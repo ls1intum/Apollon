@@ -2,8 +2,9 @@ import { AssessmentSelectableWrapper } from "@/components/wrapper/AssessmentSele
 import { FeedbackDropzone } from "@/components/wrapper/FeedbackDropzone"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
 import { useMetadataStore } from "@/store/context"
-import { getNormalizedHandleOffsetPercent } from "@/utils"
+import { getDistributedHandleOffsetPercents } from "@/utils"
 import { Handle, Position, useReactFlow } from "@xyflow/react"
+import { useMemo } from "react"
 import { useShallow } from "zustand/shallow"
 
 // Define enum for handle IDs
@@ -101,17 +102,15 @@ export function DefaultNodeWrapper({
 
   // Keep all handle ids available for compatibility with existing edges,
   // but only 3 handles per side are visible.
-  const leftStart = getNormalizedHandleOffsetPercent(nodeWidth, 0.2)
-  const leftMidStart = getNormalizedHandleOffsetPercent(nodeWidth, 0.35)
-  const leftMiddle = getNormalizedHandleOffsetPercent(nodeWidth, 0.5)
-  const leftMidEnd = getNormalizedHandleOffsetPercent(nodeWidth, 0.65)
-  const leftEnd = getNormalizedHandleOffsetPercent(nodeWidth, 0.8)
+  const [leftStart, leftMidStart, leftMiddle, leftMidEnd, leftEnd] = useMemo(
+    () => getDistributedHandleOffsetPercents(nodeWidth),
+    [nodeWidth]
+  )
 
-  const topStart = getNormalizedHandleOffsetPercent(nodeHeight, 0.2)
-  const topMidStart = getNormalizedHandleOffsetPercent(nodeHeight, 0.35)
-  const topMiddle = getNormalizedHandleOffsetPercent(nodeHeight, 0.5)
-  const topMidEnd = getNormalizedHandleOffsetPercent(nodeHeight, 0.65)
-  const topEnd = getNormalizedHandleOffsetPercent(nodeHeight, 0.8)
+  const [topStart, topMidStart, topMiddle, topMidEnd, topEnd] = useMemo(
+    () => getDistributedHandleOffsetPercents(nodeHeight),
+    [nodeHeight]
+  )
 
   const handles = [
     {

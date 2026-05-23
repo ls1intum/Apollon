@@ -108,6 +108,15 @@ export function getSegmentEffectiveLength(
   return Math.max(0, rawLength - deduction)
 }
 
+export function isLengthEditableAtZoom(
+  canvasLength: number,
+  minLength: number,
+  zoom: number
+): boolean {
+  const safeZoom = Number.isFinite(zoom) && zoom > 0 ? zoom : 1
+  return canvasLength >= minLength || canvasLength * safeZoom >= minLength
+}
+
 export function getStubExit(
   nodePoint: IPoint,
   position: Position,
@@ -150,7 +159,8 @@ export function getBendableSegments(
   sourcePosition: Position,
   targetPosition: Position,
   stubLength: number,
-  minLength: number
+  minLength: number,
+  zoom = 1
 ): BendHandle[] {
   const collapsed = collapseCollinearPoints(points)
   if (collapsed.length < 2) return []
@@ -158,7 +168,7 @@ export function getBendableSegments(
   const handles: BendHandle[] = []
   for (let i = 0; i < collapsed.length - 1; i++) {
     const effectiveLength = getSegmentEffectiveLength(collapsed, i, stubLength)
-    if (effectiveLength > minLength) {
+    if (isLengthEditableAtZoom(effectiveLength, minLength, zoom)) {
       handles.push({
         segmentIndex: i,
         position: getBendHandlePosition(

@@ -1,24 +1,25 @@
-import { useRef, useState, useEffect } from "react"
-import { useReactFlow, type Node } from "@xyflow/react"
+import {
+  useState,
+  useEffect,
+  useRef,
+  type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent,
+} from "react"
+import { Position } from "@xyflow/react"
 import { ExtendedEdgeProps } from "./EdgeProps"
 import { CustomEdgeToolbar } from "@/components"
 import { IPoint } from "./Connection"
-import { useReconnect } from "@/hooks/useReconnect"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
 import AssessmentIcon from "@/components/svgs/AssessmentIcon"
 import { DiagramEdgeType } from "."
 import { Assessment } from "@/typings"
-import { useMetadataStore } from "@/store/context"
-import { useShallow } from "zustand/shallow"
+import { EDGES } from "@/constants"
 
 export interface BaseEdgeProps extends ExtendedEdgeProps {
   diagramType?: "class" | "usecase" | "activity" | "component" | "deployment"
 }
 export const useEdgeState = (initialPoints?: IPoint[]) => {
   const [customPoints, setCustomPoints] = useState<IPoint[]>([])
-  const [tempReconnectPoints, setTempReconnectPoints] = useState<
-    IPoint[] | null
-  >(null)
 
   useEffect(() => {
     if (initialPoints && initialPoints.length > 0) {
@@ -29,158 +30,202 @@ export const useEdgeState = (initialPoints?: IPoint[]) => {
   return {
     customPoints,
     setCustomPoints,
-    tempReconnectPoints,
-    setTempReconnectPoints,
   }
 }
 
-export const useEdgeReconnection = (
-  id: string,
-  source: string,
-  target: string,
-  sourceHandleId?: string | null,
-  targetHandleId?: string | null
+type EndpointSide = Position
+
+const getEndpointDirection = (side?: EndpointSide): IPoint => {
+  switch (side?.toLowerCase()) {
+    case "top":
+      return { x: 0, y: -1 }
+    case "right":
+      return { x: 1, y: 0 }
+    case "bottom":
+      return { x: 0, y: 1 }
+    case "left":
+      return { x: -1, y: 0 }
+    default:
+      return { x: 0, y: 0 }
+  }
+}
+
+export const getEndpointHitTargetRect = (
+  point: IPoint,
+  side?: EndpointSide
 ) => {
-  const isReconnectingRef = useRef<boolean>(false)
-  const reconnectOffsetRef = useRef<IPoint>({ x: 0, y: 0 })
-  const reconnectingEndRef = useRef<"source" | "target" | null>(null)
-  const onReconnect = useReconnect()
-  const { getEdges } = useReactFlow()
-  const { startConnectionGuidance, stopConnectionGuidance } = useMetadataStore(
-    useShallow((state) => ({
-      startConnectionGuidance: state.startConnectionGuidance,
-      stopConnectionGuidance: state.stopConnectionGuidance,
-    }))
-  )
-
-  const startReconnection = (
-    e: React.PointerEvent,
-    endType: "source" | "target",
-    currentPoint: IPoint
-  ) => {
-    e.stopPropagation()
-    e.preventDefault()
-
-    isReconnectingRef.current = true
-    reconnectingEndRef.current = endType
-    startConnectionGuidance(
-      endType === "source" ? source : target,
-      endType === "source" ? (sourceHandleId ?? null) : (targetHandleId ?? null)
-    )
-
-    reconnectOffsetRef.current = {
-      x: e.clientX - currentPoint.x,
-      y: e.clientY - currentPoint.y,
-    }
-  }
-
-  const completeReconnection = (
-    upEvent: PointerEvent,
-    handleFinder: (upEvent: PointerEvent) => {
-      handle: string | null
-      node: Node | null
-      shouldClearPoints: boolean
-    },
-    onCustomPointsClear?: () => void
-  ) => {
-    const isReconnectingSource = reconnectingEndRef.current === "source"
-    isReconnectingRef.current = false
-
-    const { handle, node, shouldClearPoints } = handleFinder(upEvent)
-
-    if (!node || shouldClearPoints) {
-      reconnectingEndRef.current = null
-      onCustomPointsClear?.()
-      stopConnectionGuidance()
-      return
-    }
-
-    const newConnection = isReconnectingSource
-      ? {
-          source: node.id,
-          target: target,
-          sourceHandle: handle,
-          targetHandle: targetHandleId ?? null,
-        }
-      : {
-          source: source,
-          target: node.id,
-          sourceHandle: sourceHandleId ?? null,
-          targetHandle: handle,
-        }
-
-    const oldEdge = getEdges().find((edge) => edge.id === id)
-    if (oldEdge) {
-      onReconnect(oldEdge, newConnection)
-    }
-
-    onCustomPointsClear?.()
-    reconnectingEndRef.current = null
-    stopConnectionGuidance()
-  }
+  const hitSize = EDGES.ENDPOINT_HIT_TARGET_SIZE
+  const hitOffset = hitSize / 2
+  const direction = getEndpointDirection(side)
 
   return {
-    isReconnectingRef,
-    reconnectingEndRef,
-    startReconnection,
-    completeReconnection,
+    x: point.x + direction.x * hitOffset - hitOffset,
+    y: point.y + direction.y * hitOffset - hitOffset,
+    width: hitSize,
+    height: hitSize,
+    radius: hitOffset,
   }
 }
 
 export const EdgeEndpointMarkers = ({
   sourcePoint,
   targetPoint,
+  sourcePosition,
+  targetPosition,
   isDiagramModifiable,
-  selected,
+  canEditEndpoint = true,
   diagramType,
-  pathType,
-  onSourcePointerDown,
-  onTargetPointerDown,
 }: {
   sourcePoint: IPoint
   targetPoint: IPoint
+  sourcePosition?: EndpointSide
+  targetPosition?: EndpointSide
   isDiagramModifiable: boolean
-  selected?: boolean
+  canEditEndpoint?: boolean
   diagramType: string
-  pathType: string
-  onSourcePointerDown: (e: React.PointerEvent) => void
-  onTargetPointerDown: (e: React.PointerEvent) => void
 }) => {
-  if (!isDiagramModifiable || diagramType === "usecase") return null
+  const sourceHandleRef = useRef<SVGRectElement | null>(null)
 
-  // Only render grab circles when the edge is selected.
-  // These circles sit in the edge SVG layer (z-index 9999) above node handles
-  // (z-index 9998). When unselected, they would intercept pointer events
-  // intended for node handles, preventing new edge creation from handles
-  // that already have an edge connected.
-  if (!selected) return null
+  useEffect(() => {
+    if (!isDiagramModifiable || diagramType === "usecase") return
+
+    const edgeGroup = sourceHandleRef.current?.closest(".react-flow__edge")
+    const nativeUpdaters = Array.from(
+      edgeGroup?.querySelectorAll<SVGElement>(".react-flow__edgeupdater") ?? []
+    )
+
+    const previousPointerEvents = nativeUpdaters.map(
+      (updater) => updater.style.pointerEvents
+    )
+
+    nativeUpdaters.forEach((updater) => {
+      updater.style.pointerEvents = "none"
+    })
+
+    return () => {
+      nativeUpdaters.forEach((updater, index) => {
+        updater.style.pointerEvents = previousPointerEvents[index]
+      })
+    }
+  }, [diagramType, isDiagramModifiable])
+
+  if (!isDiagramModifiable || diagramType === "usecase") {
+    return null
+  }
+
+  const forwardToNativeReconnect = (
+    event: ReactMouseEvent<SVGRectElement>,
+    endType: "source" | "target"
+  ) => {
+    const edgeGroup = event.currentTarget.closest(".react-flow__edge")
+    const nativeUpdater = edgeGroup?.querySelector(
+      `.react-flow__edgeupdater-${endType}`
+    )
+
+    if (!nativeUpdater) return
+
+    event.preventDefault()
+    event.stopPropagation()
+    const eventWindow = event.currentTarget.ownerDocument.defaultView ?? window
+
+    // Deliberately hand off to React Flow's native reconnect updater so
+    // reconnection stays owned by React Flow while our hit target controls UX.
+    nativeUpdater.dispatchEvent(
+      new eventWindow.MouseEvent("mousedown", {
+        bubbles: true,
+        cancelable: true,
+        button: event.button,
+        buttons: event.buttons,
+        clientX: event.clientX,
+        clientY: event.clientY,
+        screenX: event.screenX,
+        screenY: event.screenY,
+        ctrlKey: event.ctrlKey,
+        shiftKey: event.shiftKey,
+        altKey: event.altKey,
+        metaKey: event.metaKey,
+      })
+    )
+  }
+  const sourceHitTarget = getEndpointHitTargetRect(sourcePoint, sourcePosition)
+  const targetHitTarget = getEndpointHitTargetRect(targetPoint, targetPosition)
+  const className = [
+    "edge-endpoint-handle",
+    canEditEndpoint ? "" : "edge-endpoint-handle--disabled",
+  ]
+    .filter(Boolean)
+    .join(" ")
 
   return (
     <>
-      <circle
-        cx={sourcePoint.x}
-        cy={sourcePoint.y}
-        r={pathType === "straight" ? 8 : 10}
-        fill="transparent"
-        stroke="transparent"
-        strokeWidth={0}
-        pointerEvents="all"
-        onPointerDown={onSourcePointerDown}
-        style={{ cursor: "crosshair" }}
+      <rect
+        ref={sourceHandleRef}
+        className={`${className} edge-endpoint-handle--source`}
+        x={sourceHitTarget.x}
+        y={sourceHitTarget.y}
+        width={sourceHitTarget.width}
+        height={sourceHitTarget.height}
+        rx={sourceHitTarget.radius}
+        ry={sourceHitTarget.radius}
+        pointerEvents={canEditEndpoint ? "all" : "none"}
+        onMouseDown={
+          canEditEndpoint
+            ? (event) => forwardToNativeReconnect(event, "source")
+            : undefined
+        }
       />
-      <circle
-        className="target-edge-marker-grab"
-        cx={targetPoint.x}
-        cy={targetPoint.y}
-        r={pathType === "straight" ? 8 : 10}
-        fill="transparent"
-        stroke="transparent"
-        strokeWidth={0}
-        pointerEvents="all"
-        onPointerDown={onTargetPointerDown}
-        style={{ cursor: "crosshair" }}
+      <rect
+        className={`${className} edge-endpoint-handle--target`}
+        x={targetHitTarget.x}
+        y={targetHitTarget.y}
+        width={targetHitTarget.width}
+        height={targetHitTarget.height}
+        rx={targetHitTarget.radius}
+        ry={targetHitTarget.radius}
+        pointerEvents={canEditEndpoint ? "all" : "none"}
+        onMouseDown={
+          canEditEndpoint
+            ? (event) => forwardToNativeReconnect(event, "target")
+            : undefined
+        }
       />
     </>
+  )
+}
+
+export const EdgeBendHandle = ({
+  id,
+  segmentIndex,
+  position,
+  orientation,
+  onPointerDown,
+}: {
+  id: string
+  segmentIndex: number
+  position: IPoint
+  orientation: "H" | "V"
+  onPointerDown: (e: ReactPointerEvent<SVGRectElement>) => void
+}) => {
+  const width = orientation === "H" ? 34 : 10
+  const height = orientation === "H" ? 10 : 34
+
+  return (
+    <rect
+      className="edge-circle edge-bend-handle"
+      pointerEvents="all"
+      key={`${id}-bend-${segmentIndex}`}
+      x={position.x - width / 2}
+      y={position.y - height / 2}
+      width={width}
+      height={height}
+      rx={6}
+      ry={6}
+      style={{
+        cursor: orientation === "H" ? "ns-resize" : "ew-resize",
+        zIndex: 9999,
+      }}
+      onPointerDown={onPointerDown}
+    />
   )
 }
 

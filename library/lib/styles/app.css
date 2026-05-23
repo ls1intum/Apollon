@@ -141,7 +141,9 @@
 .apollon-editor--connection-guidance
   .react-flow__node:has(.apollon-connection-guidance-source),
 .apollon-editor--connection-guidance
-  .react-flow__node:has(.apollon-connection-guidance-target-active) {
+  .react-flow__node:has(.apollon-connection-guidance-target-active),
+.apollon-editor--connection-guidance
+  .react-flow__node:has(.react-flow__handle.connectionindicator.connectingto) {
   z-index: 10001 !important;
 }
 
@@ -165,52 +167,89 @@
   background-color: transparent !important;
 }
 
-.apollon-editor--connection-guidance .react-flow__handle.connectionindicator.valid,
+.apollon-editor--connection-guidance
+  .react-flow__handle.connectionindicator.valid,
 .apollon-editor--connection-guidance
   .react-flow__handle.apollon-connection-guidance-target-active {
   background-color: var(--apollon-primary, #3e8acc) !important;
 }
 
-.edge-circle {
+.edge-bend-handle {
   opacity: 0;
-  background-color: var(--apollon-primary, #3e8acc);
+  stroke: none;
+  fill: color-mix(
+    in srgb,
+    var(--apollon-primary, #3e8acc) 34%,
+    var(--apollon-background, #ffffff)
+  );
+  transition:
+    fill 120ms ease,
+    opacity 120ms ease;
+  vector-effect: non-scaling-stroke;
 }
 
-.react-flow__edge:hover .edge-circle {
-  opacity: 0.4;
-  padding: 4px;
+.edge-endpoint-handle {
+  fill: transparent;
+  stroke: transparent;
+  stroke-width: 0;
+  cursor: move;
+  vector-effect: non-scaling-stroke;
+}
+
+.edge-endpoint-handle--disabled {
+  cursor: default;
+}
+
+.react-flow__edge:hover .edge-bend-handle,
+.react-flow__edge.selected .edge-bend-handle {
+  opacity: 1;
   fill: var(--apollon-primary, #3e8acc);
 }
-.react-flow__edge.selected .edge-circle {
-  opacity: 0.4;
-  padding: 4px;
-  fill: var(--apollon-primary, #3e8acc);
+
+.react-flow__edge:hover .edge-bend-handle:hover,
+.react-flow__edge.selected .edge-bend-handle:hover {
+  fill: color-mix(in srgb, var(--apollon-primary, #3e8acc) 70%, #000000);
 }
 
 .react-flow__edge:hover .edge-overlay {
-  opacity: 0.4;
-  padding: 4px;
-  stroke: var(--apollon-primary, #3e8acc);
-  stroke-width: 15px;
+  opacity: 0;
 }
 .react-flow__edge:hover .edge-marker-highlight {
-  opacity: 0.4;
-  padding: 4px;
-  stroke: var(--apollon-primary, #3e8acc);
-  stroke-width: 15px;
+  opacity: 0;
 }
 
 .react-flow__edge.selected .edge-overlay {
-  opacity: 0.4;
-  padding: 4px;
-  stroke: var(--apollon-primary, #3e8acc);
-  stroke-width: 15px;
+  opacity: 0;
+  pointer-events: none;
 }
 .react-flow__edge.selected .edge-marker-highlight {
-  opacity: 0.4;
-  padding: 4px;
-  stroke: var(--apollon-primary, #3e8acc);
-  stroke-width: 15px;
+  opacity: 0;
+}
+
+.react-flow__edge:hover .react-flow__edge-path,
+.react-flow__edge:hover [data-inline-marker] {
+  stroke: color-mix(
+    in srgb,
+    var(--apollon-primary, #3e8acc) 70%,
+    #000000
+  ) !important;
+}
+
+.react-flow__edge:hover [data-inline-marker-filled="true"] {
+  fill: color-mix(
+    in srgb,
+    var(--apollon-primary, #3e8acc) 70%,
+    #000000
+  ) !important;
+}
+
+.react-flow__edge.selected .react-flow__edge-path,
+.react-flow__edge.selected [data-inline-marker] {
+  stroke: var(--apollon-primary, #3e8acc) !important;
+}
+
+.react-flow__edge.selected [data-inline-marker-filled="true"] {
+  fill: var(--apollon-primary, #3e8acc) !important;
 }
 
 .react-flow__node:hover {

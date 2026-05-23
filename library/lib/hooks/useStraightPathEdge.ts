@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState, useCallback } from "react"
-import { useReactFlow } from "@xyflow/react"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { useStore } from "@xyflow/react"
 import { log } from "../logger"
 import {
   calculateOverlayPath,
@@ -11,10 +11,9 @@ import {
 import { EDGES } from "@/constants"
 import { useDiagramModifiable } from "./useDiagramModifiable"
 import { IPoint } from "../edges/Connection"
-import { useEdgeReconnection, BaseEdgeProps } from "../edges/GenericEdge"
-import { useHandleFinder } from "./useHandleFinder"
+import { BaseEdgeProps } from "../edges/GenericEdge"
+import { isLengthEditableAtZoom } from "@/utils/geometry/bendHandles"
 import { useMetadataStore } from "@/store/context"
-import { useShallow } from "zustand/shallow"
 
 export interface StraightPathEdgeData {
   pathMiddlePosition: IPoint
@@ -26,71 +25,19 @@ export interface StraightPathEdgeData {
 export const useStraightPathEdge = ({
   id,
   type,
-  source,
-  target,
   sourceX,
   sourceY,
   targetX,
   targetY,
   sourcePosition,
   targetPosition,
-  sourceHandleId,
-  targetHandleId,
-  enableReconnection = true,
-}: Omit<BaseEdgeProps, "data"> & { enableReconnection?: boolean }) => {
+}: Omit<BaseEdgeProps, "data">) => {
   const pathRef = useRef<SVGPathElement | null>(null)
   const isDiagramModifiable = useDiagramModifiable()
-  const { screenToFlowPosition } = useReactFlow()
-  const [tempReconnectPath, setTempReconnectPath] = useState<string | null>(
-    null
+  const zoom = useStore((state) => state.transform[2])
+  const isReconnecting = useMetadataStore(
+    (state) => state.reconnectPreviewEdgeId === id
   )
-
-  const hasReconnectionSupport = id && source && target && enableReconnection
-
-  // Hooks must be called unconditionally (Rules of Hooks).
-  // We always call them, but only use the results when reconnection is supported.
-  const reconnection = useEdgeReconnection(
-    id ?? "",
-    source ?? "",
-    target ?? "",
-    sourceHandleId,
-    targetHandleId
-  )
-  const handleFinder = useHandleFinder()
-  const { setConnectionGuidanceTarget } = useMetadataStore(
-    useShallow((state) => ({
-      setConnectionGuidanceTarget: state.setConnectionGuidanceTarget,
-    }))
-  )
-
-  const { isReconnectingRef, startReconnection, completeReconnection } =
-    hasReconnectionSupport
-      ? reconnection
-      : {
-          isReconnectingRef: {
-            current: false,
-          } as React.MutableRefObject<boolean>,
-          startReconnection:
-            (() => {}) as typeof reconnection.startReconnection,
-          completeReconnection:
-            (() => {}) as typeof reconnection.completeReconnection,
-        }
-
-  const { findBestHandle, findBestHandleAtClientPosition } =
-    hasReconnectionSupport
-      ? handleFinder
-      : {
-          findBestHandle: (() => ({
-            handle: null,
-            node: null,
-            shouldClearPoints: false,
-          })) as typeof handleFinder.findBestHandle,
-          findBestHandleAtClientPosition: (() => ({
-            handle: null,
-            node: null,
-            shouldClearPoints: false,
-          })) as typeof handleFinder.findBestHandleAtClientPosition,
-        }
 
   const { markerEnd, markerStart, strokeDashArray, markerPadding } =
     getEdgeMarkerStyles(type)
@@ -262,121 +209,14 @@ export const useStraightPathEdge = ({
     x: adjustedTargetCoordinates.targetX,
     y: adjustedTargetCoordinates.targetY,
   }
-
-  const handleEndpointPointerDown = useCallback(
-    (e: React.PointerEvent, endType: "source" | "target") => {
-      if (
-        !isDiagramModifiable ||
-        !enableReconnection ||
-        !hasReconnectionSupport
-      ) {
-        return
-      }
-
-      const endpoint = endType === "source" ? sourcePoint : targetPoint
-      startReconnection(e, endType, endpoint)
-
-      const handleEndpointPointerMove = (moveEvent: PointerEvent) => {
-        if (!isReconnectingRef.current) return
-
-        const newEndpoint = screenToFlowPosition({
-          x: moveEvent.clientX,
-          y: moveEvent.clientY,
-        })
-        const {
-          handle: previewHandle,
-          node: previewNode,
-          shouldClearPoints: shouldClearGuidanceTarget,
-        } = findBestHandleAtClientPosition(moveEvent.clientX, moveEvent.clientY)
-
-        if (shouldClearGuidanceTarget || !previewNode || !previewHandle) {
-          setConnectionGuidanceTarget(null, null)
-        } else {
-          setConnectionGuidanceTarget(previewNode.id, previewHandle)
-        }
-
-        let newSourceX = sourceX
-        let newSourceY = sourceY
-        let newTargetX = targetX
-        let newTargetY = targetY
-
-        if (endType === "source") {
-          newSourceX = newEndpoint.x
-          newSourceY = newEndpoint.y
-        } else {
-          newTargetX = newEndpoint.x
-          newTargetY = newEndpoint.y
-        }
-
-        const tempAdjustedTargetCoordinates = adjustTargetCoordinates(
-          newTargetX,
-          newTargetY,
-          targetPosition,
-          padding
-        )
-
-        const tempAdjustedSourceCoordinates = adjustSourceCoordinates(
-          newSourceX,
-          newSourceY,
-          sourcePosition,
-          EDGES.SOURCE_CONNECTION_POINT_PADDING
-        )
-
-        const tempPath = calculateStraightPath(
-          tempAdjustedSourceCoordinates.sourceX,
-          tempAdjustedSourceCoordinates.sourceY,
-          tempAdjustedTargetCoordinates.targetX,
-          tempAdjustedTargetCoordinates.targetY,
-          type
-        )
-
-        setTempReconnectPath(tempPath)
-      }
-
-      const handleEndpointPointerUp = (upEvent: PointerEvent) => {
-        setTempReconnectPath(null)
-        setConnectionGuidanceTarget(null, null)
-
-        document.removeEventListener("pointermove", handleEndpointPointerMove, {
-          capture: true,
-        })
-        document.removeEventListener("pointerup", handleEndpointPointerUp, {
-          capture: true,
-        })
-
-        completeReconnection(upEvent, findBestHandle, () => {})
-      }
-
-      document.addEventListener("pointermove", handleEndpointPointerMove, {
-        capture: true,
-      })
-      document.addEventListener("pointerup", handleEndpointPointerUp, {
-        once: true,
-        capture: true,
-      })
-    },
-    [
-      isDiagramModifiable,
-      enableReconnection,
-      hasReconnectionSupport,
-      sourcePoint,
-      targetPoint,
-      startReconnection,
-      isReconnectingRef,
-      completeReconnection,
-      findBestHandle,
-      findBestHandleAtClientPosition,
-      setConnectionGuidanceTarget,
-      sourceX,
-      sourceY,
-      targetX,
-      targetY,
-      sourcePosition,
-      targetPosition,
-      type,
-      padding,
-      screenToFlowPosition,
-    ]
+  const canvasLength = Math.hypot(
+    targetPoint.x - sourcePoint.x,
+    targetPoint.y - sourcePoint.y
+  )
+  const canEditEndpoint = isLengthEditableAtZoom(
+    canvasLength,
+    EDGES.BEND_MIN_LENGTH,
+    zoom
   )
 
   const edgeData: StraightPathEdgeData = {
@@ -397,8 +237,7 @@ export const useStraightPathEdge = ({
     sourcePoint,
     targetPoint,
     isDiagramModifiable,
-    isReconnectingRef,
-    handleEndpointPointerDown,
-    tempReconnectPath,
+    isReconnecting,
+    canEditEndpoint,
   }
 }

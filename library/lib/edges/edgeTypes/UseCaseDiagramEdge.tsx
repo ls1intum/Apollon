@@ -57,7 +57,7 @@ export const UseCaseEdge = ({
     edgeData,
     currentPath,
     overlayPath,
-    isReconnectingRef,
+    isReconnecting,
     markerEnd,
     markerStart,
     strokeDashArray,
@@ -95,7 +95,7 @@ export const UseCaseEdge = ({
             }}
           />
 
-          {!isReconnectingRef.current && (
+          {!isReconnecting && (
             <EdgeInlineMarkers
               pathD={currentPath}
               markerEnd={markerEnd}

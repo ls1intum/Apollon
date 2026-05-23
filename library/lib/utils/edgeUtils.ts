@@ -370,9 +370,6 @@ type RectHandlePoint = {
 // with CANVAS.SNAP_TO_GRID_PX in constants.ts (currently 10).
 const HANDLE_SNAP_STEP_PX = 10
 const HANDLE_RATIO_START = 0.2
-const HANDLE_RATIO_MID_START = 0.35
-const HANDLE_RATIO_MIDDLE = 0.5
-const HANDLE_RATIO_MID_END = 0.65
 const HANDLE_RATIO_END = 0.8
 
 const clamp = (value: number, min: number, max: number): number =>
@@ -405,29 +402,103 @@ export function getNormalizedHandleOffsetPercent(
   return `${(normalizedOffset / axisLength) * 100}%`
 }
 
+function getDistributedHandleOffsets(axisLength: number): number[] {
+  if (!Number.isFinite(axisLength) || axisLength <= 0) {
+    return [0, 0, 0, 0, 0]
+  }
+
+  // Ideal 5-slot distribution inside the cosmetically preferred inset band.
+  const ideal = [0, 1, 2, 3, 4].map(
+    (index) =>
+      axisLength *
+      (HANDLE_RATIO_START +
+        ((HANDLE_RATIO_END - HANDLE_RATIO_START) * index) / 4)
+  )
+
+  // Restrict candidates to grid-aligned positions so opposing handles can be
+  // perfectly aligned by grid dragging (prevents unremovable micro-dents).
+  const maxGridUnit = Math.floor(axisLength / HANDLE_SNAP_STEP_PX)
+
+  // For very small nodes we may not have enough grid units for 4 equal steps.
+  // Fall back to nearest snapped ideals.
+  if (maxGridUnit < 4) {
+    return ideal.map((value) =>
+      clamp(
+        Math.round(value / HANDLE_SNAP_STEP_PX) * HANDLE_SNAP_STEP_PX,
+        0,
+        axisLength
+      )
+    )
+  }
+
+  let bestOffsets: number[] | null = null
+  let bestScore = Number.POSITIVE_INFINITY
+
+  // Enumerate arithmetic progressions on the grid:
+  // p_i = (startUnit + i * stepUnits) * grid, i = 0..4
+  for (
+    let stepUnits = 1;
+    stepUnits <= Math.floor(maxGridUnit / 4);
+    stepUnits++
+  ) {
+    const maxStartUnit = maxGridUnit - 4 * stepUnits
+    for (let startUnit = 0; startUnit <= maxStartUnit; startUnit++) {
+      const offsets = [0, 1, 2, 3, 4].map(
+        (index) => (startUnit + index * stepUnits) * HANDLE_SNAP_STEP_PX
+      )
+
+      // Minimize squared error to ideal slots, with a tiny bias toward
+      // larger spread when scores tie (better visual coverage).
+      let score = 0
+      for (let i = 0; i < offsets.length; i++) {
+        const delta = offsets[i] - ideal[i]
+        score += delta * delta
+      }
+      score -= stepUnits * 1e-3
+
+      if (score < bestScore) {
+        bestScore = score
+        bestOffsets = offsets
+      }
+    }
+  }
+
+  if (bestOffsets) return bestOffsets
+
+  return ideal.map((value) =>
+    clamp(
+      Math.round(value / HANDLE_SNAP_STEP_PX) * HANDLE_SNAP_STEP_PX,
+      0,
+      axisLength
+    )
+  )
+}
+
+export function getDistributedHandleOffsetPercents(
+  axisLength: number
+): [string, string, string, string, string] {
+  if (!Number.isFinite(axisLength) || axisLength <= 0) {
+    return ["0%", "0%", "0%", "0%", "0%"]
+  }
+
+  const offsets = getDistributedHandleOffsets(axisLength)
+  return offsets.map((offset) => `${(offset / axisLength) * 100}%`) as [
+    string,
+    string,
+    string,
+    string,
+    string,
+  ]
+}
+
 function getCanonicalHandlePoints(
   rect: Rect,
   useFourHandles: boolean
 ): RectHandlePoint[] {
-  const xStart =
-    rect.x + getNormalizedHandleOffset(rect.width, HANDLE_RATIO_START)
-  const xMidStart =
-    rect.x + getNormalizedHandleOffset(rect.width, HANDLE_RATIO_MID_START)
-  const xMiddle =
-    rect.x + getNormalizedHandleOffset(rect.width, HANDLE_RATIO_MIDDLE)
-  const xMidEnd =
-    rect.x + getNormalizedHandleOffset(rect.width, HANDLE_RATIO_MID_END)
-  const xEnd = rect.x + getNormalizedHandleOffset(rect.width, HANDLE_RATIO_END)
-
-  const yStart =
-    rect.y + getNormalizedHandleOffset(rect.height, HANDLE_RATIO_START)
-  const yMidStart =
-    rect.y + getNormalizedHandleOffset(rect.height, HANDLE_RATIO_MID_START)
-  const yMiddle =
-    rect.y + getNormalizedHandleOffset(rect.height, HANDLE_RATIO_MIDDLE)
-  const yMidEnd =
-    rect.y + getNormalizedHandleOffset(rect.height, HANDLE_RATIO_MID_END)
-  const yEnd = rect.y + getNormalizedHandleOffset(rect.height, HANDLE_RATIO_END)
+  const [xStart, xMidStart, xMiddle, xMidEnd, xEnd] =
+    getDistributedHandleOffsets(rect.width).map((offset) => rect.x + offset)
+  const [yStart, yMidStart, yMiddle, yMidEnd, yEnd] =
+    getDistributedHandleOffsets(rect.height).map((offset) => rect.y + offset)
 
   const points: RectHandlePoint[] = [
     { label: "top", position: { x: xMiddle, y: yStart }, side: Position.Top },

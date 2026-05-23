@@ -1,5 +1,10 @@
 import { BaseEdge } from "@xyflow/react"
-import { BaseEdgeProps, CommonEdgeElements } from "../GenericEdge"
+import {
+  BaseEdgeProps,
+  CommonEdgeElements,
+  EdgeBendHandle,
+  EdgeEndpointMarkers,
+} from "../GenericEdge"
 import { useStepPathEdge } from "@/hooks/useStepPathEdge"
 import { useDiagramStore, usePopoverStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
@@ -79,12 +84,15 @@ export const SfcDiagramEdge = ({
     isBendDragging,
     draggingHandleSegmentIndex,
     hasInitialCalculation,
-    isReconnectingRef,
+    isReconnecting,
     markerEnd,
     markerStart,
     strokeDashArray,
     handlePointerDown,
+    sourcePoint,
+    targetPoint,
     isDiagramModifiable,
+    canEditEndpoint,
   } = useStepPathEdge({
     id,
     type,
@@ -100,7 +108,6 @@ export const SfcDiagramEdge = ({
     targetHandleId,
     data,
     allowMidpointDragging,
-    enableReconnection: true,
     enableStraightPath,
   })
 
@@ -158,9 +165,7 @@ export const SfcDiagramEdge = ({
             pointerEvents="none"
             style={{
               stroke: strokeColor,
-              strokeDasharray: isReconnectingRef.current
-                ? "none"
-                : strokeDashArray,
+              strokeDasharray: isReconnecting ? "none" : strokeDashArray,
               transition: hasInitialCalculation
                 ? "opacity 0.1s ease-in"
                 : "none",
@@ -168,7 +173,7 @@ export const SfcDiagramEdge = ({
             }}
           />
 
-          {!isReconnectingRef.current && (
+          {!isReconnecting && (
             <EdgeInlineMarkers
               pathD={currentPath}
               markerEnd={markerEnd}
@@ -185,12 +190,22 @@ export const SfcDiagramEdge = ({
             strokeWidth={EDGES.EDGE_HIGHLIGHT_STROKE_WIDTH}
             pointerEvents="stroke"
             style={{
-              opacity: isReconnectingRef.current || isBendDragging ? 0 : 0.4,
+              opacity: isReconnecting || isBendDragging ? 0 : 0.4,
             }}
           />
 
+          <EdgeEndpointMarkers
+            sourcePoint={sourcePoint}
+            targetPoint={targetPoint}
+            sourcePosition={sourcePosition}
+            targetPosition={targetPosition}
+            isDiagramModifiable={isDiagramModifiable}
+            canEditEndpoint={canEditEndpoint}
+            diagramType="sfc"
+          />
+
           {isDiagramModifiable &&
-            !isReconnectingRef.current &&
+            !isReconnecting &&
             allowMidpointDragging &&
             bendHandles
               .filter(
@@ -199,20 +214,12 @@ export const SfcDiagramEdge = ({
                   handle.segmentIndex === draggingHandleSegmentIndex
               )
               .map((handle) => (
-                <circle
-                  className="edge-circle"
-                  pointerEvents="all"
+                <EdgeBendHandle
                   key={`${id}-bend-${handle.segmentIndex}`}
-                  cx={handle.position.x}
-                  cy={handle.position.y}
-                  r={10}
-                  fill="lightgray"
-                  stroke="none"
-                  style={{
-                    cursor:
-                      handle.orientation === "H" ? "ns-resize" : "ew-resize",
-                    zIndex: 9999,
-                  }}
+                  id={id}
+                  segmentIndex={handle.segmentIndex}
+                  position={handle.position}
+                  orientation={handle.orientation}
                   onPointerDown={(e) => handlePointerDown(e, handle)}
                 />
               ))}

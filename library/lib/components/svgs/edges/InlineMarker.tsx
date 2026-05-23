@@ -122,6 +122,7 @@ export function InlineMarker({
           fill={filled ? strokeColor : THEME_BACKGROUND_COLOR}
           stroke={strokeColor}
           strokeWidth={strokeW}
+          data-inline-marker-filled={filled ? "true" : undefined}
           data-inline-marker="true"
         />
       )
@@ -146,6 +147,7 @@ export function InlineMarker({
             strokeWidth={strokeW}
             strokeLinecap="round"
             strokeLinejoin="round"
+            data-inline-marker-filled="true"
             data-inline-marker="true"
           />
         )
@@ -186,6 +188,7 @@ export function InlineMarker({
           fill={filled ? strokeColor : THEME_BACKGROUND_COLOR}
           stroke={strokeColor}
           strokeWidth={strokeW}
+          data-inline-marker-filled={filled ? "true" : undefined}
           data-inline-marker="true"
         />
       )
@@ -204,6 +207,7 @@ export function InlineMarker({
           fill={filled ? strokeColor : FILL_COLOR}
           stroke={strokeColor}
           strokeWidth={strokeW}
+          data-inline-marker-filled={filled ? "true" : undefined}
           data-inline-marker="true"
         />
       )

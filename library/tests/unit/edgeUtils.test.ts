@@ -12,6 +12,7 @@ import {
   getHandleAnchor,
   getConnectionLineType,
   getDefaultEdgeType,
+  getDistributedHandleOffsetPercents,
   getEdgeMarkerStyles,
   getMarkerSegmentPath,
   isInvalidOrthogonalEdgeRelease,
@@ -624,7 +625,7 @@ describe("getHandleAnchor", () => {
   it("resolves canonical handle IDs", () => {
     const anchor = getHandleAnchor(rect, "top-mid-left")
     expect(anchor).not.toBeNull()
-    expect(anchor).toEqual({ x: 110, y: 40, side: Position.Top })
+    expect(anchor).toEqual({ x: 100, y: 40, side: Position.Top })
   })
 
   it("resolves alias left-top to the canonical top side", () => {
@@ -1785,6 +1786,31 @@ describe("getDefaultEdgeType", () => {
       getDefaultEdgeType("UnknownDiagram" as unknown as UMLDiagramType)
     ).toBe("ClassUnidirectional")
   })
+})
+
+// ---------------------------------------------------------------------------
+// getDistributedHandleOffsetPercents
+// ---------------------------------------------------------------------------
+describe("getDistributedHandleOffsetPercents", () => {
+  it.each([80, 125, 200])(
+    "returns monotonic grid-aligned offsets for %ipx nodes",
+    (axisLength) => {
+      const offsets = getDistributedHandleOffsetPercents(axisLength).map(
+        (percent) => (Number.parseFloat(percent) / 100) * axisLength
+      )
+
+      expect(offsets).toHaveLength(5)
+      for (let index = 0; index < offsets.length; index++) {
+        expect(offsets[index]).toBeGreaterThanOrEqual(0)
+        expect(offsets[index]).toBeLessThanOrEqual(axisLength)
+        expect(Math.round(offsets[index]) % 10).toBe(0)
+
+        if (index > 0) {
+          expect(offsets[index]).toBeGreaterThan(offsets[index - 1])
+        }
+      }
+    }
+  )
 })
 
 // ---------------------------------------------------------------------------

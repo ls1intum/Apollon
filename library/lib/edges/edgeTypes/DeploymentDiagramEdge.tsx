@@ -2,6 +2,7 @@ import { BaseEdge } from "@xyflow/react"
 import {
   BaseEdgeProps,
   EdgeEndpointMarkers,
+  EdgeBendHandle,
   CommonEdgeElements,
 } from "../GenericEdge"
 import { useDiagramStore, usePopoverStore } from "@/store/context"
@@ -38,7 +39,6 @@ export const DeploymentDiagramEdge = ({
   sourceHandleId,
   targetHandleId,
   data,
-  selected,
 }: BaseEdgeProps) => {
   const anchorRef = useRef<SVGSVGElement | null>(null)
   const { handleDelete } = useToolbar({ id })
@@ -88,15 +88,15 @@ export const DeploymentDiagramEdge = ({
     isBendDragging,
     draggingHandleSegmentIndex,
     hasInitialCalculation,
-    isReconnectingRef,
+    isReconnecting,
     markerEnd,
     markerStart,
     strokeDashArray,
     handlePointerDown,
-    handleEndpointPointerDown,
     sourcePoint,
     targetPoint,
     isDiagramModifiable,
+    canEditEndpoint,
   } = useStepPathEdge({
     id,
     type: dynamicEdgeType,
@@ -112,7 +112,6 @@ export const DeploymentDiagramEdge = ({
     targetHandleId,
     data,
     allowMidpointDragging,
-    enableReconnection: true,
     enableStraightPath: true,
   })
 
@@ -130,9 +129,7 @@ export const DeploymentDiagramEdge = ({
             pointerEvents="none"
             style={{
               stroke: strokeColor,
-              strokeDasharray: isReconnectingRef.current
-                ? "none"
-                : strokeDashArray,
+              strokeDasharray: isReconnecting ? "none" : strokeDashArray,
               transition: hasInitialCalculation
                 ? "opacity 0.1s ease-in"
                 : "none",
@@ -140,7 +137,7 @@ export const DeploymentDiagramEdge = ({
             }}
           />
 
-          {!isReconnectingRef.current && (
+          {!isReconnecting && (
             <EdgeInlineMarkers
               pathD={currentPath}
               markerEnd={markerEnd}
@@ -157,23 +154,22 @@ export const DeploymentDiagramEdge = ({
             strokeWidth={EDGES.EDGE_HIGHLIGHT_STROKE_WIDTH}
             pointerEvents="stroke"
             style={{
-              opacity: isReconnectingRef.current || isBendDragging ? 0 : 0.4,
+              opacity: isReconnecting || isBendDragging ? 0 : 0.4,
             }}
           />
 
           <EdgeEndpointMarkers
             sourcePoint={sourcePoint}
             targetPoint={targetPoint}
+            sourcePosition={sourcePosition}
+            targetPosition={targetPosition}
             isDiagramModifiable={isDiagramModifiable}
-            selected={selected}
+            canEditEndpoint={canEditEndpoint}
             diagramType="step"
-            pathType="step"
-            onSourcePointerDown={(e) => handleEndpointPointerDown(e, "source")}
-            onTargetPointerDown={(e) => handleEndpointPointerDown(e, "target")}
           />
 
           {isDiagramModifiable &&
-            !isReconnectingRef.current &&
+            !isReconnecting &&
             allowMidpointDragging &&
             bendHandles
               .filter(
@@ -182,20 +178,12 @@ export const DeploymentDiagramEdge = ({
                   handle.segmentIndex === draggingHandleSegmentIndex
               )
               .map((handle) => (
-                <circle
-                  className="edge-circle"
-                  pointerEvents="all"
+                <EdgeBendHandle
                   key={`${id}-bend-${handle.segmentIndex}`}
-                  cx={handle.position.x}
-                  cy={handle.position.y}
-                  r={10}
-                  fill="lightgray"
-                  stroke="none"
-                  style={{
-                    cursor:
-                      handle.orientation === "H" ? "ns-resize" : "ew-resize",
-                    zIndex: 9999,
-                  }}
+                  id={id}
+                  segmentIndex={handle.segmentIndex}
+                  position={handle.position}
+                  orientation={handle.orientation}
                   onPointerDown={(e) => handlePointerDown(e, handle)}
                 />
               ))}

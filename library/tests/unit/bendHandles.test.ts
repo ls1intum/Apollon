@@ -6,6 +6,7 @@ import {
   getBendHandlePosition,
   getBendableSegments,
   getSegmentKind,
+  isLengthEditableAtZoom,
 } from "@/utils/geometry/bendHandles"
 
 const stubLength = 30
@@ -40,6 +41,39 @@ describe("bend handle utilities", () => {
     expect(handles[0].orientation).toBe("H")
     // Handle is centered on the full geometric segment, not the effective zone.
     expect(handles[0].position).toEqual({ x: 100, y: 0 })
+  })
+
+  it("treats the minimum edit length as zoom-aware screen length", () => {
+    expect(isLengthEditableAtZoom(90, 100, 1)).toBe(false)
+    expect(isLengthEditableAtZoom(90, 100, 2)).toBe(true)
+    expect(isLengthEditableAtZoom(100, 100, 1)).toBe(true)
+  })
+
+  it("shows a bend handle for a short canvas segment once zoom makes it usable", () => {
+    const points = [
+      { x: 0, y: 0 },
+      { x: 150, y: 0 },
+    ]
+
+    expect(
+      getBendableSegments(
+        points,
+        Position.Right,
+        Position.Left,
+        stubLength,
+        100
+      )
+    ).toHaveLength(0)
+    expect(
+      getBendableSegments(
+        points,
+        Position.Right,
+        Position.Left,
+        stubLength,
+        100,
+        2
+      )
+    ).toHaveLength(1)
   })
 
   it("positions a target terminal handle using the stub exit", () => {

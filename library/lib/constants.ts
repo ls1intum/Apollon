@@ -163,6 +163,8 @@ export const EDGES = Object.freeze({
   STUB_LENGTH: 30,
   /** Minimum effective segment length to show a bend handle */
   BEND_MIN_LENGTH: 100,
+  /** Size of the invisible endpoint hit target used for edge reconnection */
+  ENDPOINT_HIT_TARGET_SIZE: 24,
 } as const)
 
 /* -------------------------------------------------------------------------- */
