@@ -8,16 +8,7 @@ import {
 import React, { useEffect } from "react"
 import { useLocation } from "react-router"
 
-/**
- * Local (non-collaborative) editor mount.
- *
- * Uses the `<Apollon>` React component: the component owns the editor
- * lifecycle, the `key` triggers a fresh mount whenever the active diagram
- * changes (or the router pushes a `timeStapToCreate` to request a
- * recreate), and `onMount` wires the editor into the shared
- * `EditorContext` plus a model-change subscription that flows changes back
- * into the persistence store.
- */
+/** Local (non-collaborative) editor mount. */
 export const ApollonLocal: React.FC = () => {
   const { setEditor } = useEditorContext()
   const { state } = useLocation()
@@ -33,8 +24,6 @@ export const ApollonLocal: React.FC = () => {
   )
   const updateModel = usePersistenceModelStore((store) => store.updateModel)
 
-  // Bootstrap a default diagram if there isn't one yet. The editor only
-  // renders once a diagram exists.
   useEffect(() => {
     if (!diagram) {
       createModelByTitleAndType("Class Diagram", UMLDiagramType.ClassDiagram)
@@ -47,9 +36,6 @@ export const ApollonLocal: React.FC = () => {
 
   return (
     <Apollon
-      // Re-key when the active diagram identity changes or the router asks
-      // for a fresh editor — both are "I want a new editor" signals, and
-      // re-keying is the canonical way to ask `<Apollon>` to rebuild.
       key={`${diagram.id}|${state?.timeStapToCreate ?? ""}`}
       defaultModel={diagram.model}
       style={{ display: "flex", flexGrow: 1, height: "100%" }}

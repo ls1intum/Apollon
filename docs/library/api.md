@@ -82,12 +82,12 @@ typed-enum / object props it means "leave the live value alone".
 
 ### Hooks
 
-| Hook                                            | Returns                 | Purpose                                                       |
-| ----------------------------------------------- | ----------------------- | ------------------------------------------------------------- |
-| `useApollonEditor()`                            | `ApollonEditor \| null` | The editor for the nearest `<Apollon>` / `<ApollonProvider>`. |
-| `useApollonEditorOrThrow()`                     | `ApollonEditor`         | Same, but throws if no editor is mounted.                     |
-| `useApollonSubscription<T>(subscribe, initial)` | `T \| undefined`        | Subscribe to any `editor.subscribeTo*` channel with one call. |
-| `<ApollonProvider editor={...}>`                | —                       | Supply an externally-owned editor to descendants via context. |
+| Hook                                                | Returns                 | Purpose                                                       |
+| --------------------------------------------------- | ----------------------- | ------------------------------------------------------------- |
+| `useApollonEditor()`                                | `ApollonEditor \| null` | The editor for the nearest `<Apollon>` / `<ApollonProvider>`. |
+| `useApollonEditorOrThrow()`                         | `ApollonEditor`         | Same, but throws if no editor is mounted.                     |
+| `useApollonSubscription<T>(subscribe, getSnapshot)` | `T \| undefined`        | Subscribe to any `editor.subscribeTo*` channel with one call. |
+| `<ApollonProvider editor={...}>`                    | —                       | Supply an externally-owned editor to descendants via context. |
 
 ## Constructor
 
@@ -95,7 +95,7 @@ typed-enum / object props it means "leave the live value alone".
 new ApollonEditor(element: HTMLElement, options?: ApollonOptions)
 ```
 
-`element` must be a real `HTMLElement` — the constructor throws
+`element` must be an `HTMLElement` — the constructor throws
 `Error("Element is required to initialize Apollon")` otherwise. The element
 **must have an explicit height**; see [Quickstart](/library/quickstart) and
 [Troubleshooting](/library/troubleshooting).

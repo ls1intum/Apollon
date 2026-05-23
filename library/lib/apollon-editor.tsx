@@ -225,8 +225,7 @@ export class ApollonEditor {
   public destroy() {
     try {
       Object.keys(this.subscribers).forEach((subscriberId) => {
-        const unsubscribeCallback = this.subscribers[parseInt(subscriberId)]
-        unsubscribeCallback?.()
+        this.subscribers[parseInt(subscriberId)]?.()
       })
       this.subscribers = {}
 
@@ -234,8 +233,11 @@ export class ApollonEditor {
       this.root.unmount()
       this.ydoc.destroy()
       this.reactFlowInstance = null
-    } catch {
-      // ignore
+    } catch (err) {
+      // destroy() is best-effort — partial teardown is acceptable, but log
+      // so a regression in unmount/ydoc.destroy is surfaced rather than hidden.
+      // eslint-disable-next-line no-console
+      console.warn("[ApollonEditor] destroy() partial failure:", err)
     }
   }
 

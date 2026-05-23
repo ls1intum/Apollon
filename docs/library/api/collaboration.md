@@ -11,8 +11,6 @@ Apollon's collaboration layer is built on [Yjs](https://yjs.dev/). Set `collabor
 ```ts
 const editor = new ApollonEditor(container, {
   type: UMLDiagramType.ClassDiagram,
-  mode: ApollonMode.Modelling,
-  locale: Locale.en,
   collaborationEnabled: true,
 })
 

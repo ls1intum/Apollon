@@ -2,9 +2,9 @@ import React, { useCallback, useEffect, useRef, useState } from "react"
 import { useEditorContext, useModalContext } from "@/contexts"
 import {
   Apollon,
-  ApollonEditor,
   ApollonMode,
   importDiagram,
+  type ApollonEditor,
   type UMLModel,
 } from "@tumaet/apollon/react"
 import { useNavigate, useParams, useSearchParams } from "react-router"
@@ -44,32 +44,19 @@ export const ApollonWithConnection: React.FC = () => {
   const syncIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const diagramIsUpdated = useRef(false)
   const lastObservedHeadRev = useRef<number | undefined>(undefined)
-  const editorRef = useRef<ApollonEditor | null>(null)
   const restoredDuringPreviewRef = useRef(false)
-  /**
-   * Fingerprint of the canvas at the FIRST preview entry of the current
-   * preview session. Held until the user exits preview, so clicking
-   * V1 → V2 → V3 always compares each against the user's pre-preview
-   * canvas — not against whichever overlay is currently shown.
-   */
+  // Canvas fingerprint at preview entry — pinned across V1→V2→V3 so the
+  // banner's "restore" enablement always compares against the user's
+  // pre-preview state, not against whichever overlay is currently shown.
   const prePreviewFingerprintRef = useRef<string | null>(null)
   const hasPromptedRef = useRef(false)
-  // True when the current preview's body differs from the canvas the user
-  // had before entering preview. Computed once on preview entry and held
-  // through the preview so the banner can show/hide "Restore" without
-  // re-fingerprinting on every render. False = restoring would be a no-op
-  // (e.g. the latest saved version with no unsaved local changes).
   const [canRestoreFromPreview, setCanRestoreFromPreview] = useState(false)
   const [collaborationUser, setCollaborationUser] = useState<{
     name: string
     color: string
   } | null>(null)
 
-  // Initial model snapshot fetched per (diagramId, viewType, user) cycle.
-  // `<Apollon>` mounts only once this is set — that's the loading gate.
   const [initialDiagram, setInitialDiagram] = useState<UMLModel | null>(null)
-  // Bumped on every successful fetch to force `<Apollon>` to remount
-  // when the same diagramId is re-loaded (e.g. after collab-name prompt).
   const [loadNonce, setLoadNonce] = useState(0)
 
   const viewType = searchParams.get("view")
@@ -87,13 +74,10 @@ export const ApollonWithConnection: React.FC = () => {
 
   useFlushOnUnload({
     diagramId,
-    getModel: () => editorRef.current?.model,
+    getModel: () => editor?.model,
     isDirty: () => diagramIsUpdated.current,
   })
 
-  // Resolve view-derived mode/readonly. `mode` is reactive but in practice
-  // only flips when `viewType` changes, which also remounts <Apollon> via
-  // the key below — so the value at first render is what the editor sees.
   const isCollaborationView =
     (viewType as DiagramView) === DiagramView.COLLABORATE
   const baseReadonly = viewType === DiagramView.SEE_FEEDBACK
@@ -103,8 +87,6 @@ export const ApollonWithConnection: React.FC = () => {
       ? ApollonMode.Assessment
       : ApollonMode.Modelling
 
-  // Fetch the initial diagram on (diagramId, viewType, collaborationUser).
-  // Resets per-lifecycle refs and guards a collab-name prompt before fetch.
   useEffect(() => {
     setInitialDiagram(null)
     diagramIsUpdated.current = false
@@ -174,9 +156,6 @@ export const ApollonWithConnection: React.FC = () => {
     openModal,
   ])
 
-  // Wire WS + per-instance subscriptions when an editor instance lands.
-  // Re-runs only on the deps below; `editor` identity changes only on
-  // <Apollon> remount (new key), so WS isn't re-created on every render.
   useEffect(() => {
     if (!editor || !diagramId || !viewType) return
 
@@ -297,10 +276,8 @@ export const ApollonWithConnection: React.FC = () => {
       const previewing = useVersionStore.getState().preview !== null
       if (previewing) return
       if (!diagramIsUpdated.current) return
-      // In collab, every connected peer autosaves the same Yjs-converged
-      // model. If-Match would race them artificially — Yjs guarantees
-      // content convergence, so HEAD revision contention isn't a real
-      // conflict here. Single-editor views keep the optimistic check.
+      // Collab: skip If-Match — Yjs guarantees convergence; HEAD-rev contention
+      // is fake here. Single-editor views keep the optimistic check.
       const ifMatch = isCollaborationView
         ? undefined
         : lastObservedHeadRev.current
@@ -311,10 +288,9 @@ export const ApollonWithConnection: React.FC = () => {
         })
         .catch(async (err) => {
           if (err instanceof ApiError && err.code === "REVISION_MISMATCH") {
-            // Catch the server's hint and rebase to it; if the meta is
-            // absent, KEEP the prior rev rather than clearing it —
-            // clearing would let the very next tick PUT without an
-            // If-Match guard and could clobber a concurrent writer.
+            // Rebase to the server's hint. If the meta is absent, KEEP the
+            // prior rev rather than clearing it — clearing would let the next
+            // tick PUT without an If-Match guard and clobber a concurrent writer.
             const meta = err.meta as { currentHeadRev?: number } | undefined
             if (typeof meta?.currentHeadRev === "number") {
               lastObservedHeadRev.current = meta.currentHeadRev
@@ -358,12 +334,9 @@ export const ApollonWithConnection: React.FC = () => {
     fetchVersions,
   ])
 
-  // Sync the URL `?version=` param INTO preview state — permalink open,
-  // history nav, external link change. We do NOT mirror the other way:
-  // click-row entries from the drawer go through `enterPreview` directly
-  // and don't write to the URL. So an empty URL alone is not a signal to
-  // exit; we only exit when the URL TRANSITIONS from has-version to
-  // no-version (browser back / external removal of `?version=`).
+  // URL `?version=` → preview state. One-way: drawer entries don't write to
+  // the URL, so an empty URL alone is not a signal to exit; only the
+  // transition from has-version to no-version (browser back / external removal).
   const prevPreviewFromUrl = useRef<string | null>(null)
   useEffect(() => {
     if (!diagramId || !editor) return
@@ -382,10 +355,8 @@ export const ApollonWithConnection: React.FC = () => {
     prevPreviewFromUrl.current = previewFromUrl ?? null
   }, [previewFromUrl, preview?.versionId, diagramId, editor, exitPreview])
 
-  // Preview overlay: imperative because the success/failure paths have
-  // different model/fitView/readonly tails that don't fit a single
-  // reactive prop. <Apollon>'s reactive `previewMode` would only cover
-  // the boolean flag — we still own the model assignment.
+  // Imperative because the success/failure paths have different
+  // model/fitView tails that don't reduce to a single reactive prop.
   useEffect(() => {
     if (!editor) return
     const abort = new AbortController()
@@ -396,12 +367,6 @@ export const ApollonWithConnection: React.FC = () => {
       setCanRestoreFromPreview(
         prePreviewFingerprintRef.current !== structuralFingerprint(preview.body)
       )
-      // Library-level preview mode: store mutators stop writing to the
-      // Yjs doc (the collaborative source of truth). The next
-      // `editor.model =` assignment overlays the preview body purely in
-      // the local Zustand cache. Peer edits keep flowing into Yjs in the
-      // background; on exit, Zustand re-syncs from Yjs and the canvas
-      // catches up to whatever collaborators committed during preview.
       editor.setPreviewMode(true)
       try {
         editor.model = importDiagram(preview.body) as UMLModel
@@ -418,16 +383,13 @@ export const ApollonWithConnection: React.FC = () => {
         )
       }
     } else {
-      editor.setReadonly(baseReadonly)
       prePreviewFingerprintRef.current = null
       if (!diagramId) return
 
       if (restoredDuringPreviewRef.current) {
-        // After a restore, the server's HEAD is now the new canonical
-        // state. Flip preview off (Zustand resyncs from Yjs to a stale
-        // intermediate), then fetch HEAD and apply — that final
-        // `editor.model = head` runs with previewActive=false so writes
-        // hit Yjs and broadcast to peers.
+        // After a restore the server's HEAD is the new canonical state. Flip
+        // preview off, then fetch HEAD and apply — the final `editor.model =`
+        // runs with previewActive=false so writes hit Yjs and broadcast.
         restoredDuringPreviewRef.current = false
         editor.setPreviewMode(false)
         DiagramApiClient.fetchDiagram(diagramId, { signal: abort.signal })
@@ -441,10 +403,6 @@ export const ApollonWithConnection: React.FC = () => {
             toast.error(t.failureSchemaUnsupported)
           })
       } else {
-        // Plain preview exit: turn off preview mode. The library
-        // resyncs Zustand from Yjs which has been receiving peer edits
-        // throughout, so the canvas catches up automatically — no
-        // model snapshot, no resync round-trip, no Yjs mutation.
         editor.setPreviewMode(false)
         editor.fitView()
       }
@@ -452,9 +410,6 @@ export const ApollonWithConnection: React.FC = () => {
     return () => abort.abort()
   }, [preview, editor, diagramId, baseReadonly])
 
-  // Memoised because `handleRestoreFromPreview`'s useCallback lists it
-  // as a dep — without stable identity the restore handler gets a fresh
-  // closure every render and the banner's `onRestore` prop churns.
   const handleVersionSaved = useCallback((headRev?: number) => {
     if (typeof headRev === "number") {
       lastObservedHeadRev.current = headRev
@@ -505,12 +460,8 @@ export const ApollonWithConnection: React.FC = () => {
 
   const handleApollonMount = useCallback(
     (instance: ApollonEditor) => {
-      editorRef.current = instance
       setEditor(instance)
-      return () => {
-        setEditor(undefined)
-        editorRef.current = null
-      }
+      return () => setEditor(undefined)
     },
     [setEditor]
   )

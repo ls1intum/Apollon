@@ -98,9 +98,9 @@ function Hero() {
           browser.
         </h1>
         <p className={styles.heroSubtitle}>
-          Apollon is an open-source UML modeling editor — 13 diagram types, free
-          to use, and exportable everywhere. Open it on the web, install it in
-          VS Code, or embed it in your own product.
+          An open-source UML modeling editor. 13 diagram types, SVG/PNG/PDF
+          export, real-time collaboration. Use it in the browser, in VS Code, or
+          as an npm library.
         </p>
         <div className={styles.buttons}>
           <Link className="button button--primary button--lg" href={HOSTED_URL}>
@@ -146,9 +146,9 @@ function LiveDemo() {
       <div className="container">
         <h2 className={styles.sectionTitle}>Try it live</h2>
         <p className={styles.sectionLead}>
-          This is the real <code>@tumaet/apollon</code> package running in your
-          browser — drag from the palette, edit, export. The snippet beside it
-          is the code that mounts it; switch frameworks in the tabs.
+          The <code>@tumaet/apollon</code> package running in your browser. The
+          snippet beside it is the code that mounts it — switch frameworks in
+          the tabs.
         </p>
         <div className={clsx("row", styles.demoRow)}>
           <div className={clsx("col col--6", styles.demoCol)}>

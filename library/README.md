@@ -3,16 +3,16 @@
 [![npm version](https://img.shields.io/npm/v/@tumaet/apollon)](https://www.npmjs.com/package/@tumaet/apollon)
 [![npm license](https://img.shields.io/npm/l/@tumaet/apollon)](https://github.com/ls1intum/Apollon/blob/main/LICENSE)
 
-Embeddable UML modeling editor. Mounts into any DOM node. The public API is imperative (`new ApollonEditor(container, options)`), so the editor renders its own React tree inside the container you give it — your host code does **not** need to use React. 13 diagram types, SVG/PNG/PDF/JSON export, optional real-time collaboration via Yjs.
+Embeddable UML modeling editor. Mounts into any DOM node — works inside Angular, Vue, Svelte, vanilla JS, or React hosts. 13 diagram types, SVG/PNG/PDF/JSON export, optional real-time collaboration via Yjs.
 
 ## Install
 
 The package ships two builds with identical APIs:
 
-| Subpath                       | React / MUI / emotion / xyflow | Bundle  | Use when                                                                                                   |
-| ----------------------------- | ------------------------------ | ------- | ---------------------------------------------------------------------------------------------------------- |
-| `@tumaet/apollon` _(default)_ | bundled                        | ~2.2 MB | Your host is Angular, Vue, Svelte, vanilla JS, or any framework that doesn't already have React installed. |
-| `@tumaet/apollon/react`       | externalized (peer deps)       | ~860 KB | Your host is React 18.3+ and you want the editor to share React with your app instead of bundling a copy.  |
+| Subpath                       | React / MUI / emotion / xyflow | Bundle  | Use when                                                                                                |
+| ----------------------------- | ------------------------------ | ------- | ------------------------------------------------------------------------------------------------------- |
+| `@tumaet/apollon` _(default)_ | bundled                        | ~2.2 MB | Your host is Angular, Vue, Svelte, vanilla JS, or any framework that doesn't already have React.        |
+| `@tumaet/apollon/react`       | externalized (peer deps)       | ~860 KB | Your host is React 18.3+ / 19 and you want the editor to share React with your app instead of bundling. |
 
 ### Standalone build (any framework, no peer deps)
 
@@ -36,23 +36,16 @@ npm install @tumaet/apollon \
 ```
 
 ```ts
-import { ApollonEditor } from "@tumaet/apollon/react"
+import { Apollon } from "@tumaet/apollon/react"
 import "@tumaet/apollon/style.css"
 ```
 
-Peer ranges: `react ^18.3`, `react-dom ^18.3`, `@mui/material ^6.4`, `@emotion/react ^11.11`, `@emotion/styled ^11.11`, `@xyflow/react ^12.3`. Picking this build keeps the final bundle from shipping a second copy of React.
-
-Peers are declared with `peerDependenciesMeta.optional` so `npm install @tumaet/apollon` never warns about missing peers when you only use the standalone subpath.
+Peer ranges: `react ^18.3 || ^19`, `react-dom ^18.3 || ^19`, `@mui/material ^6.4`, `@emotion/react ^11.11`, `@emotion/styled ^11.11`, `@xyflow/react ^12.3`. The `/react` subpath keeps your final bundle from shipping a second copy of React, and is the only entry that exports the `<Apollon>` React component.
 
 ## Usage
 
 ```ts
-import {
-  ApollonEditor,
-  ApollonMode,
-  Locale,
-  UMLDiagramType,
-} from "@tumaet/apollon"
+import { ApollonEditor, UMLDiagramType } from "@tumaet/apollon"
 import "@tumaet/apollon/style.css"
 
 const container = document.getElementById("apollon")
@@ -60,12 +53,7 @@ if (!container) throw new Error("#apollon container missing")
 
 const editor = new ApollonEditor(container, {
   type: UMLDiagramType.ClassDiagram,
-  mode: ApollonMode.Modelling,
-  locale: Locale.en,
 })
-
-console.log(editor.model)
-editor.model = nextModel
 
 const subscriptionId = editor.subscribeToModelChange((model) => {
   // persist / broadcast
@@ -79,57 +67,11 @@ editor.destroy()
 
 The editor is client-only. In SSR frameworks (Next.js, Remix, SvelteKit, Nuxt), construct from a client-side effect — never during render. Always call `editor.destroy()` before re-mounting on the same container.
 
-Type definitions ship with the package (`dist/index.d.ts`) and are identical for both subpaths. Requires TypeScript 5.0+ with `moduleResolution: "bundler" | "node16" | "nodenext"`.
-
 ## Embedding examples
-
-### Angular
-
-```ts
-import {
-  Component,
-  ElementRef,
-  ViewChild,
-  AfterViewInit,
-  OnDestroy,
-} from "@angular/core"
-import {
-  ApollonEditor,
-  ApollonMode,
-  Locale,
-  UMLDiagramType,
-} from "@tumaet/apollon"
-import "@tumaet/apollon/style.css"
-
-@Component({
-  selector: "app-diagram-editor",
-  standalone: true,
-  template: `<div #container style="width: 100%; height: 100%"></div>`,
-})
-export class DiagramEditorComponent implements AfterViewInit, OnDestroy {
-  @ViewChild("container", { static: true })
-  containerRef!: ElementRef<HTMLDivElement>
-
-  private editor?: ApollonEditor
-
-  ngAfterViewInit(): void {
-    this.editor = new ApollonEditor(this.containerRef.nativeElement, {
-      type: UMLDiagramType.ClassDiagram,
-      mode: ApollonMode.Modelling,
-      locale: Locale.en,
-    })
-  }
-
-  ngOnDestroy(): void {
-    this.editor?.destroy()
-  }
-}
-```
 
 ### React
 
-Use the `<Apollon>` component from the `@tumaet/apollon/react` subpath. Render
-a saved diagram and persist edits as the user makes them:
+Use the `<Apollon>` component from the `@tumaet/apollon/react` subpath. Render a saved diagram and persist edits as the user makes them:
 
 ```tsx
 import { Apollon } from "@tumaet/apollon/react"
@@ -152,33 +94,70 @@ export function DiagramEditor({ initialModel }: { initialModel?: UMLModel }) {
 }
 ```
 
-The component owns the editor's lifecycle (constructs on mount, destroys on
-unmount). For imperative control, construct `ApollonEditor` yourself — see the
-[React embedding guide](https://ls1intum.github.io/Apollon/library/embedding/react).
+The component owns the editor's lifecycle. See the [React embedding guide](https://ls1intum.github.io/Apollon/library/embedding/react) for hooks, ref, and provider.
+
+### Angular (17.3+ signal-based)
+
+```ts
+import {
+  Component,
+  DestroyRef,
+  ElementRef,
+  afterNextRender,
+  inject,
+  input,
+  viewChild,
+} from "@angular/core"
+import { ApollonEditor, type UMLModel } from "@tumaet/apollon"
+import "@tumaet/apollon/style.css"
+
+@Component({
+  selector: "app-diagram-editor",
+  template: `<div #host style="width: 100%; height: 100%"></div>`,
+})
+export class DiagramEditorComponent {
+  readonly initialModel = input<UMLModel>()
+  private host = viewChild.required<ElementRef<HTMLDivElement>>("host")
+
+  constructor() {
+    const destroyRef = inject(DestroyRef)
+    afterNextRender(() => {
+      const editor = new ApollonEditor(this.host().nativeElement, {
+        model: this.initialModel(),
+      })
+      const subId = editor.subscribeToModelChange((model) => {
+        localStorage.setItem("diagram", JSON.stringify(model))
+      })
+      destroyRef.onDestroy(() => {
+        editor.unsubscribe(subId)
+        editor.destroy()
+      })
+    })
+  }
+}
+```
 
 ### Vanilla JS / CDN
 
 ```html
-<link
-  rel="stylesheet"
-  href="https://unpkg.com/@tumaet/apollon/dist/assets/style.css"
-/>
+<link rel="stylesheet" href="https://esm.sh/@tumaet/apollon@4.4.0/style.css" />
 <div id="apollon" style="width: 100%; height: 600px"></div>
-<script type="module">
-  import {
-    ApollonEditor,
-    ApollonMode,
-    Locale,
-    UMLDiagramType,
-  } from "https://unpkg.com/@tumaet/apollon"
 
+<script type="module">
+  import { ApollonEditor } from "https://esm.sh/@tumaet/apollon@4.4.0"
+
+  const saved = localStorage.getItem("diagram")
   const editor = new ApollonEditor(document.getElementById("apollon"), {
-    type: UMLDiagramType.ClassDiagram,
-    mode: ApollonMode.Modelling,
-    locale: Locale.en,
+    model: saved ? JSON.parse(saved) : undefined,
+  })
+
+  editor.subscribeToModelChange((model) => {
+    localStorage.setItem("diagram", JSON.stringify(model))
   })
 </script>
 ```
+
+Pin an exact version; an unpinned CDN URL resolves to `latest` and can break your embed on the next page refresh.
 
 ## Supported diagrams
 

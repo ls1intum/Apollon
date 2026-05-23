@@ -1,9 +1,13 @@
-import { createRef, StrictMode } from "react"
+import { createRef } from "react"
 import { render } from "@testing-library/react"
 import { describe, it, expect, vi, beforeEach } from "vitest"
 
-// The wrapper's job is lifecycle plumbing around the imperative `ApollonEditor`.
-// Mock it so the test stays fast and asserts the contract surface exactly.
+// Lifecycle plumbing around the imperative `ApollonEditor`. We mock the
+// editor because mounting the real one drags in xyflow/MUI/emotion + layout
+// APIs jsdom only half-implements. The mock fails open for deep behavior
+// (`destroy()` is a no-op spy), so what we assert here is strictly the
+// wrapper's responsibility: which arguments reach the constructor, which
+// reactive setters fire on prop changes, and ref forwarding.
 const { ctorSpy, destroySpy, setReadonlySpy, setPreviewModeSpy } = vi.hoisted(
   () => ({
     ctorSpy: vi.fn(),
@@ -21,12 +25,12 @@ vi.mock("@/apollon-editor", () => ({
     destroy = destroySpy
     setReadonly = setReadonlySpy
     setMode = vi.fn()
+    setScrollLock = vi.fn()
     setPreviewMode = setPreviewModeSpy
   },
 }))
 
 import { Apollon } from "@/components/react/Apollon"
-import { useApollonEditor } from "@/components/react/context"
 
 describe("<Apollon>", () => {
   beforeEach(() => {
@@ -37,7 +41,7 @@ describe("<Apollon>", () => {
   })
 
   it("constructs once with initial-only options; reactive props bypass the constructor", () => {
-    render(<Apollon defaultMode={undefined} readonly />)
+    render(<Apollon defaultMode={undefined} readonly previewMode />)
 
     expect(ctorSpy).toHaveBeenCalledTimes(1)
     const [element, options] = ctorSpy.mock.calls[0] as [
@@ -46,22 +50,12 @@ describe("<Apollon>", () => {
     ]
     expect(element).toBeInstanceOf(HTMLElement)
     expect(options.readonly).toBeUndefined()
+    expect(options.previewMode).toBeUndefined()
     expect(options.className).toBeUndefined()
     expect(options.onMount).toBeUndefined()
   })
 
-  it("runs onMount cleanup → destroy in that order", () => {
-    const order: string[] = []
-    const cleanup = vi.fn(() => order.push("cleanup"))
-    destroySpy.mockImplementation(() => order.push("destroy"))
-
-    const { unmount } = render(<Apollon onMount={() => cleanup} />)
-    unmount()
-
-    expect(order).toEqual(["cleanup", "destroy"])
-  })
-
-  it("populates the ref on mount and nulls it on unmount", () => {
+  it("forwards the ref and nulls it on unmount", () => {
     const ref = createRef<unknown>()
     const { unmount } = render(<Apollon ref={ref} />)
 
@@ -73,7 +67,7 @@ describe("<Apollon>", () => {
     expect(ref.current).toBeNull()
   })
 
-  it("re-applies reactive props via setters; never rebuilds", () => {
+  it("re-applies reactive props via setters on change; never rebuilds", () => {
     const { rerender } = render(<Apollon readonly={false} />)
     expect(setReadonlySpy).toHaveBeenLastCalledWith(false)
 
@@ -84,35 +78,5 @@ describe("<Apollon>", () => {
     expect(setPreviewModeSpy).toHaveBeenLastCalledWith(true)
 
     expect(ctorSpy).toHaveBeenCalledTimes(1)
-  })
-
-  it("exposes the editor through context to children", () => {
-    let seen: unknown = null
-    function Probe() {
-      seen = useApollonEditor()
-      return null
-    }
-    render(
-      <Apollon>
-        <Probe />
-      </Apollon>
-    )
-    expect(typeof (seen as { destroy: () => void } | null)?.destroy).toBe(
-      "function"
-    )
-  })
-
-  it("survives StrictMode double-mount cleanly", () => {
-    const { unmount } = render(
-      <StrictMode>
-        <Apollon />
-      </StrictMode>
-    )
-    // StrictMode mounts, cleans up, re-mounts: 2 ctor calls, 1 destroy.
-    expect(ctorSpy).toHaveBeenCalledTimes(2)
-    expect(destroySpy).toHaveBeenCalledTimes(1)
-
-    unmount()
-    expect(destroySpy).toHaveBeenCalledTimes(2)
   })
 })

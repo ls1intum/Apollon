@@ -24,7 +24,9 @@ import { ApollonInstanceContext } from "./context"
  *   `debug` are **snapshotted on mount** — re-key the component to apply
  *   changes against a new editor instance.
  * - `readonly` / `view` / `mode` / `scrollLock` / `previewMode` / `model`
- *   are **reactive** — applied via the matching `ApollonEditor` setter.
+ *   are **reactive** — applied via the matching `ApollonEditor` setter when
+ *   the prop changes. Passing `undefined` leaves the live value untouched;
+ *   re-key the component to fully reset.
  */
 export interface ApollonProps {
   className?: string
@@ -90,7 +92,6 @@ export const Apollon = forwardRef<ApollonEditor | null, ApollonProps>(
     const containerRef = useRef<HTMLDivElement>(null)
     const [editor, setEditor] = useState<ApollonEditor | null>(null)
 
-    // Snapshotted at mount; reactive props are owned by their effects below.
     const initialOptionsRef = useRef<ApollonOptions>({
       model: defaultModel,
       type: defaultType,
@@ -102,7 +103,7 @@ export const Apollon = forwardRef<ApollonEditor | null, ApollonProps>(
       debug,
     })
 
-    // Latest-closure ref (commit-time write avoids the StrictMode discarded-render trap).
+    // Commit-time write — StrictMode-safe latest-closure ref.
     const onMountRef = useRef(onMount)
     useEffect(() => {
       onMountRef.current = onMount
@@ -114,7 +115,7 @@ export const Apollon = forwardRef<ApollonEditor | null, ApollonProps>(
 
       const instance = new ApollonEditor(container, initialOptionsRef.current)
 
-      // Publish to the consumer ref. React-19 callback refs may return a cleanup.
+      // React-19 callback refs may return a cleanup function.
       let refCleanup: (() => void) | void
       if (typeof ref === "function") {
         const ret = ref(instance)
@@ -127,9 +128,9 @@ export const Apollon = forwardRef<ApollonEditor | null, ApollonProps>(
       const userCleanup = onMountRef.current?.(instance)
 
       return () => {
-        // Consumer cleanup → destroy → clear ref/context.
-        // Ordering matters: a destroyed instance briefly visible through the ref
-        // is more honest than a still-running editor a layout effect could touch.
+        // Order: user cleanup → destroy → null ref. A destroyed instance
+        // briefly visible through the ref is more honest than a still-running
+        // editor that a sibling layout effect could touch.
         if (typeof userCleanup === "function") userCleanup()
         instance.destroy()
 
@@ -142,12 +143,12 @@ export const Apollon = forwardRef<ApollonEditor | null, ApollonProps>(
           ;(ref as MutableRefObject<ApollonEditor | null>).current = null
         }
       }
-      // Built exactly once per mount. Re-key the component for different initial options.
+      // Initial-only — re-key the component to rebuild.
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
-    // Reactive prop effects. Each guards `!== undefined` so `false` propagates
-    // and removing a prop resets the corresponding state to its default.
+    // Reactive props. `!== undefined` so `false` propagates; passing
+    // `undefined` leaves the live value alone (does NOT reset to default).
     useEffect(() => {
       if (editor && readonly !== undefined) editor.setReadonly(readonly)
     }, [editor, readonly])

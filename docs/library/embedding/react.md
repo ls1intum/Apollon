@@ -6,10 +6,9 @@ description: Embed Apollon in React with the <Apollon> component, hooks, and pro
 
 # React
 
-Apollon ships a real React component, a context provider, and subscription
-hooks. Import them — and everything else — from the **`/react` subpath** so
-the editor shares your host's copy of React, MUI, emotion, and xyflow instead
-of bundling a second one.
+Apollon ships a React component, a context provider, and subscription hooks
+from the **`/react` subpath** so the editor shares your host's copy of React,
+MUI, emotion, and xyflow instead of bundling a second one.
 
 ```tsx
 import { Apollon } from "@tumaet/apollon/react"
@@ -109,52 +108,9 @@ the prop changes). The reactive layer is what makes the component idiomatic:
 toggle `readonly`, switch `view`, swap a preview `model` — no rebuild, no
 unmount.
 
-### Container
-
-| Prop        | Type            | Purpose                                                                                   |
-| ----------- | --------------- | ----------------------------------------------------------------------------------------- |
-| `className` | `string`        | Class on the editor's container `<div>`.                                                  |
-| `style`     | `CSSProperties` | Inline styles. **Needs an explicit non-zero height** or the canvas renders blank.         |
-| `children`  | `ReactNode`     | Rendered inside the provider alongside the canvas — toolbars, overlays, descendant hooks. |
-
-### Initial-only options (snapshotted on mount)
-
-Touch construction-time wiring (Yjs init, stores, undo manager). Changes to
-these props after mount are silently ignored; re-key the component to apply
-them to a new editor instance.
-
-| Prop                   | Type             | Effect                                                               |
-| ---------------------- | ---------------- | -------------------------------------------------------------------- |
-| `defaultModel`         | `UMLModel`       | Initial diagram. Use `importDiagram` first if the JSON may be v2/v3. |
-| `defaultType`          | `UMLDiagramType` | Initial diagram type when no `defaultModel` is supplied.             |
-| `defaultMode`          | `ApollonMode`    | Initial mode — `Modelling`, `Assessment`, or `Exporting`.            |
-| `defaultView`          | `ApollonView`    | Initial view.                                                        |
-| `availableViews`       | `ApollonView[]`  | Views the user may switch between at runtime.                        |
-| `enablePopups`         | `boolean`        | Whether inline edit/property popovers are enabled.                   |
-| `collaborationEnabled` | `boolean`        | Opt into Yjs real-time sync; wire the transport from `onMount`.      |
-| `debug`                | `boolean`        | Debug overlays/logging.                                              |
-
-### Reactive options (applied via setters when the prop changes)
-
-| Prop          | Type          | Maps to                                                       |
-| ------------- | ------------- | ------------------------------------------------------------- |
-| `readonly`    | `boolean`     | `editor.setReadonly(value)`                                   |
-| `view`        | `ApollonView` | `editor.view = value`                                         |
-| `mode`        | `ApollonMode` | `editor.setMode(value)`                                       |
-| `scrollLock`  | `boolean`     | `editor.setScrollLock(value)`                                 |
-| `previewMode` | `boolean`     | `editor.setPreviewMode(value)` — for version-history overlays |
-| `model`       | `UMLModel`    | `editor.model = value` — controlled-model overlay             |
-
-`undefined` resets boolean toggles to `false`; for `view`, `mode`, and `model`
-it means "leave the live value alone".
-
-### Lifecycle
-
-| Prop      | Type                               | Purpose                                                                                |
-| --------- | ---------------------------------- | -------------------------------------------------------------------------------------- |
-| `onMount` | `(editor) => void \| (() => void)` | Fires once after mount. The optional returned function runs as cleanup before destroy. |
-
-`onMount` does not need to be referentially stable — the component always invokes the latest closure.
+The full table — every prop, its type, and what it maps to — lives in the
+[API reference](/library/api#apollonprops). Passing `undefined` to a reactive
+prop leaves the live value alone; re-key the component to fully reset.
 
 ## Hooks
 
@@ -163,7 +119,7 @@ useApollonEditor(): ApollonEditor | null
 useApollonEditorOrThrow(): ApollonEditor
 useApollonSubscription<T>(
   subscribe: (editor: ApollonEditor, cb: (value: T) => void) => number,
-  initial: (editor: ApollonEditor) => T,
+  getSnapshot: (editor: ApollonEditor) => T,
 ): T | undefined
 ```
 
@@ -225,40 +181,5 @@ export default function Page() {
 Remix and Nuxt have equivalent client-only loading. See
 [Troubleshooting](/library/troubleshooting) for the full SSR guidance.
 
-## Imperative mounting — for full lifecycle control
-
-You do not need this for most apps. Reach for it when you want to own editor
-construction yourself — to decide exactly when the editor is created, to keep
-a long-lived `ApollonEditor` reference across renders, or to integrate with
-non-React lifecycle code.
-
-```tsx
-"use client"
-import { useEffect, useRef } from "react"
-import { ApollonEditor, UMLDiagramType } from "@tumaet/apollon/react"
-import "@tumaet/apollon/style.css"
-
-export function DiagramEditor() {
-  const containerRef = useRef<HTMLDivElement | null>(null)
-  const editorRef = useRef<ApollonEditor | null>(null)
-
-  useEffect(() => {
-    if (!containerRef.current) return
-
-    editorRef.current = new ApollonEditor(containerRef.current, {
-      type: UMLDiagramType.ClassDiagram,
-    })
-
-    return () => {
-      editorRef.current?.destroy()
-      editorRef.current = null
-    }
-  }, [])
-
-  return <div ref={containerRef} style={{ width: "100%", height: 600 }} />
-}
-```
-
-The same rules apply: import `ApollonEditor` from `@tumaet/apollon/react`, give
-the container an explicit height, and always `destroy()` on unmount before the
-container is removed.
+Non-React hosts that want imperative control mount `ApollonEditor` directly —
+see [Vanilla JS / CDN](/library/embedding/vanilla).

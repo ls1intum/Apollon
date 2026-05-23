@@ -73,7 +73,7 @@ const editor = new ApollonEditor(container)
 
 The stylesheet import is mandatory in both paths — without
 `@tumaet/apollon/style.css` the editor mounts unstyled. The constructor throws
-if `container` is not a real `HTMLElement`.
+if `container` is not an `HTMLElement`.
 
 ## What you should see
 

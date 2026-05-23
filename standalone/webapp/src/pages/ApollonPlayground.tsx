@@ -43,12 +43,9 @@ export const ApollonPlayground: React.FC = () => {
     }))
   )
 
-  // Reactive props — toggled live without rebuilding the editor.
   const [mode, setMode] = useState<ApollonMode>(ApollonMode.Modelling)
   const [readonly, setReadonly] = useState(false)
   const [scrollLock, setScrollLock] = useState(false)
-
-  // Initial-only props — changes force a remount via `mountKey`.
   const [diagramType, setDiagramType] = useState<UMLDiagramType>(
     diagram.model.type as UMLDiagramType
   )
@@ -63,7 +60,6 @@ export const ApollonPlayground: React.FC = () => {
     [highlightEnabled]
   )
 
-  // Remount when any snapshotted-at-mount input changes.
   const mountKey = useMemo(
     () => `${diagramType}|${highlightEnabled}|${debug}`,
     [diagramType, highlightEnabled, debug]
@@ -75,8 +71,7 @@ export const ApollonPlayground: React.FC = () => {
 
   const defaultModel = useMemo(
     () => ({ ...diagram.model, type: diagramType }),
-    // Snapshotted on mount alongside `mountKey`; reading the latest store
-    // value here is intentional so a remount picks up persisted edits.
+    // Intentional: re-read store on each remount keyed by mountKey.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [mountKey]
   )
@@ -188,7 +183,6 @@ export const ApollonPlayground: React.FC = () => {
       <Apollon
         key={mountKey}
         defaultModel={defaultModel}
-        defaultType={diagramType}
         availableViews={availableViews}
         debug={debug}
         mode={mode}

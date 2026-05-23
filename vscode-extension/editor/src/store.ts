@@ -1,10 +1,9 @@
 import { create } from "zustand"
-import { UMLModel } from "@tumaet/apollon/react"
-import { defaultEditorOptions, EditorOptions } from "./types"
+import type { UMLModel } from "@tumaet/apollon/react"
+import { defaultEditorOptions, type EditorOptions } from "./types"
 
 interface Store {
   model?: UMLModel
-  // Bumped on every loadDiagram message; used as <Apollon key=...> to force a remount.
   loadVersion: number
   options: EditorOptions
 }
