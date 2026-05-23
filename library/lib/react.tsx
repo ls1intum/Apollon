@@ -8,3 +8,9 @@
 // construction. Non-React hosts use the `ApollonEditor` class instead.
 export * from "./index"
 export { Apollon, type ApollonProps } from "./components/react/Apollon"
+export {
+  ApollonProvider,
+  useApollonEditor,
+  useApollonEditorOrThrow,
+} from "./components/react/context"
+export { useApollonSubscription } from "./components/react/useApollonSubscription"

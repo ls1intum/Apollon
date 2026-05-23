@@ -6,54 +6,73 @@ description: Embed Apollon in an Angular host using the default standalone bundl
 
 # Angular
 
-Use the **standalone subpath** (`@tumaet/apollon`). Angular hosts get the editor with **zero peer deps** to install — React is bundled inside the tarball.
+Use the **standalone subpath** (`@tumaet/apollon`). Angular hosts get the
+editor with **zero peer deps** to install — React is bundled inside the
+tarball.
 
 ```ts
 import {
   Component,
+  DestroyRef,
   ElementRef,
-  ViewChild,
-  AfterViewInit,
-  OnDestroy,
+  afterNextRender,
+  inject,
+  viewChild,
 } from "@angular/core"
-import {
-  ApollonEditor,
-  ApollonMode,
-  Locale,
-  UMLDiagramType,
-} from "@tumaet/apollon"
+import { ApollonEditor } from "@tumaet/apollon"
 import "@tumaet/apollon/style.css"
 
 @Component({
   selector: "app-diagram-editor",
-  standalone: true,
-  template: `<div #container style="width: 100%; height: 100%"></div>`,
+  template: `<div #host style="width: 100%; height: 100%"></div>`,
 })
-export class DiagramEditorComponent implements AfterViewInit, OnDestroy {
-  @ViewChild("container", { static: true })
-  containerRef!: ElementRef<HTMLDivElement>
+export class DiagramEditorComponent {
+  private host = viewChild.required<ElementRef<HTMLDivElement>>("host")
 
-  private editor?: ApollonEditor
-
-  ngAfterViewInit(): void {
-    this.editor = new ApollonEditor(this.containerRef.nativeElement, {
-      type: UMLDiagramType.ClassDiagram,
-      mode: ApollonMode.Modelling,
-      locale: Locale.en,
+  constructor() {
+    const destroyRef = inject(DestroyRef)
+    afterNextRender(() => {
+      const editor = new ApollonEditor(this.host().nativeElement)
+      destroyRef.onDestroy(() => editor.destroy())
     })
-  }
-
-  ngOnDestroy(): void {
-    this.editor?.destroy()
   }
 }
 ```
 
-The editor mounts its own React tree inside the `<div>` you give it. Your Angular code only sees the imperative API.
+The editor mounts its own React tree inside the `<div>` you give it. Your
+Angular code only sees the imperative API.
+
+## Why this shape (Angular 17.3+)
+
+- **`viewChild.required<…>(...)`** is the [signal-based view query](https://angular.dev/guide/components/queries) — a function you call to read the live `ElementRef`, statically guaranteed non-null with `.required`. It replaces the `@ViewChild` decorator.
+- **`afterNextRender(...)`** runs the callback once, after the first DOM commit, **and is a no-op during server-side rendering**. That removes the manual `isPlatformBrowser` guard and the wrong-hook choice of `ngAfterViewInit` for "after the DOM is painted." See [angular.dev — Side effects for non-reactive APIs](https://angular.dev/guide/signals/effect#:~:text=afterNextRender).
+- **`inject(DestroyRef).onDestroy(...)`** colocates teardown with setup — no class needs to implement the `OnDestroy` lifecycle interface. See [angular.dev — DestroyRef](https://angular.dev/api/core/DestroyRef).
+- **`standalone: true` is the Angular 19+ default**; on 17/18 add it back.
+- No `type`/`mode`/`locale` in the minimal example — those are the editor's defaults, so passing them is noise. Add them when you actually want a non-default diagram type or mode.
 
 The `<div>` must have an explicit height, or the editor renders blank — see
 [Troubleshooting](/library/troubleshooting).
 
-## SSR / Universal
+## Configuration
 
-The editor is client-only — it touches `window` at construction. Inside Angular Universal, guard with `isPlatformBrowser(this.platformId)` and construct only after hydration. See [Troubleshooting](/library/troubleshooting) for details.
+Pass options as the constructor's second argument:
+
+```ts
+import { ApollonEditor, ApollonMode, UMLDiagramType } from "@tumaet/apollon"
+
+new ApollonEditor(this.host().nativeElement, {
+  type: UMLDiagramType.BPMN,
+  mode: ApollonMode.Assessment,
+  collaborationEnabled: true,
+})
+```
+
+See the [API reference](/library/api) for the full `ApollonOptions` table and
+every imperative method on the `ApollonEditor` instance.
+
+## SSR / Angular Universal
+
+The editor is client-only — it touches `window` at construction.
+`afterNextRender` is already a no-op on the server, so the snippet above is
+SSR-safe by construction. (If you keep the older `ngAfterViewInit` shape,
+guard the call with `isPlatformBrowser(this.platformId)` instead.)

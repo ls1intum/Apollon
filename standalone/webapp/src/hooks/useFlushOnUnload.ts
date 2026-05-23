@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react"
-import type { UMLModel } from "@tumaet/apollon"
+import type { UMLModel } from "@tumaet/apollon/react"
 import { serverURL } from "@/constants"
 
 interface Options {

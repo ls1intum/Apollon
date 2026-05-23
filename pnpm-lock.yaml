@@ -468,6 +468,9 @@ importers:
       '@tumaet/apollon':
         specifier: workspace:*
         version: link:../../library
+      '@xyflow/react':
+        specifier: 'catalog:'
+        version: 12.3.6(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       capacitor-plugin-safe-area:
         specifier: 4.0.0
         version: 4.0.0(@capacitor/core@8.3.0)

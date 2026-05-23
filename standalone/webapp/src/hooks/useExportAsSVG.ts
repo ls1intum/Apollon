@@ -1,4 +1,4 @@
-import type { SvgExportMode } from "@tumaet/apollon"
+import type { SvgExportMode } from "@tumaet/apollon/react"
 import { useFileDownload } from "./useFileDownload"
 import { useEditorContext } from "@/contexts"
 import { log } from "@/logger"

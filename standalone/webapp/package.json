@@ -43,6 +43,7 @@
     "@mui/material": "catalog:",
     "@tailwindcss/vite": "catalog:",
     "@tumaet/apollon": "workspace:*",
+    "@xyflow/react": "catalog:",
     "capacitor-plugin-safe-area": "4.0.0",
     "clsx": "catalog:",
     "jspdf": "4.2.1",

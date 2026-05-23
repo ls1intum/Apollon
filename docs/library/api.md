@@ -37,29 +37,69 @@ documented below remains the API for non-React hosts and for advanced control.
 
 ## `<Apollon>` React component
 
-For React hosts, `<Apollon>` wraps `ApollonEditor` and owns its lifecycle:
-it constructs the editor on mount and destroys it on unmount. Import it from
-the `@tumaet/apollon/react` subpath — see [React](/library/embedding/react).
+For React hosts, `<Apollon>` wraps `ApollonEditor` and owns its lifecycle: it
+constructs the editor on mount and destroys it on unmount. Import it from the
+`@tumaet/apollon/react` subpath — see [React](/library/embedding/react) for
+the full integration story (hooks, provider, ref, controlled-model overlay).
 
 ```tsx
-import { Apollon, UMLDiagramType } from "@tumaet/apollon/react"
+import { Apollon } from "@tumaet/apollon/react"
 import "@tumaet/apollon/style.css"
-
-;<Apollon type={UMLDiagramType.ClassDiagram} style={{ height: 600 }} />
+;<Apollon style={{ height: 600 }} />
 ```
 
 ### `ApollonProps`
 
-`ApollonProps` extends [`ApollonOptions`](#apollonoptions): every field in that
-table is accepted directly as a prop. Those props are **initial values** — they
-are read once at mount, and changing them afterwards does not update the live
-editor. Plus three component-only props:
+Container, lifecycle, and two layers of editor options.
 
-| Prop        | Type                              | Purpose                                                                                                             |
-| ----------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `style`     | `CSSProperties`                   | Inline styles for the editor's container `<div>`. Needs an explicit, non-zero height or the canvas renders blank.   |
-| `className` | `string`                          | Class name for the editor's container `<div>`.                                                                      |
-| `onReady`   | `(editor: ApollonEditor) => void` | Called once after mount with the underlying `ApollonEditor` instance. Use it to drive the live editor imperatively. |
+**Container.** `className`, `style` (needs an explicit non-zero height), and
+`children` rendered alongside the canvas inside the editor's context
+provider.
+
+**Initial-only options** — snapshotted at mount, ignored if they change
+afterwards. Re-key the component to apply them to a new editor.
+
+| Prop                   | Type             | Effect                                                          |
+| ---------------------- | ---------------- | --------------------------------------------------------------- |
+| `defaultModel`         | `UMLModel`       | Initial diagram.                                                |
+| `defaultType`          | `UMLDiagramType` | Initial diagram type when no `defaultModel` is supplied.        |
+| `defaultMode`          | `ApollonMode`    | Initial mode — `Modelling`, `Assessment`, or `Exporting`.       |
+| `defaultView`          | `ApollonView`    | Initial view.                                                   |
+| `availableViews`       | `ApollonView[]`  | Views the user may switch between at runtime.                   |
+| `enablePopups`         | `boolean`        | Enable inline edit/property popovers.                           |
+| `collaborationEnabled` | `boolean`        | Opt into Yjs real-time sync; wire the transport from `onMount`. |
+| `locale`               | `Locale`         | Accepted for forward compatibility; editor renders in English.  |
+| `debug`                | `boolean`        | Debug overlays/logging.                                         |
+
+**Reactive options** — applied via the matching setter when the prop
+changes; no rebuild. `undefined` resets boolean toggles to `false`; for
+typed-enum / object props it means "leave the live value alone".
+
+| Prop          | Type          | Maps to                                     |
+| ------------- | ------------- | ------------------------------------------- |
+| `readonly`    | `boolean`     | `editor.setReadonly(value)`                 |
+| `view`        | `ApollonView` | `editor.view = value`                       |
+| `mode`        | `ApollonMode` | `editor.setMode(value)`                     |
+| `scrollLock`  | `boolean`     | `editor.setScrollLock(value)`               |
+| `previewMode` | `boolean`     | `editor.setPreviewMode(value)`              |
+| `model`       | `UMLModel`    | `editor.model = value` — controlled overlay |
+
+**Lifecycle.**
+
+| Prop              | Type                               | Purpose                                                                                |
+| ----------------- | ---------------------------------- | -------------------------------------------------------------------------------------- |
+| `onMount`         | `(editor) => void \| (() => void)` | Fires once after mount. The optional returned function runs as cleanup before destroy. |
+| `onBeforeDestroy` | `(editor) => void`                 | Fires once right before destroy — last chance to read state.                           |
+| `ref`             | `Ref<ApollonEditor \| null>`       | Receives the editor after mount; nulled on unmount.                                    |
+
+### Hooks
+
+| Hook                                            | Returns                 | Purpose                                                       |
+| ----------------------------------------------- | ----------------------- | ------------------------------------------------------------- |
+| `useApollonEditor()`                            | `ApollonEditor \| null` | The editor for the nearest `<Apollon>` / `<ApollonProvider>`. |
+| `useApollonEditorOrThrow()`                     | `ApollonEditor`         | Same, but throws if no editor is mounted.                     |
+| `useApollonSubscription<T>(subscribe, initial)` | `T \| undefined`        | Subscribe to any `editor.subscribeTo*` channel with one call. |
+| `<ApollonProvider editor={...}>`                | —                       | Supply an externally-owned editor to descendants via context. |
 
 ## Constructor
 

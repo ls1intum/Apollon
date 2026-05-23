@@ -525,6 +525,16 @@ export class ApollonEditor {
     }
   }
 
+  /** Live-toggle modeling vs assessment vs exporting mode. */
+  public setMode(mode: Apollon.ApollonMode): void {
+    this.metadataStore.getState().setMode(mode)
+  }
+
+  /** Live-toggle whether the canvas captures page scroll. */
+  public setScrollLock(scrollLock: boolean): void {
+    this.metadataStore.getState().setScrollLock(scrollLock)
+  }
+
   /**
    * Toggle preview-overlay mode. When `true`, subsequent `model = …`
    * assignments and other store mutators update the local Zustand caches

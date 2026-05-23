@@ -6,7 +6,7 @@ import {
   Locale,
   UMLDiagramType,
   ApollonOptions,
-} from "@tumaet/apollon"
+} from "@tumaet/apollon/react"
 import { useEditorContext } from "@/contexts"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import {

@@ -1,9 +1,4 @@
-import {
-  Apollon,
-  ApollonMode,
-  Locale,
-  UMLDiagramType,
-} from "@tumaet/apollon/react"
+import { Apollon } from "@tumaet/apollon/react"
 import "@tumaet/apollon/style.css"
 
 /**
@@ -16,14 +11,11 @@ import "@tumaet/apollon/style.css"
  *
  * Wrap in `<BrowserOnly>` at the call site: the editor touches `window`,
  * which would crash Docusaurus's SSR pre-render pass.
+ *
+ * No props beyond the class name: every editor option (`type`, `mode`,
+ * `locale`) defaults to the values shown here, so the explicit overrides
+ * were noise.
  */
 export default function ApollonEmbed() {
-  return (
-    <Apollon
-      type={UMLDiagramType.ClassDiagram}
-      mode={ApollonMode.Modelling}
-      locale={Locale.en}
-      className="apollon-embed-frame"
-    />
-  )
+  return <Apollon className="apollon-embed-frame" />
 }

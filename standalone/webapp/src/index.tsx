@@ -5,7 +5,7 @@ import { log } from "./logger"
 import {
   setLogger as setApollonLogger,
   setLogLevel as setApollonLogLevel,
-} from "@tumaet/apollon"
+} from "@tumaet/apollon/react"
 import { StatusBar } from "@capacitor/status-bar"
 
 const rootElement = document.getElementById("root")

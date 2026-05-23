@@ -11,63 +11,53 @@ import styles from "./index.module.css"
 const HOSTED_URL = "https://apollon.aet.cit.tum.de"
 
 // Minimal "mount the editor" snippets per framework — exactly what the live
-// editor on the right is rendered with, in its native idiom for each host.
-const REACT_SNIPPET = `import { Apollon, UMLDiagramType } from "@tumaet/apollon/react"
+// editor on the right is rendered with, in each host's current best-practice
+// idiom (React 18+/19, Angular 17.3+/20, ESM via esm.sh).
+const REACT_SNIPPET = `import { Apollon } from "@tumaet/apollon/react"
 import "@tumaet/apollon/style.css"
 
 export function Diagram() {
-  return (
-    <Apollon
-      type={UMLDiagramType.ClassDiagram}
-      style={{ height: 600 }}
-    />
-  )
+  return <Apollon style={{ height: 600 }} />
 }`
 
 const ANGULAR_SNIPPET = `import {
   Component,
+  DestroyRef,
   ElementRef,
-  ViewChild,
-  AfterViewInit,
-  OnDestroy,
+  afterNextRender,
+  inject,
+  viewChild,
 } from "@angular/core"
-import { ApollonEditor, UMLDiagramType } from "@tumaet/apollon"
+import { ApollonEditor } from "@tumaet/apollon"
 import "@tumaet/apollon/style.css"
 
 @Component({
   selector: "app-diagram",
   template: \`<div #host style="height: 600px"></div>\`,
 })
-export class DiagramComponent implements AfterViewInit, OnDestroy {
-  @ViewChild("host") host!: ElementRef<HTMLDivElement>
-  private editor?: ApollonEditor
+export class DiagramComponent {
+  private host = viewChild.required<ElementRef<HTMLDivElement>>("host")
 
-  ngAfterViewInit() {
-    this.editor = new ApollonEditor(this.host.nativeElement, {
-      type: UMLDiagramType.ClassDiagram,
+  constructor() {
+    const destroyRef = inject(DestroyRef)
+    afterNextRender(() => {
+      const editor = new ApollonEditor(this.host().nativeElement)
+      destroyRef.onDestroy(() => editor.destroy())
     })
-  }
-
-  ngOnDestroy() {
-    this.editor?.destroy()
   }
 }`
 
 const VANILLA_SNIPPET = `<link
   rel="stylesheet"
-  href="https://unpkg.com/@tumaet/apollon@4/dist/assets/style.css"
+  href="https://esm.sh/@tumaet/apollon@4.4.0/style.css"
 />
-<div id="apollon" style="height: 600px"></div>
+<div id="apollon" style="width: 100%; height: 600px"></div>
 
 <script type="module">
-  import {
-    ApollonEditor,
-    UMLDiagramType,
-  } from "https://unpkg.com/@tumaet/apollon@4"
+  import { ApollonEditor } from "https://esm.sh/@tumaet/apollon@4.4.0"
 
-  new ApollonEditor(document.getElementById("apollon"), {
-    type: UMLDiagramType.ClassDiagram,
-  })
+  const editor = new ApollonEditor(document.getElementById("apollon"))
+  // Keep \`editor\` to call editor.destroy() / subscribe(...) later.
 </script>`
 
 function Hero() {
