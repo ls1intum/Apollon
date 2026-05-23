@@ -137,10 +137,7 @@ export function getStubExit(
 
 export function getBendHandlePosition(
   points: IPoint[],
-  segmentIndex: number,
-  _sourcePosition: Position,
-  _targetPosition: Position,
-  _stubLength: number
+  segmentIndex: number
 ): IPoint {
   const totalPoints = points.length
   if (totalPoints < 2) return { x: 0, y: 0 }
@@ -171,13 +168,7 @@ export function getBendableSegments(
     if (isLengthEditableAtZoom(effectiveLength, minLength, zoom)) {
       handles.push({
         segmentIndex: i,
-        position: getBendHandlePosition(
-          collapsed,
-          i,
-          sourcePosition,
-          targetPosition,
-          stubLength
-        ),
+        position: getBendHandlePosition(collapsed, i),
         orientation: getSegmentOrientation(collapsed, i),
         kind: getSegmentKind(i, collapsed.length),
       })

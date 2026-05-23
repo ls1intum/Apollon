@@ -4,14 +4,19 @@ import {
   transformEdges,
   validateEdgeMigration,
 } from "@/services/migration/EdgeTransformer"
-import type { ApollonEdge, UMLModel } from "@/typings"
+import {
+  UMLDiagramType,
+  type ApollonEdge,
+  type DiagramEdgeType,
+  type UMLModel,
+} from "@/typings"
 
 function makeLegacyEdge(overrides: Partial<ApollonEdge> = {}): ApollonEdge {
   return {
     id: "edge-1",
     source: "node-1",
     target: "node-2",
-    type: "ClassUnidirectional" as any,
+    type: "ClassUnidirectional" as DiagramEdgeType,
     sourceHandle: "right",
     targetHandle: "left",
     data: {
@@ -37,7 +42,7 @@ function makeModel(edges: ApollonEdge[]): UMLModel {
     version: "4.0.0",
     id: "test-model",
     title: "Test",
-    type: "ClassDiagram" as any,
+    type: UMLDiagramType.ClassDiagram,
     nodes: [],
     edges,
     assessments: {},

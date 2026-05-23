@@ -25,8 +25,6 @@ import {
   isPathOrthogonal,
   isPathObstacleFree,
   fallbackPath,
-  astarOnOVG,
-  BEND_PENALTY,
 } from "@/utils/geometry/AStarRouter"
 
 // ---------------------------------------------------------------------------

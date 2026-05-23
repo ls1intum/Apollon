@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { orthogonalEdgePropsAreEqual } from "@/store/memoization"
-import type { EdgeProps } from "@xyflow/react"
+import { Position, type EdgeProps } from "@xyflow/react"
 
 function makeEdgeProps(overrides: Partial<EdgeProps> = {}): EdgeProps {
   return {
@@ -11,8 +11,8 @@ function makeEdgeProps(overrides: Partial<EdgeProps> = {}): EdgeProps {
     sourceY: 200,
     targetX: 300,
     targetY: 400,
-    sourcePosition: "right" as any,
-    targetPosition: "left" as any,
+    sourcePosition: Position.Right,
+    targetPosition: Position.Left,
     sourceHandleId: "handle1",
     targetHandleId: "handle2",
     selected: false,

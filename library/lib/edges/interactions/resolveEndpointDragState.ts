@@ -14,6 +14,7 @@ import { getHandleAnchor } from "@/utils/edgeUtils"
 import { getPositionOnCanvas } from "@/utils/nodeUtils"
 import { buildEdgeObstacleSet } from "@/utils/geometry/edgeObstacles"
 import type { BBox } from "@/utils/geometry/OrthogonalVisibilityGraph"
+import type { Node } from "@xyflow/react"
 import type { IPoint } from "../types"
 
 export type FoundHandle = { nodeId: string; handleId: string }
@@ -43,7 +44,7 @@ export type ResolveEndpointDragParams = {
   clientX: number
   clientY: number
   /** All nodes — used both for handle-anchor lookup and the obstacle set. */
-  nodes: any[]
+  nodes: Node[]
   /** The edge's persisted source node id (used if no new handle is found). */
   sourceNodeId: string | undefined | null
   /** The edge's persisted target node id (used if no new handle is found). */
@@ -74,9 +75,9 @@ export function resolveEndpointDragState(
 
   const { handle, node } = findBestHandleAtClientPosition(clientX, clientY)
   if (node && handle) {
-    const internalNode = nodes.find((n: any) => n.id === node.id)
+    const internalNode = nodes.find((n) => n.id === node.id)
     if (internalNode) {
-      const absPos = getPositionOnCanvas(internalNode as any, nodes as any)
+      const absPos = getPositionOnCanvas(internalNode, nodes)
       const anchor = getHandleAnchor(
         {
           x: absPos.x,

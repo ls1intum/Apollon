@@ -1,7 +1,8 @@
-import React from "react"
 import { render } from "@testing-library/react"
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { OrthogonalEdge } from "@/edges/OrthogonalEdge"
+import { Position } from "@xyflow/react"
+import type { ReactNode } from "react"
 
 vi.mock("@xyflow/react", () => ({
   useReactFlow: () => ({
@@ -31,13 +32,14 @@ vi.mock("@/store/context", async (importOriginal) => {
     setConnectionGuidanceTarget: vi.fn(),
     stopConnectionGuidance: vi.fn(),
   }
+  type Selector<TState> = (state: TState) => unknown
   return {
     ...actual,
-    useDiagramStore: (selector?: any) =>
+    useDiagramStore: (selector?: Selector<typeof diagramState>) =>
       typeof selector === "function" ? selector(diagramState) : diagramState,
-    usePopoverStore: (selector?: any) =>
+    usePopoverStore: (selector?: Selector<typeof popoverState>) =>
       typeof selector === "function" ? selector(popoverState) : popoverState,
-    useMetadataStore: (selector?: any) =>
+    useMetadataStore: (selector?: Selector<typeof metadataState>) =>
       typeof selector === "function" ? selector(metadataState) : metadataState,
   }
 })
@@ -47,7 +49,7 @@ const routingMock = {
 }
 
 vi.mock("@/store/routingStore", () => ({
-  useRoutingStore: (selector?: any) => {
+  useRoutingStore: (selector?: (state: typeof routingMock) => unknown) => {
     return typeof selector === "function" ? selector(routingMock) : routingMock
   },
 }))
@@ -69,15 +71,13 @@ vi.mock("@/edges/GenericEdge", async (importOriginal) => {
 })
 
 vi.mock("@/components/wrapper/AssessmentSelectableWrapper", () => ({
-  AssessmentSelectableWrapper: ({
-    children,
-  }: {
-    children: React.ReactNode
-  }) => <g>{children}</g>,
+  AssessmentSelectableWrapper: ({ children }: { children: ReactNode }) => (
+    <g>{children}</g>
+  ),
 }))
 
 vi.mock("@/components/wrapper/FeedbackDropzone", () => ({
-  FeedbackDropzone: ({ children }: { children: React.ReactNode }) => (
+  FeedbackDropzone: ({ children }: { children: ReactNode }) => (
     <g>{children}</g>
   ),
 }))
@@ -95,8 +95,8 @@ describe("OrthogonalEdge Component", () => {
     sourceY: 0,
     targetX: 0,
     targetY: 0,
-    sourcePosition: "right" as any,
-    targetPosition: "left" as any,
+    sourcePosition: Position.Right,
+    targetPosition: Position.Left,
   }
 
   it("returns null if less than 2 points are provided", () => {

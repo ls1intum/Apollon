@@ -1,20 +1,29 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { renderHook, act } from "@testing-library/react"
+import type { Point } from "@/utils/geometry/OrthogonalVisibilityGraph"
 
-const calculateRouteMock = vi.fn<any, any>()
-const diagramState: { nodes: any[] } = { nodes: [] }
+type TestNode = {
+  id: string
+  position: { x: number; y: number }
+  measured?: { width: number; height: number }
+}
+
+const calculateRouteMock = vi.fn()
+const diagramState: { nodes: TestNode[] } = { nodes: [] }
 
 vi.mock("@/store", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/store")>()
+  type DiagramSelector = (state: typeof diagramState) => unknown
   return {
     ...actual,
-    useDiagramStore: (selector: any) => selector(diagramState),
+    useDiagramStore: (selector: DiagramSelector) => selector(diagramState),
   }
 })
 
 vi.mock("@/store/routingStore", () => ({
-  useRoutingStore: (selector: any) =>
-    selector({ calculateRoute: calculateRouteMock }),
+  useRoutingStore: (
+    selector: (state: { calculateRoute: typeof calculateRouteMock }) => unknown
+  ) => selector({ calculateRoute: calculateRouteMock }),
 }))
 
 import { useOrthogonalRoute } from "@/edges/interactions/useOrthogonalRoute"
@@ -45,7 +54,7 @@ describe("useOrthogonalRoute", () => {
       },
     ]
 
-    let resolveRoute: (path: any) => void = () => {}
+    let resolveRoute: (path: Point[]) => void = () => {}
     calculateRouteMock.mockImplementation(
       () =>
         new Promise((resolve) => {

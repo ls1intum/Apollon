@@ -11,6 +11,8 @@ let workerInstance: Worker | null = null
 let msgIdCounter = 0
 let workerLeaseCount = 0
 const pendingRequests = new Map<string, Pending>()
+type HotModule = { dispose: (callback: () => void) => void }
+type HotImportMeta = ImportMeta & { hot?: HotModule }
 
 function getWorker() {
   return new Worker(new URL("../workers/routing.worker.ts", import.meta.url), {
@@ -65,8 +67,9 @@ export function retainRoutingWorker(): () => void {
 }
 
 // Vite HMR: tear down the worker so pending promises don't leak across reloads.
-if (typeof import.meta !== "undefined" && (import.meta as any).hot) {
-  ;(import.meta as any).hot.dispose(() => {
+const hot = (import.meta as HotImportMeta).hot
+if (hot) {
+  hot.dispose(() => {
     terminateWorker()
   })
 }

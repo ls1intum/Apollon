@@ -19,6 +19,8 @@ import { useReconnect, useToolbar } from "@/hooks"
 import { getCustomColorsFromDataForEdge } from "@/utils"
 import { orthogonalEdgePropsAreEqual } from "@/store/memoization"
 import { IPoint } from "./types"
+import type { DiagramStore } from "@/store/diagramStore"
+import type { PopoverStore } from "@/store/popoverStore"
 
 export type OrthogonalEdgeProps = Omit<ExtendedEdgeProps, "data"> & {
   data: OrthogonalEdgeData
@@ -98,12 +100,12 @@ const OrthogonalEdgeInner: React.FC<OrthogonalEdgeProps> = ({
   const { getEdges } = useReactFlow()
   const isDiagramModifiable = useDiagramModifiable()
   const assessments = useDiagramStore(
-    useShallow((s: any) => s.assessments)
-  ) as Record<string, any>
+    useShallow((s: DiagramStore) => s.assessments)
+  )
   const setEdges = useDiagramStore((s) => s.setEdges)
   const setPopOverElementId = usePopoverStore(
-    useShallow((s: any) => s.setPopOverElementId)
-  ) as (id: string) => void
+    useShallow((s: PopoverStore) => s.setPopOverElementId)
+  )
 
   const { pointsList } = getFallbackPoints(data)
   const [committedRoute, setCommittedRoute] = useState<IPoint[] | undefined>()

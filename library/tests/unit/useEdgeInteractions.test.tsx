@@ -1,9 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { renderHook, act } from "@testing-library/react"
+import type { PointerEvent as ReactPointerEvent } from "react"
 
-const calculateRouteMock = vi.fn<any, any>()
-const findHandleMock = vi.fn<any, any>()
-const diagramState: { nodes: any[] } = { nodes: [] }
+type TestNode = {
+  id: string
+  position: { x: number; y: number }
+  measured?: { width: number; height: number }
+}
+
+const calculateRouteMock = vi.fn()
+const findHandleMock = vi.fn()
+const diagramState: { nodes: TestNode[] } = { nodes: [] }
 const metadataActions = {
   startConnectionGuidance: vi.fn(),
   setConnectionGuidanceTarget: vi.fn(),
@@ -25,15 +32,19 @@ vi.mock("@xyflow/react", async (importOriginal) => {
 
 vi.mock("@/store", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/store")>()
+  type DiagramSelector = (state: typeof diagramState) => unknown
+  type MetadataSelector = (state: typeof metadataActions) => unknown
   return {
     ...actual,
-    useDiagramStore: (selector: any) => selector(diagramState),
-    useMetadataStore: (selector: any) => selector(metadataActions),
+    useDiagramStore: (selector: DiagramSelector) => selector(diagramState),
+    useMetadataStore: (selector: MetadataSelector) => selector(metadataActions),
   }
 })
 
 vi.mock("@/store/routingStore", () => ({
-  useRoutingStore: (selector?: any) => {
+  useRoutingStore: (
+    selector?: (state: { calculateRoute: typeof calculateRouteMock }) => unknown
+  ) => {
     const state = { calculateRoute: calculateRouteMock }
     return typeof selector === "function" ? selector(state) : state
   },
@@ -62,7 +73,7 @@ function makePointerDownEvent(clientX: number, clientY: number) {
     target: {
       setPointerCapture: vi.fn(),
     } as unknown as Element,
-  } as unknown as React.PointerEvent<SVGElement>
+  } as unknown as ReactPointerEvent<SVGElement>
 }
 
 describe("useEdgeInteractions — endpoint drag final-route contract", () => {
@@ -126,7 +137,10 @@ describe("useEdgeInteractions — endpoint drag final-route contract", () => {
 
     // Simulate the release event at clientX=240 ("other" region).
     await act(async () => {
-      const upEvent = new Event("pointerup") as any
+      const upEvent = new Event("pointerup") as Event & {
+        clientX: number
+        clientY: number
+      }
       upEvent.clientX = 240
       upEvent.clientY = 230
       window.dispatchEvent(upEvent)
@@ -171,7 +185,10 @@ describe("useEdgeInteractions — endpoint drag final-route contract", () => {
     })
 
     await act(async () => {
-      const upEvent = new Event("pointerup") as any
+      const upEvent = new Event("pointerup") as Event & {
+        clientX: number
+        clientY: number
+      }
       upEvent.clientX = 999
       upEvent.clientY = 999
       window.dispatchEvent(upEvent)

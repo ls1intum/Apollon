@@ -47,7 +47,7 @@ describe("resolveEndpointDragState", () => {
       targetNodeId: "tgt",
       findBestHandleAtClientPosition: () => ({
         handle: "left",
-        node: { id: "tgt" } as any,
+        node: { id: "tgt" },
       }),
     })
 
@@ -75,7 +75,7 @@ describe("resolveEndpointDragState", () => {
       targetNodeId: "tgt",
       findBestHandleAtClientPosition: () => ({
         handle: "right",
-        node: { id: "blocker" } as any,
+        node: { id: "blocker" },
       }),
     })
 

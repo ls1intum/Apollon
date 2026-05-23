@@ -481,7 +481,6 @@ export function useEdgeInteractions(
     }
     // Only re-install the listeners when the drag starts/stops; pointer
     // position and node updates feed through refs.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.value, edgeId])
 
   return {

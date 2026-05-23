@@ -16,13 +16,21 @@
 
 import type { EdgeProps } from "@xyflow/react"
 
+type PointLike = { x: number; y: number }
+type EdgeMemoData = {
+  routingMode?: unknown
+  userWaypoints?: PointLike[]
+  points?: PointLike[]
+  [key: string]: unknown
+}
+
 /**
  * Shallow array comparison for point arrays.
  * Returns true if both arrays have the same length and all {x, y} pairs match.
  */
 function pointArraysEqual(
-  a: Array<{ x: number; y: number }> | undefined,
-  b: Array<{ x: number; y: number }> | undefined
+  a: PointLike[] | undefined,
+  b: PointLike[] | undefined
 ): boolean {
   if (a === b) return true
   if (!a || !b) return a === b
@@ -67,8 +75,8 @@ export function orthogonalEdgePropsAreEqual(
   if (prev.markerStart !== next.markerStart) return false
 
   // Data deep comparison (only the fields we care about)
-  const prevData = prev.data as Record<string, any> | undefined
-  const nextData = next.data as Record<string, any> | undefined
+  const prevData = prev.data as EdgeMemoData | undefined
+  const nextData = next.data as EdgeMemoData | undefined
 
   if (prevData !== nextData) {
     if (!prevData || !nextData) return false
@@ -108,8 +116,8 @@ export function orthogonalEdgePropsAreEqual(
     if (prevStyleKeys.length !== nextStyleKeys.length) return false
     for (const key of prevStyleKeys) {
       if (
-        (prev.style as Record<string, any>)[key] !==
-        (next.style as Record<string, any>)[key]
+        (prev.style as Record<string, unknown>)[key] !==
+        (next.style as Record<string, unknown>)[key]
       )
         return false
     }

@@ -124,12 +124,12 @@ self.onmessage = (e: MessageEvent<RouteRequest>) => {
       edgeId,
       path: finalPath,
     } as RouteResponse)
-  } catch (err: any) {
+  } catch (err: unknown) {
     self.postMessage({
       msgId,
       edgeId,
       path: [],
-      error: err?.message ?? String(err),
+      error: err instanceof Error ? err.message : String(err),
     } as RouteResponse)
   }
 }
