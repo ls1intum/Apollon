@@ -16,12 +16,10 @@ Apollon ships as an npm library that any framework can embed. The public API is 
 
 ## Two builds, one API
 
-| Subpath                       | React / MUI / emotion / xyflow | Bundle                                  | When to use                                                                                                                                                                          |
-| ----------------------------- | ------------------------------ | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `@tumaet/apollon` _(default)_ | bundled                        | ~258 KB entry + ~2.1 MB lazy Yjs chunk¹ | Any framework that doesn't already have React installed — Angular (the primary use case for [Artemis](https://artemis.tum.de/)), Vue, Svelte, vanilla JS. Zero peer deps to install. |
-| `@tumaet/apollon/react`       | externalized                   | ~875 KB                                 | React 18.3 hosts that want to share their React instance with the editor and dedupe the bundle.                                                                                      |
-
-¹ The Yjs sync layer is lazy-loaded only when `collaborationEnabled: true`.
+| Subpath                       | React / MUI / emotion / xyflow | Bundle  | When to use                                                                                                                                                                          |
+| ----------------------------- | ------------------------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@tumaet/apollon` _(default)_ | bundled                        | ~2.4 MB | Any framework that doesn't already have React installed — Angular (the primary use case for [Artemis](https://artemis.tum.de/)), Vue, Svelte, vanilla JS. Zero peer deps to install. |
+| `@tumaet/apollon/react`       | externalized                   | ~875 KB | React 18.3 hosts that want to share their React instance with the editor and dedupe the bundle.                                                                                      |
 
 `peerDependenciesMeta.optional` covers all six peers — `npm install @tumaet/apollon` never warns about missing React.
 

@@ -9,12 +9,10 @@ Embeddable UML modeling editor. Mounts into any DOM node — works inside Angula
 
 The package ships two builds with identical APIs:
 
-| Subpath                       | React / MUI / emotion / xyflow | Bundle                                  | Use when                                                                                          |
-| ----------------------------- | ------------------------------ | --------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `@tumaet/apollon` _(default)_ | bundled                        | ~258 KB entry + ~2.1 MB lazy Yjs chunk¹ | Your host is Angular, Vue, Svelte, vanilla JS, or any framework that doesn't already have React.  |
-| `@tumaet/apollon/react`       | externalized (peer deps)       | ~875 KB                                 | Your host is React 18.3 and you want the editor to share React with your app instead of bundling. |
-
-¹ The Yjs sync layer is lazy-loaded only when `collaborationEnabled: true`.
+| Subpath                       | React / MUI / emotion / xyflow | Bundle  | Use when                                                                                          |
+| ----------------------------- | ------------------------------ | ------- | ------------------------------------------------------------------------------------------------- |
+| `@tumaet/apollon` _(default)_ | bundled                        | ~2.4 MB | Your host is Angular, Vue, Svelte, vanilla JS, or any framework that doesn't already have React.  |
+| `@tumaet/apollon/react`       | externalized (peer deps)       | ~875 KB | Your host is React 18.3 and you want the editor to share React with your app instead of bundling. |
 
 ### Standalone build (any framework, no peer deps)
 
