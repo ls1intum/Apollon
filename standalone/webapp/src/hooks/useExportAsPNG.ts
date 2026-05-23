@@ -2,10 +2,15 @@ import { SVG } from "@tumaet/apollon"
 import { useFileDownload } from "./useFileDownload"
 import { useEditorContext } from "@/contexts"
 import { log } from "@/logger"
+import { isPlatform } from "@ionic/react"
+import { Filesystem, Directory } from "@capacitor/filesystem"
+import { Share } from "@capacitor/share"
 
 type exportAsPNGOptions = {
   setWhiteBackground: boolean
+  shareAfterExport?: boolean
 }
+
 export const useExportAsPNG = () => {
   const { editor } = useEditorContext()
   const downloadFile = useFileDownload()
@@ -24,11 +29,43 @@ export const useExportAsPNG = () => {
     )
     const fileName = `${editor.model.title}.png`
 
-    const fileToDownload = new File([pngBlob], fileName, {
-      type: "image/png",
-    })
+    if (isPlatform("ios") || isPlatform("android")) {
+      try {
+        // Convert blob to base64
+        const base64String = await blobToBase64(pngBlob)
 
-    downloadFile({ file: fileToDownload, fileName })
+        // Save PNG to cache - Capacitor will handle base64 data properly
+        await Filesystem.writeFile({
+          path: fileName,
+          data: base64String,
+          directory: Directory.Cache,
+        })
+
+        // Get the file URI
+        const fileUri = await Filesystem.getUri({
+          path: fileName,
+          directory: Directory.Cache,
+        })
+
+        // Always open share sheet on iOS to allow saving to Files
+        await Share.share({
+          title: "Export PNG",
+          url: fileUri.uri,
+          dialogTitle: "Save PNG to Files",
+        })
+
+        log.debug("PNG export initiated on iOS")
+      } catch (error) {
+        log.error("Failed to export PNG on iOS", error as Error)
+      }
+    } else {
+      // Web download
+      const fileToDownload = new File([pngBlob], fileName, {
+        type: "image/png",
+      })
+
+      downloadFile({ file: fileToDownload, fileName })
+    }
   }
 
   return exportAsPNG
@@ -46,8 +83,9 @@ function convertRenderedSVGToPNG(
     const canvasWidth = width * scale + margin * 2
     const canvasHeight = height * scale + margin * 2
 
-    const blob = new Blob([renderedSVG.svg], { type: "image/svg+xml" })
-    const blobUrl = URL.createObjectURL(blob)
+    // Use data URL instead of blob URL for iOS compatibility
+    const svgString = encodeURIComponent(renderedSVG.svg)
+    const dataUrl = `data:image/svg+xml,${svgString}`
 
     const image = new Image()
     image.width = width
@@ -69,7 +107,6 @@ function convertRenderedSVGToPNG(
       context.drawImage(image, margin, margin)
 
       canvas.toBlob((blob) => {
-        URL.revokeObjectURL(blobUrl)
         resolve(blob as Blob)
       })
     }
@@ -77,6 +114,18 @@ function convertRenderedSVGToPNG(
     image.onerror = (error) => {
       reject(error)
     }
-    image.src = blobUrl
+    image.src = dataUrl
+  })
+}
+
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      const base64String = (reader.result as string).split(",")[1]
+      resolve(base64String)
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(blob)
   })
 }

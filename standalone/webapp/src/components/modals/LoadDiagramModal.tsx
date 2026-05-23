@@ -29,8 +29,8 @@ export const LoadDiagramModal = () => {
 
   const handleLoadingDiagram = (id: string) => {
     setCurrentModelId(id)
-    navigate("/")
     closeModal()
+    navigate("/")
   }
 
   const handleDeleteDiagram = (id: string) => {
