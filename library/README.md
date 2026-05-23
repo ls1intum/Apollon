@@ -9,10 +9,10 @@ Embeddable UML modeling editor. Mounts into any DOM node — works inside Angula
 
 The package ships two builds with identical APIs:
 
-| Subpath                       | React / MUI / emotion / xyflow | Bundle                                  | Use when                                                                                                |
-| ----------------------------- | ------------------------------ | --------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `@tumaet/apollon` _(default)_ | bundled                        | ~258 KB entry + ~2.1 MB lazy Yjs chunk¹ | Your host is Angular, Vue, Svelte, vanilla JS, or any framework that doesn't already have React.        |
-| `@tumaet/apollon/react`       | externalized (peer deps)       | ~875 KB                                 | Your host is React 18.3+ / 19 and you want the editor to share React with your app instead of bundling. |
+| Subpath                       | React / MUI / emotion / xyflow | Bundle                                  | Use when                                                                                          |
+| ----------------------------- | ------------------------------ | --------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `@tumaet/apollon` _(default)_ | bundled                        | ~258 KB entry + ~2.1 MB lazy Yjs chunk¹ | Your host is Angular, Vue, Svelte, vanilla JS, or any framework that doesn't already have React.  |
+| `@tumaet/apollon/react`       | externalized (peer deps)       | ~875 KB                                 | Your host is React 18.3 and you want the editor to share React with your app instead of bundling. |
 
 ¹ The Yjs sync layer is lazy-loaded only when `collaborationEnabled: true`.
 
@@ -42,7 +42,7 @@ import { Apollon } from "@tumaet/apollon/react"
 import "@tumaet/apollon/style.css"
 ```
 
-Peer ranges: `react ^18.3 || ^19`, `react-dom ^18.3 || ^19`, `@mui/material ^6.4`, `@emotion/react ^11.11`, `@emotion/styled ^11.11`, `@xyflow/react ^12.3`. The `/react` subpath keeps your final bundle from shipping a second copy of React, and is the only entry that exports the `<Apollon>` React component.
+Peer ranges: `react ^18.3`, `react-dom ^18.3`, `@mui/material ^6.4`, `@emotion/react ^11.11`, `@emotion/styled ^11.11`, `@xyflow/react ^12.3`. The `/react` subpath keeps your final bundle from shipping a second copy of React, and is the only entry that exports the `<Apollon>` React component.
 
 ## Usage
 

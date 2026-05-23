@@ -383,6 +383,11 @@ export const ApollonWithConnection: React.FC = () => {
         )
       }
     } else {
+      // Preview entry imperatively forced readonly=true (line above). The
+      // reactive `<Apollon readonly={baseReadonly}>` won't re-fire because
+      // neither prop changed identity — so restore it explicitly here, or
+      // the canvas stays read-only after exiting preview in editable views.
+      editor.setReadonly(baseReadonly)
       prePreviewFingerprintRef.current = null
       if (!diagramId) return
 

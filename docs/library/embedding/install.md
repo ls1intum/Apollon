@@ -32,14 +32,14 @@ import { ApollonEditor } from "@tumaet/apollon/react"
 import "@tumaet/apollon/style.css"
 ```
 
-| Peer              | Range                  |
-| ----------------- | ---------------------- |
-| `react`           | `^18.3.0 \|\| ^19.0.0` |
-| `react-dom`       | `^18.3.0 \|\| ^19.0.0` |
-| `@mui/material`   | `^6.4.0`               |
-| `@emotion/react`  | `^11.11.0`             |
-| `@emotion/styled` | `^11.11.0`             |
-| `@xyflow/react`   | `^12.3.0`              |
+| Peer              | Range      |
+| ----------------- | ---------- |
+| `react`           | `^18.3.0`  |
+| `react-dom`       | `^18.3.0`  |
+| `@mui/material`   | `^6.4.0`   |
+| `@emotion/react`  | `^11.11.0` |
+| `@emotion/styled` | `^11.11.0` |
+| `@xyflow/react`   | `^12.3.0`  |
 
 The `/react` subpath keeps your final bundle from shipping a second copy of
 React. It is also the entry that exports the `<Apollon>` React component — the

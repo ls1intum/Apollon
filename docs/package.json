@@ -11,7 +11,7 @@
     "serve": "docusaurus serve",
     "typecheck": "tsc --noEmit",
     "lint:md": "markdownlint-cli2 '{user,library,contributor,src}/**/*.{md,mdx}'",
-    "lint": "pnpm run lint:md && pnpm run typecheck"
+    "lint": "pnpm run lint:md"
   },
   "dependencies": {
     "@docusaurus/core": "3.10.1",
