@@ -40,13 +40,24 @@
   text-align: center;
 }
 
+/* Center the hero children as flex items. Margin-auto centering loses the
+   specificity battle against Infima's `h1:not(#)(#)` rule, so we sidestep
+   it: in a flex column with `align-items: center`, each child's box is
+   centered regardless of its margin values. */
+.hero :global(.container) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .heroTitle {
   font-size: clamp(2.25rem, 4vw + 1rem, 3.5rem);
   font-weight: 800;
   line-height: 1.1;
   letter-spacing: -0.025em;
   max-width: 20ch;
-  margin: 0 auto 1.25rem;
+  margin-bottom: 1.25rem;
+  text-wrap: balance;
 }
 
 .accent {
@@ -58,8 +69,9 @@
   line-height: 1.55;
   font-weight: 400;
   max-width: 56ch;
-  margin: 0 auto 2rem;
+  margin-bottom: 2rem;
   color: var(--ifm-color-emphasis-700);
+  text-wrap: pretty;
 }
 
 .buttons {
@@ -71,8 +83,9 @@
 }
 
 .install {
+  width: 100%;
   max-width: 22rem;
-  margin: 1.75rem auto 0;
+  margin-top: 1.75rem;
   text-align: left;
 }
 
