@@ -11,7 +11,7 @@ Three ways to use Apollon. Pick whichever matches your context — see the
 
 ## Hosted webapp (easiest)
 
-Open <https://apollon.ase.cit.tum.de> in a browser. No install, no account. Diagrams persist in your browser and can be shared by URL. Any current browser works — see [Requirements](/user/getting-started/requirements).
+Open <https://apollon.aet.cit.tum.de> in a browser. No install, no account. Diagrams persist in your browser and can be shared by URL. Any current browser works — see [Requirements](/user/getting-started/requirements).
 
 ## VS Code extension
 

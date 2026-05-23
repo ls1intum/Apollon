@@ -3,11 +3,16 @@ import Layout from "@theme/Layout"
 import Link from "@docusaurus/Link"
 import BrowserOnly from "@docusaurus/BrowserOnly"
 import CodeBlock from "@theme/CodeBlock"
+import Tabs from "@theme/Tabs"
+import TabItem from "@theme/TabItem"
 import clsx from "clsx"
 import styles from "./index.module.css"
 
-// The minimal React usage — the same component shown live in the editor below.
-const REACT_EXAMPLE = `import { Apollon, UMLDiagramType } from "@tumaet/apollon/react"
+const HOSTED_URL = "https://apollon.aet.cit.tum.de"
+
+// Minimal "mount the editor" snippets per framework — exactly what the live
+// editor on the right is rendered with, in its native idiom for each host.
+const REACT_SNIPPET = `import { Apollon, UMLDiagramType } from "@tumaet/apollon/react"
 import "@tumaet/apollon/style.css"
 
 export function Diagram() {
@@ -19,24 +24,71 @@ export function Diagram() {
   )
 }`
 
+const ANGULAR_SNIPPET = `import {
+  Component,
+  ElementRef,
+  ViewChild,
+  AfterViewInit,
+  OnDestroy,
+} from "@angular/core"
+import { ApollonEditor, UMLDiagramType } from "@tumaet/apollon"
+import "@tumaet/apollon/style.css"
+
+@Component({
+  selector: "app-diagram",
+  template: \`<div #host style="height: 600px"></div>\`,
+})
+export class DiagramComponent implements AfterViewInit, OnDestroy {
+  @ViewChild("host") host!: ElementRef<HTMLDivElement>
+  private editor?: ApollonEditor
+
+  ngAfterViewInit() {
+    this.editor = new ApollonEditor(this.host.nativeElement, {
+      type: UMLDiagramType.ClassDiagram,
+    })
+  }
+
+  ngOnDestroy() {
+    this.editor?.destroy()
+  }
+}`
+
+const VANILLA_SNIPPET = `<link
+  rel="stylesheet"
+  href="https://unpkg.com/@tumaet/apollon@4/dist/assets/style.css"
+/>
+<div id="apollon" style="height: 600px"></div>
+
+<script type="module">
+  import {
+    ApollonEditor,
+    UMLDiagramType,
+  } from "https://unpkg.com/@tumaet/apollon@4"
+
+  new ApollonEditor(document.getElementById("apollon"), {
+    type: UMLDiagramType.ClassDiagram,
+  })
+</script>`
+
 function Hero() {
   return (
     <header className={styles.hero}>
       <div className="container">
         <h1 className={styles.heroTitle}>
-          The open-source UML editor you can{" "}
-          <span className={styles.accent}>embed</span>, host, or run in VS Code.
+          Draw <span className={styles.accent}>UML diagrams</span> in the
+          browser.
         </h1>
         <p className={styles.heroSubtitle}>
-          A UML modeling editor for the web — 13 diagram types, exportable
-          everywhere, and published as a framework-agnostic npm package.
+          Apollon is an open-source UML modeling editor — 13 diagram types, free
+          to use, and exportable everywhere. Open it on the web, install it in
+          VS Code, or embed it in your own product.
         </p>
         <div className={styles.buttons}>
-          <Link className="button button--primary button--lg" to="/library/">
-            Embed it in your app
-          </Link>
-          <Link className="button button--secondary button--lg" to="/user/">
+          <Link className="button button--primary button--lg" href={HOSTED_URL}>
             Open the editor
+          </Link>
+          <Link className="button button--secondary button--lg" to="/library/">
+            Embed it in your app
           </Link>
         </div>
         <div className={styles.install}>
@@ -47,21 +99,41 @@ function Hero() {
   )
 }
 
+function FrameworkTabs() {
+  return (
+    <Tabs groupId="framework" className={styles.demoTabs}>
+      <TabItem value="react" label="React" default>
+        <CodeBlock language="tsx" title="Diagram.tsx">
+          {REACT_SNIPPET}
+        </CodeBlock>
+      </TabItem>
+      <TabItem value="angular" label="Angular">
+        <CodeBlock language="ts" title="diagram.component.ts">
+          {ANGULAR_SNIPPET}
+        </CodeBlock>
+      </TabItem>
+      <TabItem value="vanilla" label="Vanilla JS">
+        <CodeBlock language="html" title="index.html">
+          {VANILLA_SNIPPET}
+        </CodeBlock>
+      </TabItem>
+    </Tabs>
+  )
+}
+
 function LiveDemo() {
   return (
     <section className={clsx(styles.section, styles.demo)}>
       <div className="container">
         <h2 className={styles.sectionTitle}>Try it live</h2>
         <p className={styles.sectionLead}>
-          The editor on the right is the real <code>@tumaet/apollon</code>{" "}
-          package, mounted by the code on the left. Drag from the palette, edit,
-          export — it all runs in your browser.
+          This is the real <code>@tumaet/apollon</code> package running in your
+          browser — drag from the palette, edit, export. The snippet beside it
+          is the code that mounts it; switch frameworks in the tabs.
         </p>
         <div className={clsx("row", styles.demoRow)}>
           <div className={clsx("col col--6", styles.demoCol)}>
-            <CodeBlock language="tsx" title="Diagram.tsx">
-              {REACT_EXAMPLE}
-            </CodeBlock>
+            <FrameworkTabs />
           </div>
           <div className={clsx("col col--6", styles.demoCol)}>
             <div className={styles.demoWindow}>

@@ -189,7 +189,7 @@ const config: Config = {
           label: "Contributor",
         },
         {
-          href: "https://apollon.ase.cit.tum.de",
+          href: "https://apollon.aet.cit.tum.de",
           label: "Try Apollon",
           position: "right",
         },
@@ -214,7 +214,7 @@ const config: Config = {
             { label: "User Guide", to: "/user/" },
             {
               label: "Try Apollon",
-              href: "https://apollon.ase.cit.tum.de",
+              href: "https://apollon.aet.cit.tum.de",
             },
             {
               label: "VS Code Extension",

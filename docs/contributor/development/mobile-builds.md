@@ -6,7 +6,7 @@ description: Build the Apollon webapp as a Capacitor native shell for iOS and An
 
 # iOS and Android
 
-This guide covers building the Apollon webapp as a Capacitor native shell for iOS and Android. It is aimed at contributors; end users get the standalone web app at `https://apollon.ase.cit.tum.de`.
+This guide covers building the Apollon webapp as a Capacitor native shell for iOS and Android. It is aimed at contributors; end users get the standalone web app at `https://apollon.aet.cit.tum.de`.
 
 ## Prerequisites
 

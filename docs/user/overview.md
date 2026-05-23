@@ -38,7 +38,7 @@ Apollon ships in three forms. Pick the one that matches your context.
 
 ### Hosted web app
 
-Open [apollon.ase.cit.tum.de](https://apollon.ase.cit.tum.de) and start drawing.
+Open [apollon.aet.cit.tum.de](https://apollon.aet.cit.tum.de) and start drawing.
 No install, no account. Diagrams persist in your browser and can be shared by
 URL. Use this when you just want to draw and share a diagram.
 
