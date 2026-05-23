@@ -57,3 +57,6 @@ venv/
 .context/
 docs/.docusaurus/
 docs/build/
+
+# Local Claude Code agent state (rubrics, worktrees, lock files).
+.claude/
