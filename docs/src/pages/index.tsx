@@ -98,7 +98,7 @@ function Hero() {
           browser.
         </h1>
         <p className={styles.heroSubtitle}>
-          An open-source UML modeling editor. 13 diagram types, SVG/PNG/PDF
+          An open-source UML modeling editor. 13 diagram types, SVG/PNG/PDF/JSON
           export, real-time collaboration. Use it in the browser, in VS Code, or
           as an npm library.
         </p>

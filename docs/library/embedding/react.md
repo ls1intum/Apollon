@@ -40,10 +40,9 @@ supplied; pass `defaultType` for a different one.
 
 `<Apollon>` is exported **only** from the `@tumaet/apollon/react` subpath, which
 externalises React so the editor shares your host's copy. The default
-`@tumaet/apollon` entry is the framework-agnostic build — it bundles its own
-React and does not export the component, so importing `<Apollon>` from there is
-a compile error. Import the component, the hooks, and the types from
-`@tumaet/apollon/react`.
+`@tumaet/apollon` subpath (the standalone build) bundles its own React and
+does not export the component — importing `<Apollon>` from there is a compile
+error. Import the component, the hooks, and the types from `@tumaet/apollon/react`.
 
 ## Reaching the editor instance
 
@@ -178,8 +177,7 @@ export default function Page() {
 }
 ```
 
-Remix and Nuxt have equivalent client-only loading. See
-[Troubleshooting](/library/troubleshooting) for the full SSR guidance.
+Remix and Nuxt have equivalent client-only loading.
 
 Non-React hosts that want imperative control mount `ApollonEditor` directly —
 see [Vanilla JS / CDN](/library/embedding/vanilla).

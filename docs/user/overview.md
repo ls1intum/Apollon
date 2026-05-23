@@ -40,7 +40,7 @@ Apollon ships in three forms. Pick the one that matches your context.
 
 Open [apollon.aet.cit.tum.de](https://apollon.aet.cit.tum.de) and start drawing.
 No install, no account. Diagrams persist in your browser and can be shared by
-URL. Use this when you just want to draw and share a diagram.
+URL. Use this when you want to draw and share a diagram with no install.
 
 ### VS Code extension
 

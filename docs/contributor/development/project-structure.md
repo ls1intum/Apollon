@@ -25,8 +25,8 @@ Apollon/
 │       ├── Dockerfile
 │       └── package.json
 ├── vscode-extension/         # apollon-vscode — VS Code extension
-│   ├── editor/               # apollon-vscode-editor — diagram webview (Parcel)
-│   └── menu/                 # apollon-vscode-menu — diagram-picker webview (Parcel)
+│   ├── editor/               # apollon-vscode-editor — diagram webview (Vite)
+│   └── menu/                 # apollon-vscode-menu — diagram-picker webview (Vite)
 ├── docker/                   # Compose files for local + production
 ├── docs/                     # Documentation sources (this directory)
 ├── scripts/                  # dev.mjs and other monorepo helpers
@@ -49,3 +49,4 @@ Apollon/
 | `vscode-extension/`        | `apollon-vscode`        | [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=tumaet.apollon-vscode) |
 | `vscode-extension/menu/`   | `apollon-vscode-menu`   | bundled into the extension VSIX                                                                  |
 | `vscode-extension/editor/` | `apollon-vscode-editor` | bundled into the extension VSIX                                                                  |
+| `docs/`                    | `@tumaet/apollon-docs`  | published as the Docusaurus site at <https://ls1intum.github.io/Apollon/>                        |

@@ -69,7 +69,8 @@ Run a production build locally — assumes `pnpm build` already ran.
 
 Per-workspace variants (`lint:lib`, `lint:server`, `lint:webapp`, `lint:vscode`,
 `lint:docs`, and their `lint:fix:*` counterparts) exist for narrower runs.
-`lint:docs` runs `markdownlint-cli2` over the documentation Markdown.
+`lint:docs` runs `markdownlint-cli2` over the docs Markdown **and** `tsc
+--noEmit` on the Docusaurus config + theme.
 
 ## Test
 
@@ -77,6 +78,14 @@ Per-workspace variants (`lint:lib`, `lint:server`, `lint:webapp`, `lint:vscode`,
 | --------------- | ---------------------------------- |
 | `pnpm test`     | Library Vitest unit suite          |
 | `pnpm test:e2e` | Webapp Playwright end-to-end tests |
+
+The webapp and server have their own Vitest suites that the root scripts do
+not aggregate. Run them per-workspace:
+
+```sh
+pnpm --filter @tumaet/webapp run test   # webapp unit tests
+pnpm --filter @tumaet/server run test   # server unit tests
+```
 
 Playwright visual regression lives in the webapp workspace — see
 [Visual tests](/contributor/development/visual-tests).

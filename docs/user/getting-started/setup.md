@@ -9,7 +9,7 @@ description: How to use Apollon — hosted webapp, VS Code extension, or self-ho
 Three ways to use Apollon. Pick whichever matches your context — see the
 [Overview](/user/) if you are still deciding.
 
-## Hosted webapp (easiest)
+## Hosted webapp
 
 Open <https://apollon.aet.cit.tum.de> in a browser. No install, no account. Diagrams persist in your browser and can be shared by URL. Any current browser works — see [Requirements](/user/getting-started/requirements).
 
@@ -19,8 +19,8 @@ Install **Apollon** from the [VS Code Marketplace](https://marketplace.visualstu
 
 ## Self-host
 
-You run the standalone yourself with Docker. See the [Operations guide](https://github.com/ls1intum/Apollon/blob/main/ops/operations.md) for the supported deployment topology and required environment variables, and the [contributor setup](/contributor/) for a local dev stack.
+Run the standalone yourself with Docker. See [Deployment → GitHub Actions](/contributor/deployment/github-actions) for the supported topology and required environment variables, and [Contributor setup](/contributor/) for a local dev stack.
 
 ## Embed in your own product
 
-Apollon is also published as a real npm library, `@tumaet/apollon`. See the [library docs](/library/) for the embedding guides.
+Apollon is published as an npm library, `@tumaet/apollon`. See the [library docs](/library/) for the embedding guides.

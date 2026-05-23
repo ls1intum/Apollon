@@ -35,7 +35,7 @@ pnpm dev
 ## Pull-request checklist
 
 ```sh
-pnpm run lint        # eslint across all workspaces
+pnpm run lint        # eslint per workspace + markdownlint + docs typecheck
 pnpm run format:check
 pnpm run build       # library first, then server + webapp concurrently
 pnpm test            # library unit tests

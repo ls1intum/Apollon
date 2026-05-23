@@ -58,7 +58,7 @@ Angular code only sees the imperative API.
 - **`afterNextRender(...)`** runs the callback once, after the first DOM commit, **and is a no-op during server-side rendering**. That removes the manual `isPlatformBrowser` guard and the wrong-hook choice of `ngAfterViewInit` for "after the DOM is painted." See [angular.dev — Side effects for non-reactive APIs](https://angular.dev/guide/signals/effect#:~:text=afterNextRender).
 - **`inject(DestroyRef).onDestroy(...)`** colocates teardown with setup — no class needs to implement the `OnDestroy` lifecycle interface. See [angular.dev — DestroyRef](https://angular.dev/api/core/DestroyRef).
 - **`standalone: true` is the Angular 19+ default**; on 17/18 add it back.
-- No `type`/`mode`/`locale` in the minimal example — those are the editor's defaults, so passing them is noise. Add them when you actually want a non-default diagram type or mode.
+- No `type`/`mode`/`locale` in the minimal example — those are the editor's defaults, so passing them is noise. Pass them only to override.
 
 The `<div>` must have an explicit height, or the editor renders blank — see
 [Troubleshooting](/library/troubleshooting).

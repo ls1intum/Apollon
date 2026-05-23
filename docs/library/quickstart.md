@@ -29,6 +29,7 @@ mistake.
 
 Give the container an explicit `height` (`600px`, `80vh`, or a child of a
 sized flex or grid parent). The width can be `100%`; only the height bites.
+See [Troubleshooting](/library/troubleshooting) for the full diagnosis.
 :::
 
 ## 2. Mount the editor

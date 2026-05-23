@@ -15,10 +15,15 @@ const { svg, clip } = await editor.exportAsSVG({ svgMode: "web" })
 - `svg: string` — serialised SVG markup
 - `clip: { x, y, width, height }` — viewport of the rendered diagram
 
-| `svgMode`  | Use when                                                                                                           |
-| ---------- | ------------------------------------------------------------------------------------------------------------------ |
-| `"web"`    | Rendering in a browser; assumes the DOM stylesheet is loaded                                                       |
-| `"compat"` | Inlining into PDF/PPT/other static formats — emits fully self-contained SVG with inlined fonts and computed styles |
+`ExportOptions`:
+
+| Field              | Type                                                 | Default | Effect                                                                                                                              |
+| ------------------ | ---------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `svgMode`          | `"web" \| "compat"`                                  | `"web"` | `"web"` keeps CSS variables for theme-adaptive rendering; `"compat"` resolves them and inlines fonts/attributes (PDF/PPT/Inkscape). |
+| `margin`           | `number \| { top?, right?, bottom?, left?: number }` | `0`     | Extra space around the diagram bounding box.                                                                                        |
+| `keepOriginalSize` | `boolean`                                            | `false` | If `true`, do not normalise the viewBox to the diagram bounds — preserve the editor's current pan/zoom framing.                     |
+| `include`          | `string[]`                                           | —       | Render only the listed element ids. Mutually exclusive with `exclude`.                                                              |
+| `exclude`          | `string[]`                                           | —       | Render everything except the listed element ids.                                                                                    |
 
 ## Headless SVG export (no mounted editor)
 

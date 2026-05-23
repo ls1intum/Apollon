@@ -43,7 +43,7 @@ Complete the [contributor setup](/contributor/) first.
 4. **Generate assets:**
 
    ```bash
-   pnpm capacitor:assets:generate:ios
+   pnpm capacitor:assets:generate:ios       # or :generate:android
    ```
 
 5. **Sync the files**

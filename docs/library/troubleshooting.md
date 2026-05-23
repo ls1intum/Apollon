@@ -62,14 +62,13 @@ client — never during render.
   })
   ```
 
-- **Angular Universal.** Guard construction with
-  `isPlatformBrowser(this.platformId)` and build only after hydration.
+- **Angular (17.3+).** Construct inside `afterNextRender(() => …)` — the
+  callback is a no-op on the server, so the snippet is SSR-safe by construction.
+  Older codebases on Angular 16 or earlier should guard with
+  `isPlatformBrowser(this.platformId)` inside `ngAfterViewInit`.
 
 - **Svelte / Vue / vanilla.** Construct inside `onMount` / `mounted` / a
   client-side script — anything that runs only in the browser.
-
-See the [React](/library/embedding/react) and [Angular](/library/embedding/angular)
-pages for complete wrappers.
 
 ## The editor mounts unstyled
 

@@ -10,21 +10,27 @@ Deployments are fully automatic on merge to `main`; production promotion is one 
 
 ## Flow
 
-| Stage          | Trigger                                     | Workflow                                        | Result                                                                         |
-| -------------- | ------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------ |
-| Staging (auto) | push to `main`                              | `build-and-push.yml`                            | Docker images built + tagged `sha-<commit>`, staging deploy fires              |
-| Release        | version change merged to `main`             | `release-library.yml`, `release-standalone.yml` | npm publish (if new) + Docker retag to `vX.Y.Z` + cosign sign + GitHub Release |
-| Production     | Actions → **Deploy to Production** (manual) | `deploy-prod.yml`                               | prod runs the selected `image-tag`                                             |
+| Stage          | Trigger                                     | Workflow                                                                        | Result                                                                                      |
+| -------------- | ------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Staging (auto) | push to `main`                              | `build-and-push.yml` → `deploy-staging.yml`                                     | Docker images built + tagged `sha-<commit>`, staging deploy fires                           |
+| Docs (auto)    | push to `main`                              | `docs.yml`                                                                      | Docusaurus site rebuilt and published to GitHub Pages                                       |
+| Release        | version change merged to `main`             | `release-library.yml`, `release-standalone.yml`, `release-vscode-extension.yml` | npm / VS Code Marketplace publish + Docker retag to `vX.Y.Z` + cosign sign + GitHub Release |
+| Production     | Actions → **Deploy to Production** (manual) | `deploy-prod.yml`                                                               | prod runs the selected `image-tag`                                                          |
+
+`version-monotonicity.yml` guards every PR by failing if a workspace
+`package.json` version moves backwards.
 
 See [Releases](npm-publishing) for the release-cut procedure.
 
 ## Compose files
 
-| File                       | Purpose                                  | Lifecycle                                  |
-| -------------------------- | ---------------------------------------- | ------------------------------------------ |
-| `docker/compose.proxy.yml` | Traefik reverse proxy + maintenance page | deployed once; stays up during app deploys |
-| `docker/compose.db.yml`    | Redis                                    | deployed once; stays up during app deploys |
-| `docker/compose.app.yml`   | Server + webapp                          | deployed by CI on every merge + release    |
+| File                          | Purpose                                  | Lifecycle                                  |
+| ----------------------------- | ---------------------------------------- | ------------------------------------------ |
+| `docker/compose.proxy.yml`    | Traefik reverse proxy + maintenance page | deployed once; stays up during app deploys |
+| `docker/compose.db.yml`       | Redis                                    | deployed once; stays up during app deploys |
+| `docker/compose.app.yml`      | Server + webapp                          | deployed by CI on every merge + release    |
+| `docker/compose.local.db.yml` | Redis for local development              | started by `pnpm dev` / locally on demand  |
+| `docker/compose.local.yml`    | Local server + webapp stack              | optional; for `docker compose`-based dev   |
 
 ## Required environment variables
 

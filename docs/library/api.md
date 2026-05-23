@@ -61,8 +61,8 @@ afterwards. Re-key the component to apply them to a new editor.
 | `debug`                | `boolean`        | Debug overlays/logging.                                         |
 
 **Reactive options** — applied via the matching setter when the prop
-changes; no rebuild. `undefined` resets boolean toggles to `false`; for
-typed-enum / object props it means "leave the live value alone".
+changes; no rebuild. Passing `undefined` for any reactive prop leaves the
+live value untouched (no reset). Re-key the component to fully reset.
 
 | Prop          | Type          | Maps to                                     |
 | ------------- | ------------- | ------------------------------------------- |
@@ -104,19 +104,19 @@ new ApollonEditor(element: HTMLElement, options?: ApollonOptions)
 
 Every field is optional.
 
-| Option                 | Type             | Default                        | Effect                                                                                                         |
-| ---------------------- | ---------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------- |
-| `type`                 | `UMLDiagramType` | `model.type` or `ClassDiagram` | Diagram type for a fresh canvas. Ignored when `model` is supplied and carries its own `type`.                  |
-| `mode`                 | `ApollonMode`    | `Modelling`                    | `Modelling`, `Exporting`, or `Assessment`. Drives which UI affordances render.                                 |
-| `view`                 | `ApollonView`    | `Modelling`                    | `Modelling`, `Exporting`, or `Highlight`. Initial view.                                                        |
-| `availableViews`       | `ApollonView[]`  | derived                        | Views the user may switch between. `Modelling` is always included; `view` is appended if not listed.           |
-| `readonly`             | `boolean`        | `false`                        | Locks the canvas. Can also be toggled at runtime with `setReadonly`.                                           |
-| `enablePopups`         | `boolean`        | editor default                 | Enables the inline edit/property popovers.                                                                     |
-| `model`                | `UMLModel`       | empty diagram                  | Initial diagram. Use `importDiagram` first if the JSON may be a v2/v3 model.                                   |
-| `locale`               | `Locale`         | `en`                           | Accepted for forward compatibility; the editor currently renders in English regardless.                        |
-| `debug`                | `boolean`        | `false`                        | Enables debug overlays/logging.                                                                                |
-| `collaborationEnabled` | `boolean`        | `false`                        | Opt into Yjs real-time sync. See [Collaboration](/library/api/collaboration). Disables the local undo manager. |
-| `scrollLock`           | `boolean`        | `false`                        | Prevents the canvas from capturing page scroll.                                                                |
+| Option                 | Type             | Default                        | Effect                                                                                                                                                                                           |
+| ---------------------- | ---------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `type`                 | `UMLDiagramType` | `model.type` or `ClassDiagram` | Diagram type for a fresh canvas. Ignored when `model` is supplied and carries its own `type`.                                                                                                    |
+| `mode`                 | `ApollonMode`    | `Modelling`                    | `Modelling`, `Exporting`, or `Assessment`. Drives which UI affordances render.                                                                                                                   |
+| `view`                 | `ApollonView`    | `Modelling`                    | `Modelling`, `Exporting`, or `Highlight`. Initial view.                                                                                                                                          |
+| `availableViews`       | `ApollonView[]`  | `[Modelling]`                  | Views the user may switch between. If supplied, the editor merges `Modelling`, the array, and the configured `view`. If omitted and `view` is `Highlight`, defaults to `[Modelling, Highlight]`. |
+| `readonly`             | `boolean`        | `false`                        | Locks the canvas. Can also be toggled at runtime with `setReadonly`.                                                                                                                             |
+| `enablePopups`         | `boolean`        | `true`                         | Enables the inline edit/property popovers.                                                                                                                                                       |
+| `model`                | `UMLModel`       | empty diagram                  | Initial diagram. Use `importDiagram` first if the JSON may be a v2/v3 model.                                                                                                                     |
+| `locale`               | `Locale`         | `en`                           | Accepted for forward compatibility; the editor currently renders in English regardless.                                                                                                          |
+| `debug`                | `boolean`        | `false`                        | Enables debug overlays/logging.                                                                                                                                                                  |
+| `collaborationEnabled` | `boolean`        | `false`                        | Opt into Yjs real-time sync. See [Collaboration](/library/api/collaboration). Disables the local undo manager.                                                                                   |
+| `scrollLock`           | `boolean`        | `false`                        | Prevents the canvas from capturing page scroll.                                                                                                                                                  |
 
 ## Lifecycle
 
@@ -139,13 +139,15 @@ Every field is optional.
 
 ### View and read-only state
 
-| Member                                         | Type                                | Purpose                                                                                                                           |
-| ---------------------------------------------- | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `view` (getter / setter)                       | `ApollonView`                       | Read or set the active view.                                                                                                      |
-| `setReadonly(readonly)`                        | `(boolean) => void`                 | Toggle read-only at runtime. Clears selection and any open popover when locking.                                                  |
-| `setPreviewMode(active)`                       | `(boolean) => void`                 | Overlay a snapshot on the canvas without writing to the Yjs doc. Used for version-history previews.                               |
-| `toggleInteractiveElementsMode(forceEnabled?)` | `(boolean?) => void`                | Toggle (or force) the `Highlight` view for marking interactive elements.                                                          |
-| `fitView(options?)`                            | `({ padding?, duration? }) => void` | Zoom/pan so the whole diagram is visible. `padding` defaults to `0.15`, `duration` to `200` ms. Retries until nodes are measured. |
+| Member                                         | Type                                | Purpose                                                                                                                                                |
+| ---------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `view` (getter / setter)                       | `ApollonView`                       | Read or set the active view.                                                                                                                           |
+| `setReadonly(readonly)`                        | `(boolean) => void`                 | Toggle read-only at runtime. Clears selection and any open popover when locking.                                                                       |
+| `setPreviewMode(active)`                       | `(boolean) => void`                 | Overlay a snapshot on the canvas without writing to the Yjs doc. Used for version-history previews.                                                    |
+| `toggleInteractiveElementsMode(forceEnabled?)` | `(boolean?) => void`                | Toggle (or force) the `Highlight` view for marking interactive elements.                                                                               |
+| `setMode(mode)`                                | `(ApollonMode) => void`             | Switch between `Modelling`, `Assessment`, and `Exporting` at runtime.                                                                                  |
+| `setScrollLock(locked)`                        | `(boolean) => void`                 | Toggle whether the canvas captures page scroll.                                                                                                        |
+| `fitView(options?)`                            | `({ padding?, duration? }) => void` | Zoom/pan so the whole diagram is visible (capped at `maxZoom: 1.0`). `padding` defaults to `0.15`, `duration` to `200` ms. Retries up to 10 rAF ticks. |
 
 ### Canvas geometry
 
@@ -170,15 +172,20 @@ Every field is optional.
 Every `subscribeTo…` method returns a numeric subscription id. Pass it to
 `unsubscribe(id)` to detach. `destroy()` drops all subscriptions automatically.
 
-| Method                               | Callback signature                                  | Fires when                                |
-| ------------------------------------ | --------------------------------------------------- | ----------------------------------------- |
-| `subscribeToModelChange(cb)`         | `(model: UMLModel) => void`                         | The diagram model changes.                |
-| `subscribeToDiagramNameChange(cb)`   | `(title: string) => void`                           | The diagram title changes.                |
-| `subscribeToSelectionChange(cb)`     | `(selectedElementIds: string[]) => void`            | The set of selected elements changes.     |
-| `subscribeToAssessmentSelection(cb)` | `(selectedElementIds: string[]) => void`            | The assessment selection changes.         |
-| `subscribeToAwarenessChanges(cb)`    | `(states: Map<number, CollaborationState>) => void` | Collaborator awareness (cursors) changes. |
-| `subscribeToCollaboratorChanges(cb)` | `(collaborators: CollaboratorInfo[]) => void`       | The collaborator roster changes.          |
-| `unsubscribe(subscriptionId)`        | `(number) => void`                                  | —                                         |
+Unless noted otherwise, `subscribeTo*` channels are coarse: they re-fire on
+any state-store change and the callback receives the **current** value of the
+named field. `subscribeToSelectionChange` is the only channel with a built-in
+prev/next equality check.
+
+| Method                               | Callback signature                                  |
+| ------------------------------------ | --------------------------------------------------- |
+| `subscribeToModelChange(cb)`         | `(model: UMLModel) => void`                         |
+| `subscribeToDiagramNameChange(cb)`   | `(title: string) => void`                           |
+| `subscribeToSelectionChange(cb)`     | `(selectedElementIds: string[]) => void`            |
+| `subscribeToAssessmentSelection(cb)` | `(selectedElementIds: string[]) => void`            |
+| `subscribeToAwarenessChanges(cb)`    | `(states: Map<number, CollaborationState>) => void` |
+| `subscribeToCollaboratorChanges(cb)` | `(collaborators: CollaboratorInfo[]) => void`       |
+| `unsubscribe(subscriptionId)`        | `(number) => void`                                  |
 
 ```ts
 const id = editor.subscribeToModelChange((model) => persist(model))
@@ -217,22 +224,24 @@ These members are only meaningful with `collaborationEnabled: true`. See
 
 ## Diagram types
 
-```ts
-type UMLDiagramType =
-  | "ClassDiagram"
-  | "ObjectDiagram"
-  | "ActivityDiagram"
-  | "UseCaseDiagram"
-  | "CommunicationDiagram"
-  | "ComponentDiagram"
-  | "DeploymentDiagram"
-  | "PetriNet"
-  | "ReachabilityGraph"
-  | "SyntaxTree"
-  | "Flowchart"
-  | "BPMN"
-  | "Sfc"
-```
+Enum literals (the strings on the wire and in `UMLModel.type`) on the left;
+human-facing labels used elsewhere on the right.
+
+| Enum literal             | Label              |
+| ------------------------ | ------------------ |
+| `"ClassDiagram"`         | Class              |
+| `"ObjectDiagram"`        | Object             |
+| `"ActivityDiagram"`      | Activity           |
+| `"UseCaseDiagram"`       | Use Case           |
+| `"CommunicationDiagram"` | Communication      |
+| `"ComponentDiagram"`     | Component          |
+| `"DeploymentDiagram"`    | Deployment         |
+| `"PetriNet"`             | Petri Net          |
+| `"ReachabilityGraph"`    | Reachability Graph |
+| `"SyntaxTree"`           | Syntax Tree        |
+| `"Flowchart"`            | Flowchart          |
+| `"BPMN"`                 | BPMN               |
+| `"Sfc"`                  | SFC                |
 
 ## Enums
 
