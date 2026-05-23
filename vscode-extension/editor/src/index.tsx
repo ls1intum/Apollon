@@ -23,7 +23,7 @@ window.addEventListener("message", (e) => {
           ...prevState.options,
           type: message.diagramType as UMLDiagramType,
         },
-        createNewEditor: true,
+        loadVersion: prevState.loadVersion + 1,
       }
     })
   }

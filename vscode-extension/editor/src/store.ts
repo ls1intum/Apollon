@@ -1,16 +1,17 @@
 import { create } from "zustand"
-import { ApollonOptions, UMLModel } from "@tumaet/apollon/react"
-import { defaultEditorOptions } from "./types"
+import { UMLModel } from "@tumaet/apollon/react"
+import { defaultEditorOptions, EditorOptions } from "./types"
 
 interface Store {
   model?: UMLModel
-  createNewEditor: boolean
-  options: ApollonOptions
+  // Bumped on every loadDiagram message; used as <Apollon key=...> to force a remount.
+  loadVersion: number
+  options: EditorOptions
 }
 
 export const useStore = create<Store>(() => ({
   model: undefined,
-  createNewEditor: false,
+  loadVersion: 0,
   options: defaultEditorOptions,
 }))
 

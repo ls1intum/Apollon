@@ -1,21 +1,24 @@
-import { useState } from "react"
-import { ApollonEditor } from "@tumaet/apollon/react"
-import { ApollonEditorProvider } from "./ApollonEditor/ApollonEditorContext"
-import { ApollonEditorComponent } from "./ApollonEditor/ApollonEditorComponent"
+import { useRef, useState } from "react"
+import { Apollon, ApollonEditor, UMLModel } from "@tumaet/apollon/react"
 import { vscode } from "./index"
 import { convertRenderedSVGToPNG } from "./utils/converter"
+import useStore from "./store"
 
 type ExportType = "svg" | "png"
 
 function App() {
-  const [editor, setEditor] = useState<ApollonEditor>()
+  const editorRef = useRef<ApollonEditor | null>(null)
   const [exportType, setExportType] = useState<ExportType>("svg")
-  const handleSetEditor = (newEditor: ApollonEditor) => {
-    setEditor(newEditor)
-  }
+
+  const model = useStore((state) => state.model)
+  const loadVersion = useStore((state) => state.loadVersion)
+  const options = useStore((state) => state.options)
 
   const exportDiagram = async () => {
-    const diagramSVG = await editor!.exportAsSVG({ svgMode: "compat" })
+    const editor = editorRef.current
+    if (!editor) return
+
+    const diagramSVG = await editor.exportAsSVG({ svgMode: "compat" })
     let exportContent
 
     switch (exportType) {
@@ -56,9 +59,23 @@ function App() {
           <option value="png">PNG</option>
         </select>
       </div>
-      <ApollonEditorProvider value={{ editor, setEditor: handleSetEditor }}>
-        <ApollonEditorComponent />
-      </ApollonEditorProvider>
+      <Apollon
+        key={loadVersion}
+        ref={editorRef}
+        className="flex flex-col overflow-hidden w-full h-[calc(100vh-3rem)] bg-[var(--apollon-background)]"
+        defaultModel={model}
+        defaultType={options.type}
+        defaultMode={options.mode}
+        readonly={options.readonly}
+        enablePopups={options.enablePopups}
+        onMount={(editor) => {
+          const id = editor.subscribeToModelChange((next: UMLModel) => {
+            useStore.setState({ model: next })
+            vscode.postMessage({ type: "saveDiagram", model: next })
+          })
+          return () => editor.unsubscribe(id)
+        }}
+      />
     </>
   )
 }

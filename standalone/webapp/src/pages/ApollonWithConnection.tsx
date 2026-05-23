@@ -1,10 +1,10 @@
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { useEditorContext, useModalContext } from "@/contexts"
 import {
+  Apollon,
   ApollonEditor,
   ApollonMode,
   importDiagram,
-  type ApollonOptions,
   type UMLModel,
 } from "@tumaet/apollon/react"
 import { useNavigate, useParams, useSearchParams } from "react-router"
@@ -37,7 +37,6 @@ export const ApollonWithConnection: React.FC = () => {
   const navigate = useNavigate()
   const { setEditor, editor } = useEditorContext()
   const { openModal } = useModalContext()
-  const [isLoading, setIsLoading] = useState(true)
   const containerRef = useRef<HTMLDivElement | null>(null)
   const canvasColumnRef = useRef<HTMLDivElement | null>(null)
   const canvasColumnWidth = useElementWidth(canvasColumnRef)
@@ -65,6 +64,14 @@ export const ApollonWithConnection: React.FC = () => {
     name: string
     color: string
   } | null>(null)
+
+  // Initial model snapshot fetched per (diagramId, viewType, user) cycle.
+  // `<Apollon>` mounts only once this is set — that's the loading gate.
+  const [initialDiagram, setInitialDiagram] = useState<UMLModel | null>(null)
+  // Bumped on every successful fetch to force `<Apollon>` to remount
+  // when the same diagramId is re-loaded (e.g. after collab-name prompt).
+  const [loadNonce, setLoadNonce] = useState(0)
+
   const viewType = searchParams.get("view")
   const previewFromUrl = searchParams.get("version")
   const isCollaborationActive =
@@ -84,276 +91,272 @@ export const ApollonWithConnection: React.FC = () => {
     isDirty: () => diagramIsUpdated.current,
   })
 
+  // Resolve view-derived mode/readonly. `mode` is reactive but in practice
+  // only flips when `viewType` changes, which also remounts <Apollon> via
+  // the key below — so the value at first render is what the editor sees.
+  const isCollaborationView =
+    (viewType as DiagramView) === DiagramView.COLLABORATE
+  const baseReadonly = viewType === DiagramView.SEE_FEEDBACK
+  const apollonMode =
+    viewType === DiagramView.GIVE_FEEDBACK ||
+    viewType === DiagramView.SEE_FEEDBACK
+      ? ApollonMode.Assessment
+      : ApollonMode.Modelling
+
+  // Fetch the initial diagram on (diagramId, viewType, collaborationUser).
+  // Resets per-lifecycle refs and guards a collab-name prompt before fetch.
   useEffect(() => {
-    // The component instance survives diagramId / viewType / user
-    // changes (same `/:diagramId` route), so state and refs must be
-    // reset explicitly per lifecycle.
-    setIsLoading(true)
+    setInitialDiagram(null)
     diagramIsUpdated.current = false
     lastObservedHeadRev.current = undefined
     restoredDuringPreviewRef.current = false
     hasPromptedRef.current = false
 
-    const abort = new AbortController()
-    let instance: ApollonEditor | null = null
-    let cleanupCursorTracking: (() => void) | null = null
-    let selectionSubscriptionId: number | null = null
-    let modelChangeSubscriptionId: number | null = null
+    if (!diagramId) return
 
-    const initialize = async () => {
-      const container = containerRef.current
-      if (!container || !diagramId) return
+    const validViews = Object.values(DiagramView)
+    if (!viewType || !validViews.includes(viewType as DiagramView)) {
+      toast.error("Invalid view type")
+      navigate("/")
+      return
+    }
+    log.debug("Initializing Apollon editor with view type:", viewType)
 
-      try {
-        const validViews = Object.values(DiagramView)
-        if (!viewType || !validViews.includes(viewType as DiagramView)) {
-          toast.error("Invalid view type")
-          navigate("/")
-          return
-        }
-        log.debug("Initializing Apollon editor with view type:", viewType)
-
-        const isCollaborationView =
-          (viewType as DiagramView) === DiagramView.COLLABORATE
-        if (isCollaborationView && !collaborationUser) {
-          const storedName = sessionStorage.getItem("apollon-collab-name")
-          if (storedName) {
-            setCollaborationUser({
-              name: storedName,
-              color: collabColorFromName(storedName),
-            })
-          } else if (!hasPromptedRef.current) {
-            hasPromptedRef.current = true
-            openModal("COLLABORATE_NAME", {
-              initialName: randomCollabName(),
-              onConfirm: (name: string) => {
-                sessionStorage.setItem("apollon-collab-name", name)
-                setCollaborationUser({
-                  name,
-                  color: collabColorFromName(name),
-                })
-              },
-            })
-          }
-          return
-        }
-
-        const diagram = await DiagramApiClient.fetchDiagram(diagramId, {
-          signal: abort.signal,
+    if (isCollaborationView && !collaborationUser) {
+      const storedName = sessionStorage.getItem("apollon-collab-name")
+      if (storedName) {
+        setCollaborationUser({
+          name: storedName,
+          color: collabColorFromName(storedName),
         })
+      } else if (!hasPromptedRef.current) {
+        hasPromptedRef.current = true
+        openModal("COLLABORATE_NAME", {
+          initialName: randomCollabName(),
+          onConfirm: (name: string) => {
+            sessionStorage.setItem("apollon-collab-name", name)
+            setCollaborationUser({
+              name,
+              color: collabColorFromName(name),
+            })
+          },
+        })
+      }
+      return
+    }
+
+    const abort = new AbortController()
+    DiagramApiClient.fetchDiagram(diagramId, { signal: abort.signal })
+      .then((diagram) => {
         if (abort.signal.aborted) return
         log.debug("Fetched diagram", {
           diagramId,
           nodeCount: diagram.nodes?.length ?? 0,
           edgeCount: diagram.edges?.length ?? 0,
         })
-
-        const editorOptions: ApollonOptions = {
-          model: diagram,
-          collaborationEnabled: true,
-        }
-
-        if (viewType === DiagramView.GIVE_FEEDBACK) {
-          editorOptions.mode = ApollonMode.Assessment
-          editorOptions.readonly = false
-        } else if (viewType === DiagramView.SEE_FEEDBACK) {
-          editorOptions.mode = ApollonMode.Assessment
-          editorOptions.readonly = true
-        } else {
-          editorOptions.mode = ApollonMode.Modelling
-          editorOptions.readonly = false
-        }
-
-        instance = new ApollonEditor(container, editorOptions)
-        editorRef.current = instance
-        setEditor(instance)
-        setIsLoading(false)
-
-        if (isCollaborationView && collaborationUser) {
-          instance.setLocalAwarenessState({
-            user: collaborationUser,
-            selectedElementId: null,
-          })
-        }
-
-        if (
-          [
-            DiagramView.COLLABORATE,
-            DiagramView.GIVE_FEEDBACK,
-            DiagramView.SEE_FEEDBACK,
-          ].includes(viewType as DiagramView)
-        ) {
-          wsManagerRef.current = new WebSocketManager(diagramId, instance, () =>
-            toast.error("WebSocket error")
-          )
-          wsManagerRef.current.startConnection()
-          wsManagerRef.current.onControl((event) => {
-            applyControlEvent(diagramId, event)
-            if (event.type === "VERSION_RESTORED") {
-              const state = useVersionStore.getState()
-              const isLocalRestore =
-                state.pendingRestoreFromId === event.restoredFromVersionId ||
-                state.undoRestore?.restoredFromVersionId ===
-                  event.restoredFromVersionId
-              if (!isLocalRestore) {
-                const actor = event.actor || "A collaborator"
-                DiagramApiClient.fetchDiagram(diagramId, {
-                  signal: abort.signal,
-                })
-                  .then((next) => {
-                    if (instance) instance.model = next
-                  })
-                  .catch((err) => {
-                    if (
-                      err instanceof DOMException &&
-                      err.name === "AbortError"
-                    )
-                      return
-                    toast.error(
-                      `${actor} restored a version but we couldn't refresh.`,
-                      { toastId: "version-restored-refetch-failed" }
-                    )
-                  })
-                toast.info(t.collaboratorRestoredTitle(actor), {
-                  toastId: "version-restored-by-collaborator",
-                  autoClose: 4000,
-                })
-              }
-            }
-          })
-        }
-
-        if (isCollaborationView && collaborationUser) {
-          const rafRef = { current: 0 as number }
-          const pendingRef = {
-            current: null as { x: number; y: number } | null,
-          }
-
-          const flushCursor = () => {
-            if (pendingRef.current) {
-              instance?.setLocalAwarenessCursor(pendingRef.current)
-              pendingRef.current = null
-            }
-            rafRef.current = 0
-          }
-
-          const handlePointerMove = (event: PointerEvent) => {
-            const flowPosition = instance?.screenToFlowPosition({
-              x: event.clientX,
-              y: event.clientY,
-            })
-            if (!flowPosition) return
-
-            pendingRef.current = {
-              x: flowPosition.x,
-              y: flowPosition.y,
-            }
-
-            if (!rafRef.current) {
-              rafRef.current = window.requestAnimationFrame(flushCursor)
-            }
-          }
-
-          const handlePointerLeave = () => {
-            instance?.setLocalAwarenessCursor(null)
-          }
-
-          container.addEventListener("pointermove", handlePointerMove)
-          container.addEventListener("pointerleave", handlePointerLeave)
-
-          cleanupCursorTracking = () => {
-            container.removeEventListener("pointermove", handlePointerMove)
-            container.removeEventListener("pointerleave", handlePointerLeave)
-            if (rafRef.current) {
-              window.cancelAnimationFrame(rafRef.current)
-              rafRef.current = 0
-            }
-            instance?.setLocalAwarenessCursor(null)
-          }
-
-          selectionSubscriptionId = instance.subscribeToSelectionChange(
-            (selectedElementIds) => {
-              const selectedElementId = selectedElementIds.at(-1) ?? null
-              instance?.setLocalAwarenessSelectedElement(selectedElementId)
-            }
-          )
-        }
-
-        syncIntervalRef.current = setInterval(() => {
-          const previewing = useVersionStore.getState().preview !== null
-          if (previewing) return
-          if (!diagramIsUpdated.current || !diagramId || !instance) return
-          // In collab, every connected peer autosaves the same Yjs-converged
-          // model. If-Match would race them artificially — Yjs guarantees
-          // content convergence, so HEAD revision contention isn't a real
-          // conflict here. Single-editor views keep the optimistic check.
-          const ifMatch = isCollaborationView
-            ? undefined
-            : lastObservedHeadRev.current
-          DiagramApiClient.sendDiagramUpdate(diagramId, instance.model, {
-            ifMatch,
-          })
-            .then((res) => {
-              lastObservedHeadRev.current = res.headRev
-              diagramIsUpdated.current = false
-            })
-            .catch(async (err) => {
-              if (err instanceof ApiError && err.code === "REVISION_MISMATCH") {
-                // Catch the server's hint and rebase to it; if the meta is
-                // absent, KEEP the prior rev rather than clearing it —
-                // clearing would let the very next tick PUT without an
-                // If-Match guard and could clobber a concurrent writer.
-                const meta = err.meta as { currentHeadRev?: number } | undefined
-                if (typeof meta?.currentHeadRev === "number") {
-                  lastObservedHeadRev.current = meta.currentHeadRev
-                }
-              } else {
-                log.error("Autosave failed", err)
-                toast.error("Failed to sync changes")
-              }
-            })
-        }, 5000)
-
-        modelChangeSubscriptionId = instance.subscribeToModelChange(() => {
-          if (useVersionStore.getState().preview !== null) return
-          diagramIsUpdated.current = true
-        })
-
-        void fetchVersions(diagramId)
-        // Preview from `?version=` is handled by the dedicated URL ↔
-        // preview-state sync effect below; this effect just initialises
-        // the editor and connection.
-      } catch (err) {
+        setInitialDiagram(diagram as UMLModel)
+        setLoadNonce((n) => n + 1)
+      })
+      .catch((err) => {
         if (err instanceof DOMException && err.name === "AbortError") return
         log.error("Failed to initialize diagram", err)
         toast.error("Failed to initialize diagram")
         navigate("/")
-      }
+      })
+
+    return () => abort.abort()
+  }, [
+    diagramId,
+    viewType,
+    collaborationUser,
+    isCollaborationView,
+    navigate,
+    openModal,
+  ])
+
+  // Wire WS + per-instance subscriptions when an editor instance lands.
+  // Re-runs only on the deps below; `editor` identity changes only on
+  // <Apollon> remount (new key), so WS isn't re-created on every render.
+  useEffect(() => {
+    if (!editor || !diagramId || !viewType) return
+
+    const abort = new AbortController()
+
+    if (isCollaborationView && collaborationUser) {
+      editor.setLocalAwarenessState({
+        user: collaborationUser,
+        selectedElementId: null,
+      })
     }
 
-    initialize()
+    if (
+      [
+        DiagramView.COLLABORATE,
+        DiagramView.GIVE_FEEDBACK,
+        DiagramView.SEE_FEEDBACK,
+      ].includes(viewType as DiagramView)
+    ) {
+      wsManagerRef.current = new WebSocketManager(diagramId, editor, () =>
+        toast.error("WebSocket error")
+      )
+      wsManagerRef.current.startConnection()
+      wsManagerRef.current.onControl((event) => {
+        applyControlEvent(diagramId, event)
+        if (event.type === "VERSION_RESTORED") {
+          const state = useVersionStore.getState()
+          const isLocalRestore =
+            state.pendingRestoreFromId === event.restoredFromVersionId ||
+            state.undoRestore?.restoredFromVersionId ===
+              event.restoredFromVersionId
+          if (!isLocalRestore) {
+            const actor = event.actor || "A collaborator"
+            DiagramApiClient.fetchDiagram(diagramId, { signal: abort.signal })
+              .then((next) => {
+                editor.model = next
+              })
+              .catch((err) => {
+                if (err instanceof DOMException && err.name === "AbortError")
+                  return
+                toast.error(
+                  `${actor} restored a version but we couldn't refresh.`,
+                  { toastId: "version-restored-refetch-failed" }
+                )
+              })
+            toast.info(t.collaboratorRestoredTitle(actor), {
+              toastId: "version-restored-by-collaborator",
+              autoClose: 4000,
+            })
+          }
+        }
+      })
+    }
+
+    let cleanupCursorTracking: (() => void) | null = null
+    let selectionSubscriptionId: number | null = null
+
+    if (isCollaborationView && collaborationUser) {
+      const container = containerRef.current
+      if (container) {
+        const rafRef = { current: 0 as number }
+        const pendingRef = {
+          current: null as { x: number; y: number } | null,
+        }
+
+        const flushCursor = () => {
+          if (pendingRef.current) {
+            editor.setLocalAwarenessCursor(pendingRef.current)
+            pendingRef.current = null
+          }
+          rafRef.current = 0
+        }
+
+        const handlePointerMove = (event: PointerEvent) => {
+          const flowPosition = editor.screenToFlowPosition({
+            x: event.clientX,
+            y: event.clientY,
+          })
+          if (!flowPosition) return
+
+          pendingRef.current = {
+            x: flowPosition.x,
+            y: flowPosition.y,
+          }
+
+          if (!rafRef.current) {
+            rafRef.current = window.requestAnimationFrame(flushCursor)
+          }
+        }
+
+        const handlePointerLeave = () => {
+          editor.setLocalAwarenessCursor(null)
+        }
+
+        container.addEventListener("pointermove", handlePointerMove)
+        container.addEventListener("pointerleave", handlePointerLeave)
+
+        cleanupCursorTracking = () => {
+          container.removeEventListener("pointermove", handlePointerMove)
+          container.removeEventListener("pointerleave", handlePointerLeave)
+          if (rafRef.current) {
+            window.cancelAnimationFrame(rafRef.current)
+            rafRef.current = 0
+          }
+          editor.setLocalAwarenessCursor(null)
+        }
+      }
+
+      selectionSubscriptionId = editor.subscribeToSelectionChange(
+        (selectedElementIds) => {
+          const selectedElementId = selectedElementIds.at(-1) ?? null
+          editor.setLocalAwarenessSelectedElement(selectedElementId)
+        }
+      )
+    }
+
+    syncIntervalRef.current = setInterval(() => {
+      const previewing = useVersionStore.getState().preview !== null
+      if (previewing) return
+      if (!diagramIsUpdated.current) return
+      // In collab, every connected peer autosaves the same Yjs-converged
+      // model. If-Match would race them artificially — Yjs guarantees
+      // content convergence, so HEAD revision contention isn't a real
+      // conflict here. Single-editor views keep the optimistic check.
+      const ifMatch = isCollaborationView
+        ? undefined
+        : lastObservedHeadRev.current
+      DiagramApiClient.sendDiagramUpdate(diagramId, editor.model, { ifMatch })
+        .then((res) => {
+          lastObservedHeadRev.current = res.headRev
+          diagramIsUpdated.current = false
+        })
+        .catch(async (err) => {
+          if (err instanceof ApiError && err.code === "REVISION_MISMATCH") {
+            // Catch the server's hint and rebase to it; if the meta is
+            // absent, KEEP the prior rev rather than clearing it —
+            // clearing would let the very next tick PUT without an
+            // If-Match guard and could clobber a concurrent writer.
+            const meta = err.meta as { currentHeadRev?: number } | undefined
+            if (typeof meta?.currentHeadRev === "number") {
+              lastObservedHeadRev.current = meta.currentHeadRev
+            }
+          } else {
+            log.error("Autosave failed", err)
+            toast.error("Failed to sync changes")
+          }
+        })
+    }, 5000)
+
+    const modelChangeSubscriptionId = editor.subscribeToModelChange(() => {
+      if (useVersionStore.getState().preview !== null) return
+      diagramIsUpdated.current = true
+    })
+
+    void fetchVersions(diagramId)
 
     return () => {
       abort.abort()
-      setEditor(undefined)
       wsManagerRef.current?.cleanup()
+      wsManagerRef.current = null
       if (syncIntervalRef.current) {
         clearInterval(syncIntervalRef.current)
+        syncIntervalRef.current = null
       }
       cleanupCursorTracking?.()
-      if (instance) {
-        if (selectionSubscriptionId !== null) {
-          instance.setLocalAwarenessSelectedElement(null)
-          instance.unsubscribe(selectionSubscriptionId)
-        }
-        if (modelChangeSubscriptionId !== null) {
-          instance.unsubscribe(modelChangeSubscriptionId)
-        }
+      if (selectionSubscriptionId !== null) {
+        editor.setLocalAwarenessSelectedElement(null)
+        editor.unsubscribe(selectionSubscriptionId)
       }
-      instance?.destroy()
-      editorRef.current = null
+      editor.unsubscribe(modelChangeSubscriptionId)
     }
-  }, [diagramId, viewType, collaborationUser])
+  }, [
+    editor,
+    diagramId,
+    viewType,
+    collaborationUser,
+    isCollaborationView,
+    applyControlEvent,
+    fetchVersions,
+  ])
 
   // Sync the URL `?version=` param INTO preview state — permalink open,
   // history nav, external link change. We do NOT mirror the other way:
@@ -379,15 +382,14 @@ export const ApollonWithConnection: React.FC = () => {
     prevPreviewFromUrl.current = previewFromUrl ?? null
   }, [previewFromUrl, preview?.versionId, diagramId, editor, exitPreview])
 
-  const baseReadonly = viewType === DiagramView.SEE_FEEDBACK
-
+  // Preview overlay: imperative because the success/failure paths have
+  // different model/fitView/readonly tails that don't fit a single
+  // reactive prop. <Apollon>'s reactive `previewMode` would only cover
+  // the boolean flag — we still own the model assignment.
   useEffect(() => {
     if (!editor) return
     const abort = new AbortController()
     if (preview) {
-      // First preview entry of this session — capture the user's
-      // pre-preview canvas fingerprint so V1→V2→V3 hops keep comparing
-      // each candidate against the same baseline.
       if (prePreviewFingerprintRef.current === null) {
         prePreviewFingerprintRef.current = structuralFingerprint(editor.model)
       }
@@ -501,6 +503,20 @@ export const ApollonWithConnection: React.FC = () => {
     ]
   )
 
+  const handleApollonMount = useCallback(
+    (instance: ApollonEditor) => {
+      editorRef.current = instance
+      setEditor(instance)
+      return () => {
+        setEditor(undefined)
+        editorRef.current = null
+      }
+    },
+    [setEditor]
+  )
+
+  const isLoading = initialDiagram === null
+
   return (
     <div className="h-full flex flex-col">
       <Box
@@ -538,7 +554,19 @@ export const ApollonWithConnection: React.FC = () => {
             className={isLoading ? "invisible" : ""}
             ref={containerRef}
             sx={{ width: "100%", height: "100%" }}
-          />
+          >
+            {initialDiagram && (
+              <Apollon
+                key={`${diagramId}:${loadNonce}`}
+                defaultModel={initialDiagram}
+                collaborationEnabled
+                readonly={baseReadonly}
+                mode={apollonMode}
+                onMount={handleApollonMount}
+                style={{ width: "100%", height: "100%" }}
+              />
+            )}
+          </Box>
           <CollaboratorPresenceBar isActive={isCollaborationActive} />
           <CollaboratorCursors
             containerRef={containerRef}

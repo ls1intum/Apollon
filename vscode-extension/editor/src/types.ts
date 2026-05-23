@@ -1,9 +1,4 @@
-import {
-  ApollonMode,
-  Locale,
-  UMLDiagramType,
-  UMLModel,
-} from "@tumaet/apollon/react"
+import { ApollonMode, UMLDiagramType, UMLModel } from "@tumaet/apollon/react"
 import { uuid } from "./utils/uuid"
 
 export type Diagram = {
@@ -28,9 +23,6 @@ export type EditorOptions = {
   mode?: ApollonMode
   readonly?: boolean
   enablePopups?: boolean
-  enableCopyPaste?: boolean
-  locale: Locale
-  colorEnabled?: boolean
 }
 
 export const defaultEditorOptions: EditorOptions = {
@@ -38,7 +30,4 @@ export const defaultEditorOptions: EditorOptions = {
   mode: ApollonMode.Modelling,
   readonly: false,
   enablePopups: true,
-  enableCopyPaste: true,
-  locale: Locale.en,
-  colorEnabled: true,
 }
