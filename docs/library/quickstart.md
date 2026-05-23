@@ -62,22 +62,13 @@ directly. Give it a sized container:
 ```
 
 ```ts
-import {
-  ApollonEditor,
-  ApollonMode,
-  Locale,
-  UMLDiagramType,
-} from "@tumaet/apollon"
+import { ApollonEditor } from "@tumaet/apollon"
 import "@tumaet/apollon/style.css"
 
 const container = document.getElementById("apollon")
 if (!container) throw new Error("#apollon container missing")
 
-const editor = new ApollonEditor(container, {
-  type: UMLDiagramType.ClassDiagram,
-  mode: ApollonMode.Modelling,
-  locale: Locale.en,
-})
+const editor = new ApollonEditor(container)
 ```
 
 The stylesheet import is mandatory in both paths — without

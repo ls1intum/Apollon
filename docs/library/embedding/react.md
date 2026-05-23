@@ -13,16 +13,31 @@ of bundling a second one.
 
 ```tsx
 import { Apollon } from "@tumaet/apollon/react"
+import type { UMLModel } from "@tumaet/apollon"
 import "@tumaet/apollon/style.css"
 
-export function Diagram() {
-  return <Apollon style={{ height: 600 }} />
+export function Diagram({ initialModel }: { initialModel?: UMLModel }) {
+  return (
+    <Apollon
+      style={{ height: 600 }}
+      defaultModel={initialModel}
+      onMount={(editor) => {
+        const id = editor.subscribeToModelChange((model) => {
+          localStorage.setItem("diagram", JSON.stringify(model))
+        })
+        return () => editor.unsubscribe(id)
+      }}
+    />
+  )
 }
 ```
 
-That is the whole integration. The component owns the editor's lifecycle: it
-constructs the editor on mount and destroys it on unmount. The diagram type
-defaults to `ClassDiagram`; pass `defaultType` to start with another.
+That is the read+write loop you'll actually write: render a saved diagram,
+persist edits as the user makes them. The component owns the editor's
+lifecycle — constructs it on mount, destroys it on unmount; the `onMount`
+return is the React-19-style cleanup that runs before destroy. The diagram
+type defaults to `ClassDiagram` when no `defaultModel` is supplied; pass
+`defaultType` to start with another.
 
 ## Import from `/react`
 
@@ -180,7 +195,6 @@ reach the instance, wrap them in `<ApollonProvider>`:
 
 ```tsx
 import { ApollonProvider } from "@tumaet/apollon/react"
-
 ;<ApollonProvider editor={instance}>
   <Toolbar />
 </ApollonProvider>

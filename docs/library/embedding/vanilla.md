@@ -16,14 +16,23 @@ CDN. No build step, no bundler.
 <script type="module">
   import { ApollonEditor } from "https://esm.sh/@tumaet/apollon@4.4.0"
 
-  const editor = new ApollonEditor(document.getElementById("apollon"))
-  // Keep `editor` to call editor.destroy() / subscribe(...) later.
+  const saved = localStorage.getItem("diagram")
+  const editor = new ApollonEditor(document.getElementById("apollon"), {
+    model: saved ? JSON.parse(saved) : undefined,
+  })
+
+  editor.subscribeToModelChange((model) => {
+    localStorage.setItem("diagram", JSON.stringify(model))
+  })
+
+  // editor.destroy() when you're done.
 </script>
 ```
 
-That is the whole integration. `type`, `mode`, and `locale` default to the
-values you'd expect (class diagram, modelling mode, English), so the minimal
-example doesn't pass them.
+That is the read+write loop you'll actually write: render a saved diagram on
+load, persist edits as the user makes them. Refresh the page and the diagram
+is still there. Defaults — class diagram, modelling mode, English — fill in
+for everything the minimal example doesn't pass.
 
 ## Why esm.sh
 

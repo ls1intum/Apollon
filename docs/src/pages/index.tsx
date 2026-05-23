@@ -10,12 +10,25 @@ import styles from "./index.module.css"
 
 const HOSTED_URL = "https://apollon.aet.cit.tum.de"
 
-// Smallest correct mount per framework, in each host's current idiom.
+// The read+write loop people actually write: load a saved model and
+// persist edits as they happen. In each host's current idiom.
 const REACT_SNIPPET = `import { Apollon } from "@tumaet/apollon/react"
+import type { UMLModel } from "@tumaet/apollon"
 import "@tumaet/apollon/style.css"
 
-export function Diagram() {
-  return <Apollon style={{ height: 600 }} />
+export function Diagram({ initialModel }: { initialModel?: UMLModel }) {
+  return (
+    <Apollon
+      style={{ height: 600 }}
+      defaultModel={initialModel}
+      onMount={(editor) => {
+        const id = editor.subscribeToModelChange((model) => {
+          localStorage.setItem("diagram", JSON.stringify(model))
+        })
+        return () => editor.unsubscribe(id)
+      }}
+    />
+  )
 }`
 
 const ANGULAR_SNIPPET = `import {
@@ -24,9 +37,10 @@ const ANGULAR_SNIPPET = `import {
   ElementRef,
   afterNextRender,
   inject,
+  input,
   viewChild,
 } from "@angular/core"
-import { ApollonEditor } from "@tumaet/apollon"
+import { ApollonEditor, type UMLModel } from "@tumaet/apollon"
 import "@tumaet/apollon/style.css"
 
 @Component({
@@ -34,13 +48,22 @@ import "@tumaet/apollon/style.css"
   template: \`<div #host style="height: 600px"></div>\`,
 })
 export class DiagramComponent {
+  readonly initialModel = input<UMLModel>()
   private host = viewChild.required<ElementRef<HTMLDivElement>>("host")
 
   constructor() {
     const destroyRef = inject(DestroyRef)
     afterNextRender(() => {
-      const editor = new ApollonEditor(this.host().nativeElement)
-      destroyRef.onDestroy(() => editor.destroy())
+      const editor = new ApollonEditor(this.host().nativeElement, {
+        model: this.initialModel(),
+      })
+      const subId = editor.subscribeToModelChange((model) => {
+        localStorage.setItem("diagram", JSON.stringify(model))
+      })
+      destroyRef.onDestroy(() => {
+        editor.unsubscribe(subId)
+        editor.destroy()
+      })
     })
   }
 }`
@@ -54,8 +77,16 @@ const VANILLA_SNIPPET = `<link
 <script type="module">
   import { ApollonEditor } from "https://esm.sh/@tumaet/apollon@4.4.0"
 
-  const editor = new ApollonEditor(document.getElementById("apollon"))
-  // Keep \`editor\` to call editor.destroy() / subscribe(...) later.
+  const saved = localStorage.getItem("diagram")
+  const editor = new ApollonEditor(document.getElementById("apollon"), {
+    model: saved ? JSON.parse(saved) : undefined,
+  })
+
+  editor.subscribeToModelChange((model) => {
+    localStorage.setItem("diagram", JSON.stringify(model))
+  })
+
+  // editor.destroy() when you're done.
 </script>`
 
 function Hero() {

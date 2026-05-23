@@ -17,9 +17,10 @@ import {
   ElementRef,
   afterNextRender,
   inject,
+  input,
   viewChild,
 } from "@angular/core"
-import { ApollonEditor } from "@tumaet/apollon"
+import { ApollonEditor, type UMLModel } from "@tumaet/apollon"
 import "@tumaet/apollon/style.css"
 
 @Component({
@@ -27,13 +28,22 @@ import "@tumaet/apollon/style.css"
   template: `<div #host style="width: 100%; height: 100%"></div>`,
 })
 export class DiagramEditorComponent {
+  readonly initialModel = input<UMLModel>()
   private host = viewChild.required<ElementRef<HTMLDivElement>>("host")
 
   constructor() {
     const destroyRef = inject(DestroyRef)
     afterNextRender(() => {
-      const editor = new ApollonEditor(this.host().nativeElement)
-      destroyRef.onDestroy(() => editor.destroy())
+      const editor = new ApollonEditor(this.host().nativeElement, {
+        model: this.initialModel(),
+      })
+      const subId = editor.subscribeToModelChange((model) => {
+        localStorage.setItem("diagram", JSON.stringify(model))
+      })
+      destroyRef.onDestroy(() => {
+        editor.unsubscribe(subId)
+        editor.destroy()
+      })
     })
   }
 }

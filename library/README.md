@@ -128,19 +128,32 @@ export class DiagramEditorComponent implements AfterViewInit, OnDestroy {
 
 ### React
 
-Use the `<Apollon>` component from the `@tumaet/apollon/react` subpath. It owns
-the editor's lifecycle — constructs on mount, destroys on unmount.
+Use the `<Apollon>` component from the `@tumaet/apollon/react` subpath. Render
+a saved diagram and persist edits — the loop you'll actually write:
 
 ```tsx
 import { Apollon } from "@tumaet/apollon/react"
+import type { UMLModel } from "@tumaet/apollon"
 import "@tumaet/apollon/style.css"
 
-export function DiagramEditor() {
-  return <Apollon style={{ height: 600 }} />
+export function DiagramEditor({ initialModel }: { initialModel?: UMLModel }) {
+  return (
+    <Apollon
+      style={{ height: 600 }}
+      defaultModel={initialModel}
+      onMount={(editor) => {
+        const id = editor.subscribeToModelChange((model) => {
+          localStorage.setItem("diagram", JSON.stringify(model))
+        })
+        return () => editor.unsubscribe(id)
+      }}
+    />
+  )
 }
 ```
 
-For imperative control, construct `ApollonEditor` yourself instead — see the
+The component owns the editor's lifecycle (constructs on mount, destroys on
+unmount). For imperative control, construct `ApollonEditor` yourself — see the
 [React embedding guide](https://ls1intum.github.io/Apollon/library/embedding/react).
 
 ### Vanilla JS / CDN
