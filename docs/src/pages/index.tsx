@@ -10,9 +10,7 @@ import styles from "./index.module.css"
 
 const HOSTED_URL = "https://apollon.aet.cit.tum.de"
 
-// Minimal "mount the editor" snippets per framework — exactly what the live
-// editor on the right is rendered with, in each host's current best-practice
-// idiom (React 18+/19, Angular 17.3+/20, ESM via esm.sh).
+// Smallest correct mount per framework, in each host's current idiom.
 const REACT_SNIPPET = `import { Apollon } from "@tumaet/apollon/react"
 import "@tumaet/apollon/style.css"
 
@@ -144,9 +142,9 @@ function LiveDemo() {
                 }
               >
                 {() => {
-                  // Lazy-require keeps the editor (and its emotion/MUI/xyflow
-                  // transitive imports) out of the SSR bundle. BrowserOnly
-                  // only runs this on the client, so `require` never hits Node.
+                  // Lazy-require: BrowserOnly only runs this on the client,
+                  // so the editor's emotion/MUI/xyflow imports stay out of
+                  // Docusaurus's SSR bundle.
                   const ApollonEmbed =
                     require("../components/ApollonEmbed").default
                   return <ApollonEmbed />
@@ -171,7 +169,6 @@ type LinkCard = {
   kicker?: string
 }
 
-/** A responsive grid of cards that are each a link. Used by Ways and WhereToNext. */
 function LinkCardGrid({ items }: { items: LinkCard[] }) {
   return (
     <div className={styles.cardGrid}>

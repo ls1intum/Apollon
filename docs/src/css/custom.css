@@ -1,7 +1,4 @@
-/**
- * Custom CSS that overrides the default Infima theme.
- * Apollon brand: blue/violet from the logo.
- */
+/* Infima theme overrides — Apollon brand colors. */
 
 :root {
   --ifm-color-primary: #3e8acc;
@@ -26,11 +23,11 @@
   --docusaurus-highlighted-code-line-bg: rgba(255, 255, 255, 0.08);
 }
 
-/* Live Apollon embed. Border/radius/shadow come from the .demoWindow chrome
-   (index.module.css); this frame only sizes, clips, and pins a light
-   background (the editor renders light-only).
+/* Sizing for the live editor on the homepage. The window chrome (border,
+   radius, shadow) comes from .demoWindow in index.module.css; this frame
+   only sizes, clips, and pins a light background.
    Do NOT add `contain` here: `contain: layout` would capture the editor's
-   MUI popovers (position: fixed, viewport-positioned) and shift them off-screen. */
+   MUI popovers (position: fixed) and shift them off-screen. */
 .apollon-embed-frame {
   width: 100%;
   height: clamp(420px, 60vh, 720px);

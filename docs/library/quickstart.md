@@ -39,17 +39,18 @@ Install the `/react` subpath (see [Install](/library/embedding/install)) and
 render the `<Apollon>` component. It owns the editor's lifecycle.
 
 ```tsx
-import { Apollon, UMLDiagramType } from "@tumaet/apollon/react"
+import { Apollon } from "@tumaet/apollon/react"
 import "@tumaet/apollon/style.css"
 
 export function Diagram() {
-  return <Apollon type={UMLDiagramType.ClassDiagram} style={{ height: 600 }} />
+  return <Apollon style={{ height: 600 }} />
 }
 ```
 
 The `style` prop sizes the editor's container — the explicit height is what
 keeps the canvas from rendering blank. See [React](/library/embedding/react)
-for props, `onReady`, and SSR.
+for the full prop surface, the `useApollonEditor` / `useApollonSubscription`
+hooks, ref handling, and SSR.
 
 ### Non-React hosts
 

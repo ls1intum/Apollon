@@ -6,7 +6,6 @@
   --demo-radius: 12px;
 }
 
-/* --- shared section rhythm --------------------------------------------- */
 .section {
   padding-block: clamp(3.5rem, 6vw, 6rem);
 }
@@ -34,7 +33,6 @@
   color: var(--ifm-color-emphasis-700);
 }
 
-/* --- hero -------------------------------------------------------------- */
 .hero {
   padding-block: clamp(3.5rem, 7vw, 6rem);
   text-align: center;
@@ -89,7 +87,6 @@
   text-align: left;
 }
 
-/* --- live demo --------------------------------------------------------- */
 .demoRow {
   align-items: stretch;
 }
@@ -162,9 +159,8 @@
   color: var(--ifm-color-emphasis-600);
 }
 
-/* --- cards ------------------------------------------------------------- */
-/* A real responsive grid — 1 column on phones, 2 on tablets, 3 on desktop —
-   instead of Docusaurus's row/col, which only knows "stack below 996px". */
+/* Real responsive grid — 1/2/3 columns by width — instead of Docusaurus's
+   row/col, which only knows "stack below 996px". */
 .cardGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
@@ -227,7 +223,6 @@ a.card:hover {
   color: var(--ifm-color-primary);
 }
 
-/* --- responsive -------------------------------------------------------- */
 @media (max-width: 996px) {
   .demoCol {
     margin-bottom: 1.5rem;

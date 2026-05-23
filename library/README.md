@@ -132,11 +132,11 @@ Use the `<Apollon>` component from the `@tumaet/apollon/react` subpath. It owns
 the editor's lifecycle — constructs on mount, destroys on unmount.
 
 ```tsx
-import { Apollon, UMLDiagramType } from "@tumaet/apollon/react"
+import { Apollon } from "@tumaet/apollon/react"
 import "@tumaet/apollon/style.css"
 
 export function DiagramEditor() {
-  return <Apollon type={UMLDiagramType.ClassDiagram} style={{ height: 540 }} />
+  return <Apollon style={{ height: 600 }} />
 }
 ```
 
