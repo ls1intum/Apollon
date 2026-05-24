@@ -51,12 +51,11 @@ function makeModel(edges: ApollonEdge[]): UMLModel {
 
 describe("EdgeTransformer", () => {
   describe("hydrateEdgeData", () => {
-    it("injects userWaypoints and routingMode into legacy edge data", () => {
+    it("injects userWaypoints into legacy edge data", () => {
       const legacy = makeLegacyEdge()
       const hydrated = hydrateEdgeData(legacy)
 
       expect(hydrated.data.userWaypoints).toEqual([])
-      expect(hydrated.data.routingMode).toBe("auto")
     })
 
     it("preserves legacy points array as fallback", () => {
@@ -71,23 +70,10 @@ describe("EdgeTransformer", () => {
       ])
     })
 
-    it("sets routingMode to 'manual' for manually layouted edges", () => {
-      const legacy = makeLegacyEdge({
-        data: {
-          isManuallyLayouted: true,
-          points: [],
-        },
-      })
-      const hydrated = hydrateEdgeData(legacy)
-
-      expect(hydrated.data.routingMode).toBe("manual")
-    })
-
     it("does not re-hydrate already migrated edges", () => {
       const migrated = makeLegacyEdge({
         data: {
           userWaypoints: [{ x: 50, y: 50 }],
-          routingMode: "manual",
         },
       })
       const result = hydrateEdgeData(migrated)
@@ -100,7 +86,6 @@ describe("EdgeTransformer", () => {
       const migrated = makeLegacyEdge({
         data: {
           userWaypoints: [{ x: 50, y: 50 }],
-          routingMode: "manual",
           computedSegments: [
             { x: 0, y: 0 },
             { x: 100, y: 0 },
@@ -113,7 +98,6 @@ describe("EdgeTransformer", () => {
       expect(result).not.toBe(migrated)
       expect(result.data).not.toHaveProperty("computedSegments")
       expect(result.data.userWaypoints).toEqual([{ x: 50, y: 50 }])
-      expect(result.data.routingMode).toBe("manual")
     })
 
     it("does not mutate the original edge", () => {
@@ -138,7 +122,6 @@ describe("EdgeTransformer", () => {
 
       for (const edge of result.edges) {
         expect(edge.data.userWaypoints).toEqual([])
-        expect(edge.data.routingMode).toBe("auto")
       }
     })
 
@@ -147,7 +130,6 @@ describe("EdgeTransformer", () => {
         makeLegacyEdge({
           data: {
             userWaypoints: [],
-            routingMode: "auto",
           },
         }),
       ])
@@ -167,7 +149,7 @@ describe("EdgeTransformer", () => {
     it("returns empty array for valid model", () => {
       const model = makeModel([
         makeLegacyEdge({
-          data: { userWaypoints: [], routingMode: "auto" },
+          data: { userWaypoints: [] },
         }),
       ])
       const result = transformEdges(model)

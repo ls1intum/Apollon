@@ -1,36 +1,11 @@
 /**
- * Edge Transformer — Legacy Edge Data Migration
+ * Edge Transformer - legacy edge data migration.
  *
- * Intercepts imported diagram payloads and ensures every edge carries the
- * `OrthogonalEdgeData` interface properties (`userWaypoints`, `routingMode`).
- *
- * Transformation rules:
- *   ┌──────────────────────────────┬──────────────────────────────────────────┐
- *   │  Legacy Payload Field        │  Transformation                          │
- *   ├──────────────────────────────┼──────────────────────────────────────────┤
- *   │  data: {}                   │  data.userWaypoints = []                 │
- *   │                              │  data.routingMode = 'auto'               │
- *   ├──────────────────────────────┼──────────────────────────────────────────┤
- *   │  data.points (legacy SVG)   │  Discard / preserve for initial render.  │
- *   │                              │  A* recalculates on first load.          │
- *   ├──────────────────────────────┼──────────────────────────────────────────┤
- *   │  data.isManuallyLayouted    │  If true → routingMode = 'manual'        │
- *   └──────────────────────────────┴──────────────────────────────────────────┘
- *
- * After transformation, every edge in the model is guaranteed to satisfy
- * the `OrthogonalEdgeData` TypeScript interface, preventing runtime errors
- * when the new rendering engine attempts to read `userWaypoints` from
- * `undefined`. Stale computed routing geometry is removed during hydration.
- *
- * Thread Safety: This module is pure — no React, no side effects, no globals.
- * It can be used in a Web Worker context.
+ * Ensures imported edges carry `userWaypoints` and strips stale
+ * runtime-only geometry (`computedSegments`) from persisted edge data.
  */
 
 import type { ApollonEdge, UMLModel, OrthogonalEdgeData } from "@/typings"
-
-// ---------------------------------------------------------------------------
-// Single Edge Transformer
-// ---------------------------------------------------------------------------
 
 /**
  * Hydrates a single edge's data object with OrthogonalEdgeData defaults.
@@ -42,13 +17,9 @@ export function hydrateEdgeData(edge: ApollonEdge): ApollonEdge {
     "computedSegments"
   )
 
-  // Skip work if the edge already carries the routing fields and has no
-  // stale runtime geometry to strip.
-  if (
-    edge.data.userWaypoints !== undefined &&
-    edge.data.routingMode !== undefined &&
-    !hasComputedSegments
-  ) {
+  // Skip work if migration fields already exist and there is no stale
+  // runtime geometry to remove.
+  if (edge.data.userWaypoints !== undefined && !hasComputedSegments) {
     return edge
   }
 
@@ -61,32 +32,17 @@ export function hydrateEdgeData(edge: ApollonEdge): ApollonEdge {
     data.userWaypoints = []
   }
 
-  // If the legacy edge was manually layouted, preserve that intent.
-  if (data.routingMode === undefined) {
-    data.routingMode =
-      (data as Record<string, unknown>).isManuallyLayouted === true
-        ? "manual"
-        : "auto"
-  }
-
   return { ...edge, data }
 }
-
-// ---------------------------------------------------------------------------
-// Batch Transformer
-// ---------------------------------------------------------------------------
 
 /**
  * Transforms all edges in a `UMLModel`, ensuring every edge satisfies
  * the `OrthogonalEdgeData` interface. Returns a new model object.
- *
- * @param model The imported UMLModel (potentially lacking OrthogonalEdgeData fields)
- * @returns A new UMLModel with all edges hydrated
  */
 export function transformEdges(model: UMLModel): UMLModel {
   const hydratedEdges = model.edges.map(hydrateEdgeData)
 
-  // Only create a new model object if at least one edge was actually changed
+  // Only create a new model object if at least one edge was actually changed.
   const anyChanged = hydratedEdges.some((edge, i) => edge !== model.edges[i])
   if (!anyChanged) return model
 
@@ -95,10 +51,6 @@ export function transformEdges(model: UMLModel): UMLModel {
     edges: hydratedEdges,
   }
 }
-
-// ---------------------------------------------------------------------------
-// Validation
-// ---------------------------------------------------------------------------
 
 /**
  * Validates that every edge in the model carries valid OrthogonalEdgeData.
@@ -114,10 +66,6 @@ export function validateEdgeMigration(model: UMLModel): string[] {
       continue
     }
     if (!Array.isArray(data.userWaypoints)) {
-      failures.push(edge.id)
-      continue
-    }
-    if (data.routingMode !== "auto" && data.routingMode !== "manual") {
       failures.push(edge.id)
     }
   }

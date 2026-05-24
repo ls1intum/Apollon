@@ -74,9 +74,8 @@ export interface OrthogonalEdgeData {
   // Existing manual-waypoint array used by the step-path edges.
   points: IPoint[]
 
-  // Persisted orthogonal routing intent. Computed geometry is runtime-only.
+  // Persisted user-controlled intermediate waypoints.
   userWaypoints?: IPoint[]
-  routingMode?: "auto" | "manual"
 }
 
 export type ApollonEdge = {

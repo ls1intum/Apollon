@@ -5,11 +5,7 @@ import {
   ReactFlow,
   type Edge,
 } from "@xyflow/react"
-import {
-  type MouseEvent as ReactMouseEvent,
-  useCallback,
-  useEffect,
-} from "react"
+import { type MouseEvent as ReactMouseEvent, useCallback } from "react"
 import {
   CustomBackground,
   CustomControls,
@@ -23,7 +19,6 @@ import {
 import "@xyflow/react/dist/style.css"
 import "@/styles/app.css"
 import { useDiagramStore, useMetadataStore } from "./store/context"
-import { retainRoutingWorker } from "./store/routingStore"
 import { useShallow } from "zustand/shallow"
 import { CANVAS } from "./constants"
 import { diagramEdgeTypes } from "./edges"
@@ -64,8 +59,6 @@ const isPointArray = (value: unknown): value is IPoint[] =>
 
 function App({ onReactFlowInit }: AppProps) {
   useKeyboardShortcuts()
-
-  useEffect(() => retainRoutingWorker(), [])
 
   const { nodes, onNodesChange, edges, onEdgesChange, diagramId } =
     useDiagramStore(

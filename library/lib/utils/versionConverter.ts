@@ -899,7 +899,6 @@ export function importDiagram(data: any | V3UMLModel): UMLModel {
   }
 
   // T12: Hydrate all edges with OrthogonalEdgeData defaults.
-  // Legacy edges get userWaypoints=[] and routingMode='auto',
-  // ensuring the A* router recalculates paths on first render.
+  // Legacy edges get userWaypoints=[] and stale computed geometry removed.
   return transformEdges(model)
 }
