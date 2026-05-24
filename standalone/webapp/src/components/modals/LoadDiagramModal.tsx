@@ -23,8 +23,8 @@ export const LoadDiagramModal = () => {
   )
 
   const handleLoadingDiagram = (id: string) => {
-    navigate(`/local/${id}`)
     closeModal()
+    navigate(`/local/${id}`)
   }
 
   const handleDeleteDiagram = (id: string) => {

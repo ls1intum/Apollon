@@ -58,9 +58,10 @@ export const NewDiagramModal = () => {
   )
 
   const handleCreateDiagram = () => {
+    // Close before navigate: ModalContext writes after route unmount race.
     const id = createModelByTitleAndType(newDiagramTitle, selectedDiagramType)
-    navigate(`/local/${id}`)
     closeModal()
+    navigate(`/local/${id}`)
   }
 
   const handleDiagramNameChange = (

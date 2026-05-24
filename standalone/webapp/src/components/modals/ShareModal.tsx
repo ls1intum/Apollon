@@ -49,6 +49,7 @@ export const ShareModal = (props: unknown) => {
 
       const newurl = `${window.location.origin}/shared/${diagramID}?view=${viewType}`
       copyToClipboard(newurl)
+      closeModal()
       navigate(`/shared/${diagramID}?view=${viewType}`)
 
       toast.success(
@@ -57,7 +58,6 @@ export const ShareModal = (props: unknown) => {
           autoClose: 10000,
         }
       )
-      closeModal()
     } catch (err) {
       log.error("Error creating diagram:", err as Error)
       toast.error("Could not create diagram.")

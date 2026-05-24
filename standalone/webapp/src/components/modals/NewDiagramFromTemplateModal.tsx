@@ -51,9 +51,8 @@ export const NewDiagramFromTemplateModal = () => {
       clonedModel.id = nextId
 
       createModel(clonedModel)
-      navigate(`/local/${nextId}`)
-
       closeModal()
+      navigate(`/local/${nextId}`)
     } catch (err: unknown) {
       log.error("Error creating diagram from template:", err as Error)
 
