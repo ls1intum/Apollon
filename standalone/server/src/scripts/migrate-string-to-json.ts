@@ -8,12 +8,12 @@
  * Idempotent — running it twice is a no-op. Refuses to leave any
  * STRING-typed `diagram:*` HEAD keys behind.
  *
- * Run via: npm run migrate:string-to-json --workspace=@tumaet/server
+ * Run via: pnpm --filter @tumaet/server run migrate:string-to-json
  */
-import "../loadEnvironment"
-import { loadConfig } from "../config"
-import { createRedisClient, k } from "../redis"
-import { logger } from "../logger"
+import "../loadEnvironment.js"
+import { loadConfig } from "../config.js"
+import { createRedisClient, k } from "../redis.js"
+import { logger } from "../logger.js"
 
 const LEGACY_HEAD_RE = /^diagram:(?!\{)(.+)$/
 

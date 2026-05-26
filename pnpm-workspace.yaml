@@ -1,0 +1,72 @@
+packages:
+  - "library"
+  - "standalone/*"
+  - "vscode-extension"
+  - "vscode-extension/menu"
+  - "vscode-extension/editor"
+  - "docs"
+
+# Inject workspace deps as real packages, not symlinks, so `pnpm deploy`
+# produces a self-contained server runtime image.
+injectWorkspacePackages: true
+
+# Supply-chain hardening.
+minimumReleaseAge: 1440 # 1 day
+blockExoticSubdeps: true
+
+# Shared version pins across 2+ workspaces. Each workspace package.json
+# references the entry via `"<pkg>": "catalog:"` instead of a duplicate
+# version string, so Renovate bumps a dep in one place instead of N.
+catalog:
+  "@emotion/react": "11.11.1"
+  "@emotion/styled": "11.11.0"
+  "@eslint/js": "9.17.0"
+  "@mui/material": "6.4.2"
+  "@tailwindcss/vite": "4.0.17"
+  "@testing-library/jest-dom": "6.9.1"
+  "@testing-library/react": "16.3.2"
+  "@types/node": "24.12.4"
+  "@types/react": "18.3.28"
+  "@types/react-dom": "18.3.7"
+  "@types/uuid": "10.0.0"
+  "@types/vscode-webview": "1.57.5"
+  "@vitejs/plugin-react": "4.3.4"
+  "@vitest/coverage-v8": "4.1.2"
+  "@xyflow/react": "12.3.6"
+  clsx: "2.1.1"
+  eslint: "9.17.0"
+  eslint-plugin-react: "7.37.2"
+  eslint-plugin-react-hooks: "5.1.0"
+  globals: "15.13.0"
+  jsdom: "28.1.0"
+  react: "18.3.1"
+  react-dom: "18.3.1"
+  tailwindcss: "4.0.17"
+  typescript: "5.7.2"
+  typescript-eslint: "8.18.1"
+  uuid: "11.0.3"
+  vite: "6.4.2"
+  vitest: "4.1.2"
+  zustand: "5.0.12"
+
+overrides:
+  "@eslint/plugin-kit": ">=0.3.4" # GHSA-7q7g-4xm8-89cq
+  "@xmldom/xmldom": ">=0.8.12" # GHSA-9pgh-qqpf-7wqj
+  "brace-expansion": ">=2.0.2" # GHSA-v6h2-p8h4-qcjw
+  "esbuild": "0.27.4" # evanw/esbuild#4436 — regression, not a CVE
+  "flatted": ">=3.4.2" # GHSA-rwm2-mxc8-7m93
+  "handlebars": ">=4.7.9" # GHSA-q42p-pg8m-cqh6
+  "lodash": ">=4.17.21" # GHSA-jf85-cpcp-j695 (CVE-2019-10744 fixed in 4.17.12)
+  "minimatch": ">=3.0.5" # GHSA-f8q6-p94x-37v3
+  "picomatch": ">=4.0.4" # GHSA-9pwm-9w4j-c7q4
+  "tar": ">=6.2.1" # GHSA-f5x3-32g6-xq36 (CVE-2024-28863)
+
+# pnpm 10+ blocks lifecycle scripts by default.
+allowBuilds:
+  "@swc/core": true # docusaurus-faster (Rspack + SWC build path)
+  "@vscode/vsce-sign": true
+  "core-js": false # jspdf transitive; "thank-you" postinstall, no native build
+  "cpu-features": true
+  "esbuild": true
+  "sharp": true
+  "ssh2": true

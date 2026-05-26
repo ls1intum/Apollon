@@ -12,7 +12,7 @@ import { test, expect, type Page, type Route } from "@playwright/test"
  * - Hostile markdown does not inject <script> / <iframe> / on* / javascript:.
  * - nginx serves legal URLs with text/markdown + no-sniff + X-Frame-Options DENY.
  *
- * The dev server used by Playwright is `npm run start`, which points at the
+ * The dev server used by Playwright is `pnpm run start`, which points at the
  * Vite dev server. Vite serves `public/` files directly, so the on-disk
  * `public/legal/_disclaimer/*.md` and `public/legal/profiles/tumaet/*.md`
  * are the exact bytes the browser sees.

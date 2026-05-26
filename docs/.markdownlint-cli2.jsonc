@@ -1,0 +1,28 @@
+{
+  // Docusaurus-friendly markdownlint config.
+  //
+  // We accept long lines (tables, long URLs), allow inline HTML (MDX),
+  // permit duplicate headings across files in different categories, and
+  // tolerate the trailing-punctuation style our DSMS / GDPR docs need.
+  "config": {
+    "default": true,
+    "MD013": false,
+    "MD024": { "siblings_only": true },
+    "MD025": { "front_matter_title": "" },
+    "MD026": false,
+    "MD033": false,
+    "MD034": false,
+    "MD036": false,
+    "MD041": false,
+    "MD046": { "style": "fenced" },
+    "MD040": false,
+    "MD058": false,
+    "MD060": false,
+    "MD031": false
+  },
+  "ignores": [
+    "node_modules/**",
+    "build/**",
+    ".docusaurus/**"
+  ]
+}

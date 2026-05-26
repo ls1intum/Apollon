@@ -2,7 +2,6 @@ import { DiagramEdgeType, IPoint } from "./edges/types"
 import { DiagramNodeType } from "./nodes/types"
 import { UMLDiagramType } from "./types/DiagramType"
 import { Styles } from "./styles/theme"
-import { DeepPartial } from "./utils"
 
 export { UMLDiagramType, type DiagramNodeType, type DiagramEdgeType }
 export { type Styles }
@@ -120,11 +119,7 @@ export type ApollonOptions = {
   readonly?: boolean
   enablePopups?: boolean
   model?: UMLModel
-  theme?: DeepPartial<Styles>
   locale?: Locale
-  copyPasteToClipboard?: boolean
-  colorEnabled?: boolean
-  scale?: number
   debug?: boolean
   collaborationEnabled?: boolean
   scrollLock?: boolean
