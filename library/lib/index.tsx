@@ -12,6 +12,7 @@ export {
 // `importDiagram` is the only public version-migration entry. V2/V3 converters
 // and format detectors live behind `@tumaet/apollon/internals`.
 export { importDiagram } from "./utils/versionConverter"
+export { collabColorFromName, randomCollabName } from "./utils/collaboration"
 // NOTE: the `./utils` barrel is intentionally NOT re-exported — it holds
 // ~90 internal layout/geometry/store helpers that are not part of the
 // supported surface. Public helpers are cherry-picked by name above.

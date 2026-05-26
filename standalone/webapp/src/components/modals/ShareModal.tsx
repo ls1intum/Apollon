@@ -8,7 +8,7 @@ import { useNavigate } from "react-router"
 import { DiagramView } from "@/types"
 import { DiagramApiClient } from "@/services/DiagramApiClient"
 import { log } from "@/logger"
-import { randomCollabName } from "@/utils/collaboration"
+import { randomCollabName } from "@tumaet/apollon"
 
 export const ShareModal = () => {
   const { editor } = useEditorContext()

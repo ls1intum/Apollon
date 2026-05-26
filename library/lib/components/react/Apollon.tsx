@@ -9,6 +9,7 @@ import {
 } from "react"
 import { ApollonEditor } from "@/apollon-editor"
 import type {
+  ApollonCollaborationOptions,
   ApollonMode,
   ApollonOptions,
   ApollonView,
@@ -43,6 +44,7 @@ export interface ApollonProps {
   availableViews?: ApollonView[]
   enablePopups?: boolean
   collaborationEnabled?: boolean
+  collaboration?: ApollonCollaborationOptions
   debug?: boolean
 
   // Reactive options
@@ -77,6 +79,7 @@ export const Apollon = forwardRef<ApollonEditor | null, ApollonProps>(
       availableViews,
       enablePopups,
       collaborationEnabled,
+      collaboration,
       debug,
 
       readonly,
@@ -100,6 +103,7 @@ export const Apollon = forwardRef<ApollonEditor | null, ApollonProps>(
       availableViews,
       enablePopups,
       collaborationEnabled,
+      collaboration,
       debug,
     })
 
