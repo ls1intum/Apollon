@@ -1,0 +1,64 @@
+name: ios-testflight-release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ios-testflight-release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  testflight:
+    runs-on: [self-hosted, macOS]
+    timeout-minutes: 60
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@ac6db6d3c1f721f886538a378a2d73e85697340a # v6.0.8
+
+      - name: Set up Node
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build web assets
+        run: pnpm --filter @tumaet/webapp run build
+
+      - name: Capacitor sync (iOS)
+        run: pnpm --filter @tumaet/webapp exec cap sync ios
+
+      - name: Install Gems
+        working-directory: standalone/webapp/ios/App
+        run: bundle install
+
+      - name: Generate build number
+        run: |
+          BUILD_NUMBER=$(date +'%Y%m%d%H%M')
+          echo "BUILD_NUMBER=$BUILD_NUMBER" >> "$GITHUB_ENV"
+
+      - name: Build + upload to TestFlight (Fastlane)
+        working-directory: standalone/webapp/ios/App
+        env:
+          BUILD_NUMBER: ${{ env.BUILD_NUMBER }}
+          IOS_APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.IOS_APP_STORE_CONNECT_API_KEY_KEY_ID }}
+          IOS_APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.IOS_APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
+        run: bundle exec fastlane testflight
+
+      - name: Upload IPA artifact
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: ios-ipa
+          path: standalone/webapp/ios/App/build/*.ipa
+          retention-days: 7
