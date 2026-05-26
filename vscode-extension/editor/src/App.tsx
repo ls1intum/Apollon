@@ -16,7 +16,9 @@ function App() {
 
   const exportDiagram = async () => {
     const editor = editorRef.current
-    if (!editor) return
+    if (!editor) {
+      return
+    }
 
     const diagramSVG = await editor.exportAsSVG({ svgMode: "compat" })
     let exportContent
