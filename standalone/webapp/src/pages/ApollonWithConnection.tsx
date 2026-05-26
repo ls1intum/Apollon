@@ -8,7 +8,7 @@ import {
   randomCollabName,
   type ApollonOptions,
   type UMLModel,
-} from "@tumaet/apollon"
+} from "@tumaet/apollon/react"
 import { useNavigate, useParams, useSearchParams } from "react-router"
 import { toast } from "react-toastify"
 import { Box } from "@mui/material"
@@ -272,7 +272,7 @@ export const ApollonWithConnection: React.FC = () => {
       }
     }
 
-    initialize()
+    void initialize()
 
     return () => {
       abort.abort()
@@ -289,7 +289,16 @@ export const ApollonWithConnection: React.FC = () => {
       instance?.destroy()
       editorRef.current = null
     }
-  }, [diagramId, viewType, collaborationUser])
+  }, [
+    applyControlEvent,
+    collaborationUser,
+    diagramId,
+    fetchVersions,
+    navigate,
+    openModal,
+    setEditor,
+    viewType,
+  ])
 
   // Sync the URL `?version=` param INTO preview state — permalink open,
   // history nav, external link change. We do NOT mirror the other way:

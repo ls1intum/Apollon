@@ -1,5 +1,5 @@
 import { Router } from "express"
-import type { Redis } from "../redis"
+import type { Redis } from "../redis.js"
 
 interface Deps {
   redis: Redis

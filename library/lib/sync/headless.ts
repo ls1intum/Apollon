@@ -2,10 +2,10 @@ import * as Y from "yjs"
 import type { StoreApi } from "zustand"
 import type { DiagramStore } from "@/store/diagramStore"
 import type { MetadataStore } from "@/store/metadataStore"
-import { YjsSyncClass } from "./yjsSyncClass"
+import { YjsSync } from "./yjsSync"
 
 /**
- * Construct a `YjsSyncClass` against minimal stub stores. Intended for
+ * Construct a `YjsSync` against minimal stub stores. Intended for
  * tests that exercise the wire protocol (sync/awareness handshake,
  * incremental updates, reconnect behaviour) without dragging the React
  * editor / React-Flow / zustand-with-middleware setup into the harness.
@@ -16,7 +16,7 @@ import { YjsSyncClass } from "./yjsSyncClass"
  */
 export function createHeadlessSync(ydoc: Y.Doc = new Y.Doc()): {
   ydoc: Y.Doc
-  sync: YjsSyncClass
+  sync: YjsSync
 } {
   const noop = () => {}
   const diagramStore: StoreApi<DiagramStore> = {
@@ -28,7 +28,7 @@ export function createHeadlessSync(ydoc: Y.Doc = new Y.Doc()): {
         updateUndoRedoState: noop,
         undoManager: null,
         // Other DiagramStore fields are typed but never accessed by
-        // YjsSyncClass; cast through `unknown` keeps the helper from
+        // YjsSync; cast through `unknown` keeps the helper from
         // having to enumerate the full surface.
       }) as unknown as DiagramStore,
     setState: noop,
@@ -42,6 +42,6 @@ export function createHeadlessSync(ydoc: Y.Doc = new Y.Doc()): {
     subscribe: () => noop,
     getInitialState: () => ({}) as MetadataStore,
   }
-  const sync = new YjsSyncClass(ydoc, diagramStore, metadataStore)
+  const sync = new YjsSync(ydoc, diagramStore, metadataStore)
   return { ydoc, sync }
 }

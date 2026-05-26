@@ -1,8 +1,10 @@
 node_modules/
 dist/
+build/
 android/
 ios/
-docs/
 .context/
+.docusaurus/
 **/playwright-report/
 **/test-results/
+pnpm-lock.yaml

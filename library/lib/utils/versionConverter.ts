@@ -1,4 +1,9 @@
-/* eslint-disable */
+// V2/V3 → V4 migrators read schemas TS can't statically describe (each
+// node type unions a different union of optional fields). Narrowed
+// disable: only `no-explicit-any` is suppressed; everything else still
+// lints. The `as any` casts are at type boundaries where runtime checks
+// (`isV*Format`, switch on `type`) have already discriminated the union.
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { UMLModel, ApollonNode, ApollonEdge, Assessment } from "../typings"
 import { UMLDiagramType } from "../types/DiagramType"
 import { ClassType } from "../types/nodes/enums"
@@ -877,9 +882,11 @@ export function isV4Format(data: any): data is UMLModel {
 }
 
 /**
- * Universal import function that handles v2, v3 and v4 formats
+ * Universal import function that handles v2, v3 and v4 formats.
+ * Argument is typed `unknown` because callers pass freshly-parsed JSON;
+ * the runtime format guards (`isV*Format`) discriminate the payload.
  */
-export function importDiagram(data: any | V3UMLModel): UMLModel {
+export function importDiagram(data: any): UMLModel {
   if (isV4Format(data)) {
     return data
   }

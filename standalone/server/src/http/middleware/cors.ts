@@ -1,5 +1,5 @@
 import cors from "cors"
-import type { Config } from "../../config"
+import type { Config } from "../../config.js"
 
 export function configureCors(config: Config) {
   // Behind the production reverse proxy the webapp and API share an origin,
