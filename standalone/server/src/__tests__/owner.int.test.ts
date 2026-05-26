@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import request from "supertest"
-import { buildApp } from "../http/app"
-import { loadConfig } from "../config"
-import { getRedis } from "./setup"
+import { buildApp } from "../http/app.js"
+import { loadConfig } from "../config.js"
+import { getRedis } from "./setup.js"
 
 const baseDiagram = {
   version: "4.0.0",

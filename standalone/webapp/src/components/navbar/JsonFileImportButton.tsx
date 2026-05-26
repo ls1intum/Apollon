@@ -2,7 +2,7 @@ import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { MenuItem } from "@mui/material"
 import React, { useRef } from "react"
 import { useNavigate } from "react-router"
-import { importDiagram } from "@tumaet/apollon"
+import { importDiagram } from "@tumaet/apollon/react"
 import { log } from "@/logger"
 
 export const JsonFileImportButton: React.FC<{ close: () => void }> = (

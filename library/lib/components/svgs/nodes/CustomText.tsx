@@ -1,20 +1,14 @@
-import { FC } from "react"
+import { FC, ReactNode, SVGProps } from "react"
 
-type Props = {
-  children: React.ReactNode
-  fill?: string
+type Props = Omit<SVGProps<SVGTextElement>, "x" | "y"> & {
+  children: ReactNode
   x?: string | number
   y?: string | number
-  dominantBaseline?: string
-  textAnchor?: string
-  fontWeight?: string
-  fontFamily?: string
-  pointerEvents?: string
   noX?: boolean
   noY?: boolean
 }
 
-export const CustomText: FC<Props & Record<string, unknown>> = ({
+export const CustomText: FC<Props> = ({
   children,
   fill = "var(--apollon-primary-contrast, #000000)",
   x = "50%",
@@ -27,7 +21,7 @@ export const CustomText: FC<Props & Record<string, unknown>> = ({
   noX = false,
   noY = false,
   ...props
-}: Props) => {
+}) => {
   const pos: { x?: string | number; y?: string | number } = {}
   if (!noX) {
     pos.x = x

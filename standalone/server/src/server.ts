@@ -1,10 +1,10 @@
 // Load environment first so config picks up .env values.
-import "./loadEnvironment"
-import { loadConfig } from "./config"
-import { logger } from "./logger"
-import { buildApp } from "./http/app"
-import { bootLoadFunction, createRedisClient } from "./redis"
-import { startRelayServer } from "./ws"
+import "dotenv/config"
+import { loadConfig } from "./config.js"
+import { logger } from "./logger.js"
+import { buildApp } from "./http/app.js"
+import { bootLoadFunction, createRedisClient } from "./redis.js"
+import { startRelayServer } from "./ws.js"
 
 async function main() {
   const config = loadConfig()

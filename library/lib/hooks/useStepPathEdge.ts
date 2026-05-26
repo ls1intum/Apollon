@@ -521,12 +521,19 @@ export const useStepPathEdge = ({
     (event: React.PointerEvent, index: number) => {
       if (!allowMidpointDragging) return
 
-      // Store initial state
+      // Store initial state. The drag works entirely in flow coordinates:
+      // pointer positions are converted through screenToFlowPosition, because
+      // a raw viewport-pixel delta added to a flow-coordinate point drifts at
+      // every zoom level other than 1 (and the wrong value is persisted).
       const currentMidpoint = midpoints[index]
       draggingIndexRef.current = index
+      const flowStart = screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      })
       dragOffsetRef.current = {
-        x: event.clientX - currentMidpoint.x,
-        y: event.clientY - currentMidpoint.y,
+        x: flowStart.x - currentMidpoint.x,
+        y: flowStart.y - currentMidpoint.y,
       }
       dragPointsRef.current = [...activePoints]
 
@@ -544,8 +551,9 @@ export const useStepPathEdge = ({
         if (draggingIndexRef.current === null) return
 
         const idx = draggingIndexRef.current
-        const newX = e.clientX - dragOffsetRef.current.x
-        const newY = e.clientY - dragOffsetRef.current.y
+        const flowPoint = screenToFlowPosition({ x: e.clientX, y: e.clientY })
+        const newX = flowPoint.x - dragOffsetRef.current.x
+        const newY = flowPoint.y - dragOffsetRef.current.y
 
         // Determine if this segment is horizontal or vertical
         const pts = dragPointsRef.current
@@ -606,6 +614,7 @@ export const useStepPathEdge = ({
       setCustomPoints,
       offset,
       targetPosition,
+      screenToFlowPosition,
     ]
   )
 
