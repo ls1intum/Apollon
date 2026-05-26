@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { isDefaultOwnerSecret, loadConfig } from "../config"
+import { isDefaultOwnerSecret, loadConfig } from "../config.js"
 
 describe("loadConfig", () => {
   describe("OWNER_SECRET production guard", () => {

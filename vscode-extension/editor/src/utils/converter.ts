@@ -1,4 +1,4 @@
-import { SVG } from "@tumaet/apollon"
+import { SVG } from "@tumaet/apollon/react"
 
 export function convertRenderedSVGToPNG(
   renderedSVG: SVG,

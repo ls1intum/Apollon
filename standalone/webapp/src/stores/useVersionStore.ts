@@ -1,7 +1,7 @@
 import { create } from "zustand"
 import { devtools, persist, createJSONStorage } from "zustand/middleware"
 import { toast } from "react-toastify"
-import type { UMLModel } from "@tumaet/apollon"
+import type { UMLModel } from "@tumaet/apollon/react"
 import { ApiError, VersionApiClient } from "@/services/DiagramApiClient"
 import { MAX_VERSIONS_PER_DIAGRAM } from "@/constants"
 import { log } from "@/logger"

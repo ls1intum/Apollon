@@ -15,16 +15,27 @@ import { useShallow } from "zustand/shallow"
 import { log } from "../logger"
 
 /* ========================================================================
-   Utility functions to manage page scrolling during dragging
+   Page-scroll lock during a palette drag.
+
+   The editor is a library embedded in arbitrary host pages, so we save the
+   host's existing `body` styles and restore them verbatim — resetting to ""
+   would silently clobber a host that intentionally runs with, say,
+   `body { overflow: hidden }`. Only one palette item can be dragged at a
+   time (one pointer), so module-level saved state is safe.
    ======================================================================== */
+let savedBodyOverflow = ""
+let savedBodyTouchAction = ""
+
 const disableScroll = () => {
+  savedBodyOverflow = document.body.style.overflow
+  savedBodyTouchAction = document.body.style.touchAction
   document.body.style.overflow = "hidden"
   document.body.style.touchAction = "none"
 }
 
 const enableScroll = () => {
-  document.body.style.overflow = ""
-  document.body.style.touchAction = ""
+  document.body.style.overflow = savedBodyOverflow
+  document.body.style.touchAction = savedBodyTouchAction
 }
 
 /* ========================================================================
@@ -244,10 +255,15 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
   /* ----------------------------------------------------------------------
      Render the ghost element via a portal when dragging
      ---------------------------------------------------------------------- */
+  // `fixed`, not `absolute`: the ghost is portaled into document.body and
+  // positioned with viewport coordinates (clientX/clientY). `absolute` would
+  // resolve against the document, so any page scroll offset would shift the
+  // ghost away from the cursor — visible whenever the editor is embedded
+  // below the fold. `fixed` resolves against the viewport, matching clientX/Y.
   const ghostElement = (
     <div
       style={{
-        position: "absolute",
+        position: "fixed",
         left: `${ghostPosition.x}px`,
         top: `${ghostPosition.y}px`,
         pointerEvents: "none",

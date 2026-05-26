@@ -28,7 +28,13 @@ export const NodeToolbar: FC<Props> = ({ elementId, showEdit = true }) => {
       align="end"
       offset={10}
     >
-      <Box sx={{ display: "flex", gap: 1, flexDirection: "column" }}>
+      <Box
+        className="nodrag nopan"
+        onPointerDownCapture={(event) => event.stopPropagation()}
+        onMouseDownCapture={(event) => event.stopPropagation()}
+        onTouchStartCapture={(event) => event.stopPropagation()}
+        sx={{ display: "flex", gap: 1, flexDirection: "column" }}
+      >
         <DeleteIcon
           onClick={handleDelete}
           style={{ cursor: "pointer", width: 16, height: 16 }}

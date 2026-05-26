@@ -2,7 +2,11 @@ import { Box, Skeleton } from "@mui/material"
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded"
 import BookmarkRoundedIcon from "@mui/icons-material/BookmarkRounded"
 import { useEffect, useRef, useState, type FC } from "react"
-import { ApollonEditor, importDiagram, type UMLModel } from "@tumaet/apollon"
+import {
+  ApollonEditor,
+  importDiagram,
+  type UMLModel,
+} from "@tumaet/apollon/react"
 import { VersionApiClient } from "@/services/DiagramApiClient"
 import { log } from "@/logger"
 
