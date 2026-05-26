@@ -25,17 +25,12 @@ export function SfcJump({
     }))
   )
 
-  if (!width || !height) {
-    return null
-  }
+  const fixedHeight = 32 // Fixed height for compact appearance
 
-  // Calculate minimum width based on text
   const minWidth = useMemo(() => {
     const textWidth = measureTextWidth(name || "", LAYOUT.DEFAULT_FONT) + 8
-    return calculateMinWidth(textWidth, LAYOUT.DEFAULT_PADDING) + 12 // Extra space for the diamond and padding
+    return calculateMinWidth(textWidth, LAYOUT.DEFAULT_PADDING) + 12
   }, [name])
-
-  const fixedHeight = 32 // Fixed height for compact appearance
 
   // Auto-expand/shrink width when text changes
   useEffect(() => {
@@ -60,7 +55,11 @@ export function SfcJump({
     }
   }, [minWidth, width, id, setNodes])
 
-  const finalWidth = Math.max(width ?? 0, minWidth)
+  if (!width || !height) {
+    return null
+  }
+
+  const finalWidth = Math.max(width, minWidth)
   const finalHeight = fixedHeight
 
   return (

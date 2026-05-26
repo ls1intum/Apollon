@@ -1,0 +1,222 @@
+name: Release VS Code Extension
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - vscode-extension/package.json
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Build + validate only, skip publish/tag/release"
+        type: boolean
+        default: false
+
+concurrency:
+  group: release-vscode-extension
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  check:
+    name: Check for new version
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      publish: ${{ steps.v.outputs.publish }}
+      release: ${{ steps.v.outputs.release }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ github.sha }}
+
+      - id: v
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=$(node -p "require('./vscode-extension/package.json').version")
+          if [[ "$VERSION" == *-* || "$VERSION" == *+* ]]; then
+            echo "::error::vscode-extension version $VERSION is not strict SemVer MAJOR.MINOR.PATCH."
+            exit 1
+          fi
+          MKT=$(curl -s -X POST https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery \
+            -H "Content-Type: application/json" -H "Accept: application/json;api-version=7.2-preview.1" \
+            -d '{"filters":[{"criteria":[{"filterType":7,"value":"tumaet.apollon-vscode"}]}],"flags":914}' \
+            | jq -r '.results[0].extensions[0].versions[]?.version' | grep -Fx "$VERSION" || true)
+          if [ -n "$MKT" ]; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+          TAG="apollon-vscode@${VERSION}"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build VSIX
+    needs: [check]
+    if: needs.check.outputs.publish == 'true' || needs.check.outputs.release == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    outputs:
+      vsix-name: ${{ steps.pack.outputs.name }}
+      vsix-sha256: ${{ steps.pack.outputs.sha256 }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@ac6db6d3c1f721f886538a378a2d73e85697340a # v6.0.8
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm --filter @tumaet/apollon run build
+      - run: pnpm --filter apollon-vscode run build:all
+
+      - name: Install vsce (sandboxed)
+        run: |
+          set -euo pipefail
+          npm install --prefix "$RUNNER_TEMP/vsce-cli" --ignore-scripts @vscode/vsce@3.9.1
+          echo "$RUNNER_TEMP/vsce-cli/node_modules/.bin" >> "$GITHUB_PATH"
+
+      - name: Package VSIX
+        id: pack
+        working-directory: vscode-extension
+        run: |
+          set -euo pipefail
+          vsce package --no-dependencies
+          shopt -s nullglob
+          files=( *.vsix )
+          if [[ ${#files[@]} -ne 1 ]]; then
+            echo "::error::Expected exactly 1 VSIX in vscode-extension/, found ${#files[@]}: ${files[*]}"
+            exit 1
+          fi
+          name="${files[0]}"
+          sha256=$(sha256sum "$name" | cut -d' ' -f1)
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "sha256=$sha256" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: vsix
+          path: vscode-extension/${{ steps.pack.outputs.name }}
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Generate artifact attestation
+        if: ${{ !inputs.dry_run }}
+        uses: actions/attest-build-provenance@43d14bc2b83dec42d39ecae14e916627a18bb661 # v3
+        with:
+          subject-path: vscode-extension/${{ steps.pack.outputs.name }}
+
+  publish:
+    name: Publish to Marketplace and Open VSX
+    needs: [check, build]
+    if: needs.check.outputs.publish == 'true' && !inputs.dry_run
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: vscode-marketplace
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: vsix
+          path: ./
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Install vsce + ovsx (sandboxed)
+        run: |
+          set -euo pipefail
+          npm install --prefix "$RUNNER_TEMP/cli" --ignore-scripts @vscode/vsce@3.9.1 ovsx@0.10.12
+          echo "$RUNNER_TEMP/cli/node_modules/.bin" >> "$GITHUB_PATH"
+
+      - name: Publish to VS Marketplace
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+          VSIX_FILE: ${{ needs.build.outputs.vsix-name }}
+        run: vsce publish --skip-duplicate --no-dependencies --packagePath "$VSIX_FILE"
+
+      - name: Publish to Open VSX
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+          VSIX_FILE: ${{ needs.build.outputs.vsix-name }}
+        # ovsx@0.10+ ships --skip-duplicate; a retry on an already-published
+        # version is a soft success. The VSIX sigstore attestation from the
+        # build job is the cryptographic anchor — checksum equality with the
+        # remote tarball is not a stronger guarantee.
+        run: ovsx publish --skip-duplicate "$VSIX_FILE"
+
+  release:
+    name: Tag + GitHub Release
+    needs: [check, build, publish]
+    # Backfill case: marketplace already has this version (publish skipped)
+    # but the GitHub Release tag is missing. We still need to cut the
+    # Release. Accept publish.result in {success, skipped}.
+    if: |
+      !cancelled() && !inputs.dry_run &&
+      needs.check.outputs.release == 'true' &&
+      needs.build.result == 'success' &&
+      (needs.publish.result == 'success' || needs.publish.result == 'skipped')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ github.sha }}
+
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: vsix
+          path: ./
+
+      - name: Tag + Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.check.outputs.version }}
+        run: |
+          set -euo pipefail
+          TAG="apollon-vscode@${VERSION}"
+          if ! git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag "$TAG" "$GITHUB_SHA"
+            git push origin "refs/tags/$TAG"
+          fi
+          VSIX=$(ls *.vsix | head -n1)
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --target "$GITHUB_SHA" \
+            --verify-tag \
+            --latest=false \
+            --generate-notes \
+            --notes "VS Code extension \`tumaet.apollon-vscode@${VERSION}\`.
+
+          Install:
+          \`\`\`
+          code --install-extension tumaet.apollon-vscode
+          \`\`\`
+
+          Published to [VS Marketplace](https://marketplace.visualstudio.com/items?itemName=tumaet.apollon-vscode) and [Open VSX](https://open-vsx.org/extension/tumaet/apollon-vscode). VSIX attached for sideloading." \
+            "$VSIX"

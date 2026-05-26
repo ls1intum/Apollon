@@ -4,7 +4,7 @@ import { useState } from "react"
 import TextField from "@mui/material/TextField"
 import Button from "@mui/material/Button"
 import { useModalContext } from "@/contexts/ModalContext"
-import { UMLDiagramType } from "@tumaet/apollon"
+import { UMLDiagramType } from "@tumaet/apollon/react"
 import { useNavigate } from "react-router"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 

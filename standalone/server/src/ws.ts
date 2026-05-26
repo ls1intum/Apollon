@@ -1,8 +1,8 @@
 import WebSocket, { WebSocketServer } from "ws"
 import type { IncomingMessage } from "http"
 import { URL } from "url"
-import { logger } from "./logger"
-import type { ControlEvent, Envelope } from "./types"
+import { logger } from "./logger.js"
+import type { ControlEvent, Envelope } from "./types.js"
 import {
   applyAwarenessUpdate,
   Awareness,
