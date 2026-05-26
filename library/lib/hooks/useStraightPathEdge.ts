@@ -12,11 +12,15 @@ import { EDGES } from "@/constants"
 import { useDiagramModifiable } from "./useDiagramModifiable"
 import { IPoint } from "../edges/Connection"
 import { BaseEdgeProps } from "../edges/GenericEdge"
-import { isLengthEditableAtZoom } from "@/utils/geometry/bendHandles"
+import {
+  computeToolbarPosition,
+  isLengthEditableAtZoom,
+} from "@/utils/geometry/bendHandles"
 import { useMetadataStore } from "@/store/context"
 
 export interface StraightPathEdgeData {
   pathMiddlePosition: IPoint
+  toolbarPosition: IPoint
   isMiddlePathHorizontal: boolean
   sourcePoint: IPoint
   targetPoint: IPoint
@@ -218,9 +222,14 @@ export const useStraightPathEdge = ({
     EDGES.BEND_MIN_LENGTH,
     zoom
   )
+  const toolbarPosition = computeToolbarPosition(
+    pathMiddlePosition,
+    isMiddlePathHorizontal
+  )
 
   const edgeData: StraightPathEdgeData = {
     pathMiddlePosition,
+    toolbarPosition,
     isMiddlePathHorizontal,
     sourcePoint,
     targetPoint,

@@ -44,6 +44,8 @@ function getParsedEdgeData(data: unknown): {
   }
 }
 const crossbarLength = 20
+const sfcCenterHandleCollisionRadius = 24
+const sfcCenterShiftDistance = 34
 export const SfcDiagramEdge = ({
   id,
   type,
@@ -115,13 +117,46 @@ export const SfcDiagramEdge = ({
   const { strokeColor, textColor } = getCustomColorsFromDataForEdge(data)
   const markerKey = `${id}-${markerStart ?? "none"}-${markerEnd ?? "none"}`
 
+  const annotationAnchor = useMemo(() => {
+    const center = edgeData.pathMiddlePosition
+    const hasCenterHandle = bendHandles.some(
+      (handle) =>
+        Math.hypot(
+          handle.position.x - center.x,
+          handle.position.y - center.y
+        ) <= sfcCenterHandleCollisionRadius
+    )
+
+    if (!hasCenterHandle) return center
+
+    return edgeData.isMiddlePathHorizontal
+      ? { x: center.x + sfcCenterShiftDistance, y: center.y }
+      : { x: center.x, y: center.y + sfcCenterShiftDistance }
+  }, [
+    bendHandles,
+    edgeData.pathMiddlePosition,
+    edgeData.isMiddlePathHorizontal,
+  ])
+
+  const visibleBendHandles = useMemo(() => {
+    if (!showBar) return bendHandles
+
+    return bendHandles.filter(
+      (handle) =>
+        Math.hypot(
+          handle.position.x - annotationAnchor.x,
+          handle.position.y - annotationAnchor.y
+        ) > sfcCenterHandleCollisionRadius
+    )
+  }, [annotationAnchor.x, annotationAnchor.y, bendHandles, showBar])
+
   const labelPosition = {
     x: edgeData.isMiddlePathHorizontal
-      ? edgeData.pathMiddlePosition.x
-      : edgeData.pathMiddlePosition.x + 30,
+      ? annotationAnchor.x
+      : annotationAnchor.x + 30,
     y: edgeData.isMiddlePathHorizontal
-      ? edgeData.pathMiddlePosition.y - 30
-      : edgeData.pathMiddlePosition.y,
+      ? annotationAnchor.y + 30
+      : annotationAnchor.y,
     textAnchor: edgeData.isMiddlePathHorizontal
       ? ("middle" as const)
       : ("start" as const),
@@ -132,27 +167,23 @@ export const SfcDiagramEdge = ({
     if (edgeData.isMiddlePathHorizontal) {
       // If middle segment is horizontal, make crossbar vertical
       return {
-        x1: edgeData.pathMiddlePosition.x,
-        y1: edgeData.pathMiddlePosition.y - crossbarLength,
-        x2: edgeData.pathMiddlePosition.x,
-        y2: edgeData.pathMiddlePosition.y + crossbarLength,
+        x1: annotationAnchor.x,
+        y1: annotationAnchor.y - crossbarLength,
+        x2: annotationAnchor.x,
+        y2: annotationAnchor.y + crossbarLength,
         orientation: "vertical" as const,
       }
     } else {
       // If middle segment is vertical, make crossbar horizontal
       return {
-        x1: edgeData.pathMiddlePosition.x - crossbarLength,
-        y1: edgeData.pathMiddlePosition.y,
-        x2: edgeData.pathMiddlePosition.x + crossbarLength,
-        y2: edgeData.pathMiddlePosition.y,
+        x1: annotationAnchor.x - crossbarLength,
+        y1: annotationAnchor.y,
+        x2: annotationAnchor.x + crossbarLength,
+        y2: annotationAnchor.y,
         orientation: "horizontal" as const,
       }
     }
-  }, [
-    edgeData.isMiddlePathHorizontal,
-    edgeData.pathMiddlePosition,
-    crossbarLength,
-  ])
+  }, [edgeData.isMiddlePathHorizontal, annotationAnchor, crossbarLength])
 
   return (
     <AssessmentSelectableWrapper elementId={id} asElement="g">
@@ -207,7 +238,7 @@ export const SfcDiagramEdge = ({
           {isDiagramModifiable &&
             !isReconnecting &&
             allowMidpointDragging &&
-            bendHandles
+            visibleBendHandles
               .filter(
                 (handle) =>
                   !isBendDragging ||
@@ -258,6 +289,7 @@ export const SfcDiagramEdge = ({
         <CommonEdgeElements
           id={id}
           pathMiddlePosition={edgeData.pathMiddlePosition}
+          toolbarPosition={edgeData.toolbarPosition}
           isDiagramModifiable={isDiagramModifiable}
           assessments={assessments}
           anchorRef={anchorRef}

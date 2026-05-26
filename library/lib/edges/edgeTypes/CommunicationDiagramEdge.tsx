@@ -177,6 +177,7 @@ export const CommunicationDiagramEdge = ({
         <CommonEdgeElements
           id={id}
           pathMiddlePosition={edgeData.pathMiddlePosition}
+          toolbarPosition={edgeData.toolbarPosition}
           isDiagramModifiable={isDiagramModifiable}
           assessments={assessments}
           anchorRef={anchorRef}

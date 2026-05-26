@@ -61,6 +61,7 @@ interface UseStepPathEdgeProps {
 export interface StepPathEdgeData {
   activePoints: IPoint[]
   pathMiddlePosition: IPoint
+  toolbarPosition: IPoint
   isMiddlePathHorizontal: boolean
   sourcePoint: IPoint
   targetPoint: IPoint
@@ -574,7 +575,8 @@ export const useStepPathEdge = ({
 
   const edgeData: StepPathEdgeData = {
     activePoints,
-    pathMiddlePosition: toolbarPosition,
+    pathMiddlePosition,
+    toolbarPosition,
     isMiddlePathHorizontal,
     sourcePoint,
     targetPoint,

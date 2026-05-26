@@ -232,6 +232,7 @@ export const EdgeBendHandle = ({
 export const CommonEdgeElements = ({
   id,
   pathMiddlePosition,
+  toolbarPosition,
   isDiagramModifiable,
   assessments,
   anchorRef,
@@ -241,6 +242,7 @@ export const CommonEdgeElements = ({
 }: {
   id: string
   pathMiddlePosition: IPoint
+  toolbarPosition?: IPoint
   isDiagramModifiable: boolean
   assessments: Record<string, Assessment>
   anchorRef: React.RefObject<SVGSVGElement>
@@ -249,21 +251,22 @@ export const CommonEdgeElements = ({
   type: string
 }) => {
   const nodeScore = assessments[id]?.score
+  const uiPosition = toolbarPosition ?? pathMiddlePosition
 
   return (
     <>
       <CustomEdgeToolbar
         edgeId={id}
         anchorRef={anchorRef}
-        position={pathMiddlePosition}
+        position={uiPosition}
         onEditClick={() => setPopOverElementId(id)}
         onDeleteClick={handleDelete}
       />
 
       {!isDiagramModifiable && (
         <AssessmentIcon
-          x={pathMiddlePosition.x - 15}
-          y={pathMiddlePosition.y - 15}
+          x={uiPosition.x - 15}
+          y={uiPosition.y - 15}
           score={nodeScore}
         />
       )}
