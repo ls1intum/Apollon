@@ -1,4 +1,4 @@
-import React, { ReactNode, useMemo } from "react"
+import React, { ReactNode } from "react"
 import { Popover, PopoverOrigin, Paper } from "@mui/material"
 
 interface GenericPopoverProps {
@@ -28,18 +28,11 @@ export const GenericPopover: React.FC<GenericPopoverProps> = ({
   minWidth = 200,
   style,
 }) => {
-  // Resolve the closest .apollon-editor container so the popover portal
-  // inherits the scoped CSS custom properties (theme variables).
-  const container = useMemo(() => {
-    if (!anchorEl) return undefined
-    const el =
-      anchorEl instanceof SVGElement
-        ? (anchorEl.closest(".apollon-editor") ??
-          anchorEl.ownerSVGElement?.closest(".apollon-editor"))
-        : anchorEl.closest(".apollon-editor")
-    return (el as HTMLElement) ?? undefined
-  }, [anchorEl])
-
+  // Portal to document.body (MUI default — no `container`), not into the
+  // `.apollon-editor` subtree: an embedder wrapper using `contain`/`transform`
+  // would become the containing block for MUI's `position: fixed` root and
+  // shift the popover off-screen. Theme variables carry literal fallbacks, so
+  // a body-level popover still renders correctly.
   return (
     <Popover
       id={open ? id : undefined}
@@ -48,7 +41,6 @@ export const GenericPopover: React.FC<GenericPopoverProps> = ({
       onClose={onClose}
       anchorOrigin={anchorOrigin}
       transformOrigin={transformOrigin}
-      container={container}
       style={{ maxHeight, width: "100%", ...style }}
       onClick={(e) => {
         e.stopPropagation()

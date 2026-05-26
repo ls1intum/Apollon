@@ -9,13 +9,13 @@ import * as Y from "yjs"
 import {
   createHeadlessSync,
   MessageType,
-  type YjsSyncClass,
-} from "@tumaet/apollon"
-import { startRelayServer } from "../ws"
+  type YjsSync,
+} from "@tumaet/apollon/internals"
+import { startRelayServer } from "../ws.js"
 
 // ---------------------------------------------------------------------------
 // Helpers — set up real WebSocket peers driven by the library's actual
-// `YjsSyncClass`. The relay-side wire format is exercised end-to-end so
+// `YjsSync`. The relay-side wire format is exercised end-to-end so
 // regressions in framing, handshake order, or broadcast filtering surface
 // here rather than in production.
 // ---------------------------------------------------------------------------
@@ -35,7 +35,7 @@ function getFreePort(): Promise<number> {
 interface Peer {
   ws: WebSocket
   ydoc: Y.Doc
-  sync: YjsSyncClass
+  sync: YjsSync
   /** Resolves when the WebSocket has sent the SYNC ping + state push. */
   ready: Promise<void>
   close: () => Promise<void>

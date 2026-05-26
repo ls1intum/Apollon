@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type { ControlEvent, VersionSummary } from "@/types"
 import { VersionApiClient } from "@/services/DiagramApiClient"
-import type { UMLModel } from "@tumaet/apollon"
+import type { UMLModel } from "@tumaet/apollon/react"
 import { useVersionStore, selectVersions } from "./useVersionStore"
 
 const fakeModel: UMLModel = {

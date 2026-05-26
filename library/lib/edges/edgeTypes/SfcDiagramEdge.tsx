@@ -113,10 +113,10 @@ export const SfcDiagramEdge = ({
     y: edgeData.isMiddlePathHorizontal
       ? edgeData.pathMiddlePosition.y - 30
       : edgeData.pathMiddlePosition.y,
-    textAnchor: edgeData.isMiddlePathHorizontal ? "middle" : ("start" as const),
-    dominantBaseline: edgeData.isMiddlePathHorizontal
-      ? "middle"
-      : ("middle" as const),
+    textAnchor: edgeData.isMiddlePathHorizontal
+      ? ("middle" as const)
+      : ("start" as const),
+    dominantBaseline: "middle" as const,
   }
 
   const crossbarCoordinates = useMemo(() => {

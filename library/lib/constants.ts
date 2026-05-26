@@ -80,6 +80,8 @@ export const CSS_VARIABLE_FALLBACKS: Readonly<Record<string, string>> =
     "--apollon-alert-warning-background": "#fff3cd",
     "--apollon-alert-warning-border": "#ffeeba",
     "--apollon-interactive-selection": "#f39c12",
+    "--apollon-guide-vertical": "#d63031",
+    "--apollon-guide-horizontal": "#0984e3",
     "--apollon-background": "#ffffff",
     "--apollon-background-inverse": "#000000",
     "--apollon-background-variant": "#f8f9fa",
@@ -131,10 +133,13 @@ export const LAYOUT = Object.freeze({
 
 const generateUUID = () => uuidv4()
 
-export const INTERFACE_SIZE = 30
-export const INTERFACE_RADIUS = INTERFACE_SIZE / 2
-export const INTERFACE_STROKE_WIDTH = 2
-export const INTERFACE_SOCKET_GAP = 4
+// Interface-component sizing. The flat aliases below are local-only —
+// they were leaking publicly through the constants module before. Public
+// consumers (and the rest of the library) should reach for `INTERFACE.*`.
+const INTERFACE_SIZE = 30
+const INTERFACE_RADIUS = INTERFACE_SIZE / 2
+const INTERFACE_STROKE_WIDTH = 2
+const INTERFACE_SOCKET_GAP = 4
 
 export const INTERFACE = Object.freeze({
   SIZE: INTERFACE_SIZE,
@@ -146,9 +151,11 @@ export const INTERFACE = Object.freeze({
 /* -------------------------------------------------------------------------- */
 /* Edges                                                                      */
 /* -------------------------------------------------------------------------- */
-// Base marker sizes (exported for reference in marker configs)
+// Base marker size. `MARKER_BASE_SIZE` scales the inline reachability-graph
+// arrow against the shared MARKERS sprite; `BPMN_MARKER_SIZE` is local-only
+// (used a few lines below for BPMN message markers — was incorrectly public).
 export const MARKER_BASE_SIZE = 18
-export const BPMN_MARKER_SIZE = 11
+const BPMN_MARKER_SIZE = 11
 
 export const EDGES = Object.freeze({
   /** Negative padding extends target point to node boundary (React Flow handles are offset 3px) */

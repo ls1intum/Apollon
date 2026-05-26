@@ -8,15 +8,15 @@ export type Size = "sm" | "md" | "lg"
 // TODO: These values are not used yet, but they are defined in the theme as reference
 const apollonTheme = {
   color: {
-    primary: "var(--apollon-primary, #2a8fbd)",
+    primary: "var(--apollon-primary, #3e8acc)",
     secondary: "var(--apollon-secondary, #6c757d)",
-    warningYellow: "var(--apollon-warning-yellow, #ffc800)",
+    warningYellow: "var(--apollon-alert-warning-yellow, #ffc107)",
     background: "var(--apollon-background, #ffffff)",
-    backgroundVariant: "var(--apollon-background-variant, #e5e5e5)",
+    backgroundVariant: "var(--apollon-background-variant, #f8f9fa)",
     grid: "var(--apollon-grid, rgba(36, 39, 36, 0.1))",
     primaryContrast: "var(--apollon-primary-contrast, #000000)",
     gray: "var(--apollon-gray, #e9ecef)",
-    grayAccent: "var(--apollon-gray-variant, #343a40)",
+    grayAccent: "var(--apollon-gray-variant, #495057)",
   },
   font: {
     color: "var(--apollon-primary-contrast, #000000)",

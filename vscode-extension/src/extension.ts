@@ -39,7 +39,7 @@ async function openDiagram(provider: MenuProvider) {
 
       try {
         contentJson = JSON.parse(contentString)
-      } catch (error) {
+      } catch {
         vscode.window.showErrorMessage(
           "The diagram can not be loaded as it does not have a valid format"
         )

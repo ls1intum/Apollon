@@ -1,0 +1,42 @@
+/* Infima theme overrides — Apollon brand colors. */
+
+:root {
+  --ifm-color-primary: #3e8acc;
+  --ifm-color-primary-dark: #2f7bbf;
+  --ifm-color-primary-darker: #2c74b5;
+  --ifm-color-primary-darkest: #245f95;
+  --ifm-color-primary-light: #5499d3;
+  --ifm-color-primary-lighter: #61a0d7;
+  --ifm-color-primary-lightest: #84b6e0;
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] {
+  --ifm-color-primary: #6aa8e0;
+  --ifm-color-primary-dark: #4d96d8;
+  --ifm-color-primary-darker: #3e8dd4;
+  --ifm-color-primary-darkest: #2371b7;
+  --ifm-color-primary-light: #87b9e7;
+  --ifm-color-primary-lighter: #96c2eb;
+  --ifm-color-primary-lightest: #c3daf2;
+  --docusaurus-highlighted-code-line-bg: rgba(255, 255, 255, 0.08);
+}
+
+/* Sizing for the live editor on the homepage. The window chrome (border,
+   radius, shadow) comes from .demoWindow in index.module.css; this frame
+   only sizes, clips, and pins a light background.
+   Do NOT add `contain` here: `contain: layout` would capture the editor's
+   MUI popovers (position: fixed) and shift them off-screen. */
+.apollon-embed-frame {
+  width: 100%;
+  height: clamp(420px, 60vh, 720px);
+  overflow: hidden;
+  background: #ffffff;
+}
+
+@media (max-width: 768px) {
+  .apollon-embed-frame {
+    height: clamp(320px, 50vh, 480px);
+  }
+}
