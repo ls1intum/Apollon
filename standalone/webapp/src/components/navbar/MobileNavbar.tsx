@@ -1,22 +1,20 @@
-import React, { useEffect, useRef, useState } from "react"
-import AppBar from "@mui/material/AppBar"
-import Box from "@mui/material/Box"
-import Toolbar from "@mui/material/Toolbar"
-import IconButton from "@mui/material/IconButton"
-import Typography from "@mui/material/Typography"
-import Menu from "@mui/material/Menu"
-import MenuIcon from "@mui/icons-material/Menu"
-import { NavbarFile } from "./NavbarFile"
-import { NavbarHelp } from "./NavbarHelp"
-import { VersionHistoryButton } from "./VersionHistoryButton"
-import Button from "@mui/material/Button/Button"
-import { BrandAndVersion } from "./BrandAndVersion"
 import { NAVBAR_BACKGROUND_COLOR } from "@/constants"
 import { useEditorContext, useModalContext } from "@/contexts"
+import MenuIcon from "@mui/icons-material/Menu"
+import AppBar from "@mui/material/AppBar"
+import Box from "@mui/material/Box"
+import IconButton from "@mui/material/IconButton"
+import Menu from "@mui/material/Menu"
 import TextField from "@mui/material/TextField/TextField"
+import Toolbar from "@mui/material/Toolbar"
 import TumLogo from "assets/images/tum-logo.png"
+import React, { useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router"
+import { NavbarFile } from "./NavbarFile"
+import { NavbarHelp } from "./NavbarHelp"
 import { ThemeSwitcherMenu } from "./ThemeSwitcher"
+import { VersionHistoryButton } from "./VersionHistoryButton"
+import { MenuItem } from "@mui/material"
 
 export default function MobileNavbar() {
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null)
@@ -55,8 +53,8 @@ export default function MobileNavbar() {
   }
   return (
     <AppBar
-      position="static"
-      sx={{ bgcolor: NAVBAR_BACKGROUND_COLOR }}
+      position="fixed"
+      sx={{ bgcolor: NAVBAR_BACKGROUND_COLOR, top: 0, left: 0, right: 0 }}
       elevation={0}
     >
       <Toolbar disableGutters>
@@ -69,15 +67,20 @@ export default function MobileNavbar() {
             px: 2,
           }}
         >
-          {/* Mobile Menu Button */}
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            {/* Logo */}
+          {/* Left: Logo only */}
+          <div
+            style={{ display: "flex", alignItems: "center", cursor: "pointer" }}
+            onClick={goHome}
+          >
             <img alt="Logo" src={TumLogo} width="60" height="30" />
+          </div>
 
+          {/* Right: Options dropdown (File/Import/Export/Theme/Share/Help/Version) */}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <IconButton
               size="large"
-              aria-label="navigation menu"
-              aria-controls="menu-appbar"
+              aria-label="open options"
+              aria-controls="mobile-options-menu"
               aria-haspopup="true"
               onClick={handleOpenNavMenu}
               color="inherit"
@@ -85,44 +88,33 @@ export default function MobileNavbar() {
               <MenuIcon />
             </IconButton>
             <Menu
-              id="menu-appbar"
+              id="mobile-options-menu"
               anchorEl={anchorElNav}
-              anchorOrigin={{
-                horizontal: "center",
-                vertical: "bottom",
-              }}
+              anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
               keepMounted
-              transformOrigin={{
-                vertical: "top",
-                horizontal: "center",
-              }}
+              transformOrigin={{ vertical: "top", horizontal: "right" }}
               open={Boolean(anchorElNav)}
               onClose={handleCloseNavMenu}
             >
-              {/* Interactive Menu Items */}
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 0.25,
-                  alignItems: "flex-start",
-                }}
-              >
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
                 <NavbarFile
                   color="black"
                   handleCloseNavMenu={handleCloseNavMenu}
                 />
-                <Button
-                  sx={{ textTransform: "none" }} // This removes the uppercase transformation
-                  onClick={() => openModal("SHARE")}
+                <MenuItem
+                  onClick={() => {
+                    openModal("SHARE")
+                    handleCloseNavMenu()
+                  }}
                 >
-                  <Typography color="black">Share</Typography>
-                </Button>
+                  Share
+                </MenuItem>
                 <VersionHistoryButton color="black" />
                 <NavbarHelp color="black" />
-
-                {/* Diagram Name Input Field */}
-                <Box sx={{ p: 0.5 }}>
+                <MenuItem onClick={handleCloseNavMenu}>
+                  <ThemeSwitcherMenu />
+                </MenuItem>
+                <Box sx={{ px: 1 }}>
                   <TextField
                     value={diagramTitle}
                     onChange={(event) => {
@@ -141,13 +133,6 @@ export default function MobileNavbar() {
               </Box>
             </Menu>
           </Box>
-
-          {/* Mobile Title and Version */}
-          <div onClick={goHome}>
-            <BrandAndVersion />
-          </div>
-
-          <ThemeSwitcherMenu />
         </Box>
       </Toolbar>
     </AppBar>

@@ -45,11 +45,17 @@ const enableScroll = () => {
 interface DraggableGhostProps {
   children: React.ReactNode
   dropElementConfig: DropElementConfig
+  /**
+   * Visual scale of the palette preview.
+   * Used to convert pointer offsets into node-placement offsets.
+   */
+  previewScale?: number
 }
 
 export const DraggableGhost: React.FC<DraggableGhostProps> = ({
   children,
   dropElementConfig,
+  previewScale = DROPS.SIDEBAR_PREVIEW_SCALE,
 }) => {
   const diagramId = useDiagramStore(useShallow((state) => state.diagramId))
   // Hooks from react-flow and zustand store for node management
@@ -123,8 +129,8 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
       const dropData: DropNodeData = {
         type: dropElementConfig.type,
         data: defaultData,
-        offsetX: clickOffset.x / DROPS.SIDEBAR_PREVIEW_SCALE,
-        offsetY: clickOffset.y / DROPS.SIDEBAR_PREVIEW_SCALE,
+        offsetX: clickOffset.x / previewScale,
+        offsetY: clickOffset.y / previewScale,
       }
 
       // Find potential parent node by checking intersections with a potential Parent node type
@@ -152,13 +158,11 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
 
       // Snap position to grid
       position.x -=
-        Math.floor(
-          clickOffset.x / DROPS.SIDEBAR_PREVIEW_SCALE / CANVAS.SNAP_TO_GRID_PX
-        ) * CANVAS.SNAP_TO_GRID_PX
+        Math.floor(clickOffset.x / previewScale / CANVAS.SNAP_TO_GRID_PX) *
+        CANVAS.SNAP_TO_GRID_PX
       position.y -=
-        Math.floor(
-          clickOffset.y / DROPS.SIDEBAR_PREVIEW_SCALE / CANVAS.SNAP_TO_GRID_PX
-        ) * CANVAS.SNAP_TO_GRID_PX
+        Math.floor(clickOffset.y / previewScale / CANVAS.SNAP_TO_GRID_PX) *
+        CANVAS.SNAP_TO_GRID_PX
 
       if (parentId) {
         const parentPositionOnCanvas = getPositionOnCanvas(parentNode, nodes)
@@ -198,6 +202,7 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
       clickOffset.x,
       clickOffset.y,
       dropElementConfig,
+      previewScale,
     ]
   )
 

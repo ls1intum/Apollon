@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import {
   ColorDescriptionConfig,
   DROPS,
@@ -18,6 +18,26 @@ import { ApollonView } from "@/typings"
    ======================================================================== */
 
 export const Sidebar = () => {
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return
+
+    const mql = window.matchMedia("(max-width: 768px)")
+    const onChange = (e: MediaQueryListEvent) => setIsMobile(e.matches)
+
+    setIsMobile(mql.matches)
+    // Safari < 14 — use any to satisfy older APIs where TS defs differ
+    if ("addEventListener" in mql) mql.addEventListener("change", onChange)
+    else (mql as any).addListener(onChange)
+
+    return () => {
+      if ("removeEventListener" in mql)
+        mql.removeEventListener("change", onChange)
+      else (mql as any).removeListener(onChange)
+    }
+  }, [])
+
   const { diagramType, view, setView, availableViews } = useMetadataStore(
     useShallow((state) => ({
       diagramType: state.diagramType,
@@ -35,6 +55,11 @@ export const Sidebar = () => {
     "petriNetTransition",
   ])
 
+  const previewScale = useMemo(
+    () => (isMobile ? 0.225 : DROPS.SIDEBAR_PREVIEW_SCALE),
+    [isMobile]
+  )
+
   if (dropElementConfigs[diagramType].length === 0) {
     return null
   }
@@ -42,26 +67,50 @@ export const Sidebar = () => {
   return (
     <aside
       style={{
-        width: "180px",
-        minWidth: "180px",
-        height: "100%",
-        backgroundColor: "var(--apollon-background, white)",
-        display: "flex",
-        flexDirection: "column",
-        padding: "10px",
-        gap: "15px",
-        alignItems: "center",
-        overflowY: "auto",
-        flexShrink: 0,
+        ...(isMobile
+          ? {
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: 40,
+              width: "100%",
+              height: "auto",
+              backgroundColor: "var(--apollon-background, white)",
+              display: "flex",
+              flexDirection: "row",
+              padding: `10px calc(10px + var(--safe-area-inset-right, 0px)) 10px calc(10px + var(--safe-area-inset-left, 0px))`,
+              gap: "12px",
+              alignItems: "center",
+              overflowX: "auto",
+              overflowY: "hidden",
+              flexShrink: 0,
+              zIndex: ZINDEX.DRAGGABLE_GHOST,
+              borderBottom:
+                "1px solid var(--apollon-background-variant, #e5e7eb)",
+            }
+          : {
+              width: "180px",
+              minWidth: "180px",
+              height: "100%",
+              backgroundColor: "var(--apollon-background, white)",
+              display: "flex",
+              flexDirection: "column",
+              padding: "10px",
+              gap: "15px",
+              alignItems: "center",
+              overflowY: "auto",
+              flexShrink: 0,
+            }),
       }}
     >
       {showInteractiveSelectionView && (
         <div
           style={{
-            width: "100%",
+            width: isMobile ? "auto" : "100%",
             display: "flex",
-            flexDirection: "column",
+            flexDirection: isMobile ? "row" : "column",
             gap: "8px",
+            alignItems: "center",
           }}
         >
           <button
@@ -81,6 +130,8 @@ export const Sidebar = () => {
               padding: "8px 10px",
               cursor: "pointer",
               fontWeight: 600,
+              whiteSpace: "nowrap",
+              fontSize: "inherit",
             }}
           >
             Model
@@ -102,6 +153,8 @@ export const Sidebar = () => {
               padding: "8px 10px",
               cursor: "pointer",
               fontWeight: 600,
+              whiteSpace: "nowrap",
+              fontSize: "inherit",
             }}
           >
             Select Elements
@@ -109,7 +162,7 @@ export const Sidebar = () => {
         </div>
       )}
 
-      {view === ApollonView.Highlight && (
+      {view === ApollonView.Highlight && !isMobile && (
         <div
           style={{
             width: "100%",
@@ -127,14 +180,16 @@ export const Sidebar = () => {
           const extraPreviewHeight = labelPreviewTypes.has(config.type)
             ? LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT
             : 0
-          const previewScale = DROPS.SIDEBAR_PREVIEW_SCALE
           const previewWidth = config.width * previewScale
           const previewHeight =
             (config.height + extraPreviewHeight) * previewScale
 
           return (
             <React.Fragment key={`${config.type}_${config.defaultData?.name}`}>
-              <DraggableGhost dropElementConfig={config}>
+              <DraggableGhost
+                dropElementConfig={config}
+                previewScale={previewScale}
+              >
                 <div
                   className="prevent-select"
                   style={{
@@ -160,15 +215,16 @@ export const Sidebar = () => {
 
       {view === ApollonView.Modelling && (
         <>
-          <DividerLine style={{ margin: "3px 0" }} />
-          <DraggableGhost dropElementConfig={ColorDescriptionConfig}>
+          {!isMobile && <DividerLine style={{ margin: "3px 0" }} />}
+          <DraggableGhost
+            dropElementConfig={ColorDescriptionConfig}
+            previewScale={previewScale}
+          >
             <div
               className="prevent-select"
               style={{
-                width:
-                  ColorDescriptionConfig.width * DROPS.SIDEBAR_PREVIEW_SCALE,
-                height:
-                  ColorDescriptionConfig.height * DROPS.SIDEBAR_PREVIEW_SCALE,
+                width: ColorDescriptionConfig.width * previewScale,
+                height: ColorDescriptionConfig.height * previewScale,
                 zIndex: ZINDEX.DRAGGABLE_GHOST,
                 marginTop: ColorDescriptionConfig.marginTop,
               }}
@@ -178,7 +234,7 @@ export const Sidebar = () => {
                 height: ColorDescriptionConfig.height,
                 ...ColorDescriptionConfig.defaultData,
                 data: ColorDescriptionConfig.defaultData,
-                SIDEBAR_PREVIEW_SCALE: DROPS.SIDEBAR_PREVIEW_SCALE,
+                SIDEBAR_PREVIEW_SCALE: previewScale,
                 id: "sidebarElement_ColorDescription",
               })}
             </div>
