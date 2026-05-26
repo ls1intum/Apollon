@@ -873,7 +873,14 @@ export function isV4Format(data: any): data is UMLModel {
     data.version &&
     data.version.startsWith("4.") &&
     Array.isArray(data.nodes) &&
-    Array.isArray(data.edges)
+    Array.isArray(data.edges) &&
+    data.edges.every(
+      (edge: unknown) =>
+        edge != null &&
+        typeof edge === "object" &&
+        (edge as { data?: unknown }).data != null &&
+        typeof (edge as { data: unknown }).data === "object"
+    )
   )
 }
 
