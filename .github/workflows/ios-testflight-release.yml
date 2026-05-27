@@ -55,13 +55,17 @@ jobs:
         working-directory: standalone/webapp
         run: pnpm exec cap sync ios
 
-      - name: Generate build number
-        run: echo "BUILD_NUMBER=$(date +'%Y%m%d%H%M')" >> "$GITHUB_ENV"
+      - name: Resolve marketing version and build number
+        run: |
+          MARKETING_VERSION=$(node -p "require('./standalone/webapp/package.json').version")
+          echo "MARKETING_VERSION=$MARKETING_VERSION" >> "$GITHUB_ENV"
+          echo "BUILD_NUMBER=$(date +'%Y%m%d%H%M')" >> "$GITHUB_ENV"
 
       - name: Build iOS app (Fastlane)
         working-directory: standalone/webapp
         env:
           BUILD_NUMBER: ${{ env.BUILD_NUMBER }}
+          MARKETING_VERSION: ${{ env.MARKETING_VERSION }}
           MATCH_GITLAB_AUTH: ${{ secrets.IOS_MATCH_GITLAB_AUTH }}
           MATCH_PASSWORD: ${{ secrets.IOS_MATCH_PASSWORD }}
           MATCH_GIT_URL: ${{ vars.IOS_MATCH_GIT_URL }}

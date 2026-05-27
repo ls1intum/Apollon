@@ -32,6 +32,13 @@ platform :ios do
       team_id: team_id
     )
 
+    if ENV["MARKETING_VERSION"] && !ENV["MARKETING_VERSION"].empty?
+      increment_version_number(
+        version_number: ENV["MARKETING_VERSION"],
+        xcodeproj: XCODE_PROJECT
+      )
+    end
+
     if ENV["BUILD_NUMBER"] && !ENV["BUILD_NUMBER"].empty?
       increment_build_number(
         build_number: ENV["BUILD_NUMBER"],
