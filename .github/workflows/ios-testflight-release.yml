@@ -1,0 +1,89 @@
+name: ios-testflight-release
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ios-testflight-release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  testflight:
+    runs-on: [self-hosted, macOS]
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@ac6db6d3c1f721f886538a378a2d73e85697340a # v6.0.8
+
+      - name: Set up Node
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build library + web assets
+        run: pnpm run build:lib && pnpm --filter @tumaet/webapp run build
+
+      - name: Add iOS platform (if missing)
+        working-directory: standalone/webapp
+        run: |
+          if [ ! -d "ios" ]; then
+            pnpm capacitor:add:ios
+          fi
+
+      - name: Capacitor sync (iOS)
+        working-directory: standalone/webapp
+        run: pnpm exec cap sync ios
+
+      - name: Install Gems
+        working-directory: standalone/webapp
+        run: |
+          eval "$(/opt/homebrew/bin/rbenv init - --no-rehash bash)"
+          bundle install
+
+      - name: Generate build number
+        run: echo "BUILD_NUMBER=$(date +'%Y%m%d%H%M')" >> "$GITHUB_ENV"
+
+      - name: Build iOS app (Fastlane)
+        working-directory: standalone/webapp
+        env:
+          BUILD_NUMBER: ${{ env.BUILD_NUMBER }}
+          MATCH_GITLAB_AUTH: ${{ secrets.IOS_MATCH_GITLAB_AUTH }}
+          MATCH_PASSWORD: ${{ secrets.IOS_MATCH_PASSWORD }}
+          MATCH_GIT_URL: ${{ vars.IOS_MATCH_GIT_URL }}
+          API_KEY_ID: ${{ secrets.IOS_APP_STORE_CONNECT_API_KEY_KEY_ID }}
+          API_KEY_ISSUER_ID: ${{ secrets.IOS_APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
+          API_KEY_PASSWORD: ${{ secrets.IOS_APP_STORE_CONNECT_API_KEY_PASSWORD }}
+        run: |
+          eval "$(/opt/homebrew/bin/rbenv init - --no-rehash bash)"
+          bundle exec fastlane build
+
+      - name: Upload to TestFlight (Fastlane)
+        working-directory: standalone/webapp
+        env:
+          API_KEY_ID: ${{ secrets.IOS_APP_STORE_CONNECT_API_KEY_KEY_ID }}
+          API_KEY_ISSUER_ID: ${{ secrets.IOS_APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
+          API_KEY_PASSWORD: ${{ secrets.IOS_APP_STORE_CONNECT_API_KEY_PASSWORD }}
+        run: |
+          eval "$(/opt/homebrew/bin/rbenv init - --no-rehash bash)"
+          bundle exec fastlane release
+
+      - name: Upload IPA artifact
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: ios-ipa
+          path: standalone/webapp/build/*.ipa
+          retention-days: 7
