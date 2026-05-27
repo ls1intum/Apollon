@@ -625,7 +625,10 @@ describe("getHandleAnchor", () => {
   it("resolves canonical handle IDs", () => {
     const anchor = getHandleAnchor(rect, "top-mid-left")
     expect(anchor).not.toBeNull()
-    expect(anchor).toEqual({ x: 100, y: 40, side: Position.Top })
+    // top-mid-left = slot 1 of the top side (hidden between slot 0 and slot 2
+    // of the stage-3 layout); its coordinate is the midpoint between those two
+    // visible slots, snapped to the 5px handle grid.
+    expect(anchor).toEqual({ x: 105, y: 40, side: Position.Top })
   })
 
   it("resolves alias left-top to the canonical top side", () => {
@@ -1793,7 +1796,7 @@ describe("getDefaultEdgeType", () => {
 // ---------------------------------------------------------------------------
 describe("getDistributedHandleOffsetPercents", () => {
   it.each([80, 125, 200])(
-    "returns monotonic grid-aligned offsets for %ipx nodes",
+    "returns non-decreasing grid-aligned offsets for %ipx nodes",
     (axisLength) => {
       const offsets = getDistributedHandleOffsetPercents(axisLength).map(
         (percent) => (Number.parseFloat(percent) / 100) * axisLength
@@ -1803,10 +1806,13 @@ describe("getDistributedHandleOffsetPercents", () => {
       for (let index = 0; index < offsets.length; index++) {
         expect(offsets[index]).toBeGreaterThanOrEqual(0)
         expect(offsets[index]).toBeLessThanOrEqual(axisLength)
-        expect(Math.round(offsets[index]) % 10).toBe(0)
+        // Offsets snap to the 5px handle grid step.
+        expect(Math.round(offsets[index]) % 5).toBe(0)
 
         if (index > 0) {
-          expect(offsets[index]).toBeGreaterThan(offsets[index - 1])
+          // Hidden slots collapse to their visible neighbour in stage-1/2
+          // layouts, so adjacent offsets may be equal — but never decrease.
+          expect(offsets[index]).toBeGreaterThanOrEqual(offsets[index - 1])
         }
       }
     }

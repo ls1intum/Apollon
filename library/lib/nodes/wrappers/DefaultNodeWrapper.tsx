@@ -2,7 +2,7 @@ import { AssessmentSelectableWrapper } from "@/components/wrapper/AssessmentSele
 import { FeedbackDropzone } from "@/components/wrapper/FeedbackDropzone"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
 import { useMetadataStore } from "@/store/context"
-import { getDistributedHandleOffsetPercents } from "@/utils"
+import { getAxisHandlePlan, getDistributedHandleOffsetPercents } from "@/utils"
 import { Handle, Position, useReactFlow } from "@xyflow/react"
 import { useMemo } from "react"
 import { useShallow } from "zustand/shallow"
@@ -100,8 +100,9 @@ export function DefaultNodeWrapper({
     boxSizing: "border-box" as const,
   }
 
-  // Keep all handle ids available for compatibility with existing edges,
-  // but only 3 handles per side are visible.
+  // Keep all 20 handle ids available for compatibility with existing edges,
+  // but the visible arc-dragger count per side is decided by the axis plan
+  // so adjacent arcs never overlap.
   const [leftStart, leftMidStart, leftMiddle, leftMidEnd, leftEnd] = useMemo(
     () => getDistributedHandleOffsetPercents(nodeWidth),
     [nodeWidth]
@@ -112,11 +113,59 @@ export function DefaultNodeWrapper({
     [nodeHeight]
   )
 
+  // The width axis governs arcs on the top/bottom sides; the height axis
+  // governs arcs on the left/right sides. Each side has up to three arc
+  // slots:
+  //   visibleArcCount = 3 → arcs on slots 0, 2, 4 (corners + middle).
+  //   visibleArcCount = 2 → arcs on slots 0, 4 (no middle arc).
+  //   visibleArcCount = 1 → arc on slot 2 (middle only).
+  const widthArcs = useMemo(
+    () => getAxisHandlePlan(nodeWidth).visibleArcCount,
+    [nodeWidth]
+  )
+  const heightArcs = useMemo(
+    () => getAxisHandlePlan(nodeHeight).visibleArcCount,
+    [nodeHeight]
+  )
+
+  const hiddenHandleSet = useMemo(
+    () => (hiddenHandles === true ? null : new Set(hiddenHandles)),
+    [hiddenHandles]
+  )
+
+  // The plan reduces to a middle-only arc on small sides. But some node
+  // renderers hide both corner handles via `hiddenHandles` (e.g. the
+  // FOUR_WAY preset), which leaves the side with nothing visible if the
+  // middle was also hidden. Fall back to giving the middle an arc whenever
+  // both corner slots on that side are absent.
+  const bothCornersHidden = (cornerA: HandleId, cornerB: HandleId): boolean => {
+    if (!hiddenHandleSet) return false
+    return hiddenHandleSet.has(cornerA) && hiddenHandleSet.has(cornerB)
+  }
+  const topMiddleArc =
+    widthArcs !== 2 || bothCornersHidden(HandleId.TopLeft, HandleId.TopRight)
+  const bottomMiddleArc =
+    widthArcs !== 2 ||
+    bothCornersHidden(HandleId.BottomLeft, HandleId.BottomRight)
+  const leftMiddleArc =
+    heightArcs !== 2 || bothCornersHidden(HandleId.LeftTop, HandleId.LeftBottom)
+  const rightMiddleArc =
+    heightArcs !== 2 ||
+    bothCornersHidden(HandleId.RightTop, HandleId.RightBottom)
+
+  const topCornerArcs = widthArcs >= 2
+  const bottomCornerArcs = widthArcs >= 2
+  const leftCornerArcs = heightArcs >= 2
+  const rightCornerArcs = heightArcs >= 2
+
+  const arcClass = (side: "top" | "right" | "bottom" | "left"): string =>
+    `apollon-arc-handle apollon-arc-handle--${side}`
+
   const handles = [
     {
       id: HandleId.TopLeft,
       position: Position.Top,
-      className: "apollon-arc-handle apollon-arc-handle--top",
+      className: topCornerArcs ? arcClass("top") : undefined,
       style: { ...baseHandleStyle, left: leftStart },
     },
     {
@@ -127,7 +176,7 @@ export function DefaultNodeWrapper({
     {
       id: HandleId.Top,
       position: Position.Top,
-      className: "apollon-arc-handle apollon-arc-handle--top",
+      className: topMiddleArc ? arcClass("top") : undefined,
       style: { ...baseHandleStyle, left: leftMiddle },
     },
     {
@@ -138,13 +187,13 @@ export function DefaultNodeWrapper({
     {
       id: HandleId.TopRight,
       position: Position.Top,
-      className: "apollon-arc-handle apollon-arc-handle--top",
+      className: topCornerArcs ? arcClass("top") : undefined,
       style: { ...baseHandleStyle, left: leftEnd },
     },
     {
       id: HandleId.RightTop,
       position: Position.Right,
-      className: "apollon-arc-handle apollon-arc-handle--right",
+      className: rightCornerArcs ? arcClass("right") : undefined,
       style: { ...baseHandleStyle, top: topStart },
     },
     {
@@ -155,7 +204,7 @@ export function DefaultNodeWrapper({
     {
       id: HandleId.Right,
       position: Position.Right,
-      className: "apollon-arc-handle apollon-arc-handle--right",
+      className: rightMiddleArc ? arcClass("right") : undefined,
       style: { ...baseHandleStyle, top: topMiddle },
     },
     {
@@ -166,13 +215,13 @@ export function DefaultNodeWrapper({
     {
       id: HandleId.RightBottom,
       position: Position.Right,
-      className: "apollon-arc-handle apollon-arc-handle--right",
+      className: rightCornerArcs ? arcClass("right") : undefined,
       style: { ...baseHandleStyle, top: topEnd },
     },
     {
       id: HandleId.BottomRight,
       position: Position.Bottom,
-      className: "apollon-arc-handle apollon-arc-handle--bottom",
+      className: bottomCornerArcs ? arcClass("bottom") : undefined,
       style: { ...baseHandleStyle, left: leftEnd },
     },
     {
@@ -183,7 +232,7 @@ export function DefaultNodeWrapper({
     {
       id: HandleId.Bottom,
       position: Position.Bottom,
-      className: "apollon-arc-handle apollon-arc-handle--bottom",
+      className: bottomMiddleArc ? arcClass("bottom") : undefined,
       style: { ...baseHandleStyle, left: leftMiddle },
     },
     {
@@ -194,13 +243,13 @@ export function DefaultNodeWrapper({
     {
       id: HandleId.BottomLeft,
       position: Position.Bottom,
-      className: "apollon-arc-handle apollon-arc-handle--bottom",
+      className: bottomCornerArcs ? arcClass("bottom") : undefined,
       style: { ...baseHandleStyle, left: leftStart },
     },
     {
       id: HandleId.LeftBottom,
       position: Position.Left,
-      className: "apollon-arc-handle apollon-arc-handle--left",
+      className: leftCornerArcs ? arcClass("left") : undefined,
       style: { ...baseHandleStyle, top: topEnd },
     },
     {
@@ -211,7 +260,7 @@ export function DefaultNodeWrapper({
     {
       id: HandleId.Left,
       position: Position.Left,
-      className: "apollon-arc-handle apollon-arc-handle--left",
+      className: leftMiddleArc ? arcClass("left") : undefined,
       style: { ...baseHandleStyle, top: topMiddle },
     },
     {
@@ -222,25 +271,20 @@ export function DefaultNodeWrapper({
     {
       id: HandleId.LeftTop,
       position: Position.Left,
-      className: "apollon-arc-handle apollon-arc-handle--left",
+      className: leftCornerArcs ? arcClass("left") : undefined,
       style: { ...baseHandleStyle, top: topStart },
     },
   ]
 
-  const visibleHandleIds = new Set<HandleId>([
-    HandleId.TopLeft,
-    HandleId.Top,
-    HandleId.TopRight,
-    HandleId.RightTop,
-    HandleId.Right,
-    HandleId.RightBottom,
-    HandleId.BottomRight,
-    HandleId.Bottom,
-    HandleId.BottomLeft,
-    HandleId.LeftBottom,
-    HandleId.Left,
-    HandleId.LeftTop,
-  ])
+  // A handle is "primary" (i.e. visible to the user with a working arc and
+  // connection cursor) if the algorithm decided to give it an arc class
+  // above. Hidden connection points (slots 1 and 3, plus slots without an
+  // arc in the current stage) stay in the DOM so their ids remain
+  // addressable from saved edge data, but they render opaque.
+  const visibleHandleIds = new Set<HandleId>()
+  for (const handle of handles) {
+    if (handle.className) visibleHandleIds.add(handle.id)
+  }
 
   return (
     <AssessmentSelectableWrapper elementId={elementId}>

@@ -367,8 +367,8 @@ type RectHandlePoint = {
 //   constants.ts → @/nodes → nodes/.../Class.tsx → @/utils (barrel) → edgeUtils.ts → @/constants
 // Reading CANVAS.SNAP_TO_GRID_PX at module init can resolve to undefined when
 // edgeUtils.ts evaluates before constants.ts finishes. Keep this in sync
-// with CANVAS.SNAP_TO_GRID_PX in constants.ts (currently 10).
-const HANDLE_SNAP_STEP_PX = 10
+// with CANVAS.SNAP_TO_GRID_PX in constants.ts (currently 5).
+const HANDLE_SNAP_STEP_PX = 5
 const HANDLE_RATIO_START = 0.2
 const HANDLE_RATIO_END = 0.8
 
@@ -402,12 +402,70 @@ export function getNormalizedHandleOffsetPercent(
   return `${(normalizedOffset / axisLength) * 100}%`
 }
 
-function getDistributedHandleOffsets(axisLength: number): number[] {
-  if (!Number.isFinite(axisLength) || axisLength <= 0) {
-    return [0, 0, 0, 0, 0]
-  }
+// Visible half-circle arc-dragger length along the side it sits on. Two
+// adjacent visible arcs must have centers separated by at least this much
+// to avoid overlapping each other.
+const ARC_LENGTH_PX = 28
 
-  // Ideal 5-slot distribution inside the cosmetically preferred inset band.
+const snapToGridStep = (value: number, axisLength: number): number => {
+  const snapped = Math.round(value / HANDLE_SNAP_STEP_PX) * HANDLE_SNAP_STEP_PX
+  return clamp(snapped, 0, axisLength)
+}
+
+// Per-side placement plan. Carries the 5-slot offset tuple (every legacy
+// handle ID still resolves to a grid-aligned point so saved edges keep
+// working) plus the count of visible arc-draggers chosen for the side.
+//
+// Visible-slot mapping by `visibleArcCount`:
+//   3 → slots 0, 2, 4 each show an arc (current "spread" layout).
+//   2 → slots 0 and 4 each show an arc; slot 2 is a hidden connection point.
+//   1 → only slot 2 shows an arc.
+export type AxisHandlePlan = {
+  offsets: [number, number, number, number, number]
+  visibleArcCount: 1 | 2 | 3
+}
+
+const EMPTY_PLAN: AxisHandlePlan = {
+  offsets: [0, 0, 0, 0, 0],
+  visibleArcCount: 1,
+}
+
+// Build a 5-slot offset tuple from up to 3 grid-aligned visible positions.
+// Hidden slots (slot 1 and slot 3) collapse to the midpoint between visible
+// neighbours, snapped to the grid, so every legacy handle ID resolves to a
+// grid-aligned coordinate.
+const buildOffsets = (
+  visible: number[]
+): [number, number, number, number, number] => {
+  if (visible.length === 5) {
+    return visible as [number, number, number, number, number]
+  }
+  if (visible.length === 3) {
+    const [v0, v2, v4] = visible
+    return [
+      v0,
+      snapToGridStep((v0 + v2) / 2, Number.POSITIVE_INFINITY),
+      v2,
+      snapToGridStep((v2 + v4) / 2, Number.POSITIVE_INFINITY),
+      v4,
+    ]
+  }
+  if (visible.length === 2) {
+    const [v0, v4] = visible
+    const v2 = snapToGridStep((v0 + v4) / 2, Number.POSITIVE_INFINITY)
+    return [v0, v0, v2, v4, v4]
+  }
+  const [v2] = visible
+  return [v2, v2, v2, v2, v2]
+}
+
+// Stage 3 placement: arithmetic-progression search inside the cosmetic
+// [HANDLE_RATIO_START, HANDLE_RATIO_END] band. Returns 5 grid-aligned
+// positions that minimize squared distance to the ideal evenly-distributed
+// slots inside that band.
+const findStage3Offsets = (axisLength: number): number[] | null => {
+  if (axisLength <= 0) return null
+
   const ideal = [0, 1, 2, 3, 4].map(
     (index) =>
       axisLength *
@@ -415,27 +473,11 @@ function getDistributedHandleOffsets(axisLength: number): number[] {
         ((HANDLE_RATIO_END - HANDLE_RATIO_START) * index) / 4)
   )
 
-  // Restrict candidates to grid-aligned positions so opposing handles can be
-  // perfectly aligned by grid dragging (prevents unremovable micro-dents).
   const maxGridUnit = Math.floor(axisLength / HANDLE_SNAP_STEP_PX)
-
-  // For very small nodes we may not have enough grid units for 4 equal steps.
-  // Fall back to nearest snapped ideals.
-  if (maxGridUnit < 4) {
-    return ideal.map((value) =>
-      clamp(
-        Math.round(value / HANDLE_SNAP_STEP_PX) * HANDLE_SNAP_STEP_PX,
-        0,
-        axisLength
-      )
-    )
-  }
+  if (maxGridUnit < 4) return null
 
   let bestOffsets: number[] | null = null
   let bestScore = Number.POSITIVE_INFINITY
-
-  // Enumerate arithmetic progressions on the grid:
-  // p_i = (startUnit + i * stepUnits) * grid, i = 0..4
   for (
     let stepUnits = 1;
     stepUnits <= Math.floor(maxGridUnit / 4);
@@ -446,16 +488,12 @@ function getDistributedHandleOffsets(axisLength: number): number[] {
       const offsets = [0, 1, 2, 3, 4].map(
         (index) => (startUnit + index * stepUnits) * HANDLE_SNAP_STEP_PX
       )
-
-      // Minimize squared error to ideal slots, with a tiny bias toward
-      // larger spread when scores tie (better visual coverage).
       let score = 0
       for (let i = 0; i < offsets.length; i++) {
         const delta = offsets[i] - ideal[i]
         score += delta * delta
       }
       score -= stepUnits * 1e-3
-
       if (score < bestScore) {
         bestScore = score
         bestOffsets = offsets
@@ -463,15 +501,52 @@ function getDistributedHandleOffsets(axisLength: number): number[] {
     }
   }
 
-  if (bestOffsets) return bestOffsets
+  return bestOffsets
+}
 
-  return ideal.map((value) =>
-    clamp(
-      Math.round(value / HANDLE_SNAP_STEP_PX) * HANDLE_SNAP_STEP_PX,
-      0,
-      axisLength
-    )
-  )
+// Pick the largest staged layout whose visible arcs don't overlap:
+//   * stage-3: 5 underlying slots, arcs at slots 0/2/4 (the [0.2, 0.8] band).
+//   * stage-2: 3 underlying visible slots, arcs at the outer two (slot 0 and
+//              slot 2 of the 3-slot layout), evenly distributed at L/3 and
+//              2L/3 — no arc at the geometric center.
+//   * stage-1: single arc at the center.
+const solveAxisPlan = (axisLength: number): AxisHandlePlan => {
+  if (!Number.isFinite(axisLength) || axisLength <= 0) return EMPTY_PLAN
+
+  const stage3 = findStage3Offsets(axisLength)
+  if (stage3 && stage3[2] - stage3[0] >= ARC_LENGTH_PX) {
+    return {
+      offsets: buildOffsets(stage3),
+      visibleArcCount: 3,
+    }
+  }
+
+  // Stage 2: arcs at L/4 and 3L/4. Snap the first position to the grid then
+  // mirror it so the outer gaps are exactly equal (the centre gap may be
+  // slightly wider after snapping, but the layout reads as symmetric).
+  const s0 = snapToGridStep(axisLength / 4, axisLength)
+  const s4 = snapToGridStep(axisLength - s0, axisLength)
+  if (s4 - s0 >= ARC_LENGTH_PX) {
+    return {
+      offsets: buildOffsets([s0, s4]),
+      visibleArcCount: 2,
+    }
+  }
+
+  // Stage 1: single arc at the snapped center.
+  const center = snapToGridStep(axisLength / 2, axisLength)
+  return {
+    offsets: buildOffsets([center]),
+    visibleArcCount: 1,
+  }
+}
+
+export function getAxisHandlePlan(axisLength: number): AxisHandlePlan {
+  return solveAxisPlan(axisLength)
+}
+
+function getDistributedHandleOffsets(axisLength: number): number[] {
+  return [...solveAxisPlan(axisLength).offsets]
 }
 
 export function getDistributedHandleOffsetPercents(
@@ -481,7 +556,7 @@ export function getDistributedHandleOffsetPercents(
     return ["0%", "0%", "0%", "0%", "0%"]
   }
 
-  const offsets = getDistributedHandleOffsets(axisLength)
+  const offsets = solveAxisPlan(axisLength).offsets
   return offsets.map((offset) => `${(offset / axisLength) * 100}%`) as [
     string,
     string,
