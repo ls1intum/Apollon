@@ -1,4 +1,8 @@
-/* eslint-disable */
+/* eslint-disable @typescript-eslint/no-explicit-any --
+ * The v3 → v4 converter walks legacy JSON payloads with no shared schema, so
+ * every entry point has to accept `any` until it's narrowed inline. Replacing
+ * these with proper types would require defining the full v3/v2 envelope and
+ * isn't in scope here. */
 import { UMLModel, ApollonNode, ApollonEdge, Assessment } from "../typings"
 import { transformEdges } from "../services/migration/EdgeTransformer"
 import { UMLDiagramType } from "../types/DiagramType"
