@@ -23,6 +23,8 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@ac6db6d3c1f721f886538a378a2d73e85697340a # v6.0.8
+        with:
+          standalone: true
 
       - name: Set up Node
         uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
