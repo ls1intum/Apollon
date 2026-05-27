@@ -32,6 +32,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Install Ruby gems (fastlane + cocoapods)
+        working-directory: standalone/webapp
+        run: |
+          eval "$(/opt/homebrew/bin/rbenv init - --no-rehash bash)"
+          bundle install
+          # Persist rbenv shims on PATH so bundle, pod, and fastlane are
+          # resolvable in every subsequent step without re-init.
+          echo "$(rbenv root)/shims" >> "$GITHUB_PATH"
+
       - name: Build library + web assets
         run: pnpm run build:lib && pnpm --filter @tumaet/webapp run build
 
@@ -46,12 +55,6 @@ jobs:
         working-directory: standalone/webapp
         run: pnpm exec cap sync ios
 
-      - name: Install Gems
-        working-directory: standalone/webapp
-        run: |
-          eval "$(/opt/homebrew/bin/rbenv init - --no-rehash bash)"
-          bundle install
-
       - name: Generate build number
         run: echo "BUILD_NUMBER=$(date +'%Y%m%d%H%M')" >> "$GITHUB_ENV"
 
@@ -65,9 +68,7 @@ jobs:
           API_KEY_ID: ${{ secrets.IOS_APP_STORE_CONNECT_API_KEY_KEY_ID }}
           API_KEY_ISSUER_ID: ${{ secrets.IOS_APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
           API_KEY_PASSWORD: ${{ secrets.IOS_APP_STORE_CONNECT_API_KEY_PASSWORD }}
-        run: |
-          eval "$(/opt/homebrew/bin/rbenv init - --no-rehash bash)"
-          bundle exec fastlane build
+        run: bundle exec fastlane build
 
       - name: Upload to TestFlight (Fastlane)
         working-directory: standalone/webapp
@@ -75,9 +76,7 @@ jobs:
           API_KEY_ID: ${{ secrets.IOS_APP_STORE_CONNECT_API_KEY_KEY_ID }}
           API_KEY_ISSUER_ID: ${{ secrets.IOS_APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
           API_KEY_PASSWORD: ${{ secrets.IOS_APP_STORE_CONNECT_API_KEY_PASSWORD }}
-        run: |
-          eval "$(/opt/homebrew/bin/rbenv init - --no-rehash bash)"
-          bundle exec fastlane release
+        run: bundle exec fastlane release
 
       - name: Upload IPA artifact
         if: always()
