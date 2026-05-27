@@ -1,19 +1,23 @@
-import { Tooltip } from "@mui/material"
 import { Typography } from "@/components/Typography"
-import Info from "@mui/icons-material/Info"
-import { APButton } from "../APButton"
-import { toast } from "react-toastify"
 import { useEditorContext, useModalContext } from "@/contexts"
-import { useNavigate } from "react-router"
-import { DiagramView } from "@/types"
-import { DiagramApiClient } from "@/services/DiagramApiClient"
 import { log } from "@/logger"
+import { DiagramApiClient } from "@/services/DiagramApiClient"
+import { DiagramView } from "@/types"
 import { randomCollabName } from "@/utils/collaboration"
+import { Clipboard } from "@capacitor/clipboard"
+import { isPlatform } from "@ionic/react"
+import Info from "@mui/icons-material/Info"
+import { Tooltip } from "@mui/material"
+import { useNavigate } from "react-router"
+import { toast } from "react-toastify"
+import { APButton } from "../APButton"
+import { serverURL } from "@/constants"
 
 export const ShareModal = () => {
   const { editor } = useEditorContext()
   const { closeModal, openModal } = useModalContext()
   const navigate = useNavigate()
+  const isCapacitorApp = isPlatform("capacitor")
 
   const handleShareButtonPress = async (viewType: DiagramView) => {
     if (!editor) {
@@ -25,10 +29,13 @@ export const ShareModal = () => {
       const model = editor.model
       const { id: diagramID } = await DiagramApiClient.createDiagram(model)
 
-      const newurl = `${window.location.origin}/${diagramID}?view=${viewType}`
-      copyToClipboard(newurl)
-      closeModal()
+      const newurl = isCapacitorApp
+        ? `${serverURL}/${diagramID}?view=${viewType}`
+        : `${window.location.origin}/${diagramID}?view=${viewType}`
+
+      await copyToClipboard(newurl)
       navigate(`/${diagramID}?view=${viewType}`)
+      closeModal()
 
       toast.success(
         `The link has been copied to your clipboard and can be shared to collaborate, simply by pasting the link. You can re-access the link by going to share menu.`,
@@ -42,8 +49,12 @@ export const ShareModal = () => {
     }
   }
 
-  const copyToClipboard = (link: string) => {
-    navigator.clipboard.writeText(link)
+  const copyToClipboard = async (link: string) => {
+    if (isPlatform("capacitor")) {
+      await Clipboard.write({ string: link })
+    } else {
+      await navigator.clipboard.writeText(link)
+    }
   }
 
   const handleCollaborate = () => {
