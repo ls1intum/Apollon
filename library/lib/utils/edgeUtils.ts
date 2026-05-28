@@ -412,58 +412,78 @@ const snapToGridStep = (value: number, axisLength: number): number => {
   return clamp(snapped, 0, axisLength)
 }
 
-// Per-side placement plan. Carries the 5-slot offset tuple (every legacy
-// handle ID still resolves to a grid-aligned point so saved edges keep
-// working) plus the count of visible arc-draggers chosen for the side.
+// Per-side handle-placement plan. Each side carries nine grid-aligned offsets
+// indexed 0..8 (left-to-right or top-to-bottom). The five named handle IDs
+// per side map to the even indices (0, 2, 4, 6, 8) so existing edge data
+// stays addressable; the four "between" IDs sit at the odd indices and only
+// matter when the side is wide enough to render the five-arc layout.
 //
-// Visible-slot mapping by `visibleArcCount`:
-//   3 → slots 0, 2, 4 each show an arc (current "spread" layout).
-//   2 → slots 0 and 4 each show an arc; slot 2 is a hidden connection point.
-//   1 → only slot 2 shows an arc.
+// `visibleArcCount` decides which subset of the nine slots renders a visible
+// half-circle dragger:
+//   5 → arcs at indices 0, 2, 4, 6, 8 (every other slot).
+//   3 → arcs at indices 0, 4, 8 (corners + middle, classic layout).
+//   1 → arc at index 4 only (centre).
 export type AxisHandlePlan = {
-  offsets: [number, number, number, number, number]
-  visibleArcCount: 1 | 2 | 3
+  offsets: [
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+  ]
+  visibleArcCount: 1 | 3 | 5
 }
 
 const EMPTY_PLAN: AxisHandlePlan = {
-  offsets: [0, 0, 0, 0, 0],
+  offsets: [0, 0, 0, 0, 0, 0, 0, 0, 0],
   visibleArcCount: 1,
 }
 
-// Build a 5-slot offset tuple from up to 3 grid-aligned visible positions.
-// Hidden slots (slot 1 and slot 3) collapse to the midpoint between visible
-// neighbours, snapped to the grid, so every legacy handle ID resolves to a
-// grid-aligned coordinate.
-const buildOffsets = (
-  visible: number[]
-): [number, number, number, number, number] => {
+// Build a 9-slot offset tuple from a list of grid-aligned visible-arc
+// positions. The visible arcs are placed at even slot indices; the four
+// odd-indexed slots collapse to the midpoint of their two visible
+// neighbours (snapped to the grid) when the side is in a stage that doesn't
+// expose them, so every legacy handle ID still resolves to a usable point.
+const buildOffsets = (visible: number[]): AxisHandlePlan["offsets"] => {
   if (visible.length === 5) {
-    return visible as [number, number, number, number, number]
-  }
-  if (visible.length === 3) {
-    const [v0, v2, v4] = visible
+    const [v0, v2, v4, v6, v8] = visible
     return [
       v0,
       snapToGridStep((v0 + v2) / 2, Number.POSITIVE_INFINITY),
       v2,
       snapToGridStep((v2 + v4) / 2, Number.POSITIVE_INFINITY),
       v4,
+      snapToGridStep((v4 + v6) / 2, Number.POSITIVE_INFINITY),
+      v6,
+      snapToGridStep((v6 + v8) / 2, Number.POSITIVE_INFINITY),
+      v8,
     ]
   }
-  if (visible.length === 2) {
-    const [v0, v4] = visible
+  if (visible.length === 3) {
+    // Three visible arcs (corners + middle). The four hidden in-between
+    // slots collapse to the nearest visible neighbour so saved edges using
+    // any of the legacy IDs (top-mid-left, top-mid-right, …) resolve to a
+    // grid-aligned anchor that sits on the arc closest to them.
+    const [v0, v4, v8] = visible
     const v2 = snapToGridStep((v0 + v4) / 2, Number.POSITIVE_INFINITY)
-    return [v0, v0, v2, v4, v4]
+    const v6 = snapToGridStep((v4 + v8) / 2, Number.POSITIVE_INFINITY)
+    return [v0, v0, v2, v4, v4, v4, v6, v8, v8]
   }
-  const [v2] = visible
-  return [v2, v2, v2, v2, v2]
+  // Single visible arc at the middle; every other slot collapses to it.
+  const [v4] = visible
+  return [v4, v4, v4, v4, v4, v4, v4, v4, v4]
 }
 
-// Stage 3 placement: arithmetic-progression search inside the cosmetic
-// [HANDLE_RATIO_START, HANDLE_RATIO_END] band. Returns 5 grid-aligned
-// positions that minimize squared distance to the ideal evenly-distributed
-// slots inside that band.
-const findStage3Offsets = (axisLength: number): number[] | null => {
+// Stage-1 placement (three-arc layout, classic). Uses the historical
+// arithmetic-progression search inside the cosmetic [HANDLE_RATIO_START,
+// HANDLE_RATIO_END] band so the corner arcs land exactly where they did
+// before this refactor. Returns the three visible arc positions, or null if
+// the side is too short for the band-based search to be meaningful.
+const findStage1Offsets = (axisLength: number): number[] | null => {
   if (axisLength <= 0) return null
 
   const ideal = [0, 1, 2, 3, 4].map(
@@ -501,39 +521,67 @@ const findStage3Offsets = (axisLength: number): number[] | null => {
     }
   }
 
-  return bestOffsets
+  if (!bestOffsets) return null
+  // The historical layout exposes the band's slot 0, slot 2 and slot 4 as
+  // visible arcs; the inner slots 1 and 3 are not used as arcs in this
+  // stage.
+  return [bestOffsets[0], bestOffsets[2], bestOffsets[4]]
 }
 
-// Pick the largest staged layout whose visible arcs don't overlap:
-//   * stage-3: 5 underlying slots, arcs at slots 0/2/4 (the [0.2, 0.8] band).
-//   * stage-2: 3 underlying visible slots, arcs at the outer two (slot 0 and
-//              slot 2 of the 3-slot layout), evenly distributed at L/3 and
-//              2L/3 — no arc at the geometric center.
-//   * stage-1: single arc at the center.
+// Stage-2 placement (five-arc layout). Evenly distributes five arcs across
+// the [HANDLE_RATIO_START, HANDLE_RATIO_END] band, snapping each to the
+// grid. Returns the five visible-arc positions or null when grid-snapping
+// would cause two adjacent arcs to share the same coordinate.
+const findStage2Offsets = (axisLength: number): number[] | null => {
+  if (axisLength <= 0) return null
+
+  const positions = [0, 1, 2, 3, 4].map((index) => {
+    const ratio =
+      HANDLE_RATIO_START + ((HANDLE_RATIO_END - HANDLE_RATIO_START) * index) / 4
+    return snapToGridStep(axisLength * ratio, axisLength)
+  })
+
+  for (let i = 1; i < positions.length; i++) {
+    if (positions[i] <= positions[i - 1]) return null
+  }
+  return positions
+}
+
+// Pick the largest staged layout that fits the side without overlapping
+// arcs:
+//   * stage 2 — five arcs, requires adjacent arcs ≥ ARC_LENGTH_PX apart in
+//               the band-based layout.
+//   * stage 1 — three arcs at the historical band positions; arcs sit at
+//               slots 0, 4, 8 of the nine-slot model.
+//   * stage 0 — single arc at the centre.
 const solveAxisPlan = (axisLength: number): AxisHandlePlan => {
   if (!Number.isFinite(axisLength) || axisLength <= 0) return EMPTY_PLAN
 
-  const stage3 = findStage3Offsets(axisLength)
-  if (stage3 && stage3[2] - stage3[0] >= ARC_LENGTH_PX) {
+  const stage2 = findStage2Offsets(axisLength)
+  if (stage2) {
+    let allFit = true
+    for (let i = 1; i < stage2.length; i++) {
+      if (stage2[i] - stage2[i - 1] < ARC_LENGTH_PX) {
+        allFit = false
+        break
+      }
+    }
+    if (allFit) {
+      return {
+        offsets: buildOffsets(stage2),
+        visibleArcCount: 5,
+      }
+    }
+  }
+
+  const stage1 = findStage1Offsets(axisLength)
+  if (stage1 && stage1[1] - stage1[0] >= ARC_LENGTH_PX) {
     return {
-      offsets: buildOffsets(stage3),
+      offsets: buildOffsets(stage1),
       visibleArcCount: 3,
     }
   }
 
-  // Stage 2: arcs at L/4 and 3L/4. Snap the first position to the grid then
-  // mirror it so the outer gaps are exactly equal (the centre gap may be
-  // slightly wider after snapping, but the layout reads as symmetric).
-  const s0 = snapToGridStep(axisLength / 4, axisLength)
-  const s4 = snapToGridStep(axisLength - s0, axisLength)
-  if (s4 - s0 >= ARC_LENGTH_PX) {
-    return {
-      offsets: buildOffsets([s0, s4]),
-      visibleArcCount: 2,
-    }
-  }
-
-  // Stage 1: single arc at the snapped center.
   const center = snapToGridStep(axisLength / 2, axisLength)
   return {
     offsets: buildOffsets([center]),
@@ -551,9 +599,9 @@ function getDistributedHandleOffsets(axisLength: number): number[] {
 
 export function getDistributedHandleOffsetPercents(
   axisLength: number
-): [string, string, string, string, string] {
+): [string, string, string, string, string, string, string, string, string] {
   if (!Number.isFinite(axisLength) || axisLength <= 0) {
-    return ["0%", "0%", "0%", "0%", "0%"]
+    return ["0%", "0%", "0%", "0%", "0%", "0%", "0%", "0%", "0%"]
   }
 
   const offsets = solveAxisPlan(axisLength).offsets
@@ -563,17 +611,155 @@ export function getDistributedHandleOffsetPercents(
     string,
     string,
     string,
+    string,
+    string,
+    string,
+    string,
   ]
+}
+
+type HandleSide = "top" | "right" | "bottom" | "left"
+
+const SIDE_HANDLE_IDS: Record<HandleSide, Record<number, string[]>> = {
+  top: {
+    1: ["top"],
+    3: ["top-left", "top", "top-right"],
+    5: ["top-left", "top-mid-left", "top", "top-mid-right", "top-right"],
+    9: [
+      "top-left",
+      "top-between-left-mid-left",
+      "top-mid-left",
+      "top-between-mid-left-center",
+      "top",
+      "top-between-center-mid-right",
+      "top-mid-right",
+      "top-between-mid-right-right",
+      "top-right",
+    ],
+  },
+  right: {
+    1: ["right"],
+    3: ["right-top", "right", "right-bottom"],
+    5: [
+      "right-top",
+      "right-mid-top",
+      "right",
+      "right-mid-bottom",
+      "right-bottom",
+    ],
+    9: [
+      "right-top",
+      "right-between-top-mid-top",
+      "right-mid-top",
+      "right-between-mid-top-center",
+      "right",
+      "right-between-center-mid-bottom",
+      "right-mid-bottom",
+      "right-between-mid-bottom-bottom",
+      "right-bottom",
+    ],
+  },
+  bottom: {
+    1: ["bottom"],
+    3: ["bottom-left", "bottom", "bottom-right"],
+    5: [
+      "bottom-left",
+      "bottom-mid-left",
+      "bottom",
+      "bottom-mid-right",
+      "bottom-right",
+    ],
+    9: [
+      "bottom-left",
+      "bottom-between-mid-left-left",
+      "bottom-mid-left",
+      "bottom-between-center-mid-left",
+      "bottom",
+      "bottom-between-mid-right-center",
+      "bottom-mid-right",
+      "bottom-between-right-mid-right",
+      "bottom-right",
+    ],
+  },
+  left: {
+    1: ["left"],
+    3: ["left-top", "left", "left-bottom"],
+    5: ["left-top", "left-mid-top", "left", "left-mid-bottom", "left-bottom"],
+    9: [
+      "left-top",
+      "left-between-mid-top-top",
+      "left-mid-top",
+      "left-between-center-mid-top",
+      "left",
+      "left-between-mid-bottom-center",
+      "left-mid-bottom",
+      "left-between-bottom-mid-bottom",
+      "left-bottom",
+    ],
+  },
+}
+
+const GENERATED_SLOT_PREFIX = "slot"
+
+export function getHandleIdForSideSlot(
+  side: HandleSide,
+  slotIndex: number,
+  slotCount: number
+): string {
+  const knownIds = SIDE_HANDLE_IDS[side][slotCount]
+  if (knownIds) return knownIds[slotIndex]
+
+  const semanticIds = SIDE_HANDLE_IDS[side][9]
+  const semanticIndex = new Map<number, string>()
+  for (let i = 0; i < semanticIds.length; i++) {
+    const targetIndex = Math.round(
+      (i / (semanticIds.length - 1)) * (slotCount - 1)
+    )
+    semanticIndex.set(targetIndex, semanticIds[i])
+  }
+
+  return (
+    semanticIndex.get(slotIndex) ??
+    `${side}-${GENERATED_SLOT_PREFIX}-${slotIndex}`
+  )
 }
 
 function getCanonicalHandlePoints(
   rect: Rect,
   useFourHandles: boolean
 ): RectHandlePoint[] {
-  const [xStart, xMidStart, xMiddle, xMidEnd, xEnd] =
-    getDistributedHandleOffsets(rect.width).map((offset) => rect.x + offset)
-  const [yStart, yMidStart, yMiddle, yMidEnd, yEnd] =
-    getDistributedHandleOffsets(rect.height).map((offset) => rect.y + offset)
+  // Nine slot positions per axis. Even indices map to the five named handle
+  // IDs per side (corner / mid-corner / middle / mid-corner / corner); odd
+  // indices map to the "between" IDs that only render arcs in the five-arc
+  // stage but are always addressable as hidden connection points.
+  const xs = getDistributedHandleOffsets(rect.width).map(
+    (offset) => rect.x + offset
+  )
+  const ys = getDistributedHandleOffsets(rect.height).map(
+    (offset) => rect.y + offset
+  )
+  const [
+    xStart,
+    xBetween1,
+    xMidStart,
+    xBetween3,
+    xMiddle,
+    xBetween5,
+    xMidEnd,
+    xBetween7,
+    xEnd,
+  ] = xs
+  const [
+    yStart,
+    yBetween1,
+    yMidStart,
+    yBetween3,
+    yMiddle,
+    yBetween5,
+    yMidEnd,
+    yBetween7,
+    yEnd,
+  ] = ys
 
   const points: RectHandlePoint[] = [
     { label: "top", position: { x: xMiddle, y: yStart }, side: Position.Top },
@@ -592,9 +778,16 @@ function getCanonicalHandlePoints(
 
   if (!useFourHandles) {
     points.push(
+      // Top side. The two corners (top-left, top-right) belong to this side;
+      // aliases left-top and right-top resolve to them via getHandleAnchorMap.
       {
         label: "top-left",
         position: { x: xStart, y: yStart },
+        side: Position.Top,
+      },
+      {
+        label: "top-between-left-mid-left",
+        position: { x: xBetween1, y: yStart },
         side: Position.Top,
       },
       {
@@ -603,8 +796,23 @@ function getCanonicalHandlePoints(
         side: Position.Top,
       },
       {
+        label: "top-between-mid-left-center",
+        position: { x: xBetween3, y: yStart },
+        side: Position.Top,
+      },
+      {
+        label: "top-between-center-mid-right",
+        position: { x: xBetween5, y: yStart },
+        side: Position.Top,
+      },
+      {
         label: "top-mid-right",
         position: { x: xMidEnd, y: yStart },
+        side: Position.Top,
+      },
+      {
+        label: "top-between-mid-right-right",
+        position: { x: xBetween7, y: yStart },
         side: Position.Top,
       },
       {
@@ -612,9 +820,26 @@ function getCanonicalHandlePoints(
         position: { x: xEnd, y: yStart },
         side: Position.Top,
       },
+      // Right side — inner slots only; the corners are owned by the top
+      // and bottom sides above/below.
+      {
+        label: "right-between-top-mid-top",
+        position: { x: xEnd, y: yBetween1 },
+        side: Position.Right,
+      },
       {
         label: "right-mid-top",
         position: { x: xEnd, y: yMidStart },
+        side: Position.Right,
+      },
+      {
+        label: "right-between-mid-top-center",
+        position: { x: xEnd, y: yBetween3 },
+        side: Position.Right,
+      },
+      {
+        label: "right-between-center-mid-bottom",
+        position: { x: xEnd, y: yBetween5 },
         side: Position.Right,
       },
       {
@@ -623,8 +848,19 @@ function getCanonicalHandlePoints(
         side: Position.Right,
       },
       {
+        label: "right-between-mid-bottom-bottom",
+        position: { x: xEnd, y: yBetween7 },
+        side: Position.Right,
+      },
+      // Bottom side, right → left.
+      {
         label: "bottom-right",
         position: { x: xEnd, y: yEnd },
+        side: Position.Bottom,
+      },
+      {
+        label: "bottom-between-right-mid-right",
+        position: { x: xBetween7, y: yEnd },
         side: Position.Bottom,
       },
       {
@@ -633,8 +869,23 @@ function getCanonicalHandlePoints(
         side: Position.Bottom,
       },
       {
+        label: "bottom-between-mid-right-center",
+        position: { x: xBetween5, y: yEnd },
+        side: Position.Bottom,
+      },
+      {
+        label: "bottom-between-center-mid-left",
+        position: { x: xBetween3, y: yEnd },
+        side: Position.Bottom,
+      },
+      {
         label: "bottom-mid-left",
         position: { x: xMidStart, y: yEnd },
+        side: Position.Bottom,
+      },
+      {
+        label: "bottom-between-mid-left-left",
+        position: { x: xBetween1, y: yEnd },
         side: Position.Bottom,
       },
       {
@@ -642,14 +893,35 @@ function getCanonicalHandlePoints(
         position: { x: xStart, y: yEnd },
         side: Position.Bottom,
       },
+      // Left side — inner slots only.
+      {
+        label: "left-between-bottom-mid-bottom",
+        position: { x: xStart, y: yBetween7 },
+        side: Position.Left,
+      },
       {
         label: "left-mid-bottom",
         position: { x: xStart, y: yMidEnd },
         side: Position.Left,
       },
       {
+        label: "left-between-mid-bottom-center",
+        position: { x: xStart, y: yBetween5 },
+        side: Position.Left,
+      },
+      {
+        label: "left-between-center-mid-top",
+        position: { x: xStart, y: yBetween3 },
+        side: Position.Left,
+      },
+      {
         label: "left-mid-top",
         position: { x: xStart, y: yMidStart },
+        side: Position.Left,
+      },
+      {
+        label: "left-between-mid-top-top",
+        position: { x: xStart, y: yBetween1 },
         side: Position.Left,
       }
     )

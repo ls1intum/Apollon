@@ -578,10 +578,11 @@ describe("findClosestHandle", () => {
     })
 
     it("uses deterministic canonical-order tie-break for equal distances", () => {
-      // Midpoint between top (150,40) and top-mid-left (110,40).
-      // "top" is declared first in canonical order and wins ties.
+      // Equidistant from top (slot 4, x=150) and top-between-mid-left-center
+      // (slot 3, x=130) on the top side. The four directional middles are
+      // declared first in canonical order, so "top" wins this tie.
       const result = findClosestHandle({
-        point: { x: 130, y: 40 },
+        point: { x: 140, y: 40 },
         rect,
         useFourHandles: false,
       })
@@ -589,7 +590,7 @@ describe("findClosestHandle", () => {
     })
 
     it("returns the same ID repeatedly at an exact tie point", () => {
-      const tiePoint = { x: 130, y: 40 }
+      const tiePoint = { x: 140, y: 40 }
       const first = findClosestHandle({
         point: tiePoint,
         rect,
@@ -1802,7 +1803,9 @@ describe("getDistributedHandleOffsetPercents", () => {
         (percent) => (Number.parseFloat(percent) / 100) * axisLength
       )
 
-      expect(offsets).toHaveLength(5)
+      // Nine offsets per axis — five arc-bearing slots interleaved with four
+      // "between" hidden connection points.
+      expect(offsets).toHaveLength(9)
       for (let index = 0; index < offsets.length; index++) {
         expect(offsets[index]).toBeGreaterThanOrEqual(0)
         expect(offsets[index]).toBeLessThanOrEqual(axisLength)
@@ -1810,7 +1813,7 @@ describe("getDistributedHandleOffsetPercents", () => {
         expect(Math.round(offsets[index]) % 5).toBe(0)
 
         if (index > 0) {
-          // Hidden slots collapse to their visible neighbour in stage-1/2
+          // Hidden slots collapse to their visible neighbour in stage-0/1
           // layouts, so adjacent offsets may be equal — but never decrease.
           expect(offsets[index]).toBeGreaterThanOrEqual(offsets[index - 1])
         }
