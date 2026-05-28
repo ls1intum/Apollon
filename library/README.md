@@ -7,7 +7,7 @@
 [![license](https://img.shields.io/npm/l/@tumaet/apollon)](https://github.com/ls1intum/Apollon/blob/main/LICENSE)
 [![types included](https://img.shields.io/npm/types/@tumaet/apollon)](https://www.npmjs.com/package/@tumaet/apollon)
 
-**Embeddable UML modeling editor for the web.** Mounts into any DOM node — works inside Angular, Vue, Svelte, vanilla JS, or React hosts.
+**Embeddable UML modeling editor for the web.** Mounts into any DOM node and works inside Angular, Vue, Svelte, vanilla JS, or React.
 
 [**▶ Live demo**](https://apollon.aet.cit.tum.de) · [Docs](https://ls1intum.github.io/Apollon/library/) · [API reference](https://ls1intum.github.io/Apollon/library/api) · [Examples](https://ls1intum.github.io/Apollon/library/embedding/react) · [GitHub](https://github.com/ls1intum/Apollon)
 
@@ -15,29 +15,29 @@
 
 ---
 
-Apollon is the modeling editor behind [Artemis](https://artemis.tum.de/), TUM's interactive learning platform. Its public API is **imperative** — `new ApollonEditor(container, options)` — so your host code never has to touch React, even though the editor mounts its own React tree inside the node you give it. React hosts get a first-class [`<Apollon>` component](#react) instead.
+Apollon is the modeling editor behind [Artemis](https://artemis.tum.de/), TUM's interactive learning platform. The API is imperative: you call `new ApollonEditor(container, options)` and the editor renders its own React tree inside that node, so your own code never touches React. In a React app, render the [`<Apollon>` component](#react) instead.
 
 ## Features
 
-- **13 diagram types** — class, object, activity, use case, communication, component, deployment, Petri net, reachability graph, syntax tree, flowchart, BPMN, and SFC.
-- **Framework-agnostic** — one imperative API for Angular, Vue, Svelte, and vanilla JS; a dedicated React component, hooks, and provider for React.
-- **Real-time collaboration** — opt-in, transport-agnostic multi-user editing powered by [Yjs](https://yjs.dev/). Bring any WebSocket/WebRTC/BroadcastChannel transport.
-- **Export** — SVG and JSON out of the box; PNG/PDF derive from the SVG pipeline (reference implementations ship in the repo).
-- **Assessment mode** — attach scores and feedback to elements (the grading workflow used by Artemis).
-- **TypeScript-first** — full type definitions ship with the package.
+- **13 diagram types**: class, object, activity, use case, communication, component, deployment, Petri net, reachability graph, syntax tree, flowchart, BPMN, and SFC.
+- **Framework-agnostic**: one imperative API for Angular, Vue, Svelte, and vanilla JS, plus a React component, hooks, and provider.
+- **Real-time collaboration**: opt-in multi-user editing over [Yjs](https://yjs.dev/), with any transport you like (WebSocket, WebRTC, BroadcastChannel).
+- **Export**: SVG and JSON are built in. Generate PNG and PDF from the SVG (see [Export](#export)).
+- **Assessment mode**: attach scores and feedback to elements. This is the grading workflow Artemis uses.
+- **TypeScript**: type definitions are included.
 
 ## Install
 
-The package ships **two builds with an identical API.** Pick by whether your host already uses React:
+The package ships two builds with the same API. Pick one based on whether your host already uses React:
 
-| Import                        | React / MUI / emotion / xyflow | Size (min / gzip) | Use when                                                                                                           |
-| ----------------------------- | ------------------------------ | ----------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `@tumaet/apollon` _(default)_ | **bundled**                    | ~2.4 MB / ~540 KB | Your host is Angular, Vue, Svelte, vanilla JS — anything without React. Zero peer deps to install.                 |
-| `@tumaet/apollon/react`       | **peer deps** (shared)         | ~875 KB / ~170 KB | Your host is React 18.3 and should share its React/MUI instance with the editor instead of bundling a second copy. |
+| Import                        | React / MUI / emotion / xyflow | Size (min / gzip) | Use when                                                                                                |
+| ----------------------------- | ------------------------------ | ----------------- | ------------------------------------------------------------------------------------------------------- |
+| `@tumaet/apollon` _(default)_ | **bundled**                    | ~2.4 MB / ~540 KB | Your host is Angular, Vue, Svelte, or vanilla JS. No peer deps to install.                              |
+| `@tumaet/apollon/react`       | **peer deps** (shared)         | ~875 KB / ~170 KB | Your host is React 18.3 and should share its React and MUI with the editor instead of duplicating them. |
 
-Sizes are the published entry chunks; gzip is what ships over the wire. The `/react` figure excludes the peers your app already has.
+Sizes are the published entry chunks. Gzip is the transfer size. The `/react` number excludes the peers your app already ships.
 
-### Standalone build — any framework, no peer deps
+### Standalone build (any framework, no peer deps)
 
 ```sh
 npm install @tumaet/apollon
@@ -48,9 +48,9 @@ import { ApollonEditor } from "@tumaet/apollon"
 import "@tumaet/apollon/style.css"
 ```
 
-React, MUI, emotion, and xyflow are bundled inside the library — nothing else to install.
+React, MUI, emotion, and xyflow are bundled in. Nothing else to install.
 
-### React build — share your host's React
+### React build (share your host's React)
 
 ```sh
 npm install @tumaet/apollon \
@@ -71,12 +71,12 @@ import "@tumaet/apollon/style.css"
 
 ## Which build do I use?
 
-This is the one decision to get right up front:
+It comes down to whether your host already runs React:
 
-- **Not a React app?** Use the default `@tumaet/apollon`. It bundles its own React, so there is nothing to install and nothing to configure.
-- **A React app?** Use `@tumaet/apollon/react` and install the peers above. The default build would ship a **second copy of React** that fights your host's — causing "Invalid hook call" errors and a bloated bundle. The `/react` subpath externalizes React, MUI, emotion, and xyflow so the editor shares the single instance your app already has, and it is the **only** entry that exports the `<Apollon>` component, hooks, and provider.
+- **Not a React app?** Use the default `@tumaet/apollon`. It bundles its own React, so there is nothing extra to install or configure.
+- **A React app?** Use `@tumaet/apollon/react` and install the peers above. The default build bundles its own React, so in a React app you would load two copies. That causes "Invalid hook call" errors and a larger bundle. The `/react` subpath leaves React, MUI, emotion, and xyflow external so the editor shares the copies your app already has. It is also the only entry that exports the `<Apollon>` component, hooks, and provider.
 
-> **⚠️ The container must have an explicit, non-zero height** (`600px`, `80vh`, or a sized flex/grid child) — whichever build you choose. The canvas sizes itself to its parent; without a resolvable height it collapses to zero pixels and renders blank. This is the single most common embedding mistake. See [Troubleshooting](https://ls1intum.github.io/Apollon/library/troubleshooting).
+> **⚠️ Give the container an explicit, non-zero height** (`600px`, `80vh`, or a sized flex/grid child), whichever build you use. The canvas sizes itself to its parent, so with no resolvable height it collapses to zero pixels and renders blank. This is the most common embedding mistake. See [Troubleshooting](https://ls1intum.github.io/Apollon/library/troubleshooting).
 
 ## Quick start
 
@@ -101,13 +101,13 @@ editor.unsubscribe(subscriptionId)
 editor.destroy()
 ```
 
-The editor is **client-only**. In SSR frameworks (Next.js, Remix, SvelteKit, Nuxt), construct it from a client-side effect — never during render. Always call `editor.destroy()` before re-mounting on the same container.
+The editor is client-only. In SSR frameworks (Next.js, Remix, SvelteKit, Nuxt), construct it from a client-side effect, never during render. Always call `editor.destroy()` before re-mounting on the same container.
 
 ## Embedding examples
 
 ### React
 
-Use the `<Apollon>` component from the `@tumaet/apollon/react` subpath — it owns the editor's lifecycle (constructs on mount, destroys on unmount):
+Render the `<Apollon>` component from the `@tumaet/apollon/react` subpath. It owns the editor's lifecycle: it constructs on mount and destroys on unmount.
 
 ```tsx
 import { Apollon } from "@tumaet/apollon/react"
@@ -130,7 +130,7 @@ export function DiagramEditor({ initialModel }: { initialModel?: UMLModel }) {
 }
 ```
 
-Reach the instance via `ref`, the `onMount(editor)` callback, or the `useApollonEditor()` hook. See the [React embedding guide](https://ls1intum.github.io/Apollon/library/embedding/react) for hooks, the provider, and SSR.
+Reach the instance through `ref`, the `onMount(editor)` callback, or the `useApollonEditor()` hook. See the [React embedding guide](https://ls1intum.github.io/Apollon/library/embedding/react) for hooks, the provider, and SSR.
 
 ### Angular (17.3+ signal-based)
 
@@ -173,7 +173,7 @@ export class DiagramEditorComponent {
 }
 ```
 
-`afterNextRender` runs only in the browser, so this is SSR-safe by construction.
+`afterNextRender` runs only in the browser, so this is SSR-safe.
 
 ### Vanilla JS / CDN
 
@@ -199,11 +199,11 @@ export class DiagramEditorComponent {
 
 ## Supported diagrams
 
-Class, Object, Activity, Use Case, Communication, Component, Deployment, Petri Net, Reachability Graph, Syntax Tree, Flowchart, BPMN, SFC. The `UMLDiagramType` enum carries the exact wire literals.
+Class, Object, Activity, Use Case, Communication, Component, Deployment, Petri Net, Reachability Graph, Syntax Tree, Flowchart, BPMN, SFC. The `UMLDiagramType` enum holds the exact string values.
 
 ## Real-time collaboration
 
-Opt-in and transport-agnostic. Set `collaborationEnabled: true`, then wire your transport:
+Collaboration is opt-in and transport-agnostic. Set `collaborationEnabled: true`, then wire up your transport:
 
 ```ts
 const editor = new ApollonEditor(container, { collaborationEnabled: true })
@@ -215,31 +215,31 @@ editor.sendBroadcastMessage((base64) => transport.send(base64))
 transport.onMessage((base64) => editor.receiveBroadcastedMessage(base64))
 ```
 
-Any Yjs-compatible transport works — `y-websocket`, `y-webrtc`, BroadcastChannel, or your own relay. Cursor/selection awareness rides the same channel automatically. See [Collaboration](https://ls1intum.github.io/Apollon/library/api/collaboration).
+Any Yjs-compatible transport works: `y-websocket`, `y-webrtc`, BroadcastChannel, or your own relay. Cursor and selection awareness travel on the same channel. See [Collaboration](https://ls1intum.github.io/Apollon/library/api/collaboration).
 
 ## Export
 
-- **SVG** — `await editor.exportAsSVG(options)` resolves to `{ svg, clip }`. `svgMode: "web"` (default) keeps CSS variables for theme-adaptive output; `"compat"` inlines them for PDF/Inkscape.
-- **JSON** — `editor.model` returns the `UMLModel`; assignment is round-trip safe. Use `importDiagram(json)` to normalize older v2/v3 models.
-- **Headless** — `ApollonEditor.exportModelAsSvg(model, options)` renders an arbitrary model with no mounted editor.
-- **PNG / PDF** — produced downstream from the exported SVG. The repo's standalone app and server show reference implementations (`@resvg/resvg-js` for PNG, `pdfmake` for PDF).
+- **SVG**: `await editor.exportAsSVG(options)` resolves to `{ svg, clip }`. `svgMode: "web"` (the default) keeps CSS variables for theme-adaptive output; `"compat"` inlines them for PDF and Inkscape.
+- **JSON**: `editor.model` returns the `UMLModel`, and assigning it back is round-trip safe. Use `importDiagram(json)` to normalize older v2/v3 models first.
+- **Headless**: `ApollonEditor.exportModelAsSvg(model, options)` renders a model without a mounted editor.
+- **PNG / PDF**: not built in. Generate them from the exported SVG. The standalone webapp and server in this repo do this with `@resvg/resvg-js` (PNG) and `pdfmake` (PDF).
 
 See [Export](https://ls1intum.github.io/Apollon/library/api/export) for the full `ExportOptions`.
 
 ## Documentation
 
-- [Library overview](https://ls1intum.github.io/Apollon/library/) — install, quickstart, embedding
-- [API reference](https://ls1intum.github.io/Apollon/library/api) — the complete `ApollonEditor` and `<Apollon>` surface
-- [Troubleshooting](https://ls1intum.github.io/Apollon/library/troubleshooting) — blank canvas, SSR, duplicate React, and other embedding gotchas
+- [Library overview](https://ls1intum.github.io/Apollon/library/): install, quickstart, embedding
+- [API reference](https://ls1intum.github.io/Apollon/library/api): the full `ApollonEditor` and `<Apollon>` surface
+- [Troubleshooting](https://ls1intum.github.io/Apollon/library/troubleshooting): blank canvas, SSR, duplicate React, and other gotchas
 
-The server-side wire protocol lives behind the **unstable** `@tumaet/apollon/internals` subpath, which is explicitly **not** covered by SemVer.
+The server-side wire protocol is exposed through the `@tumaet/apollon/internals` subpath. It is unstable and not covered by SemVer.
 
 ## Related
 
-- **Source & issues:** <https://github.com/ls1intum/Apollon>
-- **Live editor:** <https://apollon.aet.cit.tum.de>
+- Source and issues: <https://github.com/ls1intum/Apollon>
+- Live editor: <https://apollon.aet.cit.tum.de>
 - The standalone web editor, collaboration server, and [VS Code extension](https://marketplace.visualstudio.com/items?itemName=tumaet.apollon-vscode) live in the same monorepo.
 
 ## License
 
-MIT — see [LICENSE](https://github.com/ls1intum/Apollon/blob/main/LICENSE).
+MIT. See [LICENSE](https://github.com/ls1intum/Apollon/blob/main/LICENSE).
