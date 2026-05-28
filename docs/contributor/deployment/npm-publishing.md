@@ -18,6 +18,8 @@ Standalone starts at `4.2.18` (the library version at the time of the release-pi
 
 All three workflows trigger automatically when their version changes on `main`. There is **one** manual step per release: merge the bump PR.
 
+The `library` bump also rewrites the pinned `@tumaet/apollon@X.Y.Z` CDN URLs in the README and docs (via `scripts/sync-library-version.mjs`) so the published examples never lag the package version. PR Health Checks run the same script with `--check`, so a drift can never merge — run `pnpm sync:version` locally to fix one.
+
 ## Cut a release
 
 1. Actions → **Version Bump** → pick `scope` and bump type. Merge the PR that opens.
