@@ -1,8 +1,10 @@
-name: Docs
+# Documentation Deployment Pipeline
+#
+# - PR with docs changes: build a /-rooted bundle
+# - push to main with docs changes: build /Apollon/-rooted bundle and deploy
+#   it to GitHub Pages
 
-# - PR with docs changes: build a /-rooted bundle (preview)
-# - push to main with docs changes: build /Apollon/-rooted bundle, deploy
-#   to GitHub Pages
+name: Docs
 
 on:
   push:
@@ -10,20 +12,25 @@ on:
     paths:
       - "docs/**"
       - "library/**"
+      - "package.json"
       - "pnpm-lock.yaml"
       - "pnpm-workspace.yaml"
+      - ".nvmrc"
       - ".github/workflows/docs.yml"
   pull_request:
+    types: [opened, synchronize, reopened]
     paths:
       - "docs/**"
       - "library/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".nvmrc"
       - ".github/workflows/docs.yml"
   workflow_dispatch:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: docs-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || github.ref }}
@@ -48,7 +55,7 @@ jobs:
 
       - id: flag
         run: |
-          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
+          if [[ "${{ github.ref }}" == "refs/heads/main" && "${{ github.event_name }}" != "pull_request" ]]; then
             echo "is-production=true" >> "$GITHUB_OUTPUT"
           else
             echo "is-production=false" >> "$GITHUB_OUTPUT"
@@ -74,13 +81,6 @@ jobs:
         env:
           DOCUSAURUS_BASE_URL: ${{ steps.flag.outputs.is-production == 'true' && '/Apollon/' || '/' }}
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: docs-build
-          path: docs/build
-          retention-days: 7
-          if-no-files-found: error
-
       - if: steps.flag.outputs.is-production == 'true'
         uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
         with:
@@ -91,6 +91,9 @@ jobs:
     needs: build
     if: needs.build.outputs.is-production == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

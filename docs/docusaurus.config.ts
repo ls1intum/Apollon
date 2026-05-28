@@ -38,7 +38,7 @@ const config: Config = {
   },
 
   url: "https://ls1intum.github.io",
-  // Surge preview ('/') vs GitHub Pages production ('/Apollon/').
+  // Pull request builds use '/', GitHub Pages production uses '/Apollon/'.
   baseUrl: process.env.DOCUSAURUS_BASE_URL || "/Apollon/",
   organizationName: "ls1intum",
   projectName: "Apollon",
