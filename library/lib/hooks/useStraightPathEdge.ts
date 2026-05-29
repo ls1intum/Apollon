@@ -5,6 +5,10 @@ import {
   calculateOverlayPath,
   calculateStraightPath,
   getEdgeMarkerStyles,
+  getAxisAlignedSegments,
+  findLineJumpIntersections,
+  buildPathWithLineJumps,
+  getEdgeGeometryMap,
   adjustSourceCoordinates,
   adjustTargetCoordinates,
 } from "@/utils/edgeUtils"
@@ -13,6 +17,7 @@ import { useDiagramModifiable } from "./useDiagramModifiable"
 import { IPoint } from "../edges/Connection"
 import { useEdgeReconnection, BaseEdgeProps } from "../edges/GenericEdge"
 import { useHandleFinder } from "./useHandleFinder"
+import { useDiagramStore } from "@/store/context"
 
 export interface StraightPathEdgeData {
   pathMiddlePosition: IPoint
@@ -39,6 +44,10 @@ export const useStraightPathEdge = ({
   const pathRef = useRef<SVGPathElement | null>(null)
   const isDiagramModifiable = useDiagramModifiable()
   const { screenToFlowPosition } = useReactFlow()
+  const { edges, nodes } = useDiagramStore((state) => ({
+    edges: state.edges,
+    nodes: state.nodes,
+  }))
   const [tempReconnectPath, setTempReconnectPath] = useState<string | null>(
     null
   )
@@ -105,6 +114,76 @@ export const useStraightPathEdge = ({
     EDGES.SOURCE_CONNECTION_POINT_PADDING
   )
 
+  const sourceXCoord = adjustedSourceCoordinates.sourceX
+  const sourceYCoord = adjustedSourceCoordinates.sourceY
+  const targetXCoord = adjustedTargetCoordinates.targetX
+  const targetYCoord = adjustedTargetCoordinates.targetY
+
+  const sourcePoint = useMemo(
+    () => ({ x: sourceXCoord, y: sourceYCoord }),
+    [sourceXCoord, sourceYCoord]
+  )
+  const targetPoint = useMemo(
+    () => ({ x: targetXCoord, y: targetYCoord }),
+    [targetXCoord, targetYCoord]
+  )
+
+  const edgeGeometryMap = useMemo(
+    () => getEdgeGeometryMap(edges, nodes),
+    [edges, nodes]
+  )
+
+  const lineJumps = useMemo(() => {
+    if (
+      !id ||
+      tempReconnectPath ||
+      type === "UseCaseInclude" ||
+      type === "UseCaseExtend"
+    ) {
+      return [] as ReturnType<typeof findLineJumpIntersections>
+    }
+
+    const currentIndex = edges.findIndex((edge) => edge.id === id)
+    if (currentIndex <= 0)
+      return [] as ReturnType<typeof findLineJumpIntersections>
+
+    const baseSegments = getAxisAlignedSegments([sourcePoint, targetPoint])
+    if (baseSegments.length === 0)
+      return [] as ReturnType<typeof findLineJumpIntersections>
+
+    const hits: ReturnType<typeof findLineJumpIntersections> = []
+
+    for (let i = 0; i < currentIndex; i += 1) {
+      const otherEdge = edges[i]
+      const otherPoints = edgeGeometryMap.get(otherEdge.id)
+      if (!otherPoints || otherPoints.length < 2) continue
+
+      const otherSegments = getAxisAlignedSegments(otherPoints)
+      const edgeHits = findLineJumpIntersections(
+        baseSegments,
+        otherSegments,
+        EDGES.EDGE_LINE_JUMP_WIDTH,
+        "any"
+      )
+
+      if (edgeHits.length > 0) {
+        hits.push(...edgeHits)
+      }
+    }
+
+    return hits
+  }, [
+    edges,
+    edgeGeometryMap,
+    id,
+    sourceXCoord,
+    sourceYCoord,
+    targetXCoord,
+    targetYCoord,
+    tempReconnectPath,
+    type,
+  ])
+
   const [pathMiddlePosition, setPathMiddlePosition] = useState<IPoint>(() => ({
     x:
       (adjustedSourceCoordinates.sourceX + adjustedTargetCoordinates.targetX) /
@@ -126,6 +205,25 @@ export const useStraightPathEdge = ({
   )
 
   const currentPath = useMemo(() => {
+    if (lineJumps.length > 0) {
+      const seen = new Set<string>()
+      const uniqueJumps = lineJumps.filter((jump) => {
+        const key = `${jump.segmentIndex}:${Math.round(
+          jump.point.x
+        )}:${Math.round(jump.point.y)}`
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
+
+      return buildPathWithLineJumps(
+        [sourcePoint, targetPoint],
+        uniqueJumps,
+        EDGES.EDGE_LINE_JUMP_HEIGHT,
+        EDGES.EDGE_LINE_JUMP_WIDTH
+      )
+    }
+
     return calculateStraightPath(
       adjustedSourceCoordinates.sourceX,
       adjustedSourceCoordinates.sourceY,
@@ -138,11 +236,20 @@ export const useStraightPathEdge = ({
     adjustedSourceCoordinates.sourceY,
     adjustedTargetCoordinates.targetX,
     adjustedTargetCoordinates.targetY,
+    lineJumps,
+    sourceXCoord,
+    sourceYCoord,
+    targetXCoord,
+    targetYCoord,
     type,
     targetPosition,
   ])
 
   const overlayPath = useMemo(() => {
+    if (lineJumps.length > 0) {
+      return currentPath
+    }
+
     return calculateOverlayPath(
       adjustedSourceCoordinates.sourceX,
       adjustedSourceCoordinates.sourceY,
@@ -155,6 +262,8 @@ export const useStraightPathEdge = ({
     adjustedSourceCoordinates.sourceY,
     adjustedTargetCoordinates.targetX,
     adjustedTargetCoordinates.targetY,
+    currentPath,
+    lineJumps,
     type,
     targetPosition,
   ])
@@ -240,15 +349,6 @@ export const useStraightPathEdge = ({
     adjustedTargetCoordinates.targetX,
     adjustedTargetCoordinates.targetY,
   ])
-
-  const sourcePoint = {
-    x: adjustedSourceCoordinates.sourceX,
-    y: adjustedSourceCoordinates.sourceY,
-  }
-  const targetPoint = {
-    x: adjustedTargetCoordinates.targetX,
-    y: adjustedTargetCoordinates.targetY,
-  }
 
   const handleEndpointPointerDown = useCallback(
     (e: React.PointerEvent, endType: "source" | "target") => {

@@ -1,7 +1,16 @@
 import { EDGES, INTERFACE } from "@/constants"
-import { IPoint } from "@/edges/Connection"
+import { IPoint, pointsToSvgPath } from "@/edges/Connection"
+import { getPositionOnCanvas } from "@/utils/nodeUtils"
 import { DiagramEdgeType, UMLDiagramType } from "@/typings"
-import { Position, Rect, XYPosition, ConnectionLineType } from "@xyflow/react"
+import {
+  Position,
+  Rect,
+  XYPosition,
+  ConnectionLineType,
+  Edge,
+  Node,
+  getSmoothStepPath,
+} from "@xyflow/react"
 
 /**
  * Adjusts the target coordinates based on the position and marker padding.
@@ -455,6 +464,526 @@ export function getEllipseHandlePosition(
     x: centerX + radiusX * Math.cos(angle),
     y: centerY + radiusY * Math.sin(angle),
   }
+}
+
+const HANDLE_OFFSET_RATIO: Record<string, number> = {
+  "top-left": 0.2,
+  "top-mid-left": 0.35,
+  top: 0.5,
+  "top-mid-right": 0.65,
+  "top-right": 0.8,
+  "right-top": 0.2,
+  "right-mid-top": 0.35,
+  right: 0.5,
+  "right-mid-bottom": 0.65,
+  "right-bottom": 0.8,
+  "bottom-right": 0.8,
+  "bottom-mid-right": 0.65,
+  bottom: 0.5,
+  "bottom-mid-left": 0.35,
+  "bottom-left": 0.2,
+  "left-bottom": 0.8,
+  "left-mid-bottom": 0.65,
+  left: 0.5,
+  "left-mid-top": 0.35,
+  "left-top": 0.2,
+}
+
+export function getHandleSideFromId(handleId?: string | null): Position {
+  if (!handleId) return Position.Right
+
+  if (handleId.startsWith("top")) return Position.Top
+  if (handleId.startsWith("bottom")) return Position.Bottom
+  if (handleId.startsWith("left")) return Position.Left
+  if (handleId.startsWith("right")) return Position.Right
+
+  return Position.Right
+}
+
+const getHandleOffsetRatio = (handleId?: string | null): number => {
+  if (!handleId) return 0.5
+  return HANDLE_OFFSET_RATIO[handleId] ?? 0.5
+}
+
+export function getHandlePositionOnNode({
+  nodeType,
+  nodePosition,
+  width,
+  height,
+  handleId,
+}: {
+  nodeType?: string
+  nodePosition: XYPosition
+  width: number
+  height: number
+  handleId?: string | null
+}): IPoint {
+  if (nodeType === "useCase") {
+    const ellipsePositiveEdgeInset = 0.5
+    const centerX = width / 2 - ellipsePositiveEdgeInset / 2
+    const centerY = height / 2 - ellipsePositiveEdgeInset / 2
+    const radiusX = width / 2 - ellipsePositiveEdgeInset / 2
+    const radiusY = height / 2 - ellipsePositiveEdgeInset / 2
+
+    const pos = getEllipseHandlePosition(
+      centerX,
+      centerY,
+      radiusX,
+      radiusY,
+      handleId ?? "right"
+    )
+
+    return {
+      x: nodePosition.x + pos.x,
+      y: nodePosition.y + pos.y,
+    }
+  }
+
+  const ratio = getHandleOffsetRatio(handleId)
+  const side = getHandleSideFromId(handleId)
+
+  switch (side) {
+    case Position.Top:
+      return { x: nodePosition.x + width * ratio, y: nodePosition.y }
+    case Position.Bottom:
+      return { x: nodePosition.x + width * ratio, y: nodePosition.y + height }
+    case Position.Left:
+      return { x: nodePosition.x, y: nodePosition.y + height * ratio }
+    case Position.Right:
+    default:
+      return {
+        x: nodePosition.x + width,
+        y: nodePosition.y + height * ratio,
+      }
+  }
+}
+
+const STRAIGHT_EDGE_TYPES = new Set([
+  "UseCaseAssociation",
+  "UseCaseInclude",
+  "UseCaseExtend",
+  "UseCaseGeneralization",
+  "SyntaxTreeLink",
+  "PetriNetArc",
+])
+
+export const isStraightEdgeType = (edgeType?: string | null): boolean =>
+  STRAIGHT_EDGE_TYPES.has(edgeType ?? "")
+
+type EdgeGeometryMap = Map<string, IPoint[]>
+
+type EdgeGeometryCacheEntry = {
+  key: string
+  points: IPoint[]
+}
+
+const edgeGeometryCacheById = new Map<string, EdgeGeometryCacheEntry>()
+
+const edgeGeometryCache = new WeakMap<
+  ReadonlyArray<Edge>,
+  WeakMap<ReadonlyArray<Node>, EdgeGeometryMap>
+>()
+
+const formatCoord = (value: number): number => Math.round(value * 1000) / 1000
+
+const buildPointKey = (point: IPoint): string =>
+  `${formatCoord(point.x)},${formatCoord(point.y)}`
+
+const buildStoredPointsKey = (points: IPoint[]): string =>
+  `points:${points.map(buildPointKey).join("|")}`
+
+const buildComputedEdgeKey = (
+  edge: Edge,
+  sourcePosition: XYPosition,
+  targetPosition: XYPosition,
+  sourceWidth: number,
+  sourceHeight: number,
+  targetWidth: number,
+  targetHeight: number
+): string => {
+  return [
+    "computed",
+    edge.type ?? "",
+    edge.source,
+    edge.target,
+    edge.sourceHandle ?? "",
+    edge.targetHandle ?? "",
+    formatCoord(sourcePosition.x),
+    formatCoord(sourcePosition.y),
+    formatCoord(sourceWidth),
+    formatCoord(sourceHeight),
+    formatCoord(targetPosition.x),
+    formatCoord(targetPosition.y),
+    formatCoord(targetWidth),
+    formatCoord(targetHeight),
+  ].join("|")
+}
+
+export const getEdgeGeometryMap = (
+  edges: ReadonlyArray<Edge>,
+  nodes: ReadonlyArray<Node>
+): EdgeGeometryMap => {
+  const cachedByEdges = edgeGeometryCache.get(edges)
+  const cached = cachedByEdges?.get(nodes)
+  if (cached) return cached
+
+  const geometryMap: EdgeGeometryMap = new Map()
+  const nodesById = new Map(nodes.map((node) => [node.id, node]))
+
+  for (const edge of edges) {
+    const storedPoints = (edge.data as { points?: IPoint[] } | undefined)
+      ?.points
+    if (storedPoints && storedPoints.length > 1) {
+      const storedKey = buildStoredPointsKey(storedPoints)
+      const cached = edgeGeometryCacheById.get(edge.id)
+      if (cached && cached.key === storedKey) {
+        geometryMap.set(edge.id, cached.points)
+      } else {
+        edgeGeometryCacheById.set(edge.id, {
+          key: storedKey,
+          points: storedPoints,
+        })
+        geometryMap.set(edge.id, storedPoints)
+      }
+      continue
+    }
+
+    const sourceNode = nodesById.get(edge.source)
+    const targetNode = nodesById.get(edge.target)
+
+    if (!sourceNode || !targetNode) {
+      continue
+    }
+
+    const sourceWidth = sourceNode.width ?? sourceNode.measured?.width ?? 100
+    const sourceHeight = sourceNode.height ?? sourceNode.measured?.height ?? 100
+    const targetWidth = targetNode.width ?? targetNode.measured?.width ?? 100
+    const targetHeight = targetNode.height ?? targetNode.measured?.height ?? 100
+
+    const mutableNodes = nodes as Node[]
+    const sourcePositionOnCanvas = getPositionOnCanvas(sourceNode, mutableNodes)
+    const targetPositionOnCanvas = getPositionOnCanvas(targetNode, mutableNodes)
+
+    const cacheKey = buildComputedEdgeKey(
+      edge,
+      sourcePositionOnCanvas,
+      targetPositionOnCanvas,
+      sourceWidth,
+      sourceHeight,
+      targetWidth,
+      targetHeight
+    )
+    const cached = edgeGeometryCacheById.get(edge.id)
+    if (cached && cached.key === cacheKey) {
+      geometryMap.set(edge.id, cached.points)
+      continue
+    }
+
+    const sourceHandle = edge.sourceHandle ?? "right"
+    const targetHandle = edge.targetHandle ?? "left"
+
+    const sourcePoint = getHandlePositionOnNode({
+      nodeType: sourceNode.type,
+      nodePosition: sourcePositionOnCanvas,
+      width: sourceWidth,
+      height: sourceHeight,
+      handleId: sourceHandle,
+    })
+    const targetPoint = getHandlePositionOnNode({
+      nodeType: targetNode.type,
+      nodePosition: targetPositionOnCanvas,
+      width: targetWidth,
+      height: targetHeight,
+      handleId: targetHandle,
+    })
+
+    if (isStraightEdgeType(edge.type)) {
+      const points = [sourcePoint, targetPoint]
+      edgeGeometryCacheById.set(edge.id, { key: cacheKey, points })
+      geometryMap.set(edge.id, points)
+      continue
+    }
+
+    const sourceHandleSide = getHandleSideFromId(sourceHandle)
+    const targetHandleSide = getHandleSideFromId(targetHandle)
+    const { markerPadding } = getEdgeMarkerStyles(edge.type ?? "")
+    const padding = markerPadding ?? EDGES.MARKER_PADDING
+
+    const adjustedTarget = adjustTargetCoordinates(
+      Math.round(targetPoint.x),
+      Math.round(targetPoint.y),
+      targetHandleSide,
+      padding
+    )
+    const adjustedSource = adjustSourceCoordinates(
+      Math.round(sourcePoint.x),
+      Math.round(sourcePoint.y),
+      sourceHandleSide,
+      EDGES.SOURCE_CONNECTION_POINT_PADDING
+    )
+
+    const [edgePath] = getSmoothStepPath({
+      sourceX: adjustedSource.sourceX,
+      sourceY: adjustedSource.sourceY,
+      sourcePosition: sourceHandleSide,
+      targetX: adjustedTarget.targetX,
+      targetY: adjustedTarget.targetY,
+      targetPosition: targetHandleSide,
+      borderRadius: EDGES.STEP_BORDER_RADIUS,
+      offset: 30,
+    })
+
+    const simplifiedPath = simplifySvgPath(edgePath)
+    const points = removeDuplicatePoints(parseSvgPath(simplifiedPath))
+    if (points.length > 1) {
+      edgeGeometryCacheById.set(edge.id, { key: cacheKey, points })
+      geometryMap.set(edge.id, points)
+    }
+  }
+
+  const edgeIds = new Set(edges.map((edge) => edge.id))
+  for (const cachedId of edgeGeometryCacheById.keys()) {
+    if (!edgeIds.has(cachedId)) {
+      edgeGeometryCacheById.delete(cachedId)
+    }
+  }
+
+  const nextByEdges = cachedByEdges ?? new WeakMap()
+  nextByEdges.set(nodes, geometryMap)
+  if (!cachedByEdges) {
+    edgeGeometryCache.set(edges, nextByEdges)
+  }
+
+  return geometryMap
+}
+
+export type AxisAlignedSegment = {
+  index: number
+  start: IPoint
+  end: IPoint
+  orientation: "horizontal" | "vertical"
+  fixed: number
+  min: number
+  max: number
+}
+
+export function getAxisAlignedSegments(
+  points: IPoint[],
+  tolerance: number = 1
+): AxisAlignedSegment[] {
+  const segments: AxisAlignedSegment[] = []
+  for (let i = 0; i < points.length - 1; i += 1) {
+    const start = points[i]
+    const end = points[i + 1]
+    const isVertical = Math.abs(start.x - end.x) <= tolerance
+    const isHorizontal = Math.abs(start.y - end.y) <= tolerance
+
+    if (!isVertical && !isHorizontal) continue
+
+    if (isVertical) {
+      const min = Math.min(start.y, end.y)
+      const max = Math.max(start.y, end.y)
+      segments.push({
+        index: i,
+        start,
+        end,
+        orientation: "vertical",
+        fixed: start.x,
+        min,
+        max,
+      })
+    } else {
+      const min = Math.min(start.x, end.x)
+      const max = Math.max(start.x, end.x)
+      segments.push({
+        index: i,
+        start,
+        end,
+        orientation: "horizontal",
+        fixed: start.y,
+        min,
+        max,
+      })
+    }
+  }
+
+  return segments
+}
+
+export type LineJumpHit = {
+  segmentIndex: number
+  point: IPoint
+  orientation: "horizontal" | "vertical"
+}
+
+export function findLineJumpIntersections(
+  baseSegments: AxisAlignedSegment[],
+  otherSegments: AxisAlignedSegment[],
+  jumpWidth: number,
+  preferredOrientation: "horizontal" | "vertical" | "any" = "horizontal",
+  tolerance: number = 1
+): LineJumpHit[] {
+  const margin = jumpWidth / 2 + 2
+  const hits: LineJumpHit[] = []
+
+  for (const base of baseSegments) {
+    if (
+      preferredOrientation !== "any" &&
+      base.orientation !== preferredOrientation
+    ) {
+      continue
+    }
+
+    for (const other of otherSegments) {
+      if (base.orientation === other.orientation) continue
+
+      if (
+        base.orientation === "horizontal" &&
+        other.orientation === "vertical"
+      ) {
+        const x = other.fixed
+        const y = base.fixed
+        if (
+          x < base.min + margin ||
+          x > base.max - margin ||
+          y < other.min - tolerance ||
+          y > other.max + tolerance
+        ) {
+          continue
+        }
+
+        hits.push({
+          segmentIndex: base.index,
+          point: { x, y },
+          orientation: base.orientation,
+        })
+      }
+
+      if (
+        base.orientation === "vertical" &&
+        other.orientation === "horizontal"
+      ) {
+        const x = base.fixed
+        const y = other.fixed
+        if (
+          y < base.min + margin ||
+          y > base.max - margin ||
+          x < other.min - tolerance ||
+          x > other.max + tolerance
+        ) {
+          continue
+        }
+
+        hits.push({
+          segmentIndex: base.index,
+          point: { x, y },
+          orientation: base.orientation,
+        })
+      }
+    }
+  }
+
+  return hits
+}
+
+export function buildPathWithLineJumps(
+  points: IPoint[],
+  jumps: LineJumpHit[],
+  jumpHeight: number,
+  jumpWidth: number = EDGES.EDGE_LINE_JUMP_WIDTH
+): string {
+  if (points.length === 0) return ""
+  if (jumps.length === 0) return pointsToSvgPath(points)
+
+  const round = (num: number) => Math.round(num)
+  const jumpsBySegment = new Map<number, LineJumpHit[]>()
+
+  for (const jump of jumps) {
+    const list = jumpsBySegment.get(jump.segmentIndex) ?? []
+    list.push(jump)
+    jumpsBySegment.set(jump.segmentIndex, list)
+  }
+
+  const pathParts = [`M ${round(points[0].x)},${round(points[0].y)}`]
+
+  for (let i = 0; i < points.length - 1; i += 1) {
+    const start = points[i]
+    const end = points[i + 1]
+    const isHorizontal = Math.abs(start.y - end.y) < 1
+    const segmentLength = isHorizontal
+      ? Math.abs(end.x - start.x)
+      : Math.abs(end.y - start.y)
+
+    const segmentJumps = jumpsBySegment.get(i)
+    if (!segmentJumps || segmentJumps.length === 0) {
+      pathParts.push(`L ${round(end.x)},${round(end.y)}`)
+      continue
+    }
+
+    if (segmentLength < jumpWidth * 1.2) {
+      pathParts.push(`L ${round(end.x)},${round(end.y)}`)
+      continue
+    }
+
+    const coordKey = (jump: LineJumpHit) =>
+      isHorizontal ? jump.point.x : jump.point.y
+    const direction = isHorizontal
+      ? Math.sign(end.x - start.x) || 1
+      : Math.sign(end.y - start.y) || 1
+    const sortedJumps = [...segmentJumps].sort((a, b) =>
+      direction >= 0 ? coordKey(a) - coordKey(b) : coordKey(b) - coordKey(a)
+    )
+    const margin = jumpWidth / 2 + 2
+    let lastCoord = direction >= 0 ? -Infinity : Infinity
+
+    for (const jump of sortedJumps) {
+      const coord = coordKey(jump)
+      const min = isHorizontal
+        ? Math.min(start.x, end.x)
+        : Math.min(start.y, end.y)
+      const max = isHorizontal
+        ? Math.max(start.x, end.x)
+        : Math.max(start.y, end.y)
+
+      if (coord < min + margin || coord > max - margin) {
+        continue
+      }
+      if (
+        (direction >= 0 && coord - lastCoord < jumpWidth) ||
+        (direction < 0 && lastCoord - coord < jumpWidth)
+      ) {
+        continue
+      }
+
+      const halfJump = Math.min(jumpWidth / 2, segmentLength / 2 - 2)
+      if (halfJump <= 1) continue
+
+      const startCoord = direction >= 0 ? -halfJump : halfJump
+      const endCoord = direction >= 0 ? halfJump : -halfJump
+      const jumpStart = isHorizontal
+        ? { x: coord + startCoord, y: start.y }
+        : { x: start.x, y: coord + startCoord }
+      const jumpEnd = isHorizontal
+        ? { x: coord + endCoord, y: start.y }
+        : { x: start.x, y: coord + endCoord }
+      const control = isHorizontal
+        ? { x: coord, y: start.y - Math.abs(jumpHeight) }
+        : { x: start.x + Math.abs(jumpHeight), y: coord }
+
+      pathParts.push(
+        `L ${round(jumpStart.x)},${round(jumpStart.y)}`,
+        `Q ${round(control.x)},${round(control.y)} ${round(
+          jumpEnd.x
+        )},${round(jumpEnd.y)}`
+      )
+
+      lastCoord = coord
+    }
+
+    pathParts.push(`L ${round(end.x)},${round(end.y)}`)
+  }
+
+  return pathParts.join(" ")
 }
 
 export function calculateOverlayPath(
