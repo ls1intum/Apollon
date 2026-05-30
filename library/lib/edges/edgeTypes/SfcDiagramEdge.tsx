@@ -1,5 +1,10 @@
 import { BaseEdge } from "@xyflow/react"
-import { BaseEdgeProps, CommonEdgeElements } from "../GenericEdge"
+import {
+  BaseEdgeProps,
+  CommonEdgeElements,
+  EdgeBendHandle,
+  EdgeEndpointMarkers,
+} from "../GenericEdge"
 import { useStepPathEdge } from "@/hooks/useStepPathEdge"
 import { useDiagramStore, usePopoverStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
@@ -39,6 +44,8 @@ function getParsedEdgeData(data: unknown): {
   }
 }
 const crossbarLength = 20
+const sfcCenterHandleCollisionRadius = 24
+const sfcCenterShiftDistance = 34
 export const SfcDiagramEdge = ({
   id,
   type,
@@ -75,14 +82,19 @@ export const SfcDiagramEdge = ({
     edgeData,
     currentPath,
     overlayPath,
-    midpoints,
+    bendHandles,
+    isBendDragging,
+    draggingHandleSegmentIndex,
     hasInitialCalculation,
-    isReconnectingRef,
+    isReconnecting,
     markerEnd,
     markerStart,
     strokeDashArray,
     handlePointerDown,
+    sourcePoint,
+    targetPoint,
     isDiagramModifiable,
+    canEditEndpoint,
   } = useStepPathEdge({
     id,
     type,
@@ -98,7 +110,6 @@ export const SfcDiagramEdge = ({
     targetHandleId,
     data,
     allowMidpointDragging,
-    enableReconnection: true,
     enableStraightPath,
   })
 
@@ -106,13 +117,46 @@ export const SfcDiagramEdge = ({
   const { strokeColor, textColor } = getCustomColorsFromDataForEdge(data)
   const markerKey = `${id}-${markerStart ?? "none"}-${markerEnd ?? "none"}`
 
+  const annotationAnchor = useMemo(() => {
+    const center = edgeData.pathMiddlePosition
+    const hasCenterHandle = bendHandles.some(
+      (handle) =>
+        Math.hypot(
+          handle.position.x - center.x,
+          handle.position.y - center.y
+        ) <= sfcCenterHandleCollisionRadius
+    )
+
+    if (!hasCenterHandle) return center
+
+    return edgeData.isMiddlePathHorizontal
+      ? { x: center.x + sfcCenterShiftDistance, y: center.y }
+      : { x: center.x, y: center.y + sfcCenterShiftDistance }
+  }, [
+    bendHandles,
+    edgeData.pathMiddlePosition,
+    edgeData.isMiddlePathHorizontal,
+  ])
+
+  const visibleBendHandles = useMemo(() => {
+    if (!showBar) return bendHandles
+
+    return bendHandles.filter(
+      (handle) =>
+        Math.hypot(
+          handle.position.x - annotationAnchor.x,
+          handle.position.y - annotationAnchor.y
+        ) > sfcCenterHandleCollisionRadius
+    )
+  }, [annotationAnchor.x, annotationAnchor.y, bendHandles, showBar])
+
   const labelPosition = {
     x: edgeData.isMiddlePathHorizontal
-      ? edgeData.pathMiddlePosition.x
-      : edgeData.pathMiddlePosition.x + 30,
+      ? annotationAnchor.x
+      : annotationAnchor.x + 30,
     y: edgeData.isMiddlePathHorizontal
-      ? edgeData.pathMiddlePosition.y - 30
-      : edgeData.pathMiddlePosition.y,
+      ? annotationAnchor.y + 30
+      : annotationAnchor.y,
     textAnchor: edgeData.isMiddlePathHorizontal
       ? ("middle" as const)
       : ("start" as const),
@@ -123,27 +167,23 @@ export const SfcDiagramEdge = ({
     if (edgeData.isMiddlePathHorizontal) {
       // If middle segment is horizontal, make crossbar vertical
       return {
-        x1: edgeData.pathMiddlePosition.x,
-        y1: edgeData.pathMiddlePosition.y - crossbarLength,
-        x2: edgeData.pathMiddlePosition.x,
-        y2: edgeData.pathMiddlePosition.y + crossbarLength,
+        x1: annotationAnchor.x,
+        y1: annotationAnchor.y - crossbarLength,
+        x2: annotationAnchor.x,
+        y2: annotationAnchor.y + crossbarLength,
         orientation: "vertical" as const,
       }
     } else {
       // If middle segment is vertical, make crossbar horizontal
       return {
-        x1: edgeData.pathMiddlePosition.x - crossbarLength,
-        y1: edgeData.pathMiddlePosition.y,
-        x2: edgeData.pathMiddlePosition.x + crossbarLength,
-        y2: edgeData.pathMiddlePosition.y,
+        x1: annotationAnchor.x - crossbarLength,
+        y1: annotationAnchor.y,
+        x2: annotationAnchor.x + crossbarLength,
+        y2: annotationAnchor.y,
         orientation: "horizontal" as const,
       }
     }
-  }, [
-    edgeData.isMiddlePathHorizontal,
-    edgeData.pathMiddlePosition,
-    crossbarLength,
-  ])
+  }, [edgeData.isMiddlePathHorizontal, annotationAnchor, crossbarLength])
 
   return (
     <AssessmentSelectableWrapper elementId={id} asElement="g">
@@ -156,9 +196,7 @@ export const SfcDiagramEdge = ({
             pointerEvents="none"
             style={{
               stroke: strokeColor,
-              strokeDasharray: isReconnectingRef.current
-                ? "none"
-                : strokeDashArray,
+              strokeDasharray: isReconnecting ? "none" : strokeDashArray,
               transition: hasInitialCalculation
                 ? "opacity 0.1s ease-in"
                 : "none",
@@ -166,7 +204,7 @@ export const SfcDiagramEdge = ({
             }}
           />
 
-          {!isReconnectingRef.current && (
+          {!isReconnecting && (
             <EdgeInlineMarkers
               pathD={currentPath}
               markerEnd={markerEnd}
@@ -183,27 +221,39 @@ export const SfcDiagramEdge = ({
             strokeWidth={EDGES.EDGE_HIGHLIGHT_STROKE_WIDTH}
             pointerEvents="stroke"
             style={{
-              opacity: isReconnectingRef.current ? 0 : 0.4,
+              opacity: isReconnecting || isBendDragging ? 0 : 0.4,
             }}
           />
 
+          <EdgeEndpointMarkers
+            sourcePoint={sourcePoint}
+            targetPoint={targetPoint}
+            sourcePosition={sourcePosition}
+            targetPosition={targetPosition}
+            isDiagramModifiable={isDiagramModifiable}
+            canEditEndpoint={canEditEndpoint}
+            diagramType="sfc"
+          />
+
           {isDiagramModifiable &&
-            !isReconnectingRef.current &&
+            !isReconnecting &&
             allowMidpointDragging &&
-            midpoints.map((point, midPointIndex) => (
-              <circle
-                className="edge-circle"
-                pointerEvents="all"
-                key={`${id}-midpoint-${midPointIndex}`}
-                cx={point.x}
-                cy={point.y}
-                r={10}
-                fill="lightgray"
-                stroke="none"
-                style={{ cursor: "grab", zIndex: 9999 }}
-                onPointerDown={(e) => handlePointerDown(e, midPointIndex)}
-              />
-            ))}
+            visibleBendHandles
+              .filter(
+                (handle) =>
+                  !isBendDragging ||
+                  handle.segmentIndex === draggingHandleSegmentIndex
+              )
+              .map((handle) => (
+                <EdgeBendHandle
+                  key={`${id}-bend-${handle.segmentIndex}`}
+                  id={id}
+                  segmentIndex={handle.segmentIndex}
+                  position={handle.position}
+                  orientation={handle.orientation}
+                  onPointerDown={(e) => handlePointerDown(e, handle)}
+                />
+              ))}
 
           {/* SFC Transition - show crossbar and label */}
           <g>
@@ -239,6 +289,7 @@ export const SfcDiagramEdge = ({
         <CommonEdgeElements
           id={id}
           pathMiddlePosition={edgeData.pathMiddlePosition}
+          toolbarPosition={edgeData.toolbarPosition}
           isDiagramModifiable={isDiagramModifiable}
           assessments={assessments}
           anchorRef={anchorRef}

@@ -63,7 +63,7 @@ export const CANVAS = Object.freeze({
   MIN_SCALE_TO_ZOOM_OUT: 0.4,
   MAX_SCALE_TO_ZOOM_IN: 2.5,
   MOUSE_UP_OFFSET_PX: 5,
-  SNAP_TO_GRID_PX: 10,
+  SNAP_TO_GRID_PX: 5,
   EXTRA_SPACE_FOR_EXTENSION: 10,
   PASTE_OFFSET_PX: 20,
 } as const)
@@ -166,6 +166,12 @@ export const EDGES = Object.freeze({
   STEP_BORDER_RADIUS: 0,
   /** Width of the invisible stroke used for edge selection/highlighting */
   EDGE_HIGHLIGHT_STROKE_WIDTH: 15,
+  /** Stub length locked to node, matches getSmoothStepPath offset */
+  STUB_LENGTH: 30,
+  /** Minimum effective segment length to show a bend handle */
+  BEND_MIN_LENGTH: 100,
+  /** Size of the invisible endpoint hit target used for edge reconnection */
+  ENDPOINT_HIT_TARGET_SIZE: 24,
 } as const)
 
 /* -------------------------------------------------------------------------- */

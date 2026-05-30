@@ -2,6 +2,7 @@ import { BaseEdge } from "@xyflow/react"
 import {
   BaseEdgeProps,
   EdgeEndpointMarkers,
+  EdgeBendHandle,
   CommonEdgeElements,
 } from "../GenericEdge"
 import { EdgeMiddleLabels } from "../labelTypes/EdgeMiddleLabels"
@@ -31,7 +32,6 @@ export const FlowChartEdge = ({
   sourceHandleId,
   targetHandleId,
   data,
-  selected,
 }: BaseEdgeProps) => {
   const anchorRef = useRef<SVGSVGElement | null>(null)
   const { handleDelete } = useToolbar({ id })
@@ -56,17 +56,19 @@ export const FlowChartEdge = ({
     edgeData,
     currentPath,
     overlayPath,
-    midpoints,
+    bendHandles,
+    isBendDragging,
+    draggingHandleSegmentIndex,
     hasInitialCalculation,
-    isReconnectingRef,
+    isReconnecting,
     markerEnd,
     markerStart,
     strokeDashArray,
     handlePointerDown,
-    handleEndpointPointerDown,
     sourcePoint,
     targetPoint,
     isDiagramModifiable,
+    canEditEndpoint,
   } = useStepPathEdge({
     id,
     type,
@@ -82,7 +84,6 @@ export const FlowChartEdge = ({
     targetHandleId,
     data,
     allowMidpointDragging,
-    enableReconnection: true,
     enableStraightPath: false,
   })
 
@@ -100,9 +101,7 @@ export const FlowChartEdge = ({
             pointerEvents="none"
             style={{
               stroke: strokeColor,
-              strokeDasharray: isReconnectingRef.current
-                ? "none"
-                : strokeDashArray,
+              strokeDasharray: isReconnecting ? "none" : strokeDashArray,
               transition: hasInitialCalculation
                 ? "opacity 0.1s ease-in"
                 : "none",
@@ -110,7 +109,7 @@ export const FlowChartEdge = ({
             }}
           />
 
-          {!isReconnectingRef.current && (
+          {!isReconnecting && (
             <EdgeInlineMarkers
               pathD={currentPath}
               markerEnd={markerEnd}
@@ -127,38 +126,39 @@ export const FlowChartEdge = ({
             strokeWidth={EDGES.EDGE_HIGHLIGHT_STROKE_WIDTH}
             pointerEvents="stroke"
             style={{
-              opacity: isReconnectingRef.current ? 0 : 0.4,
+              opacity: isReconnecting || isBendDragging ? 0 : 0.4,
             }}
           />
 
           <EdgeEndpointMarkers
             sourcePoint={sourcePoint}
             targetPoint={targetPoint}
+            sourcePosition={sourcePosition}
+            targetPosition={targetPosition}
             isDiagramModifiable={isDiagramModifiable}
-            selected={selected}
+            canEditEndpoint={canEditEndpoint}
             diagramType="step"
-            pathType="step"
-            onSourcePointerDown={(e) => handleEndpointPointerDown(e, "source")}
-            onTargetPointerDown={(e) => handleEndpointPointerDown(e, "target")}
           />
 
           {isDiagramModifiable &&
-            !isReconnectingRef.current &&
+            !isReconnecting &&
             allowMidpointDragging &&
-            midpoints.map((point, midPointIndex) => (
-              <circle
-                className="edge-circle"
-                pointerEvents="all"
-                key={`${id}-midpoint-${midPointIndex}`}
-                cx={point.x}
-                cy={point.y}
-                r={10}
-                fill="lightgray"
-                stroke="none"
-                style={{ cursor: "grab", zIndex: 9999 }}
-                onPointerDown={(e) => handlePointerDown(e, midPointIndex)}
-              />
-            ))}
+            bendHandles
+              .filter(
+                (handle) =>
+                  !isBendDragging ||
+                  handle.segmentIndex === draggingHandleSegmentIndex
+              )
+              .map((handle) => (
+                <EdgeBendHandle
+                  key={`${id}-bend-${handle.segmentIndex}`}
+                  id={id}
+                  segmentIndex={handle.segmentIndex}
+                  position={handle.position}
+                  orientation={handle.orientation}
+                  onPointerDown={(e) => handlePointerDown(e, handle)}
+                />
+              ))}
         </g>
 
         <EdgeMiddleLabels
@@ -166,12 +166,14 @@ export const FlowChartEdge = ({
           pathMiddlePosition={edgeData.pathMiddlePosition}
           isMiddlePathHorizontal={edgeData.isMiddlePathHorizontal}
           showRelationshipLabels={true}
+          avoidToolbarOverlap={true}
           textColor={textColor}
         />
 
         <CommonEdgeElements
           id={id}
           pathMiddlePosition={edgeData.pathMiddlePosition}
+          toolbarPosition={edgeData.toolbarPosition}
           isDiagramModifiable={isDiagramModifiable}
           assessments={assessments}
           anchorRef={anchorRef}

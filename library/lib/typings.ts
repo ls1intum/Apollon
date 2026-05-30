@@ -68,6 +68,15 @@ export type ApollonNode = {
   measured: { width: number; height: number }
 }
 
+export interface OrthogonalEdgeData {
+  [key: string]: unknown
+  // Existing manual-waypoint array used by the step-path edges.
+  points: IPoint[]
+
+  // Persisted user-controlled intermediate waypoints.
+  userWaypoints?: IPoint[]
+}
+
 export type ApollonEdge = {
   id: string
   source: string
@@ -75,10 +84,7 @@ export type ApollonEdge = {
   type: DiagramEdgeType
   sourceHandle: string
   targetHandle: string
-  data: {
-    [key: string]: unknown
-    points: IPoint[]
-  }
+  data: OrthogonalEdgeData
 }
 
 export type InteractiveElements = {

@@ -1,10 +1,10 @@
-// V2/V3 → V4 migrators read schemas TS can't statically describe (each
-// node type unions a different union of optional fields). Narrowed
-// disable: only `no-explicit-any` is suppressed; everything else still
-// lints. The `as any` casts are at type boundaries where runtime checks
-// (`isV*Format`, switch on `type`) have already discriminated the union.
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any --
+ * The v3 → v4 converter walks legacy JSON payloads with no shared schema, so
+ * every entry point has to accept `any` until it's narrowed inline. Replacing
+ * these with proper types would require defining the full v3/v2 envelope and
+ * isn't in scope here. */
 import { UMLModel, ApollonNode, ApollonEdge, Assessment } from "../typings"
+import { transformEdges } from "../services/migration/EdgeTransformer"
 import { UMLDiagramType } from "../types/DiagramType"
 import { ClassType } from "../types/nodes/enums"
 import { IPoint } from "../edges/Connection"
@@ -877,34 +877,39 @@ export function isV4Format(data: any): data is UMLModel {
     data.version &&
     data.version.startsWith("4.") &&
     Array.isArray(data.nodes) &&
-    Array.isArray(data.edges)
+    Array.isArray(data.edges) &&
+    data.edges.every(
+      (edge: unknown) =>
+        edge != null &&
+        typeof edge === "object" &&
+        (edge as { data?: unknown }).data != null &&
+        typeof (edge as { data: unknown }).data === "object"
+    )
   )
 }
 
 /**
- * Universal import function that handles v2, v3 and v4 formats.
- * Argument is typed `unknown` because callers pass freshly-parsed JSON;
- * the runtime format guards (`isV*Format`) discriminate the payload.
+ * Universal import function that handles v2, v3 and v4 formats
  */
-export function importDiagram(data: any): UMLModel {
+export function importDiagram(data: any | V3UMLModel): UMLModel {
+  let model: UMLModel
+
   if (isV4Format(data)) {
-    return data
-  }
-
-  if (isV3Format(data)) {
-    return convertV3ToV4(data)
-  }
-
-  if (isV2Format(data)) {
-    return convertV2ToV4(data)
-  }
-
-  if (data.model) {
+    model = data
+  } else if (isV3Format(data)) {
+    model = convertV3ToV4(data)
+  } else if (isV2Format(data)) {
+    model = convertV2ToV4(data)
+  } else if (data.model) {
     //playground
     return importDiagram(data.model)
+  } else {
+    throw new Error(
+      "Unsupported diagram format. Only 2.x.x, 3.x.x and 4.x.x formats are supported."
+    )
   }
 
-  throw new Error(
-    "Unsupported diagram format. Only 2.x.x, 3.x.x and 4.x.x formats are supported."
-  )
+  // T12: Hydrate all edges with OrthogonalEdgeData defaults.
+  // Legacy edges get userWaypoints=[] and stale computed geometry removed.
+  return transformEdges(model)
 }
