@@ -1,5 +1,5 @@
 import { NodeProps, NodeResizer, type Node } from "@xyflow/react"
-import { DefaultNodeWrapper, HandleId } from "../wrappers"
+import { DefaultNodeWrapper, FOUR_WAY_HANDLES_PRESET } from "../wrappers"
 import { useHandleOnResize } from "@/hooks"
 import { DefaultNodeProps } from "@/types"
 import { useRef } from "react"
@@ -28,16 +28,7 @@ export function FlowchartDecision({
       width={width}
       height={height}
       elementId={id}
-      hiddenHandles={[
-        HandleId.TopLeft,
-        HandleId.TopRight,
-        HandleId.RightTop,
-        HandleId.RightBottom,
-        HandleId.BottomRight,
-        HandleId.BottomLeft,
-        HandleId.LeftBottom,
-        HandleId.LeftTop,
-      ]}
+      hiddenHandles={FOUR_WAY_HANDLES_PRESET}
     >
       <NodeToolbar elementId={id} />
       <NodeResizer
