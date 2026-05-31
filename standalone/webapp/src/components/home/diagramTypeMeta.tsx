@@ -1,12 +1,12 @@
+// Diagram-type metadata: maps each UML diagram type to its display label and
+// glyph icon. Consumed by the dashboard gallery and cards. (Previously this
+// file also rendered a type-picker grid; that UI has been removed.)
 import { cloneElement, isValidElement, type ReactElement } from "react"
 import type { UMLDiagramType } from "@tumaet/apollon"
-import { useNavigate } from "react-router"
-import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 
 type DiagramTile = {
   type: UMLDiagramType
   title: string
-  description: string
   icon: ReactElement
 }
 
@@ -31,12 +31,10 @@ const diagramTypes = {
 const makeTile = (
   type: UMLDiagramType,
   title: string,
-  description: string,
   icon: ReactElement
 ): DiagramTile => ({
   type,
   title,
-  description,
   icon,
 })
 
@@ -44,7 +42,6 @@ const diagramTiles = {
   classDiagram: makeTile(
     diagramTypes.ClassDiagram,
     "Class Diagram",
-    "Model classes, attributes, methods, and relationships.",
     <svg className={iconClassName} viewBox="0 0 48 48" fill="none">
       <rect
         x="6"
@@ -84,7 +81,6 @@ const diagramTiles = {
   activityDiagram: makeTile(
     diagramTypes.ActivityDiagram,
     "Activity Diagram",
-    "Visualize control flow and process steps.",
     <svg className={iconClassName} viewBox="0 0 48 48" fill="none">
       <circle cx="10" cy="24" r="4" fill="currentColor" />
       <rect
@@ -119,7 +115,6 @@ const diagramTiles = {
   useCaseDiagram: makeTile(
     diagramTypes.UseCaseDiagram,
     "Use Case Diagram",
-    "Capture actors and their system interactions.",
     <svg className={iconClassName} viewBox="0 0 48 48" fill="none">
       <circle cx="11" cy="14" r="4" stroke="currentColor" strokeWidth="2" />
       <line
@@ -167,7 +162,6 @@ const diagramTiles = {
   objectDiagram: makeTile(
     diagramTypes.ObjectDiagram,
     "Object Diagram",
-    "Show object instances and links at runtime.",
     <svg className={iconClassName} viewBox="0 0 48 48" fill="none">
       <rect
         x="8"
@@ -207,7 +201,6 @@ const diagramTiles = {
   componentDiagram: makeTile(
     diagramTypes.ComponentDiagram,
     "Component Diagram",
-    "Outline software components and dependencies.",
     <svg className={iconClassName} viewBox="0 0 48 48" fill="none">
       <rect
         x="10"
@@ -255,7 +248,6 @@ const diagramTiles = {
   deploymentDiagram: makeTile(
     diagramTypes.DeploymentDiagram,
     "Deployment Diagram",
-    "Map software artifacts to infrastructure nodes.",
     <svg className={iconClassName} viewBox="0 0 48 48" fill="none">
       <rect
         x="7"
@@ -289,7 +281,6 @@ const diagramTiles = {
   flowchart: makeTile(
     diagramTypes.Flowchart,
     "Flowchart",
-    "Describe decisions and operational flow.",
     <svg className={iconClassName} viewBox="0 0 48 48" fill="none">
       <polygon
         points="24,8 36,20 24,32 12,20"
@@ -310,7 +301,6 @@ const diagramTiles = {
   syntaxTree: makeTile(
     diagramTypes.SyntaxTree,
     "Syntax Tree",
-    "Represent syntax nodes and parse hierarchy.",
     <svg className={iconClassName} viewBox="0 0 48 48" fill="none">
       <circle cx="24" cy="10" r="4" stroke="currentColor" strokeWidth="2" />
       <circle cx="14" cy="24" r="4" stroke="currentColor" strokeWidth="2" />
@@ -372,7 +362,6 @@ const diagramTiles = {
   sfc: makeTile(
     diagramTypes.Sfc,
     "SFC",
-    "Design sequential control with transitions.",
     <svg className={iconClassName} viewBox="0 0 48 48" fill="none">
       <rect
         x="14"
@@ -421,7 +410,6 @@ const diagramTiles = {
   communicationDiagram: makeTile(
     diagramTypes.CommunicationDiagram,
     "Communication Diagram",
-    "Focus on object collaboration and messages.",
     <svg className={iconClassName} viewBox="0 0 48 48" fill="none">
       <circle cx="12" cy="14" r="4" stroke="currentColor" strokeWidth="2" />
       <circle cx="36" cy="14" r="4" stroke="currentColor" strokeWidth="2" />
@@ -458,7 +446,6 @@ const diagramTiles = {
   petriNet: makeTile(
     diagramTypes.PetriNet,
     "Petri Net",
-    "Model places, transitions, and token flow.",
     <svg className={iconClassName} viewBox="0 0 48 48" fill="none">
       <circle cx="10" cy="24" r="5" stroke="currentColor" strokeWidth="2" />
       <rect
@@ -492,7 +479,6 @@ const diagramTiles = {
   reachabilityGraph: makeTile(
     diagramTypes.ReachabilityGraph,
     "Reachability Graph",
-    "Analyze reachable states and transitions.",
     <svg className={iconClassName} viewBox="0 0 48 48" fill="none">
       <circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="2" />
       <circle cx="36" cy="12" r="5" stroke="currentColor" strokeWidth="2" />
@@ -529,7 +515,6 @@ const diagramTiles = {
   bpmn: makeTile(
     diagramTypes.BPMN,
     "BPMN",
-    "Model business processes with events and tasks.",
     <svg className={iconClassName} viewBox="0 0 48 48" fill="none">
       <circle cx="10" cy="24" r="5" stroke="currentColor" strokeWidth="2" />
       <rect
@@ -563,49 +548,35 @@ const diagramTiles = {
   ),
 }
 
-const sections: Array<{ title: string; tiles: DiagramTile[] }> = [
-  {
-    title: "Most Used",
-    tiles: [
-      diagramTiles.classDiagram,
-      diagramTiles.activityDiagram,
-      diagramTiles.useCaseDiagram,
-    ],
-  },
-  {
-    title: "Structural",
-    tiles: [
-      diagramTiles.objectDiagram,
-      diagramTiles.componentDiagram,
-      diagramTiles.deploymentDiagram,
-      diagramTiles.flowchart,
-      diagramTiles.syntaxTree,
-      diagramTiles.sfc,
-    ],
-  },
-  {
-    title: "Behavioral",
-    tiles: [
-      diagramTiles.communicationDiagram,
-      diagramTiles.petriNet,
-      diagramTiles.reachabilityGraph,
-      diagramTiles.bpmn,
-    ],
-  },
-]
-
-const tilesByType: Partial<Record<UMLDiagramType, DiagramTile>> = sections
-  .flatMap((section) => section.tiles)
-  .reduce(
-    (result, tile) => ({
-      ...result,
-      [tile.type]: tile,
-    }),
-    {}
-  )
+const tilesByType: Partial<Record<UMLDiagramType, DiagramTile>> = Object.values(
+  diagramTiles
+).reduce<Partial<Record<UMLDiagramType, DiagramTile>>>((result, tile) => {
+  result[tile.type] = tile
+  return result
+}, {})
 
 export const getDiagramTypeLabel = (type: UMLDiagramType) =>
   tilesByType[type]?.title ?? type
+
+/** Short badge label for each diagram type (e.g. "Class", "Object", "SFC"). */
+const shortLabelsByType: Partial<Record<UMLDiagramType, string>> = {
+  ClassDiagram: "Class",
+  ObjectDiagram: "Object",
+  ActivityDiagram: "Activity",
+  UseCaseDiagram: "UseCase",
+  CommunicationDiagram: "Comm",
+  ComponentDiagram: "Component",
+  DeploymentDiagram: "Deploy",
+  PetriNet: "Petri",
+  ReachabilityGraph: "Reach",
+  SyntaxTree: "Syntax",
+  Flowchart: "Flow",
+  BPMN: "BPMN",
+  Sfc: "SFC",
+}
+
+export const getDiagramTypeShortLabel = (type: UMLDiagramType): string =>
+  shortLabelsByType[type] ?? type
 
 export const getDiagramTypeIcon = (
   type: UMLDiagramType,
@@ -648,85 +619,4 @@ export const getDiagramTypeIcon = (
   return cloneElement(icon, {
     className: customClassName,
   })
-}
-
-const escapeRegExp = (value: string) =>
-  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-
-const buildDefaultName = (baseTitle: string, existingTitles: string[]) => {
-  const escapedBaseTitle = escapeRegExp(baseTitle)
-  const pattern = new RegExp(`^${escapedBaseTitle}(?: (\\d+))?$`)
-  const usedNumbers = new Set<number>()
-
-  for (const title of existingTitles) {
-    const match = title.match(pattern)
-    if (!match) continue
-    if (match[1]) {
-      usedNumbers.add(Number(match[1]))
-    } else {
-      usedNumbers.add(1)
-    }
-  }
-
-  if (!usedNumbers.has(1)) {
-    return baseTitle
-  }
-
-  let nextNumber = 2
-  while (usedNumbers.has(nextNumber)) {
-    nextNumber += 1
-  }
-
-  return `${baseTitle} ${nextNumber}`
-}
-
-export const DiagramTypeGrid = () => {
-  const navigate = useNavigate()
-
-  const handleCreateDiagram = (tile: DiagramTile) => {
-    const { models, createModelByTitleAndType } =
-      usePersistenceModelStore.getState()
-    const existingTitles = Object.values(models).map(
-      (persistentModel) => persistentModel.model.title
-    )
-    const title = buildDefaultName(tile.title, existingTitles)
-    const newId = createModelByTitleAndType(title, tile.type)
-    navigate(`/local/${newId}`)
-  }
-
-  return (
-    <div className="rounded-lg border border-[var(--home-border-color)] bg-[var(--home-bg-card)] p-6 transition-colors duration-200">
-      <div className="space-y-8">
-        {sections.map((section) => (
-          <section key={section.title} className="space-y-3">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--home-text-secondary)] transition-colors duration-200">
-              {section.title}
-            </h3>
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {section.tiles.map((tile) => (
-                <button
-                  key={tile.type}
-                  type="button"
-                  onClick={() => handleCreateDiagram(tile)}
-                  className="group flex cursor-pointer items-start gap-3 rounded-md border border-[var(--home-border-color)] bg-[var(--home-bg-secondary)] p-4 text-left transition-colors duration-200 hover:border-[var(--home-accent-color)] hover:bg-[var(--home-accent-soft)] focus-visible:outline-2 focus-visible:outline-[var(--home-accent-color)] focus-visible:outline-offset-2"
-                >
-                  <div className="shrink-0 text-[var(--home-accent-color)] transition-colors duration-200">
-                    {tile.icon}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-semibold text-[var(--home-text-primary)] transition-colors duration-200">
-                      {tile.title}
-                    </p>
-                    <p className="mt-1 text-sm text-[var(--home-text-secondary)] transition-colors duration-200">
-                      {tile.description}
-                    </p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </section>
-        ))}
-      </div>
-    </div>
-  )
 }

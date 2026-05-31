@@ -41,7 +41,7 @@ const diagramTypeToTitle: Record<UMLDiagramType, string> = {
   SyntaxTree: "Syntax Tree",
   Flowchart: "Flowchart",
   BPMN: "BPMN Diagram",
-  Sfc: "Sequential Function Chart Diagram",
+  Sfc: "SFC Diagram",
 }
 
 export const NewDiagramModal = () => {

@@ -3,13 +3,11 @@ import { useNavigate, useParams } from "react-router"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined"
 import { formatUpadtedDate } from "@/utils/date"
-import { useThemeStore } from "@/stores/useThemeStore"
 
 export const LoadDiagramModal = () => {
   const { closeModal } = useModalContext()
   const navigate = useNavigate()
   const { id: currentDiagramId } = useParams()
-  const currentTheme = useThemeStore((state) => state.currentTheme)
   const models = usePersistenceModelStore((state) => state.models)
   const deleteModel = usePersistenceModelStore((state) => state.deleteModel)
 
@@ -45,7 +43,7 @@ export const LoadDiagramModal = () => {
         return (
           <div
             key={model.id}
-            className={`flex flex-col cursor-pointer ${currentTheme === "dark" ? "hover:bg-gray-700" : "hover:bg-gray-50"}${
+            className={`flex flex-col cursor-pointer hover:bg-[var(--apollon-background-variant)]${
               isSelected && isCurrentModelOnTop ? "rounded-t-lg" : ""
             } ${isSelected && isCurrentModelOnBottom ? "rounded-b-lg" : ""}`}
             onClick={() => handleLoadingDiagram(model.id)}

@@ -4,69 +4,142 @@ import themings from "@/constants/themings.json"
 
 const THEME_STORE_VERSION = 2
 const LEGACY_THEME_STORE_NAME = "theme-storage"
+const THEME_STYLE_ELEMENT_ID = "apollon-theme-token-styles"
+
+type ThemeMode = "light" | "dark"
+type ThemeTokenMap = Record<string, string>
+type ThemeTokenConfig = Record<ThemeMode, ThemeTokenMap>
+
+const themeTokenConfig = themings as ThemeTokenConfig
+
+const coerceThemeMode = (value: unknown): ThemeMode | null => {
+  if (value === "light" || value === "dark") {
+    return value
+  }
+  return null
+}
+
+const buildThemeBlock = (theme: ThemeMode): string => {
+  const declarations = Object.entries(themeTokenConfig[theme])
+    .map(([cssVariableName, cssVariableValue]) => {
+      return `${cssVariableName}:${cssVariableValue};`
+    })
+    .join("")
+
+  return `:root[data-theme="${theme}"]{${declarations}}`
+}
+
+const ensureThemeStyleElement = () => {
+  if (typeof document === "undefined") {
+    return
+  }
+
+  if (document.getElementById(THEME_STYLE_ELEMENT_ID)) {
+    return
+  }
+
+  const styleElement = document.createElement("style")
+  styleElement.id = THEME_STYLE_ELEMENT_ID
+  styleElement.textContent = `${buildThemeBlock("light")}${buildThemeBlock("dark")}`
+  document.head.appendChild(styleElement)
+}
+
+const applyThemeToDocument = (theme: ThemeMode) => {
+  if (typeof document === "undefined") {
+    return
+  }
+
+  ensureThemeStyleElement()
+
+  const root = document.documentElement
+  root.setAttribute("data-theme", theme)
+  // Let the browser style native controls/scrollbars for the active scheme.
+  root.style.colorScheme = theme
+}
 
 interface ThemeState {
-  systemThemePreference: string | null
-  userThemePreference: string | null
-  currentTheme: string
-  setSystemThemePreference: (value: string) => void
-  setUserThemePreference: (value: string) => void
-  setTheme: (theming: string) => void
+  systemThemePreference: ThemeMode | null
+  userThemePreference: ThemeMode | null
+  currentTheme: ThemeMode
+  setSystemThemePreference: (value: ThemeMode) => void
+  setUserThemePreference: (value: ThemeMode) => void
+  setTheme: (theming: ThemeMode) => void
   toggleTheme: () => void
   initializeTheme: () => void
 }
 
+type PersistedThemeShape = {
+  systemThemePreference?: unknown
+  userThemePreference?: unknown
+  currentTheme?: unknown
+}
+
+const normalizePersistedThemeState = (state: PersistedThemeShape) => {
+  const systemThemePreference = coerceThemeMode(state.systemThemePreference)
+  const userThemePreference = coerceThemeMode(state.userThemePreference)
+  const currentTheme = coerceThemeMode(state.currentTheme) ?? "light"
+
+  return {
+    systemThemePreference,
+    userThemePreference,
+    currentTheme,
+  } satisfies Pick<
+    ThemeState,
+    "systemThemePreference" | "userThemePreference" | "currentTheme"
+  >
+}
+
 export const useThemeStore = create<ThemeState>()(
   persist(
-    (set, get) => ({
-      systemThemePreference: null,
-      userThemePreference: null,
-      currentTheme: "light", // Default theme
-      setSystemThemePreference: (value: string) =>
-        set({ systemThemePreference: value }),
-      setUserThemePreference: (value: string) =>
-        set({ userThemePreference: value }),
-      setTheme: (theming: string) => {
-        const root = document.documentElement
-        // @ts-expect-error TS doesn't know that theming is a key of themings
-        for (const themingVar of Object.keys(themings[theming])) {
-          // @ts-expect-error TS doesn't know that themingVar is a key of themings[theming]
-          root.style.setProperty(themingVar, themings[theming][themingVar])
-        }
-        set({ currentTheme: theming })
-      },
-      toggleTheme: () => {
-        const {
-          userThemePreference,
-          systemThemePreference,
-          setTheme,
-          setUserThemePreference,
-        } = get()
-        const currentPreference =
-          userThemePreference || systemThemePreference || "light"
-        const newTheme = currentPreference === "dark" ? "light" : "dark"
-        setTheme(newTheme)
-        setUserThemePreference(newTheme)
-      },
-      initializeTheme: () => {
-        const { userThemePreference, setSystemThemePreference, setTheme } =
-          get()
-        if (!userThemePreference) {
-          if (
-            window.matchMedia &&
-            window.matchMedia("(prefers-color-scheme: dark)").matches
-          ) {
-            setSystemThemePreference("dark")
-            setTheme("dark")
-          } else {
-            setSystemThemePreference("light")
-            setTheme("light")
+    (set, get) => {
+      const applyThemeState = (
+        theme: ThemeMode,
+        nextState: Partial<
+          Pick<ThemeState, "systemThemePreference" | "userThemePreference">
+        > = {}
+      ) => {
+        applyThemeToDocument(theme)
+        set({ ...nextState, currentTheme: theme })
+      }
+
+      return {
+        systemThemePreference: null,
+        userThemePreference: null,
+        currentTheme: "light",
+        setSystemThemePreference: (value: ThemeMode) =>
+          set({ systemThemePreference: value }),
+        setUserThemePreference: (value: ThemeMode) =>
+          set({ userThemePreference: value }),
+        setTheme: (theming: ThemeMode) => {
+          const theme = coerceThemeMode(theming) ?? "light"
+          applyThemeState(theme)
+        },
+        toggleTheme: () => {
+          const { userThemePreference, systemThemePreference } = get()
+          const currentPreference =
+            userThemePreference ?? systemThemePreference ?? "light"
+          const newTheme: ThemeMode =
+            currentPreference === "dark" ? "light" : "dark"
+          applyThemeState(newTheme, { userThemePreference: newTheme })
+        },
+        initializeTheme: () => {
+          ensureThemeStyleElement()
+          const { userThemePreference } = get()
+
+          if (!userThemePreference) {
+            const systemThemePreference: ThemeMode =
+              window.matchMedia &&
+              window.matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : "light"
+            applyThemeState(systemThemePreference, { systemThemePreference })
+            return
           }
-        } else {
-          setTheme(userThemePreference)
-        }
-      },
-    }),
+
+          applyThemeState(userThemePreference)
+        },
+      }
+    },
     {
       name: "apollon-theme",
       version: THEME_STORE_VERSION,
@@ -77,21 +150,25 @@ export const useThemeStore = create<ThemeState>()(
         currentTheme: state.currentTheme,
       }),
       migrate: (persistedState, version) => {
+        const normalizedPersistedState = normalizePersistedThemeState(
+          (persistedState as PersistedThemeShape) ?? {}
+        )
+
         if (version >= THEME_STORE_VERSION) {
-          return persistedState as ThemeState
+          return normalizedPersistedState as ThemeState
         }
 
         try {
           const rawLegacyValue = localStorage.getItem(LEGACY_THEME_STORE_NAME)
           if (rawLegacyValue) {
             const parsedLegacyValue = JSON.parse(rawLegacyValue) as {
-              state?: Partial<ThemeState>
+              state?: PersistedThemeShape
             }
             localStorage.removeItem(LEGACY_THEME_STORE_NAME)
             if (parsedLegacyValue?.state) {
               return {
-                ...(persistedState as object),
-                ...parsedLegacyValue.state,
+                ...normalizedPersistedState,
+                ...normalizePersistedThemeState(parsedLegacyValue.state),
               } as ThemeState
             }
           }
@@ -99,7 +176,7 @@ export const useThemeStore = create<ThemeState>()(
           // If migration fails, fallback to current persisted state.
         }
 
-        return persistedState as ThemeState
+        return normalizedPersistedState as ThemeState
       },
     }
   )

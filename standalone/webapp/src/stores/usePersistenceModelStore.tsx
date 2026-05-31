@@ -7,12 +7,13 @@ import {
   playgroundModelId,
 } from "@/constants/playgroundDefaultDiagram"
 
-const PERSISTENCE_STORE_VERSION = 2
+const PERSISTENCE_STORE_VERSION = 3
 
 type PersistentModelEntity = {
   id: string
   model: UMLModel
   lastModifiedAt: string
+  createdAt: string
   favorite: boolean
 }
 
@@ -68,6 +69,11 @@ const normalizePersistedModels = (
       {
         ...entity,
         favorite: Boolean(entity.favorite),
+        // Backfill for existing diagrams that predate createdAt tracking.
+        // lastModifiedAt is the best available approximation.
+        createdAt:
+          (entity as Partial<PersistentModelEntity>).createdAt ??
+          entity.lastModifiedAt,
       },
     ])
   )
@@ -82,6 +88,7 @@ export const usePersistenceModelStore = create<PersistenceModelStore>()(
             id: playgroundModelId,
             model: PlaygroundDefaultModel,
             lastModifiedAt: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
             favorite: false,
           },
         },
@@ -105,6 +112,7 @@ export const usePersistenceModelStore = create<PersistenceModelStore>()(
             id: model.id,
             model,
             lastModifiedAt: now,
+            createdAt: now,
             favorite: false,
           }
 
@@ -126,6 +134,7 @@ export const usePersistenceModelStore = create<PersistenceModelStore>()(
             id: model.id,
             model,
             lastModifiedAt: now,
+            createdAt: now,
             favorite: false,
           }
 
@@ -151,6 +160,8 @@ export const usePersistenceModelStore = create<PersistenceModelStore>()(
                     id: model.id,
                     model,
                     lastModifiedAt,
+                    createdAt:
+                      state.models[model.id]?.createdAt ?? lastModifiedAt,
                     favorite: state.models[model.id]?.favorite ?? false,
                   },
                 },
@@ -203,6 +214,7 @@ export const usePersistenceModelStore = create<PersistenceModelStore>()(
                   id: duplicatedId,
                   model: duplicatedModel,
                   lastModifiedAt,
+                  createdAt: lastModifiedAt,
                   favorite: sourceEntity.favorite,
                 },
               },

@@ -4,18 +4,77 @@
     <meta charset="UTF-8" />
     <link
       rel="icon"
-      type="image/png"
-      href="/assets/images/tum-logo-32x32.png"
+      type="image/svg+xml"
+      href="/assets/images/apollon-logo-v1.svg"
     />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+    <script>
+      (function () {
+        try {
+          var rawTheme = window.localStorage.getItem("apollon-theme");
+          var storedTheme = rawTheme ? JSON.parse(rawTheme).state : null;
+          var theme =
+            storedTheme &&
+            (storedTheme.userThemePreference || storedTheme.currentTheme);
+
+          if (theme !== "dark" && theme !== "light") {
+            theme =
+              window.matchMedia &&
+              window.matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : "light";
+          }
+
+          document.documentElement.setAttribute("data-theme", theme);
+          document.documentElement.style.colorScheme = theme;
+        } catch (error) {
+          document.documentElement.setAttribute("data-theme", "light");
+          document.documentElement.style.colorScheme = "light";
+        }
+      })();
+    </script>
     <link href="/src/webapp.css" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+      media="print"
+      onload="this.media='all'"
+    />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+      />
+    </noscript>
 
     <title>Apollon</title>
     <!-- Runtime env written by the container entrypoint. 404-tolerant in dev. -->
-    <script src="/env.js"></script>
+    <script src="/env.js" defer></script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div
+        class="app-loading-screen app-loading-screen--boot"
+        role="status"
+        aria-label="Loading workspace..."
+        aria-live="polite"
+      >
+        <div class="app-loading-content">
+          <div class="app-loading-logo-shell">
+            <img
+              class="app-loading-logo"
+              src="/assets/images/apollon-logo-v1.svg"
+              alt="Apollon logo"
+              width="48"
+              height="50"
+            />
+          </div>
+          <span class="app-loading-progress" aria-hidden="true"></span>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/index.tsx"></script>
   </body>
 </html>

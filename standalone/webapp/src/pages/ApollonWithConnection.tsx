@@ -143,7 +143,9 @@ export const ApollonWithConnection: React.FC = () => {
           signal: abort.signal,
         })
         if (abort.signal.aborted) return
-        addSharedDiagramEntry(diagramId)
+        addSharedDiagramEntry(diagramId, {
+          lastSharedView: viewType as DiagramView,
+        })
         log.debug("Fetched diagram", {
           diagramId,
           nodeCount: diagram.nodes?.length ?? 0,

@@ -1,23 +1,76 @@
 @import "tailwindcss";
 
 :root {
-  --home-bg-primary: #fcfdff;
-  --home-bg-secondary: #f2f4f7;
-  --home-bg-card: #ffffff;
-  --home-border-color: #b9c5d1;
-  --home-text-primary: #17212b;
-  --home-text-secondary: #44586c;
-  --home-accent-color: #1e5a96;
-  --home-accent-soft: #e3ebf4;
-  --home-hover-overlay-bg: #1e5a96;
-  --home-hover-overlay-text: #ffffff;
-  --home-chip-bg: #f2f4f7;
-  --home-chip-text: #44586c;
-  --home-chip-active-bg: #e3ebf4;
-  --home-chip-active-text: #1e5a96;
-  --home-favorite-star: #bf8b1c;
-  --home-favorite-bg: #fff4d8;
-  --home-favorite-border: #e6c780;
+  color-scheme: light dark;
+
+  /* --home-* light tokens are the first-paint fallback; source of truth is themings.json. */
+
+  /* Surfaces — base page up through raised cards */
+  --home-surface-base: #ffffff;
+  --home-surface-sunken: #e1e9f2;
+  --home-surface-panel: #eaf0f7;
+  --home-surface-raised: #eaf0f7;
+  --home-surface-raised-hover: #dbe5f0;
+  --home-surface-raised-active: #c2cfdd;
+  --home-surface-row-alt: #dbe5f0;
+
+  /* Text */
+  --home-text-primary: #142334;
+  --home-text-secondary: #4e6175;
+  --home-text-strong: #142334;
+  --home-text-muted: #4e6175;
+
+  /* Borders / dividers */
+  --home-border-default: #93a7be;
+  --home-border-strong: #9fb1c4;
+  --home-border-subtle: #c2cfdd;
+
+  /* Accent */
+  --home-accent-base: #0f3a66;
+  --home-accent-soft: #d3e7fb;
+  --home-accent-strong: #0f3a66;
+  --home-accent-ring: #0f3a66;
+  --home-accent-contrast: #ffffff;
+
+  /* On-accent surfaces (translucent white over accent banner / dark navbar) */
+  --home-on-accent-bg: rgba(255, 255, 255, 0.14);
+  --home-on-accent-bg-hover: rgba(255, 255, 255, 0.24);
+  --home-on-accent-border: rgba(255, 255, 255, 0.22);
+  --home-on-accent-text: #ffffff;
+
+  /* Badge / status */
+  --home-badge-bg: #c2cfdd;
+  --home-badge-fold: #0f3a66;
+  --home-text-on-badge: #142334;
+  --home-favorite-star: #f2b200;
+
+  /* Shadows / glow */
+  --home-shadow-card-hover: rgba(0, 0, 0, 0.25);
+  --home-shadow-overlay: rgba(0, 0, 0, 0.5);
+  --home-glow-neutral: rgba(15, 58, 102, 0.78);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --apollon-background: #181a18;
+  --apollon-primary-contrast: #ffffff;
+  /* --home-* dark tokens come from themings.json at runtime. */
+}
+
+@keyframes diagram-highlight-pulse {
+  0% {
+    box-shadow:
+      0 0 0 4px var(--home-glow-neutral),
+      0 8px 32px var(--home-glow-neutral);
+  }
+  60% {
+    box-shadow:
+      0 0 0 4px var(--home-glow-neutral),
+      0 8px 32px var(--home-glow-neutral);
+  }
+  100% {
+    box-shadow: none;
+  }
 }
 
 html {
@@ -27,8 +80,8 @@ html {
   width: 100%;
   /* Paint the viewport with the theme background so the browser's
      rubber-band overscroll zone matches the active theme instead of
-     showing the white user-agent default. The CSS variable is kept in
-     sync with the useThemeStore state via documentElement.style. */
+     showing the white user-agent default. Theme tokens are selected by
+     the root data-theme attribute. */
   background-color: var(--apollon-background);
   color: var(--apollon-primary-contrast);
 }
@@ -68,15 +121,14 @@ body {
 html,
 body,
 #root {
-  transition: background-color 220ms ease, color 220ms ease;
+  transition:
+    background-color 220ms ease,
+    color 220ms ease;
 }
 
 .home-page-scrollbar {
-  scrollbar-gutter: stable;
   scrollbar-width: thin;
-  scrollbar-color:
-    color-mix(in srgb, var(--home-accent-color) 58%, var(--home-bg-secondary))
-    color-mix(in srgb, var(--home-bg-secondary) 78%, transparent);
+  scrollbar-color: var(--home-accent-base) var(--home-surface-sunken);
 }
 
 .home-page-scrollbar::-webkit-scrollbar {
@@ -87,28 +139,20 @@ body,
   border-radius: 999px;
   background: color-mix(
     in srgb,
-    var(--home-bg-secondary) 78%,
-    var(--home-bg-primary)
+    var(--home-surface-sunken) 78%,
+    var(--home-surface-base)
   );
 }
 
 .home-page-scrollbar::-webkit-scrollbar-thumb {
   border: 2px solid transparent;
   border-radius: 999px;
-  background: color-mix(
-    in srgb,
-    var(--home-accent-color) 58%,
-    var(--home-bg-secondary)
-  );
+  background: var(--home-accent-base);
   background-clip: content-box;
 }
 
 .home-page-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: color-mix(
-    in srgb,
-    var(--home-accent-color) 72%,
-    var(--home-bg-secondary)
-  );
+  background: var(--home-accent-base);
 }
 
 /* Reusable scroll-root utility:
@@ -118,17 +162,176 @@ body,
   overflow-x: clip;
 }
 
+.recent-diagrams-font {
+  font-family: "Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue",
+    Arial, sans-serif;
+}
+
+.app-loading-screen {
+  display: flex;
+  min-height: 100%;
+  width: 100%;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--home-surface-sunken) 42%, transparent),
+      transparent 34%
+    ),
+    var(--home-surface-base);
+  color: var(--home-text-primary);
+  font-family: "Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue",
+    Arial, sans-serif;
+  transition:
+    background-color 220ms ease,
+    color 220ms ease;
+}
+
+.app-loading-screen--boot {
+  min-height: 100vh;
+}
+
+.app-loading-screen--panel {
+  min-height: min(52vh, 420px);
+  border: 1px solid var(--home-border-subtle);
+  background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--home-surface-raised-hover) 46%, transparent),
+      transparent 70%
+    ),
+    var(--home-surface-raised);
+}
+
+.app-loading-content {
+  display: flex;
+  max-width: 260px;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 24px;
+  text-align: center;
+}
+
+.app-loading-logo-shell {
+  display: flex;
+  height: 58px;
+  width: 58px;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-loading-logo {
+  display: block;
+  height: 50px;
+  width: 48px;
+}
+
+.app-loading-progress {
+  position: relative;
+  display: block;
+  height: 3px;
+  width: 156px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--home-text-secondary) 18%, transparent);
+}
+
+.app-loading-progress::after {
+  position: absolute;
+  inset: 0;
+  width: 42%;
+  border-radius: inherit;
+  background: var(--home-accent-base);
+  box-shadow: 0 0 18px var(--home-glow-neutral);
+  content: "";
+  transform: translateX(-120%);
+  animation: app-loading-progress 1100ms ease-in-out infinite;
+}
+
+@keyframes app-loading-progress {
+  0% {
+    transform: translateX(-120%);
+  }
+
+  100% {
+    transform: translateX(260%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-loading-progress::after {
+    animation: none;
+    transform: translateX(70%);
+  }
+}
+
 .home-diagram-card {
   contain: layout paint;
   content-visibility: auto;
-  contain-intrinsic-size: auto 256px;
+  contain-intrinsic-size: auto 300px;
 }
 
-.home-diagram-card:hover .home-diagram-card-meta-normal,
-.home-diagram-card:hover .home-diagram-card-meta-compact,
-.home-diagram-card:focus-visible .home-diagram-card-meta-normal,
-.home-diagram-card:focus-visible .home-diagram-card-meta-compact {
-  will-change: transform, opacity;
+/* Buttons that sit on the accent banner / dark navbar (translucent white). */
+.home-on-accent-btn {
+  border: 1px solid var(--home-on-accent-border);
+  background-color: var(--home-on-accent-bg);
+  color: var(--home-on-accent-text);
+  transition:
+    background-color 200ms ease,
+    color 200ms ease;
+}
+
+.home-on-accent-btn:hover {
+  background-color: var(--home-on-accent-bg-hover);
+}
+
+/* Ghost variant — no idle fill, just a translucent border that fills on hover. */
+.home-on-accent-btn--ghost {
+  background-color: transparent;
+}
+
+.home-card-icon-button {
+  border-radius: 2px;
+  transition:
+    color 150ms ease,
+    background-color 150ms ease,
+    filter 150ms ease;
+}
+
+.home-card-icon-button:hover {
+  color: var(--icon-hover-color, currentcolor);
+  background-color: var(
+    --icon-hover-bg,
+    color-mix(in srgb, currentcolor 16%, transparent)
+  );
+  filter: var(--icon-hover-filter, none);
+}
+
+.home-card-icon-button[data-active="true"] {
+  color: var(--icon-active-color, currentcolor);
+  filter: var(--icon-active-filter, none);
+}
+
+.theme-thumbnail-image {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  width: 100%;
+  object-fit: contain;
+  transition: opacity 160ms ease;
+}
+
+.theme-thumbnail-dark {
+  opacity: 0;
+}
+
+:root[data-theme="dark"] .theme-thumbnail-light {
+  opacity: 0;
+}
+
+:root[data-theme="dark"] .theme-thumbnail-dark {
+  opacity: 1;
 }
 
 @supports not (content-visibility: auto) {
@@ -155,4 +358,54 @@ body,
   background-color: var(--apollon-gray) !important;
 }
 
+/* Scope overrides for home-gallery MUI filter menus so they keep
+   home tokens and typography when rendered via MUI portal. */
+.home-filter-menu-paper.MuiPaper-root {
+  background-color: var(--home-surface-raised) !important;
+  background-image: none !important;
+  color: var(--home-text-primary) !important;
+}
 
+.home-filter-menu-list.MuiMenu-list {
+  background-color: var(--home-surface-raised) !important;
+  color: var(--home-text-primary) !important;
+}
+
+.home-filter-menu-list.MuiMenu-list .home-filter-menu-item.MuiMenuItem-root {
+  font-family: "Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue",
+    Arial, sans-serif;
+}
+
+.home-filter-menu-list.MuiMenu-list
+  .home-filter-menu-item.MuiMenuItem-root
+  + .home-filter-menu-item.MuiMenuItem-root {
+  margin-top: 4px;
+}
+
+.home-filter-menu-list.MuiMenu-list
+  .home-filter-menu-item-delete.MuiMenuItem-root {
+  color: var(--apollon-alert-danger-color) !important;
+}
+
+.home-filter-menu-list.MuiMenu-list
+  .home-filter-menu-item-delete.MuiMenuItem-root:hover {
+  background-color: var(--apollon-alert-danger-background) !important;
+  color: var(--apollon-alert-danger-color) !important;
+}
+
+
+/* Fade-in for newly revealed cards when pagination loads more */
+@keyframes gallery-card-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.gallery-card-enter {
+  animation: gallery-card-enter 200ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gallery-card-enter {
+    animation: none;
+  }
+}

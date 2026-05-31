@@ -1,4 +1,12 @@
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react"
+import {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
+import { DiagramGallerySkeleton } from "@/components/home/DiagramGallerySkeleton"
 import type { UMLDiagramType, UMLModel } from "@tumaet/apollon"
 import { useNavigate } from "react-router"
 import { DiagramView } from "@/types"
@@ -12,18 +20,22 @@ import {
   toggleSharedDiagramFavorite,
 } from "@/utils/sharedDiagramStorage"
 import {
+  buildSharedDiagramPath,
+  getSharedDiagramViewBadge,
+} from "@/utils/sharedDiagramLinks"
+import {
   DiagramActionsMenu,
   DiagramCard,
   type DiagramSource,
   type RecentDiagram,
 } from "./DiagramCard"
-import { getDiagramTypeLabel } from "./DiagramTypeGrid"
+import { getDiagramTypeLabel } from "./diagramTypeMeta"
 import { SegmentedControl } from "./SegmentedControl"
+import { DropdownFilterMenu } from "./DropdownFilterMenu"
 
 const normalize = (value: string) => value.trim().toLowerCase()
 const INITIAL_VISIBLE_COUNT = 9
 const LOAD_MORE_STEP = 9
-const LOAD_MORE_DELAY_MS = 180
 
 type DiagramTypeFilter = "all" | UMLDiagramType
 type DiagramSortBy = "alphabetical" | "dateCreated" | "lastViewed"
@@ -84,7 +96,7 @@ const getDiagramSortValue = (
 
 const EmptyStateIllustration = () => (
   <svg
-    className="h-36 w-36 text-[var(--home-border-color)] transition-colors duration-200"
+    className="h-36 w-36 text-[var(--home-border-default)] transition-colors duration-200"
     viewBox="0 0 180 180"
     fill="none"
     aria-hidden="true"
@@ -207,10 +219,12 @@ const TableViewIcon = () => (
 
 type DiagramGalleryProps = {
   initialSearchTerm?: string
+  highlightSharedDiagramId?: string | null
 }
 
 export const DiagramGallery = ({
   initialSearchTerm = "",
+  highlightSharedDiagramId = null,
 }: DiagramGalleryProps) => {
   const navigate = useNavigate()
   const models = usePersistenceModelStore((state) => state.models)
@@ -225,18 +239,20 @@ export const DiagramGallery = ({
   const [viewMode, setViewMode] = useState<DiagramViewMode>("grid")
   const [diagramSource, setDiagramSource] = useState<DiagramSource>("local")
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
-  const [isTypeMenuOpen, setIsTypeMenuOpen] = useState(false)
-  const [isSortMenuOpen, setIsSortMenuOpen] = useState(false)
+  const [typeMenuAnchorEl, setTypeMenuAnchorEl] =
+    useState<null | HTMLButtonElement>(null)
+  const [sortMenuAnchorEl, setSortMenuAnchorEl] =
+    useState<null | HTMLButtonElement>(null)
   const [sharedDiagrams, setSharedDiagrams] = useState<GalleryDiagram[]>([])
-  const [isSharedDiagramsLoading, setIsSharedDiagramsLoading] = useState(false)
+  const [isSharedDiagramsFetching, setIsSharedDiagramsFetching] =
+    useState(false)
+  const hasLoadedSharedOnceRef = useRef(false)
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_COUNT)
-  const [isLoadingMore, setIsLoadingMore] = useState(false)
-  const [isObserverActive, setIsObserverActive] = useState(true)
-  const prevAllDiagramsLengthRef = useRef(0)
+  const [highlightedDiagramId, setHighlightedDiagramId] = useState<
+    string | null
+  >(null)
+  const prevVisibleCountRef = useRef(INITIAL_VISIBLE_COUNT)
   const sentinelRef = useRef<HTMLDivElement>(null)
-  const loadTimeoutRef = useRef<number | null>(null)
-  const typeMenuContainerRef = useRef<HTMLDivElement>(null)
-  const sortMenuContainerRef = useRef<HTMLDivElement>(null)
 
   const localDiagrams = useMemo<GalleryDiagram[]>(() => {
     return Object.entries(models)
@@ -249,7 +265,9 @@ export const DiagramGallery = ({
         favorite: persistentModelEntity.favorite ?? false,
         model: persistentModelEntity.model,
         source: "local" as const,
-        createdAt: persistentModelEntity.lastModifiedAt,
+        createdAt:
+          persistentModelEntity.createdAt ??
+          persistentModelEntity.lastModifiedAt,
         lastViewedAt: persistentModelEntity.lastModifiedAt,
       }))
       .sort(sortByLastModifiedDesc)
@@ -263,15 +281,19 @@ export const DiagramGallery = ({
     let isSubscribed = true
 
     const loadSharedDiagrams = async () => {
-      setIsSharedDiagramsLoading(true)
       const entries = getSharedDiagramEntries()
 
       if (entries.length === 0) {
         if (isSubscribed) {
           setSharedDiagrams([])
-          setIsSharedDiagramsLoading(false)
+          setIsSharedDiagramsFetching(false)
+          hasLoadedSharedOnceRef.current = true
         }
         return
+      }
+
+      if (isSubscribed) {
+        setIsSharedDiagramsFetching(true)
       }
 
       const staleSharedIds: string[] = []
@@ -300,6 +322,7 @@ export const DiagramGallery = ({
               source: "shared",
               model: storedDiagram,
               createdAt: storedDiagram.createdAt || entry.sharedAt,
+              lastSharedView: entry.lastSharedView,
               lastViewedAt:
                 storedDiagram.updatedAt ||
                 storedDiagram.createdAt ||
@@ -322,7 +345,8 @@ export const DiagramGallery = ({
 
       if (isSubscribed) {
         setSharedDiagrams(orderedSharedDiagrams)
-        setIsSharedDiagramsLoading(false)
+        setIsSharedDiagramsFetching(false)
+        hasLoadedSharedOnceRef.current = true
       }
     }
 
@@ -387,100 +411,22 @@ export const DiagramGallery = ({
   const deferredFilteredDiagrams = useDeferredValue(filteredDiagrams)
   const isPending = deferredFilteredDiagrams !== filteredDiagrams
 
+  // Clamp visibleCount to the actual list length so it never drifts out of
+  // bounds when filters change or diagrams are deleted.
+  const clampedVisibleCount = Math.min(
+    Math.max(visibleCount, INITIAL_VISIBLE_COUNT),
+    Math.max(deferredFilteredDiagrams.length, INITIAL_VISIBLE_COUNT)
+  )
+  const prevVisibleCount = prevVisibleCountRef.current
+  const visibleDiagrams = deferredFilteredDiagrams.slice(0, clampedVisibleCount)
+  const hasMoreDiagrams = deferredFilteredDiagrams.length > clampedVisibleCount
+
+  // Track the previous visible count after commit (not during render) so the
+  // entrance-animation baseline stays correct under StrictMode/concurrent renders.
   useEffect(() => {
-    if (prevAllDiagramsLengthRef.current === 0) {
-      prevAllDiagramsLengthRef.current = allDiagrams.length
-      return
-    }
+    prevVisibleCountRef.current = clampedVisibleCount
+  }, [clampedVisibleCount])
 
-    if (allDiagrams.length < prevAllDiagramsLengthRef.current) {
-      setVisibleCount(INITIAL_VISIBLE_COUNT)
-    }
-    prevAllDiagramsLengthRef.current = allDiagrams.length
-  }, [allDiagrams.length])
-
-  useEffect(() => {
-    if (loadTimeoutRef.current !== null) {
-      window.clearTimeout(loadTimeoutRef.current)
-      loadTimeoutRef.current = null
-    }
-
-    setIsLoadingMore(false)
-
-    return () => {
-      if (loadTimeoutRef.current !== null) {
-        window.clearTimeout(loadTimeoutRef.current)
-      }
-    }
-  }, [])
-
-  useEffect(() => {
-    if (deferredFilteredDiagrams.length === 0) {
-      setVisibleCount(INITIAL_VISIBLE_COUNT)
-      return
-    }
-
-    setVisibleCount((current) =>
-      Math.min(
-        Math.max(current, INITIAL_VISIBLE_COUNT),
-        deferredFilteredDiagrams.length
-      )
-    )
-  }, [deferredFilteredDiagrams.length])
-
-  useEffect(() => {
-    if (loadTimeoutRef.current !== null) {
-      window.clearTimeout(loadTimeoutRef.current)
-      loadTimeoutRef.current = null
-    }
-    setIsLoadingMore(false)
-    setIsObserverActive(true)
-  }, [
-    diagramSource,
-    searchTerm,
-    selectedDiagramType,
-    showFavoritesOnly,
-    sortBy,
-    sortOrder,
-    viewMode,
-  ])
-
-  useEffect(() => {
-    if (!isTypeMenuOpen && !isSortMenuOpen) {
-      return
-    }
-
-    const handleOutsideClick = (event: MouseEvent) => {
-      const clickTarget = event.target as Node
-
-      if (!typeMenuContainerRef.current?.contains(clickTarget)) {
-        setIsTypeMenuOpen(false)
-      }
-
-      if (!sortMenuContainerRef.current?.contains(clickTarget)) {
-        setIsSortMenuOpen(false)
-      }
-    }
-
-    document.addEventListener("mousedown", handleOutsideClick)
-    return () => {
-      document.removeEventListener("mousedown", handleOutsideClick)
-    }
-  }, [isTypeMenuOpen, isSortMenuOpen])
-
-  const hasActiveFilters =
-    searchTerm.trim().length > 0 || selectedDiagramType !== "all"
-  const shownCountLabel = `${filteredDiagrams.length} ${
-    filteredDiagrams.length === 1 ? "diagram" : "diagrams"
-  }`
-  const totalCountLabel = `${allDiagrams.length} ${
-    allDiagrams.length === 1 ? "diagram" : "diagrams"
-  }`
-  const summaryCountLabel = hasActiveFilters
-    ? `Showing ${shownCountLabel} of ${totalCountLabel}`
-    : `Showing ${totalCountLabel}`
-  const visibleDiagrams = deferredFilteredDiagrams.slice(0, visibleCount)
-  const hasMoreDiagrams = deferredFilteredDiagrams.length > visibleCount
   const sortByLabel =
     sortBy === "alphabetical"
       ? "Alphabetical"
@@ -495,9 +441,30 @@ export const DiagramGallery = ({
       : getDiagramTypeLabel(selectedDiagramType)
   const controlHeightClass = "h-9"
   const controlTextClass = "text-xs font-semibold"
+  const isTypeMenuOpen = Boolean(typeMenuAnchorEl)
+  const isSortMenuOpen = Boolean(sortMenuAnchorEl)
+  const diagramCountLabel = showFavoritesOnly
+    ? `${filteredDiagrams.length} favorites`
+    : `${filteredDiagrams.length} diagrams`
+
+  const closeTypeMenu = () => {
+    setTypeMenuAnchorEl(null)
+  }
+
+  const closeSortMenu = () => {
+    setSortMenuAnchorEl(null)
+  }
+
+  useEffect(() => {
+    if (!highlightSharedDiagramId) return
+    setDiagramSource("shared")
+    setHighlightedDiagramId(highlightSharedDiagramId)
+    const timer = window.setTimeout(() => setHighlightedDiagramId(null), 2400)
+    return () => window.clearTimeout(timer)
+  }, [highlightSharedDiagramId])
 
   const loadingThumbnailIds = useDiagramThumbnailWarmup({
-    visibleDiagrams: diagramSource === "local" ? visibleDiagrams : [],
+    visibleDiagrams,
     isPending,
     isDiagramEmpty,
   })
@@ -508,24 +475,51 @@ export const DiagramGallery = ({
       return
     }
 
-    navigate(`/shared/${diagram.id}?view=${DiagramView.EDIT}`)
-  }
-
-  const handleToggleDiagramFavorite = (diagram: RecentDiagram) => {
-    if ((diagram.source ?? "local") === "local") {
-      toggleFavorite(diagram.id)
-      return
-    }
-
-    toggleSharedDiagramFavorite(diagram.id)
-    setSharedDiagrams((currentDiagrams) =>
-      currentDiagrams.map((currentDiagram) =>
-        currentDiagram.id === diagram.id
-          ? { ...currentDiagram, favorite: !currentDiagram.favorite }
-          : currentDiagram
+    navigate(
+      buildSharedDiagramPath(
+        diagram.id,
+        diagram.lastSharedView ?? DiagramView.EDIT
       )
     )
   }
+
+  const handleToggleDiagramFavorite = useCallback(
+    (diagram: RecentDiagram) => {
+      if ((diagram.source ?? "local") === "local") {
+        toggleFavorite(diagram.id)
+        return
+      }
+
+      toggleSharedDiagramFavorite(diagram.id)
+      setSharedDiagrams((currentDiagrams) =>
+        currentDiagrams.map((currentDiagram) =>
+          currentDiagram.id === diagram.id
+            ? { ...currentDiagram, favorite: !currentDiagram.favorite }
+            : currentDiagram
+        )
+      )
+    },
+    [toggleFavorite]
+  )
+
+  const handleRemoveSharedDiagram = useCallback((diagramId: string) => {
+    setSharedDiagrams((currentDiagrams) =>
+      currentDiagrams.filter((diagram) => diagram.id !== diagramId)
+    )
+  }, [])
+
+  const handleSharedDiagramViewChange = useCallback(
+    (diagramId: string, view: DiagramView) => {
+      setSharedDiagrams((currentDiagrams) =>
+        currentDiagrams.map((diagram) =>
+          diagram.id === diagramId
+            ? { ...diagram, lastSharedView: view }
+            : diagram
+        )
+      )
+    },
+    []
+  )
 
   const scrollToTypeGrid = () => {
     const target = document.getElementById("new-diagram-section")
@@ -539,7 +533,7 @@ export const DiagramGallery = ({
   }
 
   useEffect(() => {
-    if (!hasMoreDiagrams || !isObserverActive || isLoadingMore || isPending) {
+    if (!hasMoreDiagrams || isPending) {
       return
     }
 
@@ -556,15 +550,9 @@ export const DiagramGallery = ({
           return
         }
 
-        setIsObserverActive(false)
-        setIsLoadingMore(true)
-        loadTimeoutRef.current = window.setTimeout(() => {
-          setVisibleCount((current) =>
-            Math.min(current + LOAD_MORE_STEP, deferredFilteredDiagrams.length)
-          )
-          setIsLoadingMore(false)
-          setIsObserverActive(true)
-        }, LOAD_MORE_DELAY_MS)
+        setVisibleCount((current) =>
+          Math.min(current + LOAD_MORE_STEP, deferredFilteredDiagrams.length)
+        )
       },
       {
         root: scrollRoot,
@@ -577,325 +565,260 @@ export const DiagramGallery = ({
     return () => {
       observer.disconnect()
     }
-  }, [
-    deferredFilteredDiagrams.length,
-    hasMoreDiagrams,
-    isLoadingMore,
-    isObserverActive,
-    isPending,
-  ])
+  }, [deferredFilteredDiagrams.length, hasMoreDiagrams, isPending])
 
   return (
-    <div className="rounded-xl border border-[var(--home-border-color)] bg-[var(--home-bg-card)] p-6 transition-colors duration-200">
-      <div className="space-y-5">
-        <div className="space-y-3">
-          <label className="sr-only" htmlFor="recent-diagrams-search">
-            Search diagrams
-          </label>
-          <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-            <div className="relative w-full lg:max-w-xl">
-              <span
-                className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-[var(--home-text-secondary)]"
-                aria-hidden="true"
-              >
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
-                  <circle
-                    cx="11"
-                    cy="11"
-                    r="7"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                  />
-                  <path
-                    d="M16.5 16.5L21 21"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </span>
-              <input
-                id="recent-diagrams-search"
-                value={searchTerm}
-                onChange={(event) => {
-                  setSearchTerm(event.target.value)
+    <div className="w-full transition-colors duration-200">
+      <div className="space-y-6 recent-diagrams-font">
+        <div className="flex w-full flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <div className="relative w-full md:max-w-xl">
+            <span
+              className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-[var(--home-text-secondary)]"
+              aria-hidden="true"
+            >
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
+                <circle
+                  cx="11"
+                  cy="11"
+                  r="7"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                />
+                <path
+                  d="M16.5 16.5L21 21"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </span>
+            <input
+              id="recent-diagrams-search"
+              value={searchTerm}
+              onChange={(event) => {
+                setSearchTerm(event.target.value)
+                setVisibleCount(INITIAL_VISIBLE_COUNT)
+              }}
+              placeholder="Search by name..."
+              className="h-9 w-full rounded-md border border-[var(--home-border-default)] bg-[var(--home-surface-base)] py-1.5 pl-8 pr-8 text-xs text-[var(--home-text-primary)] outline-none transition-colors duration-200 placeholder:text-[var(--home-text-secondary)] focus:border-[var(--home-accent-ring)]"
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchTerm("")
                   setVisibleCount(INITIAL_VISIBLE_COUNT)
                 }}
-                placeholder="Search diagrams by name"
-                className="h-10 w-full rounded-lg border border-[var(--home-border-color)] bg-[var(--home-bg-primary)] py-2 pl-10 pr-3 text-sm text-[var(--home-text-primary)] outline-none transition-colors duration-200 placeholder:text-[var(--home-text-secondary)] focus:border-[var(--home-accent-color)]"
-              />
-            </div>
-            <div className="flex items-center gap-2 self-start lg:self-center">
-              <span className="rounded-full border border-[var(--home-border-color)] bg-[var(--home-chip-bg)] px-2.5 py-1 text-xs font-semibold text-[var(--home-chip-text)] transition-colors duration-200">
-                {summaryCountLabel}
-              </span>
-            </div>
+                className="absolute inset-y-0 right-2 flex items-center text-[var(--home-text-secondary)] hover:text-[var(--home-text-primary)]"
+                aria-label="Clear search"
+              >
+                <svg
+                  className="h-3.5 w-3.5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path
+                    d="M18 6 6 18M6 6l12 12"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            )}
           </div>
+          <span className="self-start text-[12px] font-normal text-[var(--home-text-secondary)] select-none md:self-auto">
+            {diagramCountLabel}
+          </span>
         </div>
 
-        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-          <div className="flex max-w-full flex-wrap items-center gap-2">
+        <div className="flex w-full flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center lg:w-auto">
             <SegmentedControl
-              className="w-fit max-w-full self-start"
+              className="w-full sm:w-fit sm:max-w-full"
               sizeClassName={controlHeightClass}
-              itemClassName={`px-3 ${controlTextClass}`}
+              itemClassName={`px-3.5 ${controlTextClass}`}
               options={[
                 { value: "local", label: "Local diagrams" },
                 { value: "shared", label: "Shared diagrams" },
               ]}
               value={diagramSource}
-              onChange={(nextSource) => setDiagramSource(nextSource)}
+              onChange={(nextSource) => {
+                setDiagramSource(nextSource)
+                setVisibleCount(INITIAL_VISIBLE_COUNT)
+              }}
             />
             <button
               type="button"
-              aria-pressed={showFavoritesOnly}
               onClick={() => {
                 setShowFavoritesOnly((current) => !current)
                 setVisibleCount(INITIAL_VISIBLE_COUNT)
               }}
-              className={`inline-flex ${controlHeightClass} cursor-pointer items-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-[var(--home-accent-color)] focus-visible:outline-offset-2 ${
+              aria-pressed={showFavoritesOnly}
+              className={`flex ${controlHeightClass} w-full cursor-pointer items-center justify-center gap-2 rounded-md border-0 px-3 text-xs font-semibold transition-all duration-200 focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2 sm:w-fit sm:justify-start ${
                 showFavoritesOnly
-                  ? "border-[var(--home-favorite-border)] bg-[var(--home-favorite-bg)] text-[var(--home-favorite-star)]"
-                  : "border-[var(--home-border-color)] bg-[var(--home-bg-secondary)] text-[var(--home-text-secondary)] hover:border-[var(--home-accent-color)] hover:text-[var(--home-text-primary)]"
+                  ? "bg-[var(--home-surface-raised-hover)] text-[var(--home-favorite-star)]"
+                  : "bg-[var(--home-surface-raised)] text-[var(--home-text-secondary)] hover:bg-[var(--home-surface-raised-hover)] hover:text-[var(--home-favorite-star)]"
               }`}
             >
               <svg
-                className="h-3.5 w-3.5"
+                className="h-4 w-4"
                 viewBox="0 0 24 24"
                 fill={showFavoritesOnly ? "currentColor" : "none"}
+                stroke="currentColor"
+                strokeWidth="1.8"
                 aria-hidden="true"
               >
                 <path
                   d="M12 3.7l2.6 5.3 5.9.9-4.3 4.2 1 5.9-5.2-2.8-5.2 2.8 1-5.9-4.3-4.2 5.9-.9L12 3.7z"
-                  stroke="currentColor"
-                  strokeWidth="1.7"
                   strokeLinejoin="round"
                 />
               </svg>
               Favorites
             </button>
           </div>
-
-          <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 md:flex md:w-auto md:flex-wrap md:items-center md:justify-end">
-            <label className="sr-only" htmlFor="diagram-type-filter-button">
-              Filter by diagram type
-            </label>
-            <div
-              ref={typeMenuContainerRef}
-              className="relative w-full sm:w-auto"
-            >
-              <button
-                id="diagram-type-filter-button"
-                type="button"
-                aria-haspopup="menu"
-                aria-expanded={isTypeMenuOpen}
-                onClick={() => {
-                  setIsTypeMenuOpen((current) => !current)
-                  setIsSortMenuOpen(false)
-                }}
-                className={`flex ${controlHeightClass} w-full min-w-0 cursor-pointer items-center justify-between gap-2 rounded-md border border-[var(--home-border-color)] bg-[var(--home-bg-primary)] px-2.5 text-xs text-[var(--home-text-primary)] transition-colors duration-200 hover:border-[var(--home-accent-color)] focus-visible:outline-2 focus-visible:outline-[var(--home-accent-color)] focus-visible:outline-offset-2 sm:min-w-[170px]`}
-              >
+          <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 lg:flex lg:w-auto lg:flex-nowrap lg:items-center">
+            <DropdownFilterMenu
+              buttonId="diagram-type-filter-button"
+              menuId="diagram-type-filter-menu"
+              anchorEl={typeMenuAnchorEl}
+              onClose={closeTypeMenu}
+              onToggle={(event) => {
+                closeSortMenu()
+                setTypeMenuAnchorEl((currentAnchor) =>
+                  currentAnchor ? null : event.currentTarget
+                )
+              }}
+              anchorHorizontal="left"
+              triggerClassName={`flex ${controlHeightClass} min-w-0 w-full cursor-pointer items-center justify-between gap-2 rounded-md border-0 px-2.5 text-xs transition-all duration-200 focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2 sm:w-44 ${
+                isTypeMenuOpen
+                  ? "bg-[var(--home-surface-raised-hover)] text-[var(--home-accent-strong)]"
+                  : "bg-[var(--home-surface-raised)] text-[var(--home-text-secondary)] hover:bg-[var(--home-surface-raised-hover)] hover:text-[var(--home-accent-strong)]"
+              }`}
+              triggerContent={
                 <span className="truncate">{selectedDiagramTypeLabel}</span>
-                <svg
-                  className="h-3.5 w-3.5 shrink-0 text-[var(--home-text-secondary)]"
-                  viewBox="0 0 20 20"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M5 7.5L10 12.5L15 7.5"
-                    stroke="currentColor"
-                    strokeWidth="1.7"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
-
-              {isTypeMenuOpen && (
-                <div className="absolute left-0 z-40 mt-2 w-60 rounded-lg border border-[var(--home-border-color)] bg-[var(--home-bg-card)] p-2 shadow-lg transition-colors duration-200">
-                  <p className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--home-text-secondary)]">
-                    Diagram type
-                  </p>
-                  <div className="space-y-1">
-                    <button
-                      type="button"
-                      onClick={() => {
+              }
+              sections={[
+                {
+                  title: "Diagram type",
+                  items: [
+                    {
+                      key: "all",
+                      label: "All diagram types",
+                      selected: selectedDiagramType === "all",
+                      onSelect: () => {
                         setSelectedDiagramType("all")
                         setVisibleCount(INITIAL_VISIBLE_COUNT)
-                        setIsTypeMenuOpen(false)
-                      }}
-                      className={`flex w-full cursor-pointer items-center justify-between rounded-md px-2 py-1.5 text-left text-xs transition-colors duration-200 ${
-                        selectedDiagramType === "all"
-                          ? "bg-[var(--home-accent-soft)] text-[var(--home-text-primary)]"
-                          : "text-[var(--home-text-secondary)] hover:bg-[var(--home-bg-secondary)] hover:text-[var(--home-text-primary)]"
-                      }`}
-                    >
-                      <span>All diagram types</span>
-                      {selectedDiagramType === "all" ? (
-                        <span className="text-[var(--home-accent-color)]">
-                          Selected
-                        </span>
-                      ) : null}
-                    </button>
-                    {diagramTypeOptions.map((diagramType) => (
-                      <button
-                        key={diagramType}
-                        type="button"
-                        onClick={() => {
-                          setSelectedDiagramType(diagramType)
-                          setVisibleCount(INITIAL_VISIBLE_COUNT)
-                          setIsTypeMenuOpen(false)
-                        }}
-                        className={`flex w-full cursor-pointer items-center justify-between rounded-md px-2 py-1.5 text-left text-xs transition-colors duration-200 ${
-                          selectedDiagramType === diagramType
-                            ? "bg-[var(--home-accent-soft)] text-[var(--home-text-primary)]"
-                            : "text-[var(--home-text-secondary)] hover:bg-[var(--home-bg-secondary)] hover:text-[var(--home-text-primary)]"
-                        }`}
-                      >
-                        <span>{getDiagramTypeLabel(diagramType)}</span>
-                        {selectedDiagramType === diagramType ? (
-                          <span className="text-[var(--home-accent-color)]">
-                            Selected
-                          </span>
-                        ) : null}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div
-              ref={sortMenuContainerRef}
-              className="relative w-full sm:w-auto"
-            >
-              <button
-                type="button"
-                onClick={() => setIsSortMenuOpen((current) => !current)}
-                className={`flex ${controlHeightClass} w-full cursor-pointer items-center gap-2 rounded-md border border-[var(--home-border-color)] bg-[var(--home-bg-primary)] px-2.5 text-xs text-[var(--home-text-primary)] transition-colors duration-200 hover:border-[var(--home-accent-color)] focus-visible:outline-2 focus-visible:outline-[var(--home-accent-color)] focus-visible:outline-offset-2`}
-              >
-                <span className="min-w-0 truncate">{sortByLabel}</span>
-                <span className="hidden text-[var(--home-text-secondary)] sm:inline">
-                  {sortOrderLabel}
-                </span>
-                <svg
-                  className="h-3.5 w-3.5 shrink-0 text-[var(--home-text-secondary)]"
-                  viewBox="0 0 20 20"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M5 7.5L10 12.5L15 7.5"
-                    stroke="currentColor"
-                    strokeWidth="1.7"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
-
-              {isSortMenuOpen && (
-                <div className="absolute left-0 z-40 mt-2 w-60 rounded-lg border border-[var(--home-border-color)] bg-[var(--home-bg-card)] p-2 shadow-lg transition-colors duration-200">
-                  <div>
-                    <p className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--home-text-secondary)]">
-                      Sort by
-                    </p>
-                    {(
-                      [
-                        ["alphabetical", "Alphabetical"],
-                        ["dateCreated", "Date created"],
-                        ["lastViewed", "Last viewed"],
-                      ] as const
-                    ).map(([optionValue, optionLabel]) => (
-                      <button
-                        key={optionValue}
-                        type="button"
-                        onClick={() => {
-                          setSortBy(optionValue)
-                          setVisibleCount(INITIAL_VISIBLE_COUNT)
-                          setIsSortMenuOpen(false)
-                        }}
-                        className={`flex w-full cursor-pointer items-center justify-between rounded-md px-2 py-1.5 text-left text-xs transition-colors duration-200 ${
-                          sortBy === optionValue
-                            ? "bg-[var(--home-accent-soft)] text-[var(--home-text-primary)]"
-                            : "text-[var(--home-text-secondary)] hover:bg-[var(--home-bg-secondary)] hover:text-[var(--home-text-primary)]"
-                        }`}
-                      >
-                        <span>{optionLabel}</span>
-                        {sortBy === optionValue ? (
-                          <span className="text-[var(--home-accent-color)]">
-                            Selected
-                          </span>
-                        ) : null}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="my-2 h-px bg-[var(--home-border-color)]" />
-                  <div>
-                    <p className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--home-text-secondary)]">
-                      Order
-                    </p>
-                    {(
-                      [
-                        ["oldest", "Oldest first"],
-                        ["newest", "Newest first"],
-                      ] as const
-                    ).map(([optionValue, optionLabel]) => (
-                      <button
-                        key={optionValue}
-                        type="button"
-                        onClick={() => {
-                          setSortOrder(optionValue)
-                          setVisibleCount(INITIAL_VISIBLE_COUNT)
-                          setIsSortMenuOpen(false)
-                        }}
-                        className={`flex w-full cursor-pointer items-center justify-between rounded-md px-2 py-1.5 text-left text-xs transition-colors duration-200 ${
-                          sortOrder === optionValue
-                            ? "bg-[var(--home-accent-soft)] text-[var(--home-text-primary)]"
-                            : "text-[var(--home-text-secondary)] hover:bg-[var(--home-bg-secondary)] hover:text-[var(--home-text-primary)]"
-                        }`}
-                      >
-                        <span>{optionLabel}</span>
-                        {sortOrder === optionValue ? (
-                          <span className="text-[var(--home-accent-color)]">
-                            Selected
-                          </span>
-                        ) : null}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <SegmentedControl
-              className="w-fit"
-              sizeClassName={controlHeightClass}
-              itemClassName="w-8 px-0"
-              options={[
-                {
-                  value: "grid",
-                  icon: <GridViewIcon />,
-                  ariaLabel: "Grid view",
-                },
-                {
-                  value: "table",
-                  icon: <TableViewIcon />,
-                  ariaLabel: "Table view",
+                        closeTypeMenu()
+                      },
+                    },
+                    ...diagramTypeOptions.map((diagramType) => ({
+                      key: diagramType,
+                      label: getDiagramTypeLabel(diagramType),
+                      selected: selectedDiagramType === diagramType,
+                      onSelect: () => {
+                        setSelectedDiagramType(diagramType)
+                        setVisibleCount(INITIAL_VISIBLE_COUNT)
+                        closeTypeMenu()
+                      },
+                    })),
+                  ],
                 },
               ]}
-              value={viewMode}
-              onChange={(nextViewMode) => setViewMode(nextViewMode)}
             />
+            <DropdownFilterMenu
+              buttonId="diagram-sort-menu-button"
+              menuId="diagram-sort-menu"
+              anchorEl={sortMenuAnchorEl}
+              onClose={closeSortMenu}
+              onToggle={(event) => {
+                closeTypeMenu()
+                setSortMenuAnchorEl((currentAnchor) =>
+                  currentAnchor ? null : event.currentTarget
+                )
+              }}
+              triggerClassName={`flex ${controlHeightClass} min-w-0 w-full cursor-pointer items-center gap-2 rounded-md border-0 px-2.5 text-xs transition-all duration-200 focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2 sm:w-auto ${
+                isSortMenuOpen
+                  ? "bg-[var(--home-surface-raised-hover)] text-[var(--home-accent-strong)]"
+                  : "bg-[var(--home-surface-raised)] text-[var(--home-text-secondary)] hover:bg-[var(--home-surface-raised-hover)] hover:text-[var(--home-accent-strong)]"
+              }`}
+              triggerContent={
+                <>
+                  <span className="min-w-0 truncate">{sortByLabel}</span>
+                  <span className="hidden text-[var(--home-text-secondary)] sm:inline">
+                    {sortOrderLabel}
+                  </span>
+                </>
+              }
+              sections={[
+                {
+                  title: "Sort by",
+                  items: (
+                    [
+                      ["alphabetical", "Alphabetical"],
+                      ["dateCreated", "Date created"],
+                      ["lastViewed", "Last viewed"],
+                    ] as const
+                  ).map(([optionValue, optionLabel]) => ({
+                    key: optionValue,
+                    label: optionLabel,
+                    selected: sortBy === optionValue,
+                    onSelect: () => {
+                      setSortBy(optionValue)
+                      setVisibleCount(INITIAL_VISIBLE_COUNT)
+                      closeSortMenu()
+                    },
+                  })),
+                },
+                {
+                  title: "Order",
+                  items: (
+                    [
+                      ["oldest", "Oldest first"],
+                      ["newest", "Newest first"],
+                    ] as const
+                  ).map(([optionValue, optionLabel]) => ({
+                    key: optionValue,
+                    label: optionLabel,
+                    selected: sortOrder === optionValue,
+                    onSelect: () => {
+                      setSortOrder(optionValue)
+                      setVisibleCount(INITIAL_VISIBLE_COUNT)
+                      closeSortMenu()
+                    },
+                  })),
+                },
+              ]}
+            />
+            <div className="sm:col-span-2 lg:col-span-1 lg:justify-self-end">
+              <SegmentedControl
+                className="w-fit"
+                sizeClassName={controlHeightClass}
+                itemClassName="w-8 px-0"
+                options={[
+                  {
+                    value: "grid",
+                    icon: <GridViewIcon />,
+                    ariaLabel: "Grid view",
+                  },
+                  {
+                    value: "table",
+                    icon: <TableViewIcon />,
+                    ariaLabel: "Table view",
+                  },
+                ]}
+                value={viewMode}
+                onChange={(nextViewMode) => setViewMode(nextViewMode)}
+              />
+            </div>
           </div>
         </div>
 
-        {isSharedDiagramsLoading && diagramSource === "shared" ? (
-          <div className="flex items-center justify-center rounded-lg border border-[var(--home-border-color)] bg-[var(--home-bg-secondary)] px-4 py-8 text-sm text-[var(--home-text-secondary)] transition-colors duration-200">
-            <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-[var(--home-border-color)] border-t-[var(--home-accent-color)]" />
-            Loading shared diagrams...
-          </div>
+        {isSharedDiagramsFetching && !hasLoadedSharedOnceRef.current ? (
+          <DiagramGallerySkeleton
+            count={Math.max(getSharedDiagramEntries().length, 1)}
+          />
         ) : allDiagrams.length === 0 ? (
           <div className="flex min-h-96 flex-col items-center justify-center gap-4 text-center text-[var(--home-text-secondary)] transition-colors duration-200">
             <EmptyStateIllustration />
@@ -907,7 +830,7 @@ export const DiagramGallery = ({
             {diagramSource === "local" ? (
               <button
                 type="button"
-                className="cursor-pointer rounded-lg border border-[var(--home-accent-color)] bg-[var(--home-accent-color)] px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:brightness-95 focus-visible:outline-2 focus-visible:outline-[var(--home-accent-color)] focus-visible:outline-offset-2"
+                className="cursor-pointer rounded-lg border border-[var(--home-accent-ring)] bg-[var(--home-accent-ring)] px-4 py-2 text-sm font-medium text-[var(--home-text-on-badge)] transition-colors duration-200 hover:bg-[var(--home-surface-raised-active)] hover:border-[var(--home-surface-raised-active)] focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2"
                 onClick={scrollToTypeGrid}
               >
                 Create your first diagram
@@ -925,44 +848,58 @@ export const DiagramGallery = ({
                 {viewMode === "grid" ? (
                   <div
                     role="list"
-                    className={`grid grid-cols-1 gap-4 transition-opacity duration-150 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 ${isPending ? "opacity-50" : ""}`}
+                    className="grid grid-cols-[repeat(auto-fill,260px)] gap-6 justify-center md:grid-cols-[repeat(auto-fill,280px)] lg:gap-8 xl:grid-cols-[repeat(auto-fill,300px)]"
                   >
-                    {visibleDiagrams.map((diagram) => (
-                      <DiagramCard
+                    {visibleDiagrams.map((diagram, index) => (
+                      <div
                         key={diagram.id}
-                        diagram={diagram}
-                        showPlaceholderIcon={isDiagramEmpty(diagram)}
-                        isThumbnailLoading={Boolean(
-                          loadingThumbnailIds[diagram.id]
-                        )}
-                        onToggleFavorite={handleToggleDiagramFavorite}
-                      />
+                        className={
+                          index >= prevVisibleCount
+                            ? "gallery-card-enter"
+                            : undefined
+                        }
+                      >
+                        <DiagramCard
+                          diagram={diagram}
+                          showPlaceholderIcon={isDiagramEmpty(diagram)}
+                          isThumbnailLoading={Boolean(
+                            loadingThumbnailIds[diagram.id]
+                          )}
+                          isHighlighted={diagram.id === highlightedDiagramId}
+                          onToggleFavorite={handleToggleDiagramFavorite}
+                          onSharedDiagramRemoved={handleRemoveSharedDiagram}
+                          onSharedDiagramViewChange={
+                            handleSharedDiagramViewChange
+                          }
+                        />
+                      </div>
                     ))}
                   </div>
                 ) : (
-                  <div
-                    className={`overflow-hidden rounded-lg border border-[var(--home-border-color)] transition-opacity duration-150 ${isPending ? "opacity-50" : ""}`}
-                  >
+                  <div className="overflow-hidden rounded-[4px]">
                     <div className="overflow-x-auto">
                       <table className="min-w-full border-separate border-spacing-0 text-left">
-                        <thead className="bg-[var(--home-bg-secondary)]">
+                        <thead className="bg-[var(--home-surface-row-alt)]">
                           <tr>
-                            <th className="w-10 px-3 py-2 align-middle text-xs font-semibold uppercase tracking-wide text-[var(--home-text-secondary)]">
+                            <th className="w-10 px-3 py-3 align-middle text-xs font-semibold uppercase tracking-wide text-[var(--home-text-primary)]">
                               <span className="sr-only">Favorite</span>
                             </th>
-                            <th className="px-3 py-2 align-middle text-xs font-semibold uppercase tracking-wide text-[var(--home-text-secondary)]">
+                            <th className="w-[26%] px-3 py-3 align-middle text-xs font-semibold uppercase tracking-wide text-[var(--home-text-primary)]">
                               Name
                             </th>
-                            <th className="hidden px-3 py-2 align-middle text-xs font-semibold uppercase tracking-wide text-[var(--home-text-secondary)] md:table-cell">
+                            <th className="hidden px-3 py-3 align-middle text-xs font-semibold uppercase tracking-wide text-[var(--home-text-primary)] md:table-cell">
                               Type
                             </th>
-                            <th className="px-3 py-2 align-middle text-xs font-semibold uppercase tracking-wide text-[var(--home-text-secondary)]">
+                            <th className="hidden px-3 py-3 align-middle text-xs font-semibold uppercase tracking-wide text-[var(--home-text-primary)] md:table-cell">
+                              Created
+                            </th>
+                            <th className="px-3 py-3 align-middle text-xs font-semibold uppercase tracking-wide text-[var(--home-text-primary)]">
                               Last viewed
                             </th>
-                            <th className="hidden px-3 py-2 align-middle text-xs font-semibold uppercase tracking-wide text-[var(--home-text-secondary)] lg:table-cell">
+                            <th className="hidden px-3 py-3 align-middle text-xs font-semibold uppercase tracking-wide text-[var(--home-text-primary)] lg:table-cell">
                               Source
                             </th>
-                            <th className="px-3 py-2 align-middle text-xs font-semibold uppercase tracking-wide text-[var(--home-text-secondary)]">
+                            <th className="px-3 py-3 align-middle text-xs font-semibold uppercase tracking-wide text-[var(--home-text-primary)]">
                               Action
                             </th>
                           </tr>
@@ -974,7 +911,7 @@ export const DiagramGallery = ({
                             return (
                               <tr
                                 key={diagram.id}
-                                className="cursor-pointer border-t border-[var(--home-border-color)] transition-colors duration-200 hover:bg-[var(--home-accent-soft)]"
+                                className="cursor-pointer bg-[var(--home-surface-raised)] transition-colors duration-200 odd:bg-[var(--home-surface-raised)] odd:hover:bg-[var(--home-accent-soft)] even:bg-[var(--home-surface-row-alt)] even:hover:bg-[var(--home-accent-soft)]"
                                 onClick={() => handleOpenDiagram(diagram)}
                                 onKeyDown={(event) => {
                                   if (
@@ -987,7 +924,7 @@ export const DiagramGallery = ({
                                 }}
                                 tabIndex={0}
                               >
-                                <td className="px-3 py-2 align-middle">
+                                <td className="px-3 py-3 align-middle">
                                   <button
                                     type="button"
                                     aria-label={
@@ -995,11 +932,21 @@ export const DiagramGallery = ({
                                         ? "Remove from favorites"
                                         : "Add to favorites"
                                     }
-                                    className={`flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-[var(--home-accent-color)] focus-visible:outline-offset-2 ${
-                                      diagram.favorite
-                                        ? "border-[var(--home-favorite-border)] bg-[var(--home-favorite-bg)] text-[var(--home-favorite-star)]"
-                                        : "border-[var(--home-border-color)] bg-[var(--home-bg-primary)] text-[var(--home-text-secondary)] hover:border-[var(--home-accent-color)] hover:text-[var(--home-accent-color)]"
-                                    }`}
+                                    className="home-card-icon-button flex h-[30px] w-[30px] cursor-pointer items-center justify-center focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2"
+                                    style={{
+                                      color: diagram.favorite
+                                        ? "var(--home-favorite-star)"
+                                        : "var(--home-text-muted)",
+                                      ["--icon-hover-color" as string]:
+                                        "var(--home-text-strong)",
+                                      ["--icon-active-color" as string]:
+                                        "var(--home-favorite-star)",
+                                      ["--icon-hover-bg" as string]:
+                                        "color-mix(in srgb, var(--home-text-primary) 10%, transparent)",
+                                    }}
+                                    data-active={
+                                      diagram.favorite ? "true" : "false"
+                                    }
                                     onClick={(event) => {
                                       event.stopPropagation()
                                       handleToggleDiagramFavorite(diagram)
@@ -1009,7 +956,7 @@ export const DiagramGallery = ({
                                     }
                                   >
                                     <svg
-                                      className="h-3.5 w-3.5"
+                                      className="h-[18px] w-[18px]"
                                       viewBox="0 0 24 24"
                                       fill={
                                         diagram.favorite
@@ -1027,26 +974,61 @@ export const DiagramGallery = ({
                                     </svg>
                                   </button>
                                 </td>
-                                <td className="px-3 py-2 align-middle text-sm text-[var(--home-text-primary)]">
-                                  {title}
+                                <td className="w-[26%] px-3 py-3 align-middle text-sm text-[var(--home-text-primary)]">
+                                  <div className="flex min-w-0 flex-col gap-1">
+                                    <span className="truncate">{title}</span>
+                                    {diagram.source === "shared" && (
+                                      <span className="w-fit rounded bg-[var(--home-accent-soft)] px-2 py-0.5 text-[10px] font-semibold text-[var(--home-accent-base)]">
+                                        {getSharedDiagramViewBadge(
+                                          diagram.lastSharedView
+                                        )}
+                                      </span>
+                                    )}
+                                  </div>
                                 </td>
-                                <td className="hidden px-3 py-2 align-middle text-xs text-[var(--home-text-secondary)] md:table-cell">
+                                <td className="hidden px-3 py-3 align-middle text-xs text-[var(--home-text-secondary)] md:table-cell">
                                   {getDiagramTypeLabel(diagram.type)}
                                 </td>
-                                <td className="px-3 py-2 align-middle text-xs text-[var(--home-text-secondary)]">
+                                <td className="hidden px-3 py-3 align-middle text-xs text-[var(--home-text-secondary)] md:table-cell">
+                                  {formatDate(diagram.createdAt)}
+                                </td>
+                                <td className="px-3 py-3 align-middle text-xs text-[var(--home-text-secondary)]">
                                   {formatDate(diagram.lastViewedAt)}
                                 </td>
-                                <td className="hidden px-3 py-2 align-middle text-xs text-[var(--home-text-secondary)] lg:table-cell">
+                                <td className="hidden px-3 py-3 align-middle text-xs text-[var(--home-text-secondary)] lg:table-cell">
                                   {diagram.source === "local"
                                     ? "Local"
-                                    : "Shared"}
+                                    : getSharedDiagramViewBadge(
+                                        diagram.lastSharedView
+                                      )}
                                 </td>
-                                <td className="px-3 py-2 align-middle">
+                                <td className="px-3 py-3 align-middle">
                                   <DiagramActionsMenu
                                     diagram={diagram}
                                     containerClassName="relative inline-flex items-center"
-                                    menuClassName="absolute right-0 top-full z-40 mt-2 w-52 rounded-lg border border-[var(--home-border-color)] bg-[var(--home-bg-card)] p-1 shadow-lg transition-colors duration-200"
+                                    triggerClassName="cursor-pointer rounded-md p-1 transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2"
+                                    triggerStyle={{
+                                      outlineColor: "var(--home-accent-ring)",
+                                      color: "var(--home-text-secondary)",
+                                      ["--icon-hover-color" as string]:
+                                        "var(--home-text-strong)",
+                                      ["--icon-active-color" as string]:
+                                        "var(--home-text-strong)",
+                                      ["--icon-hover-bg" as string]:
+                                        "color-mix(in srgb, var(--home-text-primary) 10%, transparent)",
+                                    }}
+                                    menuClassName="z-40 w-52 rounded-lg border-0 bg-[var(--home-surface-raised)] p-1 shadow-2xl transition-colors duration-200"
+                                    menuStyle={{
+                                      boxShadow:
+                                        "0 16px 36px var(--home-shadow-overlay)",
+                                    }}
                                     stopPropagation
+                                    onSharedDiagramRemoved={
+                                      handleRemoveSharedDiagram
+                                    }
+                                    onSharedDiagramViewChange={
+                                      handleSharedDiagramViewChange
+                                    }
                                   />
                                 </td>
                               </tr>
@@ -1059,7 +1041,7 @@ export const DiagramGallery = ({
                 )}
               </>
             ) : (
-              <div className="rounded-lg border border-dashed border-[var(--home-border-color)] bg-[var(--home-bg-secondary)] px-4 py-10 text-center text-sm text-[var(--home-text-secondary)] transition-colors duration-200">
+              <div className="rounded-lg border border-dashed border-[var(--home-border-default)] bg-[var(--home-surface-sunken)] px-4 py-10 text-center text-sm text-[var(--home-text-secondary)] transition-colors duration-200">
                 No diagrams match your search and filters.
               </div>
             )}
@@ -1070,13 +1052,6 @@ export const DiagramGallery = ({
                 aria-hidden="true"
                 className="h-0.5 w-full"
               />
-            )}
-
-            {isLoadingMore && (
-              <div className="flex items-center justify-center pt-1 text-xs text-[var(--home-text-secondary)] transition-colors duration-200">
-                <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-[var(--home-border-color)] border-t-[var(--home-accent-color)]" />
-                Loading more diagrams...
-              </div>
             )}
           </>
         )}

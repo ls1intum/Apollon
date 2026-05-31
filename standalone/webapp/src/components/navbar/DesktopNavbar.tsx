@@ -9,12 +9,12 @@ import { NavbarFile } from "./NavbarFile"
 import { NavbarHelp } from "./NavbarHelp"
 import { VersionHistoryButton } from "./VersionHistoryButton"
 import { BrandAndVersion } from "./BrandAndVersion"
-import { NAVBAR_BACKGROUND_COLOR, secondary } from "@/constants"
-import TumLogo from "assets/images/tum-logo.png"
+import { secondary } from "@/constants"
 import { useEffect, useRef, useState } from "react"
 import { useModalContext, useEditorContext } from "@/contexts"
 import { useNavigate } from "react-router"
 import { ThemeSwitcherMenu } from "./ThemeSwitcher"
+import { NAVBAR_SX } from "./styleConstants"
 
 export const DesktopNavbar = () => {
   const { editor } = useEditorContext()
@@ -51,19 +51,16 @@ export const DesktopNavbar = () => {
   }, [editor])
 
   return (
-    <AppBar
-      position="static"
-      sx={{
-        bgcolor: NAVBAR_BACKGROUND_COLOR,
-        display: "flex",
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        px: 2,
-      }}
-      elevation={0}
-    >
-      <Toolbar disableGutters>
+    <AppBar position="sticky" sx={NAVBAR_SX} elevation={0}>
+      <Toolbar
+        disableGutters
+        sx={{
+          width: "100%",
+          minHeight: 64,
+          px: 2,
+          gap: 2,
+        }}
+      >
         <button
           type="button"
           onClick={goHome}
@@ -79,14 +76,6 @@ export const DesktopNavbar = () => {
             font: "inherit",
           }}
         >
-          <img
-            alt="TU Munich logo"
-            src={TumLogo}
-            width="60"
-            height="30"
-            style={{ marginRight: 10 }}
-          />
-
           <BrandAndVersion />
         </button>
 
@@ -94,9 +83,11 @@ export const DesktopNavbar = () => {
         <Box
           sx={{
             flexGrow: 1,
-            pl: 2,
+            display: "flex",
+            pl: 1.5,
             gap: 2,
             alignItems: "center",
+            minWidth: 0,
           }}
         >
           <NavbarFile />
@@ -108,7 +99,11 @@ export const DesktopNavbar = () => {
           </Button>
           <NavbarHelp />
           <TextField
-            sx={{ input: { color: "white", padding: 1 }, marginLeft: 1 }}
+            sx={{
+              input: { color: "white", padding: 1 },
+              marginLeft: 1,
+              maxWidth: 360,
+            }}
             value={diagramTitle}
             onChange={(event) => {
               const newTitle = event.target.value
@@ -118,14 +113,18 @@ export const DesktopNavbar = () => {
             placeholder="Diagram Name"
             variant="outlined"
           />
+
+          <Stack
+            direction="row"
+            alignItems="center"
+            spacing={1}
+            sx={{ marginLeft: "auto" }}
+          >
+            <VersionHistoryButton />
+            <ThemeSwitcherMenu />
+          </Stack>
         </Box>
       </Toolbar>
-      {/* Right cluster: version history sits immediately to the left of the
-          theme toggle so it's the rightmost product affordance. */}
-      <Stack direction="row" alignItems="center" spacing={1}>
-        <VersionHistoryButton />
-        <ThemeSwitcherMenu />
-      </Stack>
     </AppBar>
   )
 }

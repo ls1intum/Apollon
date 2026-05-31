@@ -1,9 +1,15 @@
+import { DiagramView } from "@/types"
+import { normalizeSharedDiagramView } from "@/utils/sharedDiagramLinks"
+
 const SHARED_DIAGRAM_STORE_KEY = "sharedDiagramStore"
 
 export type SharedDiagramEntry = {
   id: string
   sharedAt: string
   favorite: boolean
+  lastSharedView: DiagramView
+  sourceModelId?: string
+  lastCopiedAt?: string
 }
 
 type SharedDiagramStore = {
@@ -26,11 +32,23 @@ const readStore = (): SharedDiagramStore => {
       return { entries: [] }
     }
 
-    const entries = parsed.entries.filter(
-      (entry): entry is SharedDiagramEntry =>
-        Boolean(entry) &&
-        typeof entry.id === "string" &&
-        typeof entry.sharedAt === "string"
+    const rawEntries = parsed.entries as unknown[]
+    const entries = rawEntries.filter(
+      (
+        entry
+      ): entry is Partial<SharedDiagramEntry> & {
+        id: string
+        sharedAt: string
+      } => {
+        if (!entry || typeof entry !== "object") {
+          return false
+        }
+        const candidate = entry as Partial<SharedDiagramEntry>
+        return (
+          typeof candidate.id === "string" &&
+          typeof candidate.sharedAt === "string"
+        )
+      }
     )
 
     return {
@@ -38,6 +56,15 @@ const readStore = (): SharedDiagramStore => {
         id: entry.id,
         sharedAt: entry.sharedAt,
         favorite: Boolean((entry as Partial<SharedDiagramEntry>).favorite),
+        lastSharedView: normalizeSharedDiagramView(entry.lastSharedView),
+        sourceModelId:
+          typeof entry.sourceModelId === "string"
+            ? entry.sourceModelId
+            : undefined,
+        lastCopiedAt:
+          typeof entry.lastCopiedAt === "string"
+            ? entry.lastCopiedAt
+            : undefined,
       })),
     }
   } catch {
@@ -56,7 +83,16 @@ const writeStore = (store: SharedDiagramStore) => {
 export const getSharedDiagramEntries = (): SharedDiagramEntry[] =>
   readStore().entries
 
-export const addSharedDiagramEntry = (diagramId: string) => {
+type AddSharedDiagramEntryOptions = {
+  lastSharedView?: DiagramView
+  sourceModelId?: string
+  lastCopiedAt?: string
+}
+
+export const addSharedDiagramEntry = (
+  diagramId: string,
+  options: AddSharedDiagramEntryOptions = {}
+) => {
   const normalizedId = diagramId.trim()
   if (!normalizedId) {
     return
@@ -77,6 +113,12 @@ export const addSharedDiagramEntry = (diagramId: string) => {
         id: normalizedId,
         sharedAt: now,
         favorite: existingEntry?.favorite ?? false,
+        lastSharedView:
+          options.lastSharedView ??
+          existingEntry?.lastSharedView ??
+          DiagramView.EDIT,
+        sourceModelId: options.sourceModelId ?? existingEntry?.sourceModelId,
+        lastCopiedAt: options.lastCopiedAt ?? existingEntry?.lastCopiedAt,
       },
       ...remainingEntries,
     ],
@@ -108,6 +150,52 @@ export const toggleSharedDiagramFavorite = (diagramId: string) => {
         ? {
             ...entry,
             favorite: !entry.favorite,
+          }
+        : entry
+    ),
+  })
+}
+
+export const updateSharedDiagramView = (
+  diagramId: string,
+  view: DiagramView
+) => {
+  const normalizedId = diagramId.trim()
+  if (!normalizedId) {
+    return
+  }
+
+  const currentStore = readStore()
+  writeStore({
+    entries: currentStore.entries.map((entry) =>
+      entry.id === normalizedId
+        ? {
+            ...entry,
+            lastSharedView: view,
+          }
+        : entry
+    ),
+  })
+}
+
+export const markSharedDiagramCopied = (
+  diagramId: string,
+  view?: DiagramView
+) => {
+  const normalizedId = diagramId.trim()
+  if (!normalizedId) {
+    return
+  }
+
+  const currentStore = readStore()
+  const now = new Date().toISOString()
+  writeStore({
+    entries: currentStore.entries.map((entry) =>
+      entry.id === normalizedId
+        ? {
+            ...entry,
+            lastSharedView: view ?? entry.lastSharedView,
+            lastCopiedAt: now,
           }
         : entry
     ),

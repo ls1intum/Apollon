@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react"
 import { BrowserRouter, Route, Routes, useLocation } from "react-router"
 import { AppProviders } from "./AppProviders"
+import { AppLoadingScreen } from "@/components/AppLoadingScreen"
 import { DeferredToastContainer } from "./components/DeferredToastContainer"
 import { ErrorPage } from "@/pages/ErrorPage"
 import { log } from "@/logger"
@@ -39,15 +40,6 @@ const Navbar = lazy(() =>
   }))
 )
 
-const PageFallback = () => (
-  <div
-    style={{
-      flex: 1,
-      background: "var(--home-bg-primary)",
-    }}
-  />
-)
-
 const AppLayout = () => {
   const location = useLocation()
   const isHomeRoute = location.pathname === "/"
@@ -60,7 +52,7 @@ const AppLayout = () => {
         </Suspense>
       )}
       <div data-testid="editor-area" style={{ flex: 1, overflow: "hidden" }}>
-        <Suspense fallback={<PageFallback />}>
+        <Suspense fallback={<AppLoadingScreen />}>
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/local/:id" element={<ApollonLocal />} />

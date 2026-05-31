@@ -20,21 +20,6 @@ const DISCLAIMER_BANNER =
   "This deployment has not been configured with a legal profile. The content below is a placeholder and does not identify the operator of this instance."
 
 const ERROR_COPY = "Unable to load legal content."
-const LEGAL_ALERT_STYLES = {
-  position: "relative",
-  zIndex: 1,
-  my: 2,
-  border: "1px solid var(--apollon-alert-danger-border)",
-  borderRadius: 2,
-  bgcolor: "var(--apollon-alert-danger-background)",
-  color: "var(--apollon-alert-danger-color)",
-  "& .MuiAlert-icon": {
-    color: "var(--apollon-alert-danger-color)",
-  },
-  "& .MuiAlert-message": {
-    fontWeight: 500,
-  },
-}
 
 // Operator-supplied Markdown is untrusted from the renderer's point of view.
 // react-markdown v10 escapes raw HTML by default (no allowDangerousHtml, no
@@ -131,170 +116,129 @@ export function LegalPage({
       sx={{
         height: "100%",
         overflowY: "auto",
-        position: "relative",
-        bgcolor: "var(--home-bg-primary)",
-        color: "var(--home-text-primary)",
-        "&::before": {
-          content: '""',
-          position: "fixed",
-          inset: 0,
-          pointerEvents: "none",
-          background:
-            "radial-gradient(circle at 10% 0%, color-mix(in srgb, var(--home-accent-color) 20%, transparent), transparent 52%), radial-gradient(circle at 95% 100%, color-mix(in srgb, var(--apollon-guide-horizontal) 16%, transparent), transparent 50%)",
-        },
+        bgcolor: "var(--apollon-background)",
+        color: "var(--apollon-primary-contrast)",
       }}
     >
       <Container
         component="main"
         maxWidth="md"
         sx={{
-          position: "relative",
-          zIndex: 1,
           py: { xs: 3, md: 6 },
           px: { xs: 2, sm: 3 },
         }}
       >
-        <Box
+        <Typography
+          variant="h3"
+          component="h1"
+          gutterBottom
           sx={{
-            position: "relative",
-            overflow: "hidden",
-            borderRadius: 3,
-            border: "1px solid var(--home-border-color)",
-            bgcolor: "var(--home-bg-card)",
-            p: { xs: 3, md: 4 },
-            boxShadow:
-              "0 16px 32px -24px rgba(24, 38, 52, 0.22), 0 7px 14px -10px rgba(24, 38, 52, 0.14)",
-            "&::before": {
-              content: '""',
-              position: "absolute",
-              inset: 0,
-              pointerEvents: "none",
-              background:
-                "linear-gradient(135deg, color-mix(in srgb, var(--home-accent-color) 12%, transparent) 0%, transparent 55%, color-mix(in srgb, var(--apollon-guide-horizontal) 10%, transparent) 100%)",
-            },
+            color: "var(--apollon-primary-contrast)",
+            fontSize: { xs: "1.8rem", md: "2.5rem" },
           }}
         >
-          <Typography
-            variant="h3"
-            component="h1"
-            gutterBottom
+          {title}
+        </Typography>
+
+        {resolved?.source === "disclaimer" ? (
+          <Alert
+            severity="error"
+            role="alert"
+            data-testid="legal-disclaimer-banner"
+            sx={{ my: 2 }}
+          >
+            {DISCLAIMER_BANNER}
+          </Alert>
+        ) : null}
+
+        {error ? (
+          <Alert severity="error" role="alert" sx={{ my: 2 }}>
+            {ERROR_COPY}
+          </Alert>
+        ) : null}
+
+        {resolved ? (
+          <Box
+            component="article"
+            lang="en"
+            data-testid="legal-content"
+            data-source={resolved.source}
             sx={{
-              position: "relative",
-              zIndex: 1,
-              color: "var(--home-text-primary)",
-              fontSize: { xs: "1.8rem", md: "2.5rem" },
-              fontWeight: 600,
+              overflowWrap: "anywhere",
+              wordBreak: "break-word",
+              color: "var(--apollon-primary-contrast)",
+              "& h1, & h2, & h3, & h4, & h5, & h6": {
+                mt: 3,
+                mb: 1,
+                fontWeight: 600,
+                lineHeight: 1.3,
+                color: "var(--apollon-primary-contrast)",
+              },
+              "& h2": { fontSize: { xs: "1.35rem", md: "1.5rem" } },
+              "& h3": { fontSize: { xs: "1.15rem", md: "1.25rem" } },
+              "& p, & ul, & ol": { mb: 2, lineHeight: 1.7 },
+              "& ul": { pl: 3, listStyleType: "disc" },
+              "& ol": { pl: 3, listStyleType: "decimal" },
+              "& ul ul": { listStyleType: "circle", mb: 0 },
+              "& ol ol": { listStyleType: "lower-alpha", mb: 0 },
+              "& li": { mb: 0.5, display: "list-item" },
+              "& li::marker": { color: "var(--apollon-primary-contrast)" },
+              "& a": {
+                color: "var(--apollon-primary)",
+                textDecoration: "underline",
+              },
+              // Tables are authored by operators; on narrow screens let them
+              // scroll horizontally rather than break the page layout.
+              "& table": {
+                display: "block",
+                overflowX: "auto",
+                borderCollapse: "collapse",
+                width: "100%",
+                my: 2,
+                WebkitOverflowScrolling: "touch",
+              },
+              "& th, & td": {
+                border: "1px solid var(--apollon-gray)",
+                p: 1,
+                textAlign: "left",
+                verticalAlign: "top",
+              },
+              "& th": { bgcolor: "var(--apollon-background-variant)" },
+              "& code": {
+                bgcolor: "var(--apollon-background-variant)",
+                px: 0.5,
+                borderRadius: 0.5,
+                fontSize: "0.95em",
+                wordBreak: "break-all",
+              },
+              "& pre": {
+                bgcolor: "var(--apollon-background-variant)",
+                p: 2,
+                borderRadius: 1,
+                overflowX: "auto",
+              },
+              "& blockquote": {
+                borderLeft: "4px solid var(--apollon-gray)",
+                pl: 2,
+                my: 2,
+                color: "var(--apollon-gray)",
+              },
+              "& hr": {
+                border: "none",
+                borderTop: "1px solid var(--apollon-gray)",
+                my: 3,
+              },
             }}
           >
-            {title}
-          </Typography>
-
-          {resolved?.source === "disclaimer" ? (
-            <Alert
-              severity="error"
-              role="alert"
-              data-testid="legal-disclaimer-banner"
-              sx={LEGAL_ALERT_STYLES}
+            <ReactMarkdown
+              skipHtml
+              remarkPlugins={[remarkGfm]}
+              components={MARKDOWN_COMPONENTS}
             >
-              {DISCLAIMER_BANNER}
-            </Alert>
-          ) : null}
-
-          {error ? (
-            <Alert severity="error" role="alert" sx={LEGAL_ALERT_STYLES}>
-              {ERROR_COPY}
-            </Alert>
-          ) : null}
-
-          {resolved ? (
-            <Box
-              component="article"
-              lang="en"
-              data-testid="legal-content"
-              data-source={resolved.source}
-              sx={{
-                position: "relative",
-                zIndex: 1,
-                overflowWrap: "anywhere",
-                wordBreak: "break-word",
-                color: "var(--home-text-primary)",
-                "& h1, & h2, & h3, & h4, & h5, & h6": {
-                  mt: 3,
-                  mb: 1,
-                  fontWeight: 600,
-                  lineHeight: 1.3,
-                  color: "var(--home-text-primary)",
-                },
-                "& h2": { fontSize: { xs: "1.35rem", md: "1.5rem" } },
-                "& h3": { fontSize: { xs: "1.15rem", md: "1.25rem" } },
-                "& p, & ul, & ol": {
-                  mb: 2,
-                  lineHeight: 1.7,
-                  color: "var(--home-text-secondary)",
-                },
-                "& ul": { pl: 3, listStyleType: "disc" },
-                "& ol": { pl: 3, listStyleType: "decimal" },
-                "& ul ul": { listStyleType: "circle", mb: 0 },
-                "& ol ol": { listStyleType: "lower-alpha", mb: 0 },
-                "& li": { mb: 0.5, display: "list-item" },
-                "& li::marker": { color: "var(--home-text-secondary)" },
-                "& a": {
-                  color: "var(--home-accent-color)",
-                  textDecoration: "underline",
-                },
-                // Tables are authored by operators; on narrow screens let them
-                // scroll horizontally rather than break the page layout.
-                "& table": {
-                  display: "block",
-                  overflowX: "auto",
-                  borderCollapse: "collapse",
-                  width: "100%",
-                  my: 2,
-                  WebkitOverflowScrolling: "touch",
-                },
-                "& th, & td": {
-                  border: "1px solid var(--home-border-color)",
-                  p: 1,
-                  textAlign: "left",
-                  verticalAlign: "top",
-                },
-                "& th": { bgcolor: "var(--home-bg-secondary)" },
-                "& code": {
-                  bgcolor: "var(--home-bg-secondary)",
-                  px: 0.5,
-                  borderRadius: 0.5,
-                  fontSize: "0.95em",
-                  wordBreak: "break-all",
-                },
-                "& pre": {
-                  bgcolor: "var(--home-bg-secondary)",
-                  p: 2,
-                  borderRadius: 1,
-                  overflowX: "auto",
-                },
-                "& blockquote": {
-                  borderLeft: "4px solid var(--home-border-color)",
-                  pl: 2,
-                  my: 2,
-                  color: "var(--home-text-secondary)",
-                },
-                "& hr": {
-                  border: "none",
-                  borderTop: "1px solid var(--home-border-color)",
-                  my: 3,
-                },
-              }}
-            >
-              <ReactMarkdown
-                skipHtml
-                remarkPlugins={[remarkGfm]}
-                components={MARKDOWN_COMPONENTS}
-              >
-                {resolved.markdown}
-              </ReactMarkdown>
-            </Box>
-          ) : null}
-        </Box>
+              {resolved.markdown}
+            </ReactMarkdown>
+          </Box>
+        ) : null}
       </Container>
     </Box>
   )

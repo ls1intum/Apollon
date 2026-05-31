@@ -11,12 +11,11 @@ import { NavbarHelp } from "./NavbarHelp"
 import { VersionHistoryButton } from "./VersionHistoryButton"
 import Button from "@mui/material/Button/Button"
 import { BrandAndVersion } from "./BrandAndVersion"
-import { NAVBAR_BACKGROUND_COLOR } from "@/constants"
 import { useEditorContext, useModalContext } from "@/contexts"
 import TextField from "@mui/material/TextField/TextField"
-import TumLogo from "assets/images/tum-logo.png"
 import { useNavigate } from "react-router"
 import { ThemeSwitcherMenu } from "./ThemeSwitcher"
+import { NAVBAR_SX } from "./styleConstants"
 
 export default function MobileNavbar() {
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null)
@@ -59,12 +58,8 @@ export default function MobileNavbar() {
     navigate("/")
   }
   return (
-    <AppBar
-      position="static"
-      sx={{ bgcolor: NAVBAR_BACKGROUND_COLOR }}
-      elevation={0}
-    >
-      <Toolbar disableGutters>
+    <AppBar position="sticky" sx={NAVBAR_SX} elevation={0}>
+      <Toolbar disableGutters sx={{ minHeight: 64 }}>
         <Box
           sx={{
             display: "flex",
@@ -76,9 +71,6 @@ export default function MobileNavbar() {
         >
           {/* Mobile Menu Button */}
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            {/* Logo */}
-            <img alt="TU Munich logo" src={TumLogo} width="60" height="30" />
-
             <IconButton
               size="large"
               aria-label="navigation menu"
@@ -86,6 +78,7 @@ export default function MobileNavbar() {
               aria-haspopup="true"
               onClick={handleOpenNavMenu}
               color="inherit"
+              sx={{ ml: 0.5 }}
             >
               <MenuIcon />
             </IconButton>

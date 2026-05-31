@@ -26,7 +26,7 @@ export const SegmentedControl = <T extends string>({
 }: SegmentedControlProps<T>) => {
   return (
     <div
-      className={`inline-flex ${sizeClassName} items-center gap-[2px] rounded-lg border border-[var(--home-border-color)] bg-[var(--home-bg-secondary)] p-[2px] ${className}`.trim()}
+      className={`inline-flex ${sizeClassName} items-center gap-[2px] rounded-lg border-0 bg-[var(--home-surface-raised)] p-[2px] ${className}`.trim()}
     >
       {options.map((option) => {
         const isSelected = option.value === value
@@ -35,10 +35,10 @@ export const SegmentedControl = <T extends string>({
             key={option.value}
             type="button"
             onClick={() => onChange(option.value)}
-            className={`inline-flex h-full min-w-0 cursor-pointer items-center justify-center gap-1 rounded-md leading-4 ${itemClassName} transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-[var(--home-accent-color)] focus-visible:outline-offset-2 ${
+            className={`inline-flex h-full min-w-0 cursor-pointer items-center justify-center gap-1 rounded-md leading-4 ${itemClassName} transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2 ${
               isSelected
-                ? "bg-[var(--home-accent-color)] text-white"
-                : "text-[var(--home-text-secondary)] hover:bg-[var(--home-bg-card)] hover:text-[var(--home-text-primary)]"
+                ? "bg-[var(--home-accent-base)] text-[var(--home-accent-contrast)]"
+                : "text-[var(--home-text-secondary)] hover:bg-[color-mix(in_srgb,var(--home-surface-raised-hover)_50%,transparent)] hover:text-[var(--home-text-primary)]"
             }`}
             aria-label={option.ariaLabel}
             aria-pressed={isSelected}

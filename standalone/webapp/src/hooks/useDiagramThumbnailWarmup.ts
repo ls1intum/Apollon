@@ -25,7 +25,21 @@ export const useDiagramThumbnailWarmup = <T extends ThumbnailWarmupDiagram>({
   const [canWarmThumbnails, setCanWarmThumbnails] = useState(false)
   const [loadingThumbnailIds, setLoadingThumbnailIds] = useState<
     Record<string, true>
-  >({})
+  >(() => {
+    const persistenceState = usePersistenceModelStore.getState()
+    const initial: Record<string, true> = {}
+    for (const diagram of visibleDiagrams) {
+      if (isDiagramEmpty(diagram)) continue
+      const hasCurrentThumbnail =
+        Boolean(persistenceState.thumbnails[diagram.id]) &&
+        persistenceState.thumbnailLastModifiedAt[diagram.id] ===
+          diagram.lastModifiedAt
+      if (!hasCurrentThumbnail) {
+        initial[diagram.id] = true
+      }
+    }
+    return initial
+  })
 
   const queuedThumbnailIdsRef = useRef(new Set<string>())
   const failedThumbnailByLastModifiedRef = useRef(new Map<string, string>())
@@ -106,7 +120,12 @@ export const useDiagramThumbnailWarmup = <T extends ThumbnailWarmupDiagram>({
           }
           const latestModelLastModifiedAt =
             usePersistenceModelStore.getState().models[id]?.lastModifiedAt
-          if (latestModelLastModifiedAt !== nextDiagram.lastModifiedAt) {
+          // Shared diagrams are not always present in the local `models` map.
+          // Only treat this as stale when we do have a local model timestamp.
+          if (
+            latestModelLastModifiedAt &&
+            latestModelLastModifiedAt !== nextDiagram.lastModifiedAt
+          ) {
             markLoading(id, false)
             continue
           }
