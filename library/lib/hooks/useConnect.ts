@@ -11,7 +11,6 @@ import { useCallback, useRef } from "react"
 import { findClosestHandle, generateUUID, getDefaultEdgeType } from "@/utils"
 import { DiagramNodeTypeRecord } from "@/nodes"
 import { useDiagramStore, useMetadataStore } from "@/store/context"
-import type { OrthogonalEdgeData } from "@/typings"
 import { useShallow } from "zustand/shallow"
 
 export const useConnect = () => {
@@ -28,25 +27,8 @@ export const useConnect = () => {
   )
 
   const diagramType = useMetadataStore(useShallow((state) => state.diagramType))
-  const { startConnectionGuidance, stopConnectionGuidance } = useMetadataStore(
-    useShallow((state) => ({
-      startConnectionGuidance: state.startConnectionGuidance,
-      stopConnectionGuidance: state.stopConnectionGuidance,
-    }))
-  )
 
   const defaultEdgeType = getDefaultEdgeType(diagramType)
-
-  const createDefaultEdgeData = useCallback(
-    (): OrthogonalEdgeData => ({
-      userWaypoints: [],
-      routingMode: "auto",
-      routingStyle: "smart-spine-v1",
-      routeConstraints: [],
-      points: [],
-    }),
-    []
-  )
 
   const isFourHandleNode = useCallback(
     (nodeType?: string) =>
@@ -71,7 +53,6 @@ export const useConnect = () => {
   const onConnectStart: OnConnectStart = (event, params) => {
     connectionStartParams.current = params
     startEdge.current = null
-    startConnectionGuidance(params.nodeId ?? null, params.handleId ?? null)
     const dropPosition = getDropPosition(event)
 
     const intersectingNodes = getIntersectingNodes({
@@ -109,130 +90,125 @@ export const useConnect = () => {
         id: generateUUID(),
         type: defaultEdgeType,
         selected: false,
-        data: createDefaultEdgeData(),
       }
 
       addEdge(newEdge)
     },
-    [addEdge, createDefaultEdgeData, defaultEdgeType]
+    [addEdge, defaultEdgeType]
   )
 
   const onConnectEnd: OnConnectEnd = useCallback(
     (event, connectionState) => {
-      try {
-        if (!connectionState.isValid) {
-          const dropPosition = getDropPosition(event)
-          const intersectingNodes = getIntersectingNodes({
-            x: dropPosition.x - 5,
-            y: dropPosition.y - 5,
-            width: 10,
-            height: 10,
-          })
+      if (!connectionState.isValid) {
+        const dropPosition = getDropPosition(event)
+        const intersectingNodes = getIntersectingNodes({
+          x: dropPosition.x - 5,
+          y: dropPosition.y - 5,
+          width: 10,
+          height: 10,
+        })
 
-          if (intersectingNodes.length === 0) return
+        if (intersectingNodes.length === 0) return
 
-          const fromNodeId = connectionState.fromNode?.id
-          const nodeOnTop =
-            intersectingNodes.findLast((node) => node.id !== fromNodeId) ??
-            intersectingNodes[intersectingNodes.length - 1]
+        const fromNodeId = connectionState.fromNode?.id
+        const nodeOnTop =
+          intersectingNodes.findLast((node) => node.id !== fromNodeId) ??
+          intersectingNodes[intersectingNodes.length - 1]
 
-          const internalNodeData = getInternalNode(nodeOnTop.id)
+        const internalNodeData = getInternalNode(nodeOnTop.id)
 
-          if (
-            !internalNodeData ||
-            nodeOnTop.width == null ||
-            nodeOnTop.height == null
+        if (
+          !internalNodeData ||
+          nodeOnTop.width == null ||
+          nodeOnTop.height == null
+        )
+          return
+
+        const targetHandle = findClosestHandle({
+          point: dropPosition,
+          rect: {
+            x: internalNodeData.internals.positionAbsolute.x,
+            y: internalNodeData.internals.positionAbsolute.y,
+            width: nodeOnTop.width,
+            height: nodeOnTop.height,
+          },
+          useFourHandles: isFourHandleNode(nodeOnTop.type),
+        })
+
+        if (!targetHandle) return
+
+        if (startEdge.current) {
+          const updatedEdge = edges.find(
+            (edge) => edge.id === startEdge.current?.id
           )
+
+          if (!updatedEdge) return
+          const newEdge =
+            connectionStartParams.current?.handleType === "source"
+              ? { ...updatedEdge, target: nodeOnTop.id, targetHandle }
+              : {
+                  ...updatedEdge,
+                  source: nodeOnTop.id,
+                  sourceHandle: targetHandle,
+                }
+
+          // Disallow loop from a handle to the same handle on the same node.
+          if (
+            newEdge.source === newEdge.target &&
+            newEdge.sourceHandle === newEdge.targetHandle
+          ) {
+            startEdge.current = null
+            connectionStartParams.current = null
             return
-
-          const targetHandle = findClosestHandle({
-            point: dropPosition,
-            rect: {
-              x: internalNodeData.internals.positionAbsolute.x,
-              y: internalNodeData.internals.positionAbsolute.y,
-              width: nodeOnTop.width,
-              height: nodeOnTop.height,
-            },
-            useFourHandles: isFourHandleNode(nodeOnTop.type),
-          })
-
-          if (!targetHandle) return
-
-          if (startEdge.current) {
-            const updatedEdge = edges.find(
-              (edge) => edge.id === startEdge.current?.id
-            )
-
-            if (!updatedEdge) return
-            const newEdge =
-              connectionStartParams.current?.handleType === "source"
-                ? { ...updatedEdge, target: nodeOnTop.id, targetHandle }
-                : {
-                    ...updatedEdge,
-                    source: nodeOnTop.id,
-                    sourceHandle: targetHandle,
-                  }
-
-            // Disallow loop from a handle to the same handle on the same node.
-            if (
-              newEdge.source === newEdge.target &&
-              newEdge.sourceHandle === newEdge.targetHandle
-            ) {
-              return
-            }
-
-            setEdges((eds) =>
-              eds.map((edge) => (edge.id === newEdge.id ? newEdge : edge))
-            )
-          } else {
-            const sourceNodeId = connectionState.fromNode!.id
-            const sourceHandleId = connectionState.fromHandle?.id
-
-            // Disallow loop from a handle to itself, but allow loops to other handles.
-            if (
-              sourceNodeId === nodeOnTop.id &&
-              sourceHandleId === targetHandle
-            ) {
-              return
-            }
-
-            setEdges((eds) =>
-              eds.concat({
-                id: generateUUID(),
-                source: sourceNodeId,
-                target: nodeOnTop.id,
-                type: defaultEdgeType,
-                sourceHandle: sourceHandleId,
-                targetHandle,
-                data: createDefaultEdgeData(),
-              })
-            )
           }
+
+          setEdges((eds) =>
+            eds.map((edge) => (edge.id === newEdge.id ? newEdge : edge))
+          )
+        } else {
+          const sourceNodeId = connectionState.fromNode!.id
+          const sourceHandleId = connectionState.fromHandle?.id
+
+          // Disallow loop from a handle to itself, but allow loops to other handles.
+          if (
+            sourceNodeId === nodeOnTop.id &&
+            sourceHandleId === targetHandle
+          ) {
+            startEdge.current = null
+            connectionStartParams.current = null
+            return
+          }
+
+          setEdges((eds) =>
+            eds.concat({
+              id: generateUUID(),
+              source: sourceNodeId,
+              target: nodeOnTop.id,
+              type: defaultEdgeType,
+              sourceHandle: sourceHandleId,
+              targetHandle,
+            })
+          )
         }
-      } finally {
-        startEdge.current = null
-        connectionStartParams.current = null
-        stopConnectionGuidance()
       }
+      startEdge.current = null
+      connectionStartParams.current = null
     },
     [
       defaultEdgeType,
       edges,
-      createDefaultEdgeData,
       getDropPosition,
       getInternalNode,
       getIntersectingNodes,
       isFourHandleNode,
       setEdges,
-      stopConnectionGuidance,
     ]
   )
 
   const onEdgesDelete: OnEdgesDelete = useCallback(() => {
     startEdge.current = null
     connectionStartParams.current = null
-    stopConnectionGuidance()
-  }, [setEdges, stopConnectionGuidance])
+  }, [setEdges])
 
   return { onConnect, onConnectEnd, onConnectStart, onEdgesDelete }
 }

@@ -69,54 +69,6 @@ export type ApollonNode = {
   measured: { width: number; height: number }
 }
 
-export type OrthogonalRoutingStyle = "legacy" | "smart-spine-v1"
-
-export type RouteConstraint =
-  | {
-      id: string
-      kind: "lane"
-      axis: "x" | "y"
-      value: number
-      strength: "soft" | "hard"
-    }
-  | {
-      id: string
-      kind: "dogleg"
-      axis: "horizontal" | "vertical"
-      offset: number
-      originT: number
-      strength: "soft" | "hard"
-    }
-  | {
-      id: string
-      kind: "preferredPortSide"
-      end: "source" | "target"
-      side: "top" | "right" | "bottom" | "left"
-      strength: "soft" | "hard"
-    }
-
-export interface OrthogonalEdgeData {
-  [key: string]: unknown
-  // Existing manual-waypoint array used by the step-path edges.
-  points: IPoint[]
-
-  // Persisted orthogonal routing intent. Computed geometry is runtime-only.
-  userWaypoints?: IPoint[]
-  routingMode?: "auto" | "manual"
-  routingStyle?: OrthogonalRoutingStyle
-  routeConstraints?: RouteConstraint[]
-  stub?: {
-    sourceLength?: number
-    targetLength?: number
-  }
-  smartRouting?: {
-    dynamicHandles?: boolean
-    lineJumps?: boolean
-    roundedCorners?: boolean
-    showDynamicInsertionHandles?: boolean
-  }
-}
-
 export type ApollonEdge = {
   id: string
   source: string
@@ -124,7 +76,10 @@ export type ApollonEdge = {
   type: DiagramEdgeType
   sourceHandle: string
   targetHandle: string
-  data: OrthogonalEdgeData
+  data: {
+    [key: string]: unknown
+    points: IPoint[]
+  }
 }
 
 export type InteractiveElements = {
