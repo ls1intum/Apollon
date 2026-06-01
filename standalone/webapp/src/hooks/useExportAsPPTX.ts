@@ -5,6 +5,9 @@ import {
   SLIDE_DIMENSIONS_IN,
 } from "@/lib/pptxExportSettings"
 import { computeSlideViewport, renderSvgToSlide } from "@/utils/svgToPptx"
+import { Filesystem, Directory } from "@capacitor/filesystem"
+import { Share } from "@capacitor/share"
+import { isPlatform } from "@ionic/react"
 import { useFileDownload } from "./useFileDownload"
 
 /**
@@ -65,11 +68,45 @@ export const useExportAsPPTX = () => {
     })
 
     const blob = (await pres.write({ outputType: "blob" })) as Blob
-    const file = new File([blob], fileName, {
-      type: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-    })
-    downloadFile({ file, fileName })
+
+    if (isPlatform("capacitor")) {
+      const base64String = await blobToBase64(blob)
+
+      await Filesystem.writeFile({
+        path: fileName,
+        data: base64String,
+        directory: Directory.Cache,
+      })
+
+      const fileUri = await Filesystem.getUri({
+        path: fileName,
+        directory: Directory.Cache,
+      })
+
+      await Share.share({
+        title: "Export PPTX",
+        url: fileUri.uri,
+        dialogTitle: "Save PPTX to Files",
+      })
+    } else {
+      const file = new File([blob], fileName, {
+        type: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      })
+      downloadFile({ file, fileName })
+    }
   }
 
   return exportAsPPTX
+}
+
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      const base64String = (reader.result as string).split(",")[1]
+      resolve(base64String)
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(blob)
+  })
 }
