@@ -39,6 +39,8 @@
     "format:check": "prettier --ignore-path .prettierignore --check \"**/*.+(js|mjs|cjs|ts|tsx|json|md|mdx|yml|yaml)\"",
     "test": "pnpm --filter @tumaet/apollon run test",
     "test:e2e": "pnpm --filter @tumaet/webapp run test:e2e",
+    "sync:version": "node scripts/sync-library-version.mjs",
+    "sync:version:check": "node scripts/sync-library-version.mjs --check",
     "prepare": "husky || true",
     "capacitor:add:android": "pnpm --filter @tumaet/webapp run capacitor:add:android",
     "capacitor:add:ios": "pnpm --filter @tumaet/webapp run capacitor:add:ios",
