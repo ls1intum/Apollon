@@ -40,9 +40,16 @@ import {
   resolveReconnectPreviewBasePoints,
 } from "./utils/edgeUtils"
 import { IPoint } from "./edges/Connection"
+import {
+  CollaborationLayer,
+  type CollaborationAwarenessApi,
+  type CollaborationLayerOptions,
+} from "@/components/collaboration/CollaborationLayer"
 
 interface AppProps {
   onReactFlowInit: (instance: ReactFlowInstance) => void
+  collaboration: CollaborationLayerOptions
+  awareness: CollaborationAwarenessApi
 }
 const proOptions = { hideAttribution: true }
 const isPointArray = (value: unknown): value is IPoint[] =>
@@ -57,7 +64,7 @@ const isPointArray = (value: unknown): value is IPoint[] =>
       typeof point.y === "number"
   )
 
-function App({ onReactFlowInit }: AppProps) {
+function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
   useKeyboardShortcuts()
 
   const { nodes, onNodesChange, edges, onEdgesChange, diagramId } =
@@ -196,6 +203,7 @@ function App({ onReactFlowInit }: AppProps) {
         <AssessmentSelectionDebug />
       </ReactFlow>
       <ScrollOverlay />
+      <CollaborationLayer options={collaboration} awareness={awareness} />
     </div>
   )
 }

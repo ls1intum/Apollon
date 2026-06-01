@@ -51,6 +51,25 @@ jobs:
               - 'pnpm-workspace.yaml'
               - '.github/workflows/pr-health-checks.yml'
 
+  # No path filter: a stale CDN version can drift in via a doc edit OR a bump,
+  # so check every PR. Pure Node — no pnpm install needed.
+  version-sync-check:
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.should-skip != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Set up Node
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Check README + docs version sync
+        run: node scripts/sync-library-version.mjs --check
+
   lint-and-format-check:
     needs: [detect-changes]
     if: needs.detect-changes.outputs.should-skip != 'true' && needs.detect-changes.outputs.code == 'true'
@@ -270,6 +289,7 @@ jobs:
     needs:
       [
         detect-changes,
+        version-sync-check,
         lint-and-format-check,
         library-node22-compat,
         e2e-tests,
