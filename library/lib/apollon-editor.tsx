@@ -33,6 +33,39 @@ import * as Y from "yjs"
 import { StoreApi } from "zustand"
 import * as Apollon from "./typings"
 
+const normalizeCollaborationOptions = (options?: Apollon.ApollonOptions) => {
+  const collaboration = options?.collaboration
+  const enabled =
+    collaboration?.enabled ??
+    options?.collaborationEnabled ??
+    Boolean(collaboration?.user)
+  const showVisualsByDefault = enabled && Boolean(collaboration?.user)
+
+  return {
+    enabled,
+    user: collaboration?.user,
+    showPresence: collaboration?.showPresence ?? showVisualsByDefault,
+    showCursors: collaboration?.showCursors ?? showVisualsByDefault,
+    showSelectionHighlights:
+      collaboration?.showSelectionHighlights ?? showVisualsByDefault,
+  }
+}
+
+const disabledCollaboration = {
+  enabled: false,
+  showPresence: false,
+  showCursors: false,
+  showSelectionHighlights: false,
+}
+
+const noopCollaborationAwareness = {
+  setLocalAwarenessCursor: () => {},
+  setLocalAwarenessSelectedElement: () => {},
+  subscribeToAwarenessChanges: () => () => {},
+  subscribeToCollaboratorChanges: () => () => {},
+  getLocalAwarenessClientId: () => 0,
+}
+
 export class ApollonEditor {
   private root: ReactDOM.Root
   private reactFlowInstance: ReactFlowInstance | null = null
@@ -63,6 +96,13 @@ export class ApollonEditor {
       this.diagramStore,
       this.metadataStore
     )
+    const collaboration = normalizeCollaborationOptions(options)
+    if (collaboration.enabled && collaboration.user) {
+      this.syncManager.setLocalAwarenessState({
+        user: collaboration.user,
+        selectedElementId: null,
+      })
+    }
 
     const diagramId =
       options?.model?.id || Math.random().toString(36).substring(2, 15)
@@ -124,7 +164,7 @@ export class ApollonEditor {
 
     if (
       this.metadataStore.getState().mode === Apollon.ApollonMode.Modelling &&
-      !options?.collaborationEnabled
+      !collaboration.enabled
     ) {
       this.diagramStore.getState().initializeUndoManager()
     }
@@ -141,6 +181,19 @@ export class ApollonEditor {
               >
                 <AppWithProvider
                   onReactFlowInit={this.setReactFlowInstance.bind(this)}
+                  collaboration={collaboration}
+                  awareness={{
+                    setLocalAwarenessCursor:
+                      this.syncManager.setLocalAwarenessCursor,
+                    setLocalAwarenessSelectedElement:
+                      this.syncManager.setLocalAwarenessSelectedElement,
+                    subscribeToAwarenessChanges:
+                      this.syncManager.subscribeToAwarenessChanges,
+                    subscribeToCollaboratorChanges:
+                      this.syncManager.subscribeToCollaboratorChanges,
+                    getLocalAwarenessClientId:
+                      this.syncManager.getLocalAwarenessClientId,
+                  }}
                 />
               </AlignmentGuidesStoreContext.Provider>
             </AssessmentSelectionStoreContext.Provider>
@@ -294,7 +347,11 @@ export class ApollonEditor {
               <AlignmentGuidesStoreContext.Provider
                 value={alignmentGuidesStore}
               >
-                <AppWithProvider onReactFlowInit={setReactFlowInstance} />
+                <AppWithProvider
+                  onReactFlowInit={setReactFlowInstance}
+                  collaboration={disabledCollaboration}
+                  awareness={noopCollaborationAwareness}
+                />
               </AlignmentGuidesStoreContext.Provider>
             </AssessmentSelectionStoreContext.Provider>
           </PopoverStoreContext.Provider>

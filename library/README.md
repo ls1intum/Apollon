@@ -215,6 +215,18 @@ editor.sendBroadcastMessage((base64) => transport.send(base64))
 transport.onMessage((base64) => editor.receiveBroadcastedMessage(base64))
 ```
 
+To let the library render participant presence, live cursors, and remote node/edge selection highlights, pass the optional `collaboration` UI config:
+
+```ts
+const editor = new ApollonEditor(container, {
+  collaborationEnabled: true,
+  collaboration: {
+    enabled: true,
+    user: { name: "Ada", color: "#1c7ed6" },
+  },
+})
+```
+
 Any Yjs-compatible transport works: `y-websocket`, `y-webrtc`, BroadcastChannel, or your own relay. Cursor and selection awareness travel on the same channel. See [Collaboration](https://ls1intum.github.io/Apollon/library/api/collaboration).
 
 ## Export
