@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from "@capacitor/cli"
 
 const config: CapacitorConfig = {
-  appId: "de.tum.cit.ase.apollonreengineering",
-  appName: "Apollon Reengineering Mobile",
+  appId: "de.tum.cit.ase.apollon",
+  appName: "Apollon",
   webDir: "dist",
   ios: {
     contentInset: "never",

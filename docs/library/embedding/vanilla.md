@@ -42,7 +42,7 @@ can shift between releases. [jsDelivr's `esm.run`](https://www.jsdelivr.com/esm)
 is an equivalent substitute.
 
 :::warning Pin the CDN version
-Both URLs above pin an exact version (`@4.4.0`). An **unpinned** URL —
+Both URLs above pin an exact version. An **unpinned** URL —
 `@tumaet/apollon` with no version — always resolves to the latest release, so
 a new major can land on the next page refresh and break your embed without
 any change on your side. Always pin to a known-good version and bump it

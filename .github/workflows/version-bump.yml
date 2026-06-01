@@ -172,6 +172,10 @@ jobs:
           echo "standalone_version=${STANDALONE_VERSION}" >> "$GITHUB_OUTPUT"
           echo "vscode_version=${VSCODE_VERSION}" >> "$GITHUB_OUTPUT"
 
+      - name: Sync pinned library version in README + docs
+        # No-op for the standalone/vscode scopes — library version unchanged.
+        run: node scripts/sync-library-version.mjs
+
       - name: Regenerate pnpm-lock.yaml
         run: pnpm install --lockfile-only --ignore-scripts
 
@@ -190,7 +194,7 @@ jobs:
             library)
               BRANCH="chore/library-v${LIB_VERSION}"
               COMMIT_TITLE="chore: release @tumaet/apollon@${LIB_VERSION} + standalone v${STANDALONE_VERSION}"
-              FILES=(library/package.json standalone/webapp/package.json standalone/server/package.json pnpm-lock.yaml)
+              FILES=(library/package.json standalone/webapp/package.json standalone/server/package.json pnpm-lock.yaml library/README.md docs/library/embedding/vanilla.md docs/src/pages/index.tsx)
               ;;
             standalone)
               BRANCH="chore/standalone-v${STANDALONE_VERSION}"
