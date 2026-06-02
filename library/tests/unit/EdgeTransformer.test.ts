@@ -107,6 +107,17 @@ describe("EdgeTransformer", () => {
       // Original data should be unchanged
       expect(legacy.data).toEqual(original)
     })
+
+    it("hydrates an edge with null/absent data without throwing", () => {
+      // Malformed legacy payloads can omit `data` entirely; the migration must
+      // default it instead of dereferencing null.
+      const malformed = makeLegacyEdge({
+        data: null as unknown as ApollonEdge["data"],
+      })
+
+      expect(() => hydrateEdgeData(malformed)).not.toThrow()
+      expect(hydrateEdgeData(malformed).data.userWaypoints).toEqual([])
+    })
   })
 
   describe("transformEdges", () => {

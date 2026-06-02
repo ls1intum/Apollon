@@ -12,20 +12,26 @@ import type { ApollonEdge, UMLModel, OrthogonalEdgeData } from "@/typings"
  * Returns a new edge object (does NOT mutate the input).
  */
 export function hydrateEdgeData(edge: ApollonEdge): ApollonEdge {
+  // Legacy/malformed payloads can carry a null or absent `data`; treat it as
+  // empty rather than dereferencing it (which would throw mid-migration).
+  const sourceData = (edge.data ?? {}) as OrthogonalEdgeData &
+    Record<string, unknown>
   const hasComputedSegments = Object.prototype.hasOwnProperty.call(
-    edge.data,
+    sourceData,
     "computedSegments"
   )
 
   // Skip work if migration fields already exist and there is no stale
   // runtime geometry to remove.
-  if (edge.data.userWaypoints !== undefined && !hasComputedSegments) {
+  if (
+    edge.data != null &&
+    sourceData.userWaypoints !== undefined &&
+    !hasComputedSegments
+  ) {
     return edge
   }
 
-  const data = {
-    ...(edge.data as OrthogonalEdgeData & Record<string, unknown>),
-  } as OrthogonalEdgeData & Record<string, unknown>
+  const data = { ...sourceData } as OrthogonalEdgeData & Record<string, unknown>
   delete data.computedSegments
 
   if (data.userWaypoints === undefined) {
