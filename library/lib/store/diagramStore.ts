@@ -67,6 +67,23 @@ const initialDiagramState: InitialDiagramState = {
   previewMode: false,
 }
 
+function stripComputedSegmentsFromEdge(edge: Edge): Edge {
+  if (
+    !edge.data ||
+    !Object.prototype.hasOwnProperty.call(edge.data, "computedSegments")
+  ) {
+    return edge
+  }
+
+  const data = { ...(edge.data as Record<string, unknown>) }
+  delete data.computedSegments
+  return { ...edge, data }
+}
+
+function stripComputedSegmentsFromEdges(edges: Edge[]): Edge[] {
+  return edges.map(stripComputedSegmentsFromEdge)
+}
+
 export type DiagramStore = {
   nodes: Node[]
   edges: Edge[]
@@ -297,10 +314,15 @@ export const createDiagramStore = (
           },
 
           addEdge: (edge) => {
+            const persistedEdge = stripComputedSegmentsFromEdge(edge)
             transactStore(() => {
-              getEdgesMap(ydoc).set(edge.id, edge)
+              getEdgesMap(ydoc).set(persistedEdge.id, persistedEdge)
             })
-            set({ edges: [...get().edges, edge] }, undefined, "addEdge")
+            set(
+              { edges: [...get().edges, persistedEdge] },
+              undefined,
+              "addEdge"
+            )
           },
           setNodes: (payload) => {
             const nodes =
@@ -337,13 +359,16 @@ export const createDiagramStore = (
           setEdges: (payload) => {
             const edges =
               typeof payload === "function" ? payload(get().edges) : payload
+            const persistedEdges = stripComputedSegmentsFromEdges(edges)
 
-            if (deepEqual(get().edges, edges)) {
+            if (deepEqual(get().edges, persistedEdges)) {
               return
             }
             transactStore(() => {
               getEdgesMap(ydoc).clear()
-              edges.forEach((edge) => getEdgesMap(ydoc).set(edge.id, edge))
+              persistedEdges.forEach((edge) =>
+                getEdgesMap(ydoc).set(edge.id, edge)
+              )
             })
             const prunedInteractive = pruneInteractiveElements(
               {
@@ -351,11 +376,11 @@ export const createDiagramStore = (
                 relationships: get().interactiveRelationships,
               },
               get().nodes,
-              edges
+              persistedEdges
             )
             set(
               {
-                edges,
+                edges: persistedEdges,
                 interactiveElements: prunedInteractive?.elements ?? {},
                 interactiveRelationships:
                   prunedInteractive?.relationships ?? {},
@@ -366,11 +391,14 @@ export const createDiagramStore = (
           },
 
           setNodesAndEdges: (nodes, edges) => {
+            const persistedEdges = stripComputedSegmentsFromEdges(edges)
             transactStore(() => {
               getNodesMap(ydoc).clear()
               getEdgesMap(ydoc).clear()
               nodes.forEach((node) => getNodesMap(ydoc).set(node.id, node))
-              edges.forEach((edge) => getEdgesMap(ydoc).set(edge.id, edge))
+              persistedEdges.forEach((edge) =>
+                getEdgesMap(ydoc).set(edge.id, edge)
+              )
             })
             const prunedInteractive = pruneInteractiveElements(
               {
@@ -378,12 +406,12 @@ export const createDiagramStore = (
                 relationships: get().interactiveRelationships,
               },
               nodes,
-              edges
+              persistedEdges
             )
             set(
               {
                 nodes,
-                edges,
+                edges: persistedEdges,
                 interactiveElements: prunedInteractive?.elements ?? {},
                 interactiveRelationships:
                   prunedInteractive?.relationships ?? {},
@@ -554,14 +582,18 @@ export const createDiagramStore = (
               changesWithoutSelect,
               currentEdges
             )
-            if (deepEqual(currentEdges, nextEdges)) {
+            const persistedNextEdges = stripComputedSegmentsFromEdges(nextEdges)
+            if (deepEqual(currentEdges, persistedNextEdges)) {
               return
             }
 
             transactStore(() => {
               for (const change of changes) {
                 if (change.type === "add" || change.type === "replace") {
-                  getEdgesMap(ydoc).set(change.item.id, change.item)
+                  const persistedEdge = stripComputedSegmentsFromEdge(
+                    change.item
+                  )
+                  getEdgesMap(ydoc).set(persistedEdge.id, persistedEdge)
                 } else if (change.type === "remove") {
                   set(
                     (state) => ({
@@ -582,12 +614,12 @@ export const createDiagramStore = (
                 relationships: get().interactiveRelationships,
               },
               get().nodes,
-              nextEdges
+              persistedNextEdges
             )
 
             set(
               {
-                edges: nextEdges,
+                edges: persistedNextEdges,
                 interactiveElements: prunedInteractive?.elements ?? {},
                 interactiveRelationships:
                   prunedInteractive?.relationships ?? {},
@@ -665,9 +697,12 @@ export const createDiagramStore = (
             ).map((edge) => {
               const currentEdge = get().edges.find((e) => e.id === edge.id)
               if (currentEdge) {
-                return { ...edge, selected: currentEdge.selected }
+                return stripComputedSegmentsFromEdge({
+                  ...edge,
+                  selected: currentEdge.selected,
+                })
               } else {
-                return edge
+                return stripComputedSegmentsFromEdge(edge)
               }
             })
 

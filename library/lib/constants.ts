@@ -63,7 +63,7 @@ export const CANVAS = Object.freeze({
   MIN_SCALE_TO_ZOOM_OUT: 0.4,
   MAX_SCALE_TO_ZOOM_IN: 2.5,
   MOUSE_UP_OFFSET_PX: 5,
-  SNAP_TO_GRID_PX: 10,
+  SNAP_TO_GRID_PX: 5,
   EXTRA_SPACE_FOR_EXTENSION: 10,
   PASTE_OFFSET_PX: 20,
 } as const)
@@ -166,6 +166,44 @@ export const EDGES = Object.freeze({
   STEP_BORDER_RADIUS: 0,
   /** Width of the invisible stroke used for edge selection/highlighting */
   EDGE_HIGHLIGHT_STROKE_WIDTH: 15,
+  /** Stub length locked to node, matches getSmoothStepPath offset */
+  STUB_LENGTH: 30,
+  /** Minimum total edge length (screen px) for the endpoint reconnect handles
+   * to be active. Short edges fall back to always-editable (see
+   * useStepPathEdge), so this only gates medium/long edges. */
+  BEND_MIN_LENGTH: 100,
+  /** Bend handle long-axis size, in screen px (the minimum kept across zoom). */
+  BEND_HANDLE_SCREEN_LENGTH_PX: 34,
+  /** Minimum clearance, in screen px, between a bend handle and the segment's
+   * corners — how close a handle is allowed to sit to a corner. */
+  BEND_HANDLE_CORNER_CLEARANCE_PX: 10,
+  /** A segment shows a bend handle once its ON-SCREEN length can host the
+   * handle with corner clearance on both sides: 34 + 2*10 = 54px. Screen-based
+   * so zooming in reveals handles on shorter segments (and never hides them). */
+  BEND_HANDLE_MIN_SEGMENT_SCREEN_PX: 34 + 2 * 10,
+  /** "Safe area" next to a node, in flow px: a bend handle is never placed
+   * within this distance of a node connection point, and that part of a
+   * terminal segment is excluded when deciding whether a handle fits. Keeps
+   * handles out of the locked stub so dragging never produces a detached
+   * slim sliver near the node. */
+  BEND_HANDLE_SAFE_AREA_PX: 25,
+  /** Size of the invisible endpoint hit target used for edge reconnection */
+  ENDPOINT_HIT_TARGET_SIZE: 24,
+  /** Grid step a dragged bend snaps to; matches the canvas grid so bends line
+   * up with grid-snapped node handles. */
+  BEND_SNAP_GRID_PX: CANVAS.SNAP_TO_GRID_PX,
+  /** Connector length at/below which a *monotonic* orthogonal stair-step (a
+   * same-direction dogleg) is treated as a rounding artifact and flattened.
+   * Must stay strictly below BEND_SNAP_GRID_PX, otherwise the smallest
+   * deliberate single-step bend would be flattened and the edge would snap
+   * back to a straight line on release. */
+  ORTHOGONAL_DOGLEG_TOLERANCE_PX: 2,
+  /** Gap at/below which two parallel arms that double back over each other
+   * (an opposite-direction U-turn) are treated as a degenerate self-overlap
+   * and the route is reset. Independent of the snap grid: a doubled-back
+   * U-turn is never a deliberate edit, so this stays at the visual-merge
+   * threshold rather than the per-step threshold. */
+  ORTHOGONAL_ARM_OVERLAP_PX: 10,
 } as const)
 
 /* -------------------------------------------------------------------------- */

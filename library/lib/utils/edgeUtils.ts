@@ -1,7 +1,13 @@
 import { EDGES, INTERFACE } from "@/constants"
 import { IPoint } from "@/edges/Connection"
 import { DiagramEdgeType, UMLDiagramType } from "@/typings"
-import { Position, Rect, XYPosition, ConnectionLineType } from "@xyflow/react"
+import {
+  Position,
+  Rect,
+  XYPosition,
+  ConnectionLineType,
+  getSmoothStepPath,
+} from "@xyflow/react"
 
 /**
  * Adjusts the target coordinates based on the position and marker padding.
@@ -43,58 +49,6 @@ export const adjustSourceCoordinates = (
     sourceY -= sourcePadding
   }
   return { sourceX, sourceY }
-}
-
-interface TextPlacement {
-  roleX: number
-  roleY: number
-  multiplicityX: number
-  multiplicityY: number
-}
-
-export const calculateTextPlacement = (
-  x: number,
-  y: number,
-  position: Position
-): TextPlacement => {
-  let roleX = x,
-    roleY = y
-  let multiplicityX = x,
-    multiplicityY = y
-
-  switch (position) {
-    case "top":
-      roleX = x - 10
-      roleY = y - 15
-      multiplicityX = x + 10
-      multiplicityY = y - 15
-      break
-    case "right":
-      roleX = x + 15
-      roleY = y - 10
-      multiplicityX = x + 15
-      multiplicityY = y + 15
-      break
-    case "bottom":
-      roleX = x - 10
-      roleY = y + 15
-      multiplicityX = x + 10
-      multiplicityY = y + 15
-      break
-    case "left":
-      roleX = x - 15
-      roleY = y - 10
-      multiplicityX = x - 15
-      multiplicityY = y + 15
-      break
-  }
-
-  return {
-    roleX,
-    roleY,
-    multiplicityX,
-    multiplicityY,
-  }
 }
 
 export const calculateDynamicEdgeLabels = (
@@ -345,63 +299,640 @@ interface FindClosestHandleParams {
   useFourHandles?: boolean
 }
 
+type RectHandlePoint = {
+  label: string
+  position: XYPosition
+  side: Position
+}
+
+// Match the canvas grid step. Handle offsets snap to this so the X (or Y)
+// distance between any two handles on equally-sized nodes is always a
+// multiple of the grid step — which means a user dragging a node on the grid
+// can always close the misalignment exactly. With a smaller step (e.g. half
+// the grid), some handle pairs end up an odd-grid-half off and never line up.
+//
+// Hard-coded to avoid a known circular import:
+//   constants.ts → @/nodes → nodes/.../Class.tsx → @/utils (barrel) → edgeUtils.ts → @/constants
+// Reading CANVAS.SNAP_TO_GRID_PX at module init can resolve to undefined when
+// edgeUtils.ts evaluates before constants.ts finishes. Keep this in sync
+// with CANVAS.SNAP_TO_GRID_PX in constants.ts (currently 5).
+const HANDLE_SNAP_STEP_PX = 5
+const HANDLE_RATIO_START = 0.2
+const HANDLE_RATIO_END = 0.8
+
+const clamp = (value: number, min: number, max: number): number =>
+  Math.max(min, Math.min(max, value))
+
+export function getNormalizedHandleOffset(
+  axisLength: number,
+  ratio: number
+): number {
+  if (!Number.isFinite(axisLength) || axisLength <= 0) return 0
+
+  // Keep exact boundaries exact when callers explicitly ask for them.
+  if (ratio <= 0) return 0
+  if (ratio >= 1) return axisLength
+
+  const raw = axisLength * ratio
+  const snapped = Math.round(raw / HANDLE_SNAP_STEP_PX) * HANDLE_SNAP_STEP_PX
+  return clamp(snapped, 0, axisLength)
+}
+
+export function getNormalizedHandleOffsetPercent(
+  axisLength: number,
+  ratio: number
+): string {
+  if (!Number.isFinite(axisLength) || axisLength <= 0) {
+    return `${ratio * 100}%`
+  }
+
+  const normalizedOffset = getNormalizedHandleOffset(axisLength, ratio)
+  return `${(normalizedOffset / axisLength) * 100}%`
+}
+
+// Visible half-circle arc-dragger length along the side it sits on. Two
+// adjacent visible arcs must have centers separated by at least this much
+// to avoid overlapping each other.
+const ARC_LENGTH_PX = 28
+
+const snapToGridStep = (value: number, axisLength: number): number => {
+  const snapped = Math.round(value / HANDLE_SNAP_STEP_PX) * HANDLE_SNAP_STEP_PX
+  return clamp(snapped, 0, axisLength)
+}
+
+// Per-side handle-placement plan. Each side carries nine grid-aligned offsets
+// indexed 0..8 (left-to-right or top-to-bottom). The five named handle IDs
+// per side map to the even indices (0, 2, 4, 6, 8) so existing edge data
+// stays addressable; the four "between" IDs sit at the odd indices and only
+// matter when the side is wide enough to render the five-arc layout.
+//
+// `visibleArcCount` decides which subset of the nine slots renders a visible
+// half-circle dragger:
+//   5 → arcs at indices 0, 2, 4, 6, 8 (every other slot).
+//   3 → arcs at indices 0, 4, 8 (corners + middle, classic layout).
+//   1 → arc at index 4 only (centre).
+export type AxisHandlePlan = {
+  offsets: [
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+  ]
+  visibleArcCount: 1 | 3 | 5
+}
+
+const EMPTY_PLAN: AxisHandlePlan = {
+  offsets: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+  visibleArcCount: 1,
+}
+
+// Build a 9-slot offset tuple from a list of grid-aligned visible-arc
+// positions. The visible arcs are placed at even slot indices; the four
+// odd-indexed slots collapse to the midpoint of their two visible
+// neighbours (snapped to the grid) when the side is in a stage that doesn't
+// expose them, so every legacy handle ID still resolves to a usable point.
+const buildOffsets = (visible: number[]): AxisHandlePlan["offsets"] => {
+  if (visible.length === 5) {
+    const [v0, v2, v4, v6, v8] = visible
+    return [
+      v0,
+      snapToGridStep((v0 + v2) / 2, Number.POSITIVE_INFINITY),
+      v2,
+      snapToGridStep((v2 + v4) / 2, Number.POSITIVE_INFINITY),
+      v4,
+      snapToGridStep((v4 + v6) / 2, Number.POSITIVE_INFINITY),
+      v6,
+      snapToGridStep((v6 + v8) / 2, Number.POSITIVE_INFINITY),
+      v8,
+    ]
+  }
+  if (visible.length === 3) {
+    // Three visible arcs (corners + middle). The four hidden in-between
+    // slots collapse to the nearest visible neighbour so saved edges using
+    // any of the legacy IDs (top-mid-left, top-mid-right, …) resolve to a
+    // grid-aligned anchor that sits on the arc closest to them.
+    const [v0, v4, v8] = visible
+    const v2 = snapToGridStep((v0 + v4) / 2, Number.POSITIVE_INFINITY)
+    const v6 = snapToGridStep((v4 + v8) / 2, Number.POSITIVE_INFINITY)
+    return [v0, v0, v2, v4, v4, v4, v6, v8, v8]
+  }
+  // Single visible arc at the middle; every other slot collapses to it.
+  const [v4] = visible
+  return [v4, v4, v4, v4, v4, v4, v4, v4, v4]
+}
+
+// Stage-1 placement (three-arc layout, classic). Uses the historical
+// arithmetic-progression search inside the cosmetic [HANDLE_RATIO_START,
+// HANDLE_RATIO_END] band so the corner arcs land exactly where they did
+// before this refactor. Returns the three visible arc positions, or null if
+// the side is too short for the band-based search to be meaningful.
+const findStage1Offsets = (axisLength: number): number[] | null => {
+  if (axisLength <= 0) return null
+
+  const ideal = [0, 1, 2, 3, 4].map(
+    (index) =>
+      axisLength *
+      (HANDLE_RATIO_START +
+        ((HANDLE_RATIO_END - HANDLE_RATIO_START) * index) / 4)
+  )
+
+  const maxGridUnit = Math.floor(axisLength / HANDLE_SNAP_STEP_PX)
+  if (maxGridUnit < 4) return null
+
+  let bestOffsets: number[] | null = null
+  let bestScore = Number.POSITIVE_INFINITY
+  for (
+    let stepUnits = 1;
+    stepUnits <= Math.floor(maxGridUnit / 4);
+    stepUnits++
+  ) {
+    const maxStartUnit = maxGridUnit - 4 * stepUnits
+    for (let startUnit = 0; startUnit <= maxStartUnit; startUnit++) {
+      const offsets = [0, 1, 2, 3, 4].map(
+        (index) => (startUnit + index * stepUnits) * HANDLE_SNAP_STEP_PX
+      )
+      let score = 0
+      for (let i = 0; i < offsets.length; i++) {
+        const delta = offsets[i] - ideal[i]
+        score += delta * delta
+      }
+      score -= stepUnits * 1e-3
+      if (score < bestScore) {
+        bestScore = score
+        bestOffsets = offsets
+      }
+    }
+  }
+
+  if (!bestOffsets) return null
+  // The historical layout exposes the band's slot 0, slot 2 and slot 4 as
+  // visible arcs; the inner slots 1 and 3 are not used as arcs in this
+  // stage.
+  return [bestOffsets[0], bestOffsets[2], bestOffsets[4]]
+}
+
+// Stage-2 placement (five-arc layout). Evenly distributes five arcs across
+// the [HANDLE_RATIO_START, HANDLE_RATIO_END] band, snapping each to the
+// grid. Returns the five visible-arc positions or null when grid-snapping
+// would cause two adjacent arcs to share the same coordinate.
+const findStage2Offsets = (axisLength: number): number[] | null => {
+  if (axisLength <= 0) return null
+
+  const positions = [0, 1, 2, 3, 4].map((index) => {
+    const ratio =
+      HANDLE_RATIO_START + ((HANDLE_RATIO_END - HANDLE_RATIO_START) * index) / 4
+    return snapToGridStep(axisLength * ratio, axisLength)
+  })
+
+  for (let i = 1; i < positions.length; i++) {
+    if (positions[i] <= positions[i - 1]) return null
+  }
+  return positions
+}
+
+// Pick the largest staged layout that fits the side without overlapping
+// arcs:
+//   * stage 2 — five arcs, requires adjacent arcs ≥ ARC_LENGTH_PX apart in
+//               the band-based layout.
+//   * stage 1 — three arcs at the historical band positions; arcs sit at
+//               slots 0, 4, 8 of the nine-slot model.
+//   * stage 0 — single arc at the centre.
+const solveAxisPlan = (axisLength: number): AxisHandlePlan => {
+  if (!Number.isFinite(axisLength) || axisLength <= 0) return EMPTY_PLAN
+
+  const stage2 = findStage2Offsets(axisLength)
+  if (stage2) {
+    let allFit = true
+    for (let i = 1; i < stage2.length; i++) {
+      if (stage2[i] - stage2[i - 1] < ARC_LENGTH_PX) {
+        allFit = false
+        break
+      }
+    }
+    if (allFit) {
+      return {
+        offsets: buildOffsets(stage2),
+        visibleArcCount: 5,
+      }
+    }
+  }
+
+  const stage1 = findStage1Offsets(axisLength)
+  if (stage1 && stage1[1] - stage1[0] >= ARC_LENGTH_PX) {
+    return {
+      offsets: buildOffsets(stage1),
+      visibleArcCount: 3,
+    }
+  }
+
+  const center = snapToGridStep(axisLength / 2, axisLength)
+  return {
+    offsets: buildOffsets([center]),
+    visibleArcCount: 1,
+  }
+}
+
+export function getAxisHandlePlan(axisLength: number): AxisHandlePlan {
+  return solveAxisPlan(axisLength)
+}
+
+/**
+ * Reduce how many arcs a side actually shows so adjacent visible arcs never
+ * overlap ON SCREEN. The slot offsets stay fixed (handles don't move); we just
+ * hide arcs when, at the current zoom, two neighbours would be closer than an
+ * arc's on-screen length apart. Arcs counter-scale to a constant on-screen size
+ * when zoomed out and grow when zoomed in, so the required flow spacing is
+ * ARC_LENGTH_PX / min(zoom, 1): bigger (fewer arcs) when zoomed out, constant
+ * at and above 1x.
+ *
+ * Returns 5, 3, or 1 — always <= the size-based `baseVisibleArcCount`.
+ */
+export function reduceVisibleArcCountForZoom(
+  offsets: AxisHandlePlan["offsets"],
+  baseVisibleArcCount: 1 | 3 | 5,
+  zoom: number
+): 1 | 3 | 5 {
+  const safeZoom = Number.isFinite(zoom) && zoom > 0 ? zoom : 1
+  const requiredFlowSpacing = ARC_LENGTH_PX / Math.min(safeZoom, 1)
+
+  if (baseVisibleArcCount >= 5) {
+    const minAdjacent = Math.min(
+      offsets[2] - offsets[0],
+      offsets[4] - offsets[2],
+      offsets[6] - offsets[4],
+      offsets[8] - offsets[6]
+    )
+    if (minAdjacent >= requiredFlowSpacing) return 5
+  }
+  if (baseVisibleArcCount >= 3) {
+    const minAdjacent = Math.min(
+      offsets[4] - offsets[0],
+      offsets[8] - offsets[4]
+    )
+    if (minAdjacent >= requiredFlowSpacing) return 3
+  }
+  return 1
+}
+
+export function getDistributedHandleOffsets(axisLength: number): number[] {
+  return [...solveAxisPlan(axisLength).offsets]
+}
+
+export function getDistributedHandleOffsetPercents(
+  axisLength: number
+): [string, string, string, string, string, string, string, string, string] {
+  if (!Number.isFinite(axisLength) || axisLength <= 0) {
+    return ["0%", "0%", "0%", "0%", "0%", "0%", "0%", "0%", "0%"]
+  }
+
+  const offsets = solveAxisPlan(axisLength).offsets
+  return offsets.map((offset) => `${(offset / axisLength) * 100}%`) as [
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+  ]
+}
+
+type HandleSide = "top" | "right" | "bottom" | "left"
+
+const SIDE_HANDLE_IDS: Record<HandleSide, Record<number, string[]>> = {
+  top: {
+    1: ["top"],
+    3: ["top-left", "top", "top-right"],
+    5: ["top-left", "top-mid-left", "top", "top-mid-right", "top-right"],
+    9: [
+      "top-left",
+      "top-between-left-mid-left",
+      "top-mid-left",
+      "top-between-mid-left-center",
+      "top",
+      "top-between-center-mid-right",
+      "top-mid-right",
+      "top-between-mid-right-right",
+      "top-right",
+    ],
+  },
+  right: {
+    1: ["right"],
+    3: ["right-top", "right", "right-bottom"],
+    5: [
+      "right-top",
+      "right-mid-top",
+      "right",
+      "right-mid-bottom",
+      "right-bottom",
+    ],
+    9: [
+      "right-top",
+      "right-between-top-mid-top",
+      "right-mid-top",
+      "right-between-mid-top-center",
+      "right",
+      "right-between-center-mid-bottom",
+      "right-mid-bottom",
+      "right-between-mid-bottom-bottom",
+      "right-bottom",
+    ],
+  },
+  bottom: {
+    1: ["bottom"],
+    3: ["bottom-left", "bottom", "bottom-right"],
+    5: [
+      "bottom-left",
+      "bottom-mid-left",
+      "bottom",
+      "bottom-mid-right",
+      "bottom-right",
+    ],
+    9: [
+      "bottom-left",
+      "bottom-between-mid-left-left",
+      "bottom-mid-left",
+      "bottom-between-center-mid-left",
+      "bottom",
+      "bottom-between-mid-right-center",
+      "bottom-mid-right",
+      "bottom-between-right-mid-right",
+      "bottom-right",
+    ],
+  },
+  left: {
+    1: ["left"],
+    3: ["left-top", "left", "left-bottom"],
+    5: ["left-top", "left-mid-top", "left", "left-mid-bottom", "left-bottom"],
+    9: [
+      "left-top",
+      "left-between-mid-top-top",
+      "left-mid-top",
+      "left-between-center-mid-top",
+      "left",
+      "left-between-mid-bottom-center",
+      "left-mid-bottom",
+      "left-between-bottom-mid-bottom",
+      "left-bottom",
+    ],
+  },
+}
+
+const GENERATED_SLOT_PREFIX = "slot"
+
+export function getHandleIdForSideSlot(
+  side: HandleSide,
+  slotIndex: number,
+  slotCount: number
+): string {
+  const knownIds = SIDE_HANDLE_IDS[side][slotCount]
+  if (knownIds) return knownIds[slotIndex]
+
+  const semanticIds = SIDE_HANDLE_IDS[side][9]
+  const semanticIndex = new Map<number, string>()
+  for (let i = 0; i < semanticIds.length; i++) {
+    const targetIndex = Math.round(
+      (i / (semanticIds.length - 1)) * (slotCount - 1)
+    )
+    semanticIndex.set(targetIndex, semanticIds[i])
+  }
+
+  return (
+    semanticIndex.get(slotIndex) ??
+    `${side}-${GENERATED_SLOT_PREFIX}-${slotIndex}`
+  )
+}
+
+function getCanonicalHandlePoints(
+  rect: Rect,
+  useFourHandles: boolean
+): RectHandlePoint[] {
+  // Nine slot positions per axis. Even indices map to the five named handle
+  // IDs per side (corner / mid-corner / middle / mid-corner / corner); odd
+  // indices map to the "between" IDs that only render arcs in the five-arc
+  // stage but are always addressable as hidden connection points.
+  const xs = getDistributedHandleOffsets(rect.width).map(
+    (offset) => rect.x + offset
+  )
+  const ys = getDistributedHandleOffsets(rect.height).map(
+    (offset) => rect.y + offset
+  )
+  const [
+    xStart,
+    xBetween1,
+    xMidStart,
+    xBetween3,
+    xMiddle,
+    xBetween5,
+    xMidEnd,
+    xBetween7,
+    xEnd,
+  ] = xs
+  const [
+    yStart,
+    yBetween1,
+    yMidStart,
+    yBetween3,
+    yMiddle,
+    yBetween5,
+    yMidEnd,
+    yBetween7,
+    yEnd,
+  ] = ys
+
+  const points: RectHandlePoint[] = [
+    { label: "top", position: { x: xMiddle, y: yStart }, side: Position.Top },
+    {
+      label: "bottom",
+      position: { x: xMiddle, y: yEnd },
+      side: Position.Bottom,
+    },
+    { label: "left", position: { x: xStart, y: yMiddle }, side: Position.Left },
+    {
+      label: "right",
+      position: { x: xEnd, y: yMiddle },
+      side: Position.Right,
+    },
+  ]
+
+  if (!useFourHandles) {
+    points.push(
+      // Top side. The two corners (top-left, top-right) belong to this side;
+      // aliases left-top and right-top resolve to them via canonical lookup.
+      {
+        label: "top-left",
+        position: { x: xStart, y: yStart },
+        side: Position.Top,
+      },
+      {
+        label: "top-between-left-mid-left",
+        position: { x: xBetween1, y: yStart },
+        side: Position.Top,
+      },
+      {
+        label: "top-mid-left",
+        position: { x: xMidStart, y: yStart },
+        side: Position.Top,
+      },
+      {
+        label: "top-between-mid-left-center",
+        position: { x: xBetween3, y: yStart },
+        side: Position.Top,
+      },
+      {
+        label: "top-between-center-mid-right",
+        position: { x: xBetween5, y: yStart },
+        side: Position.Top,
+      },
+      {
+        label: "top-mid-right",
+        position: { x: xMidEnd, y: yStart },
+        side: Position.Top,
+      },
+      {
+        label: "top-between-mid-right-right",
+        position: { x: xBetween7, y: yStart },
+        side: Position.Top,
+      },
+      {
+        label: "top-right",
+        position: { x: xEnd, y: yStart },
+        side: Position.Top,
+      },
+      // Right side — inner slots only; the corners are owned by the top
+      // and bottom sides above/below.
+      {
+        label: "right-between-top-mid-top",
+        position: { x: xEnd, y: yBetween1 },
+        side: Position.Right,
+      },
+      {
+        label: "right-mid-top",
+        position: { x: xEnd, y: yMidStart },
+        side: Position.Right,
+      },
+      {
+        label: "right-between-mid-top-center",
+        position: { x: xEnd, y: yBetween3 },
+        side: Position.Right,
+      },
+      {
+        label: "right-between-center-mid-bottom",
+        position: { x: xEnd, y: yBetween5 },
+        side: Position.Right,
+      },
+      {
+        label: "right-mid-bottom",
+        position: { x: xEnd, y: yMidEnd },
+        side: Position.Right,
+      },
+      {
+        label: "right-between-mid-bottom-bottom",
+        position: { x: xEnd, y: yBetween7 },
+        side: Position.Right,
+      },
+      // Bottom side, right → left.
+      {
+        label: "bottom-right",
+        position: { x: xEnd, y: yEnd },
+        side: Position.Bottom,
+      },
+      {
+        label: "bottom-between-right-mid-right",
+        position: { x: xBetween7, y: yEnd },
+        side: Position.Bottom,
+      },
+      {
+        label: "bottom-mid-right",
+        position: { x: xMidEnd, y: yEnd },
+        side: Position.Bottom,
+      },
+      {
+        label: "bottom-between-mid-right-center",
+        position: { x: xBetween5, y: yEnd },
+        side: Position.Bottom,
+      },
+      {
+        label: "bottom-between-center-mid-left",
+        position: { x: xBetween3, y: yEnd },
+        side: Position.Bottom,
+      },
+      {
+        label: "bottom-mid-left",
+        position: { x: xMidStart, y: yEnd },
+        side: Position.Bottom,
+      },
+      {
+        label: "bottom-between-mid-left-left",
+        position: { x: xBetween1, y: yEnd },
+        side: Position.Bottom,
+      },
+      {
+        label: "bottom-left",
+        position: { x: xStart, y: yEnd },
+        side: Position.Bottom,
+      },
+      // Left side — inner slots only.
+      {
+        label: "left-between-bottom-mid-bottom",
+        position: { x: xStart, y: yBetween7 },
+        side: Position.Left,
+      },
+      {
+        label: "left-mid-bottom",
+        position: { x: xStart, y: yMidEnd },
+        side: Position.Left,
+      },
+      {
+        label: "left-between-mid-bottom-center",
+        position: { x: xStart, y: yBetween5 },
+        side: Position.Left,
+      },
+      {
+        label: "left-between-center-mid-top",
+        position: { x: xStart, y: yBetween3 },
+        side: Position.Left,
+      },
+      {
+        label: "left-mid-top",
+        position: { x: xStart, y: yMidStart },
+        side: Position.Left,
+      },
+      {
+        label: "left-between-mid-top-top",
+        position: { x: xStart, y: yBetween1 },
+        side: Position.Left,
+      }
+    )
+  }
+
+  return points
+}
+
 export function findClosestHandle({
   point,
   rect,
   useFourHandles = false,
 }: FindClosestHandleParams): string {
-  // Start with basic 4 handles (top, bottom, left, right)
-  const points: { label: string; position: XYPosition }[] = [
-    { label: "top", position: { x: rect.x + rect.width / 2, y: rect.y } },
-    {
-      label: "bottom",
-      position: { x: rect.x + rect.width / 2, y: rect.y + rect.height },
-    },
-    { label: "left", position: { x: rect.x, y: rect.y + rect.height / 2 } },
-    {
-      label: "right",
-      position: { x: rect.x + rect.width, y: rect.y + rect.height / 2 },
-    },
-  ]
+  // Only ever snap to a NAMED handle. The "*-between-*" slots are hidden,
+  // resolution-only anchors: they never render a visible arc, and custom nodes
+  // (e.g. the UseCase ellipse) render only the named IDs. Selecting a between
+  // slot on a drop/reconnect could persist a handle the target node does not
+  // render, and React Flow would drop the edge with a missing-handle error.
+  // Named handles are the visible drag targets and are rendered by every node.
+  const points = getCanonicalHandlePoints(rect, useFourHandles).filter(
+    (candidate) => !candidate.label.includes("-between-")
+  )
 
-  // If not a 4-handle node, append additional handles
-  if (!useFourHandles) {
-    points.push(
-      {
-        label: "top-left",
-        position: { x: rect.x + rect.width / 3, y: rect.y },
-      },
-      {
-        label: "top-right",
-        position: { x: rect.x + (2 / 3) * rect.width, y: rect.y },
-      },
-      {
-        label: "bottom-left",
-        position: { x: rect.x + rect.width / 3, y: rect.y + rect.height },
-      },
-      {
-        label: "bottom-right",
-        position: { x: rect.x + (2 / 3) * rect.width, y: rect.y + rect.height },
-      },
-      {
-        label: "left-top",
-        position: { x: rect.x, y: rect.y + rect.height / 3 },
-      },
-      {
-        label: "left-bottom",
-        position: { x: rect.x, y: rect.y + (2 / 3) * rect.height },
-      },
-      {
-        label: "right-top",
-        position: { x: rect.x + rect.width, y: rect.y + rect.height / 3 },
-      },
-      {
-        label: "right-bottom",
-        position: { x: rect.x + rect.width, y: rect.y + (2 / 3) * rect.height },
-      }
-    )
-  }
-
+  // Tie-break is deterministic: when two candidates have equal distance,
+  // the first candidate in the canonical declaration order above wins.
   let closest = points[0]
   let minDist = distance(point, points[0].position)
 
@@ -633,69 +1164,6 @@ export function parseSvgPath(path: string): IPoint[] {
   return simplifyPoints(points)
 }
 
-export function calculateInnerMidpoints(
-  points: IPoint[],
-  decimals: number = 2
-): IPoint[] {
-  const round = (num: number) => Number(num.toFixed(decimals))
-  const midpoints: IPoint[] = []
-  if (points.length < 3) return midpoints
-
-  // Group consecutive points that form straight lines (horizontal or vertical)
-  const segments: IPoint[][] = []
-  let currentSegment: IPoint[] = [points[0]]
-
-  for (let i = 1; i < points.length; i++) {
-    const prevPoint = currentSegment[currentSegment.length - 1]
-    const currentPoint = points[i]
-
-    // Check if this point continues the current segment (same direction)
-    const isHorizontal = Math.abs(prevPoint.y - currentPoint.y) < 0.1
-    const isVertical = Math.abs(prevPoint.x - currentPoint.x) < 0.1
-
-    if (currentSegment.length === 1) {
-      // First segment, just add the point
-      currentSegment.push(currentPoint)
-    } else {
-      // Check if the new point continues the same direction as the current segment
-      const segmentStart = currentSegment[0]
-      const segmentPrev = currentSegment[currentSegment.length - 1]
-      const wasHorizontal = Math.abs(segmentStart.y - segmentPrev.y) < 0.1
-      const wasVertical = Math.abs(segmentStart.x - segmentPrev.x) < 0.1
-
-      if ((wasHorizontal && isHorizontal) || (wasVertical && isVertical)) {
-        // Continue current segment
-        currentSegment.push(currentPoint)
-      } else {
-        // Start new segment
-        segments.push([...currentSegment])
-        currentSegment = [prevPoint, currentPoint]
-      }
-    }
-  }
-
-  // Add the last segment
-  if (currentSegment.length > 1) {
-    segments.push(currentSegment)
-  }
-
-  // Calculate one midpoint per segment (excluding first and last segments to avoid endpoints)
-  for (let i = 1; i < segments.length - 1; i++) {
-    const segment = segments[i]
-    if (segment.length >= 2) {
-      const start = segment[0]
-      const end = segment[segment.length - 1]
-      const midpoint = {
-        x: round((start.x + end.x) / 2),
-        y: round((start.y + end.y) / 2),
-      }
-      midpoints.push(midpoint)
-    }
-  }
-
-  return midpoints
-}
-
 export function removeDuplicatePoints(points: IPoint[]): IPoint[] {
   if (points.length === 0) return points
   const filtered: IPoint[] = [points[0]]
@@ -707,6 +1175,889 @@ export function removeDuplicatePoints(points: IPoint[]): IPoint[] {
     }
   }
   return filtered
+}
+
+export function resolveReconnectPreviewBasePoints(
+  storedPoints: IPoint[] | undefined,
+  localPoints: IPoint[] | undefined,
+  fallbackPoints: IPoint[]
+): IPoint[] {
+  const previewBasePoints =
+    storedPoints && storedPoints.length > 0
+      ? storedPoints
+      : localPoints && localPoints.length > 0
+        ? localPoints
+        : fallbackPoints
+
+  return previewBasePoints.map((point) => ({ ...point }))
+}
+
+type SegmentAxis = "horizontal" | "vertical"
+
+const getSegmentAxisForPosition = (position: Position): SegmentAxis => {
+  switch (position) {
+    case Position.Left:
+    case Position.Right:
+      return "horizontal"
+    case Position.Top:
+    case Position.Bottom:
+      return "vertical"
+    default:
+      return "vertical"
+  }
+}
+
+const getAlternatingAxis = (
+  firstAxis: SegmentAxis,
+  segmentIndex: number
+): SegmentAxis =>
+  segmentIndex % 2 === 0
+    ? firstAxis
+    : firstAxis === "horizontal"
+      ? "vertical"
+      : "horizontal"
+
+const canConnectWithSingleSegment = (
+  sourcePoint: IPoint,
+  targetPoint: IPoint,
+  axis: SegmentAxis
+): boolean =>
+  axis === "horizontal"
+    ? sourcePoint.y === targetPoint.y
+    : sourcePoint.x === targetPoint.x
+
+function getMinimumOrthogonalSegmentCount(
+  sourcePoint: IPoint,
+  targetPoint: IPoint,
+  sourceAxis: SegmentAxis,
+  targetAxis: SegmentAxis
+): number {
+  if (sourceAxis !== targetAxis) return 2
+  return canConnectWithSingleSegment(sourcePoint, targetPoint, sourceAxis)
+    ? 1
+    : 3
+}
+
+const getLaneValue = (
+  points: IPoint[],
+  index: number,
+  axis: SegmentAxis,
+  fallbackPoint: IPoint
+): number => {
+  const point = points[Math.min(index, points.length - 1)] ?? fallbackPoint
+  return axis === "horizontal" ? point.x : point.y
+}
+
+const buildOrthogonalPathFromLanes = (
+  laneValues: number[],
+  segmentCount: number,
+  sourcePoint: IPoint,
+  targetPoint: IPoint,
+  sourceAxis: SegmentAxis,
+  targetAxis: SegmentAxis
+): IPoint[] => {
+  const result: IPoint[] = [{ ...sourcePoint }]
+
+  for (let i = 1; i < segmentCount; i++) {
+    const previousPoint = result[result.length - 1]
+    const axis = getAlternatingAxis(sourceAxis, i - 1)
+
+    result.push(
+      axis === "horizontal"
+        ? { x: laneValues[i], y: previousPoint.y }
+        : { x: previousPoint.x, y: laneValues[i] }
+    )
+  }
+
+  // For segmentCount === 1 the "penultimate" point is the source itself.
+  // We still align it to the target axis before appending targetPoint; any
+  // degenerate duplicate is collapsed by removeDuplicatePoints below.
+  const penultimatePoint = result[result.length - 1]
+  if (penultimatePoint) {
+    if (targetAxis === "horizontal") {
+      penultimatePoint.y = targetPoint.y
+    } else {
+      penultimatePoint.x = targetPoint.x
+    }
+  }
+
+  result.push({ ...targetPoint })
+  return removeDuplicatePoints(result)
+}
+
+const isSourceLaneCompatible = (
+  position: Position,
+  sourcePoint: IPoint,
+  laneValue: number
+): boolean => {
+  switch (position) {
+    case Position.Left:
+      // Strict inequality avoids zero-length first segments that would
+      // collapse user geometry when a lane equals the endpoint coordinate.
+      return laneValue < sourcePoint.x
+    case Position.Right:
+      return laneValue > sourcePoint.x
+    case Position.Top:
+      return laneValue < sourcePoint.y
+    case Position.Bottom:
+      return laneValue > sourcePoint.y
+    default:
+      return false
+  }
+}
+
+const isTargetApproachCompatible = (
+  position: Position,
+  penultimatePoint: IPoint,
+  targetPoint: IPoint
+): boolean => {
+  switch (position) {
+    case Position.Left:
+      // Strict inequality keeps a real approach segment into the target side.
+      return penultimatePoint.x < targetPoint.x
+    case Position.Right:
+      return penultimatePoint.x > targetPoint.x
+    case Position.Top:
+      return penultimatePoint.y < targetPoint.y
+    case Position.Bottom:
+      return penultimatePoint.y > targetPoint.y
+    default:
+      return false
+  }
+}
+
+const getStubExitCoord = (
+  position: Position,
+  point: IPoint,
+  stubLength: number
+): number => {
+  switch (position) {
+    case Position.Right:
+      return point.x + stubLength
+    case Position.Left:
+      return point.x - stubLength
+    case Position.Bottom:
+      return point.y + stubLength
+    case Position.Top:
+    default:
+      return point.y - stubLength
+  }
+}
+
+const getStubExitPoint = (
+  position: Position,
+  point: IPoint,
+  stubLength: number
+): IPoint => {
+  switch (position) {
+    case Position.Right:
+      return { x: point.x + stubLength, y: point.y }
+    case Position.Left:
+      return { x: point.x - stubLength, y: point.y }
+    case Position.Bottom:
+      return { x: point.x, y: point.y + stubLength }
+    case Position.Top:
+    default:
+      return { x: point.x, y: point.y - stubLength }
+  }
+}
+
+const getSafeOrthogonalPathPoints = (
+  sourcePoint: IPoint,
+  targetPoint: IPoint,
+  sourcePosition: Position,
+  targetPosition: Position
+): IPoint[] => {
+  const [safePath] = getSmoothStepPath({
+    sourceX: sourcePoint.x,
+    sourceY: sourcePoint.y,
+    sourcePosition,
+    targetX: targetPoint.x,
+    targetY: targetPoint.y,
+    targetPosition,
+    borderRadius: EDGES.STEP_BORDER_RADIUS,
+    offset: 30,
+  })
+
+  return removeDuplicatePoints(parseSvgPath(simplifySvgPath(safePath)))
+}
+
+const getStubCollisionFallbackPoints = (
+  sourcePoint: IPoint,
+  targetPoint: IPoint,
+  sourcePosition: Position,
+  targetPosition: Position
+): IPoint[] => {
+  const sharedLaneSnapTolerance = Math.abs(
+    EDGES.SOURCE_CONNECTION_POINT_PADDING - EDGES.MARKER_PADDING
+  )
+  const sourceStub = getStubExitPoint(
+    sourcePosition,
+    sourcePoint,
+    EDGES.STUB_LENGTH
+  )
+  const targetStub = getStubExitPoint(
+    targetPosition,
+    targetPoint,
+    EDGES.STUB_LENGTH
+  )
+  const sourceAxis = getSegmentAxisForPosition(sourcePosition)
+
+  if (sourceAxis === "horizontal") {
+    const stubLaneDelta = Math.abs(sourceStub.x - targetStub.x)
+    if (
+      sourcePoint.y !== targetPoint.y &&
+      stubLaneDelta > 0 &&
+      stubLaneDelta <= sharedLaneSnapTolerance
+    ) {
+      const sharedX = Math.round((sourceStub.x + targetStub.x) / 2)
+      return removeDuplicatePoints([
+        sourcePoint,
+        { x: sharedX, y: sourcePoint.y },
+        { x: sharedX, y: targetPoint.y },
+        targetPoint,
+      ])
+    }
+
+    const bridgeY =
+      sourcePoint.y !== targetPoint.y
+        ? Math.round((sourcePoint.y + targetPoint.y) / 2)
+        : sourcePoint.y <= targetPoint.y
+          ? Math.min(sourcePoint.y, targetPoint.y) - EDGES.STUB_LENGTH
+          : Math.max(sourcePoint.y, targetPoint.y) + EDGES.STUB_LENGTH
+    return removeDuplicatePoints([
+      sourcePoint,
+      sourceStub,
+      { x: sourceStub.x, y: bridgeY },
+      { x: targetStub.x, y: bridgeY },
+      targetStub,
+      targetPoint,
+    ])
+  }
+
+  const stubLaneDelta = Math.abs(sourceStub.y - targetStub.y)
+  if (
+    sourcePoint.x !== targetPoint.x &&
+    stubLaneDelta > 0 &&
+    stubLaneDelta <= sharedLaneSnapTolerance
+  ) {
+    const sharedY = Math.round((sourceStub.y + targetStub.y) / 2)
+    return removeDuplicatePoints([
+      sourcePoint,
+      { x: sourcePoint.x, y: sharedY },
+      { x: targetPoint.x, y: sharedY },
+      targetPoint,
+    ])
+  }
+
+  const bridgeX =
+    sourcePoint.x !== targetPoint.x
+      ? Math.round((sourcePoint.x + targetPoint.x) / 2)
+      : sourcePoint.x <= targetPoint.x
+        ? Math.min(sourcePoint.x, targetPoint.x) - EDGES.STUB_LENGTH
+        : Math.max(sourcePoint.x, targetPoint.x) + EDGES.STUB_LENGTH
+  return removeDuplicatePoints([
+    sourcePoint,
+    sourceStub,
+    { x: bridgeX, y: sourceStub.y },
+    { x: bridgeX, y: targetStub.y },
+    targetStub,
+    targetPoint,
+  ])
+}
+
+const hasCollapsingSegments = (result: IPoint[]): boolean => {
+  for (let i = 1; i < result.length - 2; i++) {
+    const prev = result[i - 1]
+    const curr = result[i]
+    const next = result[i + 1]
+    const horizBack =
+      prev.y === curr.y &&
+      curr.y === next.y &&
+      (curr.x - prev.x) * (next.x - curr.x) < 0
+    const vertBack =
+      prev.x === curr.x &&
+      curr.x === next.x &&
+      (curr.y - prev.y) * (next.y - curr.y) < 0
+    if (horizBack || vertBack) return true
+  }
+  return false
+}
+
+/**
+ * Returns true when source and target stubs point toward each other and would
+ * overlap or leave no room between them. This catches the "narrow U" case —
+ * where the two arms of a U-shape almost touch — before the geometry has
+ * actually inverted (which hasCollapsingSegments catches too late).
+ *
+ * Only applies to facing-stub configurations where both stubs exit into the
+ * same space and can collide. Diverging pairs are handled by later validation.
+ */
+export const stubsWouldOverlap = (
+  sourcePoint: IPoint,
+  targetPoint: IPoint,
+  sourcePosition: Position,
+  targetPosition: Position,
+  stubLength: number
+): boolean => {
+  if (sourcePosition === Position.Right && targetPosition === Position.Left) {
+    return (
+      sourcePoint.x < targetPoint.x &&
+      sourcePoint.x + stubLength >= targetPoint.x - stubLength
+    )
+  }
+  if (sourcePosition === Position.Left && targetPosition === Position.Right) {
+    return (
+      sourcePoint.x > targetPoint.x &&
+      sourcePoint.x - stubLength <= targetPoint.x + stubLength
+    )
+  }
+  if (sourcePosition === Position.Bottom && targetPosition === Position.Top) {
+    return (
+      sourcePoint.y < targetPoint.y &&
+      sourcePoint.y + stubLength >= targetPoint.y - stubLength
+    )
+  }
+  if (sourcePosition === Position.Top && targetPosition === Position.Bottom) {
+    return (
+      sourcePoint.y > targetPoint.y &&
+      sourcePoint.y - stubLength <= targetPoint.y + stubLength
+    )
+  }
+  return false
+}
+
+const hasDiagonalSegment = (points: IPoint[]): boolean =>
+  points.some((point, index) => {
+    if (index === 0) return false
+    const previous = points[index - 1]
+    return previous.x !== point.x && previous.y !== point.y
+  })
+
+const getSourceStubLength = (
+  points: IPoint[],
+  sourcePoint: IPoint,
+  sourcePosition: Position
+): number => {
+  const first = points[1]
+  if (!first) return 0
+
+  switch (sourcePosition) {
+    case Position.Right:
+      return first.y === sourcePoint.y ? first.x - sourcePoint.x : -Infinity
+    case Position.Left:
+      return first.y === sourcePoint.y ? sourcePoint.x - first.x : -Infinity
+    case Position.Bottom:
+      return first.x === sourcePoint.x ? first.y - sourcePoint.y : -Infinity
+    case Position.Top:
+    default:
+      return first.x === sourcePoint.x ? sourcePoint.y - first.y : -Infinity
+  }
+}
+
+const getTargetStubLength = (
+  points: IPoint[],
+  targetPoint: IPoint,
+  targetPosition: Position
+): number => {
+  const penultimate = points[points.length - 2]
+  if (!penultimate) return 0
+
+  switch (targetPosition) {
+    case Position.Left:
+      return penultimate.y === targetPoint.y
+        ? targetPoint.x - penultimate.x
+        : -Infinity
+    case Position.Right:
+      return penultimate.y === targetPoint.y
+        ? penultimate.x - targetPoint.x
+        : -Infinity
+    case Position.Top:
+      return penultimate.x === targetPoint.x
+        ? targetPoint.y - penultimate.y
+        : -Infinity
+    case Position.Bottom:
+    default:
+      return penultimate.x === targetPoint.x
+        ? penultimate.y - targetPoint.y
+        : -Infinity
+  }
+}
+
+const hasReducedTerminalStub = (
+  points: IPoint[],
+  sourcePoint: IPoint,
+  targetPoint: IPoint,
+  sourcePosition: Position,
+  targetPosition: Position
+): boolean =>
+  getSourceStubLength(points, sourcePoint, sourcePosition) <
+    EDGES.STUB_LENGTH ||
+  getTargetStubLength(points, targetPoint, targetPosition) < EDGES.STUB_LENGTH
+
+const hasArmCollapse = (points: IPoint[], proximityPx: number): boolean => {
+  if (points.length < 4) return false
+
+  for (let i = 0; i < points.length - 1; i++) {
+    const aStart = points[i]
+    const aEnd = points[i + 1]
+    const aIsH = aStart.y === aEnd.y
+    const aIsV = aStart.x === aEnd.x
+    if (!aIsH && !aIsV) continue
+
+    for (let j = i + 2; j < points.length - 1; j++) {
+      const bStart = points[j]
+      const bEnd = points[j + 1]
+      const bIsH = bStart.y === bEnd.y
+      const bIsV = bStart.x === bEnd.x
+
+      if (aIsH && bIsH && Math.abs(aStart.y - bStart.y) <= proximityPx) {
+        const aMinX = Math.min(aStart.x, aEnd.x)
+        const aMaxX = Math.max(aStart.x, aEnd.x)
+        const bMinX = Math.min(bStart.x, bEnd.x)
+        const bMaxX = Math.max(bStart.x, bEnd.x)
+        if (Math.max(aMinX, bMinX) < Math.min(aMaxX, bMaxX)) return true
+      }
+
+      if (aIsV && bIsV && Math.abs(aStart.x - bStart.x) <= proximityPx) {
+        const aMinY = Math.min(aStart.y, aEnd.y)
+        const aMaxY = Math.max(aStart.y, aEnd.y)
+        const bMinY = Math.min(bStart.y, bEnd.y)
+        const bMaxY = Math.max(bStart.y, bEnd.y)
+        if (Math.max(aMinY, bMinY) < Math.min(aMaxY, bMaxY)) return true
+      }
+    }
+  }
+
+  return false
+}
+
+const collapseTinyOrthogonalDoglegs = (
+  points: IPoint[],
+  proximityPx: number
+): IPoint[] => {
+  if (points.length < 5) return points
+
+  let collapsed = points.map((point) => ({ ...point }))
+  let changed = true
+
+  while (changed) {
+    changed = false
+
+    for (let i = 1; i <= collapsed.length - 4; i++) {
+      const a = collapsed[i]
+      const b = collapsed[i + 1]
+      const c = collapsed[i + 2]
+      const d = collapsed[i + 3]
+
+      const firstVertical = a.x === b.x
+      const firstHorizontal = a.y === b.y
+      const secondVertical = c.x === d.x
+      const secondHorizontal = c.y === d.y
+
+      if (firstVertical && secondVertical && b.y === c.y) {
+        const connectorLength = Math.abs(c.x - b.x)
+        const sameDirection = (b.y - a.y) * (d.y - c.y) > 0
+        if (
+          connectorLength > 0 &&
+          connectorLength <= proximityPx &&
+          sameDirection
+        ) {
+          const lane = i + 3 === collapsed.length - 2 ? c.x : a.x
+          collapsed[i] = { ...a, x: lane }
+          collapsed[i + 1] = { ...b, x: lane }
+          collapsed[i + 2] = { ...c, x: lane }
+          collapsed[i + 3] = { ...d, x: lane }
+          collapsed = removeDuplicatePoints(simplifyPoints(collapsed))
+          changed = true
+          break
+        }
+      }
+
+      if (firstHorizontal && secondHorizontal && b.x === c.x) {
+        const connectorLength = Math.abs(c.y - b.y)
+        const sameDirection = (b.x - a.x) * (d.x - c.x) > 0
+        if (
+          connectorLength > 0 &&
+          connectorLength <= proximityPx &&
+          sameDirection
+        ) {
+          const lane = i + 3 === collapsed.length - 2 ? c.y : a.y
+          collapsed[i] = { ...a, y: lane }
+          collapsed[i + 1] = { ...b, y: lane }
+          collapsed[i + 2] = { ...c, y: lane }
+          collapsed[i + 3] = { ...d, y: lane }
+          collapsed = removeDuplicatePoints(simplifyPoints(collapsed))
+          changed = true
+          break
+        }
+      }
+    }
+  }
+
+  return collapsed
+}
+
+const sanitizeReleasedPoints = (
+  points: IPoint[],
+  sourcePoint: IPoint,
+  targetPoint: IPoint
+): IPoint[] => {
+  if (points.length < 2) return []
+
+  const rounded = points.map((point) => ({
+    x: Math.round(point.x),
+    y: Math.round(point.y),
+  }))
+  rounded[0] = { ...sourcePoint }
+  rounded[rounded.length - 1] = { ...targetPoint }
+
+  return removeDuplicatePoints(simplifyPoints(removeDuplicatePoints(rounded)))
+}
+
+export function isInvalidOrthogonalEdgeRelease(
+  points: IPoint[],
+  sourcePoint: IPoint,
+  targetPoint: IPoint,
+  sourcePosition: Position,
+  targetPosition: Position
+): boolean {
+  const sanitized = sanitizeReleasedPoints(points, sourcePoint, targetPoint)
+
+  return (
+    sanitized.length < 2 ||
+    hasDiagonalSegment(sanitized) ||
+    hasReducedTerminalStub(
+      sanitized,
+      sourcePoint,
+      targetPoint,
+      sourcePosition,
+      targetPosition
+    ) ||
+    hasArmCollapse(sanitized, EDGES.ORTHOGONAL_ARM_OVERLAP_PX) ||
+    stubsWouldOverlap(
+      sourcePoint,
+      targetPoint,
+      sourcePosition,
+      targetPosition,
+      EDGES.STUB_LENGTH
+    )
+  )
+}
+
+export function normalizeOrthogonalEdgePoints(
+  points: IPoint[],
+  sourcePoint: IPoint,
+  targetPoint: IPoint,
+  sourcePosition: Position,
+  targetPosition: Position
+): IPoint[] {
+  const hasStubCollision = stubsWouldOverlap(
+    sourcePoint,
+    targetPoint,
+    sourcePosition,
+    targetPosition,
+    EDGES.STUB_LENGTH
+  )
+  const fallback = hasStubCollision
+    ? getStubCollisionFallbackPoints(
+        sourcePoint,
+        targetPoint,
+        sourcePosition,
+        targetPosition
+      )
+    : getSafeOrthogonalPathPoints(
+        sourcePoint,
+        targetPoint,
+        sourcePosition,
+        targetPosition
+      )
+
+  const sanitized = sanitizeReleasedPoints(points, sourcePoint, targetPoint)
+  if (
+    sanitized.length < 2 ||
+    hasDiagonalSegment(sanitized) ||
+    hasReducedTerminalStub(
+      sanitized,
+      sourcePoint,
+      targetPoint,
+      sourcePosition,
+      targetPosition
+    ) ||
+    hasArmCollapse(sanitized, EDGES.ORTHOGONAL_ARM_OVERLAP_PX) ||
+    hasStubCollision
+  ) {
+    return fallback
+  }
+
+  const normalized = preserveOrthogonalEdgePoints(
+    sanitized,
+    sourcePoint,
+    targetPoint,
+    sourcePosition,
+    targetPosition
+  )
+
+  const canonical = sanitizeReleasedPoints(normalized, sourcePoint, targetPoint)
+
+  return canonical.length >= 2 && !hasDiagonalSegment(canonical)
+    ? canonical
+    : fallback
+}
+
+export function resolveOrthogonalEdgeReleasePoints(
+  releasedPoints: IPoint[],
+  lastValidPoints: IPoint[],
+  sourcePoint: IPoint,
+  targetPoint: IPoint,
+  sourcePosition: Position,
+  targetPosition: Position
+): IPoint[] {
+  const invalid = isInvalidOrthogonalEdgeRelease(
+    releasedPoints,
+    sourcePoint,
+    targetPoint,
+    sourcePosition,
+    targetPosition
+  )
+
+  // When a release is invalid *because the user dragged the two parallel arms
+  // of a U together (or past each other)*, that is a deliberate "merge the U"
+  // gesture, not a bad drag — collapse the released geometry rather than
+  // snapping back to the pre-drag wide route. normalizeOrthogonalEdgePoints
+  // already routes overlapping input to the clean safe path and re-validates
+  // stubs, so any other invalidity still falls back safely.
+  const sanitized = sanitizeReleasedPoints(
+    releasedPoints,
+    sourcePoint,
+    targetPoint
+  )
+  const armOverlap = hasArmCollapse(sanitized, EDGES.ORTHOGONAL_ARM_OVERLAP_PX)
+  const pointsToNormalize =
+    invalid && !armOverlap ? lastValidPoints : releasedPoints
+
+  return normalizeOrthogonalEdgePoints(
+    pointsToNormalize,
+    sourcePoint,
+    targetPoint,
+    sourcePosition,
+    targetPosition
+  )
+}
+export function preserveOrthogonalEdgePoints(
+  points: IPoint[],
+  sourcePoint: IPoint,
+  targetPoint: IPoint,
+  sourcePosition: Position,
+  targetPosition: Position
+): IPoint[] {
+  const sourceAxis = getSegmentAxisForPosition(sourcePosition)
+  const targetAxis = getSegmentAxisForPosition(targetPosition)
+  const safePoints = getSafeOrthogonalPathPoints(
+    sourcePoint,
+    targetPoint,
+    sourcePosition,
+    targetPosition
+  )
+
+  if (
+    stubsWouldOverlap(
+      sourcePoint,
+      targetPoint,
+      sourcePosition,
+      targetPosition,
+      EDGES.STUB_LENGTH
+    )
+  ) {
+    return getStubCollisionFallbackPoints(
+      sourcePoint,
+      targetPoint,
+      sourcePosition,
+      targetPosition
+    )
+  }
+
+  const originalSegmentCount = Math.max(points.length - 1, 1)
+  const safeSegmentCount = Math.max(safePoints.length - 1, 1)
+  const minimumSegmentCount = getMinimumOrthogonalSegmentCount(
+    sourcePoint,
+    targetPoint,
+    sourceAxis,
+    targetAxis
+  )
+
+  if (originalSegmentCount < minimumSegmentCount) {
+    return safePoints
+  }
+
+  let segmentCount = Math.max(
+    originalSegmentCount,
+    safeSegmentCount,
+    minimumSegmentCount
+  )
+  while (getAlternatingAxis(sourceAxis, segmentCount - 1) !== targetAxis) {
+    segmentCount += 1
+  }
+
+  const laneValues: number[] = [Number.NaN]
+  for (let i = 1; i < segmentCount; i++) {
+    const axis = getAlternatingAxis(sourceAxis, i - 1)
+    laneValues[i] = getLaneValue(points, i, axis, targetPoint)
+  }
+
+  const safeLaneValues: number[] = [Number.NaN]
+  for (let i = 1; i < segmentCount; i++) {
+    const axis = getAlternatingAxis(sourceAxis, i - 1)
+    safeLaneValues[i] = getLaneValue(safePoints, i, axis, targetPoint)
+  }
+
+  const srcAxisCoord0 = sourceAxis === "horizontal" ? points[0].x : points[0].y
+  const srcAxisCoord1 =
+    points.length > 1
+      ? sourceAxis === "horizontal"
+        ? points[1].x
+        : points[1].y
+      : srcAxisCoord0
+  const srcStubOffset = Math.abs(srcAxisCoord1 - srcAxisCoord0)
+  if (Math.abs(srcStubOffset - EDGES.STUB_LENGTH) <= 1) {
+    laneValues[1] = getStubExitCoord(
+      sourcePosition,
+      sourcePoint,
+      EDGES.STUB_LENGTH
+    )
+  }
+
+  if (!isSourceLaneCompatible(sourcePosition, sourcePoint, laneValues[1])) {
+    laneValues[1] = safeLaneValues[1]
+  }
+
+  const targetLaneIndex = (() => {
+    for (let i = segmentCount - 1; i >= 1; i--) {
+      if (getAlternatingAxis(sourceAxis, i - 1) === targetAxis) return i
+    }
+    return 1
+  })()
+
+  const lastIdx = points.length - 1
+  const tgtAxisCoordLast =
+    targetAxis === "horizontal" ? points[lastIdx].x : points[lastIdx].y
+  const tgtAxisCoordAtLane =
+    targetLaneIndex < points.length
+      ? targetAxis === "horizontal"
+        ? points[targetLaneIndex].x
+        : points[targetLaneIndex].y
+      : tgtAxisCoordLast
+  const tgtStubOffset = Math.abs(tgtAxisCoordLast - tgtAxisCoordAtLane)
+  if (Math.abs(tgtStubOffset - EDGES.STUB_LENGTH) <= 1) {
+    laneValues[targetLaneIndex] = getStubExitCoord(
+      targetPosition,
+      targetPoint,
+      EDGES.STUB_LENGTH
+    )
+  }
+
+  if (segmentCount >= 3 && points.length >= 3) {
+    const perpCoord1 = sourceAxis === "horizontal" ? points[1].y : points[1].x
+    const perpCoord2 = sourceAxis === "horizontal" ? points[2].y : points[2].x
+    if (Math.abs(perpCoord1 - perpCoord2) <= 1) {
+      laneValues[2] =
+        sourceAxis === "horizontal" ? sourcePoint.y : sourcePoint.x
+    }
+  }
+
+  let result = buildOrthogonalPathFromLanes(
+    laneValues,
+    segmentCount,
+    sourcePoint,
+    targetPoint,
+    sourceAxis,
+    targetAxis
+  )
+
+  if (
+    !isTargetApproachCompatible(
+      targetPosition,
+      result[result.length - 2],
+      targetPoint
+    )
+  ) {
+    if (sourceAxis === targetAxis && points.length >= 6) {
+      const stubExitCoord = getStubExitCoord(
+        targetPosition,
+        targetPoint,
+        EDGES.STUB_LENGTH
+      )
+      const stubExitPoint =
+        targetAxis === "horizontal"
+          ? { x: stubExitCoord, y: targetPoint.y }
+          : { x: targetPoint.x, y: stubExitCoord }
+      const withStub = removeDuplicatePoints([
+        ...result.slice(0, -1),
+        stubExitPoint,
+        targetPoint,
+      ])
+      if (
+        isTargetApproachCompatible(
+          targetPosition,
+          withStub[withStub.length - 2],
+          targetPoint
+        )
+      ) {
+        result = withStub
+      } else {
+        laneValues[targetLaneIndex] = safeLaneValues[targetLaneIndex]
+        result = buildOrthogonalPathFromLanes(
+          laneValues,
+          segmentCount,
+          sourcePoint,
+          targetPoint,
+          sourceAxis,
+          targetAxis
+        )
+      }
+    } else {
+      laneValues[targetLaneIndex] = safeLaneValues[targetLaneIndex]
+      result = buildOrthogonalPathFromLanes(
+        laneValues,
+        segmentCount,
+        sourcePoint,
+        targetPoint,
+        sourceAxis,
+        targetAxis
+      )
+    }
+  }
+
+  result = collapseTinyOrthogonalDoglegs(
+    result,
+    EDGES.ORTHOGONAL_DOGLEG_TOLERANCE_PX
+  )
+
+  if (
+    !isSourceLaneCompatible(
+      sourcePosition,
+      sourcePoint,
+      getLaneValue(result, 1, getAlternatingAxis(sourceAxis, 0), targetPoint)
+    ) ||
+    !isTargetApproachCompatible(
+      targetPosition,
+      result[result.length - 2],
+      targetPoint
+    ) ||
+    hasCollapsingSegments(result) ||
+    hasReducedTerminalStub(
+      result,
+      sourcePoint,
+      targetPoint,
+      sourcePosition,
+      targetPosition
+    ) ||
+    hasArmCollapse(result, EDGES.ORTHOGONAL_ARM_OVERLAP_PX)
+  ) {
+    return safePoints
+  }
+
+  return result
 }
 
 export function getMarkerSegmentPath(
