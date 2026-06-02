@@ -19,6 +19,7 @@ const ADJECTIVES = [
   "Kind",
   "Noble",
 ]
+
 const ANIMALS = [
   "Falcon",
   "Otter",

@@ -34,13 +34,20 @@ import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts"
 import { usePaneClicked } from "./hooks/usePaneClicked"
 import { ApollonMode } from "./typings"
 import { getConnectionLineType } from "./utils/edgeUtils"
+import {
+  CollaborationLayer,
+  type CollaborationAwarenessApi,
+  type CollaborationLayerOptions,
+} from "@/components/collaboration/CollaborationLayer"
 
 interface AppProps {
   onReactFlowInit: (instance: ReactFlowInstance) => void
+  collaboration: CollaborationLayerOptions
+  awareness: CollaborationAwarenessApi
 }
 const proOptions = { hideAttribution: true }
 
-function App({ onReactFlowInit }: AppProps) {
+function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
   useKeyboardShortcuts()
 
   const { nodes, onNodesChange, edges, onEdgesChange, diagramId } =
@@ -144,6 +151,7 @@ function App({ onReactFlowInit }: AppProps) {
         <AssessmentSelectionDebug />
       </ReactFlow>
       <ScrollOverlay />
+      <CollaborationLayer options={collaboration} awareness={awareness} />
     </div>
   )
 }

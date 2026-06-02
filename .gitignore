@@ -51,6 +51,12 @@ library/stats.html
 android/
 ios/
 
+# Fastlane
+**/fastlane/report.xml
+**/fastlane/README.md
+**/fastlane/test_output
+**/fastlane/screenshots
+
 # Capacitor generated icons
 icons/
 venv/

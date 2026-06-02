@@ -28,6 +28,7 @@
     "capacitor:assets:generate:android": "capacitor-assets generate --android"
   },
   "dependencies": {
+    "@capacitor/clipboard": "8.0.1",
     "@capacitor/android": "8.3.0",
     "@capacitor/core": "8.3.0",
     "@capacitor/file-transfer": "2.0.4",

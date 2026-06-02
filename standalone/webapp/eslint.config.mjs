@@ -7,7 +7,15 @@ import reactHooks from "eslint-plugin-react-hooks"
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
-  { ignores: ["node_modules", "dist"] },
+  {
+    ignores: [
+      "node_modules/**",
+      "dist/**",
+      // Capacitor native projects (contain generated/bundled web assets)
+      "ios/**",
+      "android/**",
+    ],
+  },
   { files: ["**/*.{js,ts,tsx}"] },
   { languageOptions: { globals: globals.browser } },
   pluginJs.configs.recommended,
