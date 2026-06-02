@@ -51,24 +51,3 @@ export function transformEdges(model: UMLModel): UMLModel {
     edges: hydratedEdges,
   }
 }
-
-/**
- * Validates that every edge in the model carries valid OrthogonalEdgeData.
- * Returns an array of edge IDs that failed validation.
- */
-export function validateEdgeMigration(model: UMLModel): string[] {
-  const failures: string[] = []
-
-  for (const edge of model.edges) {
-    const data = edge.data as OrthogonalEdgeData | undefined
-    if (!data) {
-      failures.push(edge.id)
-      continue
-    }
-    if (!Array.isArray(data.userWaypoints)) {
-      failures.push(edge.id)
-    }
-  }
-
-  return failures
-}

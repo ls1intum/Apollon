@@ -4,12 +4,9 @@ import {
   adjustSourceCoordinates,
   adjustTargetCoordinates,
   calculateDynamicEdgeLabels,
-  calculateInnerMidpoints,
   calculateOverlayPath,
   calculateStraightPath,
-  calculateTextPlacement,
   findClosestHandle,
-  getHandleAnchor,
   getConnectionLineType,
   getDefaultEdgeType,
   getDistributedHandleOffsetPercents,
@@ -99,61 +96,6 @@ describe("adjustSourceCoordinates", () => {
   it("handles zero padding", () => {
     const result = adjustSourceCoordinates(50, 75, Position.Right, 0)
     expect(result).toEqual({ sourceX: 50, sourceY: 75 })
-  })
-})
-
-// ---------------------------------------------------------------------------
-// calculateTextPlacement
-// ---------------------------------------------------------------------------
-describe("calculateTextPlacement", () => {
-  it("returns correct offsets for top position", () => {
-    const result = calculateTextPlacement(100, 200, Position.Top)
-    expect(result).toEqual({
-      roleX: 90,
-      roleY: 185,
-      multiplicityX: 110,
-      multiplicityY: 185,
-    })
-  })
-
-  it("returns correct offsets for right position", () => {
-    const result = calculateTextPlacement(100, 200, Position.Right)
-    expect(result).toEqual({
-      roleX: 115,
-      roleY: 190,
-      multiplicityX: 115,
-      multiplicityY: 215,
-    })
-  })
-
-  it("returns correct offsets for bottom position", () => {
-    const result = calculateTextPlacement(100, 200, Position.Bottom)
-    expect(result).toEqual({
-      roleX: 90,
-      roleY: 215,
-      multiplicityX: 110,
-      multiplicityY: 215,
-    })
-  })
-
-  it("returns correct offsets for left position", () => {
-    const result = calculateTextPlacement(100, 200, Position.Left)
-    expect(result).toEqual({
-      roleX: 85,
-      roleY: 190,
-      multiplicityX: 85,
-      multiplicityY: 215,
-    })
-  })
-
-  it("works with zero coordinates", () => {
-    const result = calculateTextPlacement(0, 0, Position.Top)
-    expect(result).toEqual({
-      roleX: -10,
-      roleY: -15,
-      multiplicityX: 10,
-      multiplicityY: -15,
-    })
   })
 })
 
@@ -618,62 +560,6 @@ describe("findClosestHandle", () => {
 })
 
 // ---------------------------------------------------------------------------
-// getHandleAnchor
-// ---------------------------------------------------------------------------
-describe("getHandleAnchor", () => {
-  const rect = { x: 0, y: 0, width: 300, height: 200 }
-
-  it("resolves canonical handle IDs", () => {
-    const anchor = getHandleAnchor(rect, "top-mid-left")
-    expect(anchor).not.toBeNull()
-    // top-mid-left = slot 1 of the top side (hidden between slot 0 and slot 2
-    // of the stage-3 layout); its coordinate is the midpoint between those two
-    // visible slots, snapped to the 5px handle grid.
-    expect(anchor).toEqual({ x: 105, y: 40, side: Position.Top })
-  })
-
-  it("resolves alias left-top to the canonical top side", () => {
-    const alias = getHandleAnchor(rect, "left-top")
-    const canonical = getHandleAnchor(rect, "top-left")
-    expect(alias).not.toBeNull()
-    expect(canonical).not.toBeNull()
-    expect(alias?.side).toBe(Position.Top)
-    expect(alias).toEqual(canonical)
-  })
-
-  it("resolves alias right-top to the canonical top side", () => {
-    const alias = getHandleAnchor(rect, "right-top")
-    const canonical = getHandleAnchor(rect, "top-right")
-    expect(alias).not.toBeNull()
-    expect(canonical).not.toBeNull()
-    expect(alias?.side).toBe(Position.Top)
-    expect(alias).toEqual(canonical)
-  })
-
-  it("resolves alias left-bottom to the canonical bottom side", () => {
-    const alias = getHandleAnchor(rect, "left-bottom")
-    const canonical = getHandleAnchor(rect, "bottom-left")
-    expect(alias).not.toBeNull()
-    expect(canonical).not.toBeNull()
-    expect(alias?.side).toBe(Position.Bottom)
-    expect(alias).toEqual(canonical)
-  })
-
-  it("resolves alias right-bottom to the canonical bottom side", () => {
-    const alias = getHandleAnchor(rect, "right-bottom")
-    const canonical = getHandleAnchor(rect, "bottom-right")
-    expect(alias).not.toBeNull()
-    expect(canonical).not.toBeNull()
-    expect(alias?.side).toBe(Position.Bottom)
-    expect(alias).toEqual(canonical)
-  })
-
-  it("returns null for unknown handle IDs", () => {
-    expect(getHandleAnchor(rect, "does-not-exist")).toBeNull()
-  })
-})
-
-// ---------------------------------------------------------------------------
 // calculateOverlayPath
 // ---------------------------------------------------------------------------
 describe("calculateOverlayPath", () => {
@@ -948,70 +834,6 @@ describe("parseSvgPath", () => {
       { x: 0, y: 0 },
       { x: 100, y: 200 },
     ])
-  })
-})
-
-// ---------------------------------------------------------------------------
-// calculateInnerMidpoints
-// ---------------------------------------------------------------------------
-describe("calculateInnerMidpoints", () => {
-  it("returns empty for fewer than 3 points", () => {
-    expect(
-      calculateInnerMidpoints([
-        { x: 0, y: 0 },
-        { x: 100, y: 0 },
-      ])
-    ).toEqual([])
-  })
-
-  it("returns empty for empty array", () => {
-    expect(calculateInnerMidpoints([])).toEqual([])
-  })
-
-  it("returns midpoint of inner segment for U-shaped path", () => {
-    // 3 segments: first (horiz), middle (vert), last (horiz)
-    // Only inner segments (excluding first and last) should produce midpoints
-    const points = [
-      { x: 0, y: 0 },
-      { x: 100, y: 0 },
-      { x: 100, y: 100 },
-      { x: 200, y: 100 },
-    ]
-    const result = calculateInnerMidpoints(points)
-    // Segments: [0→100,0] horiz, [100,0→100,100] vert, [100,100→200,100] horiz
-    // Inner = index 1 only: midpoint of (100,0)→(100,100) = (100, 50)
-    expect(result).toEqual([{ x: 100, y: 50 }])
-  })
-
-  it("rounds midpoints to specified decimals", () => {
-    const points = [
-      { x: 0, y: 0 },
-      { x: 100, y: 0 },
-      { x: 100, y: 77 },
-      { x: 200, y: 77 },
-    ]
-    const result = calculateInnerMidpoints(points, 1)
-    expect(result).toEqual([{ x: 100, y: 38.5 }])
-  })
-
-  it("returns multiple midpoints for longer path", () => {
-    // 5 segments path: horiz, vert, horiz, vert, horiz
-    // Inner segments: index 1, 2, 3
-    const points = [
-      { x: 0, y: 0 },
-      { x: 100, y: 0 },
-      { x: 100, y: 100 },
-      { x: 200, y: 100 },
-      { x: 200, y: 200 },
-      { x: 300, y: 200 },
-    ]
-    const result = calculateInnerMidpoints(points)
-    // Segments: [0,0→100,0] H, [100,0→100,100] V, [100,100→200,100] H, [200,100→200,200] V, [200,200→300,200] H
-    // Inner (excl first and last): index 1,2,3
-    expect(result.length).toBe(3)
-    expect(result[0]).toEqual({ x: 100, y: 50 })
-    expect(result[1]).toEqual({ x: 150, y: 100 })
-    expect(result[2]).toEqual({ x: 200, y: 150 })
   })
 })
 

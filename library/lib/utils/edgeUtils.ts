@@ -51,58 +51,6 @@ export const adjustSourceCoordinates = (
   return { sourceX, sourceY }
 }
 
-interface TextPlacement {
-  roleX: number
-  roleY: number
-  multiplicityX: number
-  multiplicityY: number
-}
-
-export const calculateTextPlacement = (
-  x: number,
-  y: number,
-  position: Position
-): TextPlacement => {
-  let roleX = x,
-    roleY = y
-  let multiplicityX = x,
-    multiplicityY = y
-
-  switch (position) {
-    case "top":
-      roleX = x - 10
-      roleY = y - 15
-      multiplicityX = x + 10
-      multiplicityY = y - 15
-      break
-    case "right":
-      roleX = x + 15
-      roleY = y - 10
-      multiplicityX = x + 15
-      multiplicityY = y + 15
-      break
-    case "bottom":
-      roleX = x - 10
-      roleY = y + 15
-      multiplicityX = x + 10
-      multiplicityY = y + 15
-      break
-    case "left":
-      roleX = x - 15
-      roleY = y - 10
-      multiplicityX = x - 15
-      multiplicityY = y + 15
-      break
-  }
-
-  return {
-    roleX,
-    roleY,
-    multiplicityX,
-    multiplicityY,
-  }
-}
-
 export const calculateDynamicEdgeLabels = (
   x: number,
   y: number,
@@ -779,7 +727,7 @@ function getCanonicalHandlePoints(
   if (!useFourHandles) {
     points.push(
       // Top side. The two corners (top-left, top-right) belong to this side;
-      // aliases left-top and right-top resolve to them via getHandleAnchorMap.
+      // aliases left-top and right-top resolve to them via canonical lookup.
       {
         label: "top-left",
         position: { x: xStart, y: yStart },
@@ -928,56 +876,6 @@ function getCanonicalHandlePoints(
   }
 
   return points
-}
-
-function getHandleAnchorMap(rect: Rect): Map<string, RectHandlePoint> {
-  const canonicalPoints = getCanonicalHandlePoints(rect, false)
-  const pointMap = new Map<string, RectHandlePoint>()
-
-  for (const point of canonicalPoints) {
-    pointMap.set(point.label, point)
-  }
-
-  // Backward compatibility for persisted alias IDs:
-  // - left-top resolves to the same anchor/side as top-left (Top)
-  // - right-top resolves to the same anchor/side as top-right (Top)
-  // - left-bottom resolves to the same anchor/side as bottom-left (Bottom)
-  // - right-bottom resolves to the same anchor/side as bottom-right (Bottom)
-  const aliasToCanonical: Record<string, string> = {
-    "left-top": "top-left",
-    "right-top": "top-right",
-    "left-bottom": "bottom-left",
-    "right-bottom": "bottom-right",
-  }
-
-  for (const [alias, canonical] of Object.entries(aliasToCanonical)) {
-    const canonicalPoint = pointMap.get(canonical)
-    if (canonicalPoint) {
-      pointMap.set(alias, {
-        label: alias,
-        position: canonicalPoint.position,
-        side: canonicalPoint.side,
-      })
-    }
-  }
-
-  return pointMap
-}
-
-/**
- * Resolves a stored handle ID (e.g. "right", "top-mid-left") to its anchor
- * point and the side it lives on, given a node rect. Returns null if the ID
- * is unknown. Pure: same inputs always produce same outputs.
- */
-export function getHandleAnchor(
-  rect: Rect,
-  handleId: string
-): { x: number; y: number; side: Position } | null {
-  const handleAnchorMap = getHandleAnchorMap(rect)
-  const match = handleAnchorMap.get(handleId)
-  if (!match) return null
-
-  return { x: match.position.x, y: match.position.y, side: match.side }
 }
 
 export function findClosestHandle({
@@ -1218,69 +1116,6 @@ export function parseSvgPath(path: string): IPoint[] {
     }
   }
   return simplifyPoints(points)
-}
-
-export function calculateInnerMidpoints(
-  points: IPoint[],
-  decimals: number = 2
-): IPoint[] {
-  const round = (num: number) => Number(num.toFixed(decimals))
-  const midpoints: IPoint[] = []
-  if (points.length < 3) return midpoints
-
-  // Group consecutive points that form straight lines (horizontal or vertical)
-  const segments: IPoint[][] = []
-  let currentSegment: IPoint[] = [points[0]]
-
-  for (let i = 1; i < points.length; i++) {
-    const prevPoint = currentSegment[currentSegment.length - 1]
-    const currentPoint = points[i]
-
-    // Check if this point continues the current segment (same direction)
-    const isHorizontal = Math.abs(prevPoint.y - currentPoint.y) < 0.1
-    const isVertical = Math.abs(prevPoint.x - currentPoint.x) < 0.1
-
-    if (currentSegment.length === 1) {
-      // First segment, just add the point
-      currentSegment.push(currentPoint)
-    } else {
-      // Check if the new point continues the same direction as the current segment
-      const segmentStart = currentSegment[0]
-      const segmentPrev = currentSegment[currentSegment.length - 1]
-      const wasHorizontal = Math.abs(segmentStart.y - segmentPrev.y) < 0.1
-      const wasVertical = Math.abs(segmentStart.x - segmentPrev.x) < 0.1
-
-      if ((wasHorizontal && isHorizontal) || (wasVertical && isVertical)) {
-        // Continue current segment
-        currentSegment.push(currentPoint)
-      } else {
-        // Start new segment
-        segments.push([...currentSegment])
-        currentSegment = [prevPoint, currentPoint]
-      }
-    }
-  }
-
-  // Add the last segment
-  if (currentSegment.length > 1) {
-    segments.push(currentSegment)
-  }
-
-  // Calculate one midpoint per segment (excluding first and last segments to avoid endpoints)
-  for (let i = 1; i < segments.length - 1; i++) {
-    const segment = segments[i]
-    if (segment.length >= 2) {
-      const start = segment[0]
-      const end = segment[segment.length - 1]
-      const midpoint = {
-        x: round((start.x + end.x) / 2),
-        y: round((start.y + end.y) / 2),
-      }
-      midpoints.push(midpoint)
-    }
-  }
-
-  return midpoints
 }
 
 export function removeDuplicatePoints(points: IPoint[]): IPoint[] {

@@ -2,7 +2,6 @@ import { describe, it, expect } from "vitest"
 import {
   hydrateEdgeData,
   transformEdges,
-  validateEdgeMigration,
 } from "@/services/migration/EdgeTransformer"
 import {
   UMLDiagramType,
@@ -142,24 +141,6 @@ describe("EdgeTransformer", () => {
       const model = makeModel([])
       const result = transformEdges(model)
       expect(result).toBe(model)
-    })
-  })
-
-  describe("validateEdgeMigration", () => {
-    it("returns empty array for valid model", () => {
-      const model = makeModel([
-        makeLegacyEdge({
-          data: { userWaypoints: [] },
-        }),
-      ])
-      const result = transformEdges(model)
-      expect(validateEdgeMigration(result)).toEqual([])
-    })
-
-    it("identifies edges with missing userWaypoints", () => {
-      const model = makeModel([makeLegacyEdge({ id: "bad-edge" })])
-      const failures = validateEdgeMigration(model)
-      expect(failures).toContain("bad-edge")
     })
   })
 })
