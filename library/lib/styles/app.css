@@ -103,6 +103,7 @@
   box-sizing: border-box;
   pointer-events: all;
   cursor: crosshair;
+
   /* --arc-scale is set by DefaultNodeWrapper to 1/zoom so the indicator keeps
      a predictable on-screen size at any zoom (defaults to 1 if unset). */
   --arc-long: calc(28px * var(--arc-scale, 1));
