@@ -415,6 +415,32 @@ describe("findClosestHandle", () => {
       }
     })
 
+    it("never snaps a drop to a hidden between-slot handle", () => {
+      // Sweep dense points along every side — landing on the exact between-slot
+      // offsets — and confirm only NAMED handles are returned. Custom nodes such
+      // as the UseCase ellipse render only the named IDs, so a "*-between-*"
+      // result would persist a handle the node cannot resolve and the edge would
+      // disappear with React Flow's missing-handle error.
+      for (let t = 0; t <= 300; t += 5) {
+        const v = (t * rect.height) / rect.width
+        const points = [
+          { x: t, y: 0 },
+          { x: t, y: rect.height },
+          { x: 0, y: v },
+          { x: rect.width, y: v },
+        ]
+        for (const point of points) {
+          const result = findClosestHandle({
+            point,
+            rect,
+            useFourHandles: false,
+          })
+          expect(result).not.toContain("-between-")
+          expect(canonicalHandleIds.has(result)).toBe(true)
+        }
+      }
+    })
+
     it("uses deterministic canonical-order tie-break for equal distances", () => {
       // Equidistant from top (slot 4, x=150) and top-between-mid-left-center
       // (slot 3, x=130) on the top side. The four directional middles are

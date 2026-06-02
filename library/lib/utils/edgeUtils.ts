@@ -921,7 +921,15 @@ export function findClosestHandle({
   rect,
   useFourHandles = false,
 }: FindClosestHandleParams): string {
-  const points = getCanonicalHandlePoints(rect, useFourHandles)
+  // Only ever snap to a NAMED handle. The "*-between-*" slots are hidden,
+  // resolution-only anchors: they never render a visible arc, and custom nodes
+  // (e.g. the UseCase ellipse) render only the named IDs. Selecting a between
+  // slot on a drop/reconnect could persist a handle the target node does not
+  // render, and React Flow would drop the edge with a missing-handle error.
+  // Named handles are the visible drag targets and are rendered by every node.
+  const points = getCanonicalHandlePoints(rect, useFourHandles).filter(
+    (candidate) => !candidate.label.includes("-between-")
+  )
 
   // Tie-break is deterministic: when two candidates have equal distance,
   // the first candidate in the canonical declaration order above wins.
