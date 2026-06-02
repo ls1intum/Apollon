@@ -10,7 +10,7 @@ import {
   type UMLModel,
 } from "@/typings"
 
-function makeLegacyEdge(overrides: Partial<ApollonEdge> = {}): ApollonEdge {
+function makeEdge(overrides: Partial<ApollonEdge> = {}): ApollonEdge {
   return {
     id: "edge-1",
     source: "node-1",
@@ -20,15 +20,9 @@ function makeLegacyEdge(overrides: Partial<ApollonEdge> = {}): ApollonEdge {
     targetHandle: "left",
     data: {
       label: "uses",
-      sourceMultiplicity: "1",
-      targetMultiplicity: "*",
-      sourceRole: "",
-      targetRole: "",
-      isManuallyLayouted: false,
       points: [
         { x: 100, y: 200 },
         { x: 150, y: 200 },
-        { x: 150, y: 300 },
         { x: 200, y: 300 },
       ],
     },
@@ -50,41 +44,15 @@ function makeModel(edges: ApollonEdge[]): UMLModel {
 
 describe("EdgeTransformer", () => {
   describe("hydrateEdgeData", () => {
-    it("injects userWaypoints into legacy edge data", () => {
-      const legacy = makeLegacyEdge()
-      const hydrated = hydrateEdgeData(legacy)
-
-      expect(hydrated.data.userWaypoints).toEqual([])
+    it("leaves a clean edge untouched (same reference, no copy)", () => {
+      const edge = makeEdge()
+      expect(hydrateEdgeData(edge)).toBe(edge)
     })
 
-    it("preserves legacy points array as fallback", () => {
-      const legacy = makeLegacyEdge()
-      const hydrated = hydrateEdgeData(legacy)
-
-      expect(hydrated.data.points).toEqual([
-        { x: 100, y: 200 },
-        { x: 150, y: 200 },
-        { x: 150, y: 300 },
-        { x: 200, y: 300 },
-      ])
-    })
-
-    it("does not re-hydrate already migrated edges", () => {
-      const migrated = makeLegacyEdge({
+    it("strips stale computedSegments while preserving points and not mutating the input", () => {
+      const edge = makeEdge({
         data: {
-          userWaypoints: [{ x: 50, y: 50 }],
-        },
-      })
-      const result = hydrateEdgeData(migrated)
-
-      // Should return the same object reference (no-op)
-      expect(result).toBe(migrated)
-    })
-
-    it("strips stale computed geometry from migrated edges", () => {
-      const migrated = makeLegacyEdge({
-        data: {
-          userWaypoints: [{ x: 50, y: 50 }],
+          points: [{ x: 0, y: 0 }],
           computedSegments: [
             { x: 0, y: 0 },
             { x: 100, y: 0 },
@@ -92,66 +60,51 @@ describe("EdgeTransformer", () => {
         },
       })
 
-      const result = hydrateEdgeData(migrated)
+      const result = hydrateEdgeData(edge)
 
-      expect(result).not.toBe(migrated)
+      expect(result).not.toBe(edge)
       expect(result.data).not.toHaveProperty("computedSegments")
-      expect(result.data.userWaypoints).toEqual([{ x: 50, y: 50 }])
+      expect(result.data.points).toEqual([{ x: 0, y: 0 }])
+      // The original is left intact.
+      expect(edge.data).toHaveProperty("computedSegments")
     })
 
-    it("does not mutate the original edge", () => {
-      const legacy = makeLegacyEdge()
-      const original = { ...legacy.data }
-      hydrateEdgeData(legacy)
-
-      // Original data should be unchanged
-      expect(legacy.data).toEqual(original)
-    })
-
-    it("hydrates an edge with null/absent data without throwing", () => {
-      // Malformed legacy payloads can omit `data` entirely; the migration must
-      // default it instead of dereferencing null.
-      const malformed = makeLegacyEdge({
+    it("normalizes null/absent data to an empty object without throwing", () => {
+      const malformed = makeEdge({
         data: null as unknown as ApollonEdge["data"],
       })
 
       expect(() => hydrateEdgeData(malformed)).not.toThrow()
-      expect(hydrateEdgeData(malformed).data.userWaypoints).toEqual([])
+      expect(hydrateEdgeData(malformed).data).toEqual({})
     })
   })
 
   describe("transformEdges", () => {
-    it("hydrates all edges in a model", () => {
+    it("returns a new model only when an edge was actually changed", () => {
       const model = makeModel([
-        makeLegacyEdge({ id: "e1" }),
-        makeLegacyEdge({ id: "e2" }),
-        makeLegacyEdge({ id: "e3" }),
-      ])
-
-      const result = transformEdges(model)
-
-      for (const edge of result.edges) {
-        expect(edge.data.userWaypoints).toEqual([])
-      }
-    })
-
-    it("returns same model if all edges already migrated", () => {
-      const model = makeModel([
-        makeLegacyEdge({
-          data: {
-            userWaypoints: [],
-          },
+        makeEdge({ id: "e1" }),
+        makeEdge({
+          id: "e2",
+          data: { points: [], computedSegments: [{ x: 0, y: 0 }] },
         }),
       ])
 
       const result = transformEdges(model)
-      expect(result).toBe(model)
+
+      expect(result).not.toBe(model)
+      expect(result.edges[1].data).not.toHaveProperty("computedSegments")
+      // The unchanged edge keeps its identity.
+      expect(result.edges[0]).toBe(model.edges[0])
     })
 
-    it("handles empty edge array", () => {
+    it("returns the same model when there is nothing to strip", () => {
+      const model = makeModel([makeEdge()])
+      expect(transformEdges(model)).toBe(model)
+    })
+
+    it("handles an empty edge array", () => {
       const model = makeModel([])
-      const result = transformEdges(model)
-      expect(result).toBe(model)
+      expect(transformEdges(model)).toBe(model)
     })
   })
 })

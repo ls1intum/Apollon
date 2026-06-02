@@ -68,7 +68,7 @@ export interface StepPathEdgeData {
   targetPoint: IPoint
 }
 
-const arePointsEqual = (a: IPoint[] = [], b: IPoint[] = []): boolean =>
+const arePointsEqual = (a: IPoint[], b: IPoint[]): boolean =>
   a.length === b.length &&
   a.every((point, index) => point.x === b[index].x && point.y === b[index].y)
 

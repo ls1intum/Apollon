@@ -78,11 +78,8 @@ export type ApollonNode = {
 
 export interface OrthogonalEdgeData {
   [key: string]: unknown
-  // Existing manual-waypoint array used by the step-path edges.
+  // Manual waypoint array used by the step-path edges.
   points: IPoint[]
-
-  // Persisted user-controlled intermediate waypoints.
-  userWaypoints?: IPoint[]
 }
 
 export type ApollonEdge = {

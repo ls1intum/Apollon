@@ -192,9 +192,9 @@
 .apollon-editor--connection-guidance
   .react-flow__node:has(.apollon-connection-guidance-source),
 .apollon-editor--connection-guidance
-  .react-flow__node:has(.apollon-connection-guidance-target-active),
-.apollon-editor--connection-guidance
   .react-flow__node:has(.react-flow__handle.connectionindicator.connectingto) {
+  /* Lift the source/target node above its peers while connecting. Pinned to
+     ZINDEX.TOOLTIP (10000) + 1; keep in sync if that constant changes. */
   z-index: 10001 !important;
 }
 
@@ -219,9 +219,7 @@
 }
 
 .apollon-editor--connection-guidance
-  .react-flow__handle.connectionindicator.valid,
-.apollon-editor--connection-guidance
-  .react-flow__handle.apollon-connection-guidance-target-active {
+  .react-flow__handle.connectionindicator.valid {
   background-color: var(--apollon-primary, #3e8acc) !important;
 }
 

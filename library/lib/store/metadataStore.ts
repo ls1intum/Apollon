@@ -20,8 +20,6 @@ export type MetadataStore = {
   connectionGuidanceActive: boolean
   connectionGuidanceSourceNodeId: string | null
   connectionGuidanceSourceHandleId: string | null
-  connectionGuidanceTargetNodeId: string | null
-  connectionGuidanceTargetHandleId: string | null
   reconnectPreviewEdgeId: string | null
   reconnectPreviewHandleType: "source" | "target" | null
   reconnectPreviewBasePoints: IPoint[]
@@ -34,10 +32,6 @@ export type MetadataStore = {
   startConnectionGuidance: (
     sourceNodeId: string | null,
     sourceHandleId: string | null
-  ) => void
-  setConnectionGuidanceTarget: (
-    targetNodeId: string | null,
-    targetHandleId: string | null
   ) => void
   stopConnectionGuidance: () => void
   startReconnectPreview: (
@@ -67,8 +61,6 @@ type InitialMetadataState = {
   connectionGuidanceActive: boolean
   connectionGuidanceSourceNodeId: string | null
   connectionGuidanceSourceHandleId: string | null
-  connectionGuidanceTargetNodeId: string | null
-  connectionGuidanceTargetHandleId: string | null
   reconnectPreviewEdgeId: string | null
   reconnectPreviewHandleType: "source" | "target" | null
   reconnectPreviewBasePoints: IPoint[]
@@ -86,8 +78,6 @@ const initialMetadataState: InitialMetadataState = {
   connectionGuidanceActive: false,
   connectionGuidanceSourceNodeId: null,
   connectionGuidanceSourceHandleId: null,
-  connectionGuidanceTargetNodeId: null,
-  connectionGuidanceTargetHandleId: null,
   reconnectPreviewEdgeId: null,
   reconnectPreviewHandleType: null,
   reconnectPreviewBasePoints: [],
@@ -187,22 +177,9 @@ export const createMetadataStore = (
               connectionGuidanceActive: true,
               connectionGuidanceSourceNodeId: sourceNodeId,
               connectionGuidanceSourceHandleId: sourceHandleId,
-              connectionGuidanceTargetNodeId: null,
-              connectionGuidanceTargetHandleId: null,
             },
             undefined,
             "startConnectionGuidance"
-          )
-        },
-
-        setConnectionGuidanceTarget: (targetNodeId, targetHandleId) => {
-          set(
-            {
-              connectionGuidanceTargetNodeId: targetNodeId,
-              connectionGuidanceTargetHandleId: targetHandleId,
-            },
-            undefined,
-            "setConnectionGuidanceTarget"
           )
         },
 
@@ -212,8 +189,6 @@ export const createMetadataStore = (
               connectionGuidanceActive: false,
               connectionGuidanceSourceNodeId: null,
               connectionGuidanceSourceHandleId: null,
-              connectionGuidanceTargetNodeId: null,
-              connectionGuidanceTargetHandleId: null,
             },
             undefined,
             "stopConnectionGuidance"

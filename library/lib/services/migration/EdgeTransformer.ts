@@ -1,15 +1,16 @@
 /**
  * Edge Transformer - legacy edge data migration.
  *
- * Ensures imported edges carry `userWaypoints` and strips stale
- * runtime-only geometry (`computedSegments`) from persisted edge data.
+ * Strips stale runtime-only geometry (`computedSegments`) that earlier
+ * development builds persisted onto edge data, so imported diagrams open with
+ * a clean `OrthogonalEdgeData` shape.
  */
 
 import type { ApollonEdge, UMLModel, OrthogonalEdgeData } from "@/typings"
 
 /**
- * Hydrates a single edge's data object with OrthogonalEdgeData defaults.
- * Returns a new edge object (does NOT mutate the input).
+ * Returns a new edge whose data is free of stale runtime geometry. Does NOT
+ * mutate the input. A null/absent `data` is normalized to an empty object.
  */
 export function hydrateEdgeData(edge: ApollonEdge): ApollonEdge {
   // Legacy/malformed payloads can carry a null or absent `data`; treat it as
@@ -21,22 +22,13 @@ export function hydrateEdgeData(edge: ApollonEdge): ApollonEdge {
     "computedSegments"
   )
 
-  // Skip work if migration fields already exist and there is no stale
-  // runtime geometry to remove.
-  if (
-    edge.data != null &&
-    sourceData.userWaypoints !== undefined &&
-    !hasComputedSegments
-  ) {
+  // Already a clean object with nothing to strip — leave it untouched.
+  if (edge.data != null && !hasComputedSegments) {
     return edge
   }
 
   const data = { ...sourceData } as OrthogonalEdgeData & Record<string, unknown>
   delete data.computedSegments
-
-  if (data.userWaypoints === undefined) {
-    data.userWaypoints = []
-  }
 
   return { ...edge, data }
 }

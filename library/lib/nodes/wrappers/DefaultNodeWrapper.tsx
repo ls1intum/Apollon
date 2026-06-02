@@ -135,15 +135,11 @@ export function DefaultNodeWrapper({
     connectionGuidanceActive,
     connectionGuidanceSourceNodeId,
     connectionGuidanceSourceHandleId,
-    connectionGuidanceTargetNodeId,
-    connectionGuidanceTargetHandleId,
   } = useMetadataStore(
     useShallow((state) => ({
       connectionGuidanceActive: state.connectionGuidanceActive,
       connectionGuidanceSourceNodeId: state.connectionGuidanceSourceNodeId,
       connectionGuidanceSourceHandleId: state.connectionGuidanceSourceHandleId,
-      connectionGuidanceTargetNodeId: state.connectionGuidanceTargetNodeId,
-      connectionGuidanceTargetHandleId: state.connectionGuidanceTargetHandleId,
     }))
   )
 
@@ -573,10 +569,6 @@ export function DefaultNodeWrapper({
               }
 
               const isPrimaryHandle = visibleHandleIds.has(handle.id)
-              const isGuidanceTargetHandle =
-                connectionGuidanceActive &&
-                elementId === connectionGuidanceTargetNodeId &&
-                handle.id === connectionGuidanceTargetHandleId
               const isGuidanceSourceHandle =
                 connectionGuidanceActive &&
                 elementId === connectionGuidanceSourceNodeId &&
@@ -588,9 +580,6 @@ export function DefaultNodeWrapper({
                   id={handle.id}
                   className={[
                     handle.className,
-                    isGuidanceTargetHandle
-                      ? "apollon-connection-guidance-target-active"
-                      : "",
                     isGuidanceSourceHandle
                       ? "apollon-connection-guidance-source"
                       : "",

@@ -34,9 +34,8 @@ export const getHandleScreenScale = (zoom: number): number => {
 const useHandleScreenScale = (): number =>
   getHandleScreenScale(useStore((state) => state.transform[2]))
 
-export interface BaseEdgeProps extends ExtendedEdgeProps {
-  diagramType?: "class" | "usecase" | "activity" | "component" | "deployment"
-}
+export type BaseEdgeProps = ExtendedEdgeProps
+
 export const useEdgeState = (initialPoints?: IPoint[]) => {
   const [customPoints, setCustomPoints] = useState<IPoint[]>([])
 
