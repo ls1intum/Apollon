@@ -103,42 +103,47 @@
   box-sizing: border-box;
   pointer-events: all;
   cursor: crosshair;
+  /* --arc-scale is set by DefaultNodeWrapper to 1/zoom so the indicator keeps
+     a predictable on-screen size at any zoom (defaults to 1 if unset). */
+  --arc-long: calc(28px * var(--arc-scale, 1));
+  --arc-short: calc(14px * var(--arc-scale, 1));
+  --arc-radius: calc(14px * var(--arc-scale, 1));
 }
 
 .react-flow__handle.apollon-arc-handle--top::before {
-  width: 28px;
-  height: 14px;
+  width: var(--arc-long);
+  height: var(--arc-short);
   left: 50%;
   top: 50%;
   transform: translate(-50%, -100%);
-  border-radius: 14px 14px 0 0;
+  border-radius: var(--arc-radius) var(--arc-radius) 0 0;
 }
 
 .react-flow__handle.apollon-arc-handle--right::before {
-  width: 14px;
-  height: 28px;
+  width: var(--arc-short);
+  height: var(--arc-long);
   left: 50%;
   top: 50%;
   transform: translate(0, -50%);
-  border-radius: 0 14px 14px 0;
+  border-radius: 0 var(--arc-radius) var(--arc-radius) 0;
 }
 
 .react-flow__handle.apollon-arc-handle--bottom::before {
-  width: 28px;
-  height: 14px;
+  width: var(--arc-long);
+  height: var(--arc-short);
   left: 50%;
   top: 50%;
   transform: translate(-50%, 0);
-  border-radius: 0 0 14px 14px;
+  border-radius: 0 0 var(--arc-radius) var(--arc-radius);
 }
 
 .react-flow__handle.apollon-arc-handle--left::before {
-  width: 14px;
-  height: 28px;
+  width: var(--arc-short);
+  height: var(--arc-long);
   left: 50%;
   top: 50%;
   transform: translate(-100%, -50%);
-  border-radius: 14px 0 0 14px;
+  border-radius: var(--arc-radius) 0 0 var(--arc-radius);
 }
 
 .react-flow__resize-control line {

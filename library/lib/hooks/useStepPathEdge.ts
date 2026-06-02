@@ -28,6 +28,7 @@ import {
   preserveOrthogonalEdgePoints,
   normalizeOrthogonalEdgePoints,
   resolveOrthogonalEdgeReleasePoints,
+  isInvalidOrthogonalEdgeRelease,
 } from "@/utils/edgeUtils"
 import {
   type BendHandle,
@@ -91,6 +92,11 @@ export const useStepPathEdge = ({
   const pathRef = useRef<SVGPathElement | null>(null)
   const finalPointsRef = useRef<IPoint[]>([])
   const dragPointsRef = useRef<IPoint[]>([])
+  // The furthest geometry the in-progress drag reached that is still valid.
+  // If the user drags past a limit (e.g. a terminal stub would collapse), the
+  // release falls back to THIS — clamping at the last good position — instead
+  // of snapping all the way back to the pre-drag shape.
+  const lastValidDragRef = useRef<IPoint[]>([])
 
   const isDiagramModifiable = useDiagramModifiable()
   const zoom = useStore((state) => state.transform[2])
@@ -446,6 +452,15 @@ export const useStepPathEdge = ({
       }
       dragPointsRef.current = dragBaseline
       finalPointsRef.current = [...dragBaseline]
+      lastValidDragRef.current = [...dragBaseline]
+      const dragSourcePoint = {
+        x: adjustedSourceCoordinates.sourceX,
+        y: adjustedSourceCoordinates.sourceY,
+      }
+      const dragTargetPoint = {
+        x: adjustedTargetCoordinates.targetX,
+        y: adjustedTargetCoordinates.targetY,
+      }
 
       // Get DOM elements for direct manipulation (like React Flow does for nodes)
       const handleEl = event.target as SVGRectElement
@@ -504,6 +519,19 @@ export const useStepPathEdge = ({
                 EDGES.BEND_SNAP_GRID_PX
               )
         finalPointsRef.current = newPoints
+        // Remember the furthest still-valid geometry so a release past a limit
+        // clamps here instead of snapping back to the pre-drag shape.
+        if (
+          !isInvalidOrthogonalEdgeRelease(
+            newPoints,
+            dragSourcePoint,
+            dragTargetPoint,
+            sourcePosition,
+            targetPosition
+          )
+        ) {
+          lastValidDragRef.current = newPoints
+        }
 
         const pathD = pointsToSvgPath(newPoints)
         mainPath?.setAttribute("d", pathD)
@@ -555,7 +583,7 @@ export const useStepPathEdge = ({
           }
           const normalizedPoints = resolveOrthogonalEdgeReleasePoints(
             finalPointsRef.current,
-            dragPointsRef.current,
+            lastValidDragRef.current,
             sourcePoint,
             targetPoint,
             sourcePosition,

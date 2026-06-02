@@ -3,8 +3,9 @@ import { FeedbackDropzone } from "@/components/wrapper/FeedbackDropzone"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
 import { useMetadataStore } from "@/store/context"
 import { getAxisHandlePlan, getDistributedHandleOffsetPercents } from "@/utils"
-import { Handle, Position, useReactFlow } from "@xyflow/react"
-import { useMemo } from "react"
+import { CANVAS } from "@/constants"
+import { Handle, Position, useReactFlow, useStore } from "@xyflow/react"
+import { type CSSProperties, useMemo } from "react"
 import { useShallow } from "zustand/shallow"
 
 // Handle IDs label the 9 connection points distributed across each side. The
@@ -113,6 +114,19 @@ export function DefaultNodeWrapper({
   const nodeWidth = node?.width ?? 0
   const nodeHeight = node?.height ?? 0
   const isDiagramModifiable = useDiagramModifiable()
+  // Counter-scale the connection indicators by 1/zoom so they keep a
+  // predictable on-screen size (they otherwise shrink to a few px when zoomed
+  // out). Clamped to the canvas zoom range.
+  const zoom = useStore((state) => state.transform[2])
+  const handleScreenScale =
+    1 /
+    Math.min(
+      Math.max(
+        Number.isFinite(zoom) && zoom > 0 ? zoom : 1,
+        CANVAS.MIN_SCALE_TO_ZOOM_OUT
+      ),
+      CANVAS.MAX_SCALE_TO_ZOOM_IN
+    )
   const {
     connectionGuidanceActive,
     connectionGuidanceSourceNodeId,
@@ -130,8 +144,8 @@ export function DefaultNodeWrapper({
   )
 
   const baseHandleStyle = {
-    width: 8,
-    height: 8,
+    width: 8 * handleScreenScale,
+    height: 8 * handleScreenScale,
     position: "absolute" as const,
     backgroundColor: "transparent",
     border: "none",
@@ -139,7 +153,10 @@ export function DefaultNodeWrapper({
     transition: "opacity 120ms ease",
     overflow: "visible",
     boxSizing: "border-box" as const,
-  }
+    // Consumed by the arc ::before pseudo-element (see app.css) to keep the
+    // visible indicator a constant on-screen size.
+    "--arc-scale": handleScreenScale,
+  } as CSSProperties
 
   // Each side carries nine grid-aligned offsets (slots 0..8). The five
   // arc-bearing positions live at even indices; the four "between" hidden
