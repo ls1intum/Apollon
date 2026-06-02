@@ -541,6 +541,44 @@ export function getAxisHandlePlan(axisLength: number): AxisHandlePlan {
   return solveAxisPlan(axisLength)
 }
 
+/**
+ * Reduce how many arcs a side actually shows so adjacent visible arcs never
+ * overlap ON SCREEN. The slot offsets stay fixed (handles don't move); we just
+ * hide arcs when, at the current zoom, two neighbours would be closer than an
+ * arc's on-screen length apart. Arcs counter-scale to a constant on-screen size
+ * when zoomed out and grow when zoomed in, so the required flow spacing is
+ * ARC_LENGTH_PX / min(zoom, 1): bigger (fewer arcs) when zoomed out, constant
+ * at and above 1x.
+ *
+ * Returns 5, 3, or 1 — always <= the size-based `baseVisibleArcCount`.
+ */
+export function reduceVisibleArcCountForZoom(
+  offsets: AxisHandlePlan["offsets"],
+  baseVisibleArcCount: 1 | 3 | 5,
+  zoom: number
+): 1 | 3 | 5 {
+  const safeZoom = Number.isFinite(zoom) && zoom > 0 ? zoom : 1
+  const requiredFlowSpacing = ARC_LENGTH_PX / Math.min(safeZoom, 1)
+
+  if (baseVisibleArcCount >= 5) {
+    const minAdjacent = Math.min(
+      offsets[2] - offsets[0],
+      offsets[4] - offsets[2],
+      offsets[6] - offsets[4],
+      offsets[8] - offsets[6]
+    )
+    if (minAdjacent >= requiredFlowSpacing) return 5
+  }
+  if (baseVisibleArcCount >= 3) {
+    const minAdjacent = Math.min(
+      offsets[4] - offsets[0],
+      offsets[8] - offsets[4]
+    )
+    if (minAdjacent >= requiredFlowSpacing) return 3
+  }
+  return 1
+}
+
 export function getDistributedHandleOffsets(axisLength: number): number[] {
   return [...solveAxisPlan(axisLength).offsets]
 }

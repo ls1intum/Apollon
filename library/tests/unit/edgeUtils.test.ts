@@ -11,6 +11,7 @@ import {
   getDefaultEdgeType,
   getDistributedHandleOffsets,
   getDistributedHandleOffsetPercents,
+  reduceVisibleArcCountForZoom,
   getEdgeMarkerStyles,
   getMarkerSegmentPath,
   isInvalidOrthogonalEdgeRelease,
@@ -1759,6 +1760,33 @@ describe("handle offsets stay on the 5px grid", () => {
       expect(Math.round(rendered)).toBe(px[i])
       expect(Math.round(rendered) % 5).toBe(0)
     }
+  })
+})
+
+describe("reduceVisibleArcCountForZoom", () => {
+  // 9-slot offsets with 5 arcs (slots 0,2,4,6,8) 40px apart, span 0..160.
+  const fiveArc = [0, 20, 40, 60, 80, 100, 120, 140, 160] as const
+
+  it("keeps all arcs at 1x when they are far enough apart", () => {
+    // adjacent even-slot spacing = 40px >= ARC_LENGTH_PX (28) → 5 arcs.
+    expect(reduceVisibleArcCountForZoom([...fiveArc], 5, 1)).toBe(5)
+  })
+
+  it("drops to fewer arcs as zoom-out shrinks the on-screen spacing", () => {
+    // At 0.5x adjacent 40px arcs are 20px apart on screen (< 28) → not 5.
+    // The 3-arc spacing (0→80) is 80px = 40px on screen >= 28 → 3.
+    expect(reduceVisibleArcCountForZoom([...fiveArc], 5, 0.5)).toBe(3)
+    // At 0.3x even the 3-arc spacing (80*0.3=24 < 28) is too tight → 1.
+    expect(reduceVisibleArcCountForZoom([...fiveArc], 5, 0.3)).toBe(1)
+  })
+
+  it("never exceeds the size-based base count", () => {
+    expect(reduceVisibleArcCountForZoom([...fiveArc], 3, 1)).toBe(3)
+    expect(reduceVisibleArcCountForZoom([...fiveArc], 1, 1)).toBe(1)
+  })
+
+  it("does not reduce when zoomed in (arcs grow with spacing)", () => {
+    expect(reduceVisibleArcCountForZoom([...fiveArc], 5, 2.5)).toBe(5)
   })
 })
 

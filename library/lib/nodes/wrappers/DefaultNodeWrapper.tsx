@@ -2,7 +2,11 @@ import { AssessmentSelectableWrapper } from "@/components/wrapper/AssessmentSele
 import { FeedbackDropzone } from "@/components/wrapper/FeedbackDropzone"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
 import { useMetadataStore } from "@/store/context"
-import { getAxisHandlePlan, getDistributedHandleOffsetPercents } from "@/utils"
+import {
+  getAxisHandlePlan,
+  getDistributedHandleOffsetPercents,
+  reduceVisibleArcCountForZoom,
+} from "@/utils"
 import { CANVAS } from "@/constants"
 import { Handle, Position, useReactFlow, useStore } from "@xyflow/react"
 import { type CSSProperties, useMemo } from "react"
@@ -171,19 +175,29 @@ export function DefaultNodeWrapper({
   )
 
   // The width axis governs arcs on the top/bottom sides; the height axis
-  // governs arcs on the left/right sides. Each side runs through three
-  // visibility stages:
+  // governs arcs on the left/right sides. The size-based plan picks 5/3/1
+  // arcs; we then reduce that for the current zoom so arcs never overlap on
+  // screen when zoomed out (their slot positions stay fixed — we just show
+  // fewer).
   //   visibleArcCount = 5 → arcs at slots 0, 2, 4, 6, 8 (every even slot).
   //   visibleArcCount = 3 → arcs at slots 0, 4, 8 (corners + middle).
   //   visibleArcCount = 1 → arc at slot 4 only (centre).
-  const widthArcs = useMemo(
-    () => getAxisHandlePlan(nodeWidth).visibleArcCount,
-    [nodeWidth]
-  )
-  const heightArcs = useMemo(
-    () => getAxisHandlePlan(nodeHeight).visibleArcCount,
-    [nodeHeight]
-  )
+  const widthArcs = useMemo(() => {
+    const plan = getAxisHandlePlan(nodeWidth)
+    return reduceVisibleArcCountForZoom(
+      plan.offsets,
+      plan.visibleArcCount,
+      zoom
+    )
+  }, [nodeWidth, zoom])
+  const heightArcs = useMemo(() => {
+    const plan = getAxisHandlePlan(nodeHeight)
+    return reduceVisibleArcCountForZoom(
+      plan.offsets,
+      plan.visibleArcCount,
+      zoom
+    )
+  }, [nodeHeight, zoom])
 
   const hiddenHandleSet = useMemo(
     () => (hiddenHandles === true ? null : new Set<string>(hiddenHandles)),

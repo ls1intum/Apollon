@@ -177,6 +177,10 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
         connectionLineType={connectionLineType}
         connectionLineComponent={ReconnectConnectionLine}
         connectionMode={ConnectionMode.Loose}
+        // Lift the selected edge (and its bend/endpoint handles) above other
+        // edges so an overlapping edge's interaction ribbon can't steal the
+        // pointer from a visible handle.
+        elevateEdgesOnSelect
         onInit={(instance) => {
           instance.fitView({ maxZoom: 1.0, minZoom: 1.0 })
           handleReactFlowInit(instance)

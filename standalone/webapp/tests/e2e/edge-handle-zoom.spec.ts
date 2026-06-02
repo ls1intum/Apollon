@@ -127,6 +127,35 @@ test("node connection indicators keep a constant on-screen size across zoom", as
   expect(Math.abs(zoomedOut - atDefault) / atDefault).toBeLessThan(0.2)
 })
 
+test("node shows fewer connection arcs when zoomed out so they do not overlap", async ({
+  page,
+}) => {
+  await injectFixtureIntoLocalStorage(page, noEdge)
+  await page.goto("/")
+  await waitForCanvasReady(page)
+  const node = page.locator(`.react-flow__node[data-id="${SRC}"]`)
+  await node.hover()
+  await page.waitForTimeout(120)
+
+  const arcs = () => node.locator(".apollon-arc-handle").count()
+  const atDefault = await arcs()
+  expect(atDefault).toBeGreaterThan(0)
+
+  const zoomOut = page.locator(".react-flow__controls-zoomout")
+  for (let i = 0; i < 6; i++) {
+    await zoomOut.click()
+    await page.waitForTimeout(70)
+  }
+  await node.hover()
+  await page.waitForTimeout(120)
+  const zoomedOut = await arcs()
+
+  // Zooming out reduces the number of visible arcs (never increases), so the
+  // constant-size arcs stop colliding.
+  expect(zoomedOut).toBeLessThan(atDefault)
+  expect(zoomedOut).toBeGreaterThan(0) // always at least the centre arcs
+})
+
 test("dragging a bend handle far toward a node clamps instead of snapping back", async ({
   page,
 }) => {

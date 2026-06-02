@@ -62,6 +62,11 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
             transform: "translateZ(0)",
             position: "relative",
             zIndex: ZINDEX.TOOLTIP,
+            // The toolbar body is decorative; only its buttons should capture
+            // the pointer. Otherwise the 32x56 box covers nearby bend handles
+            // and steals their pointer events (visible handle, not draggable).
+            pointerEvents: "none",
+            "& > *": { pointerEvents: "auto" },
           }}
         >
           <Box
