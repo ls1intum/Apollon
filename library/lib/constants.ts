@@ -172,6 +172,21 @@ export const EDGES = Object.freeze({
   BEND_MIN_LENGTH: 100,
   /** Size of the invisible endpoint hit target used for edge reconnection */
   ENDPOINT_HIT_TARGET_SIZE: 24,
+  /** Grid step a dragged bend snaps to; matches the canvas grid so bends line
+   * up with grid-snapped node handles. */
+  BEND_SNAP_GRID_PX: CANVAS.SNAP_TO_GRID_PX,
+  /** Connector length at/below which a *monotonic* orthogonal stair-step (a
+   * same-direction dogleg) is treated as a rounding artifact and flattened.
+   * Must stay strictly below BEND_SNAP_GRID_PX, otherwise the smallest
+   * deliberate single-step bend would be flattened and the edge would snap
+   * back to a straight line on release. */
+  ORTHOGONAL_DOGLEG_TOLERANCE_PX: 2,
+  /** Gap at/below which two parallel arms that double back over each other
+   * (an opposite-direction U-turn) are treated as a degenerate self-overlap
+   * and the route is reset. Independent of the snap grid: a doubled-back
+   * U-turn is never a deliberate edit, so this stays at the visual-merge
+   * threshold rather than the per-step threshold. */
+  ORTHOGONAL_ARM_OVERLAP_PX: 10,
 } as const)
 
 /* -------------------------------------------------------------------------- */

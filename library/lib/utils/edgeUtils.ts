@@ -1688,7 +1688,7 @@ export function isInvalidOrthogonalEdgeRelease(
       sourcePosition,
       targetPosition
     ) ||
-    hasArmCollapse(sanitized, 10) ||
+    hasArmCollapse(sanitized, EDGES.ORTHOGONAL_ARM_OVERLAP_PX) ||
     stubsWouldOverlap(
       sourcePoint,
       targetPoint,
@@ -1738,7 +1738,7 @@ export function normalizeOrthogonalEdgePoints(
       sourcePosition,
       targetPosition
     ) ||
-    hasArmCollapse(sanitized, 10) ||
+    hasArmCollapse(sanitized, EDGES.ORTHOGONAL_ARM_OVERLAP_PX) ||
     hasStubCollision
   ) {
     return fallback
@@ -1969,7 +1969,10 @@ export function preserveOrthogonalEdgePoints(
     }
   }
 
-  result = collapseTinyOrthogonalDoglegs(result, 10)
+  result = collapseTinyOrthogonalDoglegs(
+    result,
+    EDGES.ORTHOGONAL_DOGLEG_TOLERANCE_PX
+  )
 
   if (
     !isSourceLaneCompatible(
@@ -1990,7 +1993,7 @@ export function preserveOrthogonalEdgePoints(
       sourcePosition,
       targetPosition
     ) ||
-    hasArmCollapse(result, 10)
+    hasArmCollapse(result, EDGES.ORTHOGONAL_ARM_OVERLAP_PX)
   ) {
     return safePoints
   }

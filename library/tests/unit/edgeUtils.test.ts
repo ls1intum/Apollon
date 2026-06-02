@@ -1263,7 +1263,10 @@ describe("preserveOrthogonalEdgePoints", () => {
     expectOrthogonalSegments(result)
   })
 
-  it("collapses a target-side tiny vertical stair-step when preserving node movement", () => {
+  it("preserves a target-side small stair-step instead of flattening a deliberate offset", () => {
+    // A 10px stair-step (220->230) is a legal single-grid-step bend. Reprojection
+    // must keep it: flattening would discard the user's deliberate offset and is
+    // the root cause of the bend "snap-back" regression.
     const result = preserveOrthogonalEdgePoints(
       [
         { x: 0, y: 0 },
@@ -1285,14 +1288,18 @@ describe("preserveOrthogonalEdgePoints", () => {
       { x: 0, y: 0 },
       { x: 30, y: 0 },
       { x: 30, y: 100 },
-      { x: 230, y: 100 },
+      { x: 220, y: 100 },
+      { x: 220, y: 200 },
+      { x: 230, y: 200 },
       { x: 230, y: 300 },
       { x: 260, y: 300 },
     ])
     expectOrthogonalSegments(result)
   })
 
-  it("collapses a source-side tiny vertical stair-step without moving the source stub", () => {
+  it("preserves a source-side small stair-step without moving the source stub", () => {
+    // The 10px jog (30->40) is a deliberate single-step bend and must survive
+    // reprojection; only the fixed 30px source stub is anchored.
     const result = preserveOrthogonalEdgePoints(
       [
         { x: 0, y: 0 },
@@ -1313,7 +1320,9 @@ describe("preserveOrthogonalEdgePoints", () => {
     expect(result).toEqual([
       { x: 0, y: 0 },
       { x: 30, y: 0 },
-      { x: 30, y: 200 },
+      { x: 30, y: 100 },
+      { x: 40, y: 100 },
+      { x: 40, y: 200 },
       { x: 200, y: 200 },
       { x: 200, y: 300 },
       { x: 230, y: 300 },

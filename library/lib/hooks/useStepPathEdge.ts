@@ -455,8 +455,9 @@ export const useStepPathEdge = ({
         const rawX = flowPos.x - dragOffsetRef.current.x
         const rawY = flowPos.y - dragOffsetRef.current.y
 
-        const snappedX = Math.round(rawX / 10) * 10
-        const snappedY = Math.round(rawY / 10) * 10
+        const grid = EDGES.BEND_SNAP_GRID_PX
+        const snappedX = Math.round(rawX / grid) * grid
+        const snappedY = Math.round(rawY / grid) * grid
 
         const delta: IPoint =
           activeHandle.orientation === "H"
@@ -470,7 +471,7 @@ export const useStepPathEdge = ({
                 basePoints,
                 activeHandle.segmentIndex,
                 delta,
-                10
+                EDGES.BEND_SNAP_GRID_PX
               )
             : applyTerminalSegmentBend(
                 basePoints,
@@ -479,7 +480,7 @@ export const useStepPathEdge = ({
                 sourcePosition,
                 targetPosition,
                 EDGES.STUB_LENGTH,
-                10
+                EDGES.BEND_SNAP_GRID_PX
               )
         finalPointsRef.current = newPoints
 
