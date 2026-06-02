@@ -1405,6 +1405,63 @@ describe("preserveOrthogonalEdgePoints", () => {
     expectOrthogonalSegments(result)
   })
 
+  // Dragging a U's arm so the two parallel arms meet or cross is a deliberate
+  // "merge the U" gesture and must collapse the route — not snap back to the
+  // pre-drag wide U. Arms still clearly apart stay a (narrow) U.
+  describe("collapses a U when its arms are dragged together", () => {
+    const S = { x: 0, y: 200 }
+    const T = { x: 400, y: 200 }
+    const wideU = [
+      { x: 0, y: 200 },
+      { x: 30, y: 200 },
+      { x: 30, y: 250 },
+      { x: 370, y: 250 },
+      { x: 370, y: 200 },
+      { x: 400, y: 200 },
+    ]
+    const releaseWithLeftArmAt = (lx: number) => [
+      { x: 0, y: 200 },
+      { x: lx, y: 200 },
+      { x: lx, y: 250 },
+      { x: 370, y: 250 },
+      { x: 370, y: 200 },
+      { x: 400, y: 200 },
+    ]
+
+    // Arm gap 5px / 10px (boundary) / crossed: all collapse to a straight line.
+    for (const lx of [365, 360, 375]) {
+      it(`collapses when the dragged arm lands at x=${lx} (gap ${370 - lx}px)`, () => {
+        const result = resolveOrthogonalEdgeReleasePoints(
+          releaseWithLeftArmAt(lx),
+          wideU,
+          S,
+          T,
+          Position.Right,
+          Position.Left
+        )
+        expect(result).toEqual([
+          { x: 0, y: 200 },
+          { x: 400, y: 200 },
+        ])
+        expectOrthogonalSegments(result)
+      })
+    }
+
+    it("preserves a deliberate narrow U whose arms are still 15px apart", () => {
+      const released = releaseWithLeftArmAt(355)
+      const result = resolveOrthogonalEdgeReleasePoints(
+        released,
+        wideU,
+        S,
+        T,
+        Position.Right,
+        Position.Left
+      )
+      expect(result).toEqual(released)
+      expectOrthogonalSegments(result)
+    })
+  })
+
   it("detects mirrored horizontal and vertical stub collisions", () => {
     expect(
       stubsWouldOverlap(

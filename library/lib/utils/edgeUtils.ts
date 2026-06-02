@@ -1767,15 +1767,28 @@ export function resolveOrthogonalEdgeReleasePoints(
   sourcePosition: Position,
   targetPosition: Position
 ): IPoint[] {
-  const pointsToNormalize = isInvalidOrthogonalEdgeRelease(
+  const invalid = isInvalidOrthogonalEdgeRelease(
     releasedPoints,
     sourcePoint,
     targetPoint,
     sourcePosition,
     targetPosition
   )
-    ? lastValidPoints
-    : releasedPoints
+
+  // When a release is invalid *because the user dragged the two parallel arms
+  // of a U together (or past each other)*, that is a deliberate "merge the U"
+  // gesture, not a bad drag — collapse the released geometry rather than
+  // snapping back to the pre-drag wide route. normalizeOrthogonalEdgePoints
+  // already routes overlapping input to the clean safe path and re-validates
+  // stubs, so any other invalidity still falls back safely.
+  const sanitized = sanitizeReleasedPoints(
+    releasedPoints,
+    sourcePoint,
+    targetPoint
+  )
+  const armOverlap = hasArmCollapse(sanitized, EDGES.ORTHOGONAL_ARM_OVERLAP_PX)
+  const pointsToNormalize =
+    invalid && !armOverlap ? lastValidPoints : releasedPoints
 
   return normalizeOrthogonalEdgePoints(
     pointsToNormalize,
