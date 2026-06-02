@@ -51,6 +51,13 @@ function bridgeCount(d: string | null): number {
   return (d.match(/Q/g) ?? []).length
 }
 
+/** X of the first bridge on a horizontal segment (the Q control x), or null. */
+function firstBridgeX(d: string | null): number | null {
+  if (!d) return null
+  const m = d.match(/Q\s*(-?[\d.]+)[ ,]/)
+  return m ? Number(m[1]) : null
+}
+
 async function selectEdge(page: Page, id: string): Promise<void> {
   await edgeById(page, id)
     .locator(".edge-overlay, path")
@@ -125,6 +132,43 @@ test.describe("Line jumps", () => {
         timeout: 2000,
       })
       .toBeGreaterThanOrEqual(1)
+
+    await page.mouse.up()
+    await page.waitForTimeout(200)
+  })
+
+  test("a bridge follows the OTHER edge live while that edge's bend handle is dragged", async ({
+    page,
+  }) => {
+    // The horizontal edge draws the bridge over the vertical edge's crossing.
+    // Dragging the VERTICAL edge's bend handle moves the crossing — the
+    // horizontal edge's arc must track it during the drag, not only on release.
+    const startX = firstBridgeX(await mainPathD(page, HORIZONTAL))
+    expect(startX, "horizontal edge should bridge initially").not.toBeNull()
+
+    await selectEdge(page, VERTICAL)
+    const handle = edgeById(page, VERTICAL).locator(".edge-bend-handle").first()
+    await expect(handle).toBeVisible()
+    const box = await handle.boundingBox()
+    if (!box) throw new Error("vertical bend handle has no bounding box")
+    const cx = box.x + box.width / 2
+    const cy = box.y + box.height / 2
+
+    await page.mouse.move(cx, cy)
+    await page.mouse.down()
+    // Push the vertical segment left; its crossing with the horizontal edge
+    // moves left with it.
+    await page.mouse.move(cx - 60, cy, { steps: 10 })
+
+    // MID-DRAG (pointer still held): the OTHER (horizontal) edge's bridge must
+    // have moved left to the new crossing. If cross-edge geometry only updated
+    // on release, it would still sit at startX.
+    await expect
+      .poll(async () => firstBridgeX(await mainPathD(page, HORIZONTAL)), {
+        message: "other edge's bridge did not follow during the drag",
+        timeout: 2000,
+      })
+      .toBeLessThan((startX as number) - 25)
 
     await page.mouse.up()
     await page.waitForTimeout(200)
