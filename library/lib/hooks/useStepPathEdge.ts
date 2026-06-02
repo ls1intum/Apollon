@@ -357,15 +357,15 @@ export const useStepPathEdge = ({
     return `${currentPath} ${markerSegmentPath}`
   }, [currentPath, markerSegmentPath])
 
+  // A segment needs room for the handle (which grows with zoom past 1x) plus
+  // corner clearance on both sides. Using the handle's actual on-screen size
+  // keeps a grown handle from overflowing a short segment when zoomed in.
+  const minSegmentScreenLength =
+    EDGES.BEND_HANDLE_SCREEN_LENGTH_PX * Math.max(1, zoom) +
+    2 * EDGES.BEND_HANDLE_CORNER_CLEARANCE_PX
+
   const bendHandles = useMemo(() => {
     if (!allowMidpointDragging) return []
-    // A segment needs room for the handle (which grows with zoom past 1x) plus
-    // corner clearance on both sides. Using the handle's actual on-screen size
-    // keeps a grown handle from overflowing a short segment when zoomed in.
-    const handleScreenLength =
-      EDGES.BEND_HANDLE_SCREEN_LENGTH_PX * Math.max(1, zoom)
-    const minSegmentScreenLength =
-      handleScreenLength + 2 * EDGES.BEND_HANDLE_CORNER_CLEARANCE_PX
     return getBendableSegments(
       renderPoints,
       sourcePosition,
@@ -379,14 +379,28 @@ export const useStepPathEdge = ({
     allowMidpointDragging,
     sourcePosition,
     targetPosition,
+    minSegmentScreenLength,
     zoom,
   ])
 
   const canEditEndpoint = useMemo(() => {
+    // Decided from the COMMITTED points, never the live drag preview, so an
+    // endpoint's editability can't flicker mid-bend (the preview can transiently
+    // drop below the handle threshold).
     // Never strand an edge: if it is too short to offer a bend handle, the
     // endpoints must stay draggable so the user can always reshape it by
     // reconnecting. (Avoids the "no handle, weird workaround" dead state.)
-    if (bendHandles.length === 0) return true
+    const committedBendableCount = allowMidpointDragging
+      ? getBendableSegments(
+          activePoints,
+          sourcePosition,
+          targetPosition,
+          EDGES.BEND_HANDLE_SAFE_AREA_PX,
+          minSegmentScreenLength,
+          zoom
+        ).length
+      : 0
+    if (committedBendableCount === 0) return true
 
     const canvasLength = activePoints.reduce((length, point, index) => {
       if (index === 0) return length
@@ -397,7 +411,14 @@ export const useStepPathEdge = ({
     }, 0)
 
     return isLengthEditableAtZoom(canvasLength, EDGES.BEND_MIN_LENGTH, zoom)
-  }, [activePoints, zoom, bendHandles.length])
+  }, [
+    activePoints,
+    allowMidpointDragging,
+    sourcePosition,
+    targetPosition,
+    minSegmentScreenLength,
+    zoom,
+  ])
 
   useEffect(() => {
     if (pathRef.current && currentPath) {
@@ -443,7 +464,6 @@ export const useStepPathEdge = ({
     (event: React.PointerEvent, handle: BendHandle) => {
       if (!allowMidpointDragging) return
 
-      // Store initial state
       draggingHandleRef.current = handle
       setDraggingHandle(handle)
 

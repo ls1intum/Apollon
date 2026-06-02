@@ -8,7 +8,7 @@ interface EdgeMiddleLabelsProps {
   targetPoint?: IPoint
   showRelationshipLabels?: boolean
   isUseCasePath?: boolean
-  isPetriNet?: boolean // New prop to identify PetriNet edges
+  isPetriNet?: boolean
   avoidToolbarOverlap?: boolean
   textColor: string
 }
