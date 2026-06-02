@@ -4,6 +4,7 @@ import {
   adjustSourceCoordinates,
   adjustTargetCoordinates,
   buildPathWithLineJumps,
+  computeLineJumpsForEdge,
   calculateDynamicEdgeLabels,
   calculateOverlayPath,
   calculateStraightPath,
@@ -2019,5 +2020,169 @@ describe("getEdgeGeometryMap", () => {
 
     const start = getEdgeGeometryMap(edges, nodes).get("e1")![0]
     expect(start.x).toBeGreaterThan(60)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// findLineJumpIntersections — crossing-only semantics (T-junctions, corners)
+// ---------------------------------------------------------------------------
+describe("findLineJumpIntersections (crossing-only)", () => {
+  const horizontal = (y: number, x0: number, x1: number) =>
+    getAxisAlignedSegments([
+      { x: x0, y },
+      { x: x1, y },
+    ])
+
+  it("bridges a genuine interior crossing", () => {
+    const base = horizontal(100, 0, 200)
+    const other = getAxisAlignedSegments([
+      { x: 100, y: 40 },
+      { x: 100, y: 160 },
+    ])
+    const hits = findLineJumpIntersections(base, other, 16, "horizontal")
+    expect(hits).toEqual([
+      { segmentIndex: 0, point: { x: 100, y: 100 }, orientation: "horizontal" },
+    ])
+  })
+
+  it("does NOT bridge a T-junction (other segment ends on the base line)", () => {
+    const base = horizontal(100, 0, 200)
+    // Vertical edge whose TOP endpoint sits exactly on the base line: the two
+    // lines meet, they don't cross — a bridge here would falsely read as
+    // "no connection".
+    const other = getAxisAlignedSegments([
+      { x: 120, y: 100 },
+      { x: 120, y: 300 },
+    ])
+    expect(findLineJumpIntersections(base, other, 16, "horizontal")).toEqual([])
+  })
+
+  it("does NOT bridge at the corner (bend) of an orthogonal other edge", () => {
+    // Base runs along y=300; the other edge is an L whose corner is at
+    // (120,300). The base meets the vertical arm exactly at that corner.
+    const base = horizontal(300, 0, 400)
+    const other = getAxisAlignedSegments([
+      { x: 120, y: 100 },
+      { x: 120, y: 300 },
+      { x: 300, y: 300 },
+    ])
+    expect(findLineJumpIntersections(base, other, 16, "horizontal")).toEqual([])
+  })
+
+  it("does NOT bridge near the base segment's own corner", () => {
+    // Crossing at x=6 is within margin (jumpWidth/2+2 = 10) of the base start.
+    const base = horizontal(100, 0, 200)
+    const other = getAxisAlignedSegments([
+      { x: 6, y: 40 },
+      { x: 6, y: 160 },
+    ])
+    expect(findLineJumpIntersections(base, other, 16, "horizontal")).toEqual([])
+  })
+})
+
+// ---------------------------------------------------------------------------
+// computeLineJumpsForEdge — horizontal-hops-vertical, layout-stable
+// ---------------------------------------------------------------------------
+describe("computeLineJumpsForEdge", () => {
+  const H = [
+    { x: 0, y: 100 },
+    { x: 200, y: 100 },
+  ]
+  const V = [
+    { x: 100, y: 0 },
+    { x: 100, y: 200 },
+  ]
+  const geometry = () =>
+    new Map([
+      ["h", H],
+      ["v", V],
+    ])
+
+  it("draws the bridge on the horizontal edge of an H×V crossing", () => {
+    const hits = computeLineJumpsForEdge(
+      "h",
+      H,
+      [{ id: "h" }, { id: "v" }],
+      geometry()
+    )
+    expect(hits).toEqual([
+      { segmentIndex: 0, point: { x: 100, y: 100 }, orientation: "horizontal" },
+    ])
+  })
+
+  it("draws NOTHING on the vertical edge of the same crossing", () => {
+    expect(
+      computeLineJumpsForEdge("v", V, [{ id: "h" }, { id: "v" }], geometry())
+    ).toEqual([])
+  })
+
+  it("is stable: edge array order does not change who hops", () => {
+    const reversed = computeLineJumpsForEdge(
+      "h",
+      H,
+      [{ id: "v" }, { id: "h" }],
+      geometry()
+    )
+    expect(reversed).toHaveLength(1)
+    expect(reversed[0].point).toEqual({ x: 100, y: 100 })
+  })
+
+  it("never bridges a diagonal edge", () => {
+    const diagonal = [
+      { x: 0, y: 0 },
+      { x: 200, y: 200 },
+    ]
+    const map = new Map([
+      ["d", diagonal],
+      ["v", V],
+    ])
+    expect(
+      computeLineJumpsForEdge("d", diagonal, [{ id: "d" }, { id: "v" }], map)
+    ).toEqual([])
+  })
+
+  it("does not bridge two overlapping collinear edges (no crossing)", () => {
+    const h2 = [
+      { x: 50, y: 100 },
+      { x: 250, y: 100 },
+    ]
+    const map = new Map([
+      ["h", H],
+      ["h2", h2],
+    ])
+    expect(
+      computeLineJumpsForEdge("h", H, [{ id: "h" }, { id: "h2" }], map)
+    ).toEqual([])
+  })
+
+  it("bridges every vertical crossing along a horizontal edge", () => {
+    const v1 = [
+      { x: 60, y: 0 },
+      { x: 60, y: 200 },
+    ]
+    const v2 = [
+      { x: 140, y: 0 },
+      { x: 140, y: 200 },
+    ]
+    const map = new Map([
+      ["h", H],
+      ["v1", v1],
+      ["v2", v2],
+    ])
+    const hits = computeLineJumpsForEdge(
+      "h",
+      H,
+      [{ id: "h" }, { id: "v1" }, { id: "v2" }],
+      map
+    )
+    expect(hits.map((hit) => hit.point.x).sort((a, b) => a - b)).toEqual([
+      60, 140,
+    ])
+  })
+
+  it("excludes the edge itself", () => {
+    expect(
+      computeLineJumpsForEdge("h", H, [{ id: "h" }], new Map([["h", H]]))
+    ).toEqual([])
   })
 })

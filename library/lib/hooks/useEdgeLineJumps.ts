@@ -6,8 +6,7 @@ import { IPoint, pointsToSvgPath } from "../edges/Connection"
 import {
   LineJumpHit,
   buildPathWithLineJumps,
-  findLineJumpIntersections,
-  getAxisAlignedSegments,
+  computeLineJumpsForEdge,
   getEdgeGeometryMap,
 } from "@/utils/edgeUtils"
 
@@ -15,12 +14,10 @@ const pointsKey = (points: IPoint[]): string =>
   points.map((point) => `${point.x.toFixed(3)},${point.y.toFixed(3)}`).join("|")
 
 /**
- * Finds where this edge crosses the edges painted beneath it and returns the
- * crossing points so the renderer can bridge over them. "Beneath" is the
- * store's edge order: edges earlier in the array paint first, so only the
- * later (upper) edge of a crossing pair draws a bridge — exactly one arc per
- * crossing. Pass `enabled: false` to skip the scan entirely (e.g. mid-drag or
- * while reconnecting), keeping the quadratic pairwise work off hot paths.
+ * Returns where this edge should bridge over the edges it crosses, using the
+ * stable horizontal-hops-vertical convention (see `computeLineJumpsForEdge`).
+ * Pass `enabled: false` to skip the scan entirely (e.g. mid-drag or while
+ * reconnecting), keeping the quadratic pairwise work off hot paths.
  *
  * Shared by both `useStepPathEdge` and `useStraightPathEdge`; the only
  * difference between them is the `basePoints` they feed in.
@@ -41,27 +38,7 @@ export function useEdgeLineJumps(
 
   return useMemo(() => {
     if (!enabled || !id) return []
-
-    const currentIndex = edges.findIndex((edge) => edge.id === id)
-    if (currentIndex <= 0) return []
-
-    const baseSegments = getAxisAlignedSegments(basePoints)
-    if (baseSegments.length === 0) return []
-
-    const hits: LineJumpHit[] = []
-    for (let i = 0; i < currentIndex; i += 1) {
-      const otherPoints = edgeGeometryMap.get(edges[i].id)
-      if (!otherPoints || otherPoints.length < 2) continue
-      hits.push(
-        ...findLineJumpIntersections(
-          baseSegments,
-          getAxisAlignedSegments(otherPoints),
-          EDGES.EDGE_LINE_JUMP_WIDTH,
-          "any"
-        )
-      )
-    }
-    return hits
+    return computeLineJumpsForEdge(id, basePoints, edges, edgeGeometryMap)
     // basePoints is captured via the stable baseKey string.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled, id, baseKey, edges, edgeGeometryMap])

@@ -1207,6 +1207,8 @@ export function findLineJumpIntersections(
   preferredOrientation: Orientation | "any" = "horizontal",
   tolerance: number = 1
 ): LineJumpHit[] {
+  // `margin` keeps a hop off the base segment's own corners — the arc spans
+  // ±jumpWidth/2, so a crossing nearer than that to a bend would overrun it.
   const margin = jumpWidth / 2 + 2
   const hits: LineJumpHit[] = []
 
@@ -1230,8 +1232,13 @@ export function findLineJumpIntersections(
         if (
           x < base.min + margin ||
           x > base.max - margin ||
-          y < other.min - tolerance ||
-          y > other.max + tolerance
+          // The crossed segment must pass THROUGH the base line, not merely
+          // touch it: a crossing at the other segment's endpoint is a
+          // T-junction/corner where the lines meet, not cross — bridging it
+          // would falsely signal "no connection". Require a strict interior
+          // crossing (inset by `tolerance`).
+          y < other.min + tolerance ||
+          y > other.max - tolerance
         ) {
           continue
         }
@@ -1252,8 +1259,9 @@ export function findLineJumpIntersections(
         if (
           y < base.min + margin ||
           y > base.max - margin ||
-          x < other.min - tolerance ||
-          x > other.max + tolerance
+          // Strict interior crossing on the other segment — see above.
+          x < other.min + tolerance ||
+          x > other.max - tolerance
         ) {
           continue
         }
@@ -1368,6 +1376,47 @@ export function buildPathWithLineJumps(
   }
 
   return pathParts.join(" ")
+}
+
+/**
+ * Collects the crossings an edge should bridge over. Uses the layout-stable
+ * "horizontal hops vertical" convention (yEd / yFiles' `BridgeManager` default
+ * `HORIZONTAL_BRIDGES_VERTICAL`): the bridge is always drawn on the HORIZONTAL
+ * segment of a crossing. Consequences that make this the right default for a
+ * declarative editor:
+ *  - exactly one edge of any H×V pair hops (the horizontal one),
+ *  - the assignment is independent of edge array order / z-index, so it never
+ *    flips when an edge is selected (React Flow's `elevateEdgesOnSelect`) or
+ *    reordered — unlike a render-order rule.
+ * Diagonal segments yield no axis-aligned segments, so they neither hop nor are
+ * hopped (line jumps are orthogonal-only, matching mxGraph/ELK/yFiles).
+ *
+ * @param geometryMap each OTHER edge's rendered polyline (see getEdgeGeometryMap)
+ */
+export function computeLineJumpsForEdge(
+  edgeId: string,
+  basePoints: IPoint[],
+  edges: ReadonlyArray<{ id: string }>,
+  geometryMap: ReadonlyMap<string, IPoint[]>
+): LineJumpHit[] {
+  const baseSegments = getAxisAlignedSegments(basePoints)
+  if (baseSegments.length === 0) return []
+
+  const hits: LineJumpHit[] = []
+  for (const other of edges) {
+    if (other.id === edgeId) continue
+    const otherPoints = geometryMap.get(other.id)
+    if (!otherPoints || otherPoints.length < 2) continue
+    hits.push(
+      ...findLineJumpIntersections(
+        baseSegments,
+        getAxisAlignedSegments(otherPoints),
+        EDGES.EDGE_LINE_JUMP_WIDTH,
+        "horizontal"
+      )
+    )
+  }
+  return hits
 }
 
 export function calculateOverlayPath(
