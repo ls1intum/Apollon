@@ -97,6 +97,14 @@ export function tryFindStraightPath(
 
   const sourceHandleEdge = source.direction
   const targetHandleEdge = target.direction
+  const alignedHorizontalY =
+    handleCoords !== undefined
+      ? (handleCoords.sourceY + handleCoords.targetY) / 2
+      : null
+  const alignedVerticalX =
+    handleCoords !== undefined
+      ? (handleCoords.sourceX + handleCoords.targetX) / 2
+      : null
 
   // Right -> Left case
   if (
@@ -125,7 +133,7 @@ export function tryFindStraightPath(
     )
 
     if (overlapY !== null && overlapY[1] - overlapY[0] >= OVERLAP_THRESHOLD) {
-      const middleY = (overlapY[0] + overlapY[1]) / 2
+      const middleY = alignedHorizontalY ?? (overlapY[0] + overlapY[1]) / 2
       const start: IPoint = {
         x: source.position.x + source.width,
         y: middleY,
@@ -165,7 +173,7 @@ export function tryFindStraightPath(
     )
 
     if (overlapY !== null && overlapY[1] - overlapY[0] >= OVERLAP_THRESHOLD) {
-      const middleY = (overlapY[0] + overlapY[1]) / 2
+      const middleY = alignedHorizontalY ?? (overlapY[0] + overlapY[1]) / 2
       const start: IPoint = {
         x: source.position.x,
         y: middleY,
@@ -200,7 +208,7 @@ export function tryFindStraightPath(
     )
 
     if (overlapX !== null && overlapX[1] - overlapX[0] >= OVERLAP_THRESHOLD) {
-      const middleX = (overlapX[0] + overlapX[1]) / 2
+      const middleX = alignedVerticalX ?? (overlapX[0] + overlapX[1]) / 2
       const start: IPoint = {
         x: middleX,
         y: source.position.y + source.height,
@@ -235,7 +243,7 @@ export function tryFindStraightPath(
     )
 
     if (overlapX !== null && overlapX[1] - overlapX[0] >= OVERLAP_THRESHOLD) {
-      const middleX = (overlapX[0] + overlapX[1]) / 2
+      const middleX = alignedVerticalX ?? (overlapX[0] + overlapX[1]) / 2
       const start: IPoint = {
         x: middleX,
         y: source.position.y,

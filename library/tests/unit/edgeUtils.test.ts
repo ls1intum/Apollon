@@ -5,26 +5,41 @@ import {
   adjustTargetCoordinates,
   buildPathWithLineJumps,
   calculateDynamicEdgeLabels,
-  calculateInnerMidpoints,
   calculateOverlayPath,
   calculateStraightPath,
-  calculateTextPlacement,
   findLineJumpIntersections,
   findClosestHandle,
   getAxisAlignedSegments,
   getConnectionLineType,
   getDefaultEdgeType,
+  getDistributedHandleOffsets,
+  getDistributedHandleOffsetPercents,
+  reduceVisibleArcCountForZoom,
+  getEdgeGeometryMap,
   getEdgeMarkerStyles,
-  getHandlePositionOnNode,
   getMarkerSegmentPath,
   isStraightEdgeType,
+  isInvalidOrthogonalEdgeRelease,
+  normalizeOrthogonalEdgePoints,
   parseSvgPath,
+  preserveOrthogonalEdgePoints,
+  resolveOrthogonalEdgeReleasePoints,
+  resolveReconnectPreviewBasePoints,
   removeDuplicatePoints,
   simplifyPoints,
   simplifySvgPath,
+  stubsWouldOverlap,
 } from "@/utils/edgeUtils"
 import { ConnectionLineType, Position } from "@xyflow/react"
 import { describe, expect, it } from "vitest"
+
+const expectOrthogonalSegments = (points: { x: number; y: number }[]) => {
+  for (let i = 1; i < points.length; i++) {
+    expect(
+      points[i - 1].x === points[i].x || points[i - 1].y === points[i].y
+    ).toBe(true)
+  }
+}
 
 // ---------------------------------------------------------------------------
 // adjustTargetCoordinates
@@ -88,61 +103,6 @@ describe("adjustSourceCoordinates", () => {
   it("handles zero padding", () => {
     const result = adjustSourceCoordinates(50, 75, Position.Right, 0)
     expect(result).toEqual({ sourceX: 50, sourceY: 75 })
-  })
-})
-
-// ---------------------------------------------------------------------------
-// calculateTextPlacement
-// ---------------------------------------------------------------------------
-describe("calculateTextPlacement", () => {
-  it("returns correct offsets for top position", () => {
-    const result = calculateTextPlacement(100, 200, Position.Top)
-    expect(result).toEqual({
-      roleX: 90,
-      roleY: 185,
-      multiplicityX: 110,
-      multiplicityY: 185,
-    })
-  })
-
-  it("returns correct offsets for right position", () => {
-    const result = calculateTextPlacement(100, 200, Position.Right)
-    expect(result).toEqual({
-      roleX: 115,
-      roleY: 190,
-      multiplicityX: 115,
-      multiplicityY: 215,
-    })
-  })
-
-  it("returns correct offsets for bottom position", () => {
-    const result = calculateTextPlacement(100, 200, Position.Bottom)
-    expect(result).toEqual({
-      roleX: 90,
-      roleY: 215,
-      multiplicityX: 110,
-      multiplicityY: 215,
-    })
-  })
-
-  it("returns correct offsets for left position", () => {
-    const result = calculateTextPlacement(100, 200, Position.Left)
-    expect(result).toEqual({
-      roleX: 85,
-      roleY: 190,
-      multiplicityX: 85,
-      multiplicityY: 215,
-    })
-  })
-
-  it("works with zero coordinates", () => {
-    const result = calculateTextPlacement(0, 0, Position.Top)
-    expect(result).toEqual({
-      roleX: -10,
-      roleY: -15,
-      multiplicityX: 10,
-      multiplicityY: -15,
-    })
   })
 })
 
@@ -221,230 +181,141 @@ describe("calculateDynamicEdgeLabels", () => {
 // getEdgeMarkerStyles
 // ---------------------------------------------------------------------------
 describe("getEdgeMarkerStyles", () => {
-  // No marker, plain line group
-  it("returns plain style for ClassBidirectional", () => {
-    const result = getEdgeMarkerStyles("ClassBidirectional")
-    expect(result.markerEnd).toBeUndefined()
-    expect(result.markerStart).toBeUndefined()
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.strokeDashArray).toBe("0")
-    expect(result.offset).toBe(0)
-  })
+  const MP = EDGES.MARKER_PADDING
 
-  it("returns plain style for ObjectLink", () => {
-    const result = getEdgeMarkerStyles("ObjectLink")
-    expect(result.markerEnd).toBeUndefined()
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-  })
+  // One row per edge type. A row asserts only the fields it lists; a present
+  // key with value `undefined` asserts that field is undefined.
+  const cases: Array<Record<string, unknown>> = [
+    {
+      type: "ClassBidirectional",
+      end: undefined,
+      start: undefined,
+      dash: "0",
+      offset: 0,
+      pad: MP,
+    },
+    { type: "ObjectLink", end: undefined, pad: MP },
+    {
+      type: "ClassUnidirectional",
+      end: "url(#black-arrow)",
+      dash: "0",
+      pad: MP,
+    },
+    { type: "ActivityControlFlow", end: "url(#black-arrow)", pad: MP },
+    { type: "FlowChartFlowline", end: "url(#black-arrow)" },
+    { type: "ReachabilityGraphArc", end: "url(#black-arrow)" },
+    {
+      type: "ClassAggregation",
+      end: "url(#white-rhombus)",
+      offset: 0,
+      pad: MP,
+    },
+    {
+      type: "ClassComposition",
+      end: "url(#black-rhombus)",
+      offset: 0,
+      pad: MP,
+    },
+    {
+      type: "ClassInheritance",
+      end: "url(#white-triangle)",
+      dash: "0",
+      pad: MP,
+    },
+    {
+      type: "ClassRealization",
+      end: "url(#white-triangle)",
+      dash: "10",
+      pad: MP,
+    },
+    { type: "ClassDependency", end: "url(#black-arrow)", dash: "10", pad: MP },
+    { type: "ComponentDependency", end: "url(#black-arrow)", dash: "10" },
+    { type: "DeploymentDependency", dash: "10" },
+    { type: "PetriNetArc", end: "url(#black-triangle)", pad: MP },
+    {
+      type: "BPMNSequenceFlow",
+      end: "url(#bpmn-black-triangle)",
+      dash: "0",
+      offset: 8,
+      pad: MP,
+    },
+    {
+      type: "BPMNMessageFlow",
+      end: "url(#bpmn-white-triangle)",
+      start: "url(#bpmn-white-circle)",
+      dash: "10",
+      offset: 8,
+      pad: MP,
+    },
+    { type: "BPMNAssociationFlow", end: undefined, dash: "10", pad: MP },
+    {
+      type: "BPMNDataAssociationFlow",
+      end: "url(#bpmn-arrow)",
+      dash: "10",
+      offset: 8,
+      pad: MP,
+    },
+    { type: "UseCaseAssociation", end: undefined, dash: "0", pad: MP },
+    { type: "UseCaseInclude", end: "url(#black-arrow)", dash: "10", pad: MP },
+    { type: "UseCaseExtend", end: "url(#black-arrow)", dash: "10" },
+    {
+      type: "UseCaseGeneralization",
+      end: "url(#white-triangle)",
+      dash: "0",
+      pad: MP,
+    },
+    { type: "ComponentProvidedInterface", end: undefined, pad: MP },
+    {
+      type: "ComponentRequiredInterface",
+      end: "url(#required-interface)",
+      pad: MP + INTERFACE.SOCKET_GAP,
+    },
+    {
+      type: "ComponentRequiredQuarterInterface",
+      end: "url(#required-interface-quarter)",
+    },
+    {
+      type: "DeploymentRequiredThreeQuarterInterface",
+      end: "url(#required-interface-threequarter)",
+    },
+    { type: "DeploymentProvidedInterface", end: undefined, pad: MP },
+    { type: "DeploymentAssociation", end: undefined, pad: MP },
+    { type: "SyntaxTreeLink", end: undefined, pad: MP },
+    { type: "CommunicationLink", end: undefined, pad: MP },
+    { type: "SomeUnknownType", dash: "0", offset: 0, pad: MP },
+  ]
 
-  // Arrow marker group
-  it("returns black-arrow for ClassUnidirectional", () => {
-    const result = getEdgeMarkerStyles("ClassUnidirectional")
-    expect(result.markerEnd).toBe("url(#black-arrow)")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.strokeDashArray).toBe("0")
-  })
-
-  it("returns black-arrow for ActivityControlFlow", () => {
-    const result = getEdgeMarkerStyles("ActivityControlFlow")
-    expect(result.markerEnd).toBe("url(#black-arrow)")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-  })
-
-  it("returns black-arrow for FlowChartFlowline", () => {
-    const result = getEdgeMarkerStyles("FlowChartFlowline")
-    expect(result.markerEnd).toBe("url(#black-arrow)")
-  })
-
-  it("returns black-arrow for ReachabilityGraphArc", () => {
-    const result = getEdgeMarkerStyles("ReachabilityGraphArc")
-    expect(result.markerEnd).toBe("url(#black-arrow)")
-  })
-
-  // Rhombus marker group
-  it("returns white-rhombus for ClassAggregation", () => {
-    const result = getEdgeMarkerStyles("ClassAggregation")
-    expect(result.markerEnd).toBe("url(#white-rhombus)")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.offset).toBe(0)
-  })
-
-  it("returns black-rhombus for ClassComposition", () => {
-    const result = getEdgeMarkerStyles("ClassComposition")
-    expect(result.markerEnd).toBe("url(#black-rhombus)")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.offset).toBe(0)
-  })
-
-  // Triangle marker group
-  it("returns white-triangle for ClassInheritance", () => {
-    const result = getEdgeMarkerStyles("ClassInheritance")
-    expect(result.markerEnd).toBe("url(#white-triangle)")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.strokeDashArray).toBe("0")
-  })
-
-  it("returns white-triangle with dashed for ClassRealization", () => {
-    const result = getEdgeMarkerStyles("ClassRealization")
-    expect(result.markerEnd).toBe("url(#white-triangle)")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.strokeDashArray).toBe("10")
-  })
-
-  // Dashed arrow group (dependency)
-  it("returns dashed black-arrow for ClassDependency", () => {
-    const result = getEdgeMarkerStyles("ClassDependency")
-    expect(result.markerEnd).toBe("url(#black-arrow)")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.strokeDashArray).toBe("10")
-  })
-
-  it("returns dashed for ComponentDependency", () => {
-    const result = getEdgeMarkerStyles("ComponentDependency")
-    expect(result.strokeDashArray).toBe("10")
-    expect(result.markerEnd).toBe("url(#black-arrow)")
-  })
-
-  it("returns dashed for DeploymentDependency", () => {
-    const result = getEdgeMarkerStyles("DeploymentDependency")
-    expect(result.strokeDashArray).toBe("10")
-  })
-
-  // PetriNet black-triangle
-  it("returns black-triangle for PetriNetArc", () => {
-    const result = getEdgeMarkerStyles("PetriNetArc")
-    expect(result.markerEnd).toBe("url(#black-triangle)")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-  })
-
-  // BPMN markers
-  it("returns bpmn-black-triangle for BPMNSequenceFlow", () => {
-    const result = getEdgeMarkerStyles("BPMNSequenceFlow")
-    expect(result.markerEnd).toBe("url(#bpmn-black-triangle)")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.strokeDashArray).toBe("0")
-    expect(result.offset).toBe(8)
-  })
-
-  it("returns bpmn markers for BPMNMessageFlow (markerStart + markerEnd)", () => {
-    const result = getEdgeMarkerStyles("BPMNMessageFlow")
-    expect(result.markerEnd).toBe("url(#bpmn-white-triangle)")
-    expect(result.markerStart).toBe("url(#bpmn-white-circle)")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.strokeDashArray).toBe("10")
-    expect(result.offset).toBe(8)
-  })
-
-  it("returns dashed style for BPMNAssociationFlow", () => {
-    const result = getEdgeMarkerStyles("BPMNAssociationFlow")
-    expect(result.markerEnd).toBeUndefined()
-    expect(result.strokeDashArray).toBe("10")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-  })
-
-  it("returns bpmn-arrow for BPMNDataAssociationFlow", () => {
-    const result = getEdgeMarkerStyles("BPMNDataAssociationFlow")
-    expect(result.markerEnd).toBe("url(#bpmn-arrow)")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.strokeDashArray).toBe("10")
-    expect(result.offset).toBe(8)
-  })
-
-  // UseCase group
-  it("returns no marker for UseCaseAssociation", () => {
-    const result = getEdgeMarkerStyles("UseCaseAssociation")
-    expect(result.markerEnd).toBeUndefined()
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.strokeDashArray).toBe("0")
-  })
-
-  it("returns black-arrow dashed for UseCaseInclude", () => {
-    const result = getEdgeMarkerStyles("UseCaseInclude")
-    expect(result.markerEnd).toBe("url(#black-arrow)")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.strokeDashArray).toBe("10")
-  })
-
-  it("returns black-arrow dashed for UseCaseExtend", () => {
-    const result = getEdgeMarkerStyles("UseCaseExtend")
-    expect(result.markerEnd).toBe("url(#black-arrow)")
-    expect(result.strokeDashArray).toBe("10")
-  })
-
-  it("returns white-triangle for UseCaseGeneralization", () => {
-    const result = getEdgeMarkerStyles("UseCaseGeneralization")
-    expect(result.markerEnd).toBe("url(#white-triangle)")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.strokeDashArray).toBe("0")
-  })
-
-  // Provided/Required interface group
-  it("returns no marker for ComponentProvidedInterface", () => {
-    const result = getEdgeMarkerStyles("ComponentProvidedInterface")
-    expect(result.markerEnd).toBeUndefined()
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-  })
-
-  it("returns required-interface marker for ComponentRequiredInterface", () => {
-    const result = getEdgeMarkerStyles("ComponentRequiredInterface")
-    expect(result.markerEnd).toBe("url(#required-interface)")
-    expect(result.markerPadding).toBe(
-      EDGES.MARKER_PADDING + INTERFACE.SOCKET_GAP
-    )
-  })
-
-  it("returns required-interface-quarter for ComponentRequiredQuarterInterface", () => {
-    const result = getEdgeMarkerStyles("ComponentRequiredQuarterInterface")
-    expect(result.markerEnd).toBe("url(#required-interface-quarter)")
-  })
-
-  it("returns required-interface-threequarter for DeploymentRequiredThreeQuarterInterface", () => {
-    const result = getEdgeMarkerStyles(
-      "DeploymentRequiredThreeQuarterInterface"
-    )
-    expect(result.markerEnd).toBe("url(#required-interface-threequarter)")
-  })
-
-  // Deployment mirrors
-  it("returns same style for DeploymentProvidedInterface as ComponentProvidedInterface", () => {
-    const result = getEdgeMarkerStyles("DeploymentProvidedInterface")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.markerEnd).toBeUndefined()
-  })
-
-  // Default case
-  it("returns default style for unknown edge type", () => {
-    const result = getEdgeMarkerStyles("SomeUnknownType")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.strokeDashArray).toBe("0")
-    expect(result.offset).toBe(0)
-  })
-
-  // Shared bucket edge types
-  it("returns plain style for DeploymentAssociation", () => {
-    const result = getEdgeMarkerStyles("DeploymentAssociation")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.markerEnd).toBeUndefined()
-  })
-
-  it("returns plain style for SyntaxTreeLink", () => {
-    const result = getEdgeMarkerStyles("SyntaxTreeLink")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.markerEnd).toBeUndefined()
-  })
-
-  it("returns plain style for CommunicationLink", () => {
-    const result = getEdgeMarkerStyles("CommunicationLink")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.markerEnd).toBeUndefined()
+  it.each(cases)("maps $type to its marker style", (c) => {
+    const result = getEdgeMarkerStyles(c.type as string)
+    if ("end" in c) expect(result.markerEnd).toBe(c.end)
+    if ("start" in c) expect(result.markerStart).toBe(c.start)
+    if ("dash" in c) expect(result.strokeDashArray).toBe(c.dash)
+    if ("offset" in c) expect(result.offset).toBe(c.offset)
+    if ("pad" in c) expect(result.markerPadding).toBe(c.pad)
   })
 })
-
 // ---------------------------------------------------------------------------
 // findClosestHandle
-// ---------------------------------------------------------------------------
 describe("findClosestHandle", () => {
   const rect = { x: 0, y: 0, width: 300, height: 200 }
+  const canonicalHandleIds = new Set([
+    "top",
+    "bottom",
+    "left",
+    "right",
+    "top-left",
+    "top-mid-left",
+    "top-mid-right",
+    "top-right",
+    "right-mid-top",
+    "right-mid-bottom",
+    "bottom-right",
+    "bottom-mid-right",
+    "bottom-mid-left",
+    "bottom-left",
+    "left-mid-bottom",
+    "left-mid-top",
+  ])
 
   describe("with useFourHandles=true", () => {
     it("returns top when point is directly above center", () => {
@@ -493,86 +364,94 @@ describe("findClosestHandle", () => {
     })
   })
 
-  describe("with useFourHandles=false (12 handles)", () => {
-    it("returns top-left when point is near left-third of top edge", () => {
-      // top-left handle is at (100, 0) for rect 300 wide
-      const result = findClosestHandle({
-        point: { x: 100, y: -5 },
-        rect,
-        useFourHandles: false,
-      })
-      expect(result).toBe("top-left")
+  describe("with useFourHandles=false (canonical 16 handles)", () => {
+    const canonicalCandidates: Array<{
+      id: string
+      point: { x: number; y: number }
+    }> = [
+      { id: "top", point: { x: 150, y: 40 } },
+      { id: "bottom", point: { x: 150, y: 160 } },
+      { id: "left", point: { x: 60, y: 100 } },
+      { id: "right", point: { x: 240, y: 100 } },
+      { id: "top-left", point: { x: 60, y: 40 } },
+      { id: "top-mid-left", point: { x: 110, y: 40 } },
+      { id: "top-mid-right", point: { x: 200, y: 40 } },
+      { id: "top-right", point: { x: 240, y: 40 } },
+      { id: "right-mid-top", point: { x: 240, y: 70 } },
+      { id: "right-mid-bottom", point: { x: 240, y: 130 } },
+      { id: "bottom-right", point: { x: 240, y: 160 } },
+      { id: "bottom-mid-right", point: { x: 200, y: 160 } },
+      { id: "bottom-mid-left", point: { x: 110, y: 160 } },
+      { id: "bottom-left", point: { x: 60, y: 160 } },
+      { id: "left-mid-bottom", point: { x: 60, y: 130 } },
+      { id: "left-mid-top", point: { x: 60, y: 70 } },
+    ]
+
+    it.each(canonicalCandidates)(
+      "returns $id at its anchor point",
+      ({ id, point }) => {
+        const result = findClosestHandle({
+          point,
+          rect,
+          useFourHandles: false,
+        })
+        expect(result).toBe(id)
+      }
+    )
+
+    it("does not emit alias corner IDs at alias positions", () => {
+      const aliasPositions = [
+        { x: 60, y: 40 },
+        { x: 240, y: 40 },
+        { x: 60, y: 160 },
+        { x: 240, y: 160 },
+      ]
+      const aliasIds = new Set([
+        "left-top",
+        "right-top",
+        "left-bottom",
+        "right-bottom",
+      ])
+
+      for (const point of aliasPositions) {
+        const result = findClosestHandle({ point, rect, useFourHandles: false })
+        expect(canonicalHandleIds.has(result)).toBe(true)
+        expect(aliasIds.has(result)).toBe(false)
+      }
     })
 
-    it("returns top-right when point is near right-third of top edge", () => {
-      // top-right handle at (200, 0)
-      const result = findClosestHandle({
-        point: { x: 200, y: -5 },
-        rect,
-        useFourHandles: false,
-      })
-      expect(result).toBe("top-right")
+    it("never snaps a drop to a hidden between-slot handle", () => {
+      // Sweep dense points along every side — landing on the exact between-slot
+      // offsets — and confirm only NAMED handles are returned. Custom nodes such
+      // as the UseCase ellipse render only the named IDs, so a "*-between-*"
+      // result would persist a handle the node cannot resolve and the edge would
+      // disappear with React Flow's missing-handle error.
+      for (let t = 0; t <= 300; t += 5) {
+        const v = (t * rect.height) / rect.width
+        const points = [
+          { x: t, y: 0 },
+          { x: t, y: rect.height },
+          { x: 0, y: v },
+          { x: rect.width, y: v },
+        ]
+        for (const point of points) {
+          const result = findClosestHandle({
+            point,
+            rect,
+            useFourHandles: false,
+          })
+          expect(result).not.toContain("-between-")
+          expect(canonicalHandleIds.has(result)).toBe(true)
+        }
+      }
     })
 
-    it("returns bottom-left when point is near left-third of bottom edge", () => {
+    it("uses deterministic canonical-order tie-break for equal distances", () => {
+      // Equidistant from top (slot 4, x=150) and top-between-mid-left-center
+      // (slot 3, x=130) on the top side. The four directional middles are
+      // declared first in canonical order, so "top" wins this tie.
       const result = findClosestHandle({
-        point: { x: 100, y: 205 },
-        rect,
-        useFourHandles: false,
-      })
-      expect(result).toBe("bottom-left")
-    })
-
-    it("returns bottom-right when point is near right-third of bottom edge", () => {
-      const result = findClosestHandle({
-        point: { x: 200, y: 205 },
-        rect,
-        useFourHandles: false,
-      })
-      expect(result).toBe("bottom-right")
-    })
-
-    it("returns left-top when point is near top-third of left edge", () => {
-      // left-top handle at (0, 200/3 ≈ 66.67)
-      const result = findClosestHandle({
-        point: { x: -5, y: 66.67 },
-        rect,
-        useFourHandles: false,
-      })
-      expect(result).toBe("left-top")
-    })
-
-    it("returns left-bottom when point is near bottom-third of left edge", () => {
-      // left-bottom handle at (0, 2/3*200 ≈ 133.33)
-      const result = findClosestHandle({
-        point: { x: -5, y: 133.33 },
-        rect,
-        useFourHandles: false,
-      })
-      expect(result).toBe("left-bottom")
-    })
-
-    it("returns right-top when point is near top-third of right edge", () => {
-      const result = findClosestHandle({
-        point: { x: 305, y: 66.67 },
-        rect,
-        useFourHandles: false,
-      })
-      expect(result).toBe("right-top")
-    })
-
-    it("returns right-bottom when point is near bottom-third of right edge", () => {
-      const result = findClosestHandle({
-        point: { x: 305, y: 133.33 },
-        rect,
-        useFourHandles: false,
-      })
-      expect(result).toBe("right-bottom")
-    })
-
-    it("still returns basic handles when point is nearest", () => {
-      const result = findClosestHandle({
-        point: { x: 150, y: -20 },
+        point: { x: 140, y: 40 },
         rect,
         useFourHandles: false,
       })
@@ -585,7 +464,7 @@ describe("findClosestHandle", () => {
       point: { x: 100, y: -5 },
       rect,
     })
-    expect(result).toBe("top-left")
+    expect(result).toBe("top-mid-left")
   })
 })
 
@@ -868,70 +747,6 @@ describe("parseSvgPath", () => {
 })
 
 // ---------------------------------------------------------------------------
-// calculateInnerMidpoints
-// ---------------------------------------------------------------------------
-describe("calculateInnerMidpoints", () => {
-  it("returns empty for fewer than 3 points", () => {
-    expect(
-      calculateInnerMidpoints([
-        { x: 0, y: 0 },
-        { x: 100, y: 0 },
-      ])
-    ).toEqual([])
-  })
-
-  it("returns empty for empty array", () => {
-    expect(calculateInnerMidpoints([])).toEqual([])
-  })
-
-  it("returns midpoint of inner segment for U-shaped path", () => {
-    // 3 segments: first (horiz), middle (vert), last (horiz)
-    // Only inner segments (excluding first and last) should produce midpoints
-    const points = [
-      { x: 0, y: 0 },
-      { x: 100, y: 0 },
-      { x: 100, y: 100 },
-      { x: 200, y: 100 },
-    ]
-    const result = calculateInnerMidpoints(points)
-    // Segments: [0→100,0] horiz, [100,0→100,100] vert, [100,100→200,100] horiz
-    // Inner = index 1 only: midpoint of (100,0)→(100,100) = (100, 50)
-    expect(result).toEqual([{ x: 100, y: 50 }])
-  })
-
-  it("rounds midpoints to specified decimals", () => {
-    const points = [
-      { x: 0, y: 0 },
-      { x: 100, y: 0 },
-      { x: 100, y: 77 },
-      { x: 200, y: 77 },
-    ]
-    const result = calculateInnerMidpoints(points, 1)
-    expect(result).toEqual([{ x: 100, y: 38.5 }])
-  })
-
-  it("returns multiple midpoints for longer path", () => {
-    // 5 segments path: horiz, vert, horiz, vert, horiz
-    // Inner segments: index 1, 2, 3
-    const points = [
-      { x: 0, y: 0 },
-      { x: 100, y: 0 },
-      { x: 100, y: 100 },
-      { x: 200, y: 100 },
-      { x: 200, y: 200 },
-      { x: 300, y: 200 },
-    ]
-    const result = calculateInnerMidpoints(points)
-    // Segments: [0,0→100,0] H, [100,0→100,100] V, [100,100→200,100] H, [200,100→200,200] V, [200,200→300,200] H
-    // Inner (excl first and last): index 1,2,3
-    expect(result.length).toBe(3)
-    expect(result[0]).toEqual({ x: 100, y: 50 })
-    expect(result[1]).toEqual({ x: 150, y: 100 })
-    expect(result[2]).toEqual({ x: 200, y: 150 })
-  })
-})
-
-// ---------------------------------------------------------------------------
 // removeDuplicatePoints
 // ---------------------------------------------------------------------------
 describe("removeDuplicatePoints", () => {
@@ -978,6 +793,717 @@ describe("removeDuplicatePoints", () => {
       { x: 30, y: 40 },
     ]
     expect(removeDuplicatePoints(points)).toEqual(points)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// preserveOrthogonalEdgePoints
+// ---------------------------------------------------------------------------
+describe("preserveOrthogonalEdgePoints", () => {
+  it("keeps a manually moved bend when the target handle moves lower on the same side", () => {
+    const result = preserveOrthogonalEdgePoints(
+      [
+        { x: 100, y: 50 },
+        { x: 150, y: 50 },
+        { x: 150, y: 200 },
+        { x: 300, y: 200 },
+      ],
+      { x: 100, y: 50 },
+      { x: 300, y: 260 },
+      Position.Right,
+      Position.Left
+    )
+
+    expect(result).toEqual([
+      { x: 100, y: 50 },
+      { x: 150, y: 50 },
+      { x: 150, y: 260 },
+      { x: 300, y: 260 },
+    ])
+    expectOrthogonalSegments(result)
+  })
+
+  it("keeps the bend when the source endpoint moves", () => {
+    const result = preserveOrthogonalEdgePoints(
+      [
+        { x: 100, y: 50 },
+        { x: 150, y: 50 },
+        { x: 150, y: 200 },
+        { x: 300, y: 200 },
+      ],
+      { x: 120, y: 90 },
+      { x: 300, y: 200 },
+      Position.Right,
+      Position.Left
+    )
+
+    expect(result).toEqual([
+      { x: 120, y: 90 },
+      { x: 150, y: 90 },
+      { x: 150, y: 200 },
+      { x: 300, y: 200 },
+    ])
+    expectOrthogonalSegments(result)
+  })
+
+  it("adds a segment when reconnecting to a side with a different entering direction", () => {
+    const result = preserveOrthogonalEdgePoints(
+      [
+        { x: 100, y: 50 },
+        { x: 150, y: 50 },
+        { x: 150, y: 200 },
+        { x: 300, y: 200 },
+      ],
+      { x: 100, y: 50 },
+      { x: 350, y: 100 },
+      Position.Right,
+      Position.Top
+    )
+
+    expect(result).toEqual([
+      { x: 100, y: 50 },
+      { x: 350, y: 50 },
+      { x: 350, y: 100 },
+    ])
+    expectOrthogonalSegments(result)
+  })
+
+  it("turns a stale two-point path into an orthogonal route when endpoints no longer align", () => {
+    const result = preserveOrthogonalEdgePoints(
+      [
+        { x: 100, y: 50 },
+        { x: 300, y: 50 },
+      ],
+      { x: 100, y: 50 },
+      { x: 300, y: 120 },
+      Position.Right,
+      Position.Left
+    )
+
+    expect(result).toEqual([
+      { x: 100, y: 50 },
+      { x: 200, y: 50 },
+      { x: 200, y: 120 },
+      { x: 300, y: 120 },
+    ])
+    expectOrthogonalSegments(result)
+  })
+
+  it("reroutes the first lane when reconnecting from the opposite source side", () => {
+    const result = preserveOrthogonalEdgePoints(
+      [
+        { x: 100, y: 50 },
+        { x: 150, y: 50 },
+        { x: 150, y: 200 },
+        { x: 300, y: 200 },
+      ],
+      { x: 50, y: 50 },
+      { x: 300, y: 200 },
+      Position.Left,
+      Position.Left
+    )
+
+    expect(result).toEqual([
+      { x: 50, y: 50 },
+      { x: 20, y: 50 },
+      { x: 20, y: 200 },
+      { x: 300, y: 200 },
+    ])
+    expectOrthogonalSegments(result)
+  })
+
+  it("reroutes the last approach when reconnecting into the opposite target side", () => {
+    const result = preserveOrthogonalEdgePoints(
+      [
+        { x: 100, y: 50 },
+        { x: 150, y: 50 },
+        { x: 150, y: 200 },
+        { x: 300, y: 200 },
+      ],
+      { x: 100, y: 50 },
+      { x: 350, y: 200 },
+      Position.Right,
+      Position.Right
+    )
+
+    expect(result).toEqual([
+      { x: 100, y: 50 },
+      { x: 380, y: 50 },
+      { x: 380, y: 200 },
+      { x: 350, y: 200 },
+    ])
+    expectOrthogonalSegments(result)
+  })
+
+  it("preserves a horizontal U-shape (Right→Left bent down) when the target moves left", () => {
+    const result = preserveOrthogonalEdgePoints(
+      [
+        { x: 0, y: 200 },
+        { x: 30, y: 200 },
+        { x: 30, y: 250 },
+        { x: 370, y: 250 },
+        { x: 370, y: 200 },
+        { x: 400, y: 200 },
+      ],
+      { x: 0, y: 200 },
+      { x: 200, y: 200 },
+      Position.Right,
+      Position.Left
+    )
+
+    expect(result).toEqual([
+      { x: 0, y: 200 },
+      { x: 30, y: 200 },
+      { x: 30, y: 250 },
+      { x: 170, y: 250 },
+      { x: 170, y: 200 },
+      { x: 200, y: 200 },
+    ])
+    expectOrthogonalSegments(result)
+  })
+
+  it("preserves a vertical U-shape (Left→Right bent left) when the source moves down", () => {
+    const result = preserveOrthogonalEdgePoints(
+      [
+        { x: 200, y: 100 },
+        { x: 170, y: 100 },
+        { x: 90, y: 100 },
+        { x: 90, y: 300 },
+        { x: 230, y: 300 },
+        { x: 200, y: 300 },
+      ],
+      { x: 200, y: 150 },
+      { x: 200, y: 300 },
+      Position.Left,
+      Position.Right
+    )
+
+    expect(result).toEqual([
+      { x: 200, y: 150 },
+      { x: 170, y: 150 },
+      { x: 90, y: 150 },
+      { x: 90, y: 300 },
+      { x: 230, y: 300 },
+      { x: 200, y: 300 },
+    ])
+    expectOrthogonalSegments(result)
+  })
+
+  it("is idempotent when fed its own output", () => {
+    const sourcePoint = { x: 100, y: 50 }
+    const targetPoint = { x: 350, y: 200 }
+    const sourcePosition = Position.Right
+    const targetPosition = Position.Left
+    const seedPoints = [
+      { x: 100, y: 50 },
+      { x: 150, y: 50 },
+      { x: 150, y: 200 },
+      { x: 300, y: 200 },
+    ]
+
+    const once = preserveOrthogonalEdgePoints(
+      seedPoints,
+      sourcePoint,
+      targetPoint,
+      sourcePosition,
+      targetPosition
+    )
+    const twice = preserveOrthogonalEdgePoints(
+      once,
+      sourcePoint,
+      targetPoint,
+      sourcePosition,
+      targetPosition
+    )
+
+    expect(twice).toEqual(once)
+    expectOrthogonalSegments(twice)
+  })
+
+  it("falls back deterministically when horizontal U-shape stubs collide", () => {
+    const result = preserveOrthogonalEdgePoints(
+      [
+        { x: 0, y: 200 },
+        { x: 30, y: 200 },
+        { x: 30, y: 250 },
+        { x: 370, y: 250 },
+        { x: 370, y: 200 },
+        { x: 400, y: 200 },
+      ],
+      { x: 0, y: 200 },
+      { x: 50, y: 200 },
+      Position.Right,
+      Position.Left
+    )
+    expect(result.length).toBeGreaterThanOrEqual(2)
+    expect(result[0]).toEqual({ x: 0, y: 200 })
+    expect(result[result.length - 1]).toEqual({ x: 50, y: 200 })
+    expectOrthogonalSegments(result)
+  })
+
+  it("routes around stub collisions without shortening 30px stubs", () => {
+    const result = normalizeOrthogonalEdgePoints(
+      [
+        { x: 0, y: 200 },
+        { x: 30, y: 200 },
+        { x: 30, y: 250 },
+        { x: 20, y: 250 },
+        { x: 20, y: 200 },
+        { x: 50, y: 200 },
+      ],
+      { x: 0, y: 200 },
+      { x: 50, y: 200 },
+      Position.Right,
+      Position.Left
+    )
+
+    expect(result).toEqual([
+      { x: 0, y: 200 },
+      { x: 30, y: 200 },
+      { x: 30, y: 170 },
+      { x: 20, y: 170 },
+      { x: 20, y: 200 },
+      { x: 50, y: 200 },
+    ])
+    expectOrthogonalSegments(result)
+  })
+
+  it("prefers a Z-shape fallback for horizontal stub collisions when endpoints are vertically separated", () => {
+    const result = preserveOrthogonalEdgePoints(
+      [
+        { x: 0, y: 0 },
+        { x: 30, y: 0 },
+        { x: 30, y: 150 },
+        { x: 130, y: 150 },
+        { x: 130, y: 300 },
+        { x: 160, y: 300 },
+      ],
+      { x: 0, y: 0 },
+      { x: 50, y: 300 },
+      Position.Right,
+      Position.Left
+    )
+
+    expect(result).toEqual([
+      { x: 0, y: 0 },
+      { x: 30, y: 0 },
+      { x: 30, y: 150 },
+      { x: 20, y: 150 },
+      { x: 20, y: 300 },
+      { x: 50, y: 300 },
+    ])
+    expectOrthogonalSegments(result)
+  })
+
+  it("snaps micro horizontal stub-lane offsets to one shared spine instead of leaving a jog", () => {
+    const result = preserveOrthogonalEdgePoints(
+      [
+        { x: 0, y: 0 },
+        { x: 30, y: 0 },
+        { x: 30, y: 150 },
+        { x: 124, y: 150 },
+        { x: 124, y: 300 },
+        { x: 154, y: 300 },
+      ],
+      { x: 0, y: 0 },
+      { x: 54, y: 300 },
+      Position.Right,
+      Position.Left
+    )
+
+    expect(result).toEqual([
+      { x: 0, y: 0 },
+      { x: 27, y: 0 },
+      { x: 27, y: 300 },
+      { x: 54, y: 300 },
+    ])
+    expectOrthogonalSegments(result)
+  })
+
+  it("prefers a Z-shape fallback for vertical stub collisions when endpoints are horizontally separated", () => {
+    const result = preserveOrthogonalEdgePoints(
+      [
+        { x: 300, y: 0 },
+        { x: 300, y: 30 },
+        { x: 150, y: 30 },
+        { x: 150, y: 130 },
+        { x: 0, y: 130 },
+        { x: 0, y: 160 },
+      ],
+      { x: 300, y: 0 },
+      { x: 0, y: 50 },
+      Position.Bottom,
+      Position.Top
+    )
+
+    expect(result).toEqual([
+      { x: 300, y: 0 },
+      { x: 300, y: 30 },
+      { x: 150, y: 30 },
+      { x: 150, y: 20 },
+      { x: 0, y: 20 },
+      { x: 0, y: 50 },
+    ])
+    expectOrthogonalSegments(result)
+  })
+
+  it("snaps micro vertical stub-lane offsets to one shared spine instead of leaving a jog", () => {
+    const result = preserveOrthogonalEdgePoints(
+      [
+        { x: 300, y: 0 },
+        { x: 300, y: 30 },
+        { x: 150, y: 30 },
+        { x: 150, y: 124 },
+        { x: 0, y: 124 },
+        { x: 0, y: 154 },
+      ],
+      { x: 300, y: 0 },
+      { x: 0, y: 54 },
+      Position.Bottom,
+      Position.Top
+    )
+
+    expect(result).toEqual([
+      { x: 300, y: 0 },
+      { x: 300, y: 27 },
+      { x: 0, y: 27 },
+      { x: 0, y: 54 },
+    ])
+    expectOrthogonalSegments(result)
+  })
+
+  it("preserves a target-side small stair-step instead of flattening a deliberate offset", () => {
+    // A 10px stair-step (220->230) is a legal single-grid-step bend. Reprojection
+    // must keep it: flattening would discard the user's deliberate offset and is
+    // the root cause of the bend "snap-back" regression.
+    const result = preserveOrthogonalEdgePoints(
+      [
+        { x: 0, y: 0 },
+        { x: 30, y: 0 },
+        { x: 30, y: 100 },
+        { x: 220, y: 100 },
+        { x: 220, y: 200 },
+        { x: 230, y: 200 },
+        { x: 230, y: 300 },
+        { x: 260, y: 300 },
+      ],
+      { x: 0, y: 0 },
+      { x: 260, y: 300 },
+      Position.Right,
+      Position.Left
+    )
+
+    expect(result).toEqual([
+      { x: 0, y: 0 },
+      { x: 30, y: 0 },
+      { x: 30, y: 100 },
+      { x: 220, y: 100 },
+      { x: 220, y: 200 },
+      { x: 230, y: 200 },
+      { x: 230, y: 300 },
+      { x: 260, y: 300 },
+    ])
+    expectOrthogonalSegments(result)
+  })
+
+  it("preserves a source-side small stair-step without moving the source stub", () => {
+    // The 10px jog (30->40) is a deliberate single-step bend and must survive
+    // reprojection; only the fixed 30px source stub is anchored.
+    const result = preserveOrthogonalEdgePoints(
+      [
+        { x: 0, y: 0 },
+        { x: 30, y: 0 },
+        { x: 30, y: 100 },
+        { x: 40, y: 100 },
+        { x: 40, y: 200 },
+        { x: 200, y: 200 },
+        { x: 200, y: 300 },
+        { x: 230, y: 300 },
+      ],
+      { x: 0, y: 0 },
+      { x: 230, y: 300 },
+      Position.Right,
+      Position.Left
+    )
+
+    expect(result).toEqual([
+      { x: 0, y: 0 },
+      { x: 30, y: 0 },
+      { x: 30, y: 100 },
+      { x: 40, y: 100 },
+      { x: 40, y: 200 },
+      { x: 200, y: 200 },
+      { x: 200, y: 300 },
+      { x: 230, y: 300 },
+    ])
+    expectOrthogonalSegments(result)
+  })
+
+  it("collapses near-overlapping parallel arms only in release normalization", () => {
+    const result = normalizeOrthogonalEdgePoints(
+      [
+        { x: 0, y: 200 },
+        { x: 360, y: 200 },
+        { x: 360, y: 250 },
+        { x: 370, y: 250 },
+        { x: 370, y: 200 },
+        { x: 400, y: 200 },
+      ],
+      { x: 0, y: 200 },
+      { x: 400, y: 200 },
+      Position.Right,
+      Position.Left
+    )
+
+    expect(result).toEqual([
+      { x: 0, y: 200 },
+      { x: 400, y: 200 },
+    ])
+    expectOrthogonalSegments(result)
+  })
+
+  it("rejects release when the target stub would shrink below 30px", () => {
+    const releasedPoints = [
+      { x: 0, y: 200 },
+      { x: 30, y: 200 },
+      { x: 30, y: 150 },
+      { x: 190, y: 150 },
+      { x: 190, y: 200 },
+      { x: 200, y: 200 },
+    ]
+
+    expect(
+      isInvalidOrthogonalEdgeRelease(
+        releasedPoints,
+        { x: 0, y: 200 },
+        { x: 200, y: 200 },
+        Position.Right,
+        Position.Left
+      )
+    ).toBe(true)
+  })
+
+  it("reverts release to the last valid points when a terminal stub is reduced", () => {
+    const lastValidPoints = [
+      { x: 0, y: 200 },
+      { x: 30, y: 200 },
+      { x: 30, y: 150 },
+      { x: 170, y: 150 },
+      { x: 170, y: 200 },
+      { x: 200, y: 200 },
+    ]
+    const releasedPoints = [
+      { x: 0, y: 200 },
+      { x: 30, y: 200 },
+      { x: 30, y: 150 },
+      { x: 190, y: 150 },
+      { x: 190, y: 200 },
+      { x: 200, y: 200 },
+    ]
+
+    const result = resolveOrthogonalEdgeReleasePoints(
+      releasedPoints,
+      lastValidPoints,
+      { x: 0, y: 200 },
+      { x: 200, y: 200 },
+      Position.Right,
+      Position.Left
+    )
+
+    expect(result).toEqual(lastValidPoints)
+    expectOrthogonalSegments(result)
+  })
+
+  // Dragging a U's arm so the two parallel arms meet or cross is a deliberate
+  // "merge the U" gesture and must collapse the route — not snap back to the
+  // pre-drag wide U. Arms still clearly apart stay a (narrow) U.
+  describe("collapses a U when its arms are dragged together", () => {
+    const S = { x: 0, y: 200 }
+    const T = { x: 400, y: 200 }
+    const wideU = [
+      { x: 0, y: 200 },
+      { x: 30, y: 200 },
+      { x: 30, y: 250 },
+      { x: 370, y: 250 },
+      { x: 370, y: 200 },
+      { x: 400, y: 200 },
+    ]
+    const releaseWithLeftArmAt = (lx: number) => [
+      { x: 0, y: 200 },
+      { x: lx, y: 200 },
+      { x: lx, y: 250 },
+      { x: 370, y: 250 },
+      { x: 370, y: 200 },
+      { x: 400, y: 200 },
+    ]
+
+    // Arm gap 5px / 10px (boundary) / crossed: all collapse to a straight line.
+    for (const lx of [365, 360, 375]) {
+      it(`collapses when the dragged arm lands at x=${lx} (gap ${370 - lx}px)`, () => {
+        const result = resolveOrthogonalEdgeReleasePoints(
+          releaseWithLeftArmAt(lx),
+          wideU,
+          S,
+          T,
+          Position.Right,
+          Position.Left
+        )
+        expect(result).toEqual([
+          { x: 0, y: 200 },
+          { x: 400, y: 200 },
+        ])
+        expectOrthogonalSegments(result)
+      })
+    }
+
+    it("preserves a deliberate narrow U whose arms are still 15px apart", () => {
+      const released = releaseWithLeftArmAt(355)
+      const result = resolveOrthogonalEdgeReleasePoints(
+        released,
+        wideU,
+        S,
+        T,
+        Position.Right,
+        Position.Left
+      )
+      expect(result).toEqual(released)
+      expectOrthogonalSegments(result)
+    })
+  })
+
+  it("detects mirrored horizontal and vertical stub collisions", () => {
+    expect(
+      stubsWouldOverlap(
+        { x: 100, y: 0 },
+        { x: 50, y: 0 },
+        Position.Left,
+        Position.Right,
+        30
+      )
+    ).toBe(true)
+    expect(
+      stubsWouldOverlap(
+        { x: 0, y: 100 },
+        { x: 0, y: 50 },
+        Position.Top,
+        Position.Bottom,
+        30
+      )
+    ).toBe(true)
+    expect(
+      stubsWouldOverlap(
+        { x: 100, y: 0 },
+        { x: 0, y: 0 },
+        Position.Left,
+        Position.Right,
+        30
+      )
+    ).toBe(false)
+  })
+
+  it("normalizes no-op drag release input without persisting an empty path", () => {
+    const result = normalizeOrthogonalEdgePoints(
+      [],
+      { x: 0, y: 0 },
+      { x: 200, y: 80 },
+      Position.Right,
+      Position.Left
+    )
+
+    expect(result.length).toBeGreaterThanOrEqual(2)
+    expect(result[0]).toEqual({ x: 0, y: 0 })
+    expect(result[result.length - 1]).toEqual({ x: 200, y: 80 })
+    expectOrthogonalSegments(result)
+  })
+
+  it("rejects diagonal release input and normalizes idempotently", () => {
+    const sourcePoint = { x: 0, y: 0 }
+    const targetPoint = { x: 200, y: 80 }
+    const once = normalizeOrthogonalEdgePoints(
+      [sourcePoint, targetPoint],
+      sourcePoint,
+      targetPoint,
+      Position.Right,
+      Position.Left
+    )
+    const twice = normalizeOrthogonalEdgePoints(
+      once,
+      sourcePoint,
+      targetPoint,
+      Position.Right,
+      Position.Left
+    )
+
+    expect(twice).toEqual(once)
+    expectOrthogonalSegments(once)
+  })
+
+  it("preserves a bent vertical segment when bending the U-shape stub", () => {
+    const result = preserveOrthogonalEdgePoints(
+      [
+        { x: 0, y: 200 },
+        { x: 60, y: 200 },
+        { x: 60, y: 280 },
+        { x: 370, y: 280 },
+        { x: 370, y: 200 },
+        { x: 400, y: 200 },
+      ],
+      { x: 0, y: 200 },
+      { x: 400, y: 200 },
+      Position.Right,
+      Position.Left
+    )
+    expect(result[1]).toEqual({ x: 60, y: 200 })
+    expectOrthogonalSegments(result)
+  })
+})
+
+describe("resolveReconnectPreviewBasePoints", () => {
+  it("prefers stored manual points when available", () => {
+    const result = resolveReconnectPreviewBasePoints(
+      [
+        { x: 10, y: 20 },
+        { x: 30, y: 40 },
+      ],
+      [{ x: 50, y: 60 }],
+      [{ x: 70, y: 80 }]
+    )
+
+    expect(result).toEqual([
+      { x: 10, y: 20 },
+      { x: 30, y: 40 },
+    ])
+  })
+
+  it("falls back to local custom points before computed points", () => {
+    const result = resolveReconnectPreviewBasePoints(
+      undefined,
+      [
+        { x: 15, y: 25 },
+        { x: 35, y: 45 },
+      ],
+      [{ x: 55, y: 65 }]
+    )
+
+    expect(result).toEqual([
+      { x: 15, y: 25 },
+      { x: 35, y: 45 },
+    ])
+  })
+
+  it("returns a cloned fallback path when no manual points exist", () => {
+    const fallbackPoints = [
+      { x: 5, y: 10 },
+      { x: 15, y: 20 },
+    ]
+    const result = resolveReconnectPreviewBasePoints(
+      undefined,
+      undefined,
+      fallbackPoints
+    )
+
+    expect(result).toEqual(fallbackPoints)
+    expect(result).not.toBe(fallbackPoints)
   })
 })
 
@@ -1042,54 +1568,6 @@ describe("isStraightEdgeType", () => {
   it("returns false for non-straight edge types", () => {
     expect(isStraightEdgeType("ClassDependency")).toBe(false)
     expect(isStraightEdgeType(undefined)).toBe(false)
-  })
-})
-
-// ---------------------------------------------------------------------------
-// getHandlePositionOnNode
-// ---------------------------------------------------------------------------
-describe("getHandlePositionOnNode", () => {
-  it("returns right-middle when handleId is undefined", () => {
-    const result = getHandlePositionOnNode({
-      nodePosition: { x: 10, y: 20 },
-      width: 100,
-      height: 50,
-      handleId: undefined,
-    })
-
-    expect(result).toEqual({ x: 110, y: 45 })
-  })
-
-  it("uses offset ratio for named handles", () => {
-    const topLeft = getHandlePositionOnNode({
-      nodePosition: { x: 0, y: 0 },
-      width: 200,
-      height: 100,
-      handleId: "top-left",
-    })
-
-    const leftBottom = getHandlePositionOnNode({
-      nodePosition: { x: 5, y: 10 },
-      width: 100,
-      height: 50,
-      handleId: "left-bottom",
-    })
-
-    expect(topLeft).toEqual({ x: 40, y: 0 })
-    expect(leftBottom).toEqual({ x: 5, y: 50 })
-  })
-
-  it("computes use-case handle positions on the ellipse", () => {
-    const result = getHandlePositionOnNode({
-      nodeType: "useCase",
-      nodePosition: { x: 10, y: 20 },
-      width: 100,
-      height: 60,
-      handleId: "right",
-    })
-
-    expect(result.x).toBeCloseTo(109.5, 5)
-    expect(result.y).toBeCloseTo(49.75, 5)
   })
 })
 
@@ -1326,6 +1804,114 @@ describe("getDefaultEdgeType", () => {
 })
 
 // ---------------------------------------------------------------------------
+// getDistributedHandleOffsetPercents
+// ---------------------------------------------------------------------------
+describe("getDistributedHandleOffsetPercents", () => {
+  it.each([80, 125, 200])(
+    "returns non-decreasing grid-aligned offsets for %ipx nodes",
+    (axisLength) => {
+      const offsets = getDistributedHandleOffsetPercents(axisLength).map(
+        (percent) => (Number.parseFloat(percent) / 100) * axisLength
+      )
+
+      // Nine offsets per axis — five arc-bearing slots interleaved with four
+      // "between" hidden connection points.
+      expect(offsets).toHaveLength(9)
+      for (let index = 0; index < offsets.length; index++) {
+        expect(offsets[index]).toBeGreaterThanOrEqual(0)
+        expect(offsets[index]).toBeLessThanOrEqual(axisLength)
+        // Offsets snap to the 5px handle grid step.
+        expect(Math.round(offsets[index]) % 5).toBe(0)
+
+        if (index > 0) {
+          // Hidden slots collapse to their visible neighbour in stage-0/1
+          // layouts, so adjacent offsets may be equal — but never decrease.
+          expect(offsets[index]).toBeGreaterThanOrEqual(offsets[index - 1])
+        }
+      }
+    }
+  )
+})
+
+// ---------------------------------------------------------------------------
+// Handle grid alignment — every connection point must land on the 5px grid.
+// A node sits at a 5px-snapped position, so if every handle OFFSET is a
+// multiple of 5 the absolute connection point is on the grid too. The matrix
+// includes odd multiples of 5 (105, 115, 165, 201) where a naive percentage
+// or an un-snapped centre would drift off the grid.
+// ---------------------------------------------------------------------------
+describe("handle offsets stay on the 5px grid", () => {
+  const AXES = [
+    20, 30, 40, 45, 55, 80, 90, 95, 100, 105, 110, 115, 125, 160, 165, 200, 201,
+  ]
+
+  it.each(AXES)(
+    "getDistributedHandleOffsets(%i): all 9 slots on grid",
+    (axis) => {
+      const offsets = getDistributedHandleOffsets(axis)
+      expect(offsets).toHaveLength(9)
+      for (let i = 0; i < offsets.length; i++) {
+        expect(offsets[i] % 5).toBe(0)
+        expect(offsets[i]).toBeGreaterThanOrEqual(0)
+        expect(offsets[i]).toBeLessThanOrEqual(axis)
+        if (i > 0) expect(offsets[i]).toBeGreaterThanOrEqual(offsets[i - 1])
+      }
+    }
+  )
+
+  it.each(AXES)(
+    "centre slot (index 4) is on grid and within half a step of the true centre for %ipx",
+    (axis) => {
+      const centre = getDistributedHandleOffsets(axis)[4]
+      expect(centre % 5).toBe(0)
+      // The centre connection sits on the grid line nearest the geometric
+      // middle — never more than half a 5px step away.
+      expect(Math.abs(centre - axis / 2)).toBeLessThanOrEqual(2.5)
+    }
+  )
+
+  // The rendered handle uses the percentage; it must reconstruct to exactly
+  // the grid-snapped px offset (no round-trip drift), so what the geometry
+  // layer computes is what React Flow renders and attaches edges to.
+  it.each(AXES)("percentage reconstructs to the px offset for %ipx", (axis) => {
+    const px = getDistributedHandleOffsets(axis)
+    const pct = getDistributedHandleOffsetPercents(axis)
+    for (let i = 0; i < 9; i++) {
+      const rendered = (Number.parseFloat(pct[i]) / 100) * axis
+      expect(Math.round(rendered)).toBe(px[i])
+      expect(Math.round(rendered) % 5).toBe(0)
+    }
+  })
+})
+
+describe("reduceVisibleArcCountForZoom", () => {
+  // 9-slot offsets with 5 arcs (slots 0,2,4,6,8) 40px apart, span 0..160.
+  const fiveArc = [0, 20, 40, 60, 80, 100, 120, 140, 160] as const
+
+  it("keeps all arcs at 1x when they are far enough apart", () => {
+    // adjacent even-slot spacing = 40px >= ARC_LENGTH_PX (28) → 5 arcs.
+    expect(reduceVisibleArcCountForZoom([...fiveArc], 5, 1)).toBe(5)
+  })
+
+  it("drops to fewer arcs as zoom-out shrinks the on-screen spacing", () => {
+    // At 0.5x adjacent 40px arcs are 20px apart on screen (< 28) → not 5.
+    // The 3-arc spacing (0→80) is 80px = 40px on screen >= 28 → 3.
+    expect(reduceVisibleArcCountForZoom([...fiveArc], 5, 0.5)).toBe(3)
+    // At 0.3x even the 3-arc spacing (80*0.3=24 < 28) is too tight → 1.
+    expect(reduceVisibleArcCountForZoom([...fiveArc], 5, 0.3)).toBe(1)
+  })
+
+  it("never exceeds the size-based base count", () => {
+    expect(reduceVisibleArcCountForZoom([...fiveArc], 3, 1)).toBe(3)
+    expect(reduceVisibleArcCountForZoom([...fiveArc], 1, 1)).toBe(1)
+  })
+
+  it("does not reduce when zoomed in (arcs grow with spacing)", () => {
+    expect(reduceVisibleArcCountForZoom([...fiveArc], 5, 2.5)).toBe(5)
+  })
+})
+
+// ---------------------------------------------------------------------------
 // getConnectionLineType
 // ---------------------------------------------------------------------------
 describe("getConnectionLineType", () => {
@@ -1360,5 +1946,78 @@ describe("getConnectionLineType", () => {
 
   it.each(stepDiagrams)("returns Step for %s", (diagramType) => {
     expect(getConnectionLineType(diagramType)).toBe(ConnectionLineType.Step)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// getEdgeGeometryMap
+// ---------------------------------------------------------------------------
+describe("getEdgeGeometryMap", () => {
+  const node = (id: string, x: number, y: number) =>
+    ({
+      id,
+      type: "class",
+      position: { x, y },
+      width: 100,
+      height: 60,
+      data: {},
+    }) as unknown as Parameters<typeof getEdgeGeometryMap>[1][number]
+
+  const edge = (id: string, source: string, target: string, data = {}) =>
+    ({ id, source, target, data }) as unknown as Parameters<
+      typeof getEdgeGeometryMap
+    >[0][number]
+
+  it("uses persisted waypoints verbatim", () => {
+    const points = [
+      { x: 0, y: 0 },
+      { x: 50, y: 0 },
+      { x: 50, y: 80 },
+    ]
+    const edges = [edge("e1", "a", "b", { points })]
+    const nodes = [node("a", 0, 0), node("b", 200, 200)]
+
+    expect(getEdgeGeometryMap(edges, nodes).get("e1")).toBe(points)
+  })
+
+  it("skips edges whose endpoints are missing", () => {
+    const edges = [edge("e1", "a", "missing")]
+    const nodes = [node("a", 0, 0)]
+
+    expect(getEdgeGeometryMap(edges, nodes).has("e1")).toBe(false)
+  })
+
+  it("returns the same memoised map for identical inputs", () => {
+    const edges = [edge("e1", "a", "b", { points: [{ x: 0, y: 0 }, { x: 9, y: 9 }] })]
+    const nodes = [node("a", 0, 0), node("b", 100, 100)]
+
+    expect(getEdgeGeometryMap(edges, nodes)).toBe(getEdgeGeometryMap(edges, nodes))
+  })
+
+  it("derives a polyline for computed (un-bent) edges", () => {
+    const edges = [edge("e1", "a", "b")]
+    const nodes = [node("a", 0, 0), node("b", 300, 0)]
+
+    const points = getEdgeGeometryMap(edges, nodes).get("e1")
+    expect(points).toBeDefined()
+    expect(points!.length).toBeGreaterThan(1)
+  })
+
+  it("resolves corner-alias handle ids (e.g. legacy 'right-top') to the corner", () => {
+    // node "a" spans x 0..100; the alias must anchor at the right edge, not
+    // fall back to the side centre (~x 50) as an unknown id would.
+    const edges = [
+      {
+        id: "e1",
+        source: "a",
+        target: "b",
+        sourceHandle: "right-top",
+        data: {},
+      } as unknown as Parameters<typeof getEdgeGeometryMap>[0][number],
+    ]
+    const nodes = [node("a", 0, 0), node("b", 300, 0)]
+
+    const start = getEdgeGeometryMap(edges, nodes).get("e1")![0]
+    expect(start.x).toBeGreaterThan(60)
   })
 })

@@ -11,6 +11,9 @@ export default [
     ignores: [
       "node_modules/**",
       "dist/**",
+      "playwright-report/**",
+      "test-results/**",
+      "coverage/**",
       // Capacitor native projects (contain generated/bundled web assets)
       "ios/**",
       "android/**",

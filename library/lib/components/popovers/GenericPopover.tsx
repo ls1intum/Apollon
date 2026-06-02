@@ -1,5 +1,5 @@
-import React, { ReactNode } from "react"
-import { Popover, PopoverOrigin, Paper } from "@mui/material"
+import React, { ReactNode, useMemo } from "react"
+import { Paper, Popover, PopoverOrigin } from "@mui/material"
 
 interface GenericPopoverProps {
   id: string
@@ -28,11 +28,41 @@ export const GenericPopover: React.FC<GenericPopoverProps> = ({
   minWidth = 200,
   style,
 }) => {
-  // Portal to document.body (MUI default — no `container`), not into the
+  const popoverThemeVars = useMemo(() => {
+    const source =
+      anchorEl instanceof Element
+        ? (anchorEl.closest(".apollon-editor") ?? anchorEl)
+        : null
+
+    if (!source) return {}
+
+    const vars = [
+      "--apollon-primary",
+      "--apollon-primary-contrast",
+      "--apollon-background",
+      "--apollon-background-variant",
+      "--apollon-gray-variant",
+      "--panel-background",
+      "--panel-shadow",
+      "--text",
+    ]
+
+    const computed = getComputedStyle(source)
+    const resolved: Record<string, string> = {}
+    for (const variable of vars) {
+      const value = computed.getPropertyValue(variable).trim()
+      if (value) {
+        resolved[variable] = value
+      }
+    }
+
+    return resolved
+  }, [anchorEl])
+
+  // Portal to document.body (MUI default - no `container`), not into the
   // `.apollon-editor` subtree: an embedder wrapper using `contain`/`transform`
   // would become the containing block for MUI's `position: fixed` root and
-  // shift the popover off-screen. Theme variables carry literal fallbacks, so
-  // a body-level popover still renders correctly.
+  // shift the popover off-screen.
   return (
     <Popover
       id={open ? id : undefined}
@@ -48,6 +78,7 @@ export const GenericPopover: React.FC<GenericPopoverProps> = ({
     >
       <Paper
         elevation={2}
+        style={popoverThemeVars as React.CSSProperties}
         sx={{
           width: "100%",
           maxWidth,
@@ -58,6 +89,29 @@ export const GenericPopover: React.FC<GenericPopoverProps> = ({
           flex: 1,
           flexDirection: "column",
           backgroundColor: "var(--apollon-background-variant, #f8f9fa)",
+          color: "var(--apollon-primary-contrast, #000000)",
+          "& .MuiSelect-select": {
+            color: "var(--apollon-primary-contrast, #000000) !important",
+          },
+          "& .MuiFormLabel-root": {
+            color: "var(--apollon-primary-contrast, #000000) !important",
+          },
+          "& .MuiOutlinedInput-notchedOutline": {
+            borderColor: "var(--apollon-primary-contrast, #000000) !important",
+          },
+          "& .MuiSvgIcon-root": {
+            color: "var(--apollon-primary-contrast, #000000) !important",
+          },
+          "& .MuiCheckbox-root": {
+            color: "var(--apollon-primary-contrast, #000000)",
+            "&.Mui-checked": {
+              color: "var(--apollon-primary-contrast, #000000)",
+            },
+            "&:hover": {
+              backgroundColor:
+                "color-mix(in srgb, var(--apollon-primary-contrast, #000000) 12%, transparent)",
+            },
+          },
         }}
       >
         {children}
