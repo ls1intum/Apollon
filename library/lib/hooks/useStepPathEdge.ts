@@ -355,6 +355,11 @@ export const useStepPathEdge = ({
   ])
 
   const canEditEndpoint = useMemo(() => {
+    // Never strand an edge: if it is too short to offer a bend handle, the
+    // endpoints must stay draggable so the user can always reshape it by
+    // reconnecting. (Avoids the "no handle, weird workaround" dead state.)
+    if (bendHandles.length === 0) return true
+
     const canvasLength = activePoints.reduce((length, point, index) => {
       if (index === 0) return length
       const previous = activePoints[index - 1]
@@ -364,7 +369,7 @@ export const useStepPathEdge = ({
     }, 0)
 
     return isLengthEditableAtZoom(canvasLength, EDGES.BEND_MIN_LENGTH, zoom)
-  }, [activePoints, zoom])
+  }, [activePoints, zoom, bendHandles.length])
 
   useEffect(() => {
     if (pathRef.current && currentPath) {

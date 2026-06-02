@@ -1,9 +1,11 @@
 import { fireEvent, render } from "@testing-library/react"
-import { Position } from "@xyflow/react"
+import { Position, ReactFlowProvider } from "@xyflow/react"
 import { describe, expect, it, vi } from "vitest"
 import { EdgeEndpointMarkers } from "@/edges/GenericEdge"
 import { EDGES } from "@/constants"
 
+// The markers counter-scale by 1/zoom; ReactFlowProvider's default transform is
+// zoom = 1, so sizes resolve to their base ENDPOINT_HIT_TARGET_SIZE here.
 const renderEndpointMarkers = ({
   isDiagramModifiable = true,
   canEditEndpoint = true,
@@ -12,21 +14,23 @@ const renderEndpointMarkers = ({
   canEditEndpoint?: boolean
 } = {}) =>
   render(
-    <svg>
-      <g className="react-flow__edge">
-        <circle className="react-flow__edgeupdater react-flow__edgeupdater-source" />
-        <circle className="react-flow__edgeupdater react-flow__edgeupdater-target" />
-        <EdgeEndpointMarkers
-          sourcePoint={{ x: 10, y: 20 }}
-          targetPoint={{ x: 110, y: 120 }}
-          sourcePosition={Position.Right}
-          targetPosition={Position.Left}
-          isDiagramModifiable={isDiagramModifiable}
-          canEditEndpoint={canEditEndpoint}
-          diagramType="step"
-        />
-      </g>
-    </svg>
+    <ReactFlowProvider>
+      <svg>
+        <g className="react-flow__edge">
+          <circle className="react-flow__edgeupdater react-flow__edgeupdater-source" />
+          <circle className="react-flow__edgeupdater react-flow__edgeupdater-target" />
+          <EdgeEndpointMarkers
+            sourcePoint={{ x: 10, y: 20 }}
+            targetPoint={{ x: 110, y: 120 }}
+            sourcePosition={Position.Right}
+            targetPosition={Position.Left}
+            isDiagramModifiable={isDiagramModifiable}
+            canEditEndpoint={canEditEndpoint}
+            diagramType="step"
+          />
+        </g>
+      </svg>
+    </ReactFlowProvider>
   )
 
 describe("EdgeEndpointMarkers", () => {
@@ -86,20 +90,22 @@ describe("EdgeEndpointMarkers", () => {
     })
 
     rerender(
-      <svg>
-        <g className="react-flow__edge">
-          <circle className="react-flow__edgeupdater react-flow__edgeupdater-source" />
-          <circle className="react-flow__edgeupdater react-flow__edgeupdater-target" />
-          <EdgeEndpointMarkers
-            sourcePoint={{ x: 10, y: 20 }}
-            targetPoint={{ x: 110, y: 120 }}
-            sourcePosition={Position.Right}
-            targetPosition={Position.Left}
-            isDiagramModifiable
-            diagramType="step"
-          />
-        </g>
-      </svg>
+      <ReactFlowProvider>
+        <svg>
+          <g className="react-flow__edge">
+            <circle className="react-flow__edgeupdater react-flow__edgeupdater-source" />
+            <circle className="react-flow__edgeupdater react-flow__edgeupdater-target" />
+            <EdgeEndpointMarkers
+              sourcePoint={{ x: 10, y: 20 }}
+              targetPoint={{ x: 110, y: 120 }}
+              sourcePosition={Position.Right}
+              targetPosition={Position.Left}
+              isDiagramModifiable
+              diagramType="step"
+            />
+          </g>
+        </svg>
+      </ReactFlowProvider>
     )
 
     expect(

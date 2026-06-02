@@ -5,7 +5,7 @@ import {
   type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
 } from "react"
-import { Position } from "@xyflow/react"
+import { Position, useStore } from "@xyflow/react"
 import { ExtendedEdgeProps } from "./EdgeProps"
 import { CustomEdgeToolbar } from "@/components"
 import { IPoint } from "./Connection"
@@ -13,7 +13,23 @@ import { PopoverManager } from "@/components/popovers/PopoverManager"
 import AssessmentIcon from "@/components/svgs/AssessmentIcon"
 import { DiagramEdgeType } from "."
 import { Assessment } from "@/typings"
-import { EDGES } from "@/constants"
+import { CANVAS, EDGES } from "@/constants"
+
+// Edge handles live inside the zoomed React Flow viewport, so a fixed flow-px
+// size renders tiny when zoomed out and huge when zoomed in. Counter-scale by
+// 1/zoom so every handle keeps a predictable, touch-friendly ON-SCREEN size at
+// any zoom (clamped to the canvas zoom range to avoid pathological extremes).
+const useHandleScreenScale = (): number => {
+  const zoom = useStore((state) => state.transform[2])
+  const safeZoom = Math.min(
+    Math.max(
+      Number.isFinite(zoom) && zoom > 0 ? zoom : 1,
+      CANVAS.MIN_SCALE_TO_ZOOM_OUT
+    ),
+    CANVAS.MAX_SCALE_TO_ZOOM_IN
+  )
+  return 1 / safeZoom
+}
 
 export interface BaseEdgeProps extends ExtendedEdgeProps {
   diagramType?: "class" | "usecase" | "activity" | "component" | "deployment"
@@ -52,9 +68,10 @@ const getEndpointDirection = (side?: EndpointSide): IPoint => {
 
 export const getEndpointHitTargetRect = (
   point: IPoint,
-  side?: EndpointSide
+  side?: EndpointSide,
+  screenScale = 1
 ) => {
-  const hitSize = EDGES.ENDPOINT_HIT_TARGET_SIZE
+  const hitSize = EDGES.ENDPOINT_HIT_TARGET_SIZE * screenScale
   const hitOffset = hitSize / 2
   const direction = getEndpointDirection(side)
 
@@ -85,6 +102,7 @@ export const EdgeEndpointMarkers = ({
   diagramType: string
 }) => {
   const sourceHandleRef = useRef<SVGRectElement | null>(null)
+  const screenScale = useHandleScreenScale()
 
   useEffect(() => {
     if (!isDiagramModifiable || diagramType === "usecase") return
@@ -147,8 +165,16 @@ export const EdgeEndpointMarkers = ({
       })
     )
   }
-  const sourceHitTarget = getEndpointHitTargetRect(sourcePoint, sourcePosition)
-  const targetHitTarget = getEndpointHitTargetRect(targetPoint, targetPosition)
+  const sourceHitTarget = getEndpointHitTargetRect(
+    sourcePoint,
+    sourcePosition,
+    screenScale
+  )
+  const targetHitTarget = getEndpointHitTargetRect(
+    targetPoint,
+    targetPosition,
+    screenScale
+  )
   const className = [
     "edge-endpoint-handle",
     canEditEndpoint ? "" : "edge-endpoint-handle--disabled",
@@ -206,8 +232,11 @@ export const EdgeBendHandle = ({
   orientation: "H" | "V"
   onPointerDown: (e: ReactPointerEvent<SVGRectElement>) => void
 }) => {
-  const width = orientation === "H" ? 34 : 10
-  const height = orientation === "H" ? 10 : 34
+  const screenScale = useHandleScreenScale()
+  const longAxis = 34 * screenScale
+  const shortAxis = 10 * screenScale
+  const width = orientation === "H" ? longAxis : shortAxis
+  const height = orientation === "H" ? shortAxis : longAxis
 
   return (
     <rect
@@ -218,8 +247,8 @@ export const EdgeBendHandle = ({
       y={position.y - height / 2}
       width={width}
       height={height}
-      rx={6}
-      ry={6}
+      rx={6 * screenScale}
+      ry={6 * screenScale}
       style={{
         cursor: orientation === "H" ? "ns-resize" : "ew-resize",
         zIndex: 9999,
