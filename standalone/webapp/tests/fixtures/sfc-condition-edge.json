@@ -1,0 +1,38 @@
+{
+  "id": "fixture-sfc-condition-001",
+  "version": "4.0.0",
+  "title": "SFC condition edge",
+  "type": "Sfc",
+  "nodes": [
+    {
+      "id": "stepA",
+      "width": 160,
+      "height": 80,
+      "type": "sfcStep",
+      "position": { "x": 200, "y": 0 },
+      "data": { "name": "Step A" },
+      "measured": { "width": 160, "height": 80 }
+    },
+    {
+      "id": "stepB",
+      "width": 160,
+      "height": 80,
+      "type": "sfcStep",
+      "position": { "x": 200, "y": 420 },
+      "data": { "name": "Step B" },
+      "measured": { "width": 160, "height": 80 }
+    }
+  ],
+  "edges": [
+    {
+      "id": "sfcCondEdge",
+      "source": "stepA",
+      "target": "stepB",
+      "type": "SfcDiagramEdge",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": { "label": "x > 5", "points": [] }
+    }
+  ],
+  "assessments": {}
+}

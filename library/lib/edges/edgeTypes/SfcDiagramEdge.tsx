@@ -45,7 +45,6 @@ function getParsedEdgeData(data: unknown): {
 }
 const crossbarLength = 20
 const sfcCenterHandleCollisionRadius = 24
-const sfcCenterShiftDistance = 34
 export const SfcDiagramEdge = ({
   id,
   type,
@@ -117,37 +116,24 @@ export const SfcDiagramEdge = ({
   const { strokeColor, textColor } = getCustomColorsFromDataForEdge(data)
   const markerKey = `${id}-${markerStart ?? "none"}-${markerEnd ?? "none"}`
 
-  const annotationAnchor = useMemo(() => {
-    const center = edgeData.pathMiddlePosition
-    const hasCenterHandle = bendHandles.some(
-      (handle) =>
-        Math.hypot(
-          handle.position.x - center.x,
-          handle.position.y - center.y
-        ) <= sfcCenterHandleCollisionRadius
-    )
-
-    if (!hasCenterHandle) return center
-
-    return edgeData.isMiddlePathHorizontal
-      ? { x: center.x + sfcCenterShiftDistance, y: center.y }
-      : { x: center.x, y: center.y + sfcCenterShiftDistance }
-  }, [
-    bendHandles,
-    edgeData.pathMiddlePosition,
-    edgeData.isMiddlePathHorizontal,
-  ])
+  // The SFC transition bar marks the condition point ON the edge, so it sits
+  // exactly on the path middle (standard SFC notation) rather than being
+  // nudged off to the side. The center bend handle would sit under the bar, so
+  // it is the handle that yields: handles colliding with the bar are hidden
+  // (never all of them — an edge must keep at least one way to reshape it).
+  const annotationAnchor = edgeData.pathMiddlePosition
 
   const visibleBendHandles = useMemo(() => {
     if (!showBar) return bendHandles
 
-    return bendHandles.filter(
+    const clear = bendHandles.filter(
       (handle) =>
         Math.hypot(
           handle.position.x - annotationAnchor.x,
           handle.position.y - annotationAnchor.y
         ) > sfcCenterHandleCollisionRadius
     )
+    return clear.length > 0 ? clear : bendHandles
   }, [annotationAnchor.x, annotationAnchor.y, bendHandles, showBar])
 
   const labelPosition = {
@@ -266,6 +252,9 @@ export const SfcDiagramEdge = ({
                 y2={crossbarCoordinates.y2}
                 stroke={strokeColor}
                 strokeWidth="10"
+                // Decorative only: must not steal the pointer from the bend
+                // handle it sits on, or the centre handle becomes ungrabbable.
+                pointerEvents="none"
               />
             )}
 
@@ -279,6 +268,7 @@ export const SfcDiagramEdge = ({
                 dominantBaseline={labelPosition.dominantBaseline}
                 fontSize="14"
                 textDecoration={isNegated ? "overline" : undefined}
+                pointerEvents="none"
               >
                 {displayName}
               </text>

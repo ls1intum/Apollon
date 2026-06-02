@@ -113,6 +113,15 @@ export const useStepPathEdge = ({
     useState<boolean>(true)
   const [hasInitialCalculation, setHasInitialCalculation] = useState(false)
   const [draggingHandle, setDraggingHandle] = useState<BendHandle | null>(null)
+  // While a bend handle is being dragged we render from this live geometry
+  // instead of the committed `activePoints`. Driving the drag through state
+  // (rather than mutating the SVG `d` directly) keeps the path AND everything
+  // derived from it — the bend handle, the toolbar, edge labels, and per-type
+  // decorators like the SFC transition bar — in sync on every move, so they
+  // follow the drag in real time instead of jumping only on release.
+  const [dragPreviewPoints, setDragPreviewPoints] = useState<IPoint[] | null>(
+    null
+  )
 
   const { customPoints, setCustomPoints } = useEdgeState(data?.points)
   const { setEdges } = useDiagramStore(
@@ -329,13 +338,19 @@ export const useStepPathEdge = ({
     targetPosition,
   ])
 
+  // Geometry to render: the in-progress drag preview when dragging, otherwise
+  // the committed points. Only `renderPoints` drives the visible path and its
+  // decorations; the persistence effect above stays keyed on `activePoints`
+  // so a live preview never leaks into the store mid-drag.
+  const renderPoints = dragPreviewPoints ?? activePoints
+
   const currentPath = useMemo(() => {
-    return pointsToSvgPath(activePoints)
-  }, [activePoints])
+    return pointsToSvgPath(renderPoints)
+  }, [renderPoints])
 
   const markerSegmentPath = useMemo(
-    () => getMarkerSegmentPath(activePoints, offset, targetPosition),
-    [activePoints, offset, targetPosition]
+    () => getMarkerSegmentPath(renderPoints, offset, targetPosition),
+    [renderPoints, offset, targetPosition]
   )
 
   const overlayPath = useMemo(() => {
@@ -352,7 +367,7 @@ export const useStepPathEdge = ({
     const minSegmentScreenLength =
       handleScreenLength + 2 * EDGES.BEND_HANDLE_CORNER_CLEARANCE_PX
     return getBendableSegments(
-      activePoints,
+      renderPoints,
       sourcePosition,
       targetPosition,
       EDGES.BEND_HANDLE_SAFE_AREA_PX,
@@ -360,7 +375,7 @@ export const useStepPathEdge = ({
       zoom
     )
   }, [
-    activePoints,
+    renderPoints,
     allowMidpointDragging,
     sourcePosition,
     targetPosition,
@@ -469,23 +484,6 @@ export const useStepPathEdge = ({
         y: adjustedTargetCoordinates.targetY,
       }
 
-      // Get DOM elements for direct manipulation (like React Flow does for nodes)
-      const handleEl = event.target as SVGRectElement
-      const container = handleEl.closest(".edge-container")
-      const mainPath = container?.querySelector(
-        ".react-flow__edge-path"
-      ) as SVGPathElement | null
-      const overlayPath = container?.querySelector(
-        ".edge-overlay"
-      ) as SVGPathElement | null
-
-      const originalMainPathD = mainPath?.getAttribute("d")
-      const originalOverlayPathD = overlayPath?.getAttribute("d")
-      const originalHandleX = handleEl.getAttribute("x")
-      const originalHandleY = handleEl.getAttribute("y")
-      const handleWidth = Number(handleEl.getAttribute("width") ?? 0)
-      const handleHeight = Number(handleEl.getAttribute("height") ?? 0)
-
       const handlePointerMove = (e: PointerEvent) => {
         const activeHandle = draggingHandleRef.current
         if (!activeHandle) return
@@ -540,34 +538,16 @@ export const useStepPathEdge = ({
           lastValidDragRef.current = newPoints
         }
 
-        const pathD = pointsToSvgPath(newPoints)
-        mainPath?.setAttribute("d", pathD)
-        overlayPath?.setAttribute(
-          "d",
-          `${pathD} ${getMarkerSegmentPath(newPoints, offset, targetPosition)}`
-        )
-
-        const nextHandlePosition = {
-          x: activeHandle.position.x + delta.x,
-          y: activeHandle.position.y + delta.y,
-        }
-        handleEl.setAttribute(
-          "x",
-          String(nextHandlePosition.x - handleWidth / 2)
-        )
-        handleEl.setAttribute(
-          "y",
-          String(nextHandlePosition.y - handleHeight / 2)
-        )
+        // Drive the live render from state: the path, the dragged handle, and
+        // every decoration derived from the geometry re-render together.
+        setDragPreviewPoints(newPoints)
       }
 
       const handlePointerUp = () => {
-        if (mainPath && originalMainPathD)
-          mainPath.setAttribute("d", originalMainPathD)
-        if (overlayPath && originalOverlayPathD)
-          overlayPath.setAttribute("d", originalOverlayPathD)
-        if (originalHandleX) handleEl.setAttribute("x", originalHandleX)
-        if (originalHandleY) handleEl.setAttribute("y", originalHandleY)
+        // Drop the live preview; the render falls back to the committed points
+        // (or to the points we commit just below). Both updates batch into one
+        // re-render, so there is no intermediate flash of the pre-drag shape.
+        setDragPreviewPoints(null)
 
         // A press that never moved the path (a select-click on the handle, or a
         // first gesture React Flow consumed for selection) must NOT persist
@@ -621,7 +601,6 @@ export const useStepPathEdge = ({
       setEdges,
       allowMidpointDragging,
       setCustomPoints,
-      offset,
       targetPosition,
       sourcePosition,
       adjustedSourceCoordinates.sourceX,
@@ -631,8 +610,8 @@ export const useStepPathEdge = ({
     ]
   )
 
-  const sourcePoint = activePoints[0] || { x: sourceX, y: sourceY }
-  const targetPoint = activePoints[activePoints.length - 1] || {
+  const sourcePoint = renderPoints[0] || { x: sourceX, y: sourceY }
+  const targetPoint = renderPoints[renderPoints.length - 1] || {
     x: targetX,
     y: targetY,
   }
