@@ -93,4 +93,40 @@ test.describe("Line jumps", () => {
     expect(bridgeCount(await mainPathD(page, HORIZONTAL))).toBe(1)
     expect(bridgeCount(await mainPathD(page, VERTICAL))).toBe(0)
   })
+
+  test("the bridge updates live while a bend handle is dragged, not only on release", async ({
+    page,
+  }) => {
+    expect(bridgeCount(await mainPathD(page, HORIZONTAL))).toBe(1)
+
+    await selectEdge(page, HORIZONTAL)
+    const handle = edgeById(page, HORIZONTAL)
+      .locator(".edge-bend-handle")
+      .first()
+    await expect(handle).toBeVisible()
+    const box = await handle.boundingBox()
+    if (!box) throw new Error("bend handle has no bounding box")
+    const cx = box.x + box.width / 2
+    const cy = box.y + box.height / 2
+
+    // Press and bend the horizontal segment downward WITHOUT releasing. The
+    // segment still crosses the vertical edge (offset from the handle), so a
+    // bridge must already be present from the live preview geometry — the bug
+    // was that bridges only re-appeared on pointer-up.
+    await page.mouse.move(cx, cy)
+    await page.mouse.down()
+    await page.mouse.move(cx, cy + 40, { steps: 10 })
+
+    // Poll while the pointer is still held: the bridge must appear from the
+    // live preview, not wait for release.
+    await expect
+      .poll(async () => bridgeCount(await mainPathD(page, HORIZONTAL)), {
+        message: "bridge missing mid-drag (only updates on release)",
+        timeout: 2000,
+      })
+      .toBeGreaterThanOrEqual(1)
+
+    await page.mouse.up()
+    await page.waitForTimeout(200)
+  })
 })

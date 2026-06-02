@@ -1065,6 +1065,13 @@ const getNodeRect = (node: Node, allNodes: ReadonlyArray<Node>): Rect => {
  * it crosses the others. Edges with persisted waypoints use them verbatim;
  * the rest are re-derived from the same handle anchors and `getSmoothStepPath`
  * routing the renderer uses, keeping crossings aligned with what's drawn.
+ *
+ * Geometry comes from the committed store, so while an edge is mid-bend-drag
+ * (its live shape is local preview state, not yet committed) OTHER edges see its
+ * committed shape until release. The dragged edge's own bridges are still live
+ * (it feeds its preview points in directly). Making the cross-edge view live too
+ * would require a shared runtime geometry registry — the coupling #710 removed
+ * with `computedSegments` — which isn't worth it for a transient drag artifact.
  */
 export const getEdgeGeometryMap = (
   edges: ReadonlyArray<Edge>,

@@ -27,7 +27,7 @@
       "width": 200,
       "height": 100,
       "type": "class",
-      "position": { "x": 300, "y": 0 },
+      "position": { "x": 200, "y": 0 },
       "data": { "name": "Top", "attributes": [], "methods": [] },
       "measured": { "width": 200, "height": 100 }
     },
@@ -36,7 +36,7 @@
       "width": 200,
       "height": 100,
       "type": "class",
-      "position": { "x": 300, "y": 600 },
+      "position": { "x": 200, "y": 600 },
       "data": { "name": "Bottom", "attributes": [], "methods": [] },
       "measured": { "width": 200, "height": 100 }
     }

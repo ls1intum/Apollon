@@ -345,16 +345,11 @@ export const useStepPathEdge = ({
   // so a live preview never leaks into the store mid-drag.
   const renderPoints = dragPreviewPoints ?? activePoints
 
-  // Bridge over edges that cross beneath this one. Suppressed mid-bend and
-  // while reconnecting — the geometry is transient then, and the pairwise scan
-  // is this feature's hot path. Computed from the committed `activePoints`
-  // (which equals `renderPoints` when idle), so a live drag preview never
-  // triggers a per-frame rescan.
-  const lineJumps = useEdgeLineJumps(
-    id,
-    activePoints,
-    !isReconnecting && draggingHandle === null
-  )
+  // Bridge over edges this one crosses. Computed from `renderPoints` so the
+  // arcs follow a live bend drag frame-by-frame (during a bend only THIS edge's
+  // points change, so only its own scan re-runs — cheap). Suppressed only while
+  // reconnecting, where the preview is drawn separately by ReconnectConnectionLine.
+  const lineJumps = useEdgeLineJumps(id, renderPoints, !isReconnecting)
 
   const currentPath = useMemo(
     () => buildEdgePath(renderPoints, lineJumps),
