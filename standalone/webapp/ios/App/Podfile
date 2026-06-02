@@ -1,0 +1,30 @@
+require_relative '../../../../node_modules/.pnpm/@capacitor+ios@8.3.0_@capacitor+core@8.3.0/node_modules/@capacitor/ios/scripts/pods_helpers'
+
+platform :ios, '15.0'
+use_frameworks!
+
+# workaround to avoid Xcode caching of Pods that requires
+# Product -> Clean Build Folder after new Cordova plugins installed
+# Requires CocoaPods 1.6 or newer
+install! 'cocoapods', :disable_input_output_paths => true
+
+def capacitor_pods
+  pod 'Capacitor', :path => '../../../../node_modules/.pnpm/@capacitor+ios@8.3.0_@capacitor+core@8.3.0/node_modules/@capacitor/ios'
+  pod 'CapacitorCordova', :path => '../../../../node_modules/.pnpm/@capacitor+ios@8.3.0_@capacitor+core@8.3.0/node_modules/@capacitor/ios'
+  pod 'CapacitorClipboard', :path => '../../../../node_modules/.pnpm/@capacitor+clipboard@8.0.1_@capacitor+core@8.3.0/node_modules/@capacitor/clipboard'
+  pod 'CapacitorFileTransfer', :path => '../../../../node_modules/.pnpm/@capacitor+file-transfer@2.0.4_@capacitor+core@8.3.0/node_modules/@capacitor/file-transfer'
+  pod 'CapacitorFilesystem', :path => '../../../../node_modules/.pnpm/@capacitor+filesystem@8.1.2_@capacitor+core@8.3.0/node_modules/@capacitor/filesystem'
+  pod 'CapacitorShare', :path => '../../../../node_modules/.pnpm/@capacitor+share@8.0.1_@capacitor+core@8.3.0/node_modules/@capacitor/share'
+  pod 'CapacitorSplashScreen', :path => '../../../../node_modules/.pnpm/@capacitor+splash-screen@8.0.1_@capacitor+core@8.3.0/node_modules/@capacitor/splash-screen'
+  pod 'CapacitorStatusBar', :path => '../../../../node_modules/.pnpm/@capacitor+status-bar@8.0.2_@capacitor+core@8.3.0/node_modules/@capacitor/status-bar'
+  pod 'CapacitorPluginSafeArea', :path => '../../../../node_modules/.pnpm/capacitor-plugin-safe-area@4.0.0_@capacitor+core@8.3.0/node_modules/capacitor-plugin-safe-area'
+end
+
+target 'App' do
+  capacitor_pods
+  # Add your Pods here
+end
+
+post_install do |installer|
+  assertDeploymentTarget(installer)
+end
