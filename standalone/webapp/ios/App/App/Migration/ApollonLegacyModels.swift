@@ -8,6 +8,12 @@ import Foundation
 import CoreGraphics
 import SwiftData
 
+// Identifiers and raw values mirror the legacy on-disk schema exactly (e.g. the
+// `x`/`y` keys, the `Class` case, `Up` direction). They cannot be renamed
+// without breaking Codable decoding, so the relevant style rules are disabled —
+// the legacy source did the same.
+// swiftlint:disable identifier_name redundant_string_enum_value
+
 // MARK: - Enums
 
 enum UMLDiagramType: String, Codable {
@@ -259,3 +265,5 @@ final class ApollonDiagram {
         self.model = model
     }
 }
+
+// swiftlint:enable identifier_name redundant_string_enum_value

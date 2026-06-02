@@ -3,6 +3,7 @@
 
 import Foundation
 import Capacitor
+import SwiftData
 
 @objc(LegacyMigrationPlugin)
 public class LegacyMigrationPlugin: CAPPlugin, CAPBridgedPlugin {
@@ -11,7 +12,7 @@ public class LegacyMigrationPlugin: CAPPlugin, CAPBridgedPlugin {
     public let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "getLegacyDiagrams", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "isMigrationDone", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "setMigrationDone", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "setMigrationDone", returnType: CAPPluginReturnPromise)
     ]
 
     private let migrationDoneKey = "apollonLegacyMigrationDone"
@@ -104,9 +105,7 @@ enum LegacyStoreReader {
                     model: diagram.model
                 )
                 let data = try encoder.encode(dto)
-                if let json = String(data: data, encoding: .utf8) {
-                    result.append(json)
-                }
+                result.append(String(decoding: data, as: UTF8.self))
             } catch {
                 CAPLog.print("LegacyMigration: skipping one diagram: \(error)")
             }
