@@ -291,6 +291,7 @@ export const CommonEdgeElements = ({
         edgeId={id}
         anchorRef={anchorRef}
         position={uiPosition}
+        scaleAnchor={pathMiddlePosition}
         onEditClick={() => setPopOverElementId(id)}
         onDeleteClick={handleDelete}
       />

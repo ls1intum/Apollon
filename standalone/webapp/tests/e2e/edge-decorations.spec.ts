@@ -53,6 +53,18 @@ async function toolbarXY(page: Page, id: string) {
   }, id)
 }
 
+/** The toolbar box's on-screen size (px). */
+async function toolbarBoxSize(page: Page, id: string) {
+  return page.evaluate((edgeId) => {
+    const box = document
+      .querySelector(`.react-flow__edge[data-id="${edgeId}"] foreignObject`)
+      ?.querySelector(".MuiBox-root") as HTMLElement | null
+    if (!box) return null
+    const r = box.getBoundingClientRect()
+    return { w: Math.round(r.width), h: Math.round(r.height) }
+  }, id)
+}
+
 /** The visible (screen) centre of the edge's only bend handle. */
 async function bendHandleScreen(page: Page, id: string) {
   return page.evaluate((edgeId) => {
@@ -121,6 +133,56 @@ test("the edit toolbar follows the bend handle live during the drag, not only on
     Math.abs(mid!.y - after!.y),
     "the toolbar must track the drag live (was frozen until release)"
   ).toBeLessThanOrEqual(8)
+})
+
+test("the edit toolbar keeps a constant on-screen size across zoom (does not scale with the edge)", async ({
+  page,
+}) => {
+  await injectFixtureIntoLocalStorage(
+    page,
+    readFixture("two-class-fresh-edge.json")
+  )
+  await page.goto("/")
+  await waitForCanvasReady(page)
+
+  const id = "231f7ef5-b43d-4187-8996-f7726ed6e919"
+  await selectEdgeById(page, id)
+
+  const atDefault = await toolbarBoxSize(page, id)
+  const handleAtDefault = await bendHandleScreen(page, id)
+  expect(atDefault, "toolbar must render for the selected edge").not.toBeNull()
+
+  // The toolbar must not cover the centre bend handle: the topmost element at
+  // the handle centre is the handle itself, not a toolbar button.
+  if (handleAtDefault) {
+    const top = await page.evaluate(
+      ({ x, y }) =>
+        document.elementFromPoint(x, y)?.getAttribute("class") ?? "",
+      handleAtDefault
+    )
+    expect(top, "the toolbar must not obstruct the bend handle").toContain(
+      "edge-bend-handle"
+    )
+  }
+
+  const zoomIn = page.locator(".react-flow__controls-zoomin")
+  for (let i = 0; i < 5; i++) {
+    if (!(await zoomIn.isEnabled())) break
+    await zoomIn.click()
+    await page.waitForTimeout(60)
+  }
+  await page.waitForTimeout(200)
+  const zoomedIn = await toolbarBoxSize(page, id)
+
+  // Constant on-screen size: before the fix this ballooned (~32 -> ~80px).
+  expect(
+    Math.abs(zoomedIn!.w - atDefault!.w),
+    `toolbar width changed with zoom (${atDefault!.w} -> ${zoomedIn!.w})`
+  ).toBeLessThanOrEqual(4)
+  expect(
+    Math.abs(zoomedIn!.h - atDefault!.h),
+    `toolbar height changed with zoom (${atDefault!.h} -> ${zoomedIn!.h})`
+  ).toBeLessThanOrEqual(4)
 })
 
 test("the SFC transition bar sits on the edge centre, not off to the side", async ({
