@@ -423,8 +423,24 @@ export const useStepPathEdge = ({
         x: initialFlowPos.x - handle.position.x,
         y: initialFlowPos.y - handle.position.y,
       }
-      dragPointsRef.current = [...activePoints]
-      finalPointsRef.current = [...activePoints]
+      // Canonicalise the drag baseline's endpoints to the adjusted source/target
+      // anchors. A computed (unedited) path ends on the raw node edges, but the
+      // release validation re-pins endpoints to the adjusted anchors — the small
+      // padding delta would otherwise shrink a terminal stub below STUB_LENGTH
+      // and get the very first bend rejected back to a straight line.
+      const dragBaseline = [...activePoints]
+      if (dragBaseline.length >= 2) {
+        dragBaseline[0] = {
+          x: adjustedSourceCoordinates.sourceX,
+          y: adjustedSourceCoordinates.sourceY,
+        }
+        dragBaseline[dragBaseline.length - 1] = {
+          x: adjustedTargetCoordinates.targetX,
+          y: adjustedTargetCoordinates.targetY,
+        }
+      }
+      dragPointsRef.current = dragBaseline
+      finalPointsRef.current = [...dragBaseline]
 
       // Get DOM elements for direct manipulation (like React Flow does for nodes)
       const handleEl = event.target as SVGRectElement
@@ -513,31 +529,43 @@ export const useStepPathEdge = ({
         if (originalHandleX) handleEl.setAttribute("x", originalHandleX)
         if (originalHandleY) handleEl.setAttribute("y", originalHandleY)
 
-        const sourcePoint = {
-          x: adjustedSourceCoordinates.sourceX,
-          y: adjustedSourceCoordinates.sourceY,
-        }
-        const targetPoint = {
-          x: adjustedTargetCoordinates.targetX,
-          y: adjustedTargetCoordinates.targetY,
-        }
-        const normalizedPoints = resolveOrthogonalEdgeReleasePoints(
+        // A press that never moved the path (a select-click on the handle, or a
+        // first gesture React Flow consumed for selection) must NOT persist
+        // anything: committing here would freeze the computed path into manual
+        // points — for a straight edge that reads as the bend "snapping back".
+        // Only commit when the released geometry actually differs.
+        const pathChanged = !arePointsEqual(
           finalPointsRef.current,
-          dragPointsRef.current,
-          sourcePoint,
-          targetPoint,
-          sourcePosition,
-          targetPosition
+          dragPointsRef.current
         )
 
-        setCustomPoints(normalizedPoints)
-        setEdges((eds) =>
-          eds.map((e) =>
-            e.id === id
-              ? { ...e, data: { ...e.data, points: normalizedPoints } }
-              : e
+        if (pathChanged) {
+          const sourcePoint = {
+            x: adjustedSourceCoordinates.sourceX,
+            y: adjustedSourceCoordinates.sourceY,
+          }
+          const targetPoint = {
+            x: adjustedTargetCoordinates.targetX,
+            y: adjustedTargetCoordinates.targetY,
+          }
+          const normalizedPoints = resolveOrthogonalEdgeReleasePoints(
+            finalPointsRef.current,
+            dragPointsRef.current,
+            sourcePoint,
+            targetPoint,
+            sourcePosition,
+            targetPosition
           )
-        )
+
+          setCustomPoints(normalizedPoints)
+          setEdges((eds) =>
+            eds.map((e) =>
+              e.id === id
+                ? { ...e, data: { ...e.data, points: normalizedPoints } }
+                : e
+            )
+          )
+        }
         draggingHandleRef.current = null
         setDraggingHandle(null)
         document.removeEventListener("pointermove", handlePointerMove)
