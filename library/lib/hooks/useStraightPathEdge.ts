@@ -17,7 +17,11 @@ import {
   isLengthEditableAtZoom,
 } from "@/utils/geometry/bendHandles"
 import { useMetadataStore } from "@/store/context"
-import { useEdgeLineJumps, buildEdgePath } from "./useEdgeLineJumps"
+import {
+  useEdgeLineJumps,
+  usePublishEdgeGeometry,
+  buildEdgePath,
+} from "./useEdgeLineJumps"
 
 export interface StraightPathEdgeData {
   pathMiddlePosition: IPoint
@@ -88,6 +92,9 @@ export const useStraightPathEdge = ({
       adjustedTargetCoordinates.targetY,
     ]
   )
+
+  // Publish this edge's real geometry so other edges bridge over it accurately.
+  usePublishEdgeGeometry(id, basePoints)
 
   // UseCase include/extend edges are dashed connectors that never read as
   // crossings to disambiguate, so they opt out of bridging.

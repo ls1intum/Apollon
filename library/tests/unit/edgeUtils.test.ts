@@ -16,10 +16,8 @@ import {
   getDistributedHandleOffsets,
   getDistributedHandleOffsetPercents,
   reduceVisibleArcCountForZoom,
-  getEdgeGeometryMap,
   getEdgeMarkerStyles,
   getMarkerSegmentPath,
-  isStraightEdgeType,
   isInvalidOrthogonalEdgeRelease,
   normalizeOrthogonalEdgePoints,
   parseSvgPath,
@@ -1558,21 +1556,6 @@ describe("getMarkerSegmentPath", () => {
 })
 
 // ---------------------------------------------------------------------------
-// isStraightEdgeType
-// ---------------------------------------------------------------------------
-describe("isStraightEdgeType", () => {
-  it("returns true for straight edge types", () => {
-    expect(isStraightEdgeType("UseCaseAssociation")).toBe(true)
-    expect(isStraightEdgeType("PetriNetArc")).toBe(true)
-  })
-
-  it("returns false for non-straight edge types", () => {
-    expect(isStraightEdgeType("ClassDependency")).toBe(false)
-    expect(isStraightEdgeType(undefined)).toBe(false)
-  })
-})
-
-// ---------------------------------------------------------------------------
 // getAxisAlignedSegments
 // ---------------------------------------------------------------------------
 describe("getAxisAlignedSegments", () => {
@@ -1947,79 +1930,6 @@ describe("getConnectionLineType", () => {
 
   it.each(stepDiagrams)("returns Step for %s", (diagramType) => {
     expect(getConnectionLineType(diagramType)).toBe(ConnectionLineType.Step)
-  })
-})
-
-// ---------------------------------------------------------------------------
-// getEdgeGeometryMap
-// ---------------------------------------------------------------------------
-describe("getEdgeGeometryMap", () => {
-  const node = (id: string, x: number, y: number) =>
-    ({
-      id,
-      type: "class",
-      position: { x, y },
-      width: 100,
-      height: 60,
-      data: {},
-    }) as unknown as Parameters<typeof getEdgeGeometryMap>[1][number]
-
-  const edge = (id: string, source: string, target: string, data = {}) =>
-    ({ id, source, target, data }) as unknown as Parameters<
-      typeof getEdgeGeometryMap
-    >[0][number]
-
-  it("uses persisted waypoints verbatim", () => {
-    const points = [
-      { x: 0, y: 0 },
-      { x: 50, y: 0 },
-      { x: 50, y: 80 },
-    ]
-    const edges = [edge("e1", "a", "b", { points })]
-    const nodes = [node("a", 0, 0), node("b", 200, 200)]
-
-    expect(getEdgeGeometryMap(edges, nodes).get("e1")).toBe(points)
-  })
-
-  it("skips edges whose endpoints are missing", () => {
-    const edges = [edge("e1", "a", "missing")]
-    const nodes = [node("a", 0, 0)]
-
-    expect(getEdgeGeometryMap(edges, nodes).has("e1")).toBe(false)
-  })
-
-  it("returns the same memoised map for identical inputs", () => {
-    const edges = [edge("e1", "a", "b", { points: [{ x: 0, y: 0 }, { x: 9, y: 9 }] })]
-    const nodes = [node("a", 0, 0), node("b", 100, 100)]
-
-    expect(getEdgeGeometryMap(edges, nodes)).toBe(getEdgeGeometryMap(edges, nodes))
-  })
-
-  it("derives a polyline for computed (un-bent) edges", () => {
-    const edges = [edge("e1", "a", "b")]
-    const nodes = [node("a", 0, 0), node("b", 300, 0)]
-
-    const points = getEdgeGeometryMap(edges, nodes).get("e1")
-    expect(points).toBeDefined()
-    expect(points!.length).toBeGreaterThan(1)
-  })
-
-  it("resolves corner-alias handle ids (e.g. legacy 'right-top') to the corner", () => {
-    // node "a" spans x 0..100; the alias must anchor at the right edge, not
-    // fall back to the side centre (~x 50) as an unknown id would.
-    const edges = [
-      {
-        id: "e1",
-        source: "a",
-        target: "b",
-        sourceHandle: "right-top",
-        data: {},
-      } as unknown as Parameters<typeof getEdgeGeometryMap>[0][number],
-    ]
-    const nodes = [node("a", 0, 0), node("b", 300, 0)]
-
-    const start = getEdgeGeometryMap(edges, nodes).get("e1")![0]
-    expect(start.x).toBeGreaterThan(60)
   })
 })
 

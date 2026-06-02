@@ -5,6 +5,7 @@ import { MetadataStore } from "./metadataStore"
 import { PopoverStore } from "./popoverStore"
 import { AssessmentSelectionStore } from "./assessmentSelectionStore"
 import { AlignmentGuidesStore } from "./alignmentGuidesStore"
+import { EdgeGeometryStore } from "./edgeGeometryStore"
 
 export const DiagramStoreContext = createContext<StoreApi<DiagramStore> | null>(
   null
@@ -22,6 +23,9 @@ export const AssessmentSelectionStoreContext =
 
 export const AlignmentGuidesStoreContext =
   createContext<StoreApi<AlignmentGuidesStore> | null>(null)
+
+export const EdgeGeometryStoreContext =
+  createContext<StoreApi<EdgeGeometryStore> | null>(null)
 
 // Custom hooks for components
 export const useDiagramStore = <T>(selector: (state: DiagramStore) => T): T => {
@@ -57,5 +61,13 @@ export const useAlignmentGuidesStore = <T>(
 ): T => {
   const store = useContext(AlignmentGuidesStoreContext)
   if (!store) throw new Error("AlignmentGuidesStoreContext not provided")
+  return useStore(store, selector)
+}
+
+export const useEdgeGeometryStore = <T>(
+  selector: (state: EdgeGeometryStore) => T
+): T => {
+  const store = useContext(EdgeGeometryStoreContext)
+  if (!store) throw new Error("EdgeGeometryStoreContext not provided")
   return useStore(store, selector)
 }

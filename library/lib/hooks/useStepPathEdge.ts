@@ -40,7 +40,11 @@ import {
 } from "@/utils/geometry/bendHandles"
 import { useEdgeState } from "../edges/GenericEdge"
 import { useDiagramModifiable } from "./useDiagramModifiable"
-import { useEdgeLineJumps, buildEdgePath } from "./useEdgeLineJumps"
+import {
+  useEdgeLineJumps,
+  usePublishEdgeGeometry,
+  buildEdgePath,
+} from "./useEdgeLineJumps"
 
 interface UseStepPathEdgeProps {
   id: string
@@ -349,6 +353,9 @@ export const useStepPathEdge = ({
   // arcs follow a live bend drag frame-by-frame (during a bend only THIS edge's
   // points change, so only its own scan re-runs — cheap). Suppressed only while
   // reconnecting, where the preview is drawn separately by ReconnectConnectionLine.
+  // Publish this edge's real geometry so other edges bridge over it accurately;
+  // read others' geometry to bridge over them.
+  usePublishEdgeGeometry(id, renderPoints)
   const lineJumps = useEdgeLineJumps(id, renderPoints, !isReconnecting)
 
   const currentPath = useMemo(

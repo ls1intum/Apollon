@@ -1,23 +1,49 @@
-import { useMemo } from "react"
-import { useShallow } from "zustand/shallow"
+import { useEffect, useMemo } from "react"
 import { EDGES } from "@/constants"
-import { useDiagramStore } from "@/store/context"
+import { useEdgeGeometryStore } from "@/store/context"
 import { IPoint, pointsToSvgPath } from "../edges/Connection"
 import {
   LineJumpHit,
   buildPathWithLineJumps,
   computeLineJumpsForEdge,
-  getEdgeGeometryMap,
 } from "@/utils/edgeUtils"
 
 const pointsKey = (points: IPoint[]): string =>
   points.map((point) => `${point.x.toFixed(3)},${point.y.toFixed(3)}`).join("|")
 
 /**
+ * Publishes this edge's actual rendered (jump-free) polyline to the shared
+ * geometry registry so other edges can bridge over it at its real position,
+ * and removes it on unmount. `points` should be the edge's live render
+ * geometry (`renderPoints` for step edges, source/target for straight ones).
+ */
+export function usePublishEdgeGeometry(
+  id: string | undefined,
+  points: IPoint[]
+): void {
+  const publish = useEdgeGeometryStore((state) => state.publishEdgeGeometry)
+  const remove = useEdgeGeometryStore((state) => state.removeEdgeGeometry)
+  const key = pointsKey(points)
+
+  useEffect(() => {
+    if (id) publish(id, points)
+    // points is captured via the stable `key`; publishing is idempotent.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, key, publish])
+
+  useEffect(() => {
+    return () => {
+      if (id) remove(id)
+    }
+  }, [id, remove])
+}
+
+/**
  * Returns where this edge should bridge over the edges it crosses, using the
  * stable horizontal-hops-vertical convention (see `computeLineJumpsForEdge`).
- * Pass `enabled: false` to skip the scan entirely (e.g. mid-drag or while
- * reconnecting), keeping the quadratic pairwise work off hot paths.
+ * Other edges' geometry is read from the shared registry (their actual rendered
+ * points), so a bridge always centers on the crossing the user sees. Pass
+ * `enabled: false` to skip the scan (e.g. while reconnecting).
  *
  * Shared by both `useStepPathEdge` and `useStraightPathEdge`; the only
  * difference between them is the `basePoints` they feed in.
@@ -27,21 +53,17 @@ export function useEdgeLineJumps(
   basePoints: IPoint[],
   enabled: boolean
 ): LineJumpHit[] {
-  const { edges, nodes } = useDiagramStore(
-    useShallow((state) => ({ edges: state.edges, nodes: state.nodes }))
-  )
-  const edgeGeometryMap = useMemo(
-    () => getEdgeGeometryMap(edges, nodes),
-    [edges, nodes]
-  )
+  const geometryById = useEdgeGeometryStore((state) => state.geometryById)
   const baseKey = pointsKey(basePoints)
 
   return useMemo(() => {
     if (!enabled || !id) return []
-    return computeLineJumpsForEdge(id, basePoints, edges, edgeGeometryMap)
+    const geometryMap = new Map<string, IPoint[]>(Object.entries(geometryById))
+    const edges = Object.keys(geometryById).map((edgeId) => ({ id: edgeId }))
+    return computeLineJumpsForEdge(id, basePoints, edges, geometryMap)
     // basePoints is captured via the stable baseKey string.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, id, baseKey, edges, edgeGeometryMap])
+  }, [enabled, id, baseKey, geometryById])
 }
 
 /**

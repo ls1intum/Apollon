@@ -1,14 +1,11 @@
 import { EDGES, INTERFACE } from "@/constants"
 import { IPoint, pointsToSvgPath } from "@/edges/Connection"
-import { getPositionOnCanvas } from "@/utils/nodeUtils"
 import { DiagramEdgeType, UMLDiagramType } from "@/typings"
 import {
   Position,
   Rect,
   XYPosition,
   ConnectionLineType,
-  Edge,
-  Node,
   getSmoothStepPath,
 } from "@xyflow/react"
 
@@ -991,161 +988,6 @@ export function getEllipseHandlePosition(
   }
 }
 
-// The four corners are addressable under two ids: the canonical set owns them
-// as `top-*`/`bottom-*` (side Top/Bottom), but the renderer and legacy v3
-// imports also register them on the adjacent side as `right-*`/`left-*` (side
-// Right/Left). Map each alias to its canonical twin for the position while
-// keeping the side the renderer actually routes from, so a recomputed edge
-// exits the same way the drawn one does. (Built lazily — `Position` is an enum
-// import that some test mocks of @xyflow/react omit at module-eval time.)
-const getCornerHandleAliases = (): Record<
-  string,
-  { twin: string; side: Position }
-> => ({
-  "right-top": { twin: "top-right", side: Position.Right },
-  "left-top": { twin: "top-left", side: Position.Left },
-  "right-bottom": { twin: "bottom-right", side: Position.Right },
-  "left-bottom": { twin: "bottom-left", side: Position.Left },
-})
-
-/**
- * Resolves a node-relative handle id to its absolute canvas point and side
- * using the SAME canonical handle geometry the renderer and reconnection rely
- * on, so a recomputed edge crossing lands exactly where the edge is drawn.
- * Handle positions don't depend on how many arcs a side renders, so the full
- * nine-slot set (`useFourHandles=false`) is a safe lookup superset for any node.
- */
-const resolveEdgeHandleAnchor = (
-  rect: Rect,
-  handleId: string
-): RectHandlePoint => {
-  const points = getCanonicalHandlePoints(rect, false)
-  const alias = getCornerHandleAliases()[handleId]
-  const label = alias?.twin ?? handleId
-  const point = points.find((candidate) => candidate.label === label)
-  if (!point) return points[0]
-  return alias ? { ...point, side: alias.side } : point
-}
-
-const STRAIGHT_EDGE_TYPES = new Set([
-  "UseCaseAssociation",
-  "UseCaseInclude",
-  "UseCaseExtend",
-  "UseCaseGeneralization",
-  "SyntaxTreeLink",
-  "PetriNetArc",
-])
-
-export const isStraightEdgeType = (edgeType?: string | null): boolean =>
-  STRAIGHT_EDGE_TYPES.has(edgeType ?? "")
-
-type EdgeGeometryMap = Map<string, IPoint[]>
-
-// Memoised by the exact (edges, nodes) array identities Zustand hands us, which
-// is also the granularity React re-runs the consuming useMemo at: a stable
-// snapshot returns the same map, a new snapshot recomputes. Keys are weak so
-// the cache never outlives a store's array references (GC-safe, instance-safe).
-const edgeGeometryCache = new WeakMap<
-  ReadonlyArray<Edge>,
-  WeakMap<ReadonlyArray<Node>, EdgeGeometryMap>
->()
-
-const getNodeRect = (node: Node, allNodes: ReadonlyArray<Node>): Rect => {
-  const position = getPositionOnCanvas(node, allNodes)
-  return {
-    x: position.x,
-    y: position.y,
-    width: node.width ?? node.measured?.width ?? 100,
-    height: node.height ?? node.measured?.height ?? 100,
-  }
-}
-
-/**
- * Returns each edge's rendered polyline keyed by id, so an edge can test where
- * it crosses the others. Edges with persisted waypoints use them verbatim;
- * the rest are re-derived from the same handle anchors and `getSmoothStepPath`
- * routing the renderer uses, keeping crossings aligned with what's drawn.
- *
- * Geometry comes from the committed store, so while an edge is mid-bend-drag
- * (its live shape is local preview state, not yet committed) OTHER edges see its
- * committed shape until release. The dragged edge's own bridges are still live
- * (it feeds its preview points in directly). Making the cross-edge view live too
- * would require a shared runtime geometry registry — the coupling #710 removed
- * with `computedSegments` — which isn't worth it for a transient drag artifact.
- */
-export const getEdgeGeometryMap = (
-  edges: ReadonlyArray<Edge>,
-  nodes: ReadonlyArray<Node>
-): EdgeGeometryMap => {
-  const cachedByEdges = edgeGeometryCache.get(edges)
-  const cached = cachedByEdges?.get(nodes)
-  if (cached) return cached
-
-  const geometryMap: EdgeGeometryMap = new Map()
-  const nodesById = new Map(nodes.map((node) => [node.id, node]))
-
-  for (const edge of edges) {
-    const storedPoints = (edge.data as { points?: IPoint[] } | undefined)
-      ?.points
-    if (storedPoints && storedPoints.length > 1) {
-      geometryMap.set(edge.id, storedPoints)
-      continue
-    }
-
-    const sourceNode = nodesById.get(edge.source)
-    const targetNode = nodesById.get(edge.target)
-    if (!sourceNode || !targetNode) continue
-
-    const source = resolveEdgeHandleAnchor(
-      getNodeRect(sourceNode, nodes),
-      edge.sourceHandle ?? "right"
-    )
-    const target = resolveEdgeHandleAnchor(
-      getNodeRect(targetNode, nodes),
-      edge.targetHandle ?? "left"
-    )
-
-    if (isStraightEdgeType(edge.type)) {
-      geometryMap.set(edge.id, [source.position, target.position])
-      continue
-    }
-
-    const { markerPadding } = getEdgeMarkerStyles(edge.type ?? "")
-    const adjustedTarget = adjustTargetCoordinates(
-      Math.round(target.position.x),
-      Math.round(target.position.y),
-      target.side,
-      markerPadding ?? EDGES.MARKER_PADDING
-    )
-    const adjustedSource = adjustSourceCoordinates(
-      Math.round(source.position.x),
-      Math.round(source.position.y),
-      source.side,
-      EDGES.SOURCE_CONNECTION_POINT_PADDING
-    )
-
-    const [edgePath] = getSmoothStepPath({
-      sourceX: adjustedSource.sourceX,
-      sourceY: adjustedSource.sourceY,
-      sourcePosition: source.side,
-      targetX: adjustedTarget.targetX,
-      targetY: adjustedTarget.targetY,
-      targetPosition: target.side,
-      borderRadius: EDGES.STEP_BORDER_RADIUS,
-      offset: 30,
-    })
-
-    const points = removeDuplicatePoints(parseSvgPath(simplifySvgPath(edgePath)))
-    if (points.length > 1) geometryMap.set(edge.id, points)
-  }
-
-  const nextByEdges = cachedByEdges ?? new WeakMap()
-  nextByEdges.set(nodes, geometryMap)
-  if (!cachedByEdges) edgeGeometryCache.set(edges, nextByEdges)
-
-  return geometryMap
-}
-
 export type Orientation = "horizontal" | "vertical"
 
 export type AxisAlignedSegment = {
@@ -1398,7 +1240,8 @@ export function buildPathWithLineJumps(
  * Diagonal segments yield no axis-aligned segments, so they neither hop nor are
  * hopped (line jumps are orthogonal-only, matching mxGraph/ELK/yFiles).
  *
- * @param geometryMap each OTHER edge's rendered polyline (see getEdgeGeometryMap)
+ * @param geometryMap each OTHER edge's actual rendered polyline, keyed by id
+ *   (from the edge-geometry registry)
  */
 export function computeLineJumpsForEdge(
   edgeId: string,
