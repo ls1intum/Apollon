@@ -9,6 +9,7 @@ import {
   findClosestHandle,
   getConnectionLineType,
   getDefaultEdgeType,
+  getDistributedHandleOffsets,
   getDistributedHandleOffsetPercents,
   getEdgeMarkerStyles,
   getMarkerSegmentPath,
@@ -1708,6 +1709,57 @@ describe("getDistributedHandleOffsetPercents", () => {
       }
     }
   )
+})
+
+// ---------------------------------------------------------------------------
+// Handle grid alignment — every connection point must land on the 5px grid.
+// A node sits at a 5px-snapped position, so if every handle OFFSET is a
+// multiple of 5 the absolute connection point is on the grid too. The matrix
+// includes odd multiples of 5 (105, 115, 165, 201) where a naive percentage
+// or an un-snapped centre would drift off the grid.
+// ---------------------------------------------------------------------------
+describe("handle offsets stay on the 5px grid", () => {
+  const AXES = [
+    20, 30, 40, 45, 55, 80, 90, 95, 100, 105, 110, 115, 125, 160, 165, 200, 201,
+  ]
+
+  it.each(AXES)(
+    "getDistributedHandleOffsets(%i): all 9 slots on grid",
+    (axis) => {
+      const offsets = getDistributedHandleOffsets(axis)
+      expect(offsets).toHaveLength(9)
+      for (let i = 0; i < offsets.length; i++) {
+        expect(offsets[i] % 5).toBe(0)
+        expect(offsets[i]).toBeGreaterThanOrEqual(0)
+        expect(offsets[i]).toBeLessThanOrEqual(axis)
+        if (i > 0) expect(offsets[i]).toBeGreaterThanOrEqual(offsets[i - 1])
+      }
+    }
+  )
+
+  it.each(AXES)(
+    "centre slot (index 4) is on grid and within half a step of the true centre for %ipx",
+    (axis) => {
+      const centre = getDistributedHandleOffsets(axis)[4]
+      expect(centre % 5).toBe(0)
+      // The centre connection sits on the grid line nearest the geometric
+      // middle — never more than half a 5px step away.
+      expect(Math.abs(centre - axis / 2)).toBeLessThanOrEqual(2.5)
+    }
+  )
+
+  // The rendered handle uses the percentage; it must reconstruct to exactly
+  // the grid-snapped px offset (no round-trip drift), so what the geometry
+  // layer computes is what React Flow renders and attaches edges to.
+  it.each(AXES)("percentage reconstructs to the px offset for %ipx", (axis) => {
+    const px = getDistributedHandleOffsets(axis)
+    const pct = getDistributedHandleOffsetPercents(axis)
+    for (let i = 0; i < 9; i++) {
+      const rendered = (Number.parseFloat(pct[i]) / 100) * axis
+      expect(Math.round(rendered)).toBe(px[i])
+      expect(Math.round(rendered) % 5).toBe(0)
+    }
+  })
 })
 
 // ---------------------------------------------------------------------------

@@ -541,7 +541,7 @@ export function getAxisHandlePlan(axisLength: number): AxisHandlePlan {
   return solveAxisPlan(axisLength)
 }
 
-function getDistributedHandleOffsets(axisLength: number): number[] {
+export function getDistributedHandleOffsets(axisLength: number): number[] {
   return [...solveAxisPlan(axisLength).offsets]
 }
 
