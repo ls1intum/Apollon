@@ -349,7 +349,7 @@ export const useStepPathEdge = ({
       sourcePosition,
       targetPosition,
       EDGES.STUB_LENGTH,
-      EDGES.BEND_MIN_LENGTH,
+      EDGES.BEND_HANDLE_MIN_SEGMENT_SCREEN_PX,
       zoom
     )
   }, [

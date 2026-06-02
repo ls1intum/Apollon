@@ -8,6 +8,7 @@ import {
   getSegmentKind,
   isLengthEditableAtZoom,
 } from "@/utils/geometry/bendHandles"
+import { EDGES } from "@/constants"
 
 const stubLength = 30
 
@@ -22,7 +23,7 @@ describe("bend handle utilities", () => {
     expect(getSegmentKind(1, 4)).toBe("inner")
   })
 
-  it("calculates bendable handles with stub deduction", () => {
+  it("offers a bend handle on a segment with enough on-screen room", () => {
     const points = [
       { x: 0, y: 0 },
       { x: 200, y: 0 },
@@ -39,7 +40,7 @@ describe("bend handle utilities", () => {
     expect(handles).toHaveLength(1)
     expect(handles[0].segmentIndex).toBe(0)
     expect(handles[0].orientation).toBe("H")
-    // Handle is centered on the full geometric segment, not the effective zone.
+    // Handle is centered on the full geometric segment.
     expect(handles[0].position).toEqual({ x: 100, y: 0 })
   })
 
@@ -49,11 +50,15 @@ describe("bend handle utilities", () => {
     expect(isLengthEditableAtZoom(100, 100, 1)).toBe(true)
   })
 
-  it("shows a bend handle for a short canvas segment once zoom makes it usable", () => {
+  it("reveals a bend handle on a short segment once zoom gives it enough on-screen length", () => {
+    // 40px segment: below the 54px on-screen budget at 1x, above it at 2x.
+    // Availability is judged on the segment's *on-screen* length, so zooming in
+    // reveals handles on shorter segments (and never hides them).
     const points = [
       { x: 0, y: 0 },
-      { x: 150, y: 0 },
+      { x: 40, y: 0 },
     ]
+    const minScreen = 54
 
     expect(
       getBendableSegments(
@@ -61,7 +66,8 @@ describe("bend handle utilities", () => {
         Position.Right,
         Position.Left,
         stubLength,
-        100
+        minScreen,
+        1
       )
     ).toHaveLength(0)
     expect(
@@ -70,10 +76,46 @@ describe("bend handle utilities", () => {
         Position.Right,
         Position.Left,
         stubLength,
-        100,
+        minScreen,
         2
       )
     ).toHaveLength(1)
+  })
+
+  it("uses the documented on-screen budget at the exact boundary", () => {
+    // The budget is the handle's long axis plus clearance on both sides.
+    const budget =
+      EDGES.BEND_HANDLE_SCREEN_LENGTH_PX +
+      2 * EDGES.BEND_HANDLE_CORNER_CLEARANCE_PX
+    expect(EDGES.BEND_HANDLE_MIN_SEGMENT_SCREEN_PX).toBe(budget)
+    expect(budget).toBe(54)
+
+    const seg = (len: number) => [
+      { x: 0, y: 0 },
+      { x: len, y: 0 },
+    ]
+    // Exactly at the budget (54px on screen at 1x) a handle is offered;
+    // one pixel short, it is not.
+    expect(
+      getBendableSegments(
+        seg(budget),
+        Position.Right,
+        Position.Left,
+        stubLength,
+        budget,
+        1
+      )
+    ).toHaveLength(1)
+    expect(
+      getBendableSegments(
+        seg(budget - 1),
+        Position.Right,
+        Position.Left,
+        stubLength,
+        budget,
+        1
+      )
+    ).toHaveLength(0)
   })
 
   it("positions a target terminal handle using the stub exit", () => {

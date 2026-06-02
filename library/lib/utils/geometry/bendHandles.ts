@@ -108,13 +108,20 @@ export function getSegmentEffectiveLength(
   return Math.max(0, rawLength - deduction)
 }
 
+/**
+ * Whether a flow-space length is long enough to host an interactive handle,
+ * judged by its ON-SCREEN size. Screen-based so the rule matches what the user
+ * sees: zooming in always reveals more handles (a short segment becomes
+ * editable once it is `minScreenLength` px long on screen) and never hides
+ * them. `minScreenLength` is a screen-px budget (handle size + clearance).
+ */
 export function isLengthEditableAtZoom(
   canvasLength: number,
-  minLength: number,
+  minScreenLength: number,
   zoom: number
 ): boolean {
   const safeZoom = Number.isFinite(zoom) && zoom > 0 ? zoom : 1
-  return canvasLength >= minLength || canvasLength * safeZoom >= minLength
+  return canvasLength * safeZoom >= minScreenLength
 }
 
 export function getStubExit(
@@ -151,12 +158,22 @@ export function getBendHandlePosition(
   }
 }
 
+/**
+ * Bend handles for every segment with enough ON-SCREEN room to host one.
+ *
+ * A segment qualifies when its on-screen length (rawLength * zoom) is at least
+ * `minSegmentScreenLength` — the handle's footprint plus corner clearance.
+ * This is judged on the raw segment, not a stub-deducted "effective" length:
+ * the locked terminal stub governs the drag geometry (applyTerminalSegmentBend),
+ * not whether a handle is offered. The result is that handles appear as soon as
+ * a segment visibly has space for them, and zooming in reveals more.
+ */
 export function getBendableSegments(
   points: IPoint[],
   _sourcePosition: Position,
   _targetPosition: Position,
-  stubLength: number,
-  minLength: number,
+  _stubLength: number,
+  minSegmentScreenLength: number,
   zoom = 1
 ): BendHandle[] {
   const collapsed = collapseCollinearPoints(points)
@@ -164,8 +181,10 @@ export function getBendableSegments(
 
   const handles: BendHandle[] = []
   for (let i = 0; i < collapsed.length - 1; i++) {
-    const effectiveLength = getSegmentEffectiveLength(collapsed, i, stubLength)
-    if (isLengthEditableAtZoom(effectiveLength, minLength, zoom)) {
+    const start = collapsed[i]
+    const end = collapsed[i + 1]
+    const rawLength = Math.abs(end.x - start.x) + Math.abs(end.y - start.y)
+    if (isLengthEditableAtZoom(rawLength, minSegmentScreenLength, zoom)) {
       handles.push({
         segmentIndex: i,
         position: getBendHandlePosition(collapsed, i),

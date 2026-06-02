@@ -168,8 +168,19 @@ export const EDGES = Object.freeze({
   EDGE_HIGHLIGHT_STROKE_WIDTH: 15,
   /** Stub length locked to node, matches getSmoothStepPath offset */
   STUB_LENGTH: 30,
-  /** Minimum effective segment length to show a bend handle */
+  /** Minimum total edge length (screen px) for the endpoint reconnect handles
+   * to be active. Short edges fall back to always-editable (see
+   * useStepPathEdge), so this only gates medium/long edges. */
   BEND_MIN_LENGTH: 100,
+  /** Bend handle long-axis size, in screen px (kept constant across zoom). */
+  BEND_HANDLE_SCREEN_LENGTH_PX: 34,
+  /** Minimum clearance, in screen px, between a bend handle and the segment's
+   * corners — how close a handle is allowed to sit to a corner. */
+  BEND_HANDLE_CORNER_CLEARANCE_PX: 10,
+  /** A segment shows a bend handle once its ON-SCREEN length can host the
+   * handle with corner clearance on both sides: 34 + 2*10 = 54px. Screen-based
+   * so zooming in reveals handles on shorter segments (and never hides them). */
+  BEND_HANDLE_MIN_SEGMENT_SCREEN_PX: 34 + 2 * 10,
   /** Size of the invisible endpoint hit target used for edge reconnection */
   ENDPOINT_HIT_TARGET_SIZE: 24,
   /** Grid step a dragged bend snaps to; matches the canvas grid so bends line

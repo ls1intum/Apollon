@@ -170,14 +170,15 @@ test.describe("Edge endpoint reconnection", () => {
 })
 
 test.describe("Zoom-adaptive bend handles", () => {
-  test("zooming in exposes bend handles on segments too short to edit at 1x", async ({
+  test("zooming in reveals more bend handles and never hides them", async ({
     page,
   }) => {
-    // At 1x this edge's segments are below the bend-handle minimum length, so
-    // no handle is offered. Zooming in raises the on-screen length above the
-    // threshold and the handle should appear, letting the user edit it.
+    // Handle availability is judged on the segment's ON-SCREEN length, so
+    // zooming in can only add handles (a shorter segment crosses the size
+    // budget), never remove them. The short inheritance edge gains handles as
+    // it is zoomed in.
     const atZoom1 = await selectEdge(page, INHERITANCE)
-    expect(await atZoom1.locator(".edge-bend-handle").count()).toBe(0)
+    const countAtZoom1 = await atZoom1.locator(".edge-bend-handle").count()
 
     const zoomIn = page.locator(".react-flow__controls-zoomin")
     for (let i = 0; i < 5; i++) {
@@ -186,9 +187,13 @@ test.describe("Zoom-adaptive bend handles", () => {
     }
 
     const zoomed = await selectEdge(page, INHERITANCE)
+    const countZoomed = await zoomed.locator(".edge-bend-handle").count()
+
+    // Monotonic: never fewer than at 1x, and at least one once zoomed in.
+    expect(countZoomed).toBeGreaterThanOrEqual(countAtZoom1)
     expect(
-      await zoomed.locator(".edge-bend-handle").count(),
-      "zoom-in should reveal at least one bend handle"
+      countZoomed,
+      "zoom-in should expose at least one bend handle"
     ).toBeGreaterThan(0)
   })
 })
