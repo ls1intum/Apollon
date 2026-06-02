@@ -81,9 +81,15 @@ function interiorCrossing(h: Seg, v: Seg, margin = 6): P | null {
   if (!h.horizontal || !v.vertical) return null
   const x = (v.a.x + v.b.x) / 2
   const y = (h.a.y + h.b.y) / 2
-  if (x < Math.min(h.a.x, h.b.x) + margin || x > Math.max(h.a.x, h.b.x) - margin)
+  if (
+    x < Math.min(h.a.x, h.b.x) + margin ||
+    x > Math.max(h.a.x, h.b.x) - margin
+  )
     return null
-  if (y < Math.min(v.a.y, v.b.y) + margin || y > Math.max(v.a.y, v.b.y) - margin)
+  if (
+    y < Math.min(v.a.y, v.b.y) + margin ||
+    y > Math.max(v.a.y, v.b.y) - margin
+  )
     return null
   return { x, y }
 }
@@ -97,7 +103,10 @@ async function checkIntegrity(page: Page) {
   for (let i = 0; i < n; i++) {
     const e = loc.nth(i)
     const id = (await e.getAttribute("data-id")) ?? `#${i}`
-    const d = await e.locator(".react-flow__edge-path").first().getAttribute("d")
+    const d = await e
+      .locator(".react-flow__edge-path")
+      .first()
+      .getAttribute("d")
     if (d) edges.push({ id, ...parsePath(d) })
   }
 
@@ -112,7 +121,9 @@ async function checkIntegrity(page: Page) {
         }
     }
 
-  const bridges = edges.flatMap((e) => e.bridges.map((p) => ({ ...p, id: e.id })))
+  const bridges = edges.flatMap((e) =>
+    e.bridges.map((p) => ({ ...p, id: e.id }))
+  )
   const floating = bridges.filter((p) => !crossings.some((c) => near(c, p)))
   const unmarked = crossings.filter((c) => !bridges.some((p) => near(c, p)))
   return { crossings, bridges, floating, unmarked }
@@ -166,7 +177,9 @@ test.describe("Line-jump geometry integrity", () => {
       await page.waitForTimeout(160)
       const r = await checkIntegrity(page)
       expect(r.floating, `floating bridge mid-drag @(${dx},${dy})`).toEqual([])
-      expect(r.unmarked, `unmarked crossing mid-drag @(${dx},${dy})`).toEqual([])
+      expect(r.unmarked, `unmarked crossing mid-drag @(${dx},${dy})`).toEqual(
+        []
+      )
     }
     await page.mouse.up()
     await page.waitForTimeout(200)

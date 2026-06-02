@@ -1702,7 +1702,7 @@ describe("buildPathWithLineJumps", () => {
       20
     )
 
-    expect(path).toBe("M 0,0 L 20,0 Q 30,-10 40,0 L 60,0 Q 70,-10 80,0 L 100,0")
+    expect(path).toBe("M 0 0 L 20 0 Q 30 -10 40 0 L 60 0 Q 70 -10 80 0 L 100 0")
   })
 
   it("skips jumps that are too close together", () => {
@@ -1728,7 +1728,7 @@ describe("buildPathWithLineJumps", () => {
       20
     )
 
-    expect(path).toContain("Q 30,-10 40,0")
+    expect(path).toContain("Q 30 -10 40 0")
     expect(path).not.toContain("35")
   })
 
@@ -1750,7 +1750,7 @@ describe("buildPathWithLineJumps", () => {
       20
     )
 
-    expect(path).toBe("M 0,0 L 0,40 Q 10,50 0,60 L 0,100")
+    expect(path).toBe("M 0 0 L 0 40 Q 10 50 0 60 L 0 100")
   })
 })
 

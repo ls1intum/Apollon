@@ -1137,6 +1137,10 @@ export function buildPathWithLineJumps(
   if (jumps.length === 0) return pointsToSvgPath(points)
 
   const round = (num: number) => Math.round(num)
+  // Match pointsToSvgPath's space-separated "M x y" format so a step edge's `d`
+  // keeps the same shape whether or not it carries bridges — consumers and e2e
+  // tests parse the source point with a "M x y" regex.
+  const fmt = (point: IPoint) => `${round(point.x)} ${round(point.y)}`
   const jumpsBySegment = new Map<number, LineJumpHit[]>()
 
   for (const jump of jumps) {
@@ -1145,7 +1149,7 @@ export function buildPathWithLineJumps(
     jumpsBySegment.set(jump.segmentIndex, list)
   }
 
-  const pathParts = [`M ${round(points[0].x)},${round(points[0].y)}`]
+  const pathParts = [`M ${fmt(points[0])}`]
 
   for (let i = 0; i < points.length - 1; i += 1) {
     const start = points[i]
@@ -1157,12 +1161,12 @@ export function buildPathWithLineJumps(
 
     const segmentJumps = jumpsBySegment.get(i)
     if (!segmentJumps || segmentJumps.length === 0) {
-      pathParts.push(`L ${round(end.x)},${round(end.y)}`)
+      pathParts.push(`L ${fmt(end)}`)
       continue
     }
 
     if (segmentLength < jumpWidth * 1.2) {
-      pathParts.push(`L ${round(end.x)},${round(end.y)}`)
+      pathParts.push(`L ${fmt(end)}`)
       continue
     }
 
@@ -1211,17 +1215,12 @@ export function buildPathWithLineJumps(
         ? { x: coord, y: start.y - Math.abs(jumpHeight) }
         : { x: start.x + Math.abs(jumpHeight), y: coord }
 
-      pathParts.push(
-        `L ${round(jumpStart.x)},${round(jumpStart.y)}`,
-        `Q ${round(control.x)},${round(control.y)} ${round(
-          jumpEnd.x
-        )},${round(jumpEnd.y)}`
-      )
+      pathParts.push(`L ${fmt(jumpStart)}`, `Q ${fmt(control)} ${fmt(jumpEnd)}`)
 
       lastCoord = coord
     }
 
-    pathParts.push(`L ${round(end.x)},${round(end.y)}`)
+    pathParts.push(`L ${fmt(end)}`)
   }
 
   return pathParts.join(" ")
