@@ -344,12 +344,19 @@ export const useStepPathEdge = ({
 
   const bendHandles = useMemo(() => {
     if (!allowMidpointDragging) return []
+    // A segment needs room for the handle (which grows with zoom past 1x) plus
+    // corner clearance on both sides. Using the handle's actual on-screen size
+    // keeps a grown handle from overflowing a short segment when zoomed in.
+    const handleScreenLength =
+      EDGES.BEND_HANDLE_SCREEN_LENGTH_PX * Math.max(1, zoom)
+    const minSegmentScreenLength =
+      handleScreenLength + 2 * EDGES.BEND_HANDLE_CORNER_CLEARANCE_PX
     return getBendableSegments(
       activePoints,
       sourcePosition,
       targetPosition,
-      EDGES.STUB_LENGTH,
-      EDGES.BEND_HANDLE_MIN_SEGMENT_SCREEN_PX,
+      EDGES.BEND_HANDLE_SAFE_AREA_PX,
+      minSegmentScreenLength,
       zoom
     )
   }, [

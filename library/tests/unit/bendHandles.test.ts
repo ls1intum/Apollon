@@ -51,9 +51,9 @@ describe("bend handle utilities", () => {
   })
 
   it("reveals a bend handle on a short segment once zoom gives it enough on-screen length", () => {
-    // 40px segment: below the 54px on-screen budget at 1x, above it at 2x.
-    // Availability is judged on the segment's *on-screen* length, so zooming in
-    // reveals handles on shorter segments (and never hides them).
+    // 40px bendable segment (no safe area here): below the 54px on-screen
+    // budget at 1x, above it at 2x. Availability is judged on the *on-screen*
+    // length, so zooming in reveals handles and never hides them.
     const points = [
       { x: 0, y: 0 },
       { x: 40, y: 0 },
@@ -65,7 +65,7 @@ describe("bend handle utilities", () => {
         points,
         Position.Right,
         Position.Left,
-        stubLength,
+        0,
         minScreen,
         1
       )
@@ -75,7 +75,7 @@ describe("bend handle utilities", () => {
         points,
         Position.Right,
         Position.Left,
-        stubLength,
+        0,
         minScreen,
         2
       )
@@ -94,14 +94,14 @@ describe("bend handle utilities", () => {
       { x: 0, y: 0 },
       { x: len, y: 0 },
     ]
-    // Exactly at the budget (54px on screen at 1x) a handle is offered;
-    // one pixel short, it is not.
+    // With no safe area, exactly at the budget (54px on screen at 1x) a handle
+    // is offered; one pixel short, it is not.
     expect(
       getBendableSegments(
         seg(budget),
         Position.Right,
         Position.Left,
-        stubLength,
+        0,
         budget,
         1
       )
@@ -111,9 +111,48 @@ describe("bend handle utilities", () => {
         seg(budget - 1),
         Position.Right,
         Position.Left,
-        stubLength,
+        0,
         budget,
         1
+      )
+    ).toHaveLength(0)
+  })
+
+  it("keeps bend handles out of the node safe area and places them past it", () => {
+    const safeArea = EDGES.BEND_HANDLE_SAFE_AREA_PX // 25
+    // A source-terminal segment from the node (x=0) to the first bend (x=200).
+    const points = [
+      { x: 0, y: 0 },
+      { x: 200, y: 0 },
+    ]
+    // Single segment = both terminals, so both ends lose the safe area:
+    // bendable = 200 - 2*25 = 150; handle centred over [25, 175] → x = 100.
+    const [handle] = getBendableSegments(
+      points,
+      Position.Right,
+      Position.Left,
+      safeArea,
+      54,
+      1
+    )
+    expect(handle).toBeDefined()
+    expect(handle.position.x).toBeGreaterThanOrEqual(safeArea)
+    expect(handle.position.x).toBeLessThanOrEqual(200 - safeArea)
+    expect(handle.position).toEqual({ x: 100, y: 0 })
+
+    // A segment that is entirely safe area (<= 2*safeArea) offers no handle.
+    const allSafe = [
+      { x: 0, y: 0 },
+      { x: 2 * safeArea, y: 0 },
+    ]
+    expect(
+      getBendableSegments(
+        allSafe,
+        Position.Right,
+        Position.Left,
+        safeArea,
+        54,
+        10
       )
     ).toHaveLength(0)
   })

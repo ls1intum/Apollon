@@ -49,35 +49,48 @@ async function onScreenSize(handle: Locator) {
   }
 }
 
-test("edge handles keep a constant on-screen size across zoom", async ({
+test("edge handles stay usable when zoomed out and grow when zoomed in", async ({
   page,
 }) => {
   await injectFixtureIntoLocalStorage(page, classDiagram)
   await page.goto("/")
   await waitForCanvasReady(page)
+  const id = "edge-bidirectional-dog-imovable"
 
-  const edge = await selectEdge(page, "edge-bidirectional-dog-imovable")
-  const handle = edge.locator(".edge-bend-handle").first()
-  await expect(handle).toBeVisible()
-  const atDefault = await onScreenSize(handle)
-
-  // Zoom in substantially.
-  const zoomIn = page.locator(".react-flow__controls-zoomin")
-  for (let i = 0; i < 4; i++) {
-    await zoomIn.click()
-    await page.waitForTimeout(60)
+  const measure = async () => {
+    const edge = await selectEdge(page, id)
+    const handle = edge.locator(".edge-bend-handle").first()
+    await expect(handle).toBeVisible()
+    return onScreenSize(handle)
   }
-  await selectEdge(page, "edge-bidirectional-dog-imovable")
-  const zoomed = await onScreenSize(edge.locator(".edge-bend-handle").first())
 
-  // Despite a large zoom change, the on-screen handle size stays ~constant
-  // (counter-scaled). Without it, the handle would have grown with zoom.
-  expect(Math.abs(zoomed.long - atDefault.long) / atDefault.long).toBeLessThan(
-    0.2
-  )
-  // And it stays a comfortably grabbable size.
+  // The editor initialises at zoom 1.0.
+  const atDefault = await measure()
   expect(atDefault.long).toBeGreaterThanOrEqual(24)
-  expect(zoomed.long).toBeGreaterThanOrEqual(24)
+
+  // Zoom in: the handle grows with the (now-thicker) edge, staying proportional
+  // rather than looking like a tiny dot on it.
+  const zoomIn = page.locator(".react-flow__controls-zoomin")
+  for (let i = 0; i < 3; i++) {
+    await zoomIn.click()
+    await page.waitForTimeout(70)
+  }
+  const zoomedIn = await measure()
+  expect(zoomedIn.long, "handle should grow when zoomed in").toBeGreaterThan(
+    atDefault.long
+  )
+
+  // Zoom back out below 1x: the handle counter-scales to keep a usable minimum
+  // on-screen size instead of shrinking to a few px.
+  for (let i = 0; i < 6; i++) {
+    await page.locator(".react-flow__controls-zoomout").click()
+    await page.waitForTimeout(70)
+  }
+  const zoomedOut = await measure()
+  expect(
+    zoomedOut.long,
+    "handle should stay usable when zoomed out"
+  ).toBeGreaterThanOrEqual(24)
 })
 
 test("node connection indicators keep a constant on-screen size across zoom", async ({

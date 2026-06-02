@@ -15,21 +15,24 @@ import { DiagramEdgeType } from "."
 import { Assessment } from "@/typings"
 import { CANVAS, EDGES } from "@/constants"
 
-// Edge handles live inside the zoomed React Flow viewport, so a fixed flow-px
-// size renders tiny when zoomed out and huge when zoomed in. Counter-scale by
-// 1/zoom so every handle keeps a predictable, touch-friendly ON-SCREEN size at
-// any zoom (clamped to the canvas zoom range to avoid pathological extremes).
-const useHandleScreenScale = (): number => {
-  const zoom = useStore((state) => state.transform[2])
-  const safeZoom = Math.min(
-    Math.max(
-      Number.isFinite(zoom) && zoom > 0 ? zoom : 1,
-      CANVAS.MIN_SCALE_TO_ZOOM_OUT
-    ),
-    CANVAS.MAX_SCALE_TO_ZOOM_IN
+// Edge handles live inside the zoomed React Flow viewport. We want them to
+// keep a usable MINIMUM on-screen size when zoomed out (so they never shrink to
+// a few px), but to GROW with the edge when zoomed in (so they stay in
+// proportion to the now-thick edge instead of looking like a tiny dot on it).
+//
+//   scale = 1 / min(zoom, 1)   (zoom floored to the canvas minimum)
+//     zoom <= 1  → 1/zoom  → constant on-screen size (counter-scaled)
+//     zoom  > 1  → 1       → natural flow size → grows on-screen with zoom
+export const getHandleScreenScale = (zoom: number): number => {
+  const safeZoom = Math.max(
+    Number.isFinite(zoom) && zoom > 0 ? zoom : 1,
+    CANVAS.MIN_SCALE_TO_ZOOM_OUT
   )
-  return 1 / safeZoom
+  return 1 / Math.min(safeZoom, 1)
 }
+
+const useHandleScreenScale = (): number =>
+  getHandleScreenScale(useStore((state) => state.transform[2]))
 
 export interface BaseEdgeProps extends ExtendedEdgeProps {
   diagramType?: "class" | "usecase" | "activity" | "component" | "deployment"

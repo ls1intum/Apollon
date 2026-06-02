@@ -161,37 +161,57 @@ export function getBendHandlePosition(
 /**
  * Bend handles for every segment with enough ON-SCREEN room to host one.
  *
- * A segment qualifies when its on-screen length (rawLength * zoom) is at least
- * `minSegmentScreenLength` — the handle's footprint plus corner clearance.
- * This is judged on the raw segment, not a stub-deducted "effective" length:
- * the locked terminal stub governs the drag geometry (applyTerminalSegmentBend),
- * not whether a handle is offered. The result is that handles appear as soon as
- * a segment visibly has space for them, and zooming in reveals more.
+ * The "safe area" next to each node (`safeAreaPx`) is excluded: a terminal
+ * segment loses that length at its node end, both for deciding whether a handle
+ * fits AND for where the handle sits. The handle is placed at the midpoint of
+ * the *bendable* region (past the safe area), never inside the locked stub —
+ * so dragging always grabs a real, bendable slice instead of a detached sliver
+ * hugging the node.
+ *
+ * Availability is judged on the bendable region's ON-SCREEN length
+ * (bendable * zoom >= `minSegmentScreenLength`), so zooming in reveals handles
+ * on shorter segments and never hides them.
  */
 export function getBendableSegments(
   points: IPoint[],
   _sourcePosition: Position,
   _targetPosition: Position,
-  _stubLength: number,
+  safeAreaPx: number,
   minSegmentScreenLength: number,
   zoom = 1
 ): BendHandle[] {
   const collapsed = collapseCollinearPoints(points)
   if (collapsed.length < 2) return []
 
+  const lastSegment = collapsed.length - 2
   const handles: BendHandle[] = []
-  for (let i = 0; i < collapsed.length - 1; i++) {
+  for (let i = 0; i <= lastSegment; i++) {
     const start = collapsed[i]
     const end = collapsed[i + 1]
     const rawLength = Math.abs(end.x - start.x) + Math.abs(end.y - start.y)
-    if (isLengthEditableAtZoom(rawLength, minSegmentScreenLength, zoom)) {
-      handles.push({
-        segmentIndex: i,
-        position: getBendHandlePosition(collapsed, i),
-        orientation: getSegmentOrientation(collapsed, i),
-        kind: getSegmentKind(i, collapsed.length),
-      })
+    if (rawLength <= 0) continue
+
+    // Exclude the safe area at any terminal end of this segment.
+    const safeStart = i === 0 ? safeAreaPx : 0
+    const safeEnd = i === lastSegment ? safeAreaPx : 0
+    const bendableLength = rawLength - safeStart - safeEnd
+    if (bendableLength <= 0) continue
+    if (!isLengthEditableAtZoom(bendableLength, minSegmentScreenLength, zoom)) {
+      continue
     }
+
+    // Centre of the bendable region (offset past the safe area), in flow space.
+    const centreFromStart = safeStart + bendableLength / 2
+    const t = centreFromStart / rawLength
+    handles.push({
+      segmentIndex: i,
+      position: {
+        x: start.x + (end.x - start.x) * t,
+        y: start.y + (end.y - start.y) * t,
+      },
+      orientation: getSegmentOrientation(collapsed, i),
+      kind: getSegmentKind(i, collapsed.length),
+    })
   }
 
   return handles

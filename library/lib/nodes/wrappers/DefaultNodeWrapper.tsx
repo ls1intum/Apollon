@@ -114,9 +114,9 @@ export function DefaultNodeWrapper({
   const nodeWidth = node?.width ?? 0
   const nodeHeight = node?.height ?? 0
   const isDiagramModifiable = useDiagramModifiable()
-  // Counter-scale the connection indicators by 1/zoom so they keep a
-  // predictable on-screen size (they otherwise shrink to a few px when zoomed
-  // out). Clamped to the canvas zoom range.
+  // Connection indicators keep a usable minimum on-screen size when zoomed out
+  // and grow with the node when zoomed in (matching the edge handles):
+  //   scale = 1 / min(zoom, 1)  — constant on-screen for zoom<=1, natural >1.
   const zoom = useStore((state) => state.transform[2])
   const handleScreenScale =
     1 /
@@ -125,7 +125,7 @@ export function DefaultNodeWrapper({
         Number.isFinite(zoom) && zoom > 0 ? zoom : 1,
         CANVAS.MIN_SCALE_TO_ZOOM_OUT
       ),
-      CANVAS.MAX_SCALE_TO_ZOOM_IN
+      1
     )
   const {
     connectionGuidanceActive,

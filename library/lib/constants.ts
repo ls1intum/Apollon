@@ -172,7 +172,7 @@ export const EDGES = Object.freeze({
    * to be active. Short edges fall back to always-editable (see
    * useStepPathEdge), so this only gates medium/long edges. */
   BEND_MIN_LENGTH: 100,
-  /** Bend handle long-axis size, in screen px (kept constant across zoom). */
+  /** Bend handle long-axis size, in screen px (the minimum kept across zoom). */
   BEND_HANDLE_SCREEN_LENGTH_PX: 34,
   /** Minimum clearance, in screen px, between a bend handle and the segment's
    * corners — how close a handle is allowed to sit to a corner. */
@@ -181,6 +181,12 @@ export const EDGES = Object.freeze({
    * handle with corner clearance on both sides: 34 + 2*10 = 54px. Screen-based
    * so zooming in reveals handles on shorter segments (and never hides them). */
   BEND_HANDLE_MIN_SEGMENT_SCREEN_PX: 34 + 2 * 10,
+  /** "Safe area" next to a node, in flow px: a bend handle is never placed
+   * within this distance of a node connection point, and that part of a
+   * terminal segment is excluded when deciding whether a handle fits. Keeps
+   * handles out of the locked stub so dragging never produces a detached
+   * slim sliver near the node. */
+  BEND_HANDLE_SAFE_AREA_PX: 25,
   /** Size of the invisible endpoint hit target used for edge reconnection */
   ENDPOINT_HIT_TARGET_SIZE: 24,
   /** Grid step a dragged bend snaps to; matches the canvas grid so bends line
