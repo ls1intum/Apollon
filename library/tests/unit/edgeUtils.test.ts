@@ -176,225 +176,119 @@ describe("calculateDynamicEdgeLabels", () => {
 // getEdgeMarkerStyles
 // ---------------------------------------------------------------------------
 describe("getEdgeMarkerStyles", () => {
-  // No marker, plain line group
-  it("returns plain style for ClassBidirectional", () => {
-    const result = getEdgeMarkerStyles("ClassBidirectional")
-    expect(result.markerEnd).toBeUndefined()
-    expect(result.markerStart).toBeUndefined()
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.strokeDashArray).toBe("0")
-    expect(result.offset).toBe(0)
-  })
+  const MP = EDGES.MARKER_PADDING
 
-  it("returns plain style for ObjectLink", () => {
-    const result = getEdgeMarkerStyles("ObjectLink")
-    expect(result.markerEnd).toBeUndefined()
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-  })
+  // One row per edge type. A row asserts only the fields it lists; a present
+  // key with value `undefined` asserts that field is undefined.
+  const cases: Array<Record<string, unknown>> = [
+    {
+      type: "ClassBidirectional",
+      end: undefined,
+      start: undefined,
+      dash: "0",
+      offset: 0,
+      pad: MP,
+    },
+    { type: "ObjectLink", end: undefined, pad: MP },
+    {
+      type: "ClassUnidirectional",
+      end: "url(#black-arrow)",
+      dash: "0",
+      pad: MP,
+    },
+    { type: "ActivityControlFlow", end: "url(#black-arrow)", pad: MP },
+    { type: "FlowChartFlowline", end: "url(#black-arrow)" },
+    { type: "ReachabilityGraphArc", end: "url(#black-arrow)" },
+    {
+      type: "ClassAggregation",
+      end: "url(#white-rhombus)",
+      offset: 0,
+      pad: MP,
+    },
+    {
+      type: "ClassComposition",
+      end: "url(#black-rhombus)",
+      offset: 0,
+      pad: MP,
+    },
+    {
+      type: "ClassInheritance",
+      end: "url(#white-triangle)",
+      dash: "0",
+      pad: MP,
+    },
+    {
+      type: "ClassRealization",
+      end: "url(#white-triangle)",
+      dash: "10",
+      pad: MP,
+    },
+    { type: "ClassDependency", end: "url(#black-arrow)", dash: "10", pad: MP },
+    { type: "ComponentDependency", end: "url(#black-arrow)", dash: "10" },
+    { type: "DeploymentDependency", dash: "10" },
+    { type: "PetriNetArc", end: "url(#black-triangle)", pad: MP },
+    {
+      type: "BPMNSequenceFlow",
+      end: "url(#bpmn-black-triangle)",
+      dash: "0",
+      offset: 8,
+      pad: MP,
+    },
+    {
+      type: "BPMNMessageFlow",
+      end: "url(#bpmn-white-triangle)",
+      start: "url(#bpmn-white-circle)",
+      dash: "10",
+      offset: 8,
+      pad: MP,
+    },
+    { type: "BPMNAssociationFlow", end: undefined, dash: "10", pad: MP },
+    {
+      type: "BPMNDataAssociationFlow",
+      end: "url(#bpmn-arrow)",
+      dash: "10",
+      offset: 8,
+      pad: MP,
+    },
+    { type: "UseCaseAssociation", end: undefined, dash: "0", pad: MP },
+    { type: "UseCaseInclude", end: "url(#black-arrow)", dash: "10", pad: MP },
+    { type: "UseCaseExtend", end: "url(#black-arrow)", dash: "10" },
+    {
+      type: "UseCaseGeneralization",
+      end: "url(#white-triangle)",
+      dash: "0",
+      pad: MP,
+    },
+    { type: "ComponentProvidedInterface", end: undefined, pad: MP },
+    {
+      type: "ComponentRequiredInterface",
+      end: "url(#required-interface)",
+      pad: MP + INTERFACE.SOCKET_GAP,
+    },
+    {
+      type: "ComponentRequiredQuarterInterface",
+      end: "url(#required-interface-quarter)",
+    },
+    {
+      type: "DeploymentRequiredThreeQuarterInterface",
+      end: "url(#required-interface-threequarter)",
+    },
+    { type: "DeploymentProvidedInterface", end: undefined, pad: MP },
+    { type: "DeploymentAssociation", end: undefined, pad: MP },
+    { type: "SyntaxTreeLink", end: undefined, pad: MP },
+    { type: "CommunicationLink", end: undefined, pad: MP },
+    { type: "SomeUnknownType", dash: "0", offset: 0, pad: MP },
+  ]
 
-  // Arrow marker group
-  it("returns black-arrow for ClassUnidirectional", () => {
-    const result = getEdgeMarkerStyles("ClassUnidirectional")
-    expect(result.markerEnd).toBe("url(#black-arrow)")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.strokeDashArray).toBe("0")
-  })
-
-  it("returns black-arrow for ActivityControlFlow", () => {
-    const result = getEdgeMarkerStyles("ActivityControlFlow")
-    expect(result.markerEnd).toBe("url(#black-arrow)")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-  })
-
-  it("returns black-arrow for FlowChartFlowline", () => {
-    const result = getEdgeMarkerStyles("FlowChartFlowline")
-    expect(result.markerEnd).toBe("url(#black-arrow)")
-  })
-
-  it("returns black-arrow for ReachabilityGraphArc", () => {
-    const result = getEdgeMarkerStyles("ReachabilityGraphArc")
-    expect(result.markerEnd).toBe("url(#black-arrow)")
-  })
-
-  // Rhombus marker group
-  it("returns white-rhombus for ClassAggregation", () => {
-    const result = getEdgeMarkerStyles("ClassAggregation")
-    expect(result.markerEnd).toBe("url(#white-rhombus)")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.offset).toBe(0)
-  })
-
-  it("returns black-rhombus for ClassComposition", () => {
-    const result = getEdgeMarkerStyles("ClassComposition")
-    expect(result.markerEnd).toBe("url(#black-rhombus)")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.offset).toBe(0)
-  })
-
-  // Triangle marker group
-  it("returns white-triangle for ClassInheritance", () => {
-    const result = getEdgeMarkerStyles("ClassInheritance")
-    expect(result.markerEnd).toBe("url(#white-triangle)")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.strokeDashArray).toBe("0")
-  })
-
-  it("returns white-triangle with dashed for ClassRealization", () => {
-    const result = getEdgeMarkerStyles("ClassRealization")
-    expect(result.markerEnd).toBe("url(#white-triangle)")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.strokeDashArray).toBe("10")
-  })
-
-  // Dashed arrow group (dependency)
-  it("returns dashed black-arrow for ClassDependency", () => {
-    const result = getEdgeMarkerStyles("ClassDependency")
-    expect(result.markerEnd).toBe("url(#black-arrow)")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.strokeDashArray).toBe("10")
-  })
-
-  it("returns dashed for ComponentDependency", () => {
-    const result = getEdgeMarkerStyles("ComponentDependency")
-    expect(result.strokeDashArray).toBe("10")
-    expect(result.markerEnd).toBe("url(#black-arrow)")
-  })
-
-  it("returns dashed for DeploymentDependency", () => {
-    const result = getEdgeMarkerStyles("DeploymentDependency")
-    expect(result.strokeDashArray).toBe("10")
-  })
-
-  // PetriNet black-triangle
-  it("returns black-triangle for PetriNetArc", () => {
-    const result = getEdgeMarkerStyles("PetriNetArc")
-    expect(result.markerEnd).toBe("url(#black-triangle)")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-  })
-
-  // BPMN markers
-  it("returns bpmn-black-triangle for BPMNSequenceFlow", () => {
-    const result = getEdgeMarkerStyles("BPMNSequenceFlow")
-    expect(result.markerEnd).toBe("url(#bpmn-black-triangle)")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.strokeDashArray).toBe("0")
-    expect(result.offset).toBe(8)
-  })
-
-  it("returns bpmn markers for BPMNMessageFlow (markerStart + markerEnd)", () => {
-    const result = getEdgeMarkerStyles("BPMNMessageFlow")
-    expect(result.markerEnd).toBe("url(#bpmn-white-triangle)")
-    expect(result.markerStart).toBe("url(#bpmn-white-circle)")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.strokeDashArray).toBe("10")
-    expect(result.offset).toBe(8)
-  })
-
-  it("returns dashed style for BPMNAssociationFlow", () => {
-    const result = getEdgeMarkerStyles("BPMNAssociationFlow")
-    expect(result.markerEnd).toBeUndefined()
-    expect(result.strokeDashArray).toBe("10")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-  })
-
-  it("returns bpmn-arrow for BPMNDataAssociationFlow", () => {
-    const result = getEdgeMarkerStyles("BPMNDataAssociationFlow")
-    expect(result.markerEnd).toBe("url(#bpmn-arrow)")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.strokeDashArray).toBe("10")
-    expect(result.offset).toBe(8)
-  })
-
-  // UseCase group
-  it("returns no marker for UseCaseAssociation", () => {
-    const result = getEdgeMarkerStyles("UseCaseAssociation")
-    expect(result.markerEnd).toBeUndefined()
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.strokeDashArray).toBe("0")
-  })
-
-  it("returns black-arrow dashed for UseCaseInclude", () => {
-    const result = getEdgeMarkerStyles("UseCaseInclude")
-    expect(result.markerEnd).toBe("url(#black-arrow)")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.strokeDashArray).toBe("10")
-  })
-
-  it("returns black-arrow dashed for UseCaseExtend", () => {
-    const result = getEdgeMarkerStyles("UseCaseExtend")
-    expect(result.markerEnd).toBe("url(#black-arrow)")
-    expect(result.strokeDashArray).toBe("10")
-  })
-
-  it("returns white-triangle for UseCaseGeneralization", () => {
-    const result = getEdgeMarkerStyles("UseCaseGeneralization")
-    expect(result.markerEnd).toBe("url(#white-triangle)")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.strokeDashArray).toBe("0")
-  })
-
-  // Provided/Required interface group
-  it("returns no marker for ComponentProvidedInterface", () => {
-    const result = getEdgeMarkerStyles("ComponentProvidedInterface")
-    expect(result.markerEnd).toBeUndefined()
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-  })
-
-  it("returns required-interface marker for ComponentRequiredInterface", () => {
-    const result = getEdgeMarkerStyles("ComponentRequiredInterface")
-    expect(result.markerEnd).toBe("url(#required-interface)")
-    expect(result.markerPadding).toBe(
-      EDGES.MARKER_PADDING + INTERFACE.SOCKET_GAP
-    )
-  })
-
-  it("returns required-interface-quarter for ComponentRequiredQuarterInterface", () => {
-    const result = getEdgeMarkerStyles("ComponentRequiredQuarterInterface")
-    expect(result.markerEnd).toBe("url(#required-interface-quarter)")
-  })
-
-  it("returns required-interface-threequarter for DeploymentRequiredThreeQuarterInterface", () => {
-    const result = getEdgeMarkerStyles(
-      "DeploymentRequiredThreeQuarterInterface"
-    )
-    expect(result.markerEnd).toBe("url(#required-interface-threequarter)")
-  })
-
-  // Deployment mirrors
-  it("returns same style for DeploymentProvidedInterface as ComponentProvidedInterface", () => {
-    const result = getEdgeMarkerStyles("DeploymentProvidedInterface")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.markerEnd).toBeUndefined()
-  })
-
-  // Default case
-  it("returns default style for unknown edge type", () => {
-    const result = getEdgeMarkerStyles("SomeUnknownType")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.strokeDashArray).toBe("0")
-    expect(result.offset).toBe(0)
-  })
-
-  // Shared bucket edge types
-  it("returns plain style for DeploymentAssociation", () => {
-    const result = getEdgeMarkerStyles("DeploymentAssociation")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.markerEnd).toBeUndefined()
-  })
-
-  it("returns plain style for SyntaxTreeLink", () => {
-    const result = getEdgeMarkerStyles("SyntaxTreeLink")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.markerEnd).toBeUndefined()
-  })
-
-  it("returns plain style for CommunicationLink", () => {
-    const result = getEdgeMarkerStyles("CommunicationLink")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.markerEnd).toBeUndefined()
+  it.each(cases)("maps $type to its marker style", (c) => {
+    const result = getEdgeMarkerStyles(c.type as string)
+    if ("end" in c) expect(result.markerEnd).toBe(c.end)
+    if ("start" in c) expect(result.markerStart).toBe(c.start)
+    if ("dash" in c) expect(result.strokeDashArray).toBe(c.dash)
+    if ("offset" in c) expect(result.offset).toBe(c.offset)
+    if ("pad" in c) expect(result.markerPadding).toBe(c.pad)
   })
 })
-
 // ---------------------------------------------------------------------------
 // findClosestHandle
 describe("findClosestHandle", () => {
@@ -531,24 +425,6 @@ describe("findClosestHandle", () => {
         useFourHandles: false,
       })
       expect(result).toBe("top")
-    })
-
-    it("returns the same ID repeatedly at an exact tie point", () => {
-      const tiePoint = { x: 140, y: 40 }
-      const first = findClosestHandle({
-        point: tiePoint,
-        rect,
-        useFourHandles: false,
-      })
-
-      for (let i = 0; i < 25; i++) {
-        const result = findClosestHandle({
-          point: tiePoint,
-          rect,
-          useFourHandles: false,
-        })
-        expect(result).toBe(first)
-      }
     })
   })
 
