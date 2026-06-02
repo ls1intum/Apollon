@@ -35,13 +35,23 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
     }
   }, [position.x, position.y, edgeId])
 
+  // A <foreignObject> clips anything outside its box, so a box sized exactly to
+  // its content has its drop-shadow sliced off at a hard rectangle. Pad the
+  // foreignObject by SHADOW_MARGIN on every side (and offset it back by the same
+  // amount) so the shadow renders into transparent margin instead of being cut;
+  // the inner wrapper restores the original padding so the toolbar keeps its
+  // size and position.
+  const SHADOW_MARGIN = 8
+
   return (
     <foreignObject
       ref={anchorRef}
-      width={32}
-      height={56}
-      x={toolbarPosition.x + 20}
-      y={toolbarPosition.y + 20}
+      width={32 + SHADOW_MARGIN * 2}
+      height={56 + SHADOW_MARGIN * 2}
+      x={toolbarPosition.x + 20 - SHADOW_MARGIN}
+      y={toolbarPosition.y + 20 - SHADOW_MARGIN}
+      overflow="visible"
+      style={{ overflow: "visible" }}
     >
       {showToolbar && (
         <Box
@@ -55,16 +65,20 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
             alignItems: "center",
             cursor: "pointer",
             gap: "8px",
-            width: "100%",
-            height: "100%",
+            // Inset by SHADOW_MARGIN inside the padded foreignObject so the box
+            // keeps its size/position while the drop-shadow renders into the
+            // transparent margin instead of being clipped at the foreignObject.
+            width: `calc(100% - ${SHADOW_MARGIN * 2}px)`,
+            height: `calc(100% - ${SHADOW_MARGIN * 2}px)`,
+            margin: `${SHADOW_MARGIN}px`,
             boxSizing: "border-box",
             WebkitTransform: "translateZ(0)",
             transform: "translateZ(0)",
             position: "relative",
             zIndex: ZINDEX.TOOLTIP,
             // The toolbar body is decorative; only its buttons should capture
-            // the pointer. Otherwise the 32x56 box covers nearby bend handles
-            // and steals their pointer events (visible handle, not draggable).
+            // the pointer. Otherwise the box covers nearby bend handles and
+            // steals their pointer events (visible handle, not draggable).
             pointerEvents: "none",
             "& > *": { pointerEvents: "auto" },
           }}
