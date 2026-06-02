@@ -1,20 +1,12 @@
-import { BaseEdge } from "@xyflow/react"
-import {
-  BaseEdgeProps,
-  CommonEdgeElements,
-  EdgeBendHandle,
-  EdgeEndpointMarkers,
-} from "../GenericEdge"
+import { BaseEdgeProps, CommonEdgeElements, StepEdgeBody } from "../GenericEdge"
 import { useStepPathEdge } from "@/hooks/useStepPathEdge"
 import { useDiagramStore, usePopoverStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { useToolbar } from "@/hooks"
 import { useMemo, useRef } from "react"
-import { EDGES } from "@/constants"
 import { FeedbackDropzone } from "@/components/wrapper/FeedbackDropzone"
 import { AssessmentSelectableWrapper } from "@/components"
 import { getCustomColorsFromDataForEdge } from "@/utils/layoutUtils"
-import { EdgeInlineMarkers } from "@/components/svgs/edges/InlineMarker"
 
 function getParsedEdgeData(data: unknown): {
   isNegated: boolean
@@ -174,76 +166,33 @@ export const SfcDiagramEdge = ({
   return (
     <AssessmentSelectableWrapper elementId={id} asElement="g">
       <FeedbackDropzone elementId={id} asElement="path" elementType={type}>
-        <g className="edge-container">
-          <BaseEdge
-            key={markerKey}
-            id={id}
-            path={currentPath}
-            pointerEvents="none"
-            style={{
-              stroke: strokeColor,
-              strokeDasharray: isReconnecting ? "none" : strokeDashArray,
-              transition: hasInitialCalculation
-                ? "opacity 0.1s ease-in"
-                : "none",
-              opacity: 1,
-            }}
-          />
-
-          {!isReconnecting && (
-            <EdgeInlineMarkers
-              pathD={currentPath}
-              markerEnd={markerEnd}
-              markerStart={markerStart}
-              strokeColor={strokeColor}
-            />
-          )}
-
-          <path
-            ref={pathRef}
-            className="edge-overlay"
-            d={overlayPath}
-            fill="none"
-            strokeWidth={EDGES.EDGE_HIGHLIGHT_STROKE_WIDTH}
-            pointerEvents="stroke"
-            style={{
-              opacity: isReconnecting || isBendDragging ? 0 : 0.4,
-            }}
-          />
-
-          <EdgeEndpointMarkers
-            sourcePoint={sourcePoint}
-            targetPoint={targetPoint}
-            sourcePosition={sourcePosition}
-            targetPosition={targetPosition}
-            isDiagramModifiable={isDiagramModifiable}
-            canEditEndpoint={canEditEndpoint}
-            diagramType="sfc"
-          />
-
-          {isDiagramModifiable &&
-            !isReconnecting &&
-            allowMidpointDragging &&
-            visibleBendHandles
-              .filter(
-                (handle) =>
-                  !isBendDragging ||
-                  handle.segmentIndex === draggingHandleSegmentIndex
-              )
-              .map((handle) => (
-                <EdgeBendHandle
-                  key={`${id}-bend-${handle.segmentIndex}`}
-                  id={id}
-                  segmentIndex={handle.segmentIndex}
-                  position={handle.position}
-                  orientation={handle.orientation}
-                  onPointerDown={(e) => handlePointerDown(e, handle)}
-                />
-              ))}
-
-          {/* SFC Transition - show crossbar and label */}
+        <StepEdgeBody
+          id={id}
+          markerKey={markerKey}
+          currentPath={currentPath}
+          overlayPath={overlayPath}
+          pathRef={pathRef}
+          strokeColor={strokeColor}
+          strokeDashArray={strokeDashArray}
+          hasInitialCalculation={hasInitialCalculation}
+          isReconnecting={isReconnecting}
+          isBendDragging={isBendDragging}
+          draggingHandleSegmentIndex={draggingHandleSegmentIndex}
+          markerStart={markerStart}
+          markerEnd={markerEnd}
+          sourcePoint={sourcePoint}
+          targetPoint={targetPoint}
+          sourcePosition={sourcePosition}
+          targetPosition={targetPosition}
+          isDiagramModifiable={isDiagramModifiable}
+          canEditEndpoint={canEditEndpoint}
+          allowMidpointDragging={allowMidpointDragging}
+          bendHandles={visibleBendHandles}
+          handlePointerDown={handlePointerDown}
+        >
+          {/* SFC transition crossbar + condition label. Decorative, so it sets
+              pointer-events:none and renders above the bend handles. */}
           <g>
-            {/* Crossbar - perpendicular to middle segment direction */}
             {showBar && (
               <line
                 x1={crossbarCoordinates.x1}
@@ -252,13 +201,10 @@ export const SfcDiagramEdge = ({
                 y2={crossbarCoordinates.y2}
                 stroke={strokeColor}
                 strokeWidth="10"
-                // Decorative only: must not steal the pointer from the bend
-                // handle it sits on, or the centre handle becomes ungrabbable.
                 pointerEvents="none"
               />
             )}
 
-            {/* SFC Label - positioned based on edge orientation */}
             {displayName && (
               <text
                 fill={textColor}
@@ -274,7 +220,7 @@ export const SfcDiagramEdge = ({
               </text>
             )}
           </g>
-        </g>
+        </StepEdgeBody>
 
         <CommonEdgeElements
           id={id}

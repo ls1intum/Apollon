@@ -1,10 +1,4 @@
-import { BaseEdge } from "@xyflow/react"
-import {
-  BaseEdgeProps,
-  EdgeEndpointMarkers,
-  EdgeBendHandle,
-  CommonEdgeElements,
-} from "../GenericEdge"
+import { BaseEdgeProps, StepEdgeBody, CommonEdgeElements } from "../GenericEdge"
 import { EdgeEndLabels } from "../labelTypes/EdgeEndLabels"
 import { useEdgeConfig } from "@/hooks/useEdgeConfig"
 import { useStepPathEdge } from "@/hooks/useStepPathEdge"
@@ -12,11 +6,9 @@ import { useDiagramStore, usePopoverStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { useToolbar } from "@/hooks"
 import { useRef } from "react"
-import { EDGES } from "@/constants"
 import { FeedbackDropzone } from "@/components/wrapper/FeedbackDropzone"
 import { AssessmentSelectableWrapper } from "@/components"
 import { getCustomColorsFromDataForEdge } from "@/utils"
-import { EdgeInlineMarkers } from "@/components/svgs/edges/InlineMarker"
 
 export const ClassDiagramEdge = ({
   id,
@@ -106,74 +98,30 @@ export const ClassDiagramEdge = ({
   return (
     <AssessmentSelectableWrapper elementId={id} asElement="g">
       <FeedbackDropzone elementId={id} asElement="path" elementType={type}>
-        <g className="edge-container">
-          <BaseEdge
-            key={markerKey}
-            id={id}
-            path={currentPath}
-            pointerEvents="none"
-            style={{
-              stroke: strokeColor,
-              strokeDasharray: isReconnecting ? "none" : strokeDashArray,
-              transition: hasInitialCalculation
-                ? "opacity 0.1s ease-in"
-                : "none",
-              opacity: 1,
-            }}
-          />
-
-          {/* Inline markers for export compatibility (survives ungrouping) */}
-          {!isReconnecting && (
-            <EdgeInlineMarkers
-              pathD={currentPath}
-              markerEnd={markerEnd}
-              markerStart={markerStart}
-              strokeColor={strokeColor}
-            />
-          )}
-
-          <path
-            ref={pathRef}
-            className="edge-overlay"
-            d={overlayPath}
-            fill="none"
-            strokeWidth={EDGES.EDGE_HIGHLIGHT_STROKE_WIDTH}
-            pointerEvents="stroke"
-            style={{
-              opacity: isReconnecting || isBendDragging ? 0 : 0.4,
-            }}
-          />
-
-          <EdgeEndpointMarkers
-            sourcePoint={sourcePoint}
-            targetPoint={targetPoint}
-            sourcePosition={sourcePosition}
-            targetPosition={targetPosition}
-            isDiagramModifiable={isDiagramModifiable}
-            canEditEndpoint={canEditEndpoint}
-            diagramType="step"
-          />
-
-          {isDiagramModifiable &&
-            !isReconnecting &&
-            allowMidpointDragging &&
-            bendHandles
-              .filter(
-                (handle) =>
-                  !isBendDragging ||
-                  handle.segmentIndex === draggingHandleSegmentIndex
-              )
-              .map((handle) => (
-                <EdgeBendHandle
-                  key={`${id}-bend-${handle.segmentIndex}`}
-                  id={id}
-                  segmentIndex={handle.segmentIndex}
-                  position={handle.position}
-                  orientation={handle.orientation}
-                  onPointerDown={(e) => handlePointerDown(e, handle)}
-                />
-              ))}
-        </g>
+        <StepEdgeBody
+          id={id}
+          markerKey={markerKey}
+          currentPath={currentPath}
+          overlayPath={overlayPath}
+          pathRef={pathRef}
+          strokeColor={strokeColor}
+          strokeDashArray={strokeDashArray}
+          hasInitialCalculation={hasInitialCalculation}
+          isReconnecting={isReconnecting}
+          isBendDragging={isBendDragging}
+          draggingHandleSegmentIndex={draggingHandleSegmentIndex}
+          markerStart={markerStart}
+          markerEnd={markerEnd}
+          sourcePoint={sourcePoint}
+          targetPoint={targetPoint}
+          sourcePosition={sourcePosition}
+          targetPosition={targetPosition}
+          isDiagramModifiable={isDiagramModifiable}
+          canEditEndpoint={canEditEndpoint}
+          allowMidpointDragging={allowMidpointDragging}
+          bendHandles={bendHandles}
+          handlePointerDown={handlePointerDown}
+        />
 
         <EdgeEndLabels
           data={data}

@@ -2,17 +2,20 @@ import {
   useState,
   useEffect,
   useRef,
+  type ReactNode,
   type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
 } from "react"
-import { Position, useStore } from "@xyflow/react"
+import { BaseEdge, Position, useStore } from "@xyflow/react"
 import { ExtendedEdgeProps } from "./EdgeProps"
 import { CustomEdgeToolbar } from "@/components"
 import { IPoint } from "./Connection"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
 import AssessmentIcon from "@/components/svgs/AssessmentIcon"
+import { EdgeInlineMarkers } from "@/components/svgs/edges/InlineMarker"
 import { DiagramEdgeType } from "."
 import { Assessment } from "@/typings"
+import type { BendHandle } from "@/utils/geometry/bendHandles"
 import { CANVAS, EDGES } from "@/constants"
 
 // Edge handles live inside the zoomed React Flow viewport. We want them to
@@ -93,7 +96,6 @@ export const EdgeEndpointMarkers = ({
   targetPosition,
   isDiagramModifiable,
   canEditEndpoint = true,
-  diagramType,
 }: {
   sourcePoint: IPoint
   targetPoint: IPoint
@@ -101,14 +103,16 @@ export const EdgeEndpointMarkers = ({
   targetPosition?: EndpointSide
   isDiagramModifiable: boolean
   canEditEndpoint?: boolean
-  diagramType: string
 }) => {
   const sourceHandleRef = useRef<SVGRectElement | null>(null)
   const screenScale = useHandleScreenScale()
 
   useEffect(() => {
-    if (!isDiagramModifiable || diagramType === "usecase") return
+    if (!isDiagramModifiable) return
 
+    // NOTE: `.react-flow__edgeupdater*` are React Flow v12 internal class names.
+    // We deliberately defer reconnection to RF's native updater while our hit
+    // target controls UX; pin to RF v12 (revisit on a major React Flow bump).
     const edgeGroup = sourceHandleRef.current?.closest(".react-flow__edge")
     const nativeUpdaters = Array.from(
       edgeGroup?.querySelectorAll<SVGElement>(".react-flow__edgeupdater") ?? []
@@ -127,9 +131,9 @@ export const EdgeEndpointMarkers = ({
         updater.style.pointerEvents = previousPointerEvents[index]
       })
     }
-  }, [diagramType, isDiagramModifiable])
+  }, [isDiagramModifiable])
 
-  if (!isDiagramModifiable || diagramType === "usecase") {
+  if (!isDiagramModifiable) {
     return null
   }
 
@@ -257,6 +261,134 @@ export const EdgeBendHandle = ({
       }}
       onPointerDown={onPointerDown}
     />
+  )
+}
+
+/**
+ * The shared SVG body for every orthogonal (step-path) edge: the base path,
+ * inline export markers, the interaction overlay, endpoint reconnect targets,
+ * and the bend handles. Diagram-specific decorations (e.g. the SFC transition
+ * bar) are passed as `children` and render inside the same group. Per-type
+ * files keep only their own config, labels, and `CommonEdgeElements`.
+ */
+export const StepEdgeBody = ({
+  id,
+  markerKey,
+  currentPath,
+  overlayPath,
+  pathRef,
+  strokeColor,
+  strokeDashArray,
+  hasInitialCalculation,
+  isReconnecting,
+  isBendDragging,
+  draggingHandleSegmentIndex,
+  markerStart,
+  markerEnd,
+  sourcePoint,
+  targetPoint,
+  sourcePosition,
+  targetPosition,
+  isDiagramModifiable,
+  canEditEndpoint,
+  allowMidpointDragging,
+  bendHandles,
+  handlePointerDown,
+  children,
+}: {
+  id: string
+  markerKey: string
+  currentPath: string
+  overlayPath: string
+  pathRef: React.Ref<SVGPathElement>
+  strokeColor: string
+  strokeDashArray?: string
+  hasInitialCalculation: boolean
+  isReconnecting: boolean
+  isBendDragging: boolean
+  draggingHandleSegmentIndex: number | null
+  markerStart?: string
+  markerEnd?: string
+  sourcePoint: IPoint
+  targetPoint: IPoint
+  sourcePosition?: Position
+  targetPosition?: Position
+  isDiagramModifiable: boolean
+  canEditEndpoint: boolean
+  allowMidpointDragging: boolean
+  bendHandles: BendHandle[]
+  handlePointerDown: (
+    event: ReactPointerEvent<SVGRectElement>,
+    handle: BendHandle
+  ) => void
+  children?: ReactNode
+}) => {
+  return (
+    <g className="edge-container">
+      <BaseEdge
+        key={markerKey}
+        id={id}
+        path={currentPath}
+        pointerEvents="none"
+        style={{
+          stroke: strokeColor,
+          strokeDasharray: isReconnecting ? "none" : strokeDashArray,
+          transition: hasInitialCalculation ? "opacity 0.1s ease-in" : "none",
+          opacity: 1,
+        }}
+      />
+
+      {/* Inline markers for export compatibility (survives ungrouping). */}
+      {!isReconnecting && (
+        <EdgeInlineMarkers
+          pathD={currentPath}
+          markerEnd={markerEnd}
+          markerStart={markerStart}
+          strokeColor={strokeColor}
+        />
+      )}
+
+      <path
+        ref={pathRef}
+        className="edge-overlay"
+        d={overlayPath}
+        fill="none"
+        strokeWidth={EDGES.EDGE_HIGHLIGHT_STROKE_WIDTH}
+        pointerEvents="stroke"
+        style={{ opacity: isReconnecting || isBendDragging ? 0 : 0.4 }}
+      />
+
+      <EdgeEndpointMarkers
+        sourcePoint={sourcePoint}
+        targetPoint={targetPoint}
+        sourcePosition={sourcePosition}
+        targetPosition={targetPosition}
+        isDiagramModifiable={isDiagramModifiable}
+        canEditEndpoint={canEditEndpoint}
+      />
+
+      {isDiagramModifiable &&
+        !isReconnecting &&
+        allowMidpointDragging &&
+        bendHandles
+          .filter(
+            (handle) =>
+              !isBendDragging ||
+              handle.segmentIndex === draggingHandleSegmentIndex
+          )
+          .map((handle) => (
+            <EdgeBendHandle
+              key={`${id}-bend-${handle.segmentIndex}`}
+              id={id}
+              segmentIndex={handle.segmentIndex}
+              position={handle.position}
+              orientation={handle.orientation}
+              onPointerDown={(e) => handlePointerDown(e, handle)}
+            />
+          ))}
+
+      {children}
+    </g>
   )
 }
 

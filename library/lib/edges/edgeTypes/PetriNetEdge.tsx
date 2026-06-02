@@ -116,7 +116,7 @@ export const PetriNetEdge = ({
             style={{ opacity: isReconnecting ? 0 : 0.4 }}
           />
 
-          {isDiagramModifiable && !isReconnecting && (
+          {!isReconnecting && (
             <EdgeEndpointMarkers
               sourcePoint={sourcePoint}
               targetPoint={targetPoint}
@@ -124,7 +124,6 @@ export const PetriNetEdge = ({
               targetPosition={targetPosition}
               isDiagramModifiable={isDiagramModifiable}
               canEditEndpoint={canEditEndpoint}
-              diagramType="petriNet"
             />
           )}
         </g>
