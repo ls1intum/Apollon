@@ -148,8 +148,14 @@ export function DefaultNodeWrapper({
   )
 
   const baseHandleStyle = {
-    width: 8 * handleScreenScale,
-    height: 8 * handleScreenScale,
+    // Keep the React Flow handle BOX a constant flow size. React Flow derives
+    // each edge's connection point from this box's measured geometry, and it
+    // re-measures on resize — so a zoom-scaled box shifts the edge endpoint by
+    // half the box (a visible gap between edge tip and node when resizing while
+    // zoomed out). Only the visible arc (::before, via --arc-scale) scales with
+    // zoom; the grab target is that arc, not this box.
+    width: 8,
+    height: 8,
     position: "absolute" as const,
     backgroundColor: "transparent",
     border: "none",
@@ -158,7 +164,7 @@ export function DefaultNodeWrapper({
     overflow: "visible",
     boxSizing: "border-box" as const,
     // Consumed by the arc ::before pseudo-element (see app.css) to keep the
-    // visible indicator a constant on-screen size.
+    // visible indicator a predictable on-screen size across zoom.
     "--arc-scale": handleScreenScale,
   } as CSSProperties
 
