@@ -46,16 +46,6 @@ cosign verify \
 
 ## One-time setup
 
-### Version Packages PR CI (recommended)
-
-By default the **Version Packages** PR is opened with `GITHUB_TOKEN`, which — by GitHub design — does **not** trigger other workflows, so that PR carries no lint/build/e2e checks. Acceptable for a version-and-changelog-only change, but to run the full PR checks on it, give `release.yml` a GitHub App token:
-
-- Create (or reuse) a GitHub App in the org with **Contents: write** and **Pull requests: write**, installed on this repo. Generate a private key.
-- Repository **variable** `RELEASE_BOT_APP_ID` = the App's ID (its presence is what switches `release.yml` to the app token).
-- Repository **secret** `RELEASE_BOT_PRIVATE_KEY` = the App's private key (PEM).
-
-Leave both unset to keep the `GITHUB_TOKEN` behaviour.
-
 ### npm (library)
 
 - npm trusted publisher on npmjs.com: `ls1intum/Apollon` → `.github/workflows/release-library.yml` → environment `npm-publish` (no `NPM_TOKEN` needed).

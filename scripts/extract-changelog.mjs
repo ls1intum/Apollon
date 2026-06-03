@@ -1,15 +1,9 @@
 #!/usr/bin/env node
-// Extract the changelog section for a specific version from a package's
-// CHANGELOG.md. The release workflows use it to set the GitHub Release body
-// from the Changesets-owned changelog instead of GitHub's --generate-notes,
-// so the Release reads in the curated voice authors wrote per PR.
-//
-// Usage: node scripts/extract-changelog.mjs <package-dir> <version>
-//   e.g. node scripts/extract-changelog.mjs library 4.5.0
-//
-// Prints the section body (without the "## x.y.z" heading) to stdout. Prints
-// nothing and exits 0 when the file or the section is absent, so callers can
-// fall back to generated notes (e.g. a manual bump that carried no changeset).
+// Extract one version's section from a package's CHANGELOG.md, for the release
+// workflows to use as the GitHub Release body instead of GitHub's
+// auto-generated notes. Prints the section to stdout; prints nothing and exits
+// 0 when the file or section is absent, so callers fall back to --generate-notes
+// (e.g. a release that carried no changeset).
 
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
@@ -27,14 +21,19 @@ try {
   process.exit(0) // no changelog yet — caller falls back to generated notes
 }
 
-// Changesets writes one "## X.Y.Z" heading per release. Capture everything
-// from the matching heading up to the next "## " heading.
-const lines = text.split("\n")
+// Changesets writes one "## X.Y.Z" heading per release. Capture from the
+// matching heading to the next one — ignoring "## " lines inside fenced code
+// blocks so a changeset that documents markdown can't truncate the section.
+const lines = text.replace(/\r\n/g, "\n").split("\n")
 const start = lines.findIndex((line) => line.trim() === `## ${version}`)
 if (start === -1) process.exit(0)
 
-const rest = lines.slice(start + 1)
-const end = rest.findIndex((line) => /^## /.test(line))
-const body = (end === -1 ? rest : rest.slice(0, end)).join("\n").trim()
+let inFence = false
+const body = []
+for (const line of lines.slice(start + 1)) {
+  if (/^\s*(```|~~~)/.test(line)) inFence = !inFence
+  if (!inFence && /^## /.test(line)) break
+  body.push(line)
+}
 
-process.stdout.write(body)
+process.stdout.write(body.join("\n").trim())

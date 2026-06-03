@@ -1,11 +1,9 @@
 name: Version Bump (VS Code extension)
 
-# Manual version bump for the VS Code extension only. The library and the
-# paired standalone webapp+server are versioned by Changesets — see release.yml,
-# which opens a "Version Packages" PR automatically from the per-PR changesets.
-# The extension is excluded from Changesets (.changeset/config.json#ignore: it
-# ships to the VS Marketplace + Open VSX on its own cadence), so it keeps this
-# manual dispatch. Merging the PR this opens triggers `Release VS Code Extension`.
+# Manual version bump for the VS Code extension only. The library + standalone
+# moved to Changesets (see release.yml); the extension is deliberately excluded
+# (.changeset/config.json#ignore — separate marketplace + cadence), so it keeps
+# this dispatch. Merging the PR this opens triggers `Release VS Code Extension`.
 
 on:
   workflow_dispatch:

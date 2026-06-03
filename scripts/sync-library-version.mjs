@@ -2,8 +2,8 @@
 // Rewrites the pinned `@tumaet/apollon@X.Y.Z` esm.sh URLs in the README and
 // docs to match library/package.json. They must name an exact version (an
 // unpinned URL resolves to `latest` and breaks consumers' embeds), and no
-// bundler rewrites them, so the version-bump workflow runs this writer and PR
-// Health Checks run `--check` to block any drift from merging.
+// bundler rewrites them, so the `changeset:version` script runs this writer and
+// PR Health Checks run `--check` to block any drift from merging.
 //
 //   node scripts/sync-library-version.mjs           # rewrite to current version
 //   node scripts/sync-library-version.mjs --check    # exit 1 if anything drifts
