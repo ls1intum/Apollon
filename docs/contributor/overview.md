@@ -31,7 +31,7 @@ pnpm dev
 - **[Troubleshooting](/contributor/troubleshooting)** — common local-setup and self-host issues
 - **[Release notes](/contributor/development/release-notes)** — when to add a changeset and how to write it
 - **[Release pipeline → GitHub Actions](/contributor/deployment/github-actions)** — required-status-checks setup
-- **[Release pipeline → npm publishing](/contributor/deployment/npm-publishing)** — `version-bump.yml` + per-artifact release workflows
+- **[Release pipeline → npm publishing](/contributor/deployment/npm-publishing)** — `release.yml` (Changesets Version Packages PR) + per-artifact release workflows
 
 ## Pull-request checklist
 

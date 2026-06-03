@@ -11,7 +11,7 @@ User-facing release notes come from [Changesets](https://github.com/changesets/c
 Three release lines carry changesets: `@tumaet/apollon` on npm, and `@tumaet/webapp` + `@tumaet/server` as paired `ghcr.io` Docker images. The VS Code extension, the docs site, and the webview sub-packages are excluded in `.changeset/config.json#ignore` — they have their own (or no) release flow, and without the exclusion a routine library bump would version them too, since every package depends on `@tumaet/apollon` via `workspace:*`.
 
 :::note
-Changesets are the per-PR convention now; the pipeline that consumes them (`changeset version` → `CHANGELOG.md` → release) lands in a follow-up. Until then, write the changeset so the backlog is ready — and note that the existing `CHANGELOG.md` files are hand-maintained, since the tool does not yet regenerate them. See [Releases](/contributor/deployment/npm-publishing).
+The pipeline that consumes changesets is live: `release.yml` opens a **Version Packages** PR that runs `changeset version` → regenerates `CHANGELOG.md` → triggers the release on merge. Write the changeset and the rest is automatic — don't hand-edit `CHANGELOG.md`. See [Releases](/contributor/deployment/npm-publishing).
 :::
 
 ## When do you need one?
@@ -80,6 +80,6 @@ A change that spans the webapp and the library lands as two changesets in the sa
 
 ## CHANGELOG.md and the GitHub Release body
 
-`CHANGELOG.md` is the per-version bullet log Changesets writes; once the consuming pipeline lands it is tool-owned, not edited by hand. The **GitHub Release body** carries the human-curated lede and highlights (screenshots, video).
+`CHANGELOG.md` is the per-version bullet log Changesets writes — tool-owned, not edited by hand. The **GitHub Release body** is generated from that same `CHANGELOG.md` section (via `scripts/extract-changelog.mjs`) plus a per-track install/verify footer, so the Release reads in the voice you wrote. A maintainer can still edit the published Release afterward to add a lede, screenshots, or video.
 
 You write only the changeset body (the markdown after the frontmatter). At `changeset version` time, `@changesets/changelog-github` prepends the PR link, commit link, and `Thanks @author!` automatically. The backfilled v4.4.0 / v4.4.1 entries omit the commit-SHA link — those commits predate Changesets; new releases include it.

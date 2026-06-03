@@ -16,18 +16,19 @@ Three independently versioned artifacts, each with its own release workflow:
 
 Standalone starts at `4.2.18` (the library version at the time of the release-pipeline switchover). Future `vX.Y.Z` tags advance from there and do not collide with legacy tags.
 
-All three workflows trigger automatically when their version changes on `main`. There is **one** manual step per release: merge the bump PR.
+The library and standalone tracks are versioned by [Changesets](https://github.com/changesets/changesets); the VS Code extension is bumped manually (it is excluded in `.changeset/config.json#ignore`). All three publish workflows trigger automatically when their version changes on `main`. There is **one** manual step per release: merge the version PR.
 
-The per-PR side of this is [Changesets](https://github.com/changesets/changesets): authors run `pnpm changeset` on every user-visible PR to record a changelog entry (see [Release notes](/contributor/development/release-notes)). Those entries are what the changelog automation will consume when it replaces the manual version bump.
+The per-PR side is Changesets: authors run `pnpm changeset` on every user-visible PR to record a changelog entry with its bump type (see [Release notes](/contributor/development/release-notes)). On every push to `main`, `release.yml` runs [`changesets/action`](https://github.com/changesets/action) in **version-only** mode (no `publish` input — the bespoke `release-*.yml` workflows own publishing) and opens or updates a single **Version Packages** PR. That PR runs `pnpm changeset:version`, which:
 
-The `library` bump also rewrites the pinned `@tumaet/apollon@X.Y.Z` CDN URLs in the README and docs (via `scripts/sync-library-version.mjs`) so the published examples never lag the package version. PR Health Checks run the same script with `--check`, so a drift can never merge — run `pnpm sync:version` locally to fix one.
+- consumes the accumulated `.changeset/*.md` files and bumps `@tumaet/apollon` and the paired `@tumaet/webapp` + `@tumaet/server` from the **declared** bump types — no human picks a bump;
+- cascades a **patch** to the standalone packages whenever the library bumps, because they depend on `@tumaet/apollon` via `workspace:*` (`updateInternalDependencies: patch`), so a library change still ships to npm **and** as a new Docker release from the same merge;
+- regenerates every `CHANGELOG.md`, rewrites the pinned `@tumaet/apollon@X.Y.Z` CDN URLs (via `scripts/sync-library-version.mjs`), and refreshes the lockfile.
+
+The GitHub Release body for each track is taken from that `CHANGELOG.md` section (via `scripts/extract-changelog.mjs`); it falls back to GitHub's auto-generated notes only when a version carried no changeset. PR Health Checks also run `sync-library-version.mjs --check`, so a CDN-URL drift can never merge — run `pnpm sync:version` locally to fix one.
 
 ## Cut a release
 
-1. Actions → **Version Bump** → pick `scope` and bump type. Merge the PR that opens.
-   - **`library`** bumps `library/package.json` **and** `standalone/{webapp,server}/package.json` by the same bump type, so a library change ships to npm **and** as a new Docker release from the same PR merge.
-   - **`standalone`** bumps only `standalone/{webapp,server}/package.json`; the library is untouched.
-   - **`vscode-extension`** bumps only `vscode-extension/package.json`; library and standalone are untouched.
+1. Let the **Version Packages** PR (titled `chore: version packages`, opened by `release.yml`) accumulate as changesets land, then **merge it** when you want to cut a release. The library and the paired standalone packages bump together; merging is the only manual step. _The VS Code extension is separate: Actions → **Version Bump (VS Code extension)** → pick a bump type, then merge the PR it opens._
 2. On merge:
    - `release-library.yml` fires when `library/package.json` changes: builds with pnpm, packs the tarball with `pnpm pack`, publishes with `npm publish` for OIDC trusted publishing + provenance (pnpm does not yet support OIDC trusted publishing natively — tracked in [pnpm#9812](https://github.com/pnpm/pnpm/issues/9812)). Tags `@tumaet/apollon@X.Y.Z` → GitHub Release. Skipped if the version is already on npm.
    - `release-standalone.yml` fires after the push-to-main Docker build succeeds: retag `sha-<commit>` → `X.Y.Z` → cosign-sign → tag `vX.Y.Z` → GitHub Release. Staging is already running the same digest under the `sha-<commit>` tag from the push-to-main deploy, so no second deploy is needed. Skipped if a release for that version already exists.
