@@ -1,18 +1,29 @@
 import Tooltip from "@mui/material/Tooltip"
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
-import { useReactFlow, useViewport } from "@xyflow/react"
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react"
+import { useOnViewportChange, useReactFlow, useViewport } from "@xyflow/react"
 import { useShallow } from "zustand/shallow"
 import { useDiagramStore } from "@/store"
 import {
   CollaborationCursor,
   CollaborationState,
   CollaborationUser,
+  CollaborationViewport,
   CollaboratorInfo,
 } from "@/typings"
 
 export type CollaborationAwarenessApi = {
   setLocalAwarenessCursor: (cursor: CollaborationCursor | null) => void
   setLocalAwarenessSelectedElement: (selectedElementId: string | null) => void
+  setLocalAwarenessViewport: (viewport: CollaborationViewport | null) => void
+  setLocalAwarenessFollowing: (followingClientId: number | null) => void
+  getAwarenessStates: () => Map<number, CollaborationState>
   subscribeToAwarenessChanges: (
     callback: (states: Map<number, CollaborationState>) => void
   ) => () => void
@@ -28,6 +39,7 @@ export type CollaborationLayerOptions = {
   showPresence: boolean
   showCursors: boolean
   showSelectionHighlights: boolean
+  showFollow: boolean
 }
 
 type CollaborationLayerProps = {
@@ -41,6 +53,12 @@ type RemoteCursor = {
   color: string
   x: number
   y: number
+}
+
+type FollowTarget = {
+  clientId: number
+  name: string
+  color: string
 }
 
 const AVATAR_SIZE = 26
@@ -91,11 +109,18 @@ const clearHighlights = (container: HTMLElement, elementIds: Set<string>) => {
 function CollaboratorPresenceBar({
   active,
   awareness,
+  showFollow,
+  followedClientId,
+  onToggleFollow,
 }: {
   active: boolean
   awareness: CollaborationAwarenessApi
+  showFollow: boolean
+  followedClientId: number | null
+  onToggleFollow: (target: FollowTarget) => void
 }) {
   const [collaborators, setCollaborators] = useState<CollaboratorInfo[]>([])
+  const [followerCount, setFollowerCount] = useState(0)
 
   useEffect(() => {
     if (!active) {
@@ -109,36 +134,116 @@ function CollaboratorPresenceBar({
     return unsubscribe
   }, [active, awareness])
 
+  // Count peers whose `followingClientId` points at us. The guarded setState
+  // keeps unrelated awareness ticks (e.g. cursor moves) from re-rendering the
+  // bar — only an actual change in the follower count does.
+  useEffect(() => {
+    if (!active || !showFollow) {
+      setFollowerCount(0)
+      return
+    }
+
+    const localClientId = awareness.getLocalAwarenessClientId()
+    return awareness.subscribeToAwarenessChanges((states) => {
+      let count = 0
+      for (const [clientId, state] of states) {
+        if (
+          clientId !== localClientId &&
+          state.followingClientId === localClientId
+        ) {
+          count += 1
+        }
+      }
+      setFollowerCount((prev) => (prev === count ? prev : count))
+    })
+  }, [active, showFollow, awareness])
+
   const remoteCount = collaborators.filter((c) => !c.isLocal).length
   if (!active || remoteCount === 0) return null
 
+  const localClientId = awareness.getLocalAwarenessClientId()
+
   return (
     <div className="apollon-collaboration-presence-bar">
-      {collaborators.map((c, i) => (
-        <Tooltip
-          key={c.id}
-          title={c.isLocal ? `${c.name} (You)` : c.name}
-          arrow
-          slotProps={{
-            popper: {
-              modifiers: [{ name: "offset", options: { offset: [0, -4] } }],
-            },
-          }}
-        >
-          <div
-            aria-label={c.isLocal ? `${c.name} (You)` : c.name}
-            style={{
-              ...avatarBase,
-              backgroundColor: c.color,
-              border: "2px solid var(--apollon-background)",
-              marginLeft: i === 0 ? 0 : OVERLAP,
-              zIndex: collaborators.length - i,
+      {collaborators.map((c, i) => {
+        const followTargetId =
+          c.isLocal || !showFollow
+            ? null
+            : (c.clientIds.find((id) => id !== localClientId) ?? null)
+        const followTarget: FollowTarget | null =
+          followTargetId === null
+            ? null
+            : { clientId: followTargetId, name: c.name, color: c.color }
+        const isFollowable = followTarget !== null
+        const isFollowing =
+          followedClientId !== null && c.clientIds.includes(followedClientId)
+        const isFollowedByOthers = c.isLocal && followerCount > 0
+        const label = c.isLocal
+          ? isFollowedByOthers
+            ? `${c.name} (You · followed by ${followerCount})`
+            : `${c.name} (You)`
+          : isFollowing
+            ? `${c.name} (Following · click to stop)`
+            : isFollowable
+              ? `${c.name} (click to follow)`
+              : c.name
+
+        return (
+          <Tooltip
+            key={c.id}
+            title={label}
+            arrow
+            slotProps={{
+              popper: {
+                modifiers: [{ name: "offset", options: { offset: [0, -4] } }],
+              },
             }}
           >
-            {c.name.charAt(0).toUpperCase()}
-          </div>
-        </Tooltip>
-      ))}
+            <div
+              aria-label={label}
+              role={isFollowable ? "button" : undefined}
+              aria-pressed={isFollowable ? isFollowing : undefined}
+              tabIndex={isFollowable ? 0 : undefined}
+              onClick={
+                followTarget ? () => onToggleFollow(followTarget) : undefined
+              }
+              onKeyDown={
+                followTarget
+                  ? (event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault()
+                        onToggleFollow(followTarget)
+                      }
+                    }
+                  : undefined
+              }
+              style={{
+                ...avatarBase,
+                backgroundColor: c.color,
+                border: "2px solid var(--apollon-background)",
+                marginLeft: i === 0 ? 0 : OVERLAP,
+                zIndex: collaborators.length - i,
+                cursor: isFollowable ? "pointer" : "default",
+                position: "relative",
+                boxShadow: isFollowing
+                  ? `0 0 0 2px var(--apollon-background), 0 0 0 4px ${c.color}`
+                  : undefined,
+              }}
+            >
+              {c.name.charAt(0).toUpperCase()}
+              {isFollowedByOthers && (
+                <span
+                  aria-hidden="true"
+                  className="apollon-collaboration-follower-badge"
+                  style={{ borderColor: c.color }}
+                >
+                  {followerCount > 9 ? "9+" : followerCount}
+                </span>
+              )}
+            </div>
+          </Tooltip>
+        )
+      })}
     </div>
   )
 }
@@ -418,6 +523,181 @@ function CollaboratorSelectionHighlights({
   return null
 }
 
+const sameViewport = (
+  a: CollaborationViewport | null,
+  b: CollaborationViewport | null
+) => a != null && b != null && a.x === b.x && a.y === b.y && a.zoom === b.zoom
+
+/**
+ * Broadcasts the local viewport to peers so they can follow it, and — while
+ * `followedClientId` is set — mirrors that peer's viewport onto the local
+ * canvas. Renders nothing; it only runs effects.
+ */
+function ViewportFollow({
+  awareness,
+  followedClientId,
+  onStopFollowing,
+}: {
+  awareness: CollaborationAwarenessApi
+  followedClientId: number | null
+  onStopFollowing: () => void
+}) {
+  const reactFlow = useReactFlow()
+
+  const pendingViewport = useRef<CollaborationViewport | null>(null)
+  const broadcastRaf = useRef(0)
+  // True only for the synchronous span of a follow-driven `setViewport`. The
+  // change it provokes fires `onChange` immediately (xyflow applies `duration:
+  // 0` synchronously), so this flag lets us tell our own programmatic move
+  // apart from a real user pan/zoom — without it the follow would echo back to
+  // the followed peer, loop on mutual follow, and instantly cancel itself.
+  const applyingRemote = useRef(false)
+  const lastApplied = useRef<CollaborationViewport | null>(null)
+
+  const flushViewport = useCallback(() => {
+    broadcastRaf.current = 0
+    if (pendingViewport.current) {
+      awareness.setLocalAwarenessViewport(pendingViewport.current)
+      pendingViewport.current = null
+    }
+  }, [awareness])
+
+  // A single `onChange` handles both jobs: a real user pan/zoom hands control
+  // back (stops following), and every move is coalesced to one broadcast per
+  // frame — mirroring how the cursor broadcaster throttles pointer moves. The
+  // `applyingRemote`/`sameViewport` guards keep a follow-applied viewport from
+  // tripping either path.
+  const handleViewportChange = useCallback(
+    (viewport: CollaborationViewport) => {
+      if (applyingRemote.current || sameViewport(viewport, lastApplied.current))
+        return
+      if (followedClientId !== null) onStopFollowing()
+      pendingViewport.current = viewport
+      if (!broadcastRaf.current) {
+        broadcastRaf.current = window.requestAnimationFrame(flushViewport)
+      }
+    },
+    [followedClientId, onStopFollowing, flushViewport]
+  )
+
+  useOnViewportChange({ onChange: handleViewportChange })
+
+  // Publish the current viewport once on mount so a peer who follows us snaps
+  // to it immediately, even if we haven't panned since joining (`onChange`
+  // only fires on subsequent moves).
+  useEffect(() => {
+    awareness.setLocalAwarenessViewport(reactFlow.getViewport())
+  }, [awareness, reactFlow])
+
+  useEffect(
+    () => () => {
+      if (broadcastRaf.current) {
+        window.cancelAnimationFrame(broadcastRaf.current)
+      }
+    },
+    []
+  )
+
+  // Reflect who we follow into awareness so the target can show a follower
+  // count; clears on unfollow/unmount.
+  useEffect(() => {
+    awareness.setLocalAwarenessFollowing(followedClientId)
+    return () => awareness.setLocalAwarenessFollowing(null)
+  }, [awareness, followedClientId])
+
+  // Mirror the followed peer's viewport. `duration: 0` applies instantly — an
+  // animated transition would pile up against the ~per-frame stream
+  // (xyflow#5077). Drop follow if the peer leaves awareness, and never follow
+  // our own client (a no-op that would only publish a self-referential follow).
+  useEffect(() => {
+    if (followedClientId == null) return
+    if (followedClientId === awareness.getLocalAwarenessClientId()) return
+
+    const applyTargetViewport = (states: Map<number, CollaborationState>) => {
+      const target = states.get(followedClientId)
+      if (!target) {
+        onStopFollowing()
+        return
+      }
+      const viewport = target.viewport
+      if (!viewport || sameViewport(viewport, lastApplied.current)) return
+
+      lastApplied.current = viewport
+      // The flag must always be cleared: a stuck `true` would silently disable
+      // take-back and broadcasting for the rest of the session.
+      applyingRemote.current = true
+      try {
+        reactFlow.setViewport(viewport, { duration: 0 })
+      } finally {
+        applyingRemote.current = false
+      }
+    }
+
+    // Snap to the target's current viewport right away — `subscribeToAwareness
+    // Changes` only fires on *subsequent* changes, so without this following an
+    // idle peer wouldn't move at all.
+    applyTargetViewport(awareness.getAwarenessStates())
+    const unsubscribe =
+      awareness.subscribeToAwarenessChanges(applyTargetViewport)
+
+    return () => {
+      unsubscribe()
+      lastApplied.current = null
+    }
+  }, [awareness, followedClientId, onStopFollowing, reactFlow])
+
+  return null
+}
+
+/**
+ * Persistent affordance for an active follow: a frame around the editor in the
+ * followed peer's color and a top-center banner naming them with a stop button.
+ * `role="status"` announces the follow start to assistive tech.
+ */
+function FollowIndicator({
+  target,
+  onStopFollowing,
+}: {
+  target: FollowTarget
+  onStopFollowing: () => void
+}) {
+  return (
+    <>
+      <div
+        aria-hidden="true"
+        className="apollon-collaboration-follow-frame"
+        style={{ boxShadow: `inset 0 0 0 3px ${target.color}` }}
+      />
+      <div
+        className="apollon-collaboration-follow-banner"
+        style={{ borderColor: target.color }}
+      >
+        <span
+          aria-hidden="true"
+          className="apollon-collaboration-follow-banner-dot"
+          style={{ backgroundColor: target.color }}
+        />
+        {/* Only the message is the live region, so the Stop button's label
+            doesn't leak into the announcement. */}
+        <span
+          className="apollon-collaboration-follow-banner-text"
+          role="status"
+        >
+          Following {target.name}
+        </span>
+        <button
+          type="button"
+          className="apollon-collaboration-follow-banner-stop"
+          aria-label={`Stop following ${target.name}`}
+          onClick={onStopFollowing}
+        >
+          Stop
+        </button>
+      </div>
+    </>
+  )
+}
+
 export function CollaborationLayer({
   options,
   awareness,
@@ -425,6 +705,27 @@ export function CollaborationLayer({
   const previewMode = useDiagramStore((state) => state.previewMode)
   const active = options.enabled && options.user !== undefined
   const remoteVisualsActive = active && !previewMode
+  const followActive = remoteVisualsActive && options.showFollow
+
+  // The followed peer's name/color are captured at click time (from the
+  // presence bar, which already has them) so the banner and editor frame don't
+  // need a second awareness lookup.
+  const [followTarget, setFollowTarget] = useState<FollowTarget | null>(null)
+
+  const stopFollowing = useCallback(() => setFollowTarget(null), [])
+  const toggleFollow = useCallback(
+    (target: FollowTarget) =>
+      setFollowTarget((prev) =>
+        prev?.clientId === target.clientId ? null : target
+      ),
+    []
+  )
+
+  // Forget the follow target whenever following turns off (preview, option
+  // toggle) so it can't silently resume on re-enable.
+  useEffect(() => {
+    if (!followActive) setFollowTarget(null)
+  }, [followActive])
 
   return (
     <>
@@ -436,6 +737,9 @@ export function CollaborationLayer({
       <CollaboratorPresenceBar
         active={active && options.showPresence}
         awareness={awareness}
+        showFollow={followActive}
+        followedClientId={followTarget?.clientId ?? null}
+        onToggleFollow={toggleFollow}
       />
       <CollaboratorCursors
         active={remoteVisualsActive && options.showCursors}
@@ -445,6 +749,19 @@ export function CollaborationLayer({
         active={remoteVisualsActive && options.showSelectionHighlights}
         awareness={awareness}
       />
+      {followActive && (
+        <ViewportFollow
+          awareness={awareness}
+          followedClientId={followTarget?.clientId ?? null}
+          onStopFollowing={stopFollowing}
+        />
+      )}
+      {followActive && followTarget && (
+        <FollowIndicator
+          target={followTarget}
+          onStopFollowing={stopFollowing}
+        />
+      )}
     </>
   )
 }

@@ -26,9 +26,17 @@ export type CollaborationCursor = {
   y: number
 }
 
+export type CollaborationViewport = {
+  x: number
+  y: number
+  zoom: number
+}
+
 export type CollaborationState = {
   user?: CollaborationUser
   cursor?: CollaborationCursor | null
+  viewport?: CollaborationViewport | null
+  followingClientId?: number | null
   selectedElementId?: string | null
 }
 
@@ -47,6 +55,7 @@ export type ApollonCollaborationOptions = {
   showPresence?: boolean
   showCursors?: boolean
   showSelectionHighlights?: boolean
+  showFollow?: boolean
 }
 
 export enum Locale {

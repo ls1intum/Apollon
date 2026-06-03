@@ -8,10 +8,10 @@ import { useDiagramIdFromPath } from "@/hooks/useDiagramIdFromPath"
 interface Props {
   /**
    * Foreground color for the icon + label. Defaults to `secondary` —
-   * the navbar's muted on-dark gray. Mobile passes `"black"` because
-   * the button is rendered inside the hamburger Menu's light-bg dropdown
-   * (where on-dark gray would be near-invisible). Other navbar children
-   * (`NavbarFile`, `NavbarHelp`) follow the same prop convention.
+   * the navbar's muted on-dark gray, for the always-dark desktop bar. The
+   * mobile hamburger passes `var(--apollon-primary-contrast)` so the label
+   * stays legible on the themed dropdown in both light and dark mode. Other
+   * navbar children (`NavbarFile`, `NavbarHelp`) follow the same convention.
    */
   color?: string
 }

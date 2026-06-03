@@ -1,3 +1,5 @@
+import type { CollaborationViewport } from "@/typings"
+
 const COLLAB_COLORS = [
   "#ffb61e",
   "#37b24d",
@@ -46,4 +48,26 @@ export const collabColorFromName = (name: string): string => {
 
   const index = Math.abs(hash) % COLLAB_COLORS.length
   return COLLAB_COLORS[index]
+}
+
+/**
+ * Narrow an untrusted, peer-supplied viewport before it reaches React Flow's
+ * `setViewport`. A `NaN`/`Infinity`/non-positive zoom corrupts the canvas
+ * transform, so every field must be a finite number and zoom must be positive.
+ * Returns `null` for anything malformed.
+ */
+export const sanitizeCollaborationViewport = (
+  raw: unknown
+): CollaborationViewport | null => {
+  if (raw == null || typeof raw !== "object") return null
+  const { x, y, zoom } = raw as Record<string, unknown>
+  if (
+    !Number.isFinite(x) ||
+    !Number.isFinite(y) ||
+    !Number.isFinite(zoom) ||
+    (zoom as number) <= 0
+  ) {
+    return null
+  }
+  return { x: x as number, y: y as number, zoom: zoom as number }
 }
