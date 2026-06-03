@@ -23,6 +23,7 @@ export type CollaborationAwarenessApi = {
   setLocalAwarenessSelectedElement: (selectedElementId: string | null) => void
   setLocalAwarenessViewport: (viewport: CollaborationViewport | null) => void
   setLocalAwarenessFollowing: (followingClientId: number | null) => void
+  getAwarenessStates: () => Map<number, CollaborationState>
   subscribeToAwarenessChanges: (
     callback: (states: Map<number, CollaborationState>) => void
   ) => () => void
@@ -581,6 +582,13 @@ function ViewportFollow({
 
   useOnViewportChange({ onChange: handleViewportChange })
 
+  // Publish the current viewport once on mount so a peer who follows us snaps
+  // to it immediately, even if we haven't panned since joining (`onChange`
+  // only fires on subsequent moves).
+  useEffect(() => {
+    awareness.setLocalAwarenessViewport(reactFlow.getViewport())
+  }, [awareness, reactFlow])
+
   useEffect(
     () => () => {
       if (broadcastRaf.current) {
@@ -605,7 +613,7 @@ function ViewportFollow({
     if (followedClientId == null) return
     if (followedClientId === awareness.getLocalAwarenessClientId()) return
 
-    const unsubscribe = awareness.subscribeToAwarenessChanges((states) => {
+    const applyTargetViewport = (states: Map<number, CollaborationState>) => {
       const target = states.get(followedClientId)
       if (!target) {
         onStopFollowing()
@@ -623,7 +631,14 @@ function ViewportFollow({
       } finally {
         applyingRemote.current = false
       }
-    })
+    }
+
+    // Snap to the target's current viewport right away — `subscribeToAwareness
+    // Changes` only fires on *subsequent* changes, so without this following an
+    // idle peer wouldn't move at all.
+    applyTargetViewport(awareness.getAwarenessStates())
+    const unsubscribe =
+      awareness.subscribeToAwarenessChanges(applyTargetViewport)
 
     return () => {
       unsubscribe()

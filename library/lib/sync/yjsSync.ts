@@ -123,6 +123,9 @@ export class YjsSync {
     }
   }
 
+  public getAwarenessStates = (): Map<number, CollaborationState> =>
+    this.getTypedStates()
+
   public getCollaborators = (): CollaboratorInfo[] => {
     const states = this.getTypedStates()
     const localClientId = this.awareness.clientID

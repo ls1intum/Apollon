@@ -70,6 +70,7 @@ const noopCollaborationAwareness = {
   setLocalAwarenessSelectedElement: () => {},
   setLocalAwarenessViewport: () => {},
   setLocalAwarenessFollowing: () => {},
+  getAwarenessStates: () => new Map(),
   subscribeToAwarenessChanges: () => () => {},
   subscribeToCollaboratorChanges: () => () => {},
   getLocalAwarenessClientId: () => 0,
@@ -205,6 +206,7 @@ export class ApollonEditor {
                         this.syncManager.setLocalAwarenessViewport,
                       setLocalAwarenessFollowing:
                         this.syncManager.setLocalAwarenessFollowing,
+                      getAwarenessStates: this.syncManager.getAwarenessStates,
                       subscribeToAwarenessChanges:
                         this.syncManager.subscribeToAwarenessChanges,
                       subscribeToCollaboratorChanges:
