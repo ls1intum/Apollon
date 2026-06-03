@@ -109,17 +109,19 @@ export default function MobileNavbar() {
                 }}
               >
                 <NavbarFile
-                  color="black"
+                  color="var(--apollon-primary-contrast)"
                   handleCloseNavMenu={handleCloseNavMenu}
                 />
                 <Button
                   sx={{ textTransform: "none" }} // This removes the uppercase transformation
                   onClick={() => openModal("SHARE")}
                 >
-                  <Typography color="black">Share</Typography>
+                  <Typography color="var(--apollon-primary-contrast)">
+                    Share
+                  </Typography>
                 </Button>
-                <VersionHistoryButton color="black" />
-                <NavbarHelp color="black" />
+                <VersionHistoryButton color="var(--apollon-primary-contrast)" />
+                <NavbarHelp color="var(--apollon-primary-contrast)" />
 
                 {/* Diagram Name Input Field */}
                 <Box sx={{ p: 0.5 }}>
@@ -132,7 +134,12 @@ export default function MobileNavbar() {
                     }}
                     placeholder="Diagram Name"
                     fullWidth
-                    sx={{ input: { padding: 0.5 } }}
+                    sx={{
+                      input: {
+                        padding: 0.5,
+                        color: "var(--apollon-primary-contrast)",
+                      },
+                    }}
                     variant="outlined"
                     onClick={(e) => e.stopPropagation()}
                     onFocus={(e) => e.stopPropagation()}
