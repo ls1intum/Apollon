@@ -74,6 +74,6 @@ A change that spans the webapp and the library lands as two changesets in the sa
 
 ## CHANGELOG.md and the GitHub Release body
 
-`CHANGELOG.md` is the per-version bullet log Changesets writes; humans don't edit it by hand. The **GitHub Release body** carries the human-curated lede and highlights (screenshots, video).
+`CHANGELOG.md` is the per-version bullet log Changesets writes; once the consuming pipeline lands it is tool-owned, not edited by hand. The **GitHub Release body** carries the human-curated lede and highlights (screenshots, video).
 
 You write only the changeset body (the markdown after the frontmatter). At `changeset version` time, `@changesets/changelog-github` prepends the PR link, commit link, and `Thanks @author!` automatically. The backfilled v4.4.0 / v4.4.1 entries omit the commit-SHA link — those commits predate Changesets; new releases include it.
