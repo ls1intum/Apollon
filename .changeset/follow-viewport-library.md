@@ -2,4 +2,4 @@
 "@tumaet/apollon": minor
 ---
 
-Follow a collaborator's viewport during a live session — track and recenter the editor on another participant's pan and zoom, built on the awareness layer.
+Follow another participant's viewport during a live session — the editor recenters and tracks their pan and zoom. Exposed through the `collaboration` option (`showFollow`, `followingClientId`) and a new `CollaborationViewport` type.

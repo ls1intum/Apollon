@@ -2,4 +2,4 @@
 "@tumaet/apollon": minor
 ---
 
-Reworked edge routing and interaction: step-edge bends are predictable and grid-snapped, manually placed waypoints survive endpoint reconnection, endpoint reconnection follows React Flow's native behaviour, and only an edge's inputs (endpoints, waypoints, handles) are synced through Yjs — never computed geometry — so collaborators no longer thrash shared state.
+Edge editing overhaul: bend handles move a single segment and snap to the grid, manually placed waypoints now survive endpoint reconnection (they were discarded before), the path updates live as you drag, and connection handles no longer overlap on short node sides or when zoomed out. Grid snapping is also finer (5px).

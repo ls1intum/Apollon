@@ -2,4 +2,4 @@
 "@tumaet/apollon": patch
 ---
 
-Alignment helper lines now prioritise the parent when dragging near nested elements, while children still align within their parent.
+Alignment guides now favour the parent container when you drag near a nested element, instead of fighting with the children inside it — children still align among themselves.
