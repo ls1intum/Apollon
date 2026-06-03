@@ -5,7 +5,9 @@ import { sanitizeCollaborationViewport } from "@/utils/collaboration"
 // viewports before they reach React Flow's `setViewport`. The asserts target
 // the values that actually corrupt the canvas transform — NaN/Infinity, a
 // non-positive zoom, missing or wrong-typed fields — rather than re-stating the
-// happy path.
+// happy path. The RAF/awareness wiring in `ViewportFollow` is deliberately out
+// of unit scope (it needs a live xyflow + awareness harness); this covers the
+// one piece of pure, security-relevant logic.
 describe("sanitizeCollaborationViewport", () => {
   it("passes through a well-formed viewport", () => {
     expect(

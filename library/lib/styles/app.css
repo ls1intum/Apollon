@@ -23,6 +23,11 @@
   pointer-events: auto;
 }
 
+.apollon-collaboration-presence-bar [role="button"]:focus-visible {
+  outline: 2px solid var(--apollon-primary, #3e8acc);
+  outline-offset: 2px;
+}
+
 /* "Followed by N" badge on your own avatar. Theme tokens keep the chip
    legible in light and dark; the border is tinted with the user's color
    inline. */

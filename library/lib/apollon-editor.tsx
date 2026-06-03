@@ -558,12 +558,6 @@ export class ApollonEditor {
     this.syncManager.setLocalAwarenessCursor(cursor)
   }
 
-  public setLocalAwarenessViewport(
-    viewport: Apollon.CollaborationViewport | null
-  ) {
-    this.syncManager.setLocalAwarenessViewport(viewport)
-  }
-
   public setLocalAwarenessSelectedElement(selectedElementId: string | null) {
     this.syncManager.setLocalAwarenessSelectedElement(selectedElementId)
   }

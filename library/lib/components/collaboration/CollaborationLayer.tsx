@@ -531,13 +531,14 @@ function ViewportFollow({
   onStopFollowing: () => void
 }) {
   const reactFlow = useReactFlow()
-  const diagramId = useDiagramStore((state) => state.diagramId)
 
   const pendingViewport = useRef<CollaborationViewport | null>(null)
   const broadcastRaf = useRef(0)
-  // True only for the synchronous span of a follow-driven `setViewport`, so the
-  // viewport change it provokes isn't re-broadcast as our own move — which
-  // would echo back to whoever we're following (and loop on mutual follow).
+  // True only for the synchronous span of a follow-driven `setViewport`. The
+  // change it provokes fires `onChange` immediately (xyflow applies `duration:
+  // 0` synchronously), so this flag lets us tell our own programmatic move
+  // apart from a real user pan/zoom — without it the follow would echo back to
+  // the followed peer, loop on mutual follow, and instantly cancel itself.
   const applyingRemote = useRef(false)
   const lastApplied = useRef<CollaborationViewport | null>(null)
 
@@ -549,17 +550,25 @@ function ViewportFollow({
     }
   }, [awareness])
 
-  // Coalesce the chatty viewport-change stream to one broadcast per frame,
-  // mirroring how the cursor broadcaster throttles pointer moves.
-  useOnViewportChange({
-    onChange: (viewport) => {
-      if (applyingRemote.current) return
+  // A single `onChange` handles both jobs: a real user pan/zoom hands control
+  // back (stops following), and every move is coalesced to one broadcast per
+  // frame — mirroring how the cursor broadcaster throttles pointer moves. The
+  // `applyingRemote`/`sameViewport` guards keep a follow-applied viewport from
+  // tripping either path.
+  const handleViewportChange = useCallback(
+    (viewport: CollaborationViewport) => {
+      if (applyingRemote.current || sameViewport(viewport, lastApplied.current))
+        return
+      if (followedClientId !== null) onStopFollowing()
       pendingViewport.current = viewport
       if (!broadcastRaf.current) {
         broadcastRaf.current = window.requestAnimationFrame(flushViewport)
       }
     },
-  })
+    [followedClientId, onStopFollowing, flushViewport]
+  )
+
+  useOnViewportChange({ onChange: handleViewportChange })
 
   useEffect(
     () => () => {
@@ -577,11 +586,13 @@ function ViewportFollow({
     return () => awareness.setLocalAwarenessFollowing(null)
   }, [awareness, followedClientId])
 
-  // Mirror the followed peer's viewport. `duration: 0` applies instantly —
-  // an animated transition would pile up against the ~per-frame stream
-  // (xyflow#5077). Drop follow if the peer disappears from awareness.
+  // Mirror the followed peer's viewport. `duration: 0` applies instantly — an
+  // animated transition would pile up against the ~per-frame stream
+  // (xyflow#5077). Drop follow if the peer leaves awareness, and never follow
+  // our own client (a no-op that would only publish a self-referential follow).
   useEffect(() => {
     if (followedClientId == null) return
+    if (followedClientId === awareness.getLocalAwarenessClientId()) return
 
     const unsubscribe = awareness.subscribeToAwarenessChanges((states) => {
       const target = states.get(followedClientId)
@@ -603,28 +614,6 @@ function ViewportFollow({
       lastApplied.current = null
     }
   }, [awareness, followedClientId, onStopFollowing, reactFlow])
-
-  // Any genuine pan/zoom gesture hands control back to the user. Programmatic
-  // `setViewport` never dispatches these DOM events, so following can't
-  // cancel itself.
-  useEffect(() => {
-    if (followedClientId == null) return
-
-    const container = document.getElementById(`react-flow-library-${diagramId}`)
-    if (!container) return
-
-    const stop = () => onStopFollowing()
-    const options = { passive: true } as const
-    container.addEventListener("wheel", stop, options)
-    container.addEventListener("pointerdown", stop, options)
-    container.addEventListener("touchstart", stop, options)
-
-    return () => {
-      container.removeEventListener("wheel", stop)
-      container.removeEventListener("pointerdown", stop)
-      container.removeEventListener("touchstart", stop)
-    }
-  }, [diagramId, followedClientId, onStopFollowing])
 
   return null
 }
