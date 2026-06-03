@@ -1,8 +1,13 @@
 name: PR title
 
+# The PR title becomes the squash-merge commit subject, so it must pass the
+# same commitlint rules as a commit message. Runs on pull_request_target so it
+# can post a sticky comment on fork PRs; it never checks out PR-head code and
+# reads the title only through an env var (never interpolated into a shell).
+
 on:
   pull_request_target:
-    types: [opened, edited, synchronize, reopened, ready_for_review]
+    types: [opened, edited, reopened, ready_for_review]
 
 permissions:
   contents: read
@@ -18,40 +23,30 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ !github.event.pull_request.draft }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+      # Default ref is the base branch (trusted), not PR head.
+      # commitlint.config.mjs is the single source of truth for types + scopes.
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: pnpm/action-setup@ac6db6d3c1f721f886538a378a2d73e85697340a # v6.0.8
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
           node-version-file: .nvmrc
-          cache: npm
-      - run: npm ci --no-audit --no-fund
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
 
       - id: commitlint
         continue-on-error: true
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
-        run: |
-          set +e
-          printf '%s' "$PR_TITLE" | npx --no -- commitlint 2>&1 | tee /tmp/commitlint.txt
-          exit_code=${PIPESTATUS[1]}
-          {
-            echo 'output<<__EOF__'
-            cat /tmp/commitlint.txt
-            echo '__EOF__'
-          } >> "$GITHUB_OUTPUT"
-          exit "$exit_code"
+        run: printf '%s' "$PR_TITLE" | pnpm exec commitlint
 
       - uses: marocchino/sticky-pull-request-comment@773744901bac0e8cbb5a0dc842800d45e9b2b405 # v2.9.4
         if: steps.commitlint.outcome == 'failure'
         with:
           header: pr-title-lint-error
           message: |
-            ## ❌ PR title fails commitlint
+            ## ❌ PR title is not a valid Conventional Commit
 
-            ```
-            ${{ steps.commitlint.outputs.output }}
-            ```
-
-            PR titles must be a [Conventional Commit](https://www.conventionalcommits.org/) subject — `<type>(<scope>)?: <subject>` where `type` is one of `feat | fix | chore | docs | refactor | test | build | ci | perf | style | revert`. See [`CONTRIBUTING.md`](https://github.com/ls1intum/Apollon/blob/main/CONTRIBUTING.md).
+            Expected `<type>(<scope>)?: <subject>`, where `type` is one of `feat | fix | chore | docs | refactor | test | build | ci | perf | style | revert` and `scope` comes from the list in `commitlint.config.mjs`. See [`CONTRIBUTING.md`](https://github.com/ls1intum/Apollon/blob/main/CONTRIBUTING.md).
 
       - uses: marocchino/sticky-pull-request-comment@773744901bac0e8cbb5a0dc842800d45e9b2b405 # v2.9.4
         if: steps.commitlint.outcome == 'success'

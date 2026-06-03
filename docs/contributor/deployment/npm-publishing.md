@@ -18,6 +18,8 @@ Standalone starts at `4.2.18` (the library version at the time of the release-pi
 
 All three workflows trigger automatically when their version changes on `main`. There is **one** manual step per release: merge the bump PR.
 
+The per-PR side of this is [Changesets](https://github.com/changesets/changesets): authors run `pnpm changeset` on every user-visible PR to record a changelog entry (see [Release notes](/contributor/development/release-notes)). Those entries are what the changelog automation will consume when it replaces the manual version bump.
+
 The `library` bump also rewrites the pinned `@tumaet/apollon@X.Y.Z` CDN URLs in the README and docs (via `scripts/sync-library-version.mjs`) so the published examples never lag the package version. PR Health Checks run the same script with `--check`, so a drift can never merge — run `pnpm sync:version` locally to fix one.
 
 ## Cut a release

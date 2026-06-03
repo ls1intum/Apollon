@@ -5,5 +5,11 @@
   "baseBranch": "main",
   "fixed": [["@tumaet/webapp", "@tumaet/server"]],
   "updateInternalDependencies": "patch",
-  "privatePackages": { "version": true, "tag": false }
+  "privatePackages": { "version": true, "tag": false },
+  "ignore": [
+    "@tumaet/apollon-docs",
+    "apollon-vscode",
+    "apollon-vscode-menu",
+    "apollon-vscode-editor"
+  ]
 }

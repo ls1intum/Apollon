@@ -4,66 +4,71 @@ Conventions for AI coding agents in [Apollon](https://github.com/ls1intum/Apollo
 
 ## Architecture
 
-- **`library/`** — `@tumaet/apollon`, the embeddable React component on [npm](https://www.npmjs.com/package/@tumaet/apollon). React 18, Vite 6, Yjs for live collaboration, MUI 6 + `@emotion/react` for UI primitives.
+A pnpm monorepo on Node 24 LTS, bundled with Vite. Four release pipelines:
+
+- **`library/`** — `@tumaet/apollon`, the embeddable React editor on [npm](https://www.npmjs.com/package/@tumaet/apollon). React 18, Vite 6, Yjs for live collaboration, MUI 6 + `@emotion/react`. Published for Node `>=22`.
 - **`standalone/webapp/`** — `@tumaet/webapp` (private), the SPA at `apollon.aet.cit.tum.de`. React 18 + Vite 6 + Tailwind; Capacitor for iOS/Android.
 - **`standalone/server/`** — `@tumaet/server` (private), Express API on Redis Stack 7.4 (RedisJSON for diagram storage + version history).
-- **`vscode-extension/`** — `apollon-vscode`, the VS Code extension. Marketplace today; Open VSX wired but skips when `OVSX_PAT` is unset.
+- **`vscode-extension/`** — `apollon-vscode`, the VS Code extension (Marketplace + Open VSX), with nested `menu/` and `editor/` webview sub-packages.
+- **`docs/`** — `@tumaet/apollon-docs` (private), the Docusaurus site at <https://ls1intum.github.io/Apollon>, split into `user/`, `library/`, and `contributor/`.
+- **`ops/`** — operations runbook, legal pages, and the TUM DSMS package. Not part of any release.
 - **`docker/`** — compose files for local Redis (`compose.local.db.yml`) and prod (`compose.{app,db,proxy}.yml`).
-- **`docs/`** — `getting-started/`, `development/`, `deployment/`, `admin/`, `mobile/`. Deep tour in [`docs/development/project-structure.md`](docs/development/project-structure.md).
 
-`standalone/webapp` and `standalone/server` are paired in `.changeset/config.json#fixed` and release together. Any library bump auto-patches them through `updateInternalDependencies: patch`.
+`@tumaet/apollon` is consumed via `workspace:*` by every other package. `standalone/webapp` and `standalone/server` are paired in `.changeset/config.json#fixed` and release together.
 
 ## Toolchain
 
-- **Node.js** `>=22.14.0` (`.nvmrc` pins; `nvm use`).
-- **npm** `>=11.1.0`. Workspaces; one root `package-lock.json` plus separate lockfiles under `vscode-extension/{menu,editor}`.
-- **Docker** for the local Redis Stack (`npm run start:localdb`).
+- **Node** `>=24.15.0` (`.nvmrc` pins; `nvm use`). The library workspace targets `>=22` for its published consumers.
+- **pnpm** `>=11.1.0`, pinned in `package.json#packageManager`. Workspaces and shared version pins (`catalog:`) live in `pnpm-workspace.yaml`; one root `pnpm-lock.yaml`.
+- **Docker** for the local Redis Stack (`pnpm start:localdb`).
 
 ## Routine commands
 
-| Concern              | Command                                                               |
-| -------------------- | --------------------------------------------------------------------- |
-| Install              | `npm install`                                                         |
-| Full dev stack       | `npm run dev` _(library watch + server + webapp; spins up Redis)_     |
-| Single workspace     | `npm run dev:lib` · `dev:server` · `dev:webapp` · `dev:vscode`        |
-| Build everything     | `npm run build`                                                       |
-| Lint                 | `npm run lint` (`npm run lint:fix` to apply fixes)                    |
-| Format               | `npm run format` _(write)_ · `npm run format:check` _(read-only, CI)_ |
-| Unit tests (library) | `npm test`                                                            |
-| E2E tests (webapp)   | `npm run test:e2e` _(Playwright against a built webapp)_              |
-| Add a changeset      | `npm run changeset`                                                   |
+| Concern              | Command                                                                  |
+| -------------------- | ------------------------------------------------------------------------ |
+| Install              | `pnpm install`                                                           |
+| Full dev stack       | `pnpm dev` _(library watch + server + webapp; spins up Redis)_           |
+| Single workspace     | `pnpm dev:lib` · `dev:server` · `dev:webapp` · `dev:vscode` · `dev:docs` |
+| Build everything     | `pnpm build` _(library, then server + webapp)_ · `pnpm build:docs`       |
+| Lint                 | `pnpm lint` (`pnpm lint:fix` to apply fixes)                             |
+| Format               | `pnpm format` _(write)_ · `pnpm format:check` _(read-only, CI)_          |
+| Unit tests (library) | `pnpm test`                                                              |
+| E2E tests (webapp)   | `pnpm test:e2e` _(Playwright against a built webapp)_                    |
+| Add a changeset      | `pnpm changeset`                                                         |
 
-Before opening a PR: `npm run format:check && npm run lint && npm test && npm run check:release-docs` must pass.
+Before opening a PR: `pnpm format:check && pnpm lint && pnpm test && pnpm build` must pass.
 
 ## Code conventions
 
-- **TypeScript everywhere.** ESLint is authoritative (`eslint.config.*` per workspace); Prettier is authoritative for formatting (root `.prettierignore`).
+- **TypeScript everywhere.** ESLint is authoritative (`eslint.config.mjs` per workspace); Prettier is authoritative for formatting (root `.prettierrc` — no semicolons, double quotes).
 - **React 18**, functional components + hooks. MUI 6 + `@emotion/react` in the library; Tailwind inside `standalone/webapp/`.
-- **Yjs** powers collaboration. The library exposes awareness via `editor.subscribeToAwarenessChanges` and `setLocalAwareness*` (see `library/lib/apollon-editor.tsx`); embedders own the cursor UI.
-- **Test layout.** Library unit tests in `library/tests/unit/`; webapp unit tests in `standalone/webapp/tests/unit/`; visual-regression in `standalone/webapp/tests/visual/`; e2e in `standalone/webapp/tests/e2e/`. `npm test` runs the library suite; webapp tests run via `--workspace=@tumaet/webapp`.
-- **Conventional Commits** for commit subjects and PR titles. `commitlint.config.mjs` is the source of truth.
+- **Shared dependency versions** go through the pnpm `catalog:` in `pnpm-workspace.yaml` — reference `"catalog:"` instead of duplicating a version string.
+- **Yjs** powers collaboration; the live-cursor and presence layer lives in the library (see [`docs/library/api/collaboration.md`](docs/library/api/collaboration.md)).
+- **Test layout.** Library unit tests in `library/tests/unit/`; webapp unit, visual-regression, and e2e suites under `standalone/webapp/tests/`. `pnpm test` runs the library suite.
+- **Conventional Commits** with a constrained scope set; `commitlint.config.mjs` is the source of truth.
 
 ## PRs and releases
 
 - **Squash-merge only.** PR title becomes the merge commit subject; PR body becomes its body.
-- **PR title** is a Conventional Commit subject. Enforced locally by `.husky/commit-msg` and in CI by [`.github/workflows/pr-title.yml`](.github/workflows/pr-title.yml).
-- **Changesets** drive the changelog. Run `npm run changeset` on any PR that changes a published or operator-visible workspace; skip on docs-only / CI-only / refactor PRs. Writing rules in [`docs/development/release-notes.md`](docs/development/release-notes.md).
+- **PR title** is a Conventional Commit subject — enforced locally by `.husky/commit-msg` and in CI by [`.github/workflows/pr-title.yml`](.github/workflows/pr-title.yml).
+- **Changesets** carry user-facing release notes. Run `pnpm changeset` on any PR that changes a published or operator-visible package; skip on docs-only / CI-only / refactor PRs. Writing rules in [`docs/contributor/development/release-notes.md`](docs/contributor/development/release-notes.md). The publish pipeline still runs through `version-bump.yml`; accumulated changesets feed the changelog.
 
 ## Gotchas
 
-- The library is consumed by both the standalone webapp and external embedders. Don't couple library APIs to standalone-only runtime assumptions; gate behind options if you must.
+- The library is consumed by the standalone app, the VS Code extension, and external embedders — don't couple its APIs to standalone-only assumptions; gate behind options if you must.
 - The server requires `OWNER_SECRET` ≥ 32 chars (`openssl rand -hex 32`) in production. Local dev accepts a placeholder.
-- `library/dist/` and `standalone/webapp/dist/` are build outputs — don't commit them.
-- Workspace deps: `@tumaet/apollon` is consumed by `standalone/{webapp,server}` and the root `vscode-extension/` as a workspace link (`"*"`). The nested `vscode-extension/editor/` sub-package builds outside the root workspace and pins a published version (currently `4.2.16`).
+- `dist/` directories are build outputs — never commit them.
+- `CLAUDE.md` is a checked-in symlink to this file (git mode `120000`). On Windows, enable symlinks (`git config --global core.symlinks true`) or it checks out as a plain text file.
 
 ## Do not
 
-- Edit `library/dist/` or `.changeset/*.md` files written by `changeset version` — Changesets owns them.
-- Add co-authored-by / agent-attribution trailers inside a changeset body. The body lands in `CHANGELOG.md` as written.
+- Edit `library/dist/` or the `.changeset/*.md` files consumed by `changeset version`.
+- Add co-authored-by / agent-attribution trailers inside a changeset body — it lands in `CHANGELOG.md` verbatim.
 
 ## Deeper docs
 
 - Contributing flow: [`CONTRIBUTING.md`](CONTRIBUTING.md)
-- Release-note style guide: [`docs/development/release-notes.md`](docs/development/release-notes.md)
-- Deployment + ops: [`docs/deployment/github-actions.md`](docs/deployment/github-actions.md), [`docs/admin/operations.md`](docs/admin/operations.md)
-- Mobile: [`docs/mobile/ios-android-setup.md`](docs/mobile/ios-android-setup.md)
+- Release-note style guide: [`docs/contributor/development/release-notes.md`](docs/contributor/development/release-notes.md)
+- Project structure: [`docs/contributor/development/project-structure.md`](docs/contributor/development/project-structure.md)
+- Deployment + ops: [`docs/contributor/deployment/github-actions.md`](docs/contributor/deployment/github-actions.md), [`ops/operations.md`](ops/operations.md)
+- Mobile: [`docs/contributor/development/mobile-builds.md`](docs/contributor/development/mobile-builds.md)
