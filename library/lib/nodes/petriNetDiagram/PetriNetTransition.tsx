@@ -1,5 +1,5 @@
 import { NodeProps, NodeResizer, type Node } from "@xyflow/react"
-import { DefaultNodeWrapper } from "@/nodes/wrappers"
+import { DefaultNodeWrapper, FOUR_WAY_HANDLES_PRESET } from "@/nodes/wrappers"
 import { PetriNetTransitionSVG } from "@/components"
 import { useRef } from "react"
 import { DefaultNodeProps } from "@/types"
@@ -22,7 +22,12 @@ export function PetriNetTransition({
   }
 
   return (
-    <DefaultNodeWrapper elementId={id} width={width} height={height}>
+    <DefaultNodeWrapper
+      elementId={id}
+      width={width}
+      height={height}
+      hiddenHandles={FOUR_WAY_HANDLES_PRESET}
+    >
       <NodeToolbar elementId={id} />
       <NodeResizer
         isVisible={isDiagramModifiable}

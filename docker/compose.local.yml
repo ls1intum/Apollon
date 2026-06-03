@@ -37,6 +37,12 @@ services:
       - dbdata:/data
     command:
       - redis-stack-server
+      # `redis-stack-server` defaults `dir` to `/var/lib/redis-stack`, not
+      # `/data` like upstream `redis`. Without `--dir /data` the server
+      # writes its AOF/RDB into the container's writable layer, which is
+      # lost on container recreate.
+      - --dir
+      - /data
       - --appendonly
       - "yes"
       - --appendfsync

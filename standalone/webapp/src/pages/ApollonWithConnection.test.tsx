@@ -41,10 +41,34 @@ const FakeApollonEditor = vi.hoisted(
     }
 )
 
-vi.mock("@tumaet/apollon", async (importOriginal) => {
+vi.mock("@tumaet/apollon/react", async (importOriginal) => {
   const actual = (await importOriginal()) as Record<string, unknown>
+  const React = await import("react")
+  // The real <Apollon> instantiates the real ApollonEditor (jsdom-incompatible).
+  // Substitute one that hands the fake instance to onMount and stays out of the way.
+  const Apollon = React.forwardRef<
+    unknown,
+    { onMount?: (e: unknown) => void | (() => void) }
+  >(function Apollon(props, ref) {
+    const instanceRef = React.useRef<unknown>(null)
+    React.useEffect(() => {
+      const instance = new FakeApollonEditor()
+      instanceRef.current = instance
+      if (typeof ref === "function") ref(instance)
+      else if (ref) (ref as { current: unknown }).current = instance
+      const cleanup = props.onMount?.(instance)
+      return () => {
+        if (typeof cleanup === "function") cleanup()
+        if (typeof ref === "function") ref(null)
+        else if (ref) (ref as { current: unknown }).current = null
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+    return React.createElement("div", { "data-testid": "apollon-canvas" })
+  })
   return {
     ...actual,
+    Apollon,
     ApollonEditor: FakeApollonEditor,
     ApollonMode: { Modelling: "Modelling", Assessment: "Assessment" },
     importDiagram: (m: unknown) => m,

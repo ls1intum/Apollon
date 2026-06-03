@@ -5,7 +5,6 @@ import {
   parseDiagramType,
   mapFromReactFlowNodeToApollonNode,
   mapFromReactFlowEdgeToApollonEdge,
-  DeepPartial,
   filterRenderedElements,
   getSVG,
   getRenderedDiagramBounds,
@@ -23,31 +22,66 @@ import {
   AlignmentGuidesStore,
 } from "@/store/alignmentGuidesStore"
 import {
+  createEdgeGeometryStore,
+  EdgeGeometryStore,
+} from "@/store/edgeGeometryStore"
+import {
   DiagramStoreContext,
   MetadataStoreContext,
   PopoverStoreContext,
   AssessmentSelectionStoreContext,
   AlignmentGuidesStoreContext,
+  EdgeGeometryStoreContext,
 } from "./store/context"
-import {
-  MessageType,
-  SendBroadcastMessage,
-  YjsSyncClass,
-} from "./sync/yjsSyncClass"
+import { MessageType, SendBroadcastMessage, YjsSync } from "./sync/yjsSync"
 import * as Y from "yjs"
 import { StoreApi } from "zustand"
 import * as Apollon from "./typings"
 
+const normalizeCollaborationOptions = (options?: Apollon.ApollonOptions) => {
+  const collaboration = options?.collaboration
+  const enabled =
+    collaboration?.enabled ??
+    options?.collaborationEnabled ??
+    Boolean(collaboration?.user)
+  const showVisualsByDefault = enabled && Boolean(collaboration?.user)
+
+  return {
+    enabled,
+    user: collaboration?.user,
+    showPresence: collaboration?.showPresence ?? showVisualsByDefault,
+    showCursors: collaboration?.showCursors ?? showVisualsByDefault,
+    showSelectionHighlights:
+      collaboration?.showSelectionHighlights ?? showVisualsByDefault,
+  }
+}
+
+const disabledCollaboration = {
+  enabled: false,
+  showPresence: false,
+  showCursors: false,
+  showSelectionHighlights: false,
+}
+
+const noopCollaborationAwareness = {
+  setLocalAwarenessCursor: () => {},
+  setLocalAwarenessSelectedElement: () => {},
+  subscribeToAwarenessChanges: () => () => {},
+  subscribeToCollaboratorChanges: () => () => {},
+  getLocalAwarenessClientId: () => 0,
+}
+
 export class ApollonEditor {
   private root: ReactDOM.Root
   private reactFlowInstance: ReactFlowInstance | null = null
-  private readonly syncManager: YjsSyncClass
+  private readonly syncManager: YjsSync
   private readonly ydoc: Y.Doc
   private readonly diagramStore: StoreApi<DiagramStore>
   private readonly metadataStore: StoreApi<MetadataStore>
   private readonly popoverStore: StoreApi<PopoverStore>
   private readonly assessmentSelectionStore: StoreApi<AssessmentSelectionStore>
   private readonly alignmentGuidesStore: StoreApi<AlignmentGuidesStore>
+  private readonly edgeGeometryStore: StoreApi<EdgeGeometryStore>
   private subscribers: Apollon.Subscribers = {}
   constructor(element: HTMLElement, options?: Apollon.ApollonOptions) {
     if (!(element instanceof HTMLElement)) {
@@ -63,23 +97,29 @@ export class ApollonEditor {
     this.popoverStore = createPopoverStore()
     this.assessmentSelectionStore = createAssessmentSelectionStore()
     this.alignmentGuidesStore = createAlignmentGuidesStore()
-    this.syncManager = new YjsSyncClass(
+    this.edgeGeometryStore = createEdgeGeometryStore()
+    this.syncManager = new YjsSync(
       this.ydoc,
       this.diagramStore,
       this.metadataStore
     )
+    const collaboration = normalizeCollaborationOptions(options)
+    if (collaboration.enabled && collaboration.user) {
+      this.syncManager.setLocalAwarenessState({
+        user: collaboration.user,
+        selectedElementId: null,
+      })
+    }
 
     const diagramId =
       options?.model?.id || Math.random().toString(36).substring(2, 15)
 
-    // Initialize React root
     this.root = ReactDOM.createRoot(element, {
       identifierPrefix: `apollon-${diagramId}`,
     })
 
     this.diagramStore.getState().setDiagramId(diagramId)
 
-    // Initialize metadata and diagram type
     const diagramName = options?.model?.title || "Untitled Diagram"
     const diagramType =
       options?.type || options?.model?.type || UMLDiagramType.ClassDiagram
@@ -131,7 +171,7 @@ export class ApollonEditor {
 
     if (
       this.metadataStore.getState().mode === Apollon.ApollonMode.Modelling &&
-      !options?.collaborationEnabled
+      !collaboration.enabled
     ) {
       this.diagramStore.getState().initializeUndoManager()
     }
@@ -146,9 +186,26 @@ export class ApollonEditor {
               <AlignmentGuidesStoreContext.Provider
                 value={this.alignmentGuidesStore}
               >
-                <AppWithProvider
-                  onReactFlowInit={this.setReactFlowInstance.bind(this)}
-                />
+                <EdgeGeometryStoreContext.Provider
+                  value={this.edgeGeometryStore}
+                >
+                  <AppWithProvider
+                    onReactFlowInit={this.setReactFlowInstance.bind(this)}
+                    collaboration={collaboration}
+                    awareness={{
+                      setLocalAwarenessCursor:
+                        this.syncManager.setLocalAwarenessCursor,
+                      setLocalAwarenessSelectedElement:
+                        this.syncManager.setLocalAwarenessSelectedElement,
+                      subscribeToAwarenessChanges:
+                        this.syncManager.subscribeToAwarenessChanges,
+                      subscribeToCollaboratorChanges:
+                        this.syncManager.subscribeToCollaboratorChanges,
+                      getLocalAwarenessClientId:
+                        this.syncManager.getLocalAwarenessClientId,
+                    }}
+                  />
+                </EdgeGeometryStoreContext.Provider>
               </AlignmentGuidesStoreContext.Provider>
             </AssessmentSelectionStoreContext.Provider>
           </PopoverStoreContext.Provider>
@@ -231,10 +288,8 @@ export class ApollonEditor {
 
   public destroy() {
     try {
-      // Clean up all active subscriptions before destroying
       Object.keys(this.subscribers).forEach((subscriberId) => {
-        const unsubscribeCallback = this.subscribers[parseInt(subscriberId)]
-        unsubscribeCallback?.()
+        this.subscribers[parseInt(subscriberId)]?.()
       })
       this.subscribers = {}
 
@@ -242,24 +297,19 @@ export class ApollonEditor {
       this.root.unmount()
       this.ydoc.destroy()
       this.reactFlowInstance = null
-      // Zustand stores are automatically garbage-collected when references are gone
-    } catch {
-      // ignore
+    } catch (err) {
+      // destroy() is best-effort — partial teardown is acceptable, but log
+      // so a regression in unmount/ydoc.destroy is surfaced rather than hidden.
+      // eslint-disable-next-line no-console
+      console.warn("[ApollonEditor] destroy() partial failure:", err)
     }
   }
 
-  /**
-   * renders a model as a svg and returns it. Therefore the svg is temporarily added to the dom and removed after it has been rendered.
-   * @param model the apollon model to export as a svg
-   * @param options options to change the export behavior (add margin, exclude element ...)
-   * @param theme the theme which should be applied on the svg
-   */
+  /** Renders a model to SVG via a hidden, off-screen mount. */
   static async exportModelAsSvg(
     model: Apollon.UMLModel,
-    options?: Apollon.ExportOptions,
-    theme?: DeepPartial<Apollon.Styles>
+    options?: Apollon.ExportOptions
   ): Promise<Apollon.SVG> {
-    void theme
     const container = document.createElement("div")
     container.style.display = "flex"
     container.style.width = "4000px"
@@ -281,6 +331,7 @@ export class ApollonEditor {
     const popoverStore = createPopoverStore()
     const assessmentSelectionStore = createAssessmentSelectionStore()
     const alignmentGuidesStore = createAlignmentGuidesStore()
+    const edgeGeometryStore = createEdgeGeometryStore()
     const diagramId = Math.random().toString(36).substring(2, 15)
 
     let setReactFlowInstance: (instance: ReactFlowInstance) => void = () => {}
@@ -298,7 +349,6 @@ export class ApollonEditor {
     diagramStore.getState().setNodesAndEdges(model.nodes, model.edges)
     diagramStore.getState().setAssessments(model.assessments)
 
-    // Render the component
     svgRoot.render(
       <DiagramStoreContext.Provider value={diagramStore}>
         <MetadataStoreContext.Provider value={metadataStore}>
@@ -309,7 +359,13 @@ export class ApollonEditor {
               <AlignmentGuidesStoreContext.Provider
                 value={alignmentGuidesStore}
               >
-                <AppWithProvider onReactFlowInit={setReactFlowInstance} />
+                <EdgeGeometryStoreContext.Provider value={edgeGeometryStore}>
+                  <AppWithProvider
+                    onReactFlowInit={setReactFlowInstance}
+                    collaboration={disabledCollaboration}
+                    awareness={noopCollaborationAwareness}
+                  />
+                </EdgeGeometryStoreContext.Provider>
               </AlignmentGuidesStoreContext.Provider>
             </AssessmentSelectionStoreContext.Provider>
           </PopoverStoreContext.Provider>
@@ -317,8 +373,7 @@ export class ApollonEditor {
       </DiagramStoreContext.Provider>
     )
 
-    // Wait for React Flow to initialize
-    // Create a timeout promise that resolves to undefined after 3 seconds
+    // Race ReactFlow init against a 3 s timeout so a hung mount can't deadlock export.
     const timeoutPromise = new Promise<null>((resolve) => {
       setTimeout(() => resolve(null), 3000)
     })
@@ -368,7 +423,6 @@ export class ApollonEditor {
 
     const svgString = getSVG(container, clip, options)
 
-    // Clean up
     svgRoot.unmount()
     document.body.removeChild(container)
     ydoc.destroy()
@@ -482,7 +536,7 @@ export class ApollonEditor {
   /**
    * Push the entire local Yjs document to peers. Hosts should call this on
    * every (re)connect so any edits made while the transport was closed are
-   * absorbed by the room. See `YjsSyncClass.broadcastFullState`.
+   * absorbed by the room. See `YjsSync.broadcastFullState`.
    */
   public broadcastFullState() {
     this.syncManager.broadcastFullState()
@@ -530,6 +584,16 @@ export class ApollonEditor {
       this.diagramStore.getState().setSelectedElementsId([])
       this.popoverStore.getState().setPopOverElementId(null)
     }
+  }
+
+  /** Live-toggle modeling vs assessment vs exporting mode. */
+  public setMode(mode: Apollon.ApollonMode): void {
+    this.metadataStore.getState().setMode(mode)
+  }
+
+  /** Live-toggle whether the canvas captures page scroll. */
+  public setScrollLock(scrollLock: boolean): void {
+    this.metadataStore.getState().setScrollLock(scrollLock)
   }
 
   /**
@@ -634,12 +698,10 @@ export class ApollonEditor {
   }
 
   static generateInitialSyncMessage(): string {
-    return YjsSyncClass.uint8ToBase64(new Uint8Array([MessageType.YjsSYNC]))
+    return YjsSync.uint8ToBase64(new Uint8Array([MessageType.YjsSYNC]))
   }
 
   static generateInitialAwarenessSyncMessage(): string {
-    return YjsSyncClass.uint8ToBase64(
-      new Uint8Array([MessageType.AwarenessSync])
-    )
+    return YjsSync.uint8ToBase64(new Uint8Array([MessageType.AwarenessSync]))
   }
 }

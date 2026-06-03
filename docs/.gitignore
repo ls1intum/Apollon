@@ -1,2 +1,3 @@
-_build/
-.venv/
+# Docusaurus build output (also covered by the root .gitignore)
+/.docusaurus/
+/build/

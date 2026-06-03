@@ -1,4 +1,3 @@
-import { IPoint } from "@/edges/types"
 import { ReactFlowInstance, type Node, type Edge, Rect } from "@xyflow/react"
 import { CSS_VARIABLE_FALLBACKS, LAYOUT, STROKE_COLOR } from "@/constants"
 import { Point } from "./pathParsing"
@@ -426,70 +425,6 @@ function extractPathPoints(pathD: string): Point[] {
   }
 
   return points
-}
-
-/**
- * Get bounding box from edge data points.
- * Falls back to stored points if available.
- */
-function getBoundingBox(edges: Edge[], nodes: Node[]) {
-  const allPoints: IPoint[] = edges.flatMap(
-    (edge) => (edge.data?.points as IPoint[]) ?? []
-  )
-
-  if (allPoints.length === 0) {
-    return undefined // No points to calculate bounds
-  }
-
-  // Create a map for quick node lookup
-  const nodeMap = new Map(nodes.map((node) => [node.id, node]))
-
-  // Add source and target positions for each edge to ensure we capture connection points
-  edges.forEach((edge) => {
-    const sourceNode = nodeMap.get(edge.source)
-    const targetNode = nodeMap.get(edge.target)
-
-    if (sourceNode && sourceNode.position) {
-      allPoints.push({ x: sourceNode.position.x, y: sourceNode.position.y })
-      if (sourceNode.width && sourceNode.height) {
-        // Add corners of source node to ensure complete coverage
-        allPoints.push({
-          x: sourceNode.position.x + sourceNode.width,
-          y: sourceNode.position.y + sourceNode.height,
-        })
-      }
-    }
-
-    if (targetNode && targetNode.position) {
-      allPoints.push({ x: targetNode.position.x, y: targetNode.position.y })
-      if (targetNode.width && targetNode.height) {
-        // Add corners of target node to ensure complete coverage
-        allPoints.push({
-          x: targetNode.position.x + targetNode.width,
-          y: targetNode.position.y + targetNode.height,
-        })
-      }
-    }
-  })
-
-  let minX = Infinity
-  let maxX = -Infinity
-  let minY = Infinity
-  let maxY = -Infinity
-
-  for (const p of allPoints) {
-    if (p.x < minX) minX = p.x
-    if (p.x > maxX) maxX = p.x
-    if (p.y < minY) minY = p.y
-    if (p.y > maxY) maxY = p.y
-  }
-
-  return {
-    x: minX,
-    y: minY,
-    width: maxX - minX,
-    height: maxY - minY,
-  }
 }
 
 function getNodeBoundsFromDOM(
@@ -990,44 +925,6 @@ function mergeBounds(a: Rect, b: Rect): Rect {
     width: maxX - minX,
     height: maxY - minY,
   }
-}
-
-export function getDiagramBounds(
-  reactFlow: ReactFlowInstance<Node, Edge>,
-  container?: HTMLElement | null
-): Rect {
-  const nodes = reactFlow.getNodes()
-  let edgeBounds = getBoundingBox(reactFlow.getEdges(), nodes)
-  let bounds = reactFlow.getNodesBounds(reactFlow.getNodes())
-
-  // Prefer DOM-based edge bounds calculation (accounts for bezier control points)
-  if (container) {
-    edgeBounds = getEdgeBoundsFromDOM(container)
-  }
-
-  // Fall back to stored points if DOM isn't available
-  if (!edgeBounds) {
-    edgeBounds = getBoundingBox(reactFlow.getEdges(), nodes)
-  }
-
-  if (edgeBounds) {
-    bounds = mergeBounds(bounds, edgeBounds)
-  }
-
-  // Include overflow content from node SVGs (e.g., initial marking arrows)
-  if (container) {
-    const overflowBounds = getNodeOverflowBoundsFromDOM(container)
-    if (overflowBounds) {
-      bounds = mergeBounds(bounds, overflowBounds)
-    }
-
-    const textBounds = getTextBoundsFromDOM(container, reactFlow)
-    if (textBounds) {
-      bounds = mergeBounds(bounds, textBounds)
-    }
-  }
-
-  return bounds
 }
 
 export function getRenderedDiagramBounds(

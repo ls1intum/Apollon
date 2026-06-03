@@ -24,8 +24,9 @@
     "baseUrl": "",
     "paths": {
       "@/*": ["src/*"],
-      "@tumaet/apollon": ["../library/lib/index.tsx"],
-      "@tumaet/apollon/*": ["../library/lib/*"]
+      "@tumaet/apollon": ["../../library/dist/index.d.ts"],
+      "@tumaet/apollon/react": ["../../library/dist/react/react.d.ts"],
+      "@tumaet/apollon/*": ["../../library/dist/*"]
     }
   },
   "include": ["src"],

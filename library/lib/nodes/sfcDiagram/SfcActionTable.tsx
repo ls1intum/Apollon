@@ -25,16 +25,10 @@ export function SfcActionTable({
     }))
   )
 
-  if (!width || !height) {
-    return null
-  }
-
   const actionRows = data?.actionRows || []
 
-  // Calculate minimum height based on rows (no header needed)
   const minHeight = useMemo(() => {
     const rowsHeight = actionRows.length * LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT
-    // Ensure minimum height for at least one row
     return Math.max(rowsHeight, LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT)
   }, [actionRows.length])
 
@@ -58,6 +52,10 @@ export function SfcActionTable({
       )
     }
   }, [minHeight, height, id, setNodes])
+
+  if (!width || !height) {
+    return null
+  }
 
   return (
     <DefaultNodeWrapper width={width} height={height} elementId={id}>

@@ -4,7 +4,7 @@ import { log } from "../logger"
 
 export const getPositionOnCanvas = (
   node: Node,
-  allNodes: Node[]
+  allNodes: ReadonlyArray<Node>
 ): XYPosition => {
   // we need to copy position object here, otherwise updates node's position
   const position: XYPosition = { x: node.position.x, y: node.position.y }

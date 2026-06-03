@@ -1,4 +1,4 @@
-import { SVG } from "@tumaet/apollon"
+import { SVG } from "@tumaet/apollon/react"
 import { useFileDownload } from "./useFileDownload"
 import { useEditorContext } from "@/contexts"
 import { log } from "@/logger"

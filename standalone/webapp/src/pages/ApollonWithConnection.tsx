@@ -3,10 +3,12 @@ import { useEditorContext, useModalContext } from "@/contexts"
 import {
   ApollonEditor,
   ApollonMode,
+  collabColorFromName,
   importDiagram,
+  randomCollabName,
   type ApollonOptions,
   type UMLModel,
-} from "@tumaet/apollon"
+} from "@tumaet/apollon/react"
 import { useNavigate, useParams, useSearchParams } from "react-router"
 import { toast } from "react-toastify"
 import { Box } from "@mui/material"
@@ -26,10 +28,6 @@ import { useElementWidth } from "@/hooks/useElementWidth"
 import { useFlushOnUnload } from "@/hooks/useFlushOnUnload"
 import { useVersionShortcut } from "@/hooks/useVersionShortcut"
 import { log } from "@/logger"
-import { collabColorFromName, randomCollabName } from "@/utils/collaboration"
-import { CollaboratorCursors } from "@/components/CollaboratorCursors"
-import { CollaboratorPresenceBar } from "@/components/CollaboratorPresenceBar"
-import { CollaboratorSelectionHighlights } from "@/components/CollaboratorSelectionHighlights"
 
 export const ApollonWithConnection: React.FC = () => {
   const { diagramId } = useParams()
@@ -67,8 +65,6 @@ export const ApollonWithConnection: React.FC = () => {
   } | null>(null)
   const viewType = searchParams.get("view")
   const previewFromUrl = searchParams.get("version")
-  const isCollaborationActive =
-    viewType === DiagramView.COLLABORATE && !!collaborationUser
 
   const preview = useVersionStore((s) => s.preview)
   const exitPreview = useVersionStore((s) => s.exitPreview)
@@ -96,8 +92,6 @@ export const ApollonWithConnection: React.FC = () => {
 
     const abort = new AbortController()
     let instance: ApollonEditor | null = null
-    let cleanupCursorTracking: (() => void) | null = null
-    let selectionSubscriptionId: number | null = null
     let modelChangeSubscriptionId: number | null = null
 
     const initialize = async () => {
@@ -151,6 +145,16 @@ export const ApollonWithConnection: React.FC = () => {
         const editorOptions: ApollonOptions = {
           model: diagram,
           collaborationEnabled: true,
+          collaboration:
+            isCollaborationView && collaborationUser
+              ? {
+                  enabled: true,
+                  user: collaborationUser,
+                  showPresence: true,
+                  showCursors: true,
+                  showSelectionHighlights: true,
+                }
+              : undefined,
         }
 
         if (viewType === DiagramView.GIVE_FEEDBACK) {
@@ -168,13 +172,6 @@ export const ApollonWithConnection: React.FC = () => {
         editorRef.current = instance
         setEditor(instance)
         setIsLoading(false)
-
-        if (isCollaborationView && collaborationUser) {
-          instance.setLocalAwarenessState({
-            user: collaborationUser,
-            selectedElementId: null,
-          })
-        }
 
         if (
           [
@@ -221,62 +218,6 @@ export const ApollonWithConnection: React.FC = () => {
               }
             }
           })
-        }
-
-        if (isCollaborationView && collaborationUser) {
-          const rafRef = { current: 0 as number }
-          const pendingRef = {
-            current: null as { x: number; y: number } | null,
-          }
-
-          const flushCursor = () => {
-            if (pendingRef.current) {
-              instance?.setLocalAwarenessCursor(pendingRef.current)
-              pendingRef.current = null
-            }
-            rafRef.current = 0
-          }
-
-          const handlePointerMove = (event: PointerEvent) => {
-            const flowPosition = instance?.screenToFlowPosition({
-              x: event.clientX,
-              y: event.clientY,
-            })
-            if (!flowPosition) return
-
-            pendingRef.current = {
-              x: flowPosition.x,
-              y: flowPosition.y,
-            }
-
-            if (!rafRef.current) {
-              rafRef.current = window.requestAnimationFrame(flushCursor)
-            }
-          }
-
-          const handlePointerLeave = () => {
-            instance?.setLocalAwarenessCursor(null)
-          }
-
-          container.addEventListener("pointermove", handlePointerMove)
-          container.addEventListener("pointerleave", handlePointerLeave)
-
-          cleanupCursorTracking = () => {
-            container.removeEventListener("pointermove", handlePointerMove)
-            container.removeEventListener("pointerleave", handlePointerLeave)
-            if (rafRef.current) {
-              window.cancelAnimationFrame(rafRef.current)
-              rafRef.current = 0
-            }
-            instance?.setLocalAwarenessCursor(null)
-          }
-
-          selectionSubscriptionId = instance.subscribeToSelectionChange(
-            (selectedElementIds) => {
-              const selectedElementId = selectedElementIds.at(-1) ?? null
-              instance?.setLocalAwarenessSelectedElement(selectedElementId)
-            }
-          )
         }
 
         syncIntervalRef.current = setInterval(() => {
@@ -331,7 +272,7 @@ export const ApollonWithConnection: React.FC = () => {
       }
     }
 
-    initialize()
+    void initialize()
 
     return () => {
       abort.abort()
@@ -340,12 +281,7 @@ export const ApollonWithConnection: React.FC = () => {
       if (syncIntervalRef.current) {
         clearInterval(syncIntervalRef.current)
       }
-      cleanupCursorTracking?.()
       if (instance) {
-        if (selectionSubscriptionId !== null) {
-          instance.setLocalAwarenessSelectedElement(null)
-          instance.unsubscribe(selectionSubscriptionId)
-        }
         if (modelChangeSubscriptionId !== null) {
           instance.unsubscribe(modelChangeSubscriptionId)
         }
@@ -353,7 +289,16 @@ export const ApollonWithConnection: React.FC = () => {
       instance?.destroy()
       editorRef.current = null
     }
-  }, [diagramId, viewType, collaborationUser])
+  }, [
+    applyControlEvent,
+    collaborationUser,
+    diagramId,
+    fetchVersions,
+    navigate,
+    openModal,
+    setEditor,
+    viewType,
+  ])
 
   // Sync the URL `?version=` param INTO preview state — permalink open,
   // history nav, external link change. We do NOT mirror the other way:
@@ -538,15 +483,6 @@ export const ApollonWithConnection: React.FC = () => {
             className={isLoading ? "invisible" : ""}
             ref={containerRef}
             sx={{ width: "100%", height: "100%" }}
-          />
-          <CollaboratorPresenceBar isActive={isCollaborationActive} />
-          <CollaboratorCursors
-            containerRef={containerRef}
-            isActive={isCollaborationActive && !preview}
-          />
-          <CollaboratorSelectionHighlights
-            containerRef={containerRef}
-            isActive={isCollaborationActive && !preview}
           />
           {!isLoading && preview && diagramId && (
             <Box
