@@ -153,6 +153,7 @@ export const ApollonWithConnection: React.FC = () => {
                   showPresence: true,
                   showCursors: true,
                   showSelectionHighlights: true,
+                  showFollow: true,
                 }
               : undefined,
         }

@@ -10,8 +10,10 @@ import {
   Assessment,
   CollaborationState,
   CollaborationUser,
+  CollaborationViewport,
   CollaboratorInfo,
 } from "@/typings"
+import { sanitizeCollaborationViewport } from "@/utils/collaboration"
 import { Edge, Node } from "@xyflow/react"
 import {
   applyAwarenessUpdate,
@@ -90,6 +92,16 @@ export class YjsSync {
     this.awareness.setLocalStateField("cursor", cursor)
   }
 
+  public setLocalAwarenessViewport = (
+    viewport: CollaborationViewport | null
+  ) => {
+    this.awareness.setLocalStateField("viewport", viewport)
+  }
+
+  public setLocalAwarenessFollowing = (followingClientId: number | null) => {
+    this.awareness.setLocalStateField("followingClientId", followingClientId)
+  }
+
   public setLocalAwarenessSelectedElement = (
     selectedElementId: string | null
   ) => {
@@ -110,6 +122,9 @@ export class YjsSync {
       this.awareness.off("change", handler)
     }
   }
+
+  public getAwarenessStates = (): Map<number, CollaborationState> =>
+    this.getTypedStates()
 
   public getCollaborators = (): CollaboratorInfo[] => {
     const states = this.getTypedStates()
@@ -186,7 +201,20 @@ export class YjsSync {
     ) {
       return null
     }
-    return raw as CollaborationState
+    // Peer-supplied fields drive `setViewport`/follow, so drop malformed ones
+    // here — the single chokepoint every consumer reads through — rather than
+    // rejecting the whole state and losing a valid user/cursor alongside.
+    const state = { ...obj } as CollaborationState
+    if (obj.viewport != null) {
+      state.viewport = sanitizeCollaborationViewport(obj.viewport)
+    }
+    if (
+      obj.followingClientId != null &&
+      typeof obj.followingClientId !== "number"
+    ) {
+      state.followingClientId = null
+    }
+    return state
   }
 
   private getTypedStates(): Map<number, CollaborationState> {

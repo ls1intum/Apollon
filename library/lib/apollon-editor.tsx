@@ -53,6 +53,7 @@ const normalizeCollaborationOptions = (options?: Apollon.ApollonOptions) => {
     showCursors: collaboration?.showCursors ?? showVisualsByDefault,
     showSelectionHighlights:
       collaboration?.showSelectionHighlights ?? showVisualsByDefault,
+    showFollow: collaboration?.showFollow ?? showVisualsByDefault,
   }
 }
 
@@ -61,11 +62,15 @@ const disabledCollaboration = {
   showPresence: false,
   showCursors: false,
   showSelectionHighlights: false,
+  showFollow: false,
 }
 
 const noopCollaborationAwareness = {
   setLocalAwarenessCursor: () => {},
   setLocalAwarenessSelectedElement: () => {},
+  setLocalAwarenessViewport: () => {},
+  setLocalAwarenessFollowing: () => {},
+  getAwarenessStates: () => new Map(),
   subscribeToAwarenessChanges: () => () => {},
   subscribeToCollaboratorChanges: () => () => {},
   getLocalAwarenessClientId: () => 0,
@@ -197,6 +202,11 @@ export class ApollonEditor {
                         this.syncManager.setLocalAwarenessCursor,
                       setLocalAwarenessSelectedElement:
                         this.syncManager.setLocalAwarenessSelectedElement,
+                      setLocalAwarenessViewport:
+                        this.syncManager.setLocalAwarenessViewport,
+                      setLocalAwarenessFollowing:
+                        this.syncManager.setLocalAwarenessFollowing,
+                      getAwarenessStates: this.syncManager.getAwarenessStates,
                       subscribeToAwarenessChanges:
                         this.syncManager.subscribeToAwarenessChanges,
                       subscribeToCollaboratorChanges:
