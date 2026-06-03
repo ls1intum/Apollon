@@ -19,6 +19,7 @@ concurrency:
 jobs:
   status:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     # Forks can't fetch origin/<base> for the diff; skip rather than fail.
     if: github.event.pull_request.head.repo.full_name == github.repository
     steps:
@@ -33,5 +34,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Changesets status (advisory)
-        run: pnpm exec changeset status --since=origin/${{ github.event.pull_request.base.ref }}
+        # Surface the result in the job summary — base.ref via env, never
+        # interpolated into the shell.
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: pnpm exec changeset status --since="origin/$BASE_REF" | tee -a "$GITHUB_STEP_SUMMARY"
         continue-on-error: true

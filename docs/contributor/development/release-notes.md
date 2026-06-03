@@ -11,7 +11,7 @@ User-facing release notes come from [Changesets](https://github.com/changesets/c
 Three release lines carry changesets: `@tumaet/apollon` on npm, and `@tumaet/webapp` + `@tumaet/server` as paired `ghcr.io` Docker images. The VS Code extension, the docs site, and the webview sub-packages are excluded in `.changeset/config.json#ignore` — they have their own (or no) release flow, and without the exclusion a routine library bump would version them too, since every package depends on `@tumaet/apollon` via `workspace:*`.
 
 :::note
-Changesets are adopted as the per-PR convention now. The pipeline that consumes them (`changeset version` → `CHANGELOG.md` → release) is a follow-up; until it lands, write the changeset so the backlog is ready. See [Releases](/contributor/deployment/npm-publishing).
+Changesets are the per-PR convention now; the pipeline that consumes them (`changeset version` → `CHANGELOG.md` → release) lands in a follow-up. Until then, write the changeset so the backlog is ready — and note that the existing `CHANGELOG.md` files are hand-maintained, since the tool does not yet regenerate them. See [Releases](/contributor/deployment/npm-publishing).
 :::
 
 ## What you write per PR
@@ -20,7 +20,7 @@ Changesets are adopted as the per-PR convention now. The pipeline that consumes 
 pnpm changeset
 ```
 
-The CLI asks which packages bump, the bump type, and a summary. **The summary is the changelog entry, verbatim.** Edit `.changeset/<name>.md` after the CLI exits and commit it with your PR. Skip on docs-only, CI-only, or pure-refactor PRs.
+Pick the packages and bump type when prompted; **the summary you type becomes the changelog entry, verbatim.** Edit `.changeset/<name>.md` afterwards and commit it with your PR. Skip on docs-only, CI-only, or pure-refactor PRs.
 
 ## Writing the summary
 
@@ -30,9 +30,10 @@ The CLI asks which packages bump, the bump type, and a summary. **The summary is
 | --------------------------------------------------------------- | ----------------------------------------------------------------- |
 | `add useExportAsPPTX hook with lazy-loaded pptxgenjs`           | `Export diagrams as animatable PowerPoint slides.`                |
 | `Reset isLoading on effect re-entry and thread AbortController` | `Sharing a diagram twice no longer leaves a blank canvas behind.` |
-| `Refactor preview-mode lifecycle`                               | `setPreviewMode decouples the canvas from the Yjs doc.`           |
 
-For **breaking changes**, mark the changeset `major` and link a migration runbook (typically [`ops/operations.md`](https://github.com/ls1intum/Apollon/blob/main/ops/operations.md)).
+For an embedder-facing library change, name the API and describe the contract instead — see [Per-package conventions](#per-package-conventions) below.
+
+For **breaking changes**, mark the changeset `major` and link a migration runbook — the GitHub Release body, or [`ops/operations.md`](https://github.com/ls1intum/Apollon/blob/main/ops/operations.md).
 
 ## Per-package conventions
 

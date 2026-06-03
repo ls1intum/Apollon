@@ -21,6 +21,7 @@ jobs:
   validate:
     name: Validate title
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     if: ${{ !github.event.pull_request.draft }}
     steps:
       # Default ref is the base branch (trusted), not PR head.
