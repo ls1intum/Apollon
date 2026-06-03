@@ -1,5 +1,5 @@
 import { EDGES, INTERFACE } from "@/constants"
-import { IPoint } from "@/edges/Connection"
+import { IPoint, pointsToSvgPath } from "@/edges/Connection"
 import { DiagramEdgeType, UMLDiagramType } from "@/typings"
 import {
   Position,
@@ -986,6 +986,286 @@ export function getEllipseHandlePosition(
     x: centerX + radiusX * Math.cos(angle),
     y: centerY + radiusY * Math.sin(angle),
   }
+}
+
+export type Orientation = "horizontal" | "vertical"
+
+export type AxisAlignedSegment = {
+  index: number
+  start: IPoint
+  end: IPoint
+  orientation: Orientation
+  fixed: number
+  min: number
+  max: number
+}
+
+export function getAxisAlignedSegments(
+  points: IPoint[],
+  tolerance: number = 1
+): AxisAlignedSegment[] {
+  const segments: AxisAlignedSegment[] = []
+  for (let i = 0; i < points.length - 1; i += 1) {
+    const start = points[i]
+    const end = points[i + 1]
+    const isVertical = Math.abs(start.x - end.x) <= tolerance
+    const isHorizontal = Math.abs(start.y - end.y) <= tolerance
+
+    if (!isVertical && !isHorizontal) continue
+
+    if (isVertical) {
+      const min = Math.min(start.y, end.y)
+      const max = Math.max(start.y, end.y)
+      segments.push({
+        index: i,
+        start,
+        end,
+        orientation: "vertical",
+        fixed: start.x,
+        min,
+        max,
+      })
+    } else {
+      const min = Math.min(start.x, end.x)
+      const max = Math.max(start.x, end.x)
+      segments.push({
+        index: i,
+        start,
+        end,
+        orientation: "horizontal",
+        fixed: start.y,
+        min,
+        max,
+      })
+    }
+  }
+
+  return segments
+}
+
+export type LineJumpHit = {
+  segmentIndex: number
+  point: IPoint
+  orientation: Orientation
+}
+
+export function findLineJumpIntersections(
+  baseSegments: AxisAlignedSegment[],
+  otherSegments: AxisAlignedSegment[],
+  jumpWidth: number,
+  preferredOrientation: Orientation | "any" = "horizontal",
+  tolerance: number = 1
+): LineJumpHit[] {
+  // `margin` keeps a hop off the base segment's own corners — the arc spans
+  // ±jumpWidth/2, so a crossing nearer than that to a bend would overrun it.
+  const margin = jumpWidth / 2 + 2
+  const hits: LineJumpHit[] = []
+
+  for (const base of baseSegments) {
+    if (
+      preferredOrientation !== "any" &&
+      base.orientation !== preferredOrientation
+    ) {
+      continue
+    }
+
+    for (const other of otherSegments) {
+      if (base.orientation === other.orientation) continue
+
+      if (
+        base.orientation === "horizontal" &&
+        other.orientation === "vertical"
+      ) {
+        const x = other.fixed
+        const y = base.fixed
+        if (
+          x < base.min + margin ||
+          x > base.max - margin ||
+          // The crossed segment must pass THROUGH the base line, not merely
+          // touch it: a crossing at the other segment's endpoint is a
+          // T-junction/corner where the lines meet, not cross — bridging it
+          // would falsely signal "no connection". Require a strict interior
+          // crossing (inset by `tolerance`).
+          y < other.min + tolerance ||
+          y > other.max - tolerance
+        ) {
+          continue
+        }
+
+        hits.push({
+          segmentIndex: base.index,
+          point: { x, y },
+          orientation: base.orientation,
+        })
+      }
+
+      if (
+        base.orientation === "vertical" &&
+        other.orientation === "horizontal"
+      ) {
+        const x = base.fixed
+        const y = other.fixed
+        if (
+          y < base.min + margin ||
+          y > base.max - margin ||
+          // Strict interior crossing on the other segment — see above.
+          x < other.min + tolerance ||
+          x > other.max - tolerance
+        ) {
+          continue
+        }
+
+        hits.push({
+          segmentIndex: base.index,
+          point: { x, y },
+          orientation: base.orientation,
+        })
+      }
+    }
+  }
+
+  return hits
+}
+
+export function buildPathWithLineJumps(
+  points: IPoint[],
+  jumps: LineJumpHit[],
+  jumpHeight: number,
+  jumpWidth: number = EDGES.EDGE_LINE_JUMP_WIDTH
+): string {
+  if (points.length === 0) return ""
+  if (jumps.length === 0) return pointsToSvgPath(points)
+
+  const round = (num: number) => Math.round(num)
+  // Match pointsToSvgPath's space-separated "M x y" format so a step edge's `d`
+  // keeps the same shape whether or not it carries bridges — consumers and e2e
+  // tests parse the source point with a "M x y" regex.
+  const fmt = (point: IPoint) => `${round(point.x)} ${round(point.y)}`
+  const jumpsBySegment = new Map<number, LineJumpHit[]>()
+
+  for (const jump of jumps) {
+    const list = jumpsBySegment.get(jump.segmentIndex) ?? []
+    list.push(jump)
+    jumpsBySegment.set(jump.segmentIndex, list)
+  }
+
+  const pathParts = [`M ${fmt(points[0])}`]
+
+  for (let i = 0; i < points.length - 1; i += 1) {
+    const start = points[i]
+    const end = points[i + 1]
+    const isHorizontal = Math.abs(start.y - end.y) < 1
+    const segmentLength = isHorizontal
+      ? Math.abs(end.x - start.x)
+      : Math.abs(end.y - start.y)
+
+    const segmentJumps = jumpsBySegment.get(i)
+    if (!segmentJumps || segmentJumps.length === 0) {
+      pathParts.push(`L ${fmt(end)}`)
+      continue
+    }
+
+    if (segmentLength < jumpWidth * 1.2) {
+      pathParts.push(`L ${fmt(end)}`)
+      continue
+    }
+
+    const coordKey = (jump: LineJumpHit) =>
+      isHorizontal ? jump.point.x : jump.point.y
+    const direction = isHorizontal
+      ? Math.sign(end.x - start.x) || 1
+      : Math.sign(end.y - start.y) || 1
+    const sortedJumps = [...segmentJumps].sort((a, b) =>
+      direction >= 0 ? coordKey(a) - coordKey(b) : coordKey(b) - coordKey(a)
+    )
+    const margin = jumpWidth / 2 + 2
+    let lastCoord = direction >= 0 ? -Infinity : Infinity
+
+    for (const jump of sortedJumps) {
+      const coord = coordKey(jump)
+      const min = isHorizontal
+        ? Math.min(start.x, end.x)
+        : Math.min(start.y, end.y)
+      const max = isHorizontal
+        ? Math.max(start.x, end.x)
+        : Math.max(start.y, end.y)
+
+      if (coord < min + margin || coord > max - margin) {
+        continue
+      }
+      if (
+        (direction >= 0 && coord - lastCoord < jumpWidth) ||
+        (direction < 0 && lastCoord - coord < jumpWidth)
+      ) {
+        continue
+      }
+
+      const halfJump = Math.min(jumpWidth / 2, segmentLength / 2 - 2)
+      if (halfJump <= 1) continue
+
+      const startCoord = direction >= 0 ? -halfJump : halfJump
+      const endCoord = direction >= 0 ? halfJump : -halfJump
+      const jumpStart = isHorizontal
+        ? { x: coord + startCoord, y: start.y }
+        : { x: start.x, y: coord + startCoord }
+      const jumpEnd = isHorizontal
+        ? { x: coord + endCoord, y: start.y }
+        : { x: start.x, y: coord + endCoord }
+      const control = isHorizontal
+        ? { x: coord, y: start.y - Math.abs(jumpHeight) }
+        : { x: start.x + Math.abs(jumpHeight), y: coord }
+
+      pathParts.push(`L ${fmt(jumpStart)}`, `Q ${fmt(control)} ${fmt(jumpEnd)}`)
+
+      lastCoord = coord
+    }
+
+    pathParts.push(`L ${fmt(end)}`)
+  }
+
+  return pathParts.join(" ")
+}
+
+/**
+ * Collects the crossings an edge should bridge over. Uses the layout-stable
+ * "horizontal hops vertical" convention (yEd / yFiles' `BridgeManager` default
+ * `HORIZONTAL_BRIDGES_VERTICAL`): the bridge is always drawn on the HORIZONTAL
+ * segment of a crossing. Consequences that make this the right default for a
+ * declarative editor:
+ *  - exactly one edge of any H×V pair hops (the horizontal one),
+ *  - the assignment is independent of edge array order / z-index, so it never
+ *    flips when an edge is selected (React Flow's `elevateEdgesOnSelect`) or
+ *    reordered — unlike a render-order rule.
+ * Diagonal segments yield no axis-aligned segments, so they neither hop nor are
+ * hopped (line jumps are orthogonal-only, matching mxGraph/ELK/yFiles).
+ *
+ * @param geometryMap each OTHER edge's actual rendered polyline, keyed by id
+ *   (from the edge-geometry registry)
+ */
+export function computeLineJumpsForEdge(
+  edgeId: string,
+  basePoints: IPoint[],
+  edges: ReadonlyArray<{ id: string }>,
+  geometryMap: ReadonlyMap<string, IPoint[]>
+): LineJumpHit[] {
+  const baseSegments = getAxisAlignedSegments(basePoints)
+  if (baseSegments.length === 0) return []
+
+  const hits: LineJumpHit[] = []
+  for (const other of edges) {
+    if (other.id === edgeId) continue
+    const otherPoints = geometryMap.get(other.id)
+    if (!otherPoints || otherPoints.length < 2) continue
+    hits.push(
+      ...findLineJumpIntersections(
+        baseSegments,
+        getAxisAlignedSegments(otherPoints),
+        EDGES.EDGE_LINE_JUMP_WIDTH,
+        "horizontal"
+      )
+    )
+  }
+  return hits
 }
 
 export function calculateOverlayPath(

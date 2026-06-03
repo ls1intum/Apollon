@@ -17,6 +17,11 @@ import {
   isLengthEditableAtZoom,
 } from "@/utils/geometry/bendHandles"
 import { useMetadataStore } from "@/store/context"
+import {
+  useEdgeLineJumps,
+  usePublishEdgeGeometry,
+  buildEdgePath,
+} from "./useEdgeLineJumps"
 
 export interface StraightPathEdgeData {
   pathMiddlePosition: IPoint
@@ -69,6 +74,36 @@ export const useStraightPathEdge = ({
     EDGES.SOURCE_CONNECTION_POINT_PADDING
   )
 
+  const basePoints = useMemo<IPoint[]>(
+    () => [
+      {
+        x: adjustedSourceCoordinates.sourceX,
+        y: adjustedSourceCoordinates.sourceY,
+      },
+      {
+        x: adjustedTargetCoordinates.targetX,
+        y: adjustedTargetCoordinates.targetY,
+      },
+    ],
+    [
+      adjustedSourceCoordinates.sourceX,
+      adjustedSourceCoordinates.sourceY,
+      adjustedTargetCoordinates.targetX,
+      adjustedTargetCoordinates.targetY,
+    ]
+  )
+
+  // Publish this edge's real geometry so other edges bridge over it accurately.
+  usePublishEdgeGeometry(id, basePoints)
+
+  // UseCase include/extend edges are dashed connectors that never read as
+  // crossings to disambiguate, so they opt out of bridging.
+  const lineJumps = useEdgeLineJumps(
+    id,
+    basePoints,
+    !isReconnecting && type !== "UseCaseInclude" && type !== "UseCaseExtend"
+  )
+
   const [pathMiddlePosition, setPathMiddlePosition] = useState<IPoint>(() => ({
     x:
       (adjustedSourceCoordinates.sourceX + adjustedTargetCoordinates.targetX) /
@@ -90,6 +125,7 @@ export const useStraightPathEdge = ({
   )
 
   const currentPath = useMemo(() => {
+    if (lineJumps.length > 0) return buildEdgePath(basePoints, lineJumps)
     return calculateStraightPath(
       adjustedSourceCoordinates.sourceX,
       adjustedSourceCoordinates.sourceY,
@@ -103,10 +139,14 @@ export const useStraightPathEdge = ({
     adjustedTargetCoordinates.targetX,
     adjustedTargetCoordinates.targetY,
     type,
-    targetPosition,
+    basePoints,
+    lineJumps,
   ])
 
   const overlayPath = useMemo(() => {
+    // When bridging, the arc'd path is the hit target too, so the selectable
+    // stroke matches exactly what's drawn.
+    if (lineJumps.length > 0) return currentPath
     return calculateOverlayPath(
       adjustedSourceCoordinates.sourceX,
       adjustedSourceCoordinates.sourceY,
@@ -120,7 +160,8 @@ export const useStraightPathEdge = ({
     adjustedTargetCoordinates.targetX,
     adjustedTargetCoordinates.targetY,
     type,
-    targetPosition,
+    currentPath,
+    lineJumps,
   ])
 
   useEffect(() => {
@@ -205,14 +246,7 @@ export const useStraightPathEdge = ({
     adjustedTargetCoordinates.targetY,
   ])
 
-  const sourcePoint = {
-    x: adjustedSourceCoordinates.sourceX,
-    y: adjustedSourceCoordinates.sourceY,
-  }
-  const targetPoint = {
-    x: adjustedTargetCoordinates.targetX,
-    y: adjustedTargetCoordinates.targetY,
-  }
+  const [sourcePoint, targetPoint] = basePoints
   const canvasLength = Math.hypot(
     targetPoint.x - sourcePoint.x,
     targetPoint.y - sourcePoint.y

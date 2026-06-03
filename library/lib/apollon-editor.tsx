@@ -22,11 +22,16 @@ import {
   AlignmentGuidesStore,
 } from "@/store/alignmentGuidesStore"
 import {
+  createEdgeGeometryStore,
+  EdgeGeometryStore,
+} from "@/store/edgeGeometryStore"
+import {
   DiagramStoreContext,
   MetadataStoreContext,
   PopoverStoreContext,
   AssessmentSelectionStoreContext,
   AlignmentGuidesStoreContext,
+  EdgeGeometryStoreContext,
 } from "./store/context"
 import { MessageType, SendBroadcastMessage, YjsSync } from "./sync/yjsSync"
 import * as Y from "yjs"
@@ -76,6 +81,7 @@ export class ApollonEditor {
   private readonly popoverStore: StoreApi<PopoverStore>
   private readonly assessmentSelectionStore: StoreApi<AssessmentSelectionStore>
   private readonly alignmentGuidesStore: StoreApi<AlignmentGuidesStore>
+  private readonly edgeGeometryStore: StoreApi<EdgeGeometryStore>
   private subscribers: Apollon.Subscribers = {}
   constructor(element: HTMLElement, options?: Apollon.ApollonOptions) {
     if (!(element instanceof HTMLElement)) {
@@ -91,6 +97,7 @@ export class ApollonEditor {
     this.popoverStore = createPopoverStore()
     this.assessmentSelectionStore = createAssessmentSelectionStore()
     this.alignmentGuidesStore = createAlignmentGuidesStore()
+    this.edgeGeometryStore = createEdgeGeometryStore()
     this.syncManager = new YjsSync(
       this.ydoc,
       this.diagramStore,
@@ -179,22 +186,26 @@ export class ApollonEditor {
               <AlignmentGuidesStoreContext.Provider
                 value={this.alignmentGuidesStore}
               >
-                <AppWithProvider
-                  onReactFlowInit={this.setReactFlowInstance.bind(this)}
-                  collaboration={collaboration}
-                  awareness={{
-                    setLocalAwarenessCursor:
-                      this.syncManager.setLocalAwarenessCursor,
-                    setLocalAwarenessSelectedElement:
-                      this.syncManager.setLocalAwarenessSelectedElement,
-                    subscribeToAwarenessChanges:
-                      this.syncManager.subscribeToAwarenessChanges,
-                    subscribeToCollaboratorChanges:
-                      this.syncManager.subscribeToCollaboratorChanges,
-                    getLocalAwarenessClientId:
-                      this.syncManager.getLocalAwarenessClientId,
-                  }}
-                />
+                <EdgeGeometryStoreContext.Provider
+                  value={this.edgeGeometryStore}
+                >
+                  <AppWithProvider
+                    onReactFlowInit={this.setReactFlowInstance.bind(this)}
+                    collaboration={collaboration}
+                    awareness={{
+                      setLocalAwarenessCursor:
+                        this.syncManager.setLocalAwarenessCursor,
+                      setLocalAwarenessSelectedElement:
+                        this.syncManager.setLocalAwarenessSelectedElement,
+                      subscribeToAwarenessChanges:
+                        this.syncManager.subscribeToAwarenessChanges,
+                      subscribeToCollaboratorChanges:
+                        this.syncManager.subscribeToCollaboratorChanges,
+                      getLocalAwarenessClientId:
+                        this.syncManager.getLocalAwarenessClientId,
+                    }}
+                  />
+                </EdgeGeometryStoreContext.Provider>
               </AlignmentGuidesStoreContext.Provider>
             </AssessmentSelectionStoreContext.Provider>
           </PopoverStoreContext.Provider>
@@ -320,6 +331,7 @@ export class ApollonEditor {
     const popoverStore = createPopoverStore()
     const assessmentSelectionStore = createAssessmentSelectionStore()
     const alignmentGuidesStore = createAlignmentGuidesStore()
+    const edgeGeometryStore = createEdgeGeometryStore()
     const diagramId = Math.random().toString(36).substring(2, 15)
 
     let setReactFlowInstance: (instance: ReactFlowInstance) => void = () => {}
@@ -347,11 +359,13 @@ export class ApollonEditor {
               <AlignmentGuidesStoreContext.Provider
                 value={alignmentGuidesStore}
               >
-                <AppWithProvider
-                  onReactFlowInit={setReactFlowInstance}
-                  collaboration={disabledCollaboration}
-                  awareness={noopCollaborationAwareness}
-                />
+                <EdgeGeometryStoreContext.Provider value={edgeGeometryStore}>
+                  <AppWithProvider
+                    onReactFlowInit={setReactFlowInstance}
+                    collaboration={disabledCollaboration}
+                    awareness={noopCollaborationAwareness}
+                  />
+                </EdgeGeometryStoreContext.Provider>
               </AlignmentGuidesStoreContext.Provider>
             </AssessmentSelectionStoreContext.Provider>
           </PopoverStoreContext.Provider>

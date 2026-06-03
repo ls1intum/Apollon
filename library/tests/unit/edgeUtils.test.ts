@@ -3,10 +3,14 @@ import type { UMLDiagramType } from "@/types/DiagramType"
 import {
   adjustSourceCoordinates,
   adjustTargetCoordinates,
+  buildPathWithLineJumps,
+  computeLineJumpsForEdge,
   calculateDynamicEdgeLabels,
   calculateOverlayPath,
   calculateStraightPath,
+  findLineJumpIntersections,
   findClosestHandle,
+  getAxisAlignedSegments,
   getConnectionLineType,
   getDefaultEdgeType,
   getDistributedHandleOffsets,
@@ -1552,6 +1556,205 @@ describe("getMarkerSegmentPath", () => {
 })
 
 // ---------------------------------------------------------------------------
+// getAxisAlignedSegments
+// ---------------------------------------------------------------------------
+describe("getAxisAlignedSegments", () => {
+  it("returns horizontal and vertical segments with correct metadata", () => {
+    const points = [
+      { x: 0, y: 0 },
+      { x: 100, y: 0 },
+      { x: 100, y: 50 },
+      { x: 80, y: 80 },
+    ]
+
+    const result = getAxisAlignedSegments(points)
+    expect(result).toHaveLength(2)
+    expect(result[0]).toEqual({
+      index: 0,
+      start: { x: 0, y: 0 },
+      end: { x: 100, y: 0 },
+      orientation: "horizontal",
+      fixed: 0,
+      min: 0,
+      max: 100,
+    })
+    expect(result[1]).toEqual({
+      index: 1,
+      start: { x: 100, y: 0 },
+      end: { x: 100, y: 50 },
+      orientation: "vertical",
+      fixed: 100,
+      min: 0,
+      max: 50,
+    })
+  })
+
+  it("uses tolerance to classify nearly aligned points", () => {
+    const points = [
+      { x: 10, y: 10 },
+      { x: 10.5, y: 70 },
+    ]
+
+    const result = getAxisAlignedSegments(points, 1)
+    expect(result).toHaveLength(1)
+    expect(result[0].orientation).toBe("vertical")
+    expect(result[0].fixed).toBe(10)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// findLineJumpIntersections
+// ---------------------------------------------------------------------------
+describe("findLineJumpIntersections", () => {
+  it("returns intersection hits within margin boundaries", () => {
+    const base = getAxisAlignedSegments([
+      { x: 0, y: 0 },
+      { x: 100, y: 0 },
+    ])
+    const other = getAxisAlignedSegments([
+      { x: 12, y: -20 },
+      { x: 12, y: 20 },
+    ])
+
+    const hits = findLineJumpIntersections(base, other, 20, "horizontal")
+    expect(hits).toEqual([
+      {
+        segmentIndex: 0,
+        point: { x: 12, y: 0 },
+        orientation: "horizontal",
+      },
+    ])
+  })
+
+  it("skips hits too close to the segment ends", () => {
+    const base = getAxisAlignedSegments([
+      { x: 0, y: 0 },
+      { x: 100, y: 0 },
+    ])
+    const other = getAxisAlignedSegments([
+      { x: 10, y: -20 },
+      { x: 10, y: 20 },
+    ])
+
+    const hits = findLineJumpIntersections(base, other, 20, "horizontal")
+    expect(hits).toEqual([])
+  })
+
+  it("handles vertical base segments when orientation allows", () => {
+    const base = getAxisAlignedSegments([
+      { x: 0, y: 0 },
+      { x: 0, y: 100 },
+    ])
+    const other = getAxisAlignedSegments([
+      { x: -10, y: 50 },
+      { x: 10, y: 50 },
+    ])
+
+    const hits = findLineJumpIntersections(base, other, 20, "any")
+    expect(hits).toEqual([
+      {
+        segmentIndex: 0,
+        point: { x: 0, y: 50 },
+        orientation: "vertical",
+      },
+    ])
+  })
+
+  it("respects preferred orientation filtering", () => {
+    const base = getAxisAlignedSegments([
+      { x: 0, y: 0 },
+      { x: 0, y: 100 },
+    ])
+    const other = getAxisAlignedSegments([
+      { x: -10, y: 50 },
+      { x: 10, y: 50 },
+    ])
+
+    const hits = findLineJumpIntersections(base, other, 20, "horizontal")
+    expect(hits).toEqual([])
+  })
+})
+
+// ---------------------------------------------------------------------------
+// buildPathWithLineJumps
+// ---------------------------------------------------------------------------
+describe("buildPathWithLineJumps", () => {
+  it("builds a path with ordered jump segments on a horizontal line", () => {
+    const points = [
+      { x: 0, y: 0 },
+      { x: 100, y: 0 },
+    ]
+    const path = buildPathWithLineJumps(
+      points,
+      [
+        {
+          segmentIndex: 0,
+          point: { x: 30, y: 0 },
+          orientation: "horizontal",
+        },
+        {
+          segmentIndex: 0,
+          point: { x: 70, y: 0 },
+          orientation: "horizontal",
+        },
+      ],
+      10,
+      20
+    )
+
+    expect(path).toBe("M 0 0 L 20 0 Q 30 -10 40 0 L 60 0 Q 70 -10 80 0 L 100 0")
+  })
+
+  it("skips jumps that are too close together", () => {
+    const points = [
+      { x: 0, y: 0 },
+      { x: 100, y: 0 },
+    ]
+    const path = buildPathWithLineJumps(
+      points,
+      [
+        {
+          segmentIndex: 0,
+          point: { x: 30, y: 0 },
+          orientation: "horizontal",
+        },
+        {
+          segmentIndex: 0,
+          point: { x: 35, y: 0 },
+          orientation: "horizontal",
+        },
+      ],
+      10,
+      20
+    )
+
+    expect(path).toContain("Q 30 -10 40 0")
+    expect(path).not.toContain("35")
+  })
+
+  it("builds vertical jump paths with rightward control points", () => {
+    const points = [
+      { x: 0, y: 0 },
+      { x: 0, y: 100 },
+    ]
+    const path = buildPathWithLineJumps(
+      points,
+      [
+        {
+          segmentIndex: 0,
+          point: { x: 0, y: 50 },
+          orientation: "vertical",
+        },
+      ],
+      10,
+      20
+    )
+
+    expect(path).toBe("M 0 0 L 0 40 Q 10 50 0 60 L 0 100")
+  })
+})
+
+// ---------------------------------------------------------------------------
 // getDefaultEdgeType
 // ---------------------------------------------------------------------------
 describe("getDefaultEdgeType", () => {
@@ -1727,5 +1930,169 @@ describe("getConnectionLineType", () => {
 
   it.each(stepDiagrams)("returns Step for %s", (diagramType) => {
     expect(getConnectionLineType(diagramType)).toBe(ConnectionLineType.Step)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// findLineJumpIntersections — crossing-only semantics (T-junctions, corners)
+// ---------------------------------------------------------------------------
+describe("findLineJumpIntersections (crossing-only)", () => {
+  const horizontal = (y: number, x0: number, x1: number) =>
+    getAxisAlignedSegments([
+      { x: x0, y },
+      { x: x1, y },
+    ])
+
+  it("bridges a genuine interior crossing", () => {
+    const base = horizontal(100, 0, 200)
+    const other = getAxisAlignedSegments([
+      { x: 100, y: 40 },
+      { x: 100, y: 160 },
+    ])
+    const hits = findLineJumpIntersections(base, other, 16, "horizontal")
+    expect(hits).toEqual([
+      { segmentIndex: 0, point: { x: 100, y: 100 }, orientation: "horizontal" },
+    ])
+  })
+
+  it("does NOT bridge a T-junction (other segment ends on the base line)", () => {
+    const base = horizontal(100, 0, 200)
+    // Vertical edge whose TOP endpoint sits exactly on the base line: the two
+    // lines meet, they don't cross — a bridge here would falsely read as
+    // "no connection".
+    const other = getAxisAlignedSegments([
+      { x: 120, y: 100 },
+      { x: 120, y: 300 },
+    ])
+    expect(findLineJumpIntersections(base, other, 16, "horizontal")).toEqual([])
+  })
+
+  it("does NOT bridge at the corner (bend) of an orthogonal other edge", () => {
+    // Base runs along y=300; the other edge is an L whose corner is at
+    // (120,300). The base meets the vertical arm exactly at that corner.
+    const base = horizontal(300, 0, 400)
+    const other = getAxisAlignedSegments([
+      { x: 120, y: 100 },
+      { x: 120, y: 300 },
+      { x: 300, y: 300 },
+    ])
+    expect(findLineJumpIntersections(base, other, 16, "horizontal")).toEqual([])
+  })
+
+  it("does NOT bridge near the base segment's own corner", () => {
+    // Crossing at x=6 is within margin (jumpWidth/2+2 = 10) of the base start.
+    const base = horizontal(100, 0, 200)
+    const other = getAxisAlignedSegments([
+      { x: 6, y: 40 },
+      { x: 6, y: 160 },
+    ])
+    expect(findLineJumpIntersections(base, other, 16, "horizontal")).toEqual([])
+  })
+})
+
+// ---------------------------------------------------------------------------
+// computeLineJumpsForEdge — horizontal-hops-vertical, layout-stable
+// ---------------------------------------------------------------------------
+describe("computeLineJumpsForEdge", () => {
+  const H = [
+    { x: 0, y: 100 },
+    { x: 200, y: 100 },
+  ]
+  const V = [
+    { x: 100, y: 0 },
+    { x: 100, y: 200 },
+  ]
+  const geometry = () =>
+    new Map([
+      ["h", H],
+      ["v", V],
+    ])
+
+  it("draws the bridge on the horizontal edge of an H×V crossing", () => {
+    const hits = computeLineJumpsForEdge(
+      "h",
+      H,
+      [{ id: "h" }, { id: "v" }],
+      geometry()
+    )
+    expect(hits).toEqual([
+      { segmentIndex: 0, point: { x: 100, y: 100 }, orientation: "horizontal" },
+    ])
+  })
+
+  it("draws NOTHING on the vertical edge of the same crossing", () => {
+    expect(
+      computeLineJumpsForEdge("v", V, [{ id: "h" }, { id: "v" }], geometry())
+    ).toEqual([])
+  })
+
+  it("is stable: edge array order does not change who hops", () => {
+    const reversed = computeLineJumpsForEdge(
+      "h",
+      H,
+      [{ id: "v" }, { id: "h" }],
+      geometry()
+    )
+    expect(reversed).toHaveLength(1)
+    expect(reversed[0].point).toEqual({ x: 100, y: 100 })
+  })
+
+  it("never bridges a diagonal edge", () => {
+    const diagonal = [
+      { x: 0, y: 0 },
+      { x: 200, y: 200 },
+    ]
+    const map = new Map([
+      ["d", diagonal],
+      ["v", V],
+    ])
+    expect(
+      computeLineJumpsForEdge("d", diagonal, [{ id: "d" }, { id: "v" }], map)
+    ).toEqual([])
+  })
+
+  it("does not bridge two overlapping collinear edges (no crossing)", () => {
+    const h2 = [
+      { x: 50, y: 100 },
+      { x: 250, y: 100 },
+    ]
+    const map = new Map([
+      ["h", H],
+      ["h2", h2],
+    ])
+    expect(
+      computeLineJumpsForEdge("h", H, [{ id: "h" }, { id: "h2" }], map)
+    ).toEqual([])
+  })
+
+  it("bridges every vertical crossing along a horizontal edge", () => {
+    const v1 = [
+      { x: 60, y: 0 },
+      { x: 60, y: 200 },
+    ]
+    const v2 = [
+      { x: 140, y: 0 },
+      { x: 140, y: 200 },
+    ]
+    const map = new Map([
+      ["h", H],
+      ["v1", v1],
+      ["v2", v2],
+    ])
+    const hits = computeLineJumpsForEdge(
+      "h",
+      H,
+      [{ id: "h" }, { id: "v1" }, { id: "v2" }],
+      map
+    )
+    expect(hits.map((hit) => hit.point.x).sort((a, b) => a - b)).toEqual([
+      60, 140,
+    ])
+  })
+
+  it("excludes the edge itself", () => {
+    expect(
+      computeLineJumpsForEdge("h", H, [{ id: "h" }], new Map([["h", H]]))
+    ).toEqual([])
   })
 })

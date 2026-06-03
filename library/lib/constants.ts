@@ -166,6 +166,10 @@ export const EDGES = Object.freeze({
   STEP_BORDER_RADIUS: 0,
   /** Width of the invisible stroke used for edge selection/highlighting */
   EDGE_HIGHLIGHT_STROKE_WIDTH: 15,
+  /** Height of the line-jump bridge used when edges cross */
+  EDGE_LINE_JUMP_HEIGHT: 10,
+  /** Length of the line-jump bridge along the crossed segment */
+  EDGE_LINE_JUMP_WIDTH: 16,
   /** Stub length locked to node, matches getSmoothStepPath offset */
   STUB_LENGTH: 30,
   /** Minimum total edge length (screen px) for the endpoint reconnect handles
