@@ -19,7 +19,7 @@
 ### Checklist
 
 - [ ] Linked to a related issue (if applicable)
-- [ ] Added a changeset (`pnpm changeset`), or this PR doesn't touch a Changesets-tracked package (`@tumaet/apollon`, `@tumaet/webapp`, `@tumaet/server`)
+- [ ] Added a changeset (`pnpm changeset`, [how](https://ls1intum.github.io/Apollon/contributor/development/release-notes/)), or this PR doesn't touch a Changesets-tracked package (`@tumaet/apollon`, `@tumaet/webapp`, `@tumaet/server`)
 - [ ] Tests added or updated
 - [ ] Documentation updated (if applicable)
 - [ ] Screenshots or screencasts attached (if a UI change)

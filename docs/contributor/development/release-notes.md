@@ -14,13 +14,19 @@ Three release lines carry changesets: `@tumaet/apollon` on npm, and `@tumaet/web
 Changesets are the per-PR convention now; the pipeline that consumes them (`changeset version` → `CHANGELOG.md` → release) lands in a follow-up. Until then, write the changeset so the backlog is ready — and note that the existing `CHANGELOG.md` files are hand-maintained, since the tool does not yet regenerate them. See [Releases](/contributor/deployment/npm-publishing).
 :::
 
+## When do you need one?
+
+Add a changeset whenever a **user, embedder, or operator would notice** a change to `@tumaet/apollon`, `@tumaet/webapp`, or `@tumaet/server` — a new feature, a bug fix, a changed API, or a new deployment step.
+
+Skip it when nothing downstream is affected: docs, CI, tests, refactors, and formatting — plus anything touching only the VS Code extension or the docs site (both excluded above). When unsure, add one; an extra changelog line beats a silent gap. The advisory **Verify changesets** check on each PR reminds you.
+
 ## What you write per PR
 
 ```sh
 pnpm changeset
 ```
 
-Pick the packages and bump type when prompted; **the summary you type becomes the changelog entry, verbatim.** Edit `.changeset/<name>.md` afterwards and commit it with your PR. Skip on docs-only, CI-only, or pure-refactor PRs.
+Pick the packages and bump type when prompted; **the summary you type becomes the changelog entry, verbatim.** Edit `.changeset/<name>.md` afterwards and commit it with your PR.
 
 ## Writing the summary
 
