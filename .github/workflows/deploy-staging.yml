@@ -42,7 +42,12 @@ concurrency:
   group: deploy-staging
   cancel-in-progress: false
 
-permissions: {}
+# The called deploy-docker-compose.yml jobs request contents:read + packages:read
+# (GHCR image existence check). A called reusable workflow cannot request more
+# than its caller grants, so an empty `{}` here fails the run at startup.
+permissions:
+  contents: read
+  packages: read
 
 jobs:
   deploy-db:
