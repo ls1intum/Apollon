@@ -72,7 +72,7 @@ jobs:
             dockerfile: ./standalone/server/Dockerfile
             image: ls1intum/apollon/server
             context: .
-    uses: ls1intum/.github/.github/workflows/build-and-push-docker-image.yml@5f645f96873d8b8b3a9b2e52d06626c71377f7ac # main as of 2026-05-28
+    uses: ls1intum/.github/.github/workflows/build-and-push-docker-image.yml@main
     with:
       image-name: ${{ matrix.image }}
       docker-file: ${{ matrix.dockerfile }}
