@@ -604,9 +604,14 @@ function ViewportFollow({
       if (!viewport || sameViewport(viewport, lastApplied.current)) return
 
       lastApplied.current = viewport
+      // The flag must always be cleared: a stuck `true` would silently disable
+      // take-back and broadcasting for the rest of the session.
       applyingRemote.current = true
-      reactFlow.setViewport(viewport, { duration: 0 })
-      applyingRemote.current = false
+      try {
+        reactFlow.setViewport(viewport, { duration: 0 })
+      } finally {
+        applyingRemote.current = false
+      }
     })
 
     return () => {
