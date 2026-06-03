@@ -131,7 +131,7 @@ jobs:
           # plus an install footer. Fall back to GitHub's --generate-notes only
           # when there is no changelog section for this version (e.g. a release
           # that carried no changeset).
-          CHANGELOG=$(node scripts/extract-changelog.mjs library "$VERSION" || true)
+          CHANGELOG=$(node scripts/extract-changelog.mjs "$VERSION" library || true)
           {
             if [ -n "$CHANGELOG" ]; then printf '%s\n\n' "$CHANGELOG"; fi
             cat <<EOF
