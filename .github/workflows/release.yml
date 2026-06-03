@@ -1,0 +1,76 @@
+name: Release
+
+# Canonical Changesets pipeline. On every push to main this opens (or updates)
+# a "Version Packages" PR that runs `changeset version` — consuming the
+# .changeset/*.md files, bumping @tumaet/apollon and the paired
+# @tumaet/webapp + @tumaet/server from the bump types declared in those files
+# (the library bump cascades a patch to the standalone packages via their
+# workspace:* dependency, per .changeset/config.json#updateInternalDependencies),
+# and regenerating every CHANGELOG.md. Merging that PR is the single manual
+# release step: the version bumps it lands then trigger the existing
+# release-library.yml / release-standalone.yml publish jobs.
+#
+# Version-only mode: there is no `publish` input, so this workflow never
+# publishes. The bespoke release-*.yml workflows own publishing (npm OIDC +
+# provenance, GHCR retag + cosign). The VS Code extension is excluded in
+# .changeset/config.json#ignore and keeps its own manual Version Bump dispatch.
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  version:
+    name: Version Packages PR
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write # commit the version bump to the PR branch
+      pull-requests: write # open / update the Version Packages PR
+    steps:
+      # Optional GitHub App token. When the RELEASE_BOT_APP_ID repository
+      # variable is set, the Version Packages PR is opened by the app so its
+      # push events trigger the normal PR checks (lint, build, e2e). Without it
+      # the PR is opened with GITHUB_TOKEN, which by design does not trigger
+      # other workflows — the PR then carries no CI, acceptable for a
+      # version-and-changelog-only change. See npm-publishing.md for setup.
+      - name: Generate GitHub App token
+        id: app-token
+        if: ${{ vars.RELEASE_BOT_APP_ID != '' }}
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ vars.RELEASE_BOT_APP_ID }}
+          private-key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@ac6db6d3c1f721f886538a378a2d73e85697340a # v6.0.8
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Create or update the Version Packages PR
+        uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
+        with:
+          # changeset:version also syncs the pinned CDN URLs and regenerates the
+          # lockfile so the PR is mergeable as-is. No `publish` input — see header.
+          version: pnpm run changeset:version
+          title: "chore: version packages"
+          commit: "chore: version packages"
+          setupGitUser: true
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
