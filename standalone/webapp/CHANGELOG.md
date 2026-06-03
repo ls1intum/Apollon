@@ -14,7 +14,7 @@
 
 ### Patch Changes
 
-- Updated dependencies [[`6c5dc2a`](https://github.com/ls1intum/Apollon/commit/6c5dc2acf927a8cddccbc1eed943fdb77dcf9b06), [`6c5dc2a`](https://github.com/ls1intum/Apollon/commit/6c5dc2acf927a8cddccbc1eed943fdb77dcf9b06), [`6c5dc2a`](https://github.com/ls1intum/Apollon/commit/6c5dc2acf927a8cddccbc1eed943fdb77dcf9b06), [`6c5dc2a`](https://github.com/ls1intum/Apollon/commit/6c5dc2acf927a8cddccbc1eed943fdb77dcf9b06), [`6c5dc2a`](https://github.com/ls1intum/Apollon/commit/6c5dc2acf927a8cddccbc1eed943fdb77dcf9b06), [`6c5dc2a`](https://github.com/ls1intum/Apollon/commit/6c5dc2acf927a8cddccbc1eed943fdb77dcf9b06), [`6c5dc2a`](https://github.com/ls1intum/Apollon/commit/6c5dc2acf927a8cddccbc1eed943fdb77dcf9b06)]:
+- Updated dependencies:
   - @tumaet/apollon@4.5.0
 
 ## 4.4.1
