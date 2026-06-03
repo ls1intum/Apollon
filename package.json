@@ -42,7 +42,7 @@
     "sync:version": "node scripts/sync-library-version.mjs",
     "sync:version:check": "node scripts/sync-library-version.mjs --check",
     "changeset": "changeset",
-    "changeset:version": "changeset version && node scripts/sync-library-version.mjs && pnpm install --lockfile-only --ignore-scripts",
+    "changeset:version": "node scripts/cascade-standalone-bump.mjs && changeset version && node scripts/sync-library-version.mjs && pnpm install --lockfile-only --ignore-scripts",
     "prepare": "husky || true",
     "capacitor:add:android": "pnpm --filter @tumaet/webapp run capacitor:add:android",
     "capacitor:add:ios": "pnpm --filter @tumaet/webapp run capacitor:add:ios",
