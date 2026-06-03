@@ -19,7 +19,11 @@ const sidebars: SidebarsConfig = {
       type: "category",
       label: "Release pipeline",
       collapsed: false,
-      items: ["deployment/github-actions", "deployment/npm-publishing"],
+      items: [
+        "development/release-notes",
+        "deployment/github-actions",
+        "deployment/npm-publishing",
+      ],
     },
     { type: "doc", id: "troubleshooting", label: "Troubleshooting" },
   ],

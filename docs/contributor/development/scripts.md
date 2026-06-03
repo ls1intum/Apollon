@@ -123,6 +123,12 @@ release by dispatching the **Version Bump** workflow and merging the PR it
 opens; see [npm publishing](/contributor/deployment/npm-publishing).
 `pnpm package:vscode` builds a local `.vsix` for the VS Code extension.
 
+| Script           | Does                                           |
+| ---------------- | ---------------------------------------------- |
+| `pnpm changeset` | Record a changelog entry for a user-visible PR |
+
+Writing rules: [Release notes](/contributor/development/release-notes).
+
 ## Before opening a PR
 
 The pull-request checklist (lint, format check, build, test) lives in the
