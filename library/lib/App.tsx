@@ -3,12 +3,14 @@ import {
   ReactFlowInstance,
   ConnectionMode,
   ReactFlow,
+  type Edge,
 } from "@xyflow/react"
-import { useCallback, useRef } from "react"
+import { type MouseEvent as ReactMouseEvent, useCallback } from "react"
 import {
   CustomBackground,
   CustomControls,
   CustomMiniMap,
+  ReconnectConnectionLine,
   Sidebar,
   AssessmentSelectionDebug,
   ScrollOverlay,
@@ -33,15 +35,36 @@ import { useDiagramModifiable } from "./hooks/useDiagramModifiable"
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts"
 import { usePaneClicked } from "./hooks/usePaneClicked"
 import { ApollonMode } from "./typings"
-import { getConnectionLineType } from "./utils/edgeUtils"
+import {
+  getConnectionLineType,
+  resolveReconnectPreviewBasePoints,
+} from "./utils/edgeUtils"
+import { IPoint } from "./edges/Connection"
+import {
+  CollaborationLayer,
+  type CollaborationAwarenessApi,
+  type CollaborationLayerOptions,
+} from "@/components/collaboration/CollaborationLayer"
 
 interface AppProps {
   onReactFlowInit: (instance: ReactFlowInstance) => void
-  onViewportChange?: (viewport: { x: number; y: number; zoom: number }) => void
+  collaboration: CollaborationLayerOptions
+  awareness: CollaborationAwarenessApi
 }
 const proOptions = { hideAttribution: true }
+const isPointArray = (value: unknown): value is IPoint[] =>
+  Array.isArray(value) &&
+  value.every(
+    (point) =>
+      typeof point === "object" &&
+      point !== null &&
+      "x" in point &&
+      "y" in point &&
+      typeof point.x === "number" &&
+      typeof point.y === "number"
+  )
 
-function App({ onReactFlowInit, onViewportChange }: AppProps) {
+function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
   useKeyboardShortcuts()
 
   const { nodes, onNodesChange, edges, onEdgesChange, diagramId } =
@@ -55,16 +78,27 @@ function App({ onReactFlowInit, onViewportChange }: AppProps) {
       }))
     )
 
-  const { mode, diagramType, readonly, scrollLock, scrollEnabled } =
-    useMetadataStore(
-      useShallow((state) => ({
-        mode: state.mode,
-        diagramType: state.diagramType,
-        readonly: state.readonly,
-        scrollLock: state.scrollLock,
-        scrollEnabled: state.scrollEnabled,
-      }))
-    )
+  const {
+    mode,
+    diagramType,
+    readonly,
+    scrollLock,
+    scrollEnabled,
+    connectionGuidanceActive,
+    startReconnectPreview,
+    stopReconnectPreview,
+  } = useMetadataStore(
+    useShallow((state) => ({
+      mode: state.mode,
+      diagramType: state.diagramType,
+      readonly: state.readonly,
+      scrollLock: state.scrollLock,
+      scrollEnabled: state.scrollEnabled,
+      connectionGuidanceActive: state.connectionGuidanceActive,
+      startReconnectPreview: state.startReconnectPreview,
+      stopReconnectPreview: state.stopReconnectPreview,
+    }))
+  )
 
   const isDiagramModifiable = useDiagramModifiable()
 
@@ -82,42 +116,34 @@ function App({ onReactFlowInit, onViewportChange }: AppProps) {
   const handleReactFlowInit = useCallback(
     (instance: ReactFlowInstance) => {
       onReactFlowInit(instance)
-      if (onViewportChange) {
-        onViewportChange(instance.getViewport())
-      }
     },
-    [onReactFlowInit, onViewportChange]
+    [onReactFlowInit]
   )
 
-  const viewportRafRef = useRef(0)
-  const pendingViewportRef = useRef<{
-    x: number
-    y: number
-    zoom: number
-  } | null>(null)
+  const handleReconnectStart = useCallback(
+    (_event: ReactMouseEvent, edge: Edge, handleType: "source" | "target") => {
+      const storedPoints = isPointArray(edge.data?.points)
+        ? edge.data.points
+        : undefined
 
-  const flushViewport = useCallback(() => {
-    if (pendingViewportRef.current && onViewportChange) {
-      onViewportChange(pendingViewportRef.current)
-      pendingViewportRef.current = null
-    }
-    viewportRafRef.current = 0
-  }, [onViewportChange])
-
-  const handleViewportMove = useCallback(
-    (_event: unknown, viewport: { x: number; y: number; zoom: number }) => {
-      if (!onViewportChange) return
-      pendingViewportRef.current = viewport
-      if (!viewportRafRef.current) {
-        viewportRafRef.current = window.requestAnimationFrame(flushViewport)
-      }
+      startReconnectPreview(
+        edge.id,
+        handleType,
+        resolveReconnectPreviewBasePoints(storedPoints, undefined, [])
+      )
     },
-    [flushViewport, onViewportChange]
+    [startReconnectPreview]
   )
+
+  const handleReconnectEnd = useCallback(() => {
+    stopReconnectPreview()
+  }, [stopReconnectPreview])
 
   return (
     <div
-      className={`apollon-editor ${readonly ? "apollon-editor--readonly" : ""}`}
+      className={`apollon-editor ${readonly ? "apollon-editor--readonly" : ""} ${
+        connectionGuidanceActive ? "apollon-editor--connection-guidance" : ""
+      }`}
       style={{
         display: "flex",
         height: "100%",
@@ -146,8 +172,15 @@ function App({ onReactFlowInit, onViewportChange }: AppProps) {
         onNodeDrag={onNodeDrag}
         onNodeDragStop={onNodeDragStop}
         onReconnect={onReconnect}
+        onReconnectStart={handleReconnectStart}
+        onReconnectEnd={handleReconnectEnd}
         connectionLineType={connectionLineType}
+        connectionLineComponent={ReconnectConnectionLine}
         connectionMode={ConnectionMode.Loose}
+        // Lift the selected edge (and its bend/endpoint handles) above other
+        // edges so an overlapping edge's interaction ribbon can't steal the
+        // pointer from a visible handle.
+        elevateEdgesOnSelect
         onInit={(instance) => {
           instance.fitView({ maxZoom: 1.0, minZoom: 1.0 })
           handleReactFlowInit(instance)
@@ -160,7 +193,6 @@ function App({ onReactFlowInit, onViewportChange }: AppProps) {
         onEdgeDoubleClick={onEdgeDoubleClick}
         onBeforeDelete={onBeforeDelete}
         onPaneClick={onPaneClicked}
-        onMove={handleViewportMove}
         proOptions={proOptions}
         edgesReconnectable={isDiagramModifiable}
         nodesConnectable={isDiagramModifiable}
@@ -175,6 +207,7 @@ function App({ onReactFlowInit, onViewportChange }: AppProps) {
         <AssessmentSelectionDebug />
       </ReactFlow>
       <ScrollOverlay />
+      <CollaborationLayer options={collaboration} awareness={awareness} />
     </div>
   )
 }

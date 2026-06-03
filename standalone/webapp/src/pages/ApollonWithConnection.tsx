@@ -3,12 +3,12 @@ import { useEditorContext, useModalContext } from "@/contexts"
 import {
   ApollonEditor,
   ApollonMode,
+  collabColorFromName,
   importDiagram,
+  randomCollabName,
   type ApollonOptions,
-  type CollaboratorInfo,
-  type CollaborationViewport,
   type UMLModel,
-} from "@tumaet/apollon"
+} from "@tumaet/apollon/react"
 import { useNavigate, useParams, useSearchParams } from "react-router"
 import { toast } from "react-toastify"
 import { Box } from "@mui/material"
@@ -28,10 +28,6 @@ import { useElementWidth } from "@/hooks/useElementWidth"
 import { useFlushOnUnload } from "@/hooks/useFlushOnUnload"
 import { useVersionShortcut } from "@/hooks/useVersionShortcut"
 import { log } from "@/logger"
-import { collabColorFromName, randomCollabName } from "@/utils/collaboration"
-import { CollaboratorCursors } from "@/components/CollaboratorCursors"
-import { CollaboratorPresenceBar } from "@/components/CollaboratorPresenceBar"
-import { CollaboratorSelectionHighlights } from "@/components/CollaboratorSelectionHighlights"
 
 export const ApollonWithConnection: React.FC = () => {
   const { diagramId } = useParams()
@@ -67,59 +63,8 @@ export const ApollonWithConnection: React.FC = () => {
     name: string
     color: string
   } | null>(null)
-  const [followTarget, setFollowTarget] = useState<{
-    userId: string
-    clientId: number
-  } | null>(null)
-  const [followedByCount, setFollowedByCount] = useState(0)
-  const lastFollowViewportRef = useRef<CollaborationViewport | null>(null)
   const viewType = searchParams.get("view")
   const previewFromUrl = searchParams.get("version")
-  const isCollaborationActive =
-    viewType === DiagramView.COLLABORATE && !!collaborationUser
-
-  const handleFollowToggle = useCallback(
-    (collaborator: CollaboratorInfo) => {
-      if (!editor) return
-      if (collaborator.isLocal) return
-
-      const localClientId = editor.getLocalAwarenessClientId()
-      const targetClientId = collaborator.clientIds.find(
-        (id) => id !== localClientId
-      )
-      if (typeof targetClientId !== "number") {
-        return
-      }
-
-      const isAlreadyFollowing = followTarget?.clientId === targetClientId
-      if (isAlreadyFollowing) {
-        setFollowTarget(null)
-        editor.setLocalAwarenessState({ followingClientId: null })
-        lastFollowViewportRef.current = null
-        return
-      }
-
-      setFollowTarget({ userId: collaborator.id, clientId: targetClientId })
-      editor.setLocalAwarenessState({ followingClientId: targetClientId })
-      lastFollowViewportRef.current = null
-      toast.info(`You are now following ${collaborator.name}`, {
-        position: "top-center",
-        autoClose: 1500,
-        hideProgressBar: true,
-        pauseOnHover: false,
-        style: { marginTop: "40vh" },
-      })
-    },
-    [editor, followTarget]
-  )
-
-  const stopFollowing = useCallback(() => {
-    if (!editor) return
-    if (!followTarget) return
-    setFollowTarget(null)
-    editor.setLocalAwarenessState({ followingClientId: null })
-    lastFollowViewportRef.current = null
-  }, [editor, followTarget])
 
   const preview = useVersionStore((s) => s.preview)
   const exitPreview = useVersionStore((s) => s.exitPreview)
@@ -136,14 +81,22 @@ export const ApollonWithConnection: React.FC = () => {
   })
 
   useEffect(() => {
+    // The component instance survives diagramId / viewType / user
+    // changes (same `/:diagramId` route), so state and refs must be
+    // reset explicitly per lifecycle.
+    setIsLoading(true)
+    diagramIsUpdated.current = false
+    lastObservedHeadRev.current = undefined
+    restoredDuringPreviewRef.current = false
+    hasPromptedRef.current = false
+
+    const abort = new AbortController()
     let instance: ApollonEditor | null = null
-    let cancelled = false
-    let cleanupCursorTracking: (() => void) | null = null
-    let selectionSubscriptionId: number | null = null
     let modelChangeSubscriptionId: number | null = null
 
     const initialize = async () => {
-      if (!containerRef.current || !diagramId) return
+      const container = containerRef.current
+      if (!container || !diagramId) return
 
       try {
         const validViews = Object.values(DiagramView)
@@ -179,8 +132,10 @@ export const ApollonWithConnection: React.FC = () => {
           return
         }
 
-        const diagram = await DiagramApiClient.fetchDiagram(diagramId)
-        if (cancelled) return
+        const diagram = await DiagramApiClient.fetchDiagram(diagramId, {
+          signal: abort.signal,
+        })
+        if (abort.signal.aborted) return
         log.debug("Fetched diagram", {
           diagramId,
           nodeCount: diagram.nodes?.length ?? 0,
@@ -190,6 +145,17 @@ export const ApollonWithConnection: React.FC = () => {
         const editorOptions: ApollonOptions = {
           model: diagram,
           collaborationEnabled: true,
+          collaboration:
+            isCollaborationView && collaborationUser
+              ? {
+                  enabled: true,
+                  user: collaborationUser,
+                  showPresence: true,
+                  showCursors: true,
+                  showSelectionHighlights: true,
+                  showFollow: true,
+                }
+              : undefined,
         }
 
         if (viewType === DiagramView.GIVE_FEEDBACK) {
@@ -203,17 +169,10 @@ export const ApollonWithConnection: React.FC = () => {
           editorOptions.readonly = false
         }
 
-        instance = new ApollonEditor(containerRef.current!, editorOptions)
+        instance = new ApollonEditor(container, editorOptions)
         editorRef.current = instance
         setEditor(instance)
         setIsLoading(false)
-
-        if (isCollaborationView && collaborationUser) {
-          instance.setLocalAwarenessState({
-            user: collaborationUser,
-            selectedElementId: null,
-          })
-        }
 
         if (
           [
@@ -236,16 +195,23 @@ export const ApollonWithConnection: React.FC = () => {
                   event.restoredFromVersionId
               if (!isLocalRestore) {
                 const actor = event.actor || "A collaborator"
-                DiagramApiClient.fetchDiagram(diagramId)
+                DiagramApiClient.fetchDiagram(diagramId, {
+                  signal: abort.signal,
+                })
                   .then((next) => {
                     if (instance) instance.model = next
                   })
-                  .catch(() =>
+                  .catch((err) => {
+                    if (
+                      err instanceof DOMException &&
+                      err.name === "AbortError"
+                    )
+                      return
                     toast.error(
                       `${actor} restored a version but we couldn't refresh.`,
                       { toastId: "version-restored-refetch-failed" }
                     )
-                  )
+                  })
                 toast.info(t.collaboratorRestoredTitle(actor), {
                   toastId: "version-restored-by-collaborator",
                   autoClose: 4000,
@@ -253,64 +219,6 @@ export const ApollonWithConnection: React.FC = () => {
               }
             }
           })
-        }
-
-        if (isCollaborationView && collaborationUser) {
-          const element = containerRef.current
-          const rafRef = { current: 0 as number }
-          const pendingRef = {
-            current: null as { x: number; y: number } | null,
-          }
-
-          const flushCursor = () => {
-            if (pendingRef.current) {
-              instance?.setLocalAwarenessCursor(pendingRef.current)
-              pendingRef.current = null
-            }
-            rafRef.current = 0
-          }
-
-          const handlePointerMove = (event: PointerEvent) => {
-            if (!element) return
-            const flowPosition = instance?.screenToFlowPosition({
-              x: event.clientX,
-              y: event.clientY,
-            })
-            if (!flowPosition) return
-
-            pendingRef.current = {
-              x: flowPosition.x,
-              y: flowPosition.y,
-            }
-
-            if (!rafRef.current) {
-              rafRef.current = window.requestAnimationFrame(flushCursor)
-            }
-          }
-
-          const handlePointerLeave = () => {
-            instance?.setLocalAwarenessCursor(null)
-          }
-
-          element?.addEventListener("pointermove", handlePointerMove)
-          element?.addEventListener("pointerleave", handlePointerLeave)
-
-          cleanupCursorTracking = () => {
-            element?.removeEventListener("pointermove", handlePointerMove)
-            element?.removeEventListener("pointerleave", handlePointerLeave)
-            if (rafRef.current) {
-              window.cancelAnimationFrame(rafRef.current)
-              rafRef.current = 0
-            }
-            instance?.setLocalAwarenessCursor(null)
-          }
-
-          selectionSubscriptionId = instance.subscribeToSelectionChange(
-            (selectedElementIds) => {
-              const selectedElementId = selectedElementIds.at(-1) ?? null
-              instance?.setLocalAwarenessSelectedElement(selectedElementId)
-            }
-          )
         }
 
         syncIntervalRef.current = setInterval(() => {
@@ -357,27 +265,24 @@ export const ApollonWithConnection: React.FC = () => {
         // Preview from `?version=` is handled by the dedicated URL ↔
         // preview-state sync effect below; this effect just initialises
         // the editor and connection.
-      } catch {
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return
+        log.error("Failed to initialize diagram", err)
         toast.error("Failed to initialize diagram")
         navigate("/")
       }
     }
 
-    initialize()
+    void initialize()
 
     return () => {
-      cancelled = true
+      abort.abort()
       setEditor(undefined)
       wsManagerRef.current?.cleanup()
       if (syncIntervalRef.current) {
         clearInterval(syncIntervalRef.current)
       }
-      cleanupCursorTracking?.()
       if (instance) {
-        if (selectionSubscriptionId !== null) {
-          instance.setLocalAwarenessSelectedElement(null)
-          instance.unsubscribe(selectionSubscriptionId)
-        }
         if (modelChangeSubscriptionId !== null) {
           instance.unsubscribe(modelChangeSubscriptionId)
         }
@@ -385,7 +290,16 @@ export const ApollonWithConnection: React.FC = () => {
       instance?.destroy()
       editorRef.current = null
     }
-  }, [diagramId, viewType, collaborationUser])
+  }, [
+    applyControlEvent,
+    collaborationUser,
+    diagramId,
+    fetchVersions,
+    navigate,
+    openModal,
+    setEditor,
+    viewType,
+  ])
 
   // Sync the URL `?version=` param INTO preview state — permalink open,
   // history nav, external link change. We do NOT mirror the other way:
@@ -415,6 +329,7 @@ export const ApollonWithConnection: React.FC = () => {
 
   useEffect(() => {
     if (!editor) return
+    const abort = new AbortController()
     if (preview) {
       // First preview entry of this session — capture the user's
       // pre-preview canvas fingerprint so V1→V2→V3 hops keep comparing
@@ -459,12 +374,13 @@ export const ApollonWithConnection: React.FC = () => {
         // hit Yjs and broadcast to peers.
         restoredDuringPreviewRef.current = false
         editor.setPreviewMode(false)
-        DiagramApiClient.fetchDiagram(diagramId)
+        DiagramApiClient.fetchDiagram(diagramId, { signal: abort.signal })
           .then((head) => {
             editor.model = importDiagram(head) as UMLModel
             editor.fitView()
           })
           .catch((err) => {
+            if (err instanceof DOMException && err.name === "AbortError") return
             log.error("Failed to reload diagram after restore", err)
             toast.error(t.failureSchemaUnsupported)
           })
@@ -477,92 +393,8 @@ export const ApollonWithConnection: React.FC = () => {
         editor.fitView()
       }
     }
+    return () => abort.abort()
   }, [preview, editor, diagramId, baseReadonly])
-
-  useEffect(() => {
-    if (!editor || !isCollaborationActive || !followTarget) {
-      lastFollowViewportRef.current = null
-      return
-    }
-
-    const subscriptionId = editor.subscribeToAwarenessChanges((states) => {
-      const targetState = states.get(followTarget.clientId)
-      if (!targetState) {
-        setFollowTarget(null)
-        editor.setLocalAwarenessState({ followingClientId: null })
-        return
-      }
-
-      const viewport = targetState.viewport
-      if (!viewport) {
-        return
-      }
-
-      const last = lastFollowViewportRef.current
-      const epsilon = 0.1
-      if (
-        last &&
-        Math.abs(last.x - viewport.x) < epsilon &&
-        Math.abs(last.y - viewport.y) < epsilon &&
-        Math.abs(last.zoom - viewport.zoom) < epsilon
-      ) {
-        return
-      }
-
-      lastFollowViewportRef.current = viewport
-      editor.setViewport(viewport, { duration: 120 })
-    })
-
-    return () => {
-      editor.unsubscribe(subscriptionId)
-    }
-  }, [editor, followTarget, isCollaborationActive])
-
-  useEffect(() => {
-    if (!isCollaborationActive || !followTarget || !containerRef.current) {
-      return
-    }
-
-    const container = containerRef.current
-    const handleUserIntent = () => {
-      stopFollowing()
-    }
-
-    container.addEventListener("wheel", handleUserIntent, { passive: true })
-    container.addEventListener("pointerdown", handleUserIntent)
-    container.addEventListener("touchstart", handleUserIntent, {
-      passive: true,
-    })
-
-    return () => {
-      container.removeEventListener("wheel", handleUserIntent)
-      container.removeEventListener("pointerdown", handleUserIntent)
-      container.removeEventListener("touchstart", handleUserIntent)
-    }
-  }, [followTarget, isCollaborationActive, stopFollowing])
-
-  useEffect(() => {
-    if (!editor || !isCollaborationActive) {
-      setFollowedByCount(0)
-      return
-    }
-
-    const subscriptionId = editor.subscribeToAwarenessChanges((states) => {
-      const localClientId = editor.getLocalAwarenessClientId()
-      let count = 0
-      for (const [clientId, state] of states.entries()) {
-        if (clientId === localClientId) continue
-        if (state.followingClientId === localClientId) {
-          count += 1
-        }
-      }
-      setFollowedByCount(count)
-    })
-
-    return () => {
-      editor.unsubscribe(subscriptionId)
-    }
-  }, [editor, isCollaborationActive])
 
   // Memoised because `handleRestoreFromPreview`'s useCallback lists it
   // as a dep — without stable identity the restore handler gets a fresh
@@ -652,20 +484,6 @@ export const ApollonWithConnection: React.FC = () => {
             className={isLoading ? "invisible" : ""}
             ref={containerRef}
             sx={{ width: "100%", height: "100%" }}
-          />
-          <CollaboratorPresenceBar
-            isActive={isCollaborationActive}
-            onFollowToggle={handleFollowToggle}
-            followedCollaboratorId={followTarget?.userId ?? null}
-            followedByCount={followedByCount}
-          />
-          <CollaboratorCursors
-            containerRef={containerRef}
-            isActive={isCollaborationActive && !preview}
-          />
-          <CollaboratorSelectionHighlights
-            containerRef={containerRef}
-            isActive={isCollaborationActive && !preview}
           />
           {!isLoading && preview && diagramId && (
             <Box

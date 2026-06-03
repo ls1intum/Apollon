@@ -1,5 +1,5 @@
 import { Router } from "express"
-import { ConversionResource } from "../resources/conversion-resource"
+import { ConversionResource } from "../resources/conversion-resource.js"
 
 export function mountConversionRoutes(): Router {
   const router = Router()
@@ -11,13 +11,9 @@ export function mountConversionRoutes(): Router {
     res.sendStatus(200)
   })
 
-  router.post("/converter/pdf", async (req, res, next) => {
-    try {
-      resource ??= new ConversionResource()
-      await resource.convert(req, res)
-    } catch (err) {
-      next(err)
-    }
+  router.post("/converter/pdf", async (req, res) => {
+    resource ??= new ConversionResource()
+    await resource.convert(req, res)
   })
 
   return router

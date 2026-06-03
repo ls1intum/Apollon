@@ -21,4 +21,4 @@ See the [legal pages operator guide](https://github.com/ls1intum/Apollon/blob/ma
 
 ---
 
-*This page is the default fallback shipped with the Apollon source code. It is intentionally not a valid privacy statement for any deployment.*
+_This page is the default fallback shipped with the Apollon source code. It is intentionally not a valid privacy statement for any deployment._

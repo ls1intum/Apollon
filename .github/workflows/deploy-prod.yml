@@ -47,33 +47,33 @@ permissions: {}
 jobs:
   deploy-db:
     if: ${{ inputs.deploy-db }}
-    uses: ls1intum/.github/.github/workflows/deploy-docker-compose.yml@main
+    uses: ls1intum/.github/.github/workflows/deploy-docker-compose.yml@c8ede985ff7999c28d7538cb32ae52bfb83f51b9 # main as of 2026-05-19
     with:
       environment: Production
       docker-compose-file: "./docker/compose.db.yml"
-      main-image-name: ghcr.io/ls1intum/apollon/server
+      main-image-name: ls1intum/apollon/server
       image-tag: ${{ inputs.image-tag }}
       deployment-base-path: "/opt/apollon/db"
     secrets: inherit
 
   deploy-proxy:
     if: ${{ inputs.deploy-proxy }}
-    uses: ls1intum/.github/.github/workflows/deploy-docker-compose.yml@main
+    uses: ls1intum/.github/.github/workflows/deploy-docker-compose.yml@c8ede985ff7999c28d7538cb32ae52bfb83f51b9 # main as of 2026-05-19
     with:
       environment: Production
       docker-compose-file: "./docker/compose.proxy.yml"
-      main-image-name: ghcr.io/ls1intum/apollon/server
+      main-image-name: ls1intum/apollon/server
       image-tag: ${{ inputs.image-tag }}
       deployment-base-path: "/opt/apollon/proxy"
     secrets: inherit
 
   deploy-app:
     if: ${{ inputs.deploy-app }}
-    uses: ls1intum/.github/.github/workflows/deploy-docker-compose.yml@main
+    uses: ls1intum/.github/.github/workflows/deploy-docker-compose.yml@c8ede985ff7999c28d7538cb32ae52bfb83f51b9 # main as of 2026-05-19
     with:
       environment: Production
       docker-compose-file: "./docker/compose.app.yml"
-      main-image-name: ghcr.io/ls1intum/apollon/server
+      main-image-name: ls1intum/apollon/server
       image-tag: ${{ inputs.image-tag }}
       deployment-base-path: "/opt/apollon/app"
     secrets: inherit

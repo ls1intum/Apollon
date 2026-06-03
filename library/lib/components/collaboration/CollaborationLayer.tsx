@@ -1,0 +1,687 @@
+import Tooltip from "@mui/material/Tooltip"
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react"
+import { useOnViewportChange, useReactFlow, useViewport } from "@xyflow/react"
+import { useShallow } from "zustand/shallow"
+import { useDiagramStore } from "@/store"
+import {
+  CollaborationCursor,
+  CollaborationState,
+  CollaborationUser,
+  CollaborationViewport,
+  CollaboratorInfo,
+} from "@/typings"
+
+export type CollaborationAwarenessApi = {
+  setLocalAwarenessCursor: (cursor: CollaborationCursor | null) => void
+  setLocalAwarenessSelectedElement: (selectedElementId: string | null) => void
+  setLocalAwarenessViewport: (viewport: CollaborationViewport | null) => void
+  setLocalAwarenessFollowing: (followingClientId: number | null) => void
+  subscribeToAwarenessChanges: (
+    callback: (states: Map<number, CollaborationState>) => void
+  ) => () => void
+  subscribeToCollaboratorChanges: (
+    callback: (collaborators: CollaboratorInfo[]) => void
+  ) => () => void
+  getLocalAwarenessClientId: () => number
+}
+
+export type CollaborationLayerOptions = {
+  enabled: boolean
+  user?: CollaborationUser
+  showPresence: boolean
+  showCursors: boolean
+  showSelectionHighlights: boolean
+  showFollow: boolean
+}
+
+type CollaborationLayerProps = {
+  options: CollaborationLayerOptions
+  awareness: CollaborationAwarenessApi
+}
+
+type RemoteCursor = {
+  clientId: number
+  name: string
+  color: string
+  x: number
+  y: number
+}
+
+const AVATAR_SIZE = 26
+const OVERLAP = -6
+
+const avatarBase: CSSProperties = {
+  width: AVATAR_SIZE,
+  height: AVATAR_SIZE,
+  borderRadius: "50%",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  color: "#fff",
+  fontSize: 11,
+  fontWeight: 600,
+  cursor: "default",
+  flexShrink: 0,
+}
+
+const cssEscape = (value: string) => {
+  if (typeof CSS !== "undefined" && CSS.escape) {
+    return CSS.escape(value)
+  }
+  return value.replace(/["\\]/g, "\\$&")
+}
+
+const getElementTargets = (container: HTMLElement, elementId: string) => {
+  const escapedId = cssEscape(elementId)
+  return [
+    container.querySelector<HTMLElement>(
+      `.react-flow__node[data-id="${escapedId}"]`
+    ),
+    container.querySelector<HTMLElement>(
+      `.react-flow__edge[data-id="${escapedId}"]`
+    ),
+  ].filter((element): element is HTMLElement => element !== null)
+}
+
+const clearHighlights = (container: HTMLElement, elementIds: Set<string>) => {
+  for (const elementId of elementIds) {
+    for (const target of getElementTargets(container, elementId)) {
+      target.classList.remove("apollon-collaboration-highlighted")
+      target.style.removeProperty("--apollon-collaboration-highlight-color")
+    }
+  }
+}
+
+function CollaboratorPresenceBar({
+  active,
+  awareness,
+  showFollow,
+  followedClientId,
+  onToggleFollow,
+}: {
+  active: boolean
+  awareness: CollaborationAwarenessApi
+  showFollow: boolean
+  followedClientId: number | null
+  onToggleFollow: (clientId: number) => void
+}) {
+  const [collaborators, setCollaborators] = useState<CollaboratorInfo[]>([])
+  const [followerCount, setFollowerCount] = useState(0)
+
+  useEffect(() => {
+    if (!active) {
+      setCollaborators([])
+      return
+    }
+
+    const unsubscribe =
+      awareness.subscribeToCollaboratorChanges(setCollaborators)
+
+    return unsubscribe
+  }, [active, awareness])
+
+  // Count peers whose `followingClientId` points at us. The guarded setState
+  // keeps unrelated awareness ticks (e.g. cursor moves) from re-rendering the
+  // bar — only an actual change in the follower count does.
+  useEffect(() => {
+    if (!active || !showFollow) {
+      setFollowerCount(0)
+      return
+    }
+
+    const localClientId = awareness.getLocalAwarenessClientId()
+    return awareness.subscribeToAwarenessChanges((states) => {
+      let count = 0
+      for (const [clientId, state] of states) {
+        if (
+          clientId !== localClientId &&
+          state.followingClientId === localClientId
+        ) {
+          count += 1
+        }
+      }
+      setFollowerCount((prev) => (prev === count ? prev : count))
+    })
+  }, [active, showFollow, awareness])
+
+  const remoteCount = collaborators.filter((c) => !c.isLocal).length
+  if (!active || remoteCount === 0) return null
+
+  const localClientId = awareness.getLocalAwarenessClientId()
+
+  return (
+    <div className="apollon-collaboration-presence-bar">
+      {collaborators.map((c, i) => {
+        const followTargetId = c.isLocal
+          ? null
+          : (c.clientIds.find((id) => id !== localClientId) ?? null)
+        const isFollowable = showFollow && followTargetId !== null
+        const isFollowing =
+          followedClientId !== null && c.clientIds.includes(followedClientId)
+        const isFollowedByOthers = c.isLocal && followerCount > 0
+        const label = c.isLocal
+          ? isFollowedByOthers
+            ? `${c.name} (You · followed by ${followerCount})`
+            : `${c.name} (You)`
+          : isFollowing
+            ? `${c.name} (Following · click to stop)`
+            : isFollowable
+              ? `${c.name} (click to follow)`
+              : c.name
+
+        return (
+          <Tooltip
+            key={c.id}
+            title={label}
+            arrow
+            slotProps={{
+              popper: {
+                modifiers: [{ name: "offset", options: { offset: [0, -4] } }],
+              },
+            }}
+          >
+            <div
+              aria-label={label}
+              role={isFollowable ? "button" : undefined}
+              aria-pressed={isFollowable ? isFollowing : undefined}
+              tabIndex={isFollowable ? 0 : undefined}
+              onClick={
+                isFollowable ? () => onToggleFollow(followTargetId) : undefined
+              }
+              onKeyDown={
+                isFollowable
+                  ? (event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault()
+                        onToggleFollow(followTargetId)
+                      }
+                    }
+                  : undefined
+              }
+              style={{
+                ...avatarBase,
+                backgroundColor: c.color,
+                border: "2px solid var(--apollon-background)",
+                marginLeft: i === 0 ? 0 : OVERLAP,
+                zIndex: collaborators.length - i,
+                cursor: isFollowable ? "pointer" : "default",
+                position: "relative",
+                boxShadow: isFollowing
+                  ? `0 0 0 2px var(--apollon-background), 0 0 0 4px ${c.color}`
+                  : undefined,
+              }}
+            >
+              {c.name.charAt(0).toUpperCase()}
+              {isFollowedByOthers && (
+                <span
+                  aria-hidden="true"
+                  className="apollon-collaboration-follower-badge"
+                  style={{ borderColor: c.color }}
+                >
+                  {followerCount > 9 ? "9+" : followerCount}
+                </span>
+              )}
+            </div>
+          </Tooltip>
+        )
+      })}
+    </div>
+  )
+}
+
+function CollaboratorCursors({
+  active,
+  awareness,
+}: {
+  active: boolean
+  awareness: CollaborationAwarenessApi
+}) {
+  const reactFlow = useReactFlow()
+  useViewport()
+  const [collaborators, setCollaborators] = useState<RemoteCursor[]>([])
+
+  useEffect(() => {
+    if (!active) {
+      setCollaborators([])
+      return
+    }
+
+    const unsubscribe = awareness.subscribeToAwarenessChanges((states) => {
+      const localClientId = awareness.getLocalAwarenessClientId()
+      const next = Array.from(states.entries()).flatMap(([clientId, state]) => {
+        if (clientId === localClientId) return []
+
+        const cursor = state?.cursor
+        const user = state?.user
+        if (!cursor || !user) return []
+
+        return [
+          {
+            clientId,
+            name: user.name,
+            color: user.color,
+            x: cursor.x,
+            y: cursor.y,
+          },
+        ]
+      })
+
+      setCollaborators(next)
+    })
+
+    return unsubscribe
+  }, [active, awareness])
+
+  if (!active) return null
+
+  return (
+    <div className="apollon-collaboration-cursors">
+      {collaborators.map((collaborator) => {
+        const screenPosition = reactFlow.flowToScreenPosition({
+          x: collaborator.x,
+          y: collaborator.y,
+        })
+
+        return (
+          <div
+            key={collaborator.clientId}
+            className="apollon-collaboration-cursor"
+            style={{
+              left: screenPosition.x,
+              top: screenPosition.y,
+            }}
+          >
+            <svg
+              width="16"
+              height="20"
+              viewBox="0 0 16 20"
+              style={{ display: "block" }}
+            >
+              <path
+                d="M2 1L2 18L6.5 13.8L9.5 19L12 17.7L9 12.6L15 12.2L2 1Z"
+                fill={collaborator.color}
+                stroke="#ffffff"
+                strokeWidth="1"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <div
+              className="apollon-collaboration-cursor-label"
+              style={{ backgroundColor: collaborator.color }}
+            >
+              {collaborator.name}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function LocalCollaborationAwareness({
+  active,
+  options,
+  awareness,
+}: {
+  active: boolean
+  options: CollaborationLayerOptions
+  awareness: CollaborationAwarenessApi
+}) {
+  const reactFlow = useReactFlow()
+  const selectedElementIds = useDiagramStore(
+    (state) => state.selectedElementIds
+  )
+  const diagramId = useDiagramStore((state) => state.diagramId)
+
+  useEffect(() => {
+    if (!active || !options.showCursors) {
+      awareness.setLocalAwarenessCursor(null)
+      return
+    }
+
+    const container = document.getElementById(`react-flow-library-${diagramId}`)
+    if (!container) return
+
+    const rafRef = { current: 0 }
+    const pendingRef = {
+      current: null as CollaborationCursor | null,
+    }
+
+    const flushCursor = () => {
+      if (pendingRef.current) {
+        awareness.setLocalAwarenessCursor(pendingRef.current)
+        pendingRef.current = null
+      }
+      rafRef.current = 0
+    }
+
+    const handlePointerMove = (event: PointerEvent) => {
+      const flowPosition = reactFlow.screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      })
+
+      pendingRef.current = {
+        x: flowPosition.x,
+        y: flowPosition.y,
+      }
+
+      if (!rafRef.current) {
+        rafRef.current = window.requestAnimationFrame(flushCursor)
+      }
+    }
+
+    const handlePointerLeave = () => {
+      awareness.setLocalAwarenessCursor(null)
+    }
+
+    container.addEventListener("pointermove", handlePointerMove)
+    container.addEventListener("pointerleave", handlePointerLeave)
+
+    return () => {
+      container.removeEventListener("pointermove", handlePointerMove)
+      container.removeEventListener("pointerleave", handlePointerLeave)
+      if (rafRef.current) {
+        window.cancelAnimationFrame(rafRef.current)
+      }
+      awareness.setLocalAwarenessCursor(null)
+    }
+  }, [active, awareness, diagramId, options.showCursors, reactFlow])
+
+  useEffect(() => {
+    if (!active || !options.showSelectionHighlights) {
+      awareness.setLocalAwarenessSelectedElement(null)
+      return
+    }
+
+    awareness.setLocalAwarenessSelectedElement(
+      selectedElementIds.at(-1) ?? null
+    )
+
+    return () => {
+      awareness.setLocalAwarenessSelectedElement(null)
+    }
+  }, [active, awareness, options.showSelectionHighlights, selectedElementIds])
+
+  return null
+}
+
+function CollaboratorSelectionHighlights({
+  active,
+  awareness,
+}: {
+  active: boolean
+  awareness: CollaborationAwarenessApi
+}) {
+  const [remoteHighlights, setRemoteHighlights] = useState<Map<string, string>>(
+    () => new Map()
+  )
+  const highlightedIdsRef = useRef<Set<string>>(new Set())
+  const { diagramId, nodes, edges, previewMode } = useDiagramStore(
+    useShallow((state) => ({
+      diagramId: state.diagramId,
+      nodes: state.nodes,
+      edges: state.edges,
+      previewMode: state.previewMode,
+    }))
+  )
+
+  useEffect(() => {
+    if (!active) {
+      setRemoteHighlights(new Map())
+      return
+    }
+
+    const unsubscribe = awareness.subscribeToAwarenessChanges((states) => {
+      const localClientId = awareness.getLocalAwarenessClientId()
+      const next = new Map<string, string>()
+
+      for (const [clientId, state] of states.entries()) {
+        if (clientId === localClientId) continue
+
+        const selectedElementId = state?.selectedElementId
+        const userColor = state?.user?.color
+        if (selectedElementId && userColor) {
+          next.set(selectedElementId, userColor)
+        }
+      }
+
+      setRemoteHighlights(next)
+    })
+
+    return unsubscribe
+  }, [active, awareness])
+
+  const highlightSignature = useMemo(
+    () =>
+      Array.from(remoteHighlights.entries())
+        .map(([elementId, color]) => `${elementId}:${color}`)
+        .sort()
+        .join("|"),
+    [remoteHighlights]
+  )
+
+  useEffect(() => {
+    const container = document.getElementById(`react-flow-library-${diagramId}`)
+    if (!container) return
+
+    clearHighlights(container, highlightedIdsRef.current)
+    highlightedIdsRef.current = new Set()
+
+    if (!active || previewMode) return
+
+    const actuallyHighlighted = new Set<string>()
+    for (const [elementId, color] of remoteHighlights.entries()) {
+      const targets = getElementTargets(container, elementId)
+      if (targets.length === 0) continue
+
+      for (const target of targets) {
+        target.style.setProperty(
+          "--apollon-collaboration-highlight-color",
+          color
+        )
+        target.classList.add("apollon-collaboration-highlighted")
+      }
+      actuallyHighlighted.add(elementId)
+    }
+
+    highlightedIdsRef.current = actuallyHighlighted
+
+    return () => {
+      clearHighlights(container, highlightedIdsRef.current)
+      highlightedIdsRef.current = new Set()
+    }
+  }, [
+    active,
+    diagramId,
+    edges,
+    highlightSignature,
+    nodes,
+    previewMode,
+    remoteHighlights,
+  ])
+
+  return null
+}
+
+const sameViewport = (
+  a: CollaborationViewport | null,
+  b: CollaborationViewport | null
+) => a != null && b != null && a.x === b.x && a.y === b.y && a.zoom === b.zoom
+
+/**
+ * Broadcasts the local viewport to peers so they can follow it, and — while
+ * `followedClientId` is set — mirrors that peer's viewport onto the local
+ * canvas. Renders nothing; it only runs effects.
+ */
+function ViewportFollow({
+  awareness,
+  followedClientId,
+  onStopFollowing,
+}: {
+  awareness: CollaborationAwarenessApi
+  followedClientId: number | null
+  onStopFollowing: () => void
+}) {
+  const reactFlow = useReactFlow()
+  const diagramId = useDiagramStore((state) => state.diagramId)
+
+  const pendingViewport = useRef<CollaborationViewport | null>(null)
+  const broadcastRaf = useRef(0)
+  // True only for the synchronous span of a follow-driven `setViewport`, so the
+  // viewport change it provokes isn't re-broadcast as our own move — which
+  // would echo back to whoever we're following (and loop on mutual follow).
+  const applyingRemote = useRef(false)
+  const lastApplied = useRef<CollaborationViewport | null>(null)
+
+  const flushViewport = useCallback(() => {
+    broadcastRaf.current = 0
+    if (pendingViewport.current) {
+      awareness.setLocalAwarenessViewport(pendingViewport.current)
+      pendingViewport.current = null
+    }
+  }, [awareness])
+
+  // Coalesce the chatty viewport-change stream to one broadcast per frame,
+  // mirroring how the cursor broadcaster throttles pointer moves.
+  useOnViewportChange({
+    onChange: (viewport) => {
+      if (applyingRemote.current) return
+      pendingViewport.current = viewport
+      if (!broadcastRaf.current) {
+        broadcastRaf.current = window.requestAnimationFrame(flushViewport)
+      }
+    },
+  })
+
+  useEffect(
+    () => () => {
+      if (broadcastRaf.current) {
+        window.cancelAnimationFrame(broadcastRaf.current)
+      }
+    },
+    []
+  )
+
+  // Reflect who we follow into awareness so the target can show a follower
+  // count; clears on unfollow/unmount.
+  useEffect(() => {
+    awareness.setLocalAwarenessFollowing(followedClientId)
+    return () => awareness.setLocalAwarenessFollowing(null)
+  }, [awareness, followedClientId])
+
+  // Mirror the followed peer's viewport. `duration: 0` applies instantly —
+  // an animated transition would pile up against the ~per-frame stream
+  // (xyflow#5077). Drop follow if the peer disappears from awareness.
+  useEffect(() => {
+    if (followedClientId == null) return
+
+    const unsubscribe = awareness.subscribeToAwarenessChanges((states) => {
+      const target = states.get(followedClientId)
+      if (!target) {
+        onStopFollowing()
+        return
+      }
+      const viewport = target.viewport
+      if (!viewport || sameViewport(viewport, lastApplied.current)) return
+
+      lastApplied.current = viewport
+      applyingRemote.current = true
+      reactFlow.setViewport(viewport, { duration: 0 })
+      applyingRemote.current = false
+    })
+
+    return () => {
+      unsubscribe()
+      lastApplied.current = null
+    }
+  }, [awareness, followedClientId, onStopFollowing, reactFlow])
+
+  // Any genuine pan/zoom gesture hands control back to the user. Programmatic
+  // `setViewport` never dispatches these DOM events, so following can't
+  // cancel itself.
+  useEffect(() => {
+    if (followedClientId == null) return
+
+    const container = document.getElementById(`react-flow-library-${diagramId}`)
+    if (!container) return
+
+    const stop = () => onStopFollowing()
+    const options = { passive: true } as const
+    container.addEventListener("wheel", stop, options)
+    container.addEventListener("pointerdown", stop, options)
+    container.addEventListener("touchstart", stop, options)
+
+    return () => {
+      container.removeEventListener("wheel", stop)
+      container.removeEventListener("pointerdown", stop)
+      container.removeEventListener("touchstart", stop)
+    }
+  }, [diagramId, followedClientId, onStopFollowing])
+
+  return null
+}
+
+export function CollaborationLayer({
+  options,
+  awareness,
+}: CollaborationLayerProps) {
+  const previewMode = useDiagramStore((state) => state.previewMode)
+  const active = options.enabled && options.user !== undefined
+  const remoteVisualsActive = active && !previewMode
+  const followActive = remoteVisualsActive && options.showFollow
+
+  const [followedClientId, setFollowedClientId] = useState<number | null>(null)
+
+  const stopFollowing = useCallback(() => setFollowedClientId(null), [])
+  const toggleFollow = useCallback(
+    (clientId: number) =>
+      setFollowedClientId((prev) => (prev === clientId ? null : clientId)),
+    []
+  )
+
+  // Forget the follow target whenever following turns off (preview, option
+  // toggle) so it can't silently resume on re-enable.
+  useEffect(() => {
+    if (!followActive) setFollowedClientId(null)
+  }, [followActive])
+
+  return (
+    <>
+      <LocalCollaborationAwareness
+        active={active && !previewMode}
+        options={options}
+        awareness={awareness}
+      />
+      <CollaboratorPresenceBar
+        active={active && options.showPresence}
+        awareness={awareness}
+        showFollow={followActive}
+        followedClientId={followedClientId}
+        onToggleFollow={toggleFollow}
+      />
+      <CollaboratorCursors
+        active={remoteVisualsActive && options.showCursors}
+        awareness={awareness}
+      />
+      <CollaboratorSelectionHighlights
+        active={remoteVisualsActive && options.showSelectionHighlights}
+        awareness={awareness}
+      />
+      {followActive && (
+        <ViewportFollow
+          awareness={awareness}
+          followedClientId={followedClientId}
+          onStopFollowing={stopFollowing}
+        />
+      )}
+    </>
+  )
+}

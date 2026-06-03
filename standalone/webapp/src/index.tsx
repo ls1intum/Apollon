@@ -5,11 +5,17 @@ import { log } from "./logger"
 import {
   setLogger as setApollonLogger,
   setLogLevel as setApollonLogLevel,
-} from "@tumaet/apollon"
+} from "@tumaet/apollon/react"
+import { StatusBar } from "@capacitor/status-bar"
 
 const rootElement = document.getElementById("root")
 
 useThemeStore.getState().initializeTheme()
+
+// Hide status bar on mobile
+StatusBar.hide().catch(() => {
+  // Silently fail if not on mobile
+})
 
 const apollonSink = {
   debug: (...args: unknown[]) => log.debug(...args),

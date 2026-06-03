@@ -2,7 +2,6 @@ import { DiagramEdgeType, IPoint } from "./edges/types"
 import { DiagramNodeType } from "./nodes/types"
 import { UMLDiagramType } from "./types/DiagramType"
 import { Styles } from "./styles/theme"
-import { DeepPartial } from "./utils"
 
 export { UMLDiagramType, type DiagramNodeType, type DiagramEdgeType }
 export { type Styles }
@@ -50,6 +49,15 @@ export type CollaboratorInfo = {
   isLocal: boolean
 }
 
+export type ApollonCollaborationOptions = {
+  enabled?: boolean
+  user?: CollaborationUser
+  showPresence?: boolean
+  showCursors?: boolean
+  showSelectionHighlights?: boolean
+  showFollow?: boolean
+}
+
 export enum Locale {
   en = "en",
   de = "de",
@@ -77,6 +85,12 @@ export type ApollonNode = {
   measured: { width: number; height: number }
 }
 
+export interface OrthogonalEdgeData {
+  [key: string]: unknown
+  // Manual waypoint array used by the step-path edges.
+  points: IPoint[]
+}
+
 export type ApollonEdge = {
   id: string
   source: string
@@ -84,10 +98,7 @@ export type ApollonEdge = {
   type: DiagramEdgeType
   sourceHandle: string
   targetHandle: string
-  data: {
-    [key: string]: unknown
-    points: IPoint[]
-  }
+  data: OrthogonalEdgeData
 }
 
 export type InteractiveElements = {
@@ -122,13 +133,10 @@ export type ApollonOptions = {
   readonly?: boolean
   enablePopups?: boolean
   model?: UMLModel
-  theme?: DeepPartial<Styles>
   locale?: Locale
-  copyPasteToClipboard?: boolean
-  colorEnabled?: boolean
-  scale?: number
   debug?: boolean
   collaborationEnabled?: boolean
+  collaboration?: ApollonCollaborationOptions
   scrollLock?: boolean
 }
 

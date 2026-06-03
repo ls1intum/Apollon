@@ -13,6 +13,13 @@ services:
       - apollon-network
     command:
       - redis-stack-server
+      # `redis-stack-server` defaults `dir` to `/var/lib/redis-stack`, NOT
+      # `/data` like upstream `redis`. Without this flag the server writes
+      # its AOF/RDB into the container's writable layer instead of the
+      # `dbdata` volume — fine until the container is recreated, at which
+      # point every write since the previous recreate is lost.
+      - --dir
+      - /data
       - --appendonly
       - "yes"
       - --appendfsync

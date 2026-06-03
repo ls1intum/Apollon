@@ -1,4 +1,4 @@
-import type { UMLModel } from "@tumaet/apollon"
+import type { UMLModel } from "@tumaet/apollon/react"
 import { serverURL } from "@/constants"
 import type {
   ApiErrorBody,
@@ -80,8 +80,13 @@ async function request<T>(
 // ---------------------------------------------------------------------------
 
 export const DiagramApiClient = {
-  async fetchDiagram(diagramId: string): Promise<Diagram> {
-    const { data } = await request<Diagram>(`/api/diagrams/${diagramId}`)
+  async fetchDiagram(
+    diagramId: string,
+    opts: { signal?: AbortSignal } = {}
+  ): Promise<Diagram> {
+    const { data } = await request<Diagram>(`/api/diagrams/${diagramId}`, {
+      signal: opts.signal,
+    })
     return data
   },
 

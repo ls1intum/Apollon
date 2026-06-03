@@ -1,0 +1,42 @@
+{
+  "id": "pkg-edge-fixture",
+  "version": "4.0.0",
+  "title": "Pkg",
+  "type": "ClassDiagram",
+  "nodes": [
+    {
+      "id": "pkgA",
+      "type": "package",
+      "width": 200,
+      "height": 150,
+      "position": { "x": 200, "y": 300 },
+      "data": { "name": "Package" },
+      "measured": { "width": 200, "height": 150 }
+    },
+    {
+      "id": "clsB",
+      "type": "class",
+      "width": 160,
+      "height": 100,
+      "position": { "x": 600, "y": 300 },
+      "data": {
+        "name": "Class",
+        "methods": [{ "id": "m1", "name": "+ m()" }],
+        "attributes": [{ "id": "a1", "name": "+ a: T" }]
+      },
+      "measured": { "width": 160, "height": 100 }
+    }
+  ],
+  "edges": [
+    {
+      "id": "pkgEdge",
+      "source": "pkgA",
+      "target": "clsB",
+      "type": "ClassUnidirectional",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": { "points": [] }
+    }
+  ],
+  "assessments": {}
+}
