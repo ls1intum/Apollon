@@ -1,5 +1,22 @@
 # @tumaet/webapp
 
+## 4.5.0
+
+### Minor Changes
+
+- [#713](https://github.com/ls1intum/Apollon/pull/713) Thanks [@tamang29](https://github.com/tamang29)! - The mobile app can now export diagrams as PowerPoint (PPTX), matching the web app.
+
+- [#701](https://github.com/ls1intum/Apollon/pull/701) Thanks [@tamang29](https://github.com/tamang29)! - Apollon now runs as a native iOS and Android app, with native copy-to-clipboard and share links that always point at the web app so they open anywhere.
+
+- [#710](https://github.com/ls1intum/Apollon/pull/710) Thanks [@FadyGergesRezk](https://github.com/FadyGergesRezk)! - Editing edges feels better: drag a bend handle to move one segment and watch the path update live, reconnect an endpoint without losing the waypoints you placed, and connection handles no longer crowd or overlap on small shapes.
+
+- [#681](https://github.com/ls1intum/Apollon/pull/681) Thanks [@tamang29](https://github.com/tamang29)! - Follow a collaborator while editing together: click their avatar to snap your view to theirs and keep tracking it as they move around the canvas.
+
+### Patch Changes
+
+- Updated dependencies:
+  - @tumaet/apollon@4.5.0
+
 ## 4.4.1
 
 ### Patch Changes
