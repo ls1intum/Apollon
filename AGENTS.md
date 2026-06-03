@@ -51,7 +51,7 @@ Before opening a PR: `pnpm format:check && pnpm lint && pnpm test && pnpm build`
 
 - **Squash-merge only.** PR title becomes the merge commit subject; PR body becomes its body.
 - **PR title** is a Conventional Commit subject — enforced locally by `.husky/commit-msg` and in CI by [`.github/workflows/pr-title.yml`](.github/workflows/pr-title.yml).
-- **Changesets** carry user-facing release notes. Run `pnpm changeset` on any PR that changes a published or operator-visible package; skip on docs-only / CI-only / refactor PRs. Writing rules in [`docs/contributor/development/release-notes.md`](docs/contributor/development/release-notes.md). The publish pipeline still runs through `version-bump.yml`; changesets accumulate for the changelog automation that will replace it.
+- **Changesets** carry user-facing release notes. Run `pnpm changeset` when you change a Changesets-tracked package (`@tumaet/apollon`, `@tumaet/webapp`, `@tumaet/server`); the VS Code extension and docs release separately and are excluded in `.changeset/config.json`. Skip docs-/CI-/refactor-only PRs. Writing rules in [`docs/contributor/development/release-notes.md`](docs/contributor/development/release-notes.md). The publish pipeline still runs through `version-bump.yml`; changesets accumulate for the changelog automation that will replace it.
 
 ## Gotchas
 

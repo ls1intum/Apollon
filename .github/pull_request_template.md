@@ -1,4 +1,4 @@
-<!-- PR title = Conventional Commit subject. Squash-merge: title + body become the commit. Run `pnpm changeset` if you change a published or operator-visible workspace. See CONTRIBUTING.md. -->
+<!-- PR title = Conventional Commit subject. Squash-merge: title + body become the commit. Run `pnpm changeset` if you change a Changesets-tracked package (@tumaet/apollon, @tumaet/webapp, @tumaet/server). See CONTRIBUTING.md. -->
 
 ### Summary
 
@@ -19,7 +19,7 @@
 ### Checklist
 
 - [ ] Linked to a related issue (if applicable)
-- [ ] Added a changeset (`pnpm changeset`), or this PR doesn't change a published / deployed artefact
+- [ ] Added a changeset (`pnpm changeset`), or this PR doesn't touch a Changesets-tracked package (`@tumaet/apollon`, `@tumaet/webapp`, `@tumaet/server`)
 - [ ] Tests added or updated
 - [ ] Documentation updated (if applicable)
 - [ ] Screenshots or screencasts attached (if a UI change)

@@ -35,8 +35,12 @@ jobs:
 
       - name: Changesets status (advisory)
         # Surface the result in the job summary — base.ref via env, never
-        # interpolated into the shell.
+        # interpolated into the shell. changeset writes the "no changesets
+        # were found" reminder to stderr, so fold stderr in and keep the
+        # pipeline's real exit code with pipefail.
         env:
           BASE_REF: ${{ github.event.pull_request.base.ref }}
-        run: pnpm exec changeset status --since="origin/$BASE_REF" | tee -a "$GITHUB_STEP_SUMMARY"
+        run: |
+          set -o pipefail
+          pnpm exec changeset status --since="origin/$BASE_REF" 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
         continue-on-error: true
