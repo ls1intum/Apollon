@@ -49,7 +49,7 @@ const editor = new ApollonEditor(container, {
 })
 ```
 
-When `showFollow` is on, clicking a collaborator's avatar follows their viewport; the followed user sees a "followed by N" badge, and any local pan/zoom hands control back and stops following.
+When `showFollow` is on, clicking a collaborator's avatar follows their viewport. The follower sees the editor framed in that person's color and a banner naming them with a **Stop** button; the followed user sees a "followed by N" badge. Any local pan/zoom hands control back and stops following.
 
 ## Server-side integration
 

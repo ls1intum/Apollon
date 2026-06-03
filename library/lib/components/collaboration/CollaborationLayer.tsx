@@ -54,6 +54,12 @@ type RemoteCursor = {
   y: number
 }
 
+type FollowTarget = {
+  clientId: number
+  name: string
+  color: string
+}
+
 const AVATAR_SIZE = 26
 const OVERLAP = -6
 
@@ -110,7 +116,7 @@ function CollaboratorPresenceBar({
   awareness: CollaborationAwarenessApi
   showFollow: boolean
   followedClientId: number | null
-  onToggleFollow: (clientId: number) => void
+  onToggleFollow: (target: FollowTarget) => void
 }) {
   const [collaborators, setCollaborators] = useState<CollaboratorInfo[]>([])
   const [followerCount, setFollowerCount] = useState(0)
@@ -159,10 +165,15 @@ function CollaboratorPresenceBar({
   return (
     <div className="apollon-collaboration-presence-bar">
       {collaborators.map((c, i) => {
-        const followTargetId = c.isLocal
-          ? null
-          : (c.clientIds.find((id) => id !== localClientId) ?? null)
-        const isFollowable = showFollow && followTargetId !== null
+        const followTargetId =
+          c.isLocal || !showFollow
+            ? null
+            : (c.clientIds.find((id) => id !== localClientId) ?? null)
+        const followTarget: FollowTarget | null =
+          followTargetId === null
+            ? null
+            : { clientId: followTargetId, name: c.name, color: c.color }
+        const isFollowable = followTarget !== null
         const isFollowing =
           followedClientId !== null && c.clientIds.includes(followedClientId)
         const isFollowedByOthers = c.isLocal && followerCount > 0
@@ -193,14 +204,14 @@ function CollaboratorPresenceBar({
               aria-pressed={isFollowable ? isFollowing : undefined}
               tabIndex={isFollowable ? 0 : undefined}
               onClick={
-                isFollowable ? () => onToggleFollow(followTargetId) : undefined
+                followTarget ? () => onToggleFollow(followTarget) : undefined
               }
               onKeyDown={
-                isFollowable
+                followTarget
                   ? (event) => {
                       if (event.key === "Enter" || event.key === " ") {
                         event.preventDefault()
-                        onToggleFollow(followTargetId)
+                        onToggleFollow(followTarget)
                       }
                     }
                   : undefined
@@ -623,6 +634,55 @@ function ViewportFollow({
   return null
 }
 
+/**
+ * Persistent affordance for an active follow: a frame around the editor in the
+ * followed peer's color and a top-center banner naming them with a stop button.
+ * `role="status"` announces the follow start to assistive tech.
+ */
+function FollowIndicator({
+  target,
+  onStopFollowing,
+}: {
+  target: FollowTarget
+  onStopFollowing: () => void
+}) {
+  return (
+    <>
+      <div
+        aria-hidden="true"
+        className="apollon-collaboration-follow-frame"
+        style={{ boxShadow: `inset 0 0 0 3px ${target.color}` }}
+      />
+      <div
+        className="apollon-collaboration-follow-banner"
+        style={{ borderColor: target.color }}
+      >
+        <span
+          aria-hidden="true"
+          className="apollon-collaboration-follow-banner-dot"
+          style={{ backgroundColor: target.color }}
+        />
+        {/* Only the message is the live region, so the Stop button's label
+            doesn't leak into the announcement. */}
+        <span
+          className="apollon-collaboration-follow-banner-text"
+          role="status"
+        >
+          Following {target.name}
+        </span>
+        <button
+          type="button"
+          className="apollon-collaboration-follow-banner-stop"
+          aria-label={`Stop following ${target.name}`}
+          onClick={onStopFollowing}
+        >
+          Stop
+        </button>
+      </div>
+    </>
+  )
+}
+
 export function CollaborationLayer({
   options,
   awareness,
@@ -632,19 +692,24 @@ export function CollaborationLayer({
   const remoteVisualsActive = active && !previewMode
   const followActive = remoteVisualsActive && options.showFollow
 
-  const [followedClientId, setFollowedClientId] = useState<number | null>(null)
+  // The followed peer's name/color are captured at click time (from the
+  // presence bar, which already has them) so the banner and editor frame don't
+  // need a second awareness lookup.
+  const [followTarget, setFollowTarget] = useState<FollowTarget | null>(null)
 
-  const stopFollowing = useCallback(() => setFollowedClientId(null), [])
+  const stopFollowing = useCallback(() => setFollowTarget(null), [])
   const toggleFollow = useCallback(
-    (clientId: number) =>
-      setFollowedClientId((prev) => (prev === clientId ? null : clientId)),
+    (target: FollowTarget) =>
+      setFollowTarget((prev) =>
+        prev?.clientId === target.clientId ? null : target
+      ),
     []
   )
 
   // Forget the follow target whenever following turns off (preview, option
   // toggle) so it can't silently resume on re-enable.
   useEffect(() => {
-    if (!followActive) setFollowedClientId(null)
+    if (!followActive) setFollowTarget(null)
   }, [followActive])
 
   return (
@@ -658,7 +723,7 @@ export function CollaborationLayer({
         active={active && options.showPresence}
         awareness={awareness}
         showFollow={followActive}
-        followedClientId={followedClientId}
+        followedClientId={followTarget?.clientId ?? null}
         onToggleFollow={toggleFollow}
       />
       <CollaboratorCursors
@@ -672,7 +737,13 @@ export function CollaborationLayer({
       {followActive && (
         <ViewportFollow
           awareness={awareness}
-          followedClientId={followedClientId}
+          followedClientId={followTarget?.clientId ?? null}
+          onStopFollowing={stopFollowing}
+        />
+      )}
+      {followActive && followTarget && (
+        <FollowIndicator
+          target={followTarget}
           onStopFollowing={stopFollowing}
         />
       )}
