@@ -1,5 +1,22 @@
 # @tumaet/webapp
 
+## 4.5.0
+
+### Minor Changes
+
+- [#729](https://github.com/ls1intum/Apollon/pull/729) [`6c5dc2a`](https://github.com/ls1intum/Apollon/commit/6c5dc2acf927a8cddccbc1eed943fdb77dcf9b06) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - The mobile app can now export diagrams as PowerPoint (PPTX), matching the web app.
+
+- [#729](https://github.com/ls1intum/Apollon/pull/729) [`6c5dc2a`](https://github.com/ls1intum/Apollon/commit/6c5dc2acf927a8cddccbc1eed943fdb77dcf9b06) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Apollon now runs as a native iOS and Android app, with native copy-to-clipboard and share links that always point at the web app so they open anywhere.
+
+- [#729](https://github.com/ls1intum/Apollon/pull/729) [`6c5dc2a`](https://github.com/ls1intum/Apollon/commit/6c5dc2acf927a8cddccbc1eed943fdb77dcf9b06) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Editing edges feels better: drag a bend handle to move one segment and watch the path update live, reconnect an endpoint without losing the waypoints you placed, and connection handles no longer crowd or overlap on small shapes.
+
+- [#729](https://github.com/ls1intum/Apollon/pull/729) [`6c5dc2a`](https://github.com/ls1intum/Apollon/commit/6c5dc2acf927a8cddccbc1eed943fdb77dcf9b06) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Follow a collaborator while editing together: click their avatar to snap your view to theirs and keep tracking it as they move around the canvas.
+
+### Patch Changes
+
+- Updated dependencies [[`6c5dc2a`](https://github.com/ls1intum/Apollon/commit/6c5dc2acf927a8cddccbc1eed943fdb77dcf9b06), [`6c5dc2a`](https://github.com/ls1intum/Apollon/commit/6c5dc2acf927a8cddccbc1eed943fdb77dcf9b06), [`6c5dc2a`](https://github.com/ls1intum/Apollon/commit/6c5dc2acf927a8cddccbc1eed943fdb77dcf9b06), [`6c5dc2a`](https://github.com/ls1intum/Apollon/commit/6c5dc2acf927a8cddccbc1eed943fdb77dcf9b06), [`6c5dc2a`](https://github.com/ls1intum/Apollon/commit/6c5dc2acf927a8cddccbc1eed943fdb77dcf9b06), [`6c5dc2a`](https://github.com/ls1intum/Apollon/commit/6c5dc2acf927a8cddccbc1eed943fdb77dcf9b06), [`6c5dc2a`](https://github.com/ls1intum/Apollon/commit/6c5dc2acf927a8cddccbc1eed943fdb77dcf9b06)]:
+  - @tumaet/apollon@4.5.0
+
 ## 4.4.1
 
 ### Patch Changes
