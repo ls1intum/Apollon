@@ -47,9 +47,15 @@ eslintcache
 
 library/stats.html
 
-# Capacitor generated mobile files
+# Capacitor native projects.
+# The iOS project at standalone/webapp/ios IS committed (Capacitor best
+# practice — it carries the bundle id, signing config and the legacy-migration
+# native plugin). Its own standalone/webapp/ios/.gitignore excludes the
+# regenerated artifacts (Pods/, App/App/public, DerivedData, generated config),
+# so only a stray root-level `cap add` scratch dir and the (uncommitted)
+# android project are ignored here.
 android/
-ios/
+/ios/
 
 # Fastlane
 **/fastlane/report.xml
