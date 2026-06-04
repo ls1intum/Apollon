@@ -444,3 +444,67 @@ test.describe("Home page — accessibility basics", () => {
     await expect(page.locator('[role="list"]')).toBeAttached()
   })
 })
+
+// ---------------------------------------------------------------------------
+// 8. Sharing reflects in the gallery without a reload
+// ---------------------------------------------------------------------------
+
+test.describe("Home page — share reflects immediately", () => {
+  const SHARED_ID = "shared-new-1"
+
+  test("a newly shared diagram appears on the All view without reload", async ({
+    page,
+  }) => {
+    // Mock the share API: POST creates the diagram, GET returns the stored copy.
+    await page.route("**/api/diagrams", (route) => {
+      if (route.request().method() !== "POST") return route.continue()
+      return route.fulfill({
+        status: 201,
+        contentType: "application/json",
+        body: JSON.stringify({
+          id: SHARED_ID,
+          type: "ClassDiagram",
+          title: "Sharable Diagram",
+          nodes: [],
+          edges: [],
+          assessments: {},
+          version: "4.0.0",
+          createdAt: "2025-01-01T00:00:00.000Z",
+          updatedAt: "2025-01-01T00:00:00.000Z",
+        }),
+      })
+    })
+    await page.route(`**/api/diagrams/${SHARED_ID}`, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          id: SHARED_ID,
+          type: "ClassDiagram",
+          title: "Sharable Diagram",
+          nodes: [],
+          edges: [],
+          assessments: {},
+          version: "4.0.0",
+          createdAt: "2025-01-01T00:00:00.000Z",
+          updatedAt: "2025-01-01T00:00:00.000Z",
+        }),
+      })
+    )
+
+    await seedDiagrams(page, [{ id: "local-1", title: "Sharable Diagram" }])
+    await expect(cards(page)).toHaveCount(1)
+
+    // Open the card's actions menu and start sharing.
+    await page.getByRole("button", { name: "Open diagram actions" }).click()
+    await page.getByRole("menuitem", { name: "Share" }).click()
+    await expect(page.getByRole("dialog")).toBeVisible()
+    await page.getByRole("button", { name: "Create" }).click()
+
+    // The new shared copy must show up as a second card without any reload.
+    await expect(cards(page)).toHaveCount(2)
+    await expect(
+      page.locator('[role="listitem"]').filter({ hasText: "Shared" })
+    ).toHaveCount(1)
+  })
+})

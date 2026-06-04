@@ -72,12 +72,30 @@ const readStore = (): SharedDiagramStore => {
   }
 }
 
+// Same-tab change event (the native `storage` event is cross-tab only).
+const SHARED_DIAGRAM_CHANGE_EVENT = "shared-diagram-store-change"
+
 const writeStore = (store: SharedDiagramStore) => {
   if (typeof window === "undefined") {
     return
   }
 
   window.localStorage.setItem(SHARED_DIAGRAM_STORE_KEY, JSON.stringify(store))
+  window.dispatchEvent(new Event(SHARED_DIAGRAM_CHANGE_EVENT))
+}
+
+// Subscribe to same-tab store mutations. Returns an unsubscribe function.
+export const subscribeToSharedDiagramChange = (
+  listener: () => void
+): (() => void) => {
+  if (typeof window === "undefined") {
+    return () => {}
+  }
+
+  window.addEventListener(SHARED_DIAGRAM_CHANGE_EVENT, listener)
+  return () => {
+    window.removeEventListener(SHARED_DIAGRAM_CHANGE_EVENT, listener)
+  }
 }
 
 export const getSharedDiagramEntries = (): SharedDiagramEntry[] =>

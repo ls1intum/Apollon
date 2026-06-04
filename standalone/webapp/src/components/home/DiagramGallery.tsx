@@ -17,6 +17,7 @@ import { DiagramApiClient } from "@/services/DiagramApiClient"
 import {
   getSharedDiagramEntries,
   removeSharedDiagramEntry,
+  subscribeToSharedDiagramChange,
   toggleSharedDiagramFavorite,
 } from "@/utils/sharedDiagramStorage"
 import {
@@ -255,6 +256,8 @@ export const DiagramGallery = ({
   const [sharedDiagramsStatus, setSharedDiagramsStatus] = useState<
     "idle" | "loading" | "done" | "error"
   >("idle")
+  const [sharedReloadKey, setSharedReloadKey] = useState(0)
+  const hasLoadedSharedRef = useRef(false)
   const isSharedPending =
     diagramSource === "shared" &&
     (sharedDiagramsStatus === "idle" || sharedDiagramsStatus === "loading")
@@ -284,6 +287,12 @@ export const DiagramGallery = ({
   }, [models])
 
   useEffect(() => {
+    return subscribeToSharedDiagramChange(() => {
+      setSharedReloadKey((current) => current + 1)
+    })
+  }, [])
+
+  useEffect(() => {
     if (diagramSource !== "shared" && diagramSource !== "all") {
       return
     }
@@ -297,11 +306,12 @@ export const DiagramGallery = ({
         if (isSubscribed) {
           setSharedDiagrams([])
           setSharedDiagramsStatus("done")
+          hasLoadedSharedRef.current = true
         }
         return
       }
 
-      if (isSubscribed) {
+      if (isSubscribed && !hasLoadedSharedRef.current) {
         setSharedDiagramsStatus("loading")
       }
 
@@ -362,6 +372,7 @@ export const DiagramGallery = ({
             ? "error"
             : "done"
         )
+        hasLoadedSharedRef.current = true
       }
     }
 
@@ -370,7 +381,7 @@ export const DiagramGallery = ({
     return () => {
       isSubscribed = false
     }
-  }, [diagramSource])
+  }, [diagramSource, sharedReloadKey])
 
   const allDiagrams = useMemo(() => {
     if (diagramSource === "local") {
