@@ -1,7 +1,22 @@
 import { test, expect, type Page } from "@playwright/test"
 
+// Lazy gallery + thumbnail warmup hydrate slowly under parallel workers.
+test.describe.configure({ timeout: 60_000 })
+
+/**
+ * E2E tests for the redesigned "Your diagrams" home dashboard.
+ *
+ * The old marketing-style homepage (hero, section nav, inline diagram-type
+ * grid, "Load more" button, etc.) was replaced by a single DiagramGallery
+ * dashboard. These tests assert against the NEW DOM only — see
+ *   - src/pages/HomePage.tsx
+ *   - src/components/home/DiagramGallery.tsx
+ *   - src/components/home/DiagramCard.tsx
+ */
+
 // ---------------------------------------------------------------------------
-// Seed helper
+// Seed helper — writes diagrams into the persistenceModelStore localStorage
+// entry, then reloads so the lazy DiagramGallery hydrates from them.
 // ---------------------------------------------------------------------------
 
 async function seedDiagrams(
@@ -11,10 +26,13 @@ async function seedDiagrams(
     title: string
     type?: string
     lastModifiedAt?: string
+    createdAt?: string
+    favorite?: boolean
   }>
 ) {
   const models: Record<string, unknown> = {}
   for (const d of diagrams) {
+    const timestamp = d.lastModifiedAt ?? new Date().toISOString()
     models[d.id] = {
       id: d.id,
       model: {
@@ -26,7 +44,9 @@ async function seedDiagrams(
         assessments: {},
         version: "4.0.0",
       },
-      lastModifiedAt: d.lastModifiedAt ?? new Date().toISOString(),
+      lastModifiedAt: timestamp,
+      createdAt: d.createdAt ?? timestamp,
+      favorite: d.favorite ?? false,
     }
   }
   await page.goto("/")
@@ -38,9 +58,26 @@ async function seedDiagrams(
   )
   await page.goto("/")
   await page.waitForLoadState("networkidle")
-  // DiagramGallery is lazy-loaded; wait for it to render with seeded data
-  await page.locator('[role="list"]').waitFor({ timeout: 10_000 })
+  // Wait for the lazy gallery grid to hydrate before assertions.
+  await page.locator('[role="list"]').waitFor({ timeout: 30_000 })
 }
+
+async function seedEmpty(page: Page) {
+  await page.goto("/")
+  await page.evaluate(() => {
+    localStorage.setItem(
+      "persistenceModelStore",
+      JSON.stringify({
+        state: { models: {}, currentModelId: null },
+        version: 1,
+      })
+    )
+  })
+  await page.reload()
+  await page.waitForLoadState("networkidle")
+}
+
+const cards = (page: Page) => page.locator('[role="listitem"]')
 
 // ---------------------------------------------------------------------------
 // 1. Initial load
@@ -48,65 +85,32 @@ async function seedDiagrams(
 
 test.describe("Home page — initial load", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/")
-    await page.waitForLoadState("networkidle")
+    await seedDiagrams(page, [{ id: "init-1", title: "Initial Diagram" }])
   })
 
-  test("renders the hero section with headline and CTA buttons", async ({
-    page,
-  }) => {
-    await expect(page.getByRole("heading", { level: 1 })).toContainText(
-      "Model architecture clearly"
-    )
+  test("renders the 'Your diagrams' heading", async ({ page }) => {
     await expect(
-      page.getByRole("button", { name: "Create New Diagram" })
-    ).toBeVisible()
-    await expect(
-      page.getByRole("button", { name: "Browse Templates" })
+      page.getByRole("heading", { level: 1, name: "Your diagrams" })
     ).toBeVisible()
   })
 
-  test("shows HomeNavbar with theme toggle", async ({ page }) => {
+  test("renders the three header CTAs", async ({ page }) => {
+    await expect(
+      page.getByRole("button", { name: "New diagram" })
+    ).toBeVisible()
+    await expect(page.getByRole("button", { name: "Template" })).toBeVisible()
+    await expect(page.getByRole("button", { name: "Import" })).toBeVisible()
+  })
+
+  test("shows HomeNavbar with a theme toggle", async ({ page }) => {
     const header = page.locator("header").first()
     await expect(header).toBeVisible()
-    // ThemeSwitcherMenu renders a plain <button> with a Sun/Moon icon SVG
-    const themeToggle = header.locator("button").first()
-    await expect(themeToggle).toBeVisible()
+    // ThemeSwitcherMenu renders a button (Sun/Moon icon) inside the navbar.
+    await expect(header.locator("button").first()).toBeVisible()
   })
 
   test("does not show the editor Navbar", async ({ page }) => {
     await expect(page.locator("#file-menu-button")).toHaveCount(0)
-  })
-
-  test("desktop section nav is visible with three items", async ({ page }) => {
-    // The sticky section nav is a <section> that contains a <ul> with three <li><button>
-    // It is hidden on mobile (md:block) — default viewport 1280×720 shows it
-    const stickyNav = page.locator("section").filter({
-      has: page.locator("ul"),
-    })
-    const newDiagramBtn = stickyNav.getByRole("button", { name: "New Diagram" })
-    const templatesBtn = stickyNav.getByRole("button", { name: "Templates" })
-    const recentsBtn = stickyNav.getByRole("button", { name: "Recents" })
-    await expect(newDiagramBtn.first()).toBeVisible()
-    await expect(templatesBtn.first()).toBeVisible()
-    await expect(recentsBtn.first()).toBeVisible()
-  })
-
-  test("mobile bottom nav is visible at mobile viewport", async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 844 })
-    await page.goto("/")
-    await page.waitForLoadState("networkidle")
-    const mobileNav = page.locator('nav[aria-label="Page sections"]')
-    await expect(mobileNav).toBeVisible()
-    await expect(
-      mobileNav.getByRole("button", { name: "New Diagram" })
-    ).toBeVisible()
-    await expect(
-      mobileNav.getByRole("button", { name: "Templates" })
-    ).toBeVisible()
-    await expect(
-      mobileNav.getByRole("button", { name: "Recents" })
-    ).toBeVisible()
   })
 })
 
@@ -116,47 +120,39 @@ test.describe("Home page — initial load", () => {
 
 test.describe("Home page — empty state (no diagrams)", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/")
-    await page.evaluate(() => {
-      localStorage.setItem(
-        "persistenceModelStore",
-        JSON.stringify({
-          state: { models: {}, currentModelId: null },
-          version: 1,
-        })
-      )
-    })
-    await page.reload()
-    await page.waitForLoadState("networkidle")
+    await seedEmpty(page)
   })
 
-  test("shows 'No diagrams yet' empty state in recent diagrams section", async ({
-    page,
-  }) => {
+  test("shows the 'No diagrams yet' empty state", async ({ page }) => {
     await expect(page.getByText("No diagrams yet")).toBeVisible()
   })
 
-  test("shows 'Create your first diagram' button in empty state", async ({
-    page,
-  }) => {
+  test("shows the empty-state action buttons", async ({ page }) => {
+    // "New diagram" / "Import" appear in header + empty state; .first() picks one.
     await expect(
-      page.getByRole("button", { name: "Create your first diagram" })
+      page.getByRole("button", { name: "From template" })
+    ).toBeVisible()
+    await expect(
+      page.getByRole("button", { name: "New diagram" }).first()
+    ).toBeVisible()
+    await expect(
+      page.getByRole("button", { name: "Import" }).first()
     ).toBeVisible()
   })
 
-  test("'Create your first diagram' scrolls to the diagram type section", async ({
+  test("clicking 'New diagram' opens the new-diagram dialog", async ({
     page,
   }) => {
-    await page
-      .getByRole("button", { name: "Create your first diagram" })
-      .click()
-    await page.waitForTimeout(600)
-    await expect(page.locator("#new-diagram-section")).toBeInViewport()
+    await page.getByRole("button", { name: "New diagram" }).first().click()
+    await expect(page.getByRole("dialog")).toBeVisible()
+    await expect(
+      page.getByRole("dialog").getByText("New Diagram", { exact: true })
+    ).toBeVisible()
   })
 })
 
 // ---------------------------------------------------------------------------
-// 3. Diagram gallery with diagrams
+// 3. Diagram gallery
 // ---------------------------------------------------------------------------
 
 test.describe("Home page — diagram gallery", () => {
@@ -168,63 +164,30 @@ test.describe("Home page — diagram gallery", () => {
     ])
   })
 
-  test("shows all seeded diagrams as cards", async ({ page }) => {
-    const cards = page.locator('[role="listitem"]')
-    await expect(cards).toHaveCount(3)
+  test("renders each seeded diagram as a listitem card", async ({ page }) => {
+    await expect(cards(page)).toHaveCount(3)
   })
 
-  test("first card has 'Most Recent' badge", async ({ page }) => {
-    const firstCard = page.locator('[role="listitem"]').first()
-    await expect(firstCard).toContainText("Most Recent")
-  })
-
-  test("shows the correct diagram count badge", async ({ page }) => {
-    // The count badge is a <span> near the "Recent Diagrams" heading
-    const countBadge = page
-      .locator("h3", { hasText: "Recent Diagrams" })
-      .locator("..")
-      .getByText("3")
-    await expect(countBadge).toBeVisible()
+  test("shows the diagram count label", async ({ page }) => {
+    await expect(page.getByText("3 diagrams")).toBeVisible()
   })
 
   test("search filters cards by title", async ({ page }) => {
     await page.locator("#recent-diagrams-search").fill("Alpha")
-    const cards = page.locator('[role="listitem"]')
-    await expect(cards).toHaveCount(1)
-    await expect(cards.first()).toContainText("Alpha")
+    await expect(cards(page)).toHaveCount(1)
+    await expect(cards(page).first()).toContainText("Alpha")
   })
 
   test("clearing search restores all cards", async ({ page }) => {
-    const searchInput = page.locator("#recent-diagrams-search")
-    await searchInput.fill("Alpha")
-    await expect(page.locator('[role="listitem"]')).toHaveCount(1)
-    await searchInput.fill("")
-    await expect(page.locator('[role="listitem"]')).toHaveCount(3)
+    const search = page.locator("#recent-diagrams-search")
+    await search.fill("Alpha")
+    await expect(cards(page)).toHaveCount(1)
+    // The clear button (×) resets the search.
+    await page.getByRole("button", { name: "Clear search" }).click()
+    await expect(cards(page)).toHaveCount(3)
   })
 
-  test("type filter chip appears for ClassDiagram", async ({ page }) => {
-    // exact: true — the tile button in DiagramTypeGrid has a longer accessible
-    // name ("Class Diagram Model classes…"); the filter chip is exactly "Class Diagram"
-    await expect(
-      page.getByRole("button", { name: "Class Diagram", exact: true })
-    ).toBeVisible()
-  })
-
-  test("clicking a type filter chip shows only matching diagrams", async ({
-    page,
-  }) => {
-    // All 3 are ClassDiagram — clicking the chip keeps all 3 visible
-    const chip = page.getByRole("button", {
-      name: "Class Diagram",
-      exact: true,
-    })
-    await chip.click()
-    await expect(page.locator('[role="listitem"]')).toHaveCount(3)
-    // Active chip has the accent shadow class
-    await expect(chip).toHaveClass(/shadow-\[inset/)
-  })
-
-  test("no-match search shows 'No diagrams match' message", async ({
+  test("no-match search shows the 'No diagrams match' message", async ({
     page,
   }) => {
     await page.locator("#recent-diagrams-search").fill("zzz-no-match")
@@ -232,37 +195,85 @@ test.describe("Home page — diagram gallery", () => {
       page.getByText("No diagrams match your search and filters.")
     ).toBeVisible()
   })
+
+  test("source filter narrows to local diagrams", async ({ page }) => {
+    // All seeded diagrams are local — switching to "Local" keeps all 3,
+    // switching to "Shared" shows the empty shared state.
+    await page.getByRole("button", { name: "Local diagrams" }).click()
+    await expect(cards(page)).toHaveCount(3)
+    await page.getByRole("button", { name: "Shared diagrams" }).click()
+    await expect(page.getByText("No shared diagrams yet")).toBeVisible()
+  })
+
+  test("type filter shows only matching diagrams", async ({ page }) => {
+    await page.locator("#diagram-type-filter-button").click()
+    // Every seeded diagram is a ClassDiagram, so its type appears in the menu.
+    await page
+      .getByRole("menuitem", { name: "Class Diagram", exact: true })
+      .click()
+    await expect(cards(page)).toHaveCount(3)
+  })
+
+  test("sort menu can switch to alphabetical order", async ({ page }) => {
+    await page.locator("#diagram-sort-menu-button").click()
+    await page.getByRole("menuitem", { name: "Alphabetical" }).click()
+    await page.locator("#diagram-sort-menu-button").click()
+    await page.getByRole("menuitem", { name: "Oldest first" }).click()
+    // A-Z ascending: Alpha first.
+    await expect(cards(page).first()).toContainText("Alpha")
+  })
+
+  test("favorites toggle filters to favorited diagrams only", async ({
+    page,
+  }) => {
+    // Favorite the first card via its star button.
+    await cards(page)
+      .first()
+      .getByRole("button", { name: "Add to favorites" })
+      .click()
+    await page.getByRole("button", { name: "Favorites", exact: true }).click()
+    await expect(cards(page)).toHaveCount(1)
+    await expect(page.getByText("1 favorites")).toBeVisible()
+  })
 })
 
 // ---------------------------------------------------------------------------
-// 4. Load more
+// 4. Infinite scroll (no "Load more" button — IntersectionObserver sentinel)
 // ---------------------------------------------------------------------------
 
-test.describe("Home page — load more", () => {
+test.describe("Home page — infinite scroll", () => {
   test.beforeEach(async ({ page }) => {
-    const diagrams = Array.from({ length: 10 }, (_, i) => ({
+    // INITIAL_VISIBLE_COUNT = 9; seed more so a second page exists.
+    const diagrams = Array.from({ length: 14 }, (_, i) => ({
       id: `d${i + 1}`,
-      title: `Diagram ${i + 1}`,
+      title: `Diagram ${String(i + 1).padStart(2, "0")}`,
     }))
     await seedDiagrams(page, diagrams)
   })
 
-  test("shows 9 cards initially and a 'Load more' button", async ({ page }) => {
-    await expect(page.locator('[role="listitem"]')).toHaveCount(9)
-    await expect(page.getByRole("button", { name: "Load more" })).toBeVisible()
+  test("shows 9 cards initially with no 'Load more' button", async ({
+    page,
+  }) => {
+    await expect(cards(page)).toHaveCount(9)
+    await expect(page.getByRole("button", { name: "Load more" })).toHaveCount(0)
   })
 
-  test("'Load more' reveals the remaining cards", async ({ page }) => {
-    await page.getByRole("button", { name: "Load more" }).click()
-    await expect(page.locator('[role="listitem"]')).toHaveCount(10)
-    await expect(
-      page.getByRole("button", { name: "Load more" })
-    ).not.toBeVisible()
+  test("scrolling the gallery container reveals more cards", async ({
+    page,
+  }) => {
+    await expect(cards(page)).toHaveCount(9)
+    // Drive the IntersectionObserver by scrolling the .home-page-scrollbar
+    // container to the bottom so the sentinel div enters the root margin.
+    await page.evaluate(() => {
+      const scroller = document.querySelector(".home-page-scrollbar")
+      if (scroller) scroller.scrollTop = scroller.scrollHeight
+    })
+    await expect(cards(page)).toHaveCount(14)
   })
 })
 
 // ---------------------------------------------------------------------------
-// 5. Diagram card actions
+// 5. Card actions (MUI <Menu>)
 // ---------------------------------------------------------------------------
 
 test.describe("Home page — diagram card actions", () => {
@@ -270,253 +281,115 @@ test.describe("Home page — diagram card actions", () => {
     await seedDiagrams(page, [{ id: "card-test", title: "Card Test Diagram" }])
   })
 
-  test("three-dot menu opens action dropdown", async ({ page }) => {
+  test("three-dot menu opens with Open / Duplicate / Share / Delete", async ({
+    page,
+  }) => {
     await page.getByRole("button", { name: "Open diagram actions" }).click()
-    // Scope to the dropdown panel to avoid matching the card body button
-    const dropdown = page.locator(".absolute.right-0.z-40.mt-2")
+    const menu = page.getByRole("menu", { name: "Diagram actions" })
     await expect(
-      dropdown.getByRole("button", { name: "Open", exact: true })
+      menu.getByRole("menuitem", { name: "Open", exact: true })
     ).toBeVisible()
     await expect(
-      dropdown.getByRole("button", { name: "Duplicate", exact: true })
+      menu.getByRole("menuitem", { name: "Duplicate" })
     ).toBeVisible()
-    await expect(
-      dropdown.getByRole("button", { name: "Delete", exact: true })
-    ).toBeVisible()
+    await expect(menu.getByRole("menuitem", { name: "Share" })).toBeVisible()
+    await expect(menu.getByRole("menuitem", { name: "Delete" })).toBeVisible()
   })
 
-  test("clicking 'Open' navigates to the editor", async ({ page }) => {
+  test("'Open' navigates to the local editor", async ({ page }) => {
     await page.getByRole("button", { name: "Open diagram actions" }).click()
-    const dropdown = page.locator(".absolute.right-0.z-40.mt-2")
-    await dropdown.getByRole("button", { name: "Open", exact: true }).click()
+    await page
+      .getByRole("menu", { name: "Diagram actions" })
+      .getByRole("menuitem", { name: "Open", exact: true })
+      .click()
     await expect(page).toHaveURL(/\/local\/card-test$/)
   })
 
-  test("clicking 'Duplicate' creates a new card", async ({ page }) => {
+  test("'Duplicate' adds a new card", async ({ page }) => {
     await page.getByRole("button", { name: "Open diagram actions" }).click()
-    await page.getByRole("button", { name: "Duplicate" }).click()
-    await expect(page.locator('[role="listitem"]')).toHaveCount(2)
+    await page.getByRole("menuitem", { name: "Duplicate" }).click()
+    await expect(cards(page)).toHaveCount(2)
   })
 
-  test("Delete shows confirm panel", async ({ page }) => {
+  test("'Delete' shows the confirm panel", async ({ page }) => {
     await page.getByRole("button", { name: "Open diagram actions" }).click()
-    await page.getByRole("button", { name: "Delete" }).click()
+    await page.getByRole("menuitem", { name: "Delete" }).click()
     await expect(page.getByText("Delete this diagram?")).toBeVisible()
     await expect(page.getByRole("button", { name: "Cancel" })).toBeVisible()
   })
 
   test("Cancel dismisses the confirm panel", async ({ page }) => {
     await page.getByRole("button", { name: "Open diagram actions" }).click()
-    await page.getByRole("button", { name: "Delete" }).click()
+    await page.getByRole("menuitem", { name: "Delete" }).click()
     await page.getByRole("button", { name: "Cancel" }).click()
     await expect(page.getByText("Delete this diagram?")).not.toBeVisible()
   })
 
-  test("confirming Delete removes the card and shows empty state", async ({
+  test("confirming Delete removes the card and shows the empty state", async ({
     page,
   }) => {
     await page.getByRole("button", { name: "Open diagram actions" }).click()
-    // First "Delete" opens the confirm panel
-    await page.getByRole("button", { name: "Delete" }).click()
-    // The confirm "Delete" button is inside the confirm panel — scope to it
-    const confirmPanel = page.locator(".space-y-2.rounded-md.border")
-    await confirmPanel.getByRole("button", { name: "Delete" }).click()
-    await expect(page.locator('[role="listitem"]')).toHaveCount(0)
+    await page.getByRole("menuitem", { name: "Delete" }).click()
+    // The confirm panel's own "Delete" button commits the deletion.
+    await page
+      .getByText("Delete this diagram?")
+      .locator("..")
+      .getByRole("button", { name: "Delete" })
+      .click()
+    await expect(cards(page)).toHaveCount(0)
     await expect(page.getByText("No diagrams yet")).toBeVisible()
   })
 
-  test("clicking card body navigates to the editor", async ({ page }) => {
+  test("clicking the card body navigates to the local editor", async ({
+    page,
+  }) => {
     await page.getByRole("button", { name: "Open Card Test Diagram" }).click()
     await expect(page).toHaveURL(/\/local\/card-test$/)
   })
 })
 
 // ---------------------------------------------------------------------------
-// 6. Template section
+// 6. Grid / table view toggle
 // ---------------------------------------------------------------------------
 
-test.describe("Home page — template section", () => {
+test.describe("Home page — view toggle", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/")
-    await page.waitForLoadState("networkidle")
+    await seedDiagrams(page, [
+      { id: "v1", title: "View One" },
+      { id: "v2", title: "View Two" },
+    ])
   })
 
-  test("template section is present with all 5 templates", async ({ page }) => {
-    // Scroll the <main> scroll container to the template section
-    await page.evaluate(() => {
-      const heading = Array.from(document.querySelectorAll("h2")).find((el) =>
-        el.textContent?.includes("2. Start from Template")
-      )
-      heading?.scrollIntoView({ block: "start" })
-    })
-    await page.waitForTimeout(300)
-    for (const name of [
-      "Adapter",
-      "Bridge",
-      "Command",
-      "Observer",
-      "Factory",
-    ]) {
-      // getByRole accessible name includes full subtree text; scope via <p> child instead
-      const btn = page.locator("button").filter({
-        has: page.locator("p", { hasText: new RegExp(`^${name}$`) }),
-      })
-      await expect(btn).toBeVisible()
-    }
-  })
-
-  test("each template card shows its category badge", async ({ page }) => {
-    await page.evaluate(() => {
-      const heading = Array.from(document.querySelectorAll("h2")).find((el) =>
-        el.textContent?.includes("2. Start from Template")
-      )
-      heading?.scrollIntoView({ block: "start" })
-    })
-    await page.waitForTimeout(300)
-    await expect(page.getByText("Structural").first()).toBeVisible()
-    await expect(page.getByText("Behavioral").first()).toBeVisible()
-    await expect(page.getByText("Creational").first()).toBeVisible()
-  })
-
-  test("clicking a template navigates to the editor with a new diagram id", async ({
+  test("switching to table view renders a table; grid view restores cards", async ({
     page,
   }) => {
-    await page.evaluate(() => {
-      const heading = Array.from(document.querySelectorAll("h2")).find((el) =>
-        el.textContent?.includes("2. Start from Template")
-      )
-      heading?.scrollIntoView({ block: "start" })
-    })
-    await page.waitForTimeout(300)
-    await page
-      .locator("button")
-      .filter({ has: page.locator("p", { hasText: /^Adapter$/ }) })
-      .click()
-    await page.waitForURL(/\/local\/.+/, { timeout: 10_000 })
-    expect(page.url()).toMatch(/\/local\/.+/)
+    // Default grid view renders role="listitem" cards.
+    await expect(cards(page)).toHaveCount(2)
+
+    await page.getByRole("button", { name: "Table view" }).click()
+    await expect(page.locator("table")).toBeVisible()
+    await expect(page.locator("table thead")).toContainText("Name")
+    await expect(cards(page)).toHaveCount(0)
+
+    await page.getByRole("button", { name: "Grid view" }).click()
+    await expect(cards(page)).toHaveCount(2)
   })
 })
 
 // ---------------------------------------------------------------------------
-// 7. New diagram section (diagram type grid)
-// ---------------------------------------------------------------------------
-
-test.describe("Home page — new diagram section", () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto("/")
-    await page.waitForLoadState("networkidle")
-  })
-
-  test("diagram type grid section exists with heading", async ({ page }) => {
-    await page.evaluate(() => {
-      document
-        .getElementById("new-diagram-section")
-        ?.scrollIntoView({ block: "start" })
-    })
-    await page.waitForTimeout(300)
-    await expect(
-      page.getByRole("heading", { name: "1. Create New Diagram" })
-    ).toBeVisible()
-  })
-
-  test("clicking a diagram type creates a new diagram and navigates to editor", async ({
-    page,
-  }) => {
-    await page.evaluate(() => {
-      document
-        .getElementById("new-diagram-section")
-        ?.scrollIntoView({ block: "start" })
-    })
-    await page.waitForTimeout(300)
-    const section = page.locator("#new-diagram-section")
-    const firstTileButton = section.getByRole("button").first()
-    await firstTileButton.click()
-    await page.waitForURL(/\/local\/.+/, { timeout: 10_000 })
-    expect(page.url()).toMatch(/\/local\/.+/)
-  })
-})
-
-// ---------------------------------------------------------------------------
-// 8. Hero CTA buttons
-// ---------------------------------------------------------------------------
-
-test.describe("Home page — hero CTA buttons", () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto("/")
-    await page.waitForLoadState("networkidle")
-  })
-
-  test("'Create New Diagram' scrolls to the new diagram section", async ({
-    page,
-  }) => {
-    await page.getByRole("button", { name: "Create New Diagram" }).click()
-    await page.waitForTimeout(600)
-    await expect(page.locator("#new-diagram-section")).toBeInViewport()
-  })
-
-  test("'Browse Templates' scrolls to the template section", async ({
-    page,
-  }) => {
-    await page.getByRole("button", { name: "Browse Templates" }).click()
-    await page.waitForTimeout(600)
-    await expect(
-      page.getByRole("heading", { name: "2. Start from Template" })
-    ).toBeInViewport()
-  })
-})
-
-// ---------------------------------------------------------------------------
-// 9. Accessibility basics
+// 7. Accessibility basics
 // ---------------------------------------------------------------------------
 
 test.describe("Home page — accessibility basics", () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto("/")
-    await page.waitForLoadState("networkidle")
+  test("search input has an accessible label", async ({ page }) => {
+    await seedDiagrams(page, [{ id: "a11y-1", title: "A11y Diagram" }])
+    await expect(
+      page.getByRole("searchbox", { name: "Search diagrams by name" })
+    ).toBeVisible()
   })
 
-  test("search input has a label", async ({ page }) => {
-    const label = page.locator('label[for="recent-diagrams-search"]')
-    await expect(label).toBeAttached()
-  })
-
-  test("diagram cards list has role=list", async ({ page }) => {
-    // Seed a diagram so the gallery renders
-    await page.evaluate(() => {
-      localStorage.setItem(
-        "persistenceModelStore",
-        JSON.stringify({
-          state: {
-            models: {
-              acc1: {
-                id: "acc1",
-                model: {
-                  id: "acc1",
-                  type: "ClassDiagram",
-                  title: "Acc Test",
-                  nodes: [],
-                  edges: [],
-                  assessments: {},
-                  version: "4.0.0",
-                },
-                lastModifiedAt: new Date().toISOString(),
-              },
-            },
-            currentModelId: null,
-          },
-          version: 1,
-        })
-      )
-    })
-    await page.reload()
-    await page.waitForLoadState("networkidle")
+  test("the diagram grid exposes role=list", async ({ page }) => {
+    await seedDiagrams(page, [{ id: "a11y-2", title: "Acc Test" }])
     await expect(page.locator('[role="list"]')).toBeAttached()
-  })
-
-  test("mobile nav has aria-label", async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 844 })
-    await page.goto("/")
-    await page.waitForLoadState("networkidle")
-    await expect(page.locator('nav[aria-label="Page sections"]')).toBeAttached()
   })
 })
