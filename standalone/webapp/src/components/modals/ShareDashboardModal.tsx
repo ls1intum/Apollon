@@ -9,7 +9,11 @@ import { DiagramView } from "@/types"
 import { DiagramApiClient } from "@/services/DiagramApiClient"
 import { log } from "@/logger"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
-import { addSharedDiagramEntry } from "@/utils/sharedDiagramStorage"
+import {
+  addSharedDiagramEntry,
+  markSharedDiagramCopied,
+  updateSharedDiagramView,
+} from "@/utils/sharedDiagramStorage"
 import { randomCollabName } from "@tumaet/apollon"
 import {
   buildSharedDiagramPath,
@@ -152,9 +156,10 @@ export const ShareDashboardModal = (props: unknown) => {
   }
 
   const handleCopy = async () => {
-    if (!currentLink) return
+    if (!currentLink || !createdDiagramId) return
     try {
       await navigator.clipboard.writeText(currentLink)
+      markSharedDiagramCopied(createdDiagramId, activeMode)
       setCopied(true)
       if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current)
       copyTimeoutRef.current = setTimeout(() => setCopied(false), 2000)
@@ -166,6 +171,9 @@ export const ShareDashboardModal = (props: unknown) => {
   const handleModeSelect = (mode: DiagramView) => {
     setActiveMode(mode)
     setModeDropdownOpen(false)
+    if (createdDiagramId) {
+      updateSharedDiagramView(createdDiagramId, mode)
+    }
     void navigator.clipboard
       .writeText(buildSharedDiagramUrl(createdDiagramId!, mode))
       .catch(() => {})
