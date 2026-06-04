@@ -26,6 +26,7 @@ type PersistenceModelStore = {
   setCurrentModelId: (id: string | null) => void
   createModel: (model: UMLModel) => void
   createModelByTitleAndType: (title: string, type: UMLDiagramType) => string
+  importModels: (models: { model: UMLModel; lastModifiedAt?: string }[]) => void
   updateModel: (model: UMLModel) => void
   duplicateModel: (id: string) => string
   deleteModel: (id: string) => void
@@ -144,6 +145,35 @@ export const usePersistenceModelStore = create<PersistenceModelStore>()(
             }),
             false,
             "createModel"
+          )
+        },
+
+        importModels: (models) => {
+          set(
+            (state) => {
+              const importedModels = { ...state.models }
+
+              for (const { model, lastModifiedAt } of models) {
+                if (importedModels[model.id]) {
+                  continue
+                }
+
+                const persistedAt = lastModifiedAt ?? new Date().toISOString()
+                importedModels[model.id] = {
+                  id: model.id,
+                  model,
+                  lastModifiedAt: persistedAt,
+                  createdAt: persistedAt,
+                  favorite: false,
+                }
+              }
+
+              return {
+                models: importedModels,
+              }
+            },
+            false,
+            "importModels"
           )
         },
 

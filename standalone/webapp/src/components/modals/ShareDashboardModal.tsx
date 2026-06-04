@@ -10,7 +10,7 @@ import { DiagramApiClient } from "@/services/DiagramApiClient"
 import { log } from "@/logger"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { addSharedDiagramEntry } from "@/utils/sharedDiagramStorage"
-import { randomCollabName } from "@/utils/collaboration"
+import { randomCollabName } from "@tumaet/apollon"
 import {
   buildSharedDiagramPath,
   buildSharedDiagramUrl,

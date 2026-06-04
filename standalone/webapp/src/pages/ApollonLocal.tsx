@@ -1,8 +1,8 @@
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { useEditorContext } from "@/contexts"
-import { ApollonEditor } from "@tumaet/apollon"
+import { ApollonEditor } from "@tumaet/apollon/react"
 import React, { useEffect, useRef } from "react"
-import { useParams } from "react-router"
+import { useLocation, useParams } from "react-router"
 import { log } from "@/logger"
 import { normalizeThumbnailSvg } from "@/utils/thumbnailSvg"
 import { ErrorPage } from "./ErrorPage"
@@ -18,6 +18,8 @@ export const ApollonLocal: React.FC = () => {
   const isThumbnailExportCanceledRef = useRef(false)
   const { setEditor } = useEditorContext()
   const { id: diagramId } = useParams()
+  const location = useLocation()
+  const locationRef = useRef(location)
   const diagram = usePersistenceModelStore((store) =>
     diagramId ? store.models[diagramId] : null
   )
@@ -26,6 +28,10 @@ export const ApollonLocal: React.FC = () => {
   )
   const updateModel = usePersistenceModelStore((store) => store.updateModel)
   const setThumbnail = usePersistenceModelStore((store) => store.setThumbnail)
+
+  useEffect(() => {
+    locationRef.current = location
+  })
 
   useEffect(() => {
     if (!containerRef.current || !diagram) return
@@ -78,7 +84,13 @@ export const ApollonLocal: React.FC = () => {
 
       log.debug("Cleaning up Apollon instance")
       instance.destroy()
-      if (usePersistenceModelStore.getState().currentModelId === diagram.id) {
+      const isTransitioningToAnotherLocalDiagram = /^\/local\//.test(
+        locationRef.current.pathname
+      )
+      if (
+        !isTransitioningToAnotherLocalDiagram &&
+        usePersistenceModelStore.getState().currentModelId === diagram.id
+      ) {
         setCurrentModelId(null)
         setEditor(undefined)
       }

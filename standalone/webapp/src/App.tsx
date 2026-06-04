@@ -77,7 +77,10 @@ const AppLayout = () => {
           <Route path="/playground" element={<ApollonPlayground />} />
           <Route path="/imprint" element={<ImprintPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
-          <Route path="/shared/:id" element={<ApollonWithConnection />} />
+          <Route
+            path="/shared/:diagramId"
+            element={<ApollonWithConnection />}
+          />
           <Route path="/:id" element={<LegacySharedDiagramRedirect />} />
           <Route path="*" element={<ErrorPage />} />
         </Routes>
