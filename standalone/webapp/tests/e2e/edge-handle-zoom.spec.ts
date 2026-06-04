@@ -30,6 +30,35 @@ const viewportZoom = (page: Page) =>
     return new DOMMatrixReadOnly(getComputedStyle(vp).transform).a
   })
 
+/**
+ * Click the zoom-out control until the viewport zoom settles at or below
+ * `targetZoom`. React Flow animates each zoom step, so a fixed number of
+ * clicks spaced by short sleeps is timing-dependent: on a slow CI runner the
+ * animations lag and fewer net zoom-outs land, leaving the zoom too high for
+ * arc-reduction to kick in. Polling the *actual* settled zoom makes the test
+ * deterministic regardless of animation speed. Returns the final zoom.
+ */
+async function zoomOutUntil(page: Page, targetZoom: number): Promise<number> {
+  const zoomOut = page.locator(".react-flow__controls-zoomout")
+  let previousZoom = await viewportZoom(page)
+  // The canvas minZoom is 0.4; cap iterations so a clamped/disabled control
+  // can never hang the test.
+  for (let i = 0; i < 20; i++) {
+    const currentZoom = await viewportZoom(page)
+    if (currentZoom <= targetZoom) {
+      return currentZoom
+    }
+    await zoomOut.click()
+    // Wait for this step's animation to settle (zoom stops changing) before
+    // the next click, instead of guessing a fixed delay.
+    await expect
+      .poll(async () => viewportZoom(page), { timeout: 2000 })
+      .not.toBe(previousZoom)
+    previousZoom = await viewportZoom(page)
+  }
+  return previousZoom
+}
+
 async function selectEdge(page: Page, id: string): Promise<Locator> {
   const edge = page.locator(`.react-flow__edge[data-id="${id}"]`)
   const box = (await edge.locator("path").first().boundingBox())!
@@ -135,11 +164,11 @@ test("node shows fewer connection arcs when zoomed out so they do not overlap", 
   const atDefault = await arcs()
   expect(atDefault).toBeGreaterThan(0)
 
-  const zoomOut = page.locator(".react-flow__controls-zoomout")
-  for (let i = 0; i < 6; i++) {
-    await zoomOut.click()
-    await page.waitForTimeout(70)
-  }
+  // Zoom out until the viewport zoom is low enough that arc-reduction must
+  // trigger. The SRC node is 160×100; the width axis drops from 3→1 arcs
+  // below ~0.5x, so settling at ≤0.45x guarantees a reduction. Driving by the
+  // real zoom (not a fixed click count) keeps this stable on slow CI runners.
+  await zoomOutUntil(page, 0.45)
   await node.hover()
   await page.waitForTimeout(120)
   const zoomedOut = await arcs()

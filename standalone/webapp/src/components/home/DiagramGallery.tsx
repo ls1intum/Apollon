@@ -39,7 +39,7 @@ const INITIAL_VISIBLE_COUNT = 9
 const LOAD_MORE_STEP = 9
 
 type DiagramTypeFilter = "all" | UMLDiagramType
-type DiagramSortBy = "alphabetical" | "dateCreated" | "lastViewed"
+type DiagramSortBy = "alphabetical" | "dateCreated" | "lastModified"
 type DiagramOrder = "oldest" | "newest"
 type DiagramViewMode = "grid" | "table"
 type DiagramSourceFilter = "all" | DiagramSource
@@ -48,7 +48,6 @@ type GalleryDiagram = RecentDiagram & {
   model: UMLModel
   source: DiagramSource
   createdAt: string
-  lastViewedAt: string
   isExpired?: boolean
 }
 
@@ -90,8 +89,8 @@ const getDiagramSortValue = (
     return toDateMs(diagram.createdAt) ?? Number.NEGATIVE_INFINITY
   }
 
-  if (sortBy === "lastViewed") {
-    return toDateMs(diagram.lastViewedAt) ?? Number.NEGATIVE_INFINITY
+  if (sortBy === "lastModified") {
+    return toDateMs(diagram.lastModifiedAt) ?? Number.NEGATIVE_INFINITY
   }
 
   return normalize(diagram.title)
@@ -243,7 +242,7 @@ export const DiagramGallery = ({
   const [searchTerm, setSearchTerm] = useState(initialSearchTerm)
   const [selectedDiagramType, setSelectedDiagramType] =
     useState<DiagramTypeFilter>("all")
-  const [sortBy, setSortBy] = useState<DiagramSortBy>("lastViewed")
+  const [sortBy, setSortBy] = useState<DiagramSortBy>("lastModified")
   const [sortOrder, setSortOrder] = useState<DiagramOrder>("newest")
   const [viewMode, setViewMode] = useState<DiagramViewMode>("grid")
   const [diagramSource, setDiagramSource] = useState<DiagramSourceFilter>("all")
@@ -280,7 +279,6 @@ export const DiagramGallery = ({
         createdAt:
           persistentModelEntity.createdAt ??
           persistentModelEntity.lastModifiedAt,
-        lastViewedAt: persistentModelEntity.lastModifiedAt,
       }))
       .sort(sortByLastModifiedDesc)
   }, [models])
@@ -327,7 +325,6 @@ export const DiagramGallery = ({
                 model: { nodes: [], edges: [] } as unknown as UMLModel,
                 createdAt: entry.sharedAt,
                 lastSharedView: entry.lastSharedView,
-                lastViewedAt: entry.sharedAt,
                 isExpired: true,
               })
               return
@@ -346,10 +343,6 @@ export const DiagramGallery = ({
               model: storedDiagram,
               createdAt: storedDiagram.createdAt || entry.sharedAt,
               lastSharedView: entry.lastSharedView,
-              lastViewedAt:
-                storedDiagram.updatedAt ||
-                storedDiagram.createdAt ||
-                entry.sharedAt,
             })
           } catch {
             networkErrorCount++
@@ -464,7 +457,7 @@ export const DiagramGallery = ({
       ? "Alphabetical"
       : sortBy === "dateCreated"
         ? "Date created"
-        : "Last viewed"
+        : "Last modified"
   const sortOrderLabel =
     sortOrder === "oldest" ? "Oldest first" : "Newest first"
   const selectedDiagramTypeLabel =
@@ -915,7 +908,7 @@ export const DiagramGallery = ({
                     [
                       ["alphabetical", "Alphabetical"],
                       ["dateCreated", "Date created"],
-                      ["lastViewed", "Last viewed"],
+                      ["lastModified", "Last modified"],
                     ] as const
                   ).map(([optionValue, optionLabel]) => ({
                     key: optionValue,
@@ -1147,7 +1140,7 @@ export const DiagramGallery = ({
                               Created
                             </th>
                             <th className="px-3 py-3 align-middle text-xs font-semibold uppercase tracking-wide text-[var(--home-text-primary)]">
-                              Last viewed
+                              Last modified
                             </th>
                             <th className="hidden px-3 py-3 align-middle text-xs font-semibold uppercase tracking-wide text-[var(--home-text-primary)] lg:table-cell">
                               Source
@@ -1243,7 +1236,7 @@ export const DiagramGallery = ({
                                   {formatDate(diagram.createdAt)}
                                 </td>
                                 <td className="px-3 py-3 align-middle text-xs text-[var(--home-text-secondary)]">
-                                  {formatDate(diagram.lastViewedAt)}
+                                  {formatDate(diagram.lastModifiedAt)}
                                 </td>
                                 <td className="hidden px-3 py-3 align-middle lg:table-cell">
                                   <div className="flex flex-wrap items-center gap-1">

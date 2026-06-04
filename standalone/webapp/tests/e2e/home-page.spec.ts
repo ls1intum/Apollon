@@ -238,6 +238,57 @@ test.describe("Home page — diagram gallery", () => {
 })
 
 // ---------------------------------------------------------------------------
+// 3b. "Last modified" sort (default) — the gallery sorts and labels on
+//     lastModifiedAt, not a phantom "last viewed" timestamp.
+// ---------------------------------------------------------------------------
+
+test.describe("Home page — last modified sort", () => {
+  test.beforeEach(async ({ page }) => {
+    // Distinct modification times so order is unambiguous. Newest = Recent.
+    await seedDiagrams(page, [
+      { id: "old", title: "Older", lastModifiedAt: "2023-01-01T00:00:00.000Z" },
+      {
+        id: "mid",
+        title: "Middle",
+        lastModifiedAt: "2024-01-01T00:00:00.000Z",
+      },
+      {
+        id: "new",
+        title: "Recent",
+        lastModifiedAt: "2025-01-01T00:00:00.000Z",
+      },
+    ])
+  })
+
+  test("defaults to sorting by last modified, newest first", async ({
+    page,
+  }) => {
+    // The default sort control reads "Last modified" (not "Last viewed").
+    await expect(page.locator("#diagram-sort-menu-button")).toContainText(
+      "Last modified"
+    )
+    // Newest-modified card is first, oldest is last.
+    await expect(cards(page).first()).toContainText("Recent")
+    await expect(cards(page).last()).toContainText("Older")
+  })
+
+  test("switching to oldest-first reverses by last modified", async ({
+    page,
+  }) => {
+    await page.locator("#diagram-sort-menu-button").click()
+    await page.getByRole("menuitem", { name: "Oldest first" }).click()
+    await expect(cards(page).first()).toContainText("Older")
+    await expect(cards(page).last()).toContainText("Recent")
+  })
+
+  test("table view shows a 'Last modified' column", async ({ page }) => {
+    await page.getByRole("button", { name: "Table view" }).click()
+    await expect(page.locator("table thead")).toContainText("Last modified")
+    await expect(page.locator("table thead")).not.toContainText("Last viewed")
+  })
+})
+
+// ---------------------------------------------------------------------------
 // 4. Infinite scroll (no "Load more" button — IntersectionObserver sentinel)
 // ---------------------------------------------------------------------------
 
