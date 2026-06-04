@@ -2,10 +2,7 @@ import { test, expect } from "@playwright/test"
 import * as fs from "node:fs"
 import * as path from "node:path"
 import { fileURLToPath } from "node:url"
-import {
-  waitForCanvasReady,
-  injectFixtureIntoLocalStorage,
-} from "../helpers/canvas"
+import { waitForCanvasReady, openFixtureInLocalEditor } from "../helpers/canvas"
 
 /**
  * Grid-alignment guard: every rendered connection point (React Flow handle)
@@ -31,8 +28,7 @@ const NODES = [
 test("every class-node connection point lands on the 5px grid", async ({
   page,
 }) => {
-  await injectFixtureIntoLocalStorage(page, noEdge)
-  await page.goto("/")
+  await openFixtureInLocalEditor(page, noEdge)
   await waitForCanvasReady(page)
 
   for (const node of NODES) {

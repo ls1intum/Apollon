@@ -2,10 +2,7 @@ import { test, expect, type Page, type Locator } from "@playwright/test"
 import * as fs from "node:fs"
 import * as path from "node:path"
 import { fileURLToPath } from "node:url"
-import {
-  waitForCanvasReady,
-  injectFixtureIntoLocalStorage,
-} from "../helpers/canvas"
+import { waitForCanvasReady, openFixtureInLocalEditor } from "../helpers/canvas"
 
 /**
  * UX guards for edge-handle ergonomics:
@@ -52,8 +49,7 @@ async function onScreenSize(handle: Locator) {
 test("edge handles stay usable when zoomed out and grow when zoomed in", async ({
   page,
 }) => {
-  await injectFixtureIntoLocalStorage(page, classDiagram)
-  await page.goto("/")
+  await openFixtureInLocalEditor(page, classDiagram)
   await waitForCanvasReady(page)
   const id = "edge-bidirectional-dog-imovable"
 
@@ -96,8 +92,7 @@ test("edge handles stay usable when zoomed out and grow when zoomed in", async (
 test("node connection indicators keep a constant on-screen size across zoom", async ({
   page,
 }) => {
-  await injectFixtureIntoLocalStorage(page, noEdge)
-  await page.goto("/")
+  await openFixtureInLocalEditor(page, noEdge)
   await waitForCanvasReady(page)
   const node = page.locator(`.react-flow__node[data-id="${SRC}"]`)
 
@@ -130,8 +125,7 @@ test("node connection indicators keep a constant on-screen size across zoom", as
 test("node shows fewer connection arcs when zoomed out so they do not overlap", async ({
   page,
 }) => {
-  await injectFixtureIntoLocalStorage(page, noEdge)
-  await page.goto("/")
+  await openFixtureInLocalEditor(page, noEdge)
   await waitForCanvasReady(page)
   const node = page.locator(`.react-flow__node[data-id="${SRC}"]`)
   await node.hover()
@@ -159,8 +153,7 @@ test("node shows fewer connection arcs when zoomed out so they do not overlap", 
 test("dragging a bend handle far toward a node clamps instead of snapping back", async ({
   page,
 }) => {
-  await injectFixtureIntoLocalStorage(page, classDiagram)
-  await page.goto("/")
+  await openFixtureInLocalEditor(page, classDiagram)
   await waitForCanvasReady(page)
   const edge = await selectEdge(page, "edge-bidirectional-dog-imovable")
   const mainPath = edge.locator(".react-flow__edge-path").first()
@@ -199,8 +192,7 @@ test("dragging a bend handle far toward a node clamps instead of snapping back",
 test("a short edge between close nodes always offers a draggable handle", async ({
   page,
 }) => {
-  await injectFixtureIntoLocalStorage(page, closeNodes)
-  await page.goto("/")
+  await openFixtureInLocalEditor(page, closeNodes)
   await waitForCanvasReady(page)
 
   // Draw a short edge from the source's right handle onto the (close) target.

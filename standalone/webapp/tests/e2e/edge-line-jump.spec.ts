@@ -2,10 +2,7 @@ import { test, expect, type Page, type Locator } from "@playwright/test"
 import * as fs from "node:fs"
 import * as path from "node:path"
 import { fileURLToPath } from "node:url"
-import {
-  waitForCanvasReady,
-  injectFixtureIntoLocalStorage,
-} from "../helpers/canvas"
+import { waitForCanvasReady, openFixtureInLocalEditor } from "../helpers/canvas"
 
 /**
  * E2E coverage for line jumps (edge "bridges" at crossings).
@@ -67,8 +64,7 @@ async function selectEdge(page: Page, id: string): Promise<void> {
 }
 
 test.beforeEach(async ({ page }) => {
-  await injectFixtureIntoLocalStorage(page, crossFixture)
-  await page.goto("/")
+  await openFixtureInLocalEditor(page, crossFixture)
   await waitForCanvasReady(page)
 })
 
