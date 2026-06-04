@@ -152,6 +152,8 @@ export const usePersistenceModelStore = create<PersistenceModelStore>()(
           set(
             (state) => {
               const importedModels = { ...state.models }
+              let latestId: string | null = null
+              let latestTime = ""
 
               for (const { model, lastModifiedAt } of models) {
                 if (importedModels[model.id]) {
@@ -166,10 +168,22 @@ export const usePersistenceModelStore = create<PersistenceModelStore>()(
                   createdAt: persistedAt,
                   favorite: false,
                 }
+
+                // Default to the first imported diagram, then prefer the newest
+                // by real ISO timestamp — so a missing timestamp never wins, but
+                // something is always selectable.
+                latestId ??= model.id
+                if (lastModifiedAt && lastModifiedAt > latestTime) {
+                  latestTime = lastModifiedAt
+                  latestId = model.id
+                }
               }
 
               return {
                 models: importedModels,
+                // Only adopt a migrated diagram as current if the user has none
+                // open yet — never steal focus from an in-progress diagram.
+                currentModelId: state.currentModelId ?? latestId,
               }
             },
             false,
