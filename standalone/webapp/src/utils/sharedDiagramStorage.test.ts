@@ -4,6 +4,7 @@ import {
   addSharedDiagramEntry,
   getSharedDiagramEntries,
   markSharedDiagramCopied,
+  subscribeToSharedDiagramChange,
   updateSharedDiagramView,
 } from "./sharedDiagramStorage"
 import {
@@ -85,5 +86,20 @@ describe("shared diagram storage", () => {
     const copiedEntry = getSharedDiagramEntries()[0]
     expect(copiedEntry.lastSharedView).toBe(DiagramView.SEE_FEEDBACK)
     expect(copiedEntry.lastCopiedAt).toEqual(expect.any(String))
+  })
+
+  it("notifies same-tab subscribers on every write", () => {
+    let notifications = 0
+    const unsubscribe = subscribeToSharedDiagramChange(() => {
+      notifications += 1
+    })
+
+    addSharedDiagramEntry("shared-1", { lastSharedView: DiagramView.EDIT })
+    updateSharedDiagramView("shared-1", DiagramView.COLLABORATE)
+    expect(notifications).toBe(2)
+
+    unsubscribe()
+    addSharedDiagramEntry("shared-2")
+    expect(notifications).toBe(2)
   })
 })

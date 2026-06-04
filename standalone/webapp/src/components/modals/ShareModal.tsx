@@ -12,6 +12,11 @@ import { useNavigate } from "react-router"
 import { toast } from "react-toastify"
 import { APButton } from "../APButton"
 import { serverURL } from "@/constants"
+import { addSharedDiagramEntry } from "@/utils/sharedDiagramStorage"
+import {
+  buildSharedDiagramPath,
+  buildSharedDiagramUrl,
+} from "@/utils/sharedDiagramLinks"
 
 export const ShareModal = () => {
   const { editor } = useEditorContext()
@@ -28,13 +33,14 @@ export const ShareModal = () => {
     try {
       const model = editor.model
       const { id: diagramID } = await DiagramApiClient.createDiagram(model)
+      addSharedDiagramEntry(diagramID, { lastSharedView: viewType })
 
       const newurl = isCapacitorApp
-        ? `${serverURL}/${diagramID}?view=${viewType}`
-        : `${window.location.origin}/${diagramID}?view=${viewType}`
+        ? buildSharedDiagramUrl(diagramID, viewType, serverURL)
+        : buildSharedDiagramUrl(diagramID, viewType)
 
       await copyToClipboard(newurl)
-      navigate(`/${diagramID}?view=${viewType}`)
+      navigate(buildSharedDiagramPath(diagramID, viewType))
       closeModal()
 
       toast.success(
