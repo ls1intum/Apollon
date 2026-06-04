@@ -64,13 +64,29 @@ vi.mock("@/services/WebSocketManager", () => ({
 
 const fetchHoisted = vi.hoisted(() => {
   const state: {
-    pending: { resolve: (v: object) => void } | null
+    pending: {
+      resolve: (v: object) => void
+      reject: (e: unknown) => void
+    } | null
   } = { pending: null }
   return { state }
 })
 
+const apiErrorHoisted = vi.hoisted(() => ({
+  ApiError: class extends Error {
+    constructor(
+      public readonly status: number,
+      public readonly code: string,
+      message: string
+    ) {
+      super(message)
+      this.name = "ApiError"
+    }
+  },
+}))
+
 vi.mock("@/services/DiagramApiClient", () => ({
-  ApiError: class extends Error {},
+  ApiError: apiErrorHoisted.ApiError,
   DiagramApiClient: {
     fetchDiagram: vi.fn(
       (_diagramId: string, opts: { signal?: AbortSignal } = {}) =>
@@ -80,7 +96,7 @@ vi.mock("@/services/DiagramApiClient", () => ({
             () => reject(new DOMException("Aborted", "AbortError")),
             { once: true }
           )
-          fetchHoisted.state.pending = { resolve }
+          fetchHoisted.state.pending = { resolve, reject }
         })
     ),
     sendDiagramUpdate: vi.fn(() =>
@@ -155,7 +171,7 @@ function mountAt(initialPath: string) {
         <ModalProvider>
           <NavigateProbe />
           <Routes>
-            <Route path="/:diagramId" element={<ApollonWithConnection />} />
+            <Route path="/shared/:id" element={<ApollonWithConnection />} />
           </Routes>
         </ModalProvider>
       </EditorProvider>
@@ -169,6 +185,15 @@ async function resolveFetch(model: object = { nodes: [], edges: [] }) {
     const pending = fetchHoisted.state.pending!
     fetchHoisted.state.pending = null
     pending.resolve(model)
+  })
+}
+
+async function rejectFetch(error: unknown) {
+  await waitFor(() => expect(fetchHoisted.state.pending).not.toBeNull())
+  await act(async () => {
+    const pending = fetchHoisted.state.pending!
+    fetchHoisted.state.pending = null
+    pending.reject(error)
   })
 }
 
@@ -198,22 +223,22 @@ afterEach(() => {
 
 describe("ApollonWithConnection — loading-state regression", () => {
   it("shows the loading overlay while the initial diagram fetch is in flight", () => {
-    mountAt("/abc?view=COLLABORATE")
+    mountAt("/shared/abc?view=COLLABORATE")
     expect(screen.getByText(LOADING_TEXT)).toBeTruthy()
   })
 
   it("removes the loading overlay once the editor is mounted", async () => {
-    mountAt("/abc?view=COLLABORATE")
+    mountAt("/shared/abc?view=COLLABORATE")
     await resolveFetch()
     await waitFor(() => expect(screen.queryByText(LOADING_TEXT)).toBeNull())
   })
 
   it("re-shows the loading overlay when diagramId changes (Share-again)", async () => {
-    mountAt("/abc?view=COLLABORATE")
+    mountAt("/shared/abc?view=COLLABORATE")
     await resolveFetch({ id: "abc", nodes: [], edges: [] })
     await waitFor(() => expect(screen.queryByText(LOADING_TEXT)).toBeNull())
 
-    await act(async () => testNavigate("/def?view=COLLABORATE"))
+    await act(async () => testNavigate("/shared/def?view=COLLABORATE"))
     expect(await screen.findByText(LOADING_TEXT)).toBeTruthy()
 
     await resolveFetch({ id: "def", nodes: [], edges: [] })
@@ -222,7 +247,7 @@ describe("ApollonWithConnection — loading-state regression", () => {
 
   it("does not show an error toast when unmount races a pending fetch", async () => {
     const errorToast = vi.spyOn(toast, "error")
-    const rendered = mountAt("/abc?view=COLLABORATE")
+    const rendered = mountAt("/shared/abc?view=COLLABORATE")
     await waitFor(() => expect(fetchHoisted.state.pending).not.toBeNull())
 
     rendered.unmount()
@@ -233,9 +258,34 @@ describe("ApollonWithConnection — loading-state regression", () => {
     expect(errorToast).not.toHaveBeenCalled()
   })
 
+  it("keeps shared links on a retryable server-unavailable page when fetch fails", async () => {
+    const errorToast = vi.spyOn(toast, "error")
+    mountAt("/shared/abc?view=EDIT")
+
+    await rejectFetch(new TypeError("Failed to fetch"))
+
+    await expect(screen.findByText("Server unavailable")).resolves.toBeTruthy()
+    expect(screen.getByText(/could not reach the server/i)).toBeTruthy()
+    expect(screen.getByRole("button", { name: "Retry" })).toBeTruthy()
+    expect(errorToast).not.toHaveBeenCalled()
+  })
+
+  it("shows an expired/deleted message for not-found shared diagrams", async () => {
+    mountAt("/shared/abc?view=EDIT")
+
+    await rejectFetch(
+      new apiErrorHoisted.ApiError(404, "NOT_FOUND", "diagram not found")
+    )
+
+    await expect(
+      screen.findByText("Shared diagram unavailable")
+    ).resolves.toBeTruthy()
+    expect(screen.queryByRole("button", { name: "Retry" })).toBeNull()
+  })
+
   it("re-opens the collab-name prompt for each new un-named diagram", async () => {
     sessionStorage.removeItem("apollon-collab-name")
-    mountAt("/abc?view=COLLABORATE")
+    mountAt("/shared/abc?view=COLLABORATE")
 
     await waitFor(() => {
       expect(modalHoisted.openModal).toHaveBeenCalledWith(
@@ -245,7 +295,7 @@ describe("ApollonWithConnection — loading-state regression", () => {
     })
 
     modalHoisted.openModal.mockClear()
-    await act(async () => testNavigate("/def?view=COLLABORATE"))
+    await act(async () => testNavigate("/shared/def?view=COLLABORATE"))
     await waitFor(() =>
       expect(modalHoisted.openModal).toHaveBeenCalledWith(
         "COLLABORATE_NAME",

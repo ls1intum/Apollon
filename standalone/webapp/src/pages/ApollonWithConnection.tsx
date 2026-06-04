@@ -32,6 +32,97 @@ import { CollaboratorPresenceBar } from "@/components/CollaboratorPresenceBar"
 import { CollaboratorSelectionHighlights } from "@/components/CollaboratorSelectionHighlights"
 import { addSharedDiagramEntry } from "@/utils/sharedDiagramStorage"
 
+type InitialLoadError =
+  | {
+      kind: "not-found"
+      title: string
+      message: string
+    }
+  | {
+      kind: "server-unavailable"
+      title: string
+      message: string
+    }
+  | {
+      kind: "initialization"
+      title: string
+      message: string
+    }
+
+const classifyInitialLoadError = (err: unknown): InitialLoadError => {
+  if (err instanceof ApiError && err.status === 404) {
+    return {
+      kind: "not-found",
+      title: "Shared diagram unavailable",
+      message:
+        "This shared diagram could not be found. It may have expired or been deleted.",
+    }
+  }
+
+  if (err instanceof ApiError) {
+    return {
+      kind: "server-unavailable",
+      title: "Server unavailable",
+      message:
+        "We could not load this shared diagram from the server. Check your connection and try again.",
+    }
+  }
+
+  if (err instanceof TypeError) {
+    return {
+      kind: "server-unavailable",
+      title: "Server unavailable",
+      message:
+        "We could not reach the server. Check your connection and try again.",
+    }
+  }
+
+  return {
+    kind: "initialization",
+    title: "Could not open diagram",
+    message: "Something went wrong while opening this shared diagram.",
+  }
+}
+
+const SharedDiagramLoadError = ({
+  error,
+  onRetry,
+  onGoHome,
+}: {
+  error: InitialLoadError
+  onRetry: () => void
+  onGoHome: () => void
+}) => (
+  <div className="flex h-full flex-col items-center justify-center gap-4 bg-[var(--apollon-background)] px-6 text-center">
+    <div className="flex max-w-md flex-col items-center gap-2">
+      <h1 className="text-2xl font-semibold text-[var(--apollon-primary-contrast)]">
+        {error.title}
+      </h1>
+      <p className="text-sm leading-6 text-[var(--apollon-secondary)]">
+        {error.message}
+      </p>
+    </div>
+    <div className="flex flex-wrap items-center justify-center gap-2">
+      {error.kind !== "not-found" && (
+        <button
+          type="button"
+          onClick={onRetry}
+          className="rounded-md border border-[var(--apollon-primary)] bg-[var(--apollon-primary)] px-4 py-2 text-sm font-medium text-white"
+        >
+          Retry
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={onGoHome}
+        className="rounded-md border border-[var(--apollon-primary-contrast)] bg-transparent px-4 py-2 text-sm font-medium text-[var(--apollon-primary-contrast)]"
+      >
+        Go home
+      </button>
+    </div>
+  </div>
+)
+
 export const ApollonWithConnection: React.FC = () => {
   const { id: diagramId } = useParams()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -39,6 +130,9 @@ export const ApollonWithConnection: React.FC = () => {
   const { setEditor, editor } = useEditorContext()
   const { openModal } = useModalContext()
   const [isLoading, setIsLoading] = useState(true)
+  const [initialLoadError, setInitialLoadError] =
+    useState<InitialLoadError | null>(null)
+  const [retryAttempt, setRetryAttempt] = useState(0)
   const containerRef = useRef<HTMLDivElement | null>(null)
   const canvasColumnRef = useRef<HTMLDivElement | null>(null)
   const canvasColumnWidth = useElementWidth(canvasColumnRef)
@@ -90,6 +184,7 @@ export const ApollonWithConnection: React.FC = () => {
     // changes (same `/:diagramId` route), so state and refs must be
     // reset explicitly per lifecycle.
     setIsLoading(true)
+    setInitialLoadError(null)
     diagramIsUpdated.current = false
     lastObservedHeadRev.current = undefined
     restoredDuringPreviewRef.current = false
@@ -330,8 +425,8 @@ export const ApollonWithConnection: React.FC = () => {
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") return
         log.error("Failed to initialize diagram", err)
-        toast.error("Failed to initialize diagram")
-        navigate("/")
+        setIsLoading(false)
+        setInitialLoadError(classifyInitialLoadError(err))
       }
     }
 
@@ -357,7 +452,7 @@ export const ApollonWithConnection: React.FC = () => {
       instance?.destroy()
       editorRef.current = null
     }
-  }, [diagramId, viewType, collaborationUser])
+  }, [diagramId, viewType, collaborationUser, retryAttempt])
 
   // Sync the URL `?version=` param INTO preview state — permalink open,
   // history nav, external link change. We do NOT mirror the other way:
@@ -504,6 +599,19 @@ export const ApollonWithConnection: React.FC = () => {
       setSearchParams,
     ]
   )
+
+  if (initialLoadError) {
+    return (
+      <SharedDiagramLoadError
+        error={initialLoadError}
+        onRetry={() => {
+          setInitialLoadError(null)
+          setRetryAttempt((attempt) => attempt + 1)
+        }}
+        onGoHome={() => navigate("/")}
+      />
+    )
+  }
 
   return (
     <div className="h-full flex flex-col">
