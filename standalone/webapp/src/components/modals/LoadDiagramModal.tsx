@@ -1,5 +1,5 @@
 import { useModalContext } from "@/contexts/ModalContext"
-import { useNavigate, useParams } from "react-router"
+import { useNavigate } from "react-router"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined"
 import { formatUpadtedDate } from "@/utils/date"
@@ -7,7 +7,11 @@ import { formatUpadtedDate } from "@/utils/date"
 export const LoadDiagramModal = () => {
   const { closeModal } = useModalContext()
   const navigate = useNavigate()
-  const { id: currentDiagramId } = useParams()
+  // This modal renders outside <Routes>, so useParams() is empty here. The
+  // open diagram is tracked in the store instead (set by ApollonLocal).
+  const currentDiagramId = usePersistenceModelStore(
+    (state) => state.currentModelId
+  )
   const models = usePersistenceModelStore((state) => state.models)
   const deleteModel = usePersistenceModelStore((state) => state.deleteModel)
 
