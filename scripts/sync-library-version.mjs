@@ -36,6 +36,7 @@ function collectFiles(dir) {
   /** @type {string[]} */
   const files = []
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (entry.isSymbolicLink()) continue
     if (entry.isDirectory()) {
       if (SKIP_DIRS.has(entry.name)) continue
       files.push(...collectFiles(join(dir, entry.name)))
