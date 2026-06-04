@@ -11,7 +11,6 @@ import { Tooltip } from "@mui/material"
 import { useNavigate } from "react-router"
 import { toast } from "react-toastify"
 import { APButton } from "../APButton"
-import { serverURL } from "@/constants"
 import { addSharedDiagramEntry } from "@/utils/sharedDiagramStorage"
 import {
   buildSharedDiagramPath,
@@ -22,7 +21,6 @@ export const ShareModal = () => {
   const { editor } = useEditorContext()
   const { closeModal, openModal } = useModalContext()
   const navigate = useNavigate()
-  const isCapacitorApp = isPlatform("capacitor")
 
   const handleShareButtonPress = async (viewType: DiagramView) => {
     if (!editor) {
@@ -35,9 +33,8 @@ export const ShareModal = () => {
       const { id: diagramID } = await DiagramApiClient.createDiagram(model)
       addSharedDiagramEntry(diagramID, { lastSharedView: viewType })
 
-      const newurl = isCapacitorApp
-        ? buildSharedDiagramUrl(diagramID, viewType, serverURL)
-        : buildSharedDiagramUrl(diagramID, viewType)
+      // buildSharedDiagramUrl resolves a native-aware origin internally.
+      const newurl = buildSharedDiagramUrl(diagramID, viewType)
 
       await copyToClipboard(newurl)
       navigate(buildSharedDiagramPath(diagramID, viewType))

@@ -1,6 +1,6 @@
 import type { UMLModel } from "@tumaet/apollon/react"
-import { Capacitor } from "@capacitor/core"
 import { serverURL } from "@/constants"
+import { resolveShareOrigin } from "@/utils/sharedDiagramLinks"
 import type {
   ApiErrorBody,
   ApiErrorCode,
@@ -261,11 +261,7 @@ export const VersionApiClient = {
     const params = new URLSearchParams()
     params.set("view", current.get("view") ?? "collaborate")
     params.set("version", versionId)
-    // On native (Capacitor) the WebView origin is capacitor://localhost, which
-    // is useless once the link is shared externally — target the real web host.
-    const origin = Capacitor.isNativePlatform()
-      ? serverURL
-      : window.location.origin
-    return `${origin}/shared/${diagramId}?${params.toString()}`
+    // Native-aware origin (capacitor://localhost isn't externally openable).
+    return `${resolveShareOrigin()}/shared/${diagramId}?${params.toString()}`
   },
 }

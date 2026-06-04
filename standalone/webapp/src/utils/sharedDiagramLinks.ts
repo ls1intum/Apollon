@@ -1,4 +1,6 @@
+import { Capacitor } from "@capacitor/core"
 import { DiagramView } from "@/types"
+import { serverURL } from "@/constants"
 
 export type SharedDiagramViewOption = {
   value: DiagramView
@@ -62,8 +64,17 @@ export const buildSharedDiagramPath = (
 ): string =>
   `/shared/${encodeURIComponent(diagramId)}?view=${encodeURIComponent(view)}`
 
+// Origin for externally-shareable links: the web host on native (Capacitor),
+// else the page origin (capacitor://localhost isn't externally openable).
+export const resolveShareOrigin = (): string => {
+  if (Capacitor.isNativePlatform() && serverURL) {
+    return serverURL
+  }
+  return typeof window !== "undefined" ? window.location.origin : ""
+}
+
 export const buildSharedDiagramUrl = (
   diagramId: string,
   view: DiagramView = DEFAULT_SHARED_DIAGRAM_VIEW,
-  origin = typeof window !== "undefined" ? window.location.origin : ""
+  origin = resolveShareOrigin()
 ): string => `${origin}${buildSharedDiagramPath(diagramId, view)}`

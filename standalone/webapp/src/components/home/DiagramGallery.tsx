@@ -258,6 +258,8 @@ export const DiagramGallery = ({
   >("idle")
   const [sharedReloadKey, setSharedReloadKey] = useState(0)
   const hasLoadedSharedRef = useRef(false)
+  // Refetch only when the shared entry-id set changes, not on metadata writes.
+  const sharedEntrySignatureRef = useRef<string | null>(null)
   const isSharedPending =
     diagramSource === "shared" &&
     (sharedDiagramsStatus === "idle" || sharedDiagramsStatus === "loading")
@@ -287,7 +289,19 @@ export const DiagramGallery = ({
   }, [models])
 
   useEffect(() => {
+    const computeSignature = () =>
+      getSharedDiagramEntries()
+        .map((entry) => entry.id)
+        .join("|")
+
+    sharedEntrySignatureRef.current ??= computeSignature()
+
     return subscribeToSharedDiagramChange(() => {
+      const nextSignature = computeSignature()
+      if (nextSignature === sharedEntrySignatureRef.current) {
+        return
+      }
+      sharedEntrySignatureRef.current = nextSignature
       setSharedReloadKey((current) => current + 1)
     })
   }, [])
@@ -540,10 +554,14 @@ export const DiagramGallery = ({
   )
 
   const handleRemoveSharedDiagram = useCallback((diagramId: string) => {
-    removeSharedDiagramEntry(diagramId)
     setSharedDiagrams((currentDiagrams) =>
       currentDiagrams.filter((diagram) => diagram.id !== diagramId)
     )
+    // Sync signature before the write so the event doesn't refetch needlessly.
+    removeSharedDiagramEntry(diagramId)
+    sharedEntrySignatureRef.current = getSharedDiagramEntries()
+      .map((entry) => entry.id)
+      .join("|")
   }, [])
 
   const handleSharedDiagramViewChange = useCallback(
