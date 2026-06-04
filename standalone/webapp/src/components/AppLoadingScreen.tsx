@@ -1,3 +1,5 @@
+import ApollonLogo from "assets/images/apollon-logo-v2.svg"
+
 type AppLoadingScreenProps = {
   label?: string
   variant?: "page" | "panel"
@@ -18,7 +20,7 @@ export const AppLoadingScreen = ({
         <div className="app-loading-logo-shell">
           <img
             className="app-loading-logo"
-            src="/assets/images/apollon-logo-v2.svg"
+            src={ApollonLogo}
             alt="Apollon logo"
             width="54"
             height="50"
