@@ -200,7 +200,15 @@ export const useDiagramThumbnailWarmup = <T extends ThumbnailWarmupDiagram>({
       return
     }
 
-    for (const diagram of visibleDiagrams) {
+    // Process local diagrams before shared ones so the more-common case renders
+    // first and shared network-fetched models don't block the local warmup queue.
+    const prioritized = [...visibleDiagrams].sort((a, b) => {
+      const aIsLocal = (a as { source?: string }).source !== "shared" ? 0 : 1
+      const bIsLocal = (b as { source?: string }).source !== "shared" ? 0 : 1
+      return aIsLocal - bIsLocal
+    })
+
+    for (const diagram of prioritized) {
       if (isDiagramEmptyRef.current(diagram)) {
         continue
       }

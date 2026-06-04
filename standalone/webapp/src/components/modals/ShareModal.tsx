@@ -82,48 +82,57 @@ export const ShareModal = (props: unknown) => {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <Typography>
-          After sharing, this diagram will be accessible to everyone with access
-          to the link for at least 12 weeks{" "}
-          <Tooltip title="Copy link to clipboard">
-            <Info />
-          </Tooltip>
-        </Typography>
+      <div className="flex items-center gap-1">
+        <span className="text-sm text-[var(--apollon-primary-contrast)]">
+          Your shared diagram will be active for 120 days and your local diagram
+          is not affected.
+        </span>
+        <Tooltip
+          title="A copy of your diagram is uploaded to our servers — your local diagram is untouched. The diagram stays active for 120 days and the timer resets only when someone edits it."
+          placement="top"
+          arrow
+        >
+          <Info fontSize="small" style={{ cursor: "help" }} />
+        </Tooltip>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-        <div>
-          <APButton
-            variant="outline"
-            fullWidth
-            onClick={() => handleShareButtonPress(DiagramView.EDIT)}
-          >
-            Edit
-          </APButton>
-        </div>
-        <div>
-          <APButton variant="outline" fullWidth onClick={handleCollaborate}>
-            Collaborate
-          </APButton>
-        </div>
-        <div>
-          <APButton
-            variant="outline"
-            fullWidth
-            onClick={() => handleShareButtonPress(DiagramView.GIVE_FEEDBACK)}
-          >
-            Give Feedback
-          </APButton>
-        </div>
-        <div>
-          <APButton
-            variant="outline"
-            fullWidth
-            onClick={() => handleShareButtonPress(DiagramView.SEE_FEEDBACK)}
-          >
-            See Feedback
-          </APButton>
+      <div className="flex flex-col gap-2">
+        <Typography className="text-sm text-[var(--apollon-secondary)]">
+          Choose a default view for anyone opening the link
+        </Typography>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+          <div>
+            <APButton
+              variant="outline"
+              fullWidth
+              onClick={() => handleShareButtonPress(DiagramView.EDIT)}
+            >
+              Edit
+            </APButton>
+          </div>
+          <div>
+            <APButton variant="outline" fullWidth onClick={handleCollaborate}>
+              Collaborate
+            </APButton>
+          </div>
+          <div>
+            <APButton
+              variant="outline"
+              fullWidth
+              onClick={() => handleShareButtonPress(DiagramView.GIVE_FEEDBACK)}
+            >
+              Give Feedback
+            </APButton>
+          </div>
+          <div>
+            <APButton
+              variant="outline"
+              fullWidth
+              onClick={() => handleShareButtonPress(DiagramView.SEE_FEEDBACK)}
+            >
+              See Feedback
+            </APButton>
+          </div>
         </div>
       </div>
       <fieldset className="border border-gray-300 p-2 rounded-xl w-fill ">

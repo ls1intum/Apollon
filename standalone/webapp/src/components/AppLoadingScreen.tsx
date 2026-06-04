@@ -18,9 +18,9 @@ export const AppLoadingScreen = ({
         <div className="app-loading-logo-shell">
           <img
             className="app-loading-logo"
-            src="/assets/images/apollon-logo-v1.svg"
+            src="/assets/images/apollon-logo-v2.svg"
             alt="Apollon logo"
-            width="48"
+            width="54"
             height="50"
           />
         </div>

@@ -7,6 +7,16 @@ import { useModalContext } from "@/contexts/ModalContext"
 import { UMLDiagramType } from "@tumaet/apollon"
 import { useNavigate } from "react-router"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
+import {
+  HomeDialogActions,
+  HomeDialogContent,
+  HomeDialogField,
+  HomeDialogNotice,
+  HomeDialogOptionGroup,
+  HomeDialogTextInput,
+  isHomeDialogVariant,
+  type HomeDialogOption,
+} from "./HomeDialog"
 
 const diagramTypes = {
   structural: [
@@ -44,7 +54,19 @@ const diagramTypeToTitle: Record<UMLDiagramType, string> = {
   Sfc: "SFC Diagram",
 }
 
-export const NewDiagramModal = () => {
+const toDiagramOptions = (
+  types: UMLDiagramType[]
+): HomeDialogOption<UMLDiagramType>[] =>
+  types.map((type) => ({
+    value: type,
+    label: diagramTypeToTitle[type],
+  }))
+
+const structuralDiagramOptions = toDiagramOptions(diagramTypes.structural)
+const behavioralDiagramOptions = toDiagramOptions(diagramTypes.behavioral)
+
+export const NewDiagramModal = (props: unknown) => {
+  const isHomeDialog = isHomeDialogVariant(props)
   const { closeModal } = useModalContext()
   const [isDiagramNameDefault, setIsDiagramNameDefault] =
     useState<boolean>(true)
@@ -59,7 +81,10 @@ export const NewDiagramModal = () => {
 
   const handleCreateDiagram = () => {
     // Close before navigate: ModalContext writes after route unmount race.
-    const id = createModelByTitleAndType(newDiagramTitle, selectedDiagramType)
+    const title = newDiagramTitle.trim()
+    if (!title) return
+
+    const id = createModelByTitleAndType(title, selectedDiagramType)
     closeModal()
     navigate(`/local/${id}`)
   }
@@ -76,6 +101,51 @@ export const NewDiagramModal = () => {
     if (isDiagramNameDefault) {
       setNewDiagramTitle(diagramTypeToTitle[type])
     }
+  }
+
+  if (isHomeDialog) {
+    return (
+      <HomeDialogContent>
+        <HomeDialogNotice>
+          Choose a diagram type and name it before opening it in the editor.
+        </HomeDialogNotice>
+
+        <HomeDialogField label="Name" htmlFor="diagram-title">
+          <HomeDialogTextInput
+            id="diagram-title"
+            type="text"
+            value={newDiagramTitle}
+            onChange={handleDiagramNameChange}
+            placeholder="Enter diagram title"
+            maxLength={120}
+          />
+        </HomeDialogField>
+
+        <HomeDialogOptionGroup
+          label="Structural diagrams"
+          options={structuralDiagramOptions}
+          value={selectedDiagramType}
+          onChange={handleDiagramTypeChange}
+          columns={2}
+          onConfirm={handleCreateDiagram}
+        />
+        <HomeDialogOptionGroup
+          label="Behavioral diagrams"
+          options={behavioralDiagramOptions}
+          value={selectedDiagramType}
+          onChange={handleDiagramTypeChange}
+          columns={2}
+          onConfirm={handleCreateDiagram}
+        />
+
+        <HomeDialogActions
+          confirmLabel="Create"
+          confirmDisabled={!newDiagramTitle.trim()}
+          onCancel={closeModal}
+          onConfirm={handleCreateDiagram}
+        />
+      </HomeDialogContent>
+    )
   }
 
   return (

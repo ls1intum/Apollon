@@ -1,8 +1,8 @@
 import Box from "@mui/material/Box/Box"
 import Typography from "@mui/material/Typography/Typography"
-import { secondary, appVersion } from "@/constants"
+import { appVersion } from "@/constants"
 import { APP_NAME_FONT_FAMILY } from "./styleConstants"
-import ApollonLogo from "assets/images/apollon-logo-v1.svg"
+import ApollonLogo from "assets/images/apollon-logo-v2.svg"
 
 export const BrandAndVersion = () => {
   return (
@@ -13,17 +13,26 @@ export const BrandAndVersion = () => {
         gap: 1.25,
       }}
     >
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+      {/* Logo + wordmark are one indivisible unit: never shrink, never wrap,
+          never truncate (no "Apol…" on narrow viewports). */}
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          flexShrink: 0,
+          whiteSpace: "nowrap",
+        }}
+      >
         <img
           alt="Apollon logo"
           src={ApollonLogo}
-          width="20"
+          width="22"
           height="20"
           style={{ display: "block", flexShrink: 0 }}
         />
 
         <Typography
-          noWrap
           component="span"
           sx={{
             fontWeight: 600,
@@ -32,6 +41,8 @@ export const BrandAndVersion = () => {
             lineHeight: 1,
             fontSize: "1.25rem",
             textTransform: "uppercase",
+            whiteSpace: "nowrap",
+            overflow: "visible",
           }}
         >
           Apollon
@@ -42,7 +53,9 @@ export const BrandAndVersion = () => {
         variant="body2"
         component="span"
         sx={{
-          color: secondary,
+          // Muted text on the always-dark navbar — theme-independent translucent
+          // white, not a theme-reactive token (the navbar never changes color).
+          color: "rgba(255, 255, 255, 0.65)",
           display: { xs: "none", sm: "block" },
           lineHeight: 1.1,
           fontSize: "0.75rem",

@@ -19,7 +19,7 @@ export const ThemeSwitcherMenu: React.FC = () => {
       onClick={toggleTheme}
       aria-label={title}
       title={title}
-      className="relative mt-[5px] inline-flex h-9 w-9 cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-[var(--home-text-secondary)] transition-all duration-200 hover:scale-115 hover:text-white hover:drop-shadow-[0_0_10px_var(--home-glow-neutral)] active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#212529]"
+      className="relative mt-[5px] inline-flex h-9 w-9 cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-white/70 transition-all duration-200 hover:scale-115 hover:text-white hover:drop-shadow-[0_0_10px_var(--home-glow-neutral)] active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#212529]"
     >
       <span
         className={`absolute inset-0 flex items-center justify-center transition-all duration-[250ms] ${

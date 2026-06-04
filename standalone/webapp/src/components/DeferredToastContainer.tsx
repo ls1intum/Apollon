@@ -25,7 +25,11 @@ export const DeferredToastContainer = () => {
 
   return (
     <Suspense fallback={null}>
-      <ToastContainer theme={currentTheme === "dark" ? "dark" : "light"} />
+      <ToastContainer
+        theme={currentTheme === "dark" ? "dark" : "light"}
+        className="home-toast-container"
+        toastClassName="home-toast"
+      />
     </Suspense>
   )
 }

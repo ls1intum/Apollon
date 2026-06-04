@@ -62,7 +62,6 @@ const THUMBNAIL_THEME_CACHE_LIMIT = 300
  * element). All inner spacing is expressed in these base-px steps and run
  * through `scalePx()` so the proportions hold at every scale.
  */
-const CARD_BASE_WIDTH_PX = 260
 const CARD_BASE_HEIGHT_PX = 300
 const CARD_HEADER_HEIGHT_PX = 243
 const CARD_FOOTER_HEIGHT_PX = 56
@@ -263,7 +262,8 @@ const pruneThumbnailThemeCache = () => {
 
 const getCachedThumbnailSources = (
   cacheKey: string,
-  svgString: string | null
+  svgString: string | null,
+  { eager = false } = {}
 ): ThumbnailThemeSources | null => {
   if (!svgString) return null
 
@@ -282,17 +282,20 @@ const getCachedThumbnailSources = (
     cacheEntry.lightDataUrl = toSvgDataUrl(svgString)
   }
 
-  if (!cacheEntry.darkSvg) {
-    cacheEntry.darkSvg = applyDarkThemeToThumbnailSvg(svgString)
-  }
-
-  if (!cacheEntry.darkDataUrl) {
-    cacheEntry.darkDataUrl = toSvgDataUrl(cacheEntry.darkSvg)
+  // Dark-theme conversion is expensive (DOMParser + DOM walk + XMLSerializer).
+  // Skip it during render; only run it eagerly when called from an idle callback.
+  if (eager) {
+    if (!cacheEntry.darkSvg) {
+      cacheEntry.darkSvg = applyDarkThemeToThumbnailSvg(svgString)
+    }
+    if (!cacheEntry.darkDataUrl) {
+      cacheEntry.darkDataUrl = toSvgDataUrl(cacheEntry.darkSvg)
+    }
   }
 
   return {
     lightDataUrl: cacheEntry.lightDataUrl,
-    darkDataUrl: cacheEntry.darkDataUrl,
+    darkDataUrl: cacheEntry.darkDataUrl ?? cacheEntry.lightDataUrl,
   }
 }
 
@@ -352,6 +355,7 @@ type DiagramActionsMenuProps = {
   menuClassName?: string
   menuStyle?: CSSProperties
   stopPropagation?: boolean
+  isExpired?: boolean
   onSharedDiagramRemoved?: (diagramId: string) => void
   onSharedDiagramViewChange?: (diagramId: string, view: DiagramView) => void
 }
@@ -364,6 +368,7 @@ export const DiagramActionsMenu = ({
   menuClassName = "z-40 w-52 rounded-lg border border-[var(--home-border-subtle)] bg-[var(--home-surface-raised)] p-1 shadow-2xl transition-colors duration-200",
   menuStyle,
   stopPropagation = false,
+  isExpired = false,
   onSharedDiagramRemoved,
   onSharedDiagramViewChange,
 }: DiagramActionsMenuProps) => {
@@ -435,7 +440,7 @@ export const DiagramActionsMenu = ({
       return
     }
 
-    openModal("SHARE", { modelId: diagram.id })
+    openModal("SHARE_DASHBOARD", { modelId: diagram.id })
     closeMenu()
   }
 
@@ -475,6 +480,12 @@ export const DiagramActionsMenu = ({
     }
   }
 
+  const handleContainerMouseDown = (event: ReactMouseEvent<HTMLElement>) => {
+    if (stopPropagation) {
+      event.stopPropagation()
+    }
+  }
+
   const handleContainerKeyDown = (event: ReactKeyboardEvent<HTMLElement>) => {
     if (stopPropagation) {
       event.stopPropagation()
@@ -485,6 +496,7 @@ export const DiagramActionsMenu = ({
     <div
       className={containerClassName}
       onClick={handleContainerClick}
+      onMouseDown={handleContainerMouseDown}
       onKeyDown={handleContainerKeyDown}
     >
       <button
@@ -541,7 +553,19 @@ export const DiagramActionsMenu = ({
             : undefined,
         }}
       >
-        {!isDeleteConfirmOpen ? (
+        {isExpired ? (
+          <div className="space-y-1">
+            <MenuItem
+              disableGutters
+              sx={{ minHeight: 0 }}
+              className="home-filter-menu-item home-filter-menu-item-delete !min-h-0 !rounded-md !px-3 !py-2 !text-sm transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2"
+              onMouseEnter={closeSharingModeMenu}
+              onClick={handleRemoveSharedEntry}
+            >
+              Remove from shared list
+            </MenuItem>
+          </div>
+        ) : !isDeleteConfirmOpen ? (
           <div className="space-y-1">
             <MenuItem
               disableGutters
@@ -768,7 +792,9 @@ type DiagramCardProps = {
   diagram: RecentDiagram
   isThumbnailLoading?: boolean
   showPlaceholderIcon?: boolean
+  showSourceBadge?: boolean
   isHighlighted?: boolean
+  isExpired?: boolean
   onToggleFavorite?: (diagram: RecentDiagram) => void
   onSharedDiagramRemoved?: (diagramId: string) => void
   onSharedDiagramViewChange?: (diagramId: string, view: DiagramView) => void
@@ -778,7 +804,9 @@ const DiagramCardComponent = ({
   diagram,
   isThumbnailLoading = false,
   showPlaceholderIcon = false,
+  showSourceBadge = false,
   isHighlighted = false,
+  isExpired = false,
   onToggleFavorite,
   onSharedDiagramRemoved,
   onSharedDiagramViewChange,
@@ -797,14 +825,23 @@ const DiagramCardComponent = ({
   const title = diagram.title.trim() || "Untitled Diagram"
   const diagramSource = diagram.source ?? "local"
   const isLocalDiagram = diagramSource === "local"
-  const canToggleFavorite = isLocalDiagram || Boolean(onToggleFavorite)
+  const canToggleFavorite =
+    !isExpired && (isLocalDiagram || Boolean(onToggleFavorite))
   const thumbnailCacheKey = `${diagram.id}:${thumbnailRevision}`
-  const thumbnailSources = useMemo(
-    () => getCachedThumbnailSources(thumbnailCacheKey, thumbnailSvg),
+  const lightDataUrl = useMemo(
+    () =>
+      getCachedThumbnailSources(thumbnailCacheKey, thumbnailSvg)
+        ?.lightDataUrl ?? null,
     [thumbnailCacheKey, thumbnailSvg]
   )
+  const [darkDataUrl, setDarkDataUrl] = useState<string | null>(null)
+
   const shouldRenderDiagramThumbnail =
-    !showPlaceholderIcon && Boolean(thumbnailSources)
+    !showPlaceholderIcon && Boolean(lightDataUrl)
+  // Non-empty diagram with no thumbnail yet — treat as loading to avoid
+  // flashing the fallback type icon during the pre-warmup delay.
+  const isEffectivelyLoading =
+    isThumbnailLoading || (!showPlaceholderIcon && !lightDataUrl)
   // Re-render once a minute (via a shared interval) so the relative date stays fresh.
   useMinuteTick()
   const relativeDate = formatRelativeLastModified(
@@ -812,9 +849,8 @@ const DiagramCardComponent = ({
     Date.now()
   )
   const shortTypeLabel = getDiagramTypeShortLabel(diagram.type)
-  const sourceBadgeLabel = isLocalDiagram
-    ? shortTypeLabel
-    : getSharedDiagramViewBadge(diagram.lastSharedView)
+  const sourceTypeLabel = isLocalDiagram ? "Local" : "Shared"
+  const sharedViewLabel = getSharedDiagramViewBadge(diagram.lastSharedView)
   const createdAtDate = new Date(
     diagram.createdAt ?? diagram.lastModifiedAt
   ).toLocaleDateString("en-US", {
@@ -826,6 +862,7 @@ const DiagramCardComponent = ({
 
   useEffect(() => {
     if (!thumbnailSvg) {
+      setDarkDataUrl(null)
       return
     }
 
@@ -834,10 +871,19 @@ const DiagramCardComponent = ({
       cancelIdleCallback?: (id: number) => void
     }
 
+    const compute = () => {
+      const sources = getCachedThumbnailSources(
+        thumbnailCacheKey,
+        thumbnailSvg,
+        { eager: true }
+      )
+      if (sources) {
+        setDarkDataUrl(sources.darkDataUrl)
+      }
+    }
+
     if (typeof idleWindow.requestIdleCallback === "function") {
-      const idleId = idleWindow.requestIdleCallback(() => {
-        getCachedThumbnailSources(thumbnailCacheKey, thumbnailSvg)
-      })
+      const idleId = idleWindow.requestIdleCallback(compute)
       return () => {
         if (typeof idleWindow.cancelIdleCallback === "function") {
           idleWindow.cancelIdleCallback(idleId)
@@ -845,10 +891,7 @@ const DiagramCardComponent = ({
       }
     }
 
-    const timeoutId = window.setTimeout(() => {
-      getCachedThumbnailSources(thumbnailCacheKey, thumbnailSvg)
-    }, 120)
-
+    const timeoutId = window.setTimeout(compute, 120)
     return () => {
       window.clearTimeout(timeoutId)
     }
@@ -873,40 +916,56 @@ const DiagramCardComponent = ({
   return (
     <div
       role="listitem"
-      className="home-diagram-card group relative mx-auto flex flex-col overflow-hidden transition-all duration-[280ms] ease-[cubic-bezier(0.16,1,0.3,1)] [--card-scale:1] md:[--card-scale:1.0769231] xl:[--card-scale:1.1538462]"
+      className={`home-diagram-card group relative mx-auto flex flex-col overflow-hidden bg-[var(--home-surface-raised)] transition-all duration-[280ms] ease-[cubic-bezier(0.16,1,0.3,1)] [--card-scale:1] hover:bg-[var(--home-surface-raised-hover)] md:[--card-scale:1.0769231] xl:[--card-scale:1.1538462] ${
+        isHighlighted
+          ? "bg-[var(--home-surface-raised-hover)]"
+          : "hover:[box-shadow:0_8px_24px_var(--home-shadow-card-hover)]"
+      }`}
       style={{
-        background: "var(--home-surface-raised)",
         border: "none",
-        borderRadius: "2px",
-        width: scalePx(CARD_BASE_WIDTH_PX),
+        borderRadius: "var(--home-radius-sm)",
+        width: "100%",
+        maxWidth: "300px",
         height: scalePx(CARD_BASE_HEIGHT_PX),
         boxShadow: isHighlighted
           ? "0 0 0 4px var(--home-glow-neutral), 0 8px 32px var(--home-glow-neutral)"
-          : "none",
+          : undefined,
         animation: isHighlighted
           ? "diagram-highlight-pulse 2.4s ease-out forwards"
           : undefined,
       }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.background = "var(--home-surface-raised-hover)"
-        if (!isHighlighted) {
-          e.currentTarget.style.boxShadow =
-            "0 8px 24px var(--home-shadow-card-hover)"
-        }
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.background = "var(--home-surface-raised)"
-        if (!isHighlighted) {
-          e.currentTarget.style.boxShadow = "none"
-        }
-      }}
     >
+      {/* Expired overlay */}
+      {isExpired && (
+        <div
+          className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-1 rounded-[var(--home-radius-sm)]"
+          style={{
+            background:
+              "color-mix(in srgb, var(--home-surface-raised) 80%, transparent)",
+          }}
+        >
+          <span
+            className="text-xs font-semibold"
+            style={{ color: "var(--home-text-secondary)" }}
+          >
+            Link expired
+          </span>
+          <span
+            className="text-[10px]"
+            style={{ color: "var(--home-text-muted)" }}
+          >
+            This shared diagram is no longer available
+          </span>
+        </div>
+      )}
+
       {/* Clickable card body */}
       <button
         type="button"
-        onClick={handleOpen}
-        aria-label={`Open ${title}`}
-        className="flex w-full h-full cursor-pointer flex-col text-left focus-visible:outline-2 focus-visible:outline-offset-2"
+        onClick={isExpired ? undefined : handleOpen}
+        aria-label={isExpired ? `${title} (expired)` : `Open ${title}`}
+        aria-disabled={isExpired}
+        className={`flex w-full h-full flex-col text-left focus-visible:outline-2 focus-visible:outline-offset-2 ${isExpired ? "cursor-default opacity-40" : "cursor-pointer"}`}
         style={{ outlineColor: "var(--home-accent-ring)" }}
       >
         {/* ---- Header Part: preview + title aligned horizontally ---- */}
@@ -930,20 +989,22 @@ const DiagramCardComponent = ({
             {shouldRenderDiagramThumbnail ? (
               <div className="relative h-full w-full">
                 <img
-                  src={thumbnailSources!.lightDataUrl}
+                  src={lightDataUrl!}
                   alt={`${title} diagram preview`}
                   className="theme-thumbnail-image theme-thumbnail-light"
                   loading="lazy"
                 />
-                <img
-                  src={thumbnailSources!.darkDataUrl}
-                  alt=""
-                  aria-hidden="true"
-                  className="theme-thumbnail-image theme-thumbnail-dark"
-                  loading="lazy"
-                />
+                {darkDataUrl && (
+                  <img
+                    src={darkDataUrl}
+                    alt=""
+                    aria-hidden="true"
+                    className="theme-thumbnail-image theme-thumbnail-dark"
+                    loading="lazy"
+                  />
+                )}
               </div>
-            ) : isThumbnailLoading && !showPlaceholderIcon ? (
+            ) : isEffectivelyLoading && !showPlaceholderIcon ? (
               <div className="flex flex-col items-center gap-2">
                 <span
                   className="h-5 w-5 animate-spin rounded-full border-2"
@@ -995,12 +1056,12 @@ const DiagramCardComponent = ({
         {/* ---- Divider line ---- */}
         <div
           style={{
-            borderTop: "0.5px solid var(--home-border-strong)",
+            borderTop: "0.5px solid var(--home-border-subtle)",
             margin: `0 ${scalePx(CARD_PAD_X_PX)}`,
           }}
         />
 
-        {/* ---- Bottom metadata + badge row ---- */}
+        {/* ---- Bottom metadata + tags row ---- */}
         <div
           className="flex items-center justify-between w-full"
           style={{
@@ -1032,31 +1093,74 @@ const DiagramCardComponent = ({
             </span>
           </div>
 
-          {/* Neutral type tag so the primary blue remains reserved for main CTAs */}
-          <div className="flex shrink-0 items-center pl-2">
+          {/*
+            Tag group — always shows the diagram-type pill (primary).
+            A secondary source/mode pill is added when relevant:
+            - "all diagrams" view: Local or Shared
+            - shared diagrams: the sharing mode (view/edit)
+          */}
+          <div className="flex shrink-0 items-center gap-1 pl-2">
             <span
-              className="flex items-center justify-center rounded shadow-sm"
-              title={sourceBadgeLabel}
+              className="rounded"
+              title={shortTypeLabel}
               style={{
-                padding: "4px 10px",
+                padding: "3px 8px",
                 fontSize: `${CARD_TYPE_BADGE_PX}px`,
                 lineHeight: 1.2,
-                background: isLocalDiagram
-                  ? "var(--home-surface-raised-hover)"
-                  : "var(--home-accent-soft)",
-                color: isLocalDiagram
-                  ? "var(--home-text-secondary)"
-                  : "var(--home-accent-base)",
-                borderRadius: "4px",
-                fontWeight: isLocalDiagram ? 400 : 600,
+                background: "var(--home-tag-type-bg)",
+                color: "var(--home-tag-type-text)",
+                fontWeight: 500,
                 maxWidth: scalePx(CARD_BADGE_MAX_WIDTH_PX),
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
               }}
             >
-              {sourceBadgeLabel}
+              {shortTypeLabel}
             </span>
+            {showSourceBadge ? (
+              <span
+                className="rounded"
+                title={sourceTypeLabel}
+                style={{
+                  padding: "3px 8px",
+                  fontSize: `${CARD_TYPE_BADGE_PX}px`,
+                  lineHeight: 1.2,
+                  background: isLocalDiagram
+                    ? "var(--home-tag-local-bg)"
+                    : "var(--home-tag-shared-bg)",
+                  color: isLocalDiagram
+                    ? "var(--home-tag-local-text)"
+                    : "var(--home-tag-shared-text)",
+                  fontWeight: 600,
+                  maxWidth: scalePx(CARD_BADGE_MAX_WIDTH_PX),
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {sourceTypeLabel}
+              </span>
+            ) : !isLocalDiagram ? (
+              <span
+                className="rounded"
+                title={sharedViewLabel}
+                style={{
+                  padding: "3px 8px",
+                  fontSize: `${CARD_TYPE_BADGE_PX}px`,
+                  lineHeight: 1.2,
+                  background: "var(--home-tag-shared-bg)",
+                  color: "var(--home-tag-shared-text)",
+                  fontWeight: 600,
+                  maxWidth: scalePx(CARD_BADGE_MAX_WIDTH_PX),
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {sharedViewLabel}
+              </span>
+            ) : null}
           </div>
         </div>
       </button>
@@ -1105,6 +1209,8 @@ const DiagramCardComponent = ({
       {/* ---- Three-dot menu – overlaid top-right ---- */}
       <DiagramActionsMenu
         diagram={diagram}
+        stopPropagation
+        isExpired={isExpired}
         containerClassName="absolute z-30 [right:calc(var(--card-scale)*16px)] [top:calc(var(--card-scale)*16px)]"
         triggerClassName="flex cursor-pointer items-center justify-center rounded-md p-1 transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2"
         triggerStyle={{

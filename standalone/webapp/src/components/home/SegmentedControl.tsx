@@ -2,7 +2,7 @@ import type { ReactNode } from "react"
 
 export type SegmentedControlOption<T extends string> = {
   value: T
-  label?: string
+  label?: ReactNode
   icon?: ReactNode
   ariaLabel?: string
 }

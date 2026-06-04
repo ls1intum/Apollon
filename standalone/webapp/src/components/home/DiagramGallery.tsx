@@ -32,6 +32,7 @@ import {
 import { getDiagramTypeLabel } from "./diagramTypeMeta"
 import { SegmentedControl } from "./SegmentedControl"
 import { DropdownFilterMenu } from "./DropdownFilterMenu"
+import { HomeButton } from "./primitives/HomeButton"
 
 const normalize = (value: string) => value.trim().toLowerCase()
 const INITIAL_VISIBLE_COUNT = 9
@@ -41,12 +42,14 @@ type DiagramTypeFilter = "all" | UMLDiagramType
 type DiagramSortBy = "alphabetical" | "dateCreated" | "lastViewed"
 type DiagramOrder = "oldest" | "newest"
 type DiagramViewMode = "grid" | "table"
+type DiagramSourceFilter = "all" | DiagramSource
 
 type GalleryDiagram = RecentDiagram & {
   model: UMLModel
   source: DiagramSource
   createdAt: string
   lastViewedAt: string
+  isExpired?: boolean
 }
 
 const isDiagramEmpty = (diagram: GalleryDiagram) =>
@@ -220,11 +223,17 @@ const TableViewIcon = () => (
 type DiagramGalleryProps = {
   initialSearchTerm?: string
   highlightSharedDiagramId?: string | null
+  onNewDiagram?: () => void
+  onFromTemplate?: () => void
+  onImportJson?: () => void
 }
 
 export const DiagramGallery = ({
   initialSearchTerm = "",
   highlightSharedDiagramId = null,
+  onNewDiagram,
+  onFromTemplate,
+  onImportJson,
 }: DiagramGalleryProps) => {
   const navigate = useNavigate()
   const models = usePersistenceModelStore((state) => state.models)
@@ -237,16 +246,19 @@ export const DiagramGallery = ({
   const [sortBy, setSortBy] = useState<DiagramSortBy>("lastViewed")
   const [sortOrder, setSortOrder] = useState<DiagramOrder>("newest")
   const [viewMode, setViewMode] = useState<DiagramViewMode>("grid")
-  const [diagramSource, setDiagramSource] = useState<DiagramSource>("local")
+  const [diagramSource, setDiagramSource] = useState<DiagramSourceFilter>("all")
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
   const [typeMenuAnchorEl, setTypeMenuAnchorEl] =
     useState<null | HTMLButtonElement>(null)
   const [sortMenuAnchorEl, setSortMenuAnchorEl] =
     useState<null | HTMLButtonElement>(null)
   const [sharedDiagrams, setSharedDiagrams] = useState<GalleryDiagram[]>([])
-  const [isSharedDiagramsFetching, setIsSharedDiagramsFetching] =
-    useState(false)
-  const hasLoadedSharedOnceRef = useRef(false)
+  const [sharedDiagramsStatus, setSharedDiagramsStatus] = useState<
+    "idle" | "loading" | "done" | "error"
+  >("idle")
+  const isSharedPending =
+    diagramSource === "shared" &&
+    (sharedDiagramsStatus === "idle" || sharedDiagramsStatus === "loading")
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_COUNT)
   const [highlightedDiagramId, setHighlightedDiagramId] = useState<
     string | null
@@ -274,7 +286,7 @@ export const DiagramGallery = ({
   }, [models])
 
   useEffect(() => {
-    if (diagramSource !== "shared") {
+    if (diagramSource !== "shared" && diagramSource !== "all") {
       return
     }
 
@@ -286,18 +298,17 @@ export const DiagramGallery = ({
       if (entries.length === 0) {
         if (isSubscribed) {
           setSharedDiagrams([])
-          setIsSharedDiagramsFetching(false)
-          hasLoadedSharedOnceRef.current = true
+          setSharedDiagramsStatus("done")
         }
         return
       }
 
       if (isSubscribed) {
-        setIsSharedDiagramsFetching(true)
+        setSharedDiagramsStatus("loading")
       }
 
-      const staleSharedIds: string[] = []
       const diagramsById = new Map<string, GalleryDiagram>()
+      let networkErrorCount = 0
 
       await Promise.all(
         entries.map(async (entry) => {
@@ -306,7 +317,19 @@ export const DiagramGallery = ({
               entry.id
             )
             if (!storedDiagram) {
-              staleSharedIds.push(entry.id)
+              diagramsById.set(entry.id, {
+                id: entry.id,
+                title: "Expired diagram",
+                type: "ClassDiagram",
+                lastModifiedAt: entry.sharedAt,
+                favorite: false,
+                source: "shared",
+                model: { nodes: [], edges: [] } as unknown as UMLModel,
+                createdAt: entry.sharedAt,
+                lastSharedView: entry.lastSharedView,
+                lastViewedAt: entry.sharedAt,
+                isExpired: true,
+              })
               return
             }
 
@@ -329,14 +352,10 @@ export const DiagramGallery = ({
                 entry.sharedAt,
             })
           } catch {
-            // Keep the id in local storage and skip this entry for now.
+            networkErrorCount++
           }
         })
       )
-
-      for (const staleSharedId of staleSharedIds) {
-        removeSharedDiagramEntry(staleSharedId)
-      }
 
       const orderedSharedDiagrams = entries
         .map((entry) => diagramsById.get(entry.id))
@@ -345,8 +364,11 @@ export const DiagramGallery = ({
 
       if (isSubscribed) {
         setSharedDiagrams(orderedSharedDiagrams)
-        setIsSharedDiagramsFetching(false)
-        hasLoadedSharedOnceRef.current = true
+        setSharedDiagramsStatus(
+          networkErrorCount > 0 && orderedSharedDiagrams.length === 0
+            ? "error"
+            : "done"
+        )
       }
     }
 
@@ -357,7 +379,17 @@ export const DiagramGallery = ({
     }
   }, [diagramSource])
 
-  const allDiagrams = diagramSource === "local" ? localDiagrams : sharedDiagrams
+  const allDiagrams = useMemo(() => {
+    if (diagramSource === "local") {
+      return localDiagrams
+    }
+
+    if (diagramSource === "shared") {
+      return sharedDiagrams
+    }
+
+    return [...localDiagrams, ...sharedDiagrams].sort(sortByLastModifiedDesc)
+  }, [diagramSource, localDiagrams, sharedDiagrams])
   const diagramTypeOptions = useMemo(
     () =>
       Array.from(new Set(allDiagrams.map((diagram) => diagram.type))).sort(
@@ -446,6 +478,7 @@ export const DiagramGallery = ({
   const diagramCountLabel = showFavoritesOnly
     ? `${filteredDiagrams.length} favorites`
     : `${filteredDiagrams.length} diagrams`
+  const isAllDiagramSource = diagramSource === "all"
 
   const closeTypeMenu = () => {
     setTypeMenuAnchorEl(null)
@@ -503,6 +536,7 @@ export const DiagramGallery = ({
   )
 
   const handleRemoveSharedDiagram = useCallback((diagramId: string) => {
+    removeSharedDiagramEntry(diagramId)
     setSharedDiagrams((currentDiagrams) =>
       currentDiagrams.filter((diagram) => diagram.id !== diagramId)
     )
@@ -520,17 +554,6 @@ export const DiagramGallery = ({
     },
     []
   )
-
-  const scrollToTypeGrid = () => {
-    const target = document.getElementById("new-diagram-section")
-    if (target) {
-      // This depends on <main> being the scroll root on the home page.
-      target.scrollIntoView({ behavior: "smooth", block: "start" })
-      return
-    }
-
-    window.scrollTo({ top: 0, behavior: "smooth" })
-  }
 
   useEffect(() => {
     if (!hasMoreDiagrams || isPending) {
@@ -570,6 +593,106 @@ export const DiagramGallery = ({
   return (
     <div className="w-full transition-colors duration-200">
       <div className="space-y-6 recent-diagrams-font">
+        {/* ── Page heading ── */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <h1
+            className="text-2xl font-semibold tracking-tight"
+            style={{ color: "var(--home-text-primary)" }}
+          >
+            Your diagrams
+          </h1>
+          <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center">
+            <HomeButton
+              variant="secondary"
+              size="sm"
+              onClick={onImportJson}
+              className="w-full sm:w-auto"
+              icon={
+                <svg
+                  className="h-3.5 w-3.5 flex-shrink-0"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <polyline
+                    points="17 8 12 3 7 8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <line x1="12" y1="3" x2="12" y2="15" strokeLinecap="round" />
+                </svg>
+              }
+            >
+              Import
+            </HomeButton>
+            <HomeButton
+              variant="secondary"
+              size="sm"
+              onClick={onFromTemplate}
+              className="w-full sm:w-auto"
+              icon={
+                <svg
+                  className="h-3.5 w-3.5 flex-shrink-0"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  aria-hidden="true"
+                >
+                  <rect
+                    x="3"
+                    y="3"
+                    width="18"
+                    height="18"
+                    rx="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M3 9h18M9 21V9"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              }
+            >
+              Template
+            </HomeButton>
+            <HomeButton
+              variant="primary"
+              size="sm"
+              onClick={onNewDiagram}
+              className="col-span-2 w-full sm:col-span-1 sm:w-auto"
+              icon={
+                <svg
+                  className="h-3.5 w-3.5 flex-shrink-0"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M12 5v14M5 12h14"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              }
+            >
+              New diagram
+            </HomeButton>
+          </div>
+        </div>
+
+        {/* ── Search row ── */}
         <div className="flex w-full flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <div className="relative w-full md:max-w-xl">
             <span
@@ -594,6 +717,8 @@ export const DiagramGallery = ({
             </span>
             <input
               id="recent-diagrams-search"
+              type="search"
+              aria-label="Search diagrams by name"
               value={searchTerm}
               onChange={(event) => {
                 setSearchTerm(event.target.value)
@@ -633,15 +758,43 @@ export const DiagramGallery = ({
           </span>
         </div>
 
-        <div className="flex w-full flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center lg:w-auto">
+        <div className="grid w-full gap-2 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+          <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_auto] lg:max-w-[620px] lg:grid-cols-[auto_auto] lg:justify-start">
             <SegmentedControl
-              className="w-full sm:w-fit sm:max-w-full"
+              className="w-full sm:max-w-full lg:w-fit"
               sizeClassName={controlHeightClass}
-              itemClassName={`px-3.5 ${controlTextClass}`}
+              itemClassName={`flex-1 px-2 sm:px-3 lg:flex-none ${controlTextClass}`}
               options={[
-                { value: "local", label: "Local diagrams" },
-                { value: "shared", label: "Shared diagrams" },
+                {
+                  value: "all",
+                  label: (
+                    <>
+                      <span className="sm:hidden">All</span>
+                      <span className="hidden sm:inline">All diagrams</span>
+                    </>
+                  ),
+                  ariaLabel: "All diagrams",
+                },
+                {
+                  value: "local",
+                  label: (
+                    <>
+                      <span className="sm:hidden">Local</span>
+                      <span className="hidden sm:inline">Local diagrams</span>
+                    </>
+                  ),
+                  ariaLabel: "Local diagrams",
+                },
+                {
+                  value: "shared",
+                  label: (
+                    <>
+                      <span className="sm:hidden">Shared</span>
+                      <span className="hidden sm:inline">Shared diagrams</span>
+                    </>
+                  ),
+                  ariaLabel: "Shared diagrams",
+                },
               ]}
               value={diagramSource}
               onChange={(nextSource) => {
@@ -656,7 +809,7 @@ export const DiagramGallery = ({
                 setVisibleCount(INITIAL_VISIBLE_COUNT)
               }}
               aria-pressed={showFavoritesOnly}
-              className={`flex ${controlHeightClass} w-full cursor-pointer items-center justify-center gap-2 rounded-md border-0 px-3 text-xs font-semibold transition-all duration-200 focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2 sm:w-fit sm:justify-start ${
+              className={`flex ${controlHeightClass} w-full cursor-pointer items-center justify-center gap-2 rounded-md border-0 px-3 text-xs font-semibold transition-all duration-200 focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2 sm:w-auto sm:justify-start ${
                 showFavoritesOnly
                   ? "bg-[var(--home-surface-raised-hover)] text-[var(--home-favorite-star)]"
                   : "bg-[var(--home-surface-raised)] text-[var(--home-text-secondary)] hover:bg-[var(--home-surface-raised-hover)] hover:text-[var(--home-favorite-star)]"
@@ -678,20 +831,22 @@ export const DiagramGallery = ({
               Favorites
             </button>
           </div>
-          <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 lg:flex lg:w-auto lg:flex-nowrap lg:items-center">
+          <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:w-auto lg:grid-cols-[176px_220px_auto]">
             <DropdownFilterMenu
               buttonId="diagram-type-filter-button"
               menuId="diagram-type-filter-menu"
               anchorEl={typeMenuAnchorEl}
               onClose={closeTypeMenu}
               onToggle={(event) => {
+                // Read currentTarget before the updater; React nulls it after.
+                const trigger = event.currentTarget
                 closeSortMenu()
                 setTypeMenuAnchorEl((currentAnchor) =>
-                  currentAnchor ? null : event.currentTarget
+                  currentAnchor ? null : trigger
                 )
               }}
               anchorHorizontal="left"
-              triggerClassName={`flex ${controlHeightClass} min-w-0 w-full cursor-pointer items-center justify-between gap-2 rounded-md border-0 px-2.5 text-xs transition-all duration-200 focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2 sm:w-44 ${
+              triggerClassName={`flex ${controlHeightClass} min-w-0 w-full cursor-pointer items-center justify-between gap-2 rounded-md border-0 px-2.5 text-xs transition-all duration-200 focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2 ${
                 isTypeMenuOpen
                   ? "bg-[var(--home-surface-raised-hover)] text-[var(--home-accent-strong)]"
                   : "bg-[var(--home-surface-raised)] text-[var(--home-text-secondary)] hover:bg-[var(--home-surface-raised-hover)] hover:text-[var(--home-accent-strong)]"
@@ -733,12 +888,14 @@ export const DiagramGallery = ({
               anchorEl={sortMenuAnchorEl}
               onClose={closeSortMenu}
               onToggle={(event) => {
+                // Read currentTarget before the updater; React nulls it after.
+                const trigger = event.currentTarget
                 closeTypeMenu()
                 setSortMenuAnchorEl((currentAnchor) =>
-                  currentAnchor ? null : event.currentTarget
+                  currentAnchor ? null : trigger
                 )
               }}
-              triggerClassName={`flex ${controlHeightClass} min-w-0 w-full cursor-pointer items-center gap-2 rounded-md border-0 px-2.5 text-xs transition-all duration-200 focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2 sm:w-auto ${
+              triggerClassName={`flex ${controlHeightClass} min-w-0 w-full cursor-pointer items-center gap-2 rounded-md border-0 px-2.5 text-xs transition-all duration-200 focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2 ${
                 isSortMenuOpen
                   ? "bg-[var(--home-surface-raised-hover)] text-[var(--home-accent-strong)]"
                   : "bg-[var(--home-surface-raised)] text-[var(--home-text-secondary)] hover:bg-[var(--home-surface-raised-hover)] hover:text-[var(--home-accent-strong)]"
@@ -746,7 +903,7 @@ export const DiagramGallery = ({
               triggerContent={
                 <>
                   <span className="min-w-0 truncate">{sortByLabel}</span>
-                  <span className="hidden text-[var(--home-text-secondary)] sm:inline">
+                  <span className="hidden text-[var(--home-text-secondary)] md:inline">
                     {sortOrderLabel}
                   </span>
                 </>
@@ -791,7 +948,7 @@ export const DiagramGallery = ({
                 },
               ]}
             />
-            <div className="sm:col-span-2 lg:col-span-1 lg:justify-self-end">
+            <div className="justify-self-start sm:justify-self-end">
               <SegmentedControl
                 className="w-fit"
                 sizeClassName={controlHeightClass}
@@ -815,30 +972,124 @@ export const DiagramGallery = ({
           </div>
         </div>
 
-        {isSharedDiagramsFetching && !hasLoadedSharedOnceRef.current ? (
+        {isSharedPending ? (
           <DiagramGallerySkeleton
             count={Math.max(getSharedDiagramEntries().length, 1)}
           />
         ) : allDiagrams.length === 0 ? (
-          <div className="flex min-h-96 flex-col items-center justify-center gap-4 text-center text-[var(--home-text-secondary)] transition-colors duration-200">
+          <div className="flex min-h-[480px] flex-col items-center justify-center gap-6 text-center transition-colors duration-200">
             <EmptyStateIllustration />
-            <p className="text-lg font-semibold text-[var(--home-text-primary)] transition-colors duration-200">
-              {diagramSource === "local"
-                ? "No local diagrams yet"
-                : "No shared diagrams yet"}
-            </p>
-            {diagramSource === "local" ? (
-              <button
-                type="button"
-                className="cursor-pointer rounded-lg border border-[var(--home-accent-ring)] bg-[var(--home-accent-ring)] px-4 py-2 text-sm font-medium text-[var(--home-text-on-badge)] transition-colors duration-200 hover:bg-[var(--home-surface-raised-active)] hover:border-[var(--home-surface-raised-active)] focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2"
-                onClick={scrollToTypeGrid}
-              >
-                Create your first diagram
-              </button>
-            ) : (
-              <p className="max-w-md text-sm">
-                Share a local diagram to see it listed here.
+            <div className="flex flex-col items-center gap-1.5">
+              <p className="text-lg font-semibold text-[var(--home-text-primary)] transition-colors duration-200">
+                {diagramSource === "all"
+                  ? "No diagrams yet"
+                  : diagramSource === "local"
+                    ? "No local diagrams yet"
+                    : sharedDiagramsStatus === "error"
+                      ? "Server unavailable"
+                      : "No shared diagrams yet"}
               </p>
+              <p className="max-w-xs text-sm text-[var(--home-text-secondary)]">
+                {diagramSource === "shared"
+                  ? sharedDiagramsStatus === "error"
+                    ? "Could not reach the server. Check your connection and try again."
+                    : "Share a local diagram to see it listed here."
+                  : "Start from scratch, pick a template, or import an existing file."}
+              </p>
+            </div>
+            {(diagramSource === "local" || diagramSource === "all") && (
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <HomeButton
+                  variant="primary"
+                  size="md"
+                  onClick={onNewDiagram}
+                  icon={
+                    <svg
+                      className="h-3.5 w-3.5 flex-shrink-0"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.2"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M12 5v14M5 12h14"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  }
+                >
+                  New diagram
+                </HomeButton>
+                <HomeButton
+                  variant="secondary"
+                  size="md"
+                  onClick={onFromTemplate}
+                  icon={
+                    <svg
+                      className="h-3.5 w-3.5 flex-shrink-0"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      aria-hidden="true"
+                    >
+                      <rect
+                        x="3"
+                        y="3"
+                        width="18"
+                        height="18"
+                        rx="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M3 9h18M9 21V9"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  }
+                >
+                  From template
+                </HomeButton>
+                <HomeButton
+                  variant="secondary"
+                  size="md"
+                  onClick={onImportJson}
+                  icon={
+                    <svg
+                      className="h-3.5 w-3.5 flex-shrink-0"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <polyline
+                        points="17 8 12 3 7 8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <line
+                        x1="12"
+                        y1="3"
+                        x2="12"
+                        y2="15"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  }
+                >
+                  Import
+                </HomeButton>
+              </div>
             )}
           </div>
         ) : (
@@ -848,7 +1099,7 @@ export const DiagramGallery = ({
                 {viewMode === "grid" ? (
                   <div
                     role="list"
-                    className="grid grid-cols-[repeat(auto-fill,260px)] gap-6 justify-center md:grid-cols-[repeat(auto-fill,280px)] lg:gap-8 xl:grid-cols-[repeat(auto-fill,300px)]"
+                    className="grid grid-cols-[repeat(auto-fit,minmax(230px,1fr))] gap-x-4 gap-y-6 md:grid-cols-[repeat(auto-fit,minmax(260px,1fr))] md:gap-x-6 md:gap-y-8 lg:gap-x-7 lg:gap-y-10 xl:grid-cols-[repeat(auto-fit,minmax(280px,1fr))]"
                   >
                     {visibleDiagrams.map((diagram, index) => (
                       <div
@@ -865,7 +1116,9 @@ export const DiagramGallery = ({
                           isThumbnailLoading={Boolean(
                             loadingThumbnailIds[diagram.id]
                           )}
+                          showSourceBadge={isAllDiagramSource}
                           isHighlighted={diagram.id === highlightedDiagramId}
+                          isExpired={diagram.isExpired}
                           onToggleFavorite={handleToggleDiagramFavorite}
                           onSharedDiagramRemoved={handleRemoveSharedDiagram}
                           onSharedDiagramViewChange={
@@ -876,7 +1129,7 @@ export const DiagramGallery = ({
                     ))}
                   </div>
                 ) : (
-                  <div className="overflow-hidden rounded-[4px]">
+                  <div className="overflow-hidden rounded-[var(--home-radius-sm)]">
                     <div className="overflow-x-auto">
                       <table className="min-w-full border-separate border-spacing-0 text-left">
                         <thead className="bg-[var(--home-surface-row-alt)]">
@@ -911,9 +1164,13 @@ export const DiagramGallery = ({
                             return (
                               <tr
                                 key={diagram.id}
-                                className="cursor-pointer bg-[var(--home-surface-raised)] transition-colors duration-200 odd:bg-[var(--home-surface-raised)] odd:hover:bg-[var(--home-accent-soft)] even:bg-[var(--home-surface-row-alt)] even:hover:bg-[var(--home-accent-soft)]"
-                                onClick={() => handleOpenDiagram(diagram)}
+                                className={`bg-[var(--home-surface-raised)] transition-colors duration-200 odd:bg-[var(--home-surface-raised)] even:bg-[var(--home-surface-row-alt)] ${diagram.isExpired ? "cursor-default opacity-50" : "cursor-pointer odd:hover:bg-[var(--home-accent-soft)] even:hover:bg-[var(--home-accent-soft)]"}`}
+                                onClick={() =>
+                                  !diagram.isExpired &&
+                                  handleOpenDiagram(diagram)
+                                }
                                 onKeyDown={(event) => {
+                                  if (diagram.isExpired) return
                                   if (
                                     event.key === "Enter" ||
                                     event.key === " "
@@ -922,7 +1179,7 @@ export const DiagramGallery = ({
                                     handleOpenDiagram(diagram)
                                   }
                                 }}
-                                tabIndex={0}
+                                tabIndex={diagram.isExpired ? -1 : 0}
                               >
                                 <td className="px-3 py-3 align-middle">
                                   <button
@@ -975,19 +1232,12 @@ export const DiagramGallery = ({
                                   </button>
                                 </td>
                                 <td className="w-[26%] px-3 py-3 align-middle text-sm text-[var(--home-text-primary)]">
-                                  <div className="flex min-w-0 flex-col gap-1">
-                                    <span className="truncate">{title}</span>
-                                    {diagram.source === "shared" && (
-                                      <span className="w-fit rounded bg-[var(--home-accent-soft)] px-2 py-0.5 text-[10px] font-semibold text-[var(--home-accent-base)]">
-                                        {getSharedDiagramViewBadge(
-                                          diagram.lastSharedView
-                                        )}
-                                      </span>
-                                    )}
-                                  </div>
+                                  <span className="truncate">{title}</span>
                                 </td>
                                 <td className="hidden px-3 py-3 align-middle text-xs text-[var(--home-text-secondary)] md:table-cell">
-                                  {getDiagramTypeLabel(diagram.type)}
+                                  <span className="rounded px-2 py-0.5 text-[10px] font-medium bg-[var(--home-tag-type-bg)] text-[var(--home-tag-type-text)]">
+                                    {getDiagramTypeLabel(diagram.type)}
+                                  </span>
                                 </td>
                                 <td className="hidden px-3 py-3 align-middle text-xs text-[var(--home-text-secondary)] md:table-cell">
                                   {formatDate(diagram.createdAt)}
@@ -995,16 +1245,32 @@ export const DiagramGallery = ({
                                 <td className="px-3 py-3 align-middle text-xs text-[var(--home-text-secondary)]">
                                   {formatDate(diagram.lastViewedAt)}
                                 </td>
-                                <td className="hidden px-3 py-3 align-middle text-xs text-[var(--home-text-secondary)] lg:table-cell">
-                                  {diagram.source === "local"
-                                    ? "Local"
-                                    : getSharedDiagramViewBadge(
-                                        diagram.lastSharedView
-                                      )}
+                                <td className="hidden px-3 py-3 align-middle lg:table-cell">
+                                  <div className="flex flex-wrap items-center gap-1">
+                                    <span
+                                      className={`rounded px-2 py-0.5 text-[10px] font-semibold ${
+                                        diagram.source === "shared"
+                                          ? "bg-[var(--home-tag-shared-bg)] text-[var(--home-tag-shared-text)]"
+                                          : "bg-[var(--home-tag-local-bg)] text-[var(--home-tag-local-text)]"
+                                      }`}
+                                    >
+                                      {diagram.source === "shared"
+                                        ? "Shared"
+                                        : "Local"}
+                                    </span>
+                                    {diagram.source === "shared" && (
+                                      <span className="rounded bg-[var(--home-tag-type-bg)] px-2 py-0.5 text-[10px] font-medium text-[var(--home-tag-type-text)]">
+                                        {getSharedDiagramViewBadge(
+                                          diagram.lastSharedView
+                                        )}
+                                      </span>
+                                    )}
+                                  </div>
                                 </td>
                                 <td className="px-3 py-3 align-middle">
                                   <DiagramActionsMenu
                                     diagram={diagram}
+                                    isExpired={diagram.isExpired}
                                     containerClassName="relative inline-flex items-center"
                                     triggerClassName="cursor-pointer rounded-md p-1 transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2"
                                     triggerStyle={{

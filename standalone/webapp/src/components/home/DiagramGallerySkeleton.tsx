@@ -38,7 +38,7 @@ export const DiagramGallerySkeleton = ({ count = 6 }: Props) => {
             <div
               key={index}
               className="home-diagram-card mx-auto flex h-[300px] w-[260px] flex-col overflow-hidden bg-[var(--home-surface-raised)] md:h-[323px] md:w-[280px] xl:h-[346px] xl:w-[300px]"
-              style={{ borderRadius: "2px" }}
+              style={{ borderRadius: "var(--home-radius-sm)" }}
             >
               <div className="flex flex-1 flex-col px-4 pb-3 pt-14">
                 <div className="mx-auto mb-8 h-24 w-28 rounded bg-[var(--home-surface-raised-hover)]" />

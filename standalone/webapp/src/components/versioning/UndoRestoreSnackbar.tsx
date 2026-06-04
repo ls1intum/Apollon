@@ -1,40 +1,36 @@
-import { Box, Button, Paper, Snackbar } from "@mui/material"
-import { useEffect, useState, type FC } from "react"
+import { useEffect, useRef, useState, type FC } from "react"
 import { toast } from "react-toastify"
 import { log } from "@/logger"
 import { useEditorContext } from "@/contexts"
 import { useVersionStore } from "@/stores/useVersionStore"
 import { versioningStrings as t } from "./strings"
 
+const UNDO_RESTORE_TOAST_ID = "undo-restore"
+
 /**
- * Surfaces the post-restore Undo affordance for ~10s. Mounted globally near
- * the editor; reads from `useVersionStore.undoRestore`.
+ * Headless driver for the post-restore Undo affordance. Watches
+ * `useVersionStore.undoRestore` and surfaces it as a react-toastify toast
+ * (with an inline Undo button) so every notification in the app shares one
+ * system and look. Auto-dismisses when the store's window expires.
  *
- * App theming is via CSS custom properties on `documentElement` — not MUI's
- * ThemeProvider — so we use a custom Paper instead of `<Alert>` to follow
- * the dark toggle correctly.
+ * Kept as a component (mounted globally near the editor) so the call site in
+ * ApollonWithConnection is unchanged — only the rendering mechanism swapped
+ * from an MUI Snackbar to a toast.
  */
-export const UndoRestoreSnackbar: FC = () => {
+const UndoRestoreToastBody: FC<{ restoredVersionName: string }> = ({
+  restoredVersionName,
+}) => {
   const undo = useVersionStore((s) => s.undoRestore)
-  const dismiss = useVersionStore((s) => s.dismissUndoRestore)
   const triggerUndoRestore = useVersionStore((s) => s.triggerUndoRestore)
   const { editor } = useEditorContext()
   const [submitting, setSubmitting] = useState(false)
 
-  useEffect(() => {
-    if (!undo) return
-    const remaining = Math.max(0, undo.expiresAt - Date.now())
-    const timer = setTimeout(dismiss, remaining)
-    return () => clearTimeout(timer)
-  }, [undo, dismiss])
-
-  if (!undo) return null
-
   const onUndo = async () => {
-    if (!editor || submitting) return
+    if (!editor || submitting || !undo) return
     setSubmitting(true)
     try {
       await triggerUndoRestore(undo.diagramId, editor.model)
+      toast.dismiss(UNDO_RESTORE_TOAST_ID)
     } catch (err) {
       log.error("Undo restore failed", err)
       toast.error("Could not undo the restore.")
@@ -44,46 +40,68 @@ export const UndoRestoreSnackbar: FC = () => {
   }
 
   return (
-    <Snackbar
-      open
-      anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      onClose={dismiss}
-    >
-      <Paper
-        elevation={6}
-        sx={{
-          px: 2,
-          py: 1.25,
-          display: "flex",
-          alignItems: "center",
-          gap: 2,
-          minWidth: 320,
-          bgcolor: "var(--apollon-background-variant)",
-          color: "var(--apollon-primary-contrast)",
-          border: "1px solid var(--apollon-switch-box-border-color)",
-          borderLeft: "3px solid var(--apollon-primary)",
-          borderRadius: 1,
-        }}
-        role="alert"
+    <div className="flex w-full items-center gap-3">
+      <span className="flex-1">
+        {t.restoredSnack(restoredVersionName || "the previous version")}
+      </span>
+      <button
+        type="button"
+        onClick={onUndo}
+        disabled={submitting}
+        className="shrink-0 cursor-pointer rounded-[var(--home-radius-md)] px-2 py-1 text-sm font-semibold text-[var(--home-accent-strong)] transition-colors duration-150 hover:bg-[var(--home-surface-raised-hover)] disabled:cursor-not-allowed disabled:opacity-60"
       >
-        <Box sx={{ flex: 1 }}>
-          {t.restoredSnack(undo.restoredVersionName || "the previous version")}
-        </Box>
-        <Button
-          size="small"
-          onClick={onUndo}
-          disabled={submitting}
-          sx={{
-            textTransform: "none",
-            color: "var(--apollon-primary)",
-            "&.Mui-disabled": {
-              color: "var(--apollon-secondary)",
-            },
-          }}
-        >
-          {t.undoRestore}
-        </Button>
-      </Paper>
-    </Snackbar>
+        {t.undoRestore}
+      </button>
+    </div>
   )
+}
+
+export const UndoRestoreSnackbar: FC = () => {
+  const undo = useVersionStore((s) => s.undoRestore)
+  const dismiss = useVersionStore((s) => s.dismissUndoRestore)
+  const shownIdRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (!undo) {
+      // Store cleared the window (expired/undone elsewhere) — close the toast.
+      if (shownIdRef.current) {
+        toast.dismiss(UNDO_RESTORE_TOAST_ID)
+        shownIdRef.current = null
+      }
+      return
+    }
+
+    const remaining = Math.max(0, undo.expiresAt - Date.now())
+    if (remaining <= 0) {
+      // Window already elapsed — clear it without flashing a toast.
+      dismiss()
+      return
+    }
+
+    const body = (
+      <UndoRestoreToastBody restoredVersionName={undo.restoredVersionName} />
+    )
+
+    if (shownIdRef.current === undo.autoSnapshotVersionId) {
+      toast.update(UNDO_RESTORE_TOAST_ID, {
+        render: body,
+        autoClose: remaining,
+      })
+    } else {
+      toast.info(body, {
+        toastId: UNDO_RESTORE_TOAST_ID,
+        autoClose: remaining,
+        closeOnClick: false,
+        // When the toast closes (timeout or manual), clear the store window so
+        // state stays in sync with what the user sees.
+        onClose: () => {
+          shownIdRef.current = null
+          dismiss()
+        },
+      })
+      shownIdRef.current = undo.autoSnapshotVersionId
+    }
+  }, [undo, dismiss])
+
+  return null
 }

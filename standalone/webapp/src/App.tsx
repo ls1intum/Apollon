@@ -1,5 +1,12 @@
 import { lazy, Suspense } from "react"
-import { BrowserRouter, Route, Routes, useLocation } from "react-router"
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  useParams,
+} from "react-router"
 import { AppProviders } from "./AppProviders"
 import { AppLoadingScreen } from "@/components/AppLoadingScreen"
 import { DeferredToastContainer } from "./components/DeferredToastContainer"
@@ -40,31 +47,42 @@ const Navbar = lazy(() =>
   }))
 )
 
+const LegacySharedDiagramRedirect = () => {
+  const { id } = useParams()
+  const location = useLocation()
+
+  if (!id || !new URLSearchParams(location.search).has("view")) {
+    return <ErrorPage />
+  }
+
+  return (
+    <Navigate
+      to={`/shared/${encodeURIComponent(id)}${location.search}`}
+      replace
+    />
+  )
+}
+
 const AppLayout = () => {
   const location = useLocation()
   const isHomeRoute = location.pathname === "/"
 
   return (
-    <>
-      {!isHomeRoute && (
-        <Suspense fallback={<div style={{ height: 56 }} />}>
-          <Navbar />
-        </Suspense>
-      )}
+    <Suspense fallback={<AppLoadingScreen />}>
+      {!isHomeRoute && <Navbar />}
       <div data-testid="editor-area" style={{ flex: 1, overflow: "hidden" }}>
-        <Suspense fallback={<AppLoadingScreen />}>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/local/:id" element={<ApollonLocal />} />
-            <Route path="/playground" element={<ApollonPlayground />} />
-            <Route path="/imprint" element={<ImprintPage />} />
-            <Route path="/privacy" element={<PrivacyPage />} />
-            <Route path="/shared/:id" element={<ApollonWithConnection />} />
-            <Route path="*" element={<ErrorPage />} />
-          </Routes>
-        </Suspense>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/local/:id" element={<ApollonLocal />} />
+          <Route path="/playground" element={<ApollonPlayground />} />
+          <Route path="/imprint" element={<ImprintPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/shared/:id" element={<ApollonWithConnection />} />
+          <Route path="/:id" element={<LegacySharedDiagramRedirect />} />
+          <Route path="*" element={<ErrorPage />} />
+        </Routes>
       </div>
-    </>
+    </Suspense>
   )
 }
 
