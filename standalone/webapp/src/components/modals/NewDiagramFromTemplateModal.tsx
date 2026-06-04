@@ -10,17 +10,6 @@ import { useState } from "react"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { useNavigate } from "react-router"
 import { log } from "@/logger"
-import { useModalProgress } from "@/contexts/ModalProgressContext"
-import {
-  HomeDialogActions,
-  HomeDialogContent,
-  HomeDialogField,
-  HomeDialogNotice,
-  HomeDialogOptionGroup,
-  HomeDialogTextInput,
-  isHomeDialogVariant,
-  type HomeDialogOption,
-} from "./HomeDialog"
 
 enum TemplateType {
   Adapter = "Adapter",
@@ -30,61 +19,16 @@ enum TemplateType {
   Factory = "Factory",
 }
 
-const templateGroups: {
-  label: string
-  templates: HomeDialogOption<TemplateType>[]
-}[] = [
-  {
-    label: "Structural",
-    templates: [
-      { value: TemplateType.Adapter, label: "Adapter" },
-      { value: TemplateType.Bridge, label: "Bridge" },
-    ],
-  },
-  {
-    label: "Behavioral",
-    templates: [
-      { value: TemplateType.Command, label: "Command" },
-      { value: TemplateType.Observer, label: "Observer" },
-    ],
-  },
-  {
-    label: "Creational",
-    templates: [{ value: TemplateType.Factory, label: "Factory" }],
-  },
-]
-
-export const NewDiagramFromTemplateModal = (props: unknown) => {
-  const isHomeDialog = isHomeDialogVariant(props)
+export const NewDiagramFromTemplateModal = () => {
   const { closeModal } = useModalContext()
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateType>(
     TemplateType.Adapter
   )
-  const [diagramTitle, setDiagramTitle] = useState<string>(TemplateType.Adapter)
-  const [isTitleDefault, setIsTitleDefault] = useState<boolean>(true)
-
-  const handleTemplateChange = (template: TemplateType) => {
-    setSelectedTemplate(template)
-    if (isTitleDefault) {
-      setDiagramTitle(template)
-    }
-  }
-
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDiagramTitle(e.target.value)
-    setIsTitleDefault(false)
-  }
   const createModel = usePersistenceModelStore((store) => store.createModel)
   const navigate = useNavigate()
   const [error, setError] = useState<string | null>(null)
-  const [isCreating, setIsCreating] = useState(false)
-  const { setLoading } = useModalProgress()
 
   const handleCreate = async () => {
-    if (isCreating) return
-
-    setIsCreating(true)
-    setLoading(true)
     setError(null)
 
     try {
@@ -96,22 +40,14 @@ export const NewDiagramFromTemplateModal = (props: unknown) => {
       if (!jsonData) {
         throw new Error("Selected template data not found")
       }
-      const nextId =
-        typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-          ? crypto.randomUUID()
-          : `${Date.now()}-${Math.random().toString(36).slice(2)}`
-      const clonedModel =
-        typeof structuredClone === "function"
-          ? structuredClone(jsonData)
-          : JSON.parse(JSON.stringify(jsonData))
-      clonedModel.id = nextId
-      clonedModel.title = diagramTitle.trim() || selectedTemplate
+      const timeStapToCreate = new Date().getTime()
 
-      createModel(clonedModel)
-      setIsCreating(false)
-      setLoading(false)
+      createModel(jsonData)
       closeModal()
-      navigate(`/local/${nextId}`)
+      navigate("..", {
+        relative: "route",
+        state: { timeStapToCreate },
+      })
     } catch (err: unknown) {
       log.error("Error creating diagram from template:", err as Error)
 
@@ -120,61 +56,7 @@ export const NewDiagramFromTemplateModal = (props: unknown) => {
       } else {
         setError("An unexpected error occurred")
       }
-      setIsCreating(false)
-      setLoading(false)
     }
-  }
-
-  if (isHomeDialog) {
-    return (
-      <HomeDialogContent>
-        <HomeDialogNotice>
-          Start from a design-pattern template and open a local copy in the
-          editor.
-        </HomeDialogNotice>
-
-        {error && (
-          <div className="rounded-md border border-[var(--apollon-red,#d32f2f)] bg-[color-mix(in_srgb,var(--apollon-red,#d32f2f)_10%,transparent)] px-3 py-2 text-sm text-[var(--home-text-primary)]">
-            {error}
-          </div>
-        )}
-
-        <HomeDialogField label="Name" htmlFor="diagram-title">
-          <HomeDialogTextInput
-            id="diagram-title"
-            type="text"
-            value={diagramTitle}
-            onChange={handleTitleChange}
-            placeholder="Enter diagram title"
-            maxLength={120}
-            disabled={isCreating}
-          />
-        </HomeDialogField>
-
-        <div className="flex flex-col gap-4">
-          {templateGroups.map((group) => (
-            <HomeDialogOptionGroup
-              key={group.label}
-              label={group.label}
-              options={group.templates}
-              value={selectedTemplate}
-              onChange={handleTemplateChange}
-              disabled={isCreating}
-              onConfirm={handleCreate}
-            />
-          ))}
-        </div>
-
-        <HomeDialogActions
-          confirmLabel="Create"
-          loadingLabel="Creating..."
-          loading={isCreating}
-          confirmDisabled={!diagramTitle.trim()}
-          onCancel={closeModal}
-          onConfirm={handleCreate}
-        />
-      </HomeDialogContent>
-    )
   }
 
   return (
@@ -205,7 +87,6 @@ export const NewDiagramFromTemplateModal = (props: unknown) => {
         <MenuList dense>
           <Typography variant="h6">Structural</Typography>
           <MenuItem
-            disabled={isCreating}
             selected={selectedTemplate === TemplateType.Adapter}
             onClick={() => setSelectedTemplate(TemplateType.Adapter)}
             onDoubleClick={handleCreate}
@@ -213,7 +94,6 @@ export const NewDiagramFromTemplateModal = (props: unknown) => {
             <ListItemText inset>Adapter</ListItemText>
           </MenuItem>
           <MenuItem
-            disabled={isCreating}
             selected={selectedTemplate === TemplateType.Bridge}
             onClick={() => setSelectedTemplate(TemplateType.Bridge)}
             onDoubleClick={handleCreate}
@@ -224,7 +104,6 @@ export const NewDiagramFromTemplateModal = (props: unknown) => {
           <Divider />
           <Typography variant="h6">Behavioral</Typography>
           <MenuItem
-            disabled={isCreating}
             selected={selectedTemplate === TemplateType.Command}
             onClick={() => setSelectedTemplate(TemplateType.Command)}
             onDoubleClick={handleCreate}
@@ -232,7 +111,6 @@ export const NewDiagramFromTemplateModal = (props: unknown) => {
             <ListItemText inset>Command</ListItemText>
           </MenuItem>
           <MenuItem
-            disabled={isCreating}
             selected={selectedTemplate === TemplateType.Observer}
             onClick={() => setSelectedTemplate(TemplateType.Observer)}
             onDoubleClick={handleCreate}
@@ -243,7 +121,6 @@ export const NewDiagramFromTemplateModal = (props: unknown) => {
           <Divider />
           <Typography variant="h6">Creational</Typography>
           <MenuItem
-            disabled={isCreating}
             selected={selectedTemplate === TemplateType.Factory}
             onClick={() => setSelectedTemplate(TemplateType.Factory)}
             onDoubleClick={handleCreate}
@@ -265,7 +142,6 @@ export const NewDiagramFromTemplateModal = (props: unknown) => {
       >
         <Button
           variant="contained"
-          disabled={isCreating}
           onClick={closeModal}
           sx={{ bgcolor: "gray", textTransform: "none" }}
         >
@@ -273,13 +149,12 @@ export const NewDiagramFromTemplateModal = (props: unknown) => {
         </Button>
         <Button
           variant="contained"
-          disabled={isCreating}
           onClick={handleCreate}
           sx={{
             textTransform: "none",
           }}
         >
-          {isCreating ? "Creating..." : "Create Diagram"}
+          Create Diagram
         </Button>
       </Box>
     </Box>

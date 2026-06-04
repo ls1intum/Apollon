@@ -204,6 +204,23 @@ describe("tryFindStraightPath", () => {
         })
         expect(result).not.toBeNull()
       })
+
+      it("keeps the connected handle height instead of snapping to overlap center", () => {
+        const source = makeNode(0, 0, 100, 120, Position.Right)
+        const target = makeNode(200, 0, 100, 120, Position.Left)
+
+        const result = tryFindStraightPath(source, target, padding, {
+          sourceX: 100,
+          sourceY: 24,
+          targetX: 200,
+          targetY: 24,
+        })
+
+        expect(result).toEqual([
+          { x: 100, y: 24 },
+          { x: 200, y: 24 },
+        ])
+      })
     })
 
     describe("Left → Right with misaligned Y handles", () => {
@@ -252,6 +269,23 @@ describe("tryFindStraightPath", () => {
           targetY: 200,
         })
         expect(result).not.toBeNull()
+      })
+
+      it("keeps the connected handle column instead of snapping to overlap center", () => {
+        const source = makeNode(0, 0, 120, 100, Position.Bottom)
+        const target = makeNode(0, 200, 120, 100, Position.Top)
+
+        const result = tryFindStraightPath(source, target, padding, {
+          sourceX: 24,
+          sourceY: 100,
+          targetX: 24,
+          targetY: 200,
+        })
+
+        expect(result).toEqual([
+          { x: 24, y: 100 },
+          { x: 24, y: 200 },
+        ])
       })
     })
 

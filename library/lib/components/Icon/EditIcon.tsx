@@ -5,7 +5,7 @@ type Props = SVGAttributes<SVGSVGElement>
 export const EditIcon = ({
   width = 24,
   height = 24,
-  fill = "var(--apollon-primary-contrast, #e3e3e3)",
+  fill = "var(--apollon-primary-contrast, #000000)",
   ...props
 }: Props) => (
   <svg

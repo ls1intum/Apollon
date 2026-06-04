@@ -1,3 +1,4 @@
+// @ts-check
 import net from "node:net"
 
 const DEFAULT_HOST = "127.0.0.1"

@@ -1,11 +1,11 @@
-import type { UMLDiagramType, UMLModel } from "@tumaet/apollon"
+import { UMLDiagramType, UMLModel } from "@tumaet/apollon/react"
 
 export const playgroundModelId = "playgroundModelId"
 
 export const PlaygroundDefaultModel: UMLModel = {
   version: "4.0.0",
   id: playgroundModelId,
-  type: "ClassDiagram" as UMLDiagramType,
+  type: UMLDiagramType.ClassDiagram,
   assessments: {},
   edges: [],
   nodes: [],

@@ -6,7 +6,7 @@ interface EdgeMultipleLabelsProps {
   messages?: MessageData[]
   pathMiddlePosition: IPoint
   showRelationshipLabels: boolean
-  isReconnectingRef?: React.MutableRefObject<boolean>
+  isReconnecting?: boolean
   sourcePosition: IPoint
   targetPosition: IPoint
   edgePoints?: IPoint[]
@@ -17,7 +17,7 @@ export const EdgeMultipleLabels = ({
   messages,
   pathMiddlePosition,
   showRelationshipLabels,
-  isReconnectingRef,
+  isReconnecting,
   sourcePosition,
   targetPosition,
   edgePoints,
@@ -51,7 +51,7 @@ export const EdgeMultipleLabels = ({
   )
     return null
 
-  if (isReconnectingRef?.current) return null
+  if (isReconnecting) return null
 
   const getMessageOffset = (index: number, isForward: boolean) => {
     const spacing = 25

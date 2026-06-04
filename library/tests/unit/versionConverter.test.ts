@@ -141,6 +141,24 @@ describe("convertV3HandleToV4", () => {
     expect(convertV3HandleToV4("LeftBottom")).toBe("bottom-left")
   })
 
+  // Legacy iOS Top*/Bottom* dialect handles — see convertV3HandleToV4 for the
+  // geometry derivation. Must map to valid v4 ids, not the lowercase fallback.
+  it("converts iOS Topright to top-right", () => {
+    expect(convertV3HandleToV4("Topright")).toBe("top-right")
+  })
+
+  it("converts iOS Topleft to top-left", () => {
+    expect(convertV3HandleToV4("Topleft")).toBe("top-left")
+  })
+
+  it("converts iOS Bottomright to bottom-right", () => {
+    expect(convertV3HandleToV4("Bottomright")).toBe("bottom-right")
+  })
+
+  it("converts iOS Bottomleft to bottom-left", () => {
+    expect(convertV3HandleToV4("Bottomleft")).toBe("bottom-left")
+  })
+
   it("falls back to lowercase for unknown handles", () => {
     expect(convertV3HandleToV4("SomeCustomHandle")).toBe("somecustomhandle")
   })

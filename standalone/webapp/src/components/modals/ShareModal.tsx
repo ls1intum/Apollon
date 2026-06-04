@@ -1,56 +1,41 @@
-import { Tooltip } from "@mui/material"
 import { Typography } from "@/components/Typography"
-import Info from "@mui/icons-material/Info"
-import { APButton } from "../APButton"
-import { toast } from "react-toastify"
 import { useEditorContext, useModalContext } from "@/contexts"
-import { useNavigate } from "react-router"
-import { DiagramView } from "@/types"
-import { DiagramApiClient } from "@/services/DiagramApiClient"
 import { log } from "@/logger"
-import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
-import { addSharedDiagramEntry } from "@/utils/sharedDiagramStorage"
-import { randomCollabName } from "@/utils/collaboration"
+import { randomCollabName } from "@tumaet/apollon"
+import { DiagramApiClient } from "@/services/DiagramApiClient"
+import { DiagramView } from "@/types"
+import { Clipboard } from "@capacitor/clipboard"
+import { isPlatform } from "@ionic/react"
+import Info from "@mui/icons-material/Info"
+import { Tooltip } from "@mui/material"
+import { useNavigate } from "react-router"
+import { toast } from "react-toastify"
+import { APButton } from "../APButton"
+import { serverURL } from "@/constants"
 
-type ShareModalProps = {
-  modelId?: string
-}
-
-const resolveModelId = (props: unknown): string | undefined => {
-  if (!props || typeof props !== "object") {
-    return undefined
-  }
-
-  const candidate = (props as ShareModalProps).modelId
-  return typeof candidate === "string" ? candidate : undefined
-}
-
-export const ShareModal = (props: unknown) => {
-  const modelId = resolveModelId(props)
+export const ShareModal = () => {
   const { editor } = useEditorContext()
   const { closeModal, openModal } = useModalContext()
   const navigate = useNavigate()
-  const persistedModel = usePersistenceModelStore((state) =>
-    modelId ? state.models[modelId]?.model : null
-  )
+  const isCapacitorApp = isPlatform("capacitor")
 
   const handleShareButtonPress = async (viewType: DiagramView) => {
-    const modelToShare = editor?.model ?? persistedModel
-
-    if (!modelToShare) {
-      toast.error("Diagram data is not available for sharing.")
+    if (!editor) {
+      toast.error("Editor instance is not available.")
       return
     }
 
     try {
-      const { id: diagramID } =
-        await DiagramApiClient.createDiagram(modelToShare)
-      addSharedDiagramEntry(diagramID)
+      const model = editor.model
+      const { id: diagramID } = await DiagramApiClient.createDiagram(model)
 
-      const newurl = `${window.location.origin}/shared/${diagramID}?view=${viewType}`
-      copyToClipboard(newurl)
+      const newurl = isCapacitorApp
+        ? `${serverURL}/${diagramID}?view=${viewType}`
+        : `${window.location.origin}/${diagramID}?view=${viewType}`
+
+      await copyToClipboard(newurl)
+      navigate(`/${diagramID}?view=${viewType}`)
       closeModal()
-      navigate(`/shared/${diagramID}?view=${viewType}`)
 
       toast.success(
         `The link has been copied to your clipboard and can be shared to collaborate, simply by pasting the link. You can re-access the link by going to share menu.`,
@@ -64,8 +49,12 @@ export const ShareModal = (props: unknown) => {
     }
   }
 
-  const copyToClipboard = (link: string) => {
-    navigator.clipboard.writeText(link)
+  const copyToClipboard = async (link: string) => {
+    if (isPlatform("capacitor")) {
+      await Clipboard.write({ string: link })
+    } else {
+      await navigator.clipboard.writeText(link)
+    }
   }
 
   const handleCollaborate = () => {
@@ -82,57 +71,48 @@ export const ShareModal = (props: unknown) => {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center gap-1">
-        <span className="text-sm text-[var(--apollon-primary-contrast)]">
-          Your shared diagram will be active for 120 days and your local diagram
-          is not affected.
-        </span>
-        <Tooltip
-          title="A copy of your diagram is uploaded to our servers — your local diagram is untouched. The diagram stays active for 120 days and the timer resets only when someone edits it."
-          placement="top"
-          arrow
-        >
-          <Info fontSize="small" style={{ cursor: "help" }} />
-        </Tooltip>
+      <div>
+        <Typography>
+          After sharing, this diagram will be accessible to everyone with access
+          to the link for at least 12 weeks{" "}
+          <Tooltip title="Copy link to clipboard">
+            <Info />
+          </Tooltip>
+        </Typography>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <Typography className="text-sm text-[var(--apollon-secondary)]">
-          Choose a default view for anyone opening the link
-        </Typography>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-          <div>
-            <APButton
-              variant="outline"
-              fullWidth
-              onClick={() => handleShareButtonPress(DiagramView.EDIT)}
-            >
-              Edit
-            </APButton>
-          </div>
-          <div>
-            <APButton variant="outline" fullWidth onClick={handleCollaborate}>
-              Collaborate
-            </APButton>
-          </div>
-          <div>
-            <APButton
-              variant="outline"
-              fullWidth
-              onClick={() => handleShareButtonPress(DiagramView.GIVE_FEEDBACK)}
-            >
-              Give Feedback
-            </APButton>
-          </div>
-          <div>
-            <APButton
-              variant="outline"
-              fullWidth
-              onClick={() => handleShareButtonPress(DiagramView.SEE_FEEDBACK)}
-            >
-              See Feedback
-            </APButton>
-          </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+        <div>
+          <APButton
+            variant="outline"
+            fullWidth
+            onClick={() => handleShareButtonPress(DiagramView.EDIT)}
+          >
+            Edit
+          </APButton>
+        </div>
+        <div>
+          <APButton variant="outline" fullWidth onClick={handleCollaborate}>
+            Collaborate
+          </APButton>
+        </div>
+        <div>
+          <APButton
+            variant="outline"
+            fullWidth
+            onClick={() => handleShareButtonPress(DiagramView.GIVE_FEEDBACK)}
+          >
+            Give Feedback
+          </APButton>
+        </div>
+        <div>
+          <APButton
+            variant="outline"
+            fullWidth
+            onClick={() => handleShareButtonPress(DiagramView.SEE_FEEDBACK)}
+          >
+            See Feedback
+          </APButton>
         </div>
       </div>
       <fieldset className="border border-gray-300 p-2 rounded-xl w-fill ">

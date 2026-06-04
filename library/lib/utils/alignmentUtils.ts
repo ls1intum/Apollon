@@ -2,7 +2,21 @@ import { Node } from "@xyflow/react"
 import { AlignmentGuide } from "@/store/alignmentGuidesStore"
 import { getPositionOnCanvas, isParentNodeType } from "@/utils/nodeUtils"
 
-const ALIGNMENT_THRESHOLD = 10 // pixels within which guides appear
+// Half the grid step: guides appear once a node sits within this many pixels
+// of an alignment line.
+//
+// Hard-coded to avoid a known circular import:
+//   constants.ts → @/nodes → nodes/.../Class.tsx → @/utils (barrel) → alignmentUtils.ts → @/constants
+// Reading CANVAS.SNAP_TO_GRID_PX at module init can resolve to undefined when
+// alignmentUtils.ts evaluates before constants.ts finishes. Keep this in sync
+// with CANVAS.SNAP_TO_GRID_PX / 2 in constants.ts (currently 10 / 2 = 5).
+const ALIGNMENT_THRESHOLD = 5
+
+const isWithinThreshold = (
+  delta: number,
+  threshold: number,
+  inclusive: boolean
+) => (inclusive ? delta <= threshold : delta < threshold)
 
 export type AlignmentInfo = {
   horizontalGuides: number[] // x positions for vertical alignment lines
@@ -147,7 +161,8 @@ export const calculateAlignmentGuides = (
 
     // Check vertical alignment (draw vertical line for horizontal alignment)
     for (const alignment of verticalAlignments) {
-      if (Math.abs(draggedBounds.left - alignment.pos) < threshold) {
+      const leftDelta = Math.abs(draggedBounds.left - alignment.pos)
+      if (isWithinThreshold(leftDelta, threshold, alignment.name === "left")) {
         if (!alignedPositions.has(alignment.pos)) {
           guides.push({
             id: `vertical-${alignment.pos}`,
@@ -157,7 +172,10 @@ export const calculateAlignmentGuides = (
           alignedPositions.add(alignment.pos)
         }
       }
-      if (Math.abs(draggedBounds.centerX - alignment.pos) < threshold) {
+      const centerXDelta = Math.abs(draggedBounds.centerX - alignment.pos)
+      if (
+        isWithinThreshold(centerXDelta, threshold, alignment.name === "center")
+      ) {
         if (!alignedPositions.has(alignment.pos)) {
           guides.push({
             id: `vertical-center-${alignment.pos}`,
@@ -167,7 +185,10 @@ export const calculateAlignmentGuides = (
           alignedPositions.add(alignment.pos)
         }
       }
-      if (Math.abs(draggedBounds.right - alignment.pos) < threshold) {
+      const rightDelta = Math.abs(draggedBounds.right - alignment.pos)
+      if (
+        isWithinThreshold(rightDelta, threshold, alignment.name === "right")
+      ) {
         if (!alignedPositions.has(alignment.pos)) {
           guides.push({
             id: `vertical-right-${alignment.pos}`,
@@ -181,7 +202,8 @@ export const calculateAlignmentGuides = (
 
     // Check horizontal alignment (draw horizontal line for vertical alignment)
     for (const alignment of horizontalAlignments) {
-      if (Math.abs(draggedBounds.top - alignment.pos) < threshold) {
+      const topDelta = Math.abs(draggedBounds.top - alignment.pos)
+      if (isWithinThreshold(topDelta, threshold, alignment.name === "top")) {
         if (!alignedPositions.has(alignment.pos)) {
           guides.push({
             id: `horizontal-${alignment.pos}`,
@@ -191,7 +213,10 @@ export const calculateAlignmentGuides = (
           alignedPositions.add(alignment.pos)
         }
       }
-      if (Math.abs(draggedBounds.centerY - alignment.pos) < threshold) {
+      const centerYDelta = Math.abs(draggedBounds.centerY - alignment.pos)
+      if (
+        isWithinThreshold(centerYDelta, threshold, alignment.name === "center")
+      ) {
         if (!alignedPositions.has(alignment.pos)) {
           guides.push({
             id: `horizontal-center-${alignment.pos}`,
@@ -201,7 +226,10 @@ export const calculateAlignmentGuides = (
           alignedPositions.add(alignment.pos)
         }
       }
-      if (Math.abs(draggedBounds.bottom - alignment.pos) < threshold) {
+      const bottomDelta = Math.abs(draggedBounds.bottom - alignment.pos)
+      if (
+        isWithinThreshold(bottomDelta, threshold, alignment.name === "bottom")
+      ) {
         if (!alignedPositions.has(alignment.pos)) {
           guides.push({
             id: `horizontal-bottom-${alignment.pos}`,

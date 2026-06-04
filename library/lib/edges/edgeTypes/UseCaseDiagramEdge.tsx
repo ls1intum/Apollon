@@ -57,7 +57,7 @@ export const UseCaseEdge = ({
     edgeData,
     currentPath,
     overlayPath,
-    isReconnectingRef,
+    isReconnecting,
     markerEnd,
     markerStart,
     strokeDashArray,
@@ -95,7 +95,7 @@ export const UseCaseEdge = ({
             }}
           />
 
-          {!isReconnectingRef.current && (
+          {!isReconnecting && (
             <EdgeInlineMarkers
               pathD={currentPath}
               markerEnd={markerEnd}
@@ -146,6 +146,7 @@ export const UseCaseEdge = ({
         <CommonEdgeElements
           id={id}
           pathMiddlePosition={edgeData.pathMiddlePosition}
+          toolbarPosition={edgeData.toolbarPosition}
           isDiagramModifiable={isDiagramModifiable}
           assessments={assessments}
           anchorRef={anchorRef}

@@ -411,6 +411,15 @@ body,
   flex-grow: 1;
 }
 
+/* MUI has no theme here, so Menus/Selects render their portaled Paper with the
+   default light surface — which shows through the menu's rounded corners and
+   edges in dark mode. Theme the Paper itself (not just the inner list). */
+.MuiPopover-paper,
+.MuiMenu-paper {
+  background-color: var(--apollon-background) !important;
+  color: var(--apollon-primary-contrast) !important;
+}
+
 .MuiMenu-list {
   background-color: var(--apollon-background) !important;
   color: var(--apollon-primary-contrast) !important;

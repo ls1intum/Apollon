@@ -3,10 +3,12 @@ import { useEditorContext, useModalContext } from "@/contexts"
 import {
   ApollonEditor,
   ApollonMode,
+  collabColorFromName,
   importDiagram,
+  randomCollabName,
   type ApollonOptions,
   type UMLModel,
-} from "@tumaet/apollon"
+} from "@tumaet/apollon/react"
 import { useNavigate, useParams, useSearchParams } from "react-router"
 import { toast } from "react-toastify"
 import { Box } from "@mui/material"
@@ -26,113 +28,14 @@ import { useElementWidth } from "@/hooks/useElementWidth"
 import { useFlushOnUnload } from "@/hooks/useFlushOnUnload"
 import { useVersionShortcut } from "@/hooks/useVersionShortcut"
 import { log } from "@/logger"
-import { collabColorFromName, randomCollabName } from "@/utils/collaboration"
-import { CollaboratorCursors } from "@/components/CollaboratorCursors"
-import { CollaboratorPresenceBar } from "@/components/CollaboratorPresenceBar"
-import { CollaboratorSelectionHighlights } from "@/components/CollaboratorSelectionHighlights"
-import { addSharedDiagramEntry } from "@/utils/sharedDiagramStorage"
-
-type InitialLoadError =
-  | {
-      kind: "not-found"
-      title: string
-      message: string
-    }
-  | {
-      kind: "server-unavailable"
-      title: string
-      message: string
-    }
-  | {
-      kind: "initialization"
-      title: string
-      message: string
-    }
-
-const classifyInitialLoadError = (err: unknown): InitialLoadError => {
-  if (err instanceof ApiError && err.status === 404) {
-    return {
-      kind: "not-found",
-      title: "Shared diagram unavailable",
-      message:
-        "This shared diagram could not be found. It may have expired or been deleted.",
-    }
-  }
-
-  if (err instanceof ApiError) {
-    return {
-      kind: "server-unavailable",
-      title: "Server unavailable",
-      message:
-        "We could not load this shared diagram from the server. Check your connection and try again.",
-    }
-  }
-
-  if (err instanceof TypeError) {
-    return {
-      kind: "server-unavailable",
-      title: "Server unavailable",
-      message:
-        "We could not reach the server. Check your connection and try again.",
-    }
-  }
-
-  return {
-    kind: "initialization",
-    title: "Could not open diagram",
-    message: "Something went wrong while opening this shared diagram.",
-  }
-}
-
-const SharedDiagramLoadError = ({
-  error,
-  onRetry,
-  onGoHome,
-}: {
-  error: InitialLoadError
-  onRetry: () => void
-  onGoHome: () => void
-}) => (
-  <div className="flex h-full flex-col items-center justify-center gap-4 bg-[var(--apollon-background)] px-6 text-center">
-    <div className="flex max-w-md flex-col items-center gap-2">
-      <h1 className="text-2xl font-semibold text-[var(--apollon-primary-contrast)]">
-        {error.title}
-      </h1>
-      <p className="text-sm leading-6 text-[var(--apollon-secondary)]">
-        {error.message}
-      </p>
-    </div>
-    <div className="flex flex-wrap items-center justify-center gap-2">
-      {error.kind !== "not-found" && (
-        <button
-          type="button"
-          onClick={onRetry}
-          className="rounded-md border border-[var(--apollon-primary)] bg-[var(--apollon-primary)] px-4 py-2 text-sm font-medium text-white"
-        >
-          Retry
-        </button>
-      )}
-      <button
-        type="button"
-        onClick={onGoHome}
-        className="rounded-md border border-[var(--apollon-primary-contrast)] bg-transparent px-4 py-2 text-sm font-medium text-[var(--apollon-primary-contrast)]"
-      >
-        Go home
-      </button>
-    </div>
-  </div>
-)
 
 export const ApollonWithConnection: React.FC = () => {
-  const { id: diagramId } = useParams()
+  const { diagramId } = useParams()
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
   const { setEditor, editor } = useEditorContext()
   const { openModal } = useModalContext()
   const [isLoading, setIsLoading] = useState(true)
-  const [initialLoadError, setInitialLoadError] =
-    useState<InitialLoadError | null>(null)
-  const [retryAttempt, setRetryAttempt] = useState(0)
   const containerRef = useRef<HTMLDivElement | null>(null)
   const canvasColumnRef = useRef<HTMLDivElement | null>(null)
   const canvasColumnWidth = useElementWidth(canvasColumnRef)
@@ -162,8 +65,6 @@ export const ApollonWithConnection: React.FC = () => {
   } | null>(null)
   const viewType = searchParams.get("view")
   const previewFromUrl = searchParams.get("version")
-  const isCollaborationActive =
-    viewType === DiagramView.COLLABORATE && !!collaborationUser
 
   const preview = useVersionStore((s) => s.preview)
   const exitPreview = useVersionStore((s) => s.exitPreview)
@@ -184,7 +85,6 @@ export const ApollonWithConnection: React.FC = () => {
     // changes (same `/:diagramId` route), so state and refs must be
     // reset explicitly per lifecycle.
     setIsLoading(true)
-    setInitialLoadError(null)
     diagramIsUpdated.current = false
     lastObservedHeadRev.current = undefined
     restoredDuringPreviewRef.current = false
@@ -192,8 +92,6 @@ export const ApollonWithConnection: React.FC = () => {
 
     const abort = new AbortController()
     let instance: ApollonEditor | null = null
-    let cleanupCursorTracking: (() => void) | null = null
-    let selectionSubscriptionId: number | null = null
     let modelChangeSubscriptionId: number | null = null
 
     const initialize = async () => {
@@ -238,9 +136,6 @@ export const ApollonWithConnection: React.FC = () => {
           signal: abort.signal,
         })
         if (abort.signal.aborted) return
-        addSharedDiagramEntry(diagramId, {
-          lastSharedView: viewType as DiagramView,
-        })
         log.debug("Fetched diagram", {
           diagramId,
           nodeCount: diagram.nodes?.length ?? 0,
@@ -250,6 +145,17 @@ export const ApollonWithConnection: React.FC = () => {
         const editorOptions: ApollonOptions = {
           model: diagram,
           collaborationEnabled: true,
+          collaboration:
+            isCollaborationView && collaborationUser
+              ? {
+                  enabled: true,
+                  user: collaborationUser,
+                  showPresence: true,
+                  showCursors: true,
+                  showSelectionHighlights: true,
+                  showFollow: true,
+                }
+              : undefined,
         }
 
         if (viewType === DiagramView.GIVE_FEEDBACK) {
@@ -267,13 +173,6 @@ export const ApollonWithConnection: React.FC = () => {
         editorRef.current = instance
         setEditor(instance)
         setIsLoading(false)
-
-        if (isCollaborationView && collaborationUser) {
-          instance.setLocalAwarenessState({
-            user: collaborationUser,
-            selectedElementId: null,
-          })
-        }
 
         if (
           [
@@ -320,62 +219,6 @@ export const ApollonWithConnection: React.FC = () => {
               }
             }
           })
-        }
-
-        if (isCollaborationView && collaborationUser) {
-          const rafRef = { current: 0 as number }
-          const pendingRef = {
-            current: null as { x: number; y: number } | null,
-          }
-
-          const flushCursor = () => {
-            if (pendingRef.current) {
-              instance?.setLocalAwarenessCursor(pendingRef.current)
-              pendingRef.current = null
-            }
-            rafRef.current = 0
-          }
-
-          const handlePointerMove = (event: PointerEvent) => {
-            const flowPosition = instance?.screenToFlowPosition({
-              x: event.clientX,
-              y: event.clientY,
-            })
-            if (!flowPosition) return
-
-            pendingRef.current = {
-              x: flowPosition.x,
-              y: flowPosition.y,
-            }
-
-            if (!rafRef.current) {
-              rafRef.current = window.requestAnimationFrame(flushCursor)
-            }
-          }
-
-          const handlePointerLeave = () => {
-            instance?.setLocalAwarenessCursor(null)
-          }
-
-          container.addEventListener("pointermove", handlePointerMove)
-          container.addEventListener("pointerleave", handlePointerLeave)
-
-          cleanupCursorTracking = () => {
-            container.removeEventListener("pointermove", handlePointerMove)
-            container.removeEventListener("pointerleave", handlePointerLeave)
-            if (rafRef.current) {
-              window.cancelAnimationFrame(rafRef.current)
-              rafRef.current = 0
-            }
-            instance?.setLocalAwarenessCursor(null)
-          }
-
-          selectionSubscriptionId = instance.subscribeToSelectionChange(
-            (selectedElementIds) => {
-              const selectedElementId = selectedElementIds.at(-1) ?? null
-              instance?.setLocalAwarenessSelectedElement(selectedElementId)
-            }
-          )
         }
 
         syncIntervalRef.current = setInterval(() => {
@@ -425,12 +268,12 @@ export const ApollonWithConnection: React.FC = () => {
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") return
         log.error("Failed to initialize diagram", err)
-        setIsLoading(false)
-        setInitialLoadError(classifyInitialLoadError(err))
+        toast.error("Failed to initialize diagram")
+        navigate("/")
       }
     }
 
-    initialize()
+    void initialize()
 
     return () => {
       abort.abort()
@@ -439,12 +282,7 @@ export const ApollonWithConnection: React.FC = () => {
       if (syncIntervalRef.current) {
         clearInterval(syncIntervalRef.current)
       }
-      cleanupCursorTracking?.()
       if (instance) {
-        if (selectionSubscriptionId !== null) {
-          instance.setLocalAwarenessSelectedElement(null)
-          instance.unsubscribe(selectionSubscriptionId)
-        }
         if (modelChangeSubscriptionId !== null) {
           instance.unsubscribe(modelChangeSubscriptionId)
         }
@@ -452,7 +290,16 @@ export const ApollonWithConnection: React.FC = () => {
       instance?.destroy()
       editorRef.current = null
     }
-  }, [diagramId, viewType, collaborationUser, retryAttempt])
+  }, [
+    applyControlEvent,
+    collaborationUser,
+    diagramId,
+    fetchVersions,
+    navigate,
+    openModal,
+    setEditor,
+    viewType,
+  ])
 
   // Sync the URL `?version=` param INTO preview state — permalink open,
   // history nav, external link change. We do NOT mirror the other way:
@@ -600,19 +447,6 @@ export const ApollonWithConnection: React.FC = () => {
     ]
   )
 
-  if (initialLoadError) {
-    return (
-      <SharedDiagramLoadError
-        error={initialLoadError}
-        onRetry={() => {
-          setInitialLoadError(null)
-          setRetryAttempt((attempt) => attempt + 1)
-        }}
-        onGoHome={() => navigate("/")}
-      />
-    )
-  }
-
   return (
     <div className="h-full flex flex-col">
       <Box
@@ -650,15 +484,6 @@ export const ApollonWithConnection: React.FC = () => {
             className={isLoading ? "invisible" : ""}
             ref={containerRef}
             sx={{ width: "100%", height: "100%" }}
-          />
-          <CollaboratorPresenceBar isActive={isCollaborationActive} />
-          <CollaboratorCursors
-            containerRef={containerRef}
-            isActive={isCollaborationActive && !preview}
-          />
-          <CollaboratorSelectionHighlights
-            containerRef={containerRef}
-            isActive={isCollaborationActive && !preview}
           />
           {!isLoading && preview && diagramId && (
             <Box

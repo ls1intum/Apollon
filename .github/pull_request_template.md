@@ -1,29 +1,25 @@
-<!-- Thanks for contributing to Apollon! Before you submit your pull request, please make sure to check the following boxes by putting an x in the [ ] (don't: [x ], [ x], do: [x]) -->
-<!-- If your pull request is not ready for review yet, create a draft pull request! -->
+<!-- PR title = Conventional Commit subject. Squash-merge: title + body become the commit. Run `pnpm changeset` if you change a Changesets-tracked package (@tumaet/apollon, @tumaet/webapp, @tumaet/server). See CONTRIBUTING.md. -->
+
+### Summary
+
+<!-- What changed and why, for the reviewer. The user-facing wording lives in the changeset body. -->
+
+### Implementation notes
+
+<!-- Approach, trade-offs, alternatives considered, follow-ups. -->
+
+### Steps for testing
+
+1. …
+
+### Screenshots / screencasts
+
+<!-- Required for UI changes. -->
 
 ### Checklist
 
-- [ ] I linked PR with a related issue
-- [ ] I added multiple screenshots/screencasts of my UI changes
-
-### Motivation and Context
-
-<!-- Why is this change required? What problem does it solve? -->
-<!-- If it fixes an open issue, please link to the issue here. -->
-
-This PR completes https://github.com/ls1intum/Apollon/issues/xx
-
-### Description
-
-<!-- Describe your changes in detail -->
-
-### Steps for Testing
-
-<!-- Please describe in detail how the reviewer can test your changes. -->
-
-1. ...
-
-### Screenshots
-
-<!-- Add screenshots to demonstrate the changes in the UI. -->
-<!-- Create a GIF file from a screen recording in a docker container https://toub.es/2017/09/11/high-quality-gif-with-ffmpeg-and-docker/ -->
+- [ ] Linked to a related issue (if applicable)
+- [ ] Added a changeset (`pnpm changeset`, [how](https://ls1intum.github.io/Apollon/contributor/development/release-notes/)), or this PR doesn't touch a Changesets-tracked package (`@tumaet/apollon`, `@tumaet/webapp`, `@tumaet/server`)
+- [ ] Tests added or updated
+- [ ] Documentation updated (if applicable)
+- [ ] Screenshots or screencasts attached (if a UI change)

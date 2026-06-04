@@ -1,9 +1,4 @@
-import { BaseEdge } from "@xyflow/react"
-import {
-  BaseEdgeProps,
-  EdgeEndpointMarkers,
-  CommonEdgeElements,
-} from "../GenericEdge"
+import { BaseEdgeProps, StepEdgeBody, CommonEdgeElements } from "../GenericEdge"
 import { EdgeEndLabels } from "../labelTypes/EdgeEndLabels"
 import { useEdgeConfig } from "@/hooks/useEdgeConfig"
 import { useStepPathEdge } from "@/hooks/useStepPathEdge"
@@ -11,11 +6,9 @@ import { useDiagramStore, usePopoverStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { useToolbar } from "@/hooks"
 import { useRef } from "react"
-import { EDGES } from "@/constants"
 import { FeedbackDropzone } from "@/components/wrapper/FeedbackDropzone"
 import { AssessmentSelectableWrapper } from "@/components"
 import { getCustomColorsFromDataForEdge } from "@/utils"
-import { EdgeInlineMarkers } from "@/components/svgs/edges/InlineMarker"
 
 export const ClassDiagramEdge = ({
   id,
@@ -31,7 +24,6 @@ export const ClassDiagramEdge = ({
   sourceHandleId,
   targetHandleId,
   data,
-  selected,
 }: BaseEdgeProps) => {
   const anchorRef = useRef<SVGSVGElement | null>(null)
   const { handleDelete } = useToolbar({ id })
@@ -69,17 +61,19 @@ export const ClassDiagramEdge = ({
     edgeData,
     currentPath,
     overlayPath,
-    midpoints,
+    bendHandles,
+    isBendDragging,
+    draggingHandleSegmentIndex,
     hasInitialCalculation,
-    isReconnectingRef,
+    isReconnecting,
     markerEnd,
     markerStart,
     strokeDashArray,
     handlePointerDown,
-    handleEndpointPointerDown,
     sourcePoint,
     targetPoint,
     isDiagramModifiable,
+    canEditEndpoint,
   } = useStepPathEdge({
     id,
     type,
@@ -95,7 +89,6 @@ export const ClassDiagramEdge = ({
     targetHandleId,
     data,
     allowMidpointDragging,
-    enableReconnection: true,
     enableStraightPath,
   })
 
@@ -105,75 +98,30 @@ export const ClassDiagramEdge = ({
   return (
     <AssessmentSelectableWrapper elementId={id} asElement="g">
       <FeedbackDropzone elementId={id} asElement="path" elementType={type}>
-        <g className="edge-container">
-          <BaseEdge
-            key={markerKey}
-            id={id}
-            path={currentPath}
-            pointerEvents="none"
-            style={{
-              stroke: strokeColor,
-              strokeDasharray: isReconnectingRef.current
-                ? "none"
-                : strokeDashArray,
-              transition: hasInitialCalculation
-                ? "opacity 0.1s ease-in"
-                : "none",
-              opacity: 1,
-            }}
-          />
-
-          {/* Inline markers for export compatibility (survives ungrouping) */}
-          {!isReconnectingRef.current && (
-            <EdgeInlineMarkers
-              pathD={currentPath}
-              markerEnd={markerEnd}
-              markerStart={markerStart}
-              strokeColor={strokeColor}
-            />
-          )}
-
-          <path
-            ref={pathRef}
-            className="edge-overlay"
-            d={overlayPath}
-            fill="none"
-            strokeWidth={EDGES.EDGE_HIGHLIGHT_STROKE_WIDTH}
-            pointerEvents="stroke"
-            style={{
-              opacity: isReconnectingRef.current ? 0 : 0.4,
-            }}
-          />
-
-          <EdgeEndpointMarkers
-            sourcePoint={sourcePoint}
-            targetPoint={targetPoint}
-            isDiagramModifiable={isDiagramModifiable}
-            selected={selected}
-            diagramType="step"
-            pathType="step"
-            onSourcePointerDown={(e) => handleEndpointPointerDown(e, "source")}
-            onTargetPointerDown={(e) => handleEndpointPointerDown(e, "target")}
-          />
-
-          {isDiagramModifiable &&
-            !isReconnectingRef.current &&
-            allowMidpointDragging &&
-            midpoints.map((point, midPointIndex) => (
-              <circle
-                className="edge-circle"
-                pointerEvents="all"
-                key={`${id}-midpoint-${midPointIndex}`}
-                cx={point.x}
-                cy={point.y}
-                r={10}
-                fill="lightgray"
-                stroke="none"
-                style={{ cursor: "grab", zIndex: 9999 }}
-                onPointerDown={(e) => handlePointerDown(e, midPointIndex)}
-              />
-            ))}
-        </g>
+        <StepEdgeBody
+          id={id}
+          markerKey={markerKey}
+          currentPath={currentPath}
+          overlayPath={overlayPath}
+          pathRef={pathRef}
+          strokeColor={strokeColor}
+          strokeDashArray={strokeDashArray}
+          hasInitialCalculation={hasInitialCalculation}
+          isReconnecting={isReconnecting}
+          isBendDragging={isBendDragging}
+          draggingHandleSegmentIndex={draggingHandleSegmentIndex}
+          markerStart={markerStart}
+          markerEnd={markerEnd}
+          sourcePoint={sourcePoint}
+          targetPoint={targetPoint}
+          sourcePosition={sourcePosition}
+          targetPosition={targetPosition}
+          isDiagramModifiable={isDiagramModifiable}
+          canEditEndpoint={canEditEndpoint}
+          allowMidpointDragging={allowMidpointDragging}
+          bendHandles={bendHandles}
+          handlePointerDown={handlePointerDown}
+        />
 
         <EdgeEndLabels
           data={data}
@@ -190,6 +138,7 @@ export const ClassDiagramEdge = ({
         <CommonEdgeElements
           id={id}
           pathMiddlePosition={edgeData.pathMiddlePosition}
+          toolbarPosition={edgeData.toolbarPosition}
           isDiagramModifiable={isDiagramModifiable}
           assessments={assessments}
           anchorRef={anchorRef}

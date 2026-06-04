@@ -92,7 +92,6 @@ export function LegalPage({
           // Shipping the disclaimer in production violates § 5 DDG and Art. 13
           // GDPR. The on-page banner alone is not enough because operators
           // rarely open the page themselves.
-          // eslint-disable-next-line no-console
           console.warn(
             `[legal] Disclaimer fallback served for page=${page}. Configure LEGAL_PROFILE or mount /legal-overrides/. See docs/admin/legal-pages.`
           )
