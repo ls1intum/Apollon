@@ -44,8 +44,7 @@ export const NewDiagramFromTemplateModal = () => {
 
       createModel(jsonData)
       closeModal()
-      navigate("..", {
-        relative: "route",
+      navigate(`/local/${jsonData.id}`, {
         state: { timeStapToCreate },
       })
     } catch (err: unknown) {
