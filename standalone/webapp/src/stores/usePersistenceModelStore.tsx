@@ -32,7 +32,6 @@ type PersistenceModelStore = {
   toggleFavorite: (id: string) => void
   setThumbnail: (id: string, svgString: string, lastModifiedAt?: string) => void
   getThumbnail: (id: string) => string | null
-  getCurrentModel: () => PersistentModelEntity | null
 }
 
 type PersistedPersistenceModelStore = Pick<
@@ -312,12 +311,6 @@ export const usePersistenceModelStore = create<PersistenceModelStore>()(
           ),
 
         getThumbnail: (id) => get().thumbnails[id] ?? null,
-
-        getCurrentModel: () => {
-          const currentModelId = get().currentModelId
-          if (!currentModelId) return null
-          return get().models[currentModelId]
-        },
       }),
       {
         name: "persistenceModelStore",

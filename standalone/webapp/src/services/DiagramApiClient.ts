@@ -7,6 +7,8 @@ import type {
   VersionSummary,
 } from "@/types"
 
+export type StoredDiagram = Diagram
+
 export class ApiError extends Error {
   constructor(
     public readonly status: number,
@@ -118,6 +120,22 @@ export const DiagramApiClient = {
 
   async deleteDiagram(diagramId: string): Promise<void> {
     await request<void>(`/api/diagrams/${diagramId}`, { method: "DELETE" })
+  },
+
+  async fetchStoredDiagram(
+    diagramId: string,
+    opts: { signal?: AbortSignal } = {}
+  ): Promise<StoredDiagram | null> {
+    try {
+      const { data } = await request<StoredDiagram>(
+        `/api/diagrams/${diagramId}`,
+        { signal: opts.signal }
+      )
+      return data
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) return null
+      throw err
+    }
   },
 }
 

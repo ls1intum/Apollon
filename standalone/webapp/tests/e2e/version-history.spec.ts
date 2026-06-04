@@ -4,8 +4,7 @@ import { waitForCanvasReady } from "../helpers/canvas"
 /**
  * E2E coverage for the version-history drawer.
  *
- * The local (/) page does not have a versionable diagram (versioning is for
- * shared/connected diagrams under /:diagramId). What we *can* verify here
+ * Versioning applies to shared/connected diagrams. What we verify here
  * without a running server is the regression that triggered the original bug
  * report:
  *
@@ -19,6 +18,37 @@ import { waitForCanvasReady } from "../helpers/canvas"
  * full app mount and asserts no React error overlay or runtime warnings hit
  * the browser console.
  */
+
+const MODEL_ID = "e2e-version-history-model"
+
+async function seedLocalDiagram(page: import("@playwright/test").Page) {
+  await page.goto("/")
+  await page.evaluate((id) => {
+    const storeValue = JSON.stringify({
+      state: {
+        models: {
+          [id]: {
+            id,
+            model: {
+              id,
+              type: "ClassDiagram",
+              assessments: {},
+              edges: [],
+              nodes: [],
+              title: "Version History E2E Diagram",
+              version: "4.0.0",
+            },
+            lastModifiedAt: new Date().toISOString(),
+          },
+        },
+        currentModelId: id,
+      },
+      version: 0,
+    })
+    localStorage.setItem("persistenceModelStore", storeValue)
+  }, MODEL_ID)
+  await page.goto(`/local/${MODEL_ID}`)
+}
 
 test.describe("Version history (regression)", () => {
   test("loads the local editor without React errors or infinite-loop warnings", async ({
@@ -35,11 +65,11 @@ test.describe("Version history (regression)", () => {
       errors.push(err.message)
     })
 
-    await page.goto("/")
+    await seedLocalDiagram(page)
     await waitForCanvasReady(page, false)
 
     // The whole app mounts AppProviders (which mounts the version store via
-    // its persist middleware on first import). Even on the local page where
+    // its persist middleware on first import). Even on /local/:id where
     // VersionDrawer isn't rendered, the store is initialised and persisted.
     await expect(page.locator(".react-flow").first()).toBeVisible()
 

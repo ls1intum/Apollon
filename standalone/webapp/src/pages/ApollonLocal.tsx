@@ -78,8 +78,10 @@ export const ApollonLocal: React.FC = () => {
 
       log.debug("Cleaning up Apollon instance")
       instance.destroy()
-      setCurrentModelId(null)
-      setEditor(undefined)
+      if (usePersistenceModelStore.getState().currentModelId === diagram.id) {
+        setCurrentModelId(null)
+        setEditor(undefined)
+      }
     }
   }, [diagram?.id, setCurrentModelId, setEditor, setThumbnail, updateModel])
 

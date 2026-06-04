@@ -4,7 +4,27 @@ import themings from "@/constants/themings.json"
 
 const THEME_STORE_VERSION = 2
 const LEGACY_THEME_STORE_NAME = "theme-storage"
+const THEME_STORE_NAME = "apollon-theme"
 const THEME_STYLE_ELEMENT_ID = "apollon-theme-token-styles"
+
+// Run once at module load: if the new key is absent but the legacy key exists,
+// copy its payload under the new key so zustand's hydration picks it up.
+if (typeof localStorage !== "undefined") {
+  try {
+    if (
+      !localStorage.getItem(THEME_STORE_NAME) &&
+      localStorage.getItem(LEGACY_THEME_STORE_NAME)
+    ) {
+      localStorage.setItem(
+        THEME_STORE_NAME,
+        localStorage.getItem(LEGACY_THEME_STORE_NAME)!
+      )
+      localStorage.removeItem(LEGACY_THEME_STORE_NAME)
+    }
+  } catch {
+    // localStorage may be unavailable in some environments; skip silently.
+  }
+}
 
 type ThemeMode = "light" | "dark"
 type ThemeTokenMap = Record<string, string>
@@ -141,7 +161,7 @@ export const useThemeStore = create<ThemeState>()(
       }
     },
     {
-      name: "apollon-theme",
+      name: THEME_STORE_NAME,
       version: THEME_STORE_VERSION,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
@@ -149,34 +169,10 @@ export const useThemeStore = create<ThemeState>()(
         userThemePreference: state.userThemePreference,
         currentTheme: state.currentTheme,
       }),
-      migrate: (persistedState, version) => {
-        const normalizedPersistedState = normalizePersistedThemeState(
+      migrate: (persistedState) => {
+        return normalizePersistedThemeState(
           (persistedState as PersistedThemeShape) ?? {}
-        )
-
-        if (version >= THEME_STORE_VERSION) {
-          return normalizedPersistedState as ThemeState
-        }
-
-        try {
-          const rawLegacyValue = localStorage.getItem(LEGACY_THEME_STORE_NAME)
-          if (rawLegacyValue) {
-            const parsedLegacyValue = JSON.parse(rawLegacyValue) as {
-              state?: PersistedThemeShape
-            }
-            localStorage.removeItem(LEGACY_THEME_STORE_NAME)
-            if (parsedLegacyValue?.state) {
-              return {
-                ...normalizedPersistedState,
-                ...normalizePersistedThemeState(parsedLegacyValue.state),
-              } as ThemeState
-            }
-          }
-        } catch {
-          // If migration fails, fallback to current persisted state.
-        }
-
-        return normalizedPersistedState as ThemeState
+        ) as ThemeState
       },
     }
   )

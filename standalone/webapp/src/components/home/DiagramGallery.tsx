@@ -13,7 +13,7 @@ import { DiagramView } from "@/types"
 import { playgroundModelId } from "@/constants/playgroundDefaultDiagram"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { useDiagramThumbnailWarmup } from "@/hooks/useDiagramThumbnailWarmup"
-import { DiagramAPIManager } from "@/services/DiagramAPIManager"
+import { DiagramApiClient } from "@/services/DiagramApiClient"
 import {
   getSharedDiagramEntries,
   removeSharedDiagramEntry,
@@ -313,7 +313,7 @@ export const DiagramGallery = ({
       await Promise.all(
         entries.map(async (entry) => {
           try {
-            const storedDiagram = await DiagramAPIManager.fetchStoredDiagram(
+            const storedDiagram = await DiagramApiClient.fetchStoredDiagram(
               entry.id
             )
             if (!storedDiagram) {
