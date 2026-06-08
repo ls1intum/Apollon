@@ -157,7 +157,7 @@ test.describe("Home page — empty state (no diagrams)", () => {
   }) => {
     await page.getByRole("button", { name: "New diagram" }).first().click()
 
-    const nameInput = page.getByLabel("Name")
+    const nameInput = page.getByRole("textbox", { name: "Name" })
 
     await expect(nameInput).toHaveValue("Class Diagram")
     await page.getByRole("button", { name: "Use template" }).click()

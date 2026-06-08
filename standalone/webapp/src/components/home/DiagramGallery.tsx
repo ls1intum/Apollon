@@ -796,7 +796,7 @@ export const DiagramGallery = ({
             <input
               id="recent-diagrams-search"
               type="search"
-              aria-label="Search diagrams by name"
+              aria-label="Search diagrams"
               value={searchTerm}
               onChange={(event) => {
                 setSearchTerm(event.target.value)
