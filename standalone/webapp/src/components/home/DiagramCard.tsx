@@ -81,7 +81,6 @@ const CARD_BADGE_MAX_WIDTH_PX = 112
  */
 const CARD_TYPE_TITLE_PX = 13
 const CARD_TYPE_META_PX = 11
-const CARD_TYPE_CAPTION_PX = 10
 const CARD_TYPE_BADGE_PX = 10.5
 
 type ThumbnailThemeCacheEntry = {

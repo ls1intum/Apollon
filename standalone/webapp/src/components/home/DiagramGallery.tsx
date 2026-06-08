@@ -1036,11 +1036,11 @@ export const DiagramGallery = ({
                   <>
                     Use{" "}
                     <strong className="text-[var(--home-text-primary)]">
-                      "New diagram"
+                      &quot;New diagram&quot;
                     </strong>{" "}
                     to create a diagram, or{" "}
                     <strong className="text-[var(--home-text-primary)]">
-                      "Import"
+                      &quot;Import&quot;
                     </strong>{" "}
                     to add an existing one.
                   </>
