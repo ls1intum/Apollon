@@ -24,12 +24,16 @@ type WorkerResponse =
       error: string
     }
 
-async function renderPdf(model: UMLModel): Promise<Buffer> {
+async function renderPdf(model: UMLModel): Promise<Uint8Array> {
   const conversionService = new ConversionService()
   const { svg, clip } = await conversionService.convertToSvg(model)
   const { width, height } = clip
 
-  pdfMake.vfs = pdfFonts.vfs
+  // pdfmake 0.3.x registers fonts via addVirtualFileSystem(). The 0.2.x
+  // `pdfMake.vfs = ...` assignment is a silent no-op, leaving every Roboto
+  // face unregistered so svg-to-pdfkit fails as soon as the SVG needs one.
+  // The 0.3.x vfs_fonts default export is the vfs map itself (no `.vfs`).
+  pdfMake.addVirtualFileSystem(pdfFonts)
 
   const doc = pdfMake.createPdf({
     content: [{ svg }],
@@ -37,18 +41,10 @@ async function renderPdf(model: UMLModel): Promise<Buffer> {
     pageMargins: 0,
   })
 
-  // getBuffer materialises the entire PDF in one callback — semantically
-  // equivalent to consuming the stream end-to-end, but with no manual chunk
-  // accumulation and no need to `any`-cast a getStream() Promise (the
-  // @types/pdfmake declaration disagrees with runtime). PDFs from a single
-  // diagram are bounded by MAX_SNAPSHOT_BYTES; no streaming pressure.
-  return await new Promise<Buffer>((resolve, reject) => {
-    try {
-      doc.getBuffer((buffer) => resolve(buffer))
-    } catch (err) {
-      reject(err as Error)
-    }
-  })
+  // pdfmake 0.3.x dropped the getBuffer(callback) overload (the missing
+  // callback was this worker's other 0.2.x bug) for a Promise that resolves
+  // to a browserified Uint8Array, not a Node Buffer — hence the return type.
+  return await doc.getBuffer()
 }
 
 parentPort?.on("message", async (message: WorkerRequest) => {

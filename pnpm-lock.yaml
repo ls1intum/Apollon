@@ -391,8 +391,8 @@ importers:
         specifier: 'catalog:'
         version: 24.12.4
       '@types/pdfmake':
-        specifier: 0.2.12
-        version: 0.2.12
+        specifier: 0.3.3
+        version: 0.3.3
       '@types/supertest':
         specifier: 6.0.2
         version: 6.0.2
@@ -4315,8 +4315,8 @@ packages:
   '@types/pdfkit@0.17.6':
     resolution: {integrity: sha512-tIwzxk2uWKp0Cq9JIluQXJid77lYhF52EsIOwhsMF4iWLA6YneoBR1xVKYYdAysHuepUB0OX4tdwMiUDdGKmig==}
 
-  '@types/pdfmake@0.2.12':
-    resolution: {integrity: sha512-YV3oY+J1eSHVH22fPuevE2kQdWvrpkEgYyHacExxgr//ZPjCitAggnysGjx/2VgiH0lEAGQ+5R+wZUGbAXn1Qg==}
+  '@types/pdfmake@0.3.3':
+    resolution: {integrity: sha512-ufbceB4Q3dKpmFUMKEbZvJcfLi8+C5b1+rTFVG6urtkS3FHwaTQH6NCh/iEEDINlApCxH/W3/rsq99pP5E9/JA==}
 
   '@types/prismjs@1.26.6':
     resolution: {integrity: sha512-vqlvI7qlMvcCBbVe0AKAb4f97//Hy0EBTaiW8AalRnG/xAN5zOiWWyrNqNXeq8+KAuvRewjCVY1+IPxk4RdNYw==}
@@ -16295,7 +16295,7 @@ snapshots:
     dependencies:
       '@types/node': 24.12.4
 
-  '@types/pdfmake@0.2.12':
+  '@types/pdfmake@0.3.3':
     dependencies:
       '@types/node': 24.12.4
       '@types/pdfkit': 0.17.6
