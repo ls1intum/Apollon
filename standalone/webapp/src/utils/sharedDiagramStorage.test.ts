@@ -1,9 +1,12 @@
-import { beforeEach, describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { DiagramView } from "@/types"
 import {
   addSharedDiagramEntry,
+  clearSharedDiagramExpiredState,
   getSharedDiagramEntries,
+  markSharedDiagramExpired,
   markSharedDiagramCopied,
+  pruneExpiredSharedDiagrams,
   subscribeToSharedDiagramChange,
   updateSharedDiagramView,
 } from "./sharedDiagramStorage"
@@ -44,6 +47,10 @@ describe("shared diagram storage", () => {
     localStorage.clear()
   })
 
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it("migrates old entries to edit mode", () => {
     localStorage.setItem(
       "sharedDiagramStore",
@@ -60,6 +67,7 @@ describe("shared diagram storage", () => {
         lastSharedView: DiagramView.EDIT,
         sourceModelId: undefined,
         lastCopiedAt: undefined,
+        expiredAt: undefined,
       },
     ])
   })
@@ -86,6 +94,95 @@ describe("shared diagram storage", () => {
     const copiedEntry = getSharedDiagramEntries()[0]
     expect(copiedEntry.lastSharedView).toBe(DiagramView.SEE_FEEDBACK)
     expect(copiedEntry.lastCopiedAt).toEqual(expect.any(String))
+  })
+
+  it("keeps expired shared diagrams in storage until explicitly removed", () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date("2026-06-01T12:00:00.000Z"))
+
+    addSharedDiagramEntry("shared-1", {
+      lastSharedView: DiagramView.EDIT,
+    })
+    markSharedDiagramExpired("shared-1")
+
+    expect(getSharedDiagramEntries()).toHaveLength(1)
+    expect(getSharedDiagramEntries()[0].expiredAt).toBe(
+      "2026-06-01T12:00:00.000Z"
+    )
+
+    vi.setSystemTime(new Date("2026-06-08T11:59:59.000Z"))
+    expect(getSharedDiagramEntries()).toHaveLength(1)
+
+    vi.setSystemTime(new Date("2026-06-08T12:00:00.000Z"))
+    expect(getSharedDiagramEntries()).toHaveLength(1)
+  })
+
+  it("clears expired state when a shared diagram becomes active again", () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date("2026-06-01T12:00:00.000Z"))
+
+    addSharedDiagramEntry("shared-1", {
+      lastSharedView: DiagramView.COLLABORATE,
+    })
+    markSharedDiagramExpired("shared-1")
+    clearSharedDiagramExpiredState("shared-1")
+
+    expect(getSharedDiagramEntries()[0]).toMatchObject({
+      id: "shared-1",
+      lastSharedView: DiagramView.COLLABORATE,
+      expiredAt: undefined,
+    })
+  })
+
+  it("removes expired shared diagrams older than 7 days when pruned", () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date("2026-06-08T12:00:00.000Z"))
+
+    addSharedDiagramEntry("shared-1", {
+      lastSharedView: DiagramView.EDIT,
+    })
+    markSharedDiagramExpired("shared-1", "2026-06-01T11:59:59.000Z")
+
+    pruneExpiredSharedDiagrams()
+
+    expect(getSharedDiagramEntries()).toEqual([])
+  })
+
+  it("keeps expired shared diagrams newer than 7 days when pruned", () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date("2026-06-08T12:00:00.000Z"))
+
+    addSharedDiagramEntry("shared-1", {
+      lastSharedView: DiagramView.EDIT,
+    })
+    markSharedDiagramExpired("shared-1", "2026-06-01T12:00:01.000Z")
+
+    pruneExpiredSharedDiagrams()
+
+    expect(getSharedDiagramEntries()).toHaveLength(1)
+    expect(getSharedDiagramEntries()[0].expiredAt).toBe(
+      "2026-06-01T12:00:01.000Z"
+    )
+  })
+
+  it("keeps non-expired shared diagrams when pruned", () => {
+    addSharedDiagramEntry("shared-1", {
+      lastSharedView: DiagramView.SEE_FEEDBACK,
+    })
+
+    pruneExpiredSharedDiagrams()
+
+    expect(getSharedDiagramEntries()).toHaveLength(1)
+    expect(getSharedDiagramEntries()[0]).toMatchObject({
+      id: "shared-1",
+      expiredAt: undefined,
+      lastSharedView: DiagramView.SEE_FEEDBACK,
+    })
+  })
+
+  it("does not error when pruning empty storage", () => {
+    expect(() => pruneExpiredSharedDiagrams()).not.toThrow()
+    expect(getSharedDiagramEntries()).toEqual([])
   })
 
   it("notifies same-tab subscribers on every write", () => {

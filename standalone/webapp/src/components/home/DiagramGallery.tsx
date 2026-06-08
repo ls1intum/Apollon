@@ -15,7 +15,9 @@ import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { useDiagramThumbnailWarmup } from "@/hooks/useDiagramThumbnailWarmup"
 import { DiagramApiClient } from "@/services/DiagramApiClient"
 import {
+  clearSharedDiagramExpiredState,
   getSharedDiagramEntries,
+  markSharedDiagramExpired,
   removeSharedDiagramEntry,
   subscribeToSharedDiagramChange,
   toggleSharedDiagramFavorite,
@@ -31,7 +33,10 @@ import {
   type RecentDiagram,
 } from "./DiagramCard"
 import { getDiagramTypeLabel } from "./diagramTypeMeta"
-import { SegmentedControl } from "./SegmentedControl"
+import {
+  SegmentedControl,
+  type SegmentedControlOption,
+} from "./SegmentedControl"
 import { DropdownFilterMenu } from "./DropdownFilterMenu"
 import { HomeButton } from "./primitives/HomeButton"
 
@@ -50,6 +55,7 @@ type GalleryDiagram = RecentDiagram & {
   source: DiagramSource
   createdAt: string
   isExpired?: boolean
+  expiredAt?: string
 }
 
 const isDiagramEmpty = (diagram: GalleryDiagram) =>
@@ -95,6 +101,20 @@ const getDiagramSortValue = (
   }
 
   return normalize(diagram.title)
+}
+
+const compareExpiredLast = (
+  firstDiagram: GalleryDiagram,
+  secondDiagram: GalleryDiagram
+) => {
+  const firstExpired = Boolean(firstDiagram.isExpired)
+  const secondExpired = Boolean(secondDiagram.isExpired)
+
+  if (firstExpired === secondExpired) {
+    return 0
+  }
+
+  return firstExpired ? 1 : -1
 }
 
 const EmptyStateIllustration = () => (
@@ -224,15 +244,59 @@ type DiagramGalleryProps = {
   initialSearchTerm?: string
   highlightSharedDiagramId?: string | null
   onNewDiagram?: () => void
-  onFromTemplate?: () => void
   onImportJson?: () => void
 }
+
+const diagramSourceOptions = [
+  {
+    value: "all",
+    label: (
+      <>
+        <span className="sm:hidden">All</span>
+        <span className="hidden sm:inline">All diagrams</span>
+      </>
+    ),
+    ariaLabel: "All diagrams",
+  },
+  {
+    value: "local",
+    label: (
+      <>
+        <span className="sm:hidden">Local</span>
+        <span className="hidden sm:inline">Local diagrams</span>
+      </>
+    ),
+    ariaLabel: "Local diagrams",
+  },
+  {
+    value: "shared",
+    label: (
+      <>
+        <span className="sm:hidden">Shared</span>
+        <span className="hidden sm:inline">Shared diagrams</span>
+      </>
+    ),
+    ariaLabel: "Shared diagrams",
+  },
+] satisfies readonly SegmentedControlOption<DiagramSourceFilter>[]
+
+const viewModeOptions = [
+  {
+    value: "grid",
+    icon: <GridViewIcon />,
+    ariaLabel: "Grid view",
+  },
+  {
+    value: "table",
+    icon: <TableViewIcon />,
+    ariaLabel: "Table view",
+  },
+] satisfies readonly SegmentedControlOption<DiagramViewMode>[]
 
 export const DiagramGallery = ({
   initialSearchTerm = "",
   highlightSharedDiagramId = null,
   onNewDiagram,
-  onFromTemplate,
   onImportJson,
 }: DiagramGalleryProps) => {
   const navigate = useNavigate()
@@ -339,21 +403,27 @@ export const DiagramGallery = ({
               entry.id
             )
             if (!storedDiagram) {
+              const expiredAt = entry.expiredAt ?? new Date().toISOString()
+              markSharedDiagramExpired(entry.id, expiredAt)
               diagramsById.set(entry.id, {
                 id: entry.id,
                 title: "Expired diagram",
                 type: "ClassDiagram",
                 lastModifiedAt: entry.sharedAt,
-                favorite: false,
+                favorite: entry.favorite ?? false,
                 source: "shared",
                 model: { nodes: [], edges: [] } as unknown as UMLModel,
                 createdAt: entry.sharedAt,
                 lastSharedView: entry.lastSharedView,
                 isExpired: true,
+                expiredAt,
               })
               return
             }
 
+            if (entry.expiredAt) {
+              clearSharedDiagramExpiredState(entry.id)
+            }
             diagramsById.set(entry.id, {
               id: storedDiagram.id,
               title: storedDiagram.title,
@@ -367,6 +437,7 @@ export const DiagramGallery = ({
               model: storedDiagram,
               createdAt: storedDiagram.createdAt || entry.sharedAt,
               lastSharedView: entry.lastSharedView,
+              expiredAt: undefined,
             })
           } catch {
             networkErrorCount++
@@ -377,7 +448,17 @@ export const DiagramGallery = ({
       const orderedSharedDiagrams = entries
         .map((entry) => diagramsById.get(entry.id))
         .filter((diagram): diagram is GalleryDiagram => Boolean(diagram))
-        .sort(sortByLastModifiedDesc)
+        .sort((firstDiagram, secondDiagram) => {
+          const expiredComparison = compareExpiredLast(
+            firstDiagram,
+            secondDiagram
+          )
+          if (expiredComparison !== 0) {
+            return expiredComparison
+          }
+
+          return sortByLastModifiedDesc(firstDiagram, secondDiagram)
+        })
 
       if (isSubscribed) {
         setSharedDiagrams(orderedSharedDiagrams)
@@ -397,7 +478,7 @@ export const DiagramGallery = ({
     }
   }, [diagramSource, sharedReloadKey])
 
-  const allDiagrams = useMemo(() => {
+  const allDiagrams = useMemo<GalleryDiagram[]>(() => {
     if (diagramSource === "local") {
       return localDiagrams
     }
@@ -433,6 +514,14 @@ export const DiagramGallery = ({
         return matchesSearch && matchesType && matchesFavorite
       })
       .sort((firstDiagram, secondDiagram) => {
+        const expiredComparison = compareExpiredLast(
+          firstDiagram,
+          secondDiagram
+        )
+        if (expiredComparison !== 0) {
+          return expiredComparison
+        }
+
         if (sortBy === "alphabetical") {
           const titleComparison = String(
             getDiagramSortValue(firstDiagram, sortBy)
@@ -655,39 +744,6 @@ export const DiagramGallery = ({
               Import
             </HomeButton>
             <HomeButton
-              variant="secondary"
-              size="sm"
-              onClick={onFromTemplate}
-              className="w-full sm:w-auto"
-              icon={
-                <svg
-                  className="h-3.5 w-3.5 flex-shrink-0"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  aria-hidden="true"
-                >
-                  <rect
-                    x="3"
-                    y="3"
-                    width="18"
-                    height="18"
-                    rx="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M3 9h18M9 21V9"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              }
-            >
-              Template
-            </HomeButton>
-            <HomeButton
               variant="primary"
               size="sm"
               onClick={onNewDiagram}
@@ -786,38 +842,7 @@ export const DiagramGallery = ({
               className="w-full sm:max-w-full lg:w-fit"
               sizeClassName={controlHeightClass}
               itemClassName={`flex-1 px-2 sm:px-3 lg:flex-none ${controlTextClass}`}
-              options={[
-                {
-                  value: "all",
-                  label: (
-                    <>
-                      <span className="sm:hidden">All</span>
-                      <span className="hidden sm:inline">All diagrams</span>
-                    </>
-                  ),
-                  ariaLabel: "All diagrams",
-                },
-                {
-                  value: "local",
-                  label: (
-                    <>
-                      <span className="sm:hidden">Local</span>
-                      <span className="hidden sm:inline">Local diagrams</span>
-                    </>
-                  ),
-                  ariaLabel: "Local diagrams",
-                },
-                {
-                  value: "shared",
-                  label: (
-                    <>
-                      <span className="sm:hidden">Shared</span>
-                      <span className="hidden sm:inline">Shared diagrams</span>
-                    </>
-                  ),
-                  ariaLabel: "Shared diagrams",
-                },
-              ]}
+              options={diagramSourceOptions}
               value={diagramSource}
               onChange={(nextSource) => {
                 setDiagramSource(nextSource)
@@ -975,18 +1000,7 @@ export const DiagramGallery = ({
                 className="w-fit"
                 sizeClassName={controlHeightClass}
                 itemClassName="w-8 px-0"
-                options={[
-                  {
-                    value: "grid",
-                    icon: <GridViewIcon />,
-                    ariaLabel: "Grid view",
-                  },
-                  {
-                    value: "table",
-                    icon: <TableViewIcon />,
-                    ariaLabel: "Table view",
-                  },
-                ]}
+                options={viewModeOptions}
                 value={viewMode}
                 onChange={(nextViewMode) => setViewMode(nextViewMode)}
               />
@@ -1011,108 +1025,28 @@ export const DiagramGallery = ({
                       ? "Server unavailable"
                       : "No shared diagrams yet"}
               </p>
-              <p className="max-w-xs text-sm text-[var(--home-text-secondary)]">
-                {diagramSource === "shared"
-                  ? sharedDiagramsStatus === "error"
-                    ? "Could not reach the server. Check your connection and try again."
-                    : "Share a local diagram to see it listed here."
-                  : "Start from scratch, pick a template, or import an existing file."}
+              <p className="max-w-xs text-center text-sm text-[var(--home-text-secondary)]">
+                {diagramSource === "shared" ? (
+                  sharedDiagramsStatus === "error" ? (
+                    "Could not reach the server. Check your connection and try again."
+                  ) : (
+                    "Share a local diagram to see it listed here."
+                  )
+                ) : (
+                  <>
+                    Use{" "}
+                    <strong className="text-[var(--home-text-primary)]">
+                      "New diagram"
+                    </strong>{" "}
+                    to create a diagram, or{" "}
+                    <strong className="text-[var(--home-text-primary)]">
+                      "Import"
+                    </strong>{" "}
+                    to add an existing one.
+                  </>
+                )}
               </p>
             </div>
-            {(diagramSource === "local" || diagramSource === "all") && (
-              <div className="flex flex-wrap items-center justify-center gap-2">
-                <HomeButton
-                  variant="primary"
-                  size="md"
-                  onClick={onNewDiagram}
-                  icon={
-                    <svg
-                      className="h-3.5 w-3.5 flex-shrink-0"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.2"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d="M12 5v14M5 12h14"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  }
-                >
-                  New diagram
-                </HomeButton>
-                <HomeButton
-                  variant="secondary"
-                  size="md"
-                  onClick={onFromTemplate}
-                  icon={
-                    <svg
-                      className="h-3.5 w-3.5 flex-shrink-0"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      aria-hidden="true"
-                    >
-                      <rect
-                        x="3"
-                        y="3"
-                        width="18"
-                        height="18"
-                        rx="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M3 9h18M9 21V9"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  }
-                >
-                  From template
-                </HomeButton>
-                <HomeButton
-                  variant="secondary"
-                  size="md"
-                  onClick={onImportJson}
-                  icon={
-                    <svg
-                      className="h-3.5 w-3.5 flex-shrink-0"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <polyline
-                        points="17 8 12 3 7 8"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <line
-                        x1="12"
-                        y1="3"
-                        x2="12"
-                        y2="15"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                  }
-                >
-                  Import
-                </HomeButton>
-              </div>
-            )}
           </div>
         ) : (
           <>
@@ -1121,7 +1055,7 @@ export const DiagramGallery = ({
                 {viewMode === "grid" ? (
                   <div
                     role="list"
-                    className="grid grid-cols-[repeat(auto-fit,minmax(230px,1fr))] gap-x-4 gap-y-6 md:grid-cols-[repeat(auto-fit,minmax(260px,1fr))] md:gap-x-6 md:gap-y-8 lg:gap-x-7 lg:gap-y-10 xl:grid-cols-[repeat(auto-fit,minmax(280px,1fr))]"
+                    className="grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] justify-start gap-x-4 gap-y-6 md:grid-cols-[repeat(auto-fill,minmax(260px,1fr))] md:gap-x-6 md:gap-y-8 lg:gap-x-7 lg:gap-y-10 xl:grid-cols-[repeat(auto-fill,minmax(280px,1fr))]"
                   >
                     {visibleDiagrams.map((diagram, index) => (
                       <div

@@ -2,6 +2,7 @@ import { DiagramView } from "@/types"
 import { normalizeSharedDiagramView } from "@/utils/sharedDiagramLinks"
 
 const SHARED_DIAGRAM_STORE_KEY = "sharedDiagramStore"
+const SHARED_DIAGRAM_EXPIRY_GRACE_PERIOD_MS = 7 * 24 * 60 * 60 * 1000
 
 export type SharedDiagramEntry = {
   id: string
@@ -10,10 +11,19 @@ export type SharedDiagramEntry = {
   lastSharedView: DiagramView
   sourceModelId?: string
   lastCopiedAt?: string
+  expiredAt?: string
 }
 
 type SharedDiagramStore = {
   entries: SharedDiagramEntry[]
+}
+
+const isIsoDateString = (value: unknown): value is string => {
+  if (typeof value !== "string") {
+    return false
+  }
+
+  return !Number.isNaN(new Date(value).getTime())
 }
 
 const readStore = (): SharedDiagramStore => {
@@ -65,6 +75,9 @@ const readStore = (): SharedDiagramStore => {
           typeof entry.lastCopiedAt === "string"
             ? entry.lastCopiedAt
             : undefined,
+        expiredAt: isIsoDateString(entry.expiredAt)
+          ? entry.expiredAt
+          : undefined,
       })),
     }
   } catch {
@@ -137,6 +150,7 @@ export const addSharedDiagramEntry = (
           DiagramView.EDIT,
         sourceModelId: options.sourceModelId ?? existingEntry?.sourceModelId,
         lastCopiedAt: options.lastCopiedAt ?? existingEntry?.lastCopiedAt,
+        expiredAt: undefined,
       },
       ...remainingEntries,
     ],
@@ -214,8 +228,84 @@ export const markSharedDiagramCopied = (
             ...entry,
             lastSharedView: view ?? entry.lastSharedView,
             lastCopiedAt: now,
+            expiredAt: undefined,
           }
         : entry
     ),
   })
+}
+
+export const markSharedDiagramExpired = (
+  diagramId: string,
+  expiredAt = new Date().toISOString()
+) => {
+  const normalizedId = diagramId.trim()
+  if (!normalizedId) {
+    return
+  }
+
+  const currentStore = readStore()
+  const hasChanged = currentStore.entries.some(
+    (entry) => entry.id === normalizedId && !entry.expiredAt
+  )
+  if (!hasChanged) {
+    return
+  }
+
+  writeStore({
+    entries: currentStore.entries.map((entry) =>
+      entry.id === normalizedId
+        ? {
+            ...entry,
+            expiredAt: entry.expiredAt ?? expiredAt,
+          }
+        : entry
+    ),
+  })
+}
+
+export const clearSharedDiagramExpiredState = (diagramId: string) => {
+  const normalizedId = diagramId.trim()
+  if (!normalizedId) {
+    return
+  }
+
+  const currentStore = readStore()
+  const hasChanged = currentStore.entries.some(
+    (entry) => entry.id === normalizedId && Boolean(entry.expiredAt)
+  )
+  if (!hasChanged) {
+    return
+  }
+
+  writeStore({
+    entries: currentStore.entries.map((entry) =>
+      entry.id === normalizedId && entry.expiredAt
+        ? {
+            ...entry,
+            expiredAt: undefined,
+          }
+        : entry
+    ),
+  })
+}
+
+export const pruneExpiredSharedDiagrams = (
+  now = new Date()
+): SharedDiagramEntry[] => {
+  const currentStore = readStore()
+  const cutoffTime = now.getTime() - SHARED_DIAGRAM_EXPIRY_GRACE_PERIOD_MS
+  const entries = currentStore.entries.filter((entry) => {
+    if (!entry.expiredAt) {
+      return true
+    }
+
+    return new Date(entry.expiredAt).getTime() >= cutoffTime
+  })
+
+  if (entries.length !== currentStore.entries.length) {
+    writeStore({ entries })
+  }
+
+  return entries
 }

@@ -7,6 +7,7 @@ import { HomeNavbar } from "@/components/navbar/HomeNavbar"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { useModalContext } from "@/contexts"
 import { DiagramGallerySkeleton } from "@/components/home/DiagramGallerySkeleton"
+import { pruneExpiredSharedDiagrams } from "@/utils/sharedDiagramStorage"
 
 const DiagramGallery = lazy(() =>
   import("@/components/home/DiagramGallery").then((module) => ({
@@ -34,6 +35,9 @@ export const HomePage = () => {
       try {
         const json = JSON.parse(ev.target?.result as string)
         const processedModel = importDiagram(json)
+        if (!processedModel?.id) {
+          throw new Error("Imported diagram has no id")
+        }
         usePersistenceModelStore.getState().createModel(processedModel)
         navigate(`/local/${processedModel.id}`, { replace: true })
       } catch (error) {
@@ -48,6 +52,10 @@ export const HomePage = () => {
   useEffect(() => {
     setCurrentModelId(null)
   }, [setCurrentModelId])
+
+  useEffect(() => {
+    pruneExpiredSharedDiagrams()
+  }, [])
 
   return (
     <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[var(--home-surface-base)] text-[var(--home-text-primary)] transition-colors duration-200">
@@ -71,11 +79,6 @@ export const HomePage = () => {
               highlightSharedDiagramId={highlightSharedDiagramId}
               onNewDiagram={() =>
                 openModal("NEW_DIAGRAM", { dialogVariant: "home" })
-              }
-              onFromTemplate={() =>
-                openModal("NEW_DIAGRAM_FROM_TEMPLATE", {
-                  dialogVariant: "home",
-                })
               }
               onImportJson={() => jsonImportRef.current?.click()}
             />

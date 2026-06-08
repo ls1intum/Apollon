@@ -94,11 +94,10 @@ test.describe("Home page — initial load", () => {
     ).toBeVisible()
   })
 
-  test("renders the three header CTAs", async ({ page }) => {
+  test("renders the header CTAs", async ({ page }) => {
     await expect(
       page.getByRole("button", { name: "New diagram" })
     ).toBeVisible()
-    await expect(page.getByRole("button", { name: "Template" })).toBeVisible()
     await expect(page.getByRole("button", { name: "Import" })).toBeVisible()
   })
 
@@ -130,9 +129,6 @@ test.describe("Home page — empty state (no diagrams)", () => {
   test("shows the empty-state action buttons", async ({ page }) => {
     // "New diagram" / "Import" appear in header + empty state; .first() picks one.
     await expect(
-      page.getByRole("button", { name: "From template" })
-    ).toBeVisible()
-    await expect(
       page.getByRole("button", { name: "New diagram" }).first()
     ).toBeVisible()
     await expect(
@@ -148,6 +144,27 @@ test.describe("Home page — empty state (no diagrams)", () => {
     await expect(
       page.getByRole("dialog").getByText("New Diagram", { exact: true })
     ).toBeVisible()
+    await expect(
+      page.getByRole("button", { name: "Blank diagram" })
+    ).toBeVisible()
+    await expect(
+      page.getByRole("button", { name: "Use template" })
+    ).toBeVisible()
+  })
+
+  test("the shared name field updates with the selected creation mode", async ({
+    page,
+  }) => {
+    await page.getByRole("button", { name: "New diagram" }).first().click()
+
+    const nameInput = page.getByLabel("Name")
+
+    await expect(nameInput).toHaveValue("Class Diagram")
+    await page.getByRole("button", { name: "Use template" }).click()
+    await expect(nameInput).toHaveValue("Adapter")
+    await expect(page.getByText("Selected Template")).toHaveCount(0)
+    await page.getByRole("button", { name: "Observer" }).click()
+    await expect(nameInput).toHaveValue("Observer")
   })
 })
 

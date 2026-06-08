@@ -269,9 +269,9 @@ const getCachedThumbnailSources = (
 
   let cacheEntry = thumbnailThemeCache.get(cacheKey)
   if (!cacheEntry) {
+    pruneThumbnailThemeCache()
     cacheEntry = {}
     thumbnailThemeCache.set(cacheKey, cacheEntry)
-    pruneThumbnailThemeCache()
   }
 
   // Keep recently used entries hot in insertion-order map.
@@ -440,7 +440,7 @@ export const DiagramActionsMenu = ({
       return
     }
 
-    openModal("SHARE_DASHBOARD", { modelId: diagram.id })
+    openModal("SHARE_DASHBOARD", { modelId: diagram.id, contentOverflow: true })
     closeMenu()
   }
 
@@ -851,13 +851,6 @@ const DiagramCardComponent = ({
   const shortTypeLabel = getDiagramTypeShortLabel(diagram.type)
   const sourceTypeLabel = isLocalDiagram ? "Local" : "Shared"
   const sharedViewLabel = getSharedDiagramViewBadge(diagram.lastSharedView)
-  const createdAtDate = new Date(
-    diagram.createdAt ?? diagram.lastModifiedAt
-  ).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  })
   const scalePx = (value: number) => `calc(var(--card-scale) * ${value}px)`
 
   useEffect(() => {
@@ -1035,17 +1028,13 @@ const DiagramCardComponent = ({
           {/* ---- Title section (smaller, bottom-left in header) ---- */}
           <div className="mt-auto w-full text-left">
             <p
+              className="truncate"
               title={title}
               style={{
                 color: "var(--home-text-strong)",
                 fontSize: `${CARD_TYPE_TITLE_PX}px`,
                 fontWeight: 500,
                 lineHeight: "1.3",
-                display: "-webkit-box",
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: "vertical",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
               }}
             >
               {title}
@@ -1069,27 +1058,29 @@ const DiagramCardComponent = ({
             height: scalePx(CARD_FOOTER_HEIGHT_PX),
           }}
         >
-          {/* Stacked "Created at" and "Last modified" text */}
-          <div className="flex flex-col text-left truncate">
+          {/* Relative last-modified date; full timestamp on hover */}
+          <div
+            className="flex flex-col text-left"
+            title={new Date(diagram.lastModifiedAt).toLocaleString()}
+          >
             <span
               style={{
                 color: "var(--home-text-muted)",
-                fontSize: `${CARD_TYPE_CAPTION_PX}px`,
+                fontSize: `${CARD_TYPE_META_PX}px`,
                 lineHeight: "1.2",
               }}
             >
-              Created {createdAtDate}
+              Modified:
             </span>
             <span
               className="truncate font-medium"
               style={{
                 color: "var(--home-text-muted)",
                 fontSize: `${CARD_TYPE_META_PX}px`,
-                lineHeight: "1.4",
-                marginTop: "2.5px",
+                lineHeight: "1.2",
               }}
             >
-              Modified {relativeDate}
+              {relativeDate}
             </span>
           </div>
 

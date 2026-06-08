@@ -1,7 +1,6 @@
 import React from "react"
 import {
   NewDiagramModal,
-  NewDiagramFromTemplateModal,
   LoadDiagramModal,
   ShareModal,
   ShareDashboardModal,
@@ -34,7 +33,6 @@ interface ModalWrapperProps {
 
 const MODAL_COMPONENTS: Record<ModalName, React.ComponentType<ModalProps>> = {
   NEW_DIAGRAM: NewDiagramModal,
-  NEW_DIAGRAM_FROM_TEMPLATE: NewDiagramFromTemplateModal,
   SHARE: ShareModal,
   SHARE_DASHBOARD: ShareDashboardModal,
   COLLABORATE_NAME: CollaborateNameModal,
@@ -47,7 +45,6 @@ const MODAL_COMPONENTS: Record<ModalName, React.ComponentType<ModalProps>> = {
 
 const MODAL_TITLES: Record<ModalName, string> = {
   NEW_DIAGRAM: "New Diagram",
-  NEW_DIAGRAM_FROM_TEMPLATE: "New Diagram from Template",
   SHARE: "Share",
   SHARE_DASHBOARD: "Share your diagram",
   COLLABORATE_NAME: "Join Collaboration",
@@ -90,8 +87,10 @@ const ModalProgressBar = () => {
 export const ModalWrapper: React.FC<ModalWrapperProps> = ({ name, props }) => {
   const SpecificModal = MODAL_COMPONENTS[name]
   const { closeModal } = useModalContext()
-  const isShareDashboard = name === "SHARE_DASHBOARD"
-  const isHomeDialog = isShareDashboard || isHomeDialogVariant(props)
+  const isContentOverflow = Boolean(
+    props && typeof props === "object" && props.contentOverflow
+  )
+  const isHomeDialog = isContentOverflow || isHomeDialogVariant(props)
   const isWideHomeDialog = name === "NEW_DIAGRAM" && isHomeDialog
 
   if (!SpecificModal) {
@@ -99,11 +98,24 @@ export const ModalWrapper: React.FC<ModalWrapperProps> = ({ name, props }) => {
     return null
   }
 
+  const handleClose = () => {
+    const onClose =
+      props && typeof props === "object" && "onClose" in props
+        ? props.onClose
+        : undefined
+
+    if (typeof onClose === "function") {
+      onClose()
+    }
+
+    closeModal()
+  }
+
   return (
     <ModalProgressProvider>
       <Modal
         open
-        onClose={closeModal}
+        onClose={handleClose}
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
       >
@@ -158,6 +170,7 @@ export const ModalWrapper: React.FC<ModalWrapperProps> = ({ name, props }) => {
             </Typography>
             <IconButton
               size="small"
+              aria-label="Close"
               sx={{
                 color: isHomeDialog ? "var(--home-accent-contrast)" : "grey",
                 borderRadius: isHomeDialog ? "6px" : "2px",
@@ -171,7 +184,7 @@ export const ModalWrapper: React.FC<ModalWrapperProps> = ({ name, props }) => {
                     : "rgba(0,0,0,0.6)",
                 },
               }}
-              onClick={closeModal}
+              onClick={handleClose}
             >
               <CloseOutlinedIcon />
             </IconButton>
@@ -187,18 +200,12 @@ export const ModalWrapper: React.FC<ModalWrapperProps> = ({ name, props }) => {
           <Box
             sx={{
               p: isHomeDialog ? "24px 16px 16px" : 2,
-              overflowY:
-                isHomeDialog && !isShareDashboard
-                  ? "auto"
-                  : isShareDashboard
-                    ? "visible"
-                    : "auto",
-              maxHeight:
-                isHomeDialog && !isShareDashboard
+              overflowY: isContentOverflow ? "visible" : "auto",
+              maxHeight: isContentOverflow
+                ? "none"
+                : isHomeDialog
                   ? "calc(92vh - 84px)"
-                  : isShareDashboard
-                    ? "none"
-                    : "calc(90vh - 60px)",
+                  : "calc(90vh - 60px)",
               flexGrow: 1,
             }}
           >

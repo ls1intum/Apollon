@@ -1,12 +1,19 @@
-import Box from "@mui/material/Box"
-import { Typography } from "@/components/Typography"
 import { useState } from "react"
-import TextField from "@mui/material/TextField"
-import Button from "@mui/material/Button"
 import { useModalContext } from "@/contexts/ModalContext"
 import { UMLDiagramType } from "@tumaet/apollon/react"
 import { useNavigate } from "react-router"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
+import { log } from "@/logger"
+import {
+  HomeDialogActions,
+  HomeDialogContent,
+  HomeDialogField,
+  HomeDialogNotice,
+  type HomeDialogOption,
+  HomeDialogOptionGroup,
+  HomeDialogTextInput,
+} from "./HomeDialog"
+import type { ModalProps } from "@/types"
 
 const diagramTypes = {
   structural: [
@@ -44,18 +51,75 @@ const diagramTypeToTitle: Record<UMLDiagramType, string> = {
   Sfc: "Sequential Function Chart Diagram",
 }
 
-export const NewDiagramModal = () => {
+const structuralDiagramOptions: HomeDialogOption<UMLDiagramType>[] =
+  diagramTypes.structural.map((type) => ({
+    value: type,
+    label: diagramTypeToTitle[type],
+  }))
+
+const behavioralDiagramOptions: HomeDialogOption<UMLDiagramType>[] =
+  diagramTypes.behavioral.map((type) => ({
+    value: type,
+    label: diagramTypeToTitle[type],
+  }))
+
+enum TemplateType {
+  Adapter = "Adapter",
+  Bridge = "Bridge",
+  Command = "Command",
+  Observer = "Observer",
+  Factory = "Factory",
+}
+
+const structuralTemplates: HomeDialogOption<TemplateType>[] = [
+  { value: TemplateType.Adapter, label: TemplateType.Adapter },
+  { value: TemplateType.Bridge, label: TemplateType.Bridge },
+]
+
+const behavioralTemplates: HomeDialogOption<TemplateType>[] = [
+  { value: TemplateType.Command, label: TemplateType.Command },
+  { value: TemplateType.Observer, label: TemplateType.Observer },
+]
+
+const creationalTemplates: HomeDialogOption<TemplateType>[] = [
+  { value: TemplateType.Factory, label: TemplateType.Factory },
+]
+
+type NewDiagramModalProps = ModalProps & {
+  initialTab?: "scratch" | "template"
+}
+
+const getDefaultDiagramName = (
+  tab: "scratch" | "template",
+  diagramType: UMLDiagramType,
+  template: TemplateType
+) => (tab === "scratch" ? diagramTypeToTitle[diagramType] : template)
+
+export const NewDiagramModal = ({
+  initialTab = "scratch",
+}: NewDiagramModalProps) => {
   const { closeModal } = useModalContext()
-  const [isDiagramNameDefault, setIsDiagramNameDefault] =
-    useState<boolean>(true)
-  const [newDiagramTitle, setNewDiagramTitle] =
-    useState<string>("Class Diagram")
+  const [activeTab, setActiveTab] = useState<"scratch" | "template">(initialTab)
   const [selectedDiagramType, setSelectedDiagramType] =
     useState<UMLDiagramType>(UMLDiagramType.ClassDiagram)
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateType>(
+    TemplateType.Adapter
+  )
+  const [isDiagramNameDefault, setIsDiagramNameDefault] =
+    useState<boolean>(true)
+  const [newDiagramTitle, setNewDiagramTitle] = useState<string>(
+    getDefaultDiagramName(
+      initialTab,
+      UMLDiagramType.ClassDiagram,
+      TemplateType.Adapter
+    )
+  )
+  const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
   const createModelByTitleAndType = usePersistenceModelStore(
     (state) => state.createModelByTitleAndType
   )
+  const createModel = usePersistenceModelStore((state) => state.createModel)
 
   const handleCreateDiagram = () => {
     const newId = createModelByTitleAndType(
@@ -73,115 +137,213 @@ export const NewDiagramModal = () => {
     setIsDiagramNameDefault(false)
   }
 
+  const handleTabChange = (tab: "scratch" | "template") => {
+    setActiveTab(tab)
+
+    if (isDiagramNameDefault) {
+      setNewDiagramTitle(
+        getDefaultDiagramName(tab, selectedDiagramType, selectedTemplate)
+      )
+    }
+  }
+
   const handleDiagramTypeChange = (type: UMLDiagramType) => {
     setSelectedDiagramType(type)
+
     if (isDiagramNameDefault) {
       setNewDiagramTitle(diagramTypeToTitle[type])
     }
   }
 
+  const handleTemplateChange = (template: TemplateType) => {
+    setSelectedTemplate(template)
+
+    if (isDiagramNameDefault) {
+      setNewDiagramTitle(template)
+    }
+  }
+
+  const handleCreateFromTemplate = async () => {
+    setError(null)
+
+    try {
+      const jsonModule = await import(
+        `assets/diagramTemplates/${selectedTemplate}.json`
+      )
+      const jsonData = jsonModule.default
+
+      if (!jsonData) {
+        throw new Error("Selected template data not found")
+      }
+
+      const timeStapToCreate = new Date().getTime()
+      const templateModel =
+        typeof structuredClone === "function"
+          ? structuredClone(jsonData)
+          : JSON.parse(JSON.stringify(jsonData))
+
+      templateModel.title = newDiagramTitle
+
+      createModel(templateModel)
+      closeModal()
+      navigate(`/local/${templateModel.id}`, {
+        state: { timeStapToCreate },
+      })
+    } catch (err: unknown) {
+      log.error("Error creating diagram from template:", err as Error)
+
+      if (err instanceof Error) {
+        setError(err.message)
+      } else {
+        setError("An unexpected error occurred")
+      }
+    }
+  }
+
   return (
-    <Box
-      sx={{
-        gap: 2,
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      {/* Diagram Title */}
-      <Box>
-        <Typography variant="body2" component="label" className="form-label">
-          Diagram Title
-        </Typography>
-        <TextField
-          fullWidth
-          id="diagram-title"
-          value={newDiagramTitle}
-          onChange={handleDiagramNameChange}
-          placeholder="Enter diagram title"
-          variant="outlined"
-          sx={{
-            input: {
-              color: "var(--apollon-primary-contrast)",
-            },
-          }}
-        />
-      </Box>
-
-      {/* Diagram Type Selection */}
-      <Box>
-        <Box className="card">
-          <Typography variant="h6" className="card-header">
-            Structural Diagrams
-          </Typography>
-          <Box
-            className="list-group list-group-flush"
-            sx={{ gap: 1, flexDirection: "column", display: "flex" }}
-          >
-            {diagramTypes.structural.map((type) => (
-              <Button
-                key={type}
-                onClick={() => handleDiagramTypeChange(type)}
-                onDoubleClick={handleCreateDiagram}
-                variant={
-                  selectedDiagramType === type ? "contained" : "outlined"
-                }
-                style={{ justifyContent: "flex-start" }}
-                className={`list-group-item list-group-item-action `}
-              >
-                {diagramTypeToTitle[type]}
-              </Button>
-            ))}
-          </Box>
-        </Box>
-        {/* Behavioral Diagrams */}
-        {diagramTypes.behavioral.length > 0 && (
-          <Box className="card mt-2">
-            <Typography variant="h6" className="card-header">
-              Behavioral Diagrams
-            </Typography>
-            <Box
-              className="list-group list-group-flush"
-              sx={{ gap: 1, flexDirection: "column", display: "flex" }}
-            >
-              {diagramTypes.behavioral.map((type) => (
-                <Button
-                  key={type}
-                  onClick={() => handleDiagramTypeChange(type)}
-                  onDoubleClick={handleCreateDiagram}
-                  variant={
-                    selectedDiagramType === type ? "contained" : "outlined"
-                  }
-                  style={{ justifyContent: "flex-start" }}
-                  className={`list-group-item list-group-item-action ${
-                    selectedDiagramType === type ? "active" : ""
-                  }`}
-                >
-                  {diagramTypeToTitle[type]}
-                </Button>
-              ))}
-            </Box>
-          </Box>
-        )}
-      </Box>
-
-      {/* Footer with buttons */}
-      <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
-        <Button
-          variant="contained"
-          onClick={closeModal}
-          sx={{ bgcolor: "gray", textTransform: "none" }}
+    <HomeDialogContent>
+      <div className="flex border-b border-[var(--home-border-default)]">
+        <button
+          type="button"
+          onClick={() => handleTabChange("scratch")}
+          className={`px-3 py-2 text-sm font-medium transition-colors ${
+            activeTab === "scratch"
+              ? "border-b-2 border-[var(--home-accent-base)] text-[var(--home-accent-strong)]"
+              : "text-[var(--home-text-secondary)]"
+          }`}
         >
-          Close
-        </Button>
-        <Button
-          variant="contained"
-          onClick={handleCreateDiagram}
-          sx={{ textTransform: "none" }}
+          Blank diagram
+        </button>
+        <button
+          type="button"
+          onClick={() => handleTabChange("template")}
+          className={`px-3 py-2 text-sm font-medium transition-colors ${
+            activeTab === "template"
+              ? "border-b-2 border-[var(--home-accent-base)] text-[var(--home-accent-strong)]"
+              : "text-[var(--home-text-secondary)]"
+          }`}
         >
-          Create Diagram
-        </Button>
-      </Box>
-    </Box>
+          Use template
+        </button>
+      </div>
+
+      {activeTab === "scratch" ? (
+        <>
+          <HomeDialogField label="Name" htmlFor="diagram-title">
+            <HomeDialogTextInput
+              id="diagram-title"
+              value={newDiagramTitle}
+              onChange={handleDiagramNameChange}
+              placeholder="Enter diagram name"
+            />
+          </HomeDialogField>
+
+          <div className="flex flex-col gap-4">
+            <section className="flex flex-col gap-2">
+              <h3 className="text-xs font-semibold text-[var(--home-text-primary)]">
+                Structural Diagrams
+              </h3>
+              <HomeDialogOptionGroup
+                label="Structural Diagrams"
+                options={structuralDiagramOptions}
+                value={selectedDiagramType}
+                onChange={handleDiagramTypeChange}
+                onConfirm={handleCreateDiagram}
+                columns={2}
+                hideLabel
+              />
+            </section>
+
+            {diagramTypes.behavioral.length > 0 && (
+              <section className="flex flex-col gap-2">
+                <h3 className="text-xs font-semibold text-[var(--home-text-primary)]">
+                  Behavioral Diagrams
+                </h3>
+                <HomeDialogOptionGroup
+                  label="Behavioral Diagrams"
+                  options={behavioralDiagramOptions}
+                  value={selectedDiagramType}
+                  onChange={handleDiagramTypeChange}
+                  onConfirm={handleCreateDiagram}
+                  columns={2}
+                  hideLabel
+                />
+              </section>
+            )}
+          </div>
+        </>
+      ) : (
+        <>
+          {error && <HomeDialogNotice>{error}</HomeDialogNotice>}
+
+          <HomeDialogField label="Name" htmlFor="diagram-title">
+            <HomeDialogTextInput
+              id="diagram-title"
+              value={newDiagramTitle}
+              onChange={handleDiagramNameChange}
+              placeholder="Enter diagram name"
+            />
+          </HomeDialogField>
+
+          <section className="flex flex-col gap-2">
+            <h3 className="text-xs font-semibold text-[var(--home-text-primary)]">
+              Structural
+            </h3>
+            <HomeDialogOptionGroup
+              label="Structural"
+              options={structuralTemplates}
+              value={selectedTemplate}
+              onChange={handleTemplateChange}
+              onConfirm={() => void handleCreateFromTemplate()}
+              columns={2}
+              hideLabel
+            />
+          </section>
+
+          <section className="flex flex-col gap-2">
+            <h3 className="text-xs font-semibold text-[var(--home-text-primary)]">
+              Behavioral
+            </h3>
+            <HomeDialogOptionGroup
+              label="Behavioral"
+              options={behavioralTemplates}
+              value={selectedTemplate}
+              onChange={handleTemplateChange}
+              onConfirm={() => void handleCreateFromTemplate()}
+              columns={2}
+              hideLabel
+            />
+          </section>
+
+          <section className="flex flex-col gap-2">
+            <h3 className="text-xs font-semibold text-[var(--home-text-primary)]">
+              Creational
+            </h3>
+            <HomeDialogOptionGroup
+              label="Creational"
+              options={creationalTemplates}
+              value={selectedTemplate}
+              onChange={handleTemplateChange}
+              onConfirm={() => void handleCreateFromTemplate()}
+              hideLabel
+            />
+          </section>
+        </>
+      )}
+
+      <HomeDialogActions
+        cancelLabel="Cancel"
+        confirmLabel="Create Diagram"
+        onCancel={closeModal}
+        onConfirm={() => {
+          if (activeTab === "scratch") {
+            handleCreateDiagram()
+            return
+          }
+
+          void handleCreateFromTemplate()
+        }}
+      />
+    </HomeDialogContent>
   )
 }

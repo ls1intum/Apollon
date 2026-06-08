@@ -90,7 +90,7 @@ const CheckIcon = () => (
 
 export const ShareDashboardModal = (props: unknown) => {
   const { modelId } = resolveProps(props)
-  const { closeModal } = useModalContext()
+  const { closeModal, openModal } = useModalContext()
   const navigate = useNavigate()
 
   const persistedModel = usePersistenceModelStore((state) =>
@@ -100,6 +100,9 @@ export const ShareDashboardModal = (props: unknown) => {
   const modelData = persistedModel?.model ?? null
 
   const [name, setName] = useState(localTitle)
+  const [collaborateName, setCollaborateName] = useState(
+    () => sessionStorage.getItem("apollon-collab-name") || ""
+  )
   const [phase, setPhase] = useState<Phase>("form")
   const [createdDiagramId, setCreatedDiagramId] = useState<string | null>(null)
   const [activeMode, setActiveMode] = useState<DiagramView>(DiagramView.EDIT)
@@ -136,10 +139,6 @@ export const ShareDashboardModal = (props: unknown) => {
           ? { ...modelData, title: name.trim() }
           : modelData
 
-      const collabName =
-        sessionStorage.getItem("apollon-collab-name") || randomCollabName()
-      sessionStorage.setItem("apollon-collab-name", collabName)
-
       const { id: diagramId } =
         await DiagramApiClient.createDiagram(modelToShare)
       addSharedDiagramEntry(diagramId)
@@ -173,10 +172,10 @@ export const ShareDashboardModal = (props: unknown) => {
     setModeDropdownOpen(false)
     if (createdDiagramId) {
       updateSharedDiagramView(createdDiagramId, mode)
+      void navigator.clipboard
+        .writeText(buildSharedDiagramUrl(createdDiagramId, mode))
+        .catch(() => {})
     }
-    void navigator.clipboard
-      .writeText(buildSharedDiagramUrl(createdDiagramId!, mode))
-      .catch(() => {})
   }
 
   useEffect(() => {
@@ -197,6 +196,19 @@ export const ShareDashboardModal = (props: unknown) => {
 
   const handleOpenDiagram = () => {
     if (!createdDiagramId) return
+
+    if (activeMode === DiagramView.COLLABORATE) {
+      openModal("COLLABORATE_NAME", {
+        initialName: collaborateName.trim() || randomCollabName(),
+        onConfirm: (name: string) => {
+          sessionStorage.setItem("apollon-collab-name", name)
+          setCollaborateName(name)
+          navigate(buildSharedDiagramPath(createdDiagramId, activeMode))
+        },
+      })
+      return
+    }
+
     closeModal()
     navigate(buildSharedDiagramPath(createdDiagramId, activeMode))
   }
@@ -343,57 +355,57 @@ export const ShareDashboardModal = (props: unknown) => {
                     boxShadow: "0 8px 24px var(--home-shadow-overlay)",
                   }}
                 >
-                  {MODE_OPTIONS.map((opt) => (
-                    <li
-                      key={opt.value}
-                      role="option"
-                      aria-selected={activeMode === opt.value}
-                      onClick={() => handleModeSelect(opt.value)}
-                      className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-xs transition-colors duration-100"
-                      style={{
-                        background:
-                          activeMode === opt.value
+                  {MODE_OPTIONS.map((opt) => {
+                    const isSelected = activeMode === opt.value
+                    return (
+                      <li
+                        key={opt.value}
+                        role="option"
+                        aria-selected={isSelected}
+                        onClick={() => handleModeSelect(opt.value)}
+                        className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-xs transition-colors duration-100"
+                        style={{
+                          background: isSelected
                             ? "var(--home-accent-soft)"
                             : "transparent",
-                        color:
-                          activeMode === opt.value
+                          color: isSelected
                             ? "var(--home-accent-strong)"
                             : "var(--home-text-primary)",
-                      }}
-                      onMouseEnter={(e) => {
-                        if (activeMode !== opt.value) {
-                          e.currentTarget.style.background =
-                            "var(--home-surface-raised-hover)"
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background =
-                          activeMode === opt.value
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isSelected) {
+                            e.currentTarget.style.background =
+                              "var(--home-surface-raised-hover)"
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = isSelected
                             ? "var(--home-accent-soft)"
                             : "transparent"
-                      }}
-                    >
-                      {activeMode === opt.value && (
-                        <svg
-                          className="h-3 w-3 shrink-0"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2.5"
-                          aria-hidden="true"
-                        >
-                          <path
-                            d="M20 6 9 17l-5-5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      )}
-                      <span className={activeMode === opt.value ? "" : "pl-5"}>
-                        {opt.label}
-                      </span>
-                    </li>
-                  ))}
+                        }}
+                      >
+                        {isSelected && (
+                          <svg
+                            className="h-3 w-3 shrink-0"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                            aria-hidden="true"
+                          >
+                            <path
+                              d="M20 6 9 17l-5-5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        )}
+                        <span className={isSelected ? "" : "pl-5"}>
+                          {opt.label}
+                        </span>
+                      </li>
+                    )
+                  })}
                 </ul>
               )}
             </div>

@@ -90,6 +90,7 @@ export const HomeDialogOptionGroup = <T extends string>({
   columns = 1,
   disabled = false,
   onConfirm,
+  hideLabel = false,
 }: {
   label: string
   options: readonly HomeDialogOption<T>[]
@@ -98,6 +99,7 @@ export const HomeDialogOptionGroup = <T extends string>({
   columns?: 1 | 2
   disabled?: boolean
   onConfirm?: () => void
+  hideLabel?: boolean
 }) => {
   const headingId = `${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-group`
 
@@ -105,7 +107,11 @@ export const HomeDialogOptionGroup = <T extends string>({
     <section className="flex flex-col gap-2" aria-labelledby={headingId}>
       <h3
         id={headingId}
-        className="text-xs font-semibold text-[var(--home-text-primary)]"
+        className={
+          hideLabel
+            ? "sr-only"
+            : "text-xs font-semibold text-[var(--home-text-primary)]"
+        }
       >
         {label}
       </h3>

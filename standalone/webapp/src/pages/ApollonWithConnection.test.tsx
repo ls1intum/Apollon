@@ -277,4 +277,28 @@ describe("ApollonWithConnection — loading-state regression", () => {
       )
     )
   })
+
+  it("returns home when the collaboration-name prompt is dismissed", async () => {
+    sessionStorage.removeItem("apollon-collab-name")
+    mountAt("/abc?view=COLLABORATE")
+
+    await waitFor(() => {
+      expect(modalHoisted.openModal).toHaveBeenCalledWith(
+        "COLLABORATE_NAME",
+        expect.objectContaining({
+          onClose: expect.any(Function),
+        })
+      )
+    })
+
+    const modalProps = modalHoisted.openModal.mock.calls[0]?.[1] as
+      | { onClose?: () => void }
+      | undefined
+
+    await act(async () => {
+      modalProps?.onClose?.()
+    })
+
+    expect(window.location.pathname + window.location.search).toBe("/")
+  })
 })

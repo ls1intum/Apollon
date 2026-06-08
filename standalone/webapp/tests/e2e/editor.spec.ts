@@ -140,6 +140,37 @@ test.describe("Template diagram interactions", () => {
     const edges = page.locator(".react-flow__edge")
     expect(await edges.count()).toBeGreaterThan(0)
   })
+
+  test("creating from a template uses the shared name field as the diagram title", async ({
+    page,
+  }) => {
+    await openTemporaryLocalDiagram(page)
+    await waitForCanvasReady(page, false)
+
+    await fileMenuButton(page).click()
+    await page.getByText("Start from Template").click()
+
+    const nameInput = page.getByLabel("Name")
+    await expect(nameInput).toHaveValue("Adapter")
+    await nameInput.fill("Custom Template Diagram")
+    await page.getByRole("button", { name: "Create Diagram" }).click()
+    await waitForCanvasReady(page)
+
+    const currentTitle = await page.evaluate(() => {
+      const raw = localStorage.getItem("persistenceModelStore")
+
+      if (!raw) {
+        return null
+      }
+
+      const parsed = JSON.parse(raw)
+      const currentModelId = parsed.state.currentModelId
+
+      return parsed.state.models[currentModelId]?.model?.title ?? null
+    })
+
+    expect(currentTitle).toBe("Custom Template Diagram")
+  })
 })
 
 // ---------------------------------------------------------------------------

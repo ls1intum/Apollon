@@ -28,7 +28,6 @@ import { useElementWidth } from "@/hooks/useElementWidth"
 import { useFlushOnUnload } from "@/hooks/useFlushOnUnload"
 import { useVersionShortcut } from "@/hooks/useVersionShortcut"
 import { log } from "@/logger"
-
 export const ApollonWithConnection: React.FC = () => {
   const { diagramId } = useParams()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -53,6 +52,7 @@ export const ApollonWithConnection: React.FC = () => {
    */
   const prePreviewFingerprintRef = useRef<string | null>(null)
   const hasPromptedRef = useRef(false)
+  const lifecycleKeyRef = useRef<string | null>(null)
   // True when the current preview's body differs from the canvas the user
   // had before entering preview. Computed once on preview entry and held
   // through the preview so the banner can show/hide "Restore" without
@@ -81,14 +81,19 @@ export const ApollonWithConnection: React.FC = () => {
   })
 
   useEffect(() => {
+    const nextLifecycleKey = `${diagramId ?? ""}:${viewType ?? ""}`
+
     // The component instance survives diagramId / viewType / user
     // changes (same `/:diagramId` route), so state and refs must be
-    // reset explicitly per lifecycle.
-    setIsLoading(true)
-    diagramIsUpdated.current = false
-    lastObservedHeadRev.current = undefined
-    restoredDuringPreviewRef.current = false
-    hasPromptedRef.current = false
+    // reset explicitly per route lifecycle, not on every rerender.
+    if (lifecycleKeyRef.current !== nextLifecycleKey) {
+      lifecycleKeyRef.current = nextLifecycleKey
+      setIsLoading(true)
+      diagramIsUpdated.current = false
+      lastObservedHeadRev.current = undefined
+      restoredDuringPreviewRef.current = false
+      hasPromptedRef.current = false
+    }
 
     const abort = new AbortController()
     let instance: ApollonEditor | null = null
@@ -126,6 +131,9 @@ export const ApollonWithConnection: React.FC = () => {
                   name,
                   color: collabColorFromName(name),
                 })
+              },
+              onClose: () => {
+                navigate("/", { replace: true })
               },
             })
           }

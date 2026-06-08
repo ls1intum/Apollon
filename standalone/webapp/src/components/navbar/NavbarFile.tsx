@@ -53,9 +53,9 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
   }, [openModal, closeMainMenu])
 
   const handleStartFromTemplate = useCallback(() => {
-    openModal("NEW_DIAGRAM_FROM_TEMPLATE")
+    openModal("NEW_DIAGRAM", { initialTab: "template" })
     closeMainMenu()
-  }, [closeMainMenu])
+  }, [openModal, closeMainMenu])
 
   return (
     <>
