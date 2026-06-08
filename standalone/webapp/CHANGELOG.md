@@ -1,5 +1,11 @@
 # @tumaet/webapp
 
+## 4.5.1
+
+### Patch Changes
+
+- [#738](https://github.com/ls1intum/Apollon/pull/738) [`247cf52`](https://github.com/ls1intum/Apollon/commit/247cf52c2f5d4460f406a0aac57c2df40cd2e324) Thanks [@tamang29](https://github.com/tamang29)! - The iOS app is now only available on iPad.
+
 ## 4.5.0
 
 ### Minor Changes

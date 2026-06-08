@@ -1,5 +1,13 @@
 # @tumaet/server
 
+## 4.5.1
+
+### Patch Changes
+
+- [#741](https://github.com/ls1intum/Apollon/pull/741) [`2360882`](https://github.com/ls1intum/Apollon/commit/2360882ff2ae4195b1d195d675695dcf1f8158b3) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Fix Apollon PDF export (`POST /api/converter/pdf`), which returned 500 on every request after the pdfmake 0.2 → 0.3 upgrade: fonts were registered through the removed `pdfMake.vfs` setter and `getBuffer` used the dropped callback overload, so every render crashed in svg-to-pdfkit. The worker now registers fonts via `addVirtualFileSystem()` and awaits the Promise-based `getBuffer()`. Operators: redeploy the server to restore diagram PDF export.
+
+- [#740](https://github.com/ls1intum/Apollon/pull/740) [`a00ecae`](https://github.com/ls1intum/Apollon/commit/a00ecaeea33ffee78f448303fb54d31416a6ff6f) Thanks [@tamang29](https://github.com/tamang29)! - Operators can enable the mobile app origins for the server CORS allowlist through the Docker deployment configuration.
+
 ## 4.5.0
 
 ### Patch Changes
