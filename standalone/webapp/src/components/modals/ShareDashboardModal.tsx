@@ -88,7 +88,9 @@ const CheckIcon = () => (
   </svg>
 )
 
-export const ShareDashboardModal = (props: unknown) => {
+export const ShareDashboardModal = (
+  props: ShareDashboardModalProps | Record<string, unknown>
+) => {
   const { modelId } = resolveProps(props)
   const { closeModal, openModal } = useModalContext()
   const navigate = useNavigate()
