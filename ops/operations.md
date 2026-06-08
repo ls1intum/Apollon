@@ -25,7 +25,7 @@ than serving traffic with broken versioning.
 | `HOST`                          | `localhost`              | Express bind host                          |
 | `PORT`                          | `8000`                   | Express HTTP port                          |
 | `WS_PORT`                       | `4444`                   | WebSocket relay port                       |
-| `CORS_ORIGIN`                   | unset                    | Allowed origin (omit to allow all)         |
+| `CORS_ORIGIN`                   | unset                    | Comma-separated cross-origin allowlist     |
 | `REDIS_URL`                     | `redis://localhost:6379` | Redis connection                           |
 | `OWNER_SECRET`                  | dev placeholder          | HMAC secret for soft owner cookie          |
 | `MAX_VERSIONS_PER_DIAGRAM`      | `50`                     | FIFO cap on version history                |
