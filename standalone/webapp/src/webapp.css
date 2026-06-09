@@ -277,15 +277,15 @@ body,
 .app-loading-logo-shell {
   display: flex;
   height: 58px;
-  width: 58px;
+  width: 116px;
   align-items: center;
   justify-content: center;
 }
 
 .app-loading-logo {
   display: block;
-  height: 50px;
-  width: 54px;
+  height: 54px;
+  width: 108px;
 }
 
 .app-loading-progress {

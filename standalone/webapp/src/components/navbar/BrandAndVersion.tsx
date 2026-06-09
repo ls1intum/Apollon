@@ -2,7 +2,7 @@ import Box from "@mui/material/Box/Box"
 import Typography from "@mui/material/Typography/Typography"
 import { appVersion } from "@/constants"
 import { APP_NAME_FONT_FAMILY } from "./styleConstants"
-import ApollonLogo from "assets/images/apollon-logo-v2.svg"
+import TumLogo from "assets/images/tum-logo-579x579.png"
 
 export const BrandAndVersion = () => {
   return (
@@ -25,10 +25,10 @@ export const BrandAndVersion = () => {
         }}
       >
         <img
-          alt="Apollon logo"
-          src={ApollonLogo}
-          width="22"
-          height="20"
+          alt="TUM logo"
+          src={TumLogo}
+          width="60"
+          height="60"
           style={{ display: "block", flexShrink: 0 }}
         />
 

@@ -1,4 +1,4 @@
-import ApollonLogo from "assets/images/apollon-logo-v2.svg"
+import TumLogo from "assets/images/tum-logo.png"
 
 type AppLoadingScreenProps = {
   label?: string
@@ -20,10 +20,10 @@ export const AppLoadingScreen = ({
         <div className="app-loading-logo-shell">
           <img
             className="app-loading-logo"
-            src={ApollonLogo}
-            alt="Apollon logo"
-            width="54"
-            height="50"
+            src={TumLogo}
+            alt="TUM logo"
+            width="108"
+            height="54"
           />
         </div>
         <span className="app-loading-progress" aria-hidden="true" />
