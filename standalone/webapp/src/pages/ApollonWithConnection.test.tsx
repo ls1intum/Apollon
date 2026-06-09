@@ -5,6 +5,8 @@ import { toast } from "react-toastify"
 import { ApollonWithConnection } from "./ApollonWithConnection"
 import { EditorProvider, ModalProvider } from "@/contexts"
 
+const addSharedDiagramEntryMock = vi.fn()
+
 const FakeApollonEditor = vi.hoisted(
   () =>
     class FakeApollonEditor {
@@ -84,6 +86,11 @@ vi.mock("@/services/WebSocketManager", () => ({
     }
     cleanup() {}
   },
+}))
+
+vi.mock("@/utils/sharedDiagramStorage", () => ({
+  addSharedDiagramEntry: (...args: unknown[]) =>
+    addSharedDiagramEntryMock(...args),
 }))
 
 const fetchHoisted = vi.hoisted(() => {
@@ -198,6 +205,7 @@ async function resolveFetch(model: object = { nodes: [], edges: [] }) {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  addSharedDiagramEntryMock.mockReset()
   fetchHoisted.state.pending = null
   testNavigate = () => {}
   sessionStorage.setItem("apollon-collab-name", "tester")
@@ -230,6 +238,18 @@ describe("ApollonWithConnection — loading-state regression", () => {
     mountAt("/abc?view=COLLABORATE")
     await resolveFetch()
     await waitFor(() => expect(screen.queryByText(LOADING_TEXT)).toBeNull())
+  })
+
+  it("stores a successfully opened shared diagram for the dashboard", async () => {
+    mountAt("/abc?view=GIVE_FEEDBACK")
+
+    await resolveFetch({ id: "abc", nodes: [], edges: [] })
+
+    await waitFor(() =>
+      expect(addSharedDiagramEntryMock).toHaveBeenCalledWith("abc", {
+        lastSharedView: "GIVE_FEEDBACK",
+      })
+    )
   })
 
   it("re-shows the loading overlay when diagramId changes (Share-again)", async () => {

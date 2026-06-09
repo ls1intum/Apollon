@@ -28,6 +28,7 @@ import { useElementWidth } from "@/hooks/useElementWidth"
 import { useFlushOnUnload } from "@/hooks/useFlushOnUnload"
 import { useVersionShortcut } from "@/hooks/useVersionShortcut"
 import { log } from "@/logger"
+import { addSharedDiagramEntry } from "@/utils/sharedDiagramStorage"
 export const ApollonWithConnection: React.FC = () => {
   const { diagramId } = useParams()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -144,6 +145,9 @@ export const ApollonWithConnection: React.FC = () => {
           signal: abort.signal,
         })
         if (abort.signal.aborted) return
+        addSharedDiagramEntry(diagramId, {
+          lastSharedView: viewType as DiagramView,
+        })
         log.debug("Fetched diagram", {
           diagramId,
           nodeCount: diagram.nodes?.length ?? 0,
