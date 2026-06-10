@@ -17,6 +17,7 @@ import {
   CollaborationViewport,
   CollaboratorInfo,
 } from "@/typings"
+import { flowToCanvasPosition } from "./coordinates"
 
 export type CollaborationAwarenessApi = {
   setLocalAwarenessCursor: (cursor: CollaborationCursor | null) => void
@@ -255,8 +256,7 @@ function CollaboratorCursors({
   active: boolean
   awareness: CollaborationAwarenessApi
 }) {
-  const reactFlow = useReactFlow()
-  useViewport()
+  const viewport = useViewport()
   const [collaborators, setCollaborators] = useState<RemoteCursor[]>([])
 
   useEffect(() => {
@@ -296,18 +296,21 @@ function CollaboratorCursors({
   return (
     <div className="apollon-collaboration-cursors">
       {collaborators.map((collaborator) => {
-        const screenPosition = reactFlow.flowToScreenPosition({
-          x: collaborator.x,
-          y: collaborator.y,
-        })
+        const canvasPosition = flowToCanvasPosition(
+          {
+            x: collaborator.x,
+            y: collaborator.y,
+          },
+          viewport
+        )
 
         return (
           <div
             key={collaborator.clientId}
             className="apollon-collaboration-cursor"
             style={{
-              left: screenPosition.x,
-              top: screenPosition.y,
+              left: canvasPosition.x,
+              top: canvasPosition.y,
             }}
           >
             <svg

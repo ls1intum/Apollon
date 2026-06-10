@@ -154,60 +154,62 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
       }}
     >
       {mode === ApollonMode.Modelling && !readonly && <Sidebar />}
-      <ReactFlow
-        id={`react-flow-library-${diagramId}`}
-        className="apollon-container"
-        nodeTypes={diagramNodeTypes}
-        edgeTypes={diagramEdgeTypes}
-        nodes={nodes}
-        edges={edges}
-        onDragOver={onDragOver}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnectStart={onConnectStart}
-        onConnect={onConnect}
-        onEdgesDelete={onEdgesDelete}
-        onConnectEnd={onConnectEnd}
-        zoomOnDoubleClick={false}
-        onNodeDrag={onNodeDrag}
-        onNodeDragStop={onNodeDragStop}
-        onReconnect={onReconnect}
-        onReconnectStart={handleReconnectStart}
-        onReconnectEnd={handleReconnectEnd}
-        connectionLineType={connectionLineType}
-        connectionLineComponent={ReconnectConnectionLine}
-        connectionMode={ConnectionMode.Loose}
-        // Lift the selected edge (and its bend/endpoint handles) above other
-        // edges so an overlapping edge's interaction ribbon can't steal the
-        // pointer from a visible handle.
-        elevateEdgesOnSelect
-        onInit={(instance) => {
-          instance.fitView({ maxZoom: 1.0, minZoom: 1.0 })
-          handleReactFlowInit(instance)
-        }}
-        minZoom={CANVAS.MIN_SCALE_TO_ZOOM_OUT}
-        maxZoom={CANVAS.MAX_SCALE_TO_ZOOM_IN}
-        snapToGrid
-        snapGrid={[CANVAS.SNAP_TO_GRID_PX, CANVAS.SNAP_TO_GRID_PX]}
-        onNodeDoubleClick={onNodeDoubleClick}
-        onEdgeDoubleClick={onEdgeDoubleClick}
-        onBeforeDelete={onBeforeDelete}
-        onPaneClick={onPaneClicked}
-        proOptions={proOptions}
-        edgesReconnectable={isDiagramModifiable}
-        nodesConnectable={isDiagramModifiable}
-        nodesDraggable={isDiagramModifiable}
-        panOnScroll={!scrollLock || scrollEnabled}
-        zoomOnScroll={!scrollLock || scrollEnabled}
-      >
-        <CustomBackground />
-        <CustomMiniMap />
-        <CustomControls />
-        <AlignmentGuides />
-        <AssessmentSelectionDebug />
-      </ReactFlow>
-      <ScrollOverlay />
-      <CollaborationLayer options={collaboration} awareness={awareness} />
+      <div className="apollon-canvas">
+        <ReactFlow
+          id={`react-flow-library-${diagramId}`}
+          className="apollon-container"
+          nodeTypes={diagramNodeTypes}
+          edgeTypes={diagramEdgeTypes}
+          nodes={nodes}
+          edges={edges}
+          onDragOver={onDragOver}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnectStart={onConnectStart}
+          onConnect={onConnect}
+          onEdgesDelete={onEdgesDelete}
+          onConnectEnd={onConnectEnd}
+          zoomOnDoubleClick={false}
+          onNodeDrag={onNodeDrag}
+          onNodeDragStop={onNodeDragStop}
+          onReconnect={onReconnect}
+          onReconnectStart={handleReconnectStart}
+          onReconnectEnd={handleReconnectEnd}
+          connectionLineType={connectionLineType}
+          connectionLineComponent={ReconnectConnectionLine}
+          connectionMode={ConnectionMode.Loose}
+          // Lift the selected edge (and its bend/endpoint handles) above other
+          // edges so an overlapping edge's interaction ribbon can't steal the
+          // pointer from a visible handle.
+          elevateEdgesOnSelect
+          onInit={(instance) => {
+            instance.fitView({ maxZoom: 1.0, minZoom: 1.0 })
+            handleReactFlowInit(instance)
+          }}
+          minZoom={CANVAS.MIN_SCALE_TO_ZOOM_OUT}
+          maxZoom={CANVAS.MAX_SCALE_TO_ZOOM_IN}
+          snapToGrid
+          snapGrid={[CANVAS.SNAP_TO_GRID_PX, CANVAS.SNAP_TO_GRID_PX]}
+          onNodeDoubleClick={onNodeDoubleClick}
+          onEdgeDoubleClick={onEdgeDoubleClick}
+          onBeforeDelete={onBeforeDelete}
+          onPaneClick={onPaneClicked}
+          proOptions={proOptions}
+          edgesReconnectable={isDiagramModifiable}
+          nodesConnectable={isDiagramModifiable}
+          nodesDraggable={isDiagramModifiable}
+          panOnScroll={!scrollLock || scrollEnabled}
+          zoomOnScroll={!scrollLock || scrollEnabled}
+        >
+          <CustomBackground />
+          <CustomMiniMap />
+          <CustomControls />
+          <AlignmentGuides />
+          <AssessmentSelectionDebug />
+        </ReactFlow>
+        <ScrollOverlay />
+        <CollaborationLayer options={collaboration} awareness={awareness} />
+      </div>
     </div>
   )
 }
