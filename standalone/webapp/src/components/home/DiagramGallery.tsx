@@ -1046,6 +1046,16 @@ export const DiagramGallery = ({
                   </>
                 )}
               </p>
+              {diagramSource === "shared" &&
+                sharedDiagramsStatus === "error" && (
+                  <button
+                    type="button"
+                    onClick={() => setSharedReloadKey((current) => current + 1)}
+                    className="mt-2 rounded-md border border-[var(--home-border-default)] bg-[var(--home-surface-raised)] px-3 py-1.5 text-sm text-[var(--home-text-primary)] transition-colors duration-200 hover:bg-[var(--home-surface-raised-hover)]"
+                  >
+                    Try again
+                  </button>
+                )}
             </div>
           </div>
         ) : (
