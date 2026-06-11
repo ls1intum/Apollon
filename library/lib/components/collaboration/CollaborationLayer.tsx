@@ -249,6 +249,10 @@ function CollaboratorPresenceBar({
   )
 }
 
+// The pointer arrow's tip within its 16x20 viewBox (the path starts at "M2 1").
+// Subtracted from the rendered position so the tip lands on the exact point.
+const CURSOR_HOTSPOT = { x: 2, y: 1 }
+
 function CollaboratorCursors({
   active,
   awareness,
@@ -308,9 +312,11 @@ function CollaboratorCursors({
           <div
             key={collaborator.clientId}
             className="apollon-collaboration-cursor"
+            // Offset by the arrow's hotspot so the tip — not the SVG's
+            // top-left corner — sits exactly on the collaborator's point.
             style={{
-              left: canvasPosition.x,
-              top: canvasPosition.y,
+              left: canvasPosition.x - CURSOR_HOTSPOT.x,
+              top: canvasPosition.y - CURSOR_HOTSPOT.y,
             }}
           >
             <svg
