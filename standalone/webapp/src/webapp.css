@@ -220,6 +220,12 @@ body,
   background: var(--home-accent-base);
 }
 
+/* The gallery search renders its own Clear button, so hide the browser's
+   native search-cancel control to avoid two overlapping clear buttons. */
+#recent-diagrams-search::-webkit-search-cancel-button {
+  display: none;
+}
+
 /* Reusable scroll-root utility:
    keep vertical scrolling while preventing accidental horizontal overflow. */
 .app-scroll-y {
