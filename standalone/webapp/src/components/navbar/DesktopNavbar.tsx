@@ -90,6 +90,9 @@ export const DesktopNavbar = () => {
             minWidth: 0,
           }}
         >
+          <Button sx={{ textTransform: "none" }} onClick={goHome}>
+            <Typography color={secondary}>All Diagrams</Typography>
+          </Button>
           <NavbarFile />
           <Button
             sx={{ textTransform: "none" }} // This removes the uppercase transformation

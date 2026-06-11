@@ -106,6 +106,17 @@ export default function MobileNavbar() {
                   alignItems: "flex-start",
                 }}
               >
+                <Button
+                  sx={{ textTransform: "none" }}
+                  onClick={() => {
+                    handleCloseNavMenu()
+                    goHome()
+                  }}
+                >
+                  <Typography color="var(--apollon-primary-contrast)">
+                    All Diagrams
+                  </Typography>
+                </Button>
                 <NavbarFile
                   color="var(--apollon-primary-contrast)"
                   handleCloseNavMenu={handleCloseNavMenu}

@@ -105,9 +105,10 @@ test.describe("Template diagram interactions", () => {
     await openTemporaryLocalDiagram(page)
     await waitForCanvasReady(page, false)
 
-    // Load the Adapter template via File → Start from Template → Create
+    // Load the Adapter template via File → New Diagram → Use template → Create
     await fileMenuButton(page).click()
-    await page.getByText("Start from Template").click()
+    await page.getByText("New Diagram").click()
+    await page.getByRole("button", { name: "Use template" }).click()
     await page.getByRole("button", { name: "Create Diagram" }).click()
     await waitForCanvasReady(page)
 
@@ -151,7 +152,8 @@ test.describe("Template diagram interactions", () => {
     await waitForCanvasReady(page, false)
 
     await fileMenuButton(page).click()
-    await page.getByText("Start from Template").click()
+    await page.getByText("New Diagram").click()
+    await page.getByRole("button", { name: "Use template" }).click()
 
     const nameInput = page.getByLabel("Name")
     await expect(nameInput).toHaveValue("Adapter")
@@ -180,7 +182,8 @@ test.describe("Template diagram interactions", () => {
   }) => {
     const createFromTemplate = async () => {
       await fileMenuButton(page).click()
-      await page.getByText("Start from Template").click()
+      await page.getByText("New Diagram").click()
+      await page.getByRole("button", { name: "Use template" }).click()
       await page.getByRole("button", { name: "Create Diagram" }).click()
       await waitForCanvasReady(page)
     }
@@ -293,14 +296,29 @@ test.describe("Navbar", () => {
     await openTemporaryLocalDiagram(page)
     await waitForCanvasReady(page, false)
 
+    // An explicit "All Diagrams" button returns to the dashboard.
+    await expect(
+      page.getByRole("button", { name: "All Diagrams" })
+    ).toBeVisible()
+
     await fileMenuButton(page).click()
 
     // Verify key menu items are visible
-    await expect(page.getByText("New File")).toBeVisible()
-    await expect(page.getByText("Start from Template")).toBeVisible()
+    await expect(page.getByText("New Diagram")).toBeVisible()
     await expect(page.getByText("Export")).toBeVisible()
-    // "Load Diagram" was removed — the home dashboard is the place to open
-    // existing diagrams.
+    // "Start from Template" (now a tab in New Diagram) and "Load Diagram" (the
+    // dashboard is the loader) were removed.
+    await expect(page.getByText("Start from Template")).toHaveCount(0)
     await expect(page.getByText("Load Diagram")).toHaveCount(0)
+  })
+
+  test("the All Diagrams button returns to the dashboard", async ({ page }) => {
+    await openTemporaryLocalDiagram(page)
+    await waitForCanvasReady(page, false)
+    await page.getByRole("button", { name: "All Diagrams" }).click()
+    await expect(page).toHaveURL(/\/$/)
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Your diagrams" })
+    ).toBeVisible()
   })
 })

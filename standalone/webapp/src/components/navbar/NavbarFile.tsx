@@ -47,13 +47,8 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
     setSubMenuAnchorEl(event.currentTarget)
   }, [])
 
-  const handleNewFile = useCallback(() => {
+  const handleNewDiagram = useCallback(() => {
     openModal("NEW_DIAGRAM")
-    closeMainMenu()
-  }, [openModal, closeMainMenu])
-
-  const handleStartFromTemplate = useCallback(() => {
-    openModal("NEW_DIAGRAM", { initialTab: "template" })
     closeMainMenu()
   }, [openModal, closeMainMenu])
 
@@ -85,13 +80,11 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
           "aria-labelledby": "file-menu-button",
         }}
       >
-        <MenuItem onClick={handleNewFile}>New File</MenuItem>
-        <MenuItem onClick={handleStartFromTemplate}>
-          Start from Template
-        </MenuItem>
-        {/* No "Load Diagram" here: the home dashboard (the logo returns to it)
-            is where you browse and open existing diagrams. An in-editor loader
-            duplicated that and muddled the single-diagram flow. */}
+        <MenuItem onClick={handleNewDiagram}>New Diagram</MenuItem>
+        {/* No separate "Start from Template" — templates are a tab inside the
+            New Diagram dialog. And no "Load Diagram": the home dashboard (the
+            logo/All-diagrams button returns to it) is where you open existing
+            diagrams. Both duplicated other flows and muddled the editor. */}
         {/* Version history lives in its own dedicated nav button
             (`<VersionHistoryButton>`), not here — it had been duplicated
             in the File menu for discoverability, but the standalone
