@@ -2,21 +2,9 @@ import { test, expect } from "@playwright/test"
 import { waitForCanvasReady } from "../helpers/canvas"
 
 /**
- * E2E coverage for the version-history drawer.
- *
- * Versioning applies to shared/connected diagrams. What we verify here
- * without a running server is the regression that triggered the original bug
- * report:
- *
- *   "Maximum update depth exceeded" + "The result of getSnapshot should be
- *    cached to avoid an infinite loop"   in <VersionDrawer>
- *
- * This used to fire whenever the page rendered ApollonWithConnection because
- * VersionDrawer subscribed to `state.versions[id] ?? []`, which returned a
- * fresh array every call when the key was undefined. The Vitest unit test
- * `VersionDrawer.test.tsx` covers the static mount; this E2E test covers the
- * full app mount and asserts no React error overlay or runtime warnings hit
- * the browser console.
+ * Guards the VersionDrawer infinite-loop regression ("Maximum update depth
+ * exceeded" from subscribing to `state.versions[id] ?? []`): mounts the full
+ * app and asserts no React error overlay or console warnings appear.
  */
 
 const MODEL_ID = "e2e-version-history-model"

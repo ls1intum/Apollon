@@ -61,7 +61,6 @@ export const HomePage = () => {
     <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[var(--home-surface-base)] text-[var(--home-text-primary)] transition-colors duration-200">
       <HomeNavbar />
 
-      {/* Hidden file input for JSON import */}
       <input
         ref={jsonImportRef}
         type="file"
