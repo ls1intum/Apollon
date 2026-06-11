@@ -40,6 +40,8 @@ test("remote cursor tip lands on the sender's canvas point", async ({
 
   // A point well inside the canvas, in canvas-local coordinates.
   const target = { x: 220, y: 180 }
+  // Foreground the sender so its rAF cursor flush isn't throttled.
+  await sender.bringToFront()
   const senderCanvas = await canvasBox(sender)
   await sender.mouse.move(
     Math.round(senderCanvas.x + target.x),
