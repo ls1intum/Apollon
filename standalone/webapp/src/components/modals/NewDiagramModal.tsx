@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { v4 as uuidv4 } from "uuid"
 import { useModalContext } from "@/contexts/ModalContext"
 import { UMLDiagramType } from "@tumaet/apollon/react"
 import { useNavigate } from "react-router"
@@ -183,6 +184,10 @@ export const NewDiagramModal = ({
           : JSON.parse(JSON.stringify(jsonData))
 
       templateModel.title = newDiagramTitle
+      // Templates ship with fixed ids (several even share one), so give each
+      // created diagram a fresh id — otherwise creating two collides on the
+      // same store key and one silently overwrites the other.
+      templateModel.id = uuidv4()
 
       createModel(templateModel)
       closeModal()

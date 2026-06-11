@@ -174,6 +174,31 @@ test.describe("Template diagram interactions", () => {
 
     expect(currentTitle).toBe("Custom Template Diagram")
   })
+
+  test("creating the same template twice yields two distinct diagrams", async ({
+    page,
+  }) => {
+    const createFromTemplate = async () => {
+      await fileMenuButton(page).click()
+      await page.getByText("Start from Template").click()
+      await page.getByRole("button", { name: "Create Diagram" }).click()
+      await waitForCanvasReady(page)
+    }
+
+    await openTemporaryLocalDiagram(page)
+    await waitForCanvasReady(page, false)
+    await createFromTemplate()
+    await createFromTemplate()
+
+    // Templates ship with fixed (and shared) ids; each creation must get a
+    // fresh id, otherwise the second overwrites the first on the same key.
+    const modelIds = await page.evaluate(() => {
+      const raw = localStorage.getItem("persistenceModelStore")
+      return raw ? Object.keys(JSON.parse(raw).state.models) : []
+    })
+    expect(new Set(modelIds).size).toBe(modelIds.length)
+    expect(modelIds.length).toBeGreaterThanOrEqual(2)
+  })
 })
 
 // ---------------------------------------------------------------------------
