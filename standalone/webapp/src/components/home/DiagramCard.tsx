@@ -52,8 +52,10 @@ type RgbColor = {
   a: number
 }
 
-const DARK_THUMBNAIL_STROKE = "#d7e2ef"
-const DARK_THUMBNAIL_FILL = "#343843"
+// Neutral (not blue-tinted) so dark-mode thumbnails read like the real diagram:
+// light strokes / a mid-dark shape fill on the warm-neutral card.
+const DARK_THUMBNAIL_STROKE = "#e4e4e1"
+const DARK_THUMBNAIL_FILL = "#383934"
 const THUMBNAIL_THEME_CACHE_LIMIT = 300
 
 /**
