@@ -4,7 +4,9 @@ import {
   ApollonMode,
   ApollonView,
   UMLDiagramType,
-  type ApollonEditor,
+  ApollonEditor,
+  collabColorFromName,
+  randomCollabName,
 } from "@tumaet/apollon/react"
 import { useEditorContext } from "@/contexts"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
@@ -21,6 +23,8 @@ import {
 import { FeedbackBoxes } from "@/components/FeedbackBoxes"
 import { useShallow } from "zustand/shallow"
 import { AssessmentDataBox } from "@/components/playground/AssessmentDataBox"
+import { CollapsibleSidebar } from "@/components/playground/CollapsibleSidebar"
+import { connectPlaygroundCollaboration } from "@/components/playground/connectPlaygroundCollaboration"
 
 const UMLDiagramTypes = Object.values(UMLDiagramType)
 
@@ -51,6 +55,14 @@ export const ApollonPlayground: React.FC = () => {
   )
   const [highlightEnabled, setHighlightEnabled] = useState(false)
   const [debug, setDebug] = useState(false)
+  const [collaborationViewportTest, setCollaborationViewportTest] =
+    useState(false)
+  const [controlsSidebarOpen, setControlsSidebarOpen] = useState(true)
+  const [testSidebarOpen, setTestSidebarOpen] = useState(true)
+  const [collaborationUser] = useState(() => {
+    const name = randomCollabName()
+    return { name, color: collabColorFromName(name) }
+  })
 
   const availableViews = useMemo(
     () =>
@@ -61,8 +73,9 @@ export const ApollonPlayground: React.FC = () => {
   )
 
   const mountKey = useMemo(
-    () => `${diagramType}|${highlightEnabled}|${debug}`,
-    [diagramType, highlightEnabled, debug]
+    () =>
+      `${diagramType}|${highlightEnabled}|${debug}|${collaborationViewportTest}`,
+    [diagramType, highlightEnabled, debug, collaborationViewportTest]
   )
 
   useEffect(() => {
@@ -85,7 +98,15 @@ export const ApollonPlayground: React.FC = () => {
         height: "100%",
       }}
     >
-      <div className="flex flex-col p-4 gap-2 overflow-scroll w-[300px]  bg-[var(--apollon-background-variant)] text-[var(--apollon-primary-contrast)]">
+      <CollapsibleSidebar
+        side="left"
+        width={300}
+        surface="variant"
+        label="playground controls"
+        testId="playground-controls-sidebar"
+        open={controlsSidebarOpen}
+        onToggle={() => setControlsSidebarOpen((open) => !open)}
+      >
         <div>
           <label className="font-semibold ">Select Diagram Type</label>
           <select
@@ -151,6 +172,32 @@ export const ApollonPlayground: React.FC = () => {
           <label className="font-semibold">Enable Highlight View</label>
         </div>
 
+        <div className="flex items-center gap-2">
+          <input
+            id="collaboration-viewport-test"
+            type="checkbox"
+            checked={collaborationViewportTest}
+            onChange={(event) => {
+              const enabled = event.target.checked
+              setCollaborationViewportTest(enabled)
+              if (enabled) setTestSidebarOpen(true)
+            }}
+          />
+          <label
+            className="font-semibold"
+            htmlFor="collaboration-viewport-test"
+          >
+            Collaboration viewport test
+          </label>
+        </div>
+
+        {collaborationViewportTest && (
+          <p className="m-0 text-xs">
+            Local user: {collaborationUser.name}. Open a second playground tab
+            and enable this test there to exchange live cursors.
+          </p>
+        )}
+
         {mode === ApollonMode.Assessment && !readonly && <FeedbackBoxes />}
 
         <button onClick={() => exportAsSvg()} className="border p-1 rounded-sm">
@@ -178,33 +225,73 @@ export const ApollonPlayground: React.FC = () => {
         <AssessmentDataBox
           assessmentSelectedElements={assessmentSelectedElements}
         />
-      </div>
+      </CollapsibleSidebar>
 
-      <Apollon
-        key={mountKey}
-        defaultModel={defaultModel}
-        availableViews={availableViews}
-        debug={debug}
-        mode={mode}
-        readonly={readonly}
-        scrollLock={scrollLock}
-        style={{ display: "flex", flex: 1, height: "100%" }}
-        onMount={(editor: ApollonEditor) => {
-          setEditor(editor)
-          const modelSubId = editor.subscribeToModelChange((model) =>
-            updateModel(model)
-          )
-          const assessmentSubId = editor.subscribeToAssessmentSelection(
-            (selectedElements) =>
-              setAssessmentSelectedElements(selectedElements)
-          )
-          return () => {
-            editor.unsubscribe(modelSubId)
-            editor.unsubscribe(assessmentSubId)
-            setEditor(undefined)
+      <div className="flex h-full min-w-0 flex-1">
+        <Apollon
+          key={mountKey}
+          defaultModel={defaultModel}
+          availableViews={availableViews}
+          collaboration={
+            collaborationViewportTest
+              ? {
+                  enabled: true,
+                  user: collaborationUser,
+                  showPresence: true,
+                  showCursors: true,
+                  showSelectionHighlights: true,
+                  showFollow: true,
+                }
+              : undefined
           }
-        }}
-      />
+          debug={debug}
+          mode={mode}
+          readonly={readonly}
+          scrollLock={scrollLock}
+          style={{ display: "flex", flex: 1, minWidth: 0, height: "100%" }}
+          onMount={(editor: ApollonEditor) => {
+            setEditor(editor)
+            const disconnectCollaboration = collaborationViewportTest
+              ? connectPlaygroundCollaboration(editor, {
+                  document: ApollonEditor.generateInitialSyncMessage(),
+                  awareness:
+                    ApollonEditor.generateInitialAwarenessSyncMessage(),
+                })
+              : () => {}
+            const modelSubId = editor.subscribeToModelChange((model) =>
+              updateModel(model)
+            )
+            const assessmentSubId = editor.subscribeToAssessmentSelection(
+              (selectedElements) =>
+                setAssessmentSelectedElements(selectedElements)
+            )
+            return () => {
+              disconnectCollaboration()
+              editor.unsubscribe(modelSubId)
+              editor.unsubscribe(assessmentSubId)
+              setEditor(undefined)
+            }
+          }}
+        />
+        {collaborationViewportTest && (
+          <CollapsibleSidebar
+            side="right"
+            width={320}
+            label="test sidebar"
+            testId="collaboration-viewport-sidebar"
+            open={testSidebarOpen}
+            onToggle={() => setTestSidebarOpen((open) => !open)}
+          >
+            <h2 className="m-0 text-base font-semibold">Problem statement</h2>
+            <p className="text-sm leading-normal">
+              This inline panel simulates host application chrome that reduces
+              the available modeling width. Open this playground in two tabs,
+              enable the collaboration viewport test in both, and collapse this
+              panel in only one tab.
+            </p>
+          </CollapsibleSidebar>
+        )}
+      </div>
     </div>
   )
 }

@@ -13,6 +13,18 @@
   color: var(--apollon-primary-contrast, #000);
 }
 
+/* Positioning context + clip region for the absolutely-positioned
+   collaboration cursor layer. Keep `position` as `relative` only: a
+   `transform`/`filter`/`perspective` here would become the containing block
+   for the body-portaled MUI popovers (see GenericPopover) and misplace them. */
+.apollon-canvas {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
 .apollon-collaboration-presence-bar {
   position: absolute;
   top: 10px;
@@ -139,15 +151,15 @@
 }
 
 .apollon-collaboration-cursors {
-  position: fixed;
+  position: absolute;
   inset: 0;
+  overflow: hidden;
   pointer-events: none;
   z-index: 10003;
 }
 
 .apollon-collaboration-cursor {
   position: absolute;
-  transform: translate(8px, 8px);
 }
 
 .apollon-collaboration-cursor-label {
@@ -169,9 +181,7 @@
 .react-flow__edge.apollon-collaboration-highlighted path {
   stroke: var(--apollon-collaboration-highlight-color) !important;
   stroke-width: 4.5px !important;
-  filter: drop-shadow(
-    0 0 4px var(--apollon-collaboration-highlight-color)
-  );
+  filter: drop-shadow(0 0 4px var(--apollon-collaboration-highlight-color));
 }
 .react-flow__controls-button {
   background: none;

@@ -41,8 +41,11 @@ test.describe("Editor loading", () => {
   })
 
   test("sidebar is visible with draggable elements", async ({ page }) => {
-    // The sidebar is an <aside> rendered inside the library's App component
-    const sidebar = page.locator("aside").first()
+    // The element palette is the <aside> that holds the draggable items
+    // (the playground also wraps the editor in its own control asides).
+    const sidebar = page
+      .locator("aside")
+      .filter({ has: page.locator(".prevent-select") })
     await expect(sidebar).toBeVisible()
 
     // It should contain at least one draggable preview element
@@ -164,9 +167,12 @@ test.describe("Playground page", () => {
     await typeSelector.selectOption("ActivityDiagram")
     await waitForCanvasReady(page, false)
 
-    // The sidebar content should have changed – just verify the sidebar is
-    // still present and has draggable items
-    const sidebar = page.locator("aside").first()
+    // The element palette should have changed – just verify it is still
+    // present with draggable items. Target the palette by its draggable items,
+    // not aside order, since the playground adds its own control asides.
+    const sidebar = page
+      .locator("aside")
+      .filter({ has: page.locator(".prevent-select") })
     await expect(sidebar).toBeVisible()
     const draggableItems = sidebar.locator(".prevent-select")
     await expect(draggableItems.first()).toBeVisible()
