@@ -2,4 +2,4 @@
 "@tumaet/webapp": patch
 ---
 
-Add a browser-local collaboration viewport test to the playground with a collapsible host sidebar.
+The playground can now simulate a live collaboration session across two browser tabs, with collapsible side panels that mimic host-app chrome — handy for trying out shared cursors and presence locally.

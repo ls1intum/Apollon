@@ -8,7 +8,7 @@ describe("flowToCanvasPosition", () => {
     ).toEqual({ x: 140, y: 150 })
   })
 
-  it("does not include the browser or host layout offset", () => {
+  it("applies zoom-out scaling and a mixed-sign pan", () => {
     expect(
       flowToCanvasPosition({ x: 600, y: 200 }, { x: 10, y: -20, zoom: 0.5 })
     ).toEqual({ x: 310, y: 80 })

@@ -13,6 +13,10 @@
   color: var(--apollon-primary-contrast, #000);
 }
 
+/* Positioning context + clip region for the absolutely-positioned
+   collaboration cursor layer. Keep `position` as `relative` only: a
+   `transform`/`filter`/`perspective` here would become the containing block
+   for the body-portaled MUI popovers (see GenericPopover) and misplace them. */
 .apollon-canvas {
   position: relative;
   flex: 1;

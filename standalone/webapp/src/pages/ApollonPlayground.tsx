@@ -23,9 +23,8 @@ import {
 import { FeedbackBoxes } from "@/components/FeedbackBoxes"
 import { useShallow } from "zustand/shallow"
 import { AssessmentDataBox } from "@/components/playground/AssessmentDataBox"
-import { CollaborationViewportSidebar } from "@/components/playground/CollaborationViewportSidebar"
+import { CollapsibleSidebar } from "@/components/playground/CollapsibleSidebar"
 import { connectPlaygroundCollaboration } from "@/components/playground/connectPlaygroundCollaboration"
-import { PlaygroundControlsSidebar } from "@/components/playground/PlaygroundControlsSidebar"
 
 const UMLDiagramTypes = Object.values(UMLDiagramType)
 
@@ -99,7 +98,12 @@ export const ApollonPlayground: React.FC = () => {
         height: "100%",
       }}
     >
-      <PlaygroundControlsSidebar
+      <CollapsibleSidebar
+        side="left"
+        width={300}
+        surface="variant"
+        label="playground controls"
+        testId="playground-controls-sidebar"
         open={controlsSidebarOpen}
         onToggle={() => setControlsSidebarOpen((open) => !open)}
       >
@@ -221,9 +225,9 @@ export const ApollonPlayground: React.FC = () => {
         <AssessmentDataBox
           assessmentSelectedElements={assessmentSelectedElements}
         />
-      </PlaygroundControlsSidebar>
+      </CollapsibleSidebar>
 
-      <div style={{ display: "flex", flex: 1, minWidth: 0, height: "100%" }}>
+      <div className="flex h-full min-w-0 flex-1">
         <Apollon
           key={mountKey}
           defaultModel={defaultModel}
@@ -271,10 +275,22 @@ export const ApollonPlayground: React.FC = () => {
           }}
         />
         {collaborationViewportTest && (
-          <CollaborationViewportSidebar
+          <CollapsibleSidebar
+            side="right"
+            width={320}
+            label="test sidebar"
+            testId="collaboration-viewport-sidebar"
             open={testSidebarOpen}
             onToggle={() => setTestSidebarOpen((open) => !open)}
-          />
+          >
+            <h2 className="m-0 text-base font-semibold">Problem statement</h2>
+            <p className="text-sm leading-normal">
+              This inline panel simulates host application chrome that reduces
+              the available modeling width. Open this playground in two tabs,
+              enable the collaboration viewport test in both, and collapse this
+              panel in only one tab.
+            </p>
+          </CollapsibleSidebar>
         )}
       </div>
     </div>
