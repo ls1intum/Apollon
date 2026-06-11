@@ -159,7 +159,9 @@ export const ModalWrapper: React.FC<ModalWrapperProps> = ({ name, props }) => {
                 fontSize: isHomeDialog
                   ? "clamp(0.95rem, 4vw, 1.3rem)"
                   : undefined,
-                color: isHomeDialog ? "var(--home-accent-contrast)" : "inherit",
+                color: isHomeDialog
+                  ? "var(--home-accent-contrast)"
+                  : "var(--apollon-primary-contrast)",
                 ...(isHomeDialog ? { minWidth: 0, whiteSpace: "nowrap" } : {}),
               }}
             >
@@ -169,16 +171,18 @@ export const ModalWrapper: React.FC<ModalWrapperProps> = ({ name, props }) => {
               size="small"
               aria-label="Close"
               sx={{
-                color: isHomeDialog ? "var(--home-accent-contrast)" : "grey",
+                color: isHomeDialog
+                  ? "var(--home-accent-contrast)"
+                  : "var(--apollon-primary-contrast)",
                 borderRadius: isHomeDialog ? "6px" : "2px",
                 flexShrink: 0,
                 "&:hover": {
                   bgcolor: isHomeDialog
                     ? "var(--home-on-accent-bg-hover)"
-                    : "rgba(0,0,0,0.08)",
+                    : "var(--apollon-background-variant)",
                   color: isHomeDialog
                     ? "var(--home-on-accent-text)"
-                    : "rgba(0,0,0,0.6)",
+                    : "var(--apollon-primary-contrast)",
                 },
               }}
               onClick={handleClose}
