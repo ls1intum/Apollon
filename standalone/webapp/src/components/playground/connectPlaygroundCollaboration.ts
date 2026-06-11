@@ -20,6 +20,7 @@ export const connectPlaygroundCollaboration = (
   if (typeof BroadcastChannel === "undefined") return () => {}
 
   const channel = new BroadcastChannel(PLAYGROUND_COLLABORATION_CHANNEL)
+  let active = true
   const handleMessage = (event: MessageEvent<unknown>) => {
     if (typeof event.data === "string") {
       editor.receiveBroadcastedMessage(event.data)
@@ -27,12 +28,17 @@ export const connectPlaygroundCollaboration = (
   }
 
   channel.addEventListener("message", handleMessage)
-  editor.sendBroadcastMessage((message) => channel.postMessage(message))
+  // The send sink can't be unset, so gate it on `active`: a late emit after
+  // disconnect must not post to a closed channel.
+  editor.sendBroadcastMessage((message) => {
+    if (active) channel.postMessage(message)
+  })
   channel.postMessage(initialSyncMessages.document)
   channel.postMessage(initialSyncMessages.awareness)
   editor.broadcastFullState()
 
   return () => {
+    active = false
     channel.removeEventListener("message", handleMessage)
     channel.close()
   }

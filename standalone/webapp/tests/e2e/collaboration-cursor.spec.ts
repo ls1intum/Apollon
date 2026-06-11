@@ -3,13 +3,13 @@ import { test, expect, type Page } from "@playwright/test"
 /**
  * Pixel-precision test for remote collaboration cursors.
  *
- * Two tabs of the playground link up over a BroadcastChannel. Moving the
- * pointer to a known point of the canvas in one tab must render the remote
- * cursor's tip at the *same* canvas point in the other tab. Both tabs share
- * the same size and model, so their viewports match and a flow point maps to
- * the same canvas pixel in each — letting us assert the round trip exactly.
- *
- * Guards the cursor coordinate transform and the arrow-tip hotspot offset.
+ * Two playground tabs link up over a BroadcastChannel. The receiver is zoomed
+ * to a *different* viewport than the sender, then we point at a canvas spot in
+ * the sender and check where the remote cursor's tip lands in the receiver.
+ * Inverting each tab's own viewport must resolve both to the same flow point —
+ * that frame-of-reference independence (cursor follows the logical point, not
+ * the window) is exactly what the fix restores. Guards the coordinate
+ * transform and the arrow-tip hotspot offset together.
  */
 
 // Tip of the arrow within its 16x20 SVG (path starts at "M2 1") — mirrors
@@ -19,17 +19,34 @@ const TIP = { x: 2, y: 1 }
 const openCollaboratingTab = async (page: Page) => {
   await page.goto("/playground")
   await page.locator("#collaboration-viewport-test").check()
-  // Wait for the editor to remount with collaboration enabled.
   await page.locator(".react-flow").first().waitFor({ state: "visible" })
 }
 
-const canvasBox = async (page: Page) => {
-  const box = await page.locator(".apollon-canvas").first().boundingBox()
-  if (!box) throw new Error("canvas not found")
-  return box
-}
+// The tab's flow→canvas transform and the canvas's screen origin, read live
+// from the DOM so each tab is measured through its own viewport.
+const readView = (page: Page) =>
+  page.evaluate(() => {
+    const viewport = document.querySelector(".react-flow__viewport")!
+    const m = new DOMMatrixReadOnly(getComputedStyle(viewport).transform)
+    const canvas = document
+      .querySelector(".apollon-canvas")!
+      .getBoundingClientRect()
+    return {
+      zoom: m.a,
+      panX: m.e,
+      panY: m.f,
+      canvasX: canvas.left,
+      canvasY: canvas.top,
+    }
+  })
 
-test("remote cursor tip lands on the sender's canvas point", async ({
+const toFlow = (
+  canvasX: number,
+  canvasY: number,
+  v: { zoom: number; panX: number; panY: number }
+) => ({ x: (canvasX - v.panX) / v.zoom, y: (canvasY - v.panY) / v.zoom })
+
+test("remote cursor maps to the same flow point across different viewports", async ({
   page,
   context,
 }) => {
@@ -38,32 +55,38 @@ test("remote cursor tip lands on the sender's canvas point", async ({
   await openCollaboratingTab(sender)
   await openCollaboratingTab(receiver)
 
-  // A point well inside the canvas, in canvas-local coordinates.
-  const target = { x: 220, y: 180 }
+  // Give the receiver a different zoom/pan than the sender (the first controls
+  // button is zoom-in), so this isn't an identical round trip.
+  const zoomIn = receiver.locator(".react-flow__controls-button").first()
+  await zoomIn.click()
+  await zoomIn.click()
+
   // Foreground the sender so its rAF cursor flush isn't throttled.
   await sender.bringToFront()
-  const senderCanvas = await canvasBox(sender)
+  const senderView = await readView(sender)
+  const target = { x: 240, y: 200 } // canvas-local point in the sender
   await sender.mouse.move(
-    Math.round(senderCanvas.x + target.x),
-    Math.round(senderCanvas.y + target.y),
+    Math.round(senderView.canvasX + target.x),
+    Math.round(senderView.canvasY + target.y),
     { steps: 3 }
   )
 
   const cursor = receiver.locator(".apollon-collaboration-cursor").first()
   await expect(cursor).toBeVisible()
 
-  const receiverCanvas = await canvasBox(receiver)
-  const svg = cursor.locator("svg")
-  const tip = await svg.evaluate((el, offset) => {
+  const receiverView = await readView(receiver)
+  const tip = await cursor.locator("svg").evaluate((el, hotspot) => {
     const r = el.getBoundingClientRect()
-    return { x: r.left + offset.x, y: r.top + offset.y }
+    return { x: r.left + hotspot.x, y: r.top + hotspot.y }
   }, TIP)
 
-  const tipOnCanvas = {
-    x: tip.x - receiverCanvas.x,
-    y: tip.y - receiverCanvas.y,
-  }
+  const flowSender = toFlow(target.x, target.y, senderView)
+  const flowReceiver = toFlow(
+    tip.x - receiverView.canvasX,
+    tip.y - receiverView.canvasY,
+    receiverView
+  )
 
-  expect(Math.abs(tipOnCanvas.x - target.x)).toBeLessThanOrEqual(1)
-  expect(Math.abs(tipOnCanvas.y - target.y)).toBeLessThanOrEqual(1)
+  expect(Math.abs(flowReceiver.x - flowSender.x)).toBeLessThanOrEqual(1)
+  expect(Math.abs(flowReceiver.y - flowSender.y)).toBeLessThanOrEqual(1)
 })

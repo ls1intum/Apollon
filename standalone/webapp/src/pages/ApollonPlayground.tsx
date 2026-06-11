@@ -232,7 +232,6 @@ export const ApollonPlayground: React.FC = () => {
           key={mountKey}
           defaultModel={defaultModel}
           availableViews={availableViews}
-          collaborationEnabled={collaborationViewportTest}
           collaboration={
             collaborationViewportTest
               ? {
