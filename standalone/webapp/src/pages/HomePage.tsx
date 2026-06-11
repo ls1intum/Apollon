@@ -8,6 +8,7 @@ import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { useModalContext } from "@/contexts"
 import { DiagramGallerySkeleton } from "@/components/home/DiagramGallerySkeleton"
 import { pruneExpiredSharedDiagrams } from "@/utils/sharedDiagramStorage"
+import { useDocumentTitle } from "@/hooks/useDocumentTitle"
 
 const DiagramGallery = lazy(() =>
   import("@/components/home/DiagramGallery").then((module) => ({
@@ -16,6 +17,7 @@ const DiagramGallery = lazy(() =>
 )
 
 export const HomePage = () => {
+  useDocumentTitle("Your diagrams")
   const navigate = useNavigate()
   const location = useLocation()
   const highlightSharedDiagramId =

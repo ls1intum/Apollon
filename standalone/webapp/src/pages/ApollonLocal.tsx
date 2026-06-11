@@ -5,6 +5,7 @@ import React, { useEffect, useRef } from "react"
 import { useLocation, useParams } from "react-router"
 import { log } from "@/logger"
 import { normalizeThumbnailSvg } from "@/utils/thumbnailSvg"
+import { useDocumentTitle } from "@/hooks/useDocumentTitle"
 import { ErrorPage } from "./ErrorPage"
 
 const THUMBNAIL_DEBOUNCE_MS = 2000
@@ -28,6 +29,8 @@ export const ApollonLocal: React.FC = () => {
   )
   const updateModel = usePersistenceModelStore((store) => store.updateModel)
   const setThumbnail = usePersistenceModelStore((store) => store.setThumbnail)
+
+  useDocumentTitle(diagram?.model.title)
 
   useEffect(() => {
     locationRef.current = location

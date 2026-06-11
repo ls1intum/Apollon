@@ -16,6 +16,7 @@ import { DiagramView } from "@/types"
 import { WebSocketManager } from "@/services/WebSocketManager"
 import { ApiError, DiagramApiClient } from "@/services/DiagramApiClient"
 import { useVersionStore } from "@/stores/useVersionStore"
+import { useDocumentTitle } from "@/hooks/useDocumentTitle"
 import {
   UndoRestoreSnackbar,
   VersionDrawer,
@@ -36,6 +37,8 @@ export const ApollonWithConnection: React.FC = () => {
   const { setEditor, editor } = useEditorContext()
   const { openModal } = useModalContext()
   const [isLoading, setIsLoading] = useState(true)
+  const [diagramTitle, setDiagramTitle] = useState<string | null>(null)
+  useDocumentTitle(diagramTitle)
   const containerRef = useRef<HTMLDivElement | null>(null)
   const canvasColumnRef = useRef<HTMLDivElement | null>(null)
   const canvasColumnWidth = useElementWidth(canvasColumnRef)
@@ -145,6 +148,7 @@ export const ApollonWithConnection: React.FC = () => {
           signal: abort.signal,
         })
         if (abort.signal.aborted) return
+        setDiagramTitle(diagram.title ?? null)
         addSharedDiagramEntry(diagramId, {
           lastSharedView: viewType as DiagramView,
         })
