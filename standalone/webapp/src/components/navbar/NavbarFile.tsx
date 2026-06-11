@@ -81,16 +81,9 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
         }}
       >
         <MenuItem onClick={handleNewDiagram}>New Diagram</MenuItem>
-        {/* No separate "Start from Template" — templates are a tab inside the
-            New Diagram dialog. And no "Load Diagram": the home dashboard (the
-            logo/All-diagrams button returns to it) is where you open existing
-            diagrams. Both duplicated other flows and muddled the editor. */}
-        {/* Version history lives in its own dedicated nav button
-            (`<VersionHistoryButton>`), not here — it had been duplicated
-            in the File menu for discoverability, but the standalone
-            button is more visible and hosting it twice meant the menu
-            entry felt like it "did nothing" from the user's POV
-            (clicking either toggles the same drawer). One source. */}
+        {/* Templates are a tab in the New Diagram dialog, and the dashboard is
+            the diagram loader — so no "Start from Template"/"Load Diagram" here.
+            Version history has its own VersionHistoryButton. */}
         <JsonFileImportButton close={closeMainMenu} />
         <MenuItem
           onClick={openSubMenu}

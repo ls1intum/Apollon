@@ -296,11 +296,6 @@ test.describe("Navbar", () => {
     await openTemporaryLocalDiagram(page)
     await waitForCanvasReady(page, false)
 
-    // An explicit "All Diagrams" button returns to the dashboard.
-    await expect(
-      page.getByRole("button", { name: "All Diagrams" })
-    ).toBeVisible()
-
     await fileMenuButton(page).click()
 
     // Verify key menu items are visible

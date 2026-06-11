@@ -14,7 +14,6 @@ import {
   HomeDialogOptionGroup,
   HomeDialogTextInput,
 } from "./HomeDialog"
-import type { ModalProps } from "@/types"
 
 const diagramTypes = {
   structural: [
@@ -86,21 +85,15 @@ const creationalTemplates: HomeDialogOption<TemplateType>[] = [
   { value: TemplateType.Factory, label: TemplateType.Factory },
 ]
 
-type NewDiagramModalProps = ModalProps & {
-  initialTab?: "scratch" | "template"
-}
-
 const getDefaultDiagramName = (
   tab: "scratch" | "template",
   diagramType: UMLDiagramType,
   template: TemplateType
 ) => (tab === "scratch" ? diagramTypeToTitle[diagramType] : template)
 
-export const NewDiagramModal = ({
-  initialTab = "scratch",
-}: NewDiagramModalProps) => {
+export const NewDiagramModal = () => {
   const { closeModal } = useModalContext()
-  const [activeTab, setActiveTab] = useState<"scratch" | "template">(initialTab)
+  const [activeTab, setActiveTab] = useState<"scratch" | "template">("scratch")
   const [selectedDiagramType, setSelectedDiagramType] =
     useState<UMLDiagramType>(UMLDiagramType.ClassDiagram)
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateType>(
@@ -110,7 +103,7 @@ export const NewDiagramModal = ({
     useState<boolean>(true)
   const [newDiagramTitle, setNewDiagramTitle] = useState<string>(
     getDefaultDiagramName(
-      initialTab,
+      "scratch",
       UMLDiagramType.ClassDiagram,
       TemplateType.Adapter
     )

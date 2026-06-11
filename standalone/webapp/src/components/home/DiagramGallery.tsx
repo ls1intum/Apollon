@@ -1129,21 +1129,14 @@ export const DiagramGallery = ({
                               <tr
                                 key={diagram.id}
                                 className={`bg-[var(--home-surface-raised)] transition-colors duration-200 odd:bg-[var(--home-surface-raised)] even:bg-[var(--home-surface-row-alt)] ${diagram.isExpired ? "cursor-default opacity-50" : "cursor-pointer odd:hover:bg-[var(--home-accent-soft)] even:hover:bg-[var(--home-accent-soft)]"}`}
+                                // Mouse convenience only — clicking anywhere on
+                                // the row opens it. Keyboard/cmd-click go through
+                                // the focusable name link in the first cell, so
+                                // the row itself isn't a second tab stop.
                                 onClick={() =>
                                   !diagram.isExpired &&
                                   handleOpenDiagram(diagram)
                                 }
-                                onKeyDown={(event) => {
-                                  if (diagram.isExpired) return
-                                  if (
-                                    event.key === "Enter" ||
-                                    event.key === " "
-                                  ) {
-                                    event.preventDefault()
-                                    handleOpenDiagram(diagram)
-                                  }
-                                }}
-                                tabIndex={diagram.isExpired ? -1 : 0}
                               >
                                 <td className="px-3 py-3 align-middle">
                                   <button
