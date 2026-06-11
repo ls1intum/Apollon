@@ -17,6 +17,7 @@ import {
   CollaborationViewport,
   CollaboratorInfo,
 } from "@/typings"
+import { flowToCanvasPosition } from "./coordinates"
 
 export type CollaborationAwarenessApi = {
   setLocalAwarenessCursor: (cursor: CollaborationCursor | null) => void
@@ -248,6 +249,10 @@ function CollaboratorPresenceBar({
   )
 }
 
+// The pointer arrow's tip within its 16x20 viewBox (the path starts at "M2 1").
+// Subtracted from the rendered position so the tip lands on the exact point.
+const CURSOR_HOTSPOT = { x: 2, y: 1 }
+
 function CollaboratorCursors({
   active,
   awareness,
@@ -255,8 +260,7 @@ function CollaboratorCursors({
   active: boolean
   awareness: CollaborationAwarenessApi
 }) {
-  const reactFlow = useReactFlow()
-  useViewport()
+  const viewport = useViewport()
   const [collaborators, setCollaborators] = useState<RemoteCursor[]>([])
 
   useEffect(() => {
@@ -296,18 +300,23 @@ function CollaboratorCursors({
   return (
     <div className="apollon-collaboration-cursors">
       {collaborators.map((collaborator) => {
-        const screenPosition = reactFlow.flowToScreenPosition({
-          x: collaborator.x,
-          y: collaborator.y,
-        })
+        const canvasPosition = flowToCanvasPosition(
+          {
+            x: collaborator.x,
+            y: collaborator.y,
+          },
+          viewport
+        )
 
         return (
           <div
             key={collaborator.clientId}
             className="apollon-collaboration-cursor"
+            // Offset by the arrow's hotspot so the tip — not the SVG's
+            // top-left corner — sits exactly on the collaborator's point.
             style={{
-              left: screenPosition.x,
-              top: screenPosition.y,
+              left: canvasPosition.x - CURSOR_HOTSPOT.x,
+              top: canvasPosition.y - CURSOR_HOTSPOT.y,
             }}
           >
             <svg

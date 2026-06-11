@@ -36,6 +36,25 @@ const isMarkerId = (id: string): id is keyof typeof MARKER_CONFIGS =>
 const THEME_BACKGROUND_COLOR = "var(--apollon-background, #ffffff)"
 
 /**
+ * Native (canvas-scale) half-height of a marker's bounding box. The single
+ * place marker vertical extent is derived from MARKER_CONFIGS, so callers that
+ * place or scale a marker (e.g. inline dropdown previews) stay in sync with how
+ * `InlineMarker` actually draws it.
+ */
+export function getMarkerHalfHeight(markerId: keyof typeof MARKER_CONFIGS) {
+  const config = MARKER_CONFIGS[markerId]
+  if (config.type === "semicircle") {
+    const radius = INTERFACE.RADIUS + INTERFACE.SOCKET_GAP
+    // Once the arc spans past ±90° its extent is the full radius; clamp so a
+    // >180° arc (e.g. the three-quarter socket) isn't under-measured.
+    const span = Math.min(config.arcSpanDegrees ?? 180, 180)
+    return radius * Math.sin((span / 2) * (Math.PI / 180))
+  }
+  if (config.type === "circle") return config.size / 2
+  return (config.size * config.heightFactor) / 2
+}
+
+/**
  * Extract marker ID from a url() reference.
  * e.g., "url(#black-arrow)" -> "black-arrow"
  *
