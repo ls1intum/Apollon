@@ -29,13 +29,13 @@
   --home-accent-soft: #d3e7fb;
   --home-accent-strong: #0f3a66;
   --home-accent-ring: #0f3a66;
-  --home-accent-contrast: #ffffff;
+  --home-accent-contrast: #fff;
 
   /* On-accent surfaces (translucent white over accent banner / dark navbar) */
   --home-on-accent-bg: rgba(255, 255, 255, 0.14);
   --home-on-accent-bg-hover: rgba(255, 255, 255, 0.24);
   --home-on-accent-border: rgba(255, 255, 255, 0.22);
-  --home-on-accent-text: #ffffff;
+  --home-on-accent-text: #fff;
 
   /* Badge / status */
   --home-badge-bg: #c2cfdd;
@@ -90,7 +90,8 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
   --apollon-background: #181a18;
-  --apollon-primary-contrast: #ffffff;
+  --apollon-primary-contrast: #fff;
+
   /* --home-* dark tokens come from themings.json at runtime. */
   --home-tag-type-bg: #343740;
   --home-tag-type-text: #9bb3cc;
@@ -124,11 +125,13 @@
       0 0 0 4px var(--home-glow-neutral),
       0 8px 32px var(--home-glow-neutral);
   }
+
   60% {
     box-shadow:
       0 0 0 4px var(--home-glow-neutral),
       0 8px 32px var(--home-glow-neutral);
   }
+
   100% {
     box-shadow: none;
   }
@@ -139,6 +142,7 @@ html {
   overflow: hidden;
   position: fixed;
   width: 100%;
+
   /* Paint the viewport with the theme background so the browser's
      rubber-band overscroll zone matches the active theme instead of
      showing the white user-agent default. Theme tokens are selected by
@@ -335,7 +339,7 @@ body,
 
 :root[data-theme="dark"] .home-diagram-card:hover {
   box-shadow:
-    0 10px 28px color-mix(in srgb, #000000 50%, transparent),
+    0 10px 28px color-mix(in srgb, #000 50%, transparent),
     0 0 0 1px color-mix(in srgb, var(--home-text-primary) 16%, transparent);
 }
 
@@ -496,12 +500,14 @@ body,
     transform: translateX(70%);
   }
 }
+
 /* Fade-in for newly revealed cards when pagination loads more */
 @keyframes gallery-card-enter {
   from {
     opacity: 0;
     transform: translateY(6px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -538,6 +544,7 @@ body,
   --toastify-icon-color-error: var(--home-toast-error);
   --toastify-icon-color-warning: var(--home-toast-warning);
   --toastify-icon-color-info: var(--home-toast-info);
+
   /* Default (untyped) progress bar — use our accent instead of the
      library's rainbow gradient (light) / purple (dark). */
   --toastify-color-progress-light: var(--home-accent-base);
@@ -586,12 +593,15 @@ body,
 .home-toast-container .Toastify__progress-bar--success {
   background: var(--home-toast-success);
 }
+
 .home-toast-container .Toastify__progress-bar--error {
   background: var(--home-toast-error);
 }
+
 .home-toast-container .Toastify__progress-bar--warning {
   background: var(--home-toast-warning);
 }
+
 .home-toast-container .Toastify__progress-bar--info {
   background: var(--home-toast-info);
 }
