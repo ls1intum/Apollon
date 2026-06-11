@@ -8,7 +8,7 @@ import {
 } from "react"
 import { DiagramGallerySkeleton } from "@/components/home/DiagramGallerySkeleton"
 import type { UMLDiagramType, UMLModel } from "@tumaet/apollon"
-import { useNavigate } from "react-router"
+import { Link, useNavigate } from "react-router"
 import { DiagramView } from "@/types"
 import { playgroundModelId } from "@/constants/playgroundDefaultDiagram"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
@@ -609,18 +609,16 @@ export const DiagramGallery = ({
     isDiagramEmpty,
   })
 
-  const handleOpenDiagram = (diagram: GalleryDiagram) => {
-    if (diagram.source === "local") {
-      navigate(`/local/${diagram.id}`)
-      return
-    }
+  const diagramPath = (diagram: GalleryDiagram) =>
+    diagram.source === "local"
+      ? `/local/${diagram.id}`
+      : buildSharedDiagramPath(
+          diagram.id,
+          diagram.lastSharedView ?? DiagramView.EDIT
+        )
 
-    navigate(
-      buildSharedDiagramPath(
-        diagram.id,
-        diagram.lastSharedView ?? DiagramView.EDIT
-      )
-    )
+  const handleOpenDiagram = (diagram: GalleryDiagram) => {
+    navigate(diagramPath(diagram))
   }
 
   const handleToggleDiagramFavorite = useCallback(
@@ -1198,7 +1196,19 @@ export const DiagramGallery = ({
                                   </button>
                                 </td>
                                 <td className="w-[26%] px-3 py-3 align-middle text-sm text-[var(--home-text-primary)]">
-                                  <span className="truncate">{title}</span>
+                                  {diagram.isExpired ? (
+                                    <span className="truncate">{title}</span>
+                                  ) : (
+                                    <Link
+                                      to={diagramPath(diagram)}
+                                      onClick={(event) =>
+                                        event.stopPropagation()
+                                      }
+                                      className="truncate hover:underline focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2"
+                                    >
+                                      {title}
+                                    </Link>
+                                  )}
                                 </td>
                                 <td className="hidden px-3 py-3 align-middle text-xs text-[var(--home-text-secondary)] md:table-cell">
                                   <span className="rounded px-2 py-0.5 text-[10px] font-medium bg-[var(--home-tag-type-bg)] text-[var(--home-tag-type-text)]">

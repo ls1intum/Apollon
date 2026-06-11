@@ -387,7 +387,7 @@ test.describe("Home page — diagram card actions", () => {
   test("'Delete' shows the confirm panel", async ({ page }) => {
     await page.getByRole("button", { name: "Open diagram actions" }).click()
     await page.getByRole("menuitem", { name: "Delete" }).click()
-    await expect(page.getByText("Delete this diagram?")).toBeVisible()
+    await expect(page.getByText(/Are you sure/)).toBeVisible()
     await expect(page.getByRole("button", { name: "Cancel" })).toBeVisible()
   })
 
@@ -395,7 +395,7 @@ test.describe("Home page — diagram card actions", () => {
     await page.getByRole("button", { name: "Open diagram actions" }).click()
     await page.getByRole("menuitem", { name: "Delete" }).click()
     await page.getByRole("button", { name: "Cancel" }).click()
-    await expect(page.getByText("Delete this diagram?")).not.toBeVisible()
+    await expect(page.getByText(/Are you sure/)).not.toBeVisible()
   })
 
   test("confirming Delete removes the card and shows the empty state", async ({
@@ -405,7 +405,7 @@ test.describe("Home page — diagram card actions", () => {
     await page.getByRole("menuitem", { name: "Delete" }).click()
     // The confirm panel's own "Delete" button commits the deletion.
     await page
-      .getByText("Delete this diagram?")
+      .getByText(/Are you sure/)
       .locator("..")
       .getByRole("button", { name: "Delete" })
       .click()
@@ -416,8 +416,17 @@ test.describe("Home page — diagram card actions", () => {
   test("clicking the card body navigates to the local editor", async ({
     page,
   }) => {
-    await page.getByRole("button", { name: "Open Card Test Diagram" }).click()
+    await page.getByRole("link", { name: "Open Card Test Diagram" }).click()
     await expect(page).toHaveURL(/\/local\/card-test$/)
+    // The browser tab is named after the diagram.
+    await expect(page).toHaveTitle(/Card Test Diagram/)
+  })
+
+  test("the card body is a link (cmd/ctrl-click opens a new tab)", async ({
+    page,
+  }) => {
+    const card = page.getByRole("link", { name: "Open Card Test Diagram" })
+    await expect(card).toHaveAttribute("href", /\/local\/card-test$/)
   })
 })
 

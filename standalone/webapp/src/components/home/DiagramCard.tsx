@@ -10,7 +10,7 @@ import {
 import type { UMLDiagramType } from "@tumaet/apollon"
 import Menu from "@mui/material/Menu"
 import MenuItem from "@mui/material/MenuItem"
-import { useNavigate } from "react-router"
+import { Link, useNavigate } from "react-router"
 import { toast } from "react-toastify"
 import { useModalContext } from "@/contexts"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
@@ -678,9 +678,9 @@ export const DiagramActionsMenu = ({
             )}
           </div>
         ) : (
-          <div className="space-y-2 rounded-md border border-[var(--apollon-alert-danger-border)] bg-[var(--apollon-alert-danger-background)] p-2 text-sm transition-colors duration-200">
+          <div className="min-w-[220px] space-y-2 rounded-md border border-[var(--apollon-alert-danger-border)] bg-[var(--apollon-alert-danger-background)] p-3 text-sm transition-colors duration-200">
             <p className="font-medium text-[var(--apollon-alert-danger-color)]">
-              Delete this diagram?
+              Are you sure? This can&apos;t be undone.
             </p>
             <div className="flex justify-end gap-2">
               <button
@@ -810,7 +810,6 @@ const DiagramCardComponent = ({
   onSharedDiagramRemoved,
   onSharedDiagramViewChange,
 }: DiagramCardProps) => {
-  const navigate = useNavigate()
   const toggleFavorite = usePersistenceModelStore(
     (state) => state.toggleFavorite
   )
@@ -889,10 +888,6 @@ const DiagramCardComponent = ({
     }
   }, [thumbnailCacheKey, thumbnailSvg])
 
-  const handleOpen = () => {
-    navigate(getDiagramPath(diagram))
-  }
-
   const handleFavoriteToggle = (event: ReactMouseEvent<HTMLButtonElement>) => {
     event.stopPropagation()
     if (onToggleFavorite) {
@@ -951,13 +946,16 @@ const DiagramCardComponent = ({
         </div>
       )}
 
-      {/* Clickable card body */}
-      <button
-        type="button"
-        onClick={isExpired ? undefined : handleOpen}
+      {/* Clickable card body. A real link so cmd/ctrl/middle-click opens the
+          diagram in a new tab; plain click still navigates within the SPA. */}
+      <Link
+        to={getDiagramPath(diagram)}
+        onClick={(event) => {
+          if (isExpired) event.preventDefault()
+        }}
         aria-label={isExpired ? `${title} (expired)` : `Open ${title}`}
         aria-disabled={isExpired}
-        className={`flex w-full h-full flex-col text-left focus-visible:outline-2 focus-visible:outline-offset-2 ${isExpired ? "cursor-default opacity-40" : "cursor-pointer"}`}
+        className={`flex h-full w-full flex-col text-left focus-visible:outline-2 focus-visible:outline-offset-2 ${isExpired ? "cursor-default opacity-40" : "cursor-pointer"}`}
         style={{ outlineColor: "var(--home-accent-ring)" }}
       >
         {/* ---- Header Part: preview + title aligned horizontally ---- */}
@@ -1153,7 +1151,7 @@ const DiagramCardComponent = ({
             ) : null}
           </div>
         </div>
-      </button>
+      </Link>
 
       {/* ---- Star / Favorite button – overlaid top-left ---- */}
       {canToggleFavorite && (
