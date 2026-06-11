@@ -57,9 +57,10 @@ async function seedDiagrams(
     JSON.stringify({ state: { models, currentModelId: null }, version: 1 })
   )
   await page.goto("/")
-  await page.waitForLoadState("networkidle")
-  // Wait for the lazy gallery grid to hydrate before assertions.
-  await page.locator('[role="list"]').waitFor({ timeout: 30_000 })
+  // Wait for the lazy gallery grid to hydrate. The list itself is the
+  // readiness signal — `networkidle` is flaky here because thumbnail warmup
+  // and background fetches keep the network busy.
+  await page.locator('[role="list"]').waitFor({ timeout: 15_000 })
 }
 
 async function seedEmpty(page: Page) {
@@ -74,7 +75,11 @@ async function seedEmpty(page: Page) {
     )
   })
   await page.reload()
-  await page.waitForLoadState("networkidle")
+  // Heading renders once the home page has hydrated — a deterministic signal
+  // instead of the flaky `networkidle`.
+  await page
+    .getByRole("heading", { level: 1, name: "Your diagrams" })
+    .waitFor({ timeout: 15_000 })
 }
 
 const cards = (page: Page) => page.locator('[role="listitem"]')
