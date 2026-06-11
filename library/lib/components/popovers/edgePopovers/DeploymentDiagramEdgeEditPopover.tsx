@@ -1,10 +1,18 @@
-import { Box, FormControl, Select, MenuItem, InputLabel } from "@mui/material"
+import { Box } from "@mui/material"
 import { EdgeStyleEditor, TextField, Typography } from "@/components/ui"
 import { SwapHorizIcon } from "@/components/Icon"
 import { useReactFlow } from "@xyflow/react"
 import { CustomEdgeProps } from "@/edges/EdgeProps"
 import { useEdgePopOver } from "@/hooks"
 import { PopoverProps } from "../types"
+import { EdgeTypeSelect, EdgeTypeOption } from "./EdgeTypeSelect"
+
+const DEPLOYMENT_EDGE_TYPE_OPTIONS: ReadonlyArray<EdgeTypeOption> = [
+  { value: "DeploymentAssociation", label: "Deployment Association" },
+  { value: "DeploymentDependency", label: "Deployment Dependency" },
+  { value: "DeploymentProvidedInterface", label: "Provided Interface" },
+  { value: "DeploymentRequiredInterface", label: "Required Interface" },
+]
 
 export const DeploymentEdgeEditPopover: React.FC<PopoverProps> = ({
   elementId,
@@ -25,13 +33,6 @@ export const DeploymentEdgeEditPopover: React.FC<PopoverProps> = ({
   const sourceName = (sourceNode?.data?.name as string) ?? "Source"
   const targetName = (targetNode?.data?.name as string) ?? "Target"
 
-  const deploymentEdgeTypeOptions = [
-    { value: "DeploymentAssociation", label: "Deployment Association" },
-    { value: "DeploymentDependency", label: "Deployment Dependency" },
-    { value: "DeploymentProvidedInterface", label: "Provided Interface" },
-    { value: "DeploymentRequiredInterface", label: "Required Interface" },
-  ]
-
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
       <EdgeStyleEditor
@@ -51,23 +52,11 @@ export const DeploymentEdgeEditPopover: React.FC<PopoverProps> = ({
           ),
         ]}
       />
-      {/* Edge type selection */}
-      <FormControl fullWidth size="small">
-        <InputLabel id="edge-type-label">Edge Type</InputLabel>
-        <Select
-          labelId="edge-type-label"
-          id="edge-type-select"
-          value={edge.type}
-          label="Edge Type"
-          onChange={(e) => handleEdgeTypeChange(e.target.value)}
-        >
-          {deploymentEdgeTypeOptions.map((option) => (
-            <MenuItem key={option.value} value={option.value}>
-              {option.label}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+      <EdgeTypeSelect
+        value={edge.type}
+        options={DEPLOYMENT_EDGE_TYPE_OPTIONS}
+        onChange={handleEdgeTypeChange}
+      />
 
       {/* Connection info */}
       <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>

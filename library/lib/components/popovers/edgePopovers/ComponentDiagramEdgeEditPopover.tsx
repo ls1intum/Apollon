@@ -1,10 +1,17 @@
-import { Box, FormControl, Select, MenuItem, InputLabel } from "@mui/material"
+import { Box } from "@mui/material"
 import { EdgeStyleEditor, Typography } from "@/components/ui"
 import { useReactFlow } from "@xyflow/react"
 import { SwapHorizIcon } from "@/components/Icon"
 import { useEdgePopOver } from "@/hooks"
 import { PopoverProps } from "../types"
 import { CustomEdgeProps } from "@/edges"
+import { EdgeTypeSelect, EdgeTypeOption } from "./EdgeTypeSelect"
+
+const COMPONENT_EDGE_TYPE_OPTIONS: ReadonlyArray<EdgeTypeOption> = [
+  { value: "ComponentDependency", label: "Dependency" },
+  { value: "ComponentProvidedInterface", label: "Provided Interface" },
+  { value: "ComponentRequiredInterface", label: "Required Interface" },
+]
 
 export const ComponentEdgeEditPopover: React.FC<PopoverProps> = ({
   elementId,
@@ -22,12 +29,6 @@ export const ComponentEdgeEditPopover: React.FC<PopoverProps> = ({
   const targetNode = getNode(edge.target)
   const sourceName = (sourceNode?.data?.name as string) ?? "Source"
   const targetName = (targetNode?.data?.name as string) ?? "Target"
-
-  const componentEdgeTypeOptions = [
-    { value: "ComponentDependency", label: "Dependency" },
-    { value: "ComponentProvidedInterface", label: "Provided Interface" },
-    { value: "ComponentRequiredInterface", label: "Required Interface" },
-  ]
 
   const edgeData = edge.data as CustomEdgeProps | undefined
 
@@ -51,22 +52,11 @@ export const ComponentEdgeEditPopover: React.FC<PopoverProps> = ({
         ]}
       />
 
-      <FormControl fullWidth size="small">
-        <InputLabel id="edge-type-label">Edge Type</InputLabel>
-        <Select
-          labelId="edge-type-label"
-          id="edge-type-select"
-          value={edge.type}
-          label="Edge Type"
-          onChange={(e) => handleEdgeTypeChange(e.target.value)}
-        >
-          {componentEdgeTypeOptions.map((option) => (
-            <MenuItem key={option.value} value={option.value}>
-              {option.label}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+      <EdgeTypeSelect
+        value={edge.type}
+        options={COMPONENT_EDGE_TYPE_OPTIONS}
+        onChange={handleEdgeTypeChange}
+      />
 
       <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
         {sourceName} → {targetName}

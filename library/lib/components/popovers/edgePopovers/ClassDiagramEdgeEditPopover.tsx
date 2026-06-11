@@ -1,10 +1,21 @@
-import { Box, FormControl, InputLabel, Select, MenuItem } from "@mui/material"
+import { Box } from "@mui/material"
 import { EdgeStyleEditor, TextField, Typography } from "@/components/ui"
 import { useReactFlow } from "@xyflow/react"
 import { CustomEdgeProps } from "@/edges/EdgeProps"
 import { SwapHorizIcon } from "@/components/Icon"
 import { useEdgePopOver } from "@/hooks"
 import { PopoverProps } from "../types"
+import { EdgeTypeSelect, EdgeTypeOption } from "./EdgeTypeSelect"
+
+const CLASS_EDGE_TYPE_OPTIONS: ReadonlyArray<EdgeTypeOption> = [
+  { value: "ClassBidirectional", label: "Bi-Association" },
+  { value: "ClassUnidirectional", label: "Uni-Association" },
+  { value: "ClassAggregation", label: "Aggregation" },
+  { value: "ClassComposition", label: "Composition" },
+  { value: "ClassInheritance", label: "Inheritance" },
+  { value: "ClassDependency", label: "Dependency" },
+  { value: "ClassRealization", label: "Realization" },
+]
 
 export const EdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
   const { getEdge, getNode, updateEdgeData } = useReactFlow()
@@ -29,20 +40,6 @@ export const EdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
   const sourceName = (sourceNode?.data?.name as string) ?? "Source"
   const targetName = (targetNode?.data?.name as string) ?? "Target"
 
-  const getEdgeTypeOptions = () => {
-    return [
-      { value: "ClassBidirectional", label: "Bi-Association" },
-      { value: "ClassUnidirectional", label: "Uni-Association" },
-      { value: "ClassAggregation", label: "Aggregation" },
-      { value: "ClassComposition", label: "Composition" },
-      { value: "ClassInheritance", label: "Inheritance" },
-      { value: "ClassDependency", label: "Dependency" },
-      { value: "ClassRealization", label: "Realization" },
-    ]
-  }
-
-  const edgeTypeOptions = getEdgeTypeOptions()
-
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
       <EdgeStyleEditor
@@ -63,22 +60,11 @@ export const EdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
         ]}
       />
 
-      <FormControl fullWidth size="small">
-        <InputLabel id="edge-type-label">Edge Type</InputLabel>
-        <Select
-          labelId="edge-type-label"
-          id="edge-type-select"
-          value={edge.type}
-          label="Edge Type"
-          onChange={(e) => handleEdgeTypeChange(e.target.value)}
-        >
-          {edgeTypeOptions.map((option) => (
-            <MenuItem key={option.value} value={option.value}>
-              {option.label}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+      <EdgeTypeSelect
+        value={edge.type}
+        options={CLASS_EDGE_TYPE_OPTIONS}
+        onChange={handleEdgeTypeChange}
+      />
 
       {
         <>
