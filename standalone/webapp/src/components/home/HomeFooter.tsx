@@ -1,6 +1,6 @@
 import { Link } from "react-router"
 import { useModalContext } from "@/contexts"
-import { bugReportURL } from "@/components/navbar/NavbarHelp"
+import { bugReportURL } from "@/constants/urls"
 
 const linkClass =
   "rounded-sm text-[var(--home-text-secondary)] transition-colors duration-200 hover:text-[var(--home-text-primary)] hover:underline focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2"

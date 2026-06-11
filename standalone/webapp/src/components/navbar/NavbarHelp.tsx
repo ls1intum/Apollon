@@ -5,6 +5,7 @@ import Menu from "@mui/material/Menu"
 import MenuItem from "@mui/material/MenuItem"
 import Typography from "@mui/material/Typography/Typography"
 import { secondary } from "@/constants"
+import { bugReportURL } from "@/constants/urls"
 import { useModalContext } from "@/contexts"
 import { useNavigate } from "react-router"
 import { KeyboardArrowDownIcon } from "../Icon"
@@ -12,10 +13,6 @@ import { KeyboardArrowDownIcon } from "../Icon"
 interface Props {
   color?: string
 }
-
-// bug report url
-export const bugReportURL =
-  "https://github.com/ls1intum/Apollon/issues/new?labels=bug&template=bug-report.md"
 
 export const NavbarHelp: FC<Props> = ({ color }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
