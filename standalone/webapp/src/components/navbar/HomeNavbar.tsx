@@ -1,6 +1,5 @@
 import { NAVBAR_BACKGROUND_COLOR } from "@/constants/colorPlate"
 import { BrandAndVersion } from "./BrandAndVersion"
-import { NavbarHelp } from "./NavbarHelp"
 import { ThemeSwitcherMenu } from "./ThemeSwitcher"
 import { NAVBAR_DROP_SHADOW } from "./styleConstants"
 
@@ -19,8 +18,10 @@ export const HomeNavbar = () => {
 
       <div className="flex-1" />
 
-      <div className="flex items-center gap-1 px-2">
-        <NavbarHelp />
+      {/* Help/legal lives in the home footer (HomeFooter), not a nav dropdown —
+          editor-only items don't belong on the overview, and legal links must
+          not be buried in a menu. */}
+      <div className="flex items-center px-2">
         <ThemeSwitcherMenu />
       </div>
     </header>

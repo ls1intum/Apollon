@@ -7,6 +7,7 @@ import { HomeNavbar } from "@/components/navbar/HomeNavbar"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { useModalContext } from "@/contexts"
 import { DiagramGallerySkeleton } from "@/components/home/DiagramGallerySkeleton"
+import { HomeFooter } from "@/components/home/HomeFooter"
 import { pruneExpiredSharedDiagrams } from "@/utils/sharedDiagramStorage"
 import { useDocumentTitle } from "@/hooks/useDocumentTitle"
 
@@ -63,6 +64,7 @@ export const HomePage = () => {
     <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[var(--home-surface-base)] text-[var(--home-text-primary)] transition-colors duration-200">
       <HomeNavbar />
 
+      {/* Off-screen file input the Import button triggers programmatically. */}
       <input
         ref={jsonImportRef}
         type="file"
@@ -86,6 +88,8 @@ export const HomePage = () => {
           </Suspense>
         </div>
       </main>
+
+      <HomeFooter />
     </div>
   )
 }

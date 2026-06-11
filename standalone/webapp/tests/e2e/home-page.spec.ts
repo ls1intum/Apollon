@@ -413,20 +413,16 @@ test.describe("Home page — diagram card actions", () => {
     await expect(page.getByText("No diagrams yet")).toBeVisible()
   })
 
-  test("clicking the card body navigates to the local editor", async ({
-    page,
-  }) => {
-    await page.getByRole("link", { name: "Open Card Test Diagram" }).click()
-    await expect(page).toHaveURL(/\/local\/card-test$/)
-    // The browser tab is named after the diagram.
-    await expect(page).toHaveTitle(/Card Test Diagram/)
-  })
-
-  test("the card body is a link (cmd/ctrl-click opens a new tab)", async ({
+  test("the card body is a link that opens the local editor", async ({
     page,
   }) => {
     const card = page.getByRole("link", { name: "Open Card Test Diagram" })
+    // A real href so cmd/ctrl/middle-click opens a new tab.
     await expect(card).toHaveAttribute("href", /\/local\/card-test$/)
+    await card.click()
+    await expect(page).toHaveURL(/\/local\/card-test$/)
+    // The browser tab is named after the diagram.
+    await expect(page).toHaveTitle(/Card Test Diagram/)
   })
 })
 
@@ -473,6 +469,21 @@ test.describe("Home page — accessibility basics", () => {
   test("the diagram grid exposes role=list", async ({ page }) => {
     await seedDiagrams(page, [{ id: "a11y-2", title: "Acc Test" }])
     await expect(page.locator('[role="list"]')).toBeAttached()
+  })
+
+  test("legal links are reachable in the footer (not buried in a menu)", async ({
+    page,
+  }) => {
+    await seedEmpty(page)
+    const footer = page.getByRole("contentinfo")
+    await expect(footer.getByRole("link", { name: "Imprint" })).toHaveAttribute(
+      "href",
+      "/imprint"
+    )
+    await expect(footer.getByRole("link", { name: "Privacy" })).toHaveAttribute(
+      "href",
+      "/privacy"
+    )
   })
 })
 
