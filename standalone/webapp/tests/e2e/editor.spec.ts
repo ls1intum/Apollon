@@ -298,7 +298,9 @@ test.describe("Navbar", () => {
     // Verify key menu items are visible
     await expect(page.getByText("New File")).toBeVisible()
     await expect(page.getByText("Start from Template")).toBeVisible()
-    await expect(page.getByText("Load Diagram")).toBeVisible()
     await expect(page.getByText("Export")).toBeVisible()
+    // "Load Diagram" was removed — the home dashboard is the place to open
+    // existing diagrams.
+    await expect(page.getByText("Load Diagram")).toHaveCount(0)
   })
 })

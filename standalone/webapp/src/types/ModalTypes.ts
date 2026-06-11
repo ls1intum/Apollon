@@ -3,7 +3,6 @@ export type ModalName =
   | "SHARE"
   | "SHARE_DASHBOARD"
   | "COLLABORATE_NAME"
-  | "LOAD_DIAGRAM"
   | "EXPORT_PPTX"
   | "HowToUseModal"
   | "AboutModal"

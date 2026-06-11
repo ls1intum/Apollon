@@ -89,14 +89,9 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
         <MenuItem onClick={handleStartFromTemplate}>
           Start from Template
         </MenuItem>
-        <MenuItem
-          onClick={() => {
-            openModal("LOAD_DIAGRAM")
-            closeMainMenu()
-          }}
-        >
-          Load Diagram
-        </MenuItem>
+        {/* No "Load Diagram" here: the home dashboard (the logo returns to it)
+            is where you browse and open existing diagrams. An in-editor loader
+            duplicated that and muddled the single-diagram flow. */}
         {/* Version history lives in its own dedicated nav button
             (`<VersionHistoryButton>`), not here — it had been duplicated
             in the File menu for discoverability, but the standalone

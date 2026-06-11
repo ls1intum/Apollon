@@ -1,7 +1,6 @@
 import React from "react"
 import {
   NewDiagramModal,
-  LoadDiagramModal,
   ShareModal,
   ShareDashboardModal,
   CollaborateNameModal,
@@ -36,7 +35,6 @@ const MODAL_COMPONENTS: Record<ModalName, React.ComponentType<ModalProps>> = {
   SHARE: ShareModal,
   SHARE_DASHBOARD: ShareDashboardModal,
   COLLABORATE_NAME: CollaborateNameModal,
-  LOAD_DIAGRAM: LoadDiagramModal,
   EXPORT_PPTX: PPTXExportModal,
   HowToUseModal: HowToUseModal,
   AboutModal: AboutModal,
@@ -48,7 +46,6 @@ const MODAL_TITLES: Record<ModalName, string> = {
   SHARE: "Share",
   SHARE_DASHBOARD: "Share your diagram",
   COLLABORATE_NAME: "Join Collaboration",
-  LOAD_DIAGRAM: "Load Diagram",
   EXPORT_PPTX: "Export as PPTX",
   HowToUseModal: "How to use this editor?",
   AboutModal: "Information about Apollon",

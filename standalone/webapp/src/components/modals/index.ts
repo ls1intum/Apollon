@@ -1,5 +1,4 @@
 export * from "./NewDiagramModal"
-export * from "./LoadDiagramModal"
 export * from "./ShareModal"
 export * from "./ShareDashboardModal"
 export * from "./HomeDialog"
