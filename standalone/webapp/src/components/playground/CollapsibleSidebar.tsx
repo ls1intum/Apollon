@@ -48,7 +48,8 @@ export const CollapsibleSidebar = ({
         type="button"
         aria-label={`${open ? "Collapse" : "Expand"} ${label}`}
         aria-expanded={open}
-        aria-controls={contentId}
+        // Only reference the content region while it's actually in the DOM.
+        aria-controls={open ? contentId : undefined}
         onClick={onToggle}
         className={clsx(
           "absolute top-2 z-[1] flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border border-[var(--apollon-gray)] hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--apollon-primary-contrast)]",
