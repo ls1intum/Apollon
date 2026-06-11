@@ -2,4 +2,4 @@
 "@tumaet/apollon": patch
 ---
 
-Class diagram edge type options now show matching edge icon previews.
+The edge-type dropdown now previews how each option renders, for class, component, deployment, use case, and BPMN diagrams.

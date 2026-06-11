@@ -42,6 +42,7 @@ body {
   flex-grow: 1;
   /* background-color: var(--apollon-background); */
   height: 100%;
+
 }
 
 .apollon-editor {
@@ -69,10 +70,4 @@ body {
 
 .MuiMenu-list .MuiMenuItem-root.Mui-selected:hover {
   background-color: var(--apollon-gray) !important;
-}
-
-/* Keep notifications above Apollon's collaboration presence/cursor overlays. */
-.Toastify__toast-container {
-  --toastify-z-index: 10005;
-  z-index: 10005;
 }
