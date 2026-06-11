@@ -7,7 +7,7 @@ import { renderThumbnailSvgFromModel } from "@/utils/thumbnailSvg"
 const THUMBNAIL_WARMUP_DELAY_MS = 400
 const THUMBNAIL_FALLBACK_IDLE_DELAY_MS = 120
 
-export type ThumbnailWarmupDiagram = {
+type ThumbnailWarmupDiagram = {
   id: string
   lastModifiedAt: string
   model: UMLModel

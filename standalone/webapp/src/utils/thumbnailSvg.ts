@@ -1,7 +1,7 @@
 import type { UMLModel } from "@tumaet/apollon"
 
-export const THUMBNAIL_MAX_WIDTH = 400
-export const THUMBNAIL_MAX_HEIGHT = 300
+const THUMBNAIL_MAX_WIDTH = 400
+const THUMBNAIL_MAX_HEIGHT = 300
 
 const parseSvgDimension = (value: string | null): number | null => {
   if (!value) return null
