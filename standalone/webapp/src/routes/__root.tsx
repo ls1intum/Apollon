@@ -1,7 +1,9 @@
 import { lazy, Suspense } from "react"
 import { createRootRoute, Outlet, useRouterState } from "@tanstack/react-router"
 import { Capacitor } from "@capacitor/core"
+import { AppProviders } from "@/AppProviders"
 import { AppLoadingScreen } from "@/components/AppLoadingScreen"
+import { DeferredToastContainer } from "@/components/DeferredToastContainer"
 import { HomeNavbar } from "@/components/navbar/HomeNavbar"
 import { HomeFooter } from "@/components/home/HomeFooter"
 import { ErrorPage } from "@/pages/ErrorPage"
@@ -35,17 +37,24 @@ function RootLayout() {
     path === "/playground"
   const isChromeSubRoute = !isHomeRoute && !isEditorRoute
 
+  // AppProviders (Editor/Modal context) + the toast container live here, INSIDE
+  // the router, so modals (which call useNavigate) and pages all share the
+  // active router context. AppProviders mounts once with the root route and
+  // persists across navigations.
   return (
-    <Suspense fallback={<AppLoadingScreen />}>
-      {isEditorRoute && <Navbar />}
-      {isChromeSubRoute && <HomeNavbar />}
-      <div data-testid="editor-area" style={{ flex: 1, overflow: "hidden" }}>
-        <Outlet />
-      </div>
-      {isChromeSubRoute && !Capacitor.isNativePlatform() && (
-        <HomeFooter className="hidden md:flex" />
-      )}
-    </Suspense>
+    <AppProviders>
+      <Suspense fallback={<AppLoadingScreen />}>
+        {isEditorRoute && <Navbar />}
+        {isChromeSubRoute && <HomeNavbar />}
+        <div data-testid="editor-area" style={{ flex: 1, overflow: "hidden" }}>
+          <Outlet />
+        </div>
+        {isChromeSubRoute && !Capacitor.isNativePlatform() && (
+          <HomeFooter className="hidden md:flex" />
+        )}
+      </Suspense>
+      <DeferredToastContainer />
+    </AppProviders>
   )
 }
 

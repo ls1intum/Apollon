@@ -70,7 +70,6 @@ export const ApollonLocal: FC = () => {
   const { id: diagramId } = route.useParams()
   const location = useLocation()
   const locationRef = useRef(location)
-  const { state } = location
 
   const diagram = usePersistenceModelStore((store) =>
     diagramId ? store.models[diagramId] : null
@@ -220,9 +219,14 @@ export const ApollonLocal: FC = () => {
         setEditor(undefined)
       }
     }
+    // Re-runs only when the active diagram id changes. Each created diagram
+    // (blank or template) gets a fresh uuid, so the id alone drives the
+    // editor remount — no separate "created at" hint is needed. (Mixing a
+    // location.state value in here was harmful under TanStack, whose
+    // useParams/useLocation can update in different renders, briefly pairing
+    // the old diagram with the new state and recreating the editor twice.)
   }, [
     diagram?.id,
-    state?.timeStapToCreate,
     setCurrentModelId,
     setEditor,
     setThumbnail,

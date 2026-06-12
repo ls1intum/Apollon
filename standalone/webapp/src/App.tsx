@@ -1,7 +1,5 @@
 import { createRouter, RouterProvider } from "@tanstack/react-router"
-import { AppProviders } from "./AppProviders"
 import { AppLoadingScreen } from "@/components/AppLoadingScreen"
-import { DeferredToastContainer } from "./components/DeferredToastContainer"
 import { routeTree } from "./routeTree.gen"
 import { log } from "@/logger"
 
@@ -29,8 +27,6 @@ declare module "@tanstack/history" {
   interface HistoryState {
     /** Nav provenance: the editor route a chrome page (legal/404) was reached from. */
     from?: string
-    /** Stamped by "create from template" so the editor remounts on re-create. */
-    timeStapToCreate?: number
     /** Home gallery hint: highlight a just-opened shared diagram card. */
     highlightSharedDiagramId?: string
   }
@@ -65,16 +61,14 @@ void import("capacitor-plugin-safe-area")
   })
 
 function App() {
-  // AppProviders (Editor/Modal context) wraps the router so page components can
-  // read those contexts; DeferredToastContainer stays a global sibling of the
-  // route tree. The router renders the file-based tree starting at __root,
-  // which owns the navbar/footer chrome + the editor-area wrapper.
+  // The router renders the file-based tree starting at __root, which owns the
+  // app providers (Editor/Modal context), the navbar/footer chrome, the
+  // editor-area wrapper, and the toast container. Providers live INSIDE the
+  // router so modals rendered by ModalProvider (which call useNavigate) are
+  // bound to the active router.
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
-      <AppProviders>
-        <RouterProvider router={router} />
-        <DeferredToastContainer />
-      </AppProviders>
+      <RouterProvider router={router} />
     </div>
   )
 }

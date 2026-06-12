@@ -184,7 +184,6 @@ export const NewDiagramModal = () => {
         throw new Error("Selected template data not found")
       }
 
-      const timeStapToCreate = new Date().getTime()
       const templateModel =
         typeof structuredClone === "function"
           ? structuredClone(jsonData)
@@ -198,11 +197,7 @@ export const NewDiagramModal = () => {
 
       createModel(templateModel)
       closeModal()
-      navigate({
-        to: "/local/$id",
-        params: { id: templateModel.id },
-        state: { timeStapToCreate },
-      })
+      navigate({ to: "/local/$id", params: { id: templateModel.id } })
     } catch (err: unknown) {
       log.error("Error creating diagram from template:", err as Error)
 
