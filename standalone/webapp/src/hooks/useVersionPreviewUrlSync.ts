@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react"
+import { useCallback, useEffect } from "react"
 import { useSearchParams } from "react-router"
 import { toast } from "react-toastify"
 import { useVersionStore } from "@/stores/useVersionStore"
@@ -44,39 +44,40 @@ export function useVersionPreviewUrlSync(
   const exitPreview = useVersionStore((s) => s.exitPreview)
   const previewVersionId = useVersionStore((s) => s.preview?.versionId ?? null)
 
-  // Tracks the previous URL param so we can distinguish a real URL transition
-  // (Back button / external param removal) from a store-only state, and only
-  // call exitPreview when the user actually navigated away from a version.
-  const prevFromUrl = useRef<string | null>(null)
-
-  // URL -> store. The single place enterPreview/exitPreview are driven.
+  // URL -> store, UNCONDITIONALLY: the URL is the source of truth on every
+  // render, not just same-hop transitions. If there is no `?version=`, any
+  // preview is cleared — including a stale one carried over from another diagram
+  // by client-side navigation (`store.preview` is global and not reset on route
+  // change; that leak surfaced the preview banner on a freshly opened editor
+  // that had no version param).
   useEffect(() => {
-    if (!diagramId || !ready) return
-    if (previewFromUrl && previewVersionId !== previewFromUrl) {
-      void enterPreview(diagramId, previewFromUrl).catch((err) => {
-        log.warn(
-          "Previewed version unavailable",
-          err instanceof Error ? err.message : String(err)
-        )
-        toast.error(t.previewUnavailable)
-        // Strip the dangling param so reload/Back land on the live canvas.
-        setSearchParams(
-          (prev) => {
-            const next = new URLSearchParams(prev)
-            next.delete(PREVIEW_VERSION_PARAM)
-            return next
-          },
-          { replace: true }
-        )
-      })
-    } else if (
-      !previewFromUrl &&
-      prevFromUrl.current !== null &&
-      previewVersionId !== null
-    ) {
+    if (!diagramId) return
+    if (previewFromUrl) {
+      // Entering needs the repository bound (gated on `ready`); if it isn't yet,
+      // this effect re-runs when `ready` flips.
+      if (ready && previewVersionId !== previewFromUrl) {
+        void enterPreview(diagramId, previewFromUrl).catch((err) => {
+          log.warn(
+            "Previewed version unavailable",
+            err instanceof Error ? err.message : String(err)
+          )
+          toast.error(t.previewUnavailable)
+          // Strip the dangling param so reload/Back land on the live canvas.
+          setSearchParams(
+            (prev) => {
+              const next = new URLSearchParams(prev)
+              next.delete(PREVIEW_VERSION_PARAM)
+              return next
+            },
+            { replace: true }
+          )
+        })
+      }
+    } else if (previewVersionId !== null) {
+      // No version in the URL but the store is previewing — clear it. Clearing
+      // doesn't need the editor/repo, so it runs even before `ready`.
       exitPreview()
     }
-    prevFromUrl.current = previewFromUrl
   }, [
     previewFromUrl,
     previewVersionId,
