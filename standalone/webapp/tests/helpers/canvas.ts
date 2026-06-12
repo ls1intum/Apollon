@@ -70,3 +70,16 @@ export async function injectFixtureIntoLocalStorage(
     localStorage.setItem("persistenceModelStore", val)
   }, storeValue)
 }
+
+/**
+ * Seed a fixture into localStorage and navigate directly to the local editor
+ * route for that diagram. Use this instead of injectFixtureIntoLocalStorage +
+ * page.goto("/") — the home route now renders the dashboard, not the editor.
+ */
+export async function openFixtureInLocalEditor(
+  page: Page,
+  fixture: Record<string, unknown>
+) {
+  await injectFixtureIntoLocalStorage(page, fixture)
+  await page.goto(`/local/${fixture.id as string}`)
+}

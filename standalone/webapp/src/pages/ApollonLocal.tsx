@@ -6,15 +6,14 @@ import {
   useState,
   type FC,
 } from "react"
-import { useLocation } from "react-router"
+import { useLocation, useParams } from "react-router"
 import { Box } from "@mui/material"
 import { toast } from "react-toastify"
 import {
   ApollonEditor,
   importDiagram,
-  UMLDiagramType,
   type UMLModel,
-} from "@tumaet/apollon"
+} from "@tumaet/apollon/react"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { useEditorContext, useModalContext } from "@/contexts"
 import { useElementWidth } from "@/hooks/useElementWidth"
@@ -35,20 +34,60 @@ import { structuralFingerprint } from "@/lib/version/predicates"
 import { versioningStrings as t } from "@/components/versioning/strings"
 import type { Diagram } from "@/types"
 import { log } from "@/logger"
+import { normalizeThumbnailSvg } from "@/utils/thumbnailSvg"
+import { useDocumentTitle } from "@/hooks/useDocumentTitle"
+import { ErrorPage } from "./ErrorPage"
+
+const THUMBNAIL_DEBOUNCE_MS = 2000
 
 /**
- * Standalone-mode page. Mounts the versioning UI against
- * `LocalVersionRepository` and uses `usePersistenceModelStore.currentModelId`
- * as the diagram id. No WebSocket, no autosave loop. Restore writes a
+ * Standalone-mode local editor page (`/local/:id`). Mounts the versioning UI
+ * against `LocalVersionRepository` and keys version history off the
+ * `/local/:id` path param (mirrored into `usePersistenceModelStore.currentModelId`
+ * via `setCurrentModelId`). No WebSocket, no autosave loop. Restore writes a
  * permanent "Before restoring …" auto-row instead of a 10s snackbar.
+ *
+ * Also exports a debounced diagram thumbnail (consumed by the home gallery),
+ * which is SKIPPED while a version preview is active — the previewed snapshot
+ * is read-only and must not overwrite the persisted model or its thumbnail.
  */
 export const ApollonLocal: FC = () => {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const canvasColumnRef = useRef<HTMLDivElement | null>(null)
   const canvasColumnWidth = useElementWidth(canvasColumnRef)
+  const thumbnailExportTimeoutRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null)
+  const thumbnailExportSequenceRef = useRef(0)
+  const isThumbnailExportCanceledRef = useRef(false)
   const { setEditor, editor } = useEditorContext()
   const { openModal } = useModalContext()
-  const { state } = useLocation()
+  const { id: diagramId } = useParams()
+  const location = useLocation()
+  const locationRef = useRef(location)
+  const { state } = location
+
+  const diagram = usePersistenceModelStore((store) =>
+    diagramId ? store.models[diagramId] : null
+  )
+  const setCurrentModelId = usePersistenceModelStore(
+    (store) => store.setCurrentModelId
+  )
+  const updateModel = usePersistenceModelStore((store) => store.updateModel)
+  const setThumbnail = usePersistenceModelStore((store) => store.setThumbnail)
+
+  useDocumentTitle(diagram?.model.title)
+
+  // Bind the local repository SYNCHRONOUSLY during render — before the
+  // versioning children (VersionSidebar/VersionDrawer) mount and run their
+  // `fetchVersions` effects. A `useEffect` here would fire AFTER those child
+  // effects (React flushes child effects before parent effects), so on a
+  // reload where the drawer is already open (drawerOpenByDiagram is persisted)
+  // the first fetch would hit the default `RemoteVersionRepository` and render
+  // an empty history. Idempotent; safe under StrictMode/HMR.
+  if (getVersionRepository() !== LocalVersionRepository) {
+    setVersionRepository(LocalVersionRepository)
+  }
 
   // Bootstrap once: cleanup-on-deleteModel subscription, BroadcastChannel
   // listener, visibility refetch.
@@ -56,65 +95,104 @@ export const ApollonLocal: FC = () => {
     ensureVersionStoreBootstrapped()
   }, [])
 
-  // Defensive: pages re-set the repo on mount so the holder is always
-  // matched to the active route. Idempotent under StrictMode/HMR.
-  useEffect(() => {
-    setVersionRepository(LocalVersionRepository)
-  }, [])
-
-  const currentModelId = usePersistenceModelStore((s) => s.currentModelId)
-  const diagram = usePersistenceModelStore((s) =>
-    currentModelId ? s.models[currentModelId] : null
-  )
-  const createModelByTitleAndType = usePersistenceModelStore(
-    (s) => s.createModelByTitleAndType
-  )
-  const updateModel = usePersistenceModelStore((s) => s.updateModel)
-
   const preview = useVersionStore((s) => s.preview)
   const exitPreview = useVersionStore((s) => s.exitPreview)
   const fetchVersions = useVersionStore((s) => s.fetchVersions)
   // selectVersions returns a frozen empty-array singleton when the key
   // is absent — never construct a fresh `[]` here, or `useSyncExternalStore`
   // will warn "getSnapshot should be cached" and the regression test fails.
-  const versions = useVersionStore((s) =>
-    selectVersions(s, currentModelId ?? "")
-  )
+  const versions = useVersionStore((s) => selectVersions(s, diagramId ?? ""))
 
-  useVersionShortcut(currentModelId ?? undefined)
+  useVersionShortcut(diagramId ?? undefined)
 
   const prePreviewFingerprintRef = useRef<string | null>(null)
   const [canRestoreFromPreview, setCanRestoreFromPreview] = useState(false)
 
+  // Keep a live ref to the location so the editor cleanup can detect whether
+  // we're navigating between two /local/* diagrams (don't clobber the store)
+  // versus actually leaving local mode.
+  useEffect(() => {
+    locationRef.current = location
+  })
+
   // -------- Editor lifecycle --------------------------------------------
   useEffect(() => {
-    if (!diagram) {
-      createModelByTitleAndType("Class Diagram", UMLDiagramType.ClassDiagram)
-      return
-    }
-    if (!containerRef.current) return
+    if (!containerRef.current || !diagram) return
+    isThumbnailExportCanceledRef.current = false
+    setCurrentModelId(diagram.id)
 
     const instance = new ApollonEditor(containerRef.current, {
       model: diagram.model,
     })
 
     const subId = instance.subscribeToModelChange((model) => {
-      // Don't write the previewed snapshot back into the persistence
-      // store — preview is read-only by contract.
+      // Don't write the previewed snapshot back into the persistence store,
+      // and don't capture it as the diagram thumbnail — preview is read-only
+      // by contract.
       if (useVersionStore.getState().preview !== null) return
       updateModel(model)
+      if (thumbnailExportTimeoutRef.current) {
+        clearTimeout(thumbnailExportTimeoutRef.current)
+      }
+
+      const sequence = ++thumbnailExportSequenceRef.current
+      thumbnailExportTimeoutRef.current = setTimeout(async () => {
+        try {
+          const exportedSvg = await instance.exportAsSVG({ svgMode: "compat" })
+          if (
+            sequence !== thumbnailExportSequenceRef.current ||
+            isThumbnailExportCanceledRef.current
+          ) {
+            return
+          }
+
+          const normalizedSvg = normalizeThumbnailSvg(
+            exportedSvg.svg,
+            exportedSvg.clip.width,
+            exportedSvg.clip.height
+          )
+
+          setThumbnail(model.id, normalizedSvg)
+        } catch (error) {
+          log.error("Failed to generate diagram thumbnail", error as Error)
+        }
+      }, THUMBNAIL_DEBOUNCE_MS)
     })
 
     setEditor(instance)
     void fetchVersions(diagram.id)
 
     return () => {
+      isThumbnailExportCanceledRef.current = true
+      thumbnailExportSequenceRef.current += 1
+      if (thumbnailExportTimeoutRef.current) {
+        clearTimeout(thumbnailExportTimeoutRef.current)
+        thumbnailExportTimeoutRef.current = null
+      }
+
       log.debug("Cleaning up Apollon instance")
       instance.unsubscribe(subId)
       instance.destroy()
-      setEditor(undefined)
+      const isTransitioningToAnotherLocalDiagram = /^\/local\//.test(
+        locationRef.current.pathname
+      )
+      if (
+        !isTransitioningToAnotherLocalDiagram &&
+        usePersistenceModelStore.getState().currentModelId === diagram.id
+      ) {
+        setCurrentModelId(null)
+        setEditor(undefined)
+      }
     }
-  }, [diagram?.id, state?.timeStapToCreate])
+  }, [
+    diagram?.id,
+    state?.timeStapToCreate,
+    setCurrentModelId,
+    setEditor,
+    setThumbnail,
+    updateModel,
+    fetchVersions,
+  ])
 
   // -------- Preview overlay ---------------------------------------------
   useEffect(() => {
@@ -158,12 +236,12 @@ export const ApollonLocal: FC = () => {
   const resolveBody = useCallback(
     async (versionId: string): Promise<Diagram> => {
       if (preview?.versionId === versionId) return preview.body as Diagram
-      if (!currentModelId) {
+      if (!diagramId) {
         throw new Error("No current diagram id")
       }
-      return getVersionRepository().getBody(currentModelId, versionId)
+      return getVersionRepository().getBody(diagramId, versionId)
     },
-    [preview, currentModelId]
+    [preview, diagramId]
   )
 
   /**
@@ -175,13 +253,13 @@ export const ApollonLocal: FC = () => {
    */
   const performRestore = useCallback(
     async (versionId: string) => {
-      if (!editor || !currentModelId) return
+      if (!editor || !diagramId) return
       const summary = versions.find((v) => v.id === versionId)
       try {
         const body = await resolveBody(versionId)
         await useVersionStore
           .getState()
-          .restoreVersion(currentModelId, versionId, editor.model)
+          .restoreVersion(diagramId, versionId, editor.model)
         editor.model = importDiagram(body) as UMLModel
         editor.fitView()
         if (preview) exitPreview()
@@ -197,7 +275,7 @@ export const ApollonLocal: FC = () => {
         toast.error(t.restoreFailed)
       }
     },
-    [editor, currentModelId, versions, preview, resolveBody, exitPreview]
+    [editor, diagramId, versions, preview, resolveBody, exitPreview]
   )
 
   /**
@@ -208,7 +286,7 @@ export const ApollonLocal: FC = () => {
    */
   const handleConfirmedRestore = useCallback(
     async (versionId: string) => {
-      if (!editor || !currentModelId) return
+      if (!editor || !diagramId) return
       try {
         // Compare against the user's pre-preview canvas (if previewing)
         // so a V1→V2→V3 hop measures dirtiness vs. the canvas the user
@@ -223,7 +301,7 @@ export const ApollonLocal: FC = () => {
           return
         }
         openModal("CONFIRM_RESTORE", {
-          diagramId: currentModelId,
+          diagramId,
           versionId,
           onConfirm: async () => {
             await performRestore(versionId)
@@ -234,7 +312,7 @@ export const ApollonLocal: FC = () => {
         toast.error(t.restoreFailed)
       }
     },
-    [editor, currentModelId, resolveBody, performRestore, openModal]
+    [editor, diagramId, resolveBody, performRestore, openModal]
   )
 
   const handleVersionSaved = useCallback(() => {
@@ -247,7 +325,7 @@ export const ApollonLocal: FC = () => {
   }, [exitPreview])
 
   const banner = useMemo(() => {
-    if (!preview || !currentModelId) return null
+    if (!preview || !diagramId) return null
     return (
       <Box
         sx={{
@@ -265,7 +343,7 @@ export const ApollonLocal: FC = () => {
       >
         <VersionPreviewBanner
           containerWidth={canvasColumnWidth}
-          diagramId={currentModelId}
+          diagramId={diagramId}
           canRestore={canRestoreFromPreview}
           onExit={handleExitPreview}
           onRestore={handleConfirmedRestore}
@@ -274,12 +352,18 @@ export const ApollonLocal: FC = () => {
     )
   }, [
     preview,
-    currentModelId,
+    diagramId,
     canvasColumnWidth,
     canRestoreFromPreview,
     handleExitPreview,
     handleConfirmedRestore,
   ])
+
+  // All hooks above run unconditionally. Creation happens from the home
+  // gallery; a missing diagram is a not-found state, not an auto-create.
+  if (!diagramId || !diagram) {
+    return <ErrorPage message="Diagram not found." buttonLabel="All diagrams" />
+  }
 
   return (
     <div className="h-full flex flex-col">
@@ -303,21 +387,17 @@ export const ApollonLocal: FC = () => {
           <Box ref={containerRef} sx={{ width: "100%", height: "100%" }} />
           {banner}
         </Box>
-        {currentModelId && (
-          <VersionSidebar
-            diagramId={currentModelId}
-            onConfirmedRestore={handleConfirmedRestore}
-            onVersionSaved={handleVersionSaved}
-          />
-        )}
-      </Box>
-      {currentModelId && (
-        <VersionDrawer
-          diagramId={currentModelId}
+        <VersionSidebar
+          diagramId={diagramId}
           onConfirmedRestore={handleConfirmedRestore}
           onVersionSaved={handleVersionSaved}
         />
-      )}
+      </Box>
+      <VersionDrawer
+        diagramId={diagramId}
+        onConfirmedRestore={handleConfirmedRestore}
+        onVersionSaved={handleVersionSaved}
+      />
       {/* No <UndoRestoreSnackbar /> in local mode — auto-snapshot rows
           in the drawer are the durable replacement. */}
     </div>

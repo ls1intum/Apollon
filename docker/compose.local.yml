@@ -22,7 +22,8 @@ services:
       - PORT=8000
       - WS_PORT=4444
       - REDIS_URL=redis://db:6379
-      - OWNER_SECRET=${OWNER_SECRET:-change-me-in-production}
+      - OWNER_SECRET=${OWNER_SECRET:-development-only-replace-in-prod}
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:8080,capacitor://localhost,ionic://localhost}
     depends_on:
       db:
         condition: service_healthy
@@ -37,6 +38,12 @@ services:
       - dbdata:/data
     command:
       - redis-stack-server
+      # `redis-stack-server` defaults `dir` to `/var/lib/redis-stack`, not
+      # `/data` like upstream `redis`. Without `--dir /data` the server
+      # writes its AOF/RDB into the container's writable layer, which is
+      # lost on container recreate.
+      - --dir
+      - /data
       - --appendonly
       - "yes"
       - --appendfsync

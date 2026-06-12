@@ -12,34 +12,39 @@ import { VersionHistoryButton } from "./VersionHistoryButton"
 import { SaveLocalCopyButton } from "./SaveLocalCopyButton"
 import Button from "@mui/material/Button/Button"
 import { BrandAndVersion } from "./BrandAndVersion"
-import { NAVBAR_BACKGROUND_COLOR } from "@/constants"
+import { BackNav } from "./BackNav"
+import { ALL_DIAGRAMS_LABEL } from "@/lib/navProvenance"
 import { useEditorContext, useModalContext } from "@/contexts"
 import TextField from "@mui/material/TextField/TextField"
-import TumLogo from "assets/images/tum-logo.png"
-import { useNavigate } from "react-router"
+import { Link } from "react-router"
 import { ThemeSwitcherMenu } from "./ThemeSwitcher"
+import { NAVBAR_SX } from "./styleConstants"
 
 export default function MobileNavbar() {
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null)
   const { editor } = useEditorContext()
   const { openModal } = useModalContext()
-  const navigate = useNavigate()
   const [diagramTitle, setDiagramTitle] = useState(
     editor?.getDiagramMetadata().diagramTitle || ""
   )
   const unsubscribe = useRef<number>()
 
   useEffect(() => {
-    if (editor && !unsubscribe.current) {
-      unsubscribe.current = editor.subscribeToDiagramNameChange(
-        (diagramTitle) => {
-          setDiagramTitle(diagramTitle)
-        }
-      )
+    if (!editor) {
+      unsubscribe.current = undefined
+      return
     }
-    // Update diagram title when editor is available
-    if (editor) {
-      setDiagramTitle(editor.getDiagramMetadata().diagramTitle || "")
+
+    unsubscribe.current = editor.subscribeToDiagramNameChange((title) => {
+      setDiagramTitle(title)
+    })
+    setDiagramTitle(editor.getDiagramMetadata().diagramTitle || "")
+
+    return () => {
+      if (unsubscribe.current !== undefined) {
+        editor.unsubscribe(unsubscribe.current)
+        unsubscribe.current = undefined
+      }
     }
   }, [editor])
 
@@ -51,16 +56,9 @@ export default function MobileNavbar() {
     setAnchorElNav(null)
   }
 
-  const goHome = () => {
-    navigate("/")
-  }
   return (
-    <AppBar
-      position="static"
-      sx={{ bgcolor: NAVBAR_BACKGROUND_COLOR }}
-      elevation={0}
-    >
-      <Toolbar disableGutters>
+    <AppBar position="sticky" sx={NAVBAR_SX} elevation={0}>
+      <Toolbar disableGutters sx={{ minHeight: 64 }}>
         <Box
           sx={{
             display: "flex",
@@ -72,9 +70,6 @@ export default function MobileNavbar() {
         >
           {/* Mobile Menu Button */}
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            {/* Logo */}
-            <img alt="Logo" src={TumLogo} width="60" height="30" />
-
             <IconButton
               size="large"
               aria-label="navigation menu"
@@ -82,6 +77,7 @@ export default function MobileNavbar() {
               aria-haspopup="true"
               onClick={handleOpenNavMenu}
               color="inherit"
+              sx={{ ml: 0.5 }}
             >
               <MenuIcon />
             </IconButton>
@@ -109,22 +105,31 @@ export default function MobileNavbar() {
                   alignItems: "flex-start",
                 }}
               >
+                <BackNav
+                  to="/"
+                  label={ALL_DIAGRAMS_LABEL}
+                  tone="onSurface"
+                  onNavigate={handleCloseNavMenu}
+                  className="mx-1"
+                />
                 <NavbarFile
-                  color="black"
+                  color="var(--apollon-primary-contrast)"
                   handleCloseNavMenu={handleCloseNavMenu}
                 />
                 <Button
                   sx={{ textTransform: "none" }} // This removes the uppercase transformation
                   onClick={() => openModal("SHARE")}
                 >
-                  <Typography color="black">Share</Typography>
+                  <Typography color="var(--apollon-primary-contrast)">
+                    Share
+                  </Typography>
                 </Button>
                 <SaveLocalCopyButton
-                  color="black"
+                  color="var(--apollon-primary-contrast)"
                   onAfter={handleCloseNavMenu}
                 />
-                <VersionHistoryButton color="black" />
-                <NavbarHelp color="black" />
+                <VersionHistoryButton color="var(--apollon-primary-contrast)" />
+                <NavbarHelp color="var(--apollon-primary-contrast)" />
 
                 {/* Diagram Name Input Field */}
                 <Box sx={{ p: 0.5 }}>
@@ -137,7 +142,12 @@ export default function MobileNavbar() {
                     }}
                     placeholder="Diagram Name"
                     fullWidth
-                    sx={{ input: { padding: 0.5 } }}
+                    sx={{
+                      input: {
+                        padding: 0.5,
+                        color: "var(--apollon-primary-contrast)",
+                      },
+                    }}
                     variant="outlined"
                     onClick={(e) => e.stopPropagation()}
                     onFocus={(e) => e.stopPropagation()}
@@ -148,9 +158,18 @@ export default function MobileNavbar() {
           </Box>
 
           {/* Mobile Title and Version */}
-          <div onClick={goHome}>
+          <Link
+            to="/"
+            aria-label="Apollon home"
+            style={{
+              color: "inherit",
+              font: "inherit",
+              cursor: "pointer",
+              textDecoration: "none",
+            }}
+          >
             <BrandAndVersion />
-          </div>
+          </Link>
 
           <ThemeSwitcherMenu />
         </Box>

@@ -1,12 +1,13 @@
-import React, { useEffect, useRef, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import {
-  ApollonEditor,
+  Apollon,
   ApollonMode,
   ApollonView,
-  Locale,
   UMLDiagramType,
-  ApollonOptions,
-} from "@tumaet/apollon"
+  ApollonEditor,
+  collabColorFromName,
+  randomCollabName,
+} from "@tumaet/apollon/react"
 import { useEditorContext } from "@/contexts"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import {
@@ -21,8 +22,9 @@ import {
 } from "@/hooks"
 import { FeedbackBoxes } from "@/components/FeedbackBoxes"
 import { useShallow } from "zustand/shallow"
-import { log } from "@/logger"
 import { AssessmentDataBox } from "@/components/playground/AssessmentDataBox"
+import { CollapsibleSidebar } from "@/components/playground/CollapsibleSidebar"
+import { connectPlaygroundCollaboration } from "@/components/playground/connectPlaygroundCollaboration"
 
 const UMLDiagramTypes = Object.values(UMLDiagramType)
 
@@ -35,7 +37,6 @@ export const ApollonPlayground: React.FC = () => {
   const exportAsPNG = useExportAsPNG()
   const exportAsJSON = useExportAsJSON()
   const exportAsPDF = useExportAsPDF()
-  const containerRef = useRef<HTMLDivElement | null>(null)
   const diagram = usePersistenceModelStore(
     (store) => store.models[PlaygroundDefaultModel.id]
   )
@@ -46,46 +47,47 @@ export const ApollonPlayground: React.FC = () => {
     }))
   )
 
-  const [apollonOptions, setApollonOptions] = useState<ApollonOptions>({
-    mode: ApollonMode.Modelling,
-    availableViews: [ApollonView.Modelling],
-    locale: Locale.en,
-    readonly: false,
-    debug: false,
-    scrollLock: false,
+  const [mode, setMode] = useState<ApollonMode>(ApollonMode.Modelling)
+  const [readonly, setReadonly] = useState(false)
+  const [scrollLock, setScrollLock] = useState(false)
+  const [diagramType, setDiagramType] = useState<UMLDiagramType>(
+    diagram.model.type as UMLDiagramType
+  )
+  const [highlightEnabled, setHighlightEnabled] = useState(false)
+  const [debug, setDebug] = useState(false)
+  const [collaborationViewportTest, setCollaborationViewportTest] =
+    useState(false)
+  const [controlsSidebarOpen, setControlsSidebarOpen] = useState(true)
+  const [testSidebarOpen, setTestSidebarOpen] = useState(true)
+  const [collaborationUser] = useState(() => {
+    const name = randomCollabName()
+    return { name, color: collabColorFromName(name) }
   })
+
+  const availableViews = useMemo(
+    () =>
+      highlightEnabled
+        ? [ApollonView.Modelling, ApollonView.Highlight]
+        : [ApollonView.Modelling],
+    [highlightEnabled]
+  )
+
+  const mountKey = useMemo(
+    () =>
+      `${diagramType}|${highlightEnabled}|${debug}|${collaborationViewportTest}`,
+    [diagramType, highlightEnabled, debug, collaborationViewportTest]
+  )
 
   useEffect(() => {
     setCurrentModelId(playgroundModelId)
-  }, [])
+  }, [setCurrentModelId])
 
-  useEffect(() => {
-    if (containerRef.current) {
-      const createApollonOptions: ApollonOptions = {
-        ...apollonOptions,
-        model: diagram.model,
-      }
-      const instance = new ApollonEditor(
-        containerRef.current,
-        createApollonOptions
-      )
-
-      instance.subscribeToModelChange((model) => {
-        updateModel(model)
-      })
-
-      instance.subscribeToAssessmentSelection((selectedElements) => {
-        setAssessmentSelectedElements(selectedElements)
-      })
-
-      setEditor(instance)
-
-      return () => {
-        log.debug("disposing instance")
-        instance.destroy()
-      }
-    }
-  }, [apollonOptions])
+  const defaultModel = useMemo(
+    () => ({ ...diagram.model, type: diagramType }),
+    // Intentional: re-read store on each remount keyed by mountKey.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [mountKey]
+  )
 
   return (
     <div
@@ -96,23 +98,21 @@ export const ApollonPlayground: React.FC = () => {
         height: "100%",
       }}
     >
-      <div className="flex flex-col p-4 gap-2 overflow-scroll w-[300px]  bg-[var(--apollon-background-variant)] text-[var(--apollon-primary-contrast)]">
+      <CollapsibleSidebar
+        side="left"
+        width={300}
+        surface="variant"
+        label="playground controls"
+        testId="playground-controls-sidebar"
+        open={controlsSidebarOpen}
+        onToggle={() => setControlsSidebarOpen((open) => !open)}
+      >
         <div>
           <label className="font-semibold ">Select Diagram Type</label>
           <select
             className="border-2 border-gray-400 p-1 rounded-md flex w-[200px]"
-            onChange={(e) => {
-              const selectedType = e.target.value as UMLDiagramType
-              const newModel = {
-                ...diagram.model,
-                type: selectedType,
-              }
-              setApollonOptions((prev) => ({
-                ...prev,
-                type: selectedType,
-                model: newModel,
-              }))
-            }}
+            value={diagramType}
+            onChange={(e) => setDiagramType(e.target.value as UMLDiagramType)}
           >
             {UMLDiagramTypes.map((type) => (
               <option key={type} value={type}>
@@ -122,30 +122,11 @@ export const ApollonPlayground: React.FC = () => {
           </select>
         </div>
         <div>
-          <label className="font-semibold ">Language</label>
-          <select
-            className="border-2 border-gray-400 p-1 rounded-md flex w-[200px]"
-            onChange={(e) => {
-              const selectedLocale = e.target.value as Locale
-              log.debug("DEBUG selectedLocale", selectedLocale)
-            }}
-          >
-            <option value={Locale.en}>English</option>
-            <option value={Locale.de}>German</option>
-          </select>
-        </div>
-        <div>
           <label className="font-semibold ">Mode</label>
           <select
-            value={apollonOptions.mode}
+            value={mode}
             className="border-2 border-gray-400 p-1 rounded-md flex w-[200px] "
-            onChange={(e) => {
-              const selectedMode = e.target.value as ApollonMode
-              setApollonOptions((prev) => ({
-                ...prev!,
-                mode: selectedMode,
-              }))
-            }}
+            onChange={(e) => setMode(e.target.value as ApollonMode)}
           >
             <option value={ApollonMode.Assessment}>Assessment</option>
             <option value={ApollonMode.Exporting}>Exporting</option>
@@ -153,17 +134,12 @@ export const ApollonPlayground: React.FC = () => {
           </select>
         </div>
 
-        {apollonOptions.mode === ApollonMode.Assessment && (
+        {mode === ApollonMode.Assessment && (
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
-              checked={apollonOptions.debug}
-              onChange={(event) => {
-                setApollonOptions((prev) => ({
-                  ...prev!,
-                  debug: event.target.checked,
-                }))
-              }}
+              checked={debug}
+              onChange={(event) => setDebug(event.target.checked)}
             />
             <label className="font-semibold">Debug Mode for See feedback</label>
           </div>
@@ -172,13 +148,8 @@ export const ApollonPlayground: React.FC = () => {
         <div className="flex items-center gap-2">
           <input
             type="checkbox"
-            checked={apollonOptions.readonly}
-            onChange={(event) => {
-              setApollonOptions((prev) => ({
-                ...prev!,
-                readonly: event.target.checked,
-              }))
-            }}
+            checked={readonly}
+            onChange={(event) => setReadonly(event.target.checked)}
           />
           <label className="font-semibold">Readonly</label>
         </div>
@@ -186,13 +157,8 @@ export const ApollonPlayground: React.FC = () => {
         <div className="flex items-center gap-2">
           <input
             type="checkbox"
-            checked={apollonOptions.scrollLock}
-            onChange={(event) => {
-              setApollonOptions((prev) => ({
-                ...prev!,
-                scrollLock: event.target.checked,
-              }))
-            }}
+            checked={scrollLock}
+            onChange={(event) => setScrollLock(event.target.checked)}
           />
           <label className="font-semibold">Scroll Lock</label>
         </div>
@@ -200,26 +166,41 @@ export const ApollonPlayground: React.FC = () => {
         <div className="flex items-center gap-2">
           <input
             type="checkbox"
-            checked={
-              apollonOptions.availableViews?.includes(ApollonView.Highlight) ??
-              false
-            }
-            onChange={(event) => {
-              setApollonOptions((prev) => ({
-                ...prev!,
-                availableViews: event.target.checked
-                  ? [ApollonView.Modelling, ApollonView.Highlight]
-                  : [ApollonView.Modelling],
-              }))
-            }}
+            checked={highlightEnabled}
+            onChange={(event) => setHighlightEnabled(event.target.checked)}
           />
           <label className="font-semibold">Enable Highlight View</label>
         </div>
 
-        {apollonOptions.mode === ApollonMode.Assessment &&
-          !apollonOptions.readonly && <FeedbackBoxes />}
+        <div className="flex items-center gap-2">
+          <input
+            id="collaboration-viewport-test"
+            type="checkbox"
+            checked={collaborationViewportTest}
+            onChange={(event) => {
+              const enabled = event.target.checked
+              setCollaborationViewportTest(enabled)
+              if (enabled) setTestSidebarOpen(true)
+            }}
+          />
+          <label
+            className="font-semibold"
+            htmlFor="collaboration-viewport-test"
+          >
+            Collaboration viewport test
+          </label>
+        </div>
 
-        <button onClick={exportAsSvg} className="border p-1 rounded-sm">
+        {collaborationViewportTest && (
+          <p className="m-0 text-xs">
+            Local user: {collaborationUser.name}. Open a second playground tab
+            and enable this test there to exchange live cursors.
+          </p>
+        )}
+
+        {mode === ApollonMode.Assessment && !readonly && <FeedbackBoxes />}
+
+        <button onClick={() => exportAsSvg()} className="border p-1 rounded-sm">
           Export as SVG
         </button>
         <button
@@ -244,13 +225,73 @@ export const ApollonPlayground: React.FC = () => {
         <AssessmentDataBox
           assessmentSelectedElements={assessmentSelectedElements}
         />
-      </div>
+      </CollapsibleSidebar>
 
-      <div
-        id="playground"
-        style={{ display: "flex", flex: 1, height: "100%" }}
-        ref={containerRef}
-      />
+      <div className="flex h-full min-w-0 flex-1">
+        <Apollon
+          key={mountKey}
+          defaultModel={defaultModel}
+          availableViews={availableViews}
+          collaboration={
+            collaborationViewportTest
+              ? {
+                  enabled: true,
+                  user: collaborationUser,
+                  showPresence: true,
+                  showCursors: true,
+                  showSelectionHighlights: true,
+                  showFollow: true,
+                }
+              : undefined
+          }
+          debug={debug}
+          mode={mode}
+          readonly={readonly}
+          scrollLock={scrollLock}
+          style={{ display: "flex", flex: 1, minWidth: 0, height: "100%" }}
+          onMount={(editor: ApollonEditor) => {
+            setEditor(editor)
+            const disconnectCollaboration = collaborationViewportTest
+              ? connectPlaygroundCollaboration(editor, {
+                  document: ApollonEditor.generateInitialSyncMessage(),
+                  awareness:
+                    ApollonEditor.generateInitialAwarenessSyncMessage(),
+                })
+              : () => {}
+            const modelSubId = editor.subscribeToModelChange((model) =>
+              updateModel(model)
+            )
+            const assessmentSubId = editor.subscribeToAssessmentSelection(
+              (selectedElements) =>
+                setAssessmentSelectedElements(selectedElements)
+            )
+            return () => {
+              disconnectCollaboration()
+              editor.unsubscribe(modelSubId)
+              editor.unsubscribe(assessmentSubId)
+              setEditor(undefined)
+            }
+          }}
+        />
+        {collaborationViewportTest && (
+          <CollapsibleSidebar
+            side="right"
+            width={320}
+            label="test sidebar"
+            testId="collaboration-viewport-sidebar"
+            open={testSidebarOpen}
+            onToggle={() => setTestSidebarOpen((open) => !open)}
+          >
+            <h2 className="m-0 text-base font-semibold">Problem statement</h2>
+            <p className="text-sm leading-normal">
+              This inline panel simulates host application chrome that reduces
+              the available modeling width. Open this playground in two tabs,
+              enable the collaboration viewport test in both, and collapse this
+              panel in only one tab.
+            </p>
+          </CollapsibleSidebar>
+        )}
+      </div>
     </div>
   )
 }

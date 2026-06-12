@@ -117,6 +117,8 @@ describe("versionStoreBootstrap", () => {
             assessments: {},
           } as never,
           lastModifiedAt: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
+          favorite: false,
         },
       },
       currentModelId: DIAGRAM_ID,

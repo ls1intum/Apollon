@@ -1,6 +1,6 @@
 import { createClient, type RedisClientType } from "redis"
 import { gzipSync, gunzipSync } from "node:zlib"
-import { logger } from "./logger"
+import { logger } from "./logger.js"
 
 // ---------------------------------------------------------------------------
 // Client

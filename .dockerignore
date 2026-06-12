@@ -1,6 +1,7 @@
 .git
 .github
 .gitignore
+.husky
 .context
 .env
 .env.*
@@ -16,15 +17,29 @@ test-results/
 *.log
 
 node_modules/
+**/node_modules/
 dist/
+**/dist/
 
-standalone/webapp/dist
-standalone/webapp/node_modules
+**/tests/
+**/__tests__/
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/playwright.config.ts
+**/vitest.config.ts
+
 standalone/webapp/android
 standalone/webapp/ios
 
-standalone/server/dist
-standalone/server/node_modules
+# Keep the vscode-extension package.json files (pnpm install reads them
+# as workspace manifests), but drop the source.
+vscode-extension/src
+vscode-extension/menu/src
+vscode-extension/editor/src
+vscode-extension/menu/dist
+vscode-extension/editor/dist
+vscode-extension/dist
 
-library/node_modules
-library/dist
+scripts/
+.changeset/

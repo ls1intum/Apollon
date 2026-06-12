@@ -1,26 +1,37 @@
-import { test, expect } from "@playwright/test"
-import {
-  injectFixtureIntoLocalStorage,
-  waitForCanvasReady,
-} from "../helpers/canvas"
+import { test, expect, type Page } from "@playwright/test"
+import { waitForCanvasReady } from "../helpers/canvas"
 
 /**
- * E2E coverage for issue #670 — local-mode version history.
+ * E2E coverage for issue #670 — local-mode version history, updated for the
+ * post-#662 routing where `/` is the diagram gallery and the local editor
+ * lives at `/local/:id`.
  *
- * Run against a real Chromium so we exercise actual IndexedDB (the unit
- * suite uses fake-indexeddb). Server-down by design: local mode does not
- * touch the network.
+ * Runs against real Chromium so we exercise actual IndexedDB (the unit suite
+ * uses fake-indexeddb). Server-down by design: local mode never touches the
+ * network.
  *
- * Covers the high-value journeys:
- *   - Empty drawer renders the local-specific empty CTA on /
- *   - "Save version" composer commits a row that survives reload
- *   - Restoring with a clean canvas writes a "Before restoring …" auto-row
+ * Covers the high-value journeys that the #662 merge put at risk:
+ *   - Version-history button is visible on /local/:id and opens the drawer
+ *   - "Save version" commits a row that survives reload (URL stays on
+ *     /local/:id; the row is read back from IndexedDB)
+ *   - Save is disabled on an empty diagram
  *   - Permalink ("Copy link") menu entry is hidden in local mode
- *   - Save button is disabled on an empty diagram
+ *   - Previewing a saved version overlays the read-only banner, and exiting
+ *     returns to the editable composer
+ *   - Opening from the gallery lands on /local/:id with a working drawer
+ *   - /local/:unknown renders the not-found page back to the gallery
+ *
+ * The restore flow (auto-snapshot "Before restoring …" row, confirm-when-dirty
+ * modal) is covered exhaustively by the unit suite
+ * (services/versionRepository/__tests__/LocalVersionRepository.test.ts) since
+ * it depends on structural-fingerprint divergence that is awkward to drive
+ * reliably through the canvas in a browser.
  */
 
+const LOCAL_ID = "local-test-uuid"
+
 const LOCAL_FIXTURE = {
-  id: "local-test-uuid",
+  id: LOCAL_ID,
   version: "4.0.0",
   title: "E2E Local",
   type: "ClassDiagram",
@@ -39,36 +50,121 @@ const LOCAL_FIXTURE = {
   assessments: {},
 }
 
-test.describe("Local version history (#670)", () => {
-  test.beforeEach(async ({ page }) => {
-    // Wipe the version-history IDB once per test, on first navigation
-    // only. `addInitScript` runs on every page load (incl. reload), so
-    // gate via sessionStorage to avoid erasing saved rows mid-test.
-    await page.addInitScript(() => {
-      if (sessionStorage.getItem("__e2e_idb_wiped__")) return
-      sessionStorage.setItem("__e2e_idb_wiped__", "1")
-      indexedDB.deleteDatabase("apollon-versions")
-    })
+/**
+ * Seed a single local diagram into the persistence store (matching the
+ * post-#662 PersistentModelEntity shape with createdAt/favorite) BEFORE the
+ * first navigation. `addInitScript` runs on every load incl. reload, so the
+ * row is stable across the test.
+ */
+function seedLocalDiagram(
+  page: Page,
+  model: Record<string, unknown> = LOCAL_FIXTURE
+) {
+  const now = new Date().toISOString()
+  const storeValue = JSON.stringify({
+    state: {
+      models: {
+        [model.id as string]: {
+          id: model.id,
+          model,
+          lastModifiedAt: now,
+          createdAt: now,
+          favorite: false,
+        },
+      },
+      currentModelId: null,
+    },
+    version: 1,
   })
+  return page.addInitScript((val) => {
+    localStorage.setItem("persistenceModelStore", val)
+  }, storeValue)
+}
 
-  test("History button is visible on / and opens the drawer", async ({
+const historyButton = (page: Page) =>
+  page.getByRole("button", { name: /Version history/i })
+const drawer = (page: Page) =>
+  page.getByRole("complementary", { name: /Version history/i })
+const composer = (page: Page) =>
+  page.getByRole("textbox", { name: /Describe this version/i })
+const saveVersionButton = (page: Page) =>
+  page.getByRole("button", { name: "Save version", exact: true })
+
+/**
+ * Open the version drawer idempotently. `drawerOpenByDiagram` is persisted by
+ * the version store, so after a reload the drawer is ALREADY open — clicking
+ * the toggle again would close it. Only click when it isn't visible yet.
+ */
+async function ensureDrawerOpen(page: Page) {
+  if (!(await drawer(page).isVisible())) {
+    await historyButton(page).click()
+  }
+  await expect(drawer(page)).toBeVisible()
+}
+
+async function openLocalEditor(page: Page, id = LOCAL_ID) {
+  await page.goto(`/local/${id}`)
+  await waitForCanvasReady(page)
+}
+
+/**
+ * Wait until the version write has actually COMMITTED to IndexedDB (not just
+ * the optimistic store row). `createVersion` renders the row before its
+ * awaited IDB transaction resolves, so a reload fired off the optimistic row
+ * could race the commit. Polling real IDB both removes that flake and proves
+ * the version is durably persisted.
+ */
+async function waitForVersionsPersisted(page: Page) {
+  await expect
+    .poll(
+      () =>
+        page.evaluate(
+          (dbName) =>
+            new Promise<number>((resolve) => {
+              const req = indexedDB.open(dbName)
+              req.onsuccess = () => {
+                const db = req.result
+                if (!db.objectStoreNames.contains("versions")) {
+                  db.close()
+                  resolve(0)
+                  return
+                }
+                const countReq = db
+                  .transaction("versions", "readonly")
+                  .objectStore("versions")
+                  .count()
+                countReq.onsuccess = () => {
+                  resolve(countReq.result)
+                  db.close()
+                }
+                countReq.onerror = () => {
+                  resolve(0)
+                  db.close()
+                }
+              }
+              req.onerror = () => resolve(0)
+            }),
+          "apollon-versions"
+        ),
+      { timeout: 10_000 }
+    )
+    .toBeGreaterThan(0)
+}
+
+test.describe("Local version history (#670, /local/:id routing)", () => {
+  // No IDB wipe needed: Playwright gives each test an isolated browser
+  // context, so `apollon-versions` starts empty. (A reload-surviving wipe via
+  // addInitScript is actively harmful — it re-runs on page.reload() and erases
+  // the row the persistence test is verifying.)
+
+  test("history button is visible on /local/:id and opens the drawer", async ({
     page,
   }) => {
-    await injectFixtureIntoLocalStorage(page, LOCAL_FIXTURE)
-    await page.goto("/")
-    await waitForCanvasReady(page)
+    await seedLocalDiagram(page)
+    await openLocalEditor(page)
 
-    const historyButton = page.getByRole("button", {
-      name: /Version history/i,
-    })
-    await expect(historyButton).toBeVisible()
-    await historyButton.click()
-
-    // The drawer (sidebar on desktop, bottom-sheet on mobile) is
-    // identified by `aria-label="Version history"`.
-    await expect(
-      page.getByRole("complementary", { name: /Version history/i })
-    ).toBeVisible()
+    await expect(historyButton(page)).toBeVisible()
+    await ensureDrawerOpen(page)
 
     // Local-specific empty-state CTA.
     await expect(
@@ -76,63 +172,102 @@ test.describe("Local version history (#670)", () => {
     ).toBeVisible()
   })
 
-  test("Save composer commits a row that survives reload", async ({ page }) => {
-    await injectFixtureIntoLocalStorage(page, LOCAL_FIXTURE)
-    await page.goto("/")
-    await waitForCanvasReady(page)
+  test("save commits a row that survives reload", async ({ page }) => {
+    await seedLocalDiagram(page)
+    await openLocalEditor(page)
 
-    await page.getByRole("button", { name: /Version history/i }).click()
-    const composer = page.getByRole("textbox", {
-      name: /Describe this version/i,
-    })
-    await composer.fill("v1: initial")
-    await page
-      .getByRole("button", { name: "Save version", exact: true })
-      .click()
-
-    // Row appears with the description.
+    await ensureDrawerOpen(page)
+    await composer(page).fill("v1: initial")
+    await saveVersionButton(page).click()
     await expect(page.getByText("v1: initial").first()).toBeVisible()
 
-    // Reload — IDB persists across page lifetime.
+    // Reload — the row must be read back from IndexedDB. URL stays /local/:id.
+    // Wait for the IDB commit first so the reload doesn't race the write.
+    await waitForVersionsPersisted(page)
     await page.reload()
+    await expect(page).toHaveURL(new RegExp(`/local/${LOCAL_ID}$`))
     await waitForCanvasReady(page)
-    await page.getByRole("button", { name: /Version history/i }).click()
+    await ensureDrawerOpen(page)
     await expect(page.getByText("v1: initial").first()).toBeVisible()
   })
 
-  test("Save is disabled on an empty diagram", async ({ page }) => {
-    const emptyFixture = { ...LOCAL_FIXTURE, nodes: [], edges: [] }
-    await injectFixtureIntoLocalStorage(page, emptyFixture)
-    await page.goto("/")
+  test("save is disabled on an empty diagram", async ({ page }) => {
+    await seedLocalDiagram(page, { ...LOCAL_FIXTURE, nodes: [], edges: [] })
+    await page.goto(`/local/${LOCAL_ID}`)
     await waitForCanvasReady(page, false)
 
-    await page.getByRole("button", { name: /Version history/i }).click()
-    const saveBtn = page.getByRole("button", {
-      name: "Save version",
-      exact: true,
-    })
-    await expect(saveBtn).toBeDisabled()
+    await ensureDrawerOpen(page)
+    await expect(saveVersionButton(page)).toBeDisabled()
   })
 
-  test("Permalink menu entry is absent in local mode", async ({ page }) => {
-    await injectFixtureIntoLocalStorage(page, LOCAL_FIXTURE)
-    await page.goto("/")
-    await waitForCanvasReady(page)
+  test("permalink menu entry is absent in local mode", async ({ page }) => {
+    await seedLocalDiagram(page)
+    await openLocalEditor(page)
 
-    await page.getByRole("button", { name: /Version history/i }).click()
-    await page
-      .getByRole("textbox", { name: /Describe this version/i })
-      .fill("v1")
-    await page
-      .getByRole("button", { name: "Save version", exact: true })
-      .click()
-    await expect(page.getByText("v1").first()).toBeVisible()
+    await ensureDrawerOpen(page)
+    await composer(page).fill("v1")
+    await saveVersionButton(page).click()
+    await expect(page.getByText("v1", { exact: true }).first()).toBeVisible()
 
-    // Open the row's kebab menu.
     await page.getByRole("button", { name: /Version actions/i }).click()
-    // "Copy link to this version" is the permalink item — must be hidden.
     await expect(
       page.getByRole("menuitem", { name: /Copy link/i })
     ).toHaveCount(0)
+  })
+
+  test("previewing a saved version overlays the banner, and exit restores the composer", async ({
+    page,
+  }) => {
+    await seedLocalDiagram(page)
+    await openLocalEditor(page)
+
+    await ensureDrawerOpen(page)
+    await composer(page).fill("snapshot one")
+    await saveVersionButton(page).click()
+    const row = page.getByText("snapshot one").first()
+    await expect(row).toBeVisible()
+
+    // Clicking a saved row enters read-only preview — the banner's "Exit
+    // preview" affordance appears and the composer is hidden.
+    await row.click()
+    const exitPreview = page.getByRole("button", { name: /Exit preview/i })
+    await expect(exitPreview).toBeVisible()
+    await expect(composer(page)).toHaveCount(0)
+
+    // Exiting preview returns to the editable composer.
+    await exitPreview.click()
+    await expect(exitPreview).toHaveCount(0)
+    await expect(composer(page)).toBeVisible()
+  })
+
+  test("opening from the gallery lands on /local/:id with a working drawer", async ({
+    page,
+  }) => {
+    await seedLocalDiagram(page)
+    await page.goto("/")
+    // Open the card -> local editor.
+    await page.getByRole("link", { name: /Open E2E Local/i }).click()
+    await expect(page).toHaveURL(new RegExp(`/local/${LOCAL_ID}$`))
+    await waitForCanvasReady(page)
+
+    await expect(historyButton(page)).toBeVisible()
+    await ensureDrawerOpen(page)
+  })
+
+  test("/local/:unknown shows the not-found page back to the gallery", async ({
+    page,
+  }) => {
+    await seedLocalDiagram(page)
+    await page.goto("/local/does-not-exist")
+
+    await expect(page.getByText(/Diagram not found/i)).toBeVisible()
+    // Scope to the page body — the editor navbar's BackNav also has an "All
+    // diagrams" link, so the bare role query is ambiguous.
+    const back = page
+      .getByTestId("editor-area")
+      .getByRole("link", { name: /All diagrams/i })
+    await expect(back).toBeVisible()
+    await back.click()
+    await expect(page).toHaveURL(/\/$/)
   })
 })

@@ -1,9 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+// Side-effect import: installs jsdom + browser-API shims before any code
+// that touches `window`, `document`, or the apollon library.
+import "./jsdom-shims.js"
 import { parentPort } from "node:worker_threads"
-import pdfMake from "pdfmake/build/pdfmake"
-import pdfFonts from "pdfmake/build/vfs_fonts"
+import pdfMake from "pdfmake/build/pdfmake.js"
+import pdfFonts from "pdfmake/build/vfs_fonts.js"
 import type { UMLModel } from "@tumaet/apollon"
-import { ConversionService } from "../services/conversion-service"
+import { ConversionService } from "../services/conversion-service.js"
 
 type WorkerRequest = {
   id: number
@@ -22,40 +24,27 @@ type WorkerResponse =
       error: string
     }
 
-async function renderPdf(model: UMLModel): Promise<Buffer> {
+async function renderPdf(model: UMLModel): Promise<Uint8Array> {
   const conversionService = new ConversionService()
   const { svg, clip } = await conversionService.convertToSvg(model)
   const { width, height } = clip
 
-  pdfMake.vfs = pdfFonts.vfs
+  // pdfmake 0.3.x registers fonts via addVirtualFileSystem(). The 0.2.x
+  // `pdfMake.vfs = ...` assignment is a silent no-op, leaving every Roboto
+  // face unregistered so svg-to-pdfkit fails as soon as the SVG needs one.
+  // The 0.3.x vfs_fonts default export is the vfs map itself (no `.vfs`).
+  pdfMake.addVirtualFileSystem(pdfFonts)
 
   const doc = pdfMake.createPdf({
-    content: [
-      {
-        svg,
-      },
-    ],
+    content: [{ svg }],
     pageSize: { width, height },
     pageMargins: 0,
   })
 
-  return await new Promise<Buffer>((resolve, reject) => {
-    void (doc as any).getStream().then((stream: NodeJS.ReadableStream) => {
-      const chunks: Buffer[] = []
-
-      stream.on("data", (chunk: Buffer | string) => {
-        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
-      })
-
-      stream.on("end", () => {
-        resolve(Buffer.concat(chunks))
-      })
-
-      stream.on("error", reject)
-      stream.resume()
-      ;(stream as { end?: () => void }).end?.()
-    }, reject)
-  })
+  // pdfmake 0.3.x dropped the getBuffer(callback) overload (the missing
+  // callback was this worker's other 0.2.x bug) for a Promise that resolves
+  // to a browserified Uint8Array, not a Node Buffer — hence the return type.
+  return await doc.getBuffer()
 }
 
 parentPort?.on("message", async (message: WorkerRequest) => {

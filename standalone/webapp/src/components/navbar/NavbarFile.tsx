@@ -47,15 +47,10 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
     setSubMenuAnchorEl(event.currentTarget)
   }, [])
 
-  const handleNewFile = useCallback(() => {
+  const handleNewDiagram = useCallback(() => {
     openModal("NEW_DIAGRAM")
     closeMainMenu()
   }, [openModal, closeMainMenu])
-
-  const handleStartFromTemplate = useCallback(() => {
-    openModal("NEW_DIAGRAM_FROM_TEMPLATE")
-    closeMainMenu()
-  }, [closeMainMenu])
 
   return (
     <>
@@ -85,24 +80,10 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
           "aria-labelledby": "file-menu-button",
         }}
       >
-        <MenuItem onClick={handleNewFile}>New File</MenuItem>
-        <MenuItem onClick={handleStartFromTemplate}>
-          Start from Template
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            openModal("LOAD_DIAGRAM")
-            closeMainMenu()
-          }}
-        >
-          Load Diagram
-        </MenuItem>
-        {/* Version history lives in its own dedicated nav button
-            (`<VersionHistoryButton>`), not here — it had been duplicated
-            in the File menu for discoverability, but the standalone
-            button is more visible and hosting it twice meant the menu
-            entry felt like it "did nothing" from the user's POV
-            (clicking either toggles the same drawer). One source. */}
+        <MenuItem onClick={handleNewDiagram}>New Diagram</MenuItem>
+        {/* Templates are a tab in the New Diagram dialog, and the dashboard is
+            the diagram loader — so no "Start from Template"/"Load Diagram" here.
+            Version history has its own VersionHistoryButton. */}
         <JsonFileImportButton close={closeMainMenu} />
         <MenuItem
           onClick={openSubMenu}

@@ -92,7 +92,6 @@ export function LegalPage({
           // Shipping the disclaimer in production violates § 5 DDG and Art. 13
           // GDPR. The on-page banner alone is not enough because operators
           // rarely open the page themselves.
-          // eslint-disable-next-line no-console
           console.warn(
             `[legal] Disclaimer fallback served for page=${page}. Configure LEGAL_PROFILE or mount /legal-overrides/. See docs/admin/legal-pages.`
           )
@@ -218,16 +217,10 @@ export function LegalPage({
                 overflowX: "auto",
               },
               "& blockquote": {
-                borderLeft: "4px solid var(--apollon-primary)",
-                bgcolor: "var(--apollon-background-variant)",
+                borderLeft: "4px solid var(--apollon-gray)",
                 pl: 2,
-                pr: 2,
-                py: 1.5,
                 my: 2,
-                borderRadius: 1,
-                color: "var(--apollon-primary-contrast)",
-                "& > :first-of-type": { mt: 0 },
-                "& > :last-child": { mb: 0 },
+                color: "var(--apollon-gray)",
               },
               "& hr": {
                 border: "none",

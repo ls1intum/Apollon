@@ -1,4 +1,4 @@
-import { Request, Response } from "express"
+import type { Request, Response } from "express"
 import { Worker } from "node:worker_threads"
 import path from "node:path"
 import type { UMLModel } from "@tumaet/apollon"
@@ -55,10 +55,15 @@ export class ConversionResource {
   }
 
   private createWorker() {
-    const workerPath = path.resolve(
-      __dirname,
-      "../workers/pdf-conversion-worker-thread.js"
-    )
+    // Default resolves the compiled worker next to this module. Overridable so
+    // tests (where import.meta.dirname points at src/, with no built .js
+    // alongside) can point at the dist artifact.
+    const workerPath =
+      process.env.CONVERTER_WORKER_PATH ??
+      path.resolve(
+        import.meta.dirname,
+        "../workers/pdf-conversion-worker-thread.js"
+      )
 
     const worker = new Worker(workerPath, {
       env: {

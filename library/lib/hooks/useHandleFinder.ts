@@ -14,11 +14,11 @@ export const useHandleFinder = () => {
   const { screenToFlowPosition, getIntersectingNodes, getInternalNode } =
     useReactFlow()
 
-  const findBestHandle = useCallback(
-    (upEvent: PointerEvent): HandleFinderResult => {
+  const findBestHandleAtClientPosition = useCallback(
+    (clientX: number, clientY: number): HandleFinderResult => {
       const dropPosition = screenToFlowPosition({
-        x: upEvent.clientX,
-        y: upEvent.clientY,
+        x: clientX,
+        y: clientY,
       })
 
       const intersectingNodes = getIntersectingNodes({
@@ -87,5 +87,11 @@ export const useHandleFinder = () => {
     [screenToFlowPosition, getIntersectingNodes, getInternalNode]
   )
 
-  return { findBestHandle }
+  const findBestHandle = useCallback(
+    (upEvent: PointerEvent): HandleFinderResult =>
+      findBestHandleAtClientPosition(upEvent.clientX, upEvent.clientY),
+    [findBestHandleAtClientPosition]
+  )
+
+  return { findBestHandle, findBestHandleAtClientPosition }
 }

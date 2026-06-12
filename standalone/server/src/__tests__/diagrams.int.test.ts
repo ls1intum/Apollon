@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from "vitest"
 import request from "supertest"
-import { buildApp } from "../http/app"
-import { loadConfig } from "../config"
-import { getRedis } from "./setup"
+import { buildApp } from "../http/app.js"
+import { loadConfig } from "../config.js"
+import { getRedis } from "./setup.js"
 
 let app: ReturnType<typeof buildApp>
 

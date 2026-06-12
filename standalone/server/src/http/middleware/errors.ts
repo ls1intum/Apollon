@@ -7,9 +7,9 @@ import {
   ReconnectStrategyError,
   SocketClosedUnexpectedlyError,
 } from "redis"
-import { ApiError } from "../errors"
-import type { ApiErrorBody } from "../../types"
-import { logger } from "../../logger"
+import { ApiError } from "../errors.js"
+import type { ApiErrorBody } from "../../types.js"
+import { logger } from "../../logger.js"
 
 /**
  * Maps ApiError → typed error body. Falls back to 500 INTERNAL for unknown

@@ -2,7 +2,7 @@ import { Button, Tooltip } from "@mui/material"
 import SaveAltIcon from "@mui/icons-material/SaveAlt"
 import { v4 as uuidv4 } from "uuid"
 import { toast } from "react-toastify"
-import { useNavigate } from "react-router"
+import { useLocation, useNavigate } from "react-router"
 import type { UMLModel } from "@tumaet/apollon"
 import { useEditorContext } from "@/contexts"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
@@ -25,16 +25,20 @@ interface Props {
  * user's own work. Explicit user action — no silent caching, no GDPR
  * surface (the user copies their own viewable content on their own device).
  *
- * Hidden when there's no URL diagramId (i.e. on `/` already) — the local
- * Save / Save-version flows already cover that case.
+ * Only rendered on the shared/collab editor (`/shared/:id`). On `/local/:id`
+ * the diagram already lives in `usePersistenceModelStore`, and on `/` (the
+ * gallery) there is no editor — the local Save / Save-version flows cover
+ * those cases. `useDiagramIdFromPath()` returns an id for BOTH `/local/:id`
+ * and `/shared/:id`, so the pathname guard is what scopes this to shared.
  */
 export const SaveLocalCopyButton = ({ color = secondary, onAfter }: Props) => {
   const diagramId = useDiagramIdFromPath()
+  const { pathname } = useLocation()
   const { editor } = useEditorContext()
   const createModel = usePersistenceModelStore((s) => s.createModel)
   const navigate = useNavigate()
 
-  if (!diagramId || !editor) return null
+  if (!diagramId || !editor || !pathname.startsWith("/shared/")) return null
 
   const handleClick = () => {
     try {
@@ -42,15 +46,14 @@ export const SaveLocalCopyButton = ({ color = secondary, onAfter }: Props) => {
       // `nodes`/`edges`/`assessments` referenced by both the live editor
       // model and the local copy, so subsequent edits in either would
       // corrupt the other. `structuredClone` is Baseline 2022.
-      const copy: UMLModel = { ...structuredClone(editor.model), id: uuidv4() }
+      const newId = uuidv4()
+      const copy: UMLModel = { ...structuredClone(editor.model), id: newId }
       createModel(copy)
       toast.success(t.saveLocalCopySuccess, { autoClose: 6000 })
-      // Mirrors `JsonFileImportButton` — navigate back to the local route
-      // so the user lands on the diagram they just saved.
-      navigate("/", {
-        replace: true,
-        state: { timeStapToCreate: Date.now() },
-      })
+      // Mirrors `JsonFileImportButton` — navigate to the new local route so
+      // the user lands on the diagram they just saved. `/` is now the
+      // gallery, so we route to `/local/<newId>` explicitly.
+      navigate(`/local/${newId}`, { replace: true })
     } catch (err) {
       log.error("Save a local copy failed", err as Error)
       toast.error(t.saveLocalCopyFailed)

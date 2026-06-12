@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it } from "vitest"
 import WebSocket from "ws"
 import { createServer } from "node:net"
-import { startRelayServer } from "../ws"
-import type { ControlEvent, Envelope } from "../types"
+import { startRelayServer } from "../ws.js"
+import type { ControlEvent, Envelope } from "../types.js"
 
 function getFreePort(): Promise<number> {
   return new Promise((resolve, reject) => {

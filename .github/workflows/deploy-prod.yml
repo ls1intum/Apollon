@@ -42,7 +42,12 @@ concurrency:
   group: deploy-production
   cancel-in-progress: false
 
-permissions: {}
+# The called deploy-docker-compose.yml jobs request contents:read + packages:read
+# (GHCR image existence check). A called reusable workflow cannot request more
+# than its caller grants, so an empty `{}` here fails the run at startup.
+permissions:
+  contents: read
+  packages: read
 
 jobs:
   deploy-db:
@@ -51,7 +56,7 @@ jobs:
     with:
       environment: Production
       docker-compose-file: "./docker/compose.db.yml"
-      main-image-name: ghcr.io/ls1intum/apollon/server
+      main-image-name: ls1intum/apollon/server
       image-tag: ${{ inputs.image-tag }}
       deployment-base-path: "/opt/apollon/db"
     secrets: inherit
@@ -62,7 +67,7 @@ jobs:
     with:
       environment: Production
       docker-compose-file: "./docker/compose.proxy.yml"
-      main-image-name: ghcr.io/ls1intum/apollon/server
+      main-image-name: ls1intum/apollon/server
       image-tag: ${{ inputs.image-tag }}
       deployment-base-path: "/opt/apollon/proxy"
     secrets: inherit
@@ -73,7 +78,7 @@ jobs:
     with:
       environment: Production
       docker-compose-file: "./docker/compose.app.yml"
-      main-image-name: ghcr.io/ls1intum/apollon/server
+      main-image-name: ls1intum/apollon/server
       image-tag: ${{ inputs.image-tag }}
       deployment-base-path: "/opt/apollon/app"
     secrets: inherit

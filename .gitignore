@@ -1,13 +1,8 @@
 # Node.js dependencies
 node_modules/
-pnpm-lock.yaml
 
 # Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 pnpm-debug.log*
-lerna-debug.log*
 *.log
 
 # Build artifacts
@@ -35,36 +30,45 @@ coverage/
 
 # OS-specific files
 Thumbs.db
-.DS_Store
 
-# Typescript
+# TypeScript
 *.tsbuildinfo
 
-# Testing-related
-coverage/
+# Testing artifacts
 jest-cache/
 jest-output/
 **/test-results/
 **/playwright-report/
 **/blob-report/
 
-# Monorepo specific
-standalone/*/node_modules/
-library/*/node_modules/
-standalone/*/dist/
-library/*/dist/
-
-# Lint and Prettier files
+# Lint and Prettier caches
 eslintcache
 .prettiercache
 
 library/stats.html
 
-# Capacitor generated mobile files
+# Capacitor native projects.
+# The iOS project at standalone/webapp/ios IS committed (Capacitor best
+# practice — it carries the bundle id, signing config and the legacy-migration
+# native plugin). Its own standalone/webapp/ios/.gitignore excludes the
+# regenerated artifacts (Pods/, App/App/public, DerivedData, generated config),
+# so only a stray root-level `cap add` scratch dir and the (uncommitted)
+# android project are ignored here.
 android/
-ios/
+/ios/
+
+# Fastlane
+**/fastlane/report.xml
+**/fastlane/README.md
+**/fastlane/test_output
+**/fastlane/screenshots
 
 # Capacitor generated icons
 icons/
 venv/
 .context/
+docs/.docusaurus/
+docs/build/
+
+# Local Claude Code agent state (rubrics, worktrees, lock files).
+.claude/

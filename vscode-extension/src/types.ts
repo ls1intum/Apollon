@@ -1,30 +1,7 @@
+import type { UMLDiagramType, UMLModel } from "@tumaet/apollon"
 import { uuid } from "./util"
 
-// Type definitions compatible with @tumaet/apollon
-export type UMLDiagramType =
-  | "ClassDiagram"
-  | "ObjectDiagram"
-  | "ActivityDiagram"
-  | "UseCaseDiagram"
-  | "CommunicationDiagram"
-  | "ComponentDiagram"
-  | "DeploymentDiagram"
-  | "PetriNet"
-  | "ReachabilityGraph"
-  | "SyntaxTree"
-  | "Flowchart"
-  | "BPMN"
-  | "Sfc"
-
-export type UMLModel = {
-  version: `4.${number}.${number}`
-  id: string
-  title: string
-  type: UMLDiagramType
-  nodes: unknown[]
-  edges: unknown[]
-  assessments: { [id: string]: unknown }
-}
+export type { UMLDiagramType, UMLModel }
 
 export type Diagram = {
   id: string

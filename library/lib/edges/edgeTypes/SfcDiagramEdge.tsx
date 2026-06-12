@@ -1,15 +1,12 @@
-import { BaseEdge } from "@xyflow/react"
-import { BaseEdgeProps, CommonEdgeElements } from "../GenericEdge"
+import { BaseEdgeProps, CommonEdgeElements, StepEdgeBody } from "../GenericEdge"
 import { useStepPathEdge } from "@/hooks/useStepPathEdge"
 import { useDiagramStore, usePopoverStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { useToolbar } from "@/hooks"
 import { useMemo, useRef } from "react"
-import { EDGES } from "@/constants"
 import { FeedbackDropzone } from "@/components/wrapper/FeedbackDropzone"
 import { AssessmentSelectableWrapper } from "@/components"
 import { getCustomColorsFromDataForEdge } from "@/utils/layoutUtils"
-import { EdgeInlineMarkers } from "@/components/svgs/edges/InlineMarker"
 
 function getParsedEdgeData(data: unknown): {
   isNegated: boolean
@@ -39,6 +36,7 @@ function getParsedEdgeData(data: unknown): {
   }
 }
 const crossbarLength = 20
+const sfcCenterHandleCollisionRadius = 24
 export const SfcDiagramEdge = ({
   id,
   type,
@@ -75,14 +73,19 @@ export const SfcDiagramEdge = ({
     edgeData,
     currentPath,
     overlayPath,
-    midpoints,
+    bendHandles,
+    isBendDragging,
+    draggingHandleSegmentIndex,
     hasInitialCalculation,
-    isReconnectingRef,
+    isReconnecting,
     markerEnd,
     markerStart,
     strokeDashArray,
     handlePointerDown,
+    sourcePoint,
+    targetPoint,
     isDiagramModifiable,
+    canEditEndpoint,
   } = useStepPathEdge({
     id,
     type,
@@ -98,7 +101,6 @@ export const SfcDiagramEdge = ({
     targetHandleId,
     data,
     allowMidpointDragging,
-    enableReconnection: true,
     enableStraightPath,
   })
 
@@ -106,108 +108,91 @@ export const SfcDiagramEdge = ({
   const { strokeColor, textColor } = getCustomColorsFromDataForEdge(data)
   const markerKey = `${id}-${markerStart ?? "none"}-${markerEnd ?? "none"}`
 
+  // The SFC transition bar marks the condition point ON the edge, so it sits
+  // exactly on the path middle (standard SFC notation) rather than being
+  // nudged off to the side. The center bend handle would sit under the bar, so
+  // it is the handle that yields: handles colliding with the bar are hidden
+  // (never all of them — an edge must keep at least one way to reshape it).
+  const annotationAnchor = edgeData.pathMiddlePosition
+
+  const visibleBendHandles = useMemo(() => {
+    if (!showBar) return bendHandles
+
+    const clear = bendHandles.filter(
+      (handle) =>
+        Math.hypot(
+          handle.position.x - annotationAnchor.x,
+          handle.position.y - annotationAnchor.y
+        ) > sfcCenterHandleCollisionRadius
+    )
+    return clear.length > 0 ? clear : bendHandles
+  }, [annotationAnchor.x, annotationAnchor.y, bendHandles, showBar])
+
   const labelPosition = {
     x: edgeData.isMiddlePathHorizontal
-      ? edgeData.pathMiddlePosition.x
-      : edgeData.pathMiddlePosition.x + 30,
+      ? annotationAnchor.x
+      : annotationAnchor.x + 30,
     y: edgeData.isMiddlePathHorizontal
-      ? edgeData.pathMiddlePosition.y - 30
-      : edgeData.pathMiddlePosition.y,
-    textAnchor: edgeData.isMiddlePathHorizontal ? "middle" : ("start" as const),
-    dominantBaseline: edgeData.isMiddlePathHorizontal
-      ? "middle"
-      : ("middle" as const),
+      ? annotationAnchor.y + 30
+      : annotationAnchor.y,
+    textAnchor: edgeData.isMiddlePathHorizontal
+      ? ("middle" as const)
+      : ("start" as const),
+    dominantBaseline: "middle" as const,
   }
 
   const crossbarCoordinates = useMemo(() => {
     if (edgeData.isMiddlePathHorizontal) {
       // If middle segment is horizontal, make crossbar vertical
       return {
-        x1: edgeData.pathMiddlePosition.x,
-        y1: edgeData.pathMiddlePosition.y - crossbarLength,
-        x2: edgeData.pathMiddlePosition.x,
-        y2: edgeData.pathMiddlePosition.y + crossbarLength,
+        x1: annotationAnchor.x,
+        y1: annotationAnchor.y - crossbarLength,
+        x2: annotationAnchor.x,
+        y2: annotationAnchor.y + crossbarLength,
         orientation: "vertical" as const,
       }
     } else {
       // If middle segment is vertical, make crossbar horizontal
       return {
-        x1: edgeData.pathMiddlePosition.x - crossbarLength,
-        y1: edgeData.pathMiddlePosition.y,
-        x2: edgeData.pathMiddlePosition.x + crossbarLength,
-        y2: edgeData.pathMiddlePosition.y,
+        x1: annotationAnchor.x - crossbarLength,
+        y1: annotationAnchor.y,
+        x2: annotationAnchor.x + crossbarLength,
+        y2: annotationAnchor.y,
         orientation: "horizontal" as const,
       }
     }
-  }, [
-    edgeData.isMiddlePathHorizontal,
-    edgeData.pathMiddlePosition,
-    crossbarLength,
-  ])
+  }, [edgeData.isMiddlePathHorizontal, annotationAnchor, crossbarLength])
 
   return (
     <AssessmentSelectableWrapper elementId={id} asElement="g">
       <FeedbackDropzone elementId={id} asElement="path" elementType={type}>
-        <g className="edge-container">
-          <BaseEdge
-            key={markerKey}
-            id={id}
-            path={currentPath}
-            pointerEvents="none"
-            style={{
-              stroke: strokeColor,
-              strokeDasharray: isReconnectingRef.current
-                ? "none"
-                : strokeDashArray,
-              transition: hasInitialCalculation
-                ? "opacity 0.1s ease-in"
-                : "none",
-              opacity: 1,
-            }}
-          />
-
-          {!isReconnectingRef.current && (
-            <EdgeInlineMarkers
-              pathD={currentPath}
-              markerEnd={markerEnd}
-              markerStart={markerStart}
-              strokeColor={strokeColor}
-            />
-          )}
-
-          <path
-            ref={pathRef}
-            className="edge-overlay"
-            d={overlayPath}
-            fill="none"
-            strokeWidth={EDGES.EDGE_HIGHLIGHT_STROKE_WIDTH}
-            pointerEvents="stroke"
-            style={{
-              opacity: isReconnectingRef.current ? 0 : 0.4,
-            }}
-          />
-
-          {isDiagramModifiable &&
-            !isReconnectingRef.current &&
-            allowMidpointDragging &&
-            midpoints.map((point, midPointIndex) => (
-              <circle
-                className="edge-circle"
-                pointerEvents="all"
-                key={`${id}-midpoint-${midPointIndex}`}
-                cx={point.x}
-                cy={point.y}
-                r={10}
-                fill="lightgray"
-                stroke="none"
-                style={{ cursor: "grab", zIndex: 9999 }}
-                onPointerDown={(e) => handlePointerDown(e, midPointIndex)}
-              />
-            ))}
-
-          {/* SFC Transition - show crossbar and label */}
+        <StepEdgeBody
+          id={id}
+          markerKey={markerKey}
+          currentPath={currentPath}
+          overlayPath={overlayPath}
+          pathRef={pathRef}
+          strokeColor={strokeColor}
+          strokeDashArray={strokeDashArray}
+          hasInitialCalculation={hasInitialCalculation}
+          isReconnecting={isReconnecting}
+          isBendDragging={isBendDragging}
+          draggingHandleSegmentIndex={draggingHandleSegmentIndex}
+          markerStart={markerStart}
+          markerEnd={markerEnd}
+          sourcePoint={sourcePoint}
+          targetPoint={targetPoint}
+          sourcePosition={sourcePosition}
+          targetPosition={targetPosition}
+          isDiagramModifiable={isDiagramModifiable}
+          canEditEndpoint={canEditEndpoint}
+          allowMidpointDragging={allowMidpointDragging}
+          bendHandles={visibleBendHandles}
+          handlePointerDown={handlePointerDown}
+        >
+          {/* SFC transition crossbar + condition label. Decorative, so it sets
+              pointer-events:none and renders above the bend handles. */}
           <g>
-            {/* Crossbar - perpendicular to middle segment direction */}
             {showBar && (
               <line
                 x1={crossbarCoordinates.x1}
@@ -216,10 +201,10 @@ export const SfcDiagramEdge = ({
                 y2={crossbarCoordinates.y2}
                 stroke={strokeColor}
                 strokeWidth="10"
+                pointerEvents="none"
               />
             )}
 
-            {/* SFC Label - positioned based on edge orientation */}
             {displayName && (
               <text
                 fill={textColor}
@@ -229,16 +214,18 @@ export const SfcDiagramEdge = ({
                 dominantBaseline={labelPosition.dominantBaseline}
                 fontSize="14"
                 textDecoration={isNegated ? "overline" : undefined}
+                pointerEvents="none"
               >
                 {displayName}
               </text>
             )}
           </g>
-        </g>
+        </StepEdgeBody>
 
         <CommonEdgeElements
           id={id}
           pathMiddlePosition={edgeData.pathMiddlePosition}
+          toolbarPosition={edgeData.toolbarPosition}
           isDiagramModifiable={isDiagramModifiable}
           assessments={assessments}
           anchorRef={anchorRef}
