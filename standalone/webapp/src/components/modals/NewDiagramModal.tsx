@@ -4,6 +4,7 @@ import { useModalContext } from "@/contexts/ModalContext"
 import { UMLDiagramType } from "@tumaet/apollon/react"
 import { useNavigate } from "react-router"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
+import { getDiagramTypeIcon } from "@/components/home/diagramTypeMeta"
 import { log } from "@/logger"
 import {
   HomeDialogActions,
@@ -51,17 +52,19 @@ const diagramTypeToTitle: Record<UMLDiagramType, string> = {
   Sfc: "Sequential Function Chart Diagram",
 }
 
+const toDiagramOption = (
+  type: UMLDiagramType
+): HomeDialogOption<UMLDiagramType> => ({
+  value: type,
+  label: diagramTypeToTitle[type],
+  icon: getDiagramTypeIcon(type, "h-9 w-9"),
+})
+
 const structuralDiagramOptions: HomeDialogOption<UMLDiagramType>[] =
-  diagramTypes.structural.map((type) => ({
-    value: type,
-    label: diagramTypeToTitle[type],
-  }))
+  diagramTypes.structural.map(toDiagramOption)
 
 const behavioralDiagramOptions: HomeDialogOption<UMLDiagramType>[] =
-  diagramTypes.behavioral.map((type) => ({
-    value: type,
-    label: diagramTypeToTitle[type],
-  }))
+  diagramTypes.behavioral.map(toDiagramOption)
 
 enum TemplateType {
   Adapter = "Adapter",

@@ -7,6 +7,8 @@ export type HomeDialogSize = "compact" | "wide"
 export type HomeDialogOption<T extends string> = {
   value: T
   label: string
+  /** Optional preview glyph; turns the option into a centered icon tile. */
+  icon?: ReactNode
 }
 
 export const isHomeDialogVariant = (props?: ModalProps | unknown) =>
@@ -129,12 +131,17 @@ export const HomeDialogOptionGroup = <T extends string>({
               onClick={() => onChange(option.value)}
               onDoubleClick={onConfirm}
               aria-pressed={selected}
-              className={`min-h-9 cursor-pointer rounded-md border px-3 py-2 text-left text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-60 ${
+              className={`min-h-9 cursor-pointer rounded-md border text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-60 ${
+                option.icon
+                  ? "flex flex-col items-center gap-2 px-3 py-3 text-center"
+                  : "px-3 py-2 text-left"
+              } ${
                 selected
                   ? "border-[var(--home-accent-base)] bg-[var(--home-accent-soft)] text-[var(--home-accent-strong)]"
                   : "border-[var(--home-border-default)] bg-[var(--home-surface-raised)] text-[var(--home-text-primary)] hover:bg-[var(--home-surface-raised-hover)]"
               }`}
             >
+              {option.icon}
               {option.label}
             </button>
           )
