@@ -88,7 +88,6 @@ const VersionSidebarBody: FC<Props> = ({
   const nextCursor = useVersionStore((s) => s.nextCursor[diagramId])
   const loading = useVersionStore((s) => s.loading[diagramId] ?? false)
   const errorCode = useVersionStore((s) => s.error[diagramId] ?? null)
-  const fetchVersions = useVersionStore((s) => s.fetchVersions)
   const loadMoreVersions = useVersionStore((s) => s.loadMoreVersions)
   const createVersion = useVersionStore((s) => s.createVersion)
   const enterPreview = useVersionStore((s) => s.enterPreview)
@@ -123,9 +122,12 @@ const VersionSidebarBody: FC<Props> = ({
    */
   const lastLocalSaveIdRef = useRef<string | null>(null)
 
-  useEffect(() => {
-    void fetchVersions(diagramId)
-  }, [diagramId, fetchVersions])
+  // No fetch-on-mount here: the editor page (ApollonLocal / ApollonWithConnection)
+  // binds the repository and fetches in one effect, and the bootstrap keeps the
+  // list fresh (cross-tab + visibility refetch, collab control events). A fetch
+  // here would race the page's repository binding on a reload with the drawer
+  // already open — it would run against the default adapter (child effects flush
+  // before the parent page effect).
 
   // Filter: when off, hide every unnamed row entirely (matches Figma's "Show
   // autosave versions" toggle). Default ON so users see their full history
@@ -235,14 +237,13 @@ const VersionSidebarBody: FC<Props> = ({
     // it after the await chain below would leave the user-gesture window
     // (Firefox would silently deny). No-op for adapters that don't
     // implement the optional method.
-    void repo.requestPersistence?.(diagramId)
+    void repo.requestPersistence?.()
     setSubmitting(true)
     const description = draft.trim()
-    // Name is now an internal label only — the UI surfaces the description.
-    // Name is the first line of the description, used as a short label in
-    // restored-from snackbars and the kebab "Restored from …" copy. Empty
-    // when the user wrote no description — `#N · time-ago` is already the
-    // version's visible identifier.
+    // `name` is an internal label — the description's first line (truncated) —
+    // used in restored-from snackbars and the kebab "Restored from …" copy.
+    // Empty when there's no description; the UI surfaces the description and
+    // `#N · time-ago` as the version's visible identifier.
     const name = description
       ? description.split("\n")[0]!.slice(0, MAX_NAME_LENGTH)
       : ""
@@ -657,9 +658,9 @@ const VersionSidebarBody: FC<Props> = ({
  * fixed width so the contents don't shimmer during the animation — the
  * outer Box clips them via `overflow: hidden`.
  *
- * The body is unmounted when fully closed (after the animation finishes)
- * to avoid running its `fetchVersions` effect for diagrams the user never
- * opens, and to release the SVG-thumbnail observer.
+ * The body is unmounted when fully closed (after the animation finishes) to
+ * release the SVG-thumbnail observer and stop rendering a 320px column for a
+ * drawer the user isn't looking at.
  */
 export const VersionSidebar: FC<Props> = ({
   diagramId,

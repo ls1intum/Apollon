@@ -75,7 +75,9 @@ describe("RemoteVersionRepository", () => {
       .mockReturnValue("https://x/d/v")
 
     await RemoteVersionRepository.getBody(DIAGRAM_ID, VERSION_ID)
-    await RemoteVersionRepository.restore(DIAGRAM_ID, VERSION_ID, {})
+    await RemoteVersionRepository.restore(DIAGRAM_ID, VERSION_ID, {
+      currentBody: fakeBody as never,
+    })
     await RemoteVersionRepository.editInfo(DIAGRAM_ID, VERSION_ID, {
       name: "n",
     })
@@ -85,7 +87,9 @@ describe("RemoteVersionRepository", () => {
     )
 
     expect(getBody).toHaveBeenCalledWith(DIAGRAM_ID, VERSION_ID)
-    expect(restore).toHaveBeenCalledWith(DIAGRAM_ID, VERSION_ID, {})
+    expect(restore).toHaveBeenCalledWith(DIAGRAM_ID, VERSION_ID, {
+      currentBody: fakeBody,
+    })
     expect(editInfo).toHaveBeenCalledWith(DIAGRAM_ID, VERSION_ID, { name: "n" })
     expect(delSpy).toHaveBeenCalledWith(DIAGRAM_ID, VERSION_ID)
     expect(permaSpy).toHaveBeenCalledWith(DIAGRAM_ID, VERSION_ID)

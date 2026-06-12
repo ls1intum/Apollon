@@ -5,8 +5,9 @@ import type { UMLModel } from "@tumaet/apollon"
 import {
   LocalVersionRepository,
   subscribeToLocalVersionEvents,
+  __resetPersistenceForTests,
 } from "../LocalVersionRepository"
-import { __resetDbForTests, getDb } from "../idb"
+import { __resetDbForTests } from "../idb"
 import { ApiError } from "@/services/DiagramApiClient"
 import { MAX_LOCAL_VERSIONS_PER_DIAGRAM } from "@/constants"
 
@@ -63,6 +64,9 @@ beforeEach(async () => {
   // test's connection is still cached by the module under test.
   Object.assign(globalThis, { indexedDB: new FDBFactory() })
   __resetDbForTests()
+  // The origin-wide persistence guard is module state — reset it so the
+  // dedicated persistence test isn't order-dependent on a prior request.
+  __resetPersistenceForTests()
 })
 
 afterEach(() => {
@@ -134,12 +138,11 @@ describe("LocalVersionRepository", () => {
   })
 
   it("list returns newest first", async () => {
+    // Ordering is by the monotonic per-diagram `seq`, not `createdAt`, so no
+    // clock-tick spacing is needed for a deterministic result.
     const a = await LocalVersionRepository.create(DIAGRAM_ID, nodeyModel(), {
       name: "a",
     })
-    // Force a clock tick — fake-indexeddb is fast enough that successive
-    // ISO timestamps can collide. Sort stability still picks the later seq.
-    await new Promise((r) => setTimeout(r, 5))
     const b = await LocalVersionRepository.create(DIAGRAM_ID, nodeyModel(), {
       name: "b",
     })
@@ -152,7 +155,6 @@ describe("LocalVersionRepository", () => {
       await LocalVersionRepository.create(DIAGRAM_ID, nodeyModel(), {
         name: `v${i}`,
       })
-      await new Promise((r) => setTimeout(r, 1))
     }
     const page1 = await LocalVersionRepository.list(DIAGRAM_ID, { limit: 3 })
     expect(page1.versions).toHaveLength(3)
@@ -294,40 +296,70 @@ describe("LocalVersionRepository", () => {
     expect(LocalVersionRepository.kind).toBe("local")
   })
 
-  it("requestPersistence sets the persistedRequested flag idempotently", async () => {
-    // Mock storage API — fake-indexeddb doesn't ship one. Two-call check:
-    // first save flips the flag; second is a no-op (no second persist()).
+  it("requestPersistence requests origin persistence once per session", async () => {
+    // Mock the storage API — fake-indexeddb doesn't ship one. The guard is
+    // origin-wide and session-scoped (reset in beforeEach), so the second
+    // call is a no-op.
     const persistSpy = vi.fn().mockResolvedValue(true)
-    const persistedSpy = vi.fn().mockResolvedValue(false)
     Object.assign(globalThis, {
-      navigator: { storage: { persist: persistSpy, persisted: persistedSpy } },
+      navigator: { storage: { persist: persistSpy } },
     })
 
-    await LocalVersionRepository.requestPersistence(DIAGRAM_ID)
-    await LocalVersionRepository.requestPersistence(DIAGRAM_ID)
+    await LocalVersionRepository.requestPersistence!()
+    await LocalVersionRepository.requestPersistence!()
 
     expect(persistSpy).toHaveBeenCalledTimes(1)
-    const db = await getDb()
-    const meta = await db.get("diagramMeta", DIAGRAM_ID)
-    expect(meta?.persistedRequested).toBe(true)
+  })
+
+  it("never persists a metadata row without a readable body (atomicity invariant)", async () => {
+    // Build a mixed history: user saves, a restore (auto-snapshot), more saves.
+    const first = await LocalVersionRepository.create(
+      DIAGRAM_ID,
+      nodeyModel(),
+      {
+        name: "first",
+      }
+    )
+    await LocalVersionRepository.create(DIAGRAM_ID, nodeyModel(), {
+      description: "second",
+    })
+    await LocalVersionRepository.restore(DIAGRAM_ID, first.id, {
+      currentBody: nodeyModel(),
+    })
+    await LocalVersionRepository.create(DIAGRAM_ID, nodeyModel(), {
+      name: "third",
+    })
+
+    // Every row the drawer can show must have a body it can preview/restore —
+    // no orphan meta rows. getBody throws ApiError(404) on a missing body.
+    const { versions } = await LocalVersionRepository.list(DIAGRAM_ID)
+    expect(versions.length).toBeGreaterThan(0)
+    for (const v of versions) {
+      const body = await LocalVersionRepository.getBody(DIAGRAM_ID, v.id)
+      expect(body).toBeDefined()
+    }
   })
 
   it("create broadcasts an invalidate message that subscribers receive", async () => {
-    // BroadcastChannel posts don't echo to the same context, so we
-    // listen on a sibling channel instance — same name, separate object.
-    const received: { type: string; diagramId: string }[] = []
+    // BroadcastChannel posts don't echo to the same context, so we listen on
+    // a sibling channel instance — same name, separate object. Await the
+    // actual delivery rather than a fixed tick (which flaked ~1 in 6).
     const channel = new BroadcastChannel("apollon-versions")
-    channel.addEventListener("message", (e) =>
-      received.push(e.data as { type: string; diagramId: string })
+    const received = new Promise<{ type: string; diagramId: string }>(
+      (resolve) => {
+        channel.addEventListener(
+          "message",
+          (e) => resolve(e.data as { type: string; diagramId: string }),
+          { once: true }
+        )
+      }
     )
     await LocalVersionRepository.create(DIAGRAM_ID, nodeyModel(), {
       name: "v1",
     })
-    // BroadcastChannel delivery is async — wait one tick.
-    await new Promise((r) => setTimeout(r, 0))
+    const msg = await received
     channel.close()
-    expect(received.length).toBeGreaterThanOrEqual(1)
-    expect(received[0]).toEqual({ type: "invalidate", diagramId: DIAGRAM_ID })
+    expect(msg).toEqual({ type: "invalidate", diagramId: DIAGRAM_ID })
   })
 
   it("subscribeToLocalVersionEvents returns a working unsubscribe", async () => {

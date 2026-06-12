@@ -92,8 +92,8 @@ describe("versionStoreBootstrap", () => {
     peer.postMessage({ type: "invalidate", diagramId: DIAGRAM_ID })
     peer.close()
 
-    // Two flushes: first for the message dispatch, second for the refetch
-    // promise resolution.
+    // Drain the microtask queue across the message dispatch, the refetch
+    // promise, and the resulting state update.
     await flush()
     await flush()
     await flush()

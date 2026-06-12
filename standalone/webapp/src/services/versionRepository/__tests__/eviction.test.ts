@@ -4,9 +4,9 @@ import type { VersionMetaRow } from "../idb"
 
 /**
  * Eviction parity with the drawer's `isNamedVersion` predicate (shared
- * source of truth at `components/versioning/utils.ts`). Drift between
- * eviction and the drawer's autosave-filter would let rows the user sees
- * as named get swept first; this suite pins both behaviours together.
+ * source of truth at `lib/version/predicates.ts`). Drift between eviction
+ * and the drawer's autosave-filter would let rows the user sees as named
+ * get swept first; this suite pins both behaviours together.
  */
 
 type Row = Pick<VersionMetaRow, "id" | "name" | "description" | "kind">

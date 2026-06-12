@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useRef, useState } from "react"
 import { useEditorContext, useModalContext } from "@/contexts"
 import {
   setVersionRepository,
-  getVersionRepository,
   RemoteVersionRepository,
 } from "@/services/versionRepository"
 import { ensureVersionStoreBootstrapped } from "@/stores/versionStoreBootstrap"
@@ -95,15 +94,6 @@ export const ApollonWithConnection: React.FC = () => {
 
   useVersionShortcut(diagramId)
 
-  // Bind the remote repository SYNCHRONOUSLY during render — before the
-  // versioning children mount and run their `fetchVersions` effects (child
-  // effects flush before this parent's effects). Otherwise, navigating from a
-  // local diagram with the drawer open could leave the holder on
-  // `LocalVersionRepository` for the collab drawer's first fetch. Idempotent.
-  if (getVersionRepository() !== RemoteVersionRepository) {
-    setVersionRepository(RemoteVersionRepository)
-  }
-
   // Bootstrap wires the cross-tab BroadcastChannel + visibility refetch +
   // cascade-delete subscription that local mode relies on; safe to install in
   // collab too (the persistence-store subscription has no effect when no local
@@ -119,6 +109,10 @@ export const ApollonWithConnection: React.FC = () => {
   })
 
   useEffect(() => {
+    // Bind the remote repository before this effect fetches versions (the
+    // drawer no longer self-fetches). Set in the effect, not render, so render
+    // stays pure; ordering before the fetch below is guaranteed.
+    setVersionRepository(RemoteVersionRepository)
     const nextLifecycleKey = `${diagramId ?? ""}:${viewType ?? ""}`
 
     // The component instance survives diagramId / viewType / user

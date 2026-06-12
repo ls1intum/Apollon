@@ -9,7 +9,7 @@ import type { VersionMetaRow } from "./idb"
  */
 
 export interface EvictionInput {
-  /** Rows BELONGING TO ONE DIAGRAM, sorted ASC by createdAt. */
+  /** Rows BELONGING TO ONE DIAGRAM, oldest-first (ascending `seq`). */
   rows: ReadonlyArray<
     Pick<VersionMetaRow, "id" | "name" | "description" | "kind">
   >

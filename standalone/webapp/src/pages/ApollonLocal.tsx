@@ -78,17 +78,6 @@ export const ApollonLocal: FC = () => {
 
   useDocumentTitle(diagram?.model.title)
 
-  // Bind the local repository SYNCHRONOUSLY during render — before the
-  // versioning children (VersionSidebar/VersionDrawer) mount and run their
-  // `fetchVersions` effects. A `useEffect` here would fire AFTER those child
-  // effects (React flushes child effects before parent effects), so on a
-  // reload where the drawer is already open (drawerOpenByDiagram is persisted)
-  // the first fetch would hit the default `RemoteVersionRepository` and render
-  // an empty history. Idempotent; safe under StrictMode/HMR.
-  if (getVersionRepository() !== LocalVersionRepository) {
-    setVersionRepository(LocalVersionRepository)
-  }
-
   // Bootstrap once: cleanup-on-deleteModel subscription, BroadcastChannel
   // listener, visibility refetch.
   useEffect(() => {
@@ -118,6 +107,10 @@ export const ApollonLocal: FC = () => {
   // -------- Editor lifecycle --------------------------------------------
   useEffect(() => {
     if (!containerRef.current || !diagram) return
+    // Bind the local repository before this effect's `fetchVersions` runs.
+    // The drawer no longer self-fetches, so this is the only fetch path and
+    // ordering is guaranteed within the effect — no render-time mutation.
+    setVersionRepository(LocalVersionRepository)
     isThumbnailExportCanceledRef.current = false
     setCurrentModelId(diagram.id)
 
@@ -267,7 +260,7 @@ export const ApollonLocal: FC = () => {
           const label =
             summary.description.trim() ||
             summary.name.trim() ||
-            `v${summary.seq ?? ""}`
+            (summary.seq !== undefined ? `v${summary.seq}` : "this version")
           toast.success(t.restoredSnack(label), { autoClose: 4000 })
         }
       } catch (err) {

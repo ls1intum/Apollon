@@ -26,22 +26,14 @@ export interface VersionMetaRow {
 export interface VersionBodyRow {
   diagramId: string
   id: string
-  /** JSON-stringified `Diagram`. The `compression` field carries the encoding
-   *  so a future opt-in to gzipped Blob via `CompressionStream` can land
-   *  without a schema migration. */
+  /** JSON-stringified `Diagram`. */
   body: string
-  compression: "none" | "gzip"
 }
 
 export interface DiagramMetaRow {
   diagramId: string
   /** Monotonic per-diagram counter — assigned to `seq` at create time. */
   headSeq: number
-  /**
-   * True after `navigator.storage.persist()` has been requested for this
-   * device. Idempotent — once granted (or denied) we don't ask again.
-   */
-  persistedRequested?: boolean
 }
 
 interface ApollonVersionsDB extends DBSchema {
@@ -104,9 +96,10 @@ export function getDb(): Promise<ApollonVersionsDBHandle> {
         )
       },
     }).catch((err) => {
-      // Reset so the next caller gets a fresh attempt instead of a
-      // cached rejection. A locked-down browser / file:// origin lands
-      // here; the repository falls back to an in-memory shim.
+      // Reset so the next caller gets a fresh attempt instead of a cached
+      // rejection. A locked-down browser / file:// origin lands here; the
+      // error is rethrown and surfaces as a failed list/create — there is no
+      // fallback store.
       dbPromise = null
       log.error("Failed to open apollon-versions IDB", err as Error)
       throw err

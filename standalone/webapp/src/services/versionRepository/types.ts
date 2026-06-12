@@ -11,8 +11,8 @@ import type { Diagram, VersionSummary } from "@/types"
  * agnostic — switching modes only swaps the adapter, never the call sites.
  *
  * `restore`'s `headRev` is collab-only (Yjs revision counter); local
- * returns `headRev: undefined`. The store already handles this fallback
- * (see `useVersionStore.ts` line ~289).
+ * returns `headRev: undefined`. The store handles this in the `headRev`
+ * reconciliation of its `createVersion` / `restoreVersion` actions.
  */
 export interface ListVersionsResponse {
   versions: VersionSummary[]
@@ -74,7 +74,12 @@ export interface VersionRepository {
   restore(
     diagramId: string,
     versionId: string,
-    opts: { currentBody?: UMLModel; actor?: string }
+    /**
+     * `currentBody` is required: the pre-restore auto-snapshot is written
+     * FROM it, so without it the local adapter would persist a history row
+     * with no readable body. Both store call sites pass `editor.model`.
+     */
+    opts: { currentBody: UMLModel; actor?: string }
   ): Promise<RestoreVersionResult>
 
   editInfo(
@@ -101,11 +106,11 @@ export interface VersionRepository {
   purgeDiagram?(diagramId: string): Promise<void>
 
   /**
-   * Best-effort one-time grant request for persistent storage. Local
-   * adapters call into `navigator.storage.persist()`; remote adapters
-   * leave undefined. **Must be invoked from a user-gesture handler**
-   * (Firefox prompts for permission and the gesture window closes after
-   * the first `await`).
+   * Best-effort, origin-wide, once-per-session grant request for persistent
+   * storage. Local adapters call into `navigator.storage.persist()`; remote
+   * adapters leave undefined. **Must be invoked from a user-gesture handler**
+   * (Firefox prompts for permission and the gesture window closes after the
+   * first `await`).
    */
-  requestPersistence?(diagramId: string): Promise<void>
+  requestPersistence?(): Promise<void>
 }

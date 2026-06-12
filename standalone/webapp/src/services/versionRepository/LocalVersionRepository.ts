@@ -6,7 +6,6 @@ import type { Diagram, VersionSummary } from "@/types"
 import {
   getDb,
   type ApollonVersionsDBHandle,
-  type DiagramMetaRow,
   type VersionBodyRow,
   type VersionMetaRow,
 } from "./idb"
@@ -83,50 +82,41 @@ function metaToSummary(m: VersionMetaRow): VersionSummary {
   }
 }
 
+/**
+ * Read boundary: persisted bodies are trusted (this module wrote them), so
+ * the cast narrows the `JSON.parse` result to `Diagram` here rather than
+ * leaking `any` into the domain.
+ */
 function decodeBody(row: VersionBodyRow): Diagram {
   return JSON.parse(row.body) as Diagram
 }
 
-function encodeBody(model: UMLModel | Diagram): {
-  body: string
-  compression: "none"
-} {
-  return { body: JSON.stringify(model), compression: "none" }
+function serializeBody(model: UMLModel | Diagram): string {
+  return JSON.stringify(model)
 }
 
-async function requestPersistenceImpl(diagramId: string): Promise<void> {
-  if (
-    typeof navigator === "undefined" ||
-    !navigator.storage?.persist ||
-    !navigator.storage.persisted
-  ) {
-    return
-  }
+// Origin-wide, session-scoped guard: `navigator.storage.persist()` is an
+// origin-level grant, so one successful request covers every diagram. A
+// module boolean (not an IDB flag) lets us short-circuit WITHOUT an await,
+// which is what keeps the real `persist()` call inside the user-gesture
+// window below.
+let persistenceRequested = false
+
+/** Test-only: reset the once-per-session persistence guard. */
+export function __resetPersistenceForTests(): void {
+  persistenceRequested = false
+}
+
+async function requestPersistenceImpl(): Promise<void> {
+  if (persistenceRequested) return
+  persistenceRequested = true
+  if (typeof navigator === "undefined" || !navigator.storage?.persist) return
   try {
-    const db = await getDb()
-    // Single tx — read+write atomically so concurrent callers can't see
-    // a torn meta record between the get and put. Bail early on the
-    // `persistedRequested` flag so the storage API (and its possible
-    // permission prompt) only fires once per device per diagram.
-    const tx = db.transaction("diagramMeta", "readwrite")
-    const meta = await tx.store.get(diagramId)
-    if (meta?.persistedRequested) {
-      await tx.done
-      return
-    }
-    const next: DiagramMetaRow = {
-      diagramId,
-      headSeq: meta?.headSeq ?? 0,
-      persistedRequested: true,
-    }
-    await tx.store.put(next)
-    await tx.done
-    // Outside the tx — the storage API request can race with subsequent
-    // creates safely; the flag is already persisted.
-    const already = await navigator.storage.persisted()
-    if (!already) {
-      await navigator.storage.persist().catch(() => {})
-    }
+    // Call `persist()` before any await consumes the gesture's transient
+    // activation (an IDB open would). Idempotent and origin-wide: an
+    // already-persisted origin is a cheap no-op, and Firefox — the one engine
+    // that prompts — remembers its decision.
+    await navigator.storage.persist()
   } catch (err) {
     log.warn(
       "Failed to request persistent storage",
@@ -158,8 +148,8 @@ async function listSinglePage(
   }
   const slice = newestFirst.slice(start, start + limit)
   const versions = slice.map(metaToSummary)
-  const nextCursor =
-    start + slice.length < total ? slice[slice.length - 1]!.id : undefined
+  const last = slice.at(-1)
+  const nextCursor = last && start + slice.length < total ? last.id : undefined
   return { versions, nextCursor, total }
 }
 
@@ -168,6 +158,9 @@ function mapQuotaError(err: unknown): never {
     err instanceof DOMException &&
     (err.name === "QuotaExceededError" || err.code === 22)
   ) {
+    // 507 Insufficient Storage (origin-wide quota), deliberately NOT the
+    // server's 413 (per-request body too large) — different condition. The UI
+    // branches on the shared `BODY_TOO_LARGE` code, not the status.
     throw new ApiError(
       507,
       "BODY_TOO_LARGE",
@@ -188,73 +181,29 @@ export const LocalVersionRepository = {
 
   async create(diagramId, body, opts): Promise<CreateVersionResult> {
     const db = await getDb()
-    const id = crypto.randomUUID()
-    const createdAt = nowIso()
-    const description = (opts.description ?? "").trim()
-    const name = (opts.name ?? "").trim()
-
-    try {
-      const tx = db.transaction(
-        ["versions", "versionBodies", "diagramMeta"],
-        "readwrite"
-      )
-
-      const meta = (await tx.objectStore("diagramMeta").get(diagramId)) ?? {
+    const { row, evictedVersionIds, evictedKinds, totalAfter } =
+      await commitVersion(db, {
         diagramId,
-        headSeq: 0,
-      }
-      const seq = meta.headSeq + 1
-
-      const row: VersionMetaRow = {
-        id,
-        diagramId,
-        name,
-        description,
-        createdAt,
-        kind: "user",
-        librarySchemaVersion: body.version,
-        seq,
-      }
-      await tx.objectStore("versions").add(row)
-
-      const encoded = encodeBody(body)
-      await tx.objectStore("versionBodies").put({ diagramId, id, ...encoded })
-
-      const rows = await tx
-        .objectStore("versions")
-        .index("by_diagram_seq")
-        .getAll(diagramRange(diagramId))
-      const plan = planEviction({
-        rows,
-        cap: MAX_LOCAL_VERSIONS_PER_DIAGRAM,
+        body,
+        meta: {
+          id: crypto.randomUUID(),
+          diagramId,
+          name: (opts.name ?? "").trim(),
+          description: (opts.description ?? "").trim(),
+          createdAt: nowIso(),
+          kind: "user",
+          librarySchemaVersion: body.version,
+        },
       })
-      for (const evictedId of plan.evictedVersionIds) {
-        await tx.objectStore("versions").delete(evictedId)
-        await tx.objectStore("versionBodies").delete([diagramId, evictedId])
-      }
-
-      const nextMeta: DiagramMetaRow = {
-        diagramId,
-        headSeq: seq,
-        persistedRequested: meta.persistedRequested,
-      }
-      await tx.objectStore("diagramMeta").put(nextMeta)
-      await tx.done
-
-      broadcastInvalidate(diagramId)
-
-      const totalAfter = rows.length - plan.evictedVersionIds.length
-      return {
-        ...metaToSummary(row),
-        evictedVersionIds: plan.evictedVersionIds,
-        evictedKinds: plan.evictedKinds,
-        total: totalAfter,
-        cap: MAX_LOCAL_VERSIONS_PER_DIAGRAM,
-        // headRev is collab-only; explicit undefined.
-        headRev: undefined,
-      }
-    } catch (err) {
-      mapQuotaError(err)
+    broadcastInvalidate(diagramId)
+    return {
+      ...metaToSummary(row),
+      evictedVersionIds,
+      evictedKinds,
+      total: totalAfter,
+      cap: MAX_LOCAL_VERSIONS_PER_DIAGRAM,
+      // headRev is collab-only; explicit undefined.
+      headRev: undefined,
     }
   },
 
@@ -322,8 +271,8 @@ export const LocalVersionRepository = {
     return null
   },
 
-  requestPersistence(diagramId: string): Promise<void> {
-    return requestPersistenceImpl(diagramId)
+  requestPersistence(): Promise<void> {
+    return requestPersistenceImpl()
   },
 
   async purgeDiagram(diagramId): Promise<void> {
@@ -352,9 +301,74 @@ export const LocalVersionRepository = {
 } satisfies VersionRepository
 
 /**
- * Pre-restore auto-row: a deletable history entry written immediately
- * before `editor.model` is replaced with the restored body. Local mode's
- * always-visible undo, replacing collab's 10s snackbar.
+ * The single co-write that every persisted version goes through. In ONE
+ * multi-store transaction it assigns the next per-diagram `seq`, writes the
+ * meta row AND its body together (never one without the other), evicts to the
+ * cap, and bumps `headSeq`. Because `body` is required and the body `put` is
+ * unconditional, a metadata row without a readable body is not constructible.
+ * Quota failures are mapped to the typed `ApiError` on every write path.
+ */
+async function commitVersion(
+  db: ApollonVersionsDBHandle,
+  args: {
+    diagramId: string
+    body: UMLModel
+    /** The meta row minus the store-assigned `seq`. */
+    meta: Omit<VersionMetaRow, "seq">
+  }
+): Promise<{
+  row: VersionMetaRow
+  evictedVersionIds: string[]
+  evictedKinds: ("unnamed" | "named")[]
+  totalAfter: number
+}> {
+  const { diagramId, body, meta } = args
+  try {
+    const tx = db.transaction(
+      ["versions", "versionBodies", "diagramMeta"],
+      "readwrite"
+    )
+    const diagramMeta = (await tx
+      .objectStore("diagramMeta")
+      .get(diagramId)) ?? {
+      diagramId,
+      headSeq: 0,
+    }
+    const seq = diagramMeta.headSeq + 1
+    const row: VersionMetaRow = { ...meta, seq }
+    await tx.objectStore("versions").add(row)
+    await tx
+      .objectStore("versionBodies")
+      .put({ diagramId, id: row.id, body: serializeBody(body) })
+
+    const rows = await tx
+      .objectStore("versions")
+      .index("by_diagram_seq")
+      .getAll(diagramRange(diagramId))
+    const plan = planEviction({ rows, cap: MAX_LOCAL_VERSIONS_PER_DIAGRAM })
+    for (const evictedId of plan.evictedVersionIds) {
+      await tx.objectStore("versions").delete(evictedId)
+      await tx.objectStore("versionBodies").delete([diagramId, evictedId])
+    }
+
+    await tx.objectStore("diagramMeta").put({ diagramId, headSeq: seq })
+    await tx.done
+    return {
+      row,
+      evictedVersionIds: plan.evictedVersionIds,
+      evictedKinds: plan.evictedKinds,
+      totalAfter: rows.length - plan.evictedVersionIds.length,
+    }
+  } catch (err) {
+    mapQuotaError(err)
+  }
+}
+
+/**
+ * Pre-restore auto-row: a deletable history entry written immediately before
+ * `editor.model` is replaced with the restored body. Local mode's
+ * always-visible undo, replacing collab's 10s snackbar. Goes through
+ * `commitVersion`, so it co-writes meta+body atomically like any other version.
  *
  * Exported for test-only direct invocation; production callers go through
  * `LocalVersionRepository.restore`.
@@ -363,52 +377,22 @@ export async function createAutoSnapshot(
   db: ApollonVersionsDBHandle,
   args: {
     diagramId: string
-    body: UMLModel | undefined
+    body: UMLModel
     restoredFromName: string
   }
 ): Promise<string> {
-  const { diagramId, body, restoredFromName } = args
-  const id = crypto.randomUUID()
-  const createdAt = nowIso()
-  const tx = db.transaction(
-    ["versions", "versionBodies", "diagramMeta"],
-    "readwrite"
-  )
-  const meta = (await tx.objectStore("diagramMeta").get(diagramId)) ?? {
-    diagramId,
-    headSeq: 0,
-  }
-  const seq = meta.headSeq + 1
-  const row: VersionMetaRow = {
-    id,
-    diagramId,
-    name: `Before restoring ${restoredFromName}`,
-    description: "",
-    createdAt,
-    kind: "auto",
-    librarySchemaVersion: body?.version ?? "4.0.0",
-    seq,
-  }
-  await tx.objectStore("versions").add(row)
-  if (body) {
-    const encoded = encodeBody(body)
-    await tx.objectStore("versionBodies").put({ diagramId, id, ...encoded })
-  }
-  const rows = await tx
-    .objectStore("versions")
-    .index("by_diagram_seq")
-    .getAll(diagramRange(diagramId))
-  const plan = planEviction({ rows, cap: MAX_LOCAL_VERSIONS_PER_DIAGRAM })
-  for (const evictedId of plan.evictedVersionIds) {
-    await tx.objectStore("versions").delete(evictedId)
-    await tx.objectStore("versionBodies").delete([diagramId, evictedId])
-  }
-  const nextMeta: DiagramMetaRow = {
-    diagramId,
-    headSeq: seq,
-    persistedRequested: meta.persistedRequested,
-  }
-  await tx.objectStore("diagramMeta").put(nextMeta)
-  await tx.done
-  return id
+  const { row } = await commitVersion(db, {
+    diagramId: args.diagramId,
+    body: args.body,
+    meta: {
+      id: crypto.randomUUID(),
+      diagramId: args.diagramId,
+      name: `Before restoring ${args.restoredFromName}`,
+      description: "",
+      createdAt: nowIso(),
+      kind: "auto",
+      librarySchemaVersion: args.body.version,
+    },
+  })
+  return row.id
 }
