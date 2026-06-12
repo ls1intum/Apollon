@@ -1,5 +1,15 @@
 # @tumaet/apollon
 
+## 4.6.0
+
+### Minor Changes
+
+- [#742](https://github.com/ls1intum/Apollon/pull/742) [`dfb4479`](https://github.com/ls1intum/Apollon/commit/dfb4479bbf15671a6332c96b659efd9dd31c127b) Thanks [@tamang29](https://github.com/tamang29)! - The edge-type dropdown now shows a small preview of how each option renders — its real line style and arrowheads — so you can pick the right relationship at a glance, across class, component, deployment, use case, and BPMN diagrams.
+
+### Patch Changes
+
+- [#744](https://github.com/ls1intum/Apollon/pull/744) [`1fdb9bc`](https://github.com/ls1intum/Apollon/commit/1fdb9bc70b2fcfc119619876d595b36eebb36f8a) Thanks [@tamang29](https://github.com/tamang29)! - Fix live collaboration cursors showing up in the wrong place — or drifting outside the editor — when collaborators have different editor sizes (for example, when one has a side panel open). Remote cursors are now positioned relative to the modeling canvas instead of the browser window.
+
 ## 4.5.0
 
 ### Minor Changes
