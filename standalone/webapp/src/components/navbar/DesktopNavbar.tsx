@@ -8,6 +8,7 @@ import { TextField } from "@mui/material"
 import { NavbarFile } from "./NavbarFile"
 import { NavbarHelp } from "./NavbarHelp"
 import { VersionHistoryButton } from "./VersionHistoryButton"
+import { SaveLocalCopyButton } from "./SaveLocalCopyButton"
 import { BrandAndVersion } from "./BrandAndVersion"
 import { BackNav } from "./BackNav"
 import { ALL_DIAGRAMS_LABEL } from "@/lib/navProvenance"
@@ -92,6 +93,7 @@ export const DesktopNavbar = () => {
           >
             <Typography color={secondary}>Share</Typography>
           </Button>
+          <SaveLocalCopyButton />
           <NavbarHelp />
           <TextField
             sx={{
