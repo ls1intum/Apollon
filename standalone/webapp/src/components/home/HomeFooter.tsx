@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react"
 import { Link, useLocation } from "react-router"
 import { useModalContext } from "@/contexts"
 import { bugReportURL } from "@/constants/urls"
-import type { NavFrom } from "@/lib/navProvenance"
+import { readNavFrom } from "@/lib/navProvenance"
 import { cn } from "@/lib/utils"
 
 const itemClass =
@@ -19,7 +19,7 @@ const HelpLinks = ({ onSelect }: { onSelect?: () => void }) => {
   // Forward the INHERITED origin (set when arriving from the editor), not the
   // current /imprint path — so an imprint → privacy hop still returns the user
   // to their diagram rather than to /imprint.
-  const from = (useLocation().state as { from?: NavFrom } | null)?.from
+  const from = readNavFrom(useLocation().state)
   const legalLinkState = from ? { from } : undefined
   return (
     <>

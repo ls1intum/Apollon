@@ -3,7 +3,7 @@ import {
   ALL_DIAGRAMS_LABEL,
   BACK_TO_DIAGRAM_LABEL,
   isRestorableEditorPath,
-  type NavFrom,
+  readNavFrom,
 } from "@/lib/navProvenance"
 
 export type BackTarget = { to: string; label: string }
@@ -23,8 +23,7 @@ export type BackTarget = { to: string; label: string }
  * safe in the store; only the one-tap return shortcut is lost.
  */
 export const useBackTarget = (): BackTarget => {
-  const state = useLocation().state as { from?: NavFrom } | null
-  const from = state?.from
+  const from = readNavFrom(useLocation().state)
   if (isRestorableEditorPath(from)) {
     return { to: from, label: BACK_TO_DIAGRAM_LABEL }
   }

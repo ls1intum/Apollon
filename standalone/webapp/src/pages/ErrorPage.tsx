@@ -1,5 +1,5 @@
 import React from "react"
-import { useNavigate } from "react-router"
+import { Link } from "react-router"
 
 type ErrorPageProps = {
   title?: string
@@ -14,8 +14,6 @@ export const ErrorPage: React.FC<ErrorPageProps> = ({
   buttonLabel = "All diagrams",
   backPath = "/",
 }) => {
-  const navigate = useNavigate()
-
   return (
     <div
       style={{
@@ -46,20 +44,22 @@ export const ErrorPage: React.FC<ErrorPageProps> = ({
       >
         {message}
       </p>
-      <button
+      <Link
+        to={backPath}
+        className="focus-visible:outline-2 focus-visible:outline-offset-2"
         style={{
           marginTop: "16px",
           padding: "10px 20px",
           backgroundColor: "var(--apollon-primary)",
           color: "#fff",
-          border: "none",
           borderRadius: "5px",
           cursor: "pointer",
+          textDecoration: "none",
+          display: "inline-block",
         }}
-        onClick={() => navigate(backPath)}
       >
         {buttonLabel}
-      </button>
+      </Link>
     </div>
   )
 }

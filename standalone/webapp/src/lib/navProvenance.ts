@@ -25,3 +25,9 @@ export const isRestorableEditorPath = (
 ): from is string =>
   typeof from === "string" &&
   (/^\/local\/[^/]+/.test(from) || /^\/playground(\?|$)/.test(from))
+
+/** Read the stamped origin out of opaque router location state, if present. */
+export const readNavFrom = (state: unknown): NavFrom | undefined => {
+  const from = (state as { from?: unknown } | null)?.from
+  return typeof from === "string" ? from : undefined
+}
