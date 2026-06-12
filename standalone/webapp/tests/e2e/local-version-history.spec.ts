@@ -172,6 +172,22 @@ test.describe("Local version history (#670, /local/:id routing)", () => {
     ).toBeVisible()
   })
 
+  test("'Save first version' saves the first version", async ({ page }) => {
+    await seedLocalDiagram(page)
+    await openLocalEditor(page)
+
+    await ensureDrawerOpen(page)
+    // The empty-state CTA commits the first version directly (not just focus
+    // the composer): the empty state is replaced by a version row.
+    await page.getByRole("button", { name: /Save first version/i }).click()
+    await expect(
+      page.getByRole("button", { name: /Save first version/i })
+    ).toHaveCount(0)
+    await expect(
+      page.getByRole("button", { name: /Version actions/i })
+    ).toBeVisible()
+  })
+
   test("save commits a row that survives reload", async ({ page }) => {
     await seedLocalDiagram(page)
     await openLocalEditor(page)

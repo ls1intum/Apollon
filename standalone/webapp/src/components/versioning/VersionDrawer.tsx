@@ -543,22 +543,40 @@ const VersionSidebarBody: FC<Props> = ({
               {isLocal ? t.emptyBodyLocal : t.emptyBody}
             </Typography>
             {isLocal && (
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={() => composerRef.current?.focus()}
-                sx={{
-                  textTransform: "none",
-                  color: TEXT_PRIMARY,
-                  borderColor: TEXT_MUTED,
-                  "&:hover": {
-                    borderColor: TEXT_PRIMARY,
-                    backgroundColor: ROW_HOVER_BG,
-                  },
-                }}
+              <Tooltip
+                title={
+                  isEmptyDiagram
+                    ? t.emptyDiagramTooltip
+                    : !canSave
+                      ? "Add something to the canvas first"
+                      : ""
+                }
               >
-                {t.emptyCtaLocal}
-              </Button>
+                {/* span wrapper so the tooltip still shows on the disabled button */}
+                <span>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => void handleCreate()}
+                    disabled={submitting || !canSave}
+                    sx={{
+                      textTransform: "none",
+                      color: TEXT_PRIMARY,
+                      borderColor: TEXT_MUTED,
+                      "&:hover": {
+                        borderColor: TEXT_PRIMARY,
+                        backgroundColor: ROW_HOVER_BG,
+                      },
+                      "&.Mui-disabled": {
+                        color: TEXT_MUTED,
+                        borderColor: "rgba(255, 255, 255, 0.12)",
+                      },
+                    }}
+                  >
+                    {t.emptyCtaLocal}
+                  </Button>
+                </span>
+              </Tooltip>
             )}
           </Box>
         ) : (
