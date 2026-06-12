@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { act, cleanup, render, screen, waitFor } from "@testing-library/react"
-import { MemoryRouter, Route, Routes, useNavigate } from "react-router"
+import { act, cleanup, screen, waitFor } from "@testing-library/react"
+import { renderWithRouter } from "@/test/renderWithRouter"
 import { toast } from "react-toastify"
 import { ApollonWithConnection } from "./ApollonWithConnection"
 import { EditorProvider, ModalProvider } from "@/contexts"
@@ -148,8 +148,8 @@ vi.mock("@/stores/useVersionStore", () => {
   return { useVersionStore: hook }
 })
 
-// VersionDrawer / Sidebar / Banner need their own mocks of `react-router`'s
-// router context to render; they aren't under test here.
+// VersionDrawer / Sidebar / Banner need a router context to render; they aren't
+// under test here, so stub them out.
 vi.mock("@/components/versioning", async (importOriginal) => {
   const actual = (await importOriginal()) as Record<string, unknown>
   return {
@@ -179,25 +179,19 @@ vi.mock("@/contexts", async (importOriginal) => {
 
 const LOADING_TEXT = "Loading diagram…"
 
-let testNavigate: (path: string) => void = () => {}
-function NavigateProbe() {
-  testNavigate = useNavigate()
-  return null
-}
-
-function mountAt(initialPath: string) {
-  return render(
-    <MemoryRouter initialEntries={[initialPath]}>
+function mountAt(initialEntry: string) {
+  // The page reads getRouteApi("/shared/$diagramId"), so it must mount under
+  // that template; "/" is included so its navigate({ to: "/" }) fallback
+  // resolves. Drive in-test route changes with the returned `history.push`.
+  return renderWithRouter(<ApollonWithConnection />, {
+    initialEntry,
+    routePaths: ["/shared/$diagramId", "/"],
+    wrapper: (children) => (
       <EditorProvider>
-        <ModalProvider>
-          <NavigateProbe />
-          <Routes>
-            <Route path="/:diagramId" element={<ApollonWithConnection />} />
-          </Routes>
-        </ModalProvider>
+        <ModalProvider>{children}</ModalProvider>
       </EditorProvider>
-    </MemoryRouter>
-  )
+    ),
+  })
 }
 
 async function resolveFetch(model: object = { nodes: [], edges: [] }) {
@@ -213,7 +207,6 @@ beforeEach(() => {
   vi.clearAllMocks()
   addSharedDiagramEntryMock.mockReset()
   fetchHoisted.state.pending = null
-  testNavigate = () => {}
   sessionStorage.setItem("apollon-collab-name", "tester")
   // jsdom lacks ResizeObserver; the version-preview column uses it.
   if (typeof globalThis.ResizeObserver === "undefined") {
@@ -235,19 +228,19 @@ afterEach(() => {
 })
 
 describe("ApollonWithConnection — loading-state regression", () => {
-  it("shows the loading overlay while the initial diagram fetch is in flight", () => {
-    mountAt("/abc?view=COLLABORATE")
-    expect(screen.getByText(LOADING_TEXT)).toBeTruthy()
+  it("shows the loading overlay while the initial diagram fetch is in flight", async () => {
+    mountAt("/shared/abc?view=COLLABORATE")
+    expect(await screen.findByText(LOADING_TEXT)).toBeTruthy()
   })
 
   it("removes the loading overlay once the editor is mounted", async () => {
-    mountAt("/abc?view=COLLABORATE")
+    mountAt("/shared/abc?view=COLLABORATE")
     await resolveFetch()
     await waitFor(() => expect(screen.queryByText(LOADING_TEXT)).toBeNull())
   })
 
   it("stores a successfully opened shared diagram for the dashboard", async () => {
-    mountAt("/abc?view=GIVE_FEEDBACK")
+    mountAt("/shared/abc?view=GIVE_FEEDBACK")
 
     await resolveFetch({ id: "abc", nodes: [], edges: [] })
 
@@ -259,11 +252,13 @@ describe("ApollonWithConnection — loading-state regression", () => {
   })
 
   it("re-shows the loading overlay when diagramId changes (Share-again)", async () => {
-    mountAt("/abc?view=COLLABORATE")
+    const { history } = mountAt("/shared/abc?view=COLLABORATE")
     await resolveFetch({ id: "abc", nodes: [], edges: [] })
     await waitFor(() => expect(screen.queryByText(LOADING_TEXT)).toBeNull())
 
-    await act(async () => testNavigate("/def?view=COLLABORATE"))
+    await act(async () => {
+      history.push("/shared/def?view=COLLABORATE")
+    })
     expect(await screen.findByText(LOADING_TEXT)).toBeTruthy()
 
     await resolveFetch({ id: "def", nodes: [], edges: [] })
@@ -272,7 +267,7 @@ describe("ApollonWithConnection — loading-state regression", () => {
 
   it("does not show an error toast when unmount races a pending fetch", async () => {
     const errorToast = vi.spyOn(toast, "error")
-    const rendered = mountAt("/abc?view=COLLABORATE")
+    const rendered = mountAt("/shared/abc?view=COLLABORATE")
     await waitFor(() => expect(fetchHoisted.state.pending).not.toBeNull())
 
     rendered.unmount()
@@ -285,7 +280,7 @@ describe("ApollonWithConnection — loading-state regression", () => {
 
   it("re-opens the collab-name prompt for each new un-named diagram", async () => {
     sessionStorage.removeItem("apollon-collab-name")
-    mountAt("/abc?view=COLLABORATE")
+    const { history } = mountAt("/shared/abc?view=COLLABORATE")
 
     await waitFor(() => {
       expect(modalHoisted.openModal).toHaveBeenCalledWith(
@@ -295,7 +290,9 @@ describe("ApollonWithConnection — loading-state regression", () => {
     })
 
     modalHoisted.openModal.mockClear()
-    await act(async () => testNavigate("/def?view=COLLABORATE"))
+    await act(async () => {
+      history.push("/shared/def?view=COLLABORATE")
+    })
     await waitFor(() =>
       expect(modalHoisted.openModal).toHaveBeenCalledWith(
         "COLLABORATE_NAME",
@@ -306,7 +303,7 @@ describe("ApollonWithConnection — loading-state regression", () => {
 
   it("returns home when the collaboration-name prompt is dismissed", async () => {
     sessionStorage.removeItem("apollon-collab-name")
-    mountAt("/abc?view=COLLABORATE")
+    const { router } = mountAt("/shared/abc?view=COLLABORATE")
 
     await waitFor(() => {
       expect(modalHoisted.openModal).toHaveBeenCalledWith(
@@ -325,6 +322,7 @@ describe("ApollonWithConnection — loading-state regression", () => {
       modalProps?.onClose?.()
     })
 
-    expect(window.location.pathname + window.location.search).toBe("/")
+    // In-memory history never touches window.location; assert router state.
+    await waitFor(() => expect(router.state.location.pathname).toBe("/"))
   })
 })

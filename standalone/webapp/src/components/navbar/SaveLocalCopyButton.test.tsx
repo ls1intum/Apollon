@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from "vitest"
-import { render, screen } from "@testing-library/react"
+import { screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { MemoryRouter, Route, Routes, useLocation } from "react-router"
+import { useLocation } from "@tanstack/react-router"
+import { renderWithRouter } from "@/test/renderWithRouter"
 import { ToastContainer } from "react-toastify"
 import { SaveLocalCopyButton } from "./SaveLocalCopyButton"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
@@ -36,28 +37,32 @@ function LocationProbe() {
 
 function renderWith(editorModel: UMLModel, initialPath = "/shared/remote-id") {
   const editor = { model: editorModel } as unknown as ApollonEditor
-  return render(
-    <MemoryRouter initialEntries={[initialPath]}>
-      <EditorContext.Provider
-        value={{
-          editor,
-          setEditor: vi.fn(),
-          diagramName: "Test",
-          setDiagramName: vi.fn(),
-        }}
-      >
-        <Routes>
-          <Route
-            path="/shared/:diagramId"
-            element={<SaveLocalCopyButton color="black" />}
-          />
-          <Route path="/local/:id" element={<SaveLocalCopyButton />} />
-          <Route path="/" element={<SaveLocalCopyButton />} />
-        </Routes>
-        <LocationProbe />
-        <ToastContainer />
-      </EditorContext.Provider>
-    </MemoryRouter>
+  // The button decides whether to render from the pathname itself
+  // (useDiagramIdFromPath), not from route matching, so it can mount under any
+  // of these templates; `/local/$id` must be present so its post-save
+  // navigate({ to: "/local/$id" }) resolves.
+  return renderWithRouter(
+    <>
+      <SaveLocalCopyButton color="black" />
+      <LocationProbe />
+      <ToastContainer />
+    </>,
+    {
+      initialEntry: initialPath,
+      routePaths: ["/shared/$diagramId", "/local/$id", "/"],
+      wrapper: (children) => (
+        <EditorContext.Provider
+          value={{
+            editor,
+            setEditor: vi.fn(),
+            diagramName: "Test",
+            setDiagramName: vi.fn(),
+          }}
+        >
+          {children}
+        </EditorContext.Provider>
+      ),
+    }
   )
 }
 
@@ -67,7 +72,7 @@ describe("SaveLocalCopyButton", () => {
     renderWith(fakeModel)
 
     await userEvent.click(
-      screen.getByRole("button", { name: /Save a local copy/i })
+      await screen.findByRole("button", { name: /Save a local copy/i })
     )
 
     const models = Object.values(usePersistenceModelStore.getState().models)
@@ -81,7 +86,7 @@ describe("SaveLocalCopyButton", () => {
     renderWith(fakeModel)
 
     await userEvent.click(
-      screen.getByRole("button", { name: /Save a local copy/i })
+      await screen.findByRole("button", { name: /Save a local copy/i })
     )
 
     const newId = Object.values(usePersistenceModelStore.getState().models)[0]!
@@ -95,7 +100,7 @@ describe("SaveLocalCopyButton", () => {
     renderWith(fakeModel)
 
     await userEvent.click(
-      screen.getByRole("button", { name: /Save a local copy/i })
+      await screen.findByRole("button", { name: /Save a local copy/i })
     )
 
     const stored = Object.values(usePersistenceModelStore.getState().models)[0]!
@@ -108,17 +113,21 @@ describe("SaveLocalCopyButton", () => {
     expect(stored.nodes).not.toBe(fakeModel.nodes)
   })
 
-  it("does not render on the local editor route (/local/:id)", () => {
+  it("does not render on the local editor route (/local/:id)", async () => {
     usePersistenceModelStore.setState({ models: {}, currentModelId: null })
     renderWith(fakeModel, "/local/some-local-id")
+    // Wait for the router to resolve the route (the probe always renders) so the
+    // absent button is a real hide, not just the pre-load empty render.
+    await screen.findByTestId("pathname")
     expect(
       screen.queryByRole("button", { name: /Save a local copy/i })
     ).toBeNull()
   })
 
-  it("does not render on the gallery route (/)", () => {
+  it("does not render on the gallery route (/)", async () => {
     usePersistenceModelStore.setState({ models: {}, currentModelId: null })
     renderWith(fakeModel, "/")
+    await screen.findByTestId("pathname")
     expect(
       screen.queryByRole("button", { name: /Save a local copy/i })
     ).toBeNull()

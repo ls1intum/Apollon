@@ -11,7 +11,7 @@ const createDiagramMock = vi.fn()
 const addSharedDiagramEntryMock = vi.fn()
 const updateSharedDiagramViewMock = vi.fn()
 
-vi.mock("react-router", () => ({
+vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => navigateMock,
 }))
 
@@ -117,9 +117,11 @@ describe("ShareDashboardModal", () => {
 
     await waitFor(() => {
       expect(sessionStorage.getItem("apollon-collab-name")).toBe("Chosen Name")
-      expect(navigateMock).toHaveBeenCalledWith(
-        "/shared/shared-123?view=" + DiagramView.COLLABORATE
-      )
+      expect(navigateMock).toHaveBeenCalledWith({
+        to: "/shared/$diagramId",
+        params: { diagramId: "shared-123" },
+        search: { view: DiagramView.COLLABORATE },
+      })
     })
   })
 })
