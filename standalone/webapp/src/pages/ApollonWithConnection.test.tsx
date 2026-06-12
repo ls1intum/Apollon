@@ -5,6 +5,8 @@ import { toast } from "react-toastify"
 import { ApollonWithConnection } from "./ApollonWithConnection"
 import { EditorProvider, ModalProvider } from "@/contexts"
 
+const addSharedDiagramEntryMock = vi.fn()
+
 const FakeApollonEditor = vi.hoisted(
   () =>
     class FakeApollonEditor {
@@ -24,6 +26,12 @@ const FakeApollonEditor = vi.hoisted(
       }
       subscribeToCollaboratorChanges() {
         return 4
+      }
+      subscribeToDiagramNameChange() {
+        return 5
+      }
+      getDiagramMetadata() {
+        return { diagramTitle: "Fake Diagram" }
       }
       unsubscribe() {}
       setReadonly() {}
@@ -84,6 +92,11 @@ vi.mock("@/services/WebSocketManager", () => ({
     }
     cleanup() {}
   },
+}))
+
+vi.mock("@/utils/sharedDiagramStorage", () => ({
+  addSharedDiagramEntry: (...args: unknown[]) =>
+    addSharedDiagramEntryMock(...args),
 }))
 
 const fetchHoisted = vi.hoisted(() => {
@@ -198,6 +211,7 @@ async function resolveFetch(model: object = { nodes: [], edges: [] }) {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  addSharedDiagramEntryMock.mockReset()
   fetchHoisted.state.pending = null
   testNavigate = () => {}
   sessionStorage.setItem("apollon-collab-name", "tester")
@@ -230,6 +244,18 @@ describe("ApollonWithConnection — loading-state regression", () => {
     mountAt("/abc?view=COLLABORATE")
     await resolveFetch()
     await waitFor(() => expect(screen.queryByText(LOADING_TEXT)).toBeNull())
+  })
+
+  it("stores a successfully opened shared diagram for the dashboard", async () => {
+    mountAt("/abc?view=GIVE_FEEDBACK")
+
+    await resolveFetch({ id: "abc", nodes: [], edges: [] })
+
+    await waitFor(() =>
+      expect(addSharedDiagramEntryMock).toHaveBeenCalledWith("abc", {
+        lastSharedView: "GIVE_FEEDBACK",
+      })
+    )
   })
 
   it("re-shows the loading overlay when diagramId changes (Share-again)", async () => {
@@ -276,5 +302,29 @@ describe("ApollonWithConnection — loading-state regression", () => {
         expect.any(Object)
       )
     )
+  })
+
+  it("returns home when the collaboration-name prompt is dismissed", async () => {
+    sessionStorage.removeItem("apollon-collab-name")
+    mountAt("/abc?view=COLLABORATE")
+
+    await waitFor(() => {
+      expect(modalHoisted.openModal).toHaveBeenCalledWith(
+        "COLLABORATE_NAME",
+        expect.objectContaining({
+          onClose: expect.any(Function),
+        })
+      )
+    })
+
+    const modalProps = modalHoisted.openModal.mock.calls[0]?.[1] as
+      | { onClose?: () => void }
+      | undefined
+
+    await act(async () => {
+      modalProps?.onClose?.()
+    })
+
+    expect(window.location.pathname + window.location.search).toBe("/")
   })
 })

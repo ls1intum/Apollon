@@ -77,7 +77,15 @@ export const VersionPreviewBanner: FC<Props> = ({
       role="status"
       aria-live="polite"
       sx={{
-        boxShadow: 4,
+        // Soft-gold outlined warning: tinted body, gold border, neutral text,
+        // amber icon. Poppins + lg radius to match the notification language.
+        fontFamily:
+          '"Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue", Arial, sans-serif',
+        bgcolor: "var(--home-banner-warning-bg)",
+        color: "var(--home-banner-warning-text)",
+        border: "1px solid var(--home-banner-warning-border)",
+        borderRadius: "var(--home-radius-lg)",
+        boxShadow: "0 12px 32px var(--home-shadow-overlay)",
         alignItems: "flex-start",
         // Fixed width so the banner doesn't reflow as the user clicks
         // between previews with different description lengths. Capped to
@@ -89,6 +97,7 @@ export const VersionPreviewBanner: FC<Props> = ({
         "& .MuiAlert-icon": {
           py: 0.5,
           mr: isSmall ? 1 : 1.75,
+          color: "var(--home-banner-warning-icon)",
         },
         "& .MuiAlert-message": { minWidth: 0, flex: 1, py: 0.5 },
         // Generous breathing room between the message block and the
@@ -129,21 +138,26 @@ export const VersionPreviewBanner: FC<Props> = ({
               required the abbreviation. `whiteSpace: nowrap` prevents
               awkward mid-word wraps in the side-by-side compact case. */}
           <Button
-            color="inherit"
             onClick={onExit}
             size={isSmall ? "small" : "medium"}
             sx={{
               textTransform: "none",
+              fontFamily: "inherit",
               px: isSmall ? 1.25 : 1.5,
               minWidth: 0,
               whiteSpace: "nowrap",
+              border: "1px solid var(--home-banner-warning-btn-border)",
+              bgcolor: "var(--home-banner-warning-btn-bg)",
+              color: "var(--home-banner-warning-btn-text)",
+              "&:hover": {
+                bgcolor: "var(--home-banner-warning-btn-hover)",
+              },
             }}
           >
             {t.exitPreview}
           </Button>
           {canRestore && (
             <Button
-              variant="contained"
               disableElevation
               disabled={restoring}
               onClick={async () => {
@@ -157,13 +171,17 @@ export const VersionPreviewBanner: FC<Props> = ({
               size={isSmall ? "small" : "medium"}
               sx={{
                 textTransform: "none",
+                fontFamily: "inherit",
                 fontWeight: 600,
                 px: isSmall ? 1.5 : 2,
                 minWidth: 0,
                 whiteSpace: "nowrap",
-                bgcolor: "common.white",
-                color: "warning.dark",
-                "&:hover": { bgcolor: "grey.100" },
+                border: "1px solid var(--home-banner-warning-btn-border)",
+                bgcolor: "var(--home-banner-warning-btn-bg)",
+                color: "var(--home-banner-warning-btn-text)",
+                "&:hover": {
+                  bgcolor: "var(--home-banner-warning-btn-hover)",
+                },
               }}
             >
               {t.restoreThis}
@@ -187,7 +205,7 @@ export const VersionPreviewBanner: FC<Props> = ({
             mt: 0.5,
             fontSize: isSmall ? "0.75rem" : "0.8125rem",
             lineHeight: 1.4,
-            opacity: 0.92,
+            color: "var(--home-banner-warning-muted)",
             whiteSpace: "pre-wrap",
             wordBreak: "break-word",
             // Cap height tighter on small so the banner doesn't take over

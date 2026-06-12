@@ -2,10 +2,7 @@ import { test, expect, type Page } from "@playwright/test"
 import * as fs from "node:fs"
 import * as path from "node:path"
 import { fileURLToPath } from "node:url"
-import {
-  waitForCanvasReady,
-  injectFixtureIntoLocalStorage,
-} from "../helpers/canvas"
+import { waitForCanvasReady, openFixtureInLocalEditor } from "../helpers/canvas"
 
 /**
  * Guards against the "gap between edge tip and node after resizing while zoomed
@@ -62,8 +59,7 @@ async function resizePkgWider(page: Page): Promise<void> {
 test("resizing a node while zoomed out keeps the edge glued to the node", async ({
   page,
 }) => {
-  await injectFixtureIntoLocalStorage(page, fixture)
-  await page.goto("/")
+  await openFixtureInLocalEditor(page, fixture)
   await waitForCanvasReady(page)
 
   // Zoom out to the minimum (the button disables once there).

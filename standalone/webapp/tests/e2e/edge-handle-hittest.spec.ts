@@ -2,10 +2,7 @@ import { test, expect, type Page } from "@playwright/test"
 import * as fs from "node:fs"
 import * as path from "node:path"
 import { fileURLToPath } from "node:url"
-import {
-  waitForCanvasReady,
-  injectFixtureIntoLocalStorage,
-} from "../helpers/canvas"
+import { waitForCanvasReady, openFixtureInLocalEditor } from "../helpers/canvas"
 
 /**
  * Guards against the "visible but undraggable bend handle" bug. A selected
@@ -56,8 +53,7 @@ async function edgeZIndex(page: Page, id: string): Promise<number> {
 test("selecting an edge elevates it above unselected edges", async ({
   page,
 }) => {
-  await injectFixtureIntoLocalStorage(page, classDiagram)
-  await page.goto("/")
+  await openFixtureInLocalEditor(page, classDiagram)
   await waitForCanvasReady(page)
 
   const selectedId = "edge-bidirectional-dog-imovable"
@@ -76,8 +72,7 @@ test("selecting an edge elevates it above unselected edges", async ({
 test("the edge toolbar body does not capture pointer events (only its buttons do)", async ({
   page,
 }) => {
-  await injectFixtureIntoLocalStorage(page, classDiagram)
-  await page.goto("/")
+  await openFixtureInLocalEditor(page, classDiagram)
   await waitForCanvasReady(page)
 
   await selectEdgeById(page, "edge-bidirectional-dog-imovable")

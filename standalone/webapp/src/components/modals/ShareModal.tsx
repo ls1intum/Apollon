@@ -10,14 +10,17 @@ import Info from "@mui/icons-material/Info"
 import { Tooltip } from "@mui/material"
 import { useNavigate } from "react-router"
 import { toast } from "react-toastify"
-import { APButton } from "../APButton"
-import { serverURL } from "@/constants"
+import { Button } from "@/components/ui/button"
+import { addSharedDiagramEntry } from "@/utils/sharedDiagramStorage"
+import {
+  buildSharedDiagramPath,
+  buildSharedDiagramUrl,
+} from "@/utils/sharedDiagramLinks"
 
 export const ShareModal = () => {
   const { editor } = useEditorContext()
   const { closeModal, openModal } = useModalContext()
   const navigate = useNavigate()
-  const isCapacitorApp = isPlatform("capacitor")
 
   const handleShareButtonPress = async (viewType: DiagramView) => {
     if (!editor) {
@@ -28,13 +31,13 @@ export const ShareModal = () => {
     try {
       const model = editor.model
       const { id: diagramID } = await DiagramApiClient.createDiagram(model)
+      addSharedDiagramEntry(diagramID, { lastSharedView: viewType })
 
-      const newurl = isCapacitorApp
-        ? `${serverURL}/${diagramID}?view=${viewType}`
-        : `${window.location.origin}/${diagramID}?view=${viewType}`
+      // buildSharedDiagramUrl resolves a native-aware origin internally.
+      const newurl = buildSharedDiagramUrl(diagramID, viewType)
 
       await copyToClipboard(newurl)
-      navigate(`/${diagramID}?view=${viewType}`)
+      navigate(buildSharedDiagramPath(diagramID, viewType))
       closeModal()
 
       toast.success(
@@ -83,36 +86,36 @@ export const ShareModal = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
         <div>
-          <APButton
+          <Button
             variant="outline"
             fullWidth
             onClick={() => handleShareButtonPress(DiagramView.EDIT)}
           >
             Edit
-          </APButton>
+          </Button>
         </div>
         <div>
-          <APButton variant="outline" fullWidth onClick={handleCollaborate}>
+          <Button variant="outline" fullWidth onClick={handleCollaborate}>
             Collaborate
-          </APButton>
+          </Button>
         </div>
         <div>
-          <APButton
+          <Button
             variant="outline"
             fullWidth
             onClick={() => handleShareButtonPress(DiagramView.GIVE_FEEDBACK)}
           >
             Give Feedback
-          </APButton>
+          </Button>
         </div>
         <div>
-          <APButton
+          <Button
             variant="outline"
             fullWidth
             onClick={() => handleShareButtonPress(DiagramView.SEE_FEEDBACK)}
           >
             See Feedback
-          </APButton>
+          </Button>
         </div>
       </div>
       <fieldset className="border border-gray-300 p-2 rounded-xl w-fill ">
@@ -126,13 +129,13 @@ export const ShareModal = () => {
             readOnly
             className="grow h-[42px] px-3 py-2 border rounded-md border-r-0 rounded-r-none border-[var(--apollon-primary-contrast)] bg-[var(--apollon-background)] text-[var(--apollon-primary-contrast)]"
           />
-          <APButton
+          <Button
             onClick={() => copyToClipboard(window.location.href)}
             variant="outline"
             className=" rounded-l-none h-[42px]"
           >
             Copy Link
-          </APButton>
+          </Button>
         </div>
       </fieldset>
     </div>

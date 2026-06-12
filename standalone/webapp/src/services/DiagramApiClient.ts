@@ -1,11 +1,14 @@
 import type { UMLModel } from "@tumaet/apollon/react"
 import { serverURL } from "@/constants"
+import { resolveShareOrigin } from "@/utils/sharedDiagramLinks"
 import type {
   ApiErrorBody,
   ApiErrorCode,
   Diagram,
   VersionSummary,
 } from "@/types"
+
+export type StoredDiagram = Diagram
 
 export class ApiError extends Error {
   constructor(
@@ -118,6 +121,22 @@ export const DiagramApiClient = {
 
   async deleteDiagram(diagramId: string): Promise<void> {
     await request<void>(`/api/diagrams/${diagramId}`, { method: "DELETE" })
+  },
+
+  async fetchStoredDiagram(
+    diagramId: string,
+    opts: { signal?: AbortSignal } = {}
+  ): Promise<StoredDiagram | null> {
+    try {
+      const { data } = await request<StoredDiagram>(
+        `/api/diagrams/${diagramId}`,
+        { signal: opts.signal }
+      )
+      return data
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) return null
+      throw err
+    }
   },
 }
 
@@ -242,6 +261,7 @@ export const VersionApiClient = {
     const params = new URLSearchParams()
     params.set("view", current.get("view") ?? "collaborate")
     params.set("version", versionId)
-    return `${window.location.origin}/${diagramId}?${params.toString()}`
+    // Native-aware origin (capacitor://localhost isn't externally openable).
+    return `${resolveShareOrigin()}/shared/${diagramId}?${params.toString()}`
   },
 }

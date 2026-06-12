@@ -1,5 +1,5 @@
 import { create } from "zustand"
-import { UMLModel, UMLDiagramType } from "@tumaet/apollon/react"
+import type { UMLModel, UMLDiagramType } from "@tumaet/apollon"
 import { v4 as uuidv4 } from "uuid"
 import { persist, devtools } from "zustand/middleware"
 import {
@@ -7,35 +7,48 @@ import {
   playgroundModelId,
 } from "@/constants/playgroundDefaultDiagram"
 
+const PERSISTENCE_STORE_VERSION = 3
+
 type PersistentModelEntity = {
   id: string
   model: UMLModel
   lastModifiedAt: string
+  createdAt: string
+  favorite: boolean
 }
 
 type PersistenceModelStore = {
   models: Record<string, PersistentModelEntity>
+  thumbnails: Record<string, string>
+  thumbnailRevisions: Record<string, number>
+  thumbnailLastModifiedAt: Record<string, string>
   currentModelId: string | null
-  setCurrentModelId: (id: string) => void
+  setCurrentModelId: (id: string | null) => void
   createModel: (model: UMLModel) => void
   createModelByTitleAndType: (title: string, type: UMLDiagramType) => string
+  importModels: (models: { model: UMLModel; lastModifiedAt?: string }[]) => void
   updateModel: (model: UMLModel) => void
+  duplicateModel: (id: string) => string
   deleteModel: (id: string) => void
-  getCurrentModel: () => PersistentModelEntity | null
-  /**
-   * Bulk-insert models (used by the one-time legacy iOS migration). Keyed by
-   * model id, so re-running is idempotent — it overwrites rather than
-   * duplicating. Preserves each diagram's original last-modified timestamp and,
-   * when no diagram is currently open, selects the most recently modified
-   * imported diagram so migrated work is immediately visible.
-   */
-  importModels: (
-    entries: { model: UMLModel; lastModifiedAt?: string }[]
-  ) => void
+  toggleFavorite: (id: string) => void
+  setThumbnail: (id: string, svgString: string, lastModifiedAt?: string) => void
+  getThumbnail: (id: string) => string | null
 }
+
+type PersistedPersistenceModelStore = Pick<
+  PersistenceModelStore,
+  "models" | "currentModelId"
+> &
+  Partial<
+    Pick<
+      PersistenceModelStore,
+      "thumbnails" | "thumbnailRevisions" | "thumbnailLastModifiedAt"
+    >
+  >
+
 const populateNewModel = () => ({
   id: uuidv4(),
-  type: UMLDiagramType.ClassDiagram,
+  type: "ClassDiagram" as UMLDiagramType,
   assessments: {},
   edges: [],
   nodes: [],
@@ -43,17 +56,45 @@ const populateNewModel = () => ({
   version: "4.0.0" as const,
 })
 
+const normalizePersistedModels = (
+  models: PersistedPersistenceModelStore["models"] | undefined
+): Record<string, PersistentModelEntity> => {
+  if (!models) {
+    return {}
+  }
+
+  return Object.fromEntries(
+    Object.entries(models).map(([id, entity]) => [
+      id,
+      {
+        ...entity,
+        favorite: Boolean(entity.favorite),
+        // Backfill for existing diagrams that predate createdAt tracking.
+        // lastModifiedAt is the best available approximation.
+        createdAt:
+          (entity as Partial<PersistentModelEntity>).createdAt ??
+          entity.lastModifiedAt,
+      },
+    ])
+  )
+}
+
 export const usePersistenceModelStore = create<PersistenceModelStore>()(
   devtools(
     persist(
       (set, get) => ({
         models: {
-          playgroundModelId: {
+          [playgroundModelId]: {
             id: playgroundModelId,
             model: PlaygroundDefaultModel,
             lastModifiedAt: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
+            favorite: false,
           },
         },
+        thumbnails: {},
+        thumbnailRevisions: {},
+        thumbnailLastModifiedAt: {},
         currentModelId: null,
 
         setCurrentModelId: (id) =>
@@ -71,6 +112,8 @@ export const usePersistenceModelStore = create<PersistenceModelStore>()(
             id: model.id,
             model,
             lastModifiedAt: now,
+            createdAt: now,
+            favorite: false,
           }
 
           set(
@@ -91,6 +134,8 @@ export const usePersistenceModelStore = create<PersistenceModelStore>()(
             id: model.id,
             model,
             lastModifiedAt: now,
+            createdAt: now,
+            favorite: false,
           }
 
           set(
@@ -100,6 +145,49 @@ export const usePersistenceModelStore = create<PersistenceModelStore>()(
             }),
             false,
             "createModel"
+          )
+        },
+
+        importModels: (models) => {
+          set(
+            (state) => {
+              const importedModels = { ...state.models }
+              let latestId: string | null = null
+              let latestTime = ""
+
+              for (const { model, lastModifiedAt } of models) {
+                if (importedModels[model.id]) {
+                  continue
+                }
+
+                const persistedAt = lastModifiedAt ?? new Date().toISOString()
+                importedModels[model.id] = {
+                  id: model.id,
+                  model,
+                  lastModifiedAt: persistedAt,
+                  createdAt: persistedAt,
+                  favorite: false,
+                }
+
+                // Default to the first imported diagram, then prefer the newest
+                // by real ISO timestamp — so a missing timestamp never wins, but
+                // something is always selectable.
+                latestId ??= model.id
+                if (lastModifiedAt && lastModifiedAt > latestTime) {
+                  latestTime = lastModifiedAt
+                  latestId = model.id
+                }
+              }
+
+              return {
+                models: importedModels,
+                // Only adopt a migrated diagram as current if the user has none
+                // open yet — never steal focus from an in-progress diagram.
+                currentModelId: state.currentModelId ?? latestId,
+              }
+            },
+            false,
+            "importModels"
           )
         },
 
@@ -115,6 +203,9 @@ export const usePersistenceModelStore = create<PersistenceModelStore>()(
                     id: model.id,
                     model,
                     lastModifiedAt,
+                    createdAt:
+                      state.models[model.id]?.createdAt ?? lastModifiedAt,
+                    favorite: state.models[model.id]?.favorite ?? false,
                   },
                 },
               }
@@ -124,63 +215,164 @@ export const usePersistenceModelStore = create<PersistenceModelStore>()(
           )
         },
 
+        duplicateModel: (id) => {
+          const sourceEntity = get().models[id]
+
+          if (!sourceEntity) {
+            return ""
+          }
+
+          const sourceModel = sourceEntity.model
+          const clonedModel: UMLModel =
+            typeof structuredClone === "function"
+              ? structuredClone(sourceModel)
+              : JSON.parse(JSON.stringify(sourceModel))
+
+          const existingTitles = new Set(
+            Object.values(get().models).map((entity) => entity.model.title)
+          )
+          const sourceTitle = sourceModel.title
+          const defaultCopyTitle = `${sourceTitle} (Copy)`
+          let copyTitle = defaultCopyTitle
+          let counter = 2
+
+          while (existingTitles.has(copyTitle)) {
+            copyTitle = `${sourceTitle} (Copy ${counter})`
+            counter += 1
+          }
+
+          const duplicatedId = uuidv4()
+          const duplicatedModel: UMLModel = {
+            ...clonedModel,
+            id: duplicatedId,
+            title: copyTitle,
+          }
+          const lastModifiedAt = new Date().toISOString()
+
+          set(
+            (state) => ({
+              models: {
+                ...state.models,
+                [duplicatedId]: {
+                  id: duplicatedId,
+                  model: duplicatedModel,
+                  lastModifiedAt,
+                  createdAt: lastModifiedAt,
+                  favorite: sourceEntity.favorite,
+                },
+              },
+              thumbnails: state.thumbnails[id]
+                ? { ...state.thumbnails, [duplicatedId]: state.thumbnails[id] }
+                : state.thumbnails,
+              thumbnailRevisions: state.thumbnailRevisions[id]
+                ? {
+                    ...state.thumbnailRevisions,
+                    [duplicatedId]: state.thumbnailRevisions[id],
+                  }
+                : state.thumbnailRevisions,
+              thumbnailLastModifiedAt: state.thumbnailLastModifiedAt[id]
+                ? {
+                    ...state.thumbnailLastModifiedAt,
+                    [duplicatedId]: state.thumbnailLastModifiedAt[id],
+                  }
+                : state.thumbnailLastModifiedAt,
+            }),
+            false,
+            "duplicateModel"
+          )
+
+          return duplicatedId
+        },
+
         deleteModel: (id) => {
           set(
             (state) => {
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
               const { [id]: _, ...rest } = state.models
-              return { models: rest }
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              const { [id]: __, ...thumbnailRest } = state.thumbnails
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              const { [id]: ___, ...revisionRest } = state.thumbnailRevisions
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              const { [id]: ____, ...thumbnailLastModifiedAtRest } =
+                state.thumbnailLastModifiedAt
+              return {
+                models: rest,
+                thumbnails: thumbnailRest,
+                thumbnailRevisions: revisionRest,
+                thumbnailLastModifiedAt: thumbnailLastModifiedAtRest,
+              }
             },
             false,
             "deleteModel"
           )
         },
 
-        getCurrentModel: () => {
-          const currentModelId = get().currentModelId
-          if (!currentModelId) return null
-          return get().models[currentModelId]
-        },
-
-        importModels: (entries) => {
-          if (entries.length === 0) return
-
+        toggleFavorite: (id) => {
           set(
             (state) => {
-              const models = { ...state.models }
-              let latestId: string | null = null
-              let latestTime = ""
-
-              for (const { model, lastModifiedAt } of entries) {
-                models[model.id] = {
-                  id: model.id,
-                  model,
-                  lastModifiedAt: lastModifiedAt ?? new Date().toISOString(),
-                }
-                // Default to the first imported diagram, then prefer the newest
-                // by real ISO timestamp — so a missing timestamp never wins, but
-                // something is always selectable.
-                latestId ??= model.id
-                if (lastModifiedAt && lastModifiedAt > latestTime) {
-                  latestTime = lastModifiedAt
-                  latestId = model.id
-                }
+              const targetModel = state.models[id]
+              if (!targetModel) {
+                return state
               }
 
               return {
-                models,
-                // Only adopt a migrated diagram as current if the user has none
-                // open yet — never steal focus from an in-progress diagram.
-                currentModelId: state.currentModelId ?? latestId,
+                models: {
+                  ...state.models,
+                  [id]: {
+                    ...targetModel,
+                    favorite: !targetModel.favorite,
+                  },
+                },
               }
             },
             false,
-            "importModels"
+            "toggleFavorite"
           )
         },
+
+        setThumbnail: (id, svgString, lastModifiedAt) =>
+          set(
+            (state) => ({
+              thumbnails: {
+                ...state.thumbnails,
+                [id]: svgString,
+              },
+              thumbnailRevisions: {
+                ...state.thumbnailRevisions,
+                [id]: (state.thumbnailRevisions[id] ?? 0) + 1,
+              },
+              thumbnailLastModifiedAt: {
+                ...state.thumbnailLastModifiedAt,
+                [id]:
+                  lastModifiedAt ??
+                  state.models[id]?.lastModifiedAt ??
+                  new Date().toISOString(),
+              },
+            }),
+            false,
+            "setThumbnail"
+          ),
+
+        getThumbnail: (id) => get().thumbnails[id] ?? null,
       }),
       {
         name: "persistenceModelStore",
+        version: PERSISTENCE_STORE_VERSION,
+        partialize: (state) => ({
+          models: state.models,
+          currentModelId: state.currentModelId,
+        }),
+        migrate: (persistedState) => {
+          const state = persistedState as PersistedPersistenceModelStore
+          return {
+            ...state,
+            models: normalizePersistedModels(state.models),
+            thumbnails: {},
+            thumbnailRevisions: {},
+            thumbnailLastModifiedAt: {},
+          }
+        },
       }
     ),
     {

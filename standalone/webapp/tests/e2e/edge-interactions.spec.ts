@@ -2,10 +2,7 @@ import { test, expect, type Page, type Locator } from "@playwright/test"
 import * as fs from "node:fs"
 import * as path from "node:path"
 import { fileURLToPath } from "node:url"
-import {
-  waitForCanvasReady,
-  injectFixtureIntoLocalStorage,
-} from "../helpers/canvas"
+import { waitForCanvasReady, openFixtureInLocalEditor } from "../helpers/canvas"
 
 /**
  * Behavioural E2E coverage for edge editing: bend (waypoint) dragging,
@@ -81,8 +78,7 @@ async function isHorizontal(handle: Locator): Promise<boolean> {
 }
 
 test.beforeEach(async ({ page }) => {
-  await injectFixtureIntoLocalStorage(page, classDiagram)
-  await page.goto("/")
+  await openFixtureInLocalEditor(page, classDiagram)
   await waitForCanvasReady(page)
 })
 

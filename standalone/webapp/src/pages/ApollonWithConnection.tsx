@@ -16,6 +16,7 @@ import { DiagramView } from "@/types"
 import { WebSocketManager } from "@/services/WebSocketManager"
 import { ApiError, DiagramApiClient } from "@/services/DiagramApiClient"
 import { useVersionStore } from "@/stores/useVersionStore"
+import { useDocumentTitle } from "@/hooks/useDocumentTitle"
 import {
   UndoRestoreSnackbar,
   VersionDrawer,
@@ -28,7 +29,7 @@ import { useElementWidth } from "@/hooks/useElementWidth"
 import { useFlushOnUnload } from "@/hooks/useFlushOnUnload"
 import { useVersionShortcut } from "@/hooks/useVersionShortcut"
 import { log } from "@/logger"
-
+import { addSharedDiagramEntry } from "@/utils/sharedDiagramStorage"
 export const ApollonWithConnection: React.FC = () => {
   const { diagramId } = useParams()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -36,6 +37,19 @@ export const ApollonWithConnection: React.FC = () => {
   const { setEditor, editor } = useEditorContext()
   const { openModal } = useModalContext()
   const [isLoading, setIsLoading] = useState(true)
+  const [diagramTitle, setDiagramTitle] = useState<string | null>(null)
+  useDocumentTitle(diagramTitle)
+
+  // Keep the tab title in sync with the (possibly collaborator-edited) shared
+  // diagram name, the same way the local editor tracks it reactively.
+  useEffect(() => {
+    if (!editor) return
+    setDiagramTitle(editor.getDiagramMetadata().diagramTitle || null)
+    const subscriptionId = editor.subscribeToDiagramNameChange((title) =>
+      setDiagramTitle(title || null)
+    )
+    return () => editor.unsubscribe(subscriptionId)
+  }, [editor])
   const containerRef = useRef<HTMLDivElement | null>(null)
   const canvasColumnRef = useRef<HTMLDivElement | null>(null)
   const canvasColumnWidth = useElementWidth(canvasColumnRef)
@@ -53,6 +67,7 @@ export const ApollonWithConnection: React.FC = () => {
    */
   const prePreviewFingerprintRef = useRef<string | null>(null)
   const hasPromptedRef = useRef(false)
+  const lifecycleKeyRef = useRef<string | null>(null)
   // True when the current preview's body differs from the canvas the user
   // had before entering preview. Computed once on preview entry and held
   // through the preview so the banner can show/hide "Restore" without
@@ -81,14 +96,19 @@ export const ApollonWithConnection: React.FC = () => {
   })
 
   useEffect(() => {
+    const nextLifecycleKey = `${diagramId ?? ""}:${viewType ?? ""}`
+
     // The component instance survives diagramId / viewType / user
     // changes (same `/:diagramId` route), so state and refs must be
-    // reset explicitly per lifecycle.
-    setIsLoading(true)
-    diagramIsUpdated.current = false
-    lastObservedHeadRev.current = undefined
-    restoredDuringPreviewRef.current = false
-    hasPromptedRef.current = false
+    // reset explicitly per route lifecycle, not on every rerender.
+    if (lifecycleKeyRef.current !== nextLifecycleKey) {
+      lifecycleKeyRef.current = nextLifecycleKey
+      setIsLoading(true)
+      diagramIsUpdated.current = false
+      lastObservedHeadRev.current = undefined
+      restoredDuringPreviewRef.current = false
+      hasPromptedRef.current = false
+    }
 
     const abort = new AbortController()
     let instance: ApollonEditor | null = null
@@ -127,6 +147,9 @@ export const ApollonWithConnection: React.FC = () => {
                   color: collabColorFromName(name),
                 })
               },
+              onClose: () => {
+                navigate("/", { replace: true })
+              },
             })
           }
           return
@@ -136,6 +159,9 @@ export const ApollonWithConnection: React.FC = () => {
           signal: abort.signal,
         })
         if (abort.signal.aborted) return
+        addSharedDiagramEntry(diagramId, {
+          lastSharedView: viewType as DiagramView,
+        })
         log.debug("Fetched diagram", {
           diagramId,
           nodeCount: diagram.nodes?.length ?? 0,

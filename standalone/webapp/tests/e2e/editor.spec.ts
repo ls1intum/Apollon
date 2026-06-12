@@ -20,13 +20,54 @@ function fileMenuButton(page: Page) {
   return page.locator("#file-menu-button").first()
 }
 
+async function openTemporaryLocalDiagram(page: Page) {
+  const modelId = "e2e-local-model-id"
+
+  await page.goto("/")
+  await page.evaluate((id) => {
+    const storeValue = JSON.stringify({
+      state: {
+        models: {
+          [id]: {
+            id,
+            model: {
+              id,
+              type: "ClassDiagram",
+              assessments: {},
+              edges: [],
+              nodes: [],
+              title: "E2E Diagram",
+              version: "4.0.0",
+            },
+            lastModifiedAt: new Date().toISOString(),
+          },
+        },
+        currentModelId: id,
+      },
+      version: 0,
+    })
+
+    localStorage.setItem("persistenceModelStore", storeValue)
+  }, modelId)
+
+  await page.goto(`/local/${modelId}`)
+  const isLegacyRouting =
+    (await page.getByText("Something went wrong.").count()) > 0
+
+  if (isLegacyRouting) {
+    await page.goto("/")
+  } else {
+    await expect(page).toHaveURL(new RegExp(`/local/${modelId}$`))
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Basic loading
 // ---------------------------------------------------------------------------
 
 test.describe("Editor loading", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/")
+    await openTemporaryLocalDiagram(page)
     await waitForCanvasReady(page, false)
   })
 
@@ -61,12 +102,13 @@ test.describe("Editor loading", () => {
 
 test.describe("Template diagram interactions", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/")
+    await openTemporaryLocalDiagram(page)
     await waitForCanvasReady(page, false)
 
-    // Load the Adapter template via File → Start from Template → Create
+    // Load the Adapter template via File → New Diagram → Use template → Create
     await fileMenuButton(page).click()
-    await page.getByText("Start from Template").click()
+    await page.getByText("New Diagram").click()
+    await page.getByRole("button", { name: "Use template" }).click()
     await page.getByRole("button", { name: "Create Diagram" }).click()
     await waitForCanvasReady(page)
 
@@ -102,6 +144,81 @@ test.describe("Template diagram interactions", () => {
     const edges = page.locator(".react-flow__edge")
     expect(await edges.count()).toBeGreaterThan(0)
   })
+
+  test("creating from a template uses the shared name field as the diagram title", async ({
+    page,
+  }) => {
+    await openTemporaryLocalDiagram(page)
+    await waitForCanvasReady(page, false)
+
+    await fileMenuButton(page).click()
+    await page.getByText("New Diagram").click()
+    await page.getByRole("button", { name: "Use template" }).click()
+
+    const nameInput = page.getByLabel("Name")
+    await expect(nameInput).toHaveValue("Adapter")
+    await nameInput.fill("Custom Template Diagram")
+    await page.getByRole("button", { name: "Create Diagram" }).click()
+    await waitForCanvasReady(page)
+
+    const currentTitle = await page.evaluate(() => {
+      const raw = localStorage.getItem("persistenceModelStore")
+
+      if (!raw) {
+        return null
+      }
+
+      const parsed = JSON.parse(raw)
+      const currentModelId = parsed.state.currentModelId
+
+      return parsed.state.models[currentModelId]?.model?.title ?? null
+    })
+
+    expect(currentTitle).toBe("Custom Template Diagram")
+  })
+
+  test("template tab renders real diagram previews", async ({ page }) => {
+    await openTemporaryLocalDiagram(page)
+    await waitForCanvasReady(page, false)
+
+    await fileMenuButton(page).click()
+    await page.getByText("New Diagram").click()
+    await page.getByRole("button", { name: "Use template" }).click()
+
+    // Previews render lazily off an idle queue (a hidden editor per template),
+    // so allow generous time for the first light-mode thumbnail to appear. Assert
+    // the src is the rendered SVG data URL — not a placeholder/fallback icon — so
+    // this can only pass when the render pipeline actually produced a diagram.
+    const preview = page.locator("img.theme-thumbnail-light").first()
+    await expect(preview).toBeVisible({ timeout: 20_000 })
+    await expect(preview).toHaveAttribute("src", /^data:image\/svg\+xml/)
+  })
+
+  test("creating the same template twice yields two distinct diagrams", async ({
+    page,
+  }) => {
+    const createFromTemplate = async () => {
+      await fileMenuButton(page).click()
+      await page.getByText("New Diagram").click()
+      await page.getByRole("button", { name: "Use template" }).click()
+      await page.getByRole("button", { name: "Create Diagram" }).click()
+      await waitForCanvasReady(page)
+    }
+
+    await openTemporaryLocalDiagram(page)
+    await waitForCanvasReady(page, false)
+    await createFromTemplate()
+    await createFromTemplate()
+
+    // Templates ship with fixed (and shared) ids; each creation must get a
+    // fresh id, otherwise the second overwrites the first on the same key.
+    const modelIds = await page.evaluate(() => {
+      const raw = localStorage.getItem("persistenceModelStore")
+      return raw ? Object.keys(JSON.parse(raw).state.models) : []
+    })
+    expect(new Set(modelIds).size).toBe(modelIds.length)
+    expect(modelIds.length).toBeGreaterThanOrEqual(2)
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -110,7 +227,7 @@ test.describe("Template diagram interactions", () => {
 
 test.describe("Canvas panning", () => {
   test("panning the canvas moves the viewport transform", async ({ page }) => {
-    await page.goto("/")
+    await openTemporaryLocalDiagram(page)
     await waitForCanvasReady(page, false)
 
     const viewport = page.locator(".react-flow__viewport").first()
@@ -185,7 +302,7 @@ test.describe("Playground page", () => {
 
 test.describe("Navbar", () => {
   test("navbar is visible with File button", async ({ page }) => {
-    await page.goto("/")
+    await openTemporaryLocalDiagram(page)
     await waitForCanvasReady(page, false)
 
     const fileButton = fileMenuButton(page)
@@ -193,15 +310,69 @@ test.describe("Navbar", () => {
   })
 
   test("File menu opens and shows expected items", async ({ page }) => {
-    await page.goto("/")
+    await openTemporaryLocalDiagram(page)
     await waitForCanvasReady(page, false)
 
     await fileMenuButton(page).click()
 
     // Verify key menu items are visible
-    await expect(page.getByText("New File")).toBeVisible()
-    await expect(page.getByText("Start from Template")).toBeVisible()
-    await expect(page.getByText("Load Diagram")).toBeVisible()
+    await expect(page.getByText("New Diagram")).toBeVisible()
     await expect(page.getByText("Export")).toBeVisible()
+    // "Start from Template" (now a tab in New Diagram) and "Load Diagram" (the
+    // dashboard is the loader) were removed.
+    await expect(page.getByText("Start from Template")).toHaveCount(0)
+    await expect(page.getByText("Load Diagram")).toHaveCount(0)
+  })
+
+  test("the All Diagrams link returns to the dashboard", async ({ page }) => {
+    await openTemporaryLocalDiagram(page)
+    await waitForCanvasReady(page, false)
+    await page.getByRole("link", { name: "All diagrams" }).click()
+    await expect(page).toHaveURL(/\/$/)
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Your diagrams" })
+    ).toBeVisible()
+  })
+
+  test("opening a legal page from the editor offers a way back to the diagram", async ({
+    page,
+  }) => {
+    await openTemporaryLocalDiagram(page)
+    await waitForCanvasReady(page, false)
+
+    await page.getByRole("button", { name: "Help" }).click()
+    await page.getByRole("menuitem", { name: "Privacy" }).click()
+    await expect(page).toHaveURL(/\/privacy$/)
+
+    // Provenance turns the chrome back link into a return to the exact diagram,
+    // not the generic dashboard — the editor->Help->legal dead end is gone.
+    const backToDiagram = page.getByRole("link", { name: "Back to diagram" })
+    await expect(backToDiagram).toBeVisible()
+    await backToDiagram.click()
+    await expect(page).toHaveURL(/\/local\/e2e-local-model-id$/)
+    await waitForCanvasReady(page, false)
+  })
+
+  test("provenance survives a legal cross-link hop back to the diagram", async ({
+    page,
+  }) => {
+    await openTemporaryLocalDiagram(page)
+    await waitForCanvasReady(page, false)
+
+    await page.getByRole("button", { name: "Help" }).click()
+    await page.getByRole("menuitem", { name: "Privacy" }).click()
+    await expect(page).toHaveURL(/\/privacy$/)
+
+    // Hop across legal pages via the footer; the origin must be forwarded, not
+    // replaced with the current /imprint|/privacy path.
+    const footer = page.getByRole("contentinfo")
+    await footer.getByRole("link", { name: "Imprint" }).click()
+    await expect(page).toHaveURL(/\/imprint$/)
+    await footer.getByRole("link", { name: "Privacy" }).click()
+    await expect(page).toHaveURL(/\/privacy$/)
+
+    await page.getByRole("link", { name: "Back to diagram" }).click()
+    await expect(page).toHaveURL(/\/local\/e2e-local-model-id$/)
+    await waitForCanvasReady(page, false)
   })
 })

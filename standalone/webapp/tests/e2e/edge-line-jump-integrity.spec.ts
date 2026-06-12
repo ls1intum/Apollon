@@ -2,10 +2,7 @@ import { test, expect, type Page } from "@playwright/test"
 import * as fs from "node:fs"
 import * as path from "node:path"
 import { fileURLToPath } from "node:url"
-import {
-  waitForCanvasReady,
-  injectFixtureIntoLocalStorage,
-} from "../helpers/canvas"
+import { waitForCanvasReady, openFixtureInLocalEditor } from "../helpers/canvas"
 
 /**
  * Geometry-integrity coverage for line jumps, asserted against the ACTUAL
@@ -130,8 +127,7 @@ async function checkIntegrity(page: Page) {
 }
 
 async function loadFixture(page: Page, name: string) {
-  await injectFixtureIntoLocalStorage(page, load(name))
-  await page.goto("/")
+  await openFixtureInLocalEditor(page, load(name))
   await waitForCanvasReady(page)
 }
 

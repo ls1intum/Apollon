@@ -2,10 +2,7 @@ import { test, expect, type Page } from "@playwright/test"
 import * as fs from "node:fs"
 import * as path from "node:path"
 import { fileURLToPath } from "node:url"
-import {
-  waitForCanvasReady,
-  injectFixtureIntoLocalStorage,
-} from "../helpers/canvas"
+import { waitForCanvasReady, openFixtureInLocalEditor } from "../helpers/canvas"
 
 /**
  * Edge decorations (the floating edit/delete toolbar and per-type annotations
@@ -99,11 +96,7 @@ async function sfcBarVsMiddle(page: Page, id: string) {
 test("the edit toolbar follows the bend handle live during the drag, not only on release", async ({
   page,
 }) => {
-  await injectFixtureIntoLocalStorage(
-    page,
-    readFixture("two-class-fresh-edge.json")
-  )
-  await page.goto("/")
+  await openFixtureInLocalEditor(page, readFixture("two-class-fresh-edge.json"))
   await waitForCanvasReady(page)
 
   const id = "231f7ef5-b43d-4187-8996-f7726ed6e919"
@@ -138,11 +131,7 @@ test("the edit toolbar follows the bend handle live during the drag, not only on
 test("the edit toolbar keeps a constant on-screen size across zoom (does not scale with the edge)", async ({
   page,
 }) => {
-  await injectFixtureIntoLocalStorage(
-    page,
-    readFixture("two-class-fresh-edge.json")
-  )
-  await page.goto("/")
+  await openFixtureInLocalEditor(page, readFixture("two-class-fresh-edge.json"))
   await waitForCanvasReady(page)
 
   const id = "231f7ef5-b43d-4187-8996-f7726ed6e919"
@@ -188,11 +177,7 @@ test("the edit toolbar keeps a constant on-screen size across zoom (does not sca
 test("the SFC transition bar sits on the edge centre, not off to the side", async ({
   page,
 }) => {
-  await injectFixtureIntoLocalStorage(
-    page,
-    readFixture("sfc-condition-edge.json")
-  )
-  await page.goto("/")
+  await openFixtureInLocalEditor(page, readFixture("sfc-condition-edge.json"))
   await waitForCanvasReady(page)
 
   await selectEdgeById(page, "sfcCondEdge")
@@ -212,11 +197,7 @@ test("the SFC transition bar sits on the edge centre, not off to the side", asyn
 test("the SFC transition bar follows the bend handle live during the drag", async ({
   page,
 }) => {
-  await injectFixtureIntoLocalStorage(
-    page,
-    readFixture("sfc-condition-edge.json")
-  )
-  await page.goto("/")
+  await openFixtureInLocalEditor(page, readFixture("sfc-condition-edge.json"))
   await waitForCanvasReady(page)
 
   await selectEdgeById(page, "sfcCondEdge")

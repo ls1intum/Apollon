@@ -2,10 +2,7 @@ import { test, expect, type Page, type Locator } from "@playwright/test"
 import * as fs from "node:fs"
 import * as path from "node:path"
 import { fileURLToPath } from "node:url"
-import {
-  waitForCanvasReady,
-  injectFixtureIntoLocalStorage,
-} from "../helpers/canvas"
+import { waitForCanvasReady, openFixtureInLocalEditor } from "../helpers/canvas"
 
 /**
  * Regression coverage for the "first bend on a freshly-created edge snaps
@@ -123,8 +120,7 @@ async function selectAndGetHandle(page: Page, edge: Locator) {
 
 test.describe("Fresh-edge first bend — loaded model", () => {
   test.beforeEach(async ({ page }) => {
-    await injectFixtureIntoLocalStorage(page, freshEdge)
-    await page.goto("/")
+    await openFixtureInLocalEditor(page, freshEdge)
     await waitForCanvasReady(page)
   })
 
@@ -167,8 +163,7 @@ test.describe("Fresh-edge first bend — loaded model", () => {
 
 test.describe("Fresh-edge first bend — drawn edge", () => {
   test.beforeEach(async ({ page }) => {
-    await injectFixtureIntoLocalStorage(page, noEdge)
-    await page.goto("/")
+    await openFixtureInLocalEditor(page, noEdge)
     await waitForCanvasReady(page)
   })
 

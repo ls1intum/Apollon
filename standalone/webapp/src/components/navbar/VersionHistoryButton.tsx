@@ -1,5 +1,6 @@
 import { Button, Tooltip } from "@mui/material"
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded"
+import { useLocation } from "react-router"
 import { useVersionStore } from "@/stores/useVersionStore"
 import { secondary } from "@/constants"
 import { versioningStrings as t } from "@/components/versioning/strings"
@@ -19,19 +20,26 @@ interface Props {
 /**
  * Discoverable navbar entry point for the version-history sidebar.
  *
- * Renders only when the URL points at a connected diagram. On `/` the
- * sidebar is hidden because there's no diagramId to attach versions to —
+ * Renders only on a shared/connected diagram route, where the version drawer
+ * is actually mounted (ApollonWithConnection). Local diagrams (`/local/:id`)
+ * and `/` have no versioning backend or drawer, so the button is hidden —
  * the user must Share first.
  */
 export const VersionHistoryButton = ({ color = secondary }: Props) => {
   const diagramId = useDiagramIdFromPath()
+  const { pathname } = useLocation()
+  // Versioning only exists on the connected /shared/:id route (legacy /:id
+  // redirects there). Local-only routes have no drawer to toggle.
+  const isSharedRoute =
+    pathname.startsWith("/shared/") ||
+    (!pathname.startsWith("/local/") && Boolean(diagramId))
   const openDrawer = useVersionStore((s) => s.openDrawer)
   const closeDrawer = useVersionStore((s) => s.closeDrawer)
   const isOpen = useVersionStore((s) =>
     diagramId ? Boolean(s.drawerOpenByDiagram[diagramId]) : false
   )
 
-  if (!diagramId) return null
+  if (!diagramId || !isSharedRoute) return null
 
   return (
     <Tooltip title={t.fabTooltip}>
