@@ -302,6 +302,41 @@ test.describe("Local version history (#670, /local/:id routing)", () => {
     await expect(page).not.toHaveURL(/[?&]version=/)
   })
 
+  test("a preview does NOT leak across client-side navigation", async ({
+    page,
+  }) => {
+    // Regression: `store.preview` is global. Previewing in one editor then
+    // navigating (client-side, no full reload) to another editor with no
+    // ?version= must NOT carry the banner over — the URL is the source of truth.
+    await seedLocalDiagram(page)
+    await openLocalEditor(page)
+    await ensureDrawerOpen(page)
+    await composer(page).fill("v1")
+    await saveVersionButton(page).click()
+    await page.getByText("v1", { exact: true }).first().click()
+    await expect(page).toHaveURL(/[?&]version=/)
+    await expect(
+      page.getByRole("button", { name: /Exit preview/i })
+    ).toBeVisible()
+
+    // Client-side nav to the gallery (no full reload — the store survives)...
+    await page
+      .getByRole("banner")
+      .getByRole("link", { name: /All diagrams/i })
+      .click()
+    await expect(page).toHaveURL(/\/$/)
+    // ...then re-open the same diagram with NO version param.
+    await page.getByRole("link", { name: /Open E2E Local/i }).click()
+    await expect(page).toHaveURL(new RegExp(`/local/${LOCAL_ID}$`))
+    await waitForCanvasReady(page)
+
+    // The stale preview must be gone — no banner, no leftover param.
+    await expect(
+      page.getByRole("button", { name: /Exit preview/i })
+    ).toHaveCount(0)
+    await expect(page).not.toHaveURL(/[?&]version=/)
+  })
+
   test("opening from the gallery lands on /local/:id with a working drawer", async ({
     page,
   }) => {
