@@ -11,6 +11,8 @@ import { NavbarHelp } from "./NavbarHelp"
 import { VersionHistoryButton } from "./VersionHistoryButton"
 import Button from "@mui/material/Button/Button"
 import { BrandAndVersion } from "./BrandAndVersion"
+import { BackNav } from "./BackNav"
+import { ALL_DIAGRAMS_LABEL } from "@/lib/navProvenance"
 import { useEditorContext, useModalContext } from "@/contexts"
 import TextField from "@mui/material/TextField/TextField"
 import { useNavigate } from "react-router"
@@ -106,17 +108,13 @@ export default function MobileNavbar() {
                   alignItems: "flex-start",
                 }}
               >
-                <Button
-                  sx={{ textTransform: "none" }}
-                  onClick={() => {
-                    handleCloseNavMenu()
-                    goHome()
-                  }}
-                >
-                  <Typography color="var(--apollon-primary-contrast)">
-                    All Diagrams
-                  </Typography>
-                </Button>
+                <BackNav
+                  to="/"
+                  label={ALL_DIAGRAMS_LABEL}
+                  tone="onSurface"
+                  onNavigate={handleCloseNavMenu}
+                  className="mx-1"
+                />
                 <NavbarFile
                   color="var(--apollon-primary-contrast)"
                   handleCloseNavMenu={handleCloseNavMenu}

@@ -324,10 +324,10 @@ test.describe("Navbar", () => {
     await expect(page.getByText("Load Diagram")).toHaveCount(0)
   })
 
-  test("the All Diagrams button returns to the dashboard", async ({ page }) => {
+  test("the All Diagrams link returns to the dashboard", async ({ page }) => {
     await openTemporaryLocalDiagram(page)
     await waitForCanvasReady(page, false)
-    await page.getByRole("button", { name: "All Diagrams" }).click()
+    await page.getByRole("link", { name: "All diagrams" }).click()
     await expect(page).toHaveURL(/\/$/)
     await expect(
       page.getByRole("heading", { level: 1, name: "Your diagrams" })

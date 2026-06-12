@@ -9,6 +9,8 @@ import { NavbarFile } from "./NavbarFile"
 import { NavbarHelp } from "./NavbarHelp"
 import { VersionHistoryButton } from "./VersionHistoryButton"
 import { BrandAndVersion } from "./BrandAndVersion"
+import { BackNav } from "./BackNav"
+import { ALL_DIAGRAMS_LABEL } from "@/lib/navProvenance"
 import { secondary } from "@/constants"
 import { useEffect, useRef, useState } from "react"
 import { useModalContext, useEditorContext } from "@/contexts"
@@ -90,9 +92,7 @@ export const DesktopNavbar = () => {
             minWidth: 0,
           }}
         >
-          <Button sx={{ textTransform: "none" }} onClick={goHome}>
-            <Typography color={secondary}>All Diagrams</Typography>
-          </Button>
+          <BackNav to="/" label={ALL_DIAGRAMS_LABEL} tone="onDark" />
           <NavbarFile />
           <Button
             sx={{ textTransform: "none" }} // This removes the uppercase transformation
