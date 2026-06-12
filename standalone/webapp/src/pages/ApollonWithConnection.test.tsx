@@ -27,6 +27,12 @@ const FakeApollonEditor = vi.hoisted(
       subscribeToCollaboratorChanges() {
         return 4
       }
+      subscribeToDiagramNameChange() {
+        return 5
+      }
+      getDiagramMetadata() {
+        return { diagramTitle: "Fake Diagram" }
+      }
       unsubscribe() {}
       setReadonly() {}
       setPreviewMode() {}

@@ -91,6 +91,8 @@
 
 :root[data-theme="dark"] {
   color-scheme: dark;
+
+  /* Editor base tokens — dark first-paint fallback. */
   --apollon-background: #181a18;
   --apollon-primary-contrast: #fff;
 
