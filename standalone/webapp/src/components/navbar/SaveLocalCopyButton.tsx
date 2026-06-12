@@ -2,7 +2,7 @@ import { Button, Tooltip } from "@mui/material"
 import SaveAltIcon from "@mui/icons-material/SaveAlt"
 import { v4 as uuidv4 } from "uuid"
 import { toast } from "react-toastify"
-import { useLocation, useNavigate } from "react-router"
+import { useLocation, useNavigate } from "@tanstack/react-router"
 import type { UMLModel } from "@tumaet/apollon"
 import { useEditorContext } from "@/contexts"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
@@ -53,7 +53,7 @@ export const SaveLocalCopyButton = ({ color = secondary, onAfter }: Props) => {
       // Mirrors `JsonFileImportButton` — navigate to the new local route so
       // the user lands on the diagram they just saved. `/` is now the
       // gallery, so we route to `/local/<newId>` explicitly.
-      navigate(`/local/${newId}`, { replace: true })
+      navigate({ to: "/local/$id", params: { id: newId }, replace: true })
     } catch (err) {
       log.error("Save a local copy failed", err as Error)
       toast.error(t.saveLocalCopyFailed)

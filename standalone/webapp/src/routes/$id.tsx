@@ -1,5 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router"
 import { ErrorPage } from "@/pages/ErrorPage"
+import { DiagramView } from "@/types/ModalTypes"
 
 /**
  * Legacy single-segment route (`/:id`) from the native iOS app, which linked
@@ -19,8 +20,13 @@ export const Route = createFileRoute("/$id")({
       throw redirect({
         to: "/shared/$diagramId",
         params: { diagramId: params.id },
-        // Re-validated by the target route; encoding handled by the router.
-        search: search as { view?: string; version?: string },
+        // Forward the legacy `?view`/`?version`; the target route's
+        // validateSearch re-sanitises them (an invalid view collapses to
+        // undefined), and the router handles param encoding.
+        search: {
+          view: search.view as DiagramView | undefined,
+          version: search.version as string | undefined,
+        },
         replace: true,
       })
     }

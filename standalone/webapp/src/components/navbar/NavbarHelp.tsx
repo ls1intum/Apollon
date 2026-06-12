@@ -7,7 +7,7 @@ import Typography from "@mui/material/Typography/Typography"
 import { secondary } from "@/constants"
 import { bugReportURL } from "@/constants/urls"
 import { useModalContext } from "@/contexts"
-import { useLocation, useNavigate } from "react-router"
+import { useLocation, useNavigate } from "@tanstack/react-router"
 import { KeyboardArrowDownIcon } from "../Icon"
 
 interface Props {
@@ -24,8 +24,13 @@ export const NavbarHelp: FC<Props> = ({ color }) => {
   // to the diagram they were editing. This is the single editor → legal
   // chokepoint (both the desktop and mobile navbars render NavbarHelp), so the
   // dead-end fix lives in exactly one place.
-  const goToLegalPage = (path: string) => {
-    navigate(path, { state: { from: location.pathname + location.search } })
+  const goToLegalPage = (path: "/imprint" | "/privacy") => {
+    navigate({
+      to: path,
+      // `searchStr` includes the leading "?" — exact equivalent of the old
+      // react-router `location.search` string.
+      state: { from: location.pathname + location.searchStr },
+    })
     handleClose()
   }
 
@@ -55,7 +60,7 @@ export const NavbarHelp: FC<Props> = ({ color }) => {
   }
 
   const linkToPlayground = () => {
-    navigate("/playground")
+    navigate({ to: "/playground" })
     handleClose()
   }
 

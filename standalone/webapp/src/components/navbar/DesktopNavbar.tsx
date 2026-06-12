@@ -15,7 +15,7 @@ import { ALL_DIAGRAMS_LABEL } from "@/lib/navProvenance"
 import { secondary } from "@/constants"
 import { useEffect, useRef, useState } from "react"
 import { useModalContext, useEditorContext } from "@/contexts"
-import { Link } from "react-router"
+import { Link } from "@tanstack/react-router"
 import { ThemeSwitcherMenu } from "./ThemeSwitcher"
 import { NAVBAR_SX } from "./styleConstants"
 

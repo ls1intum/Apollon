@@ -474,6 +474,9 @@ importers:
       '@tailwindcss/vite':
         specifier: 'catalog:'
         version: 4.0.17(vite@6.4.2(@types/node@24.12.4)(jiti@2.7.0)(lightningcss@1.29.2)(terser@5.47.1)(tsx@4.19.2)(yaml@2.9.0))
+      '@tanstack/history':
+        specifier: 1.162.0
+        version: 1.162.0
       '@tanstack/react-router':
         specifier: 1.170.15
         version: 1.170.15(react-dom@18.3.1(react@18.3.1))(react@18.3.1)

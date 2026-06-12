@@ -1,5 +1,5 @@
 import React, { lazy, Suspense, useEffect, useRef } from "react"
-import { useNavigate, useLocation } from "react-router"
+import { useNavigate, useLocation } from "@tanstack/react-router"
 import { importDiagram } from "@tumaet/apollon"
 import { toast } from "react-toastify"
 import { log } from "@/logger"
@@ -44,7 +44,11 @@ export const HomePage = () => {
           throw new Error("Imported diagram has no id")
         }
         usePersistenceModelStore.getState().createModel(processedModel)
-        navigate(`/local/${processedModel.id}`, { replace: true })
+        navigate({
+          to: "/local/$id",
+          params: { id: processedModel.id },
+          replace: true,
+        })
       } catch (error) {
         log.error("Invalid JSON file", error as Error)
         toast.error("Failed to import diagram — invalid JSON file.")

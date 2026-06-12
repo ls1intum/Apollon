@@ -6,7 +6,7 @@ import {
   useState,
   type FC,
 } from "react"
-import { useLocation, useParams } from "react-router"
+import { getRouteApi, useLocation } from "@tanstack/react-router"
 import { Box } from "@mui/material"
 import { toast } from "react-toastify"
 import {
@@ -41,6 +41,10 @@ import { ErrorPage } from "./ErrorPage"
 
 const THUMBNAIL_DEBOUNCE_MS = 2000
 
+// Route-bound API for typed params (avoids importing the route file, which
+// would create a cycle: the route file imports this page).
+const route = getRouteApi("/local/$id")
+
 /**
  * Standalone-mode local editor page (`/local/:id`). Mounts the versioning UI
  * against `LocalVersionRepository` and keys version history off the
@@ -63,7 +67,7 @@ export const ApollonLocal: FC = () => {
   const isThumbnailExportCanceledRef = useRef(false)
   const { setEditor, editor } = useEditorContext()
   const { openModal } = useModalContext()
-  const { id: diagramId } = useParams()
+  const { id: diagramId } = route.useParams()
   const location = useLocation()
   const locationRef = useRef(location)
   const { state } = location

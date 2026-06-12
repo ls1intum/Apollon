@@ -43,6 +43,7 @@
     "@mui/icons-material": "6.4.2",
     "@mui/material": "catalog:",
     "@tailwindcss/vite": "catalog:",
+    "@tanstack/history": "1.162.0",
     "@tanstack/react-router": "1.170.15",
     "@tumaet/apollon": "workspace:*",
     "@xyflow/react": "catalog:",

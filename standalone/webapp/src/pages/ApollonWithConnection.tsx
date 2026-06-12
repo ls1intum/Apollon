@@ -14,7 +14,7 @@ import {
   type ApollonOptions,
   type UMLModel,
 } from "@tumaet/apollon/react"
-import { useNavigate, useParams, useSearchParams } from "react-router"
+import { getRouteApi, useNavigate } from "@tanstack/react-router"
 import { toast } from "react-toastify"
 import { Box } from "@mui/material"
 import { DiagramView } from "@/types"
@@ -36,9 +36,14 @@ import { useFlushOnUnload } from "@/hooks/useFlushOnUnload"
 import { useVersionShortcut } from "@/hooks/useVersionShortcut"
 import { log } from "@/logger"
 import { addSharedDiagramEntry } from "@/utils/sharedDiagramStorage"
+
+// Route-bound API for typed params + search (avoids importing the route file,
+// which would create a cycle: the route file imports this page).
+const route = getRouteApi("/shared/$diagramId")
+
 export const ApollonWithConnection: React.FC = () => {
-  const { diagramId } = useParams()
-  const [searchParams] = useSearchParams()
+  const { diagramId } = route.useParams()
+  const { view: viewType } = route.useSearch()
   const navigate = useNavigate()
   const { setEditor, editor } = useEditorContext()
   const { openModal } = useModalContext()
@@ -84,7 +89,6 @@ export const ApollonWithConnection: React.FC = () => {
     name: string
     color: string
   } | null>(null)
-  const viewType = searchParams.get("view")
 
   const preview = useVersionStore((s) => s.preview)
   const restoreVersion = useVersionStore((s) => s.restoreVersion)
@@ -145,7 +149,7 @@ export const ApollonWithConnection: React.FC = () => {
         const validViews = Object.values(DiagramView)
         if (!viewType || !validViews.includes(viewType as DiagramView)) {
           toast.error("Invalid view type")
-          navigate("/")
+          navigate({ to: "/" })
           return
         }
         log.debug("Initializing Apollon editor with view type:", viewType)
@@ -171,7 +175,7 @@ export const ApollonWithConnection: React.FC = () => {
                 })
               },
               onClose: () => {
-                navigate("/", { replace: true })
+                navigate({ to: "/", replace: true })
               },
             })
           }
@@ -318,7 +322,7 @@ export const ApollonWithConnection: React.FC = () => {
         if (err instanceof DOMException && err.name === "AbortError") return
         log.error("Failed to initialize diagram", err)
         toast.error("Failed to initialize diagram")
-        navigate("/")
+        navigate({ to: "/" })
       }
     }
 

@@ -1,6 +1,6 @@
 import { Button, Tooltip } from "@mui/material"
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded"
-import { useLocation } from "react-router"
+import { useLocation } from "@tanstack/react-router"
 import { useVersionStore } from "@/stores/useVersionStore"
 import { secondary } from "@/constants"
 import { versioningStrings as t } from "@/components/versioning/strings"

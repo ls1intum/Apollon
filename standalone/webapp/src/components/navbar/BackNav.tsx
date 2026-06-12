@@ -1,4 +1,4 @@
-import { Link } from "react-router"
+import { Link, type LinkProps } from "@tanstack/react-router"
 import { cn } from "@/lib/utils"
 
 type BackNavTone = "onDark" | "onSurface"
@@ -34,7 +34,9 @@ export const BackNav = ({
   className?: string
 }) => (
   <Link
-    to={to}
+    // `to` is a runtime-built, pre-validated route path (see useBackTarget /
+    // isRestorableEditorPath); cast past TanStack's literal-route typing.
+    to={to as LinkProps["to"]}
     onClick={onNavigate}
     className={cn(
       "inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2",

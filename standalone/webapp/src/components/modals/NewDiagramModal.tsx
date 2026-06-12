@@ -2,7 +2,7 @@ import { useState } from "react"
 import { v4 as uuidv4 } from "uuid"
 import { useModalContext } from "@/contexts/ModalContext"
 import { UMLDiagramType } from "@tumaet/apollon/react"
-import { useNavigate } from "react-router"
+import { useNavigate } from "@tanstack/react-router"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { getDiagramTypeIcon } from "@/components/home/diagramTypeMeta"
 import { TemplateThumbnail } from "./TemplateThumbnail"
@@ -135,7 +135,7 @@ export const NewDiagramModal = () => {
       selectedDiagramType
     )
     closeModal()
-    navigate(`/local/${newId}`)
+    navigate({ to: "/local/$id", params: { id: newId } })
   }
 
   const handleDiagramNameChange = (
@@ -198,7 +198,9 @@ export const NewDiagramModal = () => {
 
       createModel(templateModel)
       closeModal()
-      navigate(`/local/${templateModel.id}`, {
+      navigate({
+        to: "/local/$id",
+        params: { id: templateModel.id },
         state: { timeStapToCreate },
       })
     } catch (err: unknown) {

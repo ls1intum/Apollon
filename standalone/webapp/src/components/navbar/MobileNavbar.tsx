@@ -16,7 +16,7 @@ import { BackNav } from "./BackNav"
 import { ALL_DIAGRAMS_LABEL } from "@/lib/navProvenance"
 import { useEditorContext, useModalContext } from "@/contexts"
 import TextField from "@mui/material/TextField/TextField"
-import { Link } from "react-router"
+import { Link } from "@tanstack/react-router"
 import { ThemeSwitcherMenu } from "./ThemeSwitcher"
 import { NAVBAR_SX } from "./styleConstants"
 

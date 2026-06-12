@@ -8,13 +8,13 @@ import { Clipboard } from "@capacitor/clipboard"
 import { isPlatform } from "@ionic/react"
 import Info from "@mui/icons-material/Info"
 import { Tooltip } from "@mui/material"
-import { useNavigate } from "react-router"
+import { useNavigate } from "@tanstack/react-router"
 import { toast } from "react-toastify"
 import { Button } from "@/components/ui/button"
 import { addSharedDiagramEntry } from "@/utils/sharedDiagramStorage"
 import {
-  buildSharedDiagramPath,
   buildSharedDiagramUrl,
+  sharedDiagramRoute,
 } from "@/utils/sharedDiagramLinks"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { versioningStrings as t } from "@/components/versioning/strings"
@@ -39,7 +39,7 @@ export const ShareModal = () => {
       const newurl = buildSharedDiagramUrl(diagramID, viewType)
 
       await copyToClipboard(newurl)
-      navigate(buildSharedDiagramPath(diagramID, viewType))
+      navigate(sharedDiagramRoute(diagramID, viewType))
       closeModal()
 
       toast.success(

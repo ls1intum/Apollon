@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from "react"
-import { useSearchParams } from "react-router"
+import { useNavigate, useSearch } from "@tanstack/react-router"
 import { toast } from "react-toastify"
 import { useVersionStore } from "@/stores/useVersionStore"
 import { versioningStrings as t } from "@/components/versioning/strings"
@@ -26,8 +26,11 @@ export const PREVIEW_VERSION_PARAM = "version"
  * - Unknown / deleted / foreign-device ids fail soft: toast, strip the param,
  *   fall back to the live canvas — never crash.
  *
- * Must be called once per editor page (it owns the URL→store effect). The
- * returned writers are safe to spread to children.
+ * Mounted once per editor page. `useSearch({ strict: false })` keeps it
+ * route-agnostic: the same hook serves `/local/$id` and `/shared/$diagramId`,
+ * both of which type `version` as an optional string. Search is a parsed
+ * object (not a string), and `navigate({ to: "." })` rewrites only the search
+ * of the current route, preserving the path + params.
  *
  * `ready` MUST be false until the page has bound the active `VersionRepository`
  * (pass `Boolean(editor)` — the editor and the repo are bound together).
@@ -38,8 +41,9 @@ export function useVersionPreviewUrlSync(
   diagramId: string | undefined,
   ready: boolean = true
 ) {
-  const [searchParams, setSearchParams] = useSearchParams()
-  const previewFromUrl = searchParams.get(PREVIEW_VERSION_PARAM)
+  const search = useSearch({ strict: false }) as { version?: string }
+  const previewFromUrl = search.version ?? null
+  const navigate = useNavigate()
   const enterPreview = useVersionStore((s) => s.enterPreview)
   const exitPreview = useVersionStore((s) => s.exitPreview)
   const previewVersionId = useVersionStore((s) => s.preview?.versionId ?? null)
@@ -63,14 +67,11 @@ export function useVersionPreviewUrlSync(
           )
           toast.error(t.previewUnavailable)
           // Strip the dangling param so reload/Back land on the live canvas.
-          setSearchParams(
-            (prev) => {
-              const next = new URLSearchParams(prev)
-              next.delete(PREVIEW_VERSION_PARAM)
-              return next
-            },
-            { replace: true }
-          )
+          void navigate({
+            to: ".",
+            search: (prev) => ({ ...prev, [PREVIEW_VERSION_PARAM]: undefined }),
+            replace: true,
+          })
         })
       }
     } else if (previewVersionId !== null) {
@@ -85,35 +86,30 @@ export function useVersionPreviewUrlSync(
     ready,
     enterPreview,
     exitPreview,
-    setSearchParams,
+    navigate,
   ])
 
   const openPreview = useCallback(
     (versionId: string) => {
-      setSearchParams(
-        (prev) => {
-          const next = new URLSearchParams(prev)
-          next.set(PREVIEW_VERSION_PARAM, versionId)
-          return next
-        },
-        // Push once when entering from the live canvas; replace on every
-        // subsequent version→version hop so Back doesn't walk through them.
-        { replace: searchParams.has(PREVIEW_VERSION_PARAM) }
-      )
+      // Push once when entering from the live canvas; replace on every
+      // subsequent version→version hop so Back doesn't walk through them.
+      const replace = previewFromUrl !== null
+      void navigate({
+        to: ".",
+        search: (prev) => ({ ...prev, [PREVIEW_VERSION_PARAM]: versionId }),
+        replace,
+      })
     },
-    [setSearchParams, searchParams]
+    [navigate, previewFromUrl]
   )
 
   const closePreview = useCallback(() => {
-    setSearchParams(
-      (prev) => {
-        const next = new URLSearchParams(prev)
-        next.delete(PREVIEW_VERSION_PARAM)
-        return next
-      },
-      { replace: true }
-    )
-  }, [setSearchParams])
+    void navigate({
+      to: ".",
+      search: (prev) => ({ ...prev, [PREVIEW_VERSION_PARAM]: undefined }),
+      replace: true,
+    })
+  }, [navigate])
 
   return { previewFromUrl, openPreview, closePreview }
 }

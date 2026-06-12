@@ -1,4 +1,4 @@
-import { useLocation } from "react-router"
+import { useLocation } from "@tanstack/react-router"
 import {
   ALL_DIAGRAMS_LABEL,
   BACK_TO_DIAGRAM_LABEL,

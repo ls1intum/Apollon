@@ -1,4 +1,4 @@
-import { useLocation } from "react-router"
+import { useLocation } from "@tanstack/react-router"
 
 /**
  * Reserved top-level paths in `App.tsx`. Kept in sync with `<Routes>`
