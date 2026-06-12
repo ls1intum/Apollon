@@ -1,6 +1,6 @@
 import type { InputHTMLAttributes, ReactNode } from "react"
 import type { ModalProps } from "@/types"
-import { HomeButton } from "@/components/home/primitives/HomeButton"
+import { Button } from "@/components/ui/button"
 
 export type HomeDialogSize = "compact" | "wide"
 
@@ -162,16 +162,15 @@ export const HomeDialogActions = ({
   onConfirm: () => void
 }) => (
   <div className="flex items-center justify-between gap-2 pt-4">
-    <HomeButton variant="ghost" size="md" disabled={loading} onClick={onCancel}>
+    <Button variant="ghost" disabled={loading} onClick={onCancel}>
       {cancelLabel}
-    </HomeButton>
-    <HomeButton
-      variant="primary"
-      size="md"
+    </Button>
+    <Button
+      variant="default"
       disabled={loading || confirmDisabled}
       onClick={onConfirm}
     >
       {loading && loadingLabel ? loadingLabel : confirmLabel}
-    </HomeButton>
+    </Button>
   </div>
 )

@@ -38,7 +38,7 @@ import {
   type SegmentedControlOption,
 } from "./SegmentedControl"
 import { DropdownFilterMenu } from "./DropdownFilterMenu"
-import { HomeButton } from "./primitives/HomeButton"
+import { Button } from "@/components/ui/button"
 
 const normalize = (value: string) => value.trim().toLowerCase()
 const INITIAL_VISIBLE_COUNT = 9
@@ -711,7 +711,7 @@ export const DiagramGallery = ({
             Your diagrams
           </h1>
           <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center">
-            <HomeButton
+            <Button
               variant="secondary"
               size="sm"
               onClick={onImportJson}
@@ -740,9 +740,9 @@ export const DiagramGallery = ({
               }
             >
               Import
-            </HomeButton>
-            <HomeButton
-              variant="primary"
+            </Button>
+            <Button
+              variant="default"
               size="sm"
               onClick={onNewDiagram}
               className="col-span-2 w-full sm:col-span-1 sm:w-auto"
@@ -764,7 +764,7 @@ export const DiagramGallery = ({
               }
             >
               New diagram
-            </HomeButton>
+            </Button>
           </div>
         </div>
 
