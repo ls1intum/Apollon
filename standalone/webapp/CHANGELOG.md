@@ -1,5 +1,18 @@
 # @tumaet/webapp
 
+## 4.6.0
+
+### Minor Changes
+
+- [#662](https://github.com/ls1intum/Apollon/pull/662) [`6bc0372`](https://github.com/ls1intum/Apollon/commit/6bc037268849b657cb409f9a0bf3b805e52a7883) Thanks [@FadyGergesRezk](https://github.com/FadyGergesRezk)! - Add a home page that opens to a gallery of all your diagrams, each with a live preview, plus search, sorting by last modified, and favorites — with your shared diagrams shown alongside your local ones. You can create a diagram from scratch or from a template (previewing each) without leaving the gallery, and because every diagram now has its own address you can cmd/ctrl-click to open several in new tabs and jump back to the gallery from the editor. The imprint and privacy pages are reachable from anywhere, with a clear way back to whatever you were working on.
+
+### Patch Changes
+
+- [#744](https://github.com/ls1intum/Apollon/pull/744) [`1fdb9bc`](https://github.com/ls1intum/Apollon/commit/1fdb9bc70b2fcfc119619876d595b36eebb36f8a) Thanks [@tamang29](https://github.com/tamang29)! - The playground can now simulate a live collaboration session across two browser tabs, with collapsible side panels that mimic host-app chrome — handy for trying out shared cursors and presence locally.
+
+- Updated dependencies [[`1fdb9bc`](https://github.com/ls1intum/Apollon/commit/1fdb9bc70b2fcfc119619876d595b36eebb36f8a), [`dfb4479`](https://github.com/ls1intum/Apollon/commit/dfb4479bbf15671a6332c96b659efd9dd31c127b)]:
+  - @tumaet/apollon@4.6.0
+
 ## 4.5.1
 
 ### Patch Changes
@@ -21,7 +34,7 @@
 ### Patch Changes
 
 - Updated dependencies:
-  - @tumaet/apollon@4.5.0
+  - @tumaet/apollon@4.6.0
 
 ## 4.4.1
 

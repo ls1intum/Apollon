@@ -1,5 +1,12 @@
 # @tumaet/server
 
+## 4.6.0
+
+### Patch Changes
+
+- Updated dependencies [[`1fdb9bc`](https://github.com/ls1intum/Apollon/commit/1fdb9bc70b2fcfc119619876d595b36eebb36f8a), [`dfb4479`](https://github.com/ls1intum/Apollon/commit/dfb4479bbf15671a6332c96b659efd9dd31c127b)]:
+  - @tumaet/apollon@4.6.0
+
 ## 4.5.1
 
 ### Patch Changes
@@ -17,7 +24,7 @@
 - [#689](https://github.com/ls1intum/Apollon/pull/689) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - The Redis Stack container now persists to the `/data` volume (`--dir /data`). It previously defaulted to `/var/lib/redis-stack` — the container's ephemeral layer — so diagrams written between deploys could be silently lost. Operators: redeploy the database so it picks up the corrected data directory.
 
 - Updated dependencies:
-  - @tumaet/apollon@4.5.0
+  - @tumaet/apollon@4.6.0
 
 ## 4.4.1
 
