@@ -21,6 +21,7 @@ export const versioningStrings = {
   fabTooltip: `Version history (${/mac/i.test(navigator.userAgent) ? "⌥⇧H" : "Alt+Shift+H"})`,
   loadOlder: "Load older versions",
   previewFailed: "Failed to load preview.",
+  previewUnavailable: "This version is no longer available.",
   restoreFailed: "Restore failed.",
   emptyBody:
     "Save a version before risky changes. You can always come back to this exact state.",

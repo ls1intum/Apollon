@@ -18,6 +18,7 @@ import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { useEditorContext, useModalContext } from "@/contexts"
 import { useElementWidth } from "@/hooks/useElementWidth"
 import { useVersionShortcut } from "@/hooks/useVersionShortcut"
+import { useVersionPreviewUrlSync } from "@/hooks/useVersionPreviewUrlSync"
 import { selectVersions, useVersionStore } from "@/stores/useVersionStore"
 import {
   setVersionRepository,
@@ -84,9 +85,47 @@ export const ApollonLocal: FC = () => {
     ensureVersionStoreBootstrapped()
   }, [])
 
+  // Cross-window delete guard. If THIS diagram is deleted in another window,
+  // rehydrate the persistence store so ours matches the deletion. Without it,
+  // this window keeps autosaving its in-memory copy and resurrects the diagram
+  // (and the version trail the other window purged). Once rehydrated, `diagram`
+  // becomes null and the not-found view below takes over, stopping autosave.
+  //
+  // Scope is deliberately narrow — we act ONLY on deletion of the active id, not
+  // on edits. Live model sync between windows is a separate, CRDT-shaped concern
+  // (tracked in #756); rehydrating on every edit would clobber unsaved work.
+  // The `storage` event only fires in OTHER windows, so this can't loop.
+  useEffect(() => {
+    if (!diagramId) return
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== "persistenceModelStore" || !e.newValue) return
+      try {
+        const models =
+          (
+            JSON.parse(e.newValue) as {
+              state?: { models?: Record<string, unknown> }
+            }
+          )?.state?.models ?? {}
+        if (!(diagramId in models)) {
+          void usePersistenceModelStore.persist.rehydrate()
+        }
+      } catch {
+        // Malformed payload — ignore; the next valid event reconciles.
+      }
+    }
+    window.addEventListener("storage", onStorage)
+    return () => window.removeEventListener("storage", onStorage)
+  }, [diagramId])
+
   const preview = useVersionStore((s) => s.preview)
-  const exitPreview = useVersionStore((s) => s.exitPreview)
   const fetchVersions = useVersionStore((s) => s.fetchVersions)
+  // `?version=<id>` is the source of truth for which version is previewed:
+  // openPreview/closePreview write the URL, the hook mirrors URL→store. This is
+  // what makes reload re-enter the preview and Back exit it in local mode.
+  const { openPreview, closePreview } = useVersionPreviewUrlSync(
+    diagramId,
+    Boolean(editor)
+  )
   // selectVersions returns a frozen empty-array singleton when the key
   // is absent — never construct a fresh `[]` here, or `useSyncExternalStore`
   // will warn "getSnapshot should be cached" and the regression test fails.
@@ -255,7 +294,7 @@ export const ApollonLocal: FC = () => {
           .restoreVersion(diagramId, versionId, editor.model)
         editor.model = importDiagram(body) as UMLModel
         editor.fitView()
-        if (preview) exitPreview()
+        if (preview) closePreview()
         if (summary) {
           const label =
             summary.description.trim() ||
@@ -268,7 +307,7 @@ export const ApollonLocal: FC = () => {
         toast.error(t.restoreFailed)
       }
     },
-    [editor, diagramId, versions, preview, resolveBody, exitPreview]
+    [editor, diagramId, versions, preview, resolveBody, closePreview]
   )
 
   /**
@@ -314,8 +353,8 @@ export const ApollonLocal: FC = () => {
   }, [])
 
   const handleExitPreview = useCallback(() => {
-    exitPreview()
-  }, [exitPreview])
+    closePreview()
+  }, [closePreview])
 
   const banner = useMemo(() => {
     if (!preview || !diagramId) return null
@@ -384,12 +423,14 @@ export const ApollonLocal: FC = () => {
           diagramId={diagramId}
           onConfirmedRestore={handleConfirmedRestore}
           onVersionSaved={handleVersionSaved}
+          onPreview={openPreview}
         />
       </Box>
       <VersionDrawer
         diagramId={diagramId}
         onConfirmedRestore={handleConfirmedRestore}
         onVersionSaved={handleVersionSaved}
+        onPreview={openPreview}
       />
       {/* No <UndoRestoreSnackbar /> in local mode — auto-snapshot rows
           in the drawer are the durable replacement. */}

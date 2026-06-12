@@ -256,6 +256,52 @@ test.describe("Local version history (#670, /local/:id routing)", () => {
     await expect(composer(page)).toBeVisible()
   })
 
+  test("preview is in the URL: survives reload, Back exits it", async ({
+    page,
+  }) => {
+    await seedLocalDiagram(page)
+    await openLocalEditor(page)
+    await ensureDrawerOpen(page)
+    await composer(page).fill("milestone")
+    await saveVersionButton(page).click()
+    await expect(page.getByText("milestone").first()).toBeVisible()
+
+    // Clicking a row writes ?version=<id> (the source of truth).
+    await page.getByText("milestone").first().click()
+    await expect(page).toHaveURL(/[?&]version=/)
+    await expect(
+      page.getByRole("button", { name: /Exit preview/i })
+    ).toBeVisible()
+
+    // Reload re-enters preview from the URL (in-memory preview would be lost).
+    await page.reload()
+    await waitForCanvasReady(page)
+    await expect(page).toHaveURL(/[?&]version=/)
+    await expect(
+      page.getByRole("button", { name: /Exit preview/i })
+    ).toBeVisible()
+
+    // A single Back exits preview (push-once-on-enter) and drops the param.
+    await page.goBack()
+    await expect(page).not.toHaveURL(/[?&]version=/)
+    await expect(
+      page.getByRole("button", { name: /Exit preview/i })
+    ).toHaveCount(0)
+  })
+
+  test("deep link to ?version=<unknown> fails soft (toast, strips param, live canvas)", async ({
+    page,
+  }) => {
+    await seedLocalDiagram(page)
+    await page.goto(`/local/${LOCAL_ID}?version=does-not-exist`)
+    await waitForCanvasReady(page)
+    // Never crashes into preview; the bad param is stripped and we land live.
+    await expect(
+      page.getByRole("button", { name: /Exit preview/i })
+    ).toHaveCount(0)
+    await expect(page).not.toHaveURL(/[?&]version=/)
+  })
+
   test("opening from the gallery lands on /local/:id with a working drawer", async ({
     page,
   }) => {
@@ -285,5 +331,67 @@ test.describe("Local version history (#670, /local/:id routing)", () => {
     await expect(back).toBeVisible()
     await back.click()
     await expect(page).toHaveURL(/\/$/)
+  })
+
+  test("deleting the diagram in another window stops this one (no resurrection)", async ({
+    context,
+  }) => {
+    // Two windows of the SAME diagram share one origin's localStorage, so the
+    // `storage` event fires across them.
+    const now = new Date().toISOString()
+    await context.addInitScript(
+      ([id, ts]) => {
+        localStorage.setItem(
+          "persistenceModelStore",
+          JSON.stringify({
+            state: {
+              models: {
+                [id]: {
+                  id,
+                  model: {
+                    id,
+                    version: "4.0.0",
+                    title: "E2E Local",
+                    type: "ClassDiagram",
+                    nodes: [],
+                    edges: [],
+                    assessments: {},
+                  },
+                  lastModifiedAt: ts,
+                  createdAt: ts,
+                  favorite: false,
+                },
+              },
+              currentModelId: null,
+            },
+            version: 1,
+          })
+        )
+      },
+      [LOCAL_ID, now]
+    )
+
+    const editorWin = await context.newPage()
+    await editorWin.goto(`/local/${LOCAL_ID}`)
+    await waitForCanvasReady(editorWin, false)
+
+    // Second window deletes the diagram from the gallery.
+    const galleryWin = await context.newPage()
+    await galleryWin.goto("/")
+    await galleryWin
+      .getByRole("button", { name: "Open diagram actions" })
+      .click()
+    await galleryWin.getByRole("menuitem", { name: "Delete" }).click()
+    await galleryWin
+      .getByText(/Are you sure/)
+      .locator("..")
+      .getByRole("button", { name: "Delete" })
+      .click()
+
+    // The editor window reconciles to the deletion (not-found view), instead of
+    // continuing to autosave and resurrecting the diagram.
+    await expect(editorWin.getByText(/Diagram not found/i)).toBeVisible({
+      timeout: 10_000,
+    })
   })
 })

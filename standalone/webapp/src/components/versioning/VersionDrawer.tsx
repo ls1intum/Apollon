@@ -65,6 +65,13 @@ interface Props {
    * Page-level handler — drawer just calls it.
    */
   onConfirmedRestore?: (versionId: string) => Promise<void> | void
+  /**
+   * Enter preview for a version by WRITING the URL (`?version=<id>`). The page
+   * owns the URL↔store sync, so the drawer never touches preview state
+   * directly — that keeps reload / Back / deep-link working. Falls back to the
+   * store's `enterPreview` if a caller doesn't pass it.
+   */
+  onPreview?: (versionId: string) => void
 }
 
 /**
@@ -79,6 +86,7 @@ const VersionSidebarBody: FC<Props> = ({
   diagramId,
   onVersionSaved,
   onConfirmedRestore,
+  onPreview,
 }) => {
   const repo = getVersionRepository()
   const isLocal = repo.kind === "local"
@@ -278,13 +286,19 @@ const VersionSidebarBody: FC<Props> = ({
   const handlePreview = useCallback(
     async (versionId: string) => {
       if (!editor) return
+      if (onPreview) {
+        // URL-driven: write `?version=<id>`; the page's URL↔store effect
+        // enters preview. One source of truth, so reload/Back/deep-link work.
+        onPreview(versionId)
+        return
+      }
       try {
         await enterPreview(diagramId, versionId)
       } catch {
         toast.error(t.previewFailed)
       }
     },
-    [editor, enterPreview, diagramId]
+    [editor, onPreview, enterPreview, diagramId]
   )
 
   const handleRestore = useCallback(
@@ -684,6 +698,7 @@ export const VersionSidebar: FC<Props> = ({
   diagramId,
   onVersionSaved,
   onConfirmedRestore,
+  onPreview,
 }) => {
   // Below the navbar's mobile threshold the bottom-sheet
   // `<VersionDrawer>` takes over; render nothing here so the sidebar
@@ -724,6 +739,7 @@ export const VersionSidebar: FC<Props> = ({
             diagramId={diagramId}
             onVersionSaved={onVersionSaved}
             onConfirmedRestore={onConfirmedRestore}
+            onPreview={onPreview}
           />
         )}
       </Box>
@@ -739,6 +755,7 @@ export const VersionDrawer: FC<Props> = ({
   diagramId,
   onVersionSaved,
   onConfirmedRestore,
+  onPreview,
 }) => {
   const isSmall = useMediaQuery(MOBILE_QUERY)
   const open = useVersionStore((s) => Boolean(s.drawerOpenByDiagram[diagramId]))
@@ -758,6 +775,7 @@ export const VersionDrawer: FC<Props> = ({
         diagramId={diagramId}
         onVersionSaved={onVersionSaved}
         onConfirmedRestore={onConfirmedRestore}
+        onPreview={onPreview}
       />
     </Drawer>
   )
