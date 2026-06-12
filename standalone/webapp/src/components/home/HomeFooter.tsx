@@ -50,7 +50,7 @@ const HelpLinks = ({ onSelect }: { onSelect?: () => void }) => {
 export const HomeFooter = ({ className }: { className?: string }) => (
   <footer
     className={cn(
-      "z-10 flex flex-wrap items-center justify-center gap-x-5 gap-y-1 border-t border-[var(--home-border-subtle)] px-4 py-2.5 text-xs",
+      "z-10 flex flex-wrap items-center justify-center gap-x-5 gap-y-1 border-t border-[var(--home-border-subtle)] bg-[var(--home-surface-base)] px-4 py-2.5 text-xs",
       className
     )}
   >

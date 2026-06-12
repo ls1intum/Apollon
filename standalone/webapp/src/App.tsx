@@ -8,8 +8,10 @@ import {
   useParams,
 } from "react-router"
 import { AppProviders } from "./AppProviders"
+import { Capacitor } from "@capacitor/core"
 import { AppLoadingScreen } from "@/components/AppLoadingScreen"
 import { HomeNavbar } from "@/components/navbar/HomeNavbar"
+import { HomeFooter } from "@/components/home/HomeFooter"
 import { DeferredToastContainer } from "./components/DeferredToastContainer"
 import { ErrorPage } from "@/pages/ErrorPage"
 import { log } from "@/logger"
@@ -75,11 +77,14 @@ const AppLayout = () => {
     path.startsWith("/local/") ||
     path.startsWith("/shared/") ||
     path === "/playground"
+  // Chrome routes other than home (legal, 404): home renders its own
+  // navbar+footer; give these the same shell so they're not dead ends.
+  const isChromeSubRoute = !isHomeRoute && !isEditorRoute
 
   return (
     <Suspense fallback={<AppLoadingScreen />}>
       {isEditorRoute && <Navbar />}
-      {!isHomeRoute && !isEditorRoute && <HomeNavbar />}
+      {isChromeSubRoute && <HomeNavbar />}
       <div data-testid="editor-area" style={{ flex: 1, overflow: "hidden" }}>
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -95,6 +100,9 @@ const AppLayout = () => {
           <Route path="*" element={<ErrorPage />} />
         </Routes>
       </div>
+      {isChromeSubRoute && !Capacitor.isNativePlatform() && (
+        <HomeFooter className="hidden md:flex" />
+      )}
     </Suspense>
   )
 }

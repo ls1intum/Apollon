@@ -588,4 +588,17 @@ test.describe("Legal pages", () => {
       page.getByRole("heading", { level: 1, name: "Your diagrams" })
     ).toBeVisible()
   })
+
+  test("legal pages cross-link via the footer (imprint -> privacy)", async ({
+    page,
+  }) => {
+    await page.goto("/imprint")
+    await page
+      .getByRole("contentinfo")
+      .getByRole("link", { name: "Privacy" })
+      .click()
+    await expect(page).toHaveURL(/\/privacy$/)
+    // Still the chrome shell — not a dead end.
+    await expect(page.getByRole("link", { name: "All diagrams" })).toBeVisible()
+  })
 })
