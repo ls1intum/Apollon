@@ -113,6 +113,7 @@
   --home-border-strong: #696b67;
   --home-border-subtle: #313330;
 
+  /* Diagram tags — type / "Local" / "Shared" pills. */
   --home-tag-type-bg: #343740;
   --home-tag-type-text: #9bb3cc;
   --home-tag-local-bg: #3a3628;
