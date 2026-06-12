@@ -14,7 +14,7 @@ import { ALL_DIAGRAMS_LABEL } from "@/lib/navProvenance"
 import { secondary } from "@/constants"
 import { useEffect, useRef, useState } from "react"
 import { useModalContext, useEditorContext } from "@/contexts"
-import { useNavigate } from "react-router"
+import { Link } from "react-router"
 import { ThemeSwitcherMenu } from "./ThemeSwitcher"
 import { NAVBAR_SX } from "./styleConstants"
 
@@ -25,11 +25,6 @@ export const DesktopNavbar = () => {
   )
   const unsubscribeId = useRef<number>()
   const { openModal } = useModalContext()
-  const navigate = useNavigate()
-
-  const goHome = () => {
-    navigate("/")
-  }
 
   useEffect(() => {
     if (!editor) {
@@ -63,23 +58,20 @@ export const DesktopNavbar = () => {
           gap: 2,
         }}
       >
-        <button
-          type="button"
-          onClick={goHome}
+        <Link
+          to="/"
+          aria-label="Apollon home"
           style={{
             cursor: "pointer",
             display: "flex",
             alignItems: "center",
-            background: "none",
-            border: "none",
-            padding: 0,
-            margin: 0,
             color: "inherit",
             font: "inherit",
+            textDecoration: "none",
           }}
         >
           <BrandAndVersion />
-        </button>
+        </Link>
 
         {/* Spacer */}
         <Box

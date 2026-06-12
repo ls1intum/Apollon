@@ -15,7 +15,7 @@ import { BackNav } from "./BackNav"
 import { ALL_DIAGRAMS_LABEL } from "@/lib/navProvenance"
 import { useEditorContext, useModalContext } from "@/contexts"
 import TextField from "@mui/material/TextField/TextField"
-import { useNavigate } from "react-router"
+import { Link } from "react-router"
 import { ThemeSwitcherMenu } from "./ThemeSwitcher"
 import { NAVBAR_SX } from "./styleConstants"
 
@@ -23,7 +23,6 @@ export default function MobileNavbar() {
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null)
   const { editor } = useEditorContext()
   const { openModal } = useModalContext()
-  const navigate = useNavigate()
   const [diagramTitle, setDiagramTitle] = useState(
     editor?.getDiagramMetadata().diagramTitle || ""
   )
@@ -56,9 +55,6 @@ export default function MobileNavbar() {
     setAnchorElNav(null)
   }
 
-  const goHome = () => {
-    navigate("/")
-  }
   return (
     <AppBar position="sticky" sx={NAVBAR_SX} elevation={0}>
       <Toolbar disableGutters sx={{ minHeight: 64 }}>
@@ -157,21 +153,18 @@ export default function MobileNavbar() {
           </Box>
 
           {/* Mobile Title and Version */}
-          <button
-            type="button"
-            onClick={goHome}
+          <Link
+            to="/"
+            aria-label="Apollon home"
             style={{
-              background: "none",
-              border: "none",
-              padding: 0,
-              margin: 0,
               color: "inherit",
               font: "inherit",
               cursor: "pointer",
+              textDecoration: "none",
             }}
           >
             <BrandAndVersion />
-          </button>
+          </Link>
 
           <ThemeSwitcherMenu />
         </Box>
