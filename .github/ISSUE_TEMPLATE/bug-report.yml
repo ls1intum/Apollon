@@ -1,7 +1,6 @@
 name: 🐛 Bug report
 description: Something on Apollon is not working as expected? Create a report to help us improve.
-title: "[BUG] "
-labels: ["bug"]
+type: Bug
 body:
   - type: textarea
     id: description

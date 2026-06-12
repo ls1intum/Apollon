@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 💬 Questions & ideas
+    url: https://github.com/ls1intum/Apollon/discussions
+    about: Have a question or an idea to discuss? Start a discussion here.
+  - name: ▶ Try the live demo
+    url: https://apollon.aet.cit.tum.de
+    about: Try Apollon in your browser.
+  - name: 📖 Documentation
+    url: https://ls1intum.github.io/Apollon/
+    about: Guides, API reference, and embedding examples.
