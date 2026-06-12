@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react"
 import { Link, useLocation } from "react-router"
 import { useModalContext } from "@/contexts"
 import { bugReportURL } from "@/constants/urls"
+import { releasesLink, repositoryLink } from "@/constants/version"
 import { readNavFrom } from "@/lib/navProvenance"
 import { cn } from "@/lib/utils"
 
@@ -9,10 +10,10 @@ const itemClass =
   "rounded-sm text-[var(--home-text-secondary)] transition-colors duration-200 hover:text-[var(--home-text-primary)] hover:underline focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2"
 
 /**
- * The home Help/legal links (Imprint, Privacy, About, Report). Legal links must
- * stay reachable and not buried, so they render inline — as a footer bar on the
- * web and inside a menu on mobile/native (where a persistent footer is
- * out of place and collides with the safe area).
+ * The home help/legal links (About, Releases, GitHub, Privacy, Imprint, Report).
+ * Legal links must stay reachable and not buried, so they render inline — as a
+ * single footer bar on the web and inside a menu on mobile/native (where a
+ * persistent footer is out of place and collides with the safe area).
  */
 const HelpLinks = ({ onSelect }: { onSelect?: () => void }) => {
   const { openModal } = useModalContext()
@@ -23,22 +24,6 @@ const HelpLinks = ({ onSelect }: { onSelect?: () => void }) => {
   const legalLinkState = from ? { from } : undefined
   return (
     <>
-      <Link
-        to="/imprint"
-        state={legalLinkState}
-        className={itemClass}
-        onClick={onSelect}
-      >
-        Imprint
-      </Link>
-      <Link
-        to="/privacy"
-        state={legalLinkState}
-        className={itemClass}
-        onClick={onSelect}
-      >
-        Privacy
-      </Link>
       <button
         type="button"
         className={cn(itemClass, "text-left")}
@@ -47,8 +32,42 @@ const HelpLinks = ({ onSelect }: { onSelect?: () => void }) => {
           onSelect?.()
         }}
       >
-        About Apollon
+        About
       </button>
+      <a
+        href={releasesLink}
+        target="_blank"
+        rel="noreferrer"
+        className={itemClass}
+        onClick={onSelect}
+      >
+        Releases
+      </a>
+      <a
+        href={repositoryLink}
+        target="_blank"
+        rel="noreferrer"
+        className={itemClass}
+        onClick={onSelect}
+      >
+        GitHub
+      </a>
+      <Link
+        to="/privacy"
+        state={legalLinkState}
+        className={itemClass}
+        onClick={onSelect}
+      >
+        Privacy
+      </Link>
+      <Link
+        to="/imprint"
+        state={legalLinkState}
+        className={itemClass}
+        onClick={onSelect}
+      >
+        Imprint
+      </Link>
       <a
         href={bugReportURL}
         target="_blank"
@@ -62,9 +81,10 @@ const HelpLinks = ({ onSelect }: { onSelect?: () => void }) => {
   )
 }
 
-/** Slim, always-visible footer bar — web/desktop. */
+/** Slim, single-line footer bar — web/desktop. */
 export const HomeFooter = ({ className }: { className?: string }) => (
   <footer
+    aria-label="Help and legal"
     className={cn(
       "z-10 flex flex-wrap items-center justify-center gap-x-5 gap-y-1 border-t border-[var(--home-border-subtle)] bg-[var(--home-surface-base)] px-4 py-2.5 text-xs",
       className

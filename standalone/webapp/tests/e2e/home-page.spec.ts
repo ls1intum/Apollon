@@ -485,6 +485,15 @@ test.describe("Home page — accessibility basics", () => {
       "href",
       "/privacy"
     )
+    // OSS conventions (matching Artemis/Hephaestus): a Releases link and a
+    // GitHub source attribution.
+    await expect(
+      footer.getByRole("link", { name: "Releases" })
+    ).toHaveAttribute("href", /github\.com\/ls1intum\/Apollon\/releases$/)
+    await expect(footer.getByRole("link", { name: "GitHub" })).toHaveAttribute(
+      "href",
+      "https://github.com/ls1intum/Apollon"
+    )
   })
 
   test("legal links are reachable via the menu on mobile", async ({ page }) => {

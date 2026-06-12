@@ -99,7 +99,7 @@ export const NavbarHelp: FC<Props> = ({ color }) => {
         >
           How does this Editor Work?
         </MenuItem>
-        <MenuItem onClick={openAboutModal}>About Apollon</MenuItem>
+        <MenuItem onClick={openAboutModal}>About</MenuItem>
         <MenuItem onClick={openBugReport}>Report a Problem</MenuItem>
         <MenuItem onClick={linkToPlayground}>Open Playground</MenuItem>
         <Divider />
