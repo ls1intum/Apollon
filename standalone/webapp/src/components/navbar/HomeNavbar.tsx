@@ -1,4 +1,5 @@
 import { Capacitor } from "@capacitor/core"
+import { Link } from "react-router"
 import { NAVBAR_BACKGROUND_COLOR } from "@/constants/colorPlate"
 import { HomeHelpMenu } from "@/components/home/HomeFooter"
 import { BrandAndVersion } from "./BrandAndVersion"
@@ -19,9 +20,13 @@ export const HomeNavbar = () => {
         boxShadow: NAVBAR_DROP_SHADOW,
       }}
     >
-      <div className="flex shrink-0 items-center text-white">
+      <Link
+        to="/"
+        aria-label="All diagrams"
+        className="flex shrink-0 items-center rounded-sm text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+      >
         <BrandAndVersion />
-      </div>
+      </Link>
 
       <div className="flex-1" />
 

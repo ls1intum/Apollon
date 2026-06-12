@@ -109,8 +109,9 @@ test.describe("Home page — initial load", () => {
   test("shows HomeNavbar with a theme toggle", async ({ page }) => {
     const header = page.locator("header").first()
     await expect(header).toBeVisible()
-    // ThemeSwitcherMenu renders a button (Sun/Moon icon) inside the navbar.
-    await expect(header.locator("button").first()).toBeVisible()
+    await expect(
+      header.getByRole("button", { name: /Switch to (light|dark) mode/ })
+    ).toBeVisible()
   })
 
   test("does not show the editor Navbar", async ({ page }) => {
@@ -563,5 +564,28 @@ test.describe("Home page — share reflects immediately", () => {
     await expect(
       page.locator('[role="listitem"]').filter({ hasText: "Shared" })
     ).toHaveCount(1)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 9. Chrome routes (legal) show the home header, not editor controls
+// ---------------------------------------------------------------------------
+
+test.describe("Legal pages", () => {
+  test("imprint shows the home header and links back to the diagrams", async ({
+    page,
+  }) => {
+    await page.goto("/imprint")
+
+    // Home header (logo link + theme toggle), not the editor File/Share navbar.
+    await expect(page.getByRole("link", { name: "All diagrams" })).toBeVisible()
+    await expect(page.getByRole("button", { name: "File" })).toHaveCount(0)
+    await expect(page.getByRole("button", { name: "Share" })).toHaveCount(0)
+
+    await page.getByRole("link", { name: "All diagrams" }).click()
+    await expect(page).toHaveURL(/\/$/)
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Your diagrams" })
+    ).toBeVisible()
   })
 })

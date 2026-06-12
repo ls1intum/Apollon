@@ -9,6 +9,7 @@ import {
 } from "react-router"
 import { AppProviders } from "./AppProviders"
 import { AppLoadingScreen } from "@/components/AppLoadingScreen"
+import { HomeNavbar } from "@/components/navbar/HomeNavbar"
 import { DeferredToastContainer } from "./components/DeferredToastContainer"
 import { ErrorPage } from "@/pages/ErrorPage"
 import { log } from "@/logger"
@@ -65,11 +66,20 @@ const LegacySharedDiagramRedirect = () => {
 
 const AppLayout = () => {
   const location = useLocation()
-  const isHomeRoute = location.pathname === "/"
+  const path = location.pathname
+  // Editor routes get the full editor navbar (File/Share/title). The home page
+  // renders its own HomeNavbar; the remaining chrome routes (legal, 404) get a
+  // HomeNavbar too — never the editor navbar, which has no editor behind it.
+  const isHomeRoute = path === "/"
+  const isEditorRoute =
+    path.startsWith("/local/") ||
+    path.startsWith("/shared/") ||
+    path === "/playground"
 
   return (
     <Suspense fallback={<AppLoadingScreen />}>
-      {!isHomeRoute && <Navbar />}
+      {isEditorRoute && <Navbar />}
+      {!isHomeRoute && !isEditorRoute && <HomeNavbar />}
       <div data-testid="editor-area" style={{ flex: 1, overflow: "hidden" }}>
         <Routes>
           <Route path="/" element={<HomePage />} />
