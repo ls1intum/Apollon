@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
   applyDarkThemeToThumbnailSvg,
   getCachedThumbnailSources,
+  toSvgDataUrl,
 } from "../../src/utils/thumbnailTheme"
 
 const svg = (inner: string) =>
@@ -70,5 +71,29 @@ describe("getCachedThumbnailSources", () => {
     const source = svg(`<path stroke="#000000" d="M0 0"/>`)
     const eager = getCachedThumbnailSources("eager", source, { eager: true })
     expect(eager?.darkDataUrl).not.toBe(eager?.lightDataUrl)
+  })
+
+  it("bounds the cache by evicting old entries (no unbounded growth)", () => {
+    // Eviction is observed indirectly: an evicted entry loses its eagerly-computed
+    // dark variant, so a later non-eager read falls back to dark === light. Insert
+    // comfortably more than the 300-entry cap of newer keys so the victim — older
+    // than all of them — is evicted regardless of any entries earlier tests left.
+    const darkSvg = svg(`<path stroke="#000000" d="M0 0"/>`)
+    const filler = svg(`<rect/>`)
+    getCachedThumbnailSources("victim", darkSvg, { eager: true })
+    for (let i = 0; i < 320; i++) {
+      getCachedThumbnailSources(`fill-${i}`, filler)
+    }
+    const after = getCachedThumbnailSources("victim", darkSvg)
+    expect(after?.darkDataUrl).toBe(after?.lightDataUrl)
+  })
+})
+
+describe("toSvgDataUrl", () => {
+  it("percent-encodes the SVG so '#' cannot break the data URL", () => {
+    const url = toSvgDataUrl(`<svg><rect fill="#000"/></svg>`)
+    expect(url.startsWith("data:image/svg+xml;utf8,")).toBe(true)
+    expect(url).not.toContain("#")
+    expect(url).toContain("%23")
   })
 })
