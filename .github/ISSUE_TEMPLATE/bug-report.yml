@@ -1,51 +1,72 @@
 name: 🐛 Bug report
-description: Something on Apollon is not working as expected? Create a report to help us improve.
+description: Something in Apollon is not working as expected? Let us know so we can fix it.
 type: Bug
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. A clear, reproducible report helps us fix it much faster.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Before you start
+      options:
+        - label: I searched the existing issues and discussions and did not find a duplicate.
+          required: true
+        - label: I can reproduce this on the live demo (https://apollon.aet.cit.tum.de) or the latest `@tumaet/apollon`.
+          required: false
+
   - type: textarea
     id: description
     attributes:
       label: Describe the bug
       description: A clear and concise description of what the bug is.
-      placeholder: Describe the issue here...
+      placeholder: When I ..., Apollon ...
     validations:
       required: true
 
   - type: textarea
     id: steps
     attributes:
-      label: To Reproduce
-      description: Steps to reproduce the behavior.
+      label: Steps to reproduce
+      description: Steps for us to reproduce the behaviour. A sample diagram (File → Export → JSON) is very helpful.
       placeholder: |
         1. Go to '...'
         2. Click on '...'
-        3. Scroll to '...'
-        4. See error
+        3. See the error
     validations:
       required: true
 
   - type: textarea
     id: expected
     attributes:
-      label: Expected behavior
-      description: A clear and concise description of what you expected to happen.
-      placeholder: What should have happened?
+      label: Expected behaviour
+      description: What did you expect to happen instead?
     validations:
       required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of Apollon is affected? (We will confirm during triage.)
+      options:
+        - Editor library
+        - Standalone web app
+        - VS Code extension
+        - Documentation
+        - Realtime collaboration
+        - Mobile
+        - Not sure
+    validations:
+      required: false
 
   - type: textarea
     id: screenshots
     attributes:
-      label: Screenshots
-      description: If applicable, add screenshots to help explain your problem.
-      placeholder: Drag & drop or paste images here.
-
-  - type: input
-    id: os
-    attributes:
-      label: OS
-      description: Operating System
-      placeholder: e.g. iOS, macOS, Windows
+      label: Screenshots or recording
+      description: If it helps explain the problem, drag and drop images or a short screen recording here.
     validations:
       required: false
 
@@ -53,27 +74,32 @@ body:
     id: browser
     attributes:
       label: Browser
-      placeholder: e.g. Chrome, Safari, Firefox
+      placeholder: e.g. Chrome 126, Safari 17, Firefox 127
+    validations:
+      required: false
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: e.g. macOS 14, Windows 11, iOS 17
     validations:
       required: false
 
   - type: input
     id: version
     attributes:
-      label: Version
-      placeholder: e.g. 22
+      label: Apollon version
+      description: If you embed the `@tumaet/apollon` library, which version? (Skip if you used the live demo.)
+      placeholder: e.g. 4.6.0
     validations:
       required: false
 
   - type: textarea
-    id: context
-    attributes:
-      label: Additional context
-      description: Add any other context about the problem here.
-
-  - type: textarea
     id: console
     attributes:
-      label: Web Console Output
-      description: If applicable, copy output from the Web Console.
+      label: Browser console output
+      description: If there are errors, copy them from the browser dev tools console.
       render: shell
+    validations:
+      required: false
