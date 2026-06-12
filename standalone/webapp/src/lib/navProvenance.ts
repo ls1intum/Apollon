@@ -2,9 +2,10 @@
 export type NavFrom = string
 
 /**
- * Canonical labels for the back affordances. Shared by the editor navbar, the
- * chrome navbar and the error pages so the same action can never be spelled two
- * different ways across the app.
+ * Canonical labels for the back affordances, shared by the editor navbar and the
+ * chrome back affordance (BackNav/useBackTarget) so the same action can never be
+ * spelled two different ways in those entry points. The error pages render the
+ * literal as a default prop value.
  */
 export const ALL_DIAGRAMS_LABEL = "All diagrams"
 export const BACK_TO_DIAGRAM_LABEL = "Back to diagram"

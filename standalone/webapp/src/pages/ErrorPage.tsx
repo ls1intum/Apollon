@@ -46,7 +46,7 @@ export const ErrorPage: React.FC<ErrorPageProps> = ({
       </p>
       <Link
         to={backPath}
-        className="focus-visible:outline-2 focus-visible:outline-offset-2"
+        className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--home-accent-ring)]"
         style={{
           marginTop: "16px",
           padding: "10px 20px",
