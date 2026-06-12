@@ -3,9 +3,9 @@ import type { UMLModel } from "@tumaet/apollon"
 import { log } from "@/logger"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { renderThumbnailSvgFromModel } from "@/utils/thumbnailSvg"
+import { waitForIdle } from "@/utils/idle"
 
 const THUMBNAIL_WARMUP_DELAY_MS = 400
-const THUMBNAIL_FALLBACK_IDLE_DELAY_MS = 120
 
 type ThumbnailWarmupDiagram = {
   id: string
@@ -53,18 +53,6 @@ export const useDiagramThumbnailWarmup = <T extends ThumbnailWarmupDiagram>({
     if (thumbnailWorkerActiveRef.current || isUnmountedRef.current) {
       return
     }
-
-    const idleWindow = window as Window & {
-      requestIdleCallback?: (callback: IdleRequestCallback) => number
-    }
-    const waitForIdle = () =>
-      new Promise<void>((resolve) => {
-        if (typeof idleWindow.requestIdleCallback === "function") {
-          idleWindow.requestIdleCallback(() => resolve())
-          return
-        }
-        window.setTimeout(resolve, THUMBNAIL_FALLBACK_IDLE_DELAY_MS)
-      })
 
     const markLoading = (id: string, loading: boolean) => {
       setLoadingThumbnailIds((current) => {

@@ -1,17 +1,13 @@
-import { memo, useEffect, useRef, useState } from "react"
+import { memo, useEffect, useState } from "react"
 import { UMLDiagramType } from "@tumaet/apollon/react"
 import { getDiagramTypeIcon } from "@/components/home/diagramTypeMeta"
 import { getCachedThumbnailSources } from "@/utils/thumbnailTheme"
+import { runWhenIdle } from "@/utils/idle"
 import {
   getResolvedTemplateSvg,
   requestTemplateThumbnail,
   subscribeTemplateThumbnails,
 } from "@/utils/templateThumbnails"
-
-type IdleWindow = Window & {
-  requestIdleCallback?: (callback: IdleRequestCallback) => number
-  cancelIdleCallback?: (id: number) => void
-}
 
 /**
  * Live preview of a design-pattern template inside the New Diagram dialog.
@@ -30,22 +26,15 @@ export const TemplateThumbnail = memo(function TemplateThumbnail({
     getResolvedTemplateSvg(name)
   )
   const [darkDataUrl, setDarkDataUrl] = useState<string | null>(null)
-  const mountedRef = useRef(true)
-
-  useEffect(() => {
-    mountedRef.current = true
-    return () => {
-      mountedRef.current = false
-    }
-  }, [])
 
   useEffect(() => {
     const resolved = getResolvedTemplateSvg(name)
     setLightSvg(resolved)
     if (resolved !== undefined) return
 
+    // Unsubscribing on cleanup makes the setState unreachable after unmount.
     const unsubscribe = subscribeTemplateThumbnails((readyName, svg) => {
-      if (readyName === name && mountedRef.current) {
+      if (readyName === name) {
         setLightSvg(svg)
       }
     })
@@ -65,24 +54,14 @@ export const TemplateThumbnail = memo(function TemplateThumbnail({
       setDarkDataUrl(null)
       return
     }
-
-    const idleWindow = window as IdleWindow
-    const compute = () => {
+    return runWhenIdle(() => {
       const sources = getCachedThumbnailSources(cacheKey, lightSvg, {
         eager: true,
       })
-      if (sources && mountedRef.current) {
+      if (sources) {
         setDarkDataUrl(sources.darkDataUrl)
       }
-    }
-
-    if (typeof idleWindow.requestIdleCallback === "function") {
-      const idleId = idleWindow.requestIdleCallback(compute)
-      return () => idleWindow.cancelIdleCallback?.(idleId)
-    }
-
-    const timeoutId = window.setTimeout(compute, 120)
-    return () => window.clearTimeout(timeoutId)
+    })
   }, [cacheKey, lightSvg])
 
   return (

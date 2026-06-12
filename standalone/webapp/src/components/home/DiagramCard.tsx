@@ -29,6 +29,7 @@ import {
   getSharedDiagramViewBadge,
 } from "@/utils/sharedDiagramLinks"
 import { getCachedThumbnailSources } from "@/utils/thumbnailTheme"
+import { runWhenIdle } from "@/utils/idle"
 
 export type DiagramSource = "local" | "shared"
 
@@ -628,36 +629,18 @@ const DiagramCardComponent = ({
       setDarkDataUrl(null)
       return
     }
-
-    const idleWindow = window as Window & {
-      requestIdleCallback?: (callback: IdleRequestCallback) => number
-      cancelIdleCallback?: (id: number) => void
-    }
-
-    const compute = () => {
+    return runWhenIdle(() => {
       const sources = getCachedThumbnailSources(
         thumbnailCacheKey,
         thumbnailSvg,
-        { eager: true }
+        {
+          eager: true,
+        }
       )
       if (sources) {
         setDarkDataUrl(sources.darkDataUrl)
       }
-    }
-
-    if (typeof idleWindow.requestIdleCallback === "function") {
-      const idleId = idleWindow.requestIdleCallback(compute)
-      return () => {
-        if (typeof idleWindow.cancelIdleCallback === "function") {
-          idleWindow.cancelIdleCallback(idleId)
-        }
-      }
-    }
-
-    const timeoutId = window.setTimeout(compute, 120)
-    return () => {
-      window.clearTimeout(timeoutId)
-    }
+    })
   }, [thumbnailCacheKey, thumbnailSvg])
 
   const handleFavoriteToggle = (event: ReactMouseEvent<HTMLButtonElement>) => {

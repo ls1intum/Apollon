@@ -1,5 +1,6 @@
 import type { UMLModel } from "@tumaet/apollon"
 import { renderThumbnailSvgFromModel } from "@/utils/thumbnailSvg"
+import { waitForIdle } from "@/utils/idle"
 import { log } from "@/logger"
 
 /**
@@ -24,18 +25,6 @@ const listeners = new Set<Listener>()
 const pendingQueue: string[] = []
 const queuedNames = new Set<string>()
 let workerActive = false
-
-const waitForIdle = () =>
-  new Promise<void>((resolve) => {
-    const idleWindow = window as Window & {
-      requestIdleCallback?: (callback: IdleRequestCallback) => number
-    }
-    if (typeof idleWindow.requestIdleCallback === "function") {
-      idleWindow.requestIdleCallback(() => resolve())
-      return
-    }
-    window.setTimeout(resolve, 120)
-  })
 
 const importTemplateModel = async (name: string): Promise<UMLModel> => {
   // Same asset path the create flow uses; Vite resolves it at build time.
