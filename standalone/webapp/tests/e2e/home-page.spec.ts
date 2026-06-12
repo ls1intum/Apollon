@@ -496,6 +496,20 @@ test.describe("Home page — accessibility basics", () => {
     )
   })
 
+  test("the About dialog shows app info and source links", async ({ page }) => {
+    await seedEmpty(page)
+    await page
+      .getByRole("contentinfo")
+      .getByRole("button", { name: "About" })
+      .click()
+    const dialog = page.getByRole("dialog")
+    await expect(dialog.getByText("Information about Apollon")).toBeVisible()
+    await expect(dialog.getByRole("link", { name: "GitHub" })).toBeVisible()
+    await expect(
+      dialog.getByRole("link", { name: "License (MIT)" })
+    ).toBeVisible()
+  })
+
   test("legal links are reachable via the menu on mobile", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 720 })
     await seedEmpty(page)
