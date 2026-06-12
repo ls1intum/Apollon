@@ -1,4 +1,9 @@
-import { openDB, type DBSchema, type IDBPDatabase } from "idb"
+import {
+  openDB,
+  type DBSchema,
+  type IDBPDatabase,
+  type IDBPTransaction,
+} from "idb"
 import { toast } from "react-toastify"
 import { log } from "@/logger"
 import type { VersionKind } from "@/types"
@@ -56,6 +61,13 @@ interface ApollonVersionsDB extends DBSchema {
 }
 
 export type ApollonVersionsDBHandle = IDBPDatabase<ApollonVersionsDB>
+
+/** A read-write transaction spanning all three stores (the version write path). */
+export type ApollonVersionsTx = IDBPTransaction<
+  ApollonVersionsDB,
+  ["versions", "versionBodies", "diagramMeta"],
+  "readwrite"
+>
 
 /**
  * Lazy + memoised handle to the open DB. Resets the promise on rejection

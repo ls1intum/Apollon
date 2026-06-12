@@ -6,6 +6,7 @@ import type { Diagram, VersionSummary } from "@/types"
 import {
   getDb,
   type ApollonVersionsDBHandle,
+  type ApollonVersionsTx,
   type VersionBodyRow,
   type VersionMetaRow,
 } from "./idb"
@@ -218,20 +219,43 @@ export const LocalVersionRepository = {
 
   async restore(diagramId, versionId, opts): Promise<RestoreVersionResult> {
     const db = await getDb()
-    const row = await db.get("versions", versionId)
-    if (!row) {
-      throw new ApiError(404, "NOT_FOUND", "Version not found locally.")
+    let autoSnapshotVersionId: string
+    try {
+      // Read the target row and write the pre-restore auto-snapshot in ONE
+      // transaction, so a peer tab deleting the target between the two can't
+      // leave a stale "Before restoring …" label.
+      const tx = db.transaction(
+        ["versions", "versionBodies", "diagramMeta"],
+        "readwrite"
+      )
+      const target = await tx.objectStore("versions").get(versionId)
+      if (!target) {
+        throw new ApiError(404, "NOT_FOUND", "Version not found locally.")
+      }
+      const label =
+        target.description.trim() || target.name.trim() || `v${target.seq}`
+      const { row } = await writeVersionInTx(tx, {
+        diagramId,
+        body: opts.currentBody,
+        meta: {
+          id: crypto.randomUUID(),
+          diagramId,
+          name: `Before restoring ${label}`,
+          description: "",
+          createdAt: nowIso(),
+          kind: "auto",
+          librarySchemaVersion: opts.currentBody.version,
+        },
+      })
+      await tx.done
+      autoSnapshotVersionId = row.id
+    } catch (err) {
+      // Maps quota → ApiError(507); rethrows the 404 and anything else.
+      mapQuotaError(err)
     }
-    const labelTarget =
-      row.description.trim() || row.name.trim() || `v${row.seq}`
-    const autoId = await createAutoSnapshot(db, {
-      diagramId,
-      body: opts.currentBody,
-      restoredFromName: labelTarget,
-    })
     broadcastInvalidate(diagramId)
     return {
-      autoSnapshotVersionId: autoId,
+      autoSnapshotVersionId,
       updatedAt: nowIso(),
       headRev: undefined,
     }
@@ -308,91 +332,72 @@ export const LocalVersionRepository = {
  * unconditional, a metadata row without a readable body is not constructible.
  * Quota failures are mapped to the typed `ApiError` on every write path.
  */
-async function commitVersion(
-  db: ApollonVersionsDBHandle,
-  args: {
-    diagramId: string
-    body: UMLModel
-    /** The meta row minus the store-assigned `seq`. */
-    meta: Omit<VersionMetaRow, "seq">
-  }
-): Promise<{
+interface WriteVersionResult {
   row: VersionMetaRow
   evictedVersionIds: string[]
   evictedKinds: ("unnamed" | "named")[]
   totalAfter: number
-}> {
+}
+
+/**
+ * Co-writes one version WITHIN a caller-supplied transaction: assigns the next
+ * per-diagram `seq`, writes the meta row AND its body together (never one
+ * without the other), evicts to the cap (deleting both stores), and bumps
+ * `headSeq`. Caller owns `tx.done` and quota mapping. Letting `restore` pass
+ * the same `tx` it used to read the target row keeps the whole restore atomic.
+ */
+async function writeVersionInTx(
+  tx: ApollonVersionsTx,
+  args: { diagramId: string; body: UMLModel; meta: Omit<VersionMetaRow, "seq"> }
+): Promise<WriteVersionResult> {
   const { diagramId, body, meta } = args
+  const diagramMeta = (await tx.objectStore("diagramMeta").get(diagramId)) ?? {
+    diagramId,
+    headSeq: 0,
+  }
+  const seq = diagramMeta.headSeq + 1
+  const row: VersionMetaRow = { ...meta, seq }
+  await tx.objectStore("versions").add(row)
+  await tx
+    .objectStore("versionBodies")
+    .put({ diagramId, id: row.id, body: serializeBody(body) })
+
+  const rows = await tx
+    .objectStore("versions")
+    .index("by_diagram_seq")
+    .getAll(diagramRange(diagramId))
+  const plan = planEviction({ rows, cap: MAX_LOCAL_VERSIONS_PER_DIAGRAM })
+  for (const evictedId of plan.evictedVersionIds) {
+    await tx.objectStore("versions").delete(evictedId)
+    await tx.objectStore("versionBodies").delete([diagramId, evictedId])
+  }
+
+  await tx.objectStore("diagramMeta").put({ diagramId, headSeq: seq })
+  return {
+    row,
+    evictedVersionIds: plan.evictedVersionIds,
+    evictedKinds: plan.evictedKinds,
+    totalAfter: rows.length - plan.evictedVersionIds.length,
+  }
+}
+
+/**
+ * Opens a single multi-store transaction, co-writes the version via
+ * `writeVersionInTx`, and commits. Quota failures map to the typed `ApiError`.
+ */
+async function commitVersion(
+  db: ApollonVersionsDBHandle,
+  args: { diagramId: string; body: UMLModel; meta: Omit<VersionMetaRow, "seq"> }
+): Promise<WriteVersionResult> {
   try {
     const tx = db.transaction(
       ["versions", "versionBodies", "diagramMeta"],
       "readwrite"
     )
-    const diagramMeta = (await tx
-      .objectStore("diagramMeta")
-      .get(diagramId)) ?? {
-      diagramId,
-      headSeq: 0,
-    }
-    const seq = diagramMeta.headSeq + 1
-    const row: VersionMetaRow = { ...meta, seq }
-    await tx.objectStore("versions").add(row)
-    await tx
-      .objectStore("versionBodies")
-      .put({ diagramId, id: row.id, body: serializeBody(body) })
-
-    const rows = await tx
-      .objectStore("versions")
-      .index("by_diagram_seq")
-      .getAll(diagramRange(diagramId))
-    const plan = planEviction({ rows, cap: MAX_LOCAL_VERSIONS_PER_DIAGRAM })
-    for (const evictedId of plan.evictedVersionIds) {
-      await tx.objectStore("versions").delete(evictedId)
-      await tx.objectStore("versionBodies").delete([diagramId, evictedId])
-    }
-
-    await tx.objectStore("diagramMeta").put({ diagramId, headSeq: seq })
+    const result = await writeVersionInTx(tx, args)
     await tx.done
-    return {
-      row,
-      evictedVersionIds: plan.evictedVersionIds,
-      evictedKinds: plan.evictedKinds,
-      totalAfter: rows.length - plan.evictedVersionIds.length,
-    }
+    return result
   } catch (err) {
     mapQuotaError(err)
   }
-}
-
-/**
- * Pre-restore auto-row: a deletable history entry written immediately before
- * `editor.model` is replaced with the restored body. Local mode's
- * always-visible undo, replacing collab's 10s snackbar. Goes through
- * `commitVersion`, so it co-writes meta+body atomically like any other version.
- *
- * Exported for test-only direct invocation; production callers go through
- * `LocalVersionRepository.restore`.
- */
-export async function createAutoSnapshot(
-  db: ApollonVersionsDBHandle,
-  args: {
-    diagramId: string
-    body: UMLModel
-    restoredFromName: string
-  }
-): Promise<string> {
-  const { row } = await commitVersion(db, {
-    diagramId: args.diagramId,
-    body: args.body,
-    meta: {
-      id: crypto.randomUUID(),
-      diagramId: args.diagramId,
-      name: `Before restoring ${args.restoredFromName}`,
-      description: "",
-      createdAt: nowIso(),
-      kind: "auto",
-      librarySchemaVersion: args.body.version,
-    },
-  })
-  return row.id
 }
