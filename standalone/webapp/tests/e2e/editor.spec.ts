@@ -186,12 +186,12 @@ test.describe("Template diagram interactions", () => {
     await page.getByRole("button", { name: "Use template" }).click()
 
     // Previews render lazily off an idle queue (a hidden editor per template),
-    // so allow generous time for the first light-mode thumbnail to appear.
-    await expect(page.locator("img.theme-thumbnail-light").first()).toBeVisible(
-      {
-        timeout: 20_000,
-      }
-    )
+    // so allow generous time for the first light-mode thumbnail to appear. Assert
+    // the src is the rendered SVG data URL — not a placeholder/fallback icon — so
+    // this can only pass when the render pipeline actually produced a diagram.
+    const preview = page.locator("img.theme-thumbnail-light").first()
+    await expect(preview).toBeVisible({ timeout: 20_000 })
+    await expect(preview).toHaveAttribute("src", /^data:image\/svg\+xml/)
   })
 
   test("creating the same template twice yields two distinct diagrams", async ({
@@ -349,6 +349,29 @@ test.describe("Navbar", () => {
     const backToDiagram = page.getByRole("link", { name: "Back to diagram" })
     await expect(backToDiagram).toBeVisible()
     await backToDiagram.click()
+    await expect(page).toHaveURL(/\/local\/e2e-local-model-id$/)
+    await waitForCanvasReady(page, false)
+  })
+
+  test("provenance survives a legal cross-link hop back to the diagram", async ({
+    page,
+  }) => {
+    await openTemporaryLocalDiagram(page)
+    await waitForCanvasReady(page, false)
+
+    await page.getByRole("button", { name: "Help" }).click()
+    await page.getByRole("menuitem", { name: "Privacy" }).click()
+    await expect(page).toHaveURL(/\/privacy$/)
+
+    // Hop across legal pages via the footer; the origin must be forwarded, not
+    // replaced with the current /imprint|/privacy path.
+    const footer = page.getByRole("contentinfo")
+    await footer.getByRole("link", { name: "Imprint" }).click()
+    await expect(page).toHaveURL(/\/imprint$/)
+    await footer.getByRole("link", { name: "Privacy" }).click()
+    await expect(page).toHaveURL(/\/privacy$/)
+
+    await page.getByRole("link", { name: "Back to diagram" }).click()
     await expect(page).toHaveURL(/\/local\/e2e-local-model-id$/)
     await waitForCanvasReady(page, false)
   })
