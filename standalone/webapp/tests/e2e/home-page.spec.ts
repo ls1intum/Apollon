@@ -471,7 +471,7 @@ test.describe("Home page — accessibility basics", () => {
     await expect(page.locator('[role="list"]')).toBeAttached()
   })
 
-  test("legal links are reachable in the footer (not buried in a menu)", async ({
+  test("legal links are reachable in the footer on desktop", async ({
     page,
   }) => {
     await seedEmpty(page)
@@ -481,6 +481,21 @@ test.describe("Home page — accessibility basics", () => {
       "/imprint"
     )
     await expect(footer.getByRole("link", { name: "Privacy" })).toHaveAttribute(
+      "href",
+      "/privacy"
+    )
+  })
+
+  test("legal links are reachable via the menu on mobile", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 720 })
+    await seedEmpty(page)
+    await expect(page.getByRole("contentinfo")).toBeHidden()
+    await page.getByRole("button", { name: "Help and legal" }).click()
+    await expect(page.getByRole("link", { name: "Imprint" })).toHaveAttribute(
+      "href",
+      "/imprint"
+    )
+    await expect(page.getByRole("link", { name: "Privacy" })).toHaveAttribute(
       "href",
       "/privacy"
     )

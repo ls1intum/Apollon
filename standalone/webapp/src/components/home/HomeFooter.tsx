@@ -1,27 +1,35 @@
+import { useEffect, useRef, useState, type ReactNode } from "react"
 import { Link } from "react-router"
 import { useModalContext } from "@/contexts"
 import { bugReportURL } from "@/constants/urls"
+import { cn } from "@/lib/utils"
 
-const linkClass =
+const itemClass =
   "rounded-sm text-[var(--home-text-secondary)] transition-colors duration-200 hover:text-[var(--home-text-primary)] hover:underline focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2"
 
-// Slim, always-visible footer. Legal links (Imprint/Privacy) must not be hidden
-// in a dropdown — they live here, inline, alongside About and a problem report.
-export const HomeFooter = () => {
+/**
+ * The home Help/legal links (Imprint, Privacy, About, Report). Legal links must
+ * stay reachable and not buried, so they render inline — as a footer bar on the
+ * web and inside a menu on mobile/native (where a persistent footer is
+ * out of place and collides with the safe area).
+ */
+const HelpLinks = ({ onSelect }: { onSelect?: () => void }) => {
   const { openModal } = useModalContext()
-
   return (
-    <footer className="z-10 flex flex-wrap items-center justify-center gap-x-5 gap-y-1 border-t border-[var(--home-border-subtle)] px-4 py-2.5 text-xs">
-      <Link to="/imprint" className={linkClass}>
+    <>
+      <Link to="/imprint" className={itemClass} onClick={onSelect}>
         Imprint
       </Link>
-      <Link to="/privacy" className={linkClass}>
+      <Link to="/privacy" className={itemClass} onClick={onSelect}>
         Privacy
       </Link>
       <button
         type="button"
-        className={linkClass}
-        onClick={() => openModal("AboutModal")}
+        className={cn(itemClass, "text-left")}
+        onClick={() => {
+          openModal("AboutModal")
+          onSelect?.()
+        }}
       >
         About Apollon
       </button>
@@ -29,10 +37,70 @@ export const HomeFooter = () => {
         href={bugReportURL}
         target="_blank"
         rel="noreferrer"
-        className={linkClass}
+        className={itemClass}
+        onClick={onSelect}
       >
         Report a problem
       </a>
-    </footer>
+    </>
   )
 }
+
+/** Slim, always-visible footer bar — web/desktop. */
+export const HomeFooter = ({ className }: { className?: string }) => (
+  <footer
+    className={cn(
+      "z-10 flex flex-wrap items-center justify-center gap-x-5 gap-y-1 border-t border-[var(--home-border-subtle)] px-4 py-2.5 text-xs",
+      className
+    )}
+  >
+    <HelpLinks />
+  </footer>
+)
+
+/** Overflow menu for the same links — mobile and native, where a footer bar is
+ * non-native. Lightweight (no MUI) to keep it off the home first-paint cost. */
+export const HomeHelpMenu = ({ className }: { className?: string }) => {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const onPointerDown = (event: PointerEvent) => {
+      if (!ref.current?.contains(event.target as Node)) setOpen(false)
+    }
+    document.addEventListener("pointerdown", onPointerDown)
+    return () => document.removeEventListener("pointerdown", onPointerDown)
+  }, [open])
+
+  return (
+    <div ref={ref} className={cn("relative", className)}>
+      <button
+        type="button"
+        aria-label="Help and legal"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
+        className="flex h-9 w-9 items-center justify-center rounded-md text-white/90 transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+      >
+        <MoreIcon />
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="absolute right-0 z-50 mt-1 flex min-w-44 flex-col items-start gap-2 rounded-md border border-[var(--home-border-default)] bg-[var(--home-surface-raised)] p-3 text-sm shadow-lg"
+        >
+          <HelpLinks onSelect={() => setOpen(false)} />
+        </div>
+      )}
+    </div>
+  )
+}
+
+const MoreIcon = (): ReactNode => (
+  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+    <circle cx="5" cy="12" r="2" />
+    <circle cx="12" cy="12" r="2" />
+    <circle cx="19" cy="12" r="2" />
+  </svg>
+)
