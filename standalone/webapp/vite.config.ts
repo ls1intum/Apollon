@@ -1,5 +1,6 @@
 import { defineConfig } from "vite"
 import react from "@vitejs/plugin-react"
+import { tanstackRouter } from "@tanstack/router-plugin/vite"
 import { resolve } from "path"
 import fs from "fs"
 import tailwindcss from "@tailwindcss/vite"
@@ -12,6 +13,11 @@ const wsPort = Number(process.env.APOLLON_WS_PORT || 4444)
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
+    // Must run BEFORE the react plugin so it can transform route files and
+    // (re)generate src/routeTree.gen.ts. File/quote/semicolon options live in
+    // tsr.config.json; auto code-splitting replaces the old manual lazy()
+    // route wrappers.
+    tanstackRouter({ target: "react", autoCodeSplitting: true }),
     react(),
     tailwindcss(),
     {
