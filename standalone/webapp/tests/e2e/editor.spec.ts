@@ -177,6 +177,23 @@ test.describe("Template diagram interactions", () => {
     expect(currentTitle).toBe("Custom Template Diagram")
   })
 
+  test("template tab renders real diagram previews", async ({ page }) => {
+    await openTemporaryLocalDiagram(page)
+    await waitForCanvasReady(page, false)
+
+    await fileMenuButton(page).click()
+    await page.getByText("New Diagram").click()
+    await page.getByRole("button", { name: "Use template" }).click()
+
+    // Previews render lazily off an idle queue (a hidden editor per template),
+    // so allow generous time for the first light-mode thumbnail to appear.
+    await expect(page.locator("img.theme-thumbnail-light").first()).toBeVisible(
+      {
+        timeout: 20_000,
+      }
+    )
+  })
+
   test("creating the same template twice yields two distinct diagrams", async ({
     page,
   }) => {

@@ -5,6 +5,7 @@ import { UMLDiagramType } from "@tumaet/apollon/react"
 import { useNavigate } from "react-router"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { getDiagramTypeIcon } from "@/components/home/diagramTypeMeta"
+import { TemplateThumbnail } from "./TemplateThumbnail"
 import { log } from "@/logger"
 import {
   HomeDialogActions,
@@ -74,19 +75,29 @@ enum TemplateType {
   Factory = "Factory",
 }
 
+// Built once at module scope (icon elements have stable identity) so typing in
+// the name field doesn't rebuild the option arrays and re-render the previews.
+const toTemplateOption = (
+  template: TemplateType
+): HomeDialogOption<TemplateType> => ({
+  value: template,
+  label: template,
+  icon: <TemplateThumbnail name={template} />,
+})
+
 const structuralTemplates: HomeDialogOption<TemplateType>[] = [
-  { value: TemplateType.Adapter, label: TemplateType.Adapter },
-  { value: TemplateType.Bridge, label: TemplateType.Bridge },
-]
+  TemplateType.Adapter,
+  TemplateType.Bridge,
+].map(toTemplateOption)
 
 const behavioralTemplates: HomeDialogOption<TemplateType>[] = [
-  { value: TemplateType.Command, label: TemplateType.Command },
-  { value: TemplateType.Observer, label: TemplateType.Observer },
-]
+  TemplateType.Command,
+  TemplateType.Observer,
+].map(toTemplateOption)
 
 const creationalTemplates: HomeDialogOption<TemplateType>[] = [
-  { value: TemplateType.Factory, label: TemplateType.Factory },
-]
+  TemplateType.Factory,
+].map(toTemplateOption)
 
 const getDefaultDiagramName = (
   tab: "scratch" | "template",
