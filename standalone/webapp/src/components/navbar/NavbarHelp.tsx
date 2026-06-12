@@ -7,7 +7,7 @@ import Typography from "@mui/material/Typography/Typography"
 import { secondary } from "@/constants"
 import { bugReportURL } from "@/constants/urls"
 import { useModalContext } from "@/contexts"
-import { useNavigate } from "react-router"
+import { useLocation, useNavigate } from "react-router"
 import { KeyboardArrowDownIcon } from "../Icon"
 
 interface Props {
@@ -17,7 +17,17 @@ interface Props {
 export const NavbarHelp: FC<Props> = ({ color }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const navigate = useNavigate()
+  const location = useLocation()
   const { openModal } = useModalContext()
+
+  // Stamp where the user came from so the legal page can offer a one-tap return
+  // to the diagram they were editing. This is the single editor → legal
+  // chokepoint (both the desktop and mobile navbars render NavbarHelp), so the
+  // dead-end fix lives in exactly one place.
+  const goToLegalPage = (path: string) => {
+    navigate(path, { state: { from: location.pathname + location.search } })
+    handleClose()
+  }
 
   const open = Boolean(anchorEl)
   const openMenu = (event: MouseEvent<HTMLButtonElement>) => {
@@ -50,13 +60,11 @@ export const NavbarHelp: FC<Props> = ({ color }) => {
   }
 
   const linkToImprint = () => {
-    navigate("/imprint")
-    handleClose()
+    goToLegalPage("/imprint")
   }
 
   const linkToPrivacy = () => {
-    navigate("/privacy")
-    handleClose()
+    goToLegalPage("/privacy")
   }
 
   return (

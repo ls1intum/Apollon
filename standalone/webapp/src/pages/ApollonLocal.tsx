@@ -101,7 +101,7 @@ export const ApollonLocal: React.FC = () => {
   }, [diagram?.id, setCurrentModelId, setEditor, setThumbnail, updateModel])
 
   if (!diagramId || !diagram) {
-    return <ErrorPage message="Diagram not found." buttonLabel="Back to Home" />
+    return <ErrorPage message="Diagram not found." buttonLabel="All diagrams" />
   }
 
   return (

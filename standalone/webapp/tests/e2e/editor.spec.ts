@@ -333,4 +333,23 @@ test.describe("Navbar", () => {
       page.getByRole("heading", { level: 1, name: "Your diagrams" })
     ).toBeVisible()
   })
+
+  test("opening a legal page from the editor offers a way back to the diagram", async ({
+    page,
+  }) => {
+    await openTemporaryLocalDiagram(page)
+    await waitForCanvasReady(page, false)
+
+    await page.getByRole("button", { name: "Help" }).click()
+    await page.getByRole("menuitem", { name: "Privacy" }).click()
+    await expect(page).toHaveURL(/\/privacy$/)
+
+    // Provenance turns the chrome back link into a return to the exact diagram,
+    // not the generic dashboard — the editor->Help->legal dead end is gone.
+    const backToDiagram = page.getByRole("link", { name: "Back to diagram" })
+    await expect(backToDiagram).toBeVisible()
+    await backToDiagram.click()
+    await expect(page).toHaveURL(/\/local\/e2e-local-model-id$/)
+    await waitForCanvasReady(page, false)
+  })
 })
