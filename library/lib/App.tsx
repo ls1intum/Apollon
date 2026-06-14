@@ -45,6 +45,7 @@ import {
   type CollaborationAwarenessApi,
   type CollaborationLayerOptions,
 } from "@/components/collaboration/CollaborationLayer"
+import { TooltipProvider } from "@/components/ui"
 
 interface AppProps {
   onReactFlowInit: (instance: ReactFlowInstance) => void
@@ -140,77 +141,79 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
   }, [stopReconnectPreview])
 
   return (
-    <div
-      className={`apollon-editor ${readonly ? "apollon-editor--readonly" : ""} ${
-        connectionGuidanceActive ? "apollon-editor--connection-guidance" : ""
-      }`}
-      style={{
-        display: "flex",
-        height: "100%",
-        width: "100%",
-        overflow: "hidden",
-        backgroundColor: "var(--apollon-background, #ffffff)",
-        position: "relative",
-      }}
-    >
-      {mode === ApollonMode.Modelling && !readonly && <Sidebar />}
-      <div className="apollon-canvas">
-        <ReactFlow
-          id={`react-flow-library-${diagramId}`}
-          className="apollon-container"
-          nodeTypes={diagramNodeTypes}
-          edgeTypes={diagramEdgeTypes}
-          nodes={nodes}
-          edges={edges}
-          onDragOver={onDragOver}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnectStart={onConnectStart}
-          onConnect={onConnect}
-          onEdgesDelete={onEdgesDelete}
-          onConnectEnd={onConnectEnd}
-          zoomOnDoubleClick={false}
-          onNodeDrag={onNodeDrag}
-          onNodeDragStop={onNodeDragStop}
-          onReconnect={onReconnect}
-          onReconnectStart={handleReconnectStart}
-          onReconnectEnd={handleReconnectEnd}
-          connectionLineType={connectionLineType}
-          connectionLineComponent={ReconnectConnectionLine}
-          connectionMode={ConnectionMode.Loose}
-          // Lift the selected edge (and its bend/endpoint handles) above other
-          // edges so an overlapping edge's interaction ribbon can't steal the
-          // pointer from a visible handle.
-          elevateEdgesOnSelect
-          onInit={(instance) => {
-            instance.fitView({ maxZoom: 1.0, minZoom: 1.0 })
-            handleReactFlowInit(instance)
-          }}
-          minZoom={CANVAS.MIN_SCALE_TO_ZOOM_OUT}
-          maxZoom={CANVAS.MAX_SCALE_TO_ZOOM_IN}
-          snapToGrid
-          snapGrid={[CANVAS.SNAP_TO_GRID_PX, CANVAS.SNAP_TO_GRID_PX]}
-          onNodeDoubleClick={onNodeDoubleClick}
-          onEdgeDoubleClick={onEdgeDoubleClick}
-          onBeforeDelete={onBeforeDelete}
-          onPaneClick={onPaneClicked}
-          proOptions={proOptions}
-          edgesReconnectable={isDiagramModifiable}
-          nodesConnectable={isDiagramModifiable}
-          nodesDraggable={isDiagramModifiable}
-          panOnScroll={!scrollLock || scrollEnabled}
-          zoomOnScroll={!scrollLock || scrollEnabled}
-        >
-          <CustomBackground />
-          <CustomMiniMap />
-          <CustomControls />
-          <AlignmentGuides />
-          <AssessmentSelectionDebug />
-        </ReactFlow>
-        <ScrollOverlay />
-        <CollaborationLayer options={collaboration} awareness={awareness} />
+    <TooltipProvider>
+      <div
+        className={`apollon-editor ${readonly ? "apollon-editor--readonly" : ""} ${
+          connectionGuidanceActive ? "apollon-editor--connection-guidance" : ""
+        }`}
+        style={{
+          display: "flex",
+          height: "100%",
+          width: "100%",
+          overflow: "hidden",
+          backgroundColor: "var(--apollon-background, #ffffff)",
+          position: "relative",
+        }}
+      >
+        {mode === ApollonMode.Modelling && !readonly && <Sidebar />}
+        <div className="apollon-canvas">
+          <ReactFlow
+            id={`react-flow-library-${diagramId}`}
+            className="apollon-container"
+            nodeTypes={diagramNodeTypes}
+            edgeTypes={diagramEdgeTypes}
+            nodes={nodes}
+            edges={edges}
+            onDragOver={onDragOver}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnectStart={onConnectStart}
+            onConnect={onConnect}
+            onEdgesDelete={onEdgesDelete}
+            onConnectEnd={onConnectEnd}
+            zoomOnDoubleClick={false}
+            onNodeDrag={onNodeDrag}
+            onNodeDragStop={onNodeDragStop}
+            onReconnect={onReconnect}
+            onReconnectStart={handleReconnectStart}
+            onReconnectEnd={handleReconnectEnd}
+            connectionLineType={connectionLineType}
+            connectionLineComponent={ReconnectConnectionLine}
+            connectionMode={ConnectionMode.Loose}
+            // Lift the selected edge (and its bend/endpoint handles) above other
+            // edges so an overlapping edge's interaction ribbon can't steal the
+            // pointer from a visible handle.
+            elevateEdgesOnSelect
+            onInit={(instance) => {
+              instance.fitView({ maxZoom: 1.0, minZoom: 1.0 })
+              handleReactFlowInit(instance)
+            }}
+            minZoom={CANVAS.MIN_SCALE_TO_ZOOM_OUT}
+            maxZoom={CANVAS.MAX_SCALE_TO_ZOOM_IN}
+            snapToGrid
+            snapGrid={[CANVAS.SNAP_TO_GRID_PX, CANVAS.SNAP_TO_GRID_PX]}
+            onNodeDoubleClick={onNodeDoubleClick}
+            onEdgeDoubleClick={onEdgeDoubleClick}
+            onBeforeDelete={onBeforeDelete}
+            onPaneClick={onPaneClicked}
+            proOptions={proOptions}
+            edgesReconnectable={isDiagramModifiable}
+            nodesConnectable={isDiagramModifiable}
+            nodesDraggable={isDiagramModifiable}
+            panOnScroll={!scrollLock || scrollEnabled}
+            zoomOnScroll={!scrollLock || scrollEnabled}
+          >
+            <CustomBackground />
+            <CustomMiniMap />
+            <CustomControls />
+            <AlignmentGuides />
+            <AssessmentSelectionDebug />
+          </ReactFlow>
+          <ScrollOverlay />
+          <CollaborationLayer options={collaboration} awareness={awareness} />
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   )
 }
 

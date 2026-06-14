@@ -27,6 +27,10 @@ import { CollapsibleSidebar } from "@/components/playground/CollapsibleSidebar"
 import { connectPlaygroundCollaboration } from "@/components/playground/connectPlaygroundCollaboration"
 
 const UMLDiagramTypes = Object.values(UMLDiagramType)
+const playgroundSelectClassName =
+  "flex w-[200px] rounded-md border border-[var(--apollon-gray-variant,#495057)] bg-[var(--apollon-background)] p-1 text-[var(--apollon-primary-contrast)]"
+const playgroundOptionClassName =
+  "bg-[var(--apollon-background)] text-[var(--apollon-primary-contrast)]"
 
 export const ApollonPlayground: React.FC = () => {
   const { setEditor } = useEditorContext()
@@ -110,12 +114,16 @@ export const ApollonPlayground: React.FC = () => {
         <div>
           <label className="font-semibold ">Select Diagram Type</label>
           <select
-            className="border-2 border-gray-400 p-1 rounded-md flex w-[200px]"
+            className={playgroundSelectClassName}
             value={diagramType}
             onChange={(e) => setDiagramType(e.target.value as UMLDiagramType)}
           >
             {UMLDiagramTypes.map((type) => (
-              <option key={type} value={type}>
+              <option
+                key={type}
+                value={type}
+                className={playgroundOptionClassName}
+              >
                 {type}
               </option>
             ))}
@@ -125,12 +133,27 @@ export const ApollonPlayground: React.FC = () => {
           <label className="font-semibold ">Mode</label>
           <select
             value={mode}
-            className="border-2 border-gray-400 p-1 rounded-md flex w-[200px] "
+            className={playgroundSelectClassName}
             onChange={(e) => setMode(e.target.value as ApollonMode)}
           >
-            <option value={ApollonMode.Assessment}>Assessment</option>
-            <option value={ApollonMode.Exporting}>Exporting</option>
-            <option value={ApollonMode.Modelling}>Modelling</option>
+            <option
+              value={ApollonMode.Assessment}
+              className={playgroundOptionClassName}
+            >
+              Assessment
+            </option>
+            <option
+              value={ApollonMode.Exporting}
+              className={playgroundOptionClassName}
+            >
+              Exporting
+            </option>
+            <option
+              value={ApollonMode.Modelling}
+              className={playgroundOptionClassName}
+            >
+              Modelling
+            </option>
           </select>
         </div>
 
