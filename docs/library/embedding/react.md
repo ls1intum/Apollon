@@ -7,8 +7,8 @@ description: Embed Apollon in React with the <Apollon> component, hooks, and pro
 # React
 
 Apollon ships a React component, a context provider, and subscription hooks
-from the **`/react` subpath** so the editor shares your host's copy of React,
-MUI, emotion, and xyflow instead of bundling a second one.
+from the **`/react` subpath** so the editor shares your host's copy of React
+and xyflow instead of bundling a second one.
 
 ```tsx
 import { Apollon } from "@tumaet/apollon/react"

@@ -16,8 +16,8 @@ idiomatic version — but the two steps below are all Apollon needs.
 npm install @tumaet/apollon
 ```
 
-This is the standalone build: React, MUI, emotion, and xyflow are bundled
-inside the tarball, so there are no peer dependencies to install. React hosts
+This is the standalone build: React and xyflow are bundled inside the tarball,
+so there are no peer dependencies to install. React hosts
 should instead use the `/react` subpath — see [Install](/library/embedding/install).
 
 :::danger The editor MUST have an explicit height

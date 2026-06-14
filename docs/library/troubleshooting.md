@@ -93,7 +93,7 @@ For a CDN / plain-HTML host, link it instead — see
 copy of React"), broken context, or a bundle that is larger than expected.
 
 **Cause.** The default `@tumaet/apollon` build **bundles its own copy** of
-React, MUI, emotion, and xyflow. That is correct for non-React hosts, but in a
+React and xyflow. That is correct for non-React hosts, but in a
 React app it ships a second React that fights the host's.
 
 **Fix.** In a React host, import from the `/react` subpath and install the
