@@ -37,7 +37,7 @@ export async function waitForCanvasReady(page: Page, expectNodes = true) {
  * Useful for large diagrams (e.g. BPMN) that overflow at zoom 1.0.
  */
 export async function clickFitView(page: Page) {
-  const fitViewBtn = page.locator(".react-flow__controls-fitview")
+  const fitViewBtn = page.locator('[aria-label="Fit to view"]')
   await fitViewBtn.click()
   // Let the zoom/pan animation settle
   await page.waitForTimeout(500)
