@@ -1,8 +1,9 @@
 import React, { useState } from "react"
-import { DividerLine, TextField, Typography } from "@/components/ui"
+import { DividerLine, IconButton, TextField, Typography } from "@/components/ui"
 import { PaintRollerIcon } from "@/components/Icon/PaintRollerIcon"
 import { CrossIcon } from "@/components/Icon"
 import { ColorButton, ColorButtons } from "./ColorButtons"
+import { useColorEditorDisclosure } from "./ColorEditorGroup"
 import { DefaultNodeProps } from "@/types"
 
 interface NodeStyleEditorProps {
@@ -10,6 +11,7 @@ interface NodeStyleEditorProps {
   handleDataFieldUpdate: (key: keyof DefaultNodeProps, value: string) => void
   preElements?: React.ReactNode[]
   sideElements?: React.ReactNode[]
+  colorEditorLabel?: string
   inputPlaceholder?: string
   noStrokeUpdate?: boolean
   showNameInputChange?: boolean
@@ -29,8 +31,8 @@ const styles = {
     display: "flex",
     flexDirection: "row" as const,
     alignItems: "center",
-    justifyContent: "space-between",
-    gap: "5px",
+    flexWrap: "wrap" as const,
+    gap: "8px",
     flex: 1,
   },
   colorPanel: {
@@ -40,7 +42,6 @@ const styles = {
     marginBottom: 10,
     backgroundColor: "var(--apollon-background, white)",
     border: "1px solid var(--apollon-gray, #e9ecef)",
-    paddingBottom: 10,
   },
   colorOption: {
     display: "flex",
@@ -71,11 +72,16 @@ const styles = {
 const ColorOption: React.FC<{
   label: string
   color: string | undefined
+  selected?: boolean
   onSelect: () => void
-}> = ({ label, color, onSelect }) => (
+}> = ({ label, color, selected = false, onSelect }) => (
   <div style={styles.colorOption}>
     <Typography>{label}</Typography>
-    <ColorButton onSelect={onSelect} color={color || "#000000"} />
+    <ColorButton
+      onSelect={onSelect}
+      color={color || "#000000"}
+      selected={selected}
+    />
   </div>
 )
 
@@ -83,6 +89,7 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
   nodeData,
   handleDataFieldUpdate,
   sideElements = [],
+  colorEditorLabel,
   inputPlaceholder = "Enter node name",
   noStrokeUpdate = false,
   showNameInputChange = true,
@@ -103,10 +110,13 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
           { key: "textColor", label: "Text Color" },
         ]
 
-  const [paintOpen, setPaintOpen] = useState(false)
+  const { open: paintOpen, setOpen: setPaintOpen } = useColorEditorDisclosure()
   const [activeColorField, setActiveColorField] = useState<
     keyof DefaultNodeProps | null
   >(null)
+  const colorEditorActionLabel = colorEditorLabel
+    ? `Edit ${colorEditorLabel} colors`
+    : "Edit colors"
 
   const toggleColorField = (key: keyof DefaultNodeProps) => {
     setActiveColorField((prev) => (prev === key ? null : key))
@@ -114,6 +124,11 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
+      {/* One wrapping row for every caller: the name input flexes to fill the
+          width, and the buttons stay grouped on the right. When the side
+          content is too wide to share the line (e.g. the «stereotype» toggle),
+          the whole button group wraps below instead of crushing the input —
+          so no per-node-type branching is needed. */}
       <div style={styles.container}>
         {preElements}
         {title && (
@@ -127,7 +142,7 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
             onChange={(event) =>
               handleDataFieldUpdate("name", event.target.value)
             }
-            sx={{ flex: 1 }}
+            sx={{ flex: 1, minWidth: 90 }}
             size="small"
             value={nodeData.name ?? ""}
             placeholder={inputPlaceholder}
@@ -139,31 +154,57 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
             maxRows={isMultilineName ? 6 : undefined}
           />
         )}
-        <PaintRollerIcon
-          onClick={() => setPaintOpen(!paintOpen)}
-          aria-label="Toggle color settings"
-        />
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            flexShrink: 0,
+            marginLeft: "auto",
+          }}
+        >
+          <IconButton
+            ariaLabel={colorEditorActionLabel}
+            tooltip={colorEditorActionLabel}
+            aria-expanded={paintOpen}
+            onClick={() => {
+              setPaintOpen(!paintOpen)
+              setActiveColorField(null)
+            }}
+          >
+            <PaintRollerIcon />
+          </IconButton>
 
-        {sideElements.map((element, index) => (
-          <React.Fragment key={`side-element-${index}`}>
-            {element}
-          </React.Fragment>
-        ))}
+          {sideElements.map((element, index) => (
+            <React.Fragment key={`side-element-${index}`}>
+              {element}
+            </React.Fragment>
+          ))}
+        </div>
       </div>
 
       {paintOpen && (
         <div style={styles.colorPanel}>
           {!activeColorField ? (
-            colorFields.map(({ key, label }) => (
+            colorFields.map(({ key, label }, index) => (
               <React.Fragment key={`${nodeData.name}-${key}-option`}>
                 <ColorOption
                   key={`${nodeData.name}-${key}-option`}
                   label={label}
                   color={nodeData[key]}
+                  selected={Boolean(nodeData[key])}
                   onSelect={() => toggleColorField(key)}
                 />
                 {key !== colorFields[colorFields.length - 1].key && (
-                  <DividerLine backgroundColor="var(--apollon-gray, #e9ecef)" />
+                  <DividerLine
+                    backgroundColor="var(--apollon-gray, #e9ecef)"
+                    style={
+                      key === "fillColor" &&
+                      colorFields[index + 1]?.key === "textColor"
+                        ? { margin: 0 }
+                        : undefined
+                    }
+                  />
                 )}
               </React.Fragment>
             ))
@@ -179,15 +220,20 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
                 <Typography>
                   {colorFields.find((f) => f.key === activeColorField)?.label}
                 </Typography>
-                <CrossIcon
-                  fill="var(--apollon-primary-contrast, #000000)"
+                <IconButton
+                  ariaLabel="Close color picker"
+                  tooltip="Close color picker"
                   onClick={() => setActiveColorField(null)}
-                />
+                >
+                  <CrossIcon fill="var(--apollon-primary-contrast, #000000)" />
+                </IconButton>
               </div>
               <ColorButtons
-                onSelect={(color) =>
+                selectedColor={nodeData[activeColorField] ?? ""}
+                onSelect={(color) => {
                   handleDataFieldUpdate(activeColorField, color)
-                }
+                  setActiveColorField(null)
+                }}
               />
               <button
                 style={styles.resetButton}

@@ -1,11 +1,18 @@
-import { Box } from "@mui/material"
-import { EdgeStyleEditor, Typography } from "@/components/ui"
+import { EdgeStyleEditor, IconButton } from "@/components/ui"
 import { useReactFlow } from "@xyflow/react"
 import { SwapHorizIcon } from "@/components/Icon"
 import { useEdgePopOver } from "@/hooks"
 import { PopoverProps } from "../types"
 import { CustomEdgeProps } from "@/edges"
 import { EdgeTypeSelect, EdgeTypeOption } from "./EdgeTypeSelect"
+import {
+  ConnectionInfo,
+  edgeEndpointNames,
+  hasDistinctEndpointNames,
+  PopoverLayout,
+  PopoverSection,
+  swapDirectionTooltip,
+} from "../PopoverLayout"
 
 const COMPONENT_EDGE_TYPE_OPTIONS: ReadonlyArray<EdgeTypeOption> = [
   { value: "ComponentDependency", label: "Dependency" },
@@ -25,42 +32,47 @@ export const ComponentEdgeEditPopover: React.FC<PopoverProps> = ({
     return null
   }
 
-  const sourceNode = getNode(edge.source)
-  const targetNode = getNode(edge.target)
-  const sourceName = (sourceNode?.data?.name as string) ?? "Source"
-  const targetName = (targetNode?.data?.name as string) ?? "Target"
+  const { source: sourceName, target: targetName } = edgeEndpointNames(
+    edge,
+    getNode
+  )
 
   const edgeData = edge.data as CustomEdgeProps | undefined
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+    <PopoverLayout title="Edge">
       <EdgeStyleEditor
         edgeData={edgeData}
         handleDataFieldUpdate={(key, value) =>
           updateEdgeData(elementId, { ...edge.data, [key]: value })
         }
-        label="Control Flow"
+        label="Style"
         sideElements={[
           handleSwap && (
-            <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-              <SwapHorizIcon
-                style={{ cursor: "pointer" }}
-                onClick={handleSwap}
-              />
-            </Box>
+            <IconButton
+              ariaLabel={swapDirectionTooltip(sourceName, targetName)}
+              tooltip={swapDirectionTooltip(sourceName, targetName)}
+              onClick={handleSwap}
+            >
+              <SwapHorizIcon width={16} height={16} />
+            </IconButton>
           ),
         ]}
       />
 
-      <EdgeTypeSelect
-        value={edge.type}
-        options={COMPONENT_EDGE_TYPE_OPTIONS}
-        onChange={handleEdgeTypeChange}
-      />
+      <PopoverSection divider>
+        <EdgeTypeSelect
+          value={edge.type}
+          options={COMPONENT_EDGE_TYPE_OPTIONS}
+          onChange={handleEdgeTypeChange}
+        />
+      </PopoverSection>
 
-      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-        {sourceName} → {targetName}
-      </Typography>
-    </Box>
+      {hasDistinctEndpointNames(sourceName, targetName) && (
+        <PopoverSection title="Connection" divider>
+          <ConnectionInfo source={sourceName} target={targetName} />
+        </PopoverSection>
+      )}
+    </PopoverLayout>
   )
 }

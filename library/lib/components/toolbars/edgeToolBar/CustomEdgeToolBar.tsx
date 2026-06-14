@@ -3,7 +3,6 @@ import { ZINDEX } from "@/constants"
 import { IPoint } from "@/edges"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
 import { useIsOnlyThisElementSelected } from "@/hooks/useIsOnlyThisElementSelected"
-import { Box } from "@mui/material"
 import { useStore } from "@xyflow/react"
 import { useMemo } from "react"
 
@@ -68,8 +67,11 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
         style={{ overflow: "visible" }}
       >
         {showToolbar && (
-          <Box
-            sx={{
+          // `.apollon-edge-toolbar` makes only the buttons (not the box body)
+          // capture the pointer, so it can't steal events from bend handles.
+          <div
+            className="apollon-edge-toolbar"
+            style={{
               backgroundColor: "var(--apollon-background, white)",
               boxShadow: "0 0 4px 0 var(--apollon-background-variant, #f8f9fa)",
               borderRadius: "8px",
@@ -90,19 +92,14 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
               transform: "translateZ(0)",
               position: "relative",
               zIndex: ZINDEX.TOOLTIP,
-              // The toolbar body is decorative; only its buttons should capture
-              // the pointer. Otherwise the box covers nearby bend handles and
-              // steals their pointer events (visible handle, not draggable).
-              pointerEvents: "none",
-              "& > *": { pointerEvents: "auto" },
             }}
           >
-            <Box
-              sx={{
+            <div
+              style={{
                 width: "16px",
                 height: "16px",
                 backgroundColor: "var(--apollon-background, white)",
-                borderRadius: 1,
+                borderRadius: 4,
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
@@ -113,13 +110,13 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
               }}
             >
               <DeleteIcon style={{ width: 16, height: 16 }} />
-            </Box>
-            <Box
-              sx={{
+            </div>
+            <div
+              style={{
                 width: "16px",
                 height: "16px",
                 backgroundColor: "var(--apollon-background, white)",
-                borderRadius: 1,
+                borderRadius: 4,
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
@@ -130,8 +127,8 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
               }}
             >
               <EditIcon style={{ width: 16, height: 16 }} />
-            </Box>
-          </Box>
+            </div>
+          </div>
         )}
       </foreignObject>
     </g>

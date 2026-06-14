@@ -4,7 +4,8 @@ import { ObjectNodeProps } from "@/types"
 import { PopoverProps } from "../types"
 import { SeeFeedbackAssessmentBox } from "../SeeFeedbackAssessmentBox"
 import { useGoToNextAssessment } from "@/hooks"
-import Button from "@mui/material/Button"
+import { Button } from "@/components/ui"
+import { PopoverLayout } from "../PopoverLayout"
 
 export const ObjectSeeFeedbackPopover = ({ elementId }: PopoverProps) => {
   const nodes = useDiagramStore(useShallow((state) => state.nodes))
@@ -16,7 +17,7 @@ export const ObjectSeeFeedbackPopover = ({ elementId }: PopoverProps) => {
   const nodeData = node.data as ObjectNodeProps
 
   return (
-    <>
+    <PopoverLayout>
       <SeeFeedbackAssessmentBox
         elementId={elementId}
         name={nodeData.name}
@@ -29,6 +30,7 @@ export const ObjectSeeFeedbackPopover = ({ elementId }: PopoverProps) => {
           elementId={attr.id}
           name={attr.name}
           type="Attribute"
+          divider
         />
       ))}
       {nodeData.methods.map((method) => (
@@ -37,16 +39,12 @@ export const ObjectSeeFeedbackPopover = ({ elementId }: PopoverProps) => {
           elementId={method.id}
           name={method.name}
           type="Method"
+          divider
         />
       ))}
-      <Button
-        variant="contained"
-        size="small"
-        onClick={handleGoToNextAssessment}
-        style={{ textTransform: "none" }}
-      >
-        Next
+      <Button variant="outlined" onClick={handleGoToNextAssessment}>
+        Next Assessment
       </Button>
-    </>
+    </PopoverLayout>
   )
 }

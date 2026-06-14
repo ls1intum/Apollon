@@ -43,12 +43,14 @@ export const ComponentEditPopover: React.FC<PopoverProps> = ({
     <HeaderSwitchElement
       onClick={switchHeaderShown}
       isComponentHeaderShown={nodeData.isComponentHeaderShown}
+      stereotypeLabel="component"
     />
   )
   return (
     <DefaultNodeEditPopover
       elementId={elementId}
       sideElements={[HeaderSwitcher]}
+      placeholder="Component name"
     />
   )
 }

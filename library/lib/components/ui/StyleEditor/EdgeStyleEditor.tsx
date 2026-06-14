@@ -1,8 +1,9 @@
 import React, { useState } from "react"
-import { DividerLine, Typography } from "@/components/ui"
+import { DividerLine, IconButton, Typography } from "@/components/ui"
 import { PaintRollerIcon } from "@/components/Icon/PaintRollerIcon"
 import { CrossIcon } from "@/components/Icon"
 import { ColorButton, ColorButtons } from "./ColorButtons"
+import { useColorEditorDisclosure } from "./ColorEditorGroup"
 import { CustomEdgeProps } from "@/edges"
 
 type updateEdgeDataColorsKeys = "strokeColor" | "textColor"
@@ -30,7 +31,6 @@ const styles = {
     marginBottom: 10,
     backgroundColor: "var(--apollon-background, white)",
     border: "1px solid var(--apollon-gray, #e9ecef)",
-    paddingBottom: 10,
   },
   colorOption: {
     display: "flex",
@@ -61,11 +61,16 @@ const styles = {
 const ColorOption: React.FC<{
   label: string
   color: string | undefined
+  selected?: boolean
   onSelect: () => void
-}> = ({ label, color, onSelect }) => (
+}> = ({ label, color, selected = false, onSelect }) => (
   <div style={styles.colorOption}>
     <Typography>{label}</Typography>
-    <ColorButton onSelect={onSelect} color={color || "#000000"} />
+    <ColorButton
+      onSelect={onSelect}
+      color={color || "#000000"}
+      selected={selected}
+    />
   </div>
 )
 
@@ -80,7 +85,7 @@ export const EdgeStyleEditor: React.FC<EdgeStyleEditorProps> = ({
   sideElements = [],
   label,
 }) => {
-  const [paintOpen, setPaintOpen] = useState(false)
+  const { open: paintOpen, setOpen: setPaintOpen } = useColorEditorDisclosure()
   const [activeColorField, setActiveColorField] =
     useState<updateEdgeDataColorsKeys | null>(null)
 
@@ -94,19 +99,24 @@ export const EdgeStyleEditor: React.FC<EdgeStyleEditorProps> = ({
         display: "flex",
         flexDirection: "column",
         width: "100%",
-        marginTop: 10,
-        marginBottom: 10,
       }}
     >
       <div style={styles.container}>
-        <Typography variant="subtitle1" fontWeight="bold">
+        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
           {label}
         </Typography>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <PaintRollerIcon
-            onClick={() => setPaintOpen(!paintOpen)}
-            aria-label="Toggle color settings"
-          />
+          <IconButton
+            ariaLabel="Edit colors"
+            tooltip="Edit colors"
+            aria-expanded={paintOpen}
+            onClick={() => {
+              setPaintOpen(!paintOpen)
+              setActiveColorField(null)
+            }}
+          >
+            <PaintRollerIcon />
+          </IconButton>
           {sideElements.map((element, index) => (
             <React.Fragment key={`side-element-${index}`}>
               {element}
@@ -123,6 +133,7 @@ export const EdgeStyleEditor: React.FC<EdgeStyleEditorProps> = ({
                 <ColorOption
                   label={label}
                   color={edgeData ? edgeData[key] : undefined}
+                  selected={Boolean(edgeData?.[key])}
                   onSelect={() => toggleColorField(key)}
                 />
                 {key !== colorFields[colorFields.length - 1].key && (
@@ -142,15 +153,20 @@ export const EdgeStyleEditor: React.FC<EdgeStyleEditorProps> = ({
                 <Typography>
                   {colorFields.find((f) => f.key === activeColorField)?.label}
                 </Typography>
-                <CrossIcon
-                  fill="var(--apollon-primary-contrast, #000000)"
+                <IconButton
+                  ariaLabel="Close color picker"
+                  tooltip="Close color picker"
                   onClick={() => setActiveColorField(null)}
-                />
+                >
+                  <CrossIcon fill="var(--apollon-primary-contrast, #000000)" />
+                </IconButton>
               </div>
               <ColorButtons
-                onSelect={(color) =>
+                selectedColor={edgeData?.[activeColorField] ?? ""}
+                onSelect={(color) => {
                   handleDataFieldUpdate(activeColorField, color)
-                }
+                  setActiveColorField(null)
+                }}
               />
               <button
                 style={styles.resetButton}

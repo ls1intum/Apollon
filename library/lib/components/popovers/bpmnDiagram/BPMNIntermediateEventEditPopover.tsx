@@ -1,8 +1,22 @@
-import { Box, FormControl, InputLabel, MenuItem, Select } from "@mui/material"
 import { useReactFlow } from "@xyflow/react"
 import { PopoverProps } from "../types"
 import { BPMNIntermediateEventType } from "@/types"
-import { TextField } from "@/components/ui"
+import { Select, TextField } from "@/components/ui"
+import { PopoverLayout } from "../PopoverLayout"
+
+const INTERMEDIATE_TYPE_OPTIONS = [
+  { value: "default", label: "Default" },
+  { value: "message-catch", label: "Message Catch" },
+  { value: "message-throw", label: "Message Throw" },
+  { value: "timer-catch", label: "Timer Catch" },
+  { value: "escalation-throw", label: "Escalation Throw" },
+  { value: "conditional-catch", label: "Conditional Catch" },
+  { value: "link-catch", label: "Link Catch" },
+  { value: "link-throw", label: "Link Throw" },
+  { value: "compensation-throw", label: "Compensation Throw" },
+  { value: "signal-catch", label: "Signal Catch" },
+  { value: "signal-throw", label: "Signal Throw" },
+]
 
 export const BPMNIntermediateEventEditPopover: React.FC<PopoverProps> = ({
   elementId,
@@ -22,39 +36,22 @@ export const BPMNIntermediateEventEditPopover: React.FC<PopoverProps> = ({
     updateNodeData(elementId, { eventType: value })
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+    <PopoverLayout title="Intermediate Event">
       <TextField
         size="small"
         label="Name"
         value={data.name ?? ""}
         onChange={(e) => handleNameChange(e.target.value)}
+        fullWidth
       />
-      <FormControl fullWidth size="small">
-        <InputLabel id="bpmn-intermediate-type-label">
-          Intermediate Type
-        </InputLabel>
-        <Select
-          labelId="bpmn-intermediate-type-label"
-          id="bpmn-intermediate-type-select"
-          value={data.eventType ?? "default"}
-          label="Intermediate Type"
-          onChange={(e) =>
-            handleTypeChange(e.target.value as BPMNIntermediateEventType)
-          }
-        >
-          <MenuItem value="default">Default</MenuItem>
-          <MenuItem value="message-catch">Message Catch</MenuItem>
-          <MenuItem value="message-throw">Message Throw</MenuItem>
-          <MenuItem value="timer-catch">Timer Catch</MenuItem>
-          <MenuItem value="escalation-throw">Escalation Throw</MenuItem>
-          <MenuItem value="conditional-catch">Conditional Catch</MenuItem>
-          <MenuItem value="link-catch">Link Catch</MenuItem>
-          <MenuItem value="link-throw">Link Throw</MenuItem>
-          <MenuItem value="compensation-throw">Compensation Throw</MenuItem>
-          <MenuItem value="signal-catch">Signal Catch</MenuItem>
-          <MenuItem value="signal-throw">Signal Throw</MenuItem>
-        </Select>
-      </FormControl>
-    </Box>
+      <Select
+        label="Intermediate Type"
+        value={data.eventType ?? "default"}
+        options={INTERMEDIATE_TYPE_OPTIONS}
+        onChange={(value) =>
+          handleTypeChange(value as BPMNIntermediateEventType)
+        }
+      />
+    </PopoverLayout>
   )
 }

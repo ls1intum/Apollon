@@ -50,6 +50,7 @@ import {
 } from "./svgs"
 import { DiagramNodeType } from "@/typings"
 import { ZINDEX } from "@/constants"
+import { Tooltip } from "@/components/ui"
 import { MapIcon } from "./Icon/MapIcon"
 import { SouthEastArrowIcon } from "./Icon/SouthEastArrowIcon"
 import {
@@ -76,8 +77,16 @@ export const CustomMiniMap = () => {
 
   if (minimapCollapsed) {
     return (
-      <Panel position="bottom-right" onClick={() => setMinimapCollapsed(false)}>
-        <MapIcon fill="var(--apollon-primary-contrast, #000000)" />
+      <Panel
+        position="bottom-right"
+        className="minimap-icon-hover"
+        onClick={() => setMinimapCollapsed(false)}
+      >
+        <Tooltip title="Show minimap">
+          <span style={{ display: "flex" }}>
+            <MapIcon fill="var(--apollon-primary-contrast, #000000)" />
+          </span>
+        </Tooltip>
       </Panel>
     )
   }
@@ -88,24 +97,27 @@ export const CustomMiniMap = () => {
       onClick={() => setMinimapCollapsed(true)}
       style={{ boxShadow: "none", backgroundColor: "transparent" }}
     >
-      <div
-        style={{
-          position: "absolute",
-          bottom: 0,
-          right: 0,
-          display: "flex",
-          zIndex: ZINDEX.PANEL,
-          padding: 8,
-          backgroundColor: "var(--apollon-background, white)",
-          borderRadius: "4px",
-          justifyContent: "center",
-          alignItems: "center",
-          cursor: "pointer",
-          boxShadow: "0 0 4px 0 rgb(0 0 0 / 0.2)",
-        }}
-      >
-        <SouthEastArrowIcon fill="var(--apollon-primary-contrast, #000000)" />
-      </div>
+      <Tooltip title="Hide minimap">
+        <div
+          className="minimap-collapse-hover"
+          style={{
+            position: "absolute",
+            bottom: 0,
+            right: 0,
+            display: "flex",
+            zIndex: ZINDEX.PANEL,
+            padding: 8,
+            backgroundColor: "var(--apollon-background, white)",
+            borderRadius: "4px",
+            justifyContent: "center",
+            alignItems: "center",
+            cursor: "pointer",
+            boxShadow: "0 0 4px 0 rgb(0 0 0 / 0.2)",
+          }}
+        >
+          <SouthEastArrowIcon fill="var(--apollon-primary-contrast, #000000)" />
+        </div>
+      </Tooltip>
 
       <MiniMap
         zoomable

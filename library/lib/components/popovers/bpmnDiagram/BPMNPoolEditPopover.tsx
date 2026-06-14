@@ -1,7 +1,7 @@
 import { useState } from "react"
-import { Box } from "@mui/material"
 import { TextField } from "@/components/ui"
 import { PopoverProps } from "../types"
+import { PopoverLayout } from "../PopoverLayout"
 import { useDiagramStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { Node } from "@xyflow/react"
@@ -46,15 +46,15 @@ export const BPMNPoolEditPopover = ({ elementId }: PopoverProps) => {
   }
 
   return (
-    <Box sx={{ width: "auto", padding: 2 }}>
+    <PopoverLayout title="Pool">
       <TextField
         fullWidth
-        label="Pool Name"
+        label="Name"
         value={poolName}
         onChange={(e) => handlePoolNameChange(e.target.value)}
         variant="outlined"
         size="small"
       />
-    </Box>
+    </PopoverLayout>
   )
 }

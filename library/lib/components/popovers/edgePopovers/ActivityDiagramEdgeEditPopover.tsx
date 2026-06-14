@@ -1,10 +1,10 @@
-import { Box } from "@mui/material"
-import { EdgeStyleEditor, TextField } from "@/components/ui"
+import { EdgeStyleEditor, IconButton, TextField } from "@/components/ui"
 import { useReactFlow } from "@xyflow/react"
 import { CustomEdgeProps } from "@/edges/EdgeProps"
 import { SwapHorizIcon } from "@/components/Icon"
 import { useEdgePopOver } from "@/hooks"
 import { PopoverProps } from "../types"
+import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 
 export const ActivityDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
   elementId,
@@ -21,32 +21,35 @@ export const ActivityDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
   const edgeData = edge.data as CustomEdgeProps | undefined
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+    <PopoverLayout title="Edge">
       <EdgeStyleEditor
         edgeData={edgeData}
         handleDataFieldUpdate={(key, value) =>
           updateEdgeData(elementId, { ...edge.data, [key]: value })
         }
-        label="Control Flow"
+        label="Style"
         sideElements={[
           handleSwap && (
-            <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-              <SwapHorizIcon
-                style={{ cursor: "pointer" }}
-                onClick={handleSwap}
-              />
-            </Box>
+            <IconButton
+              ariaLabel="Swap edge direction"
+              tooltip="Swap edge direction"
+              onClick={handleSwap}
+            >
+              <SwapHorizIcon width={16} height={16} />
+            </IconButton>
           ),
         ]}
       />
 
-      {/* Label update */}
-      <TextField
-        value={edgeData?.label ?? ""}
-        onChange={(e) => handleLabelChange(e.target.value)}
-        size="small"
-        fullWidth
-      />
-    </Box>
+      <PopoverSection divider>
+        <TextField
+          value={edgeData?.label ?? ""}
+          onChange={(e) => handleLabelChange(e.target.value)}
+          placeholder="Label"
+          size="small"
+          fullWidth
+        />
+      </PopoverSection>
+    </PopoverLayout>
   )
 }

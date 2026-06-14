@@ -1,8 +1,16 @@
-import { Box, FormControl, InputLabel, MenuItem, Select } from "@mui/material"
 import { useReactFlow } from "@xyflow/react"
 import { PopoverProps } from "../types"
 import { BPMNGatewayType } from "@/types"
-import { TextField } from "@/components/ui"
+import { Select, TextField } from "@/components/ui"
+import { PopoverLayout } from "../PopoverLayout"
+
+const GATEWAY_TYPE_OPTIONS = [
+  { value: "exclusive", label: "Exclusive" },
+  { value: "parallel", label: "Parallel" },
+  { value: "inclusive", label: "Inclusive" },
+  { value: "event-based", label: "Event-based" },
+  { value: "complex", label: "Complex" },
+]
 
 export const BPMNGatewayEditPopover: React.FC<PopoverProps> = ({
   elementId,
@@ -19,29 +27,20 @@ export const BPMNGatewayEditPopover: React.FC<PopoverProps> = ({
     updateNodeData(elementId, { gatewayType: value })
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+    <PopoverLayout title="Gateway">
       <TextField
         size="small"
         label="Name"
         value={data.name ?? ""}
         onChange={(e) => handleNameChange(e.target.value)}
+        fullWidth
       />
-      <FormControl fullWidth size="small">
-        <InputLabel id="bpmn-gateway-type-label">Gateway Type</InputLabel>
-        <Select
-          labelId="bpmn-gateway-type-label"
-          id="bpmn-gateway-type-select"
-          value={data.gatewayType ?? "exclusive"}
-          label="Gateway Type"
-          onChange={(e) => handleTypeChange(e.target.value as BPMNGatewayType)}
-        >
-          <MenuItem value="exclusive">Exclusive</MenuItem>
-          <MenuItem value="parallel">Parallel</MenuItem>
-          <MenuItem value="inclusive">Inclusive</MenuItem>
-          <MenuItem value="event-based">Event-based</MenuItem>
-          <MenuItem value="complex">Complex</MenuItem>
-        </Select>
-      </FormControl>
-    </Box>
+      <Select
+        label="Gateway Type"
+        value={data.gatewayType ?? "exclusive"}
+        options={GATEWAY_TYPE_OPTIONS}
+        onChange={(value) => handleTypeChange(value as BPMNGatewayType)}
+      />
+    </PopoverLayout>
   )
 }

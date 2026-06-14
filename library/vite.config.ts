@@ -4,8 +4,10 @@ import dts from "vite-plugin-dts"
 import { resolve } from "path"
 
 // Two passes:
-//   default        → dist/{index,internals}.js  (React + MUI + emotion + xyflow inlined)
+//   default        → dist/{index,internals}.js  (React + xyflow inlined)
 //   LIB_PEERS=true → dist/react/react.js        (those packages externalized)
+//
+// Radix and lucide are regular deps, bundled into both builds (never external).
 //
 // The `<Apollon>` component ships ONLY from the peer build — otherwise it
 // would render on a second, private React copy. The peer entry gets a
@@ -38,9 +40,6 @@ export default defineConfig({
             "react/jsx-runtime",
             "react/jsx-dev-runtime",
             "react-dom/client",
-            "@emotion/react",
-            "@emotion/styled",
-            /^@mui\/material(\/.*)?$/,
             "@xyflow/react",
           ]
         : [],

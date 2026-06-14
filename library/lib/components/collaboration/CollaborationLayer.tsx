@@ -1,4 +1,4 @@
-import Tooltip from "@mui/material/Tooltip"
+import { Tooltip } from "@/components/ui"
 import {
   useCallback,
   useEffect,
@@ -190,16 +190,7 @@ function CollaboratorPresenceBar({
               : c.name
 
         return (
-          <Tooltip
-            key={c.id}
-            title={label}
-            arrow
-            slotProps={{
-              popper: {
-                modifiers: [{ name: "offset", options: { offset: [0, -4] } }],
-              },
-            }}
-          >
+          <Tooltip key={c.id} title={label}>
             <div
               aria-label={label}
               role={isFollowable ? "button" : undefined}

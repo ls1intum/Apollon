@@ -1,11 +1,16 @@
-import { Box } from "@mui/material"
-import { EdgeStyleEditor, TextField, Typography } from "@/components/ui"
+import { EdgeStyleEditor, IconButton, TextField } from "@/components/ui"
 import { useReactFlow } from "@xyflow/react"
 import { CustomEdgeProps } from "@/edges/EdgeProps"
 import { SwapHorizIcon } from "@/components/Icon"
 import { useEdgePopOver } from "@/hooks"
 import { PopoverProps } from "../types"
 import { EdgeTypeSelect, EdgeTypeOption } from "./EdgeTypeSelect"
+import {
+  edgeEndpointNames,
+  PopoverLayout,
+  PopoverSection,
+  swapDirectionTooltip,
+} from "../PopoverLayout"
 
 const CLASS_EDGE_TYPE_OPTIONS: ReadonlyArray<EdgeTypeOption> = [
   { value: "ClassBidirectional", label: "Bi-Association" },
@@ -35,86 +40,76 @@ export const EdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
   }
 
   const edgeData = edge.data as CustomEdgeProps | undefined
-  const sourceNode = getNode(edge.source)
-  const targetNode = getNode(edge.target)
-  const sourceName = (sourceNode?.data?.name as string) ?? "Source"
-  const targetName = (targetNode?.data?.name as string) ?? "Target"
+  const { source: rawSourceName, target: rawTargetName } = edgeEndpointNames(
+    edge,
+    getNode
+  )
+  // Append the endpoint name only when it exists, else just "Source"/"Target".
+  const sourceTitle = rawSourceName ? `Source: ${rawSourceName}` : "Source"
+  const targetTitle = rawTargetName ? `Target: ${rawTargetName}` : "Target"
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+    <PopoverLayout title="Edge">
       <EdgeStyleEditor
         edgeData={edgeData}
         handleDataFieldUpdate={(key, value) =>
           updateEdgeData(elementId, { ...edge.data, [key]: value })
         }
-        label="Edge Type"
+        label="Style"
         sideElements={[
           handleSwap && (
-            <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-              <SwapHorizIcon
-                style={{ cursor: "pointer" }}
-                onClick={handleSwap}
-              />
-            </Box>
+            <IconButton
+              ariaLabel={swapDirectionTooltip(rawSourceName, rawTargetName)}
+              tooltip={swapDirectionTooltip(rawSourceName, rawTargetName)}
+              onClick={handleSwap}
+            >
+              <SwapHorizIcon width={16} height={16} />
+            </IconButton>
           ),
         ]}
       />
 
-      <EdgeTypeSelect
-        value={edge.type}
-        options={CLASS_EDGE_TYPE_OPTIONS}
-        onChange={handleEdgeTypeChange}
-      />
+      <PopoverSection divider>
+        <EdgeTypeSelect
+          value={edge.type}
+          options={CLASS_EDGE_TYPE_OPTIONS}
+          onChange={handleEdgeTypeChange}
+        />
+      </PopoverSection>
 
-      {
-        <>
-          {/* Source subheadline */}
-          <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-            {sourceName}
-          </Typography>
+      <PopoverSection title={sourceTitle} divider>
+        <TextField
+          value={edgeData?.sourceMultiplicity ?? ""}
+          onChange={(e) => handleSourceMultiplicityChange(e.target.value)}
+          placeholder="Multiplicity"
+          size="small"
+          fullWidth
+        />
+        <TextField
+          value={edgeData?.sourceRole ?? ""}
+          onChange={(e) => handleSourceRoleChange(e.target.value)}
+          placeholder="Role"
+          size="small"
+          fullWidth
+        />
+      </PopoverSection>
 
-          {/* Source Multiplicity */}
-          <TextField
-            label={sourceName + " Multiplicity"}
-            value={edgeData?.sourceMultiplicity ?? ""}
-            onChange={(e) => handleSourceMultiplicityChange(e.target.value)}
-            size="small"
-            fullWidth
-          />
-
-          {/* Source Role */}
-          <TextField
-            label={sourceName + " Role"}
-            value={edgeData?.sourceRole ?? ""}
-            onChange={(e) => handleSourceRoleChange(e.target.value)}
-            size="small"
-            fullWidth
-          />
-
-          {/* Target subheadline */}
-          <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-            {targetName}
-          </Typography>
-
-          {/* Target Multiplicity */}
-          <TextField
-            label={targetName + " Multiplicity"}
-            value={edgeData?.targetMultiplicity ?? ""}
-            onChange={(e) => handleTargetMultiplicityChange(e.target.value)}
-            size="small"
-            fullWidth
-          />
-
-          {/* Target Role */}
-          <TextField
-            label={targetName + " Role"}
-            value={edgeData?.targetRole ?? ""}
-            onChange={(e) => handleTargetRoleChange(e.target.value)}
-            size="small"
-            fullWidth
-          />
-        </>
-      }
-    </Box>
+      <PopoverSection title={targetTitle} divider>
+        <TextField
+          value={edgeData?.targetMultiplicity ?? ""}
+          onChange={(e) => handleTargetMultiplicityChange(e.target.value)}
+          placeholder="Multiplicity"
+          size="small"
+          fullWidth
+        />
+        <TextField
+          value={edgeData?.targetRole ?? ""}
+          onChange={(e) => handleTargetRoleChange(e.target.value)}
+          placeholder="Role"
+          size="small"
+          fullWidth
+        />
+      </PopoverSection>
+    </PopoverLayout>
   )
 }

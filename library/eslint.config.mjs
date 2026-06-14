@@ -27,6 +27,11 @@ export default [
       "react-hooks/exhaustive-deps": "warn",
       "react/prop-types": "off",
       "no-console": "error",
+      // Allow intentionally-unused `_`-prefixed bindings.
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      ],
     },
   },
 ]

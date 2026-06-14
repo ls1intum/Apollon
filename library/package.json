@@ -75,9 +75,9 @@
       "limit": "220 kB"
     },
     {
-      "name": "/react entry (peers external)",
+      "name": "/react entry (peers external, Radix + lucide bundled)",
       "path": "dist/react/react.js",
-      "limit": "110 kB"
+      "limit": "140 kB"
     },
     {
       "name": "yjs sync chunk",
@@ -86,23 +86,11 @@
     }
   ],
   "peerDependencies": {
-    "@emotion/react": "^11.11.0",
-    "@emotion/styled": "^11.11.0",
-    "@mui/material": "^6.4.0",
     "@xyflow/react": "^12.3.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0"
   },
   "peerDependenciesMeta": {
-    "@emotion/react": {
-      "optional": true
-    },
-    "@emotion/styled": {
-      "optional": true
-    },
-    "@mui/material": {
-      "optional": true
-    },
     "@xyflow/react": {
       "optional": true
     },
@@ -118,16 +106,16 @@
     "@dnd-kit/core": "6.3.1",
     "@dnd-kit/sortable": "10.0.0",
     "@dnd-kit/utilities": "3.2.2",
+    "@radix-ui/react-popover": "catalog:",
+    "@radix-ui/react-tooltip": "catalog:",
+    "lucide-react": "1.18.0",
     "uuid": "catalog:",
     "y-protocols": "1.0.6",
     "yjs": "13.6.20",
     "zustand": "catalog:"
   },
   "devDependencies": {
-    "@emotion/react": "catalog:",
-    "@emotion/styled": "catalog:",
     "@eslint/js": "catalog:",
-    "@mui/material": "catalog:",
     "@testing-library/jest-dom": "catalog:",
     "@testing-library/react": "catalog:",
     "@types/node": "catalog:",

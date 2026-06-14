@@ -1,9 +1,26 @@
-import { Box, FormControl, InputLabel, MenuItem, Select } from "@mui/material"
-import { NodeStyleEditor } from "@/components/ui"
+import { NodeStyleEditor, Select } from "@/components/ui"
 import { useReactFlow } from "@xyflow/react"
 import { PopoverProps } from "../types"
 import { BPMNMarkerType, BPMNTaskProps, BPMNTaskType } from "@/types"
 import { supportsMultilineName } from "@/utils/nodeUtils"
+import { PopoverLayout, PopoverSection } from "../PopoverLayout"
+
+const TASK_TYPE_OPTIONS = [
+  { value: "default", label: "Default" },
+  { value: "user", label: "User" },
+  { value: "send", label: "Send" },
+  { value: "receive", label: "Receive" },
+  { value: "manual", label: "Manual" },
+  { value: "business-rule", label: "Business Rule" },
+  { value: "script", label: "Script" },
+]
+
+const MARKER_OPTIONS = [
+  { value: "none", label: "None" },
+  { value: "parallel multi instance", label: "Parallel multi instance" },
+  { value: "sequential multi instance", label: "Sequential multi instance" },
+  { value: "loop", label: "Loop" },
+]
 
 export const BPMNTaskEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
   const { getNode, updateNodeData } = useReactFlow()
@@ -17,7 +34,7 @@ export const BPMNTaskEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
   }
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+    <PopoverLayout title="Task">
       <NodeStyleEditor
         handleDataFieldUpdate={(key, value) =>
           handleDataFieldUpdate(key, value)
@@ -26,48 +43,25 @@ export const BPMNTaskEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
         isMultilineName={supportsMultilineName(node.type)}
       />
 
-      <FormControl fullWidth size="small">
-        <InputLabel id="bpmn-task-type-label">Task Type</InputLabel>
+      <PopoverSection divider>
         <Select
-          labelId="bpmn-task-type-label"
-          id="bpmn-task-type-select"
-          value={data.taskType ?? "default"}
           label="Task Type"
-          onChange={(e) =>
-            handleDataFieldUpdate("taskType", e.target.value as BPMNTaskType)
+          value={data.taskType ?? "default"}
+          options={TASK_TYPE_OPTIONS}
+          onChange={(value) =>
+            handleDataFieldUpdate("taskType", value as BPMNTaskType)
           }
-        >
-          <MenuItem value="default">Default</MenuItem>
-          <MenuItem value="user">User</MenuItem>
-          <MenuItem value="send">Send</MenuItem>
-          <MenuItem value="receive">Receive</MenuItem>
-          <MenuItem value="manual">Manual</MenuItem>
-          <MenuItem value="business-rule">Business Rule</MenuItem>
-          <MenuItem value="script">Script</MenuItem>
-        </Select>
-      </FormControl>
+        />
 
-      <FormControl fullWidth size="small">
-        <InputLabel id="bpmn-task-marker-label">Marker</InputLabel>
         <Select
-          labelId="bpmn-task-marker-label"
-          id="bpmn-task-marker-select"
-          value={data.marker ?? "none"}
           label="Marker"
-          onChange={(e) =>
-            handleDataFieldUpdate("marker", e.target.value as BPMNMarkerType)
+          value={data.marker ?? "none"}
+          options={MARKER_OPTIONS}
+          onChange={(value) =>
+            handleDataFieldUpdate("marker", value as BPMNMarkerType)
           }
-        >
-          <MenuItem value="none">None</MenuItem>
-          <MenuItem value="parallel multi instance">
-            Parallel multi instance
-          </MenuItem>
-          <MenuItem value="sequential multi instance">
-            Sequential multi instance
-          </MenuItem>
-          <MenuItem value="loop">Loop</MenuItem>
-        </Select>
-      </FormControl>
-    </Box>
+        />
+      </PopoverSection>
+    </PopoverLayout>
   )
 }

@@ -1,10 +1,10 @@
-import { TextField, Typography } from "@/components/ui"
+import { IconButton, TextField, Typography } from "@/components/ui"
 import { PetriNetPlaceProps } from "@/types"
 import { useDiagramStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { PopoverProps } from "../types"
 import { DefaultNodeEditPopover } from "../DefaultNodeEditPopover"
-import { DividerLine } from "@/components"
+import { PopoverSection } from "../PopoverLayout"
 import { InfiniteIcon } from "@/components/Icon"
 
 export const PetriNetPlaceEditPopover: React.FC<PopoverProps> = ({
@@ -61,15 +61,7 @@ export const PetriNetPlaceEditPopover: React.FC<PopoverProps> = ({
 
   return (
     <DefaultNodeEditPopover elementId={elementId}>
-      <div
-        style={{
-          display: "flex",
-          gap: 8,
-          flex: 1,
-          flexDirection: "column",
-        }}
-      >
-        <DividerLine />
+      <PopoverSection title="Marking" divider>
         <div
           style={{
             display: "flex",
@@ -78,30 +70,18 @@ export const PetriNetPlaceEditPopover: React.FC<PopoverProps> = ({
             alignItems: "center",
           }}
         >
-          <Typography>Tokens</Typography>
+          <Typography sx={{ width: 72, flexShrink: 0 }}>Tokens</Typography>
 
           <TextField
-            variant="outlined"
             type="number"
             onChange={(event) => {
               const value = event.target.value
-              if (value === "") {
-                // Don't update immediately when empty, wait for blur or valid input
-                return
-              }
+              // Empty/invalid commits 0 so the edit isn't lost before blur.
               const numValue = parseInt(value)
-              if (!isNaN(numValue)) {
-                handleTokensChange(numValue)
-              }
-            }}
-            onBlur={(event) => {
-              const value = event.target.value
-              if (value === "") {
-                handleTokensChange(0)
-              }
+              handleTokensChange(value === "" || isNaN(numValue) ? 0 : numValue)
             }}
             size="small"
-            defaultValue={nodeData.tokens}
+            value={nodeData.tokens ?? 0}
             fullWidth
           />
         </div>
@@ -109,16 +89,15 @@ export const PetriNetPlaceEditPopover: React.FC<PopoverProps> = ({
         <div
           style={{
             display: "flex",
-            gap: 4,
+            gap: 8,
             width: "100%",
             alignItems: "center",
           }}
         >
-          <Typography>Capacity</Typography>
+          <Typography sx={{ width: 72, flexShrink: 0 }}>Capacity</Typography>
 
-          <div style={{ position: "relative" }}>
+          <div style={{ position: "relative", flex: 1 }}>
             <TextField
-              variant="outlined"
               type="number"
               onChange={(event) => {
                 const value = event.target.value
@@ -143,14 +122,28 @@ export const PetriNetPlaceEditPopover: React.FC<PopoverProps> = ({
               </div>
             )}
           </div>
-          <div
-            onClick={() => handleCapacityChange("Infinity")}
-            style={{ padding: 4 }}
+          <IconButton
+            ariaLabel={
+              nodeData.capacity === "Infinity"
+                ? "Set a finite capacity"
+                : "Set capacity to infinite"
+            }
+            tooltip={
+              nodeData.capacity === "Infinity"
+                ? "Set a finite capacity"
+                : "Set capacity to infinite"
+            }
+            aria-pressed={nodeData.capacity === "Infinity"}
+            onClick={() =>
+              handleCapacityChange(
+                nodeData.capacity === "Infinity" ? undefined : "Infinity"
+              )
+            }
           >
             <InfiniteIcon />
-          </div>
+          </IconButton>
         </div>
-      </div>
+      </PopoverSection>
     </DefaultNodeEditPopover>
   )
 }

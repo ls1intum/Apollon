@@ -11,12 +11,13 @@
 .apollon-editor {
   background-color: var(--apollon-background, #fff);
   color: var(--apollon-primary-contrast, #000);
+  --popover-divider: #d1d5dc;
 }
 
 /* Positioning context + clip region for the absolutely-positioned
    collaboration cursor layer. Keep `position` as `relative` only: a
    `transform`/`filter`/`perspective` here would become the containing block
-   for the body-portaled MUI popovers (see GenericPopover) and misplace them. */
+   for the body-portaled Radix popovers (see GenericPopover) and misplace them. */
 .apollon-canvas {
   position: relative;
   flex: 1;
@@ -511,7 +512,14 @@ svg.react-flow__connectionline {
 }
 
 .control-button:hover:not(.disabled) {
-  background-color: var(--apollon-background-variant, #f8f9fa);
+  background-color: var(
+    --apollon-hover-neutral,
+    color-mix(
+      in srgb,
+      var(--apollon-primary-contrast, #000000) 7.5%,
+      transparent
+    )
+  );
 }
 
 .control-button.disabled {
@@ -521,6 +529,92 @@ svg.react-flow__connectionline {
 
 .control-button.disabled:hover {
   background-color: var(--apollon-background, #fff);
+}
+
+/* Grouped zoom control: [ - ][ 100% ][ + ] as a single pill */
+.zoom-control-group {
+  display: flex;
+  align-items: stretch;
+  height: 32px;
+  background-color: var(--apollon-background, #fff);
+  border: 1px solid var(--apollon-gray-variant, #495057);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Tooltip wraps disabled buttons in a <span>; make it fill the pill so
+   each segment's hover area lines up with its border. */
+.zoom-control-group > span {
+  display: flex;
+}
+
+.zoom-control-button,
+.zoom-control-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--apollon-primary-contrast, #000000);
+  transition: background-color 0.2s ease;
+}
+
+.zoom-control-button {
+  width: 28px;
+  padding: 0;
+}
+
+.zoom-control-label {
+  min-width: 48px;
+  padding: 0 4px;
+  font-size: 13px;
+  font-weight: bold;
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+  border-left: 1px solid var(--apollon-gray-variant, #495057);
+  border-right: 1px solid var(--apollon-gray-variant, #495057);
+}
+
+.zoom-control-button:hover:not(.disabled),
+.zoom-control-label:hover {
+  background-color: var(
+    --apollon-hover-neutral,
+    color-mix(
+      in srgb,
+      var(--apollon-primary-contrast, #000000) 7.5%,
+      transparent
+    )
+  );
+}
+
+.zoom-control-button.disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.zoom-control-button.disabled:hover {
+  background-color: transparent;
+}
+
+/* Hover feedback for the minimap show/hide controls */
+.minimap-icon-hover,
+.minimap-collapse-hover {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.minimap-icon-hover:hover,
+.minimap-collapse-hover:hover {
+  background-color: var(
+    --apollon-hover-neutral,
+    color-mix(
+      in srgb,
+      var(--apollon-primary-contrast, #000000) 7.5%,
+      transparent
+    )
+  );
 }
 
 .horizontally-not-resizable .react-flow__resize-control.top.line:hover {
@@ -536,18 +630,366 @@ svg.react-flow__connectionline {
   cursor: grab;
 }
 
-.apollon-editor .MuiSelect-select {
-  color: var(--apollon-primary-contrast, #000) !important;
+/* Native UI primitives (formerly MUI), tokened via `--apollon-*`. Radix
+   portals to `document.body`, so these are global, not scoped under
+   `.apollon-editor`; theme vars are forwarded by `GenericPopover`. */
+
+/* TextField (input / textarea) */
+.apollon-textfield-label {
+  font-size: 0.75rem;
+  color: var(--apollon-primary-contrast, #000);
+  margin-bottom: 2px;
 }
-.apollon-editor .MuiFormLabel-root {
-  color: var(--apollon-primary-contrast, #000) !important;
+.apollon-textfield {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  color: var(--apollon-primary-contrast, #000);
+  caret-color: var(--apollon-primary-contrast, #000);
+  background-color: var(--apollon-background, #fff);
+  border: 1px solid var(--apollon-primary-contrast, #000);
+  border-radius: 4px;
+  outline: none;
 }
-.apollon-editor .MuiOutlinedInput-notchedOutline {
-  border-color: var(--apollon-primary-contrast, #000) !important;
+.apollon-textfield--small {
+  padding: 6px 8px;
 }
-.apollon-editor .MuiSvgIcon-root {
-  color: var(--apollon-primary-contrast, #000) !important;
+.apollon-textfield::placeholder {
+  color: var(--apollon-gray-variant, #495057);
+  opacity: 0.7;
 }
+.apollon-textfield:focus-visible {
+  border-color: var(--apollon-primary, #3e8acc);
+  box-shadow: 0 0 0 1px var(--apollon-primary, #3e8acc);
+}
+.apollon-textfield--error {
+  border-color: #d32f2f;
+}
+.apollon-textfield-helper {
+  font-size: 0.75rem;
+  margin-top: 2px;
+  color: var(--apollon-gray-variant, #495057);
+}
+.apollon-textfield-helper--error {
+  color: #d32f2f;
+}
+
+/* Button */
+.apollon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 12px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: transparent;
+  color: var(--apollon-primary, #3e8acc);
+  border: 1px solid var(--apollon-primary, #3e8acc);
+}
+.apollon-button:hover {
+  background-color: var(
+    --apollon-hover-neutral,
+    color-mix(
+      in srgb,
+      var(--apollon-primary-contrast, #000000) 7.5%,
+      transparent
+    )
+  );
+}
+.apollon-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.apollon-button--contained {
+  background-color: var(--apollon-primary, #3e8acc);
+  color: var(--apollon-background, #fff);
+}
+.apollon-button--text {
+  border-color: transparent;
+}
+.apollon-button--icon {
+  padding: 4px;
+  border-color: transparent;
+  color: var(--apollon-primary-contrast, #000);
+}
+
+/* Checkbox */
+.apollon-checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: var(--apollon-primary-contrast, #000);
+  cursor: pointer;
+}
+.apollon-checkbox {
+  accent-color: var(--apollon-primary, #3e8acc);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+/* Drag handle (DnD rows) */
+.apollon-drag-handle {
+  cursor: grab;
+  color: var(--apollon-gray-variant, #495057);
+}
+.apollon-drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Edge toolbar: only buttons capture pointer events, not the box body. */
+.apollon-edge-toolbar {
+  pointer-events: none;
+}
+.apollon-edge-toolbar > * {
+  pointer-events: auto;
+}
+
+/* Popover (Radix) */
+.apollon-popover {
+  box-sizing: border-box;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 10px;
+  background-color: var(--apollon-background-variant, #f8f9fa);
+  color: var(--apollon-primary-contrast, #000);
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  z-index: 10003;
+}
+
+/* Select (Radix Popover listbox) */
+.apollon-select {
+  display: inline-flex;
+  flex-direction: column;
+}
+.apollon-select-label {
+  font-size: 0.75rem;
+  color: var(--apollon-primary-contrast, #000);
+  margin-bottom: 2px;
+}
+.apollon-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 36px;
+  padding: 6px 10px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  text-align: left;
+  color: var(--apollon-primary-contrast, #000);
+  background-color: var(--apollon-background, #fff);
+  border: 1px solid var(--apollon-primary-contrast, #000);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.apollon-select-trigger:focus-visible {
+  border-color: var(--apollon-primary, #3e8acc);
+  box-shadow: 0 0 0 1px var(--apollon-primary, #3e8acc);
+  outline: none;
+}
+.apollon-select-value {
+  flex: 1;
+  min-width: 0;
+}
+.apollon-select-placeholder {
+  color: var(--apollon-gray-variant, #495057);
+  opacity: 0.7;
+}
+.apollon-select-icon {
+  flex: 0 0 auto;
+  color: var(--apollon-primary-contrast, #000);
+}
+.apollon-select-content {
+  background-color: var(--apollon-background, #fff);
+  color: var(--apollon-primary-contrast, #000);
+  border: 1px solid var(--apollon-primary-contrast, #000);
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  z-index: 10004;
+  overflow: hidden;
+}
+.apollon-select-listbox {
+  max-height: inherit;
+  overflow-y: auto;
+  /* Reliable touch scrolling inside Capacitor WebViews. */
+  -webkit-overflow-scrolling: touch;
+  padding: 4px;
+}
+.apollon-select-option {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 40px;
+  padding: 8px 10px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  text-align: left;
+  color: var(--apollon-primary-contrast, #000);
+  background-color: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  /* Avoid the 300ms tap delay / double-tap zoom on touch devices. */
+  touch-action: manipulation;
+}
+.apollon-select-option:hover,
+.apollon-select-option:focus-visible {
+  background-color: color-mix(
+    in srgb,
+    var(--apollon-primary, #3e8acc) 14%,
+    transparent
+  );
+  outline: none;
+}
+.apollon-select-option--selected {
+  font-weight: 600;
+  background-color: color-mix(
+    in srgb,
+    var(--apollon-primary, #3e8acc) 22%,
+    transparent
+  );
+}
+
+/* Color swatch button */
+.apollon-color-swatch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  background-color: var(--swatch-color, #000);
+  box-sizing: border-box;
+  transition: opacity 120ms ease;
+  flex-shrink: 0;
+}
+.apollon-color-swatch:hover {
+  opacity: 0.72;
+}
+.apollon-color-swatch:focus-visible {
+  outline: 2px solid var(--apollon-primary, #3e8acc);
+  outline-offset: 3px;
+}
+.apollon-color-swatch[aria-pressed="true"] {
+  opacity: 1;
+}
+.apollon-color-swatch__icon {
+  pointer-events: none;
+}
+
+.apollon-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  color: var(--apollon-primary-contrast, #000);
+  transition: background-color 120ms ease;
+}
+.apollon-icon-button:hover {
+  background-color: var(
+    --apollon-hover-neutral,
+    color-mix(
+      in srgb,
+      var(--apollon-primary-contrast, #000000) 7.5%,
+      transparent
+    )
+  );
+}
+.apollon-icon-button:focus-visible {
+  outline: 2px solid var(--apollon-primary, #3e8acc);
+  outline-offset: 2px;
+}
+.apollon-icon-button[aria-expanded="true"] {
+  background-color: color-mix(
+    in srgb,
+    var(--apollon-primary, #3e8acc) 20%,
+    transparent
+  );
+}
+
+.apollon-stereotype-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid
+    color-mix(in srgb, var(--apollon-primary, #3e8acc) 38%, transparent);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--apollon-primary-contrast, #000);
+  font: inherit;
+  font-size: 0.75rem;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+}
+.apollon-stereotype-toggle:hover {
+  background-color: var(
+    --apollon-hover-neutral,
+    color-mix(
+      in srgb,
+      var(--apollon-primary-contrast, #000000) 7.5%,
+      transparent
+    )
+  );
+}
+.apollon-stereotype-toggle:focus-visible {
+  outline: 2px solid var(--apollon-primary, #3e8acc);
+  outline-offset: 2px;
+}
+.apollon-stereotype-toggle[aria-pressed="true"] {
+  background-color: color-mix(
+    in srgb,
+    var(--apollon-primary, #3e8acc) 20%,
+    transparent
+  );
+  border-color: var(--apollon-primary, #3e8acc);
+  color: var(--apollon-primary, #3e8acc);
+}
+
+/* Tooltip (Radix) */
+.apollon-tooltip {
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  line-height: 1.3;
+  color: var(--apollon-background, #fff);
+  background-color: var(--apollon-primary-contrast, #000);
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  z-index: 10005;
+  max-width: 240px;
+}
+.apollon-tooltip-arrow {
+  fill: var(--apollon-primary-contrast, #000);
+}
+
 .scroll-overlay {
   position: absolute;
   top: 0;

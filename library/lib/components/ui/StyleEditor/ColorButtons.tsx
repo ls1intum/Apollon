@@ -1,7 +1,9 @@
 import React from "react"
+import { CheckIcon } from "@/components/Icon"
 
 interface ColorButtonsProps {
   onSelect: (color: string) => void
+  selectedColor?: string
 }
 
 const COLOR_PALETTE = [
@@ -19,7 +21,10 @@ const COLOR_PALETTE = [
   "#000000",
 ]
 
-export const ColorButtons: React.FC<ColorButtonsProps> = ({ onSelect }) => {
+export const ColorButtons: React.FC<ColorButtonsProps> = ({
+  onSelect,
+  selectedColor,
+}) => {
   return (
     <div
       style={{
@@ -28,10 +33,16 @@ export const ColorButtons: React.FC<ColorButtonsProps> = ({ onSelect }) => {
         flexWrap: "wrap",
         gap: 20,
         justifyContent: "center",
+        padding: 16,
       }}
     >
       {COLOR_PALETTE.map((color) => (
-        <ColorButton key={color} color={color} onSelect={onSelect} />
+        <ColorButton
+          key={color}
+          color={color}
+          onSelect={onSelect}
+          selected={color === selectedColor}
+        />
       ))}
     </div>
   )
@@ -40,18 +51,30 @@ export const ColorButtons: React.FC<ColorButtonsProps> = ({ onSelect }) => {
 interface ColorButtonProps {
   color: string
   onSelect: (color: string) => void
+  selected?: boolean
 }
 
-export const ColorButton = ({ color, onSelect }: ColorButtonProps) => (
+export const ColorButton = ({
+  color,
+  onSelect,
+  selected = false,
+}: ColorButtonProps) => (
   <button
+    type="button"
+    className="apollon-color-swatch"
     onClick={() => onSelect(color)}
-    style={{
-      width: 28,
-      height: 28,
-      borderRadius: "50%",
-      border: "none",
-      cursor: "pointer",
-      backgroundColor: color,
-    }}
-  ></button>
+    style={{ "--swatch-color": color } as React.CSSProperties}
+    aria-pressed={selected}
+    aria-label={color}
+  >
+    {selected && (
+      <CheckIcon
+        className="apollon-color-swatch__icon"
+        width={16}
+        height={16}
+        fill="var(--apollon-background, #ffffff)"
+        aria-hidden="true"
+      />
+    )}
+  </button>
 )

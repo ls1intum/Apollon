@@ -1,5 +1,6 @@
 import React, { ReactNode, useMemo } from "react"
-import { Paper, Popover, PopoverOrigin } from "@mui/material"
+import * as Popover from "@radix-ui/react-popover"
+import { PopoverOrigin } from "@/types"
 
 interface GenericPopoverProps {
   id: string
@@ -15,13 +16,50 @@ interface GenericPopoverProps {
   style?: React.CSSProperties
 }
 
+// Forwarded onto the portaled content, which escapes the `.apollon-editor`
+// subtree and so wouldn't otherwise inherit these.
+const THEME_VARS = [
+  "--apollon-primary",
+  "--apollon-primary-contrast",
+  "--apollon-background",
+  "--apollon-background-variant",
+  "--apollon-hover-neutral",
+  "--apollon-gray-variant",
+  "--panel-background",
+  "--panel-shadow",
+  "--text",
+  "--popover-divider",
+] as const
+
+// MUI's `transformOrigin` is the popover's own corner, so it dictates growth
+// direction: anchored-left opens right, anchored-right opens left.
+function toSideAlign(transformOrigin: PopoverOrigin): {
+  side: "top" | "bottom" | "left" | "right"
+  align: "start" | "center" | "end"
+} {
+  const side =
+    transformOrigin.horizontal === "left"
+      ? "right"
+      : transformOrigin.horizontal === "right"
+        ? "left"
+        : "bottom"
+
+  const align =
+    transformOrigin.vertical === "top"
+      ? "start"
+      : transformOrigin.vertical === "bottom"
+        ? "end"
+        : "center"
+
+  return { side, align }
+}
+
 export const GenericPopover: React.FC<GenericPopoverProps> = ({
   id,
   anchorEl,
   open,
   onClose,
   children,
-  anchorOrigin = { vertical: "top", horizontal: "right" },
   transformOrigin = { vertical: "top", horizontal: "left" },
   maxHeight = 500,
   maxWidth = 278,
@@ -36,20 +74,9 @@ export const GenericPopover: React.FC<GenericPopoverProps> = ({
 
     if (!source) return {}
 
-    const vars = [
-      "--apollon-primary",
-      "--apollon-primary-contrast",
-      "--apollon-background",
-      "--apollon-background-variant",
-      "--apollon-gray-variant",
-      "--panel-background",
-      "--panel-shadow",
-      "--text",
-    ]
-
     const computed = getComputedStyle(source)
     const resolved: Record<string, string> = {}
-    for (const variable of vars) {
+    for (const variable of THEME_VARS) {
       const value = computed.getPropertyValue(variable).trim()
       if (value) {
         resolved[variable] = value
@@ -59,63 +86,46 @@ export const GenericPopover: React.FC<GenericPopoverProps> = ({
     return resolved
   }, [anchorEl])
 
-  // Portal to document.body (MUI default - no `container`), not into the
-  // `.apollon-editor` subtree: an embedder wrapper using `contain`/`transform`
-  // would become the containing block for MUI's `position: fixed` root and
-  // shift the popover off-screen.
+  const { side, align } = toSideAlign(transformOrigin)
+
+  // HTML or SVG element — both expose the `getBoundingClientRect` Radix needs.
+  const virtualRef = useMemo(
+    () => ({ current: anchorEl as Element | null }),
+    [anchorEl]
+  )
+
   return (
-    <Popover
-      id={open ? id : undefined}
+    <Popover.Root
       open={open}
-      anchorEl={anchorEl}
-      onClose={onClose}
-      anchorOrigin={anchorOrigin}
-      transformOrigin={transformOrigin}
-      style={{ maxHeight, width: "100%", ...style }}
-      onClick={(e) => {
-        e.stopPropagation()
+      onOpenChange={(next) => {
+        if (!next) onClose()
       }}
     >
-      <Paper
-        elevation={2}
-        style={popoverThemeVars as React.CSSProperties}
-        sx={{
-          width: "100%",
-          maxWidth,
-          minWidth,
-          px: 1,
-          py: 1.25,
-          display: "flex",
-          flex: 1,
-          flexDirection: "column",
-          backgroundColor: "var(--apollon-background-variant, #f8f9fa)",
-          color: "var(--apollon-primary-contrast, #000000)",
-          "& .MuiSelect-select": {
-            color: "var(--apollon-primary-contrast, #000000) !important",
-          },
-          "& .MuiFormLabel-root": {
-            color: "var(--apollon-primary-contrast, #000000) !important",
-          },
-          "& .MuiOutlinedInput-notchedOutline": {
-            borderColor: "var(--apollon-primary-contrast, #000000) !important",
-          },
-          "& .MuiSvgIcon-root": {
-            color: "var(--apollon-primary-contrast, #000000) !important",
-          },
-          "& .MuiCheckbox-root": {
-            color: "var(--apollon-primary-contrast, #000000)",
-            "&.Mui-checked": {
-              color: "var(--apollon-primary-contrast, #000000)",
-            },
-            "&:hover": {
-              backgroundColor:
-                "color-mix(in srgb, var(--apollon-primary-contrast, #000000) 12%, transparent)",
-            },
-          },
-        }}
-      >
-        {children}
-      </Paper>
-    </Popover>
+      {anchorEl && <Popover.Anchor virtualRef={virtualRef} />}
+      <Popover.Portal>
+        <Popover.Content
+          id={open ? id : undefined}
+          side={side}
+          align={align}
+          sideOffset={4}
+          collisionPadding={8}
+          avoidCollisions
+          onClick={(e) => e.stopPropagation()}
+          // Don't steal selection from the canvas on open.
+          onOpenAutoFocus={(e) => e.preventDefault()}
+          className="apollon-popover"
+          style={{
+            ...popoverThemeVars,
+            maxHeight,
+            maxWidth,
+            minWidth,
+            overflowY: "auto",
+            ...style,
+          }}
+        >
+          {children}
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
   )
 }

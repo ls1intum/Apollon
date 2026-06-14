@@ -4,7 +4,8 @@ import { CommunicationObjectNodeProps } from "@/types"
 import { PopoverProps } from "../types"
 import { SeeFeedbackAssessmentBox } from "../SeeFeedbackAssessmentBox"
 import { useGoToNextAssessment } from "@/hooks"
-import Button from "@mui/material/Button"
+import { Button } from "@/components/ui"
+import { PopoverLayout } from "../PopoverLayout"
 
 export const CommunicationObjectNameSeeFeedbackPopover = ({
   elementId,
@@ -18,7 +19,7 @@ export const CommunicationObjectNameSeeFeedbackPopover = ({
   const nodeData = node.data as CommunicationObjectNodeProps
 
   return (
-    <>
+    <PopoverLayout>
       <SeeFeedbackAssessmentBox
         elementId={elementId}
         name={nodeData.name}
@@ -31,6 +32,7 @@ export const CommunicationObjectNameSeeFeedbackPopover = ({
           elementId={attr.id}
           name={attr.name}
           type="Attribute"
+          divider
         />
       ))}
 
@@ -40,16 +42,13 @@ export const CommunicationObjectNameSeeFeedbackPopover = ({
           elementId={method.id}
           name={method.name}
           type="Method"
+          divider
         />
       ))}
 
-      <Button
-        variant="outlined"
-        onClick={handleGoToNextAssessment}
-        sx={{ mt: 1 }}
-      >
-        Next
+      <Button variant="outlined" onClick={handleGoToNextAssessment}>
+        Next Assessment
       </Button>
-    </>
+    </PopoverLayout>
   )
 }

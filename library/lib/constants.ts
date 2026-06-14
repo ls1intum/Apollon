@@ -85,6 +85,8 @@ export const CSS_VARIABLE_FALLBACKS: Readonly<Record<string, string>> =
     "--apollon-background": "#ffffff",
     "--apollon-background-inverse": "#000000",
     "--apollon-background-variant": "#f8f9fa",
+    "--apollon-hover-neutral":
+      "color-mix(in srgb, var(--apollon-primary-contrast, #000000) 7.5%, transparent)",
     "--apollon-gray": "#e9ecef",
     "--apollon-grid": "rgba(36, 39, 36, 0.1)",
     "--apollon-gray-variant": "#495057",

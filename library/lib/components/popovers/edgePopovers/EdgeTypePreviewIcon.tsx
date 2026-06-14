@@ -1,4 +1,3 @@
-import { Box } from "@mui/material"
 import {
   extractMarkerId,
   getMarkerHalfHeight,
@@ -69,12 +68,11 @@ export const EdgeTypePreviewIcon = ({ edgeType }: { edgeType: string }) => {
   const startMarkerId = toMarkerId(extractMarkerId(markerStart))
 
   return (
-    <Box
-      component="svg"
+    <svg
       aria-hidden
       focusable="false"
       viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
-      sx={{
+      style={{
         width: VIEW_W,
         height: VIEW_H,
         flex: "0 0 auto",
@@ -101,6 +99,6 @@ export const EdgeTypePreviewIcon = ({ edgeType }: { edgeType: string }) => {
           direction={Math.PI}
         />
       )}
-    </Box>
+    </svg>
   )
 }

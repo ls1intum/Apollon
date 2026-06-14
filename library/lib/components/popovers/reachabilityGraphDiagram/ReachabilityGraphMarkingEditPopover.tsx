@@ -3,6 +3,7 @@ import { useDiagramStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { PopoverProps } from "../types"
 import { DefaultNodeEditPopover } from "../DefaultNodeEditPopover"
+import { PopoverSection } from "../PopoverLayout"
 
 export const ReachabilityGraphMarkingEditPopover: React.FC<PopoverProps> = ({
   elementId,
@@ -40,19 +41,20 @@ export const ReachabilityGraphMarkingEditPopover: React.FC<PopoverProps> = ({
 
   return (
     <DefaultNodeEditPopover elementId={elementId}>
-      <div
-        onClick={toggle}
-        style={{
-          display: "flex",
-          gap: 8,
-          flex: 1,
-          paddingTop: 8,
-          paddingBottom: 8,
-        }}
-      >
-        <input type="checkbox" checked={nodeData.isInitialMarking} readOnly />
-        <div>Is Initial Marking</div>
-      </div>
+      <PopoverSection divider>
+        <label
+          className="apollon-checkbox-label"
+          style={{ display: "flex", gap: 8, alignItems: "center" }}
+        >
+          <input
+            type="checkbox"
+            className="apollon-checkbox"
+            checked={nodeData.isInitialMarking}
+            onChange={toggle}
+          />
+          Is Initial Marking
+        </label>
+      </PopoverSection>
     </DefaultNodeEditPopover>
   )
 }

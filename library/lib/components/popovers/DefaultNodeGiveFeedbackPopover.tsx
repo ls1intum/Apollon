@@ -3,8 +3,9 @@ import { useShallow } from "zustand/shallow"
 import { DefaultNodeProps } from "@/types"
 import { PopoverProps } from "./types"
 import { GiveFeedbackAssessmentBox } from "./GiveFeedbackAssessmentBox"
-import Button from "@mui/material/Button"
+import { Button } from "@/components/ui"
 import { useGoToNextAssessment } from "@/hooks"
+import { PopoverLayout } from "./PopoverLayout"
 
 export const DefaultNodeGiveFeedbackPopover = ({ elementId }: PopoverProps) => {
   const { nodes } = useDiagramStore(
@@ -18,7 +19,7 @@ export const DefaultNodeGiveFeedbackPopover = ({ elementId }: PopoverProps) => {
   const nodeData = node.data as DefaultNodeProps
 
   return (
-    <>
+    <PopoverLayout>
       <GiveFeedbackAssessmentBox
         elementId={elementId}
         name={nodeData.name}
@@ -27,6 +28,6 @@ export const DefaultNodeGiveFeedbackPopover = ({ elementId }: PopoverProps) => {
       <Button variant="outlined" onClick={handleGoToNextAssessment}>
         Next Assessment
       </Button>
-    </>
+    </PopoverLayout>
   )
 }

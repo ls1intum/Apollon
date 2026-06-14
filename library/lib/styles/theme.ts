@@ -13,6 +13,8 @@ const apollonTheme = {
     warningYellow: "var(--apollon-alert-warning-yellow, #ffc107)",
     background: "var(--apollon-background, #ffffff)",
     backgroundVariant: "var(--apollon-background-variant, #f8f9fa)",
+    hoverNeutral:
+      "var(--apollon-hover-neutral, color-mix(in srgb, var(--apollon-primary-contrast, #000000) 7.5%, transparent))",
     grid: "var(--apollon-grid, rgba(36, 39, 36, 0.1))",
     primaryContrast: "var(--apollon-primary-contrast, #000000)",
     gray: "var(--apollon-gray, #e9ecef)",

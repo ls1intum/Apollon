@@ -1,6 +1,10 @@
 import React, { useState, KeyboardEvent, ChangeEvent } from "react"
-import { Box } from "@mui/material"
-import { NodeStyleEditor, TextField, Typography } from "@/components/ui"
+import {
+  IconButton,
+  NodeStyleEditor,
+  TextField,
+  Typography,
+} from "@/components/ui"
 import { generateUUID } from "@/utils"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
@@ -58,48 +62,49 @@ const SortableMethodRow: React.FC<SortableMethodRowProps> = ({
   }
 
   return (
-    <Box
+    <div
       ref={setNodeRef}
-      style={style}
-      sx={{
+      style={{
+        ...style,
         display: "flex",
-        gap: 0.5,
+        gap: 4,
         justifyContent: "space-between",
         alignItems: "center",
       }}
     >
-      <Box
+      {/* Drag handle */}
+      <div
         {...attributes}
         {...listeners}
-        sx={{
-          cursor: "grab",
+        className="apollon-drag-handle"
+        style={{
           display: "flex",
           alignItems: "center",
-          color: "text.secondary",
-          "&:active": { cursor: "grabbing" },
           flexShrink: 0,
         }}
       >
         <DragHandleIcon width={16} height={16} />
-      </Box>
+      </div>
 
       <NodeStyleEditor
         noStrokeUpdate
         nodeData={item}
+        colorEditorLabel="method"
         handleDataFieldUpdate={(key, value) =>
           onMethodChange(item.id, key, value)
         }
         sideElements={[
-          <DeleteIcon
+          <IconButton
             key={`delete_${item.id}`}
-            width={16}
-            height={16}
-            style={{ cursor: "pointer" }}
+            ariaLabel="Delete method"
+            tooltip="Delete method"
             onClick={() => onDelete(item.id)}
-          />,
+          >
+            <DeleteIcon width={16} height={16} aria-hidden="true" />
+          </IconButton>,
         ]}
       />
-    </Box>
+    </div>
   )
 }
 
@@ -187,8 +192,10 @@ export const EditableMethodsList: React.FC<Props> = ({ nodeId }) => {
   }
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-      <Typography variant="h6">Methods</Typography>
+    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+        Methods
+      </Typography>
 
       <DndContext
         sensors={sensors}
@@ -226,6 +233,6 @@ export const EditableMethodsList: React.FC<Props> = ({ nodeId }) => {
         }}
         onKeyDown={handleKeyDown}
       />
-    </Box>
+    </div>
   )
 }

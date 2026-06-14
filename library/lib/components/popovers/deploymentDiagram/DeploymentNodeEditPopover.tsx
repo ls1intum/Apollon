@@ -3,8 +3,8 @@ import { DeploymentNodeProps } from "@/types"
 import { useShallow } from "zustand/shallow"
 import { DefaultNodeEditPopover } from "../DefaultNodeEditPopover"
 import { PopoverProps } from "../types"
-import { Divider } from "@mui/material"
 import { HeaderSwitchElement, TextField } from "@/components/ui"
+import { PopoverSection } from "../PopoverLayout"
 
 export const DeploymentNodeEditPopover: React.FC<PopoverProps> = ({
   elementId,
@@ -58,6 +58,8 @@ export const DeploymentNodeEditPopover: React.FC<PopoverProps> = ({
     <HeaderSwitchElement
       onClick={switchHeaderShown}
       isComponentHeaderShown={nodeData.isComponentHeaderShown}
+      stereotypeLabel="node"
+      stereotypeValue={nodeData.stereotype}
     />
   )
 
@@ -66,25 +68,16 @@ export const DeploymentNodeEditPopover: React.FC<PopoverProps> = ({
       elementId={elementId}
       sideElements={[HeaderSwitcher]}
     >
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "8px",
-          marginTop: "8px",
-          width: "100%",
-        }}
-      >
-        <Divider />
+      <PopoverSection title="Stereotype" divider>
         <TextField
           value={nodeData.stereotype}
           onChange={(e) => handleStereotypeChange(e.target.value)}
           onBlur={() => handleStereotypeChange(nodeData.stereotype)}
           size="small"
-          sx={{ backgroundColor: "#fff" }}
+          placeholder="e.g. «device»"
           fullWidth
         />
-      </div>
+      </PopoverSection>
     </DefaultNodeEditPopover>
   )
 }

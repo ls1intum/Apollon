@@ -3,7 +3,12 @@ import { useDiagramStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { PopoverProps } from "./types"
 import { NodeStyleEditor } from "../ui"
-import { rendersNameLabel, supportsMultilineName } from "@/utils/nodeUtils"
+import {
+  nodeTypeLabel,
+  rendersNameLabel,
+  supportsMultilineName,
+} from "@/utils/nodeUtils"
+import { PopoverLayout } from "./PopoverLayout"
 
 export const DefaultNodeEditPopover: React.FC<PopoverProps> = ({
   elementId,
@@ -43,12 +48,7 @@ export const DefaultNodeEditPopover: React.FC<PopoverProps> = ({
   const nodeData = node.data as DefaultNodeProps
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
+    <PopoverLayout title={nodeTypeLabel(node.type)}>
       <NodeStyleEditor
         nodeData={nodeData}
         handleDataFieldUpdate={handleDataFieldUpdate}
@@ -59,6 +59,6 @@ export const DefaultNodeEditPopover: React.FC<PopoverProps> = ({
       />
 
       {children}
-    </div>
+    </PopoverLayout>
   )
 }

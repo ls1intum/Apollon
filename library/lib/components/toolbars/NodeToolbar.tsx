@@ -2,7 +2,6 @@ import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
 import { useHandleDelete } from "@/hooks/useHandleDelete"
 import { useIsOnlyThisElementSelected } from "@/hooks/useIsOnlyThisElementSelected"
 import { usePopoverStore } from "@/store"
-import { Box } from "@mui/material"
 import { Position, NodeToolbar as ReactFlowNodeToolbar } from "@xyflow/react"
 import { FC } from "react"
 import { useShallow } from "zustand/shallow"
@@ -28,12 +27,12 @@ export const NodeToolbar: FC<Props> = ({ elementId, showEdit = true }) => {
       align="end"
       offset={10}
     >
-      <Box
+      <div
         className="nodrag nopan"
         onPointerDownCapture={(event) => event.stopPropagation()}
         onMouseDownCapture={(event) => event.stopPropagation()}
         onTouchStartCapture={(event) => event.stopPropagation()}
-        sx={{ display: "flex", gap: 1, flexDirection: "column" }}
+        style={{ display: "flex", gap: 8, flexDirection: "column" }}
       >
         <DeleteIcon
           onClick={handleDelete}
@@ -48,7 +47,7 @@ export const NodeToolbar: FC<Props> = ({ elementId, showEdit = true }) => {
             style={{ cursor: "pointer", width: 16, height: 16 }}
           />
         )}
-      </Box>
+      </div>
     </ReactFlowNodeToolbar>
   )
 }
