@@ -3,6 +3,7 @@ import Button from "@mui/material/Button"
 import Menu from "@mui/material/Menu"
 import MenuItem from "@mui/material/MenuItem"
 import Typography from "@mui/material/Typography"
+import useMediaQuery from "@mui/material/useMediaQuery"
 import { secondary } from "@/constants"
 import { useModalContext } from "@/contexts"
 import {
@@ -25,6 +26,9 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
   const exportAsPng = useExportAsPNG()
   const exportAsJSON = useExportAsJSON()
   const exportAsPDF = useExportAsPDF()
+  const isTouchLayout = useMediaQuery(
+    "(hover: none), (pointer: coarse), (max-width: 950px)"
+  )
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [subMenuAnchorEl, setSubMenuAnchorEl] = useState<null | HTMLElement>(
     null
@@ -44,6 +48,11 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
   }, [handleCloseNavMenu])
 
   const openSubMenu = useCallback((event: MouseEvent<HTMLElement>) => {
+    setSubMenuAnchorEl(event.currentTarget)
+  }, [])
+
+  const openSubMenuFromClick = useCallback((event: MouseEvent<HTMLElement>) => {
+    event.stopPropagation()
     setSubMenuAnchorEl(event.currentTarget)
   }, [])
 
@@ -86,8 +95,9 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
             Version history has its own VersionHistoryButton. */}
         <JsonFileImportButton close={closeMainMenu} />
         <MenuItem
-          onClick={openSubMenu}
-          onMouseEnter={openSubMenu}
+          id="export-sub-menu-button"
+          onClick={openSubMenuFromClick}
+          onMouseEnter={isTouchLayout ? undefined : openSubMenu}
           sx={{
             display: "flex",
             justifyContent: "space-between",
@@ -108,11 +118,19 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
         anchorEl={subMenuAnchorEl}
         open={isSubMenuOpen}
         onClose={closeMainMenu}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-        transformOrigin={{ vertical: "top", horizontal: "left" }}
+        anchorOrigin={{
+          vertical: "top",
+          horizontal: isTouchLayout ? "left" : "right",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: isTouchLayout ? "right" : "left",
+        }}
         MenuListProps={{
           "aria-labelledby": "export-sub-menu-button",
-          onMouseLeave: () => setSubMenuAnchorEl(null),
+          onMouseLeave: isTouchLayout
+            ? undefined
+            : () => setSubMenuAnchorEl(null),
         }}
       >
         <MenuItem

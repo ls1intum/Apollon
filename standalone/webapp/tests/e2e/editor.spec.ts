@@ -378,6 +378,32 @@ test.describe("Navbar", () => {
 })
 
 test.describe("Mobile responsive layout", () => {
+  test("opens export actions with a tap", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await openTemporaryLocalDiagram(page)
+    await waitForCanvasReady(page, false)
+
+    await page.getByRole("button", { name: "open options" }).click()
+
+    const optionsMenu = page.getByRole("menu", { name: "open options" })
+    await optionsMenu.getByRole("button", { name: "File" }).click()
+    await page.getByRole("menuitem", { name: "Export" }).click()
+
+    const exportMenu = page.getByRole("menu", { name: "Export" })
+    await expect(exportMenu).toBeVisible()
+    await expect(
+      exportMenu.getByRole("menuitem", { name: "As SVG" })
+    ).toBeVisible()
+    await expect(
+      exportMenu.getByRole("menuitem", { name: "As PDF" })
+    ).toBeVisible()
+
+    const exportMenuBox = await exportMenu.boundingBox()
+    expect(exportMenuBox).not.toBeNull()
+    expect(exportMenuBox!.x).toBeGreaterThanOrEqual(0)
+    expect(exportMenuBox!.x + exportMenuBox!.width).toBeLessThanOrEqual(390)
+  })
+
   test("opens a responsive New Diagram modal from the editor", async ({
     page,
   }) => {
