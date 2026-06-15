@@ -17,6 +17,8 @@ describe("Style editor color panels", () => {
       />
     )
 
+    // The color panel opens on the list of color options, separated by
+    // tight (margin-0) dividers — one fewer than the number of options.
     fireEvent.click(screen.getByRole("button", { name: /edit colors/i }))
 
     const dividers = [...document.querySelectorAll("div")].filter(
@@ -26,6 +28,10 @@ describe("Style editor color panels", () => {
     dividers.forEach((divider) =>
       expect(divider).toHaveStyle({ margin: "0px" })
     )
+
+    // Drilling into a color option swaps the list for the picker view,
+    // whose Reset button sits in a container that leaves space below it.
+    fireEvent.click(screen.getByRole("button", { name: "#ffffff" }))
 
     expect(
       screen.getByRole("button", { name: /reset/i }).parentElement
@@ -44,6 +50,8 @@ describe("Style editor color panels", () => {
       />
     )
 
+    // The color panel opens on the list of color options, separated by a
+    // single tight (margin-0) divider between the two options.
     fireEvent.click(screen.getByRole("button", { name: /edit colors/i }))
 
     const dividers = [...document.querySelectorAll("div")].filter(
@@ -51,6 +59,10 @@ describe("Style editor color panels", () => {
     )
     expect(dividers).toHaveLength(1)
     expect(dividers[0]).toHaveStyle({ margin: "0px" })
+
+    // Drilling into a color option swaps the list for the picker view,
+    // whose Reset button sits in a container that leaves space below it.
+    fireEvent.click(screen.getByRole("button", { name: "#000000" }))
 
     expect(
       screen.getByRole("button", { name: /reset/i }).parentElement
