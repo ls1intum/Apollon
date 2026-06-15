@@ -41,14 +41,14 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
     handleCloseNavMenu?.()
     setAnchorEl(null)
     setSubMenuAnchorEl(null)
-  }, [])
+  }, [handleCloseNavMenu])
 
   const openSubMenu = useCallback((event: MouseEvent<HTMLElement>) => {
     setSubMenuAnchorEl(event.currentTarget)
   }, [])
 
   const handleNewDiagram = useCallback(() => {
-    openModal("NEW_DIAGRAM")
+    openModal("NEW_DIAGRAM", { dialogVariant: "home" })
     closeMainMenu()
   }, [openModal, closeMainMenu])
 

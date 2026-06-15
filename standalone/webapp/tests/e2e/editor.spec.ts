@@ -378,6 +378,40 @@ test.describe("Navbar", () => {
 })
 
 test.describe("Mobile responsive layout", () => {
+  test("opens a responsive New Diagram modal from the editor", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await openTemporaryLocalDiagram(page)
+    await waitForCanvasReady(page, false)
+
+    await page.getByRole("button", { name: "open options" }).click()
+
+    const optionsMenu = page.getByRole("menu", { name: "open options" })
+    await optionsMenu.getByRole("button", { name: "File" }).click()
+    await page.getByRole("menuitem", { name: "New Diagram" }).click()
+
+    const dialog = page.getByRole("dialog", { name: "New Diagram" })
+    await expect(dialog).toBeVisible()
+    await expect(
+      dialog.getByRole("button", { name: "Blank diagram" })
+    ).toBeVisible()
+    await expect(
+      dialog.getByRole("button", { name: "Use template" })
+    ).toBeVisible()
+
+    const dialogBox = await dialog.boundingBox()
+    expect(dialogBox).not.toBeNull()
+    expect(dialogBox!.x).toBeGreaterThanOrEqual(12)
+    expect(dialogBox!.width).toBeLessThanOrEqual(390 - 24)
+    expect(dialogBox!.height).toBeLessThanOrEqual(844 - 24)
+
+    const hasHorizontalOverflow = await dialog.evaluate(
+      (element) => element.scrollWidth > element.clientWidth
+    )
+    expect(hasHorizontalOverflow).toBe(false)
+  })
+
   test("uses the compact navbar and floating palette in portrait", async ({
     page,
   }) => {
