@@ -26,7 +26,10 @@ export const Tooltip: React.FC<TooltipProps> = ({
   if (!title) return <>{children}</>
 
   const trigger = React.isValidElement(children) ? (
-    <BaseTooltip.Trigger render={children} delay={delayDuration} />
+    <BaseTooltip.Trigger
+      render={children as React.ReactElement<Record<string, unknown>>}
+      delay={delayDuration}
+    />
   ) : (
     <BaseTooltip.Trigger delay={delayDuration}>{children}</BaseTooltip.Trigger>
   )
