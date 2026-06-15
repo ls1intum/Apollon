@@ -442,7 +442,7 @@ test.describe("Mobile responsive layout", () => {
     page,
   }) => {
     await page.setViewportSize({ width: 390, height: 844 })
-    await page.goto("/")
+    await openTemporaryLocalDiagram(page)
     await waitForCanvasReady(page, false)
 
     await expect(
@@ -486,7 +486,7 @@ test.describe("Mobile responsive layout", () => {
 
   test("keeps the phone layout in landscape", async ({ page }) => {
     await page.setViewportSize({ width: 844, height: 390 })
-    await page.goto("/")
+    await openTemporaryLocalDiagram(page)
     await waitForCanvasReady(page, false)
     await page.evaluate(() => {
       document.documentElement.style.setProperty(

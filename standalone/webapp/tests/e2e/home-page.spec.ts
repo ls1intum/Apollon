@@ -50,21 +50,28 @@ async function seedDiagrams(
     }
   }
   await page.goto("/")
+  await page
+    .getByRole("heading", { level: 1, name: "Your diagrams" })
+    .waitFor({ timeout: 15_000 })
   await page.evaluate(
     (storeValue) => {
       localStorage.setItem("persistenceModelStore", storeValue)
     },
     JSON.stringify({ state: { models, currentModelId: null }, version: 1 })
   )
-  await page.goto("/")
-  // Wait for the lazy gallery grid to hydrate. The list itself is the
-  // readiness signal — `networkidle` is flaky here because thumbnail warmup
-  // and background fetches keep the network busy.
-  await page.locator('[role="list"]').waitFor({ timeout: 15_000 })
+  await page.reload()
+
+  const countLabel = `${diagrams.length} diagrams`
+  await page.getByText(countLabel, { exact: true }).waitFor({
+    timeout: 15_000,
+  })
 }
 
 async function seedEmpty(page: Page) {
   await page.goto("/")
+  await page
+    .getByRole("heading", { level: 1, name: "Your diagrams" })
+    .waitFor({ timeout: 15_000 })
   await page.evaluate(() => {
     localStorage.setItem(
       "persistenceModelStore",
