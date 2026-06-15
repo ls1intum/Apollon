@@ -8,7 +8,8 @@ interface EdgeMiddleLabelsProps {
   targetPoint?: IPoint
   showRelationshipLabels?: boolean
   isUseCasePath?: boolean
-  isPetriNet?: boolean // New prop to identify PetriNet edges
+  isPetriNet?: boolean
+  avoidToolbarOverlap?: boolean
   textColor: string
 }
 
@@ -21,6 +22,7 @@ export const EdgeMiddleLabels = ({
   showRelationshipLabels = false,
   isUseCasePath = false,
   isPetriNet = false,
+  avoidToolbarOverlap = false,
   textColor,
 }: EdgeMiddleLabelsProps) => {
   if (isPetriNet && label === "1") return null
@@ -53,14 +55,14 @@ export const EdgeMiddleLabels = ({
       y = (sourcePoint.y + targetPoint.y) / 2
     }
   } else {
-    const LABEL_GAP = 8
+    const LABEL_GAP = 14
     if (isMiddlePathHorizontal) {
-      // Horizontal edge: place label above the line
+      // Horizontal edge: optionally place label below to avoid toolbar overlap.
       x = pathMiddlePosition.x
-      y = pathMiddlePosition.y - LABEL_GAP
+      y = pathMiddlePosition.y + (avoidToolbarOverlap ? LABEL_GAP : -LABEL_GAP)
     } else {
-      // Vertical edge: place label to the left of the line with gap
-      x = pathMiddlePosition.x - LABEL_GAP
+      // Vertical edge: optionally place label to the right to avoid toolbar overlap.
+      x = pathMiddlePosition.x + (avoidToolbarOverlap ? LABEL_GAP : -LABEL_GAP)
       y = pathMiddlePosition.y
     }
   }
@@ -69,7 +71,9 @@ export const EdgeMiddleLabels = ({
     ? "middle"
     : isMiddlePathHorizontal
       ? "middle"
-      : "end"
+      : avoidToolbarOverlap
+        ? "start"
+        : "end"
   const dominantBaseline = isUseCasePath
     ? "middle"
     : isMiddlePathHorizontal

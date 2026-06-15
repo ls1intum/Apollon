@@ -18,11 +18,7 @@
     "MD040": false,
     "MD058": false,
     "MD060": false,
-    "MD031": false
+    "MD031": false,
   },
-  "ignores": [
-    "node_modules/**",
-    "build/**",
-    ".docusaurus/**"
-  ]
+  "ignores": ["node_modules/**", "build/**", ".docusaurus/**"],
 }

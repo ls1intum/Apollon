@@ -26,9 +26,17 @@ export type CollaborationCursor = {
   y: number
 }
 
+export type CollaborationViewport = {
+  x: number
+  y: number
+  zoom: number
+}
+
 export type CollaborationState = {
   user?: CollaborationUser
   cursor?: CollaborationCursor | null
+  viewport?: CollaborationViewport | null
+  followingClientId?: number | null
   selectedElementId?: string | null
 }
 
@@ -39,6 +47,15 @@ export type CollaboratorInfo = {
   imageUrl?: string
   clientIds: number[]
   isLocal: boolean
+}
+
+export type ApollonCollaborationOptions = {
+  enabled?: boolean
+  user?: CollaborationUser
+  showPresence?: boolean
+  showCursors?: boolean
+  showSelectionHighlights?: boolean
+  showFollow?: boolean
 }
 
 export enum Locale {
@@ -68,6 +85,12 @@ export type ApollonNode = {
   measured: { width: number; height: number }
 }
 
+export interface OrthogonalEdgeData {
+  [key: string]: unknown
+  // Manual waypoint array used by the step-path edges.
+  points: IPoint[]
+}
+
 export type ApollonEdge = {
   id: string
   source: string
@@ -75,10 +98,7 @@ export type ApollonEdge = {
   type: DiagramEdgeType
   sourceHandle: string
   targetHandle: string
-  data: {
-    [key: string]: unknown
-    points: IPoint[]
-  }
+  data: OrthogonalEdgeData
 }
 
 export type InteractiveElements = {
@@ -116,6 +136,7 @@ export type ApollonOptions = {
   locale?: Locale
   debug?: boolean
   collaborationEnabled?: boolean
+  collaboration?: ApollonCollaborationOptions
   scrollLock?: boolean
 }
 

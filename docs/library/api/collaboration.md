@@ -30,9 +30,26 @@ Any Yjs-compatible transport works. The standalone server uses a custom WebSocke
 - [`y-indexeddb`](https://github.com/yjs/y-indexeddb) for offline persistence (layered alongside any other transport)
 - Any HTTP/3 stream or BroadcastChannel if your room is browser-local
 
-## Awareness (cursors, selections)
+## Awareness (cursors, selections, follow)
 
-Awareness state — who's online, where their cursor is, what they have selected — rides on the same channel as document updates. The editor manages awareness internally; you don't need to wire anything beyond `sendBroadcastMessage` / `receiveBroadcastedMessage`.
+Awareness state — who's online, where their cursor is, what they have selected, and where their viewport sits — rides on the same channel as document updates. The editor manages awareness internally; you don't need to wire anything beyond `sendBroadcastMessage` / `receiveBroadcastedMessage`.
+
+The presence bar, cursors, selection highlights, and viewport-following are toggled per-feature on the `collaboration` option:
+
+```ts
+const editor = new ApollonEditor(container, {
+  collaboration: {
+    enabled: true,
+    user: { name: "Ada", color: "#1c7ed6" },
+    showPresence: true, // avatar bar (top-right)
+    showCursors: true, // live remote cursors
+    showSelectionHighlights: true, // highlight peers' selected elements
+    showFollow: true, // click a peer's avatar to mirror their viewport
+  },
+})
+```
+
+When `showFollow` is on, clicking a collaborator's avatar follows their viewport. The follower sees the editor framed in that person's color and a banner naming them with a **Stop** button; the followed user sees a "followed by N" badge. Any local pan/zoom hands control back and stops following.
 
 ## Server-side integration
 

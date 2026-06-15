@@ -5,6 +5,10 @@ import { useShallow } from "zustand/shallow"
 import { calculateAlignmentGuides } from "@/utils/alignmentUtils"
 import { useAlignmentGuidesStore } from "@/store/context"
 
+// Visual-only radius for showing alignment guide lines. Nodes don't snap to
+// these — the grid step does the alignment work. Guides are advisory only.
+const ALIGNMENT_GUIDE_DISPLAY_PX = 6
+
 export const useNodeDrag = () => {
   const { nodes } = useDiagramStore(
     useShallow((state) => ({
@@ -20,11 +24,14 @@ export const useNodeDrag = () => {
 
   const onNodeDrag: OnNodeDrag<Node> = useCallback(
     (_event, draggedNode) => {
-      // Calculate alignment guides based on current position
-      const guides = calculateAlignmentGuides(draggedNode, nodes)
-
-      // Update guides in store for rendering
-      setGuides(guides)
+      // Alignment guides are visual-only — they show users that nodes line
+      // up, but no snap pulls the node onto them.
+      const alignmentGuides = calculateAlignmentGuides(
+        draggedNode,
+        nodes,
+        ALIGNMENT_GUIDE_DISPLAY_PX
+      )
+      setGuides(alignmentGuides)
     },
     [nodes, setGuides]
   )

@@ -124,17 +124,34 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ needs.check.outputs.version }}
         run: |
+          set -euo pipefail
           TAG="@tumaet/apollon@${VERSION}"
-          gh release create "$TAG" \
-            --title "$TAG" \
-            --target "$GITHUB_SHA" \
-            --verify-tag \
-            --latest=false \
-            --generate-notes \
-            --notes "Install:
+
+          # Body = the Changesets-owned CHANGELOG section (curated per-PR voice)
+          # plus an install footer. Fall back to GitHub's --generate-notes only
+          # when there is no changelog section for this version (e.g. a release
+          # that carried no changeset).
+          CHANGELOG=$(node scripts/extract-changelog.mjs "$VERSION" library || true)
+          {
+            if [ -n "$CHANGELOG" ]; then printf '%s\n\n' "$CHANGELOG"; fi
+            cat <<EOF
+          Install:
 
           \`\`\`sh
           npm install @tumaet/apollon@${VERSION}
           \`\`\`
 
-          Published to npm with [provenance](https://docs.npmjs.com/generating-provenance-statements) via OIDC trusted publishing: [\`@tumaet/apollon@${VERSION}\`](https://www.npmjs.com/package/@tumaet/apollon/v/${VERSION})."
+          Published to npm with [provenance](https://docs.npmjs.com/generating-provenance-statements) via OIDC trusted publishing: [\`@tumaet/apollon@${VERSION}\`](https://www.npmjs.com/package/@tumaet/apollon/v/${VERSION}).
+          EOF
+          } > release-notes.md
+
+          GENERATE=()
+          [ -z "$CHANGELOG" ] && GENERATE=(--generate-notes)
+
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --target "$GITHUB_SHA" \
+            --verify-tag \
+            --latest=false \
+            "${GENERATE[@]}" \
+            --notes-file release-notes.md

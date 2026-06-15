@@ -51,6 +51,25 @@ jobs:
               - 'pnpm-workspace.yaml'
               - '.github/workflows/pr-health-checks.yml'
 
+  # No path filter: a stale CDN version can drift in via a doc edit OR a bump,
+  # so check every PR. Pure Node — no pnpm install needed.
+  version-sync-check:
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.should-skip != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Set up Node
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Check README + docs version sync
+        run: node scripts/sync-library-version.mjs --check
+
   lint-and-format-check:
     needs: [detect-changes]
     if: needs.detect-changes.outputs.should-skip != 'true' && needs.detect-changes.outputs.code == 'true'
@@ -89,6 +108,39 @@ jobs:
 
       - name: Run unit tests
         run: pnpm run test
+
+  # Root `pnpm run test` covers only the library. The server's vitest suite
+  # (incl. the PDF-conversion regression test) spawns the compiled worker and
+  # provisions Redis via testcontainers, so it gets a dedicated job: build the
+  # library + server first (the worker runs from dist and imports
+  # @tumaet/apollon), then run the suite against the Docker daemon the runner
+  # already provides.
+  server-tests:
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.should-skip != 'true' && needs.detect-changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@ac6db6d3c1f721f886538a378a2d73e85697340a # v6.0.8
+
+      - name: Set up Node
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build library and server
+        run: pnpm run build:lib && pnpm run build:server
+
+      - name: Run server tests
+        run: pnpm --filter @tumaet/server run test
 
   e2e-tests:
     needs: [detect-changes]
@@ -270,7 +322,9 @@ jobs:
     needs:
       [
         detect-changes,
+        version-sync-check,
         lint-and-format-check,
+        server-tests,
         library-node22-compat,
         e2e-tests,
         visual-regression-tests,

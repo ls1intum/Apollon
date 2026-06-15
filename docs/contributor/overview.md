@@ -29,8 +29,9 @@ pnpm dev
 - **[Visual tests](/contributor/development/visual-tests)** — Playwright snapshot regeneration inside the pinned Docker image
 - **[Mobile builds](/contributor/development/mobile-builds)** — building the iOS / Android apps with Capacitor
 - **[Troubleshooting](/contributor/troubleshooting)** — common local-setup and self-host issues
+- **[Release notes](/contributor/development/release-notes)** — when to add a changeset and how to write it
 - **[Release pipeline → GitHub Actions](/contributor/deployment/github-actions)** — required-status-checks setup
-- **[Release pipeline → npm publishing](/contributor/deployment/npm-publishing)** — `version-bump.yml` + per-artifact release workflows
+- **[Release pipeline → npm publishing](/contributor/deployment/npm-publishing)** — `release.yml` (Changesets Version Packages PR) + per-artifact release workflows
 
 ## Pull-request checklist
 
@@ -41,7 +42,9 @@ pnpm run build       # library first, then server + webapp concurrently
 pnpm test            # library unit tests
 ```
 
-The pre-push hook also runs `pnpm run lint`. CI runs the full matrix plus visual regression, Docker builds, and the library `publint` + bundle-size budgets.
+If the change is user-, embedder-, or operator-visible, also add a changeset — `pnpm changeset` — per the [release-notes guide](/contributor/development/release-notes).
+
+The pre-push hook also runs `pnpm run lint`. CI runs the full matrix plus visual regression, Docker builds, and the library `publint` + bundle-size budgets, and the advisory **Verify changesets** check flags a tracked-package change that ships without one.
 
 ## Commit messages
 

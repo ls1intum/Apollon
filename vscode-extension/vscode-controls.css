@@ -54,7 +54,10 @@
   }
 
   .vscode-select option {
-    background: var(--vscode-dropdown-listBackground, var(--vscode-dropdown-background));
+    background: var(
+      --vscode-dropdown-listBackground,
+      var(--vscode-dropdown-background)
+    );
     color: var(--vscode-dropdown-foreground);
   }
 

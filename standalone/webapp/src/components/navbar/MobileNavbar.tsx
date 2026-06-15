@@ -1,43 +1,49 @@
-import { NAVBAR_BACKGROUND_COLOR } from "@/constants"
-import { useEditorContext, useModalContext } from "@/contexts"
-import MenuIcon from "@mui/icons-material/Menu"
+import React, { useEffect, useRef, useState } from "react"
 import AppBar from "@mui/material/AppBar"
 import Box from "@mui/material/Box"
 import IconButton from "@mui/material/IconButton"
 import Menu from "@mui/material/Menu"
-import TextField from "@mui/material/TextField/TextField"
+import MenuItem from "@mui/material/MenuItem"
+import TextField from "@mui/material/TextField"
 import Toolbar from "@mui/material/Toolbar"
 import Typography from "@mui/material/Typography"
+import MenuIcon from "@mui/icons-material/Menu"
 import TumLogo from "assets/images/tum-logo.png"
-import React, { useEffect, useRef, useState } from "react"
-import { useNavigate } from "react-router"
+import { Link } from "react-router"
+import { useEditorContext, useModalContext } from "@/contexts"
+import { ALL_DIAGRAMS_LABEL } from "@/lib/navProvenance"
+import { BackNav } from "./BackNav"
 import { NavbarFile } from "./NavbarFile"
 import { NavbarHelp } from "./NavbarHelp"
+import { NAVBAR_SX } from "./styleConstants"
 import { ThemeSwitcherMenu } from "./ThemeSwitcher"
 import { VersionHistoryButton } from "./VersionHistoryButton"
-import { MenuItem } from "@mui/material"
 
 export default function MobileNavbar() {
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null)
   const { editor } = useEditorContext()
   const { openModal } = useModalContext()
-  const navigate = useNavigate()
   const [diagramTitle, setDiagramTitle] = useState(
     editor?.getDiagramMetadata().diagramTitle || ""
   )
   const unsubscribe = useRef<number>()
 
   useEffect(() => {
-    if (editor && !unsubscribe.current) {
-      unsubscribe.current = editor.subscribeToDiagramNameChange(
-        (diagramTitle) => {
-          setDiagramTitle(diagramTitle)
-        }
-      )
+    if (!editor) {
+      unsubscribe.current = undefined
+      return
     }
-    // Update diagram title when editor is available
-    if (editor) {
-      setDiagramTitle(editor.getDiagramMetadata().diagramTitle || "")
+
+    unsubscribe.current = editor.subscribeToDiagramNameChange((title) => {
+      setDiagramTitle(title)
+    })
+    setDiagramTitle(editor.getDiagramMetadata().diagramTitle || "")
+
+    return () => {
+      if (unsubscribe.current !== undefined) {
+        editor.unsubscribe(unsubscribe.current)
+        unsubscribe.current = undefined
+      }
     }
   }, [editor])
 
@@ -49,14 +55,11 @@ export default function MobileNavbar() {
     setAnchorElNav(null)
   }
 
-  const goHome = () => {
-    navigate("/")
-  }
   return (
     <AppBar
-      position="static"
+      position="sticky"
       sx={{
-        bgcolor: NAVBAR_BACKGROUND_COLOR,
+        ...NAVBAR_SX,
         flexShrink: 0,
         pt: "var(--safe-area-inset-top, 0px)",
       }}
@@ -80,12 +83,13 @@ export default function MobileNavbar() {
             pr: "calc(6px + var(--safe-area-inset-right, 0px))",
           }}
         >
-          <div
-            style={{ display: "flex", alignItems: "center", cursor: "pointer" }}
-            onClick={goHome}
+          <Link
+            to="/"
+            aria-label="Apollon home"
+            style={{ display: "flex", alignItems: "center" }}
           >
             <img alt="Logo" src={TumLogo} width="46" height="23" />
-          </div>
+          </Link>
 
           <Typography
             noWrap
@@ -141,14 +145,14 @@ export default function MobileNavbar() {
                 sx={{
                   display: "flex",
                   flexDirection: "column",
-                  "& > .MuiButton-root, & > .MuiMenuItem-root": {
+                  "& > .MuiButton-root, & > .MuiMenuItem-root, & > a": {
                     boxSizing: "border-box",
                     width: "100%",
                     minHeight: 42,
                     justifyContent: "flex-start",
                     px: 2,
                     borderRadius: 0,
-                    color: "var(--apollon-primary-contrast, #000000)",
+                    color: "var(--apollon-primary-contrast)",
                     fontSize: 16,
                   },
                   "& > .MuiButton-root > svg:last-of-type": {
@@ -156,8 +160,14 @@ export default function MobileNavbar() {
                   },
                 }}
               >
+                <BackNav
+                  to="/"
+                  label={ALL_DIAGRAMS_LABEL}
+                  tone="onSurface"
+                  onNavigate={handleCloseNavMenu}
+                />
                 <NavbarFile
-                  color="var(--apollon-primary-contrast, #000000)"
+                  color="var(--apollon-primary-contrast)"
                   handleCloseNavMenu={handleCloseNavMenu}
                 />
                 <MenuItem
@@ -168,8 +178,8 @@ export default function MobileNavbar() {
                 >
                   Share
                 </MenuItem>
-                <VersionHistoryButton color="var(--apollon-primary-contrast, #000000)" />
-                <NavbarHelp color="var(--apollon-primary-contrast, #000000)" />
+                <VersionHistoryButton color="var(--apollon-primary-contrast)" />
+                <NavbarHelp color="var(--apollon-primary-contrast)" />
                 <ThemeSwitcherMenu asMenuItem onToggle={handleCloseNavMenu} />
                 <Box sx={{ px: 1.5, py: 1 }}>
                   <TextField
@@ -183,10 +193,16 @@ export default function MobileNavbar() {
                     fullWidth
                     size="small"
                     inputProps={{ "aria-label": "Diagram name" }}
-                    sx={{ input: { py: 1, px: 1.25 } }}
+                    sx={{
+                      input: {
+                        py: 1,
+                        px: 1.25,
+                        color: "var(--apollon-primary-contrast)",
+                      },
+                    }}
                     variant="outlined"
-                    onClick={(e) => e.stopPropagation()}
-                    onFocus={(e) => e.stopPropagation()}
+                    onClick={(event) => event.stopPropagation()}
+                    onFocus={(event) => event.stopPropagation()}
                   />
                 </Box>
               </Box>

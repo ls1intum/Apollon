@@ -39,6 +39,10 @@
     "format:check": "prettier --ignore-path .prettierignore --check \"**/*.+(js|mjs|cjs|ts|tsx|json|md|mdx|yml|yaml)\"",
     "test": "pnpm --filter @tumaet/apollon run test",
     "test:e2e": "pnpm --filter @tumaet/webapp run test:e2e",
+    "sync:version": "node scripts/sync-library-version.mjs",
+    "sync:version:check": "node scripts/sync-library-version.mjs --check",
+    "changeset": "changeset",
+    "changeset:version": "node scripts/cascade-standalone-bump.mjs && changeset version && node scripts/sync-library-version.mjs && pnpm install --lockfile-only --ignore-scripts",
     "prepare": "husky || true",
     "capacitor:add:android": "pnpm --filter @tumaet/webapp run capacitor:add:android",
     "capacitor:add:ios": "pnpm --filter @tumaet/webapp run capacitor:add:ios",
@@ -55,6 +59,8 @@
     "pnpm": ">=11.1.0"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "0.7.0",
+    "@changesets/cli": "2.31.0",
     "@commitlint/cli": "19.6.0",
     "@commitlint/config-conventional": "19.6.0",
     "@types/node": "catalog:",

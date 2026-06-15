@@ -1,7 +1,7 @@
 {
   "name": "@tumaet/webapp",
   "private": true,
-  "version": "4.4.1",
+  "version": "4.6.0",
   "type": "module",
   "engines": {
     "node": ">=24.15.0"
@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "@capacitor/android": "8.3.0",
+    "@capacitor/clipboard": "8.0.1",
     "@capacitor/core": "8.3.0",
     "@capacitor/file-transfer": "2.0.4",
     "@capacitor/filesystem": "8.1.2",
@@ -54,6 +55,7 @@
     "react-router": "7.12.0",
     "react-toastify": "11.0.5",
     "remark-gfm": "4.0.1",
+    "tailwind-merge": "^3.6.0",
     "tailwindcss": "catalog:",
     "uuid": "catalog:",
     "zustand": "catalog:"

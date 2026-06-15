@@ -25,17 +25,11 @@ export const JsonFileImportButton: React.FC<{ close: () => void }> = (
     const reader = new FileReader()
     reader.onload = (e) => {
       try {
-        const timeStapToCreate = new Date().getTime()
         const json = JSON.parse(e.target?.result as string)
 
         const processedModel = importDiagram(json)
         createModel(processedModel)
-
-        navigate("..", {
-          relative: "route",
-          replace: true,
-          state: { timeStapToCreate },
-        })
+        navigate(`/local/${processedModel.id}`, { replace: true })
       } catch (error) {
         log.error("Invalid JSON file", error as Error)
       }

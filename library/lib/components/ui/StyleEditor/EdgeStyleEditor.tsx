@@ -107,7 +107,11 @@ export const EdgeStyleEditor: React.FC<EdgeStyleEditorProps> = ({
             onClick={() => setPaintOpen(!paintOpen)}
             aria-label="Toggle color settings"
           />
-          {sideElements}
+          {sideElements.map((element, index) => (
+            <React.Fragment key={`side-element-${index}`}>
+              {element}
+            </React.Fragment>
+          ))}
         </div>
       </div>
 
@@ -115,9 +119,8 @@ export const EdgeStyleEditor: React.FC<EdgeStyleEditorProps> = ({
         <div style={styles.colorPanel}>
           {!activeColorField ? (
             colorFields.map(({ key, label }) => (
-              <>
+              <React.Fragment key={key}>
                 <ColorOption
-                  key={`${edgeData?.label}-${key}-option`}
                   label={label}
                   color={edgeData ? edgeData[key] : undefined}
                   onSelect={() => toggleColorField(key)}
@@ -125,7 +128,7 @@ export const EdgeStyleEditor: React.FC<EdgeStyleEditorProps> = ({
                 {key !== colorFields[colorFields.length - 1].key && (
                   <DividerLine backgroundColor="var(--apollon-gray, #e9ecef)" />
                 )}
-              </>
+              </React.Fragment>
             ))
           ) : (
             <div
