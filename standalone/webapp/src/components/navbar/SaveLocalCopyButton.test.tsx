@@ -114,7 +114,6 @@ describe("SaveLocalCopyButton", () => {
   it("does not render on the local editor route (/local/:id)", async () => {
     usePersistenceModelStore.setState({ models: {}, currentModelId: null })
     renderWith(fakeModel, "/local/some-local-id")
-    // Await route resolution first, else queryByRole is trivially null pre-load.
     await screen.findByTestId("pathname")
     expect(
       screen.queryByRole("button", { name: /Save a local copy/i })

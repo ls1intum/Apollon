@@ -31,7 +31,6 @@ function RootLayout() {
       <Suspense fallback={<AppLoadingScreen />}>
         {isEditorRoute && <Navbar />}
         {isChromeSubRoute && <HomeNavbar />}
-        {/* data-testid asserted by e2e/visual tests; must stay. */}
         <div data-testid="editor-area" style={{ flex: 1, overflow: "hidden" }}>
           <Outlet />
         </div>

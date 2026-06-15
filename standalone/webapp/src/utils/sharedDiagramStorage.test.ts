@@ -13,6 +13,7 @@ import {
 import {
   buildSharedDiagramUrl,
   getSharedDiagramViewBadge,
+  isDiagramView,
 } from "./sharedDiagramLinks"
 
 describe("shared diagram link helpers", () => {
@@ -22,6 +23,15 @@ describe("shared diagram link helpers", () => {
         `https://example.test/shared/abc?view=${view}`
       )
     }
+  })
+
+  it("accepts only real DiagramView values (the route validateSearch guard)", () => {
+    for (const view of Object.values(DiagramView)) {
+      expect(isDiagramView(view)).toBe(true)
+    }
+    expect(isDiagramView("bogus")).toBe(false)
+    expect(isDiagramView(undefined)).toBe(false)
+    expect(isDiagramView(42)).toBe(false)
   })
 
   it("labels shared modes for dashboard badges", () => {

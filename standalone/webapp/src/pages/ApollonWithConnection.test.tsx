@@ -324,4 +324,14 @@ describe("ApollonWithConnection — loading-state regression", () => {
     // In-memory history never touches window.location; assert router state.
     await waitFor(() => expect(router.state.location.pathname).toBe("/"))
   })
+
+  it("toasts and redirects home when the view param is absent/invalid", async () => {
+    const errorToast = vi.spyOn(toast, "error")
+    const { router } = mountAt("/shared/abc")
+
+    await waitFor(() => {
+      expect(errorToast).toHaveBeenCalledWith("Invalid view type")
+      expect(router.state.location.pathname).toBe("/")
+    })
+  })
 })

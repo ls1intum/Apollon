@@ -92,9 +92,6 @@ export const ApollonWithConnection: React.FC = () => {
 
   const preview = useVersionStore((s) => s.preview)
   const restoreVersion = useVersionStore((s) => s.restoreVersion)
-  // `?version=<id>` is the source of truth for preview, shared with the local
-  // editor via one hook so the two can't drift. Writers (drawer/banner/restore)
-  // call openPreview/closePreview; the hook mirrors URL→store.
   const { openPreview, closePreview } = useVersionPreviewUrlSync(
     diagramId,
     previewFromUrl,
@@ -147,8 +144,8 @@ export const ApollonWithConnection: React.FC = () => {
       if (!container || !diagramId) return
 
       try {
-        const validViews = Object.values(DiagramView)
-        if (!viewType || !validViews.includes(viewType)) {
+        // validateSearch has already coerced an unknown ?view to undefined.
+        if (!viewType) {
           toast.error("Invalid view type")
           navigate({ to: "/" })
           return
