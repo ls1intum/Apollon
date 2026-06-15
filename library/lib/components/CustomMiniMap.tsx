@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { MiniMap, MiniMapNodeProps, Panel, useReactFlow } from "@xyflow/react"
+import { ArrowDownRight, Map } from "lucide-react"
 import {
   ClassSVG,
   PackageSVG,
@@ -51,8 +52,6 @@ import {
 import { DiagramNodeType } from "@/typings"
 import { ZINDEX } from "@/constants"
 import { Tooltip } from "@/components/ui"
-import { MapIcon } from "./Icon/MapIcon"
-import { SouthEastArrowIcon } from "./Icon/SouthEastArrowIcon"
 import {
   BPMNEventProps,
   BPMNGatewayProps,
@@ -83,8 +82,13 @@ export const CustomMiniMap = () => {
         onClick={() => setMinimapCollapsed(false)}
       >
         <Tooltip title="Show minimap">
-          <span style={{ display: "flex" }}>
-            <MapIcon fill="var(--apollon-primary-contrast, #000000)" />
+          <span
+            style={{
+              display: "flex",
+              color: "var(--apollon-primary-contrast, #000000)",
+            }}
+          >
+            <Map aria-hidden="true" />
           </span>
         </Tooltip>
       </Panel>
@@ -113,9 +117,10 @@ export const CustomMiniMap = () => {
             alignItems: "center",
             cursor: "pointer",
             boxShadow: "0 0 4px 0 rgb(0 0 0 / 0.2)",
+            color: "var(--apollon-primary-contrast, #000000)",
           }}
         >
-          <SouthEastArrowIcon fill="var(--apollon-primary-contrast, #000000)" />
+          <ArrowDownRight aria-hidden="true" />
         </div>
       </Tooltip>
 

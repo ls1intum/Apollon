@@ -1,9 +1,7 @@
 import { Controls, useReactFlow, useStore } from "@xyflow/react"
 import { useDiagramStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
-import { Minus, Plus, Maximize } from "lucide-react"
-import { UndoIcon } from "./Icon/UndoIcon"
-import { RedoIcon } from "./Icon/RedoIcon"
+import { Maximize, Minus, Plus, Redo2, Undo2 } from "lucide-react"
 import { Tooltip } from "@/components/ui"
 
 export const CustomControls = () => {
@@ -49,16 +47,13 @@ export const CustomControls = () => {
               className={`control-button ${!canUndo ? "disabled" : ""}`}
               onClick={handleUndo}
               disabled={!canUndo}
+              style={{
+                color: canUndo
+                  ? "var(--apollon-primary-contrast, #000000)"
+                  : "var(--apollon-secondary, #6c757d)",
+              }}
             >
-              <UndoIcon
-                width={16}
-                height={16}
-                fill={
-                  canUndo
-                    ? "var(--apollon-primary-contrast, #000000)"
-                    : "var(--apollon-secondary, #6c757d)"
-                }
-              />
+              <Undo2 width={16} height={16} aria-hidden="true" />
             </button>
           </span>
         </Tooltip>
@@ -71,16 +66,13 @@ export const CustomControls = () => {
               className={`control-button ${!canRedo ? "disabled" : ""}`}
               onClick={handleRedo}
               disabled={!canRedo}
+              style={{
+                color: canRedo
+                  ? "var(--apollon-primary-contrast, #000000)"
+                  : "var(--apollon-secondary, #6c757d)",
+              }}
             >
-              <RedoIcon
-                width={16}
-                height={16}
-                fill={
-                  canRedo
-                    ? "var(--apollon-primary-contrast, #000000)"
-                    : "var(--apollon-secondary, #6c757d)"
-                }
-              />
+              <Redo2 width={16} height={16} aria-hidden="true" />
             </button>
           </span>
         </Tooltip>
@@ -95,11 +87,7 @@ export const CustomControls = () => {
               disabled={!canZoomOut}
               aria-label="Zoom out"
             >
-              <Minus
-                width={16}
-                height={16}
-                color="var(--apollon-primary-contrast, #000000)"
-              />
+              <Minus width={16} height={16} aria-hidden="true" />
             </button>
           </span>
         </Tooltip>
@@ -120,11 +108,7 @@ export const CustomControls = () => {
               disabled={!canZoomIn}
               aria-label="Zoom in"
             >
-              <Plus
-                width={16}
-                height={16}
-                color="var(--apollon-primary-contrast, #000000)"
-              />
+              <Plus width={16} height={16} aria-hidden="true" />
             </button>
           </span>
         </Tooltip>
@@ -136,11 +120,7 @@ export const CustomControls = () => {
           onClick={() => fitView({ padding: 0.1, duration: 200 })}
           aria-label="Fit to view"
         >
-          <Maximize
-            width={16}
-            height={16}
-            color="var(--apollon-primary-contrast, #000000)"
-          />
+          <Maximize width={16} height={16} aria-hidden="true" />
         </button>
       </Tooltip>
     </Controls>

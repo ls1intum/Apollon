@@ -1,3 +1,4 @@
+import { InfinityIcon } from "lucide-react"
 import { IconButton, TextField, Typography } from "@/components/ui"
 import { PetriNetPlaceProps } from "@/types"
 import { useDiagramStore } from "@/store/context"
@@ -5,7 +6,6 @@ import { useShallow } from "zustand/shallow"
 import { PopoverProps } from "../types"
 import { DefaultNodeEditPopover } from "../DefaultNodeEditPopover"
 import { PopoverSection } from "../PopoverLayout"
-import { InfiniteIcon } from "@/components/Icon"
 
 export const PetriNetPlaceEditPopover: React.FC<PopoverProps> = ({
   elementId,
@@ -117,8 +117,15 @@ export const PetriNetPlaceEditPopover: React.FC<PopoverProps> = ({
               fullWidth
             />
             {nodeData.capacity === "Infinity" && (
-              <div style={{ position: "absolute", top: 12, left: 8 }}>
-                <InfiniteIcon />
+              <div
+                style={{
+                  position: "absolute",
+                  top: 12,
+                  left: 8,
+                  color: "var(--apollon-primary-contrast, #000000)",
+                }}
+              >
+                <InfinityIcon width={16} height={16} aria-hidden="true" />
               </div>
             )}
           </div>
@@ -140,7 +147,7 @@ export const PetriNetPlaceEditPopover: React.FC<PopoverProps> = ({
               )
             }
           >
-            <InfiniteIcon />
+            <InfinityIcon width={16} height={16} aria-hidden="true" />
           </IconButton>
         </div>
       </PopoverSection>

@@ -1,4 +1,5 @@
 import React, { useState, KeyboardEvent, ChangeEvent } from "react"
+import { GripVertical, Trash2 } from "lucide-react"
 import {
   IconButton,
   NodeStyleEditor,
@@ -9,7 +10,6 @@ import { generateUUID } from "@/utils"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import { ClassNodeProps } from "@/types"
-import { DeleteIcon, DragHandleIcon } from "@/components/Icon"
 import {
   DndContext,
   closestCenter,
@@ -84,7 +84,7 @@ const SortableAttributeRow: React.FC<SortableAttributeRowProps> = ({
           flexShrink: 0,
         }}
       >
-        <DragHandleIcon width={16} height={16} />
+        <GripVertical width={16} height={16} aria-hidden="true" />
       </div>
 
       <NodeStyleEditor
@@ -101,7 +101,7 @@ const SortableAttributeRow: React.FC<SortableAttributeRowProps> = ({
             tooltip="Delete attribute"
             onClick={() => onDelete(item.id)}
           >
-            <DeleteIcon width={16} height={16} aria-hidden="true" />
+            <Trash2 width={16} height={16} aria-hidden="true" />
           </IconButton>,
         ]}
       />

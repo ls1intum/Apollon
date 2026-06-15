@@ -1,5 +1,5 @@
 import React from "react"
-import { CheckIcon } from "@/components/Icon"
+import { Check } from "lucide-react"
 
 interface ColorButtonsProps {
   onSelect: (color: string) => void
@@ -20,6 +20,29 @@ const COLOR_PALETTE = [
   "#778ca3",
   "#000000",
 ]
+
+const getContrastColor = (color: string) => {
+  const normalized = color.trim().toLowerCase()
+  const hex = normalized.startsWith("#") ? normalized.slice(1) : normalized
+  const expandedHex =
+    hex.length === 3
+      ? hex
+          .split("")
+          .map((char) => `${char}${char}`)
+          .join("")
+      : hex
+
+  if (!/^[\da-f]{6}$/i.test(expandedHex)) {
+    return "var(--apollon-primary-contrast, #000000)"
+  }
+
+  const red = parseInt(expandedHex.slice(0, 2), 16)
+  const green = parseInt(expandedHex.slice(2, 4), 16)
+  const blue = parseInt(expandedHex.slice(4, 6), 16)
+  const luminance = (red * 299 + green * 587 + blue * 114) / 1000
+
+  return luminance >= 160 ? "#000000" : "#ffffff"
+}
 
 export const ColorButtons: React.FC<ColorButtonsProps> = ({
   onSelect,
@@ -63,16 +86,20 @@ export const ColorButton = ({
     type="button"
     className="apollon-color-swatch"
     onClick={() => onSelect(color)}
-    style={{ "--swatch-color": color } as React.CSSProperties}
+    style={
+      {
+        "--swatch-color": color,
+        color: getContrastColor(color),
+      } as React.CSSProperties
+    }
     aria-pressed={selected}
     aria-label={color}
   >
     {selected && (
-      <CheckIcon
+      <Check
         className="apollon-color-swatch__icon"
         width={16}
         height={16}
-        fill="var(--apollon-background, #ffffff)"
         aria-hidden="true"
       />
     )}

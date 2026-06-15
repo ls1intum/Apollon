@@ -1,7 +1,6 @@
 import React, { useState } from "react"
+import { PaintRoller, X } from "lucide-react"
 import { DividerLine, IconButton, TextField, Typography } from "@/components/ui"
-import { PaintRollerIcon } from "@/components/Icon/PaintRollerIcon"
-import { CrossIcon } from "@/components/Icon"
 import { ColorButton, ColorButtons } from "./ColorButtons"
 import { useColorEditorDisclosure } from "./ColorEditorGroup"
 import { DefaultNodeProps } from "@/types"
@@ -172,7 +171,7 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
               setActiveColorField(null)
             }}
           >
-            <PaintRollerIcon />
+            <PaintRoller width={16} height={16} aria-hidden="true" />
           </IconButton>
 
           {sideElements.map((element, index) => (
@@ -225,7 +224,7 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
                   tooltip="Close color picker"
                   onClick={() => setActiveColorField(null)}
                 >
-                  <CrossIcon fill="var(--apollon-primary-contrast, #000000)" />
+                  <X width={16} height={16} aria-hidden="true" />
                 </IconButton>
               </div>
               <ColorButtons

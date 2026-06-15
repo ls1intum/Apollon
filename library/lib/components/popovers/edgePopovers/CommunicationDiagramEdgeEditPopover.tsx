@@ -1,6 +1,6 @@
 import { useReactFlow } from "@xyflow/react"
 import { CustomEdgeProps, MessageData } from "@/edges/EdgeProps"
-import { ArrowBackIcon, ArrowForwardIcon, DeleteIcon } from "@/components/Icon"
+import { ArrowLeft, ArrowRight, Trash2 } from "lucide-react"
 import { PopoverProps } from "../types"
 import { useState, useEffect } from "react"
 import { generateUUID } from "@/utils"
@@ -168,17 +168,9 @@ export const CommunicationDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
                 onClick={() => handleMessageDirectionToggle(index)}
               >
                 {message.direction === "target" ? (
-                  <ArrowForwardIcon
-                    width={16}
-                    height={16}
-                    fill="var(--apollon-primary-contrast, #000000)"
-                  />
+                  <ArrowRight width={16} height={16} aria-hidden="true" />
                 ) : (
-                  <ArrowBackIcon
-                    width={16}
-                    height={16}
-                    fill="var(--apollon-primary-contrast, #000000)"
-                  />
+                  <ArrowLeft width={16} height={16} aria-hidden="true" />
                 )}
               </IconButton>
 
@@ -199,12 +191,7 @@ export const CommunicationDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
                 tooltip={`Delete ${messageLabel}`}
                 onClick={() => handleDeleteMessage(index)}
               >
-                <DeleteIcon
-                  width={16}
-                  height={16}
-                  fill="var(--apollon-primary-contrast, #000000)"
-                  aria-hidden="true"
-                />
+                <Trash2 width={16} height={16} aria-hidden="true" />
               </IconButton>
             </div>
           )

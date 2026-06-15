@@ -1,8 +1,8 @@
 import { useState } from "react"
+import { Trash2 } from "lucide-react"
 import { useDiagramStore } from "@/store"
 import { Assessment } from "@/typings"
 import { useShallow } from "zustand/shallow"
-import { DeleteIcon } from "../Icon"
 import { IconButton, TextField } from "../ui"
 import { AssessmentHeader, PopoverSection } from "./PopoverLayout"
 
@@ -73,7 +73,7 @@ export const GiveFeedbackAssessmentBox = ({
             tooltip="Delete assessment"
             onClick={handleDelete}
           >
-            <DeleteIcon width={16} height={16} aria-hidden="true" />
+            <Trash2 width={16} height={16} aria-hidden="true" />
           </IconButton>
         }
       />

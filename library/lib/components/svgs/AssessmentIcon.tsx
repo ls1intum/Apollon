@@ -1,5 +1,5 @@
 import React from "react"
-import { CheckIcon, ExclamationIcon, CrossIcon } from "../Icon"
+import { Check, TriangleAlert, X } from "lucide-react"
 
 interface AssessmentIconProps {
   score?: number
@@ -24,15 +24,15 @@ const AssessmentIcon: React.FC<AssessmentIconProps> = ({ score, x, y }) => {
 
   const getIconConfig = () => {
     if (score > 0) {
-      return { Icon: CheckIcon, fill: "green" }
+      return { Icon: Check, color: "green" }
     } else if (score < 0) {
-      return { Icon: CrossIcon, fill: "red" }
+      return { Icon: X, color: "red" }
     } else {
-      return { Icon: ExclamationIcon, fill: "blue" }
+      return { Icon: TriangleAlert, color: "blue" }
     }
   }
 
-  const { Icon, fill } = getIconConfig()
+  const { Icon, color } = getIconConfig()
 
   return (
     <g className="apollon-assessment-icon">
@@ -44,7 +44,7 @@ const AssessmentIcon: React.FC<AssessmentIconProps> = ({ score, x, y }) => {
         stroke="#ccc"
         opacity={0.7}
       />
-      <Icon {...iconProps} fill={fill} />
+      <Icon {...iconProps} color={color} />
     </g>
   )
 }

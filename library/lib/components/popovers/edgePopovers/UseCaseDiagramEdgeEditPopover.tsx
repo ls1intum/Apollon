@@ -1,5 +1,5 @@
 import { EdgeStyleEditor, IconButton, TextField } from "@/components/ui"
-import { SwapHorizIcon } from "@/components/Icon"
+import { ArrowLeftRight } from "lucide-react"
 import { useReactFlow } from "@xyflow/react"
 import { CustomEdgeProps } from "@/edges/EdgeProps"
 import { useEdgePopOver } from "@/hooks"
@@ -55,7 +55,7 @@ export const UseCaseEdgeEditPopover: React.FC<PopoverProps> = ({
               tooltip={swapDirectionTooltip(sourceName, targetName)}
               onClick={handleSwap}
             >
-              <SwapHorizIcon width={16} height={16} />
+              <ArrowLeftRight width={16} height={16} aria-hidden="true" />
             </IconButton>
           ),
         ]}

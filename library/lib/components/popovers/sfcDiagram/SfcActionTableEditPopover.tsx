@@ -1,4 +1,5 @@
 import React, { useState, KeyboardEvent, ChangeEvent } from "react"
+import { Trash2 } from "lucide-react"
 import { IconButton, NodeStyleEditor, TextField } from "@/components/ui"
 import { generateUUID } from "@/utils"
 import { useDiagramStore } from "@/store"
@@ -6,7 +7,6 @@ import { useShallow } from "zustand/shallow"
 import { SfcActionTableProps, SfcActionRow } from "@/types"
 import { PopoverProps } from "../types"
 import { LAYOUT } from "@/constants"
-import { DeleteIcon } from "@/components/Icon"
 import { useReactFlow } from "@xyflow/react"
 import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 
@@ -157,7 +157,7 @@ export const SfcActionTableEditPopover: React.FC<PopoverProps> = ({
                   tooltip="Delete action row"
                   onClick={() => handleRowDelete(row.id)}
                 >
-                  <DeleteIcon width={16} height={16} />
+                  <Trash2 width={16} height={16} aria-hidden="true" />
                 </IconButton>,
               ]}
               preElements={[

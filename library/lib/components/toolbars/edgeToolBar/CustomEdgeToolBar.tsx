@@ -1,4 +1,4 @@
-import { DeleteIcon, EditIcon } from "@/components/Icon"
+import { Pencil, Trash2 } from "lucide-react"
 import { ZINDEX } from "@/constants"
 import { IPoint } from "@/edges"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
@@ -99,6 +99,7 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
                 width: "16px",
                 height: "16px",
                 backgroundColor: "var(--apollon-background, white)",
+                color: "var(--apollon-primary-contrast, #000000)",
                 borderRadius: 4,
                 display: "flex",
                 justifyContent: "center",
@@ -109,13 +110,14 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
                 onDeleteClick(e)
               }}
             >
-              <DeleteIcon style={{ width: 16, height: 16 }} />
+              <Trash2 style={{ width: 16, height: 16 }} aria-hidden="true" />
             </div>
             <div
               style={{
                 width: "16px",
                 height: "16px",
                 backgroundColor: "var(--apollon-background, white)",
+                color: "var(--apollon-primary-contrast, #000000)",
                 borderRadius: 4,
                 display: "flex",
                 justifyContent: "center",
@@ -126,7 +128,7 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
                 onEditClick(e)
               }}
             >
-              <EditIcon style={{ width: 16, height: 16 }} />
+              <Pencil style={{ width: 16, height: 16 }} aria-hidden="true" />
             </div>
           </div>
         )}
