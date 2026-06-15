@@ -214,7 +214,12 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
     event.preventDefault()
     disableScroll()
 
-    const elementRect = (event.target as HTMLElement).getBoundingClientRect()
+    const previewElement = event.currentTarget.querySelector<HTMLElement>(
+      "[data-draggable-preview]"
+    )
+    const elementRect = (
+      previewElement ?? event.currentTarget
+    ).getBoundingClientRect()
     const offsetX = event.clientX - elementRect.left
     const offsetY = event.clientY - elementRect.top
 
@@ -240,6 +245,12 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
     onDrop(event)
   }
 
+  const handlePointerCancel = () => {
+    enableScroll()
+    setIsDragging(false)
+    setGhostPosition({ x: 0, y: 0 })
+  }
+
   /* ----------------------------------------------------------------------
      Attach global pointer event listeners when dragging
      ---------------------------------------------------------------------- */
@@ -247,13 +258,16 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
     if (isDragging) {
       document.addEventListener("pointermove", handlePointerMove)
       document.addEventListener("pointerup", handlePointerUp)
+      document.addEventListener("pointercancel", handlePointerCancel)
     } else {
       document.removeEventListener("pointermove", handlePointerMove)
       document.removeEventListener("pointerup", handlePointerUp)
+      document.removeEventListener("pointercancel", handlePointerCancel)
     }
     return () => {
       document.removeEventListener("pointermove", handlePointerMove)
       document.removeEventListener("pointerup", handlePointerUp)
+      document.removeEventListener("pointercancel", handlePointerCancel)
     }
   }, [isDragging, clickOffset, onDrop])
 

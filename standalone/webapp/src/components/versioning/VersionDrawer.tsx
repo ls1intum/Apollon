@@ -28,6 +28,7 @@ import { ApiError, VersionApiClient } from "@/services/DiagramApiClient"
 import {
   NAVBAR_BACKGROUND_COLOR,
   MAX_VERSIONS_PER_DIAGRAM as MAX_VERSIONS,
+  MOBILE_VIEW_QUERY,
 } from "@/constants"
 import {
   MAX_DESCRIPTION_LENGTH,
@@ -52,15 +53,13 @@ const SIDEBAR_ANIMATION_MS = 220
 
 /**
  * Switches the sidebar to a bottom-sheet drawer at the same breakpoint
- * the navbar switches to its hamburger (`md:hidden` in `Navbar.tsx`,
- * Tailwind's md = 768px). This is the *only* place where a viewport
- * media query is the right tool — sidebar↔bottom-sheet is a page-level
+ * the navbar switches to its compact mobile layout. This is the *only* place
+ * where a viewport media query is the right tool — sidebar↔bottom-sheet is a
+ * page-level
  * layout decision driven by viewport chrome. Component-internal layout
  * (e.g. the preview banner) responds to its own container width via
  * `useElementWidth`, not this constant.
  */
-const MOBILE_QUERY = "(max-width: 767.95px)"
-
 interface Props {
   diagramId: string
   onVersionSaved?: (headRev?: number) => void
@@ -587,7 +586,7 @@ export const VersionSidebar: FC<Props> = ({ diagramId, onVersionSaved }) => {
   // `<VersionDrawer>` takes over; render nothing here so the sidebar
   // doesn't eat 320px of width on phones or in the awkward
   // 600–768px range where the navbar is already mobile.
-  const isSmall = useMediaQuery(MOBILE_QUERY)
+  const isSmall = useMediaQuery(MOBILE_VIEW_QUERY)
   const open = useVersionStore((s) => Boolean(s.drawerOpenByDiagram[diagramId]))
   const [mounted, setMounted] = useState(open)
   useEffect(() => {
@@ -633,7 +632,7 @@ export const VersionSidebar: FC<Props> = ({ diagramId, onVersionSaved }) => {
  * column, so we keep the bottom-sheet pattern for the small-screen case.
  */
 export const VersionDrawer: FC<Props> = ({ diagramId, onVersionSaved }) => {
-  const isSmall = useMediaQuery(MOBILE_QUERY)
+  const isSmall = useMediaQuery(MOBILE_VIEW_QUERY)
   const open = useVersionStore((s) => Boolean(s.drawerOpenByDiagram[diagramId]))
   const closeDrawer = useVersionStore((s) => s.closeDrawer)
   // Desktop uses the inline sidebar; this component is mobile-only.

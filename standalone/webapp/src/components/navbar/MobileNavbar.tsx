@@ -7,6 +7,7 @@ import IconButton from "@mui/material/IconButton"
 import Menu from "@mui/material/Menu"
 import TextField from "@mui/material/TextField/TextField"
 import Toolbar from "@mui/material/Toolbar"
+import Typography from "@mui/material/Typography"
 import TumLogo from "assets/images/tum-logo.png"
 import React, { useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router"
@@ -53,39 +54,66 @@ export default function MobileNavbar() {
   }
   return (
     <AppBar
-      position="fixed"
-      sx={{ bgcolor: NAVBAR_BACKGROUND_COLOR, top: 0, left: 0, right: 0 }}
+      position="static"
+      sx={{
+        bgcolor: NAVBAR_BACKGROUND_COLOR,
+        flexShrink: 0,
+        pt: "var(--safe-area-inset-top, 0px)",
+      }}
       elevation={0}
     >
-      <Toolbar disableGutters>
+      <Toolbar
+        disableGutters
+        sx={{
+          minHeight: "44px !important",
+          height: 44,
+        }}
+      >
         <Box
           sx={{
             display: "flex",
             flex: 1,
             justifyContent: "space-between",
             alignItems: "center",
-            px: 2,
+            minWidth: 0,
+            pl: "calc(10px + var(--safe-area-inset-left, 0px))",
+            pr: "calc(6px + var(--safe-area-inset-right, 0px))",
           }}
         >
-          {/* Left: Logo only */}
           <div
             style={{ display: "flex", alignItems: "center", cursor: "pointer" }}
             onClick={goHome}
           >
-            <img alt="Logo" src={TumLogo} width="60" height="30" />
+            <img alt="Logo" src={TumLogo} width="46" height="23" />
           </div>
 
-          {/* Right: Options dropdown (File/Import/Export/Theme/Share/Help/Version) */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Typography
+            noWrap
+            sx={{
+              flex: 1,
+              minWidth: 0,
+              mx: 1.5,
+              color: "white",
+              fontSize: 14,
+              fontWeight: 600,
+              textAlign: "center",
+            }}
+          >
+            {diagramTitle || "Apollon"}
+          </Typography>
+
+          <Box sx={{ display: "flex", alignItems: "center" }}>
             <IconButton
-              size="large"
+              id="mobile-options-button"
+              size="small"
               aria-label="open options"
               aria-controls="mobile-options-menu"
               aria-haspopup="true"
               onClick={handleOpenNavMenu}
               color="inherit"
+              sx={{ width: 36, height: 36 }}
             >
-              <MenuIcon />
+              <MenuIcon fontSize="small" />
             </IconButton>
             <Menu
               id="mobile-options-menu"
@@ -95,10 +123,41 @@ export default function MobileNavbar() {
               transformOrigin={{ vertical: "top", horizontal: "right" }}
               open={Boolean(anchorElNav)}
               onClose={handleCloseNavMenu}
+              MenuListProps={{
+                "aria-labelledby": "mobile-options-button",
+                sx: { py: 0.5 },
+              }}
+              slotProps={{
+                paper: {
+                  sx: {
+                    width: 240,
+                    maxWidth:
+                      "calc(100vw - var(--safe-area-inset-left, 0px) - var(--safe-area-inset-right, 0px) - 16px)",
+                  },
+                },
+              }}
             >
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  "& > .MuiButton-root, & > .MuiMenuItem-root": {
+                    boxSizing: "border-box",
+                    width: "100%",
+                    minHeight: 42,
+                    justifyContent: "flex-start",
+                    px: 2,
+                    borderRadius: 0,
+                    color: "var(--apollon-primary-contrast, #000000)",
+                    fontSize: 16,
+                  },
+                  "& > .MuiButton-root > svg:last-of-type": {
+                    ml: "auto !important",
+                  },
+                }}
+              >
                 <NavbarFile
-                  color="black"
+                  color="var(--apollon-primary-contrast, #000000)"
                   handleCloseNavMenu={handleCloseNavMenu}
                 />
                 <MenuItem
@@ -109,12 +168,10 @@ export default function MobileNavbar() {
                 >
                   Share
                 </MenuItem>
-                <VersionHistoryButton color="black" />
-                <NavbarHelp color="black" />
-                <MenuItem onClick={handleCloseNavMenu}>
-                  <ThemeSwitcherMenu />
-                </MenuItem>
-                <Box sx={{ px: 1 }}>
+                <VersionHistoryButton color="var(--apollon-primary-contrast, #000000)" />
+                <NavbarHelp color="var(--apollon-primary-contrast, #000000)" />
+                <ThemeSwitcherMenu asMenuItem onToggle={handleCloseNavMenu} />
+                <Box sx={{ px: 1.5, py: 1 }}>
                   <TextField
                     value={diagramTitle}
                     onChange={(event) => {
@@ -124,7 +181,9 @@ export default function MobileNavbar() {
                     }}
                     placeholder="Diagram Name"
                     fullWidth
-                    sx={{ input: { padding: 0.5 } }}
+                    size="small"
+                    inputProps={{ "aria-label": "Diagram name" }}
+                    sx={{ input: { py: 1, px: 1.25 } }}
                     variant="outlined"
                     onClick={(e) => e.stopPropagation()}
                     onFocus={(e) => e.stopPropagation()}

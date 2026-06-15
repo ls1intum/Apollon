@@ -131,6 +131,13 @@ export const LAYOUT = Object.freeze({
   STEREOTYPE_NAME_GAP: 4,
 } as const)
 
+/**
+ * Treat narrow portrait viewports and short phone-landscape viewports as
+ * mobile. The height guard keeps tablets in their regular layout.
+ */
+export const MOBILE_VIEW_QUERY =
+  "(max-width: 768px), (max-width: 950px) and (max-height: 500px)"
+
 const generateUUID = () => uuidv4()
 
 // Interface-component sizing. The flat aliases below are local-only —

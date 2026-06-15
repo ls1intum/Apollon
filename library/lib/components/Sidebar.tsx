@@ -4,7 +4,7 @@ import {
   DROPS,
   dropElementConfigs,
   LAYOUT,
-  ZINDEX,
+  MOBILE_VIEW_QUERY,
 } from "@/constants"
 import { DividerLine } from "./ui/DividerLine"
 import { useMetadataStore } from "@/store/context"
@@ -23,18 +23,22 @@ export const Sidebar = () => {
   useEffect(() => {
     if (typeof window === "undefined" || !window.matchMedia) return
 
-    const mql = window.matchMedia("(max-width: 768px)")
+    const mql = window.matchMedia(MOBILE_VIEW_QUERY)
     const onChange = (e: MediaQueryListEvent) => setIsMobile(e.matches)
 
     setIsMobile(mql.matches)
-    // Safari < 14 — use any to satisfy older APIs where TS defs differ
-    if ("addEventListener" in mql) mql.addEventListener("change", onChange)
-    else (mql as any).addListener(onChange)
+    if (typeof mql.addEventListener === "function") {
+      mql.addEventListener("change", onChange)
+    } else {
+      mql.addListener(onChange)
+    }
 
     return () => {
-      if ("removeEventListener" in mql)
+      if (typeof mql.removeEventListener === "function") {
         mql.removeEventListener("change", onChange)
-      else (mql as any).removeListener(onChange)
+      } else {
+        mql.removeListener(onChange)
+      }
     }
   }, [])
 
@@ -55,191 +59,160 @@ export const Sidebar = () => {
     "petriNetTransition",
   ])
 
-  const previewScale = useMemo(
-    () => (isMobile ? 0.225 : DROPS.SIDEBAR_PREVIEW_SCALE),
-    [isMobile]
+  const paletteItems = useMemo(
+    () => dropElementConfigs[diagramType],
+    [diagramType]
   )
 
-  if (dropElementConfigs[diagramType].length === 0) {
+  if (paletteItems.length === 0) {
     return null
   }
 
+  const getPreviewScale = (width: number, height: number, extraHeight = 0) => {
+    if (!isMobile) return DROPS.SIDEBAR_PREVIEW_SCALE
+
+    return Math.min(0.55, 32 / width, 32 / (height + extraHeight))
+  }
+
+  const getPaletteLabel = (type: string) =>
+    type
+      .replace(/^bpmn/, "BPMN")
+      .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+      .replace(/^./, (character) => character.toUpperCase())
+
   return (
     <aside
-      style={{
-        ...(isMobile
-          ? {
-              position: "absolute",
-              left: 0,
-              right: 0,
-              top: 40,
-              width: "100%",
-              height: "auto",
-              backgroundColor: "var(--apollon-background, white)",
-              display: "flex",
-              flexDirection: "row",
-              padding: `10px calc(10px + var(--safe-area-inset-right, 0px)) 10px calc(10px + var(--safe-area-inset-left, 0px))`,
-              gap: "12px",
-              alignItems: "center",
-              overflowX: "auto",
-              overflowY: "hidden",
-              flexShrink: 0,
-              zIndex: ZINDEX.DRAGGABLE_GHOST,
-              borderBottom:
-                "1px solid var(--apollon-background-variant, #e5e7eb)",
-            }
-          : {
-              width: "180px",
-              minWidth: "180px",
-              height: "100%",
-              backgroundColor: "var(--apollon-background, white)",
-              display: "flex",
-              flexDirection: "column",
-              padding: "10px",
-              gap: "15px",
-              alignItems: "center",
-              overflowY: "auto",
-              flexShrink: 0,
-            }),
-      }}
+      className={`apollon-palette ${
+        isMobile ? "apollon-palette--mobile" : "apollon-palette--desktop"
+      }`}
+      data-testid="apollon-palette"
     >
       {showInteractiveSelectionView && (
-        <div
-          style={{
-            width: isMobile ? "auto" : "100%",
-            display: "flex",
-            flexDirection: isMobile ? "row" : "column",
-            gap: "8px",
-            alignItems: "center",
-          }}
-        >
+        <div className="apollon-palette__view-switch">
           <button
             type="button"
             onClick={() => setView(ApollonView.Modelling)}
-            style={{
-              borderRadius: "8px",
-              border: "1px solid var(--apollon-primary-contrast, #000000)",
-              background:
-                view === ApollonView.Modelling
-                  ? "var(--apollon-primary, #3e8acc)"
-                  : "transparent",
-              color:
-                view === ApollonView.Modelling
-                  ? "var(--apollon-background, #ffffff)"
-                  : "var(--apollon-primary-contrast, #000000)",
-              padding: "8px 10px",
-              cursor: "pointer",
-              fontWeight: 600,
-              whiteSpace: "nowrap",
-              fontSize: "inherit",
-            }}
+            className={
+              view === ApollonView.Modelling
+                ? "apollon-palette__view-button apollon-palette__view-button--active"
+                : "apollon-palette__view-button"
+            }
           >
             Model
           </button>
           <button
             type="button"
             onClick={() => setView(ApollonView.Highlight)}
-            style={{
-              borderRadius: "8px",
-              border: "1px solid var(--apollon-primary-contrast, #000000)",
-              background:
-                view === ApollonView.Highlight
-                  ? "var(--apollon-primary, #3e8acc)"
-                  : "transparent",
-              color:
-                view === ApollonView.Highlight
-                  ? "var(--apollon-background, #ffffff)"
-                  : "var(--apollon-primary-contrast, #000000)",
-              padding: "8px 10px",
-              cursor: "pointer",
-              fontWeight: 600,
-              whiteSpace: "nowrap",
-              fontSize: "inherit",
-            }}
+            className={
+              view === ApollonView.Highlight
+                ? "apollon-palette__view-button apollon-palette__view-button--active"
+                : "apollon-palette__view-button"
+            }
           >
             Select Elements
           </button>
         </div>
       )}
 
-      {view === ApollonView.Highlight && !isMobile && (
-        <div
-          style={{
-            width: "100%",
-            fontSize: "12px",
-            lineHeight: 1.4,
-            color: "var(--apollon-primary-contrast, #000000)",
-          }}
-        >
+      {view === ApollonView.Highlight && (
+        <div className="apollon-palette__hint">
           Click nodes or relationships to toggle whether they are interactive.
         </div>
       )}
 
-      {view === ApollonView.Modelling &&
-        dropElementConfigs[diagramType].map((config, index) => {
-          const extraPreviewHeight = labelPreviewTypes.has(config.type)
-            ? LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT
-            : 0
-          const previewWidth = config.width * previewScale
-          const previewHeight =
-            (config.height + extraPreviewHeight) * previewScale
+      {view === ApollonView.Modelling && (
+        <div className="apollon-palette__entries">
+          {paletteItems.map((config, index) => {
+            const extraPreviewHeight = labelPreviewTypes.has(config.type)
+              ? LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT
+              : 0
+            const previewScale = getPreviewScale(
+              config.width,
+              config.height,
+              extraPreviewHeight
+            )
+            const previewWidth = config.width * previewScale
+            const previewHeight =
+              (config.height + extraPreviewHeight) * previewScale
+            const label = getPaletteLabel(config.type)
 
-          return (
-            <React.Fragment key={`${config.type}_${config.defaultData?.name}`}>
+            return (
               <DraggableGhost
+                key={`${config.type}_${config.defaultData?.name}`}
                 dropElementConfig={config}
                 previewScale={previewScale}
               >
                 <div
-                  className="prevent-select"
-                  style={{
-                    width: previewWidth,
-                    height: previewHeight,
-                    zIndex: ZINDEX.DRAGGABLE_GHOST,
-                    marginTop: config.marginTop,
-                  }}
+                  className="apollon-palette__entry prevent-select"
+                  title={`Drag ${label}`}
                 >
-                  {React.createElement(config.svg, {
-                    width: config.width,
-                    height: config.height,
-                    ...config.defaultData,
-                    data: config.defaultData,
-                    SIDEBAR_PREVIEW_SCALE: previewScale,
-                    id: `sidebarElement_${index}`,
-                  })}
+                  <div
+                    data-draggable-preview
+                    style={{
+                      width: previewWidth,
+                      height: previewHeight,
+                      marginTop: isMobile ? 0 : config.marginTop,
+                    }}
+                  >
+                    {React.createElement(config.svg, {
+                      width: config.width,
+                      height: config.height,
+                      ...config.defaultData,
+                      data: config.defaultData,
+                      SIDEBAR_PREVIEW_SCALE: previewScale,
+                      id: `sidebarElement_${index}`,
+                    })}
+                  </div>
                 </div>
               </DraggableGhost>
-            </React.Fragment>
-          )
-        })}
-
-      {view === ApollonView.Modelling && (
-        <>
-          {!isMobile && <DividerLine style={{ margin: "3px 0" }} />}
+            )
+          })}
+          <div className="apollon-palette__separator">
+            <DividerLine style={{ margin: 0 }} />
+          </div>
           <DraggableGhost
             dropElementConfig={ColorDescriptionConfig}
-            previewScale={previewScale}
+            previewScale={getPreviewScale(
+              ColorDescriptionConfig.width,
+              ColorDescriptionConfig.height
+            )}
           >
             <div
-              className="prevent-select"
-              style={{
-                width: ColorDescriptionConfig.width * previewScale,
-                height: ColorDescriptionConfig.height * previewScale,
-                zIndex: ZINDEX.DRAGGABLE_GHOST,
-                marginTop: ColorDescriptionConfig.marginTop,
-              }}
+              className="apollon-palette__entry prevent-select"
+              title="Drag Color Description"
             >
-              {React.createElement(ColorDescriptionConfig.svg, {
-                width: ColorDescriptionConfig.width,
-                height: ColorDescriptionConfig.height,
-                ...ColorDescriptionConfig.defaultData,
-                data: ColorDescriptionConfig.defaultData,
-                SIDEBAR_PREVIEW_SCALE: previewScale,
-                id: "sidebarElement_ColorDescription",
-              })}
+              <div
+                data-draggable-preview
+                style={{
+                  width:
+                    ColorDescriptionConfig.width *
+                    getPreviewScale(
+                      ColorDescriptionConfig.width,
+                      ColorDescriptionConfig.height
+                    ),
+                  height:
+                    ColorDescriptionConfig.height *
+                    getPreviewScale(
+                      ColorDescriptionConfig.width,
+                      ColorDescriptionConfig.height
+                    ),
+                }}
+              >
+                {React.createElement(ColorDescriptionConfig.svg, {
+                  width: ColorDescriptionConfig.width,
+                  height: ColorDescriptionConfig.height,
+                  ...ColorDescriptionConfig.defaultData,
+                  data: ColorDescriptionConfig.defaultData,
+                  SIDEBAR_PREVIEW_SCALE: getPreviewScale(
+                    ColorDescriptionConfig.width,
+                    ColorDescriptionConfig.height
+                  ),
+                  id: "sidebarElement_ColorDescription",
+                })}
+              </div>
             </div>
           </DraggableGhost>
-        </>
+        </div>
       )}
     </aside>
   )

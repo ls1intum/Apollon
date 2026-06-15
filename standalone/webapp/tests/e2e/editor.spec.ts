@@ -199,3 +199,53 @@ test.describe("Navbar", () => {
     await expect(page.getByText("Export")).toBeVisible()
   })
 })
+
+test.describe("Mobile responsive layout", () => {
+  test("uses the compact navbar and floating palette in portrait", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto("/")
+    await waitForCanvasReady(page, false)
+
+    await expect(
+      page.getByRole("button", { name: "open options" })
+    ).toBeVisible()
+
+    const palette = page.getByTestId("apollon-palette")
+    await expect(palette).toHaveClass(/apollon-palette--mobile/)
+
+    const navbar = page.locator("header")
+    const navbarBox = await navbar.boundingBox()
+    expect(navbarBox?.height).toBeLessThanOrEqual(44)
+
+    const paletteBox = await palette.boundingBox()
+    expect(paletteBox?.width).toBeLessThanOrEqual(60)
+
+    await page.getByRole("button", { name: "open options" }).click()
+
+    const menu = page.getByRole("menu", { name: "open options" })
+    await expect(menu).toBeVisible()
+    await expect(menu.getByText("Theme", { exact: true })).toBeVisible()
+
+    const menuBox = await menu.boundingBox()
+    expect(menuBox?.width).toBeLessThanOrEqual(240)
+    expect(menuBox?.width).toBeLessThanOrEqual(390 - 16)
+  })
+
+  test("keeps the phone layout in landscape", async ({ page }) => {
+    await page.setViewportSize({ width: 844, height: 390 })
+    await page.goto("/")
+    await waitForCanvasReady(page, false)
+
+    await expect(
+      page.getByRole("button", { name: "open options" })
+    ).toBeVisible()
+
+    const palette = page.getByTestId("apollon-palette")
+    await expect(palette).toHaveClass(/apollon-palette--mobile/)
+
+    const entries = palette.locator(".apollon-palette__entries")
+    await expect(entries).toHaveCSS("grid-template-columns", "46px 46px")
+  })
+})
