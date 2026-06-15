@@ -687,6 +687,40 @@ export class ApollonEditor {
       .updateMetaData(model.title, parseDiagramType(model.type))
   }
 
+  /**
+   * Host-driven element highlighting. Paints a translucent overlay over each
+   * given node / edge / class-member id in the supplied CSS color — the v4
+   * replacement for v3's `UMLModelElement.highlight` field and
+   * `ApollonEditor.select()`. Typical hosts: an assessment editor marking
+   * elements that are missing feedback, or Athena marking elements that have
+   * automatic-feedback suggestions.
+   *
+   * The highlight is an ephemeral view overlay: it is NOT written into the
+   * model, NOT serialized by `get model`, and NOT shared with collaborators.
+   * Each call replaces the previous highlight set; pass `null` (or an empty
+   * map) to clear all highlights. Passing `undefined` is a no-op.
+   *
+   * @param highlights map / record of element id -> CSS color (any valid CSS
+   *   color string, e.g. `"rgba(23,162,184,0.3)"`), or `null` to clear.
+   */
+  public setElementHighlights(
+    highlights: Map<string, string> | Record<string, string> | null | undefined
+  ): void {
+    if (highlights === undefined) return
+    const record =
+      highlights === null
+        ? {}
+        : Object.fromEntries(
+            highlights instanceof Map ? highlights : Object.entries(highlights)
+          )
+    this.assessmentSelectionStore.getState().setElementHighlights(record)
+  }
+
+  /** Returns a copy of the current highlight record (id -> CSS color). */
+  public getElementHighlights(): Record<string, string> {
+    return { ...this.assessmentSelectionStore.getState().highlightedElements }
+  }
+
   public getSelectedElements(): string[] {
     const { mode, readonly } = this.metadataStore.getState()
     if (mode === Apollon.ApollonMode.Assessment && readonly) {

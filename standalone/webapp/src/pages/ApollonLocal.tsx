@@ -77,9 +77,22 @@ export const ApollonLocal: React.FC = () => {
 
     setEditor(instance)
 
+    // E2E seam (dev builds only — `import.meta.env.DEV` is statically false in
+    // production, so this is dead-code-eliminated from the shipped bundle).
+    // Exposes the imperative editor so Playwright can drive API surfaces that
+    // have no UI affordance, e.g. `setElementHighlights`.
+    if (import.meta.env.DEV) {
+      ;(window as Window & { apollonEditor?: ApollonEditor }).apollonEditor =
+        instance
+    }
+
     return () => {
       isThumbnailExportCanceledRef.current = true
       thumbnailExportSequenceRef.current += 1
+      if (import.meta.env.DEV) {
+        delete (window as Window & { apollonEditor?: ApollonEditor })
+          .apollonEditor
+      }
       if (thumbnailExportTimeoutRef.current) {
         clearTimeout(thumbnailExportTimeoutRef.current)
         thumbnailExportTimeoutRef.current = null
