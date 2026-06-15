@@ -524,6 +524,53 @@ test.describe("Home page — accessibility basics", () => {
       "/privacy"
     )
   })
+
+  test("keeps the home navbar outside iPhone safe areas", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await seedEmpty(page)
+    await page.evaluate(() => {
+      document.documentElement.style.setProperty(
+        "--safe-area-inset-top",
+        "47px"
+      )
+    })
+
+    const navbar = page.locator(".home-navbar")
+    const portraitBox = await navbar.boundingBox()
+    expect(portraitBox?.height).toBeGreaterThanOrEqual(64 + 47)
+
+    const content = page.locator(".home-navbar__content")
+    await expect(content).toHaveCSS("min-height", "64px")
+
+    await page.setViewportSize({ width: 844, height: 390 })
+    await page.evaluate(() => {
+      document.documentElement.style.setProperty("--safe-area-inset-top", "0px")
+      document.documentElement.style.setProperty(
+        "--safe-area-inset-left",
+        "47px"
+      )
+      document.documentElement.style.setProperty(
+        "--safe-area-inset-right",
+        "47px"
+      )
+    })
+
+    const landscapeBox = await navbar.boundingBox()
+    expect(landscapeBox?.height).toBeLessThanOrEqual(44)
+
+    const homeLinkBox = await page
+      .getByRole("link", { name: "Apollon home" })
+      .boundingBox()
+    expect(homeLinkBox?.x).toBeGreaterThanOrEqual(47 + 32)
+
+    const themeButtonBox = await navbar
+      .getByRole("button", { name: /Switch to (light|dark) mode/ })
+      .boundingBox()
+    expect(themeButtonBox).not.toBeNull()
+    expect(themeButtonBox!.x + themeButtonBox!.width).toBeLessThanOrEqual(
+      844 - 47 - 32
+    )
+  })
 })
 
 // ---------------------------------------------------------------------------

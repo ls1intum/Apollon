@@ -442,6 +442,33 @@ body,
   flex-grow: 1;
 }
 
+.home-navbar {
+  padding-top: var(--safe-area-inset-top, 0px);
+}
+
+.home-navbar__content {
+  box-sizing: border-box;
+  padding-left: calc(1rem + var(--safe-area-inset-left, 0px));
+  padding-right: calc(1rem + var(--safe-area-inset-right, 0px));
+}
+
+@media (max-width: 950px) and (max-height: 500px) {
+  .home-navbar {
+    padding-top: 0;
+  }
+
+  .home-navbar__content {
+    min-height: 44px;
+    padding-left: calc(2rem + var(--safe-area-inset-left, 0px));
+    padding-right: calc(2rem + var(--safe-area-inset-right, 0px));
+  }
+
+  .home-navbar__content img[alt="TUM logo"] {
+    width: 40px;
+    height: 40px;
+  }
+}
+
 /* MUI has no theme here, so Menus/Selects render their portaled Paper with the
    default light surface — which shows through the menu's rounded corners and
    edges in dark mode. Theme the Paper itself (not just the inner list). */

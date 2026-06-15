@@ -408,12 +408,40 @@ test.describe("Mobile responsive layout", () => {
     const menuBox = await menu.boundingBox()
     expect(menuBox?.width).toBeLessThanOrEqual(240)
     expect(menuBox?.width).toBeLessThanOrEqual(390 - 16)
+
+    await menu.getByRole("menuitem", { name: "Share" }).click()
+
+    const shareDialog = page.getByRole("dialog", { name: "Share" })
+    await expect(shareDialog).toBeVisible()
+    const shareDialogBox = await shareDialog.boundingBox()
+    expect(shareDialogBox?.x).toBeGreaterThanOrEqual(12)
+    expect(shareDialogBox?.width).toBeLessThanOrEqual(390 - 24)
+
+    const shareContent = page.getByTestId("share-modal-content")
+    const hasHorizontalOverflow = await shareContent.evaluate(
+      (element) => element.scrollWidth > element.clientWidth
+    )
+    expect(hasHorizontalOverflow).toBe(false)
   })
 
   test("keeps the phone layout in landscape", async ({ page }) => {
     await page.setViewportSize({ width: 844, height: 390 })
     await page.goto("/")
     await waitForCanvasReady(page, false)
+    await page.evaluate(() => {
+      document.documentElement.style.setProperty(
+        "--safe-area-inset-left",
+        "47px"
+      )
+      document.documentElement.style.setProperty(
+        "--safe-area-inset-right",
+        "47px"
+      )
+      document.documentElement.style.setProperty(
+        "--safe-area-inset-bottom",
+        "21px"
+      )
+    })
 
     await expect(
       page.getByRole("button", { name: "open options" })
@@ -424,5 +452,32 @@ test.describe("Mobile responsive layout", () => {
 
     const entries = palette.locator(".apollon-palette__entries")
     await expect(entries).toHaveCSS("grid-template-columns", "46px 46px")
+
+    const navbarBox = await page.locator("header").boundingBox()
+    expect(navbarBox?.height).toBeLessThanOrEqual(36)
+
+    const homeLinkBox = await page
+      .getByRole("link", { name: "Apollon home" })
+      .boundingBox()
+    expect(homeLinkBox?.x).toBeGreaterThanOrEqual(47 + 32)
+
+    const menuButtonBox = await page
+      .getByRole("button", { name: "open options" })
+      .boundingBox()
+    expect(menuButtonBox).not.toBeNull()
+    expect(menuButtonBox!.x + menuButtonBox!.width).toBeLessThanOrEqual(
+      844 - 47 - 32
+    )
+
+    const controlsBox = await page
+      .locator(".react-flow__controls")
+      .boundingBox()
+    expect(controlsBox?.x).toBeGreaterThanOrEqual(47)
+
+    const minimapBox = await page
+      .locator(".react-flow__panel.bottom.right")
+      .boundingBox()
+    expect(minimapBox).not.toBeNull()
+    expect(minimapBox!.x + minimapBox!.width).toBeLessThanOrEqual(844 - 47)
   })
 })

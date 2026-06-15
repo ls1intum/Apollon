@@ -34,9 +34,11 @@ export default function MobileNavbar() {
       return
     }
 
-    unsubscribe.current = editor.subscribeToDiagramNameChange((title) => {
-      setDiagramTitle(title)
-    })
+    unsubscribe.current = editor.subscribeToDiagramNameChange(
+      (title: string) => {
+        setDiagramTitle(title)
+      }
+    )
     setDiagramTitle(editor.getDiagramMetadata().diagramTitle || "")
 
     return () => {
@@ -62,6 +64,9 @@ export default function MobileNavbar() {
         ...NAVBAR_SX,
         flexShrink: 0,
         pt: "var(--safe-area-inset-top, 0px)",
+        "@media (max-width: 950px) and (max-height: 500px)": {
+          pt: 0,
+        },
       }}
       elevation={0}
     >
@@ -70,6 +75,10 @@ export default function MobileNavbar() {
         sx={{
           minHeight: "44px !important",
           height: 44,
+          "@media (max-width: 950px) and (max-height: 500px)": {
+            minHeight: "36px !important",
+            height: 36,
+          },
         }}
       >
         <Box
@@ -81,6 +90,10 @@ export default function MobileNavbar() {
             minWidth: 0,
             pl: "calc(10px + var(--safe-area-inset-left, 0px))",
             pr: "calc(6px + var(--safe-area-inset-right, 0px))",
+            "@media (max-width: 950px) and (max-height: 500px)": {
+              pl: "calc(32px + var(--safe-area-inset-left, 0px))",
+              pr: "calc(32px + var(--safe-area-inset-right, 0px))",
+            },
           }}
         >
           <Link
@@ -88,7 +101,19 @@ export default function MobileNavbar() {
             aria-label="Apollon home"
             style={{ display: "flex", alignItems: "center" }}
           >
-            <img alt="Logo" src={TumLogo} width="46" height="23" />
+            <Box
+              component="img"
+              alt="Logo"
+              src={TumLogo}
+              sx={{
+                width: 46,
+                height: 23,
+                "@media (max-width: 950px) and (max-height: 500px)": {
+                  width: 40,
+                  height: 20,
+                },
+              }}
+            />
           </Link>
 
           <Typography
@@ -101,6 +126,9 @@ export default function MobileNavbar() {
               fontSize: 14,
               fontWeight: 600,
               textAlign: "center",
+              "@media (max-width: 950px) and (max-height: 500px)": {
+                fontSize: 13,
+              },
             }}
           >
             {diagramTitle || "Apollon"}
@@ -115,7 +143,14 @@ export default function MobileNavbar() {
               aria-haspopup="true"
               onClick={handleOpenNavMenu}
               color="inherit"
-              sx={{ width: 36, height: 36 }}
+              sx={{
+                width: 36,
+                height: 36,
+                "@media (max-width: 950px) and (max-height: 500px)": {
+                  width: 32,
+                  height: 32,
+                },
+              }}
             >
               <MenuIcon fontSize="small" />
             </IconButton>

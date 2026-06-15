@@ -31,7 +31,7 @@
   right: 10px;
   display: flex;
   align-items: center;
-  z-index: 10002;
+  z-index: 22;
   pointer-events: auto;
 }
 
@@ -69,7 +69,7 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 10001;
+  z-index: 21;
 }
 
 .apollon-collaboration-follow-banner {
@@ -91,7 +91,7 @@
   font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
-  z-index: 10004;
+  z-index: 24;
   pointer-events: auto;
   animation: apollon-collaboration-follow-banner-in 160ms ease-out;
 }
@@ -155,7 +155,7 @@
   inset: 0;
   overflow: hidden;
   pointer-events: none;
-  z-index: 10003;
+  z-index: 23;
 }
 
 .apollon-collaboration-cursor {
@@ -314,6 +314,20 @@
 @media (max-width: 950px) and (max-height: 500px) {
   .apollon-palette--mobile .apollon-palette__entries {
     grid-template-columns: repeat(2, 46px);
+  }
+
+  .react-flow__panel.bottom.left {
+    margin-left: calc(10px + var(--safe-area-inset-left, 0px));
+    margin-bottom: calc(10px + var(--safe-area-inset-bottom, 0px));
+  }
+
+  .react-flow__panel.bottom.right {
+    margin-right: calc(10px + var(--safe-area-inset-right, 0px));
+    margin-bottom: calc(10px + var(--safe-area-inset-bottom, 0px));
+  }
+
+  .apollon-collaboration-presence-bar {
+    right: calc(10px + var(--safe-area-inset-right, 0px));
   }
 }
 
