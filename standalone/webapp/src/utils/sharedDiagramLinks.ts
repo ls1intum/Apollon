@@ -64,13 +64,8 @@ export const buildSharedDiagramPath = (
 ): string =>
   `/shared/${encodeURIComponent(diagramId)}?view=${encodeURIComponent(view)}`
 
-/**
- * Typed TanStack navigation options to a shared diagram's editor route.
- * Spreadable into `navigate()` or `<Link {...} />`. The router handles param
- * encoding and serialises `view` into `?view=`, so prefer this over passing
- * `buildSharedDiagramPath()` as a raw string `to` (which would not type-check
- * and would not parse the query into typed search).
- */
+// Typed nav options for the shared editor route; the router serialises view
+// into ?view=. Spreadable into navigate() / <Link {...} />.
 export const sharedDiagramRoute = (
   diagramId: string,
   view: DiagramView = DEFAULT_SHARED_DIAGRAM_VIEW

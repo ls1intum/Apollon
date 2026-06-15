@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from "react"
-import { useNavigate, useSearch } from "@tanstack/react-router"
+import { useNavigate } from "@tanstack/react-router"
 import { toast } from "react-toastify"
 import { useVersionStore } from "@/stores/useVersionStore"
 import { versioningStrings as t } from "@/components/versioning/strings"
@@ -26,23 +26,17 @@ export const PREVIEW_VERSION_PARAM = "version"
  * - Unknown / deleted / foreign-device ids fail soft: toast, strip the param,
  *   fall back to the live canvas — never crash.
  *
- * Mounted once per editor page. `useSearch({ strict: false })` keeps it
- * route-agnostic: the same hook serves `/local/$id` and `/shared/$diagramId`,
- * both of which type `version` as an optional string. Search is a parsed
- * object (not a string), and `navigate({ to: "." })` rewrites only the search
- * of the current route, preserving the path + params.
- *
- * `ready` MUST be false until the page has bound the active `VersionRepository`
- * (pass `Boolean(editor)` — the editor and the repo are bound together).
- * Otherwise a deep-link / reload carrying `?version=` would run `enterPreview`
- * before the repository holder is set and resolve against the wrong adapter.
+ * `previewFromUrl` is the page's typed `?version=` read — each editor route
+ * owns its own, so passing it in keeps this hook route-agnostic. `ready` MUST
+ * be false until the page has bound the active `VersionRepository` (pass
+ * `Boolean(editor)`), or a deep-link / reload carrying `?version=` would
+ * `enterPreview` against the wrong adapter.
  */
 export function useVersionPreviewUrlSync(
   diagramId: string | undefined,
+  previewFromUrl: string | null,
   ready: boolean = true
 ) {
-  const search = useSearch({ strict: false }) as { version?: string }
-  const previewFromUrl = search.version ?? null
   const navigate = useNavigate()
   const enterPreview = useVersionStore((s) => s.enterPreview)
   const exitPreview = useVersionStore((s) => s.exitPreview)
@@ -111,5 +105,5 @@ export function useVersionPreviewUrlSync(
     })
   }, [navigate])
 
-  return { previewFromUrl, openPreview, closePreview }
+  return { openPreview, closePreview }
 }

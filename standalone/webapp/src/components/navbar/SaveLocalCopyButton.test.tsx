@@ -37,10 +37,8 @@ function LocationProbe() {
 
 function renderWith(editorModel: UMLModel, initialPath = "/shared/remote-id") {
   const editor = { model: editorModel } as unknown as ApollonEditor
-  // The button decides whether to render from the pathname itself
-  // (useDiagramIdFromPath), not from route matching, so it can mount under any
-  // of these templates; `/local/$id` must be present so its post-save
-  // navigate({ to: "/local/$id" }) resolves.
+  // /local/$id must be listed so the post-save navigate({ to: "/local/$id" })
+  // resolves; the button shows/hides itself off the pathname, not route matching.
   return renderWithRouter(
     <>
       <SaveLocalCopyButton color="black" />
@@ -116,8 +114,7 @@ describe("SaveLocalCopyButton", () => {
   it("does not render on the local editor route (/local/:id)", async () => {
     usePersistenceModelStore.setState({ models: {}, currentModelId: null })
     renderWith(fakeModel, "/local/some-local-id")
-    // Wait for the router to resolve the route (the probe always renders) so the
-    // absent button is a real hide, not just the pre-load empty render.
+    // Await route resolution first, else queryByRole is trivially null pre-load.
     await screen.findByTestId("pathname")
     expect(
       screen.queryByRole("button", { name: /Save a local copy/i })

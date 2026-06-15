@@ -68,6 +68,7 @@ export const ApollonLocal: FC = () => {
   const { setEditor, editor } = useEditorContext()
   const { openModal } = useModalContext()
   const { id: diagramId } = route.useParams()
+  const { version: previewFromUrl } = route.useSearch()
   const location = useLocation()
   const locationRef = useRef(location)
 
@@ -122,11 +123,9 @@ export const ApollonLocal: FC = () => {
 
   const preview = useVersionStore((s) => s.preview)
   const fetchVersions = useVersionStore((s) => s.fetchVersions)
-  // `?version=<id>` is the source of truth for which version is previewed:
-  // openPreview/closePreview write the URL, the hook mirrors URL→store. This is
-  // what makes reload re-enter the preview and Back exit it in local mode.
   const { openPreview, closePreview } = useVersionPreviewUrlSync(
     diagramId,
+    previewFromUrl ?? null,
     Boolean(editor)
   )
   // selectVersions returns a frozen empty-array singleton when the key
@@ -220,11 +219,7 @@ export const ApollonLocal: FC = () => {
       }
     }
     // Re-runs only when the active diagram id changes. Each created diagram
-    // (blank or template) gets a fresh uuid, so the id alone drives the
-    // editor remount — no separate "created at" hint is needed. (Mixing a
-    // location.state value in here was harmful under TanStack, whose
-    // useParams/useLocation can update in different renders, briefly pairing
-    // the old diagram with the new state and recreating the editor twice.)
+    // (blank or template) gets a fresh uuid, so the id alone drives the remount.
   }, [
     diagram?.id,
     setCurrentModelId,

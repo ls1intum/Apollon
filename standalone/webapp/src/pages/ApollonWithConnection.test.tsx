@@ -148,8 +148,7 @@ vi.mock("@/stores/useVersionStore", () => {
   return { useVersionStore: hook }
 })
 
-// VersionDrawer / Sidebar / Banner need a router context to render; they aren't
-// under test here, so stub them out.
+// Not under test; stub the versioning widgets.
 vi.mock("@/components/versioning", async (importOriginal) => {
   const actual = (await importOriginal()) as Record<string, unknown>
   return {

@@ -43,7 +43,7 @@ const route = getRouteApi("/shared/$diagramId")
 
 export const ApollonWithConnection: React.FC = () => {
   const { diagramId } = route.useParams()
-  const { view: viewType } = route.useSearch()
+  const { view: viewType, version: previewFromUrl } = route.useSearch()
   const navigate = useNavigate()
   const { setEditor, editor } = useEditorContext()
   const { openModal } = useModalContext()
@@ -97,6 +97,7 @@ export const ApollonWithConnection: React.FC = () => {
   // call openPreview/closePreview; the hook mirrors URL→store.
   const { openPreview, closePreview } = useVersionPreviewUrlSync(
     diagramId,
+    previewFromUrl ?? null,
     Boolean(editor)
   )
   const applyControlEvent = useVersionStore((s) => s.applyControlEvent)
@@ -147,15 +148,14 @@ export const ApollonWithConnection: React.FC = () => {
 
       try {
         const validViews = Object.values(DiagramView)
-        if (!viewType || !validViews.includes(viewType as DiagramView)) {
+        if (!viewType || !validViews.includes(viewType)) {
           toast.error("Invalid view type")
           navigate({ to: "/" })
           return
         }
         log.debug("Initializing Apollon editor with view type:", viewType)
 
-        const isCollaborationView =
-          (viewType as DiagramView) === DiagramView.COLLABORATE
+        const isCollaborationView = viewType === DiagramView.COLLABORATE
         if (isCollaborationView && !collaborationUser) {
           const storedName = sessionStorage.getItem("apollon-collab-name")
           if (storedName) {
@@ -186,9 +186,7 @@ export const ApollonWithConnection: React.FC = () => {
           signal: abort.signal,
         })
         if (abort.signal.aborted) return
-        addSharedDiagramEntry(diagramId, {
-          lastSharedView: viewType as DiagramView,
-        })
+        addSharedDiagramEntry(diagramId, { lastSharedView: viewType })
         log.debug("Fetched diagram", {
           diagramId,
           nodeCount: diagram.nodes?.length ?? 0,
@@ -232,7 +230,7 @@ export const ApollonWithConnection: React.FC = () => {
             DiagramView.COLLABORATE,
             DiagramView.GIVE_FEEDBACK,
             DiagramView.SEE_FEEDBACK,
-          ].includes(viewType as DiagramView)
+          ].includes(viewType)
         ) {
           wsManagerRef.current = new WebSocketManager(diagramId, instance, () =>
             toast.error("WebSocket error")

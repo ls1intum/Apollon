@@ -47,8 +47,6 @@ afterEach(() => {
 })
 
 function mount(diagramId: string) {
-  // VersionSidebar takes diagramId as a prop and reads no router state; it only
-  // needs a router context to exist for any descendant Link/router hooks.
   return renderWithRouter(<VersionSidebar diagramId={diagramId} />, {
     wrapper: (children) => (
       <EditorProvider>

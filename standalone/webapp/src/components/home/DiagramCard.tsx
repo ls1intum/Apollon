@@ -107,8 +107,6 @@ const formatRelativeLastModified = (lastModifiedAt: string, nowMs: number) => {
   })
 }
 
-// Typed TanStack navigation options for this diagram's editor route
-// (local IndexedDB vs shared collab). Spreadable into navigate() / <Link>.
 const getDiagramNav = (diagram: RecentDiagram) => {
   const source = diagram.source ?? "local"
   if (source === "local") {

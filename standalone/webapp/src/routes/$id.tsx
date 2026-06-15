@@ -8,9 +8,8 @@ import { DiagramView } from "@/types/ModalTypes"
  * canonical `/shared/<id>` route; anything without a `?view` was never a valid
  * diagram link, so it falls through to the 404 page.
  *
- * Done as a route-level `beforeLoad` redirect (runs before render, no flash of
- * ErrorPage) rather than the old `<Navigate>` component. The target route's
- * `validateSearch` sanitises the forwarded `view`/`version`.
+ * A `beforeLoad` redirect runs before render, so there's no flash of ErrorPage.
+ * The target route's `validateSearch` re-sanitises the forwarded view/version.
  */
 export const Route = createFileRoute("/$id")({
   // Passthrough so `beforeLoad` sees the raw `?view`/`?version` it must forward.
@@ -20,9 +19,6 @@ export const Route = createFileRoute("/$id")({
       throw redirect({
         to: "/shared/$diagramId",
         params: { diagramId: params.id },
-        // Forward the legacy `?view`/`?version`; the target route's
-        // validateSearch re-sanitises them (an invalid view collapses to
-        // undefined), and the router handles param encoding.
         search: {
           view: search.view as DiagramView | undefined,
           version: search.version as string | undefined,

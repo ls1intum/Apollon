@@ -14,9 +14,7 @@ const wsPort = Number(process.env.APOLLON_WS_PORT || 4444)
 export default defineConfig({
   plugins: [
     // Must run BEFORE the react plugin so it can transform route files and
-    // (re)generate src/routeTree.gen.ts. File/quote/semicolon options live in
-    // tsr.config.json; auto code-splitting replaces the old manual lazy()
-    // route wrappers.
+    // (re)generate src/routeTree.gen.ts. File options live in tsr.config.json.
     tanstackRouter({ target: "react", autoCodeSplitting: true }),
     react(),
     tailwindcss(),

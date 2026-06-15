@@ -27,8 +27,7 @@ export const NavbarHelp: FC<Props> = ({ color }) => {
   const goToLegalPage = (path: "/imprint" | "/privacy") => {
     navigate({
       to: path,
-      // `searchStr` includes the leading "?" — exact equivalent of the old
-      // react-router `location.search` string.
+      // searchStr includes the leading "?".
       state: { from: location.pathname + location.searchStr },
     })
     handleClose()

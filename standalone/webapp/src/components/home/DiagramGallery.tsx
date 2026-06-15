@@ -609,7 +609,6 @@ export const DiagramGallery = ({
     isDiagramEmpty,
   })
 
-  // Typed TanStack navigation options (local IndexedDB vs shared collab).
   const diagramNav = (diagram: GalleryDiagram) =>
     diagram.source === "local"
       ? ({ to: "/local/$id", params: { id: diagram.id } } as const)
