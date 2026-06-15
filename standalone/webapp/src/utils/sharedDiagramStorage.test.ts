@@ -11,17 +11,13 @@ import {
   updateSharedDiagramView,
 } from "./sharedDiagramStorage"
 import {
-  buildSharedDiagramPath,
   buildSharedDiagramUrl,
   getSharedDiagramViewBadge,
 } from "./sharedDiagramLinks"
 
 describe("shared diagram link helpers", () => {
-  it("builds shared diagram paths and URLs for every view", () => {
+  it("builds shared diagram URLs for every view", () => {
     for (const view of Object.values(DiagramView)) {
-      expect(buildSharedDiagramPath("abc", view)).toBe(
-        `/shared/abc?view=${view}`
-      )
       expect(buildSharedDiagramUrl("abc", view, "https://example.test")).toBe(
         `https://example.test/shared/abc?view=${view}`
       )

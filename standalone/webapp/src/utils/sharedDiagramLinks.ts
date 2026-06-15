@@ -59,13 +59,6 @@ export const getSharedDiagramViewOption = (
 export const getSharedDiagramViewBadge = (view: unknown): string =>
   getSharedDiagramViewOption(view).badge
 
-export const buildSharedDiagramPath = (
-  diagramId: string,
-  view: DiagramView = DEFAULT_SHARED_DIAGRAM_VIEW
-): string =>
-  `/shared/${encodeURIComponent(diagramId)}?view=${encodeURIComponent(view)}`
-
-// The route's validateSearch serialises `view` into `?view=`.
 export const sharedDiagramRoute = (
   diagramId: string,
   view: DiagramView = DEFAULT_SHARED_DIAGRAM_VIEW
@@ -89,4 +82,5 @@ export const buildSharedDiagramUrl = (
   diagramId: string,
   view: DiagramView = DEFAULT_SHARED_DIAGRAM_VIEW,
   origin = resolveShareOrigin()
-): string => `${origin}${buildSharedDiagramPath(diagramId, view)}`
+): string =>
+  `${origin}/shared/${encodeURIComponent(diagramId)}?view=${encodeURIComponent(view)}`

@@ -1,18 +1,16 @@
 import React from "react"
-import { Link, type LinkProps } from "@tanstack/react-router"
+import { Link } from "@tanstack/react-router"
 
 type ErrorPageProps = {
   title?: string
   message?: string
   buttonLabel?: string
-  backPath?: string
 }
 
 export const ErrorPage: React.FC<ErrorPageProps> = ({
   title = "Oops!",
   message = "Something went wrong.",
   buttonLabel = "All diagrams",
-  backPath = "/",
 }) => {
   return (
     <div
@@ -45,9 +43,7 @@ export const ErrorPage: React.FC<ErrorPageProps> = ({
         {message}
       </p>
       <Link
-        // `backPath` is a runtime prop (defaults to "/"); cast past TanStack's
-        // literal-route typing.
-        to={backPath as LinkProps["to"]}
+        to="/"
         className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--home-accent-ring)]"
         style={{
           marginTop: "16px",

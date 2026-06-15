@@ -218,8 +218,8 @@ export const ApollonLocal: FC = () => {
         setEditor(undefined)
       }
     }
-    // Re-runs only when the active diagram id changes. Each created diagram
-    // (blank or template) gets a fresh uuid, so the id alone drives the remount.
+    // Each created diagram (blank or template) gets a fresh uuid, so the id
+    // alone drives the editor remount.
   }, [
     diagram?.id,
     setCurrentModelId,

@@ -22,7 +22,7 @@ interface RenderWithRouterOptions {
 }
 
 /**
- * TanStack-Router replacement for react-router's `<MemoryRouter>`. Returns
+ * Renders `ui` in a real TanStack router on in-memory history. Returns
  * Testing-Library's result plus `{ router, history }` — drive navigation with
  * `history.push` and assert it via `router.state.location` (in-memory history
  * never touches `window.location`).
