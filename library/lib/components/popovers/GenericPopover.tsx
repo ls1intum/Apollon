@@ -1,5 +1,5 @@
 import React, { ReactNode, useMemo } from "react"
-import * as Popover from "@radix-ui/react-popover"
+import { Popover } from "@base-ui-components/react/popover"
 import { PopoverOrigin } from "@/types"
 
 interface GenericPopoverProps {
@@ -88,11 +88,7 @@ export const GenericPopover: React.FC<GenericPopoverProps> = ({
 
   const { side, align } = toSideAlign(transformOrigin)
 
-  // HTML or SVG element — both expose the `getBoundingClientRect` Radix needs.
-  const virtualRef = useMemo(
-    () => ({ current: anchorEl as Element | null }),
-    [anchorEl]
-  )
+  if (!anchorEl && open) return null
 
   return (
     <Popover.Root
@@ -101,30 +97,33 @@ export const GenericPopover: React.FC<GenericPopoverProps> = ({
         if (!next) onClose()
       }}
     >
-      {anchorEl && <Popover.Anchor virtualRef={virtualRef} />}
       <Popover.Portal>
-        <Popover.Content
-          id={open ? id : undefined}
-          side={side}
-          align={align}
-          sideOffset={4}
-          collisionPadding={8}
-          avoidCollisions
-          onClick={(e) => e.stopPropagation()}
-          // Don't steal selection from the canvas on open.
-          onOpenAutoFocus={(e) => e.preventDefault()}
-          className="apollon-popover"
-          style={{
-            ...popoverThemeVars,
-            maxHeight,
-            maxWidth,
-            minWidth,
-            overflowY: "auto",
-            ...style,
-          }}
-        >
-          {children}
-        </Popover.Content>
+        {anchorEl && (
+          <Popover.Positioner
+            anchor={anchorEl}
+            side={side}
+            align={align}
+            sideOffset={4}
+            collisionPadding={8}
+          >
+            <Popover.Popup
+              id={open ? id : undefined}
+              initialFocus={false}
+              onClick={(e) => e.stopPropagation()}
+              className="apollon-popover"
+              style={{
+                ...popoverThemeVars,
+                maxHeight,
+                maxWidth,
+                minWidth,
+                overflowY: "auto",
+                ...style,
+              }}
+            >
+              {children}
+            </Popover.Popup>
+          </Popover.Positioner>
+        )}
       </Popover.Portal>
     </Popover.Root>
   )

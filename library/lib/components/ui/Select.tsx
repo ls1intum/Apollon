@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useId, useRef, useState } from "react"
-import * as Popover from "@radix-ui/react-popover"
+import { Popover } from "@base-ui-components/react/popover"
 import { ChevronDown } from "lucide-react"
 
 export interface SelectOption {
@@ -23,10 +23,9 @@ export interface SelectProps {
   "aria-label"?: string
 }
 
-// Radix Popover + `role="listbox"` rather than `@radix-ui/react-select`: its
-// scroll/pointer handling misbehaves in Capacitor WebViews, and a listbox can
-// render arbitrary per-option content (preview icons) that a native <select>
-// cannot.
+// Base UI Popover + `role="listbox"` rather than a select primitive: this
+// preserves the custom Capacitor-friendly scroll/pointer behavior and still
+// allows arbitrary per-option content (preview icons).
 export const Select: React.FC<SelectProps> = ({
   value,
   onChange,
@@ -141,77 +140,77 @@ export const Select: React.FC<SelectProps> = ({
         </label>
       )}
       <Popover.Root open={open} onOpenChange={setOpen}>
-        <Popover.Trigger asChild>
-          <button
-            type="button"
-            id={triggerId}
-            role="combobox"
-            aria-haspopup="listbox"
-            aria-expanded={open}
-            aria-controls={open ? listboxId : undefined}
-            aria-label={ariaLabel}
-            disabled={disabled}
-            className="apollon-select-trigger"
-          >
-            <span className="apollon-select-value">
-              {selected ? (
-                (selected.renderValue?.() ?? selected.label)
-              ) : (
-                <span className="apollon-select-placeholder">
-                  {placeholder}
-                </span>
-              )}
-            </span>
-            <ChevronDown
-              size={16}
-              aria-hidden
-              className="apollon-select-icon"
-            />
-          </button>
-        </Popover.Trigger>
-        <Popover.Portal>
-          <Popover.Content
-            align="start"
-            sideOffset={4}
-            collisionPadding={8}
-            avoidCollisions
-            className="apollon-select-content"
-            style={{
-              width: "var(--radix-popover-trigger-width)",
-              maxHeight:
-                "min(320px, var(--radix-popover-content-available-height))",
-            }}
-          >
-            <div
-              id={listboxId}
-              role="listbox"
+        <Popover.Trigger
+          render={
+            <button
+              type="button"
+              id={triggerId}
+              role="combobox"
+              aria-haspopup="listbox"
+              aria-expanded={open}
+              aria-controls={open ? listboxId : undefined}
               aria-label={ariaLabel}
-              className="apollon-select-listbox"
-              onKeyDown={onListKeyDown}
+              disabled={disabled}
+              className="apollon-select-trigger"
             >
-              {options.map((option, index) => {
-                const isSelected = option.value === value
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    role="option"
-                    aria-selected={isSelected}
-                    tabIndex={index === activeIndex ? 0 : -1}
-                    ref={(el) => {
-                      optionRefs.current[index] = el
-                    }}
-                    className={`apollon-select-option${
-                      isSelected ? " apollon-select-option--selected" : ""
-                    }`}
-                    onClick={() => commit(option.value)}
-                  >
-                    {option.renderOption?.() ?? option.label}
-                  </button>
-                )
-              })}
-            </div>
-          </Popover.Content>
+              <span className="apollon-select-value">
+                {selected ? (
+                  (selected.renderValue?.() ?? selected.label)
+                ) : (
+                  <span className="apollon-select-placeholder">
+                    {placeholder}
+                  </span>
+                )}
+              </span>
+              <ChevronDown
+                size={16}
+                aria-hidden
+                className="apollon-select-icon"
+              />
+            </button>
+          }
+        />
+        <Popover.Portal>
+          <Popover.Positioner align="start" sideOffset={4} collisionPadding={8}>
+            <Popover.Popup
+              initialFocus={false}
+              className="apollon-select-content"
+              style={{
+                width: "var(--anchor-width)",
+                maxHeight: "min(320px, var(--available-height))",
+              }}
+            >
+              <div
+                id={listboxId}
+                role="listbox"
+                aria-label={ariaLabel}
+                className="apollon-select-listbox"
+                onKeyDown={onListKeyDown}
+              >
+                {options.map((option, index) => {
+                  const isSelected = option.value === value
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      role="option"
+                      aria-selected={isSelected}
+                      tabIndex={index === activeIndex ? 0 : -1}
+                      ref={(el) => {
+                        optionRefs.current[index] = el
+                      }}
+                      className={`apollon-select-option${
+                        isSelected ? " apollon-select-option--selected" : ""
+                      }`}
+                      onClick={() => commit(option.value)}
+                    >
+                      {option.renderOption?.() ?? option.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </Popover.Popup>
+          </Popover.Positioner>
         </Popover.Portal>
       </Popover.Root>
     </span>

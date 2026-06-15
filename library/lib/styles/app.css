@@ -17,7 +17,7 @@
 /* Positioning context + clip region for the absolutely-positioned
    collaboration cursor layer. Keep `position` as `relative` only: a
    `transform`/`filter`/`perspective` here would become the containing block
-   for the body-portaled Radix popovers (see GenericPopover) and misplace them. */
+   for the body-portaled Base UI popovers (see GenericPopover) and misplace them. */
 .apollon-canvas {
   position: relative;
   flex: 1;
@@ -630,7 +630,7 @@ svg.react-flow__connectionline {
   cursor: grab;
 }
 
-/* Native UI primitives (formerly MUI), tokened via `--apollon-*`. Radix
+/* Native UI primitives (formerly MUI), tokened via `--apollon-*`. Base UI
    portals to `document.body`, so these are global, not scoped under
    `.apollon-editor`; theme vars are forwarded by `GenericPopover`. */
 
@@ -752,7 +752,7 @@ svg.react-flow__connectionline {
   pointer-events: auto;
 }
 
-/* Popover (Radix) */
+/* Popover (Base UI) */
 .apollon-popover {
   box-sizing: border-box;
   display: flex;
@@ -766,7 +766,7 @@ svg.react-flow__connectionline {
   z-index: 10003;
 }
 
-/* Select (Radix Popover listbox) */
+/* Select (Base UI Popover listbox) */
 .apollon-select {
   display: inline-flex;
   flex-direction: column;
@@ -974,7 +974,7 @@ svg.react-flow__connectionline {
   color: var(--apollon-primary, #3e8acc);
 }
 
-/* Tooltip (Radix) */
+/* Tooltip (Base UI) */
 .apollon-tooltip {
   padding: 4px 8px;
   font-size: 0.75rem;

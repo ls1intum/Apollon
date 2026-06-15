@@ -31,6 +31,9 @@ const styles = {
     backgroundColor: "var(--apollon-background, white)",
     border: "1px solid var(--apollon-gray, #e9ecef)",
   },
+  colorDivider: {
+    margin: 0,
+  },
   colorOption: {
     display: "flex",
     alignItems: "center",
@@ -44,8 +47,15 @@ const styles = {
     width: "100%",
     padding: 16,
   },
+  colorPickerContent: {
+    display: "flex",
+    flexDirection: "column" as const,
+    alignItems: "center",
+    paddingBottom: 12,
+  },
   resetButton: {
     marginTop: 12,
+    marginBottom: 12,
     padding: "6px 12px",
     backgroundColor: "var(--apollon-background, white)",
     color: "var(--apollon-primary-contrast, #000000)",
@@ -136,18 +146,15 @@ export const EdgeStyleEditor: React.FC<EdgeStyleEditorProps> = ({
                   onSelect={() => toggleColorField(key)}
                 />
                 {key !== colorFields[colorFields.length - 1].key && (
-                  <DividerLine backgroundColor="var(--apollon-gray, #e9ecef)" />
+                  <DividerLine
+                    backgroundColor="var(--apollon-gray, #e9ecef)"
+                    style={styles.colorDivider}
+                  />
                 )}
               </React.Fragment>
             ))
           ) : (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-              }}
-            >
+            <div style={styles.colorPickerContent}>
               <div style={styles.colorPickerHeader}>
                 <Typography>
                   {colorFields.find((f) => f.key === activeColorField)?.label}

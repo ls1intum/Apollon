@@ -1,5 +1,5 @@
 import React from "react"
-import * as RadixTooltip from "@radix-ui/react-tooltip"
+import { Tooltip as BaseTooltip } from "@base-ui-components/react/tooltip"
 
 export interface TooltipProps {
   /** Tooltip text (mirrors MUI's `title`). */
@@ -9,14 +9,12 @@ export interface TooltipProps {
   delayDuration?: number
 }
 
-// Mount once near the editor root so Radix can group hovers across controls.
+// Mount once near the editor root so adjacent tooltips can share hover delay.
 export const TooltipProvider: React.FC<{
   children: React.ReactNode
   delayDuration?: number
 }> = ({ children, delayDuration = 700 }) => (
-  <RadixTooltip.Provider delayDuration={delayDuration}>
-    {children}
-  </RadixTooltip.Provider>
+  <BaseTooltip.Provider delay={delayDuration}>{children}</BaseTooltip.Provider>
 )
 
 export const Tooltip: React.FC<TooltipProps> = ({
@@ -27,19 +25,23 @@ export const Tooltip: React.FC<TooltipProps> = ({
 }) => {
   if (!title) return <>{children}</>
 
+  const trigger = React.isValidElement(children) ? (
+    <BaseTooltip.Trigger render={children} delay={delayDuration} />
+  ) : (
+    <BaseTooltip.Trigger delay={delayDuration}>{children}</BaseTooltip.Trigger>
+  )
+
   return (
-    <RadixTooltip.Root delayDuration={delayDuration}>
-      <RadixTooltip.Trigger asChild>{children}</RadixTooltip.Trigger>
-      <RadixTooltip.Portal>
-        <RadixTooltip.Content
-          side={side}
-          sideOffset={4}
-          className="apollon-tooltip"
-        >
-          {title}
-          <RadixTooltip.Arrow className="apollon-tooltip-arrow" />
-        </RadixTooltip.Content>
-      </RadixTooltip.Portal>
-    </RadixTooltip.Root>
+    <BaseTooltip.Root>
+      {trigger}
+      <BaseTooltip.Portal>
+        <BaseTooltip.Positioner side={side} sideOffset={4}>
+          <BaseTooltip.Popup className="apollon-tooltip">
+            {title}
+            <BaseTooltip.Arrow className="apollon-tooltip-arrow" />
+          </BaseTooltip.Popup>
+        </BaseTooltip.Positioner>
+      </BaseTooltip.Portal>
+    </BaseTooltip.Root>
   )
 }

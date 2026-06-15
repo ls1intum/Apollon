@@ -42,6 +42,9 @@ const styles = {
     backgroundColor: "var(--apollon-background, white)",
     border: "1px solid var(--apollon-gray, #e9ecef)",
   },
+  colorDivider: {
+    margin: 0,
+  },
   colorOption: {
     display: "flex",
     alignItems: "center",
@@ -55,8 +58,13 @@ const styles = {
     width: "100%",
     padding: 16,
   },
+  colorPickerContent: {
+    display: "flex",
+    flexDirection: "column" as const,
+    alignItems: "center",
+    paddingBottom: 12,
+  },
   resetButton: {
-    marginTop: 12,
     padding: "6px 12px",
     backgroundColor: "var(--apollon-background, white)",
     color: "var(--apollon-primary-contrast, #000000)",
@@ -185,7 +193,7 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
       {paintOpen && (
         <div style={styles.colorPanel}>
           {!activeColorField ? (
-            colorFields.map(({ key, label }, index) => (
+            colorFields.map(({ key, label }) => (
               <React.Fragment key={`${nodeData.name}-${key}-option`}>
                 <ColorOption
                   key={`${nodeData.name}-${key}-option`}
@@ -197,24 +205,13 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
                 {key !== colorFields[colorFields.length - 1].key && (
                   <DividerLine
                     backgroundColor="var(--apollon-gray, #e9ecef)"
-                    style={
-                      key === "fillColor" &&
-                      colorFields[index + 1]?.key === "textColor"
-                        ? { margin: 0 }
-                        : undefined
-                    }
+                    style={styles.colorDivider}
                   />
                 )}
               </React.Fragment>
             ))
           ) : (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-              }}
-            >
+            <div style={styles.colorPickerContent}>
               <div style={styles.colorPickerHeader}>
                 <Typography>
                   {colorFields.find((f) => f.key === activeColorField)?.label}

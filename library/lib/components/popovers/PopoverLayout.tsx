@@ -173,7 +173,7 @@ export const AssessmentHeader: React.FC<{
   <div
     style={{
       display: "flex",
-      alignItems: "flex-start",
+      alignItems: "center",
       gap: FIELD_GAP,
     }}
   >

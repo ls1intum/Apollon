@@ -7,7 +7,7 @@ import { resolve } from "path"
 //   default        → dist/{index,internals}.js  (React + xyflow inlined)
 //   LIB_PEERS=true → dist/react/react.js        (those packages externalized)
 //
-// Radix and lucide are regular deps, bundled into both builds (never external).
+// Base UI and lucide are regular deps, bundled into both builds (never external).
 //
 // The `<Apollon>` component ships ONLY from the peer build — otherwise it
 // would render on a second, private React copy. The peer entry gets a
