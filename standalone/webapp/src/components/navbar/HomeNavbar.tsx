@@ -35,9 +35,7 @@ export const HomeNavbar = () => {
         <BrandAndVersion />
       </Link>
 
-      {isSubPage && (
-        <BackNav to={backTarget.to} label={backTarget.label} tone="onDark" />
-      )}
+      {isSubPage && <BackNav {...backTarget} tone="onDark" />}
 
       <div className="flex-1" />
 

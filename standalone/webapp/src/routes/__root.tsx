@@ -46,7 +46,5 @@ function RootLayout() {
 
 export const Route = createRootRoute({
   component: RootLayout,
-  // A 404 path is non-home/non-editor, so isChromeSubRoute already wraps it in
-  // HomeNavbar + HomeFooter.
   notFoundComponent: () => <ErrorPage />,
 })

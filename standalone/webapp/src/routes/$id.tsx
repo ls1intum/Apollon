@@ -9,10 +9,10 @@ import { isDiagramView } from "@/utils/sharedDiagramLinks"
  * forwards those to the canonical `/shared/<id>` (before render, so no flash of
  * ErrorPage); anything without a valid `?view` falls through to the 404 page.
  */
+type LegacySearch = { view?: DiagramView; version?: string }
+
 export const Route = createFileRoute("/$id")({
-  validateSearch: (
-    search: Record<string, unknown>
-  ): { view?: DiagramView; version?: string } => ({
+  validateSearch: (search: Record<string, unknown>): LegacySearch => ({
     view: isDiagramView(search.view) ? search.view : undefined,
     version: typeof search.version === "string" ? search.version : undefined,
   }),
