@@ -97,7 +97,7 @@ export const ApollonWithConnection: React.FC = () => {
   // call openPreview/closePreview; the hook mirrors URL→store.
   const { openPreview, closePreview } = useVersionPreviewUrlSync(
     diagramId,
-    previewFromUrl ?? null,
+    previewFromUrl,
     Boolean(editor)
   )
   const applyControlEvent = useVersionStore((s) => s.applyControlEvent)

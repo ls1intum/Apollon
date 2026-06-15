@@ -125,7 +125,7 @@ export const ApollonLocal: FC = () => {
   const fetchVersions = useVersionStore((s) => s.fetchVersions)
   const { openPreview, closePreview } = useVersionPreviewUrlSync(
     diagramId,
-    previewFromUrl ?? null,
+    previewFromUrl,
     Boolean(editor)
   )
   // selectVersions returns a frozen empty-array singleton when the key

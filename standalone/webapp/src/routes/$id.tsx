@@ -15,7 +15,7 @@ export const Route = createFileRoute("/$id")({
   // Passthrough so `beforeLoad` sees the raw `?view`/`?version` it must forward.
   validateSearch: (search: Record<string, unknown>) => search,
   beforeLoad: ({ params, search }) => {
-    if (params.id && "view" in search) {
+    if ("view" in search) {
       throw redirect({
         to: "/shared/$diagramId",
         params: { diagramId: params.id },

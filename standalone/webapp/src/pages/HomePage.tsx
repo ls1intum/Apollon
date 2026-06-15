@@ -10,6 +10,7 @@ import { DiagramGallerySkeleton } from "@/components/home/DiagramGallerySkeleton
 import { Capacitor } from "@capacitor/core"
 import { HomeFooter } from "@/components/home/HomeFooter"
 import { pruneExpiredSharedDiagrams } from "@/utils/sharedDiagramStorage"
+import { readHighlightSharedDiagramId } from "@/lib/navProvenance"
 import { useDocumentTitle } from "@/hooks/useDocumentTitle"
 
 const DiagramGallery = lazy(() =>
@@ -24,8 +25,7 @@ export const HomePage = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const highlightSharedDiagramId =
-    (location.state as { highlightSharedDiagramId?: string } | null)
-      ?.highlightSharedDiagramId ?? null
+    readHighlightSharedDiagramId(location.state) ?? null
   const { openModal } = useModalContext()
   const setCurrentModelId = usePersistenceModelStore(
     (state) => state.setCurrentModelId

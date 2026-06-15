@@ -3,7 +3,6 @@ import { AppLoadingScreen } from "@/components/AppLoadingScreen"
 import { routeTree } from "./routeTree.gen"
 import { log } from "@/logger"
 
-// `defaultPreload: "intent"` warms a route's chunk on link hover/focus.
 const router = createRouter({
   routeTree,
   defaultPreload: "intent",
@@ -16,14 +15,13 @@ declare module "@tanstack/react-router" {
   }
 }
 
-// Augment the (empty) HistoryState interface so Link `state`, navigate({ state })
-// and location.state reads are typed.
+// Augment the (empty) HistoryState interface so typed `state` writes (Link
+// `state` / navigate({ state })) type-check; reads go through runtime guards in
+// navProvenance.
 declare module "@tanstack/history" {
   interface HistoryState {
     /** Nav provenance: the editor route a chrome page (legal/404) was reached from. */
     from?: string
-    /** Home gallery hint: highlight a just-opened shared diagram card. */
-    highlightSharedDiagramId?: string
   }
 }
 
@@ -56,8 +54,6 @@ void import("capacitor-plugin-safe-area")
   })
 
 function App() {
-  // Providers + chrome live in __root (inside the router) so a modal's
-  // useNavigate binds to the active router.
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
       <RouterProvider router={router} />

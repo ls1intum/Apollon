@@ -34,7 +34,7 @@ export const PREVIEW_VERSION_PARAM = "version"
  */
 export function useVersionPreviewUrlSync(
   diagramId: string | undefined,
-  previewFromUrl: string | null,
+  previewFromUrl: string | undefined,
   ready: boolean = true
 ) {
   const navigate = useNavigate()
@@ -87,7 +87,7 @@ export function useVersionPreviewUrlSync(
     (versionId: string) => {
       // Push once when entering from the live canvas; replace on every
       // subsequent version→version hop so Back doesn't walk through them.
-      const replace = previewFromUrl !== null
+      const replace = previewFromUrl !== undefined
       void navigate({
         to: ".",
         search: (prev) => ({ ...prev, [PREVIEW_VERSION_PARAM]: versionId }),

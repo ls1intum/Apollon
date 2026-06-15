@@ -38,11 +38,12 @@ export const SHARED_DIAGRAM_VIEW_OPTIONS: readonly SharedDiagramViewOption[] = [
 
 export const DEFAULT_SHARED_DIAGRAM_VIEW = DiagramView.EDIT
 
-export const normalizeSharedDiagramView = (value: unknown): DiagramView => {
-  return Object.values(DiagramView).includes(value as DiagramView)
-    ? (value as DiagramView)
-    : DEFAULT_SHARED_DIAGRAM_VIEW
-}
+export const isDiagramView = (value: unknown): value is DiagramView =>
+  typeof value === "string" &&
+  (Object.values(DiagramView) as string[]).includes(value)
+
+export const normalizeSharedDiagramView = (value: unknown): DiagramView =>
+  isDiagramView(value) ? value : DEFAULT_SHARED_DIAGRAM_VIEW
 
 export const getSharedDiagramViewOption = (
   view: unknown
@@ -64,8 +65,7 @@ export const buildSharedDiagramPath = (
 ): string =>
   `/shared/${encodeURIComponent(diagramId)}?view=${encodeURIComponent(view)}`
 
-// Typed nav options for the shared editor route; the router serialises view
-// into ?view=. Spreadable into navigate() / <Link {...} />.
+// The route's validateSearch serialises `view` into `?view=`.
 export const sharedDiagramRoute = (
   diagramId: string,
   view: DiagramView = DEFAULT_SHARED_DIAGRAM_VIEW
