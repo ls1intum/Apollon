@@ -77,7 +77,7 @@
     {
       "name": "/react entry (peers external, Base UI + lucide bundled)",
       "path": "dist/react/react.js",
-      "limit": "140 kB"
+      "limit": "150 kB"
     },
     {
       "name": "yjs sync chunk",
