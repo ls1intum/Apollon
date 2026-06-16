@@ -3,6 +3,7 @@
  * Grouped by domain, deep-frozen. Import from "@/constants".
  */
 import React from "react"
+import { FONT_FAMILY, DEFAULT_FONT_SIZE } from "@/fontStack"
 import {
   ActivityActionNodeSVG,
   ActivityFinalNodeSVG,
@@ -99,6 +100,10 @@ export const CSS_VARIABLE_FALLBACKS: Readonly<Record<string, string>> =
 
 export const STROKE_COLOR = CSS_VARIABLE_FALLBACKS["--apollon-primary-contrast"]
 export const FILL_COLOR = CSS_VARIABLE_FALLBACKS["--apollon-background"]
+
+// Re-exported from the dependency-free leaf module so existing `@/constants`
+// importers keep working; see `lib/fontStack.ts` for why it lives there.
+export { FONT_FAMILY, DEFAULT_FONT_SIZE }
 export const INTERACTIVE_SELECTION_COLOR = `var(--apollon-interactive-selection, ${CSS_VARIABLE_FALLBACKS["--apollon-interactive-selection"]})`
 export const INTERACTIVE_SELECTION_FILL = `color-mix(in srgb, var(--apollon-interactive-selection, ${CSS_VARIABLE_FALLBACKS["--apollon-interactive-selection"]}) 18%, transparent)`
 
@@ -106,8 +111,7 @@ export const INTERACTIVE_SELECTION_FILL = `color-mix(in srgb, var(--apollon-inte
 /* Layout                                                                     */
 /* -------------------------------------------------------------------------- */
 export const LAYOUT = Object.freeze({
-  DEFAULT_FONT:
-    "400 16px Inter, system-ui, Avenir, Helvetica, Arial, sans-serif",
+  DEFAULT_FONT: `400 ${DEFAULT_FONT_SIZE}px ${FONT_FAMILY}`,
   DEFAULT_HEADER_HEIGHT: 40,
   DEFAULT_HEADER_HEIGHT_WITH_STEREOTYPE: 50,
   DEFAULT_ATTRIBUTE_HEIGHT: 30,

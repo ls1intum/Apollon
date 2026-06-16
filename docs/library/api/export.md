@@ -35,7 +35,27 @@ const svgExport = await ApollonEditor.exportModelAsSvg(importDiagram(model), {
 })
 ```
 
-This is the same pipeline the standalone server uses to produce server-side PDF / preview thumbnails.
+`exportModelAsSvg` mounts the editor off-screen, lets it lay out, then
+serialises the rendered SVG — so it needs a **real browser DOM**. Node sizes
+are computed from the rendered text (canvas `measureText` and `getBBox`), which
+jsdom does not implement faithfully (no canvas, stubbed `getBBox`), so a
+DOM-only shim is not enough.
+
+If you are rendering saved models in a batch — e.g. reviewing diagram
+submission versions — run it in a **real browser via Playwright or Puppeteer**.
+See the step-by-step recipe and the common pitfall (mismatched fonts →
+overlapping elements) in **[Headless rendering](./headless-rendering)**.
+
+:::tip Always normalise first
+Pass models through `importDiagram(...)` before exporting. It upgrades v2 / v3
+payloads to the current v4 shape; feeding a stale shape straight in is a common
+cause of garbled output.
+:::
+
+> The standalone **server's** PDF / thumbnail worker is a _different_ pipeline:
+> it renders under jsdom and pre-seeds element dimensions instead of measuring
+> them live. Don't copy it for browser-based headless export — use the
+> Playwright recipe above.
 
 ## PNG / PDF
 

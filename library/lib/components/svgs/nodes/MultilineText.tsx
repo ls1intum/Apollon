@@ -1,5 +1,6 @@
 import { FC, useMemo, SVGProps } from "react"
 import { wrapTextInRect, type SvgFontSpec } from "@/utils/svgTextLayout"
+import { FONT_FAMILY } from "@/fontStack"
 
 type VerticalAnchor = "top" | "middle" | "bottom"
 type TextAnchor = "start" | "middle" | "end"
@@ -43,8 +44,7 @@ type Props = Omit<SVGProps<SVGTextElement>, "x" | "y"> & {
   maxLines?: number
 }
 
-const DEFAULT_FONT_FAMILY =
-  "Inter, system-ui, Avenir, Helvetica, Arial, sans-serif"
+const DEFAULT_FONT_FAMILY = FONT_FAMILY
 
 /**
  * Lays out multi-line SVG text using pretext-powered canvas measurement.

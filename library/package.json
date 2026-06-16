@@ -66,7 +66,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "size": "size-limit"
+    "size": "size-limit",
+    "gen:fonts": "node scripts/gen-fonts.mjs"
   },
   "size-limit": [
     {
@@ -145,6 +146,7 @@
     "react-dom": "catalog:",
     "size-limit": "11.2.0",
     "@size-limit/preset-big-lib": "11.2.0",
+    "subset-font": "2.5.0",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:",
     "vite": "catalog:",

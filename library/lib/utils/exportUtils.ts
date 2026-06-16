@@ -1,17 +1,19 @@
 import { ReactFlowInstance, type Node, type Edge, Rect } from "@xyflow/react"
 import { CSS_VARIABLE_FALLBACKS, LAYOUT, STROKE_COLOR } from "@/constants"
+import { DEFAULT_FONT_SIZE, FONT_FAMILY } from "@/fontStack"
 import { Point } from "./pathParsing"
 
 /**
  * Font styles for exported SVGs.
  * Uses the same font stack as the browser (app.css) so the export looks identical
- * when opened in a browser. When opened in applications without Inter installed
- * (e.g. PowerPoint on Windows), the fallback chain provides graceful degradation
- * through system-ui → Avenir → Helvetica → Arial → sans-serif.
+ * when opened in a browser. In `compat` mode we additionally embed the Inter
+ * woff2 as an `@font-face` (see `embedInterFont`) so non-browser renderers
+ * (resvg, Inkscape, PowerPoint) measure and draw with the exact same metrics
+ * the editor used — without it they fall back to a system font and text drifts.
  */
 const svgFontStyles = `
     text {
-      font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+      font-family: ${FONT_FAMILY};
     }
   `
 
@@ -63,7 +65,14 @@ export function filterRenderedElements(
 export const getSVG = (
   container: HTMLElement,
   clip: Rect,
-  options?: ExportFilterOptions
+  options?: ExportFilterOptions,
+  /**
+   * Optional `@font-face` CSS to embed (compat mode only). The library loads
+   * the Inter woff2 lazily and passes it here so the export is self-contained;
+   * keeping it a parameter avoids statically bundling ~110 KB of base64 into
+   * the main entry. See `exportFonts.ts` and `embedFontFaceCss`.
+   */
+  fontFaceCss?: string
 ): string => {
   const emptySVG = "<svg></svg>"
 
@@ -211,6 +220,7 @@ export const getSVG = (
     replaceCSSVariables(mainSVG)
     convertStyleToAttributes(mainSVG)
     ensureTextFontDefaults(mainSVG)
+    if (fontFaceCss) embedFontFaceCss(mainSVG, fontFaceCss)
     removeMarkerElements(mainSVG)
     replaceTextDecorationWithManualUnderline(mainSVG)
   }
@@ -1205,9 +1215,9 @@ function convertStyleToAttributes(node: Element | ChildNode): void {
  * text identically to what the user sees on screen.
  */
 const TEXT_FONT_DEFAULTS = {
-  "font-size": "16px",
+  "font-size": `${DEFAULT_FONT_SIZE}px`,
   "font-weight": "400",
-  "font-family": "Inter, system-ui, Avenir, Helvetica, Arial, sans-serif",
+  "font-family": FONT_FAMILY,
 } as const
 
 /**
@@ -1285,6 +1295,23 @@ function replaceTextDecorationWithManualUnderline(svg: SVGSVGElement): void {
 }
 
 /**
+ * Embed `@font-face` CSS (typically the bundled Inter woff2 as base64) into the
+ * export SVG so the document carries its own font and renders identically when
+ * opened away from the editor. Inserted first so the face is declared before
+ * any `<text>` references it. Idempotent: a second call is a no-op.
+ */
+function embedFontFaceCss(svg: SVGSVGElement, css: string): void {
+  if (svg.querySelector("style[data-apollon-fonts]")) return
+
+  const SVG_NS = "http://www.w3.org/2000/svg"
+  const styleEl = document.createElementNS(SVG_NS, "style")
+  styleEl.setAttribute("data-apollon-fonts", "")
+  styleEl.textContent = css
+
+  svg.insertBefore(styleEl, svg.firstChild)
+}
+
+/**
  * Final safety pass: strip any legacy <marker> references that could sneak in
  * from third-party content. Keeps exports clean for PowerPoint/Keynote.
  */
@@ -1302,6 +1329,7 @@ function removeMarkerElements(svg: Element): void {
  * @internal — Exported for unit testing only. Not part of the public API.
  */
 export const __testing = {
+  embedFontFaceCss,
   filterRenderedElements,
   getRenderedDiagramBounds,
   extractPathPoints,
