@@ -47,6 +47,8 @@ export const useDiagramThumbnailWarmup = <T extends ThumbnailWarmupDiagram>({
   const thumbnailWorkerActiveRef = useRef(false)
   const isUnmountedRef = useRef(false)
   const isDiagramEmptyRef = useRef(isDiagramEmpty)
+  // Latest-value ref read only inside the async queue worker, never in render.
+  // eslint-disable-next-line react-hooks/refs
   isDiagramEmptyRef.current = isDiagramEmpty
 
   const processThumbnailQueue = useCallback(() => {
@@ -134,6 +136,9 @@ export const useDiagramThumbnailWarmup = <T extends ThumbnailWarmupDiagram>({
 
       thumbnailWorkerActiveRef.current = false
       if (thumbnailQueueRef.current.length > 0 && !isUnmountedRef.current) {
+        // Recursive drain — the worker re-invokes itself (self-reference in a
+        // useCallback, evaluated at call time, not during render).
+        // eslint-disable-next-line react-hooks/immutability
         processThumbnailQueue()
       }
     }

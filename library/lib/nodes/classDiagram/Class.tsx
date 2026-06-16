@@ -1,7 +1,8 @@
 import { NodeProps, NodeResizer, type Node } from "@xyflow/react"
+import { usePopoverAnchor } from "@/hooks/usePopoverAnchor"
 import { DefaultNodeWrapper } from "@/nodes/wrappers"
 import { ClassSVG } from "@/components"
-import { useEffect, useMemo, useRef } from "react"
+import { useEffect, useMemo } from "react"
 import { ClassNodeProps } from "@/types"
 import { useDiagramStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
@@ -30,7 +31,7 @@ export function Class({
 
   const isDiagramModifiable = useDiagramModifiable()
 
-  const classSvgWrapperRef = useRef<HTMLDivElement | null>(null)
+  const [anchorEl, anchorRef] = usePopoverAnchor()
 
   const showStereotype = !!stereotype
   const headerHeight = showStereotype
@@ -146,7 +147,7 @@ export function Class({
         maxHeight={minHeight}
         handleStyle={{ width: 8, height: 8 }}
       />
-      <div ref={classSvgWrapperRef}>
+      <div ref={anchorRef}>
         <ClassSVG
           width={finalWidth}
           height={minHeight}
@@ -157,7 +158,7 @@ export function Class({
       </div>
 
       <PopoverManager
-        anchorEl={classSvgWrapperRef.current}
+        anchorEl={anchorEl}
         elementId={id}
         type={"class" as const}
       />

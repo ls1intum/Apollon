@@ -14,7 +14,7 @@ interface CustomEdgeToolbarProps {
   scaleAnchor: IPoint
   onEditClick: (event: React.MouseEvent<HTMLElement>) => void
   onDeleteClick: (event: React.MouseEvent<HTMLElement>) => void
-  anchorRef: React.RefObject<SVGForeignObjectElement>
+  anchorRef: React.Ref<SVGForeignObjectElement>
 }
 
 export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({

@@ -1,7 +1,7 @@
 import { Box } from "@mui/material"
 import ExpandLessIcon from "@mui/icons-material/ExpandLess"
 import ChevronRightIcon from "@mui/icons-material/ChevronRight"
-import { memo, useState, type FC } from "react"
+import { useState, type FC } from "react"
 import { VersionListItem } from "./VersionListItem"
 import { ROW_HOVER_BG, TEXT_MUTED } from "./theme"
 import type { GroupedEntry } from "./utils"
@@ -87,4 +87,4 @@ const AutoGroupRow: FC<AutoGroupRowProps> = ({
   )
 }
 
-export default memo(AutoGroupRow)
+export default AutoGroupRow

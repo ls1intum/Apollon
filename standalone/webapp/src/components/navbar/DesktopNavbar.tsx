@@ -23,7 +23,7 @@ export const DesktopNavbar = () => {
   const [diagramTitle, setDiagramTitle] = useState(
     editor?.getDiagramMetadata().diagramTitle || ""
   )
-  const unsubscribeId = useRef<number>()
+  const unsubscribeId = useRef<number | undefined>(undefined)
   const { openModal } = useModalContext()
 
   useEffect(() => {
