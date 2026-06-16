@@ -594,6 +594,9 @@ function CollaboratorLiveInteractions({
   active: boolean
   awareness: CollaborationAwarenessApi
 }) {
+  // Must stay the reactive `useViewport()` (not an imperative `getViewport()`):
+  // the ghost is positioned with this on every pan/zoom, and the React Compiler
+  // would memoize a non-reactive read stale.
   const viewport = useViewport()
   const [ghosts, setGhosts] = useState<RemoteGhost[]>([])
   // Only subscribe to the node array while ghosts exist — retirement needs to
