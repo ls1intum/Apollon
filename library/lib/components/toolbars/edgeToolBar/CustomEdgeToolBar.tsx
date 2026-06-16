@@ -3,7 +3,7 @@ import { ZINDEX } from "@/constants"
 import { IPoint } from "@/edges"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
 import { useIsOnlyThisElementSelected } from "@/hooks/useIsOnlyThisElementSelected"
-import { Box } from "@mui/material"
+import { Box, IconButton } from "@mui/material"
 import { useStore } from "@xyflow/react"
 import { useMemo } from "react"
 
@@ -97,17 +97,14 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
               "& > *": { pointerEvents: "auto" },
             }}
           >
-            <Box
-              role="button"
+            <IconButton
               aria-label="Delete edge"
               sx={{
                 width: "16px",
                 height: "16px",
+                padding: 0,
                 backgroundColor: "var(--apollon-background, white)",
                 borderRadius: 1,
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
               }}
               onClick={(e) => {
                 e.stopPropagation()
@@ -115,18 +112,15 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
               }}
             >
               <DeleteIcon style={{ width: 16, height: 16 }} />
-            </Box>
-            <Box
-              role="button"
+            </IconButton>
+            <IconButton
               aria-label="Edit edge"
               sx={{
                 width: "16px",
                 height: "16px",
+                padding: 0,
                 backgroundColor: "var(--apollon-background, white)",
                 borderRadius: 1,
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
               }}
               onClick={(e) => {
                 e.stopPropagation()
@@ -134,7 +128,7 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
               }}
             >
               <EditIcon style={{ width: 16, height: 16 }} />
-            </Box>
+            </IconButton>
           </Box>
         )}
       </foreignObject>

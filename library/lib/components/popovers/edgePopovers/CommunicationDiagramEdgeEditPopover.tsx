@@ -1,5 +1,5 @@
 import { Box, IconButton } from "@mui/material"
-import { useReactiveEdge } from "@/hooks"
+import { useReactiveEdge, useReactiveNodeName } from "@/hooks"
 import { useReactFlow } from "@xyflow/react"
 import { CustomEdgeProps, MessageData } from "@/edges/EdgeProps"
 import { ArrowBackIcon, ArrowForwardIcon, DeleteIcon } from "@/components/Icon"
@@ -12,16 +12,14 @@ import { log } from "../../../logger"
 export const CommunicationDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
-  const { setEdges, getNode, updateEdgeData } = useReactFlow()
+  const { setEdges, updateEdgeData } = useReactFlow()
   const edge = useReactiveEdge(elementId)
   const [messages, setMessages] = useState<MessageData[]>([])
   const [newLabelInput, setNewLabelInput] = useState("")
   const [duplicateError, setDuplicateError] = useState(false)
 
-  const sourceNode = getNode(edge?.source || "")
-  const targetNode = getNode(edge?.target || "")
-  const sourceName = (sourceNode?.data?.name as string) ?? "Source"
-  const targetName = (targetNode?.data?.name as string) ?? "Target"
+  const sourceName = useReactiveNodeName(edge?.source, "Source")
+  const targetName = useReactiveNodeName(edge?.target, "Target")
 
   useEffect(() => {
     if (edge?.data) {

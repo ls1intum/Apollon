@@ -2,10 +2,10 @@ import { Box } from "@mui/material"
 import { EdgeStyleEditor, TextField, Typography } from "@/components/ui"
 import { useReactFlow } from "@xyflow/react"
 import { CustomEdgeProps } from "@/edges/EdgeProps"
-import { SwapHorizIcon } from "@/components/Icon"
 import { useEdgePopOver, useReactiveEdge, useReactiveNodeName } from "@/hooks"
 import { PopoverProps } from "../types"
 import { EdgeTypeSelect, EdgeTypeOption } from "./EdgeTypeSelect"
+import { SwapEndsButton } from "./SwapEndsButton"
 
 const CLASS_EDGE_TYPE_OPTIONS: ReadonlyArray<EdgeTypeOption> = [
   { value: "ClassBidirectional", label: "Bi-Association" },
@@ -51,18 +51,7 @@ export const EdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
           updateEdgeData(elementId, { ...edge.data, [key]: value })
         }
         label="Edge Type"
-        sideElements={[
-          handleSwap && (
-            <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-              <SwapHorizIcon
-                role="button"
-                aria-label="Swap source and target"
-                style={{ cursor: "pointer" }}
-                onClick={handleSwap}
-              />
-            </Box>
-          ),
-        ]}
+        sideElements={[handleSwap && <SwapEndsButton onClick={handleSwap} />]}
       />
 
       <EdgeTypeSelect
@@ -85,7 +74,9 @@ export const EdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
             onChange={(e) => handleSourceMultiplicityChange(e.target.value)}
             size="small"
             fullWidth
-            inputProps={{ "data-testid": "edge-source-multiplicity" }}
+            slotProps={{
+              htmlInput: { "data-testid": "edge-source-multiplicity" },
+            }}
           />
 
           {/* Source Role */}
@@ -95,7 +86,7 @@ export const EdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
             onChange={(e) => handleSourceRoleChange(e.target.value)}
             size="small"
             fullWidth
-            inputProps={{ "data-testid": "edge-source-role" }}
+            slotProps={{ htmlInput: { "data-testid": "edge-source-role" } }}
           />
 
           {/* Target subheadline */}
@@ -110,7 +101,9 @@ export const EdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
             onChange={(e) => handleTargetMultiplicityChange(e.target.value)}
             size="small"
             fullWidth
-            inputProps={{ "data-testid": "edge-target-multiplicity" }}
+            slotProps={{
+              htmlInput: { "data-testid": "edge-target-multiplicity" },
+            }}
           />
 
           {/* Target Role */}
@@ -120,7 +113,7 @@ export const EdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
             onChange={(e) => handleTargetRoleChange(e.target.value)}
             size="small"
             fullWidth
-            inputProps={{ "data-testid": "edge-target-role" }}
+            slotProps={{ htmlInput: { "data-testid": "edge-target-role" } }}
           />
         </>
       }
