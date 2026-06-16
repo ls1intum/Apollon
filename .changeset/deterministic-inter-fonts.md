@@ -20,3 +20,12 @@ browser, Inkscape, or PowerPoint.
 The font stack is now a single exported `FONT_FAMILY` constant. New docs cover
 [headless rendering](https://ls1intum.github.io/Apollon/library/api/headless-rendering)
 end to end.
+
+Also publishes the diagram model JSON as a stable, versioned contract (#748): a
+JSON Schema generated from the `UMLModel` type, shipped at
+`@tumaet/apollon/schema` (and `unpkg.com/@tumaet/apollon/schema`) and documented
+in [Model JSON contract](https://ls1intum.github.io/Apollon/library/api/model-contract),
+with a versioning policy and a test that keeps the schema in sync with the
+types. The schema is strict about the model envelope; per-element `data` is
+documented as an open envelope (a full per-type discriminated union is tracked
+as follow-up).

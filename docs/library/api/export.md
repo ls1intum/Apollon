@@ -79,3 +79,7 @@ import { importDiagram } from "@tumaet/apollon"
 
 editor.model = importDiagram(maybeV2OrV3Json)
 ```
+
+The v4 shape is published as a versioned JSON Schema — see the
+**[Model JSON contract](./model-contract)** for the schema, the field-by-field
+shape, and the versioning policy.

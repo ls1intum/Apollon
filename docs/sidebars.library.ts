@@ -22,7 +22,12 @@ const sidebars: SidebarsConfig = {
       // The category landing page is api.md itself, so the sidebar never
       // shows the confusing "API > API" leaf.
       link: { type: "doc", id: "api" },
-      items: ["api/collaboration", "api/export", "api/headless-rendering"],
+      items: [
+        "api/collaboration",
+        "api/export",
+        "api/headless-rendering",
+        "api/model-contract",
+      ],
     },
     { type: "doc", id: "troubleshooting", label: "Troubleshooting" },
   ],
