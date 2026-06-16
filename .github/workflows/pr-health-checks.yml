@@ -184,7 +184,10 @@ jobs:
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-v1.59.1-${{ hashFiles('standalone/webapp/package.json') }}
+          # Browser-specific key: the chromium and firefox jobs share this cache
+          # path but install different browsers, so they must not share a key
+          # (a firefox-only cache would make this job skip its chromium install).
+          key: playwright-chromium-${{ runner.os }}-v1.59.1-${{ hashFiles('standalone/webapp/package.json') }}
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
@@ -240,7 +243,9 @@ jobs:
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-v1.59.1-${{ hashFiles('standalone/webapp/package.json') }}
+          # Firefox-specific key — must differ from the chromium jobs' key (same
+          # cache path, different browser) so neither poisons the other's cache.
+          key: playwright-firefox-${{ runner.os }}-v1.59.1-${{ hashFiles('standalone/webapp/package.json') }}
 
       - name: Install Playwright Firefox
         if: steps.playwright-cache.outputs.cache-hit != 'true'
