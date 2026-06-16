@@ -68,6 +68,9 @@ export default defineConfig({
       testDir: "./tests/perf",
       fullyParallel: false,
       retries: 0,
+      // The drag-stress workload (tens of gestures, each with a settle wait)
+      // runs well past the default 30s on a slower CI runner.
+      timeout: 120_000,
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 1280, height: 720 },
