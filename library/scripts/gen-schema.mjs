@@ -84,6 +84,8 @@ if (
 ) {
   const schema = buildModelSchema()
   const out = resolve(LIB, "schema/uml-model-4.schema.json")
+  // Raw stringify is the canonical form; library/schema/ is in .prettierignore
+  // so this output is never reformatted (and `gen:schema` stays diff-free).
   writeFileSync(out, JSON.stringify(schema, null, 2) + "\n")
   // eslint-disable-next-line no-console
   console.log(`wrote ${out}`)
