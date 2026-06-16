@@ -19,7 +19,11 @@ import { useEditorContext, useModalContext } from "@/contexts"
 import { useElementWidth } from "@/hooks/useElementWidth"
 import { useVersionShortcut } from "@/hooks/useVersionShortcut"
 import { useVersionPreviewUrlSync } from "@/hooks/useVersionPreviewUrlSync"
-import { selectVersions, useVersionStore } from "@/stores/useVersionStore"
+import {
+  selectScopedPreview,
+  selectVersions,
+  useVersionStore,
+} from "@/stores/useVersionStore"
 import {
   setVersionRepository,
   LocalVersionRepository,
@@ -114,12 +118,7 @@ export const ApollonLocal: FC = () => {
     return () => window.removeEventListener("storage", onStorage)
   }, [diagramId])
 
-  // Ignore a preview left behind by another diagram (the store has one global
-  // preview slot); the URL hook clears it, but scoping here also closes the
-  // brief window before that effect runs.
-  const preview = useVersionStore((s) =>
-    s.preview?.diagramId === diagramId ? s.preview : null
-  )
+  const preview = useVersionStore((s) => selectScopedPreview(s, diagramId))
   const fetchVersions = useVersionStore((s) => s.fetchVersions)
   const { openPreview, closePreview } = useVersionPreviewUrlSync(
     diagramId,
@@ -161,7 +160,7 @@ export const ApollonLocal: FC = () => {
       // Don't write the previewed snapshot back into the persistence store,
       // and don't capture it as the diagram thumbnail — preview is read-only
       // by contract.
-      if (useVersionStore.getState().preview !== null) return
+      if (selectScopedPreview(useVersionStore.getState(), diagramId)) return
       updateModel(model)
       if (thumbnailExportTimeoutRef.current) {
         clearTimeout(thumbnailExportTimeoutRef.current)

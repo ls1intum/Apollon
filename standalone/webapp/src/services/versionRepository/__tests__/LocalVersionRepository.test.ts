@@ -251,17 +251,28 @@ describe("LocalVersionRepository", () => {
       { name: "from-other" }
     )
 
-    // A stale cross-diagram versionId must NOT snapshot under DIAGRAM_ID nor
-    // restore the other diagram's body here.
     await expect(
       LocalVersionRepository.restore(DIAGRAM_ID, other.id, {
         currentBody: nodeyModel(),
       })
     ).rejects.toBeInstanceOf(ApiError)
 
-    // No auto-snapshot row leaked into DIAGRAM_ID.
     const list = await LocalVersionRepository.list(DIAGRAM_ID)
     expect(list.versions).toHaveLength(0)
+  })
+
+  it("delete rejects a versionId that belongs to another diagram", async () => {
+    const other = await LocalVersionRepository.create(
+      "other-diagram",
+      nodeyModel(),
+      { name: "from-other" }
+    )
+
+    await expect(
+      LocalVersionRepository.delete(DIAGRAM_ID, other.id)
+    ).rejects.toBeInstanceOf(ApiError)
+
+    expect((await LocalVersionRepository.list("other-diagram")).total).toBe(1)
   })
 
   it("permalink returns null in local mode", () => {

@@ -17,9 +17,6 @@ export interface PendingVersion extends VersionSummary {
 }
 
 interface PreviewState {
-  // The diagram this preview belongs to. `preview` is a single global slot, so
-  // consumers MUST ignore a preview whose diagramId isn't theirs — otherwise a
-  // preview left by one diagram leaks onto the next one opened.
   diagramId: DiagramId
   versionId: VersionId
   body: UMLModel
@@ -117,6 +114,14 @@ export function selectVersions(
   diagramId: string
 ): readonly PendingVersion[] {
   return state.versions[diagramId] ?? EMPTY_VERSIONS
+}
+
+/** Ignore a preview left behind by another diagram (the slot is global). */
+export function selectScopedPreview(
+  state: State,
+  diagramId: string
+): PreviewState | null {
+  return state.preview?.diagramId === diagramId ? state.preview : null
 }
 
 export const useVersionStore = create<VersionStore>()(

@@ -145,7 +145,7 @@ vi.mock("@/stores/useVersionStore", () => {
   const hook = (selector?: (s: typeof state) => unknown) =>
     selector ? selector(state) : state
   ;(hook as unknown as { getState: typeof hook }).getState = () => state
-  return { useVersionStore: hook }
+  return { useVersionStore: hook, selectScopedPreview: () => null }
 })
 
 // Not under test; stub the versioning widgets.

@@ -17,9 +17,8 @@ const Navbar = lazy(() =>
 )
 
 function RootLayout() {
-  // Install the version-store side-effects (delete cascade, cross-tab sync)
-  // app-wide so a gallery-only session — never opening an editor — still purges
-  // a deleted local diagram's versions. Idempotent.
+  // Install app-wide so a gallery-only session — never opening an editor —
+  // still purges a deleted local diagram's versions.
   useEffect(() => {
     ensureVersionStoreBootstrapped()
   }, [])

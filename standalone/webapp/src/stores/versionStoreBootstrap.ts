@@ -36,10 +36,9 @@ export function ensureVersionStoreBootstrapped(): void {
       const next = new Set(Object.keys(state.models))
       for (const id of prevModelIds) {
         if (!next.has(id)) {
-          // Purge through the local adapter directly: a deleted persistence-store
-          // model is always a LOCAL diagram, so its versions live in IndexedDB
-          // regardless of which repository the editor last bound (the remote
-          // adapter has no purgeDiagram and would silently orphan them).
+          // A deleted persistence-store model is always a LOCAL diagram, so its
+          // versions live in IndexedDB; the remote adapter has no purgeDiagram
+          // and would orphan them.
           LocalVersionRepository.purgeDiagram(id).catch((err: unknown) =>
             log.warn(
               "purgeDiagram failed",
@@ -62,7 +61,6 @@ export function ensureVersionStoreBootstrapped(): void {
       .then(() => {
         const after = useVersionStore.getState()
         const previewing = after.preview
-        // Only react to an invalidation for the diagram being previewed.
         if (!previewing || previewing.diagramId !== msg.diagramId) return
         const stillThere = (after.versions[msg.diagramId] ?? []).some(
           (v) => v.id === previewing.versionId

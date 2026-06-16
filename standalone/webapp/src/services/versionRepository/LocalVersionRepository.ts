@@ -229,10 +229,6 @@ export const LocalVersionRepository = {
         "readwrite"
       )
       const target = await tx.objectStore("versions").get(versionId)
-      // Verify the row belongs to THIS diagram (the `versions` store is keyed
-      // by versionId alone). Without it a stale cross-diagram versionId would
-      // snapshot under one diagram and restore another's body — same guard as
-      // editInfo/getBody.
       if (!target || target.diagramId !== diagramId) {
         throw new ApiError(404, "NOT_FOUND", "Version not found locally.")
       }
@@ -289,6 +285,10 @@ export const LocalVersionRepository = {
   async delete(diagramId, versionId): Promise<void> {
     const db = await getDb()
     const tx = db.transaction(["versions", "versionBodies"], "readwrite")
+    const target = await tx.objectStore("versions").get(versionId)
+    if (!target || target.diagramId !== diagramId) {
+      throw new ApiError(404, "NOT_FOUND", "Version not found locally.")
+    }
     await tx.objectStore("versions").delete(versionId)
     await tx.objectStore("versionBodies").delete([diagramId, versionId])
     await tx.done

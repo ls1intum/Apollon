@@ -4,7 +4,11 @@ import CircleRoundedIcon from "@mui/icons-material/CircleRounded"
 import CircleOutlinedIcon from "@mui/icons-material/CircleOutlined"
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded"
 import type { FC } from "react"
-import { useVersionStore, type PendingVersion } from "@/stores/useVersionStore"
+import {
+  selectScopedPreview,
+  useVersionStore,
+  type PendingVersion,
+} from "@/stores/useVersionStore"
 import { relativeTime } from "./relativeTime"
 import {
   ROW_HOVER_BG,
@@ -14,6 +18,7 @@ import {
 } from "./theme"
 
 interface Props {
+  diagramId: string
   /**
    * `true` when the editor's current state vector differs from the SV at
    * the time of the last snapshot. This is the same signal that gates the
@@ -44,10 +49,11 @@ interface Props {
  * last save" is accurate; "Unsaved" would be misleading.
  */
 export const CurrentVersionRow: FC<Props> = ({
+  diagramId,
   hasChanges,
   latestSavedVersion,
 }) => {
-  const previewState = useVersionStore((s) => s.preview)
+  const previewState = useVersionStore((s) => selectScopedPreview(s, diagramId))
   const exitPreview = useVersionStore((s) => s.exitPreview)
 
   if (previewState) {

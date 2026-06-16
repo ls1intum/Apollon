@@ -102,7 +102,7 @@ describe("versionStoreBootstrap", () => {
     expect(useVersionStore.getState().preview).toBeNull()
   })
 
-  it("cascade-purges IDB rows when usePersistenceModelStore.deleteModel removes a diagram", async () => {
+  it("cascade-purges via the local adapter even when the active repo is remote", async () => {
     // Seed both a local diagram and a version trail for it.
     usePersistenceModelStore.setState({
       models: {
@@ -152,15 +152,33 @@ describe("versionStoreBootstrap", () => {
 
     expect((await LocalVersionRepository.list(DIAGRAM_ID)).total).toBe(1)
 
-    // Reviewer's scenario: after visiting a shared diagram the active repository
-    // is the remote one (no purgeDiagram). Deleting a LOCAL diagram must still
-    // purge its IDB versions — the cascade goes through the local adapter, not
-    // the mutable active repository.
     setVersionRepository(RemoteVersionRepository)
     usePersistenceModelStore.getState().deleteModel(DIAGRAM_ID)
     await flush()
     await flush()
 
     expect((await LocalVersionRepository.list(DIAGRAM_ID)).total).toBe(0)
+  })
+
+  it("ignores a cross-tab invalidation for a different diagram while previewing", async () => {
+    useVersionStore.setState({
+      preview: {
+        diagramId: DIAGRAM_ID,
+        versionId: "v1",
+        body: { id: DIAGRAM_ID } as never,
+      },
+    })
+    ensureVersionStoreBootstrapped()
+    const preview = useVersionStore.getState().preview
+
+    const peer = new BroadcastChannel("apollon-versions")
+    peer.postMessage({ type: "invalidate", diagramId: "other-diagram" })
+    peer.close()
+
+    await flush()
+    await flush()
+    await flush()
+
+    expect(useVersionStore.getState().preview).toBe(preview)
   })
 })

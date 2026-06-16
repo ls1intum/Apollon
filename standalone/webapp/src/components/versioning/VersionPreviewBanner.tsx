@@ -1,6 +1,10 @@
 import { Alert, Box, Button } from "@mui/material"
 import { useState, type FC } from "react"
-import { selectVersions, useVersionStore } from "@/stores/useVersionStore"
+import {
+  selectScopedPreview,
+  selectVersions,
+  useVersionStore,
+} from "@/stores/useVersionStore"
 import { versioningStrings as t } from "./strings"
 import { relativeTime } from "./relativeTime"
 
@@ -57,7 +61,7 @@ export const VersionPreviewBanner: FC<Props> = ({
   const isNarrow =
     containerWidth !== undefined && containerWidth < STACKED_WIDTH_PX
 
-  const preview = useVersionStore((s) => s.preview)
+  const preview = useVersionStore((s) => selectScopedPreview(s, diagramId))
   const versions = useVersionStore((s) => selectVersions(s, diagramId))
   const [restoring, setRestoring] = useState(false)
   if (!preview) return null

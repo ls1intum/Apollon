@@ -23,7 +23,11 @@ import {
 } from "react"
 import { toast } from "react-toastify"
 import { useEditorContext, useModalContext } from "@/contexts"
-import { selectVersions, useVersionStore } from "@/stores/useVersionStore"
+import {
+  selectScopedPreview,
+  selectVersions,
+  useVersionStore,
+} from "@/stores/useVersionStore"
 import { ApiError } from "@/services/DiagramApiClient"
 import { getVersionRepository } from "@/services/versionRepository"
 import { NAVBAR_BACKGROUND_COLOR } from "@/constants"
@@ -100,7 +104,7 @@ const VersionSidebarBody: FC<Props> = ({
   const createVersion = useVersionStore((s) => s.createVersion)
   const enterPreview = useVersionStore((s) => s.enterPreview)
   const restoreVersion = useVersionStore((s) => s.restoreVersion)
-  const previewState = useVersionStore((s) => s.preview)
+  const previewState = useVersionStore((s) => selectScopedPreview(s, diagramId))
 
   const { editor } = useEditorContext()
   const { openModal } = useModalContext()
@@ -525,6 +529,7 @@ const VersionSidebarBody: FC<Props> = ({
       </Box>
 
       <CurrentVersionRow
+        diagramId={diagramId}
         hasChanges={hasChanges}
         latestSavedVersion={latestSavedVersion}
       />

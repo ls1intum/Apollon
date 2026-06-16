@@ -19,7 +19,7 @@ import { Box } from "@mui/material"
 import { DiagramView } from "@/types"
 import { WebSocketManager } from "@/services/WebSocketManager"
 import { ApiError, DiagramApiClient } from "@/services/DiagramApiClient"
-import { useVersionStore } from "@/stores/useVersionStore"
+import { selectScopedPreview, useVersionStore } from "@/stores/useVersionStore"
 import { useDocumentTitle } from "@/hooks/useDocumentTitle"
 import {
   UndoRestoreSnackbar,
@@ -89,10 +89,7 @@ export const ApollonWithConnection: React.FC = () => {
     color: string
   } | null>(null)
 
-  // Ignore a preview left behind by another diagram (single global slot).
-  const preview = useVersionStore((s) =>
-    s.preview?.diagramId === diagramId ? s.preview : null
-  )
+  const preview = useVersionStore((s) => selectScopedPreview(s, diagramId))
   const restoreVersion = useVersionStore((s) => s.restoreVersion)
   const { openPreview, closePreview } = useVersionPreviewUrlSync(
     diagramId,
@@ -264,7 +261,8 @@ export const ApollonWithConnection: React.FC = () => {
         }
 
         syncIntervalRef.current = setInterval(() => {
-          const previewing = useVersionStore.getState().preview !== null
+          const previewing =
+            selectScopedPreview(useVersionStore.getState(), diagramId) !== null
           if (previewing) return
           if (!diagramIsUpdated.current || !diagramId || !instance) return
           // In collab, every connected peer autosaves the same Yjs-converged
@@ -299,7 +297,7 @@ export const ApollonWithConnection: React.FC = () => {
         }, 5000)
 
         modelChangeSubscriptionId = instance.subscribeToModelChange(() => {
-          if (useVersionStore.getState().preview !== null) return
+          if (selectScopedPreview(useVersionStore.getState(), diagramId)) return
           diagramIsUpdated.current = true
         })
 

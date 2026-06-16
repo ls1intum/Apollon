@@ -2,7 +2,11 @@ import { Button, Stack } from "@mui/material"
 import { useState } from "react"
 import { toast } from "react-toastify"
 import { useModalContext } from "@/contexts"
-import { selectVersions, useVersionStore } from "@/stores/useVersionStore"
+import {
+  selectScopedPreview,
+  selectVersions,
+  useVersionStore,
+} from "@/stores/useVersionStore"
 import { Typography } from "@/components/Typography"
 import { log } from "@/logger"
 import { versioningStrings as t } from "./strings"
@@ -17,7 +21,7 @@ export const DeleteVersionModal = ({ diagramId, versionId }: Props) => {
   const deleteVersion = useVersionStore((s) => s.deleteVersion)
   const exitPreview = useVersionStore((s) => s.exitPreview)
   const previewingThis = useVersionStore(
-    (s) => s.preview?.versionId === versionId
+    (s) => selectScopedPreview(s, diagramId)?.versionId === versionId
   )
   const target = useVersionStore((s) =>
     selectVersions(s, diagramId).find((v) => v.id === versionId)
