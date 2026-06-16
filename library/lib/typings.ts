@@ -32,12 +32,20 @@ export type CollaborationViewport = {
   zoom: number
 }
 
+export type LiveInteraction = {
+  id: string
+  position: { x: number; y: number }
+  width?: number
+  height?: number
+}
+
 export type CollaborationState = {
   user?: CollaborationUser
   cursor?: CollaborationCursor | null
   viewport?: CollaborationViewport | null
   followingClientId?: number | null
   selectedElementId?: string | null
+  liveInteraction?: LiveInteraction | null
 }
 
 export type CollaboratorInfo = {

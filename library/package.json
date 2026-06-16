@@ -60,7 +60,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build && LIB_PEERS=true vite build && rm -rf dist/react/assets",
+    "build": "tsc -b && vite build && LIB_PEERS=true vite build && rm -rf dist/react/assets && node ../scripts/check-no-perf-hooks.mjs",
     "build:watch": "tsc -b --watch & vite build --watch",
     "preview": "vite preview",
     "lint": "eslint .",

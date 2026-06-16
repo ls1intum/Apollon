@@ -98,6 +98,8 @@ jobs:
         run: pnpm run format:check
 
       - name: Check build
+        # The library build script runs scripts/check-no-perf-hooks.mjs at its
+        # tail, so the DEV-probe leak guard is exercised here.
         run: pnpm run build
 
       - name: Typecheck docs
@@ -182,6 +184,9 @@ jobs:
 
       - name: Run E2E tests
         run: pnpm --filter @tumaet/webapp exec playwright test tests/e2e/
+
+      - name: Run performance budget tests
+        run: pnpm --filter @tumaet/webapp exec playwright test --project=perf --workers=1
 
       - name: Upload Playwright report
         if: ${{ failure() }}

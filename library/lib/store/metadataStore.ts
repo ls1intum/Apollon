@@ -2,7 +2,7 @@ import { create, StoreApi, UseBoundStore } from "zustand"
 import { devtools, subscribeWithSelector } from "zustand/middleware"
 import { parseDiagramType } from "@/utils"
 import * as Y from "yjs"
-import { getDiagramMetadata } from "@/sync/ydoc"
+import { getDiagramMetadata, STORE_ORIGIN } from "@/sync/ydoc"
 import { UMLDiagramType } from "@/types"
 import { ApollonMode, ApollonView } from "@/typings"
 import { IPoint } from "@/edges/Connection"
@@ -97,7 +97,7 @@ export const createMetadataStore = (
 ): UseBoundStore<StoreApi<MetadataStore>> => {
   const transactStore = (fn: () => void) => {
     if (isPreviewMode()) return
-    ydoc.transact(fn, "store")
+    ydoc.transact(fn, STORE_ORIGIN)
   }
   return create<MetadataStore>()(
     devtools(

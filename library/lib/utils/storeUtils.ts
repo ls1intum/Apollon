@@ -1,8 +1,15 @@
-// Structural deep-equal. Used by `diagramStore` to short-circuit nodes/edges
-// replays when no semantic change occurred. Tolerant of key-order differences
-// and treats `{a: undefined}` and `{}` as equal (matching the JSON wire format
-// the editor round-trips through).
-export const deepEqual = (a: unknown, b: unknown): boolean => {
+// Structural deep-equal. By default it treats `{a: undefined}` and `{}` as
+// equal (matching the JSON wire format the editor round-trips through) —
+// `diagramStore` relies on this to short-circuit nodes/edges replays when no
+// semantic change occurred. With `distinguishUndefined`, a key holding
+// `undefined` is DISTINCT from an absent key; `reconcileYMap` needs that so
+// dragging a node out of a parent (`parentId: undefined`) is persisted into Yjs
+// rather than swallowed.
+export const deepEqual = (
+  a: unknown,
+  b: unknown,
+  distinguishUndefined = false
+): boolean => {
   if (Object.is(a, b)) return true
   if (
     typeof a !== "object" ||
@@ -15,7 +22,7 @@ export const deepEqual = (a: unknown, b: unknown): boolean => {
   if (Array.isArray(a)) {
     if (!Array.isArray(b) || a.length !== b.length) return false
     for (let i = 0; i < a.length; i++) {
-      if (!deepEqual(a[i], b[i])) return false
+      if (!deepEqual(a[i], b[i], distinguishUndefined)) return false
     }
     return true
   }
@@ -23,10 +30,14 @@ export const deepEqual = (a: unknown, b: unknown): boolean => {
   const aObj = a as Record<string, unknown>
   const bObj = b as Record<string, unknown>
   const keys = new Set<string>()
-  for (const k of Object.keys(aObj)) if (aObj[k] !== undefined) keys.add(k)
-  for (const k of Object.keys(bObj)) if (bObj[k] !== undefined) keys.add(k)
+  for (const k of Object.keys(aObj)) {
+    if (distinguishUndefined || aObj[k] !== undefined) keys.add(k)
+  }
+  for (const k of Object.keys(bObj)) {
+    if (distinguishUndefined || bObj[k] !== undefined) keys.add(k)
+  }
   for (const k of keys) {
-    if (!deepEqual(aObj[k], bObj[k])) return false
+    if (!deepEqual(aObj[k], bObj[k], distinguishUndefined)) return false
   }
   return true
 }

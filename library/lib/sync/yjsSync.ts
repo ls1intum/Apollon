@@ -5,6 +5,7 @@ import {
   getDiagramMetadata,
   getEdgesMap,
   getNodesMap,
+  STORE_ORIGIN,
 } from "@/sync/ydoc"
 import {
   Assessment,
@@ -12,6 +13,7 @@ import {
   CollaborationUser,
   CollaborationViewport,
   CollaboratorInfo,
+  LiveInteraction,
 } from "@/typings"
 import { sanitizeCollaborationViewport } from "@/utils/collaboration"
 import { Edge, Node } from "@xyflow/react"
@@ -31,6 +33,30 @@ export enum MessageType {
 }
 
 export type SendBroadcastMessage = (base64data: string) => void
+
+// Dev/test-only instrumentation, gated behind `import.meta.env.DEV`.
+type PerfCounters = {
+  broadcastYjsMsgs: number
+  broadcastYjsBytes: number
+  awarenessMsgs: number
+  storeNodeWrites: number
+}
+
+const perfCounters: PerfCounters = import.meta.env.DEV
+  ? {
+      broadcastYjsMsgs: 0,
+      broadcastYjsBytes: 0,
+      awarenessMsgs: 0,
+      storeNodeWrites: 0,
+    }
+  : (undefined as unknown as PerfCounters)
+
+export const getPerfCounters = (): PerfCounters | undefined =>
+  import.meta.env.DEV ? perfCounters : undefined
+
+export const recordStoreNodeWrite = () => {
+  if (import.meta.env.DEV) perfCounters.storeNodeWrites++
+}
 
 export class YjsSync {
   private readonly stopYjsObserver: () => void
@@ -106,6 +132,12 @@ export class YjsSync {
     selectedElementId: string | null
   ) => {
     this.awareness.setLocalStateField("selectedElementId", selectedElementId)
+  }
+
+  public setLocalAwarenessLiveInteraction = (
+    interaction: LiveInteraction | null
+  ) => {
+    this.awareness.setLocalStateField("liveInteraction", interaction)
   }
 
   public setLocalAwarenessState = (state: Partial<CollaborationState>) => {
@@ -214,7 +246,38 @@ export class YjsSync {
     ) {
       state.followingClientId = null
     }
+    if (obj.liveInteraction != null) {
+      state.liveInteraction = YjsSync.narrowLiveInteraction(obj.liveInteraction)
+    }
     return state
+  }
+
+  private static narrowLiveInteraction(raw: unknown): LiveInteraction | null {
+    if (raw == null || typeof raw !== "object") return null
+    const obj = raw as Record<string, unknown>
+    const position = obj.position as Record<string, unknown> | undefined
+    if (
+      typeof obj.id !== "string" ||
+      position == null ||
+      typeof position !== "object" ||
+      typeof position.x !== "number" ||
+      !Number.isFinite(position.x) ||
+      typeof position.y !== "number" ||
+      !Number.isFinite(position.y)
+    ) {
+      return null
+    }
+    const interaction: LiveInteraction = {
+      id: obj.id,
+      position: { x: position.x, y: position.y },
+    }
+    if (typeof obj.width === "number" && Number.isFinite(obj.width)) {
+      interaction.width = obj.width
+    }
+    if (typeof obj.height === "number" && Number.isFinite(obj.height)) {
+      interaction.height = obj.height
+    }
+    return interaction
   }
 
   private getTypedStates(): Map<number, CollaborationState> {
@@ -255,6 +318,16 @@ export class YjsSync {
     fullMessage.set(payload, 1)
 
     const base64Message = YjsSync.uint8ToBase64(fullMessage)
+
+    if (import.meta.env.DEV) {
+      if (messageType === MessageType.YjsUpdate) {
+        perfCounters.broadcastYjsMsgs++
+        perfCounters.broadcastYjsBytes += fullMessage.length
+      } else if (messageType === MessageType.AwarenessUpdate) {
+        perfCounters.awarenessMsgs++
+      }
+    }
+
     this.sendBroadcastMessage(base64Message)
   }
 
@@ -264,7 +337,7 @@ export class YjsSync {
 
   public handleReceivedData = (base64Data: string) => {
     // Decode the base64 string to Uint8Array
-    const decodedData = this.base64ToUint8(base64Data)
+    const decodedData = YjsSync.base64ToUint8(base64Data)
     const messageType = decodedData[0]
 
     if (messageType === MessageType.YjsUpdate) {
@@ -296,7 +369,7 @@ export class YjsSync {
       transaction: Y.Transaction
     ) => {
       if (
-        transaction.origin !== "store" &&
+        transaction.origin !== STORE_ORIGIN &&
         !this.isUndoRedoTransaction(transaction) &&
         !previewSuppressed()
       ) {
@@ -309,7 +382,7 @@ export class YjsSync {
       transaction: Y.Transaction
     ) => {
       if (
-        transaction.origin !== "store" &&
+        transaction.origin !== STORE_ORIGIN &&
         !this.isUndoRedoTransaction(transaction) &&
         !previewSuppressed()
       ) {
@@ -322,7 +395,7 @@ export class YjsSync {
       transaction: Y.Transaction
     ) => {
       if (
-        transaction.origin !== "store" &&
+        transaction.origin !== STORE_ORIGIN &&
         !this.isUndoRedoTransaction(transaction) &&
         !previewSuppressed()
       ) {
@@ -335,7 +408,7 @@ export class YjsSync {
       transaction: Y.Transaction
     ) => {
       if (
-        transaction.origin !== "store" &&
+        transaction.origin !== STORE_ORIGIN &&
         !this.isUndoRedoTransaction(transaction) &&
         !previewSuppressed()
       ) {
@@ -353,7 +426,7 @@ export class YjsSync {
       // Late-joining peers receive full state via the YjsSYNC handshake.
       if (
         this.sendBroadcastMessage &&
-        (transaction.origin === "store" ||
+        (transaction.origin === STORE_ORIGIN ||
           this.isUndoRedoTransaction(transaction))
       ) {
         this.sendFramedMessage(MessageType.YjsUpdate, update)
@@ -424,13 +497,15 @@ export class YjsSync {
    *  Convert Uint8Array to Base64 string
    */
   static uint8ToBase64(uint8: Uint8Array): string {
-    // For large arrays, process in chunks to avoid stack overflow
-    const chunkSize = 8192 // Process 8KB at a time
-    let binary = ""
+    const toBase64 = (uint8 as Uint8Array & { toBase64?: () => string })
+      .toBase64
+    if (typeof toBase64 === "function") {
+      return toBase64.call(uint8)
+    }
 
-    for (let i = 0; i < uint8.length; i += chunkSize) {
-      const chunk = uint8.slice(i, i + chunkSize)
-      binary += String.fromCharCode(...chunk)
+    let binary = ""
+    for (let i = 0; i < uint8.length; i++) {
+      binary += String.fromCharCode(uint8[i])
     }
 
     return btoa(binary)
@@ -439,7 +514,7 @@ export class YjsSync {
   /**
    * Convert Base64 string to Uint8Array
    */
-  private base64ToUint8(base64: string): Uint8Array {
+  static base64ToUint8(base64: string): Uint8Array {
     const binary = atob(base64)
     const bytes = new Uint8Array(binary.length)
     for (let i = 0; i < binary.length; i++) {

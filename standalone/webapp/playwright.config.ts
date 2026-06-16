@@ -35,6 +35,39 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
+      // The perf suite has its own serial, retry-free project below; keep it
+      // out of the parallel functional run.
+      testIgnore: "**/perf/**",
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: 1280, height: 720 },
+      },
+    },
+    // Firefox is where the Apollon-in-Artemis exam freeze was observed, so the
+    // functional suite should run there too. It's opt-in (PLAYWRIGHT_FIREFOX=1
+    // via `pnpm test:e2e:firefox`) so the default run — and CI that only
+    // installs chromium — doesn't fail launching an uninstalled browser. Enable
+    // it in a CI job that runs `playwright install firefox` first.
+    ...(process.env.PLAYWRIGHT_FIREFOX === "1"
+      ? [
+          {
+            name: "firefox",
+            testIgnore: "**/perf/**",
+            use: {
+              ...devices["Desktop Firefox"],
+              viewport: { width: 1280, height: 720 },
+            },
+          },
+        ]
+      : []),
+    {
+      // Document-growth / broadcast budgets. Measurements must be stable:
+      // run serially (one page contending for CPU at a time) and never retry,
+      // so a flaky pass can't mask a real regression.
+      name: "perf",
+      testDir: "./tests/perf",
+      fullyParallel: false,
+      retries: 0,
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 1280, height: 720 },

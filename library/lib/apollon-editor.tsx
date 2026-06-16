@@ -33,7 +33,13 @@ import {
   AlignmentGuidesStoreContext,
   EdgeGeometryStoreContext,
 } from "./store/context"
-import { MessageType, SendBroadcastMessage, YjsSync } from "./sync/yjsSync"
+import {
+  getPerfCounters,
+  MessageType,
+  SendBroadcastMessage,
+  YjsSync,
+} from "./sync/yjsSync"
+import { getNodesMap, getEdgesMap } from "./sync/ydoc"
 import * as Y from "yjs"
 import { StoreApi } from "zustand"
 import * as Apollon from "./typings"
@@ -69,6 +75,7 @@ const disabledCollaboration = {
 const noopCollaborationAwareness = {
   setLocalAwarenessCursor: () => {},
   setLocalAwarenessSelectedElement: () => {},
+  setLocalAwarenessLiveInteraction: () => {},
   setLocalAwarenessViewport: () => {},
   setLocalAwarenessFollowing: () => {},
   getAwarenessStates: () => new Map(),
@@ -203,6 +210,8 @@ export class ApollonEditor {
                         this.syncManager.setLocalAwarenessCursor,
                       setLocalAwarenessSelectedElement:
                         this.syncManager.setLocalAwarenessSelectedElement,
+                      setLocalAwarenessLiveInteraction:
+                        this.syncManager.setLocalAwarenessLiveInteraction,
                       setLocalAwarenessViewport:
                         this.syncManager.setLocalAwarenessViewport,
                       setLocalAwarenessFollowing:
@@ -797,6 +806,46 @@ export class ApollonEditor {
 
   public addOrUpdateAssessment(assessment: Apollon.Assessment): void {
     this.diagramStore.getState().addOrUpdateAssessment(assessment)
+  }
+
+  /**
+   * Dev/test-only performance probe; returns `undefined` in production.
+   * @internal — not part of the public API; stripped from the published d.ts.
+   */
+  public __perf():
+    | {
+        encodedDocBytes: number
+        structCount: number
+        nodesMapSize: number
+        edgesMapSize: number
+        undoStackDepth: number
+        broadcastYjsMsgs: number
+        broadcastYjsBytes: number
+        awarenessMsgs: number
+        storeNodeWrites: number
+      }
+    | undefined {
+    if (!import.meta.env.DEV) return undefined
+
+    let structCount = 0
+    for (const structs of this.ydoc.store.clients.values()) {
+      structCount += structs.length
+    }
+
+    const counters = getPerfCounters()
+
+    return {
+      encodedDocBytes: Y.encodeStateAsUpdate(this.ydoc).byteLength,
+      structCount,
+      nodesMapSize: getNodesMap(this.ydoc).size,
+      edgesMapSize: getEdgesMap(this.ydoc).size,
+      undoStackDepth:
+        this.diagramStore.getState().undoManager?.undoStack.length ?? 0,
+      broadcastYjsMsgs: counters?.broadcastYjsMsgs ?? 0,
+      broadcastYjsBytes: counters?.broadcastYjsBytes ?? 0,
+      awarenessMsgs: counters?.awarenessMsgs ?? 0,
+      storeNodeWrites: counters?.storeNodeWrites ?? 0,
+    }
   }
 
   static generateInitialSyncMessage(): string {
