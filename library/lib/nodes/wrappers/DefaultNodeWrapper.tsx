@@ -1,6 +1,7 @@
 import { AssessmentSelectableWrapper } from "@/components/wrapper/AssessmentSelectableWrapper"
 import { FeedbackDropzone } from "@/components/wrapper/FeedbackDropzone"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
+import { useReactiveNode } from "@/hooks/useReactiveElement"
 import { useMetadataStore } from "@/store/context"
 import {
   getAxisHandlePlan,
@@ -8,7 +9,7 @@ import {
   reduceVisibleArcCountForZoom,
 } from "@/utils"
 import { CANVAS } from "@/constants"
-import { Handle, Position, useReactFlow, useStore } from "@xyflow/react"
+import { Handle, Position, useStore } from "@xyflow/react"
 import { type CSSProperties, useMemo } from "react"
 import { useShallow } from "zustand/shallow"
 
@@ -112,8 +113,10 @@ export function DefaultNodeWrapper({
   hiddenHandles = [],
   className,
 }: Props) {
-  const { getNode } = useReactFlow()
-  const node = getNode(elementId)
+  // Subscribe to the node so resize/type changes re-render the wrapper; an
+  // imperative getNode() read here goes stale once the React Compiler memoizes
+  // this component (it wraps every node, so the staleness would be pervasive).
+  const node = useReactiveNode(elementId)
   const nodeType = node?.type
   const nodeWidth = node?.width ?? 0
   const nodeHeight = node?.height ?? 0
