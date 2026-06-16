@@ -37,9 +37,10 @@ authored on, so nodes grow or shrink relative to their saved positions — and
 overlap. That is exactly the symptom of a headless export that "looks nothing
 like the website".
 
-> **Use a version that bundles Inter.** Self-hosted Inter ships in
-> `@tumaet/apollon` ≥ 4.7.0. On older versions you must inject the Inter font
-> into the page yourself before exporting.
+> **Use a version that bundles Inter.** Self-hosted Inter ships in current
+> `@tumaet/apollon` releases; on an older one you must inject the Inter font
+> into the page yourself before exporting. The recipe below uses `@latest` for
+> brevity — pin a specific version for reproducible batch runs.
 
 ## Recipe: model JSON → SVG with Playwright
 
@@ -52,7 +53,7 @@ that matter: **load the stylesheet** and **await the fonts**.
 import { chromium } from "playwright"
 import { readFileSync, writeFileSync } from "node:fs"
 
-const VERSION = "4.7.0" // pin a version that bundles Inter
+const VERSION = "latest" // or pin a specific version that bundles Inter
 
 const model = JSON.parse(readFileSync(process.argv[2], "utf8"))
 
@@ -100,10 +101,9 @@ The SVG above is self-contained. To rasterise:
   `<img>` and screenshot that.
 - **[`@resvg/resvg-js`](https://github.com/yisibl/resvg-js)** (fast, no
   browser): resvg does not resolve data-URI `@font-face`, so pass Inter
-  explicitly via `fontFiles` / `fontBuffers` and set `defaultFontFamily:
-"Inter"`. Use the same Inter you render the editor with for pixel-identical
-  output. The standalone webapp's `tests/helpers/resvgRender.ts` is a working
-  reference.
+  explicitly via `fontFiles` and set `defaultFontFamily: "Inter"`. Use the same
+  Inter you render the editor with for pixel-identical output. The standalone
+  webapp's `tests/helpers/resvgRender.ts` is a working reference.
 
 ## Bundler / offline variant
 

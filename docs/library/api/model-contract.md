@@ -50,7 +50,10 @@ type UMLModel = {
   nodes: ApollonNode[] // diagram elements
   edges: ApollonEdge[] // relationships
   assessments: { [elementId: string]: Assessment }
-  interactive?: { elements; relationships }
+  interactive?: {
+    elements: { [id: string]: boolean }
+    relationships: { [id: string]: boolean }
+  }
 }
 ```
 
@@ -63,17 +66,16 @@ malformed `nodes`/`edges` array.
 Each node and edge carries a `data` object whose shape depends on its `type`
 (a class node's `name` / `attributes` / `methods`, a BPMN task's `taskType`, an
 edge's multiplicities, colors, …). The schema intentionally leaves `data` open
-(`additionalProperties`) rather than under-describing it: a full discriminated
-union of all ~50 node types is tracked as
-[follow-up work](https://github.com/ls1intum/Apollon/issues/748). For the
-concrete per-type fields today, read `lib/types/nodes/NodeProps.ts` and
-`lib/edges/EdgeProps.ts` in the source.
+(`additionalProperties`) rather than under-describing it; a full discriminated
+union of all ~50 node types is planned follow-up work. For the concrete per-type
+fields today, read `lib/types/nodes/NodeProps.ts` and `lib/edges/EdgeProps.ts`
+in the source.
 
 ## Versioning policy
 
 `version` tracks the **wire-format major line (4.x)** — _not_ the npm package
-version. A library published as `4.6.0` still stamps freshly-normalised models
-`4.0.0`, because the v4 _shape_ has not changed.
+version. `importDiagram` stamps `4.0.0` when it _converts_ a v2 / v3 payload;
+an already-v4 model passes through with its existing version string untouched.
 
 | Change                | Bump  | What you do                                       |
 | --------------------- | ----- | ------------------------------------------------- |

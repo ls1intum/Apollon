@@ -101,8 +101,8 @@ export const CSS_VARIABLE_FALLBACKS: Readonly<Record<string, string>> =
 export const STROKE_COLOR = CSS_VARIABLE_FALLBACKS["--apollon-primary-contrast"]
 export const FILL_COLOR = CSS_VARIABLE_FALLBACKS["--apollon-background"]
 
-// Re-exported from the dependency-free leaf module so existing `@/constants`
-// importers keep working; see `lib/fontStack.ts` for why it lives there.
+// Re-exported from the leaf module (see lib/fontStack.ts) so `@/constants`
+// importers keep working.
 export { FONT_FAMILY, DEFAULT_FONT_SIZE }
 export const INTERACTIVE_SELECTION_COLOR = `var(--apollon-interactive-selection, ${CSS_VARIABLE_FALLBACKS["--apollon-interactive-selection"]})`
 export const INTERACTIVE_SELECTION_FILL = `color-mix(in srgb, var(--apollon-interactive-selection, ${CSS_VARIABLE_FALLBACKS["--apollon-interactive-selection"]}) 18%, transparent)`
@@ -122,14 +122,13 @@ export const LAYOUT = Object.freeze({
   LINE_WIDTH_EDGE: 2,
   ICON_LINE_WIDTH: 1.5,
   /**
-   * Typography tokens for wrapped node labels. `NAME_FONT_SIZE` matches the
-   * SVG `<text>` browser default so un-styled labels don't visibly shrink,
-   * and `NAME_LINE_HEIGHT` is `round(16 * 1.2)` — what pretext uses internally
-   * and what `MultilineText` falls back to when no explicit line-height is
-   * passed. Used by every node that wraps its label.
+   * Typography tokens for wrapped node labels. `NAME_FONT_SIZE` is the shared
+   * diagram text size (so measured and rendered labels agree); `NAME_LINE_HEIGHT`
+   * is `round(size * 1.2)` — what pretext uses internally and what `MultilineText`
+   * falls back to when no explicit line-height is passed.
    */
-  NAME_FONT_SIZE: 16,
-  NAME_LINE_HEIGHT: 19,
+  NAME_FONT_SIZE: DEFAULT_FONT_SIZE,
+  NAME_LINE_HEIGHT: Math.round(DEFAULT_FONT_SIZE * 1.2),
   /** Stereotype tspans like `«component»` render at 0.8em of the name font. */
   STEREOTYPE_LINE_HEIGHT: 15,
   STEREOTYPE_NAME_GAP: 4,

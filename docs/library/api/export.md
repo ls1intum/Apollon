@@ -35,16 +35,10 @@ const svgExport = await ApollonEditor.exportModelAsSvg(importDiagram(model), {
 })
 ```
 
-`exportModelAsSvg` mounts the editor off-screen, lets it lay out, then
-serialises the rendered SVG — so it needs a **real browser DOM**. Node sizes
-are computed from the rendered text (canvas `measureText` and `getBBox`), which
-jsdom does not implement faithfully (no canvas, stubbed `getBBox`), so a
-DOM-only shim is not enough.
-
-If you are rendering saved models in a batch — e.g. reviewing diagram
-submission versions — run it in a **real browser via Playwright or Puppeteer**.
-See the step-by-step recipe and the common pitfall (mismatched fonts →
-overlapping elements) in **[Headless rendering](./headless-rendering)**.
+`exportModelAsSvg` mounts the editor off-screen and serialises the rendered
+SVG, so it needs a **real browser DOM** (not jsdom). To render saved models in
+a batch — e.g. reviewing diagram submission versions — use the Playwright recipe
+and the font pitfall in **[Headless rendering](./headless-rendering)**.
 
 :::tip Always normalise first
 Pass models through `importDiagram(...)` before exporting. It upgrades v2 / v3

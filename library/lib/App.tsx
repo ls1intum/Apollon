@@ -17,8 +17,8 @@ import {
   AlignmentGuides,
 } from "@/components"
 import "@xyflow/react/dist/style.css"
-// Self-hosted Inter must register before app.css so diagram text measures and
-// renders against a deterministic font (prevents headless-export overlaps).
+// Register the bundled Inter @font-face at module load, so the face exists
+// before diagram <text> elements (which request the Inter family) first paint.
 import "@/styles/fonts.css"
 import "@/styles/app.css"
 import { useDiagramStore, useMetadataStore } from "./store/context"

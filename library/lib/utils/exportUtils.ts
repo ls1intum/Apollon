@@ -4,12 +4,9 @@ import { DEFAULT_FONT_SIZE, FONT_FAMILY } from "@/fontStack"
 import { Point } from "./pathParsing"
 
 /**
- * Font styles for exported SVGs.
- * Uses the same font stack as the browser (app.css) so the export looks identical
- * when opened in a browser. In `compat` mode we additionally embed the Inter
- * woff2 as an `@font-face` (see `embedInterFont`) so non-browser renderers
- * (resvg, Inkscape, PowerPoint) measure and draw with the exact same metrics
- * the editor used — without it they fall back to a system font and text drifts.
+ * Font stack for exported SVGs (matches the browser). `compat` mode also embeds
+ * the Inter woff2 as an `@font-face` via `embedFontFaceCss` so non-browser
+ * renderers draw with the same metrics instead of a system fallback.
  */
 const svgFontStyles = `
     text {
@@ -67,10 +64,8 @@ export const getSVG = (
   clip: Rect,
   options?: ExportFilterOptions,
   /**
-   * Optional `@font-face` CSS to embed (compat mode only). The library loads
-   * the Inter woff2 lazily and passes it here so the export is self-contained;
-   * keeping it a parameter avoids statically bundling ~110 KB of base64 into
-   * the main entry. See `exportFonts.ts` and `embedFontFaceCss`.
+   * Optional `@font-face` CSS to embed (compat mode only). Passed in rather than
+   * imported so the woff2 stays out of the main entry bundle (see exportFonts.ts).
    */
   fontFaceCss?: string
 ): string => {

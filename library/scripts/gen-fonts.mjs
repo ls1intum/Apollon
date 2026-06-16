@@ -1,16 +1,14 @@
 // Regenerate the bundled Inter woff2 subset shipped in lib/assets/fonts/.
 //
-// Source of truth: the full Inter TTFs the visual-regression harness renders
-// with (standalone/webapp/tests/fonts). Subsetting from the SAME files keeps
-// the editor's canvas measureText metrics byte-identical to what resvg draws,
-// which is what makes headless exports match the on-screen editor.
+// Subsets from the SAME Inter TTFs the visual-regression harness renders with
+// (standalone/webapp/tests/fonts — Inter 4.001, git-9221beed3) so canvas
+// measureText metrics stay byte-identical to what resvg draws — the basis of
+// the determinism guarantee. Run: pnpm --filter @tumaet/apollon run gen:fonts
 //
-// Run:  pnpm --filter @tumaet/apollon run gen:fonts
-//
-// The subset covers Latin + Latin-1/Extended-A + the punctuation, dashes,
-// quotes, ellipsis, arrows and math glyphs UML labels use (e.g. guillemets
-// «» for stereotypes, the … overflow ellipsis). Widen the ranges below if a
-// real diagram needs a glyph that currently falls back to a system font.
+// The subset covers Latin + the few non-ASCII glyphs Apollon renders as SVG
+// text (guillemets «» for stereotypes, the … overflow ellipsis, en/em dashes).
+// Arbitrary user labels outside this range fall back to a system font; widen
+// the ranges if a real diagram needs more.
 
 import subsetFont from "subset-font"
 import { readFile, writeFile } from "node:fs/promises"
@@ -24,12 +22,10 @@ const OUT_DIR = resolve(here, "../lib/assets/fonts")
 const ranges = [
   [0x20, 0x7e], // Basic Latin (printable ASCII)
   [0xa0, 0xff], // Latin-1 Supplement (« » U+00AB/BB, ×, ÷, accented latin)
-  [0x100, 0x17f], // Latin Extended-A
+  [0x100, 0x17f], // Latin Extended-A (accented latin)
   [0x2013, 0x2014], // en / em dash
   [0x2018, 0x201f], // smart quotes
   [0x2026, 0x2026], // horizontal ellipsis … (overflow truncation marker)
-  [0x2190, 0x21ff], // arrows
-  [0x2200, 0x22ff], // mathematical operators
 ]
 
 let chars = ""

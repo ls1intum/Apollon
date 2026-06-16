@@ -10,7 +10,7 @@ the `Inter` family its font stack leads with — so rendering fell through to
 Chromium. That mismatch grew nodes past their saved positions and made exported
 diagrams overlap (e.g. when rendering submission versions with Playwright).
 
-Apollon now bundles a Latin + UML-symbol subset of Inter (weights 400/700) as an
+Apollon now bundles a Latin subset of Inter (weights 400/700) as an
 `@font-face` inlined into `style.css`, pinning the measured metrics across the
 editor, headless export, the server, and external SVG renderers. `compat`-mode
 SVG exports additionally embed the font as a base64 `@font-face` (loaded lazily

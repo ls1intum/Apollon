@@ -47,6 +47,8 @@ export function buildModelSchema() {
 
   if (!schema) throw new Error("typescript-json-schema returned no schema")
 
+  // typescript-json-schema emits draft-07 (`definitions`, not `$defs`); we keep
+  // it deliberately for the widest validator and $ref-tooling compatibility.
   schema.$id = SCHEMA_ID
   schema.title = "Apollon UML model (v4)"
   schema.description =

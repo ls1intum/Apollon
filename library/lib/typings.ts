@@ -102,8 +102,11 @@ export type ApollonEdge = {
 }
 
 export type InteractiveElements = {
-  elements: Record<string, boolean>
-  relationships: Record<string, boolean>
+  // Inline index signatures (not `Record<string, boolean>`) so the generated
+  // JSON Schema treats these as open maps of element id → boolean. The named
+  // `Record` utility is emitted as a closed object and would reject real ids.
+  elements: { [id: string]: boolean }
+  relationships: { [id: string]: boolean }
 }
 
 export type UMLModel = {

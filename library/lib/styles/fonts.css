@@ -1,22 +1,9 @@
 /*
- * Self-hosted Inter — the leading family in Apollon's diagram font stack
- * (see FONT_FAMILY in lib/constants.ts).
- *
- * Node geometry is derived from canvas `measureText`, so the resolved font
- * must be deterministic across every renderer (editor, headless export,
- * server PDF). Bundling Inter here pins those metrics; without it the stack
- * falls through to `system-ui`, whose metrics differ between a desktop
- * browser and a headless/CI Chromium — which is exactly what makes exported
- * diagrams overlap.
- *
- * These woff2 files are a Latin + UML-symbol subset of the same Inter the
- * visual-regression harness renders with, so the editor measures and the
- * exporter draws against byte-identical glyph metrics. Regenerate them with
- * `pnpm --filter @tumaet/apollon run gen:fonts`.
- *
- * The url() references resolve to base64 `data:` URLs inlined into the single
- * published `style.css` (see `assetsInlineLimit` in vite.config.ts), so CDN /
- * esm.sh consumers get the font with zero extra requests and no 404 risk.
+ * Self-hosted Inter — the leading family in the diagram font stack (see
+ * lib/fontStack.ts for why it must be deterministic). A Latin subset of the
+ * Inter the visual harness renders with; regenerate via `gen:fonts`. The url()s
+ * inline into the single published style.css — see the inlining trade-off note
+ * on `assetsInlineLimit` in vite.config.ts.
  */
 
 @font-face {

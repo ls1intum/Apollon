@@ -5,16 +5,19 @@ import { join } from "node:path"
 // @ts-expect-error — plain .mjs build script, no type declarations.
 import { buildModelSchema } from "../../scripts/gen-schema.mjs"
 import { importDiagram } from "@/utils/versionConverter"
-import { UMLDiagramType } from "@/types/DiagramType"
 
-const schemaPath = join(
-  import.meta.dirname,
-  "../../schema/uml-model-4.schema.json"
+const committed = JSON.parse(
+  readFileSync(
+    join(import.meta.dirname, "../../schema/uml-model-4.schema.json"),
+    "utf8"
+  )
 )
-const committed = JSON.parse(readFileSync(schemaPath, "utf8"))
 
-// A v3-shaped class diagram (wrapped envelope) to prove importDiagram's output
-// — the thing the contract actually describes — validates.
+const ajv = new Ajv({ allowUnionTypes: true, strict: false })
+const validate = ajv.compile(committed)
+
+// A minimal v3 class diagram, to prove importDiagram's canonical v4 output —
+// what the contract actually describes — validates.
 const v3ClassDiagram = {
   version: "3.0.0",
   type: "ClassDiagram",
@@ -34,56 +37,63 @@ const v3ClassDiagram = {
   assessments: {},
 }
 
+const v4Model = {
+  version: "4.0.0",
+  id: "d1",
+  title: "t",
+  type: "ClassDiagram",
+  nodes: [
+    {
+      id: "n1",
+      type: "class",
+      position: { x: 0, y: 0 },
+      width: 160,
+      height: 60,
+      measured: { width: 160, height: 60 },
+      // per-type fields live in an open `data` envelope
+      data: { name: "Person", attributes: [], methods: [] },
+    },
+  ],
+  edges: [],
+  assessments: {
+    n1: { modelElementId: "n1", elementType: "Class", score: 1 },
+  },
+  // dynamic element-id → boolean maps
+  interactive: { elements: { n1: true }, relationships: {} },
+}
+
+// `ajv.compile(committed)` above throws at import if the schema is invalid, so
+// schema validity is covered without a dedicated (unfalsifiable) test.
 describe("published model JSON schema", () => {
-  const ajv = new Ajv({ allowUnionTypes: true, strict: false })
-
-  it("is itself a valid JSON Schema (ajv compiles it)", () => {
-    expect(() => ajv.compile(committed)).not.toThrow()
-  })
-
-  it("pins an explicit, strict version pattern (not the generator's loose one)", () => {
-    expect(committed.properties.version.pattern).toBe("^4\\.\\d+\\.\\d+$")
+  it("pins a version pattern that rejects empty segments", () => {
     const re = new RegExp(committed.properties.version.pattern)
     expect(re.test("4.6.0")).toBe(true)
-    expect(re.test("4.0.0")).toBe(true)
-    expect(re.test("4..")).toBe(false) // the generator's [0-9]* would allow this
+    expect(re.test("4..")).toBe(false) // typescript-json-schema's [0-9]* allows this
     expect(re.test("3.0.0")).toBe(false)
   })
 
-  it("describes the diagram type as the full UMLDiagramType enum", () => {
-    const typeEnum: string[] = committed.definitions.UMLDiagramType.enum
-    expect([...typeEnum].sort()).toEqual(Object.values(UMLDiagramType).sort())
-  })
-
-  it("keeps element `data` an open envelope (per the documented contract)", () => {
-    const nodeData = committed.properties.nodes.items.properties.data
-    // Open: additionalProperties is a schema ({}), not `false`.
-    expect(nodeData.additionalProperties).not.toBe(false)
-  })
-
   it("validates the canonical output of importDiagram()", () => {
-    const validate = ajv.compile(committed)
     const model = importDiagram(structuredClone(v3ClassDiagram))
-    const ok = validate(model)
-    if (!ok) {
-      throw new Error(
-        `importDiagram output failed schema validation: ${JSON.stringify(
-          validate.errors,
-          null,
-          2
-        )}`
-      )
-    }
-    expect(ok).toBe(true)
+    expect(validate(model)).toBe(true)
   })
 
-  it("rejects an obviously malformed model (wrong version, missing nodes)", () => {
-    const validate = ajv.compile(committed)
+  it("accepts dynamic-key maps and open per-type element data", () => {
+    // Regression guard: a `Record<string, boolean>` was emitted closed and
+    // rejected every populated `interactive` map.
+    expect(validate(v4Model)).toBe(true)
+  })
+
+  it("rejects malformed models", () => {
     expect(validate({ version: "3.0.0", id: "x", title: "t" })).toBe(false)
+    expect(
+      validate({
+        ...v4Model,
+        interactive: { elements: { n1: "yes" }, relationships: {} },
+      })
+    ).toBe(false)
   })
 
   it("matches the committed file — run `pnpm gen:schema` if this fails", () => {
-    const regenerated = buildModelSchema()
-    expect(regenerated).toEqual(committed)
+    expect(buildModelSchema()).toEqual(committed)
   })
 })

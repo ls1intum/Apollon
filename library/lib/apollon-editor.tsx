@@ -431,17 +431,15 @@ export class ApollonEditor {
       height: bounds.height + margin * 2,
     }
 
-    // Compat exports embed the bundled Inter as a base64 @font-face so the SVG
-    // renders in the right font away from the editor. Loaded lazily so the
-    // ~110 KB of font data stays out of the main entry bundle (web mode and
-    // non-export consumers never pay for it).
+    // Compat exports embed Inter as a base64 @font-face, loaded lazily so the
+    // font stays out of the main bundle (see exportFonts.ts).
     let fontFaceCss: string | undefined
     if (options?.svgMode === "compat") {
       try {
         fontFaceCss = (await import("./utils/exportFonts")).INTER_FONT_FACE_CSS
       } catch {
-        // Best-effort: a failed font chunk load must not abort the export.
-        // The SVG still references the "Inter" family by name.
+        // Best-effort: a failed font-chunk load must not abort the export
+        // (the SVG still names the Inter family).
         fontFaceCss = undefined
       }
     }

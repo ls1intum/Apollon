@@ -46,13 +46,12 @@ export default defineConfig({
     outDir: isPeerBuild ? "dist/react" : "dist",
     emptyOutDir: !isPeerBuild,
     cssCodeSplit: false,
-    // Force the bundled Inter woff2 (referenced from lib/styles/fonts.css) to
-    // be base64-inlined into the single published style.css, so CDN / esm.sh
-    // consumers get the font with zero extra requests and no sibling-asset
-    // 404s. The files exceed Vite's 4 KB default limit, so without this they'd
-    // be emitted as separate assets. A function keeps every other asset on the
-    // default rule. `?inline` imports (exportFonts.ts) are always inlined
-    // regardless of this setting.
+    // Base64-inline the bundled Inter woff2 (from lib/styles/fonts.css) into the
+    // single published style.css instead of emitting separate assets (they
+    // exceed Vite's 4 KB default). Trade-off: every style.css consumer downloads
+    // the font inline — no separate request or 404 risk, but ~33% base64
+    // overhead and no per-file HTTP caching. Acceptable for a small Latin
+    // subset. The function scopes this to fonts; other assets keep the default.
     assetsInlineLimit: (filePath) =>
       /\.woff2?($|\?)/.test(filePath) ? true : undefined,
     lib: {
