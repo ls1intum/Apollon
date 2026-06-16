@@ -2,7 +2,7 @@ import { Box } from "@mui/material"
 import { EdgeStyleEditor, Typography } from "@/components/ui"
 import { useReactFlow } from "@xyflow/react"
 import { SwapHorizIcon } from "@/components/Icon"
-import { useEdgePopOver } from "@/hooks"
+import { useEdgePopOver, useReactiveEdge } from "@/hooks"
 import { PopoverProps } from "../types"
 import { CustomEdgeProps } from "@/edges"
 import { EdgeTypeSelect, EdgeTypeOption } from "./EdgeTypeSelect"
@@ -16,9 +16,9 @@ const COMPONENT_EDGE_TYPE_OPTIONS: ReadonlyArray<EdgeTypeOption> = [
 export const ComponentEdgeEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
-  const { getEdge, getNode, updateEdgeData } = useReactFlow()
+  const { getNode, updateEdgeData } = useReactFlow()
 
-  const edge = getEdge(elementId)
+  const edge = useReactiveEdge(elementId)
   const { handleEdgeTypeChange, handleSwap } = useEdgePopOver(elementId)
 
   if (!edge) {

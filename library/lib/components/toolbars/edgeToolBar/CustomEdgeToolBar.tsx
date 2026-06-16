@@ -98,6 +98,8 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
             }}
           >
             <Box
+              role="button"
+              aria-label="Delete edge"
               sx={{
                 width: "16px",
                 height: "16px",
@@ -115,6 +117,8 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
               <DeleteIcon style={{ width: 16, height: 16 }} />
             </Box>
             <Box
+              role="button"
+              aria-label="Edit edge"
               sx={{
                 width: "16px",
                 height: "16px",

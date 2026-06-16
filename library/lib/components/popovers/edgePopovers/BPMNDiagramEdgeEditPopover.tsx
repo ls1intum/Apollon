@@ -1,7 +1,7 @@
 import { Box } from "@mui/material"
 import { CustomEdgeProps } from "@/edges/EdgeProps"
 import { useReactFlow } from "@xyflow/react"
-import { useEdgePopOver } from "@/hooks"
+import { useEdgePopOver, useReactiveEdge } from "@/hooks"
 import { PopoverProps } from "../types"
 import { SwapHorizIcon } from "@/components/Icon"
 import { EdgeStyleEditor, TextField, Typography } from "@/components/ui"
@@ -17,9 +17,9 @@ const BPMN_EDGE_TYPE_OPTIONS: ReadonlyArray<EdgeTypeOption> = [
 export const BPMNDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
-  const { getEdge, getNode, updateEdgeData } = useReactFlow()
+  const { getNode, updateEdgeData } = useReactFlow()
 
-  const edge = getEdge(elementId)
+  const edge = useReactiveEdge(elementId)
   const { handleEdgeTypeChange, handleSwap, handleLabelChange } =
     useEdgePopOver(elementId)
 

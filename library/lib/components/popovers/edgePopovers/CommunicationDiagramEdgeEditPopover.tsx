@@ -1,4 +1,5 @@
 import { Box, IconButton } from "@mui/material"
+import { useReactiveEdge } from "@/hooks"
 import { useReactFlow } from "@xyflow/react"
 import { CustomEdgeProps, MessageData } from "@/edges/EdgeProps"
 import { ArrowBackIcon, ArrowForwardIcon, DeleteIcon } from "@/components/Icon"
@@ -11,8 +12,8 @@ import { log } from "../../../logger"
 export const CommunicationDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
-  const { getEdge, setEdges, getNode, updateEdgeData } = useReactFlow()
-  const edge = getEdge(elementId)
+  const { setEdges, getNode, updateEdgeData } = useReactFlow()
+  const edge = useReactiveEdge(elementId)
   const [messages, setMessages] = useState<MessageData[]>([])
   const [newLabelInput, setNewLabelInput] = useState("")
   const [duplicateError, setDuplicateError] = useState(false)
