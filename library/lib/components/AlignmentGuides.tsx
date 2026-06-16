@@ -1,4 +1,4 @@
-import { useReactFlow } from "@xyflow/react"
+import { useStore } from "@xyflow/react"
 import { useAlignmentGuidesStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { AlignmentGuide } from "@/store/alignmentGuidesStore"
@@ -12,8 +12,16 @@ export const AlignmentGuides = () => {
     }))
   )
 
-  const { getViewport } = useReactFlow()
-  const viewport = getViewport()
+  // Subscribe to the live viewport (reactive) rather than reading getViewport()
+  // imperatively during render — the latter is non-reactive (stale on pan/zoom)
+  // and the React Compiler memoizes it, which offset the guides.
+  const viewport = useStore(
+    useShallow((state) => ({
+      x: state.transform[0],
+      y: state.transform[1],
+      zoom: state.transform[2],
+    }))
+  )
 
   if (!guides || guides.length === 0) {
     return null
