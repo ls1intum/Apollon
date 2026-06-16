@@ -58,6 +58,20 @@ export default defineConfig({
               viewport: { width: 1280, height: 720 },
             },
           },
+          {
+            // The freeze regression guard, run on the browser the freeze was
+            // actually reported in. Same serial, retry-free, long-timeout
+            // setup as the chromium `perf` project.
+            name: "perf-firefox",
+            testDir: "./tests/perf",
+            fullyParallel: false,
+            retries: 0,
+            timeout: 120_000,
+            use: {
+              ...devices["Desktop Firefox"],
+              viewport: { width: 1280, height: 720 },
+            },
+          },
         ]
       : []),
     {

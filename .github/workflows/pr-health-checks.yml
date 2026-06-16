@@ -207,6 +207,59 @@ jobs:
           path: standalone/webapp/playwright-report/
           retention-days: 14
 
+  # The exam freeze was reported in Firefox, so run the performance regression
+  # guard (encoded-doc growth, broadcast count, live collaboration) there too.
+  # The functional e2e suite isn't run on Firefox yet — it has a few
+  # pre-existing Firefox-only rendering quirks that need separate triage.
+  perf-firefox-tests:
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.should-skip != 'true' && needs.detect-changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@ac6db6d3c1f721f886538a378a2d73e85697340a # v6.0.8
+
+      - name: Set up Node
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm run build:lib
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-v1.59.1-${{ hashFiles('standalone/webapp/package.json') }}
+
+      - name: Install Playwright Firefox
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm --filter @tumaet/webapp exec playwright install firefox
+
+      - name: Install Playwright system deps
+        run: pnpm --filter @tumaet/webapp exec playwright install-deps firefox
+
+      - name: Run Firefox performance budget tests
+        run: pnpm --filter @tumaet/webapp run test:perf:firefox
+
+      - name: Upload Playwright report
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: playwright-report-perf-firefox
+          path: standalone/webapp/playwright-report/
+          retention-days: 14
+
       - name: Upload Playwright test results
         if: ${{ failure() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
