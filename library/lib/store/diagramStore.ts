@@ -18,7 +18,7 @@ import {
   reconcileYMap,
   STORE_ORIGIN,
 } from "@/sync/ydoc"
-import { recordStoreNodeWrite } from "@/sync/yjsSync"
+import { recordStoreNodeWrite } from "@/sync/perfCounters"
 import { deepEqual } from "@/utils/storeUtils"
 import { Assessment, InteractiveElements } from "@/typings"
 import {

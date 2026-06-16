@@ -33,12 +33,8 @@ import {
   AlignmentGuidesStoreContext,
   EdgeGeometryStoreContext,
 } from "./store/context"
-import {
-  getPerfCounters,
-  MessageType,
-  SendBroadcastMessage,
-  YjsSync,
-} from "./sync/yjsSync"
+import { getPerfCounters } from "./sync/perfCounters"
+import { MessageType, SendBroadcastMessage, YjsSync } from "./sync/yjsSync"
 import { getNodesMap, getEdgesMap } from "./sync/ydoc"
 import * as Y from "yjs"
 import { StoreApi } from "zustand"

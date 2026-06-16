@@ -24,6 +24,7 @@ import {
 } from "y-protocols/awareness"
 import * as Y from "yjs"
 import { StoreApi } from "zustand"
+import { perfCounters } from "./perfCounters"
 
 export enum MessageType {
   YjsSYNC = 0,
@@ -33,30 +34,6 @@ export enum MessageType {
 }
 
 export type SendBroadcastMessage = (base64data: string) => void
-
-// Dev/test-only instrumentation, gated behind `import.meta.env.DEV`.
-type PerfCounters = {
-  broadcastYjsMsgs: number
-  broadcastYjsBytes: number
-  awarenessMsgs: number
-  storeNodeWrites: number
-}
-
-const perfCounters: PerfCounters = import.meta.env.DEV
-  ? {
-      broadcastYjsMsgs: 0,
-      broadcastYjsBytes: 0,
-      awarenessMsgs: 0,
-      storeNodeWrites: 0,
-    }
-  : (undefined as unknown as PerfCounters)
-
-export const getPerfCounters = (): PerfCounters | undefined =>
-  import.meta.env.DEV ? perfCounters : undefined
-
-export const recordStoreNodeWrite = () => {
-  if (import.meta.env.DEV) perfCounters.storeNodeWrites++
-}
 
 export class YjsSync {
   private readonly stopYjsObserver: () => void
