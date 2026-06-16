@@ -116,6 +116,12 @@ jobs:
       - name: Run unit tests
         run: pnpm run test
 
+      - name: Run webapp unit tests
+        # Root `pnpm run test` covers only the library; run the webapp's vitest
+        # suite here too (it resolves @tumaet/apollon through the dist built
+        # above) so webapp logic like the autosaver is actually gated.
+        run: pnpm --filter @tumaet/webapp run test
+
   # Root `pnpm run test` covers only the library. The server's vitest suite
   # (incl. the PDF-conversion regression test) spawns the compiled worker and
   # provisions Redis via testcontainers, so it gets a dedicated job: build the
