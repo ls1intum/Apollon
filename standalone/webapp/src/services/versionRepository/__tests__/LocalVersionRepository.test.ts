@@ -124,6 +124,20 @@ describe("LocalVersionRepository", () => {
     expect(updated.id).toBe(summary.id)
   })
 
+  it("editInfo rejects a versionId that belongs to another diagram", async () => {
+    const other = await LocalVersionRepository.create(
+      "other-diagram",
+      nodeyModel(),
+      { name: "from-other" }
+    )
+
+    await expect(
+      LocalVersionRepository.editInfo(DIAGRAM_ID, other.id, {
+        description: "x",
+      })
+    ).rejects.toBeInstanceOf(ApiError)
+  })
+
   it("assigns monotonic seq across creates", async () => {
     const a = await LocalVersionRepository.create(DIAGRAM_ID, nodeyModel(), {
       name: "a",
