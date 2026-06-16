@@ -17,6 +17,10 @@ export interface PendingVersion extends VersionSummary {
 }
 
 interface PreviewState {
+  // The diagram this preview belongs to. `preview` is a single global slot, so
+  // consumers MUST ignore a preview whose diagramId isn't theirs — otherwise a
+  // preview left by one diagram leaks onto the next one opened.
+  diagramId: DiagramId
   versionId: VersionId
   body: UMLModel
 }
@@ -393,7 +397,7 @@ export const useVersionStore = create<VersionStore>()(
             diagramId,
             versionId
           )
-          set({ preview: { versionId, body } })
+          set({ preview: { diagramId, versionId, body } })
           // On deep-link the version list may be empty (fetchVersions and
           // enterPreview both start concurrently in the init effect but
           // enterPreview can resolve first). Trigger a list fetch so the

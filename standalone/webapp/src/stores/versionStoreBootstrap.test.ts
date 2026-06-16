@@ -78,6 +78,7 @@ describe("versionStoreBootstrap", () => {
       drawerOpenByDiagram: { [DIAGRAM_ID]: true },
       versions: { [DIAGRAM_ID]: [created] },
       preview: {
+        diagramId: DIAGRAM_ID,
         versionId: created.id,
         body: { id: DIAGRAM_ID } as never,
       },
@@ -151,6 +152,11 @@ describe("versionStoreBootstrap", () => {
 
     expect((await LocalVersionRepository.list(DIAGRAM_ID)).total).toBe(1)
 
+    // Reviewer's scenario: after visiting a shared diagram the active repository
+    // is the remote one (no purgeDiagram). Deleting a LOCAL diagram must still
+    // purge its IDB versions — the cascade goes through the local adapter, not
+    // the mutable active repository.
+    setVersionRepository(RemoteVersionRepository)
     usePersistenceModelStore.getState().deleteModel(DIAGRAM_ID)
     await flush()
     await flush()

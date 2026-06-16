@@ -4,7 +4,6 @@ import {
   setVersionRepository,
   RemoteVersionRepository,
 } from "@/services/versionRepository"
-import { ensureVersionStoreBootstrapped } from "@/stores/versionStoreBootstrap"
 import {
   ApollonEditor,
   ApollonMode,
@@ -90,7 +89,10 @@ export const ApollonWithConnection: React.FC = () => {
     color: string
   } | null>(null)
 
-  const preview = useVersionStore((s) => s.preview)
+  // Ignore a preview left behind by another diagram (single global slot).
+  const preview = useVersionStore((s) =>
+    s.preview?.diagramId === diagramId ? s.preview : null
+  )
   const restoreVersion = useVersionStore((s) => s.restoreVersion)
   const { openPreview, closePreview } = useVersionPreviewUrlSync(
     diagramId,
@@ -101,14 +103,6 @@ export const ApollonWithConnection: React.FC = () => {
   const fetchVersions = useVersionStore((s) => s.fetchVersions)
 
   useVersionShortcut(diagramId)
-
-  // Bootstrap wires the cross-tab BroadcastChannel + visibility refetch +
-  // cascade-delete subscription that local mode relies on; safe to install in
-  // collab too (the persistence-store subscription has no effect when no local
-  // diagram is being deleted).
-  useEffect(() => {
-    ensureVersionStoreBootstrapped()
-  }, [])
 
   useFlushOnUnload({
     diagramId,

@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react"
+import { lazy, Suspense, useEffect } from "react"
 import { createRootRoute, Outlet, useRouterState } from "@tanstack/react-router"
 import { Capacitor } from "@capacitor/core"
 import { AppProviders } from "@/AppProviders"
@@ -7,6 +7,7 @@ import { DeferredToastContainer } from "@/components/DeferredToastContainer"
 import { HomeNavbar } from "@/components/navbar/HomeNavbar"
 import { HomeFooter } from "@/components/home/HomeFooter"
 import { ErrorPage } from "@/pages/ErrorPage"
+import { ensureVersionStoreBootstrapped } from "@/stores/versionStoreBootstrap"
 
 // The editor navbar is heavy and only editor routes need it, so load it lazily.
 const Navbar = lazy(() =>
@@ -16,6 +17,13 @@ const Navbar = lazy(() =>
 )
 
 function RootLayout() {
+  // Install the version-store side-effects (delete cascade, cross-tab sync)
+  // app-wide so a gallery-only session — never opening an editor — still purges
+  // a deleted local diagram's versions. Idempotent.
+  useEffect(() => {
+    ensureVersionStoreBootstrapped()
+  }, [])
+
   // Pathname read OUTSIDE any matched route — the root renders above every match.
   const path = useRouterState({ select: (s) => s.location.pathname })
   const isHomeRoute = path === "/"

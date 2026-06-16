@@ -25,7 +25,6 @@ import {
   LocalVersionRepository,
   getVersionRepository,
 } from "@/services/versionRepository"
-import { ensureVersionStoreBootstrapped } from "@/stores/versionStoreBootstrap"
 import {
   VersionDrawer,
   VersionPreviewBanner,
@@ -83,12 +82,6 @@ export const ApollonLocal: FC = () => {
 
   useDocumentTitle(diagram?.model.title)
 
-  // Bootstrap once: cleanup-on-deleteModel subscription, BroadcastChannel
-  // listener, visibility refetch.
-  useEffect(() => {
-    ensureVersionStoreBootstrapped()
-  }, [])
-
   // Cross-window delete guard. If THIS diagram is deleted in another window,
   // rehydrate the persistence store so ours matches the deletion. Without it,
   // this window keeps autosaving its in-memory copy and resurrects the diagram
@@ -121,7 +114,12 @@ export const ApollonLocal: FC = () => {
     return () => window.removeEventListener("storage", onStorage)
   }, [diagramId])
 
-  const preview = useVersionStore((s) => s.preview)
+  // Ignore a preview left behind by another diagram (the store has one global
+  // preview slot); the URL hook clears it, but scoping here also closes the
+  // brief window before that effect runs.
+  const preview = useVersionStore((s) =>
+    s.preview?.diagramId === diagramId ? s.preview : null
+  )
   const fetchVersions = useVersionStore((s) => s.fetchVersions)
   const { openPreview, closePreview } = useVersionPreviewUrlSync(
     diagramId,

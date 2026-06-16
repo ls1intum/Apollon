@@ -106,6 +106,7 @@ describe("useVersionStore.preview", () => {
   it("exitPreview clears state", () => {
     useVersionStore.setState({
       preview: {
+        diagramId: "d1",
         versionId: "v1",
         body: { id: "d1" } as never,
       },

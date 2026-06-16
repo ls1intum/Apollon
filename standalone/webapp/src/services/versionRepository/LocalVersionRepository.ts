@@ -229,7 +229,11 @@ export const LocalVersionRepository = {
         "readwrite"
       )
       const target = await tx.objectStore("versions").get(versionId)
-      if (!target) {
+      // Verify the row belongs to THIS diagram (the `versions` store is keyed
+      // by versionId alone). Without it a stale cross-diagram versionId would
+      // snapshot under one diagram and restore another's body — same guard as
+      // editInfo/getBody.
+      if (!target || target.diagramId !== diagramId) {
         throw new ApiError(404, "NOT_FOUND", "Version not found locally.")
       }
       const label =
