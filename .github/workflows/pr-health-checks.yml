@@ -98,9 +98,14 @@ jobs:
         run: pnpm run format:check
 
       - name: Check build
-        # The library build script runs scripts/check-no-perf-hooks.mjs at its
-        # tail, so the DEV-probe leak guard is exercised here.
         run: pnpm run build
+
+      - name: Verify the DEV perf probe is stripped from the library build
+        # Asserts the import.meta.env.DEV-gated instrumentation dead-code-
+        # eliminates from library/dist. Kept as its own step rather than in the
+        # library build script so the Docker image build (which doesn't copy
+        # scripts/) isn't affected.
+        run: node scripts/check-no-perf-hooks.mjs
 
       - name: Typecheck docs
         # `docs/` imports `@tumaet/apollon` for the live embed, so its

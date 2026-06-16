@@ -39,8 +39,12 @@ test("encoded Yjs doc stays bounded across many drag gestures", async ({
   const baseline = await readPerf(page)
   expect(baseline.nodesMapSize).toBe(30)
 
+  // Scope to this editor's container: the page can mount more than one editor
+  // instance, so a bare `.react-flow__node[data-id=…]` selector matches the
+  // same node id in every instance and trips Playwright's strict mode.
+  const editor = page.locator(`#react-flow-library-${String(fixture.id)}`)
   for (let i = 0; i < DRAG_COUNT; i++) {
-    const node = page.locator(
+    const node = editor.locator(
       `.react-flow__node[data-id="perf-node-${String(i % 30).padStart(
         2,
         "0"
