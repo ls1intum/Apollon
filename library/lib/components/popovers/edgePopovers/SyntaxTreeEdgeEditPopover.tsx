@@ -1,4 +1,5 @@
 import { useReactFlow } from "@xyflow/react"
+import { useReactiveEdge } from "@/hooks"
 import { PopoverProps } from "../types"
 import { EdgeStyleEditor } from "@/components/ui"
 import { CustomEdgeProps } from "@/edges"
@@ -6,8 +7,8 @@ import { CustomEdgeProps } from "@/edges"
 export const SyntaxTreeEdgeEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
-  const { getEdge, updateEdgeData } = useReactFlow()
-  const edge = getEdge(elementId)
+  const { updateEdgeData } = useReactFlow()
+  const edge = useReactiveEdge(elementId)
 
   if (!edge) {
     return null

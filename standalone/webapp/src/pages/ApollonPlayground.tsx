@@ -82,12 +82,10 @@ export const ApollonPlayground: React.FC = () => {
     setCurrentModelId(playgroundModelId)
   }, [setCurrentModelId])
 
-  const defaultModel = useMemo(
-    () => ({ ...diagram.model, type: diagramType }),
-    // Intentional: re-read store on each remount keyed by mountKey.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [mountKey]
-  )
+  // <Apollon> snapshots `defaultModel` on mount (initial-only prop) and is
+  // remounted via `key={mountKey}`, so a plain derived value is correct — the
+  // compiler memoizes it, and no stale-closure suppression is needed.
+  const defaultModel = { ...diagram.model, type: diagramType }
 
   return (
     <div

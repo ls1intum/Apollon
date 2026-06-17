@@ -8,7 +8,7 @@ import {
   reduceVisibleArcCountForZoom,
 } from "@/utils"
 import { CANVAS } from "@/constants"
-import { Handle, Position, useReactFlow, useStore } from "@xyflow/react"
+import { Handle, Position, useStore } from "@xyflow/react"
 import { type CSSProperties, useMemo } from "react"
 import { useShallow } from "zustand/shallow"
 
@@ -112,11 +112,21 @@ export function DefaultNodeWrapper({
   hiddenHandles = [],
   className,
 }: Props) {
-  const { getNode } = useReactFlow()
-  const node = getNode(elementId)
-  const nodeType = node?.type
-  const nodeWidth = node?.width ?? 0
-  const nodeHeight = node?.height ?? 0
+  // Subscribe to only the fields this wrapper uses, with shallow equality, so a
+  // node re-renders its handles on resize/type change but not on the position
+  // and selection churn that subscribing to the whole node would pull in — this
+  // wrapper sits on every node's render path. An imperative getNode() read here
+  // would instead go stale once the React Compiler memoizes the component.
+  const { nodeType, nodeWidth, nodeHeight } = useStore(
+    useShallow((s) => {
+      const n = s.nodeLookup.get(elementId)
+      return {
+        nodeType: n?.type,
+        nodeWidth: n?.width ?? 0,
+        nodeHeight: n?.height ?? 0,
+      }
+    })
+  )
   const isDiagramModifiable = useDiagramModifiable()
   // Connection indicators keep a usable minimum on-screen size when zoomed out
   // and grow with the node when zoomed in (matching the edge handles):

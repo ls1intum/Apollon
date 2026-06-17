@@ -2,15 +2,15 @@ import { Box } from "@mui/material"
 import { EdgeStyleEditor, TextField } from "@/components/ui"
 import { useReactFlow } from "@xyflow/react"
 import { CustomEdgeProps } from "@/edges/EdgeProps"
-import { SwapHorizIcon } from "@/components/Icon"
-import { useEdgePopOver } from "@/hooks"
+import { useEdgePopOver, useReactiveEdge } from "@/hooks"
 import { PopoverProps } from "../types"
+import { SwapEndsButton } from "./SwapEndsButton"
 
 export const PetriNetEdgeEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
-  const { getEdge, updateEdgeData } = useReactFlow()
-  const edge = getEdge(elementId)
+  const { updateEdgeData } = useReactFlow()
+  const edge = useReactiveEdge(elementId)
 
   const { handleLabelChange, handleSwap } = useEdgePopOver(elementId)
 
@@ -28,16 +28,7 @@ export const PetriNetEdgeEditPopover: React.FC<PopoverProps> = ({
           updateEdgeData(elementId, { ...edge.data, [key]: value })
         }
         label="Petri Net Arc"
-        sideElements={[
-          handleSwap && (
-            <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-              <SwapHorizIcon
-                style={{ cursor: "pointer" }}
-                onClick={handleSwap}
-              />
-            </Box>
-          ),
-        ]}
+        sideElements={[handleSwap && <SwapEndsButton onClick={handleSwap} />]}
       />
 
       {/* Label update */}

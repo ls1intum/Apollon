@@ -14,7 +14,16 @@ import { resolve } from "path"
 const isPeerBuild = process.env.LIB_PEERS === "true"
 
 export default defineConfig({
-  plugins: [react(), dts({ include: ["lib"], rollupTypes: !isPeerBuild })],
+  plugins: [
+    // React Compiler (target "19" — the library is React-19-only) emits
+    // `import { c } from "react/compiler-runtime"`, which the peer build keeps
+    // external so it resolves to the consumer's React 19 rather than bundling a
+    // polyfill copy.
+    react({
+      babel: { plugins: [["babel-plugin-react-compiler", { target: "19" }]] },
+    }),
+    dts({ include: ["lib"], rollupTypes: !isPeerBuild }),
+  ],
   build: {
     copyPublicDir: false,
     outDir: isPeerBuild ? "dist/react" : "dist",
@@ -37,6 +46,7 @@ export default defineConfig({
             "react-dom",
             "react/jsx-runtime",
             "react/jsx-dev-runtime",
+            "react/compiler-runtime",
             "react-dom/client",
             "@emotion/react",
             "@emotion/styled",

@@ -1,11 +1,11 @@
 import {
-  forwardRef,
   useEffect,
   useRef,
   useState,
   type CSSProperties,
-  type MutableRefObject,
   type ReactNode,
+  type Ref,
+  type RefObject,
 } from "react"
 import { ApollonEditor } from "@/apollon-editor"
 import type {
@@ -62,127 +62,136 @@ export interface ApollonProps {
    * runs as cleanup before destroy (React-19-style cleanup return).
    */
   onMount?: (editor: ApollonEditor) => void | (() => void)
+
+  /**
+   * Imperative handle to the underlying {@link ApollonEditor}. Assigned once
+   * after mount and cleared on unmount.
+   */
+  ref?: Ref<ApollonEditor | null>
 }
 
 /** React wrapper around {@link ApollonEditor}. See `@tumaet/apollon/react` docs. */
-export const Apollon = forwardRef<ApollonEditor | null, ApollonProps>(
-  function Apollon(props, ref) {
-    const {
-      className,
-      style,
-      children,
+export function Apollon(props: ApollonProps) {
+  const {
+    className,
+    style,
+    children,
 
-      defaultModel,
-      defaultType,
-      defaultMode,
-      defaultView,
-      availableViews,
-      enablePopups,
-      collaborationEnabled,
-      collaboration,
-      debug,
+    defaultModel,
+    defaultType,
+    defaultMode,
+    defaultView,
+    availableViews,
+    enablePopups,
+    collaborationEnabled,
+    collaboration,
+    debug,
 
-      readonly,
-      view,
-      mode,
-      scrollLock,
-      previewMode,
-      model,
+    readonly,
+    view,
+    mode,
+    scrollLock,
+    previewMode,
+    model,
 
-      onMount,
-    } = props
+    onMount,
+    ref,
+  } = props
 
-    const containerRef = useRef<HTMLDivElement>(null)
-    const [editor, setEditor] = useState<ApollonEditor | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [editor, setEditor] = useState<ApollonEditor | null>(null)
 
-    const initialOptionsRef = useRef<ApollonOptions>({
-      model: defaultModel,
-      type: defaultType,
-      mode: defaultMode,
-      view: defaultView,
-      availableViews,
-      enablePopups,
-      collaborationEnabled,
-      collaboration,
-      debug,
-    })
+  const initialOptionsRef = useRef<ApollonOptions>({
+    model: defaultModel,
+    type: defaultType,
+    mode: defaultMode,
+    view: defaultView,
+    availableViews,
+    enablePopups,
+    collaborationEnabled,
+    collaboration,
+    debug,
+  })
 
-    // Commit-time write — StrictMode-safe latest-closure ref.
-    const onMountRef = useRef(onMount)
-    useEffect(() => {
-      onMountRef.current = onMount
-    })
+  // Commit-time write — StrictMode-safe latest-closure ref.
+  const onMountRef = useRef(onMount)
+  useEffect(() => {
+    onMountRef.current = onMount
+  })
 
-    useEffect(() => {
-      const container = containerRef.current
-      if (!container) return
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
 
-      const instance = new ApollonEditor(container, initialOptionsRef.current)
+    const instance = new ApollonEditor(container, initialOptionsRef.current)
 
-      // React-19 callback refs may return a cleanup function.
-      let refCleanup: (() => void) | void
-      if (typeof ref === "function") {
-        const ret = ref(instance)
-        if (typeof ret === "function") refCleanup = ret
+    // React-19 callback refs may return a cleanup function.
+    let refCleanup: (() => void) | void
+    if (typeof ref === "function") {
+      const ret = ref(instance)
+      if (typeof ret === "function") refCleanup = ret
+    } else if (ref) {
+      ;(ref as RefObject<ApollonEditor | null>).current = instance
+    }
+
+    setEditor(instance)
+    const userCleanup = onMountRef.current?.(instance)
+
+    return () => {
+      // Order: user cleanup → destroy → null ref. A destroyed instance
+      // briefly visible through the ref is more honest than a still-running
+      // editor that a sibling layout effect could touch.
+      if (typeof userCleanup === "function") userCleanup()
+      instance.destroy()
+
+      setEditor(null)
+      if (refCleanup) {
+        refCleanup()
+      } else if (typeof ref === "function") {
+        ref(null)
       } else if (ref) {
-        ;(ref as MutableRefObject<ApollonEditor | null>).current = instance
+        ;(ref as RefObject<ApollonEditor | null>).current = null
       }
+    }
+    // Initial-only — re-key the component to rebuild.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
-      setEditor(instance)
-      const userCleanup = onMountRef.current?.(instance)
+  // Reactive props. `!== undefined` so `false` propagates; passing
+  // `undefined` leaves the live value alone (does NOT reset to default).
+  useEffect(() => {
+    if (editor && readonly !== undefined) editor.setReadonly(readonly)
+  }, [editor, readonly])
 
-      return () => {
-        // Order: user cleanup → destroy → null ref. A destroyed instance
-        // briefly visible through the ref is more honest than a still-running
-        // editor that a sibling layout effect could touch.
-        if (typeof userCleanup === "function") userCleanup()
-        instance.destroy()
+  useEffect(() => {
+    if (editor && scrollLock !== undefined) editor.setScrollLock(scrollLock)
+  }, [editor, scrollLock])
 
-        setEditor(null)
-        if (refCleanup) {
-          refCleanup()
-        } else if (typeof ref === "function") {
-          ref(null)
-        } else if (ref) {
-          ;(ref as MutableRefObject<ApollonEditor | null>).current = null
-        }
-      }
-      // Initial-only — re-key the component to rebuild.
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+  useEffect(() => {
+    if (editor && previewMode !== undefined) editor.setPreviewMode(previewMode)
+  }, [editor, previewMode])
 
-    // Reactive props. `!== undefined` so `false` propagates; passing
-    // `undefined` leaves the live value alone (does NOT reset to default).
-    useEffect(() => {
-      if (editor && readonly !== undefined) editor.setReadonly(readonly)
-    }, [editor, readonly])
+  useEffect(() => {
+    // `editor.view`/`editor.model` are the editor's public imperative setters
+    // (accessor properties, no method form). Assigning them in an effect is the
+    // API contract, not a React-state mutation — the compiler still optimizes.
+    // eslint-disable-next-line react-hooks/immutability
+    if (editor && view !== undefined) editor.view = view
+  }, [editor, view])
 
-    useEffect(() => {
-      if (editor && scrollLock !== undefined) editor.setScrollLock(scrollLock)
-    }, [editor, scrollLock])
+  useEffect(() => {
+    if (editor && mode !== undefined) editor.setMode(mode)
+  }, [editor, mode])
 
-    useEffect(() => {
-      if (editor && previewMode !== undefined)
-        editor.setPreviewMode(previewMode)
-    }, [editor, previewMode])
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/immutability
+    if (editor && model !== undefined) editor.model = model
+  }, [editor, model])
 
-    useEffect(() => {
-      if (editor && view !== undefined) editor.view = view
-    }, [editor, view])
-
-    useEffect(() => {
-      if (editor && mode !== undefined) editor.setMode(mode)
-    }, [editor, mode])
-
-    useEffect(() => {
-      if (editor && model !== undefined) editor.model = model
-    }, [editor, model])
-
-    return (
-      <ApollonInstanceContext.Provider value={editor}>
-        <div ref={containerRef} className={className} style={style} />
-        {children}
-      </ApollonInstanceContext.Provider>
-    )
-  }
-)
+  return (
+    <ApollonInstanceContext.Provider value={editor}>
+      <div ref={containerRef} className={className} style={style} />
+      {children}
+    </ApollonInstanceContext.Provider>
+  )
+}

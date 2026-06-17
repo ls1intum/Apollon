@@ -331,7 +331,9 @@ export const DiagramGallery = ({
   const [highlightedDiagramId, setHighlightedDiagramId] = useState<
     string | null
   >(null)
-  const prevVisibleCountRef = useRef(INITIAL_VISIBLE_COUNT)
+  const [prevVisibleCount, setPrevVisibleCount] = useState(
+    INITIAL_VISIBLE_COUNT
+  )
   const sentinelRef = useRef<HTMLDivElement>(null)
 
   const localDiagrams = useMemo<GalleryDiagram[]>(() => {
@@ -556,14 +558,14 @@ export const DiagramGallery = ({
     Math.max(visibleCount, INITIAL_VISIBLE_COUNT),
     Math.max(deferredFilteredDiagrams.length, INITIAL_VISIBLE_COUNT)
   )
-  const prevVisibleCount = prevVisibleCountRef.current
   const visibleDiagrams = deferredFilteredDiagrams.slice(0, clampedVisibleCount)
   const hasMoreDiagrams = deferredFilteredDiagrams.length > clampedVisibleCount
 
-  // Track the previous visible count after commit (not during render) so the
-  // entrance-animation baseline stays correct under StrictMode/concurrent renders.
+  // Track the previous visible count in state, updated after commit (not during
+  // render), so the entrance-animation baseline stays correct under
+  // StrictMode/concurrent renders and `prevVisibleCount` is a pure render read.
   useEffect(() => {
-    prevVisibleCountRef.current = clampedVisibleCount
+    setPrevVisibleCount(clampedVisibleCount)
   }, [clampedVisibleCount])
 
   const sortByLabel =

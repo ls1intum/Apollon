@@ -1,11 +1,11 @@
 import { Box } from "@mui/material"
 import { CustomEdgeProps } from "@/edges/EdgeProps"
 import { useReactFlow } from "@xyflow/react"
-import { useEdgePopOver } from "@/hooks"
+import { useEdgePopOver, useReactiveEdge, useReactiveNodeName } from "@/hooks"
 import { PopoverProps } from "../types"
-import { SwapHorizIcon } from "@/components/Icon"
 import { EdgeStyleEditor, TextField, Typography } from "@/components/ui"
 import { EdgeTypeSelect, EdgeTypeOption } from "./EdgeTypeSelect"
+import { SwapEndsButton } from "./SwapEndsButton"
 
 const BPMN_EDGE_TYPE_OPTIONS: ReadonlyArray<EdgeTypeOption> = [
   { value: "BPMNSequenceFlow", label: "Sequence Flow" },
@@ -17,9 +17,11 @@ const BPMN_EDGE_TYPE_OPTIONS: ReadonlyArray<EdgeTypeOption> = [
 export const BPMNDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
-  const { getEdge, getNode, updateEdgeData } = useReactFlow()
+  const { updateEdgeData } = useReactFlow()
 
-  const edge = getEdge(elementId)
+  const edge = useReactiveEdge(elementId)
+  const sourceName = useReactiveNodeName(edge?.source, "Source")
+  const targetName = useReactiveNodeName(edge?.target, "Target")
   const { handleEdgeTypeChange, handleSwap, handleLabelChange } =
     useEdgePopOver(elementId)
 
@@ -27,10 +29,6 @@ export const BPMNDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
     return null
   }
   const edgeData = edge.data as CustomEdgeProps | undefined
-  const sourceNode = getNode(edge.source)
-  const targetNode = getNode(edge.target)
-  const sourceName = (sourceNode?.data?.name as string) ?? "Source"
-  const targetName = (targetNode?.data?.name as string) ?? "Target"
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
@@ -40,16 +38,7 @@ export const BPMNDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
           updateEdgeData(elementId, { ...edge.data, [key]: value })
         }
         label="Control Flow"
-        sideElements={[
-          handleSwap && (
-            <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-              <SwapHorizIcon
-                style={{ cursor: "pointer" }}
-                onClick={handleSwap}
-              />
-            </Box>
-          ),
-        ]}
+        sideElements={[handleSwap && <SwapEndsButton onClick={handleSwap} />]}
       />
       <EdgeTypeSelect
         value={edge.type}

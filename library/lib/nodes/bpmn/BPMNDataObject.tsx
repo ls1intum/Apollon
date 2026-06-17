@@ -1,7 +1,7 @@
 import { NodeProps, NodeResizer, type Node } from "@xyflow/react"
+import { usePopoverAnchor } from "@/hooks/usePopoverAnchor"
 import { DefaultNodeWrapper } from "../wrappers"
 import { useHandleOnResize } from "@/hooks"
-import { useRef } from "react"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
 import { BPMNDataObjectProps } from "@/types"
@@ -15,7 +15,7 @@ export function BPMNDataObject({
   data,
   parentId,
 }: NodeProps<Node<BPMNDataObjectProps>>) {
-  const svgWrapperRef = useRef<HTMLDivElement | null>(null)
+  const [anchorEl, anchorRef] = usePopoverAnchor()
   const { onResize } = useHandleOnResize(parentId)
   const isDiagramModifiable = useDiagramModifiable()
 
@@ -34,7 +34,7 @@ export function BPMNDataObject({
         minWidth={60}
         handleStyle={{ width: 8, height: 8 }}
       />
-      <div ref={svgWrapperRef}>
+      <div ref={anchorRef}>
         <BPMNDataObjectNodeSVG
           width={width}
           height={height}
@@ -44,7 +44,7 @@ export function BPMNDataObject({
         />
       </div>
       <PopoverManager
-        anchorEl={svgWrapperRef.current}
+        anchorEl={anchorEl}
         elementId={id}
         type="BPMNDataObject"
       />
