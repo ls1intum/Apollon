@@ -1,5 +1,4 @@
 import type { Page } from "@playwright/test"
-import { FONT_FAMILY } from "@tumaet/apollon"
 
 /**
  * Extract the exported SVG string from the running Apollon editor.
@@ -15,9 +14,7 @@ import { FONT_FAMILY } from "@tumaet/apollon"
  * The result is identical to getSVG() with svgMode: "compat".
  */
 export async function extractSVGFromPage(page: Page): Promise<string> {
-  // Pass the canonical font stack into the browser context so the replicated
-  // export pipeline can't drift from the library's FONT_FAMILY.
-  return page.evaluate((fontFamily) => {
+  return page.evaluate(() => {
     const SVG_NS = "http://www.w3.org/2000/svg"
     const STROKE_COLOR = "#000000"
 
@@ -198,7 +195,7 @@ export async function extractSVGFromPage(page: Page): Promise<string> {
     const TEXT_FONT_DEFAULTS: Record<string, string> = {
       "font-size": "16px",
       "font-weight": "400",
-      "font-family": fontFamily,
+      "font-family": "Inter, system-ui, Avenir, Helvetica, Arial, sans-serif",
     }
 
     function ensureTextFontDefaults(svg: Element): void {
@@ -389,7 +386,8 @@ export async function extractSVGFromPage(page: Page): Promise<string> {
     const mainSVG = document.createElementNS(SVG_NS, "svg")
     mainSVG.setAttribute("xmlns", SVG_NS)
     const styleEl = document.createElementNS(SVG_NS, "style")
-    styleEl.textContent = `text { font-family: ${fontFamily}; }`
+    styleEl.textContent =
+      "text { font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif; }"
     mainSVG.appendChild(styleEl)
     mainSVG.setAttribute("viewBox", `${clipX} ${clipY} ${clipW} ${clipH}`)
     mainSVG.setAttribute("width", `${clipW}`)
@@ -469,5 +467,5 @@ export async function extractSVGFromPage(page: Page): Promise<string> {
     replaceTextDecorationWithManualUnderline(mainSVG)
 
     return mainSVG.outerHTML
-  }, FONT_FAMILY)
+  })
 }
