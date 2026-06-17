@@ -1,7 +1,7 @@
 ---
 id: headless-rendering
 title: Headless rendering
-description: Render saved Apollon models to SVG/PNG with no browser, using jsdom + a Skia canvas. Why text-sized diagrams overlap without it, and how to fix it.
+description: Render saved Apollon models to SVG/PNG headlessly — with jsdom + a Skia canvas (no browser) or in a real browser. Setup, fidelity caveats, and the supported recipes.
 ---
 
 # Headless rendering
@@ -29,11 +29,11 @@ You provide the DOM one of two ways.
 | Fidelity         | within ~10px of the editor            | identical to the editor                                         |
 | Reference        | the standalone server (below)         | [recipe below](#render-in-a-real-browser-playwright--puppeteer) |
 
-If you already run Playwright/Puppeteer, the browser path is the least code: as
-of `@tumaet/apollon` 4.7, the export injects the React Flow layout CSS and the
-Inter font it needs itself, so **you do not import `style.css` or wait on
-fonts** — see [below](#render-in-a-real-browser-playwright--puppeteer). The
-jsdom path avoids shipping a browser but needs the setup in the next sections.
+If you already run Playwright/Puppeteer, the browser path is the least code: the
+export injects the layout CSS and the Inter font it needs itself, so **you do
+not import `style.css` or wait on fonts** — see
+[below](#render-in-a-real-browser-playwright--puppeteer). The jsdom path avoids
+shipping a browser but needs the setup in the next sections.
 
 ## TL;DR (jsdom path)
 
@@ -145,11 +145,9 @@ need pixel-exact parity with the editor, use the browser path below.
 When the export is a forensic record of a graded submission, know these limits:
 
 - **Edge labels** (messages, multiplicities) are kept in the clip by a
-  `measureText`-based bounds fallback inside `exportModelAsSvg` — jsdom's
-  `getBoundingClientRect` is zero for SVG text, and without it an overhanging
-  label is silently cropped. The fallback needs a registered canvas (the
-  `setup.ts` step above provides one); it ships in `@tumaet/apollon` ≥ the
-  release with this fix, so use a current library version.
+  `measureText`-based bounds fallback — jsdom's `getBoundingClientRect` is zero
+  for SVG text, so the fallback needs the registered canvas the `setup.ts` step
+  above provides.
 - **Text wrapping** matches the editor only if `navigator.userAgent` reports
   Chromium — `@chenglou/pretext` picks CJK break behaviour from it. Set a
   Chromium UA on the jsdom window.
@@ -174,11 +172,11 @@ The `compat` SVG is self-contained. To rasterise:
 ## Render in a real browser (Playwright / Puppeteer)
 
 When you want pixel-exact parity with the editor — or you already drive a
-browser — this is the simplest path. **As of `@tumaet/apollon` 4.7 the export is
-self-contained:** `exportModelAsSvg` injects the React Flow base layout CSS and
-the bundled Inter `@font-face` into its off-screen mount and waits for the font
-to load before measuring. You do **not** import `@tumaet/apollon/style.css`,
-pre-seed handles, or `await document.fonts.ready` yourself.
+browser — this is the simplest path. The export is **self-contained**:
+`exportModelAsSvg` injects the layout CSS and the bundled Inter `@font-face` it
+needs into its off-screen mount and waits for the font before measuring. You do
+**not** import `@tumaet/apollon/style.css`, pre-seed handles, or
+`await document.fonts.ready` yourself.
 
 ```js
 import { chromium } from "playwright"
@@ -209,20 +207,6 @@ const svg = await page.evaluate((m) => window.exportSVG(m), model)
 `importDiagram` normalises v2 / v3 payloads to v4. `svgMode: "compat"` resolves
 CSS variables and embeds Inter so the file renders correctly when opened away
 from the page (browser, Inkscape, PowerPoint).
-
-### Troubleshooting: edges drawn through node boxes
-
-If a browser export shows **edges routed through the node boxes** (instead of
-meeting the node borders) and labels mispositioned, you are on a pre-4.7 library
-that was **not** self-contained and the page never loaded
-`@tumaet/apollon/style.css`. Without React Flow's base CSS,
-`.react-flow__node` is not `position: absolute`, so the editor's connection
-handles can't position themselves, React Flow measures them at the wrong spot,
-and edges route from the wrong points. Fixes, in order of preference:
-
-- **Upgrade to ≥ 4.7** — the export injects the CSS itself; nothing else to do.
-- On an older version, import `@tumaet/apollon/style.css` in the page **before**
-  calling `exportModelAsSvg`, and `await document.fonts.ready`.
 
 See also: **[Export](./export)** for the full `ExportOptions` table and
 **[Model JSON contract](./model-contract)** for the model shape.
