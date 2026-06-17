@@ -1,5 +1,15 @@
 import React from "react"
-import { Tooltip as BaseTooltip } from "@base-ui/react/tooltip"
+import {
+  Tooltip as SharedTooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider as SharedTooltipProvider,
+} from "@tumaet/ui/components/tooltip"
+
+// Compatibility wrapper over the shared @tumaet/ui Tooltip so the editor renders
+// the same primitive as the webapp. Keeps the editor's MUI-flavoured API
+// (`title`, default 700ms delay) so callers are unchanged; styling ships in the
+// bundled, Tailwind-free components.css (data-slot="tooltip-content").
 
 export interface TooltipProps {
   /** Tooltip text (mirrors MUI's `title`). */
@@ -14,7 +24,9 @@ export const TooltipProvider: React.FC<{
   children: React.ReactNode
   delayDuration?: number
 }> = ({ children, delayDuration = 700 }) => (
-  <BaseTooltip.Provider delay={delayDuration}>{children}</BaseTooltip.Provider>
+  <SharedTooltipProvider delay={delayDuration}>
+    {children}
+  </SharedTooltipProvider>
 )
 
 export const Tooltip: React.FC<TooltipProps> = ({
@@ -26,25 +38,18 @@ export const Tooltip: React.FC<TooltipProps> = ({
   if (!title) return <>{children}</>
 
   const trigger = React.isValidElement(children) ? (
-    <BaseTooltip.Trigger
+    <TooltipTrigger
       render={children as React.ReactElement<Record<string, unknown>>}
       delay={delayDuration}
     />
   ) : (
-    <BaseTooltip.Trigger delay={delayDuration}>{children}</BaseTooltip.Trigger>
+    <TooltipTrigger delay={delayDuration}>{children}</TooltipTrigger>
   )
 
   return (
-    <BaseTooltip.Root>
+    <SharedTooltip>
       {trigger}
-      <BaseTooltip.Portal>
-        <BaseTooltip.Positioner side={side} sideOffset={4}>
-          <BaseTooltip.Popup className="apollon-tooltip">
-            {title}
-            <BaseTooltip.Arrow className="apollon-tooltip-arrow" />
-          </BaseTooltip.Popup>
-        </BaseTooltip.Positioner>
-      </BaseTooltip.Portal>
-    </BaseTooltip.Root>
+      <TooltipContent side={side}>{title}</TooltipContent>
+    </SharedTooltip>
   )
 }

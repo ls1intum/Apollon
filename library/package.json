@@ -58,7 +58,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "pnpm --filter @tumaet/ui run build:types && tsc -b && vite build && LIB_PEERS=true vite build && rm -rf dist/react/assets && node scripts/localize-ui-types.mjs",
+    "build": "pnpm --filter @tumaet/ui run build:css && pnpm --filter @tumaet/ui run build:types && tsc -b && vite build && LIB_PEERS=true vite build && rm -rf dist/react/assets && node scripts/localize-ui-types.mjs",
     "build:watch": "tsc -b --watch & vite build --watch",
     "preview": "vite preview",
     "lint": "eslint .",

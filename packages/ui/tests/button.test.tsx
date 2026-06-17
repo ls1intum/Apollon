@@ -12,22 +12,22 @@ describe("Button", () => {
     expect(btn).toHaveAttribute("data-slot", "button")
   })
 
-  it("applies variant + size classes via cva", () => {
+  it("reflects variant + size via data attributes (styled by components.css)", () => {
     render(
       <Button variant="destructive" size="lg">
         Delete
       </Button>
     )
     const btn = screen.getByRole("button", { name: "Delete" })
-    expect(btn.className).toContain("bg-destructive")
-    expect(btn.className).toContain("h-9")
+    expect(btn).toHaveAttribute("data-variant", "destructive")
+    expect(btn).toHaveAttribute("data-size", "lg")
   })
 
   it("defaults to the default variant + size", () => {
     render(<Button>Go</Button>)
     const btn = screen.getByRole("button", { name: "Go" })
-    expect(btn.className).toContain("bg-primary")
-    expect(btn.className).toContain("h-8")
+    expect(btn).toHaveAttribute("data-variant", "default")
+    expect(btn).toHaveAttribute("data-size", "default")
   })
 
   it("forwards a custom className", () => {

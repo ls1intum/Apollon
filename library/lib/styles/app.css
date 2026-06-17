@@ -1,3 +1,10 @@
+/* Shared, embed-safe primitives (button, icon-button, input, textarea,
+   tooltip) plus the --apollon- and --home- design-token layer, precompiled by
+   the @tumaet/ui build:css step (Tailwind v4, Preflight-free). Bundled here so
+   the library ships ONE self-contained, Tailwind-free style.css that themes any
+   external embed via --apollon- tokens. */
+@import "../../../packages/ui/dist/components.css";
+
 .react-flow {
   --panel-background: var(--apollon-background, #fff);
   --panel-shadow: 0 0 4px 0 var(--apollon-background-variant, #f8f9fa);
@@ -634,90 +641,9 @@ svg.react-flow__connectionline {
    portals to `document.body`, so these are global, not scoped under
    `.apollon-editor`; theme vars are forwarded by `GenericPopover`. */
 
-/* TextField (input / textarea) */
-.apollon-textfield-label {
-  font-size: 0.75rem;
-  color: var(--apollon-primary-contrast, #000);
-  margin-bottom: 2px;
-}
-.apollon-textfield {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 8px 10px;
-  font-size: 0.875rem;
-  font-family: inherit;
-  color: var(--apollon-primary-contrast, #000);
-  caret-color: var(--apollon-primary-contrast, #000);
-  background-color: var(--apollon-background, #fff);
-  border: 1px solid var(--apollon-primary-contrast, #000);
-  border-radius: 4px;
-  outline: none;
-}
-.apollon-textfield--small {
-  padding: 6px 8px;
-}
-.apollon-textfield::placeholder {
-  color: var(--apollon-gray-variant, #495057);
-  opacity: 0.7;
-}
-.apollon-textfield:focus-visible {
-  border-color: var(--apollon-primary, #3e8acc);
-  box-shadow: 0 0 0 1px var(--apollon-primary, #3e8acc);
-}
-.apollon-textfield--error {
-  border-color: #d32f2f;
-}
-.apollon-textfield-helper {
-  font-size: 0.75rem;
-  margin-top: 2px;
-  color: var(--apollon-gray-variant, #495057);
-}
-.apollon-textfield-helper--error {
-  color: #d32f2f;
-}
-
-/* Button */
-.apollon-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 6px 12px;
-  font-size: 0.875rem;
-  font-family: inherit;
-  font-weight: 500;
-  border-radius: 4px;
-  cursor: pointer;
-  background-color: transparent;
-  color: var(--apollon-primary, #3e8acc);
-  border: 1px solid var(--apollon-primary, #3e8acc);
-}
-.apollon-button:hover {
-  background-color: var(
-    --apollon-hover-neutral,
-    color-mix(
-      in srgb,
-      var(--apollon-primary-contrast, #000000) 7.5%,
-      transparent
-    )
-  );
-}
-.apollon-button:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-.apollon-button--contained {
-  background-color: var(--apollon-primary, #3e8acc);
-  color: var(--apollon-background, #fff);
-}
-.apollon-button--text {
-  border-color: transparent;
-}
-.apollon-button--icon {
-  padding: 4px;
-  border-color: transparent;
-  color: var(--apollon-primary-contrast, #000);
-}
+/* The button / icon-button / text-field / tooltip primitives are now shared
+   from @tumaet/ui and styled by the bundled, Tailwind-free components.css
+   (data-slot rules), so their former `.apollon-*` rules live there, not here. */
 
 /* Checkbox */
 .apollon-checkbox-label {
@@ -893,42 +819,6 @@ svg.react-flow__connectionline {
   pointer-events: none;
 }
 
-.apollon-icon-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border: none;
-  border-radius: 4px;
-  background: transparent;
-  cursor: pointer;
-  padding: 0;
-  color: var(--apollon-primary-contrast, #000);
-  transition: background-color 120ms ease;
-}
-.apollon-icon-button:hover {
-  background-color: var(
-    --apollon-hover-neutral,
-    color-mix(
-      in srgb,
-      var(--apollon-primary-contrast, #000000) 7.5%,
-      transparent
-    )
-  );
-}
-.apollon-icon-button:focus-visible {
-  outline: 2px solid var(--apollon-primary, #3e8acc);
-  outline-offset: 2px;
-}
-.apollon-icon-button[aria-expanded="true"] {
-  background-color: color-mix(
-    in srgb,
-    var(--apollon-primary, #3e8acc) 20%,
-    transparent
-  );
-}
-
 .apollon-stereotype-toggle {
   display: inline-flex;
   align-items: center;
@@ -972,22 +862,6 @@ svg.react-flow__connectionline {
   );
   border-color: var(--apollon-primary, #3e8acc);
   color: var(--apollon-primary, #3e8acc);
-}
-
-/* Tooltip (Base UI) */
-.apollon-tooltip {
-  padding: 4px 8px;
-  font-size: 0.75rem;
-  line-height: 1.3;
-  color: var(--apollon-background, #fff);
-  background-color: var(--apollon-primary-contrast, #000);
-  border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-  z-index: 10005;
-  max-width: 240px;
-}
-.apollon-tooltip-arrow {
-  fill: var(--apollon-primary-contrast, #000);
 }
 
 .scroll-overlay {

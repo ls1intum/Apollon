@@ -4,6 +4,14 @@
    toast) plus the accent bridge below. */
 @import "@tumaet/ui/styles/theme.css";
 
+/* The shared primitives (button / icon-button / input / textarea / tooltip) are
+   now styled by semantic data-slot rules instead of inline Tailwind utilities,
+   so pull in the precompiled, Preflight-free components.css that defines them.
+   Tailwind still drives app layout + the other inline-utility components.
+   Relative path (not the package export) so the Tailwind Vite plugin's CSS
+   resolver reliably inlines the precompiled dist file. */
+@import "../../../packages/ui/dist/components.css";
+
 /* Accent bridge — webapp root scope ONLY (the published library default must not
    depend on --home-*). Drive the editor accent from the app accent so the
    homepage and the embedded editor share one brand color. --home-accent-base is

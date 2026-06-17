@@ -23,8 +23,12 @@
   --color-background: var(--apollon-background);
   --color-foreground: var(--apollon-primary-contrast);
 
-  --color-primary: var(--home-accent-base);
-  --color-primary-foreground: var(--home-accent-contrast);
+  /* Accent tokens follow the editor's public --apollon-* theming API so the
+     shared primitives respond to an external embedder's theme. The webapp's
+     accent bridge (--apollon-primary <- --home-accent-base) keeps the navy
+     accent in the app, so this is identical there. */
+  --color-primary: var(--apollon-primary);
+  --color-primary-foreground: var(--apollon-primary-contrast);
 
   --color-secondary: var(--home-surface-raised);
   --color-secondary-foreground: var(--home-text-secondary);
@@ -46,7 +50,7 @@
   --color-border: var(--home-border-default);
   --color-border-subtle: var(--home-border-subtle);
   --color-input: var(--home-border-default);
-  --color-ring: var(--home-accent-ring);
+  --color-ring: var(--apollon-primary);
 
   --color-surface: var(--home-surface-base);
   --color-surface-raised: var(--home-surface-raised);

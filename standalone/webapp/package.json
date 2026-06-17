@@ -7,9 +7,9 @@
     "node": ">=24.15.0"
   },
   "scripts": {
-    "start": "vite",
-    "start:host": "vite --host",
-    "build": "tsc -b && vite build",
+    "start": "pnpm --filter @tumaet/ui run build:css && vite",
+    "start:host": "pnpm --filter @tumaet/ui run build:css && vite --host",
+    "build": "pnpm --filter @tumaet/ui run build:css && tsc -b && vite build",
     "preview": "vite preview",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",

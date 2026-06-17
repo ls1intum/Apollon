@@ -1,7 +1,12 @@
 import React, { useId } from "react"
+import { Input } from "@tumaet/ui/components/input"
+import { Textarea } from "@tumaet/ui/components/textarea"
 
-// Native <input>/<textarea> styled via the `.apollon-textfield*` classes;
-// props mirror the subset of MUI's TextField the codebase uses.
+// Compatibility wrapper: the control (input / textarea) is now the shared
+// @tumaet/ui primitive (styling ships in the bundled, Tailwind-free
+// components.css via data-slot="input"/"textarea"), while the label + helper
+// chrome stay here as inline-styled, token-driven elements so the public API
+// (label, helperText, multiline, error, …) the editor relies on is unchanged.
 
 // Intersection so handlers get a `target` with `.value` for either element.
 type TextFieldElement = HTMLInputElement & HTMLTextAreaElement
@@ -37,6 +42,12 @@ export interface TextFieldProps {
   [dataAttr: `data-${string}`]: unknown
 }
 
+const labelStyle: React.CSSProperties = {
+  fontSize: "0.75rem",
+  color: "var(--apollon-primary-contrast)",
+  marginBottom: 2,
+}
+
 export const TextField: React.FC<TextFieldProps> = ({
   value,
   defaultValue,
@@ -51,7 +62,8 @@ export const TextField: React.FC<TextFieldProps> = ({
   type,
   disabled,
   autoFocus,
-  size = "medium",
+  // accepted for MUI compat; the shared control owns its sizing
+  size: _size = "medium",
   fullWidth,
   multiline,
   minRows,
@@ -77,15 +89,6 @@ export const TextField: React.FC<TextFieldProps> = ({
     ...style,
   }
 
-  const controlClassName = [
-    "apollon-textfield",
-    size === "small" && "apollon-textfield--small",
-    error && "apollon-textfield--error",
-    className,
-  ]
-    .filter(Boolean)
-    .join(" ")
-
   const sharedProps = {
     id: inputId,
     name,
@@ -99,7 +102,7 @@ export const TextField: React.FC<TextFieldProps> = ({
     onKeyDown: onKeyDown as React.KeyboardEventHandler<TextFieldElement>,
     onBlur: onBlur as React.FocusEventHandler<TextFieldElement>,
     onFocus: onFocus as React.FocusEventHandler<TextFieldElement>,
-    className: controlClassName,
+    className,
     "aria-invalid": error || undefined,
     ...rest,
   }
@@ -107,18 +110,24 @@ export const TextField: React.FC<TextFieldProps> = ({
   return (
     <span style={wrapperStyle}>
       {label && (
-        <label htmlFor={inputId} className="apollon-textfield-label">
+        <label htmlFor={inputId} style={labelStyle}>
           {label}
         </label>
       )}
       {multiline ? (
-        <textarea rows={minRows} {...sharedProps} style={{ resize: "none" }} />
+        <Textarea rows={minRows} {...sharedProps} style={{ resize: "none" }} />
       ) : (
-        <input type={type ?? "text"} {...sharedProps} />
+        <Input type={type ?? "text"} {...sharedProps} />
       )}
       {helperText && (
         <span
-          className={`apollon-textfield-helper${error ? " apollon-textfield-helper--error" : ""}`}
+          style={{
+            fontSize: "0.75rem",
+            marginTop: 2,
+            color: error
+              ? "var(--apollon-alert-danger-color)"
+              : "var(--apollon-gray-variant)",
+          }}
         >
           {helperText}
         </span>
