@@ -108,8 +108,7 @@ async function render(
       : PNG_DEFAULT_SCALE
     const width = Math.ceil(clip.width * factor)
     const height = Math.ceil(clip.height * factor)
-    // Size the SVG to the target resolution (rendering at natural size and
-    // upscaling the bitmap blurs text) and resolve dominant-baseline.
+    // Rasterize at the target resolution; upscaling a natural-size bitmap blurs text.
     const image = await loadImage(
       Buffer.from(prepareSvgForPng(svg, width, height))
     )
