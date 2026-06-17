@@ -1,7 +1,7 @@
 import { NodeProps, type Node } from "@xyflow/react"
+import { usePopoverAnchor } from "@/hooks/usePopoverAnchor"
 import { DefaultNodeWrapper, FOUR_WAY_HANDLES_PRESET } from "../wrappers"
 import { DefaultNodeProps } from "@/types"
-import { useRef } from "react"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
 import { ComponentInterfaceNodeSVG } from "@/components"
@@ -13,7 +13,7 @@ export function ComponentInterface({
   height,
   data,
 }: NodeProps<Node<DefaultNodeProps>>) {
-  const svgWrapperRef = useRef<HTMLDivElement | null>(null)
+  const [anchorEl, anchorRef] = usePopoverAnchor()
   const isDiagramModifiable = useDiagramModifiable()
 
   if (!width || !height) {
@@ -29,7 +29,7 @@ export function ComponentInterface({
     >
       <NodeToolbar elementId={id} />
 
-      <div ref={svgWrapperRef}>
+      <div ref={anchorRef}>
         <ComponentInterfaceNodeSVG
           width={width}
           height={height}
@@ -39,11 +39,7 @@ export function ComponentInterface({
         />
       </div>
 
-      <PopoverManager
-        anchorEl={svgWrapperRef.current}
-        elementId={id}
-        type="default"
-      />
+      <PopoverManager anchorEl={anchorEl} elementId={id} type="default" />
     </DefaultNodeWrapper>
   )
 }

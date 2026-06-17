@@ -3,7 +3,7 @@ import { Paper, Popover, PopoverOrigin } from "@mui/material"
 
 interface GenericPopoverProps {
   id: string
-  anchorEl: HTMLElement | SVGSVGElement | null | SVGPathElement
+  anchorEl: HTMLElement | SVGElement | null
   open: boolean
   onClose: () => void
   children: ReactNode

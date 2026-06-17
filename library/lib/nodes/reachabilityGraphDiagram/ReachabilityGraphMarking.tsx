@@ -1,8 +1,8 @@
 import { NodeProps, NodeResizer, type Node } from "@xyflow/react"
+import { usePopoverAnchor } from "@/hooks/usePopoverAnchor"
 import { DefaultNodeWrapper } from "../wrappers"
 import { useHandleOnResize } from "@/hooks"
 import { ReachabilityGraphMarkingProps } from "@/types"
-import { useRef } from "react"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
 import { ReachabilityGraphMarkingSVG } from "@/components/svgs/nodes/reachabilityGraphDiagram/ReachabilityGraphMarkingSVG"
@@ -15,7 +15,7 @@ export function ReachabilityGraphMarking({
   data,
   parentId,
 }: NodeProps<Node<ReachabilityGraphMarkingProps>>) {
-  const svgWrapperRef = useRef<HTMLDivElement | null>(null)
+  const [anchorEl, anchorRef] = usePopoverAnchor()
   const { onResize } = useHandleOnResize(parentId)
   const isDiagramModifiable = useDiagramModifiable()
 
@@ -33,7 +33,7 @@ export function ReachabilityGraphMarking({
         minWidth={50}
         handleStyle={{ width: 8, height: 8 }}
       />
-      <div ref={svgWrapperRef}>
+      <div ref={anchorRef}>
         <ReachabilityGraphMarkingSVG
           width={width}
           height={height}
@@ -44,7 +44,7 @@ export function ReachabilityGraphMarking({
       </div>
 
       <PopoverManager
-        anchorEl={svgWrapperRef.current}
+        anchorEl={anchorEl}
         elementId={id}
         type="ReachabilityGraphMarking"
       />
