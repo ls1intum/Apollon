@@ -46,10 +46,11 @@ type InitialDiagramState = {
   undoManager: Y.UndoManager | null
   /**
    * Whether this editor instance is in a collaboration session. Drives the
-   * transient drag/resize write guard in `onNodesChange`: in single-user mode
-   * we skip per-frame CRDT writes (the freeze path), but in collaboration we
-   * keep them — they drive the live remote drag and are GC-reclaimed since no
-   * UndoManager is created in collaboration mode.
+   * transient drag/resize write guard in `onNodesChange`: single-user mode
+   * skips per-frame CRDT writes (an always-on UndoManager would otherwise pin
+   * every frame and grow the document unbounded), while collaboration keeps
+   * them — there is no UndoManager there, so the frames are GC-reclaimed and
+   * they drive the live remote drag.
    */
   collaborationEnabled: boolean
   /**
@@ -207,10 +208,9 @@ export const createDiagramStore = (
             // unbounded number of StackItems (each retains DeleteSets + a meta
             // Map). This caps the JS-side array only; the spliced structs stay
             // pinned in the Yjs doc (their GC `keep` flag is never cleared —
-            // only `undoManager.clear()` releases it), so this does not shrink
-            // the doc. The per-frame doc growth that caused the freeze is
-            // handled separately by skipping transient drag writes in
-            // onNodesChange.
+            // only `undoManager.clear()` releases it), so it does not shrink
+            // the doc. Per-frame drag growth is bounded separately, by skipping
+            // transient drag writes in onNodesChange.
             const UNDO_STACK_LIMIT = 100
 
             // Listen to undo manager state changes
@@ -566,11 +566,11 @@ export const createDiagramStore = (
                   const isTransient =
                     (change.type === "position" && change.dragging === true) ||
                     (change.type === "dimensions" && change.resizing === true)
-                  // Skipping transient writes is only safe/needed in single-user
-                  // mode — there the always-on UndoManager pins every per-frame
-                  // struct and the doc balloons (the freeze). In collaboration
-                  // the per-frame writes drive the live remote drag and are
-                  // GC-reclaimed (no UndoManager), so we keep them.
+                  // Skip transient frames only in single-user mode: there the
+                  // always-on UndoManager pins every per-frame struct and the
+                  // document grows unbounded. In collaboration the per-frame
+                  // writes drive the live remote drag and are GC-reclaimed (no
+                  // UndoManager), so they are kept.
                   if (isTransient && !get().collaborationEnabled) continue
                   const node = nextNodes.find((n) => n.id === change.id)
                   if (node) {

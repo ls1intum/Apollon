@@ -210,10 +210,10 @@ jobs:
           path: standalone/webapp/playwright-report/
           retention-days: 14
 
-  # The exam freeze was reported in Firefox, so run the performance regression
-  # guard (encoded-doc growth, broadcast count, live collaboration) there too.
-  # The functional e2e suite isn't run on Firefox yet — it has a few
-  # pre-existing Firefox-only rendering quirks that need separate triage.
+  # Run the document-growth performance budget on Firefox too, not just
+  # Chromium: its GC behaviour surfaces unbounded-growth regressions sooner. The
+  # functional e2e suite is not run on Firefox yet — it has a few Firefox-only
+  # rendering quirks that need separate triage.
   perf-firefox-tests:
     needs: [detect-changes]
     if: needs.detect-changes.outputs.should-skip != 'true' && needs.detect-changes.outputs.code == 'true'

@@ -7,15 +7,12 @@ import {
 } from "./perfHelpers"
 
 /**
- * Gate A — Yjs document-growth budget under sustained dragging.
+ * Single-user Yjs document-growth budget under sustained dragging.
  *
- * This is the PRIMARY exam regression: Apollon-in-Artemis exams are single
- * user, so the local editor (no collaboration) is the path that froze. The
- * old code wrote the full node object to the Yjs map on every React-Flow drag
- * frame (~60/s) while an always-on UndoManager pinned each intermediate struct
- * so GC couldn't reclaim it — measured ~335x growth at 200 drags. The fix only
- * commits the settle frame, so the doc must stay tiny and grow ~linearly (and
- * very slowly) in the number of *gestures*, not frames.
+ * In single-user editing an always-on UndoManager pins every CRDT struct, so
+ * writing the node on each drag frame (~60/s) would grow the document
+ * unbounded. The editor commits only the settled position, so the encoded
+ * document must stay small and scale with the number of *gestures*, not frames.
  */
 
 test.describe.configure({ mode: "serial" })
@@ -23,12 +20,12 @@ test.describe.configure({ mode: "serial" })
 const fixture = loadFixture("perf-30-nodes.json")
 const DRAG_COUNT = 40
 const BYTE_BUDGET = 256 * 1024
-// A drag must commit ~one settle write, not one-per-frame. Measured: ~26 with
-// the fix vs ~229 with per-frame writes for 40 drags — 1.5x/gesture cleanly
-// separates the two and tolerates the odd extra commit.
+// A drag commits ~one settle write; writing every frame would be ~one per
+// frame. 1.5 writes/gesture sits well under the per-frame rate and tolerates an
+// occasional extra commit.
 const MAX_WRITES_PER_DRAG = 1.5
-// Bytes added per gesture. Measured: ~108 B/drag with the fix vs ~917 B/drag
-// when transient frames persist; 512 sits firmly between them.
+// Bytes added per gesture: a settle-only commit adds ~100 B/drag, while
+// persisting every frame adds ~900 B/drag. 512 sits firmly between them.
 const BYTES_PER_DRAG_BUDGET = 512
 
 test("encoded Yjs doc stays bounded across many drag gestures", async ({

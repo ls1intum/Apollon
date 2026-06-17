@@ -61,7 +61,8 @@ export async function readPerf(page: Page): Promise<PerfSnapshot> {
 /**
  * Drag a node by (dx, dy) screen pixels in `steps` intermediate moves, then
  * release. The intermediate moves mimic React-Flow's per-frame position
- * changes during a real pointer drag — the workload that used to flood Yjs.
+ * changes during a real pointer drag — the workload the write guard must keep
+ * out of the Yjs document.
  */
 export async function dragNodeBy(
   node: Locator,

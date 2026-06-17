@@ -75,7 +75,7 @@ describe("ApollonEditor.__perf()", () => {
     }
   })
 
-  it("counts a committed onNodesChange node write via storeNodeWrites", () => {
+  it("commits a settle-frame node change to Yjs and counts the write", () => {
     const ydoc = new Y.Doc()
     const store = createDiagramStore(ydoc)
     store.getState().setNodes([makeNode("a", 0)])
@@ -91,52 +91,16 @@ describe("ApollonEditor.__perf()", () => {
       },
     ])
 
-    const after = getPerfCounters()?.storeNodeWrites ?? 0
-    expect(after).toBe(before + 1)
-
-    ydoc.destroy()
-  })
-
-  it("does not write transient drag frames to Yjs, only the settle frame", () => {
-    const ydoc = new Y.Doc()
-    const store = createDiagramStore(ydoc)
-    store.getState().setNodes([makeNode("a", 0)])
-
-    const before = getPerfCounters()?.storeNodeWrites ?? 0
-
-    for (let i = 1; i <= 60; i++) {
-      store.getState().onNodesChange([
-        {
-          id: "a",
-          type: "position",
-          position: { x: i, y: 0 },
-          dragging: true,
-        },
-      ])
-    }
-    expect((getPerfCounters()?.storeNodeWrites ?? 0) - before).toBe(0)
-
-    store.getState().onNodesChange([
-      {
-        id: "a",
-        type: "position",
-        position: { x: 61, y: 0 },
-        dragging: false,
-      },
-    ])
-
     expect((getPerfCounters()?.storeNodeWrites ?? 0) - before).toBe(1)
-
-    expect(store.getState().nodes[0].position.x).toBe(61)
-    expect(getNodesMap(ydoc).get("a")?.position.x).toBe(61)
+    expect(getNodesMap(ydoc).get("a")?.position.x).toBe(999)
 
     ydoc.destroy()
   })
 
   it("is collaboration-aware: keeps transient drag frames in single-user, writes them in collaboration", () => {
-    // Single-user (default): transient drag frames are skipped (the freeze
-    // guard). Positions advance each frame so the deepEqual short-circuit at
-    // the top of onNodesChange doesn't swallow them and mask the guard.
+    // Single-user (default): transient drag frames are skipped. Positions
+    // advance each frame so the deepEqual short-circuit at the top of
+    // onNodesChange doesn't swallow them and mask the guard.
     const singleUserDoc = new Y.Doc()
     const singleUserStore = createDiagramStore(singleUserDoc)
     singleUserStore.getState().setNodes([makeNode("a", 0)])
@@ -252,10 +216,10 @@ describe("ApollonEditor.__perf()", () => {
   })
 
   it("tracks only the store origin: a remote-origin edit never enters the undo stack", () => {
-    // The always-on UndoManager pins every tracked struct (defeating Yjs GC) —
-    // the root cause of the freeze. Tracking a peer/remote origin would pin
-    // remote structs too AND make Cmd+Z revert collaborators' edits. This fails
-    // if `trackedOrigins` drops STORE_ORIGIN or admits another origin.
+    // The always-on UndoManager pins every tracked struct (defeating Yjs GC),
+    // so tracking a peer/remote origin would pin remote structs too AND make
+    // Cmd+Z revert collaborators' edits. This fails if `trackedOrigins` drops
+    // STORE_ORIGIN or admits another origin.
     const ydoc = new Y.Doc()
     const store = createDiagramStore(ydoc)
     store.getState().setNodes([makeNode("a", 0)])
