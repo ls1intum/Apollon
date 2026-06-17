@@ -10,7 +10,7 @@ import { ConversionService } from "../services/conversion-service.js"
 type WorkerRequest = { id: number; model: UMLModel }
 type WorkerResponse =
   | ({ id: number; ok: true } & SVG)
-  | { id: number; ok: false; error: string }
+  | { id: number; ok: false; error: string; code?: string }
 
 parentPort?.on("message", async (message: WorkerRequest) => {
   let response: WorkerResponse
@@ -20,11 +20,13 @@ parentPort?.on("message", async (message: WorkerRequest) => {
     )
     response = { id: message.id, ok: true, svg, clip }
   } catch (error) {
+    const code = (error as { code?: string })?.code
     response = {
       id: message.id,
       ok: false,
       error:
         error instanceof Error ? error.stack || error.message : String(error),
+      ...(code ? { code } : {}),
     }
   }
   parentPort?.postMessage(response)

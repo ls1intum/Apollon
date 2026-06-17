@@ -18,21 +18,29 @@ const model = (
   }) as UMLModel
 
 describe("findUnsupportedLabels", () => {
-  it("passes Latin text (and the symbols the bundled subset covers)", () => {
+  it("passes the scripts the bundled Inter covers: Latin, Greek, Cyrillic, Vietnamese", () => {
     const m = model(
-      [{ data: { name: "Größenänderung", attributes: ["+ id: Long"] } }],
+      [
+        { data: { name: "Größenänderung", attributes: ["+ id: Long"] } },
+        { data: { name: "λ-Reduktion (Σ, α, β)" } }, // Greek
+        { data: { name: "Заказ (Україна)" } }, // Cyrillic
+        { data: { name: "Phương thức" } }, // Vietnamese
+      ],
       [{ data: { messages: [{ text: "1: «create» — done…" }] } }]
     )
     expect(findUnsupportedLabels(m)).toEqual([])
   })
 
-  it("flags CJK, emoji, and Cyrillic labels (outside the bundled font)", () => {
+  it("flags CJK, emoji, Arabic, and Hebrew (genuinely outside Inter)", () => {
     expect(
       findUnsupportedLabels(model([{ data: { name: "注文" } }]))
     ).toContain("注文")
     expect(
-      findUnsupportedLabels(model([{ data: { name: "Заказ" } }]))
-    ).toContain("Заказ")
+      findUnsupportedLabels(model([{ data: { name: "الطلب" } }]))
+    ).toContain("الطلب")
+    expect(
+      findUnsupportedLabels(model([{ data: { name: "הזמנה" } }]))
+    ).toContain("הזמנה")
     expect(
       findUnsupportedLabels(
         model([], [{ data: { messages: [{ text: "ship 🚀" }] } }])
@@ -40,7 +48,7 @@ describe("findUnsupportedLabels", () => {
     ).toContain("ship 🚀")
   })
 
-  it("flags a non-Latin diagram title", () => {
+  it("flags a CJK diagram title", () => {
     expect(findUnsupportedLabels(model([], [], "クラス図"))).toContain(
       "クラス図"
     )

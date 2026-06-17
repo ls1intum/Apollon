@@ -17,6 +17,10 @@ falling back to `text.length × 8` and misgrading exports).
 
 Adds a worker-thread cross-type regression test that exports every diagram type,
 checks geometry against the browser-authored widths, and verifies an overhanging
-edge label widens the export clip (so messages are not cropped). Also warns when
-a submission contains glyphs outside the bundled font, since those render in a
-fallback face and may not match the editor — a grading-integrity signal.
+edge label widens the export clip (so messages are not cropped).
+
+For grading integrity it also: warns when a submission contains glyphs outside
+the bundled font's coverage (now Latin + Greek + Cyrillic + Vietnamese), since
+those render in a fallback face that may not match the editor; and **fails loud**
+on a node with missing/zero/NaN dimensions (a 422, naming the node) instead of
+silently fabricating a 100×50 box that would misrepresent a graded submission.

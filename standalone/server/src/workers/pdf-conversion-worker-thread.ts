@@ -22,6 +22,9 @@ type WorkerResponse =
       id: number
       ok: false
       error: string
+      // Stable code from a tagged error (e.g. InvalidModelGeometryError), so the
+      // route can map it to a status instead of string-matching the message.
+      code?: string
     }
 
 async function renderPdf(model: UMLModel): Promise<Uint8Array> {
@@ -58,11 +61,13 @@ parentPort?.on("message", async (message: WorkerRequest) => {
       pdf: new Uint8Array(pdf),
     }
   } catch (error) {
+    const code = (error as { code?: string })?.code
     response = {
       id: message.id,
       ok: false,
       error:
         error instanceof Error ? error.stack || error.message : String(error),
+      ...(code ? { code } : {}),
     }
   }
 

@@ -1,15 +1,21 @@
 import type { UMLModel } from "@tumaet/apollon"
 
-// The bundled Inter the editor measures and renders diagram text with is a
-// Latin subset (see the library's scripts/gen-fonts.mjs). Any codepoint outside
-// it falls back to a different face in the editor — so a server export of such
-// a label cannot be guaranteed to match what the student saw. This is the
-// authenticity boundary for grading; text within it is faithful, text outside
-// it (CJK, emoji, Hebrew/Arabic, Greek/Cyrillic, …) is not.
+// The bundled Inter the editor measures and renders diagram text with covers
+// Latin + Greek + Cyrillic + Vietnamese (must stay in lockstep with the ranges
+// in the library's scripts/gen-fonts.mjs). Any codepoint outside it falls back
+// to a different face in the editor — so a server export of such a label cannot
+// be guaranteed to match what the student saw. This is the authenticity
+// boundary for grading; text within it is faithful, text outside it (CJK,
+// emoji, Hebrew, Arabic, …) is not.
 const isCoveredCodePoint = (cp: number): boolean =>
   (cp >= 0x20 && cp <= 0x7e) || // Basic Latin
   (cp >= 0xa0 && cp <= 0xff) || // Latin-1 Supplement
   (cp >= 0x100 && cp <= 0x17f) || // Latin Extended-A
+  (cp >= 0x180 && cp <= 0x24f) || // Latin Extended-B (Vietnamese ư/ơ, …)
+  (cp >= 0x300 && cp <= 0x36f) || // Combining diacritics
+  (cp >= 0x370 && cp <= 0x3ff) || // Greek and Coptic
+  (cp >= 0x400 && cp <= 0x4ff) || // Cyrillic
+  (cp >= 0x1e00 && cp <= 0x1eff) || // Latin Extended Additional (Vietnamese)
   cp === 0x2013 || // en dash
   cp === 0x2014 || // em dash
   (cp >= 0x2018 && cp <= 0x201f) || // smart quotes

@@ -5,6 +5,7 @@ import {
   type SVG,
 } from "@tumaet/apollon"
 import { findUnsupportedLabels } from "./glyph-coverage.js"
+import { assertValidNodeGeometry } from "./node-geometry.js"
 
 export class ConversionService {
   private readonly EDGE_ENDPOINT_INSET_PX = -3
@@ -68,8 +69,10 @@ export class ConversionService {
     ])
   }
 
-  // SSR cannot measure dimensions/handle geometry, so inject defaults the
-  // React Flow renderer can pass straight through.
+  // SSR cannot measure handle geometry, so inject the handles the React Flow
+  // renderer needs from each node's (already-validated) real dimensions. Node
+  // dimensions themselves are NOT fabricated — assertValidNodeGeometry has
+  // guaranteed they are present and positive before we get here.
   private normalizeModelForServerRender = (model: UMLModel): UMLModel => {
     type NodeWithHandles = UMLModel["nodes"][number] & {
       handles?: unknown
@@ -80,15 +83,8 @@ export class ConversionService {
         const n = node as NodeWithHandles
         return {
           ...node,
-          width: node.width ?? 100,
-          height: node.height ?? 50,
-          measured: {
-            width: node.measured?.width ?? node.width ?? 100,
-            height: node.measured?.height ?? node.height ?? 50,
-          },
           handles:
-            n.handles ??
-            this.createDefaultHandles(node.width ?? 100, node.height ?? 50),
+            n.handles ?? this.createDefaultHandles(node.width, node.height),
         }
       }),
       edges: (model.edges ?? []).map((edge, index) => ({
@@ -107,9 +103,11 @@ export class ConversionService {
   }
 
   convertToSvg = async (model: UMLModel): Promise<SVG> => {
-    const normalizedModel = this.normalizeModelForServerRender(
-      importDiagram(model)
-    )
+    const imported = importDiagram(model)
+    // Fail loud on corrupt geometry rather than fabricate a wrong-sized box in a
+    // graded export (relayed to a 422 via the worker — see conversion-resource).
+    assertValidNodeGeometry(imported)
+    const normalizedModel = this.normalizeModelForServerRender(imported)
 
     // Integrity signal for grading: text outside the bundled Latin Inter renders
     // in a fallback face and may not match the student's editor. Surface it so a
