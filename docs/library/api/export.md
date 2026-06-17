@@ -35,10 +35,11 @@ const svgExport = await ApollonEditor.exportModelAsSvg(importDiagram(model), {
 })
 ```
 
-`exportModelAsSvg` mounts the editor off-screen and serialises the rendered
-SVG, so it needs a **real browser DOM** (not jsdom). To render saved models in
-a batch — e.g. reviewing diagram submission versions — use the Playwright recipe
-and the font pitfall in **[Headless rendering](./headless-rendering)**.
+`exportModelAsSvg` mounts the editor off-screen and serialises the rendered SVG,
+so it needs a DOM plus canvas `measureText` and `getBBox`. To render saved models
+in a batch — e.g. reviewing diagram submission versions — without a browser, use
+the **jsdom + canvas** recipe in **[Headless rendering](./headless-rendering)**
+(a browser is the heavier, pixel-exact alternative).
 
 :::tip Always normalise first
 Pass models through `importDiagram(...)` before exporting. It upgrades v2 / v3
@@ -46,10 +47,9 @@ payloads to the current v4 shape; feeding a stale shape straight in is a common
 cause of garbled output.
 :::
 
-> The standalone **server's** PDF / thumbnail worker is a _different_ pipeline:
-> it renders under jsdom and pre-seeds element dimensions instead of measuring
-> them live. Don't copy it for browser-based headless export — use the
-> Playwright recipe above.
+> The standalone **server's** PDF / thumbnail worker is the reference jsdom
+> setup: it registers Inter on a Skia canvas, shims `getBBox`, and pre-seeds
+> handle geometry. See **[Headless rendering](./headless-rendering)**.
 
 ## PNG / PDF
 

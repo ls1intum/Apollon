@@ -1,127 +1,135 @@
 ---
 id: headless-rendering
 title: Headless rendering
-description: Render saved Apollon models to SVG/PNG in a real browser with Playwright — and why mismatched fonts cause overlapping elements.
+description: Render saved Apollon models to SVG/PNG with no browser, using jsdom + a Skia canvas. Why text-sized diagrams overlap without it, and how to fix it.
 ---
 
 # Headless rendering
 
 You have Apollon models on disk — exam submission versions, exported diagrams,
 generated fixtures — and you want pictures of them without opening the editor by
-hand. This page is the supported recipe.
+hand, ideally without shipping a whole browser. This page is the supported
+recipe.
 
 ## TL;DR
 
-- `ApollonEditor.exportModelAsSvg(model, options)` renders a model to SVG, but
-  it needs a **real browser DOM** (it measures text with canvas `measureText`
-  and `getBBox`). Run it under **Playwright or Puppeteer**, not jsdom.
-- Load the library **stylesheet** (`@tumaet/apollon/style.css`) in the page and
-  `await document.fonts.ready` before exporting. This is the single most common
-  mistake — skip it and elements **overlap** (see below).
+- `ApollonEditor.exportModelAsSvg(model, options)` needs a DOM, canvas
+  `measureText`, and `getBBox`. The lightweight way to provide them is
+  **jsdom + a real canvas** — no browser, no Playwright.
+- jsdom has **no canvas**, so on its own `measureText` degrades to a crude
+  `text.length × 8` estimate and **text-sized diagrams (class, object,
+  communication, sfc) overlap**. Give jsdom a real canvas by aliasing the
+  `canvas` package to [`@napi-rs/canvas`](https://github.com/Brooooooklyn/canvas)
+  (Skia, prebuilt binaries, no system libraries) and registering the bundled
+  Inter font.
 - Always `importDiagram(model)` first to normalise v2 / v3 payloads to v4.
 
-## Why elements overlap (the font trap)
+The standalone server is the reference implementation:
+[`jsdom-shims.ts`](https://github.com/ls1intum/Apollon/blob/main/standalone/server/src/workers/jsdom-shims.ts)
+and
+[`conversion-service.ts`](https://github.com/ls1intum/Apollon/blob/main/standalone/server/src/services/conversion-service.ts).
 
-Apollon sizes text-bearing nodes (classes, objects, …) from the **measured
-width of their text**. The measurement uses the font named first in the diagram
-font stack: `Inter`. The library now **self-hosts Inter** (bundled into
-`style.css`), so as long as that stylesheet is loaded, every renderer — the
-editor, headless export, the server, your Playwright job — measures against the
-exact same glyphs and a diagram lays out identically everywhere.
+## Why text-sized diagrams overlap (the canvas trap)
 
-If you render in a browser where Inter is **not** available (you forgot the
-stylesheet, or you measured before `document.fonts.ready` resolved), the stack
-falls through to `system-ui`. A headless Linux Chromium resolves `system-ui` to
-a font with **different metrics** than the desktop machine the diagram was
-authored on, so nodes grow or shrink relative to their saved positions — and
-overlap. That is exactly the symptom of a headless export that "looks nothing
-like the website".
+Apollon sizes text-bearing nodes from the **measured width of their text** (a
+class grows to fit its widest member). Measurement goes through canvas
+`measureText`. Under bare jsdom there is no canvas, so the width is guessed as
+`text.length × 8` — wrong enough that nodes grow past their saved positions and
+collide. Fixed-size diagrams (activity, petri net, flowchart, …) look fine;
+text-sized ones don't. Giving jsdom a real, Inter-loaded canvas fixes it.
 
-> **Use a version that bundles Inter.** Self-hosted Inter ships in current
-> `@tumaet/apollon` releases; on an older one you must inject the Inter font
-> into the page yourself before exporting. The recipe below uses `@latest` for
-> brevity — pin a specific version for reproducible batch runs.
+## Recipe: model JSON → SVG with jsdom (no browser)
 
-## Recipe: model JSON → SVG with Playwright
+**1. Alias `canvas` to `@napi-rs/canvas`.** jsdom backs `HTMLCanvasElement` with
+a single `require("canvas")`; point that at Skia. With pnpm, add a dependency
+to the package that runs the export:
 
-This runs the library's own export inside a headless Chromium page and reads the
-SVG string back out. It mirrors the "vanilla embed" approach, with the two fixes
-that matter: **load the stylesheet** and **await the fonts**.
-
-```ts
-// render.ts — run with: npx tsx render.ts model.json out.svg
-import { chromium } from "playwright"
-import { readFileSync, writeFileSync } from "node:fs"
-
-const VERSION = "latest" // or pin a specific version that bundles Inter
-
-const model = JSON.parse(readFileSync(process.argv[2], "utf8"))
-
-const browser = await chromium.launch()
-const page = await browser.newPage()
-
-// A blank page that loads Apollon + its stylesheet from a CDN. The stylesheet
-// is what registers the bundled Inter @font-face.
-await page.setContent(
-  `<!doctype html><html><head>
-     <link rel="stylesheet" href="https://esm.sh/@tumaet/apollon@${VERSION}/style.css">
-   </head><body></body></html>`,
-  { waitUntil: "load" }
-)
-
-const svg = await page.evaluate(
-  async ({ model, version }) => {
-    const { ApollonEditor, importDiagram } = await import(
-      `https://esm.sh/@tumaet/apollon@${version}`
-    )
-    // Wait for the bundled Inter to finish loading before we measure text.
-    await document.fonts.ready
-    const { svg } = await ApollonEditor.exportModelAsSvg(importDiagram(model), {
-      svgMode: "compat",
-    })
-    return svg
-  },
-  { model, version: VERSION }
-)
-
-writeFileSync(process.argv[3], svg)
-await browser.close()
+```jsonc
+// package.json
+"dependencies": {
+  "canvas": "npm:@napi-rs/canvas@1",
+  "global-jsdom": "^28",
+  "jsdom": "^28"
+}
 ```
 
-`svgMode: "compat"` additionally embeds Inter into the SVG as a base64
-`@font-face`, so the file renders in the right font even when opened later in a
-browser, Inkscape, or PowerPoint — no font install required.
+**2. Install jsdom + register Inter before importing the library.** Apollon
+measures text at module load, so the font and DOM must exist first. Register the
+**same Inter** the library bundles (and that resvg uses for rasterising) so the
+measured metrics match the editor:
+
+```ts
+// setup.ts — imported first, before @tumaet/apollon
+import { GlobalFonts } from "canvas"
+import "global-jsdom/register"
+
+GlobalFonts.registerFromPath("/path/to/Inter-Regular.ttf", "Inter")
+GlobalFonts.registerFromPath("/path/to/Inter-Bold.ttf", "Inter")
+
+// jsdom's getBBox is a constant 10×10 stub; read each shape's viewBox instead.
+const proto = window.SVGElement.prototype as unknown as {
+  getBBox: () => DOMRect
+}
+proto.getBBox = function () {
+  const vb = (this as unknown as Element).getAttribute?.("viewBox")
+  if (vb) {
+    const [x, y, width, height] = vb.split(/[\s,]+/).map(Number)
+    if ([x, y, width, height].every(Number.isFinite))
+      return { x, y, width, height } as DOMRect
+  }
+  return { x: 0, y: 0, width: 0, height: 0 } as DOMRect
+}
+```
+
+jsdom also lacks `ResizeObserver` / `requestAnimationFrame` — shim them too (see
+the reference `jsdom-shims.ts`).
+
+**3. Export.** Server-side rendering can't measure handle geometry, so pre-seed
+each node's `width` / `height` / `measured` and edge handles before exporting
+(see `normalizeModelForServerRender` in the reference `conversion-service.ts`):
+
+```ts
+import { ApollonEditor, importDiagram } from "@tumaet/apollon"
+
+const { svg, clip } = await ApollonEditor.exportModelAsSvg(
+  importDiagram(model),
+  { svgMode: "compat" }
+)
+```
+
+Run it in a **worker thread** so the jsdom globals stay out of your main
+process. `svgMode: "compat"` resolves CSS variables and embeds Inter as a base64
+`@font-face`, so the SVG renders in the right font when opened in a browser,
+Inkscape, or PowerPoint.
+
+### Fidelity
+
+`@napi-rs/canvas` is Skia (Chromium's rasterizer family), so measured widths
+track the browser closely — text-sized nodes land within one 10px min-width grid
+step of the browser-authored sizes across all 13 diagram types. It is **not**
+bit-identical: Skia shaping differs slightly from Chromium's HarfBuzz, so an
+occasional label near a grid boundary can be ~10px wider or narrower. If you
+need pixel-exact parity with the editor, use the browser path below.
 
 ## SVG → PNG / PDF
 
-The SVG above is self-contained. To rasterise:
+The `compat` SVG is self-contained. To rasterise:
 
-- **Browser screenshot** (most faithful — resolves the embedded `@font-face`):
-  load the SVG in a Playwright page and `element.screenshot()`, or set it as an
-  `<img>` and screenshot that.
-- **[`@resvg/resvg-js`](https://github.com/yisibl/resvg-js)** (fast, no
-  browser): resvg does not resolve data-URI `@font-face`, so pass Inter
-  explicitly via `fontFiles` and set `defaultFontFamily: "Inter"`. Use the same
-  Inter you render the editor with for pixel-identical output. The standalone
-  webapp's `tests/helpers/resvgRender.ts` is a working reference.
+- **[`@resvg/resvg-js`](https://github.com/yisibl/resvg-js)** (fast, no browser):
+  resvg does not resolve data-URI `@font-face`, so pass Inter via `fontFiles`
+  and set `defaultFontFamily: "Inter"` — the same Inter you registered above, so
+  measurement and rasterisation agree. The standalone webapp's
+  `tests/helpers/resvgRender.ts` is a working reference. The server's PDF worker
+  feeds the SVG straight to `pdfmake`.
+- **Browser screenshot**: load the SVG in a page and screenshot it.
 
-## Bundler / offline variant
+## Alternative: render in a real browser
 
-If you bundle the library yourself instead of using a CDN, the only change is
-the import: ship a small page that does
-`import { ApollonEditor, importDiagram } from "@tumaet/apollon"` and
-`import "@tumaet/apollon/style.css"`, then run the same
-`await document.fonts.ready` → `exportModelAsSvg` flow inside Playwright. The
-stylesheet import is what registers Inter — don't drop it.
+If you need pixel-exact browser fidelity (or already run Playwright/Puppeteer),
+load `@tumaet/apollon` + `@tumaet/apollon/style.css` in a page, `await
+document.fonts.ready`, then call `exportModelAsSvg`. The stylesheet registers the
+bundled Inter; don't drop it. This is heavier than jsdom — reach for it only when
+the ~10px shaping difference above matters.
 
-## Don't use jsdom for this
-
-`exportModelAsSvg` relies on canvas `measureText` and SVG `getBBox`. jsdom
-implements neither faithfully (text measurement degrades to a crude
-characters-times-constant estimate), so node sizes come out wrong and elements
-overlap. Use a real browser. The standalone **server** renders under jsdom only
-because it **pre-seeds** every element's dimensions before rendering — a
-different pipeline that is not exposed as a public API.
-
-See also: **[Export](./export)** for the full `ExportOptions` table and the
-JSON round-trip.
+See also: **[Export](./export)** for the full `ExportOptions` table and
+**[Model JSON contract](./model-contract)** for the model shape.

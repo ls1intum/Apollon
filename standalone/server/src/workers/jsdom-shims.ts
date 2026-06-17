@@ -2,7 +2,29 @@
 // during server-side SVG export. Importing this file installs the shims as
 // module-evaluation side effects; import it before any code that touches
 // `window`, `document`, or the apollon library.
+// `canvas` is aliased to @napi-rs/canvas (see standalone/server/package.json);
+// jsdom's HTMLCanvasElement resolves the same alias for getContext().
+import { GlobalFonts } from "canvas"
+import { fileURLToPath } from "node:url"
 import "global-jsdom/register"
+
+// Register the bundled Inter — the same TTFs the editor's woff2 is subset from
+// (Inter 4.001) — so canvas `measureText` (and @chenglou/pretext's wrapping)
+// size text-bearing nodes with the real font instead of jsdom's no-canvas
+// `text.length * 8` fallback. Without this, class/object/communication
+// diagrams overlap headlessly. The `canvas` alias to @napi-rs/canvas (Skia) is
+// in pnpm-workspace.yaml; Skia's metrics match the browser closely enough that
+// node widths stay within their authored sizes. MUST run before the apollon
+// library is imported (textUtils captures its canvas context at module load).
+const fontPath = (name: string) =>
+  fileURLToPath(new URL(`../../assets/fonts/${name}`, import.meta.url))
+GlobalFonts.registerFromPath(fontPath("Inter-Regular.ttf"), "Inter")
+GlobalFonts.registerFromPath(fontPath("Inter-Bold.ttf"), "Inter")
+
+// pretext probes `OffscreenCanvas` before `document.createElement('canvas')`.
+// Only the latter routes through jsdom's `require("canvas")` alias, so force
+// the document path by hiding any host-provided OffscreenCanvas (Node 24+).
+;(globalThis as { OffscreenCanvas?: unknown }).OffscreenCanvas = undefined
 
 class ResizeObserverShim {
   observe() {}
