@@ -6,22 +6,22 @@ description: Self-hosted HTTP endpoints that turn an Apollon model into SVG, PNG
 
 # Conversion API (REST)
 
-The standalone Apollon **server** (`@tumaet/server`) exposes the
-[headless renderer](./headless-rendering) over HTTP. POST a model, get a
-picture back — no browser, no client-side editor, nothing to build yourself.
-This is the path for integrators (an LMS, a grading pipeline, a batch job) that
-already have models on disk and just want files.
+The standalone Apollon server (`@tumaet/server`) renders a saved diagram to an
+image over HTTP: send it a model, get back an SVG, PNG, or PDF. You don't run a
+browser or the editor yourself, so it's a good fit when you already store models
+somewhere (an LMS, a grading pipeline) and just need a file.
 
-Under the hood every request runs `ApollonEditor.exportModelAsSvg` in a worker
-thread; PNG and PDF are rasterised from that SVG. The fidelity notes in
-[Headless rendering](./headless-rendering#fidelity-for-grading) apply verbatim.
+Each request renders the model with the same
+[headless renderer](./headless-rendering) the library uses, in a background
+worker; the PNG and PDF are drawn from that SVG. Its
+[fidelity notes](./headless-rendering#fidelity-for-grading) apply here too.
 
 ## Endpoints
 
 All routes are mounted under `/api`. The examples use a local server at its
-default `http://localhost:8000`; TUM also runs a public instance at
-**`https://apollon.aet.cit.tum.de`** — swap that base URL in to try the API
-without self-hosting.
+default `http://localhost:8000`. TUM also runs a public instance at
+**`https://apollon.aet.cit.tum.de`**; swap that base URL into any example to try
+the API without self-hosting.
 
 | Method | Path                    | Response `Content-Type` | Body                 |
 | ------ | ----------------------- | ----------------------- | -------------------- |
