@@ -1,3 +1,4 @@
+import { useReactiveEdge } from "@/hooks"
 import { EdgeStyleEditor, TextField } from "@/components/ui"
 import { PopoverProps } from "../types"
 import { PopoverLayout, PopoverSection } from "../PopoverLayout"
@@ -33,8 +34,8 @@ function serializeSfcEdgeLabel(data: SfcEdgeData): string {
 }
 
 export const SfcEdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
-  const { getEdge, updateEdgeData } = useReactFlow()
-  const edge = getEdge(elementId)
+  const { updateEdgeData } = useReactFlow()
+  const edge = useReactiveEdge(elementId)
 
   const [edgeData, setEdgeData] = useState<SfcEdgeData>(() =>
     parseSfcEdgeLabel(edge?.data?.label as string | undefined)

@@ -2,15 +2,15 @@ import { EdgeStyleEditor, IconButton, TextField } from "@/components/ui"
 import { useReactFlow } from "@xyflow/react"
 import { CustomEdgeProps } from "@/edges/EdgeProps"
 import { ArrowLeftRight } from "lucide-react"
-import { useEdgePopOver } from "@/hooks"
+import { useEdgePopOver, useReactiveEdge } from "@/hooks"
 import { PopoverProps } from "../types"
 import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 
 export const FlowChartEdgeEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
-  const { getEdge, updateEdgeData } = useReactFlow()
-  const edge = getEdge(elementId)
+  const { updateEdgeData } = useReactFlow()
+  const edge = useReactiveEdge(elementId)
 
   const { handleLabelChange, handleSwap } = useEdgePopOver(elementId)
 
@@ -27,12 +27,12 @@ export const FlowChartEdgeEditPopover: React.FC<PopoverProps> = ({
         handleDataFieldUpdate={(key, value) =>
           updateEdgeData(elementId, { ...edge.data, [key]: value })
         }
-        label="Style"
+        label="Flowline"
         sideElements={[
           handleSwap && (
             <IconButton
-              ariaLabel="Swap edge direction"
-              tooltip="Swap edge direction"
+              ariaLabel="Swap source and target"
+              tooltip="Swap source and target"
               onClick={handleSwap}
             >
               <ArrowLeftRight width={16} height={16} aria-hidden="true" />

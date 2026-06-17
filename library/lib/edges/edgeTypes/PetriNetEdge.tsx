@@ -10,7 +10,6 @@ import { useStraightPathEdge } from "@/hooks/useStraightPathEdge"
 import { useDiagramStore, usePopoverStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { useToolbar } from "@/hooks"
-import { useRef } from "react"
 import { EDGES } from "@/constants"
 import {
   AssessmentSelectableWrapper,
@@ -34,7 +33,6 @@ export const PetriNetEdge = ({
   targetHandleId,
   data,
 }: BaseEdgeProps) => {
-  const anchorRef = useRef<SVGSVGElement | null>(null)
   const { handleDelete } = useToolbar({ id })
 
   const config = useEdgeConfig(type as "PetriNetArc")
@@ -148,7 +146,6 @@ export const PetriNetEdge = ({
               toolbarPosition={edgeData.toolbarPosition}
               isDiagramModifiable={isDiagramModifiable}
               assessments={assessments}
-              anchorRef={anchorRef}
               handleDelete={handleDelete}
               setPopOverElementId={setPopOverElementId}
               type={type}

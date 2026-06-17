@@ -1,6 +1,7 @@
 import { useState } from "react"
-import { MiniMap, MiniMapNodeProps, Panel, useReactFlow } from "@xyflow/react"
+import { MiniMap, MiniMapNodeProps, Panel } from "@xyflow/react"
 import { ArrowDownRight, Map } from "lucide-react"
+import { useReactiveNode } from "@/hooks/useReactiveElement"
 import {
   ClassSVG,
   PackageSVG,
@@ -136,9 +137,9 @@ export const CustomMiniMap = () => {
 }
 
 function MiniMapNode({ id, x, y }: MiniMapNodeProps) {
-  const { getNode } = useReactFlow()
-
-  const nodeInfo = getNode(id)
+  // Subscribe so the minimap preview tracks node data/size changes; an
+  // imperative getNode() read goes stale once the compiler memoizes this.
+  const nodeInfo = useReactiveNode(id)
   if (!nodeInfo) return null
 
   switch (nodeInfo.type as DiagramNodeType) {

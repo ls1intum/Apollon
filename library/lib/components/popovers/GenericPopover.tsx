@@ -4,7 +4,7 @@ import { PopoverOrigin } from "@/types"
 
 interface GenericPopoverProps {
   id: string
-  anchorEl: HTMLElement | SVGSVGElement | null | SVGPathElement
+  anchorEl: HTMLElement | SVGElement | null
   open: boolean
   onClose: () => void
   children: ReactNode

@@ -74,6 +74,7 @@
     "@types/react-dom": "catalog:",
     "@types/uuid": "catalog:",
     "@vitejs/plugin-react": "catalog:",
+    "babel-plugin-react-compiler": "catalog:",
     "eslint": "catalog:",
     "eslint-plugin-react": "catalog:",
     "eslint-plugin-react-hooks": "catalog:",

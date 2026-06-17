@@ -1,6 +1,6 @@
 import { NodeProps, type Node } from "@xyflow/react"
+import { usePopoverAnchor } from "@/hooks/usePopoverAnchor"
 import { DefaultNodeWrapper, FOUR_WAY_HANDLES_PRESET } from "../wrappers"
-import { useRef } from "react"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
 import { BPMNEventProps } from "@/types"
@@ -13,7 +13,7 @@ export function BPMNEndEvent({
   height = 40,
   data,
 }: NodeProps<Node<BPMNEventProps>>) {
-  const svgWrapperRef = useRef<HTMLDivElement | null>(null)
+  const [anchorEl, anchorRef] = usePopoverAnchor()
   const isDiagramModifiable = useDiagramModifiable()
 
   return (
@@ -26,7 +26,7 @@ export function BPMNEndEvent({
       <NodeToolbar elementId={id} />
 
       {/* Events are fixed size, no resizer */}
-      <div ref={svgWrapperRef}>
+      <div ref={anchorRef}>
         <BPMNEventNodeSVG
           width={width}
           height={height}
@@ -36,11 +36,7 @@ export function BPMNEndEvent({
           showAssessmentResults={!isDiagramModifiable}
         />
       </div>
-      <PopoverManager
-        anchorEl={svgWrapperRef.current}
-        elementId={id}
-        type="BPMNEndEvent"
-      />
+      <PopoverManager anchorEl={anchorEl} elementId={id} type="BPMNEndEvent" />
     </DefaultNodeWrapper>
   )
 }

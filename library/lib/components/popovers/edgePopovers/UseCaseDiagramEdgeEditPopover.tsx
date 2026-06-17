@@ -2,16 +2,14 @@ import { EdgeStyleEditor, IconButton, TextField } from "@/components/ui"
 import { ArrowLeftRight } from "lucide-react"
 import { useReactFlow } from "@xyflow/react"
 import { CustomEdgeProps } from "@/edges/EdgeProps"
-import { useEdgePopOver } from "@/hooks"
+import { useEdgePopOver, useReactiveEdge, useReactiveNodeName } from "@/hooks"
 import { PopoverProps } from "../types"
 import { EdgeTypeSelect, EdgeTypeOption } from "./EdgeTypeSelect"
 import {
   ConnectionInfo,
-  edgeEndpointNames,
   hasDistinctEndpointNames,
   PopoverLayout,
   PopoverSection,
-  swapDirectionTooltip,
 } from "../PopoverLayout"
 
 const USE_CASE_EDGE_TYPE_OPTIONS: ReadonlyArray<EdgeTypeOption> = [
@@ -24,9 +22,11 @@ const USE_CASE_EDGE_TYPE_OPTIONS: ReadonlyArray<EdgeTypeOption> = [
 export const UseCaseEdgeEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
-  const { getEdge, getNode, updateEdgeData } = useReactFlow()
+  const { updateEdgeData } = useReactFlow()
 
-  const edge = getEdge(elementId)
+  const edge = useReactiveEdge(elementId)
+  const sourceName = useReactiveNodeName(edge?.source, "Source")
+  const targetName = useReactiveNodeName(edge?.target, "Target")
   const { handleEdgeTypeChange, handleLabelChange, handleSwap } =
     useEdgePopOver(elementId)
 
@@ -35,10 +35,6 @@ export const UseCaseEdgeEditPopover: React.FC<PopoverProps> = ({
   }
 
   const edgeData = edge.data as CustomEdgeProps | undefined
-  const { source: sourceName, target: targetName } = edgeEndpointNames(
-    edge,
-    getNode
-  )
 
   return (
     <PopoverLayout title="Edge">
@@ -47,12 +43,12 @@ export const UseCaseEdgeEditPopover: React.FC<PopoverProps> = ({
         handleDataFieldUpdate={(key, value) =>
           updateEdgeData(elementId, { ...edge.data, [key]: value })
         }
-        label="Style"
+        label="Edge Type"
         sideElements={[
           handleSwap && (
             <IconButton
-              ariaLabel={swapDirectionTooltip(sourceName, targetName)}
-              tooltip={swapDirectionTooltip(sourceName, targetName)}
+              ariaLabel="Swap source and target"
+              tooltip="Swap source and target"
               onClick={handleSwap}
             >
               <ArrowLeftRight width={16} height={16} aria-hidden="true" />

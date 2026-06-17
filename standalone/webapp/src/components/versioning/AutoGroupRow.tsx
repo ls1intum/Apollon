@@ -1,5 +1,5 @@
 import { ChevronDownIcon, ChevronRightIcon } from "lucide-react"
-import { memo, useState, type CSSProperties, type FC } from "react"
+import { useState, type CSSProperties, type FC } from "react"
 import { VersionListItem } from "./VersionListItem"
 import { ROW_HOVER_BG, TEXT_MUTED } from "./theme"
 import type { GroupedEntry } from "./utils"
@@ -77,4 +77,4 @@ const AutoGroupRow: FC<AutoGroupRowProps> = ({
   )
 }
 
-export default memo(AutoGroupRow)
+export default AutoGroupRow

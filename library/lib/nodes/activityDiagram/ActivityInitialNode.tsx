@@ -1,7 +1,7 @@
 import { NodeProps, type Node } from "@xyflow/react"
+import { usePopoverAnchor } from "@/hooks/usePopoverAnchor"
 import { DefaultNodeWrapper, FOUR_WAY_HANDLES_PRESET } from "../wrappers"
 import { DefaultNodeProps } from "@/types"
-import { useRef } from "react"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
 import { ActivityInitialNodeSVG } from "@/components/svgs/nodes"
@@ -12,7 +12,7 @@ export function ActivityInitialNode({
   width,
   height,
 }: NodeProps<Node<DefaultNodeProps>>) {
-  const svgWrapperRef = useRef<HTMLDivElement | null>(null)
+  const [anchorEl, anchorRef] = usePopoverAnchor()
 
   const isDiagramModifiable = useDiagramModifiable()
 
@@ -27,7 +27,7 @@ export function ActivityInitialNode({
       hiddenHandles={FOUR_WAY_HANDLES_PRESET}
     >
       <NodeToolbar elementId={id} />
-      <div ref={svgWrapperRef}>
+      <div ref={anchorRef}>
         <ActivityInitialNodeSVG
           width={width}
           height={height}
@@ -36,11 +36,7 @@ export function ActivityInitialNode({
         />
       </div>
 
-      <PopoverManager
-        anchorEl={svgWrapperRef.current}
-        elementId={id}
-        type="default"
-      />
+      <PopoverManager anchorEl={anchorEl} elementId={id} type="default" />
     </DefaultNodeWrapper>
   )
 }

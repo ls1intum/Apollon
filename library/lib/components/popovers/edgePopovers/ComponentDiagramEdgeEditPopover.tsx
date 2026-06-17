@@ -1,17 +1,15 @@
 import { EdgeStyleEditor, IconButton } from "@/components/ui"
 import { useReactFlow } from "@xyflow/react"
 import { ArrowLeftRight } from "lucide-react"
-import { useEdgePopOver } from "@/hooks"
+import { useEdgePopOver, useReactiveEdge, useReactiveNodeName } from "@/hooks"
 import { PopoverProps } from "../types"
 import { CustomEdgeProps } from "@/edges"
 import { EdgeTypeSelect, EdgeTypeOption } from "./EdgeTypeSelect"
 import {
   ConnectionInfo,
-  edgeEndpointNames,
   hasDistinctEndpointNames,
   PopoverLayout,
   PopoverSection,
-  swapDirectionTooltip,
 } from "../PopoverLayout"
 
 const COMPONENT_EDGE_TYPE_OPTIONS: ReadonlyArray<EdgeTypeOption> = [
@@ -23,19 +21,16 @@ const COMPONENT_EDGE_TYPE_OPTIONS: ReadonlyArray<EdgeTypeOption> = [
 export const ComponentEdgeEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
-  const { getEdge, getNode, updateEdgeData } = useReactFlow()
+  const { updateEdgeData } = useReactFlow()
 
-  const edge = getEdge(elementId)
+  const edge = useReactiveEdge(elementId)
+  const sourceName = useReactiveNodeName(edge?.source, "Source")
+  const targetName = useReactiveNodeName(edge?.target, "Target")
   const { handleEdgeTypeChange, handleSwap } = useEdgePopOver(elementId)
 
   if (!edge) {
     return null
   }
-
-  const { source: sourceName, target: targetName } = edgeEndpointNames(
-    edge,
-    getNode
-  )
 
   const edgeData = edge.data as CustomEdgeProps | undefined
 
@@ -46,12 +41,12 @@ export const ComponentEdgeEditPopover: React.FC<PopoverProps> = ({
         handleDataFieldUpdate={(key, value) =>
           updateEdgeData(elementId, { ...edge.data, [key]: value })
         }
-        label="Style"
+        label="Control Flow"
         sideElements={[
           handleSwap && (
             <IconButton
-              ariaLabel={swapDirectionTooltip(sourceName, targetName)}
-              tooltip={swapDirectionTooltip(sourceName, targetName)}
+              ariaLabel="Swap source and target"
+              tooltip="Swap source and target"
               onClick={handleSwap}
             >
               <ArrowLeftRight width={16} height={16} aria-hidden="true" />

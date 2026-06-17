@@ -32,7 +32,7 @@ export const Navbar = () => {
     editor?.getDiagramMetadata().diagramTitle || ""
   )
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const unsubscribeId = useRef<number>()
+  const unsubscribeId = useRef<number | undefined>(undefined)
 
   useEffect(() => {
     if (!editor) {

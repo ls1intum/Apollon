@@ -54,10 +54,11 @@ vi.mock("@tumaet/apollon/react", async (importOriginal) => {
   const React = await import("react")
   // The real <Apollon> instantiates the real ApollonEditor (jsdom-incompatible).
   // Substitute one that hands the fake instance to onMount and stays out of the way.
-  const Apollon = React.forwardRef<
-    unknown,
-    { onMount?: (e: unknown) => void | (() => void) }
-  >(function Apollon(props, ref) {
+  const Apollon = (props: {
+    onMount?: (e: unknown) => void | (() => void)
+    ref?: React.Ref<unknown>
+  }) => {
+    const { ref } = props
     const instanceRef = React.useRef<unknown>(null)
     React.useEffect(() => {
       const instance = new FakeApollonEditor()
@@ -73,7 +74,7 @@ vi.mock("@tumaet/apollon/react", async (importOriginal) => {
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
     return React.createElement("div", { "data-testid": "apollon-canvas" })
-  })
+  }
   return {
     ...actual,
     Apollon,
@@ -181,6 +182,8 @@ const LOADING_TEXT = "Loading diagram…"
 
 let testNavigate: (path: string) => void = () => {}
 function NavigateProbe() {
+  // Test harness: surface router navigation to the test body.
+  // eslint-disable-next-line react-hooks/globals
   testNavigate = useNavigate()
   return null
 }

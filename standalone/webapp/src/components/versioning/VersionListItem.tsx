@@ -9,7 +9,6 @@ import { MoreVerticalIcon } from "lucide-react"
 import { VersionThumbnail } from "./VersionThumbnail"
 import {
   Fragment,
-  memo,
   useState,
   useRef,
   type CSSProperties,
@@ -337,4 +336,4 @@ const VersionListItemInner: FC<Props> = ({
   )
 }
 
-export const VersionListItem = memo(VersionListItemInner)
+export const VersionListItem = VersionListItemInner

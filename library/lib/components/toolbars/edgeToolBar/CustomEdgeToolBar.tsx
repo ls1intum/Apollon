@@ -13,7 +13,7 @@ interface CustomEdgeToolbarProps {
   scaleAnchor: IPoint
   onEditClick: (event: React.MouseEvent<HTMLElement>) => void
   onDeleteClick: (event: React.MouseEvent<HTMLElement>) => void
-  anchorRef: React.RefObject<SVGForeignObjectElement>
+  anchorRef: React.Ref<SVGForeignObjectElement>
 }
 
 export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
@@ -94,16 +94,21 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
               zIndex: ZINDEX.TOOLTIP,
             }}
           >
-            <div
+            <button
+              type="button"
+              aria-label="Delete edge"
               style={{
                 width: "16px",
                 height: "16px",
+                padding: 0,
+                border: "none",
                 backgroundColor: "var(--apollon-background, white)",
                 color: "var(--apollon-primary-contrast, #000000)",
                 borderRadius: 4,
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
+                cursor: "pointer",
               }}
               onClick={(e) => {
                 e.stopPropagation()
@@ -111,17 +116,22 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
               }}
             >
               <Trash2 style={{ width: 16, height: 16 }} aria-hidden="true" />
-            </div>
-            <div
+            </button>
+            <button
+              type="button"
+              aria-label="Edit edge"
               style={{
                 width: "16px",
                 height: "16px",
+                padding: 0,
+                border: "none",
                 backgroundColor: "var(--apollon-background, white)",
                 color: "var(--apollon-primary-contrast, #000000)",
                 borderRadius: 4,
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
+                cursor: "pointer",
               }}
               onClick={(e) => {
                 e.stopPropagation()
@@ -129,7 +139,7 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
               }}
             >
               <Pencil style={{ width: 16, height: 16 }} aria-hidden="true" />
-            </div>
+            </button>
           </div>
         )}
       </foreignObject>

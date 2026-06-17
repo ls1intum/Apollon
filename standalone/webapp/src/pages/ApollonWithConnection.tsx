@@ -352,6 +352,10 @@ export const ApollonWithConnection: React.FC = () => {
 
   const baseReadonly = viewType === DiagramView.SEE_FEEDBACK
 
+  // Imperative preview-mode driver: caches a pre-preview fingerprint in a ref
+  // and overlays the preview model via the editor's imperative API. These are
+  // effect-phase side effects, not render-time mutations.
+  // eslint-disable-next-line react-hooks/immutability
   useEffect(() => {
     if (!editor) return
     const abort = new AbortController()
@@ -373,6 +377,8 @@ export const ApollonWithConnection: React.FC = () => {
       // catches up to whatever collaborators committed during preview.
       editor.setPreviewMode(true)
       try {
+        // Imperative editor API (accessor setter), applied in an effect.
+        // eslint-disable-next-line react-hooks/immutability
         editor.model = importDiagram(preview.body) as UMLModel
         editor.setReadonly(true)
         editor.fitView()

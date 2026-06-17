@@ -3,7 +3,7 @@ import { useStepPathEdge } from "@/hooks/useStepPathEdge"
 import { useDiagramStore, usePopoverStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { useToolbar } from "@/hooks"
-import { useMemo, useRef } from "react"
+import { useMemo } from "react"
 import { FeedbackDropzone } from "@/components/wrapper/FeedbackDropzone"
 import { AssessmentSelectableWrapper } from "@/components"
 import { getCustomColorsFromDataForEdge } from "@/utils/layoutUtils"
@@ -52,7 +52,6 @@ export const SfcDiagramEdge = ({
   targetHandleId,
   data,
 }: BaseEdgeProps) => {
-  const anchorRef = useRef<SVGSVGElement | null>(null)
   const { handleDelete } = useToolbar({ id })
 
   const allowMidpointDragging = true
@@ -228,7 +227,6 @@ export const SfcDiagramEdge = ({
           toolbarPosition={edgeData.toolbarPosition}
           isDiagramModifiable={isDiagramModifiable}
           assessments={assessments}
-          anchorRef={anchorRef}
           handleDelete={handleDelete}
           setPopOverElementId={setPopOverElementId}
           type={type}

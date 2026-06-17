@@ -1,3 +1,4 @@
+import { useReactiveNode } from "@/hooks"
 import { useReactFlow } from "@xyflow/react"
 import { PopoverProps } from "../types"
 import { BPMNIntermediateEventType } from "@/types"
@@ -21,8 +22,8 @@ const INTERMEDIATE_TYPE_OPTIONS = [
 export const BPMNIntermediateEventEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
-  const { getNode, updateNodeData } = useReactFlow()
-  const node = getNode(elementId)
+  const { updateNodeData } = useReactFlow()
+  const node = useReactiveNode(elementId)
   if (!node) return null
 
   const data = node.data as {

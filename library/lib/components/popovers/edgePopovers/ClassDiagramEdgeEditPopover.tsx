@@ -2,15 +2,10 @@ import { EdgeStyleEditor, IconButton, TextField } from "@/components/ui"
 import { useReactFlow } from "@xyflow/react"
 import { CustomEdgeProps } from "@/edges/EdgeProps"
 import { ArrowLeftRight } from "lucide-react"
-import { useEdgePopOver } from "@/hooks"
+import { useEdgePopOver, useReactiveEdge, useReactiveNodeName } from "@/hooks"
 import { PopoverProps } from "../types"
 import { EdgeTypeSelect, EdgeTypeOption } from "./EdgeTypeSelect"
-import {
-  edgeEndpointNames,
-  PopoverLayout,
-  PopoverSection,
-  swapDirectionTooltip,
-} from "../PopoverLayout"
+import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 
 const CLASS_EDGE_TYPE_OPTIONS: ReadonlyArray<EdgeTypeOption> = [
   { value: "ClassBidirectional", label: "Bi-Association" },
@@ -23,9 +18,16 @@ const CLASS_EDGE_TYPE_OPTIONS: ReadonlyArray<EdgeTypeOption> = [
 ]
 
 export const EdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
-  const { getEdge, getNode, updateEdgeData } = useReactFlow()
+  const { updateEdgeData } = useReactFlow()
 
-  const edge = getEdge(elementId)
+  // Subscribe reactively to the edge and its endpoint names so the popover
+  // reflects live changes (swap, collaboration). Reading getEdge/getNode
+  // imperatively during render is non-reactive and goes stale once the React
+  // Compiler memoizes this component.
+  const edge = useReactiveEdge(elementId)
+  const sourceName = useReactiveNodeName(edge?.source, "Source")
+  const targetName = useReactiveNodeName(edge?.target, "Target")
+
   const {
     handleSourceRoleChange,
     handleSourceMultiplicityChange,
@@ -40,13 +42,6 @@ export const EdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
   }
 
   const edgeData = edge.data as CustomEdgeProps | undefined
-  const { source: rawSourceName, target: rawTargetName } = edgeEndpointNames(
-    edge,
-    getNode
-  )
-  // Append the endpoint name only when it exists, else just "Source"/"Target".
-  const sourceTitle = rawSourceName ? `Source: ${rawSourceName}` : "Source"
-  const targetTitle = rawTargetName ? `Target: ${rawTargetName}` : "Target"
 
   return (
     <PopoverLayout title="Edge">
@@ -59,8 +54,8 @@ export const EdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
         sideElements={[
           handleSwap && (
             <IconButton
-              ariaLabel={swapDirectionTooltip(rawSourceName, rawTargetName)}
-              tooltip={swapDirectionTooltip(rawSourceName, rawTargetName)}
+              ariaLabel="Swap source and target"
+              tooltip="Swap source and target"
               onClick={handleSwap}
             >
               <ArrowLeftRight width={16} height={16} aria-hidden="true" />
@@ -77,37 +72,41 @@ export const EdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
         />
       </PopoverSection>
 
-      <PopoverSection title={sourceTitle} divider>
+      <PopoverSection title="Source" divider>
         <TextField
+          label={`${sourceName} Multiplicity`}
           value={edgeData?.sourceMultiplicity ?? ""}
           onChange={(e) => handleSourceMultiplicityChange(e.target.value)}
-          placeholder="Multiplicity"
           size="small"
           fullWidth
+          data-testid="edge-source-multiplicity"
         />
         <TextField
+          label={`${sourceName} Role`}
           value={edgeData?.sourceRole ?? ""}
           onChange={(e) => handleSourceRoleChange(e.target.value)}
-          placeholder="Role"
           size="small"
           fullWidth
+          data-testid="edge-source-role"
         />
       </PopoverSection>
 
-      <PopoverSection title={targetTitle} divider>
+      <PopoverSection title="Target" divider>
         <TextField
+          label={`${targetName} Multiplicity`}
           value={edgeData?.targetMultiplicity ?? ""}
           onChange={(e) => handleTargetMultiplicityChange(e.target.value)}
-          placeholder="Multiplicity"
           size="small"
           fullWidth
+          data-testid="edge-target-multiplicity"
         />
         <TextField
+          label={`${targetName} Role`}
           value={edgeData?.targetRole ?? ""}
           onChange={(e) => handleTargetRoleChange(e.target.value)}
-          placeholder="Role"
           size="small"
           fullWidth
+          data-testid="edge-target-role"
         />
       </PopoverSection>
     </PopoverLayout>

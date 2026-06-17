@@ -12,7 +12,9 @@ const wsPort = Number(process.env.APOLLON_WS_PORT || 4444)
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
-    react(),
+    react({
+      babel: { plugins: [["babel-plugin-react-compiler", { target: "19" }]] },
+    }),
     tailwindcss(),
     {
       name: "apollon-alias-resolver",

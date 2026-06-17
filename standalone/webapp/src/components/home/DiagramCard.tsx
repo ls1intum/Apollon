@@ -1,5 +1,4 @@
 import {
-  memo,
   useEffect,
   useMemo,
   useState,
@@ -553,6 +552,8 @@ const DiagramCardComponent = ({
   useMinuteTick()
   const relativeDate = formatRelativeLastModified(
     diagram.lastModifiedAt,
+    // Display-only relative timestamp, refreshed each minute by useMinuteTick().
+    // eslint-disable-next-line react-hooks/purity
     Date.now()
   )
   const shortTypeLabel = getDiagramTypeShortLabel(diagram.type)
@@ -902,4 +903,4 @@ const DiagramCardComponent = ({
   )
 }
 
-export const DiagramCard = memo(DiagramCardComponent)
+export const DiagramCard = DiagramCardComponent
