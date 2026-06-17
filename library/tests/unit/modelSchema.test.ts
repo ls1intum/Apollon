@@ -94,6 +94,8 @@ describe("published model JSON schema", () => {
   })
 
   it("matches the committed file — run `pnpm gen:schema` if this fails", () => {
+    // buildModelSchema() compiles the whole TS program, so allow well beyond
+    // the 5 s default on cold CI runners.
     expect(buildModelSchema()).toEqual(committed)
-  })
+  }, 60_000)
 })
