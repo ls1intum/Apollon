@@ -218,6 +218,7 @@ export const getSVG = (
     ensureTextFontDefaults(mainSVG)
     resolveRelativeFontSizes(mainSVG)
     resolveTspanDy(mainSVG)
+    resolveDominantBaseline(mainSVG)
     if (fontFaceCss) embedFontFaceCss(mainSVG, fontFaceCss)
     removeMarkerElements(mainSVG)
     replaceTextDecorationWithManualUnderline(mainSVG)
@@ -1436,6 +1437,46 @@ function resolveTspanDy(svg: Element): void {
   })
 }
 
+// The browser's baseline shift (in em) for each `dominant-baseline` value,
+// measured against the bundled Inter. `middle` centres on `y`, `hanging` puts
+// the text top near `y`.
+const BASELINE_SHIFT_EM: Record<string, number> = {
+  middle: 0.25,
+  central: 0.35,
+  hanging: 0.75,
+}
+
+/**
+ * Resolve `dominant-baseline` to an explicit alphabetic-baseline `y`. Browsers
+ * honour the attribute, but resvg, Skia, Inkscape, PowerPoint and pdfmake ignore
+ * it and draw every label at the alphabetic baseline — mispositioned. Shifting
+ * `y` by the font's baseline offset and dropping the attribute makes the SVG
+ * render identically everywhere. Runs after resolveTspanDy so tspan `y` is
+ * already absolute.
+ */
+function resolveDominantBaseline(svg: Element): void {
+  svg.querySelectorAll("text").forEach((textEl) => {
+    const baseline = textEl.getAttribute("dominant-baseline")
+    const shiftEm = baseline ? BASELINE_SHIFT_EM[baseline] : undefined
+    if (shiftEm === undefined) return
+
+    const textFontSize =
+      parseFloat(textEl.getAttribute("font-size") ?? "") || DEFAULT_FONT_SIZE
+    const shift = (el: Element, fallbackY: number) => {
+      const fontSize =
+        parseFloat(el.getAttribute("font-size") ?? "") || textFontSize
+      const y = parseFloat(el.getAttribute("y") ?? "") || fallbackY
+      el.setAttribute("y", `${y + shiftEm * fontSize}`)
+    }
+
+    const tspans = Array.from(textEl.querySelectorAll("tspan"))
+    const textY = parseFloat(textEl.getAttribute("y") ?? "0") || 0
+    if (tspans.length) tspans.forEach((tspan) => shift(tspan, textY))
+    else shift(textEl, 0)
+    textEl.removeAttribute("dominant-baseline")
+  })
+}
+
 /**
  * Replace `text-decoration="underline"` on `<text>` elements with manual
  * `<line>` siblings so the underline is visible in non-browser renderers.
@@ -1536,6 +1577,7 @@ export const __testing = {
   ensureTextFontDefaults,
   resolveRelativeFontSizes,
   resolveTspanDy,
+  resolveDominantBaseline,
   removeMarkerElements,
   replaceTextDecorationWithManualUnderline,
   mergeBounds,

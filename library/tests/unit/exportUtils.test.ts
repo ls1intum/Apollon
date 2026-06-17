@@ -701,3 +701,59 @@ describe("resolveTspanDy", () => {
     expect(tspan.hasAttribute("dy")).toBe(false)
   })
 })
+
+// ---------------------------------------------------------------------------
+// resolveDominantBaseline — non-browser renderers ignore the attribute and draw
+// every label at the alphabetic baseline; resolve it to an explicit y
+// ---------------------------------------------------------------------------
+describe("resolveDominantBaseline", () => {
+  it("shifts middle-aligned text down 0.25em and drops the attribute", () => {
+    const svg = el("svg")
+    const text = el("text", {
+      y: "100",
+      "font-size": "16px",
+      "dominant-baseline": "middle",
+    })
+    svg.appendChild(text)
+
+    __testing.resolveDominantBaseline(svg)
+    expect(text.getAttribute("y")).toBe("104") // 100 + 0.25 * 16
+    expect(text.hasAttribute("dominant-baseline")).toBe(false)
+  })
+
+  it("shifts hanging text down 0.75em", () => {
+    const svg = el("svg")
+    const text = el("text", {
+      y: "50",
+      "font-size": "14px",
+      "dominant-baseline": "hanging",
+    })
+    svg.appendChild(text)
+
+    __testing.resolveDominantBaseline(svg)
+    expect(text.getAttribute("y")).toBe("60.5") // 50 + 0.75 * 14
+    expect(text.hasAttribute("dominant-baseline")).toBe(false)
+  })
+
+  it("shifts each tspan by its own font-size", () => {
+    const svg = el("svg")
+    const text = el("text", { y: "25", "dominant-baseline": "middle" })
+    const stereotype = el("tspan", { y: "17", "font-size": "13.6px" })
+    const name = el("tspan", { y: "35", "font-size": "16px" })
+    text.append(stereotype, name)
+    svg.appendChild(text)
+
+    __testing.resolveDominantBaseline(svg)
+    expect(stereotype.getAttribute("y")).toBe("20.4") // 17 + 0.25 * 13.6
+    expect(name.getAttribute("y")).toBe("39") // 35 + 0.25 * 16
+  })
+
+  it("leaves text without dominant-baseline untouched", () => {
+    const svg = el("svg")
+    const text = el("text", { y: "10" })
+    svg.appendChild(text)
+
+    __testing.resolveDominantBaseline(svg)
+    expect(text.getAttribute("y")).toBe("10")
+  })
+})
