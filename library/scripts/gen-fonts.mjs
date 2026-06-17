@@ -10,6 +10,11 @@
 // punctuation Apollon emits (guillemets «», … ellipsis, en/em dashes). Labels
 // in scripts Inter lacks (CJK, emoji, Arabic, Hebrew) fall back to a system
 // font; the server warns on those (standalone server glyph-coverage.ts).
+//
+// Licensing: Inter's OFL header declares no Reserved Font Name, so this subset
+// keeps the family name "Inter" (OFL clause 3 only restricts a declared RFN).
+// The license text ships beside the font (LICENSE-InterFont, emitted by the
+// Vite build) per OFL clause 2.
 
 import subsetFont from "subset-font"
 import { readFile, writeFile } from "node:fs/promises"
@@ -20,16 +25,11 @@ const here = dirname(fileURLToPath(import.meta.url))
 const SRC_DIR = resolve(here, "../../standalone/webapp/tests/fonts")
 const OUT_DIR = resolve(here, "../lib/assets/fonts")
 
-// Cover exactly the scripts the server's full Inter TTF also renders, so the
-// editor (this woff2) and the server measure/render the same glyphs — no
-// system-ui fallback divergence for Greek/Cyrillic/Vietnamese (λ, Σ, Cyrillic
-// identifiers are common in CS/maths diagrams). These are Inter's own
-// Google-Fonts subset ranges, so every codepoint maps to a real glyph. CJK /
-// emoji / Arabic / Hebrew are not in Inter at any size and stay out (the server
-// warns on them — see standalone/server/src/services/glyph-coverage.ts).
-// Keep this list in lockstep with isCoveredCodePoint in
-// standalone/server/src/services/glyph-coverage.ts — together they define which
-// scripts render faithfully (the export warns for anything outside).
+// Inter's own Google-Fonts subset ranges, so every codepoint maps to a real
+// glyph (Greek/Cyrillic/Vietnamese cover the λ, Σ, Cyrillic identifiers common
+// in CS/maths diagrams). Keep in lockstep with isCoveredCodePoint in
+// standalone/server/src/services/glyph-coverage.ts, which owns the authenticity
+// rationale and warns on anything outside.
 const ranges = [
   [0x20, 0x7e], // Basic Latin
   [0xa0, 0xff], // Latin-1 Supplement (« » U+00AB/BB, ×, ÷, accented latin)

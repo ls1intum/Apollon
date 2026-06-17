@@ -37,6 +37,7 @@ import { MessageType, SendBroadcastMessage, YjsSync } from "./sync/yjsSync"
 import * as Y from "yjs"
 import { StoreApi } from "zustand"
 import * as Apollon from "./typings"
+import { FONT_FAMILY, DEFAULT_FONT_SIZE } from "./fontStack"
 
 const normalizeCollaborationOptions = (options?: Apollon.ApollonOptions) => {
   const collaboration = options?.collaboration
@@ -332,6 +333,33 @@ export class ApollonEditor {
 
     document.body.appendChild(container)
 
+    // Self-contained styling: inject the layout CSS + Inter `@font-face` the
+    // headless mount needs so a consumer rendering in a browser never has to
+    // import "@tumaet/apollon/style.css". The load-bearing rule is React Flow's
+    // `.react-flow__node { position: absolute }`; without it the handle `%`
+    // offsets resolve against a zero-size box, on-mount handle measurement is
+    // wrong, and edges route through the node boxes. The `@font-face` pins
+    // canvas `measureText` to Inter so wrap decisions match the editor.
+    //
+    // Into <head>, not `container`: React's createRoot owns `container` and
+    // clears its children on first render, so a container-scoped <style> would
+    // be discarded before it applies. Removed in the `finally` below. Inert
+    // under jsdom (no layout engine), so the server export stays byte-stable.
+    let exportStyleEl: HTMLStyleElement | undefined
+    try {
+      const [{ EXPORT_LAYOUT_CSS }, { INTER_FONT_FACE_CSS }] =
+        await Promise.all([
+          import("./utils/exportStyles"),
+          import("./utils/exportFonts"),
+        ])
+      exportStyleEl = document.createElement("style")
+      exportStyleEl.setAttribute("data-apollon-export-styles", "")
+      exportStyleEl.textContent = `${EXPORT_LAYOUT_CSS}\n${INTER_FONT_FACE_CSS}`
+      document.head.appendChild(exportStyleEl)
+    } catch {
+      // Best-effort: missing CSS only degrades fidelity, never aborts export.
+    }
+
     const ydoc = new Y.Doc()
     const diagramStore = createDiagramStore(ydoc)
     const metadataStore = createMetadataStore(
@@ -356,103 +384,120 @@ export class ApollonEditor {
       identifierPrefix: `apollon-exportAsSVG-${diagramId}`,
     })
 
-    diagramStore.getState().setNodesAndEdges(model.nodes, model.edges)
-    diagramStore.getState().setAssessments(model.assessments)
-
-    svgRoot.render(
-      <DiagramStoreContext.Provider value={diagramStore}>
-        <MetadataStoreContext.Provider value={metadataStore}>
-          <PopoverStoreContext.Provider value={popoverStore}>
-            <AssessmentSelectionStoreContext.Provider
-              value={assessmentSelectionStore}
-            >
-              <AlignmentGuidesStoreContext.Provider
-                value={alignmentGuidesStore}
-              >
-                <EdgeGeometryStoreContext.Provider value={edgeGeometryStore}>
-                  <AppWithProvider
-                    onReactFlowInit={setReactFlowInstance}
-                    collaboration={disabledCollaboration}
-                    awareness={noopCollaborationAwareness}
-                  />
-                </EdgeGeometryStoreContext.Provider>
-              </AlignmentGuidesStoreContext.Provider>
-            </AssessmentSelectionStoreContext.Provider>
-          </PopoverStoreContext.Provider>
-        </MetadataStoreContext.Provider>
-      </DiagramStoreContext.Provider>
-    )
-
-    // Race ReactFlow init against a 3 s timeout so a hung mount can't deadlock export.
-    const timeoutPromise = new Promise<null>((resolve) => {
-      setTimeout(() => resolve(null), 3000)
-    })
-
-    const reactFlowInstance = await Promise.race([
-      reactFlowInstancePromise,
-      timeoutPromise,
-    ])
-
-    if (!reactFlowInstance) {
+    // Single teardown for every exit path (success or throw), run once from the
+    // `finally` below: drop the injected <head> styles, unmount React, detach
+    // the off-screen container, and dispose the Yjs doc. Each step is
+    // idempotent so it is safe even if mounting never completed.
+    const teardown = () => {
+      exportStyleEl?.remove()
       svgRoot.unmount()
-      document.body.removeChild(container)
+      container.remove()
       ydoc.destroy()
-      throw new Error("React Flow instance not initialized")
     }
 
-    // Wait for webfonts to load before we measure: canvas text measurement
-    // (used by the wrap layout) otherwise falls back to the generic-family
-    // metrics and the exported SVG's wrap decisions would drift from the
-    // on-screen render. Best-effort — older browsers may lack document.fonts.
-    if (typeof document !== "undefined" && document.fonts?.ready) {
-      await document.fonts.ready.catch(() => {})
-    }
+    try {
+      diagramStore.getState().setNodesAndEdges(model.nodes, model.edges)
+      diagramStore.getState().setAssessments(model.assessments)
 
-    // Wait for ReactFlow to fully lay out nodes and measure custom handle
-    // positions (especially for non-rectangular shapes like parallelograms).
-    // setTimeout lets ResizeObserver callbacks fire; double-rAF ensures paint.
-    await new Promise<void>((resolve) => {
-      setTimeout(() => {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => resolve())
-        })
-      }, 150)
-    })
+      svgRoot.render(
+        <DiagramStoreContext.Provider value={diagramStore}>
+          <MetadataStoreContext.Provider value={metadataStore}>
+            <PopoverStoreContext.Provider value={popoverStore}>
+              <AssessmentSelectionStoreContext.Provider
+                value={assessmentSelectionStore}
+              >
+                <AlignmentGuidesStoreContext.Provider
+                  value={alignmentGuidesStore}
+                >
+                  <EdgeGeometryStoreContext.Provider value={edgeGeometryStore}>
+                    <AppWithProvider
+                      onReactFlowInit={setReactFlowInstance}
+                      collaboration={disabledCollaboration}
+                      awareness={noopCollaborationAwareness}
+                    />
+                  </EdgeGeometryStoreContext.Provider>
+                </AlignmentGuidesStoreContext.Provider>
+              </AssessmentSelectionStoreContext.Provider>
+            </PopoverStoreContext.Provider>
+          </MetadataStoreContext.Provider>
+        </DiagramStoreContext.Provider>
+      )
 
-    filterRenderedElements(container, options)
+      // Race ReactFlow init against a 3 s timeout so a hung mount can't deadlock export.
+      const timeoutPromise = new Promise<null>((resolve) => {
+        setTimeout(() => resolve(null), 3000)
+      })
 
-    const bounds = getRenderedDiagramBounds(reactFlowInstance, container)
+      const reactFlowInstance = await Promise.race([
+        reactFlowInstancePromise,
+        timeoutPromise,
+      ])
 
-    const margin = 60
-    const clip = {
-      x: bounds.x - margin,
-      y: bounds.y - margin,
-      width: bounds.width + margin * 2,
-      height: bounds.height + margin * 2,
-    }
-
-    // Compat exports embed Inter as a base64 @font-face, loaded lazily so the
-    // font stays out of the main bundle (see exportFonts.ts).
-    let fontFaceCss: string | undefined
-    if (options?.svgMode === "compat") {
-      try {
-        fontFaceCss = (await import("./utils/exportFonts")).INTER_FONT_FACE_CSS
-      } catch {
-        // Best-effort: a failed font-chunk load must not abort the export
-        // (the SVG still names the Inter family).
-        fontFaceCss = undefined
+      if (!reactFlowInstance) {
+        throw new Error("React Flow instance not initialized")
       }
-    }
 
-    const svgString = getSVG(container, clip, options, fontFaceCss)
+      // Wait for webfonts to load before we measure: canvas text measurement
+      // (used by the wrap layout) otherwise falls back to the generic-family
+      // metrics and the exported SVG's wrap decisions would drift from the
+      // on-screen render. Explicitly load Inter — `document.fonts.ready` alone
+      // would not wait for the injected `@font-face` until a glyph requests it —
+      // then await `ready` for any other pending faces. Best-effort throughout
+      // (older browsers / jsdom may lack `document.fonts`).
+      if (typeof document !== "undefined" && document.fonts) {
+        if (document.fonts.load) {
+          await Promise.all([
+            document.fonts.load(`400 ${DEFAULT_FONT_SIZE}px ${FONT_FAMILY}`),
+            document.fonts.load(`700 ${DEFAULT_FONT_SIZE}px ${FONT_FAMILY}`),
+          ]).catch(() => {})
+        }
+        if (document.fonts.ready) {
+          await document.fonts.ready.catch(() => {})
+        }
+      }
 
-    svgRoot.unmount()
-    document.body.removeChild(container)
-    ydoc.destroy()
+      // Wait for ReactFlow to fully lay out nodes and measure custom handle
+      // positions (especially for non-rectangular shapes like parallelograms).
+      // setTimeout lets ResizeObserver callbacks fire; double-rAF ensures paint.
+      await new Promise<void>((resolve) => {
+        setTimeout(() => {
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => resolve())
+          })
+        }, 150)
+      })
 
-    return {
-      svg: svgString,
-      clip,
+      filterRenderedElements(container, options)
+
+      const bounds = getRenderedDiagramBounds(reactFlowInstance, container)
+
+      const margin = 60
+      const clip = {
+        x: bounds.x - margin,
+        y: bounds.y - margin,
+        width: bounds.width + margin * 2,
+        height: bounds.height + margin * 2,
+      }
+
+      // Compat exports embed Inter as a base64 @font-face, loaded lazily so the
+      // font stays out of the main bundle (see exportFonts.ts).
+      let fontFaceCss: string | undefined
+      if (options?.svgMode === "compat") {
+        try {
+          fontFaceCss = (await import("./utils/exportFonts"))
+            .INTER_FONT_FACE_CSS
+        } catch {
+          // Best-effort: a failed font-chunk load must not abort the export
+          // (the SVG still names the Inter family).
+          fontFaceCss = undefined
+        }
+      }
+
+      const svgString = getSVG(container, clip, options, fontFaceCss)
+
+      return { svg: svgString, clip }
+    } finally {
+      teardown()
     }
   }
 

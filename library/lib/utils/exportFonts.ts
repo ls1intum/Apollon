@@ -9,9 +9,7 @@ import interRegularWoff2 from "@/assets/fonts/Inter-Regular.woff2?inline"
  * font via its `fontFiles` instead; the embedded face is harmlessly ignored.
  *
  * Data-only and loaded lazily (dynamic `import()` in `exportModelAsSvg`) so the
- * woff2 lands in its own chunk — but note that chunk is emitted per build entry
- * (dist/ and dist/react/), so the woff2 ships three times in the package
- * (style.css inline + both lazy chunks). Only compat exporters load a chunk.
+ * woff2 lands in its own chunk instead of the main bundle.
  */
 export const INTER_FONT_FACE_CSS = `
 @font-face {

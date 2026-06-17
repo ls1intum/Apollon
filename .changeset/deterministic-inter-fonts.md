@@ -21,6 +21,21 @@ The font stack is now a single exported `FONT_FAMILY` constant. New docs cover
 [headless rendering](https://ls1intum.github.io/Apollon/library/api/headless-rendering)
 end to end.
 
+Self-contained browser export (fixes edges routed through node boxes): a
+consumer rendering headlessly in a real browser without importing
+`@tumaet/apollon/style.css` got edges drawn through the node boxes. React Flow
+positions Apollon's connection handles with an inline `left/top: "%"`, which
+resolves only when `.react-flow__node` is `position: absolute` — a rule that
+ships in React Flow's base CSS via `style.css`. Missing it, the handles
+collapse to the node origin, React Flow measures them there on mount, and edges
+route from the wrong points. `exportModelAsSvg` now injects the React Flow base
+layout CSS and the Inter `@font-face` into its off-screen mount (a lazy chunk,
+font-free so the main bundle is unaffected) and explicitly loads Inter before
+measuring — so headless browser exports are correct and font-accurate with **no
+`style.css` import required**. The jsdom/server path is unchanged (it pre-seeds
+handles and has no layout engine, so the injected CSS is inert and exports stay
+byte-stable).
+
 Headless edge-label fix: jsdom returns a zero `getBoundingClientRect` for SVG
 text, so edge labels (communication messages, multiplicities) contributed
 nothing to the export clip and an overhanging label was silently cropped. The
@@ -32,8 +47,9 @@ asymmetric extent for alphabetic baselines — so labels are kept in the clip
 The bundled Inter subset now also covers Greek, Cyrillic and Vietnamese (the
 scripts the full Inter the server renders with already provides), so those
 render deterministically in the editor and match the export instead of falling
-back to a per-OS `system-ui` (~+64 KB gzipped in `style.css`; CJK/emoji/Arabic/
-Hebrew are not in Inter and stay out). The published JSON Schema keeps element
+back to a per-OS `system-ui` (~+170 KB gzipped in `style.css` — woff2 is already
+Brotli-compressed, so inlining it adds roughly the raw woff2 size; CJK/emoji/
+Arabic/Hebrew are not in Inter and stay out). The published JSON Schema keeps element
 `data` open (the correct forward-compatible contract) and a new test validates
 every shipped fixture against it; a few drifted node types were loosened to
 match the real serialized shapes.

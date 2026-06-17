@@ -8,10 +8,34 @@ description: Render saved Apollon models to SVG/PNG with no browser, using jsdom
 
 You have Apollon models on disk — exam submission versions, exported diagrams,
 generated fixtures — and you want pictures of them without opening the editor by
-hand, ideally without shipping a whole browser. This page is the supported
-recipe.
+hand. This is **headless rendering**: a distinct use case from
+[embedding the editor](../embedding/install) in an app. You do not mount the
+interactive editor or import a UI; you call one function,
+`ApollonEditor.exportModelAsSvg(model, options)`, and get an SVG back.
 
-## TL;DR
+`exportModelAsSvg` still needs a **DOM** (it mounts the editor off-screen to lay
+the diagram out, then serialises it), plus canvas `measureText` and `getBBox`.
+So "headless" means "no visible editor / no manual interaction" — not "no DOM".
+You provide the DOM one of two ways.
+
+## Which path do I need?
+
+|                  | **jsdom + Skia canvas**               | **Real browser (Playwright/Puppeteer)**                         |
+| ---------------- | ------------------------------------- | --------------------------------------------------------------- |
+| Ships a browser? | No (Node only)                        | Yes                                                             |
+| Best for         | batch jobs, servers, CI               | pixel-exact parity with the editor                              |
+| DOM              | jsdom + `@napi-rs/canvas`             | the browser's own                                               |
+| Fonts / CSS      | you register Inter + pre-seed handles | **self-contained — nothing to import**                          |
+| Fidelity         | within ~10px of the editor            | identical to the editor                                         |
+| Reference        | the standalone server (below)         | [recipe below](#render-in-a-real-browser-playwright--puppeteer) |
+
+If you already run Playwright/Puppeteer, the browser path is the least code: as
+of `@tumaet/apollon` 4.7, the export injects the React Flow layout CSS and the
+Inter font it needs itself, so **you do not import `style.css` or wait on
+fonts** — see [below](#render-in-a-real-browser-playwright--puppeteer). The
+jsdom path avoids shipping a browser but needs the setup in the next sections.
+
+## TL;DR (jsdom path)
 
 - `ApollonEditor.exportModelAsSvg(model, options)` needs a DOM, canvas
   `measureText`, and `getBBox`. The lightweight way to provide them is
@@ -147,13 +171,58 @@ The `compat` SVG is self-contained. To rasterise:
   feeds the SVG straight to `pdfmake`.
 - **Browser screenshot**: load the SVG in a page and screenshot it.
 
-## Alternative: render in a real browser
+## Render in a real browser (Playwright / Puppeteer)
 
-If you need pixel-exact browser fidelity (or already run Playwright/Puppeteer),
-load `@tumaet/apollon` + `@tumaet/apollon/style.css` in a page, `await
-document.fonts.ready`, then call `exportModelAsSvg`. The stylesheet registers the
-bundled Inter; don't drop it. This is heavier than jsdom — reach for it only when
-the ~10px shaping difference above matters.
+When you want pixel-exact parity with the editor — or you already drive a
+browser — this is the simplest path. **As of `@tumaet/apollon` 4.7 the export is
+self-contained:** `exportModelAsSvg` injects the React Flow base layout CSS and
+the bundled Inter `@font-face` into its off-screen mount and waits for the font
+to load before measuring. You do **not** import `@tumaet/apollon/style.css`,
+pre-seed handles, or `await document.fonts.ready` yourself.
+
+```js
+import { chromium } from "playwright"
+
+const browser = await chromium.launch({ headless: true })
+const page = await browser.newPage()
+
+await page.setContent(`
+<!DOCTYPE html>
+<html><body>
+  <script type="module">
+    import { ApollonEditor, importDiagram } from "https://esm.sh/@tumaet/apollon@4.7.0";
+    window.exportSVG = async (model) => {
+      const result = await ApollonEditor.exportModelAsSvg(importDiagram(model), {
+        svgMode: "compat",
+        keepOriginalSize: true,
+      });
+      return typeof result === "string" ? result : result.svg;
+    };
+  </script>
+</body></html>
+`)
+
+const model = JSON.parse(fs.readFileSync("your-model.json", "utf8"))
+const svg = await page.evaluate((m) => window.exportSVG(m), model)
+```
+
+`importDiagram` normalises v2 / v3 payloads to v4. `svgMode: "compat"` resolves
+CSS variables and embeds Inter so the file renders correctly when opened away
+from the page (browser, Inkscape, PowerPoint).
+
+### Troubleshooting: edges drawn through node boxes
+
+If a browser export shows **edges routed through the node boxes** (instead of
+meeting the node borders) and labels mispositioned, you are on a pre-4.7 library
+that was **not** self-contained and the page never loaded
+`@tumaet/apollon/style.css`. Without React Flow's base CSS,
+`.react-flow__node` is not `position: absolute`, so the editor's connection
+handles can't position themselves, React Flow measures them at the wrong spot,
+and edges route from the wrong points. Fixes, in order of preference:
+
+- **Upgrade to ≥ 4.7** — the export injects the CSS itself; nothing else to do.
+- On an older version, import `@tumaet/apollon/style.css` in the page **before**
+  calling `exportModelAsSvg`, and `await document.fonts.ready`.
 
 See also: **[Export](./export)** for the full `ExportOptions` table and
 **[Model JSON contract](./model-contract)** for the model shape.

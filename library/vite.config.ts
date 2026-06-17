@@ -7,7 +7,7 @@ import { readFileSync } from "fs"
 // The bundled Inter woff2 is base64-inlined into style.css (and index.js via
 // `?inline`), so the SIL Open Font License binary ships inside our artifacts.
 // The OFL requires its license text to travel with the font, so emit it into
-// dist as a sibling file. Non-peer build only — that pass owns style.css.
+// dist as a sibling file, in both build passes (each embeds the font).
 function emitFontLicense(): Plugin {
   return {
     name: "apollon-emit-font-license",
@@ -39,7 +39,10 @@ export default defineConfig({
   plugins: [
     react(),
     dts({ include: ["lib"], rollupTypes: !isPeerBuild }),
-    ...(isPeerBuild ? [] : [emitFontLicense()]),
+    // Both passes embed Inter (style.css inline in the default pass; the lazy
+    // exportFonts/exportStyles chunks base64-inline it in both) — OFL clause 2
+    // requires the license to travel with every artifact, so emit it in each.
+    emitFontLicense(),
   ],
   build: {
     copyPublicDir: false,
@@ -49,10 +52,12 @@ export default defineConfig({
     // Base64-inline the bundled Inter woff2 (from lib/styles/fonts.css) into the
     // single published style.css instead of emitting separate assets (they
     // exceed Vite's 4 KB default). Trade-off: every style.css consumer downloads
-    // the font inline (~+64 KB gzipped for the Latin+Greek+Cyrillic+Vietnamese
-    // subset) — no separate request or 404 risk, but no per-file HTTP caching.
-    // Accepted to keep one self-contained stylesheet. The function scopes this
-    // to fonts; other assets keep the default.
+    // the font inline (~+170 KB gzipped for the Latin+Greek+Cyrillic+Vietnamese
+    // subset — woff2 is already Brotli-compressed, so base64-inlining adds ~the
+    // raw woff2 size and gzip can't shrink it further) — no separate request or
+    // 404 risk, but no per-file HTTP caching. Accepted to keep one
+    // self-contained stylesheet. The function scopes this to fonts; other
+    // assets keep the default.
     assetsInlineLimit: (filePath) =>
       /\.woff2?($|\?)/.test(filePath) ? true : undefined,
     lib: {

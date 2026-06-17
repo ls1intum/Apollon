@@ -2,7 +2,7 @@ import type { Request, Response } from "express"
 import { Worker } from "node:worker_threads"
 import path from "node:path"
 import type { UMLModel } from "@tumaet/apollon"
-import { ApiError } from "../http/errors.js"
+import { Errors } from "../http/errors.js"
 
 type QueueEntry = {
   id: number
@@ -123,11 +123,7 @@ export class ConversionResource {
     } else if (message.code === "INVALID_MODEL_GEOMETRY") {
       // Corrupt client model, not a server fault — 422, not 500.
       activeJob.reject(
-        new ApiError(
-          422,
-          "INVALID_PARAMS",
-          message.error.split("\n")[0] ?? message.error
-        )
+        Errors.invalidParams(message.error.split("\n")[0] || message.error)
       )
     } else {
       activeJob.reject(new Error(message.error))

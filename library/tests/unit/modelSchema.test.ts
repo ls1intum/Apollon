@@ -68,7 +68,7 @@ describe("published model JSON schema", () => {
   it("pins a version pattern that rejects empty segments", () => {
     const re = new RegExp(committed.properties.version.pattern)
     expect(re.test("4.6.0")).toBe(true)
-    expect(re.test("4..")).toBe(false) // typescript-json-schema's [0-9]* allows this
+    expect(re.test("4..")).toBe(false) // `\d+` rejects empty segments; a regression to `\d*` would let this through
     expect(re.test("3.0.0")).toBe(false)
   })
 
@@ -123,9 +123,9 @@ describe("schema accepts every real diagram model (fixtures)", () => {
 
   it.each(models)("validates importDiagram(%s)", (_name, path) => {
     const model = importDiagram(JSON.parse(readFileSync(path, "utf8")))
-    if (!validate(model)) {
-      throw new Error(JSON.stringify(validate.errors, null, 2))
-    }
-    expect(validate(model)).toBe(true)
+    // Fail with the ajv errors inline — far more useful than a bare `false`.
+    expect(validate(model) || JSON.stringify(validate.errors, null, 2)).toBe(
+      true
+    )
   })
 })

@@ -100,7 +100,7 @@ export type BPMNEndEventType =
   | "terminate"
 
 // Shared by start/intermediate/end event nodes, so eventType is the union of
-// all three — intermediate and end events carry their own values at runtime.
+// all three.
 export type BPMNEventProps = DefaultNodeProps & {
   eventType: BPMNStartEventType | BPMNIntermediateEventType | BPMNEndEventType
 }

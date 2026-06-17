@@ -41,6 +41,11 @@ in a batch — e.g. reviewing diagram submission versions — without a browser,
 the **jsdom + canvas** recipe in **[Headless rendering](./headless-rendering)**
 (a browser is the heavier, pixel-exact alternative).
 
+In a real browser the export is self-contained: it injects the layout CSS and
+Inter font it needs, so you do **not** import `@tumaet/apollon/style.css` just to
+export. (`style.css` is still required to mount the interactive
+**[editor](../embedding/install)**.)
+
 :::tip Always normalise first
 Pass models through `importDiagram(...)` before exporting. It upgrades v2 / v3
 payloads to the current v4 shape; feeding a stale shape straight in is a common

@@ -1,9 +1,8 @@
 // Generate the published JSON Schema for the Apollon v4 model wire format.
 //
 // Source of truth: the `UMLModel` TypeScript type in lib/typings.ts. The schema
-// is committed (schema/uml-model-4.schema.json) and shipped in the package, and
-// a Vitest test (tests/unit/modelSchema.test.ts) fails if it drifts from the
-// types — run this script to refresh it.
+// is committed (schema/uml-model-4.schema.json), shipped in the package, and
+// drift-checked by tests/unit/modelSchema.test.ts — run this to refresh it.
 //
 //   pnpm --filter @tumaet/apollon run gen:schema
 //
