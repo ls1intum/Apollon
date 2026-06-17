@@ -34,6 +34,25 @@ export default [
       // stale-closure patterns exist in the webapp's editor handlers).
       "react-hooks/exhaustive-deps": "warn",
       "react/prop-types": "off",
+      // The webapp is fully migrated off MUI/Emotion onto @tumaet/ui
+      // (Base UI) + lucide-react. Ban re-introducing them.
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@mui/*", "@mui"],
+              message:
+                "MUI is removed from the webapp. Use @tumaet/ui (Base UI) primitives and lucide-react icons instead.",
+            },
+            {
+              group: ["@emotion/*", "@emotion"],
+              message:
+                "Emotion is removed from the webapp. Style with Tailwind utilities and the shared --apollon-*/--home-* tokens.",
+            },
+          ],
+        },
+      ],
     },
   },
 ]

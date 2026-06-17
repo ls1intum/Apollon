@@ -1,7 +1,5 @@
-import Box from "@mui/material/Box"
-import TextField from "@mui/material/TextField"
-import Button from "@mui/material/Button"
-import { Typography } from "@/components/Typography"
+import { Button } from "@tumaet/ui/components/button"
+import { Input } from "@tumaet/ui/components/input"
 import { useModalContext } from "@/contexts"
 import { useState } from "react"
 import type { KeyboardEvent } from "react"
@@ -36,56 +34,27 @@ export const CollaborateNameModal = ({
   }
 
   return (
-    <Box sx={{ gap: 2, display: "flex", flexDirection: "column" }}>
-      <Typography variant="body2">
-        Enter a display name to collaborate.
-      </Typography>
-      <TextField
-        autoFocus
-        fullWidth
-        id="collaboration-name"
-        label="Display name"
-        value={name}
-        onChange={(event) => setName(event.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder="Your name"
-        variant="outlined"
-        sx={{
-          input: {
-            color: "var(--apollon-primary-contrast)",
-          },
-          "& .MuiInputLabel-root": {
-            color: "var(--apollon-secondary)",
-            "&.Mui-focused": { color: "var(--apollon-primary)" },
-          },
-          "& .MuiOutlinedInput-root": {
-            "& fieldset": {
-              borderColor: "var(--apollon-secondary)",
-            },
-            "&:hover fieldset": {
-              borderColor: "var(--apollon-primary-contrast)",
-            },
-            "&.Mui-focused fieldset": {
-              borderColor: "var(--apollon-primary)",
-            },
-          },
-          "& .MuiInputBase-input::placeholder": {
-            color: "var(--apollon-secondary)",
-            opacity: 1,
-          },
-        }}
-      />
-      <Button
-        variant="contained"
-        onClick={handleConfirm}
-        disabled={!isValid}
-        sx={{
-          bgcolor: "var(--apollon-primary)",
-          "&:hover": { bgcolor: "var(--apollon-primary)" },
-        }}
-      >
+    <div className="flex flex-col gap-4 text-[var(--apollon-primary-contrast)]">
+      <p className="text-sm">Enter a display name to collaborate.</p>
+      <div className="flex flex-col gap-1.5">
+        <label
+          htmlFor="collaboration-name"
+          className="text-sm text-[var(--apollon-secondary)]"
+        >
+          Display name
+        </label>
+        <Input
+          autoFocus
+          id="collaboration-name"
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Your name"
+        />
+      </div>
+      <Button onClick={handleConfirm} disabled={!isValid}>
         Start Collaborating
       </Button>
-    </Box>
+    </div>
   )
 }

@@ -1,5 +1,6 @@
 import { memo, useEffect, useState } from "react"
 import { UMLDiagramType } from "@tumaet/apollon/react"
+import { Spinner } from "@tumaet/ui/components/spinner"
 import { getDiagramTypeIcon } from "@/components/home/diagramTypeMeta"
 import { getCachedThumbnailSources } from "@/utils/thumbnailTheme"
 import { runWhenIdle } from "@/utils/idle"
@@ -87,18 +88,12 @@ export const TemplateThumbnail = memo(function TemplateThumbnail({
         </>
       ) : lightSvg === null ? (
         // Render failed — fall back to the type glyph so the tile is never blank.
-        <div className="flex h-full w-full items-center justify-center text-[var(--home-text-secondary)]">
+        <div className="flex h-full w-full items-center justify-center text-muted-foreground">
           {getDiagramTypeIcon(UMLDiagramType.ClassDiagram, "h-9 w-9")}
         </div>
       ) : (
         <div className="flex h-full w-full items-center justify-center">
-          <span
-            className="h-5 w-5 animate-spin rounded-full border-2"
-            style={{
-              borderColor: "var(--home-border-default)",
-              borderTopColor: "var(--home-accent-base)",
-            }}
-          />
+          <Spinner className="size-5 text-[var(--home-accent-base)]" />
         </div>
       )}
     </div>

@@ -1,9 +1,10 @@
-import { Box, Typography } from "@mui/material"
-import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded"
-import CircleRoundedIcon from "@mui/icons-material/CircleRounded"
-import CircleOutlinedIcon from "@mui/icons-material/CircleOutlined"
-import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded"
-import type { FC } from "react"
+import {
+  CheckCircle2Icon,
+  CircleIcon,
+  ArrowLeftIcon,
+  type LucideIcon,
+} from "lucide-react"
+import type { CSSProperties, FC } from "react"
 import { useVersionStore, type PendingVersion } from "@/stores/useVersionStore"
 import { relativeTime } from "./relativeTime"
 import {
@@ -24,6 +25,8 @@ interface Props {
   /** The latest non-pending, non-failed version, if any. */
   latestSavedVersion: PendingVersion | undefined
 }
+
+const ROW_BORDER = "1px solid rgba(255, 255, 255, 0.06)"
 
 /**
  * Pseudo-row at the top of the sidebar that represents HEAD ("you are
@@ -52,69 +55,58 @@ export const CurrentVersionRow: FC<Props> = ({
 
   if (previewState) {
     return (
-      <Box
-        component="button"
+      <button
         type="button"
         onClick={() => exitPreview()}
-        sx={{
-          display: "flex",
-          width: "100%",
-          alignItems: "flex-start",
-          gap: 1.25,
-          px: 2,
-          py: 1.25,
-          background: "transparent",
-          border: 0,
-          borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
-          color: TEXT_PRIMARY,
-          cursor: "pointer",
-          textAlign: "left",
-          "&:hover": { background: ROW_HOVER_BG },
-        }}
+        className="flex w-full cursor-pointer items-start gap-2.5 border-0 bg-transparent px-4 py-2.5 text-left transition-colors [&:hover]:[background:var(--row-hover-bg)]"
+        style={
+          {
+            color: TEXT_PRIMARY,
+            borderBottom: ROW_BORDER,
+            "--row-hover-bg": ROW_HOVER_BG,
+          } as CSSProperties
+        }
         aria-label="Return to current canvas"
       >
-        <ArrowBackRoundedIcon
-          fontSize="small"
-          sx={{ mt: 0.25, color: TEXT_PRIMARY }}
+        <ArrowLeftIcon
+          className="mt-0.5 size-4"
+          style={{ color: TEXT_PRIMARY }}
           aria-hidden
         />
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography
-            variant="body2"
-            sx={{ fontWeight: 600, color: TEXT_PRIMARY }}
+        <div className="min-w-0 flex-1">
+          <div
+            className="text-sm font-semibold"
+            style={{ color: TEXT_PRIMARY }}
           >
             Return to current
-          </Typography>
-          <Typography
-            variant="caption"
-            sx={{ color: TEXT_MUTED, display: "block" }}
-          >
+          </div>
+          <div className="text-xs" style={{ color: TEXT_MUTED }}>
             Previewing an earlier version
-          </Typography>
-        </Box>
-      </Box>
+          </div>
+        </div>
+      </button>
     )
   }
 
   const upToDate = !hasChanges && Boolean(latestSavedVersion)
-  let icon: typeof CheckCircleRoundedIcon
+  let icon: LucideIcon
   let iconColor: string
   let title: string
   let subtitle: string
 
   if (!latestSavedVersion) {
-    icon = CircleOutlinedIcon
+    icon = CircleIcon
     iconColor = TEXT_MUTED
     title = "Current"
     subtitle = "Not yet saved as a version"
   } else if (upToDate) {
-    icon = CheckCircleRoundedIcon
+    icon = CheckCircle2Icon
     // Tailwind-ish green that reads on dark bg without theming.
     iconColor = "#5cb47a"
     title = "Current"
     subtitle = `Up to date · last saved ${relativeTime(latestSavedVersion.createdAt)}`
   } else {
-    icon = CircleRoundedIcon
+    icon = CircleIcon
     // Amber, signaling "there's something to capture" without alarm — HEAD
     // is autosaved every 5 s, so this is "not yet a version," not "at risk."
     iconColor = "#e8a857"
@@ -123,36 +115,29 @@ export const CurrentVersionRow: FC<Props> = ({
   }
 
   const Icon = icon
+  // The amber/edits state uses a filled dot; the others an outline/check.
+  const fillIcon = Boolean(latestSavedVersion) && !upToDate
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        alignItems: "flex-start",
-        gap: 1.25,
-        px: 2,
-        py: 1.25,
-        bgcolor: ROW_SELECTED_BG,
-        borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
-      }}
+    <div
+      className="flex items-start gap-2.5 px-4 py-2.5"
+      style={{ background: ROW_SELECTED_BG, borderBottom: ROW_BORDER }}
       aria-label="Current canvas"
       aria-live="polite"
     >
-      <Icon fontSize="small" sx={{ mt: 0.25, color: iconColor }} aria-hidden />
-      <Box sx={{ flex: 1, minWidth: 0 }}>
-        <Typography
-          variant="body2"
-          sx={{ fontWeight: 600, color: TEXT_PRIMARY }}
-        >
+      <Icon
+        className="mt-0.5 size-4"
+        style={{ color: iconColor, fill: fillIcon ? iconColor : "none" }}
+        aria-hidden
+      />
+      <div className="min-w-0 flex-1">
+        <div className="text-sm font-semibold" style={{ color: TEXT_PRIMARY }}>
           {title}
-        </Typography>
-        <Typography
-          variant="caption"
-          sx={{ color: TEXT_MUTED, display: "block" }}
-        >
+        </div>
+        <div className="text-xs" style={{ color: TEXT_MUTED }}>
           {subtitle}
-        </Typography>
-      </Box>
-    </Box>
+        </div>
+      </div>
+    </div>
   )
 }

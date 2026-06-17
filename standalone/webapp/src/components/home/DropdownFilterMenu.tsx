@@ -1,5 +1,5 @@
 import type { MouseEvent, ReactNode } from "react"
-import MenuItem from "@mui/material/MenuItem"
+import { DropdownMenuItem } from "@tumaet/ui/components/dropdown-menu"
 import { MenuShell } from "./MenuShell"
 
 type DropdownFilterMenuItem = {
@@ -52,7 +52,7 @@ export const DropdownFilterMenu = ({
         <>
           {triggerContent}
           <svg
-            className="h-3.5 w-3.5 shrink-0 text-[var(--home-text-secondary)]"
+            className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
             viewBox="0 0 20 20"
             fill="none"
             aria-hidden="true"
@@ -75,30 +75,27 @@ export const DropdownFilterMenu = ({
     >
       {sections.map((section, sectionIndex) => (
         <div key={section.title}>
-          {sectionIndex > 0 ? (
-            <div className="my-2 h-px bg-[var(--home-border-default)]" />
-          ) : null}
-          <div className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--home-text-secondary)]">
+          {sectionIndex > 0 ? <div className="my-2 h-px bg-border" /> : null}
+          <div className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
             {section.title}
           </div>
           {section.items.map((item) => (
-            <MenuItem
+            <DropdownMenuItem
               key={item.key}
-              selected={item.selected}
               onClick={item.onSelect}
-              className={`home-filter-menu-item !min-h-0 !rounded-md !px-2 !py-1.5 !text-xs transition-colors duration-200 ${
+              className={`min-h-0 rounded-md px-2 py-1.5 text-xs transition-colors duration-200 ${
                 item.selected
-                  ? "!bg-[var(--home-surface-raised-hover)] !text-[var(--home-text-primary)]"
-                  : "!text-[var(--home-text-secondary)] hover:!bg-[color-mix(in_srgb,var(--home-surface-raised-hover)_50%,transparent)] hover:!text-[var(--home-text-primary)]"
+                  ? "bg-accent-hover text-foreground data-[highlighted]:bg-accent-hover"
+                  : "text-muted-foreground hover:bg-[color-mix(in_srgb,var(--home-surface-raised-hover)_50%,transparent)] hover:text-foreground data-[highlighted]:bg-[color-mix(in_srgb,var(--home-surface-raised-hover)_50%,transparent)] data-[highlighted]:text-foreground"
               }`}
             >
               <span className="w-full">{item.label}</span>
               {item.selected ? (
-                <span className="text-[var(--home-text-primary)] opacity-90 font-medium">
+                <span className="text-foreground opacity-90 font-medium">
                   {item.selectedLabel ?? "Selected"}
                 </span>
               ) : null}
-            </MenuItem>
+            </DropdownMenuItem>
           ))}
         </div>
       ))}

@@ -1,9 +1,8 @@
-import { Button, Stack } from "@mui/material"
 import { useState } from "react"
 import { toast } from "react-toastify"
+import { Button } from "@tumaet/ui/components/button"
 import { useModalContext } from "@/contexts"
 import { selectVersions, useVersionStore } from "@/stores/useVersionStore"
-import { Typography } from "@/components/Typography"
 import { log } from "@/logger"
 import { versioningStrings as t } from "./strings"
 
@@ -43,25 +42,20 @@ export const DeleteVersionModal = ({ diagramId, versionId }: Props) => {
     : null
 
   return (
-    <Stack spacing={2}>
-      <Typography>
+    <div className="flex flex-col gap-4">
+      <p className="text-[var(--apollon-primary-contrast)]">
         {label
           ? `'${label}' will be permanently removed. This cannot be undone.`
           : t.deleteFallbackBody}
-      </Typography>
-      <Stack direction="row" spacing={1} justifyContent="flex-end">
-        <Button onClick={closeModal} disabled={working}>
+      </p>
+      <div className="flex justify-end gap-2">
+        <Button variant="ghost" onClick={closeModal} disabled={working}>
           {t.cancel}
         </Button>
-        <Button
-          color="error"
-          variant="contained"
-          onClick={onConfirm}
-          disabled={working}
-        >
+        <Button variant="destructive" onClick={onConfirm} disabled={working}>
           {t.delete}
         </Button>
-      </Stack>
-    </Stack>
+      </div>
+    </div>
   )
 }

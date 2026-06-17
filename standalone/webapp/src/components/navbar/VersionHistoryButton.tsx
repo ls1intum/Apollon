@@ -1,10 +1,15 @@
-import { Button, Tooltip } from "@mui/material"
-import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@tumaet/ui/components/tooltip"
+import { HistoryIcon } from "lucide-react"
 import { useLocation } from "react-router"
 import { useVersionStore } from "@/stores/useVersionStore"
 import { secondary } from "@/constants"
 import { versioningStrings as t } from "@/components/versioning/strings"
 import { useDiagramIdFromPath } from "@/hooks/useDiagramIdFromPath"
+import { navTriggerClass } from "./styles"
 
 interface Props {
   /**
@@ -42,20 +47,20 @@ export const VersionHistoryButton = ({ color = secondary }: Props) => {
   if (!diagramId || !isSharedRoute) return null
 
   return (
-    <Tooltip title={t.fabTooltip}>
-      <Button
-        sx={{ textTransform: "none", minWidth: 0, gap: 0.5 }}
+    <Tooltip>
+      <TooltipTrigger
+        className={navTriggerClass}
+        style={{ color }}
+        aria-label={t.drawerTitle}
+        aria-pressed={isOpen}
         onClick={() =>
           isOpen ? closeDrawer(diagramId) : openDrawer(diagramId)
         }
-        aria-label={t.drawerTitle}
-        aria-pressed={isOpen}
-        startIcon={
-          <HistoryRoundedIcon fontSize="small" htmlColor={color} aria-hidden />
-        }
       >
-        <span style={{ color }}>{t.navMenuItem}</span>
-      </Button>
+        <HistoryIcon className="size-4" aria-hidden />
+        <span>{t.navMenuItem}</span>
+      </TooltipTrigger>
+      <TooltipContent>{t.fabTooltip}</TooltipContent>
     </Tooltip>
   )
 }

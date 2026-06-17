@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from "react"
-import { Tooltip } from "@mui/material"
-import Info from "@mui/icons-material/Info"
+import { InfoIcon } from "lucide-react"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@tumaet/ui/components/tooltip"
 import { toast } from "react-toastify"
 import { useNavigate } from "react-router"
 import { useModalContext } from "@/contexts"
@@ -224,37 +229,43 @@ export const ShareDashboardModal = (
         {createdDiagramId
           ? "Share your diagram as a link — choose edit, live collaboration, or feedback mode."
           : "Creates a live version of this diagram to share for collaboration and feedback."}
-        <Tooltip
-          title={
-            createdDiagramId ? (
-              <span
-                className="recent-diagrams-font"
-                style={{ display: "block", lineHeight: "1.6" }}
-              >
-                • <b>Edit</b> — view &amp; modify, no live sync
-                <br />• <b>Collaborate</b> — real-time multi-user editing
-                <br />• <b>Give Feedback</b> — reviewers annotate a read-only
-                view
-                <br />• <b>Receive Feedback</b> — read-only view of submitted
-                annotations
-              </span>
-            ) : (
-              <span className="recent-diagrams-font">
-                A snapshot is uploaded to our servers — your local diagram is
-                untouched. Links stay active for 120 days and reset whenever
-                someone edits.
-              </span>
-            )
-          }
-          placement="top"
-          arrow
-        >
-          <Info
-            fontSize="small"
-            className="ml-1 inline-block cursor-help"
-            style={{ color: "var(--home-accent-base)" }}
-          />
-        </Tooltip>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <span className="ml-1 inline-flex cursor-help items-center" />
+              }
+              aria-label="More information"
+            >
+              <InfoIcon
+                className="size-4"
+                style={{ color: "var(--home-accent-base)" }}
+                aria-hidden
+              />
+            </TooltipTrigger>
+            <TooltipContent>
+              {createdDiagramId ? (
+                <span
+                  className="recent-diagrams-font"
+                  style={{ display: "block", lineHeight: "1.6" }}
+                >
+                  • <b>Edit</b> — view &amp; modify, no live sync
+                  <br />• <b>Collaborate</b> — real-time multi-user editing
+                  <br />• <b>Give Feedback</b> — reviewers annotate a read-only
+                  view
+                  <br />• <b>Receive Feedback</b> — read-only view of submitted
+                  annotations
+                </span>
+              ) : (
+                <span className="recent-diagrams-font">
+                  A snapshot is uploaded to our servers — your local diagram is
+                  untouched. Links stay active for 120 days and reset whenever
+                  someone edits.
+                </span>
+              )}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </HomeDialogNotice>
 
       {/* Name field — hidden once diagram is created */}
@@ -287,33 +298,36 @@ export const ShareDashboardModal = (
               }}
             />
 
-            <Tooltip
-              title={
-                <span className="recent-diagrams-font">
-                  {copied ? "Copied!" : "Copy link"}
-                </span>
-              }
-              placement="top"
-              arrow
-            >
-              <button
-                type="button"
-                onClick={handleCopy}
-                className="flex h-9 w-9 shrink-0 items-center justify-center border border-r-0 transition-colors duration-150 hover:opacity-80"
-                style={{
-                  borderColor: "var(--home-border-default)",
-                  background: copied
-                    ? "var(--home-accent-soft)"
-                    : "var(--home-surface-raised)",
-                  color: copied
-                    ? "var(--home-accent-base)"
-                    : "var(--home-text-secondary)",
-                }}
-                aria-label="Copy link"
-              >
-                {copied ? <CheckIcon /> : <CopyIcon />}
-              </button>
-            </Tooltip>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <button
+                      type="button"
+                      onClick={handleCopy}
+                      className="flex h-9 w-9 shrink-0 items-center justify-center border border-r-0 transition-colors duration-150 hover:opacity-80"
+                      style={{
+                        borderColor: "var(--home-border-default)",
+                        background: copied
+                          ? "var(--home-accent-soft)"
+                          : "var(--home-surface-raised)",
+                        color: copied
+                          ? "var(--home-accent-base)"
+                          : "var(--home-text-secondary)",
+                      }}
+                      aria-label="Copy link"
+                    />
+                  }
+                >
+                  {copied ? <CheckIcon /> : <CopyIcon />}
+                </TooltipTrigger>
+                <TooltipContent>
+                  <span className="recent-diagrams-font">
+                    {copied ? "Copied!" : "Copy link"}
+                  </span>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
 
             <div className="relative" data-mode-dropdown="">
               <button
@@ -354,7 +368,7 @@ export const ShareDashboardModal = (
                   style={{
                     borderColor: "var(--home-border-default)",
                     background: "var(--home-surface-raised)",
-                    boxShadow: "0 8px 24px var(--home-shadow-overlay)",
+                    boxShadow: "var(--home-shadow-overlay-box)",
                   }}
                 >
                   {MODE_OPTIONS.map((opt) => {

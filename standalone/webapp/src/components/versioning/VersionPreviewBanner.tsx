@@ -1,5 +1,5 @@
-import { Alert, Box, Button } from "@mui/material"
-import { useState, type FC } from "react"
+import { TriangleAlertIcon } from "lucide-react"
+import { useState, type CSSProperties, type FC } from "react"
 import { selectVersions, useVersionStore } from "@/stores/useVersionStore"
 import { versioningStrings as t } from "./strings"
 import { relativeTime } from "./relativeTime"
@@ -36,11 +36,24 @@ interface Props {
   containerWidth: number | undefined
 }
 
+const BANNER_FONT =
+  '"Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue", Arial, sans-serif'
+
+// The warning palette comes from the `--home-banner-warning-*` tokens, so the
+// banner stays in the notification language across light/dark.
+const buttonStyle: CSSProperties = {
+  fontFamily: "inherit",
+  whiteSpace: "nowrap",
+  border: "1px solid var(--home-banner-warning-btn-border)",
+  backgroundColor: "var(--home-banner-warning-btn-bg)",
+  color: "var(--home-banner-warning-btn-text)",
+}
+
 /**
- * Compact preview banner. Standard MUI `<Alert severity="warning">` with
- * the two actions in `action`. Hosting layout overlays it on the canvas
- * (see `ApollonWithConnection`), so the canvas itself never reflows on
- * preview enter/exit.
+ * Compact preview banner. A soft-gold outlined warning alert with the two
+ * actions on the right. Hosting layout overlays it on the canvas (see
+ * `ApollonWithConnection`), so the canvas itself never reflows on preview
+ * enter/exit.
  */
 export const VersionPreviewBanner: FC<Props> = ({
   diagramId,
@@ -71,153 +84,105 @@ export const VersionPreviewBanner: FC<Props> = ({
   const ago = summary ? relativeTime(summary.createdAt) : ""
 
   return (
-    <Alert
-      severity="warning"
-      variant="filled"
+    <div
       role="status"
       aria-live="polite"
-      sx={{
-        // Soft-gold outlined warning: tinted body, gold border, neutral text,
-        // amber icon. Poppins + lg radius to match the notification language.
-        fontFamily:
-          '"Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue", Arial, sans-serif',
-        bgcolor: "var(--home-banner-warning-bg)",
+      // Fixed width so the banner doesn't reflow as the user clicks between
+      // previews with different description lengths. Capped to viewport width
+      // minus a small inset for narrow screens.
+      className="flex w-[720px] max-w-[calc(100%-16px)] items-start gap-3 rounded-lg border"
+      style={{
+        fontFamily: BANNER_FONT,
+        backgroundColor: "var(--home-banner-warning-bg)",
         color: "var(--home-banner-warning-text)",
-        border: "1px solid var(--home-banner-warning-border)",
-        borderRadius: "var(--home-radius-lg)",
-        boxShadow: "0 12px 32px var(--home-shadow-overlay)",
-        alignItems: "flex-start",
-        // Fixed width so the banner doesn't reflow as the user clicks
-        // between previews with different description lengths. Capped to
-        // viewport width minus a small inset for narrow screens.
-        width: 720,
-        maxWidth: "calc(100% - 16px)",
-        px: isSmall ? 1.25 : 2,
-        py: isSmall ? 1 : 1.25,
-        "& .MuiAlert-icon": {
-          py: 0.5,
-          mr: isSmall ? 1 : 1.75,
-          color: "var(--home-banner-warning-icon)",
-        },
-        "& .MuiAlert-message": { minWidth: 0, flex: 1, py: 0.5 },
-        // Generous breathing room between the message block and the
-        // actions. Pinned to the top so the buttons stay anchored when
-        // a long description makes the message column grow taller —
-        // they don't drift down with the banner. Tighter gap on small.
-        //
-        // `mr: 0` overrides MUI's default `marginRight: -8px` on the
-        // action slot (designed to compensate for icon-button padding
-        // we don't have here). Without the override, our text buttons
-        // sit ~8px from the alert's right edge instead of honoring the
-        // alert's own `pr` — visually too tight against the boundary.
-        "& .MuiAlert-action": {
-          p: 0,
-          mr: 0,
-          ml: isSmall ? 1.25 : 4,
-          mt: 0.5,
-          alignItems: "flex-start",
-          alignSelf: "flex-start",
-        },
+        borderColor: "var(--home-banner-warning-border)",
+        boxShadow: "var(--home-shadow-overlay-box)",
+        padding: isSmall ? "0.5rem 0.625rem" : "0.625rem 1rem",
+        gap: isSmall ? "0.5rem" : "0.875rem",
       }}
-      action={
-        <Box
-          sx={{
-            display: "flex",
-            // Stack vertically below ~480px so the message column gets
-            // its width back. Buttons remain right-aligned and compact —
-            // not full-width — so the banner doesn't dominate the canvas.
-            flexDirection: isNarrow ? "column" : "row",
-            gap: isNarrow ? 0.5 : isSmall ? 0.25 : 1,
-            alignItems: isNarrow ? "stretch" : "center",
+    >
+      <TriangleAlertIcon
+        className="mt-0.5 size-4 shrink-0"
+        style={{ color: "var(--home-banner-warning-icon)" }}
+        aria-hidden
+      />
+
+      <div className="min-w-0 flex-1">
+        <div
+          className="font-semibold"
+          style={{
+            fontSize: isSmall ? "0.875rem" : "0.9375rem",
+            lineHeight: 1.35,
           }}
         >
-          {/* Full labels at every width. The narrow-viewport label
-              swap ("Exit"/"Restore") felt clipped — and once we stack
-              the actions vertically below 480px, each button has its
-              own row anyway, so there's no horizontal pressure that
-              required the abbreviation. `whiteSpace: nowrap` prevents
-              awkward mid-word wraps in the side-by-side compact case. */}
-          <Button
-            onClick={onExit}
-            size={isSmall ? "small" : "medium"}
-            sx={{
-              textTransform: "none",
-              fontFamily: "inherit",
-              px: isSmall ? 1.25 : 1.5,
-              minWidth: 0,
-              whiteSpace: "nowrap",
-              border: "1px solid var(--home-banner-warning-btn-border)",
-              bgcolor: "var(--home-banner-warning-btn-bg)",
-              color: "var(--home-banner-warning-btn-text)",
-              "&:hover": {
-                bgcolor: "var(--home-banner-warning-btn-hover)",
-              },
+          Read-only preview{ago && ` · ${ago}`}
+        </div>
+        {label && (
+          <div
+            className="overflow-hidden break-words whitespace-pre-wrap"
+            style={{
+              marginTop: "0.25rem",
+              fontSize: isSmall ? "0.75rem" : "0.8125rem",
+              lineHeight: 1.4,
+              color: "var(--home-banner-warning-muted)",
+              // Cap height tighter on small so the banner doesn't take over
+              // the canvas with a long description.
+              maxHeight: isSmall ? "2.8em" : "4.2em",
             }}
+            title={label}
           >
-            {t.exitPreview}
-          </Button>
-          {canRestore && (
-            <Button
-              disableElevation
-              disabled={restoring}
-              onClick={async () => {
-                setRestoring(true)
-                try {
-                  await onRestore(preview.versionId)
-                } finally {
-                  setRestoring(false)
-                }
-              }}
-              size={isSmall ? "small" : "medium"}
-              sx={{
-                textTransform: "none",
-                fontFamily: "inherit",
-                fontWeight: 600,
-                px: isSmall ? 1.5 : 2,
-                minWidth: 0,
-                whiteSpace: "nowrap",
-                border: "1px solid var(--home-banner-warning-btn-border)",
-                bgcolor: "var(--home-banner-warning-btn-bg)",
-                color: "var(--home-banner-warning-btn-text)",
-                "&:hover": {
-                  bgcolor: "var(--home-banner-warning-btn-hover)",
-                },
-              }}
-            >
-              {t.restoreThis}
-            </Button>
-          )}
-        </Box>
-      }
-    >
-      <Box
-        sx={{
-          fontWeight: 600,
-          fontSize: isSmall ? "0.875rem" : "0.9375rem",
-          lineHeight: 1.35,
+            {label}
+          </div>
+        )}
+      </div>
+
+      {/* Full labels at every width. Stack vertically below ~480px so the
+          message column gets its width back; buttons stay right-aligned and
+          compact so the banner doesn't dominate the canvas. */}
+      <div
+        className="mt-0.5 flex shrink-0"
+        style={{
+          flexDirection: isNarrow ? "column" : "row",
+          gap: isNarrow ? "0.5rem" : isSmall ? "0.25rem" : "0.5rem",
+          alignItems: isNarrow ? "stretch" : "center",
+          marginLeft: isSmall ? "0.5rem" : "1rem",
         }}
       >
-        Read-only preview{ago && ` · ${ago}`}
-      </Box>
-      {label && (
-        <Box
-          sx={{
-            mt: 0.5,
-            fontSize: isSmall ? "0.75rem" : "0.8125rem",
-            lineHeight: 1.4,
-            color: "var(--home-banner-warning-muted)",
-            whiteSpace: "pre-wrap",
-            wordBreak: "break-word",
-            // Cap height tighter on small so the banner doesn't take over
-            // the canvas with a long description.
-            maxHeight: isSmall ? "2.8em" : "4.2em",
-            overflow: "hidden",
+        <button
+          type="button"
+          onClick={onExit}
+          className="inline-flex cursor-pointer items-center justify-center rounded-md font-medium transition-colors hover:[background:var(--home-banner-warning-btn-hover)]"
+          style={{
+            ...buttonStyle,
+            padding: isSmall ? "0.25rem 0.625rem" : "0.375rem 0.75rem",
+            fontSize: isSmall ? "0.8125rem" : "0.875rem",
           }}
-          title={label}
         >
-          {label}
-        </Box>
-      )}
-    </Alert>
+          {t.exitPreview}
+        </button>
+        {canRestore && (
+          <button
+            type="button"
+            disabled={restoring}
+            onClick={async () => {
+              setRestoring(true)
+              try {
+                await onRestore(preview.versionId)
+              } finally {
+                setRestoring(false)
+              }
+            }}
+            className="inline-flex cursor-pointer items-center justify-center rounded-md font-semibold transition-colors hover:[background:var(--home-banner-warning-btn-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+            style={{
+              ...buttonStyle,
+              padding: isSmall ? "0.375rem 0.75rem" : "0.5rem 1rem",
+              fontSize: isSmall ? "0.8125rem" : "0.875rem",
+            }}
+          >
+            {t.restoreThis}
+          </button>
+        )}
+      </div>
+    </div>
   )
 }

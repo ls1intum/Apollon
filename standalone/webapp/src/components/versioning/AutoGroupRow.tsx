@@ -1,7 +1,5 @@
-import { Box } from "@mui/material"
-import ExpandLessIcon from "@mui/icons-material/ExpandLess"
-import ChevronRightIcon from "@mui/icons-material/ChevronRight"
-import { memo, useState, type FC } from "react"
+import { ChevronDownIcon, ChevronRightIcon } from "lucide-react"
+import { memo, useState, type CSSProperties, type FC } from "react"
 import { VersionListItem } from "./VersionListItem"
 import { ROW_HOVER_BG, TEXT_MUTED } from "./theme"
 import type { GroupedEntry } from "./utils"
@@ -34,9 +32,8 @@ const AutoGroupRow: FC<AutoGroupRowProps> = ({
 }) => {
   const [expanded, setExpanded] = useState(false)
   return (
-    <Box>
-      <Box
-        component="button"
+    <div>
+      <button
         type="button"
         // Resolves the listbox's aria-activedescendant when the group is
         // collapsed — the inner ListItems aren't mounted, so without this
@@ -45,30 +42,23 @@ const AutoGroupRow: FC<AutoGroupRowProps> = ({
         role="option"
         aria-selected={group.first.id === activeRowId}
         onClick={() => setExpanded((v) => !v)}
-        sx={{
-          width: "100%",
-          textAlign: "left",
-          background: "transparent",
-          border: 0,
-          p: 1.5,
-          color: TEXT_MUTED,
-          cursor: "pointer",
-          fontSize: "0.85rem",
-          display: "flex",
-          alignItems: "center",
-          gap: 0.5,
-          "&:hover": { background: ROW_HOVER_BG },
-        }}
+        className="flex w-full cursor-pointer items-center gap-1 border-0 bg-transparent p-3 text-left text-sm transition-colors [&:hover]:[background:var(--row-hover-bg)]"
+        style={
+          {
+            color: TEXT_MUTED,
+            "--row-hover-bg": ROW_HOVER_BG,
+          } as CSSProperties
+        }
         aria-expanded={expanded}
         aria-label={`${group.versions.length} auto-saved versions`}
       >
         {expanded ? (
-          <ExpandLessIcon fontSize="small" aria-hidden />
+          <ChevronDownIcon className="size-4" aria-hidden />
         ) : (
-          <ChevronRightIcon fontSize="small" aria-hidden />
+          <ChevronRightIcon className="size-4" aria-hidden />
         )}
         {group.versions.length} auto-saved versions
-      </Box>
+      </button>
       {expanded &&
         group.versions.map((v) => (
           <VersionListItem
@@ -83,7 +73,7 @@ const AutoGroupRow: FC<AutoGroupRowProps> = ({
             onDelete={onDelete}
           />
         ))}
-    </Box>
+    </div>
   )
 }
 

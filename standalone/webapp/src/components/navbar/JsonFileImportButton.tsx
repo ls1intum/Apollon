@@ -1,5 +1,5 @@
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
-import { MenuItem } from "@mui/material"
+import { DropdownMenuItem } from "@tumaet/ui/components/dropdown-menu"
 import React, { useRef } from "react"
 import { useNavigate } from "react-router"
 import { importDiagram } from "@tumaet/apollon/react"
@@ -11,10 +11,6 @@ export const JsonFileImportButton: React.FC<{ close: () => void }> = (
   const fileInputRef = useRef<HTMLInputElement>(null)
   const createModel = usePersistenceModelStore((state) => state.createModel)
   const navigate = useNavigate()
-
-  const handleButtonClick = () => {
-    fileInputRef.current?.click()
-  }
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -40,15 +36,23 @@ export const JsonFileImportButton: React.FC<{ close: () => void }> = (
   }
 
   return (
-    <div>
-      <MenuItem onClick={handleButtonClick}>Import</MenuItem>
+    <>
+      {/* Keep the menu open on click — opening the native file picker is async,
+          and the hidden input must stay mounted until a file is chosen, at
+          which point handleFileChange closes the menu. */}
+      <DropdownMenuItem
+        closeOnClick={false}
+        onClick={() => fileInputRef.current?.click()}
+      >
+        Import
+      </DropdownMenuItem>
       <input
         type="file"
         accept=".json,application/json"
         ref={fileInputRef}
-        style={{ display: "none" }}
+        className="hidden"
         onChange={handleFileChange}
       />
-    </div>
+    </>
   )
 }

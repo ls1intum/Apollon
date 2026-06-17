@@ -150,12 +150,8 @@ test.describe("Home page — empty state (no diagrams)", () => {
     await expect(
       page.getByRole("dialog").getByText("New Diagram", { exact: true })
     ).toBeVisible()
-    await expect(
-      page.getByRole("button", { name: "Blank diagram" })
-    ).toBeVisible()
-    await expect(
-      page.getByRole("button", { name: "Use template" })
-    ).toBeVisible()
+    await expect(page.getByRole("tab", { name: "Blank diagram" })).toBeVisible()
+    await expect(page.getByRole("tab", { name: "Use template" })).toBeVisible()
   })
 
   test("the shared name field updates with the selected creation mode", async ({
@@ -166,7 +162,7 @@ test.describe("Home page — empty state (no diagrams)", () => {
     const nameInput = page.getByRole("textbox", { name: "Name" })
 
     await expect(nameInput).toHaveValue("Class Diagram")
-    await page.getByRole("button", { name: "Use template" }).click()
+    await page.getByRole("tab", { name: "Use template" }).click()
     await expect(nameInput).toHaveValue("Adapter")
     await expect(page.getByText("Selected Template")).toHaveCount(0)
     await page.getByRole("button", { name: "Observer" }).click()

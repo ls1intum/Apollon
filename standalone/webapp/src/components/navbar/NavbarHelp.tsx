@@ -1,21 +1,24 @@
-import { useState, MouseEvent, FC } from "react"
-import Button from "@mui/material/Button"
-import Divider from "@mui/material/Divider"
-import Menu from "@mui/material/Menu"
-import MenuItem from "@mui/material/MenuItem"
-import Typography from "@mui/material/Typography/Typography"
+import { FC, useState } from "react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@tumaet/ui/components/dropdown-menu"
+import { ChevronDownIcon } from "lucide-react"
 import { secondary } from "@/constants"
 import { bugReportURL } from "@/constants/urls"
 import { useModalContext } from "@/contexts"
 import { useLocation, useNavigate } from "react-router"
-import { KeyboardArrowDownIcon } from "../Icon"
+import { navTriggerClass } from "./styles"
 
 interface Props {
   color?: string
 }
 
 export const NavbarHelp: FC<Props> = ({ color }) => {
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+  const [open, setOpen] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
   const { openModal } = useModalContext()
@@ -26,86 +29,39 @@ export const NavbarHelp: FC<Props> = ({ color }) => {
   // dead-end fix lives in exactly one place.
   const goToLegalPage = (path: string) => {
     navigate(path, { state: { from: location.pathname + location.search } })
-    handleClose()
   }
 
-  const open = Boolean(anchorEl)
-  const openMenu = (event: MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(event.currentTarget)
-  }
-
-  const handleClose = () => {
-    setAnchorEl(null)
-  }
-
-  const openHelpModal = () => {
-    openModal("HowToUseModal")
-    handleClose()
-  }
-
-  const openAboutModal = () => {
-    openModal("AboutModal")
-
-    handleClose()
-  }
-
-  const openBugReport = () => {
-    window.open(bugReportURL, "_blank")
-    handleClose()
-  }
-
-  const linkToPlayground = () => {
-    navigate("/playground")
-    handleClose()
-  }
-
-  const linkToImprint = () => {
-    goToLegalPage("/imprint")
-  }
-
-  const linkToPrivacy = () => {
-    goToLegalPage("/privacy")
-  }
+  const openHelpModal = () => openModal("HowToUseModal")
+  const openAboutModal = () => openModal("AboutModal")
+  const openBugReport = () => window.open(bugReportURL, "_blank")
+  const linkToPlayground = () => navigate("/playground")
+  const linkToImprint = () => goToLegalPage("/imprint")
+  const linkToPrivacy = () => goToLegalPage("/privacy")
 
   return (
-    <>
-      <Button
-        id="basic-button"
-        aria-controls={open ? "basic-menu" : undefined}
-        aria-haspopup="true"
-        aria-expanded={open ? "true" : undefined}
-        onClick={openMenu}
-        sx={{ textTransform: "none" }} // This removes the uppercase transformation
+    <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenuTrigger
+        className={navTriggerClass}
+        style={{ color: color ?? secondary }}
       >
-        <Typography color={color ?? secondary}>Help</Typography>
-        <KeyboardArrowDownIcon width={16} height={16} />
-      </Button>
-      <Menu
-        id="basic-menu"
-        anchorEl={anchorEl}
-        open={open}
-        onClose={handleClose}
-        MenuListProps={{
-          "aria-labelledby": "basic-button",
-          onMouseLeave: handleClose,
-        }}
-      >
-        <MenuItem
-          sx={{
-            background: "var(--apollon-background)",
-            color: "var(--apollon-primary-contrast)",
-          }}
-          onClick={openHelpModal}
-        >
+        <span>Help</span>
+        <ChevronDownIcon className="ml-1 size-4" aria-hidden />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent>
+        <DropdownMenuItem onClick={openHelpModal}>
           How does this Editor Work?
-        </MenuItem>
-        <MenuItem onClick={openAboutModal}>About</MenuItem>
-        <MenuItem onClick={openBugReport}>Report a Problem</MenuItem>
-        <MenuItem onClick={linkToPlayground}>Open Playground</MenuItem>
-        <Divider />
-        <MenuItem onClick={linkToImprint}>Imprint</MenuItem>
-        <MenuItem onClick={linkToPrivacy}>Privacy</MenuItem>
-      </Menu>
-    </>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={openAboutModal}>About</DropdownMenuItem>
+        <DropdownMenuItem onClick={openBugReport}>
+          Report a Problem
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={linkToPlayground}>
+          Open Playground
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={linkToImprint}>Imprint</DropdownMenuItem>
+        <DropdownMenuItem onClick={linkToPrivacy}>Privacy</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }

@@ -48,7 +48,7 @@ const UndoRestoreToastBody: FC<{ restoredVersionName: string }> = ({
         type="button"
         onClick={onUndo}
         disabled={submitting}
-        className="shrink-0 cursor-pointer rounded-[var(--home-radius-md)] px-2 py-1 text-sm font-semibold text-[var(--home-accent-strong)] transition-colors duration-150 hover:bg-[var(--home-surface-raised-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+        className="shrink-0 cursor-pointer rounded-md px-2 py-1 text-sm font-semibold text-accent-strong transition-colors duration-150 hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
       >
         {t.undoRestore}
       </button>

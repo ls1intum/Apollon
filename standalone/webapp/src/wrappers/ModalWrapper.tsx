@@ -15,9 +15,13 @@ import {
   useModalProgress,
 } from "@/contexts/ModalProgressContext"
 import { ModalName, ModalProps } from "@/types"
-import { Modal, Paper, Box, Divider, IconButton } from "@mui/material"
-import { Typography } from "@/components/Typography"
-import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined"
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@tumaet/ui/components/dialog"
+import { XIcon } from "lucide-react"
+import { cn } from "@tumaet/ui/lib/utils"
 import { log } from "@/logger"
 import {
   getHomeDialogWidth,
@@ -51,20 +55,6 @@ const MODAL_TITLES: Record<ModalName, string> = {
   AboutModal: "Information about Apollon",
   DELETE_VERSION: "Delete version",
 }
-
-const style = {
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  display: "flex",
-  flexDirection: "column",
-  minWidth: "20vw",
-  maxWidth: "90vw",
-  width: "50vw",
-  gap: 1,
-  bgcolor: "var(--apollon-background)",
-} as const
 
 const ModalProgressBar = () => {
   const { isLoading } = useModalProgress()
@@ -110,110 +100,94 @@ export const ModalWrapper: React.FC<ModalWrapperProps> = ({ name, props }) => {
 
   return (
     <ModalProgressProvider>
-      <Modal
+      <Dialog
         open
-        onClose={handleClose}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
+        onOpenChange={(open) => {
+          if (!open) handleClose()
+        }}
       >
-        <Paper
-          sx={{
-            ...style,
-            width: isHomeDialog
-              ? getHomeDialogWidth(isWideHomeDialog ? "wide" : "compact")
-              : style.width,
-            minWidth: isHomeDialog ? "320px" : style.minWidth,
-            borderRadius: isHomeDialog ? "15px" : undefined,
-            overflow: isHomeDialog ? "visible" : undefined,
-            maxHeight: isHomeDialog ? "92vh" : undefined,
-            bgcolor: isHomeDialog
-              ? "var(--home-surface-base)"
-              : "var(--apollon-background)",
-          }}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="modal-modal-title"
+        {/* Base UI Dialog gives focus trap, scroll lock, Escape + ARIA wiring
+            for free. We override the default DialogContent box styling to keep
+            the responsive width, accent header, divider and scrollable body the
+            modal system has always had. */}
+        <DialogContent
+          showCloseButton={false}
+          className={cn(
+            "flex max-w-none flex-col gap-0 overflow-hidden p-0",
+            isHomeDialog
+              ? "max-h-[92vh] rounded-[15px] bg-background"
+              : "max-h-[90vh] rounded-md bg-[var(--apollon-background)]"
+          )}
+          style={
+            isHomeDialog
+              ? {
+                  width: getHomeDialogWidth(
+                    isWideHomeDialog ? "wide" : "compact"
+                  ),
+                  minWidth: "320px",
+                }
+              : { width: "50vw", minWidth: "20vw", maxWidth: "90vw" }
+          }
         >
           {/* Header */}
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: 1,
-              p: isHomeDialog ? "18px 20px" : 2,
-              bgcolor: isHomeDialog ? "var(--home-accent-base)" : undefined,
-              borderTopLeftRadius: isHomeDialog ? "15px" : undefined,
-              borderTopRightRadius: isHomeDialog ? "15px" : undefined,
-            }}
+          <div
+            className={cn(
+              "flex items-center justify-between gap-2",
+              isHomeDialog
+                ? "rounded-t-[15px] bg-primary px-5 py-[18px]"
+                : "p-4"
+            )}
           >
-            <Typography
-              variant="h5"
-              id="modal-modal-title"
-              noWrap={isHomeDialog}
-              sx={{
-                fontFamily: isHomeDialog ? "Poppins, sans-serif" : undefined,
-                fontWeight: isHomeDialog ? 500 : undefined,
-                // Scale the title down on narrow screens instead of wrapping it
-                // to a second line. Stays on one line; ellipsis is the last resort.
-                fontSize: isHomeDialog
-                  ? "clamp(0.95rem, 4vw, 1.3rem)"
-                  : undefined,
-                color: isHomeDialog
-                  ? "var(--home-accent-contrast)"
-                  : "var(--apollon-primary-contrast)",
-                ...(isHomeDialog ? { minWidth: 0, whiteSpace: "nowrap" } : {}),
-              }}
+            <DialogTitle
+              className={cn(
+                "min-w-0 text-xl leading-tight font-semibold",
+                isHomeDialog
+                  ? "truncate text-[clamp(0.95rem,4vw,1.3rem)] font-medium text-primary-foreground [font-family:Poppins,sans-serif]"
+                  : "text-[var(--apollon-primary-contrast)]"
+              )}
             >
               {MODAL_TITLES[name]}
-            </Typography>
-            <IconButton
-              size="small"
+            </DialogTitle>
+            <button
+              type="button"
               aria-label="Close"
-              sx={{
-                color: isHomeDialog
-                  ? "var(--home-accent-contrast)"
-                  : "var(--apollon-primary-contrast)",
-                borderRadius: isHomeDialog ? "6px" : "2px",
-                flexShrink: 0,
-                "&:hover": {
-                  bgcolor: isHomeDialog
-                    ? "var(--home-on-accent-bg-hover)"
-                    : "var(--apollon-background-variant)",
-                  color: isHomeDialog
-                    ? "var(--home-on-accent-text)"
-                    : "var(--apollon-primary-contrast)",
-                },
-              }}
               onClick={handleClose}
+              className={cn(
+                "flex shrink-0 cursor-pointer items-center justify-center p-1 transition-colors",
+                isHomeDialog
+                  ? "rounded-md text-primary-foreground hover:bg-[var(--home-on-accent-bg-hover)] hover:text-[var(--home-on-accent-text)]"
+                  : "rounded-sm text-[var(--apollon-primary-contrast)] hover:bg-[var(--apollon-background-variant)]"
+              )}
             >
-              <CloseOutlinedIcon />
-            </IconButton>
-          </Box>
+              <XIcon className="size-5" aria-hidden />
+            </button>
+          </div>
           {!isHomeDialog && (
-            <Divider sx={{ bgcolor: "var(--apollon-background-variant)" }} />
+            <div className="h-px w-full bg-[var(--apollon-background-variant)]" />
           )}
 
           {/* Progress bar — sits between header and content, outside scroll */}
           <ModalProgressBar />
 
           {/* Scrollable Content */}
-          <Box
-            sx={{
-              p: isHomeDialog ? "24px 16px 16px" : 2,
-              overflowY: isContentOverflow ? "visible" : "auto",
+          <div
+            className={cn(
+              "grow",
+              isContentOverflow ? "overflow-y-visible" : "overflow-y-auto",
+              isHomeDialog ? "px-4 pt-6 pb-4" : "p-4"
+            )}
+            style={{
               maxHeight: isContentOverflow
                 ? "none"
                 : isHomeDialog
                   ? "calc(92vh - 84px)"
                   : "calc(90vh - 60px)",
-              flexGrow: 1,
             }}
           >
-            {SpecificModal && <SpecificModal {...props} />}
-          </Box>
-        </Paper>
-      </Modal>
+            <SpecificModal {...props} />
+          </div>
+        </DialogContent>
+      </Dialog>
     </ModalProgressProvider>
   )
 }

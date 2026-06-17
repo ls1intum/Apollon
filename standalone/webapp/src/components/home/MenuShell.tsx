@@ -1,12 +1,16 @@
 import type { CSSProperties, MouseEvent, ReactNode } from "react"
-import Menu from "@mui/material/Menu"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@tumaet/ui/components/dropdown-menu"
 
 type MenuShellProps = {
   /** Id for the trigger button — wired to aria-controls */
   buttonId: string
-  /** Id for the MUI Menu element */
+  /** Id for the menu popup element */
   menuId: string
-  /** MUI anchor element; null when closed */
+  /** Anchor element; null when closed. Non-null means the menu is open. */
   anchorEl: HTMLElement | null
   /** Called when the button is clicked. The parent stores anchorEl. */
   onToggle: (event: MouseEvent<HTMLButtonElement>) => void
@@ -23,20 +27,25 @@ type MenuShellProps = {
   wrapperClassName?: string
   /** Which edge of the button the menu aligns to. Defaults to "right". */
   anchorHorizontal?: "left" | "right"
-  /** Extra class for the MUI Paper (controls width, etc.). */
+  /** Extra class for the menu popup (controls width, etc.). */
   menuWidthClassName?: string
-  /** Padding utility for the MUI Paper. Defaults to "p-1.5". */
+  /** Padding utility for the menu popup. Defaults to "p-1.5". */
   menuPaperPaddingClassName?: string
-  /** Border-radius utility for the MUI Paper. Defaults to "rounded-lg". */
+  /** Border-radius utility for the menu popup. Defaults to "rounded-lg". */
   menuPaperRadiusClassName?: string
   /** The menu body (items, sections, etc.). */
   children: ReactNode
 }
 
 /**
- * Shared trigger-button + MUI Menu chrome used by the dashboard dropdowns.
- * Owns the accessibility wiring, anchor/transform origins, and Paper styling so
- * the popover look-and-feel lives in one place; callers supply the menu body.
+ * Shared trigger-button + dropdown-menu chrome used by the dashboard dropdowns.
+ * Owns the accessibility wiring, alignment, and popup styling so the popover
+ * look-and-feel lives in one place; callers supply the menu body.
+ *
+ * The open state is still driven by the caller-owned `anchorEl` (non-null =
+ * open) so existing gallery state and tests keep working. The trigger button's
+ * click flows through `onToggle`; outside-click / Escape closing flows through
+ * `onClose`.
  */
 export const MenuShell = ({
   buttonId,
@@ -59,43 +68,41 @@ export const MenuShell = ({
 
   return (
     <div className={wrapperClassName}>
-      <button
-        id={buttonId}
-        type="button"
-        aria-haspopup="menu"
-        aria-controls={isOpen ? menuId : undefined}
-        aria-expanded={isOpen ? "true" : undefined}
-        aria-label={triggerAriaLabel}
-        onClick={onToggle}
-        className={triggerClassName}
-        style={triggerStyle}
-      >
-        {triggerContent}
-      </button>
-
-      <Menu
-        id={menuId}
-        anchorEl={anchorEl}
+      <DropdownMenu
         open={isOpen}
-        onClose={onClose}
-        anchorOrigin={{ vertical: "bottom", horizontal: anchorHorizontal }}
-        transformOrigin={{ vertical: "top", horizontal: anchorHorizontal }}
-        MenuListProps={{
-          "aria-labelledby": buttonId,
-          className: "home-filter-menu-list recent-diagrams-font !p-0",
-        }}
-        PaperProps={{
-          className: `home-filter-menu-paper recent-diagrams-font mt-2 ${menuPaperRadiusClassName} border-0 bg-[var(--home-surface-raised)] ${menuPaperPaddingClassName} shadow-2xl transition-colors duration-200 ${menuWidthClassName}`,
-          sx: {
-            boxShadow: "0 16px 36px var(--home-shadow-overlay)",
-            backgroundColor: "var(--home-surface-raised)",
-            backgroundImage: "none",
-            color: "var(--home-text-primary)",
-          },
+        onOpenChange={(open) => {
+          // Base UI fires this on outside-click / Escape / item-select. The
+          // trigger's own toggle is handled by onToggle below; here we only
+          // react to a request to close.
+          if (!open) onClose()
         }}
       >
-        {children}
-      </Menu>
+        <DropdownMenuTrigger
+          render={
+            <button
+              id={buttonId}
+              type="button"
+              aria-controls={isOpen ? menuId : undefined}
+              aria-label={triggerAriaLabel}
+              onClick={onToggle}
+              className={triggerClassName}
+              style={triggerStyle}
+            />
+          }
+        >
+          {triggerContent}
+        </DropdownMenuTrigger>
+
+        <DropdownMenuContent
+          id={menuId}
+          aria-labelledby={buttonId}
+          align={anchorHorizontal === "left" ? "start" : "end"}
+          sideOffset={8}
+          className={`recent-diagrams-font ${menuPaperRadiusClassName} border border-border-subtle bg-card ${menuPaperPaddingClassName} text-foreground shadow-sm transition-colors duration-200 ${menuWidthClassName}`}
+        >
+          {children}
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   )
 }

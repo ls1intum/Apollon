@@ -6,7 +6,7 @@ import {
   repositoryLink,
 } from "@/constants"
 import { useModalContext } from "@/contexts"
-import { Button } from "@/components/ui/button"
+import { Button } from "@tumaet/ui/components/button"
 
 const npmLink = "https://www.npmjs.com/package/@tumaet/apollon"
 const licenseLink = `${repositoryLink}/blob/main/LICENSE`
@@ -14,7 +14,7 @@ const aetLink = "https://github.com/ls1intum"
 const tumLink = "https://www.tum.de/en/"
 
 const linkClass =
-  "rounded-sm text-[var(--home-accent-base)] underline underline-offset-2 transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2"
+  "rounded-sm text-primary underline underline-offset-2 transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
 
 const ExternalLink = ({
   href,

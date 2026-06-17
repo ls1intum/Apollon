@@ -63,7 +63,7 @@ export const HomePage = () => {
   }, [])
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[var(--home-surface-base)] text-[var(--home-text-primary)] transition-colors duration-200">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-background text-foreground transition-colors duration-200">
       <HomeNavbar />
 
       {/* Off-screen file input the Import button triggers programmatically. */}

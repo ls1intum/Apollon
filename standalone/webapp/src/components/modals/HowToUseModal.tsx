@@ -1,27 +1,24 @@
-import { Button } from "@mui/material"
+import { Button } from "@tumaet/ui/components/button"
 import { useModalContext } from "@/contexts"
 import NodeCreation from "assets/images/how-to-use-node-creation.png"
 import EdgeCreation from "assets/images/how-to-use-edge-creation.png"
 import NodeEdit from "assets/images/how-to-use-node-edit.png"
 import NodeMove from "assets/images/how-to-use-node-move.png"
-import { Typography } from "../Typography"
 
 export const HowToUseModal = () => {
   const { closeModal } = useModalContext()
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col gap-6 p-6 text-[var(--apollon-primary-contrast)]">
       <div className="grid grid-cols-[auto,1fr,auto] gap-x-4 gap-y-6">
         {/* Add Node */}
-        <Typography variant="h5" className="font-bold text-lg">
-          Add Node
-        </Typography>
-        <Typography className="text-gray-700">
+        <h5 className="text-lg font-bold">Add Node</h5>
+        <p className="text-gray-700">
           To add a node, simply drag and drop one of the elements on the left
           side into the editor area.
-        </Typography>
+        </p>
         <img
-          className="w-64 h-auto object-contain"
+          className="h-auto w-64 object-contain"
           src={NodeCreation}
           alt="Node creation example"
         />
@@ -30,17 +27,15 @@ export const HowToUseModal = () => {
         <div className="col-span-3 border-t border-gray-200"></div>
 
         {/* Add Edge */}
-        <Typography variant="h5" className="font-bold text-lg">
-          Add Edge
-        </Typography>
-        <Typography className="text-gray-700">
+        <h5 className="text-lg font-bold">Add Edge</h5>
+        <p className="text-gray-700">
           To add an edge between nodes, select the source class with a single
           click and you will see blue circles around the node. Those are the
           possible connection points for edge. Click and hold on one of those
           and drag it to another node to create an edge.
-        </Typography>
+        </p>
         <img
-          className="w-64 h-auto object-contain"
+          className="h-auto w-64 object-contain"
           src={EdgeCreation}
           alt="Edge creation example"
         />
@@ -49,15 +44,13 @@ export const HowToUseModal = () => {
         <div className="col-span-3 border-t border-gray-200"></div>
 
         {/* Edit Class */}
-        <Typography variant="h5" className="font-bold text-lg">
-          Edit Class
-        </Typography>
-        <Typography className="text-gray-700">
+        <h5 className="text-lg font-bold">Edit Class</h5>
+        <p className="text-gray-700">
           To edit a class, double click it and a popup will open up, in which
           you can edit its components, e.g. name, attributes, methods, etc.
-        </Typography>
+        </p>
         <img
-          className="w-64 h-auto object-contain"
+          className="h-auto w-64 object-contain"
           src={NodeEdit}
           alt="Node edit example"
         />
@@ -66,27 +59,23 @@ export const HowToUseModal = () => {
         <div className="col-span-3 border-t border-gray-200"></div>
 
         {/* Delete Class */}
-        <Typography variant="h5" className="font-bold text-lg">
-          Delete Class
-        </Typography>
-        <Typography className="text-gray-700 col-span-2">
+        <h5 className="text-lg font-bold">Delete Class</h5>
+        <p className="col-span-2 text-gray-700">
           To delete a class, select it with a single click and either press{" "}
           <code>Delete</code> or <code>Backspace</code> on your keyboard.
-        </Typography>
+        </p>
 
         {/* Separator */}
         <div className="col-span-3 border-t border-gray-200"></div>
 
         {/* Move Class */}
-        <Typography variant="h5" className="font-bold text-lg">
-          Move Class
-        </Typography>
-        <Typography className="text-gray-700">
+        <h5 className="text-lg font-bold">Move Class</h5>
+        <p className="text-gray-700">
           To move a class, select it with a single click and either use your
           keyboard arrows or drag and drop it.
-        </Typography>
+        </p>
         <img
-          className="w-64 h-auto object-contain"
+          className="h-auto w-64 object-contain"
           src={NodeMove}
           alt="Node move example"
         />
@@ -95,15 +84,13 @@ export const HowToUseModal = () => {
         <div className="col-span-3 border-t border-gray-200"></div>
 
         {/* Undo & Redo */}
-        <Typography variant="h5" className="font-bold text-lg">
-          Undo & Redo
-        </Typography>
-        <Typography className="text-gray-700 col-span-2">
+        <h5 className="text-lg font-bold">Undo & Redo</h5>
+        <p className="col-span-2 text-gray-700">
           With <code>Ctrl+Z</code> and <code>Ctrl+Y</code> you can undo and redo
           your changes.
-        </Typography>
+        </p>
       </div>
-      <Button variant="contained" onClick={closeModal}>
+      <Button variant="default" onClick={closeModal}>
         Close
       </Button>
     </div>

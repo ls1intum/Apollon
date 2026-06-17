@@ -108,7 +108,7 @@ test.describe("Template diagram interactions", () => {
     // Load the Adapter template via File → New Diagram → Use template → Create
     await fileMenuButton(page).click()
     await page.getByText("New Diagram").click()
-    await page.getByRole("button", { name: "Use template" }).click()
+    await page.getByRole("tab", { name: "Use template" }).click()
     await page.getByRole("button", { name: "Create Diagram" }).click()
     await waitForCanvasReady(page)
 
@@ -153,7 +153,7 @@ test.describe("Template diagram interactions", () => {
 
     await fileMenuButton(page).click()
     await page.getByText("New Diagram").click()
-    await page.getByRole("button", { name: "Use template" }).click()
+    await page.getByRole("tab", { name: "Use template" }).click()
 
     const nameInput = page.getByLabel("Name")
     await expect(nameInput).toHaveValue("Adapter")
@@ -183,7 +183,7 @@ test.describe("Template diagram interactions", () => {
 
     await fileMenuButton(page).click()
     await page.getByText("New Diagram").click()
-    await page.getByRole("button", { name: "Use template" }).click()
+    await page.getByRole("tab", { name: "Use template" }).click()
 
     // Previews render lazily off an idle queue (a hidden editor per template),
     // so allow generous time for the first light-mode thumbnail to appear. Assert
@@ -200,7 +200,7 @@ test.describe("Template diagram interactions", () => {
     const createFromTemplate = async () => {
       await fileMenuButton(page).click()
       await page.getByText("New Diagram").click()
-      await page.getByRole("button", { name: "Use template" }).click()
+      await page.getByRole("tab", { name: "Use template" }).click()
       await page.getByRole("button", { name: "Create Diagram" }).click()
       await waitForCanvasReady(page)
     }

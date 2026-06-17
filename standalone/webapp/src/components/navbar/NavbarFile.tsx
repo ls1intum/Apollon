@@ -1,18 +1,23 @@
-import { useState, MouseEvent, FC, useCallback } from "react"
-import Button from "@mui/material/Button"
-import Menu from "@mui/material/Menu"
-import MenuItem from "@mui/material/MenuItem"
-import Typography from "@mui/material/Typography"
+import { FC, useCallback, useState } from "react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@tumaet/ui/components/dropdown-menu"
+import { ChevronDownIcon, ChevronRightIcon } from "lucide-react"
 import { secondary } from "@/constants"
 import { useModalContext } from "@/contexts"
 import {
   useExportAsJSON,
+  useExportAsPDF,
   useExportAsPNG,
   useExportAsSVG,
-  useExportAsPDF,
 } from "@/hooks"
 import { JsonFileImportButton } from "./JsonFileImportButton"
-import { KeyboardArrowDownIcon } from "../Icon"
+import { navTriggerClass } from "./styles"
 
 interface Props {
   color?: string
@@ -25,145 +30,93 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
   const exportAsPng = useExportAsPNG()
   const exportAsJSON = useExportAsJSON()
   const exportAsPDF = useExportAsPDF()
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
-  const [subMenuAnchorEl, setSubMenuAnchorEl] = useState<null | HTMLElement>(
-    null
-  )
+  const [open, setOpen] = useState(false)
 
-  const isMenuOpen = Boolean(anchorEl)
-  const isSubMenuOpen = Boolean(subMenuAnchorEl)
-
-  const openMainMenu = useCallback((event: MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(event.currentTarget)
-  }, [])
-
-  const closeMainMenu = useCallback(() => {
+  const close = useCallback(() => {
+    setOpen(false)
     handleCloseNavMenu?.()
-    setAnchorEl(null)
-    setSubMenuAnchorEl(null)
-  }, [])
-
-  const openSubMenu = useCallback((event: MouseEvent<HTMLElement>) => {
-    setSubMenuAnchorEl(event.currentTarget)
-  }, [])
+  }, [handleCloseNavMenu])
 
   const handleNewDiagram = useCallback(() => {
     openModal("NEW_DIAGRAM")
-    closeMainMenu()
-  }, [openModal, closeMainMenu])
+    close()
+  }, [openModal, close])
 
   return (
-    <>
-      <Button
+    <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenuTrigger
         id="file-menu-button"
-        aria-controls={isMenuOpen ? "file-menu" : undefined}
-        aria-haspopup="true"
-        aria-expanded={isMenuOpen ? "true" : undefined}
-        onClick={openMainMenu}
-        sx={{ textTransform: "none" }}
+        className={navTriggerClass}
+        style={{ color: color ?? secondary }}
       >
-        <Typography color={color ?? secondary} component="span">
-          File
-        </Typography>
-        <KeyboardArrowDownIcon
-          width={16}
-          height={16}
-          style={{ marginLeft: 4 }}
-        />
-      </Button>
-      <Menu
-        id="file-menu"
-        anchorEl={anchorEl}
-        open={isMenuOpen}
-        onClose={closeMainMenu}
-        MenuListProps={{
-          "aria-labelledby": "file-menu-button",
-        }}
-      >
-        <MenuItem onClick={handleNewDiagram}>New Diagram</MenuItem>
+        <span>File</span>
+        <ChevronDownIcon className="ml-1 size-4" aria-hidden />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent aria-labelledby="file-menu-button">
+        <DropdownMenuItem onClick={handleNewDiagram}>
+          New Diagram
+        </DropdownMenuItem>
         {/* Templates are a tab in the New Diagram dialog, and the dashboard is
             the diagram loader — so no "Start from Template"/"Load Diagram" here.
             Version history has its own VersionHistoryButton. */}
-        <JsonFileImportButton close={closeMainMenu} />
-        <MenuItem
-          onClick={openSubMenu}
-          onMouseEnter={openSubMenu}
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-          aria-haspopup="true"
-          aria-controls={isSubMenuOpen ? "export-sub-menu" : undefined}
-          aria-expanded={isSubMenuOpen ? "true" : undefined}
-        >
-          Export
-          <KeyboardArrowDownIcon
-            style={{ marginLeft: 4, transform: "rotate(-90deg)" }}
-          />
-        </MenuItem>
-      </Menu>
-      <Menu
-        id="export-sub-menu"
-        anchorEl={subMenuAnchorEl}
-        open={isSubMenuOpen}
-        onClose={closeMainMenu}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-        transformOrigin={{ vertical: "top", horizontal: "left" }}
-        MenuListProps={{
-          "aria-labelledby": "export-sub-menu-button",
-          onMouseLeave: () => setSubMenuAnchorEl(null),
-        }}
-      >
-        <MenuItem
-          onClick={() => {
-            exportAsSvg()
-            closeMainMenu()
-          }}
-        >
-          As SVG
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            exportAsPng({ setWhiteBackground: true })
-            closeMainMenu()
-          }}
-        >
-          As PNG (White Background)
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            exportAsPng({ setWhiteBackground: false })
-            closeMainMenu()
-          }}
-        >
-          As PNG (Transparent Background)
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            exportAsJSON()
-            closeMainMenu()
-          }}
-        >
-          As JSON
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            exportAsPDF()
-            closeMainMenu()
-          }}
-        >
-          As PDF
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            openModal("EXPORT_PPTX")
-            closeMainMenu()
-          }}
-        >
-          As PPTX (Presentation)
-        </MenuItem>
-      </Menu>
-    </>
+        <JsonFileImportButton close={close} />
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger>
+            Export
+            <ChevronRightIcon className="ml-auto size-4" aria-hidden />
+          </DropdownMenuSubTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem
+              onClick={() => {
+                exportAsSvg()
+                close()
+              }}
+            >
+              As SVG
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                exportAsPng({ setWhiteBackground: true })
+                close()
+              }}
+            >
+              As PNG (White Background)
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                exportAsPng({ setWhiteBackground: false })
+                close()
+              }}
+            >
+              As PNG (Transparent Background)
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                exportAsJSON()
+                close()
+              }}
+            >
+              As JSON
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                exportAsPDF()
+                close()
+              }}
+            >
+              As PDF
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                openModal("EXPORT_PPTX")
+                close()
+              }}
+            >
+              As PPTX (Presentation)
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenuSub>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }

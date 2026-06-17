@@ -1,24 +1,20 @@
 import {
-  Box,
-  Divider,
-  IconButton,
-  InputBase,
-  ListItem,
-  ListItemSecondaryAction,
-  Menu,
-  MenuItem,
-  Typography,
-} from "@mui/material"
-import MoreVertIcon from "@mui/icons-material/MoreVert"
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@tumaet/ui/components/dropdown-menu"
+import { MoreVerticalIcon } from "lucide-react"
 import { VersionThumbnail } from "./VersionThumbnail"
 import {
   Fragment,
   memo,
   useState,
   useRef,
+  type CSSProperties,
   type FC,
   type KeyboardEvent,
-  type MouseEvent,
 } from "react"
 import { toast } from "react-toastify"
 import { log } from "@/logger"
@@ -61,7 +57,7 @@ const VersionListItemInner: FC<Props> = ({
   onRestore,
   onDelete,
 }) => {
-  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null)
+  const [menuOpen, setMenuOpen] = useState(false)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(version.description ?? "")
   // Guards against Escape → onBlur double-submit. In React 18 automatic
@@ -72,11 +68,7 @@ const VersionListItemInner: FC<Props> = ({
   const cancellingRef = useRef(false)
   const editVersionInfo = useVersionStore((s) => s.editVersionInfo)
 
-  const openMenu = (e: MouseEvent<HTMLButtonElement>) => {
-    e.stopPropagation()
-    setMenuAnchor(e.currentTarget)
-  }
-  const closeMenu = () => setMenuAnchor(null)
+  const closeMenu = () => setMenuOpen(false)
 
   const startEditing = () => {
     setDraft(version.description ?? "")
@@ -153,9 +145,11 @@ const VersionListItemInner: FC<Props> = ({
     onPreview(version.id)
   }
 
+  const mutedCaption = "text-xs italic leading-snug"
+
   return (
     <Fragment>
-      <ListItem
+      <li
         id={`version-row-${version.id}`}
         role="option"
         aria-selected={isPreviewing}
@@ -163,50 +157,42 @@ const VersionListItemInner: FC<Props> = ({
           versionNumber ? `#${versionNumber}` : "(saving)"
         }, created ${ago}${label ? ` — ${label}` : ""}`}
         onClick={handleRowClick}
-        sx={{
-          opacity: version.pending ? 0.7 : 1,
-          bgcolor: isPreviewing ? ROW_SELECTED_BG : "transparent",
-          borderLeft: version.failed
-            ? "3px solid var(--apollon-alert-danger-color)"
-            : "3px solid transparent",
-          color: TEXT_PRIMARY,
-          gap: 1.5,
-          py: 1,
-          alignItems: "flex-start",
-          cursor: clickable ? "pointer" : "default",
-          "&:hover": clickable ? { bgcolor: ROW_HOVER_BG } : undefined,
-        }}
+        className="relative flex list-none items-start gap-3 px-4 py-2 transition-colors data-[clickable=true]:cursor-pointer data-[clickable=true]:hover:[background:var(--row-hover-bg)]"
+        data-clickable={clickable || undefined}
+        style={
+          {
+            opacity: version.pending ? 0.7 : 1,
+            background: isPreviewing ? ROW_SELECTED_BG : "transparent",
+            borderLeft: version.failed
+              ? "3px solid var(--apollon-alert-danger-color)"
+              : "3px solid transparent",
+            color: TEXT_PRIMARY,
+            "--row-hover-bg": ROW_HOVER_BG,
+          } as CSSProperties
+        }
       >
         {version.pending ? (
-          <Box
-            sx={{
-              width: 64,
-              height: 40,
-              flexShrink: 0,
-              bgcolor: ROW_HOVER_BG,
-              borderRadius: 1,
-              mt: 0.25,
-            }}
+          <div
+            className="mt-0.5 h-10 w-16 shrink-0 rounded"
+            style={{ background: ROW_HOVER_BG }}
             aria-hidden
           />
         ) : (
-          <Box sx={{ mt: 0.25 }}>
+          <div className="mt-0.5">
             <VersionThumbnail
               diagramId={diagramId}
               versionId={version.id}
               isAuto={!named}
               compact
             />
-          </Box>
+          </div>
         )}
 
-        <Box sx={{ flex: 1, minWidth: 0, pr: 4 }}>
+        <div className="min-w-0 flex-1 pr-7">
           {editing ? (
-            <InputBase
+            <textarea
               autoFocus
-              multiline
-              maxRows={6}
-              fullWidth
+              rows={1}
               value={draft}
               onChange={(e) =>
                 setDraft(e.target.value.slice(0, MAX_DESCRIPTION_LENGTH))
@@ -215,177 +201,138 @@ const VersionListItemInner: FC<Props> = ({
               onBlur={() => void submitEdit()}
               onKeyDown={onEditKeyDown}
               placeholder={t.createPlaceholder}
-              inputProps={{ "aria-label": "Edit description" }}
-              sx={{
-                fontSize: "0.8125rem",
-                color: TEXT_PRIMARY,
-                p: 0,
-                mb: 0.25,
-                "& textarea::placeholder": { color: TEXT_MUTED, opacity: 1 },
-              }}
+              aria-label="Edit description"
+              className="mb-0.5 w-full resize-none border-0 bg-transparent p-0 text-[0.8125rem] outline-none placeholder:opacity-100 placeholder:[color:var(--ph)]"
+              style={
+                {
+                  color: TEXT_PRIMARY,
+                  "--ph": TEXT_MUTED,
+                } as CSSProperties
+              }
             />
           ) : description ? (
             // User-authored description — rendered slightly smaller and muted
             // so the #N · time-ago line reads as the primary identifier.
-            <Typography
-              sx={{
-                fontSize: "0.8125rem",
-                color: TEXT_MUTED,
-                whiteSpace: "pre-wrap",
-                wordBreak: "break-word",
-                lineHeight: 1.35,
-                mb: 0.25,
-              }}
+            <div
+              className="mb-0.5 text-[0.8125rem] leading-snug break-words whitespace-pre-wrap"
+              style={{ color: TEXT_MUTED }}
             >
               {description}
-            </Typography>
+            </div>
           ) : version.kind === "user" ? (
             // User explicitly saved this version but added no description.
             // Show a placeholder so it doesn't look identical to a raw autosave.
-            <Typography
-              variant="caption"
-              sx={{
-                color: TEXT_MUTED,
-                fontStyle: "italic",
-                display: "block",
-                lineHeight: 1.35,
-                mb: 0.25,
-              }}
+            <div
+              className={`mb-0.5 block ${mutedCaption}`}
+              style={{ color: TEXT_MUTED }}
             >
               {t.noDescription}
-            </Typography>
+            </div>
           ) : version.name?.trim() ? (
             // System-generated name (pre-restore label). Styled as italic
             // caption so users don't mistake it for a user-added description —
             // the kebab's "Add description" makes sense because no user-authored
             // text is visible.
-            <Typography
-              variant="caption"
-              sx={{
-                color: TEXT_MUTED,
-                fontStyle: "italic",
-                display: "block",
-                whiteSpace: "pre-wrap",
-                wordBreak: "break-word",
-                lineHeight: 1.35,
-                mb: 0.25,
-              }}
+            <div
+              className={`mb-0.5 block break-words whitespace-pre-wrap ${mutedCaption}`}
+              style={{ color: TEXT_MUTED }}
             >
               {version.name.trim()}
-            </Typography>
+            </div>
           ) : (
             // Raw periodic auto-save — no user-authored content at all.
             // 'Auto-saved' tells the user this is a system checkpoint, not
             // a deliberate save, matching the same italic/muted register as
             // the pre-restore label above.
-            <Typography
-              variant="caption"
-              sx={{
-                color: TEXT_MUTED,
-                fontStyle: "italic",
-                display: "block",
-                lineHeight: 1.35,
-                mb: 0.25,
-              }}
+            <div
+              className={`mb-0.5 block ${mutedCaption}`}
+              style={{ color: TEXT_MUTED }}
             >
               {t.autoSaved}
-            </Typography>
+            </div>
           )}
-          <Typography
-            variant="caption"
-            sx={{ color: TEXT_MUTED, display: "block" }}
-          >
+          <div className="block text-xs" style={{ color: TEXT_MUTED }}>
             {versionNumber !== undefined && (
-              <Box component="span" sx={{ fontWeight: 600 }}>
-                #{versionNumber}
-              </Box>
+              <span className="font-semibold">#{versionNumber}</span>
             )}
             {versionNumber !== undefined && " · "}
             {ago}
             {version.pending && ` · ${t.saving}`}
             {version.failed && ` · failed`}
-          </Typography>
-        </Box>
+          </div>
+        </div>
 
-        <ListItemSecondaryAction sx={{ top: 12, transform: "none" }}>
-          <IconButton
-            size="small"
-            onClick={openMenu}
-            aria-label="Version actions"
-            aria-haspopup="menu"
-            disabled={Boolean(version.pending)}
-            sx={{ color: TEXT_PRIMARY }}
-          >
-            <MoreVertIcon fontSize="small" />
-          </IconButton>
-        </ListItemSecondaryAction>
-      </ListItem>
+        <div className="absolute top-3 right-2">
+          <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+            <DropdownMenuTrigger
+              aria-label="Version actions"
+              disabled={Boolean(version.pending)}
+              onClick={(e) => e.stopPropagation()}
+              className="inline-flex size-7 cursor-pointer items-center justify-center rounded-md bg-transparent outline-none transition-colors hover:[background:var(--row-hover-bg)] focus-visible:ring-2 focus-visible:ring-white/40 disabled:cursor-not-allowed disabled:opacity-50"
+              style={
+                {
+                  color: TEXT_PRIMARY,
+                  "--row-hover-bg": ROW_HOVER_BG,
+                } as CSSProperties
+              }
+            >
+              <MoreVerticalIcon className="size-4" aria-hidden />
+            </DropdownMenuTrigger>
+            {/* "Preview" is intentionally absent: clicking the row already
+                previews. The kebab is reserved for actions that aren't
+                obvious from the row itself. */}
+            <DropdownMenuContent
+              align="end"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {canRestore && (
+                <DropdownMenuItem
+                  onClick={() => {
+                    closeMenu()
+                    onRestore(version.id)
+                  }}
+                >
+                  {t.restoreThis}
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem onClick={copyLink}>
+                {t.copyLink}
+              </DropdownMenuItem>
+              {/* Adding a description on an empty-meta row promotes it visually
+                  (no longer eligible for collapse) and protects it from the
+                  eviction-priority sweep. Pure metadata — no protocol event.
 
-      <Menu
-        anchorEl={menuAnchor}
-        open={Boolean(menuAnchor)}
-        onClose={closeMenu}
-        slotProps={{
-          paper: {
-            sx: {
-              backgroundColor: "var(--apollon-background)",
-              color: "var(--apollon-primary-contrast)",
-              border: "1px solid var(--apollon-switch-box-border-color)",
-              "& .MuiMenuItem-root": {
-                color: "var(--apollon-primary-contrast)",
-                "&:hover": {
-                  backgroundColor: "var(--apollon-background-variant)",
-                },
-              },
-            },
-          },
-        }}
-      >
-        {/* "Preview" is intentionally absent: clicking the row already
-            previews. The kebab is reserved for actions that aren't
-            obvious from the row itself. */}
-        {canRestore && (
-          <MenuItem
-            onClick={() => {
-              closeMenu()
-              onRestore(version.id)
-            }}
-          >
-            {t.restoreThis}
-          </MenuItem>
-        )}
-        <MenuItem onClick={copyLink}>{t.copyLink}</MenuItem>
-        {/* Adding a description on an empty-meta row promotes it visually
-            (no longer eligible for collapse) and protects it from the
-            eviction-priority sweep. Pure metadata — no protocol event.
-
-            We defer `startEditing` past the menu's focus-restoration
-            tick (MUI Menu returns focus to the kebab on close). Without
-            the rAF, the InputBase's autoFocus loses to that, fires
-            onBlur immediately, and `submitEdit` early-returns on the
-            unchanged empty draft — making the action look broken. */}
-        <MenuItem
-          onClick={() => {
-            closeMenu()
-            requestAnimationFrame(() => startEditing())
-          }}
-        >
-          {description ? t.editDescription : t.addDescription}
-        </MenuItem>
-        {named && [
-          <Divider key="divider" sx={{ my: 0.5 }} />,
-          <MenuItem
-            key="delete"
-            onClick={() => {
-              closeMenu()
-              onDelete(version.id)
-            }}
-            sx={{ color: "var(--apollon-alert-danger-color) !important" }}
-          >
-            {t.delete}
-          </MenuItem>,
-        ]}
-      </Menu>
+                  We defer `startEditing` past the menu's focus-restoration
+                  tick (Base UI Menu returns focus to the kebab on close).
+                  Without the rAF, the textarea's autoFocus loses to that,
+                  fires onBlur immediately, and `submitEdit` early-returns on
+                  the unchanged empty draft — making the action look broken. */}
+              <DropdownMenuItem
+                onClick={() => {
+                  closeMenu()
+                  requestAnimationFrame(() => startEditing())
+                }}
+              >
+                {description ? t.editDescription : t.addDescription}
+              </DropdownMenuItem>
+              {named && (
+                <Fragment>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onClick={() => {
+                      closeMenu()
+                      onDelete(version.id)
+                    }}
+                  >
+                    {t.delete}
+                  </DropdownMenuItem>
+                </Fragment>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </li>
     </Fragment>
   )
 }

@@ -11,7 +11,6 @@ import {
 } from "@tumaet/apollon/react"
 import { useNavigate, useParams, useSearchParams } from "react-router"
 import { toast } from "react-toastify"
-import { Box } from "@mui/material"
 import { DiagramView } from "@/types"
 import { WebSocketManager } from "@/services/WebSocketManager"
 import { ApiError, DiagramApiClient } from "@/services/DiagramApiClient"
@@ -475,57 +474,19 @@ export const ApollonWithConnection: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <Box
-        sx={{
-          display: "flex",
-          flex: 1,
-          minHeight: 0,
-          overflow: "hidden",
-        }}
-      >
-        <Box
-          ref={canvasColumnRef}
-          sx={{
-            flex: 1,
-            minWidth: 0,
-            height: "100%",
-            position: "relative",
-          }}
-        >
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+        <div ref={canvasColumnRef} className="relative h-full min-w-0 flex-1">
           {isLoading && (
-            <Box
-              sx={{
-                position: "absolute",
-                inset: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                zIndex: 1,
-              }}
-            >
+            <div className="absolute inset-0 z-[1] flex items-center justify-center">
               Loading diagram…
-            </Box>
+            </div>
           )}
-          <Box
-            className={isLoading ? "invisible" : ""}
+          <div
+            className={`h-full w-full ${isLoading ? "invisible" : ""}`}
             ref={containerRef}
-            sx={{ width: "100%", height: "100%" }}
           />
           {!isLoading && preview && diagramId && (
-            <Box
-              sx={{
-                position: "absolute",
-                top: 12,
-                left: 0,
-                right: 0,
-                display: "flex",
-                justifyContent: "center",
-                pointerEvents: "none",
-                zIndex: 5,
-                px: 2,
-                "& > *": { pointerEvents: "auto" },
-              }}
-            >
+            <div className="pointer-events-none absolute left-0 right-0 top-3 z-[5] flex justify-center px-4 [&>*]:pointer-events-auto">
               <VersionPreviewBanner
                 containerWidth={canvasColumnWidth}
                 diagramId={diagramId}
@@ -533,16 +494,16 @@ export const ApollonWithConnection: React.FC = () => {
                 onExit={handleExitPreview}
                 onRestore={handleRestoreFromPreview}
               />
-            </Box>
+            </div>
           )}
-        </Box>
+        </div>
         {diagramId && (
           <VersionSidebar
             diagramId={diagramId}
             onVersionSaved={handleVersionSaved}
           />
         )}
-      </Box>
+      </div>
 
       {diagramId && (
         <VersionDrawer

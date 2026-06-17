@@ -70,6 +70,28 @@ jobs:
       - name: Check README + docs version sync
         run: node scripts/sync-library-version.mjs --check
 
+  # The webapp and the published library are fully migrated off MUI/Emotion
+  # onto Base UI + lucide + tokens. Fail fast if either creeps back into
+  # source — this is the cheap backstop behind the ESLint no-restricted-imports
+  # rules (a stray import in a non-linted path, or a disabled rule, still trips
+  # here). Pure grep — no install needed.
+  no-mui-emotion:
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.should-skip != 'true' && needs.detect-changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Assert no MUI/Emotion imports in webapp/library source
+        run: |
+          if grep -rEn "@mui|@emotion" standalone/webapp/src library/lib; then
+            echo "::error::Found a @mui or @emotion reference in standalone/webapp/src or library/lib. These are fully removed — use @tumaet/ui (Base UI) + lucide-react instead."
+            exit 1
+          fi
+          echo "No @mui/@emotion references in standalone/webapp/src or library/lib."
+
   lint-and-format-check:
     needs: [detect-changes]
     if: needs.detect-changes.outputs.should-skip != 'true' && needs.detect-changes.outputs.code == 'true'
@@ -100,6 +122,13 @@ jobs:
       - name: Check build
         run: pnpm run build
 
+      - name: Enforce webapp bundle-size budget
+        # Budgets in standalone/webapp/package.json#size-limit. MUI/Emotion
+        # removal materially shrank the bundle — capture the win so a heavy
+        # dependency (or a re-introduced CSS-in-JS runtime) can't silently
+        # regress it. Runs after build so dist/ exists.
+        run: pnpm --filter @tumaet/webapp run size
+
       - name: Typecheck docs
         # `docs/` imports `@tumaet/apollon` for the live embed, so its
         # `tsc --noEmit` resolves through the library's exports map and
@@ -108,6 +137,16 @@ jobs:
 
       - name: Run unit tests
         run: pnpm run test
+
+      - name: Run shared-ui unit tests
+        # The @tumaet/ui component suite (Base UI primitives + a11y behaviour).
+        run: pnpm --filter @tumaet/ui run test
+
+      - name: Run webapp unit tests
+        # Runs after build so library/dist/react exists — the webapp suite
+        # imports `@tumaet/apollon/react`, which resolves through the built
+        # exports map (vitest does not alias the workspace source).
+        run: pnpm --filter @tumaet/webapp run test
 
   # Root `pnpm run test` covers only the library. The server's vitest suite
   # (incl. the PDF-conversion regression test) spawns the compiled worker and
@@ -323,6 +362,7 @@ jobs:
       [
         detect-changes,
         version-sync-check,
+        no-mui-emotion,
         lint-and-format-check,
         server-tests,
         library-node22-compat,

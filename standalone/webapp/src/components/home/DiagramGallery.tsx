@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
 } from "react"
+import { Plus, Upload } from "lucide-react"
 import { DiagramGallerySkeleton } from "@/components/home/DiagramGallerySkeleton"
 import type { UMLDiagramType, UMLModel } from "@tumaet/apollon"
 import { Link, useNavigate } from "react-router"
@@ -38,7 +39,8 @@ import {
   type SegmentedControlOption,
 } from "./SegmentedControl"
 import { DropdownFilterMenu } from "./DropdownFilterMenu"
-import { Button } from "@/components/ui/button"
+import { Button } from "@tumaet/ui/components/button"
+import { Badge } from "@tumaet/ui/components/badge"
 
 const normalize = (value: string) => value.trim().toLowerCase()
 const INITIAL_VISIBLE_COUNT = 9
@@ -119,7 +121,7 @@ const compareExpiredLast = (
 
 const EmptyStateIllustration = () => (
   <svg
-    className="h-36 w-36 text-[var(--home-border-default)] transition-colors duration-200"
+    className="h-36 w-36 text-border transition-colors duration-200"
     viewBox="0 0 180 180"
     fill="none"
     aria-hidden="true"
@@ -716,54 +718,16 @@ export const DiagramGallery = ({
               size="sm"
               onClick={onImportJson}
               className="w-full sm:w-auto"
-              icon={
-                <svg
-                  className="h-3.5 w-3.5 flex-shrink-0"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <polyline
-                    points="17 8 12 3 7 8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <line x1="12" y1="3" x2="12" y2="15" strokeLinecap="round" />
-                </svg>
-              }
             >
-              Import
+              <Upload aria-hidden="true" /> Import
             </Button>
             <Button
               variant="default"
               size="sm"
               onClick={onNewDiagram}
               className="col-span-2 w-full sm:col-span-1 sm:w-auto"
-              icon={
-                <svg
-                  className="h-3.5 w-3.5 flex-shrink-0"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M12 5v14M5 12h14"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              }
             >
-              New diagram
+              <Plus aria-hidden="true" /> New diagram
             </Button>
           </div>
         </div>
@@ -772,7 +736,7 @@ export const DiagramGallery = ({
         <div className="flex w-full flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <div className="relative w-full md:max-w-xl">
             <span
-              className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-[var(--home-text-secondary)]"
+              className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground"
               aria-hidden="true"
             >
               <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
@@ -801,7 +765,7 @@ export const DiagramGallery = ({
                 setVisibleCount(INITIAL_VISIBLE_COUNT)
               }}
               placeholder="Search by name..."
-              className="h-9 w-full rounded-md border border-[var(--home-border-default)] bg-[var(--home-surface-base)] py-1.5 pl-8 pr-8 text-xs text-[var(--home-text-primary)] outline-none transition-colors duration-200 placeholder:text-[var(--home-text-secondary)] focus:border-[var(--home-accent-ring)]"
+              className="h-9 w-full rounded-md border border-border bg-background py-1.5 pl-8 pr-8 text-xs text-foreground outline-none transition-colors duration-200 placeholder:text-muted-foreground focus:border-ring"
             />
             {searchTerm && (
               <button
@@ -810,7 +774,7 @@ export const DiagramGallery = ({
                   setSearchTerm("")
                   setVisibleCount(INITIAL_VISIBLE_COUNT)
                 }}
-                className="absolute inset-y-0 right-2 flex items-center text-[var(--home-text-secondary)] hover:text-[var(--home-text-primary)]"
+                className="absolute inset-y-0 right-2 flex items-center text-muted-foreground hover:text-foreground"
                 aria-label="Clear search"
               >
                 <svg
@@ -829,7 +793,7 @@ export const DiagramGallery = ({
               </button>
             )}
           </div>
-          <span className="self-start text-[12px] font-normal text-[var(--home-text-secondary)] select-none md:self-auto">
+          <span className="self-start text-[12px] font-normal text-muted-foreground select-none md:self-auto">
             {diagramCountLabel}
           </span>
         </div>
@@ -854,10 +818,10 @@ export const DiagramGallery = ({
                 setVisibleCount(INITIAL_VISIBLE_COUNT)
               }}
               aria-pressed={showFavoritesOnly}
-              className={`flex ${controlHeightClass} w-full cursor-pointer items-center justify-center gap-2 rounded-md border-0 px-3 text-xs font-semibold transition-all duration-200 focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2 sm:w-auto sm:justify-start ${
+              className={`flex ${controlHeightClass} w-full cursor-pointer items-center justify-center gap-2 rounded-md border-0 px-3 text-xs font-semibold transition-all duration-200 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2 sm:w-auto sm:justify-start ${
                 showFavoritesOnly
-                  ? "bg-[var(--home-surface-raised-hover)] text-[var(--home-favorite-star)]"
-                  : "bg-[var(--home-surface-raised)] text-[var(--home-text-secondary)] hover:bg-[var(--home-surface-raised-hover)] hover:text-[var(--home-favorite-star)]"
+                  ? "bg-accent-hover text-[var(--home-favorite-star)]"
+                  : "bg-card text-muted-foreground hover:bg-accent-hover hover:text-[var(--home-favorite-star)]"
               }`}
             >
               <svg
@@ -891,10 +855,10 @@ export const DiagramGallery = ({
                 )
               }}
               anchorHorizontal="left"
-              triggerClassName={`flex ${controlHeightClass} min-w-0 w-full cursor-pointer items-center justify-between gap-2 rounded-md border-0 px-2.5 text-xs transition-all duration-200 focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2 ${
+              triggerClassName={`flex ${controlHeightClass} min-w-0 w-full cursor-pointer items-center justify-between gap-2 rounded-md border-0 px-2.5 text-xs transition-all duration-200 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2 ${
                 isTypeMenuOpen
-                  ? "bg-[var(--home-surface-raised-hover)] text-[var(--home-accent-strong)]"
-                  : "bg-[var(--home-surface-raised)] text-[var(--home-text-secondary)] hover:bg-[var(--home-surface-raised-hover)] hover:text-[var(--home-accent-strong)]"
+                  ? "bg-accent-hover text-accent-strong"
+                  : "bg-card text-muted-foreground hover:bg-accent-hover hover:text-accent-strong"
               }`}
               triggerContent={
                 <span className="truncate">{selectedDiagramTypeLabel}</span>
@@ -940,15 +904,15 @@ export const DiagramGallery = ({
                   currentAnchor ? null : trigger
                 )
               }}
-              triggerClassName={`flex ${controlHeightClass} min-w-0 w-full cursor-pointer items-center gap-2 rounded-md border-0 px-2.5 text-xs transition-all duration-200 focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2 ${
+              triggerClassName={`flex ${controlHeightClass} min-w-0 w-full cursor-pointer items-center gap-2 rounded-md border-0 px-2.5 text-xs transition-all duration-200 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2 ${
                 isSortMenuOpen
-                  ? "bg-[var(--home-surface-raised-hover)] text-[var(--home-accent-strong)]"
-                  : "bg-[var(--home-surface-raised)] text-[var(--home-text-secondary)] hover:bg-[var(--home-surface-raised-hover)] hover:text-[var(--home-accent-strong)]"
+                  ? "bg-accent-hover text-accent-strong"
+                  : "bg-card text-muted-foreground hover:bg-accent-hover hover:text-accent-strong"
               }`}
               triggerContent={
                 <>
                   <span className="min-w-0 truncate">{sortByLabel}</span>
-                  <span className="hidden text-[var(--home-text-secondary)] md:inline">
+                  <span className="hidden text-muted-foreground md:inline">
                     {sortOrderLabel}
                   </span>
                 </>
@@ -1014,7 +978,7 @@ export const DiagramGallery = ({
           <div className="flex min-h-[480px] flex-col items-center justify-center gap-6 text-center transition-colors duration-200">
             <EmptyStateIllustration />
             <div className="flex flex-col items-center gap-1.5">
-              <p className="text-lg font-semibold text-[var(--home-text-primary)] transition-colors duration-200">
+              <p className="text-lg font-semibold text-foreground transition-colors duration-200">
                 {diagramSource === "all"
                   ? "No diagrams yet"
                   : diagramSource === "local"
@@ -1023,7 +987,7 @@ export const DiagramGallery = ({
                       ? "Server unavailable"
                       : "No shared diagrams yet"}
               </p>
-              <p className="max-w-xs text-center text-sm text-[var(--home-text-secondary)]">
+              <p className="max-w-xs text-center text-sm text-muted-foreground">
                 {diagramSource === "shared" ? (
                   sharedDiagramsStatus === "error" ? (
                     "Could not reach the server. Check your connection and try again."
@@ -1033,11 +997,11 @@ export const DiagramGallery = ({
                 ) : (
                   <>
                     Use{" "}
-                    <strong className="text-[var(--home-text-primary)]">
+                    <strong className="text-foreground">
                       &quot;New diagram&quot;
                     </strong>{" "}
                     to create a diagram, or{" "}
-                    <strong className="text-[var(--home-text-primary)]">
+                    <strong className="text-foreground">
                       &quot;Import&quot;
                     </strong>{" "}
                     to add an existing one.
@@ -1049,7 +1013,7 @@ export const DiagramGallery = ({
                   <button
                     type="button"
                     onClick={() => setSharedReloadKey((current) => current + 1)}
-                    className="mt-2 rounded-md border border-[var(--home-border-default)] bg-[var(--home-surface-raised)] px-3 py-1.5 text-sm text-[var(--home-text-primary)] transition-colors duration-200 hover:bg-[var(--home-surface-raised-hover)]"
+                    className="mt-2 rounded-md border border-border bg-card px-3 py-1.5 text-sm text-foreground transition-colors duration-200 hover:bg-accent-hover"
                   >
                     Try again
                   </button>
@@ -1093,30 +1057,30 @@ export const DiagramGallery = ({
                     ))}
                   </div>
                 ) : (
-                  <div className="overflow-hidden rounded-[var(--home-radius-sm)]">
+                  <div className="overflow-hidden rounded-sm">
                     <div className="overflow-x-auto">
                       <table className="min-w-full border-separate border-spacing-0 text-left">
-                        <thead className="bg-[var(--home-surface-row-alt)]">
+                        <thead className="bg-surface-alt">
                           <tr>
-                            <th className="w-10 px-3 py-3 align-middle text-xs font-semibold uppercase tracking-wide text-[var(--home-text-primary)]">
+                            <th className="w-10 px-3 py-3 align-middle text-xs font-semibold uppercase tracking-wide text-foreground">
                               <span className="sr-only">Favorite</span>
                             </th>
-                            <th className="w-[26%] px-3 py-3 align-middle text-xs font-semibold uppercase tracking-wide text-[var(--home-text-primary)]">
+                            <th className="w-[26%] px-3 py-3 align-middle text-xs font-semibold uppercase tracking-wide text-foreground">
                               Name
                             </th>
-                            <th className="hidden px-3 py-3 align-middle text-xs font-semibold uppercase tracking-wide text-[var(--home-text-primary)] md:table-cell">
+                            <th className="hidden px-3 py-3 align-middle text-xs font-semibold uppercase tracking-wide text-foreground md:table-cell">
                               Type
                             </th>
-                            <th className="hidden px-3 py-3 align-middle text-xs font-semibold uppercase tracking-wide text-[var(--home-text-primary)] md:table-cell">
+                            <th className="hidden px-3 py-3 align-middle text-xs font-semibold uppercase tracking-wide text-foreground md:table-cell">
                               Created
                             </th>
-                            <th className="px-3 py-3 align-middle text-xs font-semibold uppercase tracking-wide text-[var(--home-text-primary)]">
+                            <th className="px-3 py-3 align-middle text-xs font-semibold uppercase tracking-wide text-foreground">
                               Last modified
                             </th>
-                            <th className="hidden px-3 py-3 align-middle text-xs font-semibold uppercase tracking-wide text-[var(--home-text-primary)] lg:table-cell">
+                            <th className="hidden px-3 py-3 align-middle text-xs font-semibold uppercase tracking-wide text-foreground lg:table-cell">
                               Source
                             </th>
-                            <th className="px-3 py-3 align-middle text-xs font-semibold uppercase tracking-wide text-[var(--home-text-primary)]">
+                            <th className="px-3 py-3 align-middle text-xs font-semibold uppercase tracking-wide text-foreground">
                               Action
                             </th>
                           </tr>
@@ -1128,7 +1092,7 @@ export const DiagramGallery = ({
                             return (
                               <tr
                                 key={diagram.id}
-                                className={`bg-[var(--home-surface-raised)] transition-colors duration-200 odd:bg-[var(--home-surface-raised)] even:bg-[var(--home-surface-row-alt)] ${diagram.isExpired ? "cursor-default opacity-50" : "cursor-pointer odd:hover:bg-[var(--home-accent-soft)] even:hover:bg-[var(--home-accent-soft)]"}`}
+                                className={`bg-card transition-colors duration-200 odd:bg-card even:bg-surface-alt ${diagram.isExpired ? "cursor-default opacity-50" : "cursor-pointer odd:hover:bg-accent-soft even:hover:bg-accent-soft"}`}
                                 // Mouse convenience only — clicking anywhere on
                                 // the row opens it. Keyboard/cmd-click go through
                                 // the focusable name link in the first cell, so
@@ -1146,7 +1110,7 @@ export const DiagramGallery = ({
                                         ? "Remove from favorites"
                                         : "Add to favorites"
                                     }
-                                    className="home-card-icon-button flex h-[30px] w-[30px] cursor-pointer items-center justify-center focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2"
+                                    className="home-card-icon-button flex h-[30px] w-[30px] cursor-pointer items-center justify-center focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
                                     style={{
                                       color: diagram.favorite
                                         ? "var(--home-favorite-star)"
@@ -1188,7 +1152,7 @@ export const DiagramGallery = ({
                                     </svg>
                                   </button>
                                 </td>
-                                <td className="w-[26%] px-3 py-3 align-middle text-sm text-[var(--home-text-primary)]">
+                                <td className="w-[26%] px-3 py-3 align-middle text-sm text-foreground">
                                   {diagram.isExpired ? (
                                     <span className="truncate">{title}</span>
                                   ) : (
@@ -1197,27 +1161,27 @@ export const DiagramGallery = ({
                                       onClick={(event) =>
                                         event.stopPropagation()
                                       }
-                                      className="truncate hover:underline focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2"
+                                      className="truncate hover:underline focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
                                     >
                                       {title}
                                     </Link>
                                   )}
                                 </td>
-                                <td className="hidden px-3 py-3 align-middle text-xs text-[var(--home-text-secondary)] md:table-cell">
-                                  <span className="rounded px-2 py-0.5 text-[10px] font-medium bg-[var(--home-tag-type-bg)] text-[var(--home-tag-type-text)]">
+                                <td className="hidden px-3 py-3 align-middle text-xs text-muted-foreground md:table-cell">
+                                  <Badge className="h-auto rounded border-0 px-2 py-0.5 text-[10px] font-medium bg-[var(--home-tag-type-bg)] text-[var(--home-tag-type-text)]">
                                     {getDiagramTypeLabel(diagram.type)}
-                                  </span>
+                                  </Badge>
                                 </td>
-                                <td className="hidden px-3 py-3 align-middle text-xs text-[var(--home-text-secondary)] md:table-cell">
+                                <td className="hidden px-3 py-3 align-middle text-xs text-muted-foreground md:table-cell">
                                   {formatDate(diagram.createdAt)}
                                 </td>
-                                <td className="px-3 py-3 align-middle text-xs text-[var(--home-text-secondary)]">
+                                <td className="px-3 py-3 align-middle text-xs text-muted-foreground">
                                   {formatDate(diagram.lastModifiedAt)}
                                 </td>
                                 <td className="hidden px-3 py-3 align-middle lg:table-cell">
                                   <div className="flex flex-wrap items-center gap-1">
-                                    <span
-                                      className={`rounded px-2 py-0.5 text-[10px] font-semibold ${
+                                    <Badge
+                                      className={`h-auto rounded border-0 px-2 py-0.5 text-[10px] font-semibold ${
                                         diagram.source === "shared"
                                           ? "bg-[var(--home-tag-shared-bg)] text-[var(--home-tag-shared-text)]"
                                           : "bg-[var(--home-tag-local-bg)] text-[var(--home-tag-local-text)]"
@@ -1226,13 +1190,13 @@ export const DiagramGallery = ({
                                       {diagram.source === "shared"
                                         ? "Shared"
                                         : "Local"}
-                                    </span>
+                                    </Badge>
                                     {diagram.source === "shared" && (
-                                      <span className="rounded bg-[var(--home-tag-type-bg)] px-2 py-0.5 text-[10px] font-medium text-[var(--home-tag-type-text)]">
+                                      <Badge className="h-auto rounded border-0 bg-[var(--home-tag-type-bg)] px-2 py-0.5 text-[10px] font-medium text-[var(--home-tag-type-text)]">
                                         {getSharedDiagramViewBadge(
                                           diagram.lastSharedView
                                         )}
-                                      </span>
+                                      </Badge>
                                     )}
                                   </div>
                                 </td>
@@ -1252,11 +1216,7 @@ export const DiagramGallery = ({
                                       ["--icon-hover-bg" as string]:
                                         "color-mix(in srgb, var(--home-text-primary) 10%, transparent)",
                                     }}
-                                    menuClassName="z-40 w-52 rounded-lg border-0 bg-[var(--home-surface-raised)] p-1 shadow-2xl transition-colors duration-200"
-                                    menuStyle={{
-                                      boxShadow:
-                                        "0 16px 36px var(--home-shadow-overlay)",
-                                    }}
+                                    menuClassName="z-40 w-52 rounded-lg border border-border-subtle bg-card p-1 shadow-sm transition-colors duration-200"
                                     stopPropagation
                                     onSharedDiagramRemoved={
                                       handleRemoveSharedDiagram
@@ -1276,7 +1236,7 @@ export const DiagramGallery = ({
                 )}
               </>
             ) : (
-              <div className="rounded-lg border border-dashed border-[var(--home-border-default)] bg-[var(--home-surface-sunken)] px-4 py-10 text-center text-sm text-[var(--home-text-secondary)] transition-colors duration-200">
+              <div className="rounded-lg border border-dashed border-border bg-muted px-4 py-10 text-center text-sm text-muted-foreground transition-colors duration-200">
                 No diagrams match your search and filters.
               </div>
             )}

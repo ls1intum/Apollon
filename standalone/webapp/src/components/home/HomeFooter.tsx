@@ -4,10 +4,10 @@ import { useModalContext } from "@/contexts"
 import { bugReportURL } from "@/constants/urls"
 import { releasesLink, repositoryLink } from "@/constants/version"
 import { readNavFrom } from "@/lib/navProvenance"
-import { cn } from "@/lib/utils"
+import { cn } from "@tumaet/ui/lib/utils"
 
 const itemClass =
-  "rounded-sm text-[var(--home-text-secondary)] transition-colors duration-200 hover:text-[var(--home-text-primary)] hover:underline focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2"
+  "rounded-sm text-muted-foreground transition-colors duration-200 hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
 
 /**
  * The home help/legal links (About, Releases, GitHub, Privacy, Imprint, Report).
@@ -86,7 +86,7 @@ export const HomeFooter = ({ className }: { className?: string }) => (
   <footer
     aria-label="Help and legal"
     className={cn(
-      "z-10 flex flex-wrap items-center justify-center gap-x-5 gap-y-1 border-t border-[var(--home-border-subtle)] bg-[var(--home-surface-base)] px-4 py-2.5 text-xs",
+      "z-10 flex flex-wrap items-center justify-center gap-x-5 gap-y-1 border-t border-border-subtle bg-background px-4 py-2.5 text-xs",
       className
     )}
   >
@@ -124,7 +124,7 @@ export const HomeHelpMenu = ({ className }: { className?: string }) => {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 z-50 mt-1 flex min-w-44 flex-col items-start gap-2 rounded-md border border-[var(--home-border-default)] bg-[var(--home-surface-raised)] p-3 text-sm shadow-lg"
+          className="absolute right-0 z-50 mt-1 flex min-w-44 flex-col items-start gap-2 rounded-md border border-border bg-card p-3 text-sm shadow-sm"
         >
           <HelpLinks onSelect={() => setOpen(false)} />
         </div>

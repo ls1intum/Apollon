@@ -1,5 +1,4 @@
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft"
-import ChevronRightIcon from "@mui/icons-material/ChevronRight"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import clsx from "clsx"
 import type { ReactNode } from "react"
 
@@ -29,8 +28,7 @@ export const CollapsibleSidebar = ({
   children: ReactNode
 }) => {
   const contentId = `${testId}-content`
-  const Chevron =
-    (side === "left") === open ? ChevronLeftIcon : ChevronRightIcon
+  const Chevron = (side === "left") === open ? ChevronLeft : ChevronRight
 
   return (
     <aside
@@ -59,7 +57,7 @@ export const CollapsibleSidebar = ({
             : "bg-[var(--apollon-background-variant)]"
         )}
       >
-        <Chevron fontSize="small" />
+        <Chevron className="size-5" />
       </button>
 
       {open && (

@@ -8,8 +8,18 @@ import {
   type MouseEvent as ReactMouseEvent,
 } from "react"
 import type { UMLDiagramType } from "@tumaet/apollon"
-import Menu from "@mui/material/Menu"
-import MenuItem from "@mui/material/MenuItem"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@tumaet/ui/components/dropdown-menu"
+import { Spinner } from "@tumaet/ui/components/spinner"
+import { Badge } from "@tumaet/ui/components/badge"
+import { Button } from "@tumaet/ui/components/button"
 import { Link, useNavigate } from "react-router"
 import { toast } from "react-toastify"
 import { useModalContext } from "@/contexts"
@@ -135,9 +145,9 @@ type DiagramActionsMenuProps = {
 export const DiagramActionsMenu = ({
   diagram,
   containerClassName = "relative",
-  triggerClassName = "cursor-pointer rounded-md border border-[var(--home-border-default)] bg-[var(--home-surface-sunken)] p-1.5 text-[var(--home-text-primary)] shadow-sm transition-colors duration-200 hover:border-[var(--home-accent-ring)] hover:bg-[var(--home-accent-ring)] hover:text-[var(--home-text-on-badge)] focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2",
+  triggerClassName = "cursor-pointer rounded-md border border-border bg-muted p-1.5 text-foreground shadow-sm transition-colors duration-200 hover:border-ring hover:bg-primary hover:text-[var(--home-text-on-badge)] focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2",
   triggerStyle,
-  menuClassName = "z-40 w-52 rounded-lg border border-[var(--home-border-subtle)] bg-[var(--home-surface-raised)] p-1 shadow-2xl transition-colors duration-200",
+  menuClassName = "z-40 w-52 rounded-lg border border-border-subtle bg-card p-1 shadow-sm transition-colors duration-200",
   menuStyle,
   stopPropagation = false,
   isExpired = false,
@@ -154,33 +164,18 @@ export const DiagramActionsMenu = ({
     (state) => state.currentModelId
   )
 
-  const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLButtonElement | null>(
-    null
-  )
-  const [sharingModeAnchorEl, setSharingModeAnchorEl] =
-    useState<HTMLElement | null>(null)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
-  const isMenuOpen = Boolean(menuAnchorEl)
-  const isSharingModeMenuOpen = Boolean(sharingModeAnchorEl)
 
   const diagramSource = diagram.source ?? "local"
   const isLocalDiagram = diagramSource === "local"
   const sharedView = diagram.lastSharedView ?? DiagramView.EDIT
   const isCurrentDiagramInEditor = diagram.id === currentModelId
   const menuItemClassName =
-    "home-filter-menu-item !min-h-0 !rounded-md !px-3 !py-2 !text-sm !text-[var(--home-text-secondary)] transition-colors duration-200 hover:!bg-[var(--home-surface-raised-hover)] hover:!text-[var(--home-text-primary)] focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2"
-
-  const openSharingModeMenu = (anchorEl: HTMLElement) => {
-    setSharingModeAnchorEl(anchorEl)
-  }
-
-  const closeSharingModeMenu = () => {
-    setSharingModeAnchorEl(null)
-  }
+    "min-h-0 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors duration-200 hover:bg-accent-hover hover:text-foreground data-[highlighted]:bg-accent-hover data-[highlighted]:text-foreground focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
 
   const closeMenu = () => {
-    closeSharingModeMenu()
-    setMenuAnchorEl(null)
+    setIsMenuOpen(false)
     setIsDeleteConfirmOpen(false)
   }
 
@@ -271,252 +266,193 @@ export const DiagramActionsMenu = ({
       onMouseDown={handleContainerMouseDown}
       onKeyDown={handleContainerKeyDown}
     >
-      <button
-        type="button"
-        aria-label="Open diagram actions"
-        className={`${triggerClassName} home-card-icon-button`}
-        style={triggerStyle}
-        data-active={isMenuOpen ? "true" : "false"}
-        onClick={(event) => {
-          if (stopPropagation) {
-            event.stopPropagation()
-          }
-          setMenuAnchorEl((prevAnchorEl) => {
-            if (prevAnchorEl) {
-              setIsDeleteConfirmOpen(false)
-              closeSharingModeMenu()
-              return null
-            }
-            return event.currentTarget
-          })
-        }}
-      >
-        <svg
-          className="h-[18px] w-[18px]"
-          viewBox="0 0 24 24"
-          fill="none"
-          aria-hidden="true"
-        >
-          <circle cx="12" cy="5" r="1.7" fill="currentColor" />
-          <circle cx="12" cy="12" r="1.7" fill="currentColor" />
-          <circle cx="12" cy="19" r="1.7" fill="currentColor" />
-        </svg>
-      </button>
-
-      <Menu
-        id={`diagram-actions-menu-${diagram.id}`}
-        anchorEl={menuAnchorEl}
+      <DropdownMenu
         open={isMenuOpen}
-        onClose={closeMenu}
-        elevation={0}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        transformOrigin={{ vertical: "top", horizontal: "right" }}
-        PaperProps={{
-          className: `home-filter-menu-paper recent-diagrams-font ${menuClassName}`,
-          style: menuStyle,
-          sx: { mt: 1 },
-        }}
-        MenuListProps={{
-          "aria-label": "Diagram actions",
-          disablePadding: true,
-          className: "home-filter-menu-list recent-diagrams-font p-1",
-          onClick: stopPropagation
-            ? (event) => event.stopPropagation()
-            : undefined,
+        onOpenChange={(open) => {
+          if (open) {
+            setIsMenuOpen(true)
+          } else {
+            closeMenu()
+          }
         }}
       >
-        {isExpired ? (
-          <div className="space-y-1">
-            <MenuItem
-              disableGutters
-              sx={{ minHeight: 0 }}
-              className="home-filter-menu-item home-filter-menu-item-delete !min-h-0 !rounded-md !px-3 !py-2 !text-sm transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2"
-              onMouseEnter={closeSharingModeMenu}
+        <DropdownMenuTrigger
+          render={
+            <button
+              type="button"
+              aria-label="Open diagram actions"
+              className={`${triggerClassName} home-card-icon-button`}
+              style={triggerStyle}
+              data-active={isMenuOpen ? "true" : "false"}
+              onClick={(event) => {
+                if (stopPropagation) {
+                  event.stopPropagation()
+                }
+              }}
+            />
+          }
+        >
+          <svg
+            className="h-[18px] w-[18px]"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="5" r="1.7" fill="currentColor" />
+            <circle cx="12" cy="12" r="1.7" fill="currentColor" />
+            <circle cx="12" cy="19" r="1.7" fill="currentColor" />
+          </svg>
+        </DropdownMenuTrigger>
+
+        <DropdownMenuContent
+          id={`diagram-actions-menu-${diagram.id}`}
+          aria-label="Diagram actions"
+          align="end"
+          sideOffset={8}
+          className={`recent-diagrams-font border-0 ${menuClassName}`}
+          style={menuStyle}
+        >
+          {isExpired ? (
+            <DropdownMenuItem
+              className="min-h-0 rounded-md px-3 py-2 text-sm transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
               onClick={handleRemoveSharedEntry}
             >
               Remove from shared list
-            </MenuItem>
-          </div>
-        ) : !isDeleteConfirmOpen ? (
-          <div className="space-y-1">
-            <MenuItem
-              disableGutters
-              sx={{ minHeight: 0 }}
-              className={menuItemClassName}
-              onClick={handleOpen}
-            >
-              {isLocalDiagram ? "Open" : "Open diagram"}
-            </MenuItem>
-            {isLocalDiagram ? (
-              <>
-                <MenuItem
-                  disableGutters
-                  sx={{ minHeight: 0 }}
-                  className={menuItemClassName}
-                  onClick={handleDuplicate}
-                >
-                  Duplicate
-                </MenuItem>
-                <MenuItem
-                  disableGutters
-                  sx={{ minHeight: 0 }}
-                  className={menuItemClassName}
-                  onClick={handleShare}
-                >
-                  Share
-                </MenuItem>
-                <div
-                  className="w-full"
-                  title={
-                    isCurrentDiagramInEditor
-                      ? "Cannot delete diagram currently being edited"
-                      : undefined
-                  }
-                >
-                  <MenuItem
-                    disableGutters
-                    sx={{ minHeight: 0 }}
-                    aria-disabled={isCurrentDiagramInEditor}
-                    disabled={isCurrentDiagramInEditor}
-                    className={`home-filter-menu-item !min-h-0 !rounded-md !px-3 !py-2 !text-sm transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2 ${
+            </DropdownMenuItem>
+          ) : !isDeleteConfirmOpen ? (
+            <div className="space-y-1">
+              <DropdownMenuItem
+                className={menuItemClassName}
+                onClick={handleOpen}
+              >
+                {isLocalDiagram ? "Open" : "Open diagram"}
+              </DropdownMenuItem>
+              {isLocalDiagram ? (
+                <>
+                  <DropdownMenuItem
+                    className={menuItemClassName}
+                    onClick={handleDuplicate}
+                  >
+                    Duplicate
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className={menuItemClassName}
+                    onClick={handleShare}
+                  >
+                    Share
+                  </DropdownMenuItem>
+                  <div
+                    className="w-full"
+                    title={
                       isCurrentDiagramInEditor
-                        ? "cursor-not-allowed bg-[var(--home-surface-sunken)] text-[var(--home-text-secondary)] opacity-60"
-                        : "home-filter-menu-item-delete !text-[var(--apollon-alert-danger-color)] hover:!bg-[var(--apollon-alert-danger-background)]"
-                    }`}
-                    onClick={() => setIsDeleteConfirmOpen(true)}
+                        ? "Cannot delete diagram currently being edited"
+                        : undefined
+                    }
                   >
-                    Delete
-                  </MenuItem>
-                </div>
-              </>
-            ) : (
-              <>
-                <MenuItem
-                  disableGutters
-                  sx={{ minHeight: 0 }}
-                  className={menuItemClassName}
-                  onMouseEnter={closeSharingModeMenu}
-                  onClick={() => void handleCopySharedLink()}
-                >
-                  Copy link
-                </MenuItem>
-                <MenuItem
-                  disableGutters
-                  className={menuItemClassName}
-                  onClick={(event) => openSharingModeMenu(event.currentTarget)}
-                  onMouseEnter={(event) =>
-                    openSharingModeMenu(event.currentTarget)
-                  }
-                  onFocus={(event) => openSharingModeMenu(event.currentTarget)}
-                  aria-haspopup="menu"
-                  aria-controls={
-                    isSharingModeMenuOpen
-                      ? `diagram-sharing-mode-menu-${diagram.id}`
-                      : undefined
-                  }
-                  aria-expanded={isSharingModeMenuOpen ? "true" : undefined}
-                  sx={{
-                    minHeight: 0,
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  Change sharing mode
-                  <svg
-                    className="ml-2 h-4 w-4 shrink-0"
-                    viewBox="0 0 20 20"
-                    fill="none"
-                    aria-hidden="true"
+                    <DropdownMenuItem
+                      closeOnClick={false}
+                      disabled={isCurrentDiagramInEditor}
+                      className={`min-h-0 rounded-md px-3 py-2 text-sm transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2 ${
+                        isCurrentDiagramInEditor
+                          ? "cursor-not-allowed bg-muted text-muted-foreground opacity-60"
+                          : "text-[var(--apollon-alert-danger-color)] hover:bg-[var(--apollon-alert-danger-background)] data-[highlighted]:bg-[var(--apollon-alert-danger-background)]"
+                      }`}
+                      onClick={() => setIsDeleteConfirmOpen(true)}
+                    >
+                      Delete
+                    </DropdownMenuItem>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <DropdownMenuItem
+                    className={menuItemClassName}
+                    onClick={() => void handleCopySharedLink()}
                   >
-                    <path
-                      d="M7 4l6 6-6 6"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </MenuItem>
-                <MenuItem
-                  disableGutters
-                  sx={{ minHeight: 0 }}
-                  className="home-filter-menu-item home-filter-menu-item-delete !min-h-0 !rounded-md !px-3 !py-2 !text-sm transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2"
-                  onMouseEnter={closeSharingModeMenu}
-                  onClick={handleRemoveSharedEntry}
-                >
-                  Remove from shared list
-                </MenuItem>
-              </>
-            )}
-          </div>
-        ) : (
-          <div className="min-w-[220px] space-y-2 rounded-md border border-[var(--apollon-alert-danger-border)] bg-[var(--apollon-alert-danger-background)] p-3 text-sm transition-colors duration-200">
-            <p className="font-medium text-[var(--apollon-alert-danger-color)]">
-              Are you sure? This can&apos;t be undone.
-            </p>
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                className="cursor-pointer rounded-md border border-[var(--home-border-default)] bg-[var(--home-surface-base)] px-2 py-1 text-xs text-[var(--home-text-secondary)] transition-colors duration-200 hover:bg-[var(--home-surface-raised-hover)] hover:text-[var(--home-text-primary)] focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2"
-                onClick={() => setIsDeleteConfirmOpen(false)}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="cursor-pointer rounded-md border border-[var(--apollon-alert-danger-border)] bg-[var(--apollon-alert-danger-color)] px-2 py-1 text-xs text-white transition-opacity duration-200 hover:opacity-90 focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2"
-                onClick={handleDelete}
-              >
-                Delete
-              </button>
+                    Copy link
+                  </DropdownMenuItem>
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger
+                      className={`${menuItemClassName} justify-between`}
+                    >
+                      Change sharing mode
+                      <svg
+                        className="ml-2 h-4 w-4 shrink-0"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M7 4l6 6-6 6"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent
+                      aria-label="Change sharing mode"
+                      className={`recent-diagrams-font border-0 ${menuClassName}`}
+                      style={menuStyle}
+                    >
+                      {SHARED_DIAGRAM_VIEW_OPTIONS.map((option) => (
+                        <DropdownMenuItem
+                          key={option.value}
+                          className={`min-h-0 rounded-md px-2 py-1.5 text-xs transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2 ${
+                            option.value === sharedView
+                              ? "bg-accent-hover text-foreground data-[highlighted]:bg-accent-hover"
+                              : "text-muted-foreground hover:bg-[color-mix(in_srgb,var(--home-surface-raised-hover)_50%,transparent)] hover:text-foreground data-[highlighted]:bg-[color-mix(in_srgb,var(--home-surface-raised-hover)_50%,transparent)] data-[highlighted]:text-foreground"
+                          }`}
+                          onClick={() => handleChangeSharedView(option.value)}
+                        >
+                          <span className="w-full">{option.badge}</span>
+                          {option.value === sharedView ? (
+                            <span className="font-medium text-foreground opacity-90">
+                              Selected
+                            </span>
+                          ) : null}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                  <DropdownMenuItem
+                    className="min-h-0 rounded-md px-3 py-2 text-sm transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
+                    onClick={handleRemoveSharedEntry}
+                  >
+                    Remove from shared list
+                  </DropdownMenuItem>
+                </>
+              )}
             </div>
-          </div>
-        )}
-      </Menu>
-      <Menu
-        id={`diagram-sharing-mode-menu-${diagram.id}`}
-        anchorEl={sharingModeAnchorEl}
-        open={isSharingModeMenuOpen}
-        onClose={closeSharingModeMenu}
-        elevation={0}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-        transformOrigin={{ vertical: "top", horizontal: "left" }}
-        PaperProps={{
-          className: `home-filter-menu-paper recent-diagrams-font ${menuClassName}`,
-          style: menuStyle,
-        }}
-        MenuListProps={{
-          "aria-label": "Change sharing mode",
-          disablePadding: true,
-          className: "home-filter-menu-list recent-diagrams-font p-1",
-          onMouseLeave: closeSharingModeMenu,
-          onClick: stopPropagation
-            ? (event) => event.stopPropagation()
-            : undefined,
-        }}
-      >
-        {SHARED_DIAGRAM_VIEW_OPTIONS.map((option) => (
-          <MenuItem
-            key={option.value}
-            disableGutters
-            selected={option.value === sharedView}
-            className={`home-filter-menu-item !min-h-0 !rounded-md !px-2 !py-1.5 !text-xs transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2 ${
-              option.value === sharedView
-                ? "!bg-[var(--home-surface-raised-hover)] !text-[var(--home-text-primary)]"
-                : "!text-[var(--home-text-secondary)] hover:!bg-[color-mix(in_srgb,var(--home-surface-raised-hover)_50%,transparent)] hover:!text-[var(--home-text-primary)]"
-            }`}
-            onClick={() => handleChangeSharedView(option.value)}
-          >
-            <span className="w-full">{option.badge}</span>
-            {option.value === sharedView ? (
-              <span className="font-medium text-[var(--home-text-primary)] opacity-90">
-                Selected
-              </span>
-            ) : null}
-          </MenuItem>
-        ))}
-      </Menu>
+          ) : (
+            <div className="min-w-[220px] space-y-2 rounded-md border border-[var(--apollon-alert-danger-border)] bg-[var(--apollon-alert-danger-background)] p-3 text-sm transition-colors duration-200">
+              <p className="font-medium text-[var(--apollon-alert-danger-color)]">
+                Are you sure? This can&apos;t be undone.
+              </p>
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="xs"
+                  className="cursor-pointer text-muted-foreground hover:bg-accent-hover hover:text-foreground"
+                  onClick={() => setIsDeleteConfirmOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  size="xs"
+                  className="cursor-pointer border border-[var(--apollon-alert-danger-border)] bg-[var(--apollon-alert-danger-color)] text-white transition-opacity duration-200 hover:bg-[var(--apollon-alert-danger-color)] hover:opacity-90"
+                  onClick={handleDelete}
+                >
+                  Delete
+                </Button>
+              </div>
+            </div>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   )
 }
@@ -658,10 +594,8 @@ const DiagramCardComponent = ({
   return (
     <div
       role="listitem"
-      className={`home-diagram-card group relative mx-auto flex flex-col overflow-hidden bg-[var(--home-surface-raised)] transition-all duration-[280ms] ease-[cubic-bezier(0.16,1,0.3,1)] [--card-scale:1] hover:bg-[var(--home-surface-raised-hover)] md:[--card-scale:1.0769231] xl:[--card-scale:1.1538462] ${
-        isHighlighted
-          ? "bg-[var(--home-surface-raised-hover)]"
-          : "hover:[box-shadow:0_8px_24px_var(--home-shadow-card-hover)]"
+      className={`home-diagram-card group relative mx-auto flex flex-col overflow-hidden bg-card transition-all duration-[280ms] ease-[cubic-bezier(0.16,1,0.3,1)] [--card-scale:1] hover:bg-accent-hover md:[--card-scale:1.0769231] xl:[--card-scale:1.1538462] ${
+        isHighlighted ? "bg-accent-hover" : "hover:shadow-sm"
       }`}
       style={{
         border: "none",
@@ -670,7 +604,7 @@ const DiagramCardComponent = ({
         maxWidth: "300px",
         height: scalePx(CARD_BASE_HEIGHT_PX),
         boxShadow: isHighlighted
-          ? "0 0 0 4px var(--home-glow-neutral), 0 8px 32px var(--home-glow-neutral)"
+          ? "0 0 0 3px color-mix(in srgb, var(--home-accent-base) 35%, transparent)"
           : undefined,
         animation: isHighlighted
           ? "diagram-highlight-pulse 2.4s ease-out forwards"
@@ -680,7 +614,7 @@ const DiagramCardComponent = ({
       {/* Expired overlay */}
       {isExpired && (
         <div
-          className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-1 rounded-[var(--home-radius-sm)]"
+          className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-1 rounded-sm"
           style={{
             background:
               "color-mix(in srgb, var(--home-surface-raised) 80%, transparent)",
@@ -751,13 +685,7 @@ const DiagramCardComponent = ({
               </div>
             ) : isEffectivelyLoading && !showPlaceholderIcon ? (
               <div className="flex flex-col items-center gap-2">
-                <span
-                  className="h-5 w-5 animate-spin rounded-full border-2"
-                  style={{
-                    borderColor: "var(--home-border-default)",
-                    borderTopColor: "var(--home-accent-base)",
-                  }}
-                />
+                <Spinner className="size-5 text-[var(--home-accent-base)]" />
                 <span
                   className="text-xs font-medium"
                   style={{ color: "var(--home-text-secondary)" }}
@@ -843,8 +771,8 @@ const DiagramCardComponent = ({
             - shared diagrams: the sharing mode (view/edit)
           */}
           <div className="flex shrink-0 items-center gap-1 pl-2">
-            <span
-              className="rounded"
+            <Badge
+              className="h-auto rounded border-0 p-0 text-[length:inherit] font-[inherit]"
               title={shortTypeLabel}
               style={{
                 padding: "3px 8px",
@@ -860,10 +788,10 @@ const DiagramCardComponent = ({
               }}
             >
               {shortTypeLabel}
-            </span>
+            </Badge>
             {showSourceBadge ? (
-              <span
-                className="rounded"
+              <Badge
+                className="h-auto rounded border-0 p-0 text-[length:inherit] font-[inherit]"
                 title={sourceTypeLabel}
                 style={{
                   padding: "3px 8px",
@@ -883,10 +811,10 @@ const DiagramCardComponent = ({
                 }}
               >
                 {sourceTypeLabel}
-              </span>
+              </Badge>
             ) : !isLocalDiagram ? (
-              <span
-                className="rounded"
+              <Badge
+                className="h-auto rounded border-0 p-0 text-[length:inherit] font-[inherit]"
                 title={sharedViewLabel}
                 style={{
                   padding: "3px 8px",
@@ -902,7 +830,7 @@ const DiagramCardComponent = ({
                 }}
               >
                 {sharedViewLabel}
-              </span>
+              </Badge>
             ) : null}
           </div>
         </div>
@@ -966,12 +894,7 @@ const DiagramCardComponent = ({
           ["--icon-hover-bg" as string]:
             "color-mix(in srgb, var(--home-text-primary) 10%, transparent)",
         }}
-        menuClassName="z-40 w-52 rounded-lg p-1 shadow-2xl"
-        menuStyle={{
-          background: "var(--home-surface-raised)",
-          border: "none",
-          boxShadow: "0 16px 36px var(--home-shadow-overlay)",
-        }}
+        menuClassName="z-40 w-52 rounded-lg border border-border-subtle bg-card p-1 shadow-sm"
         onSharedDiagramRemoved={onSharedDiagramRemoved}
         onSharedDiagramViewChange={onSharedDiagramViewChange}
       />

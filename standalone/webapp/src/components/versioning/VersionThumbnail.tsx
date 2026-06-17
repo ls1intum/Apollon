@@ -1,6 +1,5 @@
-import { Box, Skeleton } from "@mui/material"
-import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded"
-import BookmarkRoundedIcon from "@mui/icons-material/BookmarkRounded"
+import { Skeleton } from "@tumaet/ui/components/skeleton"
+import { HistoryIcon, BookmarkIcon } from "lucide-react"
 import { useEffect, useRef, useState, type FC } from "react"
 import {
   ApollonEditor,
@@ -112,28 +111,18 @@ export const VersionThumbnail: FC<Props> = ({
     }
   }, [diagramId, versionId, src, errored])
 
-  const KindIcon = isAuto ? HistoryRoundedIcon : BookmarkRoundedIcon
+  const KindIcon = isAuto ? HistoryIcon : BookmarkIcon
   const w = compact ? 64 : 160
   const h = compact ? 40 : 100
 
   return (
-    <Box
+    <div
       ref={ref}
-      sx={{
-        width: w,
-        height: h,
-        flexShrink: 0,
-        // Fixed light plate — the library exports diagrams with concrete
-        // dark stroke/text colors regardless of host theme, so a white
-        // backdrop keeps thumbnails legible in light and dark mode.
-        bgcolor: "#ffffff",
-        borderRadius: 1,
-        overflow: "hidden",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        color: isAuto ? "#9aa0a6" : "#1a73e8",
-      }}
+      // Fixed light plate — the library exports diagrams with concrete
+      // dark stroke/text colors regardless of host theme, so a white
+      // backdrop keeps thumbnails legible in light and dark mode.
+      className="flex shrink-0 items-center justify-center overflow-hidden rounded bg-white"
+      style={{ width: w, height: h, color: isAuto ? "#9aa0a6" : "#1a73e8" }}
       aria-hidden
     >
       {src ? (
@@ -150,10 +139,10 @@ export const VersionThumbnail: FC<Props> = ({
           }}
         />
       ) : errored ? (
-        <KindIcon fontSize={compact ? "small" : "medium"} aria-hidden />
+        <KindIcon className={compact ? "size-4" : "size-6"} aria-hidden />
       ) : (
-        <Skeleton variant="rectangular" width={w} height={h} />
+        <Skeleton className="rounded-none" style={{ width: w, height: h }} />
       )}
-    </Box>
+    </div>
   )
 }

@@ -1,28 +1,26 @@
+import { Sheet, SheetContent } from "@tumaet/ui/components/sheet"
 import {
-  Box,
-  Button,
-  CircularProgress,
-  Drawer,
-  IconButton,
-  InputBase,
-  List,
-  Skeleton,
   Tooltip,
-  Typography,
-  useMediaQuery,
-} from "@mui/material"
-import HistoryToggleOffIcon from "@mui/icons-material/HistoryToggleOff"
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@tumaet/ui/components/tooltip"
+import { Spinner } from "@tumaet/ui/components/spinner"
+import { Skeleton } from "@tumaet/ui/components/skeleton"
+import { HistoryIcon } from "lucide-react"
 import {
   useCallback,
   useEffect,
   useMemo,
   useRef,
   useState,
+  type CSSProperties,
   type FC,
   type KeyboardEvent,
 } from "react"
 import { toast } from "react-toastify"
 import { useEditorContext, useModalContext } from "@/contexts"
+import { useMediaQuery } from "@/hooks"
 import { selectVersions, useVersionStore } from "@/stores/useVersionStore"
 import { ApiError, VersionApiClient } from "@/services/DiagramApiClient"
 import {
@@ -47,7 +45,7 @@ import {
 
 /** Sidebar width on desktop. Narrow enough to keep the canvas usable. */
 const SIDEBAR_WIDTH = 320
-/** Slide-in animation duration matched to MUI's standard transition. */
+/** Slide-in animation duration matched to the standard panel transition. */
 const SIDEBAR_ANIMATION_MS = 220
 
 /**
@@ -55,9 +53,10 @@ const SIDEBAR_ANIMATION_MS = 220
  * the navbar switches to its hamburger (`md:hidden` in `Navbar.tsx`,
  * Tailwind's md = 768px). This is the *only* place where a viewport
  * media query is the right tool — sidebar↔bottom-sheet is a page-level
- * layout decision driven by viewport chrome. Component-internal layout
- * (e.g. the preview banner) responds to its own container width via
- * `useElementWidth`, not this constant.
+ * layout decision driven by viewport chrome, and rendering both (hiding
+ * one via CSS) would double-mount the effect-bearing body. Component-
+ * internal layout (e.g. the preview banner) responds to its own container
+ * width via `useElementWidth`, not this constant.
  */
 const MOBILE_QUERY = "(max-width: 767.95px)"
 
@@ -71,8 +70,8 @@ interface Props {
  *
  *  - `VersionSidebar` (desktop ≥ md): rendered inline as a flex sibling of
  *    the canvas so it doesn't overlay the user's work.
- *  - `VersionDrawer` (mobile <sm): rendered inside an MUI bottom-sheet
- *    Drawer because there isn't room for two columns on small viewports.
+ *  - `VersionDrawer` (mobile <sm): rendered inside a bottom-sheet because
+ *    there isn't room for two columns on small viewports.
  */
 const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
   const versions = useVersionStore((s) => selectVersions(s, diagramId))
@@ -303,17 +302,12 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
   }
 
   return (
-    <Box
-      sx={{
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        // Whole sidebar paints the navbar dark colour so it visually
-        // continues the top bar in both themes. Text is light, with rgba
-        // hover/selected tints so dark/light toggle isn't needed here.
-        bgcolor: NAVBAR_BACKGROUND_COLOR,
-        color: TEXT_PRIMARY,
-      }}
+    <div
+      // Whole sidebar paints the navbar dark colour so it visually
+      // continues the top bar in both themes. Text is light, with rgba
+      // hover/selected tints so dark/light toggle isn't needed here.
+      className="flex h-full flex-col"
+      style={{ background: NAVBAR_BACKGROUND_COLOR, color: TEXT_PRIMARY }}
       role="complementary"
       aria-label={t.drawerTitle}
     >
@@ -325,37 +319,26 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
           save while the canvas reflects an old snapshot, and showing it
           alongside the read-only banner is contradictory UX. */}
       {previewState === null && (
-        <Box
-          sx={{
-            px: 2,
-            pt: 1.5,
-            pb: 1,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "stretch",
-            gap: 0.75,
-          }}
-        >
-          <InputBase
-            multiline
-            maxRows={4}
-            fullWidth
+        <div className="flex flex-col items-stretch gap-1.5 px-4 pt-3 pb-2">
+          <textarea
+            rows={1}
             placeholder={t.createPlaceholder}
             value={draft}
             onChange={(e) =>
               setDraft(e.target.value.slice(0, MAX_DESCRIPTION_LENGTH))
             }
             onKeyDown={handleComposerKeyDown}
-            inputProps={{ "aria-label": "Describe this version" }}
-            sx={{
-              fontSize: "0.85rem",
-              color: TEXT_PRIMARY,
-              "& textarea::placeholder": { color: TEXT_MUTED, opacity: 1 },
-            }}
+            aria-label="Describe this version"
+            className="max-h-[6.5rem] w-full resize-none border-0 bg-transparent p-0 text-[0.85rem] outline-none placeholder:opacity-100 placeholder:[color:var(--ph)]"
+            style={
+              {
+                color: TEXT_PRIMARY,
+                "--ph": TEXT_MUTED,
+              } as CSSProperties
+            }
           />
-          <Button
-            variant="contained"
-            size="small"
+          <button
+            type="button"
             onClick={handleCreate}
             disabled={submitting || !canSave}
             title={
@@ -365,124 +348,109 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
                   ? "No changes since the last saved version"
                   : undefined
             }
-            disableElevation
-            sx={{
-              alignSelf: "flex-end",
-              textTransform: "none",
-              px: 1.75,
-              py: 0.5,
-              fontWeight: 600,
-              color: NAVBAR_BACKGROUND_COLOR,
-              backgroundColor: TEXT_PRIMARY,
-              "&:hover": { backgroundColor: "#ffffff" },
-              "&.Mui-disabled": {
-                backgroundColor: "rgba(255, 255, 255, 0.12)",
-                color: TEXT_MUTED,
-              },
-            }}
+            className="inline-flex cursor-pointer items-center justify-center self-end rounded-md px-3.5 py-1 text-sm font-semibold transition-colors hover:[background:#ffffff] disabled:cursor-not-allowed disabled:[background:rgba(255,255,255,0.12)] disabled:[color:var(--btn-disabled-color)]"
+            style={
+              {
+                color: NAVBAR_BACKGROUND_COLOR,
+                background: TEXT_PRIMARY,
+                "--btn-disabled-color": TEXT_MUTED,
+              } as CSSProperties
+            }
           >
             {submitting ? (
-              <CircularProgress size={14} sx={{ color: TEXT_MUTED }} />
+              <Spinner className="size-3.5" style={{ color: TEXT_MUTED }} />
             ) : (
               t.createButton
             )}
-          </Button>
-        </Box>
+          </button>
+        </div>
       )}
 
       {/* Section meta: counter + "last saved Xm ago" + autosave filter
           toggle. Borderless — separation comes from spacing. The toggle
           mirrors Figma's "Show autosave versions" — default on; flipping
           off hides every empty-meta row for a milestone-only view. */}
-      <Box
-        sx={{
-          px: 2,
-          py: 0.5,
-          display: "flex",
-          alignItems: "center",
-          gap: 1,
-        }}
-      >
-        <Typography
-          variant="caption"
-          sx={{ color: TEXT_PRIMARY, fontWeight: 600, whiteSpace: "nowrap" }}
+      <div className="flex items-center gap-2 px-4 py-1">
+        <span
+          className="text-xs font-semibold whitespace-nowrap"
+          style={{ color: TEXT_PRIMARY }}
         >
           {totalDisplay}
-          <Box component="span" sx={{ color: TEXT_MUTED, fontWeight: 400 }}>
+          <span className="font-normal" style={{ color: TEXT_MUTED }}>
             {" / "}
             {MAX_VERSIONS}
-          </Box>
-        </Typography>
-        <Typography
-          variant="caption"
-          sx={{
-            color: TEXT_MUTED,
-            flex: 1,
-            minWidth: 0,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
+          </span>
+        </span>
+        <span
+          className="min-w-0 flex-1 overflow-hidden text-xs text-ellipsis whitespace-nowrap"
+          style={{ color: TEXT_MUTED }}
           title={sectionSubtitle}
         >
           · {sectionSubtitle}
-        </Typography>
-        <Tooltip
-          title={
-            showAutosaves ? "Hide autosave versions" : "Show autosave versions"
-          }
-        >
-          <IconButton
-            size="small"
-            onClick={() => setShowAutosaves((v) => !v)}
-            aria-label={
-              showAutosaves
+        </span>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger
+              onClick={() => setShowAutosaves((v) => !v)}
+              aria-label={
+                showAutosaves
+                  ? "Hide autosave versions"
+                  : "Show autosave versions"
+              }
+              aria-pressed={showAutosaves}
+              className="inline-flex size-6 cursor-pointer items-center justify-center rounded-md bg-transparent p-0.5 outline-none transition-colors hover:[background:rgba(255,255,255,0.06)] focus-visible:ring-2 focus-visible:ring-white/40"
+              style={{ color: showAutosaves ? TEXT_PRIMARY : TEXT_MUTED }}
+            >
+              <HistoryIcon className="size-4" aria-hidden />
+            </TooltipTrigger>
+            <TooltipContent>
+              {showAutosaves
                 ? "Hide autosave versions"
-                : "Show autosave versions"
-            }
-            aria-pressed={showAutosaves}
-            sx={{ color: showAutosaves ? TEXT_PRIMARY : TEXT_MUTED, p: 0.25 }}
-          >
-            <HistoryToggleOffIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      </Box>
+                : "Show autosave versions"}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
 
       <CurrentVersionRow
         hasChanges={hasChanges}
         latestSavedVersion={latestSavedVersion}
       />
 
-      <Box sx={{ flex: 1, overflow: "auto" }}>
+      <div className="flex-1 overflow-auto">
         {errorCode === "REDIS_UNAVAILABLE" ? (
-          <Box sx={{ p: 2 }}>
-            <Typography
-              variant="body2"
-              sx={{ color: "var(--apollon-alert-warning-yellow)" }}
+          <div className="p-4">
+            <p
+              className="text-sm"
+              style={{ color: "var(--apollon-alert-warning-yellow)" }}
             >
               {t.failureRedis}
-            </Typography>
-          </Box>
+            </p>
+          </div>
         ) : loading && versions.length === 0 ? (
-          <List>
+          <ul className="m-0 list-none p-0">
             {[0, 1, 2].map((i) => (
-              <Box key={i} sx={{ p: 2, display: "flex", gap: 1.5 }}>
-                <Skeleton variant="rectangular" width={64} height={40} />
-                <Box sx={{ flex: 1 }}>
-                  <Skeleton width="60%" />
-                  <Skeleton width="30%" />
-                </Box>
-              </Box>
+              <li key={i} className="flex list-none gap-3 p-4">
+                <Skeleton
+                  className="rounded-none"
+                  style={{ width: 64, height: 40 }}
+                />
+                <div className="flex-1">
+                  <Skeleton className="h-4 w-[60%]" />
+                  <Skeleton className="mt-1 h-4 w-[30%]" />
+                </div>
+              </li>
             ))}
-          </List>
+          </ul>
         ) : versions.length === 0 ? (
-          <Box sx={{ px: 3, py: 4, textAlign: "center" }}>
-            <Typography variant="body2" sx={{ color: TEXT_MUTED }}>
+          <div className="px-6 py-8 text-center">
+            <p className="text-sm" style={{ color: TEXT_MUTED }}>
               {t.emptyBody}
-            </Typography>
-          </Box>
+            </p>
+          </div>
         ) : (
-          <List
+          <ul
+            className="m-0 list-none p-0"
             role="listbox"
             aria-label={t.drawerTitle}
             aria-activedescendant={
@@ -553,30 +521,31 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
               )
             )}
             {nextCursor && (
-              <Box sx={{ px: 2, py: 1.5, textAlign: "center" }}>
-                <Button
-                  size="small"
+              <li className="list-none px-4 py-3 text-center">
+                <button
+                  type="button"
                   onClick={() => loadMoreVersions(diagramId)}
                   disabled={loading}
-                  sx={{ textTransform: "none", color: TEXT_PRIMARY }}
+                  className="cursor-pointer rounded-md bg-transparent px-2 py-1 text-sm font-medium transition-colors hover:[background:rgba(255,255,255,0.06)] disabled:cursor-not-allowed disabled:opacity-60"
+                  style={{ color: TEXT_PRIMARY }}
                 >
                   {t.loadOlder}
-                </Button>
-              </Box>
+                </button>
+              </li>
             )}
-          </List>
+          </ul>
         )}
-      </Box>
-    </Box>
+      </div>
+    </div>
   )
 }
 
 /**
  * Persistent desktop sidebar. Inline flex sibling of the canvas. Animates
  * in by transitioning `width` from 0 → SIDEBAR_WIDTH; the canvas reflows
- * smoothly alongside instead of being overlaid. The inner Box stays at a
+ * smoothly alongside instead of being overlaid. The inner div stays at a
  * fixed width so the contents don't shimmer during the animation — the
- * outer Box clips them via `overflow: hidden`.
+ * outer div clips them via `overflow: hidden`.
  *
  * The body is unmounted when fully closed (after the animation finishes)
  * to avoid running its `fetchVersions` effect for diagrams the user never
@@ -602,29 +571,24 @@ export const VersionSidebar: FC<Props> = ({ diagramId, onVersionSaved }) => {
   if (isSmall) return null
 
   return (
-    <Box
-      sx={{
+    <div
+      className="shrink-0 overflow-hidden"
+      style={{
         width: open ? SIDEBAR_WIDTH : 0,
-        flexShrink: 0,
-        overflow: "hidden",
-        transition: (theme) =>
-          theme.transitions.create("width", {
-            duration: SIDEBAR_ANIMATION_MS,
-            easing: theme.transitions.easing.easeInOut,
-          }),
-        bgcolor: NAVBAR_BACKGROUND_COLOR,
+        transition: `width ${SIDEBAR_ANIMATION_MS}ms ease-in-out`,
+        background: NAVBAR_BACKGROUND_COLOR,
       }}
       aria-hidden={!open}
     >
-      <Box sx={{ width: SIDEBAR_WIDTH, height: "100%" }}>
+      <div style={{ width: SIDEBAR_WIDTH, height: "100%" }}>
         {mounted && (
           <VersionSidebarBody
             diagramId={diagramId}
             onVersionSaved={onVersionSaved}
           />
         )}
-      </Box>
-    </Box>
+      </div>
+    </div>
   )
 }
 
@@ -639,18 +603,24 @@ export const VersionDrawer: FC<Props> = ({ diagramId, onVersionSaved }) => {
   // Desktop uses the inline sidebar; this component is mobile-only.
   if (!isSmall) return null
   return (
-    <Drawer
-      anchor="bottom"
+    <Sheet
       open={open}
-      onClose={() => closeDrawer(diagramId)}
-      PaperProps={{
-        sx: { height: "80vh", width: "100%" },
+      onOpenChange={(next) => {
+        if (!next) closeDrawer(diagramId)
       }}
     >
-      <VersionSidebarBody
-        diagramId={diagramId}
-        onVersionSaved={onVersionSaved}
-      />
-    </Drawer>
+      <SheetContent
+        side="bottom"
+        showCloseButton={false}
+        className="h-[80vh] w-full gap-0 border-0 p-0"
+        style={{ background: NAVBAR_BACKGROUND_COLOR }}
+        aria-label={t.drawerTitle}
+      >
+        <VersionSidebarBody
+          diagramId={diagramId}
+          onVersionSaved={onVersionSaved}
+        />
+      </SheetContent>
+    </Sheet>
   )
 }
