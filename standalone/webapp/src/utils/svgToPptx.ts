@@ -27,8 +27,12 @@ import type { DiagramFitOption } from "@/lib/pptxExportSettings"
 const PX_PER_INCH = 96
 const PT_PER_PX = 0.75
 
-/** Approximate cap-height fraction for the sans-serif stack we emit. */
-const TEXT_CAP_HEIGHT_RATIO = 0.82
+/**
+ * Offset (in em) from the alphabetic baseline up to the point Apollon centres
+ * labels on — Inter's middle baseline. Matches the `compat` export's
+ * baseline-resolution constant, so PPTX text lands where the editor draws it.
+ */
+const BASELINE_TO_CENTER_EM = 0.25
 /** Slack added to canvas-measured run width so glyph edges don't clip. */
 const TEXT_BOX_HORIZONTAL_SLACK_FACTOR = 0.4
 /** Lower bound on text-box width (in em) so very short runs still render. */
@@ -969,11 +973,12 @@ function emitTextLines(
     else if (line.textAnchor === "end") leftPx = line.anchorX - widthPx
     else leftPx = line.anchorX
     // SVG `<text y>` is the alphabetic baseline (the compat export resolves
-    // dominant-baseline into it). The glyphs' visual centre is half a cap-height
-    // above the baseline; the box is emitted with `valign:"middle"`, so the box
-    // top is that centre minus half the box height.
+    // dominant-baseline into it). Apollon centres labels on a point
+    // BASELINE_TO_CENTER_EM above the baseline (Inter's middle-baseline metric,
+    // the same offset the export used to bake the baseline); the box is emitted
+    // with `valign:"middle"`, so the box top is that centre minus half the box.
     const topPx =
-      line.baselineY - (fontSize * TEXT_CAP_HEIGHT_RATIO) / 2 - heightPx / 2
+      line.baselineY - fontSize * BASELINE_TO_CENTER_EM - heightPx / 2
 
     const align: "left" | "center" | "right" =
       line.textAnchor === "middle"
