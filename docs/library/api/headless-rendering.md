@@ -159,6 +159,10 @@ When the export is a forensic record of a graded submission, know these limits:
 
 ## SVG → PNG / PDF
 
+> Don't want to wire this up yourself? The standalone server already does — POST
+> a model to the **[Conversion API](./conversion-api)** and get SVG, PNG, or PDF
+> back over HTTP.
+
 The `compat` SVG is self-contained. To rasterise:
 
 - **[`@resvg/resvg-js`](https://github.com/yisibl/resvg-js)** (fast, no browser):

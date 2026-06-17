@@ -5,13 +5,13 @@ import * as path from "node:path"
 import { fileURLToPath } from "node:url"
 
 // Drive the COMPILED worker in its own thread (same jsdom-shims + conversion
-// pipeline the production PDF worker uses) so the jsdom globals + font
-// registration never leak into this shared, non-isolated test process. Needs a
-// prior server build; CI builds first.
+// pipeline the production server uses) so the jsdom globals + font registration
+// never leak into this shared, non-isolated test process. Needs a prior server
+// build; CI builds first.
 const dir = path.dirname(fileURLToPath(import.meta.url))
 const workerPath = path.resolve(
   dir,
-  "../../dist/src/workers/svg-conversion-worker-thread.js"
+  "../../dist/src/workers/conversion-worker-thread.js"
 )
 const fixturesDir = path.resolve(dir, "../../../webapp/tests/fixtures")
 
@@ -20,7 +20,13 @@ const loadFixture = (file: string) =>
 
 type ExportResult = {
   svg: string
-  clip: { x: number; y: number; width: number; height: number }
+  clip: { width: number; height: number }
+}
+
+// The svg viewBox is `clipX clipY clipW clipH`; width/height attrs equal clipW/H.
+function clipFromSvg(svg: string): ExportResult["clip"] {
+  const vb = svg.match(/viewBox="([-\d.]+) ([-\d.]+) ([-\d.]+) ([-\d.]+)"/)
+  return { width: vb ? Number(vb[3]) : 0, height: vb ? Number(vb[4]) : 0 }
 }
 
 function exportViaWorker(model: unknown): Promise<ExportResult> {
@@ -32,10 +38,10 @@ function exportViaWorker(model: unknown): Promise<ExportResult> {
     }, 30_000)
     worker.on(
       "message",
-      (m: { ok: boolean; error?: string } & ExportResult) => {
+      (m: { ok: boolean; error?: string; data?: string }) => {
         clearTimeout(timer)
         void worker.terminate()
-        if (m.ok) resolve(m)
+        if (m.ok && m.data) resolve({ svg: m.data, clip: clipFromSvg(m.data) })
         else reject(new Error(m.error))
       }
     )
@@ -43,7 +49,7 @@ function exportViaWorker(model: unknown): Promise<ExportResult> {
       clearTimeout(timer)
       reject(e)
     })
-    worker.postMessage({ id: 1, model })
+    worker.postMessage({ id: 1, model, format: "svg" })
   })
 }
 

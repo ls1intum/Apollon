@@ -26,6 +26,7 @@ const sidebars: SidebarsConfig = {
         "api/collaboration",
         "api/export",
         "api/headless-rendering",
+        "api/conversion-api",
         "api/model-contract",
       ],
     },

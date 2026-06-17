@@ -450,6 +450,17 @@ function getNodeBoundsFromDOM(
     const styles = extractStyles(styleStr)
     const svgElement = nodeEl.querySelector("svg")
     const renderedSvgRect = svgElement?.getBoundingClientRect()
+    // Headless renderers (jsdom) return a 0×0 rect; `0 ?? fallback` would keep
+    // the 0 and collapse the node to its origin, cropping the export. Treat a
+    // non-positive rect as unmeasured so the attribute/style fallbacks apply.
+    const measuredWidth =
+      renderedSvgRect && renderedSvgRect.width > 0
+        ? renderedSvgRect.width
+        : undefined
+    const measuredHeight =
+      renderedSvgRect && renderedSvgRect.height > 0
+        ? renderedSvgRect.height
+        : undefined
     if (svgElement) {
       const viewBox = svgElement.getAttribute("viewBox")
       if (viewBox) {
@@ -457,10 +468,10 @@ function getNodeBoundsFromDOM(
         if (viewBoxParts.length >= 4) {
           const [vbX, vbY, vbW, vbH] = viewBoxParts
           const svgWidth =
-            renderedSvgRect?.width ??
+            measuredWidth ??
             parseFloat(svgElement.getAttribute("width") ?? `${vbW}`)
           const svgHeight =
-            renderedSvgRect?.height ??
+            measuredHeight ??
             parseFloat(svgElement.getAttribute("height") ?? `${vbH}`)
 
           if (
@@ -528,8 +539,8 @@ function getNodeBoundsFromDOM(
       }
     }
 
-    const width = renderedSvgRect?.width ?? parseFloat(styles.width ?? "")
-    const height = renderedSvgRect?.height ?? parseFloat(styles.height ?? "")
+    const width = measuredWidth ?? parseFloat(styles.width ?? "")
+    const height = measuredHeight ?? parseFloat(styles.height ?? "")
 
     if (!Number.isFinite(width) || !Number.isFinite(height)) {
       return
