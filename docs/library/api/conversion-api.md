@@ -18,8 +18,10 @@ thread; PNG and PDF are rasterised from that SVG. The fidelity notes in
 
 ## Endpoints
 
-All routes are mounted under `/api`. The examples assume the server runs on its
-default `http://localhost:8000`.
+All routes are mounted under `/api`. The examples use a local server at its
+default `http://localhost:8000`; TUM also runs a public instance at
+**`https://apollon.aet.cit.tum.de`** — swap that base URL in to try the API
+without self-hosting.
 
 | Method | Path                    | Response `Content-Type` | Body                 |
 | ------ | ----------------------- | ----------------------- | -------------------- |
