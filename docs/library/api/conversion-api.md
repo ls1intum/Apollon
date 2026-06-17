@@ -30,8 +30,9 @@ default `http://localhost:8000`.
 
 ## Request
 
-Send `Content-Type: application/json` with the [Apollon model](./model-contract)
-either as the whole body or wrapped under a `model` key — both are accepted:
+`Content-Type: application/json` is required. Send the
+[Apollon model](./model-contract) either as the whole body or wrapped under a
+`model` key — both are accepted:
 
 ```jsonc
 { "id": "…", "version": "4.0.0", "type": "ClassDiagram", "nodes": [], "edges": [] }
@@ -39,7 +40,10 @@ either as the whole body or wrapped under a `model` key — both are accepted:
 { "model": { "id": "…", "version": "4.0.0", "…": "…" } }
 ```
 
-Models in the v2 / v3 format are normalised to v4 automatically.
+Models in the v2 / v3 format are normalised to v4 automatically, and an empty
+diagram (`nodes: []`) renders to an empty image rather than an error. The
+endpoints require **no authentication**; cross-origin access is governed by the
+server's `CORS_ORIGIN` setting.
 
 ### SVG
 
@@ -73,15 +77,19 @@ curl -X POST http://localhost:8000/api/converter/pdf \
 
 ## Status codes
 
-| Status | When                                                            |
-| ------ | --------------------------------------------------------------- |
-| `200`  | success — the body is the rendered file                         |
-| `400`  | no model in the request body                                    |
-| `422`  | the model is structurally invalid (`error: "INVALID_PARAMS"`)   |
-| `413`  | request body exceeds the size limit (`error: "BODY_TOO_LARGE"`) |
-| `503`  | the conversion queue is full — retry with backoff               |
+| Status | When                                                                      |
+| ------ | ------------------------------------------------------------------------- |
+| `200`  | success — the body is the rendered file                                   |
+| `400`  | no model in the request body                                              |
+| `413`  | request body exceeds the size limit (`BODY_TOO_LARGE`)                    |
+| `422`  | a node is missing valid geometry, e.g. width/height (`INVALID_PARAMS`)    |
+| `500`  | the model could not be rendered, e.g. an unrecognised format (`INTERNAL`) |
+| `503`  | the conversion queue is full — retry with backoff                         |
 
-Error responses are JSON: `{ "error": "<CODE>", "message": "…", "requestId": "…" }`.
+Most errors return the server's standard JSON body —
+`{ "error": "<CODE>", "message": "…", "requestId": "…" }`. The two exceptions are
+`400` and `503`, which the converter sends directly as a short
+`{ "error": "<message>" }`.
 
 ## Limits & tuning
 

@@ -612,3 +612,92 @@ describe("getNodeOverflowBoundsFromDOM", () => {
     expect(getNodeOverflowBoundsFromDOM(container)).toBeUndefined()
   })
 })
+
+// ---------------------------------------------------------------------------
+// resolveRelativeFontSizes — stereotype labels render huge in non-browser
+// renderers when % / em font-size survives compat serialization
+// ---------------------------------------------------------------------------
+const NS = "http://www.w3.org/2000/svg"
+const el = (name: string, attrs: Record<string, string> = {}) => {
+  const node = document.createElementNS(NS, name)
+  for (const [key, value] of Object.entries(attrs))
+    node.setAttribute(key, value)
+  return node
+}
+
+describe("resolveRelativeFontSizes", () => {
+  it("resolves % font-size against the inherited px size", () => {
+    const svg = el("svg")
+    const text = el("text", { "font-size": "16px" })
+    const tspan = el("tspan", { "font-size": "85%" })
+    text.appendChild(tspan)
+    svg.appendChild(text)
+
+    __testing.resolveRelativeFontSizes(svg)
+    expect(tspan.getAttribute("font-size")).toBe("13.6px")
+  })
+
+  it("resolves em font-size against the inherited px size", () => {
+    const svg = el("svg")
+    const text = el("text", { "font-size": "20px" })
+    const tspan = el("tspan", { "font-size": "0.8em" })
+    text.appendChild(tspan)
+    svg.appendChild(text)
+
+    __testing.resolveRelativeFontSizes(svg)
+    expect(tspan.getAttribute("font-size")).toBe("16px")
+  })
+
+  it("seeds the default base size when no ancestor sets font-size", () => {
+    const svg = el("svg")
+    const text = el("text")
+    const tspan = el("tspan", { "font-size": "50%" })
+    text.appendChild(tspan)
+    svg.appendChild(text)
+
+    __testing.resolveRelativeFontSizes(svg)
+    expect(tspan.getAttribute("font-size")).toBe("8px") // 50% of the 16px default
+  })
+
+  it("leaves absolute px font-size unchanged", () => {
+    const svg = el("svg")
+    const text = el("text", { "font-size": "13px" })
+    svg.appendChild(text)
+
+    __testing.resolveRelativeFontSizes(svg)
+    expect(text.getAttribute("font-size")).toBe("13px")
+  })
+})
+
+// ---------------------------------------------------------------------------
+// resolveTspanDy — Skia ignores cumulative tspan dy, overlapping stereotype
+// and name onto one line; absolute y renders correctly everywhere
+// ---------------------------------------------------------------------------
+describe("resolveTspanDy", () => {
+  it("converts cumulative tspan dy into absolute y", () => {
+    const svg = el("svg")
+    const text = el("text", { y: "25" })
+    const stereotype = el("tspan", { dy: "-8" })
+    const name = el("tspan", { dy: "18" })
+    text.append(stereotype, name)
+    svg.appendChild(text)
+
+    __testing.resolveTspanDy(svg)
+    expect(stereotype.getAttribute("y")).toBe("17")
+    expect(stereotype.hasAttribute("dy")).toBe(false)
+    expect(name.getAttribute("y")).toBe("35")
+    expect(name.hasAttribute("dy")).toBe(false)
+  })
+
+  it("leaves a text without any tspan dy untouched", () => {
+    const svg = el("svg")
+    const text = el("text", { y: "10" })
+    const tspan = el("tspan")
+    text.appendChild(tspan)
+    svg.appendChild(text)
+
+    __testing.resolveTspanDy(svg)
+    expect(tspan.hasAttribute("y")).toBe(false)
+    expect(tspan.hasAttribute("dy")).toBe(false)
+  })
+})

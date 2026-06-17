@@ -49,7 +49,12 @@ async function render(
       Math.ceil(clip.width * factor),
       Math.ceil(clip.height * factor)
     )
-    canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height)
+    const ctx = canvas.getContext("2d")
+    // The SVG is transparent; flatten onto white so the PNG isn't see-through
+    // (transparency reads as black in most viewers).
+    ctx.fillStyle = "#ffffff"
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height)
     return { mime: "image/png", data: canvas.toBuffer("image/png") }
   }
 

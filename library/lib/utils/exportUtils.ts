@@ -216,6 +216,8 @@ export const getSVG = (
     replaceCSSVariables(mainSVG)
     convertStyleToAttributes(mainSVG)
     ensureTextFontDefaults(mainSVG)
+    resolveRelativeFontSizes(mainSVG)
+    resolveTspanDy(mainSVG)
     if (fontFaceCss) embedFontFaceCss(mainSVG, fontFaceCss)
     removeMarkerElements(mainSVG)
     replaceTextDecorationWithManualUnderline(mainSVG)
@@ -1379,6 +1381,62 @@ function ensureTextFontDefaults(svg: Element): void {
 }
 
 /**
+ * Resolve relative `font-size` units (`%`, `em`) to absolute px. Browsers
+ * compute these against the inherited font-size, but non-browser renderers
+ * (resvg, Skia, pdfmake, Inkscape) mishandle them and render the text wildly
+ * mis-sized — e.g. class stereotypes (`font-size="85%"`) ballooning over the
+ * title. A `%`/`em` value is relative to the nearest ancestor's resolved px
+ * size, so walk depth-first carrying it (seeded with the default base size).
+ * Runs after ensureTextFontDefaults so every <text> already has a px size.
+ */
+function resolveRelativeFontSizes(
+  el: Element,
+  inheritedPx = DEFAULT_FONT_SIZE
+) {
+  let resolvedPx = inheritedPx
+  const raw = el.getAttribute("font-size")?.trim()
+  const match = raw?.match(/^(\d*\.?\d+)(%|em|px)?$/)
+  if (match) {
+    const value = parseFloat(match[1])
+    if (match[2] === "%") resolvedPx = (inheritedPx * value) / 100
+    else if (match[2] === "em") resolvedPx = inheritedPx * value
+    else resolvedPx = value
+    el.setAttribute("font-size", `${resolvedPx}px`)
+  }
+  for (const child of Array.from(el.children)) {
+    resolveRelativeFontSizes(child, resolvedPx)
+  }
+}
+
+/**
+ * Convert cumulative `<tspan dy>` offsets into absolute `y` positions. Browsers
+ * accumulate each tspan's `dy` from the running text position, but Skia
+ * (@napi-rs/canvas) collapses sibling tspans onto one line, so e.g. a class
+ * stereotype and its name overlap. Resolving to absolute `y` renders identically
+ * in compliant renderers and fixes the ones that ignore `dy`. Assumes the flat
+ * `<text><tspan/></text>` shape Apollon emits (no nested tspans).
+ */
+function resolveTspanDy(svg: Element): void {
+  svg.querySelectorAll("text").forEach((textEl) => {
+    let currentY = parseFloat(textEl.getAttribute("y") ?? "0") || 0
+    let seenDy = false
+    textEl.querySelectorAll("tspan").forEach((tspan) => {
+      const y = tspan.getAttribute("y")
+      if (y !== null) currentY = parseFloat(y) || currentY
+      const dy = tspan.getAttribute("dy")
+      if (dy !== null) {
+        currentY += parseFloat(dy) || 0
+        seenDy = true
+      }
+      if (seenDy) {
+        tspan.setAttribute("y", `${currentY}`)
+        tspan.removeAttribute("dy")
+      }
+    })
+  })
+}
+
+/**
  * Replace `text-decoration="underline"` on `<text>` elements with manual
  * `<line>` siblings so the underline is visible in non-browser renderers.
  *
@@ -1476,6 +1534,8 @@ export const __testing = {
   replaceCSSVariables,
   convertStyleToAttributes,
   ensureTextFontDefaults,
+  resolveRelativeFontSizes,
+  resolveTspanDy,
   removeMarkerElements,
   replaceTextDecorationWithManualUnderline,
   mergeBounds,
