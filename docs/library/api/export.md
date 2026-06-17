@@ -47,9 +47,9 @@ payloads to the current v4 shape; feeding a stale shape straight in is a common
 cause of garbled output.
 :::
 
-> The standalone **server's** PDF / thumbnail worker is the reference jsdom
-> setup: it registers Inter on a Skia canvas, shims `getBBox`, and pre-seeds
-> handle geometry. See **[Headless rendering](./headless-rendering)**.
+> The standalone **server's** PDF worker is the reference jsdom setup: it
+> registers Inter on a Skia canvas, shims `getBBox`, and pre-seeds handle
+> geometry. See **[Headless rendering](./headless-rendering)**.
 
 ## PNG / PDF
 

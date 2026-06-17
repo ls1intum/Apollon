@@ -4,6 +4,7 @@ import {
   type UMLModel,
   type SVG,
 } from "@tumaet/apollon"
+import { findUnsupportedLabels } from "./glyph-coverage.js"
 
 export class ConversionService {
   private readonly EDGE_ENDPOINT_INSET_PX = -3
@@ -109,6 +110,20 @@ export class ConversionService {
     const normalizedModel = this.normalizeModelForServerRender(
       importDiagram(model)
     )
+
+    // Integrity signal for grading: text outside the bundled Latin Inter renders
+    // in a fallback face and may not match the student's editor. Surface it so a
+    // grader can review such a submission rather than trust a divergent image.
+    const unsupported = findUnsupportedLabels(normalizedModel)
+    if (unsupported.length > 0) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[apollon-export] ${unsupported.length} label(s) contain glyphs outside ` +
+          `the bundled font and may not match the editor: ` +
+          unsupported.slice(0, 5).join(" | ")
+      )
+    }
+
     const svgExport = (await ApollonEditor.exportModelAsSvg(normalizedModel, {
       svgMode: "compat",
     })) as SVG

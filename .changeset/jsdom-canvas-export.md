@@ -16,5 +16,7 @@ and fails loud at load if the canvas alias is ever broken (rather than silently
 falling back to `text.length × 8` and misgrading exports).
 
 Adds a worker-thread cross-type regression test that exports every diagram type,
-checks geometry against the browser-authored widths, and asserts edge labels
-stay inside the export clip (no cropped messages).
+checks geometry against the browser-authored widths, and verifies an overhanging
+edge label widens the export clip (so messages are not cropped). Also warns when
+a submission contains glyphs outside the bundled font, since those render in a
+fallback face and may not match the editor — a grading-integrity signal.

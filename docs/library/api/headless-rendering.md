@@ -120,11 +120,12 @@ need pixel-exact parity with the editor, use the browser path below.
 
 When the export is a forensic record of a graded submission, know these limits:
 
-- **Edge labels** (messages, multiplicities) are kept in the clip via a
-  `measureText`-based bounds fallback — jsdom's `getBoundingClientRect` is zero
-  for SVG text, and without the fallback an overhanging label is silently
-  cropped. Ensure that fallback (the `setup.ts` font registration above) is in
-  place, or labels can be lost.
+- **Edge labels** (messages, multiplicities) are kept in the clip by a
+  `measureText`-based bounds fallback inside `exportModelAsSvg` — jsdom's
+  `getBoundingClientRect` is zero for SVG text, and without it an overhanging
+  label is silently cropped. The fallback needs a registered canvas (the
+  `setup.ts` step above provides one); it ships in `@tumaet/apollon` ≥ the
+  release with this fix, so use a current library version.
 - **Text wrapping** matches the editor only if `navigator.userAgent` reports
   Chromium — `@chenglou/pretext` picks CJK break behaviour from it. Set a
   Chromium UA on the jsdom window.

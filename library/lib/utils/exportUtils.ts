@@ -778,6 +778,11 @@ function getNodeOverflowBoundsFromDOM(
  * from its absolute `x`/`y`, `text-anchor`, and a canvas-measured width. Heights
  * and an unknown font-size round up so a slightly-off measure still encloses the
  * glyphs — over-including is safe for a clip; cropping a graded label is not.
+ *
+ * Assumes axis-aligned, single-line edge text (true for all current edge
+ * labels). A `transform="rotate(...)"` label would get an axis-aligned box of
+ * the wrong aspect; harmless today (node bounds dominate) but revisit if a
+ * rotated label can sit between tightly-spaced nodes.
  */
 function mergeEdgeTextBoundsFromAttributes(
   textEl: SVGTextElement,

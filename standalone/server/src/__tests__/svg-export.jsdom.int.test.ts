@@ -4,9 +4,10 @@ import * as fs from "node:fs"
 import * as path from "node:path"
 import { fileURLToPath } from "node:url"
 
-// Drive the COMPILED worker (the production artifact) in its own thread so the
-// jsdom globals + font registration it installs never leak into this shared,
-// non-isolated test process. Needs a prior server build; CI builds first.
+// Drive the COMPILED worker in its own thread (same jsdom-shims + conversion
+// pipeline the production PDF worker uses) so the jsdom globals + font
+// registration never leak into this shared, non-isolated test process. Needs a
+// prior server build; CI builds first.
 const dir = path.dirname(fileURLToPath(import.meta.url))
 const workerPath = path.resolve(
   dir,
@@ -122,28 +123,30 @@ describe("jsdom SVG export (no browser)", () => {
     }
   )
 
-  // Integrity: edge labels are student-authored content. jsdom returns a zero
-  // getBoundingClientRect for SVG text, so without the measureText-based bounds
-  // fallback an overhanging label is silently cropped from the graded image.
-  it("keeps every edge label inside the export clip (no cropped messages)", async () => {
-    const { svg, clip } = await exportViaWorker(
-      loadFixture("communication-diagram.json")
-    )
+  // Integrity regression: edge labels are student-authored content, and jsdom
+  // returns a zero getBoundingClientRect for SVG text. Without the
+  // measureText-based bounds fallback, a label overhanging the node/edge
+  // geometry is silently cropped. A long message can only be enclosed if the
+  // fallback measures it and widens the clip — so the clip MUST grow when the
+  // message grows. (Anchor-in-clip checks pass even with the fallback disabled,
+  // because the stock fixture's labels already fit; this does not.)
+  it("widens the export clip to enclose an overhanging edge label", async () => {
+    const base = loadFixture("communication-diagram.json")
+    const baseExport = await exportViaWorker(base)
+    expect(baseExport.svg).toContain("1: request()")
 
-    const labels = [
-      ...svg.matchAll(/<text x="([-\d.]+)" y="([-\d.]+)"[^>]*>([^<]+)</g),
-    ]
-      .map((m) => ({ x: Number(m[1]), y: Number(m[2]), text: m[3] }))
-      .filter((t) => /\d:\s/.test(t.text)) // message labels like "1: request()"
-
-    expect(labels.length).toBeGreaterThan(0)
-    expect(labels.map((l) => l.text)).toContain("1: request()")
-
-    for (const label of labels) {
-      expect(label.x).toBeGreaterThanOrEqual(clip.x)
-      expect(label.x).toBeLessThanOrEqual(clip.x + clip.width)
-      expect(label.y).toBeGreaterThanOrEqual(clip.y)
-      expect(label.y).toBeLessThanOrEqual(clip.y + clip.height)
+    const long = structuredClone(base) as typeof base & {
+      edges: { data?: { messages?: { text: string }[] } }[]
     }
+    const marker = "OVERHANGING_" + "x".repeat(60)
+    for (const edge of long.edges) {
+      for (const message of edge.data?.messages ?? []) message.text = marker
+    }
+    const longExport = await exportViaWorker(long)
+
+    expect(longExport.svg).toContain(marker)
+    // The 60-char label sticks far past the node cluster; only the fallback can
+    // pull the clip out to hold it. Disabling the fallback leaves this < 100.
+    expect(longExport.clip.width).toBeGreaterThan(baseExport.clip.width + 100)
   })
 })
