@@ -26,46 +26,57 @@ const PNG_MIN_SCALE = 1
 const PNG_MAX_SCALE = 4
 const PNG_DEFAULT_SCALE = 2
 
-// Skia (the SVG rasterizer behind @napi-rs/canvas) ignores `dominant-baseline`
-// and draws text at the alphabetic baseline, so `middle`-aligned labels sit too
-// high. The browser/pdf place `middle` ~0.25em below the alphabetic baseline;
-// bake that shift in for the PNG so it matches the SVG/PDF.
-const MIDDLE_BASELINE_EM = 0.25
+// Apollon positions node text with `dominant-baseline` (`middle` to centre,
+// `hanging` for labels below a shape), which the browser honours but most
+// non-browser renderers — Skia (@napi-rs/canvas), macOS Preview, Inkscape,
+// PowerPoint, pdfmake — ignore, drawing every label at the alphabetic baseline
+// (too high). We resolve it to an explicit `y` so every output places text like
+// the editor. Offsets are the browser's baseline shift, measured against Inter.
+const BASELINE_SHIFT_EM: Record<string, number> = {
+  middle: 0.25,
+  central: 0.35,
+  hanging: 0.75,
+}
 
 // Skia also lays down ~20% less ink than the browser for the same Inter glyphs
-// (no stem darkening), so PNG text looks lighter than the SVG/PDF. A hairline
-// same-colour stroke calibrated against the browser (≈0.0156em) restores the
-// expected weight at both 400 and 700.
+// (no stem darkening), so rasterized PNG text looks lighter than the vector
+// SVG/PDF. A hairline same-colour stroke calibrated against the browser
+// (≈0.0156em) restores the expected weight at both 400 and 700.
 const STEM_DARKEN_EM = 0.0156
 
 const service = new ConversionService()
 pdfMake.addVirtualFileSystem(pdfFonts)
 
+type PrepareOptions = { width?: number; height?: number; stemDarken?: boolean }
+
 /**
- * Produce a PNG-only copy of the export SVG: sized to the target resolution and
- * with `dominant-baseline="middle"` resolved to an explicit baseline `y`, since
- * the Skia rasterizer honours neither the SVG's intrinsic scaling nor that
- * attribute. The original SVG (served as-is, and fed to pdfmake) is untouched.
+ * Rewrite the export SVG for portable rendering: resolve `dominant-baseline`
+ * to an explicit baseline `y` (always), optionally resize the root to a target
+ * raster resolution, and optionally stem-darken text (PNG only). Applied to
+ * every served format so they all centre text like the editor.
  */
-function prepareSvgForPng(svg: string, width: number, height: number): string {
+function prepareSvg(svg: string, options: PrepareOptions = {}): string {
+  const { width, height, stemDarken } = options
   const doc = new DOMParser().parseFromString(svg, "image/svg+xml")
-  const root = doc.documentElement
-  root.setAttribute("width", String(width))
-  root.setAttribute("height", String(height))
+  if (width && height) {
+    const root = doc.documentElement
+    root.setAttribute("width", String(width))
+    root.setAttribute("height", String(height))
+  }
 
   doc.querySelectorAll("text").forEach((text) => {
     const textFontSize =
       parseFloat(text.getAttribute("font-size") ?? "16") || 16
     const tspans = Array.from(text.querySelectorAll("tspan"))
 
-    // Resolve dominant-baseline="middle" to an explicit baseline `y`.
     const baseline = text.getAttribute("dominant-baseline")
-    if (baseline === "middle" || baseline === "central") {
+    const shiftEm = baseline ? BASELINE_SHIFT_EM[baseline] : undefined
+    if (shiftEm !== undefined) {
       const shift = (el: Element, fallbackY: number) => {
         const fontSize =
           parseFloat(el.getAttribute("font-size") ?? "") || textFontSize
         const y = parseFloat(el.getAttribute("y") ?? "") || fallbackY
-        el.setAttribute("y", String(y + MIDDLE_BASELINE_EM * fontSize))
+        el.setAttribute("y", String(y + shiftEm * fontSize))
       }
       const textY = parseFloat(text.getAttribute("y") ?? "0") || 0
       if (tspans.length) tspans.forEach((tspan) => shift(tspan, textY))
@@ -73,9 +84,8 @@ function prepareSvgForPng(svg: string, width: number, height: number): string {
       text.removeAttribute("dominant-baseline")
     }
 
-    // Stem-darken: a hairline stroke in the fill colour restores browser weight.
     const fill = text.getAttribute("fill") || "#000000"
-    if (fill !== "none") {
+    if (stemDarken && fill !== "none") {
       text.setAttribute("stroke", fill)
       text.setAttribute("paint-order", "stroke")
       text.setAttribute("stroke-linejoin", "round")
@@ -99,7 +109,7 @@ async function render(
   const { svg, clip } = await service.convertToSvg(model)
 
   if (format === "svg") {
-    return { mime: "image/svg+xml", data: svg }
+    return { mime: "image/svg+xml", data: prepareSvg(svg) }
   }
 
   if (format === "png") {
@@ -110,7 +120,7 @@ async function render(
     const height = Math.ceil(clip.height * factor)
     // Rasterize at the target resolution; upscaling a natural-size bitmap blurs text.
     const image = await loadImage(
-      Buffer.from(prepareSvgForPng(svg, width, height))
+      Buffer.from(prepareSvg(svg, { width, height, stemDarken: true }))
     )
     const canvas = new Canvas(width, height)
     const ctx = canvas.getContext("2d")
@@ -123,7 +133,7 @@ async function render(
   }
 
   const doc = pdfMake.createPdf({
-    content: [{ svg }],
+    content: [{ svg: prepareSvg(svg) }],
     pageSize: { width: clip.width, height: clip.height },
     pageMargins: 0,
   })
