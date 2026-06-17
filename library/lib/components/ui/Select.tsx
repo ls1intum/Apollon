@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useId, useRef, useState } from "react"
-import { Popover } from "@base-ui-components/react/popover"
+import { Popover } from "@base-ui/react/popover"
 import { ChevronDown } from "lucide-react"
 
 export interface SelectOption {

@@ -76,9 +76,14 @@ export default defineConfig({
         find: "@tumaet/apollon",
         replacement: resolve(__dirname, "../../library/lib"),
       },
+      // Consume the shared UI package from source (same pattern as the library).
+      {
+        find: "@tumaet/ui",
+        replacement: resolve(__dirname, "../../packages/ui/src"),
+      },
     ],
     // Avoid duplicate React copies across workspace
-    dedupe: ["react", "react-dom", "@emotion/react", "@emotion/styled"],
+    dedupe: ["react", "react-dom"],
   },
   server: {
     port: webappPort,

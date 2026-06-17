@@ -18,3 +18,6 @@ export { collabColorFromName, randomCollabName } from "./utils/collaboration"
 // supported surface. Public helpers are cherry-picked by name above.
 export { log, setLogLevel, setLogger } from "./logger"
 export type { LogLevel } from "./logger"
+// Public theming API. The helper is bundled from @tumaet/ui into dist, so
+// external consumers don't take a dependency on the private workspace package.
+export { createApollonTheme, type ApollonTheme } from "@tumaet/ui/theme"

@@ -16,7 +16,23 @@ import { resolve } from "path"
 const isPeerBuild = process.env.LIB_PEERS === "true"
 
 export default defineConfig({
-  plugins: [react(), dts({ include: ["lib"], rollupTypes: !isPeerBuild })],
+  plugins: [
+    react(),
+    dts({
+      include: ["lib"],
+      rollupTypes: !isPeerBuild,
+      // The JS build aliases @tumaet/ui to its TS source so the runtime inlines
+      // into dist. For TYPES, resolve the package's published declarations (via
+      // package.json `exports#types`) instead, so the rolled-up .d.ts (default
+      // build) doesn't inline raw .ts source. The peer (per-file) build can't
+      // inline an external pkg in declarations, so a post-build step (see
+      // package.json `build`) localises the @tumaet/ui/theme re-export.
+      aliasesExclude: [/^@tumaet\/ui/],
+      // api-extractor (rollupTypes) otherwise leaves @tumaet/ui external;
+      // bundle it so the rolled .d.ts is self-contained.
+      bundledPackages: ["@tumaet/ui"],
+    }),
+  ],
   build: {
     copyPublicDir: false,
     outDir: isPeerBuild ? "dist/react" : "dist",
@@ -52,7 +68,13 @@ export default defineConfig({
     minify: true,
   },
   resolve: {
-    alias: { "@": resolve(__dirname, "lib") },
+    alias: {
+      "@": resolve(__dirname, "lib"),
+      // Consume the shared UI package from source so the published dist stays
+      // self-contained (@tumaet/ui is inlined — never externalized — in both
+      // the default and the LIB_PEERS build passes above).
+      "@tumaet/ui": resolve(__dirname, "../packages/ui/src"),
+    },
   },
   esbuild: { drop: ["debugger"] },
 })

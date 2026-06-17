@@ -1,5 +1,5 @@
 import React from "react"
-import { Tooltip as BaseTooltip } from "@base-ui-components/react/tooltip"
+import { Tooltip as BaseTooltip } from "@base-ui/react/tooltip"
 
 export interface TooltipProps {
   /** Tooltip text (mirrors MUI's `title`). */

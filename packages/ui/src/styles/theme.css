@@ -1,0 +1,68 @@
+@import "tailwindcss";
+@import "./tokens.css";
+
+/* Tailwind's automatic content detection scans from the consuming app's root and
+   skips this workspace package, so utilities used *only* inside @tumaet/ui
+   components (e.g. the dialog's `top-1/2`/`-translate-y-1/2`, `bg-card`) would
+   never be generated. Register this package's component source explicitly.
+   `@source` is resolved relative to THIS file, so every consumer that imports
+   this stylesheet picks it up; the library is Tailwind-free and never imports
+   it, so its bundle is unaffected. */
+@source "../components";
+
+/* Dark mode = one mechanism: the root data-theme attribute. The token blocks in
+   tokens.css do ~95% of dark styling; `dark:` utilities are a rare escape hatch
+   for the few spots that need an explicit per-theme override. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* Map semantic Tailwind utilities onto the design tokens. `inline` so the
+   utilities emit `var(--token)` and re-resolve when data-theme flips, instead of
+   freezing the light value at build time. This lets components use
+   `bg-background` / `text-muted-foreground` instead of `bg-[var(--home-*)]`. */
+@theme inline {
+  --color-background: var(--apollon-background);
+  --color-foreground: var(--apollon-primary-contrast);
+
+  --color-primary: var(--home-accent-base);
+  --color-primary-foreground: var(--home-accent-contrast);
+
+  --color-secondary: var(--home-surface-raised);
+  --color-secondary-foreground: var(--home-text-secondary);
+
+  /* Surface vocabulary (single source of truth for author intent):
+       cards            -> bg-card
+       menus / popovers -> bg-popover
+       hover surfaces   -> bg-accent-hover
+     bg-accent is reserved as the base of the accent/accent-hover hover pair. */
+  --color-accent: var(--home-surface-raised);
+  --color-accent-foreground: var(--home-text-primary);
+  --color-accent-hover: var(--home-surface-raised-hover);
+  --color-accent-strong: var(--home-accent-strong);
+  --color-accent-soft: var(--home-accent-soft);
+
+  --color-muted: var(--home-surface-sunken);
+  --color-muted-foreground: var(--home-text-muted);
+
+  --color-border: var(--home-border-default);
+  --color-border-subtle: var(--home-border-subtle);
+  --color-input: var(--home-border-default);
+  --color-ring: var(--home-accent-ring);
+
+  --color-surface: var(--home-surface-base);
+  --color-surface-raised: var(--home-surface-raised);
+  --color-surface-alt: var(--home-surface-row-alt);
+
+  /* Popovers / menus / cards share the raised surface + default border. */
+  --color-popover: var(--home-surface-raised);
+  --color-popover-foreground: var(--home-text-primary);
+  --color-card: var(--home-surface-raised);
+  --color-card-foreground: var(--home-text-primary);
+
+  --color-destructive: var(--apollon-alert-danger-color);
+  --color-destructive-foreground: var(--primitive-white);
+
+  --radius-sm: var(--home-radius-sm);
+  --radius-md: var(--home-radius-md);
+  --radius-lg: var(--home-radius-lg);
+  --radius-xl: var(--home-radius-xl);
+}

@@ -1,0 +1,381 @@
+/* ──────────────────────────────────────────────────────────────────────────
+   tokens.css — the SINGLE source of truth for Apollon's design tokens.
+
+   Three layers (light values in :root, dark deltas in :root[data-theme="dark"]):
+
+     1. Primitives — the only place literal hex/rgb live (brand palette).
+     2. --apollon-* — the public editor theming API. References primitives ONLY,
+        never --home-*, so external embedders of @tumaet/apollon work standalone.
+     3. --home-* — app-level semantics for the webapp. References --apollon-*
+        and primitives.
+
+   Static CSS = correct first paint, no runtime <style> injection.
+   ────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  color-scheme: light dark;
+
+  /* ── Layer 1: primitives (light) ───────────────────────────────────────── */
+
+  /* Brand / neutral palette */
+  --primitive-white: #fff;
+  --primitive-black: #000000;
+  --primitive-blue-500: #3e8acc;
+  --primitive-slate-500: #6c757d;
+
+  /* Editor neutrals */
+  --primitive-gray-50: #f8f9fa;
+  --primitive-gray-100: #e9ecef;
+  --primitive-gray-200: #dee2e6;
+  --primitive-gray-700: #495057;
+
+  /* Editor status */
+  --primitive-warning-yellow: #ffc107;
+  --primitive-warning-bg: #fff3cd;
+  --primitive-warning-border: #ffeeba;
+  --primitive-danger-color: #721c24;
+  --primitive-danger-bg: #f8d7da;
+  --primitive-danger-border: #f5c6cb;
+  --primitive-guide-vertical: #d63031;
+  --primitive-guide-horizontal: #0984e3;
+  --primitive-grid: rgba(36, 39, 36, 0.1);
+
+  /* Home surfaces (light) — cool slate */
+  --primitive-surface-sunken: #eef1f5;
+  --primitive-surface-raised: #f6f8fa;
+  --primitive-surface-raised-hover: #eef1f5;
+  --primitive-surface-raised-active: #e3e8ef;
+  --primitive-surface-row-alt: #f8fafc;
+
+  /* Home text (light). text-muted is one step lighter than secondary but still
+     clears WCAG AA (4.5:1) on every light surface incl. sunken (#616c7a = 5.0:1
+     on cards, 4.71:1 on sunken); a lighter muted drops below AA on raised/sunken. */
+  --primitive-text-primary: #1e2530;
+  --primitive-text-secondary: #54606f;
+  --primitive-text-muted: #616c7a;
+
+  /* Home borders (light) — cool slate */
+  --primitive-border-default: #cdd5df;
+  --primitive-border-strong: #aeb8c5;
+  --primitive-border-subtle: #e3e8ef;
+
+  /* Home accent (light) */
+  --primitive-accent-base: #0f3a66;
+  --primitive-accent-soft: #d3e7fb;
+  --primitive-accent-strong: #0f3a66;
+  --primitive-accent-ring: #0f3a66;
+  --primitive-accent-contrast: #fff;
+
+  /* On-accent (translucent white over accent banner / dark navbar) */
+  --primitive-on-accent-bg: rgba(255, 255, 255, 0.14);
+  --primitive-on-accent-bg-hover: rgba(255, 255, 255, 0.24);
+  --primitive-on-accent-border: rgba(255, 255, 255, 0.22);
+  --primitive-on-accent-text: #fff;
+
+  /* Badge / status (light) */
+  --primitive-badge-bg: #c2cfdd;
+  --primitive-badge-fold: #0f3a66;
+  --primitive-text-on-badge: #142334;
+  --primitive-favorite-star: #f2b200;
+
+  /* Diagram tags (light) */
+  --primitive-tag-type-bg: #d4dce7;
+  --primitive-tag-type-text: #2e4a65;
+  --primitive-tag-local-bg: #e6dfc8;
+  --primitive-tag-local-text: #5a4a28;
+  --primitive-tag-shared-bg: #c5e4e2;
+  --primitive-tag-shared-text: #1d514e;
+
+  /* Shadows / glow (light) */
+  --primitive-shadow-card-hover: rgba(0, 0, 0, 0.1);
+  --primitive-shadow-overlay: rgba(0, 0, 0, 0.18);
+  --primitive-glow-neutral: rgba(15, 58, 102, 0.78);
+
+  /* Warning banner (light) */
+  --primitive-banner-warning-bg: #fff7e6;
+  --primitive-banner-warning-border: #f6d28b;
+  --primitive-banner-warning-icon: #b7791f;
+  --primitive-banner-warning-text: #122038;
+  --primitive-banner-warning-muted: #4e5e79;
+  --primitive-banner-warning-btn-bg: #f7faff;
+  --primitive-banner-warning-btn-text: #b7791f;
+  --primitive-banner-warning-btn-border: #f6d28b;
+  --primitive-banner-warning-btn-hover: #f5e8c8;
+
+  /* Toast semantic accents (light) */
+  --primitive-toast-success: #197d4e;
+  --primitive-toast-error: #c33640;
+  --primitive-toast-warning: #b7791f;
+  --primitive-toast-info: #1f5e9e;
+
+  /* ── Layer 2: --apollon-* editor theming API (light) ───────────────────── */
+  --apollon-primary: var(--primitive-blue-500);
+  --apollon-primary-contrast: var(--primitive-text-primary);
+  --apollon-secondary: var(--primitive-slate-500);
+  --apollon-alert-warning-yellow: var(--primitive-warning-yellow);
+  --apollon-alert-warning-background: var(--primitive-warning-bg);
+  --apollon-alert-warning-border: var(--primitive-warning-border);
+  --apollon-background: var(--primitive-white);
+  --apollon-background-inverse: var(--primitive-black);
+  --apollon-background-variant: var(--primitive-gray-50);
+  --apollon-gray: var(--primitive-gray-100);
+  --apollon-grid: var(--primitive-grid);
+  --apollon-gray-variant: var(--primitive-gray-700);
+  --apollon-alert-danger-color: var(--primitive-danger-color);
+  --apollon-alert-danger-background: var(--primitive-danger-bg);
+  --apollon-alert-danger-border: var(--primitive-danger-border);
+  --apollon-switch-box-border-color: var(--primitive-gray-200);
+  --apollon-list-group-color: var(--primitive-white);
+  --apollon-btn-outline-secondary-color: var(--primitive-slate-500);
+  --apollon-modal-bottom-border: var(--primitive-gray-100);
+  --apollon-guide-vertical: var(--primitive-guide-vertical);
+  --apollon-guide-horizontal: var(--primitive-guide-horizontal);
+
+  /* ── Layer 3: --home-* app semantics (light) ───────────────────────────── */
+
+  /* Surfaces — neutral white page canvas up through softly raised cards */
+  --home-surface-base: var(--apollon-background);
+  --home-surface-sunken: var(--primitive-surface-sunken);
+  --home-surface-raised: var(--primitive-surface-raised);
+  --home-surface-raised-hover: var(--primitive-surface-raised-hover);
+  --home-surface-raised-active: var(--primitive-surface-raised-active);
+  --home-surface-row-alt: var(--primitive-surface-row-alt);
+
+  /* Text */
+  --home-text-primary: var(--apollon-primary-contrast);
+  --home-text-secondary: var(--primitive-text-secondary);
+  --home-text-strong: var(--apollon-primary-contrast);
+  --home-text-muted: var(--primitive-text-muted);
+
+  /* Borders / dividers */
+  --home-border-default: var(--primitive-border-default);
+  --home-border-strong: var(--primitive-border-strong);
+  --home-border-subtle: var(--primitive-border-subtle);
+
+  /* Accent */
+  --home-accent-base: var(--primitive-accent-base);
+  --home-accent-soft: var(--primitive-accent-soft);
+  --home-accent-strong: var(--primitive-accent-strong);
+  --home-accent-ring: var(--primitive-accent-ring);
+  --home-accent-contrast: var(--primitive-accent-contrast);
+
+  /* On-accent surfaces (translucent white over accent banner / dark navbar) */
+  --home-on-accent-bg: var(--primitive-on-accent-bg);
+  --home-on-accent-bg-hover: var(--primitive-on-accent-bg-hover);
+  --home-on-accent-border: var(--primitive-on-accent-border);
+  --home-on-accent-text: var(--primitive-on-accent-text);
+
+  /* Badge / status */
+  --home-badge-bg: var(--primitive-badge-bg);
+  --home-badge-fold: var(--primitive-badge-fold);
+  --home-text-on-badge: var(--primitive-text-on-badge);
+  --home-favorite-star: var(--primitive-favorite-star);
+
+  /* Diagram tags — type pill (primary, steel-slate) */
+  --home-tag-type-bg: var(--primitive-tag-type-bg);
+  --home-tag-type-text: var(--primitive-tag-type-text);
+
+  /* Diagram tags — "Local" pill (warm sand) */
+  --home-tag-local-bg: var(--primitive-tag-local-bg);
+  --home-tag-local-text: var(--primitive-tag-local-text);
+
+  /* Diagram tags — "Shared" pill (teal-seafoam) */
+  --home-tag-shared-bg: var(--primitive-tag-shared-bg);
+  --home-tag-shared-text: var(--primitive-tag-shared-text);
+
+  /* Shadows / glow */
+  --home-shadow-card-hover: var(--primitive-shadow-card-hover);
+  --home-shadow-overlay: var(--primitive-shadow-overlay);
+  --home-glow-neutral: var(--primitive-glow-neutral);
+
+  /* Semantic elevation scale (3 levels). Reference the softened shadow
+     primitives so they re-resolve per theme. Use these everywhere instead of
+     ad-hoc px shadows:
+       sm — static raised surfaces (paired with a hairline border)
+       md — menus / dropdowns / popovers
+       overlay-box — modals / banners / toasts */
+  --home-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --home-shadow-md: 0 4px 12px var(--home-shadow-overlay);
+  --home-shadow-overlay-box: 0 8px 20px var(--home-shadow-overlay);
+
+  /* Radius scale — theme-independent. Replaces ad-hoc 2/4/6/8/15px values.
+     sm: cards & pills (crisp)  md: buttons & inputs  lg: menus/popovers  xl: modal shell */
+  --home-radius-sm: 2px;
+  --home-radius-md: 6px;
+  --home-radius-lg: 8px;
+  --home-radius-xl: 15px;
+
+  /* Warning banner (e.g. version-preview) — soft-gold outlined style. */
+  --home-banner-warning-bg: var(--primitive-banner-warning-bg);
+  --home-banner-warning-border: var(--primitive-banner-warning-border);
+  --home-banner-warning-icon: var(--primitive-banner-warning-icon);
+  --home-banner-warning-text: var(--primitive-banner-warning-text);
+  --home-banner-warning-muted: var(--primitive-banner-warning-muted);
+  --home-banner-warning-btn-bg: var(--primitive-banner-warning-btn-bg);
+  --home-banner-warning-btn-text: var(--primitive-banner-warning-btn-text);
+  --home-banner-warning-btn-border: var(--primitive-banner-warning-btn-border);
+  --home-banner-warning-btn-hover: var(--primitive-banner-warning-btn-hover);
+
+  /* Toast (notification) semantic accents — warning matches the gold banner. */
+  --home-toast-success: var(--primitive-toast-success);
+  --home-toast-error: var(--primitive-toast-error);
+  --home-toast-warning: var(--primitive-toast-warning);
+  --home-toast-info: var(--primitive-toast-info);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* ── Layer 1: primitives (dark deltas) ─────────────────────────────────── */
+
+  /* Editor neutrals / status (dark) */
+  --primitive-slate-500: #888;
+  --primitive-grid: #303530;
+  --primitive-warning-yellow: #ffffff;
+  --primitive-warning-bg: #f39c12;
+  --primitive-warning-border: #000000;
+  --primitive-danger-color: #ef8b80;
+  --primitive-danger-bg: #370b07;
+  --primitive-danger-border: #e43725;
+  --primitive-guide-vertical: #ff7675;
+  --primitive-guide-horizontal: #74b9ff;
+
+  /* Editor base surfaces (dark) */
+  --primitive-bg-base: #13161c;
+  --primitive-bg-variant: #303530;
+  --primitive-gray-base: #242724;
+  --primitive-gray-variant: #f8f9fa;
+  --primitive-switch-border: #3d423d;
+  --primitive-list-group: #303130;
+  --primitive-btn-outline-secondary: #b8c0c5;
+  --primitive-modal-bottom-border: #979797;
+
+  /* Home surfaces (dark) — widened elevation steps */
+  --primitive-surface-sunken: #0f1216;
+  --primitive-surface-raised: #1a1f27;
+  --primitive-surface-raised-hover: #222934;
+  --primitive-surface-raised-active: #2b3340;
+  --primitive-surface-row-alt: #181c23;
+
+  /* Home text (dark) */
+  --primitive-text-secondary: #a3b0c2;
+  --primitive-text-muted: #8b97a8;
+
+  /* Home borders (dark) */
+  --primitive-border-default: #323b48;
+  --primitive-border-strong: #48535f;
+  --primitive-border-subtle: #242b34;
+
+  /* Home accent (dark). #236ebe keeps white/off-white button text at WCAG AA
+     (4.90:1 on --accent-contrast, 5.19:1 on pure white); a lighter accent
+     would drop below 4.5:1, so do not brighten it. */
+  --primitive-accent-base: #236ebe;
+  --primitive-accent-soft: #223548;
+  --primitive-accent-strong: #ffffff;
+  --primitive-accent-ring: #236ebe;
+  --primitive-accent-contrast: #f4f9ff;
+
+  /* Badge / status (dark) */
+  --primitive-badge-bg: #87868d;
+  --primitive-badge-fold: #c1c0c6;
+  --primitive-text-on-badge: #15161b;
+  --primitive-favorite-star: #ffd47a;
+
+  /* Diagram tags (dark) */
+  --primitive-tag-type-bg: #343740;
+  --primitive-tag-type-text: #9bb3cc;
+  --primitive-tag-local-bg: #3a3628;
+  --primitive-tag-local-text: #c9b47e;
+  --primitive-tag-shared-bg: #1e3434;
+  --primitive-tag-shared-text: #70bab6;
+
+  /* Glow (dark) */
+  --primitive-glow-neutral: rgba(35, 110, 190, 0.78);
+
+  /* Warning banner (dark) */
+  --primitive-banner-warning-bg: #3a2f17;
+  --primitive-banner-warning-border: #7a5c18;
+  --primitive-banner-warning-icon: #ffd47a;
+  --primitive-banner-warning-text: #ecf2fb;
+  --primitive-banner-warning-muted: #abb8ce;
+  --primitive-banner-warning-btn-bg: #1c222c;
+  --primitive-banner-warning-btn-text: #ffd47a;
+  --primitive-banner-warning-btn-border: #7a5c18;
+  --primitive-banner-warning-btn-hover: #29313e;
+
+  /* Toast semantic accents (dark) */
+  --primitive-toast-success: #4cc38a;
+  --primitive-toast-error: #f0747e;
+  --primitive-toast-warning: #ffd47a;
+  --primitive-toast-info: #5aa0e0;
+
+  /* ── Layer 2: --apollon-* (dark deltas) ────────────────────────────────── */
+  --apollon-primary-contrast: var(--primitive-white);
+  --apollon-secondary: var(--primitive-slate-500);
+  --apollon-alert-warning-yellow: var(--primitive-warning-yellow);
+  --apollon-alert-warning-background: var(--primitive-warning-bg);
+  --apollon-alert-warning-border: var(--primitive-warning-border);
+  --apollon-background: var(--primitive-bg-base);
+  --apollon-background-inverse: var(--primitive-white);
+  --apollon-background-variant: var(--primitive-bg-variant);
+  --apollon-gray: var(--primitive-gray-base);
+  --apollon-grid: var(--primitive-grid);
+  --apollon-gray-variant: var(--primitive-gray-variant);
+  --apollon-alert-danger-color: var(--primitive-danger-color);
+  --apollon-alert-danger-background: var(--primitive-danger-bg);
+  --apollon-alert-danger-border: var(--primitive-danger-border);
+  --apollon-switch-box-border-color: var(--primitive-switch-border);
+  --apollon-list-group-color: var(--primitive-list-group);
+  --apollon-btn-outline-secondary-color: var(--primitive-btn-outline-secondary);
+  --apollon-modal-bottom-border: var(--primitive-modal-bottom-border);
+  --apollon-guide-vertical: var(--primitive-guide-vertical);
+  --apollon-guide-horizontal: var(--primitive-guide-horizontal);
+
+  /* ── Layer 3: --home-* (dark deltas) ───────────────────────────────────── */
+  --home-surface-base: var(--apollon-background);
+  --home-surface-sunken: var(--primitive-surface-sunken);
+  --home-surface-raised: var(--primitive-surface-raised);
+  --home-surface-raised-hover: var(--primitive-surface-raised-hover);
+  --home-surface-raised-active: var(--primitive-surface-raised-active);
+  --home-surface-row-alt: var(--primitive-surface-row-alt);
+  --home-text-primary: var(--apollon-primary-contrast);
+  --home-text-secondary: var(--primitive-text-secondary);
+  --home-text-strong: var(--apollon-primary-contrast);
+  --home-text-muted: var(--primitive-text-muted);
+  --home-border-default: var(--primitive-border-default);
+  --home-border-strong: var(--primitive-border-strong);
+  --home-border-subtle: var(--primitive-border-subtle);
+  --home-accent-base: var(--primitive-accent-base);
+  --home-accent-soft: var(--primitive-accent-soft);
+  --home-accent-strong: var(--primitive-accent-strong);
+  --home-accent-ring: var(--primitive-accent-ring);
+  --home-accent-contrast: var(--primitive-accent-contrast);
+  --home-badge-bg: var(--primitive-badge-bg);
+  --home-badge-fold: var(--primitive-badge-fold);
+  --home-text-on-badge: var(--primitive-text-on-badge);
+  --home-favorite-star: var(--primitive-favorite-star);
+  --home-tag-type-bg: var(--primitive-tag-type-bg);
+  --home-tag-type-text: var(--primitive-tag-type-text);
+  --home-tag-local-bg: var(--primitive-tag-local-bg);
+  --home-tag-local-text: var(--primitive-tag-local-text);
+  --home-tag-shared-bg: var(--primitive-tag-shared-bg);
+  --home-tag-shared-text: var(--primitive-tag-shared-text);
+  --home-glow-neutral: var(--primitive-glow-neutral);
+
+  /* Warning banner — dark theme. */
+  --home-banner-warning-bg: var(--primitive-banner-warning-bg);
+  --home-banner-warning-border: var(--primitive-banner-warning-border);
+  --home-banner-warning-icon: var(--primitive-banner-warning-icon);
+  --home-banner-warning-text: var(--primitive-banner-warning-text);
+  --home-banner-warning-muted: var(--primitive-banner-warning-muted);
+  --home-banner-warning-btn-bg: var(--primitive-banner-warning-btn-bg);
+  --home-banner-warning-btn-text: var(--primitive-banner-warning-btn-text);
+  --home-banner-warning-btn-border: var(--primitive-banner-warning-btn-border);
+  --home-banner-warning-btn-hover: var(--primitive-banner-warning-btn-hover);
+
+  /* Toast (notification) semantic accents — dark theme. */
+  --home-toast-success: var(--primitive-toast-success);
+  --home-toast-error: var(--primitive-toast-error);
+  --home-toast-warning: var(--primitive-toast-warning);
+  --home-toast-info: var(--primitive-toast-info);
+}

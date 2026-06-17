@@ -26,7 +26,11 @@
       "@/*": ["src/*"],
       "@tumaet/apollon": ["../../library/dist/index.d.ts"],
       "@tumaet/apollon/react": ["../../library/dist/react/react.d.ts"],
-      "@tumaet/apollon/*": ["../../library/dist/*"]
+      "@tumaet/apollon/*": ["../../library/dist/*"],
+      "@tumaet/ui/lib/utils": ["../../packages/ui/src/lib/utils.ts"],
+      "@tumaet/ui/theme": ["../../packages/ui/src/theme.ts"],
+      "@tumaet/ui/components/*": ["../../packages/ui/src/components/*"],
+      "@tumaet/ui/styles/*": ["../../packages/ui/src/styles/*"]
     }
   },
   "include": ["src"],

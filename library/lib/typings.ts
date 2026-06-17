@@ -138,6 +138,18 @@ export type ApollonOptions = {
   collaborationEnabled?: boolean
   collaboration?: ApollonCollaborationOptions
   scrollLock?: boolean
+  /**
+   * Optional `--apollon-*` CSS custom properties applied to the editor's mount
+   * element. Build one with `createApollonTheme(...)`. Fully optional — an
+   * un-themed editor falls back to the library's built-in light/dark values.
+   */
+  theme?: Record<string, string>
+  /**
+   * Sets `data-theme` on the mount element (e.g. `"dark"`). Optional — when
+   * omitted the editor keeps any `data-theme` already on the element / inherited
+   * from an ancestor. See `library/THEMING.md`.
+   */
+  dataTheme?: string
 }
 
 export type FeedbackCorrectionStatus = {

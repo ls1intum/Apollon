@@ -1,5 +1,5 @@
 import React, { ReactNode, useMemo } from "react"
-import { Popover } from "@base-ui-components/react/popover"
+import { Popover } from "@base-ui/react/popover"
 import { PopoverOrigin } from "@/types"
 
 interface GenericPopoverProps {

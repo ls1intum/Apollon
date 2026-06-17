@@ -93,6 +93,19 @@ export class ApollonEditor {
       throw new Error("Element is required to initialize Apollon")
     }
 
+    // Theming: spread `--apollon-*` overrides onto the mount node and respect
+    // an incoming `data-theme`. Both optional — un-themed mounts keep the
+    // element's existing attributes / inherited values and the built-in
+    // light/dark fallbacks. Only sets the keys provided.
+    if (options?.theme) {
+      for (const [key, value] of Object.entries(options.theme)) {
+        element.style.setProperty(key, value)
+      }
+    }
+    if (options?.dataTheme !== undefined) {
+      element.setAttribute("data-theme", options.dataTheme)
+    }
+
     this.ydoc = new Y.Doc()
     this.diagramStore = createDiagramStore(this.ydoc)
     this.metadataStore = createMetadataStore(

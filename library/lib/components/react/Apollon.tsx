@@ -33,6 +33,18 @@ export interface ApollonProps {
   className?: string
   /** Inline styles. Needs an explicit non-zero height or the canvas renders blank. */
   style?: CSSProperties
+  /**
+   * Optional `--apollon-*` CSS custom properties spread onto the mount node's
+   * `style`. Build one with `createApollonTheme(...)`. Fully optional — an
+   * un-themed embed falls back to the library's built-in light/dark values.
+   */
+  theme?: Record<string, string>
+  /**
+   * Sets `data-theme` on the mount node (e.g. `"dark"`). Optional — when
+   * omitted the editor inherits whatever `data-theme` an ancestor declares,
+   * or the default light values. See `library/THEMING.md`.
+   */
+  dataTheme?: string
   /** Rendered inside the {@link ApollonInstanceContext} provider alongside the canvas. */
   children?: ReactNode
 
@@ -70,6 +82,8 @@ export const Apollon = forwardRef<ApollonEditor | null, ApollonProps>(
     const {
       className,
       style,
+      theme,
+      dataTheme,
       children,
 
       defaultModel,
@@ -178,9 +192,18 @@ export const Apollon = forwardRef<ApollonEditor | null, ApollonProps>(
       if (editor && model !== undefined) editor.model = model
     }, [editor, model])
 
+    // Theme tokens are spread last so an explicit `style` can't shadow a
+    // caller-provided `--apollon-*` override.
+    const mergedStyle: CSSProperties = { ...style, ...theme }
+
     return (
       <ApollonInstanceContext.Provider value={editor}>
-        <div ref={containerRef} className={className} style={style} />
+        <div
+          ref={containerRef}
+          className={className}
+          style={mergedStyle}
+          data-theme={dataTheme}
+        />
         {children}
       </ApollonInstanceContext.Provider>
     )

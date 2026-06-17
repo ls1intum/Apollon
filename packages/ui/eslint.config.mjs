@@ -17,22 +17,16 @@ export default [
   {
     settings: { react: { version: "detect" } },
     plugins: { "react-hooks": reactHooks },
-    // rules-of-hooks at error (the pre-existing violations in
-    // lib/nodes/sfcDiagram/* were latent crashes — hooks called after an
-    // early return — and are now fixed). exhaustive-deps stays at warn
-    // because ~15 hooks have legitimate deliberate-stale-closure patterns
-    // (e.g. imperative editor lifecycle keyed on a single boolean).
     rules: {
       ...reactHooks.configs.recommended.rules,
       "react-hooks/exhaustive-deps": "warn",
       "react/prop-types": "off",
-      "no-console": "error",
       // Allow intentionally-unused `_`-prefixed bindings.
       "@typescript-eslint/no-unused-vars": [
         "error",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
-      // The library is migrated to Base UI + raw CSS + --apollon-* tokens.
+      // The shared component library is built on Base UI + Tailwind tokens.
       // It must never depend on MUI or a CSS-in-JS runtime (Emotion).
       "no-restricted-imports": [
         "error",
@@ -41,12 +35,12 @@ export default [
             {
               group: ["@mui/*", "@mui"],
               message:
-                "MUI is removed from the library. Use Base UI (@base-ui/react) primitives and lucide-react icons instead.",
+                "MUI is removed. Use Base UI (@base-ui/react) primitives and lucide-react icons instead.",
             },
             {
               group: ["@emotion/*", "@emotion"],
               message:
-                "The library styles with raw CSS + --apollon-* tokens, never CSS-in-JS. Do not import Emotion.",
+                "Components style with Tailwind + tokens, never CSS-in-JS. Do not import Emotion.",
             },
           ],
         },
