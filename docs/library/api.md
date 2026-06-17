@@ -222,7 +222,9 @@ These members are only meaningful with `collaborationEnabled: true`. See
 | `ApollonEditor.exportModelAsSvg(model, options?)` | `Promise<SVG>` | Static. Render an **arbitrary** model to SVG with no mounted editor. |
 
 `SVG` is `{ svg: string, clip: { x, y, width, height } }`. See
-[Export](/library/api/export) for `ExportOptions` and the PNG/PDF pipeline.
+[Export](/library/api/export) for `ExportOptions` and the PNG/PDF pipeline, or
+the [Conversion API](/library/api/conversion-api) to convert models to
+SVG/PNG/PDF over HTTP via the standalone server.
 
 ## Diagram types
 

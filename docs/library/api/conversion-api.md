@@ -56,8 +56,9 @@ curl -X POST http://localhost:8000/api/converter/svg \
 
 ### PNG
 
-The PNG is rasterised at `scale` × the diagram's natural size. Set `scale` via
-query string or body; it defaults to `2` and is clamped to `[1, 4]`.
+The PNG is rasterised at `scale` × the diagram's natural size and has a white
+background (not transparent). Set `scale` via query string or body; it defaults
+to `2` and is clamped to `[1, 4]`.
 
 ```bash
 curl -X POST 'http://localhost:8000/api/converter/png?scale=3' \
