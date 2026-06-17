@@ -77,14 +77,14 @@ curl -X POST http://localhost:8000/api/converter/pdf \
 
 ## Status codes
 
-| Status | When                                                                      |
-| ------ | ------------------------------------------------------------------------- |
-| `200`  | success — the body is the rendered file                                   |
-| `400`  | no model in the request body                                              |
-| `413`  | request body exceeds the size limit (`BODY_TOO_LARGE`)                    |
-| `422`  | a node is missing valid geometry, e.g. width/height (`INVALID_PARAMS`)    |
-| `500`  | the model could not be rendered, e.g. an unrecognised format (`INTERNAL`) |
-| `503`  | the conversion queue is full — retry with backoff                         |
+| Status | When                                                                           |
+| ------ | ------------------------------------------------------------------------------ |
+| `200`  | success — the body is the rendered file                                        |
+| `400`  | no model in the request body                                                   |
+| `413`  | request body exceeds the size limit (`BODY_TOO_LARGE`)                         |
+| `422`  | a node is missing valid geometry, e.g. width/height (`INVALID_PARAMS`)         |
+| `500`  | the worker could not render the model, e.g. an unsupported format (`INTERNAL`) |
+| `503`  | the conversion queue is full — retry with backoff                              |
 
 Most errors return the server's standard JSON body —
 `{ "error": "<CODE>", "message": "…", "requestId": "…" }`. The two exceptions are

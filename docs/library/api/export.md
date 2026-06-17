@@ -58,7 +58,7 @@ cause of garbled output.
 
 ## PNG / PDF
 
-PNG and PDF generation happens downstream of `exportAsSVG`. See the standalone webapp's export helpers (`useExportAsPNG`, `useExportAsPDF`) and the server's `conversion-worker-thread.ts` for two reference implementations — both consume the SVG produced above and pipe it through `@resvg/resvg-js` (PNG) or `pdfmake` (PDF).
+PNG and PDF generation happens downstream of `exportAsSVG`. For reference implementations: the standalone webapp's export helpers (`useExportAsPNG`, `useExportAsPDF`) rasterise via `@resvg/resvg-js` (PNG) and render PDF with `pdfmake`, and the server's `conversion-worker-thread.ts` rasterises PNG with a Skia canvas (`@napi-rs/canvas`) and renders PDF with `pdfmake` — all consuming the SVG produced above.
 
 > Don't want to build this yourself? The standalone server already exposes SVG,
 > PNG, and PDF over HTTP — see the **[Conversion API](./conversion-api)**.

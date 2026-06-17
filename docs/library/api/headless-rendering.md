@@ -169,8 +169,8 @@ The `compat` SVG is self-contained. To rasterise:
   resvg does not resolve data-URI `@font-face`, so pass Inter via `fontFiles`
   and set `defaultFontFamily: "Inter"` — the same Inter you registered above, so
   measurement and rasterisation agree. The standalone webapp's
-  `tests/helpers/resvgRender.ts` is a working reference. The server's PDF worker
-  feeds the SVG straight to `pdfmake`.
+  `tests/helpers/resvgRender.ts` is a working reference. The server's conversion
+  worker feeds the SVG straight to `pdfmake`.
 - **Browser screenshot**: load the SVG in a page and screenshot it.
 
 ## Render in a real browser (Playwright / Puppeteer)

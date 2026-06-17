@@ -11,7 +11,15 @@ function parseModel(body: unknown): UMLModel | undefined {
     body && typeof body === "object" && "model" in body
       ? (body as { model: unknown }).model
       : body
-  if (typeof raw === "string") return JSON.parse(raw) as UMLModel
+  if (typeof raw === "string") {
+    // A stringified model — return undefined (→ 400) on malformed JSON rather
+    // than letting the SyntaxError surface as a 500.
+    try {
+      return JSON.parse(raw) as UMLModel
+    } catch {
+      return undefined
+    }
+  }
   if (raw && typeof raw === "object") return raw as UMLModel
   return undefined
 }

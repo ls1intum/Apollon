@@ -134,4 +134,11 @@ describe("POST /api/converter", () => {
       .send({ model: null })
     expect(res.status).toBe(400)
   })
+
+  it("rejects a malformed stringified model with 400, not 500", async () => {
+    const res = await request(app)
+      .post("/api/converter/svg")
+      .send({ model: "{ not valid json" })
+    expect(res.status).toBe(400)
+  })
 })

@@ -1381,14 +1381,16 @@ function ensureTextFontDefaults(svg: Element): void {
   })
 }
 
+// --- compat resolution -----------------------------------------------------
+// `svgMode: "compat"` produces an SVG that renders identically in non-browser
+// engines (resvg, Skia, pdfmake, Inkscape, PowerPoint), which silently ignore
+// browser-only SVG features. Each pass below resolves one to an absolute value.
+
 /**
- * Resolve relative `font-size` units (`%`, `em`) to absolute px. Browsers
- * compute these against the inherited font-size, but non-browser renderers
- * (resvg, Skia, pdfmake, Inkscape) mishandle them and render the text wildly
- * mis-sized — e.g. class stereotypes (`font-size="85%"`) ballooning over the
- * title. A `%`/`em` value is relative to the nearest ancestor's resolved px
- * size, so walk depth-first carrying it (seeded with the default base size).
- * Runs after ensureTextFontDefaults so every <text> already has a px size.
+ * Resolve relative `font-size` (`%`, `em`) to px against the inherited size —
+ * otherwise stereotypes (`font-size="85%"`) balloon over the class title. Walks
+ * depth-first carrying the resolved px; runs after ensureTextFontDefaults so
+ * every <text> already has a px size to inherit.
  */
 function resolveRelativeFontSizes(
   el: Element,
@@ -1410,12 +1412,9 @@ function resolveRelativeFontSizes(
 }
 
 /**
- * Convert cumulative `<tspan dy>` offsets into absolute `y` positions. Browsers
- * accumulate each tspan's `dy` from the running text position, but Skia
- * (@napi-rs/canvas) collapses sibling tspans onto one line, so e.g. a class
- * stereotype and its name overlap. Resolving to absolute `y` renders identically
- * in compliant renderers and fixes the ones that ignore `dy`. Assumes the flat
- * `<text><tspan/></text>` shape Apollon emits (no nested tspans).
+ * Flatten cumulative `<tspan dy>` to absolute `y` — Skia collapses sibling
+ * tspans onto one line, overlapping a stereotype with its class name. Assumes
+ * the flat `<text><tspan/></text>` shape Apollon emits (no nested tspans).
  */
 function resolveTspanDy(svg: Element): void {
   svg.querySelectorAll("text").forEach((textEl) => {
@@ -1437,9 +1436,8 @@ function resolveTspanDy(svg: Element): void {
   })
 }
 
-// The browser's baseline shift (in em) for each `dominant-baseline` value,
-// measured against the bundled Inter. `middle` centres on `y`, `hanging` puts
-// the text top near `y`.
+// Browser baseline shift (em) per `dominant-baseline` value, measured against
+// the bundled Inter. `middle` centres on `y`; `hanging` puts the text top near it.
 const BASELINE_SHIFT_EM: Record<string, number> = {
   middle: 0.25,
   central: 0.35,
@@ -1447,12 +1445,9 @@ const BASELINE_SHIFT_EM: Record<string, number> = {
 }
 
 /**
- * Resolve `dominant-baseline` to an explicit alphabetic-baseline `y`. Browsers
- * honour the attribute, but resvg, Skia, Inkscape, PowerPoint and pdfmake ignore
- * it and draw every label at the alphabetic baseline — mispositioned. Shifting
- * `y` by the font's baseline offset and dropping the attribute makes the SVG
- * render identically everywhere. Runs after resolveTspanDy so tspan `y` is
- * already absolute.
+ * Resolve `dominant-baseline` to an explicit baseline `y` — non-browser engines
+ * draw every label at the alphabetic baseline (too high) otherwise. Runs after
+ * resolveTspanDy so tspan `y` is already absolute.
  */
 function resolveDominantBaseline(svg: Element): void {
   svg.querySelectorAll("text").forEach((textEl) => {
