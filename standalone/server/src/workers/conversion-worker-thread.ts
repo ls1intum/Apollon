@@ -26,8 +26,49 @@ const PNG_MIN_SCALE = 1
 const PNG_MAX_SCALE = 4
 const PNG_DEFAULT_SCALE = 2
 
+// Skia (the SVG rasterizer behind @napi-rs/canvas) ignores `dominant-baseline`
+// and draws text at the alphabetic baseline, so `middle`-aligned labels sit too
+// high. The browser/pdf place `middle` ~0.25em below the alphabetic baseline;
+// bake that shift in for the PNG so it matches the SVG/PDF.
+const MIDDLE_BASELINE_EM = 0.25
+
 const service = new ConversionService()
 pdfMake.addVirtualFileSystem(pdfFonts)
+
+/**
+ * Produce a PNG-only copy of the export SVG: sized to the target resolution and
+ * with `dominant-baseline="middle"` resolved to an explicit baseline `y`, since
+ * the Skia rasterizer honours neither the SVG's intrinsic scaling nor that
+ * attribute. The original SVG (served as-is, and fed to pdfmake) is untouched.
+ */
+function prepareSvgForPng(svg: string, width: number, height: number): string {
+  const doc = new DOMParser().parseFromString(svg, "image/svg+xml")
+  const root = doc.documentElement
+  root.setAttribute("width", String(width))
+  root.setAttribute("height", String(height))
+
+  doc.querySelectorAll("text").forEach((text) => {
+    const baseline = text.getAttribute("dominant-baseline")
+    if (baseline !== "middle" && baseline !== "central") return
+
+    const textFontSize =
+      parseFloat(text.getAttribute("font-size") ?? "16") || 16
+    const tspans = text.querySelectorAll("tspan")
+    const shift = (el: Element, fallbackY: number) => {
+      const fontSize =
+        parseFloat(el.getAttribute("font-size") ?? "") || textFontSize
+      const y = parseFloat(el.getAttribute("y") ?? "") || fallbackY
+      el.setAttribute("y", String(y + MIDDLE_BASELINE_EM * fontSize))
+    }
+
+    const textY = parseFloat(text.getAttribute("y") ?? "0") || 0
+    if (tspans.length) tspans.forEach((tspan) => shift(tspan, textY))
+    else shift(text, 0)
+    text.removeAttribute("dominant-baseline")
+  })
+
+  return new XMLSerializer().serializeToString(doc)
+}
 
 async function render(
   format: ConversionFormat,
@@ -44,17 +85,20 @@ async function render(
     const factor = Number.isFinite(scale)
       ? Math.min(PNG_MAX_SCALE, Math.max(PNG_MIN_SCALE, scale as number))
       : PNG_DEFAULT_SCALE
-    const image = await loadImage(Buffer.from(svg))
-    const canvas = new Canvas(
-      Math.ceil(clip.width * factor),
-      Math.ceil(clip.height * factor)
+    const width = Math.ceil(clip.width * factor)
+    const height = Math.ceil(clip.height * factor)
+    // Size the SVG to the target resolution (rendering at natural size and
+    // upscaling the bitmap blurs text) and resolve dominant-baseline.
+    const image = await loadImage(
+      Buffer.from(prepareSvgForPng(svg, width, height))
     )
+    const canvas = new Canvas(width, height)
     const ctx = canvas.getContext("2d")
     // The SVG is transparent; flatten onto white so the PNG isn't see-through
     // (transparency reads as black in most viewers).
     ctx.fillStyle = "#ffffff"
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
-    ctx.drawImage(image, 0, 0, canvas.width, canvas.height)
+    ctx.fillRect(0, 0, width, height)
+    ctx.drawImage(image, 0, 0, width, height)
     return { mime: "image/png", data: canvas.toBuffer("image/png") }
   }
 
