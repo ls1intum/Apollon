@@ -32,6 +32,12 @@ const PNG_DEFAULT_SCALE = 2
 // bake that shift in for the PNG so it matches the SVG/PDF.
 const MIDDLE_BASELINE_EM = 0.25
 
+// Skia also lays down ~20% less ink than the browser for the same Inter glyphs
+// (no stem darkening), so PNG text looks lighter than the SVG/PDF. A hairline
+// same-colour stroke calibrated against the browser (≈0.0156em) restores the
+// expected weight at both 400 and 700.
+const STEM_DARKEN_EM = 0.0156
+
 const service = new ConversionService()
 pdfMake.addVirtualFileSystem(pdfFonts)
 
@@ -48,23 +54,38 @@ function prepareSvgForPng(svg: string, width: number, height: number): string {
   root.setAttribute("height", String(height))
 
   doc.querySelectorAll("text").forEach((text) => {
-    const baseline = text.getAttribute("dominant-baseline")
-    if (baseline !== "middle" && baseline !== "central") return
-
     const textFontSize =
       parseFloat(text.getAttribute("font-size") ?? "16") || 16
-    const tspans = text.querySelectorAll("tspan")
-    const shift = (el: Element, fallbackY: number) => {
-      const fontSize =
-        parseFloat(el.getAttribute("font-size") ?? "") || textFontSize
-      const y = parseFloat(el.getAttribute("y") ?? "") || fallbackY
-      el.setAttribute("y", String(y + MIDDLE_BASELINE_EM * fontSize))
+    const tspans = Array.from(text.querySelectorAll("tspan"))
+
+    // Resolve dominant-baseline="middle" to an explicit baseline `y`.
+    const baseline = text.getAttribute("dominant-baseline")
+    if (baseline === "middle" || baseline === "central") {
+      const shift = (el: Element, fallbackY: number) => {
+        const fontSize =
+          parseFloat(el.getAttribute("font-size") ?? "") || textFontSize
+        const y = parseFloat(el.getAttribute("y") ?? "") || fallbackY
+        el.setAttribute("y", String(y + MIDDLE_BASELINE_EM * fontSize))
+      }
+      const textY = parseFloat(text.getAttribute("y") ?? "0") || 0
+      if (tspans.length) tspans.forEach((tspan) => shift(tspan, textY))
+      else shift(text, 0)
+      text.removeAttribute("dominant-baseline")
     }
 
-    const textY = parseFloat(text.getAttribute("y") ?? "0") || 0
-    if (tspans.length) tspans.forEach((tspan) => shift(tspan, textY))
-    else shift(text, 0)
-    text.removeAttribute("dominant-baseline")
+    // Stem-darken: a hairline stroke in the fill colour restores browser weight.
+    const fill = text.getAttribute("fill") || "#000000"
+    if (fill !== "none") {
+      text.setAttribute("stroke", fill)
+      text.setAttribute("paint-order", "stroke")
+      text.setAttribute("stroke-linejoin", "round")
+      text.setAttribute("stroke-width", String(STEM_DARKEN_EM * textFontSize))
+      tspans.forEach((tspan) => {
+        const fontSize = parseFloat(tspan.getAttribute("font-size") ?? "")
+        if (fontSize)
+          tspan.setAttribute("stroke-width", String(STEM_DARKEN_EM * fontSize))
+      })
+    }
   })
 
   return new XMLSerializer().serializeToString(doc)
