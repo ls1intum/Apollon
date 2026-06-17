@@ -52,13 +52,18 @@ payloads to the current v4 shape; feeding a stale shape straight in is a common
 cause of garbled output.
 :::
 
-> The standalone **server's** PDF worker is the reference jsdom setup: it
+> The standalone **server's** conversion worker is the reference jsdom setup: it
 > registers Inter on a Skia canvas, shims `getBBox`, and pre-seeds handle
 > geometry. See **[Headless rendering](./headless-rendering)**.
 
 ## PNG / PDF
 
-PNG and PDF generation happens downstream of `exportAsSVG`. For reference implementations: the standalone webapp's export helpers (`useExportAsPNG`, `useExportAsPDF`) rasterise via `@resvg/resvg-js` (PNG) and render PDF with `pdfmake`, and the server's `conversion-worker-thread.ts` rasterises PNG with a Skia canvas (`@napi-rs/canvas`) and renders PDF with `pdfmake` — all consuming the SVG produced above.
+PNG and PDF generation happens downstream of `exportAsSVG`. Two reference
+implementations: the standalone webapp's export helpers (`useExportAsPNG`,
+`useExportAsPDF`) rasterise via `@resvg/resvg-js` (PNG) and render PDF with
+`pdfmake`; the server's `conversion-worker-thread.ts` rasterises PNG with a Skia
+canvas (`@napi-rs/canvas`) and renders PDF with `pdfmake`. Both consume the SVG
+produced above.
 
 > Don't want to build this yourself? The standalone server already exposes SVG,
 > PNG, and PDF over HTTP — see the **[Conversion API](./conversion-api)**.
@@ -74,7 +79,9 @@ Round-trip safe: `editor.model = JSON.parse(json)`.
 
 ## Wire-format versions
 
-The library reads v2, v3, and v4 model JSON. Use `importDiagram(any)` to normalize any version to the current v4 shape before assigning to `editor.model` or passing to `exportModelAsSvg`.
+The library reads v2, v3, and v4 model JSON. Use `importDiagram(any)` to
+normalise any version to the current v4 shape before assigning to `editor.model`
+or passing to `exportModelAsSvg`.
 
 ```ts
 import { importDiagram } from "@tumaet/apollon"
