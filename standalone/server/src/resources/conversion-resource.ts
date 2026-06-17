@@ -1,28 +1,25 @@
-import type { Request, Response } from "express"
 import { Worker } from "node:worker_threads"
 import path from "node:path"
 import type { UMLModel } from "@tumaet/apollon"
+import { Errors } from "../http/errors.js"
+import type { ConversionFormat } from "../workers/conversion-worker-thread.js"
 
-type QueueEntry = {
+export type ConversionOutput = { mime: string; data: Buffer | string }
+
+type Job = {
   id: number
+  format: ConversionFormat
   model: UMLModel
-  resolve: (pdf: Buffer) => void
+  scale?: number
+  resolve: (output: ConversionOutput) => void
   reject: (error: Error) => void
 }
 
-type WorkerSuccess = {
-  id: number
-  ok: true
-  pdf: Uint8Array
-}
+type WorkerMessage =
+  | { id: number; ok: true; mime: string; data: string | Uint8Array }
+  | { id: number; ok: false; error: string; code?: string }
 
-type WorkerFailure = {
-  id: number
-  ok: false
-  error: string
-}
-
-type WorkerMessage = WorkerSuccess | WorkerFailure
+export class QueueFullError extends Error {}
 
 export class ConversionResource {
   private readonly conversionTimeoutMs = Number(
@@ -39,14 +36,9 @@ export class ConversionResource {
   )
 
   private worker: Worker
-  private queue: QueueEntry[] = []
+  private queue: Job[] = []
   private activeJob:
-    | {
-        id: number
-        timeout: NodeJS.Timeout
-        resolve: (pdf: Buffer) => void
-        reject: (error: Error) => void
-      }
+    | { id: number; timeout: NodeJS.Timeout; job: Job }
     | undefined
   private nextId = 1
 
@@ -56,19 +48,16 @@ export class ConversionResource {
 
   private createWorker() {
     // Default resolves the compiled worker next to this module. Overridable so
-    // tests (where import.meta.dirname points at src/, with no built .js
-    // alongside) can point at the dist artifact.
+    // tests (where import.meta.dirname is src/, with no built .js) point at dist.
     const workerPath =
       process.env.CONVERTER_WORKER_PATH ??
       path.resolve(
         import.meta.dirname,
-        "../workers/pdf-conversion-worker-thread.js"
+        "../workers/conversion-worker-thread.js"
       )
 
     const worker = new Worker(workerPath, {
-      env: {
-        ...process.env,
-      },
+      env: { ...process.env },
       resourceLimits: {
         maxOldGenerationSizeMb: this.workerMaxOldGenerationMb,
         stackSizeMb: this.workerStackMb,
@@ -76,30 +65,16 @@ export class ConversionResource {
     })
 
     worker.on("message", (message: WorkerMessage) => {
-      if (this.worker !== worker) {
-        return
-      }
-
-      this.handleWorkerMessage(message)
+      if (this.worker === worker) this.handleWorkerMessage(message)
     })
-
     worker.on("error", (error) => {
-      if (this.worker !== worker) {
-        return
-      }
-
-      this.restartWorker(worker, error)
+      if (this.worker === worker) this.restartWorker(worker, error)
     })
-
     worker.on("exit", (code) => {
-      if (this.worker !== worker) {
-        return
-      }
-
-      if (code !== 0) {
+      if (this.worker === worker && code !== 0) {
         this.restartWorker(
           worker,
-          new Error(`PDF worker thread exited with code ${code}`)
+          new Error(`Conversion worker thread exited with code ${code}`)
         )
       }
     })
@@ -108,33 +83,39 @@ export class ConversionResource {
   }
 
   private handleWorkerMessage(message: WorkerMessage) {
-    if (!this.activeJob || this.activeJob.id !== message.id) {
-      return
-    }
+    if (!this.activeJob || this.activeJob.id !== message.id) return
 
     clearTimeout(this.activeJob.timeout)
-    const activeJob = this.activeJob
+    const { job } = this.activeJob
     this.activeJob = undefined
 
     if (message.ok) {
-      activeJob.resolve(Buffer.from(message.pdf))
+      job.resolve({
+        mime: message.mime,
+        data:
+          typeof message.data === "string"
+            ? message.data
+            : Buffer.from(message.data),
+      })
+    } else if (message.code === "INVALID_MODEL_GEOMETRY") {
+      // Corrupt client model, not a server fault — 422, not 500.
+      job.reject(
+        Errors.invalidParams(message.error.split("\n")[0] || message.error)
+      )
     } else {
-      activeJob.reject(new Error(message.error))
+      job.reject(new Error(message.error))
     }
 
     this.processQueue()
   }
 
   private restartWorker(worker: Worker, error: Error) {
-    if (this.worker !== worker) {
-      return
-    }
+    if (this.worker !== worker) return
 
     if (this.activeJob) {
       clearTimeout(this.activeJob.timeout)
-      const activeJob = this.activeJob
+      this.activeJob.job.reject(error)
       this.activeJob = undefined
-      activeJob.reject(error)
     }
 
     void worker.terminate().catch(() => undefined)
@@ -143,80 +124,43 @@ export class ConversionResource {
   }
 
   private processQueue() {
-    if (this.activeJob) {
-      return
-    }
+    if (this.activeJob) return
 
-    const nextEntry = this.queue.shift()
-    if (!nextEntry) {
-      return
-    }
+    const job = this.queue.shift()
+    if (!job) return
 
     const timeout = setTimeout(() => {
-      this.restartWorker(
-        this.worker,
-        new Error("PDF conversion worker timed out")
-      )
+      this.restartWorker(this.worker, new Error("Conversion worker timed out"))
     }, this.conversionTimeoutMs)
 
-    this.activeJob = {
-      id: nextEntry.id,
-      timeout,
-      resolve: nextEntry.resolve,
-      reject: nextEntry.reject,
-    }
-
+    this.activeJob = { id: job.id, timeout, job }
     this.worker.postMessage({
-      id: nextEntry.id,
-      model: nextEntry.model,
+      id: job.id,
+      model: job.model,
+      format: job.format,
+      scale: job.scale,
     })
   }
 
-  private renderPdf = async (model: UMLModel): Promise<Buffer> => {
+  render = async (
+    format: ConversionFormat,
+    model: UMLModel,
+    scale?: number
+  ): Promise<ConversionOutput> => {
     if (this.queue.length >= this.maxQueueLength) {
-      throw new Error("PDF conversion queue is full")
+      throw new QueueFullError("Conversion queue is full")
     }
 
-    return await new Promise<Buffer>((resolve, reject) => {
+    return await new Promise<ConversionOutput>((resolve, reject) => {
       this.queue.push({
         id: this.nextId++,
+        format,
         model,
         resolve,
         reject,
+        ...(scale !== undefined ? { scale } : {}),
       })
       this.processQueue()
     })
-  }
-
-  convert = async (req: Request, res: Response) => {
-    let model: UMLModel | undefined
-
-    if (req.body) {
-      try {
-        model = req.body.model ? req.body.model : req.body
-        if (typeof model === "string") {
-          model = JSON.parse(model)
-        }
-
-        const pdfBuffer = await this.renderPdf(model as UMLModel)
-        res.type("application/pdf")
-        res.status(200).send(pdfBuffer)
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error)
-
-        if (message === "PDF conversion queue is full") {
-          res.status(503).send({ error: message })
-          return
-        }
-
-        throw error
-      }
-    } else {
-      res.status(400).send({ error: "Model must be defined!" })
-    }
-  }
-
-  status = (_req: Request, res: Response) => {
-    res.sendStatus(200)
   }
 }

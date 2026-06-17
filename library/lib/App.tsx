@@ -17,6 +17,9 @@ import {
   AlignmentGuides,
 } from "@/components"
 import "@xyflow/react/dist/style.css"
+// Register the bundled Inter @font-face at module load, so the face exists
+// before diagram <text> elements (which request the Inter family) first paint.
+import "@/styles/fonts.css"
 import "@/styles/app.css"
 import { useDiagramStore, useMetadataStore } from "./store/context"
 import { useShallow } from "zustand/shallow"

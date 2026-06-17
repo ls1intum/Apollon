@@ -13,6 +13,10 @@ export {
 // and format detectors live behind `@tumaet/apollon/internals`.
 export { importDiagram } from "./utils/versionConverter"
 export { collabColorFromName, randomCollabName } from "./utils/collaboration"
+// Font stack the editor measures and renders with, so consumers that re-render
+// or post-process exported diagram text can match it exactly instead of
+// hardcoding the family list.
+export { FONT_FAMILY } from "./fontStack"
 // NOTE: the `./utils` barrel is intentionally NOT re-exported — it holds
 // ~90 internal layout/geometry/store helpers that are not part of the
 // supported surface. Public helpers are cherry-picked by name above.

@@ -127,8 +127,8 @@ needs to invalidate.
 This explicitly is _not_ a server endpoint. Booting JSDOM + the full
 library bundle on the server for a 64×40 thumbnail is the wrong
 tradeoff: it adds cold-start latency, doesn't scale with diagram count,
-and doesn't work in the no-server deployment. The PDF export path
-(`POST /converter/pdf` → `pdf-conversion-worker-thread`) still uses
+and doesn't work in the no-server deployment. The export endpoints
+(`POST /converter/{svg,png,pdf}` → `conversion-worker-thread`) still use
 `ConversionService.convertToSvg` server-side — that's a separate
 high-quality export use case, not a per-row preview.
 
