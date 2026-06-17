@@ -71,7 +71,6 @@ const disabledCollaboration = {
 const noopCollaborationAwareness = {
   setLocalAwarenessCursor: () => {},
   setLocalAwarenessSelectedElement: () => {},
-  setLocalAwarenessLiveInteraction: () => {},
   setLocalAwarenessViewport: () => {},
   setLocalAwarenessFollowing: () => {},
   getAwarenessStates: () => new Map(),
@@ -178,6 +177,8 @@ export class ApollonEditor {
       this.metadataStore.getState().setScrollLock(options.scrollLock)
     }
 
+    this.diagramStore.getState().setCollaborationEnabled(collaboration.enabled)
+
     if (
       this.metadataStore.getState().mode === Apollon.ApollonMode.Modelling &&
       !collaboration.enabled
@@ -206,8 +207,6 @@ export class ApollonEditor {
                         this.syncManager.setLocalAwarenessCursor,
                       setLocalAwarenessSelectedElement:
                         this.syncManager.setLocalAwarenessSelectedElement,
-                      setLocalAwarenessLiveInteraction:
-                        this.syncManager.setLocalAwarenessLiveInteraction,
                       setLocalAwarenessViewport:
                         this.syncManager.setLocalAwarenessViewport,
                       setLocalAwarenessFollowing:

@@ -175,21 +175,6 @@
   white-space: nowrap;
 }
 
-.apollon-collaboration-live-interactions {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-  z-index: 10002;
-}
-
-.apollon-collaboration-live-interaction {
-  position: absolute;
-  border: 2px dashed;
-  border-radius: 4px;
-  opacity: 0.4;
-}
-
 .react-flow__node.apollon-collaboration-highlighted {
   box-shadow:
     0 0 0 4px var(--apollon-collaboration-highlight-color),

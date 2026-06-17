@@ -13,7 +13,6 @@ import {
   CollaborationUser,
   CollaborationViewport,
   CollaboratorInfo,
-  LiveInteraction,
 } from "@/typings"
 import { sanitizeCollaborationViewport } from "@/utils/collaboration"
 import { Edge, Node } from "@xyflow/react"
@@ -109,12 +108,6 @@ export class YjsSync {
     selectedElementId: string | null
   ) => {
     this.awareness.setLocalStateField("selectedElementId", selectedElementId)
-  }
-
-  public setLocalAwarenessLiveInteraction = (
-    interaction: LiveInteraction | null
-  ) => {
-    this.awareness.setLocalStateField("liveInteraction", interaction)
   }
 
   public setLocalAwarenessState = (state: Partial<CollaborationState>) => {
@@ -223,38 +216,7 @@ export class YjsSync {
     ) {
       state.followingClientId = null
     }
-    if (obj.liveInteraction != null) {
-      state.liveInteraction = YjsSync.narrowLiveInteraction(obj.liveInteraction)
-    }
     return state
-  }
-
-  private static narrowLiveInteraction(raw: unknown): LiveInteraction | null {
-    if (raw == null || typeof raw !== "object") return null
-    const obj = raw as Record<string, unknown>
-    const position = obj.position as Record<string, unknown> | undefined
-    if (
-      typeof obj.id !== "string" ||
-      position == null ||
-      typeof position !== "object" ||
-      typeof position.x !== "number" ||
-      !Number.isFinite(position.x) ||
-      typeof position.y !== "number" ||
-      !Number.isFinite(position.y)
-    ) {
-      return null
-    }
-    const interaction: LiveInteraction = {
-      id: obj.id,
-      position: { x: position.x, y: position.y },
-    }
-    if (typeof obj.width === "number" && Number.isFinite(obj.width)) {
-      interaction.width = obj.width
-    }
-    if (typeof obj.height === "number" && Number.isFinite(obj.height)) {
-      interaction.height = obj.height
-    }
-    return interaction
   }
 
   private getTypedStates(): Map<number, CollaborationState> {

@@ -1,40 +1,29 @@
 import Tooltip from "@mui/material/Tooltip"
 import {
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useRef,
   useState,
   type CSSProperties,
 } from "react"
-import {
-  useOnViewportChange,
-  useReactFlow,
-  useViewport,
-  type Node,
-} from "@xyflow/react"
+import { useOnViewportChange, useReactFlow, useViewport } from "@xyflow/react"
 import { useShallow } from "zustand/shallow"
-import { DiagramStoreContext, useDiagramStore } from "@/store"
+import { useDiagramStore } from "@/store"
 import {
   CollaborationCursor,
   CollaborationState,
   CollaborationUser,
   CollaborationViewport,
   CollaboratorInfo,
-  LiveInteraction,
 } from "@/typings"
 import { flowToCanvasPosition } from "./coordinates"
-import { getPositionOnCanvasFromMap } from "@/utils/nodeUtils"
 
 export type CollaborationAwarenessApi = {
   setLocalAwarenessCursor: (cursor: CollaborationCursor | null) => void
   setLocalAwarenessSelectedElement: (selectedElementId: string | null) => void
   setLocalAwarenessViewport: (viewport: CollaborationViewport | null) => void
   setLocalAwarenessFollowing: (followingClientId: number | null) => void
-  setLocalAwarenessLiveInteraction: (
-    interaction: LiveInteraction | null
-  ) => void
   getAwarenessStates: () => Map<number, CollaborationState>
   subscribeToAwarenessChanges: (
     callback: (states: Map<number, CollaborationState>) => void
@@ -445,240 +434,6 @@ function LocalCollaborationAwareness({
   return null
 }
 
-const POSITION_TOLERANCE = 0.5
-
-type GeometryNode = {
-  id: string
-  position: { x: number; y: number }
-  parentId?: string
-  width?: number | null
-  height?: number | null
-  dragging?: boolean
-  resizing?: boolean
-}
-
-function liveInteractionFromNodes(
-  nodes: GeometryNode[]
-): LiveInteraction | null {
-  const moving = nodes.find(
-    (node) => node.dragging === true || node.resizing === true
-  )
-  if (!moving) return null
-  // A child node's `position` is parent-relative, but the ghost is rendered
-  // against the absolute flow viewport — resolve the absolute position by
-  // walking the parent chain so a peer's ghost lands on the real node.
-  const byId = new Map(nodes.map((node) => [node.id, node]))
-  const position = { x: moving.position.x, y: moving.position.y }
-  const seen = new Set<string>()
-  let parentId = moving.parentId
-  while (parentId && !seen.has(parentId)) {
-    seen.add(parentId)
-    const parent = byId.get(parentId)
-    if (!parent) break
-    position.x += parent.position.x
-    position.y += parent.position.y
-    parentId = parent.parentId
-  }
-  const interaction: LiveInteraction = { id: moving.id, position }
-  if (typeof moving.width === "number") interaction.width = moving.width
-  if (typeof moving.height === "number") interaction.height = moving.height
-  return interaction
-}
-
-/**
- * Publishes the geometry of an in-progress drag/resize to awareness so peers
- * can render a live ghost — without writing transient frames to the CRDT.
- * Subscribes to the store directly (no React re-render per frame) and coalesces
- * to at most one publish per animation frame, mirroring the cursor broadcaster.
- */
-function LocalLiveInteractionAwareness({
-  active,
-  awareness,
-}: {
-  active: boolean
-  awareness: CollaborationAwarenessApi
-}) {
-  const store = useContext(DiagramStoreContext)
-
-  useEffect(() => {
-    if (!active || !store) {
-      awareness.setLocalAwarenessLiveInteraction(null)
-      return
-    }
-
-    const rafRef = { current: 0 }
-    const pendingRef = { current: null as LiveInteraction | null }
-    const publishedRef = { current: false }
-
-    const flush = () => {
-      rafRef.current = 0
-      const interaction = pendingRef.current
-      if (interaction) {
-        awareness.setLocalAwarenessLiveInteraction(interaction)
-        publishedRef.current = true
-      } else if (publishedRef.current) {
-        awareness.setLocalAwarenessLiveInteraction(null)
-        publishedRef.current = false
-      }
-    }
-
-    const schedule = (interaction: LiveInteraction | null) => {
-      pendingRef.current = interaction
-      if (!rafRef.current) {
-        rafRef.current = window.requestAnimationFrame(flush)
-      }
-    }
-
-    const clearNow = () => {
-      if (rafRef.current) {
-        window.cancelAnimationFrame(rafRef.current)
-        rafRef.current = 0
-      }
-      pendingRef.current = null
-      if (publishedRef.current) {
-        awareness.setLocalAwarenessLiveInteraction(null)
-        publishedRef.current = false
-      }
-    }
-
-    let previousNodes = store.getState().nodes
-    const unsubscribe = store.subscribe((state) => {
-      if (state.nodes === previousNodes) return
-      previousNodes = state.nodes
-      schedule(liveInteractionFromNodes(state.nodes))
-    })
-
-    const handleVisibility = () => {
-      if (document.visibilityState === "hidden") clearNow()
-    }
-
-    window.addEventListener("pointerup", clearNow)
-    window.addEventListener("pointercancel", clearNow)
-    window.addEventListener("pointerleave", clearNow)
-    document.addEventListener("visibilitychange", handleVisibility)
-
-    return () => {
-      unsubscribe()
-      window.removeEventListener("pointerup", clearNow)
-      window.removeEventListener("pointercancel", clearNow)
-      window.removeEventListener("pointerleave", clearNow)
-      document.removeEventListener("visibilitychange", handleVisibility)
-      clearNow()
-    }
-  }, [active, awareness, store])
-
-  return null
-}
-
-type RemoteGhost = {
-  clientId: number
-  color: string
-  interaction: LiveInteraction
-}
-
-// Stable reference returned by the node selector when no ghosts are active, so
-// node-array changes don't re-render the (idle) overlay.
-const EMPTY_NODES: Node[] = []
-
-/**
- * Renders peers' in-progress drag/resize as a translucent overlay rectangle,
- * OUTSIDE the React Flow node graph so peer nodes are never mutated per frame.
- * A ghost is retired once the peer's committed Yjs node reaches the ghost's
- * final position (within tolerance) or the awareness field clears/goes stale —
- * whichever comes first, so network arrival order can't strand a ghost.
- */
-function CollaboratorLiveInteractions({
-  active,
-  awareness,
-}: {
-  active: boolean
-  awareness: CollaborationAwarenessApi
-}) {
-  // Must stay the reactive `useViewport()` (not an imperative `getViewport()`):
-  // the ghost is positioned with this on every pan/zoom, and the React Compiler
-  // would memoize a non-reactive read stale.
-  const viewport = useViewport()
-  const [ghosts, setGhosts] = useState<RemoteGhost[]>([])
-  // Only subscribe to the node array while ghosts exist — retirement needs to
-  // re-run when a peer's committed node arrives, but an idle overlay (the
-  // common case, and the only case for a single-user exam) must not re-render
-  // on every local edit.
-  const hasGhosts = ghosts.length > 0
-  const nodes = useDiagramStore((state) =>
-    hasGhosts ? state.nodes : EMPTY_NODES
-  )
-
-  useEffect(() => {
-    if (!active) {
-      setGhosts([])
-      return
-    }
-
-    const unsubscribe = awareness.subscribeToAwarenessChanges((states) => {
-      const localClientId = awareness.getLocalAwarenessClientId()
-      const next: RemoteGhost[] = []
-      for (const [clientId, state] of states.entries()) {
-        if (clientId === localClientId) continue
-        const interaction = state?.liveInteraction
-        const color = state?.user?.color
-        if (interaction && color) {
-          next.push({ clientId, color, interaction })
-        }
-      }
-      setGhosts(next)
-    })
-
-    return unsubscribe
-  }, [active, awareness])
-
-  const visibleGhosts = useMemo(() => {
-    if (ghosts.length === 0) return ghosts
-    const nodeById = new Map(nodes.map((node) => [node.id, node]))
-    return ghosts.filter((ghost) => {
-      const committed = nodeById.get(ghost.interaction.id)
-      if (!committed) return true
-      // Compare against the committed node's ABSOLUTE position so retirement
-      // works for nested nodes too (the ghost stores absolute coordinates).
-      const committedAbsolute = getPositionOnCanvasFromMap(committed, nodeById)
-      const reached =
-        Math.abs(committedAbsolute.x - ghost.interaction.position.x) <=
-          POSITION_TOLERANCE &&
-        Math.abs(committedAbsolute.y - ghost.interaction.position.y) <=
-          POSITION_TOLERANCE
-      return !reached
-    })
-  }, [ghosts, nodes])
-
-  if (!active || visibleGhosts.length === 0) return null
-
-  return (
-    <div className="apollon-collaboration-live-interactions">
-      {visibleGhosts.map((ghost) => {
-        const topLeft = flowToCanvasPosition(
-          ghost.interaction.position,
-          viewport
-        )
-        const width = (ghost.interaction.width ?? 0) * viewport.zoom
-        const height = (ghost.interaction.height ?? 0) * viewport.zoom
-        return (
-          <div
-            key={ghost.clientId}
-            className="apollon-collaboration-live-interaction"
-            style={{
-              left: topLeft.x,
-              top: topLeft.y,
-              width,
-              height,
-              borderColor: ghost.color,
-              backgroundColor: ghost.color,
-            }}
-          />
-        )
-      })}
-    </div>
-  )
-}
-
 function CollaboratorSelectionHighlights({
   active,
   awareness,
@@ -986,14 +741,6 @@ export function CollaborationLayer({
       <LocalCollaborationAwareness
         active={active && !previewMode}
         options={options}
-        awareness={awareness}
-      />
-      <LocalLiveInteractionAwareness
-        active={active && !previewMode}
-        awareness={awareness}
-      />
-      <CollaboratorLiveInteractions
-        active={remoteVisualsActive}
         awareness={awareness}
       />
       <CollaboratorPresenceBar

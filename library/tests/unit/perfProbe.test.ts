@@ -133,6 +133,52 @@ describe("ApollonEditor.__perf()", () => {
     ydoc.destroy()
   })
 
+  it("is collaboration-aware: keeps transient drag frames in single-user, writes them in collaboration", () => {
+    // Single-user (default): transient drag frames are skipped (the freeze
+    // guard). Positions advance each frame so the deepEqual short-circuit at
+    // the top of onNodesChange doesn't swallow them and mask the guard.
+    const singleUserDoc = new Y.Doc()
+    const singleUserStore = createDiagramStore(singleUserDoc)
+    singleUserStore.getState().setNodes([makeNode("a", 0)])
+    expect(singleUserStore.getState().collaborationEnabled).toBe(false)
+
+    const singleUserBefore = getPerfCounters()?.storeNodeWrites ?? 0
+    for (let i = 1; i <= 30; i++) {
+      singleUserStore.getState().onNodesChange([
+        {
+          id: "a",
+          type: "position",
+          position: { x: i, y: 0 },
+          dragging: true,
+        },
+      ])
+    }
+    expect((getPerfCounters()?.storeNodeWrites ?? 0) - singleUserBefore).toBe(0)
+    singleUserDoc.destroy()
+
+    // Collaboration: the per-frame writes drive the live remote drag and are
+    // GC-reclaimed (no UndoManager), so each advancing frame DOES write.
+    const collabDoc = new Y.Doc()
+    const collabStore = createDiagramStore(collabDoc)
+    collabStore.getState().setNodes([makeNode("a", 0)])
+    collabStore.getState().setCollaborationEnabled(true)
+
+    const collabBefore = getPerfCounters()?.storeNodeWrites ?? 0
+    for (let i = 1; i <= 30; i++) {
+      collabStore.getState().onNodesChange([
+        {
+          id: "a",
+          type: "position",
+          position: { x: i, y: 0 },
+          dragging: true,
+        },
+      ])
+    }
+    expect((getPerfCounters()?.storeNodeWrites ?? 0) - collabBefore).toBe(30)
+
+    collabDoc.destroy()
+  })
+
   it("keeps Yjs document growth bounded across a long drag with the undo manager active", () => {
     const ydoc = new Y.Doc()
     const store = createDiagramStore(ydoc)

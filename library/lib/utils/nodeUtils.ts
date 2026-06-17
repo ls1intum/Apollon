@@ -24,25 +24,6 @@ export const getPositionOnCanvas = (
   return position
 }
 
-// Same absolute-position walk as `getPositionOnCanvas` but resolves parents
-// through a prebuilt id→node Map (O(depth) instead of O(depth·N)). For callers
-// that already hold such a Map and resolve many nodes against it.
-export const getPositionOnCanvasFromMap = (
-  node: Node,
-  nodeById: ReadonlyMap<string, Node>
-): XYPosition => {
-  const position: XYPosition = { x: node.position.x, y: node.position.y }
-  let parent = node.parentId ? nodeById.get(node.parentId) : undefined
-
-  while (parent) {
-    position.x = position.x + parent.position.x
-    position.y = position.y + parent.position.y
-    parent = parent.parentId ? nodeById.get(parent.parentId) : undefined
-  }
-
-  return position
-}
-
 export const resizeAllParents = (node: Node, allNodes: Node[]) => {
   let currentNode = node
 

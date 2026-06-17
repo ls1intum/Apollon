@@ -45,6 +45,14 @@ type InitialDiagramState = {
   canRedo: boolean
   undoManager: Y.UndoManager | null
   /**
+   * Whether this editor instance is in a collaboration session. Drives the
+   * transient drag/resize write guard in `onNodesChange`: in single-user mode
+   * we skip per-frame CRDT writes (the freeze path), but in collaboration we
+   * keep them — they drive the live remote drag and are GC-reclaimed since no
+   * UndoManager is created in collaboration mode.
+   */
+  collaborationEnabled: boolean
+  /**
    * When true, the Yjs doc is the canonical state but the canvas reflects
    * an ephemeral overlay (e.g. a version preview). In this mode:
    *   - every store mutator that would `ydoc.transact("store", …)`
@@ -71,6 +79,7 @@ const initialDiagramState: InitialDiagramState = {
   canUndo: false,
   canRedo: false,
   undoManager: null,
+  collaborationEnabled: false,
   previewMode: false,
 }
 
@@ -116,8 +125,10 @@ export type DiagramStore = {
   canUndo: boolean
   canRedo: boolean
   undoManager: Y.UndoManager | null
+  collaborationEnabled: boolean
   previewMode: boolean
   setDiagramId: (diagramId: string) => void
+  setCollaborationEnabled: (enabled: boolean) => void
   setNodes: (payload: Node[] | ((nodes: Node[]) => Node[])) => void
   setEdges: (payload: Edge[] | ((edges: Edge[]) => Edge[])) => void
   setNodesAndEdges: (nodes: Node[], edges: Edge[]) => void
@@ -258,6 +269,14 @@ export const createDiagramStore = (
 
           setDiagramId: (diagramId) => {
             set({ diagramId }, undefined, "setDiagramId")
+          },
+
+          setCollaborationEnabled: (enabled) => {
+            set(
+              { collaborationEnabled: enabled },
+              undefined,
+              "setCollaborationEnabled"
+            )
           },
 
           setSelectedElementsId: (payload) => {
@@ -547,7 +566,12 @@ export const createDiagramStore = (
                   const isTransient =
                     (change.type === "position" && change.dragging === true) ||
                     (change.type === "dimensions" && change.resizing === true)
-                  if (isTransient) continue
+                  // Skipping transient writes is only safe/needed in single-user
+                  // mode — there the always-on UndoManager pins every per-frame
+                  // struct and the doc balloons (the freeze). In collaboration
+                  // the per-frame writes drive the live remote drag and are
+                  // GC-reclaimed (no UndoManager), so we keep them.
+                  if (isTransient && !get().collaborationEnabled) continue
                   const node = nextNodes.find((n) => n.id === change.id)
                   if (node) {
                     getNodesMap(ydoc).set(change.id, stripSelected(node))
