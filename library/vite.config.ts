@@ -49,9 +49,10 @@ export default defineConfig({
     // Base64-inline the bundled Inter woff2 (from lib/styles/fonts.css) into the
     // single published style.css instead of emitting separate assets (they
     // exceed Vite's 4 KB default). Trade-off: every style.css consumer downloads
-    // the font inline — no separate request or 404 risk, but ~33% base64
-    // overhead and no per-file HTTP caching. Acceptable for a small Latin
-    // subset. The function scopes this to fonts; other assets keep the default.
+    // the font inline (~+64 KB gzipped for the Latin+Greek+Cyrillic+Vietnamese
+    // subset) — no separate request or 404 risk, but no per-file HTTP caching.
+    // Accepted to keep one self-contained stylesheet. The function scopes this
+    // to fonts; other assets keep the default.
     assetsInlineLimit: (filePath) =>
       /\.woff2?($|\?)/.test(filePath) ? true : undefined,
     lib: {

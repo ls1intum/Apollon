@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
 import Ajv from "ajv"
-import { readFileSync } from "node:fs"
+import { readFileSync, readdirSync, existsSync } from "node:fs"
 import { join } from "node:path"
 // @ts-expect-error — plain .mjs build script, no type declarations.
 import { buildModelSchema } from "../../scripts/gen-schema.mjs"
@@ -98,4 +98,34 @@ describe("published model JSON schema", () => {
     // the 5 s default on cold CI runners.
     expect(buildModelSchema()).toEqual(committed)
   }, 60_000)
+})
+
+// Contract lock: every real diagram model the app round-trips must validate
+// after importDiagram. This is what proves the open `data` envelope is correct
+// — it guarantees no real submission is rejected, and guards against anyone
+// later tightening the schema in a way that would. (The assets/diagramTemplates
+// starter files are intentionally excluded: they carry edges without `data`, so
+// they aren't conformant v4 submission models — a separate, pre-existing matter.)
+describe("schema accepts every real diagram model (fixtures)", () => {
+  const dir = join(
+    import.meta.dirname,
+    "../../../standalone/webapp/tests/fixtures"
+  )
+  const models = existsSync(dir)
+    ? readdirSync(dir)
+        .filter((f) => f.endsWith(".json"))
+        .map((f) => [f, join(dir, f)] as const)
+    : []
+
+  it("found fixtures to validate", () => {
+    expect(models.length).toBeGreaterThan(10)
+  })
+
+  it.each(models)("validates importDiagram(%s)", (_name, path) => {
+    const model = importDiagram(JSON.parse(readFileSync(path, "utf8")))
+    if (!validate(model)) {
+      throw new Error(JSON.stringify(validate.errors, null, 2))
+    }
+    expect(validate(model)).toBe(true)
+  })
 })

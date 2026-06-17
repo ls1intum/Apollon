@@ -81,7 +81,7 @@
     {
       "name": "/react entry (peers external)",
       "path": "dist/react/react.js",
-      "limit": "110 kB"
+      "limit": "112 kB"
     },
     {
       "name": "yjs sync chunk",

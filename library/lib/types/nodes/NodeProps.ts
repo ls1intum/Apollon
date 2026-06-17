@@ -46,7 +46,8 @@ export type DeploymentComponentProps = {
 
 export type PetriNetPlaceProps = {
   tokens: number
-  capacity: number | "Infinity"
+  // Serialized as a string (e.g. "3", "Infinity") in persisted models.
+  capacity: number | string
 } & DefaultNodeProps
 
 export type BPMNTaskType =
@@ -98,8 +99,10 @@ export type BPMNEndEventType =
   | "signal"
   | "terminate"
 
+// Shared by start/intermediate/end event nodes, so eventType is the union of
+// all three — intermediate and end events carry their own values at runtime.
 export type BPMNEventProps = DefaultNodeProps & {
-  eventType: BPMNStartEventType
+  eventType: BPMNStartEventType | BPMNIntermediateEventType | BPMNEndEventType
 }
 
 export type BPMNGatewayType =
@@ -135,5 +138,6 @@ export type SfcActionTableProps = DefaultNodeProps & {
   actionRows: SfcActionRow[]
 }
 export type SfcTransitionBranchNodeProps = DefaultNodeProps & {
-  showHint: boolean
+  // Optional: persisted models created without it omit the key entirely.
+  showHint?: boolean
 }

@@ -773,16 +773,66 @@ function getNodeOverflowBoundsFromDOM(
 }
 
 /**
+ * Above- and below-`y` glyph extents as a fraction of font-size, by the SVG
+ * `dominant-baseline` that places the `<text>` `y` anchor.
+ *
+ * - `middle` (use-case `<<include>>`/`<<extend>>`, communication messages): `y`
+ *   sits at the glyph center, so the box is symmetric. Inter's cap+ascender
+ *   half-height is ~0.6em; 0.75 over-includes safely.
+ * - alphabetic/`auto`/absent (association role + multiplicity end-labels): `y`
+ *   IS the baseline, so the box is ASYMMETRIC — ascenders/caps rise ~0.9em
+ *   ABOVE `y` and descenders drop ~0.3em BELOW it. A symmetric ±0.75em would
+ *   clip the top of a cap-height label by ~0.15em. Over-include on both sides.
+ *
+ * Over-including is safe for an export clip; cropping a graded label is not.
+ */
+const BASELINE_EXTENTS: Record<
+  "middle" | "alphabetic",
+  { up: number; down: number }
+> = {
+  middle: { up: 0.75, down: 0.75 },
+  alphabetic: { up: 0.9, down: 0.3 },
+}
+
+/**
+ * Parse `transform="rotate(angle[, cx, cy])"` into its components. Accepts both
+ * the comma form (`rotate(30, 10, 20)`, EdgeIncludeExtendLabel) and the
+ * space form (`rotate(30 10 20)`, EdgeMiddleLabels). Returns `undefined` for a
+ * missing/zero/origin-only rotation so callers skip the rotation math.
+ */
+function parseRotateTransform(
+  transform: string | null
+): { angleRad: number; cx: number; cy: number } | undefined {
+  if (!transform) return undefined
+  const match = transform.match(
+    /rotate\(\s*(-?[\d.]+)(?:[\s,]+(-?[\d.]+)[\s,]+(-?[\d.]+))?\s*\)/
+  )
+  if (!match) return undefined
+  const angleDeg = parseFloat(match[1])
+  if (!Number.isFinite(angleDeg) || angleDeg === 0) return undefined
+  const cx = match[2] !== undefined ? parseFloat(match[2]) : 0
+  const cy = match[3] !== undefined ? parseFloat(match[3]) : 0
+  if (!Number.isFinite(cx) || !Number.isFinite(cy)) return undefined
+  return { angleRad: (angleDeg * Math.PI) / 180, cx, cy }
+}
+
+/**
  * Headless fallback for edge-label bounds. jsdom returns an all-zero
  * `getBoundingClientRect` for SVG `<text>`, so derive the label's flow-space box
- * from its absolute `x`/`y`, `text-anchor`, and a canvas-measured width. Heights
- * and an unknown font-size round up so a slightly-off measure still encloses the
- * glyphs — over-including is safe for a clip; cropping a graded label is not.
+ * from its absolute `x`/`y`, `text-anchor`, `dominant-baseline`, and a
+ * canvas-measured width. Extents round up so a slightly-off measure still
+ * encloses the glyphs — over-including is safe for a clip; cropping a graded
+ * label is not.
  *
- * Assumes axis-aligned, single-line edge text (true for all current edge
- * labels). A `transform="rotate(...)"` label would get an axis-aligned box of
- * the wrong aspect; harmless today (node bounds dominate) but revisit if a
- * rotated label can sit between tightly-spaced nodes.
+ * Handles the two edge-label transforms emitted by the editor:
+ *  - rotated labels (use-case `<<include>>`/`<<extend>>` and the rotated
+ *    use-case association labels via `transform="rotate(angle, cx, cy)"`): the
+ *    four un-rotated corners are rotated about the pivot before merging, so the
+ *    AABB has the correct aspect instead of an axis-aligned box of the wrong
+ *    shape;
+ *  - alphabetic-baseline labels (association role/multiplicity end-labels, no
+ *    `dominant-baseline`): asymmetric vertical extents so the ascender isn't
+ *    clipped.
  */
 function mergeEdgeTextBoundsFromAttributes(
   textEl: SVGTextElement,
@@ -808,8 +858,43 @@ function mergeEdgeTextBoundsFromAttributes(
   const anchor = textEl.getAttribute("text-anchor")
   const left =
     anchor === "middle" ? x - width / 2 : anchor === "end" ? x - width : x
-  const halfHeight = fontSize * 0.75 // dominant-baseline is "middle"; pad up
-  mergeRect(left, y - halfHeight, left + width, y + halfHeight)
+  const right = left + width
+
+  const baseline =
+    (textEl.getAttribute("dominant-baseline") ||
+      textEl.style.dominantBaseline) === "middle"
+      ? "middle"
+      : "alphabetic"
+  const { up, down } = BASELINE_EXTENTS[baseline]
+  const top = y - fontSize * up
+  const bottom = y + fontSize * down
+
+  const rotation = parseRotateTransform(textEl.getAttribute("transform"))
+  if (!rotation) {
+    mergeRect(left, top, right, bottom)
+    return
+  }
+
+  // Rotate the four un-rotated corners about the pivot and merge their AABB,
+  // matching the rendered orientation. SVG rotate() is clockwise in the
+  // y-down user space.
+  const { angleRad, cx, cy } = rotation
+  const cos = Math.cos(angleRad)
+  const sin = Math.sin(angleRad)
+  const rotate = (px: number, py: number) => {
+    const dx = px - cx
+    const dy = py - cy
+    return { x: cx + dx * cos - dy * sin, y: cy + dx * sin + dy * cos }
+  }
+  const corners = [
+    rotate(left, top),
+    rotate(right, top),
+    rotate(right, bottom),
+    rotate(left, bottom),
+  ]
+  const xs = corners.map((c) => c.x)
+  const ys = corners.map((c) => c.y)
+  mergeRect(Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys))
 }
 
 /**

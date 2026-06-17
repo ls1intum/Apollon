@@ -39,16 +39,17 @@ describe("embedFontFaceCss", () => {
   })
 })
 
-// The woff2 ships base64-inlined (style.css + the lazy export chunks), where
-// size-limit's webpack preset can't measure it, so budget the source bytes.
+// The woff2 ships base64-inlined (style.css + the lazy export chunks, ~3 copies
+// on disk), where size-limit's webpack preset can't measure it — so budget the
+// source bytes here. Covers Latin + Greek + Cyrillic + Vietnamese (~76 KB);
+// the ceiling guards against accidentally re-adding CJK or the full ~410 KB TTF.
 it.each(["Inter-Regular.woff2", "Inter-Bold.woff2"])(
-  "%s subset stays small (< 60 KB)",
+  "%s subset stays within budget (< 100 KB)",
   (name) => {
     const bytes = readFileSync(
       join(import.meta.dirname, "../../lib/assets/fonts", name)
     ).byteLength
-    // Coarse tripwire: a real Latin subset, never the full ~310 KB TTF.
     expect(bytes).toBeGreaterThan(10_000)
-    expect(bytes).toBeLessThan(60_000)
+    expect(bytes).toBeLessThan(100_000)
   }
 )
