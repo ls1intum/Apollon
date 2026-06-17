@@ -190,7 +190,7 @@ await page.setContent(`
 <!DOCTYPE html>
 <html><body>
   <script type="module">
-    import { ApollonEditor, importDiagram } from "https://esm.sh/@tumaet/apollon@4.7.0";
+    import { ApollonEditor, importDiagram } from "https://esm.sh/@tumaet/apollon@4.6.0";
     window.exportSVG = async (model) => {
       const result = await ApollonEditor.exportModelAsSvg(importDiagram(model), {
         svgMode: "compat",
