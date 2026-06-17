@@ -21,6 +21,12 @@ The font stack is now a single exported `FONT_FAMILY` constant. New docs cover
 [headless rendering](https://ls1intum.github.io/Apollon/library/api/headless-rendering)
 end to end.
 
+Headless edge-label fix: jsdom returns a zero `getBoundingClientRect` for SVG
+text, so edge labels (communication messages, multiplicities) contributed
+nothing to the export clip and an overhanging label was silently cropped. The
+export now falls back to a `measureText`-based bound for edge text when the
+screen rect is empty, so labels are kept in the clip (browser path unchanged).
+
 Also publishes the diagram model JSON as a stable, versioned contract (#748): a
 JSON Schema generated from the `UMLModel` type, shipped at
 `@tumaet/apollon/schema` (and `unpkg.com/@tumaet/apollon/schema`) and documented

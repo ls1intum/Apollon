@@ -2,6 +2,7 @@ import { ReactFlowInstance, type Node, type Edge, Rect } from "@xyflow/react"
 import { CSS_VARIABLE_FALLBACKS, LAYOUT, STROKE_COLOR } from "@/constants"
 import { DEFAULT_FONT_SIZE, FONT_FAMILY } from "@/fontStack"
 import { Point } from "./pathParsing"
+import { measureTextWidth } from "./textUtils"
 
 /**
  * Font stack for exported SVGs (matches the browser). `compat` mode also embeds
@@ -772,6 +773,41 @@ function getNodeOverflowBoundsFromDOM(
 }
 
 /**
+ * Headless fallback for edge-label bounds. jsdom returns an all-zero
+ * `getBoundingClientRect` for SVG `<text>`, so derive the label's flow-space box
+ * from its absolute `x`/`y`, `text-anchor`, and a canvas-measured width. Heights
+ * and an unknown font-size round up so a slightly-off measure still encloses the
+ * glyphs — over-including is safe for a clip; cropping a graded label is not.
+ */
+function mergeEdgeTextBoundsFromAttributes(
+  textEl: SVGTextElement,
+  mergeRect: (x1: number, y1: number, x2: number, y2: number) => void
+): void {
+  const text = textEl.textContent ?? ""
+  if (!text.trim()) return
+
+  const x = parseFloat(textEl.getAttribute("x") ?? "")
+  const y = parseFloat(textEl.getAttribute("y") ?? "")
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return
+
+  const fontSize =
+    parseFloat(textEl.getAttribute("font-size") || textEl.style.fontSize) ||
+    DEFAULT_FONT_SIZE
+  const fontWeight =
+    textEl.getAttribute("font-weight") || textEl.style.fontWeight || "400"
+  const width = measureTextWidth(
+    text,
+    `${fontWeight} ${fontSize}px ${FONT_FAMILY}`
+  )
+
+  const anchor = textEl.getAttribute("text-anchor")
+  const left =
+    anchor === "middle" ? x - width / 2 : anchor === "end" ? x - width : x
+  const halfHeight = fontSize * 0.75 // dominant-baseline is "middle"; pad up
+  mergeRect(left, y - halfHeight, left + width, y + halfHeight)
+}
+
+/**
  * Calculate bounds for rendered SVG text and labels.
  *
  * Some labels extend beyond node/edge geometry and are not reliably captured by
@@ -885,6 +921,12 @@ function getTextBoundsFromDOM(
         return
       }
       if (rect.width === 0 && rect.height === 0) {
+        // Headless renderers (jsdom) return an all-zero rect for SVG text, so
+        // the screen-rect path above can't see edge labels — and an overhanging
+        // label (communication messages, multiplicities) would be silently
+        // cropped from the export clip. Edge text carries absolute flow-space
+        // x/y, so reconstruct its box from those plus a real measureText width.
+        mergeEdgeTextBoundsFromAttributes(textEl as SVGTextElement, mergeRect)
         return
       }
 

@@ -17,7 +17,10 @@ const fixturesDir = path.resolve(dir, "../../../webapp/tests/fixtures")
 const loadFixture = (file: string) =>
   JSON.parse(fs.readFileSync(path.join(fixturesDir, file), "utf8"))
 
-type ExportResult = { svg: string; clip: { width: number; height: number } }
+type ExportResult = {
+  svg: string
+  clip: { x: number; y: number; width: number; height: number }
+}
 
 function exportViaWorker(model: unknown): Promise<ExportResult> {
   const worker = new Worker(workerPath)
@@ -70,18 +73,18 @@ const ALL_TYPES = [
   "sfc.json",
 ]
 
-// Browser-authored (Chromium + the bundled Inter) node-width multisets, read
-// from the svg-export visual harness. The jsdom export must land within one
-// 10px min-width grid bucket of these for the text-sized types — the proof that
-// server measureText uses real Inter metrics. If the `canvas` alias regresses,
-// measureText drops to the no-canvas `text.length * 8` fallback and widths blow
-// past this tolerance. Refresh with the visual harness if node sizing changes.
+// Node-width multisets captured from the browser editor exporting these same
+// fixtures (Chromium + the bundled Inter). The jsdom export must land within
+// one 10px min-width grid step of them: proof that server measureText uses real
+// Inter metrics, not the no-canvas `text.length * 8` fallback a broken `canvas`
+// alias would trigger. Recapture from the editor if node sizing changes.
 const BROWSER_NODE_WIDTHS: Record<string, number[]> = {
   "class-diagram.json": [160, 200, 200, 200, 200, 200, 340],
   "object-diagram.json": [170, 180, 180],
   "communication-diagram.json": [180, 180, 180],
   "sfc.json": [30, 30, 30, 72, 160, 160, 160, 160],
 }
+// One 10px min-width grid step (LAYOUT min-width snaps to 10) plus 2px rounding.
 const WIDTH_TOLERANCE_PX = 12
 
 describe("jsdom SVG export (no browser)", () => {
@@ -118,4 +121,29 @@ describe("jsdom SVG export (no browser)", () => {
       })
     }
   )
+
+  // Integrity: edge labels are student-authored content. jsdom returns a zero
+  // getBoundingClientRect for SVG text, so without the measureText-based bounds
+  // fallback an overhanging label is silently cropped from the graded image.
+  it("keeps every edge label inside the export clip (no cropped messages)", async () => {
+    const { svg, clip } = await exportViaWorker(
+      loadFixture("communication-diagram.json")
+    )
+
+    const labels = [
+      ...svg.matchAll(/<text x="([-\d.]+)" y="([-\d.]+)"[^>]*>([^<]+)</g),
+    ]
+      .map((m) => ({ x: Number(m[1]), y: Number(m[2]), text: m[3] }))
+      .filter((t) => /\d:\s/.test(t.text)) // message labels like "1: request()"
+
+    expect(labels.length).toBeGreaterThan(0)
+    expect(labels.map((l) => l.text)).toContain("1: request()")
+
+    for (const label of labels) {
+      expect(label.x).toBeGreaterThanOrEqual(clip.x)
+      expect(label.x).toBeLessThanOrEqual(clip.x + clip.width)
+      expect(label.y).toBeGreaterThanOrEqual(clip.y)
+      expect(label.y).toBeLessThanOrEqual(clip.y + clip.height)
+    }
+  })
 })
