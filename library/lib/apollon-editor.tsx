@@ -177,10 +177,13 @@ export class ApollonEditor {
       this.metadataStore.getState().setScrollLock(options.scrollLock)
     }
 
-    if (
-      this.metadataStore.getState().mode === Apollon.ApollonMode.Modelling &&
-      !collaboration.enabled
-    ) {
+    this.diagramStore.getState().setCollaborationEnabled(collaboration.enabled)
+
+    // Undo/redo runs in modelling, collaboration included. The UndoManager
+    // tracks only locally-authored ("store") writes, so each peer undoes only
+    // their own edits (local undo). Safe because transient drag/resize frames
+    // are no longer persisted (see diagramStore.onNodesChange).
+    if (this.metadataStore.getState().mode === Apollon.ApollonMode.Modelling) {
       this.diagramStore.getState().initializeUndoManager()
     }
 
