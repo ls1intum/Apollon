@@ -45,6 +45,12 @@ describe("createApollonTheme", () => {
       danger: "15",
       dangerBackground: "16",
       dangerBorder: "17",
+      surface: "18",
+      surfaceSunken: "19",
+      surfaceHover: "20",
+      border: "21",
+      borderSubtle: "22",
+      radius: "8px",
     }
     const style = createApollonTheme(full)
     // Every field produces exactly one --apollon-* property.

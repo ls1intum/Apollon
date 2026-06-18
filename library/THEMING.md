@@ -57,6 +57,12 @@ ergonomic alias `createApollonTheme` maps to the CSS variable.
 | `background`               | `--apollon-background`                  | Canvas / surface background                         |
 | `backgroundInverse`        | `--apollon-background-inverse`          | Inverse surface (e.g. tooltips)                     |
 | `backgroundVariant`        | `--apollon-background-variant`          | Slightly raised surface variant                     |
+| `surface`                  | `--apollon-surface`                     | Raised card / popover / menu surface                |
+| `surfaceSunken`            | `--apollon-surface-sunken`              | Sunken / recessed surface                           |
+| `surfaceHover`             | `--apollon-surface-hover`               | Hover state of the raised surface                   |
+| `border`                   | `--apollon-border`                      | Default border / divider color                      |
+| `borderSubtle`             | `--apollon-border-subtle`               | Subtle border / divider color                       |
+| `radius`                   | `--apollon-radius`                      | Base corner radius for shared primitives            |
 | `gray`                     | `--apollon-gray`                        | Neutral gray surface                                |
 | `grayVariant`              | `--apollon-gray-variant`                | Stronger gray (borders / dividers)                  |
 | `grid`                     | `--apollon-grid`                        | Canvas grid line color                              |

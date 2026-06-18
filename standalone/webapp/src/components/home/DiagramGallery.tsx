@@ -5,6 +5,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type ReactNode,
 } from "react"
 import { Plus, Upload } from "lucide-react"
 import { DiagramGallerySkeleton } from "@/components/home/DiagramGallerySkeleton"
@@ -34,13 +35,10 @@ import {
   type RecentDiagram,
 } from "./DiagramCard"
 import { getDiagramTypeLabel } from "./diagramTypeMeta"
-import {
-  SegmentedControl,
-  type SegmentedControlOption,
-} from "./SegmentedControl"
 import { DropdownFilterMenu } from "./DropdownFilterMenu"
 import { Button } from "@tumaet/ui/components/button"
 import { Badge } from "@tumaet/ui/components/badge"
+import { Tabs, TabsList, TabsTrigger } from "@tumaet/ui/components/tabs"
 
 const normalize = (value: string) => value.trim().toLowerCase()
 const INITIAL_VISIBLE_COUNT = 9
@@ -249,6 +247,13 @@ type DiagramGalleryProps = {
   onImportJson?: () => void
 }
 
+type TabOption<T extends string> = {
+  value: T
+  label?: ReactNode
+  icon?: ReactNode
+  ariaLabel: string
+}
+
 const diagramSourceOptions = [
   {
     value: "all",
@@ -280,7 +285,7 @@ const diagramSourceOptions = [
     ),
     ariaLabel: "Shared diagrams",
   },
-] satisfies readonly SegmentedControlOption<DiagramSourceFilter>[]
+] satisfies readonly TabOption<DiagramSourceFilter>[]
 
 const viewModeOptions = [
   {
@@ -293,7 +298,7 @@ const viewModeOptions = [
     icon: <TableViewIcon />,
     ariaLabel: "Table view",
   },
-] satisfies readonly SegmentedControlOption<DiagramViewMode>[]
+] satisfies readonly TabOption<DiagramViewMode>[]
 
 export const DiagramGallery = ({
   initialSearchTerm = "",
@@ -802,17 +807,29 @@ export const DiagramGallery = ({
 
         <div className="grid w-full gap-2 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
           <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_auto] lg:max-w-[620px] lg:grid-cols-[auto_auto] lg:justify-start">
-            <SegmentedControl
+            <Tabs
               className="w-full sm:max-w-full lg:w-fit"
-              sizeClassName={controlHeightClass}
-              itemClassName={`flex-1 px-2 sm:px-3 lg:flex-none ${controlTextClass}`}
-              options={diagramSourceOptions}
               value={diagramSource}
-              onChange={(nextSource) => {
-                setDiagramSource(nextSource)
+              onValueChange={(value) => {
+                setDiagramSource(value as DiagramSourceFilter)
                 setVisibleCount(INITIAL_VISIBLE_COUNT)
               }}
-            />
+            >
+              <TabsList
+                className={`w-full gap-[2px] rounded-lg bg-card p-[2px] lg:w-fit ${controlHeightClass}`}
+              >
+                {diagramSourceOptions.map((option) => (
+                  <TabsTrigger
+                    key={option.value}
+                    value={option.value}
+                    aria-label={option.ariaLabel}
+                    className={`min-w-0 flex-1 px-2 leading-4 text-muted-foreground sm:px-3 lg:flex-none ${controlTextClass} data-active:bg-primary data-active:text-primary-foreground dark:data-active:bg-primary dark:data-active:text-primary-foreground`}
+                  >
+                    {option.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
             <button
               type="button"
               onClick={() => {
@@ -960,14 +977,26 @@ export const DiagramGallery = ({
               ]}
             />
             <div className="justify-self-start sm:justify-self-end">
-              <SegmentedControl
+              <Tabs
                 className="w-fit"
-                sizeClassName={controlHeightClass}
-                itemClassName="w-8 px-0"
-                options={viewModeOptions}
                 value={viewMode}
-                onChange={(nextViewMode) => setViewMode(nextViewMode)}
-              />
+                onValueChange={(value) => setViewMode(value as DiagramViewMode)}
+              >
+                <TabsList
+                  className={`w-fit gap-[2px] rounded-lg bg-card p-[2px] ${controlHeightClass}`}
+                >
+                  {viewModeOptions.map((option) => (
+                    <TabsTrigger
+                      key={option.value}
+                      value={option.value}
+                      aria-label={option.ariaLabel}
+                      className="w-8 flex-none px-0 text-muted-foreground data-active:bg-primary data-active:text-primary-foreground dark:data-active:bg-primary dark:data-active:text-primary-foreground"
+                    >
+                      {option.icon}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
             </div>
           </div>
         </div>
@@ -1105,14 +1134,16 @@ export const DiagramGallery = ({
                                 }
                               >
                                 <td className="px-3 py-3 align-middle">
-                                  <button
+                                  <Button
                                     type="button"
+                                    variant="ghost"
+                                    size="icon-sm"
                                     aria-label={
                                       diagram.favorite
                                         ? "Remove from favorites"
                                         : "Add to favorites"
                                     }
-                                    className="home-card-icon-button flex h-[30px] w-[30px] cursor-pointer items-center justify-center focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
+                                    className="home-card-icon-button size-[30px]"
                                     style={{
                                       color: diagram.favorite
                                         ? "var(--home-favorite-star)"
@@ -1136,7 +1167,7 @@ export const DiagramGallery = ({
                                     }
                                   >
                                     <svg
-                                      className="h-[18px] w-[18px]"
+                                      className="size-[18px]"
                                       viewBox="0 0 24 24"
                                       fill={
                                         diagram.favorite
@@ -1152,7 +1183,7 @@ export const DiagramGallery = ({
                                         strokeLinejoin="round"
                                       />
                                     </svg>
-                                  </button>
+                                  </Button>
                                 </td>
                                 <td className="w-[26%] px-3 py-3 align-middle text-sm text-foreground">
                                   {diagram.isExpired ? (
@@ -1170,7 +1201,13 @@ export const DiagramGallery = ({
                                   )}
                                 </td>
                                 <td className="hidden px-3 py-3 align-middle text-xs text-muted-foreground md:table-cell">
-                                  <Badge className="h-auto rounded border-0 px-2 py-0.5 text-[10px] font-medium bg-[var(--home-tag-type-bg)] text-[var(--home-tag-type-text)]">
+                                  <Badge
+                                    className="h-auto rounded border-0 px-2 py-0.5 text-[10px] font-medium"
+                                    style={{
+                                      background: "var(--home-tag-type-bg)",
+                                      color: "var(--home-tag-type-text)",
+                                    }}
+                                  >
                                     {getDiagramTypeLabel(diagram.type)}
                                   </Badge>
                                 </td>
@@ -1183,18 +1220,35 @@ export const DiagramGallery = ({
                                 <td className="hidden px-3 py-3 align-middle lg:table-cell">
                                   <div className="flex flex-wrap items-center gap-1">
                                     <Badge
-                                      className={`h-auto rounded border-0 px-2 py-0.5 text-[10px] font-semibold ${
+                                      className="h-auto rounded border-0 px-2 py-0.5 text-[10px] font-semibold"
+                                      style={
                                         diagram.source === "shared"
-                                          ? "bg-[var(--home-tag-shared-bg)] text-[var(--home-tag-shared-text)]"
-                                          : "bg-[var(--home-tag-local-bg)] text-[var(--home-tag-local-text)]"
-                                      }`}
+                                          ? {
+                                              background:
+                                                "var(--home-tag-shared-bg)",
+                                              color:
+                                                "var(--home-tag-shared-text)",
+                                            }
+                                          : {
+                                              background:
+                                                "var(--home-tag-local-bg)",
+                                              color:
+                                                "var(--home-tag-local-text)",
+                                            }
+                                      }
                                     >
                                       {diagram.source === "shared"
                                         ? "Shared"
                                         : "Local"}
                                     </Badge>
                                     {diagram.source === "shared" && (
-                                      <Badge className="h-auto rounded border-0 bg-[var(--home-tag-type-bg)] px-2 py-0.5 text-[10px] font-medium text-[var(--home-tag-type-text)]">
+                                      <Badge
+                                        className="h-auto rounded border-0 px-2 py-0.5 text-[10px] font-medium"
+                                        style={{
+                                          background: "var(--home-tag-type-bg)",
+                                          color: "var(--home-tag-type-text)",
+                                        }}
+                                      >
                                         {getSharedDiagramViewBadge(
                                           diagram.lastSharedView
                                         )}

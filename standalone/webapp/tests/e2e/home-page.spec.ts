@@ -218,9 +218,9 @@ test.describe("Home page — diagram gallery", () => {
   test("source filter narrows to local diagrams", async ({ page }) => {
     // All seeded diagrams are local — switching to "Local" keeps all 3,
     // switching to "Shared" shows the empty shared state.
-    await page.getByRole("button", { name: "Local diagrams" }).click()
+    await page.getByRole("tab", { name: "Local diagrams" }).click()
     await expect(cards(page)).toHaveCount(3)
-    await page.getByRole("button", { name: "Shared diagrams" }).click()
+    await page.getByRole("tab", { name: "Shared diagrams" }).click()
     await expect(page.getByText("No shared diagrams yet")).toBeVisible()
   })
 
@@ -301,7 +301,7 @@ test.describe("Home page — last modified sort", () => {
   })
 
   test("table view shows a 'Last modified' column", async ({ page }) => {
-    await page.getByRole("button", { name: "Table view" }).click()
+    await page.getByRole("tab", { name: "Table view" }).click()
     await expect(page.locator("table thead")).toContainText("Last modified")
     await expect(page.locator("table thead")).not.toContainText("Last viewed")
   })
@@ -441,12 +441,12 @@ test.describe("Home page — view toggle", () => {
     // Default grid view renders role="listitem" cards.
     await expect(cards(page)).toHaveCount(2)
 
-    await page.getByRole("button", { name: "Table view" }).click()
+    await page.getByRole("tab", { name: "Table view" }).click()
     await expect(page.locator("table")).toBeVisible()
     await expect(page.locator("table thead")).toContainText("Name")
     await expect(cards(page)).toHaveCount(0)
 
-    await page.getByRole("button", { name: "Grid view" }).click()
+    await page.getByRole("tab", { name: "Grid view" }).click()
     await expect(cards(page)).toHaveCount(2)
   })
 })

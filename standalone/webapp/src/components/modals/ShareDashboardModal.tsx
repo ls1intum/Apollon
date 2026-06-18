@@ -6,6 +6,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@tumaet/ui/components/tooltip"
+import { Input } from "@tumaet/ui/components/input"
+import { Button } from "@tumaet/ui/components/button"
 import { toast } from "react-toastify"
 import { useNavigate } from "react-router"
 import { useModalContext } from "@/contexts"
@@ -286,35 +288,27 @@ export const ShareDashboardModal = (
       {createdDiagramId && (
         <HomeDialogField label="Anyone with this link">
           <div className="flex items-stretch">
-            <input
+            <Input
               type="text"
               value={currentLink}
               readOnly
-              className="h-9 min-w-0 grow rounded-l-md border border-r-0 px-3 text-xs outline-none"
-              style={{
-                borderColor: "var(--home-border-default)",
-                background: "var(--home-surface-sunken)",
-                color: "var(--home-text-secondary)",
-              }}
+              className="h-9 min-w-0 grow rounded-r-none border-r-0 bg-muted text-xs text-muted-foreground"
             />
 
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger
                   render={
-                    <button
+                    <Button
                       type="button"
+                      variant="outline"
+                      size="icon"
                       onClick={handleCopy}
-                      className="flex h-9 w-9 shrink-0 items-center justify-center border border-r-0 transition-colors duration-150 hover:opacity-80"
-                      style={{
-                        borderColor: "var(--home-border-default)",
-                        background: copied
-                          ? "var(--home-accent-soft)"
-                          : "var(--home-surface-raised)",
-                        color: copied
-                          ? "var(--home-accent-base)"
-                          : "var(--home-text-secondary)",
-                      }}
+                      className={`size-9 shrink-0 rounded-none border-r-0 ${
+                        copied
+                          ? "bg-accent-soft text-primary"
+                          : "text-muted-foreground"
+                      }`}
                       aria-label="Copy link"
                     />
                   }
@@ -330,17 +324,12 @@ export const ShareDashboardModal = (
             </TooltipProvider>
 
             <div className="relative" data-mode-dropdown="">
-              <button
+              <Button
                 ref={modeTriggerRef}
                 type="button"
+                variant="outline"
                 onClick={() => setModeDropdownOpen((o) => !o)}
-                className="flex h-9 items-center gap-1.5 rounded-r-md border px-3 text-xs font-medium transition-colors duration-150 hover:opacity-80"
-                style={{
-                  borderColor: "var(--home-border-default)",
-                  background: "var(--home-surface-raised)",
-                  color: "var(--home-text-primary)",
-                  minWidth: "max-content",
-                }}
+                className="h-9 min-w-max gap-1.5 rounded-l-none px-3 text-xs font-medium"
                 aria-haspopup="listbox"
                 aria-expanded={modeDropdownOpen}
               >
@@ -359,7 +348,7 @@ export const ShareDashboardModal = (
                     strokeLinejoin="round"
                   />
                 </svg>
-              </button>
+              </Button>
 
               {modeDropdownOpen && (
                 <ul

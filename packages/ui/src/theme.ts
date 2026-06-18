@@ -60,6 +60,19 @@ export interface ApollonTheme {
   /** Danger alert border. Maps to `--apollon-alert-danger-border`. */
   dangerBorder?: string
 
+  /** Raised card/popover/menu surface. Maps to `--apollon-surface`. */
+  surface?: string
+  /** Sunken/recessed surface (e.g. wells, muted areas). Maps to `--apollon-surface-sunken`. */
+  surfaceSunken?: string
+  /** Hover state of the raised surface. Maps to `--apollon-surface-hover`. */
+  surfaceHover?: string
+  /** Default border / divider color. Maps to `--apollon-border`. */
+  border?: string
+  /** Subtle border / divider color. Maps to `--apollon-border-subtle`. */
+  borderSubtle?: string
+  /** Base corner radius for shared primitives (CSS length). Maps to `--apollon-radius`. */
+  radius?: string
+
   /** Toggle/switch outline. Maps to `--apollon-switch-box-border-color`. */
   switchBoxBorderColor?: string
   /** List-group surface color. Maps to `--apollon-list-group-color`. */
@@ -90,6 +103,12 @@ const TOKEN_VAR_MAP: Record<keyof ApollonTheme, `--apollon-${string}`> = {
   danger: "--apollon-alert-danger-color",
   dangerBackground: "--apollon-alert-danger-background",
   dangerBorder: "--apollon-alert-danger-border",
+  surface: "--apollon-surface",
+  surfaceSunken: "--apollon-surface-sunken",
+  surfaceHover: "--apollon-surface-hover",
+  border: "--apollon-border",
+  borderSubtle: "--apollon-border-subtle",
+  radius: "--apollon-radius",
   switchBoxBorderColor: "--apollon-switch-box-border-color",
   listGroupColor: "--apollon-list-group-color",
   btnOutlineSecondaryColor: "--apollon-btn-outline-secondary-color",

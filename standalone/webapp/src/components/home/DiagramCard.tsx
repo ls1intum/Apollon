@@ -19,6 +19,13 @@ import {
 import { Spinner } from "@tumaet/ui/components/spinner"
 import { Badge } from "@tumaet/ui/components/badge"
 import { Button } from "@tumaet/ui/components/button"
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@tumaet/ui/components/card"
+import { Separator } from "@tumaet/ui/components/separator"
 import { Link, useNavigate } from "react-router"
 import { toast } from "react-toastify"
 import { useModalContext } from "@/contexts"
@@ -593,13 +600,12 @@ const DiagramCardComponent = ({
   }
 
   return (
-    <div
+    <Card
       role="listitem"
-      className={`home-diagram-card group relative mx-auto flex flex-col overflow-hidden bg-card transition-all duration-[280ms] ease-[cubic-bezier(0.16,1,0.3,1)] [--card-scale:1] hover:bg-accent-hover md:[--card-scale:1.0769231] xl:[--card-scale:1.1538462] ${
+      className={`home-diagram-card group relative mx-auto flex flex-col gap-0 overflow-hidden border-none py-0 ring-0 transition-all duration-[280ms] ease-[cubic-bezier(0.16,1,0.3,1)] [--card-scale:1] hover:bg-accent-hover md:[--card-scale:1.0769231] xl:[--card-scale:1.1538462] ${
         isHighlighted ? "bg-accent-hover" : "hover:shadow-sm"
       }`}
       style={{
-        border: "none",
         borderRadius: "var(--home-radius-sm)",
         width: "100%",
         maxWidth: "300px",
@@ -649,8 +655,8 @@ const DiagramCardComponent = ({
         style={{ outlineColor: "var(--home-accent-ring)" }}
       >
         {/* ---- Header Part: preview + title aligned horizontally ---- */}
-        <div
-          className="flex w-full flex-col"
+        <CardHeader
+          className="flex w-full flex-col gap-0 rounded-none px-0"
           style={{
             height: scalePx(CARD_HEADER_HEIGHT_PX),
             background: "transparent",
@@ -707,7 +713,7 @@ const DiagramCardComponent = ({
           </div>
 
           {/* ---- Title section (smaller, bottom-left in header) ---- */}
-          <div className="mt-auto w-full text-left">
+          <CardContent className="mt-auto w-full px-0 text-left">
             <p
               className="truncate"
               title={title}
@@ -720,20 +726,22 @@ const DiagramCardComponent = ({
             >
               {title}
             </p>
-          </div>
-        </div>
+          </CardContent>
+        </CardHeader>
 
         {/* ---- Divider line ---- */}
-        <div
+        <Separator
+          className="bg-border-subtle"
           style={{
-            borderTop: "0.5px solid var(--home-border-subtle)",
+            height: "0.5px",
+            width: "auto",
             margin: `0 ${scalePx(CARD_PAD_X_PX)}`,
           }}
         />
 
         {/* ---- Bottom metadata + tags row ---- */}
-        <div
-          className="flex items-center justify-between w-full"
+        <CardFooter
+          className="flex w-full items-center justify-between rounded-none border-t-0 bg-transparent p-0"
           style={{
             padding: `${scalePx(CARD_FOOTER_PAD_TOP_PX)} ${scalePx(CARD_PAD_X_PX)} ${scalePx(CARD_FOOTER_PAD_BOTTOM_PX)} ${scalePx(CARD_PAD_X_PX)}`,
             height: scalePx(CARD_FOOTER_HEIGHT_PX),
@@ -834,17 +842,19 @@ const DiagramCardComponent = ({
               </Badge>
             ) : null}
           </div>
-        </div>
+        </CardFooter>
       </Link>
 
       {/* ---- Star / Favorite button – overlaid top-left ---- */}
       {canToggleFavorite && (
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon-sm"
           aria-label={
             diagram.favorite ? "Remove from favorites" : "Add to favorites"
           }
-          className="home-card-icon-button absolute z-30 flex cursor-pointer items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2"
+          className="home-card-icon-button absolute z-30"
           style={{
             left: scalePx(CARD_PAD_X_PX),
             top: scalePx(CARD_PAD_X_PX),
@@ -863,7 +873,7 @@ const DiagramCardComponent = ({
           onClick={handleFavoriteToggle}
         >
           <svg
-            className="h-[18px] w-[18px]"
+            className="size-[18px]"
             viewBox="0 0 24 24"
             aria-hidden="true"
             fill={diagram.favorite ? "currentColor" : "none"}
@@ -875,7 +885,7 @@ const DiagramCardComponent = ({
               strokeLinejoin="round"
             />
           </svg>
-        </button>
+        </Button>
       )}
 
       {/* ---- Three-dot menu – overlaid top-right ---- */}
@@ -899,7 +909,7 @@ const DiagramCardComponent = ({
         onSharedDiagramRemoved={onSharedDiagramRemoved}
         onSharedDiagramViewChange={onSharedDiagramViewChange}
       />
-    </div>
+    </Card>
   )
 }
 

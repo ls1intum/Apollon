@@ -26,7 +26,7 @@ interface Props {
   latestSavedVersion: PendingVersion | undefined
 }
 
-const ROW_BORDER = "1px solid rgba(255, 255, 255, 0.06)"
+const ROW_BORDER = "1px solid var(--home-on-dark-border)"
 
 /**
  * Pseudo-row at the top of the sidebar that represents HEAD ("you are

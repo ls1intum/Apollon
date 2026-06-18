@@ -15,6 +15,7 @@ import {
 import { useNavigate } from "react-router"
 import { toast } from "react-toastify"
 import { Button } from "@tumaet/ui/components/button"
+import { Input } from "@tumaet/ui/components/input"
 import { addSharedDiagramEntry } from "@/utils/sharedDiagramStorage"
 import {
   buildSharedDiagramPath,
@@ -141,11 +142,11 @@ export const ShareModal = () => {
           Recently shared Diagram:
         </legend>
         <div className="flex items-center">
-          <input
+          <Input
             type="text"
             value={window.location.href}
             readOnly
-            className="h-[42px] grow rounded-md rounded-r-none border border-r-0 border-[var(--apollon-primary-contrast)] bg-[var(--apollon-background)] px-3 py-2 text-[var(--apollon-primary-contrast)]"
+            className="h-[42px] grow rounded-r-none border-r-0"
           />
           <Button
             onClick={() => copyToClipboard(window.location.href)}

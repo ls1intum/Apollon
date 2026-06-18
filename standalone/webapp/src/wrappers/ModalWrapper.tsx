@@ -17,7 +17,9 @@ import {
 import { ModalName, ModalProps } from "@/types"
 import {
   Dialog,
+  DialogClose,
   DialogContent,
+  DialogHeader,
   DialogTitle,
 } from "@tumaet/ui/components/dialog"
 import { XIcon } from "lucide-react"
@@ -113,10 +115,10 @@ export const ModalWrapper: React.FC<ModalWrapperProps> = ({ name, props }) => {
         <DialogContent
           showCloseButton={false}
           className={cn(
-            "flex max-w-none flex-col gap-0 overflow-hidden p-0",
+            "flex max-w-none flex-col gap-0 overflow-hidden bg-background p-0",
             isHomeDialog
-              ? "max-h-[92vh] rounded-[15px] bg-background"
-              : "max-h-[90vh] rounded-md bg-[var(--apollon-background)]"
+              ? "max-h-[92vh] rounded-[15px]"
+              : "max-h-[90vh] rounded-md"
           )}
           style={
             isHomeDialog
@@ -129,42 +131,38 @@ export const ModalWrapper: React.FC<ModalWrapperProps> = ({ name, props }) => {
               : { width: "50vw", minWidth: "20vw", maxWidth: "90vw" }
           }
         >
-          {/* Header */}
-          <div
+          {/* Header — the shadcn DialogHeader/DialogTitle/DialogClose building
+              blocks; the home variant keeps its accent bar + Poppins title and
+              the editor variant keeps its divider via the styling below. */}
+          <DialogHeader
             className={cn(
-              "flex items-center justify-between gap-2",
+              "flex-row items-center justify-between gap-2",
               isHomeDialog
                 ? "rounded-t-[15px] bg-primary px-5 py-[18px]"
-                : "p-4"
+                : "border-b border-b-[var(--apollon-background-variant)] p-4"
             )}
           >
             <DialogTitle
               className={cn(
-                "min-w-0 text-xl leading-tight font-semibold",
-                isHomeDialog
-                  ? "truncate text-[clamp(0.95rem,4vw,1.3rem)] font-medium text-primary-foreground [font-family:Poppins,sans-serif]"
-                  : "text-[var(--apollon-primary-contrast)]"
+                "min-w-0 text-xl leading-tight font-semibold text-primary-foreground",
+                isHomeDialog &&
+                  "truncate text-[clamp(0.95rem,4vw,1.3rem)] font-medium [font-family:Poppins,sans-serif]"
               )}
             >
               {MODAL_TITLES[name]}
             </DialogTitle>
-            <button
-              type="button"
+            <DialogClose
               aria-label="Close"
-              onClick={handleClose}
               className={cn(
-                "flex shrink-0 cursor-pointer items-center justify-center p-1 transition-colors",
+                "flex shrink-0 cursor-pointer items-center justify-center rounded-md p-1 text-primary-foreground transition-colors",
                 isHomeDialog
-                  ? "rounded-md text-primary-foreground hover:bg-[var(--home-on-accent-bg-hover)] hover:text-[var(--home-on-accent-text)]"
-                  : "rounded-sm text-[var(--apollon-primary-contrast)] hover:bg-[var(--apollon-background-variant)]"
+                  ? "hover:bg-[var(--home-on-accent-bg-hover)] hover:text-[var(--home-on-accent-text)]"
+                  : "hover:bg-[var(--apollon-background-variant)]"
               )}
             >
               <XIcon className="size-5" aria-hidden />
-            </button>
-          </div>
-          {!isHomeDialog && (
-            <div className="h-px w-full bg-[var(--apollon-background-variant)]" />
-          )}
+            </DialogClose>
+          </DialogHeader>
 
           {/* Progress bar — sits between header and content, outside scroll */}
           <ModalProgressBar />

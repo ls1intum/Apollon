@@ -348,7 +348,7 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
                   ? "No changes since the last saved version"
                   : undefined
             }
-            className="inline-flex cursor-pointer items-center justify-center self-end rounded-md px-3.5 py-1 text-sm font-semibold transition-colors hover:[background:#ffffff] disabled:cursor-not-allowed disabled:[background:rgba(255,255,255,0.12)] disabled:[color:var(--btn-disabled-color)]"
+            className="inline-flex cursor-pointer items-center justify-center self-end rounded-md px-3.5 py-1 text-sm font-semibold transition-colors hover:[background:#ffffff] disabled:cursor-not-allowed disabled:[background:var(--home-on-dark-row-disabled)] disabled:[color:var(--btn-disabled-color)]"
             style={
               {
                 color: NAVBAR_BACKGROUND_COLOR,
@@ -398,7 +398,7 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
                   : "Show autosave versions"
               }
               aria-pressed={showAutosaves}
-              className="inline-flex size-6 cursor-pointer items-center justify-center rounded-md bg-transparent p-0.5 outline-none transition-colors hover:[background:rgba(255,255,255,0.06)] focus-visible:ring-2 focus-visible:ring-white/40"
+              className="inline-flex size-6 cursor-pointer items-center justify-center rounded-md bg-transparent p-0.5 outline-none transition-colors hover:[background:var(--home-on-dark-row-hover)] focus-visible:ring-2 focus-visible:ring-white/40"
               style={{ color: showAutosaves ? TEXT_PRIMARY : TEXT_MUTED }}
             >
               <HistoryIcon className="size-4" aria-hidden />
@@ -526,7 +526,7 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
                   type="button"
                   onClick={() => loadMoreVersions(diagramId)}
                   disabled={loading}
-                  className="cursor-pointer rounded-md bg-transparent px-2 py-1 text-sm font-medium transition-colors hover:[background:rgba(255,255,255,0.06)] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="cursor-pointer rounded-md bg-transparent px-2 py-1 text-sm font-medium transition-colors hover:[background:var(--home-on-dark-row-hover)] disabled:cursor-not-allowed disabled:opacity-60"
                   style={{ color: TEXT_PRIMARY }}
                 >
                   {t.loadOlder}

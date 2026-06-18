@@ -130,13 +130,24 @@
   --apollon-guide-vertical: var(--primitive-guide-vertical);
   --apollon-guide-horizontal: var(--primitive-guide-horizontal);
 
+  /* Surface / border / radius — public theming hooks for the shared editor
+     primitives (cards, popovers, menus, inputs). An embedder overriding these
+     restyles the editor's surfaces; the webapp's --home-* bridge below routes
+     its visuals through them so DEFAULT values are unchanged. */
+  --apollon-surface: var(--primitive-surface-raised);
+  --apollon-surface-sunken: var(--primitive-surface-sunken);
+  --apollon-surface-hover: var(--primitive-surface-raised-hover);
+  --apollon-border: var(--primitive-border-default);
+  --apollon-border-subtle: var(--primitive-border-subtle);
+  --apollon-radius: 6px;
+
   /* ── Layer 3: --home-* app semantics (light) ───────────────────────────── */
 
   /* Surfaces — neutral white page canvas up through softly raised cards */
   --home-surface-base: var(--apollon-background);
-  --home-surface-sunken: var(--primitive-surface-sunken);
-  --home-surface-raised: var(--primitive-surface-raised);
-  --home-surface-raised-hover: var(--primitive-surface-raised-hover);
+  --home-surface-sunken: var(--apollon-surface-sunken);
+  --home-surface-raised: var(--apollon-surface);
+  --home-surface-raised-hover: var(--apollon-surface-hover);
   --home-surface-raised-active: var(--primitive-surface-raised-active);
   --home-surface-row-alt: var(--primitive-surface-row-alt);
 
@@ -147,9 +158,9 @@
   --home-text-muted: var(--primitive-text-muted);
 
   /* Borders / dividers */
-  --home-border-default: var(--primitive-border-default);
+  --home-border-default: var(--apollon-border);
   --home-border-strong: var(--primitive-border-strong);
-  --home-border-subtle: var(--primitive-border-subtle);
+  --home-border-subtle: var(--apollon-border-subtle);
 
   /* Accent */
   --home-accent-base: var(--primitive-accent-base);
@@ -163,6 +174,17 @@
   --home-on-accent-bg-hover: var(--primitive-on-accent-bg-hover);
   --home-on-accent-border: var(--primitive-on-accent-border);
   --home-on-accent-text: var(--primitive-on-accent-text);
+
+  /* On-dark plate (the version-history navbar/drawer surface is intentionally
+     ALWAYS dark, independent of the document theme). Translucent-white text,
+     border, and row tints sit on that fixed-dark plate — so these are defined
+     once here and are NOT overridden in the dark block below. */
+  --home-on-dark-text: rgba(255, 255, 255, 0.92);
+  --home-on-dark-text-muted: rgba(255, 255, 255, 0.55);
+  --home-on-dark-border: rgba(255, 255, 255, 0.06);
+  --home-on-dark-row-hover: rgba(255, 255, 255, 0.06);
+  --home-on-dark-row-selected: rgba(255, 255, 255, 0.1);
+  --home-on-dark-row-disabled: rgba(255, 255, 255, 0.12);
 
   /* Badge / status */
   --home-badge-bg: var(--primitive-badge-bg);
@@ -194,9 +216,11 @@
   --home-shadow-overlay-box: 0 8px 20px var(--home-shadow-overlay);
 
   /* Radius scale — theme-independent. Replaces ad-hoc 2/4/6/8/15px values.
-     sm: cards & pills (crisp)  md: buttons & inputs  lg: menus/popovers  xl: modal shell */
+     sm: cards & pills (crisp)  md: buttons & inputs  lg: menus/popovers  xl: modal shell
+     md routes through the public --apollon-radius so an embedder can tune the
+     base radius of the shared primitives; the others stay app-fixed. */
   --home-radius-sm: 2px;
-  --home-radius-md: 6px;
+  --home-radius-md: var(--apollon-radius);
   --home-radius-lg: 8px;
   --home-radius-xl: 15px;
 
@@ -323,20 +347,27 @@
   --apollon-guide-vertical: var(--primitive-guide-vertical);
   --apollon-guide-horizontal: var(--primitive-guide-horizontal);
 
+  /* Surface / border — dark deltas (radius is theme-independent). */
+  --apollon-surface: var(--primitive-surface-raised);
+  --apollon-surface-sunken: var(--primitive-surface-sunken);
+  --apollon-surface-hover: var(--primitive-surface-raised-hover);
+  --apollon-border: var(--primitive-border-default);
+  --apollon-border-subtle: var(--primitive-border-subtle);
+
   /* ── Layer 3: --home-* (dark deltas) ───────────────────────────────────── */
   --home-surface-base: var(--apollon-background);
-  --home-surface-sunken: var(--primitive-surface-sunken);
-  --home-surface-raised: var(--primitive-surface-raised);
-  --home-surface-raised-hover: var(--primitive-surface-raised-hover);
+  --home-surface-sunken: var(--apollon-surface-sunken);
+  --home-surface-raised: var(--apollon-surface);
+  --home-surface-raised-hover: var(--apollon-surface-hover);
   --home-surface-raised-active: var(--primitive-surface-raised-active);
   --home-surface-row-alt: var(--primitive-surface-row-alt);
   --home-text-primary: var(--apollon-primary-contrast);
   --home-text-secondary: var(--primitive-text-secondary);
   --home-text-strong: var(--apollon-primary-contrast);
   --home-text-muted: var(--primitive-text-muted);
-  --home-border-default: var(--primitive-border-default);
+  --home-border-default: var(--apollon-border);
   --home-border-strong: var(--primitive-border-strong);
-  --home-border-subtle: var(--primitive-border-subtle);
+  --home-border-subtle: var(--apollon-border-subtle);
   --home-accent-base: var(--primitive-accent-base);
   --home-accent-soft: var(--primitive-accent-soft);
   --home-accent-strong: var(--primitive-accent-strong);
