@@ -41,10 +41,10 @@ Everything below is a corollary.
 ## Part 1 — Presentational vs Container separation
 
 The classic Dan Abramov container/presentational split is **still valuable in
-2025, but its mechanism changed**: hooks replaced the container *component* with
-a container *hook*. Don't add a wrapper component whose only job is to fetch and
+2025, but its mechanism changed**: hooks replaced the container _component_ with
+a container _hook_. Don't add a wrapper component whose only job is to fetch and
 pass props down; put that logic in a custom hook and keep the tree shallow. The
-*separation of concerns* survives; the *extra component layer* does not. The
+_separation of concerns_ survives; the _extra component layer_ does not. The
 pattern is "a guidepost, not a guardrail."
 ([All Insight Lab](https://allinsightlab.com/container-vs-presentational-components-still-relevant-in-2025/),
 [falldowngoboone](https://www.falldowngoboone.com/blog/container-component-pattern-using-context-and-hooks/),
@@ -74,9 +74,11 @@ function DiagramCard({ title, lastEditedAt, onOpen }: DiagramCardProps) {
 // BAD — leaf reaches into global state + routing + fetch. Untestable in isolation,
 // needs a full app (or heavy mocks) to render a single story.
 function DiagramCard({ id }: { id: string }) {
-  const diagram = useDiagramStore((s) => s.byId[id])  // store coupling
-  const navigate = useNavigate()                        // router coupling
-  useEffect(() => { fetchDiagramMeta(id) }, [id])       // side effect
+  const diagram = useDiagramStore((s) => s.byId[id]) // store coupling
+  const navigate = useNavigate() // router coupling
+  useEffect(() => {
+    fetchDiagramMeta(id)
+  }, [id]) // side effect
   return <button onClick={() => navigate(`/d/${id}`)}>{diagram.title}</button>
 }
 ```
@@ -95,8 +97,11 @@ app faster and more maintainable. ([egghead — lifting & colocating state](http
 function useDiagramCard(id: string) {
   const diagram = useDiagramStore((s) => s.byId[id])
   const navigate = useNavigate()
-  return { title: diagram.title, lastEditedAt: diagram.updatedAt,
-           onOpen: () => navigate(`/d/${id}`) }
+  return {
+    title: diagram.title,
+    lastEditedAt: diagram.updatedAt,
+    onOpen: () => navigate(`/d/${id}`),
+  }
 }
 
 function DiagramCardContainer({ id }: { id: string }) {
@@ -106,20 +111,20 @@ function DiagramCardContainer({ id }: { id: string }) {
 
 ### 1.3 Decision rule: when may a component read context/store directly?
 
-**Rule:** Read context/store directly **only** when *all three* hold; otherwise
+**Rule:** Read context/store directly **only** when _all three_ hold; otherwise
 take props:
 
 1. The data is genuinely **ambient** (theme, current user, locale, the
    open/closed state of an enclosing compound component) — not domain data the
    parent already has.
 2. Threading it as props would cross **3+ intermediate layers** that don't use
-   it, *and* extracting components + passing JSX as `children` doesn't remove the
+   it, _and_ extracting components + passing JSX as `children` doesn't remove the
    drilling.
 3. The component is **not** intended to be reused outside that provider.
 
 **Why:** React's own docs say start with props, then try extracting components
 and passing JSX as `children`, and reach for context only for data needed by
-*distant, mutually-independent* components. Context hides dependencies and
+_distant, mutually-independent_ components. Context hides dependencies and
 reduces reusability, so it's a deliberate trade, not a default.
 ([react.dev — Passing Data Deeply with Context](https://react.dev/learn/passing-data-deeply-with-context))
 
@@ -133,12 +138,12 @@ function Spinner() {
 // BAD — domain data the parent already has, yanked from a store to "save typing".
 // Now <PriceTag> only works inside a CartProvider and can't be reused or storied.
 function PriceTag() {
-  const total = useCartStore((s) => s.total)  // should have been a `value` prop
+  const total = useCartStore((s) => s.total) // should have been a `value` prop
   return <span>{formatMoney(total)}</span>
 }
 ```
 
-**Note for `@tumaet/ui`:** design-system primitives are *consumed* across apps,
+**Note for `@tumaet/ui`:** design-system primitives are _consumed_ across apps,
 so criterion 3 almost never holds — UI-package components take props. The one
 sanctioned exception is **compound-component internal context** (Principle 3.2),
 which is private wiring, not application state.
@@ -150,7 +155,7 @@ which is private wiring, not application state.
 ### 2.1 Support controlled and uncontrolled with one prop pair
 
 **Rule:** For any stateful value, accept `value` + `onValueChange` (controlled)
-*and* `defaultValue` (uncontrolled); never require the caller to manage state
+_and_ `defaultValue` (uncontrolled); never require the caller to manage state
 they don't care about. Resolve via a `useControllableState`-style hook.
 
 **Why:** This is the "control props" pattern (Kent C. Dodds); it lets the same
@@ -168,7 +173,7 @@ consistent. ([Vercel Academy — useControllableState](https://vercel.com/academ
 <ColorField value={color} onChange={setColor} /> // value required, no default
 ```
 
-**Sub-rule (no mode switching):** a component is controlled *or* uncontrolled
+**Sub-rule (no mode switching):** a component is controlled _or_ uncontrolled
 for its lifetime — don't let `value` flip between `undefined` and defined. Guard
 this in dev. ([react.dev / Radix guidance](https://react.dev/learn/sharing-state-between-components))
 
@@ -190,10 +195,14 @@ cleanly. This is exactly how `@tumaet/ui` already models buttons via cva.
 type ButtonProps = { variant?: "default" | "outline" | "ghost" | "destructive" }
 
 // BAD — the boolean trap: 2^3 combos, most invalid; what does primary+danger mean?
-type ButtonProps = { isPrimary?: boolean; isSecondary?: boolean; isDanger?: boolean }
+type ButtonProps = {
+  isPrimary?: boolean
+  isSecondary?: boolean
+  isDanger?: boolean
+}
 ```
 
-### 2.3 Name events `onX`, hand back the *value* not the *event*
+### 2.3 Name events `onX`, hand back the _value_ not the _event_
 
 **Rule:** Handlers are `onSomething`; the payload is the meaningful value, not a
 raw DOM event. Use `onXChange(value)` for value changes; pass the event only
@@ -210,7 +219,9 @@ type NameFieldProps = { value: string; onValueChange: (value: string) => void }
 
 // BAD — leaks the DOM event; every caller does e.target.value, and the API is
 // now welded to <input>.
-type NameFieldProps = { onChange: (e: React.ChangeEvent<HTMLInputElement>) => void }
+type NameFieldProps = {
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+}
 ```
 
 ### 2.4 Required vs optional: optional with sensible defaults, required only when there's no safe default
@@ -221,17 +232,19 @@ default. Default in the destructure, not with `defaultProps` (removed for
 function components).
 
 **Why:** Minimizes ceremony at the call site and keeps the common case
-one-liner-short, while still forcing callers to supply data that *must* be
+one-liner-short, while still forcing callers to supply data that _must_ be
 caller-specific.
 
 ```tsx
 // GOOD
-function Badge({ tone = "neutral", children }: BadgeProps) { /* ... */ }
-<Badge>New</Badge>
+function Badge({ tone = "neutral", children }: BadgeProps) {
+  /* ... */
+}
+;<Badge>New</Badge>
 
 // BAD — forces a decision the component could have made.
 function Badge({ tone, children }: { tone: Tone; children: ReactNode }) {}
-<Badge tone="neutral">New</Badge> // every single call must repeat this
+;<Badge tone="neutral">New</Badge> // every single call must repeat this
 ```
 
 ### 2.5 Keep prop count low; prefer composition to a prop avalanche
@@ -278,12 +291,12 @@ components that only forward props usually signal a missing composition seam.
 
 **Rule:** Presentational primitives extend the underlying element's props and
 spread `...rest` onto it, so `data-*`, `aria-*`, `id`, `onClick`, etc. pass
-through for free. Spread *before* your own controlled attributes so the
+through for free. Spread _before_ your own controlled attributes so the
 component wins where it must.
 
 **Why:** Consumers constantly need one-off attributes (test ids, ARIA, analytics
 `data-*`). Passthrough avoids a prop for every conceivable HTML attribute. Be
-deliberate about *which* element receives the rest — don't blindly forward every
+deliberate about _which_ element receives the rest — don't blindly forward every
 prop to every child. ([React TS Cheatsheet](https://react-typescript-cheatsheet.netlify.app/docs/basic/getting-started/basic_type_example/))
 
 ```tsx
@@ -324,27 +337,36 @@ className={`inline-flex h-9 px-3`}
 className={`inline-flex h-9 px-3 ${className}`}
 ```
 
-### 2.9 React 19: `ref` is a prop — delete `forwardRef`
+### 2.9 React 19: `ref` is a prop (delete `forwardRef`); read context with `use()`
 
-**Rule:** New components take `ref` as a normal prop. Do not wrap in
+**Rule:** New components take `ref` as a normal prop — do not wrap in
 `forwardRef`. Type it via `React.ComponentProps<"el">` (which includes `ref` in
-React 19) or an explicit `ref?: React.Ref<T>`.
+React 19) or an explicit `ref?: React.Ref<T>`. Read context with `use(Context)`,
+not `useContext(Context)`.
 
 **Why:** React 19 lets function components receive `ref` directly; `forwardRef`
-is now redundant boilerplate and is on the deprecation path. Less indirection,
-cleaner types, better composition. ([react.dev — forwardRef](https://react.dev/reference/react/forwardRef),
+is now redundant boilerplate on the deprecation path. `use()` reads context like
+`useContext()` but may be called conditionally (e.g. after an early return),
+removing a class of hook-ordering contortions. Less indirection, cleaner types,
+better composition. ([react.dev — forwardRef](https://react.dev/reference/react/forwardRef),
 [Saeloun — ref as prop](https://blog.saeloun.com/2025/03/24/react-19-ref-as-prop/),
+[react.dev — use](https://react.dev/reference/react/use),
 [eslint-react no-forward-ref](https://eslint-react.xyz/docs/rules/no-forward-ref))
 
 ```tsx
-// GOOD — React 19.
+// GOOD — React 19: ref as prop, context via use().
 function Input({ ref, ...rest }: React.ComponentProps<"input">) {
   return <input ref={ref} {...rest} />
 }
+function ComposerInput() {
+  const ctx = use(ComposerContext) // not useContext; may be called conditionally
+  return <textarea value={ctx?.state.input ?? ""} />
+}
 
 // BAD — legacy ceremony, extra wrapper type, deprecation-bound.
-const Input = forwardRef<HTMLInputElement, Props>((props, ref) =>
-  <input ref={ref} {...props} />)
+const Input = forwardRef<HTMLInputElement, Props>((props, ref) => (
+  <input ref={ref} {...props} />
+))
 ```
 
 ---
@@ -353,7 +375,7 @@ const Input = forwardRef<HTMLInputElement, Props>((props, ref) =>
 
 ### 3.1 Slots/children beat configuration props
 
-**Rule:** Hand a component *content* via `children` or named slot props (which
+**Rule:** Hand a component _content_ via `children` or named slot props (which
 accept `ReactNode`), not a pile of `renderX` flags. Reach for config props only
 for primitives the component genuinely owns.
 
@@ -371,7 +393,7 @@ composes the parts; the parts wire themselves.
 
 **Why:** Gives a declarative, flexible API (`<Tabs><Tabs.List>…`) without
 prop-drilling shared state, and lets consumers reorder/omit parts. The context
-here is *implementation detail*, not app state, so it doesn't violate 1.3. Base
+here is _implementation detail_, not app state, so it doesn't violate 1.3. Base
 UI's components are already structured this way; `@tumaet/ui` mirrors their
 parts.
 
@@ -391,7 +413,7 @@ parts.
 
 ### 3.3 Polymorphism: prefer Base UI's `render` prop; standardize on one mechanism
 
-**Rule:** To let a component render *as* a different element/component, use Base
+**Rule:** To let a component render _as_ a different element/component, use Base
 UI's `render` prop (the repo's primitive lib). Treat Radix's `asChild` as the
 equivalent only where you're inside Radix. Don't invent a third mechanism.
 
@@ -412,7 +434,7 @@ assistants — and it's what our stack ships. ([Base UI — useRender](https://b
 
 ### 3.4 Render props/slots over hardcoded internals when the consumer must own rendering
 
-**Rule:** When a component manages logic but the *item* rendering is
+**Rule:** When a component manages logic but the _item_ rendering is
 caller-specific (lists, virtualized rows, menus), expose a render slot
 (`renderItem`, or `children` as a function) rather than hardcoding item markup.
 
@@ -426,6 +448,77 @@ hands — composition where it counts, configuration nowhere else.
 // BAD — list hardcodes a row; unusable for any other shape.
 <VirtualList items={diagrams} /> // renders a fixed <div>{item.name}</div>
 ```
+
+### 3.5 For multi-mode widgets: a provider over a generic `state`/`actions`/`meta` context, and explicit variant components
+
+**Rule:** When a widget has several _behavioral modes_ (a composer that is also
+a thread reply / an edit form / a forward dialog; a version panel that is a
+drawer / inline sidebar), do **not** add `isThread`/`isEditing` booleans or a
+`variant` prop that forks behavior. Instead: (a) build the widget as compound
+sub-components that read a single context typed as a generic
+`{ state, actions, meta }` contract; (b) put _all_ knowledge of where state
+comes from in a **Provider** component; (c) expose each mode as its own named
+**variant component** that composes a provider + the sub-components it needs.
+The same presentational sub-components then work unchanged whether the provider
+is backed by `useState`, a zustand store, or a server sync — dependency
+injection through context.
+
+**Why:** Booleans/`variant` props that fork _behavior_ multiply invalid states
+(2³ = 8 states for three flags) and bury the real shape in conditionals. A
+`state`/`actions`/`meta` contract decouples UI from state management so a
+provider can be swapped without touching a single sub-component, and lets
+siblings _outside_ the main tree (a dialog footer button, a live preview) read
+or drive the same state with no prop-drilling or ref gymnastics. Named variant
+components are self-documenting — the call site reads like what it renders.
+This is Fernando Rojo's "Composition is all you need."
+([vercel-labs/agent-skills — composition-patterns](https://github.com/vercel-labs/agent-skills/tree/main/skills/composition-patterns))
+
+```tsx
+// Contract — UI depends on this shape, never on a concrete store.
+interface ComposerContextValue {
+  state: { input: string; attachments: Attachment[]; isSubmitting: boolean }
+  actions: { update: (fn: (s: State) => State) => void; submit: () => void }
+  meta: { inputRef: React.RefObject<HTMLTextAreaElement | null> }
+}
+const ComposerContext = createContext<ComposerContextValue | null>(null)
+
+function ComposerInput() {
+  const { state, actions, meta } = use(ComposerContext)! // sub-component reads context
+  return (
+    <textarea
+      ref={meta.inputRef}
+      value={state.input}
+      onChange={(e) => actions.update((s) => ({ ...s, input: e.target.value }))}
+    />
+  )
+}
+
+// GOOD — each mode is a named variant: a provider (owns state impl) + composed parts.
+function ThreadComposer({ channelId }: { channelId: string }) {
+  return (
+    <ThreadProvider channelId={channelId}>
+      {" "}
+      {/* provider: zustand-backed here */}
+      <Composer.Frame>
+        <Composer.Input />
+        <AlsoSendToChannelField channelId={channelId} />
+        <Composer.Footer>
+          <Composer.Submit />
+        </Composer.Footer>
+      </Composer.Frame>
+    </ThreadProvider>
+  )
+}
+
+// BAD — one component, behavior forked by booleans: 8 states, most invalid.
+;<Composer isThread isEditing={false} showAttachments channelId="abc" />
+```
+
+**Scope note:** reserve this for genuinely multi-mode/compound widgets. A simple
+leaf (a toggle button, a card) stays pure props-in/callbacks-out (1.1) — don't
+stand up a provider for a single button. In this repo the prescribed home for
+this pattern is the heavy widgets (e.g. the version sidebar/drawer, the
+share-dashboard dialog) when they're refactored.
 
 ---
 
@@ -446,8 +539,10 @@ fewer brittle tests and faster iteration. ([Storybook + MSW / CDD](https://story
 ```tsx
 // GOOD — every visual state is one prop combo → one story, zero mocks.
 export const Loading = { args: { status: "loading" } }
-export const Error   = { args: { status: "error", message: "Save failed" } }
-function SaveBar({ status, message, onRetry }: SaveBarProps) { /* pure */ }
+export const Error = { args: { status: "error", message: "Save failed" } }
+function SaveBar({ status, message, onRetry }: SaveBarProps) {
+  /* pure */
+}
 
 // BAD — to story this you must mock the store, the query, and the router.
 function SaveBar() {
@@ -465,7 +560,7 @@ play/interaction tests, Vitest); test container hooks with `renderHook` and
 mocked stores/queries. Don't test both concerns through one giant component.
 
 **Why:** Storybook 10 + Vitest run interaction, a11y, and visual checks straight
-off stories — but only if the component *has* clean prop-driven states. The
+off stories — but only if the component _has_ clean prop-driven states. The
 seam makes both halves cheap to test. ([Storybook testing](https://storybook.js.org/blog/component-test-with-storybook-and-vitest/))
 
 ---
@@ -509,7 +604,11 @@ type IconButtonProps =
   | { label: string; icon?: never; "aria-label"?: never }
 
 // BAD — both optional; nothing stops an unlabeled icon-only button (a11y bug).
-type IconButtonProps = { icon?: ReactNode; label?: string; "aria-label"?: string }
+type IconButtonProps = {
+  icon?: ReactNode
+  label?: string
+  "aria-label"?: string
+}
 ```
 
 ### 5.3 Derive variant prop types from cva; never restate them
@@ -517,13 +616,16 @@ type IconButtonProps = { icon?: ReactNode; label?: string; "aria-label"?: string
 **Rule:** Use `VariantProps<typeof xVariants>` so the union of variants is the
 single source of truth (it already validates + defaults at runtime).
 
-**Why:** One definition for runtime *and* types; adding a variant can't drift
+**Why:** One definition for runtime _and_ types; adding a variant can't drift
 out of sync. This is the established `@tumaet/ui` pattern.
 
 ```tsx
 // GOOD
-const badgeVariants = cva("…", { variants: { tone: { neutral:"", info:"", danger:"" } } })
-type BadgeProps = React.ComponentProps<"span"> & VariantProps<typeof badgeVariants>
+const badgeVariants = cva("…", {
+  variants: { tone: { neutral: "", info: "", danger: "" } },
+})
+type BadgeProps = React.ComponentProps<"span"> &
+  VariantProps<typeof badgeVariants>
 
 // BAD — duplicated union drifts from cva the first time someone adds "warning".
 type BadgeProps = { tone?: "neutral" | "info" | "danger" }
@@ -540,12 +642,30 @@ autocomplete on `item`. ([LogRocket — polymorphic/generic components](https://
 
 ```tsx
 // GOOD
-function List<T>({ items, renderItem }: { items: T[]; renderItem: (item: T) => ReactNode }) {
-  return <ul>{items.map((it, i) => <li key={i}>{renderItem(it)}</li>)}</ul>
+function List<T>({
+  items,
+  renderItem,
+}: {
+  items: T[]
+  renderItem: (item: T) => ReactNode
+}) {
+  return (
+    <ul>
+      {items.map((it, i) => (
+        <li key={i}>{renderItem(it)}</li>
+      ))}
+    </ul>
+  )
 }
 
 // BAD — any severs the link; renderItem loses all type info.
-function List({ items, renderItem }: { items: any[]; renderItem: (item: any) => ReactNode }) {}
+function List({
+  items,
+  renderItem,
+}: {
+  items: any[]
+  renderItem: (item: any) => ReactNode
+}) {}
 ```
 
 ### 5.5 Ban `any`; JSDoc the public surface
@@ -554,7 +674,7 @@ function List({ items, renderItem }: { items: any[]; renderItem: (item: any) => 
 generics, or precise unions. JSDoc every exported prop type and non-obvious prop
 (it surfaces in editor tooltips and Storybook autodocs).
 
-**Why:** `any` deletes the API contract; precise types *are* the docs. JSDoc
+**Why:** `any` deletes the API contract; precise types _are_ the docs. JSDoc
 turns the prop table into self-documenting hover help. ([React TS Cheatsheet](https://github.com/typescript-cheatsheets/react))
 
 ```tsx
@@ -625,7 +745,7 @@ type EditorProps = { /* …existing… */ readonly?: boolean } // new optional p
 **Rule:** `data-slot="…"` and `data-variant`/`data-size` are the styling
 contract between markup and CSS (the library's Tailwind-free theming and the
 UI package's `components.css`). Keep their names stable; treat them as an
-*internal* contract unless explicitly documented for theming.
+_internal_ contract unless explicitly documented for theming.
 
 **Why:** The library ships compiled CSS keyed on these attributes so it can embed
 anywhere without leaking utilities (see `ui/button.tsx`, `AGENTS.md`). Renaming a
@@ -639,12 +759,14 @@ Run this on every component you build or refactor. If you answer "no" to a
 required item, fix it or write down why.
 
 **Presentational purity (Part 1, 4)**
+
 - [ ] Is this a leaf/UI component? If so, is it **pure** — props in, callbacks out, no fetch/store/router/`useEffect`?
 - [ ] If it reads context/store directly, do **all three** of 1.3's criteria hold (ambient + drilling-not-fixable-by-composition + not reused outside provider)?
 - [ ] Is wiring (queries, zustand, router) pushed into a container **hook**, not a wrapper component?
 - [ ] Can every visual state be reached by props alone (so it stories with **zero mocks**)?
 
 **Prop API (Part 2)**
+
 - [ ] Stateful values support **controlled + uncontrolled** (`value`/`onValueChange`/`defaultValue`)?
 - [ ] No **boolean trap** — mutually-exclusive flags collapsed into a `variant`/`size` union?
 - [ ] Events named `onX` and hand back the **value**, not the raw DOM event?
@@ -655,14 +777,19 @@ required item, fix it or write down why.
 - [ ] `className` merged with `cn` (UI/webapp) or `clsx`/join (library — **no tailwind-merge**), never overwritten?
 
 **React 19 / refs**
+
 - [ ] `ref` taken as a **prop** — no `forwardRef`?
+- [ ] Context read with **`use()`**, not `useContext()`?
 
 **Composition (Part 3)**
+
 - [ ] Content via `children`/slots, not config props?
 - [ ] Multi-part widget uses compound components + **internal** context?
+- [ ] Multi-_mode_ widget uses a **provider over a `state`/`actions`/`meta` contract** + **named variant components**, not behavioral booleans/`variant` props (3.5)?
 - [ ] Polymorphism via Base UI **`render`** (not a bespoke mechanism)?
 
 **TypeScript (Part 5)**
+
 - [ ] Props extend `React.ComponentProps<...>` / the primitive's `Props`?
 - [ ] Dependent props modeled as a **discriminated union**?
 - [ ] Variant types **derived** from cva (`VariantProps`)?
@@ -670,11 +797,13 @@ required item, fix it or write down why.
 - [ ] Exported prop types **JSDoc'd**?
 
 **Accessibility & stability (Part 6)**
+
 - [ ] Semantic element + **enforced accessible name** + label association?
 - [ ] Public prop change is **additive**, or deprecated-then-removed with a **changeset**?
 - [ ] `data-slot`/`data-*` styling-hook names left stable?
 
 **Repo boundaries (AGENTS.md)**
+
 - [ ] In `@tumaet/apollon`: **no Tailwind, no CSS-in-JS** — styled via `--apollon-*` vars + `data-*`?
 - [ ] No standalone-only assumptions baked into a library API (gated behind options)?
 
@@ -687,6 +816,7 @@ required item, fix it or write down why.
 - Control props / controlled-uncontrolled — [Vercel Academy — useControllableState](https://vercel.com/academy/shadcn-ui/use-controllable-state) · [Sherry Hsu — Control Props](https://sherryhsu.medium.com/usecontrollablestate-hook-b4801ec293e5)
 - Boolean trap & variants — [Spice Factory](https://spicefactory.co/blog/2019/03/26/how-to-avoid-the-boolean-trap-when-designing-react-components/) · [MUI API design guide](https://mui.com/material-ui/guides/api/)
 - Composition / polymorphism — [Base UI — useRender](https://base-ui.com/react/utils/use-render) · [Radix — Composition](https://www.radix-ui.com/primitives/docs/guides/composition) · [boda.sh — Slot/asChild](https://boda.sh/blog/react-slot-aschild-pattern/)
+- Composition-driven architecture (provider + `state`/`actions`/`meta` DI, variant components, `use()`) — Fernando Rojo, ["Composition is all you need" / vercel-labs agent-skills — composition-patterns](https://github.com/vercel-labs/agent-skills/tree/main/skills/composition-patterns)
 - TypeScript — [Total TypeScript — ComponentProps](https://www.totaltypescript.com/concepts/react-componentprops-type-helper) · [React TS Cheatsheet](https://github.com/typescript-cheatsheets/react) · [Steve Kinney — Discriminated Unions](https://stevekinney.com/courses/react-typescript/typescript-discriminated-unions) · [Developer Way — Discriminated Unions](https://www.developerway.com/posts/advanced-typescript-for-react-developers-discriminated-unions) · [LogRocket — Polymorphic components](https://blog.logrocket.com/build-strongly-typed-polymorphic-components-react-typescript/)
 - React 19 refs — [Saeloun — ref as prop](https://blog.saeloun.com/2025/03/24/react-19-ref-as-prop/) · [eslint-react — no-forward-ref](https://eslint-react.xyz/docs/rules/no-forward-ref)
 - Storybook / CDD — [Storybook](https://storybook.js.org/) · [Intro to Storybook — simple component](https://storybook.js.org/tutorials/intro-to-storybook/react/en/simple-component/) · [Component Test with Storybook + Vitest](https://storybook.js.org/blog/component-test-with-storybook-and-vitest/)
