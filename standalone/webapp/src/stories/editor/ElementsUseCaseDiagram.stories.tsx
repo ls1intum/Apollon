@@ -27,6 +27,7 @@ const configs = elementConfigsFor("UseCaseDiagram")
 
 /** All use-case-diagram element shapes laid out together. */
 export const AllElements: Story = {
+  args: { config: configs[0] },
   render: () => (
     <div
       style={{

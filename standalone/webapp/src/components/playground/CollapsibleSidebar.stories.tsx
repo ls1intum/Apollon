@@ -13,6 +13,17 @@ import { CollapsibleSidebar } from "./CollapsibleSidebar"
 const meta = {
   title: "Webapp/Misc/CollapsibleSidebar",
   component: CollapsibleSidebar,
+  // Render-only demo stories own state inside `render`; these satisfy the
+  // required-prop types of `satisfies Meta` (mirrors ui/select).
+  args: {
+    side: "left",
+    width: 280,
+    open: true,
+    onToggle: () => {},
+    label: "Sidebar",
+    testId: "sidebar",
+    children: null,
+  },
   parameters: { layout: "fullscreen" },
   argTypes: {
     side: {

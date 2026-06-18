@@ -27,6 +27,7 @@ const configs = elementConfigsFor("ComponentDiagram")
 
 /** All component-diagram element shapes laid out together. */
 export const AllElements: Story = {
+  args: { config: configs[0] },
   render: () => (
     <div
       style={{

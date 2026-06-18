@@ -12,6 +12,18 @@ import { DropdownFilterMenu } from "./DropdownFilterMenu"
 const meta = {
   title: "Webapp/Home/DropdownFilterMenu",
   component: DropdownFilterMenu,
+  // Render-only demo stories wire the trigger/anchor inside `render`; these
+  // satisfy the required-prop types of `satisfies Meta` (mirrors ui/select).
+  args: {
+    buttonId: "filter-button",
+    menuId: "filter-menu",
+    anchorEl: null,
+    onToggle: () => {},
+    onClose: () => {},
+    triggerClassName: "",
+    triggerContent: null,
+    sections: [],
+  },
   parameters: { layout: "centered" },
   tags: ["autodocs"],
 } satisfies Meta<typeof DropdownFilterMenu>

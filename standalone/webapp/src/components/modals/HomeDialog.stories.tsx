@@ -20,6 +20,9 @@ import {
 const meta = {
   title: "Webapp/Modals/HomeDialog",
   component: HomeDialogContent,
+  // Render-only stories compose the building blocks inside `render`; this
+  // satisfies HomeDialogContent's required `children` for `satisfies Meta`.
+  args: { children: null },
   parameters: { layout: "centered" },
   decorators: [
     (Story) => (

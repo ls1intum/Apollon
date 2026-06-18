@@ -27,6 +27,7 @@ const configs = elementConfigsFor("SyntaxTree")
 
 /** All syntax-tree element shapes laid out together. */
 export const AllElements: Story = {
+  args: { config: configs[0] },
   render: () => (
     <div
       style={{

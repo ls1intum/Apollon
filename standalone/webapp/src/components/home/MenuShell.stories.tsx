@@ -13,6 +13,18 @@ import { MenuShell } from "./MenuShell"
 const meta = {
   title: "Webapp/Home/MenuShell",
   component: MenuShell,
+  // Render-only demo stories wire the trigger/anchor inside `render`; these
+  // satisfy the required-prop types of `satisfies Meta` (mirrors ui/select).
+  args: {
+    buttonId: "menu-button",
+    menuId: "menu",
+    anchorEl: null,
+    onToggle: () => {},
+    onClose: () => {},
+    triggerContent: null,
+    triggerClassName: "",
+    children: null,
+  },
   parameters: { layout: "centered" },
   tags: ["autodocs"],
 } satisfies Meta<typeof MenuShell>

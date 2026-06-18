@@ -212,15 +212,19 @@ jobs:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-v1.59.1-${{ hashFiles('standalone/webapp/package.json') }}
 
+      # The webapp also depends on `playwright` (for the Storybook browser
+      # tests), which ships its own `playwright` bin. Invoke @playwright/test's
+      # CLI via the `pw` script so the e2e runner + browser install are always
+      # @playwright/test 1.59.1, never the other bin.
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: pnpm --filter @tumaet/webapp exec playwright install chromium
+        run: pnpm --filter @tumaet/webapp run pw install chromium
 
       - name: Install Playwright system deps
-        run: pnpm --filter @tumaet/webapp exec playwright install-deps chromium
+        run: pnpm --filter @tumaet/webapp run pw install-deps chromium
 
       - name: Run E2E tests
-        run: pnpm --filter @tumaet/webapp exec playwright test tests/e2e/
+        run: pnpm --filter @tumaet/webapp run test:e2e
 
       - name: Upload Playwright report
         if: ${{ failure() }}
@@ -334,7 +338,9 @@ jobs:
         run: pnpm run build:lib
 
       - name: Run visual regression tests
-        run: pnpm --filter @tumaet/webapp exec playwright test tests/visual/
+        # Via the test:visual script (@playwright/test CLI) so the colliding
+        # `playwright` bin is never used — keeps this on @playwright/test 1.59.1.
+        run: pnpm --filter @tumaet/webapp run test:visual
 
       - name: Upload Playwright report
         if: ${{ failure() }}
