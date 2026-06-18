@@ -23,6 +23,14 @@ catalog:
   "@base-ui/react": "1.5.0"
   "@size-limit/file": "11.2.0"
   "@size-limit/preset-big-lib": "11.2.0"
+  # Storybook 10.x — all @storybook/* MUST share one exact version.
+  storybook: "10.4.6"
+  "@storybook/react-vite": "10.4.6"
+  "@storybook/addon-docs": "10.4.6"
+  "@storybook/addon-a11y": "10.4.6"
+  "@storybook/addon-themes": "10.4.6"
+  "@storybook/addon-vitest": "10.4.6"
+  playwright: "1.61.0"
   "@tailwindcss/vite": "4.0.17"
   "@testing-library/jest-dom": "6.9.1"
   "@testing-library/react": "16.3.2"
@@ -32,6 +40,8 @@ catalog:
   "@types/uuid": "10.0.0"
   "@types/vscode-webview": "1.57.5"
   "@vitejs/plugin-react": "4.3.4"
+  "@vitest/browser": "4.1.2"
+  "@vitest/browser-playwright": "4.1.2"
   "@vitest/coverage-v8": "4.1.2"
   "@xyflow/react": "12.3.6"
   # React Compiler (stable v1). Wired via @vitejs/plugin-react's Babel slot.
@@ -71,6 +81,7 @@ overrides:
 
 # pnpm 10+ blocks lifecycle scripts by default.
 allowBuilds:
+  "@parcel/watcher": false # Storybook transitive; optional native FS watcher
   "@swc/core": true # docusaurus-faster (Rspack + SWC build path)
   "@vscode/vsce-sign": true
   "core-js": false # jspdf transitive; "thank-you" postinstall, no native build

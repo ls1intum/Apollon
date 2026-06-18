@@ -1,0 +1,23 @@
+import { Meta } from "@storybook/addon-docs/blocks"
+
+<Meta title="Introduction" />
+
+# @tumaet/ui
+
+The shared shadcn component library for Apollon — base-nova components built on
+[Base UI](https://base-ui.com) and Tailwind CSS v4.
+
+These primitives are consumed by the webapp and (via the Tailwind-free
+`dist/components.css`) embedded by the editor library across host environments.
+
+## Theming
+
+Components are themed entirely through CSS custom properties (the
+`--primitive-*` / `--apollon-*` / `--home-*` token layers in
+`src/styles/tokens.css`). Dark mode is a single mechanism: the
+`data-theme="dark"` attribute on the document root. Use the toolbar theme
+switcher above to toggle light/dark.
+
+## Browse
+
+Explore the rendered primitives under **Components** in the sidebar.

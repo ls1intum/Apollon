@@ -9,6 +9,7 @@ pnpm-debug.log*
 dist/
 build/
 coverage/
+storybook-static/
 
 # Temporary files and cache
 .tmp/
