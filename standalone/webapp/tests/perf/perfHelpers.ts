@@ -12,13 +12,7 @@ const __dirname = path.dirname(__filename)
 
 export type PerfSnapshot = {
   encodedDocBytes: number
-  structCount: number
   nodesMapSize: number
-  edgesMapSize: number
-  undoStackDepth: number
-  broadcastYjsMsgs: number
-  broadcastYjsBytes: number
-  awarenessMsgs: number
   storeNodeWrites: number
 }
 
@@ -79,8 +73,11 @@ export async function dragNodeBy(
   await page.mouse.down()
   await page.mouse.move(startX + dx, startY + dy, { steps })
   await page.mouse.up()
-  // The settle frame + onNodeDragStop commit land on a later rAF tick with no
-  // DOM/probe signal to poll on, so a fixed wait is unavoidable here; 120ms is
-  // generous enough to clear it on a 2x-slower CI box.
+  // The settle commit lands on a later rAF tick. A per-gesture probe poll can't
+  // stand in for the wait: this spec alternates drag direction to keep nodes
+  // on-screen, so a node returning to a prior position is a deepEqual no-op that
+  // writes nothing — a poll for "writes advanced" would hang on those frames.
+  // The aggregate write-rate budget in the spec is the real guard; here a short
+  // fixed settle is the pragmatic choice (perf project is serial, retries:0).
   await page.waitForTimeout(120)
 }

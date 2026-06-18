@@ -13,13 +13,14 @@ type PerfHookWindow = Window & {
 /**
  * E2E-only seam: expose the editor's dev performance probe as
  * `window.__apollonPerf()` so the Playwright `tests/perf/` suite can read
- * Yjs document size / broadcast counters without a UI affordance.
+ * the Yjs document size / store-write count without a UI affordance.
  *
  * Double-gated so it stays free in production: the probe itself is
  * dead-code-eliminated from the library build under `import.meta.env.DEV`, and
- * exposure here additionally requires the opt-in `?perfHooks=1` URL param,
- * mirroring the existing test URL-param gates. Returns a cleanup that removes
- * the global. A no-op (returning a no-op cleanup) unless both gates pass.
+ * exposure here additionally requires the opt-in `?perfHooks` URL param (the
+ * value is ignored — presence is the gate), mirroring the existing test
+ * URL-param gates. Returns a cleanup that removes the global. A no-op
+ * (returning a no-op cleanup) unless both gates pass.
  */
 export const installPerfHooks = (editor: ApollonEditor): (() => void) => {
   if (!import.meta.env.DEV) return () => {}

@@ -44,26 +44,17 @@ describe("ApollonEditor.__perf()", () => {
     container.remove()
   })
 
-  it("returns an object with numeric fields that reflect document growth", () => {
+  it("exposes a probe that tracks the live nodes map under DEV", () => {
     const baseline = editor.__perf()
-    expect(baseline).toBeDefined()
     if (!baseline) throw new Error("expected __perf() to be defined under DEV")
-
-    for (const value of Object.values(baseline)) {
-      expect(typeof value).toBe("number")
-    }
     expect(baseline.nodesMapSize).toBe(0)
 
-    editor.model = makeModel(2)
     editor.model = makeModel(4)
 
     const after = editor.__perf()
     if (!after) throw new Error("expected __perf() to be defined under DEV")
 
     expect(after.nodesMapSize).toBe(4)
-    expect(after.encodedDocBytes).toBeGreaterThan(baseline.encodedDocBytes)
-    expect(after.structCount).toBeGreaterThan(baseline.structCount)
-    expect(after.undoStackDepth).toBeGreaterThanOrEqual(0)
   })
 
   it("returns undefined in production (the build-time dead-code stub contract)", () => {

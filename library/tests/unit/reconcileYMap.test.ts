@@ -59,7 +59,10 @@ describe("reconcileYMap", () => {
     doc.destroy()
   })
 
-  it("persists a field transitioning to undefined (parentId trap)", () => {
+  it("re-writes a node whose parentId clears (parentId 'parent' -> undefined)", () => {
+    // Dragging a node out of its parent flips parentId from a string to
+    // undefined. reconcile must persist that as a real write — value inequality
+    // ("parent" !== undefined) drives it — or the node stays nested in Yjs.
     const doc = new Y.Doc()
     const map = getNodesMap(doc)
     const child = makeNode("child", "Child")
@@ -68,12 +71,12 @@ describe("reconcileYMap", () => {
     })
     expect(map.get("child")?.parentId).toBe("parent")
 
+    const counts = spyMapOps(map)
     doc.transact(() => {
       reconcileYMap(map, [["child", { ...child, parentId: undefined }]])
     })
 
-    expect(map.has("child")).toBe(true)
-    expect("parentId" in (map.get("child") as object)).toBe(true)
+    expect(counts.set).toBe(1)
     expect(map.get("child")?.parentId).toBeUndefined()
     doc.destroy()
   })

@@ -184,6 +184,68 @@ describe("createDiagramAutosaver — debounce", () => {
     ).toBe("b")
   })
 
+  it("serialises saves: a third runSave during a chained save never overlaps", async () => {
+    // Three-deep window: PUT#1 held → edit chains PUT#2 → while PUT#2 is in
+    // flight a third edit arrives. Saves must run strictly one at a time, so no
+    // more than one sendDiagramUpdate is ever unresolved at once — this is the
+    // invariant the line-62 "can't overlap" comment claims.
+    let inFlightCount = 0
+    let maxConcurrent = 0
+    const releases: Array<() => void> = []
+    sendUpdate.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          inFlightCount += 1
+          maxConcurrent = Math.max(maxConcurrent, inFlightCount)
+          releases.push(() => {
+            inFlightCount -= 1
+            resolve({ headRev: 1, updatedAt: "" })
+          })
+        })
+    )
+
+    let current = "a"
+    const saver = createDiagramAutosaver({
+      diagramId: "d1",
+      getModel: () => model(current),
+      isPaused: () => false,
+      collaboration: false,
+    })
+
+    // PUT#1 in flight.
+    saver.schedule()
+    void saver.flush()
+    await tick()
+    expect(sendUpdate).toHaveBeenCalledTimes(1)
+
+    // Edit + flush chains PUT#2 behind PUT#1.
+    current = "b"
+    saver.schedule()
+    void saver.flush()
+
+    // Release PUT#1 so the chained PUT#2 begins.
+    releases[0]()
+    await tick()
+    await tick()
+    expect(sendUpdate).toHaveBeenCalledTimes(2)
+
+    // A third edit + flush arrives while PUT#2 is still in flight. It must NOT
+    // fire a parallel PUT#3 — it chains behind PUT#2.
+    current = "c"
+    saver.schedule()
+    void saver.flush()
+    await tick()
+    expect(sendUpdate).toHaveBeenCalledTimes(2)
+
+    // Drain PUT#2, then PUT#3 fires; at no point did two PUTs overlap.
+    releases[1]()
+    await tick()
+    await tick()
+    expect(sendUpdate).toHaveBeenCalledTimes(3)
+    releases[2]()
+    expect(maxConcurrent).toBe(1)
+  })
+
   it("dispose() cancels a pending save", async () => {
     const saver = createDiagramAutosaver({
       diagramId: "d1",

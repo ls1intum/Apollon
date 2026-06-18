@@ -37,7 +37,7 @@ export const reconcileYMap = <T>(
   }
 
   for (const [key, value] of next) {
-    if (!map.has(key) || !deepEqual(map.get(key), value, true)) {
+    if (!map.has(key) || !deepEqual(map.get(key), value)) {
       map.set(key, value)
     }
   }

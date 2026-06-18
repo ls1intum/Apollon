@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // Guards that the dev/test-only performance probe symbols never leak into a
-// production library build. The probe (`__perf`, perf counters in yjsSync) is
-// gated behind `import.meta.env.DEV`, so a production build must dead-code-
-// eliminate it. Run this AFTER building the library:
+// production library build. The probe (the `__perf` method and the perf-counter
+// leaf module) is gated behind `import.meta.env.DEV`, so a production build must
+// dead-code-eliminate it. Run this AFTER building the library:
 //
 //   pnpm --filter @tumaet/apollon build && node scripts/check-no-perf-hooks.mjs
 //
@@ -18,14 +18,13 @@ const distDir = join(__dirname, "..", "library", "dist")
 // The `__perf` class method survives as an empty stub (a class method cannot
 // be conditionally declared), but its DEV-gated body must dead-code-eliminate
 // to nothing. We assert the empty body separately below; here we forbid the
-// instrumentation symbols, which carry the only non-zero runtime cost.
+// instrumentation symbols — the load-bearing leak indicators. (The whole
+// perf-counter module is DEV-gated and DCE'd, so its mutable state object never
+// reaches a prod chunk; these symbols are what would prove it did.)
 const FORBIDDEN_SYMBOLS = [
   "getPerfCounters",
   "recordStoreNodeWrite",
-  "broadcastYjsMsgs",
-  "broadcastYjsBytes",
   "storeNodeWrites",
-  "awarenessMsgs",
 ]
 
 const collectFiles = (dir) => {

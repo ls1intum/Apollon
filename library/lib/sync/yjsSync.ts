@@ -23,7 +23,6 @@ import {
 } from "y-protocols/awareness"
 import * as Y from "yjs"
 import { StoreApi } from "zustand"
-import { perfCounters } from "./perfCounters"
 
 export enum MessageType {
   YjsSYNC = 0,
@@ -257,15 +256,6 @@ export class YjsSync {
     fullMessage.set(payload, 1)
 
     const base64Message = YjsSync.uint8ToBase64(fullMessage)
-
-    if (import.meta.env.DEV) {
-      if (messageType === MessageType.YjsUpdate) {
-        perfCounters.broadcastYjsMsgs++
-        perfCounters.broadcastYjsBytes += fullMessage.length
-      } else if (messageType === MessageType.AwarenessUpdate) {
-        perfCounters.awarenessMsgs++
-      }
-    }
 
     this.sendBroadcastMessage(base64Message)
   }

@@ -38,11 +38,10 @@ export interface DiagramAutosaver {
 }
 
 /**
- * Change-debounced diagram autosaver. Replaces a fixed-window poll: a save
- * fires `debounceMs` after the last model change, but no later than
- * `maxWaitMs` after the first un-saved change, so a long uninterrupted edit
- * streak still persists promptly. A frozen tab therefore loses at most the
- * trailing debounce window rather than a full poll interval.
+ * Change-debounced diagram autosaver. A save fires `debounceMs` after the last
+ * model change, but no later than `maxWaitMs` after the first un-saved change,
+ * so a long uninterrupted edit streak still persists promptly. Worst-case data
+ * loss on an abrupt teardown is therefore one debounce window.
  */
 export function createDiagramAutosaver(
   opts: AutosaverOptions
@@ -143,20 +142,25 @@ export function createDiagramAutosaver(
     }
   }
 
-  const runSave = () => {
-    if (inFlight) {
-      // A save is already running; let it finish, then re-check dirtiness.
-      // This chain is intentionally NOT gated on stopScheduling: a flush() at
-      // teardown must persist an edit that arrived during the in-flight PUT.
-      inFlight = inFlight.then(() => {
-        if (dirty && !opts.isPaused()) return save()
-      })
-      return inFlight
-    }
-    inFlight = save().finally(() => {
-      inFlight = null
+  const runSave = (): Promise<void> => {
+    const prev = inFlight
+    // Chain behind any in-flight save and re-check dirtiness when it settles.
+    // The chain is intentionally NOT gated on stopScheduling: a flush() at
+    // teardown must persist an edit that arrived during the in-flight PUT.
+    const run: Promise<void> = (
+      prev
+        ? prev.then(() => {
+            if (dirty && !opts.isPaused()) return save()
+          })
+        : save()
+    ).finally(() => {
+      // Reset to the fast path only when THIS save is still the tail. Binding
+      // the reset to an earlier link would clear `inFlight` while a chained
+      // save is still running, opening a parallel-PUT window.
+      if (inFlight === run) inFlight = null
     })
-    return inFlight
+    inFlight = run
+    return run
   }
 
   return {

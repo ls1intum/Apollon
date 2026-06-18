@@ -200,7 +200,7 @@ jobs:
         run: pnpm --filter @tumaet/webapp exec playwright test tests/e2e/
 
       - name: Run performance budget tests
-        run: pnpm --filter @tumaet/webapp exec playwright test --project=perf --workers=1
+        run: pnpm --filter @tumaet/webapp run test:perf
 
       - name: Upload Playwright report
         if: ${{ failure() }}
@@ -208,6 +208,14 @@ jobs:
         with:
           name: playwright-report-e2e
           path: standalone/webapp/playwright-report/
+          retention-days: 14
+
+      - name: Upload Playwright test results
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: playwright-test-results-e2e
+          path: standalone/webapp/test-results/
           retention-days: 14
 
   # Run the document-growth performance budget on Firefox too, not just
@@ -269,7 +277,7 @@ jobs:
         if: ${{ failure() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: playwright-test-results-e2e
+          name: playwright-test-results-perf-firefox
           path: standalone/webapp/test-results/
           retention-days: 14
 
@@ -401,6 +409,7 @@ jobs:
         server-tests,
         library-node22-compat,
         e2e-tests,
+        perf-firefox-tests,
         visual-regression-tests,
       ]
     if: always()

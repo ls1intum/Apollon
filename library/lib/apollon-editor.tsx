@@ -35,7 +35,7 @@ import {
 } from "./store/context"
 import { getPerfCounters } from "./sync/perfCounters"
 import { MessageType, SendBroadcastMessage, YjsSync } from "./sync/yjsSync"
-import { getNodesMap, getEdgesMap } from "./sync/ydoc"
+import { getNodesMap } from "./sync/ydoc"
 import * as Y from "yjs"
 import { StoreApi } from "zustand"
 import * as Apollon from "./typings"
@@ -810,35 +810,17 @@ export class ApollonEditor {
   public __perf():
     | {
         encodedDocBytes: number
-        structCount: number
         nodesMapSize: number
-        edgesMapSize: number
-        undoStackDepth: number
-        broadcastYjsMsgs: number
-        broadcastYjsBytes: number
-        awarenessMsgs: number
         storeNodeWrites: number
       }
     | undefined {
     if (!import.meta.env.DEV) return undefined
 
-    let structCount = 0
-    for (const structs of this.ydoc.store.clients.values()) {
-      structCount += structs.length
-    }
-
     const counters = getPerfCounters()
 
     return {
       encodedDocBytes: Y.encodeStateAsUpdate(this.ydoc).byteLength,
-      structCount,
       nodesMapSize: getNodesMap(this.ydoc).size,
-      edgesMapSize: getEdgesMap(this.ydoc).size,
-      undoStackDepth:
-        this.diagramStore.getState().undoManager?.undoStack.length ?? 0,
-      broadcastYjsMsgs: counters?.broadcastYjsMsgs ?? 0,
-      broadcastYjsBytes: counters?.broadcastYjsBytes ?? 0,
-      awarenessMsgs: counters?.awarenessMsgs ?? 0,
       storeNodeWrites: counters?.storeNodeWrites ?? 0,
     }
   }

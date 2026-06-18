@@ -25,7 +25,6 @@ import { useShallow } from "zustand/shallow"
 import { AssessmentDataBox } from "@/components/playground/AssessmentDataBox"
 import { CollapsibleSidebar } from "@/components/playground/CollapsibleSidebar"
 import { connectPlaygroundCollaboration } from "@/components/playground/connectPlaygroundCollaboration"
-import { installPerfHooks } from "@/utils/perfHooks"
 
 const UMLDiagramTypes = Object.values(UMLDiagramType)
 
@@ -250,7 +249,6 @@ export const ApollonPlayground: React.FC = () => {
           style={{ display: "flex", flex: 1, minWidth: 0, height: "100%" }}
           onMount={(editor: ApollonEditor) => {
             setEditor(editor)
-            const removePerfHooks = installPerfHooks(editor)
             const disconnectCollaboration = collaborationViewportTest
               ? connectPlaygroundCollaboration(editor, {
                   document: ApollonEditor.generateInitialSyncMessage(),
@@ -266,7 +264,6 @@ export const ApollonPlayground: React.FC = () => {
                 setAssessmentSelectedElements(selectedElements)
             )
             return () => {
-              removePerfHooks()
               disconnectCollaboration()
               editor.unsubscribe(modelSubId)
               editor.unsubscribe(assessmentSubId)

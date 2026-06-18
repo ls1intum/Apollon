@@ -75,7 +75,7 @@ export default defineConfig({
         ]
       : []),
     {
-      // Document-growth / broadcast budgets. Measurements must be stable:
+      // Document-growth budget. Measurements must be stable:
       // run serially (one page contending for CPU at a time) and never retry,
       // so a flaky pass can't mask a real regression.
       name: "perf",
