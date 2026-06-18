@@ -7,8 +7,8 @@
     "node": ">=24.15.0"
   },
   "scripts": {
-    "start": "pnpm --filter @tumaet/ui run build:css && vite",
-    "start:host": "pnpm --filter @tumaet/ui run build:css && vite --host",
+    "start": "pnpm --filter @tumaet/ui run build:css && pnpm exec concurrently -k \"pnpm --filter @tumaet/ui run build:css:watch\" \"vite\"",
+    "start:host": "pnpm --filter @tumaet/ui run build:css && pnpm exec concurrently -k \"pnpm --filter @tumaet/ui run build:css:watch\" \"vite --host\"",
     "build": "pnpm --filter @tumaet/ui run build:css && tsc -b && vite build",
     "preview": "vite preview",
     "lint": "eslint .",

@@ -38,13 +38,13 @@ export interface ApollonProps {
    * `style`. Build one with `createApollonTheme(...)`. Fully optional — an
    * un-themed embed falls back to the library's built-in light/dark values.
    */
-  theme?: Record<string, string>
+  theme?: Partial<Record<`--apollon-${string}`, string>>
   /**
-   * Sets `data-theme` on the mount node (e.g. `"dark"`). Optional — when
-   * omitted the editor inherits whatever `data-theme` an ancestor declares,
-   * or the default light values. See `library/THEMING.md`.
+   * Sets `data-theme` on the mount node. Optional — when omitted the editor
+   * inherits whatever `data-theme` an ancestor declares, or the default light
+   * values. See `library/THEMING.md`.
    */
-  dataTheme?: string
+  dataTheme?: "light" | "dark"
   /** Rendered inside the {@link ApollonInstanceContext} provider alongside the canvas. */
   children?: ReactNode
 

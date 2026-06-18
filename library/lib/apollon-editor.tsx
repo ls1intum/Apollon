@@ -99,7 +99,7 @@ export class ApollonEditor {
     // light/dark fallbacks. Only sets the keys provided.
     if (options?.theme) {
       for (const [key, value] of Object.entries(options.theme)) {
-        element.style.setProperty(key, value)
+        if (value !== undefined) element.style.setProperty(key, value)
       }
     }
     if (options?.dataTheme !== undefined) {

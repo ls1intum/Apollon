@@ -89,7 +89,6 @@
   /* Shadows / glow (light) */
   --primitive-shadow-card-hover: rgba(0, 0, 0, 0.1);
   --primitive-shadow-overlay: rgba(0, 0, 0, 0.18);
-  --primitive-glow-neutral: rgba(15, 58, 102, 0.78);
 
   /* Warning banner (light) */
   --primitive-banner-warning-bg: #fff7e6;
@@ -186,15 +185,11 @@
   /* Shadows / glow */
   --home-shadow-card-hover: var(--primitive-shadow-card-hover);
   --home-shadow-overlay: var(--primitive-shadow-overlay);
-  --home-glow-neutral: var(--primitive-glow-neutral);
 
-  /* Semantic elevation scale (3 levels). Reference the softened shadow
-     primitives so they re-resolve per theme. Use these everywhere instead of
-     ad-hoc px shadows:
-       sm — static raised surfaces (paired with a hairline border)
+  /* Semantic elevation scale. Reference the softened shadow primitives so they
+     re-resolve per theme. Use these everywhere instead of ad-hoc px shadows:
        md — menus / dropdowns / popovers
        overlay-box — modals / banners / toasts */
-  --home-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
   --home-shadow-md: 0 4px 12px var(--home-shadow-overlay);
   --home-shadow-overlay-box: 0 8px 20px var(--home-shadow-overlay);
 
@@ -289,9 +284,6 @@
   --primitive-tag-shared-bg: #1e3434;
   --primitive-tag-shared-text: #70bab6;
 
-  /* Glow (dark) */
-  --primitive-glow-neutral: rgba(35, 110, 190, 0.78);
-
   /* Warning banner (dark) */
   --primitive-banner-warning-bg: #3a2f17;
   --primitive-banner-warning-border: #7a5c18;
@@ -360,7 +352,6 @@
   --home-tag-local-text: var(--primitive-tag-local-text);
   --home-tag-shared-bg: var(--primitive-tag-shared-bg);
   --home-tag-shared-text: var(--primitive-tag-shared-text);
-  --home-glow-neutral: var(--primitive-glow-neutral);
 
   /* Warning banner — dark theme. */
   --home-banner-warning-bg: var(--primitive-banner-warning-bg);

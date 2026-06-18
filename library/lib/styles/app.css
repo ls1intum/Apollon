@@ -11,14 +11,16 @@
   --text: var(--apollon-primary-contrast, #000);
   --xy-edge-stroke: var(--apollon-primary-contrast, #000);
   --xy-edge-stroke-width: 2px;
-  --xy-minimap-mask-background-color-props: #00000020;
-  --xy-controls-button-background-color: var(--apollon-background, #fff);
 }
 
 .apollon-editor {
   background-color: var(--apollon-background, #fff);
   color: var(--apollon-primary-contrast, #000);
-  --popover-divider: #d1d5dc;
+  --popover-divider: color-mix(
+    in srgb,
+    var(--apollon-primary-contrast, #000) 10%,
+    transparent
+  );
 }
 
 /* Positioning context + clip region for the absolutely-positioned
@@ -191,10 +193,6 @@
   stroke-width: 4.5px !important;
   filter: drop-shadow(0 0 4px var(--apollon-collaboration-highlight-color));
 }
-.react-flow__controls-button {
-  background: none;
-  border-bottom: none;
-}
 
 .react-flow__panel,
 .react-flow__node-toolbar {
@@ -211,16 +209,6 @@
 .react-flow__node-toolbar {
   display: flex;
   gap: 8px;
-}
-
-.react-flow__controls-button,
-.react-flow__controls-button:hover {
-  background: var(--panel-background);
-  border-bottom: none;
-}
-
-.react-flow__controls-button > svg {
-  fill: var(--text);
 }
 
 .react-flow__handle {
@@ -397,16 +385,10 @@
 .react-flow__edge:hover .edge-overlay {
   opacity: 0;
 }
-.react-flow__edge:hover .edge-marker-highlight {
-  opacity: 0;
-}
 
 .react-flow__edge.selected .edge-overlay {
   opacity: 0;
   pointer-events: none;
-}
-.react-flow__edge.selected .edge-marker-highlight {
-  opacity: 0;
 }
 
 .react-flow__edge:hover .react-flow__edge-path,
@@ -462,8 +444,7 @@
   stroke-width: 3px;
 }
 
-.apollon-interactive-selection--selected .edge-overlay,
-.apollon-interactive-selection--selected .edge-marker-highlight {
+.apollon-interactive-selection--selected .edge-overlay {
   opacity: 0.45;
   stroke: var(--apollon-interactive-selection-color);
   stroke-width: 15px;
@@ -687,9 +668,23 @@ svg.react-flow__connectionline {
   padding: 10px;
   background-color: var(--apollon-background-variant, #f8f9fa);
   color: var(--apollon-primary-contrast, #000);
-  border-radius: 4px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  border-radius: var(--home-radius-lg, 8px);
+  border: 1px solid
+    color-mix(in srgb, var(--apollon-primary-contrast, #000) 10%, transparent);
+  box-shadow: var(--home-shadow-md, 0 4px 12px rgba(0, 0, 0, 0.18));
+  transform-origin: var(--transform-origin, center);
+  transition:
+    opacity 100ms ease,
+    transform 100ms ease;
   z-index: 10003;
+}
+
+.apollon-popover[data-starting-style],
+.apollon-popover[data-ending-style],
+.apollon-select-content[data-starting-style],
+.apollon-select-content[data-ending-style] {
+  opacity: 0;
+  transform: scale(0.96);
 }
 
 /* Select (Base UI Popover listbox) */
@@ -716,8 +711,9 @@ svg.react-flow__connectionline {
   text-align: left;
   color: var(--apollon-primary-contrast, #000);
   background-color: var(--apollon-background, #fff);
-  border: 1px solid var(--apollon-primary-contrast, #000);
-  border-radius: 4px;
+  border: 1px solid
+    color-mix(in srgb, var(--apollon-primary-contrast, #000) 15%, transparent);
+  border-radius: var(--home-radius-md, 6px);
   cursor: pointer;
 }
 .apollon-select-trigger:focus-visible {
@@ -740,9 +736,14 @@ svg.react-flow__connectionline {
 .apollon-select-content {
   background-color: var(--apollon-background, #fff);
   color: var(--apollon-primary-contrast, #000);
-  border: 1px solid var(--apollon-primary-contrast, #000);
-  border-radius: 4px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  border: 1px solid
+    color-mix(in srgb, var(--apollon-primary-contrast, #000) 10%, transparent);
+  border-radius: var(--home-radius-lg, 8px);
+  box-shadow: var(--home-shadow-md, 0 4px 12px rgba(0, 0, 0, 0.18));
+  transform-origin: var(--transform-origin, center);
+  transition:
+    opacity 100ms ease,
+    transform 100ms ease;
   z-index: 10004;
   overflow: hidden;
 }
@@ -766,7 +767,7 @@ svg.react-flow__connectionline {
   color: var(--apollon-primary-contrast, #000);
   background-color: transparent;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--home-radius-md, 6px);
   cursor: pointer;
   /* Avoid the 300ms tap delay / double-tap zoom on touch devices. */
   touch-action: manipulation;

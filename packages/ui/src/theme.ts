@@ -59,6 +59,15 @@ export interface ApollonTheme {
   dangerBackground?: string
   /** Danger alert border. Maps to `--apollon-alert-danger-border`. */
   dangerBorder?: string
+
+  /** Toggle/switch outline. Maps to `--apollon-switch-box-border-color`. */
+  switchBoxBorderColor?: string
+  /** List-group surface color. Maps to `--apollon-list-group-color`. */
+  listGroupColor?: string
+  /** Outline-secondary button color. Maps to `--apollon-btn-outline-secondary-color`. */
+  btnOutlineSecondaryColor?: string
+  /** Modal footer divider. Maps to `--apollon-modal-bottom-border`. */
+  modalBottomBorder?: string
 }
 
 // Single source of truth mapping each typed field to its CSS custom property.
@@ -81,6 +90,10 @@ const TOKEN_VAR_MAP: Record<keyof ApollonTheme, `--apollon-${string}`> = {
   danger: "--apollon-alert-danger-color",
   dangerBackground: "--apollon-alert-danger-background",
   dangerBorder: "--apollon-alert-danger-border",
+  switchBoxBorderColor: "--apollon-switch-box-border-color",
+  listGroupColor: "--apollon-list-group-color",
+  btnOutlineSecondaryColor: "--apollon-btn-outline-secondary-color",
+  modalBottomBorder: "--apollon-modal-bottom-border",
 }
 
 /**

@@ -12,6 +12,14 @@ correctly out of the box.
 import "@tumaet/apollon/style.css" // the editor stylesheet (loads the defaults)
 ```
 
+> **`--apollon-*` is THE public theming contract.** Those are the only variable
+> names guaranteed stable across releases. The library is Tailwind-free and
+> ships its own self-contained `style.css`, so **do not** reach for shadcn's
+> unprefixed token names — `--color-*`, `--radius-*`, and the webapp's `--home-*`
+> accent variables are **private/internal** implementation details that are not
+> exposed by the published bundle and may change at any time. Theme exclusively
+> through `--apollon-*` (typed via `createApollonTheme`) and `data-theme`.
+
 ## Quick start
 
 ```tsx
@@ -41,31 +49,36 @@ stylesheet references them as `var(--apollon-x, <fallback>)`, so overriding any
 subset is safe and forward-compatible. The typed `ApollonTheme` field is the
 ergonomic alias `createApollonTheme` maps to the CSS variable.
 
-| `ApollonTheme` field | CSS variable                         | Used for                                            |
-| -------------------- | ------------------------------------ | --------------------------------------------------- |
-| `primary`            | `--apollon-primary`                  | Accent / brand color (selection, links, highlights) |
-| `primaryContrast`    | `--apollon-primary-contrast`         | Foreground text on `background`                     |
-| `secondary`          | `--apollon-secondary`                | Muted / secondary accent                            |
-| `background`         | `--apollon-background`               | Canvas / surface background                         |
-| `backgroundInverse`  | `--apollon-background-inverse`       | Inverse surface (e.g. tooltips)                     |
-| `backgroundVariant`  | `--apollon-background-variant`       | Slightly raised surface variant                     |
-| `gray`               | `--apollon-gray`                     | Neutral gray surface                                |
-| `grayVariant`        | `--apollon-gray-variant`             | Stronger gray (borders / dividers)                  |
-| `grid`               | `--apollon-grid`                     | Canvas grid line color                              |
-| `guideVertical`      | `--apollon-guide-vertical`           | Vertical alignment guide                            |
-| `guideHorizontal`    | `--apollon-guide-horizontal`         | Horizontal alignment guide                          |
-| `warning`            | `--apollon-alert-warning-yellow`     | Warning alert accent                                |
-| `warningBackground`  | `--apollon-alert-warning-background` | Warning alert background                            |
-| `warningBorder`      | `--apollon-alert-warning-border`     | Warning alert border                                |
-| `danger`             | `--apollon-alert-danger-color`       | Danger alert text                                   |
-| `dangerBackground`   | `--apollon-alert-danger-background`  | Danger alert background                             |
-| `dangerBorder`       | `--apollon-alert-danger-border`      | Danger alert border                                 |
+| `ApollonTheme` field       | CSS variable                            | Used for                                            |
+| -------------------------- | --------------------------------------- | --------------------------------------------------- |
+| `primary`                  | `--apollon-primary`                     | Accent / brand color (selection, links, highlights) |
+| `primaryContrast`          | `--apollon-primary-contrast`            | Foreground text on `background`                     |
+| `secondary`                | `--apollon-secondary`                   | Muted / secondary accent                            |
+| `background`               | `--apollon-background`                  | Canvas / surface background                         |
+| `backgroundInverse`        | `--apollon-background-inverse`          | Inverse surface (e.g. tooltips)                     |
+| `backgroundVariant`        | `--apollon-background-variant`          | Slightly raised surface variant                     |
+| `gray`                     | `--apollon-gray`                        | Neutral gray surface                                |
+| `grayVariant`              | `--apollon-gray-variant`                | Stronger gray (borders / dividers)                  |
+| `grid`                     | `--apollon-grid`                        | Canvas grid line color                              |
+| `guideVertical`            | `--apollon-guide-vertical`              | Vertical alignment guide                            |
+| `guideHorizontal`          | `--apollon-guide-horizontal`            | Horizontal alignment guide                          |
+| `warning`                  | `--apollon-alert-warning-yellow`        | Warning alert accent                                |
+| `warningBackground`        | `--apollon-alert-warning-background`    | Warning alert background                            |
+| `warningBorder`            | `--apollon-alert-warning-border`        | Warning alert border                                |
+| `danger`                   | `--apollon-alert-danger-color`          | Danger alert text                                   |
+| `dangerBackground`         | `--apollon-alert-danger-background`     | Danger alert background                             |
+| `dangerBorder`             | `--apollon-alert-danger-border`         | Danger alert border                                 |
+| `switchBoxBorderColor`     | `--apollon-switch-box-border-color`     | Toggle / switch outline                             |
+| `listGroupColor`           | `--apollon-list-group-color`            | List-group surface color                            |
+| `btnOutlineSecondaryColor` | `--apollon-btn-outline-secondary-color` | Outline-secondary button color                      |
+| `modalBottomBorder`        | `--apollon-modal-bottom-border`         | Modal footer divider                                |
 
-> The stylesheet also defines a few internal `--apollon-*` variables
-> (`--apollon-switch-box-border-color`, `--apollon-list-group-color`,
-> `--apollon-btn-outline-secondary-color`, `--apollon-modal-bottom-border`).
-> These are not part of the typed `ApollonTheme` surface but can still be set
-> directly via CSS or the `theme` prop if you need to.
+> **Contrast / pairing.** The palette is internally balanced for WCAG AA. If you
+> override `background` or `primary`, override `primaryContrast` to match —
+> `primaryContrast` is the foreground used on top of `background`, and changing
+> only one side can drop text/UI below the AA contrast ratio. When in doubt,
+> verify the `background` ⇄ `primaryContrast` pair (and `primary` against the
+> surfaces it sits on) with a contrast checker.
 
 ## Light / dark — the `data-theme` mechanism
 
@@ -198,3 +211,29 @@ the neutral blue default unless they opt in.
 keep working exactly as before: the stylesheet's per-property fallbacks
 (`var(--apollon-primary, #3e8acc)`, etc.) and the `:root` / `:root[data-theme]`
 blocks fully define the default light and dark looks.
+
+## Architecture guardrail
+
+A few structural choices in the styling pipeline are **load-bearing and
+intentional** — they exist to keep the published bundle framework-agnostic and
+Tailwind-free. They are not accidental over-customization to "clean up":
+
+- **Tailwind-free `--apollon-*` / raw-CSS surface.** The published library ships
+  one self-contained, Preflight-free `style.css` that references `--apollon-*`
+  variables with built-in fallbacks. There is intentionally **no Tailwind and no
+  unprefixed token leakage** in the bundle, so embeds can't collide with a
+  host's own utility classes or design tokens.
+- **Empty-cva + `data-slot` primitives.** Components in `packages/ui` use
+  deliberately empty `cva()` bases and `data-slot` attributes as stable styling
+  hooks. The emptiness is the point — styling flows through the compiled CSS and
+  `data-slot` selectors, not inline variants.
+- **`@apply`-compiled `components.css`.** `packages/ui/dist/components.css` is
+  compiled from `src/styles/components.css` (which uses `@apply`) by the
+  `build:css` step. The compiled artifact is what consumers load; do not hand-
+  edit it.
+- **Canonical base-nova arbitrary values.** The arbitrary values baked into the
+  base-nova primitives in `packages/ui` are the canonical design source. Keep
+  them as-is rather than "rounding" them to nearby scale steps.
+
+Treat these as fixed contracts. Changes here ripple into every embed and the
+framework-agnostic guarantee, so they should be deliberate, not cosmetic.
