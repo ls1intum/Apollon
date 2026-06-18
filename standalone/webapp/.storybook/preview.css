@@ -1,0 +1,13 @@
+/* Neutralize the webapp app-shell rules (fixed-position html, 100vh flex body
+   from webapp.css) inside the Storybook iframe so stories lay out normally and
+   docs pages scroll. Imported LAST in preview.tsx so it wins over webapp.css. */
+html,
+body,
+#storybook-root,
+#storybook-docs {
+  position: static;
+  overflow: visible;
+  height: auto;
+  width: auto;
+  display: block;
+}

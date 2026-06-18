@@ -14,6 +14,7 @@ export default [
       "playwright-report/**",
       "test-results/**",
       "coverage/**",
+      "storybook-static/**",
       // Capacitor native projects (contain generated/bundled web assets)
       "ios/**",
       "android/**",

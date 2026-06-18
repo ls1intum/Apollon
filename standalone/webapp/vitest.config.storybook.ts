@@ -7,24 +7,24 @@ import react from "@vitejs/plugin-react"
 import { playwright } from "@vitest/browser-playwright"
 import { defineConfig } from "vitest/config"
 
+import { apollonAliasResolver, apollonAliases } from "./build/viteResolve"
+
 const dirname =
   typeof __dirname !== "undefined"
     ? __dirname
     : path.dirname(fileURLToPath(import.meta.url))
 
-// Storybook interaction/a11y tests in a real browser. SEPARATE from the jsdom
+// Storybook interaction/a11y tests in a real browser, SEPARATE from the jsdom
 // vitest.config.ts (component unit tests) so the two never fight over env.
-// Run with: pnpm --filter @tumaet/ui run test:storybook
+// `--config` means vite.config.ts is NOT auto-merged, so the cross-package
+// source resolution (aliases + the library @/ resolver) is wired in here too.
+// Run with: pnpm --filter @tumaet/webapp run test:storybook
 export default defineConfig({
-  plugins: [
-    react(),
-    tailwindcss(),
-    storybookTest({
-      configDir: path.join(dirname, ".storybook"),
-      // --ci skips prompts and never opens a browser.
-      storybookScript: "pnpm storybook --ci",
-    }),
-  ],
+  plugins: [react(), tailwindcss(), apollonAliasResolver, storybookTest({ configDir: path.join(dirname, ".storybook") })],
+  resolve: {
+    alias: apollonAliases,
+    dedupe: ["react", "react-dom"],
+  },
   test: {
     name: "storybook",
     browser: {

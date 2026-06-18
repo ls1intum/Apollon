@@ -89,3 +89,4 @@ allowBuilds:
   "esbuild": true
   "sharp": true
   "ssh2": true
+  storybook-addon-remix-react-router: false # postinstall funding notice only
