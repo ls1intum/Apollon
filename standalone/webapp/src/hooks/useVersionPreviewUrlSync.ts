@@ -9,6 +9,25 @@ import { log } from "@/logger"
 export const PREVIEW_VERSION_PARAM = "version"
 
 /**
+ * URL-level "leave preview": strips `?version=` so the URL→store sync below
+ * exits preview on the next render. Shared so every exit affordance — the
+ * banner, the drawer's "Return to current" row, and deleting the previewed
+ * version — goes through the single source of truth (the URL) instead of
+ * clearing the store directly (which the sync effect would immediately undo
+ * while the param lingers).
+ */
+export function useClosePreview() {
+  const navigate = useNavigate()
+  return useCallback(() => {
+    void navigate({
+      to: ".",
+      search: (prev) => ({ ...prev, [PREVIEW_VERSION_PARAM]: undefined }),
+      replace: true,
+    })
+  }, [navigate])
+}
+
+/**
  * Makes `?version=<id>` the single source of truth for which version is being
  * previewed, for BOTH the local and collab editors (one implementation so they
  * can't drift).
@@ -97,13 +116,7 @@ export function useVersionPreviewUrlSync(
     [navigate, previewFromUrl]
   )
 
-  const closePreview = useCallback(() => {
-    void navigate({
-      to: ".",
-      search: (prev) => ({ ...prev, [PREVIEW_VERSION_PARAM]: undefined }),
-      replace: true,
-    })
-  }, [navigate])
+  const closePreview = useClosePreview()
 
   return { openPreview, closePreview }
 }

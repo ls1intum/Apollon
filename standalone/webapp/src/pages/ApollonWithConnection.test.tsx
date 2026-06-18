@@ -173,7 +173,10 @@ vi.mock("@/stores/useVersionStore", () => {
     selector ? selector(state) : state
   ;(hook as unknown as { getState: () => typeof state }).getState = () => state
   // Single-diagram page, so scoped preview === the global preview here.
-  return { useVersionStore: hook, selectScopedPreview: (s: typeof state) => s.preview }
+  return {
+    useVersionStore: hook,
+    selectScopedPreview: (s: typeof state) => s.preview,
+  }
 })
 
 // Not under test; stub the versioning widgets.

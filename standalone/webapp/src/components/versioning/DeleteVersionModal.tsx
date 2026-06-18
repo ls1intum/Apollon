@@ -8,6 +8,7 @@ import {
   useVersionStore,
 } from "@/stores/useVersionStore"
 import { Typography } from "@/components/Typography"
+import { useClosePreview } from "@/hooks/useVersionPreviewUrlSync"
 import { log } from "@/logger"
 import { versioningStrings as t } from "./strings"
 
@@ -19,7 +20,10 @@ interface Props {
 export const DeleteVersionModal = ({ diagramId, versionId }: Props) => {
   const { closeModal } = useModalContext()
   const deleteVersion = useVersionStore((s) => s.deleteVersion)
-  const exitPreview = useVersionStore((s) => s.exitPreview)
+  // Preview is URL-driven; clear `?version=` so the sync effect doesn't try to
+  // re-enter the just-deleted version (which would surface a spurious
+  // "version unavailable" toast on an otherwise successful delete).
+  const closePreview = useClosePreview()
   const previewingThis = useVersionStore(
     (s) => selectScopedPreview(s, diagramId)?.versionId === versionId
   )
@@ -31,7 +35,7 @@ export const DeleteVersionModal = ({ diagramId, versionId }: Props) => {
   const onConfirm = async () => {
     setWorking(true)
     try {
-      if (previewingThis) exitPreview()
+      if (previewingThis) closePreview()
       await deleteVersion(diagramId, versionId)
       closeModal()
     } catch (err) {

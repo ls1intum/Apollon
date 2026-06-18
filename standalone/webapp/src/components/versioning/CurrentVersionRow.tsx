@@ -9,6 +9,7 @@ import {
   useVersionStore,
   type PendingVersion,
 } from "@/stores/useVersionStore"
+import { useClosePreview } from "@/hooks/useVersionPreviewUrlSync"
 import { relativeTime } from "./relativeTime"
 import {
   ROW_HOVER_BG,
@@ -54,14 +55,17 @@ export const CurrentVersionRow: FC<Props> = ({
   latestSavedVersion,
 }) => {
   const previewState = useVersionStore((s) => selectScopedPreview(s, diagramId))
-  const exitPreview = useVersionStore((s) => s.exitPreview)
+  // Preview is URL-driven (`?version=`). Exit by clearing the param, not by
+  // poking the store directly — the URL→store sync owns `exitPreview`, and a
+  // direct store clear would be re-entered while the param still lingers.
+  const closePreview = useClosePreview()
 
   if (previewState) {
     return (
       <Box
         component="button"
         type="button"
-        onClick={() => exitPreview()}
+        onClick={() => closePreview()}
         sx={{
           display: "flex",
           width: "100%",
