@@ -242,7 +242,7 @@ describe("ApollonEditor.__perf()", () => {
     ydoc.destroy()
   })
 
-  it("caps the undo stack length across more than 100 discrete edits while keeping undo/redo working", () => {
+  it("keeps a full, unbounded undo history (no cap drops old steps)", () => {
     const ydoc = new Y.Doc()
     const store = createDiagramStore(ydoc)
     store.getState().setNodes([makeNode("a", 0)])
@@ -257,16 +257,53 @@ describe("ApollonEditor.__perf()", () => {
       undoManager.stopCapturing()
     }
 
-    // The stack is bounded by UNDO_STACK_LIMIT rather than growing to 150.
-    expect(undoManager.undoStack.length).toBe(100)
+    // Every edit is still undoable — the history is not truncated.
+    expect(undoManager.undoStack.length).toBe(150)
+    expect(getNodesMap(ydoc).get("a")?.position.x).toBe(150)
 
-    // The retained entries still undo/redo correctly (asserted against the
-    // Yjs map, which the UndoManager mutates directly).
-    expect(getNodesMap(ydoc).get("a")?.position.x).toBe(150)
+    // Undoing all 150 walks back to the pre-history state.
+    for (let i = 0; i < 150; i++) undoManager.undo()
+    expect(getNodesMap(ydoc).get("a")?.position.x).toBe(0)
+
+    ydoc.destroy()
+  })
+
+  it("makes one drag a single undo step that undoes and redoes", () => {
+    const ydoc = new Y.Doc()
+    const store = createDiagramStore(ydoc)
+    store.getState().setNodes([makeNode("a", 0)])
+    store.getState().initializeUndoManager()
+    const undoManager = store.getState().undoManager
+    if (!undoManager) throw new Error("expected undoManager to be initialized")
+
+    // A drag: many transient frames (skipped) followed by the settle frame.
+    for (let i = 1; i <= 60; i++) {
+      store.getState().onNodesChange([
+        {
+          id: "a",
+          type: "position",
+          position: { x: i, y: 0 },
+          dragging: true,
+        },
+      ])
+    }
+    store.getState().onNodesChange([
+      {
+        id: "a",
+        type: "position",
+        position: { x: 61, y: 0 },
+        dragging: false,
+      },
+    ])
+
+    // The whole gesture is one undo step (not one per frame).
+    expect(undoManager.undoStack.length).toBe(1)
+    expect(getNodesMap(ydoc).get("a")?.position.x).toBe(61)
+
     undoManager.undo()
-    expect(getNodesMap(ydoc).get("a")?.position.x).toBe(149)
+    expect(getNodesMap(ydoc).get("a")?.position.x).toBe(0)
     undoManager.redo()
-    expect(getNodesMap(ydoc).get("a")?.position.x).toBe(150)
+    expect(getNodesMap(ydoc).get("a")?.position.x).toBe(61)
 
     ydoc.destroy()
   })

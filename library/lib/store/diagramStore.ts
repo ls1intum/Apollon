@@ -204,26 +204,7 @@ export const createDiagramStore = (
               }
             )
 
-            // Bound the undo stack so a long editing session can't grow an
-            // unbounded number of StackItems (each retains DeleteSets + a meta
-            // Map). This caps the JS-side array only; the spliced structs stay
-            // pinned in the Yjs doc (their GC `keep` flag is never cleared —
-            // only `undoManager.clear()` releases it), so it does not shrink
-            // the doc. Per-frame drag growth is bounded separately, by skipping
-            // transient drag writes in onNodesChange.
-            const UNDO_STACK_LIMIT = 100
-
-            // Listen to undo manager state changes
             undoManager.on("stack-item-added", () => {
-              // Yjs exposes no capping API, so we splice undoStack directly;
-              // this relies on it being a mutable array (true in the pinned
-              // yjs 13.6.x — revisit if that internal changes).
-              if (undoManager.undoStack.length > UNDO_STACK_LIMIT) {
-                undoManager.undoStack.splice(
-                  0,
-                  undoManager.undoStack.length - UNDO_STACK_LIMIT
-                )
-              }
               get().updateUndoRedoState()
             })
 
