@@ -88,14 +88,14 @@ describe("ApollonEditor.__perf()", () => {
     ydoc.destroy()
   })
 
-  it("is collaboration-aware: keeps transient drag frames in single-user, writes them in collaboration", () => {
-    // Single-user (default): transient drag frames are skipped. Positions
-    // advance each frame so the deepEqual short-circuit at the top of
+  it("skips transient drag frames only when an undo manager is pinning writes", () => {
+    // Single-user modelling has an UndoManager, so transient frames are skipped.
+    // Positions advance each frame so the deepEqual short-circuit at the top of
     // onNodesChange doesn't swallow them and mask the guard.
     const singleUserDoc = new Y.Doc()
     const singleUserStore = createDiagramStore(singleUserDoc)
     singleUserStore.getState().setNodes([makeNode("a", 0)])
-    expect(singleUserStore.getState().collaborationEnabled).toBe(false)
+    singleUserStore.getState().initializeUndoManager()
 
     const singleUserBefore = getPerfCounters()?.storeNodeWrites ?? 0
     for (let i = 1; i <= 30; i++) {
@@ -111,12 +111,11 @@ describe("ApollonEditor.__perf()", () => {
     expect((getPerfCounters()?.storeNodeWrites ?? 0) - singleUserBefore).toBe(0)
     singleUserDoc.destroy()
 
-    // Collaboration: the per-frame writes drive the live remote drag and are
-    // GC-reclaimed (no UndoManager), so each advancing frame DOES write.
+    // Collaboration creates no UndoManager, so the per-frame writes (which drive
+    // the live remote drag and are GC-reclaimed) DO happen — every frame writes.
     const collabDoc = new Y.Doc()
     const collabStore = createDiagramStore(collabDoc)
     collabStore.getState().setNodes([makeNode("a", 0)])
-    collabStore.getState().setCollaborationEnabled(true)
 
     const collabBefore = getPerfCounters()?.storeNodeWrites ?? 0
     for (let i = 1; i <= 30; i++) {
@@ -177,6 +176,7 @@ describe("ApollonEditor.__perf()", () => {
     const ydoc = new Y.Doc()
     const store = createDiagramStore(ydoc)
     store.getState().setNodes([makeNode("a", 0)])
+    store.getState().initializeUndoManager()
 
     const before = getPerfCounters()?.storeNodeWrites ?? 0
 

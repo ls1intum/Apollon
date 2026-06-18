@@ -177,8 +177,6 @@ export class ApollonEditor {
       this.metadataStore.getState().setScrollLock(options.scrollLock)
     }
 
-    this.diagramStore.getState().setCollaborationEnabled(collaboration.enabled)
-
     if (
       this.metadataStore.getState().mode === Apollon.ApollonMode.Modelling &&
       !collaboration.enabled
