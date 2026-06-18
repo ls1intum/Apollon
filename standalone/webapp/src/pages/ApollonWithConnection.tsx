@@ -286,6 +286,16 @@ export const ApollonWithConnection: React.FC = () => {
       abort.abort()
       setEditor(undefined)
       wsManagerRef.current?.cleanup()
+      // If a version preview is still open at teardown, the editor's local
+      // model is the previewed snapshot and the autosaver is paused — flushing
+      // as-is would either skip a pending pre-preview edit (paused) or persist
+      // the stale snapshot. Exit preview first: setPreviewMode(false) resyncs
+      // the editor from the live Yjs doc (the real diagram), and exitPreview()
+      // clears the pause, so the flush below captures and persists it.
+      if (instance && useVersionStore.getState().preview !== null) {
+        instance.setPreviewMode(false)
+        useVersionStore.getState().exitPreview()
+      }
       // Persist any pending debounced edits before tearing down (e.g. SPA
       // navigation): flush() reads the model synchronously, so it captures the
       // latest state while the editor is still alive, then dispose() stops it.
