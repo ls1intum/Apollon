@@ -99,7 +99,8 @@
     "typescript-eslint": "catalog:",
     "vite": "catalog:",
     "vite-tsconfig-paths": "5.1.4",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "yjs": "13.6.20"
   },
   "size-limit": [
     {

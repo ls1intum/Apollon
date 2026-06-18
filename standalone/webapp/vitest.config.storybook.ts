@@ -20,10 +20,27 @@ const dirname =
 // source resolution (aliases + the library @/ resolver) is wired in here too.
 // Run with: pnpm --filter @tumaet/webapp run test:storybook
 export default defineConfig({
-  plugins: [react(), tailwindcss(), apollonAliasResolver, storybookTest({ configDir: path.join(dirname, ".storybook") })],
+  plugins: [
+    react(),
+    tailwindcss(),
+    apollonAliasResolver,
+    storybookTest({ configDir: path.join(dirname, ".storybook") }),
+  ],
   resolve: {
     alias: apollonAliases,
     dedupe: ["react", "react-dom"],
+  },
+  // The editor library uses `@/` imports rewritten at load time by
+  // apollonAliasResolver; esbuild's optimizeDeps pre-bundle scan runs before
+  // that hook and can't resolve them, so exclude the editor from pre-bundling
+  // (it's loaded on demand at runtime) — mirrors the webapp's vite.config.ts.
+  optimizeDeps: {
+    exclude: ["@tumaet/apollon"],
+  },
+  // Browser mode serves files via Vite; the editor source lives outside the
+  // webapp root, so allow the monorepo root.
+  server: {
+    fs: { allow: [path.resolve(dirname, "..", "..")] },
   },
   test: {
     name: "storybook",
