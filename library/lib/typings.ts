@@ -32,12 +32,27 @@ export type CollaborationViewport = {
   zoom: number
 }
 
+/**
+ * One node a peer is actively dragging or resizing. Broadcast over the
+ * ephemeral awareness channel — never written to the Yjs document — so peers
+ * can render the in-progress gesture live without growing the CRDT or entering
+ * anyone's undo history. The settled position/size is committed once on
+ * drop/release through the document like any other edit.
+ */
+export type DraggingNode = {
+  id: string
+  position: { x: number; y: number }
+  width?: number | null
+  height?: number | null
+}
+
 export type CollaborationState = {
   user?: CollaborationUser
   cursor?: CollaborationCursor | null
   viewport?: CollaborationViewport | null
   followingClientId?: number | null
   selectedElementId?: string | null
+  draggingNodes?: DraggingNode[] | null
 }
 
 export type CollaboratorInfo = {

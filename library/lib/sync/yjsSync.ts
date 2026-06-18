@@ -13,8 +13,12 @@ import {
   CollaborationUser,
   CollaborationViewport,
   CollaboratorInfo,
+  DraggingNode,
 } from "@/typings"
-import { sanitizeCollaborationViewport } from "@/utils/collaboration"
+import {
+  sanitizeCollaborationViewport,
+  sanitizeDraggingNodes,
+} from "@/utils/collaboration"
 import { Edge, Node } from "@xyflow/react"
 import {
   applyAwarenessUpdate,
@@ -51,6 +55,15 @@ export class YjsSync {
     this.metadataStore = metadataStore
     this.awareness = new Awareness(this.ydoc)
     this.stopYjsObserver = this.startYjsObserver()
+
+    // Route the store's transient drag/resize frames onto the ephemeral
+    // awareness channel. The store collects them in `onNodesChange` (collab
+    // only) and calls this publisher per frame; peers render the live gesture
+    // from awareness, so nothing per-frame is ever written to the document or
+    // captured by the UndoManager.
+    this.diagramStore
+      .getState()
+      .setDraggingNodesPublisher(this.setLocalAwarenessDraggingNodes)
   }
 
   public stopSync() {
@@ -107,6 +120,12 @@ export class YjsSync {
     selectedElementId: string | null
   ) => {
     this.awareness.setLocalStateField("selectedElementId", selectedElementId)
+  }
+
+  public setLocalAwarenessDraggingNodes = (
+    draggingNodes: DraggingNode[] | null
+  ) => {
+    this.awareness.setLocalStateField("draggingNodes", draggingNodes)
   }
 
   public setLocalAwarenessState = (state: Partial<CollaborationState>) => {
@@ -208,6 +227,9 @@ export class YjsSync {
     const state = { ...obj } as CollaborationState
     if (obj.viewport != null) {
       state.viewport = sanitizeCollaborationViewport(obj.viewport)
+    }
+    if (obj.draggingNodes != null) {
+      state.draggingNodes = sanitizeDraggingNodes(obj.draggingNodes)
     }
     if (
       obj.followingClientId != null &&

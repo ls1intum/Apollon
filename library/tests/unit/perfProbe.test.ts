@@ -5,7 +5,7 @@ import { createDiagramStore } from "@/store/diagramStore"
 import { getPerfCounters } from "@/sync/perfCounters"
 import { getNodesMap, STORE_ORIGIN } from "@/sync/ydoc"
 import { UMLDiagramType } from "@/types"
-import type { UMLModel } from "@/typings"
+import type { DraggingNode, UMLModel } from "@/typings"
 
 const makeNode = (id: string, x: number) => ({
   id,
@@ -88,10 +88,11 @@ describe("ApollonEditor.__perf()", () => {
     ydoc.destroy()
   })
 
-  it("skips transient drag frames only when an undo manager is pinning writes", () => {
-    // Single-user modelling has an UndoManager, so transient frames are skipped.
-    // Positions advance each frame so the deepEqual short-circuit at the top of
-    // onNodesChange doesn't swallow them and mask the guard.
+  it("keeps transient drag frames out of the document in both modes, broadcasting them over awareness in collaboration", () => {
+    // Single-user (default): transient drag frames are skipped — no doc write,
+    // no awareness publisher wired. Positions advance each frame so the
+    // deepEqual short-circuit at the top of onNodesChange doesn't swallow them
+    // and mask the guard.
     const singleUserDoc = new Y.Doc()
     const singleUserStore = createDiagramStore(singleUserDoc)
     singleUserStore.getState().setNodes([makeNode("a", 0)])
@@ -111,11 +112,19 @@ describe("ApollonEditor.__perf()", () => {
     expect((getPerfCounters()?.storeNodeWrites ?? 0) - singleUserBefore).toBe(0)
     singleUserDoc.destroy()
 
-    // Collaboration creates no UndoManager, so the per-frame writes (which drive
-    // the live remote drag and are GC-reclaimed) DO happen — every frame writes.
+    // Collaboration: transient frames are STILL not persisted (the UndoManager
+    // is active here too and would otherwise pin every per-frame struct), but
+    // each frame is forwarded to the awareness publisher so peers see the live
+    // drag. The settle frame persists once and clears the overlay.
     const collabDoc = new Y.Doc()
     const collabStore = createDiagramStore(collabDoc)
     collabStore.getState().setNodes([makeNode("a", 0)])
+    collabStore.getState().setCollaborationEnabled(true)
+
+    const published: (DraggingNode[] | null)[] = []
+    collabStore
+      .getState()
+      .setDraggingNodesPublisher((nodes) => published.push(nodes))
 
     const collabBefore = getPerfCounters()?.storeNodeWrites ?? 0
     for (let i = 1; i <= 30; i++) {
@@ -128,7 +137,42 @@ describe("ApollonEditor.__perf()", () => {
         },
       ])
     }
-    expect((getPerfCounters()?.storeNodeWrites ?? 0) - collabBefore).toBe(30)
+    // Not persisted, but broadcast live over awareness. A position drag
+    // carries position only — no width/height payload.
+    expect((getPerfCounters()?.storeNodeWrites ?? 0) - collabBefore).toBe(0)
+    expect(published.length).toBe(30)
+    expect(published.at(-1)).toEqual([{ id: "a", position: { x: 30, y: 0 } }])
+
+    // A settle frame that MOVES the node writes once, and clears the overlay
+    // AFTER that write (so peers apply the durable position before the overlay
+    // drops — no snap-back).
+    const beforeSettle = getPerfCounters()?.storeNodeWrites ?? 0
+    collabStore.getState().onNodesChange([
+      {
+        id: "a",
+        type: "position",
+        position: { x: 31, y: 0 },
+        dragging: false,
+      },
+    ])
+    expect((getPerfCounters()?.storeNodeWrites ?? 0) - beforeSettle).toBe(1)
+    expect(published.at(-1)).toBeNull()
+
+    // The drag-stop clear path: a fresh live frame re-arms the overlay, and
+    // endTransientNodeBroadcast (what onNodeDragStop calls after its settle
+    // write) tears it down. This is the fallback for a drag that ends with no
+    // onNodesChange settle frame of its own.
+    collabStore.getState().onNodesChange([
+      {
+        id: "a",
+        type: "position",
+        position: { x: 99, y: 0 },
+        dragging: true,
+      },
+    ])
+    expect(published.at(-1)).toEqual([{ id: "a", position: { x: 99, y: 0 } }])
+    collabStore.getState().endTransientNodeBroadcast()
+    expect(published.at(-1)).toBeNull()
 
     collabDoc.destroy()
   })
@@ -202,6 +246,74 @@ describe("ApollonEditor.__perf()", () => {
     ])
 
     expect((getPerfCounters()?.storeNodeWrites ?? 0) - before).toBe(1)
+
+    ydoc.destroy()
+  })
+
+  it("broadcasts nested-resize parent auto-grow live without persisting it per frame", () => {
+    // A child resize grows its parent: useHandleOnResize calls
+    // useReactFlow().updateNode(parent), which in controlled mode surfaces as a
+    // full-node `replace` on every frame. Persisting those would each pin a
+    // struct under the always-on UndoManager (the nested-node twin of the drag
+    // freeze), so they're skipped — but they must still reach peers over
+    // awareness so the container grows live instead of jumping at settle.
+    const ydoc = new Y.Doc()
+    const store = createDiagramStore(ydoc)
+    const parent = { ...makeNode("p", 0), width: 300, height: 300 }
+    const child = { ...makeNode("c", 50), parentId: "p" }
+    store.getState().setNodes([parent, child])
+    store.getState().setCollaborationEnabled(true)
+    const published: (DraggingNode[] | null)[] = []
+    store.getState().setDraggingNodesPublisher((nodes) => published.push(nodes))
+    store.getState().initializeUndoManager()
+    const undoManager = store.getState().undoManager
+    if (!undoManager) throw new Error("expected undoManager to be initialized")
+
+    const baseBytes = Y.encodeStateAsUpdate(ydoc).byteLength
+
+    // 60 resize frames: the child resizes (transient) and the parent grows via
+    // a per-frame `replace`. Neither must persist.
+    for (let i = 1; i <= 60; i++) {
+      store.getState().onNodesChange([
+        {
+          id: "c",
+          type: "dimensions",
+          dimensions: { width: 200 + i, height: 100 + i },
+          resizing: true,
+        },
+      ])
+      store.getState().onNodesChange([
+        {
+          id: "p",
+          type: "replace",
+          item: { ...parent, width: 300 + i, height: 300 + i },
+        },
+      ])
+    }
+    // Nothing persisted mid-resize: the parent stays at its pre-resize size.
+    expect(getNodesMap(ydoc).get("p")?.width).toBe(300)
+    // ...but the parent's live grow WAS broadcast to peers, up to its final size.
+    expect(published.flat().some((n) => n?.id === "p" && n.width === 360)).toBe(
+      true
+    )
+
+    // Resize end commits the settled geometry once: child AND grown parent.
+    store.getState().onNodesChange([
+      {
+        id: "c",
+        type: "dimensions",
+        dimensions: { width: 260, height: 160 },
+        resizing: false,
+      },
+    ])
+    expect(getNodesMap(ydoc).get("p")?.width).toBe(360)
+
+    // Freeze-safe: the 60 frames didn't grow the doc, and the whole resize is a
+    // single undo step rather than 60 pinned structs.
+    expect(Y.encodeStateAsUpdate(ydoc).byteLength - baseBytes).toBeLessThan(
+      1500
+    )
+    expect(undoManager.undoStack.length).toBe(1)
 
     ydoc.destroy()
   })
@@ -295,6 +407,113 @@ describe("ApollonEditor.__perf()", () => {
     expect(getNodesMap(ydoc).get("a")?.position.x).toBe(0)
     undoManager.redo()
     expect(getNodesMap(ydoc).get("a")?.position.x).toBe(61)
+
+    ydoc.destroy()
+  })
+
+  it("supports undo/redo in collaboration: a drag is one freeze-safe local undo step", () => {
+    const ydoc = new Y.Doc()
+    const store = createDiagramStore(ydoc)
+    store.getState().setNodes([makeNode("a", 0)])
+    store.getState().setCollaborationEnabled(true)
+    store.getState().setDraggingNodesPublisher(() => {})
+    store.getState().initializeUndoManager()
+    const undoManager = store.getState().undoManager
+    if (!undoManager) throw new Error("expected undoManager to be initialized")
+
+    const baseBytes = Y.encodeStateAsUpdate(ydoc).byteLength
+
+    // A real drag emits two "store" transactions on drop: the dragging:false
+    // settle frame here, plus onNodeDragStop's setNodes (grid-snap/reparent),
+    // simulated below at the snapped final x. captureTimeout must coalesce both
+    // — preceded by 60 skipped transient frames — into ONE undo step.
+    for (let i = 1; i <= 60; i++) {
+      store.getState().onNodesChange([
+        {
+          id: "a",
+          type: "position",
+          position: { x: i, y: 0 },
+          dragging: true,
+        },
+      ])
+    }
+    store.getState().onNodesChange([
+      {
+        id: "a",
+        type: "position",
+        position: { x: 61, y: 0 },
+        dragging: false,
+      },
+    ])
+    store.getState().setNodes([makeNode("a", 64)]) // onNodeDragStop settle
+
+    // Freeze-safe: the 60 transient frames never touched the document, so the
+    // doc grew by only the two settle writes (~250 bytes) instead of ~60×
+    // that, even though the UndoManager pins every tracked struct.
+    expect(Y.encodeStateAsUpdate(ydoc).byteLength - baseBytes).toBeLessThan(500)
+
+    // The settle frame + drag-stop write coalesce into one undo step that walks
+    // back to the pre-drag position.
+    expect(undoManager.undoStack.length).toBe(1)
+    expect(getNodesMap(ydoc).get("a")?.position.x).toBe(64)
+    undoManager.undo()
+    expect(getNodesMap(ydoc).get("a")?.position.x).toBe(0)
+    undoManager.redo()
+    expect(getNodesMap(ydoc).get("a")?.position.x).toBe(64)
+
+    ydoc.destroy()
+  })
+
+  it("restores the selection that was active when an undone edit was made", () => {
+    const ydoc = new Y.Doc()
+    const store = createDiagramStore(ydoc)
+    store.getState().setNodes([makeNode("a", 0), makeNode("b", 250)])
+    store.getState().initializeUndoManager()
+    const undoManager = store.getState().undoManager
+    if (!undoManager) throw new Error("expected undoManager to be initialized")
+
+    // Select "a", then make a tracked edit while "a" is selected.
+    store.getState().setSelectedElementsId(["a"])
+    store.getState().setNodes([makeNode("a", 50), makeNode("b", 250)])
+    undoManager.stopCapturing()
+
+    // Move the selection elsewhere, then undo the edit.
+    store.getState().setSelectedElementsId(["b"])
+    expect(store.getState().selectedElementIds).toEqual(["b"])
+
+    undoManager.undo()
+
+    // Undo brings back both the content and the selection context.
+    expect(getNodesMap(ydoc).get("a")?.position.x).toBe(0)
+    expect(store.getState().selectedElementIds).toEqual(["a"])
+    expect(store.getState().nodes.find((n) => n.id === "a")?.selected).toBe(
+      true
+    )
+    expect(
+      store.getState().nodes.find((n) => n.id === "b")?.selected
+    ).toBeFalsy()
+
+    ydoc.destroy()
+  })
+
+  it("ignores undo/redo while a version preview is active", () => {
+    const ydoc = new Y.Doc()
+    const store = createDiagramStore(ydoc)
+    store.getState().setNodes([makeNode("a", 0)])
+    store.getState().initializeUndoManager()
+    store.getState().setNodes([makeNode("a", 50)])
+
+    // undo/redo create their own Yjs transactions and would otherwise bypass
+    // the transactStore preview gate, mutating the canonical doc behind a
+    // version preview.
+    store.getState().setPreviewMode(true)
+    store.getState().undo()
+    expect(getNodesMap(ydoc).get("a")?.position.x).toBe(50)
+
+    // Leaving preview restores undo.
+    store.getState().setPreviewMode(false)
+    store.getState().undo()
+    expect(getNodesMap(ydoc).get("a")?.position.x).toBe(0)
 
     ydoc.destroy()
   })
