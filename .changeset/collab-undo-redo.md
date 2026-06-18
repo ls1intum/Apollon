@@ -2,18 +2,4 @@
 "@tumaet/apollon": minor
 ---
 
-feat: undo/redo in shared (collaborative) diagrams
-
-The undo manager was previously single-user only, so collaboration sessions had
-no undo/redo. It is now active in collaboration too, scoped to each user's own
-edits (local undo): pressing undo reverts only your changes, never a peer's, and
-never clobbers a concurrent remote edit to the same element. A whole drag or
-resize is a single undo step, and the selection is restored when an edit is
-undone or redone.
-
-To keep this freeze-safe, transient drag/resize frames are no longer written to
-the document in either mode (an always-on undo manager would otherwise pin every
-per-frame struct and grow the document unbounded). Live remote dragging is
-preserved by broadcasting the in-progress position/size over the ephemeral
-awareness channel instead — peers still see the gesture move in real time, with
-no document growth and nothing entering undo history.
+Adds undo/redo to shared (collaborative) diagrams. Undo and redo now work during a collaboration session, scoped to each person's own edits — undo reverts only your own changes, never a teammate's, and never overwrites an element someone else is editing. A whole drag or resize counts as a single step, your selection comes back with the change you undo, and everyone keeps seeing each other's edits move in real time.

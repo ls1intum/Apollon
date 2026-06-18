@@ -15,7 +15,10 @@ import {
   CollaboratorInfo,
   DraggingNode,
 } from "@/typings"
-import { sanitizeCollaborationViewport } from "@/utils/collaboration"
+import {
+  sanitizeCollaborationViewport,
+  sanitizeDraggingNodes,
+} from "@/utils/collaboration"
 import { Edge, Node } from "@xyflow/react"
 import {
   applyAwarenessUpdate,
@@ -224,6 +227,9 @@ export class YjsSync {
     const state = { ...obj } as CollaborationState
     if (obj.viewport != null) {
       state.viewport = sanitizeCollaborationViewport(obj.viewport)
+    }
+    if (obj.draggingNodes != null) {
+      state.draggingNodes = sanitizeDraggingNodes(obj.draggingNodes)
     }
     if (
       obj.followingClientId != null &&

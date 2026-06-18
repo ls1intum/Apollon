@@ -250,16 +250,21 @@ describe("ApollonEditor.__perf()", () => {
     ydoc.destroy()
   })
 
-  it("does not persist per-frame parent auto-grow while a child is resizing (nested-resize freeze)", () => {
+  it("broadcasts nested-resize parent auto-grow live without persisting it per frame", () => {
     // A child resize grows its parent: useHandleOnResize calls
     // useReactFlow().updateNode(parent), which in controlled mode surfaces as a
-    // full-node `replace` on every frame. With the always-on UndoManager those
-    // would each pin a struct — the nested-node twin of the drag freeze.
+    // full-node `replace` on every frame. Persisting those would each pin a
+    // struct under the always-on UndoManager (the nested-node twin of the drag
+    // freeze), so they're skipped — but they must still reach peers over
+    // awareness so the container grows live instead of jumping at settle.
     const ydoc = new Y.Doc()
     const store = createDiagramStore(ydoc)
     const parent = { ...makeNode("p", 0), width: 300, height: 300 }
     const child = { ...makeNode("c", 50), parentId: "p" }
     store.getState().setNodes([parent, child])
+    store.getState().setCollaborationEnabled(true)
+    const published: (DraggingNode[] | null)[] = []
+    store.getState().setDraggingNodesPublisher((nodes) => published.push(nodes))
     store.getState().initializeUndoManager()
     const undoManager = store.getState().undoManager
     if (!undoManager) throw new Error("expected undoManager to be initialized")
@@ -287,6 +292,10 @@ describe("ApollonEditor.__perf()", () => {
     }
     // Nothing persisted mid-resize: the parent stays at its pre-resize size.
     expect(getNodesMap(ydoc).get("p")?.width).toBe(300)
+    // ...but the parent's live grow WAS broadcast to peers, up to its final size.
+    expect(published.flat().some((n) => n?.id === "p" && n.width === 360)).toBe(
+      true
+    )
 
     // Resize end commits the settled geometry once: child AND grown parent.
     store.getState().onNodesChange([

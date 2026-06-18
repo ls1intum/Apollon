@@ -607,6 +607,13 @@ export const createDiagramStore = (
 
             const nextNodes = applyNodeChanges(filteredChanges, currentNodes)
 
+            // A gesture (drag or resize) is in flight when any node still carries
+            // React Flow's live dragging/resizing flag. Used to broadcast live
+            // geometry below and to skip per-frame persistence in `transactStore`.
+            const gestureInFlight = nextNodes.some(
+              (n) => n.dragging || n.resizing
+            )
+
             // Ephemeral live-drag broadcast (collaboration only): forward the
             // in-progress positions/sizes of this frame to peers over awareness.
             // (Other awareness writes — cursor, selection, viewport — live in
@@ -616,7 +623,9 @@ export const createDiagramStore = (
             // Clearing the overlay is deferred to `endTransientNodeBroadcast`
             // (after the settle doc write) so peers receive the durable position
             // before the overlay is removed. A position drag sends position
-            // alone; width/height ride along only for a resize.
+            // alone; width/height ride along for a resize and for a mid-gesture
+            // `replace` (a parent container auto-growing around a resizing child),
+            // so peers see the parent grow live instead of jumping at settle.
             let publishedLiveFrames = false
             if (
               get().collaborationEnabled &&
@@ -630,10 +639,12 @@ export const createDiagramStore = (
                   if (node)
                     draggingNodes.push({ id: node.id, position: node.position })
                 } else if (
-                  change.type === "dimensions" &&
-                  change.resizing === true
+                  (change.type === "dimensions" && change.resizing === true) ||
+                  (change.type === "replace" && gestureInFlight)
                 ) {
-                  const node = nextNodes.find((n) => n.id === change.id)
+                  const id =
+                    change.type === "replace" ? change.item.id : change.id
+                  const node = nextNodes.find((n) => n.id === id)
                   if (node)
                     draggingNodes.push({
                       id: node.id,
@@ -663,17 +674,14 @@ export const createDiagramStore = (
             // controlled mode round-trips through onNodesChange as a full-node
             // `replace`. Persisting it every frame pins a struct per frame under
             // the always-on UndoManager (the nested-resize twin of the drag
-            // freeze). Skip it; the settled geometry is committed by the
-            // resize-end reconcile below. The guard reads the live
-            // dragging/resizing flags React Flow stamps onto the nodes, so it
-            // self-clears at gesture end — a normal (non-gesture) replace still
-            // persists immediately. INVARIANT: recovery of a skipped replace
-            // depends on every gesture ending with a full reconcile — the
-            // `resizeSettled` reconcile here, or onNodeDragStop's setNodes for a
-            // drag. Don't remove either without replacing the recovery.
-            const gestureInFlight = nextNodes.some(
-              (n) => n.dragging || n.resizing
-            )
+            // freeze). Skip it (it was broadcast live over awareness above); the
+            // settled geometry is committed by the resize-end reconcile below.
+            // `gestureInFlight` reads React Flow's live dragging/resizing flags,
+            // so it self-clears at gesture end — a normal (non-gesture) replace
+            // still persists immediately. INVARIANT: recovery of a skipped
+            // replace depends on every gesture ending with a full reconcile —
+            // the `resizeSettled` reconcile here, or onNodeDragStop's setNodes
+            // for a drag. Don't remove either without replacing the recovery.
             const resizeSettled = filteredChanges.some(
               (c) => c.type === "dimensions" && c.resizing === false
             )
