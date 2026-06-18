@@ -40,10 +40,14 @@ const MODAL_COMPONENTS: Record<ModalName, React.ComponentType<ModalProps>> = {
   NEW_DIAGRAM: NewDiagramModal,
   SHARE: ShareModal,
   SHARE_DASHBOARD: ShareDashboardModal,
-  COLLABORATE_NAME: CollaborateNameModal,
+  // These presentational bodies take required props (onClose / onConfirm) that
+  // the open-set `ModalProps` index signature can't express, so — like
+  // DeleteVersionModal — they're cast through the registry's component type
+  // until the deferred ModalProps discriminated union lands.
+  COLLABORATE_NAME: CollaborateNameModal as React.ComponentType<unknown>,
   EXPORT_PPTX: PPTXExportModal,
-  HowToUseModal: HowToUseModal,
-  AboutModal: AboutModal,
+  HowToUseModal: HowToUseModal as React.ComponentType<unknown>,
+  AboutModal: AboutModal as React.ComponentType<unknown>,
   DELETE_VERSION: DeleteVersionModal as React.ComponentType<unknown>,
 }
 
@@ -182,7 +186,12 @@ export const ModalWrapper: React.FC<ModalWrapperProps> = ({ name, props }) => {
                   : "calc(90vh - 60px)",
             }}
           >
-            <SpecificModal {...props} />
+            {/* The presentational modal bodies report dismissal through an
+                `onClose` callback instead of reaching into the modal context.
+                We wire it to `closeModal` *after* spreading the caller props so
+                a caller-supplied `onClose` (consumed above by `handleClose` for
+                dialog-level dismissal) never shadows the body's close action. */}
+            <SpecificModal {...props} onClose={closeModal} />
           </div>
         </DialogContent>
       </Dialog>

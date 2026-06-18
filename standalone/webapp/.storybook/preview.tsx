@@ -59,7 +59,7 @@ const preview: Preview = {
           "Editor",
           ["Diagrams", "Elements", "Chrome"],
           "Webapp",
-          ["Navbar", "Home", "Modals", "Versioning", "Pages"],
+          ["Navbar", "Home", "Modals", "Versioning", "Pages", "Misc"],
           "*",
         ],
       },

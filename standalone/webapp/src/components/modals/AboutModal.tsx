@@ -5,8 +5,12 @@ import {
   releasesLink,
   repositoryLink,
 } from "@/constants"
-import { useModalContext } from "@/contexts"
 import { Button } from "@tumaet/ui/components/button"
+
+type AboutModalProps = {
+  /** Called when the user dismisses the modal via the Close button. */
+  onClose: () => void
+}
 
 const npmLink = "https://www.npmjs.com/package/@tumaet/apollon"
 const licenseLink = `${repositoryLink}/blob/main/LICENSE`
@@ -28,9 +32,7 @@ const ExternalLink = ({
   </a>
 )
 
-export const AboutModal = () => {
-  const { closeModal } = useModalContext()
-
+export const AboutModal = ({ onClose }: AboutModalProps) => {
   return (
     <div className="flex flex-col gap-5 text-sm text-[var(--apollon-primary-contrast)]">
       <p className="leading-relaxed">
@@ -59,7 +61,7 @@ export const AboutModal = () => {
       </div>
 
       <div className="flex justify-end">
-        <Button variant="default" onClick={closeModal}>
+        <Button variant="default" onClick={onClose}>
           Close
         </Button>
       </div>

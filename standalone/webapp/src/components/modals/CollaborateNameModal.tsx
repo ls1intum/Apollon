@@ -1,19 +1,22 @@
 import { Button } from "@tumaet/ui/components/button"
 import { Input } from "@tumaet/ui/components/input"
-import { useModalContext } from "@/contexts"
 import { useState } from "react"
 import type { KeyboardEvent } from "react"
 
 type CollaborateNameModalProps = {
-  onConfirm?: (name: string) => void
+  /** Called with the trimmed display name when the user confirms. */
+  onConfirm: (name: string) => void
+  /** Called after a successful confirm so the host can dismiss the modal. */
+  onClose: () => void
+  /** Seeds the input; the field stays uncontrolled afterwards. */
   initialName?: string
 }
 
 export const CollaborateNameModal = ({
   onConfirm,
+  onClose,
   initialName,
 }: CollaborateNameModalProps) => {
-  const { closeModal } = useModalContext()
   const [name, setName] = useState(initialName || "")
   const trimmedName = name.trim()
   const isValid = trimmedName.length > 0
@@ -22,8 +25,8 @@ export const CollaborateNameModal = ({
     if (!isValid) {
       return
     }
-    onConfirm?.(trimmedName)
-    closeModal()
+    onConfirm(trimmedName)
+    onClose()
   }
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {

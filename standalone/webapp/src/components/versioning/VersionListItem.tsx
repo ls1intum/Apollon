@@ -14,8 +14,10 @@ import {
   type CSSProperties,
   type FC,
   type KeyboardEvent,
+  type ReactNode,
 } from "react"
 import { toast } from "react-toastify"
+import { cn } from "@tumaet/ui/lib/utils"
 import { log } from "@/logger"
 import { useVersionStore, type PendingVersion } from "@/stores/useVersionStore"
 import { VersionApiClient } from "@/services/DiagramApiClient"
@@ -29,9 +31,15 @@ import {
 } from "./theme"
 import { isNamedVersion } from "./utils"
 
-interface Props {
-  diagramId: string
+interface ViewProps {
   version: PendingVersion
+  /**
+   * The per-version thumbnail node, rendered when the version is not pending.
+   * Slotted (not hardcoded) so the view stays pure: the live thumbnail mounts
+   * an editor + fetches a body, which a story can't do — a story passes a
+   * static placeholder, the container injects the real {@link VersionThumbnail}.
+   */
+  thumbnail?: ReactNode
   /** Display rank among saved versions (newest = highest). Undefined for pending. */
   versionNumber?: number
   isPreviewing: boolean
@@ -44,18 +52,41 @@ interface Props {
   onPreview: (versionId: string) => void
   onRestore: (versionId: string) => void
   onDelete: (versionId: string) => void
+  /**
+   * Persist a new description for the version. Rejects if the save fails —
+   * the view resets the inline draft on rejection so the field reverts to
+   * the last-saved text.
+   */
+  onEditDescription: (versionId: string, description: string) => Promise<void>
+  /** Copy a shareable permalink to this version to the clipboard. */
+  onCopyLink: (versionId: string) => void
+  /** Merged onto the root `<li>` classes. */
+  className?: string
+  /** Forwarded to the root `<li>`. */
+  ref?: React.Ref<HTMLLIElement>
 }
 
-const VersionListItemInner: FC<Props> = ({
-  diagramId,
+/**
+ * Pure presentational version row — props in, callbacks out. Renders a
+ * per-version thumbnail, the description / autosave caption, the
+ * `#N · time-ago` line, and a kebab menu (restore / copy link / edit
+ * description / delete). All side effects (persist, clipboard) are reported
+ * via the `onX` callbacks; the view owns only the local inline-edit draft.
+ */
+export function VersionListItemView({
   version,
+  thumbnail,
   versionNumber,
   isPreviewing,
   canRestore,
   onPreview,
   onRestore,
   onDelete,
-}) => {
+  onEditDescription,
+  onCopyLink,
+  className,
+  ref,
+}: ViewProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(version.description ?? "")
@@ -65,7 +96,6 @@ const VersionListItemInner: FC<Props> = ({
   // user's typed value when cancelEdit's setDraft hasn't flushed yet. The
   // ref bypasses the stale-closure problem entirely.
   const cancellingRef = useRef(false)
-  const editVersionInfo = useVersionStore((s) => s.editVersionInfo)
 
   const closeMenu = () => setMenuOpen(false)
 
@@ -89,10 +119,10 @@ const VersionListItemInner: FC<Props> = ({
       // server-side for system messages (pre-restore copy, restored
       // snackbars) — derived from the composer's first line on create,
       // never edited from this surface.
-      await editVersionInfo(diagramId, version.id, { description: next })
-    } catch (err) {
-      log.error("Edit description failed", err)
-      toast.error(t.failureToEdit)
+      await onEditDescription(version.id, next)
+    } catch {
+      // Container surfaces the failure (toast/log); the view reverts the
+      // inline draft so the field shows the last-saved text again.
       setDraft(version.description ?? "")
     }
   }
@@ -115,17 +145,9 @@ const VersionListItemInner: FC<Props> = ({
     }
   }
 
-  const copyLink = async () => {
+  const handleCopyLink = () => {
     closeMenu()
-    try {
-      await navigator.clipboard.writeText(
-        VersionApiClient.permalink(diagramId, version.id)
-      )
-      toast.success(t.copied)
-    } catch (err) {
-      log.error("Copy link failed", err)
-      toast.error(t.copyFailed)
-    }
+    onCopyLink(version.id)
   }
 
   const named = isNamedVersion(version)
@@ -149,6 +171,7 @@ const VersionListItemInner: FC<Props> = ({
   return (
     <Fragment>
       <li
+        ref={ref}
         id={`version-row-${version.id}`}
         role="option"
         aria-selected={isPreviewing}
@@ -156,7 +179,10 @@ const VersionListItemInner: FC<Props> = ({
           versionNumber ? `#${versionNumber}` : "(saving)"
         }, created ${ago}${label ? ` — ${label}` : ""}`}
         onClick={handleRowClick}
-        className="relative flex list-none items-start gap-3 px-4 py-2 transition-colors data-[clickable=true]:cursor-pointer data-[clickable=true]:hover:[background:var(--row-hover-bg)]"
+        className={cn(
+          "relative flex list-none items-start gap-3 px-4 py-2 transition-colors data-[clickable=true]:cursor-pointer data-[clickable=true]:hover:[background:var(--row-hover-bg)]",
+          className
+        )}
         data-clickable={clickable || undefined}
         style={
           {
@@ -177,14 +203,7 @@ const VersionListItemInner: FC<Props> = ({
             aria-hidden
           />
         ) : (
-          <div className="mt-0.5">
-            <VersionThumbnail
-              diagramId={diagramId}
-              versionId={version.id}
-              isAuto={!named}
-              compact
-            />
-          </div>
+          <div className="mt-0.5">{thumbnail}</div>
         )}
 
         <div className="min-w-0 flex-1 pr-7">
@@ -294,7 +313,7 @@ const VersionListItemInner: FC<Props> = ({
                   {t.restoreThis}
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem onClick={copyLink}>
+              <DropdownMenuItem onClick={handleCopyLink}>
                 {t.copyLink}
               </DropdownMenuItem>
               {/* Adding a description on an empty-meta row promotes it visually
@@ -336,4 +355,61 @@ const VersionListItemInner: FC<Props> = ({
   )
 }
 
-export const VersionListItem = VersionListItemInner
+type ContainerProps = Omit<
+  ViewProps,
+  "onEditDescription" | "onCopyLink" | "thumbnail"
+> & {
+  /** Diagram the version belongs to — needed for the thumbnail + side effects. */
+  diagramId: string
+}
+
+/**
+ * Thin container — supplies the live thumbnail and the description-persist /
+ * copy-link side effects (store + API client) to {@link VersionListItemView}.
+ * Existing call sites keep working unchanged.
+ */
+export const VersionListItem: FC<ContainerProps> = ({
+  diagramId,
+  ...props
+}) => {
+  const editVersionInfo = useVersionStore((s) => s.editVersionInfo)
+
+  const onEditDescription = async (versionId: string, description: string) => {
+    try {
+      await editVersionInfo(diagramId, versionId, { description })
+    } catch (err) {
+      log.error("Edit description failed", err)
+      toast.error(t.failureToEdit)
+      // Re-throw so the view reverts its inline draft to the last-saved text.
+      throw err
+    }
+  }
+
+  const onCopyLink = async (versionId: string) => {
+    try {
+      await navigator.clipboard.writeText(
+        VersionApiClient.permalink(diagramId, versionId)
+      )
+      toast.success(t.copied)
+    } catch (err) {
+      log.error("Copy link failed", err)
+      toast.error(t.copyFailed)
+    }
+  }
+
+  return (
+    <VersionListItemView
+      {...props}
+      thumbnail={
+        <VersionThumbnail
+          diagramId={diagramId}
+          versionId={props.version.id}
+          isAuto={!isNamedVersion(props.version)}
+          compact
+        />
+      }
+      onEditDescription={onEditDescription}
+      onCopyLink={onCopyLink}
+    />
+  )
+}

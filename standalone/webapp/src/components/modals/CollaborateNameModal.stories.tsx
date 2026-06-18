@@ -1,20 +1,18 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { expect, fn, userEvent, within } from "storybook/test"
-import { ModalBodyProviders } from "../../stories/_support/webapp"
 import { CollaborateNameModal } from "./CollaborateNameModal"
 
 /**
  * The modal body that asks for a display name before joining a collaboration
  * session. The confirm button is disabled until a non-blank name is entered;
- * `Enter` confirms. It reads `useModalContext` (to close itself), so it is
- * wrapped in `ModalBodyProviders`.
+ * `Enter` confirms. It is pure — it reports the chosen name via `onConfirm` and
+ * dismissal via `onClose`, so it needs no providers.
  */
 const meta = {
   title: "Webapp/Modals/CollaborateNameModal",
   component: CollaborateNameModal,
   parameters: { layout: "centered" },
   decorators: [
-    ModalBodyProviders,
     (Story) => (
       <div className="w-[360px] rounded-lg border border-border bg-card p-5">
         <Story />
@@ -23,6 +21,24 @@ const meta = {
   ],
   args: {
     onConfirm: fn(),
+    onClose: fn(),
+  },
+  argTypes: {
+    initialName: {
+      control: "text",
+      table: { category: "Data" },
+      description: "Seeds the input; the field stays uncontrolled afterwards.",
+    },
+    onConfirm: {
+      action: "confirm",
+      table: { category: "Events" },
+      description: "Called with the trimmed display name when confirmed.",
+    },
+    onClose: {
+      action: "close",
+      table: { category: "Events" },
+      description: "Called after a successful confirm so the host dismisses.",
+    },
   },
   tags: ["autodocs"],
 } satisfies Meta<typeof CollaborateNameModal>
@@ -45,6 +61,7 @@ export const Default: Story = {
 
     await userEvent.click(confirm)
     await expect(args.onConfirm).toHaveBeenCalledWith("Ada Lovelace")
+    await expect(args.onClose).toHaveBeenCalled()
   },
 }
 

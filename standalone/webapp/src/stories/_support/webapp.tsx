@@ -40,3 +40,16 @@ export const ModalBodyProviders: Decorator = (Story) => (
     </ModalProvider>
   </EditorProvider>
 )
+
+/**
+ * Wraps a story on the dark navbar surface. The navbar and the version sidebar
+ * paint on a fixed dark panel (the `--navbar-bg` token, the canonical name for
+ * what was also hard-coded as `NAVBAR_BACKGROUND_COLOR` / `#1f2123` / `#212529`
+ * across stories). Use this for any component whose real backdrop is that dark
+ * chrome — navbar buttons, version rows — so its light-on-dark styling shows.
+ */
+export const DarkNavbarSurface: Decorator = (Story) => (
+  <div className="rounded-md bg-[var(--navbar-bg)] p-4 text-white">
+    <Story />
+  </div>
+)

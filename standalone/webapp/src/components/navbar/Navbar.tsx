@@ -137,7 +137,7 @@ export const Navbar = () => {
               >
                 Share
               </button>
-              <VersionHistoryButton color={PRIMARY_CONTRAST} />
+              <VersionHistoryButton tone="onSurface" />
               <NavbarHelp color={PRIMARY_CONTRAST} />
 
               <div className="w-full p-0.5">

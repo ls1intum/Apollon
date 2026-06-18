@@ -5,6 +5,7 @@ import {
   type LucideIcon,
 } from "lucide-react"
 import type { CSSProperties, FC } from "react"
+import { cn } from "@tumaet/ui/lib/utils"
 import { useVersionStore, type PendingVersion } from "@/stores/useVersionStore"
 import { relativeTime } from "./relativeTime"
 import {
@@ -14,7 +15,7 @@ import {
   TEXT_PRIMARY,
 } from "./theme"
 
-interface Props {
+interface ViewProps {
   /**
    * `true` when the editor's current state vector differs from the SV at
    * the time of the last snapshot. This is the same signal that gates the
@@ -23,21 +24,32 @@ interface Props {
    */
   hasChanges: boolean
   /** The latest non-pending, non-failed version, if any. */
-  latestSavedVersion: PendingVersion | undefined
+  latestSavedVersion?: PendingVersion
+  /**
+   * `true` while an earlier version is being previewed. The row morphs into
+   * a "Return to current" affordance that calls {@link ViewProps.onExitPreview}.
+   */
+  isPreviewing: boolean
+  /** Called when the user clicks the "Return to current" affordance. */
+  onExitPreview: () => void
+  /** Merged onto the root element's classes. */
+  className?: string
+  /** Forwarded to the root element. */
+  ref?: React.Ref<HTMLDivElement>
 }
 
 const ROW_BORDER = "1px solid var(--home-on-dark-border)"
 
 /**
- * Pseudo-row at the top of the sidebar that represents HEAD ("you are
- * here"). Three states:
+ * Pure presentational HEAD pseudo-row ("you are here"). Props in, callbacks
+ * out — no store, no router. Three resting states:
  *
  *   ✓ green  — current canvas matches the last snapshot
  *   ●  amber — there are edits since the last snapshot
  *   ○  muted — no snapshot exists yet
  *
- * During preview, the row morphs into a "Return to current" affordance —
- * clicking exits preview. This keeps the "current state" surface in one
+ * While previewing, the row morphs into a "Return to current" button that
+ * reports `onExitPreview`. This keeps the "current state" surface in one
  * place; users always know where to click to come back.
  *
  * Note on the "saved" semantic: HEAD is autosaved every 5 s regardless,
@@ -46,19 +58,23 @@ const ROW_BORDER = "1px solid var(--home-on-dark-border)"
  * Copy is chosen to convey that without alarming users — "Edits since
  * last save" is accurate; "Unsaved" would be misleading.
  */
-export const CurrentVersionRow: FC<Props> = ({
+export function CurrentVersionRowView({
   hasChanges,
   latestSavedVersion,
-}) => {
-  const previewState = useVersionStore((s) => s.preview)
-  const exitPreview = useVersionStore((s) => s.exitPreview)
-
-  if (previewState) {
+  isPreviewing,
+  onExitPreview,
+  className,
+  ref,
+}: ViewProps) {
+  if (isPreviewing) {
     return (
       <button
         type="button"
-        onClick={() => exitPreview()}
-        className="flex w-full cursor-pointer items-start gap-2.5 border-0 bg-transparent px-4 py-2.5 text-left transition-colors [&:hover]:[background:var(--row-hover-bg)]"
+        onClick={onExitPreview}
+        className={cn(
+          "flex w-full cursor-pointer items-start gap-2.5 border-0 bg-transparent px-4 py-2.5 text-left transition-colors [&:hover]:[background:var(--row-hover-bg)]",
+          className
+        )}
         style={
           {
             color: TEXT_PRIMARY,
@@ -120,7 +136,8 @@ export const CurrentVersionRow: FC<Props> = ({
 
   return (
     <div
-      className="flex items-start gap-2.5 px-4 py-2.5"
+      ref={ref}
+      className={cn("flex items-start gap-2.5 px-4 py-2.5", className)}
       style={{ background: ROW_SELECTED_BG, borderBottom: ROW_BORDER }}
       aria-label="Current canvas"
       aria-live="polite"
@@ -139,5 +156,33 @@ export const CurrentVersionRow: FC<Props> = ({
         </div>
       </div>
     </div>
+  )
+}
+
+type ContainerProps = Pick<
+  ViewProps,
+  "hasChanges" | "latestSavedVersion" | "className"
+>
+
+/**
+ * Thin container — reads preview state from `useVersionStore` and renders
+ * {@link CurrentVersionRowView}. Existing call sites keep working unchanged.
+ */
+export const CurrentVersionRow: FC<ContainerProps> = ({
+  hasChanges,
+  latestSavedVersion,
+  className,
+}) => {
+  const previewState = useVersionStore((s) => s.preview)
+  const exitPreview = useVersionStore((s) => s.exitPreview)
+
+  return (
+    <CurrentVersionRowView
+      hasChanges={hasChanges}
+      latestSavedVersion={latestSavedVersion}
+      isPreviewing={Boolean(previewState)}
+      onExitPreview={exitPreview}
+      className={className}
+    />
   )
 }

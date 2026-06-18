@@ -1,59 +1,69 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
-import { expect, userEvent, within } from "storybook/test"
-import { useThemeStore } from "@/stores/useThemeStore"
-import { WebappProviders } from "../../stories/_support/webapp"
-import { ThemeSwitcherMenu } from "./ThemeSwitcher"
+import { expect, fn, userEvent, within } from "storybook/test"
+import { DarkNavbarSurface } from "../../stories/_support/webapp"
+import { ThemeSwitcherButton } from "./ThemeSwitcher"
 
 /**
- * The navbar's light/dark toggle. It reads `currentTheme` from the theme store
- * and calls `toggleTheme()`; the icon cross-fades between sun and moon. The
- * button is white-tinted for the always-dark navbar, so the stories pin a dark
- * surface behind it.
+ * The navbar's pure light/dark toggle. It cross-fades a sun/moon icon based on
+ * `isDarkMode` and reports clicks via `onToggle` — no store, so every state is
+ * one `args` combo. The button is white-tinted for the always-dark navbar, so
+ * the stories paint it on the dark navbar surface.
  */
 const meta = {
   title: "Webapp/Navbar/ThemeSwitcher",
-  component: ThemeSwitcherMenu,
+  component: ThemeSwitcherButton,
   tags: ["autodocs"],
-  decorators: [
-    WebappProviders,
-    (Story) => (
-      <div style={{ background: "var(--navbar-bg)", padding: "1rem" }}>
-        <Story />
-      </div>
-    ),
-  ],
+  decorators: [DarkNavbarSurface],
   parameters: { layout: "centered" },
-  beforeEach: () => {
-    useThemeStore.setState({ currentTheme: "light", userThemePreference: null })
+  args: {
+    isDarkMode: false,
+    onToggle: fn(),
   },
-} satisfies Meta<typeof ThemeSwitcherMenu>
+  argTypes: {
+    isDarkMode: {
+      control: "boolean",
+      description:
+        "Whether dark mode is active (selects the moon icon + label).",
+      table: { category: "State" },
+    },
+    onToggle: {
+      action: "toggled",
+      description: "Fired when the toggle is clicked.",
+      table: { category: "Events" },
+    },
+    className: {
+      control: "text",
+      description: "Merged with the component's own classes.",
+      table: { category: "Appearance" },
+    },
+  },
+} satisfies Meta<typeof ThemeSwitcherButton>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 /** Light mode: the switcher offers to switch to dark, showing the sun icon. */
-export const LightMode: Story = {}
-
-/** Dark mode: seeded so the switcher offers to switch to light (moon icon). */
-export const DarkMode: Story = {
-  globals: { theme: "dark" },
-  beforeEach: () => {
-    useThemeStore.setState({
-      currentTheme: "dark",
-      userThemePreference: "dark",
-    })
-  },
+export const LightMode: Story = {
+  args: { isDarkMode: false },
 }
 
-/** Clicking the switcher flips the active theme in the store. */
+/** Dark mode: the switcher offers to switch to light, showing the moon icon. */
+export const DarkMode: Story = {
+  args: { isDarkMode: true },
+}
+
+/** Clicking the switcher reports the toggle to the caller. */
 export const TogglesTheme: Story = {
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement)
     const toggle = canvas.getByRole("button", { name: /switch to dark mode/i })
     await userEvent.click(toggle)
-    await expect(useThemeStore.getState().currentTheme).toBe("dark")
-    await expect(
-      canvas.getByRole("button", { name: /switch to light mode/i })
-    ).toBeInTheDocument()
+    await expect(args.onToggle).toHaveBeenCalled()
   },
+}
+
+/** Pinned dark for visual review. */
+export const Dark: Story = {
+  args: { isDarkMode: true },
+  globals: { theme: "dark" },
 }

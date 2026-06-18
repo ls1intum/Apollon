@@ -1,71 +1,80 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
-import { expect, userEvent, within } from "storybook/test"
-import { reactRouterParameters } from "storybook-addon-remix-react-router"
-import { useVersionStore } from "@/stores/useVersionStore"
-import { WebappProviders } from "../../stories/_support/webapp"
-import { VersionHistoryButton } from "./VersionHistoryButton"
-
-const DIAGRAM_ID = "shared-demo-1"
+import { expect, fn, userEvent, within } from "storybook/test"
+import { DarkNavbarSurface } from "../../stories/_support/webapp"
+import { VersionHistoryButtonView } from "./VersionHistoryButton"
 
 /**
- * Navbar entry point for the version-history drawer. It renders ONLY on a
- * shared/connected route (`/shared/:id`) where the drawer is mounted; on local
- * or top-level routes it returns `null`. Clicking toggles the per-diagram
- * `drawerOpenByDiagram` flag in the version store.
+ * Pure navbar entry point for the version-history drawer. It reflects the
+ * drawer's open state via `aria-pressed` and reports clicks via `onToggle` — no
+ * store, no routing, so every state is one `args` combo. `tone` switches between
+ * the always-dark desktop bar and the themed mobile dropdown.
  */
 const meta = {
   title: "Webapp/Navbar/VersionHistoryButton",
-  component: VersionHistoryButton,
+  component: VersionHistoryButtonView,
   tags: ["autodocs"],
-  decorators: [
-    WebappProviders,
-    (Story) => (
-      <div style={{ background: "var(--navbar-bg)", padding: "1rem" }}>
-        <Story />
-      </div>
-    ),
-  ],
-  parameters: {
-    layout: "centered",
-    reactRouter: reactRouterParameters({
-      location: { path: `/shared/${DIAGRAM_ID}` },
-      routing: { path: "/shared/:diagramId" },
-    }),
+  decorators: [DarkNavbarSurface],
+  parameters: { layout: "centered" },
+  args: {
+    isOpen: false,
+    tone: "onDark",
+    onToggle: fn(),
   },
-  beforeEach: () => {
-    useVersionStore.setState({ drawerOpenByDiagram: {} })
+  argTypes: {
+    isOpen: {
+      control: "boolean",
+      description: "Whether the drawer is open (drives `aria-pressed`).",
+      table: { category: "State" },
+    },
+    tone: {
+      control: "select",
+      options: ["onDark", "onSurface"],
+      description: "Foreground palette for the surface this lives on.",
+      table: { category: "Appearance" },
+    },
+    onToggle: {
+      action: "toggled",
+      description: "Fired when the button is clicked.",
+      table: { category: "Events" },
+    },
+    className: {
+      control: "text",
+      description: "Merged with the component's own classes.",
+      table: { category: "Appearance" },
+    },
   },
-} satisfies Meta<typeof VersionHistoryButton>
+} satisfies Meta<typeof VersionHistoryButtonView>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
-/** Visible on a shared route, drawer closed. */
-export const Default: Story = {}
-
-/** Drawer pre-opened — the button reflects the pressed state. */
-export const DrawerOpen: Story = {
-  beforeEach: () => {
-    useVersionStore.setState({
-      drawerOpenByDiagram: { [DIAGRAM_ID]: true },
-    })
-  },
+/** Drawer closed: the button is not pressed. */
+export const Default: Story = {
+  args: { isOpen: false },
 }
 
-/** Pinned dark-theme review. */
+/** Drawer open: the button reflects the pressed state. */
+export const DrawerOpen: Story = {
+  args: { isOpen: true },
+}
+
+/** Light mobile-dropdown tone. */
+export const OnSurface: Story = {
+  args: { tone: "onSurface" },
+}
+
+/** Pinned dark for visual review. */
 export const Dark: Story = {
   globals: { theme: "dark" },
 }
 
-/** Clicking the button toggles the drawer-open flag in the store. */
+/** Clicking the button reports the toggle and exposes the pressed state. */
 export const TogglesDrawer: Story = {
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement)
     const button = canvas.getByRole("button", { name: /version history/i })
     await expect(button).toHaveAttribute("aria-pressed", "false")
     await userEvent.click(button)
-    await expect(
-      useVersionStore.getState().drawerOpenByDiagram[DIAGRAM_ID]
-    ).toBe(true)
+    await expect(args.onToggle).toHaveBeenCalled()
   },
 }

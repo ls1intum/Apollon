@@ -5,32 +5,31 @@ import { useNavigate } from "react-router"
 import { importDiagram } from "@tumaet/apollon/react"
 import { log } from "@/logger"
 
-export const JsonFileImportButton: React.FC<{ close: () => void }> = (
-  props
-) => {
+/** Props for the pure {@link JsonFileImportButtonView}. */
+interface JsonFileImportButtonViewProps {
+  /** Fired with the chosen file when the user picks one from the native picker. */
+  onFile: (file: File) => void
+  /** Fired to close the surrounding menu once a file has been chosen. */
+  onClose: () => void
+}
+
+/**
+ * Pure "Import" menu entry. Renders a dropdown item that opens a hidden native
+ * file picker and reports the chosen `File` via `onFile` (then `onClose`). It
+ * does no parsing, persistence, or navigation — see {@link JsonFileImportButton}.
+ */
+export function JsonFileImportButtonView({
+  onFile,
+  onClose,
+}: JsonFileImportButtonViewProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const createModel = usePersistenceModelStore((state) => state.createModel)
-  const navigate = useNavigate()
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
 
-    props.close()
-
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      try {
-        const json = JSON.parse(e.target?.result as string)
-
-        const processedModel = importDiagram(json)
-        createModel(processedModel)
-        navigate(`/local/${processedModel.id}`, { replace: true })
-      } catch (error) {
-        log.error("Invalid JSON file", error as Error)
-      }
-    }
-    reader.readAsText(file)
+    onClose()
+    onFile(file)
 
     event.target.value = ""
   }
@@ -55,4 +54,33 @@ export const JsonFileImportButton: React.FC<{ close: () => void }> = (
       />
     </>
   )
+}
+
+/**
+ * Container: reads the chosen JSON file, imports it into a persisted model, and
+ * navigates to the new local diagram. Wires {@link JsonFileImportButtonView}.
+ */
+export const JsonFileImportButton: React.FC<{ close: () => void }> = ({
+  close,
+}) => {
+  const createModel = usePersistenceModelStore((state) => state.createModel)
+  const navigate = useNavigate()
+
+  const handleFile = (file: File) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const json = JSON.parse(e.target?.result as string)
+
+        const processedModel = importDiagram(json)
+        createModel(processedModel)
+        navigate(`/local/${processedModel.id}`, { replace: true })
+      } catch (error) {
+        log.error("Invalid JSON file", error as Error)
+      }
+    }
+    reader.readAsText(file)
+  }
+
+  return <JsonFileImportButtonView onFile={handleFile} onClose={close} />
 }

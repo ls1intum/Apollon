@@ -1,95 +1,136 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
-import { fn } from "storybook/test"
-import type { PendingVersion } from "@/stores/useVersionStore"
-import { useVersionStore } from "@/stores/useVersionStore"
-import { NAVBAR_BACKGROUND_COLOR } from "@/constants"
-import { VersionListItem } from "./VersionListItem"
+import { expect, fn, userEvent, within } from "storybook/test"
+import { DarkNavbarSurface } from "@/stories/_support/webapp"
+import {
+  makeAutoVersion,
+  makePendingVersion,
+  makeVersion,
+} from "@/stories/_support/versioning"
+import { VersionListItemView } from "./VersionListItem"
 
 /**
- * A single row in the version-history list. Renders a per-version thumbnail, the
- * description / autosave caption, the `#N · time-ago` line, and a kebab menu
- * (restore / copy link / edit description / delete).
+ * A single pure row in the version-history list. Renders a per-version
+ * thumbnail (slotted as a node), the description / autosave caption, the
+ * `#N · time-ago` line, and a kebab menu (restore / copy link / edit
+ * description / delete). All side effects are reported via callbacks
+ * (`onPreview` / `onRestore` / `onDelete` / `onEditDescription` / `onCopyLink`);
+ * the view owns only the inline-edit draft.
  *
- * The thumbnail (`VersionThumbnail`) lazily mounts a live `ApollonEditor` to
- * render an SVG once the row scrolls into view and the body fetch resolves; in
- * Storybook that fetch has no backend, so it stays in the skeleton / icon
- * fallback. These rows are therefore *visual* — tagged `!test` to stay out of
- * the interaction-test run, which can't host the editor's second React copy.
+ * The live `VersionThumbnail` (which mounts an editor + fetches a body) is
+ * injected by the container; the view takes the thumbnail as a `thumbnail` prop,
+ * so these stories pass a static placeholder and run real interaction tests.
  */
 
-const DIAGRAM_ID = "diagram-versions"
+/** A static stand-in for the slotted live thumbnail. */
+const thumbnailPlaceholder = (
+  <div className="h-10 w-16 rounded bg-white/10" aria-hidden />
+)
 
-const namedVersion: PendingVersion = {
+const namedVersion = makeVersion({
   id: "version-named",
-  diagramId: DIAGRAM_ID,
+  seq: 7,
   name: "Add payment flow",
   description: "Add payment flow and reconcile the account aggregate.",
   createdAt: "2026-06-15T10:00:00.000Z",
-  kind: "user",
-  librarySchemaVersion: "4.0.0",
-  seq: 7,
-}
+})
 
-const autoVersion: PendingVersion = {
+const autoVersion = makeAutoVersion({
   id: "version-auto",
-  diagramId: DIAGRAM_ID,
-  name: "",
-  description: "",
-  createdAt: "2026-06-14T09:00:00.000Z",
-  kind: "auto",
-  librarySchemaVersion: "4.0.0",
   seq: 6,
-}
+  createdAt: "2026-06-14T09:00:00.000Z",
+})
 
-const pendingVersion: PendingVersion = {
+const pendingVersion = makePendingVersion({
   id: "version-pending",
-  diagramId: DIAGRAM_ID,
-  name: "",
   description: "Saving milestone…",
   createdAt: "2026-06-16T08:00:00.000Z",
-  kind: "user",
-  librarySchemaVersion: "4.0.0",
-  pending: true,
-}
+})
 
 const meta = {
   title: "Webapp/Versioning/VersionListItem",
-  component: VersionListItem,
-  // The row mounts VersionThumbnail (a live editor renderer); keep it visual.
-  tags: ["autodocs", "!test"],
+  component: VersionListItemView,
+  tags: ["autodocs"],
   parameters: { layout: "centered" },
   decorators: [
+    DarkNavbarSurface,
     (Story) => (
-      // The list paints onto the dark navbar surface, so wrap in a matching
-      // panel to show the row's real (light-on-dark) styling.
-      <ul
-        className="m-0 w-80 list-none rounded-md p-0"
-        style={{ background: NAVBAR_BACKGROUND_COLOR }}
-      >
+      // The list paints onto the dark navbar surface; wrap in a <ul> so the
+      // row's <li>/role="option" markup is valid.
+      <ul className="m-0 w-80 list-none p-0">
         <Story />
       </ul>
     ),
   ],
   args: {
-    diagramId: DIAGRAM_ID,
     version: namedVersion,
+    thumbnail: thumbnailPlaceholder,
     versionNumber: 7,
     isPreviewing: false,
     canRestore: true,
     onPreview: fn(),
     onRestore: fn(),
     onDelete: fn(),
+    onEditDescription: fn(),
+    onCopyLink: fn(),
   },
-  beforeEach: () => {
-    // Seed the version into the store so the inline-edit and delete actions
-    // can read the row's metadata without a fetch.
-    useVersionStore.setState({
-      versions: {
-        [DIAGRAM_ID]: [namedVersion, autoVersion, pendingVersion],
-      },
-    })
+  argTypes: {
+    thumbnail: {
+      control: false,
+      description: "Slotted per-version thumbnail node (container-injected).",
+      table: { category: "Data" },
+    },
+    version: {
+      control: false,
+      description: "The version this row represents.",
+      table: { category: "Data" },
+    },
+    versionNumber: {
+      control: { type: "number" },
+      description: "Display rank among saved versions; undefined for pending.",
+      table: { category: "Data" },
+    },
+    isPreviewing: {
+      control: "boolean",
+      description: "Highlights the row as the currently-previewed version.",
+      table: { category: "State" },
+    },
+    canRestore: {
+      control: "boolean",
+      description: "Hides the Restore action when restoring would be a no-op.",
+      table: { category: "State" },
+    },
+    onPreview: {
+      action: "preview",
+      description: "Called with the version id when the row is clicked.",
+      table: { category: "Events" },
+    },
+    onRestore: {
+      action: "restore",
+      description: 'Called when "Restore this version" is chosen.',
+      table: { category: "Events" },
+    },
+    onDelete: {
+      action: "delete",
+      description: 'Called when "Delete" is chosen.',
+      table: { category: "Events" },
+    },
+    onEditDescription: {
+      action: "editDescription",
+      description: "Persists a new description; rejects to revert the draft.",
+      table: { category: "Events" },
+    },
+    onCopyLink: {
+      action: "copyLink",
+      description: "Copies a shareable permalink to the clipboard.",
+      table: { category: "Events" },
+    },
+    className: {
+      control: "text",
+      description: "Merged onto the root <li> classes.",
+      table: { category: "Appearance" },
+    },
   },
-} satisfies Meta<typeof VersionListItem>
+} satisfies Meta<typeof VersionListItemView>
 
 export default meta
 type Story = StoryObj<typeof meta>
@@ -115,4 +156,30 @@ export const Pending: Story = {
 /** Dark-pinned to confirm the row reads correctly under the dark token set. */
 export const Dark: Story = {
   globals: { theme: "dark" },
+}
+
+/** Clicking the row reports a preview request with the version id. */
+export const ClickPreviews: Story = {
+  tags: ["!autodocs", "!dev"],
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+    await userEvent.click(canvas.getByRole("option"))
+    await expect(args.onPreview).toHaveBeenCalledWith(namedVersion.id)
+  },
+}
+
+/** The kebab menu portals to the body; Restore reports the version id. */
+export const RestoreFromMenu: Story = {
+  tags: ["!autodocs", "!dev"],
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+    await userEvent.click(
+      canvas.getByRole("button", { name: /version actions/i })
+    )
+    const menu = within(canvasElement.ownerDocument.body)
+    await userEvent.click(
+      await menu.findByRole("menuitem", { name: /restore/i })
+    )
+    await expect(args.onRestore).toHaveBeenCalledWith(namedVersion.id)
+  },
 }

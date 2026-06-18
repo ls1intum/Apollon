@@ -1,88 +1,114 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { expect, fn, userEvent, within } from "storybook/test"
-import type { PendingVersion } from "@/stores/useVersionStore"
-import { useVersionStore } from "@/stores/useVersionStore"
-import { VersionPreviewBanner } from "./VersionPreviewBanner"
+import { VersionPreviewBannerView } from "./VersionPreviewBanner"
 
 /**
- * The read-only-preview banner overlaid on the canvas while a past version is
- * being previewed. It reads the active preview + the matching version summary
- * from `useVersionStore`, shows the version's label and relative time, and
- * offers "Exit preview" plus an optional "Restore" action. It renders nothing
- * when no preview is active.
+ * The pure read-only-preview banner overlaid on the canvas while a past version
+ * is being previewed. It shows the version's label and relative time and offers
+ * "Exit preview" plus an optional "Restore" action. Everything is driven by
+ * `args` — the label/time-ago are resolved by the container, the view just
+ * renders them and reports clicks via `onExit` / `onRestore`.
  */
-
-const DIAGRAM_ID = "diagram-versions"
-
-const previewedVersion: PendingVersion = {
-  id: "v5",
-  diagramId: DIAGRAM_ID,
-  name: "Initial domain sketch",
-  description: "Initial domain sketch with the core entities.",
-  createdAt: "2026-06-12T14:15:00.000Z",
-  kind: "user",
-  librarySchemaVersion: "4.0.0",
-  seq: 5,
-}
-
-const seedPreview = () => {
-  useVersionStore.setState({
-    versions: { [DIAGRAM_ID]: [previewedVersion] },
-    preview: {
-      versionId: previewedVersion.id,
-      body: { version: "4.0.0", nodes: [], edges: [] } as never,
-    },
-  })
-}
 
 const meta = {
   title: "Webapp/Versioning/VersionPreviewBanner",
-  component: VersionPreviewBanner,
+  component: VersionPreviewBannerView,
   parameters: { layout: "centered" },
   args: {
-    diagramId: DIAGRAM_ID,
+    label: "Initial domain sketch with the core entities.",
+    ago: "4d ago",
+    versionId: "v5",
     onExit: fn(),
     onRestore: fn(),
     canRestore: true,
     containerWidth: 900,
   },
-  beforeEach: () => {
-    useVersionStore.setState({ versions: {}, preview: null })
+  argTypes: {
+    label: {
+      control: "text",
+      description:
+        "The version's user-facing label; empty hides the label row.",
+      table: { category: "Data" },
+    },
+    ago: {
+      control: "text",
+      description: 'Relative "time ago" of the previewed version.',
+      table: { category: "Data" },
+    },
+    versionId: {
+      control: "text",
+      description: "Id of the previewed version, handed back to onRestore.",
+      table: { category: "Data" },
+    },
+    canRestore: {
+      control: "boolean",
+      description: "Hides the Restore button when restoring would be a no-op.",
+      table: { category: "State" },
+    },
+    containerWidth: {
+      control: { type: "range", min: 280, max: 1200, step: 10 },
+      description:
+        "Measured container width (px); drives the compact / stacked layout.",
+      table: { category: "State" },
+    },
+    onExit: {
+      action: "exit",
+      description: 'Called when the user clicks "Exit preview".',
+      table: { category: "Events" },
+    },
+    onRestore: {
+      action: "restore",
+      description: 'Called with the version id when "Restore" is clicked.',
+      table: { category: "Events" },
+    },
+    className: {
+      control: "text",
+      description: "Merged onto the root element's classes.",
+      table: { category: "Appearance" },
+    },
   },
-} satisfies Meta<typeof VersionPreviewBanner>
+} satisfies Meta<typeof VersionPreviewBannerView>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 /** Wide layout with both actions visible. */
-export const Default: Story = {
-  beforeEach: seedPreview,
-}
+export const Default: Story = {}
 
 /** Restore hidden (canRestore=false) — only "Exit preview" remains. */
 export const ExitOnly: Story = {
   args: { canRestore: false },
-  beforeEach: seedPreview,
 }
 
 /** Narrow container: the buttons stack and the copy tightens. */
 export const Narrow: Story = {
   args: { containerWidth: 420 },
-  beforeEach: seedPreview,
+}
+
+/** No label resolved — only the title and time-ago line show. */
+export const NoLabel: Story = {
+  args: { label: "" },
 }
 
 /** Dark-pinned to review the warning palette. */
 export const Dark: Story = {
-  beforeEach: seedPreview,
   globals: { theme: "dark" },
 }
 
 /** Clicking "Exit preview" invokes `onExit`. */
 export const ExitInteraction: Story = {
-  beforeEach: seedPreview,
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement)
     await userEvent.click(canvas.getByRole("button", { name: /exit preview/i }))
     await expect(args.onExit).toHaveBeenCalled()
+  },
+}
+
+/** Clicking "Restore" invokes `onRestore` with the version id. */
+export const RestoreInteraction: Story = {
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement)
+    await userEvent.click(canvas.getByRole("button", { name: /restore/i }))
+    await expect(args.onRestore).toHaveBeenCalledWith("v5")
   },
 }

@@ -1,13 +1,15 @@
 import { Button } from "@tumaet/ui/components/button"
-import { useModalContext } from "@/contexts"
 import NodeCreation from "assets/images/how-to-use-node-creation.png"
 import EdgeCreation from "assets/images/how-to-use-edge-creation.png"
 import NodeEdit from "assets/images/how-to-use-node-edit.png"
 import NodeMove from "assets/images/how-to-use-node-move.png"
 
-export const HowToUseModal = () => {
-  const { closeModal } = useModalContext()
+type HowToUseModalProps = {
+  /** Called when the user dismisses the walkthrough via the Close button. */
+  onClose: () => void
+}
 
+export const HowToUseModal = ({ onClose }: HowToUseModalProps) => {
   return (
     <div className="flex flex-col gap-6 p-6 text-[var(--apollon-primary-contrast)]">
       <div className="grid grid-cols-[auto,1fr,auto] gap-x-4 gap-y-6">
@@ -90,7 +92,7 @@ export const HowToUseModal = () => {
           your changes.
         </p>
       </div>
-      <Button variant="default" onClick={closeModal}>
+      <Button variant="default" onClick={onClose}>
         Close
       </Button>
     </div>

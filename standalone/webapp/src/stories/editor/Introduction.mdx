@@ -1,0 +1,48 @@
+import { Meta } from "@storybook/addon-docs/blocks"
+
+<Meta title="Editor/Introduction" />
+
+# Editor stories
+
+The editor (`@tumaet/apollon`) is a Tailwind-free library that wires its own
+zustand stores and ReactFlow canvas internally. Its stories resolve from source
+via the webapp's Vite aliases (`@tumaet/apollon` → `library/lib`) so they stay
+in lockstep with the editor.
+
+There are **three render paths**, mirroring the audit. The shared harness for all
+three lives in `src/stories/_support/editor.tsx`.
+
+## 1. `<ApollonFixture>` — the full editor
+
+Renders a complete read-only editor from a serialized `UMLModel` fixture. This is
+the canonical "show every diagram" path — the editor wires its own
+stores/ReactFlow internally, so **no decorator is needed**. A sized container is
+required (the canvas renders blank with zero height), so these stories use
+`layout: "fullscreen"`.
+
+The 13 canonical per-type diagrams (which also drive the visual-regression
+suite) are exported as `diagramFixtures` / `fixtureByType`.
+
+## 2. `<ElementPreview>` — a single SVG element
+
+Renders one SVG element renderer in isolation — the same call the editor Sidebar
+makes for its drag ghosts. It must be wrapped in `EditorStoreDecorator`, which
+provides the three zustand store contexts those SVGs read (diagram / metadata /
+assessment-selection), built from one fresh `Y.Doc` like a blank editor.
+
+`elementConfigsFor(type)` returns every palette element config for a diagram
+type, driving a per-family element gallery.
+
+## 3. `<SidebarHarness>` — the element palette
+
+Renders the editor Sidebar (the element palette) in isolation, per diagram type.
+The Sidebar reads `diagramType` / `view` from the metadata store and renders one
+`DraggableGhost` per palette element; `DraggableGhost` calls `useReactFlow()`, so
+a `ReactFlowProvider` is required — it's `@xyflow/react`'s documented way to
+mount flow-aware components outside the full canvas, not a workaround. The
+harness seeds the metadata store with the requested type and the Modelling view.
+
+## Browse
+
+Explore the rendered diagrams, elements, and chrome under **Editor** in the
+sidebar.

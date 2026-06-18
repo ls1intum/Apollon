@@ -1,47 +1,74 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
-import type { UMLModel } from "@tumaet/apollon/react"
-import { useVersionStore, type PendingVersion } from "@/stores/useVersionStore"
-import { CurrentVersionRow } from "./CurrentVersionRow"
+import { expect, fn, userEvent, within } from "storybook/test"
+import { DarkNavbarSurface } from "@/stories/_support/webapp"
+import { makeVersion } from "@/stories/_support/versioning"
+import { CurrentVersionRowView } from "./CurrentVersionRow"
 
 /**
- * The HEAD pseudo-row at the top of the version sidebar ("you are here"). It has
- * three resting states — up to date (green check), edits since last save (amber
- * dot), and no snapshot yet (muted circle) — plus a "Return to current" form
- * while previewing an earlier version. Preview state comes from
- * `useVersionStore`, seeded per story and reset in the meta `beforeEach`.
+ * The pure HEAD pseudo-row at the top of the version sidebar ("you are here").
+ * It has three resting states — up to date (green check), edits since last save
+ * (amber dot), and no snapshot yet (muted circle) — plus a "Return to current"
+ * form while previewing an earlier version. Everything is driven by `args`; the
+ * row reports the return-to-current click via `onExitPreview`.
  */
-const latestSaved: PendingVersion = {
+const latestSaved = makeVersion({
   id: "v-latest",
-  diagramId: "diagram-1",
+  seq: 3,
   name: "Milestone 1",
   description: "",
   createdAt: new Date(Date.now() - 5 * 60_000).toISOString(),
-  kind: "user",
-  librarySchemaVersion: "1.0.0",
-  seq: 3,
-}
+})
 
 const meta = {
   title: "Webapp/Versioning/CurrentVersionRow",
-  component: CurrentVersionRow,
+  component: CurrentVersionRowView,
   parameters: { layout: "centered" },
   // The sidebar surface is always dark; preview the row on a matching strip.
   decorators: [
+    DarkNavbarSurface,
     (Story) => (
-      <div className="w-80 bg-[#1f2123]">
+      <div className="w-80">
         <Story />
       </div>
     ),
   ],
-  beforeEach: () => {
-    useVersionStore.setState({ preview: null })
-  },
   args: {
     hasChanges: false,
     latestSavedVersion: latestSaved,
+    isPreviewing: false,
+    onExitPreview: fn(),
+  },
+  argTypes: {
+    hasChanges: {
+      control: "boolean",
+      description:
+        "Whether the canvas has edits since the last snapshot (amber dot).",
+      table: { category: "State" },
+    },
+    latestSavedVersion: {
+      control: false,
+      description: "The latest non-pending, non-failed version, if any.",
+      table: { category: "Data" },
+    },
+    isPreviewing: {
+      control: "boolean",
+      description:
+        'When true the row becomes a "Return to current" affordance.',
+      table: { category: "State" },
+    },
+    onExitPreview: {
+      action: "exitPreview",
+      description: 'Called when the user clicks "Return to current".',
+      table: { category: "Events" },
+    },
+    className: {
+      control: "text",
+      description: "Merged onto the root element's classes.",
+      table: { category: "Appearance" },
+    },
   },
   tags: ["autodocs"],
-} satisfies Meta<typeof CurrentVersionRow>
+} satisfies Meta<typeof CurrentVersionRowView>
 
 export default meta
 type Story = StoryObj<typeof meta>
@@ -61,10 +88,18 @@ export const NoSnapshot: Story = {
 
 /** While previewing an earlier version the row becomes "Return to current". */
 export const Previewing: Story = {
-  beforeEach: () => {
-    useVersionStore.setState({
-      preview: { versionId: "v-older", body: {} as UMLModel },
-    })
+  args: { isPreviewing: true },
+}
+
+/** Clicking "Return to current" reports `onExitPreview`. */
+export const ExitPreviewInteraction: Story = {
+  args: { isPreviewing: true },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement)
+    await userEvent.click(
+      canvas.getByRole("button", { name: /return to current canvas/i })
+    )
+    await expect(args.onExitPreview).toHaveBeenCalled()
   },
 }
 

@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { fn } from "storybook/test"
-import type { PendingVersion } from "@/stores/useVersionStore"
+import { DarkNavbarSurface } from "@/stories/_support/webapp"
+import { SAMPLE_DIAGRAM_ID, makeAutoGroup } from "@/stories/_support/versioning"
 import AutoGroupRow from "./AutoGroupRow"
 
 /**
@@ -10,27 +11,6 @@ import AutoGroupRow from "./AutoGroupRow"
  * renders a live `VersionThumbnail` (an embedded ApollonEditor). These are
  * therefore visual-only stories (`!test`).
  */
-const DIAGRAM_ID = "diagram-1"
-
-const makeVersion = (n: number): PendingVersion => ({
-  id: `auto-${n}`,
-  diagramId: DIAGRAM_ID,
-  name: "",
-  description: "",
-  createdAt: new Date(Date.now() - n * 60_000).toISOString(),
-  kind: "auto",
-  librarySchemaVersion: "1.0.0",
-  seq: 10 + n,
-})
-
-const makeGroup = (count: number) => {
-  const versions = Array.from({ length: count }, (_, i) => makeVersion(i + 1))
-  return {
-    kind: "auto-group" as const,
-    first: versions[0]!,
-    versions,
-  }
-}
 
 const meta = {
   title: "Webapp/Versioning/AutoGroupRow",
@@ -39,18 +19,15 @@ const meta = {
   // Expanding mounts VersionThumbnail (a live ApollonEditor) under the runner.
   tags: ["autodocs", "!test"],
   decorators: [
+    DarkNavbarSurface,
     (Story) => (
-      <div
-        role="listbox"
-        aria-label="Version history"
-        className="w-80 rounded-md bg-[#1f2123] py-1"
-      >
+      <div role="listbox" aria-label="Version history" className="w-80 py-1">
         <Story />
       </div>
     ),
   ],
   args: {
-    diagramId: DIAGRAM_ID,
+    diagramId: SAMPLE_DIAGRAM_ID,
     onPreview: fn(),
     onRestore: fn(),
     onDelete: fn(),
@@ -60,6 +37,59 @@ const meta = {
     latestSavedId: undefined,
     hasUnsavedChanges: false,
   },
+  argTypes: {
+    group: {
+      control: false,
+      description: "The run of consecutive auto-saved versions to collapse.",
+      table: { category: "Data" },
+    },
+    diagramId: {
+      control: false,
+      description: "The diagram the versions belong to.",
+      table: { category: "Data" },
+    },
+    versionNumberById: {
+      control: false,
+      description: "Maps version id → display rank, passed to each child row.",
+      table: { category: "Data" },
+    },
+    latestSavedId: {
+      control: "text",
+      description: "Id of the latest saved version; gates each row's Restore.",
+      table: { category: "Data" },
+    },
+    activeRowId: {
+      control: "text",
+      description: "Id of the keyboard-active row in the listbox.",
+      table: { category: "State" },
+    },
+    previewingVersionId: {
+      control: "text",
+      description: "Id of the version currently being previewed.",
+      table: { category: "State" },
+    },
+    hasUnsavedChanges: {
+      control: "boolean",
+      description:
+        "Whether the canvas has unsaved edits vs the latest saved version.",
+      table: { category: "State" },
+    },
+    onPreview: {
+      action: "preview",
+      description: "Called with the version id when a child row is clicked.",
+      table: { category: "Events" },
+    },
+    onRestore: {
+      action: "restore",
+      description: 'Called when a child row\'s "Restore" is chosen.',
+      table: { category: "Events" },
+    },
+    onDelete: {
+      action: "delete",
+      description: 'Called when a child row\'s "Delete" is chosen.',
+      table: { category: "Events" },
+    },
+  },
 } satisfies Meta<typeof AutoGroupRow>
 
 export default meta
@@ -67,29 +97,29 @@ type Story = StoryObj<typeof meta>
 
 /** A collapsed group of five auto-saved versions. */
 export const Default: Story = {
-  args: { group: makeGroup(5) },
+  args: { group: makeAutoGroup(5) },
 }
 
 /** The smallest group (two versions) that still collapses into an expander. */
 export const TwoVersions: Story = {
-  args: { group: makeGroup(2) },
+  args: { group: makeAutoGroup(2) },
 }
 
 /** A large run of auto-saves. */
 export const ManyVersions: Story = {
-  args: { group: makeGroup(24) },
+  args: { group: makeAutoGroup(24) },
 }
 
 /** Group whose lead row is the active/selected row in the listbox. */
 export const Active: Story = {
   args: {
-    group: makeGroup(5),
+    group: makeAutoGroup(5),
     activeRowId: "auto-1",
   },
 }
 
 /** Pinned dark — the sidebar surface is always dark. */
 export const Dark: Story = {
-  args: { group: makeGroup(5) },
+  args: { group: makeAutoGroup(5) },
   globals: { theme: "dark" },
 }
