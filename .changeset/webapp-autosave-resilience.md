@@ -2,9 +2,4 @@
 "@tumaet/webapp": patch
 ---
 
-fix: persist the most recent edit on navigation instead of dropping it
-
-Autosave is now change-debounced with a max-wait cap and flushes on teardown,
-replacing the fixed-interval poll, so the latest edit is saved when navigating
-away (SPA teardown) instead of being dropped. Tab-close persistence continues
-to be handled by the existing pagehide handler.
+Fixes the standalone editor sometimes losing your most recent change when you navigate away or when a save didn't reach the server. Your latest edit is now saved reliably on the way out, a save is never reported as successful unless it actually persisted, and an edit made while you are previewing an earlier version is saved once you return.
