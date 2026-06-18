@@ -23,9 +23,14 @@ export const AlignmentGuides = () => {
     }))
   )
 
-  if (!guides || guides.length === 0) {
-    return null
-  }
+  // Keep the host <svg> permanently mounted and toggle visibility, rather than
+  // returning null when there are no guides. Guides clear at the end of every
+  // drag, so a `return null` here unmounts the whole SVG subtree each gesture
+  // and remounts it on the next one. Some browsers (notably Firefox) hold those
+  // detached SVG nodes alive via live native references, so the churn piles up
+  // over a long editing session. Toggling visibility renders the same output
+  // (nothing visible when empty) without the per-gesture mount/unmount.
+  const hasGuides = !!guides && guides.length > 0
 
   return (
     <svg
@@ -38,9 +43,10 @@ export const AlignmentGuides = () => {
         height: "100%",
         pointerEvents: "none",
         zIndex: 999,
+        visibility: hasGuides ? "visible" : "hidden",
       }}
     >
-      {guides.map((guide: AlignmentGuide) => {
+      {(guides ?? []).map((guide: AlignmentGuide) => {
         if (guide.type === "vertical") {
           // Vertical line (for horizontal alignment)
           const screenX = guide.position * viewport.zoom + viewport.x
