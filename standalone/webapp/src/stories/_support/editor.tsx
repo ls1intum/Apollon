@@ -14,9 +14,12 @@
 import * as React from "react"
 import type { Decorator } from "@storybook/react-vite"
 import * as Y from "yjs"
+import { ReactFlowProvider } from "@xyflow/react"
 
 import { Apollon } from "@tumaet/apollon/react"
 import type { UMLModel, UMLDiagramType } from "@tumaet/apollon"
+import { ApollonView } from "@tumaet/apollon/typings"
+import { Sidebar } from "@tumaet/apollon/components/Sidebar"
 import {
   DROPS,
   dropElementConfigs,
@@ -181,4 +184,43 @@ export function elementConfigsFor(
   type: UMLDiagramType
 ): readonly DropElementConfig[] {
   return dropElementConfigs[type] ?? []
+}
+
+// ── Editor chrome path ──────────────────────────────────────────────────────
+/**
+ * The editor Sidebar (element palette) in isolation, per diagram type. The
+ * Sidebar reads diagramType/view from the MetadataStore and renders one
+ * DraggableGhost per palette element; DraggableGhost calls `useReactFlow()`, so
+ * a ReactFlowProvider is required — it's @xyflow/react's documented way to
+ * mount flow-aware components outside the full canvas, not a workaround. Seeds
+ * the metadata store with the requested type + Modelling view.
+ */
+export function SidebarHarness({
+  diagramType,
+}: {
+  diagramType: UMLDiagramType
+}) {
+  const stores = React.useMemo(() => {
+    const ydoc = new Y.Doc()
+    const diagram = createDiagramStore(ydoc)
+    const metadata = createMetadataStore(ydoc)
+    const assessment = createAssessmentSelectionStore()
+    metadata.getState().updateDiagramType(diagramType)
+    metadata.getState().setView(ApollonView.Modelling)
+    return { diagram, metadata, assessment }
+  }, [diagramType])
+
+  return (
+    <DiagramStoreContext.Provider value={stores.diagram}>
+      <MetadataStoreContext.Provider value={stores.metadata}>
+        <AssessmentSelectionStoreContext.Provider value={stores.assessment}>
+          <ReactFlowProvider>
+            <div style={{ height: 600, display: "flex" }}>
+              <Sidebar />
+            </div>
+          </ReactFlowProvider>
+        </AssessmentSelectionStoreContext.Provider>
+      </MetadataStoreContext.Provider>
+    </DiagramStoreContext.Provider>
+  )
 }

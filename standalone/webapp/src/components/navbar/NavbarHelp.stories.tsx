@@ -1,0 +1,58 @@
+import type { Meta, StoryObj } from "@storybook/react-vite"
+import { expect, userEvent, within } from "storybook/test"
+import { WebappProviders } from "../../stories/_support/webapp"
+import { NavbarHelp } from "./NavbarHelp"
+
+/**
+ * The editor's Help dropdown: editor walkthrough, About, bug report, playground,
+ * and the legal links (Imprint / Privacy). It stamps the originating path into
+ * router state so the legal pages can offer a one-tap return to the diagram.
+ */
+const meta = {
+  title: "Webapp/Navbar/NavbarHelp",
+  component: NavbarHelp,
+  tags: ["autodocs"],
+  decorators: [WebappProviders],
+  parameters: { layout: "centered" },
+} satisfies Meta<typeof NavbarHelp>
+
+export default meta
+type Story = StoryObj<typeof meta>
+
+/** Default trigger on the dark navbar (rendered here on a dark surface). */
+export const Default: Story = {
+  decorators: [
+    (Story) => (
+      <div style={{ background: "var(--navbar-bg)", padding: "1rem" }}>
+        <Story />
+      </div>
+    ),
+  ],
+}
+
+/** The mobile sheet passes an explicit contrast color for the themed surface. */
+export const OnSurface: Story = {
+  args: { color: "var(--apollon-primary-contrast)" },
+}
+
+/** Pinned dark-theme review. */
+export const Dark: Story = {
+  globals: { theme: "dark" },
+  args: { color: "var(--apollon-primary-contrast)" },
+}
+
+/** Opening the menu reveals the help/legal items in a body portal. */
+export const MenuOpens: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await userEvent.click(canvas.getByRole("button", { name: /help/i }))
+
+    const body = within(document.body)
+    await expect(
+      await body.findByRole("menuitem", { name: /how does this editor work/i })
+    ).toBeInTheDocument()
+    await expect(
+      body.getByRole("menuitem", { name: /imprint/i })
+    ).toBeInTheDocument()
+  },
+}
