@@ -28,13 +28,11 @@ const PX_PER_INCH = 96
 const PT_PER_PX = 0.75
 
 /**
- * Vertical compensation for the SVG-baseline → PPTX-text-box-top mismatch.
- * Empirically tuned for Apollon's 11–18 px label sizes (commits 4f7755a1,
- * 97a939a8, de2838df, 4f7755a1 walked it from 7 → 3.5 → 4 → 4.5 px).
+ * Offset (in em) from the alphabetic baseline up to the point Apollon centres
+ * labels on — Inter's middle baseline. Matches the `compat` export's
+ * baseline-resolution constant, so PPTX text lands where the editor draws it.
  */
-const TEXT_BASELINE_OFFSET_PX = 4.5
-/** Approximate cap-height fraction for the sans-serif stack we emit. */
-const TEXT_CAP_HEIGHT_RATIO = 0.82
+const BASELINE_TO_CENTER_EM = 0.25
 /** Slack added to canvas-measured run width so glyph edges don't clip. */
 const TEXT_BOX_HORIZONTAL_SLACK_FACTOR = 0.4
 /** Lower bound on text-box width (in em) so very short runs still render. */
@@ -974,14 +972,13 @@ function emitTextLines(
     if (line.textAnchor === "middle") leftPx = line.anchorX - widthPx / 2
     else if (line.textAnchor === "end") leftPx = line.anchorX - widthPx
     else leftPx = line.anchorX
-    // SVG `<text y>` is the baseline; PowerPoint's text-box anchors glyphs
-    // higher than that. The constant offset compensates for the resulting
-    // visual drift; tuned against the 11–18 px font sizes Apollon emits.
+    // SVG `<text y>` is the alphabetic baseline (the compat export resolves
+    // dominant-baseline into it). Apollon centres labels on a point
+    // BASELINE_TO_CENTER_EM above the baseline (Inter's middle-baseline metric,
+    // the same offset the export used to bake the baseline); the box is emitted
+    // with `valign:"middle"`, so the box top is that centre minus half the box.
     const topPx =
-      line.baselineY -
-      fontSize * TEXT_CAP_HEIGHT_RATIO -
-      (heightPx - fontSize) / 2 +
-      TEXT_BASELINE_OFFSET_PX
+      line.baselineY - fontSize * BASELINE_TO_CENTER_EM - heightPx / 2
 
     const align: "left" | "center" | "right" =
       line.textAnchor === "middle"

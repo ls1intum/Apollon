@@ -34,4 +34,4 @@ Then press <kbd>F5</kbd> in VS Code (or <kbd>Cmd/Ctrl+Shift+P</kbd> → **Debug:
 
 ## Release
 
-Bumps and publishes go through the `Version Bump (VS Code extension)` → `Release VS Code Extension` workflows. See [`docs/deployment/npm-publishing.md`](../docs/deployment/npm-publishing.md) for the full pipeline.
+Bumps and publishes go through the `Version Bump (VS Code extension)` → `Release VS Code Extension` workflows. See [`docs/contributor/deployment/npm-publishing.md`](../docs/contributor/deployment/npm-publishing.md) for the full pipeline.

@@ -13,7 +13,6 @@ import MoreVertIcon from "@mui/icons-material/MoreVert"
 import { VersionThumbnail } from "./VersionThumbnail"
 import {
   Fragment,
-  memo,
   useState,
   useRef,
   type FC,
@@ -393,4 +392,4 @@ const VersionListItemInner: FC<Props> = ({
   )
 }
 
-export const VersionListItem = memo(VersionListItemInner)
+export const VersionListItem = VersionListItemInner

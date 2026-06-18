@@ -4,18 +4,35 @@ import { renderWithRouter } from "@/test/renderWithRouter"
 import { toast } from "react-toastify"
 import { ApollonWithConnection } from "./ApollonWithConnection"
 import { EditorProvider, ModalProvider } from "@/contexts"
+import { DiagramApiClient } from "@/services/DiagramApiClient"
 
 const addSharedDiagramEntryMock = vi.fn()
+
+// Holds the most recently mounted fake editor so a test can drive it directly.
+const editorHoisted = vi.hoisted(() => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  instance: null as any,
+}))
 
 const FakeApollonEditor = vi.hoisted(
   () =>
     class FakeApollonEditor {
       model: object = {}
+      // The live Yjs model the real editor restores when preview mode is left.
+      liveModel: object | undefined = undefined
+      modelChangeCb: (() => void) | null = null
+      previewMode = false
+      constructor() {
+        // The component instantiates its editor via `new ApollonEditor(...)`;
+        // capture it so a test can drive the same instance the autosaver uses.
+        editorHoisted.instance = this
+      }
       destroy() {}
       setLocalAwarenessState() {}
       setLocalAwarenessCursor() {}
       setLocalAwarenessSelectedElement() {}
-      subscribeToModelChange() {
+      subscribeToModelChange(cb: () => void) {
+        this.modelChangeCb = cb
         return 1
       }
       subscribeToSelectionChange() {
@@ -35,7 +52,11 @@ const FakeApollonEditor = vi.hoisted(
       }
       unsubscribe() {}
       setReadonly() {}
-      setPreviewMode() {}
+      setPreviewMode(active: boolean) {
+        this.previewMode = active
+        // Mirror the real resync: leaving preview restores the live Yjs model.
+        if (!active && this.liveModel !== undefined) this.model = this.liveModel
+      }
       fitView() {}
       getLocalAwarenessClientId() {
         return 0
@@ -54,10 +75,11 @@ vi.mock("@tumaet/apollon/react", async (importOriginal) => {
   const React = await import("react")
   // The real <Apollon> instantiates the real ApollonEditor (jsdom-incompatible).
   // Substitute one that hands the fake instance to onMount and stays out of the way.
-  const Apollon = React.forwardRef<
-    unknown,
-    { onMount?: (e: unknown) => void | (() => void) }
-  >(function Apollon(props, ref) {
+  const Apollon = (props: {
+    onMount?: (e: unknown) => void | (() => void)
+    ref?: React.Ref<unknown>
+  }) => {
+    const { ref } = props
     const instanceRef = React.useRef<unknown>(null)
     React.useEffect(() => {
       const instance = new FakeApollonEditor()
@@ -73,7 +95,7 @@ vi.mock("@tumaet/apollon/react", async (importOriginal) => {
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
     return React.createElement("div", { "data-testid": "apollon-canvas" })
-  })
+  }
   return {
     ...actual,
     Apollon,
@@ -132,9 +154,9 @@ vi.mock("@/services/DiagramApiClient", () => ({
   },
 }))
 
-vi.mock("@/stores/useVersionStore", () => {
+const versionHoisted = vi.hoisted(() => {
   const state = {
-    preview: null,
+    preview: null as { versionId: string; body: object } | null,
     pendingRestoreFromId: null,
     undoRestore: null,
     exitPreview: vi.fn(),
@@ -142,10 +164,16 @@ vi.mock("@/stores/useVersionStore", () => {
     applyControlEvent: vi.fn(),
     fetchVersions: vi.fn(),
   }
+  return { state }
+})
+
+vi.mock("@/stores/useVersionStore", () => {
+  const state = versionHoisted.state
   const hook = (selector?: (s: typeof state) => unknown) =>
     selector ? selector(state) : state
-  ;(hook as unknown as { getState: typeof hook }).getState = () => state
-  return { useVersionStore: hook, selectScopedPreview: () => null }
+  ;(hook as unknown as { getState: () => typeof state }).getState = () => state
+  // Single-diagram page, so scoped preview === the global preview here.
+  return { useVersionStore: hook, selectScopedPreview: (s: typeof state) => s.preview }
 })
 
 // Not under test; stub the versioning widgets.
@@ -206,6 +234,11 @@ beforeEach(() => {
   vi.clearAllMocks()
   addSharedDiagramEntryMock.mockReset()
   fetchHoisted.state.pending = null
+  editorHoisted.instance = null
+  versionHoisted.state.preview = null
+  versionHoisted.state.exitPreview.mockImplementation(() => {
+    versionHoisted.state.preview = null
+  })
   sessionStorage.setItem("apollon-collab-name", "tester")
   // jsdom lacks ResizeObserver; the version-preview column uses it.
   if (typeof globalThis.ResizeObserver === "undefined") {
@@ -275,6 +308,44 @@ describe("ApollonWithConnection — loading-state regression", () => {
     })
 
     expect(errorToast).not.toHaveBeenCalled()
+  })
+
+  it("persists a pending edit when navigating away during a version preview", async () => {
+    const sendUpdate = vi.mocked(DiagramApiClient.sendDiagramUpdate)
+    const rendered = mountAt("/shared/abc?view=COLLABORATE")
+    await resolveFetch({ id: "abc", nodes: [], edges: [] })
+
+    const instance = editorHoisted.instance as InstanceType<
+      typeof FakeApollonEditor
+    >
+    await waitFor(() => expect(instance.modelChangeCb).not.toBeNull())
+
+    // The user edits: the live diagram gains a node and a model change marks the
+    // autosaver dirty (no save fires yet — it's still inside the debounce).
+    const liveModel = { id: "abc", nodes: [{ id: "n1" }], edges: [] }
+    instance.liveModel = liveModel
+    instance.model = liveModel
+    await act(async () => instance.modelChangeCb?.())
+
+    // Enter a version preview: the autosaver pauses and the canvas overlays an
+    // older snapshot in place of the live model.
+    versionHoisted.state.preview = {
+      versionId: "v1",
+      body: { id: "abc", nodes: [], edges: [] },
+    }
+    instance.model = { id: "abc", nodes: [], edges: [] }
+    const previewSpy = vi.spyOn(instance, "setPreviewMode")
+    sendUpdate.mockClear()
+
+    // Navigate away while still in preview — teardown must not drop the edit.
+    rendered.unmount()
+
+    await waitFor(() => expect(sendUpdate).toHaveBeenCalledTimes(1))
+    // Teardown left preview before flushing, and the flush persisted the LIVE
+    // diagram — not the previewed snapshot.
+    expect(previewSpy).toHaveBeenCalledWith(false)
+    expect(versionHoisted.state.exitPreview).toHaveBeenCalled()
+    expect(sendUpdate.mock.calls[0][1]).toEqual(liveModel)
   })
 
   it("re-opens the collab-name prompt for each new un-named diagram", async () => {

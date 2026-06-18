@@ -1,6 +1,10 @@
 import { INTERACTIVE_SELECTION_COLOR } from "@/constants"
 import { useAssessmentSelection } from "@/hooks"
-import { useDiagramStore, useMetadataStore } from "@/store"
+import {
+  useAssessmentSelectionStore,
+  useDiagramStore,
+  useMetadataStore,
+} from "@/store"
 import { ApollonMode, ApollonView } from "@/typings"
 import { FC } from "react"
 import { useShallow } from "zustand/shallow"
@@ -41,6 +45,25 @@ export const AssessmentSelectableElement: FC<
     handleElementMouseEnter,
     handleElementMouseLeave,
   } = useAssessmentSelection(elementId)
+
+  // Host-driven highlight overlay rect (see `highlightedElements` in the store).
+  const highlightColor = useAssessmentSelectionStore(
+    (state) => state.highlightedElements[elementId]
+  )
+  const highlightRect = highlightColor ? (
+    <rect
+      aria-hidden
+      x={0}
+      y={yOffset}
+      width={width}
+      height={itemHeight}
+      fill={highlightColor}
+      stroke={highlightColor}
+      strokeWidth={1}
+      rx={2}
+      pointerEvents="none"
+    />
+  ) : null
 
   const showInteractiveInteraction =
     mode === ApollonMode.Modelling &&
@@ -83,7 +106,12 @@ export const AssessmentSelectableElement: FC<
   }
 
   if (!showAssessmentInteraction) {
-    return <g data-apollon-element-id={elementId}>{children}</g>
+    return (
+      <g data-apollon-element-id={elementId}>
+        {children}
+        {highlightRect}
+      </g>
+    )
   }
 
   const handleSVGClick = (e: React.PointerEvent<SVGGElement>) => {
@@ -118,6 +146,9 @@ export const AssessmentSelectableElement: FC<
           pointerEvents="none"
         />
       )}
+      {/* Host highlight paints last, over the selection rect, matching the
+          div wrapper's layering invariant (host overlay on top). */}
+      {highlightRect}
     </g>
   )
 }

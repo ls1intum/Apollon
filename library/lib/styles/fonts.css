@@ -1,0 +1,23 @@
+/*
+ * Self-hosted Inter — the leading family in the diagram font stack (see
+ * lib/fontStack.ts for why it must be deterministic). A Latin subset of the
+ * Inter the visual harness renders with; regenerate via `gen:fonts`. The url()s
+ * inline into the single published style.css — see the inlining trade-off note
+ * on `assetsInlineLimit` in vite.config.ts.
+ */
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/Inter-Regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../assets/fonts/Inter-Bold.woff2") format("woff2");
+}

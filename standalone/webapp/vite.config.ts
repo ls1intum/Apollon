@@ -16,7 +16,9 @@ export default defineConfig({
     // Must run BEFORE the react plugin so it can transform route files and
     // (re)generate src/routeTree.gen.ts. File options live in tsr.config.json.
     tanstackRouter({ target: "react", autoCodeSplitting: true }),
-    react(),
+    react({
+      babel: { plugins: [["babel-plugin-react-compiler", { target: "19" }]] },
+    }),
     tailwindcss(),
     {
       name: "apollon-alias-resolver",

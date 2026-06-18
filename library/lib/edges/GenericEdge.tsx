@@ -11,6 +11,7 @@ import { ExtendedEdgeProps } from "./EdgeProps"
 import { CustomEdgeToolbar } from "@/components"
 import { IPoint } from "./Connection"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
+import { usePopoverAnchor } from "@/hooks/usePopoverAnchor"
 import AssessmentIcon from "@/components/svgs/AssessmentIcon"
 import { EdgeInlineMarkers } from "@/components/svgs/edges/InlineMarker"
 import { DiagramEdgeType } from "."
@@ -398,7 +399,6 @@ export const CommonEdgeElements = ({
   toolbarPosition,
   isDiagramModifiable,
   assessments,
-  anchorRef,
   handleDelete,
   setPopOverElementId,
   type,
@@ -408,13 +408,16 @@ export const CommonEdgeElements = ({
   toolbarPosition?: IPoint
   isDiagramModifiable: boolean
   assessments: Record<string, Assessment>
-  anchorRef: React.RefObject<SVGSVGElement>
   handleDelete: () => void
   setPopOverElementId: (id: string) => void
   type: string
 }) => {
   const nodeScore = assessments[id]?.score
   const uiPosition = toolbarPosition ?? pathMiddlePosition
+  // Owns its popover anchor: a callback ref captures the toolbar's
+  // <foreignObject> into state so the popover positions against the live
+  // element without reading a ref's `.current` during render.
+  const [anchorEl, anchorRef] = usePopoverAnchor<SVGForeignObjectElement>()
 
   return (
     <>
@@ -437,7 +440,7 @@ export const CommonEdgeElements = ({
 
       <PopoverManager
         elementId={id}
-        anchorEl={anchorRef.current}
+        anchorEl={anchorEl}
         type={type as DiagramEdgeType}
       />
     </>

@@ -40,6 +40,7 @@ import type { Diagram } from "@/types"
 import { log } from "@/logger"
 import { normalizeThumbnailSvg } from "@/utils/thumbnailSvg"
 import { useDocumentTitle } from "@/hooks/useDocumentTitle"
+import { installPerfHooks } from "@/utils/perfHooks"
 import { ErrorPage } from "./ErrorPage"
 
 const THUMBNAIL_DEBOUNCE_MS = 2000
@@ -193,9 +194,24 @@ export const ApollonLocal: FC = () => {
     setEditor(instance)
     void fetchVersions(diagram.id)
 
+    // E2E seam (dev builds only — `import.meta.env.DEV` is statically false in
+    // production, so this is dead-code-eliminated from the shipped bundle).
+    // Exposes the imperative editor so Playwright can drive API surfaces that
+    // have no UI affordance, e.g. `setElementHighlights`.
+    if (import.meta.env.DEV) {
+      ;(window as Window & { apollonEditor?: ApollonEditor }).apollonEditor =
+        instance
+    }
+    const removePerfHooks = installPerfHooks(instance)
+
     return () => {
       isThumbnailExportCanceledRef.current = true
       thumbnailExportSequenceRef.current += 1
+      removePerfHooks()
+      if (import.meta.env.DEV) {
+        delete (window as Window & { apollonEditor?: ApollonEditor })
+          .apollonEditor
+      }
       if (thumbnailExportTimeoutRef.current) {
         clearTimeout(thumbnailExportTimeoutRef.current)
         thumbnailExportTimeoutRef.current = null
@@ -225,6 +241,10 @@ export const ApollonLocal: FC = () => {
   ])
 
   // -------- Preview overlay ---------------------------------------------
+  // Imperative preview driver: caches a pre-preview fingerprint in a ref and
+  // overlays the preview model via the editor's imperative API. These are
+  // effect-phase side effects, not render-time mutations.
+  // eslint-disable-next-line react-hooks/immutability
   useEffect(() => {
     if (!editor) return
     if (preview) {
@@ -236,6 +256,8 @@ export const ApollonLocal: FC = () => {
       )
       editor.setPreviewMode(true)
       try {
+        // Imperative editor API (accessor setter), applied in an effect.
+        // eslint-disable-next-line react-hooks/immutability
         editor.model = importDiagram(preview.body) as UMLModel
         editor.setReadonly(true)
         editor.fitView()
@@ -290,6 +312,8 @@ export const ApollonLocal: FC = () => {
         await useVersionStore
           .getState()
           .restoreVersion(diagramId, versionId, editor.model)
+        // Imperative editor API (accessor setter), applied in a callback.
+        // eslint-disable-next-line react-hooks/immutability
         editor.model = importDiagram(body) as UMLModel
         editor.fitView()
         if (preview) closePreview()
@@ -315,6 +339,9 @@ export const ApollonLocal: FC = () => {
    * already have on canvas.
    */
   const handleConfirmedRestore = useCallback(
+    // Calls performRestore, which applies the model via the editor's
+    // imperative API; the compiler's immutability pass flags the callback.
+    // eslint-disable-next-line react-hooks/immutability
     async (versionId: string) => {
       if (!editor || !diagramId) return
       try {

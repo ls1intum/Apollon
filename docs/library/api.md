@@ -162,10 +162,12 @@ Every field is optional.
 
 ### Assessment
 
-| Member                              | Type                               | Purpose                                                     |
-| ----------------------------------- | ---------------------------------- | ----------------------------------------------------------- |
-| `addOrUpdateAssessment(assessment)` | `(Assessment) => void`             | Attach or update a score/feedback assessment on an element. |
-| `getInteractiveForSerialization()`  | `InteractiveElements \| undefined` | Interactive-element flags for inclusion in a saved model.   |
+| Member                              | Type                                                              | Purpose                                                                                                                                                                                                                                                                                                                         |
+| ----------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `addOrUpdateAssessment(assessment)` | `(Assessment) => void`                                            | Attach or update a score/feedback assessment on an element.                                                                                                                                                                                                                                                                     |
+| `setElementHighlights(highlights)`  | `(Map<string, string> \| Record<string, string> \| null) => void` | Paint a translucent highlight overlay over the given element ids (id → CSS color) — e.g. to flag elements missing feedback or carrying suggestions. Host-driven and ephemeral: never written to the model, serialized, or shared with collaborators. Each call replaces the previous set; pass `null` or an empty map to clear. |
+| `getElementHighlights()`            | `() => Record<string, string>`                                    | The current highlight map (element id → CSS color).                                                                                                                                                                                                                                                                             |
+| `getInteractiveForSerialization()`  | `InteractiveElements \| undefined`                                | Interactive-element flags for inclusion in a saved model.                                                                                                                                                                                                                                                                       |
 
 ## Subscriptions
 
@@ -220,7 +222,9 @@ These members are only meaningful with `collaborationEnabled: true`. See
 | `ApollonEditor.exportModelAsSvg(model, options?)` | `Promise<SVG>` | Static. Render an **arbitrary** model to SVG with no mounted editor. |
 
 `SVG` is `{ svg: string, clip: { x, y, width, height } }`. See
-[Export](/library/api/export) for `ExportOptions` and the PNG/PDF pipeline.
+[Export](/library/api/export) for `ExportOptions` and the PNG/PDF pipeline, or
+the [Conversion API](/library/api/conversion-api) to convert models to
+SVG/PNG/PDF over HTTP via the standalone server.
 
 ## Diagram types
 

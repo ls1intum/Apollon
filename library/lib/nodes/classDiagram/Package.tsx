@@ -1,9 +1,9 @@
 import { NodeProps, NodeResizer, type Node } from "@xyflow/react"
+import { usePopoverAnchor } from "@/hooks/usePopoverAnchor"
 import { DefaultNodeWrapper } from "../wrappers"
 import { PackageSVG } from "@/components"
 import { useHandleOnResize } from "@/hooks"
 import { DefaultNodeProps } from "@/types"
-import { useRef } from "react"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
 import { NodeToolbar } from "@/components/toolbars/NodeToolbar"
@@ -15,7 +15,7 @@ export default function Package({
   data,
   parentId,
 }: NodeProps<Node<DefaultNodeProps>>) {
-  const packageSvgWrapperRef = useRef<HTMLDivElement | null>(null)
+  const [anchorEl, anchorRef] = usePopoverAnchor()
   const { onResize } = useHandleOnResize(parentId)
   const isDiagramModifiable = useDiagramModifiable()
 
@@ -34,7 +34,7 @@ export default function Package({
         minWidth={50}
         handleStyle={{ width: 8, height: 8 }}
       />
-      <div ref={packageSvgWrapperRef}>
+      <div ref={anchorRef}>
         <PackageSVG
           width={width}
           height={height}
@@ -44,11 +44,7 @@ export default function Package({
         />
       </div>
 
-      <PopoverManager
-        anchorEl={packageSvgWrapperRef.current}
-        elementId={id}
-        type="default"
-      />
+      <PopoverManager anchorEl={anchorEl} elementId={id} type="default" />
     </DefaultNodeWrapper>
   )
 }
