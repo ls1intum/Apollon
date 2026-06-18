@@ -33,7 +33,9 @@ import {
   AlignmentGuidesStoreContext,
   EdgeGeometryStoreContext,
 } from "./store/context"
+import { getPerfCounters } from "./sync/perfCounters"
 import { MessageType, SendBroadcastMessage, YjsSync } from "./sync/yjsSync"
+import { getNodesMap } from "./sync/ydoc"
 import * as Y from "yjs"
 import { StoreApi } from "zustand"
 import * as Apollon from "./typings"
@@ -797,6 +799,28 @@ export class ApollonEditor {
 
   public addOrUpdateAssessment(assessment: Apollon.Assessment): void {
     this.diagramStore.getState().addOrUpdateAssessment(assessment)
+  }
+
+  /**
+   * Dev/test-only performance probe; returns `undefined` in production.
+   * @internal — not part of the public API; stripped from the published d.ts.
+   */
+  public __perf():
+    | {
+        encodedDocBytes: number
+        nodesMapSize: number
+        storeNodeWrites: number
+      }
+    | undefined {
+    if (!import.meta.env.DEV) return undefined
+
+    const counters = getPerfCounters()
+
+    return {
+      encodedDocBytes: Y.encodeStateAsUpdate(this.ydoc).byteLength,
+      nodesMapSize: getNodesMap(this.ydoc).size,
+      storeNodeWrites: counters?.storeNodeWrites ?? 0,
+    }
   }
 
   static generateInitialSyncMessage(): string {

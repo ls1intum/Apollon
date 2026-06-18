@@ -103,6 +103,13 @@ jobs:
       - name: Check build
         run: pnpm run build
 
+      - name: Verify the DEV perf probe is stripped from the library build
+        # Asserts the import.meta.env.DEV-gated instrumentation dead-code-
+        # eliminates from library/dist. Kept as its own step rather than in the
+        # library build script so the Docker image build (which doesn't copy
+        # scripts/) isn't affected.
+        run: node scripts/check-no-perf-hooks.mjs
+
       - name: Typecheck docs
         # `docs/` imports `@tumaet/apollon` for the live embed, so its
         # `tsc --noEmit` resolves through the library's exports map and
@@ -111,6 +118,12 @@ jobs:
 
       - name: Run unit tests
         run: pnpm run test
+
+      - name: Run webapp unit tests
+        # Root `pnpm run test` covers only the library; run the webapp's vitest
+        # suite here too (it resolves @tumaet/apollon through the dist built
+        # above) so webapp logic like the autosaver is actually gated.
+        run: pnpm --filter @tumaet/webapp run test
 
   # Root `pnpm run test` covers only the library. The server's vitest suite
   # (incl. the PDF-conversion regression test) spawns the compiled worker and
@@ -174,7 +187,10 @@ jobs:
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-v1.59.1-${{ hashFiles('standalone/webapp/package.json') }}
+          # Browser-specific key: the chromium and firefox jobs share this cache
+          # path but install different browsers, so they must not share a key
+          # (a firefox-only cache would make this job skip its chromium install).
+          key: playwright-chromium-${{ runner.os }}-v1.59.1-${{ hashFiles('standalone/webapp/package.json') }}
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
@@ -185,6 +201,9 @@ jobs:
 
       - name: Run E2E tests
         run: pnpm --filter @tumaet/webapp exec playwright test tests/e2e/
+
+      - name: Run performance budget tests
+        run: pnpm --filter @tumaet/webapp run test:perf
 
       - name: Upload Playwright report
         if: ${{ failure() }}
@@ -199,6 +218,69 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: playwright-test-results-e2e
+          path: standalone/webapp/test-results/
+          retention-days: 14
+
+  # Run the document-growth performance budget on Firefox too, not just
+  # Chromium: its GC behaviour surfaces unbounded-growth regressions sooner. The
+  # functional e2e suite is not run on Firefox yet — it has a few Firefox-only
+  # rendering quirks that need separate triage.
+  perf-firefox-tests:
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.should-skip != 'true' && needs.detect-changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@ac6db6d3c1f721f886538a378a2d73e85697340a # v6.0.8
+
+      - name: Set up Node
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm run build:lib
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          # Firefox-specific key — must differ from the chromium jobs' key (same
+          # cache path, different browser) so neither poisons the other's cache.
+          key: playwright-firefox-${{ runner.os }}-v1.59.1-${{ hashFiles('standalone/webapp/package.json') }}
+
+      - name: Install Playwright Firefox
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm --filter @tumaet/webapp exec playwright install firefox
+
+      - name: Install Playwright system deps
+        run: pnpm --filter @tumaet/webapp exec playwright install-deps firefox
+
+      - name: Run Firefox performance budget tests
+        run: pnpm --filter @tumaet/webapp run test:perf:firefox
+
+      - name: Upload Playwright report
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: playwright-report-perf-firefox
+          path: standalone/webapp/playwright-report/
+          retention-days: 14
+
+      - name: Upload Playwright test results
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: playwright-test-results-perf-firefox
           path: standalone/webapp/test-results/
           retention-days: 14
 
@@ -330,6 +412,7 @@ jobs:
         server-tests,
         library-node22-compat,
         e2e-tests,
+        perf-firefox-tests,
         visual-regression-tests,
       ]
     if: always()

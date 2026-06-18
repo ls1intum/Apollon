@@ -5,6 +5,7 @@ import {
   getDiagramMetadata,
   getEdgesMap,
   getNodesMap,
+  STORE_ORIGIN,
 } from "@/sync/ydoc"
 import {
   Assessment,
@@ -255,6 +256,7 @@ export class YjsSync {
     fullMessage.set(payload, 1)
 
     const base64Message = YjsSync.uint8ToBase64(fullMessage)
+
     this.sendBroadcastMessage(base64Message)
   }
 
@@ -264,7 +266,7 @@ export class YjsSync {
 
   public handleReceivedData = (base64Data: string) => {
     // Decode the base64 string to Uint8Array
-    const decodedData = this.base64ToUint8(base64Data)
+    const decodedData = YjsSync.base64ToUint8(base64Data)
     const messageType = decodedData[0]
 
     if (messageType === MessageType.YjsUpdate) {
@@ -296,7 +298,7 @@ export class YjsSync {
       transaction: Y.Transaction
     ) => {
       if (
-        transaction.origin !== "store" &&
+        transaction.origin !== STORE_ORIGIN &&
         !this.isUndoRedoTransaction(transaction) &&
         !previewSuppressed()
       ) {
@@ -309,7 +311,7 @@ export class YjsSync {
       transaction: Y.Transaction
     ) => {
       if (
-        transaction.origin !== "store" &&
+        transaction.origin !== STORE_ORIGIN &&
         !this.isUndoRedoTransaction(transaction) &&
         !previewSuppressed()
       ) {
@@ -322,7 +324,7 @@ export class YjsSync {
       transaction: Y.Transaction
     ) => {
       if (
-        transaction.origin !== "store" &&
+        transaction.origin !== STORE_ORIGIN &&
         !this.isUndoRedoTransaction(transaction) &&
         !previewSuppressed()
       ) {
@@ -335,7 +337,7 @@ export class YjsSync {
       transaction: Y.Transaction
     ) => {
       if (
-        transaction.origin !== "store" &&
+        transaction.origin !== STORE_ORIGIN &&
         !this.isUndoRedoTransaction(transaction) &&
         !previewSuppressed()
       ) {
@@ -353,7 +355,7 @@ export class YjsSync {
       // Late-joining peers receive full state via the YjsSYNC handshake.
       if (
         this.sendBroadcastMessage &&
-        (transaction.origin === "store" ||
+        (transaction.origin === STORE_ORIGIN ||
           this.isUndoRedoTransaction(transaction))
       ) {
         this.sendFramedMessage(MessageType.YjsUpdate, update)
@@ -424,13 +426,15 @@ export class YjsSync {
    *  Convert Uint8Array to Base64 string
    */
   static uint8ToBase64(uint8: Uint8Array): string {
-    // For large arrays, process in chunks to avoid stack overflow
-    const chunkSize = 8192 // Process 8KB at a time
-    let binary = ""
+    const toBase64 = (uint8 as Uint8Array & { toBase64?: () => string })
+      .toBase64
+    if (typeof toBase64 === "function") {
+      return toBase64.call(uint8)
+    }
 
-    for (let i = 0; i < uint8.length; i += chunkSize) {
-      const chunk = uint8.slice(i, i + chunkSize)
-      binary += String.fromCharCode(...chunk)
+    let binary = ""
+    for (let i = 0; i < uint8.length; i++) {
+      binary += String.fromCharCode(uint8[i])
     }
 
     return btoa(binary)
@@ -439,7 +443,7 @@ export class YjsSync {
   /**
    * Convert Base64 string to Uint8Array
    */
-  private base64ToUint8(base64: string): Uint8Array {
+  static base64ToUint8(base64: string): Uint8Array {
     const binary = atob(base64)
     const bytes = new Uint8Array(binary.length)
     for (let i = 0; i < binary.length; i++) {

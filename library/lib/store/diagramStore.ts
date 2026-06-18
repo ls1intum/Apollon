@@ -11,7 +11,14 @@ import {
 } from "@xyflow/react"
 import * as Y from "yjs"
 import { sortNodesTopologically } from "@/utils"
-import { getNodesMap, getEdgesMap, getAssessments } from "@/sync/ydoc"
+import {
+  getNodesMap,
+  getEdgesMap,
+  getAssessments,
+  reconcileYMap,
+  STORE_ORIGIN,
+} from "@/sync/ydoc"
+import { recordStoreNodeWrite } from "@/sync/perfCounters"
 import { deepEqual } from "@/utils/storeUtils"
 import { Assessment, InteractiveElements } from "@/typings"
 import {
@@ -84,6 +91,19 @@ function stripComputedSegmentsFromEdges(edges: Edge[]): Edge[] {
   return edges.map(stripComputedSegmentsFromEdge)
 }
 
+// The transient `selected` flag is re-overlaid locally on read
+// (`updateNodesFromYjs`), so it must never be persisted: otherwise selection
+// toggles become Yjs writes, undo entries and peer broadcasts.
+function stripSelected(node: Node): Node {
+  const persisted = { ...node }
+  delete persisted.selected
+  return persisted
+}
+
+function nodeEntriesForPersistence(nodes: Node[]): Array<[string, Node]> {
+  return nodes.map((node) => [node.id, stripSelected(node)])
+}
+
 export type DiagramStore = {
   nodes: Node[]
   edges: Edge[]
@@ -149,7 +169,7 @@ export const createDiagramStore = (
         // "store")` directly.
         const transactStore = (fn: () => void) => {
           if (get().previewMode) return
-          ydoc.transact(fn, "store")
+          ydoc.transact(fn, STORE_ORIGIN)
         }
         return {
           ...initialDiagramState,
@@ -168,11 +188,10 @@ export const createDiagramStore = (
               [nodesMap, edgesMap, assessmentsMap],
               {
                 captureTimeout: 500,
-                trackedOrigins: new Set(["store"]),
+                trackedOrigins: new Set([STORE_ORIGIN]),
               }
             )
 
-            // Listen to undo manager state changes
             undoManager.on("stack-item-added", () => {
               get().updateUndoRedoState()
             })
@@ -333,8 +352,7 @@ export const createDiagramStore = (
             }
 
             transactStore(() => {
-              getNodesMap(ydoc).clear()
-              nodes.forEach((node) => getNodesMap(ydoc).set(node.id, node))
+              reconcileYMap(getNodesMap(ydoc), nodeEntriesForPersistence(nodes))
             })
             const prunedInteractive = pruneInteractiveElements(
               {
@@ -365,9 +383,9 @@ export const createDiagramStore = (
               return
             }
             transactStore(() => {
-              getEdgesMap(ydoc).clear()
-              persistedEdges.forEach((edge) =>
-                getEdgesMap(ydoc).set(edge.id, edge)
+              reconcileYMap(
+                getEdgesMap(ydoc),
+                persistedEdges.map((edge) => [edge.id, edge])
               )
             })
             const prunedInteractive = pruneInteractiveElements(
@@ -393,11 +411,10 @@ export const createDiagramStore = (
           setNodesAndEdges: (nodes, edges) => {
             const persistedEdges = stripComputedSegmentsFromEdges(edges)
             transactStore(() => {
-              getNodesMap(ydoc).clear()
-              getEdgesMap(ydoc).clear()
-              nodes.forEach((node) => getNodesMap(ydoc).set(node.id, node))
-              persistedEdges.forEach((edge) =>
-                getEdgesMap(ydoc).set(edge.id, edge)
+              reconcileYMap(getNodesMap(ydoc), nodeEntriesForPersistence(nodes))
+              reconcileYMap(
+                getEdgesMap(ydoc),
+                persistedEdges.map((edge) => [edge.id, edge])
               )
             })
             const prunedInteractive = pruneInteractiveElements(
@@ -480,7 +497,11 @@ export const createDiagramStore = (
             transactStore(() => {
               for (const change of filteredChanges) {
                 if (change.type === "add" || change.type === "replace") {
-                  getNodesMap(ydoc).set(change.item.id, change.item)
+                  getNodesMap(ydoc).set(
+                    change.item.id,
+                    stripSelected(change.item)
+                  )
+                  recordStoreNodeWrite()
                 } else if (change.type === "remove") {
                   set(
                     (state) => ({
@@ -503,8 +524,21 @@ export const createDiagramStore = (
                     )
                   }
                 } else {
+                  const isTransient =
+                    (change.type === "position" && change.dragging === true) ||
+                    (change.type === "dimensions" && change.resizing === true)
+                  // Skip transient frames only when an UndoManager is present.
+                  // It exists exactly in single-user modelling, where it pins
+                  // every per-frame struct and the document would grow unbounded
+                  // (the freeze). Without one (collaboration), the per-frame
+                  // writes are GC-reclaimed and drive the live remote drag, so
+                  // they are kept.
+                  if (isTransient && get().undoManager !== null) continue
                   const node = nextNodes.find((n) => n.id === change.id)
-                  if (node) getNodesMap(ydoc).set(change.id, node)
+                  if (node) {
+                    getNodesMap(ydoc).set(change.id, stripSelected(node))
+                    recordStoreNodeWrite()
+                  }
                 }
               }
             })
@@ -755,11 +789,7 @@ export const createDiagramStore = (
                 : payload
 
             transactStore(() => {
-              const yMap = getAssessments(ydoc)
-              yMap.clear()
-              Object.entries(assessments).forEach(([id, assessment]) => {
-                yMap.set(id, assessment)
-              })
+              reconcileYMap(getAssessments(ydoc), Object.entries(assessments))
             })
 
             set({ assessments }, undefined, "setAssessments")
