@@ -72,7 +72,11 @@ export function createDiagramAutosaver(
     }
   }
 
-  const putOnce = async (model: UMLModel) => {
+  // Resolves to true only if the model was actually persisted. A revision
+  // mismatch we won't rebase (single-editor) or can't (retries exhausted)
+  // resolves to false so the caller keeps the edit dirty for a later retry,
+  // rather than reporting it saved when no PUT reached the server.
+  const putOnce = async (model: UMLModel): Promise<boolean> => {
     let attempt = 0
     let ifMatch = lastHeadRev
     for (;;) {
@@ -83,7 +87,7 @@ export function createDiagramAutosaver(
           { ifMatch }
         )
         lastHeadRev = res.headRev
-        return
+        return true
       } catch (err) {
         if (
           err instanceof ApiError &&
@@ -105,23 +109,36 @@ export function createDiagramAutosaver(
           }
           lastHeadRev = ifMatch
           const next = opts.getModel()
-          if (!next) return
+          if (!next) return false
           model = next
           continue
         }
         if (err instanceof ApiError && err.code === "REVISION_MISMATCH") {
-          // Single-editor mismatch (or retries exhausted): adopt the server's
-          // hint so the NEXT save carries a fresh If-Match rather than
-          // clobbering a concurrent writer with no guard.
+          // Single-editor mismatch, or rebase retries exhausted: the PUT did
+          // not land. Adopt the server's hint so the next attempt carries a
+          // fresh If-Match, and report not-persisted so the edit stays dirty.
           const meta = err.meta as { currentHeadRev?: number } | undefined
           if (typeof meta?.currentHeadRev === "number") {
             lastHeadRev = meta.currentHeadRev
           }
-          return
+          return false
         }
         throw err
       }
     }
+  }
+
+  // Arm (or re-arm) the trailing-edge save timer. While a version preview is
+  // open the timer re-arms itself instead of saving, so a dirty edit persists
+  // once preview exits rather than being stranded with no scheduled save.
+  const armDebounce = () => {
+    if (stopScheduling) return
+    if (debounceTimer !== null) clearTimeout(debounceTimer)
+    debounceTimer = setTimeout(() => {
+      debounceTimer = null
+      if (dirty && opts.isPaused()) armDebounce()
+      else void runSave()
+    }, debounceMs)
   }
 
   const save = async () => {
@@ -131,10 +148,11 @@ export function createDiagramAutosaver(
     if (!model) return
     dirty = false
     try {
-      await putOnce(model)
-      opts.onSaved?.()
+      if (await putOnce(model)) opts.onSaved?.()
+      // An unresolved mismatch didn't persist; keep it dirty for the next retry.
+      else dirty = true
     } catch (err) {
-      // The save failed for a non-rebase reason; keep the model dirty so the
+      // The save failed for a non-mismatch reason; keep the model dirty so the
       // next change (or flush) retries it.
       dirty = true
       log.error("Autosave failed", err)
@@ -167,15 +185,12 @@ export function createDiagramAutosaver(
     schedule() {
       if (stopScheduling) return
       dirty = true
-      if (debounceTimer !== null) clearTimeout(debounceTimer)
-      debounceTimer = setTimeout(() => {
-        debounceTimer = null
-        void runSave()
-      }, debounceMs)
+      armDebounce()
       if (maxWaitTimer === null) {
         maxWaitTimer = setTimeout(() => {
           maxWaitTimer = null
-          void runSave()
+          if (dirty && opts.isPaused()) armDebounce()
+          else void runSave()
         }, maxWaitMs)
       }
     },

@@ -128,6 +128,29 @@ describe("createDiagramAutosaver — debounce", () => {
     expect(sendUpdate).toHaveBeenCalledTimes(1)
   })
 
+  it("persists a paused dirty edit after preview exits, with no new change", async () => {
+    let paused = true
+    const saver = createDiagramAutosaver({
+      diagramId: "d1",
+      getModel: () => model("a"),
+      isPaused: () => paused,
+      collaboration: false,
+      debounceMs: 1500,
+      maxWaitMs: 5000,
+    })
+
+    saver.schedule()
+    vi.advanceTimersByTime(5000)
+    await tick()
+    expect(sendUpdate).not.toHaveBeenCalled()
+
+    // Preview exits with NO further edit; the re-armed timer still persists it.
+    paused = false
+    vi.advanceTimersByTime(1500)
+    await tick()
+    expect(sendUpdate).toHaveBeenCalledTimes(1)
+  })
+
   it("flush() saves immediately, bypassing the debounce", async () => {
     const saver = createDiagramAutosaver({
       diagramId: "d1",
@@ -316,6 +339,7 @@ describe("createDiagramAutosaver — collaboration rebase", () => {
     sendUpdate.mockRejectedValue(
       new ApiError(409, "REVISION_MISMATCH", "stale", { currentHeadRev: 1 })
     )
+    const onSaved = vi.fn()
     const onError = vi.fn()
     const saver = createDiagramAutosaver({
       diagramId: "d1",
@@ -323,43 +347,50 @@ describe("createDiagramAutosaver — collaboration rebase", () => {
       isPaused: () => false,
       collaboration: true,
       maxRebaseRetries: 3,
+      onSaved,
       onError,
     })
 
     saver.schedule()
     await saver.flush()
 
-    // 1 initial + 3 rebase retries = 4 PUTs, then it gives up quietly.
+    // 1 initial + 3 rebase retries = 4 PUTs, then it gives up quietly (no toast)
+    // but does NOT report the edit saved — it stays dirty for a later retry.
     expect(sendUpdate).toHaveBeenCalledTimes(4)
     expect(onError).not.toHaveBeenCalled()
+    expect(onSaved).not.toHaveBeenCalled()
   })
 
-  it("does NOT rebase in single-editor mode; adopts hint for next save", async () => {
+  it("keeps a single-editor mismatch dirty and retries with the adopted hint", async () => {
     sendUpdate.mockRejectedValueOnce(
       new ApiError(409, "REVISION_MISMATCH", "stale", { currentHeadRev: 9 })
     )
-    sendUpdate.mockResolvedValueOnce({ headRev: 10, updatedAt: "" })
 
+    const onSaved = vi.fn()
     const onError = vi.fn()
     const saver = createDiagramAutosaver({
       diagramId: "d1",
       getModel: () => model("a"),
       isPaused: () => false,
       collaboration: false,
+      onSaved,
       onError,
     })
 
     saver.schedule()
     await saver.flush()
-    // Single-editor: one PUT, no immediate re-PUT, no toast.
+    // Single-editor: one PUT, no immediate re-PUT, no toast — and crucially the
+    // edit is NOT reported saved, because no PUT reached the server.
     expect(sendUpdate).toHaveBeenCalledTimes(1)
+    expect(onSaved).not.toHaveBeenCalled()
     expect(onError).not.toHaveBeenCalled()
 
-    // Next save carries the adopted hint as If-Match.
+    // Still dirty: a flush with NO new change retries, carrying the adopted hint.
     sendUpdate.mockResolvedValueOnce({ headRev: 11, updatedAt: "" })
-    saver.schedule()
     await saver.flush()
+    expect(sendUpdate).toHaveBeenCalledTimes(2)
     expect(sendUpdate.mock.calls[1][2]).toEqual({ ifMatch: 9 })
+    expect(onSaved).toHaveBeenCalledTimes(1)
   })
 
   it("surfaces non-mismatch errors and keeps the model dirty for retry", async () => {
