@@ -1,5 +1,48 @@
 # @tumaet/apollon
 
+## 4.7.0
+
+### Minor Changes
+
+- [#765](https://github.com/ls1intum/Apollon/pull/765) [`6fe657c`](https://github.com/ls1intum/Apollon/commit/6fe657cfabbb1f60936d03b758039fe1e7fade6f) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Headless and exported diagrams now render correctly and identically to the editor.
+
+  - **Bundled Inter font.** The editor sizes diagram text by measuring it, but the library never shipped the Inter font it measures with — so it fell back to the host's `system-ui`, whose metrics differ between operating systems. That mismatch grew nodes past their saved positions and made exported diagrams overlap. Inter (Latin, Greek, Cyrillic, Vietnamese) now ships with the library, inlined into `style.css` (~+170 KB gzipped), pinning text geometry across the editor, exports, and external SVG renderers.
+  - **Self-contained SVG export.** `ApollonEditor.exportModelAsSvg` now works in a headless browser without importing `@tumaet/apollon/style.css` — it brings the styling and font it needs. This fixes edges that could be drawn through node boxes and stops overhanging edge labels from being cropped. `compat`-mode exports embed the font so they open correctly in browsers, Inkscape, and PowerPoint.
+  - **Published model JSON Schema ([#748](https://github.com/ls1intum/Apollon/issues/748)).** The diagram model is now a stable, versioned, documented contract, shipped at `@tumaet/apollon/schema`.
+  - The font stack is exported as `FONT_FAMILY` for hosts that re-render or post-process diagram text.
+
+  See the new [Headless rendering](https://ls1intum.github.io/Apollon/library/api/headless-rendering) guide and the [Model JSON contract](https://ls1intum.github.io/Apollon/library/api/model-contract).
+
+- [#762](https://github.com/ls1intum/Apollon/pull/762) [`21c6f99`](https://github.com/ls1intum/Apollon/commit/21c6f9914b1ab24d79fa6f6d6527ca6260db8c43) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - feat: add `ApollonEditor.setElementHighlights()` for host-driven element highlighting
+
+  Restores the per-element highlight capability that v3 exposed via the
+  `UMLModelElement.highlight` field and `ApollonEditor.select()`, both of which
+  were dropped in the v4 rewrite. Hosting apps (e.g. Artemis marking elements
+  that are missing assessment feedback, or Athena marking elements that have
+  automatic-feedback suggestions) can now call:
+
+  ```ts
+  editor.setElementHighlights(new Map([["element-id", "rgba(23,162,184,0.3)"]]))
+  editor.setElementHighlights(null) // clear
+  ```
+
+  The highlight is a translucent overlay painted over each given node, edge, or
+  class member id. It is an ephemeral view concern: it is not written into the
+  model, not serialized by `get model`, and not shared with collaborators. A
+  companion `getElementHighlights()` returns the current highlight record.
+
+- [#764](https://github.com/ls1intum/Apollon/pull/764) [`1fc31cc`](https://github.com/ls1intum/Apollon/commit/1fc31cc7c1d2c8dedb3555edb5d5d063f572acae) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Upgrade to React 19 and enable the React Compiler.
+
+  `@tumaet/apollon` now targets React 19 — its `react` and `react-dom` peer dependencies are `^19.0.0`. The `<Apollon>` component takes `ref` as a regular prop (the `forwardRef` wrapper was removed); consumers passing a `ref` need no changes. The React Compiler auto-memoizes the editor, so the manual `useMemo`/`useCallback`/`memo` and the hand-rolled stale-closure workarounds have been removed, and node/edge popovers anchor via a callback ref instead of reading a ref during render.
+
+### Patch Changes
+
+- [#765](https://github.com/ls1intum/Apollon/pull/765) [`6fe657c`](https://github.com/ls1intum/Apollon/commit/6fe657cfabbb1f60936d03b758039fe1e7fade6f) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Make the `compat` export render identically outside a browser (the standalone server, resvg, Inkscape, PowerPoint, macOS Preview), where it was previously corrupted in three ways. The fix is to fully resolve the SVG in one place — the library's `compat` export — instead of leaving browser-only features for downstream consumers to patch around:
+
+  - **Cropped diagrams.** Under jsdom the off-screen editor reports a zero-size bounding rect, which the bounds math kept (`0 ?? fallback` evaluates to `0`) instead of falling back to each node's real width and height — so the export viewBox enclosed only node _positions_ and sliced off the rightmost and bottommost elements. A non-positive rect is now treated as unmeasured.
+  - **Mangled class stereotypes.** Stereotype labels (`«interface»`, `«enumeration»`) used a relative `font-size` (`85%`) and cumulative `<tspan dy>` offsets — which browsers resolve but other renderers don't, so the guillemets ballooned over and overlapped the class name. Relative font sizes now resolve to absolute px and tspan offsets to absolute `y`.
+  - **Mispositioned labels.** Node text is centred with `dominant-baseline`, which non-browser renderers ignore — drawing every label at the alphabetic baseline (too high). It's now resolved to an explicit `y`, so text lands where the editor puts it everywhere.
+
 ## 4.6.0
 
 ### Minor Changes

@@ -1,5 +1,22 @@
 # @tumaet/webapp
 
+## 4.7.0
+
+### Minor Changes
+
+- [#764](https://github.com/ls1intum/Apollon/pull/764) [`1fc31cc`](https://github.com/ls1intum/Apollon/commit/1fc31cc7c1d2c8dedb3555edb5d5d063f572acae) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Upgrade to React 19 and enable the React Compiler.
+
+  `@tumaet/apollon` now targets React 19 — its `react` and `react-dom` peer dependencies are `^19.0.0`. The `<Apollon>` component takes `ref` as a regular prop (the `forwardRef` wrapper was removed); consumers passing a `ref` need no changes. The React Compiler auto-memoizes the editor, so the manual `useMemo`/`useCallback`/`memo` and the hand-rolled stale-closure workarounds have been removed, and node/edge popovers anchor via a callback ref instead of reading a ref during render.
+
+### Patch Changes
+
+- [#758](https://github.com/ls1intum/Apollon/pull/758) [`af7c085`](https://github.com/ls1intum/Apollon/commit/af7c085e1db2073e82641af17f363907067389da) Thanks [@tamang29](https://github.com/tamang29)! - The iOS app supports both iPhone and iPad again so updates remain compatible with existing installations.
+
+- [#765](https://github.com/ls1intum/Apollon/pull/765) [`6fe657c`](https://github.com/ls1intum/Apollon/commit/6fe657cfabbb1f60936d03b758039fe1e7fade6f) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Simplify PPTX text positioning. `@tumaet/apollon`'s `compat` export now resolves `dominant-baseline` into an explicit baseline `y`, so the PPTX exporter no longer needs its empirically-tuned `TEXT_BASELINE_OFFSET_PX` fudge — the text-box top is derived directly from the resolved baseline and the box height.
+
+- Updated dependencies [[`6fe657c`](https://github.com/ls1intum/Apollon/commit/6fe657cfabbb1f60936d03b758039fe1e7fade6f), [`6fe657c`](https://github.com/ls1intum/Apollon/commit/6fe657cfabbb1f60936d03b758039fe1e7fade6f), [`21c6f99`](https://github.com/ls1intum/Apollon/commit/21c6f9914b1ab24d79fa6f6d6527ca6260db8c43), [`1fc31cc`](https://github.com/ls1intum/Apollon/commit/1fc31cc7c1d2c8dedb3555edb5d5d063f572acae)]:
+  - @tumaet/apollon@4.7.0
+
 ## 4.6.0
 
 ### Minor Changes
@@ -11,7 +28,7 @@
 - [#744](https://github.com/ls1intum/Apollon/pull/744) [`1fdb9bc`](https://github.com/ls1intum/Apollon/commit/1fdb9bc70b2fcfc119619876d595b36eebb36f8a) Thanks [@tamang29](https://github.com/tamang29)! - The playground can now simulate a live collaboration session across two browser tabs, with collapsible side panels that mimic host-app chrome — handy for trying out shared cursors and presence locally.
 
 - Updated dependencies [[`1fdb9bc`](https://github.com/ls1intum/Apollon/commit/1fdb9bc70b2fcfc119619876d595b36eebb36f8a), [`dfb4479`](https://github.com/ls1intum/Apollon/commit/dfb4479bbf15671a6332c96b659efd9dd31c127b)]:
-  - @tumaet/apollon@4.6.0
+  - @tumaet/apollon@4.7.0
 
 ## 4.5.1
 
@@ -34,7 +51,7 @@
 ### Patch Changes
 
 - Updated dependencies:
-  - @tumaet/apollon@4.6.0
+  - @tumaet/apollon@4.7.0
 
 ## 4.4.1
 

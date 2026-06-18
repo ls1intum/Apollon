@@ -70,6 +70,9 @@ jobs:
       - name: Check README + docs version sync
         run: node scripts/sync-library-version.mjs --check
 
+      - name: Check release-note taxonomy sync
+        run: node scripts/check-release-taxonomy.mjs
+
   lint-and-format-check:
     needs: [detect-changes]
     if: needs.detect-changes.outputs.should-skip != 'true' && needs.detect-changes.outputs.code == 'true'
