@@ -196,8 +196,13 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: pnpm --filter @tumaet/webapp exec playwright install chromium
 
-      - name: Install Playwright system deps
-        run: pnpm --filter @tumaet/webapp exec playwright install-deps chromium
+      # Bounded + retried: a fresh runner's boot-time unattended-upgrades holds
+      # the dpkg lock, so a naive apt-get here can hang the whole job. See the
+      # composite action; shared with perf-firefox-tests so they can't drift.
+      - name: Install Playwright system deps (bounded + retried)
+        uses: ./.github/actions/playwright-install-deps
+        with:
+          browser: chromium
 
       - name: Run E2E tests
         run: pnpm --filter @tumaet/webapp exec playwright test tests/e2e/
@@ -270,26 +275,13 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: pnpm --filter @tumaet/webapp exec playwright install firefox
 
-      # `playwright install-deps` is an apt-get install. On a freshly-booted
-      # runner the dpkg lock is held by boot-time `unattended-upgrades`, so a
-      # single naive call can block for the entire job timeout (~20 min observed)
-      # and never run the test. Bound each attempt and retry: the background apt
-      # job releases the lock within a couple of minutes, so attempt 2 succeeds.
+      # Bounded + retried: a fresh runner's boot-time unattended-upgrades holds
+      # the dpkg lock, so a naive apt-get here can hang the whole job. See the
+      # composite action; shared with e2e-tests so they can't drift.
       - name: Install Playwright system deps (bounded + retried)
-        run: |
-          set -u
-          for attempt in 1 2 3; do
-            echo "::group::playwright install-deps firefox (attempt $attempt)"
-            if timeout 300 pnpm --filter @tumaet/webapp exec playwright install-deps firefox; then
-              echo "::endgroup::"
-              exit 0
-            fi
-            echo "::endgroup::"
-            echo "attempt $attempt failed or timed out; retrying in 20s"
-            sleep 20
-          done
-          echo "playwright install-deps firefox did not succeed after 3 attempts"
-          exit 1
+        uses: ./.github/actions/playwright-install-deps
+        with:
+          browser: firefox
 
       - name: Run Firefox performance budget tests
         run: pnpm --filter @tumaet/webapp run test:perf:firefox
