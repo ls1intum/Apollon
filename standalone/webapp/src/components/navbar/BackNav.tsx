@@ -25,6 +25,10 @@ type BackNavProps = BackTarget & {
   /** Fired in addition to navigating — e.g. to close the mobile menu it lives in. */
   onNavigate?: () => void
   className?: string
+  /** Classes for the label span — e.g. `"hidden lg:inline"` to collapse to the
+   * chevron on the narrow editor bar. The chevron alone stays a clear back cue,
+   * and `aria-label` keeps it accessible when the text is hidden. */
+  labelClassName?: string
 }
 
 export const BackNav = ({
@@ -32,11 +36,13 @@ export const BackNav = ({
   tone = "onDark",
   onNavigate,
   className,
+  labelClassName,
   ...target
 }: BackNavProps) => (
   <Link
     {...target}
     onClick={onNavigate}
+    aria-label={label}
     className={cn(
       "inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2",
       toneClass[tone],
@@ -44,7 +50,7 @@ export const BackNav = ({
     )}
   >
     <svg
-      className="h-4 w-4"
+      className="h-4 w-4 shrink-0"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -53,6 +59,6 @@ export const BackNav = ({
     >
       <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
-    {label}
+    <span className={labelClassName}>{label}</span>
   </Link>
 )

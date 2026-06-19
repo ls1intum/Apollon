@@ -27,8 +27,8 @@ export const BrandAndVersion = () => {
         <img
           alt="TUM logo"
           src={TumLogo}
-          width="60"
-          height="60"
+          width="40"
+          height="40"
           style={{ display: "block", flexShrink: 0 }}
         />
 
@@ -39,7 +39,7 @@ export const BrandAndVersion = () => {
             fontFamily: APP_NAME_FONT_FAMILY,
             letterSpacing: "0.06em",
             lineHeight: 1,
-            fontSize: "1.25rem",
+            fontSize: "1.05rem",
             textTransform: "uppercase",
             whiteSpace: "nowrap",
             overflow: "visible",

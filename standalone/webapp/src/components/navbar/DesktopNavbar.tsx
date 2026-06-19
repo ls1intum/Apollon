@@ -12,12 +12,15 @@ import { SaveLocalCopyButton } from "./SaveLocalCopyButton"
 import { BrandAndVersion } from "./BrandAndVersion"
 import { BackNav } from "./BackNav"
 import { ALL_DIAGRAMS_LABEL } from "@/lib/navProvenance"
-import { secondary } from "@/constants"
 import { useEffect, useRef, useState } from "react"
 import { useModalContext, useEditorContext } from "@/contexts"
 import { Link } from "@tanstack/react-router"
 import { ThemeSwitcherMenu } from "./ThemeSwitcher"
-import { NAVBAR_SX } from "./styleConstants"
+import {
+  NAVBAR_SX,
+  NAVBAR_TOOLBAR_SX,
+  navbarButtonStyle,
+} from "./styleConstants"
 
 export const DesktopNavbar = () => {
   const { editor } = useEditorContext()
@@ -52,12 +55,7 @@ export const DesktopNavbar = () => {
     <AppBar position="sticky" sx={NAVBAR_SX} elevation={0}>
       <Toolbar
         disableGutters
-        sx={{
-          width: "100%",
-          minHeight: 64,
-          px: 2,
-          gap: 2,
-        }}
+        sx={[NAVBAR_TOOLBAR_SX, { width: "100%", px: 2, gap: 2 }]}
       >
         <Link
           to="/"
@@ -85,22 +83,20 @@ export const DesktopNavbar = () => {
             minWidth: 0,
           }}
         >
-          <BackNav to="/" label={ALL_DIAGRAMS_LABEL} tone="onDark" />
+          <BackNav
+            to="/"
+            label={ALL_DIAGRAMS_LABEL}
+            tone="onDark"
+            labelClassName="hidden lg:inline"
+          />
           <NavbarFile />
-          <Button
-            sx={{ textTransform: "none" }} // This removes the uppercase transformation
-            onClick={() => openModal("SHARE")}
-          >
-            <Typography color={secondary}>Share</Typography>
+          <Button sx={navbarButtonStyle()} onClick={() => openModal("SHARE")}>
+            <Typography color="inherit">Share</Typography>
           </Button>
-          <SaveLocalCopyButton />
+          <SaveLocalCopyButton labelClassName="hidden lg:inline" />
           <NavbarHelp />
           <TextField
-            sx={{
-              input: { color: "white", padding: 1 },
-              marginLeft: 1,
-              maxWidth: 360,
-            }}
+            size="small"
             value={diagramTitle}
             onChange={(event) => {
               const newTitle = event.target.value
@@ -109,6 +105,26 @@ export const DesktopNavbar = () => {
             }}
             placeholder="Diagram Name"
             variant="outlined"
+            sx={{
+              marginLeft: 1,
+              flex: "1 1 auto",
+              minWidth: 120,
+              maxWidth: 280,
+              "& .MuiInputBase-root": { height: 36 },
+              "& .MuiInputBase-input": {
+                color: "white",
+                padding: "6px 10px",
+              },
+              "& .MuiOutlinedInput-notchedOutline": {
+                borderColor: "rgba(255, 255, 255, 0.22)",
+              },
+              "&:hover .MuiOutlinedInput-notchedOutline": {
+                borderColor: "rgba(255, 255, 255, 0.4)",
+              },
+              "& .Mui-focused .MuiOutlinedInput-notchedOutline": {
+                borderColor: "rgba(255, 255, 255, 0.6)",
+              },
+            }}
           />
 
           <Stack
@@ -117,7 +133,7 @@ export const DesktopNavbar = () => {
             spacing={1}
             sx={{ marginLeft: "auto" }}
           >
-            <VersionHistoryButton />
+            <VersionHistoryButton labelClassName="hidden lg:inline" />
             <ThemeSwitcherMenu />
           </Stack>
         </Box>
