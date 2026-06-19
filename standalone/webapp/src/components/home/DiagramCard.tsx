@@ -662,10 +662,10 @@ const DiagramCardComponent = ({
       className={`home-diagram-card group relative mx-auto flex flex-col overflow-hidden bg-[var(--home-surface-raised)] transition-all duration-[280ms] ease-[cubic-bezier(0.16,1,0.3,1)] [--card-scale:1] hover:bg-[var(--home-surface-raised-hover)] md:[--card-scale:1.0769231] xl:[--card-scale:1.1538462] ${
         isHighlighted
           ? "bg-[var(--home-surface-raised-hover)]"
-          : "hover:[box-shadow:0_8px_24px_var(--home-shadow-card-hover)]"
+          : "hover:[box-shadow:0_6px_16px_var(--home-shadow-card-hover)]"
       }`}
       style={{
-        border: "none",
+        border: "1px solid var(--home-border-subtle)",
         borderRadius: "var(--home-radius-sm)",
         width: "100%",
         maxWidth: "300px",
