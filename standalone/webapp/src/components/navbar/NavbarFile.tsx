@@ -3,6 +3,8 @@ import Button from "@mui/material/Button"
 import Menu from "@mui/material/Menu"
 import MenuItem from "@mui/material/MenuItem"
 import Typography from "@mui/material/Typography"
+import { toast } from "react-toastify"
+import { RasterTooLargeError, RasterTimeoutError } from "@tumaet/apollon/export"
 import { secondary } from "@/constants"
 import { useModalContext } from "@/contexts"
 import {
@@ -11,12 +13,28 @@ import {
   useExportAsSVG,
   useExportAsPDF,
 } from "@/hooks"
+import { log } from "@/logger"
 import { JsonFileImportButton } from "./JsonFileImportButton"
 import { KeyboardArrowDownIcon } from "../Icon"
 
 interface Props {
   color?: string
   handleCloseNavMenu?: () => void
+}
+
+type ExportFormat = "SVG" | "PNG" | "PDF" | "JSON"
+
+/** A succeeded-but-degraded signal an export can return (PNG downscale today). */
+type ExportRunResult = { clamped?: boolean; appliedScale?: number }
+
+function exportErrorMessage(format: ExportFormat, err: unknown): string {
+  if (err instanceof RasterTooLargeError) {
+    return "Diagram is too large to export as PNG. Try SVG or PDF instead."
+  }
+  if (err instanceof RasterTimeoutError) {
+    return "PNG export timed out. Please try again."
+  }
+  return `${format} export failed. Please try again.`
 }
 
 export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
@@ -29,6 +47,9 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
   const [subMenuAnchorEl, setSubMenuAnchorEl] = useState<null | HTMLElement>(
     null
   )
+  // Guards against a second click re-firing a slow render. Per-format so a slow
+  // PNG doesn't block PDF/SVG/JSON.
+  const [busyFormat, setBusyFormat] = useState<ExportFormat | null>(null)
 
   const isMenuOpen = Boolean(anchorEl)
   const isSubMenuOpen = Boolean(subMenuAnchorEl)
@@ -51,6 +72,45 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
     openModal("NEW_DIAGRAM")
     closeMainMenu()
   }, [openModal, closeMainMenu])
+
+  // Runs an export with the menu closed, surfacing failures as a toast — the
+  // fix for #667's signature symptom, a silent no-op. PNG/PDF get a progress
+  // toast since they can take seconds on a large diagram.
+  const runExport = useCallback(
+    async (
+      format: ExportFormat,
+      action: () => Promise<ExportRunResult | void>
+    ) => {
+      if (busyFormat) return
+      closeMainMenu()
+      setBusyFormat(format)
+      const progressId =
+        format === "PNG" || format === "PDF"
+          ? toast.info(`Exporting ${format}…`, {
+              autoClose: false,
+              isLoading: true,
+            })
+          : undefined
+      try {
+        const result = (await action()) ?? undefined
+        if (result?.clamped) {
+          toast.warning(
+            `${format} downscaled to fit memory limits` +
+              (typeof result.appliedScale === "number"
+                ? ` (rendered at ${Math.round(result.appliedScale * 100)}%).`
+                : ".")
+          )
+        }
+      } catch (err) {
+        log.error("export failed", err as Error)
+        toast.error(exportErrorMessage(format, err))
+      } finally {
+        if (progressId !== undefined) toast.dismiss(progressId)
+        setBusyFormat(null)
+      }
+    },
+    [busyFormat, closeMainMenu]
+  )
 
   return (
     <>
@@ -115,43 +175,31 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
           onMouseLeave: () => setSubMenuAnchorEl(null),
         }}
       >
-        <MenuItem
-          onClick={() => {
-            exportAsSvg()
-            closeMainMenu()
-          }}
-        >
+        <MenuItem onClick={() => runExport("SVG", async () => exportAsSvg())}>
           As SVG
         </MenuItem>
         <MenuItem
-          onClick={() => {
-            exportAsPng({ setWhiteBackground: true })
-            closeMainMenu()
-          }}
+          disabled={busyFormat === "PNG"}
+          onClick={() =>
+            runExport("PNG", () => exportAsPng({ setWhiteBackground: true }))
+          }
         >
           As PNG (White Background)
         </MenuItem>
         <MenuItem
-          onClick={() => {
-            exportAsPng({ setWhiteBackground: false })
-            closeMainMenu()
-          }}
+          disabled={busyFormat === "PNG"}
+          onClick={() =>
+            runExport("PNG", () => exportAsPng({ setWhiteBackground: false }))
+          }
         >
           As PNG (Transparent Background)
         </MenuItem>
-        <MenuItem
-          onClick={() => {
-            exportAsJSON()
-            closeMainMenu()
-          }}
-        >
+        <MenuItem onClick={() => runExport("JSON", async () => exportAsJSON())}>
           As JSON
         </MenuItem>
         <MenuItem
-          onClick={() => {
-            exportAsPDF()
-            closeMainMenu()
-          }}
+          disabled={busyFormat === "PDF"}
+          onClick={() => runExport("PDF", exportAsPDF)}
         >
           As PDF
         </MenuItem>

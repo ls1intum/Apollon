@@ -54,6 +54,10 @@
       "types": "./dist/internals.d.ts",
       "import": "./dist/internals.js"
     },
+    "./export": {
+      "types": "./dist/export.d.ts",
+      "import": "./dist/export.js"
+    },
     "./style.css": "./dist/assets/style.css",
     "./schema": "./schema/uml-model-4.schema.json",
     "./package.json": "./package.json"
@@ -87,6 +91,11 @@
       "name": "yjs sync chunk",
       "path": "dist/yjsSync-*.js",
       "limit": "210 kB"
+    },
+    {
+      "name": "/export lazy chunk (renderers external; Inter ttf inlined)",
+      "path": "dist/export.js",
+      "limit": "700 kB"
     }
   ],
   "peerDependencies": {
@@ -126,6 +135,11 @@
     "y-protocols": "1.0.6",
     "yjs": "13.6.20",
     "zustand": "catalog:"
+  },
+  "optionalDependencies": {
+    "@resvg/resvg-wasm": "2.6.2",
+    "jspdf": "4.2.1",
+    "svg2pdf.js": "2.7.0"
   },
   "devDependencies": {
     "@emotion/react": "catalog:",

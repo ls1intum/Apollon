@@ -49,15 +49,19 @@ for (const [a, b] of ranges) {
   for (let c = a; c <= b; c++) chars += String.fromCodePoint(c)
 }
 
-const fonts = [
-  ["Inter-Regular.ttf", "Inter-Regular.woff2"],
-  ["Inter-Bold.ttf", "Inter-Bold.woff2"],
-]
+// woff2 is base64-inlined into the editor's style.css for self-contained SVG
+// exports; the truetype subset of the SAME source feeds @tumaet/apollon/export
+// (resvg fontBuffers + jsPDF VFS, neither of which reads woff2). One source
+// keeps exported PNG/PDF glyphs identical to what the editor measures/renders.
+const fonts = ["Inter-Regular", "Inter-Bold"]
 
-for (const [src, out] of fonts) {
-  const buf = await readFile(resolve(SRC_DIR, src))
-  const subset = await subsetFont(buf, chars, { targetFormat: "woff2" })
-  await writeFile(resolve(OUT_DIR, out), subset)
-  // eslint-disable-next-line no-console
-  console.log(`${out}: ${subset.length} bytes`)
+for (const name of fonts) {
+  const buf = await readFile(resolve(SRC_DIR, `${name}.ttf`))
+  for (const targetFormat of ["woff2", "truetype"]) {
+    const ext = targetFormat === "truetype" ? "ttf" : "woff2"
+    const subset = await subsetFont(buf, chars, { targetFormat })
+    await writeFile(resolve(OUT_DIR, `${name}.${ext}`), subset)
+    // eslint-disable-next-line no-console
+    console.log(`${name}.${ext}: ${subset.length} bytes`)
+  }
 }
