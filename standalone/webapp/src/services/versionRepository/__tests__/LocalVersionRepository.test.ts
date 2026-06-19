@@ -408,22 +408,39 @@ describe("LocalVersionRepository", () => {
   })
 
   it("subscribeToLocalVersionEvents returns a working unsubscribe", async () => {
-    const handler = vi.fn()
+    // Resolve from inside the handler so we await ACTUAL delivery, not a fixed
+    // `setTimeout(0)` tick — BroadcastChannel delivery isn't guaranteed within
+    // one tick on the CI runner, which flaked here with "Number of calls: 0".
+    let deliverFirst: (() => void) | null = null
+    const firstDelivery = new Promise<void>((r) => {
+      deliverFirst = r
+    })
+    const handler = vi.fn(() => deliverFirst?.())
     const unsubscribe = subscribeToLocalVersionEvents(handler)
     // Use a sibling channel to drive the event — subscriber lives on
     // the module's own channel singleton.
     const sender = new BroadcastChannel("apollon-versions")
     sender.postMessage({ type: "invalidate", diagramId: DIAGRAM_ID })
-    await new Promise((r) => setTimeout(r, 0))
+    await firstDelivery
     expect(handler).toHaveBeenCalledWith({
       type: "invalidate",
       diagramId: DIAGRAM_ID,
     })
+
+    // After unsubscribe a second post must not reach the handler. A fresh
+    // sibling channel acts as a delivery barrier: once OUR listener on it sees
+    // the message, delivery has happened — so an still-attached handler would
+    // have fired by now too. No arbitrary timeout.
     unsubscribe()
     handler.mockClear()
+    const barrier = new BroadcastChannel("apollon-versions")
+    const barrierGot = new Promise<void>((r) => {
+      barrier.addEventListener("message", () => r(), { once: true })
+    })
     sender.postMessage({ type: "invalidate", diagramId: DIAGRAM_ID })
-    await new Promise((r) => setTimeout(r, 0))
+    await barrierGot
     expect(handler).not.toHaveBeenCalled()
+    barrier.close()
     sender.close()
   })
 })

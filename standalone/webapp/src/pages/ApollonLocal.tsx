@@ -309,9 +309,16 @@ export const ApollonLocal: FC = () => {
       const summary = versions.find((v) => v.id === versionId)
       try {
         const body = await resolveBody(versionId)
+        // While previewing, `editor.model` is the read-only overlay of the
+        // version being viewed — NOT the live canvas. Leaving preview mode
+        // resyncs `editor.model` from the live Yjs doc, so the body we capture
+        // for the durable "Before restoring …" undo snapshot is the canvas the
+        // user actually had, not the version they're about to restore.
+        if (preview) editor.setPreviewMode(false)
+        const liveBody = editor.model
         await useVersionStore
           .getState()
-          .restoreVersion(diagramId, versionId, editor.model)
+          .restoreVersion(diagramId, versionId, liveBody)
         // Imperative editor API (accessor setter), applied in a callback.
         // eslint-disable-next-line react-hooks/immutability
         editor.model = importDiagram(body) as UMLModel

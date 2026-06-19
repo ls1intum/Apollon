@@ -418,9 +418,9 @@ export const ApollonWithConnection: React.FC = () => {
     return () => abort.abort()
   }, [preview, editor, diagramId, baseReadonly])
 
-  // Memoised because `handleRestoreFromPreview`'s useCallback lists it
-  // as a dep — without stable identity the restore handler gets a fresh
-  // closure every render and the banner's `onRestore` prop churns.
+  // Memoised because `handleRestore`'s useCallback lists it as a dep —
+  // without stable identity the restore handler gets a fresh closure every
+  // render and the banner's `onRestore` prop churns.
   const handleVersionSaved = useCallback((headRev?: number) => {
     autosaverRef.current?.setHeadRev(headRev)
     diagramIsUpdated.current = false
@@ -431,18 +431,29 @@ export const ApollonWithConnection: React.FC = () => {
     closePreview()
   }, [closePreview])
 
-  const handleRestoreFromPreview = useCallback(
+  // Single restore entry point for BOTH the preview banner and the drawer
+  // rows, so neither can read the wrong body. While previewing, `editor.model`
+  // is the read-only overlay of the version being viewed; the server would then
+  // store THAT as the pre-restore undo snapshot, so Undo could only bring back
+  // the version we just restored — not the live canvas. Leaving preview mode
+  // first resyncs `editor.model` from the live Yjs doc, so the captured undo
+  // body is the user's actual canvas.
+  const handleRestore = useCallback(
     async (versionId: string) => {
       if (!diagramId || !editor) return
-      restoredDuringPreviewRef.current = true
+      const previewing =
+        selectScopedPreview(useVersionStore.getState(), diagramId) !== null
+      if (previewing) {
+        restoredDuringPreviewRef.current = true
+        editor.setPreviewMode(false)
+      }
+      const liveBody = editor.model
       try {
-        const { headRev } = await restoreVersion(
-          diagramId,
-          versionId,
-          editor.model
-        )
+        const { headRev } = await restoreVersion(diagramId, versionId, liveBody)
         handleVersionSaved(headRev)
-        closePreview()
+        // Strip `?version=` so the URL↔preview sync doesn't re-enter the
+        // version we just restored. No-op when we weren't previewing.
+        if (previewing) closePreview()
       } catch {
         restoredDuringPreviewRef.current = false
         toast.error(t.restoreFailed)
@@ -509,7 +520,7 @@ export const ApollonWithConnection: React.FC = () => {
                 diagramId={diagramId}
                 canRestore={canRestoreFromPreview}
                 onExit={handleExitPreview}
-                onRestore={handleRestoreFromPreview}
+                onRestore={handleRestore}
               />
             </Box>
           )}
@@ -518,6 +529,7 @@ export const ApollonWithConnection: React.FC = () => {
           <VersionSidebar
             diagramId={diagramId}
             onVersionSaved={handleVersionSaved}
+            onConfirmedRestore={handleRestore}
             onPreview={openPreview}
           />
         )}
@@ -527,6 +539,7 @@ export const ApollonWithConnection: React.FC = () => {
         <VersionDrawer
           diagramId={diagramId}
           onVersionSaved={handleVersionSaved}
+          onConfirmedRestore={handleRestore}
           onPreview={openPreview}
         />
       )}
