@@ -571,4 +571,25 @@ test.describe("Mobile responsive layout", () => {
       PHONE_LANDSCAPE.width - SAFE_INSET
     )
   })
+
+  test("keeps a single-column palette in a narrow short window", async ({
+    page,
+  }) => {
+    // A resized desktop window can be both narrow and short. The two-column
+    // palette is meant for phone landscape (wide + short, >= 568px); a narrow
+    // short window must stay single column, not a cramped 2-wide grid.
+    await page.setViewportSize({ width: 480, height: 480 })
+    await openTemporaryLocalDiagram(page)
+    await waitForCanvasReady(page, false)
+
+    const palette = page.getByTestId("apollon-palette")
+    await expect(palette).toHaveClass(/apollon-palette--mobile/)
+
+    const columnCount = await palette
+      .locator(".apollon-palette__entries")
+      .evaluate(
+        (el) => getComputedStyle(el).gridTemplateColumns.split(" ").length
+      )
+    expect(columnCount).toBe(1)
+  })
 })
