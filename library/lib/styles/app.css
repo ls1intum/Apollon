@@ -2,6 +2,20 @@
    (see lib/utils/exportStyles.ts). Keep it free of `@font-face`, `url(...)`,
    and `@import`, or those assets leak into that chunk. The Inter font ships
    separately (lib/styles/fonts.css + lib/utils/exportFonts.ts). */
+
+/* Safe-area floor. Consumers below read `var(--safe-area-inset-*, 0px)`; this
+   maps them to the UA insets so they work in any browser/embedded webview
+   (Artemis, vscode) with `viewport-fit=cover`. The standalone webapp may
+   override these at runtime via the Capacitor safe-area plugin (inline style
+   on documentElement wins); off-native and everywhere else, env() is the
+   source of truth and resolves to 0px when there is no inset. */
+:root {
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+}
+
 .react-flow {
   --panel-background: var(--apollon-background, #fff);
   --panel-shadow: 0 0 4px 0 var(--apollon-background-variant, #f8f9fa);
@@ -15,6 +29,14 @@
 .apollon-editor {
   background-color: var(--apollon-background, #fff);
   color: var(--apollon-primary-contrast, #000);
+
+  /* Own stacking context so the editor's internal z-indexes (canvas content at
+     9998–10001, collaboration overlays at 10001–10004) stay self-contained and
+     the whole editor sits below host-app chrome — e.g. the webapp navbar's
+     body-portaled dropdown menus render above the presence bar. Use
+     `isolation` (not `transform`) so we don't create a containing block for
+     those portaled popovers (see the `.apollon-canvas` note below). */
+  isolation: isolate;
 }
 
 /* Positioning context + clip region for the absolutely-positioned
@@ -187,6 +209,115 @@
   stroke-width: 4.5px !important;
   filter: drop-shadow(0 0 4px var(--apollon-collaboration-highlight-color));
 }
+
+/* Floating element palette — an overlay on the canvas for every viewport
+   (there is no docked variant). Its grid columns/gap and each cell's size are
+   set inline from `computePaletteLayout`, so it fits every element in view
+   without scrolling; `overflow-y` is only the rare last resort. */
+.apollon-palette {
+  box-sizing: border-box;
+  position: absolute;
+  top: 10px;
+  left: calc(10px + var(--safe-area-inset-left, 0px));
+
+  /* Above React Flow's interactive canvas content (renderer, edges 9999,
+     nodes 9998) so taps/drags always land on the palette and a node placed
+     under it can't cover it. Contained by the editor's own stacking context
+     (`.apollon-editor { isolation: isolate }`), so it stays below host-app
+     chrome. The body-portaled drag ghost renders above it regardless. */
+  z-index: 10000;
+
+  /* Never grow into the bottom zoom/undo/redo controls (their height + margin
+     + bottom safe-area inset). */
+  max-height: calc(100% - 84px - var(--safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  padding: 6px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--apollon-background, #fff);
+  color: var(--apollon-primary-contrast, #000);
+  border: 1px solid var(--apollon-gray, #e9ecef);
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 18%);
+}
+
+/* grid-template-columns and gap come inline from the computed layout. */
+.apollon-palette__entries {
+  display: grid;
+  justify-content: center;
+}
+
+/* width/height come inline from the computed cell size. */
+.apollon-palette__entry {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  border-radius: 4px;
+  transition: background-color 120ms ease;
+}
+
+.apollon-palette__entry:hover {
+  background: var(--apollon-background-variant, #f8f9fa);
+}
+
+.apollon-palette__entry:active {
+  cursor: grabbing;
+}
+
+.apollon-palette__view-switch {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.apollon-palette__view-button {
+  border-radius: 6px;
+  border: 1px solid var(--apollon-primary-contrast, #000);
+  background: transparent;
+  color: var(--apollon-primary-contrast, #000);
+  padding: 6px 8px;
+  cursor: pointer;
+  font-weight: 600;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.apollon-palette__view-button--active {
+  background: var(--apollon-primary, #3e8acc);
+  color: var(--apollon-background, #fff);
+}
+
+.apollon-palette__hint {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 160px;
+  padding: 4px;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+/* Phone landscape: nudge the canvas panels in by the safe-area insets. */
+@media (max-width: 950px) and (max-height: 500px) {
+  .react-flow__panel.bottom.left {
+    margin-left: calc(10px + var(--safe-area-inset-left, 0px));
+    margin-bottom: calc(10px + var(--safe-area-inset-bottom, 0px));
+  }
+
+  .react-flow__panel.bottom.right {
+    margin-right: calc(10px + var(--safe-area-inset-right, 0px));
+    margin-bottom: calc(10px + var(--safe-area-inset-bottom, 0px));
+  }
+
+  .apollon-collaboration-presence-bar {
+    right: calc(10px + var(--safe-area-inset-right, 0px));
+  }
+}
+
 .react-flow__controls-button {
   background: none;
   border-bottom: none;

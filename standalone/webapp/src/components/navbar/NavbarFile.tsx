@@ -3,6 +3,8 @@ import Button from "@mui/material/Button"
 import Menu from "@mui/material/Menu"
 import MenuItem from "@mui/material/MenuItem"
 import Typography from "@mui/material/Typography"
+import useMediaQuery from "@mui/material/useMediaQuery"
+import { MOBILE_VIEW_QUERY } from "@/constants"
 import { useModalContext } from "@/contexts"
 import { navbarButtonStyle } from "./styleConstants"
 import {
@@ -25,6 +27,15 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
   const exportAsPng = useExportAsPNG()
   const exportAsJSON = useExportAsJSON()
   const exportAsPDF = useExportAsPDF()
+  // Two independent concerns: how the submenu opens, and which way it opens.
+  // Open on click (not hover) when there's no reliable hover — i.e. touch.
+  const isTouchInput = useMediaQuery("(hover: none), (pointer: coarse)")
+  // Open the submenu leftward only in the actual mobile hamburger context
+  // (where the menu is anchored near the right edge). Keying off the shared
+  // MOBILE_VIEW_QUERY — the same one that swaps in MobileNavbar — keeps the
+  // desktop navbar's right-opening submenu on narrow-but-tall viewports
+  // (e.g. 900x800), where left-opening would push it off-screen.
+  const isMobileMenu = useMediaQuery(MOBILE_VIEW_QUERY)
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [subMenuAnchorEl, setSubMenuAnchorEl] = useState<null | HTMLElement>(
     null
@@ -41,14 +52,19 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
     handleCloseNavMenu?.()
     setAnchorEl(null)
     setSubMenuAnchorEl(null)
-  }, [])
+  }, [handleCloseNavMenu])
 
   const openSubMenu = useCallback((event: MouseEvent<HTMLElement>) => {
     setSubMenuAnchorEl(event.currentTarget)
   }, [])
 
+  const openSubMenuFromClick = useCallback((event: MouseEvent<HTMLElement>) => {
+    event.stopPropagation()
+    setSubMenuAnchorEl(event.currentTarget)
+  }, [])
+
   const handleNewDiagram = useCallback(() => {
-    openModal("NEW_DIAGRAM")
+    openModal("NEW_DIAGRAM", { dialogVariant: "home" })
     closeMainMenu()
   }, [openModal, closeMainMenu])
 
@@ -86,8 +102,9 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
             Version history has its own VersionHistoryButton. */}
         <JsonFileImportButton close={closeMainMenu} />
         <MenuItem
-          onClick={openSubMenu}
-          onMouseEnter={openSubMenu}
+          id="export-sub-menu-button"
+          onClick={openSubMenuFromClick}
+          onMouseEnter={isTouchInput ? undefined : openSubMenu}
           sx={{
             display: "flex",
             justifyContent: "space-between",
@@ -108,11 +125,19 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
         anchorEl={subMenuAnchorEl}
         open={isSubMenuOpen}
         onClose={closeMainMenu}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-        transformOrigin={{ vertical: "top", horizontal: "left" }}
+        anchorOrigin={{
+          vertical: "top",
+          horizontal: isMobileMenu ? "left" : "right",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: isMobileMenu ? "right" : "left",
+        }}
         MenuListProps={{
           "aria-labelledby": "export-sub-menu-button",
-          onMouseLeave: () => setSubMenuAnchorEl(null),
+          onMouseLeave: isTouchInput
+            ? undefined
+            : () => setSubMenuAnchorEl(null),
         }}
       >
         <MenuItem
