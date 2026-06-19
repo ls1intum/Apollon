@@ -7,7 +7,6 @@ import { useStraightPathEdge } from "@/hooks/useStraightPathEdge"
 import { useDiagramStore, usePopoverStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { useToolbar } from "@/hooks"
-import { useRef } from "react"
 import { EDGES } from "@/constants"
 import { FeedbackDropzone } from "@/components/wrapper/FeedbackDropzone"
 import { AssessmentSelectableWrapper } from "@/components"
@@ -29,7 +28,6 @@ export const UseCaseEdge = ({
   targetHandleId,
   data,
 }: BaseEdgeProps) => {
-  const anchorRef = useRef<SVGSVGElement | null>(null)
   const { handleDelete } = useToolbar({ id })
 
   const config = useEdgeConfig(
@@ -57,7 +55,7 @@ export const UseCaseEdge = ({
     edgeData,
     currentPath,
     overlayPath,
-    isReconnectingRef,
+    isReconnecting,
     markerEnd,
     markerStart,
     strokeDashArray,
@@ -95,7 +93,7 @@ export const UseCaseEdge = ({
             }}
           />
 
-          {!isReconnectingRef.current && (
+          {!isReconnecting && (
             <EdgeInlineMarkers
               pathD={currentPath}
               markerEnd={markerEnd}
@@ -146,9 +144,9 @@ export const UseCaseEdge = ({
         <CommonEdgeElements
           id={id}
           pathMiddlePosition={edgeData.pathMiddlePosition}
+          toolbarPosition={edgeData.toolbarPosition}
           isDiagramModifiable={isDiagramModifiable}
           assessments={assessments}
-          anchorRef={anchorRef}
           handleDelete={handleDelete}
           setPopOverElementId={setPopOverElementId}
           type={type}

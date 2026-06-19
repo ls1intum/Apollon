@@ -1,0 +1,102 @@
+# Documentation Deployment Pipeline
+#
+# - PR with docs changes: build a /-rooted bundle
+# - push to main with docs changes: build /Apollon/-rooted bundle and deploy
+#   it to GitHub Pages
+
+name: Docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "library/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".nvmrc"
+      - ".github/workflows/docs.yml"
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "docs/**"
+      - "library/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".nvmrc"
+      - ".github/workflows/docs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build Docusaurus site
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      is-production: ${{ steps.flag.outputs.is-production }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - uses: pnpm/action-setup@ac6db6d3c1f721f886538a378a2d73e85697340a # v6.0.8
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - id: flag
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/main" && "${{ github.event_name }}" != "pull_request" ]]; then
+            echo "is-production=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is-production=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - run: pnpm install --frozen-lockfile
+
+      # Library must be built first — the docs site imports
+      # `@tumaet/apollon` for the live embed on the homepage.
+      - run: pnpm --filter @tumaet/apollon run build
+
+      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
+        with:
+          path: |
+            docs/.docusaurus
+            docs/node_modules/.cache
+          key: docusaurus-${{ steps.flag.outputs.is-production }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('docs/**/*.{md,mdx,ts,tsx}') }}
+          restore-keys: |
+            docusaurus-${{ steps.flag.outputs.is-production }}-${{ hashFiles('pnpm-lock.yaml') }}-
+            docusaurus-${{ steps.flag.outputs.is-production }}-
+
+      - run: pnpm --filter @tumaet/apollon-docs run build
+        env:
+          DOCUSAURUS_BASE_URL: ${{ steps.flag.outputs.is-production == 'true' && '/Apollon/' || '/' }}
+
+      - if: steps.flag.outputs.is-production == 'true'
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
+        with:
+          path: docs/build
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    if: needs.build.outputs.is-production == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4

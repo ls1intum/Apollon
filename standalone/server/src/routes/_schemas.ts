@@ -17,25 +17,9 @@ export const VersionId = z
   .max(64)
   .regex(/^[A-Za-z0-9_-]+$/, "versionId must be URL-safe")
 
-/**
- * Library schema versions are `4.<minor>.<patch>` (the same shape
- * the library's `UMLModel.version` template-literal type encodes),
- * optionally followed by a SemVer-2.0 pre-release or build-metadata
- * suffix (`4.0.0-rc1`, `4.1.0+ci.42`). Enforcing the regex at the
- * API boundary means the renderer never receives a malformed
- * version, and the `toUmlModel` projection downstream can widen
- * `string` → the literal type via a runtime-validated assertion.
- */
-export const LibrarySchemaVersion = z
-  .string()
-  .regex(
-    /^4\.\d+\.\d+(?:-[\w.]+)?(?:\+[\w.]+)?$/,
-    "version must match the library schema pattern 4.<minor>.<patch> with an optional SemVer pre-release and/or build-metadata suffix"
-  )
-
 export const DiagramBody = z.object({
   id: z.string().min(1),
-  version: LibrarySchemaVersion,
+  version: z.string().min(1),
   title: z.string(),
   type: z.string().min(1),
   nodes: z.array(z.unknown()).default([]),

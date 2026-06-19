@@ -1,11 +1,9 @@
-import { useLocation } from "react-router"
+import { useLocation } from "@tanstack/react-router"
 
 /**
- * Reserved top-level paths in `App.tsx`. Anything else in the first path
- * segment is treated as a diagramId. Kept in sync with `<Routes>` manually
- * because the navbar lives ABOVE `<Routes>` in the App tree, so
- * `useParams()` returns `{}` there — `useLocation().pathname` is the only
- * router-aware source of the URL we have at navbar depth.
+ * Reserved top-level paths. Derived from the pathname because the navbar
+ * renders above the matched route, so `useParams()` returns `{}` at navbar
+ * depth — `useLocation().pathname` is the only router-aware URL source here.
  */
 const RESERVED_TOP_LEVEL_PATHS: ReadonlySet<string> = new Set([
   "playground",
@@ -16,13 +14,23 @@ const RESERVED_TOP_LEVEL_PATHS: ReadonlySet<string> = new Set([
 
 /**
  * Returns the diagramId derived from the URL, or `undefined` when the
- * current route is one of the reserved top-level pages (or the local-only
- * `/` route).
+ * current route is one of the reserved top-level pages (or `/`).
+ *
+ * Supported URL shapes:
+ * - `/shared/:id`
+ * - `/local/:id`
+ * - legacy `/:id`
  */
 export function useDiagramIdFromPath(): string | undefined {
   const location = useLocation()
-  const segment = location.pathname.split("/").filter(Boolean)[0]
-  if (!segment) return undefined
-  if (RESERVED_TOP_LEVEL_PATHS.has(segment)) return undefined
-  return segment
+  const segments = location.pathname.split("/").filter(Boolean)
+  const head = segments[0]
+  if (!head) return undefined
+  if (RESERVED_TOP_LEVEL_PATHS.has(head)) return undefined
+
+  if (head === "shared" || head === "local") {
+    return segments[1] || undefined
+  }
+
+  return head
 }

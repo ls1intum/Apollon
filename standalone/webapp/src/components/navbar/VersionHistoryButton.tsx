@@ -1,5 +1,6 @@
 import { Button, Tooltip } from "@mui/material"
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded"
+import { useLocation } from "@tanstack/react-router"
 import { useVersionStore } from "@/stores/useVersionStore"
 import { secondary } from "@/constants"
 import { versioningStrings as t } from "@/components/versioning/strings"
@@ -8,10 +9,10 @@ import { useDiagramIdFromPath } from "@/hooks/useDiagramIdFromPath"
 interface Props {
   /**
    * Foreground color for the icon + label. Defaults to `secondary` —
-   * the navbar's muted on-dark gray. Mobile passes `"black"` because
-   * the button is rendered inside the hamburger Menu's light-bg dropdown
-   * (where on-dark gray would be near-invisible). Other navbar children
-   * (`NavbarFile`, `NavbarHelp`) follow the same prop convention.
+   * the navbar's muted on-dark gray, for the always-dark desktop bar. The
+   * mobile hamburger passes `var(--apollon-primary-contrast)` so the label
+   * stays legible on the themed dropdown in both light and dark mode. Other
+   * navbar children (`NavbarFile`, `NavbarHelp`) follow the same convention.
    */
   color?: string
 }
@@ -19,19 +20,29 @@ interface Props {
 /**
  * Discoverable navbar entry point for the version-history sidebar.
  *
- * Renders only when the URL points at a connected diagram. On `/` the
- * sidebar is hidden because there's no diagramId to attach versions to —
- * the user must Share first.
+ * Renders on any route with an active diagram that has a version backend:
+ * `/shared/:id` (collab, RemoteVersionRepository) and `/local/:id`
+ * (standalone, LocalVersionRepository). Legacy `/:id` redirects to
+ * `/shared/:id`, so it is also covered. The gallery (`/`) and the
+ * playground have no active diagram, so the button is hidden.
  */
 export const VersionHistoryButton = ({ color = secondary }: Props) => {
   const diagramId = useDiagramIdFromPath()
+  const { pathname } = useLocation()
+  // Both shared (Remote) and local (Local) repositories back a drawer.
+  // Boolean(diagramId) additionally catches legacy /:id, which redirects
+  // to /shared. The gallery "/" and playground have no diagram id.
+  const hasVersioning =
+    pathname.startsWith("/shared/") ||
+    pathname.startsWith("/local/") ||
+    Boolean(diagramId)
   const openDrawer = useVersionStore((s) => s.openDrawer)
   const closeDrawer = useVersionStore((s) => s.closeDrawer)
   const isOpen = useVersionStore((s) =>
     diagramId ? Boolean(s.drawerOpenByDiagram[diagramId]) : false
   )
 
-  if (!diagramId) return null
+  if (!diagramId || !hasVersioning) return null
 
   return (
     <Tooltip title={t.fabTooltip}>

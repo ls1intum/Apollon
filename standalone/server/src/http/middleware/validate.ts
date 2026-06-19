@@ -1,6 +1,6 @@
 import type { NextFunction, Request, RequestHandler, Response } from "express"
 import type { z, ZodTypeAny } from "zod"
-import { Errors } from "../errors"
+import { Errors } from "../errors.js"
 
 export interface Schemas {
   body?: ZodTypeAny
@@ -58,10 +58,6 @@ export function validate<S extends Schemas>(
       }
       valid[key] = result.data
     }
-    try {
-      await handler(req, res, next, valid as Validated<S>)
-    } catch (err) {
-      next(err)
-    }
+    await handler(req, res, next, valid as Validated<S>)
   }
 }

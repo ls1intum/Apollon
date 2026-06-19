@@ -1,6 +1,6 @@
 import { MultilineText, StyledRect } from "@/components"
 import { LAYOUT } from "@/constants"
-import { maxLinesForHeight } from "@/index"
+import { maxLinesForHeight } from "@/utils"
 import { DefaultNodeProps } from "@/types"
 import { SVGComponentProps } from "@/types/SVG"
 import { getCustomColorsFromData } from "@/utils/layoutUtils"

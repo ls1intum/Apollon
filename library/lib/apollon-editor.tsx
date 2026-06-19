@@ -5,7 +5,6 @@ import {
   parseDiagramType,
   mapFromReactFlowNodeToApollonNode,
   mapFromReactFlowEdgeToApollonEdge,
-  DeepPartial,
   filterRenderedElements,
   getSVG,
   getRenderedDiagramBounds,
@@ -23,31 +22,74 @@ import {
   AlignmentGuidesStore,
 } from "@/store/alignmentGuidesStore"
 import {
+  createEdgeGeometryStore,
+  EdgeGeometryStore,
+} from "@/store/edgeGeometryStore"
+import {
   DiagramStoreContext,
   MetadataStoreContext,
   PopoverStoreContext,
   AssessmentSelectionStoreContext,
   AlignmentGuidesStoreContext,
+  EdgeGeometryStoreContext,
 } from "./store/context"
-import {
-  MessageType,
-  SendBroadcastMessage,
-  YjsSyncClass,
-} from "./sync/yjsSyncClass"
+import { getPerfCounters } from "./sync/perfCounters"
+import { MessageType, SendBroadcastMessage, YjsSync } from "./sync/yjsSync"
+import { getNodesMap } from "./sync/ydoc"
 import * as Y from "yjs"
 import { StoreApi } from "zustand"
 import * as Apollon from "./typings"
+import { FONT_FAMILY, DEFAULT_FONT_SIZE } from "./fontStack"
+
+const normalizeCollaborationOptions = (options?: Apollon.ApollonOptions) => {
+  const collaboration = options?.collaboration
+  const enabled =
+    collaboration?.enabled ??
+    options?.collaborationEnabled ??
+    Boolean(collaboration?.user)
+  const showVisualsByDefault = enabled && Boolean(collaboration?.user)
+
+  return {
+    enabled,
+    user: collaboration?.user,
+    showPresence: collaboration?.showPresence ?? showVisualsByDefault,
+    showCursors: collaboration?.showCursors ?? showVisualsByDefault,
+    showSelectionHighlights:
+      collaboration?.showSelectionHighlights ?? showVisualsByDefault,
+    showFollow: collaboration?.showFollow ?? showVisualsByDefault,
+  }
+}
+
+const disabledCollaboration = {
+  enabled: false,
+  showPresence: false,
+  showCursors: false,
+  showSelectionHighlights: false,
+  showFollow: false,
+}
+
+const noopCollaborationAwareness = {
+  setLocalAwarenessCursor: () => {},
+  setLocalAwarenessSelectedElement: () => {},
+  setLocalAwarenessViewport: () => {},
+  setLocalAwarenessFollowing: () => {},
+  getAwarenessStates: () => new Map(),
+  subscribeToAwarenessChanges: () => () => {},
+  subscribeToCollaboratorChanges: () => () => {},
+  getLocalAwarenessClientId: () => 0,
+}
 
 export class ApollonEditor {
   private root: ReactDOM.Root
   private reactFlowInstance: ReactFlowInstance | null = null
-  private readonly syncManager: YjsSyncClass
+  private readonly syncManager: YjsSync
   private readonly ydoc: Y.Doc
   private readonly diagramStore: StoreApi<DiagramStore>
   private readonly metadataStore: StoreApi<MetadataStore>
   private readonly popoverStore: StoreApi<PopoverStore>
   private readonly assessmentSelectionStore: StoreApi<AssessmentSelectionStore>
   private readonly alignmentGuidesStore: StoreApi<AlignmentGuidesStore>
+  private readonly edgeGeometryStore: StoreApi<EdgeGeometryStore>
   private subscribers: Apollon.Subscribers = {}
   constructor(element: HTMLElement, options?: Apollon.ApollonOptions) {
     if (!(element instanceof HTMLElement)) {
@@ -63,23 +105,29 @@ export class ApollonEditor {
     this.popoverStore = createPopoverStore()
     this.assessmentSelectionStore = createAssessmentSelectionStore()
     this.alignmentGuidesStore = createAlignmentGuidesStore()
-    this.syncManager = new YjsSyncClass(
+    this.edgeGeometryStore = createEdgeGeometryStore()
+    this.syncManager = new YjsSync(
       this.ydoc,
       this.diagramStore,
       this.metadataStore
     )
+    const collaboration = normalizeCollaborationOptions(options)
+    if (collaboration.enabled && collaboration.user) {
+      this.syncManager.setLocalAwarenessState({
+        user: collaboration.user,
+        selectedElementId: null,
+      })
+    }
 
     const diagramId =
       options?.model?.id || Math.random().toString(36).substring(2, 15)
 
-    // Initialize React root
     this.root = ReactDOM.createRoot(element, {
       identifierPrefix: `apollon-${diagramId}`,
     })
 
     this.diagramStore.getState().setDiagramId(diagramId)
 
-    // Initialize metadata and diagram type
     const diagramName = options?.model?.title || "Untitled Diagram"
     const diagramType =
       options?.type || options?.model?.type || UMLDiagramType.ClassDiagram
@@ -129,10 +177,13 @@ export class ApollonEditor {
       this.metadataStore.getState().setScrollLock(options.scrollLock)
     }
 
-    if (
-      this.metadataStore.getState().mode === Apollon.ApollonMode.Modelling &&
-      !options?.collaborationEnabled
-    ) {
+    this.diagramStore.getState().setCollaborationEnabled(collaboration.enabled)
+
+    // Undo/redo runs in modelling, collaboration included. The UndoManager
+    // tracks only locally-authored ("store") writes, so each peer undoes only
+    // their own edits (local undo). Safe because transient drag/resize frames
+    // are no longer persisted (see diagramStore.onNodesChange).
+    if (this.metadataStore.getState().mode === Apollon.ApollonMode.Modelling) {
       this.diagramStore.getState().initializeUndoManager()
     }
 
@@ -146,9 +197,31 @@ export class ApollonEditor {
               <AlignmentGuidesStoreContext.Provider
                 value={this.alignmentGuidesStore}
               >
-                <AppWithProvider
-                  onReactFlowInit={this.setReactFlowInstance.bind(this)}
-                />
+                <EdgeGeometryStoreContext.Provider
+                  value={this.edgeGeometryStore}
+                >
+                  <AppWithProvider
+                    onReactFlowInit={this.setReactFlowInstance.bind(this)}
+                    collaboration={collaboration}
+                    awareness={{
+                      setLocalAwarenessCursor:
+                        this.syncManager.setLocalAwarenessCursor,
+                      setLocalAwarenessSelectedElement:
+                        this.syncManager.setLocalAwarenessSelectedElement,
+                      setLocalAwarenessViewport:
+                        this.syncManager.setLocalAwarenessViewport,
+                      setLocalAwarenessFollowing:
+                        this.syncManager.setLocalAwarenessFollowing,
+                      getAwarenessStates: this.syncManager.getAwarenessStates,
+                      subscribeToAwarenessChanges:
+                        this.syncManager.subscribeToAwarenessChanges,
+                      subscribeToCollaboratorChanges:
+                        this.syncManager.subscribeToCollaboratorChanges,
+                      getLocalAwarenessClientId:
+                        this.syncManager.getLocalAwarenessClientId,
+                    }}
+                  />
+                </EdgeGeometryStoreContext.Provider>
               </AlignmentGuidesStoreContext.Provider>
             </AssessmentSelectionStoreContext.Provider>
           </PopoverStoreContext.Provider>
@@ -231,10 +304,8 @@ export class ApollonEditor {
 
   public destroy() {
     try {
-      // Clean up all active subscriptions before destroying
       Object.keys(this.subscribers).forEach((subscriberId) => {
-        const unsubscribeCallback = this.subscribers[parseInt(subscriberId)]
-        unsubscribeCallback?.()
+        this.subscribers[parseInt(subscriberId)]?.()
       })
       this.subscribers = {}
 
@@ -242,24 +313,19 @@ export class ApollonEditor {
       this.root.unmount()
       this.ydoc.destroy()
       this.reactFlowInstance = null
-      // Zustand stores are automatically garbage-collected when references are gone
-    } catch {
-      // ignore
+    } catch (err) {
+      // destroy() is best-effort — partial teardown is acceptable, but log
+      // so a regression in unmount/ydoc.destroy is surfaced rather than hidden.
+      // eslint-disable-next-line no-console
+      console.warn("[ApollonEditor] destroy() partial failure:", err)
     }
   }
 
-  /**
-   * renders a model as a svg and returns it. Therefore the svg is temporarily added to the dom and removed after it has been rendered.
-   * @param model the apollon model to export as a svg
-   * @param options options to change the export behavior (add margin, exclude element ...)
-   * @param theme the theme which should be applied on the svg
-   */
+  /** Renders a model to SVG via a hidden, off-screen mount. */
   static async exportModelAsSvg(
     model: Apollon.UMLModel,
-    options?: Apollon.ExportOptions,
-    theme?: DeepPartial<Apollon.Styles>
+    options?: Apollon.ExportOptions
   ): Promise<Apollon.SVG> {
-    void theme
     const container = document.createElement("div")
     container.style.display = "flex"
     container.style.width = "4000px"
@@ -268,8 +334,36 @@ export class ApollonEditor {
     container.style.top = "0"
     container.style.position = "absolute"
     container.style.left = "-99px"
+    container.style.visibility = "hidden"
 
     document.body.appendChild(container)
+
+    // Self-contained styling: inject the layout CSS + Inter `@font-face` the
+    // headless mount needs so a consumer rendering in a browser never has to
+    // import "@tumaet/apollon/style.css". The load-bearing rule is React Flow's
+    // `.react-flow__node { position: absolute }`; without it the handle `%`
+    // offsets resolve against a zero-size box, on-mount handle measurement is
+    // wrong, and edges route through the node boxes. The `@font-face` pins
+    // canvas `measureText` to Inter so wrap decisions match the editor.
+    //
+    // Into <head>, not `container`: React's createRoot owns `container` and
+    // clears its children on first render, so a container-scoped <style> would
+    // be discarded before it applies. Removed in the `finally` below. Inert
+    // under jsdom (no layout engine), so the server export stays byte-stable.
+    let exportStyleEl: HTMLStyleElement | undefined
+    try {
+      const [{ EXPORT_LAYOUT_CSS }, { INTER_FONT_FACE_CSS }] =
+        await Promise.all([
+          import("./utils/exportStyles"),
+          import("./utils/exportFonts"),
+        ])
+      exportStyleEl = document.createElement("style")
+      exportStyleEl.setAttribute("data-apollon-export-styles", "")
+      exportStyleEl.textContent = `${EXPORT_LAYOUT_CSS}\n${INTER_FONT_FACE_CSS}`
+      document.head.appendChild(exportStyleEl)
+    } catch {
+      // Best-effort: missing CSS only degrades fidelity, never aborts export.
+    }
 
     const ydoc = new Y.Doc()
     const diagramStore = createDiagramStore(ydoc)
@@ -280,6 +374,7 @@ export class ApollonEditor {
     const popoverStore = createPopoverStore()
     const assessmentSelectionStore = createAssessmentSelectionStore()
     const alignmentGuidesStore = createAlignmentGuidesStore()
+    const edgeGeometryStore = createEdgeGeometryStore()
     const diagramId = Math.random().toString(36).substring(2, 15)
 
     let setReactFlowInstance: (instance: ReactFlowInstance) => void = () => {}
@@ -294,87 +389,120 @@ export class ApollonEditor {
       identifierPrefix: `apollon-exportAsSVG-${diagramId}`,
     })
 
-    diagramStore.getState().setNodesAndEdges(model.nodes, model.edges)
-    diagramStore.getState().setAssessments(model.assessments)
-
-    // Render the component
-    svgRoot.render(
-      <DiagramStoreContext.Provider value={diagramStore}>
-        <MetadataStoreContext.Provider value={metadataStore}>
-          <PopoverStoreContext.Provider value={popoverStore}>
-            <AssessmentSelectionStoreContext.Provider
-              value={assessmentSelectionStore}
-            >
-              <AlignmentGuidesStoreContext.Provider
-                value={alignmentGuidesStore}
-              >
-                <AppWithProvider onReactFlowInit={setReactFlowInstance} />
-              </AlignmentGuidesStoreContext.Provider>
-            </AssessmentSelectionStoreContext.Provider>
-          </PopoverStoreContext.Provider>
-        </MetadataStoreContext.Provider>
-      </DiagramStoreContext.Provider>
-    )
-
-    // Wait for React Flow to initialize
-    // Create a timeout promise that resolves to undefined after 3 seconds
-    const timeoutPromise = new Promise<null>((resolve) => {
-      setTimeout(() => resolve(null), 3000)
-    })
-
-    const reactFlowInstance = await Promise.race([
-      reactFlowInstancePromise,
-      timeoutPromise,
-    ])
-
-    if (!reactFlowInstance) {
+    // Single teardown for every exit path (success or throw), run once from the
+    // `finally` below: drop the injected <head> styles, unmount React, detach
+    // the off-screen container, and dispose the Yjs doc. Each step is
+    // idempotent so it is safe even if mounting never completed.
+    const teardown = () => {
+      exportStyleEl?.remove()
       svgRoot.unmount()
-      document.body.removeChild(container)
+      container.remove()
       ydoc.destroy()
-      throw new Error("React Flow instance not initialized")
     }
 
-    // Wait for webfonts to load before we measure: canvas text measurement
-    // (used by the wrap layout) otherwise falls back to the generic-family
-    // metrics and the exported SVG's wrap decisions would drift from the
-    // on-screen render. Best-effort — older browsers may lack document.fonts.
-    if (typeof document !== "undefined" && document.fonts?.ready) {
-      await document.fonts.ready.catch(() => {})
-    }
+    try {
+      diagramStore.getState().setNodesAndEdges(model.nodes, model.edges)
+      diagramStore.getState().setAssessments(model.assessments)
 
-    // Wait for ReactFlow to fully lay out nodes and measure custom handle
-    // positions (especially for non-rectangular shapes like parallelograms).
-    // setTimeout lets ResizeObserver callbacks fire; double-rAF ensures paint.
-    await new Promise<void>((resolve) => {
-      setTimeout(() => {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => resolve())
-        })
-      }, 150)
-    })
+      svgRoot.render(
+        <DiagramStoreContext.Provider value={diagramStore}>
+          <MetadataStoreContext.Provider value={metadataStore}>
+            <PopoverStoreContext.Provider value={popoverStore}>
+              <AssessmentSelectionStoreContext.Provider
+                value={assessmentSelectionStore}
+              >
+                <AlignmentGuidesStoreContext.Provider
+                  value={alignmentGuidesStore}
+                >
+                  <EdgeGeometryStoreContext.Provider value={edgeGeometryStore}>
+                    <AppWithProvider
+                      onReactFlowInit={setReactFlowInstance}
+                      collaboration={disabledCollaboration}
+                      awareness={noopCollaborationAwareness}
+                    />
+                  </EdgeGeometryStoreContext.Provider>
+                </AlignmentGuidesStoreContext.Provider>
+              </AssessmentSelectionStoreContext.Provider>
+            </PopoverStoreContext.Provider>
+          </MetadataStoreContext.Provider>
+        </DiagramStoreContext.Provider>
+      )
 
-    filterRenderedElements(container, options)
+      // Race ReactFlow init against a 3 s timeout so a hung mount can't deadlock export.
+      const timeoutPromise = new Promise<null>((resolve) => {
+        setTimeout(() => resolve(null), 3000)
+      })
 
-    const bounds = getRenderedDiagramBounds(reactFlowInstance, container)
+      const reactFlowInstance = await Promise.race([
+        reactFlowInstancePromise,
+        timeoutPromise,
+      ])
 
-    const margin = 60
-    const clip = {
-      x: bounds.x - margin,
-      y: bounds.y - margin,
-      width: bounds.width + margin * 2,
-      height: bounds.height + margin * 2,
-    }
+      if (!reactFlowInstance) {
+        throw new Error("React Flow instance not initialized")
+      }
 
-    const svgString = getSVG(container, clip, options)
+      // Wait for webfonts to load before we measure: canvas text measurement
+      // (used by the wrap layout) otherwise falls back to the generic-family
+      // metrics and the exported SVG's wrap decisions would drift from the
+      // on-screen render. Explicitly load Inter — `document.fonts.ready` alone
+      // would not wait for the injected `@font-face` until a glyph requests it —
+      // then await `ready` for any other pending faces. Best-effort throughout
+      // (older browsers / jsdom may lack `document.fonts`).
+      if (typeof document !== "undefined" && document.fonts) {
+        if (document.fonts.load) {
+          await Promise.all([
+            document.fonts.load(`400 ${DEFAULT_FONT_SIZE}px ${FONT_FAMILY}`),
+            document.fonts.load(`700 ${DEFAULT_FONT_SIZE}px ${FONT_FAMILY}`),
+          ]).catch(() => {})
+        }
+        if (document.fonts.ready) {
+          await document.fonts.ready.catch(() => {})
+        }
+      }
 
-    // Clean up
-    svgRoot.unmount()
-    document.body.removeChild(container)
-    ydoc.destroy()
+      // Wait for ReactFlow to fully lay out nodes and measure custom handle
+      // positions (especially for non-rectangular shapes like parallelograms).
+      // setTimeout lets ResizeObserver callbacks fire; double-rAF ensures paint.
+      await new Promise<void>((resolve) => {
+        setTimeout(() => {
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => resolve())
+          })
+        }, 150)
+      })
 
-    return {
-      svg: svgString,
-      clip,
+      filterRenderedElements(container, options)
+
+      const bounds = getRenderedDiagramBounds(reactFlowInstance, container)
+
+      const margin = 60
+      const clip = {
+        x: bounds.x - margin,
+        y: bounds.y - margin,
+        width: bounds.width + margin * 2,
+        height: bounds.height + margin * 2,
+      }
+
+      // Compat exports embed Inter as a base64 @font-face, loaded lazily so the
+      // font stays out of the main bundle (see exportFonts.ts).
+      let fontFaceCss: string | undefined
+      if (options?.svgMode === "compat") {
+        try {
+          fontFaceCss = (await import("./utils/exportFonts"))
+            .INTER_FONT_FACE_CSS
+        } catch {
+          // Best-effort: a failed font-chunk load must not abort the export
+          // (the SVG still names the Inter family).
+          fontFaceCss = undefined
+        }
+      }
+
+      const svgString = getSVG(container, clip, options, fontFaceCss)
+
+      return { svg: svgString, clip }
+    } finally {
+      teardown()
     }
   }
 
@@ -481,7 +609,7 @@ export class ApollonEditor {
   /**
    * Push the entire local Yjs document to peers. Hosts should call this on
    * every (re)connect so any edits made while the transport was closed are
-   * absorbed by the room. See `YjsSyncClass.broadcastFullState`.
+   * absorbed by the room. See `YjsSync.broadcastFullState`.
    */
   public broadcastFullState() {
     this.syncManager.broadcastFullState()
@@ -529,6 +657,16 @@ export class ApollonEditor {
       this.diagramStore.getState().setSelectedElementsId([])
       this.popoverStore.getState().setPopOverElementId(null)
     }
+  }
+
+  /** Live-toggle modeling vs assessment vs exporting mode. */
+  public setMode(mode: Apollon.ApollonMode): void {
+    this.metadataStore.getState().setMode(mode)
+  }
+
+  /** Live-toggle whether the canvas captures page scroll. */
+  public setScrollLock(scrollLock: boolean): void {
+    this.metadataStore.getState().setScrollLock(scrollLock)
   }
 
   /**
@@ -612,6 +750,40 @@ export class ApollonEditor {
       .updateMetaData(model.title, parseDiagramType(model.type))
   }
 
+  /**
+   * Host-driven element highlighting. Paints a translucent overlay over each
+   * given node / edge / class-member id in the supplied CSS color — the v4
+   * replacement for v3's `UMLModelElement.highlight` field and
+   * `ApollonEditor.select()`. Typical hosts: an assessment editor marking
+   * elements that are missing feedback, or Athena marking elements that have
+   * automatic-feedback suggestions.
+   *
+   * The highlight is an ephemeral view overlay: it is NOT written into the
+   * model, NOT serialized by `get model`, and NOT shared with collaborators.
+   * Each call replaces the previous highlight set; pass `null` (or an empty
+   * map) to clear all highlights. Passing `undefined` is a no-op.
+   *
+   * @param highlights map / record of element id -> CSS color (any valid CSS
+   *   color string, e.g. `"rgba(23,162,184,0.3)"`), or `null` to clear.
+   */
+  public setElementHighlights(
+    highlights: Map<string, string> | Record<string, string> | null | undefined
+  ): void {
+    if (highlights === undefined) return
+    const record =
+      highlights === null
+        ? {}
+        : Object.fromEntries(
+            highlights instanceof Map ? highlights : Object.entries(highlights)
+          )
+    this.assessmentSelectionStore.getState().setElementHighlights(record)
+  }
+
+  /** Returns a copy of the current highlight record (id -> CSS color). */
+  public getElementHighlights(): Record<string, string> {
+    return { ...this.assessmentSelectionStore.getState().highlightedElements }
+  }
+
   public getSelectedElements(): string[] {
     const { mode, readonly } = this.metadataStore.getState()
     if (mode === Apollon.ApollonMode.Assessment && readonly) {
@@ -632,13 +804,33 @@ export class ApollonEditor {
     this.diagramStore.getState().addOrUpdateAssessment(assessment)
   }
 
+  /**
+   * Dev/test-only performance probe; returns `undefined` in production.
+   * @internal — not part of the public API; stripped from the published d.ts.
+   */
+  public __perf():
+    | {
+        encodedDocBytes: number
+        nodesMapSize: number
+        storeNodeWrites: number
+      }
+    | undefined {
+    if (!import.meta.env.DEV) return undefined
+
+    const counters = getPerfCounters()
+
+    return {
+      encodedDocBytes: Y.encodeStateAsUpdate(this.ydoc).byteLength,
+      nodesMapSize: getNodesMap(this.ydoc).size,
+      storeNodeWrites: counters?.storeNodeWrites ?? 0,
+    }
+  }
+
   static generateInitialSyncMessage(): string {
-    return YjsSyncClass.uint8ToBase64(new Uint8Array([MessageType.YjsSYNC]))
+    return YjsSync.uint8ToBase64(new Uint8Array([MessageType.YjsSYNC]))
   }
 
   static generateInitialAwarenessSyncMessage(): string {
-    return YjsSyncClass.uint8ToBase64(
-      new Uint8Array([MessageType.AwarenessSync])
-    )
+    return YjsSync.uint8ToBase64(new Uint8Array([MessageType.AwarenessSync]))
   }
 }

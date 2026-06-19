@@ -113,7 +113,7 @@ test.describe("Visual regression - diagram fixtures", () => {
   for (const { name, file, fixture, fitView } of diagramFixtures) {
     test(`canvas for ${name}`, async ({ page }) => {
       await injectFixtureIntoLocalStorage(page, fixture)
-      await page.goto("/")
+      await page.goto(resolveLocalDiagramRoute(fixture))
       await waitForCanvasReady(page)
 
       // For large diagrams that overflow at zoom 1.0, click the built-in
@@ -145,6 +145,14 @@ function loadJsonFile(filePath: string): Record<string, unknown> {
   return JSON.parse(raw) as Record<string, unknown>
 }
 
+function resolveLocalDiagramRoute(fixture: Record<string, unknown>) {
+  const id = fixture.id
+  if (typeof id !== "string" || !id) {
+    throw new Error("Fixture is missing a valid 'id' for /local/:id navigation")
+  }
+  return `/local/${id}`
+}
+
 const templatesDir = path.join(
   __dirname,
   "..",
@@ -166,7 +174,7 @@ test.describe("Template diagrams", () => {
     test(`${name} template canvas matches baseline`, async ({ page }) => {
       const template = loadJsonFile(path.join(templatesDir, `${file}.json`))
       await injectFixtureIntoLocalStorage(page, template)
-      await page.goto("/")
+      await page.goto(resolveLocalDiagramRoute(template))
       await waitForCanvasReady(page)
 
       const editorArea = page.locator('[data-testid="editor-area"]')

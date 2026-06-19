@@ -44,10 +44,17 @@ export const calculateMinHeight = (
   return minHeightWithSnapToGrid
 }
 
+// Every CSS-variable reference carries a literal fallback so the editor
+// renders correctly even when the host page never defines the theme
+// variables (e.g. embedded on a plain site). Without the fallback an
+// undefined variable makes the SVG `fill`/`stroke` default to black.
+const STROKE_VAR = "var(--apollon-primary-contrast, #000000)"
+const FILL_VAR = "var(--apollon-background, #ffffff)"
+
 export const getCustomColorsFromData = (data: DefaultNodeProps) => {
-  const strokeColor = data.strokeColor || "var(--apollon-primary-contrast)"
-  const fillColor = data.fillColor || "var(--apollon-background)"
-  const textColor = data.textColor || "var(--apollon-primary-contrast)"
+  const strokeColor = data.strokeColor || STROKE_VAR
+  const fillColor = data.fillColor || FILL_VAR
+  const textColor = data.textColor || STROKE_VAR
   return { strokeColor, fillColor, textColor }
 }
 
@@ -55,7 +62,7 @@ export const getCustomColorsFromDataForEdge = (data?: {
   strokeColor?: string
   textColor?: string
 }) => {
-  const strokeColor = data?.strokeColor || "var(--apollon-primary-contrast)"
-  const textColor = data?.textColor || "var(--apollon-primary-contrast)"
+  const strokeColor = data?.strokeColor || STROKE_VAR
+  const textColor = data?.textColor || STROKE_VAR
   return { strokeColor, textColor }
 }

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react"
-import type { UMLModel } from "@tumaet/apollon"
+import type { UMLModel } from "@tumaet/apollon/react"
 import { serverURL } from "@/constants"
 
 interface Options {
@@ -19,6 +19,10 @@ interface Options {
  */
 export function useFlushOnUnload(opts: Options) {
   const optsRef = useRef(opts)
+  // Latest-closure ref: keeps the pagehide listener stable while callers pass
+  // fresh closures each render. Read only inside the effect's handler, never
+  // during render.
+  // eslint-disable-next-line react-hooks/refs
   optsRef.current = opts
 
   useEffect(() => {

@@ -5,6 +5,7 @@ import {
   Handle,
   Position,
 } from "@xyflow/react"
+import { usePopoverAnchor } from "@/hooks/usePopoverAnchor"
 import { DefaultNodeWrapper } from "../wrappers"
 import { useHandleOnResize } from "@/hooks"
 import { DefaultNodeProps } from "@/types"
@@ -12,7 +13,6 @@ import { FlowchartInputOutputNodeSVG } from "@/components"
 import { NodeToolbar } from "@/components/toolbars/NodeToolbar"
 import { HandleId } from "../wrappers"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
-import { useRef } from "react"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
 
 export function FlowchartInputOutput({
@@ -22,7 +22,7 @@ export function FlowchartInputOutput({
   data,
   parentId,
 }: NodeProps<Node<DefaultNodeProps>>) {
-  const svgWrapperRef = useRef<HTMLDivElement | null>(null)
+  const [anchorEl, anchorRef] = usePopoverAnchor()
   const { onResize } = useHandleOnResize(parentId)
   const isDiagramModifiable = useDiagramModifiable()
 
@@ -106,7 +106,7 @@ export function FlowchartInputOutput({
         minWidth={50}
         handleStyle={{ width: 8, height: 8 }}
       />
-      <div ref={svgWrapperRef}>
+      <div ref={anchorRef}>
         <FlowchartInputOutputNodeSVG
           width={width}
           height={height}
@@ -117,7 +117,7 @@ export function FlowchartInputOutput({
       </div>
 
       <PopoverManager
-        anchorEl={svgWrapperRef.current}
+        anchorEl={anchorEl}
         elementId={id}
         type="FlowchartInputOutput"
       />

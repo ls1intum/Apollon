@@ -612,3 +612,148 @@ describe("getNodeOverflowBoundsFromDOM", () => {
     expect(getNodeOverflowBoundsFromDOM(container)).toBeUndefined()
   })
 })
+
+// ---------------------------------------------------------------------------
+// resolveRelativeFontSizes — stereotype labels render huge in non-browser
+// renderers when % / em font-size survives compat serialization
+// ---------------------------------------------------------------------------
+const NS = "http://www.w3.org/2000/svg"
+const el = (name: string, attrs: Record<string, string> = {}) => {
+  const node = document.createElementNS(NS, name)
+  for (const [key, value] of Object.entries(attrs))
+    node.setAttribute(key, value)
+  return node
+}
+
+describe("resolveRelativeFontSizes", () => {
+  it("resolves % font-size against the inherited px size", () => {
+    const svg = el("svg")
+    const text = el("text", { "font-size": "16px" })
+    const tspan = el("tspan", { "font-size": "85%" })
+    text.appendChild(tspan)
+    svg.appendChild(text)
+
+    __testing.resolveRelativeFontSizes(svg)
+    expect(tspan.getAttribute("font-size")).toBe("13.6px")
+  })
+
+  it("resolves em font-size against the inherited px size", () => {
+    const svg = el("svg")
+    const text = el("text", { "font-size": "20px" })
+    const tspan = el("tspan", { "font-size": "0.8em" })
+    text.appendChild(tspan)
+    svg.appendChild(text)
+
+    __testing.resolveRelativeFontSizes(svg)
+    expect(tspan.getAttribute("font-size")).toBe("16px")
+  })
+
+  it("seeds the default base size when no ancestor sets font-size", () => {
+    const svg = el("svg")
+    const text = el("text")
+    const tspan = el("tspan", { "font-size": "50%" })
+    text.appendChild(tspan)
+    svg.appendChild(text)
+
+    __testing.resolveRelativeFontSizes(svg)
+    expect(tspan.getAttribute("font-size")).toBe("8px") // 50% of the 16px default
+  })
+
+  it("leaves absolute px font-size unchanged", () => {
+    const svg = el("svg")
+    const text = el("text", { "font-size": "13px" })
+    svg.appendChild(text)
+
+    __testing.resolveRelativeFontSizes(svg)
+    expect(text.getAttribute("font-size")).toBe("13px")
+  })
+})
+
+// ---------------------------------------------------------------------------
+// resolveTspanDy — Skia ignores cumulative tspan dy, overlapping stereotype
+// and name onto one line; absolute y renders correctly everywhere
+// ---------------------------------------------------------------------------
+describe("resolveTspanDy", () => {
+  it("converts cumulative tspan dy into absolute y", () => {
+    const svg = el("svg")
+    const text = el("text", { y: "25" })
+    const stereotype = el("tspan", { dy: "-8" })
+    const name = el("tspan", { dy: "18" })
+    text.append(stereotype, name)
+    svg.appendChild(text)
+
+    __testing.resolveTspanDy(svg)
+    expect(stereotype.getAttribute("y")).toBe("17")
+    expect(stereotype.hasAttribute("dy")).toBe(false)
+    expect(name.getAttribute("y")).toBe("35")
+    expect(name.hasAttribute("dy")).toBe(false)
+  })
+
+  it("leaves a text without any tspan dy untouched", () => {
+    const svg = el("svg")
+    const text = el("text", { y: "10" })
+    const tspan = el("tspan")
+    text.appendChild(tspan)
+    svg.appendChild(text)
+
+    __testing.resolveTspanDy(svg)
+    expect(tspan.hasAttribute("y")).toBe(false)
+    expect(tspan.hasAttribute("dy")).toBe(false)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// resolveDominantBaseline — non-browser renderers ignore the attribute and draw
+// every label at the alphabetic baseline; resolve it to an explicit y
+// ---------------------------------------------------------------------------
+describe("resolveDominantBaseline", () => {
+  it("shifts middle-aligned text down 0.25em and drops the attribute", () => {
+    const svg = el("svg")
+    const text = el("text", {
+      y: "100",
+      "font-size": "16px",
+      "dominant-baseline": "middle",
+    })
+    svg.appendChild(text)
+
+    __testing.resolveDominantBaseline(svg)
+    expect(text.getAttribute("y")).toBe("104") // 100 + 0.25 * 16
+    expect(text.hasAttribute("dominant-baseline")).toBe(false)
+  })
+
+  it("shifts hanging text down 0.75em", () => {
+    const svg = el("svg")
+    const text = el("text", {
+      y: "50",
+      "font-size": "14px",
+      "dominant-baseline": "hanging",
+    })
+    svg.appendChild(text)
+
+    __testing.resolveDominantBaseline(svg)
+    expect(text.getAttribute("y")).toBe("60.5") // 50 + 0.75 * 14
+    expect(text.hasAttribute("dominant-baseline")).toBe(false)
+  })
+
+  it("shifts each tspan by its own font-size", () => {
+    const svg = el("svg")
+    const text = el("text", { y: "25", "dominant-baseline": "middle" })
+    const stereotype = el("tspan", { y: "17", "font-size": "13.6px" })
+    const name = el("tspan", { y: "35", "font-size": "16px" })
+    text.append(stereotype, name)
+    svg.appendChild(text)
+
+    __testing.resolveDominantBaseline(svg)
+    expect(stereotype.getAttribute("y")).toBe("20.4") // 17 + 0.25 * 13.6
+    expect(name.getAttribute("y")).toBe("39") // 35 + 0.25 * 16
+  })
+
+  it("leaves text without dominant-baseline untouched", () => {
+    const svg = el("svg")
+    const text = el("text", { y: "10" })
+    svg.appendChild(text)
+
+    __testing.resolveDominantBaseline(svg)
+    expect(text.getAttribute("y")).toBe("10")
+  })
+})

@@ -1,129 +1,108 @@
-import { Router, type Request } from "express"
-import type { Redis } from "../redis"
-import { k } from "../redis"
-import { ApiError, Errors } from "../http/errors"
-import { validate } from "../http/middleware/validate"
-import type { EmbedPreviewService } from "../services/embed-preview"
-import { readDiagram } from "./diagrams"
-import { DiagramIdParams } from "./_schemas"
+import { Router, type Request, type Response } from "express"
+import type { Redis } from "../redis.js"
+import { k } from "../redis.js"
+import { Errors } from "../http/errors.js"
+import { validate } from "../http/middleware/validate.js"
+import {
+  type ConversionResource,
+  QueueFullError,
+} from "../resources/conversion-resource.js"
+import { readDiagram } from "./diagrams.js"
+import { DiagramIdParams } from "./_schemas.js"
+import type { Diagram } from "../types.js"
+import type { UMLModel } from "@tumaet/apollon"
 
 interface Deps {
   redis: Redis
-  /**
-   * Lazy provider for the preview service. Allocation is deferred to
-   * the first embed request so a `buildApp` call that never serves an
-   * embed (e.g. the diagram + version test suites) doesn't trigger
-   * worker-thread creation. Subsequent calls return the same instance,
-   * keeping the LRU + coalescing maps coherent across requests.
-   */
-  getPreviewService: () => EmbedPreviewService
+  /** Lazy provider for the shared conversion worker pool (see `buildApp`). */
+  getResource: () => ConversionResource
 }
 
 /**
- * Embed surface. Two routes mounted at the app level.
+ * Embed surface — two public routes that share the editor's access model: the
+ * diagramId is a 128-bit base64url-random string (`diagrams.ts:generateDiagramId`)
+ * so the URL itself is the unguessable bearer. No token, role, or cookie.
  *
- *   GET  /api/diagrams/:diagramId/preview.svg
- *      Public, cacheable SVG render. The diagramId is the bearer —
- *      there is no token / role / cookie. The id is a 128-bit
- *      base64url-random string (`routes/diagrams.ts:generateDiagramId`)
- *      so the URL itself is unguessable; the embed surface inherits
- *      the same access model as the editor URL.
+ *   GET /api/diagrams/:diagramId/preview.svg
+ *     Cacheable SVG, served as `image/svg+xml` for GitHub/GitLab READMEs
+ *     (rendered through Camo's `<img>` proxy) and any other `<img>` context.
  *
- *      Headers:
- *        Cache-Control: public, max-age=60, stale-while-revalidate=86400
- *        ETag:          W/"<headRev>"  (matches the PUT response so
- *                                       the same identity is observed
- *                                       across writers and readers)
- *        Content-Type:  image/svg+xml; charset=utf-8
- *        X-Content-Type-Options: nosniff
- *        Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'
+ *   GET /embed/:diagramId
+ *     Server-rendered HTML shell (inline SVG + "Open in Apollon" link, no JS
+ *     bundle). `frame-ancestors *` so any host can iframe it — GitLab snippets,
+ *     Notion, Confluence, VS Code preview.
  *
- *   GET  /embed/:diagramId
- *      Server-rendered HTML shell. Inline SVG + a small "Open in
- *      Apollon" link, no JS bundle. CSP `frame-ancestors *` so any
- *      host can iframe it. Suitable for GitLab snippets / Notion /
- *      Confluence / VS Code preview.
+ * Both carry `Cache-Control: public, max-age=60, stale-while-revalidate=86400`
+ * and a weak `ETag: W/"<headRev>"` — the same identity `saveHead` bumps — so a
+ * cache populated by one writer revalidates correctly for every reader, and a
+ * conditional GET short-circuits before the renderer runs.
  *
- * Cold-start: the very first embed request after a fresh `buildApp`
- * pays a one-time worker-thread spin-up cost — JSDOM globals init
- * plus the library's lazy module load (up to ~6 s on slow disks per
- * `conversion-service.ts:42-57`). Camo's retry behavior absorbs the
- * latency for the public surface; warm the worker by hitting
- * `GET /api/converter/status` if you care about cold p99.
+ * Security: both responses set `Content-Security-Policy: default-src 'none'`
+ * (the embed page additionally allows only `img-src`, `style-src
+ * 'unsafe-inline'`, and `frame-ancestors *`). With no `script-src`, an inline
+ * `<script>`, an `on*=` handler, or a `javascript:` URI riding inside the
+ * library-generated SVG cannot execute — so the SVG is inlined verbatim
+ * without a sanitizer pass. The only HTML interpolation is the diagram title,
+ * which is HTML-escaped.
+ *
+ * Cold start: the first embed request after boot pays the one-time worker
+ * spin-up (JSDOM globals + the library's lazy module load). Camo's retry
+ * behaviour absorbs it; warm it with `GET /api/converter/status` if cold p99
+ * matters.
  */
 
-const RENDER_OVERLOADED_MESSAGES = new Set([
-  "Conversion queue is full",
-  "Conversion worker timed out",
-])
+const SVG_CSP = "default-src 'none'; style-src 'unsafe-inline'"
+const HTML_CSP = [
+  "default-src 'none'",
+  "img-src 'self' data:",
+  "style-src 'unsafe-inline'",
+  "frame-ancestors *",
+].join("; ")
+const CACHE_CONTROL = "public, max-age=60, stale-while-revalidate=86400"
+const RETRY_AFTER_SECONDS = 1
 
-/**
- * Maps render-pipeline errors to typed ApiErrors. Queue saturation and
- * worker timeouts are transient — surface as 503 with a `Retry-After`
- * so well-behaved clients (Camo, browsers) back off and retry rather
- * than caching a 500 against the diagramId.
- */
-function classifyRenderError(err: unknown): ApiError | null {
-  const message =
-    err instanceof Error ? err.message : typeof err === "string" ? err : ""
-  if (RENDER_OVERLOADED_MESSAGES.has(message)) {
-    // 503 RENDERER_BUSY is an explicit "transient overload" signal —
-    // distinct from REDIS_UNAVAILABLE so dashboards / alerts /
-    // log-pipelines filtering on the Redis-outage code don't false-
-    // positive on render saturation.
-    return new ApiError(503, "RENDERER_BUSY", "Render pipeline busy", {
-      retryAfterSeconds: 1,
-    })
-  }
-  return null
-}
-
-const SVG_HEADERS = {
-  cacheControl: "public, max-age=60, stale-while-revalidate=86400",
-  contentType: "image/svg+xml; charset=utf-8",
-  csp: "default-src 'none'; style-src 'unsafe-inline'",
-} as const
-
-const HTML_HEADERS = {
-  cacheControl: "public, max-age=60, stale-while-revalidate=86400",
-  contentType: "text/html; charset=utf-8",
-  csp: [
-    "default-src 'none'",
-    "img-src 'self' data:",
-    "style-src 'unsafe-inline'",
-    "frame-ancestors *",
-  ].join("; "),
-  referrerPolicy: "no-referrer",
-  // Permissions-Policy: opt out of every interest-tracking surface
-  // the page has no business using. `interest-cohort` is the legacy
-  // FLoC opt-out (kept for older browsers); `browsing-topics` is its
-  // Topics-API replacement (Chrome 115+). Listing both keeps the
-  // header forward-compatible across the Chrome migration.
-  permissionsPolicy: "interest-cohort=(), browsing-topics=()",
-} as const
-
-/** Reads the diagram + its current `headRev` (used as the ETag). */
+/** Reads the diagram and its current `headRev` (used verbatim as the ETag). */
 async function readDiagramWithRev(
   redis: Redis,
   diagramId: string
-): Promise<{
-  diagram: NonNullable<Awaited<ReturnType<typeof readDiagram>>>
-  headRev: string
-} | null> {
+): Promise<{ diagram: Diagram; headRev: string } | null> {
   const diagram = await readDiagram(redis, diagramId)
   if (!diagram) return null
-  const rev = (await redis.hGet(k.diagramMeta(diagramId), "headRev")) ?? "0"
-  return { diagram, headRev: rev }
+  const headRev = (await redis.hGet(k.diagramMeta(diagramId), "headRev")) ?? "0"
+  return { diagram, headRev }
 }
 
-function etagFor(headRev: string): string {
-  return `W/"${headRev}"`
+const etagFor = (headRev: string): string => `W/"${headRev}"`
+
+/**
+ * Renders the diagram to an SVG string through the shared worker. Queue
+ * saturation surfaces as a 503 with a real `Retry-After` header so Camo and
+ * browsers back off instead of caching a hard error against the diagramId.
+ * Returns the SVG string, or `null` if it already sent the 503 response.
+ */
+async function renderSvgOr503(
+  getResource: () => ConversionResource,
+  res: Response,
+  diagram: Diagram
+): Promise<string | null> {
+  try {
+    // `Diagram.version` is a plain string at the storage boundary; the library
+    // renderer's `UMLModel` narrows it to `4.x.y`. The server intentionally
+    // does not pin the version format (see `_schemas.ts`), so widen here — the
+    // same cast `/api/converter/*` applies to its request body.
+    const { data } = await getResource().render("svg", diagram as UMLModel)
+    return typeof data === "string" ? data : data.toString("utf8")
+  } catch (error) {
+    if (error instanceof QueueFullError) {
+      res.setHeader("retry-after", String(RETRY_AFTER_SECONDS))
+      res.status(503).json({ error: error.message })
+      return null
+    }
+    throw error
+  }
 }
 
-export function mountEmbedApiRoutes({
-  redis,
-  getPreviewService,
-}: Deps): Router {
+export function mountEmbedApiRoutes({ redis, getResource }: Deps): Router {
   const router = Router()
 
   router.get(
@@ -135,32 +114,22 @@ export function mountEmbedApiRoutes({
         if (!found) throw Errors.notFound("diagram not found")
         const etag = etagFor(found.headRev)
 
-        // Conditional GET: if the client's ETag matches, return 304
-        // before touching the renderer.
+        res.setHeader("cache-control", CACHE_CONTROL)
+        res.setHeader("etag", etag)
         if (req.header("if-none-match") === etag) {
-          res.setHeader("etag", etag)
-          res.setHeader("cache-control", SVG_HEADERS.cacheControl)
           res.status(304).end()
           return
         }
 
-        let rendered
-        try {
-          rendered = await getPreviewService().render(found.diagram)
-        } catch (err) {
-          const mapped = classifyRenderError(err)
-          if (mapped) throw mapped
-          throw err
-        }
+        const svg = await renderSvgOr503(getResource, res, found.diagram)
+        if (svg === null) return
 
-        res.setHeader("content-type", SVG_HEADERS.contentType)
-        res.setHeader("etag", etag)
-        res.setHeader("cache-control", SVG_HEADERS.cacheControl)
+        res.setHeader("content-type", "image/svg+xml; charset=utf-8")
         res.setHeader("x-content-type-options", "nosniff")
-        // SVG-as-image renderers ignore CSP, but if anyone ever consumes
-        // the response as HTML, we want a deny-all default.
-        res.setHeader("content-security-policy", SVG_HEADERS.csp)
-        res.status(200).send(rendered.svg)
+        // SVG-as-image renderers ignore CSP, but a deny-all default protects
+        // any client that consumes the response as a top-level document.
+        res.setHeader("content-security-policy", SVG_CSP)
+        res.status(200).send(svg)
       }
     )
   )
@@ -168,7 +137,7 @@ export function mountEmbedApiRoutes({
   return router
 }
 
-export function mountEmbedRoutes({ redis, getPreviewService }: Deps): Router {
+export function mountEmbedRoutes({ redis, getResource }: Deps): Router {
   const router = Router()
 
   router.get(
@@ -180,39 +149,32 @@ export function mountEmbedRoutes({ redis, getPreviewService }: Deps): Router {
         if (!found) throw Errors.notFound("diagram not found")
         const etag = etagFor(found.headRev)
 
+        res.setHeader("cache-control", CACHE_CONTROL)
+        res.setHeader("etag", etag)
         if (req.header("if-none-match") === etag) {
-          res.setHeader("etag", etag)
-          res.setHeader("cache-control", HTML_HEADERS.cacheControl)
           res.status(304).end()
           return
         }
 
-        let rendered
-        try {
-          rendered = await getPreviewService().render(found.diagram)
-        } catch (err) {
-          const mapped = classifyRenderError(err)
-          if (mapped) throw mapped
-          throw err
-        }
+        const svg = await renderSvgOr503(getResource, res, found.diagram)
+        if (svg === null) return
 
-        const editorHref = buildEditorHref(req, found.diagram.id)
         const html = renderEmbedHtml({
           title: found.diagram.title || "Apollon diagram",
-          svg: rendered.svg,
-          clip: rendered.clip,
-          editorHref,
+          svg,
+          editorHref: buildEditorHref(req, found.diagram.id),
         })
 
-        res.setHeader("content-type", HTML_HEADERS.contentType)
-        res.setHeader("etag", etag)
-        res.setHeader("cache-control", HTML_HEADERS.cacheControl)
+        res.setHeader("content-type", "text/html; charset=utf-8")
         res.setHeader("x-content-type-options", "nosniff")
-        // The embed page is intentionally framable from anywhere — the
-        // diagramId is the access bearer; iframing adds no privilege.
-        res.setHeader("content-security-policy", HTML_HEADERS.csp)
-        res.setHeader("referrer-policy", HTML_HEADERS.referrerPolicy)
-        res.setHeader("permissions-policy", HTML_HEADERS.permissionsPolicy)
+        res.setHeader("content-security-policy", HTML_CSP)
+        res.setHeader("referrer-policy", "no-referrer")
+        // Opt out of interest-tracking surfaces an embed has no business using
+        // — both the legacy FLoC token and its Topics-API replacement.
+        res.setHeader(
+          "permissions-policy",
+          "interest-cohort=(), browsing-topics=()"
+        )
         res.status(200).send(html)
       }
     )
@@ -222,42 +184,35 @@ export function mountEmbedRoutes({ redis, getPreviewService }: Deps): Router {
 }
 
 /**
- * Builds an absolute URL from the request's own protocol + host. Behind
- * a reverse proxy, `req.protocol` honours `X-Forwarded-Proto` thanks to
- * `app.set("trust proxy", …)` in `buildApp`. The encodeURIComponent on
- * the diagramId is defence-in-depth: route validation already restricts
- * the param to URL-safe chars, but encoding makes the URL safe to paste
- * verbatim into HTML.
+ * Absolute editor URL from the request's own protocol + host. Behind a reverse
+ * proxy `req.protocol` honours `X-Forwarded-Proto` thanks to `trust proxy`
+ * (set in `buildApp`). `encodeURIComponent` is defence-in-depth — route
+ * validation already restricts the id to URL-safe chars.
+ *
+ * Targets the webapp's canonical `/shared/:id?view=EDIT` route. The bare
+ * `/:id` route 404s without a `?view` query (it only redirects legacy native
+ * links), so the view must be explicit; `EDIT` mirrors the webapp's
+ * `DEFAULT_SHARED_DIAGRAM_VIEW`.
  */
 function buildEditorHref(req: Request, diagramId: string): string {
   const host = req.get("host") ?? ""
-  return `${req.protocol}://${host}/${encodeURIComponent(diagramId)}`
+  return `${req.protocol}://${host}/shared/${encodeURIComponent(diagramId)}?view=EDIT`
 }
 
 interface EmbedHtmlInput {
   title: string
   svg: string
-  clip: { x: number; y: number; width: number; height: number }
   editorHref: string
 }
 
 /**
- * Renders the embed HTML shell. No JS, no remote assets, ~1 KiB of
- * inline CSS. Body is an inline SVG plus an "Open in Apollon" anchor.
- *
- * The title is HTML-escaped because it lands in `<title>` and inside
- * the body. The svg is pre-sanitized by `sanitizeSvg` upstream and is
- * inserted verbatim.
+ * The embed HTML shell: no JS, no remote assets, ~1 KiB of inline CSS. The SVG
+ * is inlined verbatim (sized by its own intrinsic `viewBox` plus the CSS
+ * below); the title is HTML-escaped because it lands in `<title>` and the
+ * footer.
  */
-function renderEmbedHtml({
-  title,
-  svg,
-  clip,
-  editorHref,
-}: EmbedHtmlInput): string {
+function renderEmbedHtml({ title, svg, editorHref }: EmbedHtmlInput): string {
   const safeTitle = escapeHtml(title)
-  const w = Math.max(1, Math.round(clip.width))
-  const h = Math.max(1, Math.round(clip.height))
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -266,18 +221,14 @@ function renderEmbedHtml({
 <meta name="referrer" content="no-referrer">
 <title>${safeTitle} - Apollon</title>
 <style>
-  /* Light by default; dark via prefers-color-scheme. The canvas
-     itself stays on a white surface in both modes because the
-     library's exported SVG uses hardcoded fills tuned for a
-     light background — flipping the canvas to dark would break
-     contrast. The chrome (footer, borders) follows the system
-     theme. */
+  /* The exported SVG uses fills tuned for a light canvas, so the canvas stays
+     white in both colour schemes; only the chrome follows the system theme. */
   :root { color-scheme: light dark; }
   *, *::before, *::after { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; height: 100%; background: #fff; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: #111; }
   .apollon-embed { display: flex; flex-direction: column; height: 100%; min-height: 100vh; }
   .apollon-embed__canvas { flex: 1; display: flex; align-items: center; justify-content: center; padding: 8px; overflow: auto; background: #fff; }
-  .apollon-embed__canvas svg { max-width: 100%; max-height: 100%; height: auto; width: auto; aspect-ratio: ${w} / ${h}; }
+  .apollon-embed__canvas svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
   .apollon-embed__footer { padding: 6px 12px; font-size: 12px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(0,0,0,0.08); }
   .apollon-embed__title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 12px; opacity: 0.7; }
   .apollon-embed__open { color: inherit; text-decoration: none; padding: 4px 10px; border-radius: 6px; border: 1px solid currentColor; opacity: 0.85; }

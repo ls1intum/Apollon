@@ -1,10 +1,10 @@
 import { NodeProps, type Node } from "@xyflow/react"
+import { usePopoverAnchor } from "@/hooks/usePopoverAnchor"
 import { PetriNetPlaceSVG } from "@/components"
-import { useRef } from "react"
 import { PetriNetPlaceProps } from "@/types"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
-import { DefaultNodeWrapper, HandleId } from "../wrappers"
+import { DefaultNodeWrapper, FOUR_WAY_HANDLES_PRESET } from "../wrappers"
 import { NodeToolbar } from "@/components/toolbars/NodeToolbar"
 
 export function PetriNetPlace({
@@ -13,7 +13,7 @@ export function PetriNetPlace({
   height,
   data,
 }: NodeProps<Node<PetriNetPlaceProps>>) {
-  const svgWrapperRef = useRef<HTMLDivElement | null>(null)
+  const [anchorEl, anchorRef] = usePopoverAnchor()
   const isDiagramModifiable = useDiagramModifiable()
 
   if (!width || !height) {
@@ -25,19 +25,10 @@ export function PetriNetPlace({
       elementId={id}
       width={width}
       height={height}
-      hiddenHandles={[
-        HandleId.TopLeft,
-        HandleId.TopRight,
-        HandleId.RightTop,
-        HandleId.RightBottom,
-        HandleId.BottomRight,
-        HandleId.BottomLeft,
-        HandleId.LeftBottom,
-        HandleId.LeftTop,
-      ]}
+      hiddenHandles={FOUR_WAY_HANDLES_PRESET}
     >
       <NodeToolbar elementId={id} />
-      <div ref={svgWrapperRef}>
+      <div ref={anchorRef}>
         <PetriNetPlaceSVG
           width={width}
           height={height}
@@ -47,11 +38,7 @@ export function PetriNetPlace({
         />
       </div>
 
-      <PopoverManager
-        anchorEl={svgWrapperRef.current}
-        elementId={id}
-        type="PetriNetPlace"
-      />
+      <PopoverManager anchorEl={anchorEl} elementId={id} type="PetriNetPlace" />
     </DefaultNodeWrapper>
   )
 }

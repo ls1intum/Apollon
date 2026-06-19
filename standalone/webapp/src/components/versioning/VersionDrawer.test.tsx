@@ -13,8 +13,8 @@
  *   - the empty state renders.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { cleanup, render, screen } from "@testing-library/react"
-import { MemoryRouter } from "react-router"
+import { cleanup, screen } from "@testing-library/react"
+import { renderWithRouter } from "@/test/renderWithRouter"
 import { ModalProvider, EditorProvider } from "@/contexts"
 import { VersionSidebar } from "./VersionDrawer"
 import { useVersionStore } from "@/stores/useVersionStore"
@@ -47,15 +47,13 @@ afterEach(() => {
 })
 
 function mount(diagramId: string) {
-  return render(
-    <MemoryRouter>
+  return renderWithRouter(<VersionSidebar diagramId={diagramId} />, {
+    wrapper: (children) => (
       <EditorProvider>
-        <ModalProvider>
-          <VersionSidebar diagramId={diagramId} />
-        </ModalProvider>
+        <ModalProvider>{children}</ModalProvider>
       </EditorProvider>
-    </MemoryRouter>
-  )
+    ),
+  })
 }
 
 describe("VersionSidebar (regression: infinite render loop)", () => {

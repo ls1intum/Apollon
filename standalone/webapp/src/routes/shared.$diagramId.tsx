@@ -1,0 +1,21 @@
+import { createFileRoute } from "@tanstack/react-router"
+import { ApollonWithConnection } from "@/pages/ApollonWithConnection"
+import type { DiagramView } from "@/types/ModalTypes"
+import { isDiagramView } from "@/utils/sharedDiagramLinks"
+
+/**
+ * Collaborative (server + Yjs) editor. `?view` selects the editor mode (all
+ * four `DiagramView` members, incl. COLLABORATE), `?version=<id>` previews a
+ * saved version.
+ */
+type SharedSearch = { view?: DiagramView; version?: string }
+
+export const Route = createFileRoute("/shared/$diagramId")({
+  // Invalid `view` collapses to undefined; the page's missing-view guard then
+  // toasts and redirects home.
+  validateSearch: (search: Record<string, unknown>): SharedSearch => ({
+    view: isDiagramView(search.view) ? search.view : undefined,
+    version: typeof search.version === "string" ? search.version : undefined,
+  }),
+  component: ApollonWithConnection,
+})

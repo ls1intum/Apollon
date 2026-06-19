@@ -21,9 +21,17 @@ export const versioningStrings = {
   fabTooltip: `Version history (${/mac/i.test(navigator.userAgent) ? "⌥⇧H" : "Alt+Shift+H"})`,
   loadOlder: "Load older versions",
   previewFailed: "Failed to load preview.",
+  previewUnavailable: "This version is no longer available.",
   restoreFailed: "Restore failed.",
   emptyBody:
     "Save a version before risky changes. You can always come back to this exact state.",
+  emptyBodyLocal:
+    "No versions yet. Save one before risky changes — they're stored on this device.",
+  emptyCtaLocal: "Save first version",
+  composerHint: /mac/i.test(navigator.userAgent)
+    ? "⌘+Enter to save"
+    : "Ctrl+Enter to save",
+  emptyDiagramTooltip: "Add a node before saving a version.",
   createPlaceholder: "Describe this version (optional)",
   createButton: "Save version",
   saving: "Saving…",
@@ -51,11 +59,24 @@ export const versioningStrings = {
   failureToEdit: "Couldn't update description. Try again.",
   failureRedis:
     "Version history is temporarily unavailable. Your edits are still being saved.",
-  failureBodyTooLarge:
-    "This diagram is too large to version (over 5 MB). Try splitting it into smaller diagrams.",
   failureSchemaUnsupported:
     "This snapshot was created by an older version of the editor and can't be restored automatically.",
   unnamed: "Untitled snapshot",
+  // Confirm-when-dirty restore copy (local mode replacement for the 10s
+  // undo snackbar — see ConfirmRestoreModal).
+  confirmRestoreTitle: "Restore this version?",
+  confirmRestoreBody: (label: string) =>
+    `Restore ${label}? This replaces your current canvas. We'll save an auto-snapshot first so you can come back.`,
+  confirmRestoreButton: "Restore",
+  // "Save a local copy" (durability escape hatch on shared/collab URLs).
+  saveLocalCopyButton: "Save a local copy",
+  saveLocalCopySuccess:
+    "Saved as a local copy on this device. You can keep editing here.",
+  saveLocalCopyFailed: "Couldn't save a local copy. Try again.",
+  // Share-flow notice — local versions stay attached to the original
+  // local UUID, not the new server-assigned id.
+  shareKeepsLocal:
+    "Sharing creates a new collaborative copy. Your local version history stays on this device under the original diagram.",
   justNow: "just now",
   minutesAgo: (n: number) => `${n}m ago`,
   hoursAgo: (n: number) => `${n}h ago`,

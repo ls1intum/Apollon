@@ -1,12 +1,19 @@
 import React, {
   createContext,
+  lazy,
+  Suspense,
   useContext,
   useState,
   ReactNode,
   useMemo,
 } from "react"
 import { ModalName, ModalProps } from "@/types"
-import { ModalWrapper } from "@/wrappers"
+
+const ModalWrapper = lazy(() =>
+  import("@/wrappers/ModalWrapper").then((module) => ({
+    default: module.ModalWrapper,
+  }))
+)
 
 interface ModalContextType {
   openModal: (name: ModalName, props?: ModalProps) => void
@@ -56,11 +63,13 @@ export const ModalProvider: React.FC<Props> = ({ children }) => {
       {children}
       {/* Render the current modal if any */}
       {currentModal && (
-        <ModalWrapper
-          name={currentModal.name}
-          props={currentModal.props}
-          closeModal={closeModal}
-        />
+        <Suspense fallback={null}>
+          <ModalWrapper
+            name={currentModal.name}
+            props={currentModal.props}
+            closeModal={closeModal}
+          />
+        </Suspense>
       )}
     </ModalContext.Provider>
   )

@@ -1,46 +1,51 @@
 import { useMemo } from "react"
-import { useParams } from "react-router"
 import { toast } from "react-toastify"
+import { isPlatform } from "@ionic/react"
+import { Clipboard } from "@capacitor/clipboard"
 import { Typography } from "@/components/Typography"
-import { APButton } from "../APButton"
+import { Button } from "@/components/ui/button"
+import { serverURL } from "@/constants/urls"
+import { useDiagramIdFromPath } from "@/hooks/useDiagramIdFromPath"
+import { buildSharedDiagramUrl } from "@/utils/sharedDiagramLinks"
 
 /**
  * Embed-hints panel for the share modal.
  *
- * Renders three copyable snippets pointing at the *current* diagram's
- * URL (the diagramId is the bearer — there's no token, no role gate):
+ * Renders three copyable snippets pointing at the *current* diagram (the
+ * diagramId is the bearer — there's no token, no role gate):
  *
- *   1. Markdown image-with-click-through, GitHub/GitLab README friendly:
- *        [![title](origin/api/diagrams/:id/preview.svg)](origin/:id)
- *      Renders inline; clicking opens the editor.
+ *   1. Markdown image with click-through, GitHub/GitLab README friendly:
+ *        [![title](<server>/api/diagrams/:id/preview.svg)](<web>/shared/:id?view=EDIT)
+ *   2. Plain markdown image (no click-through).
+ *   3. HTML iframe pointing at `<server>/embed/:id` for surfaces that allow it
+ *      (GitLab Pages, Notion, Confluence, VS Code preview).
  *
- *   2. Plain markdown image (no click-through):
- *        ![title](origin/api/diagrams/:id/preview.svg)
- *
- *   3. HTML iframe for surfaces that allow it (GitLab Pages, Notion,
- *      Confluence, VS Code preview):
- *        <iframe src="origin/embed/:id" width="…" height="…" …></iframe>
- *
- * The component reads `diagramId` from the route params; if there is
- * no diagram in the URL (e.g. the user is on the local-only editor
- * `/`), the panel renders a one-line hint asking them to save first.
+ * The preview SVG and `/embed` page are served by the API server, so their URLs
+ * use the server origin (`serverURL`, else the page origin); the click-through
+ * uses `buildSharedDiagramUrl` so it always lands on the canonical, view-scoped
+ * `/shared/:id` route. The id is read from the path; without one (e.g. the
+ * local-only editor) the panel shows a save-first hint.
  */
 export function EmbedHints({ title = "Apollon diagram" }: { title?: string }) {
-  const { diagramId } = useParams<{ diagramId?: string }>()
-  const origin = typeof window !== "undefined" ? window.location.origin : ""
+  const diagramId = useDiagramIdFromPath()
 
   const snippets = useMemo(() => {
     if (!diagramId) return null
-    const safeTitle = title.replace(/[\]]/g, "")
-    const editorUrl = `${origin}/${diagramId}`
-    const previewUrl = `${origin}/api/diagrams/${diagramId}/preview.svg`
-    const embedUrl = `${origin}/embed/${diagramId}`
+    // The page origin falls back when no dedicated API origin is configured
+    // (same-origin deploy). Bracket-strip keeps the markdown alt text from
+    // breaking the `![alt](url)` grammar.
+    const serverOrigin =
+      serverURL || (typeof window !== "undefined" ? window.location.origin : "")
+    const safeTitle = title.replace(/[[\]]/g, "")
+    const editorUrl = buildSharedDiagramUrl(diagramId)
+    const previewUrl = `${serverOrigin}/api/diagrams/${diagramId}/preview.svg`
+    const embedUrl = `${serverOrigin}/embed/${diagramId}`
     return {
       markdownLinked: `[![${safeTitle}](${previewUrl})](${editorUrl})`,
       markdownPlain: `![${safeTitle}](${previewUrl})`,
       iframe: `<iframe src="${embedUrl}" width="800" height="500" loading="lazy" referrerpolicy="no-referrer" style="border:0"></iframe>`,
     }
-  }, [diagramId, origin, title])
+  }, [diagramId, title])
 
   if (!snippets) {
     return (
@@ -85,9 +90,17 @@ interface SnippetRowProps {
   hint: string
 }
 
+async function copyToClipboard(value: string): Promise<void> {
+  if (isPlatform("capacitor")) {
+    await Clipboard.write({ string: value })
+  } else {
+    await navigator.clipboard.writeText(value)
+  }
+}
+
 function SnippetRow({ label, value, hint }: SnippetRowProps) {
   const onCopy = () => {
-    void navigator.clipboard.writeText(value).then(
+    void copyToClipboard(value).then(
       () => toast.success(`${label} copied`),
       () => toast.error("Could not copy to clipboard")
     )
@@ -110,13 +123,13 @@ function SnippetRow({ label, value, hint }: SnippetRowProps) {
           onFocus={(e) => e.currentTarget.select()}
           className="grow h-[36px] px-3 py-1.5 border rounded-md border-r-0 rounded-r-none border-[var(--apollon-primary-contrast)] bg-[var(--apollon-background)] text-[var(--apollon-primary-contrast)] text-xs font-mono"
         />
-        <APButton
+        <Button
           onClick={onCopy}
           variant="outline"
           className="rounded-l-none h-[36px]"
         >
           Copy
-        </APButton>
+        </Button>
       </div>
     </div>
   )

@@ -1,0 +1,176 @@
+{
+  "id": "fixture-line-jump-complex",
+  "version": "4.0.0",
+  "title": "Line Jump Complex",
+  "type": "ClassDiagram",
+  "nodes": [
+    {
+      "id": "L",
+      "width": 200,
+      "height": 100,
+      "type": "class",
+      "position": {
+        "x": 0,
+        "y": 200
+      },
+      "data": {
+        "name": "L",
+        "attributes": [],
+        "methods": []
+      },
+      "measured": {
+        "width": 200,
+        "height": 100
+      }
+    },
+    {
+      "id": "R",
+      "width": 200,
+      "height": 100,
+      "type": "class",
+      "position": {
+        "x": 700,
+        "y": 200
+      },
+      "data": {
+        "name": "R",
+        "attributes": [],
+        "methods": []
+      },
+      "measured": {
+        "width": 200,
+        "height": 100
+      }
+    },
+    {
+      "id": "T",
+      "width": 200,
+      "height": 100,
+      "type": "class",
+      "position": {
+        "x": 300,
+        "y": -200
+      },
+      "data": {
+        "name": "T",
+        "attributes": [],
+        "methods": []
+      },
+      "measured": {
+        "width": 200,
+        "height": 100
+      }
+    },
+    {
+      "id": "B",
+      "width": 200,
+      "height": 100,
+      "type": "class",
+      "position": {
+        "x": 300,
+        "y": 500
+      },
+      "data": {
+        "name": "B",
+        "attributes": [],
+        "methods": []
+      },
+      "measured": {
+        "width": 200,
+        "height": 100
+      }
+    },
+    {
+      "id": "P",
+      "width": 300,
+      "height": 220,
+      "type": "package",
+      "position": {
+        "x": 550,
+        "y": -320
+      },
+      "data": {
+        "name": "P"
+      },
+      "measured": {
+        "width": 300,
+        "height": 220
+      }
+    },
+    {
+      "id": "C",
+      "width": 200,
+      "height": 100,
+      "type": "class",
+      "position": {
+        "x": 40,
+        "y": 60
+      },
+      "parentId": "P",
+      "data": {
+        "name": "C",
+        "attributes": [],
+        "methods": []
+      },
+      "measured": {
+        "width": 200,
+        "height": 100
+      }
+    },
+    {
+      "id": "W",
+      "width": 200,
+      "height": 100,
+      "type": "class",
+      "position": {
+        "x": 590,
+        "y": 520
+      },
+      "data": {
+        "name": "W",
+        "attributes": [],
+        "methods": []
+      },
+      "measured": {
+        "width": 200,
+        "height": 100
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "HA",
+      "source": "L",
+      "target": "R",
+      "type": "ClassDependency",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "VB",
+      "source": "T",
+      "target": "B",
+      "type": "ClassDependency",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "VC",
+      "source": "C",
+      "target": "W",
+      "type": "ClassDependency",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    }
+  ],
+  "assessments": {}
+}

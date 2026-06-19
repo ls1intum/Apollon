@@ -15,15 +15,15 @@ export const BPMNPoolEditPopover = ({ elementId }: PopoverProps) => {
     }))
   )
 
-  const poolNode = nodes.find(
-    (node) => node.id === elementId
-  ) as Node<BPMNPoolProps>
+  const poolNode = nodes.find((node) => node.id === elementId) as
+    | Node<BPMNPoolProps>
+    | undefined
+
+  const [poolName, setPoolName] = useState(poolNode?.data.name ?? "")
 
   if (!poolNode) {
     return null
   }
-
-  const [poolName, setPoolName] = useState(poolNode.data.name)
 
   const handlePoolNameChange = (value: string) => {
     setPoolName(value)

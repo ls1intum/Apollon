@@ -1,15 +1,33 @@
-import { Box, FormControl, InputLabel, Select, MenuItem } from "@mui/material"
+import { Box } from "@mui/material"
 import { EdgeStyleEditor, TextField, Typography } from "@/components/ui"
 import { useReactFlow } from "@xyflow/react"
 import { CustomEdgeProps } from "@/edges/EdgeProps"
-import { SwapHorizIcon } from "@/components/Icon"
-import { useEdgePopOver } from "@/hooks"
+import { useEdgePopOver, useReactiveEdge, useReactiveNodeName } from "@/hooks"
 import { PopoverProps } from "../types"
+import { EdgeTypeSelect, EdgeTypeOption } from "./EdgeTypeSelect"
+import { SwapEndsButton } from "./SwapEndsButton"
+
+const CLASS_EDGE_TYPE_OPTIONS: ReadonlyArray<EdgeTypeOption> = [
+  { value: "ClassBidirectional", label: "Bi-Association" },
+  { value: "ClassUnidirectional", label: "Uni-Association" },
+  { value: "ClassAggregation", label: "Aggregation" },
+  { value: "ClassComposition", label: "Composition" },
+  { value: "ClassInheritance", label: "Inheritance" },
+  { value: "ClassDependency", label: "Dependency" },
+  { value: "ClassRealization", label: "Realization" },
+]
 
 export const EdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
-  const { getEdge, getNode, updateEdgeData } = useReactFlow()
+  const { updateEdgeData } = useReactFlow()
 
-  const edge = getEdge(elementId)
+  // Subscribe reactively to the edge and its endpoint names so the popover
+  // reflects live changes (swap, collaboration). Reading getEdge/getNode
+  // imperatively during render is non-reactive and goes stale once the React
+  // Compiler memoizes this component.
+  const edge = useReactiveEdge(elementId)
+  const sourceName = useReactiveNodeName(edge?.source, "Source")
+  const targetName = useReactiveNodeName(edge?.target, "Target")
+
   const {
     handleSourceRoleChange,
     handleSourceMultiplicityChange,
@@ -24,24 +42,6 @@ export const EdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
   }
 
   const edgeData = edge.data as CustomEdgeProps | undefined
-  const sourceNode = getNode(edge.source)
-  const targetNode = getNode(edge.target)
-  const sourceName = (sourceNode?.data?.name as string) ?? "Source"
-  const targetName = (targetNode?.data?.name as string) ?? "Target"
-
-  const getEdgeTypeOptions = () => {
-    return [
-      { value: "ClassBidirectional", label: "Bi-Association" },
-      { value: "ClassUnidirectional", label: "Uni-Association" },
-      { value: "ClassAggregation", label: "Aggregation" },
-      { value: "ClassComposition", label: "Composition" },
-      { value: "ClassInheritance", label: "Inheritance" },
-      { value: "ClassDependency", label: "Dependency" },
-      { value: "ClassRealization", label: "Realization" },
-    ]
-  }
-
-  const edgeTypeOptions = getEdgeTypeOptions()
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
@@ -51,34 +51,14 @@ export const EdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
           updateEdgeData(elementId, { ...edge.data, [key]: value })
         }
         label="Edge Type"
-        sideElements={[
-          handleSwap && (
-            <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-              <SwapHorizIcon
-                style={{ cursor: "pointer" }}
-                onClick={handleSwap}
-              />
-            </Box>
-          ),
-        ]}
+        sideElements={[handleSwap && <SwapEndsButton onClick={handleSwap} />]}
       />
 
-      <FormControl fullWidth size="small">
-        <InputLabel id="edge-type-label">Edge Type</InputLabel>
-        <Select
-          labelId="edge-type-label"
-          id="edge-type-select"
-          value={edge.type}
-          label="Edge Type"
-          onChange={(e) => handleEdgeTypeChange(e.target.value)}
-        >
-          {edgeTypeOptions.map((option) => (
-            <MenuItem key={option.value} value={option.value}>
-              {option.label}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+      <EdgeTypeSelect
+        value={edge.type}
+        options={CLASS_EDGE_TYPE_OPTIONS}
+        onChange={handleEdgeTypeChange}
+      />
 
       {
         <>
@@ -94,6 +74,9 @@ export const EdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
             onChange={(e) => handleSourceMultiplicityChange(e.target.value)}
             size="small"
             fullWidth
+            slotProps={{
+              htmlInput: { "data-testid": "edge-source-multiplicity" },
+            }}
           />
 
           {/* Source Role */}
@@ -103,6 +86,7 @@ export const EdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
             onChange={(e) => handleSourceRoleChange(e.target.value)}
             size="small"
             fullWidth
+            slotProps={{ htmlInput: { "data-testid": "edge-source-role" } }}
           />
 
           {/* Target subheadline */}
@@ -117,6 +101,9 @@ export const EdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
             onChange={(e) => handleTargetMultiplicityChange(e.target.value)}
             size="small"
             fullWidth
+            slotProps={{
+              htmlInput: { "data-testid": "edge-target-multiplicity" },
+            }}
           />
 
           {/* Target Role */}
@@ -126,6 +113,7 @@ export const EdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
             onChange={(e) => handleTargetRoleChange(e.target.value)}
             size="small"
             fullWidth
+            slotProps={{ htmlInput: { "data-testid": "edge-target-role" } }}
           />
         </>
       }

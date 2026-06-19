@@ -1,9 +1,17 @@
 import React from "react"
-import { useNavigate } from "react-router"
+import { Link } from "@tanstack/react-router"
 
-export const ErrorPage: React.FC = () => {
-  const navigate = useNavigate()
+type ErrorPageProps = {
+  title?: string
+  message?: string
+  buttonLabel?: string
+}
 
+export const ErrorPage: React.FC<ErrorPageProps> = ({
+  title = "Oops!",
+  message = "Something went wrong.",
+  buttonLabel = "All diagrams",
+}) => {
   return (
     <div
       style={{
@@ -13,29 +21,43 @@ export const ErrorPage: React.FC = () => {
         justifyContent: "center",
         height: "100vh",
         textAlign: "center",
-        backgroundColor: "#f8f8f8",
+        backgroundColor: "var(--apollon-background)",
       }}
     >
-      <h1 style={{ fontSize: "2rem", fontWeight: "bold", color: "#d9534f" }}>
-        Oops!
+      <h1
+        style={{
+          fontSize: "2rem",
+          fontWeight: "bold",
+          color: "var(--apollon-guide-vertical)",
+        }}
+      >
+        {title}
       </h1>
-      <p style={{ fontSize: "1.2rem", color: "#333", marginTop: "8px" }}>
-        Something went wrong.
+      <p
+        style={{
+          fontSize: "1.2rem",
+          color: "var(--apollon-primary-contrast)",
+          marginTop: "8px",
+        }}
+      >
+        {message}
       </p>
-      <button
+      <Link
+        to="/"
+        className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--home-accent-ring)]"
         style={{
           marginTop: "16px",
           padding: "10px 20px",
-          backgroundColor: "#007bff",
+          backgroundColor: "var(--apollon-primary)",
           color: "#fff",
-          border: "none",
           borderRadius: "5px",
           cursor: "pointer",
+          textDecoration: "none",
+          display: "inline-block",
         }}
-        onClick={() => navigate("/")}
       >
-        Go Home
-      </button>
+        {buttonLabel}
+      </Link>
     </div>
   )
 }
