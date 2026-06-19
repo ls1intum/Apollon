@@ -28,9 +28,12 @@ export const HomeNavbar = () => {
         boxShadow: NAVBAR_DROP_SHADOW,
       }}
     >
-      {/* min-h matches NAVBAR_MIN_HEIGHT so the home bar stays the same height
-          as the editor navbars (#769's unified app header). */}
-      <div className="home-navbar__content flex min-h-[52px] w-full items-center gap-3 px-4">
+      {/* min-height from NAVBAR_MIN_HEIGHT (single source of truth) keeps the
+          home bar the same height as the editor navbars (#769's unified header). */}
+      <div
+        className="home-navbar__content flex w-full items-center gap-3 px-4"
+        style={{ minHeight: NAVBAR_MIN_HEIGHT }}
+      >
         <Link
           to="/"
           aria-label="Apollon home"
