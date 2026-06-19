@@ -29,6 +29,7 @@
 .apollon-editor {
   background-color: var(--apollon-background, #fff);
   color: var(--apollon-primary-contrast, #000);
+
   /* Own stacking context so the editor's internal z-indexes (canvas content at
      9998–10001, collaboration overlays at 10001–10004) stay self-contained and
      the whole editor sits below host-app chrome — e.g. the webapp navbar's
