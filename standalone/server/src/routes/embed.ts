@@ -46,19 +46,6 @@ const HTML_CSP = [
   "frame-ancestors *",
 ].join("; ")
 
-/** Reads the diagram and its current `headRev` (used verbatim as the ETag). */
-async function readDiagramWithRev(
-  redis: Redis,
-  diagramId: string
-): Promise<{ diagram: Diagram; headRev: string } | null> {
-  const diagram = await readDiagram(redis, diagramId)
-  if (!diagram) return null
-  const headRev = (await redis.hGet(k.diagramMeta(diagramId), "headRev")) ?? "0"
-  return { diagram, headRev }
-}
-
-const etagFor = (headRev: string): string => `W/"${headRev}"`
-
 /** Honours the list and `*` forms of If-None-Match, not just a single token. */
 function ifNoneMatch(header: string | undefined, etag: string): boolean {
   if (!header) return false
@@ -67,10 +54,11 @@ function ifNoneMatch(header: string | undefined, etag: string): boolean {
 }
 
 /**
- * Shared preamble: load the diagram, 404 if missing, and short-circuit a fresh
- * conditional GET with 304. Returns the diagram + etag when a render is needed,
- * or `null` when it already sent the 304. Cache headers are set here (304) and
- * on the 200 paths only — never before the render, so a 503/500 is not cached.
+ * Shared preamble: load the diagram (404 if missing), derive its weak ETag from
+ * `headRev`, and short-circuit a fresh conditional GET with 304. Returns the
+ * diagram + etag when a render is needed, or `null` when it already sent the
+ * 304. Cache headers are set here (304) and on the 200 paths only — never
+ * before the render, so a 503/500 is not cached against the diagramId.
  */
 async function loadOrNotModified(
   redis: Redis,
@@ -78,16 +66,17 @@ async function loadOrNotModified(
   res: Response,
   diagramId: string
 ): Promise<{ diagram: Diagram; etag: string } | null> {
-  const found = await readDiagramWithRev(redis, diagramId)
-  if (!found) throw Errors.notFound("diagram not found")
-  const etag = etagFor(found.headRev)
+  const diagram = await readDiagram(redis, diagramId)
+  if (!diagram) throw Errors.notFound("diagram not found")
+  const headRev = (await redis.hGet(k.diagramMeta(diagramId), "headRev")) ?? "0"
+  const etag = `W/"${headRev}"`
   if (ifNoneMatch(req.header("if-none-match"), etag)) {
     res.setHeader("cache-control", CACHE_CONTROL)
     res.setHeader("etag", etag)
     res.status(304).end()
     return null
   }
-  return { diagram: found.diagram, etag }
+  return { diagram, etag }
 }
 
 /** Renders to an SVG string; queue saturation becomes a typed transient 503. */
@@ -96,8 +85,7 @@ async function renderSvg(
   diagram: Diagram
 ): Promise<string> {
   try {
-    // Storage keeps `version` as a plain string; widen to the renderer's
-    // `UMLModel` — the same cast `/api/converter/*` applies to its input.
+    // Widen storage's string `version` to UMLModel — same cast /api/converter/* uses.
     const { data } = await getResource().render("svg", diagram as UMLModel)
     return typeof data === "string" ? data : data.toString("utf8")
   } catch (error) {

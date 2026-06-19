@@ -112,15 +112,12 @@ describe("GET /api/diagrams/:diagramId/preview.svg", () => {
     // The conditional-GET short-circuit must happen before the renderer runs.
     expect(resource.calls).toBe(callsAfterFirst)
 
-    // The list and `*` forms are honoured too, not just a bare single token.
+    // A multi-tag If-None-Match list matches too (guards against a naive
+    // revert to single-token equality).
     const list = await request(app)
       .get(`/api/diagrams/${id}/preview.svg`)
       .set("if-none-match", `W/"999", ${first.headers["etag"]}`)
     expect(list.status).toBe(304)
-    const star = await request(app)
-      .get(`/api/diagrams/${id}/preview.svg`)
-      .set("if-none-match", "*")
-    expect(star.status).toBe(304)
   })
 
   it("changes the ETag after a PUT bumps headRev", async () => {

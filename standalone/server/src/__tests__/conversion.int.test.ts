@@ -6,6 +6,10 @@ import path from "node:path"
 import { buildApp } from "../http/app.js"
 import { loadConfig } from "../config.js"
 import { getRedis } from "./setup.js"
+import {
+  ConversionResource,
+  QueueFullError,
+} from "../resources/conversion-resource.js"
 
 // Drive the COMPILED worker — the real production artifact. Running it in its
 // own thread keeps the jsdom globals it installs out of this shared test
@@ -140,5 +144,26 @@ describe("POST /api/converter", () => {
       .post("/api/converter/svg")
       .send({ model: "{ not valid json" })
     expect(res.status).toBe(400)
+  })
+
+  it("maps a full queue to a typed 503 RENDERER_BUSY with Retry-After", async () => {
+    const busy = {
+      render: () =>
+        Promise.reject(new QueueFullError("Conversion queue is full")),
+    } as unknown as ConversionResource
+    const redis = await getRedis()
+    const busyApp = buildApp({
+      config: loadConfig(),
+      redis,
+      autoLogging: false,
+      conversionResource: busy,
+    })
+    const res = await request(busyApp)
+      .post("/api/converter/svg")
+      .send({ model: loadModel() })
+    expect(res.status).toBe(503)
+    expect(res.body.error).toBe("RENDERER_BUSY")
+    expect(res.headers["retry-after"]).toBe("2")
+    expect(res.headers["cache-control"]).toBe("no-store")
   })
 })
