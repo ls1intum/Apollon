@@ -24,6 +24,10 @@ const labelPreviewTypes = new Set([
   "petriNetTransition",
 ])
 
+// Extra height an element's preview reserves below its body for a label band.
+const previewExtraHeight = (type: string) =>
+  labelPreviewTypes.has(type) ? LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT : 0
+
 // Rough height of the Model/Select view switch when shown — used as the
 // non-grid budget so the grid still fits under it without scrolling.
 const VIEW_SWITCH_HEIGHT = 64
@@ -72,6 +76,25 @@ export const Sidebar = () => {
     [cellCount, canvas.w, canvas.h, chromeHeight]
   )
 
+  // One uniform scale for the whole palette: pick the largest scale at which
+  // EVERY element still fits its cell, then render them all at it. This keeps
+  // the elements' true relative sizes (a small interface stays small next to a
+  // big component) instead of each element being stretched to fill its own
+  // cell, which would invert proportions and clip small elements' labels.
+  const previewScale = useMemo(() => {
+    if (layout.cellW <= 0 || layout.cellH <= 0) return 0
+    return Math.min(
+      ...[...paletteItems, ColorDescriptionConfig].map((config) =>
+        previewScaleForCell(
+          config.width,
+          config.height + previewExtraHeight(config.type),
+          layout.cellW,
+          layout.cellH
+        )
+      )
+    )
+  }, [paletteItems, layout.cellW, layout.cellH])
+
   if (paletteItems.length === 0) {
     return null
   }
@@ -83,15 +106,7 @@ export const Sidebar = () => {
     id: string,
     keyValue: string
   ) => {
-    const extraPreviewHeight = labelPreviewTypes.has(config.type)
-      ? LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT
-      : 0
-    const previewScale = previewScaleForCell(
-      config.width,
-      config.height + extraPreviewHeight,
-      layout.cellW,
-      layout.cellH
-    )
+    const extraPreviewHeight = previewExtraHeight(config.type)
     return (
       <DraggableGhost
         key={keyValue}
