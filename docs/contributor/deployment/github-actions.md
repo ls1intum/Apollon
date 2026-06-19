@@ -20,6 +20,10 @@ Deployments are fully automatic on merge to `main`; production promotion is one 
 `version-monotonicity.yml` guards every PR by failing if a workspace
 `package.json` version moves backwards.
 
+`nightly-checks.yml` runs the visual-regression and chromium performance-budget
+guards on a nightly schedule (and on demand via **Run workflow** against any
+branch), opening a deduplicated tracking issue if a scheduled run fails.
+
 See [Releases](npm-publishing) for the release-cut procedure.
 
 ## Compose files
