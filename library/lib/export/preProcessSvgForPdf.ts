@@ -21,12 +21,18 @@
 const SVG_NS = "http://www.w3.org/2000/svg"
 
 /** Attributes a split `<text>` must keep from its parent so svg2pdf's
- *  per-element lookup matches the original SVG semantics. */
+ *  per-element lookup matches the original SVG semantics. `font-size` is
+ *  inherited because compat SVG only guarantees it on the parent `<text>`
+ *  (e.g. HeaderSection class names, MultilineText) — child tspans often carry
+ *  only `x`/`y`; without it a split line falls back to svg2pdf's default size
+ *  and the PDF label grows/shifts. A tspan's own `font-size` still wins, since
+ *  the tspan's attributes are copied after these (see flattenMultiTspans). */
 const INHERITED_TEXT_ATTRS = [
   "text-anchor",
   "font-family",
   "font-weight",
   "font-style",
+  "font-size",
   "fill",
 ] as const
 

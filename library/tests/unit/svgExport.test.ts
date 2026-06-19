@@ -86,6 +86,24 @@ describe("preProcessSvgForPdf", () => {
     expect(root.querySelectorAll("tspan").length).toBe(0)
   })
 
+  it("inherits the parent font-size onto split tspans, but a tspan's own size wins", () => {
+    const root = preProcessSvgForPdf(
+      parse(
+        `<svg xmlns="http://www.w3.org/2000/svg"><text x="0" y="0" font-size="16px">` +
+          `<tspan x="0" dy="0" font-size="13.6px">«Abstract»</tspan>` +
+          `<tspan x="0" dy="18">ClassName</tspan></text></svg>`
+      )
+    )
+    const byText = Object.fromEntries(
+      Array.from(root.querySelectorAll("text")).map((t) => [
+        t.textContent,
+        t.getAttribute("font-size"),
+      ])
+    )
+    expect(byText["«Abstract»"]).toBe("13.6px") // own size preserved
+    expect(byText["ClassName"]).toBe("16px") // inherited from parent <text>
+  })
+
   it("collapses an Inter-led font-family chain to a literal 'Inter'", () => {
     const root = preProcessSvgForPdf(parse(SAMPLE_SVG))
     for (const text of Array.from(root.querySelectorAll("text"))) {

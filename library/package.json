@@ -137,9 +137,9 @@
     "zustand": "catalog:"
   },
   "optionalDependencies": {
-    "@resvg/resvg-wasm": "2.6.2",
-    "jspdf": "4.2.1",
-    "svg2pdf.js": "2.7.0"
+    "@resvg/resvg-wasm": "catalog:",
+    "jspdf": "catalog:",
+    "svg2pdf.js": "catalog:"
   },
   "devDependencies": {
     "@emotion/react": "catalog:",
