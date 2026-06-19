@@ -52,17 +52,32 @@ describe("computePaletteLayout", () => {
     expect(l.scroll).toBe(false)
   })
 
-  it("prefers fewer columns (a tall card) over a wide bar when height allows", () => {
-    // Tall desktop, 14 items → should stay around 2 columns, not spread wide.
-    const l = computePaletteLayout(14, 1280, 800, 0)
-    expect(l.cols).toBeLessThanOrEqual(2)
+  it("prefers a single column filling the height on a tall canvas", () => {
+    // 14 items on a tall desktop → one narrow column down the side, not a grid.
+    const l = computePaletteLayout(14, 1920, 1080, 0)
+    expect(l.cols).toBe(1)
     expect(l.scroll).toBe(false)
+    expect(l.cellH).toBeGreaterThanOrEqual(PALETTE.COMFORT_MIN_H)
   })
 
-  it("adds columns when the viewport is short (landscape phone)", () => {
-    const l = computePaletteLayout(14, 844, 390, 0)
-    expect(l.cols).toBeGreaterThanOrEqual(3)
-    expect(l.scroll).toBe(false)
+  it("adds columns only when one column would go too small", () => {
+    // Short laptop: a single column of 14 would be sub-comfort, so 2 columns.
+    expect(computePaletteLayout(14, 1280, 800, 0).cols).toBe(2)
+    // Very short landscape phone forces more columns still.
+    const land = computePaletteLayout(14, 844, 390, 0)
+    expect(land.cols).toBeGreaterThanOrEqual(3)
+    expect(land.scroll).toBe(false)
+  })
+
+  it("keeps a single column for a sparse diagram even when tall", () => {
+    // 6 items never need a second column at any normal size.
+    for (const [w, h] of [
+      [1920, 1080],
+      [1280, 800],
+      [768, 1024],
+    ] as const) {
+      expect(computePaletteLayout(6, w, h, 0).cols).toBe(1)
+    }
   })
 
   it("handles empty / degenerate input safely", () => {

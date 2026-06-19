@@ -1,10 +1,20 @@
 /**
  * Layout math for the floating element palette. The palette is an overlay on
  * the canvas (all viewports — there is no docked variant), so it must lay every
- * element out in a grid that fits the available canvas WITHOUT scrolling, with
- * previews as large as is reasonable. The precedence, borrowed from drawing
- * tools that solve the same "many tools, little room" problem, is:
- *   wrap into more columns  →  shrink the cell  →  (rarely) scroll.
+ * element out in a grid that fits the available canvas WITHOUT scrolling.
+ *
+ * Objective (in priority order):
+ *   1. Use the FEWEST columns — a tall, narrow card preserves horizontal canvas
+ *      space, which is what you actually draw in.
+ *   2. Fill the available VERTICAL space — a single column down the side reads
+ *      like a classic palette and wastes no height.
+ *   3. Keep cells comfortably large — never below `COMFORT_MIN_H` just to save a
+ *      column, and never below the HIG `CELL_MIN_H` touch floor at all.
+ *
+ * So: walk column counts low→high and take the first one whose cells, sized to
+ * fill the height, are still comfortable. Few elements get big capped cells in
+ * one column; many elements get a taller single column of moderate cells before
+ * a second column is ever added.
  *
  * Cells are rectangular (the dominant elements — class boxes, BPMN tasks — are
  * ~1.6:1 wide); narrower/square elements letterbox centered inside. Sizing the
@@ -13,16 +23,21 @@
 export const PALETTE = Object.freeze({
   /** HIG/WCAG touch + legibility floor — never shrink a cell past this. */
   CELL_MIN_H: 44,
-  /** "Bigger than before" cap; also keeps the palette from dominating. */
-  CELL_MAX_H: 72,
-  CELL_STEP: 4,
+  /** Bias toward fewer columns: keep a single (or narrower) column as long as
+   *  its height-filling cells stay at least this big; only add a column when
+   *  that would drop below it. Just above the touch floor, so the strong
+   *  preference is fewer columns + filling the height. */
+  COMFORT_MIN_H: 48,
+  /** Upper bound so few-element palettes don't get absurdly tall cells. */
+  CELL_MAX_H: 78,
   /** cellW = round(CELL_RATIO * cellH); ~matches the 160×100 class box. */
   CELL_RATIO: 1.6,
   GAP: 8,
   PAD: 6,
-  /** The palette may occupy at most this fraction of the canvas. */
-  MAX_FRAC_W: 0.55,
-  MAX_FRAC_H: 0.8,
+  /** Keep the palette horizontally narrow so the canvas keeps its width … */
+  MAX_FRAC_W: 0.5,
+  /** … but let it use most of the height. */
+  MAX_FRAC_H: 0.9,
   /** Letterbox padding around the preview inside a cell. */
   CONTENT_INSET: 6,
   /** Space kept clear above (top offset) and below (zoom controls) the palette. */
@@ -40,6 +55,23 @@ export interface PaletteLayout {
 
 const clamp = (value: number, min: number, max: number) =>
   Math.max(min, Math.min(max, value))
+
+/** Largest cell height that fits `cols` columns of `count` items in the budget,
+ *  filling the vertical space (capped) and bounded by the available width. */
+function cellHeightFor(
+  cols: number,
+  count: number,
+  budgetW: number,
+  budgetH: number,
+  chromeH: number
+): number {
+  const p = PALETTE
+  const rows = Math.ceil(count / cols)
+  const fillH = (budgetH - chromeH - 2 * p.PAD - (rows - 1) * p.GAP) / rows
+  const cellW = (budgetW - 2 * p.PAD - (cols - 1) * p.GAP) / cols
+  const widthH = cellW / p.CELL_RATIO
+  return Math.floor(Math.min(p.CELL_MAX_H, fillH, widthH))
+}
 
 /**
  * @param itemCount total grid cells (drag elements + the color-description cell)
@@ -66,41 +98,42 @@ export function computePaletteLayout(
     availH * p.MAX_FRAC_H,
     availH - p.TOP_RESERVE - p.BOTTOM_RESERVE
   )
+  const maxCols = Math.max(
+    1,
+    Math.min(itemCount, Math.floor((budgetW + p.GAP) / (floorCellW + p.GAP)))
+  )
 
-  for (let cellH = p.CELL_MAX_H; cellH >= p.CELL_MIN_H; cellH -= p.CELL_STEP) {
-    const cellW = Math.round(p.CELL_RATIO * cellH)
-    const maxCols = Math.max(1, Math.floor((budgetW + p.GAP) / (cellW + p.GAP)))
-    const rowsBudget = budgetH - chromeH - 2 * p.PAD
-    const maxRows = Math.max(
-      1,
-      Math.floor((rowsBudget + p.GAP) / (cellH + p.GAP))
-    )
-    // Fewest columns whose row count fits the height — prefer a tall, narrow
-    // card over a wide bar — bounded by what the width allows.
-    const cols = clamp(
-      Math.ceil(itemCount / maxRows),
-      1,
-      Math.min(maxCols, itemCount)
-    )
-    const rows = Math.ceil(itemCount / cols)
-    const blockW = cols * cellW + (cols - 1) * p.GAP + 2 * p.PAD
-    const blockH = rows * cellH + (rows - 1) * p.GAP + 2 * p.PAD + chromeH
-    if (blockW <= budgetW && blockH <= budgetH) {
-      return { cols, cellW, cellH, scroll: false }
+  // Fewest columns whose height-filling cells are still comfortable; meanwhile
+  // remember the column count that yields the biggest cell as a fallback.
+  let bestCols = 1
+  let bestCellH = 0
+  for (let cols = 1; cols <= maxCols; cols++) {
+    const cellH = cellHeightFor(cols, itemCount, budgetW, budgetH, chromeH)
+    if (cellH >= p.COMFORT_MIN_H) {
+      return {
+        cols,
+        cellW: Math.round(p.CELL_RATIO * cellH),
+        cellH,
+        scroll: false,
+      }
+    }
+    if (cellH > bestCellH) {
+      bestCellH = cellH
+      bestCols = cols
     }
   }
 
-  // Even at the floor it doesn't fit: pack as wide as the width allows and let
-  // it scroll (the deliberate last resort — never shrink below the floor).
-  const maxCols = Math.max(
-    1,
-    Math.floor((budgetW + p.GAP) / (floorCellW + p.GAP))
-  )
+  // Nothing is comfortable (very constrained canvas): use the column count with
+  // the biggest cell, clamp to the touch floor, and scroll only if even that
+  // overflows — the deliberate last resort.
+  const cellH = clamp(bestCellH, p.CELL_MIN_H, p.CELL_MAX_H)
+  const rows = Math.ceil(itemCount / bestCols)
+  const blockH = rows * cellH + (rows - 1) * p.GAP + 2 * p.PAD + chromeH
   return {
-    cols: Math.min(maxCols, itemCount),
-    cellW: floorCellW,
-    cellH: p.CELL_MIN_H,
-    scroll: true,
+    cols: bestCols,
+    cellW: Math.round(p.CELL_RATIO * cellH),
+    cellH,
+    scroll: blockH > budgetH + 1,
   }
 }
 
