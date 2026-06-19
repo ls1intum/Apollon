@@ -103,7 +103,7 @@
   /* Dark first-paint fallback for the home surfaces/text/borders (kept in sync
      with themings.json's dark block) so dark mode doesn't flash the light
      palette before the runtime tokens are injected. */
-  --home-surface-base: #181a18;
+  --home-surface-base: #181a1f;
   --home-surface-sunken: #131519;
   --home-surface-raised: #20232a;
   --home-surface-raised-hover: #2a2e36;
