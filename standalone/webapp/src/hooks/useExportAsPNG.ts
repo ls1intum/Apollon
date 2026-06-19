@@ -1,7 +1,4 @@
-import { svgToPng, type SvgToPngResult } from "@tumaet/apollon/export"
-// Vite resolves the resvg wasm to a served asset URL; the library renders the
-// PNG but leaves wasm location to the host bundler (it isn't portably exported).
-import resvgWasmUrl from "@resvg/resvg-wasm/index_bg.wasm?url"
+import type { SvgToPngResult } from "@tumaet/apollon/export"
 import { isPlatform } from "@ionic/react"
 import { Filesystem, Directory } from "@capacitor/filesystem"
 import { Share } from "@capacitor/share"
@@ -32,6 +29,14 @@ export const useExportAsPNG = () => {
     }
 
     const apollonSVG = await editor.exportAsSVG({ svgMode: "compat" })
+    // Lazy-load the renderer (and its inlined fonts) + the resvg wasm only on
+    // export, so the editor route's bundle stays lean. Vite resolves the wasm to
+    // a served asset URL; the library leaves wasm location to the host bundler
+    // since `@resvg/resvg-wasm` doesn't export it portably.
+    const [{ svgToPng }, { default: resvgWasmUrl }] = await Promise.all([
+      import("@tumaet/apollon/export"),
+      import("@resvg/resvg-wasm/index_bg.wasm?url"),
+    ])
     const result = await svgToPng(apollonSVG.svg, apollonSVG.clip, {
       scale: 1.5,
       background: setWhiteBackground ? "#ffffff" : null,

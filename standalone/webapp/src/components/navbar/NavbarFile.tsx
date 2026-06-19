@@ -4,7 +4,6 @@ import Menu from "@mui/material/Menu"
 import MenuItem from "@mui/material/MenuItem"
 import Typography from "@mui/material/Typography"
 import { toast } from "react-toastify"
-import { RasterTooLargeError } from "@tumaet/apollon/export"
 import { secondary } from "@/constants"
 import { useModalContext } from "@/contexts"
 import {
@@ -28,7 +27,10 @@ type ExportFormat = "SVG" | "PNG" | "PDF" | "JSON"
 type ExportRunResult = { clamped?: boolean; appliedScale?: number }
 
 function exportErrorMessage(format: ExportFormat, err: unknown): string {
-  if (err instanceof RasterTooLargeError) {
+  // Match by name, not `instanceof`, so the navbar doesn't statically import the
+  // library's (font-heavy) export entry just for the type — keeping it out of
+  // the editor route's bundle.
+  if ((err as Error)?.name === "RasterTooLargeError") {
     return "Diagram is too large to export as PNG. Try SVG or PDF instead."
   }
   return `${format} export failed. Please try again.`

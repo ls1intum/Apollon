@@ -1,4 +1,3 @@
-import { svgToPdf } from "@tumaet/apollon/export"
 import { isPlatform } from "@ionic/react"
 import { Filesystem, Directory } from "@capacitor/filesystem"
 import { Share } from "@capacitor/share"
@@ -21,6 +20,9 @@ export const useExportAsPDF = () => {
     }
 
     const { svg, clip } = await editor.exportAsSVG({ svgMode: "compat" })
+    // Lazy-load the renderer (jspdf/svg2pdf + inlined fonts) only on export, so
+    // the editor route's bundle stays lean.
+    const { svgToPdf } = await import("@tumaet/apollon/export")
     const title = editor.getDiagramMetadata().diagramTitle || "diagram"
     const blob = await svgToPdf(svg, clip, { title })
     const fileName = `${title}.pdf`
