@@ -225,23 +225,37 @@ jobs:
   # Chromium: its GC behaviour surfaces unbounded-growth regressions sooner. The
   # functional e2e suite is not run on Firefox yet — it has a few Firefox-only
   # rendering quirks that need separate triage.
+  #
+  # Runs in the Playwright container (browsers + system libraries pre-baked) —
+  # the same image visual-regression-tests uses. The previous bare-`ubuntu`
+  # setup shelled out to `playwright install-deps firefox` (a large apt-get) on
+  # every run, which periodically stalled for the entire job timeout. Baking the
+  # deps into the image removes that flake class and the browser-download step
+  # outright, so the job is now bounded by build + the 120 s test, not apt.
   perf-firefox-tests:
     needs: [detect-changes]
     if: needs.detect-changes.outputs.should-skip != 'true' && needs.detect-changes.outputs.code == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
+    container:
+      image: mcr.microsoft.com/playwright:v1.59.1-noble
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
+      # The image ships an older Node than the repo's root engines gate
+      # (>=24.15, enforced via engine-strict), so install Node 24 — same as
+      # visual-regression-tests.
+      - name: Install Node 24
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://deb.nodesource.com/setup_24.x | bash -
+          apt-get install -y nodejs
+          node --version
+
       - name: Install pnpm
         uses: pnpm/action-setup@ac6db6d3c1f721f886538a378a2d73e85697340a # v6.0.8
-
-      - name: Set up Node
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
-        with:
-          node-version-file: ".nvmrc"
-          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -249,22 +263,8 @@ jobs:
       - name: Build
         run: pnpm run build:lib
 
-      - name: Cache Playwright browsers
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
-        id: playwright-cache
-        with:
-          path: ~/.cache/ms-playwright
-          # Firefox-specific key — must differ from the chromium jobs' key (same
-          # cache path, different browser) so neither poisons the other's cache.
-          key: playwright-firefox-${{ runner.os }}-v1.59.1-${{ hashFiles('standalone/webapp/package.json') }}
-
-      - name: Install Playwright Firefox
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: pnpm --filter @tumaet/webapp exec playwright install firefox
-
-      - name: Install Playwright system deps
-        run: pnpm --filter @tumaet/webapp exec playwright install-deps firefox
-
+      # Firefox is already present in the container image — no install /
+      # install-deps step, so there is no apt path left to hang on.
       - name: Run Firefox performance budget tests
         run: pnpm --filter @tumaet/webapp run test:perf:firefox
 
