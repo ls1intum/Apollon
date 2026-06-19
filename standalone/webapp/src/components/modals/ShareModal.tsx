@@ -4,13 +4,12 @@ import { log } from "@/logger"
 import { randomCollabName } from "@tumaet/apollon"
 import { DiagramApiClient } from "@/services/DiagramApiClient"
 import { DiagramView } from "@/types"
-import { Clipboard } from "@capacitor/clipboard"
-import { isPlatform } from "@ionic/react"
 import Info from "@mui/icons-material/Info"
 import { Tooltip } from "@mui/material"
 import { useNavigate } from "@tanstack/react-router"
 import { toast } from "react-toastify"
 import { Button } from "@/components/ui/button"
+import { copyToClipboard } from "@/utils/clipboard"
 import { addSharedDiagramEntry } from "@/utils/sharedDiagramStorage"
 import {
   buildSharedDiagramUrl,
@@ -57,14 +56,6 @@ export const ShareModal = () => {
     } catch (err) {
       log.error("Error creating diagram:", err as Error)
       toast.error("Could not create diagram.")
-    }
-  }
-
-  const copyToClipboard = async (link: string) => {
-    if (isPlatform("capacitor")) {
-      await Clipboard.write({ string: link })
-    } else {
-      await navigator.clipboard.writeText(link)
     }
   }
 

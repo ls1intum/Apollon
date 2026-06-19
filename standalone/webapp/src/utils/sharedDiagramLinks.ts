@@ -78,6 +78,16 @@ export const resolveShareOrigin = (): string => {
   return typeof window !== "undefined" ? window.location.origin : ""
 }
 
+// Origin for server-rendered assets (the `/api/...` SVG + `/embed` page): the
+// configured API host first, else the page origin on web. On native with no
+// configured host it returns "" — `capacitor://localhost` is not externally
+// resolvable, so callers must treat "" as "can't build a shareable URL".
+export const resolveServerOrigin = (): string => {
+  if (serverURL) return serverURL
+  if (Capacitor.isNativePlatform()) return ""
+  return typeof window !== "undefined" ? window.location.origin : ""
+}
+
 export const buildSharedDiagramUrl = (
   diagramId: string,
   view: DiagramView = DEFAULT_SHARED_DIAGRAM_VIEW,

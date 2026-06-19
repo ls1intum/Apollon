@@ -1,42 +1,42 @@
 import { useMemo } from "react"
+import { useLocation } from "@tanstack/react-router"
 import { toast } from "react-toastify"
-import { isPlatform } from "@ionic/react"
-import { Clipboard } from "@capacitor/clipboard"
 import { Typography } from "@/components/Typography"
 import { Button } from "@/components/ui/button"
-import { serverURL } from "@/constants/urls"
+import { copyToClipboard } from "@/utils/clipboard"
 import { useDiagramIdFromPath } from "@/hooks/useDiagramIdFromPath"
-import { buildSharedDiagramUrl } from "@/utils/sharedDiagramLinks"
+import {
+  buildSharedDiagramUrl,
+  resolveServerOrigin,
+} from "@/utils/sharedDiagramLinks"
 
 /**
- * Embed-hints panel for the share modal.
+ * Embed-hints panel for the share modal. Renders three copyable snippets for
+ * the current diagram (the diagramId is the bearer — no token, no role gate):
  *
- * Renders three copyable snippets pointing at the *current* diagram (the
- * diagramId is the bearer — there's no token, no role gate):
+ *   1. Markdown image with click-through: `[![title](preview.svg)](editor)`
+ *   2. Plain Markdown image (no click-through).
+ *   3. HTML iframe pointing at the `/embed/:id` page.
  *
- *   1. Markdown image with click-through, GitHub/GitLab README friendly:
- *        [![title](<server>/api/diagrams/:id/preview.svg)](<web>/shared/:id?view=EDIT)
- *   2. Plain markdown image (no click-through).
- *   3. HTML iframe pointing at `<server>/embed/:id` for surfaces that allow it
- *      (GitLab Pages, Notion, Confluence, VS Code preview).
- *
- * The preview SVG and `/embed` page are served by the API server, so their URLs
- * use the server origin (`serverURL`, else the page origin); the click-through
- * uses `buildSharedDiagramUrl` so it always lands on the canonical, view-scoped
- * `/shared/:id` route. The id is read from the path; without one (e.g. the
- * local-only editor) the panel shows a save-first hint.
+ * Only SERVER-persisted diagrams render: `/shared/:id` (and legacy `/:id`).
+ * A `/local/:id` diagram is a client-only IndexedDB id the server can't render,
+ * so the panel shows a save-first hint instead of emitting 404-bound snippets.
  */
 export function EmbedHints({ title = "Apollon diagram" }: { title?: string }) {
-  const diagramId = useDiagramIdFromPath()
+  const diagramId = useEmbeddableDiagramId()
 
   const snippets = useMemo(() => {
     if (!diagramId) return null
-    // The page origin falls back when no dedicated API origin is configured
-    // (same-origin deploy). Bracket-strip keeps the markdown alt text from
-    // breaking the `![alt](url)` grammar.
-    const serverOrigin =
-      serverURL || (typeof window !== "undefined" ? window.location.origin : "")
-    const safeTitle = title.replace(/[[\]]/g, "")
+    // The SVG + /embed routes are served by the API host; "" means there is no
+    // externally-resolvable origin (native without a configured host).
+    const serverOrigin = resolveServerOrigin()
+    if (!serverOrigin) return null
+    // Collapse whitespace and drop the characters that break Markdown alt text.
+    const safeTitle =
+      title
+        .replace(/\s+/g, " ")
+        .replace(/[[\]()]/g, "")
+        .trim() || "Apollon diagram"
     const editorUrl = buildSharedDiagramUrl(diagramId)
     const previewUrl = `${serverOrigin}/api/diagrams/${diagramId}/preview.svg`
     const embedUrl = `${serverOrigin}/embed/${diagramId}`
@@ -84,18 +84,22 @@ export function EmbedHints({ title = "Apollon diagram" }: { title?: string }) {
   )
 }
 
+/**
+ * The current diagramId only when it is server-renderable. Reuses the shared
+ * path hook (which already excludes reserved pages and `/`), then drops the
+ * `/local/:id` case — a client-only IndexedDB id the server can't render.
+ */
+function useEmbeddableDiagramId(): string | undefined {
+  const id = useDiagramIdFromPath()
+  const { pathname } = useLocation()
+  const isLocal = pathname.split("/").filter(Boolean)[0] === "local"
+  return isLocal ? undefined : id
+}
+
 interface SnippetRowProps {
   label: string
   value: string
   hint: string
-}
-
-async function copyToClipboard(value: string): Promise<void> {
-  if (isPlatform("capacitor")) {
-    await Clipboard.write({ string: value })
-  } else {
-    await navigator.clipboard.writeText(value)
-  }
 }
 
 function SnippetRow({ label, value, hint }: SnippetRowProps) {

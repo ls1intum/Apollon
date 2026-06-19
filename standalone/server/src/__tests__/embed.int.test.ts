@@ -111,6 +111,16 @@ describe("GET /api/diagrams/:diagramId/preview.svg", () => {
     expect(second.text).toBe("")
     // The conditional-GET short-circuit must happen before the renderer runs.
     expect(resource.calls).toBe(callsAfterFirst)
+
+    // The list and `*` forms are honoured too, not just a bare single token.
+    const list = await request(app)
+      .get(`/api/diagrams/${id}/preview.svg`)
+      .set("if-none-match", `W/"999", ${first.headers["etag"]}`)
+    expect(list.status).toBe(304)
+    const star = await request(app)
+      .get(`/api/diagrams/${id}/preview.svg`)
+      .set("if-none-match", "*")
+    expect(star.status).toBe(304)
   })
 
   it("changes the ETag after a PUT bumps headRev", async () => {
@@ -127,7 +137,7 @@ describe("GET /api/diagrams/:diagramId/preview.svg", () => {
     expect(second.headers["etag"]).not.toBe(first.headers["etag"])
   })
 
-  it("returns 503 with a Retry-After header when the queue is full", async () => {
+  it("maps queue saturation to a typed 503 with Retry-After + no-store", async () => {
     const app = appWith(
       fakeResource(async () => {
         throw new QueueFullError("Conversion queue is full")
@@ -136,8 +146,11 @@ describe("GET /api/diagrams/:diagramId/preview.svg", () => {
     const id = await createDiagram(app)
     const res = await request(app).get(`/api/diagrams/${id}/preview.svg`)
     expect(res.status).toBe(503)
-    // A real header — not just a JSON field — so Camo/browsers back off.
-    expect(res.headers["retry-after"]).toBe("1")
+    expect(res.body.error).toBe("RENDERER_BUSY")
+    // A real header — not just a JSON field — so Camo/browsers back off, and the
+    // transient error is never cached against the diagramId.
+    expect(res.headers["retry-after"]).toBe("2")
+    expect(res.headers["cache-control"]).toBe("no-store")
   })
 
   it("returns 404 for a missing diagram", async () => {
@@ -248,13 +261,7 @@ describe("end-to-end through the real conversion worker", () => {
     const res = await request(app)
       .get(`/api/diagrams/${created.body.id}/preview.svg`)
       .buffer(true)
-      .parse((response, callback) => {
-        const chunks: Buffer[] = []
-        response.on("data", (c: Buffer) => chunks.push(Buffer.from(c)))
-        response.on("end", () => callback(null, Buffer.concat(chunks)))
-      })
     expect(res.status).toBe(200)
-    const body = (res.body as Buffer).toString("utf8")
-    expect(body).toContain('xmlns="http://www.w3.org/2000/svg"')
+    expect(asText(res)).toContain('xmlns="http://www.w3.org/2000/svg"')
   }, 20_000)
 })

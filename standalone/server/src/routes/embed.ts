@@ -19,47 +19,32 @@ interface Deps {
 }
 
 /**
- * Embed surface — two public routes that share the editor's access model: the
- * diagramId is a 128-bit base64url-random string (`diagrams.ts:generateDiagramId`)
- * so the URL itself is the unguessable bearer. No token, role, or cookie.
+ * Embed surface — two public routes. The diagramId is the unguessable bearer
+ * (128-bit base64url, see `diagrams.ts:generateDiagramId`); there is no token
+ * or cookie, so embedding adds no privilege over holding the URL.
  *
- *   GET /api/diagrams/:diagramId/preview.svg
- *     Cacheable SVG, served as `image/svg+xml` for GitHub/GitLab READMEs
- *     (rendered through Camo's `<img>` proxy) and any other `<img>` context.
+ *   GET /api/diagrams/:diagramId/preview.svg  — cacheable `image/svg+xml` for
+ *     `<img>`/Camo embedding in GitHub & GitLab READMEs.
+ *   GET /embed/:diagramId  — iframe-friendly HTML shell (inline SVG + an "Open
+ *     in Apollon" link, no JS), `frame-ancestors *` for Notion/Confluence/etc.
  *
- *   GET /embed/:diagramId
- *     Server-rendered HTML shell (inline SVG + "Open in Apollon" link, no JS
- *     bundle). `frame-ancestors *` so any host can iframe it — GitLab snippets,
- *     Notion, Confluence, VS Code preview.
- *
- * Both carry `Cache-Control: public, max-age=60, stale-while-revalidate=86400`
- * and a weak `ETag: W/"<headRev>"` — the same identity `saveHead` bumps — so a
- * cache populated by one writer revalidates correctly for every reader, and a
- * conditional GET short-circuits before the renderer runs.
- *
- * Security: both responses set `Content-Security-Policy: default-src 'none'`
- * (the embed page additionally allows only `img-src`, `style-src
- * 'unsafe-inline'`, and `frame-ancestors *`). With no `script-src`, an inline
- * `<script>`, an `on*=` handler, or a `javascript:` URI riding inside the
- * library-generated SVG cannot execute — so the SVG is inlined verbatim
- * without a sanitizer pass. The only HTML interpolation is the diagram title,
- * which is HTML-escaped.
- *
- * Cold start: the first embed request after boot pays the one-time worker
- * spin-up (JSDOM globals + the library's lazy module load). Camo's retry
- * behaviour absorbs it; warm it with `GET /api/converter/status` if cold p99
- * matters.
+ * Both serve a weak `ETag` (= `headRev`, the identity `saveHead` bumps) so a
+ * conditional GET short-circuits before the renderer runs, and a deny-all CSP.
+ * With no `script-src`, script in the library-generated SVG cannot execute, so
+ * it is inlined verbatim without a sanitizer.
  */
 
+const CACHE_CONTROL = "public, max-age=60, stale-while-revalidate=86400"
 const SVG_CSP = "default-src 'none'; style-src 'unsafe-inline'"
 const HTML_CSP = [
   "default-src 'none'",
+  // `img-src 'self' data:` is load-bearing: it is the only egress sink open to
+  // the inlined (untrusted) SVG's CSS, so it MUST NOT be widened to remote
+  // hosts or a CSS-exfiltration channel opens.
   "img-src 'self' data:",
   "style-src 'unsafe-inline'",
   "frame-ancestors *",
 ].join("; ")
-const CACHE_CONTROL = "public, max-age=60, stale-while-revalidate=86400"
-const RETRY_AFTER_SECONDS = 1
 
 /** Reads the diagram and its current `headRev` (used verbatim as the ETag). */
 async function readDiagramWithRev(
@@ -74,30 +59,49 @@ async function readDiagramWithRev(
 
 const etagFor = (headRev: string): string => `W/"${headRev}"`
 
+/** Honours the list and `*` forms of If-None-Match, not just a single token. */
+function ifNoneMatch(header: string | undefined, etag: string): boolean {
+  if (!header) return false
+  if (header.trim() === "*") return true
+  return header.split(",").some((tag) => tag.trim() === etag)
+}
+
 /**
- * Renders the diagram to an SVG string through the shared worker. Queue
- * saturation surfaces as a 503 with a real `Retry-After` header so Camo and
- * browsers back off instead of caching a hard error against the diagramId.
- * Returns the SVG string, or `null` if it already sent the 503 response.
+ * Shared preamble: load the diagram, 404 if missing, and short-circuit a fresh
+ * conditional GET with 304. Returns the diagram + etag when a render is needed,
+ * or `null` when it already sent the 304. Cache headers are set here (304) and
+ * on the 200 paths only — never before the render, so a 503/500 is not cached.
  */
-async function renderSvgOr503(
-  getResource: () => ConversionResource,
+async function loadOrNotModified(
+  redis: Redis,
+  req: Request,
   res: Response,
+  diagramId: string
+): Promise<{ diagram: Diagram; etag: string } | null> {
+  const found = await readDiagramWithRev(redis, diagramId)
+  if (!found) throw Errors.notFound("diagram not found")
+  const etag = etagFor(found.headRev)
+  if (ifNoneMatch(req.header("if-none-match"), etag)) {
+    res.setHeader("cache-control", CACHE_CONTROL)
+    res.setHeader("etag", etag)
+    res.status(304).end()
+    return null
+  }
+  return { diagram: found.diagram, etag }
+}
+
+/** Renders to an SVG string; queue saturation becomes a typed transient 503. */
+async function renderSvg(
+  getResource: () => ConversionResource,
   diagram: Diagram
-): Promise<string | null> {
+): Promise<string> {
   try {
-    // `Diagram.version` is a plain string at the storage boundary; the library
-    // renderer's `UMLModel` narrows it to `4.x.y`. The server intentionally
-    // does not pin the version format (see `_schemas.ts`), so widen here — the
-    // same cast `/api/converter/*` applies to its request body.
+    // Storage keeps `version` as a plain string; widen to the renderer's
+    // `UMLModel` — the same cast `/api/converter/*` applies to its input.
     const { data } = await getResource().render("svg", diagram as UMLModel)
     return typeof data === "string" ? data : data.toString("utf8")
   } catch (error) {
-    if (error instanceof QueueFullError) {
-      res.setHeader("retry-after", String(RETRY_AFTER_SECONDS))
-      res.status(503).json({ error: error.message })
-      return null
-    }
+    if (error instanceof QueueFullError) throw Errors.rendererBusy()
     throw error
   }
 }
@@ -110,24 +114,19 @@ export function mountEmbedApiRoutes({ redis, getResource }: Deps): Router {
     validate(
       { params: DiagramIdParams },
       async (req, res, _next, { params }) => {
-        const found = await readDiagramWithRev(redis, params.diagramId)
-        if (!found) throw Errors.notFound("diagram not found")
-        const etag = etagFor(found.headRev)
-
-        res.setHeader("cache-control", CACHE_CONTROL)
-        res.setHeader("etag", etag)
-        if (req.header("if-none-match") === etag) {
-          res.status(304).end()
-          return
-        }
-
-        const svg = await renderSvgOr503(getResource, res, found.diagram)
-        if (svg === null) return
+        const loaded = await loadOrNotModified(
+          redis,
+          req,
+          res,
+          params.diagramId
+        )
+        if (!loaded) return
+        const svg = await renderSvg(getResource, loaded.diagram)
 
         res.setHeader("content-type", "image/svg+xml; charset=utf-8")
+        res.setHeader("etag", loaded.etag)
+        res.setHeader("cache-control", CACHE_CONTROL)
         res.setHeader("x-content-type-options", "nosniff")
-        // SVG-as-image renderers ignore CSP, but a deny-all default protects
-        // any client that consumes the response as a top-level document.
         res.setHeader("content-security-policy", SVG_CSP)
         res.status(200).send(svg)
       }
@@ -145,32 +144,28 @@ export function mountEmbedRoutes({ redis, getResource }: Deps): Router {
     validate(
       { params: DiagramIdParams },
       async (req, res, _next, { params }) => {
-        const found = await readDiagramWithRev(redis, params.diagramId)
-        if (!found) throw Errors.notFound("diagram not found")
-        const etag = etagFor(found.headRev)
-
-        res.setHeader("cache-control", CACHE_CONTROL)
-        res.setHeader("etag", etag)
-        if (req.header("if-none-match") === etag) {
-          res.status(304).end()
-          return
-        }
-
-        const svg = await renderSvgOr503(getResource, res, found.diagram)
-        if (svg === null) return
+        const loaded = await loadOrNotModified(
+          redis,
+          req,
+          res,
+          params.diagramId
+        )
+        if (!loaded) return
+        const svg = await renderSvg(getResource, loaded.diagram)
 
         const html = renderEmbedHtml({
-          title: found.diagram.title || "Apollon diagram",
+          title: loaded.diagram.title || "Apollon diagram",
           svg,
-          editorHref: buildEditorHref(req, found.diagram.id),
+          editorHref: buildEditorHref(req, loaded.diagram.id),
         })
 
         res.setHeader("content-type", "text/html; charset=utf-8")
+        res.setHeader("etag", loaded.etag)
+        res.setHeader("cache-control", CACHE_CONTROL)
         res.setHeader("x-content-type-options", "nosniff")
         res.setHeader("content-security-policy", HTML_CSP)
         res.setHeader("referrer-policy", "no-referrer")
-        // Opt out of interest-tracking surfaces an embed has no business using
-        // — both the legacy FLoC token and its Topics-API replacement.
+        // Opt out of FLoC and its Topics-API successor.
         res.setHeader(
           "permissions-policy",
           "interest-cohort=(), browsing-topics=()"
@@ -184,15 +179,9 @@ export function mountEmbedRoutes({ redis, getResource }: Deps): Router {
 }
 
 /**
- * Absolute editor URL from the request's own protocol + host. Behind a reverse
- * proxy `req.protocol` honours `X-Forwarded-Proto` thanks to `trust proxy`
- * (set in `buildApp`). `encodeURIComponent` is defence-in-depth — route
- * validation already restricts the id to URL-safe chars.
- *
- * Targets the webapp's canonical `/shared/:id?view=EDIT` route. The bare
- * `/:id` route 404s without a `?view` query (it only redirects legacy native
- * links), so the view must be explicit; `EDIT` mirrors the webapp's
- * `DEFAULT_SHARED_DIAGRAM_VIEW`.
+ * Absolute editor URL from req protocol + host (honours `X-Forwarded-Proto` via
+ * `trust proxy`). Targets `/shared/:id?view=EDIT` — the bare `/:id` route 404s
+ * without a `?view`, and `EDIT` mirrors the webapp's default shared view.
  */
 function buildEditorHref(req: Request, diagramId: string): string {
   const host = req.get("host") ?? ""
@@ -206,10 +195,9 @@ interface EmbedHtmlInput {
 }
 
 /**
- * The embed HTML shell: no JS, no remote assets, ~1 KiB of inline CSS. The SVG
- * is inlined verbatim (sized by its own intrinsic `viewBox` plus the CSS
- * below); the title is HTML-escaped because it lands in `<title>` and the
- * footer.
+ * The embed HTML shell: no JS, no remote assets. The pre-rendered SVG is inlined
+ * verbatim (sized by its own viewBox); `title` is HTML-escaped for the `<title>`
+ * and footer text contexts.
  */
 function renderEmbedHtml({ title, svg, editorHref }: EmbedHtmlInput): string {
   const safeTitle = escapeHtml(title)

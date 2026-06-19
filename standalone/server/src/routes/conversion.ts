@@ -4,6 +4,7 @@ import {
   ConversionResource,
   QueueFullError,
 } from "../resources/conversion-resource.js"
+import { Errors } from "../http/errors.js"
 import type { ConversionFormat } from "../workers/conversion-worker-thread.js"
 
 interface Deps {
@@ -54,10 +55,9 @@ export function mountConversionRoutes({ getResource }: Deps): Router {
         const { mime, data } = await getResource().render(format, model, scale)
         res.type(mime).status(200).send(data)
       } catch (error) {
-        if (error instanceof QueueFullError) {
-          res.status(503).json({ error: error.message })
-          return
-        }
+        // Queue saturation is transient — surface it as a typed 503 (with a
+        // Retry-After header) through the shared error handler.
+        if (error instanceof QueueFullError) throw Errors.rendererBusy()
         throw error
       }
     }
