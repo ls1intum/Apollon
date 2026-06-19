@@ -4,6 +4,7 @@ import Menu from "@mui/material/Menu"
 import MenuItem from "@mui/material/MenuItem"
 import Typography from "@mui/material/Typography"
 import useMediaQuery from "@mui/material/useMediaQuery"
+import { MOBILE_VIEW_QUERY } from "@/constants"
 import { useModalContext } from "@/contexts"
 import { navbarButtonStyle } from "./styleConstants"
 import {
@@ -26,9 +27,15 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
   const exportAsPng = useExportAsPNG()
   const exportAsJSON = useExportAsJSON()
   const exportAsPDF = useExportAsPDF()
-  const isTouchLayout = useMediaQuery(
-    "(hover: none), (pointer: coarse), (max-width: 950px)"
-  )
+  // Two independent concerns: how the submenu opens, and which way it opens.
+  // Open on click (not hover) when there's no reliable hover — i.e. touch.
+  const isTouchInput = useMediaQuery("(hover: none), (pointer: coarse)")
+  // Open the submenu leftward only in the actual mobile hamburger context
+  // (where the menu is anchored near the right edge). Keying off the shared
+  // MOBILE_VIEW_QUERY — the same one that swaps in MobileNavbar — keeps the
+  // desktop navbar's right-opening submenu on narrow-but-tall viewports
+  // (e.g. 900x800), where left-opening would push it off-screen.
+  const isMobileMenu = useMediaQuery(MOBILE_VIEW_QUERY)
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [subMenuAnchorEl, setSubMenuAnchorEl] = useState<null | HTMLElement>(
     null
@@ -97,7 +104,7 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
         <MenuItem
           id="export-sub-menu-button"
           onClick={openSubMenuFromClick}
-          onMouseEnter={isTouchLayout ? undefined : openSubMenu}
+          onMouseEnter={isTouchInput ? undefined : openSubMenu}
           sx={{
             display: "flex",
             justifyContent: "space-between",
@@ -120,15 +127,15 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
         onClose={closeMainMenu}
         anchorOrigin={{
           vertical: "top",
-          horizontal: isTouchLayout ? "left" : "right",
+          horizontal: isMobileMenu ? "left" : "right",
         }}
         transformOrigin={{
           vertical: "top",
-          horizontal: isTouchLayout ? "right" : "left",
+          horizontal: isMobileMenu ? "right" : "left",
         }}
         MenuListProps={{
           "aria-labelledby": "export-sub-menu-button",
-          onMouseLeave: isTouchLayout
+          onMouseLeave: isTouchInput
             ? undefined
             : () => setSubMenuAnchorEl(null),
         }}
