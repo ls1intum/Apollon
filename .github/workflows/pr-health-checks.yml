@@ -196,8 +196,12 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: pnpm --filter @tumaet/webapp exec playwright install chromium
 
-      - name: Install Playwright system deps
-        run: pnpm --filter @tumaet/webapp exec playwright install-deps chromium
+      # Shared with perf-firefox-tests; the dpkg-lock hang it guards is
+      # documented in the composite action.
+      - name: Install Playwright system deps (bounded + retried)
+        uses: ./.github/actions/playwright-install-deps
+        with:
+          browser: chromium
 
       - name: Run E2E tests
         run: pnpm --filter @tumaet/webapp exec playwright test tests/e2e/
@@ -221,10 +225,13 @@ jobs:
           path: standalone/webapp/test-results/
           retention-days: 14
 
-  # Run the document-growth performance budget on Firefox too, not just
-  # Chromium: its GC behaviour surfaces unbounded-growth regressions sooner. The
-  # functional e2e suite is not run on Firefox yet — it has a few Firefox-only
-  # rendering quirks that need separate triage.
+  # Document-growth budget on Firefox too: its GC surfaces unbounded-growth
+  # regressions sooner. (The functional e2e suite isn't on Firefox yet — it has
+  # Firefox-only rendering quirks that need separate triage.)
+  #
+  # Bare runner, NOT the Playwright container: the container's bundled Firefox
+  # crashes (exitCode=1) under GitHub Actions' container sandbox, while the host
+  # runner launches it reliably. Do not "simplify" this into the container.
   perf-firefox-tests:
     needs: [detect-changes]
     if: needs.detect-changes.outputs.should-skip != 'true' && needs.detect-changes.outputs.code == 'true'
@@ -262,8 +269,12 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: pnpm --filter @tumaet/webapp exec playwright install firefox
 
-      - name: Install Playwright system deps
-        run: pnpm --filter @tumaet/webapp exec playwright install-deps firefox
+      # Shared with e2e-tests; the dpkg-lock hang it guards is documented in
+      # the composite action.
+      - name: Install Playwright system deps (bounded + retried)
+        uses: ./.github/actions/playwright-install-deps
+        with:
+          browser: firefox
 
       - name: Run Firefox performance budget tests
         run: pnpm --filter @tumaet/webapp run test:perf:firefox

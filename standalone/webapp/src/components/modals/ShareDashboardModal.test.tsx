@@ -1,19 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { fireEvent, screen, waitFor } from "@testing-library/react"
 import { ShareDashboardModal } from "./ShareDashboardModal"
+import { renderWithRouter } from "@/test/renderWithRouter"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { DiagramView } from "@/types"
 
-const navigateMock = vi.fn()
 const openModalMock = vi.fn()
 const closeModalMock = vi.fn()
 const createDiagramMock = vi.fn()
 const addSharedDiagramEntryMock = vi.fn()
 const updateSharedDiagramViewMock = vi.fn()
-
-vi.mock("react-router", () => ({
-  useNavigate: () => navigateMock,
-}))
 
 vi.mock("@/contexts", () => ({
   useModalContext: () => ({
@@ -51,7 +47,6 @@ vi.mock("react-toastify", () => ({
 
 describe("ShareDashboardModal", () => {
   beforeEach(() => {
-    navigateMock.mockReset()
     openModalMock.mockReset()
     closeModalMock.mockReset()
     createDiagramMock.mockReset()
@@ -92,9 +87,12 @@ describe("ShareDashboardModal", () => {
     sessionStorage.setItem("apollon-collab-name", "Stored Name")
     createDiagramMock.mockResolvedValue({ id: "shared-123" })
 
-    render(<ShareDashboardModal modelId="diagram-1" />)
+    const { router } = renderWithRouter(
+      <ShareDashboardModal modelId="diagram-1" />,
+      { routePaths: ["/", "/shared/$diagramId"] }
+    )
 
-    fireEvent.click(screen.getByRole("button", { name: "Create" }))
+    fireEvent.click(await screen.findByRole("button", { name: "Create" }))
 
     await screen.findByDisplayValue(/shared-123\?view=EDIT$/)
 
@@ -106,7 +104,8 @@ describe("ShareDashboardModal", () => {
       initialName: "Stored Name",
       onConfirm: expect.any(Function),
     })
-    expect(navigateMock).not.toHaveBeenCalled()
+    // Navigation is gated on the collab-name prompt — nothing has moved yet.
+    expect(router.state.location.pathname).toBe("/")
     expect(closeModalMock).not.toHaveBeenCalled()
 
     const onConfirm = openModalMock.mock.calls[0]?.[1]?.onConfirm as
@@ -117,9 +116,10 @@ describe("ShareDashboardModal", () => {
 
     await waitFor(() => {
       expect(sessionStorage.getItem("apollon-collab-name")).toBe("Chosen Name")
-      expect(navigateMock).toHaveBeenCalledWith(
-        "/shared/shared-123?view=" + DiagramView.COLLABORATE
-      )
+      expect(router.state.location.pathname).toBe("/shared/shared-123")
+      expect(router.state.location.search).toEqual({
+        view: DiagramView.COLLABORATE,
+      })
     })
   })
 })

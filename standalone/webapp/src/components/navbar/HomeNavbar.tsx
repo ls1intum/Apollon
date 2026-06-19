@@ -1,5 +1,5 @@
 import { Capacitor } from "@capacitor/core"
-import { Link, useLocation } from "react-router"
+import { Link, useLocation } from "@tanstack/react-router"
 import { NAVBAR_BACKGROUND_COLOR } from "@/constants/colorPlate"
 import { HomeHelpMenu } from "@/components/home/HomeFooter"
 import { useBackTarget } from "@/hooks/useBackTarget"
@@ -36,9 +36,7 @@ export const HomeNavbar = () => {
           <BrandAndVersion />
         </Link>
 
-        {isSubPage && (
-          <BackNav to={backTarget.to} label={backTarget.label} tone="onDark" />
-        )}
+        {isSubPage && <BackNav {...backTarget} tone="onDark" />}
 
         <div className="flex-1" />
 

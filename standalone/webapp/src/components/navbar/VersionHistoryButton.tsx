@@ -1,6 +1,6 @@
 import { Button, Tooltip } from "@mui/material"
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded"
-import { useLocation } from "react-router"
+import { useLocation } from "@tanstack/react-router"
 import { useVersionStore } from "@/stores/useVersionStore"
 import { secondary } from "@/constants"
 import { versioningStrings as t } from "@/components/versioning/strings"
@@ -20,26 +20,29 @@ interface Props {
 /**
  * Discoverable navbar entry point for the version-history sidebar.
  *
- * Renders only on a shared/connected diagram route, where the version drawer
- * is actually mounted (ApollonWithConnection). Local diagrams (`/local/:id`)
- * and `/` have no versioning backend or drawer, so the button is hidden —
- * the user must Share first.
+ * Renders on any route with an active diagram that has a version backend:
+ * `/shared/:id` (collab, RemoteVersionRepository) and `/local/:id`
+ * (standalone, LocalVersionRepository). Legacy `/:id` redirects to
+ * `/shared/:id`, so it is also covered. The gallery (`/`) and the
+ * playground have no active diagram, so the button is hidden.
  */
 export const VersionHistoryButton = ({ color = secondary }: Props) => {
   const diagramId = useDiagramIdFromPath()
   const { pathname } = useLocation()
-  // Versioning only exists on the connected /shared/:id route (legacy /:id
-  // redirects there). Local-only routes have no drawer to toggle.
-  const isSharedRoute =
+  // Both shared (Remote) and local (Local) repositories back a drawer.
+  // Boolean(diagramId) additionally catches legacy /:id, which redirects
+  // to /shared. The gallery "/" and playground have no diagram id.
+  const hasVersioning =
     pathname.startsWith("/shared/") ||
-    (!pathname.startsWith("/local/") && Boolean(diagramId))
+    pathname.startsWith("/local/") ||
+    Boolean(diagramId)
   const openDrawer = useVersionStore((s) => s.openDrawer)
   const closeDrawer = useVersionStore((s) => s.closeDrawer)
   const isOpen = useVersionStore((s) =>
     diagramId ? Boolean(s.drawerOpenByDiagram[diagramId]) : false
   )
 
-  if (!diagramId || !isSharedRoute) return null
+  if (!diagramId || !hasVersioning) return null
 
   return (
     <Tooltip title={t.fabTooltip}>

@@ -1,6 +1,10 @@
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { useEditorContext, useModalContext } from "@/contexts"
 import {
+  setVersionRepository,
+  RemoteVersionRepository,
+} from "@/services/versionRepository"
+import {
   ApollonEditor,
   ApollonMode,
   collabColorFromName,
@@ -9,7 +13,7 @@ import {
   type ApollonOptions,
   type UMLModel,
 } from "@tumaet/apollon/react"
-import { useNavigate, useParams, useSearchParams } from "react-router"
+import { getRouteApi, useNavigate } from "@tanstack/react-router"
 import { toast } from "react-toastify"
 import { Box } from "@mui/material"
 import { DiagramView } from "@/types"
@@ -19,7 +23,7 @@ import {
   createDiagramAutosaver,
   type DiagramAutosaver,
 } from "@/services/createDiagramAutosaver"
-import { useVersionStore } from "@/stores/useVersionStore"
+import { selectScopedPreview, useVersionStore } from "@/stores/useVersionStore"
 import { useDocumentTitle } from "@/hooks/useDocumentTitle"
 import {
   UndoRestoreSnackbar,
@@ -28,15 +32,21 @@ import {
   VersionSidebar,
 } from "@/components/versioning"
 import { versioningStrings as t } from "@/components/versioning/strings"
-import { structuralFingerprint } from "@/components/versioning/utils"
+import { structuralFingerprint } from "@/lib/version/predicates"
+import { useVersionPreviewUrlSync } from "@/hooks/useVersionPreviewUrlSync"
 import { useElementWidth } from "@/hooks/useElementWidth"
 import { useFlushOnUnload } from "@/hooks/useFlushOnUnload"
 import { useVersionShortcut } from "@/hooks/useVersionShortcut"
 import { log } from "@/logger"
 import { addSharedDiagramEntry } from "@/utils/sharedDiagramStorage"
+
+// Route-bound API for typed params + search (avoids importing the route file,
+// which would create a cycle: the route file imports this page).
+const route = getRouteApi("/shared/$diagramId")
+
 export const ApollonWithConnection: React.FC = () => {
-  const { diagramId } = useParams()
-  const [searchParams, setSearchParams] = useSearchParams()
+  const { diagramId } = route.useParams()
+  const { view: viewType, version: previewFromUrl } = route.useSearch()
   const navigate = useNavigate()
   const { setEditor, editor } = useEditorContext()
   const { openModal } = useModalContext()
@@ -81,12 +91,14 @@ export const ApollonWithConnection: React.FC = () => {
     name: string
     color: string
   } | null>(null)
-  const viewType = searchParams.get("view")
-  const previewFromUrl = searchParams.get("version")
 
-  const preview = useVersionStore((s) => s.preview)
-  const exitPreview = useVersionStore((s) => s.exitPreview)
+  const preview = useVersionStore((s) => selectScopedPreview(s, diagramId))
   const restoreVersion = useVersionStore((s) => s.restoreVersion)
+  const { openPreview, closePreview } = useVersionPreviewUrlSync(
+    diagramId,
+    previewFromUrl,
+    Boolean(editor)
+  )
   const applyControlEvent = useVersionStore((s) => s.applyControlEvent)
   const fetchVersions = useVersionStore((s) => s.fetchVersions)
 
@@ -99,6 +111,10 @@ export const ApollonWithConnection: React.FC = () => {
   })
 
   useEffect(() => {
+    // Bind the remote repository before this effect fetches versions (the
+    // drawer no longer self-fetches). Set in the effect, not render, so render
+    // stays pure; ordering before the fetch below is guaranteed.
+    setVersionRepository(RemoteVersionRepository)
     const nextLifecycleKey = `${diagramId ?? ""}:${viewType ?? ""}`
 
     // The component instance survives diagramId / viewType / user
@@ -121,16 +137,15 @@ export const ApollonWithConnection: React.FC = () => {
       if (!container || !diagramId) return
 
       try {
-        const validViews = Object.values(DiagramView)
-        if (!viewType || !validViews.includes(viewType as DiagramView)) {
+        // validateSearch has already coerced an unknown ?view to undefined.
+        if (!viewType) {
           toast.error("Invalid view type")
-          navigate("/")
+          navigate({ to: "/" })
           return
         }
         log.debug("Initializing Apollon editor with view type:", viewType)
 
-        const isCollaborationView =
-          (viewType as DiagramView) === DiagramView.COLLABORATE
+        const isCollaborationView = viewType === DiagramView.COLLABORATE
         if (isCollaborationView && !collaborationUser) {
           const storedName = sessionStorage.getItem("apollon-collab-name")
           if (storedName) {
@@ -150,7 +165,7 @@ export const ApollonWithConnection: React.FC = () => {
                 })
               },
               onClose: () => {
-                navigate("/", { replace: true })
+                navigate({ to: "/", replace: true })
               },
             })
           }
@@ -161,9 +176,7 @@ export const ApollonWithConnection: React.FC = () => {
           signal: abort.signal,
         })
         if (abort.signal.aborted) return
-        addSharedDiagramEntry(diagramId, {
-          lastSharedView: viewType as DiagramView,
-        })
+        addSharedDiagramEntry(diagramId, { lastSharedView: viewType })
         log.debug("Fetched diagram", {
           diagramId,
           nodeCount: diagram.nodes?.length ?? 0,
@@ -207,7 +220,7 @@ export const ApollonWithConnection: React.FC = () => {
             DiagramView.COLLABORATE,
             DiagramView.GIVE_FEEDBACK,
             DiagramView.SEE_FEEDBACK,
-          ].includes(viewType as DiagramView)
+          ].includes(viewType)
         ) {
           wsManagerRef.current = new WebSocketManager(diagramId, instance, () =>
             toast.error("WebSocket error")
@@ -253,7 +266,8 @@ export const ApollonWithConnection: React.FC = () => {
         const autosaver = createDiagramAutosaver({
           diagramId,
           getModel: () => editorInstance.model,
-          isPaused: () => useVersionStore.getState().preview !== null,
+          isPaused: () =>
+            selectScopedPreview(useVersionStore.getState(), diagramId) !== null,
           collaboration: isCollaborationView,
           onSaved: () => {
             diagramIsUpdated.current = false
@@ -263,7 +277,7 @@ export const ApollonWithConnection: React.FC = () => {
         autosaverRef.current = autosaver
 
         modelChangeSubscriptionId = instance.subscribeToModelChange(() => {
-          if (useVersionStore.getState().preview !== null) return
+          if (selectScopedPreview(useVersionStore.getState(), diagramId)) return
           diagramIsUpdated.current = true
           autosaver.schedule()
         })
@@ -276,7 +290,7 @@ export const ApollonWithConnection: React.FC = () => {
         if (err instanceof DOMException && err.name === "AbortError") return
         log.error("Failed to initialize diagram", err)
         toast.error("Failed to initialize diagram")
-        navigate("/")
+        navigate({ to: "/" })
       }
     }
 
@@ -292,7 +306,10 @@ export const ApollonWithConnection: React.FC = () => {
       // the stale snapshot. Exit preview first: setPreviewMode(false) resyncs
       // the editor from the live Yjs doc (the real diagram), and exitPreview()
       // clears the pause, so the flush below captures and persists it.
-      if (instance && useVersionStore.getState().preview !== null) {
+      if (
+        instance &&
+        selectScopedPreview(useVersionStore.getState(), diagramId) !== null
+      ) {
         instance.setPreviewMode(false)
         useVersionStore.getState().exitPreview()
       }
@@ -321,29 +338,8 @@ export const ApollonWithConnection: React.FC = () => {
     viewType,
   ])
 
-  // Sync the URL `?version=` param INTO preview state — permalink open,
-  // history nav, external link change. We do NOT mirror the other way:
-  // click-row entries from the drawer go through `enterPreview` directly
-  // and don't write to the URL. So an empty URL alone is not a signal to
-  // exit; we only exit when the URL TRANSITIONS from has-version to
-  // no-version (browser back / external removal of `?version=`).
-  const prevPreviewFromUrl = useRef<string | null>(null)
-  useEffect(() => {
-    if (!diagramId || !editor) return
-    if (previewFromUrl && preview?.versionId !== previewFromUrl) {
-      void useVersionStore
-        .getState()
-        .enterPreview(diagramId, previewFromUrl)
-        .catch(() => toast.error("This version is no longer available."))
-    } else if (
-      !previewFromUrl &&
-      prevPreviewFromUrl.current !== null &&
-      preview !== null
-    ) {
-      exitPreview()
-    }
-    prevPreviewFromUrl.current = previewFromUrl ?? null
-  }, [previewFromUrl, preview?.versionId, diagramId, editor, exitPreview])
+  // URL↔preview sync (deep-link open, history nav, drawer click) is handled by
+  // useVersionPreviewUrlSync above — the same hook the local editor uses.
 
   const baseReadonly = viewType === DiagramView.SEE_FEEDBACK
 
@@ -422,53 +418,44 @@ export const ApollonWithConnection: React.FC = () => {
     return () => abort.abort()
   }, [preview, editor, diagramId, baseReadonly])
 
-  // Memoised because `handleRestoreFromPreview`'s useCallback lists it
-  // as a dep — without stable identity the restore handler gets a fresh
-  // closure every render and the banner's `onRestore` prop churns.
+  // Memoised because `handleRestore`'s useCallback lists it as a dep —
+  // without stable identity the restore handler gets a fresh closure every
+  // render and the banner's `onRestore` prop churns.
   const handleVersionSaved = useCallback((headRev?: number) => {
     autosaverRef.current?.setHeadRev(headRev)
     diagramIsUpdated.current = false
   }, [])
 
   const handleExitPreview = useCallback(() => {
-    if (!diagramId) return
-    exitPreview()
-    if (searchParams.has("version")) {
-      const next = new URLSearchParams(searchParams)
-      next.delete("version")
-      setSearchParams(next, { replace: true })
-    }
-  }, [diagramId, exitPreview, searchParams, setSearchParams])
+    // Removing `?version=` makes the URL↔preview hook exit preview.
+    closePreview()
+  }, [closePreview])
 
-  const handleRestoreFromPreview = useCallback(
+  // One restore path for the banner and the drawer. While previewing,
+  // `editor.model` is the read-only overlay — persisting it as the pre-restore
+  // undo snapshot would make Undo restore the very version we just restored.
+  // Leave preview first so editor.model resyncs to the live canvas.
+  const handleRestore = useCallback(
     async (versionId: string) => {
       if (!diagramId || !editor) return
-      restoredDuringPreviewRef.current = true
+      const previewing =
+        selectScopedPreview(useVersionStore.getState(), diagramId) !== null
+      if (previewing) {
+        restoredDuringPreviewRef.current = true
+        editor.setPreviewMode(false)
+      }
+      const liveBody = editor.model
       try {
-        const { headRev } = await restoreVersion(
-          diagramId,
-          versionId,
-          editor.model
-        )
+        const { headRev } = await restoreVersion(diagramId, versionId, liveBody)
         handleVersionSaved(headRev)
-        if (searchParams.has("version")) {
-          const next = new URLSearchParams(searchParams)
-          next.delete("version")
-          setSearchParams(next, { replace: true })
-        }
+        // Strip `?version=` so the URL sync doesn't re-enter the restored version.
+        if (previewing) closePreview()
       } catch {
         restoredDuringPreviewRef.current = false
         toast.error(t.restoreFailed)
       }
     },
-    [
-      diagramId,
-      editor,
-      handleVersionSaved,
-      restoreVersion,
-      searchParams,
-      setSearchParams,
-    ]
+    [diagramId, editor, handleVersionSaved, restoreVersion, closePreview]
   )
 
   return (
@@ -529,7 +516,7 @@ export const ApollonWithConnection: React.FC = () => {
                 diagramId={diagramId}
                 canRestore={canRestoreFromPreview}
                 onExit={handleExitPreview}
-                onRestore={handleRestoreFromPreview}
+                onRestore={handleRestore}
               />
             </Box>
           )}
@@ -538,6 +525,8 @@ export const ApollonWithConnection: React.FC = () => {
           <VersionSidebar
             diagramId={diagramId}
             onVersionSaved={handleVersionSaved}
+            onConfirmedRestore={handleRestore}
+            onPreview={openPreview}
           />
         )}
       </Box>
@@ -546,6 +535,8 @@ export const ApollonWithConnection: React.FC = () => {
         <VersionDrawer
           diagramId={diagramId}
           onVersionSaved={handleVersionSaved}
+          onConfirmedRestore={handleRestore}
+          onPreview={openPreview}
         />
       )}
       <UndoRestoreSnackbar />

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react"
-import { Link, useLocation } from "react-router"
+import { Link, useLocation } from "@tanstack/react-router"
 import { useModalContext } from "@/contexts"
 import { bugReportURL } from "@/constants/urls"
 import { releasesLink, repositoryLink } from "@/constants/version"

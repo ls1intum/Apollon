@@ -9,12 +9,13 @@ import Toolbar from "@mui/material/Toolbar"
 import Typography from "@mui/material/Typography"
 import MenuIcon from "@mui/icons-material/Menu"
 import TumLogo from "assets/images/tum-logo.png"
-import { Link } from "react-router"
+import { Link } from "@tanstack/react-router"
 import { useEditorContext, useModalContext } from "@/contexts"
 import { ALL_DIAGRAMS_LABEL } from "@/lib/navProvenance"
 import { BackNav } from "./BackNav"
 import { NavbarFile } from "./NavbarFile"
 import { NavbarHelp } from "./NavbarHelp"
+import { SaveLocalCopyButton } from "./SaveLocalCopyButton"
 import { NAVBAR_SX } from "./styleConstants"
 import { ThemeSwitcherMenu } from "./ThemeSwitcher"
 import { VersionHistoryButton } from "./VersionHistoryButton"
@@ -213,6 +214,10 @@ export default function MobileNavbar() {
                 >
                   Share
                 </MenuItem>
+                <SaveLocalCopyButton
+                  color="var(--apollon-primary-contrast)"
+                  onAfter={handleCloseNavMenu}
+                />
                 <VersionHistoryButton color="var(--apollon-primary-contrast)" />
                 <NavbarHelp color="var(--apollon-primary-contrast)" />
                 <ThemeSwitcherMenu asMenuItem onToggle={handleCloseNavMenu} />
