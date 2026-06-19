@@ -132,6 +132,15 @@ describe("GET /api/diagrams/:diagramId/preview.svg", () => {
 
     const second = await request(app).get(`/api/diagrams/${id}/preview.svg`)
     expect(second.headers["etag"]).not.toBe(first.headers["etag"])
+
+    // The ETag and the body advance together (read atomically), so the OLD tag
+    // must NOT 304 after the edit — otherwise a stale render would be pinned to
+    // a fresh revision.
+    const stale = await request(app)
+      .get(`/api/diagrams/${id}/preview.svg`)
+      .set("if-none-match", first.headers["etag"])
+    expect(stale.status).toBe(200)
+    expect(stale.headers["etag"]).toBe(second.headers["etag"])
   })
 
   it("treats the strong ETag form (as the PUT route mints) as a match", async () => {

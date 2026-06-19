@@ -7,7 +7,6 @@ import {
   type ConversionResource,
   QueueFullError,
 } from "../resources/conversion-resource.js"
-import { readDiagram } from "./diagrams.js"
 import { DiagramIdParams } from "./_schemas.js"
 import type { Diagram } from "../types.js"
 import type { UMLModel } from "@tumaet/apollon"
@@ -46,14 +45,32 @@ const HTML_CSP = [
   "frame-ancestors *",
 ].join("; ")
 
-/** Reads the diagram and derives its weak ETag from `headRev`. */
+/**
+ * Reads the diagram body and its `headRev` in ONE transaction and derives the
+ * weak ETag from `headRev`. MULTI/EXEC executes atomically with no interleave,
+ * so a concurrent PUT cannot pair an old body with a new `headRev` — which
+ * would cache stale SVG under a fresh ETag and then 304 forever. The two keys
+ * share the `{id}` hash tag (same slot), so this also holds under Redis Cluster.
+ */
 async function readDiagramWithEtag(
   redis: Redis,
   diagramId: string
 ): Promise<{ diagram: Diagram; etag: string } | null> {
-  const diagram = await readDiagram(redis, diagramId)
+  const multi = redis.multi()
+  multi.json.get(k.diagram(diagramId), { path: "$" })
+  multi.hGet(k.diagramMeta(diagramId), "headRev")
+  const replies = (await multi.exec()) as unknown[]
+  for (const reply of replies) {
+    if (reply instanceof Error) throw reply
+  }
+
+  // `json.get` with path `$` returns an array; an empty/absent result is a miss.
+  const body = replies[0] as Diagram[] | null
+  const diagram =
+    body && Array.isArray(body) && body.length > 0 ? body[0] : undefined
   if (!diagram) return null
-  const headRev = (await redis.hGet(k.diagramMeta(diagramId), "headRev")) ?? "0"
+
+  const headRev = (replies[1] as string | null) ?? "0"
   return { diagram, etag: `W/"${headRev}"` }
 }
 
