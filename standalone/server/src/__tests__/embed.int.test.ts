@@ -205,6 +205,18 @@ describe("GET /api/diagrams/:diagramId/preview.svg", () => {
     }
   })
 
+  it("serves a repeat request from the render cache without re-rendering", async () => {
+    const resource = okResource()
+    const app = appWith(resource)
+    const id = await createDiagram(app)
+    await request(app).get(`/api/diagrams/${id}/preview.svg`).buffer(true)
+    const afterFirst = resource.calls
+    expect(afterFirst).toBe(1)
+    // Same (id, headRev) → served from the in-process cache, renderer untouched.
+    await request(app).get(`/api/diagrams/${id}/preview.svg`).buffer(true)
+    expect(resource.calls).toBe(afterFirst)
+  })
+
   it("does not cache a non-queue render error (500)", async () => {
     const app = appWith(
       fakeResource(async () => {

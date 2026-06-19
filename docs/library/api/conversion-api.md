@@ -97,14 +97,26 @@ model), which the converter sends directly as a short `{ "error": "<message>" }`
 
 ## Limits & tuning
 
-Requests are serialised through a single render worker with a bounded queue, so
-one slow diagram can't exhaust the process. Defaults (override via environment):
+Renders run on a **self-calibrating worker pool** that sizes itself to the
+machine — no tuning required. The pool grows from one warm worker up to a
+ceiling derived from `min(CPU, memory)` (`availableParallelism − 1`, bounded by
+~60% of system memory ÷ per-worker footprint), reaps idle workers back to one,
+sheds excess load with `503` + `Retry-After`, and recycles workers to bound
+memory. Every value below has a derived default; override only to constrain a
+shared host.
 
-| Variable                     | Default           | Meaning                      |
-| ---------------------------- | ----------------- | ---------------------------- |
-| `MAX_SNAPSHOT_BYTES`         | `5242880` (5 MiB) | max request body size        |
-| `CONVERTER_MAX_QUEUE_LENGTH` | `20`              | queued requests before `503` |
-| `CONVERTER_TIMEOUT_MS`       | `30000`           | per-conversion timeout       |
+| Variable                             | Default                 | Meaning                                          |
+| ------------------------------------ | ----------------------- | ------------------------------------------------ |
+| `MAX_SNAPSHOT_BYTES`                 | `5242880` (5 MiB)       | max request body size                            |
+| `CONVERTER_POOL_MAX`                 | _calibrated_            | max render workers (`min(cores−1, memBudget)`)   |
+| `CONVERTER_POOL_MIN`                 | `1`                     | always-warm workers                              |
+| `CONVERTER_MAX_QUEUE_LENGTH`         | `8 × poolMax`           | queued requests before `503`                     |
+| `CONVERTER_MAX_QUEUE_WAIT_MS`        | `10000`                 | drop a job that has waited longer (it's a ghost) |
+| `CONVERTER_TIMEOUT_{SVG,PNG,PDF}_MS` | `10000`/`15000`/`30000` | per-format render deadline                       |
+
+The embed surface additionally serves identical revisions from an in-process
+render cache with single-flight, so a fan-out of viewers (e.g. GitHub Camo)
+collapses to one render per save.
 
 ## See also
 

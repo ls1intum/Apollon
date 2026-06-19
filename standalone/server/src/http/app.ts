@@ -13,6 +13,7 @@ import { mountConversionRoutes } from "../routes/conversion.js"
 import { mountHealthRoutes } from "../routes/health.js"
 import { mountEmbedApiRoutes, mountEmbedRoutes } from "../routes/embed.js"
 import { ConversionResource } from "../resources/conversion-resource.js"
+import { SvgPreviewCache } from "../services/svg-preview-cache.js"
 import type { ControlEvent } from "../types.js"
 
 export interface RelayHook {
@@ -79,19 +80,24 @@ export function buildApp(deps: AppDeps): Express {
   const getResource = (): ConversionResource =>
     (resource ??= new ConversionResource())
 
+  // One render cache + single-flight shared by both embed routes, so a
+  // preview.svg hit warms the /embed HTML render for the same revision and
+  // vice versa.
+  const previewCache = new SvgPreviewCache()
+
   app.use("/health", mountHealthRoutes({ redis }))
   app.use(
     "/api",
     mountDiagramRoutes({ config, redis }, relay),
     mountVersionRoutes({ config, redis }, relay),
     mountConversionRoutes({ getResource }),
-    mountEmbedApiRoutes({ redis, getResource })
+    mountEmbedApiRoutes({ redis, getResource, previewCache })
   )
   // /embed/:diagramId — server-rendered HTML page suitable for iframing from
   // third-party hosts (GitLab snippets, Notion, Confluence, …). Mounted at the
   // root, not under /api, because the URL is part of the public surface that
   // ends up in `<iframe src=…>` attributes.
-  app.use("/embed", mountEmbedRoutes({ redis, getResource }))
+  app.use("/embed", mountEmbedRoutes({ redis, getResource, previewCache }))
 
   app.use(errorHandler)
   return app

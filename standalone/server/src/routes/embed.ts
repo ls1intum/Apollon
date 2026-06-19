@@ -11,11 +11,18 @@ import { readDiagram } from "./diagrams.js"
 import { DiagramIdParams } from "./_schemas.js"
 import type { Diagram } from "../types.js"
 import type { UMLModel } from "@tumaet/apollon"
+import type { SvgPreviewCache } from "../services/svg-preview-cache.js"
 
 interface Deps {
   redis: Redis
   /** Lazy provider for the shared conversion worker pool (see `buildApp`). */
   getResource: () => ConversionResource
+  /**
+   * Shared render cache + single-flight. Collapses the Camo fan-out (many
+   * concurrent requests for the same `(id, headRev)`) to one render and serves
+   * repeats from memory.
+   */
+  previewCache: SvgPreviewCache
 }
 
 /**
@@ -65,22 +72,33 @@ function ifNoneMatch(header: string | undefined, etag: string): boolean {
   return header.split(",").some((tag) => opaque(tag) === target)
 }
 
-/** Renders to an SVG string; queue saturation becomes a typed transient 503. */
+/**
+ * Renders to an SVG string through the cache + single-flight, mapping queue
+ * saturation to a typed transient 503. The cache key is `(id, etag)`: immutable
+ * per revision, and shared by both the SVG and HTML routes so either warms the
+ * other.
+ */
 async function renderSvg(
-  getResource: () => ConversionResource,
-  diagram: Diagram
+  deps: Deps,
+  diagram: Diagram,
+  etag: string
 ): Promise<string> {
   try {
-    // Widen storage's string `version` to UMLModel — same cast /api/converter/* uses.
-    const { data } = await getResource().render("svg", diagram as UMLModel)
-    return typeof data === "string" ? data : data.toString("utf8")
+    return await deps.previewCache.render(`${diagram.id}:${etag}`, async () => {
+      // Widen storage's string `version` to UMLModel — same cast the converter uses.
+      const { data } = await deps
+        .getResource()
+        .render("svg", diagram as UMLModel)
+      return typeof data === "string" ? data : data.toString("utf8")
+    })
   } catch (error) {
     if (error instanceof QueueFullError) throw Errors.rendererBusy()
     throw error
   }
 }
 
-export function mountEmbedApiRoutes({ redis, getResource }: Deps): Router {
+export function mountEmbedApiRoutes(deps: Deps): Router {
+  const { redis } = deps
   const router = Router()
 
   router.get(
@@ -116,7 +134,7 @@ export function mountEmbedApiRoutes({ redis, getResource }: Deps): Router {
           return
         }
 
-        const svg = await renderSvg(getResource, found.diagram)
+        const svg = await renderSvg(deps, found.diagram, found.etag)
         setHeaders()
         res.status(200).send(svg)
       }
@@ -126,7 +144,8 @@ export function mountEmbedApiRoutes({ redis, getResource }: Deps): Router {
   return router
 }
 
-export function mountEmbedRoutes({ redis, getResource }: Deps): Router {
+export function mountEmbedRoutes(deps: Deps): Router {
+  const { redis } = deps
   const router = Router()
 
   router.get(
@@ -164,7 +183,7 @@ export function mountEmbedRoutes({ redis, getResource }: Deps): Router {
           return
         }
 
-        const svg = await renderSvg(getResource, found.diagram)
+        const svg = await renderSvg(deps, found.diagram, found.etag)
         const html = renderEmbedHtml({
           title: found.diagram.title || "Apollon diagram",
           svg,
