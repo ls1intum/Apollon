@@ -81,7 +81,7 @@ const pdfBlob = await svgToPdf(svg, clip, { title: "diagram" })
 `@resvg/resvg-wasm`, `jspdf` and `svg2pdf.js` are optional dependencies the
 consumer installs; they load lazily, so importing the editor never pulls them
 in. Over-budget diagrams come back with `clamped: true` and a reduced
-`appliedScale`; failures throw `RasterTooLargeError` / `RasterTimeoutError`.
+`appliedScale`; an over-budget PNG throws `RasterTooLargeError`.
 Inter ships Regular + Bold only, so italics render upright — matching the server.
 
 > Server-side instead? The standalone server renders SVG, PNG, and PDF over

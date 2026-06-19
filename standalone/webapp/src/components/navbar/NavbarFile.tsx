@@ -44,8 +44,9 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
   const [subMenuAnchorEl, setSubMenuAnchorEl] = useState<null | HTMLElement>(
     null
   )
-  // Guards against a second click re-firing a slow render. Per-format so a slow
-  // PNG doesn't block PDF/SVG/JSON.
+  // Global re-entry lock: while any export runs, `runExport` ignores further
+  // clicks (they share the editor's SVG extraction). The per-item `disabled`
+  // below is just the visual cue on the format in flight.
   const [busyFormat, setBusyFormat] = useState<ExportFormat | null>(null)
 
   const isMenuOpen = Boolean(anchorEl)

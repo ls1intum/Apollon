@@ -124,7 +124,9 @@ function normalizeInterFontFamily(root: Element): void {
   while (stack.length) {
     const node = stack.pop()!
     const family = node.getAttribute("font-family")
-    if (family && /(^|,\s*)Inter\b/i.test(family)) {
+    // Only collapse an Inter-*led* list (Inter is the primary face, as Apollon
+    // emits). A list where Inter is merely a fallback keeps its primary.
+    if (family && /^\s*["']?Inter\b/i.test(family)) {
       node.setAttribute("font-family", "Inter")
     }
     for (const child of Array.from(node.children)) stack.push(child)

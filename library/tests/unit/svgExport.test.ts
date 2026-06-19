@@ -81,11 +81,22 @@ describe("preProcessSvgForPdf", () => {
     expect(root.querySelectorAll("tspan").length).toBe(0)
   })
 
-  it("collapses the Inter font-family chain to a literal 'Inter'", () => {
+  it("collapses an Inter-led font-family chain to a literal 'Inter'", () => {
     const root = preProcessSvgForPdf(parse(SAMPLE_SVG))
     for (const text of Array.from(root.querySelectorAll("text"))) {
       expect(text.getAttribute("font-family")).toBe("Inter")
     }
+  })
+
+  it("leaves a non-Inter-led font-family untouched", () => {
+    const root = preProcessSvgForPdf(
+      parse(
+        `<svg xmlns="http://www.w3.org/2000/svg"><text font-family="Helvetica, Inter">x</text></svg>`
+      )
+    )
+    expect(root.querySelector("text")!.getAttribute("font-family")).toBe(
+      "Helvetica, Inter"
+    )
   })
 })
 
