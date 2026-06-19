@@ -592,4 +592,52 @@ test.describe("Mobile responsive layout", () => {
       )
     expect(columnCount).toBe(1)
   })
+
+  test("palette never overlaps the canvas controls", async ({ page }) => {
+    // BPMN has the most palette items; in a short viewport the palette must
+    // stop above the zoom/controls toolbar (scrolling within its bound)
+    // instead of growing into it.
+    await page.setViewportSize({ width: 844, height: 390 })
+    const modelId = "e2e-bpmn-overlap"
+    await page.goto("/")
+    await page.evaluate((id) => {
+      localStorage.setItem(
+        "persistenceModelStore",
+        JSON.stringify({
+          state: {
+            models: {
+              [id]: {
+                id,
+                model: {
+                  id,
+                  type: "BPMN",
+                  assessments: {},
+                  edges: [],
+                  nodes: [],
+                  title: "BPMN",
+                  version: "4.0.0",
+                },
+                lastModifiedAt: new Date().toISOString(),
+              },
+            },
+            currentModelId: id,
+          },
+          version: 0,
+        })
+      )
+    }, modelId)
+    await page.goto(`/local/${modelId}`)
+    await waitForCanvasReady(page, false)
+
+    const paletteBox = await page.getByTestId("apollon-palette").boundingBox()
+    const controlsBox = await page
+      .locator(".react-flow__controls")
+      .boundingBox()
+    expect(paletteBox).not.toBeNull()
+    expect(controlsBox).not.toBeNull()
+    // Palette bottom edge stays above the controls' top edge.
+    expect(paletteBox!.y + paletteBox!.height).toBeLessThanOrEqual(
+      controlsBox!.y
+    )
+  })
 })

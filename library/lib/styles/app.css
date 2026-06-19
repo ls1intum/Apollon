@@ -234,7 +234,13 @@
   top: 10px;
   left: calc(10px + var(--safe-area-inset-left, 0px));
   z-index: 2;
-  max-height: calc(100% - 20px);
+
+  /* Reserve room at the bottom for the canvas controls toolbar (~48px tall
+     plus its margin and the bottom safe-area inset) so the palette never grows
+     into the zoom/undo/redo controls. It shrinks to its content when there are
+     few elements and scrolls within this bound when there are many — adapting
+     to the available height instead of dominating the viewport. */
+  max-height: calc(100% - 84px - var(--safe-area-inset-bottom, 0px));
   padding: 5px;
   overflow-y: auto;
   overscroll-behavior: contain;
