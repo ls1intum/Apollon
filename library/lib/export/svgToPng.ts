@@ -46,7 +46,7 @@ export type SvgToPngOptions = {
    *   `import url from "@resvg/resvg-wasm/index_bg.wasm?url"`
    *   `svgToPng(svg, clip, { wasmInput: fetch(url) })`
    */
-  wasmInput?: WebAssembly.Module | ArrayBuffer | Response | Promise<Response>
+  wasmInput?: WebAssembly.Module | BufferSource | Response | Promise<Response>
   /** Font buffers (ttf/otf) to use instead of the bundled Inter. */
   fontBuffers?: Uint8Array[]
 }
@@ -202,6 +202,9 @@ export async function svgToPng(
       height,
     }
   } catch (err) {
+    // Best-effort: surface a likely wasm OOM as the typed error. wasm-bindgen
+    // doesn't report OOM uniformly, so this is a heuristic — the area budget
+    // above is the real guard against running out of memory.
     const e = err as Error
     if (e.name === "RangeError" || /memory|allocation/i.test(e.message ?? "")) {
       const cw = Math.round(clip.width * appliedScale)

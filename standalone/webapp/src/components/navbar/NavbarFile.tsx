@@ -4,7 +4,7 @@ import Menu from "@mui/material/Menu"
 import MenuItem from "@mui/material/MenuItem"
 import Typography from "@mui/material/Typography"
 import { toast } from "react-toastify"
-import { RasterTooLargeError, RasterTimeoutError } from "@tumaet/apollon/export"
+import { RasterTooLargeError } from "@tumaet/apollon/export"
 import { secondary } from "@/constants"
 import { useModalContext } from "@/contexts"
 import {
@@ -30,9 +30,6 @@ type ExportRunResult = { clamped?: boolean; appliedScale?: number }
 function exportErrorMessage(format: ExportFormat, err: unknown): string {
   if (err instanceof RasterTooLargeError) {
     return "Diagram is too large to export as PNG. Try SVG or PDF instead."
-  }
-  if (err instanceof RasterTimeoutError) {
-    return "PNG export timed out. Please try again."
   }
   return `${format} export failed. Please try again.`
 }

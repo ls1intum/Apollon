@@ -56,13 +56,23 @@ function inlineNestedSvgs(root: Element): void {
     if (!doc) continue
     const g = doc.createElementNS(SVG_NS, "g")
 
+    // A nested <svg> positions content at its own (x, y) and offsets it by the
+    // viewBox origin; <g> has neither, so fold both into a translate. Apollon's
+    // nested SVGs use x=y=0 and viewBox "0 0 w h" today, but handling the
+    // general case keeps the substitution layout-equivalent.
+    const x = parseFloat(svg.getAttribute("x") ?? "0") || 0
+    const y = parseFloat(svg.getAttribute("y") ?? "0") || 0
+    let vbX = 0
+    let vbY = 0
     const viewBox = svg.getAttribute("viewBox")
     if (viewBox) {
-      const [minX, minY] = viewBox.split(/[\s,]+/).map(Number)
-      if (Number.isFinite(minX) && Number.isFinite(minY) && (minX || minY)) {
-        g.setAttribute("transform", `translate(${-minX}, ${-minY})`)
-      }
+      const [a, b] = viewBox.split(/[\s,]+/).map(Number)
+      if (Number.isFinite(a)) vbX = a
+      if (Number.isFinite(b)) vbY = b
     }
+    const tx = x - vbX
+    const ty = y - vbY
+    if (tx || ty) g.setAttribute("transform", `translate(${tx}, ${ty})`)
     for (const attr of Array.from(svg.attributes)) {
       if (!dropOnG.has(attr.name)) g.setAttribute(attr.name, attr.value)
     }
@@ -91,6 +101,12 @@ function flattenMultiTspans(root: Element): void {
           newText.setAttribute(attr, text.getAttribute(attr)!)
         }
       }
+      // The standalone <text> must carry an absolute position. Apollon's
+      // multi-tspan texts give every tspan an explicit x/y (resolveTspanDy in
+      // getSVG already converted any dy); inherit the parent's x/y as a floor so
+      // a tspan that omits one can't silently collapse to the 0 origin.
+      if (text.hasAttribute("x")) newText.setAttribute("x", text.getAttribute("x")!)
+      if (text.hasAttribute("y")) newText.setAttribute("y", text.getAttribute("y")!)
       // The tspan's own attributes (its absolute x/y, per-tspan font-size/style)
       // win over the inherited parent values.
       for (const attr of Array.from(tspan.attributes)) {

@@ -73,14 +73,13 @@ async function registerInter(
   const { regular, bold } = await fontBase64(fonts)
   pdf.addFileToVFS("Inter-Regular.ttf", regular)
   pdf.addFileToVFS("Inter-Bold.ttf", bold)
+  // jsPDF folds (style, weight) into one registry key: 400→"normal",
+  // 700→"bold", 600→"600normal" (per style). Registering 400/600/700 covers
+  // every (style, weight) Apollon's compat SVG emits; 600 aliases onto Bold.
   for (const style of ["normal", "italic"] as const) {
-    const regularFile = "Inter-Regular.ttf"
-    const boldFile = "Inter-Bold.ttf"
-    pdf.addFont(regularFile, "Inter", style, "400")
-    pdf.addFont(regularFile, "Inter", style, "normal")
-    pdf.addFont(boldFile, "Inter", style, "600")
-    pdf.addFont(boldFile, "Inter", style, "700")
-    pdf.addFont(boldFile, "Inter", style, "bold")
+    pdf.addFont("Inter-Regular.ttf", "Inter", style, "400")
+    pdf.addFont("Inter-Bold.ttf", "Inter", style, "600")
+    pdf.addFont("Inter-Bold.ttf", "Inter", style, "700")
   }
 }
 

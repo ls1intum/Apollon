@@ -94,7 +94,7 @@ describe("svgToPng", () => {
     const result = await svgToPng(SAMPLE_SVG, CLIP, {
       scale: 2,
       background: "#ffffff",
-      wasmInput: wasmBytes.buffer.slice(0),
+      wasmInput: wasmBytes,
       fontBuffers,
     })
     expect(result.clamped).toBe(false)
@@ -112,7 +112,7 @@ describe("svgToPng", () => {
     const result = await svgToPng(SAMPLE_SVG, CLIP, {
       scale: 2,
       maxAreaPx: 10_000, // tiny budget forces a clamp
-      wasmInput: wasmBytes.buffer.slice(0),
+      wasmInput: wasmBytes,
       fontBuffers,
     })
     expect(result.clamped).toBe(true)
@@ -140,6 +140,15 @@ describe("svgToPdf", () => {
     const bytes = new Uint8Array(await blob.arrayBuffer())
     // "%PDF" header.
     expect(Array.from(bytes.slice(0, 4))).toEqual([0x25, 0x50, 0x44, 0x46])
+
+    // Fidelity guard: the embedded Inter subset must be present. jsPDF always
+    // lists the 14 base-14 names regardless, so absence-of-Helvetica proves
+    // nothing — but a /BaseFont /...Inter entry plus the subset's tens-of-KB
+    // payload only appear when registerInter ran and svg2pdf used Inter rather
+    // than dropping the 600-weight text to a base font.
+    const text = Buffer.from(bytes).toString("latin1")
+    expect(text).toContain("Inter")
+    expect(bytes.length).toBeGreaterThan(20_000)
   })
 
   it("throws on non-positive dimensions", async () => {
