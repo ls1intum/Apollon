@@ -44,7 +44,7 @@ pnpm test            # library unit tests
 
 If the change is user-, embedder-, or operator-visible, also add a changeset — `pnpm changeset` — per the [release-notes guide](/contributor/development/release-notes).
 
-The pre-push hook also runs `pnpm run lint`. CI runs the full matrix plus visual regression, Docker builds, and the library `publint` + bundle-size budgets, and the advisory **Verify changesets** check flags a tracked-package change that ships without one.
+The pre-push hook also runs `pnpm run lint`. CI runs the full matrix on every PR, Docker builds, and the library `publint` + bundle-size budgets, and the advisory **Verify changesets** check flags a tracked-package change that ships without one. Visual regression and the chromium performance budget run nightly (see [Visual tests](/contributor/development/visual-tests)), not per-PR.
 
 ## Commit messages
 
