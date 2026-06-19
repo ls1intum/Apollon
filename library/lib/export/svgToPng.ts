@@ -195,7 +195,9 @@ export async function svgToPng(
       },
     })
     rendered = resvg.render()
-    const png = rendered.asPng()
+    // Copy into a plain ArrayBuffer-backed array: resvg types the PNG as
+    // Uint8Array<ArrayBufferLike>, which TS 5.7 won't accept as a BlobPart.
+    const png = new Uint8Array(rendered.asPng())
     const { width, height } = rendered
     return {
       blob: new Blob([png], { type: "image/png" }),
