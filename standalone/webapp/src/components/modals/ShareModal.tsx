@@ -117,7 +117,7 @@ export const ShareModal = () => {
           </Button>
         </div>
       </div>
-      <fieldset className="border border-gray-300 p-2 rounded-xl w-fill ">
+      <fieldset className="border border-[var(--home-border-subtle)] p-2 rounded-xl w-fill ">
         <legend className="text-sm px-2 text-[var(--apollon-primary-contrast)]">
           Recently shared Diagram:
         </legend>

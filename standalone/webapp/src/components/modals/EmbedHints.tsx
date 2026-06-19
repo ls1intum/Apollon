@@ -27,7 +27,7 @@ export function EmbedHints({ title = "Apollon diagram" }: { title?: string }) {
 
   if (!snippets) {
     return (
-      <fieldset className="border border-gray-300 p-2 rounded-xl">
+      <fieldset className="border border-[var(--home-border-subtle)] p-2 rounded-xl">
         <legend className="text-sm px-2 text-[var(--apollon-primary-contrast)]">
           Embed in GitHub / GitLab
         </legend>
@@ -39,7 +39,7 @@ export function EmbedHints({ title = "Apollon diagram" }: { title?: string }) {
   }
 
   return (
-    <fieldset className="border border-gray-300 p-2 rounded-xl flex flex-col gap-3">
+    <fieldset className="border border-[var(--home-border-subtle)] p-2 rounded-xl flex flex-col gap-3">
       <legend className="text-sm px-2 text-[var(--apollon-primary-contrast)]">
         Embed in GitHub / GitLab
       </legend>
