@@ -158,6 +158,12 @@ export const ApollonLocal: FC = () => {
       // by contract.
       if (selectScopedPreview(useVersionStore.getState(), diagramId)) return
       updateModel(model)
+      // The dashboard thumbnail is purely cosmetic, but rendering it mounts a
+      // second, transient React Flow canvas (`exportAsSVG`'s off-screen 4000²
+      // div). Under test automation that duplicate canvas races with editor
+      // interactions — locators resolve to its off-screen clone. Skip the
+      // thumbnail there; persistence (above) is unaffected.
+      if (typeof navigator !== "undefined" && navigator.webdriver) return
       if (thumbnailExportTimeoutRef.current) {
         clearTimeout(thumbnailExportTimeoutRef.current)
       }

@@ -80,7 +80,10 @@ export const ShareModal = () => {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div
+      className="flex min-w-0 flex-col gap-4 sm:gap-6"
+      data-testid="share-modal-content"
+    >
       <div>
         <Typography>
           After sharing, this diagram will be accessible to everyone with access
@@ -91,7 +94,7 @@ export const ShareModal = () => {
         </Typography>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
         <div>
           <Button
             variant="outline"
@@ -125,21 +128,21 @@ export const ShareModal = () => {
           </Button>
         </div>
       </div>
-      <fieldset className="border border-gray-300 p-2 rounded-xl w-fill ">
+      <fieldset className="min-w-0 rounded-xl border border-gray-300 p-2">
         <legend className="text-sm px-2 text-[var(--apollon-primary-contrast)]">
           Recently shared Diagram:
         </legend>
-        <div className="flex items-center ">
+        <div className="flex min-w-0 items-center">
           <input
             type="text"
             value={window.location.href}
             readOnly
-            className="grow h-[42px] px-3 py-2 border rounded-md border-r-0 rounded-r-none border-[var(--apollon-primary-contrast)] bg-[var(--apollon-background)] text-[var(--apollon-primary-contrast)]"
+            className="h-[42px] min-w-0 grow rounded-md rounded-r-none border border-r-0 border-[var(--apollon-primary-contrast)] bg-[var(--apollon-background)] px-3 py-2 text-[var(--apollon-primary-contrast)]"
           />
           <Button
             onClick={() => copyToClipboard(window.location.href)}
             variant="outline"
-            className=" rounded-l-none h-[42px]"
+            className="h-[42px] whitespace-nowrap rounded-l-none px-3"
           >
             Copy Link
           </Button>
