@@ -28,6 +28,20 @@ type ExportFormat = "SVG" | "PNG" | "PDF" | "JSON"
 /** A succeeded-but-degraded signal an export can return (PNG downscale today). */
 type ExportRunResult = { clamped?: boolean; appliedScale?: number }
 
+function exportSuccessMessage(
+  format: ExportFormat,
+  result: ExportRunResult | void
+): string {
+  if (result?.clamped) {
+    const scale =
+      typeof result.appliedScale === "number"
+        ? ` (rendered at ${Math.round(result.appliedScale * 100)}%)`
+        : ""
+    return `${format} downscaled to fit memory limits${scale}.`
+  }
+  return `${format} exported.`
+}
+
 function exportErrorMessage(format: ExportFormat, err: unknown): string {
   // Match by name, not `instanceof`, so the navbar doesn't statically import the
   // library's (font-heavy) export entry just for the type — keeping it out of
@@ -89,9 +103,11 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
     closeMainMenu()
   }, [openModal, closeMainMenu])
 
-  // Runs an export with the menu closed, surfacing failures as a toast — the
-  // fix for #667's signature symptom, a silent no-op. PNG/PDF get a progress
-  // toast since they can take seconds on a large diagram.
+  // Every export takes the same path: one toast that shows "Exporting…" while
+  // it runs, then resolves in place to success or error. Uniform across all
+  // formats (no silent successes, no spinner that just vanishes) and fixes
+  // #667's signature symptom — a silent no-op. A PNG downscaled to fit the
+  // pixel budget reports that in its success message.
   const runExport = useCallback(
     async (
       format: ExportFormat,
@@ -100,28 +116,20 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
       if (busyFormat) return
       closeMainMenu()
       setBusyFormat(format)
-      const progressId =
-        format === "PNG" || format === "PDF"
-          ? toast.info(`Exporting ${format}…`, {
-              autoClose: false,
-              isLoading: true,
-            })
-          : undefined
       try {
-        const result = (await action()) ?? undefined
-        if (result?.clamped) {
-          toast.warning(
-            `${format} downscaled to fit memory limits` +
-              (typeof result.appliedScale === "number"
-                ? ` (rendered at ${Math.round(result.appliedScale * 100)}%).`
-                : ".")
-          )
-        }
+        await toast.promise(action(), {
+          pending: `Exporting ${format}…`,
+          success: {
+            render: ({ data }) => exportSuccessMessage(format, data),
+          },
+          error: {
+            render: ({ data }) => exportErrorMessage(format, data),
+          },
+        })
       } catch (err) {
+        // toast.promise already surfaced the error toast; keep a log for triage.
         log.error("export failed", err as Error)
-        toast.error(exportErrorMessage(format, err))
       } finally {
-        if (progressId !== undefined) toast.dismiss(progressId)
         setBusyFormat(null)
       }
     },
