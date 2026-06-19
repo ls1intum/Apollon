@@ -113,7 +113,8 @@ async function loadBundledFonts(): Promise<Uint8Array[]> {
     cachedFonts = Promise.all(
       [interRegularUrl, interBoldUrl].map(async (url) => {
         const res = await fetch(url)
-        if (!res.ok) throw new Error(`Failed to load font ${url}: ${res.status}`)
+        if (!res.ok)
+          throw new Error(`Failed to load font ${url}: ${res.status}`)
         return new Uint8Array(await res.arrayBuffer())
       })
     )
@@ -131,14 +132,16 @@ function stemDarken(svg: string): string {
   doc.querySelectorAll("text").forEach((text) => {
     const fill = text.getAttribute("fill") || "#000000"
     if (fill === "none") return
-    const fontSize = parseFloat(text.getAttribute("font-size") ?? "") || DEFAULT_FONT_SIZE
+    const fontSize =
+      parseFloat(text.getAttribute("font-size") ?? "") || DEFAULT_FONT_SIZE
     text.setAttribute("stroke", fill)
     text.setAttribute("paint-order", "stroke")
     text.setAttribute("stroke-linejoin", "round")
     text.setAttribute("stroke-width", String(STEM_DARKEN_EM * fontSize))
     text.querySelectorAll("tspan").forEach((tspan) => {
       const size = parseFloat(tspan.getAttribute("font-size") ?? "")
-      if (size) tspan.setAttribute("stroke-width", String(STEM_DARKEN_EM * size))
+      if (size)
+        tspan.setAttribute("stroke-width", String(STEM_DARKEN_EM * size))
     })
   })
   return new XMLSerializer().serializeToString(doc)

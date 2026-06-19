@@ -12,8 +12,12 @@ const wasmBytes = readFileSync(
   resolve(__dirname, "../../node_modules/@resvg/resvg-wasm/index_bg.wasm")
 )
 const fontBuffers = [
-  new Uint8Array(readFileSync(resolve(__dirname, "../../lib/assets/fonts/Inter-Regular.ttf"))),
-  new Uint8Array(readFileSync(resolve(__dirname, "../../lib/assets/fonts/Inter-Bold.ttf"))),
+  new Uint8Array(
+    readFileSync(resolve(__dirname, "../../lib/assets/fonts/Inter-Regular.ttf"))
+  ),
+  new Uint8Array(
+    readFileSync(resolve(__dirname, "../../lib/assets/fonts/Inter-Bold.ttf"))
+  ),
 ]
 
 // A nested-<svg> node with a stereotype tspan stack and the Inter font-family

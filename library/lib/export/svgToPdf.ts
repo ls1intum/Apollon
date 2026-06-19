@@ -39,14 +39,18 @@ async function fontBase64(
   injected?: SvgToPdfOptions["fonts"]
 ): Promise<{ regular: string; bold: string }> {
   if (injected) {
-    return { regular: toBase64(injected.regular), bold: toBase64(injected.bold) }
+    return {
+      regular: toBase64(injected.regular),
+      bold: toBase64(injected.bold),
+    }
   }
   if (!cachedFontBase64) {
     cachedFontBase64 = (async () => {
       const [regular, bold] = await Promise.all(
         [interRegularUrl, interBoldUrl].map(async (url) => {
           const res = await fetch(url)
-          if (!res.ok) throw new Error(`Failed to load font ${url}: ${res.status}`)
+          if (!res.ok)
+            throw new Error(`Failed to load font ${url}: ${res.status}`)
           return toBase64(new Uint8Array(await res.arrayBuffer()))
         })
       )

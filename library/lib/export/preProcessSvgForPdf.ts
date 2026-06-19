@@ -84,7 +84,8 @@ function inlineNestedSvgs(root: Element): void {
 function flattenMultiTspans(root: Element): void {
   const multiTspanTexts = Array.from(root.querySelectorAll("text")).filter(
     (text) =>
-      Array.from(text.children).filter((c) => c.localName === "tspan").length >= 2
+      Array.from(text.children).filter((c) => c.localName === "tspan").length >=
+      2
   )
 
   for (const text of multiTspanTexts) {
@@ -105,8 +106,10 @@ function flattenMultiTspans(root: Element): void {
       // multi-tspan texts give every tspan an explicit x/y (resolveTspanDy in
       // getSVG already converted any dy); inherit the parent's x/y as a floor so
       // a tspan that omits one can't silently collapse to the 0 origin.
-      if (text.hasAttribute("x")) newText.setAttribute("x", text.getAttribute("x")!)
-      if (text.hasAttribute("y")) newText.setAttribute("y", text.getAttribute("y")!)
+      if (text.hasAttribute("x"))
+        newText.setAttribute("x", text.getAttribute("x")!)
+      if (text.hasAttribute("y"))
+        newText.setAttribute("y", text.getAttribute("y")!)
       // The tspan's own attributes (its absolute x/y, per-tspan font-size/style)
       // win over the inherited parent values.
       for (const attr of Array.from(tspan.attributes)) {
