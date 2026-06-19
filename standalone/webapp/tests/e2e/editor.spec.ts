@@ -642,3 +642,52 @@ test.describe("Mobile responsive layout", () => {
     )
   })
 })
+
+test.describe("Desktop sidebar", () => {
+  test("keeps every element in view without scrolling", async ({ page }) => {
+    // BPMN has the most palette items and overflowed a short desktop sidebar
+    // before fit-to-height. The previews now shrink so all elements stay
+    // visible instead of scrolling.
+    await page.setViewportSize({ width: 1280, height: 600 })
+    const modelId = "e2e-bpmn-desktop-fit"
+    await page.goto("/")
+    await page.evaluate((id) => {
+      localStorage.setItem(
+        "persistenceModelStore",
+        JSON.stringify({
+          state: {
+            models: {
+              [id]: {
+                id,
+                model: {
+                  id,
+                  type: "BPMN",
+                  assessments: {},
+                  edges: [],
+                  nodes: [],
+                  title: "BPMN",
+                  version: "4.0.0",
+                },
+                lastModifiedAt: new Date().toISOString(),
+              },
+            },
+            currentModelId: id,
+          },
+          version: 0,
+        })
+      )
+    }, modelId)
+    await page.goto(`/local/${modelId}`)
+    await waitForCanvasReady(page, false)
+
+    const palette = page.getByTestId("apollon-palette")
+    await expect(palette).toHaveClass(/apollon-palette--desktop/)
+    // Settle the fit-to-height layout effect.
+    await page.waitForTimeout(300)
+
+    const overflow = await palette.evaluate(
+      (el) => el.scrollHeight - el.clientHeight
+    )
+    expect(overflow).toBeLessThanOrEqual(1)
+  })
+})

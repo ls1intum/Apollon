@@ -1,4 +1,10 @@
-import React, { useMemo, useSyncExternalStore } from "react"
+import React, {
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react"
 import {
   ColorDescriptionConfig,
   DROPS,
@@ -23,6 +29,13 @@ const labelPreviewTypes = new Set([
   "petriNetPlace",
   "petriNetTransition",
 ])
+
+// Vertical gap between desktop palette entries (mirrors the CSS); scaled with
+// the fit factor so the fit math stays linear.
+const DESKTOP_ENTRY_GAP = 15
+// Don't shrink desktop previews past this — below it elements stop being
+// recognizable, so the palette scrolls instead (the rare last resort).
+const MIN_FIT_SCALE = 0.45
 
 // `matchMedia` as an external store: synchronous first-paint value (no
 // desktop→mobile flash) and concurrency-safe under React 18+/19.
@@ -61,18 +74,62 @@ export const Sidebar = () => {
     [diagramType]
   )
 
+  // Fit-to-height: on desktop, shrink the previews so every element stays in
+  // view instead of scrolling. The mobile palette keeps its fixed (HIG-sized)
+  // tap targets — shrinking them below the touch minimum would be worse than a
+  // rare scroll — so it opts out (factor 1).
+  const asideRef = useRef<HTMLElement>(null)
+  const entriesRef = useRef<HTMLDivElement>(null)
+  const [fitScale, setFitScale] = useState(1)
+  // Mobile keeps full-size (HIG) tap targets regardless of the stored factor.
+  const effectiveFit = isMobile ? 1 : fitScale
+
+  useLayoutEffect(() => {
+    if (isMobile) return
+    const aside = asideRef.current
+    const entries = entriesRef.current
+    if (!aside || !entries) return
+
+    // Assign all of the aside's vertical overflow (or slack) to the entries —
+    // the only part that scales. `entriesH / prev` recovers the natural
+    // (unscaled) height because the items *and* their gap both scale by the
+    // factor, so removing exactly the overflow makes the content fit in one
+    // step (and it grows back toward 1 when there is room).
+    const fit = () => {
+      const entriesH = entries.getBoundingClientRect().height
+      if (entriesH === 0) return
+      const overflow = aside.scrollHeight - aside.clientHeight
+      setFitScale((prev) => {
+        const natural = entriesH / prev
+        const next = Math.max(
+          MIN_FIT_SCALE,
+          Math.min(1, (entriesH - overflow) / natural)
+        )
+        return Math.abs(next - prev) < 0.01 ? prev : next
+      })
+    }
+
+    fit()
+    const observer = new ResizeObserver(fit)
+    observer.observe(aside)
+    return () => observer.disconnect()
+  }, [isMobile, diagramType, view])
+
   if (paletteItems.length === 0) {
     return null
   }
 
   const getPreviewScale = (width: number, height: number, extraHeight = 0) => {
-    if (!isMobile) return DROPS.SIDEBAR_PREVIEW_SCALE
+    const base = isMobile
+      ? Math.min(0.55, 32 / width, 32 / (height + extraHeight))
+      : DROPS.SIDEBAR_PREVIEW_SCALE
 
-    return Math.min(0.55, 32 / width, 32 / (height + extraHeight))
+    return base * effectiveFit
   }
 
   return (
     <aside
+      ref={asideRef}
       className={`apollon-palette ${
         isMobile ? "apollon-palette--mobile" : "apollon-palette--desktop"
       }`}
@@ -112,7 +169,13 @@ export const Sidebar = () => {
       )}
 
       {view === ApollonView.Modelling && (
-        <div className="apollon-palette__entries">
+        <div
+          ref={entriesRef}
+          className="apollon-palette__entries"
+          style={
+            isMobile ? undefined : { gap: DESKTOP_ENTRY_GAP * effectiveFit }
+          }
+        >
           {paletteItems.map((config, index) => {
             const extraPreviewHeight = labelPreviewTypes.has(config.type)
               ? LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT
@@ -138,7 +201,9 @@ export const Sidebar = () => {
                     style={{
                       width: previewWidth,
                       height: previewHeight,
-                      marginTop: isMobile ? 0 : config.marginTop,
+                      marginTop: isMobile
+                        ? 0
+                        : (config.marginTop ?? 0) * effectiveFit,
                     }}
                   >
                     {React.createElement(config.svg, {

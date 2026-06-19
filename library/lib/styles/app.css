@@ -233,7 +233,13 @@
   position: absolute;
   top: 10px;
   left: calc(10px + var(--safe-area-inset-left, 0px));
-  z-index: 2;
+
+  /* Above React Flow's interactive canvas content (renderer, edges 9999,
+     nodes 9998) so taps/drags always land on the palette and a node placed
+     under it can't cover it. Contained by the editor's own stacking context
+     (`.apollon-editor { isolation: isolate }`), so this stays below host-app
+     chrome. The body-portaled drag ghost renders above it regardless. */
+  z-index: 10000;
 
   /* Reserve room at the bottom for the canvas controls toolbar (~48px tall
      plus its margin and the bottom safe-area inset) so the palette never grows
