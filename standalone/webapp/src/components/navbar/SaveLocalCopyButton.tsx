@@ -7,13 +7,16 @@ import type { UMLModel } from "@tumaet/apollon"
 import { useEditorContext } from "@/contexts"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { useDiagramIdFromPath } from "@/hooks/useDiagramIdFromPath"
-import { secondary } from "@/constants"
 import { versioningStrings as t } from "@/components/versioning/strings"
 import { log } from "@/logger"
+import { navbarButtonStyle } from "./styleConstants"
 
 interface Props {
   /** Foreground colour, mirrors `VersionHistoryButton`'s convention. */
   color?: string
+  /** Label-span classes, mirrors `VersionHistoryButton` — the desktop bar
+   * passes `"hidden lg:inline"` to collapse to the icon when space is tight. */
+  labelClassName?: string
   /** Mobile menu close callback when rendered inside the hamburger. */
   onAfter?: () => void
 }
@@ -31,7 +34,11 @@ interface Props {
  * those cases. `useDiagramIdFromPath()` returns an id for BOTH `/local/:id`
  * and `/shared/:id`, so the pathname guard is what scopes this to shared.
  */
-export const SaveLocalCopyButton = ({ color = secondary, onAfter }: Props) => {
+export const SaveLocalCopyButton = ({
+  color,
+  labelClassName,
+  onAfter,
+}: Props) => {
   const diagramId = useDiagramIdFromPath()
   const { pathname } = useLocation()
   const { editor } = useEditorContext()
@@ -65,14 +72,12 @@ export const SaveLocalCopyButton = ({ color = secondary, onAfter }: Props) => {
   return (
     <Tooltip title={t.saveLocalCopyButton}>
       <Button
-        sx={{ textTransform: "none", minWidth: 0, gap: 0.5 }}
+        sx={navbarButtonStyle(color)}
         onClick={handleClick}
         aria-label={t.saveLocalCopyButton}
-        startIcon={
-          <SaveAltIcon fontSize="small" htmlColor={color} aria-hidden />
-        }
+        startIcon={<SaveAltIcon fontSize="small" aria-hidden />}
       >
-        <span style={{ color }}>{t.saveLocalCopyButton}</span>
+        <span className={labelClassName}>{t.saveLocalCopyButton}</span>
       </Button>
     </Tooltip>
   )
