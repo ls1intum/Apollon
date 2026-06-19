@@ -9,7 +9,7 @@ import {
 import type { UMLDiagramType } from "@tumaet/apollon"
 import Menu from "@mui/material/Menu"
 import MenuItem from "@mui/material/MenuItem"
-import { Link, useNavigate } from "react-router"
+import { Link, useNavigate } from "@tanstack/react-router"
 import { toast } from "react-toastify"
 import { useModalContext } from "@/contexts"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
@@ -23,7 +23,7 @@ import {
 } from "@/utils/sharedDiagramStorage"
 import {
   SHARED_DIAGRAM_VIEW_OPTIONS,
-  buildSharedDiagramPath,
+  sharedDiagramRoute,
   buildSharedDiagramUrl,
   getSharedDiagramViewBadge,
 } from "@/utils/sharedDiagramLinks"
@@ -106,13 +106,13 @@ const formatRelativeLastModified = (lastModifiedAt: string, nowMs: number) => {
   })
 }
 
-const getDiagramPath = (diagram: RecentDiagram) => {
+const getDiagramNav = (diagram: RecentDiagram) => {
   const source = diagram.source ?? "local"
   if (source === "local") {
-    return `/local/${diagram.id}`
+    return { to: "/local/$id", params: { id: diagram.id } } as const
   }
 
-  return buildSharedDiagramPath(
+  return sharedDiagramRoute(
     diagram.id,
     diagram.lastSharedView ?? DiagramView.EDIT
   )
@@ -184,7 +184,7 @@ export const DiagramActionsMenu = ({
   }
 
   const handleOpen = () => {
-    navigate(getDiagramPath(diagram))
+    navigate(getDiagramNav(diagram))
     closeMenu()
   }
 
@@ -705,7 +705,7 @@ const DiagramCardComponent = ({
       {/* Clickable card body. A real link so cmd/ctrl/middle-click opens the
           diagram in a new tab; plain click still navigates within the SPA. */}
       <Link
-        to={getDiagramPath(diagram)}
+        {...getDiagramNav(diagram)}
         onClick={(event) => {
           if (isExpired) event.preventDefault()
         }}

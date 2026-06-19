@@ -1,10 +1,9 @@
-import { useLocation } from "react-router"
+import { useLocation } from "@tanstack/react-router"
 
 /**
- * Reserved top-level paths in `App.tsx`. Kept in sync with `<Routes>`
- * manually because the navbar lives ABOVE `<Routes>` in the App tree, so
- * `useParams()` returns `{}` there - `useLocation().pathname` is the only
- * router-aware source of the URL we have at navbar depth.
+ * Reserved top-level paths. Derived from the pathname because the navbar
+ * renders above the matched route, so `useParams()` returns `{}` at navbar
+ * depth — `useLocation().pathname` is the only router-aware URL source here.
  */
 const RESERVED_TOP_LEVEL_PATHS: ReadonlySet<string> = new Set([
   "playground",

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { Tooltip } from "@mui/material"
 import Info from "@mui/icons-material/Info"
 import { toast } from "react-toastify"
-import { useNavigate } from "react-router"
+import { useNavigate } from "@tanstack/react-router"
 import { useModalContext } from "@/contexts"
 import { useModalProgress } from "@/contexts/ModalProgressContext"
 import { DiagramView } from "@/types"
@@ -16,8 +16,8 @@ import {
 } from "@/utils/sharedDiagramStorage"
 import { randomCollabName } from "@tumaet/apollon"
 import {
-  buildSharedDiagramPath,
   buildSharedDiagramUrl,
+  sharedDiagramRoute,
 } from "@/utils/sharedDiagramLinks"
 import {
   HomeDialogActions,
@@ -205,14 +205,14 @@ export const ShareDashboardModal = (
         onConfirm: (name: string) => {
           sessionStorage.setItem("apollon-collab-name", name)
           setCollaborateName(name)
-          navigate(buildSharedDiagramPath(createdDiagramId, activeMode))
+          navigate(sharedDiagramRoute(createdDiagramId, activeMode))
         },
       })
       return
     }
 
     closeModal()
-    navigate(buildSharedDiagramPath(createdDiagramId, activeMode))
+    navigate(sharedDiagramRoute(createdDiagramId, activeMode))
   }
 
   const activeModeLabel =

@@ -1,18 +1,16 @@
 import React from "react"
-import { Link } from "react-router"
+import { Link } from "@tanstack/react-router"
 
 type ErrorPageProps = {
   title?: string
   message?: string
   buttonLabel?: string
-  backPath?: string
 }
 
 export const ErrorPage: React.FC<ErrorPageProps> = ({
   title = "Oops!",
   message = "Something went wrong.",
   buttonLabel = "All diagrams",
-  backPath = "/",
 }) => {
   return (
     <div
@@ -45,7 +43,7 @@ export const ErrorPage: React.FC<ErrorPageProps> = ({
         {message}
       </p>
       <Link
-        to={backPath}
+        to="/"
         className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--home-accent-ring)]"
         style={{
           marginTop: "16px",

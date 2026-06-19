@@ -1,7 +1,7 @@
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { MenuItem } from "@mui/material"
 import React, { useRef } from "react"
-import { useNavigate } from "react-router"
+import { useNavigate } from "@tanstack/react-router"
 import { importDiagram } from "@tumaet/apollon/react"
 import { log } from "@/logger"
 
@@ -29,7 +29,11 @@ export const JsonFileImportButton: React.FC<{ close: () => void }> = (
 
         const processedModel = importDiagram(json)
         createModel(processedModel)
-        navigate(`/local/${processedModel.id}`, { replace: true })
+        navigate({
+          to: "/local/$id",
+          params: { id: processedModel.id },
+          replace: true,
+        })
       } catch (error) {
         log.error("Invalid JSON file", error as Error)
       }

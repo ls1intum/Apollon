@@ -1,4 +1,5 @@
-import { Link } from "react-router"
+import { Link } from "@tanstack/react-router"
+import type { BackTarget } from "@/hooks/useBackTarget"
 import { cn } from "@/lib/utils"
 
 type BackNavTone = "onDark" | "onSurface"
@@ -19,22 +20,22 @@ const toneClass: Record<BackNavTone, string> = {
  * Renders a real router <Link> (anchor) so cmd/middle-click opens a new tab and
  * the browser/native history stays coherent.
  */
-export const BackNav = ({
-  to,
-  label,
-  tone = "onDark",
-  onNavigate,
-  className,
-}: {
-  to: string
-  label: string
+type BackNavProps = BackTarget & {
   tone?: BackNavTone
   /** Fired in addition to navigating — e.g. to close the mobile menu it lives in. */
   onNavigate?: () => void
   className?: string
-}) => (
+}
+
+export const BackNav = ({
+  label,
+  tone = "onDark",
+  onNavigate,
+  className,
+  ...target
+}: BackNavProps) => (
   <Link
-    to={to}
+    {...target}
     onClick={onNavigate}
     className={cn(
       "inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2",

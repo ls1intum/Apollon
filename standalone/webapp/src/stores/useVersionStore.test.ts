@@ -2,7 +2,11 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import type { ControlEvent, VersionSummary } from "@/types"
 import { VersionApiClient } from "@/services/DiagramApiClient"
 import type { UMLModel } from "@tumaet/apollon/react"
-import { useVersionStore, selectVersions } from "./useVersionStore"
+import {
+  useVersionStore,
+  selectVersions,
+  selectScopedPreview,
+} from "./useVersionStore"
 
 const fakeModel: UMLModel = {
   version: "4.0.0",
@@ -106,6 +110,7 @@ describe("useVersionStore.preview", () => {
   it("exitPreview clears state", () => {
     useVersionStore.setState({
       preview: {
+        diagramId: "d1",
         versionId: "v1",
         body: { id: "d1" } as never,
       },
@@ -259,6 +264,17 @@ describe("selectVersions", () => {
     }))
     const result = selectVersions(useVersionStore.getState(), "d1")
     expect(result).toBe(versions)
+  })
+})
+
+describe("selectScopedPreview", () => {
+  it("returns the preview only for its own diagram, else null", () => {
+    useVersionStore.setState({
+      preview: { diagramId: "a", versionId: "v1", body: { id: "a" } as never },
+    })
+    const state = useVersionStore.getState()
+    expect(selectScopedPreview(state, "a")).toBe(state.preview)
+    expect(selectScopedPreview(state, "b")).toBeNull()
   })
 })
 

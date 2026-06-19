@@ -38,11 +38,12 @@ export const SHARED_DIAGRAM_VIEW_OPTIONS: readonly SharedDiagramViewOption[] = [
 
 export const DEFAULT_SHARED_DIAGRAM_VIEW = DiagramView.EDIT
 
-export const normalizeSharedDiagramView = (value: unknown): DiagramView => {
-  return Object.values(DiagramView).includes(value as DiagramView)
-    ? (value as DiagramView)
-    : DEFAULT_SHARED_DIAGRAM_VIEW
-}
+export const isDiagramView = (value: unknown): value is DiagramView =>
+  typeof value === "string" &&
+  (Object.values(DiagramView) as string[]).includes(value)
+
+export const normalizeSharedDiagramView = (value: unknown): DiagramView =>
+  isDiagramView(value) ? value : DEFAULT_SHARED_DIAGRAM_VIEW
 
 export const getSharedDiagramViewOption = (
   view: unknown
@@ -58,11 +59,15 @@ export const getSharedDiagramViewOption = (
 export const getSharedDiagramViewBadge = (view: unknown): string =>
   getSharedDiagramViewOption(view).badge
 
-export const buildSharedDiagramPath = (
+export const sharedDiagramRoute = (
   diagramId: string,
   view: DiagramView = DEFAULT_SHARED_DIAGRAM_VIEW
-): string =>
-  `/shared/${encodeURIComponent(diagramId)}?view=${encodeURIComponent(view)}`
+) =>
+  ({
+    to: "/shared/$diagramId",
+    params: { diagramId },
+    search: { view },
+  }) as const
 
 // Origin for externally-shareable links: the web host on native (Capacitor),
 // else the page origin (capacitor://localhost isn't externally openable).
@@ -77,4 +82,5 @@ export const buildSharedDiagramUrl = (
   diagramId: string,
   view: DiagramView = DEFAULT_SHARED_DIAGRAM_VIEW,
   origin = resolveShareOrigin()
-): string => `${origin}${buildSharedDiagramPath(diagramId, view)}`
+): string =>
+  `${origin}/shared/${encodeURIComponent(diagramId)}?view=${encodeURIComponent(view)}`

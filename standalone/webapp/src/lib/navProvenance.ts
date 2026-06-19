@@ -32,3 +32,12 @@ export const readNavFrom = (state: unknown): NavFrom | undefined => {
   const from = (state as { from?: unknown } | null)?.from
   return typeof from === "string" ? from : undefined
 }
+
+/** Read the home-gallery highlight hint out of opaque router location state. */
+export const readHighlightSharedDiagramId = (
+  state: unknown
+): string | undefined => {
+  const id = (state as { highlightSharedDiagramId?: unknown } | null)
+    ?.highlightSharedDiagramId
+  return typeof id === "string" ? id : undefined
+}

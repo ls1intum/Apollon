@@ -9,13 +9,14 @@ import MenuIcon from "@mui/icons-material/Menu"
 import { NavbarFile } from "./NavbarFile"
 import { NavbarHelp } from "./NavbarHelp"
 import { VersionHistoryButton } from "./VersionHistoryButton"
+import { SaveLocalCopyButton } from "./SaveLocalCopyButton"
 import Button from "@mui/material/Button/Button"
 import { BrandAndVersion } from "./BrandAndVersion"
 import { BackNav } from "./BackNav"
 import { ALL_DIAGRAMS_LABEL } from "@/lib/navProvenance"
 import { useEditorContext, useModalContext } from "@/contexts"
 import TextField from "@mui/material/TextField/TextField"
-import { Link } from "react-router"
+import { Link } from "@tanstack/react-router"
 import { ThemeSwitcherMenu } from "./ThemeSwitcher"
 import { NAVBAR_SX } from "./styleConstants"
 
@@ -123,6 +124,10 @@ export default function MobileNavbar() {
                     Share
                   </Typography>
                 </Button>
+                <SaveLocalCopyButton
+                  color="var(--apollon-primary-contrast)"
+                  onAfter={handleCloseNavMenu}
+                />
                 <VersionHistoryButton color="var(--apollon-primary-contrast)" />
                 <NavbarHelp color="var(--apollon-primary-contrast)" />
 
