@@ -58,15 +58,34 @@ cause of garbled output.
 
 ## PNG / PDF
 
-PNG and PDF generation happens downstream of `exportAsSVG`. Two reference
-implementations: the standalone webapp's export helpers (`useExportAsPNG`,
-`useExportAsPDF`) rasterise via `@resvg/resvg-js` (PNG) and render PDF with
-`pdfmake`; the server's `conversion-worker-thread.ts` rasterises PNG with a Skia
-canvas (`@napi-rs/canvas`) and renders PDF with `pdfmake`. Both consume the SVG
-produced above.
+For browsers and embedders, import the ready-made helpers from
+`@tumaet/apollon/export`. They consume the compat-mode SVG produced above and
+fix the canvas-area cap (#667) — `svgToPng` rasterises in wasm memory instead of
+a `<canvas>`, and `svgToPdf` emits true vector PDF.
 
-> Don't want to build this yourself? The standalone server already exposes SVG,
-> PNG, and PDF over HTTP — see the **[Conversion API](./conversion-api)**.
+```ts
+import { svgToPng, svgToPdf } from "@tumaet/apollon/export"
+// resvg's wasm binary isn't portably exported, so the host bundler supplies it.
+import resvgWasmUrl from "@resvg/resvg-wasm/index_bg.wasm?url" // Vite
+
+const { svg, clip } = await editor.exportAsSVG({ svgMode: "compat" })
+
+const { blob, clamped } = await svgToPng(svg, clip, {
+  scale: 1.5,
+  background: "#ffffff", // or null for transparent
+  wasmInput: fetch(resvgWasmUrl),
+})
+const pdfBlob = await svgToPdf(svg, clip, { title: "diagram" })
+```
+
+`@resvg/resvg-wasm`, `jspdf` and `svg2pdf.js` are optional dependencies the
+consumer installs; they load lazily, so importing the editor never pulls them
+in. Over-budget diagrams come back with `clamped: true` and a reduced
+`appliedScale`; an over-budget PNG throws `RasterTooLargeError`.
+Inter ships Regular + Bold only, so italics render upright — matching the server.
+
+> Server-side instead? The standalone server renders SVG, PNG, and PDF over
+> HTTP via a Skia canvas + `pdfmake` — see the **[Conversion API](./conversion-api)**.
 
 ## JSON
 

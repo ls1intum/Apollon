@@ -72,25 +72,35 @@ export default defineConfig({
         : {
             index: resolve(__dirname, "lib/index.tsx"),
             internals: resolve(__dirname, "lib/internals.ts"),
+            export: resolve(__dirname, "lib/export/index.ts"),
           },
       formats: ["es"],
       cssFileName: "style",
     },
     rollupOptions: {
-      external: isPeerBuild
-        ? [
-            "react",
-            "react-dom",
-            "react/jsx-runtime",
-            "react/jsx-dev-runtime",
-            "react/compiler-runtime",
-            "react-dom/client",
-            "@emotion/react",
-            "@emotion/styled",
-            /^@mui\/material(\/.*)?$/,
-            "@xyflow/react",
-          ]
-        : [],
+      // The `@tumaet/apollon/export` renderers are optionalDependencies the
+      // consumer installs — keep them (and resvg's `?url` wasm subpath) external
+      // in both passes so they never enter any published chunk; the lazy
+      // `import()`s in lib/export resolve them from the host's node_modules.
+      external: [
+        /^@resvg\/resvg-wasm/,
+        "jspdf",
+        "svg2pdf.js",
+        ...(isPeerBuild
+          ? [
+              "react",
+              "react-dom",
+              "react/jsx-runtime",
+              "react/jsx-dev-runtime",
+              "react/compiler-runtime",
+              "react-dom/client",
+              "@emotion/react",
+              "@emotion/styled",
+              /^@mui\/material(\/.*)?$/,
+              "@xyflow/react",
+            ]
+          : []),
+      ],
       output: {
         assetFileNames: "assets/[name][extname]",
         entryFileNames: "[name].js",
