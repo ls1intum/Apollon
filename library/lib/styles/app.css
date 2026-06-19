@@ -244,12 +244,13 @@
   box-shadow: 0 2px 8px rgb(0 0 0 / 18%);
 }
 
+/* grid-template-columns and gap come inline from the computed layout. */
 .apollon-palette__entries {
   display: grid;
   justify-content: center;
-  /* grid-template-columns and gap come inline from the computed layout. */
 }
 
+/* width/height come inline from the computed cell size. */
 .apollon-palette__entry {
   display: flex;
   align-items: center;
@@ -257,7 +258,6 @@
   cursor: grab;
   border-radius: 4px;
   transition: background-color 120ms ease;
-  /* width/height come inline from the computed cell size. */
 }
 
 .apollon-palette__entry:hover {
