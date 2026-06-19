@@ -1,4 +1,4 @@
-import { Router, type Request, type Response } from "express"
+import { Router, type Request } from "express"
 import type { Redis } from "../redis.js"
 import { k } from "../redis.js"
 import { Errors } from "../http/errors.js"
@@ -19,19 +19,12 @@ interface Deps {
 }
 
 /**
- * Embed surface — two public routes. The diagramId is the unguessable bearer
- * (128-bit base64url, see `diagrams.ts:generateDiagramId`); there is no token
- * or cookie, so embedding adds no privilege over holding the URL.
- *
- *   GET /api/diagrams/:diagramId/preview.svg  — cacheable `image/svg+xml` for
- *     `<img>`/Camo embedding in GitHub & GitLab READMEs.
- *   GET /embed/:diagramId  — iframe-friendly HTML shell (inline SVG + an "Open
- *     in Apollon" link, no JS), `frame-ancestors *` for Notion/Confluence/etc.
- *
- * Both serve a weak `ETag` (= `headRev`, the identity `saveHead` bumps) so a
- * conditional GET short-circuits before the renderer runs, and a deny-all CSP.
- * With no `script-src`, script in the library-generated SVG cannot execute, so
- * it is inlined verbatim without a sanitizer.
+ * Embed surface — `GET /api/diagrams/:id/preview.svg` (cacheable `image/svg+xml`
+ * for `<img>`/Camo) and `GET /embed/:id` (iframe-friendly HTML shell). The
+ * diagramId is the unguessable bearer (see `diagrams.ts:generateDiagramId`); no
+ * token or cookie. Both carry a weak `ETag` (= `headRev`) + SWR cache and a
+ * deny-all CSP — with no `script-src`, script in the library SVG cannot execute,
+ * so it is inlined verbatim without a sanitizer.
  */
 
 const CACHE_CONTROL = "public, max-age=60, stale-while-revalidate=86400"
@@ -46,37 +39,30 @@ const HTML_CSP = [
   "frame-ancestors *",
 ].join("; ")
 
-/** Honours the list and `*` forms of If-None-Match, not just a single token. */
-function ifNoneMatch(header: string | undefined, etag: string): boolean {
-  if (!header) return false
-  if (header.trim() === "*") return true
-  return header.split(",").some((tag) => tag.trim() === etag)
-}
-
-/**
- * Shared preamble: load the diagram (404 if missing), derive its weak ETag from
- * `headRev`, and short-circuit a fresh conditional GET with 304. Returns the
- * diagram + etag when a render is needed, or `null` when it already sent the
- * 304. Cache headers are set here (304) and on the 200 paths only — never
- * before the render, so a 503/500 is not cached against the diagramId.
- */
-async function loadOrNotModified(
+/** Reads the diagram and derives its weak ETag from `headRev`. */
+async function readDiagramWithEtag(
   redis: Redis,
-  req: Request,
-  res: Response,
   diagramId: string
 ): Promise<{ diagram: Diagram; etag: string } | null> {
   const diagram = await readDiagram(redis, diagramId)
-  if (!diagram) throw Errors.notFound("diagram not found")
+  if (!diagram) return null
   const headRev = (await redis.hGet(k.diagramMeta(diagramId), "headRev")) ?? "0"
-  const etag = `W/"${headRev}"`
-  if (ifNoneMatch(req.header("if-none-match"), etag)) {
-    res.setHeader("cache-control", CACHE_CONTROL)
-    res.setHeader("etag", etag)
-    res.status(304).end()
-    return null
-  }
-  return { diagram, etag }
+  return { diagram, etag: `W/"${headRev}"` }
+}
+
+/**
+ * RFC 7232 §3.2: `If-None-Match` uses the WEAK comparison function, so strip the
+ * `W/` prefix on both sides before comparing opaque-tags. This matches a client
+ * echoing either our weak ETag or the STRONG ETag the PUT route mints
+ * (`diagrams.ts`) for the same `headRev`. Honours the `*` and multi-tag list
+ * forms too. Safe to split on `,` only because our opaque-tags are `[0-9]+`.
+ */
+function ifNoneMatch(header: string | undefined, etag: string): boolean {
+  if (!header) return false
+  if (header.trim() === "*") return true
+  const opaque = (tag: string) => tag.trim().replace(/^W\//, "")
+  const target = opaque(etag)
+  return header.split(",").some((tag) => opaque(tag) === target)
 }
 
 /** Renders to an SVG string; queue saturation becomes a typed transient 503. */
@@ -102,20 +88,36 @@ export function mountEmbedApiRoutes({ redis, getResource }: Deps): Router {
     validate(
       { params: DiagramIdParams },
       async (req, res, _next, { params }) => {
-        const loaded = await loadOrNotModified(
-          redis,
-          req,
-          res,
-          params.diagramId
-        )
-        if (!loaded) return
-        const svg = await renderSvg(getResource, loaded.diagram)
+        const found = await readDiagramWithEtag(redis, params.diagramId)
+        if (!found) throw Errors.notFound("diagram not found")
 
-        res.setHeader("content-type", "image/svg+xml; charset=utf-8")
-        res.setHeader("etag", loaded.etag)
-        res.setHeader("cache-control", CACHE_CONTROL)
-        res.setHeader("x-content-type-options", "nosniff")
-        res.setHeader("content-security-policy", SVG_CSP)
+        // Conditional GET / HEAD short-circuit — before any render. Cache
+        // headers are set here and on the 200 path only, never before the
+        // render, so a 503/500 is never cached against the diagramId.
+        if (ifNoneMatch(req.header("if-none-match"), found.etag)) {
+          res.setHeader("etag", found.etag)
+          res.setHeader("cache-control", CACHE_CONTROL)
+          res.status(304).end()
+          return
+        }
+
+        const setHeaders = () => {
+          res.type("image/svg+xml")
+          res.setHeader("etag", found.etag)
+          res.setHeader("cache-control", CACHE_CONTROL)
+          res.setHeader("x-content-type-options", "nosniff")
+          res.setHeader("content-security-policy", SVG_CSP)
+        }
+
+        // HEAD returns the metadata without paying the render cost.
+        if (req.method === "HEAD") {
+          setHeaders()
+          res.status(200).end()
+          return
+        }
+
+        const svg = await renderSvg(getResource, found.diagram)
+        setHeaders()
         res.status(200).send(svg)
       }
     )
@@ -132,32 +134,43 @@ export function mountEmbedRoutes({ redis, getResource }: Deps): Router {
     validate(
       { params: DiagramIdParams },
       async (req, res, _next, { params }) => {
-        const loaded = await loadOrNotModified(
-          redis,
-          req,
-          res,
-          params.diagramId
-        )
-        if (!loaded) return
-        const svg = await renderSvg(getResource, loaded.diagram)
+        const found = await readDiagramWithEtag(redis, params.diagramId)
+        if (!found) throw Errors.notFound("diagram not found")
 
+        if (ifNoneMatch(req.header("if-none-match"), found.etag)) {
+          res.setHeader("etag", found.etag)
+          res.setHeader("cache-control", CACHE_CONTROL)
+          res.status(304).end()
+          return
+        }
+
+        const setHeaders = () => {
+          res.type("html")
+          res.setHeader("etag", found.etag)
+          res.setHeader("cache-control", CACHE_CONTROL)
+          res.setHeader("x-content-type-options", "nosniff")
+          res.setHeader("content-security-policy", HTML_CSP)
+          res.setHeader("referrer-policy", "no-referrer")
+          // Opt out of FLoC and its Topics-API successor.
+          res.setHeader(
+            "permissions-policy",
+            "interest-cohort=(), browsing-topics=()"
+          )
+        }
+
+        if (req.method === "HEAD") {
+          setHeaders()
+          res.status(200).end()
+          return
+        }
+
+        const svg = await renderSvg(getResource, found.diagram)
         const html = renderEmbedHtml({
-          title: loaded.diagram.title || "Apollon diagram",
+          title: found.diagram.title || "Apollon diagram",
           svg,
-          editorHref: buildEditorHref(req, loaded.diagram.id),
+          editorHref: buildEditorHref(req, found.diagram.id),
         })
-
-        res.setHeader("content-type", "text/html; charset=utf-8")
-        res.setHeader("etag", loaded.etag)
-        res.setHeader("cache-control", CACHE_CONTROL)
-        res.setHeader("x-content-type-options", "nosniff")
-        res.setHeader("content-security-policy", HTML_CSP)
-        res.setHeader("referrer-policy", "no-referrer")
-        // Opt out of FLoC and its Topics-API successor.
-        res.setHeader(
-          "permissions-policy",
-          "interest-cohort=(), browsing-topics=()"
-        )
+        setHeaders()
         res.status(200).send(html)
       }
     )
@@ -167,9 +180,11 @@ export function mountEmbedRoutes({ redis, getResource }: Deps): Router {
 }
 
 /**
- * Absolute editor URL from req protocol + host (honours `X-Forwarded-Proto` via
- * `trust proxy`). Targets `/shared/:id?view=EDIT` — the bare `/:id` route 404s
- * without a `?view`, and `EDIT` mirrors the webapp's default shared view.
+ * Absolute editor URL targeting the webapp's `/shared/:id?view=EDIT` route (the
+ * bare `/:id` 404s without `?view`). Uses `req.get("host")` (the verbatim `Host`
+ * header) deliberately — NOT `req.hostname`, which under `trust proxy` honours
+ * the client-spoofable `X-Forwarded-Host`. The link host is therefore only as
+ * trustworthy as the edge proxy's `Host` hygiene; keep `req.get("host")` here.
  */
 function buildEditorHref(req: Request, diagramId: string): string {
   const host = req.get("host") ?? ""

@@ -1,4 +1,3 @@
-import { useMemo } from "react"
 import { useLocation } from "@tanstack/react-router"
 import { toast } from "react-toastify"
 import { Typography } from "@/components/Typography"
@@ -24,28 +23,7 @@ import {
  */
 export function EmbedHints({ title = "Apollon diagram" }: { title?: string }) {
   const diagramId = useEmbeddableDiagramId()
-
-  const snippets = useMemo(() => {
-    if (!diagramId) return null
-    // The SVG + /embed routes are served by the API host; "" means there is no
-    // externally-resolvable origin (native without a configured host).
-    const serverOrigin = resolveServerOrigin()
-    if (!serverOrigin) return null
-    // Collapse whitespace and drop the characters that break Markdown alt text.
-    const safeTitle =
-      title
-        .replace(/\s+/g, " ")
-        .replace(/[[\]()]/g, "")
-        .trim() || "Apollon diagram"
-    const editorUrl = buildSharedDiagramUrl(diagramId)
-    const previewUrl = `${serverOrigin}/api/diagrams/${diagramId}/preview.svg`
-    const embedUrl = `${serverOrigin}/embed/${diagramId}`
-    return {
-      markdownLinked: `[![${safeTitle}](${previewUrl})](${editorUrl})`,
-      markdownPlain: `![${safeTitle}](${previewUrl})`,
-      iframe: `<iframe src="${embedUrl}" width="800" height="500" loading="lazy" referrerpolicy="no-referrer" style="border:0"></iframe>`,
-    }
-  }, [diagramId, title])
+  const snippets = diagramId ? buildSnippets(diagramId, title) : null
 
   if (!snippets) {
     return (
@@ -82,6 +60,32 @@ export function EmbedHints({ title = "Apollon diagram" }: { title?: string }) {
       />
     </fieldset>
   )
+}
+
+/**
+ * Builds the three snippets, or `null` when there is no externally-resolvable
+ * server origin (native without a configured API host). The SVG + `/embed`
+ * routes live on the API host; the click-through uses `buildSharedDiagramUrl`
+ * so it always lands on the canonical `/shared/:id` route.
+ */
+function buildSnippets(diagramId: string, title: string) {
+  const serverOrigin = resolveServerOrigin()
+  if (!serverOrigin) return null
+  // Collapse whitespace and drop the characters that break Markdown alt text.
+  const safeTitle =
+    title
+      .replace(/\s+/g, " ")
+      .replace(/[[\]()]/g, "")
+      .trim() || "Apollon diagram"
+  const id = encodeURIComponent(diagramId)
+  const editorUrl = buildSharedDiagramUrl(diagramId)
+  const previewUrl = `${serverOrigin}/api/diagrams/${id}/preview.svg`
+  const embedUrl = `${serverOrigin}/embed/${id}`
+  return {
+    markdownLinked: `[![${safeTitle}](${previewUrl})](${editorUrl})`,
+    markdownPlain: `![${safeTitle}](${previewUrl})`,
+    iframe: `<iframe src="${embedUrl}" width="800" height="500" loading="lazy" referrerpolicy="no-referrer" style="border:0"></iframe>`,
+  }
 }
 
 /**
@@ -124,12 +128,14 @@ function SnippetRow({ label, value, hint }: SnippetRowProps) {
           type="text"
           value={value}
           readOnly
+          aria-label={label}
           onFocus={(e) => e.currentTarget.select()}
           className="grow h-[36px] px-3 py-1.5 border rounded-md border-r-0 rounded-r-none border-[var(--apollon-primary-contrast)] bg-[var(--apollon-background)] text-[var(--apollon-primary-contrast)] text-xs font-mono"
         />
         <Button
           onClick={onCopy}
           variant="outline"
+          aria-label={`Copy ${label}`}
           className="rounded-l-none h-[36px]"
         >
           Copy

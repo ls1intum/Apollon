@@ -134,6 +134,34 @@ describe("GET /api/diagrams/:diagramId/preview.svg", () => {
     expect(second.headers["etag"]).not.toBe(first.headers["etag"])
   })
 
+  it("treats the strong ETag form (as the PUT route mints) as a match", async () => {
+    // RFC 7232 §3.2 mandates weak comparison for If-None-Match. The PUT route
+    // returns a STRONG `"<headRev>"`; a client revalidating the embed with that
+    // tag must still 304 even though we emit the weak `W/"<headRev>"`.
+    const app = appWith(okResource())
+    const id = await createDiagram(app)
+    const first = await request(app).get(`/api/diagrams/${id}/preview.svg`)
+    const strong = first.headers["etag"].replace(/^W\//, "")
+    const res = await request(app)
+      .get(`/api/diagrams/${id}/preview.svg`)
+      .set("if-none-match", strong)
+    expect(res.status).toBe(304)
+  })
+
+  it("serves HEAD with headers and an empty body, without rendering", async () => {
+    const resource = fakeResource(async () => {
+      throw new Error("HEAD must not invoke the renderer")
+    })
+    const app = appWith(resource)
+    const id = await createDiagram(app)
+    const head = await request(app).head(`/api/diagrams/${id}/preview.svg`)
+    expect(head.status).toBe(200)
+    expect(head.headers["content-type"]).toMatch(/^image\/svg\+xml/)
+    expect(head.headers["etag"]).toMatch(/^W\/"\d+"$/)
+    expect(head.text).toBeFalsy()
+    expect(resource.calls).toBe(0)
+  })
+
   it("maps queue saturation to a typed 503 with Retry-After + no-store", async () => {
     const app = appWith(
       fakeResource(async () => {
@@ -164,6 +192,30 @@ describe("GET /api/diagrams/:diagramId/preview.svg", () => {
     const res = await request(app).get("/api/diagrams/has%20spaces/preview.svg")
     expect(res.status).toBe(422)
     expect(res.body.error).toBe("INVALID_PARAMS")
+  })
+
+  it("rejects over-length and non-URL-safe ids with 422 before storage", async () => {
+    const app = appWith(okResource())
+    // 65 chars (cap is 64) and a unicode id — both fail the zod grammar at the
+    // boundary, never reaching readDiagram / Redis key construction.
+    for (const id of ["a".repeat(65), "%E6%97%A5%E6%9C%AC%E8%AA%9E"]) {
+      const res = await request(app).get(`/api/diagrams/${id}/preview.svg`)
+      expect(res.status, id).toBe(422)
+      expect(res.body.error).toBe("INVALID_PARAMS")
+    }
+  })
+
+  it("does not cache a non-queue render error (500)", async () => {
+    const app = appWith(
+      fakeResource(async () => {
+        throw new Error("renderer exploded")
+      })
+    )
+    const id = await createDiagram(app)
+    const res = await request(app).get(`/api/diagrams/${id}/preview.svg`)
+    expect(res.status).toBe(500)
+    // A transient render failure must never be cached against the diagramId.
+    expect(res.headers["cache-control"]).toBe("no-store")
   })
 })
 
@@ -226,6 +278,27 @@ describe("GET /embed/:diagramId", () => {
       .set("if-none-match", first.headers["etag"])
     expect(second.status).toBe(304)
   })
+
+  it("returns 404 for a missing diagram on the HTML route", async () => {
+    const res = await request(app).get("/embed/no-such-diagram")
+    expect(res.status).toBe(404)
+    expect(res.body.error).toBe("NOT_FOUND")
+  })
+
+  it("maps queue saturation on the HTML route to 503 with no-store", async () => {
+    // The HTML route has its own copy of the cache-header code; prove a 503
+    // there is not cached and never carries the 200-path public header.
+    const busyApp = appWith(
+      fakeResource(async () => {
+        throw new QueueFullError("Conversion queue is full")
+      })
+    )
+    const id = await createDiagram(busyApp)
+    const res = await request(busyApp).get(`/embed/${id}`)
+    expect(res.status).toBe(503)
+    expect(res.body.error).toBe("RENDERER_BUSY")
+    expect(res.headers["cache-control"]).toBe("no-store")
+  })
 })
 
 describe("end-to-end through the real conversion worker", () => {
@@ -259,6 +332,12 @@ describe("end-to-end through the real conversion worker", () => {
       .get(`/api/diagrams/${created.body.id}/preview.svg`)
       .buffer(true)
     expect(res.status).toBe(200)
-    expect(asText(res)).toContain('xmlns="http://www.w3.org/2000/svg"')
+    const body = asText(res)
+    // A real render: namespaced root, a closing tag, and actual drawn content —
+    // not an empty/degenerate envelope. Worth the worker spin-up only if the
+    // payoff is a non-trivial SVG.
+    expect(body).toContain('xmlns="http://www.w3.org/2000/svg"')
+    expect(body.trimEnd()).toMatch(/<\/svg>$/)
+    expect(body).toMatch(/<(path|rect|text|g)\b/)
   }, 20_000)
 })
