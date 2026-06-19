@@ -82,6 +82,11 @@ export const resolveShareOrigin = (): string => {
 // configured API host first, else the page origin on web. On native with no
 // configured host it returns "" — `capacitor://localhost` is not externally
 // resolvable, so callers must treat "" as "can't build a shareable URL".
+//
+// NOT the same as `resolveShareOrigin` above and not unifiable: a clickable
+// share link wants the *page* origin first (stay on staging vs. jumping to the
+// prod API host), an embedded asset wants the *API* host first (that's where it
+// is served). The two contracts diverge on web+serverURL and native-no-config.
 export const resolveServerOrigin = (): string => {
   if (serverURL) return serverURL
   if (Capacitor.isNativePlatform()) return ""

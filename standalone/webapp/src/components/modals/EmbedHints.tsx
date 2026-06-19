@@ -3,6 +3,10 @@ import { useLocation } from "@tanstack/react-router"
 import { toast } from "react-toastify"
 import { Typography } from "@/components/Typography"
 import { Button } from "@/components/ui/button"
+import {
+  SegmentedControl,
+  type SegmentedControlOption,
+} from "@/components/home/SegmentedControl"
 import { copyToClipboard } from "@/utils/clipboard"
 import { useDiagramIdFromPath } from "@/hooks/useDiagramIdFromPath"
 import {
@@ -11,42 +15,26 @@ import {
 } from "@/utils/sharedDiagramLinks"
 
 /**
- * Embed panel for the share modal: copy one snippet to drop a *live* diagram
- * (it re-renders as you edit) into a README, docs page, or any site. The
- * snippet works in any Markdown renderer, any `<img>`, and any iframe host —
- * so the panel is platform-neutral; specific platforms only appear as examples
- * in the per-format hint.
- *
- * One snippet is shown at a time, picked with a format selector (clickable
- * Markdown by default), following the Loom/Observable/Gist convention rather
- * than dumping every variant at once. Only SERVER-persisted diagrams embed
- * (`/shared/:id`, legacy `/:id`); a `/local/:id` is a client-only id the server
- * can't render, so the panel shows a share-first hint instead.
+ * Embed panel for the share modal: copies one snippet that renders a *live*,
+ * auto-updating diagram. Only server-persisted diagrams embed (`/shared/:id`,
+ * legacy `/:id`); a `/local/:id` is a client-only id the server can't render,
+ * so the panel shows a share-first hint instead.
  */
 
 type EmbedFormat = "markdown" | "markdown-plain" | "iframe"
 
-const FORMATS: ReadonlyArray<{
-  id: EmbedFormat
-  label: string
-  hint: string
-}> = [
-  {
-    id: "markdown",
-    label: "Markdown",
-    hint: "Recommended. Renders inline; clicking it opens the diagram in the editor.",
-  },
-  {
-    id: "markdown-plain",
-    label: "Markdown (no link)",
-    hint: "The same image, without the click-through.",
-  },
-  {
-    id: "iframe",
-    label: "iframe",
-    hint: "For pages that allow iframes — Notion, Confluence, GitLab Pages, or your own site.",
-  },
-]
+const FORMAT_OPTIONS = [
+  { value: "markdown", label: "Markdown" },
+  { value: "markdown-plain", label: "Markdown (no link)" },
+  { value: "iframe", label: "iframe" },
+] satisfies readonly SegmentedControlOption<EmbedFormat>[]
+
+const FORMAT_HINTS: Record<EmbedFormat, string> = {
+  markdown:
+    "Recommended. Shows the diagram inline; click it to open the editor.",
+  "markdown-plain": "The same image, but not clickable.",
+  iframe: "For sites that allow iframes, like Notion or your own page.",
+}
 
 export function EmbedHints({ title = "Apollon diagram" }: { title?: string }) {
   const diagramId = useEmbeddableDiagramId()
@@ -54,26 +42,10 @@ export function EmbedHints({ title = "Apollon diagram" }: { title?: string }) {
   const hintId = useId()
   const snippets = diagramId ? buildSnippets(diagramId, title) : null
 
-  if (!snippets) {
-    return (
-      <fieldset className="border border-[var(--home-border-subtle)] p-2 rounded-xl">
-        <legend className="text-sm px-2 text-[var(--apollon-primary-contrast)]">
-          Embed
-        </legend>
-        <Typography sx={{ fontSize: "0.875rem", opacity: 0.75 }}>
-          Share this diagram to embed it — your snippet will appear here.
-        </Typography>
-      </fieldset>
-    )
-  }
-
-  const active = FORMATS.find((f) => f.id === format) ?? FORMATS[0]
-  const value = snippets[format]
-
-  const onCopy = () => {
+  const onCopy = (value: string) => {
     void copyToClipboard(value).then(
       () => toast.success("Embed snippet copied"),
-      () => toast.error("Couldn't copy. Select the text and copy manually.")
+      () => toast.error("Couldn't copy. Select the text and copy it manually.")
     )
   }
 
@@ -82,55 +54,64 @@ export function EmbedHints({ title = "Apollon diagram" }: { title?: string }) {
       <legend className="text-sm px-2 text-[var(--apollon-primary-contrast)]">
         Embed
       </legend>
-      <Typography sx={{ fontSize: "0.8125rem", opacity: 0.75 }}>
-        Add a live diagram to your README, docs, or any web page — it stays in
-        sync as you edit.
-      </Typography>
 
-      <div
-        role="group"
-        aria-label="Embed format"
-        className="flex flex-wrap gap-1"
-      >
-        {FORMATS.map((f) => (
-          <Button
-            key={f.id}
-            size="sm"
-            variant={f.id === format ? "secondary" : "ghost"}
-            aria-pressed={f.id === format}
-            onClick={() => setFormat(f.id)}
+      {!snippets ? (
+        <Typography sx={{ fontSize: "0.8125rem", opacity: 0.75 }}>
+          Share this diagram first to get an embed snippet.
+        </Typography>
+      ) : (
+        <>
+          <Typography sx={{ fontSize: "0.8125rem", opacity: 0.75 }}>
+            Add a live diagram to any page — it stays in sync as you edit.
+          </Typography>
+
+          <SegmentedControl
+            options={FORMAT_OPTIONS}
+            value={format}
+            onChange={setFormat}
+          />
+
+          <div className="flex items-center">
+            <input
+              type="text"
+              value={snippets[format]}
+              readOnly
+              aria-label="Embed snippet"
+              aria-describedby={hintId}
+              onFocus={(e) => e.currentTarget.select()}
+              className="grow h-9 px-3 py-1.5 border rounded-md border-r-0 rounded-r-none border-[var(--home-border-default)] bg-[var(--apollon-background)] text-[var(--apollon-primary-contrast)] text-xs font-mono"
+            />
+            <Button
+              onClick={() => onCopy(snippets[format])}
+              variant="outline"
+              aria-label="Copy embed snippet"
+              className="rounded-l-none"
+            >
+              Copy
+            </Button>
+          </div>
+          <span
+            id={hintId}
+            className="text-xs opacity-70 text-[var(--apollon-primary-contrast)]"
           >
-            {f.label}
-          </Button>
-        ))}
-      </div>
-
-      <div className="flex items-center">
-        <input
-          type="text"
-          value={value}
-          readOnly
-          aria-label={`Embed snippet (${active.label})`}
-          aria-describedby={hintId}
-          onFocus={(e) => e.currentTarget.select()}
-          className="grow h-[36px] px-3 py-1.5 border rounded-md border-r-0 rounded-r-none border-[var(--home-border-default)] bg-[var(--apollon-background)] text-[var(--apollon-primary-contrast)] text-xs font-mono"
-        />
-        <Button
-          onClick={onCopy}
-          variant="outline"
-          aria-label="Copy embed snippet"
-          className="rounded-l-none h-[36px]"
-        >
-          Copy
-        </Button>
-      </div>
-      <span
-        id={hintId}
-        className="text-xs opacity-70 text-[var(--apollon-primary-contrast)]"
-      >
-        {active.hint}
-      </span>
+            {FORMAT_HINTS[format]}
+          </span>
+        </>
+      )}
     </fieldset>
+  )
+}
+
+/**
+ * Strips the characters that break Markdown alt text and collapses whitespace,
+ * falling back to a default when the title is empty. Exported for unit tests.
+ */
+export function sanitizeMarkdownAlt(title: string): string {
+  return (
+    title
+      .replace(/\s+/g, " ")
+      .replace(/[[\]()]/g, "")
+      .trim() || "Apollon diagram"
   )
 }
 
@@ -146,12 +127,7 @@ function buildSnippets(
 ): Record<EmbedFormat, string> | null {
   const serverOrigin = resolveServerOrigin()
   if (!serverOrigin) return null
-  // Collapse whitespace and drop the characters that break Markdown alt text.
-  const safeTitle =
-    title
-      .replace(/\s+/g, " ")
-      .replace(/[[\]()]/g, "")
-      .trim() || "Apollon diagram"
+  const safeTitle = sanitizeMarkdownAlt(title)
   const id = encodeURIComponent(diagramId)
   const editorUrl = buildSharedDiagramUrl(diagramId)
   const previewUrl = `${serverOrigin}/api/diagrams/${id}/preview.svg`
