@@ -6,7 +6,7 @@ import {
   useState,
   type FC,
 } from "react"
-import { getRouteApi, useLocation } from "@tanstack/react-router"
+import { getRouteApi, useRouter } from "@tanstack/react-router"
 import { Box } from "@mui/material"
 import { toast } from "react-toastify"
 import {
@@ -73,8 +73,11 @@ export const ApollonLocal: FC = () => {
   const { openModal } = useModalContext()
   const { id: diagramId } = route.useParams()
   const { version: previewFromUrl } = route.useSearch()
-  const location = useLocation()
-  const locationRef = useRef(location)
+  // The router instance is stable; its `state.location` is updated synchronously
+  // on navigation, so the editor cleanup can read the DESTINATION path even
+  // while this component is unmounting (a React `useLocation` ref lags — it
+  // still holds the old /local path at unmount, which is the bug this avoids).
+  const router = useRouter()
 
   const diagram = usePersistenceModelStore((store) =>
     diagramId ? store.models[diagramId] : null
@@ -135,13 +138,6 @@ export const ApollonLocal: FC = () => {
 
   const prePreviewFingerprintRef = useRef<string | null>(null)
   const [canRestoreFromPreview, setCanRestoreFromPreview] = useState(false)
-
-  // Keep a live ref to the location so the editor cleanup can detect whether
-  // we're navigating between two /local/* diagrams (don't clobber the store)
-  // versus actually leaving local mode.
-  useEffect(() => {
-    locationRef.current = location
-  })
 
   // -------- Editor lifecycle --------------------------------------------
   useEffect(() => {
@@ -220,8 +216,14 @@ export const ApollonLocal: FC = () => {
       log.debug("Cleaning up Apollon instance")
       instance.unsubscribe(subId)
       instance.destroy()
+      // Read the DESTINATION from the router (updated synchronously on
+      // navigation), not a React location ref (which still holds this
+      // /local/... path at unmount). Only a hop to another /local/* diagram
+      // should preserve the editor + currentModelId for the next instance to
+      // adopt; leaving local mode (to /shared/... or the gallery) must clear
+      // them so a destroyed editor never lingers in EditorContext.
       const isTransitioningToAnotherLocalDiagram = /^\/local\//.test(
-        locationRef.current.pathname
+        router.state.location.pathname
       )
       if (
         !isTransitioningToAnotherLocalDiagram &&
@@ -233,6 +235,7 @@ export const ApollonLocal: FC = () => {
     }
   }, [
     diagram?.id,
+    router,
     setCurrentModelId,
     setEditor,
     setThumbnail,
