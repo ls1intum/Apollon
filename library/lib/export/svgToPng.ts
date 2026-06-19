@@ -16,6 +16,7 @@ import interBoldUrl from "@/assets/fonts/Inter-Bold.ttf?url"
 import interRegularUrl from "@/assets/fonts/Inter-Regular.ttf?url"
 import { DEFAULT_FONT_SIZE } from "@/fontStack"
 import { RasterTooLargeError } from "./exportErrors"
+import { normalizeExportSvg } from "./normalizeExportSvg"
 
 /** 75 MP — well under the wasm32 4 GB ceiling at resvg's ~4× working set. */
 const DEFAULT_MAX_AREA_PX = 75_000_000
@@ -123,12 +124,14 @@ async function loadBundledFonts(): Promise<Uint8Array[]> {
 }
 
 /**
- * Add a same-colour hairline stroke to every `<text>`/`<tspan>` (see
- * STEM_DARKEN_EM). Returns the serialised SVG; mutates a parsed clone, not the
- * caller's string.
+ * Prepare the SVG for resvg: normalise the italic claim away (resvg has no
+ * italic face — see normalizeExportSvg) and add a same-colour hairline stroke
+ * to every `<text>`/`<tspan>` (see STEM_DARKEN_EM). Returns the serialised SVG;
+ * mutates a parsed clone, not the caller's string.
  */
-function stemDarken(svg: string): string {
+function prepareSvgForRaster(svg: string): string {
   const doc = new DOMParser().parseFromString(svg, "image/svg+xml")
+  normalizeExportSvg(doc.documentElement)
   doc.querySelectorAll("text").forEach((text) => {
     const fill = text.getAttribute("fill") || "#000000"
     if (fill === "none") return
@@ -181,7 +184,7 @@ export async function svgToPng(
   let resvg: InstanceType<typeof Resvg> | undefined
   let rendered: ReturnType<InstanceType<typeof Resvg>["render"]> | undefined
   try {
-    resvg = new Resvg(stemDarken(svg), {
+    resvg = new Resvg(prepareSvgForRaster(svg), {
       fitTo: { mode: "zoom", value: appliedScale },
       // An explicit transparent rgba; omitting `background` leaves resvg's
       // anti-aliased edges painted black.
@@ -207,15 +210,16 @@ export async function svgToPng(
       height,
     }
   } catch (err) {
-    // Best-effort: surface a likely wasm OOM as the typed error. wasm-bindgen
-    // doesn't report OOM uniformly, so this is a heuristic — the area budget
-    // above is the real guard against running out of memory.
-    const e = err as Error
-    if (e.name === "RangeError" || /memory|allocation/i.test(e.message ?? "")) {
+    // A failed wasm memory growth surfaces as a RangeError; resvg's own
+    // parse/render failures are plain Errors with descriptive messages. Key off
+    // the type, not the message, so an unrelated error can't be mislabelled
+    // "too large". The area budget above is the real guard; this only improves
+    // the message on the rare device-memory failure at the clamp ceiling.
+    if (err instanceof RangeError) {
       const cw = Math.round(clip.width * appliedScale)
       const ch = Math.round(clip.height * appliedScale)
       throw new RasterTooLargeError(
-        `PNG render ran out of memory at ${cw}x${ch}: ${e.message}`,
+        `PNG render ran out of memory at ${cw}x${ch}: ${err.message}`,
         cw,
         ch
       )

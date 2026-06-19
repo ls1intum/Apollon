@@ -4,6 +4,7 @@ import { describe, it, expect } from "vitest"
 import { computeAppliedScale, svgToPng } from "@/export/svgToPng"
 import { svgToPdf } from "@/export/svgToPdf"
 import { preProcessSvgForPdf } from "@/export/preProcessSvgForPdf"
+import { normalizeExportSvg } from "@/export/normalizeExportSvg"
 import { RasterTooLargeError } from "@/export/exportErrors"
 
 // resvg-wasm and the Inter ttf are normally fetched via bundler `?url` assets;
@@ -104,6 +105,18 @@ describe("preProcessSvgForPdf", () => {
   })
 })
 
+describe("normalizeExportSvg", () => {
+  it("drops the italic claim abstract headers emit (no italic face is shipped)", () => {
+    const doc = parse(
+      `<svg xmlns="http://www.w3.org/2000/svg"><text font-style="italic">Abstract</text><text font-style="normal">Concrete</text></svg>`
+    )
+    normalizeExportSvg(doc)
+    const texts = Array.from(doc.querySelectorAll("text"))
+    expect(texts[0].hasAttribute("font-style")).toBe(false)
+    expect(texts[1].getAttribute("font-style")).toBe("normal")
+  })
+})
+
 describe("svgToPng", () => {
   it("rasterises to a real PNG at the requested scale", async () => {
     const result = await svgToPng(SAMPLE_SVG, CLIP, {
@@ -138,6 +151,17 @@ describe("svgToPng", () => {
     await expect(
       svgToPng(SAMPLE_SVG, { width: 0, height: 60 }, { fontBuffers })
     ).rejects.toBeInstanceOf(RasterTooLargeError)
+  })
+
+  it("does not misclassify a malformed-SVG failure as too-large", async () => {
+    // resvg rejects unparseable input with a plain Error, not a RangeError, so
+    // it must surface as itself rather than the OOM-typed RasterTooLargeError.
+    const err = await svgToPng("not an svg at all", CLIP, {
+      wasmInput: wasmBytes,
+      fontBuffers,
+    }).catch((e) => e)
+    expect(err).toBeInstanceOf(Error)
+    expect(err).not.toBeInstanceOf(RasterTooLargeError)
   })
 })
 

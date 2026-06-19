@@ -11,6 +11,7 @@
 import type { jsPDF } from "jspdf"
 import interBoldUrl from "@/assets/fonts/Inter-Bold.ttf?url"
 import interRegularUrl from "@/assets/fonts/Inter-Regular.ttf?url"
+import { normalizeExportSvg } from "./normalizeExportSvg"
 import { preProcessSvgForPdf } from "./preProcessSvgForPdf"
 
 /** svg2pdf.js / PDF-1.x MediaBox ceiling in points (yWorks/svg2pdf.js#213). */
@@ -62,13 +63,13 @@ async function fontBase64(
 
 /**
  * Register Inter with jsPDF before svg2pdf walks the SVG. svg2pdf looks up
- * `(family, weight+style)` in jsPDF's registry and silently falls back to a
- * standard font (dropping glyphs / mismatching widths) for any combination it
- * can't find — which is how stereotype labels and headers used to vanish. We
- * ship Regular + Bold only, matching the server, and alias every weight/style
- * Apollon emits onto them: italic maps to the upright face (Inter has no italic
- * bundled), so abstract-class names render upright in the PDF — the same
- * fidelity bound as the server path.
+ * `(family, weight)` in jsPDF's registry and silently falls back to a standard
+ * font (dropping glyphs / mismatching widths) for any combination it can't
+ * find — which is how stereotype labels and headers used to vanish. We ship
+ * Regular + Bold (matching the server) and register the weights Apollon emits;
+ * jsPDF folds them into one key per face: 400→"normal", 700→"bold",
+ * 600→"600normal" (600 aliases onto Bold). Only the upright style is
+ * registered — `normalizeExportSvg` strips the italic claim first.
  */
 async function registerInter(
   pdf: jsPDF,
@@ -77,14 +78,9 @@ async function registerInter(
   const { regular, bold } = await fontBase64(fonts)
   pdf.addFileToVFS("Inter-Regular.ttf", regular)
   pdf.addFileToVFS("Inter-Bold.ttf", bold)
-  // jsPDF folds (style, weight) into one registry key: 400→"normal",
-  // 700→"bold", 600→"600normal" (per style). Registering 400/600/700 covers
-  // every (style, weight) Apollon's compat SVG emits; 600 aliases onto Bold.
-  for (const style of ["normal", "italic"] as const) {
-    pdf.addFont("Inter-Regular.ttf", "Inter", style, "400")
-    pdf.addFont("Inter-Bold.ttf", "Inter", style, "600")
-    pdf.addFont("Inter-Bold.ttf", "Inter", style, "700")
-  }
+  pdf.addFont("Inter-Regular.ttf", "Inter", "normal", "400")
+  pdf.addFont("Inter-Bold.ttf", "Inter", "normal", "600")
+  pdf.addFont("Inter-Bold.ttf", "Inter", "normal", "700")
 }
 
 export async function svgToPdf(
@@ -127,6 +123,7 @@ export async function svgToPdf(
   if (doc.getElementsByTagName("parsererror").length > 0) {
     throw new Error("Failed to parse exported SVG for PDF rendering.")
   }
+  normalizeExportSvg(doc.documentElement)
   preProcessSvgForPdf(doc.documentElement)
 
   await svg2pdf(doc.documentElement as unknown as SVGElement, pdf, {
