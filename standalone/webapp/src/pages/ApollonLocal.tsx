@@ -6,6 +6,7 @@ import { useLocation, useParams } from "react-router"
 import { log } from "@/logger"
 import { normalizeThumbnailSvg } from "@/utils/thumbnailSvg"
 import { useDocumentTitle } from "@/hooks/useDocumentTitle"
+import { installPerfHooks } from "@/utils/perfHooks"
 import { ErrorPage } from "./ErrorPage"
 
 const THUMBNAIL_DEBOUNCE_MS = 2000
@@ -85,10 +86,12 @@ export const ApollonLocal: React.FC = () => {
       ;(window as Window & { apollonEditor?: ApollonEditor }).apollonEditor =
         instance
     }
+    const removePerfHooks = installPerfHooks(instance)
 
     return () => {
       isThumbnailExportCanceledRef.current = true
       thumbnailExportSequenceRef.current += 1
+      removePerfHooks()
       if (import.meta.env.DEV) {
         delete (window as Window & { apollonEditor?: ApollonEditor })
           .apollonEditor

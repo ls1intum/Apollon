@@ -14,7 +14,11 @@ import { toast } from "react-toastify"
 import { Box } from "@mui/material"
 import { DiagramView } from "@/types"
 import { WebSocketManager } from "@/services/WebSocketManager"
-import { ApiError, DiagramApiClient } from "@/services/DiagramApiClient"
+import { DiagramApiClient } from "@/services/DiagramApiClient"
+import {
+  createDiagramAutosaver,
+  type DiagramAutosaver,
+} from "@/services/createDiagramAutosaver"
 import { useVersionStore } from "@/stores/useVersionStore"
 import { useDocumentTitle } from "@/hooks/useDocumentTitle"
 import {
@@ -54,9 +58,8 @@ export const ApollonWithConnection: React.FC = () => {
   const canvasColumnRef = useRef<HTMLDivElement | null>(null)
   const canvasColumnWidth = useElementWidth(canvasColumnRef)
   const wsManagerRef = useRef<WebSocketManager | null>(null)
-  const syncIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const autosaverRef = useRef<DiagramAutosaver | null>(null)
   const diagramIsUpdated = useRef(false)
-  const lastObservedHeadRev = useRef<number | undefined>(undefined)
   const editorRef = useRef<ApollonEditor | null>(null)
   const restoredDuringPreviewRef = useRef(false)
   /**
@@ -105,7 +108,6 @@ export const ApollonWithConnection: React.FC = () => {
       lifecycleKeyRef.current = nextLifecycleKey
       setIsLoading(true)
       diagramIsUpdated.current = false
-      lastObservedHeadRev.current = undefined
       restoredDuringPreviewRef.current = false
       hasPromptedRef.current = false
     }
@@ -247,44 +249,23 @@ export const ApollonWithConnection: React.FC = () => {
           })
         }
 
-        syncIntervalRef.current = setInterval(() => {
-          const previewing = useVersionStore.getState().preview !== null
-          if (previewing) return
-          if (!diagramIsUpdated.current || !diagramId || !instance) return
-          // In collab, every connected peer autosaves the same Yjs-converged
-          // model. If-Match would race them artificially — Yjs guarantees
-          // content convergence, so HEAD revision contention isn't a real
-          // conflict here. Single-editor views keep the optimistic check.
-          const ifMatch = isCollaborationView
-            ? undefined
-            : lastObservedHeadRev.current
-          DiagramApiClient.sendDiagramUpdate(diagramId, instance.model, {
-            ifMatch,
-          })
-            .then((res) => {
-              lastObservedHeadRev.current = res.headRev
-              diagramIsUpdated.current = false
-            })
-            .catch(async (err) => {
-              if (err instanceof ApiError && err.code === "REVISION_MISMATCH") {
-                // Catch the server's hint and rebase to it; if the meta is
-                // absent, KEEP the prior rev rather than clearing it —
-                // clearing would let the very next tick PUT without an
-                // If-Match guard and could clobber a concurrent writer.
-                const meta = err.meta as { currentHeadRev?: number } | undefined
-                if (typeof meta?.currentHeadRev === "number") {
-                  lastObservedHeadRev.current = meta.currentHeadRev
-                }
-              } else {
-                log.error("Autosave failed", err)
-                toast.error("Failed to sync changes")
-              }
-            })
-        }, 5000)
+        const editorInstance = instance
+        const autosaver = createDiagramAutosaver({
+          diagramId,
+          getModel: () => editorInstance.model,
+          isPaused: () => useVersionStore.getState().preview !== null,
+          collaboration: isCollaborationView,
+          onSaved: () => {
+            diagramIsUpdated.current = false
+          },
+          onError: () => toast.error("Failed to sync changes"),
+        })
+        autosaverRef.current = autosaver
 
         modelChangeSubscriptionId = instance.subscribeToModelChange(() => {
           if (useVersionStore.getState().preview !== null) return
           diagramIsUpdated.current = true
+          autosaver.schedule()
         })
 
         void fetchVersions(diagramId)
@@ -305,9 +286,22 @@ export const ApollonWithConnection: React.FC = () => {
       abort.abort()
       setEditor(undefined)
       wsManagerRef.current?.cleanup()
-      if (syncIntervalRef.current) {
-        clearInterval(syncIntervalRef.current)
+      // If a version preview is still open at teardown, the editor's local
+      // model is the previewed snapshot and the autosaver is paused — flushing
+      // as-is would either skip a pending pre-preview edit (paused) or persist
+      // the stale snapshot. Exit preview first: setPreviewMode(false) resyncs
+      // the editor from the live Yjs doc (the real diagram), and exitPreview()
+      // clears the pause, so the flush below captures and persists it.
+      if (instance && useVersionStore.getState().preview !== null) {
+        instance.setPreviewMode(false)
+        useVersionStore.getState().exitPreview()
       }
+      // Persist any pending debounced edits before tearing down (e.g. SPA
+      // navigation): flush() reads the model synchronously, so it captures the
+      // latest state while the editor is still alive, then dispose() stops it.
+      void autosaverRef.current?.flush()
+      autosaverRef.current?.dispose()
+      autosaverRef.current = null
       if (instance) {
         if (modelChangeSubscriptionId !== null) {
           instance.unsubscribe(modelChangeSubscriptionId)
@@ -353,6 +347,10 @@ export const ApollonWithConnection: React.FC = () => {
 
   const baseReadonly = viewType === DiagramView.SEE_FEEDBACK
 
+  // Imperative preview-mode driver: caches a pre-preview fingerprint in a ref
+  // and overlays the preview model via the editor's imperative API. These are
+  // effect-phase side effects, not render-time mutations.
+  // eslint-disable-next-line react-hooks/immutability
   useEffect(() => {
     if (!editor) return
     const abort = new AbortController()
@@ -374,6 +372,8 @@ export const ApollonWithConnection: React.FC = () => {
       // catches up to whatever collaborators committed during preview.
       editor.setPreviewMode(true)
       try {
+        // Imperative editor API (accessor setter), applied in an effect.
+        // eslint-disable-next-line react-hooks/immutability
         editor.model = importDiagram(preview.body) as UMLModel
         editor.setReadonly(true)
         editor.fitView()
@@ -426,9 +426,7 @@ export const ApollonWithConnection: React.FC = () => {
   // as a dep — without stable identity the restore handler gets a fresh
   // closure every render and the banner's `onRestore` prop churns.
   const handleVersionSaved = useCallback((headRev?: number) => {
-    if (typeof headRev === "number") {
-      lastObservedHeadRev.current = headRev
-    }
+    autosaverRef.current?.setHeadRev(headRev)
     diagramIsUpdated.current = false
   }, [])
 

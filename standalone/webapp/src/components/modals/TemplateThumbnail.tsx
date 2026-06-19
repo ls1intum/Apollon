@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { UMLDiagramType } from "@tumaet/apollon/react"
 import { getDiagramTypeIcon } from "@/components/home/diagramTypeMeta"
 import { getCachedThumbnailSources } from "@/utils/thumbnailTheme"
@@ -16,11 +16,7 @@ import {
  * heavy render is queued lazily (see templateThumbnails) and memoized so the
  * dialog's name field re-renders don't rebuild it.
  */
-export const TemplateThumbnail = memo(function TemplateThumbnail({
-  name,
-}: {
-  name: string
-}) {
+export function TemplateThumbnail({ name }: { name: string }) {
   // undefined = still rendering, null = render failed, string = light SVG.
   const [lightSvg, setLightSvg] = useState<string | null | undefined>(() =>
     getResolvedTemplateSvg(name)
@@ -103,4 +99,4 @@ export const TemplateThumbnail = memo(function TemplateThumbnail({
       )}
     </div>
   )
-})
+}

@@ -17,6 +17,9 @@ import {
   AlignmentGuides,
 } from "@/components"
 import "@xyflow/react/dist/style.css"
+// Register the bundled Inter @font-face at module load, so the face exists
+// before diagram <text> elements (which request the Inter family) first paint.
+import "@/styles/fonts.css"
 import "@/styles/app.css"
 import { useDiagramStore, useMetadataStore } from "./store/context"
 import { useShallow } from "zustand/shallow"
@@ -34,6 +37,10 @@ import { diagramNodeTypes } from "./nodes"
 import { useDiagramModifiable } from "./hooks/useDiagramModifiable"
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts"
 import { usePaneClicked } from "./hooks/usePaneClicked"
+import {
+  useRemoteDraggingNodes,
+  applyDraggingOverlay,
+} from "./hooks/useRemoteDraggingNodes"
 import { ApollonMode } from "./typings"
 import {
   getConnectionLineType,
@@ -67,7 +74,7 @@ const isPointArray = (value: unknown): value is IPoint[] =>
 function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
   useKeyboardShortcuts()
 
-  const { nodes, onNodesChange, edges, onEdgesChange, diagramId } =
+  const { nodes, onNodesChange, edges, onEdgesChange, diagramId, previewMode } =
     useDiagramStore(
       useShallow((state) => ({
         nodes: state.nodes,
@@ -75,6 +82,7 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
         edges: state.edges,
         onEdgesChange: state.onEdgesChange,
         diagramId: state.diagramId,
+        previewMode: state.previewMode,
       }))
     )
 
@@ -101,6 +109,18 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
   )
 
   const isDiagramModifiable = useDiagramModifiable()
+
+  // Overlay the live positions/sizes of nodes peers are dragging (carried over
+  // ephemeral awareness, never the document) onto what React Flow renders, so
+  // remote drags stay live without per-frame CRDT writes. Suppressed during a
+  // version preview (matching CollaborationLayer's other remote visuals), and a
+  // no-op outside collaboration — `displayNodes` is then `nodes` by reference,
+  // so React Flow re-renders nothing.
+  const remoteDraggingNodes = useRemoteDraggingNodes(
+    awareness,
+    collaboration.enabled && !previewMode
+  )
+  const displayNodes = applyDraggingOverlay(nodes, remoteDraggingNodes)
 
   const connectionLineType = getConnectionLineType(diagramType)
   const onNodeDragStop = useNodeDragStop()
@@ -160,7 +180,7 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
           className="apollon-container"
           nodeTypes={diagramNodeTypes}
           edgeTypes={diagramEdgeTypes}
-          nodes={nodes}
+          nodes={displayNodes}
           edges={edges}
           onDragOver={onDragOver}
           onNodesChange={onNodesChange}

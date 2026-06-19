@@ -13,7 +13,14 @@ import { defineConfig, type UserConfig } from "vite"
 // JIT scans each webview's own src/ tree (it uses CWD by default).
 export function defineWebviewConfig(): UserConfig {
   return defineConfig({
-    plugins: [react(), tailwindcss()],
+    plugins: [
+      react({
+        babel: {
+          plugins: [["babel-plugin-react-compiler", { target: "19" }]],
+        },
+      }),
+      tailwindcss(),
+    ],
     build: {
       outDir: "dist",
       emptyOutDir: true,

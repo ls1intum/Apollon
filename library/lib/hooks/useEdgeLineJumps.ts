@@ -8,14 +8,13 @@ import {
   computeLineJumpsForEdge,
 } from "@/utils/edgeUtils"
 
-const pointsKey = (points: IPoint[]): string =>
-  points.map((point) => `${point.x.toFixed(3)},${point.y.toFixed(3)}`).join("|")
-
 /**
  * Publishes this edge's actual rendered (jump-free) polyline to the shared
  * geometry registry so other edges can bridge over it at its real position,
  * and removes it on unmount. `points` should be the edge's live render
- * geometry (`renderPoints` for step edges, source/target for straight ones).
+ * geometry (`renderPoints` for step edges, source/target for straight ones),
+ * which its producer already memoizes, so depending on the array directly is
+ * stable — no hashing needed.
  */
 export function usePublishEdgeGeometry(
   id: string | undefined,
@@ -23,13 +22,10 @@ export function usePublishEdgeGeometry(
 ): void {
   const publish = useEdgeGeometryStore((state) => state.publishEdgeGeometry)
   const remove = useEdgeGeometryStore((state) => state.removeEdgeGeometry)
-  const key = pointsKey(points)
 
   useEffect(() => {
     if (id) publish(id, points)
-    // points is captured via the stable `key`; publishing is idempotent.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, key, publish])
+  }, [id, points, publish])
 
   useEffect(() => {
     return () => {
@@ -54,16 +50,13 @@ export function useEdgeLineJumps(
   enabled: boolean
 ): LineJumpHit[] {
   const geometryById = useEdgeGeometryStore((state) => state.geometryById)
-  const baseKey = pointsKey(basePoints)
 
   return useMemo(() => {
     if (!enabled || !id) return []
     const geometryMap = new Map<string, IPoint[]>(Object.entries(geometryById))
     const edges = Object.keys(geometryById).map((edgeId) => ({ id: edgeId }))
     return computeLineJumpsForEdge(id, basePoints, edges, geometryMap)
-    // basePoints is captured via the stable baseKey string.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, id, baseKey, geometryById])
+  }, [enabled, id, basePoints, geometryById])
 }
 
 /**

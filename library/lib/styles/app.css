@@ -1,3 +1,7 @@
+/* NOTE: this file is inlined verbatim into the headless-export CSS chunk
+   (see lib/utils/exportStyles.ts). Keep it free of `@font-face`, `url(...)`,
+   and `@import`, or those assets leak into that chunk. The Inter font ships
+   separately (lib/styles/fonts.css + lib/utils/exportFonts.ts). */
 .react-flow {
   --panel-background: var(--apollon-background, #fff);
   --panel-shadow: 0 0 4px 0 var(--apollon-background-variant, #f8f9fa);
