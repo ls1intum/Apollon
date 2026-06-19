@@ -45,11 +45,13 @@ jobs:
               - '.nvmrc'
               - 'tsconfig*.json'
               - '.github/workflows/pr-health-checks.yml'
+              - '.github/actions/**'
             library:
               - 'library/**'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
               - '.github/workflows/pr-health-checks.yml'
+              - '.github/actions/**'
 
   # No path filter: a stale CDN version can drift in via a doc edit OR a bump,
   # so check every PR. Pure Node — no pnpm install needed.
@@ -82,17 +84,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@ac6db6d3c1f721f886538a378a2d73e85697340a # v6.0.8
-
-      - name: Set up Node
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
-        with:
-          node-version-file: ".nvmrc"
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup pnpm + Node + install
+        uses: ./.github/actions/setup
 
       - name: Run Lint
         run: pnpm run lint
@@ -140,17 +133,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@ac6db6d3c1f721f886538a378a2d73e85697340a # v6.0.8
-
-      - name: Set up Node
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
-        with:
-          node-version-file: ".nvmrc"
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup pnpm + Node + install
+        uses: ./.github/actions/setup
 
       - name: Build library and server
         run: pnpm run build:lib && pnpm run build:server
@@ -167,17 +151,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@ac6db6d3c1f721f886538a378a2d73e85697340a # v6.0.8
-
-      - name: Set up Node
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
-        with:
-          node-version-file: ".nvmrc"
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup pnpm + Node + install
+        uses: ./.github/actions/setup
 
       - name: Build
         run: pnpm run build:lib
@@ -206,8 +181,11 @@ jobs:
       - name: Run E2E tests
         run: pnpm --filter @tumaet/webapp exec playwright test tests/e2e/
 
-      - name: Run performance budget tests
-        run: pnpm --filter @tumaet/webapp run test:perf
+      # The chromium document-growth budget runs in the scheduled
+      # nightly-checks workflow, not here — the Firefox budget (perf-firefox-
+      # tests below) is the per-PR guard for the exam-freeze regression, since
+      # Firefox is the engine the freeze was reported on and its GC surfaces
+      # unbounded growth sooner.
 
       - name: Upload Playwright report
         if: ${{ failure() }}
@@ -241,17 +219,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@ac6db6d3c1f721f886538a378a2d73e85697340a # v6.0.8
-
-      - name: Set up Node
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
-        with:
-          node-version-file: ".nvmrc"
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup pnpm + Node + install
+        uses: ./.github/actions/setup
 
       - name: Build
         run: pnpm run build:lib
@@ -307,19 +276,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@ac6db6d3c1f721f886538a378a2d73e85697340a # v6.0.8
-
-      - name: Set up Node 22 LTS
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+      - name: Setup pnpm + Node 22 + install
+        # Node 22 (the library's published floor) instead of the repo's .nvmrc,
+        # and engine-strict off so the root `>=24.15.0` gate doesn't reject it.
+        uses: ./.github/actions/setup
         with:
           node-version: "22"
-          cache: "pnpm"
-
-      - name: Install dependencies
-        # `engine-strict=true` rejects Node 22 against the root `>=24.15.0`
-        # gate; library workspace is `>=22`, so install with the flag off.
-        run: pnpm install --frozen-lockfile --config.engine-strict=false
+          engine-strict: "false"
 
       - name: Build library
         run: pnpm --filter @tumaet/apollon run build
@@ -361,53 +324,11 @@ jobs:
         # of >10% (size-limit default) per artifact.
         run: pnpm run size
 
-  # Baseline regeneration: see docs/development/visual-tests.md.
-  visual-regression-tests:
-    needs: [detect-changes]
-    if: needs.detect-changes.outputs.should-skip != 'true' && needs.detect-changes.outputs.code == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    container:
-      image: mcr.microsoft.com/playwright:v1.59.1-noble
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-
-      - name: Install Node 24
-        shell: bash
-        run: |
-          set -euo pipefail
-          curl -fsSL https://deb.nodesource.com/setup_24.x | bash -
-          apt-get install -y nodejs
-          node --version
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@ac6db6d3c1f721f886538a378a2d73e85697340a # v6.0.8
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build
-        run: pnpm run build:lib
-
-      - name: Run visual regression tests
-        run: pnpm --filter @tumaet/webapp exec playwright test tests/visual/
-
-      - name: Upload Playwright report
-        if: ${{ failure() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: playwright-report-visual
-          path: standalone/webapp/playwright-report/
-          retention-days: 14
-
-      - name: Upload Playwright test results
-        if: ${{ failure() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: playwright-test-results-visual
-          path: standalone/webapp/test-results/
-          retention-days: 14
+  # NOTE: visual-regression and the chromium document-growth budget moved to
+  # the scheduled `nightly-checks.yml` workflow (run on demand via Run
+  # workflow). They are rendering/cross-engine guards, not per-PR correctness
+  # gates. The Firefox document-growth budget (the exam-freeze guard) stays
+  # per-PR above.
 
   # Gate job — set this as the required status check in branch protection.
   # Correctly handles skipped jobs (docs-only, duplicate runs).
@@ -424,7 +345,6 @@ jobs:
         library-node22-compat,
         e2e-tests,
         perf-firefox-tests,
-        visual-regression-tests,
       ]
     if: always()
     steps:
