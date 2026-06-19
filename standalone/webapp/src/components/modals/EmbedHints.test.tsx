@@ -18,8 +18,8 @@ describe("sanitizeMarkdownAlt", () => {
 describe("EmbedHints", () => {
   it("prompts to share first when the diagram isn't server-persisted", async () => {
     renderWithRouter(<EmbedHints title="My diagram" />)
-    expect(await screen.findByText(/share this diagram first/i)).toBeTruthy()
-    expect(screen.queryByLabelText("Embed snippet")).toBeNull()
+    expect(await screen.findByText(/share the diagram to embed/i)).toBeTruthy()
+    expect(screen.queryByLabelText("Embed code")).toBeNull()
   })
 
   it("switches the snippet when a different format is selected", async () => {
@@ -28,7 +28,7 @@ describe("EmbedHints", () => {
       routePaths: ["/shared/$diagramId"],
     })
     const input = (await screen.findByLabelText(
-      "Embed snippet"
+      "Embed code"
     )) as HTMLInputElement
     // Default is clickable Markdown: `[![alt](preview)](editor)`.
     expect(input.value.startsWith("[![")).toBe(true)

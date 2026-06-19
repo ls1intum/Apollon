@@ -1,7 +1,6 @@
 import { useId, useState } from "react"
 import { useLocation } from "@tanstack/react-router"
 import { toast } from "react-toastify"
-import { Typography } from "@/components/Typography"
 import { Button } from "@/components/ui/button"
 import {
   SegmentedControl,
@@ -33,7 +32,7 @@ const FORMAT_HINTS: Record<EmbedFormat, string> = {
   markdown:
     "Recommended. Shows the diagram inline; click it to open the editor.",
   "markdown-plain": "The same image, but not clickable.",
-  iframe: "For sites that allow iframes, like Notion or your own page.",
+  iframe: "For sites that allow iframes.",
 }
 
 export function EmbedHints({ title = "Apollon diagram" }: { title?: string }) {
@@ -44,7 +43,7 @@ export function EmbedHints({ title = "Apollon diagram" }: { title?: string }) {
 
   const onCopy = (value: string) => {
     void copyToClipboard(value).then(
-      () => toast.success("Embed snippet copied"),
+      () => toast.success("Embed code copied"),
       () => toast.error("Couldn't copy. Select the text and copy it manually.")
     )
   }
@@ -56,14 +55,14 @@ export function EmbedHints({ title = "Apollon diagram" }: { title?: string }) {
       </legend>
 
       {!snippets ? (
-        <Typography sx={{ fontSize: "0.8125rem", opacity: 0.75 }}>
-          Share this diagram first to get an embed snippet.
-        </Typography>
+        <p className="text-sm opacity-75 text-[var(--apollon-primary-contrast)]">
+          Share the diagram to embed it.
+        </p>
       ) : (
         <>
-          <Typography sx={{ fontSize: "0.8125rem", opacity: 0.75 }}>
-            Add a live diagram to any page — it stays in sync as you edit.
-          </Typography>
+          <p className="text-sm opacity-75 text-[var(--apollon-primary-contrast)]">
+            Add a live diagram to any page — it updates as you edit.
+          </p>
 
           <SegmentedControl
             options={FORMAT_OPTIONS}
@@ -76,7 +75,7 @@ export function EmbedHints({ title = "Apollon diagram" }: { title?: string }) {
               type="text"
               value={snippets[format]}
               readOnly
-              aria-label="Embed snippet"
+              aria-label="Embed code"
               aria-describedby={hintId}
               onFocus={(e) => e.currentTarget.select()}
               className="grow h-9 px-3 py-1.5 border rounded-md border-r-0 rounded-r-none border-[var(--home-border-default)] bg-[var(--apollon-background)] text-[var(--apollon-primary-contrast)] text-xs font-mono"
@@ -84,7 +83,7 @@ export function EmbedHints({ title = "Apollon diagram" }: { title?: string }) {
             <Button
               onClick={() => onCopy(snippets[format])}
               variant="outline"
-              aria-label="Copy embed snippet"
+              aria-label="Copy embed code"
               className="rounded-l-none"
             >
               Copy
