@@ -408,9 +408,8 @@ describe("LocalVersionRepository", () => {
   })
 
   it("subscribeToLocalVersionEvents returns a working unsubscribe", async () => {
-    // Resolve from inside the handler so we await ACTUAL delivery, not a fixed
-    // `setTimeout(0)` tick — BroadcastChannel delivery isn't guaranteed within
-    // one tick on the CI runner, which flaked here with "Number of calls: 0".
+    // Await actual delivery (resolved from the handler), not a setTimeout(0)
+    // tick — BroadcastChannel isn't guaranteed to deliver within one tick on CI.
     let deliverFirst: (() => void) | null = null
     const firstDelivery = new Promise<void>((r) => {
       deliverFirst = r
@@ -427,10 +426,8 @@ describe("LocalVersionRepository", () => {
       diagramId: DIAGRAM_ID,
     })
 
-    // After unsubscribe a second post must not reach the handler. A fresh
-    // sibling channel acts as a delivery barrier: once OUR listener on it sees
-    // the message, delivery has happened — so an still-attached handler would
-    // have fired by now too. No arbitrary timeout.
+    // A fresh sibling channel is the delivery barrier: once it sees the post,
+    // delivery happened, so a still-attached handler would have fired too.
     unsubscribe()
     handler.mockClear()
     const barrier = new BroadcastChannel("apollon-versions")

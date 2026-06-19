@@ -55,9 +55,6 @@ export const CurrentVersionRow: FC<Props> = ({
   latestSavedVersion,
 }) => {
   const previewState = useVersionStore((s) => selectScopedPreview(s, diagramId))
-  // Preview is URL-driven (`?version=`). Exit by clearing the param, not by
-  // poking the store directly — the URL→store sync owns `exitPreview`, and a
-  // direct store clear would be re-entered while the param still lingers.
   const closePreview = useClosePreview()
 
   if (previewState) {

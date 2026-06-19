@@ -431,13 +431,10 @@ export const ApollonWithConnection: React.FC = () => {
     closePreview()
   }, [closePreview])
 
-  // Single restore entry point for BOTH the preview banner and the drawer
-  // rows, so neither can read the wrong body. While previewing, `editor.model`
-  // is the read-only overlay of the version being viewed; the server would then
-  // store THAT as the pre-restore undo snapshot, so Undo could only bring back
-  // the version we just restored — not the live canvas. Leaving preview mode
-  // first resyncs `editor.model` from the live Yjs doc, so the captured undo
-  // body is the user's actual canvas.
+  // One restore path for the banner and the drawer. While previewing,
+  // `editor.model` is the read-only overlay — persisting it as the pre-restore
+  // undo snapshot would make Undo restore the very version we just restored.
+  // Leave preview first so editor.model resyncs to the live canvas.
   const handleRestore = useCallback(
     async (versionId: string) => {
       if (!diagramId || !editor) return
@@ -451,8 +448,7 @@ export const ApollonWithConnection: React.FC = () => {
       try {
         const { headRev } = await restoreVersion(diagramId, versionId, liveBody)
         handleVersionSaved(headRev)
-        // Strip `?version=` so the URL↔preview sync doesn't re-enter the
-        // version we just restored. No-op when we weren't previewing.
+        // Strip `?version=` so the URL sync doesn't re-enter the restored version.
         if (previewing) closePreview()
       } catch {
         restoredDuringPreviewRef.current = false

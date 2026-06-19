@@ -1,17 +1,8 @@
 /**
- * Regression tests for the URL-driven preview-exit paths (PR #678 review).
- *
- * Preview is the single source of truth in `?version=<id>`; the URL→store sync
- * (`useVersionPreviewUrlSync`) owns `enterPreview`/`exitPreview`. Two exit
- * affordances previously cleared the store directly, which the sync effect
- * immediately re-applied while the param lingered:
- *
- *   - CurrentVersionRow's "Return to current" row → preview couldn't be left.
- *   - DeleteVersionModal deleting the previewed version → the sync effect tried
- *     to re-enter the just-deleted id and showed a spurious "unavailable" toast.
- *
- * Both now route through `useClosePreview()`, which strips `?version=`. These
- * tests assert the param is gone after the interaction.
+ * Both preview-exit affordances — "Return to current" and deleting the
+ * previewed version — must clear `?version=` (via useClosePreview), not the
+ * store directly, or the URL→store sync re-enters preview. Asserts the param is
+ * gone after each interaction.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { cleanup, screen } from "@testing-library/react"

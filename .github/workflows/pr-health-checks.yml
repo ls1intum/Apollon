@@ -196,9 +196,8 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: pnpm --filter @tumaet/webapp exec playwright install chromium
 
-      # Bounded + retried: a fresh runner's boot-time unattended-upgrades holds
-      # the dpkg lock, so a naive apt-get here can hang the whole job. See the
-      # composite action; shared with perf-firefox-tests so they can't drift.
+      # Shared with perf-firefox-tests; the dpkg-lock hang it guards is
+      # documented in the composite action.
       - name: Install Playwright system deps (bounded + retried)
         uses: ./.github/actions/playwright-install-deps
         with:
@@ -226,18 +225,13 @@ jobs:
           path: standalone/webapp/test-results/
           retention-days: 14
 
-  # Run the document-growth performance budget on Firefox too, not just
-  # Chromium: its GC behaviour surfaces unbounded-growth regressions sooner. The
-  # functional e2e suite is not run on Firefox yet — it has a few Firefox-only
-  # rendering quirks that need separate triage.
+  # Document-growth budget on Firefox too: its GC surfaces unbounded-growth
+  # regressions sooner. (The functional e2e suite isn't on Firefox yet — it has
+  # Firefox-only rendering quirks that need separate triage.)
   #
-  # Runs on a bare runner (not the Playwright container): the container's
-  # bundled Firefox launches fine under plain Docker but crashes (exitCode=1) in
-  # GitHub Actions' container sandbox, whereas the runner's host environment
-  # launches it reliably. The only weakness of the bare-runner path was
-  # `playwright install-deps` (apt-get) stalling on the dpkg lock that fresh
-  # runners hold for their boot-time `unattended-upgrades` — so that single step
-  # is bounded and retried below instead of being able to hang the whole job.
+  # Bare runner, NOT the Playwright container: the container's bundled Firefox
+  # crashes (exitCode=1) under GitHub Actions' container sandbox, while the host
+  # runner launches it reliably. Do not "simplify" this into the container.
   perf-firefox-tests:
     needs: [detect-changes]
     if: needs.detect-changes.outputs.should-skip != 'true' && needs.detect-changes.outputs.code == 'true'
@@ -275,9 +269,8 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: pnpm --filter @tumaet/webapp exec playwright install firefox
 
-      # Bounded + retried: a fresh runner's boot-time unattended-upgrades holds
-      # the dpkg lock, so a naive apt-get here can hang the whole job. See the
-      # composite action; shared with e2e-tests so they can't drift.
+      # Shared with e2e-tests; the dpkg-lock hang it guards is documented in
+      # the composite action.
       - name: Install Playwright system deps (bounded + retried)
         uses: ./.github/actions/playwright-install-deps
         with:

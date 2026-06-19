@@ -73,10 +73,9 @@ export const ApollonLocal: FC = () => {
   const { openModal } = useModalContext()
   const { id: diagramId } = route.useParams()
   const { version: previewFromUrl } = route.useSearch()
-  // The router instance is stable; its `state.location` is updated synchronously
-  // on navigation, so the editor cleanup can read the DESTINATION path even
-  // while this component is unmounting (a React `useLocation` ref lags — it
-  // still holds the old /local path at unmount, which is the bug this avoids).
+  // `router.state.location` updates synchronously on navigation, so the editor
+  // cleanup reads the real destination even while unmounting — a `useLocation`
+  // ref still holds the old /local path at that point.
   const router = useRouter()
 
   const diagram = usePersistenceModelStore((store) =>
@@ -216,12 +215,9 @@ export const ApollonLocal: FC = () => {
       log.debug("Cleaning up Apollon instance")
       instance.unsubscribe(subId)
       instance.destroy()
-      // Read the DESTINATION from the router (updated synchronously on
-      // navigation), not a React location ref (which still holds this
-      // /local/... path at unmount). Only a hop to another /local/* diagram
-      // should preserve the editor + currentModelId for the next instance to
-      // adopt; leaving local mode (to /shared/... or the gallery) must clear
-      // them so a destroyed editor never lingers in EditorContext.
+      // Keep the editor + currentModelId only when hopping to another /local/*
+      // diagram (the next instance adopts them); clear on any other destination
+      // so a destroyed editor can't linger in EditorContext.
       const isTransitioningToAnotherLocalDiagram = /^\/local\//.test(
         router.state.location.pathname
       )
@@ -244,9 +240,7 @@ export const ApollonLocal: FC = () => {
   ])
 
   // -------- Preview overlay ---------------------------------------------
-  // Imperative preview driver: caches a pre-preview fingerprint in a ref and
-  // overlays the preview model via the editor's imperative API. These are
-  // effect-phase side effects, not render-time mutations.
+  // Imperative editor API in an effect, not a render-time mutation.
   // eslint-disable-next-line react-hooks/immutability
   useEffect(() => {
     if (!editor) return
@@ -312,11 +306,9 @@ export const ApollonLocal: FC = () => {
       const summary = versions.find((v) => v.id === versionId)
       try {
         const body = await resolveBody(versionId)
-        // While previewing, `editor.model` is the read-only overlay of the
-        // version being viewed — NOT the live canvas. Leaving preview mode
-        // resyncs `editor.model` from the live Yjs doc, so the body we capture
-        // for the durable "Before restoring …" undo snapshot is the canvas the
-        // user actually had, not the version they're about to restore.
+        // While previewing, `editor.model` is the read-only overlay. Leave
+        // preview so it resyncs to the live canvas — that's the body we want
+        // as the "Before restoring …" undo snapshot, not the previewed version.
         if (preview) editor.setPreviewMode(false)
         const liveBody = editor.model
         await useVersionStore
@@ -349,8 +341,7 @@ export const ApollonLocal: FC = () => {
    * already have on canvas.
    */
   const handleConfirmedRestore = useCallback(
-    // Calls performRestore, which applies the model via the editor's
-    // imperative API; the compiler's immutability pass flags the callback.
+    // performRestore mutates editor.model imperatively; flagged by the compiler.
     // eslint-disable-next-line react-hooks/immutability
     async (versionId: string) => {
       if (!editor || !diagramId) return

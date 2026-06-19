@@ -20,9 +20,8 @@ interface Props {
 export const DeleteVersionModal = ({ diagramId, versionId }: Props) => {
   const { closeModal } = useModalContext()
   const deleteVersion = useVersionStore((s) => s.deleteVersion)
-  // Preview is URL-driven; clear `?version=` so the sync effect doesn't try to
-  // re-enter the just-deleted version (which would surface a spurious
-  // "version unavailable" toast on an otherwise successful delete).
+  // Clearing `?version=` before delete stops the URL sync re-entering the
+  // deleted version and flashing a spurious "unavailable" toast.
   const closePreview = useClosePreview()
   const previewingThis = useVersionStore(
     (s) => selectScopedPreview(s, diagramId)?.versionId === versionId

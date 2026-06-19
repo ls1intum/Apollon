@@ -9,12 +9,9 @@ import { log } from "@/logger"
 export const PREVIEW_VERSION_PARAM = "version"
 
 /**
- * URL-level "leave preview": strips `?version=` so the URL→store sync below
- * exits preview on the next render. Shared so every exit affordance — the
- * banner, the drawer's "Return to current" row, and deleting the previewed
- * version — goes through the single source of truth (the URL) instead of
- * clearing the store directly (which the sync effect would immediately undo
- * while the param lingers).
+ * Leave preview by clearing `?version=`; the URL→store sync then exits preview.
+ * Callers must not clear the store directly — the sync effect re-enters preview
+ * while the param still lingers.
  */
 export function useClosePreview() {
   const navigate = useNavigate()
