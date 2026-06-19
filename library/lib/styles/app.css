@@ -29,6 +29,13 @@
 .apollon-editor {
   background-color: var(--apollon-background, #fff);
   color: var(--apollon-primary-contrast, #000);
+  /* Own stacking context so the editor's internal z-indexes (canvas content at
+     9998–10001, collaboration overlays at 10001–10004) stay self-contained and
+     the whole editor sits below host-app chrome — e.g. the webapp navbar's
+     body-portaled dropdown menus render above the presence bar. Use
+     `isolation` (not `transform`) so we don't create a containing block for
+     those portaled popovers (see the `.apollon-canvas` note below). */
+  isolation: isolate;
 }
 
 /* Positioning context + clip region for the absolutely-positioned
@@ -49,7 +56,7 @@
   right: 10px;
   display: flex;
   align-items: center;
-  z-index: 22;
+  z-index: 10002;
   pointer-events: auto;
 }
 
@@ -87,7 +94,7 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 21;
+  z-index: 10001;
 }
 
 .apollon-collaboration-follow-banner {
@@ -109,7 +116,7 @@
   font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
-  z-index: 24;
+  z-index: 10004;
   pointer-events: auto;
   animation: apollon-collaboration-follow-banner-in 160ms ease-out;
 }
@@ -173,7 +180,7 @@
   inset: 0;
   overflow: hidden;
   pointer-events: none;
-  z-index: 23;
+  z-index: 10003;
 }
 
 .apollon-collaboration-cursor {
