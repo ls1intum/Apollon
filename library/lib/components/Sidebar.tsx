@@ -1,26 +1,20 @@
-import React, {
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react"
-import {
-  ColorDescriptionConfig,
-  DROPS,
-  dropElementConfigs,
-  LAYOUT,
-  MOBILE_VIEW_QUERY,
-} from "@/constants"
-import { DividerLine } from "./ui/DividerLine"
+import React, { useLayoutEffect, useMemo, useRef, useState } from "react"
+import { ColorDescriptionConfig, dropElementConfigs, LAYOUT } from "@/constants"
 import { useMetadataStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { DraggableGhost } from "./DraggableGhost"
 import { ApollonView } from "@/typings"
+import {
+  PALETTE,
+  computePaletteLayout,
+  previewScaleForCell,
+} from "@/utils/paletteLayout"
 
 /* ========================================================================
-   Sidebar Component
-   Renders the draggable elements based on the selected diagram type.
+   Sidebar (element palette)
+   A floating overlay on the canvas (all viewports). It lays every draggable
+   element out in a grid sized — via `computePaletteLayout` — so they all stay
+   in view without scrolling, as large as the canvas reasonably allows.
    ======================================================================== */
 
 // Types whose preview reserves an extra attribute row of height.
@@ -30,33 +24,11 @@ const labelPreviewTypes = new Set([
   "petriNetTransition",
 ])
 
-// Vertical gap between desktop palette entries (mirrors the CSS); scaled with
-// the fit factor so the fit math stays linear.
-const DESKTOP_ENTRY_GAP = 15
-// Don't shrink desktop previews past this — below it elements stop being
-// recognizable, so the palette scrolls instead (the rare last resort).
-const MIN_FIT_SCALE = 0.45
-
-// `matchMedia` as an external store: synchronous first-paint value (no
-// desktop→mobile flash) and concurrency-safe under React 18+/19.
-const subscribeToMobile = (onChange: () => void) => {
-  if (typeof window === "undefined" || !window.matchMedia) return () => {}
-  const mql = window.matchMedia(MOBILE_VIEW_QUERY)
-  mql.addEventListener("change", onChange)
-  return () => mql.removeEventListener("change", onChange)
-}
-const getMobileSnapshot = () =>
-  typeof window !== "undefined" && !!window.matchMedia
-    ? window.matchMedia(MOBILE_VIEW_QUERY).matches
-    : false
+// Rough height of the Model/Select view switch when shown — used as the
+// non-grid budget so the grid still fits under it without scrolling.
+const VIEW_SWITCH_HEIGHT = 64
 
 export const Sidebar = () => {
-  const isMobile = useSyncExternalStore(
-    subscribeToMobile,
-    getMobileSnapshot,
-    () => false
-  )
-
   const { diagramType, view, setView, availableViews } = useMetadataStore(
     useShallow((state) => ({
       diagramType: state.diagramType,
@@ -74,65 +46,87 @@ export const Sidebar = () => {
     [diagramType]
   )
 
-  // Fit-to-height: on desktop, shrink the previews so every element stays in
-  // view instead of scrolling. The mobile palette keeps its fixed (HIG-sized)
-  // tap targets — shrinking them below the touch minimum would be worse than a
-  // rare scroll — so it opts out (factor 1).
+  // Measure the canvas the palette floats over (its positioned ancestor) so the
+  // grid can size itself to the available room.
   const asideRef = useRef<HTMLElement>(null)
-  const entriesRef = useRef<HTMLDivElement>(null)
-  const [fitScale, setFitScale] = useState(1)
-  // Mobile keeps full-size (HIG) tap targets regardless of the stored factor.
-  const effectiveFit = isMobile ? 1 : fitScale
+  const [canvas, setCanvas] = useState({ w: 0, h: 0 })
 
   useLayoutEffect(() => {
-    if (isMobile) return
-    const aside = asideRef.current
-    const entries = entriesRef.current
-    if (!aside || !entries) return
-
-    // Assign all of the aside's vertical overflow (or slack) to the entries —
-    // the only part that scales. `entriesH / prev` recovers the natural
-    // (unscaled) height because the items *and* their gap both scale by the
-    // factor, so removing exactly the overflow makes the content fit in one
-    // step (and it grows back toward 1 when there is room).
-    const fit = () => {
-      const entriesH = entries.getBoundingClientRect().height
-      if (entriesH === 0) return
-      const overflow = aside.scrollHeight - aside.clientHeight
-      setFitScale((prev) => {
-        const natural = entriesH / prev
-        const next = Math.max(
-          MIN_FIT_SCALE,
-          Math.min(1, (entriesH - overflow) / natural)
-        )
-        return Math.abs(next - prev) < 0.01 ? prev : next
-      })
+    const parent = asideRef.current?.offsetParent as HTMLElement | null
+    if (!parent) return
+    const measure = () => {
+      const rect = parent.getBoundingClientRect()
+      setCanvas({ w: rect.width, h: rect.height })
     }
-
-    fit()
-    const observer = new ResizeObserver(fit)
-    observer.observe(aside)
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(parent)
     return () => observer.disconnect()
-  }, [isMobile, diagramType, view])
+  }, [])
+
+  // The color-description element is the last grid cell.
+  const cellCount = paletteItems.length + 1
+  const chromeHeight = showInteractiveSelectionView ? VIEW_SWITCH_HEIGHT : 0
+  const layout = useMemo(
+    () => computePaletteLayout(cellCount, canvas.w, canvas.h, chromeHeight),
+    [cellCount, canvas.w, canvas.h, chromeHeight]
+  )
 
   if (paletteItems.length === 0) {
     return null
   }
 
-  const getPreviewScale = (width: number, height: number, extraHeight = 0) => {
-    const base = isMobile
-      ? Math.min(0.55, 32 / width, 32 / (height + extraHeight))
-      : DROPS.SIDEBAR_PREVIEW_SCALE
+  const cellStyle = { width: layout.cellW, height: layout.cellH }
 
-    return base * effectiveFit
+  const renderCell = (
+    config: (typeof paletteItems)[number],
+    id: string,
+    keyValue: string
+  ) => {
+    const extraPreviewHeight = labelPreviewTypes.has(config.type)
+      ? LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT
+      : 0
+    const previewScale = previewScaleForCell(
+      config.width,
+      config.height + extraPreviewHeight,
+      layout.cellW,
+      layout.cellH
+    )
+    return (
+      <DraggableGhost
+        key={keyValue}
+        dropElementConfig={config}
+        previewScale={previewScale}
+      >
+        <div
+          className="apollon-palette__entry prevent-select"
+          style={cellStyle}
+        >
+          <div
+            data-draggable-preview
+            style={{
+              width: config.width * previewScale,
+              height: (config.height + extraPreviewHeight) * previewScale,
+            }}
+          >
+            {React.createElement(config.svg, {
+              width: config.width,
+              height: config.height,
+              ...config.defaultData,
+              data: config.defaultData,
+              SIDEBAR_PREVIEW_SCALE: previewScale,
+              id,
+            })}
+          </div>
+        </div>
+      </DraggableGhost>
+    )
   }
 
   return (
     <aside
       ref={asideRef}
-      className={`apollon-palette ${
-        isMobile ? "apollon-palette--mobile" : "apollon-palette--desktop"
-      }`}
+      className="apollon-palette"
       data-testid="apollon-palette"
     >
       {showInteractiveSelectionView && (
@@ -170,89 +164,24 @@ export const Sidebar = () => {
 
       {view === ApollonView.Modelling && (
         <div
-          ref={entriesRef}
           className="apollon-palette__entries"
-          style={
-            isMobile ? undefined : { gap: DESKTOP_ENTRY_GAP * effectiveFit }
-          }
+          style={{
+            gridTemplateColumns: `repeat(${layout.cols}, ${layout.cellW}px)`,
+            gap: PALETTE.GAP,
+          }}
         >
-          {paletteItems.map((config, index) => {
-            const extraPreviewHeight = labelPreviewTypes.has(config.type)
-              ? LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT
-              : 0
-            const previewScale = getPreviewScale(
-              config.width,
-              config.height,
-              extraPreviewHeight
+          {paletteItems.map((config, index) =>
+            renderCell(
+              config,
+              `sidebarElement_${index}`,
+              `${config.type}_${config.defaultData?.name}`
             )
-            const previewWidth = config.width * previewScale
-            const previewHeight =
-              (config.height + extraPreviewHeight) * previewScale
-
-            return (
-              <DraggableGhost
-                key={`${config.type}_${config.defaultData?.name}`}
-                dropElementConfig={config}
-                previewScale={previewScale}
-              >
-                <div className="apollon-palette__entry prevent-select">
-                  <div
-                    data-draggable-preview
-                    style={{
-                      width: previewWidth,
-                      height: previewHeight,
-                      marginTop: isMobile
-                        ? 0
-                        : (config.marginTop ?? 0) * effectiveFit,
-                    }}
-                  >
-                    {React.createElement(config.svg, {
-                      width: config.width,
-                      height: config.height,
-                      ...config.defaultData,
-                      data: config.defaultData,
-                      SIDEBAR_PREVIEW_SCALE: previewScale,
-                      id: `sidebarElement_${index}`,
-                    })}
-                  </div>
-                </div>
-              </DraggableGhost>
-            )
-          })}
-          <div className="apollon-palette__separator">
-            <DividerLine style={{ margin: 0 }} />
-          </div>
-          {(() => {
-            const colorPreviewScale = getPreviewScale(
-              ColorDescriptionConfig.width,
-              ColorDescriptionConfig.height
-            )
-            return (
-              <DraggableGhost
-                dropElementConfig={ColorDescriptionConfig}
-                previewScale={colorPreviewScale}
-              >
-                <div className="apollon-palette__entry prevent-select">
-                  <div
-                    data-draggable-preview
-                    style={{
-                      width: ColorDescriptionConfig.width * colorPreviewScale,
-                      height: ColorDescriptionConfig.height * colorPreviewScale,
-                    }}
-                  >
-                    {React.createElement(ColorDescriptionConfig.svg, {
-                      width: ColorDescriptionConfig.width,
-                      height: ColorDescriptionConfig.height,
-                      ...ColorDescriptionConfig.defaultData,
-                      data: ColorDescriptionConfig.defaultData,
-                      SIDEBAR_PREVIEW_SCALE: colorPreviewScale,
-                      id: "sidebarElement_ColorDescription",
-                    })}
-                  </div>
-                </div>
-              </DraggableGhost>
-            )
-          })()}
+          )}
+          {renderCell(
+            ColorDescriptionConfig,
+            "sidebarElement_ColorDescription",
+            "colorDescription"
+          )}
         </div>
       )}
     </aside>

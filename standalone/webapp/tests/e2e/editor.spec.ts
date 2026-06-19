@@ -461,15 +461,18 @@ test.describe("Mobile responsive layout", () => {
     ).toBeVisible()
 
     const palette = page.getByTestId("apollon-palette")
-    await expect(palette).toHaveClass(/apollon-palette--mobile/)
+    await expect(palette).toBeVisible()
 
     // Portrait uses the unified app-header height (NAVBAR_MIN_HEIGHT = 52).
     const navbar = page.locator("header")
     const navbarBox = await navbar.boundingBox()
     expect(navbarBox?.height).toBeLessThanOrEqual(52)
 
-    const paletteBox = await palette.boundingBox()
-    expect(paletteBox?.width).toBeLessThanOrEqual(60)
+    // The floating palette lays every element out in view — no scrolling.
+    const overflow = await palette.evaluate(
+      (el) => el.scrollHeight - el.clientHeight
+    )
+    expect(overflow).toBeLessThanOrEqual(1)
 
     await page.getByRole("button", { name: "open options" }).click()
 
@@ -527,17 +530,12 @@ test.describe("Mobile responsive layout", () => {
     ).toBeVisible()
 
     const palette = page.getByTestId("apollon-palette")
-    await expect(palette).toHaveClass(/apollon-palette--mobile/)
-
-    // Landscape uses a 2-column entry grid (portrait is 1). Count the resolved
-    // columns rather than matching an exact px string, so cosmetic width tweaks
-    // don't break the test.
-    const columnCount = await palette
-      .locator(".apollon-palette__entries")
-      .evaluate(
-        (el) => getComputedStyle(el).gridTemplateColumns.split(" ").length
-      )
-    expect(columnCount).toBe(2)
+    await expect(palette).toBeVisible()
+    // The floating palette fits every element without scrolling here too.
+    const overflow = await palette.evaluate(
+      (el) => el.scrollHeight - el.clientHeight
+    )
+    expect(overflow).toBeLessThanOrEqual(1)
 
     const navbarBox = await page.locator("header").boundingBox()
     expect(navbarBox?.height).toBeLessThanOrEqual(36)
@@ -573,31 +571,9 @@ test.describe("Mobile responsive layout", () => {
     )
   })
 
-  test("keeps a single-column palette in a narrow short window", async ({
-    page,
-  }) => {
-    // A resized desktop window can be both narrow and short. The two-column
-    // palette is meant for phone landscape (wide + short, >= 568px); a narrow
-    // short window must stay single column, not a cramped 2-wide grid.
-    await page.setViewportSize({ width: 480, height: 480 })
-    await openTemporaryLocalDiagram(page)
-    await waitForCanvasReady(page, false)
-
-    const palette = page.getByTestId("apollon-palette")
-    await expect(palette).toHaveClass(/apollon-palette--mobile/)
-
-    const columnCount = await palette
-      .locator(".apollon-palette__entries")
-      .evaluate(
-        (el) => getComputedStyle(el).gridTemplateColumns.split(" ").length
-      )
-    expect(columnCount).toBe(1)
-  })
-
   test("palette never overlaps the canvas controls", async ({ page }) => {
     // BPMN has the most palette items; in a short viewport the palette must
-    // stop above the zoom/controls toolbar (scrolling within its bound)
-    // instead of growing into it.
+    // stop above the zoom/controls toolbar, not grow into it.
     await page.setViewportSize({ width: 844, height: 390 })
     const modelId = "e2e-bpmn-overlap"
     await page.goto("/")
@@ -643,51 +619,62 @@ test.describe("Mobile responsive layout", () => {
   })
 })
 
-test.describe("Desktop sidebar", () => {
-  test("keeps every element in view without scrolling", async ({ page }) => {
-    // BPMN has the most palette items and overflowed a short desktop sidebar
-    // before fit-to-height. The previews now shrink so all elements stay
-    // visible instead of scrolling.
-    await page.setViewportSize({ width: 1280, height: 600 })
-    const modelId = "e2e-bpmn-desktop-fit"
-    await page.goto("/")
-    await page.evaluate((id) => {
-      localStorage.setItem(
-        "persistenceModelStore",
-        JSON.stringify({
-          state: {
-            models: {
-              [id]: {
-                id,
-                model: {
+test.describe("Element palette", () => {
+  // The floating palette grid must show every element without scrolling across
+  // viewports — verified here with BPMN (the most element-rich diagram).
+  for (const [w, h, label] of [
+    [375, 667, "phone portrait"],
+    [844, 390, "phone landscape"],
+    [1280, 600, "short laptop"],
+    [1920, 1080, "desktop"],
+  ] as const) {
+    test(`fits every element in view without scrolling (${label})`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: w, height: h })
+      const modelId = `e2e-bpmn-palette-${w}x${h}`
+      await page.goto("/")
+      await page.evaluate((id) => {
+        localStorage.setItem(
+          "persistenceModelStore",
+          JSON.stringify({
+            state: {
+              models: {
+                [id]: {
                   id,
-                  type: "BPMN",
-                  assessments: {},
-                  edges: [],
-                  nodes: [],
-                  title: "BPMN",
-                  version: "4.0.0",
+                  model: {
+                    id,
+                    type: "BPMN",
+                    assessments: {},
+                    edges: [],
+                    nodes: [],
+                    title: "BPMN",
+                    version: "4.0.0",
+                  },
+                  lastModifiedAt: new Date().toISOString(),
                 },
-                lastModifiedAt: new Date().toISOString(),
               },
+              currentModelId: id,
             },
-            currentModelId: id,
-          },
-          version: 0,
-        })
+            version: 0,
+          })
+        )
+      }, modelId)
+      await page.goto(`/local/${modelId}`)
+      await waitForCanvasReady(page, false)
+
+      const palette = page.getByTestId("apollon-palette")
+      await expect(palette).toBeVisible()
+      // Settle the measured-layout effect.
+      await page.waitForTimeout(300)
+
+      // All 14 BPMN cells (13 elements + color) are present and none scroll.
+      const entries = palette.locator(".apollon-palette__entry")
+      expect(await entries.count()).toBe(14)
+      const overflow = await palette.evaluate(
+        (el) => el.scrollHeight - el.clientHeight
       )
-    }, modelId)
-    await page.goto(`/local/${modelId}`)
-    await waitForCanvasReady(page, false)
-
-    const palette = page.getByTestId("apollon-palette")
-    await expect(palette).toHaveClass(/apollon-palette--desktop/)
-    // Settle the fit-to-height layout effect.
-    await page.waitForTimeout(300)
-
-    const overflow = await palette.evaluate(
-      (el) => el.scrollHeight - el.clientHeight
-    )
-    expect(overflow).toBeLessThanOrEqual(1)
-  })
+      expect(overflow).toBeLessThanOrEqual(1)
+    })
+  }
 })

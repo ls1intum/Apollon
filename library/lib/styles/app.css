@@ -210,26 +210,12 @@
   filter: drop-shadow(0 0 4px var(--apollon-collaboration-highlight-color));
 }
 
+/* Floating element palette — an overlay on the canvas for every viewport
+   (there is no docked variant). Its grid columns/gap and each cell's size are
+   set inline from `computePaletteLayout`, so it fits every element in view
+   without scrolling; `overflow-y` is only the rare last resort. */
 .apollon-palette {
   box-sizing: border-box;
-  background: var(--apollon-background, #fff);
-  color: var(--apollon-primary-contrast, #000);
-}
-
-.apollon-palette--desktop {
-  width: 180px;
-  min-width: 180px;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  padding: 10px;
-  gap: 15px;
-  align-items: center;
-  overflow-y: auto;
-  flex-shrink: 0;
-}
-
-.apollon-palette--mobile {
   position: absolute;
   top: 10px;
   left: calc(10px + var(--safe-area-inset-left, 0px));
@@ -237,35 +223,31 @@
   /* Above React Flow's interactive canvas content (renderer, edges 9999,
      nodes 9998) so taps/drags always land on the palette and a node placed
      under it can't cover it. Contained by the editor's own stacking context
-     (`.apollon-editor { isolation: isolate }`), so this stays below host-app
+     (`.apollon-editor { isolation: isolate }`), so it stays below host-app
      chrome. The body-portaled drag ghost renders above it regardless. */
   z-index: 10000;
 
-  /* Reserve room at the bottom for the canvas controls toolbar (~48px tall
-     plus its margin and the bottom safe-area inset) so the palette never grows
-     into the zoom/undo/redo controls. It shrinks to its content when there are
-     few elements and scrolls within this bound when there are many — adapting
-     to the available height instead of dominating the viewport. */
+  /* Never grow into the bottom zoom/undo/redo controls (their height + margin
+     + bottom safe-area inset). */
   max-height: calc(100% - 84px - var(--safe-area-inset-bottom, 0px));
-  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  padding: 6px;
   overflow-y: auto;
   overscroll-behavior: contain;
+  background: var(--apollon-background, #fff);
+  color: var(--apollon-primary-contrast, #000);
   border: 1px solid var(--apollon-gray, #e9ecef);
-  border-radius: 4px;
+  border-radius: 6px;
   box-shadow: 0 2px 8px rgb(0 0 0 / 18%);
 }
 
 .apollon-palette__entries {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  align-items: center;
-}
-
-.apollon-palette--mobile .apollon-palette__entries {
   display: grid;
-  grid-template-columns: 46px;
-  gap: 0;
+  justify-content: center;
+  /* grid-template-columns and gap come inline from the computed layout. */
 }
 
 .apollon-palette__entry {
@@ -273,51 +255,36 @@
   align-items: center;
   justify-content: center;
   cursor: grab;
+  border-radius: 4px;
+  transition: background-color 120ms ease;
+  /* width/height come inline from the computed cell size. */
+}
+
+.apollon-palette__entry:hover {
+  background: var(--apollon-background-variant, #f8f9fa);
 }
 
 .apollon-palette__entry:active {
   cursor: grabbing;
 }
 
-.apollon-palette--mobile .apollon-palette__entry {
-  width: 46px;
-  height: 46px;
-  border-radius: 3px;
-  transition: background-color 120ms ease;
-}
-
-.apollon-palette--mobile .apollon-palette__entry:hover {
-  background: var(--apollon-background-variant, #f8f9fa);
-}
-
-.apollon-palette__separator {
-  width: 100%;
-}
-
-.apollon-palette--mobile .apollon-palette__separator {
-  grid-column: 1 / -1;
-  box-sizing: border-box;
-  height: 8px;
-  padding: 3px 7px;
-}
-
 .apollon-palette__view-switch {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 
 .apollon-palette__view-button {
-  border-radius: 8px;
+  border-radius: 6px;
   border: 1px solid var(--apollon-primary-contrast, #000);
   background: transparent;
   color: var(--apollon-primary-contrast, #000);
-  padding: 8px 10px;
+  padding: 6px 8px;
   cursor: pointer;
   font-weight: 600;
   white-space: nowrap;
-  font-size: inherit;
+  font-size: 12px;
 }
 
 .apollon-palette__view-button--active {
@@ -325,39 +292,17 @@
   color: var(--apollon-background, #fff);
 }
 
-.apollon-palette--mobile .apollon-palette__view-switch {
-  width: 92px;
-  padding-bottom: 5px;
-  gap: 4px;
-}
-
-.apollon-palette--mobile .apollon-palette__view-button {
-  padding: 5px 6px;
-  font-size: 11px;
-}
-
 .apollon-palette__hint {
+  box-sizing: border-box;
   width: 100%;
-  font-size: 12px;
+  max-width: 160px;
+  padding: 4px;
+  font-size: 11px;
   line-height: 1.4;
 }
 
-.apollon-palette--mobile .apollon-palette__hint {
-  box-sizing: border-box;
-  width: 92px;
-  padding: 4px;
-  font-size: 10px;
-}
-
-/* Phone landscape: short viewport with enough width for a 2-wide palette and
-   safe-area-aware canvas panels. The `min-width` guard keeps the smallest real
-   phone landscape (iPhone SE, 568px) at two columns while a narrow *and* short
-   resized desktop window stays single column instead of getting a cramped grid. */
-@media (min-width: 568px) and (max-width: 950px) and (max-height: 500px) {
-  .apollon-palette--mobile .apollon-palette__entries {
-    grid-template-columns: repeat(2, 46px);
-  }
-
+/* Phone landscape: nudge the canvas panels in by the safe-area insets. */
+@media (max-width: 950px) and (max-height: 500px) {
   .react-flow__panel.bottom.left {
     margin-left: calc(10px + var(--safe-area-inset-left, 0px));
     margin-bottom: calc(10px + var(--safe-area-inset-bottom, 0px));
