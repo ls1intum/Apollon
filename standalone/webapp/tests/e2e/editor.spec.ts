@@ -463,9 +463,10 @@ test.describe("Mobile responsive layout", () => {
     const palette = page.getByTestId("apollon-palette")
     await expect(palette).toHaveClass(/apollon-palette--mobile/)
 
+    // Portrait uses the unified app-header height (NAVBAR_MIN_HEIGHT = 52).
     const navbar = page.locator("header")
     const navbarBox = await navbar.boundingBox()
-    expect(navbarBox?.height).toBeLessThanOrEqual(44)
+    expect(navbarBox?.height).toBeLessThanOrEqual(52)
 
     const paletteBox = await palette.boundingBox()
     expect(paletteBox?.width).toBeLessThanOrEqual(60)

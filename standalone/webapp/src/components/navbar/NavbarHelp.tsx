@@ -4,11 +4,11 @@ import Divider from "@mui/material/Divider"
 import Menu from "@mui/material/Menu"
 import MenuItem from "@mui/material/MenuItem"
 import Typography from "@mui/material/Typography/Typography"
-import { secondary } from "@/constants"
 import { bugReportURL } from "@/constants/urls"
 import { useModalContext } from "@/contexts"
 import { useLocation, useNavigate } from "@tanstack/react-router"
 import { KeyboardArrowDownIcon } from "../Icon"
+import { navbarButtonStyle } from "./styleConstants"
 
 interface Props {
   color?: string
@@ -79,9 +79,9 @@ export const NavbarHelp: FC<Props> = ({ color }) => {
         aria-haspopup="true"
         aria-expanded={open ? "true" : undefined}
         onClick={openMenu}
-        sx={{ textTransform: "none" }} // This removes the uppercase transformation
+        sx={navbarButtonStyle(color)}
       >
-        <Typography color={color ?? secondary}>Help</Typography>
+        <Typography color="inherit">Help</Typography>
         <KeyboardArrowDownIcon width={16} height={16} />
       </Button>
       <Menu

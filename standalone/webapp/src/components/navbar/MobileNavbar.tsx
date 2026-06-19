@@ -16,9 +16,9 @@ import { BackNav } from "./BackNav"
 import { NavbarFile } from "./NavbarFile"
 import { NavbarHelp } from "./NavbarHelp"
 import { SaveLocalCopyButton } from "./SaveLocalCopyButton"
-import { NAVBAR_SX } from "./styleConstants"
 import { ThemeSwitcherMenu } from "./ThemeSwitcher"
 import { VersionHistoryButton } from "./VersionHistoryButton"
+import { NAVBAR_SX, NAVBAR_TOOLBAR_SX } from "./styleConstants"
 
 export default function MobileNavbar() {
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null)
@@ -71,11 +71,12 @@ export default function MobileNavbar() {
       }}
       elevation={0}
     >
+      {/* Unified app-header height (NAVBAR_TOOLBAR_SX, 52px) in portrait, but
+          stay compact in phone-landscape where vertical canvas space is scarce. */}
       <Toolbar
         disableGutters
         sx={{
-          minHeight: "44px !important",
-          height: 44,
+          ...NAVBAR_TOOLBAR_SX,
           "@media (max-width: 950px) and (max-height: 500px)": {
             minHeight: "36px !important",
             height: 36,

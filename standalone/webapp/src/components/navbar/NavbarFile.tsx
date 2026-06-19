@@ -4,8 +4,8 @@ import Menu from "@mui/material/Menu"
 import MenuItem from "@mui/material/MenuItem"
 import Typography from "@mui/material/Typography"
 import useMediaQuery from "@mui/material/useMediaQuery"
-import { secondary } from "@/constants"
 import { useModalContext } from "@/contexts"
+import { navbarButtonStyle } from "./styleConstants"
 import {
   useExportAsJSON,
   useExportAsPNG,
@@ -69,9 +69,9 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
         aria-haspopup="true"
         aria-expanded={isMenuOpen ? "true" : undefined}
         onClick={openMainMenu}
-        sx={{ textTransform: "none" }}
+        sx={navbarButtonStyle(color)}
       >
-        <Typography color={color ?? secondary} component="span">
+        <Typography color="inherit" component="span">
           File
         </Typography>
         <KeyboardArrowDownIcon

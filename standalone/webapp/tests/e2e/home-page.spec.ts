@@ -548,12 +548,13 @@ test.describe("Home page — accessibility basics", () => {
       )
     }, INSET)
 
+    // The app header uses the unified NAVBAR_MIN_HEIGHT (52) plus the top inset.
     const navbar = page.locator(".home-navbar")
     const portraitBox = await navbar.boundingBox()
-    expect(portraitBox?.height).toBeGreaterThanOrEqual(64 + INSET)
+    expect(portraitBox?.height).toBeGreaterThanOrEqual(52 + INSET)
 
     const content = page.locator(".home-navbar__content")
-    await expect(content).toHaveCSS("min-height", "64px")
+    await expect(content).toHaveCSS("min-height", "52px")
 
     await page.setViewportSize({ width: LANDSCAPE_WIDTH, height: 390 })
     await page.evaluate((inset) => {
@@ -568,8 +569,10 @@ test.describe("Home page — accessibility basics", () => {
       )
     }, INSET)
 
+    // Home stays at the unified height in landscape (no compaction — the
+    // dashboard scrolls, unlike the editor canvas); top inset drops to 0.
     const landscapeBox = await navbar.boundingBox()
-    expect(landscapeBox?.height).toBeLessThanOrEqual(44)
+    expect(landscapeBox?.height).toBeLessThanOrEqual(52)
 
     const homeLinkBox = await page
       .getByRole("link", { name: "Apollon home" })
