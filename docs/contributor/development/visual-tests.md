@@ -6,7 +6,7 @@ description: Regenerating Playwright snapshots inside the pinned Docker image.
 
 # Visual regression tests
 
-Apollon's visual regression tests run as part of `pr-health-checks.yml` on every PR. They use Playwright with the `mcr.microsoft.com/playwright:v1.59.1-noble` Docker image so snapshots are pinned to one Linux rendering stack regardless of contributor OS.
+Apollon's visual regression tests run nightly from `nightly-checks.yml`, not on every PR — they are a rendering guard, not a correctness gate, so they stay out of the per-PR hot path. To run them against a specific branch on demand (e.g. a PR that intentionally changes rendering), use **Actions → Nightly Checks → Run workflow** and pick the branch. They use Playwright with the `mcr.microsoft.com/playwright:v1.59.1-noble` Docker image so snapshots are pinned to one Linux rendering stack regardless of contributor OS.
 
 ## Regenerating baselines
 
@@ -35,4 +35,4 @@ pnpm exec playwright test tests/visual/svg-export --update-snapshots
 
 ## Triage
 
-If `visual-regression-tests` fails on CI, download the `playwright-report-visual` artifact from the workflow run, open `playwright-report/index.html` locally, and inspect the actual-vs-expected diff before deciding whether to update the baseline or fix the regression.
+If `visual-regression-tests` fails in `nightly-checks.yml` (nightly, or an on-demand **Run workflow**), download the `playwright-report-visual` artifact from the workflow run, open `playwright-report/index.html` locally, and inspect the actual-vs-expected diff before deciding whether to update the baseline or fix the regression.
