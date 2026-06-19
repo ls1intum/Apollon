@@ -19,9 +19,14 @@ type Phase = "form" | "creating"
  * access mode only rewrites the `?view=` of the same link — it never creates a
  * second server diagram. Copy is explicit, with a transient "copied" flag.
  */
-export function useShareableDiagram(modelData: UMLModel | null) {
+export function useShareableDiagram(
+  modelData: UMLModel | null,
+  initialDiagramId?: string
+) {
   const [phase, setPhase] = useState<Phase>("form")
-  const [diagramId, setDiagramId] = useState<string | null>(null)
+  const [diagramId, setDiagramId] = useState<string | null>(
+    initialDiagramId ?? null
+  )
   const [mode, setMode] = useState<DiagramView>(DiagramView.EDIT)
   const [copied, setCopied] = useState(false)
   const copyTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)

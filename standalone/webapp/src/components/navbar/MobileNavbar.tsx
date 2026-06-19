@@ -118,7 +118,7 @@ export default function MobileNavbar() {
                 />
                 <Button
                   sx={{ textTransform: "none" }} // This removes the uppercase transformation
-                  onClick={() => openModal("SHARE")}
+                  onClick={() => openModal("SHARE", { dialogVariant: "home" })}
                 >
                   <Typography color="var(--apollon-primary-contrast)">
                     Share

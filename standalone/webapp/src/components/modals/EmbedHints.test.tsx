@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { fireEvent, screen } from "@testing-library/react"
-import { renderWithRouter } from "@/test/renderWithRouter"
+import { fireEvent, render, screen } from "@testing-library/react"
 import { EmbedHints, sanitizeMarkdownAlt } from "./EmbedHints"
 
 describe("sanitizeMarkdownAlt", () => {
@@ -16,20 +15,15 @@ describe("sanitizeMarkdownAlt", () => {
 })
 
 describe("EmbedHints", () => {
-  it("prompts to share first when the diagram isn't server-persisted", async () => {
-    renderWithRouter(<EmbedHints title="My diagram" />)
-    expect(await screen.findByText(/share the diagram to embed/i)).toBeTruthy()
+  it("prompts to share first when there is no shared diagram id", () => {
+    render(<EmbedHints title="My diagram" />)
+    expect(screen.getByText(/share the diagram to embed/i)).toBeTruthy()
     expect(screen.queryByLabelText("Embed code")).toBeNull()
   })
 
-  it("switches the snippet when a different format is selected", async () => {
-    renderWithRouter(<EmbedHints title="My diagram" />, {
-      initialEntry: "/shared/abc123",
-      routePaths: ["/shared/$diagramId"],
-    })
-    const input = (await screen.findByLabelText(
-      "Embed code"
-    )) as HTMLInputElement
+  it("switches the snippet when a different format is selected", () => {
+    render(<EmbedHints diagramId="abc123" title="My diagram" />)
+    const input = screen.getByLabelText("Embed code") as HTMLInputElement
     // Default is clickable Markdown: `[![alt](preview)](editor)`.
     expect(input.value.startsWith("[![")).toBe(true)
 

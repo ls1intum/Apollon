@@ -1,5 +1,4 @@
 import { useId, useState } from "react"
-import { useLocation } from "@tanstack/react-router"
 import { toast } from "react-toastify"
 import { Button } from "@/components/ui/button"
 import {
@@ -7,7 +6,6 @@ import {
   type SegmentedControlOption,
 } from "@/components/home/SegmentedControl"
 import { copyToClipboard } from "@/utils/clipboard"
-import { useDiagramIdFromPath } from "@/hooks/useDiagramIdFromPath"
 import {
   buildSharedDiagramUrl,
   resolveServerOrigin,
@@ -15,9 +13,9 @@ import {
 
 /**
  * Embed panel for the share modal: copies one snippet that renders a *live*,
- * auto-updating diagram. Only server-persisted diagrams embed (`/shared/:id`,
- * legacy `/:id`); a `/local/:id` is a client-only id the server can't render,
- * so the panel shows a share-first hint instead.
+ * auto-updating diagram. `diagramId` is the server id of a shared diagram (the
+ * caller resolves it — from the share it just created, or the current shared
+ * route); without one, the panel shows a share-first hint.
  */
 
 type EmbedFormat = "markdown" | "markdown-plain" | "iframe"
@@ -35,8 +33,13 @@ const FORMAT_HINTS: Record<EmbedFormat, string> = {
   iframe: "For sites that allow iframes.",
 }
 
-export function EmbedHints({ title = "Apollon diagram" }: { title?: string }) {
-  const diagramId = useEmbeddableDiagramId()
+export function EmbedHints({
+  diagramId,
+  title = "Apollon diagram",
+}: {
+  diagramId?: string
+  title?: string
+}) {
   const [format, setFormat] = useState<EmbedFormat>("markdown")
   const hintId = useId()
   const snippets = diagramId ? buildSnippets(diagramId, title) : null
@@ -136,16 +139,4 @@ function buildSnippets(
     "markdown-plain": `![${safeTitle}](${previewUrl})`,
     iframe: `<iframe src="${embedUrl}" width="800" height="500" loading="lazy" referrerpolicy="no-referrer" style="border:0"></iframe>`,
   }
-}
-
-/**
- * The current diagramId only when it is server-renderable. Reuses the shared
- * path hook (which already excludes reserved pages and `/`), then drops the
- * `/local/:id` case — a client-only IndexedDB id the server can't render.
- */
-function useEmbeddableDiagramId(): string | undefined {
-  const id = useDiagramIdFromPath()
-  const { pathname } = useLocation()
-  const isLocal = pathname.split("/").filter(Boolean)[0] === "local"
-  return isLocal ? undefined : id
 }
