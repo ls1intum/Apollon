@@ -204,8 +204,8 @@
 
 .apollon-palette {
   box-sizing: border-box;
-  background: var(--apollon-background, #ffffff);
-  color: var(--apollon-primary-contrast, #000000);
+  background: var(--apollon-background, #fff);
+  color: var(--apollon-primary-contrast, #000);
 }
 
 .apollon-palette--desktop {
@@ -290,9 +290,9 @@
 
 .apollon-palette__view-button {
   border-radius: 8px;
-  border: 1px solid var(--apollon-primary-contrast, #000000);
+  border: 1px solid var(--apollon-primary-contrast, #000);
   background: transparent;
-  color: var(--apollon-primary-contrast, #000000);
+  color: var(--apollon-primary-contrast, #000);
   padding: 8px 10px;
   cursor: pointer;
   font-weight: 600;
@@ -302,7 +302,7 @@
 
 .apollon-palette__view-button--active {
   background: var(--apollon-primary, #3e8acc);
-  color: var(--apollon-background, #ffffff);
+  color: var(--apollon-background, #fff);
 }
 
 .apollon-palette--mobile .apollon-palette__view-switch {

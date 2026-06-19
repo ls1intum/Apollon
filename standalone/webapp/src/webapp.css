@@ -452,7 +452,7 @@ body,
 }
 
 .home-navbar {
-  padding-top: var(--safe-area-inset-top, 0px);
+  padding-top: var(--safe-area-inset-top, 0);
 }
 
 .home-navbar__content {
