@@ -3,6 +3,7 @@
  * Grouped by domain, deep-frozen. Import from "@/constants".
  */
 import React from "react"
+import { FONT_FAMILY, DEFAULT_FONT_SIZE } from "@/fontStack"
 import {
   ActivityActionNodeSVG,
   ActivityFinalNodeSVG,
@@ -63,7 +64,7 @@ export const CANVAS = Object.freeze({
   MIN_SCALE_TO_ZOOM_OUT: 0.4,
   MAX_SCALE_TO_ZOOM_IN: 2.5,
   MOUSE_UP_OFFSET_PX: 5,
-  SNAP_TO_GRID_PX: 10,
+  SNAP_TO_GRID_PX: 5,
   EXTRA_SPACE_FOR_EXTENSION: 10,
   PASTE_OFFSET_PX: 20,
 } as const)
@@ -80,6 +81,8 @@ export const CSS_VARIABLE_FALLBACKS: Readonly<Record<string, string>> =
     "--apollon-alert-warning-background": "#fff3cd",
     "--apollon-alert-warning-border": "#ffeeba",
     "--apollon-interactive-selection": "#f39c12",
+    "--apollon-guide-vertical": "#d63031",
+    "--apollon-guide-horizontal": "#0984e3",
     "--apollon-background": "#ffffff",
     "--apollon-background-inverse": "#000000",
     "--apollon-background-variant": "#f8f9fa",
@@ -97,6 +100,10 @@ export const CSS_VARIABLE_FALLBACKS: Readonly<Record<string, string>> =
 
 export const STROKE_COLOR = CSS_VARIABLE_FALLBACKS["--apollon-primary-contrast"]
 export const FILL_COLOR = CSS_VARIABLE_FALLBACKS["--apollon-background"]
+
+// Re-exported from the leaf module (see lib/fontStack.ts) so `@/constants`
+// importers keep working.
+export { FONT_FAMILY, DEFAULT_FONT_SIZE }
 export const INTERACTIVE_SELECTION_COLOR = `var(--apollon-interactive-selection, ${CSS_VARIABLE_FALLBACKS["--apollon-interactive-selection"]})`
 export const INTERACTIVE_SELECTION_FILL = `color-mix(in srgb, var(--apollon-interactive-selection, ${CSS_VARIABLE_FALLBACKS["--apollon-interactive-selection"]}) 18%, transparent)`
 
@@ -104,8 +111,7 @@ export const INTERACTIVE_SELECTION_FILL = `color-mix(in srgb, var(--apollon-inte
 /* Layout                                                                     */
 /* -------------------------------------------------------------------------- */
 export const LAYOUT = Object.freeze({
-  DEFAULT_FONT:
-    "400 16px Inter, system-ui, Avenir, Helvetica, Arial, sans-serif",
+  DEFAULT_FONT: `400 ${DEFAULT_FONT_SIZE}px ${FONT_FAMILY}`,
   DEFAULT_HEADER_HEIGHT: 40,
   DEFAULT_HEADER_HEIGHT_WITH_STEREOTYPE: 50,
   DEFAULT_ATTRIBUTE_HEIGHT: 30,
@@ -116,14 +122,13 @@ export const LAYOUT = Object.freeze({
   LINE_WIDTH_EDGE: 2,
   ICON_LINE_WIDTH: 1.5,
   /**
-   * Typography tokens for wrapped node labels. `NAME_FONT_SIZE` matches the
-   * SVG `<text>` browser default so un-styled labels don't visibly shrink,
-   * and `NAME_LINE_HEIGHT` is `round(16 * 1.2)` — what pretext uses internally
-   * and what `MultilineText` falls back to when no explicit line-height is
-   * passed. Used by every node that wraps its label.
+   * Typography tokens for wrapped node labels. `NAME_FONT_SIZE` is the shared
+   * diagram text size (so measured and rendered labels agree); `NAME_LINE_HEIGHT`
+   * is `round(size * 1.2)` — what pretext uses internally and what `MultilineText`
+   * falls back to when no explicit line-height is passed.
    */
-  NAME_FONT_SIZE: 16,
-  NAME_LINE_HEIGHT: 19,
+  NAME_FONT_SIZE: DEFAULT_FONT_SIZE,
+  NAME_LINE_HEIGHT: Math.round(DEFAULT_FONT_SIZE * 1.2),
   /** Stereotype tspans like `«component»` render at 0.8em of the name font. */
   STEREOTYPE_LINE_HEIGHT: 15,
   STEREOTYPE_NAME_GAP: 4,
@@ -131,10 +136,13 @@ export const LAYOUT = Object.freeze({
 
 const generateUUID = () => uuidv4()
 
-export const INTERFACE_SIZE = 30
-export const INTERFACE_RADIUS = INTERFACE_SIZE / 2
-export const INTERFACE_STROKE_WIDTH = 2
-export const INTERFACE_SOCKET_GAP = 4
+// Interface-component sizing. The flat aliases below are local-only —
+// they were leaking publicly through the constants module before. Public
+// consumers (and the rest of the library) should reach for `INTERFACE.*`.
+const INTERFACE_SIZE = 30
+const INTERFACE_RADIUS = INTERFACE_SIZE / 2
+const INTERFACE_STROKE_WIDTH = 2
+const INTERFACE_SOCKET_GAP = 4
 
 export const INTERFACE = Object.freeze({
   SIZE: INTERFACE_SIZE,
@@ -146,9 +154,11 @@ export const INTERFACE = Object.freeze({
 /* -------------------------------------------------------------------------- */
 /* Edges                                                                      */
 /* -------------------------------------------------------------------------- */
-// Base marker sizes (exported for reference in marker configs)
+// Base marker size. `MARKER_BASE_SIZE` scales the inline reachability-graph
+// arrow against the shared MARKERS sprite; `BPMN_MARKER_SIZE` is local-only
+// (used a few lines below for BPMN message markers — was incorrectly public).
 export const MARKER_BASE_SIZE = 18
-export const BPMN_MARKER_SIZE = 11
+const BPMN_MARKER_SIZE = 11
 
 export const EDGES = Object.freeze({
   /** Negative padding extends target point to node boundary (React Flow handles are offset 3px) */
@@ -159,6 +169,48 @@ export const EDGES = Object.freeze({
   STEP_BORDER_RADIUS: 0,
   /** Width of the invisible stroke used for edge selection/highlighting */
   EDGE_HIGHLIGHT_STROKE_WIDTH: 15,
+  /** Height of the line-jump bridge used when edges cross */
+  EDGE_LINE_JUMP_HEIGHT: 10,
+  /** Length of the line-jump bridge along the crossed segment */
+  EDGE_LINE_JUMP_WIDTH: 16,
+  /** Stub length locked to node, matches getSmoothStepPath offset */
+  STUB_LENGTH: 30,
+  /** Minimum total edge length (screen px) for the endpoint reconnect handles
+   * to be active. Short edges fall back to always-editable (see
+   * useStepPathEdge), so this only gates medium/long edges. */
+  BEND_MIN_LENGTH: 100,
+  /** Bend handle long-axis size, in screen px (the minimum kept across zoom). */
+  BEND_HANDLE_SCREEN_LENGTH_PX: 34,
+  /** Minimum clearance, in screen px, between a bend handle and the segment's
+   * corners — how close a handle is allowed to sit to a corner. */
+  BEND_HANDLE_CORNER_CLEARANCE_PX: 10,
+  /** A segment shows a bend handle once its ON-SCREEN length can host the
+   * handle with corner clearance on both sides: 34 + 2*10 = 54px. Screen-based
+   * so zooming in reveals handles on shorter segments (and never hides them). */
+  BEND_HANDLE_MIN_SEGMENT_SCREEN_PX: 34 + 2 * 10,
+  /** "Safe area" next to a node, in flow px: a bend handle is never placed
+   * within this distance of a node connection point, and that part of a
+   * terminal segment is excluded when deciding whether a handle fits. Keeps
+   * handles out of the locked stub so dragging never produces a detached
+   * slim sliver near the node. */
+  BEND_HANDLE_SAFE_AREA_PX: 25,
+  /** Size of the invisible endpoint hit target used for edge reconnection */
+  ENDPOINT_HIT_TARGET_SIZE: 24,
+  /** Grid step a dragged bend snaps to; matches the canvas grid so bends line
+   * up with grid-snapped node handles. */
+  BEND_SNAP_GRID_PX: CANVAS.SNAP_TO_GRID_PX,
+  /** Connector length at/below which a *monotonic* orthogonal stair-step (a
+   * same-direction dogleg) is treated as a rounding artifact and flattened.
+   * Must stay strictly below BEND_SNAP_GRID_PX, otherwise the smallest
+   * deliberate single-step bend would be flattened and the edge would snap
+   * back to a straight line on release. */
+  ORTHOGONAL_DOGLEG_TOLERANCE_PX: 2,
+  /** Gap at/below which two parallel arms that double back over each other
+   * (an opposite-direction U-turn) are treated as a degenerate self-overlap
+   * and the route is reset. Independent of the snap grid: a doubled-back
+   * U-turn is never a deliberate edit, so this stays at the visual-merge
+   * threshold rather than the per-step threshold. */
+  ORTHOGONAL_ARM_OVERLAP_PX: 10,
 } as const)
 
 /* -------------------------------------------------------------------------- */

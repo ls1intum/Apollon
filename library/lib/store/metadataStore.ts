@@ -2,9 +2,10 @@ import { create, StoreApi, UseBoundStore } from "zustand"
 import { devtools, subscribeWithSelector } from "zustand/middleware"
 import { parseDiagramType } from "@/utils"
 import * as Y from "yjs"
-import { getDiagramMetadata } from "@/sync/ydoc"
+import { getDiagramMetadata, STORE_ORIGIN } from "@/sync/ydoc"
 import { UMLDiagramType } from "@/types"
 import { ApollonMode, ApollonView } from "@/typings"
+import { IPoint } from "@/edges/Connection"
 
 export type MetadataStore = {
   diagramTitle: string
@@ -16,12 +17,29 @@ export type MetadataStore = {
   debug: boolean
   scrollLock: boolean
   scrollEnabled: boolean
+  connectionGuidanceActive: boolean
+  connectionGuidanceSourceNodeId: string | null
+  connectionGuidanceSourceHandleId: string | null
+  reconnectPreviewEdgeId: string | null
+  reconnectPreviewHandleType: "source" | "target" | null
+  reconnectPreviewBasePoints: IPoint[]
   setMode: (mode: ApollonMode) => void
   setView: (view: ApollonView) => void
   setAvailableViews: (availableViews: ApollonView[]) => void
   setReadonly: (readonly: boolean) => void
   setScrollLock: (scrollLock: boolean) => void
   setScrollEnabled: (scrollEnabled: boolean) => void
+  startConnectionGuidance: (
+    sourceNodeId: string | null,
+    sourceHandleId: string | null
+  ) => void
+  stopConnectionGuidance: () => void
+  startReconnectPreview: (
+    edgeId: string,
+    handleType: "source" | "target",
+    basePoints: IPoint[]
+  ) => void
+  stopReconnectPreview: () => void
   updateDiagramTitle: (diagramTitle: string) => void
   updateDiagramType: (diagramType: UMLDiagramType) => void
   updateMetaData: (diagramTitle: string, diagramType: UMLDiagramType) => void
@@ -40,6 +58,12 @@ type InitialMetadataState = {
   debug: boolean
   scrollLock: boolean
   scrollEnabled: boolean
+  connectionGuidanceActive: boolean
+  connectionGuidanceSourceNodeId: string | null
+  connectionGuidanceSourceHandleId: string | null
+  reconnectPreviewEdgeId: string | null
+  reconnectPreviewHandleType: "source" | "target" | null
+  reconnectPreviewBasePoints: IPoint[]
 }
 const initialMetadataState: InitialMetadataState = {
   diagramTitle: "Untitled Diagram",
@@ -51,35 +75,54 @@ const initialMetadataState: InitialMetadataState = {
   debug: false,
   scrollLock: false,
   scrollEnabled: false,
+  connectionGuidanceActive: false,
+  connectionGuidanceSourceNodeId: null,
+  connectionGuidanceSourceHandleId: null,
+  reconnectPreviewEdgeId: null,
+  reconnectPreviewHandleType: null,
+  reconnectPreviewBasePoints: [],
 }
 
 export const createMetadataStore = (
-  ydoc: Y.Doc
-): UseBoundStore<StoreApi<MetadataStore>> =>
-  create<MetadataStore>()(
+  ydoc: Y.Doc,
+  /**
+   * Cross-store getter for the diagram store's `previewMode` flag. When
+   * true, every `ydoc.transact("store", …)` write here no-ops — the
+   * canvas is showing an ephemeral preview overlay and Yjs must stay
+   * pristine. The diagram store factory owns the source of truth; this
+   * factory accepts a getter so the two stores can share the gate
+   * without a circular import.
+   */
+  isPreviewMode: () => boolean = () => false
+): UseBoundStore<StoreApi<MetadataStore>> => {
+  const transactStore = (fn: () => void) => {
+    if (isPreviewMode()) return
+    ydoc.transact(fn, STORE_ORIGIN)
+  }
+  return create<MetadataStore>()(
     devtools(
       subscribeWithSelector((set) => ({
         ...initialMetadataState,
 
         updateDiagramTitle: (diagramTitle) => {
-          ydoc.transact(() => {
+          transactStore(() => {
             getDiagramMetadata(ydoc).set("diagramTitle", diagramTitle)
-          }, "store")
+          })
           set({ diagramTitle }, undefined, "updateDiagramTitle")
         },
 
         updateDiagramType: (type) => {
-          ydoc.transact(() => {
+          transactStore(() => {
             getDiagramMetadata(ydoc).set("diagramType", type)
-          }, "store")
+          })
           set({ diagramType: type }, undefined, "updateDiagramType")
         },
 
         updateMetaData: (diagramTitle, diagramType) => {
-          ydoc.transact(() => {
+          transactStore(() => {
             getDiagramMetadata(ydoc).set("diagramTitle", diagramTitle)
             getDiagramMetadata(ydoc).set("diagramType", diagramType)
-          }, "store")
+          })
           set(
             {
               diagramTitle,
@@ -128,6 +171,56 @@ export const createMetadataStore = (
           set({ scrollEnabled }, undefined, "setScrollEnabled")
         },
 
+        startConnectionGuidance: (sourceNodeId, sourceHandleId) => {
+          set(
+            {
+              connectionGuidanceActive: true,
+              connectionGuidanceSourceNodeId: sourceNodeId,
+              connectionGuidanceSourceHandleId: sourceHandleId,
+            },
+            undefined,
+            "startConnectionGuidance"
+          )
+        },
+
+        stopConnectionGuidance: () => {
+          set(
+            {
+              connectionGuidanceActive: false,
+              connectionGuidanceSourceNodeId: null,
+              connectionGuidanceSourceHandleId: null,
+            },
+            undefined,
+            "stopConnectionGuidance"
+          )
+        },
+
+        startReconnectPreview: (edgeId, handleType, basePoints) => {
+          set(
+            {
+              reconnectPreviewEdgeId: edgeId,
+              reconnectPreviewHandleType: handleType,
+              reconnectPreviewBasePoints: basePoints.map((point) => ({
+                ...point,
+              })),
+            },
+            undefined,
+            "startReconnectPreview"
+          )
+        },
+
+        stopReconnectPreview: () => {
+          set(
+            {
+              reconnectPreviewEdgeId: null,
+              reconnectPreviewHandleType: null,
+              reconnectPreviewBasePoints: [],
+            },
+            undefined,
+            "stopReconnectPreview"
+          )
+        },
+
         setDebug: (debug) => {
           set({ debug }, undefined, "setDebug")
         },
@@ -139,3 +232,4 @@ export const createMetadataStore = (
       { name: "MetadataStore", enabled: true }
     )
   )
+}

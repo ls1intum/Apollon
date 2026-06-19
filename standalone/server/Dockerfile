@@ -1,19 +1,50 @@
-FROM node:22.14.0-slim AS builder
+# syntax=docker/dockerfile:1.9
 
+ARG NODE_IMAGE=node:24.15.0-slim@sha256:24dc26ef1e3c3690f27ebc4136c9c186c3133b25563ae4d7f0692e4d1fe5db0e
+
+# DL3006 wants `FROM image:tag`, but the ARG default above is fully
+# digest-pinned (stronger than tag pinning). The ARG indirection lets CI
+# override the base image for vulnerability scans without editing the file.
+# hadolint ignore=DL3006
+FROM ${NODE_IMAGE} AS base
+ENV PNPM_HOME=/pnpm
+ENV PATH=$PNPM_HOME:$PATH
+# pnpm installed via npm, not corepack; corepack disabled so it cannot shadow.
+RUN corepack disable && npm install -g pnpm@11.1.3 \
+    && pnpm config set store-dir /pnpm/store
 WORKDIR /app
 
-COPY package*.json ./
-COPY standalone/server/package*.json ./standalone/server/
-COPY library/package*.json ./library/
+FROM base AS builder
 
-RUN npm ci
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json .npmrc ./
+COPY library/package.json ./library/
+COPY standalone/server/package.json ./standalone/server/
+COPY standalone/webapp/package.json ./standalone/webapp/
+COPY vscode-extension/package.json ./vscode-extension/
+COPY vscode-extension/menu/package.json ./vscode-extension/menu/
+COPY vscode-extension/editor/package.json ./vscode-extension/editor/
 
-COPY standalone/server ./standalone/server
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile
+
 COPY library ./library
+COPY standalone/server ./standalone/server
+COPY tsconfig*.json ./
 
-RUN npm run build:lib && npm run build:server
+RUN pnpm --filter @tumaet/apollon run build
+RUN pnpm --filter @tumaet/server run build
 
-FROM node:22.14.0-slim AS runtime
+FROM base AS deploy
+# Only the trees `pnpm deploy --filter=@tumaet/server` walks — skip webapp / vscode.
+COPY --from=builder /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml /app/.npmrc ./
+COPY --from=builder /app/library ./library
+COPY --from=builder /app/standalone/server ./standalone/server
+COPY --from=builder /app/node_modules ./node_modules
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm deploy --filter=@tumaet/server --prod /deploy/server
+
+# hadolint ignore=DL3006
+FROM ${NODE_IMAGE} AS runtime
 
 WORKDIR /app
 
@@ -25,22 +56,16 @@ LABEL org.opencontainers.image.source="https://github.com/ls1intum/Apollon" \
       org.opencontainers.image.vendor="TUM Applied Education Technologies" \
       org.opencontainers.image.licenses="MIT"
 
-# Install tini for proper PID 1 signal handling
 RUN apt-get update && apt-get install -y --no-install-recommends tini && rm -rf /var/lib/apt/lists/*
 
-# Copy runtime artifacts (owned by node user to avoid extra chown layer)
-COPY --from=builder --chown=node:node /app/package*.json ./
-COPY --from=builder --chown=node:node /app/standalone/server/package*.json ./standalone/server/
-COPY --from=builder --chown=node:node /app/standalone/server/dist ./standalone/server/dist
-COPY --from=builder --chown=node:node /app/library/package.json ./library/
-COPY --from=builder --chown=node:node /app/library/dist ./library/dist
-
-# Install production dependencies only
-RUN npm ci --omit=dev --workspace=@tumaet/server
+COPY --from=deploy --chown=node:node /deploy/server ./
 
 EXPOSE 8000 4444
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:8000/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
 
 USER node
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
-CMD ["node", "standalone/server/dist/src/server.js"]
+CMD ["node", "dist/src/server.js"]

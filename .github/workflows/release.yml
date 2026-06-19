@@ -1,0 +1,55 @@
+name: Release
+
+# Opens or updates the "Version Packages" PR on every push to main, via
+# changesets/action in version-only mode (no `publish` input): this never
+# publishes or tags — merging the PR bumps versions, which triggers the bespoke
+# release-library.yml / release-standalone.yml publish jobs.
+#
+# The PR is opened with GITHUB_TOKEN, so it carries no CI (token-created events
+# don't trigger workflows) — acceptable for a version-and-changelog-only change.
+# TODO: for pre-merge CI on the PR, open it with a GitHub App token (provision
+# and test the App in that change).
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  version:
+    name: Version Packages PR
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write # commit the version bump to the PR branch
+      pull-requests: write # open / update the Version Packages PR
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@ac6db6d3c1f721f886538a378a2d73e85697340a # v6.0.8
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Create or update the Version Packages PR
+        uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
+        with:
+          # changeset:version is a custom script — it chains `changeset version`
+          # with the CDN-URL sync and a lockfile refresh so the PR merges as-is.
+          version: pnpm run changeset:version
+          title: "chore: version packages"
+          commit: "chore: version packages"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,8 +1,8 @@
 import { NodeProps, NodeResizer, type Node } from "@xyflow/react"
-import { DefaultNodeWrapper } from "../wrappers"
+import { usePopoverAnchor } from "@/hooks/usePopoverAnchor"
+import { DefaultNodeWrapper, FOUR_WAY_HANDLES_PRESET } from "../wrappers"
 import { useHandleOnResize } from "@/hooks"
 import { DefaultNodeProps } from "@/types"
-import { useRef } from "react"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
 import { ActivityMergeNodeSVG } from "@/components/svgs/nodes"
@@ -15,7 +15,7 @@ export function ActivityMergeNode({
   data,
   parentId,
 }: NodeProps<Node<DefaultNodeProps>>) {
-  const svgWrapperRef = useRef<HTMLDivElement | null>(null)
+  const [anchorEl, anchorRef] = usePopoverAnchor()
   const { onResize } = useHandleOnResize(parentId)
   const isDiagramModifiable = useDiagramModifiable()
 
@@ -24,7 +24,12 @@ export function ActivityMergeNode({
   }
 
   return (
-    <DefaultNodeWrapper width={width} height={height} elementId={id}>
+    <DefaultNodeWrapper
+      width={width}
+      height={height}
+      elementId={id}
+      hiddenHandles={FOUR_WAY_HANDLES_PRESET}
+    >
       <NodeToolbar elementId={id} />
 
       <NodeResizer
@@ -34,7 +39,7 @@ export function ActivityMergeNode({
         minWidth={50}
         handleStyle={{ width: 8, height: 8 }}
       />
-      <div ref={svgWrapperRef}>
+      <div ref={anchorRef}>
         <ActivityMergeNodeSVG
           width={width}
           height={height}
@@ -44,11 +49,7 @@ export function ActivityMergeNode({
         />
       </div>
 
-      <PopoverManager
-        anchorEl={svgWrapperRef.current}
-        elementId={id}
-        type="default"
-      />
+      <PopoverManager anchorEl={anchorEl} elementId={id} type="default" />
     </DefaultNodeWrapper>
   )
 }

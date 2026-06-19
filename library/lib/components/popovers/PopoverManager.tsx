@@ -550,7 +550,7 @@ const seeFeedbackPopovers: {
 
 interface PopoverManagerProps {
   elementId: string
-  anchorEl: HTMLElement | SVGSVGElement | null
+  anchorEl: HTMLElement | SVGElement | null
   type: PopoverType
 }
 

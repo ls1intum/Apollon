@@ -1,82 +1,91 @@
 import AppBar from "@mui/material/AppBar"
 import Box from "@mui/material/Box"
+import Stack from "@mui/material/Stack"
 import Toolbar from "@mui/material/Toolbar"
 import Typography from "@mui/material/Typography"
 import Button from "@mui/material/Button"
 import { TextField } from "@mui/material"
 import { NavbarFile } from "./NavbarFile"
 import { NavbarHelp } from "./NavbarHelp"
+import { VersionHistoryButton } from "./VersionHistoryButton"
+import { SaveLocalCopyButton } from "./SaveLocalCopyButton"
 import { BrandAndVersion } from "./BrandAndVersion"
-import { NAVBAR_BACKGROUND_COLOR, secondary } from "@/constants"
-import TumLogo from "assets/images/tum-logo.png"
+import { BackNav } from "./BackNav"
+import { ALL_DIAGRAMS_LABEL } from "@/lib/navProvenance"
+import { secondary } from "@/constants"
 import { useEffect, useRef, useState } from "react"
 import { useModalContext, useEditorContext } from "@/contexts"
-import { useNavigate } from "react-router"
+import { Link } from "@tanstack/react-router"
 import { ThemeSwitcherMenu } from "./ThemeSwitcher"
+import { NAVBAR_SX } from "./styleConstants"
 
 export const DesktopNavbar = () => {
   const { editor } = useEditorContext()
   const [diagramTitle, setDiagramTitle] = useState(
     editor?.getDiagramMetadata().diagramTitle || ""
   )
-  const unsubscribeId = useRef<number>()
+  const unsubscribeId = useRef<number | undefined>(undefined)
   const { openModal } = useModalContext()
-  const navigate = useNavigate()
-
-  const goHome = () => {
-    navigate("/")
-  }
 
   useEffect(() => {
-    if (editor && !unsubscribeId.current) {
-      editor.subscribeToDiagramNameChange((diagramTitle) => {
+    if (!editor) {
+      unsubscribeId.current = undefined
+      return
+    }
+
+    unsubscribeId.current = editor.subscribeToDiagramNameChange(
+      (diagramTitle) => {
         setDiagramTitle(diagramTitle)
-      })
+      }
+    )
+    setDiagramTitle(editor.getDiagramMetadata().diagramTitle || "")
+
+    return () => {
+      if (unsubscribeId.current !== undefined) {
+        editor.unsubscribe(unsubscribeId.current)
+        unsubscribeId.current = undefined
+      }
     }
-    // Update diagram title when editor is available
-    if (editor) {
-      setDiagramTitle(editor.getDiagramMetadata().diagramTitle || "")
-    }
-  }, [editor, setDiagramTitle, unsubscribeId])
+  }, [editor])
 
   return (
-    <AppBar
-      position="static"
-      sx={{
-        bgcolor: NAVBAR_BACKGROUND_COLOR,
-        display: "flex",
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        px: 2,
-      }}
-      elevation={0}
-    >
-      <Toolbar disableGutters>
-        <div
-          onClick={goHome}
-          style={{ cursor: "pointer", display: "flex", alignItems: "center" }}
+    <AppBar position="sticky" sx={NAVBAR_SX} elevation={0}>
+      <Toolbar
+        disableGutters
+        sx={{
+          width: "100%",
+          minHeight: 64,
+          px: 2,
+          gap: 2,
+        }}
+      >
+        <Link
+          to="/"
+          aria-label="Apollon home"
+          style={{
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            color: "inherit",
+            font: "inherit",
+            textDecoration: "none",
+          }}
         >
-          <img
-            alt="Logo"
-            src={TumLogo}
-            width="60"
-            height="30"
-            style={{ marginRight: 10 }}
-          />
-
           <BrandAndVersion />
-        </div>
+        </Link>
 
         {/* Spacer */}
         <Box
           sx={{
             flexGrow: 1,
-            pl: 2,
+            display: "flex",
+            pl: 1.5,
             gap: 2,
             alignItems: "center",
+            minWidth: 0,
           }}
         >
+          <BackNav to="/" label={ALL_DIAGRAMS_LABEL} tone="onDark" />
           <NavbarFile />
           <Button
             sx={{ textTransform: "none" }} // This removes the uppercase transformation
@@ -84,20 +93,35 @@ export const DesktopNavbar = () => {
           >
             <Typography color={secondary}>Share</Typography>
           </Button>
+          <SaveLocalCopyButton />
           <NavbarHelp />
           <TextField
-            sx={{ input: { color: "white", padding: 1 }, marginLeft: 1 }}
+            sx={{
+              input: { color: "white", padding: 1 },
+              marginLeft: 1,
+              maxWidth: 360,
+            }}
             value={diagramTitle}
             onChange={(event) => {
               const newTitle = event.target.value
               editor?.updateDiagramTitle(newTitle)
+              setDiagramTitle(newTitle)
             }}
             placeholder="Diagram Name"
             variant="outlined"
           />
+
+          <Stack
+            direction="row"
+            alignItems="center"
+            spacing={1}
+            sx={{ marginLeft: "auto" }}
+          >
+            <VersionHistoryButton />
+            <ThemeSwitcherMenu />
+          </Stack>
         </Box>
       </Toolbar>
-      <ThemeSwitcherMenu />
     </AppBar>
   )
 }

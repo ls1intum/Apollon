@@ -10,7 +10,6 @@ import { useStraightPathEdge } from "@/hooks/useStraightPathEdge"
 import { useDiagramStore, usePopoverStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { useToolbar } from "@/hooks"
-import { useRef } from "react"
 import { EDGES } from "@/constants"
 import {
   AssessmentSelectableWrapper,
@@ -33,9 +32,7 @@ export const PetriNetEdge = ({
   sourceHandleId,
   targetHandleId,
   data,
-  selected,
 }: BaseEdgeProps) => {
-  const anchorRef = useRef<SVGSVGElement | null>(null)
   const { handleDelete } = useToolbar({ id })
 
   const config = useEdgeConfig(type as "PetriNetArc")
@@ -63,9 +60,8 @@ export const PetriNetEdge = ({
     sourcePoint,
     targetPoint,
     isDiagramModifiable,
-    handleEndpointPointerDown,
-    isReconnectingRef,
-    tempReconnectPath,
+    isReconnecting,
+    canEditEndpoint,
   } = useStraightPathEdge({
     id,
     type,
@@ -91,7 +87,7 @@ export const PetriNetEdge = ({
           <BaseEdge
             key={markerKey}
             id={id}
-            path={tempReconnectPath || currentPath}
+            path={currentPath}
             pointerEvents="none"
             style={{
               stroke: strokeColor,
@@ -99,7 +95,7 @@ export const PetriNetEdge = ({
             }}
           />
 
-          {!isReconnectingRef.current && (
+          {!isReconnecting && (
             <EdgeInlineMarkers
               pathD={currentPath}
               markerEnd={markerEnd}
@@ -115,31 +111,22 @@ export const PetriNetEdge = ({
             fill="none"
             strokeWidth={EDGES.EDGE_HIGHLIGHT_STROKE_WIDTH}
             pointerEvents="stroke"
-            style={{ opacity: isReconnectingRef.current ? 0 : 0.4 }}
+            style={{ opacity: isReconnecting ? 0 : 0.4 }}
           />
 
-          {/* Temporary reconnection path */}
-          {/* Removed - now using tempReconnectPath directly in BaseEdge */}
-
-          {isDiagramModifiable && !isReconnectingRef.current && (
+          {!isReconnecting && (
             <EdgeEndpointMarkers
               sourcePoint={sourcePoint}
               targetPoint={targetPoint}
+              sourcePosition={sourcePosition}
+              targetPosition={targetPosition}
               isDiagramModifiable={isDiagramModifiable}
-              selected={selected}
-              diagramType="petriNet"
-              pathType="straight"
-              onSourcePointerDown={(e) =>
-                handleEndpointPointerDown(e, "source")
-              }
-              onTargetPointerDown={(e) =>
-                handleEndpointPointerDown(e, "target")
-              }
+              canEditEndpoint={canEditEndpoint}
             />
           )}
         </g>
 
-        {!isReconnectingRef.current && (
+        {!isReconnecting && (
           <>
             <EdgeMiddleLabels
               label={data?.label}
@@ -156,9 +143,9 @@ export const PetriNetEdge = ({
             <CommonEdgeElements
               id={id}
               pathMiddlePosition={edgeData.pathMiddlePosition}
+              toolbarPosition={edgeData.toolbarPosition}
               isDiagramModifiable={isDiagramModifiable}
               assessments={assessments}
-              anchorRef={anchorRef}
               handleDelete={handleDelete}
               setPopOverElementId={setPopOverElementId}
               type={type}

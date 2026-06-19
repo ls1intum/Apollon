@@ -1,0 +1,80 @@
+name: Version monotonicity
+
+# Refuses any PR that LOWERS the version in a published workspace's
+# `package.json` vs its merge base. Required because git's textual merge
+# happily takes either side of a `"version"` line — if a long-lived
+# branch was rebased before a release bump landed on main, merging
+# silently regresses main's version (and the next bump cycle then
+# tries to publish a version npm already has).
+#
+# History pinning the failure mode that motivated this check:
+#   - 2026-04-27 #654 bumps library/package.json on main: 4.2.22 → 4.3.0
+#   - 2026-05-09 #657 merges with library at 4.2.22 → main regresses
+#                   to 4.2.22, while npm still has 4.3.0 published
+#   - 2026-05-09 next bump cycle tries to publish 4.3.0 again → collision
+#
+# Add this check as a required status on `main` so a regression cannot
+# pass review.
+
+on:
+  pull_request:
+    paths:
+      - "library/package.json"
+      - "standalone/server/package.json"
+      - "standalone/webapp/package.json"
+      - "vscode-extension/package.json"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Versions must not regress vs base
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+
+      - name: Compare each workspace's version to merge base
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          fail=0
+          for pkg in library standalone/server standalone/webapp vscode-extension; do
+            # Some PRs touch a workspace by accident; we only care if
+            # `package.json` actually exists on both sides.
+            if ! git cat-file -e "$BASE_SHA:$pkg/package.json" 2>/dev/null; then
+              echo "$pkg: not present at base, skipping"
+              continue
+            fi
+            if [ ! -f "$pkg/package.json" ]; then
+              echo "$pkg: not present in PR head, skipping"
+              continue
+            fi
+            base=$(git show "$BASE_SHA:$pkg/package.json" | jq -r '.version // empty')
+            head=$(jq -r '.version // empty' "$pkg/package.json")
+            if [ -z "$base" ] || [ -z "$head" ]; then
+              echo "::warning file=$pkg/package.json::missing version field (base=$base, head=$head)"
+              continue
+            fi
+            if [ "$base" = "$head" ]; then
+              echo "$pkg: $base (unchanged)"
+              continue
+            fi
+            # Use sort -V (semver-ish) for the ordering check. -C exits
+            # non-zero if the input isn't already sorted ascending.
+            if printf '%s\n%s\n' "$base" "$head" | sort -V -C; then
+              echo "$pkg: $base → $head ✓"
+            else
+              echo "::error file=$pkg/package.json::$pkg version regressed: $base → $head"
+              fail=1
+            fi
+          done
+          exit "$fail"
