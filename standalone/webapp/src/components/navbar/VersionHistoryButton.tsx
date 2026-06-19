@@ -2,19 +2,23 @@ import { Button, Tooltip } from "@mui/material"
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded"
 import { useLocation } from "@tanstack/react-router"
 import { useVersionStore } from "@/stores/useVersionStore"
-import { secondary } from "@/constants"
 import { versioningStrings as t } from "@/components/versioning/strings"
 import { useDiagramIdFromPath } from "@/hooks/useDiagramIdFromPath"
+import { navbarButtonStyle } from "./styleConstants"
 
 interface Props {
   /**
-   * Foreground color for the icon + label. Defaults to `secondary` —
-   * the navbar's muted on-dark gray, for the always-dark desktop bar. The
-   * mobile hamburger passes `var(--apollon-primary-contrast)` so the label
-   * stays legible on the themed dropdown in both light and dark mode. Other
-   * navbar children (`NavbarFile`, `NavbarHelp`) follow the same convention.
+   * Foreground colour for the icon + label. Omitted on the always-dark desktop
+   * bar (muted grey, brightening to white on hover via `navbarButtonStyle`);
+   * the mobile hamburger passes `var(--apollon-primary-contrast)` so the label
+   * stays legible on the themed dropdown. `NavbarFile`/`NavbarHelp`/
+   * `SaveLocalCopyButton` follow the same convention.
    */
   color?: string
+  /** Classes for the label span — the desktop bar passes `"hidden lg:inline"`
+   * to collapse to the icon when space is tight; the mobile menu omits it so
+   * the label always shows. */
+  labelClassName?: string
 }
 
 /**
@@ -26,7 +30,7 @@ interface Props {
  * `/shared/:id`, so it is also covered. The gallery (`/`) and the
  * playground have no active diagram, so the button is hidden.
  */
-export const VersionHistoryButton = ({ color = secondary }: Props) => {
+export const VersionHistoryButton = ({ color, labelClassName }: Props) => {
   const diagramId = useDiagramIdFromPath()
   const { pathname } = useLocation()
   // Both shared (Remote) and local (Local) repositories back a drawer.
@@ -47,17 +51,15 @@ export const VersionHistoryButton = ({ color = secondary }: Props) => {
   return (
     <Tooltip title={t.fabTooltip}>
       <Button
-        sx={{ textTransform: "none", minWidth: 0, gap: 0.5 }}
+        sx={navbarButtonStyle(color)}
         onClick={() =>
           isOpen ? closeDrawer(diagramId) : openDrawer(diagramId)
         }
         aria-label={t.drawerTitle}
         aria-pressed={isOpen}
-        startIcon={
-          <HistoryRoundedIcon fontSize="small" htmlColor={color} aria-hidden />
-        }
+        startIcon={<HistoryRoundedIcon fontSize="small" aria-hidden />}
       >
-        <span style={{ color }}>{t.navMenuItem}</span>
+        <span className={labelClassName}>{t.navMenuItem}</span>
       </Button>
     </Tooltip>
   )

@@ -18,7 +18,7 @@ import { useEditorContext, useModalContext } from "@/contexts"
 import TextField from "@mui/material/TextField/TextField"
 import { Link } from "@tanstack/react-router"
 import { ThemeSwitcherMenu } from "./ThemeSwitcher"
-import { NAVBAR_SX } from "./styleConstants"
+import { NAVBAR_SX, NAVBAR_TOOLBAR_SX } from "./styleConstants"
 
 export default function MobileNavbar() {
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null)
@@ -58,7 +58,7 @@ export default function MobileNavbar() {
 
   return (
     <AppBar position="sticky" sx={NAVBAR_SX} elevation={0}>
-      <Toolbar disableGutters sx={{ minHeight: 64 }}>
+      <Toolbar disableGutters sx={NAVBAR_TOOLBAR_SX}>
         <Box
           sx={{
             display: "flex",
