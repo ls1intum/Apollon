@@ -136,10 +136,15 @@ export const LAYOUT = Object.freeze({
 
 /**
  * Treat narrow portrait viewports and short phone-landscape viewports as
- * mobile. The height guard keeps tablets in their regular layout.
+ * mobile. The portrait bound stops just below 768px so iPads (768px portrait)
+ * keep the regular desktop layout; the second clause catches phones in
+ * landscape, where the short height distinguishes them from tablets.
+ *
+ * NOTE: mirrored in standalone/webapp/src/constants/responsive.ts (the webapp
+ * can't import the library's curated public surface). Keep both in sync.
  */
 export const MOBILE_VIEW_QUERY =
-  "(max-width: 768px), (max-width: 950px) and (max-height: 500px)"
+  "(max-width: 767.95px), (max-width: 950px) and (max-height: 500px)"
 
 const generateUUID = () => uuidv4()
 

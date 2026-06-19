@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react"
+import React, { useMemo, useSyncExternalStore } from "react"
 import {
   ColorDescriptionConfig,
   DROPS,
@@ -17,30 +17,32 @@ import { ApollonView } from "@/typings"
    Renders the draggable elements based on the selected diagram type.
    ======================================================================== */
 
+// Types whose preview reserves an extra attribute row of height.
+const labelPreviewTypes = new Set([
+  "sfcTransitionBranch",
+  "petriNetPlace",
+  "petriNetTransition",
+])
+
+// `matchMedia` as an external store: synchronous first-paint value (no
+// desktop→mobile flash) and concurrency-safe under React 18+/19.
+const subscribeToMobile = (onChange: () => void) => {
+  if (typeof window === "undefined" || !window.matchMedia) return () => {}
+  const mql = window.matchMedia(MOBILE_VIEW_QUERY)
+  mql.addEventListener("change", onChange)
+  return () => mql.removeEventListener("change", onChange)
+}
+const getMobileSnapshot = () =>
+  typeof window !== "undefined" && !!window.matchMedia
+    ? window.matchMedia(MOBILE_VIEW_QUERY).matches
+    : false
+
 export const Sidebar = () => {
-  const [isMobile, setIsMobile] = useState(false)
-
-  useEffect(() => {
-    if (typeof window === "undefined" || !window.matchMedia) return
-
-    const mql = window.matchMedia(MOBILE_VIEW_QUERY)
-    const onChange = (e: MediaQueryListEvent) => setIsMobile(e.matches)
-
-    setIsMobile(mql.matches)
-    if (typeof mql.addEventListener === "function") {
-      mql.addEventListener("change", onChange)
-    } else {
-      mql.addListener(onChange)
-    }
-
-    return () => {
-      if (typeof mql.removeEventListener === "function") {
-        mql.removeEventListener("change", onChange)
-      } else {
-        mql.removeListener(onChange)
-      }
-    }
-  }, [])
+  const isMobile = useSyncExternalStore(
+    subscribeToMobile,
+    getMobileSnapshot,
+    () => false
+  )
 
   const { diagramType, view, setView, availableViews } = useMetadataStore(
     useShallow((state) => ({
@@ -53,11 +55,6 @@ export const Sidebar = () => {
   const showInteractiveSelectionView =
     availableViews.includes(ApollonView.Highlight) ||
     view === ApollonView.Highlight
-  const labelPreviewTypes = new Set([
-    "sfcTransitionBranch",
-    "petriNetPlace",
-    "petriNetTransition",
-  ])
 
   const paletteItems = useMemo(
     () => dropElementConfigs[diagramType],
@@ -73,12 +70,6 @@ export const Sidebar = () => {
 
     return Math.min(0.55, 32 / width, 32 / (height + extraHeight))
   }
-
-  const getPaletteLabel = (type: string) =>
-    type
-      .replace(/^bpmn/, "BPMN")
-      .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
-      .replace(/^./, (character) => character.toUpperCase())
 
   return (
     <aside
@@ -134,7 +125,6 @@ export const Sidebar = () => {
             const previewWidth = config.width * previewScale
             const previewHeight =
               (config.height + extraPreviewHeight) * previewScale
-            const label = getPaletteLabel(config.type)
 
             return (
               <DraggableGhost
@@ -142,10 +132,7 @@ export const Sidebar = () => {
                 dropElementConfig={config}
                 previewScale={previewScale}
               >
-                <div
-                  className="apollon-palette__entry prevent-select"
-                  title={`Drag ${label}`}
-                >
+                <div className="apollon-palette__entry prevent-select">
                   <div
                     data-draggable-preview
                     style={{
@@ -170,48 +157,37 @@ export const Sidebar = () => {
           <div className="apollon-palette__separator">
             <DividerLine style={{ margin: 0 }} />
           </div>
-          <DraggableGhost
-            dropElementConfig={ColorDescriptionConfig}
-            previewScale={getPreviewScale(
+          {(() => {
+            const colorPreviewScale = getPreviewScale(
               ColorDescriptionConfig.width,
               ColorDescriptionConfig.height
-            )}
-          >
-            <div
-              className="apollon-palette__entry prevent-select"
-              title="Drag Color Description"
-            >
-              <div
-                data-draggable-preview
-                style={{
-                  width:
-                    ColorDescriptionConfig.width *
-                    getPreviewScale(
-                      ColorDescriptionConfig.width,
-                      ColorDescriptionConfig.height
-                    ),
-                  height:
-                    ColorDescriptionConfig.height *
-                    getPreviewScale(
-                      ColorDescriptionConfig.width,
-                      ColorDescriptionConfig.height
-                    ),
-                }}
+            )
+            return (
+              <DraggableGhost
+                dropElementConfig={ColorDescriptionConfig}
+                previewScale={colorPreviewScale}
               >
-                {React.createElement(ColorDescriptionConfig.svg, {
-                  width: ColorDescriptionConfig.width,
-                  height: ColorDescriptionConfig.height,
-                  ...ColorDescriptionConfig.defaultData,
-                  data: ColorDescriptionConfig.defaultData,
-                  SIDEBAR_PREVIEW_SCALE: getPreviewScale(
-                    ColorDescriptionConfig.width,
-                    ColorDescriptionConfig.height
-                  ),
-                  id: "sidebarElement_ColorDescription",
-                })}
-              </div>
-            </div>
-          </DraggableGhost>
+                <div className="apollon-palette__entry prevent-select">
+                  <div
+                    data-draggable-preview
+                    style={{
+                      width: ColorDescriptionConfig.width * colorPreviewScale,
+                      height: ColorDescriptionConfig.height * colorPreviewScale,
+                    }}
+                  >
+                    {React.createElement(ColorDescriptionConfig.svg, {
+                      width: ColorDescriptionConfig.width,
+                      height: ColorDescriptionConfig.height,
+                      ...ColorDescriptionConfig.defaultData,
+                      data: ColorDescriptionConfig.defaultData,
+                      SIDEBAR_PREVIEW_SCALE: colorPreviewScale,
+                      id: "sidebarElement_ColorDescription",
+                    })}
+                  </div>
+                </div>
+              </DraggableGhost>
+            )
+          })()}
         </div>
       )}
     </aside>

@@ -377,9 +377,18 @@ test.describe("Navbar", () => {
   })
 })
 
+// iPhone-class viewports. Headless Chromium reports 0 for env(safe-area-inset-*),
+// so the landscape test injects insets to simulate a notched device; in
+// production the same custom properties are derived from env() (webapp.css
+// :root), so this exercises the real layout math, not a test-only variable.
+const PHONE_PORTRAIT = { width: 390, height: 844 }
+const PHONE_LANDSCAPE = { width: 844, height: 390 }
+const SAFE_INSET = 47 // simulated side notch inset (iPhone landscape)
+const NAVBAR_LANDSCAPE_GAP = 32 // breathing room around logo/menu in landscape
+
 test.describe("Mobile responsive layout", () => {
   test("opens export actions with a tap", async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 844 })
+    await page.setViewportSize(PHONE_PORTRAIT)
     await openTemporaryLocalDiagram(page)
     await waitForCanvasReady(page, false)
 
@@ -401,13 +410,15 @@ test.describe("Mobile responsive layout", () => {
     const exportMenuBox = await exportMenu.boundingBox()
     expect(exportMenuBox).not.toBeNull()
     expect(exportMenuBox!.x).toBeGreaterThanOrEqual(0)
-    expect(exportMenuBox!.x + exportMenuBox!.width).toBeLessThanOrEqual(390)
+    expect(exportMenuBox!.x + exportMenuBox!.width).toBeLessThanOrEqual(
+      PHONE_PORTRAIT.width
+    )
   })
 
   test("opens a responsive New Diagram modal from the editor", async ({
     page,
   }) => {
-    await page.setViewportSize({ width: 390, height: 844 })
+    await page.setViewportSize(PHONE_PORTRAIT)
     await openTemporaryLocalDiagram(page)
     await waitForCanvasReady(page, false)
 
@@ -429,8 +440,8 @@ test.describe("Mobile responsive layout", () => {
     const dialogBox = await dialog.boundingBox()
     expect(dialogBox).not.toBeNull()
     expect(dialogBox!.x).toBeGreaterThanOrEqual(12)
-    expect(dialogBox!.width).toBeLessThanOrEqual(390 - 24)
-    expect(dialogBox!.height).toBeLessThanOrEqual(844 - 24)
+    expect(dialogBox!.width).toBeLessThanOrEqual(PHONE_PORTRAIT.width - 24)
+    expect(dialogBox!.height).toBeLessThanOrEqual(PHONE_PORTRAIT.height - 24)
 
     const hasHorizontalOverflow = await dialog.evaluate(
       (element) => element.scrollWidth > element.clientWidth
@@ -441,7 +452,7 @@ test.describe("Mobile responsive layout", () => {
   test("uses the compact navbar and floating palette in portrait", async ({
     page,
   }) => {
-    await page.setViewportSize({ width: 390, height: 844 })
+    await page.setViewportSize(PHONE_PORTRAIT)
     await openTemporaryLocalDiagram(page)
     await waitForCanvasReady(page, false)
 
@@ -467,7 +478,6 @@ test.describe("Mobile responsive layout", () => {
 
     const menuBox = await menu.boundingBox()
     expect(menuBox?.width).toBeLessThanOrEqual(240)
-    expect(menuBox?.width).toBeLessThanOrEqual(390 - 16)
 
     await menu.getByRole("menuitem", { name: "Share" }).click()
 
@@ -475,7 +485,7 @@ test.describe("Mobile responsive layout", () => {
     await expect(shareDialog).toBeVisible()
     const shareDialogBox = await shareDialog.boundingBox()
     expect(shareDialogBox?.x).toBeGreaterThanOrEqual(12)
-    expect(shareDialogBox?.width).toBeLessThanOrEqual(390 - 24)
+    expect(shareDialogBox?.width).toBeLessThanOrEqual(PHONE_PORTRAIT.width - 24)
 
     const shareContent = page.getByTestId("share-modal-content")
     const hasHorizontalOverflow = await shareContent.evaluate(
@@ -485,23 +495,31 @@ test.describe("Mobile responsive layout", () => {
   })
 
   test("keeps the phone layout in landscape", async ({ page }) => {
-    await page.setViewportSize({ width: 844, height: 390 })
+    await page.setViewportSize(PHONE_LANDSCAPE)
     await openTemporaryLocalDiagram(page)
     await waitForCanvasReady(page, false)
-    await page.evaluate(() => {
+
+    // Guard the env() floor itself: the custom property must be defined on
+    // :root (from env()) before we simulate insets — otherwise the consumers
+    // below would silently fall back to the literal 0px and still pass.
+    const floorDefined = await page.evaluate(() =>
+      getComputedStyle(document.documentElement)
+        .getPropertyValue("--safe-area-inset-left")
+        .trim()
+    )
+    expect(floorDefined).not.toBe("")
+
+    // Simulate a side notch so the safe-area offsets are exercised.
+    await page.evaluate((inset) => {
       document.documentElement.style.setProperty(
         "--safe-area-inset-left",
-        "47px"
+        `${inset}px`
       )
       document.documentElement.style.setProperty(
         "--safe-area-inset-right",
-        "47px"
+        `${inset}px`
       )
-      document.documentElement.style.setProperty(
-        "--safe-area-inset-bottom",
-        "21px"
-      )
-    })
+    }, SAFE_INSET)
 
     await expect(
       page.getByRole("button", { name: "open options" })
@@ -510,34 +528,47 @@ test.describe("Mobile responsive layout", () => {
     const palette = page.getByTestId("apollon-palette")
     await expect(palette).toHaveClass(/apollon-palette--mobile/)
 
-    const entries = palette.locator(".apollon-palette__entries")
-    await expect(entries).toHaveCSS("grid-template-columns", "46px 46px")
+    // Landscape uses a 2-column entry grid (portrait is 1). Count the resolved
+    // columns rather than matching an exact px string, so cosmetic width tweaks
+    // don't break the test.
+    const columnCount = await palette
+      .locator(".apollon-palette__entries")
+      .evaluate(
+        (el) => getComputedStyle(el).gridTemplateColumns.split(" ").length
+      )
+    expect(columnCount).toBe(2)
 
     const navbarBox = await page.locator("header").boundingBox()
     expect(navbarBox?.height).toBeLessThanOrEqual(36)
 
+    // Logo and menu clear the notch plus the landscape breathing-room gap.
     const homeLinkBox = await page
       .getByRole("link", { name: "Apollon home" })
       .boundingBox()
-    expect(homeLinkBox?.x).toBeGreaterThanOrEqual(47 + 32)
+    expect(homeLinkBox?.x).toBeGreaterThanOrEqual(
+      SAFE_INSET + NAVBAR_LANDSCAPE_GAP
+    )
 
     const menuButtonBox = await page
       .getByRole("button", { name: "open options" })
       .boundingBox()
     expect(menuButtonBox).not.toBeNull()
     expect(menuButtonBox!.x + menuButtonBox!.width).toBeLessThanOrEqual(
-      844 - 47 - 32
+      PHONE_LANDSCAPE.width - SAFE_INSET - NAVBAR_LANDSCAPE_GAP
     )
 
+    // React Flow controls/minimap stay inside the left/right insets.
     const controlsBox = await page
       .locator(".react-flow__controls")
       .boundingBox()
-    expect(controlsBox?.x).toBeGreaterThanOrEqual(47)
+    expect(controlsBox?.x).toBeGreaterThanOrEqual(SAFE_INSET)
 
     const minimapBox = await page
       .locator(".react-flow__panel.bottom.right")
       .boundingBox()
     expect(minimapBox).not.toBeNull()
-    expect(minimapBox!.x + minimapBox!.width).toBeLessThanOrEqual(844 - 47)
+    expect(minimapBox!.x + minimapBox!.width).toBeLessThanOrEqual(
+      PHONE_LANDSCAPE.width - SAFE_INSET
+    )
   })
 })

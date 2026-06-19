@@ -533,34 +533,40 @@ test.describe("Home page — accessibility basics", () => {
   })
 
   test("keeps the home navbar outside iPhone safe areas", async ({ page }) => {
+    // Headless Chromium reports 0 env() insets, so simulate a notch by setting
+    // the custom properties production derives from env() (webapp.css :root).
+    const INSET = 47
+    const LANDSCAPE_GAP = 32 // breathing room around logo/controls in landscape
+    const LANDSCAPE_WIDTH = 844
+
     await page.setViewportSize({ width: 390, height: 844 })
     await seedEmpty(page)
-    await page.evaluate(() => {
+    await page.evaluate((inset) => {
       document.documentElement.style.setProperty(
         "--safe-area-inset-top",
-        "47px"
+        `${inset}px`
       )
-    })
+    }, INSET)
 
     const navbar = page.locator(".home-navbar")
     const portraitBox = await navbar.boundingBox()
-    expect(portraitBox?.height).toBeGreaterThanOrEqual(64 + 47)
+    expect(portraitBox?.height).toBeGreaterThanOrEqual(64 + INSET)
 
     const content = page.locator(".home-navbar__content")
     await expect(content).toHaveCSS("min-height", "64px")
 
-    await page.setViewportSize({ width: 844, height: 390 })
-    await page.evaluate(() => {
+    await page.setViewportSize({ width: LANDSCAPE_WIDTH, height: 390 })
+    await page.evaluate((inset) => {
       document.documentElement.style.setProperty("--safe-area-inset-top", "0px")
       document.documentElement.style.setProperty(
         "--safe-area-inset-left",
-        "47px"
+        `${inset}px`
       )
       document.documentElement.style.setProperty(
         "--safe-area-inset-right",
-        "47px"
+        `${inset}px`
       )
-    })
+    }, INSET)
 
     const landscapeBox = await navbar.boundingBox()
     expect(landscapeBox?.height).toBeLessThanOrEqual(44)
@@ -568,14 +574,14 @@ test.describe("Home page — accessibility basics", () => {
     const homeLinkBox = await page
       .getByRole("link", { name: "Apollon home" })
       .boundingBox()
-    expect(homeLinkBox?.x).toBeGreaterThanOrEqual(47 + 32)
+    expect(homeLinkBox?.x).toBeGreaterThanOrEqual(INSET + LANDSCAPE_GAP)
 
     const themeButtonBox = await navbar
       .getByRole("button", { name: /Switch to (light|dark) mode/ })
       .boundingBox()
     expect(themeButtonBox).not.toBeNull()
     expect(themeButtonBox!.x + themeButtonBox!.width).toBeLessThanOrEqual(
-      844 - 47 - 32
+      LANDSCAPE_WIDTH - INSET - LANDSCAPE_GAP
     )
   })
 })

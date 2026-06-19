@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 import { CANVAS, DROPS, DropElementConfig, ZINDEX } from "@/constants"
 import { DropNodeData } from "@/types"
 import { createPortal } from "react-dom"
@@ -239,39 +239,48 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
     })
   }
 
-  // End dragging: re-enable scrolling, reset state, and trigger drop logic
-  const handlePointerUp = (event: PointerEvent) => {
+  // Shared teardown for both a completed drop and an interrupted drag
+  // (pointercancel: gesture taken over by the OS, multi-touch, etc.).
+  const resetDrag = () => {
     enableScroll()
     setIsDragging(false)
     setGhostPosition({ x: 0, y: 0 })
-    onDrop(event)
+  }
+
+  // Keep the latest `onDrop` reachable from the document listeners without
+  // re-binding them: `onDrop` is a useCallback that changes whenever `nodes`
+  // changes, which on a busy canvas is constantly. Reading it through a ref
+  // lets the listeners bind once per drag (deps below), not once per render.
+  const onDropRef = useRef(onDrop)
+  useEffect(() => {
+    onDropRef.current = onDrop
+  }, [onDrop])
+
+  // End dragging: re-enable scrolling, reset state, and trigger drop logic
+  const handlePointerUp = (event: PointerEvent) => {
+    resetDrag()
+    onDropRef.current(event)
   }
 
   const handlePointerCancel = () => {
-    enableScroll()
-    setIsDragging(false)
-    setGhostPosition({ x: 0, y: 0 })
+    resetDrag()
   }
 
   /* ----------------------------------------------------------------------
      Attach global pointer event listeners when dragging
      ---------------------------------------------------------------------- */
   useEffect(() => {
-    if (isDragging) {
-      document.addEventListener("pointermove", handlePointerMove)
-      document.addEventListener("pointerup", handlePointerUp)
-      document.addEventListener("pointercancel", handlePointerCancel)
-    } else {
-      document.removeEventListener("pointermove", handlePointerMove)
-      document.removeEventListener("pointerup", handlePointerUp)
-      document.removeEventListener("pointercancel", handlePointerCancel)
-    }
+    if (!isDragging) return
+
+    document.addEventListener("pointermove", handlePointerMove)
+    document.addEventListener("pointerup", handlePointerUp)
+    document.addEventListener("pointercancel", handlePointerCancel)
     return () => {
       document.removeEventListener("pointermove", handlePointerMove)
       document.removeEventListener("pointerup", handlePointerUp)
       document.removeEventListener("pointercancel", handlePointerCancel)
     }
-  }, [isDragging, clickOffset, onDrop])
+  }, [isDragging, clickOffset])
 
   /* ----------------------------------------------------------------------
      Render the ghost element via a portal when dragging

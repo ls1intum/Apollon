@@ -2,6 +2,20 @@
    (see lib/utils/exportStyles.ts). Keep it free of `@font-face`, `url(...)`,
    and `@import`, or those assets leak into that chunk. The Inter font ships
    separately (lib/styles/fonts.css + lib/utils/exportFonts.ts). */
+
+/* Safe-area floor. Consumers below read `var(--safe-area-inset-*, 0px)`; this
+   maps them to the UA insets so they work in any browser/embedded webview
+   (Artemis, vscode) with `viewport-fit=cover`. The standalone webapp may
+   override these at runtime via the Capacitor safe-area plugin (inline style
+   on documentElement wins); off-native and everywhere else, env() is the
+   source of truth and resolves to 0px when there is no inset. */
+:root {
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+}
+
 .react-flow {
   --panel-background: var(--apollon-background, #fff);
   --panel-shadow: 0 0 4px 0 var(--apollon-background-variant, #f8f9fa);

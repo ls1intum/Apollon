@@ -7,34 +7,31 @@
       type="image/png"
       href="/assets/images/tum-logo-32x32.png"
     />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
     <script>
-      ;(function () {
+      (function () {
         try {
-          var rawTheme = window.localStorage.getItem("apollon-theme")
-          var storedTheme = rawTheme ? JSON.parse(rawTheme).state : null
+          var rawTheme = window.localStorage.getItem("apollon-theme");
+          var storedTheme = rawTheme ? JSON.parse(rawTheme).state : null;
           var theme =
             storedTheme &&
-            (storedTheme.userThemePreference || storedTheme.currentTheme)
+            (storedTheme.userThemePreference || storedTheme.currentTheme);
 
           if (theme !== "dark" && theme !== "light") {
             theme =
               window.matchMedia &&
               window.matchMedia("(prefers-color-scheme: dark)").matches
                 ? "dark"
-                : "light"
+                : "light";
           }
 
-          document.documentElement.setAttribute("data-theme", theme)
-          document.documentElement.style.colorScheme = theme
+          document.documentElement.setAttribute("data-theme", theme);
+          document.documentElement.style.colorScheme = theme;
         } catch (error) {
-          document.documentElement.setAttribute("data-theme", "light")
-          document.documentElement.style.colorScheme = "light"
+          document.documentElement.setAttribute("data-theme", "light");
+          document.documentElement.style.colorScheme = "light";
         }
-      })()
+      })();
     </script>
     <link href="/src/webapp.css" rel="stylesheet" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />

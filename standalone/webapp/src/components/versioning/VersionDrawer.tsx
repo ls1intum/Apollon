@@ -55,8 +55,7 @@ const SIDEBAR_ANIMATION_MS = 220
  * Switches the sidebar to a bottom-sheet drawer at the same breakpoint
  * the navbar switches to its compact mobile layout. This is the *only* place
  * where a viewport media query is the right tool — sidebar↔bottom-sheet is a
- * page-level
- * layout decision driven by viewport chrome. Component-internal layout
+ * page-level layout decision driven by viewport chrome. Component-internal layout
  * (e.g. the preview banner) responds to its own container width via
  * `useElementWidth`, not this constant.
  */
