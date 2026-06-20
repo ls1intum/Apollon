@@ -1,4 +1,11 @@
 import ReactDOM from "react-dom/client"
+// Imported FIRST (before ./utils, the stores and overlay modules) so the editor
+// render tree — and the node/edge component registries it pulls in — evaluates
+// ahead of any utility/store/overlay module. This mirrors the original module
+// graph; relocating it (e.g. behind a store factory or a separate root module)
+// reorders the bundle and reintroduces a load-order TDZ in the node/popover
+// registries. Keep this import position.
+import { AppWithProvider } from "./App"
 import { ReactFlowInstance, type Node, type Edge } from "@xyflow/react"
 import {
   parseDiagramType,
@@ -9,13 +16,25 @@ import {
   getRenderedDiagramBounds,
 } from "./utils"
 import { UMLDiagramType } from "./types"
-import { type DiagramStore } from "@/store/diagramStore"
-import { type MetadataStore } from "@/store/metadataStore"
-import { type PopoverStore } from "@/store/popoverStore"
-import { type AssessmentSelectionStore } from "@/store/assessmentSelectionStore"
-import { createApollonStores } from "./store/createApollonStores"
-import { ApollonRoot } from "./ApollonRoot"
-import { type OverlayStore } from "./overlay/overlayStore"
+import { createDiagramStore, type DiagramStore } from "@/store/diagramStore"
+import { createMetadataStore, type MetadataStore } from "@/store/metadataStore"
+import { createPopoverStore, type PopoverStore } from "@/store/popoverStore"
+import {
+  createAssessmentSelectionStore,
+  type AssessmentSelectionStore,
+} from "@/store/assessmentSelectionStore"
+import { createAlignmentGuidesStore } from "@/store/alignmentGuidesStore"
+import { createEdgeGeometryStore } from "@/store/edgeGeometryStore"
+import {
+  DiagramStoreContext,
+  MetadataStoreContext,
+  PopoverStoreContext,
+  AssessmentSelectionStoreContext,
+  AlignmentGuidesStoreContext,
+  EdgeGeometryStoreContext,
+  OverlayStoreContext,
+} from "./store/context"
+import { createOverlayStore, type OverlayStore } from "./overlay/overlayStore"
 import { RegionMount } from "./overlay/RegionMount"
 import {
   type ApollonDisplayOptions,
@@ -90,12 +109,16 @@ export class ApollonEditor {
     }
 
     this.ydoc = new Y.Doc()
-    const stores = createApollonStores(this.ydoc)
-    this.diagramStore = stores.diagramStore
-    this.metadataStore = stores.metadataStore
-    this.popoverStore = stores.popoverStore
-    this.assessmentSelectionStore = stores.assessmentSelectionStore
-    this.overlayStore = stores.overlayStore
+    this.diagramStore = createDiagramStore(this.ydoc)
+    this.metadataStore = createMetadataStore(
+      this.ydoc,
+      () => this.diagramStore.getState().previewMode
+    )
+    this.popoverStore = createPopoverStore()
+    this.assessmentSelectionStore = createAssessmentSelectionStore()
+    const alignmentGuidesStore = createAlignmentGuidesStore()
+    const edgeGeometryStore = createEdgeGeometryStore()
+    this.overlayStore = createOverlayStore()
     this.syncManager = new YjsSync(
       this.ydoc,
       this.diagramStore,
@@ -178,25 +201,45 @@ export class ApollonEditor {
     }
 
     this.root.render(
-      <ApollonRoot
-        stores={stores}
-        onReactFlowInit={this.setReactFlowInstance.bind(this)}
-        collaboration={collaboration}
-        awareness={{
-          setLocalAwarenessCursor: this.syncManager.setLocalAwarenessCursor,
-          setLocalAwarenessSelectedElement:
-            this.syncManager.setLocalAwarenessSelectedElement,
-          setLocalAwarenessViewport: this.syncManager.setLocalAwarenessViewport,
-          setLocalAwarenessFollowing:
-            this.syncManager.setLocalAwarenessFollowing,
-          getAwarenessStates: this.syncManager.getAwarenessStates,
-          subscribeToAwarenessChanges:
-            this.syncManager.subscribeToAwarenessChanges,
-          subscribeToCollaboratorChanges:
-            this.syncManager.subscribeToCollaboratorChanges,
-          getLocalAwarenessClientId: this.syncManager.getLocalAwarenessClientId,
-        }}
-      />
+      <DiagramStoreContext.Provider value={this.diagramStore}>
+        <MetadataStoreContext.Provider value={this.metadataStore}>
+          <PopoverStoreContext.Provider value={this.popoverStore}>
+            <AssessmentSelectionStoreContext.Provider
+              value={this.assessmentSelectionStore}
+            >
+              <AlignmentGuidesStoreContext.Provider
+                value={alignmentGuidesStore}
+              >
+                <EdgeGeometryStoreContext.Provider value={edgeGeometryStore}>
+                  <OverlayStoreContext.Provider value={this.overlayStore}>
+                    <AppWithProvider
+                      onReactFlowInit={this.setReactFlowInstance.bind(this)}
+                      collaboration={collaboration}
+                      awareness={{
+                        setLocalAwarenessCursor:
+                          this.syncManager.setLocalAwarenessCursor,
+                        setLocalAwarenessSelectedElement:
+                          this.syncManager.setLocalAwarenessSelectedElement,
+                        setLocalAwarenessViewport:
+                          this.syncManager.setLocalAwarenessViewport,
+                        setLocalAwarenessFollowing:
+                          this.syncManager.setLocalAwarenessFollowing,
+                        getAwarenessStates: this.syncManager.getAwarenessStates,
+                        subscribeToAwarenessChanges:
+                          this.syncManager.subscribeToAwarenessChanges,
+                        subscribeToCollaboratorChanges:
+                          this.syncManager.subscribeToCollaboratorChanges,
+                        getLocalAwarenessClientId:
+                          this.syncManager.getLocalAwarenessClientId,
+                      }}
+                    />
+                  </OverlayStoreContext.Provider>
+                </EdgeGeometryStoreContext.Provider>
+              </AlignmentGuidesStoreContext.Provider>
+            </AssessmentSelectionStoreContext.Provider>
+          </PopoverStoreContext.Provider>
+        </MetadataStoreContext.Provider>
+      </DiagramStoreContext.Provider>
     )
   }
 
@@ -453,9 +496,19 @@ export class ApollonEditor {
 
     const ydoc = new Y.Doc()
     // Construct-only: no undo manager, no collaboration — keeps the headless
-    // render deterministic (see createApollonStores + the no-op awareness below).
-    const stores = createApollonStores(ydoc)
-    const { diagramStore } = stores
+    // render deterministic (no `initializeUndoManager` + the no-op awareness
+    // below). Overlay store exists but no controls are registered, so the
+    // overlay layer renders nothing and insets stay zero.
+    const diagramStore = createDiagramStore(ydoc)
+    const metadataStore = createMetadataStore(
+      ydoc,
+      () => diagramStore.getState().previewMode
+    )
+    const popoverStore = createPopoverStore()
+    const assessmentSelectionStore = createAssessmentSelectionStore()
+    const alignmentGuidesStore = createAlignmentGuidesStore()
+    const edgeGeometryStore = createEdgeGeometryStore()
+    const overlayStore = createOverlayStore()
     const diagramId = Math.random().toString(36).substring(2, 15)
 
     let setReactFlowInstance: (instance: ReactFlowInstance) => void = () => {}
@@ -486,12 +539,29 @@ export class ApollonEditor {
       diagramStore.getState().setAssessments(model.assessments)
 
       svgRoot.render(
-        <ApollonRoot
-          stores={stores}
-          onReactFlowInit={setReactFlowInstance}
-          collaboration={disabledCollaboration}
-          awareness={noopCollaborationAwareness}
-        />
+        <DiagramStoreContext.Provider value={diagramStore}>
+          <MetadataStoreContext.Provider value={metadataStore}>
+            <PopoverStoreContext.Provider value={popoverStore}>
+              <AssessmentSelectionStoreContext.Provider
+                value={assessmentSelectionStore}
+              >
+                <AlignmentGuidesStoreContext.Provider
+                  value={alignmentGuidesStore}
+                >
+                  <EdgeGeometryStoreContext.Provider value={edgeGeometryStore}>
+                    <OverlayStoreContext.Provider value={overlayStore}>
+                      <AppWithProvider
+                        onReactFlowInit={setReactFlowInstance}
+                        collaboration={disabledCollaboration}
+                        awareness={noopCollaborationAwareness}
+                      />
+                    </OverlayStoreContext.Provider>
+                  </EdgeGeometryStoreContext.Provider>
+                </AlignmentGuidesStoreContext.Provider>
+              </AssessmentSelectionStoreContext.Provider>
+            </PopoverStoreContext.Provider>
+          </MetadataStoreContext.Provider>
+        </DiagramStoreContext.Provider>
       )
 
       // Race ReactFlow init against a 3 s timeout so a hung mount can't deadlock export.

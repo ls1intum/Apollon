@@ -214,10 +214,11 @@ export function OverlayLayer() {
       const axis = MEASURE_AXIS[control.region]
       const side = REGION_PRIMARY_SIDE[control.region]
       if (!axis || !side) continue
+      // Reserve exactly the control's box. Spacing comes from each consumer's
+      // own offset (the palette's `top:10`) and from fitView's own gutter, so
+      // adding margin here would double-count and shrink neighbours.
       const size = axis === "width" ? el.offsetWidth : el.offsetHeight
-      // Offset the band from the container edge so the reserved room matches the
-      // control's outer box (10px standard margin, mirrors the legacy overlays).
-      setMeasured(id, { [side]: size + 10 })
+      setMeasured(id, { [side]: size })
     }
   }, [controls, setMeasured])
 
