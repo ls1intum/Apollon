@@ -1,4 +1,4 @@
-// Entity-Relationship (Chen notation) discriminators.
+// Entity-Relationship discriminators (Chen and crow's-foot notations).
 //
 // Variants are modelled as enum/flag *properties* on a small set of node types
 // (the `ClassType` stereotype precedent) rather than as a separate node type per

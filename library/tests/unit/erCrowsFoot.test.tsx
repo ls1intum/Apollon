@@ -1,7 +1,12 @@
 import { render } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
 import { ErCrowsFootMarker } from "@/components/svgs/edges/ErCrowsFootMarker"
-import { getDefaultEdgeType } from "@/utils"
+import {
+  deriveErCfEdgeRender,
+  getDefaultEdgeType,
+  swapErCfCardinalities,
+} from "@/utils"
+import { CustomEdgeProps } from "@/edges/EdgeProps"
 
 // A crow's-foot end marker = a "max" symbol at the entity (bar for one, a
 // 3-line foot for many) plus a "min" symbol set back toward the line (bar for
@@ -55,9 +60,18 @@ describe("ErCrowsFootMarker geometry", () => {
   it("puts the max symbol at the entity and the min symbol further back", () => {
     const { container } = renderMarker("ExactlyOne")
     const xs = lineXs(container).sort((a, b) => a - b)
-    // Max bar sits on the entity point; min bar is set back toward the line.
-    expect(xs).toEqual([41, 50])
-    expect(Math.max(...xs)).toBe(POINT.x)
+    // Max bar sits on the entity point; min bar is set back toward the line by
+    // MIN_OFFSET_NEAR (= 9). Both bars are vertical (perpendicular to +x).
+    expect(xs).toEqual([50 - 9, 50])
+    // The max bar is a vertical segment of full height 2*BAR_HALF (= 12).
+    const maxBar = [...container.querySelectorAll("line")].find(
+      (l) => l.getAttribute("x1") === "50"
+    )!
+    expect(maxBar.getAttribute("x2")).toBe("50") // vertical
+    const span = Math.abs(
+      Number(maxBar.getAttribute("y1")) - Number(maxBar.getAttribute("y2"))
+    )
+    expect(span).toBe(12)
   })
 
   it("keeps the optional circle clear of the crow's foot", () => {
@@ -82,5 +96,66 @@ describe("crow's-foot diagram wiring", () => {
     expect(getDefaultEdgeType("EntityRelationshipCrowsFoot")).toBe(
       "ErCfRelationship"
     )
+  })
+})
+
+describe("deriveErCfEdgeRender", () => {
+  const left = { x: 0, y: 0 }
+  const right = { x: 10, y: 0 }
+
+  it("is dashed only when explicitly non-identifying", () => {
+    expect(
+      deriveErCfEdgeRender(
+        { identifying: false } as CustomEdgeProps,
+        left,
+        right
+      ).dashed
+    ).toBe(true)
+    expect(
+      deriveErCfEdgeRender(
+        { identifying: true } as CustomEdgeProps,
+        left,
+        right
+      ).dashed
+    ).toBe(false)
+    // Undefined defaults to identifying (solid), matching the popover toggle.
+    expect(deriveErCfEdgeRender(undefined, left, right).dashed).toBe(false)
+  })
+
+  it("points each end's marker into its entity (source = target + π)", () => {
+    const { source, target } = deriveErCfEdgeRender(undefined, left, right)
+    expect(target.direction).toBeCloseTo(0) // along source→target (+x)
+    expect(source.direction).toBeCloseTo(Math.PI) // the reverse
+  })
+
+  it("maps source/target cardinality to the matching end, with defaults", () => {
+    const withData = deriveErCfEdgeRender(
+      {
+        sourceCardinality: "OneOrMany",
+        targetCardinality: "ZeroOrOne",
+      } as CustomEdgeProps,
+      left,
+      right
+    )
+    expect(withData.source.cardinality).toBe("OneOrMany")
+    expect(withData.target.cardinality).toBe("ZeroOrOne")
+
+    const defaults = deriveErCfEdgeRender(undefined, left, right)
+    expect(defaults.source.cardinality).toBe("ExactlyOne")
+    expect(defaults.target.cardinality).toBe("ZeroOrMany")
+  })
+})
+
+describe("swapErCfCardinalities", () => {
+  it("exchanges the two ends so markers follow a Swap Ends", () => {
+    expect(
+      swapErCfCardinalities({
+        sourceCardinality: "ExactlyOne",
+        targetCardinality: "ZeroOrMany",
+      } as CustomEdgeProps)
+    ).toEqual({
+      sourceCardinality: "ZeroOrMany",
+      targetCardinality: "ExactlyOne",
+    })
   })
 })

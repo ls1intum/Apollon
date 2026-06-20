@@ -24,7 +24,7 @@ const isMany = (c: ErCfCardinality) => c === "ZeroOrMany" || c === "OneOrMany"
 interface Props {
   // Connection point on the entity edge.
   point: { x: number; y: number }
-  // Unit direction (radians) pointing INTO the entity (toward `point`).
+  // Angle (radians) pointing INTO the entity (toward `point`).
   direction: number
   cardinality: ErCfCardinality
   strokeColor?: string

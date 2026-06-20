@@ -16,10 +16,7 @@ import {
 } from "@/components/wrapper"
 import { getCustomColorsFromDataForEdge } from "@/utils/layoutUtils"
 import { ErCrowsFootMarker } from "@/components/svgs/edges/ErCrowsFootMarker"
-import {
-  DEFAULT_ER_CF_SOURCE_CARDINALITY,
-  DEFAULT_ER_CF_TARGET_CARDINALITY,
-} from "@/types/nodes/enums/EntityRelationshipType"
+import { deriveErCfEdgeRender } from "@/utils/erCfUtils"
 
 // Crow's-foot (Mermaid-style) relationship: a straight line directly between two
 // entity tables, with a crow's-foot cardinality marker at each end. Solid when
@@ -75,15 +72,11 @@ export const ErCfRelationshipEdge = ({
   })
 
   const { strokeColor, textColor } = getCustomColorsFromDataForEdge(data)
-  const dashed = data?.identifying === false
-
-  // Each marker points INTO its entity: the target end follows the line
-  // direction, the source end is the reverse.
-  const intoTarget = Math.atan2(
-    targetPoint.y - sourcePoint.y,
-    targetPoint.x - sourcePoint.x
-  )
-  const intoSource = intoTarget + Math.PI
+  const {
+    dashed,
+    source: sourceMarker,
+    target: targetMarker,
+  } = deriveErCfEdgeRender(data, sourcePoint, targetPoint)
 
   return (
     <AssessmentSelectableWrapper elementId={id} asElement="g">
@@ -103,18 +96,14 @@ export const ErCfRelationshipEdge = ({
             <>
               <ErCrowsFootMarker
                 point={sourcePoint}
-                direction={intoSource}
-                cardinality={
-                  data?.sourceCardinality ?? DEFAULT_ER_CF_SOURCE_CARDINALITY
-                }
+                direction={sourceMarker.direction}
+                cardinality={sourceMarker.cardinality}
                 strokeColor={strokeColor}
               />
               <ErCrowsFootMarker
                 point={targetPoint}
-                direction={intoTarget}
-                cardinality={
-                  data?.targetCardinality ?? DEFAULT_ER_CF_TARGET_CARDINALITY
-                }
+                direction={targetMarker.direction}
+                cardinality={targetMarker.cardinality}
                 strokeColor={strokeColor}
               />
             </>

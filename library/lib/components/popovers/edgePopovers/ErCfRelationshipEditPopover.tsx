@@ -8,6 +8,7 @@ import {
   ErCfCardinality,
 } from "@/types/nodes/enums/EntityRelationshipType"
 import { useEdgePopOver, useReactiveEdge } from "@/hooks"
+import { swapErCfCardinalities } from "@/utils/erCfUtils"
 import { PopoverProps } from "../types"
 import { SwapEndsButton } from "./SwapEndsButton"
 
@@ -31,6 +32,13 @@ export const ErCfRelationshipEditPopover: React.FC<PopoverProps> = ({
   const edgeData = edge.data as CustomEdgeProps | undefined
   const patch = (fields: Partial<CustomEdgeProps>) =>
     updateEdgeData(elementId, { ...edge.data, ...fields })
+
+  // The shared handleSwap only exchanges the endpoints; the per-end cardinalities
+  // are directional, so swap them too or the markers land on the wrong entities.
+  const handleSwapEnds = () => {
+    handleSwap()
+    updateEdgeData(elementId, swapErCfCardinalities(edgeData))
+  }
 
   const cardinalitySelect = (
     label: string,
@@ -62,7 +70,7 @@ export const ErCfRelationshipEditPopover: React.FC<PopoverProps> = ({
         edgeData={edgeData}
         handleDataFieldUpdate={(key, value) => patch({ [key]: value })}
         label="Relationship"
-        sideElements={[handleSwap && <SwapEndsButton onClick={handleSwap} />]}
+        sideElements={[<SwapEndsButton key="swap" onClick={handleSwapEnds} />]}
       />
 
       <TextField
