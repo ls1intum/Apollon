@@ -63,6 +63,9 @@ export const NAVBAR_SX: SxProps<Theme> = {
   bgcolor: "var(--apollon-chrome-surface)",
   color: "var(--apollon-chrome-text)",
   backgroundImage: "none",
-  borderBottom: "1px solid var(--apollon-chrome-border)",
-  boxShadow: "var(--apollon-chrome-shadow-docked)",
+  // Hairline drawn as an inset shadow (not a border) so it doesn't add to the
+  // header's height — the mobile/safe-area height budgets stay exact.
+  borderBottom: "none",
+  boxShadow:
+    "inset 0 -1px 0 var(--apollon-chrome-border), var(--apollon-chrome-shadow-docked)",
 }

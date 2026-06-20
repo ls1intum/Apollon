@@ -31,8 +31,9 @@ export const HomeNavbar = () => {
         backgroundColor: `color-mix(in srgb, ${NAVBAR_BACKGROUND_COLOR} 88%, transparent)`,
         backdropFilter: "saturate(140%) blur(12px)",
         WebkitBackdropFilter: "saturate(140%) blur(12px)",
-        borderBottom: "1px solid var(--apollon-chrome-border)",
-        boxShadow: NAVBAR_DROP_SHADOW,
+        // Hairline as an inset shadow (not a border) so the header height stays
+        // exactly NAVBAR_MIN_HEIGHT — the safe-area height budget is asserted.
+        boxShadow: `inset 0 -1px 0 var(--apollon-chrome-border), ${NAVBAR_DROP_SHADOW}`,
       }}
     >
       {/* min-height from NAVBAR_MIN_HEIGHT (single source of truth) keeps the
