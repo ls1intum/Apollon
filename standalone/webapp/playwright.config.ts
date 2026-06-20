@@ -24,7 +24,7 @@ export default defineConfig({
   // across macOS and Linux.  SVG export tests use a bundled font (Liberation
   // Sans) for deterministic resvg rendering.  Canvas screenshot baselines are
   // generated inside the Playwright Docker container to guarantee consistency;
-  // see the "visual-regression-tests" job in nightly-checks.yml and the docker
+  // see the "visual-regression-tests" job in pr-health-checks.yml and the docker
   // command in docs/contributor/development/visual-tests.md.
   snapshotPathTemplate:
     "{testDir}/{testFileDir}/{testFileName}-snapshots/{arg}{ext}",
