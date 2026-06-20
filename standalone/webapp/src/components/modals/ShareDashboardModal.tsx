@@ -15,7 +15,7 @@ import {
   HomeDialogNotice,
   HomeDialogTextInput,
 } from "./HomeDialog"
-import { ShareLinkRow, type ShareModeOption } from "./ShareLinkRow"
+import { ShareLinkRow, MODE_OPTIONS } from "./ShareLinkRow"
 import { useShareableDiagram } from "./useShareableDiagram"
 
 type ShareDashboardModalProps = {
@@ -30,13 +30,6 @@ const resolveProps = (props: unknown): ShareDashboardModalProps => {
       typeof candidate.modelId === "string" ? candidate.modelId : undefined,
   }
 }
-
-export const MODE_OPTIONS: readonly ShareModeOption[] = [
-  { value: DiagramView.EDIT, label: "Edit" },
-  { value: DiagramView.COLLABORATE, label: "Collaborate" },
-  { value: DiagramView.GIVE_FEEDBACK, label: "Add feedback" },
-  { value: DiagramView.SEE_FEEDBACK, label: "View feedback" },
-]
 
 export const ShareDashboardModal = (
   props: ShareDashboardModalProps | Record<string, unknown>

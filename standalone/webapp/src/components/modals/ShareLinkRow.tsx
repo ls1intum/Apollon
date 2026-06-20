@@ -1,8 +1,16 @@
 import { useEffect, useRef, useState } from "react"
 import { Tooltip } from "@mui/material"
-import type { DiagramView } from "@/types"
+import { DiagramView } from "@/types"
 
 export type ShareModeOption = { value: DiagramView; label: string }
+
+/** The access modes a shared link can carry, shared by both share dialogs. */
+export const MODE_OPTIONS: readonly ShareModeOption[] = [
+  { value: DiagramView.EDIT, label: "Edit" },
+  { value: DiagramView.COLLABORATE, label: "Collaborate" },
+  { value: DiagramView.GIVE_FEEDBACK, label: "Add feedback" },
+  { value: DiagramView.SEE_FEEDBACK, label: "View feedback" },
+]
 
 const CopyIcon = () => (
   <svg

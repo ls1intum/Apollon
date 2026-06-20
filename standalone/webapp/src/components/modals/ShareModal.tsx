@@ -14,8 +14,7 @@ import {
   HomeDialogNotice,
   HomeDialogTextInput,
 } from "./HomeDialog"
-import { ShareLinkRow } from "./ShareLinkRow"
-import { MODE_OPTIONS } from "./ShareDashboardModal"
+import { ShareLinkRow, MODE_OPTIONS } from "./ShareLinkRow"
 import { useShareableDiagram } from "./useShareableDiagram"
 import { EmbedHints } from "./EmbedHints"
 
