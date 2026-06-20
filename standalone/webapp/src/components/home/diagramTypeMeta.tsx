@@ -611,9 +611,27 @@ const diagramTiles = {
         stroke="currentColor"
         strokeWidth="2"
       />
-      <line x1="17" y1="24" x2="31" y2="24" stroke="currentColor" strokeWidth="2" />
-      <line x1="20" y1="20" x2="20" y2="28" stroke="currentColor" strokeWidth="2" />
-      <path d="M31 24 L27 20 M31 24 L27 24 M31 24 L27 28" stroke="currentColor" strokeWidth="2" />
+      <line
+        x1="17"
+        y1="24"
+        x2="31"
+        y2="24"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <line
+        x1="20"
+        y1="20"
+        x2="20"
+        y2="28"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <path
+        d="M31 24 L27 20 M31 24 L27 24 M31 24 L27 28"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
     </svg>
   ),
 }

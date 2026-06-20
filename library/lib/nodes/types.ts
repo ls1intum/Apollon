@@ -59,12 +59,7 @@ import {
   SfcTransitionBranch,
   SfcJump,
 } from "./sfcDiagram"
-import {
-  EREntity,
-  ERRelationship,
-  ERAttribute,
-  ErCfEntity,
-} from "./erDiagram"
+import { EREntity, ERRelationship, ERAttribute, ErCfEntity } from "./erDiagram"
 
 export const diagramNodeTypes = {
   package: Package,
