@@ -24,7 +24,13 @@ export const HomeNavbar = () => {
       className="home-navbar sticky top-0 z-40 transition-colors duration-200"
       style={{
         minHeight: NAVBAR_MIN_HEIGHT,
-        backgroundColor: NAVBAR_BACKGROUND_COLOR,
+        // Frosted glass: a translucent slate plate over a backdrop blur so
+        // content scrolls softly beneath it (a modern dashboard idiom). The
+        // 88% mix keeps white brand/controls fully legible even over a light
+        // page; browsers without backdrop-filter just see the near-solid plate.
+        backgroundColor: `color-mix(in srgb, ${NAVBAR_BACKGROUND_COLOR} 88%, transparent)`,
+        backdropFilter: "saturate(140%) blur(12px)",
+        WebkitBackdropFilter: "saturate(140%) blur(12px)",
         boxShadow: NAVBAR_DROP_SHADOW,
       }}
     >
