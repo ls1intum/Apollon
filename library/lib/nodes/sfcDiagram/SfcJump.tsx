@@ -1,6 +1,7 @@
 import { NodeProps, type Node } from "@xyflow/react"
+import { usePopoverAnchor } from "@/hooks/usePopoverAnchor"
 import { DefaultNodeWrapper } from "../wrappers"
-import { useRef, useMemo, useEffect } from "react"
+import { useMemo, useEffect } from "react"
 import { useDiagramStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
@@ -17,7 +18,7 @@ export function SfcJump({
   data,
 }: NodeProps<Node<DefaultNodeProps>>) {
   const { name } = data || {}
-  const svgWrapperRef = useRef<HTMLDivElement | null>(null)
+  const [anchorEl, anchorRef] = usePopoverAnchor()
 
   const { setNodes } = useDiagramStore(
     useShallow((state) => ({
@@ -25,17 +26,12 @@ export function SfcJump({
     }))
   )
 
-  if (!width || !height) {
-    return null
-  }
+  const fixedHeight = 32 // Fixed height for compact appearance
 
-  // Calculate minimum width based on text
   const minWidth = useMemo(() => {
     const textWidth = measureTextWidth(name || "", LAYOUT.DEFAULT_FONT) + 8
-    return calculateMinWidth(textWidth, LAYOUT.DEFAULT_PADDING) + 12 // Extra space for the diamond and padding
+    return calculateMinWidth(textWidth, LAYOUT.DEFAULT_PADDING) + 12
   }, [name])
-
-  const fixedHeight = 32 // Fixed height for compact appearance
 
   // Auto-expand/shrink width when text changes
   useEffect(() => {
@@ -60,14 +56,18 @@ export function SfcJump({
     }
   }, [minWidth, width, id, setNodes])
 
-  const finalWidth = Math.max(width ?? 0, minWidth)
+  if (!width || !height) {
+    return null
+  }
+
+  const finalWidth = Math.max(width, minWidth)
   const finalHeight = fixedHeight
 
   return (
     <DefaultNodeWrapper width={finalWidth} height={finalHeight} elementId={id}>
       <NodeToolbar elementId={id} />
 
-      <div ref={svgWrapperRef}>
+      <div ref={anchorRef}>
         <SfcJumpNodeSVG
           width={finalWidth}
           height={finalHeight}
@@ -76,11 +76,7 @@ export function SfcJump({
         />
       </div>
 
-      <PopoverManager
-        anchorEl={svgWrapperRef.current}
-        elementId={id}
-        type="default"
-      />
+      <PopoverManager anchorEl={anchorEl} elementId={id} type="default" />
     </DefaultNodeWrapper>
   )
 }

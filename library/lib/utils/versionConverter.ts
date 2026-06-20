@@ -1,5 +1,10 @@
-/* eslint-disable */
+/* eslint-disable @typescript-eslint/no-explicit-any --
+ * The v3 → v4 converter walks legacy JSON payloads with no shared schema, so
+ * every entry point has to accept `any` until it's narrowed inline. Replacing
+ * these with proper types would require defining the full v3/v2 envelope and
+ * isn't in scope here. */
 import { UMLModel, ApollonNode, ApollonEdge, Assessment } from "../typings"
+import { transformEdges } from "../services/migration/EdgeTransformer"
 import { UMLDiagramType } from "../types/DiagramType"
 import { ClassType } from "../types/nodes/enums"
 import { IPoint } from "../edges/Connection"
@@ -172,6 +177,14 @@ export function convertV3HandleToV4(v3Handle: string): string {
     RightBottom: "bottom-right",
     LeftTop: "top-left",
     LeftBottom: "bottom-left",
+
+    // Legacy iOS dialect for the top/bottom-edge quarter handles (web v3 uses
+    // RightTop/LeftBottom for the same ports). Without these they hit the
+    // lowercase fallback below, producing invalid handle ids that mis-route.
+    Topright: "top-right",
+    Topleft: "top-left",
+    Bottomright: "bottom-right",
+    Bottomleft: "bottom-left",
   }
 
   return handleMap[v3Handle] || v3Handle.toLowerCase()
@@ -363,6 +376,17 @@ function calculateRelativePosition(
 }
 
 /**
+ * Order child elements top-to-bottom by bounds.y. V3 stored class/object
+ * attributes and methods as separate child elements and rendered them by
+ * vertical position (UMLElement.verticallySortedChildren); object key order is
+ * not a reliable proxy, so sort before folding them into a parent node.
+ * Mutates in place — callers pass a fresh `Object.values(...)` array.
+ */
+function sortedByBoundsY(elements: V3UMLElement[]): V3UMLElement[] {
+  return elements.sort((a, b) => (a.bounds?.y ?? 0) - (b.bounds?.y ?? 0))
+}
+
+/**
  * Convert V3 node data to V4 node data format
  */
 function convertV3NodeDataToV4(
@@ -385,7 +409,7 @@ function convertV3NodeDataToV4(
     case "Enumeration": {
       const attributes: Array<{ id: string; name: string }> = []
       const methods: Array<{ id: string; name: string }> = []
-      Object.values(allElements).forEach((childElement) => {
+      sortedByBoundsY(Object.values(allElements)).forEach((childElement) => {
         if (childElement.owner === element.id) {
           if (childElement.type === "ClassAttribute") {
             attributes.push({
@@ -436,7 +460,7 @@ function convertV3NodeDataToV4(
       const attributes: Array<{ id: string; name: string }> = []
       const methods: Array<{ id: string; name: string }> = []
 
-      Object.values(allElements).forEach((childElement) => {
+      sortedByBoundsY(Object.values(allElements)).forEach((childElement) => {
         if (childElement.owner === element.id) {
           if (childElement.type === "ObjectAttribute") {
             attributes.push({
@@ -475,7 +499,7 @@ function convertV3NodeDataToV4(
     case "CommunicationObject": {
       const attributes: Array<{ id: string; name: string }> = []
       const methods: Array<{ id: string; name: string }> = []
-      Object.values(allElements).forEach((childElement) => {
+      sortedByBoundsY(Object.values(allElements)).forEach((childElement) => {
         if (childElement.owner === element.id) {
           if (childElement.type === "ObjectAttribute") {
             attributes.push({
@@ -872,7 +896,14 @@ export function isV4Format(data: any): data is UMLModel {
     data.version &&
     data.version.startsWith("4.") &&
     Array.isArray(data.nodes) &&
-    Array.isArray(data.edges)
+    Array.isArray(data.edges) &&
+    data.edges.every(
+      (edge: unknown) =>
+        edge != null &&
+        typeof edge === "object" &&
+        (edge as { data?: unknown }).data != null &&
+        typeof (edge as { data: unknown }).data === "object"
+    )
   )
 }
 
@@ -880,24 +911,23 @@ export function isV4Format(data: any): data is UMLModel {
  * Universal import function that handles v2, v3 and v4 formats
  */
 export function importDiagram(data: any | V3UMLModel): UMLModel {
+  let model: UMLModel
+
   if (isV4Format(data)) {
-    return data
-  }
-
-  if (isV3Format(data)) {
-    return convertV3ToV4(data)
-  }
-
-  if (isV2Format(data)) {
-    return convertV2ToV4(data)
-  }
-
-  if (data.model) {
+    model = data
+  } else if (isV3Format(data)) {
+    model = convertV3ToV4(data)
+  } else if (isV2Format(data)) {
+    model = convertV2ToV4(data)
+  } else if (data.model) {
     //playground
     return importDiagram(data.model)
+  } else {
+    throw new Error(
+      "Unsupported diagram format. Only 2.x.x, 3.x.x and 4.x.x formats are supported."
+    )
   }
 
-  throw new Error(
-    "Unsupported diagram format. Only 2.x.x, 3.x.x and 4.x.x formats are supported."
-  )
+  // Strip stale runtime-only edge geometry (computedSegments) from imports.
+  return transformEdges(model)
 }

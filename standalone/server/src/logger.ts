@@ -1,30 +1,18 @@
-export type LogLevel = "silent" | "error" | "warn" | "debug"
+import { pino, stdTimeFunctions, type Logger } from "pino"
 
-type Sink = Pick<Console, "debug" | "warn" | "error">
+const level =
+  process.env.LOG_LEVEL ??
+  (process.env.NODE_ENV === "production" ? "info" : "debug")
 
-const noop = () => {}
-
-let sink: Sink =
-  typeof process !== "undefined" && process.env.NODE_ENV !== "production"
-    ? console
-    : { debug: noop, warn: noop, error: noop }
-
-let level: LogLevel =
-  typeof process !== "undefined" && process.env.NODE_ENV !== "production"
-    ? "debug"
-    : "silent"
-
-export function setLogger(next: Partial<Sink>) {
-  sink = { ...sink, ...next }
-}
-
-export function setLogLevel(next: LogLevel) {
-  level = next
-}
-
-export const log = {
-  debug: (...a: unknown[]) => (level === "debug" ? sink.debug(...a) : void 0),
-  warn: (...a: unknown[]) =>
-    level === "debug" || level === "warn" ? sink.warn(...a) : void 0,
-  error: (...a: unknown[]) => (level !== "silent" ? sink.error(...a) : void 0),
-}
+export const logger: Logger = pino({
+  level,
+  timestamp: stdTimeFunctions.isoTime,
+  redact: {
+    paths: [
+      "req.headers.cookie",
+      "req.headers.authorization",
+      'res.headers["set-cookie"]',
+    ],
+    censor: "[REDACTED]",
+  },
+})

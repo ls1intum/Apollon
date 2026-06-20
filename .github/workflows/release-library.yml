@@ -65,25 +65,45 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           ref: ${{ github.sha }}
+          # Full history so extract-changelog.mjs can resolve each changelog
+          # entry's commit type (feat/fix/...) to group the release notes.
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@ac6db6d3c1f721f886538a378a2d73e85697340a # v6.0.8
 
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
-          node-version: 22.14.0
+          node-version-file: ".nvmrc"
           registry-url: https://registry.npmjs.org/
+          cache: "pnpm"
 
-      - run: npm install -g npm@11.5.1 # 11.5.1+ required for npm OIDC trusted publishing
+      # OIDC trusted publishing needs npm 11.5.1+; pnpm lacks it (pnpm#9812).
+      - run: npm install -g --ignore-scripts npm@11.5.1
 
-      - run: npm ci
+      - run: pnpm install --frozen-lockfile
 
-      - run: npm run build
+      - run: pnpm --filter @tumaet/apollon run build
+      - run: pnpm --filter @tumaet/apollon run test
+
+      - name: Pack
+        id: pack
         working-directory: library
+        # `pnpm pack --json` writes the tarball path to stdout as structured
+        # output; previous `pnpm pack | tail -n 1` broke when pnpm logged
+        # warnings on stdout (pnpm/pnpm#10200). The type-guarded jq filter
+        # tolerates either object or array output — pnpm has flip-flopped
+        # between the two shapes across releases.
+        run: |
+          set -euo pipefail
+          TARBALL=$(pnpm pack --json | jq -r 'if type=="array" then .[0].filename else .filename end')
+          test -f "$TARBALL"
+          echo "tarball=${TARBALL}" >> "$GITHUB_OUTPUT"
 
-      - run: npm run test
-        working-directory: library
-
-      - run: npm publish --access public --tag latest --provenance
+      - name: Publish to npm with OIDC trusted publishing
         if: needs.check.outputs.publish == 'true'
         working-directory: library
+        run: npm publish "${{ steps.pack.outputs.tarball }}" --access public --provenance --tag latest
 
       - name: Ensure release tag exists
         if: needs.check.outputs.release == 'true'
@@ -107,17 +127,35 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ needs.check.outputs.version }}
         run: |
+          set -euo pipefail
           TAG="@tumaet/apollon@${VERSION}"
-          gh release create "$TAG" \
-            --title "$TAG" \
-            --target "$GITHUB_SHA" \
-            --verify-tag \
-            --latest=false \
-            --generate-notes \
-            --notes "Install:
+
+          # Body = the Changesets-owned CHANGELOG section (curated per-PR voice),
+          # regrouped by category (Features/Bug Fixes/...) from each entry's
+          # commit type, plus an install footer. Fall back to GitHub's
+          # --generate-notes only when there is no changelog section for this
+          # version (e.g. a release that carried no changeset).
+          CHANGELOG=$(node scripts/extract-changelog.mjs "$VERSION" library)
+          {
+            if [ -n "$CHANGELOG" ]; then printf '%s\n\n' "$CHANGELOG"; fi
+            cat <<EOF
+          Install:
 
           \`\`\`sh
           npm install @tumaet/apollon@${VERSION}
           \`\`\`
 
-          Published to npm with [provenance](https://docs.npmjs.com/generating-provenance-statements) via OIDC trusted publishing: [\`@tumaet/apollon@${VERSION}\`](https://www.npmjs.com/package/@tumaet/apollon/v/${VERSION})."
+          Published to npm with [provenance](https://docs.npmjs.com/generating-provenance-statements) via OIDC trusted publishing: [\`@tumaet/apollon@${VERSION}\`](https://www.npmjs.com/package/@tumaet/apollon/v/${VERSION}).
+          EOF
+          } > release-notes.md
+
+          GENERATE=()
+          [ -z "$CHANGELOG" ] && GENERATE=(--generate-notes)
+
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --target "$GITHUB_SHA" \
+            --verify-tag \
+            --latest=false \
+            "${GENERATE[@]}" \
+            --notes-file release-notes.md

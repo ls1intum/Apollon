@@ -64,6 +64,15 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           ref: ${{ needs.check.outputs.sha }}
+          # Full history so extract-changelog.mjs can resolve each changelog
+          # entry's commit type (feat/fix/...) to group the release notes.
+          fetch-depth: 0
+
+      # Pin Node for the changelog-extraction step in "Create GitHub Release"
+      # rather than relying on the runner's ambient version.
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version-file: ".nvmrc"
 
       - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
@@ -72,6 +81,13 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: sigstore/cosign-installer@d7543c93d881b35a8faa02e8e3605f69b7a1ce62 # v3.10.0
+        with:
+          # Pin cosign itself — cosign-installer@v3.x defaults to a
+          # cosign v2.x release and we sign / publish-verify against
+          # the v2 CLI surface. Cosign v3 changed the verify bundle
+          # format; bumping requires cosign-installer@v4 AND updating
+          # the verify instructions in the release-notes body below.
+          cosign-release: v2.4.3
 
       - name: Retag and sign images
         env:
@@ -108,13 +124,19 @@ jobs:
           VERSION: ${{ needs.check.outputs.version }}
           COMMIT_SHA: ${{ needs.check.outputs.sha }}
         run: |
-          gh release create "v${VERSION}" \
-            --title "v${VERSION}" \
-            --target "$COMMIT_SHA" \
-            --verify-tag \
-            --latest \
-            --generate-notes \
-            --notes "## Docker images
+          set -euo pipefail
+
+          # Body = the Changesets-owned CHANGELOG sections for the paired webapp
+          # + server, merged (a server-only changeset lands only in the server
+          # file; dupes from a library cascade collapse to one) and regrouped by
+          # category (Features/Bug Fixes/...) from each entry's commit type, plus
+          # the Docker + cosign footer. Fall back to GitHub's --generate-notes
+          # only when neither package has a section for this version.
+          CHANGELOG=$(node scripts/extract-changelog.mjs "$VERSION" standalone/webapp standalone/server)
+          {
+            if [ -n "$CHANGELOG" ]; then printf '%s\n\n' "$CHANGELOG"; fi
+            cat <<EOF
+          ## Docker images
 
           - \`ghcr.io/ls1intum/apollon/webapp:${VERSION}\`
           - \`ghcr.io/ls1intum/apollon/server:${VERSION}\`
@@ -125,4 +147,17 @@ jobs:
           cosign verify ghcr.io/ls1intum/apollon/webapp:${VERSION} \\
             --certificate-identity-regexp='^https://github\\.com/ls1intum/Apollon/\\.github/workflows/release-standalone\\.yml@refs/heads/main\$' \\
             --certificate-oidc-issuer=https://token.actions.githubusercontent.com
-          \`\`\`"
+          \`\`\`
+          EOF
+          } > release-notes.md
+
+          GENERATE=()
+          [ -z "$CHANGELOG" ] && GENERATE=(--generate-notes)
+
+          gh release create "v${VERSION}" \
+            --title "v${VERSION}" \
+            --target "$COMMIT_SHA" \
+            --verify-tag \
+            --latest \
+            "${GENERATE[@]}" \
+            --notes-file release-notes.md

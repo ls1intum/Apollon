@@ -15,43 +15,43 @@ export const BPMNPoolEditPopover = ({ elementId }: PopoverProps) => {
     }))
   )
 
-  const poolNode = nodes.find(
-    (node) => node.id === elementId
-  ) as Node<BPMNPoolProps>
+  const poolNode = nodes.find((node) => node.id === elementId) as
+    | Node<BPMNPoolProps>
+    | undefined
+
+  const [poolName, setPoolName] = useState(poolNode?.data.name ?? "")
 
   if (!poolNode) {
     return null
   }
 
-  const [poolName, setPoolName] = useState(poolNode.data.name)
+  const handlePoolNameChange = (value: string) => {
+    setPoolName(value)
 
-  const handlePoolNameChange = () => {
     setNodes((nodes) =>
       nodes.map((node) => {
         if (node.id === elementId) {
           return {
             ...node,
-            data: { ...node.data, name: poolName },
+            data: {
+              ...node.data,
+              name: value,
+            },
           }
         }
+
         return node
       })
     )
   }
 
   return (
-    <Box sx={{ width: 300, padding: 2 }}>
+    <Box sx={{ width: "auto", padding: 2 }}>
       <TextField
         fullWidth
         label="Pool Name"
         value={poolName}
-        onChange={(e) => setPoolName(e.target.value)}
-        onBlur={handlePoolNameChange}
-        onKeyPress={(e) => {
-          if (e.key === "Enter") {
-            handlePoolNameChange()
-          }
-        }}
+        onChange={(e) => handlePoolNameChange(e.target.value)}
         variant="outlined"
         size="small"
       />

@@ -1,6 +1,14 @@
 import React from "react"
+import {
+  INTERACTIVE_SELECTION_COLOR,
+  INTERACTIVE_SELECTION_FILL,
+} from "@/constants"
 import { useAssessmentSelection } from "@/hooks/useAssessmentSelection"
-import { useDiagramStore, useMetadataStore } from "@/store"
+import {
+  useAssessmentSelectionStore,
+  useDiagramStore,
+  useMetadataStore,
+} from "@/store"
 import { ApollonMode, ApollonView } from "@/typings"
 import { useShallow } from "zustand/shallow"
 
@@ -23,9 +31,12 @@ export const AssessmentSelectableWrapper: React.FC<
       view: state.view,
     }))
   )
-  const { isElementInteractive, toggleInteractiveElement } = useDiagramStore(
+  const { isInteractiveSelected, toggleInteractiveElement } = useDiagramStore(
     useShallow((state) => ({
-      isElementInteractive: state.isElementInteractive,
+      isInteractiveSelected:
+        state.interactiveElements[elementId] ||
+        state.interactiveRelationships[elementId] ||
+        false,
       toggleInteractiveElement: state.toggleInteractiveElement,
     }))
   )
@@ -42,7 +53,31 @@ export const AssessmentSelectableWrapper: React.FC<
     mode === ApollonMode.Modelling &&
     view === ApollonView.Highlight &&
     !readonly
-  const isInteractiveSelected = isElementInteractive(elementId)
+
+  // Host-driven highlight (assessment "missing feedback" / Athena suggestions):
+  // a translucent tint + ring over div-wrapped nodes, a stroke glow over
+  // g-wrapped edges. Rendered wherever elements are displayed or assessed — not
+  // in the quiz interactive-element picker (ApollonView.Highlight), which the
+  // assessment hosts never enter.
+  const highlightColor = useAssessmentSelectionStore(
+    (state) => state.highlightedElements[elementId]
+  )
+  const highlightDivOverlay = highlightColor ? (
+    <div
+      aria-hidden
+      style={{
+        position: "absolute",
+        inset: 0,
+        backgroundColor: highlightColor,
+        boxShadow: `0 0 0 2px ${highlightColor}`,
+        borderRadius: 2,
+        pointerEvents: "none",
+      }}
+    />
+  ) : null
+  const highlightEdgeFilter = highlightColor
+    ? `drop-shadow(0 0 2px ${highlightColor}) drop-shadow(0 0 2px ${highlightColor})`
+    : undefined
 
   if (showInteractiveInteraction) {
     const handleInteractiveClick = (event: React.PointerEvent) => {
@@ -54,10 +89,16 @@ export const AssessmentSelectableWrapper: React.FC<
     if (asElement == "g") {
       return (
         <g
+          className={`nodrag nopan apollon-interactive-selection${
+            isInteractiveSelected
+              ? " apollon-interactive-selection--selected"
+              : ""
+          }`}
+          data-apollon-element-id={elementId}
           style={{
             cursor: "pointer",
             ...(isInteractiveSelected && {
-              filter: "drop-shadow(0 0 4px rgba(25, 118, 210, 0.75))",
+              filter: `drop-shadow(0 0 4px ${INTERACTIVE_SELECTION_COLOR})`,
             }),
           }}
           onPointerDown={handleInteractiveClick}
@@ -69,12 +110,18 @@ export const AssessmentSelectableWrapper: React.FC<
 
     return (
       <div
+        className={`nodrag nopan apollon-interactive-selection${
+          isInteractiveSelected
+            ? " apollon-interactive-selection--selected"
+            : ""
+        }`}
+        data-apollon-element-id={elementId}
         style={{
           cursor: "pointer",
           ...(isInteractiveSelected && {
-            outline: "2px solid #1976d2",
+            outline: `2px solid ${INTERACTIVE_SELECTION_COLOR}`,
             outlineOffset: "2px",
-            backgroundColor: "rgba(25, 118, 210, 0.12)",
+            backgroundColor: INTERACTIVE_SELECTION_FILL,
           }),
         }}
         onPointerDown={handleInteractiveClick}
@@ -85,11 +132,33 @@ export const AssessmentSelectableWrapper: React.FC<
   }
 
   if (!showAssessmentInteraction) {
-    return <>{children}</>
+    // No host highlight is the hot path (99% of renders): return a zero-box
+    // Fragment so ordinary modelling/editing pays no extra DOM/layout cost.
+    if (!highlightColor) return <>{children}</>
+    if (asElement == "g") {
+      return (
+        <g
+          data-apollon-element-id={elementId}
+          style={{ filter: highlightEdgeFilter }}
+        >
+          {children}
+        </g>
+      )
+    }
+    // A bare relative box is layout-neutral but gives the absolutely-positioned
+    // overlay a containing block anchored to the node content box (like every
+    // other branch).
+    return (
+      <div data-apollon-element-id={elementId} style={{ position: "relative" }}>
+        {children}
+        {highlightDivOverlay}
+      </div>
+    )
   }
 
   const combinedStyle: React.CSSProperties = {
     cursor: "pointer",
+    ...(highlightColor && { position: "relative" }),
     ...(isSelected && {
       backgroundColor: "rgba(25, 118, 210, 0.2)",
       border: "2px solid #1976d2",
@@ -104,6 +173,7 @@ export const AssessmentSelectableWrapper: React.FC<
   if (asElement == "g") {
     const gStyle = {
       cursor: "pointer",
+      ...(highlightColor && { filter: highlightEdgeFilter }),
       ...(isSelected && {
         stroke: "rgba(25, 118, 210, 0.2)",
       }),
@@ -115,6 +185,8 @@ export const AssessmentSelectableWrapper: React.FC<
 
     return (
       <g
+        className="nodrag nopan"
+        data-apollon-element-id={elementId}
         style={gStyle}
         onPointerDown={handleElementClick}
         onMouseEnter={handleElementMouseEnter}
@@ -126,12 +198,15 @@ export const AssessmentSelectableWrapper: React.FC<
   }
   return (
     <div
+      className="nodrag nopan"
+      data-apollon-element-id={elementId}
       style={combinedStyle}
       onPointerDown={handleElementClick}
       onMouseEnter={handleElementMouseEnter}
       onMouseLeave={handleElementMouseLeave}
     >
       {children}
+      {highlightDivOverlay}
     </div>
   )
 }

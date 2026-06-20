@@ -1,82 +1,86 @@
-import { SVG } from "@tumaet/apollon"
+import type { SvgToPngResult } from "@tumaet/apollon/export"
+import { isPlatform } from "@ionic/react"
+import { Filesystem, Directory } from "@capacitor/filesystem"
+import { Share } from "@capacitor/share"
 import { useFileDownload } from "./useFileDownload"
 import { useEditorContext } from "@/contexts"
-import { log } from "@/logger"
 
 type exportAsPNGOptions = {
   setWhiteBackground: boolean
+  shareAfterExport?: boolean
 }
+
+/**
+ * Export the diagram as PNG. Rasterisation runs through the library's
+ * resvg-based `svgToPng`, which bypasses the browser canvas-area cap that made
+ * large diagrams silently produce a 0-byte file (#667). Errors propagate so the
+ * caller can surface them; the result reports whether the diagram was
+ * downscaled to fit the pixel budget.
+ */
 export const useExportAsPNG = () => {
   const { editor } = useEditorContext()
   const downloadFile = useFileDownload()
 
-  const exportAsPNG = async ({ setWhiteBackground }: exportAsPNGOptions) => {
+  const exportAsPNG = async ({
+    setWhiteBackground,
+  }: exportAsPNGOptions): Promise<SvgToPngResult> => {
     if (!editor) {
-      log.error("Editor context is not available")
-      return
+      throw new Error("Editor context is not available")
     }
 
-    const apollonSVG: SVG = await editor.exportAsSVG({ svgMode: "compat" })
-
-    const pngBlob = await convertRenderedSVGToPNG(
-      apollonSVG,
-      setWhiteBackground
-    )
+    const apollonSVG = await editor.exportAsSVG({ svgMode: "compat" })
+    // Lazy-load the renderer (and its inlined fonts) + the resvg wasm only on
+    // export, so the editor route's bundle stays lean. Vite resolves the wasm to
+    // a served asset URL; the library leaves wasm location to the host bundler
+    // since `@resvg/resvg-wasm` doesn't export it portably.
+    const [{ svgToPng }, { default: resvgWasmUrl }] = await Promise.all([
+      import("@tumaet/apollon/export"),
+      import("@resvg/resvg-wasm/index_bg.wasm?url"),
+    ])
+    const result = await svgToPng(apollonSVG.svg, apollonSVG.clip, {
+      scale: 1.5,
+      background: setWhiteBackground ? "#ffffff" : null,
+      wasmInput: fetch(resvgWasmUrl),
+    })
     const fileName = `${editor.model.title}.png`
 
-    const fileToDownload = new File([pngBlob], fileName, {
-      type: "image/png",
-    })
+    if (isPlatform("ios") || isPlatform("android")) {
+      const base64String = await blobToBase64(result.blob)
+      await Filesystem.writeFile({
+        path: fileName,
+        data: base64String,
+        directory: Directory.Cache,
+      })
+      const fileUri = await Filesystem.getUri({
+        path: fileName,
+        directory: Directory.Cache,
+      })
+      await Share.share({
+        title: "Export PNG",
+        url: fileUri.uri,
+        dialogTitle: "Save PNG to Files",
+      })
+    } else {
+      const fileToDownload = new File([result.blob], fileName, {
+        type: "image/png",
+      })
+      downloadFile({ file: fileToDownload, fileName })
+    }
 
-    downloadFile({ file: fileToDownload, fileName })
+    return result
   }
 
   return exportAsPNG
 }
 
-function convertRenderedSVGToPNG(
-  renderedSVG: SVG,
-  whiteBackground: boolean
-): Promise<Blob> {
+function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
-    const { width, height } = renderedSVG.clip
-    const margin = 0
-    const scale = 1.5
-
-    const canvasWidth = width * scale + margin * 2
-    const canvasHeight = height * scale + margin * 2
-
-    const blob = new Blob([renderedSVG.svg], { type: "image/svg+xml" })
-    const blobUrl = URL.createObjectURL(blob)
-
-    const image = new Image()
-    image.width = width
-    image.height = height
-
-    image.onload = () => {
-      const canvas = document.createElement("canvas")
-      canvas.width = canvasWidth
-      canvas.height = canvasHeight
-
-      const context = canvas.getContext("2d")!
-
-      if (whiteBackground) {
-        context.fillStyle = "white"
-        context.fillRect(0, 0, canvasWidth, canvasHeight)
-      }
-
-      context.scale(scale, scale)
-      context.drawImage(image, margin, margin)
-
-      canvas.toBlob((blob) => {
-        URL.revokeObjectURL(blobUrl)
-        resolve(blob as Blob)
-      })
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      const base64String = (reader.result as string).split(",")[1]
+      resolve(base64String)
     }
-
-    image.onerror = (error) => {
-      reject(error)
-    }
-    image.src = blobUrl
+    reader.onerror = reject
+    reader.readAsDataURL(blob)
   })
 }

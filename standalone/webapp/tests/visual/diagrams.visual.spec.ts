@@ -113,7 +113,7 @@ test.describe("Visual regression - diagram fixtures", () => {
   for (const { name, file, fixture, fitView } of diagramFixtures) {
     test(`canvas for ${name}`, async ({ page }) => {
       await injectFixtureIntoLocalStorage(page, fixture)
-      await page.goto("/")
+      await page.goto(resolveLocalDiagramRoute(fixture))
       await waitForCanvasReady(page)
 
       // For large diagrams that overflow at zoom 1.0, click the built-in
@@ -125,7 +125,8 @@ test.describe("Visual regression - diagram fixtures", () => {
       // Screenshot the editor area (sidebar + canvas) excluding the navbar,
       // so visual diffs focus on diagram rendering, not unrelated UI chrome.
       // Baselines MUST be generated inside the Playwright Docker container
-      // (see pr-health-checks.yaml) so they match the CI environment exactly.
+      // (see docs/contributor/development/visual-tests.md) so they match the CI
+      // environment exactly.
       const editorArea = page.locator('[data-testid="editor-area"]')
       await expect(editorArea).toHaveScreenshot(`visual-${file}.png`)
     })
@@ -143,6 +144,14 @@ test.describe("Visual regression - diagram fixtures", () => {
 function loadJsonFile(filePath: string): Record<string, unknown> {
   const raw = fs.readFileSync(filePath, "utf-8")
   return JSON.parse(raw) as Record<string, unknown>
+}
+
+function resolveLocalDiagramRoute(fixture: Record<string, unknown>) {
+  const id = fixture.id
+  if (typeof id !== "string" || !id) {
+    throw new Error("Fixture is missing a valid 'id' for /local/:id navigation")
+  }
+  return `/local/${id}`
 }
 
 const templatesDir = path.join(
@@ -166,7 +175,7 @@ test.describe("Template diagrams", () => {
     test(`${name} template canvas matches baseline`, async ({ page }) => {
       const template = loadJsonFile(path.join(templatesDir, `${file}.json`))
       await injectFixtureIntoLocalStorage(page, template)
-      await page.goto("/")
+      await page.goto(resolveLocalDiagramRoute(template))
       await waitForCanvasReady(page)
 
       const editorArea = page.locator('[data-testid="editor-area"]')

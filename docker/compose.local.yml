@@ -22,6 +22,8 @@ services:
       - PORT=8000
       - WS_PORT=4444
       - REDIS_URL=redis://db:6379
+      - OWNER_SECRET=${OWNER_SECRET:-development-only-replace-in-prod}
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:8080,capacitor://localhost,ionic://localhost}
     depends_on:
       db:
         condition: service_healthy
@@ -29,11 +31,23 @@ services:
       - apollon-local
 
   db:
-    image: redis:7-alpine
+    image: redis/redis-stack-server:7.4.0-v8
     ports:
       - "6379:6379"
     volumes:
       - dbdata:/data
+    command:
+      - redis-stack-server
+      # `redis-stack-server` defaults `dir` to `/var/lib/redis-stack`, not
+      # `/data` like upstream `redis`. Without `--dir /data` the server
+      # writes its AOF/RDB into the container's writable layer, which is
+      # lost on container recreate.
+      - --dir
+      - /data
+      - --appendonly
+      - "yes"
+      - --appendfsync
+      - everysec
     networks:
       - apollon-local
     healthcheck:

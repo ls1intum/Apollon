@@ -1,57 +1,11 @@
-import "global-jsdom/register"
-import path from "node:path"
-import type { UMLModel, SVG } from "@tumaet/apollon"
-
-// Mock ResizeObserver for JSDOM
-if (typeof global.ResizeObserver === "undefined") {
-  class MockResizeObserver {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-  }
-  ;(global as any).ResizeObserver = MockResizeObserver
-}
-
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
-
-const loadApollonModuleOnce = () => {
-  try {
-    return require("@tumaet/apollon")
-  } catch {
-    const fallbackCandidates = [
-      path.resolve(process.cwd(), "library/dist/index.js"),
-      path.resolve(process.cwd(), "../library/dist/index.js"),
-      path.resolve(process.cwd(), "../../library/dist/index.js"),
-    ]
-
-    for (const fallbackPath of fallbackCandidates) {
-      try {
-        return require(fallbackPath)
-      } catch {
-        // try next fallback
-      }
-    }
-
-    throw new Error("Failed to load @tumaet/apollon module")
-  }
-}
-
-const loadApollonModule = async (retries = 20, delayMs = 300) => {
-  let lastError: unknown
-
-  for (let attempt = 0; attempt < retries; attempt++) {
-    try {
-      return loadApollonModuleOnce()
-    } catch (error) {
-      lastError = error
-      await sleep(delayMs)
-    }
-  }
-
-  throw new Error(
-    `Failed to load @tumaet/apollon after ${retries} attempts: ${String(lastError)}`
-  )
-}
+import {
+  ApollonEditor,
+  importDiagram,
+  type UMLModel,
+  type SVG,
+} from "@tumaet/apollon"
+import { findUnsupportedLabels } from "./glyph-coverage.js"
+import { assertValidNodeGeometry } from "./node-geometry.js"
 
 export class ConversionService {
   private readonly EDGE_ENDPOINT_INSET_PX = -3
@@ -115,29 +69,24 @@ export class ConversionService {
     ])
   }
 
-  /**
-   * Ensures model has render-ready defaults for server-side React Flow export.
-   * Server-side rendering cannot measure dimensions/handle geometry, so defaults are injected.
-   */
+  // SSR cannot measure handle geometry, so inject the handles the React Flow
+  // renderer needs from each node's (already-validated) real dimensions. Node
+  // dimensions themselves are NOT fabricated — assertValidNodeGeometry has
+  // guaranteed they are present and positive before we get here.
   private normalizeModelForServerRender = (model: UMLModel): UMLModel => {
-    if (!model || !model.nodes) {
-      throw new Error("Invalid model: missing nodes property")
+    type NodeWithHandles = UMLModel["nodes"][number] & {
+      handles?: unknown
     }
-
     return {
       ...model,
-      nodes: model.nodes.map((node) => ({
-        ...node,
-        width: node.width ?? 100,
-        height: node.height ?? 50,
-        measured: {
-          width: node.measured?.width ?? node.width ?? 100,
-          height: node.measured?.height ?? node.height ?? 50,
-        },
-        handles:
-          (node as any).handles ??
-          this.createDefaultHandles(node.width ?? 100, node.height ?? 50),
-      })),
+      nodes: model.nodes.map((node) => {
+        const n = node as NodeWithHandles
+        return {
+          ...node,
+          handles:
+            n.handles ?? this.createDefaultHandles(node.width, node.height),
+        }
+      }),
       edges: (model.edges ?? []).map((edge, index) => ({
         ...edge,
         id:
@@ -154,43 +103,36 @@ export class ConversionService {
   }
 
   convertToSvg = async (model: UMLModel): Promise<SVG> => {
-    if (typeof window.requestAnimationFrame !== "function") {
-      ;(window as any).requestAnimationFrame = (cb: FrameRequestCallback) =>
-        setTimeout(() => cb(Date.now()), 16)
+    const imported = importDiagram(model)
+    // Fail loud on corrupt geometry rather than fabricate a wrong-sized box in a
+    // graded export (relayed to a 422 via the worker — see conversion-resource).
+    assertValidNodeGeometry(imported)
+    const normalizedModel = this.normalizeModelForServerRender(imported)
+
+    // Integrity signal for grading: text outside the bundled Latin Inter renders
+    // in a fallback face and may not match the student's editor. Surface it so a
+    // grader can review such a submission rather than trust a divergent image.
+    const unsupported = findUnsupportedLabels(normalizedModel)
+    if (unsupported.length > 0) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[apollon-export] ${unsupported.length} label(s) contain glyphs outside ` +
+          `the bundled font and may not match the editor: ` +
+          unsupported.slice(0, 5).join(" | ")
+      )
     }
-    if (typeof window.cancelAnimationFrame !== "function") {
-      ;(window as any).cancelAnimationFrame = (id: number) => clearTimeout(id)
-    }
 
-    // JSDOM does not implement getBBox; mock it to allow SVG export.
-    // @ts-ignore - JSDOM does not implement getBBox.
-    window.SVGElement.prototype.getBBox = () => ({
-      x: 0,
-      y: 0,
-      width: 10,
-      height: 10,
-    })
-
-    const { ApollonEditor, importDiagram } = await loadApollonModule()
-
-    const normalizedModel = this.normalizeModelForServerRender(
-      importDiagram(model)
-    )
     const svgExport = (await ApollonEditor.exportModelAsSvg(normalizedModel, {
       svgMode: "compat",
     })) as SVG
 
-    // exportModelAsSvg returns { svg: string, clip: { x, y, width, height } }
     if (
-      svgExport &&
-      typeof svgExport.svg === "string" &&
-      svgExport.clip &&
-      typeof svgExport.clip.width === "number" &&
-      typeof svgExport.clip.height === "number"
+      typeof svgExport?.svg === "string" &&
+      typeof svgExport.clip?.width === "number" &&
+      typeof svgExport.clip?.height === "number"
     ) {
       return svgExport
     }
-
     throw new Error("Failed to extract SVG: invalid export format")
   }
 }

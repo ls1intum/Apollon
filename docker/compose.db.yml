@@ -1,6 +1,9 @@
 services:
   db:
-    image: redis:7-alpine
+    # Stack image is required: the server's RedisJSON gate refuses to boot
+    # without the ReJSON module. `redis:7-alpine` ships without it and would
+    # silently break versioning on a fresh deploy.
+    image: redis/redis-stack-server:7.4.0-v8
     restart: unless-stopped
     expose:
       - "6379"
@@ -8,7 +11,19 @@ services:
       - dbdata:/data
     networks:
       - apollon-network
-    command: redis-server --appendonly yes --appendfsync everysec
+    command:
+      - redis-stack-server
+      # `redis-stack-server` defaults `dir` to `/var/lib/redis-stack`, NOT
+      # `/data` like upstream `redis`. Without this flag the server writes
+      # its AOF/RDB into the container's writable layer instead of the
+      # `dbdata` volume — fine until the container is recreated, at which
+      # point every write since the previous recreate is lost.
+      - --dir
+      - /data
+      - --appendonly
+      - "yes"
+      - --appendfsync
+      - everysec
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s

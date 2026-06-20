@@ -1,5 +1,13 @@
+import { INTERACTIVE_SELECTION_COLOR } from "@/constants"
 import { useAssessmentSelection } from "@/hooks"
+import {
+  useAssessmentSelectionStore,
+  useDiagramStore,
+  useMetadataStore,
+} from "@/store"
+import { ApollonMode, ApollonView } from "@/typings"
 import { FC } from "react"
+import { useShallow } from "zustand/shallow"
 
 // Assessment selectable wrapper for SVG elements
 interface AssessmentSelectableElementProps {
@@ -13,6 +21,22 @@ interface AssessmentSelectableElementProps {
 export const AssessmentSelectableElement: FC<
   AssessmentSelectableElementProps
 > = ({ elementId, width, itemHeight, yOffset = 0, children }) => {
+  const { mode, readonly, view } = useMetadataStore(
+    useShallow((state) => ({
+      mode: state.mode,
+      readonly: state.readonly,
+      view: state.view,
+    }))
+  )
+  const { isInteractiveSelected, toggleInteractiveElement } = useDiagramStore(
+    useShallow((state) => ({
+      isInteractiveSelected:
+        state.interactiveElements[elementId] ||
+        state.interactiveRelationships[elementId] ||
+        false,
+      toggleInteractiveElement: state.toggleInteractiveElement,
+    }))
+  )
   const {
     isSelected,
     isHighlighted,
@@ -22,8 +46,72 @@ export const AssessmentSelectableElement: FC<
     handleElementMouseLeave,
   } = useAssessmentSelection(elementId)
 
+  // Host-driven highlight overlay rect (see `highlightedElements` in the store).
+  const highlightColor = useAssessmentSelectionStore(
+    (state) => state.highlightedElements[elementId]
+  )
+  const highlightRect = highlightColor ? (
+    <rect
+      aria-hidden
+      x={0}
+      y={yOffset}
+      width={width}
+      height={itemHeight}
+      fill={highlightColor}
+      stroke={highlightColor}
+      strokeWidth={1}
+      rx={2}
+      pointerEvents="none"
+    />
+  ) : null
+
+  const showInteractiveInteraction =
+    mode === ApollonMode.Modelling &&
+    view === ApollonView.Highlight &&
+    !readonly
+
+  if (showInteractiveInteraction) {
+    const handleInteractivePointerDown = (
+      e: React.PointerEvent<SVGGElement>
+    ) => {
+      e.stopPropagation()
+      e.preventDefault()
+      toggleInteractiveElement(elementId)
+    }
+
+    return (
+      <g
+        className="nodrag nopan"
+        data-apollon-element-id={elementId}
+        style={{ cursor: "pointer" }}
+        onPointerDown={handleInteractivePointerDown}
+      >
+        {children}
+        {isInteractiveSelected && (
+          <rect
+            x={0}
+            y={yOffset}
+            width={width}
+            height={itemHeight}
+            fill={INTERACTIVE_SELECTION_COLOR}
+            fillOpacity={0.18}
+            stroke={INTERACTIVE_SELECTION_COLOR}
+            strokeWidth={2}
+            rx={2}
+            pointerEvents="none"
+          />
+        )}
+      </g>
+    )
+  }
+
   if (!showAssessmentInteraction) {
-    return <g>{children}</g>
+    return (
+      <g data-apollon-element-id={elementId}>
+        {children}
+        {highlightRect}
+      </g>
+    )
   }
 
   const handleSVGClick = (e: React.PointerEvent<SVGGElement>) => {
@@ -32,6 +120,8 @@ export const AssessmentSelectableElement: FC<
 
   return (
     <g
+      className="nodrag nopan"
+      data-apollon-element-id={elementId}
       style={{
         cursor: showAssessmentInteraction ? "pointer" : "default",
       }}
@@ -56,6 +146,9 @@ export const AssessmentSelectableElement: FC<
           pointerEvents="none"
         />
       )}
+      {/* Host highlight paints last, over the selection rect, matching the
+          div wrapper's layering invariant (host overlay on top). */}
+      {highlightRect}
     </g>
   )
 }

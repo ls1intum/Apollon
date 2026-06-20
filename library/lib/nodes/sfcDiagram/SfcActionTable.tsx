@@ -1,6 +1,7 @@
 import { NodeProps, NodeResizer, type Node } from "@xyflow/react"
+import { usePopoverAnchor } from "@/hooks/usePopoverAnchor"
 import { DefaultNodeWrapper } from "../wrappers"
-import { useRef, useMemo, useEffect } from "react"
+import { useMemo, useEffect } from "react"
 import { useDiagramStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
@@ -16,7 +17,7 @@ export function SfcActionTable({
   height,
   data,
 }: NodeProps<Node<SfcActionTableProps>>) {
-  const svgWrapperRef = useRef<HTMLDivElement | null>(null)
+  const [anchorEl, anchorRef] = usePopoverAnchor()
   const isDiagramModifiable = useDiagramModifiable()
 
   const { setNodes } = useDiagramStore(
@@ -25,16 +26,10 @@ export function SfcActionTable({
     }))
   )
 
-  if (!width || !height) {
-    return null
-  }
-
   const actionRows = data?.actionRows || []
 
-  // Calculate minimum height based on rows (no header needed)
   const minHeight = useMemo(() => {
     const rowsHeight = actionRows.length * LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT
-    // Ensure minimum height for at least one row
     return Math.max(rowsHeight, LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT)
   }, [actionRows.length])
 
@@ -59,6 +54,10 @@ export function SfcActionTable({
     }
   }, [minHeight, height, id, setNodes])
 
+  if (!width || !height) {
+    return null
+  }
+
   return (
     <DefaultNodeWrapper width={width} height={height} elementId={id}>
       <NodeToolbar elementId={id} />
@@ -72,7 +71,7 @@ export function SfcActionTable({
         handleStyle={{ width: 8, height: 8 }}
       />
 
-      <div ref={svgWrapperRef}>
+      <div ref={anchorRef}>
         <SfcActionTableNodeSVG
           width={width}
           height={minHeight}
@@ -82,7 +81,7 @@ export function SfcActionTable({
       </div>
 
       <PopoverManager
-        anchorEl={svgWrapperRef.current}
+        anchorEl={anchorEl}
         elementId={id}
         type="SfcActionTable"
       />

@@ -2,7 +2,6 @@ import { DiagramEdgeType, IPoint } from "./edges/types"
 import { DiagramNodeType } from "./nodes/types"
 import { UMLDiagramType } from "./types/DiagramType"
 import { Styles } from "./styles/theme"
-import { DeepPartial } from "./utils"
 
 export { UMLDiagramType, type DiagramNodeType, type DiagramEdgeType }
 export { type Styles }
@@ -14,6 +13,65 @@ export type Subscribers = {
 }
 
 export type UMLModelElementType = DiagramNodeType | DiagramEdgeType
+
+export type CollaborationUser = {
+  name: string
+  color: string
+  id?: string
+  imageUrl?: string
+}
+
+export type CollaborationCursor = {
+  x: number
+  y: number
+}
+
+export type CollaborationViewport = {
+  x: number
+  y: number
+  zoom: number
+}
+
+/**
+ * One node a peer is actively dragging or resizing. Broadcast over the
+ * ephemeral awareness channel — never written to the Yjs document — so peers
+ * can render the in-progress gesture live without growing the CRDT or entering
+ * anyone's undo history. The settled position/size is committed once on
+ * drop/release through the document like any other edit.
+ */
+export type DraggingNode = {
+  id: string
+  position: { x: number; y: number }
+  width?: number | null
+  height?: number | null
+}
+
+export type CollaborationState = {
+  user?: CollaborationUser
+  cursor?: CollaborationCursor | null
+  viewport?: CollaborationViewport | null
+  followingClientId?: number | null
+  selectedElementId?: string | null
+  draggingNodes?: DraggingNode[] | null
+}
+
+export type CollaboratorInfo = {
+  id: string
+  name: string
+  color: string
+  imageUrl?: string
+  clientIds: number[]
+  isLocal: boolean
+}
+
+export type ApollonCollaborationOptions = {
+  enabled?: boolean
+  user?: CollaborationUser
+  showPresence?: boolean
+  showCursors?: boolean
+  showSelectionHighlights?: boolean
+  showFollow?: boolean
+}
 
 export enum Locale {
   en = "en",
@@ -42,6 +100,12 @@ export type ApollonNode = {
   measured: { width: number; height: number }
 }
 
+export interface OrthogonalEdgeData {
+  [key: string]: unknown
+  // Manual waypoint array used by the step-path edges.
+  points: IPoint[]
+}
+
 export type ApollonEdge = {
   id: string
   source: string
@@ -49,15 +113,15 @@ export type ApollonEdge = {
   type: DiagramEdgeType
   sourceHandle: string
   targetHandle: string
-  data: {
-    [key: string]: unknown
-    points: IPoint[]
-  }
+  data: OrthogonalEdgeData
 }
 
 export type InteractiveElements = {
-  elements: Record<string, boolean>
-  relationships: Record<string, boolean>
+  // Inline index signatures (not `Record<string, boolean>`) so the generated
+  // JSON Schema treats these as open maps of element id → boolean. The named
+  // `Record` utility is emitted as a closed object and would reject real ids.
+  elements: { [id: string]: boolean }
+  relationships: { [id: string]: boolean }
 }
 
 export type UMLModel = {
@@ -87,13 +151,10 @@ export type ApollonOptions = {
   readonly?: boolean
   enablePopups?: boolean
   model?: UMLModel
-  theme?: DeepPartial<Styles>
   locale?: Locale
-  copyPasteToClipboard?: boolean
-  colorEnabled?: boolean
-  scale?: number
   debug?: boolean
   collaborationEnabled?: boolean
+  collaboration?: ApollonCollaborationOptions
   scrollLock?: boolean
 }
 

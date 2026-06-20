@@ -43,7 +43,10 @@ jobs:
               - 'docker/**'
               - 'nginx.conf'
               - 'package.json'
-              - 'package-lock.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - '.npmrc'
+              - '.nvmrc'
               - 'tsconfig*.json'
               - '.github/workflows/build-and-push.yml'
 
@@ -59,14 +62,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # image must be bare (no registry prefix) — the reusable workflow below prepends it.
         include:
           - name: Webapp
             dockerfile: ./standalone/webapp/Dockerfile
-            image: ghcr.io/ls1intum/apollon/webapp
+            image: ls1intum/apollon/webapp
             context: .
           - name: Server
             dockerfile: ./standalone/server/Dockerfile
-            image: ghcr.io/ls1intum/apollon/server
+            image: ls1intum/apollon/server
             context: .
     uses: ls1intum/.github/.github/workflows/build-and-push-docker-image.yml@main
     with:

@@ -1,16 +1,10 @@
 import MobileNavbar from "./MobileNavbar"
 import { DesktopNavbar } from "./DesktopNavbar"
+import useMediaQuery from "@mui/material/useMediaQuery"
+import { MOBILE_VIEW_QUERY } from "@/constants"
 
 export const Navbar = () => {
-  return (
-    <>
-      <div className="hidden md:block">
-        <DesktopNavbar />
-      </div>
+  const isMobile = useMediaQuery(MOBILE_VIEW_QUERY)
 
-      <div className="md:hidden">
-        <MobileNavbar />
-      </div>
-    </>
-  )
+  return isMobile ? <MobileNavbar /> : <DesktopNavbar />
 }
