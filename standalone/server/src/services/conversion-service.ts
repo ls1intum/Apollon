@@ -1,5 +1,6 @@
 import {
   ApollonEditor,
+  buildServerRenderHandles,
   importDiagram,
   type UMLModel,
   type SVG,
@@ -8,75 +9,35 @@ import { findUnsupportedLabels } from "./glyph-coverage.js"
 import { assertValidNodeGeometry } from "./node-geometry.js"
 
 export class ConversionService {
-  private readonly EDGE_ENDPOINT_INSET_PX = -3
-
-  private calculateAdjustedQuarter = (value: number): number => {
-    const quarter = value / 4
-    return Math.floor(quarter / 10) * 10
-  }
-
-  private createDefaultHandles = (width: number, height: number) => {
-    const adjustedWidth = this.calculateAdjustedQuarter(width)
-    const adjustedHeight = this.calculateAdjustedQuarter(height)
-    const inset = this.EDGE_ENDPOINT_INSET_PX
-
-    const baseHandles = [
-      { id: "top-left", position: "top", x: adjustedWidth, y: inset },
-      { id: "top", position: "top", x: width / 2, y: inset },
-      { id: "top-right", position: "top", x: width - adjustedWidth, y: inset },
-
-      {
-        id: "right-top",
-        position: "right",
-        x: width - inset,
-        y: adjustedHeight,
-      },
-      { id: "right", position: "right", x: width - inset, y: height / 2 },
-      {
-        id: "right-bottom",
-        position: "right",
-        x: width - inset,
-        y: height - adjustedHeight,
-      },
-
-      {
-        id: "bottom-right",
-        position: "bottom",
-        x: width - adjustedWidth,
-        y: height - inset,
-      },
-      { id: "bottom", position: "bottom", x: width / 2, y: height - inset },
-      {
-        id: "bottom-left",
-        position: "bottom",
-        x: adjustedWidth,
-        y: height - inset,
-      },
-
-      {
-        id: "left-bottom",
-        position: "left",
-        x: inset,
-        y: height - adjustedHeight,
-      },
-      { id: "left", position: "left", x: inset, y: height / 2 },
-      { id: "left-top", position: "left", x: inset, y: adjustedHeight },
-    ]
-
-    return baseHandles.flatMap((handle) => [
-      { ...handle, type: "source", width: 1, height: 1 },
-      { ...handle, type: "target", width: 1, height: 1 },
-    ])
-  }
-
   // SSR cannot measure handle geometry, so inject the handles the React Flow
-  // renderer needs from each node's (already-validated) real dimensions. Node
-  // dimensions themselves are NOT fabricated — assertValidNodeGeometry has
-  // guaranteed they are present and positive before we get here.
+  // renderer needs. They are derived from the library's connection-anchor model
+  // (the single source of truth the editor also renders from), so an exported
+  // edge resolves to the exact point shown on the canvas — including the
+  // referenced anchor of every edge touching the node. Node dimensions are NOT
+  // fabricated — assertValidNodeGeometry guarantees they are present and
+  // positive before we get here.
   private normalizeModelForServerRender = (model: UMLModel): UMLModel => {
     type NodeWithHandles = UMLModel["nodes"][number] & {
       handles?: unknown
     }
+
+    // Anchor ids each node's edges reference, so every saved endpoint is backed
+    // by an SSR handle (mirrors the editor's ConnectHandles addressable anchors).
+    const anchorIdsByNode = new Map<string, Set<string>>()
+    const remember = (
+      nodeId: string | undefined,
+      handle: string | null | undefined
+    ) => {
+      if (!nodeId || !handle) return
+      const set = anchorIdsByNode.get(nodeId) ?? new Set<string>()
+      set.add(handle)
+      anchorIdsByNode.set(nodeId, set)
+    }
+    for (const edge of model.edges ?? []) {
+      remember(edge.source, edge.sourceHandle)
+      remember(edge.target, edge.targetHandle)
+    }
+
     return {
       ...model,
       nodes: model.nodes.map((node) => {
@@ -84,7 +45,13 @@ export class ConversionService {
         return {
           ...node,
           handles:
-            n.handles ?? this.createDefaultHandles(node.width, node.height),
+            n.handles ??
+            buildServerRenderHandles({
+              nodeType: node.type,
+              width: node.width,
+              height: node.height,
+              anchorIds: [...(anchorIdsByNode.get(node.id) ?? [])],
+            }),
         }
       }),
       edges: (model.edges ?? []).map((edge, index) => ({
@@ -92,8 +59,8 @@ export class ConversionService {
         id:
           edge.id ??
           `${edge.source ?? "source"}-${edge.target ?? "target"}-${index}`,
-        sourceHandle: edge.sourceHandle ?? "right",
-        targetHandle: edge.targetHandle ?? "left",
+        sourceHandle: edge.sourceHandle ?? "r:0.500",
+        targetHandle: edge.targetHandle ?? "l:0.500",
         data: {
           ...(edge.data ?? {}),
           points: edge.data?.points ?? [],

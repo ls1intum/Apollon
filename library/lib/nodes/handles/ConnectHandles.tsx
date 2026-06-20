@@ -1,5 +1,5 @@
 import { Handle, useStore, useUpdateNodeInternals } from "@xyflow/react"
-import { type CSSProperties, useEffect, useMemo } from "react"
+import { type CSSProperties, useEffect, useMemo, useRef } from "react"
 import { useShallow } from "zustand/shallow"
 import { CANVAS } from "@/constants"
 import {
@@ -159,9 +159,20 @@ export function ConnectHandles({
   }, [config, width, height, zoom, referencedAnchorIds])
 
   // Re-measure handles in React Flow whenever the set of handle ids changes
-  // (e.g. crossing the quarter threshold, or a new referenced anchor appears).
+  // AFTER mount (e.g. crossing the quarter threshold, or a new referenced
+  // anchor appears). We deliberately skip the initial mount: React Flow already
+  // measures handles on first render, and an extra updateNodeInternals there
+  // adds a post-mount churn cycle that can race headless SVG export (the
+  // serializer settles on a fixed timer) and produce an empty diagram.
   const signature = useMemo(() => handles.map((h) => h.id).join("|"), [handles])
+  const lastSignature = useRef<string | null>(null)
   useEffect(() => {
+    if (lastSignature.current === null) {
+      lastSignature.current = signature
+      return
+    }
+    if (lastSignature.current === signature) return
+    lastSignature.current = signature
     updateNodeInternals(elementId)
   }, [signature, elementId, updateNodeInternals])
 
