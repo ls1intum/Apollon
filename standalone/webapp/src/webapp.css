@@ -687,6 +687,7 @@ body,
   box-shadow: 0 2px 8px rgb(0 0 0 / 24%);
   transition: top 120ms ease;
 }
+
 .apollon-skip-link:focus-visible {
   top: 8px;
   outline: 2px solid var(--home-accent-base, #236ebe);
