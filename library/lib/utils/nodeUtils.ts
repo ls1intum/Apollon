@@ -141,6 +141,8 @@ const NODE_LABEL_CAPABILITIES = {
   activityFinalNode: { wrapsName: false, rendersNameLabel: false },
   activityForkNode: { wrapsName: false, rendersNameLabel: false },
   activityForkNodeHorizontal: { wrapsName: false, rendersNameLabel: false },
+  // Lane names live in data.lanes; the swimlane has no single name label.
+  activitySwimlane: { wrapsName: false, rendersNameLabel: false },
 
   // Use case diagram
   useCase: { wrapsName: true, rendersNameLabel: true },
@@ -226,6 +228,7 @@ export const isParentNodeType = (nodeType?: string) => {
   return (
     nodeType === DiagramNodeTypeRecord.package ||
     nodeType === DiagramNodeTypeRecord.activity ||
+    nodeType === DiagramNodeTypeRecord.activitySwimlane ||
     nodeType === DiagramNodeTypeRecord.useCaseSystem ||
     nodeType === DiagramNodeTypeRecord.componentSubsystem ||
     nodeType === DiagramNodeTypeRecord.deploymentNode ||

@@ -125,6 +125,14 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
           })
         )
       }
+      if (defaultData.lanes) {
+        defaultData.lanes = (defaultData.lanes as Array<object>).map(
+          (lane) => ({
+            ...lane,
+            id: generateUUID(),
+          })
+        )
+      }
 
       // Prepare the drop data including offset adjustments
       const dropData: DropNodeData = {

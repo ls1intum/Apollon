@@ -11,6 +11,25 @@ export type ClassNodeElement = {
   id: string
 } & DefaultNodeProps
 
+/** A single partition (lane) inside an activity swimlane. */
+export type SwimlaneLane = {
+  id: string
+  name: string
+}
+
+/**
+ * Activity-partition (swimlane) container. Lanes are equal divisions along the
+ * primary axis (columns when vertical, rows when horizontal). Elements dropped
+ * into the swimlane become its children and move with it; which lane an element
+ * belongs to is expressed by where the modeller places it, matching the UML
+ * activity-partition notation where partition membership is positional rather
+ * than stored per element.
+ */
+export type ActivitySwimlaneProps = DefaultNodeProps & {
+  orientation: "vertical" | "horizontal"
+  lanes: SwimlaneLane[]
+}
+
 export type ClassNodeProps = {
   methods: ClassNodeElement[]
   attributes: ClassNodeElement[]

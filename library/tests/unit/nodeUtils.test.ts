@@ -17,6 +17,7 @@ vi.mock("@/nodes", () => ({
     activityMergeNode: "activityMergeNode",
     activityForkNode: "activityForkNode",
     activityForkNodeHorizontal: "activityForkNodeHorizontal",
+    activitySwimlane: "activitySwimlane",
     useCase: "useCase",
     useCaseActor: "useCaseActor",
     useCaseSystem: "useCaseSystem",
@@ -347,6 +348,7 @@ describe("isParentNodeType", () => {
   const parentTypes = [
     "package",
     "activity",
+    "activitySwimlane",
     "useCaseSystem",
     "componentSubsystem",
     "deploymentNode",

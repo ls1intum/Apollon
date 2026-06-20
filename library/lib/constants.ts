@@ -13,6 +13,7 @@ import {
   ActivityMergeNodeSVG,
   ActivityObjectNodeSVG,
   ActivitySVG,
+  ActivitySwimlaneSVG,
   ClassSVG,
   PackageSVG,
   UseCaseNodeSVG,
@@ -518,6 +519,20 @@ export const dropElementConfigs: Readonly<
       height: 20,
       defaultData: { name: "Fork" },
       svg: ActivityForkNodeHorizontalSVG,
+    },
+    {
+      type: "activitySwimlane",
+      width: 400,
+      height: 200,
+      defaultData: {
+        name: "",
+        orientation: "vertical",
+        lanes: [
+          { id: "lane-1", name: "Lane 1" },
+          { id: "lane-2", name: "Lane 2" },
+        ],
+      },
+      svg: ActivitySwimlaneSVG,
     },
   ],
   [UMLDiagramType.UseCaseDiagram]: [
