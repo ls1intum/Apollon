@@ -1,4 +1,4 @@
-import { CustomText } from "@/components"
+import { InterfaceLabel } from "../InterfaceLabel"
 import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
@@ -44,17 +44,12 @@ export const ComponentInterfaceNodeSVG: React.FC<Props> = ({
           fill={fillColor}
         />
 
-        {/* Name Text */}
-        <CustomText
-          x={width + 2}
-          y={-10}
-          textAnchor="start"
-          fontWeight="bold"
-          dominantBaseline="hanging"
+        <InterfaceLabel
+          name={name}
+          width={width}
+          height={height}
           fill={textColor}
-        >
-          {name}
-        </CustomText>
+        />
       </g>
 
       {showAssessmentResults && (
