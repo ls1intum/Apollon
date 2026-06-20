@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ReactNode } from "react"
-import { useApollonEditorOrThrow } from "./context"
+import { useApollonEditor } from "./context"
 import { type OverlayControlOptions } from "../../overlay/types"
 
 export type ApollonControlProps = OverlayControlOptions & {
@@ -17,7 +17,9 @@ export function ApollonControl({
   children,
   ...options
 }: ApollonControlProps): null {
-  const editor = useApollonEditorOrThrow()
+  // Nullable: the imperative editor mounts asynchronously, so on the first
+  // render(s) it may not exist yet. We register once it's available.
+  const editor = useApollonEditor()
   // Holds the latest children/options for the (stable) render thunk. Seeded from
   // the first render's values; refreshed in an effect (never mutated in render).
   const latest = useRef<{
@@ -28,8 +30,9 @@ export function ApollonControl({
     options,
   })
 
-  // Register once per id; the renderer reads the latest children via the ref.
+  // Register once per id once the editor exists; renderer reads latest via ref.
   useEffect(() => {
+    if (!editor) return
     const dispose = editor.addControl({
       ...latest.current.options,
       render: () => latest.current.children,
@@ -41,7 +44,7 @@ export function ApollonControl({
   // to the store so the slot reflects changes (registration stays stable per id).
   useEffect(() => {
     latest.current = { children, options }
-    editor.updateControl(options.id, {
+    editor?.updateControl(options.id, {
       ...options,
       render: () => latest.current.children,
     })

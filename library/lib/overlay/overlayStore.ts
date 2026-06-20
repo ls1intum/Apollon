@@ -83,6 +83,26 @@ export function computeInsets(
   return result
 }
 
+/**
+ * Inset rect from the current registry state. Controls explicitly hidden
+ * (`visible: false`) reserve nothing; function-based visibility is treated as
+ * visible here (resolved accurately by OverlayLayer, which republishes the
+ * visibility-filtered rect when mounted). Keeping this in the store means
+ * `setInset`/`addControl` reflect in `getInsets()` synchronously — without
+ * waiting for a render — so the imperative API is reliable headless.
+ */
+function recomputeInsets(
+  controls: Record<string, OverlayControl>,
+  measured: Record<string, Partial<Record<OverlaySide, number>>>,
+  manualInsets: Partial<Record<OverlaySide, number>>
+): Insets {
+  return computeInsets(
+    Object.values(controls).filter((c) => c.visible !== false),
+    measured,
+    manualInsets
+  )
+}
+
 export type OverlayStore = {
   controls: Record<string, OverlayControl>
   /** Measured rects per control id (written by the shared ResizeObserver). */
@@ -121,7 +141,13 @@ export const createOverlayStore = (): UseBoundStore<StoreApi<OverlayStore>> =>
 
         register: (control) =>
           set(
-            (s) => ({ controls: { ...s.controls, [control.id]: control } }),
+            (s) => {
+              const controls = { ...s.controls, [control.id]: control }
+              return {
+                controls,
+                insets: recomputeInsets(controls, s.measured, s.manualInsets),
+              }
+            },
             undefined,
             "register"
           ),
@@ -134,7 +160,11 @@ export const createOverlayStore = (): UseBoundStore<StoreApi<OverlayStore>> =>
               const measured = { ...s.measured }
               delete controls[id]
               delete measured[id]
-              return { controls, measured }
+              return {
+                controls,
+                measured,
+                insets: recomputeInsets(controls, measured, s.manualInsets),
+              }
             },
             undefined,
             "unregister"
@@ -142,7 +172,13 @@ export const createOverlayStore = (): UseBoundStore<StoreApi<OverlayStore>> =>
 
         setMeasured: (id, rect) =>
           set(
-            (s) => ({ measured: { ...s.measured, [id]: rect } }),
+            (s) => {
+              const measured = { ...s.measured, [id]: rect }
+              return {
+                measured,
+                insets: recomputeInsets(s.controls, measured, s.manualInsets),
+              }
+            },
             undefined,
             "setMeasured"
           ),
@@ -153,7 +189,10 @@ export const createOverlayStore = (): UseBoundStore<StoreApi<OverlayStore>> =>
               const manualInsets = { ...s.manualInsets }
               if (px === null) delete manualInsets[side]
               else manualInsets[side] = px
-              return { manualInsets }
+              return {
+                manualInsets,
+                insets: recomputeInsets(s.controls, s.measured, manualInsets),
+              }
             },
             undefined,
             "setManualInset"
