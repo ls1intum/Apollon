@@ -672,3 +672,23 @@ body,
 .home-toast-container .Toastify__progress-bar--info {
   background: var(--home-toast-info);
 }
+
+/* Skip link: visually hidden until keyboard-focused, then pinned top-left above
+   all editor chrome so it's the first stop and jumps to the diagram. */
+.apollon-skip-link {
+  position: absolute;
+  left: 8px;
+  top: -48px;
+  z-index: 100000;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: var(--home-surface-raised, #20242c);
+  color: var(--home-text-primary, #fff);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 24%);
+  transition: top 120ms ease;
+}
+.apollon-skip-link:focus-visible {
+  top: 8px;
+  outline: 2px solid var(--home-accent-base, #236ebe);
+  outline-offset: 2px;
+}

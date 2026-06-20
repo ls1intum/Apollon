@@ -189,10 +189,17 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
           overflow: "hidden",
           backgroundColor: "var(--apollon-background, #ffffff)",
           position: "relative",
-          "--apollon-inset-top": `${insets.top}px`,
-          "--apollon-inset-right": `${insets.right}px`,
-          "--apollon-inset-bottom": `${insets.bottom}px`,
-          "--apollon-inset-left": `${insets.left}px`,
+          // Only emit the inset custom properties when chrome actually reserves
+          // room, so an editor with no overlays keeps the exact original style
+          // attribute (byte-identical DOM for embedders like Artemis).
+          ...(insets.top || insets.right || insets.bottom || insets.left
+            ? {
+                "--apollon-inset-top": `${insets.top}px`,
+                "--apollon-inset-right": `${insets.right}px`,
+                "--apollon-inset-bottom": `${insets.bottom}px`,
+                "--apollon-inset-left": `${insets.left}px`,
+              }
+            : {}),
         } as CSSProperties
       }
     >

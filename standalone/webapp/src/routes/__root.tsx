@@ -38,9 +38,23 @@ function RootLayout() {
   return (
     <AppProviders>
       <Suspense fallback={<AppLoadingScreen />}>
+        {/* Skip link (WCAG 2.4.1): on editor routes the navbar + version rail are
+            now in-canvas chrome, so let keyboard users jump straight to the
+            diagram instead of tabbing through all of it. Visually hidden until
+            focused. */}
+        {isEditorRoute && (
+          <a href="#editor-area" className="apollon-skip-link">
+            Skip to diagram
+          </a>
+        )}
         {isEditorRoute && <EditorChromeHeader />}
         {isChromeSubRoute && <HomeNavbar />}
-        <div data-testid="editor-area" style={{ flex: 1, overflow: "hidden" }}>
+        <div
+          id="editor-area"
+          data-testid="editor-area"
+          tabIndex={-1}
+          style={{ flex: 1, overflow: "hidden" }}
+        >
           <Outlet />
         </div>
         {isChromeSubRoute && !Capacitor.isNativePlatform() && (
