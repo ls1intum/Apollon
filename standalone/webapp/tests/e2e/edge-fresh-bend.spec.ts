@@ -65,7 +65,7 @@ async function drawStraightEdge(page: Page): Promise<Locator> {
   await srcNode.hover()
   await page.waitForTimeout(120)
   const rightHandle = srcNode.locator(
-    '.react-flow__handle[data-handleid="right"]'
+    '.react-flow__handle[data-handleid="r:0.500"]'
   )
   const hb = (await rightHandle.first().boundingBox())!
   const tb = (await tgtNode.boundingBox())!

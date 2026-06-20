@@ -20,12 +20,7 @@ export function ColorDescription({
   }
 
   return (
-    <DefaultNodeWrapper
-      width={width}
-      height={height}
-      elementId={id}
-      hiddenHandles={true}
-    >
+    <DefaultNodeWrapper elementId={id}>
       <NodeToolbar elementId={id} />
       <NodeResizer minHeight={40} isVisible={isDiagramModifiable} />
 

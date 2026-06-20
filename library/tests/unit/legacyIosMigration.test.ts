@@ -192,8 +192,8 @@ describe("legacy iOS class diagram", () => {
     expect(edge.source).toBe("class-1")
     expect(edge.target).toBe("class-2")
     expect(edge.type).toBe("ClassInheritance")
-    expect(edge.sourceHandle).toBe("top-right") // iOS "Topright"
-    expect(edge.targetHandle).toBe("bottom") // "Down"
+    expect(edge.sourceHandle).toBe("t:1.000") // iOS "Topright" → top-right corner
+    expect(edge.targetHandle).toBe("b:0.500") // "Down" → bottom centre
   })
 
   it("preserves endpoint role/multiplicity and absolutizes waypoints", () => {
@@ -264,8 +264,8 @@ describe("legacy iOS object diagram", () => {
   it("converts the object link with left/right handles", () => {
     expect(model.edges).toHaveLength(1)
     expect(model.edges[0].type).toBe("ObjectLink")
-    expect(model.edges[0].sourceHandle).toBe("right")
-    expect(model.edges[0].targetHandle).toBe("left")
+    expect(model.edges[0].sourceHandle).toBe("r:0.500")
+    expect(model.edges[0].targetHandle).toBe("l:0.500")
   })
 })
 

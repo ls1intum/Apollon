@@ -34,6 +34,7 @@ import {
   useNodeDrag,
 } from "./hooks"
 import { diagramNodeTypes } from "./nodes"
+import { GridGhostLayer } from "./nodes/handles/GridGhostLayer"
 import { useDiagramModifiable } from "./hooks/useDiagramModifiable"
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts"
 import { usePaneClicked } from "./hooks/usePaneClicked"
@@ -222,6 +223,7 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
           zoomOnScroll={!scrollLock || scrollEnabled}
         >
           <CustomBackground />
+          <GridGhostLayer />
           <CustomMiniMap />
           <CustomControls />
           <AlignmentGuides />

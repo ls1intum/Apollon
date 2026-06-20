@@ -407,6 +407,21 @@
   border-radius: var(--arc-radius) 0 0 var(--arc-radius);
 }
 
+/* Magnetic grid overlay shown during a connection drag (GridGhostLayer). The
+   ticks reveal the zoom-aware 5px grid on the targeted side; the dot marks the
+   point the drop will snap to. */
+.apollon-grid-ghost__tick {
+  fill: var(--apollon-primary, #3e8acc);
+  opacity: 0.35;
+}
+
+.apollon-grid-ghost__dot {
+  fill: var(--apollon-primary, #3e8acc);
+  stroke: var(--apollon-background, #fff);
+  stroke-width: 1;
+  paint-order: stroke;
+}
+
 .react-flow__resize-control line {
   z-index: 9;
 }

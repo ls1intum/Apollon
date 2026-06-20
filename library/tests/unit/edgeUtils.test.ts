@@ -13,9 +13,6 @@ import {
   getAxisAlignedSegments,
   getConnectionLineType,
   getDefaultEdgeType,
-  getDistributedHandleOffsets,
-  getDistributedHandleOffsetPercents,
-  reduceVisibleArcCountForZoom,
   getEdgeMarkerStyles,
   getMarkerSegmentPath,
   isInvalidOrthogonalEdgeRelease,
@@ -294,176 +291,32 @@ describe("getEdgeMarkerStyles", () => {
   })
 })
 // ---------------------------------------------------------------------------
-// findClosestHandle
-describe("findClosestHandle", () => {
+// findClosestHandle is a thin delegate to snapToAnchor (geometry is covered in
+// anchorModel.test.ts); these only pin that each option is forwarded.
+describe("findClosestHandle (option forwarding)", () => {
   const rect = { x: 0, y: 0, width: 300, height: 200 }
-  const canonicalHandleIds = new Set([
-    "top",
-    "bottom",
-    "left",
-    "right",
-    "top-left",
-    "top-mid-left",
-    "top-mid-right",
-    "top-right",
-    "right-mid-top",
-    "right-mid-bottom",
-    "bottom-right",
-    "bottom-mid-right",
-    "bottom-mid-left",
-    "bottom-left",
-    "left-mid-bottom",
-    "left-mid-top",
-  ])
 
-  describe("with useFourHandles=true", () => {
-    it("returns top when point is directly above center", () => {
-      const result = findClosestHandle({
-        point: { x: 150, y: -10 },
-        rect,
-        useFourHandles: true,
-      })
-      expect(result).toBe("top")
-    })
-
-    it("returns bottom when point is directly below center", () => {
-      const result = findClosestHandle({
-        point: { x: 150, y: 210 },
-        rect,
-        useFourHandles: true,
-      })
-      expect(result).toBe("bottom")
-    })
-
-    it("returns left when point is to the left", () => {
-      const result = findClosestHandle({
-        point: { x: -10, y: 100 },
-        rect,
-        useFourHandles: true,
-      })
-      expect(result).toBe("left")
-    })
-
-    it("returns right when point is to the right", () => {
-      const result = findClosestHandle({
-        point: { x: 310, y: 100 },
-        rect,
-        useFourHandles: true,
-      })
-      expect(result).toBe("right")
-    })
-
-    it("returns top for a point near the top edge midpoint", () => {
-      const result = findClosestHandle({
-        point: { x: 150, y: 5 },
-        rect,
-        useFourHandles: true,
-      })
-      expect(result).toBe("top")
-    })
+  it("defaults to the key model and never resolves to a corner (0/1)", () => {
+    const r = findClosestHandle({ point: { x: 1, y: -2 }, rect })
+    expect(r).toMatch(/^t:/)
+    expect(r).not.toBe("t:0.000")
+    expect(r).not.toBe("t:1.000")
   })
 
-  describe("with useFourHandles=false (canonical 16 handles)", () => {
-    const canonicalCandidates: Array<{
-      id: string
-      point: { x: number; y: number }
-    }> = [
-      { id: "top", point: { x: 150, y: 40 } },
-      { id: "bottom", point: { x: 150, y: 160 } },
-      { id: "left", point: { x: 60, y: 100 } },
-      { id: "right", point: { x: 240, y: 100 } },
-      { id: "top-left", point: { x: 60, y: 40 } },
-      { id: "top-mid-left", point: { x: 110, y: 40 } },
-      { id: "top-mid-right", point: { x: 200, y: 40 } },
-      { id: "top-right", point: { x: 240, y: 40 } },
-      { id: "right-mid-top", point: { x: 240, y: 70 } },
-      { id: "right-mid-bottom", point: { x: 240, y: 130 } },
-      { id: "bottom-right", point: { x: 240, y: 160 } },
-      { id: "bottom-mid-right", point: { x: 200, y: 160 } },
-      { id: "bottom-mid-left", point: { x: 110, y: 160 } },
-      { id: "bottom-left", point: { x: 60, y: 160 } },
-      { id: "left-mid-bottom", point: { x: 60, y: 130 } },
-      { id: "left-mid-top", point: { x: 60, y: 70 } },
-    ]
-
-    it.each(canonicalCandidates)(
-      "returns $id at its anchor point",
-      ({ id, point }) => {
-        const result = findClosestHandle({
-          point,
-          rect,
-          useFourHandles: false,
-        })
-        expect(result).toBe(id)
-      }
-    )
-
-    it("does not emit alias corner IDs at alias positions", () => {
-      const aliasPositions = [
-        { x: 60, y: 40 },
-        { x: 240, y: 40 },
-        { x: 60, y: 160 },
-        { x: 240, y: 160 },
-      ]
-      const aliasIds = new Set([
-        "left-top",
-        "right-top",
-        "left-bottom",
-        "right-bottom",
-      ])
-
-      for (const point of aliasPositions) {
-        const result = findClosestHandle({ point, rect, useFourHandles: false })
-        expect(canonicalHandleIds.has(result)).toBe(true)
-        expect(aliasIds.has(result)).toBe(false)
-      }
-    })
-
-    it("never snaps a drop to a hidden between-slot handle", () => {
-      // Sweep dense points along every side — landing on the exact between-slot
-      // offsets — and confirm only NAMED handles are returned. Custom nodes such
-      // as the UseCase ellipse render only the named IDs, so a "*-between-*"
-      // result would persist a handle the node cannot resolve and the edge would
-      // disappear with React Flow's missing-handle error.
-      for (let t = 0; t <= 300; t += 5) {
-        const v = (t * rect.height) / rect.width
-        const points = [
-          { x: t, y: 0 },
-          { x: t, y: rect.height },
-          { x: 0, y: v },
-          { x: rect.width, y: v },
-        ]
-        for (const point of points) {
-          const result = findClosestHandle({
-            point,
-            rect,
-            useFourHandles: false,
-          })
-          expect(result).not.toContain("-between-")
-          expect(canonicalHandleIds.has(result)).toBe(true)
-        }
-      }
-    })
-
-    it("uses deterministic canonical-order tie-break for equal distances", () => {
-      // Equidistant from top (slot 4, x=150) and top-between-mid-left-center
-      // (slot 3, x=130) on the top side. The four directional middles are
-      // declared first in canonical order, so "top" wins this tie.
-      const result = findClosestHandle({
-        point: { x: 140, y: 40 },
-        rect,
-        useFourHandles: false,
-      })
-      expect(result).toBe("top")
-    })
+  it("forwards variant=center (only side centres)", () => {
+    expect(
+      findClosestHandle({ point: { x: 2, y: -2 }, rect, variant: "center" })
+    ).toBe("t:0.500")
   })
 
-  it("defaults useFourHandles to false", () => {
+  it("forwards sides (resolves only to an allowed side)", () => {
+    // Drop is nearest the top, but only the bottom side is connectable.
     const result = findClosestHandle({
-      point: { x: 100, y: -5 },
+      point: { x: 150, y: -10 },
       rect,
+      sides: ["b"],
     })
-    expect(result).toBe("top-mid-left")
+    expect(result.startsWith("b:")).toBe(true)
   })
 })
 
@@ -1784,114 +1637,6 @@ describe("getDefaultEdgeType", () => {
     expect(
       getDefaultEdgeType("UnknownDiagram" as unknown as UMLDiagramType)
     ).toBe("ClassUnidirectional")
-  })
-})
-
-// ---------------------------------------------------------------------------
-// getDistributedHandleOffsetPercents
-// ---------------------------------------------------------------------------
-describe("getDistributedHandleOffsetPercents", () => {
-  it.each([80, 125, 200])(
-    "returns non-decreasing grid-aligned offsets for %ipx nodes",
-    (axisLength) => {
-      const offsets = getDistributedHandleOffsetPercents(axisLength).map(
-        (percent) => (Number.parseFloat(percent) / 100) * axisLength
-      )
-
-      // Nine offsets per axis — five arc-bearing slots interleaved with four
-      // "between" hidden connection points.
-      expect(offsets).toHaveLength(9)
-      for (let index = 0; index < offsets.length; index++) {
-        expect(offsets[index]).toBeGreaterThanOrEqual(0)
-        expect(offsets[index]).toBeLessThanOrEqual(axisLength)
-        // Offsets snap to the 5px handle grid step.
-        expect(Math.round(offsets[index]) % 5).toBe(0)
-
-        if (index > 0) {
-          // Hidden slots collapse to their visible neighbour in stage-0/1
-          // layouts, so adjacent offsets may be equal — but never decrease.
-          expect(offsets[index]).toBeGreaterThanOrEqual(offsets[index - 1])
-        }
-      }
-    }
-  )
-})
-
-// ---------------------------------------------------------------------------
-// Handle grid alignment — every connection point must land on the 5px grid.
-// A node sits at a 5px-snapped position, so if every handle OFFSET is a
-// multiple of 5 the absolute connection point is on the grid too. The matrix
-// includes odd multiples of 5 (105, 115, 165, 201) where a naive percentage
-// or an un-snapped centre would drift off the grid.
-// ---------------------------------------------------------------------------
-describe("handle offsets stay on the 5px grid", () => {
-  const AXES = [
-    20, 30, 40, 45, 55, 80, 90, 95, 100, 105, 110, 115, 125, 160, 165, 200, 201,
-  ]
-
-  it.each(AXES)(
-    "getDistributedHandleOffsets(%i): all 9 slots on grid",
-    (axis) => {
-      const offsets = getDistributedHandleOffsets(axis)
-      expect(offsets).toHaveLength(9)
-      for (let i = 0; i < offsets.length; i++) {
-        expect(offsets[i] % 5).toBe(0)
-        expect(offsets[i]).toBeGreaterThanOrEqual(0)
-        expect(offsets[i]).toBeLessThanOrEqual(axis)
-        if (i > 0) expect(offsets[i]).toBeGreaterThanOrEqual(offsets[i - 1])
-      }
-    }
-  )
-
-  it.each(AXES)(
-    "centre slot (index 4) is on grid and within half a step of the true centre for %ipx",
-    (axis) => {
-      const centre = getDistributedHandleOffsets(axis)[4]
-      expect(centre % 5).toBe(0)
-      // The centre connection sits on the grid line nearest the geometric
-      // middle — never more than half a 5px step away.
-      expect(Math.abs(centre - axis / 2)).toBeLessThanOrEqual(2.5)
-    }
-  )
-
-  // The rendered handle uses the percentage; it must reconstruct to exactly
-  // the grid-snapped px offset (no round-trip drift), so what the geometry
-  // layer computes is what React Flow renders and attaches edges to.
-  it.each(AXES)("percentage reconstructs to the px offset for %ipx", (axis) => {
-    const px = getDistributedHandleOffsets(axis)
-    const pct = getDistributedHandleOffsetPercents(axis)
-    for (let i = 0; i < 9; i++) {
-      const rendered = (Number.parseFloat(pct[i]) / 100) * axis
-      expect(Math.round(rendered)).toBe(px[i])
-      expect(Math.round(rendered) % 5).toBe(0)
-    }
-  })
-})
-
-describe("reduceVisibleArcCountForZoom", () => {
-  // 9-slot offsets with 5 arcs (slots 0,2,4,6,8) 40px apart, span 0..160.
-  const fiveArc = [0, 20, 40, 60, 80, 100, 120, 140, 160] as const
-
-  it("keeps all arcs at 1x when they are far enough apart", () => {
-    // adjacent even-slot spacing = 40px >= ARC_LENGTH_PX (28) → 5 arcs.
-    expect(reduceVisibleArcCountForZoom([...fiveArc], 5, 1)).toBe(5)
-  })
-
-  it("drops to fewer arcs as zoom-out shrinks the on-screen spacing", () => {
-    // At 0.5x adjacent 40px arcs are 20px apart on screen (< 28) → not 5.
-    // The 3-arc spacing (0→80) is 80px = 40px on screen >= 28 → 3.
-    expect(reduceVisibleArcCountForZoom([...fiveArc], 5, 0.5)).toBe(3)
-    // At 0.3x even the 3-arc spacing (80*0.3=24 < 28) is too tight → 1.
-    expect(reduceVisibleArcCountForZoom([...fiveArc], 5, 0.3)).toBe(1)
-  })
-
-  it("never exceeds the size-based base count", () => {
-    expect(reduceVisibleArcCountForZoom([...fiveArc], 3, 1)).toBe(3)
-    expect(reduceVisibleArcCountForZoom([...fiveArc], 1, 1)).toBe(1)
-  })
-
-  it("does not reduce when zoomed in (arcs grow with spacing)", () => {
-    expect(reduceVisibleArcCountForZoom([...fiveArc], 5, 2.5)).toBe(5)
   })
 })
 

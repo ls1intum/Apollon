@@ -155,4 +155,36 @@ describe("jsdom SVG export (no browser)", () => {
     // pull the clip out to hold it. Disabling the fallback leaves this < 100.
     expect(longExport.clip.width).toBeGreaterThan(baseExport.clip.width + 100)
   })
+
+  // The PR's headline guarantee, end to end: a saved diagram whose edges use
+  // the OLD named handle ids must still export with its edges (the import →
+  // migrate → SSR-handle → render chain keeps them; a regression in that chain
+  // would silently drop the edge onto an unrendered handle).
+  it("keeps an edge whose handles use the legacy id scheme", async () => {
+    const base = loadFixture("two-class-no-edge.json") as {
+      nodes: { id: string }[]
+      edges: unknown[]
+    }
+    const [a, b] = base.nodes
+    const model = {
+      ...base,
+      edges: [
+        {
+          id: "legacy-edge",
+          source: a.id,
+          target: b.id,
+          sourceHandle: "top-mid-left", // legacy → migrates to t:0.250
+          targetHandle: "left-between-mid-bottom-center", // legacy → l:0.625
+          type: "ClassUnidirectional",
+          data: { label: "", points: [] },
+        },
+      ],
+    }
+
+    const { svg } = await exportViaWorker(model)
+    // The edge path only renders if React Flow resolved both (migrated) handles
+    // to handles the nodes actually expose; a missing handle drops it silently.
+    expect(svg).toContain('id="legacy-edge"')
+    expect(svg).toContain("react-flow__edge-path")
+  })
 })

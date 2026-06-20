@@ -20,6 +20,8 @@ import {
 } from "@/sync/ydoc"
 import { recordStoreNodeWrite } from "@/sync/perfCounters"
 import { deepEqual } from "@/utils/storeUtils"
+import { migrateLegacyHandle } from "@/nodes/handles/migrateLegacyHandle"
+import { parseAnchor } from "@/nodes/handles/anchorModel"
 import { Assessment, DraggingNode, InteractiveElements } from "@/typings"
 import {
   getNestedNodeElementIds,
@@ -85,21 +87,43 @@ const initialDiagramState: InitialDiagramState = {
   previewMode: false,
 }
 
-function stripComputedSegmentsFromEdge(edge: Edge): Edge {
-  if (
-    !edge.data ||
-    !Object.prototype.hasOwnProperty.call(edge.data, "computedSegments")
-  ) {
-    return edge
-  }
+// Only migrate a legacy named handle ("top", "right-mid-bottom", …); leave
+// canonical `side:ratio` anchors and null/undefined untouched (idempotent).
+const normalizeHandle = (
+  handle: string | null | undefined
+): string | null | undefined =>
+  handle && parseAnchor(handle) === null ? migrateLegacyHandle(handle) : handle
 
-  const data = { ...(edge.data as Record<string, unknown>) }
-  delete data.computedSegments
-  return { ...edge, data }
+// Normalize an edge before it enters the store: strip stale runtime geometry
+// (`computedSegments`) AND migrate legacy handle ids to the canonical anchor
+// model. This runs for every bulk model ingestion (editor construction,
+// `set model`, import) so a diagram loaded straight into the editor keeps its
+// edges instead of dropping them on a now-unrendered legacy handle.
+function normalizeEdgeForStore(edge: Edge): Edge {
+  const sourceHandle = normalizeHandle(edge.sourceHandle)
+  const targetHandle = normalizeHandle(edge.targetHandle)
+  const handlesChanged =
+    sourceHandle !== edge.sourceHandle || targetHandle !== edge.targetHandle
+  const hasComputedSegments =
+    !!edge.data &&
+    Object.prototype.hasOwnProperty.call(edge.data, "computedSegments")
+
+  if (!handlesChanged && !hasComputedSegments) return edge
+
+  let data = edge.data
+  if (hasComputedSegments) {
+    data = { ...(edge.data as Record<string, unknown>) }
+    delete (data as Record<string, unknown>).computedSegments
+  }
+  return {
+    ...edge,
+    ...(handlesChanged && { sourceHandle, targetHandle }),
+    data,
+  }
 }
 
-function stripComputedSegmentsFromEdges(edges: Edge[]): Edge[] {
-  return edges.map(stripComputedSegmentsFromEdge)
+function normalizeEdgesForStore(edges: Edge[]): Edge[] {
+  return edges.map(normalizeEdgeForStore)
 }
 
 // The transient `selected` flag is re-overlaid locally on read
@@ -449,7 +473,7 @@ export const createDiagramStore = (
           },
 
           addEdge: (edge) => {
-            const persistedEdge = stripComputedSegmentsFromEdge(edge)
+            const persistedEdge = normalizeEdgeForStore(edge)
             transactStore(() => {
               getEdgesMap(ydoc).set(persistedEdge.id, persistedEdge)
             })
@@ -493,7 +517,7 @@ export const createDiagramStore = (
           setEdges: (payload) => {
             const edges =
               typeof payload === "function" ? payload(get().edges) : payload
-            const persistedEdges = stripComputedSegmentsFromEdges(edges)
+            const persistedEdges = normalizeEdgesForStore(edges)
 
             if (deepEqual(get().edges, persistedEdges)) {
               return
@@ -525,7 +549,7 @@ export const createDiagramStore = (
           },
 
           setNodesAndEdges: (nodes, edges) => {
-            const persistedEdges = stripComputedSegmentsFromEdges(edges)
+            const persistedEdges = normalizeEdgesForStore(edges)
             transactStore(() => {
               reconcileYMap(getNodesMap(ydoc), nodeEntriesForPersistence(nodes))
               reconcileYMap(
@@ -829,7 +853,7 @@ export const createDiagramStore = (
               changesWithoutSelect,
               currentEdges
             )
-            const persistedNextEdges = stripComputedSegmentsFromEdges(nextEdges)
+            const persistedNextEdges = normalizeEdgesForStore(nextEdges)
             if (deepEqual(currentEdges, persistedNextEdges)) {
               return
             }
@@ -837,9 +861,7 @@ export const createDiagramStore = (
             transactStore(() => {
               for (const change of changes) {
                 if (change.type === "add" || change.type === "replace") {
-                  const persistedEdge = stripComputedSegmentsFromEdge(
-                    change.item
-                  )
+                  const persistedEdge = normalizeEdgeForStore(change.item)
                   getEdgesMap(ydoc).set(persistedEdge.id, persistedEdge)
                 } else if (change.type === "remove") {
                   set(
@@ -944,12 +966,12 @@ export const createDiagramStore = (
             ).map((edge) => {
               const currentEdge = get().edges.find((e) => e.id === edge.id)
               if (currentEdge) {
-                return stripComputedSegmentsFromEdge({
+                return normalizeEdgeForStore({
                   ...edge,
                   selected: currentEdge.selected,
                 })
               } else {
-                return stripComputedSegmentsFromEdge(edge)
+                return normalizeEdgeForStore(edge)
               }
             })
 

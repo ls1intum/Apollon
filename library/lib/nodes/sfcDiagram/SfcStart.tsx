@@ -21,7 +21,7 @@ export function SfcStart({
   }
 
   return (
-    <DefaultNodeWrapper width={width} height={height} elementId={id}>
+    <DefaultNodeWrapper elementId={id}>
       <NodeToolbar elementId={id} showEdit={false} />
 
       <div ref={anchorRef}>

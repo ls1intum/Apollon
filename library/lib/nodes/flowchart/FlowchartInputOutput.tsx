@@ -1,17 +1,10 @@
-import {
-  NodeProps,
-  NodeResizer,
-  type Node,
-  Handle,
-  Position,
-} from "@xyflow/react"
+import { NodeProps, NodeResizer, type Node } from "@xyflow/react"
 import { usePopoverAnchor } from "@/hooks/usePopoverAnchor"
 import { DefaultNodeWrapper } from "../wrappers"
 import { useHandleOnResize } from "@/hooks"
 import { DefaultNodeProps } from "@/types"
 import { FlowchartInputOutputNodeSVG } from "@/components"
 import { NodeToolbar } from "@/components/toolbars/NodeToolbar"
-import { HandleId } from "../wrappers"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
 
@@ -30,74 +23,9 @@ export function FlowchartInputOutput({
     return null
   }
 
-  const offset = 20
-  const baseHandleStyle = {
-    width: 8,
-    height: 8,
-    position: "absolute" as const,
-    backgroundColor: "transparent",
-    border: "none",
-    zIndex: 10,
-    transition: "opacity 120ms ease",
-    overflow: "visible",
-    boxSizing: "border-box" as const,
-  }
-
-  const handles = [
-    {
-      id: HandleId.Top,
-      position: Position.Top,
-      className: "apollon-arc-handle apollon-arc-handle--top",
-      style: { left: width / 2, ...baseHandleStyle },
-    },
-    {
-      id: HandleId.Right,
-      position: Position.Right,
-      className: "apollon-arc-handle apollon-arc-handle--right",
-      style: {
-        top: height / 2,
-        right: offset / 2,
-        ...baseHandleStyle,
-      },
-    },
-    {
-      id: HandleId.Bottom,
-      position: Position.Bottom,
-      className: "apollon-arc-handle apollon-arc-handle--bottom",
-      style: { left: width / 2, ...baseHandleStyle },
-    },
-    {
-      id: HandleId.Left,
-      position: Position.Left,
-      className: "apollon-arc-handle apollon-arc-handle--left",
-      style: {
-        top: height / 2,
-        left: offset / 2,
-        ...baseHandleStyle,
-      },
-    },
-  ]
-
   return (
-    <DefaultNodeWrapper
-      width={width}
-      height={height}
-      elementId={id}
-      hiddenHandles={true}
-    >
+    <DefaultNodeWrapper elementId={id}>
       <NodeToolbar elementId={id} />
-
-      {handles.map((handle) => (
-        <Handle
-          key={handle.id}
-          id={handle.id}
-          type="source"
-          position={handle.position}
-          className={handle.className}
-          style={handle.style}
-          isConnectable={isDiagramModifiable}
-        />
-      ))}
 
       <NodeResizer
         isVisible={isDiagramModifiable}

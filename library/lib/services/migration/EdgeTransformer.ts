@@ -7,9 +7,15 @@
  */
 
 import type { ApollonEdge, UMLModel, OrthogonalEdgeData } from "@/typings"
+import { migrateLegacyHandle } from "@/nodes/handles/migrateLegacyHandle"
+import { parseAnchor } from "@/nodes/handles/anchorModel"
+
+const isLegacyHandle = (handle: string | null | undefined): boolean =>
+  handle != null && handle !== "" && parseAnchor(handle) === null
 
 /**
- * Returns a new edge whose data is free of stale runtime geometry. Does NOT
+ * Returns a new edge whose data is free of stale runtime geometry and whose
+ * source/target handles use the canonical `side:ratio` anchor model. Does NOT
  * mutate the input. A null/absent `data` is normalized to an empty object.
  */
 export function hydrateEdgeData(edge: ApollonEdge): ApollonEdge {
@@ -21,16 +27,25 @@ export function hydrateEdgeData(edge: ApollonEdge): ApollonEdge {
     sourceData,
     "computedSegments"
   )
+  const needsHandleMigration =
+    isLegacyHandle(edge.sourceHandle) || isLegacyHandle(edge.targetHandle)
 
-  // Already a clean object with nothing to strip — leave it untouched.
-  if (edge.data != null && !hasComputedSegments) {
+  // Already a clean object with nothing to strip or migrate — leave untouched.
+  if (edge.data != null && !hasComputedSegments && !needsHandleMigration) {
     return edge
   }
 
   const data = { ...sourceData } as OrthogonalEdgeData & Record<string, unknown>
   delete data.computedSegments
 
-  return { ...edge, data }
+  return {
+    ...edge,
+    ...(needsHandleMigration && {
+      sourceHandle: migrateLegacyHandle(edge.sourceHandle),
+      targetHandle: migrateLegacyHandle(edge.targetHandle),
+    }),
+    data,
+  }
 }
 
 /**

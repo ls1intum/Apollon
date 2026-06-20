@@ -1,4 +1,5 @@
 import { Position } from "@xyflow/react"
+import { parseAnchor, SIDE_TO_POSITION } from "@/nodes/handles/anchorModel"
 
 type RequiredInterfaceLikeEdge = {
   id: string
@@ -28,13 +29,8 @@ const arePositionsOpposite = (pos1: Position, pos2: Position): boolean => {
 }
 
 const getPositionFromHandleId = (handleId: string | null): Position => {
-  if (!handleId) return Position.Right
-
-  if (handleId.includes("left")) return Position.Left
-  if (handleId.includes("right")) return Position.Right
-  if (handleId.includes("top")) return Position.Top
-  if (handleId.includes("bottom")) return Position.Bottom
-
+  const anchor = parseAnchor(handleId)
+  if (anchor) return SIDE_TO_POSITION[anchor.side]
   return Position.Right
 }
 

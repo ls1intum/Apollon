@@ -1,6 +1,6 @@
 import { NodeProps, type Node } from "@xyflow/react"
 import { usePopoverAnchor } from "@/hooks/usePopoverAnchor"
-import { DefaultNodeWrapper, FOUR_WAY_HANDLES_PRESET } from "../wrappers"
+import { DefaultNodeWrapper } from "../wrappers"
 import { DefaultNodeProps } from "@/types"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
@@ -22,12 +22,7 @@ export function DeploymentInterface({
   }
 
   return (
-    <DefaultNodeWrapper
-      width={width}
-      height={height}
-      elementId={id}
-      hiddenHandles={FOUR_WAY_HANDLES_PRESET}
-    >
+    <DefaultNodeWrapper elementId={id}>
       <NodeToolbar elementId={id} />
 
       <div ref={anchorRef}>
