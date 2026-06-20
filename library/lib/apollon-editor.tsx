@@ -1,5 +1,4 @@
 import ReactDOM from "react-dom/client"
-import { AppWithProvider } from "./App"
 import { ReactFlowInstance, type Node, type Edge } from "@xyflow/react"
 import {
   parseDiagramType,
@@ -10,29 +9,12 @@ import {
   getRenderedDiagramBounds,
 } from "./utils"
 import { UMLDiagramType } from "./types"
-import { createDiagramStore, DiagramStore } from "@/store/diagramStore"
-import { createMetadataStore, MetadataStore } from "@/store/metadataStore"
-import { createPopoverStore, PopoverStore } from "@/store/popoverStore"
-import {
-  createAssessmentSelectionStore,
-  AssessmentSelectionStore,
-} from "@/store/assessmentSelectionStore"
-import {
-  createAlignmentGuidesStore,
-  AlignmentGuidesStore,
-} from "@/store/alignmentGuidesStore"
-import {
-  createEdgeGeometryStore,
-  EdgeGeometryStore,
-} from "@/store/edgeGeometryStore"
-import {
-  DiagramStoreContext,
-  MetadataStoreContext,
-  PopoverStoreContext,
-  AssessmentSelectionStoreContext,
-  AlignmentGuidesStoreContext,
-  EdgeGeometryStoreContext,
-} from "./store/context"
+import { type DiagramStore } from "@/store/diagramStore"
+import { type MetadataStore } from "@/store/metadataStore"
+import { type PopoverStore } from "@/store/popoverStore"
+import { type AssessmentSelectionStore } from "@/store/assessmentSelectionStore"
+import { createApollonStores } from "./store/createApollonStores"
+import { ApollonRoot } from "./ApollonRoot"
 import { getPerfCounters } from "./sync/perfCounters"
 import { MessageType, SendBroadcastMessage, YjsSync } from "./sync/yjsSync"
 import { getNodesMap } from "./sync/ydoc"
@@ -88,8 +70,6 @@ export class ApollonEditor {
   private readonly metadataStore: StoreApi<MetadataStore>
   private readonly popoverStore: StoreApi<PopoverStore>
   private readonly assessmentSelectionStore: StoreApi<AssessmentSelectionStore>
-  private readonly alignmentGuidesStore: StoreApi<AlignmentGuidesStore>
-  private readonly edgeGeometryStore: StoreApi<EdgeGeometryStore>
   private subscribers: Apollon.Subscribers = {}
   constructor(element: HTMLElement, options?: Apollon.ApollonOptions) {
     if (!(element instanceof HTMLElement)) {
@@ -97,15 +77,11 @@ export class ApollonEditor {
     }
 
     this.ydoc = new Y.Doc()
-    this.diagramStore = createDiagramStore(this.ydoc)
-    this.metadataStore = createMetadataStore(
-      this.ydoc,
-      () => this.diagramStore.getState().previewMode
-    )
-    this.popoverStore = createPopoverStore()
-    this.assessmentSelectionStore = createAssessmentSelectionStore()
-    this.alignmentGuidesStore = createAlignmentGuidesStore()
-    this.edgeGeometryStore = createEdgeGeometryStore()
+    const stores = createApollonStores(this.ydoc)
+    this.diagramStore = stores.diagramStore
+    this.metadataStore = stores.metadataStore
+    this.popoverStore = stores.popoverStore
+    this.assessmentSelectionStore = stores.assessmentSelectionStore
     this.syncManager = new YjsSync(
       this.ydoc,
       this.diagramStore,
@@ -188,45 +164,25 @@ export class ApollonEditor {
     }
 
     this.root.render(
-      <DiagramStoreContext.Provider value={this.diagramStore}>
-        <MetadataStoreContext.Provider value={this.metadataStore}>
-          <PopoverStoreContext.Provider value={this.popoverStore}>
-            <AssessmentSelectionStoreContext.Provider
-              value={this.assessmentSelectionStore}
-            >
-              <AlignmentGuidesStoreContext.Provider
-                value={this.alignmentGuidesStore}
-              >
-                <EdgeGeometryStoreContext.Provider
-                  value={this.edgeGeometryStore}
-                >
-                  <AppWithProvider
-                    onReactFlowInit={this.setReactFlowInstance.bind(this)}
-                    collaboration={collaboration}
-                    awareness={{
-                      setLocalAwarenessCursor:
-                        this.syncManager.setLocalAwarenessCursor,
-                      setLocalAwarenessSelectedElement:
-                        this.syncManager.setLocalAwarenessSelectedElement,
-                      setLocalAwarenessViewport:
-                        this.syncManager.setLocalAwarenessViewport,
-                      setLocalAwarenessFollowing:
-                        this.syncManager.setLocalAwarenessFollowing,
-                      getAwarenessStates: this.syncManager.getAwarenessStates,
-                      subscribeToAwarenessChanges:
-                        this.syncManager.subscribeToAwarenessChanges,
-                      subscribeToCollaboratorChanges:
-                        this.syncManager.subscribeToCollaboratorChanges,
-                      getLocalAwarenessClientId:
-                        this.syncManager.getLocalAwarenessClientId,
-                    }}
-                  />
-                </EdgeGeometryStoreContext.Provider>
-              </AlignmentGuidesStoreContext.Provider>
-            </AssessmentSelectionStoreContext.Provider>
-          </PopoverStoreContext.Provider>
-        </MetadataStoreContext.Provider>
-      </DiagramStoreContext.Provider>
+      <ApollonRoot
+        stores={stores}
+        onReactFlowInit={this.setReactFlowInstance.bind(this)}
+        collaboration={collaboration}
+        awareness={{
+          setLocalAwarenessCursor: this.syncManager.setLocalAwarenessCursor,
+          setLocalAwarenessSelectedElement:
+            this.syncManager.setLocalAwarenessSelectedElement,
+          setLocalAwarenessViewport: this.syncManager.setLocalAwarenessViewport,
+          setLocalAwarenessFollowing:
+            this.syncManager.setLocalAwarenessFollowing,
+          getAwarenessStates: this.syncManager.getAwarenessStates,
+          subscribeToAwarenessChanges:
+            this.syncManager.subscribeToAwarenessChanges,
+          subscribeToCollaboratorChanges:
+            this.syncManager.subscribeToCollaboratorChanges,
+          getLocalAwarenessClientId: this.syncManager.getLocalAwarenessClientId,
+        }}
+      />
     )
   }
 
@@ -366,15 +322,10 @@ export class ApollonEditor {
     }
 
     const ydoc = new Y.Doc()
-    const diagramStore = createDiagramStore(ydoc)
-    const metadataStore = createMetadataStore(
-      ydoc,
-      () => diagramStore.getState().previewMode
-    )
-    const popoverStore = createPopoverStore()
-    const assessmentSelectionStore = createAssessmentSelectionStore()
-    const alignmentGuidesStore = createAlignmentGuidesStore()
-    const edgeGeometryStore = createEdgeGeometryStore()
+    // Construct-only: no undo manager, no collaboration — keeps the headless
+    // render deterministic (see createApollonStores + the no-op awareness below).
+    const stores = createApollonStores(ydoc)
+    const { diagramStore } = stores
     const diagramId = Math.random().toString(36).substring(2, 15)
 
     let setReactFlowInstance: (instance: ReactFlowInstance) => void = () => {}
@@ -405,27 +356,12 @@ export class ApollonEditor {
       diagramStore.getState().setAssessments(model.assessments)
 
       svgRoot.render(
-        <DiagramStoreContext.Provider value={diagramStore}>
-          <MetadataStoreContext.Provider value={metadataStore}>
-            <PopoverStoreContext.Provider value={popoverStore}>
-              <AssessmentSelectionStoreContext.Provider
-                value={assessmentSelectionStore}
-              >
-                <AlignmentGuidesStoreContext.Provider
-                  value={alignmentGuidesStore}
-                >
-                  <EdgeGeometryStoreContext.Provider value={edgeGeometryStore}>
-                    <AppWithProvider
-                      onReactFlowInit={setReactFlowInstance}
-                      collaboration={disabledCollaboration}
-                      awareness={noopCollaborationAwareness}
-                    />
-                  </EdgeGeometryStoreContext.Provider>
-                </AlignmentGuidesStoreContext.Provider>
-              </AssessmentSelectionStoreContext.Provider>
-            </PopoverStoreContext.Provider>
-          </MetadataStoreContext.Provider>
-        </DiagramStoreContext.Provider>
+        <ApollonRoot
+          stores={stores}
+          onReactFlowInit={setReactFlowInstance}
+          collaboration={disabledCollaboration}
+          awareness={noopCollaborationAwareness}
+        />
       )
 
       // Race ReactFlow init against a 3 s timeout so a hung mount can't deadlock export.
