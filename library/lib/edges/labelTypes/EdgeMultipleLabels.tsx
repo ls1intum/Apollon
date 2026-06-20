@@ -1,7 +1,10 @@
-import { useMessagePositioning } from "../../hooks"
 import { IPoint } from "../Connection"
 import { MessageData } from "../EdgeProps"
-import { ARROW_SIZE, MessageGroupLayout } from "./messageLayout"
+import {
+  ARROW_SIZE,
+  computeMessageLayout,
+  MessageGroupLayout,
+} from "./messageLayout"
 
 interface EdgeMultipleLabelsProps {
   messages?: MessageData[]
@@ -10,7 +13,7 @@ interface EdgeMultipleLabelsProps {
   isReconnecting?: boolean
   sourcePosition: IPoint
   targetPosition: IPoint
-  isHorizontalEdge?: boolean
+  isHorizontalEdge: boolean
   textColor: string
 }
 
@@ -24,79 +27,59 @@ export const EdgeMultipleLabels = ({
   isHorizontalEdge,
   textColor,
 }: EdgeMultipleLabelsProps) => {
-  const displayMessages: MessageData[] = messages || []
+  const displayMessages = messages ?? []
 
-  const { forward, backward, isPositioned } = useMessagePositioning(
+  if (displayMessages.length === 0 || !showRelationshipLabels || isReconnecting)
+    return null
+
+  const { forward, backward } = computeMessageLayout(
     displayMessages,
     sourcePosition,
     targetPosition,
-    !!isHorizontalEdge
+    isHorizontalEdge
   )
-
-  if (
-    displayMessages.length === 0 ||
-    !showRelationshipLabels ||
-    !isPositioned ||
-    isReconnecting
-  )
-    return null
 
   const renderGroup = (group: MessageGroupLayout, keyPrefix: string) =>
-    group.messages.map((message, index) => {
-      const textX =
-        pathMiddlePosition.x + group.textOrigin.x + index * group.stackStep.x
-      const textY =
-        pathMiddlePosition.y + group.textOrigin.y + index * group.stackStep.y
-
-      return (
-        <g key={`${keyPrefix}-${index}`}>
-          {/* One direction arrow per group, rendered with the first message. */}
-          {index === 0 && (
-            <g
-              transform={`translate(${pathMiddlePosition.x + group.arrowOrigin.x}, ${
-                pathMiddlePosition.y + group.arrowOrigin.y
-              }) rotate(${group.arrowRotation}, ${ARROW_SIZE / 2}, ${ARROW_SIZE / 2})`}
-            >
-              {/* Scale the 24x24 icon paths down to the 16x16 arrow box. */}
-              <g transform={`scale(${ARROW_SIZE / 24})`}>
-                <path
-                  d="M2 12h20"
-                  stroke={textColor}
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  fill="none"
-                />
-                <path
-                  d="m17 5 5 7-5 7"
-                  stroke={textColor}
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  fill="none"
-                />
-              </g>
-            </g>
-          )}
-
-          <text
-            x={textX}
-            y={textY}
-            textAnchor={group.textAnchor}
-            dominantBaseline="middle"
-            style={{
-              fontSize: "14px",
-              fontWeight: 400,
-              fill: textColor,
-              userSelect: "none",
-              pointerEvents: "none",
-            }}
+    group.messages.map((message, index) => (
+      <g key={`${keyPrefix}-${message.id}`}>
+        {/* One direction arrow per group, drawn with the first message. */}
+        {index === 0 && (
+          <g
+            transform={`translate(${pathMiddlePosition.x + group.arrowOrigin.x}, ${
+              pathMiddlePosition.y + group.arrowOrigin.y
+            }) rotate(${group.arrowRotation}, ${ARROW_SIZE / 2}, ${ARROW_SIZE / 2})`}
           >
-            {message.text || ""}
-          </text>
-        </g>
-      )
-    })
+            {/* Arrow paths come from a 24×24 icon; scale them to the arrow box. */}
+            <g
+              transform={`scale(${ARROW_SIZE / 24})`}
+              stroke={textColor}
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            >
+              <path d="M2 12h20" />
+              <path d="m17 5 5 7-5 7" />
+            </g>
+          </g>
+        )}
+
+        <text
+          x={pathMiddlePosition.x + group.textOrigin.x + index * group.stackStep.x}
+          y={pathMiddlePosition.y + group.textOrigin.y + index * group.stackStep.y}
+          textAnchor={group.textAnchor}
+          dominantBaseline="middle"
+          style={{
+            fontSize: "14px",
+            fill: textColor,
+            userSelect: "none",
+            pointerEvents: "none",
+          }}
+        >
+          {message.text}
+        </text>
+      </g>
+    ))
 
   return (
     <g className="edge-labels">
