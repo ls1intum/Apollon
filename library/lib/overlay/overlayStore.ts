@@ -2,7 +2,6 @@ import { create, StoreApi, UseBoundStore } from "zustand"
 import { devtools } from "zustand/middleware"
 import {
   type Insets,
-  type OverlayBreakpoint,
   type OverlayControl,
   type OverlayRegion,
   type OverlaySide,
@@ -84,19 +83,16 @@ export type OverlayStore = {
   measured: Record<string, Partial<Record<OverlaySide, number>>>
   /** Derived content-inset rect — recomputed on every registry mutation. */
   insets: Insets
-  breakpoint: OverlayBreakpoint
 
   register: (control: OverlayControl) => void
   unregister: (id: string) => void
   setMeasured: (id: string, rect: Partial<Record<OverlaySide, number>>) => void
-  setBreakpoint: (bp: OverlayBreakpoint) => void
 }
 
 const initialState = {
   controls: {} as Record<string, OverlayControl>,
   measured: {} as Record<string, Partial<Record<OverlaySide, number>>>,
   insets: ZERO_INSETS,
-  breakpoint: "desktop" as OverlayBreakpoint,
 }
 
 export const createOverlayStore = (): UseBoundStore<StoreApi<OverlayStore>> =>
@@ -141,13 +137,6 @@ export const createOverlayStore = (): UseBoundStore<StoreApi<OverlayStore>> =>
             },
             undefined,
             "setMeasured"
-          ),
-
-        setBreakpoint: (breakpoint) =>
-          set(
-            (s) => (s.breakpoint === breakpoint ? s : { breakpoint }),
-            undefined,
-            "setBreakpoint"
           ),
       }),
       { name: "OverlayStore", enabled: true }

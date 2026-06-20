@@ -1,5 +1,4 @@
 import { type ReactNode, type CSSProperties } from "react"
-import type { ApollonMode, ApollonView } from "../typings"
 
 /**
  * Where a control is anchored. The six React Flow `<Panel>` corners are
@@ -43,16 +42,6 @@ export type InsetContribution =
   | OverlaySide[]
   | Partial<Record<OverlaySide, number | "auto">>
 
-export type OverlayBreakpoint = "mobile" | "tablet" | "desktop"
-
-export interface OverlayVisibilityState {
-  mode: ApollonMode
-  view: ApollonView
-  readonly: boolean
-  previewMode: boolean
-  breakpoint: OverlayBreakpoint
-}
-
 export interface OverlayControlOptions {
   /** Stable id. Re-adding the same id REPLACES (idempotent, StrictMode-safe). */
   id: string
@@ -66,8 +55,8 @@ export interface OverlayControlOptions {
   /** Wraps the control in a `role="group"` with this aria-label. No focus
    *  management is imposed. */
   groupLabel?: string
-  /** Hide without unregistering; a function recomputes on editor-state change. */
-  visible?: boolean | ((s: OverlayVisibilityState) => boolean)
+  /** Hide without unregistering (reserves no inset while hidden). */
+  visible?: boolean
   className?: string
   style?: CSSProperties
 }

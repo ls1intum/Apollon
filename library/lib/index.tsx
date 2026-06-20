@@ -2,15 +2,12 @@
 // `./internals` (unstable) or intentionally private.
 export * from "./typings"
 export { ApollonEditor } from "./apollon-editor"
-// Canvas overlay / control API types (regions, control options, insets) —
-// needed by both the imperative and React injection paths.
+// Canvas overlay / control API types — needed by both the imperative and React
+// injection paths.
 export type {
   OverlayRegion,
   OverlaySide,
-  Insets,
   InsetContribution,
-  OverlayBreakpoint,
-  OverlayVisibilityState,
   OverlayControlOptions,
   OverlayControlInput,
 } from "./overlay/types"

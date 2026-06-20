@@ -27,10 +27,10 @@ function serializeOptions(o: OverlayControlOptions): string {
 /**
  * Declarative façade over `editor.addControl`. Registers a control that renders
  * a stable host node into the chosen region, and portals `children` into that
- * node — so children render INSIDE the canvas (under React Flow + the stores,
- * usable with `useApollonInsets` etc.) while React owns their reconciliation.
- * Children changes therefore never touch the overlay store; only real option
- * changes (region/inset/order/…) push an update. Returns null in the host tree.
+ * node — so children render INSIDE the canvas while React owns their
+ * reconciliation. Children changes therefore never touch the overlay store; only
+ * real option changes (region/inset/order/…) push an update. Returns null in the
+ * host tree.
  */
 export function ApollonControl({
   children,

@@ -6,7 +6,7 @@
  * entry, causing Zustand's `useSyncExternalStore` to detect a "change" each
  * render and trigger "Maximum update depth exceeded".
  *
- * This test mounts the VersionDrawer (open) on a diagram that's never been
+ * This test mounts the version panel body (open) on a diagram that's never been
  * fetched — exactly the failing path from the user's report — and asserts:
  *   - no React error boundary fires,
  *   - the test environment console doesn't emit the cached-snapshot warning,

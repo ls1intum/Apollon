@@ -740,8 +740,8 @@ export const VersionRail: FC<Props> = ({
 }
 
 /**
- * Mobile fallback. On `<sm` viewports there isn't room for a 400-pixel
- * column, so we keep the bottom-sheet pattern for the small-screen case.
+ * Mobile fallback. On `<sm` viewports there isn't room for a side column
+ * (SIDEBAR_WIDTH), so we keep the bottom-sheet pattern for the small-screen case.
  */
 export const VersionDrawer: FC<Props> = ({
   diagramId,

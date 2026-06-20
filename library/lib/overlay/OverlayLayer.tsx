@@ -1,9 +1,4 @@
-import {
-  Panel,
-  ViewportPortal,
-  useStore as useReactFlowStore,
-  type PanelPosition,
-} from "@xyflow/react"
+import { Panel, ViewportPortal, type PanelPosition } from "@xyflow/react"
 import {
   useCallback,
   useEffect,
@@ -12,42 +7,16 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react"
-import { useShallow } from "zustand/shallow"
-import {
-  useDiagramStore,
-  useMetadataStore,
-  useOverlayStore,
-} from "../store/context"
+import { useOverlayStore } from "../store/context"
 import {
   PANEL_REGIONS,
-  type OverlayBreakpoint,
   type OverlayControl,
   type OverlayRegion,
   type OverlaySide,
-  type OverlayVisibilityState,
 } from "./types"
 
 /** Library-owned bands rendered as absolutely-positioned containers. */
 const BAND_REGIONS: OverlayRegion[] = ["header", "left-rail", "right-rail"]
-
-function breakpointForWidth(width: number): OverlayBreakpoint {
-  // Pre-measurement width is 0; treat it as desktop to avoid a transient
-  // mobile/tablet flip (and chrome flicker) on first paint.
-  if (width <= 0) return "desktop"
-  if (width < 768) return "mobile"
-  if (width < 1024) return "tablet"
-  return "desktop"
-}
-
-function isControlVisible(
-  control: OverlayControl,
-  state: OverlayVisibilityState
-): boolean {
-  if (control.visible === undefined) return true
-  return typeof control.visible === "function"
-    ? control.visible(state)
-    : control.visible
-}
 
 /** Which side a band/panel region measures for its auto inset. */
 const MEASURE_AXIS: Partial<Record<OverlayRegion, "width" | "height">> = {
@@ -107,7 +76,7 @@ interface ControlSlotProps {
 /**
  * Renders a single control: opts pointer events back in over the
  * pointer-transparent region frame, blocks canvas pan/zoom/wheel (#708 pattern,
- * pointer events only — never keyboard), and applies the toolbar a11y wrapper.
+ * pointer events only — never keyboard), and applies the role="group" wrapper.
  */
 function ControlSlot({ control, registerMeasure }: ControlSlotProps) {
   const interactive = control.interactive !== false
@@ -149,38 +118,20 @@ function ControlSlot({ control, registerMeasure }: ControlSlotProps) {
 /**
  * The single in-canvas host layer. Renders every registered overlay control into
  * its region (React Flow `<Panel>` for the six corners, library-owned bands for
- * header/rails/center/in-front, `<ViewportPortal>` for on-canvas) and measures
- * auto-inset controls with one shared ResizeObserver (the store derives the
- * content-inset rect from those measurements — it is the single inset authority).
+ * header/rails, `<ViewportPortal>` for on-canvas) and measures auto-inset
+ * controls with one shared ResizeObserver (the store derives the content-inset
+ * rect from those measurements — it is the single inset authority).
  */
 export function OverlayLayer() {
   const controls = useOverlayStore((s) => s.controls)
   const setMeasured = useOverlayStore((s) => s.setMeasured)
-  const breakpoint = useOverlayStore((s) => s.breakpoint)
-  const setBreakpoint = useOverlayStore((s) => s.setBreakpoint)
-
-  const { mode, view, readonly } = useMetadataStore(
-    useShallow((s) => ({ mode: s.mode, view: s.view, readonly: s.readonly }))
-  )
-  const previewMode = useDiagramStore((s) => s.previewMode)
-  const width = useReactFlowStore((s) => s.width)
-
-  // Container-derived breakpoint (embedders size independently of the window).
-  useEffect(() => {
-    setBreakpoint(breakpointForWidth(width))
-  }, [width, setBreakpoint])
-
-  const visibilityState: OverlayVisibilityState = useMemo(
-    () => ({ mode, view, readonly, previewMode, breakpoint }),
-    [mode, view, readonly, previewMode, breakpoint]
-  )
 
   const visibleControls = useMemo(
     () =>
       Object.values(controls)
-        .filter((c) => isControlVisible(c, visibilityState))
+        .filter((c) => c.visible !== false)
         .sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
-    [controls, visibilityState]
+    [controls]
   )
 
   // One shared ResizeObserver measures every auto-inset control; writes are
