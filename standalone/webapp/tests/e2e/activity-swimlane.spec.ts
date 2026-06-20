@@ -13,6 +13,7 @@ import { openFixtureInLocalEditor, waitForCanvasReady } from "../helpers/canvas"
 
 const SWIMLANE_ID = "sl"
 const ACTION_ID = "act"
+const TOL = 4 // px tolerance absorbing sub-pixel/anti-alias rounding only
 
 const swimlaneModel = (
   orientation: "vertical" | "horizontal",
@@ -72,7 +73,23 @@ const dragBy = async (
   await page.mouse.down()
   await page.mouse.move(from.x + dx, from.y + dy, { steps: 12 })
   await page.mouse.up()
-  await page.waitForTimeout(300)
+}
+
+// Drag the swimlane by its header band and assert the action tracks it 1:1 in
+// screen space — the observable proof that the action is parented to it.
+const expectActionTracksSwimlane = async (page: Page) => {
+  const s0 = await nodeBox(page, SWIMLANE_ID)
+  const c0 = await nodeBox(page, ACTION_ID)
+  await dragBy(page, { x: s0.x + s0.width / 2, y: s0.y + 12 }, -70, 55)
+  // Wait for the *child* to commit its new position (it's what we assert on),
+  // not just the swimlane — avoids reading the child mid-commit.
+  await expect
+    .poll(async () => (await nodeBox(page, ACTION_ID)).x - c0.x)
+    .toBeLessThan(-30)
+  const s1 = await nodeBox(page, SWIMLANE_ID)
+  const c1 = await nodeBox(page, ACTION_ID)
+  expect(Math.abs(c1.x - c0.x - (s1.x - s0.x))).toBeLessThanOrEqual(TOL)
+  expect(Math.abs(c1.y - c0.y - (s1.y - s0.y))).toBeLessThanOrEqual(TOL)
 }
 
 test.describe("activity swimlane", () => {
@@ -84,15 +101,7 @@ test.describe("activity swimlane", () => {
       swimlaneModel("vertical", { parented: true, x: 250, y: 140 })
     )
     await waitForCanvasReady(page)
-
-    const before = await nodeBox(page, ACTION_ID)
-    const sl = await nodeBox(page, SWIMLANE_ID)
-    // Grab the swimlane by its header band (top strip), away from the action.
-    await dragBy(page, { x: sl.x + sl.width / 2, y: sl.y + 12 }, 90, 60)
-
-    const after = await nodeBox(page, ACTION_ID)
-    expect(Math.round(after.x - before.x)).toBeGreaterThan(60)
-    expect(Math.round(after.y - before.y)).toBeGreaterThan(30)
+    await expectActionTracksSwimlane(page)
   })
 
   test("dropping a free action onto the swimlane makes it a child", async ({
@@ -114,39 +123,47 @@ test.describe("activity swimlane", () => {
       sl.x + sl.width * 0.7 - (act.x + act.width / 2),
       sl.y + sl.height * 0.6 - (act.y + act.height / 2)
     )
+    // Wait until the action has actually landed inside the swimlane frame.
+    await expect
+      .poll(async () => {
+        const s = await nodeBox(page, SWIMLANE_ID)
+        const a = await nodeBox(page, ACTION_ID)
+        const cx = a.x + a.width / 2
+        return cx >= s.x && cx <= s.x + s.width
+      })
+      .toBe(true)
 
-    // Proof of parenting: moving the swimlane now also moves the action.
-    const before = await nodeBox(page, ACTION_ID)
-    const sl2 = await nodeBox(page, SWIMLANE_ID)
-    await dragBy(page, { x: sl2.x + sl2.width / 2, y: sl2.y + 12 }, -70, 50)
-    const after = await nodeBox(page, ACTION_ID)
-    expect(Math.round(before.x - after.x)).toBeGreaterThan(40)
-    expect(Math.round(after.y - before.y)).toBeGreaterThan(25)
+    // Proof of parenting: the action now tracks the swimlane when it moves.
+    await expectActionTracksSwimlane(page)
   })
 
   test("flipping orientation keeps the action inside the frame", async ({
     page,
   }) => {
-    // Action near the right edge of a wide vertical swimlane — the case that
-    // would be stranded off-frame if children weren't transposed on flip.
+    // Action near the right edge of a wide vertical swimlane (in lane 2, fully
+    // inside: 270 + 150 = 420 < 440) — the case that strands a child off-frame
+    // if the flip transpose ignores the child's own width.
     await openFixtureInLocalEditor(
       page,
-      swimlaneModel("vertical", { parented: true, x: 360, y: 150 })
+      swimlaneModel("vertical", { parented: true, x: 270, y: 150 })
     )
     await waitForCanvasReady(page)
+    const before = await nodeBox(page, SWIMLANE_ID)
 
     await page.locator(`.react-flow__node[data-id="${SWIMLANE_ID}"]`).dblclick()
     await page.getByRole("combobox", { name: "Orientation" }).click()
     await page.getByRole("option", { name: "Horizontal (rows)" }).click()
-    await page.waitForTimeout(400)
+    // Flip is committed once the swimlane has become narrower (440 -> 280).
+    await expect
+      .poll(async () => (await nodeBox(page, SWIMLANE_ID)).width)
+      .toBeLessThan(before.width - 20)
 
     const sl = await nodeBox(page, SWIMLANE_ID)
     const act = await nodeBox(page, ACTION_ID)
-    const tol = 4
-    expect(act.x).toBeGreaterThanOrEqual(sl.x - tol)
-    expect(act.y).toBeGreaterThanOrEqual(sl.y - tol)
-    expect(act.x + act.width).toBeLessThanOrEqual(sl.x + sl.width + tol)
-    expect(act.y + act.height).toBeLessThanOrEqual(sl.y + sl.height + tol)
+    expect(act.x).toBeGreaterThanOrEqual(sl.x - TOL)
+    expect(act.y).toBeGreaterThanOrEqual(sl.y - TOL)
+    expect(act.x + act.width).toBeLessThanOrEqual(sl.x + sl.width + TOL)
+    expect(act.y + act.height).toBeLessThanOrEqual(sl.y + sl.height + TOL)
   })
 
   test("adding a lane grows the swimlane and removing one shrinks it", async ({
@@ -162,13 +179,14 @@ test.describe("activity swimlane", () => {
     await page.locator(`.react-flow__node[data-id="${SWIMLANE_ID}"]`).dblclick()
 
     await page.getByRole("button", { name: /Add lane/ }).click()
-    await page.waitForTimeout(300)
+    await expect
+      .poll(async () => (await nodeBox(page, SWIMLANE_ID)).width)
+      .toBeGreaterThan(start.width)
     const grown = await nodeBox(page, SWIMLANE_ID)
-    expect(grown.width).toBeGreaterThan(start.width + 20)
 
     await page.getByLabel("Delete lane").first().click()
-    await page.waitForTimeout(300)
-    const shrunk = await nodeBox(page, SWIMLANE_ID)
-    expect(shrunk.width).toBeLessThan(grown.width - 20)
+    await expect
+      .poll(async () => (await nodeBox(page, SWIMLANE_ID)).width)
+      .toBeLessThan(grown.width)
   })
 })

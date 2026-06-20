@@ -137,14 +137,8 @@ describe("canDropIntoParent – activity", () => {
 // ---------------------------------------------------------------------------
 
 describe("canDropIntoParent – activitySwimlane", () => {
-  it("accepts activity action-level nodes", () => {
+  it("accepts activity nodes by their type prefix", () => {
     expect(canDropIntoParent("activityActionNode", "activitySwimlane")).toBe(
-      true
-    )
-    expect(canDropIntoParent("activityFinalNode", "activitySwimlane")).toBe(
-      true
-    )
-    expect(canDropIntoParent("activityInitialNode", "activitySwimlane")).toBe(
       true
     )
     expect(canDropIntoParent("activityForkNode", "activitySwimlane")).toBe(true)

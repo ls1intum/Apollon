@@ -46,7 +46,6 @@ export const ActivitySwimlaneSVG: React.FC<ActivitySwimlaneSVGProps> = ({
       overflow="visible"
       {...svgAttributes}
     >
-      {/* Outer frame */}
       <StyledRect
         x={0}
         y={0}

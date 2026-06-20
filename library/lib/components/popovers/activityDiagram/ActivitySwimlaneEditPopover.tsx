@@ -9,7 +9,7 @@ import {
   Typography,
 } from "@mui/material"
 import { NodeStyleEditor, PrimaryButton, TextField } from "@/components/ui"
-import { generateUUID } from "@/utils"
+import { flipSwimlaneChildPosition, generateUUID } from "@/utils"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import { ActivitySwimlaneProps, DefaultNodeProps, SwimlaneLane } from "@/types"
@@ -62,25 +62,34 @@ export const ActivitySwimlaneEditPopover: React.FC<PopoverProps> = ({
   const handleOrientationChange = (next: "vertical" | "horizontal") => {
     if (next === orientation) return
     // Flipping the primary axis swaps the node's width and height. Children are
-    // positioned relative to the swimlane, so transpose their coordinates so
-    // they track the flip instead of being stranded off the swapped frame.
-    setNodes((current) =>
-      current.map((n) => {
+    // positioned relative to the swimlane, so transpose + clamp them into the
+    // swapped frame (see flipSwimlaneChildPosition) so a child near the old
+    // primary edge isn't stranded off the new cross-axis. Read the swimlane's
+    // current dimensions from `current` (not a render snapshot) so a resize
+    // while the popover is open can't write stale bounds.
+    setNodes((current) => {
+      const swimlane = current.find((n) => n.id === elementId)
+      const newWidth = swimlane?.height ?? 0
+      const newHeight = swimlane?.width ?? 0
+      return current.map((n) => {
         if (n.id === elementId) {
           return {
             ...n,
             data: { ...n.data, orientation: next },
-            width: n.height,
-            height: n.width,
-            measured: { ...n.measured, width: n.height, height: n.width },
+            width: newWidth,
+            height: newHeight,
+            measured: { ...n.measured, width: newWidth, height: newHeight },
           }
         }
         if (n.parentId === elementId) {
-          return { ...n, position: { x: n.position.y, y: n.position.x } }
+          return {
+            ...n,
+            position: flipSwimlaneChildPosition(n, newWidth, newHeight),
+          }
         }
         return n
       })
-    )
+    })
   }
 
   const handleLaneNameChange = (id: string, name: string) =>
