@@ -1,6 +1,5 @@
 import { EDGES, INTERFACE } from "@/constants"
 import type { UMLDiagramType } from "@/types/DiagramType"
-import { quantizeRatio } from "@/nodes/handles/anchorModel"
 import {
   adjustSourceCoordinates,
   adjustTargetCoordinates,
@@ -292,106 +291,39 @@ describe("getEdgeMarkerStyles", () => {
   })
 })
 // ---------------------------------------------------------------------------
-// ---------------------------------------------------------------------------
-// findClosestHandle — now resolves to canonical `side:ratio` anchors.
-// ---------------------------------------------------------------------------
-describe("findClosestHandle", () => {
+// findClosestHandle is a thin delegate to snapToAnchor (geometry is covered in
+// anchorModel.test.ts); these only pin that each option is forwarded.
+describe("findClosestHandle (option forwarding)", () => {
   const rect = { x: 0, y: 0, width: 300, height: 200 }
-  const anchorRe = /^[trbl]:\d\.\d{3}$/
 
-  describe("with variant=center (NSEW shapes)", () => {
-    it("returns the side centre nearest the drop point", () => {
-      expect(
-        findClosestHandle({
-          point: { x: 150, y: -10 },
-          rect,
-          variant: "center",
-        })
-      ).toBe("t:0.500")
-      expect(
-        findClosestHandle({
-          point: { x: 150, y: 210 },
-          rect,
-          variant: "center",
-        })
-      ).toBe("b:0.500")
-      expect(
-        findClosestHandle({
-          point: { x: -10, y: 100 },
-          rect,
-          variant: "center",
-        })
-      ).toBe("l:0.500")
-      expect(
-        findClosestHandle({
-          point: { x: 310, y: 100 },
-          rect,
-          variant: "center",
-        })
-      ).toBe("r:0.500")
-    })
-
-    it("only ever yields a side centre even near a corner", () => {
-      const result = findClosestHandle({
-        point: { x: 2, y: -2 },
-        rect,
-        variant: "center",
-      })
-      expect(result.endsWith(":0.500")).toBe(true)
-    })
+  it("defaults to the key model (snaps to a true corner near a corner)", () => {
+    expect(findClosestHandle({ point: { x: 1, y: -2 }, rect })).toBe("t:0.000")
   })
 
-  describe("with the default key model", () => {
-    it("snaps to the true corner near a corner", () => {
-      expect(findClosestHandle({ point: { x: 1, y: -2 }, rect })).toBe(
-        "t:0.000"
-      )
-      expect(findClosestHandle({ point: { x: 299, y: -2 }, rect })).toBe(
-        "t:1.000"
-      )
-    })
-
-    it("snaps to the side centre near the middle of a side", () => {
-      expect(findClosestHandle({ point: { x: 151, y: -3 }, rect })).toBe(
-        "t:0.500"
-      )
-    })
-
-    it("always returns a parseable, grid-aligned anchor", () => {
-      for (let t = 0; t <= 300; t += 5) {
-        const v = (t * rect.height) / rect.width
-        for (const point of [
-          { x: t, y: 0 },
-          { x: t, y: rect.height },
-          { x: 0, y: v },
-          { x: rect.width, y: v },
-        ]) {
-          const result = findClosestHandle({ point, rect })
-          expect(result).toMatch(anchorRe)
-          const [side, ratioStr] = result.split(":")
-          const axis = side === "t" || side === "b" ? rect.width : rect.height
-          // The stored ratio is a 2-decimal reference; exact grid alignment is
-          // a render-time guarantee via quantizeRatio against the live axis.
-          const px = quantizeRatio(Number(ratioStr), axis) * axis
-          expect(Math.abs(px - Math.round(px / 5) * 5)).toBeLessThan(1e-9)
-        }
-      }
-    })
-
-    it("excludeCorners never resolves to ratio 0 or 1", () => {
-      const result = findClosestHandle({
-        point: { x: 1, y: -1 },
-        rect,
-        excludeCorners: true,
-      })
-      expect(result).not.toBe("t:0.000")
-      expect(result).not.toBe("t:1.000")
-    })
+  it("forwards variant=center (only side centres)", () => {
+    expect(
+      findClosestHandle({ point: { x: 2, y: -2 }, rect, variant: "center" })
+    ).toBe("t:0.500")
   })
 
-  it("defaults variant to key", () => {
-    const result = findClosestHandle({ point: { x: 150, y: -5 }, rect })
-    expect(result).toMatch(anchorRe)
+  it("forwards excludeCorners (never ratio 0 or 1)", () => {
+    const result = findClosestHandle({
+      point: { x: 1, y: -1 },
+      rect,
+      excludeCorners: true,
+    })
+    expect(result).not.toBe("t:0.000")
+    expect(result).not.toBe("t:1.000")
+  })
+
+  it("forwards sides (resolves only to an allowed side)", () => {
+    // Drop is nearest the top, but only the bottom side is connectable.
+    const result = findClosestHandle({
+      point: { x: 150, y: -10 },
+      rect,
+      sides: ["b"],
+    })
+    expect(result.startsWith("b:")).toBe(true)
   })
 })
 

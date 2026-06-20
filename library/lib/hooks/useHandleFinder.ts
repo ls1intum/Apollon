@@ -74,6 +74,7 @@ export const useHandleFinder = () => {
         rect: nodeBounds,
         variant: config.variant === "center" ? "center" : "key",
         excludeCorners: config.excludeCorners,
+        sides: config.sides,
         zoom: getZoom(),
       })
       return {

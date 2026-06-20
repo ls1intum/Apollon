@@ -142,6 +142,7 @@ export const useConnect = () => {
             },
             variant: targetConfig.variant === "center" ? "center" : "key",
             excludeCorners: targetConfig.excludeCorners,
+            sides: targetConfig.sides,
             zoom: getZoom(),
           })
 

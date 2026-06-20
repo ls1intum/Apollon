@@ -1,5 +1,5 @@
 import { EDGES, INTERFACE } from "@/constants"
-import { snapToAnchor } from "@/nodes/handles/anchorModel"
+import { snapToAnchor, type Side } from "@/nodes/handles/anchorModel"
 import { IPoint, pointsToSvgPath } from "@/edges/Connection"
 import { DiagramEdgeType, UMLDiagramType } from "@/typings"
 import {
@@ -290,13 +290,16 @@ export function getEdgeMarkerStyles(edgeType: string): EdgeMarkerStyles {
   }
 }
 
-export interface FindClosestHandleParams {
+interface FindClosestHandleParams {
   point: XYPosition
   rect: Rect
   /** Handle set to snap to: "center" (NSEW shapes) or the full "key" set. */
   variant?: "key" | "center"
   /** Exclude the corner anchors (e.g. activity fork bars). */
   excludeCorners?: boolean
+  /** Connectable sides — must match the node's config so the resolved anchor
+   * is one the node actually renders. */
+  sides?: readonly Side[]
   /** Current canvas zoom — drives the grid level of detail. Defaults to 1. */
   zoom?: number
 }
@@ -311,9 +314,10 @@ export function findClosestHandle({
   rect,
   variant = "key",
   excludeCorners = false,
+  sides,
   zoom = 1,
 }: FindClosestHandleParams): string {
-  return snapToAnchor(rect, point, zoom, { variant, excludeCorners }).id
+  return snapToAnchor(rect, point, zoom, { variant, excludeCorners, sides }).id
 }
 
 export type Orientation = "horizontal" | "vertical"
