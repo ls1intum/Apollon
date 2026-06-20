@@ -9,6 +9,7 @@ import {
   parseAnchor,
   quantizeRatio,
   SIDE_TO_POSITION,
+  sideOwnsCorners,
   visibleKeyRatios,
   type AnchorKind,
   type Side,
@@ -116,11 +117,12 @@ export function ConnectHandles({
           ? new Set([0.5])
           : new Set(visibleKeyRatios(axis, zoom))
 
+      const dropCorners = config.excludeCorners || !sideOwnsCorners(side)
       const keyHandles =
         config.variant === "center"
           ? [{ ratio: 0.5, kind: "center" as AnchorKind }]
           : keyHandlesForSide(axis).filter(
-              (h) => !(config.excludeCorners && h.kind === "corner")
+              (h) => !(dropCorners && h.kind === "corner")
             )
 
       for (const { ratio, kind } of keyHandles) {

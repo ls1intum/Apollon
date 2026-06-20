@@ -242,6 +242,15 @@ export function ellipseAnchorPoint(
 const axisLengthForSide = (rect: Rect, side: Side): number =>
   side === "t" || side === "b" ? rect.width : rect.height
 
+/**
+ * The corner points (ratio 0 and 1) are shared by two sides but owned by the
+ * horizontal ones, so each corner renders a single handle instead of two
+ * overlapping arcs from a top/bottom AND a left/right side. Vertical sides
+ * therefore never emit a corner ratio.
+ */
+export const sideOwnsCorners = (side: Side): boolean =>
+  side === "t" || side === "b"
+
 /** Raw (un-snapped) ratio of the perpendicular projection of `point` onto a side. */
 const projectRatio = (rect: Rect, side: Side, point: Point): number => {
   if (side === "t" || side === "b") {
@@ -287,8 +296,9 @@ const candidateRatios = (
   if (opts.variant === "center") {
     candidates.push({ ratio: 0.5, kind: "center" })
   } else {
+    const dropCorners = opts.excludeCorners || !sideOwnsCorners(side)
     for (const handle of keyHandlesForSide(axis)) {
-      if (opts.excludeCorners && handle.kind === "corner") continue
+      if (dropCorners && handle.kind === "corner") continue
       candidates.push(handle)
     }
     // Fine grid points (only where they don't coincide with a key ratio).
@@ -297,7 +307,7 @@ const candidateRatios = (
       const keyRatios = new Set(candidates.map((c) => c.ratio))
       for (let px = 0; px <= axis + 1e-6; px += step) {
         const ratio = clamp01(px / axis)
-        if (opts.excludeCorners && (ratio === 0 || ratio === 1)) continue
+        if (dropCorners && (ratio === 0 || ratio === 1)) continue
         if (!keyRatios.has(ratio)) candidates.push({ ratio, kind: "grid" })
       }
     }

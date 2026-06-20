@@ -33,9 +33,24 @@ describe("buildServerRenderHandles", () => {
         "t:1.000",
       ])
     )
-    // left (height 60, short): corners + centre only, no quarters
+    // left (vertical): centre only — corners belong to top/bottom, not l/r,
+    // so each corner is one handle instead of two overlapping arcs.
     expect(got).toContain("l:0.500")
     expect(got).not.toContain("l:0.250")
+    expect(got).not.toContain("l:0.000")
+    expect(got).not.toContain("l:1.000")
+  })
+
+  it("emits each corner once, owned by the horizontal side", () => {
+    const got = ids(
+      buildServerRenderHandles({ nodeType: "class", width: 200, height: 200 })
+    )
+    // long vertical side would have quarters but never the shared corners
+    expect(got).toContain("r:0.500")
+    expect(got).not.toContain("r:0.000")
+    expect(got).not.toContain("r:1.000")
+    expect(got).toContain("t:0.000")
+    expect(got).toContain("t:1.000")
   })
 
   it("backs every referenced anchor id so SSR edges never drop", () => {

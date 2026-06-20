@@ -218,6 +218,21 @@ describe("anchorModel: snapToAnchor", () => {
     expect(r.kind).toBe("center")
   })
 
+  it("resolves a corner drop to the horizontal side, not l/r", () => {
+    // Top-left corner: top and left are equidistant; corners are owned by the
+    // horizontal side, so the result is t:0.000 (one handle per corner).
+    const r = snapToAnchor(RECT, { x: -2, y: -2 }, 1)
+    expect(r.side).toBe("t")
+    expect(r.ratio).toBe(0)
+  })
+
+  it("a left-side drop never yields a corner", () => {
+    const r = snapToAnchor(RECT, { x: -3, y: 1 }, 1)
+    expect(r.side).toBe("l")
+    expect(r.ratio).not.toBe(0)
+    expect(r.ratio).not.toBe(1)
+  })
+
   it("excludeCorners never snaps to ratio 0 or 1", () => {
     const r = snapToAnchor(RECT, { x: 1, y: -1 }, 1, { excludeCorners: true })
     expect(r.ratio).not.toBe(0)
