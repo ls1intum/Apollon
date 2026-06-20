@@ -377,19 +377,31 @@ export class ApollonEditor {
    * the diagram makes room for whatever the host mounts. Lifetime = the editor.
    */
   public getRegionElement(region: OverlayRegion): HTMLElement {
-    const existing = this.hostRegionEls.get(region)
-    if (existing) return existing
-    const el = document.createElement("div")
-    el.dataset.apollonHostRegion = region
-    this.hostRegionEls.set(region, el)
+    let el = this.hostRegionEls.get(region)
+    if (!el) {
+      el = document.createElement("div")
+      el.dataset.apollonHostRegion = region
+      this.hostRegionEls.set(region, el)
+    }
+    // Register on EVERY call (idempotent by id): a host that removed the control
+    // on close (e.g. the version rail) must get it back on reopen — returning
+    // the cached node without re-registering would leave the band unrendered and
+    // the inset stuck at 0.
+    const node = el
     this.overlayStore.getState().register({
       id: `apollon:host:${region}`,
       region,
       source: "imperative",
       inset: "auto",
-      render: () => <RegionMount el={el} />,
+      render: () => <RegionMount el={node} />,
     })
     return el
+  }
+
+  /** Release a region acquired via getRegionElement (unregister + drop the node). */
+  public releaseRegionElement(region: OverlayRegion): void {
+    this.overlayStore.getState().unregister(`apollon:host:${region}`)
+    this.hostRegionEls.delete(region)
   }
 
   /** Reserve room on a side without rendering (the standing-padding analog). */
@@ -441,6 +453,7 @@ export class ApollonEditor {
       this.syncManager.stopSync()
       this.root.unmount()
       this.ydoc.destroy()
+      this.hostRegionEls.clear()
       this.reactFlowInstance = null
     } catch (err) {
       // destroy() is best-effort — partial teardown is acceptable, but log

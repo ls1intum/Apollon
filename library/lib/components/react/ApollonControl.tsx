@@ -1,54 +1,73 @@
-import { useEffect, useRef, type ReactNode } from "react"
+import { useEffect, useRef, useState, type ReactNode } from "react"
+import { createPortal } from "react-dom"
 import { useApollonEditor } from "./context"
+import { RegionMount } from "../../overlay/RegionMount"
 import { type OverlayControlOptions } from "../../overlay/types"
 
 export type ApollonControlProps = OverlayControlOptions & {
   children: ReactNode
 }
 
+/** Stable signature of the non-children options; a function `visible` collapses
+ *  to a marker (its identity doesn't matter — it's re-evaluated with live state
+ *  on every OverlayLayer render). */
+function serializeOptions(o: OverlayControlOptions): string {
+  return JSON.stringify({
+    region: o.region,
+    order: o.order ?? null,
+    interactive: o.interactive ?? null,
+    toolbarLabel: o.toolbarLabel ?? null,
+    inset: o.inset ?? null,
+    visible: typeof o.visible === "function" ? "fn" : (o.visible ?? null),
+    className: o.className ?? null,
+    style: o.style ?? null,
+  })
+}
+
 /**
- * Declarative façade over `editor.addControl`. Renders `children` INSIDE the
- * editor's canvas (under the React Flow + store providers), so they may use
- * `useApollonInsets`, `useApollonViewport`, etc. The control is registered once
- * per `id`; option/children changes are pushed to the store so the slot
- * re-renders without re-registering.
+ * Declarative façade over `editor.addControl`. Registers a control that renders
+ * a stable host node into the chosen region, and portals `children` into that
+ * node — so children render INSIDE the canvas (under React Flow + the stores,
+ * usable with `useApollonInsets` etc.) while React owns their reconciliation.
+ * Children changes therefore never touch the overlay store; only real option
+ * changes (region/inset/order/…) push an update. Returns null in the host tree.
  */
 export function ApollonControl({
   children,
   ...options
-}: ApollonControlProps): null {
-  // Nullable: the imperative editor mounts asynchronously, so on the first
-  // render(s) it may not exist yet. We register once it's available.
+}: ApollonControlProps): ReactNode {
+  // Nullable: the imperative editor mounts asynchronously.
   const editor = useApollonEditor()
-  // Holds the latest children/options for the (stable) render thunk. Seeded from
-  // the first render's values; refreshed in an effect (never mutated in render).
-  const latest = useRef<{
-    children: ReactNode
-    options: OverlayControlOptions
-  }>({
-    children,
-    options,
+  const [host] = useState<HTMLDivElement | null>(() =>
+    typeof document !== "undefined" ? document.createElement("div") : null
+  )
+
+  const optionsRef = useRef(options)
+  useEffect(() => {
+    optionsRef.current = options
   })
 
-  // Register once per id once the editor exists; renderer reads latest via ref.
+  // Register once per id once the editor + host node exist.
   useEffect(() => {
-    if (!editor) return
+    if (!editor || !host) return
     const dispose = editor.addControl({
-      ...latest.current.options,
-      render: () => latest.current.children,
+      ...optionsRef.current,
+      render: () => <RegionMount el={host} />,
     })
     return dispose
-  }, [editor, options.id])
+  }, [editor, host, options.id])
 
-  // After every render, refresh the ref and push the latest options + children
-  // to the store so the slot reflects changes (registration stays stable per id).
+  // Push real option changes to the store (NOT on every children render) —
+  // keyed by a serialized signature of the non-children options.
+  const sig = serializeOptions(options)
   useEffect(() => {
-    latest.current = { children, options }
-    editor?.updateControl(options.id, {
-      ...options,
-      render: () => latest.current.children,
+    if (!editor || !host) return
+    editor.updateControl(options.id, {
+      ...optionsRef.current,
+      render: () => <RegionMount el={host} />,
     })
-  })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editor, host, options.id, sig])
 
-  return null
+  return host ? createPortal(children, host) : null
 }

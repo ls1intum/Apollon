@@ -86,26 +86,18 @@ export type OverlayControlInput = OverlayControlOptions & {
   render: () => ReactNode
 }
 
-/** Built-in library overlays, addressable for hide/replace via display options. */
-export type LibraryOverlayName =
-  | "palette"
-  | "controls"
-  | "minimap"
-  | "presence"
-  | "header"
-
 /**
- * View-only display configuration (issue #749). Toggling these is exactly
- * hiding/replacing the corresponding library overlay control under the hood —
- * one mechanism, two ergonomics.
+ * View-only display configuration (issue #749). Each flag toggles a built-in
+ * overlay; `undefined` keeps that overlay's default, so an editor that never
+ * sets them is unaffected.
  */
 export interface ApollonDisplayOptions {
+  /** Element palette. Default: visible in Modelling mode when not readonly. */
   palette?: boolean
+  /** Zoom / undo / redo controls. Default: visible. */
   controls?: boolean
+  /** Minimap. Default: visible. */
   minimap?: boolean
+  /** Collaborator presence bar. Default: follows the collaboration options. */
   presence?: boolean
-  /** Replace (fn) or hide (null) a built-in overlay; undefined keeps the default. */
-  components?: Partial<Record<LibraryOverlayName, (() => ReactNode) | null>>
-  /** Move a built-in overlay to a different region. */
-  regions?: Partial<Record<LibraryOverlayName, OverlayRegion>>
 }

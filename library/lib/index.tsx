@@ -14,7 +14,6 @@ export type {
   OverlayVisibilityState,
   OverlayControlOptions,
   OverlayControlInput,
-  LibraryOverlayName,
   ApollonDisplayOptions,
 } from "./overlay/types"
 export {

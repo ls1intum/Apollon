@@ -80,10 +80,37 @@ describe("overlayStore", () => {
     expect(store.getState().manualInsets.right).toBeUndefined()
   })
 
-  it("setInsets is a no-op when the rect is unchanged (stable reference)", () => {
+  it("recomputes insets synchronously on every mutation (single authority)", () => {
     const store = createOverlayStore()
-    const before = store.getState().insets
-    store.getState().setInsets({ top: 0, right: 0, bottom: 0, left: 0 })
-    expect(store.getState().insets).toBe(before)
+    expect(store.getState().insets).toEqual({
+      top: 0,
+      right: 0,
+      bottom: 0,
+      left: 0,
+    })
+    store
+      .getState()
+      .register(control({ id: "h", region: "header", inset: { top: 40 } }))
+    expect(store.getState().insets.top).toBe(40)
+    store.getState().setManualInset("right", 24)
+    expect(store.getState().insets.right).toBe(24)
+    store.getState().unregister("h")
+    expect(store.getState().insets.top).toBe(0)
+    expect(store.getState().insets.right).toBe(24) // manual floor survives
+  })
+
+  it("excludes statically-hidden controls (visible:false) from insets", () => {
+    const store = createOverlayStore()
+    store
+      .getState()
+      .register(
+        control({
+          id: "h",
+          region: "header",
+          inset: { top: 40 },
+          visible: false,
+        })
+      )
+    expect(store.getState().insets.top).toBe(0)
   })
 })

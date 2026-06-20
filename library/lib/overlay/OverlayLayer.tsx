@@ -5,7 +5,6 @@ import {
   type PanelPosition,
 } from "@xyflow/react"
 import {
-  Fragment,
   useCallback,
   useEffect,
   useMemo,
@@ -19,7 +18,6 @@ import {
   useMetadataStore,
   useOverlayStore,
 } from "../store/context"
-import { computeInsets } from "./overlayStore"
 import {
   PANEL_REGIONS,
   type OverlayBreakpoint,
@@ -40,7 +38,10 @@ const BAND_REGIONS: OverlayRegion[] = [
 ]
 
 function breakpointForWidth(width: number): OverlayBreakpoint {
-  if (width > 0 && width < 768) return "mobile"
+  // Pre-measurement width is 0; treat it as desktop to avoid a transient
+  // mobile/tablet flip (and chrome flicker) on first paint.
+  if (width <= 0) return "desktop"
+  if (width < 768) return "mobile"
   if (width < 1024) return "tablet"
   return "desktop"
 }
@@ -85,19 +86,26 @@ const REGION_PRIMARY_SIDE: Partial<Record<OverlayRegion, OverlaySide>> = {
 }
 
 const BAND_STYLE: Record<string, CSSProperties> = {
-  header: { top: 0, left: 0, right: 0, flexDirection: "row" },
+  // Pinned edges add the device safe-area inset so generic embedders (the iOS
+  // Capacitor app, a VS Code webview) don't paint chrome under a notch.
+  header: {
+    top: "var(--safe-area-inset-top, 0px)",
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+  },
   // Side rails sit between the header and any bottom chrome so they never tuck
   // under a full-width header band (insets default to 0px when none is present).
   "left-rail": {
     top: "var(--apollon-inset-top, 0px)",
     bottom: "var(--apollon-inset-bottom, 0px)",
-    left: 0,
+    left: "var(--safe-area-inset-left, 0px)",
     flexDirection: "column",
   },
   "right-rail": {
     top: "var(--apollon-inset-top, 0px)",
     bottom: "var(--apollon-inset-bottom, 0px)",
-    right: 0,
+    right: "var(--safe-area-inset-right, 0px)",
     flexDirection: "column",
   },
   "center-left": {
@@ -126,7 +134,13 @@ interface ControlSlotProps {
  * pointer events only — never keyboard), and applies the toolbar a11y wrapper.
  */
 function ControlSlot({ control, registerMeasure }: ControlSlotProps) {
-  const interactive = control.interactive !== false
+  // `in-front` is a non-interactive screen-space layer by default (guides,
+  // hints) — only opt into pointer events when the control explicitly asks, so a
+  // default in-front control can't swallow canvas pan/zoom.
+  const interactive =
+    control.region === "in-front"
+      ? control.interactive === true
+      : control.interactive !== false
   const setRef = useCallback(
     (el: HTMLDivElement | null) => registerMeasure(control.id, el),
     [control.id, registerMeasure]
@@ -135,16 +149,10 @@ function ControlSlot({ control, registerMeasure }: ControlSlotProps) {
     e.stopPropagation()
   }, [])
 
+  // role="group" (not "toolbar"): a labelled group of controls without imposing
+  // the toolbar single-tab-stop / roving-tabindex contract we don't implement.
   const content: ReactNode = control.toolbarLabel ? (
-    <div
-      role="toolbar"
-      aria-label={control.toolbarLabel}
-      aria-orientation={
-        control.region === "left-rail" || control.region === "right-rail"
-          ? "vertical"
-          : "horizontal"
-      }
-    >
+    <div role="group" aria-label={control.toolbarLabel}>
       {control.render()}
     </div>
   ) : (
@@ -173,16 +181,13 @@ function ControlSlot({ control, registerMeasure }: ControlSlotProps) {
 /**
  * The single in-canvas host layer. Renders every registered overlay control into
  * its region (React Flow `<Panel>` for the six corners, library-owned bands for
- * header/rails/center/in-front, `<ViewportPortal>` for on-canvas), measures
- * auto-inset controls with one shared ResizeObserver, and publishes the derived
- * content-inset rect to the overlay store.
+ * header/rails/center/in-front, `<ViewportPortal>` for on-canvas) and measures
+ * auto-inset controls with one shared ResizeObserver (the store derives the
+ * content-inset rect from those measurements — it is the single inset authority).
  */
 export function OverlayLayer() {
   const controls = useOverlayStore((s) => s.controls)
-  const measured = useOverlayStore((s) => s.measured)
-  const manualInsets = useOverlayStore((s) => s.manualInsets)
   const setMeasured = useOverlayStore((s) => s.setMeasured)
-  const setInsets = useOverlayStore((s) => s.setInsets)
   const breakpoint = useOverlayStore((s) => s.breakpoint)
   const setBreakpoint = useOverlayStore((s) => s.setBreakpoint)
 
@@ -281,11 +286,6 @@ export function OverlayLayer() {
     [scheduleMeasure]
   )
 
-  // Publish the single content-inset rect whenever inputs change.
-  useEffect(() => {
-    setInsets(computeInsets(visibleControls, measured, manualInsets))
-  }, [visibleControls, measured, manualInsets, setInsets])
-
   const byRegion = useMemo(() => {
     const map = new Map<OverlayRegion, OverlayControl[]>()
     for (const c of visibleControls) {
@@ -309,7 +309,7 @@ export function OverlayLayer() {
             pointerEvents: "none",
             display: "flex",
             gap: 8,
-            zIndex: "var(--apollon-z-chrome, 10005)" as unknown as number,
+            zIndex: "var(--apollon-z-chrome)" as unknown as number,
           }}
         >
           {byRegion.get(region)!.map((c) => (
@@ -332,7 +332,7 @@ export function OverlayLayer() {
             display: "flex",
             gap: 8,
             pointerEvents: "none",
-            zIndex: "var(--apollon-z-chrome, 10005)" as unknown as number,
+            zIndex: "var(--apollon-z-chrome)" as unknown as number,
             ...BAND_STYLE[region],
           }}
         >
@@ -348,8 +348,15 @@ export function OverlayLayer() {
 
       {onCanvas.length > 0 && (
         <ViewportPortal>
+          {/* Wrapped in ControlSlot so interactive on-canvas chrome blocks
+              canvas pan/zoom/wheel (nopan/nodrag/nowheel + capture stop) instead
+              of dragging the diagram under the pointer. */}
           {onCanvas.map((c) => (
-            <Fragment key={c.id}>{c.render()}</Fragment>
+            <ControlSlot
+              key={c.id}
+              control={c}
+              registerMeasure={registerMeasure}
+            />
           ))}
         </ViewportPortal>
       )}

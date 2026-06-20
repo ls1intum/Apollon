@@ -109,7 +109,8 @@ export type OverlayStore = {
   measured: Record<string, Partial<Record<OverlaySide, number>>>
   /** Explicit per-side floor set via `editor.setInset`. */
   manualInsets: Partial<Record<OverlaySide, number>>
-  /** Published content-inset rect (recomputed by OverlayLayer). */
+  /** Derived content-inset rect — recomputed on every registry mutation, so it
+   *  is the single inset authority (reliable without a render). */
   insets: Insets
   breakpoint: OverlayBreakpoint
   display: ApollonDisplayOptions
@@ -118,10 +119,8 @@ export type OverlayStore = {
   unregister: (id: string) => void
   setMeasured: (id: string, rect: Partial<Record<OverlaySide, number>>) => void
   setManualInset: (side: OverlaySide, px: number | null) => void
-  setInsets: (insets: Insets) => void
   setBreakpoint: (bp: OverlayBreakpoint) => void
   setDisplay: (display: Partial<ApollonDisplayOptions>) => void
-  reset: () => void
 }
 
 const initialState = {
@@ -198,19 +197,6 @@ export const createOverlayStore = (): UseBoundStore<StoreApi<OverlayStore>> =>
             "setManualInset"
           ),
 
-        setInsets: (insets) =>
-          set(
-            (s) =>
-              s.insets.top === insets.top &&
-              s.insets.right === insets.right &&
-              s.insets.bottom === insets.bottom &&
-              s.insets.left === insets.left
-                ? s
-                : { insets },
-            undefined,
-            "setInsets"
-          ),
-
         setBreakpoint: (breakpoint) =>
           set(
             (s) => (s.breakpoint === breakpoint ? s : { breakpoint }),
@@ -224,8 +210,6 @@ export const createOverlayStore = (): UseBoundStore<StoreApi<OverlayStore>> =>
             undefined,
             "setDisplay"
           ),
-
-        reset: () => set(initialState, undefined, "reset"),
       }),
       { name: "OverlayStore", enabled: true }
     )

@@ -31,12 +31,18 @@
   color: var(--apollon-primary-contrast, #000);
 
   /* Own stacking context so the editor's internal z-indexes (canvas content at
-     9998–10001, collaboration overlays at 10001–10004) stay self-contained and
-     the whole editor sits below host-app chrome — e.g. the webapp navbar's
-     body-portaled dropdown menus render above the presence bar. Use
-     `isolation` (not `transform`) so we don't create a containing block for
-     those portaled popovers (see the `.apollon-canvas` note below). */
+     9998–10001, collaboration overlays at 10001–10004, overlay chrome at
+     --apollon-z-chrome) stay self-contained and the whole editor sits below
+     host-app chrome — e.g. the webapp navbar's body-portaled dropdown menus
+     render above the presence bar. Use `isolation` (not `transform`) so we don't
+     create a containing block for those portaled popovers (see the
+     `.apollon-canvas` note below). */
   isolation: isolate;
+
+  /* Overlay chrome (header, rails, host controls): above canvas content +
+     collaboration overlays. Single source of truth, mirrored by ZINDEX.CHROME
+     in constants.ts. */
+  --apollon-z-chrome: 10005;
 }
 
 /* Positioning context + clip region for the absolutely-positioned

@@ -122,6 +122,11 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
   // means byte-identical layout.
   const insets = useOverlayStore((state) => state.insets)
 
+  // View-only display options (#749): host toggles for the built-in overlays.
+  // Undefined keeps each overlay's default, so an editor that never sets them is
+  // unaffected.
+  const display = useOverlayStore((state) => state.display)
+
   // Overlay the live positions/sizes of nodes peers are dragging (carried over
   // ephemeral awareness, never the document) onto what React Flow renders, so
   // remote drags stay live without per-frame CRDT writes. Suppressed during a
@@ -191,7 +196,9 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
         } as CSSProperties
       }
     >
-      {mode === ApollonMode.Modelling && !readonly && <Sidebar />}
+      {(display.palette ?? (mode === ApollonMode.Modelling && !readonly)) && (
+        <Sidebar />
+      )}
       <div className="apollon-canvas">
         <ReactFlow
           id={`react-flow-library-${diagramId}`}
@@ -240,8 +247,8 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
           zoomOnScroll={!scrollLock || scrollEnabled}
         >
           <CustomBackground />
-          <CustomMiniMap />
-          <CustomControls />
+          {(display.minimap ?? true) && <CustomMiniMap />}
+          {(display.controls ?? true) && <CustomControls />}
           <AlignmentGuides />
           <AssessmentSelectionDebug />
           {/* Host-injected canvas chrome (header, rails, controls). Renders
@@ -250,7 +257,14 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
           <OverlayLayer />
         </ReactFlow>
         <ScrollOverlay />
-        <CollaborationLayer options={collaboration} awareness={awareness} />
+        <CollaborationLayer
+          options={
+            display.presence === false
+              ? { ...collaboration, showPresence: false }
+              : collaboration
+          }
+          awareness={awareness}
+        />
       </div>
     </div>
   )
