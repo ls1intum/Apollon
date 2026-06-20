@@ -1,8 +1,8 @@
 name: "Setup pnpm + Node + install"
 description: >
   Installs pnpm, sets up Node (from .nvmrc by default) with the pnpm store
-  cached, and runs a frozen install. Shared by the PR-health and nightly jobs
-  so their toolchain pins live in one place. Use after actions/checkout (a
+  cached, and runs a frozen install. Shared across the CI jobs so their
+  toolchain pins live in one place. Use after actions/checkout (a
   local `./` composite can't perform the initial checkout itself).
 
 inputs:
