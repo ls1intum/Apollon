@@ -197,6 +197,11 @@ const NODE_LABEL_CAPABILITIES = {
   sfcJump: { wrapsName: false, rendersNameLabel: true },
   sfcTransitionBranch: { wrapsName: false, rendersNameLabel: true },
   sfcActionTable: { wrapsName: false, rendersNameLabel: true },
+
+  // Entity-Relationship — single-line names centred inside the shape.
+  erEntity: { wrapsName: false, rendersNameLabel: true },
+  erRelationship: { wrapsName: false, rendersNameLabel: true },
+  erAttribute: { wrapsName: false, rendersNameLabel: true },
 } as const satisfies Record<DiagramNodeType, NodeLabelCapabilities>
 
 /**

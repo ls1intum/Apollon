@@ -67,6 +67,12 @@ import { SfcActionTableEditPopover, SfcEdgeEditPopover } from "./sfcDiagram"
 import { ReachabilityGraphEdgeEditPopover } from "./edgePopovers/ReachabilityGraphEdgeEditPopover"
 import { BPMNDiagramEdgeEditPopover } from "./edgePopovers/BPMNDiagramEdgeEditPopover"
 import { PetriNetEdgeEditPopover } from "./edgePopovers/PetriNetEdgeEditPopover"
+import { ErDiagramEdgeEditPopover } from "./edgePopovers/ErDiagramEdgeEditPopover"
+import {
+  ErEntityEditPopover,
+  ErRelationshipEditPopover,
+  ErAttributeEditPopover,
+} from "./erDiagram"
 
 type NodePopoverType =
   | "class"
@@ -101,6 +107,9 @@ type NodePopoverType =
   | "ReachabilityGraphMarking"
   | "Sfc"
   | "SfcActionTable"
+  | "ErEntity"
+  | "ErRelationship"
+  | "ErAttribute"
 
 type EdgePopoverType =
   | "ClassAggregation"
@@ -137,6 +146,8 @@ type EdgePopoverType =
   | "SfcDiagramEdge"
   | "ReachabilityGraphArc"
   | "PetriNetArc"
+  | "ErConnector"
+  | "ErLink"
 
 type PopoverType = NodePopoverType | EdgePopoverType
 
@@ -207,6 +218,11 @@ const editPopovers: {
   ReachabilityGraphMarking: React.FC<PopoverProps>
   Sfc: React.FC<PopoverProps>
   SfcActionTable: React.FC<PopoverProps>
+  ErEntity: React.FC<PopoverProps>
+  ErRelationship: React.FC<PopoverProps>
+  ErAttribute: React.FC<PopoverProps>
+  ErConnector: React.FC<PopoverProps>
+  ErLink: React.FC<PopoverProps>
 } = {
   class: ClassEditPopover,
   objectName: ObjectEditPopover,
@@ -274,6 +290,11 @@ const editPopovers: {
   ReachabilityGraphMarking: ReachabilityGraphMarkingEditPopover,
   Sfc: DefaultNodeEditPopover,
   SfcActionTable: SfcActionTableEditPopover,
+  ErEntity: ErEntityEditPopover,
+  ErRelationship: ErRelationshipEditPopover,
+  ErAttribute: ErAttributeEditPopover,
+  ErConnector: ErDiagramEdgeEditPopover,
+  ErLink: ErDiagramEdgeEditPopover,
 }
 
 const giveFeedbackPopovers: {
@@ -343,6 +364,11 @@ const giveFeedbackPopovers: {
   Sfc: React.FC<PopoverProps>
   SfcActionTable: React.FC<PopoverProps>
   SfcDiagramEdge: React.FC<PopoverProps>
+  ErEntity: React.FC<PopoverProps>
+  ErRelationship: React.FC<PopoverProps>
+  ErAttribute: React.FC<PopoverProps>
+  ErConnector: React.FC<PopoverProps>
+  ErLink: React.FC<PopoverProps>
 } = {
   class: ClassGiveFeedbackPopover,
   objectName: ObjectGiveFeedbackPopover,
@@ -410,6 +436,11 @@ const giveFeedbackPopovers: {
   Sfc: DefaultNodeGiveFeedbackPopover,
   SfcActionTable: DefaultNodeGiveFeedbackPopover,
   SfcDiagramEdge: EdgeGiveFeedbackPopover,
+  ErEntity: DefaultNodeGiveFeedbackPopover,
+  ErRelationship: DefaultNodeGiveFeedbackPopover,
+  ErAttribute: DefaultNodeGiveFeedbackPopover,
+  ErConnector: EdgeGiveFeedbackPopover,
+  ErLink: EdgeGiveFeedbackPopover,
 }
 
 const seeFeedbackPopovers: {
@@ -479,6 +510,11 @@ const seeFeedbackPopovers: {
   Sfc: React.FC<PopoverProps>
   SfcActionTable: React.FC<PopoverProps>
   SfcDiagramEdge: React.FC<PopoverProps>
+  ErEntity: React.FC<PopoverProps>
+  ErRelationship: React.FC<PopoverProps>
+  ErAttribute: React.FC<PopoverProps>
+  ErConnector: React.FC<PopoverProps>
+  ErLink: React.FC<PopoverProps>
 } = {
   class: ClassSeeFeedbackPopover,
   objectName: ObjectSeeFeedbackPopover,
@@ -546,6 +582,11 @@ const seeFeedbackPopovers: {
   Sfc: DefaultNodeSeeFeedbackPopover,
   SfcActionTable: DefaultNodeSeeFeedbackPopover,
   SfcDiagramEdge: EdgeSeeFeedbackPopover,
+  ErEntity: DefaultNodeSeeFeedbackPopover,
+  ErRelationship: DefaultNodeSeeFeedbackPopover,
+  ErAttribute: DefaultNodeSeeFeedbackPopover,
+  ErConnector: EdgeSeeFeedbackPopover,
+  ErLink: EdgeSeeFeedbackPopover,
 }
 
 interface PopoverManagerProps {

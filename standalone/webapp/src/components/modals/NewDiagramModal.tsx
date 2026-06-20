@@ -26,6 +26,7 @@ const diagramTypes = {
     UMLDiagramType.Flowchart,
     UMLDiagramType.SyntaxTree,
     UMLDiagramType.Sfc,
+    UMLDiagramType.EntityRelationship,
   ],
   behavioral: [
     UMLDiagramType.ActivityDiagram,
@@ -51,6 +52,7 @@ const diagramTypeToTitle: Record<UMLDiagramType, string> = {
   Flowchart: "Flowchart",
   BPMN: "BPMN Diagram",
   Sfc: "Sequential Function Chart Diagram",
+  EntityRelationship: "Entity-Relationship Diagram",
 }
 
 const toDiagramOption = (

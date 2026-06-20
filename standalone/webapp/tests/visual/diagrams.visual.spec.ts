@@ -35,7 +35,7 @@ function loadFixture(filename: string): Record<string, unknown> {
   return JSON.parse(raw) as Record<string, unknown>
 }
 
-// All 13 diagram fixtures with human-readable name + kebab-case file slug.
+// All 14 diagram fixtures with human-readable name + kebab-case file slug.
 // `fitView: true` triggers the ReactFlow fit-view button so the full diagram
 // is visible — needed for diagrams that overflow the viewport at zoom 1.0.
 const diagramFixtures = [
@@ -101,12 +101,18 @@ const diagramFixtures = [
     fitView: true,
   },
   { name: "Sfc", file: "sfc", fixture: loadFixture("sfc.json") },
+  {
+    name: "EntityRelationship",
+    file: "entity-relationship-diagram",
+    fixture: loadFixture("entity-relationship-diagram.json"),
+    fitView: true,
+  },
 ]
 
 // Helpers imported from ../helpers/canvas
 
 // ---------------------------------------------------------------------------
-// 1. Fixture-based diagram tests (all 13 diagram types)
+// 1. Fixture-based diagram tests (all 14 diagram types)
 // ---------------------------------------------------------------------------
 
 test.describe("Visual regression - diagram fixtures", () => {
@@ -137,7 +143,7 @@ test.describe("Visual regression - diagram fixtures", () => {
 // 2. Template diagrams – GoF design pattern templates loaded via fixture injection
 // ---------------------------------------------------------------------------
 // The template JSON files live in the webapp's assets directory. We load them
-// via fixture injection (the same approach as the 13 diagram fixtures above)
+// via fixture injection (the same approach as the 14 diagram fixtures above)
 // so the tests are deterministic and don't depend on Vite serving dynamic
 // imports at runtime.
 

@@ -16,6 +16,13 @@ export type CustomEdgeProps = {
   points: IPoint[]
   label?: string | null
   messages?: MessageData[] // For communication diagram edges with direction-aware messages
+  // Entity-Relationship connector (entity↔relationship). The cardinality is a
+  // single label per branch — each entity/relationship pair is its own edge.
+  // Stored verbatim so both Chen ratio ("1"/"N"/"M") and (min,max) notations are
+  // supported without a diagram-level mode (placement-preserving / look-across).
+  cardinality?: string | null
+  // Participation of the connected entity: "total" renders a double line.
+  participation?: "partial" | "total"
   strokeColor?: string
   textColor?: string
 }

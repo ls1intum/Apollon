@@ -131,6 +131,8 @@ export function getEdgeMarkerStyles(edgeType: string): EdgeMarkerStyles {
     case "ObjectLink":
     case "SyntaxTreeLink":
     case "CommunicationLink":
+    case "ErConnector":
+    case "ErLink":
       return {
         markerPadding: EDGES.MARKER_PADDING,
         strokeDashArray: "0",
@@ -2404,6 +2406,8 @@ export const getDefaultEdgeType = (
       return "CommunicationLink"
     case "PetriNet":
       return "PetriNetArc"
+    case "EntityRelationship":
+      return "ErConnector"
     default:
       return "ClassUnidirectional"
   }
@@ -2421,6 +2425,7 @@ export function getConnectionLineType(
     case "UseCaseDiagram":
     case "SyntaxTree":
     case "PetriNet":
+    case "EntityRelationship":
       return ConnectionLineType.Straight
 
     default:

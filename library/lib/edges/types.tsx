@@ -12,6 +12,8 @@ import { ReachabilityGraphEdge } from "./edgeTypes/ReachabilityGraphArc"
 import { CommunicationDiagramEdge } from "./edgeTypes/CommunicationDiagramEdge"
 import { BPMNDiagramEdge } from "./edgeTypes/BPMNDiagramEdge"
 import { PetriNetEdge } from "./edgeTypes/PetriNetEdge"
+import { ErConnectorEdge } from "./edgeTypes/ErConnectorEdge"
+import { ErLinkEdge } from "./edgeTypes/ErLinkEdge"
 
 export const diagramEdgeTypes = {
   ClassAggregation: ClassDiagramEdge,
@@ -60,6 +62,9 @@ export const diagramEdgeTypes = {
   BPMNMessageFlow: BPMNDiagramEdge,
   BPMNAssociationFlow: BPMNDiagramEdge,
   BPMNDataAssociationFlow: BPMNDiagramEdge,
+
+  ErConnector: ErConnectorEdge,
+  ErLink: ErLinkEdge,
 } satisfies EdgeTypes
 
 export const edgeConfig = {
@@ -151,6 +156,9 @@ export const edgeConfig = {
   SfcDiagramEdge: {
     allowMidpointDragging: true,
   },
+
+  ErConnector: { allowMidpointDragging: true },
+  ErLink: { allowMidpointDragging: true },
 } as const
 
 export type DiagramEdgeType = keyof typeof diagramEdgeTypes

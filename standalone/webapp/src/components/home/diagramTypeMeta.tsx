@@ -26,6 +26,7 @@ const diagramTypes = {
   Flowchart: "Flowchart",
   BPMN: "BPMN",
   Sfc: "Sfc",
+  EntityRelationship: "EntityRelationship",
 } satisfies Record<string, UMLDiagramType>
 
 const makeTile = (
@@ -546,6 +547,49 @@ const diagramTiles = {
       <path d="M35 22 L37 24 L35 26" stroke="currentColor" strokeWidth="2" />
     </svg>
   ),
+  entityRelationship: makeTile(
+    diagramTypes.EntityRelationship,
+    "Entity-Relationship Diagram",
+    <svg className={iconClassName} viewBox="0 0 48 48" fill="none">
+      <rect
+        x="4"
+        y="18"
+        width="14"
+        height="12"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <path
+        d="M30 17 L37 24 L30 31 L23 24 Z"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <ellipse
+        cx="42"
+        cy="10"
+        rx="5"
+        ry="3.5"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <line
+        x1="18"
+        y1="24"
+        x2="23"
+        y2="24"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <line
+        x1="37"
+        y1="20"
+        x2="40"
+        y2="13"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+    </svg>
+  ),
 }
 
 const tilesByType: Partial<Record<UMLDiagramType, DiagramTile>> = Object.values(
@@ -573,6 +617,7 @@ const shortLabelsByType: Partial<Record<UMLDiagramType, string>> = {
   Flowchart: "Flow",
   BPMN: "BPMN",
   Sfc: "SFC",
+  EntityRelationship: "ER",
 }
 
 export const getDiagramTypeShortLabel = (type: UMLDiagramType): string =>
