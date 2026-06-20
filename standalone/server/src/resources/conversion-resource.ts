@@ -192,12 +192,21 @@ export class ConversionResource {
 
   /** Crash / timeout: fail the in-flight job, replace the worker with backoff. */
   private onExit(pw: PooledWorker, error: Error) {
+    // Idempotent: ignore a worker already removed from the pool. `terminate()`
+    // exits with a non-zero code, so every intentional shutdown (retire, reap,
+    // and this method's own cleanup) re-fires `exit` — and the worker's `error`
+    // then `exit` both fire on a real crash. Without this guard those would
+    // re-enter as fake crashes, inflating the backoff counter and respawning
+    // past the pool cap.
+    if (!this.workers.includes(pw)) return
+    this.workers = this.workers.filter((w) => w !== pw)
+
     if (pw.active) {
       clearTimeout(pw.active.timeout)
       pw.active.job.reject(error)
+      pw.active = undefined
     }
     void pw.worker.terminate().catch(() => undefined)
-    this.workers = this.workers.filter((w) => w !== pw)
 
     this.consecutiveCrashes += 1
     const backoff = Math.min(
@@ -217,8 +226,10 @@ export class ConversionResource {
 
   /** Gracefully terminate a worn worker and drop it from the pool. */
   private retire(pw: PooledWorker) {
-    void pw.worker.terminate().catch(() => undefined)
+    // Drop from the pool BEFORE terminating, so the terminate's exit(1) is
+    // ignored by `onExit` (worker no longer present) rather than counted.
     this.workers = this.workers.filter((w) => w !== pw)
+    void pw.worker.terminate().catch(() => undefined)
     if (this.workers.length < this.poolMin) this.spawn()
   }
 
@@ -231,8 +242,8 @@ export class ConversionResource {
         this.workers.length > this.poolMin &&
         now - pw.idleSince >= idleTtlMs
       ) {
-        void pw.worker.terminate().catch(() => undefined)
         this.workers = this.workers.filter((w) => w !== pw)
+        void pw.worker.terminate().catch(() => undefined)
       }
     }
   }
