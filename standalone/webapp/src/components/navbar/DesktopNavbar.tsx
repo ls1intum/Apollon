@@ -112,17 +112,21 @@ export const DesktopNavbar = () => {
               maxWidth: 280,
               "& .MuiInputBase-root": { height: 36 },
               "& .MuiInputBase-input": {
-                color: "white",
+                color: "var(--apollon-chrome-text)",
                 padding: "6px 10px",
               },
+              "& .MuiInputBase-input::placeholder": {
+                color: "var(--apollon-chrome-text-muted)",
+                opacity: 1,
+              },
               "& .MuiOutlinedInput-notchedOutline": {
-                borderColor: "rgba(255, 255, 255, 0.22)",
+                borderColor: "var(--apollon-chrome-border-strong)",
               },
               "&:hover .MuiOutlinedInput-notchedOutline": {
-                borderColor: "rgba(255, 255, 255, 0.4)",
+                borderColor: "var(--apollon-chrome-text-muted)",
               },
               "& .Mui-focused .MuiOutlinedInput-notchedOutline": {
-                borderColor: "rgba(255, 255, 255, 0.6)",
+                borderColor: "var(--apollon-chrome-accent)",
               },
             }}
           />

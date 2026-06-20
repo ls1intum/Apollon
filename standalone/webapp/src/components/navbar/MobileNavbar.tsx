@@ -124,7 +124,7 @@ export default function MobileNavbar() {
               flex: 1,
               minWidth: 0,
               mx: 1.5,
-              color: "white",
+              color: "var(--apollon-chrome-text)",
               fontSize: 14,
               fontWeight: 600,
               textAlign: "center",

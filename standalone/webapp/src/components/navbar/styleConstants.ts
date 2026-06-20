@@ -1,7 +1,6 @@
 import type { SxProps, Theme } from "@mui/material/styles"
-import { NAVBAR_BACKGROUND_COLOR, secondary } from "@/constants"
 
-export const NAVBAR_DROP_SHADOW = "0 1px 3px rgba(15, 23, 42, 0.16)"
+export const NAVBAR_DROP_SHADOW = "var(--apollon-chrome-shadow-docked)"
 
 // Single source of truth for the app header height — keeps the home dashboard
 // and the in-editor navbars (desktop + mobile) the same height everywhere.
@@ -22,15 +21,12 @@ export const NAVBAR_TOOLBAR_SX = {
 /**
  * Shared style for every action button in the navbars (File, Share, Help,
  * Version history, Save copy) so they all match the `BackNav` "All diagrams"
- * link: compact, no uppercase, and the same hover. `onDark` (the desktop bar)
- * idles in the muted `secondary` grey and brightens to white on hover with a
- * translucent fill; otherwise (the light mobile menu) it tints the surface.
- * Inner text/icons must use `currentColor` so the hover colour reaches them.
+ * link: compact, no uppercase, and the same hover. One theme-reactive idiom now
+ * that the header is a light themed surface (not a dark plate): idle in muted
+ * chrome text, wash toward the chrome hover surface on hover/focus. Inner
+ * text/icons use `currentColor` so the hover colour reaches them.
  */
-export const navbarButtonSx = (
-  fg: string,
-  onDark: boolean
-): SxProps<Theme> => ({
+export const navbarButtonSx = (fg?: string): SxProps<Theme> => ({
   textTransform: "none",
   minWidth: 0,
   gap: 0.5,
@@ -39,18 +35,23 @@ export const navbarButtonSx = (
   fontSize: "0.875rem",
   fontWeight: 500,
   lineHeight: 1.25,
-  borderRadius: "var(--home-radius-md)",
-  color: fg,
+  borderRadius: "var(--apollon-chrome-radius-md)",
+  color: fg ?? "var(--apollon-chrome-text-muted)",
   "& .MuiButton-startIcon": { mx: 0 },
-  "&:hover": onDark
-    ? { backgroundColor: "rgba(255, 255, 255, 0.1)", color: "#fff" }
-    : { backgroundColor: "var(--apollon-background-variant)" },
+  "&:hover": {
+    backgroundColor: "var(--apollon-chrome-surface-hover)",
+    color: "var(--apollon-chrome-text)",
+  },
+  "&:focus-visible": {
+    outline: "2px solid var(--apollon-chrome-accent)",
+    outlineOffset: "2px",
+  },
 })
 
-/** Desktop bar omits an explicit colour → muted grey on the dark bar; the
- * mobile menu passes a colour → that colour on the light surface. */
+/** `color` lets the mobile menu pin an explicit colour; otherwise the shared
+ * muted-chrome idiom applies (desktop bar + light popover are now identical). */
 export const navbarButtonStyle = (color?: string): SxProps<Theme> =>
-  navbarButtonSx(color ?? secondary, !color)
+  navbarButtonSx(color)
 
 export const APP_NAME_FONT_FAMILY =
   '"Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue", Arial, sans-serif'
@@ -59,8 +60,9 @@ export const NAVBAR_SX: SxProps<Theme> = {
   position: "sticky",
   top: 0,
   zIndex: (theme) => theme.zIndex.appBar,
-  bgcolor: NAVBAR_BACKGROUND_COLOR,
+  bgcolor: "var(--apollon-chrome-surface)",
+  color: "var(--apollon-chrome-text)",
   backgroundImage: "none",
-  borderBottom: "none",
-  boxShadow: NAVBAR_DROP_SHADOW,
+  borderBottom: "1px solid var(--apollon-chrome-border)",
+  boxShadow: "var(--apollon-chrome-shadow-docked)",
 }

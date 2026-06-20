@@ -117,7 +117,7 @@ export const HomeHelpMenu = ({ className }: { className?: string }) => {
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
-        className="flex h-9 w-9 items-center justify-center rounded-md text-white/90 transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+        className="flex h-9 w-9 items-center justify-center rounded-md text-[color:var(--apollon-chrome-text-muted)] transition-colors hover:bg-[var(--apollon-chrome-surface-hover)] hover:text-[color:var(--apollon-chrome-text)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--apollon-chrome-accent)]"
       >
         <MoreIcon />
       </button>

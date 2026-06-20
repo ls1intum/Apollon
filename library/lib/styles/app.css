@@ -16,6 +16,88 @@
   --safe-area-inset-left: env(safe-area-inset-left, 0px);
 }
 
+/* ── Shared in-canvas chrome contract ─────────────────────────────────────
+   ONE token family consumed by every piece of editor chrome — library palette,
+   zoom/undo controls, minimap, presence AND the webapp's portaled navbar +
+   version-history rail — so they read as a single, theme-reactive surface
+   (Figma/tldraw/Excalidraw all build their toolbars, menus, panels and side
+   rails on one shared "panel" primitive; the old fixed #20242c plate over a
+   light canvas was the opposite of that).
+
+   Surfaces are DERIVED from --apollon-background + --apollon-primary-contrast
+   via color-mix, so any host that themes those two tokens (the webapp flips
+   them per `data-theme`; an embedder can override --apollon-background alone)
+   gets correct chrome for free — no separate per-host palette. Only the
+   shadows, which don't read on a dark canvas, get a dark-mode override below. */
+:root {
+  /* Surface ladder: base == canvas; chrome separates via border + elevation. */
+  --apollon-chrome-surface: var(--apollon-background, #fff);
+  --apollon-chrome-surface-raised: color-mix(
+    in srgb,
+    var(--apollon-primary-contrast, #000) 4%,
+    var(--apollon-background, #fff)
+  );
+  --apollon-chrome-surface-hover: color-mix(
+    in srgb,
+    var(--apollon-primary-contrast, #000) 8%,
+    var(--apollon-background, #fff)
+  );
+  --apollon-chrome-surface-active: color-mix(
+    in srgb,
+    var(--apollon-primary-contrast, #000) 14%,
+    var(--apollon-background, #fff)
+  );
+
+  /* Borders: opaque cool neutrals that hold their contrast in both themes. */
+  --apollon-chrome-border: color-mix(
+    in srgb,
+    var(--apollon-primary-contrast, #000) 12%,
+    var(--apollon-background, #fff)
+  );
+  --apollon-chrome-border-strong: color-mix(
+    in srgb,
+    var(--apollon-primary-contrast, #000) 28%,
+    var(--apollon-background, #fff)
+  );
+
+  /* Text */
+  --apollon-chrome-text: var(--apollon-primary-contrast, #212529);
+  --apollon-chrome-text-muted: color-mix(
+    in srgb,
+    var(--apollon-primary-contrast, #000) 58%,
+    var(--apollon-background, #fff)
+  );
+
+  /* Accent — reserved for meaning (primary action, selection, current marker).
+     Chrome surfaces themselves stay neutral. */
+  --apollon-chrome-accent: var(--apollon-primary, #3e8acc);
+  --apollon-chrome-accent-contrast: #ffffff;
+
+  /* Radius ramp: sm pills, md controls, lg panels/rails. */
+  --apollon-chrome-radius-sm: 6px;
+  --apollon-chrome-radius-md: 8px;
+  --apollon-chrome-radius-lg: 12px;
+
+  /* Elevation: docked chrome (header/rail) = hairline + flat micro-shadow;
+     floating chrome (palette/controls/minimap) = soft halo. */
+  --apollon-chrome-shadow-docked: 0 1px 2px rgb(15 23 42 / 8%);
+  --apollon-chrome-shadow-floating: 0 0 1px 0 rgb(15 23 42 / 20%),
+    0 2px 8px 0 rgb(15 23 42 / 12%);
+  /* Lit up only in dark mode (a pure drop shadow vanishes on a dark canvas). */
+  --apollon-chrome-inset-hairline: 0 0 0 0 transparent;
+}
+
+/* Dark mode only needs to fix the shadows + add the contrast hairline; the
+   surfaces above already track the dark --apollon-background via color-mix.
+   `:root[data-theme]` is how the webapp flips the theme; the `.apollon-editor`
+   selector lets a standalone library host theme a single editor instance. */
+:root[data-theme="dark"],
+.apollon-editor[data-theme="dark"] {
+  --apollon-chrome-shadow-docked: 0 1px 2px rgb(0 0 0 / 40%);
+  --apollon-chrome-shadow-floating: 0 2px 12px 0 rgb(0 0 0 / 50%);
+  --apollon-chrome-inset-hairline: inset 0 0 0 1px rgb(255 255 255 / 8%);
+}
+
 .react-flow {
   --panel-background: var(--apollon-background, #fff);
   --panel-shadow: 0 0 4px 0 var(--apollon-background-variant, #f8f9fa);
@@ -253,11 +335,12 @@
   padding: 6px;
   overflow-y: auto;
   overscroll-behavior: contain;
-  background: var(--apollon-background, #fff);
-  color: var(--apollon-primary-contrast, #000);
-  border: 1px solid var(--apollon-gray, #e9ecef);
-  border-radius: 6px;
-  box-shadow: 0 2px 8px rgb(0 0 0 / 18%);
+  background: var(--apollon-chrome-surface);
+  color: var(--apollon-chrome-text);
+  border: 1px solid var(--apollon-chrome-border);
+  border-radius: var(--apollon-chrome-radius-lg);
+  box-shadow: var(--apollon-chrome-shadow-floating),
+    var(--apollon-chrome-inset-hairline);
 }
 
 /* grid-template-columns and gap come inline from the computed layout. */
@@ -272,12 +355,12 @@
   align-items: center;
   justify-content: center;
   cursor: grab;
-  border-radius: 4px;
+  border-radius: var(--apollon-chrome-radius-sm);
   transition: background-color 120ms ease;
 }
 
 .apollon-palette__entry:hover {
-  background: var(--apollon-background-variant, #f8f9fa);
+  background: var(--apollon-chrome-surface-hover);
 }
 
 .apollon-palette__entry:active {
@@ -292,10 +375,10 @@
 }
 
 .apollon-palette__view-button {
-  border-radius: 6px;
-  border: 1px solid var(--apollon-primary-contrast, #000);
+  border-radius: var(--apollon-chrome-radius-md);
+  border: 1px solid var(--apollon-chrome-border-strong);
   background: transparent;
-  color: var(--apollon-primary-contrast, #000);
+  color: var(--apollon-chrome-text);
   padding: 6px 8px;
   cursor: pointer;
   font-weight: 600;
@@ -303,9 +386,15 @@
   font-size: 12px;
 }
 
-.apollon-palette__view-button--active {
-  background: var(--apollon-primary, #3e8acc);
-  color: var(--apollon-background, #fff);
+.apollon-palette__view-button:hover {
+  background: var(--apollon-chrome-surface-hover);
+}
+
+.apollon-palette__view-button--active,
+.apollon-palette__view-button--active:hover {
+  background: var(--apollon-chrome-accent);
+  color: var(--apollon-chrome-accent-contrast);
+  border-color: var(--apollon-chrome-accent);
 }
 
 .apollon-palette__hint {
@@ -341,10 +430,21 @@
 
 .react-flow__panel,
 .react-flow__node-toolbar {
-  background-color: var(--panel-background);
-  box-shadow: var(--panel-shadow);
-  border-radius: 8px;
+  background-color: var(--apollon-chrome-surface);
+  box-shadow: var(--apollon-chrome-shadow-floating),
+    var(--apollon-chrome-inset-hairline);
+  border-radius: var(--apollon-chrome-radius-lg);
   padding: 8px;
+}
+
+/* The overlay-band regions (header / side rails) are pass-through containers —
+   the portaled chrome paints its own surface, so the band must not double up a
+   panel face/shadow of its own. */
+.apollon-overlay-band {
+  background-color: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  padding: 0;
 }
 
 .react-flow svg {
@@ -645,9 +745,9 @@ svg.react-flow__connectionline {
 }
 
 .control-button {
-  background-color: var(--apollon-background, #fff);
-  border: 1px solid var(--apollon-gray-variant, #495057);
-  border-radius: 8px;
+  background-color: var(--apollon-chrome-surface);
+  border: 1px solid var(--apollon-chrome-border-strong);
+  border-radius: var(--apollon-chrome-radius-md);
   padding: 6px 8px;
   cursor: pointer;
   opacity: 1;
@@ -662,7 +762,7 @@ svg.react-flow__connectionline {
 }
 
 .control-button:hover:not(.disabled) {
-  background-color: var(--apollon-background-variant, #f8f9fa);
+  background-color: var(--apollon-chrome-surface-hover);
 }
 
 .control-button.disabled {
@@ -671,7 +771,7 @@ svg.react-flow__connectionline {
 }
 
 .control-button.disabled:hover {
-  background-color: var(--apollon-background, #fff);
+  background-color: var(--apollon-chrome-surface);
 }
 
 .horizontally-not-resizable .react-flow__resize-control.top.line:hover {

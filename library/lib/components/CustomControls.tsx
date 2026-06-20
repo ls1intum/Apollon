@@ -81,16 +81,16 @@ export const CustomControls = () => {
       <div
         style={{
           userSelect: "none",
-          border: "1px solid var(--apollon-primary-contrast, #000000)",
-          borderRadius: 8,
-          paddingLeft: 4,
-          paddingRight: 4,
+          border: "1px solid var(--apollon-chrome-border-strong)",
+          borderRadius: "var(--apollon-chrome-radius-md)",
+          paddingLeft: 6,
+          paddingRight: 6,
           cursor: "pointer",
           display: "flex",
           height: "100%",
           alignItems: "center",
           justifyContent: "center",
-          color: "var(--apollon-primary-contrast, #000000)",
+          color: "var(--apollon-chrome-text)",
         }}
         onClick={() => zoomTo(1)}
       >

@@ -43,6 +43,7 @@ export const BrandAndVersion = () => {
             textTransform: "uppercase",
             whiteSpace: "nowrap",
             overflow: "visible",
+            color: "var(--apollon-chrome-text)",
           }}
         >
           Apollon
@@ -53,9 +54,8 @@ export const BrandAndVersion = () => {
         variant="body2"
         component="span"
         sx={{
-          // Muted text on the always-dark navbar — theme-independent translucent
-          // white, not a theme-reactive token (the navbar never changes color).
-          color: "rgba(255, 255, 255, 0.65)",
+          // Muted, theme-reactive version label that tracks the chrome surface.
+          color: "var(--apollon-chrome-text-muted)",
           display: { xs: "none", sm: "block" },
           lineHeight: 1.1,
           fontSize: "0.75rem",

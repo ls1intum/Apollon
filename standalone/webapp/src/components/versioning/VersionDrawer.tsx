@@ -31,7 +31,7 @@ import {
 } from "@/stores/useVersionStore"
 import { ApiError } from "@/services/DiagramApiClient"
 import { getVersionRepository } from "@/services/versionRepository"
-import { NAVBAR_BACKGROUND_COLOR, MOBILE_VIEW_QUERY } from "@/constants"
+import { MOBILE_VIEW_QUERY } from "@/constants"
 import {
   MAX_DESCRIPTION_LENGTH,
   MAX_NAME_LENGTH,
@@ -369,10 +369,10 @@ export const VersionSidebarBody: FC<Props> = ({
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        // Whole sidebar paints the navbar dark colour so it visually
-        // continues the top bar in both themes. Text is light, with rgba
-        // hover/selected tints so dark/light toggle isn't needed here.
-        bgcolor: NAVBAR_BACKGROUND_COLOR,
+        // The rail is a chrome surface: it paints the shared chrome background
+        // and themes in lock-step with the header, palette and controls (light
+        // in light mode, charcoal in dark) via the --apollon-chrome-* tokens.
+        bgcolor: "var(--apollon-chrome-surface)",
         color: TEXT_PRIMARY,
       }}
       role="complementary"
@@ -395,6 +395,7 @@ export const VersionSidebarBody: FC<Props> = ({
             flexDirection: "column",
             alignItems: "stretch",
             gap: 0.75,
+            borderBottom: "1px solid var(--apollon-chrome-border)",
           }}
         >
           <InputBase
@@ -449,17 +450,24 @@ export const VersionSidebarBody: FC<Props> = ({
               px: 1.75,
               py: 0.5,
               fontWeight: 600,
-              color: NAVBAR_BACKGROUND_COLOR,
-              backgroundColor: TEXT_PRIMARY,
-              "&:hover": { backgroundColor: "#ffffff" },
+              borderRadius: "var(--apollon-chrome-radius-md)",
+              color: "var(--apollon-chrome-accent-contrast)",
+              backgroundColor: "var(--apollon-chrome-accent)",
+              "&:hover": {
+                backgroundColor: "var(--apollon-chrome-accent)",
+                filter: "brightness(0.94)",
+              },
               "&.Mui-disabled": {
-                backgroundColor: "rgba(255, 255, 255, 0.12)",
-                color: TEXT_MUTED,
+                backgroundColor: "var(--apollon-chrome-surface-active)",
+                color: "var(--apollon-chrome-text-muted)",
               },
             }}
           >
             {submitting ? (
-              <CircularProgress size={14} sx={{ color: TEXT_MUTED }} />
+              <CircularProgress
+                size={14}
+                sx={{ color: "var(--apollon-chrome-accent-contrast)" }}
+              />
             ) : (
               t.createButton
             )}
@@ -585,7 +593,7 @@ export const VersionSidebarBody: FC<Props> = ({
                       },
                       "&.Mui-disabled": {
                         color: TEXT_MUTED,
-                        borderColor: "rgba(255, 255, 255, 0.12)",
+                        borderColor: "var(--apollon-chrome-border)",
                       },
                     }}
                   >
@@ -725,7 +733,10 @@ export const VersionRail: FC<Props> = ({
       sx={{
         width: SIDEBAR_WIDTH,
         height: "100%",
-        bgcolor: NAVBAR_BACKGROUND_COLOR,
+        bgcolor: "var(--apollon-chrome-surface)",
+        // Hairline framing the rail against the full-bleed canvas (docked-chrome
+        // rule: a border, not a shadow).
+        borderLeft: "1px solid var(--apollon-chrome-border)",
       }}
     >
       <VersionSidebarBody

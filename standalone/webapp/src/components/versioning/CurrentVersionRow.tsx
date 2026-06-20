@@ -72,7 +72,7 @@ export const CurrentVersionRow: FC<Props> = ({
           py: 1.25,
           background: "transparent",
           border: 0,
-          borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
+          borderBottom: "1px solid var(--apollon-chrome-border)",
           color: TEXT_PRIMARY,
           cursor: "pointer",
           textAlign: "left",
@@ -140,7 +140,10 @@ export const CurrentVersionRow: FC<Props> = ({
         px: 2,
         py: 1.25,
         bgcolor: ROW_SELECTED_BG,
-        borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
+        borderBottom: "1px solid var(--apollon-chrome-border)",
+        // Accent left-rule marks HEAD ("you are here") — the one place the
+        // brand accent appears in the list; saved rows stay neutral.
+        boxShadow: "inset 3px 0 0 var(--apollon-chrome-accent)",
       }}
       aria-label="Current canvas"
       aria-live="polite"

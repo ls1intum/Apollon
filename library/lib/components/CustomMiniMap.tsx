@@ -97,12 +97,13 @@ export const CustomMiniMap = () => {
           display: "flex",
           zIndex: ZINDEX.PANEL,
           padding: 8,
-          backgroundColor: "var(--apollon-background, white)",
-          borderRadius: "4px",
+          backgroundColor: "var(--apollon-chrome-surface)",
+          borderRadius: "var(--apollon-chrome-radius-md)",
           justifyContent: "center",
           alignItems: "center",
           cursor: "pointer",
-          boxShadow: "0 0 4px 0 rgb(0 0 0 / 0.2)",
+          boxShadow:
+            "var(--apollon-chrome-shadow-floating), var(--apollon-chrome-inset-hairline)",
         }}
       >
         <SouthEastArrowIcon fill="var(--apollon-primary-contrast, #000000)" />

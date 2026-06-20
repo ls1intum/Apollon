@@ -24,13 +24,14 @@ export const HomeNavbar = () => {
       className="home-navbar sticky top-0 z-40 transition-colors duration-200"
       style={{
         minHeight: NAVBAR_MIN_HEIGHT,
-        // Frosted glass: a translucent slate plate over a backdrop blur so
-        // content scrolls softly beneath it (a modern dashboard idiom). The
-        // 88% mix keeps white brand/controls fully legible even over a light
-        // page; browsers without backdrop-filter just see the near-solid plate.
+        // Frosted glass: a translucent chrome-surface plate over a backdrop
+        // blur so content scrolls softly beneath it (a modern dashboard idiom).
+        // The 88% mix keeps brand/controls legible while the page shows through;
+        // browsers without backdrop-filter just see the near-solid plate.
         backgroundColor: `color-mix(in srgb, ${NAVBAR_BACKGROUND_COLOR} 88%, transparent)`,
         backdropFilter: "saturate(140%) blur(12px)",
         WebkitBackdropFilter: "saturate(140%) blur(12px)",
+        borderBottom: "1px solid var(--apollon-chrome-border)",
         boxShadow: NAVBAR_DROP_SHADOW,
       }}
     >
@@ -43,7 +44,7 @@ export const HomeNavbar = () => {
         <Link
           to="/"
           aria-label="Apollon home"
-          className="flex shrink-0 items-center rounded-sm text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          className="flex shrink-0 items-center rounded-sm text-[color:var(--apollon-chrome-text)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--apollon-chrome-accent)]"
         >
           <BrandAndVersion />
         </Link>

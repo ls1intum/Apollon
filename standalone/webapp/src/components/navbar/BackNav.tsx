@@ -5,13 +5,14 @@ import { cn } from "@/lib/utils"
 type BackNavTone = "onDark" | "onSurface"
 
 const toneClass: Record<BackNavTone, string> = {
-  // Dark navbar (editor desktop bar + chrome home navbar). #a3a6a8 mirrors the
-  // `secondary` token used by the sibling File/Share controls.
+  // Header chrome (editor desktop bar + home navbar) — now a light themed
+  // surface, so this idles in muted chrome text and washes toward the chrome
+  // hover surface, matching the sibling File/Share controls.
   onDark:
-    "text-[#a3a6a8] hover:bg-white/10 hover:text-white focus-visible:outline-white",
+    "text-[color:var(--apollon-chrome-text-muted)] hover:bg-[var(--apollon-chrome-surface-hover)] hover:text-[color:var(--apollon-chrome-text)] focus-visible:outline-[color:var(--apollon-chrome-accent)]",
   // Light popover surface (editor mobile menu).
   onSurface:
-    "text-[var(--apollon-primary-contrast)] hover:bg-[var(--apollon-background-variant)] focus-visible:outline-[var(--apollon-primary-contrast)]",
+    "text-[color:var(--apollon-chrome-text)] hover:bg-[var(--apollon-chrome-surface-hover)] focus-visible:outline-[color:var(--apollon-chrome-accent)]",
 }
 
 /**
