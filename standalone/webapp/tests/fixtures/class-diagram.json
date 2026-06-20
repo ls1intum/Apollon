@@ -223,8 +223,8 @@
       "source": "550e8400-e29b-41d4-a716-446655440003",
       "target": "550e8400-e29b-41d4-a716-446655440002",
       "type": "ClassBidirectional",
-      "sourceHandle": "right",
-      "targetHandle": "bottom-left",
+      "sourceHandle": "r:0.500",
+      "targetHandle": "b:0.500",
       "data": {
         "points": []
       }
