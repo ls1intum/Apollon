@@ -170,7 +170,6 @@ export const CommunicationDiagramEdge = ({
           sourcePosition={{ x: sourceX, y: sourceY }}
           targetPosition={{ x: targetX, y: targetY }}
           textColor={textColor}
-          edgePoints={edgeData.activePoints}
           isHorizontalEdge={edgeData.isMiddlePathHorizontal}
         />
 

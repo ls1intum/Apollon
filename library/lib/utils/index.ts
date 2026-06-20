@@ -13,7 +13,6 @@ export * from "./storeUtils"
 export * from "./deepPartial"
 export * from "./bpmnConstraints"
 export * from "./versionConverter"
-export * from "./labelUtils"
 export * from "./alignmentUtils"
 export * from "./requiredInterfaceUtils"
 // Deliberately narrow: only the helpers that node SVGs genuinely need to
