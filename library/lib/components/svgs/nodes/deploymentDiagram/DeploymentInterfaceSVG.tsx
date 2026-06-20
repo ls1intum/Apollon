@@ -6,9 +6,11 @@ import AssessmentIcon from "../../AssessmentIcon"
 import { SVGComponentProps } from "@/types/SVG"
 import { DefaultNodeProps } from "@/types"
 import { getCustomColorsFromData } from "@/utils/layoutUtils"
+import type { InterfaceLabelSide } from "@/utils/geometry/interfaceLabelLayout"
 
 interface Props extends SVGComponentProps {
   data: DefaultNodeProps
+  labelSide?: InterfaceLabelSide
 }
 
 export const DeploymentInterfaceSVG: React.FC<Props> = ({
@@ -19,6 +21,7 @@ export const DeploymentInterfaceSVG: React.FC<Props> = ({
   SIDEBAR_PREVIEW_SCALE,
   showAssessmentResults = false,
   data,
+  labelSide,
 }) => {
   const { name } = data
   const assessments = useDiagramStore(useShallow((state) => state.assessments))
@@ -50,6 +53,7 @@ export const DeploymentInterfaceSVG: React.FC<Props> = ({
           width={width}
           height={height}
           fill={textColor}
+          side={labelSide}
         />
       </g>
 

@@ -6,6 +6,8 @@ import { PopoverManager } from "@/components/popovers/PopoverManager"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
 import { DeploymentInterfaceSVG } from "@/components"
 import { NodeToolbar } from "@/components/toolbars/NodeToolbar"
+import { useDiagramStore } from "@/store"
+import { computeInterfaceLabelSide } from "@/utils/geometry/interfaceLabelLayout"
 
 export function DeploymentInterface({
   id,
@@ -16,6 +18,14 @@ export function DeploymentInterface({
   const [anchorEl, anchorRef] = usePopoverAnchor()
 
   const isDiagramModifiable = useDiagramModifiable()
+  const showAssessmentResults = !isDiagramModifiable
+  // Move the name off any side a connecting edge attaches to. A primitive-
+  // returning selector re-renders the node only when the chosen side flips.
+  const labelSide = useDiagramStore((state) =>
+    computeInterfaceLabelSide(state.edges, id, {
+      badgeTopRight: showAssessmentResults,
+    })
+  )
 
   if (!width || !height) {
     return null
@@ -36,7 +46,8 @@ export function DeploymentInterface({
           height={height}
           data={data}
           id={id}
-          showAssessmentResults={!isDiagramModifiable}
+          showAssessmentResults={showAssessmentResults}
+          labelSide={labelSide}
         />
       </div>
 
