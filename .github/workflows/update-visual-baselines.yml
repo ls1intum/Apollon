@@ -1,0 +1,70 @@
+name: Update Visual Baselines
+
+# Regenerate Playwright screenshot baselines inside the pinned rendering
+# container and commit them back to a branch. Visual regression gates every PR
+# (visual-regression-tests in pr-health-checks.yml), so an intentional UI change
+# needs fresh baselines that match CI's exact Linux rendering stack —
+# regenerating on a contributor's macOS/Windows would diff against the wrong
+# pixels (snapshots are platform-stripped on purpose; see
+# docs/contributor/development/visual-tests.md).
+#
+# SECURITY: workflow_dispatch requires write access, and this job only ever
+# checks out a branch already in this repo — so untrusted code never runs with
+# the write token. Do NOT switch this to a pull_request_target / issue_comment
+# trigger that checks out fork head code (the classic pwn-request footgun). For a
+# fork PR, push the branch into this repo (or enable "Allow edits by maintainers").
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Branch in this repo to regenerate baselines on (e.g. a PR head branch)"
+        required: true
+        type: string
+
+concurrency:
+  group: update-visual-baselines-${{ github.event.inputs.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  update-baselines:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    container:
+      image: mcr.microsoft.com/playwright:v1.59.1-noble
+    steps:
+      - name: Checkout target branch
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ github.event.inputs.ref }}
+
+      - name: Setup pnpm + Node + install
+        uses: ./.github/actions/setup
+
+      - name: Build
+        run: pnpm run build:lib
+
+      - name: Regenerate visual baselines
+        run: pnpm --filter @tumaet/webapp run test:visual:update
+
+      - name: Commit and push refreshed baselines
+        env:
+          REF: ${{ github.event.inputs.ref }}
+        run: |
+          set -euo pipefail
+          # The container runs git as a different user than the checkout owner.
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Scope strictly to snapshot PNGs so a render bug can't smuggle other
+          # tree changes back onto the branch.
+          git add 'standalone/webapp/tests/**/*-snapshots/*.png'
+          if git diff --cached --quiet; then
+            echo "Baselines already match — nothing to commit." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git commit -m "chore(visual): refresh Playwright baselines"
+          git push origin "HEAD:$REF"
+          echo "Pushed refreshed baselines to \`$REF\`." >> "$GITHUB_STEP_SUMMARY"

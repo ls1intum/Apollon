@@ -26,7 +26,16 @@ export async function waitForCanvasReady(page: Page, expectNodes = true) {
       .waitFor({ state: "visible", timeout: 15_000 })
   }
 
-  // 4. Let layout and paint settle
+  // 4. Web fonts are loaded before we paint. Diagram labels render in the
+  //    bundled Inter font; screenshotting before the font swaps in captures
+  //    fallback glyphs of a different width → a full-canvas pixel diff.
+  await page.evaluate(() => document.fonts.ready)
+
+  // 5. Park the cursor in the corner so a stray hover state left by a prior
+  //    action (e.g. the fit-view click) can't bleed into the screenshot.
+  await page.mouse.move(0, 0)
+
+  // 6. Let layout and paint settle
   await page.waitForTimeout(800)
 }
 

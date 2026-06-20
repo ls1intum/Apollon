@@ -181,11 +181,10 @@ jobs:
       - name: Run E2E tests
         run: pnpm --filter @tumaet/webapp exec playwright test tests/e2e/
 
-      # The chromium document-growth budget runs in the scheduled
-      # nightly-checks workflow, not here — the Firefox budget (perf-firefox-
-      # tests below) is the per-PR guard for the exam-freeze regression, since
-      # Firefox is the engine the freeze was reported on and its GC surfaces
-      # unbounded growth sooner.
+      # No chromium document-growth budget: the metric is engine-independent and
+      # the Firefox budget (perf-firefox-tests below) is the per-PR guard for the
+      # exam-freeze regression, since Firefox is the engine the freeze was
+      # reported on and its GC surfaces unbounded growth sooner.
 
       - name: Upload Playwright report
         if: ${{ failure() }}
@@ -324,11 +323,67 @@ jobs:
         # of >10% (size-limit default) per artifact.
         run: pnpm run size
 
-  # NOTE: visual-regression and the chromium document-growth budget moved to
-  # the scheduled `nightly-checks.yml` workflow (run on demand via Run
-  # workflow). They are rendering/cross-engine guards, not per-PR correctness
-  # gates. The Firefox document-growth budget (the exam-freeze guard) stays
-  # per-PR above.
+  # Pinned Playwright container so screenshot baselines diff against one Linux
+  # rendering stack regardless of contributor OS (see
+  # docs/contributor/development/visual-tests.md). Runs per-PR so a rendering
+  # change refreshes its own baselines in the same PR, instead of merging
+  # unguarded and surfacing later as an ownerless failure.
+  #
+  # Gated on `code`, not a curated render-only path filter: rendering output is
+  # not statically enumerable (an app-shell layout edit shifts every diagram
+  # baseline), so anything that could touch pixels must run. Docs-only PRs skip.
+  visual-regression-tests:
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.should-skip != 'true' && needs.detect-changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    container:
+      image: mcr.microsoft.com/playwright:v1.59.1-noble
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      # The container ships an older Node; the composite installs Node from
+      # .nvmrc via setup-node instead of curl-ing NodeSource on every run.
+      - name: Setup pnpm + Node + install
+        uses: ./.github/actions/setup
+
+      - name: Build
+        run: pnpm run build:lib
+
+      - name: Run visual regression tests
+        run: pnpm --filter @tumaet/webapp run test:visual
+
+      # Point an author whose UI change is intentional at the way to refresh
+      # baselines, right in the Checks UI. No extra permissions needed.
+      - name: Explain how to refresh baselines
+        if: ${{ failure() }}
+        run: |
+          {
+            echo "### Visual regression failed"
+            echo ""
+            echo "If this diff is an **intentional** UI change, refresh the baselines:"
+            echo "- A maintainer runs **Actions → Update Visual Baselines → Run workflow** against this PR's branch — it regenerates snapshots inside this exact pinned container and commits them back."
+            echo "- Or regenerate locally in the container — see \`docs/contributor/development/visual-tests.md\`."
+            echo ""
+            echo "Otherwise download the \`playwright-report-visual\` artifact to inspect the actual-vs-expected diff."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload Playwright report
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: playwright-report-visual
+          path: standalone/webapp/playwright-report/
+          retention-days: 14
+
+      - name: Upload Playwright test results
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: playwright-test-results-visual
+          path: standalone/webapp/test-results/
+          retention-days: 14
 
   # Gate job — set this as the required status check in branch protection.
   # Correctly handles skipped jobs (docs-only, duplicate runs).
@@ -345,6 +400,7 @@ jobs:
         library-node22-compat,
         e2e-tests,
         perf-firefox-tests,
+        visual-regression-tests,
       ]
     if: always()
     steps:
