@@ -49,7 +49,7 @@ export const EdgeMultipleLabels = ({
               pathMiddlePosition.y + group.arrowOrigin.y
             }) rotate(${group.arrowRotation}, ${ARROW_SIZE / 2}, ${ARROW_SIZE / 2})`}
           >
-            {/* Arrow paths come from a 24×24 icon; scale them to the arrow box. */}
+            {/* Lucide "move-right" glyph (24×24, stroked) scaled to the arrow box. */}
             <g
               transform={`scale(${ARROW_SIZE / 24})`}
               stroke={textColor}

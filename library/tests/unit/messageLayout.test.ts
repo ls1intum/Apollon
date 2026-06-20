@@ -1,8 +1,7 @@
 import { describe, it, expect } from "vitest"
 import { computeMessageLayout } from "@/edges/labelTypes/messageLayout"
 import type { MessageData } from "@/edges/EdgeProps"
-
-type IPointLike = { x: number; y: number }
+import type { IPoint } from "@/edges/Connection"
 
 const fwd = (id: string): MessageData => ({ id, text: "f", direction: "target" })
 const bwd = (id: string): MessageData => ({ id, text: "b", direction: "source" })
@@ -59,18 +58,18 @@ describe("computeMessageLayout", () => {
     )
   })
 
-  it("stacks the two groups away from the line on a horizontal edge", () => {
-    const { forward, backward } = computeMessageLayout(
-      [fwd("1"), bwd("2")],
-      HORIZONTAL.src,
-      HORIZONTAL.tgt,
-      true
-    )
-    expect(forward.stackStep.y).toBeLessThan(0) // forward is above → stacks up
-    expect(backward.stackStep.y).toBeGreaterThan(0) // backward below → stacks down
+  it("stacks each group away from the line", () => {
+    const msgs = [fwd("1"), bwd("2")]
+    const h = computeMessageLayout(msgs, HORIZONTAL.src, HORIZONTAL.tgt, true)
+    expect(h.forward.stackStep.y).toBeLessThan(0) // above → stacks up
+    expect(h.backward.stackStep.y).toBeGreaterThan(0) // below → stacks down
+
+    const v = computeMessageLayout(msgs, VERTICAL.src, VERTICAL.tgt, false)
+    expect(v.forward.stackStep.y).toBeGreaterThan(0) // both sides stack down
+    expect(v.backward.stackStep.y).toBeGreaterThan(0)
   })
 
-  it.each([
+  it.each<[boolean, IPoint, IPoint, number, number]>([
     // isHorizontal, source,         target,          fwdRot, bwdRot
     [true, { x: 0, y: 0 }, { x: 300, y: 0 }, 0, 180], // source left  → forward Right
     [true, { x: 300, y: 0 }, { x: 0, y: 0 }, 180, 0], // source right → forward Left
@@ -81,9 +80,9 @@ describe("computeMessageLayout", () => {
     (isHorizontal, src, tgt, fwdRot, bwdRot) => {
       const { forward, backward } = computeMessageLayout(
         [fwd("1"), bwd("2")],
-        src as IPointLike,
-        tgt as IPointLike,
-        isHorizontal as boolean
+        src,
+        tgt,
+        isHorizontal
       )
       expect(forward.arrowRotation).toBe(fwdRot)
       expect(backward.arrowRotation).toBe(bwdRot)
