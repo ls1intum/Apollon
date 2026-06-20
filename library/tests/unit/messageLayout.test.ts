@@ -103,6 +103,19 @@ describe("computeMessageLayout — horizontal edge sides", () => {
     expect(forward.textOrigin.y).toBeLessThan(0)
     expect(backward.textOrigin.y).toBeGreaterThan(0)
   })
+
+  it("centres horizontal labels on the midpoint (no sideways drift)", () => {
+    const { forward, backward } = computeMessageLayout(
+      [fwd("1"), bwd("2")],
+      HORIZONTAL.src,
+      HORIZONTAL.tgt,
+      true
+    )
+    expect(forward.textAnchor).toBe("middle")
+    expect(backward.textAnchor).toBe("middle")
+    expect(forward.textOrigin.x).toBe(0)
+    expect(backward.textOrigin.x).toBe(0)
+  })
 })
 
 describe("computeMessageLayout — arrow rotations", () => {

@@ -12,9 +12,15 @@ import { IPoint } from "../Connection"
  *   - vertical   middle segment → forward RIGHT, backward LEFT
  *
  * Which side a group lands on is fixed; the message's flow direction is encoded
- * purely by the arrow rotation, never by the side. Each label is anchored to its
- * inner edge with a CONSTANT gap to the line and grown outward via the SVG
- * text-anchor, so the gap never depends on the (unmeasured) text width.
+ * purely by the arrow rotation, never by the side. Nothing here measures the
+ * text width — gaps are constant by construction:
+ *
+ *   - horizontal labels are CENTRED on the segment midpoint (text-anchor
+ *     "middle", matching EdgeMiddleLabels) with the arrow stacked between the
+ *     text and the line, so a label never drifts sideways into a neighbour.
+ *   - vertical labels are anchored to their inner edge and grown outward via the
+ *     text-anchor ("start" on the right, "end" on the left), so the gap to the
+ *     line is constant regardless of how long the text is.
  */
 
 type ArrowDirection = "Up" | "Down" | "Left" | "Right"
@@ -22,12 +28,12 @@ export type LabelTextAnchor = "start" | "middle" | "end"
 
 /** Rendered size of the direction arrow icon (square). */
 export const ARROW_SIZE = 16
-/** Horizontal gap between the arrow icon and the label text. */
+/** Gap between the arrow icon and the label text (vertical edges). */
 export const ARROW_TEXT_GAP = 4
-/** Gap kept clear between a label and the edge line. */
-export const LINE_GAP = 10
-/** Vertical distance between stacked messages of the same group. */
-export const STACK_SPACING = 25
+/** Gap kept clear between the nearest label element and the edge line. */
+export const LINE_GAP = 8
+/** Distance between stacked messages of the same group. */
+export const STACK_SPACING = 22
 
 export interface MessageGroupLayout {
   messages: MessageData[]
@@ -94,23 +100,25 @@ export const computeMessageLayout = (
   const textInset = LINE_GAP + ARROW_SIZE + ARROW_TEXT_GAP
 
   if (isHorizontalEdge) {
-    // Forward above the line (stacking upward), backward below (stacking down).
-    // The arrow is centred on the midpoint's x; text flows to its right.
+    // Forward above the line, backward below. Both are centred on the midpoint's
+    // x (text-anchor "middle") with the arrow stacked between the text and the
+    // line, so the label stays put no matter how long the text is.
+    const textGap = LINE_GAP + ARROW_SIZE + half + 4
     return {
       forward: {
         messages: forwardMessages,
         arrowRotation: forwardRotation,
-        textAnchor: "start",
+        textAnchor: "middle",
         arrowOrigin: { x: -half, y: -(LINE_GAP + ARROW_SIZE) },
-        textOrigin: { x: half + ARROW_TEXT_GAP, y: -(LINE_GAP + half) },
+        textOrigin: { x: 0, y: -textGap },
         stackStep: { x: 0, y: -STACK_SPACING },
       },
       backward: {
         messages: backwardMessages,
         arrowRotation: backwardRotation,
-        textAnchor: "start",
+        textAnchor: "middle",
         arrowOrigin: { x: -half, y: LINE_GAP },
-        textOrigin: { x: half + ARROW_TEXT_GAP, y: LINE_GAP + half },
+        textOrigin: { x: 0, y: textGap },
         stackStep: { x: 0, y: STACK_SPACING },
       },
     }
