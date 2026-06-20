@@ -1,0 +1,156 @@
+/**
+ * Layout math for the floating element palette. The palette is an overlay on
+ * the canvas (all viewports — there is no docked variant), so it must lay every
+ * element out in a grid that fits the available canvas WITHOUT scrolling.
+ *
+ * Objective (in priority order):
+ *   1. Use the FEWEST columns — a tall, narrow card preserves horizontal canvas
+ *      space, which is what you actually draw in.
+ *   2. Fill the available VERTICAL space — a single column down the side reads
+ *      like a classic palette and wastes no height.
+ *   3. Keep cells comfortably large — never below `COMFORT_MIN_H` just to save a
+ *      column, and never below the HIG `CELL_MIN_H` touch floor at all.
+ *
+ * So: walk column counts low→high and take the first one whose cells, sized to
+ * fill the height, are still comfortable. Few elements get big capped cells in
+ * one column; many elements get a taller single column of moderate cells before
+ * a second column is ever added.
+ *
+ * Cells are rectangular (the dominant elements — class boxes, BPMN tasks — are
+ * ~1.6:1 wide); narrower/square elements letterbox centered inside. Sizing the
+ * cell, not the SVG, keeps the node components untouched.
+ */
+export const PALETTE = Object.freeze({
+  /** HIG/WCAG touch + legibility floor — never shrink a cell past this. */
+  CELL_MIN_H: 44,
+  /** Bias toward fewer columns: keep a single (or narrower) column as long as
+   *  its height-filling cells stay at least this big; only add a column when
+   *  that would drop below it. Just above the touch floor, so the strong
+   *  preference is fewer columns + filling the height. */
+  COMFORT_MIN_H: 48,
+  /** Upper bound so few-element palettes don't get absurdly tall cells. */
+  CELL_MAX_H: 78,
+  /** cellW = round(CELL_RATIO * cellH); ~matches the 160×100 class box. */
+  CELL_RATIO: 1.6,
+  GAP: 8,
+  PAD: 6,
+  /** Keep the palette horizontally narrow so the canvas keeps its width … */
+  MAX_FRAC_W: 0.5,
+  /** … but let it use most of the height. */
+  MAX_FRAC_H: 0.9,
+  /** Letterbox padding around the preview inside a cell. */
+  CONTENT_INSET: 6,
+  /** Space kept clear above (top offset) and below (zoom controls) the palette. */
+  TOP_RESERVE: 10,
+  BOTTOM_RESERVE: 84,
+} as const)
+
+export interface PaletteLayout {
+  cols: number
+  cellW: number
+  cellH: number
+  /** True only in the rare case all items can't fit even at the floor size. */
+  scroll: boolean
+}
+
+const clamp = (value: number, min: number, max: number) =>
+  Math.max(min, Math.min(max, value))
+
+/** Largest cell height that fits `cols` columns of `count` items in the budget,
+ *  filling the vertical space (capped) and bounded by the available width. */
+function cellHeightFor(
+  cols: number,
+  count: number,
+  budgetW: number,
+  budgetH: number,
+  chromeH: number
+): number {
+  const p = PALETTE
+  const rows = Math.ceil(count / cols)
+  const fillH = (budgetH - chromeH - 2 * p.PAD - (rows - 1) * p.GAP) / rows
+  const cellW = (budgetW - 2 * p.PAD - (cols - 1) * p.GAP) / cols
+  const widthH = cellW / p.CELL_RATIO
+  return Math.floor(Math.min(p.CELL_MAX_H, fillH, widthH))
+}
+
+/**
+ * @param itemCount total grid cells (drag elements + the color-description cell)
+ * @param availW    measured canvas width
+ * @param availH    measured canvas height
+ * @param chromeH   height of non-grid palette chrome (view switch / hint), 0 if none
+ */
+export function computePaletteLayout(
+  itemCount: number,
+  availW: number,
+  availH: number,
+  chromeH: number
+): PaletteLayout {
+  const p = PALETTE
+  const floorCellW = Math.round(p.CELL_RATIO * p.CELL_MIN_H)
+  if (itemCount <= 0 || availW <= 0 || availH <= 0) {
+    return { cols: 1, cellW: floorCellW, cellH: p.CELL_MIN_H, scroll: false }
+  }
+
+  const budgetW = availW * p.MAX_FRAC_W
+  // Honor both the fraction cap and the physical room left once the top offset
+  // and the bottom zoom-controls reserve are removed.
+  const budgetH = Math.min(
+    availH * p.MAX_FRAC_H,
+    availH - p.TOP_RESERVE - p.BOTTOM_RESERVE
+  )
+  const maxCols = Math.max(
+    1,
+    Math.min(itemCount, Math.floor((budgetW + p.GAP) / (floorCellW + p.GAP)))
+  )
+
+  // Fewest columns whose height-filling cells are still comfortable; meanwhile
+  // remember the column count that yields the biggest cell as a fallback.
+  let bestCols = 1
+  let bestCellH = 0
+  for (let cols = 1; cols <= maxCols; cols++) {
+    const cellH = cellHeightFor(cols, itemCount, budgetW, budgetH, chromeH)
+    if (cellH >= p.COMFORT_MIN_H) {
+      return {
+        cols,
+        cellW: Math.round(p.CELL_RATIO * cellH),
+        cellH,
+        scroll: false,
+      }
+    }
+    if (cellH > bestCellH) {
+      bestCellH = cellH
+      bestCols = cols
+    }
+  }
+
+  // Nothing is comfortable (very constrained canvas): use the column count with
+  // the biggest cell, clamp to the touch floor, and scroll only if even that
+  // overflows — the deliberate last resort.
+  const cellH = clamp(bestCellH, p.CELL_MIN_H, p.CELL_MAX_H)
+  const rows = Math.ceil(itemCount / bestCols)
+  const blockH = rows * cellH + (rows - 1) * p.GAP + 2 * p.PAD + chromeH
+  return {
+    cols: bestCols,
+    cellW: Math.round(p.CELL_RATIO * cellH),
+    cellH,
+    scroll: blockH > budgetH + 1,
+  }
+}
+
+/**
+ * Preview scale that fits an element's natural size into a cell's content box.
+ * Elements fill their cell (so they read "big"); wide boxes fit width, tall/
+ * square nodes fit height and letterbox.
+ */
+export function previewScaleForCell(
+  naturalWidth: number,
+  naturalHeight: number,
+  cellW: number,
+  cellH: number
+): number {
+  const inset = 2 * PALETTE.CONTENT_INSET
+  return Math.min(
+    (cellW - inset) / naturalWidth,
+    (cellH - inset) / naturalHeight
+  )
+}

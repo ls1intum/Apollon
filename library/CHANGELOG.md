@@ -1,5 +1,19 @@
 # @tumaet/apollon
 
+## 4.8.0
+
+### Minor Changes
+
+- [#766](https://github.com/ls1intum/Apollon/pull/766) [`5013fc6`](https://github.com/ls1intum/Apollon/commit/5013fc632ea0e18c9fce5baf1f66f1d50617a358) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Adds undo/redo to shared (collaborative) diagrams. Undo and redo now work during a collaboration session, scoped to each person's own edits — undo reverts only your own changes, never a teammate's, and never overwrites an element someone else is editing. A whole drag or resize counts as a single step, your selection comes back with the change you undo, and everyone keeps seeing each other's edits move in real time.
+
+- [#675](https://github.com/ls1intum/Apollon/pull/675) [`1bb280d`](https://github.com/ls1intum/Apollon/commit/1bb280d23f9a4cfb9339a04b2311c1c50aeffae7) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Adds `@tumaet/apollon/export` — `svgToPng` and `svgToPdf` — for reliable in-browser PNG and vector-PDF export of an exported diagram SVG. The previous client approach rasterised through a `<canvas>`, which silently produced an empty PNG and a blurry, size-capped PDF once a diagram grew past the browser's canvas-area limit; these render off-canvas, so large diagrams export cleanly. `svgToPng` downscales a very large diagram to a pixel budget (reporting the applied scale) and throws `RasterTooLargeError` when it can't fit. Abstract-class names export upright, since the bundled Inter ships without an italic face.
+
+### Patch Changes
+
+- [#763](https://github.com/ls1intum/Apollon/pull/763) [`82942cd`](https://github.com/ls1intum/Apollon/commit/82942cddec7d3dd33711d3f38eba92e10c1da0c9) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Fixes the editor gradually slowing down and freezing during long single-user editing sessions. Repeatedly dragging or resizing nodes no longer makes the diagram progressively heavier until the tab locks up — the editor stays responsive, and undo/redo and live collaboration behave exactly as before. Lining up nodes with the alignment guides is also lighter on every drag, which most affected long sessions in Firefox.
+
+- [#761](https://github.com/ls1intum/Apollon/pull/761) [`5d4a8dd`](https://github.com/ls1intum/Apollon/commit/5d4a8dd5d6d34d1c26d4258a99aadc02faca1c17) Thanks [@tamang29](https://github.com/tamang29)! - The editor palette, controls, and collaboration presence now adapt to compact portrait and landscape containers while respecting mobile safe areas.
+
 ## 4.7.0
 
 ### Minor Changes

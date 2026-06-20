@@ -1,7 +1,7 @@
 {
   "name": "@tumaet/webapp",
   "private": true,
-  "version": "4.7.0",
+  "version": "4.8.0",
   "type": "module",
   "engines": {
     "node": ">=24.15.0"
@@ -45,6 +45,7 @@
     "@ionic/react": "8.7.13",
     "@mui/icons-material": "6.4.2",
     "@mui/material": "catalog:",
+    "@resvg/resvg-wasm": "catalog:",
     "@tailwindcss/vite": "catalog:",
     "@tanstack/history": "1.162.0",
     "@tanstack/react-router": "1.170.15",
@@ -53,13 +54,14 @@
     "capacitor-plugin-safe-area": "4.0.0",
     "clsx": "catalog:",
     "idb": "8.0.3",
-    "jspdf": "4.2.1",
+    "jspdf": "catalog:",
     "pptxgenjs": "4.0.1",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-markdown": "10.1.0",
     "react-toastify": "11.0.5",
     "remark-gfm": "4.0.1",
+    "svg2pdf.js": "catalog:",
     "tailwind-merge": "3.6.0",
     "tailwindcss": "catalog:",
     "uuid": "catalog:",

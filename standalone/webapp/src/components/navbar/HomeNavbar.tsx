@@ -21,28 +21,35 @@ export const HomeNavbar = () => {
 
   return (
     <header
-      className="sticky top-0 z-40 flex items-center gap-3 px-4 transition-colors duration-200"
+      className="home-navbar sticky top-0 z-40 transition-colors duration-200"
       style={{
         minHeight: NAVBAR_MIN_HEIGHT,
         backgroundColor: NAVBAR_BACKGROUND_COLOR,
         boxShadow: NAVBAR_DROP_SHADOW,
       }}
     >
-      <Link
-        to="/"
-        aria-label="Apollon home"
-        className="flex shrink-0 items-center rounded-sm text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+      {/* min-height from NAVBAR_MIN_HEIGHT (single source of truth) keeps the
+          home bar the same height as the editor navbars (#769's unified header). */}
+      <div
+        className="home-navbar__content flex w-full items-center gap-3 px-4"
+        style={{ minHeight: NAVBAR_MIN_HEIGHT }}
       >
-        <BrandAndVersion />
-      </Link>
+        <Link
+          to="/"
+          aria-label="Apollon home"
+          className="flex shrink-0 items-center rounded-sm text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+        >
+          <BrandAndVersion />
+        </Link>
 
-      {isSubPage && <BackNav {...backTarget} tone="onDark" />}
+        {isSubPage && <BackNav {...backTarget} tone="onDark" />}
 
-      <div className="flex-1" />
+        <div className="flex-1" />
 
-      <div className="flex items-center gap-1 px-2">
-        <HomeHelpMenu className={isNative ? undefined : "md:hidden"} />
-        <ThemeSwitcherMenu />
+        <div className="flex items-center gap-1 px-2">
+          <HomeHelpMenu className={isNative ? undefined : "md:hidden"} />
+          <ThemeSwitcherMenu />
+        </div>
       </div>
     </header>
   )

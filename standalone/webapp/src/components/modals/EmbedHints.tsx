@@ -73,7 +73,7 @@ export function EmbedHints({
             onChange={setFormat}
           />
 
-          <div className="flex items-center">
+          <div className="flex min-w-0 items-center">
             <input
               type="text"
               value={snippets[format]}
@@ -81,7 +81,7 @@ export function EmbedHints({
               aria-label="Embed code"
               aria-describedby={hintId}
               onFocus={(e) => e.currentTarget.select()}
-              className="grow h-9 px-3 py-1.5 border rounded-md border-r-0 rounded-r-none border-[var(--home-border-default)] bg-[var(--apollon-background)] text-[var(--apollon-primary-contrast)] text-xs font-mono"
+              className="grow min-w-0 h-9 px-3 py-1.5 border rounded-md border-r-0 rounded-r-none border-[var(--home-border-default)] bg-[var(--apollon-background)] text-[var(--apollon-primary-contrast)] text-xs font-mono"
             />
             <Button
               onClick={() => onCopy(snippets[format])}

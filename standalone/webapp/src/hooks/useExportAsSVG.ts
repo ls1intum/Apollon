@@ -1,10 +1,9 @@
 import type { SvgExportMode } from "@tumaet/apollon/react"
-import { useFileDownload } from "./useFileDownload"
-import { useEditorContext } from "@/contexts"
-import { log } from "@/logger"
 import { isPlatform } from "@ionic/react"
 import { Filesystem, Directory, Encoding } from "@capacitor/filesystem"
 import { Share } from "@capacitor/share"
+import { useFileDownload } from "./useFileDownload"
+import { useEditorContext } from "@/contexts"
 
 const buildSvgFileName = (title: string, suffix?: string) =>
   suffix ? `${title}${suffix}.svg` : `${title}.svg`
@@ -16,55 +15,42 @@ export const useExportAsSVG = (
   const { editor } = useEditorContext()
   const downloadFile = useFileDownload()
 
+  // Rejects on any failure (missing editor, empty export, or a mobile
+  // Filesystem/Share error) instead of swallowing it, so callers — e.g. the
+  // navbar's toast.promise — report a failure rather than a false success.
   const exportSVG = async () => {
     if (!editor) {
-      log.error("Failed to export SVG: editor is not available")
-      return
+      throw new Error("Editor context is not available")
     }
 
     const apollonSVG = await editor.exportAsSVG({ svgMode })
-
     if (!apollonSVG) {
-      log.error("Failed to export SVG")
-      return
+      throw new Error("Failed to export SVG")
     }
 
-    const diagramTitle = editor?.model.title || "diagram"
+    const diagramTitle = editor.model.title || "diagram"
     const fileName = buildSvgFileName(diagramTitle, fileNameSuffix)
 
     if (isPlatform("ios") || isPlatform("android")) {
-      try {
-        // Save SVG to temporary location first
-        await Filesystem.writeFile({
-          path: fileName,
-          data: apollonSVG.svg,
-          directory: Directory.Cache,
-          encoding: Encoding.UTF8,
-        })
-
-        // Get the file URI
-        const fileUri = await Filesystem.getUri({
-          path: fileName,
-          directory: Directory.Cache,
-        })
-
-        // Always open share sheet on iOS to allow saving to Files
-        await Share.share({
-          title: "Export SVG",
-          url: fileUri.uri,
-          dialogTitle: "Save SVG to Files",
-        })
-
-        log.debug("SVG export initiated on iOS")
-      } catch (error) {
-        log.error("Failed to export SVG on iOS", error as Error)
-      }
+      await Filesystem.writeFile({
+        path: fileName,
+        data: apollonSVG.svg,
+        directory: Directory.Cache,
+        encoding: Encoding.UTF8,
+      })
+      const fileUri = await Filesystem.getUri({
+        path: fileName,
+        directory: Directory.Cache,
+      })
+      await Share.share({
+        title: "Export SVG",
+        url: fileUri.uri,
+        dialogTitle: "Save SVG to Files",
+      })
     } else {
-      // Web download
       const fileToDownload = new File([apollonSVG.svg], fileName, {
         type: "image/svg+xml",
       })
-
       downloadFile({ file: fileToDownload, fileName })
     }
   }

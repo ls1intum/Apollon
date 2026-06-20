@@ -1,9 +1,18 @@
 import { useThemeStore } from "@/stores/useThemeStore"
+import MenuItem from "@mui/material/MenuItem"
 import React from "react"
 import { useShallow } from "zustand/shallow"
 import { MoonIcon, SunIcon } from "../Icon"
 
-export const ThemeSwitcherMenu: React.FC = () => {
+interface Props {
+  asMenuItem?: boolean
+  onToggle?: () => void
+}
+
+export const ThemeSwitcherMenu: React.FC<Props> = ({
+  asMenuItem = false,
+  onToggle,
+}) => {
   const { currentTheme, toggleTheme } = useThemeStore(
     useShallow((state) => ({
       currentTheme: state.currentTheme,
@@ -13,10 +22,28 @@ export const ThemeSwitcherMenu: React.FC = () => {
   const isDarkMode = currentTheme === "dark"
   const title = isDarkMode ? "Switch to light mode" : "Switch to dark mode"
 
+  const handleToggle = () => {
+    toggleTheme()
+    onToggle?.()
+  }
+
+  if (asMenuItem) {
+    return (
+      <MenuItem
+        onClick={handleToggle}
+        aria-label={title}
+        sx={{ justifyContent: "space-between !important" }}
+      >
+        Theme
+        {isDarkMode ? <SunIcon /> : <MoonIcon />}
+      </MenuItem>
+    )
+  }
+
   return (
     <button
       type="button"
-      onClick={toggleTheme}
+      onClick={handleToggle}
       aria-label={title}
       title={title}
       className="relative mt-[5px] inline-flex h-9 w-9 cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-white/70 transition-all duration-200 hover:scale-115 hover:text-white hover:drop-shadow-[0_0_10px_var(--home-glow-neutral)] active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#20242c]"

@@ -68,7 +68,7 @@ export const ShareModal = () => {
   }
 
   return (
-    <HomeDialogContent>
+    <HomeDialogContent testId="share-modal-content">
       <HomeDialogNotice>
         {share.diagramId
           ? "Anyone with this link can open the diagram. Choose what they can do with it."
