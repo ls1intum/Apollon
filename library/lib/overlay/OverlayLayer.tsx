@@ -28,14 +28,7 @@ import {
 } from "./types"
 
 /** Library-owned bands rendered as absolutely-positioned containers. */
-const BAND_REGIONS: OverlayRegion[] = [
-  "header",
-  "left-rail",
-  "right-rail",
-  "center-left",
-  "center-right",
-  "in-front",
-]
+const BAND_REGIONS: OverlayRegion[] = ["header", "left-rail", "right-rail"]
 
 function breakpointForWidth(width: number): OverlayBreakpoint {
   // Pre-measurement width is 0; treat it as desktop to avoid a transient
@@ -67,8 +60,6 @@ const MEASURE_AXIS: Partial<Record<OverlayRegion, "width" | "height">> = {
   "bottom-right": "height",
   "left-rail": "width",
   "right-rail": "width",
-  "center-left": "width",
-  "center-right": "width",
 }
 
 const REGION_PRIMARY_SIDE: Partial<Record<OverlayRegion, OverlaySide>> = {
@@ -80,9 +71,7 @@ const REGION_PRIMARY_SIDE: Partial<Record<OverlayRegion, OverlaySide>> = {
   "bottom-center": "bottom",
   "bottom-right": "bottom",
   "left-rail": "left",
-  "center-left": "left",
   "right-rail": "right",
-  "center-right": "right",
 }
 
 const BAND_STYLE: Record<string, CSSProperties> = {
@@ -108,19 +97,6 @@ const BAND_STYLE: Record<string, CSSProperties> = {
     right: "var(--safe-area-inset-right, 0px)",
     flexDirection: "column",
   },
-  "center-left": {
-    top: "50%",
-    left: 0,
-    transform: "translateY(-50%)",
-    flexDirection: "column",
-  },
-  "center-right": {
-    top: "50%",
-    right: 0,
-    transform: "translateY(-50%)",
-    flexDirection: "column",
-  },
-  "in-front": { inset: 0 },
 }
 
 interface ControlSlotProps {
@@ -134,13 +110,7 @@ interface ControlSlotProps {
  * pointer events only — never keyboard), and applies the toolbar a11y wrapper.
  */
 function ControlSlot({ control, registerMeasure }: ControlSlotProps) {
-  // `in-front` is a non-interactive screen-space layer by default (guides,
-  // hints) — only opt into pointer events when the control explicitly asks, so a
-  // default in-front control can't swallow canvas pan/zoom.
-  const interactive =
-    control.region === "in-front"
-      ? control.interactive === true
-      : control.interactive !== false
+  const interactive = control.interactive !== false
   const setRef = useCallback(
     (el: HTMLDivElement | null) => registerMeasure(control.id, el),
     [control.id, registerMeasure]
@@ -149,10 +119,8 @@ function ControlSlot({ control, registerMeasure }: ControlSlotProps) {
     e.stopPropagation()
   }, [])
 
-  // role="group" (not "toolbar"): a labelled group of controls without imposing
-  // the toolbar single-tab-stop / roving-tabindex contract we don't implement.
-  const content: ReactNode = control.toolbarLabel ? (
-    <div role="group" aria-label={control.toolbarLabel}>
+  const content: ReactNode = control.groupLabel ? (
+    <div role="group" aria-label={control.groupLabel}>
       {control.render()}
     </div>
   ) : (
@@ -305,12 +273,7 @@ export function OverlayLayer() {
           key={region}
           position={region as PanelPosition}
           className="apollon-overlay-panel"
-          style={{
-            pointerEvents: "none",
-            display: "flex",
-            gap: 8,
-            zIndex: "var(--apollon-z-chrome)" as unknown as number,
-          }}
+          style={{ pointerEvents: "none", display: "flex", gap: 8 }}
         >
           {byRegion.get(region)!.map((c) => (
             <ControlSlot
@@ -332,7 +295,6 @@ export function OverlayLayer() {
             display: "flex",
             gap: 8,
             pointerEvents: "none",
-            zIndex: "var(--apollon-z-chrome)" as unknown as number,
             ...BAND_STYLE[region],
           }}
         >

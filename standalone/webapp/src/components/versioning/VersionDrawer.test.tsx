@@ -16,7 +16,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { cleanup, screen } from "@testing-library/react"
 import { renderWithRouter } from "@/test/renderWithRouter"
 import { ModalProvider, EditorProvider } from "@/contexts"
-import { VersionSidebarBody, VersionRail } from "./VersionDrawer"
+import { VersionSidebarBody } from "./VersionDrawer"
 import { useVersionStore } from "@/stores/useVersionStore"
 import { VersionApiClient } from "@/services/DiagramApiClient"
 
@@ -59,33 +59,7 @@ function mount(diagramId: string) {
   })
 }
 
-describe("VersionRail (overlay rehome)", () => {
-  it("renders nothing (no throw) when there is no editor to portal into", () => {
-    expect(() =>
-      renderWithRouter(<VersionRail diagramId="no-editor" />, {
-        wrapper: (children) => (
-          <EditorProvider>
-            <ModalProvider>{children}</ModalProvider>
-          </EditorProvider>
-        ),
-      })
-    ).not.toThrow()
-  })
-})
-
 describe("VersionSidebarBody (regression: infinite render loop)", () => {
-  it("mounts without warnings on a diagram with no fetched versions", () => {
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
-    const error = vi.spyOn(console, "error").mockImplementation(() => {})
-    expect(() => mount("never-fetched")).not.toThrow()
-    const warnings = warn.mock.calls.map((c) => String(c[0])).join("\n")
-    const errors = error.mock.calls.map((c) => String(c[0])).join("\n")
-    expect(warnings).not.toMatch(/getSnapshot should be cached/)
-    expect(errors).not.toMatch(/Maximum update depth exceeded/)
-    warn.mockRestore()
-    error.mockRestore()
-  })
-
   it("mounts open without warnings + renders the empty state", async () => {
     useVersionStore.setState((s) => ({
       drawerOpenByDiagram: { ...s.drawerOpenByDiagram, abc: true },

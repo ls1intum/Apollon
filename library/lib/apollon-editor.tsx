@@ -37,9 +37,6 @@ import {
 import { createOverlayStore, type OverlayStore } from "./overlay/overlayStore"
 import { RegionMount } from "./overlay/RegionMount"
 import {
-  type ApollonDisplayOptions,
-  type Insets,
-  type OverlayBreakpoint,
   type OverlayControlInput,
   type OverlayRegion,
   type OverlaySide,
@@ -402,39 +399,6 @@ export class ApollonEditor {
   public releaseRegionElement(region: OverlayRegion): void {
     this.overlayStore.getState().unregister(`apollon:host:${region}`)
     this.hostRegionEls.delete(region)
-  }
-
-  /** Reserve room on a side without rendering (the standing-padding analog). */
-  public setInset(side: OverlaySide, px: number): void {
-    this.overlayStore.getState().setManualInset(side, px)
-  }
-
-  public clearInset(side: OverlaySide): void {
-    this.overlayStore.getState().setManualInset(side, null)
-  }
-
-  public getInsets(): Insets {
-    return this.overlayStore.getState().insets
-  }
-
-  /** Subscribe to content-inset changes. Returns an unsubscribe fn. */
-  public onInsetsChange(cb: (insets: Insets) => void): () => void {
-    return this.overlayStore.subscribe((state, prev) => {
-      if (state.insets !== prev.insets) cb(state.insets)
-    })
-  }
-
-  public getBreakpoint(): OverlayBreakpoint {
-    return this.overlayStore.getState().breakpoint
-  }
-
-  /** View-only display options (issue #749) — toggles/replaces built-in overlays. */
-  public setDisplayOptions(options: Partial<ApollonDisplayOptions>): void {
-    this.overlayStore.getState().setDisplay(options)
-  }
-
-  public getDisplayOptions(): ApollonDisplayOptions {
-    return this.overlayStore.getState().display
   }
 
   set diagramType(type: UMLDiagramType) {

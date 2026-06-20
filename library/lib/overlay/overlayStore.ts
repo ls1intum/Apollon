@@ -1,7 +1,6 @@
 import { create, StoreApi, UseBoundStore } from "zustand"
 import { devtools } from "zustand/middleware"
 import {
-  type ApollonDisplayOptions,
   type Insets,
   type OverlayBreakpoint,
   type OverlayControl,
@@ -20,10 +19,7 @@ const REGION_SIDES: Record<OverlayRegion, OverlaySide[]> = {
   "bottom-center": ["bottom"],
   "bottom-right": ["bottom"],
   "left-rail": ["left"],
-  "center-left": ["left"],
   "right-rail": ["right"],
-  "center-right": ["right"],
-  "in-front": [],
   "on-canvas": [],
 }
 
@@ -38,11 +34,10 @@ function controlContribution(
 ): Partial<Record<OverlaySide, number>> {
   const { inset, region } = control
   if (inset === undefined) return {}
-  const regionSides = REGION_SIDES[region]
   const out: Partial<Record<OverlaySide, number>> = {}
 
   if (inset === "auto") {
-    for (const side of regionSides) out[side] = measured?.[side] ?? 0
+    for (const side of REGION_SIDES[region]) out[side] = measured?.[side] ?? 0
     return out
   }
   if (Array.isArray(inset)) {
@@ -57,79 +52,51 @@ function controlContribution(
 }
 
 /**
- * The single content-inset authority: per side, the manual floor PLUS the
- * largest reservation among visible controls touching that side. `max` (not
- * sum) within a side avoids double-counting nested/stacked chrome; a host that
- * truly needs two summed bands raises the manual floor via `setInset`.
+ * Content-inset rect: per side, the largest reservation among visible controls
+ * touching that side. `max` (not sum) avoids double-counting nested/stacked
+ * chrome. Controls hidden with `visible: false` reserve nothing; function-based
+ * visibility is treated as visible here and resolved accurately by OverlayLayer.
+ * Recomputed on every mutation so the rect is reliable without a render.
  */
 export function computeInsets(
   controls: OverlayControl[],
-  measured: Record<string, Partial<Record<OverlaySide, number>>>,
-  manualInsets: Partial<Record<OverlaySide, number>>
+  measured: Record<string, Partial<Record<OverlaySide, number>>>
 ): Insets {
-  const result: Insets = {
-    top: manualInsets.top ?? 0,
-    right: manualInsets.right ?? 0,
-    bottom: manualInsets.bottom ?? 0,
-    left: manualInsets.left ?? 0,
-  }
+  const result: Insets = { ...ZERO_INSETS }
   for (const control of controls) {
+    if (control.visible === false) continue
     const contribution = controlContribution(control, measured[control.id])
     for (const side of Object.keys(contribution) as OverlaySide[]) {
-      const base = manualInsets[side] ?? 0
-      result[side] = Math.max(result[side], base + (contribution[side] ?? 0))
+      result[side] = Math.max(result[side], contribution[side] ?? 0)
     }
   }
   return result
 }
 
-/**
- * Inset rect from the current registry state. Controls explicitly hidden
- * (`visible: false`) reserve nothing; function-based visibility is treated as
- * visible here (resolved accurately by OverlayLayer, which republishes the
- * visibility-filtered rect when mounted). Keeping this in the store means
- * `setInset`/`addControl` reflect in `getInsets()` synchronously — without
- * waiting for a render — so the imperative API is reliable headless.
- */
-function recomputeInsets(
+const recompute = (
   controls: Record<string, OverlayControl>,
-  measured: Record<string, Partial<Record<OverlaySide, number>>>,
-  manualInsets: Partial<Record<OverlaySide, number>>
-): Insets {
-  return computeInsets(
-    Object.values(controls).filter((c) => c.visible !== false),
-    measured,
-    manualInsets
-  )
-}
+  measured: Record<string, Partial<Record<OverlaySide, number>>>
+): Insets => computeInsets(Object.values(controls), measured)
 
 export type OverlayStore = {
   controls: Record<string, OverlayControl>
   /** Measured rects per control id (written by the shared ResizeObserver). */
   measured: Record<string, Partial<Record<OverlaySide, number>>>
-  /** Explicit per-side floor set via `editor.setInset`. */
-  manualInsets: Partial<Record<OverlaySide, number>>
-  /** Derived content-inset rect — recomputed on every registry mutation, so it
-   *  is the single inset authority (reliable without a render). */
+  /** Derived content-inset rect — recomputed on every registry mutation. */
   insets: Insets
   breakpoint: OverlayBreakpoint
-  display: ApollonDisplayOptions
 
   register: (control: OverlayControl) => void
   unregister: (id: string) => void
   setMeasured: (id: string, rect: Partial<Record<OverlaySide, number>>) => void
-  setManualInset: (side: OverlaySide, px: number | null) => void
   setBreakpoint: (bp: OverlayBreakpoint) => void
-  setDisplay: (display: Partial<ApollonDisplayOptions>) => void
 }
 
 const initialState = {
   controls: {} as Record<string, OverlayControl>,
   measured: {} as Record<string, Partial<Record<OverlaySide, number>>>,
-  manualInsets: {} as Partial<Record<OverlaySide, number>>,
   insets: ZERO_INSETS,
   breakpoint: "desktop" as OverlayBreakpoint,
-  display: {} as ApollonDisplayOptions,
 }
 
 export const createOverlayStore = (): UseBoundStore<StoreApi<OverlayStore>> =>
@@ -142,10 +109,7 @@ export const createOverlayStore = (): UseBoundStore<StoreApi<OverlayStore>> =>
           set(
             (s) => {
               const controls = { ...s.controls, [control.id]: control }
-              return {
-                controls,
-                insets: recomputeInsets(controls, s.measured, s.manualInsets),
-              }
+              return { controls, insets: recompute(controls, s.measured) }
             },
             undefined,
             "register"
@@ -162,7 +126,7 @@ export const createOverlayStore = (): UseBoundStore<StoreApi<OverlayStore>> =>
               return {
                 controls,
                 measured,
-                insets: recomputeInsets(controls, measured, s.manualInsets),
+                insets: recompute(controls, measured),
               }
             },
             undefined,
@@ -173,28 +137,10 @@ export const createOverlayStore = (): UseBoundStore<StoreApi<OverlayStore>> =>
           set(
             (s) => {
               const measured = { ...s.measured, [id]: rect }
-              return {
-                measured,
-                insets: recomputeInsets(s.controls, measured, s.manualInsets),
-              }
+              return { measured, insets: recompute(s.controls, measured) }
             },
             undefined,
             "setMeasured"
-          ),
-
-        setManualInset: (side, px) =>
-          set(
-            (s) => {
-              const manualInsets = { ...s.manualInsets }
-              if (px === null) delete manualInsets[side]
-              else manualInsets[side] = px
-              return {
-                manualInsets,
-                insets: recomputeInsets(s.controls, s.measured, manualInsets),
-              }
-            },
-            undefined,
-            "setManualInset"
           ),
 
         setBreakpoint: (breakpoint) =>
@@ -202,13 +148,6 @@ export const createOverlayStore = (): UseBoundStore<StoreApi<OverlayStore>> =>
             (s) => (s.breakpoint === breakpoint ? s : { breakpoint }),
             undefined,
             "setBreakpoint"
-          ),
-
-        setDisplay: (display) =>
-          set(
-            (s) => ({ display: { ...s.display, ...display } }),
-            undefined,
-            "setDisplay"
           ),
       }),
       { name: "OverlayStore", enabled: true }

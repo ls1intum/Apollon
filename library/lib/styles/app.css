@@ -40,9 +40,14 @@
   isolation: isolate;
 
   /* Overlay chrome (header, rails, host controls): above canvas content +
-     collaboration overlays. Single source of truth, mirrored by ZINDEX.CHROME
-     in constants.ts. */
+     collaboration overlays. Single source of truth for the overlay layer. */
   --apollon-z-chrome: 10005;
+}
+
+/* Overlay chrome regions sit above canvas content + collaboration overlays. */
+.apollon-overlay-panel,
+.apollon-overlay-band {
+  z-index: var(--apollon-z-chrome);
 }
 
 /* Positioning context + clip region for the absolutely-positioned

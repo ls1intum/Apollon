@@ -685,8 +685,6 @@ export const VersionSidebarBody: FC<Props> = ({
   )
 }
 
-const RIGHT_RAIL_CONTROL_ID = "apollon:host:right-rail"
-
 /**
  * Desktop version-history panel, rehomed onto the library's overlay/control API.
  * Instead of being a flex sibling that pushes the canvas (a reflow on every
@@ -710,14 +708,14 @@ export const VersionRail: FC<Props> = ({
   // returns a stable node + reserves the panel's width as a right inset.
   useEffect(() => {
     if (!editor || isSmall || !open) {
-      editor?.removeControl(RIGHT_RAIL_CONTROL_ID)
+      editor?.releaseRegionElement("right-rail")
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setHost(null)
       return
     }
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setHost(editor.getRegionElement("right-rail"))
-    return () => editor.removeControl(RIGHT_RAIL_CONTROL_ID)
+    return () => editor.releaseRegionElement("right-rail")
   }, [editor, isSmall, open])
 
   if (!host) return null

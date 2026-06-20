@@ -238,9 +238,6 @@ export const ZINDEX = Object.freeze({
   LABEL: 9998,
   DRAGGABLE_ELEMENT: 9999,
   TOOLTIP: 10000,
-  /** Host-injected / built-in overlay chrome (header, rails, controls), above
-   *  canvas content. Mirrored as the `--apollon-z-chrome` CSS var in app.css. */
-  CHROME: 10005,
 } as const)
 
 /* -------------------------------------------------------------------------- */

@@ -16,7 +16,7 @@ function serializeOptions(o: OverlayControlOptions): string {
     region: o.region,
     order: o.order ?? null,
     interactive: o.interactive ?? null,
-    toolbarLabel: o.toolbarLabel ?? null,
+    groupLabel: o.groupLabel ?? null,
     inset: o.inset ?? null,
     visible: typeof o.visible === "function" ? "fn" : (o.visible ?? null),
     className: o.className ?? null,

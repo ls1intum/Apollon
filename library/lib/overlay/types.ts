@@ -1,11 +1,10 @@
 import { type ReactNode, type CSSProperties } from "react"
-import * as Apollon from "../typings"
+import type { ApollonMode, ApollonView } from "../typings"
 
 /**
- * Where a control is anchored. The six React Flow `<Panel>` corners/edge-centers
- * are screen-space and rendered through React Flow; the remaining regions are
- * library-owned bands (full-width header, full-height side rails, a non-interactive
- * in-front layer) plus `on-canvas`, which pans/zooms with the diagram.
+ * Where a control is anchored. The six React Flow `<Panel>` corners are
+ * screen-space and rendered through React Flow; `header`/`left-rail`/`right-rail`
+ * are library-owned bands; `on-canvas` pans/zooms with the diagram.
  */
 export type OverlayRegion =
   | "top-left"
@@ -14,12 +13,9 @@ export type OverlayRegion =
   | "bottom-left"
   | "bottom-center"
   | "bottom-right"
-  | "center-left"
-  | "center-right"
   | "header" // full-width band pinned to the container top, above top-* regions
   | "left-rail" // full-height left band (e.g. the element palette)
   | "right-rail" // full-height right band (e.g. version history)
-  | "in-front" // screen-space, full-bleed, non-interactive (guides, scroll hints)
   | "on-canvas" // viewport-transformed, pans + zooms with the diagram
 
 /** Regions that map directly onto a React Flow `<Panel position>`. */
@@ -50,8 +46,8 @@ export type InsetContribution =
 export type OverlayBreakpoint = "mobile" | "tablet" | "desktop"
 
 export interface OverlayVisibilityState {
-  mode: Apollon.ApollonMode
-  view: Apollon.ApollonView
+  mode: ApollonMode
+  view: ApollonView
   readonly: boolean
   previewMode: boolean
   breakpoint: OverlayBreakpoint
@@ -67,8 +63,9 @@ export interface OverlayControlOptions {
   order?: number
   /** When false the region frame stays pointer-transparent here too. Default true. */
   interactive?: boolean
-  /** Wraps the panel as role="toolbar" with this aria-label + roving tabindex. */
-  toolbarLabel?: string
+  /** Wraps the control in a `role="group"` with this aria-label. No focus
+   *  management is imposed. */
+  groupLabel?: string
   /** Hide without unregistering; a function recomputes on editor-state change. */
   visible?: boolean | ((s: OverlayVisibilityState) => boolean)
   className?: string
@@ -84,20 +81,4 @@ export interface OverlayControl extends OverlayControlOptions {
 /** The public registration payload (options + renderer). */
 export type OverlayControlInput = OverlayControlOptions & {
   render: () => ReactNode
-}
-
-/**
- * View-only display configuration (issue #749). Each flag toggles a built-in
- * overlay; `undefined` keeps that overlay's default, so an editor that never
- * sets them is unaffected.
- */
-export interface ApollonDisplayOptions {
-  /** Element palette. Default: visible in Modelling mode when not readonly. */
-  palette?: boolean
-  /** Zoom / undo / redo controls. Default: visible. */
-  controls?: boolean
-  /** Minimap. Default: visible. */
-  minimap?: boolean
-  /** Collaborator presence bar. Default: follows the collaboration options. */
-  presence?: boolean
 }

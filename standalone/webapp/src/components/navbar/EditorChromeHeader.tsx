@@ -3,8 +3,6 @@ import { createPortal } from "react-dom"
 import { useEditorContext } from "@/contexts"
 import { Navbar } from "./Navbar"
 
-const HEADER_CONTROL_ID = "apollon:host:header"
-
 /**
  * Mounts the editor navbar as immersive in-canvas chrome. The navbar is
  * portaled into the library's `header` overlay region, so the canvas is
@@ -33,7 +31,7 @@ export function EditorChromeHeader() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setHost(el)
     return () => {
-      editor.removeControl(HEADER_CONTROL_ID)
+      editor.releaseRegionElement("header")
     }
   }, [editor])
 
