@@ -141,7 +141,9 @@ export const DeploymentDiagramEdge = ({
           pathMiddlePosition={edgeData.pathMiddlePosition}
           isMiddlePathHorizontal={edgeData.isMiddlePathHorizontal}
           showRelationshipLabels={showRelationshipLabels}
-          avoidToolbarOverlap={true}
+          sourceNodeRect={edgeData.sourceNodeRect}
+          targetNodeRect={edgeData.targetNodeRect}
+          neighborGeometry={edgeData.neighborGeometry}
           textColor={textColor}
         />
 

@@ -113,7 +113,9 @@ export const ActivityDiagramEdge = ({
           pathMiddlePosition={edgeData.pathMiddlePosition}
           isMiddlePathHorizontal={edgeData.isMiddlePathHorizontal}
           showRelationshipLabels={true}
-          avoidToolbarOverlap={true}
+          sourceNodeRect={edgeData.sourceNodeRect}
+          targetNodeRect={edgeData.targetNodeRect}
+          neighborGeometry={edgeData.neighborGeometry}
           textColor={textColor}
         />
 

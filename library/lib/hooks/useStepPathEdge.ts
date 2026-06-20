@@ -5,7 +5,6 @@ import {
   useStore,
   useReactFlow,
 } from "@xyflow/react"
-import { log } from "../logger"
 import { EDGES } from "@/constants"
 import {
   adjustSourceCoordinates,
@@ -17,7 +16,11 @@ import {
   pointsToSvgPath,
   tryFindStraightPath,
 } from "../edges/Connection"
-import { useDiagramStore, useMetadataStore } from "@/store/context"
+import {
+  useDiagramStore,
+  useMetadataStore,
+  useEdgeGeometryStore,
+} from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import {
   getEdgeMarkerStyles,
@@ -38,6 +41,11 @@ import {
   computeToolbarPosition,
   isLengthEditableAtZoom,
 } from "@/utils/geometry/bendHandles"
+import {
+  getMidSegment,
+  collectNeighborPolylines,
+  type Rect,
+} from "@/utils/geometry/edgeLabelLayout"
 import { useEdgeState } from "../edges/GenericEdge"
 import { useDiagramModifiable } from "./useDiagramModifiable"
 import {
@@ -71,6 +79,17 @@ export interface StepPathEdgeData {
   isMiddlePathHorizontal: boolean
   sourcePoint: IPoint
   targetPoint: IPoint
+  /** Source/target node bounds (flow space), so label placement can bias a
+   * label away from the node it would otherwise sit on (stacked-node case). */
+  sourceNodeRect?: Rect
+  targetNodeRect?: Rect
+  /** Mid-segment endpoints in source->target order — the LOCAL flow direction
+   * at the middle (used for communication-message arrow direction). */
+  midSegmentStart: IPoint
+  midSegmentEnd: IPoint
+  /** Nearby other-edge polylines, so a middle label can break a side tie toward
+   * where fewer edges cross. */
+  neighborGeometry: IPoint[][]
 }
 
 const arePointsEqual = (a: IPoint[], b: IPoint[]): boolean =>
@@ -110,13 +129,6 @@ export const useStepPathEdge = ({
   )
   const { getNode, getNodes, screenToFlowPosition } = useReactFlow()
 
-  const [pathMiddlePosition, setPathMiddlePosition] = useState<IPoint>({
-    x: (sourceX + targetX) / 2,
-    y: (sourceY + targetY) / 2,
-  })
-  const [isMiddlePathHorizontal, setIsMiddlePathHorizontal] =
-    useState<boolean>(true)
-  const [hasInitialCalculation, setHasInitialCalculation] = useState(false)
   const [draggingHandle, setDraggingHandle] = useState<BendHandle | null>(null)
   // While a bend handle is being dragged we render from this live geometry
   // instead of the committed `activePoints`. Driving the drag through state
@@ -156,6 +168,31 @@ export const useStepPathEdge = ({
     if (!targetNode) return { x: targetX, y: targetY }
     return getPositionOnCanvas(targetNode, allNodes)
   }, [targetNode, allNodes, targetX, targetY])
+
+  const sourceNodeRect = useMemo<Rect | undefined>(
+    () =>
+      sourceNode
+        ? {
+            x: sourceAbsolutePosition.x,
+            y: sourceAbsolutePosition.y,
+            width: sourceNode.width ?? 0,
+            height: sourceNode.height ?? 0,
+          }
+        : undefined,
+    [sourceNode, sourceAbsolutePosition]
+  )
+  const targetNodeRect = useMemo<Rect | undefined>(
+    () =>
+      targetNode
+        ? {
+            x: targetAbsolutePosition.x,
+            y: targetAbsolutePosition.y,
+            width: targetNode.width ?? 0,
+            height: targetNode.height ?? 0,
+          }
+        : undefined,
+    [targetNode, targetAbsolutePosition]
+  )
   // Round coordinates to whole pixels for pixel-perfect rendering
   // React Flow may return fractional values when node dimensions are odd
   const roundedSourceX = Math.round(sourceX)
@@ -435,45 +472,41 @@ export const useStepPathEdge = ({
     zoom,
   ])
 
-  useEffect(() => {
-    if (pathRef.current && currentPath) {
-      const calculateMiddlePoint = () => {
-        if (!pathRef.current) return
+  // The mid-segment midpoint + orientation, derived synchronously and purely
+  // from the polyline (no DOM measurement). This replaces a racy
+  // getPointAtLength + setTimeout(0) effect that lagged a frame, could lock to
+  // an off-edge/misclassified value (#634/#129), and never resolved in headless
+  // export — so exported labels fell back to the straight-line guess. Computed
+  // from renderPoints (pre line-jump bridges) it is also frame-stable and
+  // identical interactively and in export.
+  const midSegment = useMemo(
+    () =>
+      getMidSegment(
+        renderPoints,
+        renderPoints[0] ?? { x: sourceX, y: sourceY },
+        renderPoints[renderPoints.length - 1] ?? { x: targetX, y: targetY }
+      ),
+    [renderPoints, sourceX, sourceY, targetX, targetY]
+  )
+  const pathMiddlePosition = midSegment.point
+  const isMiddlePathHorizontal = midSegment.isHorizontal
 
-        try {
-          const totalLength = pathRef.current.getTotalLength()
-
-          if (totalLength > 0) {
-            const halfLength = totalLength / 2
-            const middlePoint = pathRef.current.getPointAtLength(halfLength)
-            const pointOnCloseToMiddle = pathRef.current.getPointAtLength(
-              halfLength + 2
-            )
-
-            const isHorizontal =
-              Math.abs(pointOnCloseToMiddle.x - middlePoint.x) >
-              Math.abs(pointOnCloseToMiddle.y - middlePoint.y)
-
-            setIsMiddlePathHorizontal(isHorizontal)
-            setPathMiddlePosition({ x: middlePoint.x, y: middlePoint.y })
-
-            if (!hasInitialCalculation) {
-              setHasInitialCalculation(true)
-            }
-          }
-        } catch (error) {
-          log.warn("Path calculation error:", error)
-          setPathMiddlePosition({
-            x: (sourceX + targetX) / 2,
-            y: (sourceY + targetY) / 2,
-          })
-        }
-      }
-      const timeoutId = setTimeout(calculateMiddlePoint, 0)
-
-      return () => clearTimeout(timeoutId)
-    }
-  }, [currentPath, sourceX, sourceY, targetX, targetY, hasInitialCalculation])
+  // Other edges near the label, used only to break a side tie (see
+  // computeMiddleLabelLayout). Bounded to a radius around the midpoint so the
+  // scan stays cheap; reuses the same geometry registry as line jumps.
+  const geometryById = useEdgeGeometryStore((state) => state.geometryById)
+  const neighborGeometry = useMemo(
+    () =>
+      collectNeighborPolylines(
+        geometryById,
+        id,
+        pathMiddlePosition,
+        EDGES.LABEL_NOMINAL_HALF_EXTENT +
+          EDGES.LABEL_GAP +
+          EDGES.LABEL_LINE_HEIGHT
+      ),
+    [geometryById, id, pathMiddlePosition]
+  )
 
   const handlePointerDown = useCallback(
     (event: React.PointerEvent, handle: BendHandle) => {
@@ -663,6 +696,11 @@ export const useStepPathEdge = ({
     isMiddlePathHorizontal,
     sourcePoint,
     targetPoint,
+    sourceNodeRect,
+    targetNodeRect,
+    midSegmentStart: midSegment.start,
+    midSegmentEnd: midSegment.end,
+    neighborGeometry,
   }
 
   return {
@@ -673,7 +711,9 @@ export const useStepPathEdge = ({
     bendHandles,
     isBendDragging: draggingHandle !== null,
     draggingHandleSegmentIndex: draggingHandle?.segmentIndex ?? null,
-    hasInitialCalculation,
+    // The midpoint is now known synchronously on first render, so there is no
+    // pre-measurement straight-line flash to fade past — always true.
+    hasInitialCalculation: true,
     isReconnecting,
     markerEnd,
     markerStart,

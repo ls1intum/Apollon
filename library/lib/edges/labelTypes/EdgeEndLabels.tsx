@@ -55,12 +55,22 @@ export const EdgeEndLabels = ({
       return calculateDynamicEdgeLabels(targetX, targetY, targetPosition)
     }
 
+    // Mirror the source: derive the side from the REAL terminal segment
+    // (penultimate -> last point), not the declared targetPosition. On a bent
+    // edge whose final segment approaches from a different side than the handle
+    // implies, this keeps the target role/multiplicity on the correct side.
     const targetPoint = activePoints[activePoints.length - 1]
-    return calculateDynamicEdgeLabels(
-      targetPoint.x,
-      targetPoint.y,
-      targetPosition
-    )
+    const prevPoint = activePoints[activePoints.length - 2]
+    const deltaX = prevPoint.x - targetPoint.x
+    const deltaY = prevPoint.y - targetPoint.y
+
+    let direction: string
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      direction = deltaX > 0 ? "right" : "left"
+    } else {
+      direction = deltaY > 0 ? "bottom" : "top"
+    }
+    return calculateDynamicEdgeLabels(targetPoint.x, targetPoint.y, direction)
   }, [activePoints, targetX, targetY, targetPosition])
 
   return (

@@ -1,0 +1,46 @@
+{
+  "id": "fixture-deployment-labeled-edge",
+  "version": "4.0.0",
+  "title": "Deployment Labeled Edge",
+  "type": "DeploymentDiagram",
+  "nodes": [
+    {
+      "id": "node-alpha",
+      "width": 200,
+      "height": 120,
+      "type": "deploymentNode",
+      "position": { "x": 0, "y": 0 },
+      "data": {
+        "name": "Alpha",
+        "isComponentHeaderShown": true,
+        "stereotype": "node"
+      },
+      "measured": { "width": 200, "height": 120 }
+    },
+    {
+      "id": "node-beta",
+      "width": 200,
+      "height": 120,
+      "type": "deploymentNode",
+      "position": { "x": 480, "y": 0 },
+      "data": {
+        "name": "Beta",
+        "isComponentHeaderShown": true,
+        "stereotype": "node"
+      },
+      "measured": { "width": 200, "height": 120 }
+    }
+  ],
+  "edges": [
+    {
+      "id": "labeled-assoc",
+      "source": "node-alpha",
+      "target": "node-beta",
+      "type": "DeploymentAssociation",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": { "label": "deploys", "points": [] }
+    }
+  ],
+  "assessments": {}
+}

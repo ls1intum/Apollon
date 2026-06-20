@@ -114,8 +114,8 @@ export const CommunicationDiagramEdge = ({
           pathMiddlePosition={edgeData.pathMiddlePosition}
           showRelationshipLabels={true}
           isReconnecting={isReconnecting}
-          sourcePosition={{ x: sourceX, y: sourceY }}
-          targetPosition={{ x: targetX, y: targetY }}
+          sourcePosition={edgeData.midSegmentStart}
+          targetPosition={edgeData.midSegmentEnd}
           textColor={textColor}
           isHorizontalEdge={edgeData.isMiddlePathHorizontal}
         />

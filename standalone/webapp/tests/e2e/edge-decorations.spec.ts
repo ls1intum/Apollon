@@ -194,6 +194,68 @@ test("the SFC transition bar sits on the edge centre, not off to the side", asyn
   ).toBeLessThanOrEqual(6)
 })
 
+/** The relationship middle-label position and the edge path's geometric middle,
+ * both in the edge's own SVG user space (directly comparable, flow units). */
+async function labelVsMiddle(page: Page, id: string, text: string) {
+  return page.evaluate(
+    ({ edgeId, needle }) => {
+      const g = document.querySelector(`.react-flow__edge[data-id="${edgeId}"]`)
+      const label = Array.from(g?.querySelectorAll("text") ?? []).find((t) =>
+        (t.textContent ?? "").includes(needle)
+      )
+      const p = g?.querySelector(
+        "path.react-flow__edge-path"
+      ) as SVGPathElement | null
+      if (!label || !p) return null
+      const mid = p.getPointAtLength(p.getTotalLength() / 2)
+      const near = p.getPointAtLength(
+        Math.min(p.getTotalLength() / 2 + 2, p.getTotalLength())
+      )
+      return {
+        mid: { x: mid.x, y: mid.y },
+        isHorizontal: Math.abs(near.x - mid.x) > Math.abs(near.y - mid.y),
+        label: {
+          x: Number(label.getAttribute("x")),
+          y: Number(label.getAttribute("y")),
+          anchor: label.getAttribute("text-anchor"),
+          baseline: label.getAttribute("dominant-baseline"),
+        },
+      }
+    },
+    { edgeId: id, needle: text }
+  )
+}
+
+test("the relationship label sits centered on top of a horizontal mid-segment, off the line", async ({
+  page,
+}) => {
+  await openFixtureInLocalEditor(
+    page,
+    readFixture("deployment-labeled-edge.json")
+  )
+  await waitForCanvasReady(page)
+
+  const m = await labelVsMiddle(page, "labeled-assoc", "deploys")
+  expect(m, "labeled edge and its middle label must be present").not.toBeNull()
+  expect(m!.isHorizontal, "the mid-segment should be horizontal").toBe(true)
+
+  // Centered over the mid-segment (x), not nudged off to the side.
+  expect(
+    Math.abs(m!.label.x - m!.mid.x),
+    `label x ${m!.label.x} should be centered on the mid x ${m!.mid.x}`
+  ).toBeLessThanOrEqual(2)
+  expect(m!.label.anchor).toBe("middle")
+
+  // ON TOP: above the line, by roughly the constant gap, never on the line.
+  const gap = m!.mid.y - m!.label.y
+  expect(gap, `label should sit above the line (gap ${gap})`).toBeGreaterThan(6)
+  expect(
+    gap,
+    `label gap ${gap} should be the constant on-top offset`
+  ).toBeLessThan(24)
+  expect(m!.label.baseline).toBe("auto")
+})
+
 test("the SFC transition bar follows the bend handle live during the drag", async ({
   page,
 }) => {
