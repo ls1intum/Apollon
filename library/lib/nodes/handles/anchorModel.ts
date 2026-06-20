@@ -5,8 +5,9 @@ import { Position } from "@xyflow/react"
  *
  * A connection endpoint is persisted as a `side:ratio` anchor (e.g. `t:0.500`):
  *   - `side`  one of the four rectangle sides (t/r/b/l)
- *   - `ratio` the fraction along that side (0 = start corner, 1 = end corner),
- *             quantized to the 5px canvas grid.
+ *   - `ratio` the fraction along that side, quantized to the 5px canvas grid.
+ *             The extremes 0/1 (the corners) are never offered as connection
+ *             points — see KEY_RATIOS below.
  *
  * This replaces the legacy fixed 9-slot / staged-arc model. It is pure (no
  * React, no DOM) so the same math drives the interactive handles, the
@@ -44,7 +45,7 @@ export interface Point {
 export const GRID_STEP_PX = 5
 
 // A side gains its two quarter handles once it is at least this long, so small
-// nodes stay uncluttered (3 key handles) while large nodes expose 5.
+// nodes stay uncluttered (centre only) while longer sides expose three points.
 export const QUARTER_THRESHOLD_PX = 120
 
 // Minimum comfortable on-screen spacing between two adjacent draggable points.
@@ -304,7 +305,7 @@ const candidateRatios = (
 /**
  * Resolve a world-space point to the best anchor. Picks the nearest connectable side, then within the
  * zoom-scaled snap radius prefers higher-priority points
- * (center > corner > quarter > grid); falls back to the closest point on the
+ * (center > quarter > grid); falls back to the closest point on the
  * side so a drop ALWAYS resolves to a real anchor.
  */
 export function snapToAnchor(
