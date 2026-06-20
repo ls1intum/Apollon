@@ -9,15 +9,19 @@ import {
 } from "@xyflow/react"
 import { useCallback, useRef } from "react"
 import { findClosestHandle, generateUUID, getDefaultEdgeType } from "@/utils"
-import { DiagramNodeTypeRecord } from "@/nodes"
+import { getNodeHandleConfig } from "@/nodes/handles/nodeHandleConfig"
 import { useDiagramStore, useMetadataStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 
 export const useConnect = () => {
   const startEdge = useRef<Edge | null>(null)
   const connectionStartParams = useRef<OnConnectStartParams | null>(null)
-  const { screenToFlowPosition, getIntersectingNodes, getInternalNode } =
-    useReactFlow()
+  const {
+    screenToFlowPosition,
+    getIntersectingNodes,
+    getInternalNode,
+    getZoom,
+  } = useReactFlow()
   const { setEdges, addEdge, edges } = useDiagramStore(
     useShallow((state) => ({
       setEdges: state.setEdges,
@@ -36,14 +40,6 @@ export const useConnect = () => {
 
   const defaultEdgeType = getDefaultEdgeType(diagramType)
 
-  const isFourHandleNode = useCallback(
-    (nodeType?: string) =>
-      nodeType === DiagramNodeTypeRecord.componentInterface ||
-      nodeType === DiagramNodeTypeRecord.petriNetPlace ||
-      nodeType === DiagramNodeTypeRecord.petriNetTransition ||
-      nodeType === DiagramNodeTypeRecord.sfcTransitionBranch,
-    []
-  )
   const getDropPosition = useCallback(
     (event: MouseEvent | TouchEvent) => {
       const { clientX, clientY } =
@@ -132,6 +128,10 @@ export const useConnect = () => {
           )
             return
 
+          const targetConfig = getNodeHandleConfig(nodeOnTop.type)
+          // Non-connectable nodes (legends/decorations) are never drop targets.
+          if (targetConfig.variant === "none") return
+
           const targetHandle = findClosestHandle({
             point: dropPosition,
             rect: {
@@ -140,7 +140,9 @@ export const useConnect = () => {
               width: nodeOnTop.width,
               height: nodeOnTop.height,
             },
-            useFourHandles: isFourHandleNode(nodeOnTop.type),
+            useFourHandles: targetConfig.variant === "center",
+            excludeCorners: targetConfig.excludeCorners,
+            zoom: getZoom(),
           })
 
           if (!targetHandle) return
@@ -207,7 +209,7 @@ export const useConnect = () => {
       getDropPosition,
       getInternalNode,
       getIntersectingNodes,
-      isFourHandleNode,
+      getZoom,
       setEdges,
       stopConnectionGuidance,
     ]

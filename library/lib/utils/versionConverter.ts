@@ -155,8 +155,9 @@ export function isV2Format(data: any): data is V2DiagramFormat {
 }
 
 /**
- * Convert v3 handle directions to v4 handle IDs
- * V3 uses Direction enum, V4 uses HandleId enum
+ * Convert v3 handle directions to v4 named handle ids. These named ids are
+ * later normalized to canonical `side:ratio` anchors by migrateLegacyHandle
+ * (run for every import via the EdgeTransformer).
  */
 export function convertV3HandleToV4(v3Handle: string): string {
   const handleMap: Record<string, string> = {

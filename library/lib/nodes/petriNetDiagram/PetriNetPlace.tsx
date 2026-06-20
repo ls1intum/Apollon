@@ -4,7 +4,7 @@ import { PetriNetPlaceSVG } from "@/components"
 import { PetriNetPlaceProps } from "@/types"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
-import { DefaultNodeWrapper, FOUR_WAY_HANDLES_PRESET } from "../wrappers"
+import { DefaultNodeWrapper } from "../wrappers"
 import { NodeToolbar } from "@/components/toolbars/NodeToolbar"
 
 export function PetriNetPlace({
@@ -21,12 +21,7 @@ export function PetriNetPlace({
   }
 
   return (
-    <DefaultNodeWrapper
-      elementId={id}
-      width={width}
-      height={height}
-      hiddenHandles={FOUR_WAY_HANDLES_PRESET}
-    >
+    <DefaultNodeWrapper elementId={id} width={width} height={height}>
       <NodeToolbar elementId={id} />
       <div ref={anchorRef}>
         <PetriNetPlaceSVG

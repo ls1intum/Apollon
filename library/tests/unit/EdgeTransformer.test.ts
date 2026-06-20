@@ -16,8 +16,8 @@ function makeEdge(overrides: Partial<ApollonEdge> = {}): ApollonEdge {
     source: "node-1",
     target: "node-2",
     type: "ClassUnidirectional" as DiagramEdgeType,
-    sourceHandle: "right",
-    targetHandle: "left",
+    sourceHandle: "r:0.50",
+    targetHandle: "l:0.50",
     data: {
       label: "uses",
       points: [
@@ -67,6 +67,22 @@ describe("EdgeTransformer", () => {
       expect(result.data.points).toEqual([{ x: 0, y: 0 }])
       // The original is left intact.
       expect(edge.data).toHaveProperty("computedSegments")
+    })
+
+    it("migrates legacy named handles to canonical side:ratio anchors", () => {
+      const edge = makeEdge({ sourceHandle: "top-right", targetHandle: "left" })
+      const result = hydrateEdgeData(edge)
+
+      expect(result).not.toBe(edge)
+      expect(result.sourceHandle).toBe("t:1.000")
+      expect(result.targetHandle).toBe("l:0.500")
+      // The original is left intact.
+      expect(edge.sourceHandle).toBe("top-right")
+    })
+
+    it("leaves edges with anchor handles untouched", () => {
+      const edge = makeEdge({ sourceHandle: "t:0.25", targetHandle: "b:0.75" })
+      expect(hydrateEdgeData(edge)).toBe(edge)
     })
 
     it("normalizes null/absent data to an empty object without throwing", () => {

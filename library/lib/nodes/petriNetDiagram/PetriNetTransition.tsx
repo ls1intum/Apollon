@@ -1,6 +1,6 @@
 import { NodeProps, NodeResizer, type Node } from "@xyflow/react"
 import { usePopoverAnchor } from "@/hooks/usePopoverAnchor"
-import { DefaultNodeWrapper, FOUR_WAY_HANDLES_PRESET } from "@/nodes/wrappers"
+import { DefaultNodeWrapper } from "@/nodes/wrappers"
 import { PetriNetTransitionSVG } from "@/components"
 import { DefaultNodeProps } from "@/types"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
@@ -22,12 +22,7 @@ export function PetriNetTransition({
   }
 
   return (
-    <DefaultNodeWrapper
-      elementId={id}
-      width={width}
-      height={height}
-      hiddenHandles={FOUR_WAY_HANDLES_PRESET}
-    >
+    <DefaultNodeWrapper elementId={id} width={width} height={height}>
       <NodeToolbar elementId={id} />
       <NodeResizer
         isVisible={isDiagramModifiable}

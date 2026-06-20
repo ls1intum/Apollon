@@ -1,7 +1,7 @@
 import { useCallback } from "react"
 import { type Node, useReactFlow } from "@xyflow/react"
 import { findClosestHandle } from "../utils/edgeUtils"
-import { DiagramNodeTypeRecord } from "../nodes"
+import { getNodeHandleConfig } from "../nodes/handles/nodeHandleConfig"
 import { log } from "../logger"
 
 interface HandleFinderResult {
@@ -11,8 +11,12 @@ interface HandleFinderResult {
 }
 
 export const useHandleFinder = () => {
-  const { screenToFlowPosition, getIntersectingNodes, getInternalNode } =
-    useReactFlow()
+  const {
+    screenToFlowPosition,
+    getIntersectingNodes,
+    getInternalNode,
+    getZoom,
+  } = useReactFlow()
 
   const findBestHandleAtClientPosition = useCallback(
     (clientX: number, clientY: number): HandleFinderResult => {
@@ -60,31 +64,25 @@ export const useHandleFinder = () => {
         width: nodeOnTop.width,
         height: nodeOnTop.height,
       }
-      let handle: string
-      if (
-        nodeOnTop.type === DiagramNodeTypeRecord.componentInterface ||
-        nodeOnTop.type === DiagramNodeTypeRecord.petriNetPlace ||
-        nodeOnTop.type === DiagramNodeTypeRecord.petriNetTransition ||
-        nodeOnTop.type === DiagramNodeTypeRecord.sfcTransitionBranch
-      ) {
-        handle = findClosestHandle({
-          point: dropPosition,
-          rect: nodeBounds,
-          useFourHandles: true,
-        })
-      } else {
-        handle = findClosestHandle({
-          point: dropPosition,
-          rect: nodeBounds,
-        })
+      const config = getNodeHandleConfig(nodeOnTop.type)
+      if (config.variant === "none") {
+        return { handle: null, node: null, shouldClearPoints: true }
       }
+
+      const handle = findClosestHandle({
+        point: dropPosition,
+        rect: nodeBounds,
+        useFourHandles: config.variant === "center",
+        excludeCorners: config.excludeCorners,
+        zoom: getZoom(),
+      })
       return {
         handle,
         node: nodeOnTop,
         shouldClearPoints: false,
       }
     },
-    [screenToFlowPosition, getIntersectingNodes, getInternalNode]
+    [screenToFlowPosition, getIntersectingNodes, getInternalNode, getZoom]
   )
 
   const findBestHandle = useCallback(

@@ -172,9 +172,9 @@ test("node shows fewer connection arcs when zoomed out so they do not overlap", 
   expect(atDefault).toBeGreaterThan(0)
 
   // Zoom out until the viewport zoom is low enough that arc-reduction must
-  // trigger. The SRC node is 160×100; the width axis drops from 3→1 arcs
-  // below ~0.5x, so settling at ≤0.45x guarantees a reduction. Driving by the
-  // real zoom (not a fixed click count) keeps this stable on slow CI runners.
+  // trigger. Visible arcs drop centre-ward as zoom falls (quarters first, then
+  // corners); settling at ≤0.45x guarantees fewer arcs than at 1x. Driving by
+  // the real zoom (not a fixed click count) keeps this stable on slow CI runners.
   await zoomOutUntil(page, 0.45)
   await node.hover()
   await page.waitForTimeout(120)

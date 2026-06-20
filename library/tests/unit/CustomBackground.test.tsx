@@ -7,6 +7,7 @@ import { CANVAS } from "@/constants"
 const gaps: number[] = []
 vi.mock("@xyflow/react", () => ({
   BackgroundVariant: { Lines: "lines" },
+  Position: { Top: "top", Right: "right", Bottom: "bottom", Left: "left" },
   Background: ({ gap }: { gap: number }) => {
     gaps.push(gap)
     return null
