@@ -6,6 +6,7 @@ import {
   MenuItem,
   Select,
   IconButton,
+  Typography,
 } from "@mui/material"
 import { NodeStyleEditor, PrimaryButton, TextField } from "@/components/ui"
 import { generateUUID } from "@/utils"
@@ -94,10 +95,14 @@ export const ActivitySwimlaneEditPopover: React.FC<PopoverProps> = ({
   }
 
   const handleAddLane = () => {
-    const newLane: SwimlaneLane = {
-      id: generateUUID(),
-      name: `Lane ${lanes.length + 1}`,
-    }
+    // Name the new lane one past the highest existing "Lane N" so deleting a
+    // middle lane and re-adding doesn't reuse a name that's still in use.
+    const numbers = lanes
+      .map((lane) => /^Lane (\d+)$/.exec(lane.name)?.[1])
+      .filter((n): n is string => n != null)
+      .map(Number)
+    const next = numbers.length ? Math.max(...numbers) + 1 : lanes.length + 1
+    const newLane: SwimlaneLane = { id: generateUUID(), name: `Lane ${next}` }
     setLanes([...lanes, newLane], primaryExtent + laneExtent)
   }
 
@@ -129,30 +134,43 @@ export const ActivitySwimlaneEditPopover: React.FC<PopoverProps> = ({
         </Select>
       </FormControl>
 
-      {lanes.map((lane) => (
-        <Box
-          key={lane.id}
-          sx={{ display: "flex", gap: 0.5, alignItems: "center" }}
-        >
-          <TextField
-            size="small"
-            fullWidth
-            value={lane.name}
-            placeholder="Lane name"
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              handleLaneNameChange(lane.id, e.target.value)
-            }
-          />
-          <IconButton
-            size="small"
-            aria-label="Delete lane"
-            disabled={lanes.length <= 1}
-            onClick={() => handleLaneDelete(lane.id)}
+      <Typography variant="caption" sx={{ opacity: 0.7, mt: 0.5 }}>
+        Lanes
+      </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 0.5,
+          maxHeight: 180,
+          overflowY: "auto",
+        }}
+      >
+        {lanes.map((lane) => (
+          <Box
+            key={lane.id}
+            sx={{ display: "flex", gap: 0.5, alignItems: "center" }}
           >
-            <DeleteIcon width={16} height={16} />
-          </IconButton>
-        </Box>
-      ))}
+            <TextField
+              size="small"
+              fullWidth
+              value={lane.name}
+              placeholder="Lane name"
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                handleLaneNameChange(lane.id, e.target.value)
+              }
+            />
+            <IconButton
+              size="small"
+              aria-label="Delete lane"
+              disabled={lanes.length <= 1}
+              onClick={() => handleLaneDelete(lane.id)}
+            >
+              <DeleteIcon width={16} height={16} />
+            </IconButton>
+          </Box>
+        ))}
+      </Box>
 
       <PrimaryButton isSelected={false} onClick={handleAddLane}>
         + Add lane
