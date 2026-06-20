@@ -3,8 +3,16 @@ import { computeMessageLayout } from "@/edges/labelTypes/messageLayout"
 import type { MessageData } from "@/edges/EdgeProps"
 import type { IPoint } from "@/edges/Connection"
 
-const fwd = (id: string): MessageData => ({ id, text: "f", direction: "target" })
-const bwd = (id: string): MessageData => ({ id, text: "b", direction: "source" })
+const fwd = (id: string): MessageData => ({
+  id,
+  text: "f",
+  direction: "target",
+})
+const bwd = (id: string): MessageData => ({
+  id,
+  text: "b",
+  direction: "source",
+})
 
 const VERTICAL = { src: { x: 100, y: 0 }, tgt: { x: 100, y: 300 } } // source above
 const HORIZONTAL = { src: { x: 0, y: 50 }, tgt: { x: 300, y: 50 } } // source left
@@ -51,8 +59,18 @@ describe("computeMessageLayout", () => {
   })
 
   it("fixes the label side by orientation, not by which node is the source", () => {
-    const a = computeMessageLayout([fwd("1")], VERTICAL.src, VERTICAL.tgt, false)
-    const b = computeMessageLayout([fwd("1")], VERTICAL.tgt, VERTICAL.src, false)
+    const a = computeMessageLayout(
+      [fwd("1")],
+      VERTICAL.src,
+      VERTICAL.tgt,
+      false
+    )
+    const b = computeMessageLayout(
+      [fwd("1")],
+      VERTICAL.tgt,
+      VERTICAL.src,
+      false
+    )
     expect(Math.sign(a.forward.textOrigin.x)).toBe(
       Math.sign(b.forward.textOrigin.x)
     )
