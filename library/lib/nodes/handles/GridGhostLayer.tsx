@@ -61,7 +61,6 @@ export function GridGhostLayer() {
   const snap = snapToAnchor(target.rect, connection.to, z, {
     sides: config.sides,
     variant: config.variant === "center" ? "center" : "key",
-    excludeCorners: config.excludeCorners,
   })
 
   const { rect } = target

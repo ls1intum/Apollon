@@ -7,7 +7,6 @@ import {
   parseAnchor,
   quantizeRatio,
   SIDE_TO_POSITION,
-  sideOwnsCorners,
   type Side,
 } from "./anchorModel"
 import { getNodeHandleConfig } from "./nodeHandleConfig"
@@ -75,13 +74,10 @@ export function buildServerRenderHandles({
 
   for (const side of config.sides) {
     const axis = side === "t" || side === "b" ? width : height
-    const dropCorners = config.excludeCorners || !sideOwnsCorners(side)
     const ratios =
       config.variant === "center"
         ? [0.5]
-        : keyHandlesForSide(axis)
-            .filter((h) => !(dropCorners && h.kind === "corner"))
-            .map((h) => h.ratio)
+        : keyHandlesForSide(axis).map((h) => h.ratio)
     for (const ratio of ratios) add(side, ratio)
   }
 

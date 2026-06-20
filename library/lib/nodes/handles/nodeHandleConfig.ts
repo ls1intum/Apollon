@@ -8,7 +8,7 @@ import { SIDES, type Side } from "./anchorModel"
  */
 
 export type HandleVariant =
-  | "key" // corners + centre (+ quarters on long sides) + magnetic grid
+  | "key" // side centre (+ quarter points on long sides) + magnetic grid
   | "center" // only the four side centres (NSEW shapes: circles, diamonds)
   | "none" // not connectable (legends, decorations)
 
@@ -17,14 +17,12 @@ export type HandleShape = "rect" | "ellipse"
 export interface NodeHandleConfig {
   variant: HandleVariant
   shape: HandleShape
-  excludeCorners: boolean
   sides: readonly Side[]
 }
 
 const DEFAULT_CONFIG: NodeHandleConfig = {
   variant: "key",
   shape: "rect",
-  excludeCorners: false,
   sides: SIDES,
 }
 
@@ -55,9 +53,6 @@ const CENTER_NODE_TYPES = [
 
 const NODE_HANDLE_CONFIG: Record<string, NodeHandleConfig> = {
   ...Object.fromEntries(CENTER_NODE_TYPES.map((type) => [type, center()])),
-  // Fork bars connect along their length but never at the very ends.
-  activityForkNode: { ...DEFAULT_CONFIG, excludeCorners: true },
-  activityForkNodeHorizontal: { ...DEFAULT_CONFIG, excludeCorners: true },
   // The use-case ellipse positions anchors on its perimeter.
   useCase: { ...DEFAULT_CONFIG, shape: "ellipse" },
   // Legend / decoration — no connection handles.

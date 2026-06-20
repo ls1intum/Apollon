@@ -16,41 +16,23 @@ describe("buildServerRenderHandles", () => {
     expect(center.map((h) => h.type).sort()).toEqual(["source", "target"])
   })
 
-  it("includes key handles (corners + centre, quarters on long sides)", () => {
-    const handles = buildServerRenderHandles({
-      nodeType: "class",
-      width: 200, // long side → quarters
-      height: 60, // short side → no quarters
-    })
-    const got = ids(handles)
-    // top (width 200, long): corners + quarters + centre
-    expect(got).toEqual(
-      expect.arrayContaining([
-        "t:0.000",
-        "t:0.250",
-        "t:0.500",
-        "t:0.750",
-        "t:1.000",
-      ])
+  it("emits centre + quarters on long sides and never the corners", () => {
+    const got = ids(
+      buildServerRenderHandles({
+        nodeType: "class",
+        width: 200, // long side → quarters
+        height: 60, // short side → centre only
+      })
     )
-    // left (vertical): centre only — corners belong to top/bottom, not l/r,
-    // so each corner is one handle instead of two overlapping arcs.
+    // top (long): quarters + centre, NO corners (ratio 0/1)
+    expect(got).toEqual(
+      expect.arrayContaining(["t:0.250", "t:0.500", "t:0.750"])
+    )
+    expect(got).not.toContain("t:0.000")
+    expect(got).not.toContain("t:1.000")
+    // left (short): centre only
     expect(got).toContain("l:0.500")
     expect(got).not.toContain("l:0.250")
-    expect(got).not.toContain("l:0.000")
-    expect(got).not.toContain("l:1.000")
-  })
-
-  it("emits each corner once, owned by the horizontal side", () => {
-    const got = ids(
-      buildServerRenderHandles({ nodeType: "class", width: 200, height: 200 })
-    )
-    // long vertical side would have quarters but never the shared corners
-    expect(got).toContain("r:0.500")
-    expect(got).not.toContain("r:0.000")
-    expect(got).not.toContain("r:1.000")
-    expect(got).toContain("t:0.000")
-    expect(got).toContain("t:1.000")
   })
 
   it("backs every referenced anchor id so SSR edges never drop", () => {

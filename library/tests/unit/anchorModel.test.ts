@@ -51,19 +51,17 @@ describe("anchorModel: encoding", () => {
 })
 
 describe("anchorModel: key handles", () => {
-  it("returns 3 key ratios below the quarter threshold", () => {
-    expect(keyRatiosForSide(QUARTER_THRESHOLD_PX - 5)).toEqual([0, 0.5, 1])
+  it("exposes only the centre below the quarter threshold (no corners)", () => {
+    expect(keyRatiosForSide(QUARTER_THRESHOLD_PX - 5)).toEqual([0.5])
   })
 
-  it("returns 5 key ratios at/above the quarter threshold", () => {
-    expect(keyRatiosForSide(QUARTER_THRESHOLD_PX)).toEqual([
-      0, 0.25, 0.5, 0.75, 1,
-    ])
+  it("adds the quarter points at/above the threshold (still no corners)", () => {
+    expect(keyRatiosForSide(QUARTER_THRESHOLD_PX)).toEqual([0.25, 0.5, 0.75])
   })
 
   it("labels semantic kinds", () => {
     const kinds = keyHandlesForSide(QUARTER_THRESHOLD_PX).map((h) => h.kind)
-    expect(kinds).toEqual(["corner", "quarter", "center", "quarter", "corner"])
+    expect(kinds).toEqual(["quarter", "center", "quarter"])
   })
 })
 
@@ -130,15 +128,13 @@ describe("anchorModel: zoom LOD ladder (pinned against 0.4–2.5 range)", () => 
 })
 
 describe("anchorModel: visible arc LOD", () => {
-  it("shows all five key arcs on a long side at default zoom", () => {
-    expect(visibleKeyRatios(200, 1)).toEqual([0, 0.25, 0.5, 0.75, 1])
+  it("shows the quarter points on a long side at default zoom", () => {
+    expect(visibleKeyRatios(200, 1)).toEqual([0.25, 0.5, 0.75])
   })
 
-  it("drops quarters first, then corners, as zoom decreases", () => {
-    // 160px side: 5 arcs need (160/4)*z >= 28 → z >= 0.7; 3 arcs need
-    // (160/2)*z >= 28 → z >= 0.35.
-    expect(visibleKeyRatios(160, 1)).toEqual([0, 0.25, 0.5, 0.75, 1])
-    expect(visibleKeyRatios(160, 0.45)).toEqual([0, 0.5, 1])
+  it("drops the quarters when zoomed out, keeping the centre", () => {
+    // Quarters are 0.25·axis apart; need 0.25·axis·z >= 28 to stay.
+    expect(visibleKeyRatios(160, 1)).toEqual([0.25, 0.5, 0.75])
     expect(visibleKeyRatios(160, 0.3)).toEqual([0.5])
   })
 
@@ -173,13 +169,6 @@ describe("anchorModel: snapToAnchor", () => {
     expect(r.id).toBe("t:0.500")
   })
 
-  it("prefers a corner over a nearby grid point", () => {
-    const r = snapToAnchor(RECT, { x: 2, y: -2 }, 1)
-    expect(r.side).toBe("t")
-    expect(r.ratio).toBe(0)
-    expect(r.kind).toBe("corner")
-  })
-
   it("a key handle wins over a closer grid tick within radius (priority)", () => {
     // Cursor at x=103 on the 200px top side: centre is at x=100 (dist 3) and a
     // grid tick sits at x=105 (dist 2) — both inside the snap radius. Priority
@@ -191,9 +180,8 @@ describe("anchorModel: snapToAnchor", () => {
   })
 
   it("snaps to a fine grid tick when no key handle is in range", () => {
-    // Cursor at x=15 (a grid tick at zoom 1, step 15px). Nearest key handles
-    // are corner(0, dist 15 — just outside the 14px radius) and quarter(50,
-    // far), so only the grid tick at x=15 (dist 0) is in range → grid wins.
+    // Cursor at x=15 (a grid tick at zoom 1, step 15px). The nearest key handle
+    // is the quarter at x=50 (far), so the grid tick at x=15 (dist 0) wins.
     const r = snapToAnchor(RECT, { x: 15, y: -1 }, 1)
     expect(r.kind).toBe("grid")
     expect(r.point.x).toBe(15)
@@ -218,23 +206,9 @@ describe("anchorModel: snapToAnchor", () => {
     expect(r.kind).toBe("center")
   })
 
-  it("resolves a corner drop to the horizontal side, not l/r", () => {
-    // Top-left corner: top and left are equidistant; corners are owned by the
-    // horizontal side, so the result is t:0.000 (one handle per corner).
-    const r = snapToAnchor(RECT, { x: -2, y: -2 }, 1)
-    expect(r.side).toBe("t")
-    expect(r.ratio).toBe(0)
-  })
-
   it("a left-side drop never yields a corner", () => {
     const r = snapToAnchor(RECT, { x: -3, y: 1 }, 1)
     expect(r.side).toBe("l")
-    expect(r.ratio).not.toBe(0)
-    expect(r.ratio).not.toBe(1)
-  })
-
-  it("excludeCorners never snaps to ratio 0 or 1", () => {
-    const r = snapToAnchor(RECT, { x: 1, y: -1 }, 1, { excludeCorners: true })
     expect(r.ratio).not.toBe(0)
     expect(r.ratio).not.toBe(1)
   })

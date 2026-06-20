@@ -295,8 +295,6 @@ interface FindClosestHandleParams {
   rect: Rect
   /** Handle set to snap to: "center" (NSEW shapes) or the full "key" set. */
   variant?: "key" | "center"
-  /** Exclude the corner anchors (e.g. activity fork bars). */
-  excludeCorners?: boolean
   /** Connectable sides — must match the node's config so the resolved anchor
    * is one the node actually renders. */
   sides?: readonly Side[]
@@ -313,11 +311,10 @@ export function findClosestHandle({
   point,
   rect,
   variant = "key",
-  excludeCorners = false,
   sides,
   zoom = 1,
 }: FindClosestHandleParams): string {
-  return snapToAnchor(rect, point, zoom, { variant, excludeCorners, sides }).id
+  return snapToAnchor(rect, point, zoom, { variant, sides }).id
 }
 
 export type Orientation = "horizontal" | "vertical"

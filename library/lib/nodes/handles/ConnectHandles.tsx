@@ -9,7 +9,6 @@ import {
   parseAnchor,
   quantizeRatio,
   SIDE_TO_POSITION,
-  sideOwnsCorners,
   visibleKeyRatios,
   type AnchorKind,
   type Side,
@@ -46,9 +45,9 @@ interface Props {
 
 /**
  * Renders a node's connection handles from the shared anchor model:
- *   - VISIBLE key handles (corners + centre, plus quarters on long sides; or
+ *   - VISIBLE key handles (side centre, plus quarter points on long sides; or
  *     just the four side centres for NSEW shapes), each a real React Flow
- *     <Handle> with an arc indicator.
+ *     <Handle> with an arc indicator. Corners (ratio 0/1) are never connectable.
  *   - HIDDEN addressable-anchor handles for any saved edge that references a
  *     non-key ratio (e.g. a grid point), kept in the DOM with `visibility:
  *     hidden` so React Flow can still measure them and native reconnect works.
@@ -110,20 +109,17 @@ export function ConnectHandles({
 
     for (const side of config.sides) {
       const axis = side === "t" || side === "b" ? width : height
-      // Which key ratios render a visible arc at this zoom (centre always; then
-      // corners; then quarters) so arcs never overlap on screen.
+      // Which key ratios render a visible arc at this zoom (centre always, plus
+      // the quarter points until they would crowd) so arcs never overlap.
       const arcRatios =
         config.variant === "center"
           ? new Set([0.5])
           : new Set(visibleKeyRatios(axis, zoom))
 
-      const dropCorners = config.excludeCorners || !sideOwnsCorners(side)
       const keyHandles =
         config.variant === "center"
           ? [{ ratio: 0.5, kind: "center" as AnchorKind }]
-          : keyHandlesForSide(axis).filter(
-              (h) => !(dropCorners && h.kind === "corner")
-            )
+          : keyHandlesForSide(axis)
 
       for (const { ratio, kind } of keyHandles) {
         const id = formatAnchor(side, ratio)

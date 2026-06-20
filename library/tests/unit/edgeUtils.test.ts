@@ -296,24 +296,17 @@ describe("getEdgeMarkerStyles", () => {
 describe("findClosestHandle (option forwarding)", () => {
   const rect = { x: 0, y: 0, width: 300, height: 200 }
 
-  it("defaults to the key model (snaps to a true corner near a corner)", () => {
-    expect(findClosestHandle({ point: { x: 1, y: -2 }, rect })).toBe("t:0.000")
+  it("defaults to the key model and never resolves to a corner (0/1)", () => {
+    const r = findClosestHandle({ point: { x: 1, y: -2 }, rect })
+    expect(r).toMatch(/^t:/)
+    expect(r).not.toBe("t:0.000")
+    expect(r).not.toBe("t:1.000")
   })
 
   it("forwards variant=center (only side centres)", () => {
     expect(
       findClosestHandle({ point: { x: 2, y: -2 }, rect, variant: "center" })
     ).toBe("t:0.500")
-  })
-
-  it("forwards excludeCorners (never ratio 0 or 1)", () => {
-    const result = findClosestHandle({
-      point: { x: 1, y: -1 },
-      rect,
-      excludeCorners: true,
-    })
-    expect(result).not.toBe("t:0.000")
-    expect(result).not.toBe("t:1.000")
   })
 
   it("forwards sides (resolves only to an allowed side)", () => {

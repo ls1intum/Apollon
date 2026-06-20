@@ -20,7 +20,7 @@ import { Position } from "@xyflow/react"
 export type Side = "t" | "r" | "b" | "l"
 export const SIDES: readonly Side[] = ["t", "r", "b", "l"]
 
-export type AnchorKind = "center" | "corner" | "quarter" | "grid"
+export type AnchorKind = "center" | "quarter" | "grid"
 
 export interface Anchor {
   side: Side
@@ -55,8 +55,11 @@ const MIN_TARGET_SPACING_PX = 12
 const SNAP_RADIUS_BASE_PX = 14
 const SNAP_RADIUS_MAX_PX = 30
 
-const KEY_RATIOS_BASE: readonly number[] = [0, 0.5, 1]
-const KEY_RATIOS_LONG: readonly number[] = [0, 0.25, 0.5, 0.75, 1]
+// Connection points sit on the INTERIOR of each side, never at the corners
+// (ratio 0/1) — a connector straddling a corner reads as broken. Small sides
+// expose just the centre; longer sides add the quarter points.
+const KEY_RATIOS_BASE: readonly number[] = [0.5]
+const KEY_RATIOS_LONG: readonly number[] = [0.25, 0.5, 0.75]
 
 export const SIDE_TO_POSITION: Record<Side, Position> = {
   t: Position.Top,
@@ -110,11 +113,8 @@ export function parseAnchor(id: string | null | undefined): Anchor | null {
   return { side, ratio: clamp01(ratio) }
 }
 
-const kindForRatio = (ratio: number): AnchorKind => {
-  if (ratio === 0.5) return "center"
-  if (ratio === 0 || ratio === 1) return "corner"
-  return "quarter"
-}
+const kindForRatio = (ratio: number): AnchorKind =>
+  ratio === 0.5 ? "center" : "quarter"
 
 /** Ratios of the always-rendered KEY handles for a side of the given length. */
 export function keyRatiosForSide(axisPx: number): number[] {
@@ -184,18 +184,19 @@ function snapRadiusWorldPx(zoom: number): number {
 const ARC_ON_SCREEN_PX = 28
 
 /**
- * Which KEY ratios render a visible arc on a side at the current zoom. The slot
- * positions never move — we just show fewer arcs when zoomed out so they don't
- * overlap, dropping quarters first, then corners, always keeping the centre:
- *   [0, .25, .5, .75, 1]  →  [0, .5, 1]  →  [.5]
+ * Which KEY ratios render a visible arc on a side at the current zoom. Positions
+ * never move — when zoomed out so far that the quarter points would crowd the
+ * centre, we drop them and keep only the centre:
+ *   [.25, .5, .75]  →  [.5]
  */
 export function visibleKeyRatios(axisPx: number, zoom: number): number[] {
   const z = safeZoom(zoom)
-  const fits = (count: number): boolean =>
-    (axisPx / (count - 1)) * z >= ARC_ON_SCREEN_PX
-  if (keyRatiosForSide(axisPx).length === 5 && fits(5))
-    return [0, 0.25, 0.5, 0.75, 1]
-  if (fits(3)) return [0, 0.5, 1]
+  const ratios = keyRatiosForSide(axisPx)
+  // Quarter points are 0.25·axis apart; keep them only while that clears the
+  // arc's on-screen footprint.
+  if (ratios.length > 1 && 0.25 * axisPx * z >= ARC_ON_SCREEN_PX) {
+    return [...ratios]
+  }
   return [0.5]
 }
 
@@ -242,15 +243,6 @@ export function ellipseAnchorPoint(
 const axisLengthForSide = (rect: Rect, side: Side): number =>
   side === "t" || side === "b" ? rect.width : rect.height
 
-/**
- * The corner points (ratio 0 and 1) are shared by two sides but owned by the
- * horizontal ones, so each corner renders a single handle instead of two
- * overlapping arcs from a top/bottom AND a left/right side. Vertical sides
- * therefore never emit a corner ratio.
- */
-export const sideOwnsCorners = (side: Side): boolean =>
-  side === "t" || side === "b"
-
 /** Raw (un-snapped) ratio of the perpendicular projection of `point` onto a side. */
 const projectRatio = (rect: Rect, side: Side, point: Point): number => {
   if (side === "t" || side === "b") {
@@ -264,8 +256,6 @@ export interface SnapOptions {
   sides?: readonly Side[]
   /** "center" exposes only the side centre (NSEW shapes); "key" the full set. */
   variant?: "key" | "center"
-  /** Drop the corner ratios 0 and 1 (e.g. fork bars). */
-  excludeCorners?: boolean
 }
 
 export interface SnapResult {
@@ -278,9 +268,8 @@ export interface SnapResult {
 
 const PRIORITY: Record<AnchorKind, number> = {
   center: 0,
-  corner: 1,
-  quarter: 2,
-  grid: 3,
+  quarter: 1,
+  grid: 2,
 }
 
 /** Candidate ratios on a side: key handles first, then the zoom grid. */
@@ -296,18 +285,15 @@ const candidateRatios = (
   if (opts.variant === "center") {
     candidates.push({ ratio: 0.5, kind: "center" })
   } else {
-    const dropCorners = opts.excludeCorners || !sideOwnsCorners(side)
-    for (const handle of keyHandlesForSide(axis)) {
-      if (dropCorners && handle.kind === "corner") continue
-      candidates.push(handle)
-    }
-    // Fine grid points (only where they don't coincide with a key ratio).
+    candidates.push(...keyHandlesForSide(axis))
+    // Fine grid points, excluding the corners (ratio 0/1, never connectable)
+    // and any ratio that coincides with a key handle.
     if (axis > 0) {
       const step = effectiveStepPx(zoom)
       const keyRatios = new Set(candidates.map((c) => c.ratio))
       for (let px = 0; px <= axis + 1e-6; px += step) {
         const ratio = clamp01(px / axis)
-        if (dropCorners && (ratio === 0 || ratio === 1)) continue
+        if (ratio === 0 || ratio === 1) continue
         if (!keyRatios.has(ratio)) candidates.push({ ratio, kind: "grid" })
       }
     }
