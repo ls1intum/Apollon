@@ -53,8 +53,8 @@
 
 .apollon-collaboration-presence-bar {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: calc(10px + var(--apollon-inset-top, 0px));
+  right: calc(10px + var(--apollon-inset-right, 0px));
   display: flex;
   align-items: center;
   z-index: 10002;
@@ -217,8 +217,10 @@
 .apollon-palette {
   box-sizing: border-box;
   position: absolute;
-  top: 10px;
-  left: calc(10px + var(--safe-area-inset-left, 0px));
+  top: calc(10px + var(--apollon-inset-top, 0px));
+  left: calc(
+    10px + var(--apollon-inset-left, 0px) + var(--safe-area-inset-left, 0px)
+  );
 
   /* Above React Flow's interactive canvas content (renderer, edges 9999,
      nodes 9998) so taps/drags always land on the palette and a node placed
@@ -228,8 +230,11 @@
   z-index: 10000;
 
   /* Never grow into the bottom zoom/undo/redo controls (their height + margin
-     + bottom safe-area inset). */
-  max-height: calc(100% - 84px - var(--safe-area-inset-bottom, 0px));
+     + bottom safe-area inset), nor under reserved host chrome (header/footer). */
+  max-height: calc(
+    100% - 84px - var(--apollon-inset-top, 0px) -
+      var(--apollon-inset-bottom, 0px) - var(--safe-area-inset-bottom, 0px)
+  );
   display: flex;
   flex-direction: column;
   gap: 8px;

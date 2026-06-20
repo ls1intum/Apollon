@@ -22,8 +22,13 @@ import "@xyflow/react/dist/style.css"
 // before diagram <text> elements (which request the Inter family) first paint.
 import "@/styles/fonts.css"
 import "@/styles/app.css"
-import { useDiagramStore, useMetadataStore } from "./store/context"
+import {
+  useDiagramStore,
+  useMetadataStore,
+  useOverlayStore,
+} from "./store/context"
 import { useShallow } from "zustand/shallow"
+import { type CSSProperties } from "react"
 import { CANVAS } from "./constants"
 import { diagramEdgeTypes } from "./edges"
 import {
@@ -111,6 +116,12 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
 
   const isDiagramModifiable = useDiagramModifiable()
 
+  // Publish the reserved overlay insets as CSS custom properties so the editor's
+  // own overlays (palette, presence bar, controls, minimap) slide to make room
+  // for host chrome instead of overlapping it. All default to 0 -> no chrome
+  // means byte-identical layout.
+  const insets = useOverlayStore((state) => state.insets)
+
   // Overlay the live positions/sizes of nodes peers are dragging (carried over
   // ephemeral awareness, never the document) onto what React Flow renders, so
   // remote drags stay live without per-frame CRDT writes. Suppressed during a
@@ -165,14 +176,20 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
       className={`apollon-editor ${readonly ? "apollon-editor--readonly" : ""} ${
         connectionGuidanceActive ? "apollon-editor--connection-guidance" : ""
       }`}
-      style={{
-        display: "flex",
-        height: "100%",
-        width: "100%",
-        overflow: "hidden",
-        backgroundColor: "var(--apollon-background, #ffffff)",
-        position: "relative",
-      }}
+      style={
+        {
+          display: "flex",
+          height: "100%",
+          width: "100%",
+          overflow: "hidden",
+          backgroundColor: "var(--apollon-background, #ffffff)",
+          position: "relative",
+          "--apollon-inset-top": `${insets.top}px`,
+          "--apollon-inset-right": `${insets.right}px`,
+          "--apollon-inset-bottom": `${insets.bottom}px`,
+          "--apollon-inset-left": `${insets.left}px`,
+        } as CSSProperties
+      }
     >
       {mode === ApollonMode.Modelling && !readonly && <Sidebar />}
       <div className="apollon-canvas">
