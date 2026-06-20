@@ -22,7 +22,7 @@ export function PetriNetTransition({
   }
 
   return (
-    <DefaultNodeWrapper elementId={id} width={width} height={height}>
+    <DefaultNodeWrapper elementId={id}>
       <NodeToolbar elementId={id} />
       <NodeResizer
         isVisible={isDiagramModifiable}

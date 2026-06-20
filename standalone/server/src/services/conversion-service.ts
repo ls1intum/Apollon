@@ -1,6 +1,7 @@
 import {
   ApollonEditor,
   buildServerRenderHandles,
+  formatAnchor,
   importDiagram,
   type UMLModel,
   type SVG,
@@ -59,8 +60,8 @@ export class ConversionService {
         id:
           edge.id ??
           `${edge.source ?? "source"}-${edge.target ?? "target"}-${index}`,
-        sourceHandle: edge.sourceHandle ?? "r:0.500",
-        targetHandle: edge.targetHandle ?? "l:0.500",
+        sourceHandle: edge.sourceHandle ?? formatAnchor("r", 0.5),
+        targetHandle: edge.targetHandle ?? formatAnchor("l", 0.5),
         data: {
           ...(edge.data ?? {}),
           points: edge.data?.points ?? [],

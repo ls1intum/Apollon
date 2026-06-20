@@ -1,7 +1,7 @@
 import { useCallback } from "react"
 import { type Node, useReactFlow } from "@xyflow/react"
 import { findClosestHandle } from "../utils/edgeUtils"
-import { getNodeHandleConfig } from "../nodes/handles/nodeHandleConfig"
+import { getNodeHandleConfig } from "@/nodes/handles/nodeHandleConfig"
 import { log } from "../logger"
 
 interface HandleFinderResult {
@@ -72,7 +72,7 @@ export const useHandleFinder = () => {
       const handle = findClosestHandle({
         point: dropPosition,
         rect: nodeBounds,
-        useFourHandles: config.variant === "center",
+        variant: config.variant === "center" ? "center" : "key",
         excludeCorners: config.excludeCorners,
         zoom: getZoom(),
       })

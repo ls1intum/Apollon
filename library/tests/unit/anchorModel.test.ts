@@ -1,5 +1,4 @@
 import { describe, it, expect } from "vitest"
-import { Position } from "@xyflow/react"
 import {
   anchorPoint,
   effectiveStepPx,
@@ -8,11 +7,9 @@ import {
   GRID_STEP_PX,
   keyHandlesForSide,
   keyRatiosForSide,
-  nearestSide,
   parseAnchor,
   quantizeRatio,
   QUARTER_THRESHOLD_PX,
-  SIDE_TO_POSITION,
   snapRadiusScreenPx,
   snapToAnchor,
   visibleKeyRatios,
@@ -22,7 +19,7 @@ import {
 const RECT: Rect = { x: 0, y: 0, width: 200, height: 100 }
 
 describe("anchorModel: encoding", () => {
-  it("formats ratios to 2 decimals", () => {
+  it("formats ratios to 3 decimals", () => {
     expect(formatRatio(0)).toBe("0.000")
     expect(formatRatio(0.5)).toBe("0.500")
     expect(formatRatio(1)).toBe("1.000")
@@ -50,13 +47,6 @@ describe("anchorModel: encoding", () => {
     ]) {
       expect(parseAnchor(id as string)).toBeNull()
     }
-  })
-
-  it("maps sides to React Flow positions", () => {
-    expect(SIDE_TO_POSITION.t).toBe(Position.Top)
-    expect(SIDE_TO_POSITION.r).toBe(Position.Right)
-    expect(SIDE_TO_POSITION.b).toBe(Position.Bottom)
-    expect(SIDE_TO_POSITION.l).toBe(Position.Left)
   })
 })
 
@@ -171,13 +161,6 @@ describe("anchorModel: geometry", () => {
     expect(anchorPoint(RECT, "b", 0)).toEqual({ x: 0, y: 100 })
     expect(anchorPoint(RECT, "l", 1)).toEqual({ x: 0, y: 100 })
     expect(anchorPoint(RECT, "r", 0.5)).toEqual({ x: 200, y: 50 })
-  })
-
-  it("finds the nearest side", () => {
-    expect(nearestSide(RECT, { x: 100, y: -10 })).toBe("t")
-    expect(nearestSide(RECT, { x: 210, y: 50 })).toBe("r")
-    expect(nearestSide(RECT, { x: 100, y: 110 })).toBe("b")
-    expect(nearestSide(RECT, { x: -10, y: 50 })).toBe("l")
   })
 })
 

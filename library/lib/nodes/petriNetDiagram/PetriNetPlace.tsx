@@ -21,7 +21,7 @@ export function PetriNetPlace({
   }
 
   return (
-    <DefaultNodeWrapper elementId={id} width={width} height={height}>
+    <DefaultNodeWrapper elementId={id}>
       <NodeToolbar elementId={id} />
       <div ref={anchorRef}>
         <PetriNetPlaceSVG

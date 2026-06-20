@@ -293,8 +293,8 @@ export function getEdgeMarkerStyles(edgeType: string): EdgeMarkerStyles {
 export interface FindClosestHandleParams {
   point: XYPosition
   rect: Rect
-  /** Restrict to the four side centres (NSEW shapes: circles, diamonds, …). */
-  useFourHandles?: boolean
+  /** Handle set to snap to: "center" (NSEW shapes) or the full "key" set. */
+  variant?: "key" | "center"
   /** Exclude the corner anchors (e.g. activity fork bars). */
   excludeCorners?: boolean
   /** Current canvas zoom — drives the grid level of detail. Defaults to 1. */
@@ -309,14 +309,11 @@ export interface FindClosestHandleParams {
 export function findClosestHandle({
   point,
   rect,
-  useFourHandles = false,
+  variant = "key",
   excludeCorners = false,
   zoom = 1,
 }: FindClosestHandleParams): string {
-  return snapToAnchor(rect, point, zoom, {
-    variant: useFourHandles ? "center" : "key",
-    excludeCorners,
-  }).id
+  return snapToAnchor(rect, point, zoom, { variant, excludeCorners }).id
 }
 
 export type Orientation = "horizontal" | "vertical"

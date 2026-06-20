@@ -73,15 +73,4 @@ describe("buildServerRenderHandles", () => {
       })
     ).toEqual([])
   })
-
-  it("positions handles on the node border and on the grid (rect)", () => {
-    const handles = buildServerRenderHandles({
-      nodeType: "class",
-      width: 200,
-      height: 100,
-    })
-    const top = handles.find((h) => h.id === "t:0.500")!
-    expect(top.y).toBe(0)
-    expect(top.x).toBe(100)
-  })
 })

@@ -64,7 +64,7 @@ export function SfcJump({
   const finalHeight = fixedHeight
 
   return (
-    <DefaultNodeWrapper width={finalWidth} height={finalHeight} elementId={id}>
+    <DefaultNodeWrapper elementId={id}>
       <NodeToolbar elementId={id} />
 
       <div ref={anchorRef}>

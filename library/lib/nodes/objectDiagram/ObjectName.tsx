@@ -125,12 +125,7 @@ export function ObjectName({
   const finalWidth = Math.max(width ?? 0, minWidth)
 
   return (
-    <DefaultNodeWrapper
-      width={width}
-      height={height}
-      elementId={id}
-      className="horizontally-not-resizable"
-    >
+    <DefaultNodeWrapper elementId={id} className="horizontally-not-resizable">
       <NodeToolbar elementId={id} />
       <NodeResizer
         nodeId={id}

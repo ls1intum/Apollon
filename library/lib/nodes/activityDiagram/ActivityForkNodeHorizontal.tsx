@@ -24,12 +24,7 @@ export function ActivityForkNodeHorizontal({
   }
 
   return (
-    <DefaultNodeWrapper
-      width={width}
-      height={height}
-      elementId={id}
-      className="horizontally-not-resizable"
-    >
+    <DefaultNodeWrapper elementId={id} className="horizontally-not-resizable">
       <NodeToolbar elementId={id} />
       <NodeResizer
         isVisible={isDiagramModifiable}

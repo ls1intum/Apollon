@@ -3,6 +3,7 @@ import { useShallow } from "zustand/shallow"
 import {
   anchorPoint,
   effectiveStepPx,
+  safeZoom,
   snapToAnchor,
   type Rect,
 } from "./anchorModel"
@@ -15,11 +16,11 @@ interface TargetNode {
 }
 
 /**
- * During an in-progress connection drag, reveals the fine 5px-aligned grid
- * (zoom-aware density) on the side of the hovered node and a magnetic ghost dot
- * at the point the drop will snap to. Pure visual affordance — the actual snap
- * is computed by snapToAnchor in onConnectEnd. Rendered once (mounted in App)
- * inside a ViewportPortal so it shares the canvas transform.
+ * Overlay shown during a connection drag: the zoom-aware 5px grid on the
+ * hovered node's targeted side plus a ghost dot at the snap point. Holds no
+ * snap state — the authoritative snap is recomputed by snapToAnchor in
+ * onConnectEnd; mounted once in App inside a ViewportPortal to share the
+ * canvas transform.
  */
 export function GridGhostLayer() {
   const connection = useConnection()
@@ -56,8 +57,8 @@ export function GridGhostLayer() {
   const config = getNodeHandleConfig(target.type)
   if (config.variant === "none") return null
 
-  const safeZoom = Number.isFinite(zoom) && zoom > 0 ? zoom : 1
-  const snap = snapToAnchor(target.rect, connection.to, safeZoom, {
+  const z = safeZoom(zoom)
+  const snap = snapToAnchor(target.rect, connection.to, z, {
     sides: config.sides,
     variant: config.variant === "center" ? "center" : "key",
     excludeCorners: config.excludeCorners,
@@ -70,7 +71,7 @@ export function GridGhostLayer() {
   // single centre target, no grid).
   const ticks: { x: number; y: number }[] = []
   if (config.variant !== "center" && axis > 0) {
-    const step = effectiveStepPx(safeZoom)
+    const step = effectiveStepPx(z)
     for (let px = 0; px <= axis + 1e-6; px += step) {
       const p = anchorPoint(rect, snap.side, px / axis)
       ticks.push({ x: p.x - rect.x, y: p.y - rect.y })
@@ -78,8 +79,8 @@ export function GridGhostLayer() {
   }
 
   // Keep both marks a constant on-screen size across zoom.
-  const tickR = 1.5 / safeZoom
-  const ghostR = 4 / safeZoom
+  const tickR = 1.5 / z
+  const ghostR = 4 / z
 
   return (
     <ViewportPortal>

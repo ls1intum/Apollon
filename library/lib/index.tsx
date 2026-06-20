@@ -20,6 +20,9 @@ export {
   buildServerRenderHandles,
   type ServerRenderHandle,
 } from "./nodes/handles/serverRenderHandles"
+// Canonical `side:ratio` anchor encoder — lets SSR hosts build edge handle ids
+// that match the editor instead of hardcoding the string format.
+export { formatAnchor } from "./nodes/handles/anchorModel"
 // Font stack the editor measures and renders with, so consumers that re-render
 // or post-process exported diagram text can match it exactly instead of
 // hardcoding the family list.

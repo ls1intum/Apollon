@@ -299,34 +299,34 @@ describe("findClosestHandle", () => {
   const rect = { x: 0, y: 0, width: 300, height: 200 }
   const anchorRe = /^[trbl]:\d\.\d{3}$/
 
-  describe("with useFourHandles=true (NSEW shapes)", () => {
+  describe("with variant=center (NSEW shapes)", () => {
     it("returns the side centre nearest the drop point", () => {
       expect(
         findClosestHandle({
           point: { x: 150, y: -10 },
           rect,
-          useFourHandles: true,
+          variant: "center",
         })
       ).toBe("t:0.500")
       expect(
         findClosestHandle({
           point: { x: 150, y: 210 },
           rect,
-          useFourHandles: true,
+          variant: "center",
         })
       ).toBe("b:0.500")
       expect(
         findClosestHandle({
           point: { x: -10, y: 100 },
           rect,
-          useFourHandles: true,
+          variant: "center",
         })
       ).toBe("l:0.500")
       expect(
         findClosestHandle({
           point: { x: 310, y: 100 },
           rect,
-          useFourHandles: true,
+          variant: "center",
         })
       ).toBe("r:0.500")
     })
@@ -335,7 +335,7 @@ describe("findClosestHandle", () => {
       const result = findClosestHandle({
         point: { x: 2, y: -2 },
         rect,
-        useFourHandles: true,
+        variant: "center",
       })
       expect(result.endsWith(":0.500")).toBe(true)
     })
@@ -389,7 +389,7 @@ describe("findClosestHandle", () => {
     })
   })
 
-  it("defaults useFourHandles to false", () => {
+  it("defaults variant to key", () => {
     const result = findClosestHandle({ point: { x: 150, y: -5 }, rect })
     expect(result).toMatch(anchorRe)
   })

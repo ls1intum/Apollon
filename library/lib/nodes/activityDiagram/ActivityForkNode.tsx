@@ -24,12 +24,7 @@ export function ActivityForkNode({
   }
 
   return (
-    <DefaultNodeWrapper
-      width={width}
-      height={height}
-      elementId={id}
-      className="vertically-not-resizable"
-    >
+    <DefaultNodeWrapper elementId={id} className="vertically-not-resizable">
       <NodeToolbar elementId={id} />
       <NodeResizer
         isVisible={isDiagramModifiable}

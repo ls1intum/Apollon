@@ -17,7 +17,7 @@ export function BPMNEndEvent({
   const isDiagramModifiable = useDiagramModifiable()
 
   return (
-    <DefaultNodeWrapper width={width} height={height} elementId={id}>
+    <DefaultNodeWrapper elementId={id}>
       <NodeToolbar elementId={id} />
 
       {/* Events are fixed size, no resizer */}

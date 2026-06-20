@@ -24,7 +24,7 @@ export function SyntaxTreeTerminal({
   }
 
   return (
-    <DefaultNodeWrapper width={width} height={height} elementId={id}>
+    <DefaultNodeWrapper elementId={id}>
       <NodeToolbar elementId={id} />
 
       <NodeResizer

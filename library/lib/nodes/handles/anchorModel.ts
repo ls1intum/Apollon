@@ -3,7 +3,7 @@ import { Position } from "@xyflow/react"
 /**
  * anchorModel — the single source of truth for connection-point geometry.
  *
- * A connection endpoint is persisted as a `side:ratio` anchor (e.g. `t:0.50`):
+ * A connection endpoint is persisted as a `side:ratio` anchor (e.g. `t:0.500`):
  *   - `side`  one of the four rectangle sides (t/r/b/l)
  *   - `ratio` the fraction along that side (0 = start corner, 1 = end corner),
  *             quantized to the 5px canvas grid.
@@ -48,8 +48,8 @@ export const GRID_STEP_PX = 5
 export const QUARTER_THRESHOLD_PX = 120
 
 // Minimum comfortable on-screen spacing between two adjacent draggable points.
-// Drives the zoom-aware grid step and the key-handle fade-out.
-export const MIN_TARGET_SPACING_PX = 12
+// Drives the zoom-aware grid level of detail.
+const MIN_TARGET_SPACING_PX = 12
 
 // Base on-screen snap radius (at zoom >= 1) and its cap when zoomed out.
 const SNAP_RADIUS_BASE_PX = 14
@@ -70,15 +70,11 @@ const clamp = (value: number, min: number, max: number): number =>
 
 const clamp01 = (value: number): number => clamp(value, 0, 1)
 
-const safeZoom = (zoom: number): number =>
+export const safeZoom = (zoom: number): number =>
   Number.isFinite(zoom) && zoom > 0 ? zoom : 1
 
 const isSide = (value: string): value is Side =>
   value === "t" || value === "r" || value === "b" || value === "l"
-
-// ---------------------------------------------------------------------------
-// Encoding / decoding
-// ---------------------------------------------------------------------------
 
 /**
  * Format a ratio to the canonical 3-decimal string ("0.000" … "1.000").
@@ -114,10 +110,6 @@ export function parseAnchor(id: string | null | undefined): Anchor | null {
   return { side, ratio: clamp01(ratio) }
 }
 
-// ---------------------------------------------------------------------------
-// Key handles
-// ---------------------------------------------------------------------------
-
 const kindForRatio = (ratio: number): AnchorKind => {
   if (ratio === 0.5) return "center"
   if (ratio === 0 || ratio === 1) return "corner"
@@ -144,10 +136,6 @@ export function keyHandlesForSide(axisPx: number): KeyHandle[] {
   }))
 }
 
-// ---------------------------------------------------------------------------
-// Grid quantization
-// ---------------------------------------------------------------------------
-
 /**
  * Snap a ratio to the 5px world grid for the given side length. Because node
  * sizes and origins are 5px-snapped, `ratio * axisPx` lands on the global grid
@@ -159,10 +147,6 @@ export function quantizeRatio(ratio: number, axisPx: number): number {
     Math.round((clamp01(ratio) * axisPx) / GRID_STEP_PX) * GRID_STEP_PX
   return clamp(snappedPx, 0, axisPx) / axisPx
 }
-
-// ---------------------------------------------------------------------------
-// Zoom-aware level of detail
-// ---------------------------------------------------------------------------
 
 /**
  * World-space grid step the ghost overlay reveals and snaps to at a given zoom.
@@ -191,13 +175,13 @@ export function snapRadiusScreenPx(zoom: number): number {
   )
 }
 
-export function snapRadiusWorldPx(zoom: number): number {
+function snapRadiusWorldPx(zoom: number): number {
   return snapRadiusScreenPx(zoom) / safeZoom(zoom)
 }
 
 // On-screen length of an arc indicator. Two adjacent visible arcs need centres
 // at least this far apart on screen, otherwise they overlap.
-export const ARC_ON_SCREEN_PX = 28
+const ARC_ON_SCREEN_PX = 28
 
 /**
  * Which KEY ratios render a visible arc on a side at the current zoom. The slot
@@ -214,10 +198,6 @@ export function visibleKeyRatios(axisPx: number, zoom: number): number[] {
   if (fits(3)) return [0, 0.5, 1]
   return [0.5]
 }
-
-// ---------------------------------------------------------------------------
-// Geometry
-// ---------------------------------------------------------------------------
 
 /** World-space point of an anchor on a rectangle. */
 export function anchorPoint(rect: Rect, side: Side, ratio: number): Point {
@@ -268,21 +248,6 @@ const projectRatio = (rect: Rect, side: Side, point: Point): number => {
     return rect.width > 0 ? clamp01((point.x - rect.x) / rect.width) : 0
   }
   return rect.height > 0 ? clamp01((point.y - rect.y) / rect.height) : 0
-}
-
-/** The side whose border `point` is closest to. */
-export function nearestSide(rect: Rect, point: Point): Side {
-  const distances: Record<Side, number> = {
-    t: Math.abs(point.y - rect.y),
-    b: Math.abs(point.y - (rect.y + rect.height)),
-    l: Math.abs(point.x - rect.x),
-    r: Math.abs(point.x - (rect.x + rect.width)),
-  }
-  let best: Side = "t"
-  for (const side of SIDES) {
-    if (distances[side] < distances[best]) best = side
-  }
-  return best
 }
 
 export interface SnapOptions {
@@ -341,8 +306,7 @@ const candidateRatios = (
 }
 
 /**
- * Resolve a world-space point to the best anchor — the heart of connect/
- * reconnect snapping. Picks the nearest connectable side, then within the
+ * Resolve a world-space point to the best anchor. Picks the nearest connectable side, then within the
  * zoom-scaled snap radius prefers higher-priority points
  * (center > corner > quarter > grid); falls back to the closest point on the
  * side so a drop ALWAYS resolves to a real anchor.
@@ -354,7 +318,6 @@ export function snapToAnchor(
   opts: SnapOptions = {}
 ): SnapResult {
   const sides = opts.sides && opts.sides.length > 0 ? opts.sides : SIDES
-  // Choose the nearest connectable side.
   let side = sides[0]
   let sideDist = Number.POSITIVE_INFINITY
   for (const candidate of sides) {

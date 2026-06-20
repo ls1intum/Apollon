@@ -9,9 +9,6 @@ import { ConnectHandles } from "@/nodes/handles/ConnectHandles"
 
 interface Props {
   children: React.ReactNode
-  /** Accepted for call-site convenience; geometry is read from the store. */
-  width?: number
-  height?: number
   elementId: string
   className?: string
 }

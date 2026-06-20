@@ -140,7 +140,7 @@ export const useConnect = () => {
               width: nodeOnTop.width,
               height: nodeOnTop.height,
             },
-            useFourHandles: targetConfig.variant === "center",
+            variant: targetConfig.variant === "center" ? "center" : "key",
             excludeCorners: targetConfig.excludeCorners,
             zoom: getZoom(),
           })
