@@ -1,3 +1,4 @@
 export * from "./EREntitySVG"
 export * from "./ERRelationshipSVG"
 export * from "./ERAttributeSVG"
+export * from "./ErCfEntitySVG"

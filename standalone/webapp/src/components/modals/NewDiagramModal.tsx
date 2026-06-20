@@ -27,6 +27,7 @@ const diagramTypes = {
     UMLDiagramType.SyntaxTree,
     UMLDiagramType.Sfc,
     UMLDiagramType.EntityRelationship,
+    UMLDiagramType.EntityRelationshipCrowsFoot,
   ],
   behavioral: [
     UMLDiagramType.ActivityDiagram,
@@ -52,7 +53,8 @@ const diagramTypeToTitle: Record<UMLDiagramType, string> = {
   Flowchart: "Flowchart",
   BPMN: "BPMN Diagram",
   Sfc: "Sequential Function Chart Diagram",
-  EntityRelationship: "Entity-Relationship Diagram",
+  EntityRelationship: "Entity-Relationship (Chen)",
+  EntityRelationshipCrowsFoot: "Entity-Relationship (Crow's Foot)",
 }
 
 const toDiagramOption = (

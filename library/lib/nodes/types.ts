@@ -59,7 +59,12 @@ import {
   SfcTransitionBranch,
   SfcJump,
 } from "./sfcDiagram"
-import { EREntity, ERRelationship, ERAttribute } from "./erDiagram"
+import {
+  EREntity,
+  ERRelationship,
+  ERAttribute,
+  ErCfEntity,
+} from "./erDiagram"
 
 export const diagramNodeTypes = {
   package: Package,
@@ -117,6 +122,7 @@ export const diagramNodeTypes = {
   erEntity: EREntity,
   erRelationship: ERRelationship,
   erAttribute: ERAttribute,
+  erCfEntity: ErCfEntity,
 } satisfies NodeTypes
 
 // 2. Union type from keys
@@ -179,4 +185,5 @@ export const DiagramNodeTypeRecord: Record<DiagramNodeType, DiagramNodeType> = {
   erEntity: "erEntity",
   erRelationship: "erRelationship",
   erAttribute: "erAttribute",
+  erCfEntity: "erCfEntity",
 } as const

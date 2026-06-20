@@ -161,3 +161,10 @@ export type ErAttributeProps = DefaultNodeProps & {
   isMultivalued?: boolean // double ellipse
   isDerived?: boolean // dashed ellipse
 }
+
+// Crow's-foot (Mermaid-style) entity: a table box whose columns are listed as
+// rows inside it. Uses ClassNodeElement so the row renderer and attribute editor
+// are shared with the class diagram.
+export type ErCfEntityProps = DefaultNodeProps & {
+  attributes: ClassNodeElement[]
+}

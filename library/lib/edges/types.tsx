@@ -14,6 +14,7 @@ import { BPMNDiagramEdge } from "./edgeTypes/BPMNDiagramEdge"
 import { PetriNetEdge } from "./edgeTypes/PetriNetEdge"
 import { ErConnectorEdge } from "./edgeTypes/ErConnectorEdge"
 import { ErLinkEdge } from "./edgeTypes/ErLinkEdge"
+import { ErCfRelationshipEdge } from "./edgeTypes/ErCfRelationshipEdge"
 
 export const diagramEdgeTypes = {
   ClassAggregation: ClassDiagramEdge,
@@ -65,6 +66,7 @@ export const diagramEdgeTypes = {
 
   ErConnector: ErConnectorEdge,
   ErLink: ErLinkEdge,
+  ErCfRelationship: ErCfRelationshipEdge,
 } satisfies EdgeTypes
 
 export const edgeConfig = {
@@ -159,6 +161,9 @@ export const edgeConfig = {
 
   ErConnector: { allowMidpointDragging: true },
   ErLink: { allowMidpointDragging: true },
+  // Straight only: the crow's-foot end markers are oriented from the
+  // source→target vector, so a bend point would detach them from the line.
+  ErCfRelationship: { allowMidpointDragging: false },
 } as const
 
 export type DiagramEdgeType = keyof typeof diagramEdgeTypes

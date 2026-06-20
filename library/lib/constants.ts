@@ -39,6 +39,7 @@ import {
   EREntitySVG,
   ERRelationshipSVG,
   ERAttributeSVG,
+  ErCfEntitySVG,
   BPMNTaskNodeSVG,
   BPMNEventNodeSVG,
   BPMNGatewayNodeSVG,
@@ -889,6 +890,21 @@ export const dropElementConfigs: Readonly<
       height: 50,
       defaultData: { name: "id", isKey: true },
       svg: ERAttributeSVG,
+    },
+  ],
+  [UMLDiagramType.EntityRelationshipCrowsFoot]: [
+    {
+      type: "erCfEntity",
+      width: 180,
+      height: 100,
+      defaultData: {
+        name: "Entity",
+        attributes: [
+          { id: generateUUID(), name: "id: int (PK)" },
+          { id: generateUUID(), name: "name: varchar" },
+        ],
+      },
+      svg: ErCfEntitySVG,
     },
   ],
 })

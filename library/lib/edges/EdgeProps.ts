@@ -1,5 +1,6 @@
 import { Edge, EdgeProps } from "@xyflow/react"
 import { IPoint } from "./Connection"
+import { ErCfCardinality } from "@/types/nodes/enums/EntityRelationshipType"
 
 // Define message structure with direction
 export interface MessageData {
@@ -23,6 +24,11 @@ export type CustomEdgeProps = {
   cardinality?: string | null
   // Participation of the connected entity: "total" renders a double line.
   participation?: "partial" | "total"
+  // Crow's-foot (Mermaid-style) relationship: cardinality at each end and whether
+  // the relationship is identifying (solid line) or non-identifying (dashed).
+  sourceCardinality?: ErCfCardinality
+  targetCardinality?: ErCfCardinality
+  identifying?: boolean
   strokeColor?: string
   textColor?: string
 }

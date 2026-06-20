@@ -198,10 +198,13 @@ const NODE_LABEL_CAPABILITIES = {
   sfcTransitionBranch: { wrapsName: false, rendersNameLabel: true },
   sfcActionTable: { wrapsName: false, rendersNameLabel: true },
 
-  // Entity-Relationship — single-line names centred inside the shape.
+  // Entity-Relationship (Chen) — single-line names centred inside the shape.
   erEntity: { wrapsName: false, rendersNameLabel: true },
   erRelationship: { wrapsName: false, rendersNameLabel: true },
   erAttribute: { wrapsName: false, rendersNameLabel: true },
+
+  // Entity-Relationship (crow's foot) — table box with a header name.
+  erCfEntity: { wrapsName: false, rendersNameLabel: true },
 } as const satisfies Record<DiagramNodeType, NodeLabelCapabilities>
 
 /**
