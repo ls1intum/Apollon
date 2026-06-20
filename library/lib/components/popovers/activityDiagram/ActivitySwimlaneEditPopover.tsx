@@ -162,7 +162,10 @@ export const ActivitySwimlaneEditPopover: React.FC<PopoverProps> = ({
           >
             <TextField
               size="small"
-              fullWidth
+              // flex + minWidth:0 so the field shrinks to leave room for the
+              // delete button; `fullWidth` (100%) would push the icon out of
+              // the popover and clip it.
+              sx={{ flex: 1, minWidth: 0 }}
               value={lane.name}
               placeholder="Lane name"
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
@@ -174,6 +177,7 @@ export const ActivitySwimlaneEditPopover: React.FC<PopoverProps> = ({
               aria-label="Delete lane"
               disabled={lanes.length <= 1}
               onClick={() => handleLaneDelete(lane.id)}
+              sx={{ flexShrink: 0 }}
             >
               <DeleteIcon width={16} height={16} />
             </IconButton>
