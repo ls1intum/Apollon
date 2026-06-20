@@ -7,6 +7,7 @@ import {
   AssessmentSelectionStoreContext,
   AlignmentGuidesStoreContext,
   EdgeGeometryStoreContext,
+  OverlayStoreContext,
 } from "./store/context"
 import { type ApollonStores } from "./store/createApollonStores"
 
@@ -35,7 +36,9 @@ export function ApollonRoot({ stores, ...appProps }: ApollonRootProps) {
               <EdgeGeometryStoreContext.Provider
                 value={stores.edgeGeometryStore}
               >
-                <AppWithProvider {...appProps} />
+                <OverlayStoreContext.Provider value={stores.overlayStore}>
+                  <AppWithProvider {...appProps} />
+                </OverlayStoreContext.Provider>
               </EdgeGeometryStoreContext.Provider>
             </AlignmentGuidesStoreContext.Provider>
           </AssessmentSelectionStoreContext.Provider>

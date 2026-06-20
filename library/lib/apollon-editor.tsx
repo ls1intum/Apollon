@@ -15,6 +15,17 @@ import { type PopoverStore } from "@/store/popoverStore"
 import { type AssessmentSelectionStore } from "@/store/assessmentSelectionStore"
 import { createApollonStores } from "./store/createApollonStores"
 import { ApollonRoot } from "./ApollonRoot"
+import { type OverlayStore } from "./overlay/overlayStore"
+import { RegionMount } from "./overlay/RegionMount"
+import {
+  type ApollonDisplayOptions,
+  type Insets,
+  type OverlayBreakpoint,
+  type OverlayControlInput,
+  type OverlayRegion,
+  type OverlaySide,
+  ZERO_INSETS,
+} from "./overlay/types"
 import { getPerfCounters } from "./sync/perfCounters"
 import { MessageType, SendBroadcastMessage, YjsSync } from "./sync/yjsSync"
 import { getNodesMap } from "./sync/ydoc"
@@ -70,6 +81,8 @@ export class ApollonEditor {
   private readonly metadataStore: StoreApi<MetadataStore>
   private readonly popoverStore: StoreApi<PopoverStore>
   private readonly assessmentSelectionStore: StoreApi<AssessmentSelectionStore>
+  private readonly overlayStore: StoreApi<OverlayStore>
+  private readonly hostRegionEls = new Map<OverlayRegion, HTMLElement>()
   private subscribers: Apollon.Subscribers = {}
   constructor(element: HTMLElement, options?: Apollon.ApollonOptions) {
     if (!(element instanceof HTMLElement)) {
@@ -82,6 +95,7 @@ export class ApollonEditor {
     this.metadataStore = stores.metadataStore
     this.popoverStore = stores.popoverStore
     this.assessmentSelectionStore = stores.assessmentSelectionStore
+    this.overlayStore = stores.overlayStore
     this.syncManager = new YjsSync(
       this.ydoc,
       this.diagramStore,
@@ -224,9 +238,16 @@ export class ApollonEditor {
     return this.reactFlowInstance.flowToScreenPosition(position)
   }
 
-  public fitView(options?: { padding?: number; duration?: number }): void {
-    const padding = options?.padding ?? 0.15
+  public fitView(options?: {
+    padding?: number | Partial<Record<OverlaySide, number>>
+    duration?: number
+    /** Pad the fit by the reserved overlay insets (header, rails, …). */
+    respectInsets?: boolean
+  }): void {
     const duration = options?.duration ?? 200
+    const respectInsets = options?.respectInsets ?? true
+    const explicit = options?.padding
+    const explicitObject = typeof explicit === "object" && explicit !== null
     const maxAttempts = 10
     let attempts = 0
 
@@ -244,12 +265,121 @@ export class ApollonEditor {
             (n.measured?.height ?? n.height ?? 0) > 0
         )
       if (allMeasured || attempts >= maxAttempts) {
-        rf.fitView({ padding, duration, maxZoom: 1.0 })
-        return
+        const insets = respectInsets
+          ? this.overlayStore.getState().insets
+          : ZERO_INSETS
+        const hasInsets =
+          insets.top || insets.right || insets.bottom || insets.left
+        // No reserved chrome and a scalar/absent padding -> the original
+        // fraction-based fit (keeps embedders without overlays byte-identical).
+        if (!hasInsets && !explicitObject) {
+          rf.fitView({
+            padding: typeof explicit === "number" ? explicit : 0.15,
+            duration,
+            maxZoom: 1.0,
+          })
+          return
+        }
+        // Reserve room MapLibre-style: per-side px = inset + a base gutter
+        // (or the host's explicit per-side override).
+        const obj = explicitObject
+          ? (explicit as Partial<Record<OverlaySide, number>>)
+          : {}
+        const GUTTER = 16
+        rf.fitView({
+          padding: {
+            top: `${insets.top + (obj.top ?? GUTTER)}px`,
+            right: `${insets.right + (obj.right ?? GUTTER)}px`,
+            bottom: `${insets.bottom + (obj.bottom ?? GUTTER)}px`,
+            left: `${insets.left + (obj.left ?? GUTTER)}px`,
+          },
+          duration,
+          maxZoom: 1.0,
+        })
       }
-      requestAnimationFrame(attempt)
     }
     requestAnimationFrame(attempt)
+  }
+
+  // ---- Canvas overlay / control API -------------------------------------
+  // A library-owned overlay engine: host chrome (header, rails, banners) and the
+  // editor's own overlays share one collision-free, inset-aware layout. Controls
+  // render INSIDE the React Flow context. `getRegionElement` is the escape hatch
+  // for hosts that need their OWN React context (theme, router) via createPortal.
+
+  /** Register a floating control. Returns a disposer. Re-using an id replaces. */
+  public addControl(control: OverlayControlInput): () => void {
+    this.overlayStore.getState().register({ source: "imperative", ...control })
+    return () => this.overlayStore.getState().unregister(control.id)
+  }
+
+  /** Patch a registered control (options and/or its renderer). */
+  public updateControl(id: string, patch: Partial<OverlayControlInput>): void {
+    const existing = this.overlayStore.getState().controls[id]
+    if (!existing) return
+    this.overlayStore.getState().register({ ...existing, ...patch })
+  }
+
+  public removeControl(id: string): void {
+    this.overlayStore.getState().unregister(id)
+  }
+
+  public hasControl(id: string): boolean {
+    return id in this.overlayStore.getState().controls
+  }
+
+  /**
+   * A stable DOM node anchored in `region`, for hosts that render their own
+   * React into it (via `createPortal`) to keep host context. Auto-measured, so
+   * the diagram makes room for whatever the host mounts. Lifetime = the editor.
+   */
+  public getRegionElement(region: OverlayRegion): HTMLElement {
+    const existing = this.hostRegionEls.get(region)
+    if (existing) return existing
+    const el = document.createElement("div")
+    el.dataset.apollonHostRegion = region
+    this.hostRegionEls.set(region, el)
+    this.overlayStore.getState().register({
+      id: `apollon:host:${region}`,
+      region,
+      source: "imperative",
+      inset: "auto",
+      render: () => <RegionMount el={el} />,
+    })
+    return el
+  }
+
+  /** Reserve room on a side without rendering (the standing-padding analog). */
+  public setInset(side: OverlaySide, px: number): void {
+    this.overlayStore.getState().setManualInset(side, px)
+  }
+
+  public clearInset(side: OverlaySide): void {
+    this.overlayStore.getState().setManualInset(side, null)
+  }
+
+  public getInsets(): Insets {
+    return this.overlayStore.getState().insets
+  }
+
+  /** Subscribe to content-inset changes. Returns an unsubscribe fn. */
+  public onInsetsChange(cb: (insets: Insets) => void): () => void {
+    return this.overlayStore.subscribe((state, prev) => {
+      if (state.insets !== prev.insets) cb(state.insets)
+    })
+  }
+
+  public getBreakpoint(): OverlayBreakpoint {
+    return this.overlayStore.getState().breakpoint
+  }
+
+  /** View-only display options (issue #749) — toggles/replaces built-in overlays. */
+  public setDisplayOptions(options: Partial<ApollonDisplayOptions>): void {
+    this.overlayStore.getState().setDisplay(options)
+  }
+
+  public getDisplayOptions(): ApollonDisplayOptions {
+    return this.overlayStore.getState().display
   }
 
   set diagramType(type: UMLDiagramType) {

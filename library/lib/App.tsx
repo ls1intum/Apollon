@@ -16,6 +16,7 @@ import {
   ScrollOverlay,
   AlignmentGuides,
 } from "@/components"
+import { OverlayLayer } from "@/overlay/OverlayLayer"
 import "@xyflow/react/dist/style.css"
 // Register the bundled Inter @font-face at module load, so the face exists
 // before diagram <text> elements (which request the Inter family) first paint.
@@ -226,6 +227,10 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
           <CustomControls />
           <AlignmentGuides />
           <AssessmentSelectionDebug />
+          {/* Host-injected canvas chrome (header, rails, controls). Renders
+              nothing until a control is registered, so embedders that add none
+              are byte-identical. */}
+          <OverlayLayer />
         </ReactFlow>
         <ScrollOverlay />
         <CollaborationLayer options={collaboration} awareness={awareness} />

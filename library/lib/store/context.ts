@@ -6,6 +6,7 @@ import { PopoverStore } from "./popoverStore"
 import { AssessmentSelectionStore } from "./assessmentSelectionStore"
 import { AlignmentGuidesStore } from "./alignmentGuidesStore"
 import { EdgeGeometryStore } from "./edgeGeometryStore"
+import { OverlayStore } from "../overlay/overlayStore"
 
 export const DiagramStoreContext = createContext<StoreApi<DiagramStore> | null>(
   null
@@ -26,6 +27,10 @@ export const AlignmentGuidesStoreContext =
 
 export const EdgeGeometryStoreContext =
   createContext<StoreApi<EdgeGeometryStore> | null>(null)
+
+export const OverlayStoreContext = createContext<StoreApi<OverlayStore> | null>(
+  null
+)
 
 // Custom hooks for components
 export const useDiagramStore = <T>(selector: (state: DiagramStore) => T): T => {
@@ -69,5 +74,11 @@ export const useEdgeGeometryStore = <T>(
 ): T => {
   const store = useContext(EdgeGeometryStoreContext)
   if (!store) throw new Error("EdgeGeometryStoreContext not provided")
+  return useStore(store, selector)
+}
+
+export const useOverlayStore = <T>(selector: (state: OverlayStore) => T): T => {
+  const store = useContext(OverlayStoreContext)
+  if (!store) throw new Error("OverlayStoreContext not provided")
   return useStore(store, selector)
 }

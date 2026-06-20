@@ -15,6 +15,7 @@ import {
   createEdgeGeometryStore,
   EdgeGeometryStore,
 } from "@/store/edgeGeometryStore"
+import { createOverlayStore, OverlayStore } from "../overlay/overlayStore"
 
 /**
  * The complete set of per-editor zustand stores. One instance is created per
@@ -29,6 +30,7 @@ export interface ApollonStores {
   assessmentSelectionStore: StoreApi<AssessmentSelectionStore>
   alignmentGuidesStore: StoreApi<AlignmentGuidesStore>
   edgeGeometryStore: StoreApi<EdgeGeometryStore>
+  overlayStore: StoreApi<OverlayStore>
 }
 
 /**
@@ -49,6 +51,7 @@ export function createApollonStores(ydoc: Y.Doc): ApollonStores {
   const assessmentSelectionStore = createAssessmentSelectionStore()
   const alignmentGuidesStore = createAlignmentGuidesStore()
   const edgeGeometryStore = createEdgeGeometryStore()
+  const overlayStore = createOverlayStore()
 
   return {
     diagramStore,
@@ -57,5 +60,6 @@ export function createApollonStores(ydoc: Y.Doc): ApollonStores {
     assessmentSelectionStore,
     alignmentGuidesStore,
     edgeGeometryStore,
+    overlayStore,
   }
 }
