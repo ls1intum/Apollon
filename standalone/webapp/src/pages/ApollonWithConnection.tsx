@@ -29,7 +29,7 @@ import {
   UndoRestoreSnackbar,
   VersionDrawer,
   VersionPreviewBanner,
-  VersionSidebar,
+  VersionRail,
 } from "@/components/versioning"
 import { versioningStrings as t } from "@/components/versioning/strings"
 import { structuralFingerprint } from "@/lib/version/predicates"
@@ -522,7 +522,7 @@ export const ApollonWithConnection: React.FC = () => {
           )}
         </Box>
         {diagramId && (
-          <VersionSidebar
+          <VersionRail
             diagramId={diagramId}
             onVersionSaved={handleVersionSaved}
             onConfirmedRestore={handleRestore}

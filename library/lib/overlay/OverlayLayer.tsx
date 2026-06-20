@@ -86,8 +86,20 @@ const REGION_PRIMARY_SIDE: Partial<Record<OverlayRegion, OverlaySide>> = {
 
 const BAND_STYLE: Record<string, CSSProperties> = {
   header: { top: 0, left: 0, right: 0, flexDirection: "row" },
-  "left-rail": { top: 0, bottom: 0, left: 0, flexDirection: "column" },
-  "right-rail": { top: 0, bottom: 0, right: 0, flexDirection: "column" },
+  // Side rails sit between the header and any bottom chrome so they never tuck
+  // under a full-width header band (insets default to 0px when none is present).
+  "left-rail": {
+    top: "var(--apollon-inset-top, 0px)",
+    bottom: "var(--apollon-inset-bottom, 0px)",
+    left: 0,
+    flexDirection: "column",
+  },
+  "right-rail": {
+    top: "var(--apollon-inset-top, 0px)",
+    bottom: "var(--apollon-inset-bottom, 0px)",
+    right: 0,
+    flexDirection: "column",
+  },
   "center-left": {
     top: "50%",
     left: 0,
@@ -200,16 +212,24 @@ export function OverlayLayer() {
 
   // One shared ResizeObserver measures every auto-inset control; writes are
   // rAF-deferred so the callback never triggers a synchronous re-fit (which
-  // would provoke "ResizeObserver loop completed").
+  // would provoke "ResizeObserver loop completed"). The observer and its
+  // callbacks are STABLE (created once) — they read the latest controls /
+  // setMeasured through refs, so registering a new control never tears the
+  // observer down (which would drop existing measurements).
   const elById = useRef(new Map<string, HTMLElement>())
-  const idByEl = useRef(new Map<Element, string>())
   const rafRef = useRef<number | null>(null)
   const observerRef = useRef<ResizeObserver | null>(null)
+  const controlsRef = useRef(controls)
+  const setMeasuredRef = useRef(setMeasured)
+  useEffect(() => {
+    controlsRef.current = controls
+    setMeasuredRef.current = setMeasured
+  }, [controls, setMeasured])
 
   const flushMeasure = useCallback(() => {
     rafRef.current = null
     for (const [id, el] of elById.current) {
-      const control = controls[id]
+      const control = controlsRef.current[id]
       if (!control) continue
       const axis = MEASURE_AXIS[control.region]
       const side = REGION_PRIMARY_SIDE[control.region]
@@ -218,9 +238,9 @@ export function OverlayLayer() {
       // own offset (the palette's `top:10`) and from fitView's own gutter, so
       // adding margin here would double-count and shrink neighbours.
       const size = axis === "width" ? el.offsetWidth : el.offsetHeight
-      setMeasured(id, { [side]: size })
+      setMeasuredRef.current(id, { [side]: size })
     }
-  }, [controls, setMeasured])
+  }, [])
 
   const scheduleMeasure = useCallback(() => {
     if (rafRef.current !== null) return
@@ -238,18 +258,22 @@ export function OverlayLayer() {
     }
   }, [scheduleMeasure])
 
+  // Re-measure when the set of controls changes (a newly-registered auto-inset
+  // control needs its first measurement; a removed one is dropped from elById).
+  useEffect(() => {
+    scheduleMeasure()
+  }, [controls, scheduleMeasure])
+
   const registerMeasure = useCallback(
     (id: string, el: HTMLElement | null) => {
       const observer = observerRef.current
       const prev = elById.current.get(id)
       if (prev && prev !== el) {
         observer?.unobserve(prev)
-        idByEl.current.delete(prev)
         elById.current.delete(id)
       }
       if (el) {
         elById.current.set(id, el)
-        idByEl.current.set(el, id)
         observer?.observe(el)
         scheduleMeasure()
       }

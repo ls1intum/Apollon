@@ -32,7 +32,7 @@ import {
 import {
   VersionDrawer,
   VersionPreviewBanner,
-  VersionSidebar,
+  VersionRail,
 } from "@/components/versioning"
 import { structuralFingerprint } from "@/lib/version/predicates"
 import { versioningStrings as t } from "@/components/versioning/strings"
@@ -451,7 +451,7 @@ export const ApollonLocal: FC = () => {
           <Box ref={containerRef} sx={{ width: "100%", height: "100%" }} />
           {banner}
         </Box>
-        <VersionSidebar
+        <VersionRail
           diagramId={diagramId}
           onConfirmedRestore={handleConfirmedRestore}
           onVersionSaved={handleVersionSaved}

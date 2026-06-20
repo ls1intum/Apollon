@@ -16,7 +16,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { cleanup, screen } from "@testing-library/react"
 import { renderWithRouter } from "@/test/renderWithRouter"
 import { ModalProvider, EditorProvider } from "@/contexts"
-import { VersionSidebar } from "./VersionDrawer"
+import { VersionSidebarBody, VersionRail } from "./VersionDrawer"
 import { useVersionStore } from "@/stores/useVersionStore"
 import { VersionApiClient } from "@/services/DiagramApiClient"
 
@@ -46,8 +46,11 @@ afterEach(() => {
   localStorage.clear()
 })
 
+// The body is the chrome-free panel content reused by the desktop rail and the
+// mobile drawer; testing it directly exercises the version selectors without the
+// editor-portal plumbing (VersionRail needs a live editor to portal into).
 function mount(diagramId: string) {
-  return renderWithRouter(<VersionSidebar diagramId={diagramId} />, {
+  return renderWithRouter(<VersionSidebarBody diagramId={diagramId} />, {
     wrapper: (children) => (
       <EditorProvider>
         <ModalProvider>{children}</ModalProvider>
@@ -56,8 +59,22 @@ function mount(diagramId: string) {
   })
 }
 
-describe("VersionSidebar (regression: infinite render loop)", () => {
-  it("mounts hidden without warnings on a diagram with no fetched versions", () => {
+describe("VersionRail (overlay rehome)", () => {
+  it("renders nothing (no throw) when there is no editor to portal into", () => {
+    expect(() =>
+      renderWithRouter(<VersionRail diagramId="no-editor" />, {
+        wrapper: (children) => (
+          <EditorProvider>
+            <ModalProvider>{children}</ModalProvider>
+          </EditorProvider>
+        ),
+      })
+    ).not.toThrow()
+  })
+})
+
+describe("VersionSidebarBody (regression: infinite render loop)", () => {
+  it("mounts without warnings on a diagram with no fetched versions", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
     const error = vi.spyOn(console, "error").mockImplementation(() => {})
     expect(() => mount("never-fetched")).not.toThrow()

@@ -21,6 +21,7 @@ import {
   type FC,
   type KeyboardEvent,
 } from "react"
+import { createPortal } from "react-dom"
 import { toast } from "react-toastify"
 import { useEditorContext, useModalContext } from "@/contexts"
 import {
@@ -44,10 +45,8 @@ import { TEXT_PRIMARY, TEXT_MUTED, ROW_HOVER_BG } from "./theme"
 import { structuralFingerprint, isNamedVersion } from "@/lib/version/predicates"
 import { groupUnnamedRuns } from "./utils"
 
-/** Sidebar width on desktop. Narrow enough to keep the canvas usable. */
+/** Panel width on desktop. Narrow enough to keep the canvas usable. */
 const SIDEBAR_WIDTH = 320
-/** Slide-in animation duration matched to MUI's standard transition. */
-const SIDEBAR_ANIMATION_MS = 220
 
 /**
  * Switches the sidebar to a bottom-sheet drawer at the same breakpoint
@@ -78,12 +77,13 @@ interface Props {
 /**
  * Chrome-free body of the version-history panel. Reused by:
  *
- *  - `VersionSidebar` (desktop ≥ md): rendered inline as a flex sibling of
- *    the canvas so it doesn't overlay the user's work.
+ *  - `VersionRail` (desktop ≥ md): portaled into the editor's `right-rail`
+ *    overlay region; the canvas stays full-bleed and makes room via the
+ *    measured inset (no reflow).
  *  - `VersionDrawer` (mobile <sm): rendered inside an MUI bottom-sheet
  *    Drawer because there isn't room for two columns on small viewports.
  */
-const VersionSidebarBody: FC<Props> = ({
+export const VersionSidebarBody: FC<Props> = ({
   diagramId,
   onVersionSaved,
   onConfirmedRestore,
@@ -685,67 +685,59 @@ const VersionSidebarBody: FC<Props> = ({
   )
 }
 
+const RIGHT_RAIL_CONTROL_ID = "apollon:host:right-rail"
+
 /**
- * Persistent desktop sidebar. Inline flex sibling of the canvas. Animates
- * in by transitioning `width` from 0 → SIDEBAR_WIDTH; the canvas reflows
- * smoothly alongside instead of being overlaid. The inner Box stays at a
- * fixed width so the contents don't shimmer during the animation — the
- * outer Box clips them via `overflow: hidden`.
- *
- * The body is unmounted when fully closed (after the animation finishes) to
- * release the SVG-thumbnail observer and stop rendering a 320px column for a
- * drawer the user isn't looking at.
+ * Desktop version-history panel, rehomed onto the library's overlay/control API.
+ * Instead of being a flex sibling that pushes the canvas (a reflow on every
+ * open/close), it is portaled into the editor's `right-rail` overlay region: the
+ * canvas stays full-bleed beneath it and the diagram makes room via the measured
+ * inset (no reflow). The panel unmounts when closed, releasing the
+ * SVG-thumbnail observer. Mobile keeps the bottom-sheet `<VersionDrawer>`.
  */
-export const VersionSidebar: FC<Props> = ({
+export const VersionRail: FC<Props> = ({
   diagramId,
   onVersionSaved,
   onConfirmedRestore,
   onPreview,
 }) => {
-  // Below the navbar's mobile threshold the bottom-sheet
-  // `<VersionDrawer>` takes over; render nothing here so the sidebar
-  // doesn't eat 320px of width on phones or in the awkward
-  // 600–768px range where the navbar is already mobile.
+  const { editor } = useEditorContext()
   const isSmall = useMediaQuery(MOBILE_VIEW_QUERY)
   const open = useVersionStore((s) => Boolean(s.drawerOpenByDiagram[diagramId]))
-  const [mounted, setMounted] = useState(open)
+  const [host, setHost] = useState<HTMLElement | null>(null)
+
+  // Register the right-rail region while open (desktop only). getRegionElement
+  // returns a stable node + reserves the panel's width as a right inset.
   useEffect(() => {
-    if (open) {
-      setMounted(true)
+    if (!editor || isSmall || !open) {
+      editor?.removeControl(RIGHT_RAIL_CONTROL_ID)
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setHost(null)
       return
     }
-    const handle = setTimeout(() => setMounted(false), SIDEBAR_ANIMATION_MS)
-    return () => clearTimeout(handle)
-  }, [open])
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setHost(editor.getRegionElement("right-rail"))
+    return () => editor.removeControl(RIGHT_RAIL_CONTROL_ID)
+  }, [editor, isSmall, open])
 
-  if (isSmall) return null
+  if (!host) return null
 
-  return (
+  return createPortal(
     <Box
       sx={{
-        width: open ? SIDEBAR_WIDTH : 0,
-        flexShrink: 0,
-        overflow: "hidden",
-        transition: (theme) =>
-          theme.transitions.create("width", {
-            duration: SIDEBAR_ANIMATION_MS,
-            easing: theme.transitions.easing.easeInOut,
-          }),
+        width: SIDEBAR_WIDTH,
+        height: "100%",
         bgcolor: NAVBAR_BACKGROUND_COLOR,
       }}
-      aria-hidden={!open}
     >
-      <Box sx={{ width: SIDEBAR_WIDTH, height: "100%" }}>
-        {mounted && (
-          <VersionSidebarBody
-            diagramId={diagramId}
-            onVersionSaved={onVersionSaved}
-            onConfirmedRestore={onConfirmedRestore}
-            onPreview={onPreview}
-          />
-        )}
-      </Box>
-    </Box>
+      <VersionSidebarBody
+        diagramId={diagramId}
+        onVersionSaved={onVersionSaved}
+        onConfirmedRestore={onConfirmedRestore}
+        onPreview={onPreview}
+      />
+    </Box>,
+    host
   )
 }
 
