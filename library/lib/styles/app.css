@@ -71,7 +71,7 @@
   /* Accent — reserved for meaning (primary action, selection, current marker).
      Chrome surfaces themselves stay neutral. */
   --apollon-chrome-accent: var(--apollon-primary, #3e8acc);
-  --apollon-chrome-accent-contrast: #ffffff;
+  --apollon-chrome-accent-contrast: #fff;
 
   /* Radius ramp: sm pills, md controls, lg panels/rails. */
   --apollon-chrome-radius-sm: 6px;
@@ -83,6 +83,7 @@
   --apollon-chrome-shadow-docked: 0 1px 2px rgb(15 23 42 / 8%);
   --apollon-chrome-shadow-floating: 0 0 1px 0 rgb(15 23 42 / 20%),
     0 2px 8px 0 rgb(15 23 42 / 12%);
+
   /* Lit up only in dark mode (a pure drop shadow vanishes on a dark canvas). */
   --apollon-chrome-inset-hairline: 0 0 0 0 transparent;
 }
