@@ -140,7 +140,9 @@ export function HeaderTitleIsland() {
         }}
         placeholder="Untitled diagram"
         inputProps={{
-          "aria-label": "Diagram name",
+          // "title" not "name" so it doesn't collide with the template dialog's
+          // "Name" field under getByLabel('Name') in the e2e suite.
+          "aria-label": "Diagram title",
           style: { textAlign: "center" },
         }}
         sx={{
