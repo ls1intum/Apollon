@@ -465,6 +465,21 @@ body,
   padding-top: var(--safe-area-inset-top, 0);
 }
 
+/* Home page content gutter — hugs the safe area like the navbar, so the gallery
+   clears a side notch in landscape (the Tailwind px-4/md:px-6 it replaces had no
+   safe-area awareness). */
+.home-content-x {
+  padding-left: max(1rem, var(--safe-area-inset-left, 0px));
+  padding-right: max(1rem, var(--safe-area-inset-right, 0px));
+}
+
+@media (min-width: 768px) {
+  .home-content-x {
+    padding-left: max(1.5rem, var(--safe-area-inset-left, 0px));
+    padding-right: max(1.5rem, var(--safe-area-inset-right, 0px));
+  }
+}
+
 .home-navbar__content {
   box-sizing: border-box;
   /* HUG the safe area (max), don't stack on top of it (calc + inset) — otherwise

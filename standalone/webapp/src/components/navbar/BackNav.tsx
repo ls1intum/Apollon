@@ -45,7 +45,7 @@ export const BackNav = ({
     onClick={onNavigate}
     aria-label={label}
     className={cn(
-      "inline-flex min-h-[var(--apollon-chrome-btn)] items-center gap-1 rounded-[var(--apollon-chrome-radius-sm)] px-2 py-1 text-sm font-medium transition-colors focus-visible:shadow-[0_0_0_2px_color-mix(in_srgb,var(--apollon-chrome-accent)_45%,transparent)] focus-visible:outline-none",
+      "inline-flex min-h-[var(--apollon-chrome-btn)] items-center gap-1 whitespace-nowrap rounded-[var(--apollon-chrome-radius-sm)] px-2 py-1 text-sm font-medium transition-colors focus-visible:shadow-[0_0_0_2px_color-mix(in_srgb,var(--apollon-chrome-accent)_45%,transparent)] focus-visible:outline-none",
       toneClass[tone],
       className
     )}

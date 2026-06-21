@@ -546,11 +546,16 @@
   pointer-events: none;
 }
 
+/* The title lives in a flex:1 track right after the brand and is LEFT-aligned to
+   it (not centered). The track fills the space between brand and actions so the
+   actions stay pinned right; the title island inside grows with the name up to
+   its own max-width and only shrinks (ellipsis) when the track is truly tight —
+   it is never artificially capped while there is room. */
 .apollon-chrome-header-spacer {
   display: flex;
   flex: 1 1 auto;
   min-width: 0;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 /* Phone landscape: compact the clusters to the shorter height budget. The
@@ -644,36 +649,24 @@
 }
 
 /* Expanded minimap = its own glass card (the .react-flow__panel glass rule
-   supplies the pane); make the map's own svg background transparent so the glass
-   shows instead of an opaque rectangle, and drop the panel padding so the map
-   fills the rounded card. */
+   supplies the pane). Drop the panel padding so the map fills the rounded card
+   (no fat glass gutter) and clip the svg to the card radius. */
 .react-flow__minimap.apollon-minimap {
   padding: 0;
   overflow: hidden;
+  border-radius: var(--apollon-chrome-radius-lg);
+}
+
+.react-flow__minimap.apollon-minimap .react-flow__minimap-svg {
+  display: block;
+  border-radius: inherit;
 }
 
 /* The collapse control is a sibling bottom-right Panel that overlaps the map's
-   bottom-right corner — the exact spot the collapsed "show minimap" button
-   occupied, so the cursor never travels to dismiss it. Its Panel is transparent;
-   the button carries its own small filled surface so the glyph reads over the
-   map underneath. */
-.apollon-minimap__collapse-panel.react-flow__panel {
-  background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  border: 0;
-  box-shadow: none;
-  padding: 0;
-}
-
-.apollon-minimap__collapse {
-  background: var(--apollon-chrome-surface-raised);
-  box-shadow: 0 0 0 1px var(--apollon-chrome-border);
-}
-
-.apollon-minimap__collapse:hover:not(:disabled) {
-  background: var(--apollon-chrome-surface-hover);
-}
+   bottom-right corner — the exact spot, surface and size of the collapsed "show
+   minimap" button, so toggling reads as one control and the cursor never moves.
+   It is a normal glass panel + .apollon-chrome-iconbtn (no bespoke surface), so
+   it is visually identical to the open button. */
 
 /* Hairline separating action families within one cluster (view vs history). */
 .apollon-chrome-cluster-divider {

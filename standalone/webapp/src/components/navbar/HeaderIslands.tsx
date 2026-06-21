@@ -177,20 +177,25 @@ export function HeaderTitleIsland() {
           // "Name" field under getByLabel('Name') in the e2e suite.
           "aria-label": "Diagram title",
           // Grow the field with the name (in ch), clamped so short titles stay
-          // compact and long ones cap out — maxWidth then bounds it in px.
+          // compact and long ones grow — maxWidth then bounds it in px. NOT
+          // capped by a vw fraction: the field uses the real slack left in the
+          // header track and only shrinks (ellipsis) when that track is tight.
           size: Math.min(
             Math.max((title || "Untitled diagram").length, 12),
-            40
+            56
           ),
-          style: { textAlign: "center", textOverflow: "ellipsis" },
+          style: {
+            textAlign: "left",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          },
         }}
         sx={{
           px: 1,
           minWidth: 0,
-          // Grows up to 340px, but never wider than the slack between the side
-          // islands (≈38vw), so it shrinks (ellipsis) and stays clear of the
-          // brand/actions instead of overlapping them on narrower viewports.
-          maxWidth: "min(340px, 38vw)",
+          // Left-aligned, grows with the name up to 560px (and never past the
+          // track via 100%), then ellipsises — no artificial vw shrink.
+          maxWidth: "min(560px, 100%)",
           fontSize: "0.875rem",
           fontWeight: 600,
           color: "var(--apollon-chrome-text)",

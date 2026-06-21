@@ -91,27 +91,25 @@ export const CustomMiniMap = () => {
   }
 
   // Expanded: the MiniMap renders as its own glass card (a React Flow Panel), and
-  // the collapse arrow is a SIBLING bottom-right Panel — so it lands at the exact
-  // bottom-right corner the collapsed open button occupied (the cursor never
-  // moves to dismiss), overlapping the map on its own small surface. Rendering
-  // the MiniMap normally (not nested) keeps its intrinsic sizing intact.
+  // the collapse arrow is a SIBLING bottom-right Panel that is IDENTICAL to the
+  // collapsed open button (same glass panel + .apollon-chrome-iconbtn, same
+  // bottom-right corner) — so toggling reads as one control and the cursor never
+  // moves. Rendering the MiniMap normally (not nested) keeps its sizing intact;
+  // a tight offsetScale avoids a fat empty margin around the diagram.
   return (
     <>
       <MiniMap
         zoomable
         pannable
         nodeComponent={MiniMapNode}
-        offsetScale={20}
+        offsetScale={6}
         bgColor="transparent"
         className="apollon-minimap"
       />
-      <Panel
-        position="bottom-right"
-        className="apollon-minimap__collapse-panel"
-      >
+      <Panel position="bottom-right">
         <button
           type="button"
-          className="apollon-chrome-iconbtn apollon-minimap__collapse"
+          className="apollon-chrome-iconbtn"
           aria-label="Hide minimap"
           title="Hide minimap"
           onClick={() => setMinimapCollapsed(true)}

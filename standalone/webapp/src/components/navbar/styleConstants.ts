@@ -16,6 +16,8 @@ export const NAVBAR_MIN_HEIGHT = 52
  */
 export const navbarButtonSx = (fg?: string): SxProps<Theme> => ({
   textTransform: "none",
+  // Labels never wrap to a second line inside a glass island.
+  whiteSpace: "nowrap",
   minWidth: 0,
   // Same 32px box, 6px radius and focus-ring as the icon buttons
   // (.apollon-chrome-iconbtn) so text + icon controls read as one family.
