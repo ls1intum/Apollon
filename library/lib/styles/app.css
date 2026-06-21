@@ -96,6 +96,7 @@
     var(--apollon-background, #fff) 80%,
     transparent
   );
+
   /* Near-opaque tint for text-dense glass (the version-history list) so list
      copy clears WCAG AA over a busy diagram while still reading as glass. */
   --apollon-chrome-glass-solid: color-mix(
