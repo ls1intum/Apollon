@@ -13,6 +13,7 @@ import {
   ActivityMergeNodeSVG,
   ActivityObjectNodeSVG,
   ActivitySVG,
+  ActivitySwimlaneSVG,
   ClassSVG,
   PackageSVG,
   UseCaseNodeSVG,
@@ -380,6 +381,11 @@ export type DropElementConfig = {
   readonly type: DiagramNodeType
   readonly width: number
   readonly height: number
+  /** Size of the node when dropped on the canvas, if it should differ from the
+   * sidebar preview size (`width`/`height`). Lets a large element preview small
+   * in the palette without shrinking the rest of the picker. */
+  readonly dropWidth?: number
+  readonly dropHeight?: number
   readonly defaultData?: Record<string, unknown>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly svg: React.FC<any>
@@ -518,6 +524,24 @@ export const dropElementConfigs: Readonly<
       height: 20,
       defaultData: { name: "Fork" },
       svg: ActivityForkNodeHorizontalSVG,
+    },
+    {
+      type: "activitySwimlane",
+      // Preview small (the picker shares one Math.min scale, so a big item
+      // shrinks every sibling) but drop a properly sized swimlane on the canvas.
+      width: 160,
+      height: 100,
+      dropWidth: 400,
+      dropHeight: 240,
+      defaultData: {
+        name: "",
+        orientation: "vertical",
+        lanes: [
+          { id: "lane-1", name: "Lane 1" },
+          { id: "lane-2", name: "Lane 2" },
+        ],
+      },
+      svg: ActivitySwimlaneSVG,
     },
   ],
   [UMLDiagramType.UseCaseDiagram]: [

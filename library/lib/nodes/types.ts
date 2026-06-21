@@ -13,6 +13,7 @@ import {
   ActivityMergeNode,
   ActivityForkNode,
   ActivityForkNodeHorizontal,
+  ActivitySwimlane,
 } from "./activityDiagram"
 import { UseCase, UseCaseActor, UseCaseSystem } from "./useCaseDiagram"
 import {
@@ -75,6 +76,7 @@ export const diagramNodeTypes = {
   activityMergeNode: ActivityMergeNode,
   activityForkNode: ActivityForkNode,
   activityForkNodeHorizontal: ActivityForkNodeHorizontal,
+  activitySwimlane: ActivitySwimlane,
   useCase: UseCase,
   useCaseActor: UseCaseActor,
   useCaseSystem: UseCaseSystem,
@@ -134,6 +136,7 @@ export const DiagramNodeTypeRecord: Record<DiagramNodeType, DiagramNodeType> = {
   activityMergeNode: "activityMergeNode",
   activityForkNode: "activityForkNode",
   activityForkNodeHorizontal: "activityForkNodeHorizontal",
+  activitySwimlane: "activitySwimlane",
   useCase: "useCase",
   useCaseActor: "useCaseActor",
   useCaseSystem: "useCaseSystem",
