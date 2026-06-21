@@ -1,6 +1,5 @@
 import React, { useState } from "react"
 import Box from "@mui/material/Box"
-import IconButton from "@mui/material/IconButton"
 import Menu from "@mui/material/Menu"
 import MoreVertIcon from "@mui/icons-material/MoreVert"
 import ShareIcon from "@mui/icons-material/IosShare"
@@ -73,21 +72,23 @@ export function MobileActionsPill() {
       className="apollon-glass apollon-chrome-island"
       sx={PILL_SX}
     >
-      {/* Primary actions stay visible as icons. */}
-      <IconButton
-        size="small"
+      {/* Primary actions stay visible as icons — same .apollon-chrome-iconbtn
+          family (size/hover/radius/focus) as the zoom/minimap controls. */}
+      <button
+        type="button"
+        className="apollon-chrome-iconbtn"
         aria-label="Share"
         title="Share"
         onClick={() => openModal("SHARE")}
-        sx={{ width: 32, height: 32, color: "var(--apollon-chrome-text)" }}
       >
         <ShareIcon fontSize="small" />
-      </IconButton>
+      </button>
       <VersionHistoryButton labelClassName="hidden" />
       {/* Trailing, lower-frequency actions collapse behind the overflow menu. */}
-      <IconButton
+      <button
+        type="button"
         id="mobile-options-button"
-        size="small"
+        className="apollon-chrome-iconbtn"
         aria-label="open options"
         title="More"
         aria-controls="mobile-options-menu"
@@ -95,10 +96,9 @@ export function MobileActionsPill() {
         onClick={(e: React.MouseEvent<HTMLElement>) =>
           setAnchorEl(e.currentTarget)
         }
-        sx={{ width: 32, height: 32, color: "var(--apollon-chrome-text)" }}
       >
         <MoreVertIcon fontSize="small" />
-      </IconButton>
+      </button>
       <Menu
         id="mobile-options-menu"
         anchorEl={anchorEl}

@@ -17,13 +17,18 @@ export const NAVBAR_MIN_HEIGHT = 52
 export const navbarButtonSx = (fg?: string): SxProps<Theme> => ({
   textTransform: "none",
   minWidth: 0,
+  // Same 32px box, 6px radius and focus-ring as the icon buttons
+  // (.apollon-chrome-iconbtn) so text + icon controls read as one family.
+  minHeight: "var(--apollon-chrome-btn)",
+  display: "inline-flex",
+  alignItems: "center",
   gap: 0.5,
   px: 1,
   py: 0.5,
   fontSize: "0.875rem",
   fontWeight: 500,
   lineHeight: 1.25,
-  borderRadius: "var(--apollon-chrome-radius-md)",
+  borderRadius: "var(--apollon-chrome-radius-sm)",
   color: fg ?? "var(--apollon-chrome-text-muted)",
   "& .MuiButton-startIcon": { mx: 0 },
   "&:hover": {
@@ -34,8 +39,9 @@ export const navbarButtonSx = (fg?: string): SxProps<Theme> => ({
     backgroundColor: "var(--apollon-chrome-surface-active)",
   },
   "&:focus-visible": {
-    outline: "2px solid var(--apollon-chrome-accent)",
-    outlineOffset: "2px",
+    outline: "none",
+    boxShadow:
+      "0 0 0 2px color-mix(in srgb, var(--apollon-chrome-accent) 45%, transparent)",
   },
 })
 

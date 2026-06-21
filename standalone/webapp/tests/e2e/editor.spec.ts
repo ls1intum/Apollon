@@ -384,7 +384,8 @@ test.describe("Navbar", () => {
 const PHONE_PORTRAIT = { width: 390, height: 844 }
 const PHONE_LANDSCAPE = { width: 844, height: 390 }
 const SAFE_INSET = 47 // simulated side notch inset (iPhone landscape)
-const NAVBAR_LANDSCAPE_GAP = 32 // breathing room around logo/menu in landscape
+// Chrome hugs the safe-area boundary in landscape (max(edge, safe-area)) — the
+// side inset itself is the clearance, with no extra constant nudge on top.
 
 test.describe("Mobile responsive layout", () => {
   test("opens export actions with a tap", async ({ page }) => {
@@ -543,18 +544,16 @@ test.describe("Mobile responsive layout", () => {
     const navbarBox = await page.locator("header").boundingBox()
     expect(navbarBox?.height).toBeLessThanOrEqual(36)
 
-    // Logo and actions clear the notch plus the landscape breathing-room gap.
+    // Logo and actions clear the dynamic island by hugging the side safe area.
     const homeLinkBox = await page
       .getByRole("link", { name: "Apollon home" })
       .boundingBox()
-    expect(homeLinkBox?.x).toBeGreaterThanOrEqual(
-      SAFE_INSET + NAVBAR_LANDSCAPE_GAP
-    )
+    expect(homeLinkBox?.x).toBeGreaterThanOrEqual(SAFE_INSET)
 
     const actionsBox = await actions.boundingBox()
     expect(actionsBox).not.toBeNull()
     expect(actionsBox!.x + actionsBox!.width).toBeLessThanOrEqual(
-      PHONE_LANDSCAPE.width - SAFE_INSET - NAVBAR_LANDSCAPE_GAP
+      PHONE_LANDSCAPE.width - SAFE_INSET
     )
 
     // React Flow controls/minimap stay inside the left/right insets.

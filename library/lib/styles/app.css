@@ -78,6 +78,25 @@
   --apollon-chrome-pad: 6px; /* inner padding of every floating cluster */
   --apollon-chrome-hit: 44px; /* minimum touch target (Apple HIG) */
 
+  /* Edge margin that HUGS a device safe area instead of stacking on it: the
+     design edge when there's no inset, the inset alone when there is one — so
+     chrome aligns to the usable edge with no double-spacing under a notch / home
+     indicator. NO -top variant: the header top is intentionally additive
+     (safe-area-inset-top + edge) because the band is pinned under the notch and
+     still needs its own breathing room. */
+  --apollon-chrome-edge-safe-left: max(
+    var(--apollon-chrome-edge),
+    var(--safe-area-inset-left, 0px)
+  );
+  --apollon-chrome-edge-safe-right: max(
+    var(--apollon-chrome-edge),
+    var(--safe-area-inset-right, 0px)
+  );
+  --apollon-chrome-edge-safe-bottom: max(
+    var(--apollon-chrome-edge),
+    var(--safe-area-inset-bottom, 0px)
+  );
+
   /* Shared OUTER cluster height = button + 2·padding + 2·1px border. Derived, so
      fixed-height islands match the auto-height control/minimap panels to the
      pixel and it self-corrects when btn/pad change (landscape overrides it). */
@@ -379,8 +398,7 @@
       )
   );
   left: calc(
-    var(--apollon-chrome-edge) + var(--apollon-inset-left, 0px) +
-      var(--safe-area-inset-left, 0px)
+    var(--apollon-chrome-edge-safe-left) + var(--apollon-inset-left, 0px)
   );
 
   /* Above React Flow's interactive canvas content (renderer, edges 9999,
@@ -399,9 +417,8 @@
         --apollon-inset-top,
         calc(var(--apollon-chrome-edge) + var(--apollon-chrome-island-h))
       ) -
-      var(--apollon-chrome-edge) - var(--apollon-chrome-island-h) -
-      var(--apollon-chrome-gap) - var(--apollon-inset-bottom, 0px) -
-      var(--safe-area-inset-bottom, 0px)
+      var(--apollon-chrome-edge-safe-bottom) - var(--apollon-chrome-island-h) -
+      var(--apollon-chrome-gap) - var(--apollon-inset-bottom, 0px)
   );
   display: flex;
   flex-direction: column;
@@ -498,23 +515,17 @@
 
 .react-flow__panel.bottom.left,
 .react-flow__panel.bottom.right {
-  margin-bottom: calc(
-    var(--apollon-chrome-edge) + var(--safe-area-inset-bottom, 0px)
-  );
+  margin-bottom: var(--apollon-chrome-edge-safe-bottom);
 }
 
 .react-flow__panel.top.left,
 .react-flow__panel.bottom.left {
-  margin-left: calc(
-    var(--apollon-chrome-edge) + var(--safe-area-inset-left, 0px)
-  );
+  margin-left: var(--apollon-chrome-edge-safe-left);
 }
 
 .react-flow__panel.top.right,
 .react-flow__panel.bottom.right {
-  margin-right: calc(
-    var(--apollon-chrome-edge) + var(--safe-area-inset-right, 0px)
-  );
+  margin-right: var(--apollon-chrome-edge-safe-right);
 }
 
 /* The editor header is one fluid flex row inside the full-width `header` band:
@@ -530,12 +541,8 @@
   width: 100%;
   box-sizing: border-box;
   padding-top: var(--apollon-chrome-edge);
-  padding-left: calc(
-    var(--apollon-chrome-edge) + var(--safe-area-inset-left, 0px)
-  );
-  padding-right: calc(
-    var(--apollon-chrome-edge) + var(--safe-area-inset-right, 0px)
-  );
+  padding-left: var(--apollon-chrome-edge-safe-left);
+  padding-right: var(--apollon-chrome-edge-safe-right);
   pointer-events: none;
 }
 
@@ -546,7 +553,11 @@
   justify-content: center;
 }
 
-/* Phone landscape: nudge the canvas panels in by the safe-area insets. */
+/* Phone landscape: compact the clusters to the shorter height budget. The
+   base max(edge, safe-area) rules already pull every cluster clear of the side
+   notch / dynamic island via the real left/right safe-area inset — no extra
+   nudge needed (and none wanted: stacking a constant on top of the inset is the
+   double-spacing the safe-area model exists to remove). */
 @media (max-width: 950px) and (max-height: 500px) {
   /* Tighter clusters in landscape so the header band fits the ≤36px budget;
      32px buttons still center inside, and the ::before keeps a 44px hit area. */
@@ -555,30 +566,8 @@
     --apollon-chrome-pad: 2px;
   }
 
-  /* The base rule already adds safe-area on every side; landscape only needs
-     EXTRA breathing room past a side notch / dynamic island. The header row and
-     the element palette both clear safe-area + 32px so neither tucks under the
-     landscape notch (the e2e asserts the logo/menu clear safe-area + 32px; the
-     palette nudge fixes the dynamic-island-over-palette overlap). */
-  .apollon-chrome-header-row {
-    padding-left: calc(32px + var(--safe-area-inset-left, 0px));
-    padding-right: calc(32px + var(--safe-area-inset-right, 0px));
-  }
-
-  .apollon-palette {
-    left: calc(32px + var(--safe-area-inset-left, 0px));
-  }
-
-  .react-flow__panel.top.left {
-    margin-left: calc(32px + var(--safe-area-inset-left, 0px));
-  }
-
-  .react-flow__panel.top.right {
-    margin-right: calc(32px + var(--safe-area-inset-right, 0px));
-  }
-
   .apollon-collaboration-presence-bar {
-    right: calc(10px + var(--safe-area-inset-right, 0px));
+    right: var(--apollon-chrome-edge-safe-right);
   }
 }
 
@@ -647,19 +636,22 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Expanded minimap = one glass card: a header row (collapse control) above the
-   map. The nested MiniMap is itself a React Flow Panel, so neutralise its
-   absolute corner positioning and its own pane and let it render transparent
-   inside our card — no pane-in-a-pane, no opaque rectangle, no floating glyph. */
+/* Expanded minimap = one glass card with the collapse control corner-anchored
+   (the exact on-screen spot the collapsed "show minimap" button occupied) so the
+   cursor never travels to dismiss it. The nested MiniMap is itself a React Flow
+   Panel, so neutralise its absolute positioning + own pane and let it render
+   transparent inside the card; the arrow overlaps it on its own small surface so
+   it stays legible over a busy map. */
 .apollon-minimap-panel {
-  display: flex;
-  flex-direction: column;
-  gap: var(--apollon-chrome-pad);
-}
-
-.apollon-minimap-panel__header {
-  display: flex;
-  justify-content: flex-end;
+  position: relative;
+  padding: var(--apollon-chrome-pad);
+  background: var(--apollon-chrome-glass);
+  backdrop-filter: var(--apollon-chrome-glass-blur);
+  -webkit-backdrop-filter: var(--apollon-chrome-glass-blur);
+  border: 1px solid var(--apollon-chrome-border);
+  border-radius: var(--apollon-chrome-radius-lg);
+  box-shadow: var(--apollon-chrome-shadow-floating),
+    var(--apollon-chrome-inset-hairline);
 }
 
 .apollon-minimap-panel .react-flow__minimap.apollon-minimap-canvas {
@@ -671,6 +663,21 @@
   border: 0;
   border-radius: var(--apollon-chrome-radius-md);
   box-shadow: none;
+}
+
+/* Corner-anchored collapse arrow: sits in the card's inner pad box at the same
+   bottom-right where the collapsed open button lived, on a small filled glass
+   surface so the glyph reads over the map underneath. */
+.apollon-minimap-panel__collapse {
+  position: absolute;
+  right: var(--apollon-chrome-pad);
+  bottom: var(--apollon-chrome-pad);
+  background: var(--apollon-chrome-surface-raised);
+  box-shadow: 0 0 0 1px var(--apollon-chrome-border);
+}
+
+.apollon-minimap-panel__collapse:hover:not(:disabled) {
+  background: var(--apollon-chrome-surface-hover);
 }
 
 /* Hairline separating action families within one cluster (view vs history). */

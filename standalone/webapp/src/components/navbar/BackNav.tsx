@@ -9,10 +9,10 @@ const toneClass: Record<BackNavTone, string> = {
   // surface, so this idles in muted chrome text and washes toward the chrome
   // hover surface, matching the sibling File/Share controls.
   onDark:
-    "text-[color:var(--apollon-chrome-text-muted)] hover:bg-[var(--apollon-chrome-surface-hover)] hover:text-[color:var(--apollon-chrome-text)] focus-visible:outline-[color:var(--apollon-chrome-accent)]",
+    "text-[color:var(--apollon-chrome-text-muted)] hover:bg-[var(--apollon-chrome-surface-hover)] hover:text-[color:var(--apollon-chrome-text)] active:bg-[var(--apollon-chrome-surface-active)]",
   // Light popover surface (editor mobile menu).
   onSurface:
-    "text-[color:var(--apollon-chrome-text)] hover:bg-[var(--apollon-chrome-surface-hover)] focus-visible:outline-[color:var(--apollon-chrome-accent)]",
+    "text-[color:var(--apollon-chrome-text)] hover:bg-[var(--apollon-chrome-surface-hover)] active:bg-[var(--apollon-chrome-surface-active)]",
 }
 
 /**
@@ -45,7 +45,7 @@ export const BackNav = ({
     onClick={onNavigate}
     aria-label={label}
     className={cn(
-      "inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2",
+      "inline-flex min-h-[var(--apollon-chrome-btn)] items-center gap-1 rounded-[var(--apollon-chrome-radius-sm)] px-2 py-1 text-sm font-medium transition-colors focus-visible:shadow-[0_0_0_2px_color-mix(in_srgb,var(--apollon-chrome-accent)_45%,transparent)] focus-visible:outline-none",
       toneClass[tone],
       className
     )}

@@ -730,13 +730,14 @@ export const VersionRail: FC<Props> = ({
     <Box
       className="apollon-glass apollon-history-panel apollon-chrome-island"
       sx={{
-        // A floating glass panel — the right-side mirror of the left palette,
-        // not a docked slab. The right-rail band is pinned between the top/bottom
-        // insets (so it already clears the top islands); the 10px margin then
-        // leaves a gap on every side and rounds the corners. Width + margins are
-        // what the band measures as the reserved right inset (no reflow).
+        // A floating glass card — the right-side mirror of the left palette, NOT
+        // a full-height docked slab. Anchored to the top of the right-rail band
+        // and bounded in height (scrolls internally) so it reads as an island,
+        // not a column. Width + margins are what the band measures as the
+        // reserved right inset (no reflow); the height cap doesn't affect width.
         width: SIDEBAR_WIDTH,
-        flex: "1 1 auto",
+        alignSelf: "flex-start",
+        maxHeight: "min(640px, 100%)",
         minHeight: 0,
         m: "10px",
         overflow: "hidden",
@@ -775,10 +776,15 @@ export const VersionDrawer: FC<Props> = ({
       open={open}
       onClose={() => closeDrawer(diagramId)}
       PaperProps={{
+        // A floating glass card detached from the edges (margins + radius +
+        // blur), not a full-bleed bottom sheet — the mobile mirror of the
+        // desktop rail island.
+        className: "apollon-glass apollon-history-panel",
         sx: {
-          height: "80vh",
-          width: "100%",
-          bgcolor: "var(--apollon-chrome-surface)",
+          m: "var(--apollon-chrome-edge)",
+          maxHeight: "70vh",
+          borderRadius: "var(--apollon-chrome-radius-lg)",
+          backgroundImage: "none",
         },
       }}
     >

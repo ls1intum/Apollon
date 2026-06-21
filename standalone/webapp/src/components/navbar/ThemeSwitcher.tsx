@@ -46,7 +46,7 @@ export const ThemeSwitcherMenu: React.FC<Props> = ({
       onClick={handleToggle}
       aria-label={title}
       title={title}
-      className="relative inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-[var(--apollon-chrome-radius-md)] border-0 bg-transparent p-0 text-[color:var(--apollon-chrome-text-muted)] transition-colors duration-200 hover:bg-[color:var(--apollon-chrome-surface-hover)] hover:text-[color:var(--apollon-chrome-text)] active:bg-[color:var(--apollon-chrome-surface-active)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--apollon-chrome-accent)]"
+      className="relative inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-[var(--apollon-chrome-radius-sm)] border-0 bg-transparent p-0 text-[color:var(--apollon-chrome-text-muted)] transition-colors duration-200 hover:bg-[color:var(--apollon-chrome-surface-hover)] hover:text-[color:var(--apollon-chrome-text)] active:bg-[color:var(--apollon-chrome-surface-active)] focus-visible:shadow-[0_0_0_2px_color-mix(in_srgb,var(--apollon-chrome-accent)_45%,transparent)] focus-visible:outline-none"
     >
       <span
         className={`absolute inset-0 flex items-center justify-center transition-all duration-[250ms] ${
