@@ -137,15 +137,15 @@ describe("canDropIntoParent – activity", () => {
 // ---------------------------------------------------------------------------
 
 describe("canDropIntoParent – activitySwimlane", () => {
-  it("accepts activity nodes by their type prefix", () => {
+  it("accepts any activity element, including a nested activity frame", () => {
     expect(canDropIntoParent("activityActionNode", "activitySwimlane")).toBe(
       true
     )
     expect(canDropIntoParent("activityForkNode", "activitySwimlane")).toBe(true)
+    expect(canDropIntoParent("activity", "activitySwimlane")).toBe(true)
   })
 
-  it("rejects the activity frame and nested swimlanes", () => {
-    expect(canDropIntoParent("activity", "activitySwimlane")).toBe(false)
+  it("rejects nested swimlanes (single-level partitions)", () => {
     expect(canDropIntoParent("activitySwimlane", "activitySwimlane")).toBe(
       false
     )

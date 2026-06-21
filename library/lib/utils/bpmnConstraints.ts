@@ -61,14 +61,10 @@ export const canDropIntoParent = (
     return childType === "class" || childType === "package"
   }
 
-  // Activity swimlane can contain activity nodes, but not another swimlane
-  // (single-level partitions) nor the activity frame itself.
+  // Activity swimlane can contain any activity element (including a nested
+  // activity / sub-activity), but not another swimlane (single-level partitions).
   if (parentType === "activitySwimlane") {
-    return (
-      childType.startsWith("activity") &&
-      childType !== "activitySwimlane" &&
-      childType !== "activity"
-    )
+    return childType.startsWith("activity") && childType !== "activitySwimlane"
   }
 
   // Activity can contain activity nodes (but not a swimlane — swimlanes are
