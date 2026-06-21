@@ -8,6 +8,8 @@ type EditorMessage = {
   type: "editorMounted" | "saveDiagram" | "exportDiagram"
   exportContent: string
   exportType: "png" | "svg"
+  /** True for debounced auto-exports — write silently (status bar, no modal). */
+  auto?: boolean
   model: UMLModel
 }
 
@@ -240,7 +242,7 @@ export default class MenuProvider implements vscode.WebviewViewProvider {
         break
       }
       case "exportDiagram": {
-        const { exportContent, exportType } = data
+        const { exportContent, exportType, auto } = data
 
         if (!this.loadedDiagramPath) {
           vscode.window.showErrorMessage("An unexpected error occured")
@@ -257,9 +259,20 @@ export default class MenuProvider implements vscode.WebviewViewProvider {
 
         try {
           await vscode.workspace.fs.writeFile(exportPath, exportContentBuffer!)
-          vscode.window.showInformationMessage(
-            `Successfuly exported diagram ${this.currentDiagramName}`
-          )
+          const exported = `${this.currentDiagramName}.${exportType}`
+          // Auto-exports fire on every edit — a modal toast each time would be
+          // noise, so use a transient status-bar message. Manual exports keep
+          // the explicit confirmation.
+          if (auto) {
+            vscode.window.setStatusBarMessage(
+              `Apollon: exported ${exported}`,
+              2000
+            )
+          } else {
+            vscode.window.showInformationMessage(
+              `Successfully exported ${exported}`
+            )
+          }
         } catch (error) {
           vscode.window.showErrorMessage(
             `An unexpected error occured: "${error}"`
