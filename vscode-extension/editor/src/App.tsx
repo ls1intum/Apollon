@@ -69,7 +69,16 @@ function App() {
       {/* Export toolbar mounted as immersive in-canvas chrome via the overlay
           API, instead of a separate bar above the canvas. */}
       <ApollonControl id="vscode:export" region="top-right" groupLabel="Export">
-        <div className="app-bar items-center gap-2 px-3">
+        {/* Glass island, consistent with the webapp's floating chrome. */}
+        <div
+          className="apollon-glass apollon-chrome-island"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "5px 8px",
+          }}
+        >
           <button
             type="button"
             className="vscode-button"

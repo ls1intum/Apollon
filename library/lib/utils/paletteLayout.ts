@@ -38,6 +38,12 @@ export const PALETTE = Object.freeze({
   MAX_FRAC_W: 0.5,
   /** … but let it use most of the height. */
   MAX_FRAC_H: 0.9,
+  /** Phone-portrait override: a full-height single column eats the scarce
+   *  vertical canvas space on a phone, so cap the palette to a fraction of the
+   *  height — this pushes the layout into a compact multi-column corner cluster
+   *  instead of a tall column. Only applies below PORTRAIT_MAX_W in portrait. */
+  PORTRAIT_MAX_W: 600,
+  PORTRAIT_FRAC_H: 0.4,
   /** Letterbox padding around the preview inside a cell. */
   CONTENT_INSET: 6,
   /** Space kept clear above (top offset) and below (zoom controls) the palette. */
@@ -92,10 +98,16 @@ export function computePaletteLayout(
   }
 
   const budgetW = availW * p.MAX_FRAC_W
+  // On a phone in portrait, a tall single column would swallow the vertical
+  // canvas space, so cap the height hard — the column walk below then settles on
+  // a compact multi-column cluster instead. Tablets/desktops keep the full
+  // height-filling column.
+  const isPortraitPhone = availW < p.PORTRAIT_MAX_W && availH > availW
+  const fracH = isPortraitPhone ? p.PORTRAIT_FRAC_H : p.MAX_FRAC_H
   // Honor both the fraction cap and the physical room left once the top offset
   // and the bottom zoom-controls reserve are removed.
   const budgetH = Math.min(
-    availH * p.MAX_FRAC_H,
+    availH * fracH,
     availH - p.TOP_RESERVE - p.BOTTOM_RESERVE
   )
   const maxCols = Math.max(

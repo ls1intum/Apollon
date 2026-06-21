@@ -60,7 +60,12 @@ export const NAVBAR_SX: SxProps<Theme> = {
   position: "sticky",
   top: 0,
   zIndex: (theme) => theme.zIndex.appBar,
-  bgcolor: "var(--apollon-chrome-surface)",
+  // Glass material — the canvas is full-bleed behind this band, so the same
+  // translucent tint floor + backdrop blur the palette/controls use reads as
+  // glass here too, making the mobile bar one family with the rest of the chrome.
+  bgcolor: "var(--apollon-chrome-glass)",
+  backdropFilter: "var(--apollon-chrome-glass-blur)",
+  WebkitBackdropFilter: "var(--apollon-chrome-glass-blur)",
   color: "var(--apollon-chrome-text)",
   backgroundImage: "none",
   // Hairline drawn as an inset shadow (not a border) so it doesn't add to the
