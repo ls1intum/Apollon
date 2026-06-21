@@ -98,6 +98,21 @@ describe("GET /api/diagrams/:diagramId/preview.svg", () => {
     expect(asText(res)).toContain("<svg")
   })
 
+  it("inlines an opaque white background so it stays legible on dark-mode pages", async () => {
+    const app = appWith(okResource())
+    const id = await createDiagram(app)
+    const res = await request(app)
+      .get(`/api/diagrams/${id}/preview.svg`)
+      .buffer(true)
+    expect(res.status).toBe(200)
+    // The white rect is the FIRST child, sized to the viewBox, so it sits
+    // behind the diagram regardless of the host page's background. Without it a
+    // transparent export would render dark-on-dark in a GitHub dark README.
+    expect(asText(res)).toMatch(
+      /<svg[^>]*>\s*<rect x="0" y="0" width="100" height="60" fill="#ffffff"\/>/i
+    )
+  })
+
   it("returns 304 on a matching If-None-Match without rendering again", async () => {
     const resource = okResource()
     const app = appWith(resource)
@@ -446,5 +461,8 @@ describe("end-to-end through the real conversion worker", () => {
     expect(body).toContain('xmlns="http://www.w3.org/2000/svg"')
     expect(body.trimEnd()).toMatch(/<\/svg>$/)
     expect(body).toMatch(/<(path|rect|text|g)\b/)
+    // The opaque background is sized to the real export's (negative-origin)
+    // viewBox and inserted as the first child.
+    expect(body).toMatch(/<svg[^>]*>\s*<rect [^>]*fill="#ffffff"\/>/i)
   }, 20_000)
 })

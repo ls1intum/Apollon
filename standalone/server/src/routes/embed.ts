@@ -137,10 +137,40 @@ function ifNoneMatch(header: string | undefined, etag: string): boolean {
 }
 
 /**
+ * Inlines an opaque white background as the first child of the SVG. The library
+ * export is transparent and its strokes/text are tuned for a light canvas, so a
+ * diagram dropped into a dark-mode page (a GitHub dark README) would otherwise
+ * render dark-on-dark and be unreadable. White rather than theme-adaptive: the
+ * diagram's own fills can't be recolored to suit a dark canvas, so the canvas
+ * itself must stay light — matching the `/embed` HTML page, which is white in
+ * both schemes for the same reason.
+ *
+ * The rect is sized to the SVG's own `viewBox` (which can have a negative
+ * origin, e.g. `-70 -110 1050 670`); if the viewBox is missing or malformed it
+ * falls back to an oversized rect that the SVG viewport clips to the canvas.
+ */
+function withOpaqueBackground(svg: string): string {
+  const openTag = svg.match(/<svg\b[^>]*>/i)
+  if (!openTag) return svg
+  const viewBox = openTag[0].match(/viewBox\s*=\s*"([^"]+)"/i)
+  const parts = viewBox?.[1]
+    .trim()
+    .split(/[\s,]+/)
+    .map(Number)
+  const rect =
+    parts && parts.length === 4 && parts.every(Number.isFinite)
+      ? `<rect x="${parts[0]}" y="${parts[1]}" width="${parts[2]}" height="${parts[3]}" fill="#ffffff"/>`
+      : `<rect x="-100000" y="-100000" width="200000" height="200000" fill="#ffffff"/>`
+  const insertAt = (openTag.index ?? 0) + openTag[0].length
+  return svg.slice(0, insertAt) + rect + svg.slice(insertAt)
+}
+
+/**
  * Renders to an SVG string through the cache + single-flight, mapping queue
  * saturation to a typed transient 503. The cache key is `(id, etag)`: immutable
  * per revision, and shared by both the SVG and HTML routes so either warms the
- * other.
+ * other. The cached value already carries the opaque background so neither route
+ * re-processes it.
  */
 async function renderSvg(
   deps: Deps,
@@ -153,7 +183,8 @@ async function renderSvg(
       const { data } = await deps
         .getResource()
         .render("svg", diagram as UMLModel)
-      return typeof data === "string" ? data : data.toString("utf8")
+      const svg = typeof data === "string" ? data : data.toString("utf8")
+      return withOpaqueBackground(svg)
     })
   } catch (error) {
     if (error instanceof QueueFullError) throw Errors.rendererBusy()
