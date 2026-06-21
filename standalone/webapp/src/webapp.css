@@ -482,6 +482,7 @@ body,
 
 .home-navbar__content {
   box-sizing: border-box;
+
   /* HUG the safe area (max), don't stack on top of it (calc + inset) — otherwise
      the navbar sits further from a notch than the editor chrome, which uses the
      max(edge, inset) model. */
