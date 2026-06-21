@@ -592,7 +592,9 @@ const DiagramCardComponent = ({
     (state) => state.thumbnailRevisions[diagram.id] ?? 0
   )
 
-  const title = diagram.title.trim() || "Untitled Diagram"
+  // Untitled diagrams keep an empty real title and show a muted placeholder.
+  const isUntitled = !diagram.title.trim()
+  const title = diagram.title.trim() || "Untitled diagram"
   const diagramSource = diagram.source ?? "local"
   const isLocalDiagram = diagramSource === "local"
   const canToggleFavorite =
@@ -784,7 +786,10 @@ const DiagramCardComponent = ({
               className="truncate"
               title={title}
               style={{
-                color: "var(--home-text-strong)",
+                color: isUntitled
+                  ? "var(--home-text-muted)"
+                  : "var(--home-text-strong)",
+                fontStyle: isUntitled ? "italic" : "normal",
                 fontSize: `${CARD_TYPE_TITLE_PX}px`,
                 fontWeight: 500,
                 lineHeight: "1.3",

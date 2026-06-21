@@ -327,7 +327,11 @@ export default class MenuProvider implements vscode.WebviewViewProvider {
     // library's createCache call — see emotion-js/emotion#403.
     const csp = [
       `default-src 'none'`,
-      `img-src ${webview.cspSource} https: data:`,
+      // `blob:` is required for PNG export: the SVG→PNG converter loads the
+      // rendered SVG into an <img> via URL.createObjectURL (a blob: URL) before
+      // drawing it to a canvas. Without it the image fails to load → "Export
+      // failed". `data:` covers inlined images in the SVG.
+      `img-src ${webview.cspSource} https: data: blob:`,
       `script-src 'nonce-${nonce}'`,
       `style-src ${webview.cspSource} 'unsafe-inline'`,
       `font-src ${webview.cspSource}`,

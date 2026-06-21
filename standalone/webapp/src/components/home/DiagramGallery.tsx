@@ -1125,8 +1125,12 @@ export const DiagramGallery = ({
                         </thead>
                         <tbody>
                           {visibleDiagrams.map((diagram) => {
+                            const isUntitled = !diagram.title.trim()
                             const title =
-                              diagram.title.trim() || "Untitled Diagram"
+                              diagram.title.trim() || "Untitled diagram"
+                            const titleClass = isUntitled
+                              ? "truncate italic text-[var(--home-text-muted)]"
+                              : "truncate"
                             return (
                               <tr
                                 key={diagram.id}
@@ -1192,14 +1196,14 @@ export const DiagramGallery = ({
                                 </td>
                                 <td className="w-[26%] px-3 py-3 align-middle text-sm text-[var(--home-text-primary)]">
                                   {diagram.isExpired ? (
-                                    <span className="truncate">{title}</span>
+                                    <span className={titleClass}>{title}</span>
                                   ) : (
                                     <Link
                                       {...diagramNav(diagram)}
                                       onClick={(event) =>
                                         event.stopPropagation()
                                       }
-                                      className="truncate hover:underline focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2"
+                                      className={`${titleClass} hover:underline focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2`}
                                     >
                                       {title}
                                     </Link>

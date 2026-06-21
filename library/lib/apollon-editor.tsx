@@ -139,7 +139,9 @@ export class ApollonEditor {
 
     this.diagramStore.getState().setDiagramId(diagramId)
 
-    const diagramName = options?.model?.title || "Untitled Diagram"
+    // Keep an empty title EMPTY — don't force "Untitled Diagram" (which would be
+    // written back to the model and persisted). Hosts show their own placeholder.
+    const diagramName = options?.model?.title ?? ""
     const diagramType =
       options?.type || options?.model?.type || UMLDiagramType.ClassDiagram
     this.metadataStore
