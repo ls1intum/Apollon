@@ -9,7 +9,13 @@ import {
   Typography,
 } from "@mui/material"
 import { NodeStyleEditor, PrimaryButton, TextField } from "@/components/ui"
-import { flipSwimlaneChildPosition, generateUUID, laneFractions } from "@/utils"
+import {
+  flipSwimlaneChildPosition,
+  generateUUID,
+  getLaneOffsets,
+  laneIndexAtOffset,
+  materializeLaneSizes,
+} from "@/utils"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import { ActivitySwimlaneProps, DefaultNodeProps, SwimlaneLane } from "@/types"
@@ -124,9 +130,9 @@ export const ActivitySwimlaneEditPopover: React.FC<PopoverProps> = ({
   const orientation = data.orientation ?? "vertical"
   const isVertical = orientation === "vertical"
 
-  // Lanes divide the primary axis (width for columns, height for rows) by their
-  // size fractions; add/remove grows/shrinks the node by the affected lane's
-  // share so the other lanes keep their on-screen size.
+  // Lanes are sized in absolute px along the primary axis (width for columns,
+  // height for rows); add/remove grows/shrinks the node by the affected lane's
+  // extent so the other lanes keep their on-screen size.
   const primaryExtent = isVertical ? (node.width ?? 0) : (node.height ?? 0)
 
   const patch = (update: (n: Node) => Node) =>
@@ -189,15 +195,12 @@ export const ActivitySwimlaneEditPopover: React.FC<PopoverProps> = ({
 
   const handleLaneDelete = (id: string) => {
     if (lanes.length <= 1) return
-    const fractions = laneFractions(lanes)
-    const removed = fractions[lanes.findIndex((lane) => lane.id === id)]
-    // Shrink the node by the removed lane's share; renormalize the rest so they
-    // keep their on-screen size.
-    const remaining = lanes.filter((lane) => lane.id !== id)
-    const remainingFractions = laneFractions(remaining)
+    const sized = materializeLaneSizes(lanes, primaryExtent)
+    const removed = sized.find((lane) => lane.id === id)?.size ?? 0
+    // Shrink the node by the removed lane's extent; the rest keep their sizes.
     setLanes(
-      remaining.map((lane, i) => ({ ...lane, size: remainingFractions[i] })),
-      primaryExtent * (1 - removed)
+      sized.filter((lane) => lane.id !== id),
+      primaryExtent - removed
     )
   }
 
@@ -211,16 +214,15 @@ export const ActivitySwimlaneEditPopover: React.FC<PopoverProps> = ({
     const nextNumber = numbers.length
       ? Math.max(...numbers) + 1
       : lanes.length + 1
-    // Grow the node by one average lane and give the new lane that share, so the
-    // existing lanes keep their on-screen size.
-    const n = lanes.length
-    const scaled = laneFractions(lanes).map((f) => (f * n) / (n + 1))
+    // Grow the node by one average lane; existing lanes keep their extent and
+    // the new (now last, elastic) lane fills the added space.
+    const average = primaryExtent / lanes.length
     setLanes(
       [
-        ...lanes.map((lane, i) => ({ ...lane, size: scaled[i] })),
-        { id: generateUUID(), name: `Lane ${nextNumber}`, size: 1 / (n + 1) },
+        ...materializeLaneSizes(lanes, primaryExtent),
+        { id: generateUUID(), name: `Lane ${nextNumber}`, size: average },
       ],
-      (primaryExtent * (n + 1)) / n
+      primaryExtent + average
     )
   }
 
@@ -228,7 +230,37 @@ export const ActivitySwimlaneEditPopover: React.FC<PopoverProps> = ({
     if (!over || active.id === over.id) return
     const oldIndex = lanes.findIndex((lane) => lane.id === active.id)
     const newIndex = lanes.findIndex((lane) => lane.id === over.id)
-    setLanes(arrayMove(lanes, oldIndex, newIndex))
+    // Pin sizes first so the elastic last lane keeps its extent through the move.
+    const sized = materializeLaneSizes(lanes, primaryExtent)
+    const reordered = arrayMove(sized, oldIndex, newIndex)
+    const oldOffsets = getLaneOffsets(sized, primaryExtent)
+    const newOffsets = getLaneOffsets(reordered, primaryExtent)
+    // Move each child so it stays in its lane: shift its primary-axis position
+    // by how far that lane moved.
+    setNodes((current) =>
+      current.map((n) => {
+        if (n.id === elementId) {
+          return { ...n, data: { ...n.data, lanes: reordered } }
+        }
+        if (n.parentId === elementId) {
+          const center = isVertical
+            ? n.position.x + (n.width ?? 0) / 2
+            : n.position.y + (n.height ?? 0) / 2
+          const fromLane = laneIndexAtOffset(oldOffsets, center)
+          const toLane = reordered.findIndex(
+            (lane) => lane.id === sized[fromLane].id
+          )
+          const shift = newOffsets[toLane].start - oldOffsets[fromLane].start
+          return {
+            ...n,
+            position: isVertical
+              ? { x: n.position.x + shift, y: n.position.y }
+              : { x: n.position.x, y: n.position.y + shift },
+          }
+        }
+        return n
+      })
+    )
   }
 
   const handleDataFieldUpdate = (key: keyof DefaultNodeProps, value: string) =>

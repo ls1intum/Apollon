@@ -6,7 +6,7 @@ import { useHandleOnResize } from "@/hooks"
 import { ActivitySwimlaneProps } from "@/types"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
-import { getLaneOffsets, resizeLaneDivider, MIN_LANE_EXTENT } from "@/utils"
+import { getLaneOffsets, resizeLaneDivider } from "@/utils"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
 import { ActivitySwimlaneSVG } from "@/components/svgs/nodes/activityDiagram/ActivitySwimlaneSVG"
@@ -59,13 +59,8 @@ function LaneResizeHandles({
     if (!drag.current) return
     const { index, start, origLanes, primaryExtent } = drag.current
     const deltaScreen = (isVertical ? e.clientX : e.clientY) - start
-    const deltaFraction = deltaScreen / (zoom || 1) / primaryExtent
-    const next = resizeLaneDivider(
-      origLanes,
-      index,
-      deltaFraction,
-      MIN_LANE_EXTENT / primaryExtent
-    )
+    const deltaPx = deltaScreen / (zoom || 1)
+    const next = resizeLaneDivider(origLanes, index, deltaPx, primaryExtent)
     setNodes((nodes) =>
       nodes.map((n) =>
         n.id === id ? { ...n, data: { ...n.data, lanes: next } } : n

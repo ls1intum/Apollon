@@ -16,9 +16,10 @@ export type SwimlaneLane = {
   id: string
   name: string
   /**
-   * Lane's share of the swimlane's primary axis as a fraction (lanes sum to 1).
-   * Optional: lanes without it divide the space equally, so existing saved
-   * swimlanes keep rendering as equal lanes until a separator is dragged.
+   * Lane's extent along the swimlane's primary axis, in absolute flow px. The
+   * last lane is elastic (fills the remainder), so resizing the swimlane only
+   * changes the last lane. Optional: lanes without it divide the space equally,
+   * so existing saved swimlanes render as equal lanes until a separator moves.
    */
   size?: number
 }

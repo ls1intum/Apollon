@@ -7,7 +7,8 @@ import type { ActivitySwimlaneProps } from "@/types"
 import {
   flipSwimlaneChildPosition,
   getLaneOffsets,
-  laneFractions,
+  laneIndexAtOffset,
+  materializeLaneSizes,
   resizeLaneDivider,
 } from "@/utils"
 
@@ -56,21 +57,34 @@ describe("lane geometry", () => {
     ])
   })
 
-  it("respects per-lane sizes and normalizes them", () => {
-    // sizes 1:3 of a 400px axis -> 100 / 300, regardless of absolute scale.
-    const offsets = getLaneOffsets([{ size: 0.25 }, { size: 0.75 }], 400)
-    expect(offsets).toEqual([
-      { start: 0, extent: 100 },
-      { start: 100, extent: 300 },
-    ])
+  it("uses absolute sizes; the last lane absorbs the remainder", () => {
+    // Resizing the swimlane must only change the last lane, not every separator:
+    // the two fixed lanes keep 120/100 at any total width.
+    const at400 = getLaneOffsets([{ size: 120 }, { size: 100 }, {}], 400)
+    expect(at400.map((o) => o.extent)).toEqual([120, 100, 180])
+    const at500 = getLaneOffsets([{ size: 120 }, { size: 100 }, {}], 500)
+    // Only the last lane grew; the interior separators (120, 220) are unmoved.
+    expect(at500.map((o) => o.extent)).toEqual([120, 100, 280])
+    expect(at500.map((o) => o.start)).toEqual(at400.map((o) => o.start))
   })
 
-  it("laneFractions always sums to 1", () => {
-    const sum = laneFractions([{ size: 2 }, { size: 1 }, {}]).reduce(
-      (a, b) => a + b,
-      0
+  it("laneIndexAtOffset finds the lane containing a coordinate", () => {
+    const offsets = getLaneOffsets([{ size: 120 }, { size: 100 }, {}], 400)
+    expect(laneIndexAtOffset(offsets, 10)).toBe(0)
+    expect(laneIndexAtOffset(offsets, 150)).toBe(1)
+    expect(laneIndexAtOffset(offsets, 350)).toBe(2)
+    expect(laneIndexAtOffset(offsets, 9999)).toBe(2)
+  })
+
+  it("materializeLaneSizes pins every lane's current extent", () => {
+    const sized = materializeLaneSizes(
+      [
+        { id: "a", name: "A" },
+        { id: "b", name: "B" },
+      ],
+      300
     )
-    expect(sum).toBeCloseTo(1)
+    expect(sized.map((l) => l.size)).toEqual([150, 150])
   })
 })
 
@@ -80,21 +94,23 @@ describe("resizeLaneDivider", () => {
     { id: "b", name: "B" },
   ]
 
-  it("moves the boundary, conserving the total (balanced)", () => {
-    const next = resizeLaneDivider(lanes, 0, 0.1, 0.05)
-    expect(next[0].size).toBeCloseTo(0.6)
-    expect(next[1].size).toBeCloseTo(0.4)
-    expect((next[0].size ?? 0) + (next[1].size ?? 0)).toBeCloseTo(1)
+  it("moves the boundary in px, conserving the total (balanced)", () => {
+    // 400px, two equal lanes (200/200); drag the divider +40px.
+    const next = resizeLaneDivider(lanes, 0, 40, 400)
+    expect(next[0].size).toBeCloseTo(240)
+    expect(next[1].size).toBeCloseTo(160)
+    expect((next[0].size ?? 0) + (next[1].size ?? 0)).toBeCloseTo(400)
   })
 
   it("clamps so neither lane shrinks below the minimum", () => {
-    const next = resizeLaneDivider(lanes, 0, 0.9, 0.1)
-    expect(next[0].size).toBeCloseTo(0.9) // capped: B can't go below 0.1
-    expect(next[1].size).toBeCloseTo(0.1)
+    // Drag far past B's room: B floors at MIN_LANE_EXTENT (40), A takes the rest.
+    const next = resizeLaneDivider(lanes, 0, 9999, 400)
+    expect(next[0].size).toBeCloseTo(360)
+    expect(next[1].size).toBeCloseTo(40)
   })
 
   it("ignores an out-of-range divider index", () => {
-    expect(resizeLaneDivider(lanes, 1, 0.1, 0.05)).toBe(lanes)
+    expect(resizeLaneDivider(lanes, 1, 40, 400)).toBe(lanes)
   })
 })
 

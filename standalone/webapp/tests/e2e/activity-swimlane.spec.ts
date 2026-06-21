@@ -238,13 +238,20 @@ test.describe("activity swimlane", () => {
   test("lanes can be reordered by dragging in the popover", async ({
     page,
   }) => {
+    // Action sits in lane 2 ("System") — right half of the swimlane.
     await openFixtureInLocalEditor(
       page,
       swimlaneModel("vertical", { parented: true, x: 250, y: 150 })
     )
     await waitForCanvasReady(page)
-    await page.locator(`.react-flow__node[data-id="${SWIMLANE_ID}"]`).dblclick()
 
+    const sl = await nodeBox(page, SWIMLANE_ID)
+    const actBefore = await nodeBox(page, ACTION_ID)
+    expect(actBefore.x + actBefore.width / 2).toBeGreaterThan(
+      sl.x + sl.width / 2
+    )
+
+    await page.locator(`.react-flow__node[data-id="${SWIMLANE_ID}"]`).dblclick()
     const handles = page.getByLabel("Reorder lane")
     await expect(handles).toHaveCount(2)
     const h1 = (await handles.nth(1).boundingBox())!
@@ -259,6 +266,7 @@ test.describe("activity swimlane", () => {
     await page.mouse.move(h0.x + h0.width / 2, h0.y - 4, { steps: 8 })
     await page.mouse.up()
 
+    // Lane labels swapped...
     await expect
       .poll(async () =>
         page
@@ -266,5 +274,14 @@ test.describe("activity swimlane", () => {
           .evaluateAll((els) => els.map((e) => (e as HTMLInputElement).value))
       )
       .toEqual(["System", "Customer"])
+
+    // ...and the action followed its lane to the left half.
+    await expect
+      .poll(async () => {
+        const a = await nodeBox(page, ACTION_ID)
+        const s = await nodeBox(page, SWIMLANE_ID)
+        return a.x + a.width / 2 < s.x + s.width / 2
+      })
+      .toBe(true)
   })
 })
