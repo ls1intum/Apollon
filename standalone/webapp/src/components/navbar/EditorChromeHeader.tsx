@@ -3,12 +3,12 @@ import { createPortal } from "react-dom"
 import useMediaQuery from "@mui/material/useMediaQuery"
 import { useEditorContext } from "@/contexts"
 import { MOBILE_VIEW_QUERY } from "@/constants"
-import MobileNavbar from "./MobileNavbar"
 import {
   HeaderBrandIsland,
   HeaderTitleIsland,
   HeaderActionsIsland,
 } from "./HeaderIslands"
+import { MobileBrandPill, MobileActionsPill } from "./MobileIslands"
 
 // Derive the editor type from the context so it matches by construction (the
 // library ships two ApollonEditor declarations — main + react peer build — whose
@@ -35,11 +35,13 @@ function useRegionHost(editor: Editor, region: Region, active: boolean) {
 }
 
 /**
- * Mounts the editor header as immersive in-canvas chrome. On desktop it is three
- * floating glass islands (brand+nav top-left, title top-center, actions
- * top-right) portaled into the matching overlay regions so they hover over a
- * full-bleed canvas and the diagram makes room for each via its measured inset.
- * On mobile it stays a single compact bar in the full-width `header` band.
+ * Mounts the editor header as immersive in-canvas chrome — floating glass
+ * islands over a full-bleed canvas, both on desktop and mobile (same overlay
+ * regions + material, so the two read as one system). Desktop: brand+nav
+ * top-left, title top-center, actions top-right. Mobile: a compact brand+back
+ * pill top-left and an overflow pill top-right (the title lives in the menu).
+ * Each region reserves its measured height as a top inset so the diagram (and
+ * the palette) make room for it.
  *
  * createPortal keeps every island in the webapp React tree, so they retain theme
  * tokens, the router and all app contexts; only their DOM lands in the canvas.
@@ -48,17 +50,23 @@ export function EditorChromeHeader() {
   const { editor } = useEditorContext()
   const isMobile = useMediaQuery(MOBILE_VIEW_QUERY)
 
-  const headerHost = useRegionHost(editor, "header", isMobile)
-  const leftHost = useRegionHost(editor, "top-left", !isMobile)
+  const leftHost = useRegionHost(editor, "top-left", true)
   const centerHost = useRegionHost(editor, "top-center", !isMobile)
-  const rightHost = useRegionHost(editor, "top-right", !isMobile)
+  const rightHost = useRegionHost(editor, "top-right", true)
 
   return (
     <>
-      {headerHost && createPortal(<MobileNavbar />, headerHost)}
-      {leftHost && createPortal(<HeaderBrandIsland />, leftHost)}
+      {leftHost &&
+        createPortal(
+          isMobile ? <MobileBrandPill /> : <HeaderBrandIsland />,
+          leftHost
+        )}
       {centerHost && createPortal(<HeaderTitleIsland />, centerHost)}
-      {rightHost && createPortal(<HeaderActionsIsland />, rightHost)}
+      {rightHost &&
+        createPortal(
+          isMobile ? <MobileActionsPill /> : <HeaderActionsIsland />,
+          rightHost
+        )}
     </>
   )
 }

@@ -77,8 +77,15 @@ export const CustomMiniMap = () => {
 
   if (minimapCollapsed) {
     return (
-      <Panel position="bottom-right" onClick={() => setMinimapCollapsed(false)}>
-        <MapIcon fill="var(--apollon-primary-contrast, #000000)" />
+      <Panel position="bottom-right">
+        <button
+          type="button"
+          className="apollon-chrome-iconbtn"
+          aria-label="Show minimap"
+          onClick={() => setMinimapCollapsed(false)}
+        >
+          <MapIcon width={18} height={18} fill="currentColor" />
+        </button>
       </Panel>
     )
   }
@@ -86,28 +93,22 @@ export const CustomMiniMap = () => {
   return (
     <Panel
       position="bottom-right"
-      onClick={() => setMinimapCollapsed(true)}
       style={{ boxShadow: "none", backgroundColor: "transparent" }}
     >
-      <div
+      <button
+        type="button"
+        className="apollon-chrome-iconbtn"
+        aria-label="Hide minimap"
+        onClick={() => setMinimapCollapsed(true)}
         style={{
           position: "absolute",
-          bottom: 0,
-          right: 0,
-          display: "flex",
+          bottom: 8,
+          right: 8,
           zIndex: ZINDEX.PANEL,
-          padding: 8,
-          backgroundColor: "var(--apollon-chrome-surface)",
-          borderRadius: "var(--apollon-chrome-radius-md)",
-          justifyContent: "center",
-          alignItems: "center",
-          cursor: "pointer",
-          boxShadow:
-            "var(--apollon-chrome-shadow-floating), var(--apollon-chrome-inset-hairline)",
         }}
       >
-        <SouthEastArrowIcon fill="var(--apollon-primary-contrast, #000000)" />
-      </div>
+        <SouthEastArrowIcon width={18} height={18} fill="currentColor" />
+      </button>
 
       <MiniMap
         zoomable

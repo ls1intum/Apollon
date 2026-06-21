@@ -49,7 +49,7 @@ export default [
       "src/components/modals/TemplateThumbnail.tsx",
       "src/components/navbar/EditorChromeHeader.tsx",
       "src/components/navbar/HeaderIslands.tsx",
-      "src/components/navbar/MobileNavbar.tsx",
+      "src/components/navbar/MobileIslands.tsx",
       "src/components/versioning/VersionDrawer.tsx",
       "src/pages/ApollonWithConnection.tsx",
       "src/pages/LegalPage.tsx",

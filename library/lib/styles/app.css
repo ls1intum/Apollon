@@ -438,6 +438,18 @@
 
 /* Phone landscape: nudge the canvas panels in by the safe-area insets. */
 @media (max-width: 950px) and (max-height: 500px) {
+  /* Phone-landscape: nudge the floating top pills past the side notch + add
+     breathing room, mirroring the bottom controls below. */
+  .react-flow__panel.top.left {
+    margin-left: calc(32px + var(--safe-area-inset-left, 0px));
+    margin-top: calc(10px + var(--safe-area-inset-top, 0px));
+  }
+
+  .react-flow__panel.top.right {
+    margin-right: calc(32px + var(--safe-area-inset-right, 0px));
+    margin-top: calc(10px + var(--safe-area-inset-top, 0px));
+  }
+
   .react-flow__panel.bottom.left {
     margin-left: calc(10px + var(--safe-area-inset-left, 0px));
     margin-bottom: calc(10px + var(--safe-area-inset-bottom, 0px));
@@ -453,9 +465,106 @@
   }
 }
 
+/* The single icon-control idiom for every floating chrome button (zoom, fit,
+   undo/redo, minimap handles): borderless on glass, the pane supplies the
+   border/radius, and state is a surface-layer fill — never a border — so a
+   control never reads as a box-inside-a-box. */
+.apollon-chrome-iconbtn {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--apollon-chrome-radius-sm);
+  background: transparent;
+  color: var(--apollon-chrome-text);
+  cursor: pointer;
+  transition: background-color var(--apollon-chrome-duration-hover)
+    var(--apollon-chrome-ease-standard);
+}
+
+.apollon-chrome-iconbtn > svg {
+  fill: currentColor;
+}
+
+.apollon-chrome-iconbtn:hover:not(:disabled) {
+  background: var(--apollon-chrome-surface-hover);
+}
+
+.apollon-chrome-iconbtn:active:not(:disabled) {
+  background: var(--apollon-chrome-surface-active);
+}
+
+.apollon-chrome-iconbtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.apollon-chrome-iconbtn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px
+    color-mix(in srgb, var(--apollon-chrome-accent) 45%, transparent);
+}
+
+/* Numeric zoom readout: same idiom, auto width, tabular figures so the digits
+   don't jitter as the percentage changes. */
+.apollon-chrome-iconbtn--readout {
+  width: auto;
+  min-width: 48px;
+  padding: 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Hairline separating action families within one cluster (view vs history). */
+.apollon-chrome-cluster-divider {
+  align-self: stretch;
+  width: 1px;
+  margin: 4px 2px;
+  background: var(--apollon-chrome-border);
+}
+
+/* Touch: grow the hit target to the Apple HIG 44pt minimum without enlarging
+   the glyph. */
+@media (pointer: coarse) {
+  .apollon-chrome-iconbtn {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/* React Flow's built-in zoom/fit buttons adopt the same borderless idiom. */
 .react-flow__controls-button {
-  background: none;
-  border-bottom: none;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--apollon-chrome-radius-sm);
+  background: transparent;
+  color: var(--apollon-chrome-text);
+  transition: background-color var(--apollon-chrome-duration-hover)
+    var(--apollon-chrome-ease-standard);
+}
+
+.react-flow__controls-button:hover {
+  background: var(--apollon-chrome-surface-hover);
+}
+
+.react-flow__controls-button > svg {
+  max-width: 18px;
+  max-height: 18px;
+  fill: currentColor;
+}
+
+@media (pointer: coarse) {
+  .react-flow__controls-button {
+    width: 44px;
+    height: 44px;
+  }
 }
 
 /* Shared glass surface for every floating chrome object — header islands,
@@ -571,15 +680,6 @@
   gap: 8px;
 }
 
-.react-flow__controls-button,
-.react-flow__controls-button:hover {
-  background: var(--panel-background);
-  border-bottom: none;
-}
-
-.react-flow__controls-button > svg {
-  fill: var(--text);
-}
 
 .react-flow__handle {
   opacity: 0;
@@ -849,44 +949,14 @@ svg.react-flow__connectionline {
 }
 
 .react-flow__minimap-mask {
-  fill: "#f2f2f2";
-  opacity: 0.6;
+  fill: var(--apollon-chrome-text-muted);
+  opacity: 0.15;
 }
 
 .prevent-select {
   -webkit-user-select: none; /* Safari */
   -ms-user-select: none; /* IE 10 and IE 11 */
   user-select: none; /* Standard syntax */
-}
-
-.control-button {
-  background-color: var(--apollon-chrome-surface);
-  border: 1px solid var(--apollon-chrome-border-strong);
-  border-radius: var(--apollon-chrome-radius-md);
-  padding: 6px 8px;
-  cursor: pointer;
-  opacity: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 32px;
-  height: 32px;
-  font-size: 14px;
-  font-weight: bold;
-  transition: background-color 0.2s ease;
-}
-
-.control-button:hover:not(.disabled) {
-  background-color: var(--apollon-chrome-surface-hover);
-}
-
-.control-button.disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-.control-button.disabled:hover {
-  background-color: var(--apollon-chrome-surface);
 }
 
 .horizontally-not-resizable .react-flow__resize-control.top.line:hover {
