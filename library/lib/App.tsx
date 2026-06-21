@@ -118,8 +118,7 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
 
   // Publish the reserved overlay insets as CSS custom properties so the editor's
   // own overlays (palette, presence bar, controls, minimap) slide to make room
-  // for host chrome instead of overlapping it. All default to 0 -> no chrome
-  // means byte-identical layout.
+  // for host chrome instead of overlapping it.
   const insets = useOverlayStore((state) => state.insets)
 
   // Overlay the live positions/sizes of nodes peers are dragging (carried over
@@ -251,9 +250,7 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
           <CustomControls />
           <AlignmentGuides />
           <AssessmentSelectionDebug />
-          {/* Host-injected canvas chrome (header, rails, controls). Renders
-              nothing until a control is registered, so embedders that add none
-              are byte-identical. */}
+          {/* Host-injected canvas chrome (header, rails, controls). */}
           <OverlayLayer />
         </ReactFlow>
         <ScrollOverlay />

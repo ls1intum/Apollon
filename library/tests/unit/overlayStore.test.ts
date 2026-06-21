@@ -5,7 +5,6 @@ import { type OverlayControl } from "@/overlay/types"
 const control = (over: Partial<OverlayControl>): OverlayControl => ({
   id: "c",
   region: "header",
-  source: "imperative",
   render: () => null,
   ...over,
 })
@@ -63,5 +62,16 @@ describe("overlayStore", () => {
     store.getState().unregister("h")
     expect(store.getState().insets.top).toBe(0)
     expect(store.getState().measured.h).toBeUndefined()
+  })
+
+  it("toggling visible re-releases and restores the reserved inset", () => {
+    const store = createOverlayStore()
+    const base = { id: "h", region: "header", inset: { top: 40 } } as const
+    store.getState().register(control(base))
+    expect(store.getState().insets.top).toBe(40)
+    store.getState().register(control({ ...base, visible: false }))
+    expect(store.getState().insets.top).toBe(0)
+    store.getState().register(control({ ...base, visible: true }))
+    expect(store.getState().insets.top).toBe(40)
   })
 })

@@ -122,10 +122,10 @@ test.describe("Visual regression - diagram fixtures", () => {
         await clickFitView(page)
       }
 
-      // Screenshot the editor area (sidebar + canvas). The immersive header now
-      // floats inside the canvas, so mask it — visual diffs stay focused on
-      // diagram rendering, not unrelated UI chrome. Baselines MUST be generated
-      // inside the Playwright Docker container (see
+      // Screenshot the editor area (sidebar + canvas). The header floats inside
+      // the canvas, so mask it — visual diffs stay focused on diagram rendering,
+      // not unrelated UI chrome. Baselines MUST be generated inside the
+      // Playwright Docker container (see
       // docs/contributor/development/visual-tests.md) so they match CI exactly.
       const editorArea = page.locator('[data-testid="editor-area"]')
       await expect(editorArea).toHaveScreenshot(`visual-${file}.png`, {

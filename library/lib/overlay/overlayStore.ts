@@ -39,10 +39,6 @@ function controlContribution(
     for (const side of REGION_SIDES[region]) out[side] = measured?.[side] ?? 0
     return out
   }
-  if (Array.isArray(inset)) {
-    for (const side of inset) out[side] = measured?.[side] ?? 0
-    return out
-  }
   for (const side of Object.keys(inset) as OverlaySide[]) {
     const v = inset[side]
     out[side] = v === "auto" ? (measured?.[side] ?? 0) : (v ?? 0)
@@ -131,6 +127,9 @@ export const createOverlayStore = (): UseBoundStore<StoreApi<OverlayStore>> =>
         setMeasured: (id, rect) =>
           set(
             (s) => {
+              // Ignore measurements for an unregistered id so an orphan rect
+              // can never leak into the computed insets.
+              if (!(id in s.controls)) return s
               const measured = { ...s.measured, [id]: rect }
               return { measured, insets: recompute(s.controls, measured) }
             },

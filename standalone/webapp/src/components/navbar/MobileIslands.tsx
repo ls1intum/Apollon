@@ -56,9 +56,7 @@ export function MobileBackPill() {
  * The two highest-value actions stay reachable as direct icons — Share
  * (collaboration is the reason to be here on a phone) and Version history — and
  * only the trailing, lower-frequency actions (File, Save copy, Help, theme)
- * collapse behind a "…" (MoreVert) menu. Follows Apple HIG (Toolbars: keep
- * primary actions reachable, collapse the trailing items into a menu) and
- * Material 3's top-app-bar overflow guidance. The diagram title is NOT here — it
+ * collapse behind a "…" (MoreVert) menu. The diagram title is NOT here — it
  * lives in the header's centre track (see EditorHeaderRow).
  */
 export function MobileActionsPill() {

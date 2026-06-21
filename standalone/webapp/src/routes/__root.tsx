@@ -39,9 +39,8 @@ function RootLayout() {
     <AppProviders>
       <Suspense fallback={<AppLoadingScreen />}>
         {/* Skip link (WCAG 2.4.1): on editor routes the navbar + version rail are
-            now in-canvas chrome, so let keyboard users jump straight to the
-            diagram instead of tabbing through all of it. Visually hidden until
-            focused. */}
+            in-canvas chrome, so let keyboard users jump straight to the diagram
+            instead of tabbing through it. Visually hidden until focused. */}
         {isEditorRoute && (
           <a href="#editor-area" className="apollon-skip-link">
             Skip to diagram

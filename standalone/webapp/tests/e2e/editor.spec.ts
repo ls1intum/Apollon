@@ -604,16 +604,18 @@ test.describe("Mobile responsive layout", () => {
     await page.goto(`/local/${modelId}`)
     await waitForCanvasReady(page, false)
 
-    const paletteBox = await page.getByTestId("apollon-palette").boundingBox()
-    const controlsBox = await page
-      .locator(".react-flow__controls")
-      .boundingBox()
-    expect(paletteBox).not.toBeNull()
-    expect(controlsBox).not.toBeNull()
-    // Palette bottom edge stays above the controls' top edge.
-    expect(paletteBox!.y + paletteBox!.height).toBeLessThanOrEqual(
-      controlsBox!.y
-    )
+    // The palette height is ResizeObserver-driven, so poll the relation rather
+    // than asserting on a single possibly-pre-reflow frame: the palette bottom
+    // edge stays above the controls' top edge.
+    const palette = page.getByTestId("apollon-palette")
+    const controls = page.locator(".react-flow__controls")
+    await expect
+      .poll(async () => {
+        const p = await palette.boundingBox()
+        const c = await controls.boundingBox()
+        return p && c ? p.y + p.height - c.y : Number.NaN
+      })
+      .toBeLessThanOrEqual(0)
   })
 })
 
@@ -665,13 +667,13 @@ test.describe("Element palette", () => {
       await expect(palette).toBeVisible()
 
       // All 14 BPMN cells (13 elements + color) are present and none scroll.
-      // toHaveCount auto-retries, so it also settles the measured-layout effect.
       const entries = palette.locator(".apollon-palette__entry")
       await expect(entries).toHaveCount(14)
-      const overflow = await palette.evaluate(
-        (el) => el.scrollHeight - el.clientHeight
-      )
-      expect(overflow).toBeLessThanOrEqual(1)
+      // The cell sizing is ResizeObserver-driven, so poll the overflow rather
+      // than reading a single possibly-pre-reflow frame.
+      await expect
+        .poll(() => palette.evaluate((el) => el.scrollHeight - el.clientHeight))
+        .toBeLessThanOrEqual(1)
     })
   }
 })

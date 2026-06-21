@@ -164,7 +164,6 @@ set `inset`. The reserved space is measured per region on its dominant axis
 | Value                       | Type                                             | Effect                                                  |
 | --------------------------- | ------------------------------------------------ | ------------------------------------------------------- |
 | `"auto"`                    | string literal                                   | Auto-measure the control on the region's dominant axis. |
-| `["top", "left"]`           | `OverlaySide[]`                                  | Auto-measure exactly those sides.                       |
 | `{ top: 48, left: "auto" }` | `Partial<Record<OverlaySide, number \| "auto">>` | Mix explicit pixels with per-side `"auto"`.             |
 
 ```ts
@@ -236,6 +235,9 @@ control never drags the diagram.
 - **`updateControl` on an absent id is a no-op** — it does not create the control.
 - **Reserved host ids.** `getRegionElement` owns `apollon:host:<region>`. Do not
   register your own controls under those ids; use a host-namespaced id instead.
+- **Inspection selectors.** Each control's wrapper carries `data-apollon-control="<id>"`
+  and each region container `data-apollon-region="<region>"` — stable hooks for
+  tests and DOM inspection (not styling targets).
 
 ## Accessibility & theming
 

@@ -377,7 +377,7 @@ export class ApollonEditor {
       throw new Error(
         `[ApollonEditor] addControl: unknown region: ${control.region}`
       )
-    this.overlayStore.getState().register({ source: "imperative", ...control })
+    this.overlayStore.getState().register(control)
     return () => this.overlayStore.getState().unregister(control.id)
   }
 
@@ -407,7 +407,8 @@ export class ApollonEditor {
    * the diagram makes room for whatever the host mounts. Lifetime = the editor;
    * `releaseRegionElement` unregisters it. Reserved id: `apollon:host:<region>`.
    * @param region - The region to anchor the node in.
-   * @returns The same stable element on every call until `releaseRegionElement`.
+   * @returns The same node for the lifetime of one acquire; `releaseRegionElement`
+   *   drops it and the next call returns a fresh node.
    * @throws If `region` is not a known region.
    */
   public getRegionElement(region: OverlayRegion): HTMLElement {
@@ -421,13 +422,11 @@ export class ApollonEditor {
     // cache, so a reopen re-enters here and re-registers — no need to re-register
     // (and clobber host-applied options) on a plain re-read.
     el = document.createElement("div")
-    el.dataset.apollonHostRegion = region
     this.hostRegionEls.set(region, el)
     const node = el
     this.overlayStore.getState().register({
       id: `apollon:host:${region}`,
       region,
-      source: "imperative",
       inset: "auto",
       render: () => <RegionMount el={node} />,
     })

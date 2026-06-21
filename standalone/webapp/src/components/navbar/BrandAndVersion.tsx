@@ -6,10 +6,10 @@ import TumLogo from "assets/images/tum-logo-579x579.png"
 
 /**
  * Brand lockup: TUM logo + "APOLLON" wordmark. The version string is NOT shown
- * here — primary chrome stays uncluttered (Apple HIG: don't sprinkle branding;
- * keep room for controls). The version is discoverable via Help → About and the
- * `title` tooltip below. The logo is a compact ~28px so the brand island stays
- * the same height as its sibling islands.
+ * here, so the brand island stays uncluttered and leaves room for controls; the
+ * version is discoverable via Help → About and the `title` tooltip below. The
+ * logo is a compact ~28px so the brand island stays the same height as its
+ * sibling islands.
  */
 export const BrandAndVersion = () => {
   return (

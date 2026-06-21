@@ -108,9 +108,7 @@ function App() {
         }
       }}
     >
-      {/* Auto-export status island — top-left, in the shared floating-glass
-          language. The diagram is exported to a sibling file automatically on
-          every change; this indicates the format and the live sync state. */}
+      {/* Auto-export status island (top-left), in the shared floating-glass language. */}
       <ApollonControl
         id="vscode:export"
         region="top-left"

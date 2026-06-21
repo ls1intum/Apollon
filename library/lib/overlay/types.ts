@@ -45,12 +45,11 @@ export const ZERO_INSETS: Insets = { top: 0, right: 0, bottom: 0, left: 0 }
 /**
  * How much room a control reserves so the diagram "makes way" (fed into
  * `fitView` padding, MapLibre-style). `"auto"` measures the control via the
- * shared ResizeObserver on the region's dominant axis; an array auto-measures
- * exactly those sides; an object mixes explicit px with per-side `"auto"`.
+ * shared ResizeObserver on the region's dominant axis; an object mixes explicit
+ * px with per-side `"auto"` (e.g. `{ top: "auto" }`).
  */
 export type InsetContribution =
   | "auto"
-  | OverlaySide[]
   | Partial<Record<OverlaySide, number | "auto">>
 
 export interface OverlayControlOptions {
@@ -75,10 +74,9 @@ export interface OverlayControlOptions {
   style?: CSSProperties
 }
 
-/** A control as registered: options plus the renderer and bookkeeping.
+/** A control as stored in the registry: options plus the renderer.
  *  @internal Use {@link OverlayControlInput} as the public registration type. */
 export interface OverlayControl extends OverlayControlOptions {
-  source: "library" | "imperative" | "react"
   render: () => ReactNode
 }
 

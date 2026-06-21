@@ -781,7 +781,7 @@
   }
 }
 
-/* Accessibility fallbacks (Apple HIG Materials): honour the OS preferences. */
+/* Honour the OS reduced-transparency / increased-contrast / reduced-motion preferences. */
 @media (prefers-reduced-transparency: reduce) {
   .apollon-glass,
   .react-flow__panel,
@@ -1084,9 +1084,9 @@ svg.react-flow__connectionline {
 }
 
 .prevent-select {
-  -webkit-user-select: none; /* Safari */
-  -ms-user-select: none; /* IE 10 and IE 11 */
-  user-select: none; /* Standard syntax */
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 .horizontally-not-resizable .react-flow__resize-control.top.line:hover {

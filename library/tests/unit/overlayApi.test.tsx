@@ -43,12 +43,17 @@ describe("ApollonEditor overlay/control API", () => {
     expect(editor.hasControl("missing")).toBe(false)
   })
 
-  it("getRegionElement returns a stable node; releaseRegionElement unregisters it", () => {
+  it("getRegionElement caches per acquire; release drops it and re-acquire mints a fresh, re-registered node", () => {
     const a = editor.getRegionElement("header")
     expect(a).toBe(editor.getRegionElement("header"))
     expect(editor.hasControl("apollon:host:header")).toBe(true)
+
     editor.releaseRegionElement("header")
     expect(editor.hasControl("apollon:host:header")).toBe(false)
+
+    const b = editor.getRegionElement("header")
+    expect(b).not.toBe(a)
+    expect(editor.hasControl("apollon:host:header")).toBe(true)
   })
 
   it("throws on an empty id or an unknown region (loud at the edge)", () => {

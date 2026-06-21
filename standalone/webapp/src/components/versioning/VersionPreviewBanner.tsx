@@ -13,9 +13,7 @@ import { relativeTime } from "./relativeTime"
  * The banner overlays the canvas column; that column's width depends on
  * whether the desktop sidebar is open (it shrinks the canvas by 320px),
  * whether devtools are docked, etc. Querying `window` widths gives the
- * wrong answer in any non-trivial layout. The values still echo the
- * common phone/phablet thresholds — they're chosen for readability of
- * the banner's content (icon + title + 2 buttons) at given widths.
+ * wrong answer in any non-trivial layout.
  */
 const COMPACT_WIDTH_PX = 768
 
