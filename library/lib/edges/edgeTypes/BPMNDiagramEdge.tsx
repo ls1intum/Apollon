@@ -118,10 +118,10 @@ export const BPMNDiagramEdge = ({
 
         <EdgeMiddleLabels
           label={data?.label}
-          pathMiddlePosition={edgeData.pathMiddlePosition}
-          isMiddlePathHorizontal={edgeData.isMiddlePathHorizontal}
+          activePoints={edgeData.activePoints}
           showRelationshipLabels={showRelationshipLabels}
-          avoidToolbarOverlap={true}
+          nodeRects={edgeData.nodeRects}
+          neighborGeometry={edgeData.neighborGeometry}
           textColor={textColor}
         />
 

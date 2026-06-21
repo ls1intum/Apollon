@@ -224,6 +224,19 @@ export const EDGES = Object.freeze({
    * U-turn is never a deliberate edit, so this stays at the visual-merge
    * threshold rather than the per-step threshold. */
   ORTHOGONAL_ARM_OVERLAP_PX: 10,
+  /** Perpendicular gap (flow px) between an edge's mid-segment line and the
+   * near edge of its relationship/stereotype label. The label sits this far
+   * off the line on whichever side is clearer. */
+  LABEL_GAP: 14,
+  /** Nominal label line height (flow px) used as the across-text depth of the
+   * candidate box when scoring which side a label sits on. Constant by
+   * construction — placement never measures the rendered text (mirrors the
+   * messageLayout.ts invariant). */
+  LABEL_LINE_HEIGHT: 14,
+  /** Nominal half-width (flow px) of a label along its text axis, used only to
+   * build the candidate box for side scoring. Coarse on purpose: we choose a
+   * side, not a pixel-perfect fit. */
+  LABEL_NOMINAL_HALF_EXTENT: 40,
 } as const)
 
 /* -------------------------------------------------------------------------- */

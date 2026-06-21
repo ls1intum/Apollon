@@ -152,13 +152,13 @@ const NODE_LABEL_CAPABILITIES = {
   // Component diagram
   component: { wrapsName: true, rendersNameLabel: true },
   componentSubsystem: { wrapsName: true, rendersNameLabel: true },
-  componentInterface: { wrapsName: false, rendersNameLabel: true },
+  componentInterface: { wrapsName: true, rendersNameLabel: true },
 
   // Deployment diagram
   deploymentNode: { wrapsName: true, rendersNameLabel: true },
   deploymentComponent: { wrapsName: true, rendersNameLabel: true },
   deploymentArtifact: { wrapsName: true, rendersNameLabel: true },
-  deploymentInterface: { wrapsName: false, rendersNameLabel: true },
+  deploymentInterface: { wrapsName: true, rendersNameLabel: true },
 
   // Flowchart
   flowchartTerminal: { wrapsName: true, rendersNameLabel: true },

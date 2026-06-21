@@ -110,10 +110,10 @@ export const ReachabilityGraphEdge = ({
 
         <EdgeMiddleLabels
           label={data?.label}
-          pathMiddlePosition={edgeData.pathMiddlePosition}
-          isMiddlePathHorizontal={edgeData.isMiddlePathHorizontal}
+          activePoints={edgeData.activePoints}
           showRelationshipLabels={true}
-          avoidToolbarOverlap={true}
+          nodeRects={edgeData.nodeRects}
+          neighborGeometry={edgeData.neighborGeometry}
           textColor={textColor}
         />
 

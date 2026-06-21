@@ -5,19 +5,23 @@ import {
   useStore,
   useReactFlow,
 } from "@xyflow/react"
-import { log } from "../logger"
 import { EDGES } from "@/constants"
 import {
   adjustSourceCoordinates,
   adjustTargetCoordinates,
   getPositionOnCanvas,
+  isParentNodeType,
 } from "@/utils"
 import {
   IPoint,
   pointsToSvgPath,
   tryFindStraightPath,
 } from "../edges/Connection"
-import { useDiagramStore, useMetadataStore } from "@/store/context"
+import {
+  useDiagramStore,
+  useMetadataStore,
+  useEdgeGeometryStore,
+} from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import {
   getEdgeMarkerStyles,
@@ -38,6 +42,11 @@ import {
   computeToolbarPosition,
   isLengthEditableAtZoom,
 } from "@/utils/geometry/bendHandles"
+import {
+  getMidSegment,
+  collectNeighborPolylines,
+  type Rect,
+} from "@/utils/geometry/edgeLabelLayout"
 import { useEdgeState } from "../edges/GenericEdge"
 import { useDiagramModifiable } from "./useDiagramModifiable"
 import {
@@ -71,6 +80,16 @@ export interface StepPathEdgeData {
   isMiddlePathHorizontal: boolean
   sourcePoint: IPoint
   targetPoint: IPoint
+  /** Bounds (flow space) of every node the edge routes near, so label placement
+   * keeps the label off any node's body, not just the source/target. */
+  nodeRects: Rect[]
+  /** Mid-segment endpoints in source->target order — the LOCAL flow direction
+   * at the middle (used for communication-message arrow direction). */
+  midSegmentStart: IPoint
+  midSegmentEnd: IPoint
+  /** Nearby other-edge polylines, so a middle label can break a side tie toward
+   * where fewer edges cross. */
+  neighborGeometry: IPoint[][]
 }
 
 const arePointsEqual = (a: IPoint[], b: IPoint[]): boolean =>
@@ -110,13 +129,6 @@ export const useStepPathEdge = ({
   )
   const { getNode, getNodes, screenToFlowPosition } = useReactFlow()
 
-  const [pathMiddlePosition, setPathMiddlePosition] = useState<IPoint>({
-    x: (sourceX + targetX) / 2,
-    y: (sourceY + targetY) / 2,
-  })
-  const [isMiddlePathHorizontal, setIsMiddlePathHorizontal] =
-    useState<boolean>(true)
-  const [hasInitialCalculation, setHasInitialCalculation] = useState(false)
   const [draggingHandle, setDraggingHandle] = useState<BendHandle | null>(null)
   // While a bend handle is being dragged we render from this live geometry
   // instead of the committed `activePoints`. Driving the drag through state
@@ -156,6 +168,7 @@ export const useStepPathEdge = ({
     if (!targetNode) return { x: targetX, y: targetY }
     return getPositionOnCanvas(targetNode, allNodes)
   }, [targetNode, allNodes, targetX, targetY])
+
   // Round coordinates to whole pixels for pixel-perfect rendering
   // React Flow may return fractional values when node dimensions are odd
   const roundedSourceX = Math.round(sourceX)
@@ -435,45 +448,86 @@ export const useStepPathEdge = ({
     zoom,
   ])
 
-  useEffect(() => {
-    if (pathRef.current && currentPath) {
-      const calculateMiddlePoint = () => {
-        if (!pathRef.current) return
+  // The mid-segment midpoint + orientation, derived synchronously and purely
+  // from the polyline (no DOM measurement). This replaces a racy
+  // getPointAtLength + setTimeout(0) effect that lagged a frame, could lock to
+  // an off-edge/misclassified value (#634/#129), and never resolved in headless
+  // export — so exported labels fell back to the straight-line guess. Computed
+  // from renderPoints (pre line-jump bridges) it is also frame-stable and
+  // identical interactively and in export.
+  const midSegment = useMemo(
+    () =>
+      getMidSegment(
+        renderPoints,
+        renderPoints[0] ?? { x: sourceX, y: sourceY },
+        renderPoints[renderPoints.length - 1] ?? { x: targetX, y: targetY }
+      ),
+    [renderPoints, sourceX, sourceY, targetX, targetY]
+  )
+  const pathMiddlePosition = midSegment.point
+  const isMiddlePathHorizontal = midSegment.isHorizontal
 
-        try {
-          const totalLength = pathRef.current.getTotalLength()
-
-          if (totalLength > 0) {
-            const halfLength = totalLength / 2
-            const middlePoint = pathRef.current.getPointAtLength(halfLength)
-            const pointOnCloseToMiddle = pathRef.current.getPointAtLength(
-              halfLength + 2
-            )
-
-            const isHorizontal =
-              Math.abs(pointOnCloseToMiddle.x - middlePoint.x) >
-              Math.abs(pointOnCloseToMiddle.y - middlePoint.y)
-
-            setIsMiddlePathHorizontal(isHorizontal)
-            setPathMiddlePosition({ x: middlePoint.x, y: middlePoint.y })
-
-            if (!hasInitialCalculation) {
-              setHasInitialCalculation(true)
-            }
-          }
-        } catch (error) {
-          log.warn("Path calculation error:", error)
-          setPathMiddlePosition({
-            x: (sourceX + targetX) / 2,
-            y: (sourceY + targetY) / 2,
-          })
-        }
-      }
-      const timeoutId = setTimeout(calculateMiddlePoint, 0)
-
-      return () => clearTimeout(timeoutId)
+  // Obstacle geometry for label placement, collected over the WHOLE edge (not
+  // just the arc-midpoint) since the label may sit on any arm.
+  const edgeBounds = useMemo(() => {
+    let minX = Infinity,
+      minY = Infinity,
+      maxX = -Infinity,
+      maxY = -Infinity
+    for (const pt of renderPoints) {
+      if (pt.x < minX) minX = pt.x
+      if (pt.x > maxX) maxX = pt.x
+      if (pt.y < minY) minY = pt.y
+      if (pt.y > maxY) maxY = pt.y
     }
-  }, [currentPath, sourceX, sourceY, targetX, targetY, hasInitialCalculation])
+    return { minX, minY, maxX, maxY }
+  }, [renderPoints])
+
+  // How far (flow px) a label can reach from an arm: a wide label plus the gap.
+  const LABEL_REACH = 220
+
+  // Other edges near the edge, so a label on any arm can avoid crossing them.
+  const geometryById = useEdgeGeometryStore((state) => state.geometryById)
+  const neighborGeometry = useMemo(() => {
+    const center = {
+      x: (edgeBounds.minX + edgeBounds.maxX) / 2,
+      y: (edgeBounds.minY + edgeBounds.maxY) / 2,
+    }
+    const radius =
+      Math.max(
+        edgeBounds.maxX - edgeBounds.minX,
+        edgeBounds.maxY - edgeBounds.minY
+      ) /
+        2 +
+      LABEL_REACH
+    return collectNeighborPolylines(geometryById, id, center, radius)
+  }, [geometryById, id, edgeBounds])
+
+  // EVERY node the edge routes near (not only source/target), so the label
+  // never lands on an unrelated node's body.
+  const nearbyNodeRects = useMemo<Rect[]>(() => {
+    const q = {
+      x: edgeBounds.minX - LABEL_REACH,
+      y: edgeBounds.minY - LABEL_REACH,
+      r: edgeBounds.maxX + LABEL_REACH,
+      b: edgeBounds.maxY + LABEL_REACH,
+    }
+    const rects: Rect[] = []
+    for (const node of allNodes) {
+      const w = node.width ?? 0
+      const h = node.height ?? 0
+      if (!w || !h) continue
+      // Container nodes (pools, lanes, subprocesses, packages, …) are
+      // backgrounds that labels and edges legitimately overlay — never treat
+      // them as obstacles, or a label inside a pool can never be placed.
+      if (isParentNodeType(node.type)) continue
+      const pos = getPositionOnCanvas(node, allNodes)
+      if (pos.x < q.r && pos.x + w > q.x && pos.y < q.b && pos.y + h > q.y) {
+        rects.push({ x: pos.x, y: pos.y, width: w, height: h })
+      }
+    }
+    return rects
+  }, [allNodes, edgeBounds])
 
   const handlePointerDown = useCallback(
     (event: React.PointerEvent, handle: BendHandle) => {
@@ -663,6 +717,10 @@ export const useStepPathEdge = ({
     isMiddlePathHorizontal,
     sourcePoint,
     targetPoint,
+    nodeRects: nearbyNodeRects,
+    midSegmentStart: midSegment.start,
+    midSegmentEnd: midSegment.end,
+    neighborGeometry,
   }
 
   return {
@@ -673,7 +731,9 @@ export const useStepPathEdge = ({
     bendHandles,
     isBendDragging: draggingHandle !== null,
     draggingHandleSegmentIndex: draggingHandle?.segmentIndex ?? null,
-    hasInitialCalculation,
+    // The midpoint is now known synchronously on first render, so there is no
+    // pre-measurement straight-line flash to fade past — always true.
+    hasInitialCalculation: true,
     isReconnecting,
     markerEnd,
     markerStart,
