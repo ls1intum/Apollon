@@ -1,5 +1,6 @@
 import { BaseEdgeProps, StepEdgeBody, CommonEdgeElements } from "../GenericEdge"
 import { EdgeMultipleLabels } from "../labelTypes/EdgeMultipleLabels"
+import { getMessageHostSegment } from "../labelTypes/messageLayout"
 import { useEdgeConfig } from "@/hooks/useEdgeConfig"
 import { DiagramEdgeType } from "@/edges/types"
 import { useStepPathEdge } from "@/hooks/useStepPathEdge"
@@ -81,6 +82,15 @@ export const CommunicationDiagramEdge = ({
   const { strokeColor, textColor } = getCustomColorsFromDataForEdge(data)
   const markerKey = `${id}-${markerStart ?? "none"}-${markerEnd ?? "none"}`
 
+  // Host the message stack on the edge's longest arm, not the raw mid-segment:
+  // a short jog between two long arms would otherwise centre the labels on the
+  // jog and cross both neighbouring arms.
+  const messageHost = getMessageHostSegment(
+    edgeData.activePoints,
+    edgeData.sourcePoint,
+    edgeData.targetPoint
+  )
+
   return (
     <AssessmentSelectableWrapper elementId={id} asElement="g">
       <FeedbackDropzone elementId={id} asElement="path" elementType={type}>
@@ -111,13 +121,13 @@ export const CommunicationDiagramEdge = ({
 
         <EdgeMultipleLabels
           messages={data?.messages}
-          pathMiddlePosition={edgeData.pathMiddlePosition}
+          pathMiddlePosition={messageHost.point}
           showRelationshipLabels={true}
           isReconnecting={isReconnecting}
-          sourcePosition={edgeData.midSegmentStart}
-          targetPosition={edgeData.midSegmentEnd}
+          sourcePosition={messageHost.start}
+          targetPosition={messageHost.end}
           textColor={textColor}
-          isHorizontalEdge={edgeData.isMiddlePathHorizontal}
+          isHorizontalEdge={messageHost.isHorizontal}
         />
 
         <CommonEdgeElements
