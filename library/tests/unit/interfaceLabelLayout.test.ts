@@ -3,7 +3,7 @@ import {
   getOccupiedInterfaceSides,
   pickInterfaceLabelSide,
   computeInterfaceLabelSide,
-  type InterfaceLabelSide,
+  type CardinalSide,
 } from "@/utils/geometry/interfaceLabelLayout"
 
 const edge = (
@@ -13,7 +13,7 @@ const edge = (
   targetHandle: string | null
 ) => ({ source, target, sourceHandle, targetHandle })
 
-const occ = (...sides: InterfaceLabelSide[]) => new Set(sides)
+const occ = (...sides: CardinalSide[]) => new Set(sides)
 
 describe("getOccupiedInterfaceSides", () => {
   it("returns an empty set when no edge touches the node", () => {
@@ -88,10 +88,19 @@ describe("pickInterfaceLabelSide", () => {
     expect(pickInterfaceLabelSide(occ("bottom", "top", "left"))).toBe("right")
   })
 
-  it("falls back to bottom when all four sides are occupied", () => {
+  it("moves to a diagonal corner when all four sides are occupied", () => {
+    // Every cardinal edge leaves along an axis, so a corner crosses none.
     expect(pickInterfaceLabelSide(occ("bottom", "top", "left", "right"))).toBe(
-      "bottom"
+      "bottom-right"
     )
+  })
+
+  it("uses a badge-safe diagonal (bottom-left) when all sides are occupied and the badge shows", () => {
+    expect(
+      pickInterfaceLabelSide(occ("bottom", "top", "left", "right"), {
+        badgeTopRight: true,
+      })
+    ).toBe("bottom-left")
   })
 
   describe("with the top-right assessment badge present", () => {

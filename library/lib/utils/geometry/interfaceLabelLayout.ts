@@ -7,7 +7,20 @@
  * in the spirit of edgeLabelLayout.ts; no React, no DOM, no constants.
  */
 
-export type InterfaceLabelSide = "top" | "right" | "bottom" | "left"
+/** A side an edge can attach to (the four directional interface handles). */
+export type CardinalSide = "top" | "right" | "bottom" | "left"
+
+/**
+ * Where the label sits relative to the circle: one of the four sides, or — when
+ * every side has a connecting edge — a diagonal quadrant (which no cardinal edge
+ * passes through).
+ */
+export type InterfaceLabelSide =
+  | CardinalSide
+  | "top-left"
+  | "top-right"
+  | "bottom-left"
+  | "bottom-right"
 
 /** Minimal structural view of a React Flow edge (the store's `Edge[]` fits). */
 interface InterfaceEdgeLike {
@@ -22,7 +35,7 @@ interface InterfaceEdgeLike {
 // every other handle), so an exact match is correct and unambiguous.
 const sideFromHandle = (
   handle: string | null | undefined
-): InterfaceLabelSide | null => {
+): CardinalSide | null => {
   switch (handle) {
     case "top":
     case "right":
@@ -38,8 +51,8 @@ const sideFromHandle = (
 export function getOccupiedInterfaceSides(
   edges: ReadonlyArray<InterfaceEdgeLike>,
   nodeId: string
-): Set<InterfaceLabelSide> {
-  const occupied = new Set<InterfaceLabelSide>()
+): Set<CardinalSide> {
+  const occupied = new Set<CardinalSide>()
   for (const edge of edges) {
     const isSource = edge.source === nodeId
     const isTarget = edge.target === nodeId
@@ -58,24 +71,27 @@ export function getOccupiedInterfaceSides(
 }
 
 /**
- * Picks the first free side by priority. Default order reads naturally under a
- * small circle (bottom, then top, then a horizontal side). When the assessment
- * badge occupies the top-right corner, "top" and "right" are demoted last so a
- * label can't graze the badge — leaving the badge-safe "left" as the fallback.
- * If all four sides are taken, keep the canonical "bottom" (one unavoidable
- * overlap; moving the label off-node is out of scope).
+ * Picks where the label sits. Prefers a free cardinal side by priority — reads
+ * naturally under a small circle (bottom, then top, then a horizontal side).
+ * When the assessment badge occupies the top-right corner, "top" and "right"
+ * are demoted last so a label can't graze the badge.
+ *
+ * If every cardinal side has a connecting edge, the label moves into a DIAGONAL
+ * quadrant: each cardinal edge leaves along an axis, so a corner label sits in
+ * the gap between two of them and crosses none. Prefer a corner away from the
+ * top-right badge.
  */
 export function pickInterfaceLabelSide(
-  occupied: ReadonlySet<InterfaceLabelSide>,
+  occupied: ReadonlySet<CardinalSide>,
   opts?: { badgeTopRight?: boolean }
 ): InterfaceLabelSide {
-  const order: InterfaceLabelSide[] = opts?.badgeTopRight
+  const cardinals: CardinalSide[] = opts?.badgeTopRight
     ? ["bottom", "left", "top", "right"]
     : ["bottom", "top", "left", "right"]
-  for (const side of order) {
+  for (const side of cardinals) {
     if (!occupied.has(side)) return side
   }
-  return "bottom"
+  return opts?.badgeTopRight ? "bottom-left" : "bottom-right"
 }
 
 /** Convenience: the interface label side for `nodeId` given the current edges. */
