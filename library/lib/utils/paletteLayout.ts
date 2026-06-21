@@ -45,12 +45,6 @@ export const PALETTE = Object.freeze({
   PAD: 6,
   /** Keep the palette horizontally narrow so the canvas keeps its width. */
   MAX_FRAC_W: 0.5,
-  /** Phone-portrait override: a full-height single column eats the scarce
-   *  vertical canvas space on a phone, so cap the palette to a fraction of the
-   *  band — this pushes the layout into a compact multi-column corner cluster
-   *  instead of a tall column. Only applies below PORTRAIT_MAX_W in portrait. */
-  PORTRAIT_MAX_W: 600,
-  PORTRAIT_FRAC_H: 0.4,
   /** Letterbox padding around the preview inside a cell. */
   CONTENT_INSET: 6,
 } as const)
@@ -103,11 +97,11 @@ export function computePaletteLayout(
 
   const budgetW = availW * p.MAX_FRAC_W
   // `availH` is already the real available band (the caller subtracts the top
-  // chrome + bottom controls), so use ALL of it — except on a phone in portrait,
-  // where a full-height column would swallow the scarce vertical space, so cap it
-  // to a fraction and let the column walk settle on a compact corner cluster.
-  const isPortraitPhone = availW < p.PORTRAIT_MAX_W && availH > availW
-  const budgetH = isPortraitPhone ? availH * p.PORTRAIT_FRAC_H : availH
+  // chrome + bottom controls), so use ALL of it — on EVERY viewport, including a
+  // narrow phone in portrait: there the tall vertical space should read as one
+  // legible column down the side, not a squat multi-column cluster. The column
+  // walk below still spills to more columns only when one can't stay legible.
+  const budgetH = availH
   const maxCols = Math.max(
     1,
     Math.min(itemCount, Math.floor((budgetW + p.GAP) / (floorCellW + p.GAP)))

@@ -53,16 +53,22 @@ const BAND_STYLE: Record<string, CSSProperties> = {
     flexDirection: "row",
   },
   // Side rails sit between the header and any bottom chrome so they never tuck
-  // under a full-width header band (insets default to 0px when none is present).
+  // under a full-width header band. The inset fallback is the header/controls'
+  // deterministic footprint (edge + island-h) — NOT 0 — so a rail that mounts
+  // before the first ResizeObserver tick (e.g. version history already open on
+  // load) still starts clear of the top-right island instead of overlapping it.
+  // The safe-area inset is added on top so a notched device clears the notch too.
   "left-rail": {
-    top: "var(--apollon-inset-top, 0px)",
-    bottom: "var(--apollon-inset-bottom, 0px)",
+    top: "calc(var(--safe-area-inset-top, 0px) + var(--apollon-inset-top, calc(var(--apollon-chrome-edge) + var(--apollon-chrome-island-h))))",
+    bottom:
+      "calc(var(--safe-area-inset-bottom, 0px) + var(--apollon-inset-bottom, calc(var(--apollon-chrome-edge) + var(--apollon-chrome-island-h))))",
     left: "var(--safe-area-inset-left, 0px)",
     flexDirection: "column",
   },
   "right-rail": {
-    top: "var(--apollon-inset-top, 0px)",
-    bottom: "var(--apollon-inset-bottom, 0px)",
+    top: "calc(var(--safe-area-inset-top, 0px) + var(--apollon-inset-top, calc(var(--apollon-chrome-edge) + var(--apollon-chrome-island-h))))",
+    bottom:
+      "calc(var(--safe-area-inset-bottom, 0px) + var(--apollon-inset-bottom, calc(var(--apollon-chrome-edge) + var(--apollon-chrome-island-h))))",
     right: "var(--safe-area-inset-right, 0px)",
     flexDirection: "column",
   },
