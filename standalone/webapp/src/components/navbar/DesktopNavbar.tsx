@@ -90,7 +90,10 @@ export const DesktopNavbar = () => {
             labelClassName="hidden lg:inline"
           />
           <NavbarFile />
-          <Button sx={navbarButtonStyle()} onClick={() => openModal("SHARE")}>
+          <Button
+            sx={navbarButtonStyle()}
+            onClick={() => openModal("SHARE", { dialogVariant: "home" })}
+          >
             <Typography color="inherit">Share</Typography>
           </Button>
           <SaveLocalCopyButton labelClassName="hidden lg:inline" />

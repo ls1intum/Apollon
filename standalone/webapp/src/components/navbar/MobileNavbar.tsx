@@ -209,7 +209,7 @@ export default function MobileNavbar() {
                 />
                 <MenuItem
                   onClick={() => {
-                    openModal("SHARE")
+                    openModal("SHARE", { dialogVariant: "home" })
                     handleCloseNavMenu()
                   }}
                 >
