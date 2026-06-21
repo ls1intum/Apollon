@@ -35,6 +35,40 @@ interface Deps {
 
 const CACHE_CONTROL = "public, max-age=60, stale-while-revalidate=86400"
 const SVG_CSP = "default-src 'none'; style-src 'unsafe-inline'"
+
+// The "Open in Apollon" call-to-action badge, embedded under the diagram in the
+// recommended Markdown snippet. It is diagram-independent (the per-diagram link
+// is applied by wrapping this image in a Markdown link), so it is a single
+// immutable asset with a one-year cache. Light/dark adapt via an internal
+// `prefers-color-scheme` media query: when a host (GitHub Camo, GitLab, …)
+// serves it as an `<img>`, the browser still evaluates the query against the
+// viewer's OS theme, so the badge matches the surrounding page.
+const BUTTON_CACHE_CONTROL = "public, max-age=31536000, immutable"
+const OPEN_BUTTON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="174" height="38" viewBox="0 0 174 38" role="img" aria-label="Open in Apollon">
+<style>
+  .bg { fill: #ffffff; }
+  .bd { stroke: #d0d7de; }
+  .tx { fill: #1f2328; }
+  .ac { fill: #0f3a66; }
+  .acs { stroke: #0f3a66; }
+  text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; font-size: 13.5px; font-weight: 600; letter-spacing: 0.1px; }
+  @media (prefers-color-scheme: dark) {
+    .bg { fill: #1f2630; }
+    .bd { stroke: #3d444d; }
+    .tx { fill: #e6edf3; }
+    .ac { fill: #6cb0ff; }
+    .acs { stroke: #6cb0ff; }
+  }
+</style>
+<rect class="bg bd" x="0.75" y="0.75" width="172.5" height="36.5" rx="9" stroke-width="1.5"/>
+<g transform="translate(14 8.5)">
+  <rect class="ac" x="0" y="2" width="8.5" height="6.5" rx="1.5"/>
+  <rect class="ac" x="12" y="12.5" width="8.5" height="6.5" rx="1.5"/>
+  <path class="acs" d="M5.5 8.5 L15 12.5" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+</g>
+<text class="tx" x="44" y="24">Open in Apollon</text>
+</svg>
+`
 const HTML_CSP = [
   "default-src 'none'",
   // `img-src 'self' data:` is load-bearing: it is the only egress sink open to
@@ -117,6 +151,16 @@ async function renderSvg(
 export function mountEmbedApiRoutes(deps: Deps): Router {
   const { redis } = deps
   const router = Router()
+
+  // Static "Open in Apollon" badge for the Markdown embed snippet. No diagram
+  // lookup, no render — a constant asset served with a long immutable cache.
+  router.get("/embed/button.svg", (_req, res) => {
+    res.type("image/svg+xml")
+    res.setHeader("cache-control", BUTTON_CACHE_CONTROL)
+    res.setHeader("x-content-type-options", "nosniff")
+    res.setHeader("content-security-policy", SVG_CSP)
+    res.status(200).send(OPEN_BUTTON_SVG)
+  })
 
   router.get(
     "/diagrams/:diagramId/preview.svg",
@@ -258,11 +302,14 @@ function renderEmbedHtml({ title, svg, editorHref }: EmbedHtmlInput): string {
   .apollon-embed__canvas svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
   .apollon-embed__footer { padding: 6px 12px; font-size: 12px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(0,0,0,0.08); }
   .apollon-embed__title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 12px; opacity: 0.7; }
-  .apollon-embed__open { color: inherit; text-decoration: none; padding: 4px 10px; border-radius: 6px; border: 1px solid currentColor; opacity: 0.85; }
-  .apollon-embed__open:hover { opacity: 1; }
+  .apollon-embed__open { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; color: #fff; background: #0f3a66; text-decoration: none; padding: 5px 12px; border-radius: 6px; font-weight: 600; transition: background 0.15s ease; }
+  .apollon-embed__open:hover { background: #15497f; }
+  .apollon-embed__open svg { display: block; }
   @media (prefers-color-scheme: dark) {
     html, body { background: #0d1117; color: #e6edf3; }
     .apollon-embed__footer { border-top-color: rgba(255,255,255,0.08); }
+    .apollon-embed__open { background: #1f6feb; }
+    .apollon-embed__open:hover { background: #388bfd; }
   }
 </style>
 </head>
@@ -271,7 +318,7 @@ function renderEmbedHtml({ title, svg, editorHref }: EmbedHtmlInput): string {
   <div class="apollon-embed__canvas">${svg}</div>
   <footer class="apollon-embed__footer">
     <span class="apollon-embed__title">${safeTitle}</span>
-    <a class="apollon-embed__open" rel="noopener noreferrer" target="_top" href="${escapeHtml(editorHref)}">Open in Apollon</a>
+    <a class="apollon-embed__open" rel="noopener noreferrer" target="_top" href="${escapeHtml(editorHref)}">Open in Apollon<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg></a>
   </footer>
 </main>
 </body>

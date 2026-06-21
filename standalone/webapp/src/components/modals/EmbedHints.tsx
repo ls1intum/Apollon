@@ -6,6 +6,7 @@ import {
   type SegmentedControlOption,
 } from "@/components/home/SegmentedControl"
 import { copyToClipboard } from "@/utils/clipboard"
+import { DiagramView } from "@/types"
 import {
   buildSharedDiagramUrl,
   resolveServerOrigin,
@@ -28,9 +29,9 @@ const FORMAT_OPTIONS = [
 
 const FORMAT_HINTS: Record<EmbedFormat, string> = {
   markdown:
-    "Recommended. Shows the diagram inline; click it to open the editor.",
-  "markdown-plain": "The same image, but not clickable.",
-  iframe: "For sites that allow iframes.",
+    "Recommended. Shows the diagram inline with an “Open in Apollon” button below it.",
+  "markdown-plain": "Just the image — not clickable.",
+  iframe: "A live, interactive embed for sites that allow iframes.",
 }
 
 export function EmbedHints({
@@ -73,21 +74,25 @@ export function EmbedHints({
             onChange={setFormat}
           />
 
-          <div className="flex min-w-0 items-center">
-            <input
-              type="text"
+          <div className="relative min-w-0">
+            <textarea
               value={snippets[format]}
               readOnly
+              spellCheck={false}
+              rows={Math.min(
+                6,
+                Math.max(2, snippets[format].split("\n").length)
+              )}
               aria-label="Embed code"
               aria-describedby={hintId}
               onFocus={(e) => e.currentTarget.select()}
-              className="grow min-w-0 h-9 px-3 py-1.5 border rounded-md border-r-0 rounded-r-none border-[var(--home-border-default)] bg-[var(--apollon-background)] text-[var(--apollon-primary-contrast)] text-xs font-mono"
+              className="w-full resize-y rounded-md border border-[var(--home-border-default)] bg-[var(--apollon-background)] px-3 py-2 pr-16 text-xs font-mono leading-relaxed text-[var(--apollon-primary-contrast)] outline-none"
             />
             <Button
               onClick={() => onCopy(snippets[format])}
               variant="outline"
               aria-label="Copy embed code"
-              className="rounded-l-none"
+              className="absolute right-2 top-2 h-7 px-2.5 text-xs"
             >
               Copy
             </Button>
@@ -120,8 +125,9 @@ export function sanitizeMarkdownAlt(title: string): string {
 /**
  * Builds the snippet for each format, or `null` when there is no
  * externally-resolvable server origin (native without a configured API host).
- * The SVG + `/embed` routes live on the API host; the click-through uses
- * `buildSharedDiagramUrl` so it always lands on the canonical `/shared/:id`.
+ * The SVG, badge, and `/embed` routes live on the API host; the click-through
+ * uses `buildSharedDiagramUrl` with an explicit `EDIT` view so "Open in Apollon"
+ * always lands on the diagram regardless of the share dialog's default mode.
  */
 function buildSnippets(
   diagramId: string,
@@ -131,12 +137,16 @@ function buildSnippets(
   if (!serverOrigin) return null
   const safeTitle = sanitizeMarkdownAlt(title)
   const id = encodeURIComponent(diagramId)
-  const editorUrl = buildSharedDiagramUrl(diagramId)
+  const editorUrl = buildSharedDiagramUrl(diagramId, DiagramView.EDIT)
   const previewUrl = `${serverOrigin}/api/diagrams/${id}/preview.svg`
+  const buttonUrl = `${serverOrigin}/api/embed/button.svg`
   const embedUrl = `${serverOrigin}/embed/${id}`
   return {
-    markdown: `[![${safeTitle}](${previewUrl})](${editorUrl})`,
+    // Clickable diagram, then a polished light/dark "Open in Apollon" badge —
+    // both link to the editor. The blank line keeps them on separate lines in
+    // rendered Markdown.
+    markdown: `[![${safeTitle}](${previewUrl})](${editorUrl})\n\n[![Open in Apollon](${buttonUrl})](${editorUrl})`,
     "markdown-plain": `![${safeTitle}](${previewUrl})`,
-    iframe: `<iframe src="${embedUrl}" width="800" height="500" loading="lazy" referrerpolicy="no-referrer" style="border:0"></iframe>`,
+    iframe: `<iframe src="${embedUrl}" width="800" height="500" loading="lazy" referrerpolicy="no-referrer" style="border:0;border-radius:8px"></iframe>`,
   }
 }

@@ -4,10 +4,14 @@ import { DiagramView } from "@/types"
 
 export type ShareModeOption = { value: DiagramView; label: string }
 
-/** The access modes a shared link can carry, shared by both share dialogs. */
+/**
+ * The access modes a shared link can carry, shared by both share dialogs.
+ * Collaborate leads (and is the default) — sharing a diagram is most often an
+ * invitation to work on it together; Edit follows for a private working copy.
+ */
 export const MODE_OPTIONS: readonly ShareModeOption[] = [
-  { value: DiagramView.EDIT, label: "Edit" },
   { value: DiagramView.COLLABORATE, label: "Collaborate" },
+  { value: DiagramView.EDIT, label: "Edit" },
   { value: DiagramView.GIVE_FEEDBACK, label: "Add feedback" },
   { value: DiagramView.SEE_FEEDBACK, label: "View feedback" },
 ]

@@ -240,6 +240,33 @@ describe("GET /api/diagrams/:diagramId/preview.svg", () => {
   })
 })
 
+describe("GET /api/embed/button.svg", () => {
+  it("serves the static, immutably-cached, light/dark-adaptive badge", async () => {
+    const app = appWith(okResource())
+    const res = await request(app).get("/api/embed/button.svg").buffer(true)
+
+    expect(res.status).toBe(200)
+    expect(res.headers["content-type"]).toMatch(/^image\/svg\+xml/)
+    // Static asset → long immutable cache (no ETag round-trip needed).
+    expect(res.headers["cache-control"]).toBe(
+      "public, max-age=31536000, immutable"
+    )
+    expect(res.headers["x-content-type-options"]).toBe("nosniff")
+    const body = asText(res)
+    expect(body).toContain("Open in Apollon")
+    // Adapts to the viewer's OS theme even when served as an <img> via a proxy.
+    expect(body).toContain("prefers-color-scheme: dark")
+  })
+
+  it("does not collide with the /api/diagrams/:id/preview.svg route", async () => {
+    // `button.svg` must resolve to the static handler, not be parsed as a
+    // diagramId by a greedy route — a 404/422 here would mean a route-order bug.
+    const app = appWith(okResource())
+    const res = await request(app).get("/api/embed/button.svg")
+    expect(res.status).toBe(200)
+  })
+})
+
 describe("GET /embed/:diagramId", () => {
   let app: ReturnType<typeof buildApp>
   beforeEach(() => {
