@@ -363,10 +363,20 @@
 
   /* --apollon-inset-top measures the (uniform-height) top islands + their edge
      margin; adding the safe-area top (the islands drop by it too) lands the
-     palette an even --apollon-chrome-gap below every island, notch and all. */
+     palette an even --apollon-chrome-gap below every island, notch and all.
+     The fallback equals what the ResizeObserver will write for a top island
+     (offsetHeight == island-h, plus the corner Panel's edge margin re-added in
+     OverlayLayer.flushMeasure) — so before the first measurement lands the
+     palette already sits clear of the brand, and the real var arrives
+     byte-identical with no slide. (The race this kills: the var is published
+     only once an inset is non-zero, so a 0px fallback let the palette start
+     over the brand for the frames before measurement.) */
   top: calc(
     var(--safe-area-inset-top, 0px) + var(--apollon-chrome-gap) +
-      var(--apollon-inset-top, 0px)
+      var(
+        --apollon-inset-top,
+        calc(var(--apollon-chrome-edge) + var(--apollon-chrome-island-h))
+      )
   );
   left: calc(
     var(--apollon-chrome-edge) + var(--apollon-inset-left, 0px) +
@@ -385,9 +395,13 @@
      footprint (edge + island-h + gap + inset-bottom + safe-bottom). */
   max-height: calc(
     100% - var(--safe-area-inset-top, 0px) - var(--apollon-chrome-gap) -
-      var(--apollon-inset-top, 0px) - var(--apollon-chrome-edge) -
-      var(--apollon-chrome-island-h) - var(--apollon-chrome-gap) -
-      var(--apollon-inset-bottom, 0px) - var(--safe-area-inset-bottom, 0px)
+      var(
+        --apollon-inset-top,
+        calc(var(--apollon-chrome-edge) + var(--apollon-chrome-island-h))
+      ) -
+      var(--apollon-chrome-edge) - var(--apollon-chrome-island-h) -
+      var(--apollon-chrome-gap) - var(--apollon-inset-bottom, 0px) -
+      var(--safe-area-inset-bottom, 0px)
   );
   display: flex;
   flex-direction: column;
@@ -477,7 +491,9 @@
    Declared before the landscape block so its extra notch nudge still wins. */
 .react-flow__panel.top.left,
 .react-flow__panel.top.right {
-  margin-top: calc(var(--apollon-chrome-edge) + var(--safe-area-inset-top, 0px));
+  margin-top: calc(
+    var(--apollon-chrome-edge) + var(--safe-area-inset-top, 0px)
+  );
 }
 
 .react-flow__panel.bottom.left,
@@ -589,6 +605,32 @@
   font-size: 13px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+}
+
+/* Expanded minimap = one glass card: a header row (collapse control) above the
+   map. The nested MiniMap is itself a React Flow Panel, so neutralise its
+   absolute corner positioning and its own pane and let it render transparent
+   inside our card — no pane-in-a-pane, no opaque rectangle, no floating glyph. */
+.apollon-minimap-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--apollon-chrome-pad);
+}
+
+.apollon-minimap-panel__header {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.apollon-minimap-panel .react-flow__minimap.apollon-minimap-canvas {
+  position: relative;
+  inset: auto;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: var(--apollon-chrome-radius-md);
+  box-shadow: none;
 }
 
 /* Hairline separating action families within one cluster (view vs history). */
@@ -741,7 +783,6 @@
   display: flex;
   gap: 8px;
 }
-
 
 .react-flow__handle {
   opacity: 0;

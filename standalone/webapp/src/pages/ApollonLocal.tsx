@@ -394,7 +394,10 @@ export const ApollonLocal: FC = () => {
       <Box
         sx={{
           position: "absolute",
-          top: 12,
+          // Sit one gap BELOW the floating header islands (safe-area + edge 10 +
+          // island-h 46 + gap 8) so the banner never overlaps the brand/title/
+          // actions chrome — it reads as a sibling island on the row beneath.
+          top: "calc(var(--safe-area-inset-top, 0px) + 64px)",
           left: 0,
           right: 0,
           display: "flex",

@@ -89,7 +89,10 @@ export const VersionPreviewBanner: FC<Props> = ({
         color: "var(--home-banner-warning-text)",
         border: "1px solid var(--home-banner-warning-border)",
         borderRadius: "var(--home-radius-lg)",
-        boxShadow: "0 12px 32px var(--home-shadow-overlay)",
+        // Soft floating-chrome elevation (matches the island shadow language)
+        // instead of the previous heavy 0 12px 32px overlay drop.
+        boxShadow:
+          "0 0 1px 0 rgb(15 23 42 / 20%), 0 2px 8px 0 rgb(15 23 42 / 12%)",
         alignItems: "flex-start",
         // Fixed width so the banner doesn't reflow as the user clicks
         // between previews with different description lengths. Capped to

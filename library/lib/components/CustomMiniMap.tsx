@@ -50,7 +50,6 @@ import {
   ReachabilityGraphMarkingSVG,
 } from "./svgs"
 import { DiagramNodeType } from "@/typings"
-import { ZINDEX } from "@/constants"
 import { MapIcon } from "./Icon/MapIcon"
 import { SouthEastArrowIcon } from "./Icon/SouthEastArrowIcon"
 import {
@@ -82,6 +81,7 @@ export const CustomMiniMap = () => {
           type="button"
           className="apollon-chrome-iconbtn"
           aria-label="Show minimap"
+          title="Show minimap (overview)"
           onClick={() => setMinimapCollapsed(false)}
         >
           <MapIcon width={18} height={18} fill="currentColor" />
@@ -90,32 +90,32 @@ export const CustomMiniMap = () => {
     )
   }
 
+  // Expanded: one glass card (the Panel itself) with the collapse control on a
+  // header row above the map. The nested MiniMap is itself a React Flow Panel,
+  // so app.css neutralises its absolute positioning and own pane — it renders
+  // transparent inside our card instead of as a pane-in-a-pane with an opaque
+  // rectangle and a bare floating arrow.
   return (
-    <Panel
-      position="bottom-right"
-      style={{ boxShadow: "none", backgroundColor: "transparent" }}
-    >
-      <button
-        type="button"
-        className="apollon-chrome-iconbtn"
-        aria-label="Hide minimap"
-        onClick={() => setMinimapCollapsed(true)}
-        style={{
-          position: "absolute",
-          bottom: 8,
-          right: 8,
-          zIndex: ZINDEX.PANEL,
-        }}
-      >
-        <SouthEastArrowIcon width={18} height={18} fill="currentColor" />
-      </button>
+    <Panel position="bottom-right" className="apollon-minimap-panel">
+      <div className="apollon-minimap-panel__header">
+        <button
+          type="button"
+          className="apollon-chrome-iconbtn"
+          aria-label="Hide minimap"
+          title="Hide minimap"
+          onClick={() => setMinimapCollapsed(true)}
+        >
+          <SouthEastArrowIcon width={18} height={18} fill="currentColor" />
+        </button>
+      </div>
 
       <MiniMap
         zoomable
-        onClick={() => setMinimapCollapsed(true)}
+        pannable
         nodeComponent={MiniMapNode}
         offsetScale={20}
-        style={{ zIndex: ZINDEX.MINIMAP }}
+        bgColor="transparent"
+        className="apollon-minimap-canvas"
       />
     </Panel>
   )

@@ -100,7 +100,7 @@ export function HeaderBrandIsland() {
       <BackNav
         to="/"
         label={ALL_DIAGRAMS_LABEL}
-        labelClassName="hidden xl:inline"
+        labelClassName="hidden lg:inline"
       />
     </Island>
   )
@@ -140,12 +140,21 @@ export function HeaderTitleIsland() {
           // "title" not "name" so it doesn't collide with the template dialog's
           // "Name" field under getByLabel('Name') in the e2e suite.
           "aria-label": "Diagram title",
-          style: { textAlign: "center" },
+          // Grow the field with the name (in ch), clamped so short titles stay
+          // compact and long ones cap out — maxWidth then bounds it in px.
+          size: Math.min(
+            Math.max((title || "Untitled diagram").length, 12),
+            40
+          ),
+          style: { textAlign: "center", textOverflow: "ellipsis" },
         }}
         sx={{
           px: 1,
-          minWidth: 120,
-          maxWidth: 340,
+          minWidth: 0,
+          // Grows up to 340px, but never wider than the slack between the side
+          // islands (≈38vw), so it shrinks (ellipsis) and stays clear of the
+          // brand/actions instead of overlapping them on narrower viewports.
+          maxWidth: "min(340px, 38vw)",
           fontSize: "0.875rem",
           fontWeight: 600,
           color: "var(--apollon-chrome-text)",
@@ -174,12 +183,12 @@ export function HeaderActionsIsland() {
             Share
           </Typography>
         </Button>
-        <SaveLocalCopyButton labelClassName="hidden xl:inline" />
+        <SaveLocalCopyButton labelClassName="hidden lg:inline" />
         <NavbarHelp />
       </Stack>
       <GroupDivider />
       <Stack direction="row" alignItems="center" gap={0.25}>
-        <VersionHistoryButton labelClassName="hidden xl:inline" />
+        <VersionHistoryButton labelClassName="hidden lg:inline" />
         <ThemeSwitcherMenu />
       </Stack>
     </Island>

@@ -21,7 +21,7 @@ export const HomeNavbar = () => {
 
   return (
     <header
-      className="home-navbar sticky top-0 z-40 transition-colors duration-200"
+      className="home-navbar sticky top-0 z-40"
       style={{
         minHeight: NAVBAR_MIN_HEIGHT,
         // Frosted glass: a translucent chrome-surface plate over a backdrop

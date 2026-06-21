@@ -2,9 +2,9 @@ import React, { useEffect, useRef, useState } from "react"
 import Box from "@mui/material/Box"
 import IconButton from "@mui/material/IconButton"
 import Menu from "@mui/material/Menu"
-import MenuItem from "@mui/material/MenuItem"
 import TextField from "@mui/material/TextField"
-import MenuIcon from "@mui/icons-material/Menu"
+import MoreVertIcon from "@mui/icons-material/MoreVert"
+import ShareIcon from "@mui/icons-material/IosShare"
 import { Link } from "@tanstack/react-router"
 import TumLogo from "assets/images/tum-logo-579x579.png"
 import { useEditorContext, useModalContext } from "@/contexts"
@@ -86,10 +86,13 @@ export function MobileBrandPill() {
 }
 
 /**
- * Top-right: a single overflow button that opens the actions menu (File, Share,
- * Save copy, Version history, Help, theme) plus the diagram-title field. Keeping
- * everything but the menu trigger off the top chrome respects HIG's nav-bar
- * limit and the phone height budget.
+ * Top-right: a true overflow bar (not a single hamburger). The two highest-value
+ * actions stay reachable as direct icons — Share (collaboration is the reason to
+ * be here on a phone) and Version history — and only the trailing, lower-
+ * frequency actions (File, Save copy, Help, theme, title) collapse behind a "…"
+ * (MoreVert) menu. This follows Apple HIG (Toolbars: keep primary actions
+ * reachable, collapse the trailing items into a menu) and Material 3's top-app-
+ * bar overflow guidance, within the phone height budget.
  */
 export function MobileActionsPill() {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
@@ -120,10 +123,23 @@ export function MobileActionsPill() {
       className="apollon-glass apollon-chrome-island"
       sx={PILL_SX}
     >
+      {/* Primary actions stay visible as icons. */}
+      <IconButton
+        size="small"
+        aria-label="Share"
+        title="Share"
+        onClick={() => openModal("SHARE")}
+        sx={{ width: 32, height: 32, color: "var(--apollon-chrome-text)" }}
+      >
+        <ShareIcon fontSize="small" />
+      </IconButton>
+      <VersionHistoryButton labelClassName="hidden" />
+      {/* Trailing, lower-frequency actions collapse behind the overflow menu. */}
       <IconButton
         id="mobile-options-button"
         size="small"
         aria-label="open options"
+        title="More"
         aria-controls="mobile-options-menu"
         aria-haspopup="true"
         onClick={(e: React.MouseEvent<HTMLElement>) =>
@@ -131,7 +147,7 @@ export function MobileActionsPill() {
         }
         sx={{ width: 32, height: 32, color: "var(--apollon-chrome-text)" }}
       >
-        <MenuIcon fontSize="small" />
+        <MoreVertIcon fontSize="small" />
       </IconButton>
       <Menu
         id="mobile-options-menu"
@@ -182,19 +198,11 @@ export function MobileActionsPill() {
             color="var(--apollon-primary-contrast)"
             handleCloseNavMenu={close}
           />
-          <MenuItem
-            onClick={() => {
-              openModal("SHARE")
-              close()
-            }}
-          >
-            Share
-          </MenuItem>
+          {/* Share + Version history live on the pill as visible icons now. */}
           <SaveLocalCopyButton
             color="var(--apollon-primary-contrast)"
             onAfter={close}
           />
-          <VersionHistoryButton color="var(--apollon-primary-contrast)" />
           <NavbarHelp color="var(--apollon-primary-contrast)" />
           <ThemeSwitcherMenu asMenuItem onToggle={close} />
           <Box sx={{ px: 1.5, py: 1 }}>

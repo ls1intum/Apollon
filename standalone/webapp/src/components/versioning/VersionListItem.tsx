@@ -372,7 +372,16 @@ const VersionListItemInner: FC<Props> = ({
             aria-label="Version actions"
             aria-haspopup="menu"
             disabled={Boolean(version.pending)}
-            sx={{ color: TEXT_PRIMARY }}
+            sx={{
+              color: TEXT_PRIMARY,
+              borderRadius: "var(--apollon-chrome-radius-sm)",
+              "&:hover": { backgroundColor: ROW_HOVER_BG },
+              "&:active": { backgroundColor: ROW_SELECTED_BG },
+              "&:focus-visible": {
+                outline: "2px solid var(--apollon-chrome-accent)",
+                outlineOffset: "2px",
+              },
+            }}
           >
             <MoreVertIcon fontSize="small" />
           </IconButton>

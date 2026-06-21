@@ -30,6 +30,9 @@ export const navbarButtonSx = (fg?: string): SxProps<Theme> => ({
     backgroundColor: "var(--apollon-chrome-surface-hover)",
     color: "var(--apollon-chrome-text)",
   },
+  "&:active": {
+    backgroundColor: "var(--apollon-chrome-surface-active)",
+  },
   "&:focus-visible": {
     outline: "2px solid var(--apollon-chrome-accent)",
     outlineOffset: "2px",
