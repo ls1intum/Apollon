@@ -10,7 +10,7 @@ import { Spinner } from "./spinner"
  * color follow `className` (defaults to `size-4` and `currentColor`).
  */
 const meta = {
-  title: "Components/Spinner",
+  title: "UI/Components/Spinner",
   component: Spinner,
   parameters: { layout: "centered" },
 } satisfies Meta<typeof Spinner>

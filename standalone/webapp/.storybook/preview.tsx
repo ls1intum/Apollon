@@ -1,6 +1,6 @@
 import { withThemeByDataAttribute } from "@storybook/addon-themes"
 import type { Decorator, Preview } from "@storybook/react-vite"
-import { withRouter } from "storybook-addon-remix-react-router"
+import { withTanStackRouter } from "../src/stories/_support/webapp"
 
 // One CSS entry chain for every package's stories:
 //  - webapp.css pulls in @tumaet/ui's theme.css (Tailwind + all --apollon-*/
@@ -52,12 +52,10 @@ const preview: Preview = {
     options: {
       storySort: {
         order: [
-          "Introduction",
-          "Theming",
-          "Tokens",
-          "Components",
+          "UI",
+          ["Overview", "Theming", "Tokens", "Components"],
           "Editor",
-          ["Diagrams", "Elements", "Chrome"],
+          ["Diagrams", "Templates", "Elements", "Chrome"],
           "Webapp",
           ["Navbar", "Home", "Modals", "Versioning", "Pages", "Misc"],
           "*",
@@ -67,9 +65,10 @@ const preview: Preview = {
   },
   tags: ["autodocs"],
   decorators: [
-    // Router context so any component using <Link>/useNavigate renders without
-    // crashing. Per-story routes are set via the reactRouter parameter.
-    withRouter,
+    // TanStack router context so any component using <Link>/useNavigate/
+    // useLocation renders without crashing. Per-story routes and the active
+    // location are set via the `tanstackRouter` parameter.
+    withTanStackRouter,
     withThemeByDataAttribute({
       themes: { light: "light", dark: "dark" },
       defaultTheme: "light",

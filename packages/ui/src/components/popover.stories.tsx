@@ -20,7 +20,7 @@ import {
  * outside click, and returns focus to the trigger on close.
  */
 const meta = {
-  title: "Components/Popover",
+  title: "UI/Components/Popover",
   component: Popover,
   parameters: {
     layout: "centered",

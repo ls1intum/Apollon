@@ -9,7 +9,7 @@ import { Input } from "./input"
  * `data-slot="input"`, so the Tailwind-free editor bundle can embed anywhere.
  */
 const meta = {
-  title: "Components/Input",
+  title: "UI/Components/Input",
   component: Input,
   tags: ["autodocs"],
   argTypes: {

@@ -10,7 +10,7 @@ import { IconButton } from "./icon-button"
  * accessible, and an optional `tooltip` wraps it in the shared Tooltip.
  */
 const meta = {
-  title: "Components/IconButton",
+  title: "UI/Components/IconButton",
   component: IconButton,
   tags: ["autodocs"],
   argTypes: {

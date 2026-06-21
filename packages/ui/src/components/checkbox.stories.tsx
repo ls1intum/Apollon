@@ -9,7 +9,7 @@ import { Field, FieldLabel } from "./field"
  * built on Base UI's Checkbox. The check icon renders inside the indicator.
  */
 const meta = {
-  title: "Components/Checkbox",
+  title: "UI/Components/Checkbox",
   component: Checkbox,
   tags: ["autodocs"],
   argTypes: {

@@ -9,7 +9,7 @@ import { Label } from "./label"
  * focuses its associated control; the label dims when its peer is disabled.
  */
 const meta = {
-  title: "Components/Label",
+  title: "UI/Components/Label",
   component: Label,
   tags: ["autodocs"],
   argTypes: {

@@ -22,7 +22,7 @@ import { Textarea } from "./textarea"
  * `responsive` orientations. Group fields with `FieldGroup` and `FieldSet`.
  */
 const meta = {
-  title: "Components/Field",
+  title: "UI/Components/Field",
   component: Field,
   tags: ["autodocs"],
   argTypes: {

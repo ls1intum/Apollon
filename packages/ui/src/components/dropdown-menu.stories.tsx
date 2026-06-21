@@ -27,7 +27,7 @@ import {
  * The popup portals to `document.body`.
  */
 const meta = {
-  title: "Components/DropdownMenu",
+  title: "UI/Components/DropdownMenu",
   component: DropdownMenu,
   parameters: {
     layout: "centered",

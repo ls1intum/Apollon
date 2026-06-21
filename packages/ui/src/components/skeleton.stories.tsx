@@ -8,7 +8,7 @@ import { Skeleton } from "./skeleton"
  * driven entirely by the `className` you pass (width/height/radius).
  */
 const meta = {
-  title: "Components/Skeleton",
+  title: "UI/Components/Skeleton",
   component: Skeleton,
   args: {
     className: "h-4 w-48",

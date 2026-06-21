@@ -18,7 +18,7 @@ import {
  * Tailwind utilities; footers and leading images get edge-to-edge treatment.
  */
 const meta = {
-  title: "Components/Card",
+  title: "UI/Components/Card",
   component: Card,
   argTypes: {
     size: {

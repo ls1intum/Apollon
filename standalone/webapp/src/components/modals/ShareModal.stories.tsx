@@ -4,10 +4,11 @@ import { ModalBodyProviders } from "../../stories/_support/webapp"
 import { ShareModal } from "./ShareModal"
 
 /**
- * Body of the editor "Share" modal. Offers four share modes (Edit, Collaborate,
- * Give Feedback, See Feedback) and a read-only field showing the current link.
- * Each mode button calls the API to create a shared diagram — only on click —
- * so these stories render the chooser without sharing anything.
+ * Body of the editor "Share" modal. Before sharing it shows a name field and a
+ * "Create share link" action (uploading a copy only on click); once shared it
+ * swaps to the link row whose dropdown carries the access mode. These stories
+ * render the pre-share state, so nothing is uploaded. The access-mode dropdown
+ * itself is covered in `ShareLinkRow.stories`.
  */
 const meta = {
   title: "Webapp/Modals/ShareModal",
@@ -27,17 +28,13 @@ export const Dark: Story = {
   globals: { theme: "dark" },
 }
 
-/** Verifies the four share modes render as actionable buttons. */
-export const AllModesPresent: Story = {
+/** The pre-share state offers a name field and the create-link action. */
+export const CreateState: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    for (const name of [
-      /edit/i,
-      /collaborate/i,
-      /give feedback/i,
-      /see feedback/i,
-    ]) {
-      await expect(canvas.getByRole("button", { name })).toBeInTheDocument()
-    }
+    await expect(canvas.getByLabelText(/name/i)).toBeInTheDocument()
+    await expect(
+      canvas.getByRole("button", { name: /create share link/i })
+    ).toBeInTheDocument()
   },
 }

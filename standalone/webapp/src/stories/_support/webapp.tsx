@@ -1,8 +1,9 @@
 /* Shared foundation for the webapp component stories.
  *
- * Most webapp components read one or more of: React Router (global withRouter in
- * preview.tsx covers it), the EditorContext (live ApollonEditor + diagram name),
- * the ModalContext (openModal/closeModal), and — for modal *bodies* rendered
+ * Most webapp components read one or more of: the TanStack router (the global
+ * withTanStackRouter decorator in preview.tsx covers <Link>/useNavigate/
+ * useLocation), the EditorContext (live ApollonEditor + diagram name), the
+ * ModalContext (openModal/closeModal), and — for modal *bodies* rendered
  * standalone — the ModalProgressContext. The `use*Context` hooks throw without
  * their provider, so any consumer needs the matching decorator.
  *
@@ -10,14 +11,59 @@
  * seed them in a story's `beforeEach` and reset in the meta's `beforeEach`.
  */
 import type { Decorator } from "@storybook/react-vite"
+import {
+  Outlet,
+  RouterProvider,
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from "@tanstack/react-router"
 import { EditorProvider } from "@/contexts/EditorContext"
 import { ModalProvider } from "@/contexts/ModalContext"
 import { ModalProgressProvider } from "@/contexts/ModalProgressContext"
 
 /**
+ * Mounts a story inside a real TanStack router on in-memory history — the same
+ * memory/root-route harness as `src/test/renderWithRouter.tsx` — so components
+ * that call `useNavigate`/`useLocation` or render a `<Link>` work without ever
+ * touching `window.location`.
+ *
+ * The active location and the routes the story mounts under are driven per story
+ * via the `tanstackRouter` parameter:
+ *
+ *   parameters: { tanstackRouter: { initialEntry: "/imprint", routePaths: ["/imprint"] } }
+ *
+ * Defaults to the home route (`/`).
+ */
+export const withTanStackRouter: Decorator = (Story, context) => {
+  const { initialEntry = "/", routePaths = ["/"] } = (context.parameters
+    .tanstackRouter ?? {}) as {
+    initialEntry?: string
+    routePaths?: string[]
+  }
+
+  const rootRoute = createRootRoute({ component: () => <Outlet /> })
+  const routes = routePaths.map((path) =>
+    createRoute({
+      getParentRoute: () => rootRoute,
+      path,
+      validateSearch: (search: Record<string, unknown>) => search,
+      component: () => <Story />,
+    })
+  )
+  const router = createRouter({
+    routeTree: rootRoute.addChildren(routes),
+    history: createMemoryHistory({ initialEntries: [initialEntry] }),
+  })
+
+  return <RouterProvider router={router} />
+}
+
+/**
  * Editor + Modal context providers — the common decorator for navbar, home, and
  * any component that can open a modal. (ModalProvider also mounts the modal
- * host, so `openModal` works inside a story.) Router is already global.
+ * host, so `openModal` works inside a story.) The router is already global.
  */
 export const WebappProviders: Decorator = (Story) => (
   <EditorProvider>

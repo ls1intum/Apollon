@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
-import { reactRouterParameters } from "storybook-addon-remix-react-router"
 import { WebappProviders } from "../../stories/_support/webapp"
 import { HomeNavbar } from "./HomeNavbar"
 
@@ -15,10 +14,7 @@ const meta = {
   decorators: [WebappProviders],
   parameters: {
     layout: "fullscreen",
-    reactRouter: reactRouterParameters({
-      location: { path: "/" },
-      routing: { path: "/" },
-    }),
+    tanstackRouter: { initialEntry: "/", routePaths: ["/"] },
   },
 } satisfies Meta<typeof HomeNavbar>
 
@@ -34,10 +30,7 @@ export const Default: Story = {}
  */
 export const SubPage: Story = {
   parameters: {
-    reactRouter: reactRouterParameters({
-      location: { path: "/imprint" },
-      routing: { path: "/imprint" },
-    }),
+    tanstackRouter: { initialEntry: "/imprint", routePaths: ["/imprint"] },
   },
 }
 

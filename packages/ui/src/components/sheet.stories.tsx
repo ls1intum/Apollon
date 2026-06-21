@@ -23,7 +23,7 @@ import {
  * any `SheetClose`.
  */
 const meta = {
-  title: "Components/Sheet",
+  title: "UI/Components/Sheet",
   component: Sheet,
   parameters: {
     layout: "centered",

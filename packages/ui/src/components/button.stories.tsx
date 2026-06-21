@@ -11,7 +11,7 @@ import { Spinner } from "./spinner"
  * and `data-size`, so the Tailwind-free editor bundle can embed anywhere.
  */
 const meta = {
-  title: "Components/Button",
+  title: "UI/Components/Button",
   component: Button,
   tags: ["autodocs"],
   argTypes: {

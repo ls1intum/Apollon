@@ -10,7 +10,7 @@ import { Separator } from "./separator"
  * vs self-stretching 1px column).
  */
 const meta = {
-  title: "Components/Separator",
+  title: "UI/Components/Separator",
   component: Separator,
   argTypes: {
     orientation: {

@@ -20,7 +20,7 @@ import {
  * `Enter`). Set `aria-invalid` on the trigger to surface the invalid state.
  */
 const meta = {
-  title: "Components/Select",
+  title: "UI/Components/Select",
   component: Select,
   parameters: {
     layout: "centered",

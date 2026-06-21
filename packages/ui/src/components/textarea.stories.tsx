@@ -10,7 +10,7 @@ import { Textarea } from "./textarea"
  * anywhere.
  */
 const meta = {
-  title: "Components/Textarea",
+  title: "UI/Components/Textarea",
   component: Textarea,
   tags: ["autodocs"],
   argTypes: {

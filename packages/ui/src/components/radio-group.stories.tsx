@@ -9,7 +9,7 @@ import { RadioGroup, RadioGroupItem } from "./radio-group"
  * move focus and selection between items.
  */
 const meta = {
-  title: "Components/RadioGroup",
+  title: "UI/Components/RadioGroup",
   component: RadioGroup,
   tags: ["autodocs"],
   argTypes: {

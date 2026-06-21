@@ -10,7 +10,7 @@ import { Badge } from "./badge"
  * the `[a]:` variant rules then apply hover affordances.
  */
 const meta = {
-  title: "Components/Badge",
+  title: "UI/Components/Badge",
   component: Badge,
   argTypes: {
     variant: {

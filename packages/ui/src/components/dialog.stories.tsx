@@ -21,7 +21,7 @@ import {
  * built-in "Close" action.
  */
 const meta = {
-  title: "Components/Dialog",
+  title: "UI/Components/Dialog",
   component: Dialog,
   parameters: {
     layout: "centered",

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { expect, fn, userEvent, within } from "storybook/test"
+import { DarkNavbarSurface } from "../../stories/_support/webapp"
 import { BackNav } from "./BackNav"
 
 /**
@@ -35,13 +36,7 @@ type Story = StoryObj<typeof meta>
 
 /** Default dark-navbar tone, shown on a dark surface. */
 export const OnDark: Story = {
-  decorators: [
-    (Story) => (
-      <div className="rounded-md bg-[#1f2123] p-3">
-        <Story />
-      </div>
-    ),
-  ],
+  decorators: [DarkNavbarSurface],
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement)
     const link = await canvas.findByRole("link", { name: /all diagrams/i })
@@ -66,13 +61,7 @@ export const OnSurface: Story = {
 /** A custom destination and label. */
 export const CustomTarget: Story = {
   args: { to: "/playground", label: "Back to diagram" },
-  decorators: [
-    (Story) => (
-      <div className="rounded-md bg-[#1f2123] p-3">
-        <Story />
-      </div>
-    ),
-  ],
+  decorators: [DarkNavbarSurface],
 }
 
 /** Pinned dark to verify the on-surface tone against dark tokens. */

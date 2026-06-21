@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./tabs"
  * tabs.
  */
 const meta = {
-  title: "Components/Tabs",
+  title: "UI/Components/Tabs",
   component: Tabs,
   argTypes: {
     orientation: {

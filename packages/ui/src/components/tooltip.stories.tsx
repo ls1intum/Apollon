@@ -16,7 +16,7 @@ import {
  * always renders an arrow. The popup portals to `document.body`.
  */
 const meta = {
-  title: "Components/Tooltip",
+  title: "UI/Components/Tooltip",
   component: Tooltip,
   parameters: {
     layout: "centered",

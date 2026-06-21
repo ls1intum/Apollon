@@ -25,7 +25,6 @@ const config: StorybookConfig = {
     "@storybook/addon-a11y",
     "@storybook/addon-themes",
     "@storybook/addon-vitest",
-    "storybook-addon-remix-react-router",
   ],
   core: {
     disableTelemetry: true,

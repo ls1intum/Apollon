@@ -11,7 +11,7 @@ import { IconButton } from "./icon-button"
  * Two variants: `default` and `destructive`.
  */
 const meta = {
-  title: "Components/Alert",
+  title: "UI/Components/Alert",
   component: Alert,
   argTypes: {
     variant: {

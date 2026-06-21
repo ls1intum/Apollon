@@ -26,7 +26,7 @@ const targetVersion: PendingVersion = {
 }
 
 const meta = {
-  title: "Webapp/Modals/DeleteVersionModal",
+  title: "Webapp/Versioning/DeleteVersionModal",
   component: DeleteVersionModal,
   parameters: { layout: "centered" },
   decorators: [ModalBodyProviders],

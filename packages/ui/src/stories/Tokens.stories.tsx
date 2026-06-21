@@ -10,7 +10,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
  * toast) plus the theme-independent radius scale.
  */
 const meta = {
-  title: "Tokens",
+  title: "UI/Tokens",
   parameters: { layout: "fullscreen" },
 } satisfies Meta
 
