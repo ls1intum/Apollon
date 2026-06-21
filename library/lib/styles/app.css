@@ -564,6 +564,23 @@
   :root {
     --apollon-chrome-island-h: 36px;
     --apollon-chrome-pad: 2px;
+
+    /* The dynamic island / notch sits on the LEADING screen edge in landscape.
+       Guarantee a clearance floor so chrome never tucks under it even where the
+       webview reports a 0 side inset (browser device-emulators, some Capacitor
+       webviews), while still using the larger REAL inset on a notched device.
+       Re-deriving the tokens here flows the clearance to every consumer (palette,
+       header row, corner panels) at once. */
+    --apollon-chrome-edge-safe-left: max(
+      var(--apollon-chrome-edge),
+      var(--safe-area-inset-left, 0px),
+      50px
+    );
+    --apollon-chrome-edge-safe-right: max(
+      var(--apollon-chrome-edge),
+      var(--safe-area-inset-right, 0px),
+      50px
+    );
   }
 
   .apollon-collaboration-presence-bar {
@@ -636,47 +653,35 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Expanded minimap = one glass card with the collapse control corner-anchored
-   (the exact on-screen spot the collapsed "show minimap" button occupied) so the
-   cursor never travels to dismiss it. The nested MiniMap is itself a React Flow
-   Panel, so neutralise its absolute positioning + own pane and let it render
-   transparent inside the card; the arrow overlaps it on its own small surface so
-   it stays legible over a busy map. */
-.apollon-minimap-panel {
-  position: relative;
-  padding: var(--apollon-chrome-pad);
-  background: var(--apollon-chrome-glass);
-  backdrop-filter: var(--apollon-chrome-glass-blur);
-  -webkit-backdrop-filter: var(--apollon-chrome-glass-blur);
-  border: 1px solid var(--apollon-chrome-border);
-  border-radius: var(--apollon-chrome-radius-lg);
-  box-shadow: var(--apollon-chrome-shadow-floating),
-    var(--apollon-chrome-inset-hairline);
-}
-
-.apollon-minimap-panel .react-flow__minimap.apollon-minimap-canvas {
-  position: relative;
-  inset: auto;
-  margin: 0;
+/* Expanded minimap = its own glass card (the .react-flow__panel glass rule
+   supplies the pane); make the map's own svg background transparent so the glass
+   shows instead of an opaque rectangle, and drop the panel padding so the map
+   fills the rounded card. */
+.react-flow__minimap.apollon-minimap {
   padding: 0;
-  background: transparent;
-  border: 0;
-  border-radius: var(--apollon-chrome-radius-md);
-  box-shadow: none;
+  overflow: hidden;
 }
 
-/* Corner-anchored collapse arrow: sits in the card's inner pad box at the same
-   bottom-right where the collapsed open button lived, on a small filled glass
-   surface so the glyph reads over the map underneath. */
-.apollon-minimap-panel__collapse {
-  position: absolute;
-  right: var(--apollon-chrome-pad);
-  bottom: var(--apollon-chrome-pad);
+/* The collapse control is a sibling bottom-right Panel that overlaps the map's
+   bottom-right corner — the exact spot the collapsed "show minimap" button
+   occupied, so the cursor never travels to dismiss it. Its Panel is transparent;
+   the button carries its own small filled surface so the glyph reads over the
+   map underneath. */
+.apollon-minimap__collapse-panel.react-flow__panel {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+}
+
+.apollon-minimap__collapse {
   background: var(--apollon-chrome-surface-raised);
   box-shadow: 0 0 0 1px var(--apollon-chrome-border);
 }
 
-.apollon-minimap-panel__collapse:hover:not(:disabled) {
+.apollon-minimap__collapse:hover:not(:disabled) {
   background: var(--apollon-chrome-surface-hover);
 }
 

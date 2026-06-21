@@ -31,7 +31,7 @@ import {
 } from "@/stores/useVersionStore"
 import { ApiError } from "@/services/DiagramApiClient"
 import { getVersionRepository } from "@/services/versionRepository"
-import { MOBILE_VIEW_QUERY } from "@/constants"
+import { NARROW_VIEW_QUERY } from "@/constants"
 import {
   MAX_DESCRIPTION_LENGTH,
   MAX_NAME_LENGTH,
@@ -708,7 +708,7 @@ export const VersionRail: FC<Props> = ({
   onPreview,
 }) => {
   const { editor } = useEditorContext()
-  const isSmall = useMediaQuery(MOBILE_VIEW_QUERY)
+  const isSmall = useMediaQuery(NARROW_VIEW_QUERY)
   const open = useVersionStore((s) => Boolean(s.drawerOpenByDiagram[diagramId]))
   const [host, setHost] = useState<HTMLElement | null>(null)
 
@@ -765,7 +765,7 @@ export const VersionDrawer: FC<Props> = ({
   onConfirmedRestore,
   onPreview,
 }) => {
-  const isSmall = useMediaQuery(MOBILE_VIEW_QUERY)
+  const isSmall = useMediaQuery(NARROW_VIEW_QUERY)
   const open = useVersionStore((s) => Boolean(s.drawerOpenByDiagram[diagramId]))
   const closeDrawer = useVersionStore((s) => s.closeDrawer)
   // Desktop uses the inline sidebar; this component is mobile-only.
@@ -778,13 +778,17 @@ export const VersionDrawer: FC<Props> = ({
       PaperProps={{
         // A floating glass card detached from the edges (margins + radius +
         // blur), not a full-bleed bottom sheet — the mobile mirror of the
-        // desktop rail island.
+        // desktop rail island. backgroundColor MUST be set via sx (emotion wins
+        // over MUI's default `.MuiPaper-root` white — a plain class loses the
+        // specificity tie, which left the sheet white in dark mode).
         className: "apollon-glass apollon-history-panel",
         sx: {
           m: "var(--apollon-chrome-edge)",
           maxHeight: "70vh",
           borderRadius: "var(--apollon-chrome-radius-lg)",
+          backgroundColor: "var(--apollon-chrome-glass-solid)",
           backgroundImage: "none",
+          color: "var(--apollon-chrome-text)",
         },
       }}
     >

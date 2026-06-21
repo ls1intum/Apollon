@@ -116,15 +116,17 @@ export const CurrentVersionRow: FC<Props> = ({
     subtitle = "Not yet saved as a version"
   } else if (upToDate) {
     icon = CheckCircleRoundedIcon
-    // Tailwind-ish green that reads on dark bg without theming.
-    iconColor = "#5cb47a"
+    // Theme-aware success green (shared with the success toast) so the check
+    // reads correctly + consistently in both light and dark.
+    iconColor = "var(--home-toast-success)"
     title = "Current"
     subtitle = `Up to date · last saved ${relativeTime(latestSavedVersion.createdAt)}`
   } else {
     icon = CircleRoundedIcon
-    // Amber, signaling "there's something to capture" without alarm — HEAD
-    // is autosaved every 5 s, so this is "not yet a version," not "at risk."
-    iconColor = "#e8a857"
+    // Theme-aware warning amber (shared with the warning toast), signaling
+    // "there's something to capture" without alarm — HEAD is autosaved every
+    // 5 s, so this is "not yet a version," not "at risk."
+    iconColor = "var(--home-toast-warning)"
     title = "Current"
     subtitle = `Edits since last save · ${relativeTime(latestSavedVersion.createdAt)}`
   }
