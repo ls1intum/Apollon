@@ -7,6 +7,7 @@
 import { GlobalFonts } from "canvas"
 import { fileURLToPath } from "node:url"
 import "global-jsdom/register"
+import { installSvgPathGeometry } from "./svgPathGeometry.js"
 
 // @chenglou/pretext picks its line-break profile from `navigator.userAgent`
 // (a non-Chromium UA changes CJK wrap points). Present as Chromium so wrapping
@@ -85,3 +86,10 @@ w.cancelAnimationFrame ??= (id: number) => clearTimeout(id)
     height: Number.isFinite(height) ? height : 0,
   } as DOMRect
 }
+
+// JSDOM has no geometry engine, so `getTotalLength` / `getPointAtLength` are
+// unimplemented and throw. The library measures edge paths with them to place
+// labels, toolbars, and decorators; without them every edge label lands at a
+// fallback point off the line in the export. Reimplement them purely from the
+// path `d` so the headless export positions labels exactly like the browser.
+installSvgPathGeometry(window as Window)

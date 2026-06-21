@@ -508,4 +508,66 @@ describe("end-to-end through the real conversion worker", () => {
     // The edge survives the export: a visible edge path is present.
     expect(asText(res)).toMatch(/react-flow__edge-path|data-inline-marker/)
   }, 20_000)
+
+  it("positions an edge label on the edge, not at a fallback point", async () => {
+    // Regression: edge labels are positioned by measuring the rendered path with
+    // getTotalLength/getPointAtLength, which JSDOM can't do — so the label landed
+    // at a fallback point off the line (this BPMN flow's label floated left of
+    // its vertical segment). The svgPathGeometry shim restores on-path placement.
+    const node = (id: string, type: string, x: number, y: number) => ({
+      id,
+      width: 160,
+      height: 60,
+      type,
+      position: { x, y },
+      data: { name: id },
+      measured: { width: 160, height: 60 },
+    })
+    const model = {
+      version: "4.0.0",
+      title: "BPMN",
+      type: "BPMN",
+      nodes: [
+        node("a", "bpmnTransaction", 215, 395),
+        node("b", "bpmnSubprocess", 500, 185),
+      ],
+      edges: [
+        {
+          id: "e1",
+          source: "a",
+          target: "b",
+          type: "BPMNSequenceFlow",
+          sourceHandle: "right",
+          targetHandle: "left",
+          data: {
+            points: [
+              { x: 376, y: 425 },
+              { x: 469, y: 425 },
+              { x: 469, y: 215 },
+              { x: 499, y: 215 },
+            ],
+            label: "edgelabel",
+          },
+        },
+      ],
+      assessments: {},
+    }
+    const created = await request(app).post("/api/diagrams").send(model)
+    expect(created.status).toBe(201)
+    const res = await request(app)
+      .get(`/api/diagrams/${created.body.id}/preview.svg`)
+      .buffer(true)
+    expect(res.status).toBe(200)
+
+    const m = asText(res).match(
+      /<text x="([\d.]+)" y="([\d.]+)"[^>]*>edgelabel<\/text>/
+    )
+    expect(m).not.toBeNull()
+    const [lx, ly] = [Number(m![1]), Number(m![2])]
+    // The path midpoint is on the vertical segment at ~(469, 352). The label
+    // sits within a small offset of it — NOT at the old straight-line fallback
+    // (~438, 334) which is ~37px away, off the line.
+    const dist = Math.hypot(lx - 469, ly - 352)
+    expect(dist).toBeLessThan(25)
+  }, 20_000)
 })
