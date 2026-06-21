@@ -102,6 +102,12 @@ function ControlSlot({ control, registerMeasure }: ControlSlotProps) {
     control.render()
   )
 
+  // The full-width header band must fill its row, not shrink-wrap to content —
+  // otherwise a short-content bar (e.g. the mobile navbar with a short title)
+  // collapses to its content width and its right-aligned controls drift inward
+  // (colliding with the floating palette). Side rails already size correctly.
+  const fillRow = control.region === "header"
+
   return (
     <div
       ref={setRef}
@@ -111,7 +117,11 @@ function ControlSlot({ control, registerMeasure }: ControlSlotProps) {
           ? `nopan nodrag nowheel ${control.className ?? ""}`
           : control.className
       }
-      style={{ pointerEvents: interactive ? "auto" : "none", ...control.style }}
+      style={{
+        pointerEvents: interactive ? "auto" : "none",
+        ...(fillRow ? { flex: "1 1 auto", minWidth: 0 } : null),
+        ...control.style,
+      }}
       onPointerDownCapture={interactive ? stop : undefined}
       onMouseDownCapture={interactive ? stop : undefined}
       onTouchStartCapture={interactive ? stop : undefined}

@@ -59,6 +59,12 @@ export const APP_NAME_FONT_FAMILY =
 export const NAVBAR_SX: SxProps<Theme> = {
   position: "sticky",
   top: 0,
+  // Span the full width of the header band. Without this the AppBar shrink-wraps
+  // to its content inside the flex band, so a short diagram title would leave the
+  // bar (and its right-aligned options button) only as wide as the content —
+  // colliding with the floating palette. Full width keeps the options button at
+  // the far right, clear of the palette.
+  width: "100%",
   zIndex: (theme) => theme.zIndex.appBar,
   // Glass material — the canvas is full-bleed behind this band, so the same
   // translucent tint floor + backdrop blur the palette/controls use reads as
