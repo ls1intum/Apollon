@@ -96,6 +96,13 @@
     var(--apollon-background, #fff) 80%,
     transparent
   );
+  /* Near-opaque tint for text-dense glass (the version-history list) so list
+     copy clears WCAG AA over a busy diagram while still reading as glass. */
+  --apollon-chrome-glass-solid: color-mix(
+    in srgb,
+    var(--apollon-background, #fff) 92%,
+    transparent
+  );
   --apollon-chrome-glass-blur: saturate(180%) blur(20px);
 
   /* Motion tokens (Material 3 emphasized + Apple HIG): short, decelerated. */
@@ -469,6 +476,14 @@
 .react-flow__panel,
 .react-flow__node-toolbar {
   padding: 8px;
+}
+
+/* The version-history panel is glass like the rest, but text-dense, so it uses
+   a near-opaque tint floor for list legibility. Declared after .apollon-glass
+   (wins normally) but before the reduced-transparency fallback (which then wins,
+   collapsing it to the solid surface). */
+.apollon-history-panel {
+  background-color: var(--apollon-chrome-glass-solid);
 }
 
 /* The overlay-band regions (header / side rails) AND the overlay corner Panels

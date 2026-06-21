@@ -369,10 +369,10 @@ export const VersionSidebarBody: FC<Props> = ({
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        // The rail is a chrome surface: it paints the shared chrome background
-        // and themes in lock-step with the header, palette and controls (light
-        // in light mode, charcoal in dark) via the --apollon-chrome-* tokens.
-        bgcolor: "var(--apollon-chrome-surface)",
+        // Transparent: the desktop rail's glass panel (VersionRail) and the
+        // mobile drawer's Paper own the surface, so the body just themes its text
+        // via the shared --apollon-chrome-* tokens.
+        bgcolor: "transparent",
         color: TEXT_PRIMARY,
       }}
       role="complementary"
@@ -728,13 +728,19 @@ export const VersionRail: FC<Props> = ({
 
   return createPortal(
     <Box
+      className="apollon-glass apollon-history-panel apollon-chrome-island"
       sx={{
+        // A floating glass panel — the right-side mirror of the left palette,
+        // not a docked slab. The right-rail band is pinned between the top/bottom
+        // insets (so it already clears the top islands); the 10px margin then
+        // leaves a gap on every side and rounds the corners. Width + margins are
+        // what the band measures as the reserved right inset (no reflow).
         width: SIDEBAR_WIDTH,
-        height: "100%",
-        bgcolor: "var(--apollon-chrome-surface)",
-        // Hairline framing the rail against the full-bleed canvas (docked-chrome
-        // rule: a border, not a shadow).
-        borderLeft: "1px solid var(--apollon-chrome-border)",
+        flex: "1 1 auto",
+        minHeight: 0,
+        m: "10px",
+        overflow: "hidden",
+        borderRadius: "var(--apollon-chrome-radius-lg)",
       }}
     >
       <VersionSidebarBody
@@ -769,7 +775,11 @@ export const VersionDrawer: FC<Props> = ({
       open={open}
       onClose={() => closeDrawer(diagramId)}
       PaperProps={{
-        sx: { height: "80vh", width: "100%" },
+        sx: {
+          height: "80vh",
+          width: "100%",
+          bgcolor: "var(--apollon-chrome-surface)",
+        },
       }}
     >
       <VersionSidebarBody

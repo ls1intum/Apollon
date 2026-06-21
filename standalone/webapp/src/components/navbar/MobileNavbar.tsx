@@ -124,7 +124,12 @@ export default function MobileNavbar() {
               flex: 1,
               minWidth: 0,
               mx: 1.5,
-              color: "var(--apollon-chrome-text)",
+              // The centre slot is document identity, never the brand — an empty
+              // title shows a muted placeholder, not "Apollon" (which would
+              // double-brand against the logo on the left).
+              color: diagramTitle
+                ? "var(--apollon-chrome-text)"
+                : "var(--apollon-chrome-text-muted)",
               fontSize: 14,
               fontWeight: 600,
               textAlign: "center",
@@ -133,7 +138,7 @@ export default function MobileNavbar() {
               },
             }}
           >
-            {diagramTitle || "Apollon"}
+            {diagramTitle || "Untitled diagram"}
           </Typography>
 
           <Box sx={{ display: "flex", alignItems: "center" }}>

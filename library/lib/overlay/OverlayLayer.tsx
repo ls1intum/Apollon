@@ -18,6 +18,12 @@ import {
 /** Library-owned bands rendered as absolutely-positioned containers. */
 const BAND_REGIONS: OverlayRegion[] = ["header", "left-rail", "right-rail"]
 
+/** Margin a floating corner Panel keeps from the canvas edge — must match
+ *  `.apollon-overlay-panel { margin }` in app.css. Added back into the reserved
+ *  inset (offsetWidth/Height excludes margin) so neighbouring floating chrome
+ *  clears the island with a gap instead of sitting flush against it. */
+const PANEL_EDGE_MARGIN = 10
+
 /** Which side a band/panel region measures for its auto inset. */
 const MEASURE_AXIS: Partial<Record<OverlayRegion, "width" | "height">> = {
   header: "height",
@@ -158,11 +164,15 @@ export function OverlayLayer() {
       const axis = MEASURE_AXIS[control.region]
       const side = REGION_PRIMARY_SIDE[control.region]
       if (!axis || !side) continue
-      // Reserve exactly the control's box. Spacing comes from each consumer's
-      // own offset (the palette's `top:10`) and from fitView's own gutter, so
-      // adding margin here would double-count and shrink neighbours.
-      const size = axis === "width" ? el.offsetWidth : el.offsetHeight
-      setMeasuredRef.current(id, { [side]: size })
+      // Reserve the control's full footprint from its edge. Corner Panels float
+      // with a CSS margin that offsetWidth/Height excludes, so add it back —
+      // otherwise the reserved inset is one margin short and neighbouring
+      // floating chrome (the palette under a top island, the version rail beside
+      // the top-right island) sits flush against the island instead of clearing
+      // it. Bands are edge-flush (no margin) and reserve their raw box.
+      const raw = axis === "width" ? el.offsetWidth : el.offsetHeight
+      const edge = BAND_REGIONS.includes(control.region) ? 0 : PANEL_EDGE_MARGIN
+      setMeasuredRef.current(id, { [side]: raw + edge })
     }
   }, [])
 
