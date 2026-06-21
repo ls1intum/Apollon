@@ -78,6 +78,21 @@
   --apollon-chrome-radius-md: 8px;
   --apollon-chrome-radius-lg: 12px;
 
+  /* ── Harmonic dimensional system (one 4px grid) ───────────────────────────
+     Every floating cluster — the three top islands, the bottom zoom/undo
+     cluster and the collapsed minimap — is the SAME height, so their bottom
+     edges align and the palette clears them all by one even gap. The spine:
+       island-height = button + 2·padding   (44 = 32 + 2·6 on a fine pointer)
+     One edge margin and one inter-cluster gap apply to ALL floating chrome. */
+  --apollon-chrome-edge: 10px; /* margin from the canvas edge (every cluster) */
+  --apollon-chrome-gap: 8px; /* gap between adjacent clusters / to the palette */
+  --apollon-chrome-btn: 32px; /* icon-button paint box */
+  --apollon-chrome-pad: 6px; /* inner padding of every floating cluster */
+  /* Shared OUTER height = button + 2·padding + 2·1px border, so the fixed-height
+     islands match the auto-height control/minimap panels to the pixel (46 = 32 +
+     12 + 2). The 44px touch target is preserved by the icon-button ::before. */
+  --apollon-chrome-island-h: 46px;
+
   /* Elevation: docked chrome (header/rail) = hairline + flat micro-shadow;
      floating chrome (palette/controls/minimap) = soft halo. */
   --apollon-chrome-shadow-docked: 0 1px 2px rgb(15 23 42 / 8%);
@@ -124,6 +139,16 @@
   --apollon-chrome-shadow-docked: 0 1px 2px rgb(0 0 0 / 40%);
   --apollon-chrome-shadow-floating: 0 2px 12px 0 rgb(0 0 0 / 50%);
   --apollon-chrome-inset-hairline: inset 0 0 0 1px rgb(255 255 255 / 8%);
+}
+
+/* Touch: slightly tighter clusters (40 = 32 + 2·4) so the phone chrome stays
+   compact; the icon buttons keep a ≥44px hit target via a ::before overlay (the
+   paint box stays 32). */
+@media (pointer: coarse) {
+  :root {
+    --apollon-chrome-island-h: 42px; /* 32 + 2·4 + 2·border */
+    --apollon-chrome-pad: 4px;
+  }
 }
 
 .react-flow {
@@ -338,9 +363,13 @@
 .apollon-palette {
   box-sizing: border-box;
   position: absolute;
-  top: calc(10px + var(--apollon-inset-top, 0px));
+  /* --apollon-inset-top already measures the (now uniform-height) top islands +
+     their edge margin, so one --apollon-chrome-gap below it lands the palette an
+     even gap under every island. */
+  top: calc(var(--apollon-chrome-gap) + var(--apollon-inset-top, 0px));
   left: calc(
-    10px + var(--apollon-inset-left, 0px) + var(--safe-area-inset-left, 0px)
+    var(--apollon-chrome-edge) + var(--apollon-inset-left, 0px) +
+      var(--safe-area-inset-left, 0px)
   );
 
   /* Above React Flow's interactive canvas content (renderer, edges 9999,
@@ -358,9 +387,9 @@
   );
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--apollon-chrome-gap);
   align-items: center;
-  padding: 6px;
+  padding: var(--apollon-chrome-pad);
   overflow-y: auto;
   overscroll-behavior: contain;
   background: var(--apollon-chrome-glass);
@@ -436,8 +465,26 @@
   line-height: 1.4;
 }
 
+/* One edge margin for every floating corner cluster (controls, minimap, host
+   panels) — replaces React Flow's default 15px so they line up with the islands
+   and palette at exactly --apollon-chrome-edge from the canvas edge. Declared
+   BEFORE the landscape block so its notch nudges (same specificity) win. */
+.react-flow__panel.top.left,
+.react-flow__panel.top.right,
+.react-flow__panel.bottom.left,
+.react-flow__panel.bottom.right {
+  margin: var(--apollon-chrome-edge);
+}
+
 /* Phone landscape: nudge the canvas panels in by the safe-area insets. */
 @media (max-width: 950px) and (max-height: 500px) {
+  /* Tighter clusters in landscape so the header band fits the ≤36px budget;
+     32px buttons still center inside, and the ::before keeps a 44px hit area. */
+  :root {
+    --apollon-chrome-island-h: 36px;
+    --apollon-chrome-pad: 2px;
+  }
+
   /* Phone-landscape: nudge the floating top pills past the side notch + add
      breathing room, mirroring the bottom controls below. */
   .react-flow__panel.top.left {
@@ -471,11 +518,12 @@
    control never reads as a box-inside-a-box. */
 .apollon-chrome-iconbtn {
   box-sizing: border-box;
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: var(--apollon-chrome-btn);
+  height: var(--apollon-chrome-btn);
   padding: 0;
   border: 0;
   border-radius: var(--apollon-chrome-radius-sm);
@@ -488,6 +536,14 @@
 
 .apollon-chrome-iconbtn > svg {
   fill: currentColor;
+}
+
+/* The paint box stays compact, but the hit target extends to ≥44px (Apple HIG)
+   via an invisible overlay — so touch chrome doesn't have to grow the glyph. */
+.apollon-chrome-iconbtn::before {
+  content: "";
+  position: absolute;
+  inset: calc((var(--apollon-chrome-btn) - 44px) / 2);
 }
 
 /* Lower-specificity states first (stylelint no-descending-specificity). */
@@ -529,19 +585,11 @@
   background: var(--apollon-chrome-border);
 }
 
-/* Touch: grow the hit target to the Apple HIG 44pt minimum without enlarging
-   the glyph. */
-@media (pointer: coarse) {
-  .apollon-chrome-iconbtn {
-    width: 44px;
-    height: 44px;
-  }
-}
-
 /* React Flow's built-in zoom/fit buttons adopt the same borderless idiom. */
 .react-flow__controls-button {
-  width: 32px;
-  height: 32px;
+  position: relative;
+  width: var(--apollon-chrome-btn);
+  height: var(--apollon-chrome-btn);
   padding: 0;
   border: 0;
   border-radius: var(--apollon-chrome-radius-sm);
@@ -549,6 +597,12 @@
   color: var(--apollon-chrome-text);
   transition: background-color var(--apollon-chrome-duration-hover)
     var(--apollon-chrome-ease-standard);
+}
+
+.react-flow__controls-button::before {
+  content: "";
+  position: absolute;
+  inset: calc((var(--apollon-chrome-btn) - 44px) / 2);
 }
 
 .react-flow__controls-button:hover {
@@ -559,13 +613,6 @@
   max-width: 18px;
   max-height: 18px;
   fill: currentColor;
-}
-
-@media (pointer: coarse) {
-  .react-flow__controls-button {
-    width: 44px;
-    height: 44px;
-  }
 }
 
 /* Shared glass surface for every floating chrome object — header islands,
@@ -586,7 +633,7 @@
 
 .react-flow__panel,
 .react-flow__node-toolbar {
-  padding: 8px;
+  padding: var(--apollon-chrome-pad);
 }
 
 /* The version-history panel is glass like the rest, but text-dense, so it uses
@@ -615,7 +662,7 @@
 /* Corner overlay panels (header islands, host controls) float 10px from the
    edge, matching the palette and zoom/minimap controls. */
 .apollon-overlay-panel {
-  margin: 10px;
+  margin: var(--apollon-chrome-edge);
 }
 
 /* Header islands settle in on mount (decelerated, short). */

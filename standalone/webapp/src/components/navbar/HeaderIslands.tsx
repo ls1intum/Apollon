@@ -50,9 +50,13 @@ function Island({
       sx={{
         display: "flex",
         alignItems: "center",
-        gap: 0.5,
-        // Concentric: island radius-lg (12px) − 6px padding ⇒ inner controls 6px.
-        p: "5px 6px",
+        gap: "var(--apollon-chrome-gap)",
+        // One shared height so brand/title/actions align their bottoms exactly;
+        // content centers within it (concentric radius: 12 outer − 6 pad = 6).
+        height: "var(--apollon-chrome-island-h)",
+        px: "var(--apollon-chrome-pad)",
+        py: 0,
+        boxSizing: "border-box",
         pointerEvents: "auto",
         maxWidth: "100%",
         minWidth: 0,

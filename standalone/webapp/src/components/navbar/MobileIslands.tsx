@@ -26,8 +26,13 @@ import { VersionHistoryButton } from "./VersionHistoryButton"
 const PILL_SX = {
   display: "flex",
   alignItems: "center",
-  gap: 0.25,
-  p: "3px 5px",
+  gap: "var(--apollon-chrome-gap)",
+  // Same shared cluster height as every other floating control (coarse: 40px;
+  // 36px in phone-landscape via the app.css media override).
+  height: "var(--apollon-chrome-island-h)",
+  px: "var(--apollon-chrome-pad)",
+  py: 0,
+  boxSizing: "border-box",
   pointerEvents: "auto",
   maxWidth: "100%",
   minWidth: 0,

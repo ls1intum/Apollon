@@ -1065,7 +1065,7 @@ export const DiagramGallery = ({
                 {viewMode === "grid" ? (
                   <div
                     role="list"
-                    className="grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] justify-start gap-x-4 gap-y-6 md:grid-cols-[repeat(auto-fill,minmax(260px,1fr))] md:gap-x-6 md:gap-y-8 lg:gap-x-7 lg:gap-y-10 xl:grid-cols-[repeat(auto-fill,minmax(280px,1fr))]"
+                    className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,240px),1fr))] justify-start gap-4 md:grid-cols-[repeat(auto-fill,minmax(min(100%,260px),1fr))] md:gap-6 xl:grid-cols-[repeat(auto-fill,minmax(min(100%,280px),1fr))]"
                   >
                     {visibleDiagrams.map((diagram, index) => (
                       <div
