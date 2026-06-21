@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router"
+import { ChevronLeft } from "lucide-react"
 import { cn } from "@tumaet/ui/lib/utils"
 import type { BackTarget } from "@/hooks/useBackTarget"
 
@@ -49,16 +50,7 @@ export const BackNav = ({
       className
     )}
   >
-    <svg
-      className="h-4 w-4 shrink-0"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      aria-hidden
-    >
-      <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
+    <ChevronLeft className="size-4 shrink-0" aria-hidden />
     <span className={labelClassName}>{label}</span>
   </Link>
 )

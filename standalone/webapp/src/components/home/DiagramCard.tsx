@@ -8,6 +8,7 @@ import {
   type ReactNode,
   type Ref,
 } from "react"
+import { ChevronRight, MoreVertical, Star } from "lucide-react"
 import type { UMLDiagramType } from "@tumaet/apollon"
 import {
   DropdownMenu,
@@ -265,16 +266,7 @@ export function DiagramActionsMenuView({
             />
           }
         >
-          <svg
-            className="h-[18px] w-[18px]"
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-hidden="true"
-          >
-            <circle cx="12" cy="5" r="1.7" fill="currentColor" />
-            <circle cx="12" cy="12" r="1.7" fill="currentColor" />
-            <circle cx="12" cy="19" r="1.7" fill="currentColor" />
-          </svg>
+          <MoreVertical className="size-[18px]" aria-hidden="true" />
         </DropdownMenuTrigger>
 
         <DropdownMenuContent
@@ -349,20 +341,10 @@ export function DiagramActionsMenuView({
                       className={`${menuItemClassName} justify-between`}
                     >
                       Change sharing mode
-                      <svg
-                        className="ml-2 h-4 w-4 shrink-0"
-                        viewBox="0 0 20 20"
-                        fill="none"
+                      <ChevronRight
+                        className="ml-2 size-4 shrink-0"
                         aria-hidden="true"
-                      >
-                        <path
-                          d="M7 4l6 6-6 6"
-                          stroke="currentColor"
-                          strokeWidth="1.8"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
+                      />
                     </DropdownMenuSubTrigger>
                     <DropdownMenuSubContent
                       aria-label="Change sharing mode"
@@ -954,19 +936,11 @@ export function DiagramCardView({
             onToggleFavorite()
           }}
         >
-          <svg
+          <Star
             className="size-[18px]"
-            viewBox="0 0 24 24"
             aria-hidden="true"
             fill={isFavorite ? "currentColor" : "none"}
-          >
-            <path
-              d="M12 3.7l2.6 5.3 5.9.9-4.3 4.2 1 5.9-5.2-2.8-5.2 2.8 1-5.9-4.3-4.2 5.9-.9L12 3.7z"
-              stroke="currentColor"
-              strokeWidth="1.7"
-              strokeLinejoin="round"
-            />
-          </svg>
+          />
         </Button>
       )}
 

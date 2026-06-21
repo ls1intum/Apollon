@@ -1,4 +1,5 @@
 import type { MouseEvent, ReactNode } from "react"
+import { ChevronDown } from "lucide-react"
 import { DropdownMenuItem } from "@tumaet/ui/components/dropdown-menu"
 import { MenuShell } from "./MenuShell"
 
@@ -51,20 +52,10 @@ export const DropdownFilterMenu = ({
       triggerContent={
         <>
           {triggerContent}
-          <svg
-            className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
-            viewBox="0 0 20 20"
-            fill="none"
+          <ChevronDown
+            className="size-3.5 shrink-0 text-muted-foreground"
             aria-hidden="true"
-          >
-            <path
-              d="M5 7.5L10 12.5L15 7.5"
-              stroke="currentColor"
-              strokeWidth="1.7"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          />
         </>
       }
       wrapperClassName="relative min-w-0 flex-1 sm:flex-none"

@@ -726,7 +726,7 @@ export const DiagramGallery = ({
               onClick={onImportJson}
               className="w-full sm:w-auto"
             >
-              <Upload aria-hidden="true" /> Import
+              <Upload className="size-4" aria-hidden="true" /> Import
             </Button>
             <Button
               variant="default"
@@ -734,7 +734,7 @@ export const DiagramGallery = ({
               onClick={onNewDiagram}
               className="col-span-2 w-full sm:col-span-1 sm:w-auto"
             >
-              <Plus aria-hidden="true" /> New diagram
+              <Plus className="size-4" aria-hidden="true" /> New diagram
             </Button>
           </div>
         </div>

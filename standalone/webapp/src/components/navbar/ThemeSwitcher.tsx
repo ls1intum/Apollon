@@ -1,9 +1,9 @@
 import { DropdownMenuItem } from "@tumaet/ui/components/dropdown-menu"
 import { cn } from "@tumaet/ui/lib/utils"
 import React from "react"
+import { Moon, Sun } from "lucide-react"
 import { useShallow } from "zustand/shallow"
 import { useThemeStore } from "@/stores/useThemeStore"
-import { MoonIcon, SunIcon } from "../Icon"
 
 /** Props for the pure {@link ThemeSwitcherButton} view. */
 interface ThemeSwitcherButtonProps {
@@ -54,7 +54,7 @@ export function ThemeSwitcherButton({
             : "scale-[0.6] -rotate-90 opacity-0"
         )}
       >
-        <MoonIcon width={18} height={18} fill="currentColor" />
+        <Moon className="size-[18px]" aria-hidden="true" />
       </span>
       <span
         className={cn(
@@ -64,7 +64,7 @@ export function ThemeSwitcherButton({
             : "scale-100 rotate-0 opacity-100"
         )}
       >
-        <SunIcon width={18} height={18} fill="currentColor" />
+        <Sun className="size-[18px]" aria-hidden="true" />
       </span>
     </button>
   )
@@ -113,9 +113,9 @@ export const ThemeSwitcherMenu: React.FC<Props> = ({
       >
         Theme
         {isDarkMode ? (
-          <SunIcon width={18} height={18} fill="currentColor" />
+          <Sun className="size-[18px]" aria-hidden="true" />
         ) : (
-          <MoonIcon width={18} height={18} fill="currentColor" />
+          <Moon className="size-[18px]" aria-hidden="true" />
         )}
       </DropdownMenuItem>
     )

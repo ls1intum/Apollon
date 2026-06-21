@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, type ReactNode } from "react"
+import { useEffect, useRef, useState } from "react"
+import { MoreHorizontal } from "lucide-react"
 import { Link, useLocation } from "@tanstack/react-router"
 import { useModalContext } from "@/contexts"
 import { bugReportURL } from "@/constants/urls"
@@ -119,7 +120,7 @@ export const HomeHelpMenu = ({ className }: { className?: string }) => {
         onClick={() => setOpen((value) => !value)}
         className="flex h-9 w-9 items-center justify-center rounded-md text-[color:var(--apollon-chrome-text-muted)] transition-colors hover:bg-[var(--apollon-chrome-surface-hover)] hover:text-[color:var(--apollon-chrome-text)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--apollon-chrome-accent)]"
       >
-        <MoreIcon />
+        <MoreHorizontal className="size-5" aria-hidden />
       </button>
       {open && (
         <div
@@ -132,11 +133,3 @@ export const HomeHelpMenu = ({ className }: { className?: string }) => {
     </div>
   )
 }
-
-const MoreIcon = (): ReactNode => (
-  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-    <circle cx="5" cy="12" r="2" />
-    <circle cx="12" cy="12" r="2" />
-    <circle cx="19" cy="12" r="2" />
-  </svg>
-)
