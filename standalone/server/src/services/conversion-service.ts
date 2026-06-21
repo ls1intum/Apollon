@@ -7,6 +7,24 @@ import {
 import { findUnsupportedLabels } from "./glyph-coverage.js"
 import { assertValidNodeGeometry } from "./node-geometry.js"
 
+/**
+ * Collapses a hidden `*-between-*` connection anchor to the visible named handle
+ * on the same side (the token before `-between-`). Those between-slots are
+ * resolution-only anchors the headless (JSDOM) render does not position, so
+ * React Flow drops any edge bound to one with a missing-handle error and the
+ * edge vanishes from the export, even though the browser editor renders it fine.
+ * Every node renders the named handles, so re-anchoring keeps the edge; the
+ * endpoint shifts to the side's named position, identical for the centred case.
+ */
+function toNamedHandle(
+  handle: string | null | undefined,
+  fallback: string
+): string {
+  const h = handle ?? fallback
+  const between = h.indexOf("-between-")
+  return between === -1 ? h : h.slice(0, between)
+}
+
 export class ConversionService {
   private readonly EDGE_ENDPOINT_INSET_PX = -3
 
@@ -92,8 +110,8 @@ export class ConversionService {
         id:
           edge.id ??
           `${edge.source ?? "source"}-${edge.target ?? "target"}-${index}`,
-        sourceHandle: edge.sourceHandle ?? "right",
-        targetHandle: edge.targetHandle ?? "left",
+        sourceHandle: toNamedHandle(edge.sourceHandle, "right"),
+        targetHandle: toNamedHandle(edge.targetHandle, "left"),
         data: {
           ...(edge.data ?? {}),
           points: edge.data?.points ?? [],

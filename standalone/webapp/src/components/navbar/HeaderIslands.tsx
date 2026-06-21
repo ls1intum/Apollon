@@ -219,7 +219,10 @@ export function HeaderActionsIsland() {
     <Island ariaLabel="Editor actions">
       <Stack direction="row" alignItems="center" gap={0.25}>
         <NavbarFile />
-        <Button sx={navbarButtonStyle()} onClick={() => openModal("SHARE")}>
+        <Button
+          sx={navbarButtonStyle()}
+          onClick={() => openModal("SHARE", { dialogVariant: "home" })}
+        >
           <Typography color="inherit" component="span">
             Share
           </Typography>

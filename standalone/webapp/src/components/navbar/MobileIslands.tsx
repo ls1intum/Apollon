@@ -77,7 +77,7 @@ export function MobileActionsPill() {
         className="apollon-chrome-iconbtn"
         aria-label="Share"
         title="Share"
-        onClick={() => openModal("SHARE")}
+        onClick={() => openModal("SHARE", { dialogVariant: "home" })}
       >
         <ShareIcon fontSize="small" />
       </button>
