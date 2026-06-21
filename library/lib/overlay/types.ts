@@ -27,6 +27,15 @@ export const PANEL_REGIONS = [
   "bottom-right",
 ] as const
 
+/** Every valid region — used to validate control registration at the API edge. */
+export const OVERLAY_REGIONS: readonly OverlayRegion[] = [
+  ...PANEL_REGIONS,
+  "header",
+  "left-rail",
+  "right-rail",
+  "on-canvas",
+]
+
 export type OverlaySide = "top" | "right" | "bottom" | "left"
 export type Insets = Record<OverlaySide, number>
 export const ZERO_INSETS: Insets = { top: 0, right: 0, bottom: 0, left: 0 }

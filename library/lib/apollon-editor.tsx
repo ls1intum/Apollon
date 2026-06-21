@@ -40,6 +40,7 @@ import {
   type OverlayControlInput,
   type OverlayRegion,
   type OverlaySide,
+  OVERLAY_REGIONS,
   ZERO_INSETS,
 } from "./overlay/types"
 import { getPerfCounters } from "./sync/perfCounters"
@@ -347,21 +348,28 @@ export class ApollonEditor {
   // render INSIDE the React Flow context. `getRegionElement` is the escape hatch
   // for hosts that need their OWN React context (theme, router) via createPortal.
 
-  /** Register a floating control. Returns a disposer. Re-using an id replaces. */
+  /**
+   * Register a floating control, returning a disposer. Re-using an id replaces.
+   * Pick a façade: a React host → `<ApollonControl>`; a non-React host (or one
+   * that needs its own React root/context) → `getRegionElement` + `createPortal`;
+   * a one-off imperative widget → `addControl`. Throws on an unknown region or
+   * empty id so mistakes fail loudly at the edge, not silently in the renderer.
+   */
   public addControl(control: OverlayControlInput): () => void {
+    if (!control.id) throw new Error("[ApollonControl] id must be non-empty")
+    if (!OVERLAY_REGIONS.includes(control.region))
+      throw new Error(`[ApollonControl] unknown region: ${control.region}`)
     this.overlayStore.getState().register({ source: "imperative", ...control })
     return () => this.overlayStore.getState().unregister(control.id)
   }
 
-  /** Patch a registered control (options and/or its renderer). */
+  /** Patch a registered control's options/renderer (a no-op if absent). The id
+   *  is immutable — pass it as the first arg; any `id` in `patch` is ignored. */
   public updateControl(id: string, patch: Partial<OverlayControlInput>): void {
     const existing = this.overlayStore.getState().controls[id]
     if (!existing) return
-    this.overlayStore.getState().register({ ...existing, ...patch })
-  }
-
-  public removeControl(id: string): void {
-    this.overlayStore.getState().unregister(id)
+    // Pin id last so a stray `patch.id` can't fork the control under a new key.
+    this.overlayStore.getState().register({ ...existing, ...patch, id })
   }
 
   public hasControl(id: string): boolean {
@@ -371,19 +379,20 @@ export class ApollonEditor {
   /**
    * A stable DOM node anchored in `region`, for hosts that render their own
    * React into it (via `createPortal`) to keep host context. Auto-measured, so
-   * the diagram makes room for whatever the host mounts. Lifetime = the editor.
+   * the diagram makes room for whatever the host mounts. Lifetime = the editor;
+   * `releaseRegionElement` unregisters it. Reserved id: `apollon:host:<region>`.
    */
   public getRegionElement(region: OverlayRegion): HTMLElement {
+    if (!OVERLAY_REGIONS.includes(region))
+      throw new Error(`[ApollonControl] unknown region: ${region}`)
     let el = this.hostRegionEls.get(region)
-    if (!el) {
-      el = document.createElement("div")
-      el.dataset.apollonHostRegion = region
-      this.hostRegionEls.set(region, el)
-    }
-    // Register on EVERY call (idempotent by id): a host that removed the control
-    // on close (e.g. the version rail) must get it back on reopen — returning
-    // the cached node without re-registering would leave the band unrendered and
-    // the inset stuck at 0.
+    if (el) return el
+    // Create + register once. `releaseRegionElement` drops the node from the
+    // cache, so a reopen re-enters here and re-registers — no need to re-register
+    // (and clobber host-applied options) on a plain re-read.
+    el = document.createElement("div")
+    el.dataset.apollonHostRegion = region
+    this.hostRegionEls.set(region, el)
     const node = el
     this.overlayStore.getState().register({
       id: `apollon:host:${region}`,

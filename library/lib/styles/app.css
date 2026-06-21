@@ -16,19 +16,10 @@
   --safe-area-inset-left: env(safe-area-inset-left, 0px);
 }
 
-/* ── Shared in-canvas chrome contract ─────────────────────────────────────
-   ONE token family consumed by every piece of editor chrome — library palette,
-   zoom/undo controls, minimap, presence AND the webapp's portaled navbar +
-   version-history rail — so they read as a single, theme-reactive surface
-   (Figma/tldraw/Excalidraw all build their toolbars, menus, panels and side
-   rails on one shared "panel" primitive; the old fixed #20242c plate over a
-   light canvas was the opposite of that).
-
-   Surfaces are DERIVED from --apollon-background + --apollon-primary-contrast
-   via color-mix, so any host that themes those two tokens (the webapp flips
-   them per `data-theme`; an embedder can override --apollon-background alone)
-   gets correct chrome for free — no separate per-host palette. Only the
-   shadows, which don't read on a dark canvas, get a dark-mode override below. */
+/* Shared chrome tokens for every floating surface (palette, controls, minimap,
+   header islands, version rail). Surfaces derive from --apollon-background +
+   --apollon-primary-contrast via color-mix, so any host theming those two gets
+   correct chrome for free; only shadows need a dark-mode override (below). */
 :root {
   /* Surface ladder: base == canvas; chrome separates via border + elevation. */
   --apollon-chrome-surface: var(--apollon-background, #fff);
@@ -78,20 +69,20 @@
   --apollon-chrome-radius-md: 8px;
   --apollon-chrome-radius-lg: 12px;
 
-  /* ── Harmonic dimensional system (one 4px grid) ───────────────────────────
-     Every floating cluster — the three top islands, the bottom zoom/undo
-     cluster and the collapsed minimap — is the SAME height, so their bottom
-     edges align and the palette clears them all by one even gap. The spine:
-       island-height = button + 2·padding   (44 = 32 + 2·6 on a fine pointer)
-     One edge margin and one inter-cluster gap apply to ALL floating chrome. */
+  /* Harmonic dimensional system: every floating cluster shares one height
+     (island-h, below), so their bottom edges align and the palette clears them
+     by one even gap. One edge margin + one gap apply to all chrome. */
   --apollon-chrome-edge: 10px; /* margin from the canvas edge (every cluster) */
   --apollon-chrome-gap: 8px; /* gap between adjacent clusters / to the palette */
   --apollon-chrome-btn: 32px; /* icon-button paint box */
   --apollon-chrome-pad: 6px; /* inner padding of every floating cluster */
-  /* Shared OUTER height = button + 2·padding + 2·1px border, so the fixed-height
-     islands match the auto-height control/minimap panels to the pixel (46 = 32 +
-     12 + 2). The 44px touch target is preserved by the icon-button ::before. */
-  --apollon-chrome-island-h: 46px;
+  --apollon-chrome-hit: 44px; /* minimum touch target (Apple HIG) */
+  /* Shared OUTER cluster height = button + 2·padding + 2·1px border. Derived, so
+     fixed-height islands match the auto-height control/minimap panels to the
+     pixel and it self-corrects when btn/pad change (landscape overrides it). */
+  --apollon-chrome-island-h: calc(
+    var(--apollon-chrome-btn) + 2 * var(--apollon-chrome-pad) + 2px
+  );
 
   /* Elevation: docked chrome (header/rail) = hairline + flat micro-shadow;
      floating chrome (palette/controls/minimap) = soft halo. */
@@ -102,10 +93,9 @@
   /* Lit up only in dark mode (a pure drop shadow vanishes on a dark canvas). */
   --apollon-chrome-inset-hairline: 0 0 0 0 transparent;
 
-  /* Liquid-Glass "regular" variant for floating chrome (islands, palette,
-     controls, minimap): a semi-opaque TINT FLOOR (legibility never depends on
-     translucency — Apple HIG Materials) under a backdrop blur+saturate. The
-     floor is derived from the canvas background so it themes automatically. */
+  /* Glass for floating chrome: a semi-opaque tint floor (keeps text legible —
+     translucency alone never carries it) under a backdrop blur, derived from
+     the canvas background so it themes automatically. */
   --apollon-chrome-glass: color-mix(
     in srgb,
     var(--apollon-background, #fff) 80%,
@@ -121,7 +111,7 @@
   );
   --apollon-chrome-glass-blur: saturate(180%) blur(20px);
 
-  /* Motion tokens (Material 3 emphasized + Apple HIG): short, decelerated. */
+  /* Motion tokens: short, decelerated. */
   --apollon-chrome-duration-hover: 120ms;
   --apollon-chrome-duration-enter: 220ms;
   --apollon-chrome-duration-exit: 140ms;
@@ -146,7 +136,7 @@
    paint box stays 32). */
 @media (pointer: coarse) {
   :root {
-    --apollon-chrome-island-h: 42px; /* 32 + 2·4 + 2·border */
+    /* island-h derives from pad → 32 + 2·4 + 2·border = 42 automatically. */
     --apollon-chrome-pad: 4px;
   }
 }
@@ -387,10 +377,13 @@
      chrome. The body-portaled drag ghost renders above it regardless. */
   z-index: 10000;
 
-  /* Never grow into the bottom zoom/undo/redo controls (their height + margin
-     + bottom safe-area inset), nor under reserved host chrome (header/footer). */
+  /* Fill the space between the palette's own top offset and the bottom controls:
+     subtract the top offset (safe-top + gap + inset-top) and the bottom controls
+     footprint (edge + island-h + gap + inset-bottom + safe-bottom). */
   max-height: calc(
-    100% - 84px - var(--apollon-inset-top, 0px) -
+    100% - var(--safe-area-inset-top, 0px) - var(--apollon-chrome-gap) -
+      var(--apollon-inset-top, 0px) - var(--apollon-chrome-edge) -
+      var(--apollon-chrome-island-h) - var(--apollon-chrome-gap) -
       var(--apollon-inset-bottom, 0px) - var(--safe-area-inset-bottom, 0px)
   );
   display: flex;
@@ -561,7 +554,7 @@
 .apollon-chrome-iconbtn::before {
   content: "";
   position: absolute;
-  inset: calc((var(--apollon-chrome-btn) - 44px) / 2);
+  inset: calc((var(--apollon-chrome-btn) - var(--apollon-chrome-hit)) / 2);
 }
 
 /* Lower-specificity states first (stylelint no-descending-specificity). */
@@ -620,7 +613,7 @@
 .react-flow__controls-button::before {
   content: "";
   position: absolute;
-  inset: calc((var(--apollon-chrome-btn) - 44px) / 2);
+  inset: calc((var(--apollon-chrome-btn) - var(--apollon-chrome-hit)) / 2);
 }
 
 .react-flow__controls-button:hover {

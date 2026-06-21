@@ -8,9 +8,8 @@ export type ApollonControlProps = OverlayControlOptions & {
   children: ReactNode
 }
 
-/** Stable signature of the non-children options; a function `visible` collapses
- *  to a marker (its identity doesn't matter — it's re-evaluated with live state
- *  on every OverlayLayer render). */
+/** Stable signature of the non-children options, so an option change
+ *  re-registers but a children change doesn't. */
 function serializeOptions(o: OverlayControlOptions): string {
   return JSON.stringify({
     region: o.region,
@@ -18,7 +17,7 @@ function serializeOptions(o: OverlayControlOptions): string {
     interactive: o.interactive ?? null,
     groupLabel: o.groupLabel ?? null,
     inset: o.inset ?? null,
-    visible: typeof o.visible === "function" ? "fn" : (o.visible ?? null),
+    visible: o.visible ?? null,
     className: o.className ?? null,
     style: o.style ?? null,
   })

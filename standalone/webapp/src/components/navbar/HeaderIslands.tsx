@@ -17,16 +17,9 @@ import { ThemeSwitcherMenu } from "./ThemeSwitcher"
 import { navbarButtonStyle } from "./styleConstants"
 
 /**
- * The editor header is no longer a full-width bar — it is a set of floating
- * glass islands (top-left / top-center / top-right) that hover over a full-bleed
- * canvas, the same family of objects as the palette and zoom/minimap controls
- * (Excalidraw/tldraw corner-cluster model). Each island is portaled into its own
- * overlay region (EditorChromeHeader), so the diagram makes room for it via the
- * region's measured inset and the palette drops below the top islands.
- *
- * `.apollon-glass` gives every island the shared Liquid-Glass surface (tint
- * floor + backdrop blur + concentric radii); the wrapper just lays out content
- * and re-enables pointer events over the pointer-transparent region.
+ * One floating glass island. Portaled (by EditorChromeHeader) into a top-*
+ * overlay region; `.apollon-glass` gives the shared surface, this wrapper lays
+ * out content and re-enables pointer events over the transparent region.
  */
 function Island({
   children,

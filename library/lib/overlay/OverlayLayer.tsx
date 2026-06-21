@@ -18,12 +18,6 @@ import {
 /** Library-owned bands rendered as absolutely-positioned containers. */
 const BAND_REGIONS: OverlayRegion[] = ["header", "left-rail", "right-rail"]
 
-/** Margin a floating corner Panel keeps from the canvas edge — must match
- *  `.apollon-overlay-panel { margin }` in app.css. Added back into the reserved
- *  inset (offsetWidth/Height excludes margin) so neighbouring floating chrome
- *  clears the island with a gap instead of sitting flush against it. */
-const PANEL_EDGE_MARGIN = 10
-
 /** Which side a band/panel region measures for its auto inset. */
 const MEASURE_AXIS: Partial<Record<OverlayRegion, "width" | "height">> = {
   header: "height",
@@ -174,14 +168,16 @@ export function OverlayLayer() {
       const axis = MEASURE_AXIS[control.region]
       const side = REGION_PRIMARY_SIDE[control.region]
       if (!axis || !side) continue
-      // Reserve the control's full footprint from its edge. Corner Panels float
-      // with a CSS margin that offsetWidth/Height excludes, so add it back —
-      // otherwise the reserved inset is one margin short and neighbouring
-      // floating chrome (the palette under a top island, the version rail beside
-      // the top-right island) sits flush against the island instead of clearing
-      // it. Bands are edge-flush (no margin) and reserve their raw box.
+      // offsetWidth/Height excludes the corner Panel's CSS margin, so add it
+      // back (read live from --apollon-chrome-edge, the single source of truth)
+      // — else the reserved inset is one margin short and neighbouring chrome
+      // sits flush. Bands are edge-flush and reserve their raw box.
       const raw = axis === "width" ? el.offsetWidth : el.offsetHeight
-      const edge = BAND_REGIONS.includes(control.region) ? 0 : PANEL_EDGE_MARGIN
+      const edge = BAND_REGIONS.includes(control.region)
+        ? 0
+        : parseFloat(
+            getComputedStyle(el).getPropertyValue("--apollon-chrome-edge")
+          ) || 0
       setMeasuredRef.current(id, { [side]: raw + edge })
     }
   }, [])
@@ -244,7 +240,11 @@ export function OverlayLayer() {
           key={region}
           position={region as PanelPosition}
           className="apollon-overlay-panel"
-          style={{ pointerEvents: "none", display: "flex", gap: 8 }}
+          style={{
+            pointerEvents: "none",
+            display: "flex",
+            gap: "var(--apollon-chrome-gap)",
+          }}
         >
           {byRegion.get(region)!.map((c) => (
             <ControlSlot
@@ -264,7 +264,7 @@ export function OverlayLayer() {
           style={{
             position: "absolute",
             display: "flex",
-            gap: 8,
+            gap: "var(--apollon-chrome-gap)",
             pointerEvents: "none",
             ...BAND_STYLE[region],
           }}

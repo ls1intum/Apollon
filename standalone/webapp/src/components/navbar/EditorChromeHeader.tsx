@@ -35,16 +35,11 @@ function useRegionHost(editor: Editor, region: Region, active: boolean) {
 }
 
 /**
- * Mounts the editor header as immersive in-canvas chrome — floating glass
- * islands over a full-bleed canvas, both on desktop and mobile (same overlay
- * regions + material, so the two read as one system). Desktop: brand+nav
- * top-left, title top-center, actions top-right. Mobile: a compact brand+back
- * pill top-left and an overflow pill top-right (the title lives in the menu).
- * Each region reserves its measured height as a top inset so the diagram (and
- * the palette) make room for it.
- *
- * createPortal keeps every island in the webapp React tree, so they retain theme
- * tokens, the router and all app contexts; only their DOM lands in the canvas.
+ * Mounts the editor header as floating glass islands over a full-bleed canvas.
+ * Desktop: brand+nav top-left, title top-center, actions top-right. Mobile: a
+ * brand+back pill top-left and an overflow pill top-right (title in the menu).
+ * createPortal keeps each island in the webapp React tree (theme, router, app
+ * contexts intact); only its DOM lands in the canvas region.
  */
 export function EditorChromeHeader() {
   const { editor } = useEditorContext()

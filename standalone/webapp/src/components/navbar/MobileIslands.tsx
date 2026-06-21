@@ -17,11 +17,9 @@ import { ThemeSwitcherMenu } from "./ThemeSwitcher"
 import { VersionHistoryButton } from "./VersionHistoryButton"
 
 /**
- * Mobile editor chrome is two floating glass pills (same family + regions as the
- * desktop islands), not a full-width bar — matching what every leading phone
- * canvas does (Figma/tldraw/Excalidraw float compact clusters; HIG/M3 favour
- * floating toolbars over a solid bar). Both pills stay compact enough that the
- * <header> landmark fits the phone-landscape height budget (≤36px).
+ * Mobile editor chrome: two floating glass pills (same regions + material as the
+ * desktop islands), compact enough that the <header> landmark fits the
+ * phone-landscape ≤36px height budget.
  */
 const PILL_SX = {
   display: "flex",

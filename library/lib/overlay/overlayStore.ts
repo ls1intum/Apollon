@@ -53,9 +53,8 @@ function controlContribution(
 /**
  * Content-inset rect: per side, the largest reservation among visible controls
  * touching that side. `max` (not sum) avoids double-counting nested/stacked
- * chrome. Controls hidden with `visible: false` reserve nothing; function-based
- * visibility is treated as visible here and resolved accurately by OverlayLayer.
- * Recomputed on every mutation so the rect is reliable without a render.
+ * chrome. Controls hidden with `visible: false` reserve nothing. Recomputed on
+ * every mutation so the rect is reliable without a render.
  */
 export function computeInsets(
   controls: OverlayControl[],
@@ -139,6 +138,6 @@ export const createOverlayStore = (): UseBoundStore<StoreApi<OverlayStore>> =>
             "setMeasured"
           ),
       }),
-      { name: "OverlayStore", enabled: true }
+      { name: "OverlayStore", enabled: import.meta.env?.DEV ?? false }
     )
   )
