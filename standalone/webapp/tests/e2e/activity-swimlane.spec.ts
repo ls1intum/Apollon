@@ -150,7 +150,9 @@ test.describe("activity swimlane", () => {
     await waitForCanvasReady(page)
     const before = await nodeBox(page, SWIMLANE_ID)
 
-    await page.locator(`.react-flow__node[data-id="${SWIMLANE_ID}"]`).dblclick()
+    await page
+      .locator(`.react-flow__node[data-id="${SWIMLANE_ID}"]`)
+      .dblclick({ position: { x: 30, y: 12 } })
     await page.getByRole("combobox", { name: "Orientation" }).click()
     await page.getByRole("option", { name: "Horizontal (rows)" }).click()
     // Flip is committed once the swimlane has become narrower (440 -> 280).
@@ -176,7 +178,9 @@ test.describe("activity swimlane", () => {
     await waitForCanvasReady(page)
 
     const start = await nodeBox(page, SWIMLANE_ID)
-    await page.locator(`.react-flow__node[data-id="${SWIMLANE_ID}"]`).dblclick()
+    await page
+      .locator(`.react-flow__node[data-id="${SWIMLANE_ID}"]`)
+      .dblclick({ position: { x: 30, y: 12 } })
 
     await page.getByRole("button", { name: /Add lane/ }).click()
     await expect
@@ -251,7 +255,9 @@ test.describe("activity swimlane", () => {
       sl.x + sl.width / 2
     )
 
-    await page.locator(`.react-flow__node[data-id="${SWIMLANE_ID}"]`).dblclick()
+    await page
+      .locator(`.react-flow__node[data-id="${SWIMLANE_ID}"]`)
+      .dblclick({ position: { x: 30, y: 12 } })
     const handles = page.getByLabel("Reorder lane")
     await expect(handles).toHaveCount(2)
     const h1 = (await handles.nth(1).boundingBox())!

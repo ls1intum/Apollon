@@ -91,18 +91,10 @@ export const resizeLaneDivider = (
 }
 
 /**
- * Reposition a swimlane child when the swimlane's orientation flips and its
- * width and height swap.
- *
- * Transposing the child's top-left corner (x,y)->(y,x) makes it track the axis
- * flip, but the corner alone isn't enough: a child whose long side ran along
- * the old primary axis can land past the new (shorter) cross-axis edge, because
- * there is no React Flow `extent` clamping children to the parent. So clamp the
- * transposed corner into the swapped frame using the child's own size — the
- * child stays inside the frame instead of being stranded outside it.
- *
- * `newWidth`/`newHeight` are the swimlane's dimensions *after* the swap
- * (i.e. the old height and old width respectively).
+ * Reposition a swimlane child when orientation flips and the swimlane's
+ * width/height swap: transpose the child's corner (x,y)->(y,x), then clamp it
+ * into the swapped frame by its own size so it can't be stranded off the new
+ * (shorter) cross-axis. `newWidth`/`newHeight` are the post-swap dimensions.
  */
 export const flipSwimlaneChildPosition = (
   child: {

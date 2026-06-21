@@ -37,13 +37,21 @@ describe("activity swimlane — registration", () => {
     )
   })
 
-  it("keeps every Activity palette item near the default size", () => {
+  it("keeps every Activity palette preview near the default size", () => {
     // The sidebar shares one Math.min(scale) across the palette, so an oversized
-    // item shrinks every sibling. Pin that invariant so it can't regress.
+    // preview shrinks every sibling. Pin that invariant so it can't regress.
     for (const config of dropElementConfigs[UMLDiagramType.ActivityDiagram]) {
       expect(config.width).toBeLessThanOrEqual(DROPS.DEFAULT_ELEMENT_WIDTH * 2)
       expect(config.height).toBeLessThanOrEqual(DROPS.DEFAULT_ELEMENT_WIDTH * 2)
     }
+  })
+
+  it("drops a swimlane larger than its small sidebar preview", () => {
+    const config = dropElementConfigs[UMLDiagramType.ActivityDiagram].find(
+      (c) => c.type === "activitySwimlane"
+    )!
+    expect(config.dropWidth).toBeGreaterThan(config.width)
+    expect(config.dropHeight).toBeGreaterThan(config.height)
   })
 })
 

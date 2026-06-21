@@ -159,12 +159,9 @@ export const ActivitySwimlaneEditPopover: React.FC<PopoverProps> = ({
 
   const handleOrientationChange = (next: "vertical" | "horizontal") => {
     if (next === orientation) return
-    // Flipping the primary axis swaps the node's width and height. Children are
-    // positioned relative to the swimlane, so transpose + clamp them into the
-    // swapped frame (see flipSwimlaneChildPosition) so a child near the old
-    // primary edge isn't stranded off the new cross-axis. Read the swimlane's
-    // current dimensions from `current` (not a render snapshot) so a resize
-    // while the popover is open can't write stale bounds.
+    // Swap width/height and transpose each child into the swapped frame. Read
+    // dimensions from `current` (not a render snapshot) so a concurrent resize
+    // can't write stale bounds.
     setNodes((current) => {
       const swimlane = current.find((n) => n.id === elementId)
       const newWidth = swimlane?.height ?? 0

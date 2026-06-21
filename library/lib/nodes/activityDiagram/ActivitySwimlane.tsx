@@ -9,15 +9,19 @@ import { useShallow } from "zustand/shallow"
 import { getLaneOffsets, resizeLaneDivider } from "@/utils"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
-import { ActivitySwimlaneSVG } from "@/components/svgs/nodes/activityDiagram/ActivitySwimlaneSVG"
+import {
+  ActivitySwimlaneSVG,
+  SWIMLANE_HEADER_SIZE,
+} from "@/components/svgs/nodes/activityDiagram/ActivitySwimlaneSVG"
 import { NodeToolbar } from "@/components/toolbars/NodeToolbar"
 
 const HANDLE_THICKNESS = 6
 
 /**
- * Invisible draggable strips over the interior lane separators. Dragging one
- * does a balanced resize of the two adjacent lanes (the swimlane's outer size
- * never changes). The visible divider lines are drawn by the SVG underneath.
+ * Invisible draggable strips over the interior lane separators that do a
+ * balanced resize of the two adjacent lanes. They sit in the lane body only —
+ * not the header band — so the header stays a clean handle for moving the
+ * swimlane.
  */
 function LaneResizeHandles({
   id,
@@ -82,18 +86,18 @@ function LaneResizeHandles({
           ? {
               position: "absolute",
               left: pos - HANDLE_THICKNESS / 2,
-              top: 0,
+              top: SWIMLANE_HEADER_SIZE,
               width: HANDLE_THICKNESS,
-              height: "100%",
+              height: height - SWIMLANE_HEADER_SIZE,
               cursor: "col-resize",
               touchAction: "none",
             }
           : {
               position: "absolute",
               top: pos - HANDLE_THICKNESS / 2,
-              left: 0,
+              left: SWIMLANE_HEADER_SIZE,
               height: HANDLE_THICKNESS,
-              width: "100%",
+              width: width - SWIMLANE_HEADER_SIZE,
               cursor: "row-resize",
               touchAction: "none",
             }

@@ -381,6 +381,11 @@ export type DropElementConfig = {
   readonly type: DiagramNodeType
   readonly width: number
   readonly height: number
+  /** Size of the node when dropped on the canvas, if it should differ from the
+   * sidebar preview size (`width`/`height`). Lets a large element preview small
+   * in the palette without shrinking the rest of the picker. */
+  readonly dropWidth?: number
+  readonly dropHeight?: number
   readonly defaultData?: Record<string, unknown>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly svg: React.FC<any>
@@ -522,11 +527,12 @@ export const dropElementConfigs: Readonly<
     },
     {
       type: "activitySwimlane",
-      // Sidebar previews share one Math.min(scale) across the palette, so an
-      // oversized item shrinks every sibling. Keep this close to the other
-      // containers (two 120px lanes + header) so the picker stays balanced.
-      width: 240,
-      height: 160,
+      // Preview small (the picker shares one Math.min scale, so a big item
+      // shrinks every sibling) but drop a properly sized swimlane on the canvas.
+      width: 160,
+      height: 100,
+      dropWidth: 400,
+      dropHeight: 240,
       defaultData: {
         name: "",
         orientation: "vertical",
