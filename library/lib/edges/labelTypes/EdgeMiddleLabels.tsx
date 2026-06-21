@@ -10,8 +10,8 @@ const USE_CASE_LABEL_OFFSET = 15
 
 interface EdgeMiddleLabelsProps {
   label?: string | null
-  pathMiddlePosition: IPoint
-  isMiddlePathHorizontal: boolean
+  /** The edge's full rendered polyline (orthogonal edges). */
+  activePoints?: IPoint[]
   sourcePoint?: IPoint
   targetPoint?: IPoint
   sourceNodeRect?: Rect
@@ -23,10 +23,11 @@ interface EdgeMiddleLabelsProps {
   textColor: string
 }
 
+const LABEL_FONT_SIZE = 12
+
 export const EdgeMiddleLabels = ({
   label,
-  pathMiddlePosition,
-  isMiddlePathHorizontal,
+  activePoints,
   sourcePoint,
   targetPoint,
   sourceNodeRect,
@@ -73,10 +74,13 @@ export const EdgeMiddleLabels = ({
     )
   }
 
-  // Orthogonal edges: centered on top of the mid-segment by default, flipped to
-  // the clearer side when the default would land on a connected node.
+  // Orthogonal edges: hosted on whichever arm + side has room, so the label
+  // clears its own other arms, connected nodes, and nearby edges.
+  if (!activePoints || activePoints.length < 2) return null
   const placed = computeMiddleLabelLayout({
-    mid: { point: pathMiddlePosition, isHorizontal: isMiddlePathHorizontal },
+    renderPoints: activePoints,
+    labelText: label,
+    fontSize: LABEL_FONT_SIZE,
     sourceNodeRect,
     targetNodeRect,
     neighborGeometry,
@@ -89,7 +93,7 @@ export const EdgeMiddleLabels = ({
       textAnchor={placed.textAnchor}
       dominantBaseline={placed.dominantBaseline}
       style={{
-        fontSize: "12px",
+        fontSize: `${LABEL_FONT_SIZE}px`,
         fontWeight: 700,
         fill: textColor,
         userSelect: "none",

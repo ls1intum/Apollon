@@ -9,10 +9,12 @@ import { getAxisAlignedSegments } from "@/utils/edgeUtils"
  * identical interactively and in headless (resvg) export, and unit-testable on
  * its own (mirrors edges/labelTypes/messageLayout.ts, the #645 gold standard).
  *
- * The model is the cross-tool consensus (yEd / ELK CENTER / mxGraph / JointJS):
- * anchor the label at the MID-SEGMENT midpoint, keep the text horizontal, and
- * offset it by a constant gap onto whichever perpendicular side is clearer.
- * Side selection is a deterministic two-candidate pick — not an optimizer.
+ * The model follows the cross-tool consensus (yEd / ELK CENTER / mxGraph /
+ * JointJS): keep the text horizontal and offset it by a constant gap onto a
+ * perpendicular side. The label is hosted on whichever ARM of the (possibly
+ * stepped) edge has room — scored against the edge's own arms, nodes, and
+ * neighbour edges — defaulting to centered-on-top of the arc-mid segment when
+ * that is already clear. Deterministic scoring, not a continuous optimizer.
  */
 
 export interface Rect {
@@ -139,45 +141,57 @@ const rectsIntersect = (a: Rect, b: Rect): boolean =>
   a.y + a.height > b.y
 
 /**
- * The approximate area a label occupies for a given side, used only for
- * scoring. Spans from the line out to the far edge of the (nominal) text on the
- * chosen side, so a candidate is penalised when that band would sit on a node
- * or on another arm of the edge.
+ * Rough single-line text width (flow px). Deterministic — a pure character-count
+ * estimate, never canvas measurement — so the chosen placement is identical
+ * interactively and in headless export, and SSR-safe. Slightly generous so the
+ * scoring box errs toward MORE clearance.
+ */
+export function estimateLabelWidth(text: string, fontSize: number): number {
+  return text.length * fontSize * 0.6
+}
+
+/**
+ * The text box (flow space) for a label anchored at `point` on the chosen side,
+ * sized to the actual label (`w` × `h`). Used to score overlap against the
+ * edge's own arms, neighbour edges, and nodes.
  */
 export function candidateBox(
-  mid: Pick<MidSegment, "point">,
-  side: LabelSide
+  point: IPoint,
+  side: LabelSide,
+  w: number,
+  h: number
 ): Rect {
   const gap = EDGES.LABEL_GAP
-  const depth = gap + EDGES.LABEL_LINE_HEIGHT
-  const halfExtent = EDGES.LABEL_NOMINAL_HALF_EXTENT
-  const { x, y } = mid.point
-
   switch (side) {
     case "above":
-      return {
-        x: x - halfExtent,
-        y: y - depth,
-        width: halfExtent * 2,
-        height: depth,
-      }
+      return { x: point.x - w / 2, y: point.y - gap - h, width: w, height: h }
     case "below":
-      return { x: x - halfExtent, y, width: halfExtent * 2, height: depth }
+      return { x: point.x - w / 2, y: point.y + gap, width: w, height: h }
     case "left":
-      return {
-        x: x - depth - halfExtent,
-        y: y - EDGES.LABEL_LINE_HEIGHT / 2,
-        width: depth + halfExtent,
-        height: EDGES.LABEL_LINE_HEIGHT,
-      }
+      return { x: point.x - gap - w, y: point.y - h / 2, width: w, height: h }
     case "right":
-      return {
-        x,
-        y: y - EDGES.LABEL_LINE_HEIGHT / 2,
-        width: depth + halfExtent,
-        height: EDGES.LABEL_LINE_HEIGHT,
-      }
+      return { x: point.x + gap, y: point.y - h / 2, width: w, height: h }
   }
+}
+
+/** Whether an axis-aligned polyline segment passes through the box. */
+const segmentCrossesBox = (
+  seg: {
+    orientation: "horizontal" | "vertical"
+    fixed: number
+    min: number
+    max: number
+  },
+  box: Rect
+): boolean => {
+  const onAcross =
+    seg.orientation === "horizontal"
+      ? seg.fixed >= box.y && seg.fixed <= box.y + box.height
+      : seg.fixed >= box.x && seg.fixed <= box.x + box.width
+  const lo = seg.orientation === "horizontal" ? box.x : box.y
+  const hi =
+    seg.orientation === "horizontal" ? box.x + box.width : box.y + box.height
+  return onAcross && seg.max >= lo && seg.min <= hi
 }
 
 const placeOnSide = (
@@ -233,24 +247,28 @@ const countNodeHits = (box: Rect, nodeRects: Rect[]): number =>
 const countNeighborHits = (box: Rect, polylines: IPoint[][]): number => {
   let hits = 0
   for (const polyline of polylines) {
-    for (const seg of getAxisAlignedSegments(polyline)) {
-      const onAcross =
-        seg.orientation === "horizontal"
-          ? seg.fixed >= box.y && seg.fixed <= box.y + box.height
-          : seg.fixed >= box.x && seg.fixed <= box.x + box.width
-      const lo = seg.orientation === "horizontal" ? box.x : box.y
-      const hi =
-        seg.orientation === "horizontal"
-          ? box.x + box.width
-          : box.y + box.height
-      if (onAcross && seg.max >= lo && seg.min <= hi) {
-        hits++
-        break
-      }
-    }
+    if (
+      getAxisAlignedSegments(polyline).some((seg) =>
+        segmentCrossesBox(seg, box)
+      )
+    )
+      hits++
   }
   return hits
 }
+
+/** How many of the edge's OWN arms (every segment except the host) cross the
+ * box — i.e. the label would sit on another part of the same edge. */
+const countOwnSegmentHits = (
+  box: Rect,
+  segments: ReturnType<typeof getAxisAlignedSegments>,
+  hostIndex: number
+): number =>
+  segments.reduce(
+    (hits, seg) =>
+      seg.index !== hostIndex && segmentCrossesBox(seg, box) ? hits + 1 : hits,
+    0
+  )
 
 const bounds = (polyline: IPoint[]): Rect => {
   let minX = Infinity
@@ -292,58 +310,110 @@ export function collectNeighborPolylines(
 }
 
 export interface MiddleLabelInput {
-  /** Only the midpoint + orientation are needed; callers may pass a full
-   * MidSegment or a synthetic {point, isHorizontal}. */
-  mid: Pick<MidSegment, "point" | "isHorizontal">
+  /** The edge's full rendered polyline (source → target). */
+  renderPoints: IPoint[]
+  /** The label text — its estimated width decides which arms have room. */
+  labelText: string
+  /** Render font size (px) of the label. */
+  fontSize: number
   sourceNodeRect?: Rect
   targetNodeRect?: Rect
-  /** Nearby other-edge polylines (see collectNeighborPolylines). Used only to
-   * break a tie between two node-clear sides — never overrides node avoidance. */
+  /** Nearby other-edge polylines (see collectNeighborPolylines). */
   neighborGeometry?: IPoint[][]
 }
 
+const clampToRange = (value: number, lo: number, hi: number): number =>
+  Math.max(lo, Math.min(hi, value))
+
+const distance = (a: IPoint, b: IPoint): number =>
+  Math.hypot(a.x - b.x, a.y - b.y)
+
+/** Lexicographic "<" over equal-length numeric cost tuples. */
+const lexLess = (a: readonly number[], b: readonly number[]): boolean => {
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return a[i] < b[i]
+  }
+  return false
+}
+
 /**
- * Places the relationship/stereotype middle label. Default = centered on top of
- * the mid-segment (above for a horizontal segment, right for a vertical one),
- * flipped to the clearer side when the default would sit on a connected node
- * (the stacked-nodes case, #129) or — as a tie-breaker between two node-clear
- * sides — where fewer other edges cross. Scored lexicographically
- * [nodeHits, neighborHits] so node avoidance always dominates. The constant
- * perpendicular gap already keeps the label off its own line, and the toolbar
- * (transient, far above at y-64) does not collide with an on-top label, so
- * neither is a factor. All inputs are always-present geometry, so the side is
- * stable across selection and identical in headless export.
+ * Places the relationship/stereotype middle label so it overlaps nothing it can
+ * avoid. The label is hosted on whichever arm of the edge — and on whichever
+ * perpendicular side — has room: each candidate (every segment × its two sides)
+ * is scored lexicographically by
+ *   [ overlaps (own other arms + nodes + neighbour edges),
+ *     does-not-fit-within-the-segment,
+ *     distance from the arc-midpoint (keep it central),
+ *     side preference (on top / right) ].
+ * For a simple edge the arc-mid segment wins with zero overlaps, so the label
+ * stays centered on top exactly as before; on a zig-zag/stepped edge it moves to
+ * a longer arm with clearance instead of crossing the short mid-segment's
+ * neighbouring arms. All inputs are static geometry, so the placement is stable
+ * across selection and identical in headless export.
  */
 export function computeMiddleLabelLayout(input: MiddleLabelInput): PlacedLabel {
-  const { mid, neighborGeometry } = input
+  const { renderPoints, labelText, fontSize, neighborGeometry } = input
   const nodeRects = [input.sourceNodeRect, input.targetNodeRect].filter(
     (rect): rect is Rect => rect !== undefined
   )
+  const points = collapseCollinearPoints(renderPoints)
+  const arc = getMidSegment(
+    points,
+    points[0] ?? { x: 0, y: 0 },
+    points[points.length - 1] ?? { x: 0, y: 0 }
+  ).point
 
-  // First candidate is the preferred "on top" side; a tie keeps it.
-  const sides: LabelSide[] = mid.isHorizontal
-    ? ["above", "below"]
-    : ["right", "left"]
+  const w = estimateLabelWidth(labelText, fontSize)
+  const h = EDGES.LABEL_LINE_HEIGHT
+  const segments = getAxisAlignedSegments(points)
+  if (segments.length === 0) {
+    return placeOnSide({ point: arc }, "above")
+  }
 
-  let best: LabelSide = sides[0]
-  let bestScore: [number, number] | null = null
-  for (const side of sides) {
-    const box = candidateBox(mid, side)
-    const score: [number, number] = [
-      countNodeHits(box, nodeRects),
-      neighborGeometry ? countNeighborHits(box, neighborGeometry) : 0,
-    ]
-    if (
-      bestScore === null ||
-      score[0] < bestScore[0] ||
-      (score[0] === bestScore[0] && score[1] < bestScore[1])
-    ) {
-      bestScore = score
-      best = side
+  let best: { point: IPoint; side: LabelSide } | null = null
+  let bestCost: number[] | null = null
+
+  for (const seg of segments) {
+    const isHorizontal = seg.orientation === "horizontal"
+    // Anchor at the point on this arm nearest the arc-midpoint, clamped so the
+    // label's own extent stays inside the arm (central AND fitting when it can).
+    const along = isHorizontal ? w : h
+    const lo = seg.min + along / 2
+    const hi = seg.max - along / 2
+    const target = isHorizontal ? arc.x : arc.y
+    const coord =
+      lo <= hi ? clampToRange(target, lo, hi) : (seg.min + seg.max) / 2
+    const anchor: IPoint = isHorizontal
+      ? { x: coord, y: seg.fixed }
+      : { x: seg.fixed, y: coord }
+    const fits = seg.max - seg.min >= along
+
+    const sides: LabelSide[] = isHorizontal
+      ? ["above", "below"]
+      : ["right", "left"]
+    for (const side of sides) {
+      const box = candidateBox(anchor, side, w, h)
+      // Cost, most-significant first. Sitting on a NODE (covers its content) is
+      // worse than crossing a thin line (own arm or neighbour edge); then prefer
+      // a label that fits within its arm, then a central spot, then the on-top
+      // side. Minimising this picks a clear, central placement and falls back to
+      // the least-bad one when nothing is fully clear.
+      const cost: [number, number, number, number, number] = [
+        countNodeHits(box, nodeRects),
+        countOwnSegmentHits(box, segments, seg.index) +
+          (neighborGeometry ? countNeighborHits(box, neighborGeometry) : 0),
+        fits ? 0 : 1,
+        Math.round(distance(anchor, arc)),
+        side === sides[0] ? 0 : 1,
+      ]
+      if (bestCost === null || lexLess(cost, bestCost)) {
+        bestCost = cost
+        best = { point: anchor, side }
+      }
     }
   }
 
-  return placeOnSide(mid, best)
+  return placeOnSide({ point: best!.point }, best!.side)
 }
 
 export interface RotatedLabelPlacement {

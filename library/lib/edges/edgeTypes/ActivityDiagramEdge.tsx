@@ -110,8 +110,7 @@ export const ActivityDiagramEdge = ({
 
         <EdgeMiddleLabels
           label={data?.label}
-          pathMiddlePosition={edgeData.pathMiddlePosition}
-          isMiddlePathHorizontal={edgeData.isMiddlePathHorizontal}
+          activePoints={edgeData.activePoints}
           showRelationshipLabels={true}
           sourceNodeRect={edgeData.sourceNodeRect}
           targetNodeRect={edgeData.targetNodeRect}

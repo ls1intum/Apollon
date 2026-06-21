@@ -5,7 +5,6 @@ import {
   computeUseCaseLabelLayout,
   collectNeighborPolylines,
   candidateBox,
-  type Rect,
 } from "@/utils/geometry/edgeLabelLayout"
 import { EDGES } from "@/constants"
 import type { IPoint } from "@/edges/Connection"
@@ -97,19 +96,27 @@ describe("getMidSegment", () => {
 })
 
 describe("computeMiddleLabelLayout", () => {
-  const horizontalMid = getMidSegment(
-    [p(0, 100), p(200, 100)],
-    p(0, 100),
-    p(200, 100)
-  )
-  const verticalMid = getMidSegment(
-    [p(100, 0), p(100, 200)],
-    p(100, 0),
-    p(100, 200)
-  )
+  const horizontal = (
+    over: Partial<Parameters<typeof computeMiddleLabelLayout>[0]> = {}
+  ) =>
+    computeMiddleLabelLayout({
+      renderPoints: [p(0, 100), p(200, 100)],
+      labelText: "Rel",
+      fontSize: 12,
+      ...over,
+    })
+  const vertical = (
+    over: Partial<Parameters<typeof computeMiddleLabelLayout>[0]> = {}
+  ) =>
+    computeMiddleLabelLayout({
+      renderPoints: [p(100, 0), p(100, 200)],
+      labelText: "Rel",
+      fontSize: 12,
+      ...over,
+    })
 
   it("defaults a horizontal edge label to centered ON TOP (above)", () => {
-    const placed = computeMiddleLabelLayout({ mid: horizontalMid })
+    const placed = horizontal()
     expect(placed.side).toBe("above")
     expect(placed.x).toBe(100)
     expect(placed.y).toBe(100 - EDGES.LABEL_GAP)
@@ -118,58 +125,78 @@ describe("computeMiddleLabelLayout", () => {
   })
 
   it("defaults a vertical edge label to the right", () => {
-    const placed = computeMiddleLabelLayout({ mid: verticalMid })
+    const placed = vertical()
     expect(placed.side).toBe("right")
     expect(placed.x).toBe(100 + EDGES.LABEL_GAP)
     expect(placed.textAnchor).toBe("start")
   })
 
   it("flips below when a node occupies the default (above) side (#129)", () => {
-    // A node sitting just above the horizontal mid-segment.
-    const sourceNodeRect: Rect = { x: 60, y: 100 - 40, width: 80, height: 40 }
-    const placed = computeMiddleLabelLayout({
-      mid: horizontalMid,
-      sourceNodeRect,
+    const placed = horizontal({
+      sourceNodeRect: { x: 60, y: 100 - 40, width: 80, height: 40 },
     })
     expect(placed.side).toBe("below")
     expect(placed.dominantBaseline).toBe("hanging")
   })
 
   it("keeps the default side when both sides are clear", () => {
-    const placed = computeMiddleLabelLayout({
-      mid: horizontalMid,
+    const placed = horizontal({
       sourceNodeRect: { x: 1000, y: 1000, width: 10, height: 10 },
     })
     expect(placed.side).toBe("above")
   })
 
   it("keeps the default side when BOTH sides are equally blocked (deterministic)", () => {
-    // Nodes hugging the line above and below: a tie must keep the on-top side.
-    const placed = computeMiddleLabelLayout({
-      mid: horizontalMid,
+    const placed = horizontal({
       sourceNodeRect: { x: 60, y: 100 - 40, width: 80, height: 40 },
       targetNodeRect: { x: 60, y: 100, width: 80, height: 40 },
     })
     expect(placed.side).toBe("above")
   })
 
-  it("breaks a node-clear tie toward the side with fewer crossing edges", () => {
-    // A neighbour edge crosses the default ABOVE box → flip BELOW.
-    const placed = computeMiddleLabelLayout({
-      mid: horizontalMid,
-      neighborGeometry: [[p(100, 70), p(100, 90)]],
-    })
+  it("breaks a node-clear tie away from a side crossed by another edge", () => {
+    const placed = horizontal({ neighborGeometry: [[p(100, 70), p(100, 90)]] })
     expect(placed.side).toBe("below")
   })
 
-  it("never lets a crossing edge override node avoidance", () => {
-    // Node blocks BELOW, a neighbour crosses ABOVE: node term dominates → ABOVE.
-    const placed = computeMiddleLabelLayout({
-      mid: horizontalMid,
+  it("never sits on a node to avoid merely crossing an edge", () => {
+    // Node blocks BELOW, a neighbour crosses ABOVE: node avoidance dominates.
+    const placed = horizontal({
       targetNodeRect: { x: 60, y: 100, width: 80, height: 40 },
       neighborGeometry: [[p(100, 70), p(100, 90)]],
     })
     expect(placed.side).toBe("above")
+  })
+
+  it("moves the label onto a longer arm when the mid-segment is too short (stepped edge)", () => {
+    // The user's flowchart staircase: the arc-midpoint lands on the short
+    // horizontal arm at y=468 (x 524..541) squeezed between two vertical arms,
+    // so a wide label there would cross them. It must move to a clear arm.
+    const renderPoints = [
+      p(511, 385),
+      p(541, 385),
+      p(541, 468),
+      p(524, 468),
+      p(524, 550),
+      p(554, 550),
+    ]
+    const placed = computeMiddleLabelLayout({
+      renderPoints,
+      labelText: "sdfasd fas dfg",
+      fontSize: 12,
+    })
+    // Not centered on the cramped y=468 arm (that would overlap the arms).
+    expect(placed.y).not.toBe(468)
+    // Sits beside one of the long vertical arms (x = 541 or 524, ± the gap).
+    expect([
+      541 + EDGES.LABEL_GAP,
+      541 - EDGES.LABEL_GAP,
+      524 + EDGES.LABEL_GAP,
+      524 - EDGES.LABEL_GAP,
+    ]).toContain(placed.x)
+    // And it does not cross any of the edge's own arms (verified by the side
+    // being a vertical-arm placement, anchored start/end).
+    expect(["start", "end"]).toContain(placed.textAnchor)
   })
 })
 
@@ -219,11 +246,15 @@ describe("computeUseCaseLabelLayout", () => {
 })
 
 describe("candidateBox", () => {
-  it("spans from the line outward on the chosen side", () => {
-    const mid = getMidSegment([p(0, 100), p(200, 100)], p(0, 100), p(200, 100))
-    const above = candidateBox(mid, "above")
-    expect(above.y + above.height).toBe(100) // reaches the line
-    const below = candidateBox(mid, "below")
-    expect(below.y).toBe(100) // starts at the line
+  it("sizes the box to the label and offsets it by the gap on the chosen side", () => {
+    const point = p(100, 100)
+    const above = candidateBox(point, "above", 40, 14)
+    expect(above.width).toBe(40)
+    expect(above.height).toBe(14)
+    expect(above.y + above.height).toBe(100 - EDGES.LABEL_GAP) // gap below text
+    const below = candidateBox(point, "below", 40, 14)
+    expect(below.y).toBe(100 + EDGES.LABEL_GAP)
+    const right = candidateBox(point, "right", 40, 14)
+    expect(right.x).toBe(100 + EDGES.LABEL_GAP)
   })
 })

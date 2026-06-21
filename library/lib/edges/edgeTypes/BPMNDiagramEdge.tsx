@@ -118,8 +118,7 @@ export const BPMNDiagramEdge = ({
 
         <EdgeMiddleLabels
           label={data?.label}
-          pathMiddlePosition={edgeData.pathMiddlePosition}
-          isMiddlePathHorizontal={edgeData.isMiddlePathHorizontal}
+          activePoints={edgeData.activePoints}
           showRelationshipLabels={showRelationshipLabels}
           sourceNodeRect={edgeData.sourceNodeRect}
           targetNodeRect={edgeData.targetNodeRect}
