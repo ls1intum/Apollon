@@ -35,6 +35,7 @@ const renderRows = () =>
         itemHeight={30}
         width={200}
         offsetFromTop={0}
+        maxNameWidth={80}
       />
     </svg>
   )
@@ -55,10 +56,10 @@ describe("ErCfRowSection (structured crow's-foot table)", () => {
     expect(getByText("FK")).toBeTruthy()
   })
 
-  it("underlines only the primary-key column name", () => {
+  it("draws a divider between rows (first row has none)", () => {
     const { container } = renderRows()
-    // Exactly one PK column → exactly one underline line.
-    expect(container.querySelectorAll("line")).toHaveLength(1)
+    // 3 columns → a rule above rows 2 and 3, none above the first.
+    expect(container.querySelectorAll("line")).toHaveLength(2)
   })
 
   it("omits the type cell when a column has no type", () => {

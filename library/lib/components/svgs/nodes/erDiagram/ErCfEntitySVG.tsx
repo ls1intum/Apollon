@@ -9,15 +9,15 @@ import AssessmentIcon from "../../AssessmentIcon"
 import { SVGComponentProps } from "@/types/SVG"
 import { AssessmentSelectableElement } from "@/components/AssessmentSelectableElement"
 import { StyledRect } from "../../StyledElements"
-import { getCustomColorsFromData } from "@/utils/layoutUtils"
+import { getCustomColorsFromData, measureTextWidth } from "@/utils"
 
 export type ErCfEntitySVGProps = SVGComponentProps & {
   data: ErCfEntityProps
 }
 
-// Crow's-foot (Mermaid-style) entity — a table box with the entity name in the
-// header and its attributes as rows. Structurally a one-compartment class, so it
-// reuses the class diagram's HeaderSection / RowBlockSection renderers.
+// Crow's-foot (Mermaid / IE-style) entity — a table with a shaded title band and
+// aligned columns: a key gutter (PK/FK/UK), the column name, and a muted data
+// type. Mirrors how Mermaid, dbdiagram and DrawSQL render an entity table.
 export const ErCfEntitySVG = ({
   id,
   width,
@@ -41,7 +41,16 @@ export const ErCfEntitySVG = ({
 
   const scaledWidth = width * (SIDEBAR_PREVIEW_SCALE ?? 1)
   const scaledHeight = height * (SIDEBAR_PREVIEW_SCALE ?? 1)
-  const { fillColor, strokeColor, textColor } = getCustomColorsFromData(data)
+  const { strokeColor, textColor } = getCustomColorsFromData(data)
+
+  const maxNameWidth = Math.max(
+    0,
+    ...attributes.map((a) => measureTextWidth(a.name, LAYOUT.DEFAULT_FONT))
+  )
+  // Shaded title band so the entity name reads as a table header. A user-set
+  // fill is honoured; otherwise the subtle theme surface var is used.
+  const headerFill =
+    data.fillColor || "var(--apollon-background-variant, #f8f9fa)"
 
   return (
     <svg
@@ -71,7 +80,7 @@ export const ErCfEntitySVG = ({
           width={width}
           headerHeight={headerHeight}
           textColor={textColor}
-          fill={fillColor}
+          fill={headerFill}
         />
 
         <SeparationLine
@@ -85,6 +94,7 @@ export const ErCfEntitySVG = ({
           itemHeight={attributeHeight}
           width={width}
           offsetFromTop={headerHeight}
+          maxNameWidth={maxNameWidth}
           showAssessmentResults={showAssessmentResults}
         />
 

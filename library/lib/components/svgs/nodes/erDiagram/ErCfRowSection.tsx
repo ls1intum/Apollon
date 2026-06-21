@@ -4,12 +4,14 @@ import { CustomText } from "../CustomText"
 import AssessmentIcon from "../../AssessmentIcon"
 import { FeedbackDropzone } from "@/components/wrapper/FeedbackDropzone"
 import { AssessmentSelectableElement } from "@/components/AssessmentSelectableElement"
-import { getCustomColorsFromData, measureTextWidth } from "@/utils"
-import { DEFAULT_FONT_SIZE, LAYOUT } from "@/constants"
+import { getCustomColorsFromData } from "@/utils"
+import { LAYOUT } from "@/constants"
 
-// Width of the leftmost key gutter (holds "PK" / "FK" / "UK"). Matches Mermaid's
+// Width of the leftmost key gutter (holds "PK" / "FK" / "UK"), matching Mermaid's
 // dedicated key column.
 export const ER_CF_KEY_GUTTER_WIDTH = 34
+// Gap between the name column and the (left-aligned) data-type column.
+export const ER_CF_COLUMN_GAP = 16
 
 interface Props {
   columns: (ErCfColumn & { score?: number })[]
@@ -17,23 +19,27 @@ interface Props {
   itemHeight: number
   width: number
   offsetFromTop: number
+  // Width of the widest column name, so every row's type column aligns.
+  maxNameWidth: number
   showAssessmentResults?: boolean
 }
 
-// Renders an entity's columns as structured rows: [key gutter] name [type],
-// the layout Mermaid / DBML / physical ER tools use. Primary-key names are
-// underlined (drawn as an explicit line so it survives PNG/PDF export, unlike
-// CSS text-decoration).
+// Renders an entity's columns as an aligned table: [key gutter] name  type.
+// The key role (PK/FK/UK) sits in a left gutter, the data type in a muted column
+// left-aligned at a shared x so the types line up — the layout Mermaid, dbdiagram
+// and DrawSQL converge on. Thin row dividers + a shaded header band (set by the
+// caller) make it read as a real table rather than a list.
 export const ErCfRowSection: FC<Props> = ({
   columns,
   padding,
   itemHeight,
   width,
   offsetFromTop,
+  maxNameWidth,
   showAssessmentResults = false,
 }) => {
   const nameX = padding + ER_CF_KEY_GUTTER_WIDTH
-  const typeX = width - padding
+  const typeX = nameX + maxNameWidth + ER_CF_COLUMN_GAP
 
   return (
     <g transform={`translate(0, ${offsetFromTop})`}>
@@ -42,7 +48,6 @@ export const ErCfRowSection: FC<Props> = ({
         const centerY = 15 + y
         const { fillColor, textColor } = getCustomColorsFromData(column)
         const keys = column.keys ?? []
-        const isPrimary = keys.includes("PK")
 
         return (
           <AssessmentSelectableElement
@@ -60,6 +65,17 @@ export const ErCfRowSection: FC<Props> = ({
                 height={itemHeight - LAYOUT.LINE_WIDTH}
                 fill={fillColor}
               />
+              {/* Thin rule between rows (the first row's top is the header divider). */}
+              {index > 0 && (
+                <line
+                  x1={LAYOUT.LINE_WIDTH}
+                  x2={width - LAYOUT.LINE_WIDTH}
+                  y1={y}
+                  y2={y}
+                  stroke="var(--apollon-gray, #e9ecef)"
+                  strokeWidth={1}
+                />
+              )}
 
               {keys.length > 0 && (
                 <CustomText
@@ -83,25 +99,15 @@ export const ErCfRowSection: FC<Props> = ({
               >
                 {column.name}
               </CustomText>
-              {isPrimary && column.name && (
-                <line
-                  x1={nameX}
-                  x2={nameX + measureTextWidth(column.name)}
-                  y1={centerY + DEFAULT_FONT_SIZE * 0.6}
-                  y2={centerY + DEFAULT_FONT_SIZE * 0.6}
-                  stroke={textColor}
-                  strokeWidth={1.5}
-                />
-              )}
 
               {column.type && (
                 <CustomText
                   x={typeX}
                   y={centerY}
                   dominantBaseline="middle"
-                  textAnchor="end"
+                  textAnchor="start"
                   fill={textColor}
-                  opacity={0.65}
+                  opacity={0.6}
                 >
                   {column.type}
                 </CustomText>

@@ -11,7 +11,10 @@ import {
   calculateMinWidth,
   calculateMinHeight,
 } from "@/utils"
-import { ER_CF_KEY_GUTTER_WIDTH } from "@/components/svgs/nodes/erDiagram/ErCfRowSection"
+import {
+  ER_CF_KEY_GUTTER_WIDTH,
+  ER_CF_COLUMN_GAP,
+} from "@/components/svgs/nodes/erDiagram/ErCfRowSection"
 import { LAYOUT } from "@/constants"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
@@ -35,19 +38,22 @@ export function ErCfEntity({
   const padding = LAYOUT.DEFAULT_PADDING
   const font = LAYOUT.DEFAULT_FONT
 
-  // Each column row needs room for the key gutter + name + (gap +) type, so the
-  // box can't be sized from the name alone the way a single-string row would be.
+  // Columns are globally aligned, so the box must fit the widest name PLUS the
+  // widest type (not the widest single row), or a type on a short-name row clips.
   const maxTextWidth = useMemo(() => {
-    const COLUMN_GAP = 16
-    const rowWidths = attributes.map((attr) => {
-      const typeWidth = attr.type ? measureTextWidth(attr.type, font) : 0
-      return (
-        ER_CF_KEY_GUTTER_WIDTH +
-        measureTextWidth(attr.name, font) +
-        (typeWidth > 0 ? COLUMN_GAP + typeWidth : 0)
-      )
-    })
-    return Math.max(measureTextWidth(name, font), ...rowWidths, 0)
+    const maxNameWidth = Math.max(
+      0,
+      ...attributes.map((a) => measureTextWidth(a.name, font))
+    )
+    const maxTypeWidth = Math.max(
+      0,
+      ...attributes.map((a) => (a.type ? measureTextWidth(a.type, font) : 0))
+    )
+    const bodyWidth =
+      ER_CF_KEY_GUTTER_WIDTH +
+      maxNameWidth +
+      (maxTypeWidth > 0 ? ER_CF_COLUMN_GAP + maxTypeWidth : 0)
+    return Math.max(measureTextWidth(name, font), bodyWidth, 0)
   }, [name, attributes, font])
 
   const minWidth = useMemo(
