@@ -465,4 +465,47 @@ describe("end-to-end through the real conversion worker", () => {
     // viewBox and inserted as the first child.
     expect(body).toMatch(/<svg[^>]*>\s*<rect [^>]*fill="#ffffff"\/>/i)
   }, 20_000)
+
+  it("renders an edge bound to a hidden *-between-* anchor", async () => {
+    // Regression: edges connected to a `*-between-*` resolution anchor were
+    // dropped by the headless render (React Flow can't position the hidden
+    // handle under JSDOM), so the diagram exported with its boxes but no edge.
+    // `normalizeModelForServerRender` collapses the anchor to its named side.
+    const node = (id: string, x: number) => ({
+      id,
+      width: 160,
+      height: 100,
+      type: "class",
+      position: { x, y: 285 },
+      data: { name: "Class", methods: [], attributes: [] },
+      measured: { width: 160, height: 100 },
+    })
+    const model = {
+      version: "4.0.0",
+      title: "Between Handle",
+      type: "ClassDiagram",
+      nodes: [node("a", 330), node("b", 645)],
+      edges: [
+        {
+          id: "e1",
+          source: "a",
+          target: "b",
+          type: "ClassUnidirectional",
+          sourceHandle: "right",
+          targetHandle: "left-between-mid-bottom-center",
+          data: { points: [] },
+        },
+      ],
+      assessments: {},
+    }
+    const created = await request(app).post("/api/diagrams").send(model)
+    expect(created.status).toBe(201)
+
+    const res = await request(app)
+      .get(`/api/diagrams/${created.body.id}/preview.svg`)
+      .buffer(true)
+    expect(res.status).toBe(200)
+    // The edge survives the export: a visible edge path is present.
+    expect(asText(res)).toMatch(/react-flow__edge-path|data-inline-marker/)
+  }, 20_000)
 })
