@@ -479,7 +479,9 @@
   cursor: pointer;
   font-weight: 600;
   white-space: nowrap;
-  font-size: 12px;
+  /* Bumped from 12px: the prior editor labels read a touch small. 13px keeps the
+     palette compact while matching the select/label/hint baseline below. */
+  font-size: 13px;
 }
 
 .apollon-palette__view-button:hover {
@@ -498,7 +500,7 @@
   width: 100%;
   max-width: 160px;
   padding: 4px;
-  font-size: 11px;
+  font-size: 13px; /* up from 11px — see view-button note above */
   line-height: 1.4;
 }
 
@@ -614,9 +616,11 @@
     var(--apollon-chrome-ease-standard);
 }
 
-.apollon-chrome-iconbtn > svg {
-  fill: currentColor;
-}
+/* lucide icons are stroke-based (fill="none" stroke="currentColor"); the button's
+   `color` drives the stroke. Do NOT set `fill: currentColor` here — it would fill
+   the stroke paths into a solid blob (the old fill-based custom icons needed it;
+   lucide does not). React-flow's own built-in zoom/fit glyphs are fill-based and
+   keep their fill rule below. */
 
 /* The paint box stays compact, but the hit target extends to ≥44px (Apple HIG)
    via an invisible overlay — so touch chrome doesn't have to grow the glyph. */
@@ -1189,7 +1193,7 @@ svg.react-flow__connectionline {
   flex-direction: column;
 }
 .apollon-select-label {
-  font-size: 0.75rem;
+  font-size: 0.8125rem; /* 13px — up from 0.75rem (12px) for legibility */
   color: var(--apollon-primary-contrast, #000);
   margin-bottom: 2px;
 }
@@ -1328,7 +1332,7 @@ svg.react-flow__connectionline {
   background: transparent;
   color: var(--apollon-primary-contrast, #000);
   font: inherit;
-  font-size: 0.75rem;
+  font-size: 0.8125rem; /* 13px — up from 0.75rem (12px) for legibility */
   line-height: 1;
   white-space: nowrap;
   cursor: pointer;

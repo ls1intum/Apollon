@@ -66,8 +66,11 @@
   }
 
   /* sizes */
+  /* Default control height is 36px (h-9): a touch roomier than the prior 32px for
+     comfortable hit area, still compact and text-sm. Icon-only size variants are
+     intentionally left untouched (they have their own square paint boxes). */
   [data-slot="button"][data-size="default"] {
-    @apply h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2;
+    @apply h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2;
   }
   [data-slot="button"][data-size="xs"] {
     @apply h-6 gap-1 rounded-[min(var(--radius-md),10px)] px-2 text-xs in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5;
@@ -139,8 +142,9 @@
   }
 
   /* ── Input (data-slot="input") ────────────────────────────────────────── */
+  /* h-9 (36px) matches the default button height for aligned form rows. */
   [data-slot="input"] {
-    @apply h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40;
+    @apply h-9 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40;
   }
   [data-slot="input"]::file-selector-button {
     @apply inline-flex h-6 border-0 bg-transparent text-sm font-medium text-foreground;

@@ -40,11 +40,16 @@
   --primitive-guide-horizontal: #0984e3;
   --primitive-grid: rgba(36, 39, 36, 0.1);
 
-  /* Home surfaces (light) — cool slate */
-  --primitive-surface-sunken: #eef1f5;
-  --primitive-surface-raised: #f6f8fa;
-  --primitive-surface-raised-hover: #eef1f5;
-  --primitive-surface-raised-active: #e3e8ef;
+  /* Home surfaces (light) — shadcn-canonical elevation: the RESTING raised
+     surface (cards / popovers / menus) is WHITE; separation comes from their
+     border + shadow, not a gray plate. The cool neutral-slate grays are reserved
+     for interaction states — hover/highlight (raised-hover, = --color-accent) and
+     the recessed muted well (sunken, = --color-muted) — and are kept DISTINCT so
+     the elevation model doesn't collapse (hover is lighter, sunken is deeper). */
+  --primitive-surface-raised: #ffffff;
+  --primitive-surface-raised-hover: #f1f5f9;
+  --primitive-surface-sunken: #eef2f6;
+  --primitive-surface-raised-active: #e2e8f0;
   --primitive-surface-row-alt: #f8fafc;
 
   /* Home text (light). text-muted is one step lighter than secondary but still
@@ -59,11 +64,14 @@
   --primitive-border-strong: #aeb8c5;
   --primitive-border-subtle: #e3e8ef;
 
-  /* Home accent (light) */
+  /* Home accent (light). base is the brand navy; -ring (focus rings) is the same
+     navy in BOTH themes, so it references base. -strong (text/icon ON a soft
+     accent fill) equals base in light but diverges in dark (-> white), so it gets
+     its own literal here and a dark override below. */
   --primitive-accent-base: #0f3a66;
   --primitive-accent-soft: #d3e7fb;
-  --primitive-accent-strong: #0f3a66;
-  --primitive-accent-ring: #0f3a66;
+  --primitive-accent-strong: var(--primitive-accent-base);
+  --primitive-accent-ring: var(--primitive-accent-base);
   --primitive-accent-contrast: #fff;
 
   /* On-accent (translucent white over accent banner / dark navbar) */
@@ -247,7 +255,12 @@
 
   /* ── Layer 1: primitives (dark deltas) ─────────────────────────────────── */
 
-  /* Editor neutrals / status (dark) */
+  /* Editor neutrals / status (dark). These primitives are REDEFINED in light too,
+     so they stay as named primitives (the light/dark pair is the abstraction).
+     Editor surfaces that had a single dark-only pass-through primitive
+     (bg-base/-variant, gray-base/-variant, switch-border, list-group,
+     btn-outline-secondary, modal-bottom-border) are now inlined straight into the
+     --apollon-* dark deltas below, since a one-use 1:1 alias added no value. */
   --primitive-slate-500: #888;
   --primitive-grid: #303530;
   --primitive-warning-yellow: #ffffff;
@@ -258,16 +271,6 @@
   --primitive-danger-border: #e43725;
   --primitive-guide-vertical: #ff7675;
   --primitive-guide-horizontal: #74b9ff;
-
-  /* Editor base surfaces (dark) */
-  --primitive-bg-base: #13161c;
-  --primitive-bg-variant: #303530;
-  --primitive-gray-base: #242724;
-  --primitive-gray-variant: #f8f9fa;
-  --primitive-switch-border: #3d423d;
-  --primitive-list-group: #303130;
-  --primitive-btn-outline-secondary: #b8c0c5;
-  --primitive-modal-bottom-border: #979797;
 
   /* Home surfaces (dark) — widened elevation steps */
   --primitive-surface-sunken: #0f1216;
@@ -290,8 +293,8 @@
      would drop below 4.5:1, so do not brighten it. */
   --primitive-accent-base: #236ebe;
   --primitive-accent-soft: #223548;
-  --primitive-accent-strong: #ffffff;
-  --primitive-accent-ring: #236ebe;
+  --primitive-accent-strong: #ffffff; /* diverges from base: white on the dark soft fill */
+  --primitive-accent-ring: var(--primitive-accent-base);
   --primitive-accent-contrast: #f4f9ff;
 
   /* Badge / status (dark) */
@@ -331,19 +334,19 @@
   --apollon-alert-warning-yellow: var(--primitive-warning-yellow);
   --apollon-alert-warning-background: var(--primitive-warning-bg);
   --apollon-alert-warning-border: var(--primitive-warning-border);
-  --apollon-background: var(--primitive-bg-base);
+  --apollon-background: #13161c;
   --apollon-background-inverse: var(--primitive-white);
-  --apollon-background-variant: var(--primitive-bg-variant);
-  --apollon-gray: var(--primitive-gray-base);
+  --apollon-background-variant: #303530;
+  --apollon-gray: #242724;
   --apollon-grid: var(--primitive-grid);
-  --apollon-gray-variant: var(--primitive-gray-variant);
+  --apollon-gray-variant: #f8f9fa;
   --apollon-alert-danger-color: var(--primitive-danger-color);
   --apollon-alert-danger-background: var(--primitive-danger-bg);
   --apollon-alert-danger-border: var(--primitive-danger-border);
-  --apollon-switch-box-border-color: var(--primitive-switch-border);
-  --apollon-list-group-color: var(--primitive-list-group);
-  --apollon-btn-outline-secondary-color: var(--primitive-btn-outline-secondary);
-  --apollon-modal-bottom-border: var(--primitive-modal-bottom-border);
+  --apollon-switch-box-border-color: #3d423d;
+  --apollon-list-group-color: #303130;
+  --apollon-btn-outline-secondary-color: #b8c0c5;
+  --apollon-modal-bottom-border: #979797;
   --apollon-guide-vertical: var(--primitive-guide-vertical);
   --apollon-guide-horizontal: var(--primitive-guide-horizontal);
 

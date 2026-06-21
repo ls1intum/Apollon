@@ -86,6 +86,34 @@ ergonomic alias `createApollonTheme` maps to the CSS variable.
 > verify the `background` ⇄ `primaryContrast` pair (and `primary` against the
 > surfaces it sits on) with a contrast checker.
 
+## Editor chrome (`--apollon-chrome-*`) — auto-derived, rarely set
+
+The floating editor chrome — the element palette, zoom / undo controls, minimap,
+header islands, and version rail — is painted from a second band of variables,
+`--apollon-chrome-*`. **You almost never set these.** Every chrome surface,
+border, and text color is `color-mix()`-**derived from the two tokens you already
+theme** — `--apollon-background` and `--apollon-primary-contrast` — so theming
+those two gives the chrome correct, cohesive light/dark values for free. They are
+deliberately kept out of `ApollonTheme` / `createApollonTheme` for that reason:
+the typed API is the surface you tune; chrome follows.
+
+The handful that are genuinely meant to be tuned (and are safe to override) are:
+
+| CSS variable                 | Used for                                                                              |
+| ---------------------------- | ------------------------------------------------------------------------------------- |
+| `--apollon-chrome-accent`    | Accent for meaning (primary action, current marker). Defaults to `--apollon-primary`. |
+| `--apollon-chrome-radius-sm` | Pill / small-control corner radius (default 6px).                                     |
+| `--apollon-chrome-radius-md` | Control corner radius (default 8px).                                                  |
+| `--apollon-chrome-radius-lg` | Panel / rail corner radius (default 12px).                                            |
+| `--apollon-chrome-edge`      | Margin from the canvas edge for every cluster (default 10px).                         |
+| `--apollon-chrome-gap`       | Gap between adjacent clusters (default 8px).                                          |
+
+Everything else under `--apollon-chrome-*` (the derived surface / border / text
+ramp, the glass tint + blur, shadows, motion tokens, and the dimensional
+`btn`/`pad`/`hit`/`island-h` system) is **internal** — derived or structural, not
+part of the stable contract. Don't depend on those names; theme `background` +
+`primaryContrast` and let the chrome derive.
+
 ## Light / dark — the `data-theme` mechanism
 
 The bundled stylesheet ships **light defaults in `:root`** and **dark deltas in

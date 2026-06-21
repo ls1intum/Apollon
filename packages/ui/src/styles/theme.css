@@ -48,6 +48,8 @@
      restyles the shared primitives. */
   --color-accent: var(--home-surface-raised-hover);
   --color-accent-foreground: var(--home-text-primary);
+  /* Explicit alias of --color-accent (the webapp's bespoke hover/selected states
+     use bg-accent-hover); kept named so those call sites read intentionally. */
   --color-accent-hover: var(--home-surface-raised-hover);
   --color-accent-strong: var(--home-accent-strong);
   --color-accent-soft: var(--home-accent-soft);
