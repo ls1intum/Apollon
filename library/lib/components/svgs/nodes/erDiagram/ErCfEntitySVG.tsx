@@ -1,8 +1,8 @@
-import { ClassNodeElement, ErCfEntityProps } from "@/types"
+import { ErCfColumn, ErCfEntityProps } from "@/types"
 import { LAYOUT } from "@/constants"
 import { SeparationLine } from "@/components/svgs/nodes/SeparationLine"
 import { HeaderSection } from "../HeaderSection"
-import { RowBlockSection } from "../RowBlockSection"
+import { ErCfRowSection } from "./ErCfRowSection"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import AssessmentIcon from "../../AssessmentIcon"
@@ -33,7 +33,7 @@ export const ErCfEntitySVG = ({
   const padding = LAYOUT.DEFAULT_PADDING
 
   const assessments = useDiagramStore(useShallow((state) => state.assessments))
-  const processedAttributes = attributes.map((el: ClassNodeElement) => ({
+  const processedAttributes = attributes.map((el: ErCfColumn) => ({
     ...el,
     score: assessments[el.id]?.score,
   }))
@@ -79,14 +79,13 @@ export const ErCfEntitySVG = ({
           width={width}
           strokeColor={strokeColor}
         />
-        <RowBlockSection
-          items={processedAttributes}
+        <ErCfRowSection
+          columns={processedAttributes}
           padding={padding}
           itemHeight={attributeHeight}
           width={width}
           offsetFromTop={headerHeight}
           showAssessmentResults={showAssessmentResults}
-          itemElementType="attribute"
         />
 
         {showAssessmentResults && (

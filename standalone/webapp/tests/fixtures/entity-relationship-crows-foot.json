@@ -15,15 +15,19 @@
         "attributes": [
           {
             "id": "a1111111-1111-4111-a111-111111111111",
-            "name": "id: int (PK)"
+            "name": "id",
+            "type": "int",
+            "keys": ["PK"]
           },
           {
             "id": "a2222222-2222-4222-a222-222222222222",
-            "name": "name: varchar"
+            "name": "name",
+            "type": "varchar"
           },
           {
             "id": "a3333333-3333-4333-a333-333333333333",
-            "name": "email: varchar"
+            "name": "email",
+            "type": "varchar"
           }
         ]
       },
@@ -40,15 +44,20 @@
         "attributes": [
           {
             "id": "b1111111-1111-4111-a111-111111111111",
-            "name": "id: int (PK)"
+            "name": "id",
+            "type": "int",
+            "keys": ["PK"]
           },
           {
             "id": "b2222222-2222-4222-a222-222222222222",
-            "name": "customerId: int (FK)"
+            "name": "customerId",
+            "type": "int",
+            "keys": ["FK"]
           },
           {
             "id": "b3333333-3333-4333-a333-333333333333",
-            "name": "total: decimal"
+            "name": "total",
+            "type": "decimal"
           }
         ]
       },
@@ -65,15 +74,20 @@
         "attributes": [
           {
             "id": "c1111111-1111-4111-a111-111111111111",
-            "name": "id: int (PK)"
+            "name": "id",
+            "type": "int",
+            "keys": ["PK"]
           },
           {
             "id": "c2222222-2222-4222-a222-222222222222",
-            "name": "orderId: int (FK)"
+            "name": "orderId",
+            "type": "int",
+            "keys": ["FK"]
           },
           {
             "id": "c3333333-3333-4333-a333-333333333333",
-            "name": "quantity: int"
+            "name": "quantity",
+            "type": "int"
           }
         ]
       },

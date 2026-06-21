@@ -3,10 +3,10 @@ import { useDiagramStore } from "@/store"
 import { ErCfEntityProps } from "@/types"
 import { useShallow } from "zustand/shallow"
 import { PopoverProps } from "../types"
-import { EditableAttributeList } from "../classDiagram/EditableAttributesList"
+import { ErCfColumnList } from "./ErCfColumnList"
 
-// Crow's-foot entity: a table with editable attribute (column) rows. Reuses the
-// class diagram's attribute list since both store `data.attributes`.
+// Crow's-foot entity: a table whose columns carry a name, data type and key
+// role(s) — edited through the structured column list.
 export const ErCfEntityEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
@@ -33,7 +33,7 @@ export const ErCfEntityEditPopover: React.FC<PopoverProps> = ({
         nodeData={nodeData}
         handleDataFieldUpdate={handleDataFieldUpdate}
       />
-      <EditableAttributeList nodeId={elementId} />
+      <ErCfColumnList nodeId={elementId} />
     </>
   )
 }

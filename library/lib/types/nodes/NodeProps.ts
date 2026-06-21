@@ -162,9 +162,15 @@ export type ErAttributeProps = DefaultNodeProps & {
   isDerived?: boolean // dashed ellipse
 }
 
-// Crow's-foot (Mermaid-style) entity: a table box whose columns are listed as
-// rows inside it. Uses ClassNodeElement so the row renderer and attribute editor
-// are shared with the class diagram.
+// Crow's-foot (Mermaid / Information-Engineering) entity: a table box whose
+// columns are listed as structured rows — name, data type, and key role(s) —
+// matching how Mermaid `erDiagram`, DBML and physical ER tools render a table.
+// `keys` is an array because a column can be both PK and FK (Mermaid's "PK, FK").
+export type ErCfColumnKey = "PK" | "FK" | "UK"
+export type ErCfColumn = ClassNodeElement & {
+  type?: string
+  keys?: ErCfColumnKey[]
+}
 export type ErCfEntityProps = DefaultNodeProps & {
-  attributes: ClassNodeElement[]
+  attributes: ErCfColumn[]
 }

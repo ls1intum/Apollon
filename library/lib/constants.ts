@@ -900,8 +900,8 @@ export const dropElementConfigs: Readonly<
       defaultData: {
         name: "Entity",
         attributes: [
-          { id: generateUUID(), name: "id: int (PK)" },
-          { id: generateUUID(), name: "name: varchar" },
+          { id: generateUUID(), name: "id", type: "int", keys: ["PK"] },
+          { id: generateUUID(), name: "name", type: "varchar" },
         ],
       },
       svg: ErCfEntitySVG,
