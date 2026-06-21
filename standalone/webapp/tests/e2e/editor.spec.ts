@@ -249,11 +249,9 @@ test.describe("Canvas panning", () => {
     await page.mouse.down()
     await page.mouse.move(startX - 120, startY - 80, { steps: 10 })
     await page.mouse.up()
-    await page.waitForTimeout(400)
 
-    // The viewport transform should have changed
-    const newTransform = await getTransform()
-    expect(newTransform).not.toEqual(initialTransform)
+    // The pan changes the viewport transform.
+    await expect.poll(getTransform).not.toEqual(initialTransform)
   })
 })
 
@@ -384,7 +382,8 @@ test.describe("Navbar", () => {
 const PHONE_PORTRAIT = { width: 390, height: 844 }
 const PHONE_LANDSCAPE = { width: 844, height: 390 }
 const SAFE_INSET = 47 // simulated side notch inset (iPhone landscape)
-const NAVBAR_LANDSCAPE_GAP = 32 // breathing room around logo/menu in landscape
+// Chrome hugs the safe-area boundary in landscape (max(edge, safe-area)) — the
+// side inset itself is the clearance, with no extra constant nudge on top.
 
 test.describe("Mobile responsive layout", () => {
   test("opens export actions with a tap", async ({ page }) => {
@@ -483,7 +482,9 @@ test.describe("Mobile responsive layout", () => {
     const menuBox = await menu.boundingBox()
     expect(menuBox?.width).toBeLessThanOrEqual(240)
 
-    await menu.getByRole("menuitem", { name: "Share" }).click()
+    // Share is a primary icon on the pill, not in the overflow menu.
+    await page.keyboard.press("Escape")
+    await page.getByRole("button", { name: "Share" }).click()
 
     const shareDialog = page.getByRole("dialog", { name: "Share" })
     await expect(shareDialog).toBeVisible()
@@ -525,9 +526,10 @@ test.describe("Mobile responsive layout", () => {
       )
     }, SAFE_INSET)
 
-    await expect(
-      page.getByRole("button", { name: "open options" })
-    ).toBeVisible()
+    // Landscape is wide enough for the full action bar — it keeps every control
+    // (the overflow "open options" pill is for narrow portrait only).
+    const actions = page.locator('[aria-label="Editor actions"]')
+    await expect(actions).toBeVisible()
 
     const palette = page.getByTestId("apollon-palette")
     await expect(palette).toBeVisible()
@@ -540,20 +542,16 @@ test.describe("Mobile responsive layout", () => {
     const navbarBox = await page.locator("header").boundingBox()
     expect(navbarBox?.height).toBeLessThanOrEqual(36)
 
-    // Logo and menu clear the notch plus the landscape breathing-room gap.
+    // Logo and actions clear the dynamic island by hugging the side safe area.
     const homeLinkBox = await page
       .getByRole("link", { name: "Apollon home" })
       .boundingBox()
-    expect(homeLinkBox?.x).toBeGreaterThanOrEqual(
-      SAFE_INSET + NAVBAR_LANDSCAPE_GAP
-    )
+    expect(homeLinkBox?.x).toBeGreaterThanOrEqual(SAFE_INSET)
 
-    const menuButtonBox = await page
-      .getByRole("button", { name: "open options" })
-      .boundingBox()
-    expect(menuButtonBox).not.toBeNull()
-    expect(menuButtonBox!.x + menuButtonBox!.width).toBeLessThanOrEqual(
-      PHONE_LANDSCAPE.width - SAFE_INSET - NAVBAR_LANDSCAPE_GAP
+    const actionsBox = await actions.boundingBox()
+    expect(actionsBox).not.toBeNull()
+    expect(actionsBox!.x + actionsBox!.width).toBeLessThanOrEqual(
+      PHONE_LANDSCAPE.width - SAFE_INSET
     )
 
     // React Flow controls/minimap stay inside the left/right insets.
@@ -606,16 +604,18 @@ test.describe("Mobile responsive layout", () => {
     await page.goto(`/local/${modelId}`)
     await waitForCanvasReady(page, false)
 
-    const paletteBox = await page.getByTestId("apollon-palette").boundingBox()
-    const controlsBox = await page
-      .locator(".react-flow__controls")
-      .boundingBox()
-    expect(paletteBox).not.toBeNull()
-    expect(controlsBox).not.toBeNull()
-    // Palette bottom edge stays above the controls' top edge.
-    expect(paletteBox!.y + paletteBox!.height).toBeLessThanOrEqual(
-      controlsBox!.y
-    )
+    // The palette height is ResizeObserver-driven, so poll the relation rather
+    // than asserting on a single possibly-pre-reflow frame: the palette bottom
+    // edge stays above the controls' top edge.
+    const palette = page.getByTestId("apollon-palette")
+    const controls = page.locator(".react-flow__controls")
+    await expect
+      .poll(async () => {
+        const p = await palette.boundingBox()
+        const c = await controls.boundingBox()
+        return p && c ? p.y + p.height - c.y : Number.NaN
+      })
+      .toBeLessThanOrEqual(0)
   })
 })
 
@@ -665,16 +665,15 @@ test.describe("Element palette", () => {
 
       const palette = page.getByTestId("apollon-palette")
       await expect(palette).toBeVisible()
-      // Settle the measured-layout effect.
-      await page.waitForTimeout(300)
 
       // All 14 BPMN cells (13 elements + color) are present and none scroll.
       const entries = palette.locator(".apollon-palette__entry")
-      expect(await entries.count()).toBe(14)
-      const overflow = await palette.evaluate(
-        (el) => el.scrollHeight - el.clientHeight
-      )
-      expect(overflow).toBeLessThanOrEqual(1)
+      await expect(entries).toHaveCount(14)
+      // The cell sizing is ResizeObserver-driven, so poll the overflow rather
+      // than reading a single possibly-pre-reflow frame.
+      await expect
+        .poll(() => palette.evaluate((el) => el.scrollHeight - el.clientHeight))
+        .toBeLessThanOrEqual(1)
     })
   }
 })

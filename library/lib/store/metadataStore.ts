@@ -66,7 +66,9 @@ type InitialMetadataState = {
   reconnectPreviewBasePoints: IPoint[]
 }
 const initialMetadataState: InitialMetadataState = {
-  diagramTitle: "Untitled Diagram",
+  // Empty by default — an untitled diagram stays untitled (hosts render their own
+  // muted placeholder); never auto-populate a real title.
+  diagramTitle: "",
   diagramType: UMLDiagramType.ClassDiagram,
   mode: ApollonMode.Modelling,
   view: ApollonView.Modelling,
@@ -136,9 +138,7 @@ export const createMetadataStore = (
         updateMetaDataFromYjs: () =>
           set(
             {
-              diagramTitle:
-                getDiagramMetadata(ydoc).get("diagramTitle") ||
-                "Untitled Diagram",
+              diagramTitle: getDiagramMetadata(ydoc).get("diagramTitle") || "",
               diagramType: parseDiagramType(
                 getDiagramMetadata(ydoc).get("diagramType")
               ),

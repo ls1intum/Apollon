@@ -51,7 +51,6 @@ import {
   ReachabilityGraphMarkingSVG,
 } from "./svgs"
 import { DiagramNodeType } from "@/typings"
-import { ZINDEX } from "@/constants"
 import { MapIcon } from "./Icon/MapIcon"
 import { SouthEastArrowIcon } from "./Icon/SouthEastArrowIcon"
 import {
@@ -79,45 +78,48 @@ export const CustomMiniMap = () => {
 
   if (minimapCollapsed) {
     return (
-      <Panel position="bottom-right" onClick={() => setMinimapCollapsed(false)}>
-        <MapIcon fill="var(--apollon-primary-contrast, #000000)" />
+      <Panel position="bottom-right">
+        <button
+          type="button"
+          className="apollon-chrome-iconbtn"
+          aria-label="Show minimap"
+          title="Show minimap (overview)"
+          onClick={() => setMinimapCollapsed(false)}
+        >
+          <MapIcon width={18} height={18} fill="currentColor" />
+        </button>
       </Panel>
     )
   }
 
+  // Expanded: the MiniMap renders as its own glass card (a React Flow Panel), and
+  // the collapse arrow is a SIBLING bottom-right Panel that is IDENTICAL to the
+  // collapsed open button (same glass panel + .apollon-chrome-iconbtn, same
+  // bottom-right corner) — so toggling reads as one control and the cursor never
+  // moves. Rendering the MiniMap normally (not nested) keeps its sizing intact;
+  // a tight offsetScale avoids a fat empty margin around the diagram.
   return (
-    <Panel
-      position="bottom-right"
-      onClick={() => setMinimapCollapsed(true)}
-      style={{ boxShadow: "none", backgroundColor: "transparent" }}
-    >
-      <div
-        style={{
-          position: "absolute",
-          bottom: 0,
-          right: 0,
-          display: "flex",
-          zIndex: ZINDEX.PANEL,
-          padding: 8,
-          backgroundColor: "var(--apollon-background, white)",
-          borderRadius: "4px",
-          justifyContent: "center",
-          alignItems: "center",
-          cursor: "pointer",
-          boxShadow: "0 0 4px 0 rgb(0 0 0 / 0.2)",
-        }}
-      >
-        <SouthEastArrowIcon fill="var(--apollon-primary-contrast, #000000)" />
-      </div>
-
+    <>
       <MiniMap
         zoomable
-        onClick={() => setMinimapCollapsed(true)}
+        pannable
         nodeComponent={MiniMapNode}
-        offsetScale={20}
-        style={{ zIndex: ZINDEX.MINIMAP }}
+        offsetScale={6}
+        bgColor="transparent"
+        className="apollon-minimap"
       />
-    </Panel>
+      <Panel position="bottom-right">
+        <button
+          type="button"
+          className="apollon-chrome-iconbtn"
+          aria-label="Hide minimap"
+          title="Hide minimap"
+          onClick={() => setMinimapCollapsed(true)}
+        >
+          <SouthEastArrowIcon width={18} height={18} fill="currentColor" />
+        </button>
+      </Panel>
+    </>
   )
 }
 

@@ -10,3 +10,9 @@ export {
   useApollonEditorOrThrow,
 } from "./components/react/context"
 export { useApollonSubscription } from "./components/react/useApollonSubscription"
+// Canvas overlay / control API (React surface): declaratively inject floating
+// chrome into the editor canvas.
+export {
+  ApollonControl,
+  type ApollonControlProps,
+} from "./components/react/ApollonControl"

@@ -56,11 +56,25 @@ export const Sidebar = () => {
   const [canvas, setCanvas] = useState({ w: 0, h: 0 })
 
   useLayoutEffect(() => {
-    const parent = asideRef.current?.offsetParent as HTMLElement | null
-    if (!parent) return
+    const aside = asideRef.current
+    const parent = aside?.offsetParent as HTMLElement | null
+    if (!aside || !parent) return
     const measure = () => {
       const rect = parent.getBoundingClientRect()
-      setCanvas({ w: rect.width, h: rect.height })
+      // Size the grid to the palette's ACTUAL available height — the gap between
+      // its own top and the bottom controls — not the full canvas height. The
+      // palette is CSS-capped to that band (max-height), so using the canvas
+      // height over-counts by the top/bottom chrome and overflows on short
+      // viewports. Measuring real elements keeps this in sync with the CSS
+      // without duplicating the max-height formula in JS.
+      const asideTop = aside.getBoundingClientRect().top
+      const controls = parent.querySelector(".react-flow__controls")
+      const GAP = 8 // --apollon-chrome-gap: palette clears the controls by one
+      const bottomLimit = controls
+        ? controls.getBoundingClientRect().top - GAP
+        : rect.bottom - (asideTop - rect.top) // symmetric fallback
+      const h = Math.max(0, bottomLimit - asideTop)
+      setCanvas({ w: rect.width, h })
     }
     measure()
     const observer = new ResizeObserver(measure)

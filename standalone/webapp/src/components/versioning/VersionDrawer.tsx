@@ -21,8 +21,10 @@ import {
   type FC,
   type KeyboardEvent,
 } from "react"
+import { createPortal } from "react-dom"
 import { toast } from "react-toastify"
 import { useEditorContext, useModalContext } from "@/contexts"
+import { useRegionHost } from "@/hooks/useRegionHost"
 import {
   selectScopedPreview,
   selectVersions,
@@ -30,7 +32,7 @@ import {
 } from "@/stores/useVersionStore"
 import { ApiError } from "@/services/DiagramApiClient"
 import { getVersionRepository } from "@/services/versionRepository"
-import { NAVBAR_BACKGROUND_COLOR, MOBILE_VIEW_QUERY } from "@/constants"
+import { NARROW_VIEW_QUERY } from "@/constants"
 import {
   MAX_DESCRIPTION_LENGTH,
   MAX_NAME_LENGTH,
@@ -44,10 +46,8 @@ import { TEXT_PRIMARY, TEXT_MUTED, ROW_HOVER_BG } from "./theme"
 import { structuralFingerprint, isNamedVersion } from "@/lib/version/predicates"
 import { groupUnnamedRuns } from "./utils"
 
-/** Sidebar width on desktop. Narrow enough to keep the canvas usable. */
+/** Panel width on desktop. Narrow enough to keep the canvas usable. */
 const SIDEBAR_WIDTH = 320
-/** Slide-in animation duration matched to MUI's standard transition. */
-const SIDEBAR_ANIMATION_MS = 220
 
 /**
  * Switches the sidebar to a bottom-sheet drawer at the same breakpoint
@@ -78,12 +78,13 @@ interface Props {
 /**
  * Chrome-free body of the version-history panel. Reused by:
  *
- *  - `VersionSidebar` (desktop ≥ md): rendered inline as a flex sibling of
- *    the canvas so it doesn't overlay the user's work.
+ *  - `VersionRail` (desktop ≥ md): portaled into the editor's `right-rail`
+ *    overlay region; the canvas stays full-bleed and makes room via the
+ *    measured inset (no reflow).
  *  - `VersionDrawer` (mobile <sm): rendered inside an MUI bottom-sheet
  *    Drawer because there isn't room for two columns on small viewports.
  */
-const VersionSidebarBody: FC<Props> = ({
+export const VersionSidebarBody: FC<Props> = ({
   diagramId,
   onVersionSaved,
   onConfirmedRestore,
@@ -369,10 +370,10 @@ const VersionSidebarBody: FC<Props> = ({
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        // Whole sidebar paints the navbar dark colour so it visually
-        // continues the top bar in both themes. Text is light, with rgba
-        // hover/selected tints so dark/light toggle isn't needed here.
-        bgcolor: NAVBAR_BACKGROUND_COLOR,
+        // Transparent: the desktop rail's glass panel (VersionRail) and the
+        // mobile drawer's Paper own the surface, so the body just themes its text
+        // via the shared --apollon-chrome-* tokens.
+        bgcolor: "transparent",
         color: TEXT_PRIMARY,
       }}
       role="complementary"
@@ -395,6 +396,7 @@ const VersionSidebarBody: FC<Props> = ({
             flexDirection: "column",
             alignItems: "stretch",
             gap: 0.75,
+            borderBottom: "1px solid var(--apollon-chrome-border)",
           }}
         >
           <InputBase
@@ -449,17 +451,24 @@ const VersionSidebarBody: FC<Props> = ({
               px: 1.75,
               py: 0.5,
               fontWeight: 600,
-              color: NAVBAR_BACKGROUND_COLOR,
-              backgroundColor: TEXT_PRIMARY,
-              "&:hover": { backgroundColor: "#ffffff" },
+              borderRadius: "var(--apollon-chrome-radius-md)",
+              color: "var(--apollon-chrome-accent-contrast)",
+              backgroundColor: "var(--apollon-chrome-accent)",
+              "&:hover": {
+                backgroundColor: "var(--apollon-chrome-accent)",
+                filter: "brightness(0.94)",
+              },
               "&.Mui-disabled": {
-                backgroundColor: "rgba(255, 255, 255, 0.12)",
-                color: TEXT_MUTED,
+                backgroundColor: "var(--apollon-chrome-surface-active)",
+                color: "var(--apollon-chrome-text-muted)",
               },
             }}
           >
             {submitting ? (
-              <CircularProgress size={14} sx={{ color: TEXT_MUTED }} />
+              <CircularProgress
+                size={14}
+                sx={{ color: "var(--apollon-chrome-accent-contrast)" }}
+              />
             ) : (
               t.createButton
             )}
@@ -585,7 +594,7 @@ const VersionSidebarBody: FC<Props> = ({
                       },
                       "&.Mui-disabled": {
                         color: TEXT_MUTED,
-                        borderColor: "rgba(255, 255, 255, 0.12)",
+                        borderColor: "var(--apollon-chrome-border)",
                       },
                     }}
                   >
@@ -686,72 +695,61 @@ const VersionSidebarBody: FC<Props> = ({
 }
 
 /**
- * Persistent desktop sidebar. Inline flex sibling of the canvas. Animates
- * in by transitioning `width` from 0 → SIDEBAR_WIDTH; the canvas reflows
- * smoothly alongside instead of being overlaid. The inner Box stays at a
- * fixed width so the contents don't shimmer during the animation — the
- * outer Box clips them via `overflow: hidden`.
- *
- * The body is unmounted when fully closed (after the animation finishes) to
- * release the SVG-thumbnail observer and stop rendering a 320px column for a
- * drawer the user isn't looking at.
+ * Desktop version-history panel, rehomed onto the library's overlay/control API.
+ * Instead of being a flex sibling that pushes the canvas (a reflow on every
+ * open/close), it is portaled into the editor's `right-rail` overlay region: the
+ * canvas stays full-bleed beneath it and the diagram makes room via the measured
+ * inset (no reflow). The panel unmounts when closed, releasing the
+ * SVG-thumbnail observer. Mobile keeps the bottom-sheet `<VersionDrawer>`.
  */
-export const VersionSidebar: FC<Props> = ({
+export const VersionRail: FC<Props> = ({
   diagramId,
   onVersionSaved,
   onConfirmedRestore,
   onPreview,
 }) => {
-  // Below the navbar's mobile threshold the bottom-sheet
-  // `<VersionDrawer>` takes over; render nothing here so the sidebar
-  // doesn't eat 320px of width on phones or in the awkward
-  // 600–768px range where the navbar is already mobile.
-  const isSmall = useMediaQuery(MOBILE_VIEW_QUERY)
+  const { editor } = useEditorContext()
+  const isSmall = useMediaQuery(NARROW_VIEW_QUERY)
   const open = useVersionStore((s) => Boolean(s.drawerOpenByDiagram[diagramId]))
-  const [mounted, setMounted] = useState(open)
-  useEffect(() => {
-    if (open) {
-      setMounted(true)
-      return
-    }
-    const handle = setTimeout(() => setMounted(false), SIDEBAR_ANIMATION_MS)
-    return () => clearTimeout(handle)
-  }, [open])
 
-  if (isSmall) return null
+  // Hold the right-rail region while open on desktop: a stable host node whose
+  // measured width becomes the panel's reserved right inset.
+  const host = useRegionHost(editor, "right-rail", !isSmall && open)
 
-  return (
+  if (!host) return null
+
+  return createPortal(
     <Box
+      className="apollon-glass apollon-history-panel apollon-chrome-island"
       sx={{
-        width: open ? SIDEBAR_WIDTH : 0,
-        flexShrink: 0,
+        // A floating glass card — the right-side mirror of the left palette, NOT
+        // a full-height docked slab. Anchored to the top of the right-rail band
+        // and bounded in height (scrolls internally) so it reads as an island,
+        // not a column. Width + margins are what the band measures as the
+        // reserved right inset (no reflow); the height cap doesn't affect width.
+        width: SIDEBAR_WIDTH,
+        alignSelf: "flex-start",
+        maxHeight: "min(640px, 100%)",
+        minHeight: 0,
+        m: "10px",
         overflow: "hidden",
-        transition: (theme) =>
-          theme.transitions.create("width", {
-            duration: SIDEBAR_ANIMATION_MS,
-            easing: theme.transitions.easing.easeInOut,
-          }),
-        bgcolor: NAVBAR_BACKGROUND_COLOR,
+        borderRadius: "var(--apollon-chrome-radius-lg)",
       }}
-      aria-hidden={!open}
     >
-      <Box sx={{ width: SIDEBAR_WIDTH, height: "100%" }}>
-        {mounted && (
-          <VersionSidebarBody
-            diagramId={diagramId}
-            onVersionSaved={onVersionSaved}
-            onConfirmedRestore={onConfirmedRestore}
-            onPreview={onPreview}
-          />
-        )}
-      </Box>
-    </Box>
+      <VersionSidebarBody
+        diagramId={diagramId}
+        onVersionSaved={onVersionSaved}
+        onConfirmedRestore={onConfirmedRestore}
+        onPreview={onPreview}
+      />
+    </Box>,
+    host
   )
 }
 
 /**
- * Mobile fallback. On `<sm` viewports there isn't room for a 400-pixel
- * column, so we keep the bottom-sheet pattern for the small-screen case.
+ * Mobile fallback. On `<sm` viewports there isn't room for a side column
+ * (SIDEBAR_WIDTH), so we keep the bottom-sheet pattern for the small-screen case.
  */
 export const VersionDrawer: FC<Props> = ({
   diagramId,
@@ -759,7 +757,7 @@ export const VersionDrawer: FC<Props> = ({
   onConfirmedRestore,
   onPreview,
 }) => {
-  const isSmall = useMediaQuery(MOBILE_VIEW_QUERY)
+  const isSmall = useMediaQuery(NARROW_VIEW_QUERY)
   const open = useVersionStore((s) => Boolean(s.drawerOpenByDiagram[diagramId]))
   const closeDrawer = useVersionStore((s) => s.closeDrawer)
   // Desktop uses the inline sidebar; this component is mobile-only.
@@ -770,7 +768,20 @@ export const VersionDrawer: FC<Props> = ({
       open={open}
       onClose={() => closeDrawer(diagramId)}
       PaperProps={{
-        sx: { height: "80vh", width: "100%" },
+        // A floating glass card detached from the edges (margins + radius +
+        // blur), not a full-bleed bottom sheet — the mobile mirror of the
+        // desktop rail island. backgroundColor MUST be set via sx: emotion beats
+        // MUI's default `.MuiPaper-root` white, but a plain class loses the
+        // specificity tie and the sheet renders white in dark mode.
+        className: "apollon-glass apollon-history-panel",
+        sx: {
+          m: "var(--apollon-chrome-edge)",
+          maxHeight: "70vh",
+          borderRadius: "var(--apollon-chrome-radius-lg)",
+          backgroundColor: "var(--apollon-chrome-glass-solid)",
+          backgroundImage: "none",
+          color: "var(--apollon-chrome-text)",
+        },
       }}
     >
       <VersionSidebarBody

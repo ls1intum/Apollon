@@ -2,6 +2,15 @@
 // `./internals` (unstable) or intentionally private.
 export * from "./typings"
 export { ApollonEditor } from "./apollon-editor"
+// Canvas overlay / control API types — needed by both the imperative and React
+// injection paths.
+export type {
+  OverlayRegion,
+  OverlaySide,
+  InsetContribution,
+  OverlayControlOptions,
+  OverlayControlInput,
+} from "./overlay/types"
 export {
   // Artemis-facing assessment helpers (host consumes these directly).
   getAssessmentNameForArtemis,

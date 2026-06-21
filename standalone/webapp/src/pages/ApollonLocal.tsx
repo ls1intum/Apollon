@@ -32,7 +32,7 @@ import {
 import {
   VersionDrawer,
   VersionPreviewBanner,
-  VersionSidebar,
+  VersionRail,
 } from "@/components/versioning"
 import { structuralFingerprint } from "@/lib/version/predicates"
 import { versioningStrings as t } from "@/components/versioning/strings"
@@ -394,7 +394,10 @@ export const ApollonLocal: FC = () => {
       <Box
         sx={{
           position: "absolute",
-          top: 12,
+          // Sit one gap BELOW the floating header islands (safe-area + edge 10 +
+          // island-h 46 + gap 8) so the banner never overlaps the brand/title/
+          // actions chrome — it reads as a sibling island on the row beneath.
+          top: "calc(var(--safe-area-inset-top, 0px) + 64px)",
           left: 0,
           right: 0,
           display: "flex",
@@ -451,7 +454,7 @@ export const ApollonLocal: FC = () => {
           <Box ref={containerRef} sx={{ width: "100%", height: "100%" }} />
           {banner}
         </Box>
-        <VersionSidebar
+        <VersionRail
           diagramId={diagramId}
           onConfirmedRestore={handleConfirmedRestore}
           onVersionSaved={handleVersionSaved}

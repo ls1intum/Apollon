@@ -1,4 +1,9 @@
 import ReactDOM from "react-dom/client"
+// Must be imported FIRST (before ./utils, the stores and overlay modules) so the
+// editor render tree — and the node/edge component registries it pulls in —
+// evaluates ahead of any utility/store/overlay module. Relocating it (e.g.
+// behind a store factory or a separate root module) reorders the bundle and
+// reintroduces a load-order TDZ in the node/popover registries.
 import { AppWithProvider } from "./App"
 import { ReactFlowInstance, type Node, type Edge } from "@xyflow/react"
 import {
@@ -10,21 +15,15 @@ import {
   getRenderedDiagramBounds,
 } from "./utils"
 import { UMLDiagramType } from "./types"
-import { createDiagramStore, DiagramStore } from "@/store/diagramStore"
-import { createMetadataStore, MetadataStore } from "@/store/metadataStore"
-import { createPopoverStore, PopoverStore } from "@/store/popoverStore"
+import { createDiagramStore, type DiagramStore } from "@/store/diagramStore"
+import { createMetadataStore, type MetadataStore } from "@/store/metadataStore"
+import { createPopoverStore, type PopoverStore } from "@/store/popoverStore"
 import {
   createAssessmentSelectionStore,
-  AssessmentSelectionStore,
+  type AssessmentSelectionStore,
 } from "@/store/assessmentSelectionStore"
-import {
-  createAlignmentGuidesStore,
-  AlignmentGuidesStore,
-} from "@/store/alignmentGuidesStore"
-import {
-  createEdgeGeometryStore,
-  EdgeGeometryStore,
-} from "@/store/edgeGeometryStore"
+import { createAlignmentGuidesStore } from "@/store/alignmentGuidesStore"
+import { createEdgeGeometryStore } from "@/store/edgeGeometryStore"
 import {
   DiagramStoreContext,
   MetadataStoreContext,
@@ -32,7 +31,17 @@ import {
   AssessmentSelectionStoreContext,
   AlignmentGuidesStoreContext,
   EdgeGeometryStoreContext,
+  OverlayStoreContext,
 } from "./store/context"
+import { createOverlayStore, type OverlayStore } from "./overlay/overlayStore"
+import { RegionMount } from "./overlay/RegionMount"
+import {
+  type OverlayControlInput,
+  type OverlayRegion,
+  type OverlaySide,
+  OVERLAY_REGIONS,
+  ZERO_INSETS,
+} from "./overlay/types"
 import { getPerfCounters } from "./sync/perfCounters"
 import { MessageType, SendBroadcastMessage, YjsSync } from "./sync/yjsSync"
 import { getNodesMap } from "./sync/ydoc"
@@ -88,8 +97,8 @@ export class ApollonEditor {
   private readonly metadataStore: StoreApi<MetadataStore>
   private readonly popoverStore: StoreApi<PopoverStore>
   private readonly assessmentSelectionStore: StoreApi<AssessmentSelectionStore>
-  private readonly alignmentGuidesStore: StoreApi<AlignmentGuidesStore>
-  private readonly edgeGeometryStore: StoreApi<EdgeGeometryStore>
+  private readonly overlayStore: StoreApi<OverlayStore>
+  private readonly hostRegionEls = new Map<OverlayRegion, HTMLElement>()
   private subscribers: Apollon.Subscribers = {}
   constructor(element: HTMLElement, options?: Apollon.ApollonOptions) {
     if (!(element instanceof HTMLElement)) {
@@ -104,8 +113,9 @@ export class ApollonEditor {
     )
     this.popoverStore = createPopoverStore()
     this.assessmentSelectionStore = createAssessmentSelectionStore()
-    this.alignmentGuidesStore = createAlignmentGuidesStore()
-    this.edgeGeometryStore = createEdgeGeometryStore()
+    const alignmentGuidesStore = createAlignmentGuidesStore()
+    const edgeGeometryStore = createEdgeGeometryStore()
+    this.overlayStore = createOverlayStore()
     this.syncManager = new YjsSync(
       this.ydoc,
       this.diagramStore,
@@ -128,7 +138,9 @@ export class ApollonEditor {
 
     this.diagramStore.getState().setDiagramId(diagramId)
 
-    const diagramName = options?.model?.title || "Untitled Diagram"
+    // Keep an empty title EMPTY — don't force "Untitled Diagram" (which would be
+    // written back to the model and persisted). Hosts show their own placeholder.
+    const diagramName = options?.model?.title ?? ""
     const diagramType =
       options?.type || options?.model?.type || UMLDiagramType.ClassDiagram
     this.metadataStore
@@ -195,32 +207,32 @@ export class ApollonEditor {
               value={this.assessmentSelectionStore}
             >
               <AlignmentGuidesStoreContext.Provider
-                value={this.alignmentGuidesStore}
+                value={alignmentGuidesStore}
               >
-                <EdgeGeometryStoreContext.Provider
-                  value={this.edgeGeometryStore}
-                >
-                  <AppWithProvider
-                    onReactFlowInit={this.setReactFlowInstance.bind(this)}
-                    collaboration={collaboration}
-                    awareness={{
-                      setLocalAwarenessCursor:
-                        this.syncManager.setLocalAwarenessCursor,
-                      setLocalAwarenessSelectedElement:
-                        this.syncManager.setLocalAwarenessSelectedElement,
-                      setLocalAwarenessViewport:
-                        this.syncManager.setLocalAwarenessViewport,
-                      setLocalAwarenessFollowing:
-                        this.syncManager.setLocalAwarenessFollowing,
-                      getAwarenessStates: this.syncManager.getAwarenessStates,
-                      subscribeToAwarenessChanges:
-                        this.syncManager.subscribeToAwarenessChanges,
-                      subscribeToCollaboratorChanges:
-                        this.syncManager.subscribeToCollaboratorChanges,
-                      getLocalAwarenessClientId:
-                        this.syncManager.getLocalAwarenessClientId,
-                    }}
-                  />
+                <EdgeGeometryStoreContext.Provider value={edgeGeometryStore}>
+                  <OverlayStoreContext.Provider value={this.overlayStore}>
+                    <AppWithProvider
+                      onReactFlowInit={this.setReactFlowInstance.bind(this)}
+                      collaboration={collaboration}
+                      awareness={{
+                        setLocalAwarenessCursor:
+                          this.syncManager.setLocalAwarenessCursor,
+                        setLocalAwarenessSelectedElement:
+                          this.syncManager.setLocalAwarenessSelectedElement,
+                        setLocalAwarenessViewport:
+                          this.syncManager.setLocalAwarenessViewport,
+                        setLocalAwarenessFollowing:
+                          this.syncManager.setLocalAwarenessFollowing,
+                        getAwarenessStates: this.syncManager.getAwarenessStates,
+                        subscribeToAwarenessChanges:
+                          this.syncManager.subscribeToAwarenessChanges,
+                        subscribeToCollaboratorChanges:
+                          this.syncManager.subscribeToCollaboratorChanges,
+                        getLocalAwarenessClientId:
+                          this.syncManager.getLocalAwarenessClientId,
+                      }}
+                    />
+                  </OverlayStoreContext.Provider>
                 </EdgeGeometryStoreContext.Provider>
               </AlignmentGuidesStoreContext.Provider>
             </AssessmentSelectionStoreContext.Provider>
@@ -268,9 +280,25 @@ export class ApollonEditor {
     return this.reactFlowInstance.flowToScreenPosition(position)
   }
 
-  public fitView(options?: { padding?: number; duration?: number }): void {
-    const padding = options?.padding ?? 0.15
+  /**
+   * Zoom/pan so the whole diagram fits, capped at `maxZoom: 1.0`. Retries up to
+   * 10 animation frames until every node is measured.
+   * @param options.padding - Scalar fraction (default `0.15`), or per-side px
+   *   that adds to a 16px gutter. A per-side object forces the inset-aware path.
+   * @param options.duration - Animation duration in ms (default `200`).
+   * @param options.respectInsets - Pad the fit by reserved overlay insets
+   *   (header, rails, …). Default `true`.
+   */
+  public fitView(options?: {
+    padding?: number | Partial<Record<OverlaySide, number>>
+    duration?: number
+    /** Pad the fit by the reserved overlay insets (header, rails, …). */
+    respectInsets?: boolean
+  }): void {
     const duration = options?.duration ?? 200
+    const respectInsets = options?.respectInsets ?? true
+    const explicit = options?.padding
+    const explicitObject = typeof explicit === "object" && explicit !== null
     const maxAttempts = 10
     let attempts = 0
 
@@ -288,12 +316,131 @@ export class ApollonEditor {
             (n.measured?.height ?? n.height ?? 0) > 0
         )
       if (allMeasured || attempts >= maxAttempts) {
-        rf.fitView({ padding, duration, maxZoom: 1.0 })
-        return
+        const insets = respectInsets
+          ? this.overlayStore.getState().insets
+          : ZERO_INSETS
+        const hasInsets =
+          insets.top || insets.right || insets.bottom || insets.left
+        // No reserved chrome and a scalar/absent padding -> fraction-based fit,
+        // byte-identical to an embedder that registers no overlays.
+        if (!hasInsets && !explicitObject) {
+          rf.fitView({
+            padding: typeof explicit === "number" ? explicit : 0.15,
+            duration,
+            maxZoom: 1.0,
+          })
+          return
+        }
+        // Reserve room MapLibre-style: per-side px = inset + a base gutter
+        // (or the host's explicit per-side override).
+        const obj = explicitObject
+          ? (explicit as Partial<Record<OverlaySide, number>>)
+          : {}
+        const GUTTER = 16
+        rf.fitView({
+          padding: {
+            top: `${insets.top + (obj.top ?? GUTTER)}px`,
+            right: `${insets.right + (obj.right ?? GUTTER)}px`,
+            bottom: `${insets.bottom + (obj.bottom ?? GUTTER)}px`,
+            left: `${insets.left + (obj.left ?? GUTTER)}px`,
+          },
+          duration,
+          maxZoom: 1.0,
+        })
       }
-      requestAnimationFrame(attempt)
     }
     requestAnimationFrame(attempt)
+  }
+
+  // ---- Canvas overlay / control API -------------------------------------
+  // A library-owned overlay engine: host chrome (header, rails, banners) and the
+  // editor's own overlays share one collision-free, inset-aware layout. Controls
+  // render INSIDE the React Flow context. `getRegionElement` is the escape hatch
+  // for hosts that need their OWN React context (theme, router) via createPortal.
+
+  /**
+   * Register a floating control, returning a disposer. Re-using an id replaces
+   * (idempotent / StrictMode-safe). Pick a façade: a React host →
+   * `<ApollonControl>`; a non-React host (or one that needs its own React
+   * root/context) → `getRegionElement` + `createPortal`; a one-off imperative
+   * widget → `addControl`.
+   * @param control - id, target region, a `render` thunk, and optional layout
+   *   options ({@link OverlayControlInput}).
+   * @returns A disposer that unregisters this control; safe to call twice.
+   * @throws If `id` is empty or `region` is not a known region — mistakes fail
+   *   loudly at the edge, not silently in the renderer.
+   */
+  public addControl(control: OverlayControlInput): () => void {
+    if (!control.id)
+      throw new Error("[ApollonEditor] addControl: id must be non-empty")
+    if (!OVERLAY_REGIONS.includes(control.region))
+      throw new Error(
+        `[ApollonEditor] addControl: unknown region: ${control.region}`
+      )
+    this.overlayStore.getState().register(control)
+    return () => this.overlayStore.getState().unregister(control.id)
+  }
+
+  /**
+   * Patch a registered control's options/renderer (a no-op if absent).
+   * @param id - The control's immutable id (an `id` in `patch` is ignored).
+   * @param patch - Partial options/renderer merged over the existing control.
+   */
+  public updateControl(id: string, patch: Partial<OverlayControlInput>): void {
+    const existing = this.overlayStore.getState().controls[id]
+    if (!existing) return
+    // Pin id last so a stray `patch.id` can't fork the control under a new key.
+    this.overlayStore.getState().register({ ...existing, ...patch, id })
+  }
+
+  /**
+   * @param id - A control id.
+   * @returns `true` if a control with this id is currently registered.
+   */
+  public hasControl(id: string): boolean {
+    return id in this.overlayStore.getState().controls
+  }
+
+  /**
+   * A stable DOM node anchored in `region`, for hosts that render their own
+   * React into it (via `createPortal`) to keep host context. Auto-measured, so
+   * the diagram makes room for whatever the host mounts. Lifetime = the editor;
+   * `releaseRegionElement` unregisters it. Reserved id: `apollon:host:<region>`.
+   * @param region - The region to anchor the node in.
+   * @returns The same node for the lifetime of one acquire; `releaseRegionElement`
+   *   drops it and the next call returns a fresh node.
+   * @throws If `region` is not a known region.
+   */
+  public getRegionElement(region: OverlayRegion): HTMLElement {
+    if (!OVERLAY_REGIONS.includes(region))
+      throw new Error(
+        `[ApollonEditor] getRegionElement: unknown region: ${region}`
+      )
+    let el = this.hostRegionEls.get(region)
+    if (el) return el
+    // Create + register once. `releaseRegionElement` drops the node from the
+    // cache, so a reopen re-enters here and re-registers — no need to re-register
+    // (and clobber host-applied options) on a plain re-read.
+    el = document.createElement("div")
+    this.hostRegionEls.set(region, el)
+    const node = el
+    this.overlayStore.getState().register({
+      id: `apollon:host:${region}`,
+      region,
+      inset: "auto",
+      render: () => <RegionMount el={node} />,
+    })
+    return el
+  }
+
+  /**
+   * Release a region acquired via {@link getRegionElement} (unregister + drop
+   * the cached node); a later `getRegionElement(region)` creates a fresh node.
+   * @param region - The region whose host node to release.
+   */
+  public releaseRegionElement(region: OverlayRegion): void {
+    this.overlayStore.getState().unregister(`apollon:host:${region}`)
+    this.hostRegionEls.delete(region)
   }
 
   set diagramType(type: UMLDiagramType) {
@@ -312,6 +459,7 @@ export class ApollonEditor {
       this.syncManager.stopSync()
       this.root.unmount()
       this.ydoc.destroy()
+      this.hostRegionEls.clear()
       this.reactFlowInstance = null
     } catch (err) {
       // destroy() is best-effort — partial teardown is acceptable, but log
@@ -366,6 +514,10 @@ export class ApollonEditor {
     }
 
     const ydoc = new Y.Doc()
+    // Construct-only: no undo manager, no collaboration — keeps the headless
+    // render deterministic (no `initializeUndoManager` + the no-op awareness
+    // below). Overlay store exists but no controls are registered, so the
+    // overlay layer renders nothing and insets stay zero.
     const diagramStore = createDiagramStore(ydoc)
     const metadataStore = createMetadataStore(
       ydoc,
@@ -375,6 +527,7 @@ export class ApollonEditor {
     const assessmentSelectionStore = createAssessmentSelectionStore()
     const alignmentGuidesStore = createAlignmentGuidesStore()
     const edgeGeometryStore = createEdgeGeometryStore()
+    const overlayStore = createOverlayStore()
     const diagramId = Math.random().toString(36).substring(2, 15)
 
     let setReactFlowInstance: (instance: ReactFlowInstance) => void = () => {}
@@ -415,11 +568,13 @@ export class ApollonEditor {
                   value={alignmentGuidesStore}
                 >
                   <EdgeGeometryStoreContext.Provider value={edgeGeometryStore}>
-                    <AppWithProvider
-                      onReactFlowInit={setReactFlowInstance}
-                      collaboration={disabledCollaboration}
-                      awareness={noopCollaborationAwareness}
-                    />
+                    <OverlayStoreContext.Provider value={overlayStore}>
+                      <AppWithProvider
+                        onReactFlowInit={setReactFlowInstance}
+                        collaboration={disabledCollaboration}
+                        awareness={noopCollaborationAwareness}
+                      />
+                    </OverlayStoreContext.Provider>
                   </EdgeGeometryStoreContext.Provider>
                 </AlignmentGuidesStoreContext.Provider>
               </AssessmentSelectionStoreContext.Provider>

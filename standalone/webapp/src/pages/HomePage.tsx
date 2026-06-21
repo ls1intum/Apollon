@@ -82,7 +82,7 @@ export const HomePage = () => {
       />
 
       <main className="home-page-scrollbar app-scroll-y relative z-10 w-full min-h-0 flex-1 pb-24 md:pb-10">
-        <div className="flex w-full flex-col gap-5 px-4 pt-5 md:px-6 md:pt-6">
+        <div className="home-content-x mx-auto flex w-full max-w-[1536px] flex-col gap-6 pt-5 md:pt-6">
           <Suspense fallback={<DiagramGallerySkeleton />}>
             <DiagramGallery
               highlightSharedDiagramId={highlightSharedDiagramId}

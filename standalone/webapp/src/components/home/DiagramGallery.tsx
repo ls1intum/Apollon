@@ -1065,7 +1065,7 @@ export const DiagramGallery = ({
                 {viewMode === "grid" ? (
                   <div
                     role="list"
-                    className="grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] justify-start gap-x-4 gap-y-6 md:grid-cols-[repeat(auto-fill,minmax(260px,1fr))] md:gap-x-6 md:gap-y-8 lg:gap-x-7 lg:gap-y-10 xl:grid-cols-[repeat(auto-fill,minmax(280px,1fr))]"
+                    className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,240px),1fr))] justify-start gap-4 md:grid-cols-[repeat(auto-fill,minmax(min(100%,260px),1fr))] md:gap-6 xl:grid-cols-[repeat(auto-fill,minmax(min(100%,280px),1fr))]"
                   >
                     {visibleDiagrams.map((diagram, index) => (
                       <div
@@ -1125,8 +1125,12 @@ export const DiagramGallery = ({
                         </thead>
                         <tbody>
                           {visibleDiagrams.map((diagram) => {
+                            const isUntitled = !diagram.title.trim()
                             const title =
-                              diagram.title.trim() || "Untitled Diagram"
+                              diagram.title.trim() || "Untitled diagram"
+                            const titleClass = isUntitled
+                              ? "truncate italic text-[var(--home-text-muted)]"
+                              : "truncate"
                             return (
                               <tr
                                 key={diagram.id}
@@ -1192,14 +1196,14 @@ export const DiagramGallery = ({
                                 </td>
                                 <td className="w-[26%] px-3 py-3 align-middle text-sm text-[var(--home-text-primary)]">
                                   {diagram.isExpired ? (
-                                    <span className="truncate">{title}</span>
+                                    <span className={titleClass}>{title}</span>
                                   ) : (
                                     <Link
                                       {...diagramNav(diagram)}
                                       onClick={(event) =>
                                         event.stopPropagation()
                                       }
-                                      className="truncate hover:underline focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2"
+                                      className={`${titleClass} hover:underline focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2`}
                                     >
                                       {title}
                                     </Link>

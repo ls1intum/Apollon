@@ -34,7 +34,7 @@ describe("computeMessageLayout", () => {
     expect(backward.messages.map((m) => m.id)).toEqual(["2", "4"])
   })
 
-  // Regression for PR #645: the vertical branch had forward/backward swapped.
+  // On a vertical edge, forward sits right and backward left — not swapped.
   it("puts forward right / backward left on a vertical edge (mirror images)", () => {
     const { forward, backward } = computeMessageLayout(
       [fwd("1"), bwd("2")],

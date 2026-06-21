@@ -4,67 +4,47 @@ import { appVersion } from "@/constants"
 import { APP_NAME_FONT_FAMILY } from "./styleConstants"
 import TumLogo from "assets/images/tum-logo-579x579.png"
 
+/**
+ * Brand lockup: TUM logo + "APOLLON" wordmark. The version string is NOT shown
+ * here, so the brand island stays uncluttered and leaves room for controls; the
+ * version is discoverable via Help → About and the `title` tooltip below. The
+ * logo is a compact ~28px so the brand island stays the same height as its
+ * sibling islands.
+ */
 export const BrandAndVersion = () => {
   return (
     <Box
+      title={`Apollon ${appVersion}`}
       sx={{
         display: "flex",
         alignItems: "center",
-        gap: 1.25,
+        gap: 0.75,
+        flexShrink: 0,
+        whiteSpace: "nowrap",
       }}
     >
-      {/* Logo + wordmark are one indivisible unit: never shrink, never wrap,
-          never truncate (no "Apol…" on narrow viewports). */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 1,
-          flexShrink: 0,
-          whiteSpace: "nowrap",
-        }}
-      >
-        <img
-          alt="TUM logo"
-          src={TumLogo}
-          width="40"
-          height="40"
-          style={{ display: "block", flexShrink: 0 }}
-        />
-
-        <Typography
-          component="span"
-          sx={{
-            fontWeight: 600,
-            fontFamily: APP_NAME_FONT_FAMILY,
-            letterSpacing: "0.06em",
-            lineHeight: 1,
-            fontSize: "1.05rem",
-            textTransform: "uppercase",
-            whiteSpace: "nowrap",
-            overflow: "visible",
-          }}
-        >
-          Apollon
-        </Typography>
-      </Box>
-
+      <img
+        alt="TUM logo"
+        src={TumLogo}
+        width="28"
+        height="28"
+        style={{ display: "block", flexShrink: 0 }}
+      />
       <Typography
-        variant="body2"
         component="span"
         sx={{
-          // Muted text on the always-dark navbar — theme-independent translucent
-          // white, not a theme-reactive token (the navbar never changes color).
-          color: "rgba(255, 255, 255, 0.65)",
-          display: { xs: "none", sm: "block" },
-          lineHeight: 1.1,
-          fontSize: "0.75rem",
-          letterSpacing: "0.02em",
-          fontFamily:
-            "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace",
+          fontWeight: 600,
+          fontFamily: APP_NAME_FONT_FAMILY,
+          letterSpacing: "0.06em",
+          lineHeight: 1,
+          fontSize: "1rem",
+          textTransform: "uppercase",
+          whiteSpace: "nowrap",
+          overflow: "visible",
+          color: "var(--apollon-chrome-text)",
         }}
       >
-        {appVersion}
+        Apollon
       </Typography>
     </Box>
   )

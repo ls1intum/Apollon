@@ -187,7 +187,7 @@ vi.mock("@/components/versioning", async (importOriginal) => {
     UndoRestoreSnackbar: () => null,
     VersionDrawer: () => null,
     VersionPreviewBanner: () => null,
-    VersionSidebar: () => null,
+    VersionRail: () => null,
   }
 })
 

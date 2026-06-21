@@ -1,7 +1,7 @@
-// Sidebar lives on the navbar's dark plate, independent of the document
-// theme — these are the on-dark text shades and rgba state tints used
-// throughout. Kept here because they're specific to that always-dark surface.
-export const TEXT_PRIMARY = "rgba(255, 255, 255, 0.92)"
-export const TEXT_MUTED = "rgba(255, 255, 255, 0.55)"
-export const ROW_HOVER_BG = "rgba(255, 255, 255, 0.06)"
-export const ROW_SELECTED_BG = "rgba(255, 255, 255, 0.10)"
+// The version rail is one of the editor's chrome surfaces, so it reads the
+// shared `--apollon-chrome-*` contract (library app.css) and themes in lock-step
+// with the header, palette and controls — light in light mode, charcoal in dark.
+export const TEXT_PRIMARY = "var(--apollon-chrome-text)"
+export const TEXT_MUTED = "var(--apollon-chrome-text-muted)"
+export const ROW_HOVER_BG = "var(--apollon-chrome-surface-hover)"
+export const ROW_SELECTED_BG = "var(--apollon-chrome-surface-active)"

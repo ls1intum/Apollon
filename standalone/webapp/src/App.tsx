@@ -1,7 +1,6 @@
 import { createRouter, RouterProvider } from "@tanstack/react-router"
 import { AppLoadingScreen } from "@/components/AppLoadingScreen"
 import { routeTree } from "./routeTree.gen"
-import { log } from "@/logger"
 
 const router = createRouter({
   routeTree,
@@ -25,33 +24,14 @@ declare module "@tanstack/history" {
   }
 }
 
-// To set the safe area insets as for mobile devices
-void import("capacitor-plugin-safe-area")
-  .then(({ SafeArea }) => {
-    void SafeArea.getSafeAreaInsets().then(
-      ({ insets: { top, bottom, left, right } }) => {
-        document.documentElement.style.setProperty(
-          "--safe-area-inset-top",
-          `${top}px`
-        )
-        document.documentElement.style.setProperty(
-          "--safe-area-inset-bottom",
-          `${bottom}px`
-        )
-        document.documentElement.style.setProperty(
-          "--safe-area-inset-left",
-          `${left}px`
-        )
-        document.documentElement.style.setProperty(
-          "--safe-area-inset-right",
-          `${right}px`
-        )
-      }
-    )
-  })
-  .catch((error) => {
-    log.error("Failed to initialize safe-area insets", error as Error)
-  })
+// Safe-area insets MUST NOT be written from JS: a one-shot getSafeAreaInsets()
+// write captures boot (portrait) values as inline styles that beat env() forever,
+// so a landscape rotation never updates the side insets. Instead Capacitor 8's
+// bundled System Bars plugin injects --safe-area-inset-* on Android (working
+// around the Android WebView <140 env() bug), and iOS WKWebView resolves
+// env(safe-area-inset-*) natively via viewport-fit=cover — both reactive on
+// rotation. CSS reads the canonical vars with env() as the fallback (see
+// webapp.css / library app.css). Ref: https://capacitorjs.com/docs/apis/system-bars
 
 function App() {
   return (

@@ -220,9 +220,12 @@ body {
 html,
 body,
 #root {
-  transition:
-    background-color 220ms ease,
-    color 220ms ease;
+  /* Only the text colour eases on a theme switch. Animating background-color
+     here made every backdrop-blur surface above it (home navbar, glass islands)
+     re-rasterise its blur each frame for 220ms — a visible flicker on toggle.
+     The background flips in one frame instead (how tldraw/Linear/VS Code do it),
+     so the blurred plates never sample a tweening backdrop. */
+  transition: color 220ms ease;
 }
 
 .home-page-scrollbar {
@@ -462,10 +465,29 @@ body,
   padding-top: var(--safe-area-inset-top, 0);
 }
 
+/* Home page content gutter — hugs the safe area like the navbar, so the gallery
+   clears a side notch in landscape (the Tailwind px-4/md:px-6 it replaces had no
+   safe-area awareness). */
+.home-content-x {
+  padding-left: max(1rem, var(--safe-area-inset-left, 0px));
+  padding-right: max(1rem, var(--safe-area-inset-right, 0px));
+}
+
+@media (min-width: 768px) {
+  .home-content-x {
+    padding-left: max(1.5rem, var(--safe-area-inset-left, 0px));
+    padding-right: max(1.5rem, var(--safe-area-inset-right, 0px));
+  }
+}
+
 .home-navbar__content {
   box-sizing: border-box;
-  padding-left: calc(1rem + var(--safe-area-inset-left, 0px));
-  padding-right: calc(1rem + var(--safe-area-inset-right, 0px));
+
+  /* HUG the safe area (max), don't stack on top of it (calc + inset) — otherwise
+     the navbar sits further from a notch than the editor chrome, which uses the
+     max(edge, inset) model. */
+  padding-left: max(1rem, var(--safe-area-inset-left, 0px));
+  padding-right: max(1rem, var(--safe-area-inset-right, 0px));
 }
 
 @media (max-width: 950px) and (max-height: 500px) {
@@ -474,13 +496,8 @@ body,
   }
 
   .home-navbar__content {
-    padding-left: calc(2rem + var(--safe-area-inset-left, 0px));
-    padding-right: calc(2rem + var(--safe-area-inset-right, 0px));
-  }
-
-  .home-navbar__content img[alt="TUM logo"] {
-    width: 40px;
-    height: 40px;
+    padding-left: max(2rem, var(--safe-area-inset-left, 0px));
+    padding-right: max(2rem, var(--safe-area-inset-right, 0px));
   }
 }
 
@@ -671,4 +688,25 @@ body,
 
 .home-toast-container .Toastify__progress-bar--info {
   background: var(--home-toast-info);
+}
+
+/* Skip link: visually hidden until keyboard-focused, then pinned top-left above
+   all editor chrome so it's the first stop and jumps to the diagram. */
+.apollon-skip-link {
+  position: absolute;
+  left: 8px;
+  top: -48px;
+  z-index: 100000;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: var(--home-surface-raised, #20242c);
+  color: var(--home-text-primary, #fff);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 24%);
+  transition: top 120ms ease;
+}
+
+.apollon-skip-link:focus-visible {
+  top: 8px;
+  outline: 2px solid var(--home-accent-base, #236ebe);
+  outline-offset: 2px;
 }

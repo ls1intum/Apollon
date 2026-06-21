@@ -72,7 +72,7 @@ export const CurrentVersionRow: FC<Props> = ({
           py: 1.25,
           background: "transparent",
           border: 0,
-          borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
+          borderBottom: "1px solid var(--apollon-chrome-border)",
           color: TEXT_PRIMARY,
           cursor: "pointer",
           textAlign: "left",
@@ -116,15 +116,17 @@ export const CurrentVersionRow: FC<Props> = ({
     subtitle = "Not yet saved as a version"
   } else if (upToDate) {
     icon = CheckCircleRoundedIcon
-    // Tailwind-ish green that reads on dark bg without theming.
-    iconColor = "#5cb47a"
+    // Theme-aware success green (shared with the success toast) so the check
+    // reads correctly + consistently in both light and dark.
+    iconColor = "var(--home-toast-success)"
     title = "Current"
     subtitle = `Up to date · last saved ${relativeTime(latestSavedVersion.createdAt)}`
   } else {
     icon = CircleRoundedIcon
-    // Amber, signaling "there's something to capture" without alarm — HEAD
-    // is autosaved every 5 s, so this is "not yet a version," not "at risk."
-    iconColor = "#e8a857"
+    // Theme-aware warning amber (shared with the warning toast), signaling
+    // "there's something to capture" without alarm — HEAD is autosaved every
+    // 5 s, so this is "not yet a version," not "at risk."
+    iconColor = "var(--home-toast-warning)"
     title = "Current"
     subtitle = `Edits since last save · ${relativeTime(latestSavedVersion.createdAt)}`
   }
@@ -140,7 +142,10 @@ export const CurrentVersionRow: FC<Props> = ({
         px: 2,
         py: 1.25,
         bgcolor: ROW_SELECTED_BG,
-        borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
+        borderBottom: "1px solid var(--apollon-chrome-border)",
+        // Accent left-rule marks HEAD ("you are here") — the one place the
+        // brand accent appears in the list; saved rows stay neutral.
+        boxShadow: "inset 3px 0 0 var(--apollon-chrome-accent)",
       }}
       aria-label="Current canvas"
       aria-live="polite"

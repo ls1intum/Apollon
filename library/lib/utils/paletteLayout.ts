@@ -8,41 +8,45 @@
  *      space, which is what you actually draw in.
  *   2. Fill the available VERTICAL space — a single column down the side reads
  *      like a classic palette and wastes no height.
- *   3. Keep cells comfortably large — never below `COMFORT_MIN_H` just to save a
- *      column, and never below the HIG `CELL_MIN_H` touch floor at all.
+ *   3. Shrink the cells down to the `COMFORT_MIN_H` LEGIBILITY threshold BEFORE
+ *      adding a column — but no smaller: below that, spill to another column so
+ *      the node types stay distinguishable (rather than collapsing to an
+ *      illegible sliver). Cap at `CELL_MAX_H` so they're never too large. The
+ *      `CELL_MIN_H` touch floor is the last-resort fallback on a tiny canvas.
  *
  * So: walk column counts low→high and take the first one whose cells, sized to
- * fill the height, are still comfortable. Few elements get big capped cells in
- * one column; many elements get a taller single column of moderate cells before
- * a second column is ever added.
+ * fill the height (capped), are still at least the legibility threshold. One
+ * column of legible cells is preferred over two columns of bigger ones; cells
+ * shrink toward the legibility threshold first, and only spill to another column
+ * when staying legible in fewer columns no longer fits the height.
+ *
+ * `availH` is the palette's REAL available band (the caller measures the space
+ * between the palette's top and the bottom controls), so this math does NOT
+ * re-subtract any top/bottom chrome reserve — it fills the band it is given.
  *
  * Cells are rectangular (the dominant elements — class boxes, BPMN tasks — are
  * ~1.6:1 wide); narrower/square elements letterbox centered inside. Sizing the
  * cell, not the SVG, keeps the node components untouched.
  */
 export const PALETTE = Object.freeze({
-  /** HIG/WCAG touch + legibility floor — never shrink a cell past this. */
+  /** Absolute floor (HIG/WCAG touch) — only reached on a tiny canvas where even
+   *  spilling to more columns can't keep cells legible; never shrink past it. */
   CELL_MIN_H: 44,
-  /** Bias toward fewer columns: keep a single (or narrower) column as long as
-   *  its height-filling cells stay at least this big; only add a column when
-   *  that would drop below it. Just above the touch floor, so the strong
-   *  preference is fewer columns + filling the height. */
-  COMFORT_MIN_H: 48,
-  /** Upper bound so few-element palettes don't get absurdly tall cells. */
-  CELL_MAX_H: 78,
+  /** Legibility threshold: shrink a column's cells down to here BEFORE adding
+   *  another column, but spill (rather than go smaller) so the node types stay
+   *  distinguishable. ~a comfortably legible node-preview cell. */
+  COMFORT_MIN_H: 64,
+  /** Upper bound so few-element palettes don't get absurdly tall cells;
+   *  ~a 0.8-scale class-box preview. */
+  CELL_MAX_H: 88,
   /** cellW = round(CELL_RATIO * cellH); ~matches the 160×100 class box. */
   CELL_RATIO: 1.6,
   GAP: 8,
   PAD: 6,
-  /** Keep the palette horizontally narrow so the canvas keeps its width … */
+  /** Keep the palette horizontally narrow so the canvas keeps its width. */
   MAX_FRAC_W: 0.5,
-  /** … but let it use most of the height. */
-  MAX_FRAC_H: 0.9,
   /** Letterbox padding around the preview inside a cell. */
   CONTENT_INSET: 6,
-  /** Space kept clear above (top offset) and below (zoom controls) the palette. */
-  TOP_RESERVE: 10,
-  BOTTOM_RESERVE: 84,
 } as const)
 
 export interface PaletteLayout {
@@ -92,19 +96,21 @@ export function computePaletteLayout(
   }
 
   const budgetW = availW * p.MAX_FRAC_W
-  // Honor both the fraction cap and the physical room left once the top offset
-  // and the bottom zoom-controls reserve are removed.
-  const budgetH = Math.min(
-    availH * p.MAX_FRAC_H,
-    availH - p.TOP_RESERVE - p.BOTTOM_RESERVE
-  )
+  // `availH` is already the real available band (the caller subtracts the top
+  // chrome + bottom controls), so use ALL of it — on EVERY viewport, including a
+  // narrow phone in portrait: there the tall vertical space should read as one
+  // legible column down the side, not a squat multi-column cluster. The column
+  // walk below still spills to more columns only when one can't stay legible.
+  const budgetH = availH
   const maxCols = Math.max(
     1,
     Math.min(itemCount, Math.floor((budgetW + p.GAP) / (floorCellW + p.GAP)))
   )
 
-  // Fewest columns whose height-filling cells are still comfortable; meanwhile
-  // remember the column count that yields the biggest cell as a fallback.
+  // Fewest columns whose height-filling cells still clear the LEGIBILITY
+  // threshold — so cells shrink toward legible (not the touch floor) before a
+  // column is ever added; meanwhile remember the column count that yields the
+  // biggest cell as a fallback for tiny canvases.
   let bestCols = 1
   let bestCellH = 0
   for (let cols = 1; cols <= maxCols; cols++) {

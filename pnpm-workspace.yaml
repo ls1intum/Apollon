@@ -33,7 +33,7 @@ catalog:
   "@types/vscode-webview": "1.57.5"
   "@vitejs/plugin-react": "4.3.4"
   "@vitest/coverage-v8": "4.1.2"
-  "@xyflow/react": "12.3.6"
+  "@xyflow/react": "12.9.3"
   # React Compiler (stable v1). Wired via @vitejs/plugin-react's Babel slot.
   # Pinned exact — the compiler has not committed to SemVer-safe output yet.
   babel-plugin-react-compiler: "1.0.0"

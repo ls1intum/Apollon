@@ -21,15 +21,23 @@ export const HomeNavbar = () => {
 
   return (
     <header
-      className="home-navbar sticky top-0 z-40 transition-colors duration-200"
+      className="home-navbar sticky top-0 z-40"
       style={{
         minHeight: NAVBAR_MIN_HEIGHT,
-        backgroundColor: NAVBAR_BACKGROUND_COLOR,
-        boxShadow: NAVBAR_DROP_SHADOW,
+        // Frosted glass: a translucent chrome-surface plate over a backdrop
+        // blur so content scrolls softly beneath it (a modern dashboard idiom).
+        // The 88% mix keeps brand/controls legible while the page shows through;
+        // browsers without backdrop-filter just see the near-solid plate.
+        backgroundColor: `color-mix(in srgb, ${NAVBAR_BACKGROUND_COLOR} 88%, transparent)`,
+        backdropFilter: "saturate(140%) blur(12px)",
+        WebkitBackdropFilter: "saturate(140%) blur(12px)",
+        // Hairline as an inset shadow (not a border) so the header height stays
+        // exactly NAVBAR_MIN_HEIGHT — the safe-area height budget is asserted.
+        boxShadow: `inset 0 -1px 0 var(--apollon-chrome-border), ${NAVBAR_DROP_SHADOW}`,
       }}
     >
-      {/* min-height from NAVBAR_MIN_HEIGHT (single source of truth) keeps the
-          home bar the same height as the editor navbars (#769's unified header). */}
+      {/* NAVBAR_MIN_HEIGHT (single source of truth) keeps the home bar the same
+          height as the editor chrome header. */}
       <div
         className="home-navbar__content flex w-full items-center gap-3 px-4"
         style={{ minHeight: NAVBAR_MIN_HEIGHT }}
@@ -37,7 +45,7 @@ export const HomeNavbar = () => {
         <Link
           to="/"
           aria-label="Apollon home"
-          className="flex shrink-0 items-center rounded-sm text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          className="flex shrink-0 items-center rounded-sm text-[color:var(--apollon-chrome-text)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--apollon-chrome-accent)]"
         >
           <BrandAndVersion />
         </Link>

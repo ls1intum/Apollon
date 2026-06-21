@@ -9,10 +9,12 @@ import { HomeFooter } from "@/components/home/HomeFooter"
 import { ErrorPage } from "@/pages/ErrorPage"
 import { ensureVersionStoreBootstrapped } from "@/stores/versionStoreBootstrap"
 
-// The editor navbar is heavy and only editor routes need it, so load it lazily.
-const Navbar = lazy(() =>
-  import("@/components/navbar/Navbar").then((module) => ({
-    default: module.Navbar,
+// The editor chrome is heavy and only editor routes need it, so load it lazily.
+// It mounts the navbar as immersive in-canvas chrome (portaled into the editor
+// canvas via the overlay API) instead of a bar above the canvas.
+const EditorChromeHeader = lazy(() =>
+  import("@/components/navbar/EditorChromeHeader").then((module) => ({
+    default: module.EditorChromeHeader,
   }))
 )
 
@@ -36,9 +38,22 @@ function RootLayout() {
   return (
     <AppProviders>
       <Suspense fallback={<AppLoadingScreen />}>
-        {isEditorRoute && <Navbar />}
+        {/* Skip link (WCAG 2.4.1): on editor routes the navbar + version rail are
+            in-canvas chrome, so let keyboard users jump straight to the diagram
+            instead of tabbing through it. Visually hidden until focused. */}
+        {isEditorRoute && (
+          <a href="#editor-area" className="apollon-skip-link">
+            Skip to diagram
+          </a>
+        )}
+        {isEditorRoute && <EditorChromeHeader />}
         {isChromeSubRoute && <HomeNavbar />}
-        <div data-testid="editor-area" style={{ flex: 1, overflow: "hidden" }}>
+        <div
+          id="editor-area"
+          data-testid="editor-area"
+          tabIndex={-1}
+          style={{ flex: 1, overflow: "hidden" }}
+        >
           <Outlet />
         </div>
         {isChromeSubRoute && !Capacitor.isNativePlatform() && (
