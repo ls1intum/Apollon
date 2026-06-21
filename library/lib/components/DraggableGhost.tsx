@@ -125,6 +125,14 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
           })
         )
       }
+      if (defaultData.lanes) {
+        defaultData.lanes = (defaultData.lanes as Array<object>).map(
+          (lane) => ({
+            ...lane,
+            id: generateUUID(),
+          })
+        )
+      }
 
       // Prepare the drop data including offset adjustments
       const dropData: DropNodeData = {
@@ -171,18 +179,23 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
         position.y -= parentPositionOnCanvas.y
       }
 
-      // Create the new node with a unique ID and calculated position
+      // Create the new node with a unique ID and calculated position. The drop
+      // size may differ from the sidebar preview size (e.g. a swimlane previews
+      // small but drops large).
+      const dropWidth = dropElementConfig.dropWidth ?? dropElementConfig.width
+      const dropHeight =
+        dropElementConfig.dropHeight ?? dropElementConfig.height
       const newNode: Node = {
         id: generateUUID(),
-        width: dropElementConfig.width,
-        height: dropElementConfig.height,
+        width: dropWidth,
+        height: dropHeight,
         type: dropData.type,
         position: { ...position },
         data: { ...defaultData, ...dropData.data },
         parentId: parentId,
         measured: {
-          width: dropElementConfig.width,
-          height: dropElementConfig.height,
+          width: dropWidth,
+          height: dropHeight,
         },
         selected: false,
       }

@@ -1,7 +1,12 @@
 import { describe, it, expect } from "vitest"
-import { computeMessageLayout } from "@/edges/labelTypes/messageLayout"
+import {
+  computeMessageLayout,
+  getMessageHostSegment,
+} from "@/edges/labelTypes/messageLayout"
 import type { MessageData } from "@/edges/EdgeProps"
 import type { IPoint } from "@/edges/Connection"
+
+const pt = (x: number, y: number): IPoint => ({ x, y })
 
 const fwd = (id: string): MessageData => ({
   id,
@@ -106,4 +111,51 @@ describe("computeMessageLayout", () => {
       expect(backward.arrowRotation).toBe(bwdRot)
     }
   )
+})
+
+describe("getMessageHostSegment", () => {
+  it("hosts a straight vertical edge on the whole run, centered", () => {
+    const host = getMessageHostSegment(
+      [pt(100, 0), pt(100, 300)],
+      pt(100, 0),
+      pt(100, 300)
+    )
+    expect(host.isHorizontal).toBe(false)
+    expect(host.point).toEqual({ x: 100, y: 150 })
+  })
+
+  it("ignores a short jog and hosts on a long arm (the reported bug)", () => {
+    // The user's edge: two ~114px vertical arms joined by a 20px horizontal jog.
+    // The naive mid-segment is the jog (→ horizontal, centered, crossing both
+    // arms). The host must instead be a VERTICAL arm so labels sit beside it.
+    const host = getMessageHostSegment(
+      [pt(580, 509), pt(580, 395), pt(560, 395), pt(560, 281)],
+      pt(580, 509),
+      pt(560, 281)
+    )
+    expect(host.isHorizontal).toBe(false)
+    expect([560, 580]).toContain(host.point.x)
+    // Midpoint of a 114px vertical arm, never on the y=395 jog.
+    expect(host.point.y).not.toBe(395)
+  })
+
+  it("breaks an equal-length tie toward the arm nearest the edge middle", () => {
+    // Z-shape: 60 (H) + 100 (V) + 60 (H). The vertical arm is longest AND
+    // central, so it wins outright; endpoints stay source->target order.
+    const host = getMessageHostSegment(
+      [pt(0, 0), pt(60, 0), pt(60, 100), pt(120, 100)],
+      pt(0, 0),
+      pt(120, 100)
+    )
+    expect(host.isHorizontal).toBe(false)
+    expect(host.point).toEqual({ x: 60, y: 50 })
+    expect(host.start).toEqual({ x: 60, y: 0 })
+    expect(host.end).toEqual({ x: 60, y: 100 })
+  })
+
+  it("falls back to the endpoint midpoint when there is no polyline", () => {
+    const host = getMessageHostSegment([], pt(0, 0), pt(40, 10))
+    expect(host.point).toEqual({ x: 20, y: 5 })
+    expect(host.isHorizontal).toBe(true)
+  })
 })

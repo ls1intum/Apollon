@@ -115,8 +115,6 @@ export const UseCaseEdge = ({
 
         <EdgeMiddleLabels
           label={data?.label}
-          pathMiddlePosition={edgeData.pathMiddlePosition}
-          isMiddlePathHorizontal={edgeData.isMiddlePathHorizontal}
           showRelationshipLabels={showRelationshipLabels}
           sourcePoint={edgeData.sourcePoint}
           targetPoint={edgeData.targetPoint}
@@ -135,7 +133,6 @@ export const UseCaseEdge = ({
           showRelationshipLabels={
             type === "UseCaseInclude" || type === "UseCaseExtend"
           }
-          pathMiddlePosition={edgeData.pathMiddlePosition}
           sourcePoint={edgeData.sourcePoint}
           targetPoint={edgeData.targetPoint}
           textColor={textColor}

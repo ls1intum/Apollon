@@ -5,6 +5,7 @@ import {
   ClassSVG,
   PackageSVG,
   ActivitySVG,
+  ActivitySwimlaneSVG,
   ActivityInitialNodeSVG,
   ActivityFinalNodeSVG,
   ActivityActionNodeSVG,
@@ -62,6 +63,7 @@ import {
   ComponentNodeProps,
   ComponentSubsystemNodeProps,
   DefaultNodeProps,
+  ActivitySwimlaneProps,
   DeploymentComponentProps,
   DeploymentNodeProps,
   ObjectNodeProps,
@@ -164,6 +166,16 @@ function MiniMapNode({ id, x, y }: MiniMapNodeProps) {
           width={nodeInfo.width ?? 0}
           height={nodeInfo.height ?? 0}
           data={nodeInfo.data as DefaultNodeProps}
+          id={`minimap_${id}`}
+          svgAttributes={{ x, y }}
+        />
+      )
+    case "activitySwimlane":
+      return (
+        <ActivitySwimlaneSVG
+          width={nodeInfo.width ?? 0}
+          height={nodeInfo.height ?? 0}
+          data={nodeInfo.data as ActivitySwimlaneProps}
           id={`minimap_${id}`}
           svgAttributes={{ x, y }}
         />

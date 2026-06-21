@@ -13,6 +13,7 @@ import {
   ActivityMergeNodeSVG,
   ActivityObjectNodeSVG,
   ActivitySVG,
+  ActivitySwimlaneSVG,
   ClassSVG,
   PackageSVG,
   UseCaseNodeSVG,
@@ -223,6 +224,19 @@ export const EDGES = Object.freeze({
    * U-turn is never a deliberate edit, so this stays at the visual-merge
    * threshold rather than the per-step threshold. */
   ORTHOGONAL_ARM_OVERLAP_PX: 10,
+  /** Perpendicular gap (flow px) between an edge's mid-segment line and the
+   * near edge of its relationship/stereotype label. The label sits this far
+   * off the line on whichever side is clearer. */
+  LABEL_GAP: 14,
+  /** Nominal label line height (flow px) used as the across-text depth of the
+   * candidate box when scoring which side a label sits on. Constant by
+   * construction — placement never measures the rendered text (mirrors the
+   * messageLayout.ts invariant). */
+  LABEL_LINE_HEIGHT: 14,
+  /** Nominal half-width (flow px) of a label along its text axis, used only to
+   * build the candidate box for side scoring. Coarse on purpose: we choose a
+   * side, not a pixel-perfect fit. */
+  LABEL_NOMINAL_HALF_EXTENT: 40,
 } as const)
 
 /* -------------------------------------------------------------------------- */
@@ -380,6 +394,11 @@ export type DropElementConfig = {
   readonly type: DiagramNodeType
   readonly width: number
   readonly height: number
+  /** Size of the node when dropped on the canvas, if it should differ from the
+   * sidebar preview size (`width`/`height`). Lets a large element preview small
+   * in the palette without shrinking the rest of the picker. */
+  readonly dropWidth?: number
+  readonly dropHeight?: number
   readonly defaultData?: Record<string, unknown>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly svg: React.FC<any>
@@ -518,6 +537,24 @@ export const dropElementConfigs: Readonly<
       height: 20,
       defaultData: { name: "Fork" },
       svg: ActivityForkNodeHorizontalSVG,
+    },
+    {
+      type: "activitySwimlane",
+      // Preview small (the picker shares one Math.min scale, so a big item
+      // shrinks every sibling) but drop a properly sized swimlane on the canvas.
+      width: 160,
+      height: 100,
+      dropWidth: 400,
+      dropHeight: 240,
+      defaultData: {
+        name: "",
+        orientation: "vertical",
+        lanes: [
+          { id: "lane-1", name: "Lane 1" },
+          { id: "lane-2", name: "Lane 2" },
+        ],
+      },
+      svg: ActivitySwimlaneSVG,
     },
   ],
   [UMLDiagramType.UseCaseDiagram]: [

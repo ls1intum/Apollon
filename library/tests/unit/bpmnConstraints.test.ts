@@ -126,6 +126,35 @@ describe("canDropIntoParent – activity", () => {
     expect(canDropIntoParent("class", "activity")).toBe(false)
     expect(canDropIntoParent("bpmnTask", "activity")).toBe(false)
   })
+
+  it("rejects swimlanes (they are top-level structuring elements)", () => {
+    expect(canDropIntoParent("activitySwimlane", "activity")).toBe(false)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// activitySwimlane
+// ---------------------------------------------------------------------------
+
+describe("canDropIntoParent – activitySwimlane", () => {
+  it("accepts any activity element, including a nested activity frame", () => {
+    expect(canDropIntoParent("activityActionNode", "activitySwimlane")).toBe(
+      true
+    )
+    expect(canDropIntoParent("activityForkNode", "activitySwimlane")).toBe(true)
+    expect(canDropIntoParent("activity", "activitySwimlane")).toBe(true)
+  })
+
+  it("rejects nested swimlanes (single-level partitions)", () => {
+    expect(canDropIntoParent("activitySwimlane", "activitySwimlane")).toBe(
+      false
+    )
+  })
+
+  it("rejects non-activity types", () => {
+    expect(canDropIntoParent("class", "activitySwimlane")).toBe(false)
+    expect(canDropIntoParent("bpmnTask", "activitySwimlane")).toBe(false)
+  })
 })
 
 // ---------------------------------------------------------------------------
