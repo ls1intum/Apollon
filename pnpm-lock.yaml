@@ -526,9 +526,6 @@ importers:
       '@xyflow/react':
         specifier: 'catalog:'
         version: 12.9.3(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      capacitor-plugin-safe-area:
-        specifier: 4.0.0
-        version: 4.0.0(@capacitor/core@8.3.0)
       clsx:
         specifier: 'catalog:'
         version: 2.1.1
@@ -5391,11 +5388,6 @@ packages:
   canvg@3.0.11:
     resolution: {integrity: sha512-5ON+q7jCTgMp9cjpu4Jo6XbvfYwSB2Ow3kzHKfIyJfaCAOHLbdKPQqGKgfED/R5B+3TFFfe8pegYA+b423SRyA==}
     engines: {node: '>=10.0.0'}
-
-  capacitor-plugin-safe-area@4.0.0:
-    resolution: {integrity: sha512-5VHT4wG2TlwHtyy3zKrAjKwgJQgC3KeMfRW1bc8abTETLYNLxb85zvfpA0QFE59BxbtYHD57GvXKJuUPgEHl3g==}
-    peerDependencies:
-      '@capacitor/core': '>=7.0.0'
 
   ccount@2.0.1:
     resolution: {integrity: sha512-eyrF0jiFpY+3drT6383f1qhkbGsLSifNAjA61IUjZjmLCWjItY6LB9ft9YhoDgwfmclB2zhu51Lc7+95b8NRAg==}
@@ -17797,10 +17789,6 @@ snapshots:
       stackblur-canvas: 2.7.0
       svg-pathdata: 6.0.3
     optional: true
-
-  capacitor-plugin-safe-area@4.0.0(@capacitor/core@8.3.0):
-    dependencies:
-      '@capacitor/core': 8.3.0
 
   ccount@2.0.1: {}
 

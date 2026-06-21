@@ -51,7 +51,6 @@
     "@tanstack/react-router": "1.170.15",
     "@tumaet/apollon": "workspace:*",
     "@xyflow/react": "catalog:",
-    "capacitor-plugin-safe-area": "4.0.0",
     "clsx": "catalog:",
     "idb": "8.0.3",
     "jspdf": "catalog:",

@@ -115,4 +115,36 @@ test.describe("Editor chrome polish", () => {
     expect(box!.x).toBeGreaterThan(844 * 0.45)
     expect(box!.width).toBeLessThan(844 * 0.6)
   })
+
+  test("chrome clears a simulated landscape notch via the real inset (no floor)", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 844, height: 390 })
+    await openEditor(page)
+
+    // Baseline: no safe area → chrome hugs the 10px edge (no hardcoded floor).
+    const palette = page.getByTestId("apollon-palette")
+    const before = await palette.boundingBox()
+    expect(before).not.toBeNull()
+    expect(before!.x).toBeLessThan(20)
+
+    // Simulate a 59px side notch the way a device would report it (the dev-only
+    // helper sets --safe-area-inset-*, the same var env()/System Bars feed). The
+    // max(edge, inset) model must then push the palette clear of the notch.
+    await page.evaluate(() => {
+      const sim = (
+        window as unknown as {
+          __apollonSafeArea?: (v: number[] | number | null) => void
+        }
+      ).__apollonSafeArea
+      sim?.([0, 59, 0, 59]) // [top, right, bottom, left]
+    })
+    await page.waitForTimeout(150)
+
+    const after = await palette.boundingBox()
+    expect(after).not.toBeNull()
+    // Palette now clears the notch by the real inset — not a constant floor.
+    expect(after!.x).toBeGreaterThanOrEqual(59)
+    expect(after!.x).toBeLessThan(80)
+  })
 })

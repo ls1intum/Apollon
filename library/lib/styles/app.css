@@ -564,25 +564,15 @@
   :root {
     --apollon-chrome-island-h: 36px;
     --apollon-chrome-pad: 2px;
-
-    /* The dynamic island / notch sits on the LEADING screen edge in landscape.
-       Guarantee a clearance floor so chrome never tucks under it even where the
-       webview reports a 0 side inset (browser device-emulators, some Capacitor
-       webviews), while still using the larger REAL inset on a notched device.
-       Re-deriving the tokens here flows the clearance to every consumer (palette,
-       header row, corner panels) at once. */
-    --apollon-chrome-edge-safe-left: max(
-      var(--apollon-chrome-edge),
-      var(--safe-area-inset-left, 0px),
-      50px
-    );
-    --apollon-chrome-edge-safe-right: max(
-      var(--apollon-chrome-edge),
-      var(--safe-area-inset-right, 0px),
-      50px
-    );
   }
 
+  /* No landscape clearance floor: the base --apollon-chrome-edge-safe-* tokens
+     already hug the real left/right safe-area inset (max(edge, inset)), which on
+     a notched device IS the dynamic-island width. A hardcoded floor would
+     over-pad real hardware and re-introduce the double-spacing the inset model
+     removes. (A browser device-emulator that draws an island while env() reports
+     0 is an emulator artifact — preview it with the dev safe-area helper, not a
+     shipped floor.) */
   .apollon-collaboration-presence-bar {
     right: var(--apollon-chrome-edge-safe-right);
   }

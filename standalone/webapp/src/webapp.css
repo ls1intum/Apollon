@@ -467,8 +467,11 @@ body,
 
 .home-navbar__content {
   box-sizing: border-box;
-  padding-left: calc(1rem + var(--safe-area-inset-left, 0px));
-  padding-right: calc(1rem + var(--safe-area-inset-right, 0px));
+  /* HUG the safe area (max), don't stack on top of it (calc + inset) — otherwise
+     the navbar sits further from a notch than the editor chrome, which uses the
+     max(edge, inset) model. */
+  padding-left: max(1rem, var(--safe-area-inset-left, 0px));
+  padding-right: max(1rem, var(--safe-area-inset-right, 0px));
 }
 
 @media (max-width: 950px) and (max-height: 500px) {
@@ -477,8 +480,8 @@ body,
   }
 
   .home-navbar__content {
-    padding-left: calc(2rem + var(--safe-area-inset-left, 0px));
-    padding-right: calc(2rem + var(--safe-area-inset-right, 0px));
+    padding-left: max(2rem, var(--safe-area-inset-left, 0px));
+    padding-right: max(2rem, var(--safe-area-inset-right, 0px));
   }
 }
 
