@@ -176,7 +176,7 @@ test.describe("Zoom-adaptive bend handles", () => {
     const atZoom1 = await selectEdge(page, INHERITANCE)
     const countAtZoom1 = await atZoom1.locator(".edge-bend-handle").count()
 
-    const zoomIn = page.locator('[aria-label="Zoom in"]')
+    const zoomIn = page.locator(".react-flow__controls-zoomin").first()
     for (let i = 0; i < 5; i++) {
       await zoomIn.click()
       await page.waitForTimeout(60)

@@ -154,7 +154,7 @@ test("the edit toolbar keeps a constant on-screen size across zoom (does not sca
     )
   }
 
-  const zoomIn = page.locator('[aria-label="Zoom in"]')
+  const zoomIn = page.locator(".react-flow__controls-zoomin").first()
   for (let i = 0; i < 5; i++) {
     if (!(await zoomIn.isEnabled())) break
     await zoomIn.click()
