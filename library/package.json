@@ -1,6 +1,6 @@
 {
   "name": "@tumaet/apollon",
-  "version": "4.6.0",
+  "version": "4.8.0",
   "description": "Embeddable UML modeling editor. Mounts into any DOM node — works inside Angular, Vue, Svelte, vanilla JS, or React hosts.",
   "keywords": [
     "uml",
@@ -35,7 +35,8 @@
     "access": "public"
   },
   "files": [
-    "dist"
+    "dist",
+    "schema"
   ],
   "sideEffects": [
     "**/*.css"
@@ -53,7 +54,12 @@
       "types": "./dist/internals.d.ts",
       "import": "./dist/internals.js"
     },
+    "./export": {
+      "types": "./dist/export.d.ts",
+      "import": "./dist/export.js"
+    },
     "./style.css": "./dist/assets/style.css",
+    "./schema": "./schema/uml-model-4.schema.json",
     "./package.json": "./package.json"
   },
   "scripts": {
@@ -66,7 +72,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "size": "size-limit"
+    "size": "size-limit",
+    "gen:fonts": "node scripts/gen-fonts.mjs",
+    "gen:schema": "node scripts/gen-schema.mjs"
   },
   "size-limit": [
     {
@@ -83,10 +91,15 @@
       "name": "yjs sync chunk",
       "path": "dist/yjsSync-*.js",
       "limit": "210 kB"
+    },
+    {
+      "name": "/export lazy chunk (renderers external; Inter ttf inlined)",
+      "path": "dist/export.js",
+      "limit": "700 kB"
     }
   ],
   "peerDependencies": {
-    "@xyflow/react": "^12.3.0",
+    "@xyflow/react": "^12.9.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
@@ -114,8 +127,14 @@
     "yjs": "13.6.20",
     "zustand": "catalog:"
   },
+  "optionalDependencies": {
+    "@resvg/resvg-wasm": "catalog:",
+    "jspdf": "catalog:",
+    "svg2pdf.js": "catalog:"
+  },
   "devDependencies": {
     "@eslint/js": "catalog:",
+    "@size-limit/preset-big-lib": "catalog:",
     "@testing-library/jest-dom": "catalog:",
     "@testing-library/react": "catalog:",
     "@types/node": "catalog:",
@@ -124,6 +143,7 @@
     "@vitejs/plugin-react": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "@xyflow/react": "catalog:",
+    "ajv": "8.20.0",
     "babel-plugin-react-compiler": "catalog:",
     "eslint": "catalog:",
     "eslint-plugin-react": "catalog:",
@@ -133,9 +153,10 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "size-limit": "catalog:",
-    "@size-limit/preset-big-lib": "catalog:",
+    "subset-font": "2.5.0",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:",
+    "typescript-json-schema": "0.67.4",
     "vite": "catalog:",
     "vite-plugin-dts": "4.3.0",
     "vitest": "catalog:"

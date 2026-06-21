@@ -16,11 +16,13 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from "react"
+import { Link } from "@tanstack/react-router"
 import { toast } from "react-toastify"
 import { cn } from "@tumaet/ui/lib/utils"
 import { log } from "@/logger"
 import { useVersionStore, type PendingVersion } from "@/stores/useVersionStore"
-import { VersionApiClient } from "@/services/DiagramApiClient"
+import { getVersionRepository } from "@/services/versionRepository"
+import { PREVIEW_VERSION_PARAM } from "@/hooks/useVersionPreviewUrlSync"
 import { MAX_DESCRIPTION_LENGTH, versioningStrings as t } from "./strings"
 import { relativeTime } from "./relativeTime"
 import {
@@ -29,7 +31,16 @@ import {
   TEXT_MUTED,
   TEXT_PRIMARY,
 } from "./theme"
-import { isNamedVersion } from "./utils"
+import { isNamedVersion } from "@/lib/version/predicates"
+
+/**
+ * Wraps the clickable row body. The container injects a real `<Link>` to
+ * `?version=<id>` so cmd/ctrl/middle-click opens the version's preview in a new
+ * tab (same as gallery cards); plain left-click stays in-SPA via `onPreview`.
+ * `(children) => children` so the {@link VersionListItemView} stays router-
+ * agnostic (stories render it without a router and just get a plain wrapper).
+ */
+type RowLink = (children: ReactNode) => ReactNode
 
 interface ViewProps {
   version: PendingVersion
@@ -49,6 +60,17 @@ interface ViewProps {
    * Restore action so the kebab only offers actions that change state.
    */
   canRestore: boolean
+  /**
+   * Whether a shareable permalink exists for this version. Local/offline mode
+   * has no permalink (the repository returns null), so the "Copy link" action
+   * is hidden. Defaults to shown when omitted.
+   */
+  hasPermalink?: boolean
+  /**
+   * Wraps the clickable row body — the container injects a TanStack `<Link>`
+   * for new-tab preview; defaults to a plain wrapper for router-less stories.
+   */
+  rowLink?: RowLink
   onPreview: (versionId: string) => void
   onRestore: (versionId: string) => void
   onDelete: (versionId: string) => void
@@ -79,6 +101,8 @@ export function VersionListItemView({
   versionNumber,
   isPreviewing,
   canRestore,
+  hasPermalink = true,
+  rowLink,
   onPreview,
   onRestore,
   onDelete,
@@ -168,6 +192,100 @@ export function VersionListItemView({
 
   const mutedCaption = "text-xs italic leading-snug"
 
+  const rowBody = (
+    <div className="flex min-w-0 flex-1 items-start gap-3">
+      {version.pending ? (
+        <div
+          className="mt-0.5 h-10 w-16 shrink-0 rounded"
+          style={{ background: ROW_HOVER_BG }}
+          aria-hidden
+        />
+      ) : (
+        <div className="mt-0.5">{thumbnail}</div>
+      )}
+
+      <div className="min-w-0 flex-1 pr-7">
+        {editing ? (
+          <textarea
+            autoFocus
+            rows={1}
+            value={draft}
+            onChange={(e) =>
+              setDraft(e.target.value.slice(0, MAX_DESCRIPTION_LENGTH))
+            }
+            onClick={(e) => e.stopPropagation()}
+            onBlur={() => void submitEdit()}
+            onKeyDown={onEditKeyDown}
+            placeholder={t.createPlaceholder}
+            aria-label="Edit description"
+            className="mb-0.5 w-full resize-none border-0 bg-transparent p-0 text-[0.8125rem] outline-none placeholder:opacity-100 placeholder:[color:var(--ph)]"
+            style={
+              {
+                color: TEXT_PRIMARY,
+                "--ph": TEXT_MUTED,
+              } as CSSProperties
+            }
+          />
+        ) : description ? (
+          // User-authored description — rendered slightly smaller and muted
+          // so the #N · time-ago line reads as the primary identifier.
+          <div
+            className="mb-0.5 text-[0.8125rem] leading-snug break-words whitespace-pre-wrap"
+            style={{ color: TEXT_MUTED }}
+          >
+            {description}
+          </div>
+        ) : version.kind === "user" ? (
+          // User explicitly saved this version but added no description.
+          // Show a placeholder so it doesn't look identical to a raw autosave.
+          <div
+            className={`mb-0.5 block ${mutedCaption}`}
+            style={{ color: TEXT_MUTED }}
+          >
+            {t.noDescription}
+          </div>
+        ) : version.name?.trim() ? (
+          // System-generated name (pre-restore label). Styled as italic
+          // caption so users don't mistake it for a user-added description —
+          // the kebab's "Add description" makes sense because no user-authored
+          // text is visible.
+          <div
+            className={`mb-0.5 block break-words whitespace-pre-wrap ${mutedCaption}`}
+            style={{ color: TEXT_MUTED }}
+          >
+            {version.name.trim()}
+          </div>
+        ) : (
+          // Raw periodic auto-save — no user-authored content at all.
+          // 'Auto-saved' tells the user this is a system checkpoint, not
+          // a deliberate save, matching the same italic/muted register as
+          // the pre-restore label above.
+          <div
+            className={`mb-0.5 block ${mutedCaption}`}
+            style={{ color: TEXT_MUTED }}
+          >
+            {t.autoSaved}
+          </div>
+        )}
+        <div className="block text-xs" style={{ color: TEXT_MUTED }}>
+          {versionNumber !== undefined && (
+            <span className="font-semibold">#{versionNumber}</span>
+          )}
+          {versionNumber !== undefined && " · "}
+          {ago}
+          {version.pending && ` · ${t.saving}`}
+          {version.failed && ` · failed`}
+        </div>
+      </div>
+    </div>
+  )
+
+  // A real `<Link>` (injected by the container) so cmd/ctrl/middle-click opens
+  // the version's preview in a new tab; plain left-click stays in-SPA via
+  // `onPreview`. Non-clickable rows (pending / editing) render the body plain.
+  const wrappedBody =
+    clickable && rowLink ? rowLink(rowBody) : <Fragment>{rowBody}</Fragment>
+
   return (
     <Fragment>
       <li
@@ -178,7 +296,7 @@ export function VersionListItemView({
         aria-label={`Version ${
           versionNumber ? `#${versionNumber}` : "(saving)"
         }, created ${ago}${label ? ` — ${label}` : ""}`}
-        onClick={handleRowClick}
+        onClick={rowLink ? undefined : handleRowClick}
         className={cn(
           "relative flex list-none items-start gap-3 px-4 py-2 transition-colors data-[clickable=true]:cursor-pointer data-[clickable=true]:hover:[background:var(--row-hover-bg)]",
           className
@@ -196,89 +314,7 @@ export function VersionListItemView({
           } as CSSProperties
         }
       >
-        {version.pending ? (
-          <div
-            className="mt-0.5 h-10 w-16 shrink-0 rounded"
-            style={{ background: ROW_HOVER_BG }}
-            aria-hidden
-          />
-        ) : (
-          <div className="mt-0.5">{thumbnail}</div>
-        )}
-
-        <div className="min-w-0 flex-1 pr-7">
-          {editing ? (
-            <textarea
-              autoFocus
-              rows={1}
-              value={draft}
-              onChange={(e) =>
-                setDraft(e.target.value.slice(0, MAX_DESCRIPTION_LENGTH))
-              }
-              onClick={(e) => e.stopPropagation()}
-              onBlur={() => void submitEdit()}
-              onKeyDown={onEditKeyDown}
-              placeholder={t.createPlaceholder}
-              aria-label="Edit description"
-              className="mb-0.5 w-full resize-none border-0 bg-transparent p-0 text-[0.8125rem] outline-none placeholder:opacity-100 placeholder:[color:var(--ph)]"
-              style={
-                {
-                  color: TEXT_PRIMARY,
-                  "--ph": TEXT_MUTED,
-                } as CSSProperties
-              }
-            />
-          ) : description ? (
-            // User-authored description — rendered slightly smaller and muted
-            // so the #N · time-ago line reads as the primary identifier.
-            <div
-              className="mb-0.5 text-[0.8125rem] leading-snug break-words whitespace-pre-wrap"
-              style={{ color: TEXT_MUTED }}
-            >
-              {description}
-            </div>
-          ) : version.kind === "user" ? (
-            // User explicitly saved this version but added no description.
-            // Show a placeholder so it doesn't look identical to a raw autosave.
-            <div
-              className={`mb-0.5 block ${mutedCaption}`}
-              style={{ color: TEXT_MUTED }}
-            >
-              {t.noDescription}
-            </div>
-          ) : version.name?.trim() ? (
-            // System-generated name (pre-restore label). Styled as italic
-            // caption so users don't mistake it for a user-added description —
-            // the kebab's "Add description" makes sense because no user-authored
-            // text is visible.
-            <div
-              className={`mb-0.5 block break-words whitespace-pre-wrap ${mutedCaption}`}
-              style={{ color: TEXT_MUTED }}
-            >
-              {version.name.trim()}
-            </div>
-          ) : (
-            // Raw periodic auto-save — no user-authored content at all.
-            // 'Auto-saved' tells the user this is a system checkpoint, not
-            // a deliberate save, matching the same italic/muted register as
-            // the pre-restore label above.
-            <div
-              className={`mb-0.5 block ${mutedCaption}`}
-              style={{ color: TEXT_MUTED }}
-            >
-              {t.autoSaved}
-            </div>
-          )}
-          <div className="block text-xs" style={{ color: TEXT_MUTED }}>
-            {versionNumber !== undefined && (
-              <span className="font-semibold">#{versionNumber}</span>
-            )}
-            {versionNumber !== undefined && " · "}
-            {ago}
-            {version.pending && ` · ${t.saving}`}
-            {version.failed && ` · failed`}
-          </div>
-        </div>
+        {wrappedBody}
 
         <div className="absolute top-3 right-2">
           <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
@@ -286,11 +322,12 @@ export function VersionListItemView({
               aria-label="Version actions"
               disabled={Boolean(version.pending)}
               onClick={(e) => e.stopPropagation()}
-              className="inline-flex size-7 cursor-pointer items-center justify-center rounded-md bg-transparent outline-none transition-colors hover:[background:var(--row-hover-bg)] focus-visible:ring-2 focus-visible:ring-white/40 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex size-7 cursor-pointer items-center justify-center rounded-[var(--apollon-chrome-radius-sm)] bg-transparent outline-none transition-colors hover:[background:var(--row-hover-bg)] active:[background:var(--row-active-bg)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:[outline-color:var(--apollon-chrome-accent)] disabled:cursor-not-allowed disabled:opacity-50"
               style={
                 {
                   color: TEXT_PRIMARY,
                   "--row-hover-bg": ROW_HOVER_BG,
+                  "--row-active-bg": ROW_SELECTED_BG,
                 } as CSSProperties
               }
             >
@@ -313,9 +350,13 @@ export function VersionListItemView({
                   {t.restoreThis}
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem onClick={handleCopyLink}>
-                {t.copyLink}
-              </DropdownMenuItem>
+              {/* No permalink in local/offline mode (the repository returns
+                  null), so the copy-link action is hidden there. */}
+              {hasPermalink && (
+                <DropdownMenuItem onClick={handleCopyLink}>
+                  {t.copyLink}
+                </DropdownMenuItem>
+              )}
               {/* Adding a description on an empty-meta row promotes it visually
                   (no longer eligible for collapse) and protects it from the
                   eviction-priority sweep. Pure metadata — no protocol event.
@@ -357,22 +398,29 @@ export function VersionListItemView({
 
 type ContainerProps = Omit<
   ViewProps,
-  "onEditDescription" | "onCopyLink" | "thumbnail"
+  "onEditDescription" | "onCopyLink" | "thumbnail" | "hasPermalink" | "rowLink"
 > & {
   /** Diagram the version belongs to — needed for the thumbnail + side effects. */
   diagramId: string
 }
 
 /**
- * Thin container — supplies the live thumbnail and the description-persist /
- * copy-link side effects (store + API client) to {@link VersionListItemView}.
- * Existing call sites keep working unchanged.
+ * Thin container — supplies the live thumbnail, the new-tab preview link, and
+ * the description-persist / copy-link side effects (store + version repository)
+ * to {@link VersionListItemView}. Existing call sites keep working unchanged.
  */
 export const VersionListItem: FC<ContainerProps> = ({
   diagramId,
   ...props
 }) => {
   const editVersionInfo = useVersionStore((s) => s.editVersionInfo)
+  // Single source of truth for permalink visibility: the active repository
+  // decides via its `permalink()` return value. Local mode returns null;
+  // remote returns a URL. No prop, no drift.
+  const permalinkUrl = getVersionRepository().permalink(
+    diagramId,
+    props.version.id
+  )
 
   const onEditDescription = async (versionId: string, description: string) => {
     try {
@@ -385,17 +433,49 @@ export const VersionListItem: FC<ContainerProps> = ({
     }
   }
 
-  const onCopyLink = async (versionId: string) => {
+  const onCopyLink = async () => {
+    if (!permalinkUrl) return
     try {
-      await navigator.clipboard.writeText(
-        VersionApiClient.permalink(diagramId, versionId)
-      )
+      await navigator.clipboard.writeText(permalinkUrl)
       toast.success(t.copied)
     } catch (err) {
       log.error("Copy link failed", err)
       toast.error(t.copyFailed)
     }
   }
+
+  // Real `<Link>` to `?version=<id>` so cmd/ctrl/middle-click opens the
+  // preview in a new tab (same as gallery cards); plain left-click stays
+  // in-SPA via `onPreview`. `tabIndex={-1}` keeps it out of the listbox tab
+  // order — keyboard nav drives selection from the list.
+  const rowLink: RowLink = (children) => (
+    <Link
+      to="."
+      search={(prev) => ({
+        ...prev,
+        [PREVIEW_VERSION_PARAM]: props.version.id,
+      })}
+      tabIndex={-1}
+      onClick={(e) => {
+        // Let the browser handle modified clicks (open in a new tab/window).
+        if (e.metaKey || e.ctrlKey || e.shiftKey) return
+        e.preventDefault()
+        props.onPreview(props.version.id)
+      }}
+      style={{
+        display: "flex",
+        flex: 1,
+        minWidth: 0,
+        gap: "12px",
+        alignItems: "flex-start",
+        textDecoration: "none",
+        color: "inherit",
+        cursor: "pointer",
+      }}
+    >
+      {children}
+    </Link>
+  )
 
   return (
     <VersionListItemView
@@ -408,6 +488,8 @@ export const VersionListItem: FC<ContainerProps> = ({
           compact
         />
       }
+      hasPermalink={Boolean(permalinkUrl)}
+      rowLink={rowLink}
       onEditDescription={onEditDescription}
       onCopyLink={onCopyLink}
     />

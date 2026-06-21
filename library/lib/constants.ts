@@ -3,6 +3,7 @@
  * Grouped by domain, deep-frozen. Import from "@/constants".
  */
 import React from "react"
+import { FONT_FAMILY, DEFAULT_FONT_SIZE } from "@/fontStack"
 import {
   ActivityActionNodeSVG,
   ActivityFinalNodeSVG,
@@ -12,6 +13,7 @@ import {
   ActivityMergeNodeSVG,
   ActivityObjectNodeSVG,
   ActivitySVG,
+  ActivitySwimlaneSVG,
   ClassSVG,
   PackageSVG,
   UseCaseNodeSVG,
@@ -101,6 +103,10 @@ export const CSS_VARIABLE_FALLBACKS: Readonly<Record<string, string>> =
 
 export const STROKE_COLOR = CSS_VARIABLE_FALLBACKS["--apollon-primary-contrast"]
 export const FILL_COLOR = CSS_VARIABLE_FALLBACKS["--apollon-background"]
+
+// Re-exported from the leaf module (see lib/fontStack.ts) so `@/constants`
+// importers keep working.
+export { FONT_FAMILY, DEFAULT_FONT_SIZE }
 export const INTERACTIVE_SELECTION_COLOR = `var(--apollon-interactive-selection, ${CSS_VARIABLE_FALLBACKS["--apollon-interactive-selection"]})`
 export const INTERACTIVE_SELECTION_FILL = `color-mix(in srgb, var(--apollon-interactive-selection, ${CSS_VARIABLE_FALLBACKS["--apollon-interactive-selection"]}) 18%, transparent)`
 
@@ -108,8 +114,7 @@ export const INTERACTIVE_SELECTION_FILL = `color-mix(in srgb, var(--apollon-inte
 /* Layout                                                                     */
 /* -------------------------------------------------------------------------- */
 export const LAYOUT = Object.freeze({
-  DEFAULT_FONT:
-    "400 16px Inter, system-ui, Avenir, Helvetica, Arial, sans-serif",
+  DEFAULT_FONT: `400 ${DEFAULT_FONT_SIZE}px ${FONT_FAMILY}`,
   DEFAULT_HEADER_HEIGHT: 40,
   DEFAULT_HEADER_HEIGHT_WITH_STEREOTYPE: 50,
   DEFAULT_ATTRIBUTE_HEIGHT: 30,
@@ -120,18 +125,29 @@ export const LAYOUT = Object.freeze({
   LINE_WIDTH_EDGE: 2,
   ICON_LINE_WIDTH: 1.5,
   /**
-   * Typography tokens for wrapped node labels. `NAME_FONT_SIZE` matches the
-   * SVG `<text>` browser default so un-styled labels don't visibly shrink,
-   * and `NAME_LINE_HEIGHT` is `round(16 * 1.2)` — what pretext uses internally
-   * and what `MultilineText` falls back to when no explicit line-height is
-   * passed. Used by every node that wraps its label.
+   * Typography tokens for wrapped node labels. `NAME_FONT_SIZE` is the shared
+   * diagram text size (so measured and rendered labels agree); `NAME_LINE_HEIGHT`
+   * is `round(size * 1.2)` — what pretext uses internally and what `MultilineText`
+   * falls back to when no explicit line-height is passed.
    */
-  NAME_FONT_SIZE: 16,
-  NAME_LINE_HEIGHT: 19,
+  NAME_FONT_SIZE: DEFAULT_FONT_SIZE,
+  NAME_LINE_HEIGHT: Math.round(DEFAULT_FONT_SIZE * 1.2),
   /** Stereotype tspans like `«component»` render at 0.8em of the name font. */
   STEREOTYPE_LINE_HEIGHT: 15,
   STEREOTYPE_NAME_GAP: 4,
 } as const)
+
+/**
+ * Treat narrow portrait viewports and short phone-landscape viewports as
+ * mobile. The portrait bound stops just below 768px so iPads (768px portrait)
+ * keep the regular desktop layout; the second clause catches phones in
+ * landscape, where the short height distinguishes them from tablets.
+ *
+ * NOTE: mirrored in standalone/webapp/src/constants/responsive.ts (the webapp
+ * can't import the library's curated public surface). Keep both in sync.
+ */
+export const MOBILE_VIEW_QUERY =
+  "(max-width: 767.95px), (max-width: 950px) and (max-height: 500px)"
 
 const generateUUID = () => uuidv4()
 
@@ -210,6 +226,19 @@ export const EDGES = Object.freeze({
    * U-turn is never a deliberate edit, so this stays at the visual-merge
    * threshold rather than the per-step threshold. */
   ORTHOGONAL_ARM_OVERLAP_PX: 10,
+  /** Perpendicular gap (flow px) between an edge's mid-segment line and the
+   * near edge of its relationship/stereotype label. The label sits this far
+   * off the line on whichever side is clearer. */
+  LABEL_GAP: 14,
+  /** Nominal label line height (flow px) used as the across-text depth of the
+   * candidate box when scoring which side a label sits on. Constant by
+   * construction — placement never measures the rendered text (mirrors the
+   * messageLayout.ts invariant). */
+  LABEL_LINE_HEIGHT: 14,
+  /** Nominal half-width (flow px) of a label along its text axis, used only to
+   * build the candidate box for side scoring. Coarse on purpose: we choose a
+   * side, not a pixel-perfect fit. */
+  LABEL_NOMINAL_HALF_EXTENT: 40,
 } as const)
 
 /* -------------------------------------------------------------------------- */
@@ -367,6 +396,11 @@ export type DropElementConfig = {
   readonly type: DiagramNodeType
   readonly width: number
   readonly height: number
+  /** Size of the node when dropped on the canvas, if it should differ from the
+   * sidebar preview size (`width`/`height`). Lets a large element preview small
+   * in the palette without shrinking the rest of the picker. */
+  readonly dropWidth?: number
+  readonly dropHeight?: number
   readonly defaultData?: Record<string, unknown>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly svg: React.FC<any>
@@ -505,6 +539,24 @@ export const dropElementConfigs: Readonly<
       height: 20,
       defaultData: { name: "Fork" },
       svg: ActivityForkNodeHorizontalSVG,
+    },
+    {
+      type: "activitySwimlane",
+      // Preview small (the picker shares one Math.min scale, so a big item
+      // shrinks every sibling) but drop a properly sized swimlane on the canvas.
+      width: 160,
+      height: 100,
+      dropWidth: 400,
+      dropHeight: 240,
+      defaultData: {
+        name: "",
+        orientation: "vertical",
+        lanes: [
+          { id: "lane-1", name: "Lane 1" },
+          { id: "lane-2", name: "Lane 2" },
+        ],
+      },
+      svg: ActivitySwimlaneSVG,
     },
   ],
   [UMLDiagramType.UseCaseDiagram]: [

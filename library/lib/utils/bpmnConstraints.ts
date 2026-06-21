@@ -61,9 +61,16 @@ export const canDropIntoParent = (
     return childType === "class" || childType === "package"
   }
 
-  // Activity can contain activity nodes
+  // Activity swimlane can contain any activity element (including a nested
+  // activity / sub-activity), but not another swimlane (single-level partitions).
+  if (parentType === "activitySwimlane") {
+    return childType.startsWith("activity") && childType !== "activitySwimlane"
+  }
+
+  // Activity can contain activity nodes (but not a swimlane — swimlanes are
+  // top-level structuring elements).
   if (parentType === "activity") {
-    return childType.startsWith("activity")
+    return childType.startsWith("activity") && childType !== "activitySwimlane"
   }
 
   // Use Case System can contain use cases and actors

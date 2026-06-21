@@ -50,21 +50,28 @@ async function seedDiagrams(
     }
   }
   await page.goto("/")
+  await page
+    .getByRole("heading", { level: 1, name: "Your diagrams" })
+    .waitFor({ timeout: 15_000 })
   await page.evaluate(
     (storeValue) => {
       localStorage.setItem("persistenceModelStore", storeValue)
     },
     JSON.stringify({ state: { models, currentModelId: null }, version: 1 })
   )
-  await page.goto("/")
-  // Wait for the lazy gallery grid to hydrate. The list itself is the
-  // readiness signal — `networkidle` is flaky here because thumbnail warmup
-  // and background fetches keep the network busy.
-  await page.locator('[role="list"]').waitFor({ timeout: 15_000 })
+  await page.reload()
+
+  const countLabel = `${diagrams.length} diagrams`
+  await page.getByText(countLabel, { exact: true }).waitFor({
+    timeout: 15_000,
+  })
 }
 
 async function seedEmpty(page: Page) {
   await page.goto("/")
+  await page
+    .getByRole("heading", { level: 1, name: "Your diagrams" })
+    .waitFor({ timeout: 15_000 })
   await page.evaluate(() => {
     localStorage.setItem(
       "persistenceModelStore",
@@ -161,7 +168,9 @@ test.describe("Home page — empty state (no diagrams)", () => {
 
     const nameInput = page.getByRole("textbox", { name: "Name" })
 
-    await expect(nameInput).toHaveValue("Class Diagram")
+    // A blank diagram is created untitled (empty name → muted placeholder); a
+    // template pre-fills its own name as the sensible default.
+    await expect(nameInput).toHaveValue("")
     await page.getByRole("tab", { name: "Use template" }).click()
     await expect(nameInput).toHaveValue("Adapter")
     await expect(page.getByText("Selected Template")).toHaveCount(0)
@@ -518,6 +527,63 @@ test.describe("Home page — accessibility basics", () => {
     await expect(page.getByRole("link", { name: "Privacy" })).toHaveAttribute(
       "href",
       "/privacy"
+    )
+  })
+
+  test("keeps the home navbar outside iPhone safe areas", async ({ page }) => {
+    // Headless Chromium reports 0 env() insets, so simulate a notch by setting
+    // the custom properties production derives from env() (webapp.css :root).
+    const INSET = 47
+    const LANDSCAPE_WIDTH = 844
+
+    await page.setViewportSize({ width: 390, height: 844 })
+    await seedEmpty(page)
+    await page.evaluate((inset) => {
+      document.documentElement.style.setProperty(
+        "--safe-area-inset-top",
+        `${inset}px`
+      )
+    }, INSET)
+
+    // The app header uses the unified NAVBAR_MIN_HEIGHT (52) plus the top inset.
+    const navbar = page.locator(".home-navbar")
+    const portraitBox = await navbar.boundingBox()
+    expect(portraitBox?.height).toBeGreaterThanOrEqual(52 + INSET)
+
+    const content = page.locator(".home-navbar__content")
+    await expect(content).toHaveCSS("min-height", "52px")
+
+    await page.setViewportSize({ width: LANDSCAPE_WIDTH, height: 390 })
+    await page.evaluate((inset) => {
+      document.documentElement.style.setProperty("--safe-area-inset-top", "0px")
+      document.documentElement.style.setProperty(
+        "--safe-area-inset-left",
+        `${inset}px`
+      )
+      document.documentElement.style.setProperty(
+        "--safe-area-inset-right",
+        `${inset}px`
+      )
+    }, INSET)
+
+    // Home stays at the unified height in landscape (no compaction — the
+    // dashboard scrolls, unlike the editor canvas); top inset drops to 0.
+    const landscapeBox = await navbar.boundingBox()
+    expect(landscapeBox?.height).toBeLessThanOrEqual(52)
+
+    // The chrome HUGS the safe area (max(edge, inset)), same as the editor: the
+    // leading content sits at the notch edge, never under it.
+    const homeLinkBox = await page
+      .getByRole("link", { name: "Apollon home" })
+      .boundingBox()
+    expect(homeLinkBox?.x).toBeGreaterThanOrEqual(INSET)
+
+    const themeButtonBox = await navbar
+      .getByRole("button", { name: /Switch to (light|dark) mode/ })
+      .boundingBox()
+    expect(themeButtonBox).not.toBeNull()
+    expect(themeButtonBox!.x + themeButtonBox!.width).toBeLessThanOrEqual(
+      LANDSCAPE_WIDTH - INSET
     )
   })
 })

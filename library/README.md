@@ -23,6 +23,7 @@ Apollon is the modeling editor behind [Artemis](https://artemis.tum.de/), TUM's 
 - **Framework-agnostic**: one imperative API for Angular, Vue, Svelte, and vanilla JS, plus a React component, hooks, and provider.
 - **Real-time collaboration**: opt-in multi-user editing over [Yjs](https://yjs.dev/), with any transport you like (WebSocket, WebRTC, BroadcastChannel).
 - **Export**: SVG and JSON are built in. Generate PNG and PDF from the SVG (see [Export](#export)).
+- **Canvas overlays**: inject your own toolbars, banners, and rails into the editor canvas, collision-free with built-in chrome — `<ApollonControl>` (React) or `addControl` / `getRegionElement` (any framework). See [Overlay controls](https://ls1intum.github.io/Apollon/library/api/overlay-controls).
 - **Assessment mode**: attach scores and feedback to elements. This is the grading workflow Artemis uses.
 - **TypeScript**: type definitions are included.
 
@@ -178,11 +179,11 @@ export class DiagramEditorComponent {
 ### Vanilla JS / CDN
 
 ```html
-<link rel="stylesheet" href="https://esm.sh/@tumaet/apollon@4.6.0/style.css" />
+<link rel="stylesheet" href="https://esm.sh/@tumaet/apollon@4.8.0/style.css" />
 <div id="apollon" style="width: 100%; height: 600px"></div>
 
 <script type="module">
-  import { ApollonEditor } from "https://esm.sh/@tumaet/apollon@4.6.0"
+  import { ApollonEditor } from "https://esm.sh/@tumaet/apollon@4.8.0"
 
   const saved = localStorage.getItem("diagram")
   const editor = new ApollonEditor(document.getElementById("apollon"), {

@@ -6,8 +6,9 @@ import { VersionHistoryButtonView } from "./VersionHistoryButton"
 /**
  * Pure navbar entry point for the version-history drawer. It reflects the
  * drawer's open state via `aria-pressed` and reports clicks via `onToggle` — no
- * store, no routing, so every state is one `args` combo. `tone` switches between
- * the always-dark desktop bar and the themed mobile dropdown.
+ * store, no routing, so every state is one `args` combo. `color` pins an explicit
+ * foreground (the themed mobile dropdown); `labelClassName` can collapse the
+ * label to the icon when space is tight.
  */
 const meta = {
   title: "Webapp/Navbar/VersionHistoryButton",
@@ -17,7 +18,6 @@ const meta = {
   parameters: { layout: "centered" },
   args: {
     isOpen: false,
-    tone: "onDark",
     onToggle: fn(),
   },
   argTypes: {
@@ -26,10 +26,9 @@ const meta = {
       description: "Whether the drawer is open (drives `aria-pressed`).",
       table: { category: "State" },
     },
-    tone: {
-      control: "select",
-      options: ["onDark", "onSurface"],
-      description: "Foreground palette for the surface this lives on.",
+    color: {
+      control: "text",
+      description: "Explicit foreground colour for the icon + label.",
       table: { category: "Appearance" },
     },
     onToggle: {
@@ -37,9 +36,9 @@ const meta = {
       description: "Fired when the button is clicked.",
       table: { category: "Events" },
     },
-    className: {
+    labelClassName: {
       control: "text",
-      description: "Merged with the component's own classes.",
+      description: "Classes for the label span (e.g. `hidden lg:inline`).",
       table: { category: "Appearance" },
     },
   },
@@ -58,9 +57,9 @@ export const DrawerOpen: Story = {
   args: { isOpen: true },
 }
 
-/** Light mobile-dropdown tone. */
+/** Themed mobile-dropdown foreground (explicit `color`). */
 export const OnSurface: Story = {
-  args: { tone: "onSurface" },
+  args: { color: "var(--apollon-primary-contrast)" },
 }
 
 /** Pinned dark for visual review. */

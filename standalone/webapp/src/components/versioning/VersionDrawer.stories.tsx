@@ -2,10 +2,10 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 import type { PendingVersion } from "@/stores/useVersionStore"
 import { useVersionStore } from "@/stores/useVersionStore"
 import { WebappProviders } from "../../stories/_support/webapp"
-import { VersionSidebar } from "./VersionDrawer"
+import { VersionSidebarBody } from "./VersionDrawer"
 
 /**
- * The desktop version-history sidebar (`VersionSidebar`) — the inline panel that
+ * The desktop version-history sidebar (`VersionSidebarBody`) — the inline panel that
  * reflows next to the canvas. It renders the chrome-free `VersionSidebarBody`:
  * the description composer, the `count / max` meta line with the autosave-filter
  * toggle, the current-version row, and the list of `VersionListItem` rows.
@@ -60,7 +60,7 @@ const openDrawer = (diagramId: string) => {
 
 const meta = {
   title: "Webapp/Versioning/VersionDrawer",
-  component: VersionSidebar,
+  component: VersionSidebarBody,
   // Mounts VersionThumbnail (a live editor renderer); keep these visual.
   tags: ["autodocs", "!test"],
   parameters: { layout: "fullscreen" },
@@ -86,7 +86,7 @@ const meta = {
       drawerOpenByDiagram: {},
     })
   },
-} satisfies Meta<typeof VersionSidebar>
+} satisfies Meta<typeof VersionSidebarBody>
 
 export default meta
 type Story = StoryObj<typeof meta>
@@ -117,6 +117,7 @@ export const Previewing: Story = {
       versions: { [DIAGRAM_ID]: versions },
       totals: { [DIAGRAM_ID]: 7 },
       preview: {
+        diagramId: DIAGRAM_ID,
         versionId: "v5",
         body: { version: "4.0.0", nodes: [], edges: [] } as never,
       },

@@ -1,16 +1,17 @@
-import { Link } from "react-router"
+import { Link } from "@tanstack/react-router"
 import { cn } from "@tumaet/ui/lib/utils"
+import type { BackTarget } from "@/hooks/useBackTarget"
 
 type BackNavTone = "onDark" | "onSurface"
 
 const toneClass: Record<BackNavTone, string> = {
-  // Dark navbar (editor desktop bar + chrome home navbar). #a3a6a8 mirrors the
-  // `secondary` token used by the sibling File/Share controls.
+  // Header chrome (editor + home): idles in muted chrome text and washes toward
+  // the chrome hover surface, matching the sibling File/Share controls.
   onDark:
-    "text-[#a3a6a8] hover:bg-white/10 hover:text-white focus-visible:outline-white",
+    "text-[color:var(--apollon-chrome-text-muted)] hover:bg-[var(--apollon-chrome-surface-hover)] hover:text-[color:var(--apollon-chrome-text)] active:bg-[var(--apollon-chrome-surface-active)]",
   // Light popover surface (editor mobile menu).
   onSurface:
-    "text-[var(--apollon-primary-contrast)] hover:bg-[var(--apollon-background-variant)] focus-visible:outline-[var(--apollon-primary-contrast)]",
+    "text-[color:var(--apollon-chrome-text)] hover:bg-[var(--apollon-chrome-surface-hover)] active:bg-[var(--apollon-chrome-surface-active)]",
 }
 
 /**
@@ -19,31 +20,37 @@ const toneClass: Record<BackNavTone, string> = {
  * Renders a real router <Link> (anchor) so cmd/middle-click opens a new tab and
  * the browser/native history stays coherent.
  */
-export const BackNav = ({
-  to,
-  label,
-  tone = "onDark",
-  onNavigate,
-  className,
-}: {
-  to: string
-  label: string
+type BackNavProps = BackTarget & {
   tone?: BackNavTone
   /** Fired in addition to navigating — e.g. to close the mobile menu it lives in. */
   onNavigate?: () => void
   className?: string
-}) => (
+  /** Classes for the label span — e.g. `"hidden lg:inline"` to collapse to the
+   * chevron on the narrow editor bar. The chevron alone stays a clear back cue,
+   * and `aria-label` keeps it accessible when the text is hidden. */
+  labelClassName?: string
+}
+
+export const BackNav = ({
+  label,
+  tone = "onDark",
+  onNavigate,
+  className,
+  labelClassName,
+  ...target
+}: BackNavProps) => (
   <Link
-    to={to}
+    {...target}
     onClick={onNavigate}
+    aria-label={label}
     className={cn(
-      "inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2",
+      "inline-flex min-h-[var(--apollon-chrome-btn)] items-center gap-1 whitespace-nowrap rounded-[var(--apollon-chrome-radius-sm)] px-2 py-1 text-sm font-medium transition-colors focus-visible:shadow-[0_0_0_2px_color-mix(in_srgb,var(--apollon-chrome-accent)_45%,transparent)] focus-visible:outline-none",
       toneClass[tone],
       className
     )}
   >
     <svg
-      className="h-4 w-4"
+      className="h-4 w-4 shrink-0"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -52,6 +59,6 @@ export const BackNav = ({
     >
       <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
-    {label}
+    <span className={labelClassName}>{label}</span>
   </Link>
 )

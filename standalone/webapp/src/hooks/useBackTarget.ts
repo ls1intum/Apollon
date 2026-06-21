@@ -1,4 +1,4 @@
-import { useLocation } from "react-router"
+import { useLocation } from "@tanstack/react-router"
 import {
   ALL_DIAGRAMS_LABEL,
   BACK_TO_DIAGRAM_LABEL,
@@ -6,7 +6,12 @@ import {
   readNavFrom,
 } from "@/lib/navProvenance"
 
-export type BackTarget = { to: string; label: string }
+/** A typed `<Link>` destination (route + any params/search) plus its label. */
+export type BackTarget = { label: string } & (
+  | { to: "/local/$id"; params: { id: string }; search: { version?: string } }
+  | { to: "/playground" }
+  | { to: "/" }
+)
 
 /**
  * Resolves the back affordance for a chrome page (legal, 404). When the user
@@ -25,7 +30,18 @@ export type BackTarget = { to: string; label: string }
 export const useBackTarget = (): BackTarget => {
   const from = readNavFrom(useLocation().state)
   if (isRestorableEditorPath(from)) {
-    return { to: from, label: BACK_TO_DIAGRAM_LABEL }
+    const [pathname, query = ""] = from.split("?")
+    const [, head, id] = pathname.split("/")
+    if (head === "local" && id) {
+      const version = new URLSearchParams(query).get("version") ?? undefined
+      return {
+        to: "/local/$id",
+        params: { id: decodeURIComponent(id) },
+        search: { version },
+        label: BACK_TO_DIAGRAM_LABEL,
+      }
+    }
+    return { to: "/playground", label: BACK_TO_DIAGRAM_LABEL }
   }
   return { to: "/", label: ALL_DIAGRAMS_LABEL }
 }

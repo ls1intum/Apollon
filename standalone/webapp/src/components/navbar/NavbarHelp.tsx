@@ -7,11 +7,10 @@ import {
   DropdownMenuTrigger,
 } from "@tumaet/ui/components/dropdown-menu"
 import { ChevronDownIcon } from "lucide-react"
-import { secondary } from "@/constants"
+import { useLocation, useNavigate } from "@tanstack/react-router"
 import { bugReportURL } from "@/constants/urls"
 import { useModalContext } from "@/contexts"
-import { useLocation, useNavigate } from "react-router"
-import { navTriggerClass } from "./styles"
+import { navbarButtonStyle } from "./styleConstants"
 
 interface Props {
   color?: string
@@ -23,31 +22,51 @@ export const NavbarHelp: FC<Props> = ({ color }) => {
   const location = useLocation()
   const { openModal } = useModalContext()
 
+  const close = () => setOpen(false)
+
   // Stamp where the user came from so the legal page can offer a one-tap return
   // to the diagram they were editing. This is the single editor → legal
   // chokepoint (both the desktop and mobile navbars render NavbarHelp), so the
   // dead-end fix lives in exactly one place.
-  const goToLegalPage = (path: string) => {
-    navigate(path, { state: { from: location.pathname + location.search } })
+  const goToLegalPage = (path: "/imprint" | "/privacy") => {
+    navigate({
+      to: path,
+      // searchStr includes the leading "?".
+      state: { from: location.pathname + location.searchStr },
+    })
+    close()
   }
 
-  const openHelpModal = () => openModal("HowToUseModal")
-  const openAboutModal = () => openModal("AboutModal")
-  const openBugReport = () => window.open(bugReportURL, "_blank")
-  const linkToPlayground = () => navigate("/playground")
+  const openHelpModal = () => {
+    openModal("HowToUseModal")
+    close()
+  }
+  const openAboutModal = () => {
+    openModal("AboutModal")
+    close()
+  }
+  const openBugReport = () => {
+    window.open(bugReportURL, "_blank")
+    close()
+  }
+  const linkToPlayground = () => {
+    navigate({ to: "/playground" })
+    close()
+  }
   const linkToImprint = () => goToLegalPage("/imprint")
   const linkToPrivacy = () => goToLegalPage("/privacy")
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger
-        className={navTriggerClass}
-        style={{ color: color ?? secondary }}
+        id="help-menu-button"
+        className={navbarButtonStyle()}
+        style={color ? { color } : undefined}
       >
         <span>Help</span>
         <ChevronDownIcon className="ml-1 size-4" aria-hidden />
       </DropdownMenuTrigger>
-      <DropdownMenuContent>
+      <DropdownMenuContent aria-labelledby="help-menu-button">
         <DropdownMenuItem onClick={openHelpModal}>
           How does this Editor Work?
         </DropdownMenuItem>

@@ -24,6 +24,13 @@ const noEdge = load("two-class-no-edge.json")
 const SRC = "95aac2b6-3e6b-4e6d-9201-52a498e6ea20"
 const TGT = "32659cdc-bd03-46f3-918c-ee8dbba9c15b"
 
+// A second, hidden ApollonEditor is transiently mounted on the page (diagram
+// thumbnail snapshotting), so `.react-flow*` selectors can match two instances.
+// It mounts after the interactive editor, so `.first()` targets the real one —
+// matching the convention already used in waitForCanvasReady. Without it these
+// selectors hit Playwright strict-mode violations once the suite runs in
+// parallel (workers > 1, as of the e2e parallelization in #770).
+
 const viewportZoom = (page: Page) =>
   page.evaluate(() => {
     const vp = document.querySelector(".react-flow__viewport") as HTMLElement
@@ -39,7 +46,7 @@ const viewportZoom = (page: Page) =>
  * deterministic regardless of animation speed. Returns the final zoom.
  */
 async function zoomOutUntil(page: Page, targetZoom: number): Promise<number> {
-  const zoomOut = page.locator('[aria-label="Zoom out"]')
+  const zoomOut = page.locator(".react-flow__controls-zoomout").first()
   let previousZoom = await viewportZoom(page)
   // The canvas minZoom is 0.4; cap iterations so a clamped/disabled control
   // can never hang the test.
@@ -60,7 +67,7 @@ async function zoomOutUntil(page: Page, targetZoom: number): Promise<number> {
 }
 
 async function selectEdge(page: Page, id: string): Promise<Locator> {
-  const edge = page.locator(`.react-flow__edge[data-id="${id}"]`)
+  const edge = page.locator(`.react-flow__edge[data-id="${id}"]`).first()
   const box = (await edge.locator("path").first().boundingBox())!
   await page.mouse.click(box.x + 12, box.y + box.height / 2)
   await page.waitForTimeout(150)
@@ -95,7 +102,7 @@ test("edge handles stay usable when zoomed out and grow when zoomed in", async (
 
   // Zoom in: the handle grows with the (now-thicker) edge, staying proportional
   // rather than looking like a tiny dot on it.
-  const zoomIn = page.locator('[aria-label="Zoom in"]')
+  const zoomIn = page.locator(".react-flow__controls-zoomin").first()
   for (let i = 0; i < 3; i++) {
     await zoomIn.click()
     await page.waitForTimeout(70)
@@ -108,7 +115,7 @@ test("edge handles stay usable when zoomed out and grow when zoomed in", async (
   // Zoom back out below 1x: the handle counter-scales to keep a usable minimum
   // on-screen size instead of shrinking to a few px.
   for (let i = 0; i < 6; i++) {
-    await page.locator('[aria-label="Zoom out"]').click()
+    await page.locator(".react-flow__controls-zoomout").first().click()
     await page.waitForTimeout(70)
   }
   const zoomedOut = await measure()
@@ -123,7 +130,7 @@ test("node connection indicators keep a constant on-screen size across zoom", as
 }) => {
   await openFixtureInLocalEditor(page, noEdge)
   await waitForCanvasReady(page)
-  const node = page.locator(`.react-flow__node[data-id="${SRC}"]`)
+  const node = page.locator(`.react-flow__node[data-id="${SRC}"]`).first()
 
   // On-screen width of a visible arc indicator = its ::before width * zoom.
   const arcScreenWidth = async () => {
@@ -140,7 +147,7 @@ test("node connection indicators keep a constant on-screen size across zoom", as
   const atDefault = await arcScreenWidth()
   expect(atDefault).toBeGreaterThan(0)
 
-  const zoomOut = page.locator('[aria-label="Zoom out"]')
+  const zoomOut = page.locator(".react-flow__controls-zoomout").first()
   for (let i = 0; i < 4; i++) {
     await zoomOut.click()
     await page.waitForTimeout(70)
@@ -156,7 +163,7 @@ test("node shows fewer connection arcs when zoomed out so they do not overlap", 
 }) => {
   await openFixtureInLocalEditor(page, noEdge)
   await waitForCanvasReady(page)
-  const node = page.locator(`.react-flow__node[data-id="${SRC}"]`)
+  const node = page.locator(`.react-flow__node[data-id="${SRC}"]`).first()
   await node.hover()
   await page.waitForTimeout(120)
 
@@ -225,8 +232,8 @@ test("a short edge between close nodes always offers a draggable handle", async 
   await waitForCanvasReady(page)
 
   // Draw a short edge from the source's right handle onto the (close) target.
-  const srcNode = page.locator(`.react-flow__node[data-id="${SRC}"]`)
-  const tgtNode = page.locator(`.react-flow__node[data-id="${TGT}"]`)
+  const srcNode = page.locator(`.react-flow__node[data-id="${SRC}"]`).first()
+  const tgtNode = page.locator(`.react-flow__node[data-id="${TGT}"]`).first()
   await srcNode.hover()
   await page.waitForTimeout(120)
   const rightHandle = srcNode.locator(

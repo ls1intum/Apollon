@@ -60,7 +60,7 @@ export default [
       "lib/components/collaboration/**/*.tsx",
       "lib/components/popovers/**/*EditPopover.tsx",
       "lib/edges/GenericEdge.tsx",
-      "lib/hooks/useMessagePositioning.ts",
+      "lib/hooks/useRemoteDraggingNodes.ts",
       "lib/hooks/useStraightPathEdge.ts",
     ],
     rules: { "react-hooks/set-state-in-effect": "warn" },

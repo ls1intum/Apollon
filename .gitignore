@@ -73,3 +73,6 @@ docs/build/
 
 # Local Claude Code agent state (rubrics, worktrees, lock files).
 .claude/
+
+# Stray pnpm store if pnpm is run outside the workspace root
+.pnpm-store/

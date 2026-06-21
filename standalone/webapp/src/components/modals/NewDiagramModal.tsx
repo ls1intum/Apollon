@@ -2,7 +2,7 @@ import { useState } from "react"
 import { v4 as uuidv4 } from "uuid"
 import { useModalContext } from "@/contexts/ModalContext"
 import { UMLDiagramType } from "@tumaet/apollon/react"
-import { useNavigate } from "react-router"
+import { useNavigate } from "@tanstack/react-router"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { getDiagramTypeIcon } from "@/components/home/diagramTypeMeta"
 import { TemplateThumbnail } from "./TemplateThumbnail"
@@ -105,12 +105,6 @@ const creationalTemplates: HomeDialogOption<TemplateType>[] = [
   TemplateType.Factory,
 ].map(toTemplateOption)
 
-const getDefaultDiagramName = (
-  tab: "scratch" | "template",
-  diagramType: UMLDiagramType,
-  template: TemplateType
-) => (tab === "scratch" ? diagramTypeToTitle[diagramType] : template)
-
 export const NewDiagramModal = () => {
   const { closeModal } = useModalContext()
   const [activeTab, setActiveTab] = useState<"scratch" | "template">("scratch")
@@ -119,15 +113,12 @@ export const NewDiagramModal = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateType>(
     TemplateType.Adapter
   )
+  // Whether the name is still the auto-default (vs. user-typed). A blank/scratch
+  // diagram defaults to NO name (created untitled — home/editor show a muted
+  // placeholder); a template keeps its own name as the sensible default.
   const [isDiagramNameDefault, setIsDiagramNameDefault] =
     useState<boolean>(true)
-  const [newDiagramTitle, setNewDiagramTitle] = useState<string>(
-    getDefaultDiagramName(
-      "scratch",
-      UMLDiagramType.ClassDiagram,
-      TemplateType.Adapter
-    )
-  )
+  const [newDiagramTitle, setNewDiagramTitle] = useState<string>("")
   const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
   const createModelByTitleAndType = usePersistenceModelStore(
@@ -141,7 +132,7 @@ export const NewDiagramModal = () => {
       selectedDiagramType
     )
     closeModal()
-    navigate(`/local/${newId}`)
+    navigate({ to: "/local/$id", params: { id: newId } })
   }
 
   const handleDiagramNameChange = (
@@ -151,27 +142,21 @@ export const NewDiagramModal = () => {
     setIsDiagramNameDefault(false)
   }
 
+  // Auto-default only: scratch → empty (untitled), template → the template name.
+  // A type change never names a scratch diagram (it stays untitled).
   const handleTabChange = (tab: "scratch" | "template") => {
     setActiveTab(tab)
-
     if (isDiagramNameDefault) {
-      setNewDiagramTitle(
-        getDefaultDiagramName(tab, selectedDiagramType, selectedTemplate)
-      )
+      setNewDiagramTitle(tab === "template" ? selectedTemplate : "")
     }
   }
 
   const handleDiagramTypeChange = (type: UMLDiagramType) => {
     setSelectedDiagramType(type)
-
-    if (isDiagramNameDefault) {
-      setNewDiagramTitle(diagramTypeToTitle[type])
-    }
   }
 
   const handleTemplateChange = (template: TemplateType) => {
     setSelectedTemplate(template)
-
     if (isDiagramNameDefault) {
       setNewDiagramTitle(template)
     }
@@ -190,7 +175,6 @@ export const NewDiagramModal = () => {
         throw new Error("Selected template data not found")
       }
 
-      const timeStapToCreate = new Date().getTime()
       const templateModel =
         typeof structuredClone === "function"
           ? structuredClone(jsonData)
@@ -204,9 +188,7 @@ export const NewDiagramModal = () => {
 
       createModel(templateModel)
       closeModal()
-      navigate(`/local/${templateModel.id}`, {
-        state: { timeStapToCreate },
-      })
+      navigate({ to: "/local/$id", params: { id: templateModel.id } })
     } catch (err: unknown) {
       log.error("Error creating diagram from template:", err as Error)
 

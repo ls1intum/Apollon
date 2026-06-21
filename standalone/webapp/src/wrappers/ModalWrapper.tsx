@@ -8,7 +8,11 @@ import {
   HowToUseModal,
   PPTXExportModal,
 } from "@/components/modals"
-import { DeleteVersionModal } from "@/components/versioning"
+import {
+  ConfirmRestoreModal,
+  DeleteVersionModal,
+} from "@/components/versioning"
+import { versioningStrings as v } from "@/components/versioning/strings"
 import { useModalContext } from "@/contexts"
 import {
   ModalProgressProvider,
@@ -49,6 +53,7 @@ const MODAL_COMPONENTS: Record<ModalName, React.ComponentType<ModalProps>> = {
   HowToUseModal: HowToUseModal as React.ComponentType<unknown>,
   AboutModal: AboutModal as React.ComponentType<unknown>,
   DELETE_VERSION: DeleteVersionModal as React.ComponentType<unknown>,
+  CONFIRM_RESTORE: ConfirmRestoreModal as React.ComponentType<unknown>,
 }
 
 const MODAL_TITLES: Record<ModalName, string> = {
@@ -60,6 +65,7 @@ const MODAL_TITLES: Record<ModalName, string> = {
   HowToUseModal: "How to use this editor?",
   AboutModal: "Information about Apollon",
   DELETE_VERSION: "Delete version",
+  CONFIRM_RESTORE: v.confirmRestoreTitle,
 }
 
 const ModalProgressBar = () => {
@@ -85,6 +91,7 @@ export const ModalWrapper: React.FC<ModalWrapperProps> = ({ name, props }) => {
   )
   const isHomeDialog = isContentOverflow || isHomeDialogVariant(props)
   const isWideHomeDialog = name === "NEW_DIAGRAM" && isHomeDialog
+  const isEditorShareDialog = name === "SHARE"
 
   if (!SpecificModal) {
     log.error(`No modal found for name: ${name}`)
@@ -115,35 +122,44 @@ export const ModalWrapper: React.FC<ModalWrapperProps> = ({ name, props }) => {
         {/* Base UI Dialog gives focus trap, scroll lock, Escape + ARIA wiring
             for free. We override the default DialogContent box styling to keep
             the responsive width, accent header, divider and scrollable body the
-            modal system has always had. */}
+            modal system has always had. The editor Share dialog and the home
+            dialogs size themselves against the safe-area insets so they never
+            spill under the iPhone notch / home indicator (#761). */}
         <DialogContent
           showCloseButton={false}
           className={cn(
-            "flex max-w-none flex-col gap-0 overflow-hidden bg-background p-0",
+            "flex max-w-none flex-col gap-0 overflow-hidden p-0",
             isHomeDialog
-              ? "max-h-[92vh] rounded-[15px]"
-              : "max-h-[90vh] rounded-md"
+              ? "rounded-[15px] bg-[var(--home-surface-base)]"
+              : "rounded-md bg-background",
+            !isHomeDialog && !isEditorShareDialog && "max-h-[90vh]"
           )}
-          style={
-            isHomeDialog
-              ? {
-                  width: getHomeDialogWidth(
-                    isWideHomeDialog ? "wide" : "compact"
-                  ),
-                  minWidth: "320px",
-                }
-              : { width: "50vw", minWidth: "20vw", maxWidth: "90vw" }
-          }
+          style={{
+            width: isEditorShareDialog
+              ? "min(560px, calc(100vw - var(--safe-area-inset-left, 0px) - var(--safe-area-inset-right, 0px) - 24px))"
+              : isHomeDialog
+                ? getHomeDialogWidth(isWideHomeDialog ? "wide" : "compact")
+                : "50vw",
+            minWidth: isEditorShareDialog ? 0 : isHomeDialog ? "320px" : "20vw",
+            maxWidth:
+              "calc(100vw - var(--safe-area-inset-left, 0px) - var(--safe-area-inset-right, 0px) - 24px)",
+            maxHeight:
+              isHomeDialog || isEditorShareDialog
+                ? "calc(100dvh - var(--safe-area-inset-top, 0px) - var(--safe-area-inset-bottom, 0px) - 24px)"
+                : undefined,
+          }}
         >
           {/* Header — the shadcn DialogHeader/DialogTitle/DialogClose building
               blocks; the home variant keeps its accent bar + Poppins title and
-              the editor variant keeps its divider via the styling below. */}
+              the editor variant keeps its divider via the styling below. The
+              narrow-screen variant tightens the padding so the header stays out
+              of the way on landscape phones. */}
           <DialogHeader
             className={cn(
               "flex-row items-center justify-between gap-2",
               isHomeDialog
-                ? "rounded-t-[15px] bg-primary px-5 py-[18px]"
-                : "border-b border-b-[var(--apollon-background-variant)] p-4"
+                ? "rounded-t-[15px] bg-primary px-5 py-[18px] [@media(max-width:950px)_and_(max-height:500px)]:px-[14px] [@media(max-width:950px)_and_(max-height:500px)]:py-[10px]"
+                : "border-b border-b-[var(--apollon-background-variant)] p-4 [@media(max-width:950px)_and_(max-height:500px)]:px-3 [@media(max-width:950px)_and_(max-height:500px)]:py-2"
             )}
           >
             <DialogTitle
@@ -171,12 +187,18 @@ export const ModalWrapper: React.FC<ModalWrapperProps> = ({ name, props }) => {
           {/* Progress bar — sits between header and content, outside scroll */}
           <ModalProgressBar />
 
-          {/* Scrollable Content */}
+          {/* Scrollable Content. On landscape phones the body padding tightens
+              and the cap switches to a safe-area-aware dvh budget so the dialog
+              body never runs under the home indicator (#761). */}
           <div
             className={cn(
               "grow",
               isContentOverflow ? "overflow-y-visible" : "overflow-y-auto",
-              isHomeDialog ? "px-4 pt-6 pb-4" : "p-4"
+              isHomeDialog
+                ? "px-4 pt-6 pb-4 [@media(max-width:950px)_and_(max-height:500px)]:p-3"
+                : "p-4 [@media(max-width:950px)_and_(max-height:500px)]:px-3 [@media(max-width:950px)_and_(max-height:500px)]:py-[10px]",
+              !isContentOverflow &&
+                "[@media(max-width:950px)_and_(max-height:500px)]:max-h-[calc(100dvh-var(--safe-area-inset-top,0px)-var(--safe-area-inset-bottom,0px)-64px)]"
             )}
             style={{
               maxHeight: isContentOverflow

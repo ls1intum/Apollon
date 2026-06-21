@@ -1,26 +1,30 @@
 import { TriangleAlertIcon } from "lucide-react"
 import { useState, type CSSProperties, type FC } from "react"
 import { cn } from "@tumaet/ui/lib/utils"
-import { selectVersions, useVersionStore } from "@/stores/useVersionStore"
+import {
+  selectScopedPreview,
+  selectVersions,
+  useVersionStore,
+} from "@/stores/useVersionStore"
 import { versioningStrings as t } from "./strings"
 import { relativeTime } from "./relativeTime"
 
 /**
- * Compactness thresholds in **container pixels**, not viewport pixels.
+ * Compactness threshold in **container pixels**, not viewport pixels.
  * The banner overlays the canvas column; that column's width depends on
  * whether the desktop sidebar is open (it shrinks the canvas by 320px),
  * whether devtools are docked, etc. Querying `window` widths gives the
- * wrong answer in any non-trivial layout. The values still echo the
- * common phone/phablet thresholds — they're chosen for readability of
- * the banner's content (icon + title + 2 buttons) at given widths.
+ * wrong answer in any non-trivial layout. The value still echoes the
+ * common phablet threshold — it's chosen for readability of the banner's
+ * content (icon + title + 2 buttons) at given widths.
  */
 const COMPACT_WIDTH_PX = 768
-const STACKED_WIDTH_PX = 480
 
 interface ViewProps {
   /**
    * The version's user-facing label (description, falling back to name, then
-   * the catch-all). Rendered under the title; empty hides the label row.
+   * the catch-all). Rides along as the title's hover tooltip rather than a
+   * second row, so the banner stays a compact pill.
    */
   label: string
   /** Relative "time ago" of the previewed version (e.g. "2h ago"). */
@@ -65,10 +69,12 @@ const buttonStyle: CSSProperties = {
 }
 
 /**
- * Pure presentational preview banner — props in, callbacks out. A soft-gold
- * outlined warning alert with the two actions on the right. Hosting layout
- * overlays it on the canvas (see `ApollonWithConnection`), so the canvas
- * itself never reflows on preview enter/exit.
+ * Pure presentational preview banner — props in, callbacks out. A compact,
+ * content-hugging soft-gold warning pill: a single vertically-centred row of
+ * icon · message · actions, with the snapshot description carried as a hover
+ * tooltip rather than a second row. Hosting layout overlays it on the canvas
+ * (see `ApollonWithConnection`), so the canvas itself never reflows on preview
+ * enter/exit.
  */
 export function VersionPreviewBannerView({
   label,
@@ -81,13 +87,11 @@ export function VersionPreviewBannerView({
   className,
   ref,
 }: ViewProps) {
-  // Container-relative compactness. Falls back to "not compact" until
-  // the first ResizeObserver tick lands — first paint may be slightly
-  // off, then settles within a frame.
+  // Container-relative compactness (tightens icon/action gaps on a narrow
+  // canvas column). Falls back to "not compact" until the first ResizeObserver
+  // tick lands — first paint may be slightly off, then settles within a frame.
   const isSmall =
     containerWidth !== undefined && containerWidth < COMPACT_WIDTH_PX
-  const isNarrow =
-    containerWidth !== undefined && containerWidth < STACKED_WIDTH_PX
 
   const [restoring, setRestoring] = useState(false)
 
@@ -96,11 +100,11 @@ export function VersionPreviewBannerView({
       ref={ref}
       role="status"
       aria-live="polite"
-      // Fixed width so the banner doesn't reflow as the user clicks between
-      // previews with different description lengths. Capped to viewport width
-      // minus a small inset for narrow screens.
+      // Compact, content-hugging pill (centred by the parent), not a fixed slab
+      // — a single vertically-centred row of icon · message · actions. Capped to
+      // viewport width minus a small inset for narrow screens.
       className={cn(
-        "flex w-[720px] max-w-[calc(100%-16px)] items-start gap-3 rounded-lg border",
+        "flex w-max max-w-[calc(100%-16px)] items-center rounded-lg border",
         className
       )}
       style={{
@@ -108,56 +112,38 @@ export function VersionPreviewBannerView({
         backgroundColor: "var(--home-banner-warning-bg)",
         color: "var(--home-banner-warning-text)",
         borderColor: "var(--home-banner-warning-border)",
-        boxShadow: "var(--home-shadow-overlay-box)",
-        padding: isSmall ? "0.5rem 0.625rem" : "0.625rem 1rem",
-        gap: isSmall ? "0.5rem" : "0.875rem",
+        // Soft floating-chrome elevation, matching the island shadow language.
+        boxShadow:
+          "0 0 1px 0 rgb(15 23 42 / 20%), 0 2px 8px 0 rgb(15 23 42 / 12%)",
+        padding: "0.25rem 0.625rem",
+        gap: isSmall ? "0.5rem" : "0.625rem",
       }}
     >
       <TriangleAlertIcon
-        className="mt-0.5 size-4 shrink-0"
+        className="size-4 shrink-0"
         style={{ color: "var(--home-banner-warning-icon)" }}
         aria-hidden
       />
 
-      <div className="min-w-0 flex-1">
-        <div
-          className="font-semibold"
-          style={{
-            fontSize: isSmall ? "0.875rem" : "0.9375rem",
-            lineHeight: 1.35,
-          }}
-        >
-          Read-only preview{ago && ` · ${ago}`}
-        </div>
-        {label && (
-          <div
-            className="overflow-hidden break-words whitespace-pre-wrap"
-            style={{
-              marginTop: "0.25rem",
-              fontSize: isSmall ? "0.75rem" : "0.8125rem",
-              lineHeight: 1.4,
-              color: "var(--home-banner-warning-muted)",
-              // Cap height tighter on small so the banner doesn't take over
-              // the canvas with a long description.
-              maxHeight: isSmall ? "2.8em" : "4.2em",
-            }}
-            title={label}
-          >
-            {label}
-          </div>
-        )}
+      {/* One concise line: "Read-only preview · 2h ago". The snapshot
+          description rides along as a hover tooltip rather than a second row,
+          so the banner stays a compact pill instead of a tall card. */}
+      <div
+        className="min-w-0 flex-1 font-semibold whitespace-nowrap"
+        style={{ fontSize: "0.8125rem", lineHeight: 1.2 }}
+        title={label || undefined}
+      >
+        Read-only preview{ago && ` · ${ago}`}
       </div>
 
-      {/* Full labels at every width. Stack vertically below ~480px so the
-          message column gets its width back; buttons stay right-aligned and
-          compact so the banner doesn't dominate the canvas. */}
+      {/* Short labels for the compact pill. `whitespace-nowrap` (via
+          buttonStyle) prevents mid-word wraps so the two actions stay on one
+          row. */}
       <div
-        className="mt-0.5 flex shrink-0"
+        className="flex shrink-0 flex-row items-center"
         style={{
-          flexDirection: isNarrow ? "column" : "row",
-          gap: isNarrow ? "0.5rem" : isSmall ? "0.25rem" : "0.5rem",
-          alignItems: isNarrow ? "stretch" : "center",
-          marginLeft: isSmall ? "0.5rem" : "1rem",
+          gap: "0.5rem",
+          marginLeft: isSmall ? "0.5rem" : "0.875rem",
         }}
       >
         <button
@@ -166,8 +152,8 @@ export function VersionPreviewBannerView({
           className="inline-flex cursor-pointer items-center justify-center rounded-md font-medium transition-colors hover:[background:var(--home-banner-warning-btn-hover)]"
           style={{
             ...buttonStyle,
-            padding: isSmall ? "0.25rem 0.625rem" : "0.375rem 0.75rem",
-            fontSize: isSmall ? "0.8125rem" : "0.875rem",
+            padding: "0.125rem 0.5rem",
+            fontSize: "0.8125rem",
           }}
         >
           {t.exitPreview}
@@ -187,8 +173,8 @@ export function VersionPreviewBannerView({
             className="inline-flex cursor-pointer items-center justify-center rounded-md font-semibold transition-colors hover:[background:var(--home-banner-warning-btn-hover)] disabled:cursor-not-allowed disabled:opacity-60"
             style={{
               ...buttonStyle,
-              padding: isSmall ? "0.375rem 0.75rem" : "0.5rem 1rem",
-              fontSize: isSmall ? "0.8125rem" : "0.875rem",
+              padding: "0.125rem 0.625rem",
+              fontSize: "0.8125rem",
             }}
           >
             {t.restoreThis}
@@ -209,9 +195,10 @@ interface ContainerProps {
 }
 
 /**
- * Thin container — reads the active preview + the matching version summary
- * from `useVersionStore` to resolve the label / time-ago, then renders
- * {@link VersionPreviewBannerView}. Renders nothing when no preview is active.
+ * Thin container — reads the active preview (scoped to this diagram) + the
+ * matching version summary from `useVersionStore` to resolve the label /
+ * time-ago, then renders {@link VersionPreviewBannerView}. Renders nothing
+ * when no preview is active for this diagram.
  */
 export const VersionPreviewBanner: FC<ContainerProps> = ({
   diagramId,
@@ -221,7 +208,7 @@ export const VersionPreviewBanner: FC<ContainerProps> = ({
   containerWidth,
   className,
 }) => {
-  const preview = useVersionStore((s) => s.preview)
+  const preview = useVersionStore((s) => selectScopedPreview(s, diagramId))
   const versions = useVersionStore((s) => selectVersions(s, diagramId))
   if (!preview) return null
 

@@ -2,7 +2,7 @@ import { create, StoreApi, UseBoundStore } from "zustand"
 import { devtools, subscribeWithSelector } from "zustand/middleware"
 import { parseDiagramType } from "@/utils"
 import * as Y from "yjs"
-import { getDiagramMetadata } from "@/sync/ydoc"
+import { getDiagramMetadata, STORE_ORIGIN } from "@/sync/ydoc"
 import { UMLDiagramType } from "@/types"
 import { ApollonMode, ApollonView } from "@/typings"
 import { IPoint } from "@/edges/Connection"
@@ -66,7 +66,9 @@ type InitialMetadataState = {
   reconnectPreviewBasePoints: IPoint[]
 }
 const initialMetadataState: InitialMetadataState = {
-  diagramTitle: "Untitled Diagram",
+  // Empty by default — an untitled diagram stays untitled (hosts render their own
+  // muted placeholder); never auto-populate a real title.
+  diagramTitle: "",
   diagramType: UMLDiagramType.ClassDiagram,
   mode: ApollonMode.Modelling,
   view: ApollonView.Modelling,
@@ -97,7 +99,7 @@ export const createMetadataStore = (
 ): UseBoundStore<StoreApi<MetadataStore>> => {
   const transactStore = (fn: () => void) => {
     if (isPreviewMode()) return
-    ydoc.transact(fn, "store")
+    ydoc.transact(fn, STORE_ORIGIN)
   }
   return create<MetadataStore>()(
     devtools(
@@ -136,9 +138,7 @@ export const createMetadataStore = (
         updateMetaDataFromYjs: () =>
           set(
             {
-              diagramTitle:
-                getDiagramMetadata(ydoc).get("diagramTitle") ||
-                "Untitled Diagram",
+              diagramTitle: getDiagramMetadata(ydoc).get("diagramTitle") || "",
               diagramType: parseDiagramType(
                 getDiagramMetadata(ydoc).get("diagramType")
               ),

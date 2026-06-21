@@ -6,11 +6,19 @@ description: Regenerating Playwright snapshots inside the pinned Docker image.
 
 # Visual regression tests
 
-Apollon's visual regression tests run as part of `pr-health-checks.yml` on every PR. They use Playwright with the `mcr.microsoft.com/playwright:v1.59.1-noble` Docker image so snapshots are pinned to one Linux rendering stack regardless of contributor OS.
+Apollon's visual regression tests run on **every PR** as the `visual-regression-tests` job in `pr-health-checks.yml`, feeding the required **PR Health Gate** check. Gating per-PR forces a rendering change to refresh its own baselines in the same PR; running them nightly-only instead lets a rendering change merge green and resurface later as an orphaned failure on an unrelated PR. They use Playwright with the `mcr.microsoft.com/playwright:v1.59.1-noble` Docker image so snapshots are pinned to one Linux rendering stack regardless of contributor OS.
 
 ## Regenerating baselines
 
-Snapshots **must** be regenerated inside the same Playwright container CI uses, otherwise CI will diff against macOS/Windows-rendered pixels. From the repo root:
+When an **intentional** UI change makes the job fail, refresh the baselines. They **must** be regenerated inside the same Playwright container CI uses, otherwise CI will diff against macOS/Windows-rendered pixels.
+
+### Preferred: regenerate in CI (no local Docker)
+
+A maintainer runs **Actions → Update Visual Baselines → Run workflow** and enters the PR's branch name. The `update-visual-baselines.yml` workflow regenerates the snapshots inside the pinned container and commits them straight back to the branch. It is `workflow_dispatch`, so it is maintainer-only by construction. For a fork PR, push the branch into this repo (or enable "Allow edits by maintainers") so the workflow can write to it.
+
+### Fallback: regenerate locally in the container
+
+From the repo root:
 
 ```sh
 docker run --rm -v "$(pwd)":/work -w /work --ipc=host \
@@ -21,7 +29,7 @@ docker run --rm -v "$(pwd)":/work -w /work --ipc=host \
     && pnpm install --frozen-lockfile \
     && pnpm run build:lib \
     && cd standalone/webapp \
-    && pnpm exec playwright test tests/visual/ --update-snapshots"
+    && pnpm run test:visual:update"
 ```
 
 ## SVG export baselines
@@ -35,4 +43,4 @@ pnpm exec playwright test tests/visual/svg-export --update-snapshots
 
 ## Triage
 
-If `visual-regression-tests` fails on CI, download the `playwright-report-visual` artifact from the workflow run, open `playwright-report/index.html` locally, and inspect the actual-vs-expected diff before deciding whether to update the baseline or fix the regression.
+If `visual-regression-tests` fails on a PR, download the `playwright-report-visual` artifact from the run, open `playwright-report/index.html` locally, and inspect the actual-vs-expected diff before deciding whether to refresh the baseline (intentional UI change — see above) or fix the regression (unintended).

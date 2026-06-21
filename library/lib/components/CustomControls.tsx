@@ -1,17 +1,20 @@
 import { Controls, useReactFlow, useStore } from "@xyflow/react"
 import { useDiagramStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
-import { Maximize, Minus, Plus, Redo2, Undo2 } from "lucide-react"
+import { Redo2, Undo2 } from "lucide-react"
 import { Tooltip } from "@/components/ui"
 
+/**
+ * Bottom-left control cluster. Every button shares one idiom
+ * (`apollon-chrome-iconbtn`): borderless on the glass pane, state shown as a
+ * surface-layer fill. Reads left→right as view (zoom-out/in, fit, a clickable
+ * %-reset) then, past a hairline, history (undo/redo). React Flow renders its
+ * built-in zoom/fit buttons first; our children follow.
+ */
 export const CustomControls = () => {
-  const { zoomTo, zoomIn, zoomOut, fitView } = useReactFlow()
+  const { zoomTo } = useReactFlow()
   const zoomLevel = useStore((state) => state.transform[2])
-  const minZoom = useStore((state) => state.minZoom)
-  const maxZoom = useStore((state) => state.maxZoom)
   const zoomLevelPercent = Math.round(zoomLevel * 100)
-  const canZoomOut = zoomLevel > minZoom
-  const canZoomIn = zoomLevel < maxZoom
 
   const { canUndo, canRedo, undo, redo, undoManagerExist } = useDiagramStore(
     useShallow((state) => ({
@@ -23,106 +26,57 @@ export const CustomControls = () => {
     }))
   )
 
-  const handleUndo = () => {
-    undo()
-  }
-
-  const handleRedo = () => {
-    redo()
-  }
-
   return (
     <Controls
       orientation="horizontal"
       showInteractive={false}
-      showZoom={false}
-      showFitView={false}
-      style={{ display: "flex", gap: 4, alignItems: "center" }}
+      style={{ display: "flex", gap: 2, alignItems: "center" }}
     >
-      {/* Undo Button */}
+      {/* Clickable zoom readout — resets to 100% (Figma/Excalidraw pattern). */}
+      <Tooltip title="Reset zoom to 100%">
+        <button
+          type="button"
+          className="apollon-chrome-iconbtn apollon-chrome-iconbtn--readout"
+          onClick={() => zoomTo(1)}
+        >
+          {zoomLevelPercent}%
+        </button>
+      </Tooltip>
+
+      {undoManagerExist && (
+        <div className="apollon-chrome-cluster-divider" aria-hidden />
+      )}
+
       {undoManagerExist && (
         <Tooltip title="Undo (Ctrl+Z)">
           <span>
             <button
-              className={`control-button ${!canUndo ? "disabled" : ""}`}
-              onClick={handleUndo}
+              type="button"
+              className="apollon-chrome-iconbtn"
+              onClick={undo}
               disabled={!canUndo}
-              style={{
-                color: canUndo
-                  ? "var(--apollon-primary-contrast, #000000)"
-                  : "var(--apollon-secondary, #6c757d)",
-              }}
+              aria-label="Undo"
             >
-              <Undo2 width={16} height={16} aria-hidden="true" />
+              <Undo2 width={18} height={18} aria-hidden="true" />
             </button>
           </span>
         </Tooltip>
       )}
-      {/* Redo Button */}
       {undoManagerExist && (
         <Tooltip title="Redo (Ctrl+Y or Ctrl+Shift+Z)">
           <span>
             <button
-              className={`control-button ${!canRedo ? "disabled" : ""}`}
-              onClick={handleRedo}
+              type="button"
+              className="apollon-chrome-iconbtn"
+              onClick={redo}
               disabled={!canRedo}
-              style={{
-                color: canRedo
-                  ? "var(--apollon-primary-contrast, #000000)"
-                  : "var(--apollon-secondary, #6c757d)",
-              }}
+              aria-label="Redo"
             >
-              <Redo2 width={16} height={16} aria-hidden="true" />
+              <Redo2 width={18} height={18} aria-hidden="true" />
             </button>
           </span>
         </Tooltip>
       )}
-      {/* Zoom controls */}
-      <div className="zoom-control-group">
-        <Tooltip title="Zoom out">
-          <span>
-            <button
-              className={`zoom-control-button ${!canZoomOut ? "disabled" : ""}`}
-              onClick={() => zoomOut()}
-              disabled={!canZoomOut}
-              aria-label="Zoom out"
-            >
-              <Minus width={16} height={16} aria-hidden="true" />
-            </button>
-          </span>
-        </Tooltip>
-        <Tooltip title="Reset zoom to 100%">
-          <button
-            className="zoom-control-label"
-            onClick={() => zoomTo(1)}
-            aria-label="Reset zoom to 100%"
-          >
-            {zoomLevelPercent}%
-          </button>
-        </Tooltip>
-        <Tooltip title="Zoom in">
-          <span>
-            <button
-              className={`zoom-control-button ${!canZoomIn ? "disabled" : ""}`}
-              onClick={() => zoomIn()}
-              disabled={!canZoomIn}
-              aria-label="Zoom in"
-            >
-              <Plus width={16} height={16} aria-hidden="true" />
-            </button>
-          </span>
-        </Tooltip>
-      </div>
-      {/* Fit view */}
-      <Tooltip title="Fit to view">
-        <button
-          className="control-button"
-          onClick={() => fitView({ padding: 0.1, duration: 200 })}
-          aria-label="Fit to view"
-        >
-          <Maximize width={16} height={16} aria-hidden="true" />
-        </button>
-      </Tooltip>
     </Controls>
   )
 }

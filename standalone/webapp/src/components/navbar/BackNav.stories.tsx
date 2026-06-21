@@ -65,7 +65,7 @@ export const OnSurface: Story = {
 
 /** A custom destination and label. */
 export const CustomTarget: Story = {
-  args: { to: "/diagrams", label: "Back to diagrams" },
+  args: { to: "/playground", label: "Back to diagram" },
   decorators: [
     (Story) => (
       <div className="rounded-md bg-[#1f2123] p-3">

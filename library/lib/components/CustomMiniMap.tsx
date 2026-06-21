@@ -6,6 +6,7 @@ import {
   ClassSVG,
   PackageSVG,
   ActivitySVG,
+  ActivitySwimlaneSVG,
   ActivityInitialNodeSVG,
   ActivityFinalNodeSVG,
   ActivityActionNodeSVG,
@@ -51,8 +52,6 @@ import {
   ReachabilityGraphMarkingSVG,
 } from "./svgs"
 import { DiagramNodeType } from "@/typings"
-import { ZINDEX } from "@/constants"
-import { Tooltip } from "@/components/ui"
 import {
   BPMNEventProps,
   BPMNGatewayProps,
@@ -63,6 +62,7 @@ import {
   ComponentNodeProps,
   ComponentSubsystemNodeProps,
   DefaultNodeProps,
+  ActivitySwimlaneProps,
   DeploymentComponentProps,
   DeploymentNodeProps,
   ObjectNodeProps,
@@ -77,62 +77,48 @@ export const CustomMiniMap = () => {
 
   if (minimapCollapsed) {
     return (
-      <Panel
-        position="bottom-right"
-        className="minimap-icon-hover"
-        onClick={() => setMinimapCollapsed(false)}
-      >
-        <Tooltip title="Show minimap">
-          <span
-            style={{
-              display: "flex",
-              color: "var(--apollon-primary-contrast, #000000)",
-            }}
-          >
-            <Map aria-hidden="true" />
-          </span>
-        </Tooltip>
+      <Panel position="bottom-right">
+        <button
+          type="button"
+          className="apollon-chrome-iconbtn"
+          aria-label="Show minimap"
+          title="Show minimap (overview)"
+          onClick={() => setMinimapCollapsed(false)}
+        >
+          <Map width={18} height={18} aria-hidden="true" />
+        </button>
       </Panel>
     )
   }
 
+  // Expanded: the MiniMap renders as its own glass card (a React Flow Panel), and
+  // the collapse arrow is a SIBLING bottom-right Panel that is IDENTICAL to the
+  // collapsed open button (same glass panel + .apollon-chrome-iconbtn, same
+  // bottom-right corner) — so toggling reads as one control and the cursor never
+  // moves. Rendering the MiniMap normally (not nested) keeps its sizing intact;
+  // a tight offsetScale avoids a fat empty margin around the diagram.
   return (
-    <Panel
-      position="bottom-right"
-      onClick={() => setMinimapCollapsed(true)}
-      style={{ boxShadow: "none", backgroundColor: "transparent" }}
-    >
-      <Tooltip title="Hide minimap">
-        <div
-          className="minimap-collapse-hover"
-          style={{
-            position: "absolute",
-            bottom: 0,
-            right: 0,
-            display: "flex",
-            zIndex: ZINDEX.PANEL,
-            padding: 8,
-            backgroundColor: "var(--apollon-background, white)",
-            borderRadius: "4px",
-            justifyContent: "center",
-            alignItems: "center",
-            cursor: "pointer",
-            boxShadow: "0 0 4px 0 rgb(0 0 0 / 0.2)",
-            color: "var(--apollon-primary-contrast, #000000)",
-          }}
-        >
-          <ArrowDownRight aria-hidden="true" />
-        </div>
-      </Tooltip>
-
+    <>
       <MiniMap
         zoomable
-        onClick={() => setMinimapCollapsed(true)}
+        pannable
         nodeComponent={MiniMapNode}
-        offsetScale={20}
-        style={{ zIndex: ZINDEX.MINIMAP }}
+        offsetScale={6}
+        bgColor="transparent"
+        className="apollon-minimap"
       />
-    </Panel>
+      <Panel position="bottom-right">
+        <button
+          type="button"
+          className="apollon-chrome-iconbtn"
+          aria-label="Hide minimap"
+          title="Hide minimap"
+          onClick={() => setMinimapCollapsed(true)}
+        >
+          <ArrowDownRight width={18} height={18} aria-hidden="true" />
+        </button>
+      </Panel>
+    </>
   )
 }
 
@@ -179,6 +165,16 @@ function MiniMapNode({ id, x, y }: MiniMapNodeProps) {
           width={nodeInfo.width ?? 0}
           height={nodeInfo.height ?? 0}
           data={nodeInfo.data as DefaultNodeProps}
+          id={`minimap_${id}`}
+          svgAttributes={{ x, y }}
+        />
+      )
+    case "activitySwimlane":
+      return (
+        <ActivitySwimlaneSVG
+          width={nodeInfo.width ?? 0}
+          height={nodeInfo.height ?? 0}
+          data={nodeInfo.data as ActivitySwimlaneProps}
           id={`minimap_${id}`}
           svgAttributes={{ x, y }}
         />

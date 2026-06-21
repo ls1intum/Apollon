@@ -29,7 +29,7 @@ import {
   CardHeader,
 } from "@tumaet/ui/components/card"
 import { Separator } from "@tumaet/ui/components/separator"
-import { Link, useNavigate } from "react-router"
+import { Link, useNavigate } from "@tanstack/react-router"
 import { toast } from "react-toastify"
 import { useModalContext } from "@/contexts"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
@@ -43,7 +43,7 @@ import {
 } from "@/utils/sharedDiagramStorage"
 import {
   SHARED_DIAGRAM_VIEW_OPTIONS,
-  buildSharedDiagramPath,
+  sharedDiagramRoute,
   buildSharedDiagramUrl,
   getSharedDiagramViewBadge,
 } from "@/utils/sharedDiagramLinks"
@@ -126,13 +126,13 @@ const formatRelativeLastModified = (lastModifiedAt: string, nowMs: number) => {
   })
 }
 
-const getDiagramPath = (diagram: RecentDiagram) => {
+const getDiagramNav = (diagram: RecentDiagram) => {
   const source = diagram.source ?? "local"
   if (source === "local") {
-    return `/local/${diagram.id}`
+    return { to: "/local/$id", params: { id: diagram.id } } as const
   }
 
-  return buildSharedDiagramPath(
+  return sharedDiagramRoute(
     diagram.id,
     diagram.lastSharedView ?? DiagramView.EDIT
   )
@@ -498,7 +498,7 @@ export const DiagramActionsMenu = ({
       triggerStyle={triggerStyle}
       menuClassName={menuClassName}
       menuStyle={menuStyle}
-      onOpen={() => navigate(getDiagramPath(diagram))}
+      onOpen={() => navigate(getDiagramNav(diagram))}
       onDuplicate={() => {
         if (isLocalDiagram) duplicateModel(diagram.id)
       }}
@@ -608,8 +608,8 @@ export type DiagramCardViewProps = {
    * shared diagrams that can't be favorited).
    */
   onToggleFavorite?: () => void
-  /** Called with the diagram's route when the card link is activated. */
-  onOpen?: (path: string) => void
+  /** Called when the card link is activated. */
+  onOpen?: () => void
   /** The three-dot actions menu, slotted in by the container. */
   actionsMenu?: ReactNode
   /** Extra classes merged onto the root card. */
@@ -639,7 +639,9 @@ export function DiagramCardView({
   className,
   ref,
 }: DiagramCardViewProps) {
-  const title = diagram.title.trim() || "Untitled Diagram"
+  // Untitled diagrams keep an empty real title and show a muted placeholder.
+  const isUntitled = !diagram.title.trim()
+  const title = diagram.title.trim() || "Untitled diagram"
   const isLocalDiagram = (diagram.source ?? "local") === "local"
   const lightDataUrl = thumbnail?.lightDataUrl ?? null
   const darkDataUrl = thumbnail?.darkDataUrl ?? null
@@ -663,18 +665,21 @@ export function DiagramCardView({
   const sharedViewLabel = getSharedDiagramViewBadge(diagram.lastSharedView)
   const scalePx = (value: number) => `calc(var(--card-scale) * ${value}px)`
 
-  const path = getDiagramPath(diagram)
+  const nav = getDiagramNav(diagram)
 
   return (
     <Card
       ref={ref}
       role="listitem"
       className={cn(
-        "home-diagram-card group relative mx-auto flex flex-col gap-0 overflow-hidden border-none py-0 ring-0 transition-all duration-[280ms] ease-[cubic-bezier(0.16,1,0.3,1)] [--card-scale:1] hover:bg-accent-hover md:[--card-scale:1.0769231] xl:[--card-scale:1.1538462]",
-        isHighlighted ? "bg-accent-hover" : "hover:shadow-sm",
+        "home-diagram-card group relative mx-auto flex flex-col gap-0 overflow-hidden py-0 ring-0 transition-all duration-[280ms] ease-[cubic-bezier(0.16,1,0.3,1)] [--card-scale:1] hover:bg-accent-hover md:[--card-scale:1.0769231] xl:[--card-scale:1.1538462]",
+        isHighlighted
+          ? "bg-accent-hover"
+          : "hover:[box-shadow:0_6px_16px_var(--home-shadow-card-hover)]",
         className
       )}
       style={{
+        border: "1px solid var(--home-border-subtle)",
         borderRadius: "var(--home-radius-sm)",
         width: "100%",
         maxWidth: "300px",
@@ -714,13 +719,13 @@ export function DiagramCardView({
       {/* Clickable card body. A real link so cmd/ctrl/middle-click opens the
           diagram in a new tab; plain click still navigates within the SPA. */}
       <Link
-        to={path}
+        {...nav}
         onClick={(event) => {
           if (isExpired) {
             event.preventDefault()
             return
           }
-          onOpen?.(path)
+          onOpen?.()
         }}
         aria-label={isExpired ? `${title} (expired)` : `Open ${title}`}
         aria-disabled={isExpired}
@@ -791,7 +796,10 @@ export function DiagramCardView({
               className="truncate"
               title={title}
               style={{
-                color: "var(--home-text-strong)",
+                color: isUntitled
+                  ? "var(--home-text-muted)"
+                  : "var(--home-text-strong)",
+                fontStyle: isUntitled ? "italic" : "normal",
                 fontSize: `${CARD_TYPE_TITLE_PX}px`,
                 fontWeight: 500,
                 lineHeight: "1.3",

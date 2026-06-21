@@ -12,6 +12,7 @@ export * from "./diagramTypeUtils"
 export * from "./storeUtils"
 export * from "./deepPartial"
 export * from "./bpmnConstraints"
+export * from "./swimlaneUtils"
 // Only `importDiagram` is public; the V2/V3 convert helpers and format
 // detectors live in `@tumaet/apollon/internals` (internal/unstable).
 export { importDiagram } from "./versionConverter"

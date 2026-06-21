@@ -1,22 +1,21 @@
 /**
- * Regression test for the "getSnapshot should be cached" infinite-loop bug.
+ * Guards against the "getSnapshot should be cached" infinite render loop: a
+ * selector like `useVersionStore((s) => s.versions[diagramId] ?? [])` that
+ * returns a fresh empty-array literal each call makes Zustand's
+ * `useSyncExternalStore` detect a "change" every render → "Maximum update depth
+ * exceeded". The version store must return a stable reference for a diagram with
+ * no entries.
  *
- * The pre-fix selector `useVersionStore((s) => s.versions[diagramId] ?? [])`
- * returned a fresh empty-array literal every call when the diagram had no
- * entry, causing Zustand's `useSyncExternalStore` to detect a "change" each
- * render and trigger "Maximum update depth exceeded".
- *
- * This test mounts the VersionDrawer (open) on a diagram that's never been
- * fetched — exactly the failing path from the user's report — and asserts:
- *   - no React error boundary fires,
- *   - the test environment console doesn't emit the cached-snapshot warning,
- *   - the empty state renders.
+ * Mounting the version panel body (open) on a never-fetched diagram must:
+ *   - fire no React error boundary,
+ *   - emit no cached-snapshot console warning,
+ *   - render the empty state.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { cleanup, render, screen } from "@testing-library/react"
-import { MemoryRouter } from "react-router"
+import { cleanup, screen } from "@testing-library/react"
+import { renderWithRouter } from "@/test/renderWithRouter"
 import { ModalProvider, EditorProvider } from "@/contexts"
-import { VersionSidebar } from "./VersionDrawer"
+import { VersionSidebarBody } from "./VersionDrawer"
 import { useVersionStore } from "@/stores/useVersionStore"
 import { VersionApiClient } from "@/services/DiagramApiClient"
 
@@ -46,31 +45,20 @@ afterEach(() => {
   localStorage.clear()
 })
 
+// The body is the chrome-free panel content reused by the desktop rail and the
+// mobile drawer; testing it directly exercises the version selectors without the
+// editor-portal plumbing (VersionRail needs a live editor to portal into).
 function mount(diagramId: string) {
-  return render(
-    <MemoryRouter>
+  return renderWithRouter(<VersionSidebarBody diagramId={diagramId} />, {
+    wrapper: (children) => (
       <EditorProvider>
-        <ModalProvider>
-          <VersionSidebar diagramId={diagramId} />
-        </ModalProvider>
+        <ModalProvider>{children}</ModalProvider>
       </EditorProvider>
-    </MemoryRouter>
-  )
+    ),
+  })
 }
 
-describe("VersionSidebar (regression: infinite render loop)", () => {
-  it("mounts hidden without warnings on a diagram with no fetched versions", () => {
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
-    const error = vi.spyOn(console, "error").mockImplementation(() => {})
-    expect(() => mount("never-fetched")).not.toThrow()
-    const warnings = warn.mock.calls.map((c) => String(c[0])).join("\n")
-    const errors = error.mock.calls.map((c) => String(c[0])).join("\n")
-    expect(warnings).not.toMatch(/getSnapshot should be cached/)
-    expect(errors).not.toMatch(/Maximum update depth exceeded/)
-    warn.mockRestore()
-    error.mockRestore()
-  })
-
+describe("VersionSidebarBody (regression: infinite render loop)", () => {
   it("mounts open without warnings + renders the empty state", async () => {
     useVersionStore.setState((s) => ({
       drawerOpenByDiagram: { ...s.drawerOpenByDiagram, abc: true },

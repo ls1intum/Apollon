@@ -1,3 +1,8 @@
+# Fallback only: shapes GitHub's `--generate-notes`, used when a release carries
+# no changeset (rare). Categories/order mirror scripts/extract-changelog.mjs, but
+# GitHub groups by PR LABEL not commit type and there's no auto-labeler, so an
+# unlabeled PR collapses into the `*` catch-all (Other Changes). The normal
+# changeset path (extract-changelog.mjs) needs no labels.
 changelog:
   exclude:
     labels:
@@ -6,17 +11,30 @@ changelog:
       - github-actions
       - dependabot
   categories:
+    - title: Breaking Changes
+      labels:
+        - breaking-change
+        - "breaking change"
     - title: Features
       labels:
         - feat
         - enhancement
-    - title: Bug fixes
+    - title: Bug Fixes
       labels:
         - fix
         - bug
+    - title: Performance
+      labels:
+        - perf
+        - performance
     - title: Documentation
       labels:
         - docs
-    - title: Other changes
+        - documentation
+    - title: Dependencies
+      labels:
+        - dependencies
+        - deps
+    - title: Other Changes
       labels:
         - "*"

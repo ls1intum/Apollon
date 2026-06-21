@@ -26,6 +26,7 @@ export function createHeadlessSync(ydoc: Y.Doc = new Y.Doc()): {
         updateEdgesFromYjs: noop,
         updateAssessmentFromYjs: noop,
         updateUndoRedoState: noop,
+        setDraggingNodesPublisher: noop,
         undoManager: null,
         // Other DiagramStore fields are typed but never accessed by
         // YjsSync; cast through `unknown` keeps the helper from

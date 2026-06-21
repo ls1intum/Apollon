@@ -3,7 +3,11 @@ import { SVGAttributes } from "react"
 export const KeyboardArrowDownIcon = ({
   width = 24,
   height = 24,
-  fill = "#A3A6A8",
+  // Inherit the surrounding text color so the arrow tracks its control: on the
+  // navbar buttons it idles in the muted `secondary` grey (the button sets that
+  // color) and brightens to white on hover alongside the label, instead of
+  // staying a fixed grey. All call sites render inside a colored control.
+  fill = "currentColor",
   ...props
 }: SVGAttributes<SVGSVGElement>) => (
   <svg

@@ -18,15 +18,19 @@ import {
   type FC,
   type KeyboardEvent,
 } from "react"
+import { createPortal } from "react-dom"
 import { toast } from "react-toastify"
 import { useEditorContext, useModalContext } from "@/contexts"
 import { useMediaQuery } from "@/hooks"
-import { selectVersions, useVersionStore } from "@/stores/useVersionStore"
-import { ApiError, VersionApiClient } from "@/services/DiagramApiClient"
+import { useRegionHost } from "@/hooks/useRegionHost"
 import {
-  NAVBAR_BACKGROUND_COLOR,
-  MAX_VERSIONS_PER_DIAGRAM as MAX_VERSIONS,
-} from "@/constants"
+  selectScopedPreview,
+  selectVersions,
+  useVersionStore,
+} from "@/stores/useVersionStore"
+import { ApiError } from "@/services/DiagramApiClient"
+import { getVersionRepository } from "@/services/versionRepository"
+import { NARROW_VIEW_QUERY } from "@/constants"
 import {
   MAX_DESCRIPTION_LENGTH,
   MAX_NAME_LENGTH,
@@ -36,55 +40,59 @@ import { relativeTime } from "./relativeTime"
 import { CurrentVersionRow } from "./CurrentVersionRow"
 import { VersionListItem } from "./VersionListItem"
 import AutoGroupRow from "./AutoGroupRow"
-import { TEXT_PRIMARY, TEXT_MUTED } from "./theme"
-import {
-  structuralFingerprint,
-  isNamedVersion,
-  groupUnnamedRuns,
-} from "./utils"
+import { TEXT_PRIMARY, TEXT_MUTED, ROW_HOVER_BG } from "./theme"
+import { structuralFingerprint, isNamedVersion } from "@/lib/version/predicates"
+import { groupUnnamedRuns } from "./utils"
 
-/** Sidebar width on desktop. Narrow enough to keep the canvas usable. */
+/** Panel width on desktop. Narrow enough to keep the canvas usable. */
 const SIDEBAR_WIDTH = 320
-/** Slide-in animation duration matched to the standard panel transition. */
-const SIDEBAR_ANIMATION_MS = 220
-
-/**
- * Switches the sidebar to a bottom-sheet drawer at the same breakpoint
- * the navbar switches to its hamburger (`md:hidden` in `Navbar.tsx`,
- * Tailwind's md = 768px). This is the *only* place where a viewport
- * media query is the right tool — sidebar↔bottom-sheet is a page-level
- * layout decision driven by viewport chrome, and rendering both (hiding
- * one via CSS) would double-mount the effect-bearing body. Component-
- * internal layout (e.g. the preview banner) responds to its own container
- * width via `useElementWidth`, not this constant.
- */
-const MOBILE_QUERY = "(max-width: 767.95px)"
 
 interface Props {
   diagramId: string
   onVersionSaved?: (headRev?: number) => void
+  /**
+   * Local mode swaps the snackbar for an always-visible "Before
+   * restoring …" auto-row + a confirm dialog when the canvas is dirty.
+   * Page-level handler — drawer just calls it.
+   */
+  onConfirmedRestore?: (versionId: string) => Promise<void> | void
+  /**
+   * Enter preview for a version by WRITING the URL (`?version=<id>`). The page
+   * owns the URL↔store sync, so the drawer never touches preview state
+   * directly — that keeps reload / Back / deep-link working. Falls back to the
+   * store's `enterPreview` if a caller doesn't pass it.
+   */
+  onPreview?: (versionId: string) => void
 }
 
 /**
  * Chrome-free body of the version-history panel. Reused by:
  *
- *  - `VersionSidebar` (desktop ≥ md): rendered inline as a flex sibling of
- *    the canvas so it doesn't overlay the user's work.
+ *  - `VersionRail` (desktop ≥ md): portaled into the editor's `right-rail`
+ *    overlay region; the canvas stays full-bleed and makes room via the
+ *    measured inset (no reflow).
  *  - `VersionDrawer` (mobile <sm): rendered inside a bottom-sheet because
  *    there isn't room for two columns on small viewports.
  */
-const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
+export const VersionSidebarBody: FC<Props> = ({
+  diagramId,
+  onVersionSaved,
+  onConfirmedRestore,
+  onPreview,
+}) => {
+  const repo = getVersionRepository()
+  const isLocal = repo.kind === "local"
+  const MAX_VERSIONS = repo.cap
   const versions = useVersionStore((s) => selectVersions(s, diagramId))
   const total = useVersionStore((s) => s.totals[diagramId])
   const nextCursor = useVersionStore((s) => s.nextCursor[diagramId])
   const loading = useVersionStore((s) => s.loading[diagramId] ?? false)
   const errorCode = useVersionStore((s) => s.error[diagramId] ?? null)
-  const fetchVersions = useVersionStore((s) => s.fetchVersions)
   const loadMoreVersions = useVersionStore((s) => s.loadMoreVersions)
   const createVersion = useVersionStore((s) => s.createVersion)
   const enterPreview = useVersionStore((s) => s.enterPreview)
   const restoreVersion = useVersionStore((s) => s.restoreVersion)
-  const previewState = useVersionStore((s) => s.preview)
+  const previewState = useVersionStore((s) => selectScopedPreview(s, diagramId))
 
   const { editor } = useEditorContext()
   const { openModal } = useModalContext()
@@ -92,6 +100,21 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
   const [draft, setDraft] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [activeRowId, setActiveRowId] = useState<string | null>(null)
+  const composerRef = useRef<HTMLTextAreaElement | null>(null)
+  // Subscribe to model changes so the empty-diagram check (drives Save
+  // disable) reacts as the user adds the first node.
+  const [isEmptyDiagram, setIsEmptyDiagram] = useState(true)
+  useEffect(() => {
+    if (!editor) return
+    const compute = () =>
+      setIsEmptyDiagram(
+        (editor.model.nodes?.length ?? 0) === 0 &&
+          (editor.model.edges?.length ?? 0) === 0
+      )
+    compute()
+    const subId = editor.subscribeToModelChange(compute)
+    return () => editor.unsubscribe(subId)
+  }, [editor])
   /**
    * Tracks the id of the last version saved locally (via handleCreate) so
    * the fingerprint baseline can be taken from `editor.model` (fast path)
@@ -99,9 +122,12 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
    */
   const lastLocalSaveIdRef = useRef<string | null>(null)
 
-  useEffect(() => {
-    void fetchVersions(diagramId)
-  }, [diagramId, fetchVersions])
+  // No fetch-on-mount here: the editor page (ApollonLocal / ApollonWithConnection)
+  // binds the repository and fetches in one effect, and the bootstrap keeps the
+  // list fresh (cross-tab + visibility refetch, collab control events). A fetch
+  // here would race the page's repository binding on a reload with the drawer
+  // already open — it would run against the default adapter (child effects flush
+  // before the parent page effect).
 
   // Filter: when off, hide every unnamed row entirely (matches Figma's "Show
   // autosave versions" toggle). Default ON so users see their full history
@@ -156,11 +182,10 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
       return
     }
     // Slow path: fetch the actual version body so the baseline is the
-    // server's canonical snapshot, not the potentially-dirty editor state.
-    VersionApiClient.getBody(
-      latestSavedVersion.diagramId,
-      latestSavedVersion.id
-    )
+    // canonical snapshot (server in collab mode, IDB in local mode), not
+    // the potentially-dirty editor state.
+    getVersionRepository()
+      .getBody(latestSavedVersion.diagramId, latestSavedVersion.id)
       .then((body) => {
         setSavedFingerprint(structuralFingerprint(body))
       })
@@ -201,17 +226,24 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
   // While previewing, `editor.model` reflects the previewed snapshot — saving
   // it would just duplicate that version (or produce a misleading "new"
   // version of old content). Block Save in that mode regardless of diff.
-  const canSave = Boolean(editor) && hasChanges && previewState === null
+  // Also block on empty diagrams (server skips them too — avoids the
+  // phantom-v1 confusion described in `services/autoVersion.ts:87`).
+  const canSave =
+    Boolean(editor) && hasChanges && previewState === null && !isEmptyDiagram
 
   const handleCreate = async () => {
     if (!editor || submitting || !canSave) return
+    // Request persistent storage from inside the click handler — running
+    // it after the await chain below would leave the user-gesture window
+    // (Firefox would silently deny). No-op for adapters that don't
+    // implement the optional method.
+    void repo.requestPersistence?.()
     setSubmitting(true)
     const description = draft.trim()
-    // Name is now an internal label only — the UI surfaces the description.
-    // Name is the first line of the description, used as a short label in
-    // restored-from snackbars and the kebab "Restored from …" copy. Empty
-    // when the user wrote no description — `#N · time-ago` is already the
-    // version's visible identifier.
+    // `name` is an internal label — the description's first line (truncated) —
+    // used in restored-from snackbars and the kebab "Restored from …" copy.
+    // Empty when there's no description; the UI surfaces the description and
+    // `#N · time-ago` as the version's visible identifier.
     const name = description
       ? description.split("\n")[0]!.slice(0, MAX_NAME_LENGTH)
       : ""
@@ -228,7 +260,12 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
       setDraft("")
     } catch (err) {
       if (err instanceof ApiError) {
-        if (err.code === "BODY_TOO_LARGE") toast.error(t.failureBodyTooLarge)
+        // BODY_TOO_LARGE is the same code for the server's 5MB limit and
+        // the local IDB quota. The repository tailors `err.message` to
+        // its actual constraint — surface that directly so a local-mode
+        // user isn't told to "split into smaller diagrams" when the
+        // problem is whole-origin storage pressure.
+        if (err.code === "BODY_TOO_LARGE") toast.error(err.message)
         else toast.error(t.failureToCreate)
       } else {
         toast.error(t.failureToCreate)
@@ -241,18 +278,34 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
   const handlePreview = useCallback(
     async (versionId: string) => {
       if (!editor) return
+      if (onPreview) {
+        // URL-driven: write `?version=<id>`; the page's URL↔store effect
+        // enters preview. One source of truth, so reload/Back/deep-link work.
+        onPreview(versionId)
+        return
+      }
       try {
         await enterPreview(diagramId, versionId)
       } catch {
         toast.error(t.previewFailed)
       }
     },
-    [editor, enterPreview, diagramId]
+    [editor, onPreview, enterPreview, diagramId]
   )
 
   const handleRestore = useCallback(
     async (versionId: string) => {
       if (!editor) return
+      // Local mode: delegate to the page handler which gates on a confirm
+      // dialog when the canvas is dirty (replaces collab's 10s snackbar).
+      if (onConfirmedRestore) {
+        try {
+          await onConfirmedRestore(versionId)
+        } catch {
+          toast.error(t.restoreFailed)
+        }
+        return
+      }
       try {
         const { headRev } = await restoreVersion(
           diagramId,
@@ -264,7 +317,7 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
         toast.error(t.restoreFailed)
       }
     },
-    [editor, restoreVersion, diagramId, onVersionSaved]
+    [editor, restoreVersion, diagramId, onVersionSaved, onConfirmedRestore]
   )
 
   const handleDelete = useCallback(
@@ -303,11 +356,11 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
 
   return (
     <div
-      // Whole sidebar paints the navbar dark colour so it visually
-      // continues the top bar in both themes. Text is light, with rgba
-      // hover/selected tints so dark/light toggle isn't needed here.
-      className="flex h-full flex-col"
-      style={{ background: NAVBAR_BACKGROUND_COLOR, color: TEXT_PRIMARY }}
+      // Transparent: the desktop rail's glass panel (VersionRail) and the
+      // mobile drawer own the surface, so the body just themes its text via the
+      // shared --apollon-chrome-* tokens.
+      className="flex h-full flex-col bg-transparent"
+      style={{ color: TEXT_PRIMARY }}
       role="complementary"
       aria-label={t.drawerTitle}
     >
@@ -319,7 +372,10 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
           save while the canvas reflects an old snapshot, and showing it
           alongside the read-only banner is contradictory UX. */}
       {previewState === null && (
-        <div className="flex flex-col items-stretch gap-1.5 px-4 pt-3 pb-2">
+        <div
+          className="flex flex-col items-stretch gap-1.5 px-4 pt-3 pb-2"
+          style={{ borderBottom: "1px solid var(--apollon-chrome-border)" }}
+        >
           <textarea
             rows={1}
             placeholder={t.createPlaceholder}
@@ -328,6 +384,7 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
               setDraft(e.target.value.slice(0, MAX_DESCRIPTION_LENGTH))
             }
             onKeyDown={handleComposerKeyDown}
+            ref={composerRef}
             aria-label="Describe this version"
             className="max-h-[6.5rem] w-full resize-none border-0 bg-transparent p-0 text-[0.85rem] outline-none placeholder:opacity-100 placeholder:[color:var(--ph)]"
             style={
@@ -337,6 +394,15 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
               } as CSSProperties
             }
           />
+          {/* ⌘/Ctrl+Enter hint — surface the keybinding so it's
+              discoverable instead of folklore. */}
+          <span
+            className="-mt-0.5 text-[0.7rem]"
+            style={{ color: TEXT_MUTED }}
+            aria-hidden
+          >
+            {t.composerHint}
+          </span>
           <button
             type="button"
             onClick={handleCreate}
@@ -344,21 +410,23 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
             title={
               !canSave && previewState !== null
                 ? "Exit preview to save a new version"
-                : !canSave && !hasChanges
-                  ? "No changes since the last saved version"
-                  : undefined
+                : !canSave && isEmptyDiagram
+                  ? t.emptyDiagramTooltip
+                  : !canSave && !hasChanges
+                    ? "No changes since the last saved version"
+                    : undefined
             }
-            className="inline-flex cursor-pointer items-center justify-center self-end rounded-md px-3.5 py-1 text-sm font-semibold transition-colors hover:[background:#ffffff] disabled:cursor-not-allowed disabled:[background:var(--home-on-dark-row-disabled)] disabled:[color:var(--btn-disabled-color)]"
-            style={
-              {
-                color: NAVBAR_BACKGROUND_COLOR,
-                background: TEXT_PRIMARY,
-                "--btn-disabled-color": TEXT_MUTED,
-              } as CSSProperties
-            }
+            className="inline-flex cursor-pointer items-center justify-center self-end rounded-[var(--apollon-chrome-radius-md)] px-3.5 py-1 text-sm font-semibold transition hover:brightness-[0.94] disabled:cursor-not-allowed disabled:[background:var(--apollon-chrome-surface-active)] disabled:[color:var(--apollon-chrome-text-muted)]"
+            style={{
+              color: "var(--apollon-chrome-accent-contrast)",
+              background: "var(--apollon-chrome-accent)",
+            }}
           >
             {submitting ? (
-              <Spinner className="size-3.5" style={{ color: TEXT_MUTED }} />
+              <Spinner
+                className="size-3.5"
+                style={{ color: "var(--apollon-chrome-accent-contrast)" }}
+              />
             ) : (
               t.createButton
             )}
@@ -398,8 +466,13 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
                   : "Show autosave versions"
               }
               aria-pressed={showAutosaves}
-              className="inline-flex size-6 cursor-pointer items-center justify-center rounded-md bg-transparent p-0.5 outline-none transition-colors hover:[background:var(--home-on-dark-row-hover)] focus-visible:ring-2 focus-visible:ring-white/40"
-              style={{ color: showAutosaves ? TEXT_PRIMARY : TEXT_MUTED }}
+              className="inline-flex size-6 cursor-pointer items-center justify-center rounded-md bg-transparent p-0.5 outline-none transition-colors hover:[background:var(--row-hover-bg)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:[outline-color:var(--apollon-chrome-accent)]"
+              style={
+                {
+                  color: showAutosaves ? TEXT_PRIMARY : TEXT_MUTED,
+                  "--row-hover-bg": ROW_HOVER_BG,
+                } as CSSProperties
+              }
             >
               <HistoryIcon className="size-4" aria-hidden />
             </TooltipTrigger>
@@ -413,6 +486,7 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
       </div>
 
       <CurrentVersionRow
+        diagramId={diagramId}
         hasChanges={hasChanges}
         latestSavedVersion={latestSavedVersion}
       />
@@ -444,9 +518,42 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
           </ul>
         ) : versions.length === 0 ? (
           <div className="px-6 py-8 text-center">
-            <p className="text-sm" style={{ color: TEXT_MUTED }}>
-              {t.emptyBody}
+            <p className="mb-3 text-sm" style={{ color: TEXT_MUTED }}>
+              {isLocal ? t.emptyBodyLocal : t.emptyBody}
             </p>
+            {isLocal && (
+              <TooltipProvider>
+                <Tooltip>
+                  {/* span wrapper so the tooltip still shows on the disabled
+                      button (a disabled button emits no pointer events). */}
+                  <TooltipTrigger render={<span className="inline-flex" />}>
+                    <button
+                      type="button"
+                      onClick={() => void handleCreate()}
+                      disabled={submitting || !canSave}
+                      className="inline-flex cursor-pointer items-center justify-center rounded-md border px-3 py-1 text-sm font-medium transition-colors hover:[background:var(--row-hover-bg)] disabled:cursor-not-allowed disabled:[border-color:var(--apollon-chrome-border)] disabled:[color:var(--btn-disabled-color)]"
+                      style={
+                        {
+                          color: TEXT_PRIMARY,
+                          borderColor: TEXT_MUTED,
+                          "--row-hover-bg": ROW_HOVER_BG,
+                          "--btn-disabled-color": TEXT_MUTED,
+                        } as CSSProperties
+                      }
+                    >
+                      {t.emptyCtaLocal}
+                    </button>
+                  </TooltipTrigger>
+                  {(isEmptyDiagram || !canSave) && (
+                    <TooltipContent>
+                      {isEmptyDiagram
+                        ? t.emptyDiagramTooltip
+                        : "Add something to the canvas first"}
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </div>
         ) : (
           <ul
@@ -526,8 +633,13 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
                   type="button"
                   onClick={() => loadMoreVersions(diagramId)}
                   disabled={loading}
-                  className="cursor-pointer rounded-md bg-transparent px-2 py-1 text-sm font-medium transition-colors hover:[background:var(--home-on-dark-row-hover)] disabled:cursor-not-allowed disabled:opacity-60"
-                  style={{ color: TEXT_PRIMARY }}
+                  className="cursor-pointer rounded-md bg-transparent px-2 py-1 text-sm font-medium transition-colors hover:[background:var(--row-hover-bg)] disabled:cursor-not-allowed disabled:opacity-60"
+                  style={
+                    {
+                      color: TEXT_PRIMARY,
+                      "--row-hover-bg": ROW_HOVER_BG,
+                    } as CSSProperties
+                  }
                 >
                   {t.loadOlder}
                 </button>
@@ -541,66 +653,68 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
 }
 
 /**
- * Persistent desktop sidebar. Inline flex sibling of the canvas. Animates
- * in by transitioning `width` from 0 → SIDEBAR_WIDTH; the canvas reflows
- * smoothly alongside instead of being overlaid. The inner div stays at a
- * fixed width so the contents don't shimmer during the animation — the
- * outer div clips them via `overflow: hidden`.
- *
- * The body is unmounted when fully closed (after the animation finishes)
- * to avoid running its `fetchVersions` effect for diagrams the user never
- * opens, and to release the SVG-thumbnail observer.
+ * Desktop version-history panel, rehomed onto the library's overlay/control API.
+ * Instead of being a flex sibling that pushes the canvas (a reflow on every
+ * open/close), it is portaled into the editor's `right-rail` overlay region: the
+ * canvas stays full-bleed beneath it and the diagram makes room via the measured
+ * inset (no reflow). The panel unmounts when closed, releasing the
+ * SVG-thumbnail observer. Mobile keeps the bottom-sheet `<VersionDrawer>`.
  */
-export const VersionSidebar: FC<Props> = ({ diagramId, onVersionSaved }) => {
-  // Below the navbar's mobile threshold the bottom-sheet
-  // `<VersionDrawer>` takes over; render nothing here so the sidebar
-  // doesn't eat 320px of width on phones or in the awkward
-  // 600–768px range where the navbar is already mobile.
-  const isSmall = useMediaQuery(MOBILE_QUERY)
+export const VersionRail: FC<Props> = ({
+  diagramId,
+  onVersionSaved,
+  onConfirmedRestore,
+  onPreview,
+}) => {
+  const { editor } = useEditorContext()
+  const isSmall = useMediaQuery(NARROW_VIEW_QUERY)
   const open = useVersionStore((s) => Boolean(s.drawerOpenByDiagram[diagramId]))
-  const [mounted, setMounted] = useState(open)
-  useEffect(() => {
-    if (open) {
-      setMounted(true)
-      return
-    }
-    const handle = setTimeout(() => setMounted(false), SIDEBAR_ANIMATION_MS)
-    return () => clearTimeout(handle)
-  }, [open])
 
-  if (isSmall) return null
+  // Hold the right-rail region while open on desktop: a stable host node whose
+  // measured width becomes the panel's reserved right inset.
+  const host = useRegionHost(editor, "right-rail", !isSmall && open)
 
-  return (
+  if (!host) return null
+
+  return createPortal(
     <div
-      className="shrink-0 overflow-hidden"
+      // A floating glass card — the right-side mirror of the left palette, NOT
+      // a full-height docked slab. Anchored to the top of the right-rail band
+      // and bounded in height (scrolls internally) so it reads as an island,
+      // not a column. Width + margins are what the band measures as the
+      // reserved right inset (no reflow); the height cap doesn't affect width.
+      className="apollon-glass apollon-history-panel apollon-chrome-island m-2.5 self-start overflow-hidden rounded-[var(--apollon-chrome-radius-lg)]"
       style={{
-        width: open ? SIDEBAR_WIDTH : 0,
-        transition: `width ${SIDEBAR_ANIMATION_MS}ms ease-in-out`,
-        background: NAVBAR_BACKGROUND_COLOR,
+        width: SIDEBAR_WIDTH,
+        maxHeight: "min(640px, 100%)",
+        minHeight: 0,
       }}
-      aria-hidden={!open}
     >
-      <div style={{ width: SIDEBAR_WIDTH, height: "100%" }}>
-        {mounted && (
-          <VersionSidebarBody
-            diagramId={diagramId}
-            onVersionSaved={onVersionSaved}
-          />
-        )}
-      </div>
-    </div>
+      <VersionSidebarBody
+        diagramId={diagramId}
+        onVersionSaved={onVersionSaved}
+        onConfirmedRestore={onConfirmedRestore}
+        onPreview={onPreview}
+      />
+    </div>,
+    host
   )
 }
 
 /**
- * Mobile fallback. On `<sm` viewports there isn't room for a 400-pixel
- * column, so we keep the bottom-sheet pattern for the small-screen case.
+ * Mobile fallback. On `<sm` viewports there isn't room for a side column
+ * (SIDEBAR_WIDTH), so we keep the bottom-sheet pattern for the small-screen case.
  */
-export const VersionDrawer: FC<Props> = ({ diagramId, onVersionSaved }) => {
-  const isSmall = useMediaQuery(MOBILE_QUERY)
+export const VersionDrawer: FC<Props> = ({
+  diagramId,
+  onVersionSaved,
+  onConfirmedRestore,
+  onPreview,
+}) => {
+  const isSmall = useMediaQuery(NARROW_VIEW_QUERY)
   const open = useVersionStore((s) => Boolean(s.drawerOpenByDiagram[diagramId]))
   const closeDrawer = useVersionStore((s) => s.closeDrawer)
-  // Desktop uses the inline sidebar; this component is mobile-only.
+  // Desktop uses the inline rail; this component is mobile-only.
   if (!isSmall) return null
   return (
     <Sheet
@@ -609,16 +723,26 @@ export const VersionDrawer: FC<Props> = ({ diagramId, onVersionSaved }) => {
         if (!next) closeDrawer(diagramId)
       }}
     >
+      {/* A floating glass card detached from the edges (margins + radius +
+          blur), not a full-bleed bottom sheet — the mobile mirror of the
+          desktop rail island. The chrome glass background overrides shadcn's
+          default `bg-background` so the sheet themes charcoal in dark mode. */}
       <SheetContent
         side="bottom"
         showCloseButton={false}
-        className="h-[80vh] w-full gap-0 border-0 p-0"
-        style={{ background: NAVBAR_BACKGROUND_COLOR }}
+        className="apollon-glass apollon-history-panel m-[var(--apollon-chrome-edge)] h-auto max-h-[70vh] w-auto gap-0 rounded-[var(--apollon-chrome-radius-lg)] border-0 bg-clip-border p-0"
+        style={{
+          backgroundColor: "var(--apollon-chrome-glass-solid)",
+          backgroundImage: "none",
+          color: "var(--apollon-chrome-text)",
+        }}
         aria-label={t.drawerTitle}
       >
         <VersionSidebarBody
           diagramId={diagramId}
           onVersionSaved={onVersionSaved}
+          onConfirmedRestore={onConfirmedRestore}
+          onPreview={onPreview}
         />
       </SheetContent>
     </Sheet>

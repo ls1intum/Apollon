@@ -1,5 +1,5 @@
 import React from "react"
-import { Link } from "react-router"
+import { Link } from "@tanstack/react-router"
 
 type ErrorPageProps = {
   title?: string
@@ -46,7 +46,7 @@ export const ErrorPage: React.FC<ErrorPageProps> = ({
       </p>
       <Link
         to={backPath}
-        className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--home-accent-ring)]"
         style={{
           marginTop: "16px",
           padding: "10px 20px",

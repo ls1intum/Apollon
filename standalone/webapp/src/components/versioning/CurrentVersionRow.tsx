@@ -6,7 +6,12 @@ import {
 } from "lucide-react"
 import type { CSSProperties, FC } from "react"
 import { cn } from "@tumaet/ui/lib/utils"
-import { useVersionStore, type PendingVersion } from "@/stores/useVersionStore"
+import {
+  selectScopedPreview,
+  useVersionStore,
+  type PendingVersion,
+} from "@/stores/useVersionStore"
+import { useClosePreview } from "@/hooks/useVersionPreviewUrlSync"
 import { relativeTime } from "./relativeTime"
 import {
   ROW_HOVER_BG,
@@ -38,7 +43,9 @@ interface ViewProps {
   ref?: React.Ref<HTMLDivElement>
 }
 
-const ROW_BORDER = "1px solid var(--home-on-dark-border)"
+// The row lives on the editor's chrome surface, so its rules use the shared
+// `--apollon-chrome-*` contract and theme in lock-step with the header/palette.
+const ROW_BORDER = "1px solid var(--apollon-chrome-border)"
 
 /**
  * Pure presentational HEAD pseudo-row ("you are here"). Props in, callbacks
@@ -117,15 +124,17 @@ export function CurrentVersionRowView({
     subtitle = "Not yet saved as a version"
   } else if (upToDate) {
     icon = CheckCircle2Icon
-    // Tailwind-ish green that reads on dark bg without theming.
-    iconColor = "#5cb47a"
+    // Theme-aware success green (shared with the success toast) so the check
+    // reads correctly + consistently in both light and dark.
+    iconColor = "var(--home-toast-success)"
     title = "Current"
     subtitle = `Up to date · last saved ${relativeTime(latestSavedVersion.createdAt)}`
   } else {
     icon = CircleIcon
-    // Amber, signaling "there's something to capture" without alarm — HEAD
-    // is autosaved every 5 s, so this is "not yet a version," not "at risk."
-    iconColor = "#e8a857"
+    // Theme-aware warning amber (shared with the warning toast), signaling
+    // "there's something to capture" without alarm — HEAD is autosaved every
+    // 5 s, so this is "not yet a version," not "at risk."
+    iconColor = "var(--home-toast-warning)"
     title = "Current"
     subtitle = `Edits since last save · ${relativeTime(latestSavedVersion.createdAt)}`
   }
@@ -138,7 +147,13 @@ export function CurrentVersionRowView({
     <div
       ref={ref}
       className={cn("flex items-start gap-2.5 px-4 py-2.5", className)}
-      style={{ background: ROW_SELECTED_BG, borderBottom: ROW_BORDER }}
+      style={{
+        background: ROW_SELECTED_BG,
+        borderBottom: ROW_BORDER,
+        // Accent left-rule marks HEAD ("you are here") — the one place the
+        // brand accent appears in the list; saved rows stay neutral.
+        boxShadow: "inset 3px 0 0 var(--apollon-chrome-accent)",
+      }}
       aria-label="Current canvas"
       aria-live="polite"
     >
@@ -159,29 +174,34 @@ export function CurrentVersionRowView({
   )
 }
 
-type ContainerProps = Pick<
-  ViewProps,
-  "hasChanges" | "latestSavedVersion" | "className"
->
+interface ContainerProps {
+  diagramId: string
+  hasChanges: boolean
+  latestSavedVersion?: PendingVersion
+  className?: string
+}
 
 /**
- * Thin container — reads preview state from `useVersionStore` and renders
- * {@link CurrentVersionRowView}. Existing call sites keep working unchanged.
+ * Thin container — reads the diagram-scoped preview state from
+ * `useVersionStore` and renders {@link CurrentVersionRowView}. Exiting the
+ * preview goes through `useClosePreview`, which strips `?version=` from the URL
+ * (the URL sync owns the preview state) rather than mutating the store directly.
  */
 export const CurrentVersionRow: FC<ContainerProps> = ({
+  diagramId,
   hasChanges,
   latestSavedVersion,
   className,
 }) => {
-  const previewState = useVersionStore((s) => s.preview)
-  const exitPreview = useVersionStore((s) => s.exitPreview)
+  const previewState = useVersionStore((s) => selectScopedPreview(s, diagramId))
+  const closePreview = useClosePreview()
 
   return (
     <CurrentVersionRowView
       hasChanges={hasChanges}
       latestSavedVersion={latestSavedVersion}
       isPreviewing={Boolean(previewState)}
-      onExitPreview={exitPreview}
+      onExitPreview={closePreview}
       className={className}
     />
   )

@@ -19,8 +19,9 @@ blockExoticSubdeps: true
 # references the entry via `"<pkg>": "catalog:"` instead of a duplicate
 # version string, so Renovate bumps a dep in one place instead of N.
 catalog:
-  "@eslint/js": "9.17.0"
   "@base-ui/react": "1.5.0"
+  "@eslint/js": "9.17.0"
+  "@resvg/resvg-wasm": "2.6.2"
   "@size-limit/file": "11.2.0"
   "@size-limit/preset-big-lib": "11.2.0"
   # Storybook 10.x — all @storybook/* MUST share one exact version.
@@ -49,7 +50,7 @@ catalog:
   "@vitest/browser": "4.1.2"
   "@vitest/browser-playwright": "4.1.2"
   "@vitest/coverage-v8": "4.1.2"
-  "@xyflow/react": "12.3.6"
+  "@xyflow/react": "12.9.3"
   # React Compiler (stable v1). Wired via @vitejs/plugin-react's Babel slot.
   # Pinned exact — the compiler has not committed to SemVer-safe output yet.
   babel-plugin-react-compiler: "1.0.0"
@@ -60,10 +61,12 @@ catalog:
   eslint-plugin-react-hooks: "7.1.1"
   globals: "15.13.0"
   jsdom: "28.1.0"
+  jspdf: "4.2.1"
   lucide-react: "1.18.0"
   react: "19.2.7"
   react-dom: "19.2.7"
   size-limit: "11.2.0"
+  "svg2pdf.js": "2.7.0"
   tailwind-merge: "3.6.0"
   tailwindcss: "4.0.17"
   typescript: "5.7.2"

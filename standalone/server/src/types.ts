@@ -49,6 +49,7 @@ export type ApiErrorCode =
   | "BODY_TOO_LARGE"
   | "NO_HEAD"
   | "REDIS_UNAVAILABLE"
+  | "RENDERER_BUSY"
   | "INTERNAL"
 
 export interface ApiErrorBody {

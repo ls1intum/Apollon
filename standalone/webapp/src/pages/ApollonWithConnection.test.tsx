@@ -1,21 +1,38 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { act, cleanup, render, screen, waitFor } from "@testing-library/react"
-import { MemoryRouter, Route, Routes, useNavigate } from "react-router"
+import { act, cleanup, screen, waitFor } from "@testing-library/react"
+import { renderWithRouter } from "@/test/renderWithRouter"
 import { toast } from "react-toastify"
 import { ApollonWithConnection } from "./ApollonWithConnection"
 import { EditorProvider, ModalProvider } from "@/contexts"
+import { DiagramApiClient } from "@/services/DiagramApiClient"
 
 const addSharedDiagramEntryMock = vi.fn()
+
+// Holds the most recently mounted fake editor so a test can drive it directly.
+const editorHoisted = vi.hoisted(() => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  instance: null as any,
+}))
 
 const FakeApollonEditor = vi.hoisted(
   () =>
     class FakeApollonEditor {
       model: object = {}
+      // The live Yjs model the real editor restores when preview mode is left.
+      liveModel: object | undefined = undefined
+      modelChangeCb: (() => void) | null = null
+      previewMode = false
+      constructor() {
+        // The component instantiates its editor via `new ApollonEditor(...)`;
+        // capture it so a test can drive the same instance the autosaver uses.
+        editorHoisted.instance = this
+      }
       destroy() {}
       setLocalAwarenessState() {}
       setLocalAwarenessCursor() {}
       setLocalAwarenessSelectedElement() {}
-      subscribeToModelChange() {
+      subscribeToModelChange(cb: () => void) {
+        this.modelChangeCb = cb
         return 1
       }
       subscribeToSelectionChange() {
@@ -35,7 +52,11 @@ const FakeApollonEditor = vi.hoisted(
       }
       unsubscribe() {}
       setReadonly() {}
-      setPreviewMode() {}
+      setPreviewMode(active: boolean) {
+        this.previewMode = active
+        // Mirror the real resync: leaving preview restores the live Yjs model.
+        if (!active && this.liveModel !== undefined) this.model = this.liveModel
+      }
       fitView() {}
       getLocalAwarenessClientId() {
         return 0
@@ -133,9 +154,9 @@ vi.mock("@/services/DiagramApiClient", () => ({
   },
 }))
 
-vi.mock("@/stores/useVersionStore", () => {
+const versionHoisted = vi.hoisted(() => {
   const state = {
-    preview: null,
+    preview: null as { versionId: string; body: object } | null,
     pendingRestoreFromId: null,
     undoRestore: null,
     exitPreview: vi.fn(),
@@ -143,14 +164,22 @@ vi.mock("@/stores/useVersionStore", () => {
     applyControlEvent: vi.fn(),
     fetchVersions: vi.fn(),
   }
-  const hook = (selector?: (s: typeof state) => unknown) =>
-    selector ? selector(state) : state
-  ;(hook as unknown as { getState: typeof hook }).getState = () => state
-  return { useVersionStore: hook }
+  return { state }
 })
 
-// VersionDrawer / Sidebar / Banner need their own mocks of `react-router`'s
-// router context to render; they aren't under test here.
+vi.mock("@/stores/useVersionStore", () => {
+  const state = versionHoisted.state
+  const hook = (selector?: (s: typeof state) => unknown) =>
+    selector ? selector(state) : state
+  ;(hook as unknown as { getState: () => typeof state }).getState = () => state
+  // Single-diagram page, so scoped preview === the global preview here.
+  return {
+    useVersionStore: hook,
+    selectScopedPreview: (s: typeof state) => s.preview,
+  }
+})
+
+// Not under test; stub the versioning widgets.
 vi.mock("@/components/versioning", async (importOriginal) => {
   const actual = (await importOriginal()) as Record<string, unknown>
   return {
@@ -158,7 +187,7 @@ vi.mock("@/components/versioning", async (importOriginal) => {
     UndoRestoreSnackbar: () => null,
     VersionDrawer: () => null,
     VersionPreviewBanner: () => null,
-    VersionSidebar: () => null,
+    VersionRail: () => null,
   }
 })
 
@@ -180,27 +209,19 @@ vi.mock("@/contexts", async (importOriginal) => {
 
 const LOADING_TEXT = "Loading diagram…"
 
-let testNavigate: (path: string) => void = () => {}
-function NavigateProbe() {
-  // Test harness: surface router navigation to the test body.
-  // eslint-disable-next-line react-hooks/globals
-  testNavigate = useNavigate()
-  return null
-}
-
-function mountAt(initialPath: string) {
-  return render(
-    <MemoryRouter initialEntries={[initialPath]}>
+function mountAt(initialEntry: string) {
+  // The page reads getRouteApi("/shared/$diagramId"), so it must mount under
+  // that template; "/" is included so its navigate({ to: "/" }) fallback
+  // resolves. Drive in-test route changes with the returned `history.push`.
+  return renderWithRouter(<ApollonWithConnection />, {
+    initialEntry,
+    routePaths: ["/shared/$diagramId", "/"],
+    wrapper: (children) => (
       <EditorProvider>
-        <ModalProvider>
-          <NavigateProbe />
-          <Routes>
-            <Route path="/:diagramId" element={<ApollonWithConnection />} />
-          </Routes>
-        </ModalProvider>
+        <ModalProvider>{children}</ModalProvider>
       </EditorProvider>
-    </MemoryRouter>
-  )
+    ),
+  })
 }
 
 async function resolveFetch(model: object = { nodes: [], edges: [] }) {
@@ -216,7 +237,11 @@ beforeEach(() => {
   vi.clearAllMocks()
   addSharedDiagramEntryMock.mockReset()
   fetchHoisted.state.pending = null
-  testNavigate = () => {}
+  editorHoisted.instance = null
+  versionHoisted.state.preview = null
+  versionHoisted.state.exitPreview.mockImplementation(() => {
+    versionHoisted.state.preview = null
+  })
   sessionStorage.setItem("apollon-collab-name", "tester")
   // jsdom lacks ResizeObserver; the version-preview column uses it.
   if (typeof globalThis.ResizeObserver === "undefined") {
@@ -238,19 +263,19 @@ afterEach(() => {
 })
 
 describe("ApollonWithConnection — loading-state regression", () => {
-  it("shows the loading overlay while the initial diagram fetch is in flight", () => {
-    mountAt("/abc?view=COLLABORATE")
-    expect(screen.getByText(LOADING_TEXT)).toBeTruthy()
+  it("shows the loading overlay while the initial diagram fetch is in flight", async () => {
+    mountAt("/shared/abc?view=COLLABORATE")
+    expect(await screen.findByText(LOADING_TEXT)).toBeTruthy()
   })
 
   it("removes the loading overlay once the editor is mounted", async () => {
-    mountAt("/abc?view=COLLABORATE")
+    mountAt("/shared/abc?view=COLLABORATE")
     await resolveFetch()
     await waitFor(() => expect(screen.queryByText(LOADING_TEXT)).toBeNull())
   })
 
   it("stores a successfully opened shared diagram for the dashboard", async () => {
-    mountAt("/abc?view=GIVE_FEEDBACK")
+    mountAt("/shared/abc?view=GIVE_FEEDBACK")
 
     await resolveFetch({ id: "abc", nodes: [], edges: [] })
 
@@ -262,11 +287,13 @@ describe("ApollonWithConnection — loading-state regression", () => {
   })
 
   it("re-shows the loading overlay when diagramId changes (Share-again)", async () => {
-    mountAt("/abc?view=COLLABORATE")
+    const { history } = mountAt("/shared/abc?view=COLLABORATE")
     await resolveFetch({ id: "abc", nodes: [], edges: [] })
     await waitFor(() => expect(screen.queryByText(LOADING_TEXT)).toBeNull())
 
-    await act(async () => testNavigate("/def?view=COLLABORATE"))
+    await act(async () => {
+      history.push("/shared/def?view=COLLABORATE")
+    })
     expect(await screen.findByText(LOADING_TEXT)).toBeTruthy()
 
     await resolveFetch({ id: "def", nodes: [], edges: [] })
@@ -275,7 +302,7 @@ describe("ApollonWithConnection — loading-state regression", () => {
 
   it("does not show an error toast when unmount races a pending fetch", async () => {
     const errorToast = vi.spyOn(toast, "error")
-    const rendered = mountAt("/abc?view=COLLABORATE")
+    const rendered = mountAt("/shared/abc?view=COLLABORATE")
     await waitFor(() => expect(fetchHoisted.state.pending).not.toBeNull())
 
     rendered.unmount()
@@ -286,9 +313,47 @@ describe("ApollonWithConnection — loading-state regression", () => {
     expect(errorToast).not.toHaveBeenCalled()
   })
 
+  it("persists a pending edit when navigating away during a version preview", async () => {
+    const sendUpdate = vi.mocked(DiagramApiClient.sendDiagramUpdate)
+    const rendered = mountAt("/shared/abc?view=COLLABORATE")
+    await resolveFetch({ id: "abc", nodes: [], edges: [] })
+
+    const instance = editorHoisted.instance as InstanceType<
+      typeof FakeApollonEditor
+    >
+    await waitFor(() => expect(instance.modelChangeCb).not.toBeNull())
+
+    // The user edits: the live diagram gains a node and a model change marks the
+    // autosaver dirty (no save fires yet — it's still inside the debounce).
+    const liveModel = { id: "abc", nodes: [{ id: "n1" }], edges: [] }
+    instance.liveModel = liveModel
+    instance.model = liveModel
+    await act(async () => instance.modelChangeCb?.())
+
+    // Enter a version preview: the autosaver pauses and the canvas overlays an
+    // older snapshot in place of the live model.
+    versionHoisted.state.preview = {
+      versionId: "v1",
+      body: { id: "abc", nodes: [], edges: [] },
+    }
+    instance.model = { id: "abc", nodes: [], edges: [] }
+    const previewSpy = vi.spyOn(instance, "setPreviewMode")
+    sendUpdate.mockClear()
+
+    // Navigate away while still in preview — teardown must not drop the edit.
+    rendered.unmount()
+
+    await waitFor(() => expect(sendUpdate).toHaveBeenCalledTimes(1))
+    // Teardown left preview before flushing, and the flush persisted the LIVE
+    // diagram — not the previewed snapshot.
+    expect(previewSpy).toHaveBeenCalledWith(false)
+    expect(versionHoisted.state.exitPreview).toHaveBeenCalled()
+    expect(sendUpdate.mock.calls[0][1]).toEqual(liveModel)
+  })
+
   it("re-opens the collab-name prompt for each new un-named diagram", async () => {
     sessionStorage.removeItem("apollon-collab-name")
-    mountAt("/abc?view=COLLABORATE")
+    const { history } = mountAt("/shared/abc?view=COLLABORATE")
 
     await waitFor(() => {
       expect(modalHoisted.openModal).toHaveBeenCalledWith(
@@ -298,7 +363,9 @@ describe("ApollonWithConnection — loading-state regression", () => {
     })
 
     modalHoisted.openModal.mockClear()
-    await act(async () => testNavigate("/def?view=COLLABORATE"))
+    await act(async () => {
+      history.push("/shared/def?view=COLLABORATE")
+    })
     await waitFor(() =>
       expect(modalHoisted.openModal).toHaveBeenCalledWith(
         "COLLABORATE_NAME",
@@ -309,7 +376,7 @@ describe("ApollonWithConnection — loading-state regression", () => {
 
   it("returns home when the collaboration-name prompt is dismissed", async () => {
     sessionStorage.removeItem("apollon-collab-name")
-    mountAt("/abc?view=COLLABORATE")
+    const { router } = mountAt("/shared/abc?view=COLLABORATE")
 
     await waitFor(() => {
       expect(modalHoisted.openModal).toHaveBeenCalledWith(
@@ -328,6 +395,17 @@ describe("ApollonWithConnection — loading-state regression", () => {
       modalProps?.onClose?.()
     })
 
-    expect(window.location.pathname + window.location.search).toBe("/")
+    // In-memory history never touches window.location; assert router state.
+    await waitFor(() => expect(router.state.location.pathname).toBe("/"))
+  })
+
+  it("toasts and redirects home when the view param is absent/invalid", async () => {
+    const errorToast = vi.spyOn(toast, "error")
+    const { router } = mountAt("/shared/abc")
+
+    await waitFor(() => {
+      expect(errorToast).toHaveBeenCalledWith("Invalid view type")
+      expect(router.state.location.pathname).toBe("/")
+    })
   })
 })

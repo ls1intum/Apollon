@@ -12,10 +12,15 @@ body {
   @apply p-0;
 }
 
-/* VS Code auto-applies `vscode-light` / `vscode-dark` / `vscode-high-contrast`
-   classes to <body>. Scope the apollon palette to each so the editor follows
-   live theme switches without any JS. */
-body.vscode-light {
+/* VS Code applies `vscode-light` / `vscode-dark` / `vscode-high-contrast` classes
+   to <body>, but the library's chrome tokens (--apollon-chrome-*) are computed on
+   :root from --apollon-background / --apollon-primary-contrast. CSS custom
+   properties inherit DOWNWARD only, so vars set on <body> never reach the :root
+   computation — the chrome (islands, minimap, auto-export indicator) stays light.
+   index.tsx mirrors the VS Code theme onto :root's data-theme; the base apollon
+   palette MUST key off THAT so the vars live at :root where the chrome tokens
+   compute. */
+:root[data-theme="light"] {
   --apollon-primary: #3e8acc;
   --apollon-primary-contrast: #212529;
   --apollon-secondary: #6c757d;
@@ -37,8 +42,7 @@ body.vscode-light {
   --apollon-modal-bottom-border: #e9ecef;
 }
 
-body.vscode-dark,
-body.vscode-high-contrast {
+:root[data-theme="dark"] {
   --apollon-primary: #3e8acc;
   --apollon-primary-contrast: white;
   --apollon-secondary: #888;

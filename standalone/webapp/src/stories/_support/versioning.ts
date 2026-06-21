@@ -173,7 +173,8 @@ export function openDrawer(diagramId: string = SAMPLE_DIAGRAM_ID): void {
 /** Enter preview of a given version with an empty body. */
 export function seedPreview(
   versionId: string,
-  body: UMLModel = EMPTY_BODY
+  body: UMLModel = EMPTY_BODY,
+  diagramId: string = SAMPLE_DIAGRAM_ID
 ): void {
-  useVersionStore.setState({ preview: { versionId, body } })
+  useVersionStore.setState({ preview: { diagramId, versionId, body } })
 }
