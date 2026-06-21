@@ -4,7 +4,11 @@ import { useApollonEditor } from "./context"
 import { RegionMount } from "../../overlay/RegionMount"
 import { type OverlayControlOptions } from "../../overlay/types"
 
+/** Props for {@link ApollonControl}: every {@link OverlayControlOptions} field
+ *  (id, region, inset, order, …) plus the children to render in-canvas. */
 export type ApollonControlProps = OverlayControlOptions & {
+  /** Portaled into the control's host node inside the chosen region. Children
+   *  changes never re-register the control; only real option changes do. */
   children: ReactNode
 }
 

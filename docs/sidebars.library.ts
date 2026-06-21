@@ -23,6 +23,7 @@ const sidebars: SidebarsConfig = {
       // shows the confusing "API > API" leaf.
       link: { type: "doc", id: "api" },
       items: [
+        "api/overlay-controls",
         "api/collaboration",
         "api/export",
         "api/headless-rendering",

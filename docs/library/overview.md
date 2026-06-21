@@ -12,7 +12,7 @@ slug: /
 
 Apollon ships as an npm library that any framework can embed. The public API is **imperative** (`new ApollonEditor(container, options)`), so your host code does not need to use React — but the library does, and it mounts its own React tree inside the DOM node you give it.
 
-13 UML and modeling diagram types · SVG/PNG/PDF/JSON export · optional real-time collaboration via Yjs.
+13 UML and modeling diagram types · SVG/PNG/PDF/JSON export · optional real-time collaboration via Yjs · injectable [canvas overlay controls](/library/api/overlay-controls).
 
 ## Two builds, one API
 
@@ -31,4 +31,5 @@ Apollon ships as an npm library that any framework can embed. The public API is 
 - **[API reference](/library/api)** — the complete `ApollonEditor` surface
 - **[Collaboration](/library/api/collaboration)** — Yjs-based real-time sync
 - **[Export](/library/api/export)** — SVG / PNG / PDF / JSON
+- **[Overlay controls](/library/api/overlay-controls)** — inject toolbars, banners, and rails into the canvas
 - **[Troubleshooting](/library/troubleshooting)** — blank canvas, SSR, and other embedding gotchas

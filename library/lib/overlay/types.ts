@@ -36,7 +36,9 @@ export const OVERLAY_REGIONS: readonly OverlayRegion[] = [
   "on-canvas",
 ]
 
+/** One of the four edges a control can sit against / reserve room on. */
 export type OverlaySide = "top" | "right" | "bottom" | "left"
+/** Reserved room per side, in px. */
 export type Insets = Record<OverlaySide, number>
 export const ZERO_INSETS: Insets = { top: 0, right: 0, bottom: 0, left: 0 }
 
@@ -54,6 +56,7 @@ export type InsetContribution =
 export interface OverlayControlOptions {
   /** Stable id. Re-adding the same id REPLACES (idempotent, StrictMode-safe). */
   id: string
+  /** Which band/corner the control is anchored in. */
   region: OverlayRegion
   /** Reserve viewport room. Default: reserves nothing (the control floats). */
   inset?: InsetContribution
@@ -64,13 +67,16 @@ export interface OverlayControlOptions {
   /** Wraps the control in a `role="group"` with this aria-label. No focus
    *  management is imposed. */
   groupLabel?: string
-  /** Hide without unregistering (reserves no inset while hidden). */
+  /** Hide without unregistering (reserves no inset while hidden). Default true. */
   visible?: boolean
+  /** Extra class on the control's wrapper element. */
   className?: string
+  /** Inline styles merged onto the control's wrapper element. */
   style?: CSSProperties
 }
 
-/** A control as registered: options plus the renderer and bookkeeping. */
+/** A control as registered: options plus the renderer and bookkeeping.
+ *  @internal Use {@link OverlayControlInput} as the public registration type. */
 export interface OverlayControl extends OverlayControlOptions {
   source: "library" | "imperative" | "react"
   render: () => ReactNode

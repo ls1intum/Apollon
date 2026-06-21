@@ -279,6 +279,15 @@ export class ApollonEditor {
     return this.reactFlowInstance.flowToScreenPosition(position)
   }
 
+  /**
+   * Zoom/pan so the whole diagram fits, capped at `maxZoom: 1.0`. Retries up to
+   * 10 animation frames until every node is measured.
+   * @param options.padding - Scalar fraction (default `0.15`), or per-side px
+   *   that adds to a 16px gutter. A per-side object forces the inset-aware path.
+   * @param options.duration - Animation duration in ms (default `200`).
+   * @param options.respectInsets - Pad the fit by reserved overlay insets
+   *   (header, rails, …). Default `true`.
+   */
   public fitView(options?: {
     padding?: number | Partial<Record<OverlaySide, number>>
     duration?: number
@@ -349,11 +358,16 @@ export class ApollonEditor {
   // for hosts that need their OWN React context (theme, router) via createPortal.
 
   /**
-   * Register a floating control, returning a disposer. Re-using an id replaces.
-   * Pick a façade: a React host → `<ApollonControl>`; a non-React host (or one
-   * that needs its own React root/context) → `getRegionElement` + `createPortal`;
-   * a one-off imperative widget → `addControl`. Throws on an unknown region or
-   * empty id so mistakes fail loudly at the edge, not silently in the renderer.
+   * Register a floating control, returning a disposer. Re-using an id replaces
+   * (idempotent / StrictMode-safe). Pick a façade: a React host →
+   * `<ApollonControl>`; a non-React host (or one that needs its own React
+   * root/context) → `getRegionElement` + `createPortal`; a one-off imperative
+   * widget → `addControl`.
+   * @param control - id, target region, a `render` thunk, and optional layout
+   *   options ({@link OverlayControlInput}).
+   * @returns A disposer that unregisters this control; safe to call twice.
+   * @throws If `id` is empty or `region` is not a known region — mistakes fail
+   *   loudly at the edge, not silently in the renderer.
    */
   public addControl(control: OverlayControlInput): () => void {
     if (!control.id) throw new Error("[ApollonControl] id must be non-empty")
@@ -363,8 +377,11 @@ export class ApollonEditor {
     return () => this.overlayStore.getState().unregister(control.id)
   }
 
-  /** Patch a registered control's options/renderer (a no-op if absent). The id
-   *  is immutable — pass it as the first arg; any `id` in `patch` is ignored. */
+  /**
+   * Patch a registered control's options/renderer (a no-op if absent).
+   * @param id - The control's immutable id (an `id` in `patch` is ignored).
+   * @param patch - Partial options/renderer merged over the existing control.
+   */
   public updateControl(id: string, patch: Partial<OverlayControlInput>): void {
     const existing = this.overlayStore.getState().controls[id]
     if (!existing) return
@@ -372,6 +389,10 @@ export class ApollonEditor {
     this.overlayStore.getState().register({ ...existing, ...patch, id })
   }
 
+  /**
+   * @param id - A control id.
+   * @returns `true` if a control with this id is currently registered.
+   */
   public hasControl(id: string): boolean {
     return id in this.overlayStore.getState().controls
   }
@@ -381,6 +402,9 @@ export class ApollonEditor {
    * React into it (via `createPortal`) to keep host context. Auto-measured, so
    * the diagram makes room for whatever the host mounts. Lifetime = the editor;
    * `releaseRegionElement` unregisters it. Reserved id: `apollon:host:<region>`.
+   * @param region - The region to anchor the node in.
+   * @returns The same stable element on every call until `releaseRegionElement`.
+   * @throws If `region` is not a known region.
    */
   public getRegionElement(region: OverlayRegion): HTMLElement {
     if (!OVERLAY_REGIONS.includes(region))
@@ -404,7 +428,11 @@ export class ApollonEditor {
     return el
   }
 
-  /** Release a region acquired via getRegionElement (unregister + drop the node). */
+  /**
+   * Release a region acquired via {@link getRegionElement} (unregister + drop
+   * the cached node); a later `getRegionElement(region)` creates a fresh node.
+   * @param region - The region whose host node to release.
+   */
   public releaseRegionElement(region: OverlayRegion): void {
     this.overlayStore.getState().unregister(`apollon:host:${region}`)
     this.hostRegionEls.delete(region)

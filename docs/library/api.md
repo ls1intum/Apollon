@@ -139,15 +139,15 @@ Every field is optional.
 
 ### View and read-only state
 
-| Member                                         | Type                                | Purpose                                                                                                                                                |
-| ---------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `view` (getter / setter)                       | `ApollonView`                       | Read or set the active view.                                                                                                                           |
-| `setReadonly(readonly)`                        | `(boolean) => void`                 | Toggle read-only at runtime. Clears selection and any open popover when locking.                                                                       |
-| `setPreviewMode(active)`                       | `(boolean) => void`                 | Overlay a snapshot on the canvas without writing to the Yjs doc. Used for version-history previews.                                                    |
-| `toggleInteractiveElementsMode(forceEnabled?)` | `(boolean?) => void`                | Toggle (or force) the `Highlight` view for marking interactive elements.                                                                               |
-| `setMode(mode)`                                | `(ApollonMode) => void`             | Switch between `Modelling`, `Assessment`, and `Exporting` at runtime.                                                                                  |
-| `setScrollLock(locked)`                        | `(boolean) => void`                 | Toggle whether the canvas captures page scroll.                                                                                                        |
-| `fitView(options?)`                            | `({ padding?, duration? }) => void` | Zoom/pan so the whole diagram is visible (capped at `maxZoom: 1.0`). `padding` defaults to `0.15`, `duration` to `200` ms. Retries up to 10 rAF ticks. |
+| Member                                         | Type                                                | Purpose                                                                                                                                                                                                                                                                   |
+| ---------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `view` (getter / setter)                       | `ApollonView`                                       | Read or set the active view.                                                                                                                                                                                                                                              |
+| `setReadonly(readonly)`                        | `(boolean) => void`                                 | Toggle read-only at runtime. Clears selection and any open popover when locking.                                                                                                                                                                                          |
+| `setPreviewMode(active)`                       | `(boolean) => void`                                 | Overlay a snapshot on the canvas without writing to the Yjs doc. Used for version-history previews.                                                                                                                                                                       |
+| `toggleInteractiveElementsMode(forceEnabled?)` | `(boolean?) => void`                                | Toggle (or force) the `Highlight` view for marking interactive elements.                                                                                                                                                                                                  |
+| `setMode(mode)`                                | `(ApollonMode) => void`                             | Switch between `Modelling`, `Assessment`, and `Exporting` at runtime.                                                                                                                                                                                                     |
+| `setScrollLock(locked)`                        | `(boolean) => void`                                 | Toggle whether the canvas captures page scroll.                                                                                                                                                                                                                           |
+| `fitView(options?)`                            | `({ padding?, duration?, respectInsets? }) => void` | Zoom/pan so the whole diagram is visible (capped at `maxZoom: 1.0`). `padding` defaults to `0.15`, `duration` to `200` ms; `respectInsets` (default `true`) pads the fit by reserved [overlay control](/library/api/overlay-controls) insets. Retries up to 10 rAF ticks. |
 
 ### Canvas geometry
 
@@ -159,6 +159,20 @@ Every field is optional.
 | `screenToFlowPosition(position)` | `XYPosition \| null`     | Convert screen coordinates to canvas coordinates. |
 | `flowToScreenPosition(position)` | `XYPosition \| null`     | Convert canvas coordinates to screen coordinates. |
 | `getSelectedElements()`          | `string[]`               | IDs of the currently selected elements.           |
+
+### Canvas overlays / controls
+
+Inject floating chrome (toolbars, banners, rails) that shares the editor's
+collision-free, inset-aware layout. See [Overlay controls](/library/api/overlay-controls)
+for regions, the `<ApollonControl>` React component, and the "make room" model.
+
+| Member                         | Type                                             | Purpose                                                                             |
+| ------------------------------ | ------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| `addControl(control)`          | `(OverlayControlInput) => () => void`            | Register a floating control; returns a disposer. Throws on a bad region / empty id. |
+| `updateControl(id, patch)`     | `(string, Partial<OverlayControlInput>) => void` | Patch a control's options/renderer (no-op if absent; `id` is immutable).            |
+| `hasControl(id)`               | `(string) => boolean`                            | Whether a control with this id is registered.                                       |
+| `getRegionElement(region)`     | `(OverlayRegion) => HTMLElement`                 | Stable node to `createPortal` host chrome into (keeps host React context).          |
+| `releaseRegionElement(region)` | `(OverlayRegion) => void`                        | Release a region acquired via `getRegionElement`.                                   |
 
 ### Assessment
 
