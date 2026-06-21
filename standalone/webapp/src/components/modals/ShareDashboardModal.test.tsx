@@ -94,10 +94,10 @@ describe("ShareDashboardModal", () => {
 
     fireEvent.click(await screen.findByRole("button", { name: "Create" }))
 
-    await screen.findByDisplayValue(/shared-123\?view=EDIT$/)
+    // Collaborate is the default mode, so the freshly created link is already a
+    // collaborate link and opening it goes straight to the collab-name prompt.
+    await screen.findByDisplayValue(/shared-123\?view=COLLABORATE$/)
 
-    fireEvent.click(screen.getByRole("button", { name: /Edit/i }))
-    fireEvent.click(screen.getByRole("option", { name: "Collaborate" }))
     fireEvent.click(screen.getByRole("button", { name: "Open diagram" }))
 
     expect(openModalMock).toHaveBeenCalledWith("COLLABORATE_NAME", {

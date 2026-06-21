@@ -65,8 +65,16 @@ export const EdgeMultipleLabels = ({
         )}
 
         <text
-          x={pathMiddlePosition.x + group.textOrigin.x + index * group.stackStep.x}
-          y={pathMiddlePosition.y + group.textOrigin.y + index * group.stackStep.y}
+          x={
+            pathMiddlePosition.x +
+            group.textOrigin.x +
+            index * group.stackStep.x
+          }
+          y={
+            pathMiddlePosition.y +
+            group.textOrigin.y +
+            index * group.stackStep.y
+          }
           textAnchor={group.textAnchor}
           dominantBaseline="middle"
           style={{
