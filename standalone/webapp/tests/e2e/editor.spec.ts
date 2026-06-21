@@ -430,10 +430,10 @@ test.describe("Mobile responsive layout", () => {
     const dialog = page.getByRole("dialog", { name: "New Diagram" })
     await expect(dialog).toBeVisible()
     await expect(
-      dialog.getByRole("button", { name: "Blank diagram" })
+      dialog.getByRole("tab", { name: "Blank diagram" })
     ).toBeVisible()
     await expect(
-      dialog.getByRole("button", { name: "Use template" })
+      dialog.getByRole("tab", { name: "Use template" })
     ).toBeVisible()
 
     const dialogBox = await dialog.boundingBox()
