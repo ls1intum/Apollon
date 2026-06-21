@@ -1,10 +1,15 @@
 import { describe, it, expect } from "vitest"
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
-import { dropElementConfigs } from "@/constants"
+import { dropElementConfigs, DROPS } from "@/constants"
 import { UMLDiagramType } from "@/types"
 import type { ActivitySwimlaneProps } from "@/types"
-import { flipSwimlaneChildPosition } from "@/utils"
+import {
+  flipSwimlaneChildPosition,
+  getLaneOffsets,
+  laneFractions,
+  resizeLaneDivider,
+} from "@/utils"
 
 describe("activity swimlane — registration", () => {
   it("is registered in the Activity palette with a renderable default", () => {
@@ -29,6 +34,67 @@ describe("activity swimlane — registration", () => {
     expect(schema.definitions.DiagramNodeType.enum).toContain(
       "activitySwimlane"
     )
+  })
+
+  it("keeps every Activity palette item near the default size", () => {
+    // The sidebar shares one Math.min(scale) across the palette, so an oversized
+    // item shrinks every sibling. Pin that invariant so it can't regress.
+    for (const config of dropElementConfigs[UMLDiagramType.ActivityDiagram]) {
+      expect(config.width).toBeLessThanOrEqual(DROPS.DEFAULT_ELEMENT_WIDTH * 2)
+      expect(config.height).toBeLessThanOrEqual(DROPS.DEFAULT_ELEMENT_WIDTH * 2)
+    }
+  })
+})
+
+describe("lane geometry", () => {
+  it("divides the axis equally when no lane has a size", () => {
+    const offsets = getLaneOffsets([{}, {}, {}], 300)
+    expect(offsets).toEqual([
+      { start: 0, extent: 100 },
+      { start: 100, extent: 100 },
+      { start: 200, extent: 100 },
+    ])
+  })
+
+  it("respects per-lane sizes and normalizes them", () => {
+    // sizes 1:3 of a 400px axis -> 100 / 300, regardless of absolute scale.
+    const offsets = getLaneOffsets([{ size: 0.25 }, { size: 0.75 }], 400)
+    expect(offsets).toEqual([
+      { start: 0, extent: 100 },
+      { start: 100, extent: 300 },
+    ])
+  })
+
+  it("laneFractions always sums to 1", () => {
+    const sum = laneFractions([{ size: 2 }, { size: 1 }, {}]).reduce(
+      (a, b) => a + b,
+      0
+    )
+    expect(sum).toBeCloseTo(1)
+  })
+})
+
+describe("resizeLaneDivider", () => {
+  const lanes = [
+    { id: "a", name: "A" },
+    { id: "b", name: "B" },
+  ]
+
+  it("moves the boundary, conserving the total (balanced)", () => {
+    const next = resizeLaneDivider(lanes, 0, 0.1, 0.05)
+    expect(next[0].size).toBeCloseTo(0.6)
+    expect(next[1].size).toBeCloseTo(0.4)
+    expect((next[0].size ?? 0) + (next[1].size ?? 0)).toBeCloseTo(1)
+  })
+
+  it("clamps so neither lane shrinks below the minimum", () => {
+    const next = resizeLaneDivider(lanes, 0, 0.9, 0.1)
+    expect(next[0].size).toBeCloseTo(0.9) // capped: B can't go below 0.1
+    expect(next[1].size).toBeCloseTo(0.1)
+  })
+
+  it("ignores an out-of-range divider index", () => {
+    expect(resizeLaneDivider(lanes, 1, 0.1, 0.05)).toBe(lanes)
   })
 })
 

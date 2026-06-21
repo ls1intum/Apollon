@@ -5,7 +5,7 @@ import { SVGComponentProps } from "@/types/SVG"
 import { useShallow } from "zustand/shallow"
 import AssessmentIcon from "../../AssessmentIcon"
 import { ActivitySwimlaneProps } from "@/types"
-import { getCustomColorsFromData } from "@/utils"
+import { getCustomColorsFromData, getLaneOffsets } from "@/utils"
 
 /** Thickness of the band that holds the lane name labels. */
 export const SWIMLANE_HEADER_SIZE = 30
@@ -32,11 +32,11 @@ export const ActivitySwimlaneSVG: React.FC<ActivitySwimlaneSVGProps> = ({
 
   const { fillColor, strokeColor, textColor } = getCustomColorsFromData(data)
 
-  // Lanes divide the primary axis equally; the header band runs along the
-  // cross-axis start (top for vertical columns, left for horizontal rows).
-  const laneCount = Math.max(lanes.length, 1)
+  // Lanes divide the primary axis by their (possibly resized) sizes; the header
+  // band runs along the cross-axis start (top for vertical columns, left for
+  // horizontal rows).
   const primaryExtent = isVertical ? width : height
-  const laneExtent = primaryExtent / laneCount
+  const laneOffsets = getLaneOffsets(lanes, primaryExtent)
 
   return (
     <svg
@@ -77,8 +77,8 @@ export const ActivitySwimlaneSVG: React.FC<ActivitySwimlaneSVGProps> = ({
       )}
 
       {lanes.map((lane, index) => {
-        const start = index * laneExtent
-        const center = start + laneExtent / 2
+        const { start, extent } = laneOffsets[index]
+        const center = start + extent / 2
 
         return (
           <g key={lane.id}>
@@ -108,7 +108,7 @@ export const ActivitySwimlaneSVG: React.FC<ActivitySwimlaneSVGProps> = ({
                 text={lane.name}
                 x={center}
                 y={SWIMLANE_HEADER_SIZE / 2}
-                maxWidth={laneExtent - 8}
+                maxWidth={extent - 8}
                 maxLines={1}
                 fontSize={LAYOUT.NAME_FONT_SIZE}
                 fill={textColor}
@@ -118,7 +118,7 @@ export const ActivitySwimlaneSVG: React.FC<ActivitySwimlaneSVGProps> = ({
                 text={lane.name}
                 x={SWIMLANE_HEADER_SIZE / 2}
                 y={center}
-                maxWidth={laneExtent - 8}
+                maxWidth={extent - 8}
                 maxLines={1}
                 fontSize={LAYOUT.NAME_FONT_SIZE}
                 fill={textColor}

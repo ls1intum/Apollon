@@ -189,4 +189,82 @@ test.describe("activity swimlane", () => {
       .poll(async () => (await nodeBox(page, SWIMLANE_ID)).width)
       .toBeLessThan(grown.width)
   })
+
+  test("the swimlane exposes no connection handles", async ({ page }) => {
+    await openFixtureInLocalEditor(
+      page,
+      swimlaneModel("vertical", { parented: true, x: 250, y: 140 })
+    )
+    await waitForCanvasReady(page)
+    await expect(
+      page.locator(
+        `.react-flow__node[data-id="${SWIMLANE_ID}"] .react-flow__handle`
+      )
+    ).toHaveCount(0)
+  })
+
+  test("dragging a lane separator resizes the lanes, conserving total width", async ({
+    page,
+  }) => {
+    await openFixtureInLocalEditor(
+      page,
+      swimlaneModel("vertical", { parented: true, x: 250, y: 150 })
+    )
+    await waitForCanvasReady(page)
+
+    const sl = await nodeBox(page, SWIMLANE_ID)
+    const handle = page
+      .locator(
+        `.react-flow__node[data-id="${SWIMLANE_ID}"] [aria-label="Resize lane"]`
+      )
+      .first()
+    const h0 = (await handle.boundingBox())!
+    const cx = h0.x + h0.width / 2
+    const cy = h0.y + h0.height / 2
+    await page.mouse.move(cx, cy)
+    await page.mouse.down()
+    await page.mouse.move(cx + 70, cy, { steps: 10 })
+    await page.mouse.up()
+
+    // The separator moved right (lane 1 grew)...
+    await expect
+      .poll(async () => (await handle.boundingBox())!.x)
+      .toBeGreaterThan(h0.x + 25)
+    // ...while the swimlane's outer width is unchanged (balanced resize).
+    const after = await nodeBox(page, SWIMLANE_ID)
+    expect(Math.abs(after.width - sl.width)).toBeLessThanOrEqual(TOL)
+  })
+
+  test("lanes can be reordered by dragging in the popover", async ({
+    page,
+  }) => {
+    await openFixtureInLocalEditor(
+      page,
+      swimlaneModel("vertical", { parented: true, x: 250, y: 150 })
+    )
+    await waitForCanvasReady(page)
+    await page.locator(`.react-flow__node[data-id="${SWIMLANE_ID}"]`).dblclick()
+
+    const handles = page.getByLabel("Reorder lane")
+    await expect(handles).toHaveCount(2)
+    const h1 = (await handles.nth(1).boundingBox())!
+    const h0 = (await handles.nth(0).boundingBox())!
+    // Drag the second lane's handle above the first (dnd-kit needs an initial
+    // nudge to start, then a move over the target).
+    await page.mouse.move(h1.x + h1.width / 2, h1.y + h1.height / 2)
+    await page.mouse.down()
+    await page.mouse.move(h1.x + h1.width / 2, h1.y + h1.height / 2 - 6, {
+      steps: 3,
+    })
+    await page.mouse.move(h0.x + h0.width / 2, h0.y - 4, { steps: 8 })
+    await page.mouse.up()
+
+    await expect
+      .poll(async () =>
+        page
+          .getByPlaceholder("Lane name")
+          .evaluateAll((els) => els.map((e) => (e as HTMLInputElement).value))
+      )
+      .toEqual(["System", "Customer"])
+  })
 })

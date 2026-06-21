@@ -522,8 +522,11 @@ export const dropElementConfigs: Readonly<
     },
     {
       type: "activitySwimlane",
-      width: 400,
-      height: 200,
+      // Sidebar previews share one Math.min(scale) across the palette, so an
+      // oversized item shrinks every sibling. Keep this close to the other
+      // containers (two 120px lanes + header) so the picker stays balanced.
+      width: 240,
+      height: 160,
       defaultData: {
         name: "",
         orientation: "vertical",

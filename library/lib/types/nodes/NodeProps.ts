@@ -15,6 +15,12 @@ export type ClassNodeElement = {
 export type SwimlaneLane = {
   id: string
   name: string
+  /**
+   * Lane's share of the swimlane's primary axis as a fraction (lanes sum to 1).
+   * Optional: lanes without it divide the space equally, so existing saved
+   * swimlanes keep rendering as equal lanes until a separator is dragged.
+   */
+  size?: number
 }
 
 /**

@@ -9,19 +9,111 @@ import {
   Typography,
 } from "@mui/material"
 import { NodeStyleEditor, PrimaryButton, TextField } from "@/components/ui"
-import { flipSwimlaneChildPosition, generateUUID } from "@/utils"
+import { flipSwimlaneChildPosition, generateUUID, laneFractions } from "@/utils"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import { ActivitySwimlaneProps, DefaultNodeProps, SwimlaneLane } from "@/types"
 import { PopoverProps } from "../types"
-import { DeleteIcon } from "@/components/Icon"
+import { DeleteIcon, DragHandleIcon } from "@/components/Icon"
 import { type Node } from "@xyflow/react"
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core"
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
+
+type LaneRowProps = {
+  lane: SwimlaneLane
+  canDelete: boolean
+  onRename: (id: string, name: string) => void
+  onDelete: (id: string) => void
+}
+
+const SortableLaneRow: React.FC<LaneRowProps> = ({
+  lane,
+  canDelete,
+  onRename,
+  onDelete,
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: lane.id })
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+    zIndex: isDragging ? 999 : undefined,
+  }
+  return (
+    <Box
+      ref={setNodeRef}
+      style={style}
+      sx={{ display: "flex", gap: 0.5, alignItems: "center" }}
+    >
+      <Box
+        {...attributes}
+        {...listeners}
+        aria-label="Reorder lane"
+        sx={{
+          cursor: "grab",
+          display: "flex",
+          alignItems: "center",
+          flexShrink: 0,
+          "&:active": { cursor: "grabbing" },
+        }}
+      >
+        <DragHandleIcon width={16} height={16} />
+      </Box>
+      <TextField
+        size="small"
+        // flex + minWidth:0 so the field shrinks to leave room for the controls;
+        // `fullWidth` (100%) would push them out of the popover and clip them.
+        sx={{ flex: 1, minWidth: 0 }}
+        value={lane.name}
+        placeholder="Lane name"
+        onChange={(e: ChangeEvent<HTMLInputElement>) =>
+          onRename(lane.id, e.target.value)
+        }
+      />
+      <IconButton
+        size="small"
+        aria-label="Delete lane"
+        disabled={!canDelete}
+        onClick={() => onDelete(lane.id)}
+        sx={{ flexShrink: 0 }}
+      >
+        <DeleteIcon width={16} height={16} />
+      </IconButton>
+    </Box>
+  )
+}
 
 export const ActivitySwimlaneEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
   const { nodes, setNodes } = useDiagramStore(
     useShallow((state) => ({ nodes: state.nodes, setNodes: state.setNodes }))
+  )
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   )
 
   const node = nodes.find((n) => n.id === elementId)
@@ -32,10 +124,10 @@ export const ActivitySwimlaneEditPopover: React.FC<PopoverProps> = ({
   const orientation = data.orientation ?? "vertical"
   const isVertical = orientation === "vertical"
 
-  // Lanes divide the primary axis (width for columns, height for rows)
-  // equally, so add/remove grows or shrinks the node by one lane's extent.
+  // Lanes divide the primary axis (width for columns, height for rows) by their
+  // size fractions; add/remove grows/shrinks the node by the affected lane's
+  // share so the other lanes keep their on-screen size.
   const primaryExtent = isVertical ? (node.width ?? 0) : (node.height ?? 0)
-  const laneExtent = primaryExtent / Math.max(lanes.length, 1)
 
   const patch = (update: (n: Node) => Node) =>
     setNodes((current) =>
@@ -97,9 +189,15 @@ export const ActivitySwimlaneEditPopover: React.FC<PopoverProps> = ({
 
   const handleLaneDelete = (id: string) => {
     if (lanes.length <= 1) return
+    const fractions = laneFractions(lanes)
+    const removed = fractions[lanes.findIndex((lane) => lane.id === id)]
+    // Shrink the node by the removed lane's share; renormalize the rest so they
+    // keep their on-screen size.
+    const remaining = lanes.filter((lane) => lane.id !== id)
+    const remainingFractions = laneFractions(remaining)
     setLanes(
-      lanes.filter((lane) => lane.id !== id),
-      primaryExtent - laneExtent
+      remaining.map((lane, i) => ({ ...lane, size: remainingFractions[i] })),
+      primaryExtent * (1 - removed)
     )
   }
 
@@ -110,9 +208,27 @@ export const ActivitySwimlaneEditPopover: React.FC<PopoverProps> = ({
       .map((lane) => /^Lane (\d+)$/.exec(lane.name)?.[1])
       .filter((n): n is string => n != null)
       .map(Number)
-    const next = numbers.length ? Math.max(...numbers) + 1 : lanes.length + 1
-    const newLane: SwimlaneLane = { id: generateUUID(), name: `Lane ${next}` }
-    setLanes([...lanes, newLane], primaryExtent + laneExtent)
+    const nextNumber = numbers.length
+      ? Math.max(...numbers) + 1
+      : lanes.length + 1
+    // Grow the node by one average lane and give the new lane that share, so the
+    // existing lanes keep their on-screen size.
+    const n = lanes.length
+    const scaled = laneFractions(lanes).map((f) => (f * n) / (n + 1))
+    setLanes(
+      [
+        ...lanes.map((lane, i) => ({ ...lane, size: scaled[i] })),
+        { id: generateUUID(), name: `Lane ${nextNumber}`, size: 1 / (n + 1) },
+      ],
+      (primaryExtent * (n + 1)) / n
+    )
+  }
+
+  const handleReorder = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return
+    const oldIndex = lanes.findIndex((lane) => lane.id === active.id)
+    const newIndex = lanes.findIndex((lane) => lane.id === over.id)
+    setLanes(arrayMove(lanes, oldIndex, newIndex))
   }
 
   const handleDataFieldUpdate = (key: keyof DefaultNodeProps, value: string) =>
@@ -155,34 +271,26 @@ export const ActivitySwimlaneEditPopover: React.FC<PopoverProps> = ({
           overflowY: "auto",
         }}
       >
-        {lanes.map((lane) => (
-          <Box
-            key={lane.id}
-            sx={{ display: "flex", gap: 0.5, alignItems: "center" }}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleReorder}
+        >
+          <SortableContext
+            items={lanes.map((lane) => lane.id)}
+            strategy={verticalListSortingStrategy}
           >
-            <TextField
-              size="small"
-              // flex + minWidth:0 so the field shrinks to leave room for the
-              // delete button; `fullWidth` (100%) would push the icon out of
-              // the popover and clip it.
-              sx={{ flex: 1, minWidth: 0 }}
-              value={lane.name}
-              placeholder="Lane name"
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                handleLaneNameChange(lane.id, e.target.value)
-              }
-            />
-            <IconButton
-              size="small"
-              aria-label="Delete lane"
-              disabled={lanes.length <= 1}
-              onClick={() => handleLaneDelete(lane.id)}
-              sx={{ flexShrink: 0 }}
-            >
-              <DeleteIcon width={16} height={16} />
-            </IconButton>
-          </Box>
-        ))}
+            {lanes.map((lane) => (
+              <SortableLaneRow
+                key={lane.id}
+                lane={lane}
+                canDelete={lanes.length > 1}
+                onRename={handleLaneNameChange}
+                onDelete={handleLaneDelete}
+              />
+            ))}
+          </SortableContext>
+        </DndContext>
       </Box>
 
       <PrimaryButton isSelected={false} onClick={handleAddLane}>
