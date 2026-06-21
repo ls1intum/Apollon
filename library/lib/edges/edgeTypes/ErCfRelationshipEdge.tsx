@@ -1,15 +1,10 @@
-import { BaseEdge } from "@xyflow/react"
-import {
-  BaseEdgeProps,
-  CommonEdgeElements,
-  EdgeEndpointMarkers,
-} from "../GenericEdge"
+import { BaseEdgeProps, StepEdgeBody, CommonEdgeElements } from "../GenericEdge"
 import { EdgeMiddleLabels } from "../labelTypes/EdgeMiddleLabels"
-import { useStraightPathEdge } from "@/hooks/useStraightPathEdge"
+import { useEdgeConfig } from "@/hooks/useEdgeConfig"
+import { useStepPathEdge } from "@/hooks/useStepPathEdge"
 import { useDiagramStore, usePopoverStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { useToolbar } from "@/hooks"
-import { EDGES } from "@/constants"
 import {
   AssessmentSelectableWrapper,
   FeedbackDropzone,
@@ -18,8 +13,10 @@ import { getCustomColorsFromDataForEdge } from "@/utils/layoutUtils"
 import { ErCrowsFootMarker } from "@/components/svgs/edges/ErCrowsFootMarker"
 import { deriveErCfEdgeRender } from "@/utils/erCfUtils"
 
-// Crow's-foot (Mermaid-style) relationship: a straight line directly between two
-// entity tables, with a crow's-foot cardinality marker at each end. Solid when
+// Crow's-foot (Mermaid-style) relationship between two entity tables. Reuses the
+// class diagram's step (orthogonal) routing — bend points, midpoint dragging,
+// reconnection — and overlays a crow's-foot cardinality marker at each end,
+// oriented along the path's final segment so it tracks bends. Solid line when
 // identifying, dashed when not.
 export const ErCfRelationshipEdge = ({
   id,
@@ -37,11 +34,17 @@ export const ErCfRelationshipEdge = ({
   data,
 }: BaseEdgeProps) => {
   const { handleDelete } = useToolbar({ id })
+  const config = useEdgeConfig(type as "ErCfRelationship")
+  const allowMidpointDragging =
+    "allowMidpointDragging" in config ? config.allowMidpointDragging : true
+  const enableStraightPath =
+    "enableStraightPath" in config
+      ? (config.enableStraightPath as boolean)
+      : true
 
   const { assessments } = useDiagramStore(
     useShallow((state) => ({ assessments: state.assessments }))
   )
-
   const setPopOverElementId = usePopoverStore(
     useShallow((state) => state.setPopOverElementId)
   )
@@ -51,12 +54,17 @@ export const ErCfRelationshipEdge = ({
     edgeData,
     currentPath,
     overlayPath,
+    bendHandles,
+    isBendDragging,
+    draggingHandleSegmentIndex,
+    hasInitialCalculation,
+    isReconnecting,
+    handlePointerDown,
     sourcePoint,
     targetPoint,
     isDiagramModifiable,
-    isReconnecting,
     canEditEndpoint,
-  } = useStraightPathEdge({
+  } = useStepPathEdge({
     id,
     type,
     source,
@@ -69,6 +77,9 @@ export const ErCfRelationshipEdge = ({
     targetPosition,
     sourceHandleId,
     targetHandleId,
+    data,
+    allowMidpointDragging,
+    enableStraightPath,
   })
 
   const { strokeColor, textColor } = getCustomColorsFromDataForEdge(data)
@@ -76,60 +87,52 @@ export const ErCfRelationshipEdge = ({
     dashed,
     source: sourceMarker,
     target: targetMarker,
-  } = deriveErCfEdgeRender(data, sourcePoint, targetPoint)
+  } = deriveErCfEdgeRender(data, currentPath, sourcePoint, targetPoint)
 
   return (
     <AssessmentSelectableWrapper elementId={id} asElement="g">
       <FeedbackDropzone elementId={id} asElement="path" elementType={type}>
-        <g className="edge-container">
-          <BaseEdge
-            id={id}
-            path={currentPath}
-            pointerEvents="none"
-            style={{
-              stroke: strokeColor,
-              strokeDasharray: dashed ? "8 5" : undefined,
-            }}
-          />
-
+        <StepEdgeBody
+          id={id}
+          markerKey={`${id}-ercf`}
+          currentPath={currentPath}
+          overlayPath={overlayPath}
+          pathRef={pathRef}
+          strokeColor={strokeColor}
+          strokeDashArray={dashed ? "8 5" : undefined}
+          hasInitialCalculation={hasInitialCalculation}
+          isReconnecting={isReconnecting}
+          isBendDragging={isBendDragging}
+          draggingHandleSegmentIndex={draggingHandleSegmentIndex}
+          markerStart={undefined}
+          markerEnd={undefined}
+          sourcePoint={sourcePoint}
+          targetPoint={targetPoint}
+          sourcePosition={sourcePosition}
+          targetPosition={targetPosition}
+          isDiagramModifiable={isDiagramModifiable}
+          canEditEndpoint={canEditEndpoint}
+          allowMidpointDragging={allowMidpointDragging}
+          bendHandles={bendHandles}
+          handlePointerDown={handlePointerDown}
+        >
           {!isReconnecting && (
             <>
               <ErCrowsFootMarker
-                point={sourcePoint}
+                point={sourceMarker.point}
                 direction={sourceMarker.direction}
                 cardinality={sourceMarker.cardinality}
                 strokeColor={strokeColor}
               />
               <ErCrowsFootMarker
-                point={targetPoint}
+                point={targetMarker.point}
                 direction={targetMarker.direction}
                 cardinality={targetMarker.cardinality}
                 strokeColor={strokeColor}
               />
             </>
           )}
-
-          <path
-            ref={pathRef}
-            className="edge-overlay"
-            d={overlayPath}
-            fill="none"
-            strokeWidth={EDGES.EDGE_HIGHLIGHT_STROKE_WIDTH}
-            pointerEvents="stroke"
-            style={{ opacity: isReconnecting ? 0 : 0.4 }}
-          />
-
-          {!isReconnecting && (
-            <EdgeEndpointMarkers
-              sourcePoint={sourcePoint}
-              targetPoint={targetPoint}
-              sourcePosition={sourcePosition}
-              targetPosition={targetPosition}
-              isDiagramModifiable={isDiagramModifiable}
-              canEditEndpoint={canEditEndpoint}
-            />
-          )}
-        </g>
+        </StepEdgeBody>
 
         {!isReconnecting && (
           <>

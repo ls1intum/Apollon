@@ -2429,8 +2429,9 @@ export function getConnectionLineType(
     case "SyntaxTree":
     case "PetriNet":
     case "EntityRelationship":
-    case "EntityRelationshipCrowsFoot":
       return ConnectionLineType.Straight
+    // EntityRelationshipCrowsFoot falls through to the default Step routing, like
+    // the class diagram — its markers orient off the path's end segment.
 
     default:
       return ConnectionLineType.Step

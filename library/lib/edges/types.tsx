@@ -161,9 +161,9 @@ export const edgeConfig = {
 
   ErConnector: { allowMidpointDragging: true },
   ErLink: { allowMidpointDragging: true },
-  // Straight only: the crow's-foot end markers are oriented from the
-  // source→target vector, so a bend point would detach them from the line.
-  ErCfRelationship: { allowMidpointDragging: false },
+  // Step-routed like class edges; the crow's-foot markers orient off the path's
+  // end segment so they stay attached at bends.
+  ErCfRelationship: { allowMidpointDragging: true },
 } as const
 
 export type DiagramEdgeType = keyof typeof diagramEdgeTypes

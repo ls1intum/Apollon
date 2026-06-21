@@ -102,30 +102,48 @@ describe("crow's-foot diagram wiring", () => {
 describe("deriveErCfEdgeRender", () => {
   const left = { x: 0, y: 0 }
   const right = { x: 10, y: 0 }
+  const straight = "M 0 0 L 10 0" // horizontal source→target
+  // L-shaped step path: leaves the source going DOWN, enters the target going RIGHT.
+  const bent = "M 0 0 L 0 10 L 10 10"
 
   it("is dashed only when explicitly non-identifying", () => {
-    expect(
+    const d = (id?: boolean) =>
       deriveErCfEdgeRender(
-        { identifying: false } as CustomEdgeProps,
+        id === undefined ? undefined : ({ identifying: id } as CustomEdgeProps),
+        straight,
         left,
         right
       ).dashed
-    ).toBe(true)
-    expect(
-      deriveErCfEdgeRender(
-        { identifying: true } as CustomEdgeProps,
-        left,
-        right
-      ).dashed
-    ).toBe(false)
+    expect(d(false)).toBe(true)
+    expect(d(true)).toBe(false)
     // Undefined defaults to identifying (solid), matching the popover toggle.
-    expect(deriveErCfEdgeRender(undefined, left, right).dashed).toBe(false)
+    expect(d(undefined)).toBe(false)
   })
 
-  it("points each end's marker into its entity (source = target + π)", () => {
-    const { source, target } = deriveErCfEdgeRender(undefined, left, right)
-    expect(target.direction).toBeCloseTo(0) // along source→target (+x)
-    expect(source.direction).toBeCloseTo(Math.PI) // the reverse
+  it("orients each marker along the path's end segment (straight)", () => {
+    const { source, target } = deriveErCfEdgeRender(
+      undefined,
+      straight,
+      left,
+      right
+    )
+    expect(target.direction).toBeCloseTo(0) // segment enters target going +x
+    expect(source.direction).toBeCloseTo(Math.PI) // reverse of leaving the source
+    expect(source.point).toEqual(left)
+    expect(target.point).toEqual(right)
+  })
+
+  it("follows the path round a bend (markers track the step route)", () => {
+    const { source, target } = deriveErCfEdgeRender(
+      undefined,
+      bent,
+      left,
+      right
+    )
+    // Last segment enters the target going +x; first segment leaves the source
+    // going +y (down), so the marker points back up (−y).
+    expect(target.direction).toBeCloseTo(0)
+    expect(source.direction).toBeCloseTo(-Math.PI / 2)
   })
 
   it("maps source/target cardinality to the matching end, with defaults", () => {
@@ -134,13 +152,14 @@ describe("deriveErCfEdgeRender", () => {
         sourceCardinality: "OneOrMany",
         targetCardinality: "ZeroOrOne",
       } as CustomEdgeProps,
+      straight,
       left,
       right
     )
     expect(withData.source.cardinality).toBe("OneOrMany")
     expect(withData.target.cardinality).toBe("ZeroOrOne")
 
-    const defaults = deriveErCfEdgeRender(undefined, left, right)
+    const defaults = deriveErCfEdgeRender(undefined, straight, left, right)
     expect(defaults.source.cardinality).toBe("ExactlyOne")
     expect(defaults.target.cardinality).toBe("ZeroOrMany")
   })
