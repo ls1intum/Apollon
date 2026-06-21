@@ -8,47 +8,43 @@
  *      space, which is what you actually draw in.
  *   2. Fill the available VERTICAL space — a single column down the side reads
  *      like a classic palette and wastes no height.
- *   3. Keep cells comfortably large — never below `COMFORT_MIN_H` just to save a
- *      column, and never below the HIG `CELL_MIN_H` touch floor at all.
+ *   3. Shrink the cells (down to the HIG `CELL_MIN_H` touch floor) BEFORE adding
+ *      a column, and cap them at `CELL_MAX_H` so they're never too large.
  *
  * So: walk column counts low→high and take the first one whose cells, sized to
- * fill the height, are still comfortable. Few elements get big capped cells in
- * one column; many elements get a taller single column of moderate cells before
- * a second column is ever added.
+ * fill the height (capped), are still at least the touch floor. One column of
+ * moderate cells is preferred over two columns of bigger ones — cells shrink
+ * toward the floor first, and only spill to another column when even the floor
+ * no longer fits the height.
+ *
+ * `availH` is the palette's REAL available band (the caller measures the space
+ * between the palette's top and the bottom controls), so this math does NOT
+ * re-subtract any top/bottom chrome reserve — it fills the band it is given.
  *
  * Cells are rectangular (the dominant elements — class boxes, BPMN tasks — are
  * ~1.6:1 wide); narrower/square elements letterbox centered inside. Sizing the
  * cell, not the SVG, keeps the node components untouched.
  */
 export const PALETTE = Object.freeze({
-  /** HIG/WCAG touch + legibility floor — never shrink a cell past this. */
+  /** HIG/WCAG touch + legibility floor — shrink to here before adding a column,
+   *  never past it. */
   CELL_MIN_H: 44,
-  /** Bias toward fewer columns: keep a single (or narrower) column as long as
-   *  its height-filling cells stay at least this big; only add a column when
-   *  that would drop below it. Just above the touch floor, so the strong
-   *  preference is fewer columns + filling the height. */
-  COMFORT_MIN_H: 48,
   /** Upper bound so few-element palettes don't get absurdly tall cells. */
   CELL_MAX_H: 78,
   /** cellW = round(CELL_RATIO * cellH); ~matches the 160×100 class box. */
   CELL_RATIO: 1.6,
   GAP: 8,
   PAD: 6,
-  /** Keep the palette horizontally narrow so the canvas keeps its width … */
+  /** Keep the palette horizontally narrow so the canvas keeps its width. */
   MAX_FRAC_W: 0.5,
-  /** … but let it use most of the height. */
-  MAX_FRAC_H: 0.9,
   /** Phone-portrait override: a full-height single column eats the scarce
    *  vertical canvas space on a phone, so cap the palette to a fraction of the
-   *  height — this pushes the layout into a compact multi-column corner cluster
+   *  band — this pushes the layout into a compact multi-column corner cluster
    *  instead of a tall column. Only applies below PORTRAIT_MAX_W in portrait. */
   PORTRAIT_MAX_W: 600,
   PORTRAIT_FRAC_H: 0.4,
   /** Letterbox padding around the preview inside a cell. */
   CONTENT_INSET: 6,
-  /** Space kept clear above (top offset) and below (zoom controls) the palette. */
-  TOP_RESERVE: 10,
-  BOTTOM_RESERVE: 84,
 } as const)
 
 export interface PaletteLayout {
@@ -98,30 +94,25 @@ export function computePaletteLayout(
   }
 
   const budgetW = availW * p.MAX_FRAC_W
-  // On a phone in portrait, a tall single column would swallow the vertical
-  // canvas space, so cap the height hard — the column walk below then settles on
-  // a compact multi-column cluster instead. Tablets/desktops keep the full
-  // height-filling column.
+  // `availH` is already the real available band (the caller subtracts the top
+  // chrome + bottom controls), so use ALL of it — except on a phone in portrait,
+  // where a full-height column would swallow the scarce vertical space, so cap it
+  // to a fraction and let the column walk settle on a compact corner cluster.
   const isPortraitPhone = availW < p.PORTRAIT_MAX_W && availH > availW
-  const fracH = isPortraitPhone ? p.PORTRAIT_FRAC_H : p.MAX_FRAC_H
-  // Honor both the fraction cap and the physical room left once the top offset
-  // and the bottom zoom-controls reserve are removed.
-  const budgetH = Math.min(
-    availH * fracH,
-    availH - p.TOP_RESERVE - p.BOTTOM_RESERVE
-  )
+  const budgetH = isPortraitPhone ? availH * p.PORTRAIT_FRAC_H : availH
   const maxCols = Math.max(
     1,
     Math.min(itemCount, Math.floor((budgetW + p.GAP) / (floorCellW + p.GAP)))
   )
 
-  // Fewest columns whose height-filling cells are still comfortable; meanwhile
+  // Fewest columns whose height-filling cells still clear the touch floor — so
+  // cells shrink toward the floor before a column is ever added; meanwhile
   // remember the column count that yields the biggest cell as a fallback.
   let bestCols = 1
   let bestCellH = 0
   for (let cols = 1; cols <= maxCols; cols++) {
     const cellH = cellHeightFor(cols, itemCount, budgetW, budgetH, chromeH)
-    if (cellH >= p.COMFORT_MIN_H) {
+    if (cellH >= p.CELL_MIN_H) {
       return {
         cols,
         cellW: Math.round(p.CELL_RATIO * cellH),

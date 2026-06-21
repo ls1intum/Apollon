@@ -546,6 +546,13 @@
   pointer-events: none;
 }
 
+/* The brand/back and actions islands NEVER shrink — only the title track (the
+   spacer) does. Otherwise flexbox shrinks all three proportionally and the fixed
+   icon buttons (theme toggle, back chevron) clip inside a squished island. */
+.apollon-chrome-header-row > :not(.apollon-chrome-header-spacer) {
+  flex-shrink: 0;
+}
+
 /* The title lives in a flex:1 track right after the brand and is LEFT-aligned to
    it (not centered). The track fills the space between brand and actions so the
    actions stay pinned right; the title island inside grows with the name up to
