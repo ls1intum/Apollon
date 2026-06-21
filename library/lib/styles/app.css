@@ -77,6 +77,7 @@
   --apollon-chrome-btn: 32px; /* icon-button paint box */
   --apollon-chrome-pad: 6px; /* inner padding of every floating cluster */
   --apollon-chrome-hit: 44px; /* minimum touch target (Apple HIG) */
+
   /* Shared OUTER cluster height = button + 2·padding + 2·1px border. Derived, so
      fixed-height islands match the auto-height control/minimap panels to the
      pixel and it self-corrects when btn/pad change (landscape overrides it). */
@@ -149,6 +150,7 @@
   --xy-edge-stroke-width: 2px;
   --xy-minimap-mask-background-color-props: #00000020;
   --xy-controls-button-background-color: var(--apollon-background, #fff);
+
   /* Kill React Flow's default divider between control buttons — its
      `.controls.horizontal .controls-button { border-right }` outranks our
      `border: 0`, so a light hairline leaked between the zoom/fit buttons
@@ -358,6 +360,7 @@
 .apollon-palette {
   box-sizing: border-box;
   position: absolute;
+
   /* --apollon-inset-top measures the (uniform-height) top islands + their edge
      margin; adding the safe-area top (the islands drop by it too) lands the
      palette an even --apollon-chrome-gap below every island, notch and all. */
