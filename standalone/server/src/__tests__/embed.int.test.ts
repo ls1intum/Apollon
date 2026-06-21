@@ -15,6 +15,7 @@ import path from "node:path"
 import { readFileSync } from "node:fs"
 import { buildApp } from "../http/app.js"
 import { loadConfig } from "../config.js"
+import { k } from "../redis.js"
 import { getRedis } from "./setup.js"
 import {
   ConversionResource,
@@ -346,6 +347,64 @@ describe("GET /embed/:diagramId", () => {
     expect(res.status).toBe(503)
     expect(res.body.error).toBe("RENDERER_BUSY")
     expect(res.headers["cache-control"]).toBe("no-store")
+  })
+})
+
+describe("sliding TTL — reads keep an embedded diagram alive", () => {
+  const fullTtl = loadConfig().DIAGRAM_TTL_SECONDS
+
+  it("a preview.svg fetch refreshes a decayed TTL back to (near) full", async () => {
+    const app = appWith(okResource())
+    const id = await createDiagram(app)
+    // Simulate a diagram that has aged most of the way to expiry.
+    await redis.expire(k.diagram(id), 1000)
+    await redis.expire(k.diagramMeta(id), 1000)
+
+    await request(app).get(`/api/diagrams/${id}/preview.svg`).expect(200)
+
+    // Both the body and meta keys are slid back to the full window.
+    expect(await redis.ttl(k.diagram(id))).toBeGreaterThan(fullTtl - 60)
+    expect(await redis.ttl(k.diagramMeta(id))).toBeGreaterThan(fullTtl - 60)
+  })
+
+  it("the /embed page and the editor GET refresh too", async () => {
+    const app = appWith(okResource())
+    const id = await createDiagram(app)
+
+    await redis.expire(k.diagram(id), 1000)
+    await request(app).get(`/embed/${id}`).expect(200)
+    expect(await redis.ttl(k.diagram(id))).toBeGreaterThan(fullTtl - 60)
+
+    await redis.expire(k.diagram(id), 1000)
+    await request(app).get(`/api/diagrams/${id}`).expect(200)
+    expect(await redis.ttl(k.diagram(id))).toBeGreaterThan(fullTtl - 60)
+  })
+
+  it("a 304 conditional GET still refreshes (Camo revalidation keeps it alive)", async () => {
+    const app = appWith(okResource())
+    const id = await createDiagram(app)
+    const first = await request(app).get(`/api/diagrams/${id}/preview.svg`)
+    await redis.expire(k.diagram(id), 1000)
+
+    await request(app)
+      .get(`/api/diagrams/${id}/preview.svg`)
+      .set("if-none-match", first.headers["etag"])
+      .expect(304)
+    expect(await redis.ttl(k.diagram(id))).toBeGreaterThan(fullTtl - 60)
+  })
+
+  it("does not refresh while the TTL is still fresh (throttle)", async () => {
+    const app = appWith(okResource())
+    const id = await createDiagram(app)
+    // Inside the throttle window (above full − 1 day): a read must NOT bump it,
+    // so a busy embed can't write-amplify into an EXPIRE per fetch.
+    const fresh = fullTtl - 12 * 3600
+    await redis.expire(k.diagram(id), fresh)
+    await request(app).get(`/api/diagrams/${id}/preview.svg`).expect(200)
+
+    const ttl = await redis.ttl(k.diagram(id))
+    expect(ttl).toBeLessThanOrEqual(fresh)
+    expect(ttl).toBeGreaterThan(fresh - 60)
   })
 })
 

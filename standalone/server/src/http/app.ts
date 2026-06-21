@@ -91,13 +91,16 @@ export function buildApp(deps: AppDeps): Express {
     mountDiagramRoutes({ config, redis }, relay),
     mountVersionRoutes({ config, redis }, relay),
     mountConversionRoutes({ getResource }),
-    mountEmbedApiRoutes({ redis, getResource, previewCache })
+    mountEmbedApiRoutes({ redis, config, getResource, previewCache })
   )
   // /embed/:diagramId — server-rendered HTML page suitable for iframing from
   // third-party hosts (GitLab snippets, Notion, Confluence, …). Mounted at the
   // root, not under /api, because the URL is part of the public surface that
   // ends up in `<iframe src=…>` attributes.
-  app.use("/embed", mountEmbedRoutes({ redis, getResource, previewCache }))
+  app.use(
+    "/embed",
+    mountEmbedRoutes({ redis, config, getResource, previewCache })
+  )
 
   app.use(errorHandler)
   return app

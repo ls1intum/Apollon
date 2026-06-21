@@ -8,12 +8,16 @@ import {
   QueueFullError,
 } from "../resources/conversion-resource.js"
 import { DiagramIdParams } from "./_schemas.js"
+import { refreshDiagramTtl } from "./diagrams.js"
+import type { Config } from "../config.js"
 import type { Diagram } from "../types.js"
 import type { UMLModel } from "@tumaet/apollon"
 import type { SvgPreviewCache } from "../services/svg-preview-cache.js"
 
 interface Deps {
   redis: Redis
+  /** TTL config for the sliding-expiry refresh on embed reads. */
+  config: Config
   /** Lazy provider for the shared conversion worker pool (see `buildApp`). */
   getResource: () => ConversionResource
   /**
@@ -94,10 +98,13 @@ const HTML_CSP = [
 async function readDiagramWithEtag(
   redis: Redis,
   diagramId: string
-): Promise<{ diagram: Diagram; etag: string } | null> {
+): Promise<{ diagram: Diagram; etag: string; ttlSeconds: number } | null> {
   const multi = redis.multi()
   multi.json.get(k.diagram(diagramId), { path: "$" })
   multi.hGet(k.diagramMeta(diagramId), "headRev")
+  // Pull the remaining TTL in the same round trip so the sliding-expiry refresh
+  // needs no extra read on the embed hot path.
+  multi.ttl(k.diagram(diagramId))
   const replies = (await multi.exec()) as unknown[]
   for (const reply of replies) {
     if (reply instanceof Error) throw reply
@@ -110,7 +117,8 @@ async function readDiagramWithEtag(
   if (!diagram) return null
 
   const headRev = (replies[1] as string | null) ?? "0"
-  return { diagram, etag: `W/"${headRev}"` }
+  const ttlSeconds = Number(replies[2] ?? -1)
+  return { diagram, etag: `W/"${headRev}"`, ttlSeconds }
 }
 
 /**
@@ -154,7 +162,7 @@ async function renderSvg(
 }
 
 export function mountEmbedApiRoutes(deps: Deps): Router {
-  const { redis } = deps
+  const { redis, config } = deps
   const router = Router()
 
   // Static "Open in Apollon" badge for the Markdown embed snippet. No diagram
@@ -174,6 +182,14 @@ export function mountEmbedApiRoutes(deps: Deps): Router {
       async (req, res, _next, { params }) => {
         const found = await readDiagramWithEtag(redis, params.diagramId)
         if (!found) throw Errors.notFound("diagram not found")
+        // A fetch (incl. Camo revalidating to a 304) means the embed is live —
+        // slide the TTL so it doesn't expire out from under the README.
+        await refreshDiagramTtl(
+          redis,
+          config.DIAGRAM_TTL_SECONDS,
+          params.diagramId,
+          found.ttlSeconds
+        )
 
         // Conditional GET / HEAD short-circuit — before any render. Cache
         // headers are set here and on the 200 path only, never before the
@@ -211,7 +227,7 @@ export function mountEmbedApiRoutes(deps: Deps): Router {
 }
 
 export function mountEmbedRoutes(deps: Deps): Router {
-  const { redis } = deps
+  const { redis, config } = deps
   const router = Router()
 
   router.get(
@@ -221,6 +237,13 @@ export function mountEmbedRoutes(deps: Deps): Router {
       async (req, res, _next, { params }) => {
         const found = await readDiagramWithEtag(redis, params.diagramId)
         if (!found) throw Errors.notFound("diagram not found")
+        // Viewing the embed page keeps the diagram alive (see the SVG route).
+        await refreshDiagramTtl(
+          redis,
+          config.DIAGRAM_TTL_SECONDS,
+          params.diagramId,
+          found.ttlSeconds
+        )
 
         if (ifNoneMatch(req.header("if-none-match"), found.etag)) {
           res.setHeader("etag", found.etag)

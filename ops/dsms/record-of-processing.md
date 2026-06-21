@@ -106,7 +106,7 @@ No off-host backups of personal data exist. No personal data leaves the EU.
 :::tip Paste-ready — DSMS "Custom Erasure Time"
 
 ```
-- Diagram content (Redis): 120 days from the last write, enforced by a native database TTL.
+- Diagram content (Redis): 120 days from the last access (opening, embedding, or editing the diagram), enforced by a native database TTL that is extended on each access.
 - Live-collaboration data (display name, cursor, selection): held only while the user is connected; dropped from server memory on disconnect.
 - IP address and user-agent: visible to the server only for the duration of an HTTP request; not persistently stored.
 - Operational events about the service (no personal data by design): size-bounded ring buffer, ~250 MB per container.
@@ -119,7 +119,7 @@ No off-host backups of personal data exist. No personal data leaves the EU.
 :::tip Paste-ready — DSMS "Reasoning for the erasure time"
 
 ```
-Diagram data is retained for 120 days from the last edit to support editing across teaching iterations. After 120 days of inactivity, deletion is performed automatically by the Redis engine. Operational events about the service are kept free of personal data by data minimisation at source (Art. 5(1)(c) + Art. 25 GDPR); a time-based retention period under Art. 5(1)(e) GDPR is therefore not required.
+Diagram data is retained for 120 days from the last access (opening, embedding, or editing the diagram) to support editing across teaching iterations and stable embeds in course materials. Each access resets the window; after 120 days of inactivity, deletion is performed automatically by the Redis engine. Operational events about the service are kept free of personal data by data minimisation at source (Art. 5(1)(c) + Art. 25 GDPR); a time-based retention period under Art. 5(1)(e) GDPR is therefore not required.
 ```
 
 :::

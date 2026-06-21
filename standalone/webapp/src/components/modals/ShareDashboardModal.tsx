@@ -95,8 +95,8 @@ export const ShareDashboardModal = (
             ) : (
               <span className="recent-diagrams-font">
                 A snapshot is uploaded to our servers — your local diagram is
-                untouched. Links stay active for 120 days and reset whenever
-                someone edits.
+                untouched. Links stay active for 120 days, and the clock resets
+                whenever the diagram is opened or edited.
               </span>
             )
           }

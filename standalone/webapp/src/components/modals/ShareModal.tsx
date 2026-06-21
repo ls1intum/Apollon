@@ -71,7 +71,7 @@ export const ShareModal = () => {
       <HomeDialogNotice>
         {share.diagramId
           ? "Anyone with this link can open the diagram. Choose what they can do with it."
-          : "Share the diagram as a link. A copy is uploaded to our servers and kept for at least 12 weeks; your local diagram stays untouched."}
+          : "Share the diagram as a link. A copy is uploaded to our servers and kept for 120 days after it's last opened or edited; your local diagram stays untouched."}
       </HomeDialogNotice>
 
       {!share.diagramId && (
