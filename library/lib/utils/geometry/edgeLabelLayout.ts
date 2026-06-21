@@ -312,21 +312,39 @@ export function collectNeighborPolylines(
 export interface MiddleLabelInput {
   /** The edge's full rendered polyline (source → target). */
   renderPoints: IPoint[]
-  /** The label text — its estimated width decides which arms have room. */
+  /** The label text — used for a width fallback when measuredWidth is absent. */
   labelText: string
   /** Render font size (px) of the label. */
   fontSize: number
-  sourceNodeRect?: Rect
-  targetNodeRect?: Rect
-  /** Nearby other-edge polylines (see collectNeighborPolylines). */
+  /** Real measured label width (px), from the rendering context. Preferred over
+   * the character-count estimate so the scored box equals the rendered ink. */
+  measuredWidth?: number
+  /** Node rects to avoid — NOT only source/target: every node the edge routes
+   * near, so the label never lands on an unrelated node's body. */
+  nodeRects?: Rect[]
+  /** Nearby other-edge polylines (see collectNeighborPolylines), collected over
+   * the WHOLE edge so they cover any arm the label may land on. */
   neighborGeometry?: IPoint[][]
 }
+
+/** Clearance (flow px) kept between the label box and any line or node, so a
+ * label that merely sits NEXT TO a parallel arm still counts as overlapping. */
+const LABEL_CLEARANCE = 5
+/** Cap on along-arm sample points per arm, to bound candidate count. */
+const MAX_ARM_SAMPLES = 20
 
 const clampToRange = (value: number, lo: number, hi: number): number =>
   Math.max(lo, Math.min(hi, value))
 
 const distance = (a: IPoint, b: IPoint): number =>
   Math.hypot(a.x - b.x, a.y - b.y)
+
+const inflate = (r: Rect, m: number): Rect => ({
+  x: r.x - m,
+  y: r.y - m,
+  width: r.width + 2 * m,
+  height: r.height + 2 * m,
+})
 
 /** Lexicographic "<" over equal-length numeric cost tuples. */
 const lexLess = (a: readonly number[], b: readonly number[]): boolean => {
@@ -353,9 +371,8 @@ const lexLess = (a: readonly number[], b: readonly number[]): boolean => {
  */
 export function computeMiddleLabelLayout(input: MiddleLabelInput): PlacedLabel {
   const { renderPoints, labelText, fontSize, neighborGeometry } = input
-  const nodeRects = [input.sourceNodeRect, input.targetNodeRect].filter(
-    (rect): rect is Rect => rect !== undefined
-  )
+  const nodeRects = input.nodeRects ?? []
+  const neighbors = neighborGeometry ?? []
   const points = collapseCollinearPoints(renderPoints)
   const arc = getMidSegment(
     points,
@@ -363,7 +380,7 @@ export function computeMiddleLabelLayout(input: MiddleLabelInput): PlacedLabel {
     points[points.length - 1] ?? { x: 0, y: 0 }
   ).point
 
-  const w = estimateLabelWidth(labelText, fontSize)
+  const w = input.measuredWidth ?? estimateLabelWidth(labelText, fontSize)
   const h = EDGES.LABEL_LINE_HEIGHT
   const segments = getAxisAlignedSegments(points)
   if (segments.length === 0) {
@@ -375,40 +392,61 @@ export function computeMiddleLabelLayout(input: MiddleLabelInput): PlacedLabel {
 
   for (const seg of segments) {
     const isHorizontal = seg.orientation === "horizontal"
-    // Anchor at the point on this arm nearest the arc-midpoint, clamped so the
-    // label's own extent stays inside the arm (central AND fitting when it can).
+    // The label's extent ALONG the arm (its width on a horizontal arm; its line
+    // height on a vertical one). It "fits" only if it stays between the bends.
     const along = isHorizontal ? w : h
     const lo = seg.min + along / 2
     const hi = seg.max - along / 2
     const target = isHorizontal ? arc.x : arc.y
-    const coord =
-      lo <= hi ? clampToRange(target, lo, hi) : (seg.min + seg.max) / 2
-    const anchor: IPoint = isHorizontal
-      ? { x: coord, y: seg.fixed }
-      : { x: seg.fixed, y: coord }
-    const fits = seg.max - seg.min >= along
+
+    // Slide along the arm: sample positions (capped) plus the arc-mid-nearest
+    // point and both fit extremes, so a partly-blocked arm can still offer a
+    // clear window instead of being taken/rejected at a single point.
+    const coords = new Set<number>()
+    if (lo <= hi) {
+      coords.add(clampToRange(target, lo, hi))
+      coords.add(lo)
+      coords.add(hi)
+      const span = hi - lo
+      const step = Math.max(
+        EDGES.LABEL_LINE_HEIGHT,
+        along / 2,
+        span / MAX_ARM_SAMPLES
+      )
+      for (let c = lo; c <= hi; c += step) coords.add(c)
+    } else {
+      coords.add((seg.min + seg.max) / 2) // arm too short — label will overhang
+    }
+    const fits = lo <= hi
 
     const sides: LabelSide[] = isHorizontal
       ? ["above", "below"]
       : ["right", "left"]
-    for (const side of sides) {
-      const box = candidateBox(anchor, side, w, h)
-      // Cost, most-significant first. Sitting on a NODE (covers its content) is
-      // worse than crossing a thin line (own arm or neighbour edge); then prefer
-      // a label that fits within its arm, then a central spot, then the on-top
-      // side. Minimising this picks a clear, central placement and falls back to
-      // the least-bad one when nothing is fully clear.
-      const cost: [number, number, number, number, number] = [
-        countNodeHits(box, nodeRects),
-        countOwnSegmentHits(box, segments, seg.index) +
-          (neighborGeometry ? countNeighborHits(box, neighborGeometry) : 0),
-        fits ? 0 : 1,
-        Math.round(distance(anchor, arc)),
-        side === sides[0] ? 0 : 1,
-      ]
-      if (bestCost === null || lexLess(cost, bestCost)) {
-        bestCost = cost
-        best = { point: anchor, side }
+    for (const coord of coords) {
+      const anchor: IPoint = isHorizontal
+        ? { x: coord, y: seg.fixed }
+        : { x: seg.fixed, y: coord }
+      for (const side of sides) {
+        // Pad the box by the clearance so a label merely sitting NEXT TO a line
+        // or node (not strictly crossing it) is still penalised.
+        const box = inflate(candidateBox(anchor, side, w, h), LABEL_CLEARANCE)
+        // Cost, most-significant first: sitting on a NODE (covers its content)
+        // is worse than touching a thin line (own arm or neighbour edge); then
+        // prefer a label that fits within its arm, then a central spot, then the
+        // on-top side. The lex-min picks the clearest, most central placement
+        // and degrades to the least-bad when nothing is fully clear.
+        const cost: [number, number, number, number, number] = [
+          countNodeHits(box, nodeRects),
+          countOwnSegmentHits(box, segments, seg.index) +
+            countNeighborHits(box, neighbors),
+          fits ? 0 : 1,
+          Math.round(distance(anchor, arc)),
+          side === sides[0] ? 0 : 1,
+        ]
+        if (bestCost === null || lexLess(cost, bestCost)) {
+          bestCost = cost
+          best = { point: anchor, side }
+        }
       }
     }
   }

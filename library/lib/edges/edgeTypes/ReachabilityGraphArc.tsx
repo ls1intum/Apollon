@@ -112,8 +112,7 @@ export const ReachabilityGraphEdge = ({
           label={data?.label}
           activePoints={edgeData.activePoints}
           showRelationshipLabels={true}
-          sourceNodeRect={edgeData.sourceNodeRect}
-          targetNodeRect={edgeData.targetNodeRect}
+          nodeRects={edgeData.nodeRects}
           neighborGeometry={edgeData.neighborGeometry}
           textColor={textColor}
         />

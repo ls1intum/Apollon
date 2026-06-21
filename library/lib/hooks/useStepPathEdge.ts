@@ -10,6 +10,7 @@ import {
   adjustSourceCoordinates,
   adjustTargetCoordinates,
   getPositionOnCanvas,
+  isParentNodeType,
 } from "@/utils"
 import {
   IPoint,
@@ -79,10 +80,9 @@ export interface StepPathEdgeData {
   isMiddlePathHorizontal: boolean
   sourcePoint: IPoint
   targetPoint: IPoint
-  /** Source/target node bounds (flow space), so label placement can bias a
-   * label away from the node it would otherwise sit on (stacked-node case). */
-  sourceNodeRect?: Rect
-  targetNodeRect?: Rect
+  /** Bounds (flow space) of every node the edge routes near, so label placement
+   * keeps the label off any node's body, not just the source/target. */
+  nodeRects: Rect[]
   /** Mid-segment endpoints in source->target order — the LOCAL flow direction
    * at the middle (used for communication-message arrow direction). */
   midSegmentStart: IPoint
@@ -169,30 +169,6 @@ export const useStepPathEdge = ({
     return getPositionOnCanvas(targetNode, allNodes)
   }, [targetNode, allNodes, targetX, targetY])
 
-  const sourceNodeRect = useMemo<Rect | undefined>(
-    () =>
-      sourceNode
-        ? {
-            x: sourceAbsolutePosition.x,
-            y: sourceAbsolutePosition.y,
-            width: sourceNode.width ?? 0,
-            height: sourceNode.height ?? 0,
-          }
-        : undefined,
-    [sourceNode, sourceAbsolutePosition]
-  )
-  const targetNodeRect = useMemo<Rect | undefined>(
-    () =>
-      targetNode
-        ? {
-            x: targetAbsolutePosition.x,
-            y: targetAbsolutePosition.y,
-            width: targetNode.width ?? 0,
-            height: targetNode.height ?? 0,
-          }
-        : undefined,
-    [targetNode, targetAbsolutePosition]
-  )
   // Round coordinates to whole pixels for pixel-perfect rendering
   // React Flow may return fractional values when node dimensions are odd
   const roundedSourceX = Math.round(sourceX)
@@ -491,22 +467,67 @@ export const useStepPathEdge = ({
   const pathMiddlePosition = midSegment.point
   const isMiddlePathHorizontal = midSegment.isHorizontal
 
-  // Other edges near the label, used only to break a side tie (see
-  // computeMiddleLabelLayout). Bounded to a radius around the midpoint so the
-  // scan stays cheap; reuses the same geometry registry as line jumps.
+  // Obstacle geometry for label placement, collected over the WHOLE edge (not
+  // just the arc-midpoint) since the label may sit on any arm.
+  const edgeBounds = useMemo(() => {
+    let minX = Infinity,
+      minY = Infinity,
+      maxX = -Infinity,
+      maxY = -Infinity
+    for (const pt of renderPoints) {
+      if (pt.x < minX) minX = pt.x
+      if (pt.x > maxX) maxX = pt.x
+      if (pt.y < minY) minY = pt.y
+      if (pt.y > maxY) maxY = pt.y
+    }
+    return { minX, minY, maxX, maxY }
+  }, [renderPoints])
+
+  // How far (flow px) a label can reach from an arm: a wide label plus the gap.
+  const LABEL_REACH = 220
+
+  // Other edges near the edge, so a label on any arm can avoid crossing them.
   const geometryById = useEdgeGeometryStore((state) => state.geometryById)
-  const neighborGeometry = useMemo(
-    () =>
-      collectNeighborPolylines(
-        geometryById,
-        id,
-        pathMiddlePosition,
-        EDGES.LABEL_NOMINAL_HALF_EXTENT +
-          EDGES.LABEL_GAP +
-          EDGES.LABEL_LINE_HEIGHT
-      ),
-    [geometryById, id, pathMiddlePosition]
-  )
+  const neighborGeometry = useMemo(() => {
+    const center = {
+      x: (edgeBounds.minX + edgeBounds.maxX) / 2,
+      y: (edgeBounds.minY + edgeBounds.maxY) / 2,
+    }
+    const radius =
+      Math.max(
+        edgeBounds.maxX - edgeBounds.minX,
+        edgeBounds.maxY - edgeBounds.minY
+      ) /
+        2 +
+      LABEL_REACH
+    return collectNeighborPolylines(geometryById, id, center, radius)
+  }, [geometryById, id, edgeBounds])
+
+  // EVERY node the edge routes near (not only source/target), so the label
+  // never lands on an unrelated node's body.
+  const nearbyNodeRects = useMemo<Rect[]>(() => {
+    const q = {
+      x: edgeBounds.minX - LABEL_REACH,
+      y: edgeBounds.minY - LABEL_REACH,
+      r: edgeBounds.maxX + LABEL_REACH,
+      b: edgeBounds.maxY + LABEL_REACH,
+    }
+    const rects: Rect[] = []
+    for (const node of allNodes) {
+      const w = node.width ?? 0
+      const h = node.height ?? 0
+      if (!w || !h) continue
+      // Container nodes (pools, lanes, subprocesses, packages, …) are
+      // backgrounds that labels and edges legitimately overlay — never treat
+      // them as obstacles, or a label inside a pool can never be placed.
+      if (isParentNodeType(node.type)) continue
+      const pos = getPositionOnCanvas(node, allNodes)
+      if (pos.x < q.r && pos.x + w > q.x && pos.y < q.b && pos.y + h > q.y) {
+        rects.push({ x: pos.x, y: pos.y, width: w, height: h })
+      }
+    }
+    return rects
+  }, [allNodes, edgeBounds])
 
   const handlePointerDown = useCallback(
     (event: React.PointerEvent, handle: BendHandle) => {
@@ -696,8 +717,7 @@ export const useStepPathEdge = ({
     isMiddlePathHorizontal,
     sourcePoint,
     targetPoint,
-    sourceNodeRect,
-    targetNodeRect,
+    nodeRects: nearbyNodeRects,
     midSegmentStart: midSegment.start,
     midSegmentEnd: midSegment.end,
     neighborGeometry,

@@ -132,8 +132,9 @@ describe("computeMiddleLabelLayout", () => {
   })
 
   it("flips below when a node occupies the default (above) side (#129)", () => {
+    // A wide node spanning the whole arm above, so no clear above window exists.
     const placed = horizontal({
-      sourceNodeRect: { x: 60, y: 100 - 40, width: 80, height: 40 },
+      nodeRects: [{ x: -50, y: 100 - 40, width: 300, height: 40 }],
     })
     expect(placed.side).toBe("below")
     expect(placed.dominantBaseline).toBe("hanging")
@@ -141,29 +142,34 @@ describe("computeMiddleLabelLayout", () => {
 
   it("keeps the default side when both sides are clear", () => {
     const placed = horizontal({
-      sourceNodeRect: { x: 1000, y: 1000, width: 10, height: 10 },
+      nodeRects: [{ x: 1000, y: 1000, width: 10, height: 10 }],
     })
     expect(placed.side).toBe("above")
   })
 
   it("keeps the default side when BOTH sides are equally blocked (deterministic)", () => {
     const placed = horizontal({
-      sourceNodeRect: { x: 60, y: 100 - 40, width: 80, height: 40 },
-      targetNodeRect: { x: 60, y: 100, width: 80, height: 40 },
+      nodeRects: [
+        { x: -50, y: 100 - 40, width: 300, height: 40 },
+        { x: -50, y: 100, width: 300, height: 40 },
+      ],
     })
     expect(placed.side).toBe("above")
   })
 
   it("breaks a node-clear tie away from a side crossed by another edge", () => {
-    const placed = horizontal({ neighborGeometry: [[p(100, 70), p(100, 90)]] })
+    // A neighbour edge runs along the whole arm above → flip below.
+    const placed = horizontal({
+      neighborGeometry: [[p(0, 86), p(200, 86)]],
+    })
     expect(placed.side).toBe("below")
   })
 
   it("never sits on a node to avoid merely crossing an edge", () => {
     // Node blocks BELOW, a neighbour crosses ABOVE: node avoidance dominates.
     const placed = horizontal({
-      targetNodeRect: { x: 60, y: 100, width: 80, height: 40 },
-      neighborGeometry: [[p(100, 70), p(100, 90)]],
+      nodeRects: [{ x: -50, y: 100, width: 300, height: 40 }],
+      neighborGeometry: [[p(0, 86), p(200, 86)]],
     })
     expect(placed.side).toBe("above")
   })

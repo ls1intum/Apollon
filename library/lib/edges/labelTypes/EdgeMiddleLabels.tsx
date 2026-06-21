@@ -4,6 +4,8 @@ import {
   computeUseCaseLabelLayout,
   type Rect,
 } from "@/utils/geometry/edgeLabelLayout"
+import { measureTextWidth } from "@/utils/textUtils"
+import { FONT_FAMILY } from "@/fontStack"
 
 /** Perpendicular offset (flow px) of a use-case association label off its line. */
 const USE_CASE_LABEL_OFFSET = 15
@@ -14,8 +16,8 @@ interface EdgeMiddleLabelsProps {
   activePoints?: IPoint[]
   sourcePoint?: IPoint
   targetPoint?: IPoint
-  sourceNodeRect?: Rect
-  targetNodeRect?: Rect
+  /** Every node the edge routes near, so the label avoids all of them. */
+  nodeRects?: Rect[]
   neighborGeometry?: IPoint[][]
   showRelationshipLabels?: boolean
   isUseCasePath?: boolean
@@ -30,8 +32,7 @@ export const EdgeMiddleLabels = ({
   activePoints,
   sourcePoint,
   targetPoint,
-  sourceNodeRect,
-  targetNodeRect,
+  nodeRects,
   neighborGeometry,
   showRelationshipLabels = false,
   isUseCasePath = false,
@@ -81,8 +82,12 @@ export const EdgeMiddleLabels = ({
     renderPoints: activePoints,
     labelText: label,
     fontSize: LABEL_FONT_SIZE,
-    sourceNodeRect,
-    targetNodeRect,
+    // Real ink width (bold), so the scored box matches what renders.
+    measuredWidth: measureTextWidth(
+      label,
+      `700 ${LABEL_FONT_SIZE}px ${FONT_FAMILY}`
+    ),
+    nodeRects,
     neighborGeometry,
   })
 

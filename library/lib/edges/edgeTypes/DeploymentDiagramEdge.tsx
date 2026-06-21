@@ -140,8 +140,7 @@ export const DeploymentDiagramEdge = ({
           label={data?.label}
           activePoints={edgeData.activePoints}
           showRelationshipLabels={showRelationshipLabels}
-          sourceNodeRect={edgeData.sourceNodeRect}
-          targetNodeRect={edgeData.targetNodeRect}
+          nodeRects={edgeData.nodeRects}
           neighborGeometry={edgeData.neighborGeometry}
           textColor={textColor}
         />
