@@ -159,6 +159,11 @@
   --xy-edge-stroke-width: 2px;
   --xy-minimap-mask-background-color-props: #00000020;
   --xy-controls-button-background-color: var(--apollon-background, #fff);
+  /* Kill React Flow's default divider between control buttons — its
+     `.controls.horizontal .controls-button { border-right }` outranks our
+     `border: 0`, so a light hairline leaked between the zoom/fit buttons
+     (glaring in dark mode). Zero it at the source via RF's own token. */
+  --xy-controls-button-border-color: transparent;
 }
 
 .apollon-editor {
@@ -363,10 +368,13 @@
 .apollon-palette {
   box-sizing: border-box;
   position: absolute;
-  /* --apollon-inset-top already measures the (now uniform-height) top islands +
-     their edge margin, so one --apollon-chrome-gap below it lands the palette an
-     even gap under every island. */
-  top: calc(var(--apollon-chrome-gap) + var(--apollon-inset-top, 0px));
+  /* --apollon-inset-top measures the (uniform-height) top islands + their edge
+     margin; adding the safe-area top (the islands drop by it too) lands the
+     palette an even --apollon-chrome-gap below every island, notch and all. */
+  top: calc(
+    var(--safe-area-inset-top, 0px) + var(--apollon-chrome-gap) +
+      var(--apollon-inset-top, 0px)
+  );
   left: calc(
     var(--apollon-chrome-edge) + var(--apollon-inset-left, 0px) +
       var(--safe-area-inset-left, 0px)
@@ -465,15 +473,36 @@
   line-height: 1.4;
 }
 
-/* One edge margin for every floating corner cluster (controls, minimap, host
-   panels) — replaces React Flow's default 15px so they line up with the islands
-   and palette at exactly --apollon-chrome-edge from the canvas edge. Declared
-   BEFORE the landscape block so its notch nudges (same specificity) win. */
+/* One edge margin for every floating corner cluster (islands, controls,
+   minimap, host panels) — replaces React Flow's default 15px so they line up
+   with the palette at exactly --apollon-chrome-edge from the canvas edge, PLUS
+   the device safe-area inset on each pinned side so chrome never tucks under a
+   notch / home indicator / rounded corner (Capacitor, viewport-fit=cover).
+   Declared before the landscape block so its extra notch nudge still wins. */
 .react-flow__panel.top.left,
-.react-flow__panel.top.right,
+.react-flow__panel.top.right {
+  margin-top: calc(var(--apollon-chrome-edge) + var(--safe-area-inset-top, 0px));
+}
+
 .react-flow__panel.bottom.left,
 .react-flow__panel.bottom.right {
-  margin: var(--apollon-chrome-edge);
+  margin-bottom: calc(
+    var(--apollon-chrome-edge) + var(--safe-area-inset-bottom, 0px)
+  );
+}
+
+.react-flow__panel.top.left,
+.react-flow__panel.bottom.left {
+  margin-left: calc(
+    var(--apollon-chrome-edge) + var(--safe-area-inset-left, 0px)
+  );
+}
+
+.react-flow__panel.top.right,
+.react-flow__panel.bottom.right {
+  margin-right: calc(
+    var(--apollon-chrome-edge) + var(--safe-area-inset-right, 0px)
+  );
 }
 
 /* Phone landscape: nudge the canvas panels in by the safe-area insets. */
@@ -485,26 +514,15 @@
     --apollon-chrome-pad: 2px;
   }
 
-  /* Phone-landscape: nudge the floating top pills past the side notch + add
-     breathing room, mirroring the bottom controls below. */
+  /* The base rule already adds safe-area on every side; landscape only needs
+     EXTRA breathing room past a side notch for the top pills (the e2e asserts
+     the logo/menu clear safe-area + 32px). Bottom panels inherit the base. */
   .react-flow__panel.top.left {
     margin-left: calc(32px + var(--safe-area-inset-left, 0px));
-    margin-top: calc(10px + var(--safe-area-inset-top, 0px));
   }
 
   .react-flow__panel.top.right {
     margin-right: calc(32px + var(--safe-area-inset-right, 0px));
-    margin-top: calc(10px + var(--safe-area-inset-top, 0px));
-  }
-
-  .react-flow__panel.bottom.left {
-    margin-left: calc(10px + var(--safe-area-inset-left, 0px));
-    margin-bottom: calc(10px + var(--safe-area-inset-bottom, 0px));
-  }
-
-  .react-flow__panel.bottom.right {
-    margin-right: calc(10px + var(--safe-area-inset-right, 0px));
-    margin-bottom: calc(10px + var(--safe-area-inset-bottom, 0px));
   }
 
   .apollon-collaboration-presence-bar {
