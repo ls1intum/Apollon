@@ -8,7 +8,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@tumaet/ui/components/dropdown-menu"
-import { ChevronDownIcon, ChevronRightIcon } from "lucide-react"
+import { ChevronDownIcon } from "lucide-react"
 import { toast } from "react-toastify"
 import { useModalContext } from "@/contexts"
 import {
@@ -129,9 +129,9 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
             Version history has its own VersionHistoryButton. */}
         <JsonFileImportButton close={close} />
         <DropdownMenuSub>
+          {/* SubTrigger renders its own right-chevron — don't add another. */}
           <DropdownMenuSubTrigger id="export-sub-menu-button">
             Export
-            <ChevronRightIcon className="ml-auto size-4" aria-hidden />
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent aria-labelledby="export-sub-menu-button">
             <DropdownMenuItem

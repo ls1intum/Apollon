@@ -36,12 +36,17 @@
   /* Surface vocabulary (single source of truth for author intent):
        cards            -> bg-card
        menus / popovers -> bg-popover
-       hover surfaces   -> bg-accent-hover
-     bg-accent is reserved as the base of the accent/accent-hover hover pair.
-     These resolve through --home-surface-* onto the public
-     --apollon-surface/-surface-hover/-surface-sunken, so an embedder theming
-     those restyles the shared primitives' surfaces. */
-  --color-accent: var(--home-surface-raised);
+       hover / highlight -> bg-accent  (shadcn convention)
+     shadcn's stock primitives (dropdown-menu, select, command, …) paint their
+     highlighted/hovered item with `bg-accent` on a `bg-popover` surface, so
+     `--color-accent` MUST differ from `--color-popover` or the highlight is
+     invisible. It is therefore the raised-surface HOVER tint (not the resting
+     surface). `--color-accent-hover` is the same tint kept as an explicit alias
+     the webapp's bespoke hover/selected states use; `-strong`/`-soft` are the
+     accent-color (brand) variants. All resolve through --home-surface-* onto
+     the public --apollon-surface/-surface-hover, so an embedder theming those
+     restyles the shared primitives. */
+  --color-accent: var(--home-surface-raised-hover);
   --color-accent-foreground: var(--home-text-primary);
   --color-accent-hover: var(--home-surface-raised-hover);
   --color-accent-strong: var(--home-accent-strong);
