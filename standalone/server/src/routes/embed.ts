@@ -154,7 +154,7 @@ function withOpaqueBackground(svg: string): string {
   if (!openTag) return svg
   const viewBox = openTag[0].match(/viewBox\s*=\s*"([^"]+)"/i)
   const parts = viewBox?.[1]
-    .trim()
+    ?.trim()
     .split(/[\s,]+/)
     .map(Number)
   const rect =
