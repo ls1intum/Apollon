@@ -8,14 +8,17 @@
  *      space, which is what you actually draw in.
  *   2. Fill the available VERTICAL space — a single column down the side reads
  *      like a classic palette and wastes no height.
- *   3. Shrink the cells (down to the HIG `CELL_MIN_H` touch floor) BEFORE adding
- *      a column, and cap them at `CELL_MAX_H` so they're never too large.
+ *   3. Shrink the cells down to the `COMFORT_MIN_H` LEGIBILITY threshold BEFORE
+ *      adding a column — but no smaller: below that, spill to another column so
+ *      the node types stay distinguishable (rather than collapsing to an
+ *      illegible sliver). Cap at `CELL_MAX_H` so they're never too large. The
+ *      `CELL_MIN_H` touch floor is the last-resort fallback on a tiny canvas.
  *
  * So: walk column counts low→high and take the first one whose cells, sized to
- * fill the height (capped), are still at least the touch floor. One column of
- * moderate cells is preferred over two columns of bigger ones — cells shrink
- * toward the floor first, and only spill to another column when even the floor
- * no longer fits the height.
+ * fill the height (capped), are still at least the legibility threshold. One
+ * column of legible cells is preferred over two columns of bigger ones; cells
+ * shrink toward the legibility threshold first, and only spill to another column
+ * when staying legible in fewer columns no longer fits the height.
  *
  * `availH` is the palette's REAL available band (the caller measures the space
  * between the palette's top and the bottom controls), so this math does NOT
@@ -26,11 +29,16 @@
  * cell, not the SVG, keeps the node components untouched.
  */
 export const PALETTE = Object.freeze({
-  /** HIG/WCAG touch + legibility floor — shrink to here before adding a column,
-   *  never past it. */
+  /** Absolute floor (HIG/WCAG touch) — only reached on a tiny canvas where even
+   *  spilling to more columns can't keep cells legible; never shrink past it. */
   CELL_MIN_H: 44,
-  /** Upper bound so few-element palettes don't get absurdly tall cells. */
-  CELL_MAX_H: 78,
+  /** Legibility threshold: shrink a column's cells down to here BEFORE adding
+   *  another column, but spill (rather than go smaller) so the node types stay
+   *  distinguishable. ~the original docked-palette element size. */
+  COMFORT_MIN_H: 64,
+  /** Upper bound so few-element palettes don't get absurdly tall cells; ~matches
+   *  the original 0.8-scale class-box preview. */
+  CELL_MAX_H: 88,
   /** cellW = round(CELL_RATIO * cellH); ~matches the 160×100 class box. */
   CELL_RATIO: 1.6,
   GAP: 8,
@@ -105,14 +113,15 @@ export function computePaletteLayout(
     Math.min(itemCount, Math.floor((budgetW + p.GAP) / (floorCellW + p.GAP)))
   )
 
-  // Fewest columns whose height-filling cells still clear the touch floor — so
-  // cells shrink toward the floor before a column is ever added; meanwhile
-  // remember the column count that yields the biggest cell as a fallback.
+  // Fewest columns whose height-filling cells still clear the LEGIBILITY
+  // threshold — so cells shrink toward legible (not the touch floor) before a
+  // column is ever added; meanwhile remember the column count that yields the
+  // biggest cell as a fallback for tiny canvases.
   let bestCols = 1
   let bestCellH = 0
   for (let cols = 1; cols <= maxCols; cols++) {
     const cellH = cellHeightFor(cols, itemCount, budgetW, budgetH, chromeH)
-    if (cellH >= p.CELL_MIN_H) {
+    if (cellH >= p.COMFORT_MIN_H) {
       return {
         cols,
         cellW: Math.round(p.CELL_RATIO * cellH),

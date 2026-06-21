@@ -60,23 +60,26 @@ describe("computePaletteLayout", () => {
   })
 
   it("prefers a single column filling the height on a tall band", () => {
-    // 14 items on a tall band → one narrow column down the side, not a grid.
-    const l = computePaletteLayout(14, 1920, 960, 0)
+    // A modest count on a tall band → one narrow column down the side, not a
+    // grid, with legible (≥ threshold) cells.
+    const l = computePaletteLayout(8, 1920, 960, 0)
     expect(l.cols).toBe(1)
     expect(l.scroll).toBe(false)
-    expect(l.cellH).toBeGreaterThanOrEqual(PALETTE.CELL_MIN_H)
+    expect(l.cellH).toBeGreaterThanOrEqual(PALETTE.COMFORT_MIN_H)
   })
 
-  it("shrinks cells to the floor before adding a column", () => {
-    // A band where one column of 14 fits at ~floor stays a single column …
-    expect(computePaletteLayout(14, 1280, 760, 0).cols).toBe(1)
-    // … and only spills to a second column once even the floor no longer fits.
-    expect(computePaletteLayout(14, 1280, 560, 0).cols).toBeGreaterThanOrEqual(
-      2
-    )
-    // Very short landscape phone band forces more columns still, no scroll.
+  it("spills to another column to keep cells legible, not shrink them small", () => {
+    // 14 items wouldn't stay legible in one column even on a tall band, so it
+    // spills — and the resulting cells are still ≥ the legibility threshold.
+    const l = computePaletteLayout(14, 1920, 960, 0)
+    expect(l.cols).toBeGreaterThanOrEqual(2)
+    expect(l.scroll).toBe(false)
+    expect(l.cellH).toBeGreaterThanOrEqual(PALETTE.COMFORT_MIN_H)
+    // Only a genuinely tiny band drops below the legibility threshold (fallback),
+    // and even then it stays at or above the touch floor without scrolling.
     const land = computePaletteLayout(14, 844, 250, 0)
     expect(land.cols).toBeGreaterThanOrEqual(3)
+    expect(land.cellH).toBeGreaterThanOrEqual(PALETTE.CELL_MIN_H)
     expect(land.scroll).toBe(false)
   })
 
