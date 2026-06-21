@@ -44,7 +44,7 @@ const SVG_CSP = "default-src 'none'; style-src 'unsafe-inline'"
 // serves it as an `<img>`, the browser still evaluates the query against the
 // viewer's OS theme, so the badge matches the surrounding page.
 const BUTTON_CACHE_CONTROL = "public, max-age=31536000, immutable"
-const OPEN_BUTTON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="174" height="38" viewBox="0 0 174 38" role="img" aria-label="Open in Apollon">
+const OPEN_BUTTON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="178" height="44" viewBox="0 0 178 44" role="img" aria-label="Open in Apollon">
 <style>
   .bg { fill: #ffffff; }
   .bd { stroke: #d0d7de; }
@@ -58,15 +58,20 @@ const OPEN_BUTTON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="174" hei
     .tx { fill: #e6edf3; }
     .ac { fill: #6cb0ff; }
     .acs { stroke: #6cb0ff; }
+    /* Lift the shadow on dark so the pill still detaches from the page. */
+    .sh { flood-color: #000000; flood-opacity: 0.45; }
   }
 </style>
-<rect class="bg bd" x="0.75" y="0.75" width="172.5" height="36.5" rx="9" stroke-width="1.5"/>
-<g transform="translate(14 8.5)">
+<filter id="sh" x="-20%" y="-20%" width="140%" height="170%">
+  <feDropShadow class="sh" dx="0" dy="1.3" stdDeviation="1.3" flood-color="#0b1f3a" flood-opacity="0.22"/>
+</filter>
+<rect class="bg bd" filter="url(#sh)" x="4" y="3" width="170" height="34" rx="9" stroke-width="1.5"/>
+<g transform="translate(17 9.5)">
   <rect class="ac" x="0" y="2" width="8.5" height="6.5" rx="1.5"/>
   <rect class="ac" x="12" y="12.5" width="8.5" height="6.5" rx="1.5"/>
   <path class="acs" d="M5.5 8.5 L15 12.5" stroke-width="1.6" fill="none" stroke-linecap="round"/>
 </g>
-<text class="tx" x="44" y="24">Open in Apollon</text>
+<text class="tx" x="47" y="24.5">Open in Apollon</text>
 </svg>
 `
 const HTML_CSP = [
