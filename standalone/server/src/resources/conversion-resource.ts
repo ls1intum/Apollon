@@ -124,11 +124,21 @@ export class ConversionResource {
 
   // Overridable so tests can drive a fake worker without a real thread.
   protected createWorker(): Worker {
+    // `pnpm run dev` runs the server from TypeScript source via tsx, where the
+    // sibling worker is a `.ts` with no compiled `.js`. tsx's worker loader
+    // transpiles a worker entry but does NOT apply its `.js`→`.ts` resolution to
+    // that entry's own imports, so we can't point a worker at the raw `.ts`.
+    // Route dev through a small `.mjs` bootstrap that re-imports the worker under
+    // tsx's programmatic loader (`tsImport`), which resolves the whole graph.
+    // Production runs the compiled `.js` directly and never loads the bootstrap.
+    const fromSource = import.meta.url.endsWith(".ts")
     const workerPath =
       process.env.CONVERTER_WORKER_PATH ??
       path.resolve(
         import.meta.dirname,
-        "../workers/conversion-worker-thread.js"
+        fromSource
+          ? "../workers/conversion-worker-dev.mjs"
+          : "../workers/conversion-worker-thread.js"
       )
     return new Worker(workerPath, {
       env: { ...process.env },
