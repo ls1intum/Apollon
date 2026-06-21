@@ -17,8 +17,13 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { TextField, Typography } from "@/components/ui"
-import { DeleteIcon, DragHandleIcon } from "@/components/Icon"
+import { TextField, Typography, DividerLine } from "@/components/ui"
+import {
+  ColorButton,
+  ColorButtons,
+} from "@/components/ui/StyleEditor/ColorButtons"
+import { DeleteIcon, DragHandleIcon, CrossIcon } from "@/components/Icon"
+import { PaintRollerIcon } from "@/components/Icon/PaintRollerIcon"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import { generateUUID } from "@/utils"
@@ -26,6 +31,12 @@ import { ErCfColumn, ErCfColumnKey, ErCfEntityProps } from "@/types"
 import { LAYOUT } from "@/constants"
 
 const KEY_OPTIONS: ErCfColumnKey[] = ["PK", "FK", "UK"]
+// Per-column colour fields — fill + text, exactly the noStrokeUpdate set the
+// class diagram exposes per attribute.
+const COLOR_FIELDS: { key: "fillColor" | "textColor"; label: string }[] = [
+  { key: "fillColor", label: "Fill Color" },
+  { key: "textColor", label: "Text Color" },
+]
 // Shared column template so the header labels line up over the inputs.
 const ICON_SLOT = 16
 const KEY_WIDTH = 70
@@ -52,6 +63,10 @@ const SortableColumnRow: React.FC<RowProps> = ({
     transition,
     isDragging,
   } = useSortable({ id: column.id })
+  const [paintOpen, setPaintOpen] = useState(false)
+  const [activeField, setActiveField] = useState<
+    "fillColor" | "textColor" | null
+  >(null)
 
   return (
     <Box
@@ -61,68 +76,145 @@ const SortableColumnRow: React.FC<RowProps> = ({
         transition,
         opacity: isDragging ? 0.4 : 1,
       }}
-      sx={{ display: "flex", gap: ROW_GAP, alignItems: "center" }}
+      sx={{ display: "flex", flexDirection: "column" }}
     >
-      <Box
-        {...attributes}
-        {...listeners}
-        sx={{
-          cursor: "grab",
-          display: "flex",
-          alignItems: "center",
-          color: "text.secondary",
-          flexShrink: 0,
-          "&:active": { cursor: "grabbing" },
-        }}
-      >
-        <DragHandleIcon width={ICON_SLOT} height={ICON_SLOT} />
+      <Box sx={{ display: "flex", gap: ROW_GAP, alignItems: "center" }}>
+        <Box
+          {...attributes}
+          {...listeners}
+          sx={{
+            cursor: "grab",
+            display: "flex",
+            alignItems: "center",
+            color: "text.secondary",
+            flexShrink: 0,
+            "&:active": { cursor: "grabbing" },
+          }}
+        >
+          <DragHandleIcon width={ICON_SLOT} height={ICON_SLOT} />
+        </Box>
+
+        <TextField
+          size="small"
+          placeholder="name"
+          value={column.name}
+          onChange={(e) => onChange(column.id, { name: e.target.value })}
+          sx={{ flex: NAME_FLEX, minWidth: 0 }}
+        />
+        <TextField
+          size="small"
+          placeholder="type"
+          value={column.type ?? ""}
+          onChange={(e) => onChange(column.id, { type: e.target.value })}
+          sx={{ flex: TYPE_FLEX, minWidth: 0 }}
+        />
+        <Select
+          size="small"
+          multiple
+          displayEmpty
+          value={column.keys ?? []}
+          onChange={(e) =>
+            onChange(column.id, { keys: e.target.value as ErCfColumnKey[] })
+          }
+          renderValue={(selected) =>
+            selected.length ? selected.join(", ") : "—"
+          }
+          sx={{ width: KEY_WIDTH, flexShrink: 0 }}
+        >
+          {KEY_OPTIONS.map((k) => (
+            <MenuItem key={k} value={k} dense>
+              <Checkbox
+                size="small"
+                checked={(column.keys ?? []).includes(k)}
+                sx={{ p: 0.5 }}
+              />
+              {k}
+            </MenuItem>
+          ))}
+        </Select>
+
+        <Box sx={{ flexShrink: 0, display: "flex" }}>
+          <PaintRollerIcon
+            onClick={() => {
+              setPaintOpen((o) => !o)
+              setActiveField(null)
+            }}
+            aria-label="Toggle column colors"
+          />
+        </Box>
+        <DeleteIcon
+          width={ICON_SLOT}
+          height={ICON_SLOT}
+          style={{ cursor: "pointer", flexShrink: 0 }}
+          onClick={() => onDelete(column.id)}
+        />
       </Box>
 
-      <TextField
-        size="small"
-        placeholder="name"
-        value={column.name}
-        onChange={(e) => onChange(column.id, { name: e.target.value })}
-        sx={{ flex: NAME_FLEX, minWidth: 0 }}
-      />
-      <TextField
-        size="small"
-        placeholder="type"
-        value={column.type ?? ""}
-        onChange={(e) => onChange(column.id, { type: e.target.value })}
-        sx={{ flex: TYPE_FLEX, minWidth: 0 }}
-      />
-      <Select
-        size="small"
-        multiple
-        displayEmpty
-        value={column.keys ?? []}
-        onChange={(e) =>
-          onChange(column.id, { keys: e.target.value as ErCfColumnKey[] })
-        }
-        renderValue={(selected) =>
-          selected.length ? selected.join(", ") : "—"
-        }
-        sx={{ width: KEY_WIDTH, flexShrink: 0 }}
-      >
-        {KEY_OPTIONS.map((k) => (
-          <MenuItem key={k} value={k} dense>
-            <Checkbox
-              size="small"
-              checked={(column.keys ?? []).includes(k)}
-              sx={{ p: 0.5 }}
-            />
-            {k}
-          </MenuItem>
-        ))}
-      </Select>
-
-      <DeleteIcon
-        width={ICON_SLOT}
-        height={ICON_SLOT}
-        style={{ cursor: "pointer", flexShrink: 0 }}
-        onClick={() => onDelete(column.id)}
-      />
+      {paintOpen && (
+        <Box
+          sx={{
+            mt: 0.5,
+            mb: 0.5,
+            border: "1px solid var(--apollon-gray, #e9ecef)",
+            borderRadius: 1,
+          }}
+        >
+          {!activeField ? (
+            COLOR_FIELDS.map(({ key, label }, i) => (
+              <Box key={key}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    p: 1,
+                  }}
+                >
+                  <Typography>{label}</Typography>
+                  <ColorButton
+                    color={column[key] || "#000000"}
+                    onSelect={() => setActiveField(key)}
+                  />
+                </Box>
+                {i < COLOR_FIELDS.length - 1 && (
+                  <DividerLine backgroundColor="var(--apollon-gray, #e9ecef)" />
+                )}
+              </Box>
+            ))
+          ) : (
+            <Box sx={{ p: 1 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  mb: 1,
+                }}
+              >
+                <Typography>
+                  {COLOR_FIELDS.find((f) => f.key === activeField)?.label}
+                </Typography>
+                <CrossIcon
+                  fill="var(--apollon-primary-contrast, #000000)"
+                  onClick={() => setActiveField(null)}
+                />
+              </Box>
+              <ColorButtons
+                onSelect={(color) =>
+                  onChange(column.id, { [activeField]: color })
+                }
+              />
+              <Typography
+                variant="caption"
+                sx={{ cursor: "pointer", display: "inline-block", mt: 1 }}
+                onClick={() => onChange(column.id, { [activeField]: "" })}
+              >
+                Reset
+              </Typography>
+            </Box>
+          )}
+        </Box>
+      )}
     </Box>
   )
 }

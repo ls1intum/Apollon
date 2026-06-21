@@ -21,6 +21,9 @@ interface Props {
   offsetFromTop: number
   // Width of the widest column name, so every row's type column aligns.
   maxNameWidth: number
+  // The entity's themeable stroke colour, so the row dividers track a user's
+  // chosen border colour (rather than a hard-coded chrome grey).
+  strokeColor: string
   showAssessmentResults?: boolean
 }
 
@@ -36,6 +39,7 @@ export const ErCfRowSection: FC<Props> = ({
   width,
   offsetFromTop,
   maxNameWidth,
+  strokeColor,
   showAssessmentResults = false,
 }) => {
   const nameX = padding + ER_CF_KEY_GUTTER_WIDTH
@@ -65,14 +69,17 @@ export const ErCfRowSection: FC<Props> = ({
                 height={itemHeight - LAYOUT.LINE_WIDTH}
                 fill={fillColor}
               />
-              {/* Thin rule between rows (the first row's top is the header divider). */}
+              {/* Light rule between rows — the entity stroke at low opacity, so
+                  it themes with the border but stays subtler than the header
+                  SeparationLine above. The first row's top is that header rule. */}
               {index > 0 && (
                 <line
-                  x1={LAYOUT.LINE_WIDTH}
-                  x2={width - LAYOUT.LINE_WIDTH}
+                  x1={0}
+                  x2={width}
                   y1={y}
                   y2={y}
-                  stroke="var(--apollon-gray, #e9ecef)"
+                  stroke={strokeColor}
+                  strokeOpacity={0.25}
                   strokeWidth={1}
                 />
               )}

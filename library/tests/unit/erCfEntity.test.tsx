@@ -36,6 +36,7 @@ const renderRows = () =>
         width={200}
         offsetFromTop={0}
         maxNameWidth={80}
+        strokeColor="#000000"
       />
     </svg>
   )
