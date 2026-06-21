@@ -1,39 +1,64 @@
 import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
+import useMediaQuery from "@mui/material/useMediaQuery"
 import { useEditorContext } from "@/contexts"
-import { Navbar } from "./Navbar"
+import { MOBILE_VIEW_QUERY } from "@/constants"
+import MobileNavbar from "./MobileNavbar"
+import {
+  HeaderBrandIsland,
+  HeaderTitleIsland,
+  HeaderActionsIsland,
+} from "./HeaderIslands"
+
+// Derive the editor type from the context so it matches by construction (the
+// library ships two ApollonEditor declarations — main + react peer build — whose
+// private members aren't assignable to each other).
+type Editor = ReturnType<typeof useEditorContext>["editor"]
+type Region = Parameters<NonNullable<Editor>["getRegionElement"]>[0]
 
 /**
- * Mounts the editor navbar as immersive in-canvas chrome. The navbar is
- * portaled into the library's `header` overlay region, so the canvas is
- * full-bleed beneath it and the diagram automatically makes room (the region
- * reserves its measured height as a top inset). createPortal keeps the navbar in
- * the webapp React tree, so it retains theme tokens, the router and all app
- * contexts; only its DOM lands inside the canvas.
- *
- * Rendered once for editor routes (from the root layout). Returns null until an
- * editor instance exists in EditorContext.
+ * Acquires a stable host node for an overlay region while `active`, releasing it
+ * otherwise. The host node lives for the editor instance, so a `createPortal`
+ * target stays valid; switching desktop⇆mobile releases the unused regions.
  */
-export function EditorChromeHeader() {
-  const { editor } = useEditorContext()
+function useRegionHost(editor: Editor, region: Region, active: boolean) {
   const [host, setHost] = useState<HTMLElement | null>(null)
-
-  // Acquire the stable header host node once per editor (registering the control
-  // is a side effect, so it belongs in an effect, not render). This is a
-  // one-shot external-resource acquisition, not a render cascade.
   useEffect(() => {
-    if (!editor) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (!editor || !active) {
       setHost(null)
       return
     }
-    const el = editor.getRegionElement("header")
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setHost(el)
-    return () => {
-      editor.releaseRegionElement("header")
-    }
-  }, [editor])
+    setHost(editor.getRegionElement(region))
+    return () => editor.releaseRegionElement(region)
+  }, [editor, region, active])
+  return host
+}
 
-  return host ? createPortal(<Navbar />, host) : null
+/**
+ * Mounts the editor header as immersive in-canvas chrome. On desktop it is three
+ * floating glass islands (brand+nav top-left, title top-center, actions
+ * top-right) portaled into the matching overlay regions so they hover over a
+ * full-bleed canvas and the diagram makes room for each via its measured inset.
+ * On mobile it stays a single compact bar in the full-width `header` band.
+ *
+ * createPortal keeps every island in the webapp React tree, so they retain theme
+ * tokens, the router and all app contexts; only their DOM lands in the canvas.
+ */
+export function EditorChromeHeader() {
+  const { editor } = useEditorContext()
+  const isMobile = useMediaQuery(MOBILE_VIEW_QUERY)
+
+  const headerHost = useRegionHost(editor, "header", isMobile)
+  const leftHost = useRegionHost(editor, "top-left", !isMobile)
+  const centerHost = useRegionHost(editor, "top-center", !isMobile)
+  const rightHost = useRegionHost(editor, "top-right", !isMobile)
+
+  return (
+    <>
+      {headerHost && createPortal(<MobileNavbar />, headerHost)}
+      {leftHost && createPortal(<HeaderBrandIsland />, leftHost)}
+      {centerHost && createPortal(<HeaderTitleIsland />, centerHost)}
+      {rightHost && createPortal(<HeaderActionsIsland />, rightHost)}
+    </>
+  )
 }

@@ -86,6 +86,25 @@
 
   /* Lit up only in dark mode (a pure drop shadow vanishes on a dark canvas). */
   --apollon-chrome-inset-hairline: 0 0 0 0 transparent;
+
+  /* Liquid-Glass "regular" variant for floating chrome (islands, palette,
+     controls, minimap): a semi-opaque TINT FLOOR (legibility never depends on
+     translucency — Apple HIG Materials) under a backdrop blur+saturate. The
+     floor is derived from the canvas background so it themes automatically. */
+  --apollon-chrome-glass: color-mix(
+    in srgb,
+    var(--apollon-background, #fff) 80%,
+    transparent
+  );
+  --apollon-chrome-glass-blur: saturate(180%) blur(20px);
+
+  /* Motion tokens (Material 3 emphasized + Apple HIG): short, decelerated. */
+  --apollon-chrome-duration-hover: 120ms;
+  --apollon-chrome-duration-enter: 220ms;
+  --apollon-chrome-duration-exit: 140ms;
+  --apollon-chrome-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --apollon-chrome-ease-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --apollon-chrome-ease-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15);
 }
 
 /* Dark mode only needs to fix the shadows + add the contrast hairline; the
@@ -336,7 +355,9 @@
   padding: 6px;
   overflow-y: auto;
   overscroll-behavior: contain;
-  background: var(--apollon-chrome-surface);
+  background: var(--apollon-chrome-glass);
+  backdrop-filter: var(--apollon-chrome-glass-blur);
+  -webkit-backdrop-filter: var(--apollon-chrome-glass-blur);
   color: var(--apollon-chrome-text);
   border: 1px solid var(--apollon-chrome-border);
   border-radius: var(--apollon-chrome-radius-lg);
@@ -429,23 +450,100 @@
   border-bottom: none;
 }
 
+/* Shared glass surface for every floating chrome object — header islands,
+   palette, zoom/undo controls, minimap — so they read as one family of
+   translucent panes over the canvas. The tint floor keeps text legible over a
+   busy diagram; the inset hairline gives crispness in dark mode. */
+.apollon-glass,
 .react-flow__panel,
 .react-flow__node-toolbar {
-  background-color: var(--apollon-chrome-surface);
+  background-color: var(--apollon-chrome-glass);
+  backdrop-filter: var(--apollon-chrome-glass-blur);
+  -webkit-backdrop-filter: var(--apollon-chrome-glass-blur);
+  border: 1px solid var(--apollon-chrome-border);
   box-shadow: var(--apollon-chrome-shadow-floating),
     var(--apollon-chrome-inset-hairline);
   border-radius: var(--apollon-chrome-radius-lg);
+}
+
+.react-flow__panel,
+.react-flow__node-toolbar {
   padding: 8px;
 }
 
-/* The overlay-band regions (header / side rails) are pass-through containers —
-   the portaled chrome paints its own surface, so the band must not double up a
-   panel face/shadow of its own. */
-.apollon-overlay-band {
+/* The overlay-band regions (header / side rails) AND the overlay corner Panels
+   are pass-through containers — the portaled chrome (a header island, the
+   version rail) paints its own glass surface, so the region wrapper must not
+   double up a pane/shadow/blur of its own. */
+.apollon-overlay-band,
+.apollon-overlay-panel {
   background-color: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 0;
   box-shadow: none;
   border-radius: 0;
   padding: 0;
+}
+
+/* Corner overlay panels (header islands, host controls) float 10px from the
+   edge, matching the palette and zoom/minimap controls. */
+.apollon-overlay-panel {
+  margin: 10px;
+}
+
+/* Header islands settle in on mount (decelerated, short). */
+@keyframes apollon-island-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.apollon-chrome-island {
+  animation: apollon-island-in var(--apollon-chrome-duration-enter)
+    var(--apollon-chrome-ease-decelerate) both;
+}
+
+/* The title island reads as a quiet capsule until focused, then lifts an accent
+   ring (the field inside is borderless — the island is its chrome). */
+.apollon-chrome-title-island:focus-within {
+  border-color: var(--apollon-chrome-accent);
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--apollon-chrome-accent) 35%, transparent),
+    var(--apollon-chrome-shadow-floating);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .apollon-chrome-island {
+    animation: none;
+  }
+}
+
+/* Accessibility fallbacks (Apple HIG Materials): honour the OS preferences. */
+@media (prefers-reduced-transparency: reduce) {
+  .apollon-glass,
+  .react-flow__panel,
+  .react-flow__node-toolbar,
+  .apollon-palette {
+    background-color: var(--apollon-chrome-surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .apollon-glass,
+  .react-flow__panel,
+  .react-flow__node-toolbar,
+  .apollon-palette {
+    border-color: var(--apollon-chrome-border-strong);
+  }
 }
 
 .react-flow svg {

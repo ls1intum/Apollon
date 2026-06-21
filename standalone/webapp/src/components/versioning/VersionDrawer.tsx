@@ -717,11 +717,9 @@ export const VersionRail: FC<Props> = ({
   useEffect(() => {
     if (!editor || isSmall || !open) {
       editor?.releaseRegionElement("right-rail")
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setHost(null)
       return
     }
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHost(editor.getRegionElement("right-rail"))
     return () => editor.releaseRegionElement("right-rail")
   }, [editor, isSmall, open])
