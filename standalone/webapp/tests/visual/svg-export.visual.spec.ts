@@ -119,6 +119,18 @@ const diagramFixtures = [
     fitView: true,
   },
   { name: "Sfc", file: "sfc", fixture: loadFixture("sfc.json") },
+  {
+    name: "EntityRelationship",
+    file: "entity-relationship-diagram",
+    fixture: loadFixture("entity-relationship-diagram.json"),
+    fitView: true,
+  },
+  {
+    name: "EntityRelationshipCrowsFoot",
+    file: "entity-relationship-crows-foot",
+    fixture: loadFixture("entity-relationship-crows-foot.json"),
+    fitView: true,
+  },
 ]
 
 const templateDiagrams = [

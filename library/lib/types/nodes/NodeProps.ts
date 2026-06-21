@@ -1,4 +1,4 @@
-import { ClassType } from "./enums"
+import { ClassType, ErEntityKind, ErRelationshipKind } from "./enums"
 
 export type DefaultNodeProps = {
   name: string
@@ -140,4 +140,37 @@ export type SfcActionTableProps = DefaultNodeProps & {
 export type SfcTransitionBranchNodeProps = DefaultNodeProps & {
   // Optional: persisted models created without it omit the key entirely.
   showHint?: boolean
+}
+
+// Entity-Relationship (Chen) nodes. Attributes are first-class nodes (ellipses)
+// connected to their owner by a link edge, exactly as Chen notation draws them.
+export type ErEntityProps = DefaultNodeProps & {
+  kind: ErEntityKind
+}
+
+export type ErRelationshipProps = DefaultNodeProps & {
+  kind: ErRelationshipKind
+}
+
+export type ErAttributeProps = DefaultNodeProps & {
+  // Combinable Chen decorations (all optional; omitted keys default to false).
+  // Composite attributes need no flag — they are simply attributes that own
+  // child attributes through link edges.
+  isKey?: boolean // underlined name (primary key)
+  isPartialKey?: boolean // dashed underline (discriminator of a weak entity)
+  isMultivalued?: boolean // double ellipse
+  isDerived?: boolean // dashed ellipse
+}
+
+// Crow's-foot (Mermaid / Information-Engineering) entity: a table box whose
+// columns are listed as structured rows — name, data type, and key role(s) —
+// matching how Mermaid `erDiagram`, DBML and physical ER tools render a table.
+// `keys` is an array because a column can be both PK and FK (Mermaid's "PK, FK").
+export type ErCfColumnKey = "PK" | "FK" | "UK"
+export type ErCfColumn = ClassNodeElement & {
+  type?: string
+  keys?: ErCfColumnKey[]
+}
+export type ErCfEntityProps = DefaultNodeProps & {
+  attributes: ErCfColumn[]
 }

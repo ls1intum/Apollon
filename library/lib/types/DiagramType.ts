@@ -14,4 +14,6 @@ export const UMLDiagramType = {
   Flowchart: "Flowchart",
   BPMN: "BPMN",
   Sfc: "Sfc",
+  EntityRelationship: "EntityRelationship",
+  EntityRelationshipCrowsFoot: "EntityRelationshipCrowsFoot",
 } as const

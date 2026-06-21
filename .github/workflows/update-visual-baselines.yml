@@ -52,6 +52,10 @@ jobs:
       - name: Commit and push refreshed baselines
         env:
           REF: ${{ github.event.inputs.ref }}
+        # The container's default shell is dash; `set -o pipefail` below is a
+        # bash builtin, so pin bash explicitly (otherwise the step dies before
+        # it can commit the refreshed baselines).
+        shell: bash
         run: |
           set -euo pipefail
           # The container runs git as a different user than the checkout owner.

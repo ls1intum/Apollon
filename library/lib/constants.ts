@@ -36,6 +36,10 @@ import {
   CommunicationObjectNameSVG,
   PetriNetPlaceSVG,
   PetriNetTransitionSVG,
+  EREntitySVG,
+  ERRelationshipSVG,
+  ERAttributeSVG,
+  ErCfEntitySVG,
   BPMNTaskNodeSVG,
   BPMNEventNodeSVG,
   BPMNGatewayNodeSVG,
@@ -54,7 +58,12 @@ import {
 } from "@/components"
 import { ReachabilityGraphMarkingSVG } from "@/components/svgs/nodes/reachabilityGraphDiagram/ReachabilityGraphMarkingSVG"
 import { DiagramNodeType } from "@/nodes"
-import { ClassType, UMLDiagramType } from "@/types"
+import {
+  ClassType,
+  ErEntityKind,
+  ErRelationshipKind,
+  UMLDiagramType,
+} from "@/types"
 import { v4 as uuidv4 } from "uuid"
 
 /* -------------------------------------------------------------------------- */
@@ -834,6 +843,68 @@ export const dropElementConfigs: Readonly<
         ],
       },
       svg: SfcActionTableNodeSVG,
+    },
+  ],
+  [UMLDiagramType.EntityRelationship]: [
+    {
+      type: "erEntity",
+      width: 160,
+      height: 70,
+      defaultData: { name: "Entity", kind: ErEntityKind.Strong },
+      svg: EREntitySVG,
+    },
+    {
+      type: "erEntity",
+      width: 160,
+      height: 70,
+      defaultData: { name: "Weak Entity", kind: ErEntityKind.Weak },
+      svg: EREntitySVG,
+    },
+    {
+      type: "erRelationship",
+      width: 140,
+      height: 80,
+      defaultData: { name: "Relationship", kind: ErRelationshipKind.Regular },
+      svg: ERRelationshipSVG,
+    },
+    {
+      type: "erRelationship",
+      width: 140,
+      height: 80,
+      defaultData: {
+        name: "Identifying",
+        kind: ErRelationshipKind.Identifying,
+      },
+      svg: ERRelationshipSVG,
+    },
+    {
+      type: "erAttribute",
+      width: 120,
+      height: 50,
+      defaultData: { name: "Attribute" },
+      svg: ERAttributeSVG,
+    },
+    {
+      type: "erAttribute",
+      width: 120,
+      height: 50,
+      defaultData: { name: "id", isKey: true },
+      svg: ERAttributeSVG,
+    },
+  ],
+  [UMLDiagramType.EntityRelationshipCrowsFoot]: [
+    {
+      type: "erCfEntity",
+      width: 180,
+      height: 100,
+      defaultData: {
+        name: "Entity",
+        attributes: [
+          { id: generateUUID(), name: "id", type: "int", keys: ["PK"] },
+          { id: generateUUID(), name: "name", type: "varchar" },
+        ],
+      },
+      svg: ErCfEntitySVG,
     },
   ],
 })

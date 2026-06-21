@@ -131,6 +131,9 @@ export function getEdgeMarkerStyles(edgeType: string): EdgeMarkerStyles {
     case "ObjectLink":
     case "SyntaxTreeLink":
     case "CommunicationLink":
+    case "ErConnector":
+    case "ErLink":
+    case "ErCfRelationship":
       return {
         markerPadding: EDGES.MARKER_PADDING,
         strokeDashArray: "0",
@@ -2404,6 +2407,10 @@ export const getDefaultEdgeType = (
       return "CommunicationLink"
     case "PetriNet":
       return "PetriNetArc"
+    case "EntityRelationship":
+      return "ErConnector"
+    case "EntityRelationshipCrowsFoot":
+      return "ErCfRelationship"
     default:
       return "ClassUnidirectional"
   }
@@ -2421,7 +2428,10 @@ export function getConnectionLineType(
     case "UseCaseDiagram":
     case "SyntaxTree":
     case "PetriNet":
+    case "EntityRelationship":
       return ConnectionLineType.Straight
+    // EntityRelationshipCrowsFoot falls through to the default Step routing, like
+    // the class diagram — its markers orient off the path's end segment.
 
     default:
       return ConnectionLineType.Step

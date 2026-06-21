@@ -8,7 +8,13 @@ import {
   OnEdgesDelete,
 } from "@xyflow/react"
 import { useCallback, useRef } from "react"
-import { findClosestHandle, generateUUID, getDefaultEdgeType } from "@/utils"
+import {
+  classifyErConnection,
+  findClosestHandle,
+  generateUUID,
+  getDefaultEdgeType,
+} from "@/utils"
+import type { ErConnectionVerdict } from "@/utils"
 import { DiagramNodeTypeRecord } from "@/nodes"
 import { useDiagramStore, useMetadataStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
@@ -41,8 +47,21 @@ export const useConnect = () => {
       nodeType === DiagramNodeTypeRecord.componentInterface ||
       nodeType === DiagramNodeTypeRecord.petriNetPlace ||
       nodeType === DiagramNodeTypeRecord.petriNetTransition ||
-      nodeType === DiagramNodeTypeRecord.sfcTransitionBranch,
+      nodeType === DiagramNodeTypeRecord.sfcTransitionBranch ||
+      nodeType === DiagramNodeTypeRecord.erRelationship ||
+      nodeType === DiagramNodeTypeRecord.erAttribute,
     []
+  )
+
+  // For ER diagrams, classify a prospective connection by its endpoint types so
+  // the connect flow can reject invalid edges and pick connector vs. link
+  // automatically. Returns null for non-ER diagrams (caller uses the default).
+  const classifyErIfApplicable = useCallback(
+    (sourceType?: string, targetType?: string): ErConnectionVerdict | null =>
+      diagramType === "EntityRelationship"
+        ? classifyErConnection(sourceType, targetType)
+        : null,
+    [diagramType]
   )
   const getDropPosition = useCallback(
     (event: MouseEvent | TouchEvent) => {
@@ -92,16 +111,20 @@ export const useConnect = () => {
 
   const onConnect = useCallback(
     (connection: Connection) => {
-      const newEdge: Edge = {
+      const verdict = classifyErIfApplicable(
+        getInternalNode(connection.source)?.type,
+        getInternalNode(connection.target)?.type
+      )
+      if (verdict && !verdict.valid) return // reject invalid ER connection
+
+      addEdge({
         ...connection,
         id: generateUUID(),
-        type: defaultEdgeType,
+        type: verdict?.valid ? verdict.edgeType : defaultEdgeType,
         selected: false,
-      }
-
-      addEdge(newEdge)
+      })
     },
-    [addEdge, defaultEdgeType]
+    [addEdge, defaultEdgeType, getInternalNode, classifyErIfApplicable]
   )
 
   const onConnectEnd: OnConnectEnd = useCallback(
@@ -168,6 +191,26 @@ export const useConnect = () => {
               return
             }
 
+            // Reconnecting must re-validate against the NEW endpoints and switch
+            // connector↔link as they demand — otherwise a reconnect could
+            // launder an invalid entity↔entity edge or keep a stale edge type.
+            const verdict = classifyErIfApplicable(
+              getInternalNode(newEdge.source)?.type,
+              getInternalNode(newEdge.target)?.type
+            )
+            if (verdict) {
+              if (!verdict.valid) return
+              newEdge.type = verdict.edgeType
+              if (verdict.edgeType === "ErLink" && newEdge.data) {
+                // Cardinality/participation are meaningless on a plain link.
+                newEdge.data = {
+                  ...newEdge.data,
+                  cardinality: null,
+                  participation: undefined,
+                }
+              }
+            }
+
             setEdges((eds) =>
               eds.map((edge) => (edge.id === newEdge.id ? newEdge : edge))
             )
@@ -183,12 +226,18 @@ export const useConnect = () => {
               return
             }
 
+            const verdict = classifyErIfApplicable(
+              connectionState.fromNode?.type,
+              nodeOnTop.type
+            )
+            if (verdict && !verdict.valid) return
+
             setEdges((eds) =>
               eds.concat({
                 id: generateUUID(),
                 source: sourceNodeId,
                 target: nodeOnTop.id,
-                type: defaultEdgeType,
+                type: verdict?.valid ? verdict.edgeType : defaultEdgeType,
                 sourceHandle: sourceHandleId,
                 targetHandle,
               })
@@ -208,6 +257,7 @@ export const useConnect = () => {
       getInternalNode,
       getIntersectingNodes,
       isFourHandleNode,
+      classifyErIfApplicable,
       setEdges,
       stopConnectionGuidance,
     ]
