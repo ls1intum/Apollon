@@ -24,16 +24,19 @@ describe("EmbedHints", () => {
   it("switches the snippet when a different format is selected", () => {
     render(<EmbedHints diagramId="abc123" title="My diagram" />)
     const field = screen.getByLabelText("Embed code") as HTMLTextAreaElement
-    // Default is clickable Markdown: the diagram image followed by the hosted
-    // "Open in Apollon" badge, both linking to the editor.
+    // Default is the clickable framed image (the "Open in Apollon" button is
+    // baked into the preview SVG), wrapped in a link to the editor.
     expect(field.value.startsWith("[![")).toBe(true)
-    expect(field.value).toContain("/api/embed/button.svg")
-    expect(field.value).toContain("[![Open in Apollon]")
+    expect(field.value).toContain("/preview.svg")
+    expect(field.value).toContain("?view=EDIT")
+    // One image, one link — no separate badge line.
+    expect(field.value).not.toContain("\n")
 
     fireEvent.click(screen.getByText("Markdown (no link)"))
-    // Plain image only — no link wrapper, no badge.
+    // Plain image only — no link wrapper around it.
     expect(field.value.startsWith("![")).toBe(true)
-    expect(field.value).not.toContain("button.svg")
+    expect(field.value.startsWith("[![")).toBe(false)
+    expect(field.value).not.toContain("?view=EDIT")
 
     fireEvent.click(screen.getByText("iframe"))
     expect(field.value.startsWith("<iframe")).toBe(true)

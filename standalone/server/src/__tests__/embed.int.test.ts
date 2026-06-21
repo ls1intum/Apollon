@@ -98,19 +98,23 @@ describe("GET /api/diagrams/:diagramId/preview.svg", () => {
     expect(asText(res)).toContain("<svg")
   })
 
-  it("inlines an opaque white background so it stays legible on dark-mode pages", async () => {
+  it("frames the diagram as a themed card with a baked-in Open in Apollon button", async () => {
     const app = appWith(okResource())
     const id = await createDiagram(app)
     const res = await request(app)
       .get(`/api/diagrams/${id}/preview.svg`)
       .buffer(true)
     expect(res.status).toBe(200)
-    // The white rect is the FIRST child, sized to the viewBox, so it sits
-    // behind the diagram regardless of the host page's background. Without it a
-    // transparent export would render dark-on-dark in a GitHub dark README.
-    expect(asText(res)).toMatch(
-      /<svg[^>]*>\s*<rect x="0" y="0" width="100" height="60" fill="#ffffff"\/>/i
-    )
+    const body = asText(res)
+    // A bordered card, a white diagram inset (so it reads on a dark README), the
+    // original diagram content, and the baked-in CTA — all adapting to the
+    // viewer's theme via prefers-color-scheme.
+    expect(body).toContain('class="fr-card"')
+    expect(body).toContain('class="fr-inset"')
+    expect(body).toContain("Open in Apollon")
+    expect(body).toContain("prefers-color-scheme: dark")
+    expect(body).toMatch(/\.fr-inset\s*\{\s*fill:\s*#ffffff/i) // inset stays white
+    expect(body).toContain('fill="#abcdef"') // diagram content survives framing
   })
 
   it("returns 304 on a matching If-None-Match without rendering again", async () => {
@@ -253,33 +257,6 @@ describe("GET /api/diagrams/:diagramId/preview.svg", () => {
     expect(res.status).toBe(500)
     // A transient render failure must never be cached against the diagramId.
     expect(res.headers["cache-control"]).toBe("no-store")
-  })
-})
-
-describe("GET /api/embed/button.svg", () => {
-  it("serves the static, immutably-cached, light/dark-adaptive badge", async () => {
-    const app = appWith(okResource())
-    const res = await request(app).get("/api/embed/button.svg").buffer(true)
-
-    expect(res.status).toBe(200)
-    expect(res.headers["content-type"]).toMatch(/^image\/svg\+xml/)
-    // Static asset → long immutable cache (no ETag round-trip needed).
-    expect(res.headers["cache-control"]).toBe(
-      "public, max-age=31536000, immutable"
-    )
-    expect(res.headers["x-content-type-options"]).toBe("nosniff")
-    const body = asText(res)
-    expect(body).toContain("Open in Apollon")
-    // Adapts to the viewer's OS theme even when served as an <img> via a proxy.
-    expect(body).toContain("prefers-color-scheme: dark")
-  })
-
-  it("does not collide with the /api/diagrams/:id/preview.svg route", async () => {
-    // `button.svg` must resolve to the static handler, not be parsed as a
-    // diagramId by a greedy route — a 404/422 here would mean a route-order bug.
-    const app = appWith(okResource())
-    const res = await request(app).get("/api/embed/button.svg")
-    expect(res.status).toBe(200)
   })
 })
 
@@ -461,9 +438,9 @@ describe("end-to-end through the real conversion worker", () => {
     expect(body).toContain('xmlns="http://www.w3.org/2000/svg"')
     expect(body.trimEnd()).toMatch(/<\/svg>$/)
     expect(body).toMatch(/<(path|rect|text|g)\b/)
-    // The opaque background is sized to the real export's (negative-origin)
-    // viewBox and inserted as the first child.
-    expect(body).toMatch(/<svg[^>]*>\s*<rect [^>]*fill="#ffffff"\/>/i)
+    // The real render is wrapped in the themed card with the baked-in CTA.
+    expect(body).toContain('class="fr-card"')
+    expect(body).toContain("Open in Apollon")
   }, 20_000)
 
   it("renders an edge bound to a hidden *-between-* anchor", async () => {

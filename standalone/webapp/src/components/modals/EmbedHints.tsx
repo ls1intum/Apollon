@@ -29,8 +29,8 @@ const FORMAT_OPTIONS = [
 
 const FORMAT_HINTS: Record<EmbedFormat, string> = {
   markdown:
-    "Recommended. Shows the diagram inline with an “Open in Apollon” button below it.",
-  "markdown-plain": "Just the image — not clickable.",
+    "Recommended. A framed diagram with an “Open in Apollon” button — click it to open the editor.",
+  "markdown-plain": "The same framed image, but not clickable.",
   iframe: "A live, interactive embed for sites that allow iframes.",
 }
 
@@ -139,13 +139,11 @@ function buildSnippets(
   const id = encodeURIComponent(diagramId)
   const editorUrl = buildSharedDiagramUrl(diagramId, DiagramView.EDIT)
   const previewUrl = `${serverOrigin}/api/diagrams/${id}/preview.svg`
-  const buttonUrl = `${serverOrigin}/api/embed/button.svg`
   const embedUrl = `${serverOrigin}/embed/${id}`
   return {
-    // Clickable diagram, then a polished light/dark "Open in Apollon" badge —
-    // both link to the editor. The blank line keeps them on separate lines in
-    // rendered Markdown.
-    markdown: `[![${safeTitle}](${previewUrl})](${editorUrl})\n\n[![Open in Apollon](${buttonUrl})](${editorUrl})`,
+    // The framed preview image already carries the "Open in Apollon" button, so
+    // one clickable image is the whole snippet — clicking it opens the editor.
+    markdown: `[![${safeTitle}](${previewUrl})](${editorUrl})`,
     "markdown-plain": `![${safeTitle}](${previewUrl})`,
     iframe: `<iframe src="${embedUrl}" width="800" height="500" loading="lazy" referrerpolicy="no-referrer" style="border:0;border-radius:8px"></iframe>`,
   }

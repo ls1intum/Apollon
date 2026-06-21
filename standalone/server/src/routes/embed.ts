@@ -40,44 +40,6 @@ interface Deps {
 const CACHE_CONTROL = "public, max-age=60, stale-while-revalidate=86400"
 const SVG_CSP = "default-src 'none'; style-src 'unsafe-inline'"
 
-// The "Open in Apollon" call-to-action badge, embedded under the diagram in the
-// recommended Markdown snippet. It is diagram-independent (the per-diagram link
-// is applied by wrapping this image in a Markdown link), so it is a single
-// immutable asset with a one-year cache. Light/dark adapt via an internal
-// `prefers-color-scheme` media query: when a host (GitHub Camo, GitLab, …)
-// serves it as an `<img>`, the browser still evaluates the query against the
-// viewer's OS theme, so the badge matches the surrounding page.
-const BUTTON_CACHE_CONTROL = "public, max-age=31536000, immutable"
-const OPEN_BUTTON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="178" height="44" viewBox="0 0 178 44" role="img" aria-label="Open in Apollon">
-<style>
-  .bg { fill: #ffffff; }
-  .bd { stroke: #d0d7de; }
-  .tx { fill: #1f2328; }
-  .ac { fill: #0f3a66; }
-  .acs { stroke: #0f3a66; }
-  text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; font-size: 13.5px; font-weight: 600; letter-spacing: 0.1px; }
-  @media (prefers-color-scheme: dark) {
-    .bg { fill: #1f2630; }
-    .bd { stroke: #3d444d; }
-    .tx { fill: #e6edf3; }
-    .ac { fill: #6cb0ff; }
-    .acs { stroke: #6cb0ff; }
-    /* Lift the shadow on dark so the pill still detaches from the page. */
-    .sh { flood-color: #000000; flood-opacity: 0.45; }
-  }
-</style>
-<filter id="sh" x="-20%" y="-20%" width="140%" height="170%">
-  <feDropShadow class="sh" dx="0" dy="1.3" stdDeviation="1.3" flood-color="#0b1f3a" flood-opacity="0.22"/>
-</filter>
-<rect class="bg bd" filter="url(#sh)" x="4" y="3" width="170" height="34" rx="9" stroke-width="1.5"/>
-<g transform="translate(17 9.5)">
-  <rect class="ac" x="0" y="2" width="8.5" height="6.5" rx="1.5"/>
-  <rect class="ac" x="12" y="12.5" width="8.5" height="6.5" rx="1.5"/>
-  <path class="acs" d="M5.5 8.5 L15 12.5" stroke-width="1.6" fill="none" stroke-linecap="round"/>
-</g>
-<text class="tx" x="47" y="24.5">Open in Apollon</text>
-</svg>
-`
 const HTML_CSP = [
   "default-src 'none'",
   // `img-src 'self' data:` is load-bearing: it is the only egress sink open to
@@ -166,11 +128,11 @@ function withOpaqueBackground(svg: string): string {
 }
 
 /**
- * Renders to an SVG string through the cache + single-flight, mapping queue
- * saturation to a typed transient 503. The cache key is `(id, etag)`: immutable
- * per revision, and shared by both the SVG and HTML routes so either warms the
- * other. The cached value already carries the opaque background so neither route
- * re-processes it.
+ * Renders the diagram to a RAW SVG string (transparent, no chrome) through the
+ * cache + single-flight, mapping queue saturation to a typed transient 503. The
+ * cache key is `(id, etag)`: immutable per revision and shared by both routes,
+ * which then apply their own presentation — the preview image gets the framed
+ * card (`frameDiagramSvg`), the embed page just an opaque background.
  */
 async function renderSvg(
   deps: Deps,
@@ -183,8 +145,7 @@ async function renderSvg(
       const { data } = await deps
         .getResource()
         .render("svg", diagram as UMLModel)
-      const svg = typeof data === "string" ? data : data.toString("utf8")
-      return withOpaqueBackground(svg)
+      return typeof data === "string" ? data : data.toString("utf8")
     })
   } catch (error) {
     if (error instanceof QueueFullError) throw Errors.rendererBusy()
@@ -192,19 +153,116 @@ async function renderSvg(
   }
 }
 
+const FRAME_STYLE = `
+  .fr-card { fill: #ffffff; stroke: #d0d7de; }
+  .fr-inset { fill: #ffffff; }
+  .fr-divider { stroke: #d8dee4; }
+  .fr-title { fill: #59636e; font-weight: 500; }
+  .fr-btn { fill: #0f3a66; }
+  .fr-btn-tx { fill: #ffffff; font-weight: 600; }
+  .fr-btn-ar { stroke: #ffffff; }
+  .fr-sh { flood-color: #1f2328; flood-opacity: 0.16; }
+  .fr-card, .fr-title, .fr-btn-tx { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
+  @media (prefers-color-scheme: dark) {
+    .fr-card { fill: #161b22; stroke: #30363d; }
+    .fr-divider { stroke: #30363d; }
+    .fr-title { fill: #9198a1; }
+    .fr-btn { fill: #1f6feb; }
+    .fr-sh { flood-color: #000000; flood-opacity: 0.5; }
+  }`
+
+const clamp = (v: number, lo: number, hi: number): number =>
+  Math.min(hi, Math.max(lo, v))
+
+/** Truncates to `max` characters with an ellipsis, collapsing whitespace. */
+function truncateLabel(s: string, max: number): string {
+  const t = s.replace(/\s+/g, " ").trim()
+  if (t.length <= max) return t
+  return t.slice(0, Math.max(1, max - 1)).trimEnd() + "…"
+}
+
+/**
+ * Frames the raw diagram export as a self-contained "card": a rounded, bordered
+ * panel with the diagram on a white inset and a footer carrying the title + an
+ * "Open in Apollon" button. The Markdown snippet wraps the whole image in a link
+ * to the editor, so the footer button is a visual affordance — clicking anywhere
+ * opens Apollon.
+ *
+ * Light/dark adaptive via an internal `prefers-color-scheme` query (honoured by
+ * browsers even when the SVG is an `<img>`): the card, border, and footer follow
+ * the viewer's theme while the diagram inset stays white — the library's strokes
+ * are tuned for a light canvas and can't be recoloured, so in dark mode the
+ * white diagram sits matted inside the dark frame. Falls back to the plain
+ * opaque background if the export's geometry can't be read.
+ */
+function frameDiagramSvg(svg: string, title: string): string {
+  const openTag = svg.match(/<svg\b[^>]*>/i)
+  const vb = openTag?.[0]
+    .match(/viewBox\s*=\s*"([^"]+)"/i)?.[1]
+    ?.trim()
+    .split(/[\s,]+/)
+    .map(Number)
+  if (!openTag || !vb || vb.length !== 4 || !vb.every(Number.isFinite)) {
+    return withOpaqueBackground(svg)
+  }
+  const [minX, minY, w, h] = vb as [number, number, number, number]
+
+  const MAT = clamp(w * 0.014, 10, 22) // dark-mode frame thickness around inset
+  const FOOTER = clamp(w * 0.055, 46, 78) // footer band height
+  const R = clamp(w * 0.014, 12, 26) // card corner radius
+  const PAD = clamp(w * 0.03, 22, 44) // outer margin (shadow room)
+  const STROKE = Math.max(1.4, w * 0.0013)
+  const FONT = clamp(FOOTER * 0.32, 13, 26)
+  const BTN_H = FOOTER * 0.62
+  const GUTTER = FONT * 0.85
+
+  const footerY = minY + h
+  const footerMid = footerY + FOOTER / 2
+
+  // The button label is pinned to an exact `textLength` so the box always fits
+  // regardless of the viewer's system font metrics, then the box is sized from
+  // that known width — no font-measurement guesswork.
+  const label = "Open in Apollon"
+  const arrow = FONT * 0.8
+  const btnPadX = FONT * 0.95
+  const btnTextW = label.length * FONT * 0.54
+  const gap = FONT * 0.6
+  const btnW = btnPadX * 2 + btnTextW + gap + arrow
+  const btnX = minX + w - MAT - GUTTER - btnW
+  const btnY = footerMid - BTN_H / 2
+  const arrowX = btnX + btnW - btnPadX - arrow
+  const ah = arrow * 0.34
+
+  const titleX = minX + MAT + GUTTER
+  const titleAvail = btnX - titleX - FONT * 0.8
+  const maxChars = Math.max(3, Math.floor(titleAvail / (FONT * 0.56)))
+  const safeTitle = escapeHtml(
+    truncateLabel(title || "Apollon diagram", maxChars)
+  )
+
+  const inner = svg.slice(
+    (openTag.index ?? 0) + openTag[0].length,
+    svg.lastIndexOf("</svg>")
+  )
+
+  const r2 = (n: number) => Math.round(n * 100) / 100
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${r2(minX - PAD)} ${r2(minY - PAD)} ${r2(w + 2 * PAD)} ${r2(h + FOOTER + 2 * PAD)}" width="${r2(w + 2 * PAD)}" height="${r2(h + FOOTER + 2 * PAD)}" shape-rendering="geometricPrecision">
+<style>${FRAME_STYLE}</style>
+<defs><filter id="fr-shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow class="fr-sh" dx="0" dy="${r2(STROKE * 1.4)}" stdDeviation="${r2(PAD * 0.22)}"/></filter></defs>
+<rect class="fr-card" filter="url(#fr-shadow)" x="${r2(minX)}" y="${r2(minY)}" width="${r2(w)}" height="${r2(h + FOOTER)}" rx="${r2(R)}" stroke-width="${r2(STROKE)}"/>
+<rect class="fr-inset" x="${r2(minX + MAT)}" y="${r2(minY + MAT)}" width="${r2(w - 2 * MAT)}" height="${r2(h - MAT)}" rx="${r2(R * 0.5)}"/>
+${inner}
+<line class="fr-divider" x1="${r2(minX + MAT)}" y1="${r2(footerY)}" x2="${r2(minX + w - MAT)}" y2="${r2(footerY)}" stroke-width="${r2(STROKE)}"/>
+<text class="fr-title" x="${r2(titleX)}" y="${r2(footerMid)}" font-size="${r2(FONT)}" dominant-baseline="central">${safeTitle}</text>
+<rect class="fr-btn" x="${r2(btnX)}" y="${r2(btnY)}" width="${r2(btnW)}" height="${r2(BTN_H)}" rx="${r2(BTN_H / 2)}"/>
+<text class="fr-btn-tx" x="${r2(btnX + btnPadX)}" y="${r2(footerMid)}" font-size="${r2(FONT)}" textLength="${r2(btnTextW)}" lengthAdjust="spacingAndGlyphs" dominant-baseline="central">${label}</text>
+<path class="fr-btn-ar" d="M ${r2(arrowX)} ${r2(footerMid)} L ${r2(arrowX + arrow)} ${r2(footerMid)} M ${r2(arrowX + arrow - ah)} ${r2(footerMid - ah)} L ${r2(arrowX + arrow)} ${r2(footerMid)} L ${r2(arrowX + arrow - ah)} ${r2(footerMid + ah)}" fill="none" stroke-width="${r2(STROKE * 1.3)}" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`
+}
+
 export function mountEmbedApiRoutes(deps: Deps): Router {
   const { redis, config } = deps
   const router = Router()
-
-  // Static "Open in Apollon" badge for the Markdown embed snippet. No diagram
-  // lookup, no render — a constant asset served with a long immutable cache.
-  router.get("/embed/button.svg", (_req, res) => {
-    res.type("image/svg+xml")
-    res.setHeader("cache-control", BUTTON_CACHE_CONTROL)
-    res.setHeader("x-content-type-options", "nosniff")
-    res.setHeader("content-security-policy", SVG_CSP)
-    res.status(200).send(OPEN_BUTTON_SVG)
-  })
 
   router.get(
     "/diagrams/:diagramId/preview.svg",
@@ -247,7 +305,11 @@ export function mountEmbedApiRoutes(deps: Deps): Router {
           return
         }
 
-        const svg = await renderSvg(deps, found.diagram, found.etag)
+        const raw = await renderSvg(deps, found.diagram, found.etag)
+        const svg = frameDiagramSvg(
+          raw,
+          found.diagram.title || "Apollon diagram"
+        )
         setHeaders()
         res.status(200).send(svg)
       }
@@ -303,10 +365,10 @@ export function mountEmbedRoutes(deps: Deps): Router {
           return
         }
 
-        const svg = await renderSvg(deps, found.diagram, found.etag)
+        const raw = await renderSvg(deps, found.diagram, found.etag)
         const html = renderEmbedHtml({
           title: found.diagram.title || "Apollon diagram",
-          svg,
+          svg: withOpaqueBackground(raw),
           editorHref: buildEditorHref(req, found.diagram.id),
         })
         setHeaders()
