@@ -490,14 +490,7 @@
   fill: currentColor;
 }
 
-.apollon-chrome-iconbtn:hover:not(:disabled) {
-  background: var(--apollon-chrome-surface-hover);
-}
-
-.apollon-chrome-iconbtn:active:not(:disabled) {
-  background: var(--apollon-chrome-surface-active);
-}
-
+/* Lower-specificity states first (stylelint no-descending-specificity). */
 .apollon-chrome-iconbtn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
@@ -507,6 +500,14 @@
   outline: none;
   box-shadow: 0 0 0 2px
     color-mix(in srgb, var(--apollon-chrome-accent) 45%, transparent);
+}
+
+.apollon-chrome-iconbtn:hover:not(:disabled) {
+  background: var(--apollon-chrome-surface-hover);
+}
+
+.apollon-chrome-iconbtn:active:not(:disabled) {
+  background: var(--apollon-chrome-surface-active);
 }
 
 /* Numeric zoom readout: same idiom, auto width, tabular figures so the digits
