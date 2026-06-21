@@ -49,7 +49,14 @@ export const UseCaseActorNodeSVG: React.FC<Props> = ({
   const labelAreaTop = FIGURE_HEIGHT + LABEL_TOP_GAP
   const labelFirstLineCenter = labelAreaTop + LABEL_LINE_HEIGHT / 2
   const labelAreaHeight = Math.max(LABEL_LINE_HEIGHT, height - labelAreaTop)
-  const labelMaxLines = maxLinesForHeight(labelAreaHeight, LABEL_LINE_HEIGHT)
+  // The name renders in the overflow:visible area below the figure, so it can
+  // wrap past the node's own height. Allow at least two lines (a multi-word
+  // actor name like "Premium Customer" should wrap, not truncate to "Premium…"),
+  // and more when the user has grown the node tall enough.
+  const labelMaxLines = Math.max(
+    2,
+    maxLinesForHeight(labelAreaHeight, LABEL_LINE_HEIGHT)
+  )
 
   return (
     <svg
