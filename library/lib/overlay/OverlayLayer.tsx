@@ -81,8 +81,10 @@ interface ControlSlotProps {
 
 /**
  * Renders a single control: opts pointer events back in over the
- * pointer-transparent region frame, blocks canvas pan/zoom/wheel (#708 pattern,
- * pointer events only — never keyboard), and applies the role="group" wrapper.
+ * pointer-transparent region frame, blocks canvas pan/zoom/wheel via
+ * nopan/nodrag/nowheel + capture-phase stopPropagation (pointer events only,
+ * never keyboard — so focus/tab order is preserved), and applies the
+ * role="group" wrapper.
  */
 function ControlSlot({ control, registerMeasure }: ControlSlotProps) {
   const interactive = control.interactive !== false

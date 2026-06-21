@@ -16,11 +16,10 @@ body {
    to <body>, but the library's chrome tokens (--apollon-chrome-*) are computed on
    :root from --apollon-background / --apollon-primary-contrast. CSS custom
    properties inherit DOWNWARD only, so vars set on <body> never reach the :root
-   computation — the chrome (islands, minimap, auto-export indicator) would stay
-   light. index.tsx mirrors the VS Code theme onto :root's data-theme; key the
-   apollon palette off THAT so the vars live at :root and the chrome themes
-   correctly. (The opened popover worked before because it portals inside <body>,
-   inheriting the body-scoped vars.) */
+   computation — the chrome (islands, minimap, auto-export indicator) stays light.
+   index.tsx mirrors the VS Code theme onto :root's data-theme; the base apollon
+   palette MUST key off THAT so the vars live at :root where the chrome tokens
+   compute. */
 :root[data-theme="light"] {
   --apollon-primary: #3e8acc;
   --apollon-primary-contrast: #212529;

@@ -1,5 +1,8 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest"
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
+import { render, cleanup } from "@testing-library/react"
 import { ApollonEditor } from "@/apollon-editor"
+import { ApollonProvider } from "@/components/react/context"
+import { ApollonControl } from "@/components/react/ApollonControl"
 
 // Drives the public overlay/control API against the real editor (no mock);
 // asserts at the store level (jsdom has no layout).
@@ -14,6 +17,7 @@ describe("ApollonEditor overlay/control API", () => {
   })
 
   afterEach(() => {
+    cleanup()
     editor.destroy()
     container.remove()
   })
@@ -45,5 +49,94 @@ describe("ApollonEditor overlay/control API", () => {
     expect(editor.hasControl("apollon:host:header")).toBe(true)
     editor.releaseRegionElement("header")
     expect(editor.hasControl("apollon:host:header")).toBe(false)
+  })
+
+  it("throws on an empty id or an unknown region (loud at the edge)", () => {
+    expect(() =>
+      editor.addControl({ id: "", region: "top-left", render: () => null })
+    ).toThrow(/non-empty/)
+    expect(() =>
+      editor.addControl({
+        id: "x",
+        region: "nope" as never,
+        render: () => null,
+      })
+    ).toThrow(/unknown region/)
+    expect(() => editor.getRegionElement("nope" as never)).toThrow(
+      /unknown region/
+    )
+  })
+})
+
+// The <ApollonControl> facade in isolation (a fake editor, so we exercise the
+// component's register/update/dispose effects without mounting the real editor's
+// heavy tree — which jsdom can't render, see Apollon.test.tsx).
+describe("<ApollonControl> facade", () => {
+  function makeFakeEditor() {
+    const controls = new Set<string>()
+    const editor = {
+      addControl: vi.fn((c: { id: string }) => {
+        controls.add(c.id)
+        return () => controls.delete(c.id)
+      }),
+      updateControl: vi.fn(),
+      hasControl: (id: string) => controls.has(id),
+    }
+    return editor as typeof editor & ApollonEditor
+  }
+
+  afterEach(cleanup)
+
+  it("registers once on mount and disposes on unmount", () => {
+    const editor = makeFakeEditor()
+    const { unmount } = render(
+      <ApollonProvider editor={editor}>
+        <ApollonControl id="react-ctrl" region="top-right">
+          <button type="button">Export</button>
+        </ApollonControl>
+      </ApollonProvider>
+    )
+
+    expect(editor.hasControl("react-ctrl")).toBe(true)
+    expect(editor.addControl).toHaveBeenCalledTimes(1)
+    // Mounting must NOT also fire an update: the register effect already set the
+    // initial options, so an update here would double-write the store.
+    expect(editor.updateControl).not.toHaveBeenCalled()
+
+    unmount()
+    expect(editor.hasControl("react-ctrl")).toBe(false)
+  })
+
+  it("re-renders children without re-registering; only option changes update", () => {
+    const editor = makeFakeEditor()
+    const { rerender } = render(
+      <ApollonProvider editor={editor}>
+        <ApollonControl id="c" region="top-right">
+          <span>one</span>
+        </ApollonControl>
+      </ApollonProvider>
+    )
+    expect(editor.addControl).toHaveBeenCalledTimes(1)
+
+    // Children-only change: no store write.
+    rerender(
+      <ApollonProvider editor={editor}>
+        <ApollonControl id="c" region="top-right">
+          <span>two</span>
+        </ApollonControl>
+      </ApollonProvider>
+    )
+    expect(editor.updateControl).not.toHaveBeenCalled()
+
+    // Real option change: exactly one update.
+    rerender(
+      <ApollonProvider editor={editor}>
+        <ApollonControl id="c" region="bottom-right">
+          <span>two</span>
+        </ApollonControl>
+      </ApollonProvider>
+    )
+    expect(editor.updateControl).toHaveBeenCalledTimes(1)
+    expect(editor.addControl).toHaveBeenCalledTimes(1)
   })
 })

@@ -221,9 +221,10 @@ control never drags the diagram.
 ## Errors & gotchas
 
 - **Unknown region throws.** `addControl` and `getRegionElement` throw
-  `[ApollonControl] unknown region: <region>` for any region not in the known
-  set. Mistakes fail loudly at the API edge, not silently in the renderer.
-- **Empty id throws.** `addControl` throws `[ApollonControl] id must be non-empty`.
+  `[ApollonEditor] <method>: unknown region: <region>` for any region not in the
+  known set. Mistakes fail loudly at the API edge, not silently in the renderer.
+- **Empty id throws.** `addControl` throws
+  `[ApollonEditor] addControl: id must be non-empty`.
 - **Ids must be unique.** Re-using an id **replaces** the existing control rather
   than adding a second one — the intended idempotent, StrictMode-safe behavior
   (React StrictMode double-invokes effects; the replace makes that a no-op).

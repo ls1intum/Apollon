@@ -8,16 +8,16 @@ import { navbarButtonStyle } from "./styleConstants"
 
 interface Props {
   /**
-   * Foreground colour for the icon + label. Omitted on the always-dark desktop
-   * bar (muted grey, brightening to white on hover via `navbarButtonStyle`);
-   * the mobile hamburger passes `var(--apollon-primary-contrast)` so the label
-   * stays legible on the themed dropdown. `NavbarFile`/`NavbarHelp`/
+   * Foreground colour for the icon + label. Omitted on the chrome header (idles
+   * muted, washes to `--apollon-chrome-text` on hover via `navbarButtonStyle`);
+   * the mobile overflow menu passes `var(--apollon-primary-contrast)` so the
+   * label stays legible on the themed dropdown. `NavbarFile`/`NavbarHelp`/
    * `SaveLocalCopyButton` follow the same convention.
    */
   color?: string
-  /** Classes for the label span — the desktop bar passes `"hidden lg:inline"`
-   * to collapse to the icon when space is tight; the mobile menu omits it so
-   * the label always shows. */
+  /** Classes for the label span — the header passes `"hidden lg:inline"` to
+   * collapse to the icon when space is tight; the mobile menu omits it so the
+   * label always shows. */
   labelClassName?: string
 }
 

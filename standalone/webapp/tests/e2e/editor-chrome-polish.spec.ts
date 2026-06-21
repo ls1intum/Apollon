@@ -1,10 +1,19 @@
 import { test, expect, type Page } from "@playwright/test"
 import { waitForCanvasReady } from "../helpers/canvas"
 
-// Coverage for the editor-chrome polish pass: minimap card, version-history
-// dark-mode surface, and the landscape rail (not a bottom sheet).
+// Coverage for the editor chrome: minimap card, version-history surface in dark
+// mode, and the landscape rail (not a bottom sheet).
 
 const MODEL_ID = "chrome-polish-model-id"
+
+// A computed colour whose rgb channels sum below this is clearly dark (white is
+// 255+255+255 = 765).
+const NEAR_BLACK_SUM = 300
+const LANDSCAPE = { width: 844, height: 390 }
+// A side notch reported the way a device would, and the slack the chrome may add
+// on top of it (margin/border) while still "clearing" the notch.
+const NOTCH_INSET = 59
+const NOTCH_SLACK = 21
 
 async function openEditor(page: Page) {
   await page.goto("/")
@@ -57,8 +66,8 @@ test.describe("Editor chrome polish", () => {
     await expect(page.locator(".react-flow__minimap")).toHaveCount(0)
     await page.getByRole("button", { name: "Show minimap" }).click()
 
-    // Expanded: a real, bounded minimap card (regression guard — a CSS slip once
-    // collapsed it to a 0-size sliver with a floating arrow).
+    // Expanded: the minimap renders as a real, bounded card — never a 0-size
+    // sliver with a floating arrow.
     const map = page.locator(".react-flow__minimap")
     await expect(map).toBeVisible()
     const box = await map.boundingBox()
@@ -92,17 +101,17 @@ test.describe("Editor chrome polish", () => {
       page.getByRole("complementary", { name: /Version history/i })
     ).toBeVisible()
 
-    // The panel surface must follow the theme — not render as a white sheet
-    // (the MUI Paper default once leaked through in dark mode).
+    // The panel surface follows the theme; it must not render as a white Paper
+    // sheet in dark mode.
+    await expect(page.locator(".apollon-history-panel")).toBeVisible()
     const sum = await rgbSum(page, ".apollon-history-panel")
-    expect(sum).toBeGreaterThanOrEqual(0) // element exists
-    expect(sum).toBeLessThan(300) // clearly dark, nowhere near white (765)
+    expect(sum).toBeLessThan(NEAR_BLACK_SUM)
   })
 
   test("version history is a right rail in landscape, not a bottom sheet", async ({
     page,
   }) => {
-    await page.setViewportSize({ width: 844, height: 390 })
+    await page.setViewportSize(LANDSCAPE)
     await openEditor(page)
     await page.getByRole("button", { name: /Version history/i }).click()
     const panel = page.getByRole("complementary", { name: /Version history/i })
@@ -111,40 +120,40 @@ test.describe("Editor chrome polish", () => {
     const box = await panel.boundingBox()
     expect(box).not.toBeNull()
     // A rail sits in the right half and is far narrower than the viewport — a
-    // bottom sheet would span (nearly) the full width on the left.
-    expect(box!.x).toBeGreaterThan(844 * 0.45)
-    expect(box!.width).toBeLessThan(844 * 0.6)
+    // bottom sheet would span (nearly) the full width from the left.
+    expect(box!.x).toBeGreaterThan(LANDSCAPE.width * 0.45)
+    expect(box!.width).toBeLessThan(LANDSCAPE.width * 0.6)
   })
 
   test("chrome clears a simulated landscape notch via the real inset (no floor)", async ({
     page,
   }) => {
-    await page.setViewportSize({ width: 844, height: 390 })
+    await page.setViewportSize(LANDSCAPE)
     await openEditor(page)
 
-    // Baseline: no safe area → chrome hugs the 10px edge (no hardcoded floor).
+    // Baseline: no safe area → chrome hugs the edge (no hardcoded floor).
     const palette = page.getByTestId("apollon-palette")
     const before = await palette.boundingBox()
     expect(before).not.toBeNull()
     expect(before!.x).toBeLessThan(20)
 
-    // Simulate a 59px side notch the way a device would report it (the dev-only
-    // helper sets --safe-area-inset-*, the same var env()/System Bars feed). The
+    // Simulate a side notch the way a device would report it (the dev-only helper
+    // sets --safe-area-inset-*, the same var env()/System Bars feed). The
     // max(edge, inset) model must then push the palette clear of the notch.
-    await page.evaluate(() => {
+    await page.evaluate((inset) => {
       const sim = (
         window as unknown as {
           __apollonSafeArea?: (v: number[] | number | null) => void
         }
       ).__apollonSafeArea
-      sim?.([0, 59, 0, 59]) // [top, right, bottom, left]
-    })
-    await page.waitForTimeout(150)
+      sim?.([0, inset, 0, inset]) // [top, right, bottom, left]
+    }, NOTCH_INSET)
 
+    // The palette clears the notch by the real inset, not a constant floor.
+    await expect
+      .poll(async () => (await palette.boundingBox())?.x ?? 0)
+      .toBeGreaterThanOrEqual(NOTCH_INSET)
     const after = await palette.boundingBox()
-    expect(after).not.toBeNull()
-    // Palette now clears the notch by the real inset — not a constant floor.
-    expect(after!.x).toBeGreaterThanOrEqual(59)
-    expect(after!.x).toBeLessThan(80)
+    expect(after!.x).toBeLessThan(NOTCH_INSET + NOTCH_SLACK)
   })
 })

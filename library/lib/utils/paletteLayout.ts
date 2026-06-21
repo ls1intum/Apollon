@@ -34,10 +34,10 @@ export const PALETTE = Object.freeze({
   CELL_MIN_H: 44,
   /** Legibility threshold: shrink a column's cells down to here BEFORE adding
    *  another column, but spill (rather than go smaller) so the node types stay
-   *  distinguishable. ~the original docked-palette element size. */
+   *  distinguishable. ~a comfortably legible node-preview cell. */
   COMFORT_MIN_H: 64,
-  /** Upper bound so few-element palettes don't get absurdly tall cells; ~matches
-   *  the original 0.8-scale class-box preview. */
+  /** Upper bound so few-element palettes don't get absurdly tall cells;
+   *  ~a 0.8-scale class-box preview. */
   CELL_MAX_H: 88,
   /** cellW = round(CELL_RATIO * cellH); ~matches the 160×100 class box. */
   CELL_RATIO: 1.6,

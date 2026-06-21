@@ -1,10 +1,9 @@
 import ReactDOM from "react-dom/client"
-// Imported FIRST (before ./utils, the stores and overlay modules) so the editor
-// render tree — and the node/edge component registries it pulls in — evaluates
-// ahead of any utility/store/overlay module. This mirrors the original module
-// graph; relocating it (e.g. behind a store factory or a separate root module)
-// reorders the bundle and reintroduces a load-order TDZ in the node/popover
-// registries. Keep this import position.
+// Must be imported FIRST (before ./utils, the stores and overlay modules) so the
+// editor render tree — and the node/edge component registries it pulls in —
+// evaluates ahead of any utility/store/overlay module. Relocating it (e.g.
+// behind a store factory or a separate root module) reorders the bundle and
+// reintroduces a load-order TDZ in the node/popover registries.
 import { AppWithProvider } from "./App"
 import { ReactFlowInstance, type Node, type Edge } from "@xyflow/react"
 import {
@@ -322,8 +321,8 @@ export class ApollonEditor {
           : ZERO_INSETS
         const hasInsets =
           insets.top || insets.right || insets.bottom || insets.left
-        // No reserved chrome and a scalar/absent padding -> the original
-        // fraction-based fit (keeps embedders without overlays byte-identical).
+        // No reserved chrome and a scalar/absent padding -> fraction-based fit,
+        // byte-identical to an embedder that registers no overlays.
         if (!hasInsets && !explicitObject) {
           rf.fitView({
             padding: typeof explicit === "number" ? explicit : 0.15,
@@ -372,9 +371,12 @@ export class ApollonEditor {
    *   loudly at the edge, not silently in the renderer.
    */
   public addControl(control: OverlayControlInput): () => void {
-    if (!control.id) throw new Error("[ApollonControl] id must be non-empty")
+    if (!control.id)
+      throw new Error("[ApollonEditor] addControl: id must be non-empty")
     if (!OVERLAY_REGIONS.includes(control.region))
-      throw new Error(`[ApollonControl] unknown region: ${control.region}`)
+      throw new Error(
+        `[ApollonEditor] addControl: unknown region: ${control.region}`
+      )
     this.overlayStore.getState().register({ source: "imperative", ...control })
     return () => this.overlayStore.getState().unregister(control.id)
   }
@@ -410,7 +412,9 @@ export class ApollonEditor {
    */
   public getRegionElement(region: OverlayRegion): HTMLElement {
     if (!OVERLAY_REGIONS.includes(region))
-      throw new Error(`[ApollonControl] unknown region: ${region}`)
+      throw new Error(
+        `[ApollonEditor] getRegionElement: unknown region: ${region}`
+      )
     let el = this.hostRegionEls.get(region)
     if (el) return el
     // Create + register once. `releaseRegionElement` drops the node from the

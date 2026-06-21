@@ -86,8 +86,7 @@ export const VersionPreviewBanner: FC<Props> = ({
         color: "var(--home-banner-warning-text)",
         border: "1px solid var(--home-banner-warning-border)",
         borderRadius: "var(--home-radius-lg)",
-        // Soft floating-chrome elevation (matches the island shadow language)
-        // instead of the previous heavy 0 12px 32px overlay drop.
+        // Soft floating-chrome elevation, matching the island shadow language.
         boxShadow:
           "0 0 1px 0 rgb(15 23 42 / 20%), 0 2px 8px 0 rgb(15 23 42 / 12%)",
         // Compact, content-hugging pill (centred by the parent), not a 720px

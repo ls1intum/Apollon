@@ -50,26 +50,32 @@ export function ApollonControl({
     optionsRef.current = options
   })
 
-  // Register once per id once the editor + host node exist.
-  useEffect(() => {
-    if (!editor || !host) return
-    const dispose = editor.addControl({
-      ...optionsRef.current,
-      render: () => <RegionMount el={host} />,
-    })
-    return dispose
-  }, [editor, host, options.id])
-
-  // Push real option changes to the store (NOT on every children render) —
-  // keyed by a serialized signature of the non-children options.
+  // Signature of the non-children options; an option change re-applies, a
+  // children-only render does not (children reconcile through the portal).
   const sig = serializeOptions(options)
+  // Tracks the signature last written to the store, so registration and the
+  // option-change effect never both write on the same render (a mount, or the
+  // editor resolving from null, runs both — without this guard that is a
+  // redundant register + computeInsets).
+  const appliedSig = useRef<string | null>(null)
+
   useEffect(() => {
     if (!editor || !host) return
-    editor.updateControl(options.id, {
+    appliedSig.current = sig
+    return editor.addControl({
       ...optionsRef.current,
       render: () => <RegionMount el={host} />,
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editor, host, options.id])
+
+  useEffect(() => {
+    if (!editor || !host || appliedSig.current === sig) return
+    appliedSig.current = sig
+    editor.updateControl(options.id, {
+      ...optionsRef.current,
+      render: () => <RegionMount el={host} />,
+    })
   }, [editor, host, options.id, sig])
 
   return host ? createPortal(children, host) : null

@@ -5,11 +5,9 @@ import {
   previewScaleForCell,
 } from "@/utils/paletteLayout"
 
-// `availH` (3rd arg) is the palette's REAL available band — the caller measures
-// the space between the palette top and the bottom controls — NOT the full
-// viewport height. So the heights below are bands (viewport minus the ~top/bottom
-// chrome), and the algorithm fills the band it is given without re-subtracting
-// any reserve.
+// `availH` (3rd arg) is the palette's REAL available band (the space between the
+// palette top and the bottom controls), not the full viewport height; the
+// algorithm fills the band it is given without re-subtracting any reserve.
 //
 // Helper: the rendered block size for a layout, mirroring the algorithm.
 function block(cols: number, rows: number, cellW: number, cellH: number) {
@@ -101,14 +99,16 @@ describe("computePaletteLayout", () => {
 })
 
 describe("previewScaleForCell", () => {
+  const inset = 2 * PALETTE.CONTENT_INSET // padding subtracted on both axes
+
   it("fits a wide element to the cell width", () => {
     // 160×60 task in a 90×56 cell → width-bound.
     const s = previewScaleForCell(160, 60, 90, 56)
-    expect(s).toBeCloseTo((90 - 12) / 160, 5)
+    expect(s).toBeCloseTo((90 - inset) / 160, 5)
   })
 
   it("fits a tall/square element to the cell height", () => {
     const s = previewScaleForCell(40, 40, 90, 56)
-    expect(s).toBeCloseTo((56 - 12) / 40, 5)
+    expect(s).toBeCloseTo((56 - inset) / 40, 5)
   })
 })

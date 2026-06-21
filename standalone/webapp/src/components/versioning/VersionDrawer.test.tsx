@@ -1,16 +1,15 @@
 /**
- * Regression test for the "getSnapshot should be cached" infinite-loop bug.
+ * Guards against the "getSnapshot should be cached" infinite render loop: a
+ * selector like `useVersionStore((s) => s.versions[diagramId] ?? [])` that
+ * returns a fresh empty-array literal each call makes Zustand's
+ * `useSyncExternalStore` detect a "change" every render → "Maximum update depth
+ * exceeded". The version store must return a stable reference for a diagram with
+ * no entries.
  *
- * The pre-fix selector `useVersionStore((s) => s.versions[diagramId] ?? [])`
- * returned a fresh empty-array literal every call when the diagram had no
- * entry, causing Zustand's `useSyncExternalStore` to detect a "change" each
- * render and trigger "Maximum update depth exceeded".
- *
- * This test mounts the version panel body (open) on a diagram that's never been
- * fetched — exactly the failing path from the user's report — and asserts:
- *   - no React error boundary fires,
- *   - the test environment console doesn't emit the cached-snapshot warning,
- *   - the empty state renders.
+ * Mounting the version panel body (open) on a never-fetched diagram must:
+ *   - fire no React error boundary,
+ *   - emit no cached-snapshot console warning,
+ *   - render the empty state.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { cleanup, screen } from "@testing-library/react"

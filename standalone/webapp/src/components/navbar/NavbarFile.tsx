@@ -61,11 +61,10 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
   // Two independent concerns: how the submenu opens, and which way it opens.
   // Open on click (not hover) when there's no reliable hover — i.e. touch.
   const isTouchInput = useMediaQuery("(hover: none), (pointer: coarse)")
-  // Open the submenu leftward only in the actual mobile hamburger context
-  // (where the menu is anchored near the right edge). Keying off the shared
-  // MOBILE_VIEW_QUERY — the same one that swaps in MobileNavbar — keeps the
-  // desktop navbar's right-opening submenu on narrow-but-tall viewports
-  // (e.g. 900x800), where left-opening would push it off-screen.
+  // Open the submenu leftward only inside the mobile overflow menu (anchored
+  // near the right edge). Keying off the shared MOBILE_VIEW_QUERY keeps the
+  // header's right-opening submenu on narrow-but-tall viewports (e.g. 900x800),
+  // where left-opening would push it off-screen.
   const isMobileMenu = useMediaQuery(MOBILE_VIEW_QUERY)
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [subMenuAnchorEl, setSubMenuAnchorEl] = useState<null | HTMLElement>(

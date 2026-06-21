@@ -30,10 +30,10 @@ const PILL_SX = {
 } as const
 
 /**
- * Left cluster on narrow phones: an ALWAYS-visible back affordance, NO brand mark
- * (on a phone the logo/wordmark is noise — the user asked for it gone). Still the
- * single <header role="banner"> so the "All diagrams" link stays scoped to the
- * banner landmark for the e2e suite.
+ * Left cluster on narrow phones: an ALWAYS-visible back affordance, NO brand
+ * mark (on a phone the logo/wordmark is noise that crowds out controls). Still
+ * the single <header role="banner"> so the "All diagrams" link stays scoped to
+ * the banner landmark for the e2e suite.
  */
 export function MobileBackPill() {
   return (

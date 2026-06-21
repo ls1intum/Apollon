@@ -36,8 +36,8 @@ export const HomeNavbar = () => {
         boxShadow: `inset 0 -1px 0 var(--apollon-chrome-border), ${NAVBAR_DROP_SHADOW}`,
       }}
     >
-      {/* min-height from NAVBAR_MIN_HEIGHT (single source of truth) keeps the
-          home bar the same height as the editor navbars (#769's unified header). */}
+      {/* NAVBAR_MIN_HEIGHT (single source of truth) keeps the home bar the same
+          height as the editor chrome header. */}
       <div
         className="home-navbar__content flex w-full items-center gap-3 px-4"
         style={{ minHeight: NAVBAR_MIN_HEIGHT }}

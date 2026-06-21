@@ -23,11 +23,6 @@
 :root {
   /* Surface ladder: base == canvas; chrome separates via border + elevation. */
   --apollon-chrome-surface: var(--apollon-background, #fff);
-  --apollon-chrome-surface-raised: color-mix(
-    in srgb,
-    var(--apollon-primary-contrast, #000) 4%,
-    var(--apollon-background, #fff)
-  );
   --apollon-chrome-surface-hover: color-mix(
     in srgb,
     var(--apollon-primary-contrast, #000) 8%,
@@ -134,10 +129,8 @@
   /* Motion tokens: short, decelerated. */
   --apollon-chrome-duration-hover: 120ms;
   --apollon-chrome-duration-enter: 220ms;
-  --apollon-chrome-duration-exit: 140ms;
   --apollon-chrome-ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --apollon-chrome-ease-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
-  --apollon-chrome-ease-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15);
 }
 
 /* Dark mode only needs to fix the shadows + add the contrast hairline; the
@@ -151,12 +144,11 @@
   --apollon-chrome-inset-hairline: inset 0 0 0 1px rgb(255 255 255 / 8%);
 }
 
-/* Touch: slightly tighter clusters (40 = 32 + 2·4) so the phone chrome stays
-   compact; the icon buttons keep a ≥44px hit target via a ::before overlay (the
-   paint box stays 32). */
+/* Touch: tighter island padding so the phone chrome stays compact; the icon
+   buttons keep a ≥44px hit target via a ::before overlay (the paint box stays
+   32px). island-h derives from pad, so it follows automatically. */
 @media (pointer: coarse) {
   :root {
-    /* island-h derives from pad → 32 + 2·4 + 2·border = 42 automatically. */
     --apollon-chrome-pad: 4px;
   }
 }
@@ -167,7 +159,6 @@
   --text: var(--apollon-primary-contrast, #000);
   --xy-edge-stroke: var(--apollon-primary-contrast, #000);
   --xy-edge-stroke-width: 2px;
-  --xy-minimap-mask-background-color-props: #00000020;
   --xy-controls-button-background-color: var(--apollon-background, #fff);
 
   /* Kill React Flow's default divider between control buttons — its
@@ -668,12 +659,6 @@
   display: block;
   border-radius: inherit;
 }
-
-/* The collapse control is a sibling bottom-right Panel that overlaps the map's
-   bottom-right corner — the exact spot, surface and size of the collapsed "show
-   minimap" button, so toggling reads as one control and the cursor never moves.
-   It is a normal glass panel + .apollon-chrome-iconbtn (no bespoke surface), so
-   it is visually identical to the open button. */
 
 /* Hairline separating action families within one cluster (view vs history). */
 .apollon-chrome-cluster-divider {

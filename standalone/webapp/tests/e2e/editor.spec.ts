@@ -249,11 +249,9 @@ test.describe("Canvas panning", () => {
     await page.mouse.down()
     await page.mouse.move(startX - 120, startY - 80, { steps: 10 })
     await page.mouse.up()
-    await page.waitForTimeout(400)
 
-    // The viewport transform should have changed
-    const newTransform = await getTransform()
-    expect(newTransform).not.toEqual(initialTransform)
+    // The pan changes the viewport transform.
+    await expect.poll(getTransform).not.toEqual(initialTransform)
   })
 })
 
@@ -484,7 +482,7 @@ test.describe("Mobile responsive layout", () => {
     const menuBox = await menu.boundingBox()
     expect(menuBox?.width).toBeLessThanOrEqual(240)
 
-    // Share is now a primary icon on the pill, not buried in the overflow menu.
+    // Share is a primary icon on the pill, not in the overflow menu.
     await page.keyboard.press("Escape")
     await page.getByRole("button", { name: "Share" }).click()
 
@@ -665,12 +663,11 @@ test.describe("Element palette", () => {
 
       const palette = page.getByTestId("apollon-palette")
       await expect(palette).toBeVisible()
-      // Settle the measured-layout effect.
-      await page.waitForTimeout(300)
 
       // All 14 BPMN cells (13 elements + color) are present and none scroll.
+      // toHaveCount auto-retries, so it also settles the measured-layout effect.
       const entries = palette.locator(".apollon-palette__entry")
-      expect(await entries.count()).toBe(14)
+      await expect(entries).toHaveCount(14)
       const overflow = await palette.evaluate(
         (el) => el.scrollHeight - el.clientHeight
       )

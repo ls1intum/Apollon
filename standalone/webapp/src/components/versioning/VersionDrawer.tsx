@@ -24,6 +24,7 @@ import {
 import { createPortal } from "react-dom"
 import { toast } from "react-toastify"
 import { useEditorContext, useModalContext } from "@/contexts"
+import { useRegionHost } from "@/hooks/useRegionHost"
 import {
   selectScopedPreview,
   selectVersions,
@@ -710,19 +711,10 @@ export const VersionRail: FC<Props> = ({
   const { editor } = useEditorContext()
   const isSmall = useMediaQuery(NARROW_VIEW_QUERY)
   const open = useVersionStore((s) => Boolean(s.drawerOpenByDiagram[diagramId]))
-  const [host, setHost] = useState<HTMLElement | null>(null)
 
-  // Register the right-rail region while open (desktop only). getRegionElement
-  // returns a stable node + reserves the panel's width as a right inset.
-  useEffect(() => {
-    if (!editor || isSmall || !open) {
-      editor?.releaseRegionElement("right-rail")
-      setHost(null)
-      return
-    }
-    setHost(editor.getRegionElement("right-rail"))
-    return () => editor.releaseRegionElement("right-rail")
-  }, [editor, isSmall, open])
+  // Hold the right-rail region while open on desktop: a stable host node whose
+  // measured width becomes the panel's reserved right inset.
+  const host = useRegionHost(editor, "right-rail", !isSmall && open)
 
   if (!host) return null
 
@@ -778,9 +770,9 @@ export const VersionDrawer: FC<Props> = ({
       PaperProps={{
         // A floating glass card detached from the edges (margins + radius +
         // blur), not a full-bleed bottom sheet — the mobile mirror of the
-        // desktop rail island. backgroundColor MUST be set via sx (emotion wins
-        // over MUI's default `.MuiPaper-root` white — a plain class loses the
-        // specificity tie, which left the sheet white in dark mode).
+        // desktop rail island. backgroundColor MUST be set via sx: emotion beats
+        // MUI's default `.MuiPaper-root` white, but a plain class loses the
+        // specificity tie and the sheet renders white in dark mode.
         className: "apollon-glass apollon-history-panel",
         sx: {
           m: "var(--apollon-chrome-edge)",
