@@ -33,6 +33,44 @@ export async function readDiagram(
   return (result[0] as Diagram | undefined) ?? null
 }
 
+/**
+ * How long a refreshed TTL must decay before a read is allowed to bump it
+ * again. Without this throttle a high-traffic embed (Camo re-fetching the SVG)
+ * would issue an EXPIRE on every fetch; with it, an actively-read diagram is
+ * refreshed at most once per window — one extra Redis write per day, not per
+ * request.
+ */
+const TTL_REFRESH_THROTTLE_SECONDS = 24 * 3600
+
+/**
+ * Sliding expiry: a read pushes the diagram's 120-day TTL back to full so a
+ * diagram that's still being opened or embedded doesn't expire out from under a
+ * README/issue while it's unedited.
+ *
+ * Best-effort and throttled: it refreshes only once the remaining TTL has
+ * dropped below `full - throttle`, and any failure is swallowed so it can never
+ * break the read it rode in on. Pass `knownTtlSeconds` when the caller already
+ * has the TTL (e.g. folded into the embed read's MULTI) to avoid an extra round
+ * trip. A `-1` (no expiry) / `-2` (missing) TTL is left untouched.
+ */
+export async function refreshDiagramTtl(
+  redis: Redis,
+  fullTtlSeconds: number,
+  id: string,
+  knownTtlSeconds?: number
+): Promise<void> {
+  try {
+    const ttl = knownTtlSeconds ?? (await redis.ttl(k.diagram(id)))
+    if (ttl < 0 || ttl >= fullTtlSeconds - TTL_REFRESH_THROTTLE_SECONDS) return
+    const multi = redis.multi()
+    multi.expire(k.diagram(id), fullTtlSeconds)
+    multi.expire(k.diagramMeta(id), fullTtlSeconds)
+    await multi.exec()
+  } catch (err) {
+    logger.warn({ err, diagramId: id }, "diagram TTL refresh failed")
+  }
+}
+
 /** Atomically writes HEAD, bumps headRev, updates updatedAt, and bumps TTLs. */
 export async function saveHead(
   redis: Redis,
@@ -143,6 +181,12 @@ export function mountDiagramRoutes(
       async (_req, res, _next, { params }) => {
         const diagram = await readDiagram(redis, params.diagramId)
         if (!diagram) throw Errors.notFound("diagram not found")
+        // Opening a diagram counts as activity — slide its TTL forward.
+        await refreshDiagramTtl(
+          redis,
+          config.DIAGRAM_TTL_SECONDS,
+          params.diagramId
+        )
         res.status(200).json(diagram)
       }
     )

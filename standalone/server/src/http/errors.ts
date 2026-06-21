@@ -24,6 +24,13 @@ export const Errors = {
       "If-Match revision does not match current headRev",
       { currentHeadRev }
     ),
+  // Transient render saturation (queue full / worker timeout). `retryAfterSeconds`
+  // is surfaced as a real `Retry-After` header by the error handler so Camo and
+  // browsers back off instead of caching a hard error.
+  rendererBusy: (retryAfterSeconds = 2) =>
+    new ApiError(503, "RENDERER_BUSY", "Render pipeline is busy", {
+      retryAfterSeconds,
+    }),
   internal: (msg = "Internal server error") =>
     new ApiError(500, "INTERNAL", msg),
 }

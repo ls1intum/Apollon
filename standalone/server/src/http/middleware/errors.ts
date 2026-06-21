@@ -18,6 +18,10 @@ import { logger } from "../../logger.js"
 export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
   const requestId = req.requestId ?? ""
 
+  // Error responses must never be cached — a 404 is heuristically cacheable by
+  // default (RFC 9111 §4.2.2), which would pin a transient miss against a URL.
+  res.setHeader("cache-control", "no-store")
+
   if (err instanceof ApiError) {
     const body: ApiErrorBody = {
       error: err.code,
@@ -27,6 +31,12 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
     if (err.meta) {
       // Surface optional metadata (e.g. currentHeadRev on REVISION_MISMATCH).
       Object.assign(body as unknown as Record<string, unknown>, err.meta)
+      // A transient 503 carries its backoff as a real header (not just a body
+      // field) so Camo/browsers back off.
+      const retryAfter = err.meta.retryAfterSeconds
+      if (typeof retryAfter === "number") {
+        res.setHeader("retry-after", String(retryAfter))
+      }
     }
     if (err.status >= 500) {
       logger.error(

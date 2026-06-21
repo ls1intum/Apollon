@@ -24,12 +24,15 @@ export const getHomeDialogWidth = (size: HomeDialogSize) =>
 export const HomeDialogContent = ({
   children,
   className = "",
+  testId,
 }: {
   children: ReactNode
   className?: string
+  testId?: string
 }) => (
   <div
-    className={`recent-diagrams-font flex flex-col gap-5 ${className}`.trim()}
+    data-testid={testId}
+    className={`recent-diagrams-font flex min-w-0 flex-col gap-5 ${className}`.trim()}
   >
     {children}
   </div>

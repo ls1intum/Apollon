@@ -4,7 +4,18 @@ import {
   ConversionResource,
   QueueFullError,
 } from "../resources/conversion-resource.js"
+import { Errors } from "../http/errors.js"
 import type { ConversionFormat } from "../workers/conversion-worker-thread.js"
+
+interface Deps {
+  /**
+   * Lazy provider for the shared `ConversionResource`. Returning the same
+   * instance on every call gives the converter + embed routes one worker
+   * thread and one render queue; lazy construction keeps suites that never
+   * render from spawning the worker.
+   */
+  getResource: () => ConversionResource
+}
 
 function parseModel(body: unknown): UMLModel | undefined {
   const raw =
@@ -24,11 +35,8 @@ function parseModel(body: unknown): UMLModel | undefined {
   return undefined
 }
 
-export function mountConversionRoutes(): Router {
+export function mountConversionRoutes({ getResource }: Deps): Router {
   const router = Router()
-  // Constructed lazily on first request so dev tooling (tsx watch) doesn't spin
-  // up a worker thread for unrelated requests.
-  let resource: ConversionResource | null = null
 
   const convert =
     (format: ConversionFormat) => async (req: Request, res: Response) => {
@@ -43,15 +51,13 @@ export function mountConversionRoutes(): Router {
           ? Number(req.query.scale ?? (req.body as { scale?: number })?.scale)
           : undefined
 
-      resource ??= new ConversionResource()
       try {
-        const { mime, data } = await resource.render(format, model, scale)
+        const { mime, data } = await getResource().render(format, model, scale)
         res.type(mime).status(200).send(data)
       } catch (error) {
-        if (error instanceof QueueFullError) {
-          res.status(503).json({ error: error.message })
-          return
-        }
+        // Queue saturation is transient — surface it as a typed 503 (with a
+        // Retry-After header) through the shared error handler.
+        if (error instanceof QueueFullError) throw Errors.rendererBusy()
         throw error
       }
     }
