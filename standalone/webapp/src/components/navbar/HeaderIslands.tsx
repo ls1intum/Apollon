@@ -14,7 +14,37 @@ import { NavbarHelp } from "./NavbarHelp"
 import { SaveLocalCopyButton } from "./SaveLocalCopyButton"
 import { VersionHistoryButton } from "./VersionHistoryButton"
 import { ThemeSwitcherMenu } from "./ThemeSwitcher"
+import { MobileBackPill, MobileActionsPill } from "./MobileIslands"
 import { navbarButtonStyle } from "./styleConstants"
+
+/**
+ * The whole editor header as one fluid flex row inside the `header` overlay band:
+ * `[brand/back] [title — flex middle] [actions]`. Because the three groups are
+ * flex siblings (not independent absolutely-positioned Panels), the title gets a
+ * real, bounded middle column — it grows then shrinks with ellipsis and can never
+ * overlap the brand/actions — and the gaps stay constant at every width.
+ */
+export function EditorHeaderRow({
+  isNarrow,
+  hideBrand,
+}: {
+  isNarrow: boolean
+  hideBrand: boolean
+}) {
+  return (
+    <div className="apollon-chrome-header-row">
+      {isNarrow ? (
+        <MobileBackPill />
+      ) : (
+        <HeaderBrandIsland showLogo={!hideBrand} />
+      )}
+      <div className="apollon-chrome-header-spacer">
+        <HeaderTitleIsland />
+      </div>
+      {isNarrow ? <MobileActionsPill /> : <HeaderActionsIsland />}
+    </div>
+  )
+}
 
 /**
  * One floating glass island. Portaled (by EditorChromeHeader) into a top-*
@@ -77,26 +107,32 @@ function GroupDivider() {
 }
 
 /**
- * Top-left: identity + navigation. Rendered as <header role="banner"> so the
+ * Left cluster: identity + navigation. Rendered as <header role="banner"> so the
  * editor keeps exactly one banner landmark (the "All diagrams" link is scoped to
- * it in the e2e suite).
+ * it in the e2e suite). `showLogo` is all-or-nothing — the wordmark is part of the
+ * logo, so we never collapse it to an icon; when hidden (native app) the cluster
+ * is just the always-present back control.
  */
-export function HeaderBrandIsland() {
+export function HeaderBrandIsland({ showLogo = true }: { showLogo?: boolean }) {
   return (
     <Island as="header" role="banner" ariaLabel="Editor">
-      <Link
-        to="/"
-        aria-label="Apollon home"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          color: "inherit",
-          textDecoration: "none",
-        }}
-      >
-        <BrandAndVersion />
-      </Link>
-      <GroupDivider />
+      {showLogo && (
+        <>
+          <Link
+            to="/"
+            aria-label="Apollon home"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              color: "inherit",
+              textDecoration: "none",
+            }}
+          >
+            <BrandAndVersion />
+          </Link>
+          <GroupDivider />
+        </>
+      )}
       <BackNav
         to="/"
         label={ALL_DIAGRAMS_LABEL}

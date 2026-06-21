@@ -483,7 +483,9 @@ test.describe("Mobile responsive layout", () => {
     const menuBox = await menu.boundingBox()
     expect(menuBox?.width).toBeLessThanOrEqual(240)
 
-    await menu.getByRole("menuitem", { name: "Share" }).click()
+    // Share is now a primary icon on the pill, not buried in the overflow menu.
+    await page.keyboard.press("Escape")
+    await page.getByRole("button", { name: "Share" }).click()
 
     const shareDialog = page.getByRole("dialog", { name: "Share" })
     await expect(shareDialog).toBeVisible()
@@ -525,9 +527,10 @@ test.describe("Mobile responsive layout", () => {
       )
     }, SAFE_INSET)
 
-    await expect(
-      page.getByRole("button", { name: "open options" })
-    ).toBeVisible()
+    // Landscape is wide enough for the full action bar — it keeps every control
+    // (the overflow "open options" pill is for narrow portrait only).
+    const actions = page.locator('[aria-label="Editor actions"]')
+    await expect(actions).toBeVisible()
 
     const palette = page.getByTestId("apollon-palette")
     await expect(palette).toBeVisible()
@@ -540,7 +543,7 @@ test.describe("Mobile responsive layout", () => {
     const navbarBox = await page.locator("header").boundingBox()
     expect(navbarBox?.height).toBeLessThanOrEqual(36)
 
-    // Logo and menu clear the notch plus the landscape breathing-room gap.
+    // Logo and actions clear the notch plus the landscape breathing-room gap.
     const homeLinkBox = await page
       .getByRole("link", { name: "Apollon home" })
       .boundingBox()
@@ -548,11 +551,9 @@ test.describe("Mobile responsive layout", () => {
       SAFE_INSET + NAVBAR_LANDSCAPE_GAP
     )
 
-    const menuButtonBox = await page
-      .getByRole("button", { name: "open options" })
-      .boundingBox()
-    expect(menuButtonBox).not.toBeNull()
-    expect(menuButtonBox!.x + menuButtonBox!.width).toBeLessThanOrEqual(
+    const actionsBox = await actions.boundingBox()
+    expect(actionsBox).not.toBeNull()
+    expect(actionsBox!.x + actionsBox!.width).toBeLessThanOrEqual(
       PHONE_LANDSCAPE.width - SAFE_INSET - NAVBAR_LANDSCAPE_GAP
     )
 

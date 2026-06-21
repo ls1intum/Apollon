@@ -1,14 +1,10 @@
 import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
+import { Capacitor } from "@capacitor/core"
 import useMediaQuery from "@mui/material/useMediaQuery"
 import { useEditorContext } from "@/contexts"
-import { MOBILE_VIEW_QUERY } from "@/constants"
-import {
-  HeaderBrandIsland,
-  HeaderTitleIsland,
-  HeaderActionsIsland,
-} from "./HeaderIslands"
-import { MobileBrandPill, MobileActionsPill } from "./MobileIslands"
+import { NARROW_VIEW_QUERY } from "@/constants"
+import { EditorHeaderRow } from "./HeaderIslands"
 
 // Derive the editor type from the context so it matches by construction (the
 // library ships two ApollonEditor declarations — main + react peer build — whose
@@ -19,7 +15,7 @@ type Region = Parameters<NonNullable<Editor>["getRegionElement"]>[0]
 /**
  * Acquires a stable host node for an overlay region while `active`, releasing it
  * otherwise. The host node lives for the editor instance, so a `createPortal`
- * target stays valid; switching desktop⇆mobile releases the unused regions.
+ * target stays valid.
  */
 function useRegionHost(editor: Editor, region: Region, active: boolean) {
   const [host, setHost] = useState<HTMLElement | null>(null)
@@ -35,33 +31,28 @@ function useRegionHost(editor: Editor, region: Region, active: boolean) {
 }
 
 /**
- * Mounts the editor header as floating glass islands over a full-bleed canvas.
- * Desktop: brand+nav top-left, title top-center, actions top-right. Mobile: a
- * brand+back pill top-left and an overflow pill top-right (title in the menu).
- * createPortal keeps each island in the webapp React tree (theme, router, app
- * contexts intact); only its DOM lands in the canvas region.
+ * Mounts the editor header into the library's single full-width `header` overlay
+ * band as one fluid flex row: `[brand/back] [title — flex] [actions]`. A shared
+ * flex track means the centered title can grow with the name and then shrink
+ * (ellipsis) but never overlap its neighbours, and the gaps stay constant — the
+ * three-independent-Panels layout could not guarantee either. createPortal keeps
+ * the row in the webapp React tree (theme, router, contexts); only its DOM lands
+ * in the canvas band.
+ *
+ * Responsive: `isNarrow` (portrait phones) collapses to compact pills with an
+ * overflow menu; wider viewports (incl. phone-landscape) keep the full island
+ * bar. The brand logo is hidden on narrow AND on native (Capacitor) — there the
+ * wordmark is noise, so the left cluster is just an always-present back control.
  */
 export function EditorChromeHeader() {
   const { editor } = useEditorContext()
-  const isMobile = useMediaQuery(MOBILE_VIEW_QUERY)
+  const isNarrow = useMediaQuery(NARROW_VIEW_QUERY)
+  const isNative = Capacitor.isNativePlatform()
+  const headerHost = useRegionHost(editor, "header", true)
 
-  const leftHost = useRegionHost(editor, "top-left", true)
-  const centerHost = useRegionHost(editor, "top-center", !isMobile)
-  const rightHost = useRegionHost(editor, "top-right", true)
-
-  return (
-    <>
-      {leftHost &&
-        createPortal(
-          isMobile ? <MobileBrandPill /> : <HeaderBrandIsland />,
-          leftHost
-        )}
-      {centerHost && createPortal(<HeaderTitleIsland />, centerHost)}
-      {rightHost &&
-        createPortal(
-          isMobile ? <MobileActionsPill /> : <HeaderActionsIsland />,
-          rightHost
-        )}
-    </>
+  if (!headerHost) return null
+  return createPortal(
+    <EditorHeaderRow isNarrow={isNarrow} hideBrand={isNarrow || isNative} />,
+    headerHost
   )
 }

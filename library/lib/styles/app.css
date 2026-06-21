@@ -517,6 +517,35 @@
   );
 }
 
+/* The editor header is one fluid flex row inside the full-width `header` band:
+   [brand/back] [title — flex middle] [actions]. A shared flex track keeps the
+   centred title bounded between its neighbours (grow → shrink → ellipsis, never
+   overlap) at constant gaps. Floats one edge margin in from every side, plus the
+   device safe-area on the pinned left/right edges (the band already offsets the
+   top by the safe-area, so only padding-top: edge is needed here). */
+.apollon-chrome-header-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--apollon-chrome-gap);
+  width: 100%;
+  box-sizing: border-box;
+  padding-top: var(--apollon-chrome-edge);
+  padding-left: calc(
+    var(--apollon-chrome-edge) + var(--safe-area-inset-left, 0px)
+  );
+  padding-right: calc(
+    var(--apollon-chrome-edge) + var(--safe-area-inset-right, 0px)
+  );
+  pointer-events: none;
+}
+
+.apollon-chrome-header-spacer {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  justify-content: center;
+}
+
 /* Phone landscape: nudge the canvas panels in by the safe-area insets. */
 @media (max-width: 950px) and (max-height: 500px) {
   /* Tighter clusters in landscape so the header band fits the ≤36px budget;
@@ -527,8 +556,19 @@
   }
 
   /* The base rule already adds safe-area on every side; landscape only needs
-     EXTRA breathing room past a side notch for the top pills (the e2e asserts
-     the logo/menu clear safe-area + 32px). Bottom panels inherit the base. */
+     EXTRA breathing room past a side notch / dynamic island. The header row and
+     the element palette both clear safe-area + 32px so neither tucks under the
+     landscape notch (the e2e asserts the logo/menu clear safe-area + 32px; the
+     palette nudge fixes the dynamic-island-over-palette overlap). */
+  .apollon-chrome-header-row {
+    padding-left: calc(32px + var(--safe-area-inset-left, 0px));
+    padding-right: calc(32px + var(--safe-area-inset-right, 0px));
+  }
+
+  .apollon-palette {
+    left: calc(32px + var(--safe-area-inset-left, 0px));
+  }
+
   .react-flow__panel.top.left {
     margin-left: calc(32px + var(--safe-area-inset-left, 0px));
   }
