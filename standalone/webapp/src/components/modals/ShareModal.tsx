@@ -68,9 +68,7 @@ export const ShareModal = () => {
 
   return (
     <HomeDialogContent testId="share-modal-content">
-      {/* Shared state needs no intro — the "Anyone with this link" field label
-          and the access dropdown already say it. Only the create step, which
-          uploads a copy, warrants a one-line heads-up. */}
+      {/* Heads-up only on create; the shared view's field label + dropdown say enough. */}
       {!share.diagramId && (
         <HomeDialogNotice>
           A copy is uploaded so anyone with the link can open it — your local

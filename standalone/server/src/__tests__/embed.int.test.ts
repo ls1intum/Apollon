@@ -322,7 +322,7 @@ describe("GET /embed/:diagramId", () => {
     expect(res.status).toBe(200)
     // `https://` (not mixed content) + the canonical /shared/:id?view= route.
     expect(res.text).toMatch(
-      /href="https:\/\/[^"]+\/shared\/[A-Za-z0-9_-]+\?view=EDIT"/
+      /href="https:\/\/[^"]+\/shared\/[A-Za-z0-9_-]+\?view=COLLABORATE"/
     )
   })
 
@@ -459,10 +459,9 @@ describe("end-to-end through the real conversion worker", () => {
   }, 20_000)
 
   it("renders an edge bound to a hidden *-between-* anchor", async () => {
-    // Regression: edges connected to a `*-between-*` resolution anchor were
-    // dropped by the headless render (React Flow can't position the hidden
-    // handle under JSDOM), so the diagram exported with its boxes but no edge.
-    // `normalizeModelForServerRender` collapses the anchor to its named side.
+    // React Flow can't position the hidden `*-between-*` handle under JSDOM, so
+    // an edge bound to one must be re-anchored to its named side
+    // (`normalizeModelForServerRender`) or it vanishes from the export.
     const node = (id: string, x: number) => ({
       id,
       width: 160,
@@ -502,10 +501,10 @@ describe("end-to-end through the real conversion worker", () => {
   }, 20_000)
 
   it("positions an edge label on the edge, not at a fallback point", async () => {
-    // Regression: edge labels are positioned by measuring the rendered path with
-    // getTotalLength/getPointAtLength, which JSDOM can't do — so the label landed
-    // at a fallback point off the line (this BPMN flow's label floated left of
-    // its vertical segment). The svgPathGeometry shim restores on-path placement.
+    // Edge labels are placed by measuring the path with getTotalLength /
+    // getPointAtLength; the svgPathGeometry shim makes that work under JSDOM so
+    // the label sits on the line instead of at the straight source→target
+    // midpoint, which for this L-shaped path is off the line entirely.
     const node = (id: string, type: string, x: number, y: number) => ({
       id,
       width: 160,
@@ -556,9 +555,9 @@ describe("end-to-end through the real conversion worker", () => {
     )
     expect(m).not.toBeNull()
     const [lx, ly] = [Number(m![1]), Number(m![2])]
-    // The path midpoint is on the vertical segment at ~(469, 352). The label
-    // sits within a small offset of it — NOT at the old straight-line fallback
-    // (~438, 334) which is ~37px away, off the line.
+    // The on-path midpoint is on the vertical segment at ~(469, 352); the label
+    // must sit within a small offset of it (the source→target midpoint ~(438,
+    // 334) is ~37px away, off the line).
     const dist = Math.hypot(lx - 469, ly - 352)
     expect(dist).toBeLessThan(25)
   }, 20_000)

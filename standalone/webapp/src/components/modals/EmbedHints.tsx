@@ -131,10 +131,8 @@ export function sanitizeMarkdownAlt(title: string): string {
 /**
  * Builds the snippet for each format, or `null` when there is no
  * externally-resolvable server origin (native without a configured API host).
- * The click-through uses `buildSharedDiagramUrl` with an explicit `EDIT` view so
- * it always lands on the diagram regardless of the dialog's default mode. The
- * non-clickable variant requests `?frame=plain` so the image drops the
- * "Open in Apollon" button that would otherwise lead nowhere.
+ * The click-through opens the diagram in collaboration mode; the non-clickable
+ * variant requests `?frame=plain`, dropping the card's button that links nowhere.
  */
 function buildSnippets(
   diagramId: string,
@@ -144,7 +142,7 @@ function buildSnippets(
   if (!serverOrigin) return null
   const safeTitle = sanitizeMarkdownAlt(title)
   const id = encodeURIComponent(diagramId)
-  const editorUrl = buildSharedDiagramUrl(diagramId, DiagramView.EDIT)
+  const editorUrl = buildSharedDiagramUrl(diagramId, DiagramView.COLLABORATE)
   const previewUrl = `${serverOrigin}/api/diagrams/${id}/preview.svg`
   const embedUrl = `${serverOrigin}/embed/${id}`
   return {

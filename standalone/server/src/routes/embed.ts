@@ -403,15 +403,14 @@ export function mountEmbedRoutes(deps: Deps): Router {
 }
 
 /**
- * Absolute editor URL targeting the webapp's `/shared/:id?view=EDIT` route (the
+ * Absolute editor URL for the webapp's `/shared/:id?view=COLLABORATE` route (the
  * bare `/:id` 404s without `?view`). Uses `req.get("host")` (the verbatim `Host`
- * header) deliberately — NOT `req.hostname`, which under `trust proxy` honours
- * the client-spoofable `X-Forwarded-Host`. The link host is therefore only as
- * trustworthy as the edge proxy's `Host` hygiene; keep `req.get("host")` here.
+ * header), not `req.hostname`, which under `trust proxy` honours the
+ * client-spoofable `X-Forwarded-Host`.
  */
 function buildEditorHref(req: Request, diagramId: string): string {
   const host = req.get("host") ?? ""
-  return `${req.protocol}://${host}/shared/${encodeURIComponent(diagramId)}?view=EDIT`
+  return `${req.protocol}://${host}/shared/${encodeURIComponent(diagramId)}?view=COLLABORATE`
 }
 
 interface EmbedHtmlInput {

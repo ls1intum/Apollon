@@ -45,8 +45,7 @@ const TTL_REFRESH_THROTTLE_SECONDS = 24 * 3600
 /**
  * Sliding expiry: a read pushes the diagram's 120-day TTL back to full so a
  * diagram that's still being opened or embedded doesn't expire out from under a
- * README/issue. Only writes used to refresh the TTL, so a viewed-but-unedited
- * embed would silently 404 after 120 days; this closes that gap.
+ * README/issue while it's unedited.
  *
  * Best-effort and throttled: it refreshes only once the remaining TTL has
  * dropped below `full - throttle`, and any failure is swallowed so it can never

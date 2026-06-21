@@ -28,7 +28,7 @@ describe("EmbedHints", () => {
     // baked into the preview SVG), wrapped in a link to the editor.
     expect(field.value.startsWith("[![")).toBe(true)
     expect(field.value).toContain("/preview.svg")
-    expect(field.value).toContain("?view=EDIT")
+    expect(field.value).toContain("?view=COLLABORATE")
     // A single-line snippet — one image, one link.
     expect(field.value).not.toContain("\n")
 
@@ -36,7 +36,7 @@ describe("EmbedHints", () => {
     // Plain image, no link wrapper — and the image drops the CTA button.
     expect(field.value.startsWith("![")).toBe(true)
     expect(field.value.startsWith("[![")).toBe(false)
-    expect(field.value).not.toContain("?view=EDIT")
+    expect(field.value).not.toContain("?view=COLLABORATE")
     expect(field.value).toContain("?frame=plain")
 
     fireEvent.click(screen.getByText("iframe"))
