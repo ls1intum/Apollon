@@ -183,10 +183,13 @@ function truncateLabel(s: string, max: number): string {
 
 /**
  * Frames the raw diagram export as a self-contained "card": a rounded, bordered
- * panel with the diagram on a white inset and a footer carrying the title + an
- * "Open in Apollon" button. The Markdown snippet wraps the whole image in a link
- * to the editor, so the footer button is a visual affordance — clicking anywhere
- * opens Apollon.
+ * panel with the diagram on a white inset and — when `withFooter` — a footer
+ * carrying the title + an "Open in Apollon" button.
+ *
+ * The clickable Markdown snippet wraps the whole image in a link to the editor,
+ * so the footer button is a visual affordance — clicking anywhere opens Apollon.
+ * The "no link" snippet passes `withFooter: false` so it doesn't show a button
+ * that goes nowhere; it's the same framed card, just without the call to action.
  *
  * Light/dark adaptive via an internal `prefers-color-scheme` query (honoured by
  * browsers even when the SVG is an `<img>`): the card, border, and footer follow
@@ -195,7 +198,11 @@ function truncateLabel(s: string, max: number): string {
  * white diagram sits matted inside the dark frame. Falls back to the plain
  * opaque background if the export's geometry can't be read.
  */
-function frameDiagramSvg(svg: string, title: string): string {
+function frameDiagramSvg(
+  svg: string,
+  title: string,
+  withFooter = true
+): string {
   const openTag = svg.match(/<svg\b[^>]*>/i)
   const vb = openTag?.[0]
     .match(/viewBox\s*=\s*"([^"]+)"/i)?.[1]
@@ -208,55 +215,67 @@ function frameDiagramSvg(svg: string, title: string): string {
   const [minX, minY, w, h] = vb as [number, number, number, number]
 
   const MAT = clamp(w * 0.014, 10, 22) // dark-mode frame thickness around inset
-  const FOOTER = clamp(w * 0.055, 46, 78) // footer band height
   const R = clamp(w * 0.014, 12, 26) // card corner radius
   const PAD = clamp(w * 0.03, 22, 44) // outer margin (shadow room)
   const STROKE = Math.max(1.4, w * 0.0013)
-  const FONT = clamp(FOOTER * 0.32, 13, 26)
-  const BTN_H = FOOTER * 0.62
-  const GUTTER = FONT * 0.85
+  const FOOTER = withFooter ? clamp(w * 0.055, 46, 78) : 0
+  // Without a footer the inset is symmetrically matted (MAT on all four sides);
+  // with one it runs down to the divider that separates it from the footer band.
+  const insetH = withFooter ? h - MAT : h - 2 * MAT
 
-  const footerY = minY + h
-  const footerMid = footerY + FOOTER / 2
+  const r2 = (n: number) => Math.round(n * 100) / 100
+  const outW = w + 2 * PAD
+  const outH = h + FOOTER + 2 * PAD
 
-  // The button label is pinned to an exact `textLength` so the box always fits
-  // regardless of the viewer's system font metrics, then the box is sized from
-  // that known width — no font-measurement guesswork.
-  const label = "Open in Apollon"
-  const arrow = FONT * 0.8
-  const btnPadX = FONT * 0.95
-  const btnTextW = label.length * FONT * 0.54
-  const gap = FONT * 0.6
-  const btnW = btnPadX * 2 + btnTextW + gap + arrow
-  const btnX = minX + w - MAT - GUTTER - btnW
-  const btnY = footerMid - BTN_H / 2
-  const arrowX = btnX + btnW - btnPadX - arrow
-  const ah = arrow * 0.34
+  let footer = ""
+  if (withFooter) {
+    const FONT = clamp(FOOTER * 0.32, 13, 26)
+    const GUTTER = FONT * 0.85
+    const footerY = minY + h
+    const footerMid = footerY + FOOTER / 2
 
-  const titleX = minX + MAT + GUTTER
-  const titleAvail = btnX - titleX - FONT * 0.8
-  const maxChars = Math.max(3, Math.floor(titleAvail / (FONT * 0.56)))
-  const safeTitle = escapeHtml(
-    truncateLabel(title || "Apollon diagram", maxChars)
-  )
+    // The button label is pinned to an exact `textLength` so the box always fits
+    // regardless of the viewer's system font metrics, then the box is sized from
+    // that known width — no font-measurement guesswork.
+    const label = "Open in Apollon"
+    const arrow = FONT * 0.8
+    const btnPadX = FONT * 0.95
+    const btnTextW = label.length * FONT * 0.54
+    const btnW = btnPadX * 2 + btnTextW + FONT * 0.6 + arrow
+    const BTN_H = FOOTER * 0.62
+    const btnX = minX + w - MAT - GUTTER - btnW
+    const btnY = footerMid - BTN_H / 2
+    const arrowX = btnX + btnW - btnPadX - arrow
+    const ah = arrow * 0.34
+
+    const titleX = minX + MAT + GUTTER
+    const maxChars = Math.max(
+      3,
+      Math.floor((btnX - titleX - FONT * 0.8) / (FONT * 0.56))
+    )
+    const safeTitle = escapeHtml(
+      truncateLabel(title || "Apollon diagram", maxChars)
+    )
+
+    footer = `
+<line class="fr-divider" x1="${r2(minX + MAT)}" y1="${r2(footerY)}" x2="${r2(minX + w - MAT)}" y2="${r2(footerY)}" stroke-width="${r2(STROKE)}"/>
+<text class="fr-title" x="${r2(titleX)}" y="${r2(footerMid)}" font-size="${r2(FONT)}" dominant-baseline="central">${safeTitle}</text>
+<rect class="fr-btn" x="${r2(btnX)}" y="${r2(btnY)}" width="${r2(btnW)}" height="${r2(BTN_H)}" rx="${r2(BTN_H / 2)}"/>
+<text class="fr-btn-tx" x="${r2(btnX + btnPadX)}" y="${r2(footerMid)}" font-size="${r2(FONT)}" textLength="${r2(btnTextW)}" lengthAdjust="spacingAndGlyphs" dominant-baseline="central">${label}</text>
+<path class="fr-btn-ar" d="M ${r2(arrowX)} ${r2(footerMid)} L ${r2(arrowX + arrow)} ${r2(footerMid)} M ${r2(arrowX + arrow - ah)} ${r2(footerMid - ah)} L ${r2(arrowX + arrow)} ${r2(footerMid)} L ${r2(arrowX + arrow - ah)} ${r2(footerMid + ah)}" fill="none" stroke-width="${r2(STROKE * 1.3)}" stroke-linecap="round" stroke-linejoin="round"/>`
+  }
 
   const inner = svg.slice(
     (openTag.index ?? 0) + openTag[0].length,
     svg.lastIndexOf("</svg>")
   )
 
-  const r2 = (n: number) => Math.round(n * 100) / 100
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${r2(minX - PAD)} ${r2(minY - PAD)} ${r2(w + 2 * PAD)} ${r2(h + FOOTER + 2 * PAD)}" width="${r2(w + 2 * PAD)}" height="${r2(h + FOOTER + 2 * PAD)}" shape-rendering="geometricPrecision">
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${r2(minX - PAD)} ${r2(minY - PAD)} ${r2(outW)} ${r2(outH)}" width="${r2(outW)}" height="${r2(outH)}" shape-rendering="geometricPrecision">
 <style>${FRAME_STYLE}</style>
 <defs><filter id="fr-shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow class="fr-sh" dx="0" dy="${r2(STROKE * 1.4)}" stdDeviation="${r2(PAD * 0.22)}"/></filter></defs>
 <rect class="fr-card" filter="url(#fr-shadow)" x="${r2(minX)}" y="${r2(minY)}" width="${r2(w)}" height="${r2(h + FOOTER)}" rx="${r2(R)}" stroke-width="${r2(STROKE)}"/>
-<rect class="fr-inset" x="${r2(minX + MAT)}" y="${r2(minY + MAT)}" width="${r2(w - 2 * MAT)}" height="${r2(h - MAT)}" rx="${r2(R * 0.5)}"/>
-${inner}
-<line class="fr-divider" x1="${r2(minX + MAT)}" y1="${r2(footerY)}" x2="${r2(minX + w - MAT)}" y2="${r2(footerY)}" stroke-width="${r2(STROKE)}"/>
-<text class="fr-title" x="${r2(titleX)}" y="${r2(footerMid)}" font-size="${r2(FONT)}" dominant-baseline="central">${safeTitle}</text>
-<rect class="fr-btn" x="${r2(btnX)}" y="${r2(btnY)}" width="${r2(btnW)}" height="${r2(BTN_H)}" rx="${r2(BTN_H / 2)}"/>
-<text class="fr-btn-tx" x="${r2(btnX + btnPadX)}" y="${r2(footerMid)}" font-size="${r2(FONT)}" textLength="${r2(btnTextW)}" lengthAdjust="spacingAndGlyphs" dominant-baseline="central">${label}</text>
-<path class="fr-btn-ar" d="M ${r2(arrowX)} ${r2(footerMid)} L ${r2(arrowX + arrow)} ${r2(footerMid)} M ${r2(arrowX + arrow - ah)} ${r2(footerMid - ah)} L ${r2(arrowX + arrow)} ${r2(footerMid)} L ${r2(arrowX + arrow - ah)} ${r2(footerMid + ah)}" fill="none" stroke-width="${r2(STROKE * 1.3)}" stroke-linecap="round" stroke-linejoin="round"/>
+<rect class="fr-inset" x="${r2(minX + MAT)}" y="${r2(minY + MAT)}" width="${r2(w - 2 * MAT)}" height="${r2(insetH)}" rx="${r2(R * 0.5)}"/>
+${inner}${footer}
 </svg>`
 }
 
@@ -306,9 +325,12 @@ export function mountEmbedApiRoutes(deps: Deps): Router {
         }
 
         const raw = await renderSvg(deps, found.diagram, found.etag)
+        // `?frame=plain` drops the footer/CTA — used by the non-clickable embed
+        // snippet, where an "Open in Apollon" button would link nowhere.
         const svg = frameDiagramSvg(
           raw,
-          found.diagram.title || "Apollon diagram"
+          found.diagram.title || "Apollon diagram",
+          req.query.frame !== "plain"
         )
         setHeaders()
         res.status(200).send(svg)

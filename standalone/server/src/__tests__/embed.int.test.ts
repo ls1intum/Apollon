@@ -117,6 +117,21 @@ describe("GET /api/diagrams/:diagramId/preview.svg", () => {
     expect(body).toContain('fill="#abcdef"') // diagram content survives framing
   })
 
+  it("?frame=plain drops the footer/CTA for the non-clickable snippet", async () => {
+    const app = appWith(okResource())
+    const id = await createDiagram(app)
+    const res = await request(app)
+      .get(`/api/diagrams/${id}/preview.svg?frame=plain`)
+      .buffer(true)
+    expect(res.status).toBe(200)
+    const body = asText(res)
+    // Still the framed card (inset + border), but no button that links nowhere.
+    expect(body).toContain('class="fr-inset"')
+    expect(body).not.toContain("Open in Apollon")
+    expect(body).not.toContain('class="fr-btn"')
+    expect(body).toContain('fill="#abcdef"')
+  })
+
   it("returns 304 on a matching If-None-Match without rendering again", async () => {
     const resource = okResource()
     const app = appWith(resource)

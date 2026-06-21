@@ -1,4 +1,4 @@
-import { useId, useState } from "react"
+import { useEffect, useId, useRef, useState } from "react"
 import { toast } from "react-toastify"
 import { Button } from "@/components/ui/button"
 import {
@@ -13,10 +13,9 @@ import {
 } from "@/utils/sharedDiagramLinks"
 
 /**
- * Embed panel for the share modal: copies one snippet that renders a *live*,
- * auto-updating diagram. `diagramId` is the server id of a shared diagram (the
- * caller resolves it — from the share it just created, or the current shared
- * route); without one, the panel shows a share-first hint.
+ * Embed panel for the share modal: a format picker plus one copy-paste snippet
+ * that renders a live, auto-updating diagram. `diagramId` is the server id of a
+ * shared diagram; without one the panel shows a share-first hint.
  */
 
 type EmbedFormat = "markdown" | "markdown-plain" | "iframe"
@@ -28,10 +27,9 @@ const FORMAT_OPTIONS = [
 ] satisfies readonly SegmentedControlOption<EmbedFormat>[]
 
 const FORMAT_HINTS: Record<EmbedFormat, string> = {
-  markdown:
-    "Recommended. A framed diagram with an “Open in Apollon” button — click it to open the editor.",
-  "markdown-plain": "The same framed image, but not clickable.",
-  iframe: "A live, interactive embed for sites that allow iframes.",
+  markdown: "A clickable, auto-updating card — opens the diagram in Apollon.",
+  "markdown-plain": "The same card, image only — no link.",
+  iframe: "An interactive embed for pages that allow iframes.",
 }
 
 export function EmbedHints({
@@ -42,12 +40,26 @@ export function EmbedHints({
   title?: string
 }) {
   const [format, setFormat] = useState<EmbedFormat>("markdown")
+  const [copied, setCopied] = useState(false)
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const hintId = useId()
   const snippets = diagramId ? buildSnippets(diagramId, title) : null
 
+  useEffect(
+    () => () => {
+      if (copyTimer.current) clearTimeout(copyTimer.current)
+    },
+    []
+  )
+
   const onCopy = (value: string) => {
     void copyToClipboard(value).then(
-      () => toast.success("Embed code copied"),
+      () => {
+        setCopied(true)
+        if (copyTimer.current) clearTimeout(copyTimer.current)
+        copyTimer.current = setTimeout(() => setCopied(false), 2000)
+        toast.success("Embed code copied")
+      },
       () => toast.error("Couldn't copy. Select the text and copy it manually.")
     )
   }
@@ -64,39 +76,33 @@ export function EmbedHints({
         </p>
       ) : (
         <>
-          <p className="text-sm opacity-75 text-[var(--apollon-primary-contrast)]">
-            Add a live diagram to any page — it updates as you edit.
-          </p>
-
           <SegmentedControl
             options={FORMAT_OPTIONS}
             value={format}
             onChange={setFormat}
           />
 
-          <div className="relative min-w-0">
-            <textarea
+          <div className="flex items-stretch">
+            <input
+              type="text"
               value={snippets[format]}
               readOnly
               spellCheck={false}
-              rows={Math.min(
-                6,
-                Math.max(2, snippets[format].split("\n").length)
-              )}
               aria-label="Embed code"
               aria-describedby={hintId}
               onFocus={(e) => e.currentTarget.select()}
-              className="w-full resize-y rounded-md border border-[var(--home-border-default)] bg-[var(--apollon-background)] px-3 py-2 pr-16 text-xs font-mono leading-relaxed text-[var(--apollon-primary-contrast)] outline-none"
+              className="h-9 min-w-0 grow rounded-l-md border border-r-0 border-[var(--home-border-default)] bg-[var(--apollon-background)] px-3 font-mono text-xs text-[var(--apollon-primary-contrast)] outline-none"
             />
             <Button
               onClick={() => onCopy(snippets[format])}
               variant="outline"
               aria-label="Copy embed code"
-              className="absolute right-2 top-2 h-7 px-2.5 text-xs"
+              className="h-9 shrink-0 rounded-l-none px-3 text-xs"
             >
-              Copy
+              {copied ? "Copied" : "Copy"}
             </Button>
           </div>
+
           <span
             id={hintId}
             className="text-xs opacity-70 text-[var(--apollon-primary-contrast)]"
@@ -125,9 +131,10 @@ export function sanitizeMarkdownAlt(title: string): string {
 /**
  * Builds the snippet for each format, or `null` when there is no
  * externally-resolvable server origin (native without a configured API host).
- * The SVG, badge, and `/embed` routes live on the API host; the click-through
- * uses `buildSharedDiagramUrl` with an explicit `EDIT` view so "Open in Apollon"
- * always lands on the diagram regardless of the share dialog's default mode.
+ * The click-through uses `buildSharedDiagramUrl` with an explicit `EDIT` view so
+ * it always lands on the diagram regardless of the dialog's default mode. The
+ * non-clickable variant requests `?frame=plain` so the image drops the
+ * "Open in Apollon" button that would otherwise lead nowhere.
  */
 function buildSnippets(
   diagramId: string,
@@ -141,10 +148,8 @@ function buildSnippets(
   const previewUrl = `${serverOrigin}/api/diagrams/${id}/preview.svg`
   const embedUrl = `${serverOrigin}/embed/${id}`
   return {
-    // The framed preview image already carries the "Open in Apollon" button, so
-    // one clickable image is the whole snippet — clicking it opens the editor.
     markdown: `[![${safeTitle}](${previewUrl})](${editorUrl})`,
-    "markdown-plain": `![${safeTitle}](${previewUrl})`,
+    "markdown-plain": `![${safeTitle}](${previewUrl}?frame=plain)`,
     iframe: `<iframe src="${embedUrl}" width="800" height="500" loading="lazy" referrerpolicy="no-referrer" style="border:0;border-radius:8px"></iframe>`,
   }
 }

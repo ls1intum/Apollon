@@ -68,11 +68,15 @@ export const ShareModal = () => {
 
   return (
     <HomeDialogContent testId="share-modal-content">
-      <HomeDialogNotice>
-        {share.diagramId
-          ? "Anyone with this link can open the diagram. Choose what they can do with it."
-          : "Share the diagram as a link. A copy is uploaded to our servers and kept for 120 days after it's last opened or edited; your local diagram stays untouched."}
-      </HomeDialogNotice>
+      {/* Shared state needs no intro — the "Anyone with this link" field label
+          and the access dropdown already say it. Only the create step, which
+          uploads a copy, warrants a one-line heads-up. */}
+      {!share.diagramId && (
+        <HomeDialogNotice>
+          A copy is uploaded so anyone with the link can open it — your local
+          diagram stays untouched.
+        </HomeDialogNotice>
+      )}
 
       {!share.diagramId && (
         <HomeDialogField label="Name" htmlFor="share-diagram-name">
@@ -103,8 +107,7 @@ export const ShareModal = () => {
 
           {hasLocalOriginal && (
             <p className="text-xs opacity-70 text-[var(--home-text-secondary)]">
-              This is a shared copy — your local version history stays on this
-              device with the original.
+              Your local copy and its history stay on this device.
             </p>
           )}
 
