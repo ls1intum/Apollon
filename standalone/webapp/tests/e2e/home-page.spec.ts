@@ -172,7 +172,9 @@ test.describe("Home page — empty state (no diagrams)", () => {
 
     const nameInput = page.getByRole("textbox", { name: "Name" })
 
-    await expect(nameInput).toHaveValue("Class Diagram")
+    // A blank diagram is created untitled (empty name → muted placeholder); a
+    // template pre-fills its own name as the sensible default.
+    await expect(nameInput).toHaveValue("")
     await page.getByRole("button", { name: "Use template" }).click()
     await expect(nameInput).toHaveValue("Adapter")
     await expect(page.getByText("Selected Template")).toHaveCount(0)
@@ -536,7 +538,6 @@ test.describe("Home page — accessibility basics", () => {
     // Headless Chromium reports 0 env() insets, so simulate a notch by setting
     // the custom properties production derives from env() (webapp.css :root).
     const INSET = 47
-    const LANDSCAPE_GAP = 32 // breathing room around logo/controls in landscape
     const LANDSCAPE_WIDTH = 844
 
     await page.setViewportSize({ width: 390, height: 844 })
@@ -574,17 +575,19 @@ test.describe("Home page — accessibility basics", () => {
     const landscapeBox = await navbar.boundingBox()
     expect(landscapeBox?.height).toBeLessThanOrEqual(52)
 
+    // The chrome HUGS the safe area (max(edge, inset)), same as the editor: the
+    // leading content sits at the notch edge, never under it.
     const homeLinkBox = await page
       .getByRole("link", { name: "Apollon home" })
       .boundingBox()
-    expect(homeLinkBox?.x).toBeGreaterThanOrEqual(INSET + LANDSCAPE_GAP)
+    expect(homeLinkBox?.x).toBeGreaterThanOrEqual(INSET)
 
     const themeButtonBox = await navbar
       .getByRole("button", { name: /Switch to (light|dark) mode/ })
       .boundingBox()
     expect(themeButtonBox).not.toBeNull()
     expect(themeButtonBox!.x + themeButtonBox!.width).toBeLessThanOrEqual(
-      LANDSCAPE_WIDTH - INSET - LANDSCAPE_GAP
+      LANDSCAPE_WIDTH - INSET
     )
   })
 })
