@@ -46,32 +46,56 @@ const withSurface: Decorator = (Story, context) => {
  * flip with the toolbar), but the surrounding Docs CHROME — page background,
  * prose, the args table — is themed by Storybook's own static docs theme, which
  * ignores `data-theme`. That left dark previews on a light docs page (and in
- * spots dark-on-dark, unreadable). This container syncs the Storybook docs theme
- * to the same `theme` global the toolbar drives: initial value from the docs
- * context, live updates via the globals channel.
+ * spots dark-on-dark, unreadable).
+ *
+ * This container keeps the Storybook docs theme in lock-step with the ACTUAL
+ * applied theme by observing `html[data-theme]` — the single source of truth the
+ * data-theme decorator writes. Reading a global at mount is racy (the decorator
+ * sets the attribute when the first preview renders, which can be AFTER this
+ * container mounts, and `globalsUpdated` only fires on a *change*) — that race is
+ * exactly why a freshly-loaded docs page sometimes stayed light. The
+ * MutationObserver catches the attribute whenever it lands; the globals channel
+ * covers toolbar toggles before any preview has re-rendered.
  */
-const readThemeIsDark = (context: DocsContainerCtx): boolean => {
+const htmlThemeIsDark = (): boolean =>
+  typeof document !== "undefined" &&
+  document.documentElement.getAttribute("data-theme") === "dark"
+
+const readInitialIsDark = (context: DocsContainerCtx): boolean => {
   const globals = (
     context as { store?: { userGlobals?: { globals?: { theme?: string } } } }
   )?.store?.userGlobals?.globals
   if (globals?.theme) return globals.theme === "dark"
-  if (typeof document !== "undefined")
-    return document.documentElement.getAttribute("data-theme") === "dark"
-  return false
+  return htmlThemeIsDark()
 }
 
 const ThemedDocsContainer = ({
   context,
   children,
 }: ComponentProps<typeof DocsContainer>) => {
-  const [isDark, setIsDark] = useState(() => readThemeIsDark(context))
+  const [isDark, setIsDark] = useState(() => readInitialIsDark(context))
   useEffect(() => {
+    // Sync from the DOM attribute, but ignore a transient unset (null) so we
+    // never clobber a correct initial read before the decorator has written it.
+    const syncFromDom = () => {
+      const attr = document.documentElement.getAttribute("data-theme")
+      if (attr === "dark" || attr === "light") setIsDark(attr === "dark")
+    }
+    syncFromDom()
+    const observer = new MutationObserver(syncFromDom)
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    })
     const channel = addons.getChannel()
     const onGlobals = ({ globals }: { globals?: { theme?: string } }) => {
       if (globals?.theme) setIsDark(globals.theme === "dark")
     }
     channel.on("globalsUpdated", onGlobals)
-    return () => channel.off("globalsUpdated", onGlobals)
+    return () => {
+      observer.disconnect()
+      channel.off("globalsUpdated", onGlobals)
+    }
   }, [])
   return (
     <DocsContainer
