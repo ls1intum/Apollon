@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { expect, fn, userEvent, within } from "storybook/test"
+import { withModalFrame } from "../../stories/_support/webapp"
 import { AboutModal } from "./AboutModal"
 
 /**
@@ -10,13 +11,12 @@ import { AboutModal } from "./AboutModal"
 const meta = {
   title: "Webapp/Modals/AboutModal",
   component: AboutModal,
-  parameters: { layout: "centered" },
+  parameters: {
+    layout: "fullscreen",
+    docs: { story: { inline: false, height: "560px" } },
+  },
   decorators: [
-    (Story) => (
-      <div className="w-[420px] rounded-lg border border-border bg-card p-5">
-        <Story />
-      </div>
-    ),
+    withModalFrame({ title: "Information about Apollon", variant: "plain" }),
   ],
   args: {
     onClose: fn(),
@@ -36,15 +36,20 @@ type Story = StoryObj<typeof meta>
 
 /** The about content with its external links. */
 export const Default: Story = {
-  play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement)
-    const github = await canvas.findByRole("link", { name: /^github$/i })
+  play: async ({ args }) => {
+    // The modal portals over a backdrop, so query the whole document.
+    const screen = within(document.body)
+    const github = await screen.findByRole("link", { name: /^github$/i })
     await expect(github).toHaveAttribute("target", "_blank")
     await expect(
-      canvas.getByRole("link", { name: /license \(mit\)/i })
+      screen.getByRole("link", { name: /license \(mit\)/i })
     ).toBeInTheDocument()
 
-    await userEvent.click(canvas.getByRole("button", { name: /close/i }))
+    // The frame's header adds its own X "Close"; click the body's Close button.
+    const close = screen
+      .getAllByRole("button", { name: /close/i })
+      .find((button) => button.textContent?.trim() === "Close")
+    await userEvent.click(close!)
     await expect(args.onClose).toHaveBeenCalled()
   },
 }

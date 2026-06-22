@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { expect, fn, userEvent, within } from "storybook/test"
 import { useVersionStore } from "@/stores/useVersionStore"
-import { ModalBodyProviders } from "../../stories/_support/webapp"
+import { withModalFrame } from "../../stories/_support/webapp"
 import {
   SAMPLE_DIAGRAM_ID,
   makeVersion,
@@ -29,8 +29,11 @@ const meta = {
   title: "Webapp/Versioning/DeleteVersionModal",
   component: DeleteVersionModal,
   tags: ["autodocs"],
-  parameters: { layout: "centered" },
-  decorators: [ModalBodyProviders],
+  parameters: {
+    layout: "fullscreen",
+    docs: { story: { inline: false, height: "360px" } },
+  },
+  decorators: [withModalFrame({ title: "Delete version", variant: "confirm" })],
   args: { diagramId: SAMPLE_DIAGRAM_ID, versionId: VERSION_ID },
   argTypes: {
     diagramId: { control: false, table: { category: "Data" } },
@@ -58,8 +61,8 @@ export const FallbackCopy: Story = {
 
 /** The named version is surfaced in the warning text. */
 export const ShowsVersionLabel: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
+  play: async () => {
+    const canvas = within(document.body)
     await expect(canvas.getByText(/initial domain sketch/i)).toBeInTheDocument()
   },
 }
@@ -72,8 +75,8 @@ export const ConfirmDeletes: Story = {
     // Swap in a spy so the play test can assert the delete fired without a backend.
     useVersionStore.setState({ deleteVersion: fn(async () => {}) })
   },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
+  play: async () => {
+    const canvas = within(document.body)
     const deleteVersion = useVersionStore.getState().deleteVersion
     await userEvent.click(canvas.getByRole("button", { name: /^delete$/i }))
     await expect(deleteVersion).toHaveBeenCalledWith(

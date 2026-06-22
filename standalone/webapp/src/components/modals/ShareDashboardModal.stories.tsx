@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { expect, userEvent, within } from "storybook/test"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
-import { ModalBodyProviders } from "../../stories/_support/webapp"
+import { withModalFrame } from "../../stories/_support/webapp"
 import {
   makeModel,
   makePersistentEntity,
@@ -30,8 +30,17 @@ const meta = {
   title: "Webapp/Modals/ShareDashboardModal",
   component: ShareDashboardModal,
   tags: ["autodocs"],
-  parameters: { layout: "centered" },
-  decorators: [ModalBodyProviders],
+  parameters: {
+    layout: "fullscreen",
+    docs: { story: { inline: false, height: "560px" } },
+  },
+  decorators: [
+    withModalFrame({
+      title: "Share your diagram",
+      variant: "home-compact",
+      contentOverflow: true,
+    }),
+  ],
   args: { modelId: SHARE_MODEL_ID },
   beforeEach: () => {
     usePersistenceModelStore.setState({
@@ -49,8 +58,8 @@ export const Default: Story = {}
 
 /** Editing the share name updates the field that gets uploaded on submit. */
 export const RenameBeforeShare: Story = {
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+  play: async ({ step }) => {
+    const canvas = within(document.body)
 
     await step("the name is pre-filled", async () => {
       const name = canvas.getByLabelText("Name")

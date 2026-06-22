@@ -26,9 +26,13 @@
   /* Accent tokens follow the editor's public --apollon-* theming API so the
      shared primitives respond to an external embedder's theme. The webapp's
      accent bridge (--apollon-primary <- --home-accent-base) keeps the navy
-     accent in the app, so this is identical there. */
+     accent in the app, so this is identical there.
+     primary-foreground is the text that sits ON the primary swatch (white-on-
+     navy), i.e. the accent's CONTRAST — NOT --apollon-primary-contrast, which is
+     the dark body text used for --color-foreground above. Mixing them gave
+     primary buttons + the accent dialog header dark-on-navy text. */
   --color-primary: var(--apollon-primary);
-  --color-primary-foreground: var(--apollon-primary-contrast);
+  --color-primary-foreground: var(--home-accent-contrast);
 
   --color-secondary: var(--home-surface-raised);
   --color-secondary-foreground: var(--home-text-secondary);

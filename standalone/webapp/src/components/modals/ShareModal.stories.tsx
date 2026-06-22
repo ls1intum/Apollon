@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { expect, within } from "storybook/test"
-import { ModalBodyProviders } from "../../stories/_support/webapp"
+import { withModalFrame } from "../../stories/_support/webapp"
 import { ShareModal } from "./ShareModal"
 
 /**
@@ -14,8 +14,11 @@ const meta = {
   title: "Webapp/Modals/ShareModal",
   component: ShareModal,
   tags: ["autodocs"],
-  parameters: { layout: "centered" },
-  decorators: [ModalBodyProviders],
+  parameters: {
+    layout: "fullscreen",
+    docs: { story: { inline: false, height: "560px" } },
+  },
+  decorators: [withModalFrame({ title: "Share", variant: "editor-share" })],
 } satisfies Meta<typeof ShareModal>
 
 export default meta
@@ -26,8 +29,8 @@ export const Default: Story = {}
 
 /** The pre-share state offers a name field and the create-link action. */
 export const CreateState: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
+  play: async () => {
+    const canvas = within(document.body)
     await expect(canvas.getByLabelText(/name/i)).toBeInTheDocument()
     await expect(
       canvas.getByRole("button", { name: /create share link/i })
@@ -47,8 +50,8 @@ export const AlreadyShared: Story = {
       routePaths: ["/shared/$id"],
     },
   },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
+  play: async () => {
+    const canvas = within(document.body)
     // The create-only notice + name field are gone; the link row stands in.
     await expect(canvas.getByText(/anyone with this link/i)).toBeInTheDocument()
     await expect(canvas.queryByLabelText(/^name$/i)).not.toBeInTheDocument()

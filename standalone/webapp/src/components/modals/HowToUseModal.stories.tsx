@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { expect, fn, userEvent, within } from "storybook/test"
+import { withModalFrame } from "../../stories/_support/webapp"
 import { HowToUseModal } from "./HowToUseModal"
 
 /**
@@ -10,13 +11,12 @@ import { HowToUseModal } from "./HowToUseModal"
 const meta = {
   title: "Webapp/Modals/HowToUseModal",
   component: HowToUseModal,
-  parameters: { layout: "fullscreen" },
+  parameters: {
+    layout: "fullscreen",
+    docs: { story: { inline: false, height: "720px" } },
+  },
   decorators: [
-    (Story) => (
-      <div className="mx-auto max-w-3xl rounded-lg border border-border bg-card">
-        <Story />
-      </div>
-    ),
+    withModalFrame({ title: "How to use this editor?", variant: "plain" }),
   ],
   args: {
     onClose: fn(),
@@ -36,9 +36,15 @@ type Story = StoryObj<typeof meta>
 
 /** The full walkthrough. */
 export const Default: Story = {
-  play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement)
-    await userEvent.click(await canvas.findByRole("button", { name: /close/i }))
+  play: async ({ args }) => {
+    // The modal portals over a backdrop, so query the whole document.
+    const screen = within(document.body)
+    // The frame's header adds its own X "Close"; click the body's Close button.
+    const buttons = await screen.findAllByRole("button", { name: /close/i })
+    const close = buttons.find(
+      (button) => button.textContent?.trim() === "Close"
+    )
+    await userEvent.click(close!)
     await expect(args.onClose).toHaveBeenCalled()
   },
 }

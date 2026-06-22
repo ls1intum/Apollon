@@ -24,6 +24,7 @@ import type { ApollonEditor, UMLModel } from "@tumaet/apollon/react"
 import { EditorContext, EditorProvider } from "@/contexts/EditorContext"
 import { ModalProvider } from "@/contexts/ModalContext"
 import { ModalProgressProvider } from "@/contexts/ModalProgressContext"
+import { ModalFrame, type ModalVariant } from "@/wrappers/ModalFrame"
 
 /**
  * Mounts a story inside a real TanStack router on in-memory history — the same
@@ -88,6 +89,42 @@ export const ModalBodyProviders: Decorator = (Story) => (
     </ModalProvider>
   </EditorProvider>
 )
+
+/**
+ * Renders a modal *body* story inside the AUTHENTIC modal chrome — the real
+ * {@link ModalFrame} (open Base UI Dialog + accent/divider header + responsive
+ * sizing) that `ModalWrapper` uses in the app, so the story looks and is sized
+ * exactly like the shipped modal instead of a bare, full-bleed body. Includes
+ * the editor/modal/progress providers the bodies consume. Pick the `variant`
+ * that matches how the modal is actually opened (New Diagram → `home-wide`,
+ * Share → `editor-share`, About/PPTX/version confirms → `plain`, …).
+ *
+ * The frame portals over a backdrop, so give the story `layout: "fullscreen"`
+ * and (for a clean Docs page) `parameters.docs.story.inline: false`.
+ */
+export function withModalFrame(opts: {
+  title: string
+  variant: ModalVariant
+  contentOverflow?: boolean
+}): Decorator {
+  return function ModalFrameDecorator(Story) {
+    return (
+      <EditorProvider>
+        <ModalProvider>
+          <ModalProgressProvider>
+            <ModalFrame
+              title={opts.title}
+              variant={opts.variant}
+              contentOverflow={opts.contentOverflow}
+            >
+              <Story />
+            </ModalFrame>
+          </ModalProgressProvider>
+        </ModalProvider>
+      </EditorProvider>
+    )
+  }
+}
 
 /**
  * Wraps a story on the dark navbar surface. The navbar and the version sidebar

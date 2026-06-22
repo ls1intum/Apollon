@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { expect, fn, userEvent, within } from "storybook/test"
+import { withModalFrame } from "../../stories/_support/webapp"
 import { CollaborateNameModal } from "./CollaborateNameModal"
 
 /**
@@ -11,13 +12,12 @@ import { CollaborateNameModal } from "./CollaborateNameModal"
 const meta = {
   title: "Webapp/Modals/CollaborateNameModal",
   component: CollaborateNameModal,
-  parameters: { layout: "centered" },
+  parameters: {
+    layout: "fullscreen",
+    docs: { story: { inline: false, height: "360px" } },
+  },
   decorators: [
-    (Story) => (
-      <div className="w-[360px] rounded-lg border border-border bg-card p-5">
-        <Story />
-      </div>
-    ),
+    withModalFrame({ title: "Join Collaboration", variant: "confirm" }),
   ],
   args: {
     onConfirm: fn(),
@@ -48,8 +48,8 @@ type Story = StoryObj<typeof meta>
 
 /** Empty by default; confirm is disabled until a name is typed. */
 export const Default: Story = {
-  play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement)
+  play: async ({ args }) => {
+    const canvas = within(document.body)
     const confirm = await canvas.findByRole("button", {
       name: /start collaborating/i,
     })

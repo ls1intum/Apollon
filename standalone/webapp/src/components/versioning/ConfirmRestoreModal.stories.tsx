@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { expect, fn, userEvent, within } from "storybook/test"
-import { ModalBodyProviders } from "../../stories/_support/webapp"
+import { withModalFrame } from "../../stories/_support/webapp"
 import {
   SAMPLE_DIAGRAM_ID,
   makeVersion,
@@ -30,8 +30,13 @@ const meta = {
   title: "Webapp/Versioning/ConfirmRestoreModal",
   component: ConfirmRestoreModal,
   tags: ["autodocs"],
-  parameters: { layout: "centered" },
-  decorators: [ModalBodyProviders],
+  parameters: {
+    layout: "fullscreen",
+    docs: { story: { inline: false, height: "360px" } },
+  },
+  decorators: [
+    withModalFrame({ title: "Restore this version?", variant: "confirm" }),
+  ],
   args: {
     diagramId: SAMPLE_DIAGRAM_ID,
     versionId: VERSION_ID,
@@ -68,16 +73,16 @@ export const FallbackLabel: Story = {
 
 /** The named version is surfaced in the warning copy. */
 export const ShowsVersionLabel: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
+  play: async () => {
+    const canvas = within(document.body)
     await expect(canvas.getByText(/initial domain sketch/i)).toBeInTheDocument()
   },
 }
 
 /** Clicking Restore awaits `onConfirm`, then closes the modal. */
 export const ConfirmRestores: Story = {
-  play: async ({ args, canvasElement }) => {
-    const canvas = within(canvasElement)
+  play: async ({ args }) => {
+    const canvas = within(document.body)
     await userEvent.click(canvas.getByRole("button", { name: /^restore$/i }))
     await expect(args.onConfirm).toHaveBeenCalled()
   },
@@ -85,8 +90,8 @@ export const ConfirmRestores: Story = {
 
 /** Cancel leaves the restore untriggered. */
 export const CancelKeepsCanvas: Story = {
-  play: async ({ args, canvasElement }) => {
-    const canvas = within(canvasElement)
+  play: async ({ args }) => {
+    const canvas = within(document.body)
     await userEvent.click(canvas.getByRole("button", { name: /cancel/i }))
     await expect(args.onConfirm).not.toHaveBeenCalled()
   },

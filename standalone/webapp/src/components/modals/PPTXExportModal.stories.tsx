@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { expect, userEvent, within } from "storybook/test"
-import { ModalBodyProviders } from "../../stories/_support/webapp"
+import { withModalFrame } from "../../stories/_support/webapp"
 import { PPTXExportModal } from "./PPTXExportModal"
 
 /**
@@ -14,8 +14,11 @@ const meta = {
   title: "Webapp/Modals/PPTXExportModal",
   component: PPTXExportModal,
   tags: ["autodocs"],
-  parameters: { layout: "centered" },
-  decorators: [ModalBodyProviders],
+  parameters: {
+    layout: "fullscreen",
+    docs: { story: { inline: false, height: "720px" } },
+  },
+  decorators: [withModalFrame({ title: "Export as PPTX", variant: "plain" })],
 } satisfies Meta<typeof PPTXExportModal>
 
 export default meta
@@ -29,8 +32,8 @@ export const Default: Story = {}
  * helper text switches accordingly.
  */
 export const InvalidScale: Story = {
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+  play: async ({ step }) => {
+    const canvas = within(document.body)
 
     await step("enter an out-of-range scale", async () => {
       const scale = canvas.getByLabelText("Scale")
