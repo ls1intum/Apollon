@@ -13,10 +13,8 @@ const config: StorybookConfig = {
     // Design system (@tumaet/ui) — primitives + token/theming docs.
     "../../../packages/ui/src/stories/**/*.mdx",
     "../../../packages/ui/src/**/*.stories.@(ts|tsx)",
-    // Editor library (@tumaet/apollon) — diagrams, element renderers, chrome.
-    "../../../library/lib/**/*.stories.@(ts|tsx)",
-    "../../../library/lib/**/*.mdx",
-    // Webapp — navbar, home, modals, versioning, pages.
+    // Webapp — navbar, home, modals, versioning, pages, AND the editor stories
+    // (which live under src/stories/editor and drive @tumaet/apollon).
     "../src/**/*.mdx",
     "../src/**/*.stories.@(ts|tsx)",
   ],
@@ -30,7 +28,12 @@ const config: StorybookConfig = {
     disableTelemetry: true,
   },
   typescript: {
-    reactDocgen: "react-docgen-typescript",
+    // Stories span three packages (@tumaet/ui, @tumaet/apollon, webapp), each in
+    // its own tsconfig project. react-docgen-typescript reads a single TS project
+    // and warns + skips prop tables for everything outside it (the @tumaet/ui
+    // primitives never got tables). react-docgen (babel AST) is project-agnostic:
+    // it generates prop tables for components in EVERY package with no warnings.
+    reactDocgen: "react-docgen",
   },
 }
 
