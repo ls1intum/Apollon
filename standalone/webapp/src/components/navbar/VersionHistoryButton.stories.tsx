@@ -62,11 +62,6 @@ export const OnSurface: Story = {
   args: { color: "var(--apollon-primary-contrast)" },
 }
 
-/** Pinned dark for visual review. */
-export const Dark: Story = {
-  globals: { theme: "dark" },
-}
-
 /** Clicking the button reports the toggle and exposes the pressed state. */
 export const TogglesDrawer: Story = {
   play: async ({ canvasElement, args }) => {

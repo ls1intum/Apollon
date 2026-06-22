@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { expect, userEvent, within } from "storybook/test"
-import { DiagramGallerySkeleton } from "./DiagramGallerySkeleton"
 import {
   resetPersistenceStore,
   seedGallery,
@@ -45,24 +44,6 @@ export const Populated: Story = {
  */
 export const Empty: Story = {
   // No seeding — the meta `beforeEach` already cleared the store.
-}
-
-/**
- * The loading placeholder rendered while local diagrams hydrate: a skeleton
- * toolbar and a grid of card placeholders, announced as a "Loading diagrams"
- * status region. The gallery swaps this in before its store read resolves.
- */
-export const Loading: StoryObj<typeof DiagramGallerySkeleton> = {
-  render: () => <DiagramGallerySkeleton count={6} />,
-}
-
-/**
- * Populated grid pinned to dark mode to review card surfaces and the
- * control-row contrast.
- */
-export const Dark: Story = {
-  beforeEach: () => seedGallery(),
-  globals: { theme: "dark" },
 }
 
 /**

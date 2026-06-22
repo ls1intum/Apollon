@@ -75,6 +75,8 @@ export function LegalPage({
 
   useEffect(() => {
     const controller = new AbortController()
+    // Clear stale content synchronously when the page/profile changes so the
+    // loading state shows immediately before the resolver resolves.
     setError(null)
     setResolved(null)
     resolver(page, { signal: controller.signal, profile })

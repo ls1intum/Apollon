@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 import { expect, userEvent, within } from "storybook/test"
 import { ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
-import { EmbedHints } from "./EmbedHints"
+import { EmbedSnippetPanel } from "./EmbedSnippetPanel"
 
 /**
  * The embed panel for the share modal: a format picker (Markdown / Markdown
@@ -16,8 +16,8 @@ import { EmbedHints } from "./EmbedHints"
  */
 
 const meta = {
-  title: "Webapp/Modals/EmbedHints",
-  component: EmbedHints,
+  title: "Webapp/Modals/EmbedSnippetPanel",
+  component: EmbedSnippetPanel,
   tags: ["autodocs"],
   parameters: { layout: "centered" },
   decorators: [
@@ -45,7 +45,7 @@ const meta = {
       table: { category: "Data" },
     },
   },
-} satisfies Meta<typeof EmbedHints>
+} satisfies Meta<typeof EmbedSnippetPanel>
 
 export default meta
 type Story = StoryObj<typeof meta>
@@ -56,11 +56,6 @@ export const Shared: Story = {}
 /** No shared id yet — the "share the diagram to embed it" fallback. */
 export const NotShared: Story = {
   args: { diagramId: undefined },
-}
-
-/** Pinned dark for visual review on the dark token set. */
-export const Dark: Story = {
-  globals: { theme: "dark" },
 }
 
 /** Switching to the iframe tab swaps the snippet to an `<iframe …>` string. */

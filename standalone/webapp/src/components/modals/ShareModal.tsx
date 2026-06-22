@@ -16,7 +16,7 @@ import {
 } from "./HomeDialog"
 import { ShareLinkRow, MODE_OPTIONS } from "./ShareLinkRow"
 import { useShareableDiagram } from "./useShareableDiagram"
-import { EmbedHints } from "./EmbedHints"
+import { EmbedSnippetPanel } from "./EmbedSnippetPanel"
 
 /**
  * In-editor "Share" dialog. Uploads a snapshot of the current diagram ONCE, then
@@ -109,7 +109,7 @@ export const ShareModal = () => {
             </p>
           )}
 
-          <EmbedHints diagramId={share.diagramId} title={name} />
+          <EmbedSnippetPanel diagramId={share.diagramId} title={name} />
         </>
       )}
 

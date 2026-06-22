@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router"
-import { ApollonWithConnection } from "@/pages/ApollonWithConnection"
+import { ApollonShared } from "@/pages/ApollonShared"
 import type { DiagramView } from "@/types/ModalTypes"
 import { isDiagramView } from "@/utils/sharedDiagramLinks"
 
@@ -17,5 +17,5 @@ export const Route = createFileRoute("/shared/$diagramId")({
     view: isDiagramView(search.view) ? search.view : undefined,
     version: typeof search.version === "string" ? search.version : undefined,
   }),
-  component: ApollonWithConnection,
+  component: ApollonShared,
 })

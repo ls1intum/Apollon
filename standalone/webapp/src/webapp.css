@@ -24,8 +24,9 @@
      editor Navbar and the chrome HomeNavbar share one source). */
   --navbar-bg: #212529;
   --navbar-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
-  --navbar-app-name-font: "Poppins", "Avenir Next", "Avenir", "Segoe UI",
-    "Helvetica Neue", Arial, sans-serif;
+  --navbar-app-name-font:
+    "Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue", Arial,
+    sans-serif;
 
   /* Safe-area floor: map the UA insets onto the custom properties the mobile
      layout reads as `var(--safe-area-inset-*, 0px)`. With `viewport-fit=cover`
@@ -155,8 +156,9 @@ body,
 }
 
 .recent-diagrams-font {
-  font-family: "Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue",
-    Arial, sans-serif;
+  font-family:
+    "Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue", Arial,
+    sans-serif;
 }
 
 .app-loading-screen {
@@ -166,15 +168,17 @@ body,
   flex: 1;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(
+  background:
+    linear-gradient(
       180deg,
       color-mix(in srgb, var(--home-surface-sunken) 42%, transparent),
       transparent 34%
     ),
     var(--home-surface-base);
   color: var(--home-text-primary);
-  font-family: "Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue",
-    Arial, sans-serif;
+  font-family:
+    "Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue", Arial,
+    sans-serif;
   transition:
     background-color 220ms ease,
     color 220ms ease;
@@ -187,7 +191,8 @@ body,
 .app-loading-screen--panel {
   min-height: min(52vh, 420px);
   border: 1px solid var(--home-border-subtle);
-  background: linear-gradient(
+  background:
+    linear-gradient(
       180deg,
       color-mix(in srgb, var(--home-surface-raised-hover) 46%, transparent),
       transparent 70%
@@ -567,8 +572,9 @@ body,
    accents. Theme-aware via --home-* tokens. */
 
 .home-toast-container {
-  --toastify-font-family: "Poppins", "Avenir Next", "Avenir", "Segoe UI",
-    "Helvetica Neue", Arial, sans-serif;
+  --toastify-font-family:
+    "Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue", Arial,
+    sans-serif;
   --toastify-toast-bd-radius: var(--home-radius-lg);
   --toastify-toast-shadow: var(--home-shadow-overlay-box);
   --toastify-color-success: var(--home-toast-success);
@@ -594,8 +600,9 @@ body,
   color: var(--home-text-primary);
   border: 1px solid var(--home-border-subtle);
   border-radius: var(--home-radius-lg);
-  font-family: "Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue",
-    Arial, sans-serif;
+  font-family:
+    "Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue", Arial,
+    sans-serif;
   font-size: 0.85rem;
   line-height: 1.45;
 }

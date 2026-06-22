@@ -66,11 +66,6 @@ export const FallbackLabel: Story = {
   args: { versionId: "missing-version" },
 }
 
-/** Pinned dark for visual review on the dark token set. */
-export const Dark: Story = {
-  globals: { theme: "dark" },
-}
-
 /** The named version is surfaced in the warning copy. */
 export const ShowsVersionLabel: Story = {
   play: async ({ canvasElement }) => {

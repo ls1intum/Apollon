@@ -1,11 +1,10 @@
-import type { ReactNode } from "react"
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { expect, within } from "storybook/test"
-import type { UMLModel } from "@tumaet/apollon"
-import type { ApollonEditor } from "@tumaet/apollon/react"
-import { EditorContext } from "@/contexts/EditorContext"
-import { ModalProvider } from "@/contexts/ModalContext"
-import { DarkNavbarSurface } from "../../stories/_support/webapp"
+import {
+  DarkNavbarSurface,
+  makeStubEditor,
+  StubEditorContext,
+} from "../../stories/_support/webapp"
 import { SaveLocalCopyButton } from "./SaveLocalCopyButton"
 
 /**
@@ -16,33 +15,6 @@ import { SaveLocalCopyButton } from "./SaveLocalCopyButton"
  * parameter) and inject a minimal editor stub into `EditorContext` — the only
  * thing the button reads off it is `editor.model`, on click.
  */
-
-const STUB_MODEL = {
-  version: "4.0.0",
-  type: "ClassDiagram",
-  title: "Shared Diagram",
-  nodes: [],
-  edges: [],
-} as unknown as UMLModel
-
-/** A throwaway editor stub: the button only needs a truthy `editor.model`. */
-const stubEditor = { model: STUB_MODEL } as unknown as ApollonEditor
-
-/** Supplies the editor stub + a modal host on top of the global router. */
-function SharedEditorContext({ children }: { children: ReactNode }) {
-  return (
-    <EditorContext.Provider
-      value={{
-        editor: stubEditor,
-        diagramName: "Shared Diagram",
-        setDiagramName: () => {},
-        setEditor: () => {},
-      }}
-    >
-      <ModalProvider>{children}</ModalProvider>
-    </EditorContext.Provider>
-  )
-}
 
 const meta = {
   title: "Webapp/Navbar/SaveLocalCopyButton",
@@ -59,9 +31,12 @@ const meta = {
   decorators: [
     DarkNavbarSurface,
     (Story) => (
-      <SharedEditorContext>
+      <StubEditorContext
+        editor={makeStubEditor({ title: "Shared Diagram" })}
+        diagramName="Shared Diagram"
+      >
         <Story />
-      </SharedEditorContext>
+      </StubEditorContext>
     ),
   ],
   argTypes: {
@@ -87,11 +62,6 @@ export const Default: Story = {}
 /** Collapsed to the icon at tight widths (the bar passes `hidden lg:inline`). */
 export const IconOnly: Story = {
   args: { labelClassName: "hidden" },
-}
-
-/** Pinned dark for visual review on the dark token set. */
-export const Dark: Story = {
-  globals: { theme: "dark" },
 }
 
 /** On a non-shared route the button self-hides (renders nothing). */

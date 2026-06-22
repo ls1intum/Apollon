@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 import { fn } from "storybook/test"
 import { DarkNavbarSurface } from "@/stories/_support/webapp"
 import { SAMPLE_DIAGRAM_ID, makeAutoGroup } from "@/stories/_support/versioning"
-import AutoGroupRow from "./AutoGroupRow"
+import { AutoGroupRow } from "./AutoGroupRow"
 
 /**
  * The collapsed expander row that stands in for a run of consecutive auto-saved
@@ -100,11 +100,6 @@ export const Default: Story = {
   args: { group: makeAutoGroup(5) },
 }
 
-/** The smallest group (two versions) that still collapses into an expander. */
-export const TwoVersions: Story = {
-  args: { group: makeAutoGroup(2) },
-}
-
 /** A large run of auto-saves. */
 export const ManyVersions: Story = {
   args: { group: makeAutoGroup(24) },
@@ -116,10 +111,4 @@ export const Active: Story = {
     group: makeAutoGroup(5),
     activeRowId: "auto-1",
   },
-}
-
-/** Pinned dark — the sidebar surface is always dark. */
-export const Dark: Story = {
-  args: { group: makeAutoGroup(5) },
-  globals: { theme: "dark" },
 }

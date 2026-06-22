@@ -165,9 +165,3 @@ export const Actions: Story = {
     </HomeDialogContent>
   ),
 }
-
-/** Pinned dark to verify the dialog blocks against dark tokens. */
-export const Dark: Story = {
-  globals: { theme: "dark" },
-  render: Composed.render,
-}

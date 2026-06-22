@@ -20,7 +20,7 @@ import {
   useExportAsJSON,
   useExportAsPDF,
 } from "@/hooks"
-import { FeedbackBoxes } from "@/components/FeedbackBoxes"
+import { AssessmentScoreChips } from "@/components/AssessmentScoreChips"
 import { useShallow } from "zustand/shallow"
 import { AssessmentDataBox } from "@/components/playground/AssessmentDataBox"
 import { CollapsibleSidebar } from "@/components/playground/CollapsibleSidebar"
@@ -219,7 +219,9 @@ export const ApollonPlayground: React.FC = () => {
           </p>
         )}
 
-        {mode === ApollonMode.Assessment && !readonly && <FeedbackBoxes />}
+        {mode === ApollonMode.Assessment && !readonly && (
+          <AssessmentScoreChips />
+        )}
 
         <button onClick={() => exportAsSvg()} className="border p-1 rounded-sm">
           Export as SVG

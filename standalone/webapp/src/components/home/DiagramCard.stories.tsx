@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { expect, fn, userEvent, within } from "storybook/test"
-import { DiagramView } from "@/types"
 import {
   SAMPLE_LOCAL_DIAGRAM,
   SAMPLE_SHARED_DIAGRAM,
@@ -181,11 +180,6 @@ export const Expired: Story = {
   },
 }
 
-/** Pinned dark-theme review. */
-export const Dark: Story = {
-  globals: { theme: "dark" },
-}
-
 /** Toggling the favorite star reports the toggle to the caller. */
 export const FavoriteToggles: Story = {
   args: { onToggleFavorite: fn() },
@@ -218,94 +212,5 @@ export const ActionsMenuOpens: Story = {
     await expect(
       body.getByRole("menuitem", { name: /delete/i })
     ).toBeInTheDocument()
-  },
-}
-
-/* ------------------------------------------------------------------ *\
- * DiagramActionsMenuView — the standalone three-dot menu.
-\* ------------------------------------------------------------------ */
-
-type MenuStory = StoryObj<typeof DiagramActionsMenuView>
-
-/**
- * The pure three-dot actions menu. It owns only open / delete-confirm UI state;
- * every action is an `onX` callback. Stories drive it via `args` and assert the
- * callbacks fire — no store, navigation, clipboard, or modal wiring.
- */
-export const ActionsMenu: MenuStory = {
-  render: (args) => <DiagramActionsMenuView {...args} />,
-  args: {
-    diagram: SAMPLE_LOCAL_DIAGRAM,
-    canDelete: true,
-    onOpen: fn(),
-    onDuplicate: fn(),
-    onDelete: fn(),
-    onShare: fn(),
-    onCopySharedLink: fn(),
-    onChangeSharedView: fn(),
-    onRemoveSharedEntry: fn(),
-  },
-  argTypes: {
-    diagram: { table: { category: "Data" } },
-    isExpired: { control: "boolean", table: { category: "State" } },
-    canDelete: { control: "boolean", table: { category: "State" } },
-    onOpen: { action: "open", table: { category: "Events" } },
-    onDuplicate: { action: "duplicate", table: { category: "Events" } },
-    onDelete: { action: "delete", table: { category: "Events" } },
-    onShare: { action: "share", table: { category: "Events" } },
-    onCopySharedLink: {
-      action: "copySharedLink",
-      table: { category: "Events" },
-    },
-    onChangeSharedView: {
-      action: "changeSharedView",
-      table: { category: "Events" },
-    },
-    onRemoveSharedEntry: {
-      action: "removeSharedEntry",
-      table: { category: "Events" },
-    },
-  },
-  play: async ({ args, canvasElement }) => {
-    const canvas = within(canvasElement)
-    await userEvent.click(
-      canvas.getByRole("button", { name: /open diagram actions/i })
-    )
-    const body = within(document.body)
-    await userEvent.click(
-      await body.findByRole("menuitem", { name: /^open$/i })
-    )
-    await expect(args.onOpen).toHaveBeenCalled()
-  },
-}
-
-/** The shared-diagram menu: copy link, change sharing mode, remove entry. */
-export const ActionsMenuShared: MenuStory = {
-  render: (args) => <DiagramActionsMenuView {...args} />,
-  args: {
-    diagram: SAMPLE_SHARED_DIAGRAM,
-    onOpen: fn(),
-    onDuplicate: fn(),
-    onDelete: fn(),
-    onShare: fn(),
-    onCopySharedLink: fn(),
-    onChangeSharedView: fn(),
-    onRemoveSharedEntry: fn(),
-  },
-}
-
-/** The expired-link menu: only "remove from shared list" is offered. */
-export const ActionsMenuExpired: MenuStory = {
-  render: (args) => <DiagramActionsMenuView {...args} />,
-  args: {
-    diagram: { ...SAMPLE_SHARED_DIAGRAM, lastSharedView: DiagramView.EDIT },
-    isExpired: true,
-    onOpen: fn(),
-    onDuplicate: fn(),
-    onDelete: fn(),
-    onShare: fn(),
-    onCopySharedLink: fn(),
-    onChangeSharedView: fn(),
-    onRemoveSharedEntry: fn(),
   },
 }

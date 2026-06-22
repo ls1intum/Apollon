@@ -109,14 +109,6 @@ export const ErrorState: Story = {
   },
 }
 
-/** Imprint pinned to dark mode. */
-export const Dark: Story = {
-  args: {
-    resolver: makeResolver(IMPRINT_MARKDOWN),
-  },
-  globals: { theme: "dark" },
-}
-
 /** Verifies the stubbed Markdown reaches the rendered article. */
 export const RendersContent: Story = {
   args: {

@@ -1,6 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { expect, userEvent, within } from "storybook/test"
-import { WebappProviders } from "../../stories/_support/webapp"
+import {
+  DarkNavbarSurface,
+  WebappProviders,
+} from "../../stories/_support/webapp"
 import { NavbarFile } from "./NavbarFile"
 
 /**
@@ -30,24 +33,11 @@ type Story = StoryObj<typeof meta>
 
 /** Default trigger on the dark navbar (rendered here on a dark surface). */
 export const Default: Story = {
-  parameters: { backgrounds: { default: "dark" } },
-  decorators: [
-    (Story) => (
-      <div style={{ background: "var(--navbar-bg)", padding: "1rem" }}>
-        <Story />
-      </div>
-    ),
-  ],
+  decorators: [DarkNavbarSurface],
 }
 
 /** The mobile sheet passes an explicit contrast color for the themed surface. */
 export const OnSurface: Story = {
-  args: { color: "var(--apollon-primary-contrast)" },
-}
-
-/** Pinned dark-theme review. */
-export const Dark: Story = {
-  globals: { theme: "dark" },
   args: { color: "var(--apollon-primary-contrast)" },
 }
 

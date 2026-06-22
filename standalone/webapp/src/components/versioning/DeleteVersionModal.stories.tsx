@@ -48,11 +48,6 @@ type Story = StoryObj<typeof meta>
 /** Confirmation naming the targeted version from its description. */
 export const Default: Story = {}
 
-/** Dark-pinned confirmation. */
-export const Dark: Story = {
-  globals: { theme: "dark" },
-}
-
 /** No matching version in the store — the generic fallback copy is shown. */
 export const FallbackCopy: Story = {
   beforeEach: () => {

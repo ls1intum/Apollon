@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { fireEvent, render, screen } from "@testing-library/react"
-import { EmbedHints, sanitizeMarkdownAlt } from "./EmbedHints"
+import { EmbedSnippetPanel, sanitizeMarkdownAlt } from "./EmbedSnippetPanel"
 
 describe("sanitizeMarkdownAlt", () => {
   it("strips characters that break Markdown alt text and collapses whitespace", () => {
@@ -14,15 +14,15 @@ describe("sanitizeMarkdownAlt", () => {
   })
 })
 
-describe("EmbedHints", () => {
+describe("EmbedSnippetPanel", () => {
   it("prompts to share first when there is no shared diagram id", () => {
-    render(<EmbedHints title="My diagram" />)
+    render(<EmbedSnippetPanel title="My diagram" />)
     expect(screen.getByText(/share the diagram to embed/i)).toBeTruthy()
     expect(screen.queryByLabelText("Embed code")).toBeNull()
   })
 
   it("switches the snippet when a different format is selected", () => {
-    render(<EmbedHints diagramId="abc123" title="My diagram" />)
+    render(<EmbedSnippetPanel diagramId="abc123" title="My diagram" />)
     const field = screen.getByLabelText("Embed code") as HTMLInputElement
     // Default is the clickable framed image (the "Open in Apollon" button is
     // baked into the preview SVG), wrapped in a link to the editor.

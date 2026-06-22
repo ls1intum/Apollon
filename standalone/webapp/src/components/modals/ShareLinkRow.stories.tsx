@@ -94,11 +94,6 @@ export const EditMode: Story = {
   args: { mode: DiagramView.EDIT },
 }
 
-/** Pinned dark for visual review on the dark token set. */
-export const Dark: Story = {
-  globals: { theme: "dark" },
-}
-
 /** Clicking the copy button reports the copy intent. */
 export const CopyClick: Story = {
   play: async ({ args, canvasElement }) => {

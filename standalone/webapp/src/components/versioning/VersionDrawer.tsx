@@ -39,7 +39,7 @@ import {
 import { relativeTime } from "./relativeTime"
 import { CurrentVersionRow } from "./CurrentVersionRow"
 import { VersionListItem } from "./VersionListItem"
-import AutoGroupRow from "./AutoGroupRow"
+import { AutoGroupRow } from "./AutoGroupRow"
 import { TEXT_PRIMARY, TEXT_MUTED, ROW_HOVER_BG } from "./theme"
 import { structuralFingerprint, isNamedVersion } from "@/lib/version/predicates"
 import { groupUnnamedRuns } from "./utils"
@@ -122,7 +122,7 @@ export const VersionSidebarBody: FC<Props> = ({
    */
   const lastLocalSaveIdRef = useRef<string | null>(null)
 
-  // No fetch-on-mount here: the editor page (ApollonLocal / ApollonWithConnection)
+  // No fetch-on-mount here: the editor page (ApollonLocal / ApollonShared)
   // binds the repository and fetches in one effect, and the bootstrap keeps the
   // list fresh (cross-tab + visibility refetch, collab control events). A fetch
   // here would race the page's repository binding on a reload with the drawer

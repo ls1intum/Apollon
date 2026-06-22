@@ -1,6 +1,6 @@
 export * from "./ApollonLocal"
 export * from "./ApollonPlayground"
-export * from "./ApollonWithConnection"
+export * from "./ApollonShared"
 export * from "./ErrorPage"
 export * from "./HomePage"
 export * from "./ImprintPage"

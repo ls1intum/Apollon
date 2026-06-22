@@ -61,9 +61,3 @@ export const TogglesTheme: Story = {
     await expect(args.onToggle).toHaveBeenCalled()
   },
 }
-
-/** Pinned dark for visual review. */
-export const Dark: Story = {
-  args: { isDarkMode: true },
-  globals: { theme: "dark" },
-}

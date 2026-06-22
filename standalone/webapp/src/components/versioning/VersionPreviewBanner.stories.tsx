@@ -91,11 +91,6 @@ export const NoLabel: Story = {
   args: { label: "" },
 }
 
-/** Dark-pinned to review the warning palette. */
-export const Dark: Story = {
-  globals: { theme: "dark" },
-}
-
 /** Clicking "Exit preview" invokes `onExit`. */
 export const ExitInteraction: Story = {
   play: async ({ canvasElement, args }) => {

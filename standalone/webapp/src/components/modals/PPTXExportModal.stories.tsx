@@ -24,11 +24,6 @@ type Story = StoryObj<typeof meta>
 /** The default export form with persisted (or default) settings. */
 export const Default: Story = {}
 
-/** Pinned to dark mode to review the radio groups, inputs, and select. */
-export const Dark: Story = {
-  globals: { theme: "dark" },
-}
-
 /**
  * An out-of-range scale value surfaces the inline validation error and the
  * helper text switches accordingly.

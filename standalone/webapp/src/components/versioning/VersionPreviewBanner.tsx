@@ -73,7 +73,7 @@ const buttonStyle: CSSProperties = {
  * content-hugging soft-gold warning pill: a single vertically-centred row of
  * icon · message · actions, with the snapshot description carried as a hover
  * tooltip rather than a second row. Hosting layout overlays it on the canvas
- * (see `ApollonWithConnection`), so the canvas itself never reflows on preview
+ * (see `ApollonShared`), so the canvas itself never reflows on preview
  * enter/exit.
  */
 export function VersionPreviewBannerView({

@@ -20,12 +20,7 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /** The web/desktop footer bar with all help and legal links inline. */
-export const Footer: Story = {}
-
-/** Pinned dark-theme review of the footer bar. */
-export const Dark: Story = {
-  globals: { theme: "dark" },
-}
+export const Default: Story = {}
 
 /**
  * The mobile/native overflow menu rendering the same links. Pinned on a dark

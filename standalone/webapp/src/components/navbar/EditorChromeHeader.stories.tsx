@@ -2,8 +2,7 @@ import { useState, type ReactNode } from "react"
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { Apollon } from "@tumaet/apollon/react"
 import type { ApollonEditor, UMLModel } from "@tumaet/apollon/react"
-import { EditorContext } from "@/contexts/EditorContext"
-import { ModalProvider } from "@/contexts/ModalContext"
+import { StubEditorContext } from "../../stories/_support/webapp"
 import { EditorChromeHeader } from "./EditorChromeHeader"
 
 /**
@@ -48,26 +47,24 @@ function LiveEditorHost({
   title?: string
 }) {
   const [editor, setEditor] = useState<ApollonEditor | undefined>(undefined)
-  const [diagramName, setDiagramName] = useState(title ?? SAMPLE_MODEL.title)
   return (
-    <EditorContext.Provider
-      value={{ editor, diagramName, setDiagramName, setEditor }}
+    <StubEditorContext
+      editor={editor}
+      diagramName={title ?? SAMPLE_MODEL.title}
     >
-      <ModalProvider>
-        <div style={{ position: "relative", height: 360, width: "100%" }}>
-          <Apollon
-            readonly
-            defaultModel={{
-              ...SAMPLE_MODEL,
-              title: title ?? SAMPLE_MODEL.title,
-            }}
-            onMount={(instance) => setEditor(instance)}
-            style={{ height: "100%", width: "100%" }}
-          />
-          {children}
-        </div>
-      </ModalProvider>
-    </EditorContext.Provider>
+      <div style={{ position: "relative", height: 360, width: "100%" }}>
+        <Apollon
+          readonly
+          defaultModel={{
+            ...SAMPLE_MODEL,
+            title: title ?? SAMPLE_MODEL.title,
+          }}
+          onMount={(instance) => setEditor(instance)}
+          style={{ height: "100%", width: "100%" }}
+        />
+        {children}
+      </div>
+    </StubEditorContext>
   )
 }
 
@@ -95,16 +92,6 @@ export const Default: Story = {
 export const LongTitle: Story = {
   render: () => (
     <LiveEditorHost title="A deliberately very long diagram title that has to ellipsise">
-      <EditorChromeHeader />
-    </LiveEditorHost>
-  ),
-}
-
-/** Pinned dark to review the glass islands on the dark token set. */
-export const Dark: Story = {
-  globals: { theme: "dark" },
-  render: () => (
-    <LiveEditorHost>
       <EditorChromeHeader />
     </LiveEditorHost>
   ),

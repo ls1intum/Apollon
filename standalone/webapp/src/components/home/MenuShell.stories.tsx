@@ -77,10 +77,3 @@ export const Default: Story = {
     await expect(body.getByText("Last edited")).toBeVisible()
   },
 }
-
-/** Pinned dark to verify the popover surface against dark tokens. */
-export const Dark: Story = {
-  tags: ["!test"],
-  globals: { theme: "dark" },
-  render: () => <MenuShellHarness />,
-}

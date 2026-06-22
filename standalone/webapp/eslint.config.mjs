@@ -72,7 +72,7 @@ export default [
       "src/components/navbar/MobileIslands.tsx",
       "src/components/versioning/VersionDrawer.tsx",
       "src/hooks/useRegionHost.ts",
-      "src/pages/ApollonWithConnection.tsx",
+      "src/pages/ApollonShared.tsx",
       "src/pages/LegalPage.tsx",
     ],
     rules: { "react-hooks/set-state-in-effect": "warn" },

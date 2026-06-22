@@ -40,13 +40,3 @@ type Story = StoryObj<typeof meta>
 
 /** A named GoF template preview (renders, then settles on the image or glyph). */
 export const Default: Story = {}
-
-/** Another template to confirm the lazy per-name render path. */
-export const Bridge: Story = {
-  args: { name: "Bridge" },
-}
-
-/** Pinned dark — the dark `<img>` variant is shown by the data-theme swap. */
-export const Dark: Story = {
-  globals: { theme: "dark" },
-}

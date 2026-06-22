@@ -31,11 +31,3 @@ export const NarrowViewport: Story = {
     viewport: { defaultViewport: "mobile1" },
   },
 }
-
-/**
- * The navbar surface never changes color; the dark global is pinned here only
- * to confirm the brand stays identical regardless of theme.
- */
-export const Dark: Story = {
-  globals: { theme: "dark" },
-}

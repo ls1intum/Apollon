@@ -59,8 +59,3 @@ export const Banner: Story = {
 export const Autosave: Story = {
   args: { isAuto: true },
 }
-
-/** Pinned dark to confirm the white plate stays legible on dark chrome. */
-export const Dark: Story = {
-  globals: { theme: "dark" },
-}

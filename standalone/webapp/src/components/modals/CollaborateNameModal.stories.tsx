@@ -69,9 +69,3 @@ export const Default: Story = {
 export const Prefilled: Story = {
   args: { initialName: "Grace Hopper" },
 }
-
-/** Pinned dark to verify the input and button against dark tokens. */
-export const Dark: Story = {
-  args: { initialName: "Grace Hopper" },
-  globals: { theme: "dark" },
-}

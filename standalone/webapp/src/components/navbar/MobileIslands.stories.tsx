@@ -1,10 +1,9 @@
-import type { ReactNode } from "react"
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { expect, userEvent, within } from "storybook/test"
-import type { ApollonEditor } from "@tumaet/apollon/react"
-import { EditorContext } from "@/contexts/EditorContext"
-import { ModalProvider } from "@/contexts/ModalContext"
-import { WebappProviders } from "../../stories/_support/webapp"
+import {
+  StubEditorContext,
+  WebappProviders,
+} from "../../stories/_support/webapp"
 import { MobileActionsPill, MobileBackPill } from "./MobileIslands"
 
 /**
@@ -56,43 +55,12 @@ export const ActionsPill: Story = {
   render: () => <MobileActionsPill />,
 }
 
-/** Pinned dark for visual review on the dark token set. */
-export const Dark: Story = {
-  globals: { theme: "dark" },
-  render: () => (
-    <>
-      <MobileBackPill />
-      <MobileActionsPill />
-    </>
-  ),
-}
-
 /**
  * The "Save a local copy" tail item only renders with BOTH a /shared/:id route
  * and a live editor in context, so this story drives the router there and
  * injects a minimal editor stub (the same stub the SaveLocalCopyButton stories
  * use) so the collapsed tail is fully populated.
  */
-const STUB_EDITOR = {
-  model: { version: "4.0.0", type: "ClassDiagram", title: "Shared" },
-} as unknown as ApollonEditor
-
-function SharedEditorContext({ children }: { children: ReactNode }) {
-  return (
-    <EditorContext.Provider
-      value={{
-        editor: STUB_EDITOR,
-        diagramName: "Shared",
-        setDiagramName: () => {},
-        setEditor: () => {},
-      }}
-    >
-      <ModalProvider>{children}</ModalProvider>
-    </EditorContext.Provider>
-  )
-}
-
-/** Opening the "…" menu reveals the collapsed tail actions (portaled to body). */
 export const OverflowMenu: Story = {
   render: () => <MobileActionsPill />,
   // "Save a local copy" only renders on a /shared/:id route with a live editor.
@@ -104,11 +72,11 @@ export const OverflowMenu: Story = {
   },
   decorators: [
     (Story) => (
-      <SharedEditorContext>
+      <StubEditorContext>
         <div className="flex gap-3 bg-[var(--navbar-bg)] p-4">
           <Story />
         </div>
-      </SharedEditorContext>
+      </StubEditorContext>
     ),
   ],
   play: async ({ canvasElement }) => {

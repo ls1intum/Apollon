@@ -18,7 +18,7 @@ interface AutoGroupRowProps {
   hasUnsavedChanges: boolean
 }
 
-const AutoGroupRow: FC<AutoGroupRowProps> = ({
+export const AutoGroupRow: FC<AutoGroupRowProps> = ({
   group,
   diagramId,
   onPreview,
@@ -76,5 +76,3 @@ const AutoGroupRow: FC<AutoGroupRowProps> = ({
     </div>
   )
 }
-
-export default AutoGroupRow

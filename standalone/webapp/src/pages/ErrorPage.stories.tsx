@@ -55,8 +55,3 @@ export const LongMessage: Story = {
       "The diagram could not be loaded because the server returned an unexpected response. Please try again in a moment or head back to your diagrams.",
   },
 }
-
-/** Pinned dark to verify token-driven colors on a dark background. */
-export const Dark: Story = {
-  globals: { theme: "dark" },
-}

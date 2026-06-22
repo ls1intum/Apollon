@@ -10,6 +10,7 @@
  * State (theme / persisted diagrams / versions) is held in zustand singletons;
  * seed them in a story's `beforeEach` and reset in the meta's `beforeEach`.
  */
+import type { ReactNode } from "react"
 import type { Decorator } from "@storybook/react-vite"
 import {
   Outlet,
@@ -19,7 +20,8 @@ import {
   createRoute,
   createRouter,
 } from "@tanstack/react-router"
-import { EditorProvider } from "@/contexts/EditorContext"
+import type { ApollonEditor, UMLModel } from "@tumaet/apollon/react"
+import { EditorContext, EditorProvider } from "@/contexts/EditorContext"
 import { ModalProvider } from "@/contexts/ModalContext"
 import { ModalProgressProvider } from "@/contexts/ModalProgressContext"
 
@@ -98,4 +100,64 @@ export const DarkNavbarSurface: Decorator = (Story) => (
   <div className="rounded-md bg-[var(--navbar-bg)] p-4 text-white">
     <Story />
   </div>
+)
+
+/**
+ * A throwaway `ApollonEditor` stub for stories that only need a truthy editor in
+ * `EditorContext` (the navbar shared-editor affordances read at most
+ * `editor.model`). Pass an optional model; the cast keeps callers from having to
+ * build a full editor instance.
+ */
+export function makeStubEditor(model?: Partial<UMLModel>): ApollonEditor {
+  return {
+    model: {
+      version: "4.0.0",
+      type: "ClassDiagram",
+      title: "Shared",
+      nodes: [],
+      edges: [],
+      ...model,
+    },
+  } as unknown as ApollonEditor
+}
+
+/**
+ * Supplies an `EditorContext` (seeded with `editor` + `diagramName`) and a modal
+ * host. The navbar's shared-editor affordances (Save-a-local-copy, the mobile
+ * overflow tail) only render with a live editor in context, so their stories
+ * inject a stub via this provider. `editor` defaults to a minimal stub; pass a
+ * real instance to mount against a live editor.
+ */
+export function StubEditorContext({
+  children,
+  editor = makeStubEditor(),
+  diagramName = "Shared",
+}: {
+  children: ReactNode
+  editor?: ApollonEditor | undefined
+  diagramName?: string
+}) {
+  return (
+    <EditorContext.Provider
+      value={{
+        editor,
+        diagramName,
+        setDiagramName: () => {},
+        setEditor: () => {},
+      }}
+    >
+      <ModalProvider>{children}</ModalProvider>
+    </EditorContext.Provider>
+  )
+}
+
+/**
+ * Decorator form of {@link StubEditorContext}: wraps a story in a stub editor +
+ * modal host. Use the component form directly when a story needs to control the
+ * editor/diagram name or nest extra layout.
+ */
+export const withStubEditor: Decorator = (Story) => (
+  <StubEditorContext>
+    <Story />
+  </StubEditorContext>
 )

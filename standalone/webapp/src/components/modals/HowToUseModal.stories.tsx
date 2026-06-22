@@ -42,8 +42,3 @@ export const Default: Story = {
     await expect(args.onClose).toHaveBeenCalled()
   },
 }
-
-/** Pinned dark to verify the walkthrough surface on dark. */
-export const Dark: Story = {
-  globals: { theme: "dark" },
-}

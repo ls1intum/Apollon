@@ -40,13 +40,3 @@ export const Panel: Story = {
   parameters: { layout: "centered" },
   args: { variant: "panel", label: "Loading diagram..." },
 }
-
-/** A custom status label. */
-export const CustomLabel: Story = {
-  args: { label: "Restoring your last session..." },
-}
-
-/** Pinned dark to verify the logo shell and progress bar on a dark surface. */
-export const Dark: Story = {
-  globals: { theme: "dark" },
-}

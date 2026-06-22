@@ -50,8 +50,3 @@ export const SubPage: Story = {
     ).toHaveAttribute("href", "/")
   },
 }
-
-/** Pinned dark-theme review of the header chrome. */
-export const Dark: Story = {
-  globals: { theme: "dark" },
-}

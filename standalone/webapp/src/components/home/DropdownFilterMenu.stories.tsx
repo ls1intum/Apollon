@@ -117,10 +117,3 @@ export const Default: Story = {
     await userEvent.click(body.getByText("Class diagram"))
   },
 }
-
-/** Pinned dark to verify section headers and the selected highlight on dark. */
-export const Dark: Story = {
-  tags: ["!test"],
-  globals: { theme: "dark" },
-  render: () => <FilterHarness />,
-}

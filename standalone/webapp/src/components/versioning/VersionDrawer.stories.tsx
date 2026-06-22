@@ -78,12 +78,3 @@ export const Previewing: Story = {
     openDrawer()
   },
 }
-
-/** Populated panel pinned to dark mode. */
-export const Dark: Story = {
-  beforeEach: () => {
-    seedVersions(SAMPLE_VERSIONS, { total: 7 })
-    openDrawer()
-  },
-  globals: { theme: "dark" },
-}

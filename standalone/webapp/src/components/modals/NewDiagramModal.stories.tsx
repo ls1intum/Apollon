@@ -23,11 +23,6 @@ type Story = StoryObj<typeof meta>
 /** Default view: the "Blank diagram" tab with the diagram-type picker. */
 export const Default: Story = {}
 
-/** Pinned to dark mode to review the option-grid and tab contrast. */
-export const Dark: Story = {
-  globals: { theme: "dark" },
-}
-
 /**
  * Switching to the template tab swaps the structural/behavioral/creational
  * pattern pickers in, and editing the name field stops it tracking the default.

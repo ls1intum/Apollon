@@ -78,16 +78,3 @@ export const CustomTarget: Story = {
   args: { to: "/playground", label: "Back to diagram" },
   decorators: [DarkNavbarSurface],
 }
-
-/** Pinned dark to verify the on-surface tone against dark tokens. */
-export const Dark: Story = {
-  args: { tone: "onSurface" },
-  globals: { theme: "dark" },
-  decorators: [
-    (Story) => (
-      <div className="rounded-md bg-card p-3">
-        <Story />
-      </div>
-    ),
-  ],
-}

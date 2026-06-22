@@ -47,11 +47,6 @@ type Story = StoryObj<typeof meta>
 /** Initial form with the diagram name pre-filled from the local store. */
 export const Default: Story = {}
 
-/** Pinned to dark mode to review the notice, field, and action contrast. */
-export const Dark: Story = {
-  globals: { theme: "dark" },
-}
-
 /** Editing the share name updates the field that gets uploaded on submit. */
 export const RenameBeforeShare: Story = {
   play: async ({ canvasElement, step }) => {

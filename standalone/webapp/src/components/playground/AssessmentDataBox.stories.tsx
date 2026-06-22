@@ -76,11 +76,6 @@ export const Empty: Story = {
   args: { assessmentSelectedElements: [] },
 }
 
-/** Pinned dark for visual review on the dark token set. */
-export const Dark: Story = {
-  globals: { theme: "dark" },
-}
-
 /** The selected ids are listed in the panel. */
 export const ListsSelectedIds: Story = {
   play: async ({ canvasElement }) => {

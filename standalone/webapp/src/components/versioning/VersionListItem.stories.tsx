@@ -153,11 +153,6 @@ export const Pending: Story = {
   args: { version: pendingVersion, versionNumber: undefined },
 }
 
-/** Dark-pinned to confirm the row reads correctly under the dark token set. */
-export const Dark: Story = {
-  globals: { theme: "dark" },
-}
-
 /** Clicking the row reports a preview request with the version id. */
 export const ClickPreviews: Story = {
   tags: ["!autodocs"],

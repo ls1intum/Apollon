@@ -29,7 +29,7 @@ const FORMAT_HINTS: Record<EmbedFormat, string> = {
   iframe: "An interactive embed for pages that allow iframes.",
 }
 
-export function EmbedHints({
+export function EmbedSnippetPanel({
   diagramId,
   title = "Apollon diagram",
 }: {

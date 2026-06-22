@@ -441,7 +441,7 @@ export const ApollonLocal: FC = () => {
         onVersionSaved={handleVersionSaved}
         onPreview={openPreview}
       />
-      {/* No <UndoRestoreSnackbar /> in local mode — auto-snapshot rows
+      {/* No <UndoRestoreToast /> in local mode — auto-snapshot rows
           in the drawer are the durable replacement. */}
     </div>
   )

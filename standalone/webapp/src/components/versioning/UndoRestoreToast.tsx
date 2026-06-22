@@ -14,7 +14,7 @@ const UNDO_RESTORE_TOAST_ID = "undo-restore"
  * system and look. Auto-dismisses when the store's window expires.
  *
  * Kept as a component (mounted globally near the editor) so the call site in
- * ApollonWithConnection is unchanged — only the rendering mechanism swapped
+ * ApollonShared is unchanged — only the rendering mechanism swapped
  * from an MUI Snackbar to a toast.
  */
 const UndoRestoreToastBody: FC<{ restoredVersionName: string }> = ({
@@ -56,7 +56,7 @@ const UndoRestoreToastBody: FC<{ restoredVersionName: string }> = ({
   )
 }
 
-export const UndoRestoreSnackbar: FC = () => {
+export const UndoRestoreToast: FC = () => {
   const undo = useVersionStore((s) => s.undoRestore)
   const dismiss = useVersionStore((s) => s.dismissUndoRestore)
   const shownIdRef = useRef<string | null>(null)

@@ -1,7 +1,7 @@
 import React from "react"
 import { useFeedbackDragStart } from "@/hooks"
 
-export const FeedbackBoxes: React.FC = () => {
+export const AssessmentScoreChips: React.FC = () => {
   const handleDragStart = useFeedbackDragStart()
 
   return (

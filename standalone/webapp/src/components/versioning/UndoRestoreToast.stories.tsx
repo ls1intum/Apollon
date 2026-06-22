@@ -5,7 +5,7 @@ import "react-toastify/dist/ReactToastify.css"
 import { useVersionStore } from "@/stores/useVersionStore"
 import { WebappProviders } from "../../stories/_support/webapp"
 import { SAMPLE_DIAGRAM_ID } from "../../stories/_support/versioning"
-import { UndoRestoreSnackbar } from "./UndoRestoreSnackbar"
+import { UndoRestoreToast } from "./UndoRestoreToast"
 
 /**
  * The headless driver for the post-restore Undo affordance. It renders `null`
@@ -32,8 +32,8 @@ function seedUndoWindow(restoredVersionName = "Initial domain sketch") {
 }
 
 const meta = {
-  title: "Webapp/Versioning/UndoRestoreSnackbar",
-  component: UndoRestoreSnackbar,
+  title: "Webapp/Versioning/UndoRestoreToast",
+  component: UndoRestoreToast,
   tags: ["autodocs"],
   parameters: { layout: "fullscreen" },
   decorators: [
@@ -53,7 +53,7 @@ const meta = {
   beforeEach: () => {
     useVersionStore.setState({ undoRestore: null })
   },
-} satisfies Meta<typeof UndoRestoreSnackbar>
+} satisfies Meta<typeof UndoRestoreToast>
 
 export default meta
 type Story = StoryObj<typeof meta>
@@ -65,12 +65,6 @@ export const Default: Story = {
 
 /** No active window — the driver renders nothing and no toast appears. */
 export const NoWindow: Story = {}
-
-/** Pinned dark for visual review of the toast on the dark token set. */
-export const Dark: Story = {
-  globals: { theme: "dark" },
-  beforeEach: () => seedUndoWindow(),
-}
 
 /** The toast carries the restored name and an Undo control. */
 export const ShowsUndoToast: Story = {

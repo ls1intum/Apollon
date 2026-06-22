@@ -24,11 +24,6 @@ type Story = StoryObj<typeof meta>
 /** The mode chooser with the four share actions and the recent-link field. */
 export const Default: Story = {}
 
-/** Pinned to dark mode to review the outlined buttons and link fieldset. */
-export const Dark: Story = {
-  globals: { theme: "dark" },
-}
-
 /** The pre-share state offers a name field and the create-link action. */
 export const CreateState: Story = {
   play: async ({ canvasElement }) => {

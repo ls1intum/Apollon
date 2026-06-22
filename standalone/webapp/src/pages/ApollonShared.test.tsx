@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { act, cleanup, screen, waitFor } from "@testing-library/react"
 import { renderWithRouter } from "@/test/renderWithRouter"
 import { toast } from "react-toastify"
-import { ApollonWithConnection } from "./ApollonWithConnection"
+import { ApollonShared } from "./ApollonShared"
 import { EditorProvider, ModalProvider } from "@/contexts"
 import { DiagramApiClient } from "@/services/DiagramApiClient"
 
@@ -184,7 +184,7 @@ vi.mock("@/components/versioning", async (importOriginal) => {
   const actual = (await importOriginal()) as Record<string, unknown>
   return {
     ...actual,
-    UndoRestoreSnackbar: () => null,
+    UndoRestoreToast: () => null,
     VersionDrawer: () => null,
     VersionPreviewBanner: () => null,
     VersionRail: () => null,
@@ -213,7 +213,7 @@ function mountAt(initialEntry: string) {
   // The page reads getRouteApi("/shared/$diagramId"), so it must mount under
   // that template; "/" is included so its navigate({ to: "/" }) fallback
   // resolves. Drive in-test route changes with the returned `history.push`.
-  return renderWithRouter(<ApollonWithConnection />, {
+  return renderWithRouter(<ApollonShared />, {
     initialEntry,
     routePaths: ["/shared/$diagramId", "/"],
     wrapper: (children) => (
@@ -262,7 +262,7 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-describe("ApollonWithConnection — loading-state regression", () => {
+describe("ApollonShared — loading-state regression", () => {
   it("shows the loading overlay while the initial diagram fetch is in flight", async () => {
     mountAt("/shared/abc?view=COLLABORATE")
     expect(await screen.findByText(LOADING_TEXT)).toBeTruthy()

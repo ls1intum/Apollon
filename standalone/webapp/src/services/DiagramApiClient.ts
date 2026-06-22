@@ -248,7 +248,7 @@ export const VersionApiClient = {
   /**
    * Convenience permalink to a specific version, opened in preview mode.
    *
-   * Preserves the current `view` query parameter — `ApollonWithConnection`
+   * Preserves the current `view` query parameter — `ApollonShared`
    * rejects URLs that omit it ("Invalid view type") because the editor's
    * mode (collaborate / give-feedback / see-feedback) is configured up
    * front from that param. Without preserving it, a copied link would

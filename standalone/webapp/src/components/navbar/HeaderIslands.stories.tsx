@@ -67,11 +67,6 @@ export const Narrow: Story = {
   args: { isNarrow: true },
 }
 
-/** Pinned dark for visual review of the glass islands on dark tokens. */
-export const Dark: Story = {
-  globals: { theme: "dark" },
-}
-
 /** The title field carries the placeholder and the actions are reachable. */
 export const ActionsPresent: Story = {
   play: async ({ canvasElement }) => {

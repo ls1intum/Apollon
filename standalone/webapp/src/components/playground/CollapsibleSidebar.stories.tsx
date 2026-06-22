@@ -125,9 +125,3 @@ export const VariantSurface: Story = {
     ),
   ],
 }
-
-/** Pinned dark to verify the rail and toggle against the dark editor tokens. */
-export const Dark: Story = {
-  globals: { theme: "dark" },
-  render: () => <SidebarHarness side="left" />,
-}

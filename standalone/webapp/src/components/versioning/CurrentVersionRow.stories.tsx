@@ -102,8 +102,3 @@ export const ExitPreviewInteraction: Story = {
     await expect(args.onExitPreview).toHaveBeenCalled()
   },
 }
-
-/** Pinned dark — the row lives on the always-dark sidebar. */
-export const Dark: Story = {
-  globals: { theme: "dark" },
-}

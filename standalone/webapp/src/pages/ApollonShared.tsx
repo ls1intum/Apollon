@@ -25,7 +25,7 @@ import {
 import { selectScopedPreview, useVersionStore } from "@/stores/useVersionStore"
 import { useDocumentTitle } from "@/hooks/useDocumentTitle"
 import {
-  UndoRestoreSnackbar,
+  UndoRestoreToast,
   VersionDrawer,
   VersionPreviewBanner,
   VersionRail,
@@ -43,7 +43,7 @@ import { addSharedDiagramEntry } from "@/utils/sharedDiagramStorage"
 // which would create a cycle: the route file imports this page).
 const route = getRouteApi("/shared/$diagramId")
 
-export const ApollonWithConnection: React.FC = () => {
+export const ApollonShared: React.FC = () => {
   const { diagramId } = route.useParams()
   const { view: viewType, version: previewFromUrl } = route.useSearch()
   const navigate = useNavigate()
@@ -57,6 +57,8 @@ export const ApollonWithConnection: React.FC = () => {
   // diagram name, the same way the local editor tracks it reactively.
   useEffect(() => {
     if (!editor) return
+    // Seed the title from the editor once it mounts; subsequent updates come
+    // through the subscription below.
     setDiagramTitle(editor.getDiagramMetadata().diagramTitle || null)
     const subscriptionId = editor.subscribeToDiagramNameChange((title) =>
       setDiagramTitle(title || null)
@@ -500,7 +502,7 @@ export const ApollonWithConnection: React.FC = () => {
           onPreview={openPreview}
         />
       )}
-      <UndoRestoreSnackbar />
+      <UndoRestoreToast />
     </div>
   )
 }
