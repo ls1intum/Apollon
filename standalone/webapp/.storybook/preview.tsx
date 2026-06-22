@@ -1,6 +1,12 @@
+import { useEffect, useState, type ComponentProps } from "react"
 import { withThemeByDataAttribute } from "@storybook/addon-themes"
 import type { Decorator, Preview } from "@storybook/react-vite"
+import { DocsContainer } from "@storybook/addon-docs/blocks"
+import { themes } from "storybook/theming"
+import { addons } from "storybook/preview-api"
 import { withTanStackRouter } from "../src/stories/_support/webapp"
+
+type DocsContainerCtx = ComponentProps<typeof DocsContainer>["context"]
 
 // One CSS entry chain for every package's stories:
 //  - webapp.css pulls in @tumaet/ui's theme.css (Tailwind + all --apollon-*/
@@ -35,9 +41,52 @@ const withSurface: Decorator = (Story, context) => {
   )
 }
 
+/**
+ * autodocs pages render the story previews via the data-theme decorator (so they
+ * flip with the toolbar), but the surrounding Docs CHROME — page background,
+ * prose, the args table — is themed by Storybook's own static docs theme, which
+ * ignores `data-theme`. That left dark previews on a light docs page (and in
+ * spots dark-on-dark, unreadable). This container syncs the Storybook docs theme
+ * to the same `theme` global the toolbar drives: initial value from the docs
+ * context, live updates via the globals channel.
+ */
+const readThemeIsDark = (context: DocsContainerCtx): boolean => {
+  const globals = (
+    context as { store?: { userGlobals?: { globals?: { theme?: string } } } }
+  )?.store?.userGlobals?.globals
+  if (globals?.theme) return globals.theme === "dark"
+  if (typeof document !== "undefined")
+    return document.documentElement.getAttribute("data-theme") === "dark"
+  return false
+}
+
+const ThemedDocsContainer = ({
+  context,
+  children,
+}: ComponentProps<typeof DocsContainer>) => {
+  const [isDark, setIsDark] = useState(() => readThemeIsDark(context))
+  useEffect(() => {
+    const channel = addons.getChannel()
+    const onGlobals = ({ globals }: { globals?: { theme?: string } }) => {
+      if (globals?.theme) setIsDark(globals.theme === "dark")
+    }
+    channel.on("globalsUpdated", onGlobals)
+    return () => channel.off("globalsUpdated", onGlobals)
+  }, [])
+  return (
+    <DocsContainer
+      context={context}
+      theme={isDark ? themes.dark : themes.light}
+    >
+      {children}
+    </DocsContainer>
+  )
+}
+
 const preview: Preview = {
   parameters: {
     layout: "centered",
+    docs: { container: ThemedDocsContainer },
     controls: {
       expanded: true,
       matchers: {
