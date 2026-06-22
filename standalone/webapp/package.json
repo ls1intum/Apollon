@@ -112,10 +112,10 @@
   },
   "size-limit": [
     {
-      "name": "all JS (gzipped) — guards against MUI/Emotion-class regressions",
+      "name": "all JS incl. on-demand export chunks (gzipped) — regression ceiling; MUI/Emotion removal is separately enforced by the no-mui-emotion check",
       "path": "dist/assets/*.js",
       "gzip": true,
-      "limit": "1000 kB"
+      "limit": "1300 kB"
     },
     {
       "name": "all CSS (gzipped)",
