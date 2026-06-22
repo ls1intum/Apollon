@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { useState } from "react"
-import { expect, userEvent, within } from "storybook/test"
+import { expect, fn, userEvent, within } from "storybook/test"
 import { CollapsibleSidebar } from "./CollapsibleSidebar"
 
 /**
@@ -19,7 +19,7 @@ const meta = {
     side: "left",
     width: 280,
     open: true,
-    onToggle: () => {},
+    onToggle: fn(),
     label: "Sidebar",
     testId: "sidebar",
     children: null,

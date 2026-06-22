@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
+import { DarkNavbarSurface } from "../../stories/_support/webapp"
 import { BrandAndVersion } from "./BrandAndVersion"
 
 /**
@@ -11,13 +12,7 @@ const meta = {
   title: "Webapp/Navbar/BrandAndVersion",
   component: BrandAndVersion,
   parameters: { layout: "centered" },
-  decorators: [
-    (Story) => (
-      <div className="rounded-md bg-[#1f2123] px-4 py-3">
-        <Story />
-      </div>
-    ),
-  ],
+  decorators: [DarkNavbarSurface],
   tags: ["autodocs"],
 } satisfies Meta<typeof BrandAndVersion>
 

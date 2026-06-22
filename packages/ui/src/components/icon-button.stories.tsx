@@ -14,10 +14,26 @@ const meta = {
   component: IconButton,
   tags: ["autodocs"],
   argTypes: {
-    ariaLabel: { control: "text" },
-    tooltip: { control: "text" },
-    disabled: { control: "boolean" },
-    onClick: { action: "clicked" },
+    ariaLabel: {
+      control: "text",
+      description: "Required accessible name for the icon-only button.",
+      table: { category: "Data" },
+    },
+    tooltip: {
+      control: "text",
+      description: "Optional label revealed in a Tooltip on hover or focus.",
+      table: { category: "Data" },
+    },
+    disabled: {
+      control: "boolean",
+      description: "Prevents interaction and dims the button.",
+      table: { category: "State" },
+    },
+    onClick: {
+      action: "clicked",
+      description: "Fires when the button is activated.",
+      table: { category: "Events" },
+    },
   },
   args: {
     ariaLabel: "Edit",
@@ -49,6 +65,26 @@ export const WithTooltip: Story = {
 /** A disabled icon button ignores user interaction. */
 export const Disabled: Story = {
   args: { disabled: true },
+}
+
+/** Pinned dark-theme review across default and disabled states. */
+export const Dark: Story = {
+  tags: ["!autodocs"],
+  globals: { theme: "dark" },
+  parameters: { controls: { disable: true } },
+  render: () => (
+    <div className="flex items-center gap-3">
+      <IconButton ariaLabel="Edit">
+        <PencilIcon />
+      </IconButton>
+      <IconButton ariaLabel="Delete">
+        <TrashIcon />
+      </IconButton>
+      <IconButton ariaLabel="Edit" disabled>
+        <PencilIcon />
+      </IconButton>
+    </div>
+  ),
 }
 
 /** The `ariaLabel` is exposed as the button's accessible name. */

@@ -1,8 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { expect, userEvent, within } from "storybook/test"
-import type { UMLModel } from "@tumaet/apollon"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { ModalBodyProviders } from "../../stories/_support/webapp"
+import {
+  makeModel,
+  makePersistentEntity,
+} from "../../stories/_support/persistence"
 import { ShareDashboardModal } from "./ShareDashboardModal"
 
 /**
@@ -14,34 +17,25 @@ import { ShareDashboardModal } from "./ShareDashboardModal"
 
 const SHARE_MODEL_ID = "share-dashboard-model"
 
-const shareModel = {
-  version: "4.0.0",
-  id: SHARE_MODEL_ID,
-  title: "Banking Domain Model",
-  type: "ClassDiagram",
-  nodes: [],
-  edges: [],
-  assessments: {},
-} as unknown as UMLModel
+const shareEntity = makePersistentEntity({
+  model: makeModel({
+    id: SHARE_MODEL_ID,
+    title: "Banking Domain Model",
+    type: "ClassDiagram",
+    withContent: false,
+  }),
+})
 
 const meta = {
   title: "Webapp/Modals/ShareDashboardModal",
   component: ShareDashboardModal,
+  tags: ["autodocs"],
   parameters: { layout: "centered" },
   decorators: [ModalBodyProviders],
   args: { modelId: SHARE_MODEL_ID },
   beforeEach: () => {
-    const now = new Date().toISOString()
     usePersistenceModelStore.setState({
-      models: {
-        [SHARE_MODEL_ID]: {
-          id: SHARE_MODEL_ID,
-          model: shareModel,
-          lastModifiedAt: now,
-          createdAt: now,
-          favorite: false,
-        },
-      },
+      models: { [SHARE_MODEL_ID]: shareEntity },
       currentModelId: SHARE_MODEL_ID,
     })
   },

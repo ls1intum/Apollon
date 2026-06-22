@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
+import { expect, within } from "storybook/test"
 import { WebappProviders } from "../../stories/_support/webapp"
 import { HomeNavbar } from "./HomeNavbar"
 
@@ -22,7 +23,17 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /** On the dashboard root the logo is the only navigation — no back link. */
-export const Default: Story = {}
+export const Default: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await expect(
+      await canvas.findByRole("link", { name: /apollon home/i })
+    ).toBeInTheDocument()
+    await expect(
+      canvas.queryByRole("link", { name: /all diagrams/i })
+    ).not.toBeInTheDocument()
+  },
+}
 
 /**
  * On a sub-page (e.g. the imprint) the shared back affordance is shown so the
@@ -31,6 +42,12 @@ export const Default: Story = {}
 export const SubPage: Story = {
   parameters: {
     tanstackRouter: { initialEntry: "/imprint", routePaths: ["/imprint"] },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await expect(
+      await canvas.findByRole("link", { name: /all diagrams/i })
+    ).toHaveAttribute("href", "/")
   },
 }
 

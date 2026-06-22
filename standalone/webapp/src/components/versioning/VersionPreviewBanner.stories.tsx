@@ -13,6 +13,7 @@ import { VersionPreviewBannerView } from "./VersionPreviewBanner"
 const meta = {
   title: "Webapp/Versioning/VersionPreviewBanner",
   component: VersionPreviewBannerView,
+  tags: ["autodocs"],
   parameters: { layout: "centered" },
   args: {
     label: "Initial domain sketch with the core entities.",

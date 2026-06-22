@@ -109,6 +109,27 @@ export const IconOnly: Story = {
   },
 }
 
+/**
+ * The four square icon sizes — `icon-xs`, `icon-sm`, `icon`, and `icon-lg` —
+ * side by side for proportion review.
+ */
+export const IconSizes: Story = {
+  tags: ["!autodocs"],
+  parameters: { controls: { disable: true } },
+  render: () => {
+    const sizes = ["icon-xs", "icon-sm", "icon", "icon-lg"] as const
+    return (
+      <div className="flex items-center gap-3">
+        {sizes.map((size) => (
+          <Button key={size} size={size} variant="secondary" aria-label={size}>
+            <MailIcon />
+          </Button>
+        ))}
+      </div>
+    )
+  },
+}
+
 /** Pair a disabled button with a `Spinner` child for in-progress actions. */
 export const Loading: Story = {
   args: {

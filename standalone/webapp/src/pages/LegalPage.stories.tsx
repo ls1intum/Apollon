@@ -61,6 +61,7 @@ const failingResolver: typeof import("@/lib/legal").resolveLegalContent =
 const meta = {
   title: "Webapp/Pages/LegalPage",
   component: LegalPage,
+  tags: ["autodocs"],
   parameters: { layout: "fullscreen" },
   args: {
     page: "imprint",

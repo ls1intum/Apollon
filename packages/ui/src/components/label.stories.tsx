@@ -63,6 +63,24 @@ export const Required: Story = {
   ),
 }
 
+/** Pinned dark-theme review of a label paired with its input. */
+export const Dark: Story = {
+  tags: ["!autodocs"],
+  globals: { theme: "dark" },
+  parameters: { controls: { disable: true } },
+  render: () => (
+    <div className="flex w-64 flex-col gap-2">
+      <Label htmlFor="label-dark">
+        Full name
+        <span aria-hidden className="text-destructive">
+          *
+        </span>
+      </Label>
+      <Input id="label-dark" placeholder="Ada Lovelace" />
+    </div>
+  ),
+}
+
 /** Interaction test: clicking the label focuses its associated input. */
 export const ForInputInteraction: Story = {
   tags: ["test", "!autodocs", "!dev"],

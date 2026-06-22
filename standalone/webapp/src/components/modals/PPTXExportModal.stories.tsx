@@ -13,6 +13,7 @@ import { PPTXExportModal } from "./PPTXExportModal"
 const meta = {
   title: "Webapp/Modals/PPTXExportModal",
   component: PPTXExportModal,
+  tags: ["autodocs"],
   parameters: { layout: "centered" },
   decorators: [ModalBodyProviders],
 } satisfies Meta<typeof PPTXExportModal>

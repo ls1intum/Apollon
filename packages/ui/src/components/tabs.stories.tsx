@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./tabs"
 const meta = {
   title: "UI/Components/Tabs",
   component: Tabs,
+  tags: ["autodocs"],
   argTypes: {
     orientation: {
       control: "select",
@@ -168,6 +169,39 @@ export const Matrix: Story = {
           </div>
         ))
       )}
+    </div>
+  ),
+}
+
+/**
+ * Pinned dark-theme review of both list variants, focused on the `line`
+ * variant's transparent track and active underline indicator on a dark surface.
+ */
+export const Dark: Story = {
+  tags: ["!autodocs"],
+  globals: { theme: "dark" },
+  parameters: { controls: { disable: true } },
+  render: () => (
+    <div className="flex flex-col gap-8">
+      {(["default", "line"] as const).map((variant) => (
+        <div key={variant} className="flex flex-col gap-2">
+          <span className="text-xs text-muted-foreground">{variant}</span>
+          <Tabs defaultValue="account" className="w-96">
+            <TabsList variant={variant}>
+              <TabsTrigger value="account">Account</TabsTrigger>
+              <TabsTrigger value="password">Password</TabsTrigger>
+              <TabsTrigger value="team">Team</TabsTrigger>
+            </TabsList>
+            <TabsContent value="account">
+              Manage your account details.
+            </TabsContent>
+            <TabsContent value="password">
+              Change your password here.
+            </TabsContent>
+            <TabsContent value="team">Invite and manage teammates.</TabsContent>
+          </Tabs>
+        </div>
+      ))}
     </div>
   ),
 }

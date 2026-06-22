@@ -1,8 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
-import { expect, within } from "storybook/test"
-import type { PendingVersion } from "@/stores/useVersionStore"
+import { expect, fn, userEvent, within } from "storybook/test"
 import { useVersionStore } from "@/stores/useVersionStore"
 import { ModalBodyProviders } from "../../stories/_support/webapp"
+import {
+  SAMPLE_DIAGRAM_ID,
+  makeVersion,
+  resetVersionStore,
+  seedVersions,
+} from "../../stories/_support/versioning"
 import { DeleteVersionModal } from "./DeleteVersionModal"
 
 /**
@@ -11,31 +16,29 @@ import { DeleteVersionModal } from "./DeleteVersionModal"
  * confirm. With no matching version seeded it falls back to generic copy.
  */
 
-const DIAGRAM_ID = "diagram-versions"
-const VERSION_ID = "v5"
+const VERSION_ID = "version-5"
 
-const targetVersion: PendingVersion = {
+const target = makeVersion({
   id: VERSION_ID,
-  diagramId: DIAGRAM_ID,
+  seq: 5,
   name: "Initial domain sketch",
   description: "Initial domain sketch with the core entities.",
-  createdAt: "2026-06-12T14:15:00.000Z",
-  kind: "user",
-  librarySchemaVersion: "4.0.0",
-  seq: 5,
-}
+})
 
 const meta = {
   title: "Webapp/Versioning/DeleteVersionModal",
   component: DeleteVersionModal,
+  tags: ["autodocs"],
   parameters: { layout: "centered" },
   decorators: [ModalBodyProviders],
-  args: { diagramId: DIAGRAM_ID, versionId: VERSION_ID },
+  args: { diagramId: SAMPLE_DIAGRAM_ID, versionId: VERSION_ID },
+  argTypes: {
+    diagramId: { control: false, table: { category: "Data" } },
+    versionId: { control: false, table: { category: "Data" } },
+  },
   beforeEach: () => {
-    useVersionStore.setState({
-      versions: { [DIAGRAM_ID]: [targetVersion] },
-      preview: null,
-    })
+    resetVersionStore()
+    seedVersions([target])
   },
 } satisfies Meta<typeof DeleteVersionModal>
 
@@ -52,6 +55,9 @@ export const Dark: Story = {
 
 /** No matching version in the store — the generic fallback copy is shown. */
 export const FallbackCopy: Story = {
+  beforeEach: () => {
+    resetVersionStore()
+  },
   args: { versionId: "missing-version" },
 }
 
@@ -60,5 +66,24 @@ export const ShowsVersionLabel: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
     await expect(canvas.getByText(/initial domain sketch/i)).toBeInTheDocument()
+  },
+}
+
+/** Clicking Delete invokes the store's `deleteVersion` for the target. */
+export const ConfirmDeletes: Story = {
+  beforeEach: () => {
+    resetVersionStore()
+    seedVersions([target])
+    // Swap in a spy so the play test can assert the delete fired without a backend.
+    useVersionStore.setState({ deleteVersion: fn(async () => {}) })
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const deleteVersion = useVersionStore.getState().deleteVersion
+    await userEvent.click(canvas.getByRole("button", { name: /^delete$/i }))
+    await expect(deleteVersion).toHaveBeenCalledWith(
+      SAMPLE_DIAGRAM_ID,
+      VERSION_ID
+    )
   },
 }

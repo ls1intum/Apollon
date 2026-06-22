@@ -1,8 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { expect, userEvent, within } from "storybook/test"
-import type { UMLModel } from "@tumaet/apollon"
-import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
-import { playgroundModelId } from "@/constants/playgroundDefaultDiagram"
+import { DiagramGallerySkeleton } from "./DiagramGallerySkeleton"
+import {
+  resetPersistenceStore,
+  seedGallery,
+} from "../../stories/_support/persistence"
 import { WebappProviders } from "../../stories/_support/webapp"
 import { DiagramGallery } from "./DiagramGallery"
 
@@ -16,128 +18,14 @@ import { DiagramGallery } from "./DiagramGallery"
  * the shared-diagram tab is the only path that hits the API, and we never
  * switch to it here.
  */
-
-const makeModel = (
-  id: string,
-  title: string,
-  type: UMLModel["type"],
-  withContent: boolean
-): UMLModel =>
-  ({
-    version: "4.0.0",
-    id,
-    title,
-    type,
-    nodes: withContent
-      ? [
-          {
-            id: `${id}-node`,
-            type,
-            position: { x: 0, y: 0 },
-            width: 200,
-            height: 110,
-            data: {},
-          },
-        ]
-      : [],
-    edges: [],
-    assessments: {},
-  }) as unknown as UMLModel
-
-// A spread of types, titles, and timestamps so the type/sort filters and the
-// search box all have something meaningful to act on.
-const seedDiagrams: {
-  id: string
-  title: string
-  type: UMLModel["type"]
-  lastModifiedAt: string
-  favorite?: boolean
-  empty?: boolean
-}[] = [
-  {
-    id: "diagram-bank",
-    title: "Banking Domain Model",
-    type: "ClassDiagram",
-    lastModifiedAt: "2026-06-15T10:00:00.000Z",
-    favorite: true,
-  },
-  {
-    id: "diagram-checkout",
-    title: "Checkout Activity",
-    type: "ActivityDiagram",
-    lastModifiedAt: "2026-06-12T09:30:00.000Z",
-  },
-  {
-    id: "diagram-auth",
-    title: "Authentication Use Cases",
-    type: "UseCaseDiagram",
-    lastModifiedAt: "2026-06-10T14:15:00.000Z",
-  },
-  {
-    id: "diagram-deploy",
-    title: "Deployment Topology",
-    type: "DeploymentDiagram",
-    lastModifiedAt: "2026-06-01T08:00:00.000Z",
-  },
-  {
-    id: "diagram-empty",
-    title: "Empty Sketch",
-    type: "ClassDiagram",
-    lastModifiedAt: "2026-05-20T16:45:00.000Z",
-    empty: true,
-  },
-]
-
-const seedStore = () => {
-  const now = new Date().toISOString()
-  usePersistenceModelStore.setState({
-    models: {
-      // Keep the playground entry — the gallery filters it out by id, so it
-      // mirrors the real store shape without polluting the grid.
-      [playgroundModelId]: usePersistenceModelStore.getState().models[
-        playgroundModelId
-      ] ?? {
-        id: playgroundModelId,
-        model: makeModel(playgroundModelId, "Playground", "ClassDiagram", true),
-        lastModifiedAt: now,
-        createdAt: now,
-        favorite: false,
-      },
-      ...Object.fromEntries(
-        seedDiagrams.map((diagram) => [
-          diagram.id,
-          {
-            id: diagram.id,
-            model: makeModel(
-              diagram.id,
-              diagram.title,
-              diagram.type,
-              !diagram.empty
-            ),
-            lastModifiedAt: diagram.lastModifiedAt,
-            createdAt: diagram.lastModifiedAt,
-            favorite: Boolean(diagram.favorite),
-          },
-        ])
-      ),
-    },
-    currentModelId: null,
-  })
-}
-
 const meta = {
   title: "Webapp/Home/DiagramGallery",
   component: DiagramGallery,
   parameters: { layout: "padded" },
   decorators: [WebappProviders],
-  // Reset to a playground-only store before each story so a populated story
-  // never bleeds diagrams into the empty-state story (and vice versa).
-  beforeEach: () => {
-    usePersistenceModelStore.setState({
-      models: {},
-      currentModelId: null,
-    })
-  },
+  // Reset to an empty store before each story so a populated story never bleeds
+  // diagrams into the empty-state story (and vice versa).
+  beforeEach: resetPersistenceStore,
 } satisfies Meta<typeof DiagramGallery>
 
 export default meta
@@ -148,7 +36,7 @@ type Story = StoryObj<typeof meta>
  * one empty.
  */
 export const Populated: Story = {
-  beforeEach: seedStore,
+  beforeEach: () => seedGallery(),
 }
 
 /**
@@ -160,11 +48,20 @@ export const Empty: Story = {
 }
 
 /**
+ * The loading placeholder rendered while local diagrams hydrate: a skeleton
+ * toolbar and a grid of card placeholders, announced as a "Loading diagrams"
+ * status region. The gallery swaps this in before its store read resolves.
+ */
+export const Loading: StoryObj<typeof DiagramGallerySkeleton> = {
+  render: () => <DiagramGallerySkeleton count={6} />,
+}
+
+/**
  * Populated grid pinned to dark mode to review card surfaces and the
  * control-row contrast.
  */
 export const Dark: Story = {
-  beforeEach: seedStore,
+  beforeEach: () => seedGallery(),
   globals: { theme: "dark" },
 }
 
@@ -173,7 +70,7 @@ export const Dark: Story = {
  * updates the count label.
  */
 export const SearchFilters: Story = {
-  beforeEach: seedStore,
+  beforeEach: () => seedGallery(),
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
 

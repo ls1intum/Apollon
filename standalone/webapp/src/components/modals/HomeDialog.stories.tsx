@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { useState } from "react"
-import { fn } from "storybook/test"
+import { expect, fn, userEvent, within } from "storybook/test"
 import {
   HomeDialogActions,
   HomeDialogContent,
@@ -37,6 +37,9 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
+/** Stable spies for the composed form so the play test can assert the click. */
+const composedActions = { onCancel: fn(), onConfirm: fn() }
+
 /** A composed dialog body using most of the blocks together. */
 export const Composed: Story = {
   render: () => {
@@ -70,13 +73,19 @@ export const Composed: Story = {
           />
           <HomeDialogActions
             confirmLabel="Create"
-            onCancel={fn()}
-            onConfirm={fn()}
+            onCancel={composedActions.onCancel}
+            onConfirm={composedActions.onConfirm}
           />
         </HomeDialogContent>
       )
     }
     return <Demo />
+  },
+  play: async ({ canvasElement }) => {
+    composedActions.onConfirm.mockClear()
+    const canvas = within(canvasElement)
+    await userEvent.click(canvas.getByRole("button", { name: /create/i }))
+    await expect(composedActions.onConfirm).toHaveBeenCalled()
   },
 }
 

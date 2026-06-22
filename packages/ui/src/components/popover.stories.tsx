@@ -22,6 +22,7 @@ import {
 const meta = {
   title: "UI/Components/Popover",
   component: Popover,
+  tags: ["autodocs"],
   parameters: {
     layout: "centered",
   },
@@ -162,9 +163,6 @@ export const WithForm: Story = {
 export const Dark: Story = {
   args: {
     defaultOpen: true,
-  },
-  parameters: {
-    themes: { themeOverride: "dark" },
   },
   globals: {
     theme: "dark",

@@ -20,13 +20,28 @@ const meta = {
     onNavigate: fn(),
   },
   argTypes: {
+    to: {
+      control: "text",
+      description: "Typed router `<Link>` destination.",
+      table: { category: "Data" },
+    },
+    label: {
+      control: "text",
+      description: "Visible label and the link's accessible name.",
+      table: { category: "Data" },
+    },
+    onNavigate: {
+      action: "navigate",
+      description:
+        "Fired in addition to navigating — e.g. to close the menu it lives in.",
+      table: { category: "Events" },
+    },
     tone: {
       control: "select",
       options: ["onDark", "onSurface"],
+      description: "Palette: dark-navbar vs. light popover surface.",
       table: { category: "Appearance" },
     },
-    to: { control: "text", table: { category: "Navigation" } },
-    label: { control: "text", table: { category: "Content" } },
   },
   tags: ["autodocs"],
 } satisfies Meta<typeof BackNav>

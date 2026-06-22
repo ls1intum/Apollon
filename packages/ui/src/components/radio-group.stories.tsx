@@ -13,8 +13,16 @@ const meta = {
   component: RadioGroup,
   tags: ["autodocs"],
   argTypes: {
-    disabled: { control: "boolean" },
-    onValueChange: { action: "valueChange" },
+    disabled: {
+      control: "boolean",
+      description: "Disables every item in the group.",
+      table: { category: "State" },
+    },
+    onValueChange: {
+      action: "valueChange",
+      description: "Fires with the new value when the selection changes.",
+      table: { category: "Events" },
+    },
   },
   args: {
     disabled: false,
@@ -93,6 +101,45 @@ export const Controlled: Story = {
             value={option.value}
           />
           <FieldLabel htmlFor={`controlled-${option.value}`}>
+            {option.label}
+          </FieldLabel>
+        </Field>
+      ))}
+    </RadioGroup>
+  ),
+}
+
+/** Set `aria-invalid` on the items to surface a validation error state. */
+export const Invalid: Story = {
+  render: (args) => (
+    <RadioGroup defaultValue="free" {...args}>
+      {options.map((option) => (
+        <Field key={option.value} orientation="horizontal">
+          <RadioGroupItem
+            id={`invalid-${option.value}`}
+            value={option.value}
+            aria-invalid
+          />
+          <FieldLabel htmlFor={`invalid-${option.value}`}>
+            {option.label}
+          </FieldLabel>
+        </Field>
+      ))}
+    </RadioGroup>
+  ),
+}
+
+/** Pinned dark-theme review across selected, unselected, and invalid items. */
+export const Dark: Story = {
+  tags: ["!autodocs"],
+  globals: { theme: "dark" },
+  parameters: { controls: { disable: true } },
+  render: () => (
+    <RadioGroup defaultValue="pro">
+      {options.map((option) => (
+        <Field key={option.value} orientation="horizontal">
+          <RadioGroupItem id={`dark-${option.value}`} value={option.value} />
+          <FieldLabel htmlFor={`dark-${option.value}`}>
             {option.label}
           </FieldLabel>
         </Field>

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { expect, fn, userEvent, waitFor, within } from "storybook/test"
+import type * as React from "react"
 import { useState } from "react"
 
 import {
@@ -13,6 +14,11 @@ import {
   SelectValue,
 } from "./select"
 
+type SelectStoryArgs = React.ComponentProps<typeof Select> & {
+  /** Story-only: forwarded to `SelectTrigger`'s `size`. */
+  triggerSize?: "sm" | "default"
+}
+
 /**
  * A listbox-style select built on Base UI's `Select`. `SelectTrigger` accepts a
  * `size` (`sm` | `default`); `SelectValue` accepts a `placeholder`. The popup
@@ -22,43 +28,61 @@ import {
 const meta = {
   title: "UI/Components/Select",
   component: Select,
+  tags: ["autodocs"],
   parameters: {
     layout: "centered",
   },
   args: {
     onValueChange: fn(),
+    triggerSize: "default",
   },
   argTypes: {
     value: {
       control: "text",
       description: "Controlled selected value.",
+      table: { category: "State" },
     },
     defaultValue: {
       control: "text",
       description: "Selected value on mount (uncontrolled).",
+      table: { category: "State" },
     },
     disabled: {
       control: "boolean",
       description: "Disable the whole select.",
+      table: { category: "State" },
     },
     required: {
       control: "boolean",
       description: "Mark the select as required for form validation.",
+      table: { category: "State" },
+    },
+    onValueChange: {
+      description: "Called with the newly selected value.",
+      table: { category: "Events" },
+    },
+    triggerSize: {
+      control: "select",
+      options: ["sm", "default"],
+      description:
+        "`SelectTrigger` height: `sm` (h-7) or `default` (h-8). " +
+        "Story-only arg forwarded to the trigger.",
+      table: { category: "Appearance" },
     },
   },
-} satisfies Meta<typeof Select>
+} satisfies Meta<SelectStoryArgs>
 
 export default meta
 
-type Story = StoryObj<typeof meta>
+type Story = StoryObj<SelectStoryArgs>
 
 /**
  * A select showing its placeholder until a value is chosen.
  */
 export const Default: Story = {
-  render: (args) => (
+  render: ({ triggerSize, ...args }) => (
     <Select {...args}>
-      <SelectTrigger className="w-48">
+      <SelectTrigger size={triggerSize} className="w-48">
         <SelectValue placeholder="Select a fruit" />
       </SelectTrigger>
       <SelectContent>
@@ -72,10 +96,22 @@ export const Default: Story = {
 }
 
 /**
+ * The compact `sm` trigger (`size="sm"`, h-7) for dense toolbars and inline
+ * controls.
+ */
+export const Small: Story = {
+  args: {
+    triggerSize: "sm",
+    defaultValue: "apple",
+  },
+  render: Default.render,
+}
+
+/**
  * Items split into labelled groups separated by a divider.
  */
 export const WithGroups: Story = {
-  render: (args) => (
+  render: ({ triggerSize: _triggerSize, ...args }) => (
     <Select {...args}>
       <SelectTrigger className="w-48">
         <SelectValue placeholder="Select a food" />
@@ -102,7 +138,7 @@ export const WithGroups: Story = {
  * arrows.
  */
 export const ManyOptions: Story = {
-  render: (args) => (
+  render: ({ triggerSize: _triggerSize, ...args }) => (
     <Select {...args}>
       <SelectTrigger className="w-48">
         <SelectValue placeholder="Select a timezone" />
@@ -126,7 +162,7 @@ export const Disabled: Story = {
   args: {
     disabled: true,
   },
-  render: (args) => (
+  render: ({ triggerSize: _triggerSize, ...args }) => (
     <Select {...args}>
       <SelectTrigger className="w-48">
         <SelectValue placeholder="Unavailable" />
@@ -143,7 +179,7 @@ export const Disabled: Story = {
  * A single option disabled while the rest remain selectable.
  */
 export const DisabledOption: Story = {
-  render: (args) => (
+  render: ({ triggerSize: _triggerSize, ...args }) => (
     <Select {...args}>
       <SelectTrigger className="w-48">
         <SelectValue placeholder="Select a fruit" />
@@ -163,7 +199,7 @@ export const DisabledOption: Story = {
  * The invalid state, surfaced by `aria-invalid` on the trigger.
  */
 export const Invalid: Story = {
-  render: (args) => (
+  render: ({ triggerSize: _triggerSize, ...args }) => (
     <Select {...args}>
       <SelectTrigger aria-invalid className="w-48">
         <SelectValue placeholder="Required" />
@@ -180,7 +216,7 @@ export const Invalid: Story = {
  * A fully controlled select whose value is mirrored next to the trigger.
  */
 export const Controlled: Story = {
-  render: (args) => {
+  render: ({ triggerSize: _triggerSize, ...args }) => {
     const Demo = () => {
       const [value, setValue] = useState<string | null>("banana")
       return (
@@ -216,7 +252,7 @@ export const LongValue: Story = {
   args: {
     defaultValue: "long",
   },
-  render: (args) => (
+  render: ({ triggerSize: _triggerSize, ...args }) => (
     <Select {...args}>
       <SelectTrigger className="w-48">
         <SelectValue placeholder="Select an option" />
@@ -239,9 +275,6 @@ export const LongValue: Story = {
 export const Dark: Story = {
   args: {
     defaultValue: "banana",
-  },
-  parameters: {
-    themes: { themeOverride: "dark" },
   },
   globals: {
     theme: "dark",
@@ -279,5 +312,43 @@ export const Behavior: Story = {
     await step("selected value is reflected in the trigger", async () => {
       await waitFor(() => expect(trigger).toHaveTextContent(/banana/i))
     })
+  },
+}
+
+/**
+ * Locks the accent highlight fix: the highlighted option must paint a different
+ * background than the (white) popup surface, so the active row is visible.
+ * Hovering an option highlights it (`focus:bg-accent`); we assert its computed
+ * background differs from the popup's own background.
+ */
+export const HighlightContrast: Story = {
+  tags: ["test", "!autodocs", "!dev"],
+  render: Default.render,
+  play: async ({ canvasElement, step }) => {
+    const body = within(canvasElement.ownerDocument.body)
+    const trigger = await body.findByRole("combobox")
+
+    await userEvent.click(trigger)
+    await body.findByRole("listbox")
+    const option = await body.findByRole("option", { name: /blueberry/i })
+    const popup = canvasElement.ownerDocument.querySelector(
+      '[data-slot="select-content"]'
+    ) as HTMLElement
+
+    await step(
+      "highlighted option differs from the popup surface",
+      async () => {
+        await userEvent.hover(option)
+        await waitFor(() => {
+          const optionBg = getComputedStyle(option).backgroundColor
+          const popupBg = getComputedStyle(popup).backgroundColor
+          // The highlight must be a real, non-transparent fill...
+          expect(optionBg).not.toBe("rgba(0, 0, 0, 0)")
+          expect(optionBg).not.toBe("transparent")
+          // ...and distinct from the menu's own (white) background.
+          expect(optionBg).not.toBe(popupBg)
+        })
+      }
+    )
   },
 }

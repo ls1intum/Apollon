@@ -56,6 +56,20 @@ export const Rows: Story = {
   args: { rows: 8 },
 }
 
+/** Pinned dark-theme review across default, invalid, and disabled. */
+export const Dark: Story = {
+  tags: ["!autodocs"],
+  globals: { theme: "dark" },
+  parameters: { controls: { disable: true } },
+  render: () => (
+    <div className="flex w-80 flex-col gap-3">
+      <Textarea placeholder="Type your message…" />
+      <Textarea aria-invalid defaultValue="Something is off" />
+      <Textarea disabled defaultValue="Read-only content" />
+    </div>
+  ),
+}
+
 /** The native `resize` style is configurable; here it is disabled. */
 export const Resize: Story = {
   parameters: { controls: { disable: true } },

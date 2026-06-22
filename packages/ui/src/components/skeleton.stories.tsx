@@ -10,6 +10,14 @@ import { Skeleton } from "./skeleton"
 const meta = {
   title: "UI/Components/Skeleton",
   component: Skeleton,
+  tags: ["autodocs"],
+  argTypes: {
+    className: {
+      control: "text",
+      description: "Drives the placeholder shape (width / height / radius).",
+      table: { category: "Appearance" },
+    },
+  },
   args: {
     className: "h-4 w-48",
   },
@@ -53,10 +61,8 @@ export const Paragraph: Story = {
 
 /** Pinned dark to verify the muted background reads against a dark surface. */
 export const Dark: Story = {
-  parameters: {
-    themes: { themeOverride: "dark" },
-    backgrounds: { default: "dark" },
-  },
+  tags: ["!autodocs"],
+  globals: { theme: "dark" },
   render: () => (
     <div className="flex items-center gap-3">
       <Skeleton className="size-12 rounded-full" />

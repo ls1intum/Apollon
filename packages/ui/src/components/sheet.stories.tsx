@@ -25,6 +25,7 @@ import {
 const meta = {
   title: "UI/Components/Sheet",
   component: Sheet,
+  tags: ["autodocs"],
   parameters: {
     layout: "centered",
   },
@@ -199,9 +200,6 @@ export const Open: Story = {
 export const Dark: Story = {
   args: {
     defaultOpen: true,
-  },
-  parameters: {
-    themes: { themeOverride: "dark" },
   },
   globals: {
     theme: "dark",

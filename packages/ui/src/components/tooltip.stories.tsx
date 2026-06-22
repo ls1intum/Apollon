@@ -18,6 +18,7 @@ import {
 const meta = {
   title: "UI/Components/Tooltip",
   component: Tooltip,
+  tags: ["autodocs"],
   parameters: {
     layout: "centered",
   },
@@ -145,6 +146,25 @@ export const DelayProvider: Story = {
         <TooltipContent>Opens instantly while the group is warm</TooltipContent>
       </Tooltip>
     </div>
+  ),
+}
+
+/**
+ * The tooltip pinned open in dark mode to review the popup surface, text
+ * contrast, and arrow.
+ */
+export const Dark: Story = {
+  globals: { theme: "dark" },
+  args: {
+    open: true,
+  },
+  render: (args) => (
+    <Tooltip {...args}>
+      <TooltipTrigger render={<Button variant="outline" />}>
+        Hover me
+      </TooltipTrigger>
+      <TooltipContent>Reviewing dark-mode contrast</TooltipContent>
+    </Tooltip>
   ),
 }
 

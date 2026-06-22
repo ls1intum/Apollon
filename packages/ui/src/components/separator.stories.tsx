@@ -12,6 +12,7 @@ import { Separator } from "./separator"
 const meta = {
   title: "UI/Components/Separator",
   component: Separator,
+  tags: ["autodocs"],
   argTypes: {
     orientation: {
       control: "select",
@@ -80,6 +81,24 @@ export const BetweenButtons: Story = {
       <Button variant="ghost" size="sm">
         Reset
       </Button>
+    </div>
+  ),
+}
+
+/** Pinned dark-theme review so the divider contrast is verifiable. */
+export const Dark: Story = {
+  tags: ["!autodocs"],
+  globals: { theme: "dark" },
+  parameters: { controls: { disable: true } },
+  render: () => (
+    <div className="w-64 space-y-3">
+      <p className="text-sm">Profile</p>
+      <Separator />
+      <div className="flex h-5 items-center gap-2 text-sm text-muted-foreground">
+        <span>Workspace</span>
+        <Separator orientation="vertical" />
+        <span>Diagrams</span>
+      </div>
     </div>
   ),
 }

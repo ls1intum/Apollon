@@ -160,7 +160,7 @@ export const Dark: Story = {
 
 /** Clicking the row reports a preview request with the version id. */
 export const ClickPreviews: Story = {
-  tags: ["!autodocs", "!dev"],
+  tags: ["!autodocs"],
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement)
     await userEvent.click(canvas.getByRole("option"))
@@ -170,7 +170,7 @@ export const ClickPreviews: Story = {
 
 /** The kebab menu portals to the body; Restore reports the version id. */
 export const RestoreFromMenu: Story = {
-  tags: ["!autodocs", "!dev"],
+  tags: ["!autodocs"],
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement)
     await userEvent.click(

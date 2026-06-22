@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { useState, type MouseEvent } from "react"
-import { expect, userEvent, within } from "storybook/test"
+import { expect, fn, userEvent, within } from "storybook/test"
 import { DropdownFilterMenu } from "./DropdownFilterMenu"
 
 /**
@@ -18,8 +18,8 @@ const meta = {
     buttonId: "filter-button",
     menuId: "filter-menu",
     anchorEl: null,
-    onToggle: () => {},
-    onClose: () => {},
+    onToggle: fn(),
+    onClose: fn(),
     triggerClassName: "",
     triggerContent: null,
     sections: [],

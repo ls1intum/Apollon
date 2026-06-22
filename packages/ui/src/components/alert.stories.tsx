@@ -13,11 +13,13 @@ import { IconButton } from "./icon-button"
 const meta = {
   title: "UI/Components/Alert",
   component: Alert,
+  tags: ["autodocs"],
   argTypes: {
     variant: {
       control: "select",
       options: ["default", "destructive"],
       description: "Visual style mirroring the alert cva variants.",
+      table: { category: "Appearance" },
     },
   },
   args: {
@@ -116,10 +118,7 @@ export const Long: Story = {
 /** Destructive variant pinned to dark for contrast review. */
 export const DestructiveDark: Story = {
   args: { variant: "destructive" },
-  parameters: {
-    themes: { themeOverride: "dark" },
-    backgrounds: { default: "dark" },
-  },
+  globals: { theme: "dark" },
   render: (args) => (
     <Alert {...args} className="max-w-md">
       <AlertTriangleIcon />

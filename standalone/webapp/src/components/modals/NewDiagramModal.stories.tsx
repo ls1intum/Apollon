@@ -12,6 +12,7 @@ import { NewDiagramModal } from "./NewDiagramModal"
 const meta = {
   title: "Webapp/Modals/NewDiagramModal",
   component: NewDiagramModal,
+  tags: ["autodocs"],
   parameters: { layout: "centered" },
   decorators: [ModalBodyProviders],
 } satisfies Meta<typeof NewDiagramModal>

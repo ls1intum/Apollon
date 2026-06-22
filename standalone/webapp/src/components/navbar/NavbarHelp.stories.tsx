@@ -14,6 +14,14 @@ const meta = {
   tags: ["autodocs"],
   decorators: [WebappProviders],
   parameters: { layout: "centered" },
+  argTypes: {
+    color: {
+      control: "text",
+      description:
+        "Explicit trigger text color for the themed mobile sheet; omitted on the always-dark desktop bar.",
+      table: { category: "Appearance" },
+    },
+  },
 } satisfies Meta<typeof NavbarHelp>
 
 export default meta

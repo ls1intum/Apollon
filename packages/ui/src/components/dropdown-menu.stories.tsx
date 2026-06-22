@@ -29,6 +29,7 @@ import {
 const meta = {
   title: "UI/Components/DropdownMenu",
   component: DropdownMenu,
+  tags: ["autodocs"],
   parameters: {
     layout: "centered",
   },
@@ -269,9 +270,6 @@ export const Dark: Story = {
   args: {
     defaultOpen: true,
   },
-  parameters: {
-    themes: { themeOverride: "dark" },
-  },
   globals: {
     theme: "dark",
   },
@@ -321,6 +319,40 @@ export const Behavior: Story = {
       await waitFor(() =>
         expect(body.queryByRole("menu")).not.toBeInTheDocument()
       )
+    })
+  },
+}
+
+/**
+ * Locks the accent highlight fix: the highlighted item must paint a different
+ * background than the (white) popup surface so the active row reads as selected.
+ * We focus an item via the keyboard (`focus:bg-accent`) and assert its computed
+ * background differs from the menu's own background.
+ */
+export const HighlightContrast: Story = {
+  tags: ["test", "!autodocs", "!dev"],
+  render: Default.render,
+  play: async ({ canvasElement, step }) => {
+    const body = within(canvasElement.ownerDocument.body)
+    const trigger = await body.findByRole("button", { name: /open menu/i })
+
+    await userEvent.click(trigger)
+    const menu = await body.findByRole("menu")
+    await waitFor(() => expect(menu).toHaveAttribute("data-open"))
+
+    await step("highlighted item differs from the popup surface", async () => {
+      await userEvent.keyboard("{ArrowDown}")
+      const profile = body.getByRole("menuitem", { name: /profile/i })
+      await waitFor(() => expect(profile).toHaveFocus())
+      await waitFor(() => {
+        const itemBg = getComputedStyle(profile).backgroundColor
+        const menuBg = getComputedStyle(menu).backgroundColor
+        // The highlight must be a real, non-transparent fill...
+        expect(itemBg).not.toBe("rgba(0, 0, 0, 0)")
+        expect(itemBg).not.toBe("transparent")
+        // ...and distinct from the menu's own (white) background.
+        expect(itemBg).not.toBe(menuBg)
+      })
     })
   },
 }

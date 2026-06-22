@@ -91,6 +91,21 @@ export const Types: Story = {
   ),
 }
 
+/** Pinned dark-theme review across default, filled, invalid, and disabled. */
+export const Dark: Story = {
+  tags: ["!autodocs"],
+  globals: { theme: "dark" },
+  parameters: { controls: { disable: true } },
+  render: () => (
+    <div className="flex w-64 flex-col gap-3">
+      <Input placeholder="Type here…" />
+      <Input defaultValue="Apollon" />
+      <Input aria-invalid defaultValue="not-an-email" />
+      <Input disabled defaultValue="Read-only company" />
+    </div>
+  ),
+}
+
 /** Interaction test: typing updates the input's value. */
 export const TypeInteraction: Story = {
   tags: ["test", "!autodocs", "!dev"],

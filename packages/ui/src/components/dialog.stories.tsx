@@ -23,6 +23,7 @@ import {
 const meta = {
   title: "UI/Components/Dialog",
   component: Dialog,
+  tags: ["autodocs"],
   parameters: {
     layout: "centered",
   },
@@ -203,9 +204,6 @@ export const Dark: Story = {
   args: {
     defaultOpen: true,
   },
-  parameters: {
-    themes: { themeOverride: "dark" },
-  },
   globals: {
     theme: "dark",
   },
@@ -257,6 +255,21 @@ export const Behavior: Story = {
       )
       await body.findByRole("dialog")
       await userEvent.click(await body.findByRole("button", { name: /close/i }))
+      await waitFor(() =>
+        expect(body.queryByRole("dialog")).not.toBeInTheDocument()
+      )
+    })
+
+    await step("backdrop click closes the dialog", async () => {
+      await userEvent.click(
+        await body.findByRole("button", { name: /open dialog/i })
+      )
+      await body.findByRole("dialog")
+      const overlay = canvasElement.ownerDocument.querySelector(
+        '[data-slot="dialog-overlay"]'
+      ) as HTMLElement
+      expect(overlay).toBeInTheDocument()
+      await userEvent.click(overlay)
       await waitFor(() =>
         expect(body.queryByRole("dialog")).not.toBeInTheDocument()
       )

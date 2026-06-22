@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
+import { expect, within } from "storybook/test"
 
 import { Button } from "./button"
 import {
@@ -20,11 +21,13 @@ import {
 const meta = {
   title: "UI/Components/Card",
   component: Card,
+  tags: ["autodocs"],
   argTypes: {
     size: {
       control: "select",
       options: ["default", "sm"],
       description: "Spacing scale; `sm` also shrinks the title.",
+      table: { category: "Appearance" },
     },
   },
   args: {
@@ -134,6 +137,38 @@ export const FullExample: Story = {
   ),
 }
 
+/**
+ * The white card on the painted base surface. Card and popover are both white
+ * (`#ffffff`), so a card separates from the canvas with only `ring-1
+ * ring-foreground/10` plus a subtle `shadow-xs`. This story makes that
+ * separation explicit by placing the card on the `--home-surface-base` paint.
+ */
+export const OnSurface: Story = {
+  parameters: { layout: "fullscreen" },
+  render: (args) => (
+    <div
+      className="flex justify-center p-12"
+      style={{ backgroundColor: "var(--home-surface-base)" }}
+    >
+      <Card {...args} className="w-80">
+        <CardHeader>
+          <CardTitle>Class Diagram</CardTitle>
+          <CardDescription>Last edited 2 hours ago</CardDescription>
+        </CardHeader>
+        <CardContent className="text-muted-foreground">
+          A UML class diagram modelling the domain entities and their relations.
+        </CardContent>
+      </Card>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const card = canvas.getByText("Class Diagram").closest('[data-slot="card"]')
+    // The card relies on a ring + subtle shadow to lift off the white surface.
+    await expect(card).toHaveClass("ring-1", "ring-foreground/10", "shadow-xs")
+  },
+}
+
 /** Default vs `sm` spacing side by side for visual + dark review. */
 export const Matrix: Story = {
   parameters: { controls: { disable: true } },
@@ -161,10 +196,8 @@ export const Matrix: Story = {
 
 /** Pinned dark for surface/ring/footer-divider contrast review. */
 export const Dark: Story = {
-  parameters: {
-    themes: { themeOverride: "dark" },
-    backgrounds: { default: "dark" },
-  },
+  tags: ["!autodocs"],
+  globals: { theme: "dark" },
   render: (args) => (
     <Card {...args} className="w-80">
       <CardHeader>

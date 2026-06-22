@@ -12,6 +12,7 @@ import { Badge } from "./badge"
 const meta = {
   title: "UI/Components/Badge",
   component: Badge,
+  tags: ["autodocs"],
   argTypes: {
     variant: {
       control: "select",
@@ -24,9 +25,12 @@ const meta = {
         "link",
       ],
       description: "Visual style mirroring the badge cva variants.",
+      table: { category: "Appearance" },
     },
     children: {
       control: "text",
+      description: "Badge label content.",
+      table: { category: "Data" },
     },
   },
   args: {
@@ -134,8 +138,5 @@ export const Matrix: Story = {
 /** Destructive badge pinned to dark for contrast review (background tint + ring). */
 export const DestructiveDark: Story = {
   args: { variant: "destructive", children: "Failed" },
-  parameters: {
-    themes: { themeOverride: "dark" },
-    backgrounds: { default: "dark" },
-  },
+  globals: { theme: "dark" },
 }

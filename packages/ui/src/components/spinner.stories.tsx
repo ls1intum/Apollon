@@ -8,10 +8,15 @@ import { Spinner } from "./spinner"
  * Indeterminate loading indicator: a spinning `Loader2Icon` that exposes
  * `role="status"` and `aria-label="Loading"` for assistive technology. Size and
  * color follow `className` (defaults to `size-4` and `currentColor`).
+ *
+ * No dedicated Dark story: the spinner draws in `currentColor`, so it inherits
+ * whatever foreground its context provides and has no theme-specific surface,
+ * ring, or fill to review.
  */
 const meta = {
   title: "UI/Components/Spinner",
   component: Spinner,
+  tags: ["autodocs"],
   parameters: { layout: "centered" },
 } satisfies Meta<typeof Spinner>
 

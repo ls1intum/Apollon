@@ -3,8 +3,7 @@ import { expect, waitFor, within } from "storybook/test"
 import { ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
 import { useVersionStore } from "@/stores/useVersionStore"
-import { EditorProvider } from "@/contexts/EditorContext"
-import { ModalProvider } from "@/contexts/ModalContext"
+import { WebappProviders } from "../../stories/_support/webapp"
 import { SAMPLE_DIAGRAM_ID } from "../../stories/_support/versioning"
 import { UndoRestoreSnackbar } from "./UndoRestoreSnackbar"
 
@@ -38,20 +37,18 @@ const meta = {
   tags: ["autodocs"],
   parameters: { layout: "fullscreen" },
   decorators: [
-    // Mount the driver AND the ToastContainer inside the same EditorProvider so
-    // the toast body (which reads EditorContext for its Undo action) renders
-    // under the provider — react-toastify 11 renders toast content in place at
-    // the container, so the container must itself sit inside the context.
+    // Mount the driver AND the ToastContainer inside the same editor/modal
+    // providers so the toast body (which reads EditorContext for its Undo
+    // action) renders under the provider — react-toastify 11 renders toast
+    // content in place at the container, so the container must itself sit
+    // inside the context.
     (Story) => (
-      <EditorProvider>
-        <ModalProvider>
-          <div style={{ minHeight: 200 }}>
-            <Story />
-            <ToastContainer position="bottom-center" />
-          </div>
-        </ModalProvider>
-      </EditorProvider>
+      <div style={{ minHeight: 200 }}>
+        <Story />
+        <ToastContainer position="bottom-center" />
+      </div>
     ),
+    WebappProviders,
   ],
   beforeEach: () => {
     useVersionStore.setState({ undoRestore: null })

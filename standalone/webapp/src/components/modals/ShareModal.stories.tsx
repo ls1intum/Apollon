@@ -13,6 +13,7 @@ import { ShareModal } from "./ShareModal"
 const meta = {
   title: "Webapp/Modals/ShareModal",
   component: ShareModal,
+  tags: ["autodocs"],
   parameters: { layout: "centered" },
   decorators: [ModalBodyProviders],
 } satisfies Meta<typeof ShareModal>
@@ -35,6 +36,29 @@ export const CreateState: Story = {
     await expect(canvas.getByLabelText(/name/i)).toBeInTheDocument()
     await expect(
       canvas.getByRole("button", { name: /create share link/i })
+    ).toBeInTheDocument()
+  },
+}
+
+/**
+ * Already shared: opening on a `/shared/:id` route resolves a server id, so the
+ * modal skips the create form and opens straight on the copyable link row with
+ * the access-mode dropdown and the "Open diagram" action.
+ */
+export const AlreadyShared: Story = {
+  parameters: {
+    tanstackRouter: {
+      initialEntry: "/shared/shared-abc123",
+      routePaths: ["/shared/$id"],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    // The create-only notice + name field are gone; the link row stands in.
+    await expect(canvas.getByText(/anyone with this link/i)).toBeInTheDocument()
+    await expect(canvas.queryByLabelText(/^name$/i)).not.toBeInTheDocument()
+    await expect(
+      canvas.getByRole("button", { name: /open diagram/i })
     ).toBeInTheDocument()
   },
 }
