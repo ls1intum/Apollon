@@ -1,29 +1,49 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import {
   ApollonEditable,
-  ApollonFixture,
   fixtureByType,
   EditorStoreDecorator,
   ElementGallery,
   EdgeGallery,
+  SeededPopoverHarness,
+  makeNode,
+  makeEdge,
 } from "../_support/editor"
+import { BPMNTaskEditPopover } from "@tumaet/apollon/components/popovers/bpmnDiagram/BPMNTaskEditPopover"
+import { BPMNStartEventEditPopover } from "@tumaet/apollon/components/popovers/bpmnDiagram/BPMNStartEventEditPopover"
+import { BPMNIntermediateEventEditPopover } from "@tumaet/apollon/components/popovers/bpmnDiagram/BPMNIntermediateEventEditPopover"
+import { BPMNEndEventEditPopover } from "@tumaet/apollon/components/popovers/bpmnDiagram/BPMNEndEventEditPopover"
+import { BPMNGatewayEditPopover } from "@tumaet/apollon/components/popovers/bpmnDiagram/BPMNGatewayEditPopover"
+import { BPMNPoolEditPopover } from "@tumaet/apollon/components/popovers/bpmnDiagram/BPMNPoolEditPopover"
+import { BPMNDiagramEdgeEditPopover } from "@tumaet/apollon/components/popovers/edgePopovers/BPMNDiagramEdgeEditPopover"
 
 /**
  * **BPMN** — everything in one place. `Playground` is the real, editable
  * editor (palette, selection, edit popups) loaded with a sample; `Blank` is an
- * empty editable canvas; `Preview` is a read-only render; `Elements` / `Edges`
- * are galleries of every shape / connector. Edit popovers live under Popovers/.
- * Use the toolbar to switch light / dark. Tagged `!test` (editor source = a 2nd
- * React copy under the Vitest runner) — these are visual; browse them here.
+ * empty editable canvas; `Elements` / `Edges` are galleries of every shape /
+ * connector; the `Edit:` stories are the edit popovers. Use the toolbar to
+ * switch light / dark. Everything for this diagram type lives in this one Docs
+ * page.
+ *
+ * Tagged `!test` — these mount editor source (a 2nd React copy under the Vitest
+ * runner), so they are visual: browse them here.
  */
 const meta = {
   title: "Editor/BPMN",
   tags: ["autodocs", "!test"],
+  // The Docs page is the complete overview, but every story mounts a real
+  // editor — rendering them all inline is slow. `inline: false` lazy-loads each
+  // story in its own iframe (rendered on scroll), so the Docs page opens fast
+  // while still showing everything.
+  parameters: {
+    docs: { story: { inline: false, height: "640px" } },
+  },
 } satisfies Meta
 
 export default meta
 type Story = StoryObj<typeof meta>
 
+// ── Editor ───────────────────────────────────────────────────────────────────
 /** The real, editable editor + palette, pre-loaded with a sample to edit. */
 export const Playground: Story = {
   parameters: { layout: "fullscreen" },
@@ -36,12 +56,7 @@ export const Blank: Story = {
   render: () => <ApollonEditable type="BPMN" />,
 }
 
-/** Read-only render of a populated diagram (clean visual reference). */
-export const Preview: Story = {
-  parameters: { layout: "fullscreen" },
-  render: () => <ApollonFixture model={fixtureByType.BPMN} />,
-}
-
+// ── Catalog ──────────────────────────────────────────────────────────────────
 /** Every node shape this diagram can contain. */
 export const Elements: Story = {
   decorators: [EditorStoreDecorator],
@@ -53,4 +68,158 @@ export const Elements: Story = {
 export const Edges: Story = {
   parameters: { layout: "centered" },
   render: () => <EdgeGallery family="BPMN" />,
+}
+
+// ── Edit popovers ────────────────────────────────────────────────────────────
+/** Task editor — style, task type, and activity marker. */
+export const EditTask: Story = {
+  name: "Edit: Task",
+  parameters: { layout: "centered" },
+  render: () => (
+    <SeededPopoverHarness
+      diagramType="BPMN"
+      seed={(diagram) =>
+        diagram.getState().addNode(
+          makeNode("bpmn-task", "bpmnTask", {
+            name: "Review Application",
+            taskType: "user",
+            marker: "loop",
+          })
+        )
+      }
+    >
+      <BPMNTaskEditPopover elementId="bpmn-task" />
+    </SeededPopoverHarness>
+  ),
+}
+
+/** Start-event editor — name and start trigger type. */
+export const EditStartEvent: Story = {
+  name: "Edit: Start Event",
+  parameters: { layout: "centered" },
+  render: () => (
+    <SeededPopoverHarness
+      diagramType="BPMN"
+      seed={(diagram) =>
+        diagram.getState().addNode(
+          makeNode("bpmn-start", "bpmnStartEvent", {
+            name: "Application Received",
+            eventType: "message",
+          })
+        )
+      }
+    >
+      <BPMNStartEventEditPopover elementId="bpmn-start" />
+    </SeededPopoverHarness>
+  ),
+}
+
+/** Intermediate-event editor — name and catch/throw trigger type. */
+export const EditIntermediateEvent: Story = {
+  name: "Edit: Intermediate Event",
+  parameters: { layout: "centered" },
+  render: () => (
+    <SeededPopoverHarness
+      diagramType="BPMN"
+      seed={(diagram) =>
+        diagram.getState().addNode(
+          makeNode("bpmn-intermediate", "bpmnIntermediateEvent", {
+            name: "Await Confirmation",
+            eventType: "message-catch",
+          })
+        )
+      }
+    >
+      <BPMNIntermediateEventEditPopover elementId="bpmn-intermediate" />
+    </SeededPopoverHarness>
+  ),
+}
+
+/** End-event editor — name and end result type. */
+export const EditEndEvent: Story = {
+  name: "Edit: End Event",
+  parameters: { layout: "centered" },
+  render: () => (
+    <SeededPopoverHarness
+      diagramType="BPMN"
+      seed={(diagram) =>
+        diagram.getState().addNode(
+          makeNode("bpmn-end", "bpmnEndEvent", {
+            name: "Application Rejected",
+            eventType: "error",
+          })
+        )
+      }
+    >
+      <BPMNEndEventEditPopover elementId="bpmn-end" />
+    </SeededPopoverHarness>
+  ),
+}
+
+/** Gateway editor — name and gateway type. */
+export const EditGateway: Story = {
+  name: "Edit: Gateway",
+  parameters: { layout: "centered" },
+  render: () => (
+    <SeededPopoverHarness
+      diagramType="BPMN"
+      seed={(diagram) =>
+        diagram.getState().addNode(
+          makeNode("bpmn-gateway", "bpmnGateway", {
+            name: "Eligible?",
+            gatewayType: "exclusive",
+          })
+        )
+      }
+    >
+      <BPMNGatewayEditPopover elementId="bpmn-gateway" />
+    </SeededPopoverHarness>
+  ),
+}
+
+/** Pool editor — pool name. */
+export const EditPool: Story = {
+  name: "Edit: Pool",
+  parameters: { layout: "centered" },
+  render: () => (
+    <SeededPopoverHarness
+      diagramType="BPMN"
+      seed={(diagram) =>
+        diagram.getState().addNode(
+          makeNode("bpmn-pool", "bpmnPool", {
+            name: "Loan Department",
+          })
+        )
+      }
+    >
+      <BPMNPoolEditPopover elementId="bpmn-pool" />
+    </SeededPopoverHarness>
+  ),
+}
+
+/** Sequence-flow editor — style, edge type, connection, and label. */
+export const EditSequenceFlow: Story = {
+  name: "Edit: Sequence Flow",
+  parameters: { layout: "centered" },
+  render: () => (
+    <SeededPopoverHarness
+      diagramType="BPMN"
+      width={360}
+      seed={(diagram) => {
+        diagram
+          .getState()
+          .addNode(makeNode("from", "bpmnTask", { name: "Review Application" }))
+        diagram
+          .getState()
+          .addNode(makeNode("to", "bpmnGateway", { name: "Eligible?" }))
+        diagram.getState().addEdge(
+          makeEdge("bpmn-edge", "BPMNSequenceFlow", "from", "to", {
+            label: "approved",
+          })
+        )
+      }}
+    >
+      <BPMNDiagramEdgeEditPopover elementId="bpmn-edge" />
+    </SeededPopoverHarness>
+  ),
 }

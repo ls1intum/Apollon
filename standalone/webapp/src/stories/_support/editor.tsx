@@ -121,11 +121,11 @@ export const fixtureByType: Record<string, UMLModel> = Object.fromEntries(
  */
 export function ApollonFixture({
   model,
-  height = 560,
+  height = "100vh",
   dataTheme,
 }: {
   model: UMLModel
-  height?: number
+  height?: number | string
   dataTheme?: "light" | "dark"
 }) {
   return (
@@ -147,12 +147,12 @@ export function ApollonFixture({
 export function ApollonEditable({
   model,
   type,
-  height = 600,
+  height = "100vh",
   dataTheme,
 }: {
   model?: UMLModel
   type?: UMLDiagramType
-  height?: number
+  height?: number | string
   dataTheme?: "light" | "dark"
 }) {
   return (
