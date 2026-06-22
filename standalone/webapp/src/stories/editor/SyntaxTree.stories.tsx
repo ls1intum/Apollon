@@ -1,27 +1,63 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
-import { SeededPopoverHarness, makeNode, makeEdge } from "../_support/editor"
+import {
+  ApollonFixture,
+  fixtureByType,
+  EditorStoreDecorator,
+  ElementGallery,
+  EdgeGallery,
+  SidebarHarness,
+  SeededPopoverHarness,
+  makeNode,
+  makeEdge,
+} from "../_support/editor"
 import { SyntaxTreeNonterminalEditPopover } from "@tumaet/apollon/components/popovers/syntaxTreeDiagram/SyntaxTreeNonterminalEditPopover"
 import { SyntaxTreeTerminalEditPopover } from "@tumaet/apollon/components/popovers/syntaxTreeDiagram/SyntaxTreeTerminalEditPopover"
 import { SyntaxTreeEdgeEditPopover } from "@tumaet/apollon/components/popovers/edgePopovers/SyntaxTreeEdgeEditPopover"
 
 /**
- * Syntax-tree edit popovers, rendered in isolation against a seeded store — the
- * same forms users get when they select a nonterminal, a terminal, or a link.
- * Browse to verify each editor's fields, layout, and styling.
+ * Everything for the **Syntax Tree** in one place: the full diagram, the element
+ * palette, every node shape, every edge (link) type, and the edit popovers.
+ * Tagged `!test` — these mount editor source (a second React copy under the
+ * Vitest browser runner), so they are visual: browse them here.
  */
 const meta = {
-  title: "Editor/Popovers/Syntax Tree",
-  parameters: { layout: "centered" },
-  // Visual-only: the popovers import editor source (second React copy under the
-  // Vitest browser runner). Browse them in Storybook.
+  title: "Editor/Syntax Tree",
   tags: ["autodocs", "!test"],
 } satisfies Meta
 
 export default meta
 type Story = StoryObj<typeof meta>
 
+// ── The whole diagram ────────────────────────────────────────────────────────
+export const Diagram: Story = {
+  parameters: { layout: "fullscreen" },
+  render: () => <ApollonFixture model={fixtureByType.SyntaxTree} />,
+}
+
+/** The element palette (drag source) for this diagram type. */
+export const Palette: Story = {
+  parameters: { layout: "fullscreen" },
+  render: () => <SidebarHarness diagramType="SyntaxTree" />,
+}
+
+// ── The parts ────────────────────────────────────────────────────────────────
+/** Every node shape this diagram can contain. */
+export const Elements: Story = {
+  decorators: [EditorStoreDecorator],
+  parameters: { layout: "centered" },
+  render: () => <ElementGallery type="SyntaxTree" />,
+}
+
+/** Every relationship (edge) type, with its marker + dash style. */
+export const Edges: Story = {
+  parameters: { layout: "centered" },
+  render: () => <EdgeGallery family="SyntaxTree" />,
+}
+
+// ── Popovers (the edit UIs) ──────────────────────────────────────────────────
 /** Nonterminal editor — name + color (placeholder "Nonterminal"). */
-export const NonterminalNode: Story = {
+export const NonterminalPopover: Story = {
+  parameters: { layout: "centered" },
   render: () => (
     <SeededPopoverHarness
       diagramType="SyntaxTree"
@@ -39,7 +75,8 @@ export const NonterminalNode: Story = {
 }
 
 /** Terminal editor — name + color (placeholder "Terminal"). */
-export const TerminalNode: Story = {
+export const TerminalPopover: Story = {
+  parameters: { layout: "centered" },
   render: () => (
     <SeededPopoverHarness
       diagramType="SyntaxTree"
@@ -57,7 +94,8 @@ export const TerminalNode: Story = {
 }
 
 /** Link editor — style controls for the edge between tree nodes. */
-export const LinkEdge: Story = {
+export const LinkPopover: Story = {
+  parameters: { layout: "centered" },
   render: () => (
     <SeededPopoverHarness
       diagramType="SyntaxTree"
@@ -83,8 +121,8 @@ export const LinkEdge: Story = {
   ),
 }
 
-/** Dark-pinned to confirm the popover reads correctly under the dark token set. */
+/** The whole diagram, dark theme. */
 export const Dark: Story = {
-  ...NonterminalNode,
+  ...Diagram,
   globals: { theme: "dark" },
 }

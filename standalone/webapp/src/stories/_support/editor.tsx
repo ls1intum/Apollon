@@ -194,6 +194,29 @@ export function elementConfigsFor(
   return dropElementConfigs[type] ?? []
 }
 
+/**
+ * The node-shape gallery for a diagram type — every palette element rendered via
+ * ElementPreview. Apply the EditorStoreDecorator on the story (the SVGs read the
+ * stores). Keeps each per-type story file DRY.
+ */
+export function ElementGallery({ type }: { type: UMLDiagramType }) {
+  const configs = elementConfigsFor(type)
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        gap: 24,
+        alignItems: "flex-start",
+      }}
+    >
+      {configs.map((config, i) => (
+        <ElementPreview key={`${config.type}-${i}`} config={config} />
+      ))}
+    </div>
+  )
+}
+
 // ── Editor chrome path ──────────────────────────────────────────────────────
 /**
  * The editor Sidebar (element palette) in isolation, per diagram type. The
@@ -372,6 +395,35 @@ export function EdgePreview({
           {label}
         </span>
       )}
+    </div>
+  )
+}
+
+/** The edge-type gallery for a diagram family — every connector via EdgePreview. */
+export function EdgeGallery({ family }: { family: UMLDiagramType }) {
+  const edges = edgeTypeCatalog.filter((e) => e.family === family)
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+        gap: 8,
+        alignItems: "start",
+        width: 540,
+      }}
+    >
+      {edges.map((e) => (
+        <div
+          key={e.key}
+          style={{
+            border: "1px solid var(--home-border-subtle)",
+            borderRadius: "var(--home-radius-md)",
+            background: "var(--home-surface-raised)",
+          }}
+        >
+          <EdgePreview edgeType={e.key} label={e.label} />
+        </div>
+      ))}
     </div>
   )
 }

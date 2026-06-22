@@ -1,5 +1,15 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
-import { SeededPopoverHarness, makeNode, makeEdge } from "../_support/editor"
+import {
+  ApollonFixture,
+  fixtureByType,
+  EditorStoreDecorator,
+  ElementGallery,
+  EdgeGallery,
+  SidebarHarness,
+  SeededPopoverHarness,
+  makeNode,
+  makeEdge,
+} from "../_support/editor"
 import { BPMNTaskEditPopover } from "@tumaet/apollon/components/popovers/bpmnDiagram/BPMNTaskEditPopover"
 import { BPMNStartEventEditPopover } from "@tumaet/apollon/components/popovers/bpmnDiagram/BPMNStartEventEditPopover"
 import { BPMNIntermediateEventEditPopover } from "@tumaet/apollon/components/popovers/bpmnDiagram/BPMNIntermediateEventEditPopover"
@@ -9,24 +19,51 @@ import { BPMNPoolEditPopover } from "@tumaet/apollon/components/popovers/bpmnDia
 import { BPMNDiagramEdgeEditPopover } from "@tumaet/apollon/components/popovers/edgePopovers/BPMNDiagramEdgeEditPopover"
 
 /**
- * BPMN edit popovers, rendered in isolation against a seeded store — the same
- * forms users get when they select a task, event, gateway, pool, or sequence
- * flow. Each BPMN node popover resolves its element via the harness's hidden
- * ReactFlow. Browse to verify each editor's fields, layout, and styling.
+ * Everything for the **BPMN** diagram in one place: the full diagram, the
+ * element palette, every node shape, every edge (flow) type, and the edit
+ * popovers (task, event, gateway, pool, sequence flow). Each BPMN node popover
+ * resolves its element via the harness's hidden ReactFlow. Tagged `!test` —
+ * these mount editor source (a second React copy under the Vitest browser
+ * runner), so they are visual: browse them here.
  */
 const meta = {
-  title: "Editor/Popovers/BPMN",
-  parameters: { layout: "centered" },
-  // Visual-only: the popovers import editor source (second React copy under the
-  // Vitest browser runner). Browse them in Storybook.
+  title: "Editor/BPMN",
   tags: ["autodocs", "!test"],
 } satisfies Meta
 
 export default meta
 type Story = StoryObj<typeof meta>
 
+// ── The whole diagram ────────────────────────────────────────────────────────
+export const Diagram: Story = {
+  parameters: { layout: "fullscreen" },
+  render: () => <ApollonFixture model={fixtureByType.BPMN} />,
+}
+
+/** The element palette (drag source) for this diagram type. */
+export const Palette: Story = {
+  parameters: { layout: "fullscreen" },
+  render: () => <SidebarHarness diagramType="BPMN" />,
+}
+
+// ── The parts ────────────────────────────────────────────────────────────────
+/** Every node shape this diagram can contain. */
+export const Elements: Story = {
+  decorators: [EditorStoreDecorator],
+  parameters: { layout: "centered" },
+  render: () => <ElementGallery type="BPMN" />,
+}
+
+/** Every flow (edge) type, with its marker + dash style. */
+export const Edges: Story = {
+  parameters: { layout: "centered" },
+  render: () => <EdgeGallery family="BPMN" />,
+}
+
+// ── Popovers (the edit UIs) ──────────────────────────────────────────────────
 /** Task editor — style, task type, and activity marker. */
-export const Task: Story = {
+export const TaskPopover: Story = {
+  parameters: { layout: "centered" },
   render: () => (
     <SeededPopoverHarness
       diagramType="BPMN"
@@ -46,7 +83,8 @@ export const Task: Story = {
 }
 
 /** Start-event editor — name and start trigger type. */
-export const StartEvent: Story = {
+export const StartEventPopover: Story = {
+  parameters: { layout: "centered" },
   render: () => (
     <SeededPopoverHarness
       diagramType="BPMN"
@@ -65,7 +103,8 @@ export const StartEvent: Story = {
 }
 
 /** Intermediate-event editor — name and catch/throw trigger type. */
-export const IntermediateEvent: Story = {
+export const IntermediateEventPopover: Story = {
+  parameters: { layout: "centered" },
   render: () => (
     <SeededPopoverHarness
       diagramType="BPMN"
@@ -84,7 +123,8 @@ export const IntermediateEvent: Story = {
 }
 
 /** End-event editor — name and end result type. */
-export const EndEvent: Story = {
+export const EndEventPopover: Story = {
+  parameters: { layout: "centered" },
   render: () => (
     <SeededPopoverHarness
       diagramType="BPMN"
@@ -103,7 +143,8 @@ export const EndEvent: Story = {
 }
 
 /** Gateway editor — name and gateway type. */
-export const Gateway: Story = {
+export const GatewayPopover: Story = {
+  parameters: { layout: "centered" },
   render: () => (
     <SeededPopoverHarness
       diagramType="BPMN"
@@ -122,7 +163,8 @@ export const Gateway: Story = {
 }
 
 /** Pool editor — pool name. */
-export const Pool: Story = {
+export const PoolPopover: Story = {
+  parameters: { layout: "centered" },
   render: () => (
     <SeededPopoverHarness
       diagramType="BPMN"
@@ -140,7 +182,8 @@ export const Pool: Story = {
 }
 
 /** Sequence-flow editor — style, edge type, connection, and label. */
-export const SequenceFlowEdge: Story = {
+export const SequenceFlowEdgePopover: Story = {
+  parameters: { layout: "centered" },
   render: () => (
     <SeededPopoverHarness
       diagramType="BPMN"
@@ -164,8 +207,8 @@ export const SequenceFlowEdge: Story = {
   ),
 }
 
-/** Dark-pinned to confirm the popover reads correctly under the dark token set. */
+/** The whole diagram, dark theme. */
 export const Dark: Story = {
-  ...Task,
+  ...Diagram,
   globals: { theme: "dark" },
 }

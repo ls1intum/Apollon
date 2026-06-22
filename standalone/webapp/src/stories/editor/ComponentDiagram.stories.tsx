@@ -1,27 +1,63 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
-import { SeededPopoverHarness, makeNode, makeEdge } from "../_support/editor"
+import {
+  ApollonFixture,
+  fixtureByType,
+  EditorStoreDecorator,
+  ElementGallery,
+  EdgeGallery,
+  SidebarHarness,
+  SeededPopoverHarness,
+  makeNode,
+  makeEdge,
+} from "../_support/editor"
 import { ComponentEditPopover } from "@tumaet/apollon/components/popovers/componentDiagram/ComponentEditPopover"
 import { ComponentSubsystemEditPopover } from "@tumaet/apollon/components/popovers/componentDiagram/ComponentSubsystemEditPopover"
 import { ComponentEdgeEditPopover } from "@tumaet/apollon/components/popovers/edgePopovers/ComponentDiagramEdgeEditPopover"
 
 /**
- * Component-diagram edit popovers, rendered in isolation against a seeded store —
- * the same forms users get when they select a component, a subsystem, or a
- * dependency edge. Browse to verify each editor's fields, layout, and styling.
+ * Everything for the **Component Diagram** in one place: the full diagram, the
+ * element palette, every node shape, every edge type, and the edit popovers.
+ * Tagged `!test` — these mount editor source (a second React copy under the
+ * Vitest browser runner), so they are visual: browse them here.
  */
 const meta = {
-  title: "Editor/Popovers/Component Diagram",
-  parameters: { layout: "centered" },
-  // Visual-only: the popovers import editor source (second React copy under the
-  // Vitest browser runner). Browse them in Storybook.
+  title: "Editor/Component Diagram",
   tags: ["autodocs", "!test"],
 } satisfies Meta
 
 export default meta
 type Story = StoryObj<typeof meta>
 
+// ── The whole diagram ────────────────────────────────────────────────────────
+export const Diagram: Story = {
+  parameters: { layout: "fullscreen" },
+  render: () => <ApollonFixture model={fixtureByType.ComponentDiagram} />,
+}
+
+/** The element palette (drag source) for this diagram type. */
+export const Palette: Story = {
+  parameters: { layout: "fullscreen" },
+  render: () => <SidebarHarness diagramType="ComponentDiagram" />,
+}
+
+// ── The parts ────────────────────────────────────────────────────────────────
+/** Every node shape this diagram can contain. */
+export const Elements: Story = {
+  decorators: [EditorStoreDecorator],
+  parameters: { layout: "centered" },
+  render: () => <ElementGallery type="ComponentDiagram" />,
+}
+
+/** Every relationship (edge) type, with its marker + dash style. */
+export const Edges: Story = {
+  parameters: { layout: "centered" },
+  render: () => <EdgeGallery family="ComponentDiagram" />,
+}
+
+// ── Popovers (the edit UIs) ──────────────────────────────────────────────────
 /** Component node editor — name + component-header toggle. */
-export const ComponentNode: Story = {
+export const ComponentPopover: Story = {
+  parameters: { layout: "centered" },
   render: () => (
     <SeededPopoverHarness
       diagramType="ComponentDiagram"
@@ -40,7 +76,8 @@ export const ComponentNode: Story = {
 }
 
 /** Subsystem node editor — name + subsystem-header toggle. */
-export const ComponentSubsystemNode: Story = {
+export const ComponentSubsystemPopover: Story = {
+  parameters: { layout: "centered" },
   render: () => (
     <SeededPopoverHarness
       diagramType="ComponentDiagram"
@@ -59,7 +96,8 @@ export const ComponentSubsystemNode: Story = {
 }
 
 /** Dependency edge editor — line style, swap, edge type, connection info. */
-export const ComponentDependencyEdge: Story = {
+export const ComponentDependencyPopover: Story = {
+  parameters: { layout: "centered" },
   render: () => (
     <SeededPopoverHarness
       diagramType="ComponentDiagram"
@@ -89,8 +127,8 @@ export const ComponentDependencyEdge: Story = {
   ),
 }
 
-/** Dark-pinned to confirm the popover reads correctly under the dark token set. */
+/** The whole diagram, dark theme. */
 export const Dark: Story = {
-  ...ComponentNode,
+  ...Diagram,
   globals: { theme: "dark" },
 }

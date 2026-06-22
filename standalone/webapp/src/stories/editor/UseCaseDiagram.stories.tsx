@@ -1,26 +1,62 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
-import { SeededPopoverHarness, makeNode, makeEdge } from "../_support/editor"
+import {
+  ApollonFixture,
+  fixtureByType,
+  EditorStoreDecorator,
+  ElementGallery,
+  EdgeGallery,
+  SidebarHarness,
+  SeededPopoverHarness,
+  makeNode,
+  makeEdge,
+} from "../_support/editor"
 import { DefaultNodeEditPopover } from "@tumaet/apollon/components/popovers/DefaultNodeEditPopover"
 import { UseCaseEdgeEditPopover } from "@tumaet/apollon/components/popovers/edgePopovers/UseCaseDiagramEdgeEditPopover"
 
 /**
- * Use-case edit popovers, rendered in isolation against a seeded store — the
- * same forms users get when they select a use case or one of its connections.
- * Browse to verify each editor's fields, layout, and styling.
+ * Everything for the **Use Case Diagram** in one place: the full diagram, the
+ * element palette, every node shape, every edge (connection) type, and the edit
+ * popovers. Tagged `!test` — these mount editor source (a second React copy
+ * under the Vitest browser runner), so they are visual: browse them here.
  */
 const meta = {
-  title: "Editor/Popovers/Use Case",
-  parameters: { layout: "centered" },
-  // Visual-only: the popovers import editor source (second React copy under the
-  // Vitest browser runner). Browse them in Storybook.
+  title: "Editor/Use Case Diagram",
   tags: ["autodocs", "!test"],
 } satisfies Meta
 
 export default meta
 type Story = StoryObj<typeof meta>
 
+// ── The whole diagram ────────────────────────────────────────────────────────
+export const Diagram: Story = {
+  parameters: { layout: "fullscreen" },
+  render: () => <ApollonFixture model={fixtureByType.UseCaseDiagram} />,
+}
+
+/** The element palette (drag source) for this diagram type. */
+export const Palette: Story = {
+  parameters: { layout: "fullscreen" },
+  render: () => <SidebarHarness diagramType="UseCaseDiagram" />,
+}
+
+// ── The parts ────────────────────────────────────────────────────────────────
+/** Every node shape this diagram can contain. */
+export const Elements: Story = {
+  decorators: [EditorStoreDecorator],
+  parameters: { layout: "centered" },
+  render: () => <ElementGallery type="UseCaseDiagram" />,
+}
+
+/** Every relationship (edge) type, with its marker + dash style. */
+export const Edges: Story = {
+  parameters: { layout: "centered" },
+  render: () => <EdgeGallery family="UseCaseDiagram" />,
+}
+
+// ── Popovers (the edit UIs) ──────────────────────────────────────────────────
 /** Use-case editor — the shared default node editor (name + style). */
-export const UseCaseNode: Story = {
+export const UseCasePopover: Story = {
+  parameters: { layout: "centered" },
   render: () => (
     <SeededPopoverHarness
       diagramType="UseCaseDiagram"
@@ -38,7 +74,8 @@ export const UseCaseNode: Story = {
 }
 
 /** Association editor — edge-type select, swap, connection info, label. */
-export const AssociationEdge: Story = {
+export const AssociationPopover: Story = {
+  parameters: { layout: "centered" },
   render: () => (
     <SeededPopoverHarness
       diagramType="UseCaseDiagram"
@@ -63,7 +100,8 @@ export const AssociationEdge: Story = {
 }
 
 /** Include editor — same form, type pinned to «include» (no label field). */
-export const IncludeEdge: Story = {
+export const IncludePopover: Story = {
+  parameters: { layout: "centered" },
   render: () => (
     <SeededPopoverHarness
       diagramType="UseCaseDiagram"
@@ -85,8 +123,8 @@ export const IncludeEdge: Story = {
   ),
 }
 
-/** Dark-pinned to confirm the popover reads correctly under the dark token set. */
+/** The whole diagram, dark theme. */
 export const Dark: Story = {
-  ...UseCaseNode,
+  ...Diagram,
   globals: { theme: "dark" },
 }

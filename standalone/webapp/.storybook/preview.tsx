@@ -54,8 +54,26 @@ const preview: Preview = {
         order: [
           "UI",
           ["Overview", "Theming", "Tokens", "Components"],
+          // Editor is grouped BY DIAGRAM TYPE — each type colocates all its parts
+          // (Diagram, Palette, Elements, Edges, popovers). Within a type, stories
+          // keep file order (Diagram first). Type order follows the palette.
           "Editor",
-          ["Diagrams", "Templates", "Elements", "Chrome"],
+          [
+            "Introduction",
+            "Class Diagram",
+            "Object Diagram",
+            "Activity Diagram",
+            "Use Case Diagram",
+            "Communication Diagram",
+            "Component Diagram",
+            "Deployment Diagram",
+            "Petri Net",
+            "Reachability Graph",
+            "Syntax Tree",
+            "Flowchart",
+            "BPMN",
+            "SFC",
+          ],
           "Webapp",
           ["Navbar", "Home", "Modals", "Versioning", "Pages", "Misc"],
           "*",

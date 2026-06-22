@@ -1,27 +1,63 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
-import { SeededPopoverHarness, makeNode, makeEdge } from "../_support/editor"
+import {
+  ApollonFixture,
+  fixtureByType,
+  EditorStoreDecorator,
+  ElementGallery,
+  EdgeGallery,
+  SidebarHarness,
+  SeededPopoverHarness,
+  makeNode,
+  makeEdge,
+} from "../_support/editor"
 import { DeploymentComponentEditPopover } from "@tumaet/apollon/components/popovers/deploymentDiagram/DeploymentComponentEditPopover"
 import { DeploymentNodeEditPopover } from "@tumaet/apollon/components/popovers/deploymentDiagram/DeploymentNodeEditPopover"
 import { DeploymentEdgeEditPopover } from "@tumaet/apollon/components/popovers/edgePopovers/DeploymentDiagramEdgeEditPopover"
 
 /**
- * Deployment-diagram edit popovers, rendered in isolation against a seeded store —
- * the same forms users get when they select a deployment component, a node, or an
- * association edge. Browse to verify each editor's fields, layout, and styling.
+ * Everything for the **Deployment Diagram** in one place: the full diagram, the
+ * element palette, every node shape, every edge type, and the edit popovers.
+ * Tagged `!test` — these mount editor source (a second React copy under the
+ * Vitest browser runner), so they are visual: browse them here.
  */
 const meta = {
-  title: "Editor/Popovers/Deployment Diagram",
-  parameters: { layout: "centered" },
-  // Visual-only: the popovers import editor source (second React copy under the
-  // Vitest browser runner). Browse them in Storybook.
+  title: "Editor/Deployment Diagram",
   tags: ["autodocs", "!test"],
 } satisfies Meta
 
 export default meta
 type Story = StoryObj<typeof meta>
 
+// ── The whole diagram ────────────────────────────────────────────────────────
+export const Diagram: Story = {
+  parameters: { layout: "fullscreen" },
+  render: () => <ApollonFixture model={fixtureByType.DeploymentDiagram} />,
+}
+
+/** The element palette (drag source) for this diagram type. */
+export const Palette: Story = {
+  parameters: { layout: "fullscreen" },
+  render: () => <SidebarHarness diagramType="DeploymentDiagram" />,
+}
+
+// ── The parts ────────────────────────────────────────────────────────────────
+/** Every node shape this diagram can contain. */
+export const Elements: Story = {
+  decorators: [EditorStoreDecorator],
+  parameters: { layout: "centered" },
+  render: () => <ElementGallery type="DeploymentDiagram" />,
+}
+
+/** Every relationship (edge) type, with its marker + dash style. */
+export const Edges: Story = {
+  parameters: { layout: "centered" },
+  render: () => <EdgeGallery family="DeploymentDiagram" />,
+}
+
+// ── Popovers (the edit UIs) ──────────────────────────────────────────────────
 /** Deployment-component node editor — name + component-header toggle. */
-export const DeploymentComponentNode: Story = {
+export const DeploymentComponentPopover: Story = {
+  parameters: { layout: "centered" },
   render: () => (
     <SeededPopoverHarness
       diagramType="DeploymentDiagram"
@@ -40,7 +76,8 @@ export const DeploymentComponentNode: Story = {
 }
 
 /** Deployment-node editor — name, header toggle, and a stereotype field. */
-export const DeploymentNode: Story = {
+export const DeploymentNodePopover: Story = {
+  parameters: { layout: "centered" },
   render: () => (
     <SeededPopoverHarness
       diagramType="DeploymentDiagram"
@@ -60,7 +97,8 @@ export const DeploymentNode: Story = {
 }
 
 /** Association edge editor — line style, swap, edge type, label, connection info. */
-export const DeploymentAssociationEdge: Story = {
+export const DeploymentAssociationPopover: Story = {
+  parameters: { layout: "centered" },
   render: () => (
     <SeededPopoverHarness
       diagramType="DeploymentDiagram"
@@ -92,8 +130,8 @@ export const DeploymentAssociationEdge: Story = {
   ),
 }
 
-/** Dark-pinned to confirm the popover reads correctly under the dark token set. */
+/** The whole diagram, dark theme. */
 export const Dark: Story = {
-  ...DeploymentComponentNode,
+  ...Diagram,
   globals: { theme: "dark" },
 }
