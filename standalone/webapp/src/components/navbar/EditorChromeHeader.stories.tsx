@@ -2,7 +2,8 @@ import { useState, type ReactNode } from "react"
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { Apollon } from "@tumaet/apollon/react"
 import type { ApollonEditor, UMLModel } from "@tumaet/apollon/react"
-import { StubEditorContext } from "../../stories/_support/webapp"
+import { EditorContext } from "@/contexts/EditorContext"
+import { ModalProvider } from "@/contexts/ModalContext"
 import { EditorChromeHeader } from "./EditorChromeHeader"
 
 /**
@@ -46,25 +47,31 @@ function LiveEditorHost({
   children: ReactNode
   title?: string
 }) {
+  // EditorContext.Provider directly (NOT the stub helper): EditorChromeHeader
+  // calls editor.getRegionElement, which only a LIVE editor has. With a real
+  // editor that is `undefined` until onMount, the header renders null until the
+  // editor mounts — a stub-default would poison that first render.
   const [editor, setEditor] = useState<ApollonEditor | undefined>(undefined)
+  const [diagramName, setDiagramName] = useState(title ?? SAMPLE_MODEL.title)
   return (
-    <StubEditorContext
-      editor={editor}
-      diagramName={title ?? SAMPLE_MODEL.title}
+    <EditorContext.Provider
+      value={{ editor, diagramName, setDiagramName, setEditor }}
     >
-      <div style={{ position: "relative", height: 360, width: "100%" }}>
-        <Apollon
-          readonly
-          defaultModel={{
-            ...SAMPLE_MODEL,
-            title: title ?? SAMPLE_MODEL.title,
-          }}
-          onMount={(instance) => setEditor(instance)}
-          style={{ height: "100%", width: "100%" }}
-        />
-        {children}
-      </div>
-    </StubEditorContext>
+      <ModalProvider>
+        <div style={{ position: "relative", height: "100vh", width: "100%" }}>
+          <Apollon
+            readonly
+            defaultModel={{
+              ...SAMPLE_MODEL,
+              title: title ?? SAMPLE_MODEL.title,
+            }}
+            onMount={(instance) => setEditor(instance)}
+            style={{ height: "100%", width: "100%" }}
+          />
+          {children}
+        </div>
+      </ModalProvider>
+    </EditorContext.Provider>
   )
 }
 
