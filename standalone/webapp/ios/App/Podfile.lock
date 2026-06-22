@@ -10,8 +10,6 @@ PODS:
   - CapacitorFileTransfer (2.0.4):
     - Capacitor
     - IONFileTransferLib (~> 1.0.2)
-  - CapacitorPluginSafeArea (4.0.0):
-    - Capacitor
   - CapacitorShare (8.0.1):
     - Capacitor
   - CapacitorSplashScreen (8.0.1):
@@ -27,7 +25,6 @@ DEPENDENCIES:
   - "CapacitorCordova (from `../../../../node_modules/.pnpm/@capacitor+ios@8.3.0_@capacitor+core@8.3.0/node_modules/@capacitor/ios`)"
   - "CapacitorFilesystem (from `../../../../node_modules/.pnpm/@capacitor+filesystem@8.1.2_@capacitor+core@8.3.0/node_modules/@capacitor/filesystem`)"
   - "CapacitorFileTransfer (from `../../../../node_modules/.pnpm/@capacitor+file-transfer@2.0.4_@capacitor+core@8.3.0/node_modules/@capacitor/file-transfer`)"
-  - "CapacitorPluginSafeArea (from `../../../../node_modules/.pnpm/capacitor-plugin-safe-area@4.0.0_@capacitor+core@8.3.0/node_modules/capacitor-plugin-safe-area`)"
   - "CapacitorShare (from `../../../../node_modules/.pnpm/@capacitor+share@8.0.1_@capacitor+core@8.3.0/node_modules/@capacitor/share`)"
   - "CapacitorSplashScreen (from `../../../../node_modules/.pnpm/@capacitor+splash-screen@8.0.1_@capacitor+core@8.3.0/node_modules/@capacitor/splash-screen`)"
   - "CapacitorStatusBar (from `../../../../node_modules/.pnpm/@capacitor+status-bar@8.0.2_@capacitor+core@8.3.0/node_modules/@capacitor/status-bar`)"
@@ -48,8 +45,6 @@ EXTERNAL SOURCES:
     :path: "../../../../node_modules/.pnpm/@capacitor+filesystem@8.1.2_@capacitor+core@8.3.0/node_modules/@capacitor/filesystem"
   CapacitorFileTransfer:
     :path: "../../../../node_modules/.pnpm/@capacitor+file-transfer@2.0.4_@capacitor+core@8.3.0/node_modules/@capacitor/file-transfer"
-  CapacitorPluginSafeArea:
-    :path: "../../../../node_modules/.pnpm/capacitor-plugin-safe-area@4.0.0_@capacitor+core@8.3.0/node_modules/capacitor-plugin-safe-area"
   CapacitorShare:
     :path: "../../../../node_modules/.pnpm/@capacitor+share@8.0.1_@capacitor+core@8.3.0/node_modules/@capacitor/share"
   CapacitorSplashScreen:
@@ -63,13 +58,12 @@ SPEC CHECKSUMS:
   CapacitorCordova: 2e1e2bb93b2f365309dc4ff18b72b9a69a7814a9
   CapacitorFilesystem: 2db285a1ac6e475cc27cae2e1bea999000f9e2be
   CapacitorFileTransfer: 445b9dc69ea5a5e0e708e011a4848e63c471abee
-  CapacitorPluginSafeArea: 22031c3436269ca80fac90ec2c94bc7c1e59a81d
   CapacitorShare: 0c58305114538568059bfc07111f22dcb9cb2a82
   CapacitorSplashScreen: 4b46c72298db552b3c57ce021ef028b6dc7f1fa7
   CapacitorStatusBar: 01d5763b4ed720de5ce2edbc938de6a98f4c8f32
   IONFilesystemLib: 21a63377696b2d8fab5632ecfb7d2ac67bddb68a
   IONFileTransferLib: addbbf50405c163dcd74a7b1bd8c6f9302342be2
 
-PODFILE CHECKSUM: 0e717feea310103b27d5fcac000bdb3d635e0a5c
+PODFILE CHECKSUM: b63f0bc5fd48fea81ea054862cb08b3bdc19f84a
 
 COCOAPODS: 1.16.2
