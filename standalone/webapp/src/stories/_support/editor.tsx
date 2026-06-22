@@ -14,12 +14,19 @@
 import * as React from "react"
 import type { Decorator } from "@storybook/react-vite"
 import * as Y from "yjs"
-import { ReactFlowProvider } from "@xyflow/react"
+import {
+  ReactFlow,
+  ReactFlowProvider,
+  type Node,
+  type Edge,
+} from "@xyflow/react"
+import { useShallow } from "zustand/shallow"
 
 import { Apollon } from "@tumaet/apollon/react"
-import type { UMLModel, UMLDiagramType } from "@tumaet/apollon"
+import type { UMLModel, UMLDiagramType, DiagramEdgeType } from "@tumaet/apollon"
 import { ApollonView } from "@tumaet/apollon/typings"
 import { Sidebar } from "@tumaet/apollon/components/Sidebar"
+import { EdgeTypePreviewIcon } from "@tumaet/apollon/components/popovers/edgePopovers/EdgeTypePreviewIcon"
 import {
   DROPS,
   dropElementConfigs,
@@ -32,6 +39,7 @@ import {
   DiagramStoreContext,
   MetadataStoreContext,
   AssessmentSelectionStoreContext,
+  useDiagramStore,
 } from "@tumaet/apollon/store"
 
 // ── Fixtures ────────────────────────────────────────────────────────────────
@@ -217,6 +225,263 @@ export function SidebarHarness({
           <ReactFlowProvider>
             <div style={{ height: 600, display: "flex" }}>
               <Sidebar />
+            </div>
+          </ReactFlowProvider>
+        </AssessmentSelectionStoreContext.Provider>
+      </MetadataStoreContext.Provider>
+    </DiagramStoreContext.Provider>
+  )
+}
+
+// ── Edge path ────────────────────────────────────────────────────────────────
+// The real edge components are @xyflow/react edges needing live geometry, so they
+// can't render standalone. EdgeTypePreviewIcon is the editor's own faithful
+// mini-edge (same getEdgeMarkerStyles + InlineMarker the canvas uses) — a pure
+// SVG of the line + start/end markers, no context. It's exactly what the
+// edge-type dropdown shows. Markers use currentColor, so a colored wrapper themes it.
+
+/** Every edge type the editor draws, grouped by diagram family (for the gallery). */
+export const edgeTypeCatalog: {
+  key: DiagramEdgeType
+  label: string
+  family: UMLDiagramType
+}[] = [
+  {
+    key: "ClassBidirectional",
+    label: "Bi-Association",
+    family: "ClassDiagram",
+  },
+  {
+    key: "ClassUnidirectional",
+    label: "Uni-Association",
+    family: "ClassDiagram",
+  },
+  { key: "ClassAggregation", label: "Aggregation", family: "ClassDiagram" },
+  { key: "ClassComposition", label: "Composition", family: "ClassDiagram" },
+  { key: "ClassInheritance", label: "Inheritance", family: "ClassDiagram" },
+  { key: "ClassDependency", label: "Dependency", family: "ClassDiagram" },
+  { key: "ClassRealization", label: "Realization", family: "ClassDiagram" },
+  { key: "ObjectLink", label: "Object Link", family: "ObjectDiagram" },
+  {
+    key: "ActivityControlFlow",
+    label: "Control Flow",
+    family: "ActivityDiagram",
+  },
+  { key: "UseCaseAssociation", label: "Association", family: "UseCaseDiagram" },
+  { key: "UseCaseInclude", label: "Include", family: "UseCaseDiagram" },
+  { key: "UseCaseExtend", label: "Extend", family: "UseCaseDiagram" },
+  {
+    key: "UseCaseGeneralization",
+    label: "Generalization",
+    family: "UseCaseDiagram",
+  },
+  {
+    key: "CommunicationLink",
+    label: "Message Link",
+    family: "CommunicationDiagram",
+  },
+  {
+    key: "ComponentDependency",
+    label: "Dependency",
+    family: "ComponentDiagram",
+  },
+  {
+    key: "ComponentProvidedInterface",
+    label: "Provided Interface",
+    family: "ComponentDiagram",
+  },
+  {
+    key: "ComponentRequiredInterface",
+    label: "Required Interface",
+    family: "ComponentDiagram",
+  },
+  {
+    key: "ComponentRequiredThreeQuarterInterface",
+    label: "Required (¾)",
+    family: "ComponentDiagram",
+  },
+  {
+    key: "ComponentRequiredQuarterInterface",
+    label: "Required (¼)",
+    family: "ComponentDiagram",
+  },
+  {
+    key: "DeploymentAssociation",
+    label: "Association",
+    family: "DeploymentDiagram",
+  },
+  {
+    key: "DeploymentDependency",
+    label: "Dependency",
+    family: "DeploymentDiagram",
+  },
+  {
+    key: "DeploymentProvidedInterface",
+    label: "Provided Interface",
+    family: "DeploymentDiagram",
+  },
+  {
+    key: "DeploymentRequiredInterface",
+    label: "Required Interface",
+    family: "DeploymentDiagram",
+  },
+  {
+    key: "DeploymentRequiredThreeQuarterInterface",
+    label: "Required (¾)",
+    family: "DeploymentDiagram",
+  },
+  {
+    key: "DeploymentRequiredQuarterInterface",
+    label: "Required (¼)",
+    family: "DeploymentDiagram",
+  },
+  { key: "PetriNetArc", label: "Arc", family: "PetriNet" },
+  { key: "ReachabilityGraphArc", label: "Arc", family: "ReachabilityGraph" },
+  { key: "SfcDiagramEdge", label: "Transition", family: "Sfc" },
+  { key: "SyntaxTreeLink", label: "Link", family: "SyntaxTree" },
+  { key: "FlowChartFlowline", label: "Flowline", family: "Flowchart" },
+  { key: "BPMNSequenceFlow", label: "Sequence Flow", family: "BPMN" },
+  { key: "BPMNMessageFlow", label: "Message Flow", family: "BPMN" },
+  { key: "BPMNAssociationFlow", label: "Association", family: "BPMN" },
+  { key: "BPMNDataAssociationFlow", label: "Data Association", family: "BPMN" },
+]
+
+/** One captioned edge-type preview tile. */
+export function EdgePreview({
+  edgeType,
+  label,
+}: {
+  edgeType: string
+  label?: string
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 6,
+        padding: "12px 16px",
+        color: "var(--apollon-primary-contrast, #1a1f27)",
+      }}
+      data-edge-type={edgeType}
+    >
+      <EdgeTypePreviewIcon edgeType={edgeType} />
+      {label && (
+        <span style={{ fontSize: 12, color: "var(--home-text-secondary)" }}>
+          {label}
+        </span>
+      )}
+    </div>
+  )
+}
+
+// ── Popover path ─────────────────────────────────────────────────────────────
+// Edit popovers take an `elementId` and read the element from the stores. Node
+// popovers need only the seeded DiagramStore; edge + BPMN-node popovers also read
+// ReactFlow's nodeLookup/edgeLookup, so a controlled (hidden) <ReactFlow> bound to
+// the same store must be mounted (exactly how App.tsx feeds ReactFlow). We render
+// the popover CONTENT directly (no Base UI portal/anchor) inside .apollon-editor >
+// .apollon-popover so the theme + popup styling apply.
+
+/** Minimal node for seeding a popover. */
+export function makeNode(
+  id: string,
+  type: string,
+  data: Record<string, unknown>,
+  opts?: { width?: number; height?: number }
+): Node {
+  return {
+    id,
+    type,
+    position: { x: 0, y: 0 },
+    width: opts?.width ?? 200,
+    height: opts?.height ?? 110,
+    data,
+  }
+}
+
+/** Minimal edge for seeding an edge popover (with two endpoint nodes). */
+export function makeEdge(
+  id: string,
+  type: DiagramEdgeType,
+  source: string,
+  target: string,
+  data: Record<string, unknown> = {}
+): Edge {
+  return { id, type, source, target, data }
+}
+
+// Hidden, controlled ReactFlow bound to the diagram store — populates
+// nodeLookup/edgeLookup so useReactiveNode/useReactiveEdge resolve. Same prop
+// wiring as App.tsx (nodes/edges/onNodesChange/onEdgesChange from the store).
+function HiddenStoreFlow() {
+  const { nodes, edges, onNodesChange, onEdgesChange } = useDiagramStore(
+    useShallow((s) => ({
+      nodes: s.nodes,
+      edges: s.edges,
+      onNodesChange: s.onNodesChange,
+      onEdgesChange: s.onEdgesChange,
+    }))
+  )
+  return (
+    <div
+      aria-hidden
+      style={{ position: "absolute", width: 0, height: 0, overflow: "hidden" }}
+    >
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+      />
+    </div>
+  )
+}
+
+/**
+ * Renders an edit popover's content in isolation. `seed` populates the diagram
+ * store (add the node/edge whose id the popover renders); the harness provides
+ * the three store contexts + a hidden controlled ReactFlow so edge/BPMN popovers
+ * resolve their element. Wrap in .apollon-editor (theme vars) > .apollon-popover.
+ */
+export function SeededPopoverHarness({
+  diagramType,
+  seed,
+  width = 320,
+  children,
+}: {
+  diagramType?: UMLDiagramType
+  seed: (
+    diagram: ReturnType<typeof createDiagramStore>,
+    metadata: ReturnType<typeof createMetadataStore>
+  ) => void
+  width?: number
+  children: React.ReactNode
+}) {
+  const stores = React.useMemo(() => {
+    const ydoc = new Y.Doc()
+    const diagram = createDiagramStore(ydoc)
+    const metadata = createMetadataStore(ydoc)
+    const assessment = createAssessmentSelectionStore()
+    if (diagramType) metadata.getState().updateDiagramType(diagramType)
+    metadata.getState().setView(ApollonView.Modelling)
+    seed(diagram, metadata)
+    return { diagram, metadata, assessment }
+    // seed is referentially stable per story; diagramType keys the rebuild.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [diagramType])
+
+  return (
+    <DiagramStoreContext.Provider value={stores.diagram}>
+      <MetadataStoreContext.Provider value={stores.metadata}>
+        <AssessmentSelectionStoreContext.Provider value={stores.assessment}>
+          <ReactFlowProvider>
+            <div className="apollon-editor">
+              <HiddenStoreFlow />
+              <div className="apollon-popover" style={{ width }}>
+                {children}
+              </div>
             </div>
           </ReactFlowProvider>
         </AssessmentSelectionStoreContext.Provider>
