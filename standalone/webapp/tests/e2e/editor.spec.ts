@@ -462,6 +462,13 @@ test.describe("Mobile responsive layout", () => {
     const palette = page.getByTestId("apollon-palette")
     await expect(palette).toBeVisible()
 
+    const paletteBox = await palette.boundingBox()
+    expect(paletteBox).not.toBeNull()
+    // Six class-diagram entries stay in a dense single column instead of
+    // stretching their rows to consume the full portrait height.
+    expect(paletteBox!.width).toBeLessThanOrEqual(112)
+    expect(paletteBox!.height).toBeLessThanOrEqual(396)
+
     // Portrait uses the unified app-header height (NAVBAR_MIN_HEIGHT = 52).
     const navbar = page.locator("header")
     const navbarBox = await navbar.boundingBox()
@@ -533,6 +540,12 @@ test.describe("Mobile responsive layout", () => {
 
     const palette = page.getByTestId("apollon-palette")
     await expect(palette).toBeVisible()
+    const paletteBox = await palette.boundingBox()
+    expect(paletteBox).not.toBeNull()
+    // Landscape uses two compact columns, leaving substantially more canvas
+    // visible than the old height-filling grid.
+    expect(paletteBox!.width).toBeLessThanOrEqual(210)
+    expect(paletteBox!.height).toBeLessThanOrEqual(210)
     // The floating palette fits every element without scrolling here too.
     const overflow = await palette.evaluate(
       (el) => el.scrollHeight - el.clientHeight
