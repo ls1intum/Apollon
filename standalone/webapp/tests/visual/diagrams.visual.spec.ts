@@ -122,12 +122,15 @@ test.describe("Visual regression - diagram fixtures", () => {
         await clickFitView(page)
       }
 
-      // Screenshot the editor area (sidebar + canvas) excluding the navbar,
-      // so visual diffs focus on diagram rendering, not unrelated UI chrome.
-      // Baselines MUST be generated inside the Playwright Docker container
-      // (see pr-health-checks.yaml) so they match the CI environment exactly.
+      // Screenshot the editor area (sidebar + canvas). The header floats inside
+      // the canvas, so mask it — visual diffs stay focused on diagram rendering,
+      // not unrelated UI chrome. Baselines MUST be generated inside the
+      // Playwright Docker container (see
+      // docs/contributor/development/visual-tests.md) so they match CI exactly.
       const editorArea = page.locator('[data-testid="editor-area"]')
-      await expect(editorArea).toHaveScreenshot(`visual-${file}.png`)
+      await expect(editorArea).toHaveScreenshot(`visual-${file}.png`, {
+        mask: [page.locator("header")],
+      })
     })
   }
 })
@@ -179,7 +182,8 @@ test.describe("Template diagrams", () => {
 
       const editorArea = page.locator('[data-testid="editor-area"]')
       await expect(editorArea).toHaveScreenshot(
-        `template-${name.toLowerCase()}.png`
+        `template-${name.toLowerCase()}.png`,
+        { mask: [page.locator("header")] }
       )
     })
   }

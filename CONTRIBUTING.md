@@ -23,7 +23,7 @@ pnpm run build
 pnpm test
 ```
 
-Commits follow [Conventional Commits](https://www.conventionalcommits.org/) with a constrained scope set — see `commitlint.config.mjs`. The repository is **squash-merge only**, so your PR title is the merge commit subject and is checked against the same rules.
+Commits follow [Conventional Commits](https://www.conventionalcommits.org/) with a constrained type and scope set — see `commitlint.config.mjs`. The repository is **squash-merge only**, so your PR title is the merge commit subject and is checked against the same rules. The title's type also groups the release note (full mapping: [How your change gets grouped](https://ls1intum.github.io/Apollon/contributor/development/release-notes#how-your-change-gets-grouped)), so pick it for the user-visible kind of change.
 
 On any PR that changes a Changesets-tracked package — `@tumaet/apollon`, `@tumaet/webapp`, or `@tumaet/server` — add a changeset:
 

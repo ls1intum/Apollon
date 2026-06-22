@@ -3,28 +3,42 @@
 :root {
   color-scheme: light dark;
 
+  /* Safe-area floor: map the UA insets onto the custom properties the mobile
+     layout reads as `var(--safe-area-inset-*, 0px)`. With `viewport-fit=cover`
+     (set in index.html) this works in any browser; on native the Capacitor
+     safe-area plugin overrides these via an inline style on documentElement. */
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+
   /* --home-* light tokens are the first-paint fallback; source of truth is
      themings.json. Keep these in sync with the light block there (concrete
      equivalents of its var(--apollon-*) refs) so the page doesn't flash. */
 
-  /* Surfaces — neutral white page canvas up through softly raised cards */
+  /* Surfaces — neutral white page canvas up through softly raised cards.
+     Cool, slightly blue-tinted neutrals. */
   --home-surface-base: #fff;
-  --home-surface-sunken: #eaeae7;
-  --home-surface-raised: #f3f3f1;
-  --home-surface-raised-hover: #ebebe8;
-  --home-surface-raised-active: #e2e2de;
-  --home-surface-row-alt: #f7f7f5;
+  --home-surface-sunken: #eaeef3;
+  --home-surface-raised: #f1f3f6;
+  --home-surface-raised-hover: #e9edf2;
+  --home-surface-raised-active: #dfe4ec;
+  --home-surface-row-alt: #f6f8fb;
 
-  /* Text */
+  /* Text — secondary/muted darkened so all text clears WCAG AA (≥4.5:1) on
+     every home surface. */
   --home-text-primary: #212529;
-  --home-text-secondary: #5c5e57;
+  --home-text-secondary: #49515d;
   --home-text-strong: #212529;
-  --home-text-muted: #5c5e57;
+  --home-text-muted: #545d6a;
 
-  /* Borders / dividers */
-  --home-border-default: #b7b8b1;
-  --home-border-strong: #9a9b93;
-  --home-border-subtle: #d8d8d3;
+  /* Borders / dividers — cool neutrals, ordered subtle < default < strong.
+     `default` is the input/control border, ≥3:1 against the canvas and raised
+     surfaces it sits on (WCAG 1.4.11); `strong` is the most prominent divider;
+     `subtle` is a decorative hairline (dividers, card edge). */
+  --home-border-default: #7e8796;
+  --home-border-strong: #6e7686;
+  --home-border-subtle: #e3e7ee;
 
   /* Accent */
   --home-accent-base: #0f3a66;
@@ -57,17 +71,16 @@
   --home-tag-shared-bg: #c5e4e2;
   --home-tag-shared-text: #1d514e;
 
-  /* Shadows / glow */
-  --home-shadow-card-hover: rgba(0, 0, 0, 0.25);
-  --home-shadow-overlay: rgba(0, 0, 0, 0.5);
+  /* Shadows / glow — slate-tinted, low-opacity elevation. */
+  --home-shadow-card-hover: rgba(15, 23, 42, 0.12);
+  --home-shadow-overlay: rgba(15, 23, 42, 0.32);
   --home-glow-neutral: rgba(15, 58, 102, 0.78);
 
-  /* Radius scale — theme-independent. Replaces ad-hoc 2/4/6/8/15px values.
-     sm: cards & pills (crisp)  md: buttons & inputs  lg: menus/popovers  xl: modal shell */
-  --home-radius-sm: 2px;
-  --home-radius-md: 6px;
-  --home-radius-lg: 8px;
-  --home-radius-xl: 15px;
+  /* Radius scale — theme-independent, monotonic ramp.
+     sm: cards & pills  md: buttons & inputs  lg: menus/popovers & banners */
+  --home-radius-sm: 6px;
+  --home-radius-md: 8px;
+  --home-radius-lg: 12px;
 
   /* Warning banner (e.g. version-preview) — soft-gold outlined style.
      Per-theme; dark values live in the dark block below. */
@@ -93,25 +106,25 @@
   color-scheme: dark;
 
   /* Editor base tokens — dark first-paint fallback. */
-  --apollon-background: #181a18;
+  --apollon-background: #181a1f;
   --apollon-primary-contrast: #fff;
 
   /* Dark first-paint fallback for the home surfaces/text/borders (kept in sync
      with themings.json's dark block) so dark mode doesn't flash the light
      palette before the runtime tokens are injected. */
-  --home-surface-base: #181a18;
-  --home-surface-sunken: #161816;
-  --home-surface-raised: #202220;
-  --home-surface-raised-hover: #2e302e;
-  --home-surface-raised-active: #3a3c3a;
-  --home-surface-row-alt: #262826;
+  --home-surface-base: #181a1f;
+  --home-surface-sunken: #131519;
+  --home-surface-raised: #20232a;
+  --home-surface-raised-hover: #2a2e36;
+  --home-surface-raised-active: #343a44;
+  --home-surface-row-alt: #23262e;
   --home-text-primary: #fff;
-  --home-text-secondary: #b5b6b3;
+  --home-text-secondary: #c3c8d0;
   --home-text-strong: #fff;
-  --home-text-muted: #b5b6b3;
-  --home-border-default: #4a4c49;
-  --home-border-strong: #696b67;
-  --home-border-subtle: #313330;
+  --home-text-muted: #c3c8d0;
+  --home-border-default: #6a7280;
+  --home-border-strong: #828a98;
+  --home-border-subtle: #2a2e36;
 
   /* Diagram tags — type / "Local" / "Shared" pills. */
   --home-tag-type-bg: #343740;
@@ -207,9 +220,12 @@ body {
 html,
 body,
 #root {
-  transition:
-    background-color 220ms ease,
-    color 220ms ease;
+  /* Only the text colour eases on a theme switch. Animating background-color
+     here made every backdrop-blur surface above it (home navbar, glass islands)
+     re-rasterise its blur each frame for 220ms — a visible flicker on toggle.
+     The background flips in one frame instead (how tldraw/Linear/VS Code do it),
+     so the blurred plates never sample a tweening backdrop. */
+  transition: color 220ms ease;
 }
 
 .home-page-scrollbar {
@@ -364,10 +380,13 @@ body,
   contain-intrinsic-size: auto 300px;
 }
 
+/* Low-alpha slate shadows are invisible on dark surfaces, so dark hover uses a
+   black shadow instead of the `--home-shadow-card-hover` token. Keep its geometry
+   in sync with the light hover in DiagramCard.tsx. */
 :root[data-theme="dark"] .home-diagram-card:hover {
   box-shadow:
-    0 10px 28px color-mix(in srgb, #000 50%, transparent),
-    0 0 0 1px color-mix(in srgb, var(--home-text-primary) 16%, transparent);
+    0 6px 16px color-mix(in srgb, #000 38%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--home-text-primary) 12%, transparent);
 }
 
 /* Buttons that sit on the accent banner / dark navbar (translucent white). */
@@ -440,6 +459,46 @@ body,
 
 .apollon-editor {
   flex-grow: 1;
+}
+
+.home-navbar {
+  padding-top: var(--safe-area-inset-top, 0);
+}
+
+/* Home page content gutter — hugs the safe area like the navbar, so the gallery
+   clears a side notch in landscape (the Tailwind px-4/md:px-6 it replaces had no
+   safe-area awareness). */
+.home-content-x {
+  padding-left: max(1rem, var(--safe-area-inset-left, 0px));
+  padding-right: max(1rem, var(--safe-area-inset-right, 0px));
+}
+
+@media (min-width: 768px) {
+  .home-content-x {
+    padding-left: max(1.5rem, var(--safe-area-inset-left, 0px));
+    padding-right: max(1.5rem, var(--safe-area-inset-right, 0px));
+  }
+}
+
+.home-navbar__content {
+  box-sizing: border-box;
+
+  /* HUG the safe area (max), don't stack on top of it (calc + inset) — otherwise
+     the navbar sits further from a notch than the editor chrome, which uses the
+     max(edge, inset) model. */
+  padding-left: max(1rem, var(--safe-area-inset-left, 0px));
+  padding-right: max(1rem, var(--safe-area-inset-right, 0px));
+}
+
+@media (max-width: 950px) and (max-height: 500px) {
+  .home-navbar {
+    padding-top: 0;
+  }
+
+  .home-navbar__content {
+    padding-left: max(2rem, var(--safe-area-inset-left, 0px));
+    padding-right: max(2rem, var(--safe-area-inset-right, 0px));
+  }
 }
 
 /* MUI has no theme here, so Menus/Selects render their portaled Paper with the
@@ -558,9 +617,8 @@ body,
    --home-toast-* semantic accents. Theme-aware via --home-* tokens. */
 
 .home-toast-container {
-  --toastify-font-family:
-    "Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue", Arial,
-    sans-serif;
+  --toastify-font-family: "Poppins", "Avenir Next", "Avenir", "Segoe UI",
+    "Helvetica Neue", Arial, sans-serif;
   --toastify-toast-bd-radius: var(--home-radius-lg);
   --toastify-toast-shadow: 0 12px 32px var(--home-shadow-overlay);
   --toastify-color-success: var(--home-toast-success);
@@ -586,9 +644,8 @@ body,
   color: var(--home-text-primary);
   border: 1px solid var(--home-border-subtle);
   border-radius: var(--home-radius-lg);
-  font-family:
-    "Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue", Arial,
-    sans-serif;
+  font-family: "Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue",
+    Arial, sans-serif;
   font-size: 0.85rem;
   line-height: 1.45;
 }
@@ -631,4 +688,25 @@ body,
 
 .home-toast-container .Toastify__progress-bar--info {
   background: var(--home-toast-info);
+}
+
+/* Skip link: visually hidden until keyboard-focused, then pinned top-left above
+   all editor chrome so it's the first stop and jumps to the diagram. */
+.apollon-skip-link {
+  position: absolute;
+  left: 8px;
+  top: -48px;
+  z-index: 100000;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: var(--home-surface-raised, #20242c);
+  color: var(--home-text-primary, #fff);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 24%);
+  transition: top 120ms ease;
+}
+
+.apollon-skip-link:focus-visible {
+  top: 8px;
+  outline: 2px solid var(--home-accent-base, #236ebe);
+  outline-offset: 2px;
 }

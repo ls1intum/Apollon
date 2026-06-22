@@ -8,7 +8,11 @@ import {
   HowToUseModal,
   PPTXExportModal,
 } from "@/components/modals"
-import { DeleteVersionModal } from "@/components/versioning"
+import {
+  ConfirmRestoreModal,
+  DeleteVersionModal,
+} from "@/components/versioning"
+import { versioningStrings as v } from "@/components/versioning/strings"
 import { useModalContext } from "@/contexts"
 import {
   ModalProgressProvider,
@@ -39,6 +43,7 @@ const MODAL_COMPONENTS: Record<ModalName, React.ComponentType<ModalProps>> = {
   HowToUseModal: HowToUseModal,
   AboutModal: AboutModal,
   DELETE_VERSION: DeleteVersionModal as React.ComponentType<unknown>,
+  CONFIRM_RESTORE: ConfirmRestoreModal as React.ComponentType<unknown>,
 }
 
 const MODAL_TITLES: Record<ModalName, string> = {
@@ -50,6 +55,7 @@ const MODAL_TITLES: Record<ModalName, string> = {
   HowToUseModal: "How to use this editor?",
   AboutModal: "Information about Apollon",
   DELETE_VERSION: "Delete version",
+  CONFIRM_RESTORE: v.confirmRestoreTitle,
 }
 
 const style = {
@@ -89,6 +95,7 @@ export const ModalWrapper: React.FC<ModalWrapperProps> = ({ name, props }) => {
   )
   const isHomeDialog = isContentOverflow || isHomeDialogVariant(props)
   const isWideHomeDialog = name === "NEW_DIAGRAM" && isHomeDialog
+  const isEditorShareDialog = name === "SHARE"
 
   if (!SpecificModal) {
     log.error(`No modal found for name: ${name}`)
@@ -119,13 +126,24 @@ export const ModalWrapper: React.FC<ModalWrapperProps> = ({ name, props }) => {
         <Paper
           sx={{
             ...style,
-            width: isHomeDialog
-              ? getHomeDialogWidth(isWideHomeDialog ? "wide" : "compact")
-              : style.width,
-            minWidth: isHomeDialog ? "320px" : style.minWidth,
+            width: isEditorShareDialog
+              ? "min(560px, calc(100vw - var(--safe-area-inset-left, 0px) - var(--safe-area-inset-right, 0px) - 24px))"
+              : isHomeDialog
+                ? getHomeDialogWidth(isWideHomeDialog ? "wide" : "compact")
+                : style.width,
+            minWidth: isEditorShareDialog
+              ? 0
+              : isHomeDialog
+                ? "320px"
+                : style.minWidth,
+            maxWidth:
+              "calc(100vw - var(--safe-area-inset-left, 0px) - var(--safe-area-inset-right, 0px) - 24px)",
             borderRadius: isHomeDialog ? "15px" : undefined,
             overflow: isHomeDialog ? "visible" : undefined,
-            maxHeight: isHomeDialog ? "92vh" : undefined,
+            maxHeight:
+              isHomeDialog || isEditorShareDialog
+                ? "calc(100dvh - var(--safe-area-inset-top, 0px) - var(--safe-area-inset-bottom, 0px) - 24px)"
+                : undefined,
             bgcolor: isHomeDialog
               ? "var(--home-surface-base)"
               : "var(--apollon-background)",
@@ -145,6 +163,9 @@ export const ModalWrapper: React.FC<ModalWrapperProps> = ({ name, props }) => {
               bgcolor: isHomeDialog ? "var(--home-accent-base)" : undefined,
               borderTopLeftRadius: isHomeDialog ? "15px" : undefined,
               borderTopRightRadius: isHomeDialog ? "15px" : undefined,
+              "@media (max-width: 950px) and (max-height: 500px)": {
+                p: isHomeDialog ? "10px 14px" : "8px 12px",
+              },
             }}
           >
             <Typography
@@ -208,6 +229,11 @@ export const ModalWrapper: React.FC<ModalWrapperProps> = ({ name, props }) => {
                   ? "calc(92vh - 84px)"
                   : "calc(90vh - 60px)",
               flexGrow: 1,
+              "@media (max-width: 950px) and (max-height: 500px)": {
+                p: isHomeDialog ? "12px" : "10px 12px",
+                maxHeight:
+                  "calc(100dvh - var(--safe-area-inset-top, 0px) - var(--safe-area-inset-bottom, 0px) - 64px)",
+              },
             }}
           >
             {SpecificModal && <SpecificModal {...props} />}

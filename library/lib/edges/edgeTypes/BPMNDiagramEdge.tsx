@@ -5,7 +5,6 @@ import { EdgeMiddleLabels } from "../labelTypes/EdgeMiddleLabels"
 import { useEdgeConfig } from "@/hooks/useEdgeConfig"
 import { useStepPathEdge } from "@/hooks/useStepPathEdge"
 import { useToolbar } from "@/hooks"
-import { useRef } from "react"
 import { FeedbackDropzone } from "@/components/wrapper/FeedbackDropzone"
 import { AssessmentSelectableWrapper } from "@/components"
 import { getCustomColorsFromDataForEdge } from "@/utils"
@@ -25,7 +24,6 @@ export const BPMNDiagramEdge = ({
   targetHandleId,
   data,
 }: BaseEdgeProps) => {
-  const anchorRef = useRef<SVGSVGElement | null>(null)
   const { handleDelete } = useToolbar({ id })
 
   const config = useEdgeConfig(
@@ -120,10 +118,10 @@ export const BPMNDiagramEdge = ({
 
         <EdgeMiddleLabels
           label={data?.label}
-          pathMiddlePosition={edgeData.pathMiddlePosition}
-          isMiddlePathHorizontal={edgeData.isMiddlePathHorizontal}
+          activePoints={edgeData.activePoints}
           showRelationshipLabels={showRelationshipLabels}
-          avoidToolbarOverlap={true}
+          nodeRects={edgeData.nodeRects}
+          neighborGeometry={edgeData.neighborGeometry}
           textColor={textColor}
         />
 
@@ -133,7 +131,6 @@ export const BPMNDiagramEdge = ({
           toolbarPosition={edgeData.toolbarPosition}
           isDiagramModifiable={isDiagramModifiable}
           assessments={assessments}
-          anchorRef={anchorRef}
           handleDelete={handleDelete}
           setPopOverElementId={setPopOverElementId}
           type={type}

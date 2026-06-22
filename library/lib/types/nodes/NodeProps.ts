@@ -11,6 +11,32 @@ export type ClassNodeElement = {
   id: string
 } & DefaultNodeProps
 
+/** A single partition (lane) inside an activity swimlane. */
+export type SwimlaneLane = {
+  id: string
+  name: string
+  /**
+   * Lane's extent along the swimlane's primary axis, in absolute flow px. The
+   * last lane is elastic (fills the remainder), so resizing the swimlane only
+   * changes the last lane. Optional: lanes without it divide the space equally,
+   * so existing saved swimlanes render as equal lanes until a separator moves.
+   */
+  size?: number
+}
+
+/**
+ * Activity-partition (swimlane) container. Lanes are equal divisions along the
+ * primary axis (columns when vertical, rows when horizontal). Elements dropped
+ * into the swimlane become its children and move with it; which lane an element
+ * belongs to is expressed by where the modeller places it, matching the UML
+ * activity-partition notation where partition membership is positional rather
+ * than stored per element.
+ */
+export type ActivitySwimlaneProps = DefaultNodeProps & {
+  orientation: "vertical" | "horizontal"
+  lanes: SwimlaneLane[]
+}
+
 export type ClassNodeProps = {
   methods: ClassNodeElement[]
   attributes: ClassNodeElement[]
@@ -46,7 +72,8 @@ export type DeploymentComponentProps = {
 
 export type PetriNetPlaceProps = {
   tokens: number
-  capacity: number | "Infinity"
+  // Serialized as a string (e.g. "3", "Infinity") in persisted models.
+  capacity: number | string
 } & DefaultNodeProps
 
 export type BPMNTaskType =
@@ -98,8 +125,10 @@ export type BPMNEndEventType =
   | "signal"
   | "terminate"
 
+// Shared by start/intermediate/end event nodes, so eventType is the union of
+// all three.
 export type BPMNEventProps = DefaultNodeProps & {
-  eventType: BPMNStartEventType
+  eventType: BPMNStartEventType | BPMNIntermediateEventType | BPMNEndEventType
 }
 
 export type BPMNGatewayType =
@@ -135,5 +164,6 @@ export type SfcActionTableProps = DefaultNodeProps & {
   actionRows: SfcActionRow[]
 }
 export type SfcTransitionBranchNodeProps = DefaultNodeProps & {
-  showHint: boolean
+  // Optional: persisted models created without it omit the key entirely.
+  showHint?: boolean
 }

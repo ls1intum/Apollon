@@ -106,4 +106,5 @@ editor.destroy()
 - [Install](/library/embedding/install) — standalone vs. `/react` build, peer deps
 - [React](/library/embedding/react) · [Angular](/library/embedding/angular) · [Vanilla JS / CDN](/library/embedding/vanilla)
 - [API reference](/library/api) — the complete `ApollonEditor` surface
+- [Overlay controls](/library/api/overlay-controls) — inject your own chrome into the canvas
 - [Troubleshooting](/library/troubleshooting) — blank canvas, SSR, and other embedding gotchas

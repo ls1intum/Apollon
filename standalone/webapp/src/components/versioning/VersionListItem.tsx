@@ -13,17 +13,19 @@ import MoreVertIcon from "@mui/icons-material/MoreVert"
 import { VersionThumbnail } from "./VersionThumbnail"
 import {
   Fragment,
-  memo,
   useState,
   useRef,
   type FC,
   type KeyboardEvent,
   type MouseEvent,
+  type ReactNode,
 } from "react"
+import { Link } from "@tanstack/react-router"
+import { PREVIEW_VERSION_PARAM } from "@/hooks/useVersionPreviewUrlSync"
 import { toast } from "react-toastify"
 import { log } from "@/logger"
 import { useVersionStore, type PendingVersion } from "@/stores/useVersionStore"
-import { VersionApiClient } from "@/services/DiagramApiClient"
+import { getVersionRepository } from "@/services/versionRepository"
 import { MAX_DESCRIPTION_LENGTH, versioningStrings as t } from "./strings"
 import { relativeTime } from "./relativeTime"
 import {
@@ -32,7 +34,7 @@ import {
   TEXT_MUTED,
   TEXT_PRIMARY,
 } from "./theme"
-import { isNamedVersion } from "./utils"
+import { isNamedVersion } from "@/lib/version/predicates"
 
 interface Props {
   diagramId: string
@@ -51,6 +53,61 @@ interface Props {
   onDelete: (versionId: string) => void
 }
 
+/**
+ * Clickable row body. A real `<Link>` to `?version=<id>` so cmd/ctrl/middle-
+ * click opens the version's preview in a new tab (same as gallery cards);
+ * plain left-click stays in-SPA via `onPreview`. `tabIndex={-1}` keeps it out
+ * of the listbox tab order — keyboard nav drives selection from the list. Non-
+ * clickable rows (pending / editing) render a plain box with no navigation.
+ */
+const RowBody: FC<{
+  clickable: boolean
+  versionId: string
+  onPreview: (versionId: string) => void
+  children: ReactNode
+}> = ({ clickable, versionId, onPreview, children }) => {
+  if (!clickable) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          flex: 1,
+          minWidth: 0,
+          gap: 1.5,
+          alignItems: "flex-start",
+        }}
+      >
+        {children}
+      </Box>
+    )
+  }
+  return (
+    <Link
+      to="."
+      search={(prev) => ({ ...prev, [PREVIEW_VERSION_PARAM]: versionId })}
+      tabIndex={-1}
+      onClick={(e) => {
+        // Let the browser handle modified clicks (open in a new tab/window).
+        if (e.metaKey || e.ctrlKey || e.shiftKey) return
+        e.preventDefault()
+        onPreview(versionId)
+      }}
+      style={{
+        display: "flex",
+        flex: 1,
+        minWidth: 0,
+        gap: "12px",
+        alignItems: "flex-start",
+        textDecoration: "none",
+        color: "inherit",
+        cursor: "pointer",
+      }}
+    >
+      {children}
+    </Link>
+  )
+}
+
 const VersionListItemInner: FC<Props> = ({
   diagramId,
   version,
@@ -61,6 +118,10 @@ const VersionListItemInner: FC<Props> = ({
   onRestore,
   onDelete,
 }) => {
+  // Single source of truth for permalink visibility: the active
+  // repository decides via its `permalink()` return value. Local mode
+  // returns null; remote returns a URL. No prop, no drift.
+  const permalinkUrl = getVersionRepository().permalink(diagramId, version.id)
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(version.description ?? "")
@@ -126,10 +187,9 @@ const VersionListItemInner: FC<Props> = ({
 
   const copyLink = async () => {
     closeMenu()
+    if (!permalinkUrl) return
     try {
-      await navigator.clipboard.writeText(
-        VersionApiClient.permalink(diagramId, version.id)
-      )
+      await navigator.clipboard.writeText(permalinkUrl)
       toast.success(t.copied)
     } catch (err) {
       log.error("Copy link failed", err)
@@ -146,13 +206,6 @@ const VersionListItemInner: FC<Props> = ({
   const label = description || version.name?.trim() || ""
   const clickable = !version.pending && !editing
 
-  // Whole row triggers preview when clicked. The menu button and the inline
-  // edit field stop propagation so they don't double-fire.
-  const handleRowClick = () => {
-    if (!clickable) return
-    onPreview(version.id)
-  }
-
   return (
     <Fragment>
       <ListItem
@@ -162,7 +215,6 @@ const VersionListItemInner: FC<Props> = ({
         aria-label={`Version ${
           versionNumber ? `#${versionNumber}` : "(saving)"
         }, created ${ago}${label ? ` — ${label}` : ""}`}
-        onClick={handleRowClick}
         sx={{
           opacity: version.pending ? 0.7 : 1,
           bgcolor: isPreviewing ? ROW_SELECTED_BG : "transparent",
@@ -177,135 +229,141 @@ const VersionListItemInner: FC<Props> = ({
           "&:hover": clickable ? { bgcolor: ROW_HOVER_BG } : undefined,
         }}
       >
-        {version.pending ? (
-          <Box
-            sx={{
-              width: 64,
-              height: 40,
-              flexShrink: 0,
-              bgcolor: ROW_HOVER_BG,
-              borderRadius: 1,
-              mt: 0.25,
-            }}
-            aria-hidden
-          />
-        ) : (
-          <Box sx={{ mt: 0.25 }}>
-            <VersionThumbnail
-              diagramId={diagramId}
-              versionId={version.id}
-              isAuto={!named}
-              compact
+        <RowBody
+          clickable={clickable}
+          versionId={version.id}
+          onPreview={onPreview}
+        >
+          {version.pending ? (
+            <Box
+              sx={{
+                width: 64,
+                height: 40,
+                flexShrink: 0,
+                bgcolor: ROW_HOVER_BG,
+                borderRadius: 1,
+                mt: 0.25,
+              }}
+              aria-hidden
             />
-          </Box>
-        )}
-
-        <Box sx={{ flex: 1, minWidth: 0, pr: 4 }}>
-          {editing ? (
-            <InputBase
-              autoFocus
-              multiline
-              maxRows={6}
-              fullWidth
-              value={draft}
-              onChange={(e) =>
-                setDraft(e.target.value.slice(0, MAX_DESCRIPTION_LENGTH))
-              }
-              onClick={(e) => e.stopPropagation()}
-              onBlur={() => void submitEdit()}
-              onKeyDown={onEditKeyDown}
-              placeholder={t.createPlaceholder}
-              inputProps={{ "aria-label": "Edit description" }}
-              sx={{
-                fontSize: "0.8125rem",
-                color: TEXT_PRIMARY,
-                p: 0,
-                mb: 0.25,
-                "& textarea::placeholder": { color: TEXT_MUTED, opacity: 1 },
-              }}
-            />
-          ) : description ? (
-            // User-authored description — rendered slightly smaller and muted
-            // so the #N · time-ago line reads as the primary identifier.
-            <Typography
-              sx={{
-                fontSize: "0.8125rem",
-                color: TEXT_MUTED,
-                whiteSpace: "pre-wrap",
-                wordBreak: "break-word",
-                lineHeight: 1.35,
-                mb: 0.25,
-              }}
-            >
-              {description}
-            </Typography>
-          ) : version.kind === "user" ? (
-            // User explicitly saved this version but added no description.
-            // Show a placeholder so it doesn't look identical to a raw autosave.
-            <Typography
-              variant="caption"
-              sx={{
-                color: TEXT_MUTED,
-                fontStyle: "italic",
-                display: "block",
-                lineHeight: 1.35,
-                mb: 0.25,
-              }}
-            >
-              {t.noDescription}
-            </Typography>
-          ) : version.name?.trim() ? (
-            // System-generated name (pre-restore label). Styled as italic
-            // caption so users don't mistake it for a user-added description —
-            // the kebab's "Add description" makes sense because no user-authored
-            // text is visible.
-            <Typography
-              variant="caption"
-              sx={{
-                color: TEXT_MUTED,
-                fontStyle: "italic",
-                display: "block",
-                whiteSpace: "pre-wrap",
-                wordBreak: "break-word",
-                lineHeight: 1.35,
-                mb: 0.25,
-              }}
-            >
-              {version.name.trim()}
-            </Typography>
           ) : (
-            // Raw periodic auto-save — no user-authored content at all.
-            // 'Auto-saved' tells the user this is a system checkpoint, not
-            // a deliberate save, matching the same italic/muted register as
-            // the pre-restore label above.
+            <Box sx={{ mt: 0.25 }}>
+              <VersionThumbnail
+                diagramId={diagramId}
+                versionId={version.id}
+                isAuto={!named}
+                compact
+              />
+            </Box>
+          )}
+
+          <Box sx={{ flex: 1, minWidth: 0, pr: 4 }}>
+            {editing ? (
+              <InputBase
+                autoFocus
+                multiline
+                maxRows={6}
+                fullWidth
+                value={draft}
+                onChange={(e) =>
+                  setDraft(e.target.value.slice(0, MAX_DESCRIPTION_LENGTH))
+                }
+                onClick={(e) => e.stopPropagation()}
+                onBlur={() => void submitEdit()}
+                onKeyDown={onEditKeyDown}
+                placeholder={t.createPlaceholder}
+                inputProps={{ "aria-label": "Edit description" }}
+                sx={{
+                  fontSize: "0.8125rem",
+                  color: TEXT_PRIMARY,
+                  p: 0,
+                  mb: 0.25,
+                  "& textarea::placeholder": { color: TEXT_MUTED, opacity: 1 },
+                }}
+              />
+            ) : description ? (
+              // User-authored description — rendered slightly smaller and muted
+              // so the #N · time-ago line reads as the primary identifier.
+              <Typography
+                sx={{
+                  fontSize: "0.8125rem",
+                  color: TEXT_MUTED,
+                  whiteSpace: "pre-wrap",
+                  wordBreak: "break-word",
+                  lineHeight: 1.35,
+                  mb: 0.25,
+                }}
+              >
+                {description}
+              </Typography>
+            ) : version.kind === "user" ? (
+              // User explicitly saved this version but added no description.
+              // Show a placeholder so it doesn't look identical to a raw autosave.
+              <Typography
+                variant="caption"
+                sx={{
+                  color: TEXT_MUTED,
+                  fontStyle: "italic",
+                  display: "block",
+                  lineHeight: 1.35,
+                  mb: 0.25,
+                }}
+              >
+                {t.noDescription}
+              </Typography>
+            ) : version.name?.trim() ? (
+              // System-generated name (pre-restore label). Styled as italic
+              // caption so users don't mistake it for a user-added description —
+              // the kebab's "Add description" makes sense because no user-authored
+              // text is visible.
+              <Typography
+                variant="caption"
+                sx={{
+                  color: TEXT_MUTED,
+                  fontStyle: "italic",
+                  display: "block",
+                  whiteSpace: "pre-wrap",
+                  wordBreak: "break-word",
+                  lineHeight: 1.35,
+                  mb: 0.25,
+                }}
+              >
+                {version.name.trim()}
+              </Typography>
+            ) : (
+              // Raw periodic auto-save — no user-authored content at all.
+              // 'Auto-saved' tells the user this is a system checkpoint, not
+              // a deliberate save, matching the same italic/muted register as
+              // the pre-restore label above.
+              <Typography
+                variant="caption"
+                sx={{
+                  color: TEXT_MUTED,
+                  fontStyle: "italic",
+                  display: "block",
+                  lineHeight: 1.35,
+                  mb: 0.25,
+                }}
+              >
+                {t.autoSaved}
+              </Typography>
+            )}
             <Typography
               variant="caption"
-              sx={{
-                color: TEXT_MUTED,
-                fontStyle: "italic",
-                display: "block",
-                lineHeight: 1.35,
-                mb: 0.25,
-              }}
+              sx={{ color: TEXT_MUTED, display: "block" }}
             >
-              {t.autoSaved}
+              {versionNumber !== undefined && (
+                <Box component="span" sx={{ fontWeight: 600 }}>
+                  #{versionNumber}
+                </Box>
+              )}
+              {versionNumber !== undefined && " · "}
+              {ago}
+              {version.pending && ` · ${t.saving}`}
+              {version.failed && ` · failed`}
             </Typography>
-          )}
-          <Typography
-            variant="caption"
-            sx={{ color: TEXT_MUTED, display: "block" }}
-          >
-            {versionNumber !== undefined && (
-              <Box component="span" sx={{ fontWeight: 600 }}>
-                #{versionNumber}
-              </Box>
-            )}
-            {versionNumber !== undefined && " · "}
-            {ago}
-            {version.pending && ` · ${t.saving}`}
-            {version.failed && ` · failed`}
-          </Typography>
-        </Box>
+          </Box>
+        </RowBody>
 
         <ListItemSecondaryAction sx={{ top: 12, transform: "none" }}>
           <IconButton
@@ -314,7 +372,16 @@ const VersionListItemInner: FC<Props> = ({
             aria-label="Version actions"
             aria-haspopup="menu"
             disabled={Boolean(version.pending)}
-            sx={{ color: TEXT_PRIMARY }}
+            sx={{
+              color: TEXT_PRIMARY,
+              borderRadius: "var(--apollon-chrome-radius-sm)",
+              "&:hover": { backgroundColor: ROW_HOVER_BG },
+              "&:active": { backgroundColor: ROW_SELECTED_BG },
+              "&:focus-visible": {
+                outline: "2px solid var(--apollon-chrome-accent)",
+                outlineOffset: "2px",
+              },
+            }}
           >
             <MoreVertIcon fontSize="small" />
           </IconButton>
@@ -354,7 +421,7 @@ const VersionListItemInner: FC<Props> = ({
             {t.restoreThis}
           </MenuItem>
         )}
-        <MenuItem onClick={copyLink}>{t.copyLink}</MenuItem>
+        {permalinkUrl && <MenuItem onClick={copyLink}>{t.copyLink}</MenuItem>}
         {/* Adding a description on an empty-meta row promotes it visually
             (no longer eligible for collapse) and protects it from the
             eviction-priority sweep. Pure metadata — no protocol event.
@@ -390,4 +457,4 @@ const VersionListItemInner: FC<Props> = ({
   )
 }
 
-export const VersionListItem = memo(VersionListItemInner)
+export const VersionListItem = VersionListItemInner

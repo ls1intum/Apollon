@@ -1,17 +1,17 @@
 import { ReactFlowInstance, type Node, type Edge, Rect } from "@xyflow/react"
 import { CSS_VARIABLE_FALLBACKS, LAYOUT, STROKE_COLOR } from "@/constants"
+import { DEFAULT_FONT_SIZE, FONT_FAMILY } from "@/fontStack"
 import { Point } from "./pathParsing"
+import { measureTextWidth } from "./textUtils"
 
 /**
- * Font styles for exported SVGs.
- * Uses the same font stack as the browser (app.css) so the export looks identical
- * when opened in a browser. When opened in applications without Inter installed
- * (e.g. PowerPoint on Windows), the fallback chain provides graceful degradation
- * through system-ui → Avenir → Helvetica → Arial → sans-serif.
+ * Font stack for exported SVGs (matches the browser). `compat` mode also embeds
+ * the Inter woff2 as an `@font-face` via `embedFontFaceCss` so non-browser
+ * renderers draw with the same metrics instead of a system fallback.
  */
 const svgFontStyles = `
     text {
-      font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+      font-family: ${FONT_FAMILY};
     }
   `
 
@@ -63,7 +63,12 @@ export function filterRenderedElements(
 export const getSVG = (
   container: HTMLElement,
   clip: Rect,
-  options?: ExportFilterOptions
+  options?: ExportFilterOptions,
+  /**
+   * Optional `@font-face` CSS to embed (compat mode only). Passed in rather than
+   * imported so the woff2 stays out of the main entry bundle (see exportFonts.ts).
+   */
+  fontFaceCss?: string
 ): string => {
   const emptySVG = "<svg></svg>"
 
@@ -211,6 +216,10 @@ export const getSVG = (
     replaceCSSVariables(mainSVG)
     convertStyleToAttributes(mainSVG)
     ensureTextFontDefaults(mainSVG)
+    resolveRelativeFontSizes(mainSVG)
+    resolveTspanDy(mainSVG)
+    resolveDominantBaseline(mainSVG)
+    if (fontFaceCss) embedFontFaceCss(mainSVG, fontFaceCss)
     removeMarkerElements(mainSVG)
     replaceTextDecorationWithManualUnderline(mainSVG)
   }
@@ -444,6 +453,17 @@ function getNodeBoundsFromDOM(
     const styles = extractStyles(styleStr)
     const svgElement = nodeEl.querySelector("svg")
     const renderedSvgRect = svgElement?.getBoundingClientRect()
+    // Headless renderers (jsdom) return a 0×0 rect; `0 ?? fallback` would keep
+    // the 0 and collapse the node to its origin, cropping the export. Treat a
+    // non-positive rect as unmeasured so the attribute/style fallbacks apply.
+    const measuredWidth =
+      renderedSvgRect && renderedSvgRect.width > 0
+        ? renderedSvgRect.width
+        : undefined
+    const measuredHeight =
+      renderedSvgRect && renderedSvgRect.height > 0
+        ? renderedSvgRect.height
+        : undefined
     if (svgElement) {
       const viewBox = svgElement.getAttribute("viewBox")
       if (viewBox) {
@@ -451,10 +471,10 @@ function getNodeBoundsFromDOM(
         if (viewBoxParts.length >= 4) {
           const [vbX, vbY, vbW, vbH] = viewBoxParts
           const svgWidth =
-            renderedSvgRect?.width ??
+            measuredWidth ??
             parseFloat(svgElement.getAttribute("width") ?? `${vbW}`)
           const svgHeight =
-            renderedSvgRect?.height ??
+            measuredHeight ??
             parseFloat(svgElement.getAttribute("height") ?? `${vbH}`)
 
           if (
@@ -522,8 +542,8 @@ function getNodeBoundsFromDOM(
       }
     }
 
-    const width = renderedSvgRect?.width ?? parseFloat(styles.width ?? "")
-    const height = renderedSvgRect?.height ?? parseFloat(styles.height ?? "")
+    const width = measuredWidth ?? parseFloat(styles.width ?? "")
+    const height = measuredHeight ?? parseFloat(styles.height ?? "")
 
     if (!Number.isFinite(width) || !Number.isFinite(height)) {
       return
@@ -767,6 +787,131 @@ function getNodeOverflowBoundsFromDOM(
 }
 
 /**
+ * Above- and below-`y` glyph extents as a fraction of font-size, by the SVG
+ * `dominant-baseline` that places the `<text>` `y` anchor.
+ *
+ * - `middle` (use-case `<<include>>`/`<<extend>>`, communication messages): `y`
+ *   sits at the glyph center, so the box is symmetric. Inter's cap+ascender
+ *   half-height is ~0.6em; 0.75 over-includes safely.
+ * - alphabetic/`auto`/absent (association role + multiplicity end-labels): `y`
+ *   IS the baseline, so the box is ASYMMETRIC — ascenders/caps rise ~0.9em
+ *   ABOVE `y` and descenders drop ~0.3em BELOW it. A symmetric ±0.75em would
+ *   clip the top of a cap-height label by ~0.15em. Over-include on both sides.
+ *
+ * Over-including is safe for an export clip; cropping a graded label is not.
+ */
+const BASELINE_EXTENTS: Record<
+  "middle" | "alphabetic",
+  { up: number; down: number }
+> = {
+  middle: { up: 0.75, down: 0.75 },
+  alphabetic: { up: 0.9, down: 0.3 },
+}
+
+/**
+ * Parse `transform="rotate(angle[, cx, cy])"` into its components. Accepts both
+ * the comma form (`rotate(30, 10, 20)`, EdgeIncludeExtendLabel) and the
+ * space form (`rotate(30 10 20)`, EdgeMiddleLabels). Returns `undefined` for a
+ * missing/zero/origin-only rotation so callers skip the rotation math.
+ */
+function parseRotateTransform(
+  transform: string | null
+): { angleRad: number; cx: number; cy: number } | undefined {
+  if (!transform) return undefined
+  const match = transform.match(
+    /rotate\(\s*(-?[\d.]+)(?:[\s,]+(-?[\d.]+)[\s,]+(-?[\d.]+))?\s*\)/
+  )
+  if (!match) return undefined
+  const angleDeg = parseFloat(match[1])
+  if (!Number.isFinite(angleDeg) || angleDeg === 0) return undefined
+  const cx = match[2] !== undefined ? parseFloat(match[2]) : 0
+  const cy = match[3] !== undefined ? parseFloat(match[3]) : 0
+  if (!Number.isFinite(cx) || !Number.isFinite(cy)) return undefined
+  return { angleRad: (angleDeg * Math.PI) / 180, cx, cy }
+}
+
+/**
+ * Headless fallback for edge-label bounds. jsdom returns an all-zero
+ * `getBoundingClientRect` for SVG `<text>`, so derive the label's flow-space box
+ * from its absolute `x`/`y`, `text-anchor`, `dominant-baseline`, and a
+ * canvas-measured width. Extents round up so a slightly-off measure still
+ * encloses the glyphs — over-including is safe for a clip; cropping a graded
+ * label is not.
+ *
+ * Handles the two edge-label transforms emitted by the editor:
+ *  - rotated labels (use-case `<<include>>`/`<<extend>>` and the rotated
+ *    use-case association labels via `transform="rotate(angle, cx, cy)"`): the
+ *    four un-rotated corners are rotated about the pivot before merging, so the
+ *    AABB has the correct aspect instead of an axis-aligned box of the wrong
+ *    shape;
+ *  - alphabetic-baseline labels (association role/multiplicity end-labels, no
+ *    `dominant-baseline`): asymmetric vertical extents so the ascender isn't
+ *    clipped.
+ */
+function mergeEdgeTextBoundsFromAttributes(
+  textEl: SVGTextElement,
+  mergeRect: (x1: number, y1: number, x2: number, y2: number) => void
+): void {
+  const text = textEl.textContent ?? ""
+  if (!text.trim()) return
+
+  const x = parseFloat(textEl.getAttribute("x") ?? "")
+  const y = parseFloat(textEl.getAttribute("y") ?? "")
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return
+
+  const fontSize =
+    parseFloat(textEl.getAttribute("font-size") || textEl.style.fontSize) ||
+    DEFAULT_FONT_SIZE
+  const fontWeight =
+    textEl.getAttribute("font-weight") || textEl.style.fontWeight || "400"
+  const width = measureTextWidth(
+    text,
+    `${fontWeight} ${fontSize}px ${FONT_FAMILY}`
+  )
+
+  const anchor = textEl.getAttribute("text-anchor")
+  const left =
+    anchor === "middle" ? x - width / 2 : anchor === "end" ? x - width : x
+  const right = left + width
+
+  const baseline =
+    (textEl.getAttribute("dominant-baseline") ||
+      textEl.style.dominantBaseline) === "middle"
+      ? "middle"
+      : "alphabetic"
+  const { up, down } = BASELINE_EXTENTS[baseline]
+  const top = y - fontSize * up
+  const bottom = y + fontSize * down
+
+  const rotation = parseRotateTransform(textEl.getAttribute("transform"))
+  if (!rotation) {
+    mergeRect(left, top, right, bottom)
+    return
+  }
+
+  // Rotate the four un-rotated corners about the pivot and merge their AABB,
+  // matching the rendered orientation. SVG rotate() is clockwise in the
+  // y-down user space.
+  const { angleRad, cx, cy } = rotation
+  const cos = Math.cos(angleRad)
+  const sin = Math.sin(angleRad)
+  const rotate = (px: number, py: number) => {
+    const dx = px - cx
+    const dy = py - cy
+    return { x: cx + dx * cos - dy * sin, y: cy + dx * sin + dy * cos }
+  }
+  const corners = [
+    rotate(left, top),
+    rotate(right, top),
+    rotate(right, bottom),
+    rotate(left, bottom),
+  ]
+  const xs = corners.map((c) => c.x)
+  const ys = corners.map((c) => c.y)
+  mergeRect(Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys))
+}
+
+/**
  * Calculate bounds for rendered SVG text and labels.
  *
  * Some labels extend beyond node/edge geometry and are not reliably captured by
@@ -880,6 +1025,12 @@ function getTextBoundsFromDOM(
         return
       }
       if (rect.width === 0 && rect.height === 0) {
+        // Headless renderers (jsdom) return an all-zero rect for SVG text, so
+        // the screen-rect path above can't see edge labels — and an overhanging
+        // label (communication messages, multiplicities) would be silently
+        // cropped from the export clip. Edge text carries absolute flow-space
+        // x/y, so reconstruct its box from those plus a real measureText width.
+        mergeEdgeTextBoundsFromAttributes(textEl as SVGTextElement, mergeRect)
         return
       }
 
@@ -1205,9 +1356,9 @@ function convertStyleToAttributes(node: Element | ChildNode): void {
  * text identically to what the user sees on screen.
  */
 const TEXT_FONT_DEFAULTS = {
-  "font-size": "16px",
+  "font-size": `${DEFAULT_FONT_SIZE}px`,
   "font-weight": "400",
-  "font-family": "Inter, system-ui, Avenir, Helvetica, Arial, sans-serif",
+  "font-family": FONT_FAMILY,
 } as const
 
 /**
@@ -1227,6 +1378,97 @@ function ensureTextFontDefaults(svg: Element): void {
         textEl.setAttribute(attr, defaultValue)
       }
     }
+  })
+}
+
+// --- compat resolution -----------------------------------------------------
+// `svgMode: "compat"` produces an SVG that renders identically in non-browser
+// engines (resvg, Skia, pdfmake, Inkscape, PowerPoint), which silently ignore
+// browser-only SVG features. Each pass below resolves one to an absolute value.
+
+/**
+ * Resolve relative `font-size` (`%`, `em`) to px against the inherited size —
+ * otherwise stereotypes (`font-size="85%"`) balloon over the class title. Walks
+ * depth-first carrying the resolved px; runs after ensureTextFontDefaults so
+ * every <text> already has a px size to inherit.
+ */
+function resolveRelativeFontSizes(
+  el: Element,
+  inheritedPx = DEFAULT_FONT_SIZE
+) {
+  let resolvedPx = inheritedPx
+  const raw = el.getAttribute("font-size")?.trim()
+  const match = raw?.match(/^(\d*\.?\d+)(%|em|px)?$/)
+  if (match) {
+    const value = parseFloat(match[1])
+    if (match[2] === "%") resolvedPx = (inheritedPx * value) / 100
+    else if (match[2] === "em") resolvedPx = inheritedPx * value
+    else resolvedPx = value
+    el.setAttribute("font-size", `${resolvedPx}px`)
+  }
+  for (const child of Array.from(el.children)) {
+    resolveRelativeFontSizes(child, resolvedPx)
+  }
+}
+
+/**
+ * Flatten cumulative `<tspan dy>` to absolute `y` — Skia collapses sibling
+ * tspans onto one line, overlapping a stereotype with its class name. Assumes
+ * the flat `<text><tspan/></text>` shape Apollon emits (no nested tspans).
+ */
+function resolveTspanDy(svg: Element): void {
+  svg.querySelectorAll("text").forEach((textEl) => {
+    let currentY = parseFloat(textEl.getAttribute("y") ?? "0") || 0
+    let seenDy = false
+    textEl.querySelectorAll("tspan").forEach((tspan) => {
+      const y = tspan.getAttribute("y")
+      if (y !== null) currentY = parseFloat(y) || currentY
+      const dy = tspan.getAttribute("dy")
+      if (dy !== null) {
+        currentY += parseFloat(dy) || 0
+        seenDy = true
+      }
+      if (seenDy) {
+        tspan.setAttribute("y", `${currentY}`)
+        tspan.removeAttribute("dy")
+      }
+    })
+  })
+}
+
+// Browser baseline shift (em) per `dominant-baseline` value, measured against
+// the bundled Inter. `middle` centres on `y`; `hanging` puts the text top near it.
+const BASELINE_SHIFT_EM: Record<string, number> = {
+  middle: 0.25,
+  central: 0.35,
+  hanging: 0.75,
+}
+
+/**
+ * Resolve `dominant-baseline` to an explicit baseline `y` — non-browser engines
+ * draw every label at the alphabetic baseline (too high) otherwise. Runs after
+ * resolveTspanDy so tspan `y` is already absolute.
+ */
+function resolveDominantBaseline(svg: Element): void {
+  svg.querySelectorAll("text").forEach((textEl) => {
+    const baseline = textEl.getAttribute("dominant-baseline")
+    const shiftEm = baseline ? BASELINE_SHIFT_EM[baseline] : undefined
+    if (shiftEm === undefined) return
+
+    const textFontSize =
+      parseFloat(textEl.getAttribute("font-size") ?? "") || DEFAULT_FONT_SIZE
+    const shift = (el: Element, fallbackY: number) => {
+      const fontSize =
+        parseFloat(el.getAttribute("font-size") ?? "") || textFontSize
+      const y = parseFloat(el.getAttribute("y") ?? "") || fallbackY
+      el.setAttribute("y", `${y + shiftEm * fontSize}`)
+    }
+
+    const tspans = Array.from(textEl.querySelectorAll("tspan"))
+    const textY = parseFloat(textEl.getAttribute("y") ?? "0") || 0
+    if (tspans.length) tspans.forEach((tspan) => shift(tspan, textY))
+    else shift(textEl, 0)
+    textEl.removeAttribute("dominant-baseline")
   })
 }
 
@@ -1285,6 +1527,23 @@ function replaceTextDecorationWithManualUnderline(svg: SVGSVGElement): void {
 }
 
 /**
+ * Embed `@font-face` CSS (typically the bundled Inter woff2 as base64) into the
+ * export SVG so the document carries its own font and renders identically when
+ * opened away from the editor. Inserted first so the face is declared before
+ * any `<text>` references it. Idempotent: a second call is a no-op.
+ */
+function embedFontFaceCss(svg: SVGSVGElement, css: string): void {
+  if (svg.querySelector("style[data-apollon-fonts]")) return
+
+  const SVG_NS = "http://www.w3.org/2000/svg"
+  const styleEl = document.createElementNS(SVG_NS, "style")
+  styleEl.setAttribute("data-apollon-fonts", "")
+  styleEl.textContent = css
+
+  svg.insertBefore(styleEl, svg.firstChild)
+}
+
+/**
  * Final safety pass: strip any legacy <marker> references that could sneak in
  * from third-party content. Keeps exports clean for PowerPoint/Keynote.
  */
@@ -1302,6 +1561,7 @@ function removeMarkerElements(svg: Element): void {
  * @internal — Exported for unit testing only. Not part of the public API.
  */
 export const __testing = {
+  embedFontFaceCss,
   filterRenderedElements,
   getRenderedDiagramBounds,
   extractPathPoints,
@@ -1310,6 +1570,9 @@ export const __testing = {
   replaceCSSVariables,
   convertStyleToAttributes,
   ensureTextFontDefaults,
+  resolveRelativeFontSizes,
+  resolveTspanDy,
+  resolveDominantBaseline,
   removeMarkerElements,
   replaceTextDecorationWithManualUnderline,
   mergeBounds,

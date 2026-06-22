@@ -1,8 +1,8 @@
 import { NodeProps, NodeResizer, type Node } from "@xyflow/react"
+import { usePopoverAnchor } from "@/hooks/usePopoverAnchor"
 import { DefaultNodeWrapper, FOUR_WAY_HANDLES_PRESET } from "../wrappers"
 import { useHandleOnResize } from "@/hooks"
 import { DefaultNodeProps } from "@/types"
-import { useRef } from "react"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
 import { FlowchartDecisionNodeSVG } from "@/components"
@@ -15,7 +15,7 @@ export function FlowchartDecision({
   data,
   parentId,
 }: NodeProps<Node<DefaultNodeProps>>) {
-  const svgWrapperRef = useRef<HTMLDivElement | null>(null)
+  const [anchorEl, anchorRef] = usePopoverAnchor()
   const { onResize } = useHandleOnResize(parentId)
   const isDiagramModifiable = useDiagramModifiable()
 
@@ -38,7 +38,7 @@ export function FlowchartDecision({
         minWidth={50}
         handleStyle={{ width: 8, height: 8 }}
       />
-      <div ref={svgWrapperRef}>
+      <div ref={anchorRef}>
         <FlowchartDecisionNodeSVG
           width={width}
           height={height}
@@ -49,7 +49,7 @@ export function FlowchartDecision({
       </div>
 
       <PopoverManager
-        anchorEl={svgWrapperRef.current}
+        anchorEl={anchorEl}
         elementId={id}
         type="FlowchartDecision"
       />

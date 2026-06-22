@@ -4,7 +4,12 @@ import CircleRoundedIcon from "@mui/icons-material/CircleRounded"
 import CircleOutlinedIcon from "@mui/icons-material/CircleOutlined"
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded"
 import type { FC } from "react"
-import { useVersionStore, type PendingVersion } from "@/stores/useVersionStore"
+import {
+  selectScopedPreview,
+  useVersionStore,
+  type PendingVersion,
+} from "@/stores/useVersionStore"
+import { useClosePreview } from "@/hooks/useVersionPreviewUrlSync"
 import { relativeTime } from "./relativeTime"
 import {
   ROW_HOVER_BG,
@@ -14,6 +19,7 @@ import {
 } from "./theme"
 
 interface Props {
+  diagramId: string
   /**
    * `true` when the editor's current state vector differs from the SV at
    * the time of the last snapshot. This is the same signal that gates the
@@ -44,18 +50,19 @@ interface Props {
  * last save" is accurate; "Unsaved" would be misleading.
  */
 export const CurrentVersionRow: FC<Props> = ({
+  diagramId,
   hasChanges,
   latestSavedVersion,
 }) => {
-  const previewState = useVersionStore((s) => s.preview)
-  const exitPreview = useVersionStore((s) => s.exitPreview)
+  const previewState = useVersionStore((s) => selectScopedPreview(s, diagramId))
+  const closePreview = useClosePreview()
 
   if (previewState) {
     return (
       <Box
         component="button"
         type="button"
-        onClick={() => exitPreview()}
+        onClick={() => closePreview()}
         sx={{
           display: "flex",
           width: "100%",
@@ -65,7 +72,7 @@ export const CurrentVersionRow: FC<Props> = ({
           py: 1.25,
           background: "transparent",
           border: 0,
-          borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
+          borderBottom: "1px solid var(--apollon-chrome-border)",
           color: TEXT_PRIMARY,
           cursor: "pointer",
           textAlign: "left",
@@ -109,15 +116,17 @@ export const CurrentVersionRow: FC<Props> = ({
     subtitle = "Not yet saved as a version"
   } else if (upToDate) {
     icon = CheckCircleRoundedIcon
-    // Tailwind-ish green that reads on dark bg without theming.
-    iconColor = "#5cb47a"
+    // Theme-aware success green (shared with the success toast) so the check
+    // reads correctly + consistently in both light and dark.
+    iconColor = "var(--home-toast-success)"
     title = "Current"
     subtitle = `Up to date · last saved ${relativeTime(latestSavedVersion.createdAt)}`
   } else {
     icon = CircleRoundedIcon
-    // Amber, signaling "there's something to capture" without alarm — HEAD
-    // is autosaved every 5 s, so this is "not yet a version," not "at risk."
-    iconColor = "#e8a857"
+    // Theme-aware warning amber (shared with the warning toast), signaling
+    // "there's something to capture" without alarm — HEAD is autosaved every
+    // 5 s, so this is "not yet a version," not "at risk."
+    iconColor = "var(--home-toast-warning)"
     title = "Current"
     subtitle = `Edits since last save · ${relativeTime(latestSavedVersion.createdAt)}`
   }
@@ -133,7 +142,10 @@ export const CurrentVersionRow: FC<Props> = ({
         px: 2,
         py: 1.25,
         bgcolor: ROW_SELECTED_BG,
-        borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
+        borderBottom: "1px solid var(--apollon-chrome-border)",
+        // Accent left-rule marks HEAD ("you are here") — the one place the
+        // brand accent appears in the list; saved rows stay neutral.
+        boxShadow: "inset 3px 0 0 var(--apollon-chrome-accent)",
       }}
       aria-label="Current canvas"
       aria-live="polite"

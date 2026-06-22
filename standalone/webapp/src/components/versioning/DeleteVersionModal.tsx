@@ -2,8 +2,13 @@ import { Button, Stack } from "@mui/material"
 import { useState } from "react"
 import { toast } from "react-toastify"
 import { useModalContext } from "@/contexts"
-import { selectVersions, useVersionStore } from "@/stores/useVersionStore"
+import {
+  selectScopedPreview,
+  selectVersions,
+  useVersionStore,
+} from "@/stores/useVersionStore"
 import { Typography } from "@/components/Typography"
+import { useClosePreview } from "@/hooks/useVersionPreviewUrlSync"
 import { log } from "@/logger"
 import { versioningStrings as t } from "./strings"
 
@@ -15,9 +20,11 @@ interface Props {
 export const DeleteVersionModal = ({ diagramId, versionId }: Props) => {
   const { closeModal } = useModalContext()
   const deleteVersion = useVersionStore((s) => s.deleteVersion)
-  const exitPreview = useVersionStore((s) => s.exitPreview)
+  // Clearing `?version=` before delete stops the URL sync re-entering the
+  // deleted version and flashing a spurious "unavailable" toast.
+  const closePreview = useClosePreview()
   const previewingThis = useVersionStore(
-    (s) => s.preview?.versionId === versionId
+    (s) => selectScopedPreview(s, diagramId)?.versionId === versionId
   )
   const target = useVersionStore((s) =>
     selectVersions(s, diagramId).find((v) => v.id === versionId)
@@ -27,7 +34,7 @@ export const DeleteVersionModal = ({ diagramId, versionId }: Props) => {
   const onConfirm = async () => {
     setWorking(true)
     try {
-      if (previewingThis) exitPreview()
+      if (previewingThis) closePreview()
       await deleteVersion(diagramId, versionId)
       closeModal()
     } catch (err) {

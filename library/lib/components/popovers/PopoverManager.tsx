@@ -64,6 +64,7 @@ import { ObjectDiagramEdgeEditPopover } from "./edgePopovers/ObjectDiagramEdgeEd
 import { FlowChartEdgeEditPopover } from "./edgePopovers/FlowChartEdgeEditPopover"
 import { SyntaxTreeEdgeEditPopover } from "./edgePopovers/SyntaxTreeEdgeEditPopover"
 import { SfcActionTableEditPopover, SfcEdgeEditPopover } from "./sfcDiagram"
+import { ActivitySwimlaneEditPopover } from "./activityDiagram"
 import { ReachabilityGraphEdgeEditPopover } from "./edgePopovers/ReachabilityGraphEdgeEditPopover"
 import { BPMNDiagramEdgeEditPopover } from "./edgePopovers/BPMNDiagramEdgeEditPopover"
 import { PetriNetEdgeEditPopover } from "./edgePopovers/PetriNetEdgeEditPopover"
@@ -101,6 +102,7 @@ type NodePopoverType =
   | "ReachabilityGraphMarking"
   | "Sfc"
   | "SfcActionTable"
+  | "ActivitySwimlane"
 
 type EdgePopoverType =
   | "ClassAggregation"
@@ -207,6 +209,7 @@ const editPopovers: {
   ReachabilityGraphMarking: React.FC<PopoverProps>
   Sfc: React.FC<PopoverProps>
   SfcActionTable: React.FC<PopoverProps>
+  ActivitySwimlane: React.FC<PopoverProps>
 } = {
   class: ClassEditPopover,
   objectName: ObjectEditPopover,
@@ -274,6 +277,7 @@ const editPopovers: {
   ReachabilityGraphMarking: ReachabilityGraphMarkingEditPopover,
   Sfc: DefaultNodeEditPopover,
   SfcActionTable: SfcActionTableEditPopover,
+  ActivitySwimlane: ActivitySwimlaneEditPopover,
 }
 
 const giveFeedbackPopovers: {
@@ -342,6 +346,7 @@ const giveFeedbackPopovers: {
   ReachabilityGraphMarking: React.FC<PopoverProps>
   Sfc: React.FC<PopoverProps>
   SfcActionTable: React.FC<PopoverProps>
+  ActivitySwimlane: React.FC<PopoverProps>
   SfcDiagramEdge: React.FC<PopoverProps>
 } = {
   class: ClassGiveFeedbackPopover,
@@ -409,6 +414,7 @@ const giveFeedbackPopovers: {
   ReachabilityGraphMarking: DefaultNodeGiveFeedbackPopover,
   Sfc: DefaultNodeGiveFeedbackPopover,
   SfcActionTable: DefaultNodeGiveFeedbackPopover,
+  ActivitySwimlane: DefaultNodeGiveFeedbackPopover,
   SfcDiagramEdge: EdgeGiveFeedbackPopover,
 }
 
@@ -478,6 +484,7 @@ const seeFeedbackPopovers: {
   ReachabilityGraphMarking: React.FC<PopoverProps>
   Sfc: React.FC<PopoverProps>
   SfcActionTable: React.FC<PopoverProps>
+  ActivitySwimlane: React.FC<PopoverProps>
   SfcDiagramEdge: React.FC<PopoverProps>
 } = {
   class: ClassSeeFeedbackPopover,
@@ -545,12 +552,13 @@ const seeFeedbackPopovers: {
   ReachabilityGraphMarking: DefaultNodeSeeFeedbackPopover,
   Sfc: DefaultNodeSeeFeedbackPopover,
   SfcActionTable: DefaultNodeSeeFeedbackPopover,
+  ActivitySwimlane: DefaultNodeSeeFeedbackPopover,
   SfcDiagramEdge: EdgeSeeFeedbackPopover,
 }
 
 interface PopoverManagerProps {
   elementId: string
-  anchorEl: HTMLElement | SVGSVGElement | null
+  anchorEl: HTMLElement | SVGElement | null
   type: PopoverType
 }
 

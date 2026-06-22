@@ -1,0 +1,43 @@
+name: "Playwright install-deps (bounded + retried)"
+description: >
+  Runs `playwright install-deps <browser>` bounded per attempt and retried.
+  A freshly-booted GitHub-hosted runner holds the dpkg lock for its boot-time
+  `unattended-upgrades`, so a naive call can block for the entire job timeout
+  (~20 min observed) and never reach the tests. Bounding each attempt and
+  retrying lets the background apt job release the lock so a later attempt
+  succeeds — a hang can no longer consume the whole job.
+
+  Shared by every job that installs Playwright system deps on a bare runner
+  (e2e-tests, perf-firefox-tests) so the hardening can't drift between them.
+
+inputs:
+  browser:
+    description: "Browser to install system deps for, e.g. chromium or firefox."
+    required: true
+  attempts:
+    description: "Maximum number of attempts."
+    required: false
+    default: "3"
+  timeout-seconds:
+    description: "Per-attempt timeout (seconds). SIGTERM frees a stuck apt."
+    required: false
+    default: "300"
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        set -u
+        for attempt in $(seq 1 "${{ inputs.attempts }}"); do
+          echo "::group::playwright install-deps ${{ inputs.browser }} (attempt $attempt)"
+          if timeout "${{ inputs.timeout-seconds }}" pnpm --filter @tumaet/webapp exec playwright install-deps "${{ inputs.browser }}"; then
+            echo "::endgroup::"
+            exit 0
+          fi
+          echo "::endgroup::"
+          echo "attempt $attempt failed or timed out; retrying in 20s"
+          sleep 20
+        done
+        echo "playwright install-deps ${{ inputs.browser }} did not succeed after ${{ inputs.attempts }} attempts"
+        exit 1

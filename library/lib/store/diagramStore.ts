@@ -11,9 +11,16 @@ import {
 } from "@xyflow/react"
 import * as Y from "yjs"
 import { sortNodesTopologically } from "@/utils"
-import { getNodesMap, getEdgesMap, getAssessments } from "@/sync/ydoc"
+import {
+  getNodesMap,
+  getEdgesMap,
+  getAssessments,
+  reconcileYMap,
+  STORE_ORIGIN,
+} from "@/sync/ydoc"
+import { recordStoreNodeWrite } from "@/sync/perfCounters"
 import { deepEqual } from "@/utils/storeUtils"
-import { Assessment, InteractiveElements } from "@/typings"
+import { Assessment, DraggingNode, InteractiveElements } from "@/typings"
 import {
   getNestedNodeElementIds,
   pruneInteractiveElements,
@@ -37,6 +44,16 @@ type InitialDiagramState = {
   canUndo: boolean
   canRedo: boolean
   undoManager: Y.UndoManager | null
+  /**
+   * Whether this editor instance is in a collaboration session. Gates the
+   * ephemeral live-drag broadcast: when true, `onNodesChange` forwards each
+   * transient drag/resize frame to `draggingNodesPublisher` (awareness) so peers
+   * see the gesture live. Not redundant with `undoManager !== null` — the undo
+   * manager now runs in both single-user and collaboration, so it can't tell
+   * them apart; only this flag marks "peers are listening". (Transient frames
+   * are never persisted in either mode — see `onNodesChange`.)
+   */
+  collaborationEnabled: boolean
   /**
    * When true, the Yjs doc is the canonical state but the canvas reflects
    * an ephemeral overlay (e.g. a version preview). In this mode:
@@ -64,6 +81,7 @@ const initialDiagramState: InitialDiagramState = {
   canUndo: false,
   canRedo: false,
   undoManager: null,
+  collaborationEnabled: false,
   previewMode: false,
 }
 
@@ -84,6 +102,19 @@ function stripComputedSegmentsFromEdges(edges: Edge[]): Edge[] {
   return edges.map(stripComputedSegmentsFromEdge)
 }
 
+// The transient `selected` flag is re-overlaid locally on read
+// (`updateNodesFromYjs`), so it must never be persisted: otherwise selection
+// toggles become Yjs writes, undo entries and peer broadcasts.
+function stripSelected(node: Node): Node {
+  const persisted = { ...node }
+  delete persisted.selected
+  return persisted
+}
+
+function nodeEntriesForPersistence(nodes: Node[]): Array<[string, Node]> {
+  return nodes.map((node) => [node.id, stripSelected(node)])
+}
+
 export type DiagramStore = {
   nodes: Node[]
   edges: Edge[]
@@ -96,8 +127,26 @@ export type DiagramStore = {
   canUndo: boolean
   canRedo: boolean
   undoManager: Y.UndoManager | null
+  collaborationEnabled: boolean
   previewMode: boolean
   setDiagramId: (diagramId: string) => void
+  setCollaborationEnabled: (enabled: boolean) => void
+  /**
+   * Inject the sink that forwards transient drag/resize frames onto the
+   * ephemeral awareness channel (wired by `YjsSync` for every editor). Kept as
+   * runtime wiring rather than diagram state so a `reset()` never clears it.
+   * The broadcast itself is gated by `collaborationEnabled`, not by this sink;
+   * `null` (headless, where no `YjsSync` runs) just leaves it unwired.
+   */
+  setDraggingNodesPublisher: (
+    publisher: ((draggingNodes: DraggingNode[] | null) => void) | null
+  ) => void
+  /**
+   * Clear the peers' live-drag overlay once a gesture's settled value is
+   * committed. Called from `onNodeDragStop` (after the doc write) and on
+   * collaboration teardown; a no-op when nothing is being broadcast.
+   */
+  endTransientNodeBroadcast: () => void
   setNodes: (payload: Node[] | ((nodes: Node[]) => Node[])) => void
   setEdges: (payload: Edge[] | ((edges: Edge[]) => Edge[])) => void
   setNodesAndEdges: (nodes: Node[], edges: Edge[]) => void
@@ -149,8 +198,17 @@ export const createDiagramStore = (
         // "store")` directly.
         const transactStore = (fn: () => void) => {
           if (get().previewMode) return
-          ydoc.transact(fn, "store")
+          ydoc.transact(fn, STORE_ORIGIN)
         }
+
+        // Ephemeral live-drag wiring (collaboration only). `YjsSync` injects
+        // the publisher; `wasPublishingTransient` tracks whether a gesture is
+        // mid-broadcast so `endTransientNodeBroadcast` clears the overlay once.
+        let draggingNodesPublisher:
+          | ((draggingNodes: DraggingNode[] | null) => void)
+          | null = null
+        let wasPublishingTransient = false
+
         return {
           ...initialDiagramState,
 
@@ -159,25 +217,70 @@ export const createDiagramStore = (
             const edgesMap = getEdgesMap(ydoc)
             const assessmentsMap = getAssessments(ydoc)
 
-            // Track only LOCAL ("store") writes. Including "remote" would
-            // pollute the local undo stack with peer edits — Cmd+Z would
-            // then revert a collaborator's change, which is never the
-            // intended undo semantics (Yjs's recommendation is the same:
-            // pass `trackedOrigins` containing only origins YOU author).
+            // Track only LOCAL ("store") writes, never "remote" — per-user
+            // "local undo": each peer reverses only their own edits, never a
+            // collaborator's (Yjs's own recommendation). `ignoreRemoteMapChanges`
+            // stays at its default (false), so undoing a key a peer concurrently
+            // changed safely no-ops instead of clobbering it.
+            //
+            // captureTimeout 500ms is load-bearing, not cosmetic: one drop emits
+            // two "store" transactions — the onNodesChange settle frame and
+            // onNodeDragStop's setNodes — and the window coalesces them into one
+            // undo step. (It also folds two genuinely distinct gestures <500ms
+            // apart, which is standard Yjs behaviour.)
             const undoManager = new Y.UndoManager(
               [nodesMap, edgesMap, assessmentsMap],
               {
                 captureTimeout: 500,
-                trackedOrigins: new Set(["store"]),
+                trackedOrigins: new Set([STORE_ORIGIN]),
               }
             )
 
-            // Listen to undo manager state changes
-            undoManager.on("stack-item-added", () => {
-              get().updateUndoRedoState()
-            })
+            // Restore the user's selection across undo/redo (documented best
+            // practice: undo should bring back the context, not just the
+            // content). The selection in effect when an edit is recorded is
+            // stashed on the stack item and re-applied — to `selectedElementIds`
+            // and the per-element `selected` flags — when it is popped.
+            // `stack-item-popped` fires after the undo transaction's observers,
+            // so `applySelection` runs last and wins over the doc resync.
+            const applySelection = (ids: string[]) => {
+              const idSet = new Set(ids)
+              set(
+                (state) => ({
+                  selectedElementIds: ids,
+                  nodes: state.nodes.map((node) =>
+                    (node.selected ?? false) === idSet.has(node.id)
+                      ? node
+                      : { ...node, selected: idSet.has(node.id) }
+                  ),
+                  edges: state.edges.map((edge) =>
+                    (edge.selected ?? false) === idSet.has(edge.id)
+                      ? edge
+                      : { ...edge, selected: idSet.has(edge.id) }
+                  ),
+                }),
+                undefined,
+                "undo-restore-selection"
+              )
+            }
 
-            undoManager.on("stack-item-popped", () => {
+            // Capture on both add and update: a merged edit (captureTimeout
+            // folds it into the existing item via "stack-item-updated") must
+            // refresh the stashed selection, else it keeps the first edit's.
+            const captureSelection = ({
+              stackItem,
+            }: {
+              stackItem: Y.UndoManager["undoStack"][number]
+            }) => {
+              stackItem.meta.set("selectedElementIds", get().selectedElementIds)
+              get().updateUndoRedoState()
+            }
+            undoManager.on("stack-item-added", captureSelection)
+            undoManager.on("stack-item-updated", captureSelection)
+
+            undoManager.on("stack-item-popped", ({ stackItem }) => {
+              const ids = stackItem.meta.get("selectedElementIds")
+              if (Array.isArray(ids)) applySelection(ids)
               get().updateUndoRedoState()
             })
 
@@ -204,6 +307,10 @@ export const createDiagramStore = (
           },
 
           undo: () => {
+            // undo/redo create their own Yjs transactions, bypassing the
+            // `transactStore` preview gate; guard here so Cmd+Z during a version
+            // preview can't mutate the canonical doc and broadcast to peers.
+            if (get().previewMode) return
             const { undoManager } = get()
             if (!undoManager || !undoManager.canUndo()) return
 
@@ -211,6 +318,7 @@ export const createDiagramStore = (
           },
 
           redo: () => {
+            if (get().previewMode) return
             const { undoManager } = get()
             if (!undoManager || !undoManager.canRedo()) return
 
@@ -219,6 +327,33 @@ export const createDiagramStore = (
 
           setDiagramId: (diagramId) => {
             set({ diagramId }, undefined, "setDiagramId")
+          },
+
+          setCollaborationEnabled: (enabled) => {
+            // Flush any in-flight live-drag overlay when collaboration is turned
+            // off mid-gesture, else peers would keep rendering the frozen drag
+            // (the per-frame publish path below is itself gated on this flag).
+            if (!enabled) get().endTransientNodeBroadcast()
+            set(
+              { collaborationEnabled: enabled },
+              undefined,
+              "setCollaborationEnabled"
+            )
+          },
+
+          setDraggingNodesPublisher: (publisher) => {
+            draggingNodesPublisher = publisher
+          },
+
+          endTransientNodeBroadcast: () => {
+            // Clear the peers' live-drag overlay. Call this AFTER the settled
+            // position/size has been committed to the document, so peers apply
+            // the durable value before the overlay is removed (no snap-back to
+            // the stale pre-gesture position).
+            if (draggingNodesPublisher && wasPublishingTransient) {
+              draggingNodesPublisher(null)
+              wasPublishingTransient = false
+            }
           },
 
           setSelectedElementsId: (payload) => {
@@ -333,8 +468,7 @@ export const createDiagramStore = (
             }
 
             transactStore(() => {
-              getNodesMap(ydoc).clear()
-              nodes.forEach((node) => getNodesMap(ydoc).set(node.id, node))
+              reconcileYMap(getNodesMap(ydoc), nodeEntriesForPersistence(nodes))
             })
             const prunedInteractive = pruneInteractiveElements(
               {
@@ -365,9 +499,9 @@ export const createDiagramStore = (
               return
             }
             transactStore(() => {
-              getEdgesMap(ydoc).clear()
-              persistedEdges.forEach((edge) =>
-                getEdgesMap(ydoc).set(edge.id, edge)
+              reconcileYMap(
+                getEdgesMap(ydoc),
+                persistedEdges.map((edge) => [edge.id, edge])
               )
             })
             const prunedInteractive = pruneInteractiveElements(
@@ -393,11 +527,10 @@ export const createDiagramStore = (
           setNodesAndEdges: (nodes, edges) => {
             const persistedEdges = stripComputedSegmentsFromEdges(edges)
             transactStore(() => {
-              getNodesMap(ydoc).clear()
-              getEdgesMap(ydoc).clear()
-              nodes.forEach((node) => getNodesMap(ydoc).set(node.id, node))
-              persistedEdges.forEach((edge) =>
-                getEdgesMap(ydoc).set(edge.id, edge)
+              reconcileYMap(getNodesMap(ydoc), nodeEntriesForPersistence(nodes))
+              reconcileYMap(
+                getEdgesMap(ydoc),
+                persistedEdges.map((edge) => [edge.id, edge])
               )
             })
             const prunedInteractive = pruneInteractiveElements(
@@ -473,14 +606,95 @@ export const createDiagramStore = (
             const currentNodes = get().nodes
 
             const nextNodes = applyNodeChanges(filteredChanges, currentNodes)
+
+            // A gesture (drag or resize) is in flight when any node still carries
+            // React Flow's live dragging/resizing flag. Used to broadcast live
+            // geometry below and to skip per-frame persistence in `transactStore`.
+            const gestureInFlight = nextNodes.some(
+              (n) => n.dragging || n.resizing
+            )
+
+            // Ephemeral live-drag broadcast (collaboration only): forward the
+            // in-progress positions/sizes of this frame to peers over awareness.
+            // (Other awareness writes — cursor, selection, viewport — live in
+            // the React layer, but this one lives here because `onNodesChange`
+            // is the only seam that sees BOTH drag and resize transient frames;
+            // React's `onNodeDrag` is position-only.)
+            // Clearing the overlay is deferred to `endTransientNodeBroadcast`
+            // (after the settle doc write) so peers receive the durable position
+            // before the overlay is removed. A position drag sends position
+            // alone; width/height ride along for a resize and for a mid-gesture
+            // `replace` (a parent container auto-growing around a resizing child),
+            // so peers see the parent grow live instead of jumping at settle.
+            let publishedLiveFrames = false
+            if (
+              get().collaborationEnabled &&
+              !get().previewMode &&
+              draggingNodesPublisher
+            ) {
+              const draggingNodes: DraggingNode[] = []
+              for (const change of filteredChanges) {
+                if (change.type === "position" && change.dragging === true) {
+                  const node = nextNodes.find((n) => n.id === change.id)
+                  if (node)
+                    draggingNodes.push({ id: node.id, position: node.position })
+                } else if (
+                  (change.type === "dimensions" && change.resizing === true) ||
+                  (change.type === "replace" && gestureInFlight)
+                ) {
+                  const id =
+                    change.type === "replace" ? change.item.id : change.id
+                  const node = nextNodes.find((n) => n.id === id)
+                  if (node)
+                    draggingNodes.push({
+                      id: node.id,
+                      position: node.position,
+                      width: node.width ?? null,
+                      height: node.height ?? null,
+                    })
+                }
+              }
+              if (draggingNodes.length > 0) {
+                draggingNodesPublisher(draggingNodes)
+                wasPublishingTransient = true
+                publishedLiveFrames = true
+              }
+            }
+
             if (deepEqual(currentNodes, nextNodes)) {
+              // Live frames already published above. If a gesture ended with no
+              // net change this tick, the overlay clear is delegated to
+              // onNodeDragStop's endTransientNodeBroadcast.
               return
             }
+
+            // A `replace` that lands mid-gesture is a transient geometry
+            // side-effect — e.g. a parent auto-growing around a resizing child
+            // (useHandleOnResize → useReactFlow().updateNode), which in
+            // controlled mode round-trips through onNodesChange as a full-node
+            // `replace`. Persisting it every frame pins a struct per frame under
+            // the always-on UndoManager (the nested-resize twin of the drag
+            // freeze). Skip it (it was broadcast live over awareness above); the
+            // settled geometry is committed by the resize-end reconcile below.
+            // `gestureInFlight` reads React Flow's live dragging/resizing flags,
+            // so it self-clears at gesture end — a normal (non-gesture) replace
+            // still persists immediately. INVARIANT: recovery of a skipped
+            // replace depends on every gesture ending with a full reconcile —
+            // the `resizeSettled` reconcile here, or onNodeDragStop's setNodes
+            // for a drag. Don't remove either without replacing the recovery.
+            const resizeSettled = filteredChanges.some(
+              (c) => c.type === "dimensions" && c.resizing === false
+            )
 
             transactStore(() => {
               for (const change of filteredChanges) {
                 if (change.type === "add" || change.type === "replace") {
-                  getNodesMap(ydoc).set(change.item.id, change.item)
+                  if (change.type === "replace" && gestureInFlight) continue
+                  getNodesMap(ydoc).set(
+                    change.item.id,
+                    stripSelected(change.item)
+                  )
+                  recordStoreNodeWrite()
                 } else if (change.type === "remove") {
                   set(
                     (state) => ({
@@ -503,9 +717,33 @@ export const createDiagramStore = (
                     )
                   }
                 } else {
+                  const isTransient =
+                    (change.type === "position" && change.dragging === true) ||
+                    (change.type === "dimensions" && change.resizing === true)
+                  // Transient drag/resize frames are never persisted, in either
+                  // mode: the UndoManager (now active in collaboration too) pins
+                  // every per-frame struct, so writing them would grow the
+                  // document unbounded. Only the settled frame is committed; the
+                  // live gesture reaches peers via the awareness broadcast above.
+                  if (isTransient) continue
                   const node = nextNodes.find((n) => n.id === change.id)
-                  if (node) getNodesMap(ydoc).set(change.id, node)
+                  if (node) {
+                    getNodesMap(ydoc).set(change.id, stripSelected(node))
+                    recordStoreNodeWrite()
+                  }
                 }
+              }
+
+              // Commit any parent geometry that was deferred while the resize
+              // was in flight (the skipped per-frame `replace` writes above).
+              // `reconcileYMap` only writes keys that actually changed, so this
+              // is the single settled write for the grown parents — and a no-op
+              // for the child already committed in the loop.
+              if (resizeSettled) {
+                reconcileYMap(
+                  getNodesMap(ydoc),
+                  nodeEntriesForPersistence(nextNodes)
+                )
               }
             })
             const prunedInteractive = pruneInteractiveElements(
@@ -527,6 +765,15 @@ export const createDiagramStore = (
               undefined,
               "onNodesChange"
             )
+
+            // A settle/idle batch (no live frames this tick) that follows a
+            // gesture: the durable value was just committed above, so it's now
+            // safe to clear the peers' overlay. Resize ends this way (no
+            // drag-stop hook); drag also clears here when the settle frame moved
+            // the node, and via onNodeDragStop otherwise.
+            if (get().collaborationEnabled && !publishedLiveFrames) {
+              get().endTransientNodeBroadcast()
+            }
           },
 
           onEdgesChange: (changes) => {
@@ -755,11 +1002,7 @@ export const createDiagramStore = (
                 : payload
 
             transactStore(() => {
-              const yMap = getAssessments(ydoc)
-              yMap.clear()
-              Object.entries(assessments).forEach(([id, assessment]) => {
-                yMap.set(id, assessment)
-              })
+              reconcileYMap(getAssessments(ydoc), Object.entries(assessments))
             })
 
             set({ assessments }, undefined, "setAssessments")

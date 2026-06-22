@@ -1,4 +1,5 @@
 import { Box, FormControl, InputLabel, MenuItem, Select } from "@mui/material"
+import { useReactiveNode } from "@/hooks"
 import { NodeStyleEditor } from "@/components/ui"
 import { useReactFlow } from "@xyflow/react"
 import { PopoverProps } from "../types"
@@ -6,8 +7,8 @@ import { BPMNMarkerType, BPMNTaskProps, BPMNTaskType } from "@/types"
 import { supportsMultilineName } from "@/utils/nodeUtils"
 
 export const BPMNTaskEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
-  const { getNode, updateNodeData } = useReactFlow()
-  const node = getNode(elementId)
+  const { updateNodeData } = useReactFlow()
+  const node = useReactiveNode(elementId)
   if (!node) return null
 
   const data = node.data as BPMNTaskProps

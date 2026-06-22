@@ -1,0 +1,364 @@
+{
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^4\\.\\d+\\.\\d+$",
+      "description": "Wire-format version. Tracks the model MAJOR line (4.x), not the npm package version."
+    },
+    "id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "type": {
+      "$ref": "#/definitions/UMLDiagramType"
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "width": {
+            "type": "number"
+          },
+          "height": {
+            "type": "number"
+          },
+          "type": {
+            "$ref": "#/definitions/DiagramNodeType"
+          },
+          "position": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "x",
+              "y"
+            ]
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": {}
+          },
+          "parentId": {
+            "type": "string"
+          },
+          "measured": {
+            "type": "object",
+            "properties": {
+              "width": {
+                "type": "number"
+              },
+              "height": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "height",
+              "width"
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "data",
+          "height",
+          "id",
+          "measured",
+          "position",
+          "type",
+          "width"
+        ]
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/definitions/DiagramEdgeType"
+          },
+          "sourceHandle": {
+            "type": "string"
+          },
+          "targetHandle": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/definitions/OrthogonalEdgeData"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "data",
+          "id",
+          "source",
+          "sourceHandle",
+          "target",
+          "targetHandle",
+          "type"
+        ]
+      }
+    },
+    "assessments": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "modelElementId": {
+            "type": "string"
+          },
+          "elementType": {
+            "type": "string"
+          },
+          "score": {
+            "type": "number"
+          },
+          "feedback": {
+            "type": "string"
+          },
+          "dropInfo": {},
+          "label": {
+            "type": "string"
+          },
+          "labelColor": {
+            "type": "string"
+          },
+          "correctionStatus": {
+            "type": "object",
+            "properties": {
+              "description": {
+                "type": "string"
+              },
+              "status": {
+                "enum": [
+                  "CORRECT",
+                  "INCORRECT",
+                  "NOT_VALIDATED"
+                ],
+                "type": "string"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "status"
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "elementType",
+          "modelElementId",
+          "score"
+        ]
+      }
+    },
+    "interactive": {
+      "type": "object",
+      "properties": {
+        "elements": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "boolean"
+          }
+        },
+        "relationships": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "boolean"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "elements",
+        "relationships"
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "assessments",
+    "edges",
+    "id",
+    "nodes",
+    "title",
+    "type",
+    "version"
+  ],
+  "definitions": {
+    "UMLDiagramType": {
+      "enum": [
+        "ActivityDiagram",
+        "BPMN",
+        "ClassDiagram",
+        "CommunicationDiagram",
+        "ComponentDiagram",
+        "DeploymentDiagram",
+        "Flowchart",
+        "ObjectDiagram",
+        "PetriNet",
+        "ReachabilityGraph",
+        "Sfc",
+        "SyntaxTree",
+        "UseCaseDiagram"
+      ],
+      "type": "string"
+    },
+    "DiagramNodeType": {
+      "enum": [
+        "activity",
+        "activityActionNode",
+        "activityFinalNode",
+        "activityForkNode",
+        "activityForkNodeHorizontal",
+        "activityInitialNode",
+        "activityMergeNode",
+        "activityObjectNode",
+        "activitySwimlane",
+        "bpmnAnnotation",
+        "bpmnCallActivity",
+        "bpmnDataObject",
+        "bpmnDataStore",
+        "bpmnEndEvent",
+        "bpmnGateway",
+        "bpmnGroup",
+        "bpmnIntermediateEvent",
+        "bpmnPool",
+        "bpmnStartEvent",
+        "bpmnSubprocess",
+        "bpmnTask",
+        "bpmnTransaction",
+        "class",
+        "colorDescription",
+        "communicationObjectName",
+        "component",
+        "componentInterface",
+        "componentSubsystem",
+        "deploymentArtifact",
+        "deploymentComponent",
+        "deploymentInterface",
+        "deploymentNode",
+        "flowchartDecision",
+        "flowchartFunctionCall",
+        "flowchartInputOutput",
+        "flowchartProcess",
+        "flowchartTerminal",
+        "objectName",
+        "package",
+        "petriNetPlace",
+        "petriNetTransition",
+        "reachabilityGraphMarking",
+        "sfcActionTable",
+        "sfcJump",
+        "sfcStart",
+        "sfcStep",
+        "sfcTransitionBranch",
+        "syntaxTreeNonterminal",
+        "syntaxTreeTerminal",
+        "titleAndDesctiption",
+        "useCase",
+        "useCaseActor",
+        "useCaseSystem"
+      ],
+      "type": "string"
+    },
+    "DiagramEdgeType": {
+      "enum": [
+        "ActivityControlFlow",
+        "BPMNAssociationFlow",
+        "BPMNDataAssociationFlow",
+        "BPMNMessageFlow",
+        "BPMNSequenceFlow",
+        "ClassAggregation",
+        "ClassBidirectional",
+        "ClassComposition",
+        "ClassDependency",
+        "ClassInheritance",
+        "ClassRealization",
+        "ClassUnidirectional",
+        "CommunicationLink",
+        "ComponentDependency",
+        "ComponentProvidedInterface",
+        "ComponentRequiredInterface",
+        "ComponentRequiredQuarterInterface",
+        "ComponentRequiredThreeQuarterInterface",
+        "DeploymentAssociation",
+        "DeploymentDependency",
+        "DeploymentProvidedInterface",
+        "DeploymentRequiredInterface",
+        "DeploymentRequiredQuarterInterface",
+        "DeploymentRequiredThreeQuarterInterface",
+        "FlowChartFlowline",
+        "ObjectLink",
+        "PetriNetArc",
+        "ReachabilityGraphArc",
+        "SfcDiagramEdge",
+        "SyntaxTreeLink",
+        "UseCaseAssociation",
+        "UseCaseExtend",
+        "UseCaseGeneralization",
+        "UseCaseInclude"
+      ],
+      "type": "string"
+    },
+    "OrthogonalEdgeData": {
+      "type": "object",
+      "additionalProperties": {},
+      "properties": {
+        "points": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/IPoint"
+          }
+        }
+      },
+      "required": [
+        "points"
+      ]
+    },
+    "IPoint": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ]
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://unpkg.com/@tumaet/apollon/schema/uml-model-4.schema.json",
+  "title": "Apollon UML model (v4)",
+  "description": "Canonical v4 Apollon diagram model — the output of importDiagram(). See https://ls1intum.github.io/Apollon/library/api/model-contract."
+}

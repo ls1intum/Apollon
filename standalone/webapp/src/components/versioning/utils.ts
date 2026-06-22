@@ -1,55 +1,5 @@
+import { isNamedVersion } from "@/lib/version/predicates"
 import type { PendingVersion } from "@/stores/useVersionStore"
-
-/**
- * Structural fingerprint for dirty detection. Mirrors `structuralFingerprint`
- * in `services/autoVersion.ts` on the server — both hash the same six fields
- * with the same VOLATILE_KEYS replacer, pinned by an integration test.
- *
- * The replacer drops UI/transient flags (selected, dragging, resizing, hidden,
- * measured) and capability flags (selectable, draggable, connectable, deletable)
- * so that React-Flow measurement noise doesn't register as a user change.
- */
-const VOLATILE_KEYS = new Set([
-  "selected",
-  "dragging",
-  "resizing",
-  "hidden",
-  "measured",
-  "selectable",
-  "draggable",
-  "connectable",
-  "deletable",
-])
-
-export function structuralFingerprint(model: {
-  nodes: unknown
-  edges: unknown
-  assessments?: unknown
-  title?: unknown
-  type?: unknown
-  version?: unknown
-}): string {
-  return JSON.stringify(
-    {
-      nodes: model.nodes,
-      edges: model.edges,
-      assessments: model.assessments,
-      title: model.title,
-      type: model.type,
-      version: model.version,
-    },
-    (key, value) => (VOLATILE_KEYS.has(key) ? undefined : value)
-  )
-}
-
-/**
- * True when the version should be treated as a user-intentional milestone:
- * either the user explicitly saved it (kind='user') or an auto-snapshot was
- * later given a name / description.
- */
-export function isNamedVersion(v: PendingVersion): boolean {
-  return v.kind === "user" || Boolean(v.name?.trim() || v.description?.trim())
-}
 
 export type GroupedEntry =
   | { kind: "single"; version: PendingVersion }

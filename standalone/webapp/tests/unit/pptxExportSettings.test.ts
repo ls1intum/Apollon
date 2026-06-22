@@ -18,15 +18,15 @@ describe("pptxExportSettings", () => {
   it("round-trips a save+load", () => {
     savePptxSettings({
       slideSize: "widescreen",
+      scalePercent: 150,
       diagramFit: "fill",
       fontFace: "Aptos",
-      scalePercent: 75,
     })
     expect(loadPptxSettings()).toEqual({
       slideSize: "widescreen",
+      scalePercent: 150,
       diagramFit: "fill",
       fontFace: "Aptos",
-      scalePercent: 75,
     })
   })
 
@@ -37,7 +37,7 @@ describe("pptxExportSettings", () => {
         slideSize: "huge",
         diagramFit: "bizarre",
         fontFace: "Comic Sans",
-        background: "rainbow",
+        scalePercent: "not a number",
       })
     )
     expect(loadPptxSettings()).toEqual(DEFAULT_PPTX_PERSISTED_SETTINGS)

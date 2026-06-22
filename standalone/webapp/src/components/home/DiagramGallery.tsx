@@ -8,7 +8,7 @@ import {
 } from "react"
 import { DiagramGallerySkeleton } from "@/components/home/DiagramGallerySkeleton"
 import type { UMLDiagramType, UMLModel } from "@tumaet/apollon"
-import { Link, useNavigate } from "react-router"
+import { Link, useNavigate } from "@tanstack/react-router"
 import { DiagramView } from "@/types"
 import { playgroundModelId } from "@/constants/playgroundDefaultDiagram"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
@@ -23,7 +23,7 @@ import {
   toggleSharedDiagramFavorite,
 } from "@/utils/sharedDiagramStorage"
 import {
-  buildSharedDiagramPath,
+  sharedDiagramRoute,
   getSharedDiagramViewBadge,
 } from "@/utils/sharedDiagramLinks"
 import {
@@ -331,7 +331,9 @@ export const DiagramGallery = ({
   const [highlightedDiagramId, setHighlightedDiagramId] = useState<
     string | null
   >(null)
-  const prevVisibleCountRef = useRef(INITIAL_VISIBLE_COUNT)
+  const [prevVisibleCount, setPrevVisibleCount] = useState(
+    INITIAL_VISIBLE_COUNT
+  )
   const sentinelRef = useRef<HTMLDivElement>(null)
 
   const localDiagrams = useMemo<GalleryDiagram[]>(() => {
@@ -556,14 +558,14 @@ export const DiagramGallery = ({
     Math.max(visibleCount, INITIAL_VISIBLE_COUNT),
     Math.max(deferredFilteredDiagrams.length, INITIAL_VISIBLE_COUNT)
   )
-  const prevVisibleCount = prevVisibleCountRef.current
   const visibleDiagrams = deferredFilteredDiagrams.slice(0, clampedVisibleCount)
   const hasMoreDiagrams = deferredFilteredDiagrams.length > clampedVisibleCount
 
-  // Track the previous visible count after commit (not during render) so the
-  // entrance-animation baseline stays correct under StrictMode/concurrent renders.
+  // Track the previous visible count in state, updated after commit (not during
+  // render), so the entrance-animation baseline stays correct under
+  // StrictMode/concurrent renders and `prevVisibleCount` is a pure render read.
   useEffect(() => {
-    prevVisibleCountRef.current = clampedVisibleCount
+    setPrevVisibleCount(clampedVisibleCount)
   }, [clampedVisibleCount])
 
   const sortByLabel =
@@ -609,16 +611,16 @@ export const DiagramGallery = ({
     isDiagramEmpty,
   })
 
-  const diagramPath = (diagram: GalleryDiagram) =>
+  const diagramNav = (diagram: GalleryDiagram) =>
     diagram.source === "local"
-      ? `/local/${diagram.id}`
-      : buildSharedDiagramPath(
+      ? ({ to: "/local/$id", params: { id: diagram.id } } as const)
+      : sharedDiagramRoute(
           diagram.id,
           diagram.lastSharedView ?? DiagramView.EDIT
         )
 
   const handleOpenDiagram = (diagram: GalleryDiagram) => {
-    navigate(diagramPath(diagram))
+    navigate(diagramNav(diagram))
   }
 
   const handleToggleDiagramFavorite = useCallback(
@@ -1063,7 +1065,7 @@ export const DiagramGallery = ({
                 {viewMode === "grid" ? (
                   <div
                     role="list"
-                    className="grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] justify-start gap-x-4 gap-y-6 md:grid-cols-[repeat(auto-fill,minmax(260px,1fr))] md:gap-x-6 md:gap-y-8 lg:gap-x-7 lg:gap-y-10 xl:grid-cols-[repeat(auto-fill,minmax(280px,1fr))]"
+                    className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,240px),1fr))] justify-start gap-4 md:grid-cols-[repeat(auto-fill,minmax(min(100%,260px),1fr))] md:gap-6 xl:grid-cols-[repeat(auto-fill,minmax(min(100%,280px),1fr))]"
                   >
                     {visibleDiagrams.map((diagram, index) => (
                       <div
@@ -1123,8 +1125,12 @@ export const DiagramGallery = ({
                         </thead>
                         <tbody>
                           {visibleDiagrams.map((diagram) => {
+                            const isUntitled = !diagram.title.trim()
                             const title =
-                              diagram.title.trim() || "Untitled Diagram"
+                              diagram.title.trim() || "Untitled diagram"
+                            const titleClass = isUntitled
+                              ? "truncate italic text-[var(--home-text-muted)]"
+                              : "truncate"
                             return (
                               <tr
                                 key={diagram.id}
@@ -1190,14 +1196,14 @@ export const DiagramGallery = ({
                                 </td>
                                 <td className="w-[26%] px-3 py-3 align-middle text-sm text-[var(--home-text-primary)]">
                                   {diagram.isExpired ? (
-                                    <span className="truncate">{title}</span>
+                                    <span className={titleClass}>{title}</span>
                                   ) : (
                                     <Link
-                                      to={diagramPath(diagram)}
+                                      {...diagramNav(diagram)}
                                       onClick={(event) =>
                                         event.stopPropagation()
                                       }
-                                      className="truncate hover:underline focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2"
+                                      className={`${titleClass} hover:underline focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2`}
                                     >
                                       {title}
                                     </Link>

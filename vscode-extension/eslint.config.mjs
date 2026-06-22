@@ -27,7 +27,7 @@ export default [
     languageOptions: { globals: { ...globals.browser } },
     plugins: { "react-hooks": reactHooks },
     rules: {
-      ...reactHooks.configs.recommended.rules,
+      ...reactHooks.configs.flat.recommended.rules,
       curly: "warn",
       eqeqeq: "warn",
       "no-throw-literal": "warn",

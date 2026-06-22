@@ -17,16 +17,28 @@ export default [
   {
     settings: { react: { version: "detect" } },
     plugins: { "react-hooks": reactHooks },
-    // rules-of-hooks at error (the pre-existing violations in
-    // lib/nodes/sfcDiagram/* were latent crashes — hooks called after an
-    // early return — and are now fixed). exhaustive-deps stays at warn
-    // because ~15 hooks have legitimate deliberate-stale-closure patterns
-    // (e.g. imperative editor lifecycle keyed on a single boolean).
+    // eslint-plugin-react-hooks v7 flat preset — bundles the React Compiler
+    // lint rules (preserve-manual-memoization, refs, purity, immutability,
+    // set-state-in-effect, …). exhaustive-deps stays at warn: the only
+    // remaining exhaustive-deps suppression is Apollon.tsx's mount-once lifecycle.
     rules: {
-      ...reactHooks.configs.recommended.rules,
+      ...reactHooks.configs.flat.recommended.rules,
       "react-hooks/exhaustive-deps": "warn",
       "react/prop-types": "off",
       "no-console": "error",
     },
+  },
+  {
+    // setState-in-effect is the correct pattern in these files — post-paint SVG
+    // geometry measurement, Yjs subscription sync, and bounded prop→state sync —
+    // so it is warn here while staying an error everywhere else.
+    files: [
+      "lib/components/collaboration/**/*.tsx",
+      "lib/components/popovers/**/*EditPopover.tsx",
+      "lib/edges/GenericEdge.tsx",
+      "lib/hooks/useRemoteDraggingNodes.ts",
+      "lib/hooks/useStraightPathEdge.ts",
+    ],
+    rules: { "react-hooks/set-state-in-effect": "warn" },
   },
 ]

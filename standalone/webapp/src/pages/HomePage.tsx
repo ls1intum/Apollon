@@ -1,5 +1,5 @@
 import React, { lazy, Suspense, useEffect, useRef } from "react"
-import { useNavigate, useLocation } from "react-router"
+import { useNavigate, useLocation } from "@tanstack/react-router"
 import { importDiagram } from "@tumaet/apollon"
 import { toast } from "react-toastify"
 import { log } from "@/logger"
@@ -10,6 +10,7 @@ import { DiagramGallerySkeleton } from "@/components/home/DiagramGallerySkeleton
 import { Capacitor } from "@capacitor/core"
 import { HomeFooter } from "@/components/home/HomeFooter"
 import { pruneExpiredSharedDiagrams } from "@/utils/sharedDiagramStorage"
+import { readHighlightSharedDiagramId } from "@/lib/navProvenance"
 import { useDocumentTitle } from "@/hooks/useDocumentTitle"
 
 const DiagramGallery = lazy(() =>
@@ -24,8 +25,7 @@ export const HomePage = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const highlightSharedDiagramId =
-    (location.state as { highlightSharedDiagramId?: string } | null)
-      ?.highlightSharedDiagramId ?? null
+    readHighlightSharedDiagramId(location.state) ?? null
   const { openModal } = useModalContext()
   const setCurrentModelId = usePersistenceModelStore(
     (state) => state.setCurrentModelId
@@ -44,7 +44,11 @@ export const HomePage = () => {
           throw new Error("Imported diagram has no id")
         }
         usePersistenceModelStore.getState().createModel(processedModel)
-        navigate(`/local/${processedModel.id}`, { replace: true })
+        navigate({
+          to: "/local/$id",
+          params: { id: processedModel.id },
+          replace: true,
+        })
       } catch (error) {
         log.error("Invalid JSON file", error as Error)
         toast.error("Failed to import diagram — invalid JSON file.")
@@ -78,7 +82,7 @@ export const HomePage = () => {
       />
 
       <main className="home-page-scrollbar app-scroll-y relative z-10 w-full min-h-0 flex-1 pb-24 md:pb-10">
-        <div className="flex w-full flex-col gap-5 px-4 pt-5 md:px-6 md:pt-6">
+        <div className="home-content-x mx-auto flex w-full max-w-[1536px] flex-col gap-6 pt-5 md:pt-6">
           <Suspense fallback={<DiagramGallerySkeleton />}>
             <DiagramGallery
               highlightSharedDiagramId={highlightSharedDiagramId}

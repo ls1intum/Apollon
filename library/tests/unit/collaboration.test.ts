@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest"
-import { sanitizeCollaborationViewport } from "@/utils/collaboration"
+import {
+  sanitizeCollaborationViewport,
+  sanitizeDraggingNodes,
+} from "@/utils/collaboration"
 
 // `sanitizeCollaborationViewport` is the trust boundary for peer-supplied
 // viewports before they reach React Flow's `setViewport`. The asserts target
@@ -46,5 +49,53 @@ describe("sanitizeCollaborationViewport", () => {
     expect(
       sanitizeCollaborationViewport({ x: 1, y: 2, zoom: 1, evil: "drop me" })
     ).toEqual({ x: 1, y: 2, zoom: 1 })
+  })
+})
+
+// `sanitizeDraggingNodes` is the trust boundary for the peer-supplied live-drag
+// payload before the overlay reader iterates it. A non-array value, or an entry
+// without a string id / finite position, would otherwise throw in the awareness
+// handler and break the overlay for everyone reading that peer.
+describe("sanitizeDraggingNodes", () => {
+  it("passes through well-formed entries", () => {
+    expect(
+      sanitizeDraggingNodes([
+        { id: "a", position: { x: 1, y: 2 } },
+        { id: "b", position: { x: 3, y: 4 }, width: 200, height: 100 },
+      ])
+    ).toEqual([
+      { id: "a", position: { x: 1, y: 2 } },
+      { id: "b", position: { x: 3, y: 4 }, width: 200, height: 100 },
+    ])
+  })
+
+  it("returns null for a non-array (the value that throws `for...of`)", () => {
+    expect(sanitizeDraggingNodes({})).toBeNull()
+    expect(sanitizeDraggingNodes("nope")).toBeNull()
+    expect(sanitizeDraggingNodes(null)).toBeNull()
+  })
+
+  it("drops entries with a missing/wrong-typed id or non-finite position", () => {
+    expect(
+      sanitizeDraggingNodes([
+        { position: { x: 1, y: 2 } }, // no id
+        { id: 5, position: { x: 1, y: 2 } }, // non-string id
+        { id: "c", position: { x: NaN, y: 2 } }, // non-finite
+        { id: "d" }, // no position
+        { id: "keep", position: { x: 0, y: 0 } },
+      ])
+    ).toEqual([{ id: "keep", position: { x: 0, y: 0 } }])
+  })
+
+  it("keeps null width/height but drops non-finite ones", () => {
+    expect(
+      sanitizeDraggingNodes([
+        { id: "a", position: { x: 0, y: 0 }, width: null, height: 10 },
+        { id: "b", position: { x: 0, y: 0 }, width: Infinity },
+      ])
+    ).toEqual([
+      { id: "a", position: { x: 0, y: 0 }, width: null, height: 10 },
+      { id: "b", position: { x: 0, y: 0 } },
+    ])
   })
 })

@@ -1,4 +1,5 @@
 import { Box, FormControl, InputLabel, MenuItem, Select } from "@mui/material"
+import { useReactiveNode } from "@/hooks"
 import { useReactFlow } from "@xyflow/react"
 import { PopoverProps } from "../types"
 import { BPMNGatewayType } from "@/types"
@@ -7,8 +8,8 @@ import { TextField } from "@/components/ui"
 export const BPMNGatewayEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
-  const { getNode, updateNodeData } = useReactFlow()
-  const node = getNode(elementId)
+  const { updateNodeData } = useReactFlow()
+  const node = useReactiveNode(elementId)
   if (!node) return null
 
   const data = node.data as { name?: string; gatewayType?: BPMNGatewayType }

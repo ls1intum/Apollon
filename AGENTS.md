@@ -34,6 +34,8 @@ A pnpm + Vite monorepo (the server compiles with `tsc`, not Vite).
 
 - **Squash-merge only** — the PR title becomes the merge commit subject and must be a valid Conventional Commit (enforced in CI by [`pr-title.yml`](.github/workflows/pr-title.yml)).
 - **Changesets** carry release notes. Run `pnpm changeset` when you change `@tumaet/apollon`, `@tumaet/webapp`, or `@tumaet/server`. Skip docs-/CI-/refactor-only PRs and the VS Code extension (separate release; excluded in `.changeset/config.json`). Writing rules: [`release-notes.md`](docs/contributor/development/release-notes.md).
+- **Changeset summaries are user-voice.** Lead with what the user can now do, or the symptom a fix removes; no internal types, hook names, or file paths — except a library entry may name the public API it adds, since that _is_ the user-facing contract. Bad: `feat: add ApollonEditor.setElementHighlights()`. Good: `Highlight individual diagram elements from embedding apps via setElementHighlights().` The summary becomes the changelog entry verbatim.
+- **The PR title's Conventional Commit type picks the release-note group** — `scripts/extract-changelog.mjs` regroups by it. The full type → group mapping lives in one place: [release-notes.md § How your change gets grouped](docs/contributor/development/release-notes.md#how-your-change-gets-grouped). Pick the type for the user-visible kind of change, not the diff's mechanics.
 
 ## Gotchas / do not
 

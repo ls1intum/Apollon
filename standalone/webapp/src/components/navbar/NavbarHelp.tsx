@@ -4,11 +4,11 @@ import Divider from "@mui/material/Divider"
 import Menu from "@mui/material/Menu"
 import MenuItem from "@mui/material/MenuItem"
 import Typography from "@mui/material/Typography/Typography"
-import { secondary } from "@/constants"
 import { bugReportURL } from "@/constants/urls"
 import { useModalContext } from "@/contexts"
-import { useLocation, useNavigate } from "react-router"
+import { useLocation, useNavigate } from "@tanstack/react-router"
 import { KeyboardArrowDownIcon } from "../Icon"
+import { navbarButtonStyle } from "./styleConstants"
 
 interface Props {
   color?: string
@@ -24,8 +24,12 @@ export const NavbarHelp: FC<Props> = ({ color }) => {
   // to the diagram they were editing. This is the single editor → legal
   // chokepoint (both the desktop and mobile navbars render NavbarHelp), so the
   // dead-end fix lives in exactly one place.
-  const goToLegalPage = (path: string) => {
-    navigate(path, { state: { from: location.pathname + location.search } })
+  const goToLegalPage = (path: "/imprint" | "/privacy") => {
+    navigate({
+      to: path,
+      // searchStr includes the leading "?".
+      state: { from: location.pathname + location.searchStr },
+    })
     handleClose()
   }
 
@@ -55,7 +59,7 @@ export const NavbarHelp: FC<Props> = ({ color }) => {
   }
 
   const linkToPlayground = () => {
-    navigate("/playground")
+    navigate({ to: "/playground" })
     handleClose()
   }
 
@@ -75,9 +79,9 @@ export const NavbarHelp: FC<Props> = ({ color }) => {
         aria-haspopup="true"
         aria-expanded={open ? "true" : undefined}
         onClick={openMenu}
-        sx={{ textTransform: "none" }} // This removes the uppercase transformation
+        sx={navbarButtonStyle(color)}
       >
-        <Typography color={color ?? secondary}>Help</Typography>
+        <Typography color="inherit">Help</Typography>
         <KeyboardArrowDownIcon width={16} height={16} />
       </Button>
       <Menu

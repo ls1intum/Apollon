@@ -13,10 +13,11 @@ import { useShallow } from "zustand/shallow"
 
 export const useNodeDragStop = () => {
   const { screenToFlowPosition, getIntersectingNodes } = useReactFlow()
-  const { nodes, setNodes } = useDiagramStore(
+  const { nodes, setNodes, endTransientNodeBroadcast } = useDiagramStore(
     useShallow((state) => ({
       nodes: state.nodes,
       setNodes: state.setNodes,
+      endTransientNodeBroadcast: state.endTransientNodeBroadcast,
     }))
   )
 
@@ -31,97 +32,117 @@ export const useNodeDragStop = () => {
       // Clear alignment guides when drag stops
       clearGuides()
 
-      const draggedLastPoint = screenToFlowPosition({
-        x:
-          "changedTouches" in event
-            ? // event is handled as Mouse event in the library but also it is touch event for mobile users
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (event as any).changedTouches[0].clientX
-            : event.clientX,
-        y:
-          "changedTouches" in event
-            ? // event is handled as Mouse event in the library but also it is touch event for mobile users
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (event as any).changedTouches[0].clientY
-            : event.clientY,
-      })
+      // Tear down the peers' live-drag overlay once this handler's settle
+      // `setNodes` (below, every branch) has committed the final position to
+      // the document — `finally` guarantees the order, so peers apply the
+      // durable position before the overlay is removed (no snap-back). The
+      // dragging:false `onNodesChange` frame usually carries the same position
+      // as the last drag frame and short-circuits, so this is the drag path's
+      // clear; resize (no drag-stop) clears from `onNodesChange` instead.
+      try {
+        const draggedLastPoint = screenToFlowPosition({
+          x:
+            "changedTouches" in event
+              ? // event is handled as Mouse event in the library but also it is touch event for mobile users
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (event as any).changedTouches[0].clientX
+              : event.clientX,
+          y:
+            "changedTouches" in event
+              ? // event is handled as Mouse event in the library but also it is touch event for mobile users
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (event as any).changedTouches[0].clientY
+              : event.clientY,
+        })
 
-      const intersectionsWithDroppedLocation = getIntersectingNodes({
-        x: draggedLastPoint.x,
-        y: draggedLastPoint.y,
-        width: CANVAS.MOUSE_UP_OFFSET_PX,
-        height: CANVAS.MOUSE_UP_OFFSET_PX,
-      }).filter((n) => {
-        return (
-          isParentNodeType(n.type) &&
-          n.id !== draggedNode.id &&
-          n.type &&
-          draggedNode.type &&
-          canDropIntoParent(draggedNode.type, n.type)
-        )
-      })
-
-      const parentNode = intersectionsWithDroppedLocation.length
-        ? intersectionsWithDroppedLocation[
-            intersectionsWithDroppedLocation.length - 1
-          ]
-        : null
-
-      if (!parentNode) {
-        const updatedNode = nodes.map((n) =>
-          n.id === draggedNode.id
-            ? {
-                ...draggedNode,
-                position: getPositionOnCanvas(draggedNode, nodes),
-                parentId: undefined,
-              }
-            : n
-        )
-        setNodes(updatedNode)
-        return
-      }
-
-      const isThisNewParent =
-        parentNode && parentNode?.id !== draggedNode.parentId
-
-      if (isThisNewParent) {
-        const updatedNode: Node = {
-          ...structuredClone(draggedNode),
-          position: getPositionOnCanvas(draggedNode, nodes),
-          parentId: undefined,
-        }
-        const parentsFlowPosition = getPositionOnCanvas(parentNode, nodes)
-
-        updatedNode.position.x -= parentsFlowPosition.x
-        updatedNode.position.y -= parentsFlowPosition.y
-        updatedNode.parentId = parentNode.id
-
-        const updatedNodes = structuredClone(nodes)
-        const updatedNodesList = sortNodesTopologically(
-          resizeAllParents(
-            updatedNode,
-            updatedNodes.map((n) => (n.id === updatedNode.id ? updatedNode : n))
+        const intersectionsWithDroppedLocation = getIntersectingNodes({
+          x: draggedLastPoint.x,
+          y: draggedLastPoint.y,
+          width: CANVAS.MOUSE_UP_OFFSET_PX,
+          height: CANVAS.MOUSE_UP_OFFSET_PX,
+        }).filter((n) => {
+          return (
+            isParentNodeType(n.type) &&
+            n.id !== draggedNode.id &&
+            n.type &&
+            draggedNode.type &&
+            canDropIntoParent(draggedNode.type, n.type)
           )
-        )
+        })
 
-        setNodes(updatedNodesList)
-        return
-      }
+        const parentNode = intersectionsWithDroppedLocation.length
+          ? intersectionsWithDroppedLocation[
+              intersectionsWithDroppedLocation.length - 1
+            ]
+          : null
 
-      if (draggedNode.parentId) {
-        const updatedNodes = structuredClone(nodes)
-        const updatedNodesList = sortNodesTopologically(
-          resizeAllParents(
-            draggedNode,
-            updatedNodes.map((n) =>
-              n.id === draggedNode.id ? { ...draggedNode } : n
+        if (!parentNode) {
+          const updatedNode = nodes.map((n) =>
+            n.id === draggedNode.id
+              ? {
+                  ...draggedNode,
+                  position: getPositionOnCanvas(draggedNode, nodes),
+                  parentId: undefined,
+                }
+              : n
+          )
+          setNodes(updatedNode)
+          return
+        }
+
+        const isThisNewParent =
+          parentNode && parentNode?.id !== draggedNode.parentId
+
+        if (isThisNewParent) {
+          const updatedNode: Node = {
+            ...structuredClone(draggedNode),
+            position: getPositionOnCanvas(draggedNode, nodes),
+            parentId: undefined,
+          }
+          const parentsFlowPosition = getPositionOnCanvas(parentNode, nodes)
+
+          updatedNode.position.x -= parentsFlowPosition.x
+          updatedNode.position.y -= parentsFlowPosition.y
+          updatedNode.parentId = parentNode.id
+
+          const updatedNodes = structuredClone(nodes)
+          const updatedNodesList = sortNodesTopologically(
+            resizeAllParents(
+              updatedNode,
+              updatedNodes.map((n) =>
+                n.id === updatedNode.id ? updatedNode : n
+              )
             )
           )
-        )
-        setNodes(updatedNodesList)
+
+          setNodes(updatedNodesList)
+          return
+        }
+
+        if (draggedNode.parentId) {
+          const updatedNodes = structuredClone(nodes)
+          const updatedNodesList = sortNodesTopologically(
+            resizeAllParents(
+              draggedNode,
+              updatedNodes.map((n) =>
+                n.id === draggedNode.id ? { ...draggedNode } : n
+              )
+            )
+          )
+          setNodes(updatedNodesList)
+        }
+      } finally {
+        endTransientNodeBroadcast()
       }
     },
-    [screenToFlowPosition, nodes, getIntersectingNodes, setNodes, clearGuides]
+    [
+      screenToFlowPosition,
+      nodes,
+      getIntersectingNodes,
+      setNodes,
+      clearGuides,
+      endTransientNodeBroadcast,
+    ]
   )
 
   return onNodeDragStop

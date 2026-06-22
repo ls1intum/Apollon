@@ -1,7 +1,8 @@
 import { NodeProps, NodeResizer, type Node } from "@xyflow/react"
+import { usePopoverAnchor } from "@/hooks/usePopoverAnchor"
 import { DefaultNodeWrapper } from "@/nodes/wrappers"
 import { ObjectNameSVG } from "@/components"
-import { useEffect, useMemo, useRef } from "react"
+import { useEffect, useMemo } from "react"
 import { ObjectNodeProps } from "@/types"
 import { useDiagramStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
@@ -30,7 +31,7 @@ export function ObjectName({
 
   const isDiagramModifiable = useDiagramModifiable()
 
-  const objectSvgWrapperRef = useRef<HTMLDivElement | null>(null)
+  const [anchorEl, anchorRef] = usePopoverAnchor()
 
   // Object diagrams don't have stereotypes, so header height is consistent
   const headerHeight = LAYOUT.DEFAULT_HEADER_HEIGHT
@@ -140,7 +141,7 @@ export function ObjectName({
         handleStyle={{ width: 8, height: 8 }}
       />
 
-      <div ref={objectSvgWrapperRef}>
+      <div ref={anchorRef}>
         <ObjectNameSVG
           width={finalWidth}
           height={minHeight}
@@ -150,7 +151,7 @@ export function ObjectName({
         />
       </div>
       <PopoverManager
-        anchorEl={objectSvgWrapperRef.current}
+        anchorEl={anchorEl}
         elementId={id}
         type={"objectName" as const}
       />

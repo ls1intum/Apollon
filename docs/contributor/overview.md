@@ -44,11 +44,11 @@ pnpm test            # library unit tests
 
 If the change is user-, embedder-, or operator-visible, also add a changeset — `pnpm changeset` — per the [release-notes guide](/contributor/development/release-notes).
 
-The pre-push hook also runs `pnpm run lint`. CI runs the full matrix plus visual regression, Docker builds, and the library `publint` + bundle-size budgets, and the advisory **Verify changesets** check flags a tracked-package change that ships without one.
+The pre-push hook also runs `pnpm run lint`. CI runs the full matrix on every PR, Docker builds, and the library `publint` + bundle-size budgets, and the advisory **Verify changesets** check flags a tracked-package change that ships without one. Visual regression runs per-PR too (see [Visual tests](/contributor/development/visual-tests)) so a rendering change refreshes its own baselines; the document-growth budget is guarded per-PR on Firefox, the engine the exam-freeze was reported on.
 
 ## Commit messages
 
-Conventional commits are enforced by `commitlint`. The `scope-enum` rule constrains scopes:
+Conventional commits are enforced by `commitlint`, which constrains both the **type** (`type-enum`) and the **scope** (`scope-enum`):
 
 ```
 chore(library): drop dead deps
@@ -56,4 +56,6 @@ fix(server): handle gunzip Z_DATA_ERROR in autoVersion
 refactor(vscode-extension)!: drop deprecated webview-ui-toolkit
 ```
 
-Valid scopes: `library`, `server`, `webapp`, `vscode`, `vscode-extension`, `deps`, `ci`, `docker`, `docs`, `release`.
+Valid types: `feat`, `fix`, `perf`, `docs`, `refactor`, `build`, `chore`, `ci`, `test`, `style`, `revert`. Valid scopes: `library`, `server`, `webapp`, `vscode`, `vscode-extension`, `deps`, `ci`, `docker`, `docs`, `release`. (`commitlint.config.mjs` is the source of truth.)
+
+Because the repo is squash-merge only, the PR title's type becomes the commit type — and that type **groups the release note** (the full mapping is in [Release notes → How your change gets grouped](/contributor/development/release-notes#how-your-change-gets-grouped)). Pick it for the user-visible kind of change.

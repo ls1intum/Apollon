@@ -3,7 +3,7 @@ import { Paper, Popover, PopoverOrigin } from "@mui/material"
 
 interface GenericPopoverProps {
   id: string
-  anchorEl: HTMLElement | SVGSVGElement | null | SVGPathElement
+  anchorEl: HTMLElement | SVGElement | null
   open: boolean
   onClose: () => void
   children: ReactNode
@@ -83,6 +83,11 @@ export const GenericPopover: React.FC<GenericPopoverProps> = ({
           width: "100%",
           maxWidth,
           minWidth,
+          // border-box so `maxWidth` is the popover's TOTAL width; with the
+          // default content-box the px padding was added on top, pushing the
+          // paper past its max and clipping right-edge controls (e.g. the
+          // colour toggle and per-row delete buttons).
+          boxSizing: "border-box",
           px: 1,
           py: 1.25,
           display: "flex",

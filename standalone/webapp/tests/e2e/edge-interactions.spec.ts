@@ -182,7 +182,10 @@ test.describe("Zoom-adaptive bend handles", () => {
       await page.waitForTimeout(60)
     }
 
-    const zoomed = await selectEdge(page, INHERITANCE)
+    // The edge stays selected across zoom, so re-read its handles directly.
+    // (Re-clicking would target the edge's on-screen position, which the
+    // center-anchored zoom-in can pan out of view.)
+    const zoomed = edgeById(page, INHERITANCE)
     const countZoomed = await zoomed.locator(".edge-bend-handle").count()
 
     // Monotonic: never fewer than at 1x, and at least one once zoomed in.

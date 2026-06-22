@@ -5,7 +5,6 @@ import { useStepPathEdge } from "@/hooks/useStepPathEdge"
 import { useDiagramStore, usePopoverStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { useToolbar } from "@/hooks"
-import { useRef } from "react"
 import { FeedbackDropzone } from "@/components/wrapper/FeedbackDropzone"
 import { AssessmentSelectableWrapper } from "@/components/wrapper/AssessmentSelectableWrapper"
 import { getCustomColorsFromDataForEdge } from "@/utils/layoutUtils"
@@ -25,7 +24,6 @@ export const ActivityDiagramEdge = ({
   targetHandleId,
   data,
 }: BaseEdgeProps) => {
-  const anchorRef = useRef<SVGSVGElement | null>(null)
   const { handleDelete } = useToolbar({ id })
 
   const config = useEdgeConfig(type as "ActivityControlFlow")
@@ -112,10 +110,10 @@ export const ActivityDiagramEdge = ({
 
         <EdgeMiddleLabels
           label={data?.label}
-          pathMiddlePosition={edgeData.pathMiddlePosition}
-          isMiddlePathHorizontal={edgeData.isMiddlePathHorizontal}
+          activePoints={edgeData.activePoints}
           showRelationshipLabels={true}
-          avoidToolbarOverlap={true}
+          nodeRects={edgeData.nodeRects}
+          neighborGeometry={edgeData.neighborGeometry}
           textColor={textColor}
         />
 
@@ -125,7 +123,6 @@ export const ActivityDiagramEdge = ({
           toolbarPosition={edgeData.toolbarPosition}
           isDiagramModifiable={isDiagramModifiable}
           assessments={assessments}
-          anchorRef={anchorRef}
           handleDelete={handleDelete}
           setPopOverElementId={setPopOverElementId}
           type={type}

@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useMemo, useRef } from "react"
 import { useStore } from "@xyflow/react"
-import { log } from "../logger"
 import {
   calculateOverlayPath,
   calculateStraightPath,
@@ -16,6 +15,7 @@ import {
   computeToolbarPosition,
   isLengthEditableAtZoom,
 } from "@/utils/geometry/bendHandles"
+import { getMidSegment } from "@/utils/geometry/edgeLabelLayout"
 import { useMetadataStore } from "@/store/context"
 import {
   useEdgeLineJumps,
@@ -104,25 +104,15 @@ export const useStraightPathEdge = ({
     !isReconnecting && type !== "UseCaseInclude" && type !== "UseCaseExtend"
   )
 
-  const [pathMiddlePosition, setPathMiddlePosition] = useState<IPoint>(() => ({
-    x:
-      (adjustedSourceCoordinates.sourceX + adjustedTargetCoordinates.targetX) /
-      2,
-    y:
-      (adjustedSourceCoordinates.sourceY + adjustedTargetCoordinates.targetY) /
-      2,
-  }))
-  const [isMiddlePathHorizontal, setIsMiddlePathHorizontal] = useState<boolean>(
-    () => {
-      const dx = Math.abs(
-        adjustedTargetCoordinates.targetX - adjustedSourceCoordinates.sourceX
-      )
-      const dy = Math.abs(
-        adjustedTargetCoordinates.targetY - adjustedSourceCoordinates.sourceY
-      )
-      return dx > dy
-    }
-  )
+  // Midpoint + orientation derived purely from the two endpoints. A straight
+  // edge's middle is analytic, so this replaces the old getPointAtLength +
+  // setTimeout effect (and its two redundant fallback effects) with one
+  // synchronous, DOM-free, export-stable computation.
+  const { point: pathMiddlePosition, isHorizontal: isMiddlePathHorizontal } =
+    useMemo(
+      () => getMidSegment(basePoints, basePoints[0], basePoints[1]),
+      [basePoints]
+    )
 
   const currentPath = useMemo(() => {
     if (lineJumps.length > 0) return buildEdgePath(basePoints, lineJumps)
@@ -162,88 +152,6 @@ export const useStraightPathEdge = ({
     type,
     currentPath,
     lineJumps,
-  ])
-
-  useEffect(() => {
-    if (pathRef.current) {
-      try {
-        const totalLength = pathRef.current.getTotalLength()
-        if (totalLength === 0 || !isFinite(totalLength)) {
-          const middleX =
-            (adjustedSourceCoordinates.sourceX +
-              adjustedTargetCoordinates.targetX) /
-            2
-          const middleY =
-            (adjustedSourceCoordinates.sourceY +
-              adjustedTargetCoordinates.targetY) /
-            2
-          setPathMiddlePosition({ x: middleX, y: middleY })
-
-          const dx = Math.abs(
-            adjustedTargetCoordinates.targetX -
-              adjustedSourceCoordinates.sourceX
-          )
-          const dy = Math.abs(
-            adjustedTargetCoordinates.targetY -
-              adjustedSourceCoordinates.sourceY
-          )
-          setIsMiddlePathHorizontal(dx > dy)
-          return
-        }
-
-        const halfLength = totalLength / 2
-        const middlePoint = pathRef.current.getPointAtLength(halfLength)
-        const pointOnCloseToMiddle = pathRef.current.getPointAtLength(
-          Math.min(halfLength + 2, totalLength)
-        )
-        const isHorizontal =
-          Math.abs(pointOnCloseToMiddle.x - middlePoint.x) >
-          Math.abs(pointOnCloseToMiddle.y - middlePoint.y)
-
-        setIsMiddlePathHorizontal(isHorizontal)
-        setPathMiddlePosition({ x: middlePoint.x, y: middlePoint.y })
-      } catch (error) {
-        log.warn("Path calculation failed, using fallback:", error)
-        const middleX = (sourceX + targetX) / 2
-        const middleY = (sourceY + targetY) / 2
-        setPathMiddlePosition({ x: middleX, y: middleY })
-
-        const dx = Math.abs(targetX - sourceX)
-        const dy = Math.abs(
-          adjustedTargetCoordinates.targetY - adjustedSourceCoordinates.sourceY
-        )
-        setIsMiddlePathHorizontal(dx > dy)
-      }
-    }
-  }, [
-    currentPath,
-    adjustedSourceCoordinates.sourceX,
-    adjustedSourceCoordinates.sourceY,
-    adjustedTargetCoordinates.targetX,
-    adjustedTargetCoordinates.targetY,
-  ])
-
-  useEffect(() => {
-    const middleX =
-      (adjustedSourceCoordinates.sourceX + adjustedTargetCoordinates.targetX) /
-      2
-    const middleY =
-      (adjustedSourceCoordinates.sourceY + adjustedTargetCoordinates.targetY) /
-      2
-    setPathMiddlePosition({ x: middleX, y: middleY })
-
-    const dx = Math.abs(
-      adjustedTargetCoordinates.targetX - adjustedSourceCoordinates.sourceX
-    )
-    const dy = Math.abs(
-      adjustedTargetCoordinates.targetY - adjustedSourceCoordinates.sourceY
-    )
-    setIsMiddlePathHorizontal(dx > dy)
-  }, [
-    adjustedSourceCoordinates.sourceX,
-    adjustedSourceCoordinates.sourceY,
-    adjustedTargetCoordinates.targetX,
-    adjustedTargetCoordinates.targetY,
   ])
 
   const [sourcePoint, targetPoint] = basePoints

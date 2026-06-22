@@ -1,6 +1,6 @@
 {
   "name": "@tumaet/server",
-  "version": "4.6.0",
+  "version": "4.8.0",
   "private": true,
   "type": "module",
   "license": "MIT",
@@ -8,7 +8,7 @@
     "node": ">=24.15.0"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node --eval \"require('node:fs').cpSync('assets','dist/assets',{recursive:true})\"",
     "dev": "tsx watch --clear-screen=false src/server.ts",
     "start": "node dist/src/server.js",
     "lint": "eslint .",
@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@tumaet/apollon": "workspace:*",
+    "canvas": "npm:@napi-rs/canvas@1.0.0",
     "cookie": "1.0.2",
     "cors": "2.8.5",
     "dotenv": "16.4.7",

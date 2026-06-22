@@ -45,11 +45,13 @@ jobs:
               - '.nvmrc'
               - 'tsconfig*.json'
               - '.github/workflows/pr-health-checks.yml'
+              - '.github/actions/**'
             library:
               - 'library/**'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
               - '.github/workflows/pr-health-checks.yml'
+              - '.github/actions/**'
 
   # No path filter: a stale CDN version can drift in via a doc edit OR a bump,
   # so check every PR. Pure Node — no pnpm install needed.
@@ -70,6 +72,9 @@ jobs:
       - name: Check README + docs version sync
         run: node scripts/sync-library-version.mjs --check
 
+      - name: Check release-note taxonomy sync
+        run: node scripts/check-release-taxonomy.mjs
+
   lint-and-format-check:
     needs: [detect-changes]
     if: needs.detect-changes.outputs.should-skip != 'true' && needs.detect-changes.outputs.code == 'true'
@@ -79,17 +84,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@ac6db6d3c1f721f886538a378a2d73e85697340a # v6.0.8
-
-      - name: Set up Node
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
-        with:
-          node-version-file: ".nvmrc"
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup pnpm + Node + install
+        uses: ./.github/actions/setup
 
       - name: Run Lint
         run: pnpm run lint
@@ -100,6 +96,13 @@ jobs:
       - name: Check build
         run: pnpm run build
 
+      - name: Verify the DEV perf probe is stripped from the library build
+        # Asserts the import.meta.env.DEV-gated instrumentation dead-code-
+        # eliminates from library/dist. Kept as its own step rather than in the
+        # library build script so the Docker image build (which doesn't copy
+        # scripts/) isn't affected.
+        run: node scripts/check-no-perf-hooks.mjs
+
       - name: Typecheck docs
         # `docs/` imports `@tumaet/apollon` for the live embed, so its
         # `tsc --noEmit` resolves through the library's exports map and
@@ -108,6 +111,12 @@ jobs:
 
       - name: Run unit tests
         run: pnpm run test
+
+      - name: Run webapp unit tests
+        # Root `pnpm run test` covers only the library; run the webapp's vitest
+        # suite here too (it resolves @tumaet/apollon through the dist built
+        # above) so webapp logic like the autosaver is actually gated.
+        run: pnpm --filter @tumaet/webapp run test
 
   # Root `pnpm run test` covers only the library. The server's vitest suite
   # (incl. the PDF-conversion regression test) spawns the compiled worker and
@@ -124,17 +133,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@ac6db6d3c1f721f886538a378a2d73e85697340a # v6.0.8
-
-      - name: Set up Node
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
-        with:
-          node-version-file: ".nvmrc"
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup pnpm + Node + install
+        uses: ./.github/actions/setup
 
       - name: Build library and server
         run: pnpm run build:lib && pnpm run build:server
@@ -151,17 +151,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@ac6db6d3c1f721f886538a378a2d73e85697340a # v6.0.8
-
-      - name: Set up Node
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
-        with:
-          node-version-file: ".nvmrc"
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup pnpm + Node + install
+        uses: ./.github/actions/setup
 
       - name: Build
         run: pnpm run build:lib
@@ -171,17 +162,29 @@ jobs:
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-v1.59.1-${{ hashFiles('standalone/webapp/package.json') }}
+          # Browser-specific key: the chromium and firefox jobs share this cache
+          # path but install different browsers, so they must not share a key
+          # (a firefox-only cache would make this job skip its chromium install).
+          key: playwright-chromium-${{ runner.os }}-v1.59.1-${{ hashFiles('standalone/webapp/package.json') }}
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: pnpm --filter @tumaet/webapp exec playwright install chromium
 
-      - name: Install Playwright system deps
-        run: pnpm --filter @tumaet/webapp exec playwright install-deps chromium
+      # Shared with perf-firefox-tests; the dpkg-lock hang it guards is
+      # documented in the composite action.
+      - name: Install Playwright system deps (bounded + retried)
+        uses: ./.github/actions/playwright-install-deps
+        with:
+          browser: chromium
 
       - name: Run E2E tests
         run: pnpm --filter @tumaet/webapp exec playwright test tests/e2e/
+
+      # No chromium document-growth budget: the metric is engine-independent and
+      # the Firefox budget (perf-firefox-tests below) is the per-PR guard for the
+      # exam-freeze regression, since Firefox is the engine the freeze was
+      # reported on and its GC surfaces unbounded growth sooner.
 
       - name: Upload Playwright report
         if: ${{ failure() }}
@@ -199,6 +202,67 @@ jobs:
           path: standalone/webapp/test-results/
           retention-days: 14
 
+  # Document-growth budget on Firefox too: its GC surfaces unbounded-growth
+  # regressions sooner. (The functional e2e suite isn't on Firefox yet — it has
+  # Firefox-only rendering quirks that need separate triage.)
+  #
+  # Bare runner, NOT the Playwright container: the container's bundled Firefox
+  # crashes (exitCode=1) under GitHub Actions' container sandbox, while the host
+  # runner launches it reliably. Do not "simplify" this into the container.
+  perf-firefox-tests:
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.should-skip != 'true' && needs.detect-changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Setup pnpm + Node + install
+        uses: ./.github/actions/setup
+
+      - name: Build
+        run: pnpm run build:lib
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          # Firefox-specific key — must differ from the chromium jobs' key (same
+          # cache path, different browser) so neither poisons the other's cache.
+          key: playwright-firefox-${{ runner.os }}-v1.59.1-${{ hashFiles('standalone/webapp/package.json') }}
+
+      - name: Install Playwright Firefox
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm --filter @tumaet/webapp exec playwright install firefox
+
+      # Shared with e2e-tests; the dpkg-lock hang it guards is documented in
+      # the composite action.
+      - name: Install Playwright system deps (bounded + retried)
+        uses: ./.github/actions/playwright-install-deps
+        with:
+          browser: firefox
+
+      - name: Run Firefox performance budget tests
+        run: pnpm --filter @tumaet/webapp run test:perf:firefox
+
+      - name: Upload Playwright report
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: playwright-report-perf-firefox
+          path: standalone/webapp/playwright-report/
+          retention-days: 14
+
+      - name: Upload Playwright test results
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: playwright-test-results-perf-firefox
+          path: standalone/webapp/test-results/
+          retention-days: 14
+
   # Library has `engines.node: ">=22"` for its published consumers — back the
   # promise with a build+test on Node 22 LTS so a Node-24-only feature can't
   # silently land in the npm tarball.
@@ -211,19 +275,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@ac6db6d3c1f721f886538a378a2d73e85697340a # v6.0.8
-
-      - name: Set up Node 22 LTS
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+      - name: Setup pnpm + Node 22 + install
+        # Node 22 (the library's published floor) instead of the repo's .nvmrc,
+        # and engine-strict off so the root `>=24.15.0` gate doesn't reject it.
+        uses: ./.github/actions/setup
         with:
           node-version: "22"
-          cache: "pnpm"
-
-      - name: Install dependencies
-        # `engine-strict=true` rejects Node 22 against the root `>=24.15.0`
-        # gate; library workspace is `>=22`, so install with the flag off.
-        run: pnpm install --frozen-lockfile --config.engine-strict=false
+          engine-strict: "false"
 
       - name: Build library
         run: pnpm --filter @tumaet/apollon run build
@@ -265,7 +323,15 @@ jobs:
         # of >10% (size-limit default) per artifact.
         run: pnpm run size
 
-  # Baseline regeneration: see docs/development/visual-tests.md.
+  # Pinned Playwright container so screenshot baselines diff against one Linux
+  # rendering stack regardless of contributor OS (see
+  # docs/contributor/development/visual-tests.md). Runs per-PR so a rendering
+  # change refreshes its own baselines in the same PR, instead of merging
+  # unguarded and surfacing later as an ownerless failure.
+  #
+  # Gated on `code`, not a curated render-only path filter: rendering output is
+  # not statically enumerable (an app-shell layout edit shifts every diagram
+  # baseline), so anything that could touch pixels must run. Docs-only PRs skip.
   visual-regression-tests:
     needs: [detect-changes]
     if: needs.detect-changes.outputs.should-skip != 'true' && needs.detect-changes.outputs.code == 'true'
@@ -277,25 +343,31 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
-      - name: Install Node 24
-        shell: bash
-        run: |
-          set -euo pipefail
-          curl -fsSL https://deb.nodesource.com/setup_24.x | bash -
-          apt-get install -y nodejs
-          node --version
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@ac6db6d3c1f721f886538a378a2d73e85697340a # v6.0.8
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      # The container ships an older Node; the composite installs Node from
+      # .nvmrc via setup-node instead of curl-ing NodeSource on every run.
+      - name: Setup pnpm + Node + install
+        uses: ./.github/actions/setup
 
       - name: Build
         run: pnpm run build:lib
 
       - name: Run visual regression tests
-        run: pnpm --filter @tumaet/webapp exec playwright test tests/visual/
+        run: pnpm --filter @tumaet/webapp run test:visual
+
+      # Point an author whose UI change is intentional at the way to refresh
+      # baselines, right in the Checks UI. No extra permissions needed.
+      - name: Explain how to refresh baselines
+        if: ${{ failure() }}
+        run: |
+          {
+            echo "### Visual regression failed"
+            echo ""
+            echo "If this diff is an **intentional** UI change, refresh the baselines:"
+            echo "- A maintainer runs **Actions → Update Visual Baselines → Run workflow** against this PR's branch — it regenerates snapshots inside this exact pinned container and commits them back."
+            echo "- Or regenerate locally in the container — see \`docs/contributor/development/visual-tests.md\`."
+            echo ""
+            echo "Otherwise download the \`playwright-report-visual\` artifact to inspect the actual-vs-expected diff."
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload Playwright report
         if: ${{ failure() }}
@@ -327,6 +399,7 @@ jobs:
         server-tests,
         library-node22-compat,
         e2e-tests,
+        perf-firefox-tests,
         visual-regression-tests,
       ]
     if: always()

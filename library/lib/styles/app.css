@@ -1,16 +1,195 @@
+/* NOTE: this file is inlined verbatim into the headless-export CSS chunk
+   (see lib/utils/exportStyles.ts). Keep it free of `@font-face`, `url(...)`,
+   and `@import`, or those assets leak into that chunk. The Inter font ships
+   separately (lib/styles/fonts.css + lib/utils/exportFonts.ts). */
+
+/* Safe-area floor. Consumers below read `var(--safe-area-inset-*, 0px)`; this
+   maps them to the UA insets so they work in any browser/embedded webview
+   (Artemis, vscode) with `viewport-fit=cover`. The standalone webapp may
+   override these at runtime via the Capacitor safe-area plugin (inline style
+   on documentElement wins); off-native and everywhere else, env() is the
+   source of truth and resolves to 0px when there is no inset. */
+:root {
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+}
+
+/* Shared chrome tokens for every floating surface (palette, controls, minimap,
+   header islands, version rail). Surfaces derive from --apollon-background +
+   --apollon-primary-contrast via color-mix, so any host theming those two gets
+   correct chrome for free; only shadows need a dark-mode override (below). */
+:root {
+  /* Surface ladder: base == canvas; chrome separates via border + elevation. */
+  --apollon-chrome-surface: var(--apollon-background, #fff);
+  --apollon-chrome-surface-hover: color-mix(
+    in srgb,
+    var(--apollon-primary-contrast, #000) 8%,
+    var(--apollon-background, #fff)
+  );
+  --apollon-chrome-surface-active: color-mix(
+    in srgb,
+    var(--apollon-primary-contrast, #000) 14%,
+    var(--apollon-background, #fff)
+  );
+
+  /* Borders: opaque cool neutrals that hold their contrast in both themes. */
+  --apollon-chrome-border: color-mix(
+    in srgb,
+    var(--apollon-primary-contrast, #000) 12%,
+    var(--apollon-background, #fff)
+  );
+  --apollon-chrome-border-strong: color-mix(
+    in srgb,
+    var(--apollon-primary-contrast, #000) 28%,
+    var(--apollon-background, #fff)
+  );
+
+  /* Text */
+  --apollon-chrome-text: var(--apollon-primary-contrast, #212529);
+  --apollon-chrome-text-muted: color-mix(
+    in srgb,
+    var(--apollon-primary-contrast, #000) 58%,
+    var(--apollon-background, #fff)
+  );
+
+  /* Accent — reserved for meaning (primary action, selection, current marker).
+     Chrome surfaces themselves stay neutral. */
+  --apollon-chrome-accent: var(--apollon-primary, #3e8acc);
+  --apollon-chrome-accent-contrast: #fff;
+
+  /* Radius ramp: sm pills, md controls, lg panels/rails. */
+  --apollon-chrome-radius-sm: 6px;
+  --apollon-chrome-radius-md: 8px;
+  --apollon-chrome-radius-lg: 12px;
+
+  /* Harmonic dimensional system: every floating cluster shares one height
+     (island-h, below), so their bottom edges align and the palette clears them
+     by one even gap. One edge margin + one gap apply to all chrome. */
+  --apollon-chrome-edge: 10px; /* margin from the canvas edge (every cluster) */
+  --apollon-chrome-gap: 8px; /* gap between adjacent clusters / to the palette */
+  --apollon-chrome-btn: 32px; /* icon-button paint box */
+  --apollon-chrome-pad: 6px; /* inner padding of every floating cluster */
+  --apollon-chrome-hit: 44px; /* minimum touch target (Apple HIG) */
+
+  /* Edge margin that HUGS a device safe area instead of stacking on it: the
+     design edge when there's no inset, the inset alone when there is one — so
+     chrome aligns to the usable edge with no double-spacing under a notch / home
+     indicator. NO -top variant: the header top is intentionally additive
+     (safe-area-inset-top + edge) because the band is pinned under the notch and
+     still needs its own breathing room. */
+  --apollon-chrome-edge-safe-left: max(
+    var(--apollon-chrome-edge),
+    var(--safe-area-inset-left, 0px)
+  );
+  --apollon-chrome-edge-safe-right: max(
+    var(--apollon-chrome-edge),
+    var(--safe-area-inset-right, 0px)
+  );
+  --apollon-chrome-edge-safe-bottom: max(
+    var(--apollon-chrome-edge),
+    var(--safe-area-inset-bottom, 0px)
+  );
+
+  /* Shared OUTER cluster height = button + 2·padding + 2·1px border. Derived, so
+     fixed-height islands match the auto-height control/minimap panels to the
+     pixel and it self-corrects when btn/pad change (landscape overrides it). */
+  --apollon-chrome-island-h: calc(
+    var(--apollon-chrome-btn) + 2 * var(--apollon-chrome-pad) + 2px
+  );
+
+  /* Elevation: docked chrome (header/rail) = hairline + flat micro-shadow;
+     floating chrome (palette/controls/minimap) = soft halo. */
+  --apollon-chrome-shadow-docked: 0 1px 2px rgb(15 23 42 / 8%);
+  --apollon-chrome-shadow-floating: 0 0 1px 0 rgb(15 23 42 / 20%),
+    0 2px 8px 0 rgb(15 23 42 / 12%);
+
+  /* Lit up only in dark mode (a pure drop shadow vanishes on a dark canvas). */
+  --apollon-chrome-inset-hairline: 0 0 0 0 transparent;
+
+  /* Glass for floating chrome: a semi-opaque tint floor (keeps text legible —
+     translucency alone never carries it) under a backdrop blur, derived from
+     the canvas background so it themes automatically. */
+  --apollon-chrome-glass: color-mix(
+    in srgb,
+    var(--apollon-background, #fff) 80%,
+    transparent
+  );
+
+  /* Near-opaque tint for text-dense glass (the version-history list) so list
+     copy clears WCAG AA over a busy diagram while still reading as glass. */
+  --apollon-chrome-glass-solid: color-mix(
+    in srgb,
+    var(--apollon-background, #fff) 92%,
+    transparent
+  );
+  --apollon-chrome-glass-blur: saturate(180%) blur(20px);
+
+  /* Motion tokens: short, decelerated. */
+  --apollon-chrome-duration-hover: 120ms;
+  --apollon-chrome-duration-enter: 220ms;
+  --apollon-chrome-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --apollon-chrome-ease-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
+}
+
+/* Dark mode only needs to fix the shadows + add the contrast hairline; the
+   surfaces above already track the dark --apollon-background via color-mix.
+   `:root[data-theme]` is how the webapp flips the theme; the `.apollon-editor`
+   selector lets a standalone library host theme a single editor instance. */
+:root[data-theme="dark"],
+.apollon-editor[data-theme="dark"] {
+  --apollon-chrome-shadow-docked: 0 1px 2px rgb(0 0 0 / 40%);
+  --apollon-chrome-shadow-floating: 0 2px 12px 0 rgb(0 0 0 / 50%);
+  --apollon-chrome-inset-hairline: inset 0 0 0 1px rgb(255 255 255 / 8%);
+}
+
+/* Touch: tighter island padding so the phone chrome stays compact; the icon
+   buttons keep a ≥44px hit target via a ::before overlay (the paint box stays
+   32px). island-h derives from pad, so it follows automatically. */
+@media (pointer: coarse) {
+  :root {
+    --apollon-chrome-pad: 4px;
+  }
+}
+
 .react-flow {
   --panel-background: var(--apollon-background, #fff);
   --panel-shadow: 0 0 4px 0 var(--apollon-background-variant, #f8f9fa);
   --text: var(--apollon-primary-contrast, #000);
   --xy-edge-stroke: var(--apollon-primary-contrast, #000);
   --xy-edge-stroke-width: 2px;
-  --xy-minimap-mask-background-color-props: #00000020;
   --xy-controls-button-background-color: var(--apollon-background, #fff);
+
+  /* Kill React Flow's default divider between control buttons — its
+     `.controls.horizontal .controls-button { border-right }` outranks our
+     `border: 0`, so a light hairline leaked between the zoom/fit buttons
+     (glaring in dark mode). Zero it at the source via RF's own token. */
+  --xy-controls-button-border-color: transparent;
 }
 
 .apollon-editor {
   background-color: var(--apollon-background, #fff);
   color: var(--apollon-primary-contrast, #000);
+
+  /* Own stacking context so the editor's internal z-indexes (canvas content at
+     9998–10001, collaboration overlays at 10001–10004, overlay chrome at
+     --apollon-z-chrome) stay self-contained and the whole editor sits below
+     host-app chrome — e.g. the webapp navbar's body-portaled dropdown menus
+     render above the presence bar. Use `isolation` (not `transform`) so we don't
+     create a containing block for those portaled popovers (see the
+     `.apollon-canvas` note below). */
+  isolation: isolate;
+
+  /* Overlay chrome (header, rails, host controls): above canvas content +
+     collaboration overlays. Single source of truth for the overlay layer. */
+  --apollon-z-chrome: 10005;
+}
+
+/* Overlay chrome regions sit above canvas content + collaboration overlays. */
+.apollon-overlay-panel,
+.apollon-overlay-band {
+  z-index: var(--apollon-z-chrome);
 }
 
 /* Positioning context + clip region for the absolutely-positioned
@@ -27,8 +206,8 @@
 
 .apollon-collaboration-presence-bar {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: calc(10px + var(--apollon-inset-top, 0px));
+  right: calc(10px + var(--apollon-inset-right, 0px));
   display: flex;
   align-items: center;
   z-index: 10002;
@@ -183,17 +362,444 @@
   stroke-width: 4.5px !important;
   filter: drop-shadow(0 0 4px var(--apollon-collaboration-highlight-color));
 }
+
+/* Floating element palette — an overlay on the canvas for every viewport
+   (there is no docked variant). Its grid columns/gap and each cell's size are
+   set inline from `computePaletteLayout`, so it fits every element in view
+   without scrolling; `overflow-y` is only the rare last resort. */
+.apollon-palette {
+  box-sizing: border-box;
+  position: absolute;
+
+  /* --apollon-inset-top measures the (uniform-height) top islands + their edge
+     margin; adding the safe-area top (the islands drop by it too) lands the
+     palette an even --apollon-chrome-gap below every island, notch and all.
+     The fallback equals what the ResizeObserver will write for a top island
+     (offsetHeight == island-h, plus the corner Panel's edge margin re-added in
+     OverlayLayer.flushMeasure) — so before the first measurement lands the
+     palette already sits clear of the brand, and the real var arrives
+     byte-identical with no slide. (The race this kills: the var is published
+     only once an inset is non-zero, so a 0px fallback let the palette start
+     over the brand for the frames before measurement.) */
+  top: calc(
+    var(--safe-area-inset-top, 0px) + var(--apollon-chrome-gap) +
+      var(
+        --apollon-inset-top,
+        calc(var(--apollon-chrome-edge) + var(--apollon-chrome-island-h))
+      )
+  );
+  left: calc(
+    var(--apollon-chrome-edge-safe-left) + var(--apollon-inset-left, 0px)
+  );
+
+  /* Above React Flow's interactive canvas content (renderer, edges 9999,
+     nodes 9998) so taps/drags always land on the palette and a node placed
+     under it can't cover it. Contained by the editor's own stacking context
+     (`.apollon-editor { isolation: isolate }`), so it stays below host-app
+     chrome. The body-portaled drag ghost renders above it regardless. */
+  z-index: 10000;
+
+  /* Fill the space between the palette's own top offset and the bottom controls:
+     subtract the top offset (safe-top + gap + inset-top) and the bottom controls
+     footprint (edge + island-h + gap + inset-bottom + safe-bottom). */
+  max-height: calc(
+    100% - var(--safe-area-inset-top, 0px) - var(--apollon-chrome-gap) -
+      var(
+        --apollon-inset-top,
+        calc(var(--apollon-chrome-edge) + var(--apollon-chrome-island-h))
+      ) -
+      var(--apollon-chrome-edge-safe-bottom) - var(--apollon-chrome-island-h) -
+      var(--apollon-chrome-gap) - var(--apollon-inset-bottom, 0px)
+  );
+  display: flex;
+  flex-direction: column;
+  gap: var(--apollon-chrome-gap);
+  align-items: center;
+  padding: var(--apollon-chrome-pad);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--apollon-chrome-glass);
+  backdrop-filter: var(--apollon-chrome-glass-blur);
+  -webkit-backdrop-filter: var(--apollon-chrome-glass-blur);
+  color: var(--apollon-chrome-text);
+  border: 1px solid var(--apollon-chrome-border);
+  border-radius: var(--apollon-chrome-radius-lg);
+  box-shadow: var(--apollon-chrome-shadow-floating),
+    var(--apollon-chrome-inset-hairline);
+}
+
+/* grid-template-columns and gap come inline from the computed layout. */
+.apollon-palette__entries {
+  display: grid;
+  justify-content: center;
+}
+
+/* width/height come inline from the computed cell size. */
+.apollon-palette__entry {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  border-radius: var(--apollon-chrome-radius-sm);
+  transition: background-color 120ms ease;
+}
+
+.apollon-palette__entry:hover {
+  background: var(--apollon-chrome-surface-hover);
+}
+
+.apollon-palette__entry:active {
+  cursor: grabbing;
+}
+
+.apollon-palette__view-switch {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.apollon-palette__view-button {
+  border-radius: var(--apollon-chrome-radius-md);
+  border: 1px solid var(--apollon-chrome-border-strong);
+  background: transparent;
+  color: var(--apollon-chrome-text);
+  padding: 6px 8px;
+  cursor: pointer;
+  font-weight: 600;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.apollon-palette__view-button:hover {
+  background: var(--apollon-chrome-surface-hover);
+}
+
+.apollon-palette__view-button--active,
+.apollon-palette__view-button--active:hover {
+  background: var(--apollon-chrome-accent);
+  color: var(--apollon-chrome-accent-contrast);
+  border-color: var(--apollon-chrome-accent);
+}
+
+.apollon-palette__hint {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 160px;
+  padding: 4px;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+/* One edge margin for every floating corner cluster (islands, controls,
+   minimap, host panels) — replaces React Flow's default 15px so they line up
+   with the palette at exactly --apollon-chrome-edge from the canvas edge, PLUS
+   the device safe-area inset on each pinned side so chrome never tucks under a
+   notch / home indicator / rounded corner (Capacitor, viewport-fit=cover).
+   Declared before the landscape block so its extra notch nudge still wins. */
+.react-flow__panel.top.left,
+.react-flow__panel.top.right {
+  margin-top: calc(
+    var(--apollon-chrome-edge) + var(--safe-area-inset-top, 0px)
+  );
+}
+
+.react-flow__panel.bottom.left,
+.react-flow__panel.bottom.right {
+  margin-bottom: var(--apollon-chrome-edge-safe-bottom);
+}
+
+.react-flow__panel.top.left,
+.react-flow__panel.bottom.left {
+  margin-left: var(--apollon-chrome-edge-safe-left);
+}
+
+.react-flow__panel.top.right,
+.react-flow__panel.bottom.right {
+  margin-right: var(--apollon-chrome-edge-safe-right);
+}
+
+/* The editor header is one fluid flex row inside the full-width `header` band:
+   [brand/back] [title — flex middle] [actions]. A shared flex track keeps the
+   centred title bounded between its neighbours (grow → shrink → ellipsis, never
+   overlap) at constant gaps. Floats one edge margin in from every side, plus the
+   device safe-area on the pinned left/right edges (the band already offsets the
+   top by the safe-area, so only padding-top: edge is needed here). */
+.apollon-chrome-header-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--apollon-chrome-gap);
+  width: 100%;
+  box-sizing: border-box;
+  padding-top: var(--apollon-chrome-edge);
+  padding-left: var(--apollon-chrome-edge-safe-left);
+  padding-right: var(--apollon-chrome-edge-safe-right);
+  pointer-events: none;
+}
+
+/* The brand/back and actions islands NEVER shrink — only the title track (the
+   spacer) does. Otherwise flexbox shrinks all three proportionally and the fixed
+   icon buttons (theme toggle, back chevron) clip inside a squished island. */
+.apollon-chrome-header-row > :not(.apollon-chrome-header-spacer) {
+  flex-shrink: 0;
+}
+
+/* The title lives in a flex:1 track right after the brand and is LEFT-aligned to
+   it (not centered). The track fills the space between brand and actions so the
+   actions stay pinned right; the title island inside grows with the name up to
+   its own max-width and only shrinks (ellipsis) when the track is truly tight —
+   it is never artificially capped while there is room. */
+.apollon-chrome-header-spacer {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  justify-content: flex-start;
+}
+
+/* Phone landscape: compact the clusters to the shorter height budget. The
+   base max(edge, safe-area) rules already pull every cluster clear of the side
+   notch / dynamic island via the real left/right safe-area inset — no extra
+   nudge needed (and none wanted: stacking a constant on top of the inset is the
+   double-spacing the safe-area model exists to remove). */
+@media (max-width: 950px) and (max-height: 500px) {
+  /* Tighter clusters in landscape so the header band fits the ≤36px budget;
+     32px buttons still center inside, and the ::before keeps a 44px hit area. */
+  :root {
+    --apollon-chrome-island-h: 36px;
+    --apollon-chrome-pad: 2px;
+  }
+
+  /* No landscape clearance floor: the base --apollon-chrome-edge-safe-* tokens
+     already hug the real left/right safe-area inset (max(edge, inset)), which on
+     a notched device IS the dynamic-island width. A hardcoded floor would
+     over-pad real hardware and re-introduce the double-spacing the inset model
+     removes. (A browser device-emulator that draws an island while env() reports
+     0 is an emulator artifact — preview it with the dev safe-area helper, not a
+     shipped floor.) */
+  .apollon-collaboration-presence-bar {
+    right: var(--apollon-chrome-edge-safe-right);
+  }
+}
+
+/* The single icon-control idiom for every floating chrome button (zoom, fit,
+   undo/redo, minimap handles): borderless on glass, the pane supplies the
+   border/radius, and state is a surface-layer fill — never a border — so a
+   control never reads as a box-inside-a-box. */
+.apollon-chrome-iconbtn {
+  box-sizing: border-box;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--apollon-chrome-btn);
+  height: var(--apollon-chrome-btn);
+  padding: 0;
+  border: 0;
+  border-radius: var(--apollon-chrome-radius-sm);
+  background: transparent;
+  color: var(--apollon-chrome-text);
+  cursor: pointer;
+  transition: background-color var(--apollon-chrome-duration-hover)
+    var(--apollon-chrome-ease-standard);
+}
+
+.apollon-chrome-iconbtn > svg {
+  fill: currentColor;
+}
+
+/* The paint box stays compact, but the hit target extends to ≥44px (Apple HIG)
+   via an invisible overlay — so touch chrome doesn't have to grow the glyph. */
+.apollon-chrome-iconbtn::before {
+  content: "";
+  position: absolute;
+  inset: calc((var(--apollon-chrome-btn) - var(--apollon-chrome-hit)) / 2);
+}
+
+/* Lower-specificity states first (stylelint no-descending-specificity). */
+.apollon-chrome-iconbtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.apollon-chrome-iconbtn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px
+    color-mix(in srgb, var(--apollon-chrome-accent) 45%, transparent);
+}
+
+.apollon-chrome-iconbtn:hover:not(:disabled) {
+  background: var(--apollon-chrome-surface-hover);
+}
+
+.apollon-chrome-iconbtn:active:not(:disabled) {
+  background: var(--apollon-chrome-surface-active);
+}
+
+/* Numeric zoom readout: same idiom, auto width, tabular figures so the digits
+   don't jitter as the percentage changes. */
+.apollon-chrome-iconbtn--readout {
+  width: auto;
+  min-width: 48px;
+  padding: 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Expanded minimap = its own glass card (the .react-flow__panel glass rule
+   supplies the pane). Drop the panel padding so the map fills the rounded card
+   (no fat glass gutter) and clip the svg to the card radius. */
+.react-flow__minimap.apollon-minimap {
+  padding: 0;
+  overflow: hidden;
+  border-radius: var(--apollon-chrome-radius-lg);
+}
+
+.react-flow__minimap.apollon-minimap .react-flow__minimap-svg {
+  display: block;
+  border-radius: inherit;
+}
+
+/* Hairline separating action families within one cluster (view vs history). */
+.apollon-chrome-cluster-divider {
+  align-self: stretch;
+  width: 1px;
+  margin: 4px 2px;
+  background: var(--apollon-chrome-border);
+}
+
+/* React Flow's built-in zoom/fit buttons adopt the same borderless idiom. */
 .react-flow__controls-button {
-  background: none;
-  border-bottom: none;
+  position: relative;
+  width: var(--apollon-chrome-btn);
+  height: var(--apollon-chrome-btn);
+  padding: 0;
+  border: 0;
+  border-radius: var(--apollon-chrome-radius-sm);
+  background: transparent;
+  color: var(--apollon-chrome-text);
+  transition: background-color var(--apollon-chrome-duration-hover)
+    var(--apollon-chrome-ease-standard);
+}
+
+.react-flow__controls-button::before {
+  content: "";
+  position: absolute;
+  inset: calc((var(--apollon-chrome-btn) - var(--apollon-chrome-hit)) / 2);
+}
+
+.react-flow__controls-button:hover {
+  background: var(--apollon-chrome-surface-hover);
+}
+
+.react-flow__controls-button > svg {
+  max-width: 18px;
+  max-height: 18px;
+  fill: currentColor;
+}
+
+/* Shared glass surface for every floating chrome object — header islands,
+   palette, zoom/undo controls, minimap — so they read as one family of
+   translucent panes over the canvas. The tint floor keeps text legible over a
+   busy diagram; the inset hairline gives crispness in dark mode. */
+.apollon-glass,
+.react-flow__panel,
+.react-flow__node-toolbar {
+  background-color: var(--apollon-chrome-glass);
+  backdrop-filter: var(--apollon-chrome-glass-blur);
+  -webkit-backdrop-filter: var(--apollon-chrome-glass-blur);
+  border: 1px solid var(--apollon-chrome-border);
+  box-shadow: var(--apollon-chrome-shadow-floating),
+    var(--apollon-chrome-inset-hairline);
+  border-radius: var(--apollon-chrome-radius-lg);
 }
 
 .react-flow__panel,
 .react-flow__node-toolbar {
-  background-color: var(--panel-background);
-  box-shadow: var(--panel-shadow);
-  border-radius: 8px;
-  padding: 8px;
+  padding: var(--apollon-chrome-pad);
+}
+
+/* The version-history panel is glass like the rest, but text-dense, so it uses
+   a near-opaque tint floor for list legibility. Declared after .apollon-glass
+   (wins normally) but before the reduced-transparency fallback (which then wins,
+   collapsing it to the solid surface). */
+.apollon-history-panel {
+  background-color: var(--apollon-chrome-glass-solid);
+}
+
+/* The overlay-band regions (header / side rails) AND the overlay corner Panels
+   are pass-through containers — the portaled chrome (a header island, the
+   version rail) paints its own glass surface, so the region wrapper must not
+   double up a pane/shadow/blur of its own. */
+.apollon-overlay-band,
+.apollon-overlay-panel {
+  background-color: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 0;
+  box-shadow: none;
+  border-radius: 0;
+  padding: 0;
+}
+
+/* Corner overlay panels (header islands, host controls) float 10px from the
+   edge, matching the palette and zoom/minimap controls. */
+.apollon-overlay-panel {
+  margin: var(--apollon-chrome-edge);
+}
+
+/* Header islands settle in on mount (decelerated, short). */
+@keyframes apollon-island-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.apollon-chrome-island {
+  animation: apollon-island-in var(--apollon-chrome-duration-enter)
+    var(--apollon-chrome-ease-decelerate) both;
+}
+
+/* The title island reads as a quiet capsule until focused, then lifts an accent
+   ring (the field inside is borderless — the island is its chrome). */
+.apollon-chrome-title-island:focus-within {
+  border-color: var(--apollon-chrome-accent);
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--apollon-chrome-accent) 35%, transparent),
+    var(--apollon-chrome-shadow-floating);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .apollon-chrome-island {
+    animation: none;
+  }
+}
+
+/* Honour the OS reduced-transparency / increased-contrast / reduced-motion preferences. */
+@media (prefers-reduced-transparency: reduce) {
+  .apollon-glass,
+  .react-flow__panel,
+  .react-flow__node-toolbar,
+  .apollon-palette {
+    background-color: var(--apollon-chrome-surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .apollon-glass,
+  .react-flow__panel,
+  .react-flow__node-toolbar,
+  .apollon-palette {
+    border-color: var(--apollon-chrome-border-strong);
+  }
 }
 
 .react-flow svg {
@@ -203,16 +809,6 @@
 .react-flow__node-toolbar {
   display: flex;
   gap: 8px;
-}
-
-.react-flow__controls-button,
-.react-flow__controls-button:hover {
-  background: var(--panel-background);
-  border-bottom: none;
-}
-
-.react-flow__controls-button > svg {
-  fill: var(--text);
 }
 
 .react-flow__handle {
@@ -483,44 +1079,14 @@ svg.react-flow__connectionline {
 }
 
 .react-flow__minimap-mask {
-  fill: "#f2f2f2";
-  opacity: 0.6;
+  fill: var(--apollon-chrome-text-muted);
+  opacity: 0.15;
 }
 
 .prevent-select {
-  -webkit-user-select: none; /* Safari */
-  -ms-user-select: none; /* IE 10 and IE 11 */
-  user-select: none; /* Standard syntax */
-}
-
-.control-button {
-  background-color: var(--apollon-background, #fff);
-  border: 1px solid var(--apollon-gray-variant, #495057);
-  border-radius: 8px;
-  padding: 6px 8px;
-  cursor: pointer;
-  opacity: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 32px;
-  height: 32px;
-  font-size: 14px;
-  font-weight: bold;
-  transition: background-color 0.2s ease;
-}
-
-.control-button:hover:not(.disabled) {
-  background-color: var(--apollon-background-variant, #f8f9fa);
-}
-
-.control-button.disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-.control-button.disabled:hover {
-  background-color: var(--apollon-background, #fff);
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 .horizontally-not-resizable .react-flow__resize-control.top.line:hover {

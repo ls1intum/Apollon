@@ -20,6 +20,12 @@ Deployments are fully automatic on merge to `main`; production promotion is one 
 `version-monotonicity.yml` guards every PR by failing if a workspace
 `package.json` version moves backwards.
 
+`pr-health-checks.yml` runs the full per-PR matrix, including the visual-regression
+guard (pinned Playwright container) feeding the required **PR Health Gate** check.
+`update-visual-baselines.yml` (manual **Run workflow** against a branch) regenerates
+screenshot baselines in that same container and commits them back — used when an
+intentional UI change needs fresh baselines.
+
 See [Releases](npm-publishing) for the release-cut procedure.
 
 ## Compose files

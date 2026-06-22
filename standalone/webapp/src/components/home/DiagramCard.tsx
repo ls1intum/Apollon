@@ -1,5 +1,4 @@
 import {
-  memo,
   useEffect,
   useMemo,
   useState,
@@ -10,7 +9,7 @@ import {
 import type { UMLDiagramType } from "@tumaet/apollon"
 import Menu from "@mui/material/Menu"
 import MenuItem from "@mui/material/MenuItem"
-import { Link, useNavigate } from "react-router"
+import { Link, useNavigate } from "@tanstack/react-router"
 import { toast } from "react-toastify"
 import { useModalContext } from "@/contexts"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
@@ -24,7 +23,7 @@ import {
 } from "@/utils/sharedDiagramStorage"
 import {
   SHARED_DIAGRAM_VIEW_OPTIONS,
-  buildSharedDiagramPath,
+  sharedDiagramRoute,
   buildSharedDiagramUrl,
   getSharedDiagramViewBadge,
 } from "@/utils/sharedDiagramLinks"
@@ -107,13 +106,13 @@ const formatRelativeLastModified = (lastModifiedAt: string, nowMs: number) => {
   })
 }
 
-const getDiagramPath = (diagram: RecentDiagram) => {
+const getDiagramNav = (diagram: RecentDiagram) => {
   const source = diagram.source ?? "local"
   if (source === "local") {
-    return `/local/${diagram.id}`
+    return { to: "/local/$id", params: { id: diagram.id } } as const
   }
 
-  return buildSharedDiagramPath(
+  return sharedDiagramRoute(
     diagram.id,
     diagram.lastSharedView ?? DiagramView.EDIT
   )
@@ -185,7 +184,7 @@ export const DiagramActionsMenu = ({
   }
 
   const handleOpen = () => {
-    navigate(getDiagramPath(diagram))
+    navigate(getDiagramNav(diagram))
     closeMenu()
   }
 
@@ -593,7 +592,9 @@ const DiagramCardComponent = ({
     (state) => state.thumbnailRevisions[diagram.id] ?? 0
   )
 
-  const title = diagram.title.trim() || "Untitled Diagram"
+  // Untitled diagrams keep an empty real title and show a muted placeholder.
+  const isUntitled = !diagram.title.trim()
+  const title = diagram.title.trim() || "Untitled diagram"
   const diagramSource = diagram.source ?? "local"
   const isLocalDiagram = diagramSource === "local"
   const canToggleFavorite =
@@ -617,6 +618,8 @@ const DiagramCardComponent = ({
   useMinuteTick()
   const relativeDate = formatRelativeLastModified(
     diagram.lastModifiedAt,
+    // Display-only relative timestamp, refreshed each minute by useMinuteTick().
+    // eslint-disable-next-line react-hooks/purity
     Date.now()
   )
   const shortTypeLabel = getDiagramTypeShortLabel(diagram.type)
@@ -661,10 +664,10 @@ const DiagramCardComponent = ({
       className={`home-diagram-card group relative mx-auto flex flex-col overflow-hidden bg-[var(--home-surface-raised)] transition-all duration-[280ms] ease-[cubic-bezier(0.16,1,0.3,1)] [--card-scale:1] hover:bg-[var(--home-surface-raised-hover)] md:[--card-scale:1.0769231] xl:[--card-scale:1.1538462] ${
         isHighlighted
           ? "bg-[var(--home-surface-raised-hover)]"
-          : "hover:[box-shadow:0_8px_24px_var(--home-shadow-card-hover)]"
+          : "hover:[box-shadow:0_6px_16px_var(--home-shadow-card-hover)]"
       }`}
       style={{
-        border: "none",
+        border: "1px solid var(--home-border-subtle)",
         borderRadius: "var(--home-radius-sm)",
         width: "100%",
         maxWidth: "300px",
@@ -704,7 +707,7 @@ const DiagramCardComponent = ({
       {/* Clickable card body. A real link so cmd/ctrl/middle-click opens the
           diagram in a new tab; plain click still navigates within the SPA. */}
       <Link
-        to={getDiagramPath(diagram)}
+        {...getDiagramNav(diagram)}
         onClick={(event) => {
           if (isExpired) event.preventDefault()
         }}
@@ -783,7 +786,10 @@ const DiagramCardComponent = ({
               className="truncate"
               title={title}
               style={{
-                color: "var(--home-text-strong)",
+                color: isUntitled
+                  ? "var(--home-text-muted)"
+                  : "var(--home-text-strong)",
+                fontStyle: isUntitled ? "italic" : "normal",
                 fontSize: `${CARD_TYPE_TITLE_PX}px`,
                 fontWeight: 500,
                 lineHeight: "1.3",
@@ -979,4 +985,4 @@ const DiagramCardComponent = ({
   )
 }
 
-export const DiagramCard = memo(DiagramCardComponent)
+export const DiagramCard = DiagramCardComponent

@@ -8,6 +8,7 @@ import {
   type LayoutLine,
   type PreparedTextWithSegments,
 } from "@chenglou/pretext"
+import { FONT_FAMILY } from "@/fontStack"
 
 /**
  * Canvas-accurate text layout helpers powered by @chenglou/pretext.
@@ -18,8 +19,7 @@ import {
  * like ellipses — instead of relying on character-count approximations.
  */
 
-const DEFAULT_FONT_FAMILY =
-  "Inter, system-ui, Avenir, Helvetica, Arial, sans-serif"
+const DEFAULT_FONT_FAMILY = FONT_FAMILY
 
 /** Compact spec for a text style. Converted into a canvas `font` shorthand. */
 export type SvgFontSpec = {

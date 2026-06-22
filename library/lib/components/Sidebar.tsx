@@ -1,21 +1,36 @@
-import React from "react"
-import {
-  ColorDescriptionConfig,
-  DROPS,
-  dropElementConfigs,
-  LAYOUT,
-  ZINDEX,
-} from "@/constants"
-import { DividerLine } from "./ui/DividerLine"
+import React, { useLayoutEffect, useMemo, useRef, useState } from "react"
+import { ColorDescriptionConfig, dropElementConfigs, LAYOUT } from "@/constants"
 import { useMetadataStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { DraggableGhost } from "./DraggableGhost"
 import { ApollonView } from "@/typings"
+import {
+  PALETTE,
+  computePaletteLayout,
+  previewScaleForCell,
+} from "@/utils/paletteLayout"
 
 /* ========================================================================
-   Sidebar Component
-   Renders the draggable elements based on the selected diagram type.
+   Sidebar (element palette)
+   A floating overlay on the canvas (all viewports). It lays every draggable
+   element out in a grid sized — via `computePaletteLayout` — so they all stay
+   in view without scrolling, as large as the canvas reasonably allows.
    ======================================================================== */
+
+// Types whose preview reserves an extra attribute row of height.
+const labelPreviewTypes = new Set([
+  "sfcTransitionBranch",
+  "petriNetPlace",
+  "petriNetTransition",
+])
+
+// Extra height an element's preview reserves below its body for a label band.
+const previewExtraHeight = (type: string) =>
+  labelPreviewTypes.has(type) ? LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT : 0
+
+// Rough height of the Model/Select view switch when shown — used as the
+// non-grid budget so the grid still fits under it without scrolling.
+const VIEW_SWITCH_HEIGHT = 64
 
 export const Sidebar = () => {
   const { diagramType, view, setView, availableViews } = useMetadataStore(
@@ -29,80 +44,141 @@ export const Sidebar = () => {
   const showInteractiveSelectionView =
     availableViews.includes(ApollonView.Highlight) ||
     view === ApollonView.Highlight
-  const labelPreviewTypes = new Set([
-    "sfcTransitionBranch",
-    "petriNetPlace",
-    "petriNetTransition",
-  ])
 
-  if (dropElementConfigs[diagramType].length === 0) {
+  const paletteItems = useMemo(
+    () => dropElementConfigs[diagramType],
+    [diagramType]
+  )
+
+  // Measure the canvas the palette floats over (its positioned ancestor) so the
+  // grid can size itself to the available room.
+  const asideRef = useRef<HTMLElement>(null)
+  const [canvas, setCanvas] = useState({ w: 0, h: 0 })
+
+  useLayoutEffect(() => {
+    const aside = asideRef.current
+    const parent = aside?.offsetParent as HTMLElement | null
+    if (!aside || !parent) return
+    const measure = () => {
+      const rect = parent.getBoundingClientRect()
+      // Size the grid to the palette's ACTUAL available height — the gap between
+      // its own top and the bottom controls — not the full canvas height. The
+      // palette is CSS-capped to that band (max-height), so using the canvas
+      // height over-counts by the top/bottom chrome and overflows on short
+      // viewports. Measuring real elements keeps this in sync with the CSS
+      // without duplicating the max-height formula in JS.
+      const asideTop = aside.getBoundingClientRect().top
+      const controls = parent.querySelector(".react-flow__controls")
+      const GAP = 8 // --apollon-chrome-gap: palette clears the controls by one
+      const bottomLimit = controls
+        ? controls.getBoundingClientRect().top - GAP
+        : rect.bottom - (asideTop - rect.top) // symmetric fallback
+      const h = Math.max(0, bottomLimit - asideTop)
+      setCanvas({ w: rect.width, h })
+    }
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(parent)
+    return () => observer.disconnect()
+  }, [])
+
+  // The color-description element is the last grid cell.
+  const cellCount = paletteItems.length + 1
+  const chromeHeight = showInteractiveSelectionView ? VIEW_SWITCH_HEIGHT : 0
+  const layout = useMemo(
+    () => computePaletteLayout(cellCount, canvas.w, canvas.h, chromeHeight),
+    [cellCount, canvas.w, canvas.h, chromeHeight]
+  )
+
+  // One uniform scale for the whole palette: pick the largest scale at which
+  // EVERY element still fits its cell, then render them all at it. This keeps
+  // the elements' true relative sizes (a small interface stays small next to a
+  // big component) instead of each element being stretched to fill its own
+  // cell, which would invert proportions and clip small elements' labels.
+  const previewScale = useMemo(() => {
+    if (layout.cellW <= 0 || layout.cellH <= 0) return 0
+    return Math.min(
+      ...[...paletteItems, ColorDescriptionConfig].map((config) =>
+        previewScaleForCell(
+          config.width,
+          config.height + previewExtraHeight(config.type),
+          layout.cellW,
+          layout.cellH
+        )
+      )
+    )
+  }, [paletteItems, layout.cellW, layout.cellH])
+
+  if (paletteItems.length === 0) {
     return null
+  }
+
+  const cellStyle = { width: layout.cellW, height: layout.cellH }
+
+  const renderCell = (
+    config: (typeof paletteItems)[number],
+    id: string,
+    keyValue: string
+  ) => {
+    const extraPreviewHeight = previewExtraHeight(config.type)
+    return (
+      <DraggableGhost
+        key={keyValue}
+        dropElementConfig={config}
+        previewScale={previewScale}
+      >
+        <div
+          className="apollon-palette__entry prevent-select"
+          style={cellStyle}
+        >
+          <div
+            data-draggable-preview
+            style={{
+              width: config.width * previewScale,
+              height: (config.height + extraPreviewHeight) * previewScale,
+            }}
+          >
+            {React.createElement(config.svg, {
+              width: config.width,
+              height: config.height,
+              ...config.defaultData,
+              data: config.defaultData,
+              SIDEBAR_PREVIEW_SCALE: previewScale,
+              id,
+            })}
+          </div>
+        </div>
+      </DraggableGhost>
+    )
   }
 
   return (
     <aside
-      style={{
-        width: "180px",
-        minWidth: "180px",
-        height: "100%",
-        backgroundColor: "var(--apollon-background, white)",
-        display: "flex",
-        flexDirection: "column",
-        padding: "10px",
-        gap: "15px",
-        alignItems: "center",
-        overflowY: "auto",
-        flexShrink: 0,
-      }}
+      ref={asideRef}
+      className="apollon-palette"
+      data-testid="apollon-palette"
     >
       {showInteractiveSelectionView && (
-        <div
-          style={{
-            width: "100%",
-            display: "flex",
-            flexDirection: "column",
-            gap: "8px",
-          }}
-        >
+        <div className="apollon-palette__view-switch">
           <button
             type="button"
             onClick={() => setView(ApollonView.Modelling)}
-            style={{
-              borderRadius: "8px",
-              border: "1px solid var(--apollon-primary-contrast, #000000)",
-              background:
-                view === ApollonView.Modelling
-                  ? "var(--apollon-primary, #3e8acc)"
-                  : "transparent",
-              color:
-                view === ApollonView.Modelling
-                  ? "var(--apollon-background, #ffffff)"
-                  : "var(--apollon-primary-contrast, #000000)",
-              padding: "8px 10px",
-              cursor: "pointer",
-              fontWeight: 600,
-            }}
+            className={
+              view === ApollonView.Modelling
+                ? "apollon-palette__view-button apollon-palette__view-button--active"
+                : "apollon-palette__view-button"
+            }
           >
             Model
           </button>
           <button
             type="button"
             onClick={() => setView(ApollonView.Highlight)}
-            style={{
-              borderRadius: "8px",
-              border: "1px solid var(--apollon-primary-contrast, #000000)",
-              background:
-                view === ApollonView.Highlight
-                  ? "var(--apollon-primary, #3e8acc)"
-                  : "transparent",
-              color:
-                view === ApollonView.Highlight
-                  ? "var(--apollon-background, #ffffff)"
-                  : "var(--apollon-primary-contrast, #000000)",
-              padding: "8px 10px",
-              cursor: "pointer",
-              fontWeight: 600,
-            }}
+            className={
+              view === ApollonView.Highlight
+                ? "apollon-palette__view-button apollon-palette__view-button--active"
+                : "apollon-palette__view-button"
+            }
           >
             Select Elements
           </button>
@@ -110,80 +186,32 @@ export const Sidebar = () => {
       )}
 
       {view === ApollonView.Highlight && (
-        <div
-          style={{
-            width: "100%",
-            fontSize: "12px",
-            lineHeight: 1.4,
-            color: "var(--apollon-primary-contrast, #000000)",
-          }}
-        >
+        <div className="apollon-palette__hint">
           Click nodes or relationships to toggle whether they are interactive.
         </div>
       )}
 
-      {view === ApollonView.Modelling &&
-        dropElementConfigs[diagramType].map((config, index) => {
-          const extraPreviewHeight = labelPreviewTypes.has(config.type)
-            ? LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT
-            : 0
-          const previewScale = DROPS.SIDEBAR_PREVIEW_SCALE
-          const previewWidth = config.width * previewScale
-          const previewHeight =
-            (config.height + extraPreviewHeight) * previewScale
-
-          return (
-            <React.Fragment key={`${config.type}_${config.defaultData?.name}`}>
-              <DraggableGhost dropElementConfig={config}>
-                <div
-                  className="prevent-select"
-                  style={{
-                    width: previewWidth,
-                    height: previewHeight,
-                    zIndex: ZINDEX.DRAGGABLE_GHOST,
-                    marginTop: config.marginTop,
-                  }}
-                >
-                  {React.createElement(config.svg, {
-                    width: config.width,
-                    height: config.height,
-                    ...config.defaultData,
-                    data: config.defaultData,
-                    SIDEBAR_PREVIEW_SCALE: previewScale,
-                    id: `sidebarElement_${index}`,
-                  })}
-                </div>
-              </DraggableGhost>
-            </React.Fragment>
-          )
-        })}
-
       {view === ApollonView.Modelling && (
-        <>
-          <DividerLine style={{ margin: "3px 0" }} />
-          <DraggableGhost dropElementConfig={ColorDescriptionConfig}>
-            <div
-              className="prevent-select"
-              style={{
-                width:
-                  ColorDescriptionConfig.width * DROPS.SIDEBAR_PREVIEW_SCALE,
-                height:
-                  ColorDescriptionConfig.height * DROPS.SIDEBAR_PREVIEW_SCALE,
-                zIndex: ZINDEX.DRAGGABLE_GHOST,
-                marginTop: ColorDescriptionConfig.marginTop,
-              }}
-            >
-              {React.createElement(ColorDescriptionConfig.svg, {
-                width: ColorDescriptionConfig.width,
-                height: ColorDescriptionConfig.height,
-                ...ColorDescriptionConfig.defaultData,
-                data: ColorDescriptionConfig.defaultData,
-                SIDEBAR_PREVIEW_SCALE: DROPS.SIDEBAR_PREVIEW_SCALE,
-                id: "sidebarElement_ColorDescription",
-              })}
-            </div>
-          </DraggableGhost>
-        </>
+        <div
+          className="apollon-palette__entries"
+          style={{
+            gridTemplateColumns: `repeat(${layout.cols}, ${layout.cellW}px)`,
+            gap: PALETTE.GAP,
+          }}
+        >
+          {paletteItems.map((config, index) =>
+            renderCell(
+              config,
+              `sidebarElement_${index}`,
+              `${config.type}_${config.defaultData?.name}`
+            )
+          )}
+          {renderCell(
+            ColorDescriptionConfig,
+            "sidebarElement_ColorDescription",
+            "colorDescription"
+          )}
+        </div>
       )}
     </aside>
   )

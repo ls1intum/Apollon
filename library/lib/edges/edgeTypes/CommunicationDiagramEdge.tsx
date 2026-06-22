@@ -1,12 +1,12 @@
 import { BaseEdgeProps, StepEdgeBody, CommonEdgeElements } from "../GenericEdge"
 import { EdgeMultipleLabels } from "../labelTypes/EdgeMultipleLabels"
+import { getMessageHostSegment } from "../labelTypes/messageLayout"
 import { useEdgeConfig } from "@/hooks/useEdgeConfig"
 import { DiagramEdgeType } from "@/edges/types"
 import { useStepPathEdge } from "@/hooks/useStepPathEdge"
 import { useDiagramStore, usePopoverStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { useToolbar } from "@/hooks"
-import { useRef } from "react"
 import { FeedbackDropzone } from "@/components/wrapper/FeedbackDropzone"
 import { AssessmentSelectableWrapper } from "@/components"
 import { getCustomColorsFromDataForEdge } from "@/utils/layoutUtils"
@@ -26,7 +26,6 @@ export const CommunicationDiagramEdge = ({
   targetHandleId,
   data,
 }: BaseEdgeProps) => {
-  const anchorRef = useRef<SVGSVGElement | null>(null)
   const { handleDelete } = useToolbar({ id })
 
   const config = useEdgeConfig(type as DiagramEdgeType)
@@ -83,6 +82,15 @@ export const CommunicationDiagramEdge = ({
   const { strokeColor, textColor } = getCustomColorsFromDataForEdge(data)
   const markerKey = `${id}-${markerStart ?? "none"}-${markerEnd ?? "none"}`
 
+  // Host the message stack on the edge's longest arm, not the raw mid-segment:
+  // a short jog between two long arms would otherwise centre the labels on the
+  // jog and cross both neighbouring arms.
+  const messageHost = getMessageHostSegment(
+    edgeData.activePoints,
+    edgeData.sourcePoint,
+    edgeData.targetPoint
+  )
+
   return (
     <AssessmentSelectableWrapper elementId={id} asElement="g">
       <FeedbackDropzone elementId={id} asElement="path" elementType={type}>
@@ -113,14 +121,13 @@ export const CommunicationDiagramEdge = ({
 
         <EdgeMultipleLabels
           messages={data?.messages}
-          pathMiddlePosition={edgeData.pathMiddlePosition}
+          pathMiddlePosition={messageHost.point}
           showRelationshipLabels={true}
           isReconnecting={isReconnecting}
-          sourcePosition={{ x: sourceX, y: sourceY }}
-          targetPosition={{ x: targetX, y: targetY }}
+          sourcePosition={messageHost.start}
+          targetPosition={messageHost.end}
           textColor={textColor}
-          edgePoints={edgeData.activePoints}
-          isHorizontalEdge={edgeData.isMiddlePathHorizontal}
+          isHorizontalEdge={messageHost.isHorizontal}
         />
 
         <CommonEdgeElements
@@ -129,7 +136,6 @@ export const CommunicationDiagramEdge = ({
           toolbarPosition={edgeData.toolbarPosition}
           isDiagramModifiable={isDiagramModifiable}
           assessments={assessments}
-          anchorRef={anchorRef}
           handleDelete={handleDelete}
           setPopOverElementId={setPopOverElementId}
           type={type}

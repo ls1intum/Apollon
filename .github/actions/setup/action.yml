@@ -1,0 +1,38 @@
+name: "Setup pnpm + Node + install"
+description: >
+  Installs pnpm, sets up Node (from .nvmrc by default) with the pnpm store
+  cached, and runs a frozen install. Shared across the CI jobs so their
+  toolchain pins live in one place. Use after actions/checkout (a
+  local `./` composite can't perform the initial checkout itself).
+
+inputs:
+  node-version:
+    description: "Explicit Node version. Empty (default) uses .nvmrc."
+    required: false
+    default: ""
+  engine-strict:
+    description: >
+      Set to "false" to install with --config.engine-strict=false (needed when
+      testing an older Node floor than the repo's root engines gate).
+    required: false
+    default: "true"
+
+runs:
+  using: composite
+  steps:
+    - name: Install pnpm
+      uses: pnpm/action-setup@ac6db6d3c1f721f886538a378a2d73e85697340a # v6.0.8
+
+    - name: Set up Node
+      uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+      with:
+        # Pass exactly one: an empty node-version makes setup-node fall through
+        # to node-version-file (.nvmrc); a set node-version blanks the file so
+        # the two never conflict.
+        node-version: ${{ inputs.node-version }}
+        node-version-file: ${{ inputs.node-version == '' && '.nvmrc' || '' }}
+        cache: "pnpm"
+
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install --frozen-lockfile ${{ inputs.engine-strict == 'false' && '--config.engine-strict=false' || '' }}

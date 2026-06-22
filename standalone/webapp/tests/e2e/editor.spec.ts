@@ -249,11 +249,9 @@ test.describe("Canvas panning", () => {
     await page.mouse.down()
     await page.mouse.move(startX - 120, startY - 80, { steps: 10 })
     await page.mouse.up()
-    await page.waitForTimeout(400)
 
-    // The viewport transform should have changed
-    const newTransform = await getTransform()
-    expect(newTransform).not.toEqual(initialTransform)
+    // The pan changes the viewport transform.
+    await expect.poll(getTransform).not.toEqual(initialTransform)
   })
 })
 
@@ -375,4 +373,307 @@ test.describe("Navbar", () => {
     await expect(page).toHaveURL(/\/local\/e2e-local-model-id$/)
     await waitForCanvasReady(page, false)
   })
+})
+
+// iPhone-class viewports. Headless Chromium reports 0 for env(safe-area-inset-*),
+// so the landscape test injects insets to simulate a notched device; in
+// production the same custom properties are derived from env() (webapp.css
+// :root), so this exercises the real layout math, not a test-only variable.
+const PHONE_PORTRAIT = { width: 390, height: 844 }
+const PHONE_LANDSCAPE = { width: 844, height: 390 }
+const SAFE_INSET = 47 // simulated side notch inset (iPhone landscape)
+// Chrome hugs the safe-area boundary in landscape (max(edge, safe-area)) — the
+// side inset itself is the clearance, with no extra constant nudge on top.
+
+test.describe("Mobile responsive layout", () => {
+  test("opens export actions with a tap", async ({ page }) => {
+    await page.setViewportSize(PHONE_PORTRAIT)
+    await openTemporaryLocalDiagram(page)
+    await waitForCanvasReady(page, false)
+
+    await page.getByRole("button", { name: "open options" }).click()
+
+    const optionsMenu = page.getByRole("menu", { name: "open options" })
+    await optionsMenu.getByRole("button", { name: "File" }).click()
+    await page.getByRole("menuitem", { name: "Export" }).click()
+
+    const exportMenu = page.getByRole("menu", { name: "Export" })
+    await expect(exportMenu).toBeVisible()
+    await expect(
+      exportMenu.getByRole("menuitem", { name: "As SVG" })
+    ).toBeVisible()
+    await expect(
+      exportMenu.getByRole("menuitem", { name: "As PDF" })
+    ).toBeVisible()
+
+    const exportMenuBox = await exportMenu.boundingBox()
+    expect(exportMenuBox).not.toBeNull()
+    expect(exportMenuBox!.x).toBeGreaterThanOrEqual(0)
+    expect(exportMenuBox!.x + exportMenuBox!.width).toBeLessThanOrEqual(
+      PHONE_PORTRAIT.width
+    )
+  })
+
+  test("opens a responsive New Diagram modal from the editor", async ({
+    page,
+  }) => {
+    await page.setViewportSize(PHONE_PORTRAIT)
+    await openTemporaryLocalDiagram(page)
+    await waitForCanvasReady(page, false)
+
+    await page.getByRole("button", { name: "open options" }).click()
+
+    const optionsMenu = page.getByRole("menu", { name: "open options" })
+    await optionsMenu.getByRole("button", { name: "File" }).click()
+    await page.getByRole("menuitem", { name: "New Diagram" }).click()
+
+    const dialog = page.getByRole("dialog", { name: "New Diagram" })
+    await expect(dialog).toBeVisible()
+    await expect(
+      dialog.getByRole("button", { name: "Blank diagram" })
+    ).toBeVisible()
+    await expect(
+      dialog.getByRole("button", { name: "Use template" })
+    ).toBeVisible()
+
+    const dialogBox = await dialog.boundingBox()
+    expect(dialogBox).not.toBeNull()
+    expect(dialogBox!.x).toBeGreaterThanOrEqual(12)
+    expect(dialogBox!.width).toBeLessThanOrEqual(PHONE_PORTRAIT.width - 24)
+    expect(dialogBox!.height).toBeLessThanOrEqual(PHONE_PORTRAIT.height - 24)
+
+    const hasHorizontalOverflow = await dialog.evaluate(
+      (element) => element.scrollWidth > element.clientWidth
+    )
+    expect(hasHorizontalOverflow).toBe(false)
+  })
+
+  test("uses the compact navbar and floating palette in portrait", async ({
+    page,
+  }) => {
+    await page.setViewportSize(PHONE_PORTRAIT)
+    await openTemporaryLocalDiagram(page)
+    await waitForCanvasReady(page, false)
+
+    await expect(
+      page.getByRole("button", { name: "open options" })
+    ).toBeVisible()
+
+    const palette = page.getByTestId("apollon-palette")
+    await expect(palette).toBeVisible()
+
+    // Portrait uses the unified app-header height (NAVBAR_MIN_HEIGHT = 52).
+    const navbar = page.locator("header")
+    const navbarBox = await navbar.boundingBox()
+    expect(navbarBox?.height).toBeLessThanOrEqual(52)
+
+    // The floating palette lays every element out in view — no scrolling.
+    const overflow = await palette.evaluate(
+      (el) => el.scrollHeight - el.clientHeight
+    )
+    expect(overflow).toBeLessThanOrEqual(1)
+
+    await page.getByRole("button", { name: "open options" }).click()
+
+    const menu = page.getByRole("menu", { name: "open options" })
+    await expect(menu).toBeVisible()
+    await expect(menu.getByText("Theme", { exact: true })).toBeVisible()
+
+    const menuBox = await menu.boundingBox()
+    expect(menuBox?.width).toBeLessThanOrEqual(240)
+
+    // Share is a primary icon on the pill, not in the overflow menu.
+    await page.keyboard.press("Escape")
+    await page.getByRole("button", { name: "Share" }).click()
+
+    const shareDialog = page.getByRole("dialog", { name: "Share" })
+    await expect(shareDialog).toBeVisible()
+    const shareDialogBox = await shareDialog.boundingBox()
+    expect(shareDialogBox?.x).toBeGreaterThanOrEqual(12)
+    expect(shareDialogBox?.width).toBeLessThanOrEqual(PHONE_PORTRAIT.width - 24)
+
+    const shareContent = page.getByTestId("share-modal-content")
+    const hasHorizontalOverflow = await shareContent.evaluate(
+      (element) => element.scrollWidth > element.clientWidth
+    )
+    expect(hasHorizontalOverflow).toBe(false)
+  })
+
+  test("keeps the phone layout in landscape", async ({ page }) => {
+    await page.setViewportSize(PHONE_LANDSCAPE)
+    await openTemporaryLocalDiagram(page)
+    await waitForCanvasReady(page, false)
+
+    // Guard the env() floor itself: the custom property must be defined on
+    // :root (from env()) before we simulate insets — otherwise the consumers
+    // below would silently fall back to the literal 0px and still pass.
+    const floorDefined = await page.evaluate(() =>
+      getComputedStyle(document.documentElement)
+        .getPropertyValue("--safe-area-inset-left")
+        .trim()
+    )
+    expect(floorDefined).not.toBe("")
+
+    // Simulate a side notch so the safe-area offsets are exercised.
+    await page.evaluate((inset) => {
+      document.documentElement.style.setProperty(
+        "--safe-area-inset-left",
+        `${inset}px`
+      )
+      document.documentElement.style.setProperty(
+        "--safe-area-inset-right",
+        `${inset}px`
+      )
+    }, SAFE_INSET)
+
+    // Landscape is wide enough for the full action bar — it keeps every control
+    // (the overflow "open options" pill is for narrow portrait only).
+    const actions = page.locator('[aria-label="Editor actions"]')
+    await expect(actions).toBeVisible()
+
+    const palette = page.getByTestId("apollon-palette")
+    await expect(palette).toBeVisible()
+    // The floating palette fits every element without scrolling here too.
+    const overflow = await palette.evaluate(
+      (el) => el.scrollHeight - el.clientHeight
+    )
+    expect(overflow).toBeLessThanOrEqual(1)
+
+    const navbarBox = await page.locator("header").boundingBox()
+    expect(navbarBox?.height).toBeLessThanOrEqual(36)
+
+    // Logo and actions clear the dynamic island by hugging the side safe area.
+    const homeLinkBox = await page
+      .getByRole("link", { name: "Apollon home" })
+      .boundingBox()
+    expect(homeLinkBox?.x).toBeGreaterThanOrEqual(SAFE_INSET)
+
+    const actionsBox = await actions.boundingBox()
+    expect(actionsBox).not.toBeNull()
+    expect(actionsBox!.x + actionsBox!.width).toBeLessThanOrEqual(
+      PHONE_LANDSCAPE.width - SAFE_INSET
+    )
+
+    // React Flow controls/minimap stay inside the left/right insets.
+    const controlsBox = await page
+      .locator(".react-flow__controls")
+      .boundingBox()
+    expect(controlsBox?.x).toBeGreaterThanOrEqual(SAFE_INSET)
+
+    const minimapBox = await page
+      .locator(".react-flow__panel.bottom.right")
+      .boundingBox()
+    expect(minimapBox).not.toBeNull()
+    expect(minimapBox!.x + minimapBox!.width).toBeLessThanOrEqual(
+      PHONE_LANDSCAPE.width - SAFE_INSET
+    )
+  })
+
+  test("palette never overlaps the canvas controls", async ({ page }) => {
+    // BPMN has the most palette items; in a short viewport the palette must
+    // stop above the zoom/controls toolbar, not grow into it.
+    await page.setViewportSize({ width: 844, height: 390 })
+    const modelId = "e2e-bpmn-overlap"
+    await page.goto("/")
+    await page.evaluate((id) => {
+      localStorage.setItem(
+        "persistenceModelStore",
+        JSON.stringify({
+          state: {
+            models: {
+              [id]: {
+                id,
+                model: {
+                  id,
+                  type: "BPMN",
+                  assessments: {},
+                  edges: [],
+                  nodes: [],
+                  title: "BPMN",
+                  version: "4.0.0",
+                },
+                lastModifiedAt: new Date().toISOString(),
+              },
+            },
+            currentModelId: id,
+          },
+          version: 0,
+        })
+      )
+    }, modelId)
+    await page.goto(`/local/${modelId}`)
+    await waitForCanvasReady(page, false)
+
+    // The palette height is ResizeObserver-driven, so poll the relation rather
+    // than asserting on a single possibly-pre-reflow frame: the palette bottom
+    // edge stays above the controls' top edge.
+    const palette = page.getByTestId("apollon-palette")
+    const controls = page.locator(".react-flow__controls")
+    await expect
+      .poll(async () => {
+        const p = await palette.boundingBox()
+        const c = await controls.boundingBox()
+        return p && c ? p.y + p.height - c.y : Number.NaN
+      })
+      .toBeLessThanOrEqual(0)
+  })
+})
+
+test.describe("Element palette", () => {
+  // The floating palette grid must show every element without scrolling across
+  // viewports — verified here with BPMN (the most element-rich diagram).
+  for (const [w, h, label] of [
+    [375, 667, "phone portrait"],
+    [844, 390, "phone landscape"],
+    [1280, 600, "short laptop"],
+    [1920, 1080, "desktop"],
+  ] as const) {
+    test(`fits every element in view without scrolling (${label})`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: w, height: h })
+      const modelId = `e2e-bpmn-palette-${w}x${h}`
+      await page.goto("/")
+      await page.evaluate((id) => {
+        localStorage.setItem(
+          "persistenceModelStore",
+          JSON.stringify({
+            state: {
+              models: {
+                [id]: {
+                  id,
+                  model: {
+                    id,
+                    type: "BPMN",
+                    assessments: {},
+                    edges: [],
+                    nodes: [],
+                    title: "BPMN",
+                    version: "4.0.0",
+                  },
+                  lastModifiedAt: new Date().toISOString(),
+                },
+              },
+              currentModelId: id,
+            },
+            version: 0,
+          })
+        )
+      }, modelId)
+      await page.goto(`/local/${modelId}`)
+      await waitForCanvasReady(page, false)
+
+      const palette = page.getByTestId("apollon-palette")
+      await expect(palette).toBeVisible()
+
+      // All 14 BPMN cells (13 elements + color) are present and none scroll.
+      const entries = palette.locator(".apollon-palette__entry")
+      await expect(entries).toHaveCount(14)
+      // The cell sizing is ResizeObserver-driven, so poll the overflow rather
+      // than reading a single possibly-pre-reflow frame.
+      await expect
+        .poll(() => palette.evaluate((el) => el.scrollHeight - el.clientHeight))
+        .toBeLessThanOrEqual(1)
+    })
+  }
 })

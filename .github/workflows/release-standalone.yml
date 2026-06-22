@@ -64,6 +64,9 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           ref: ${{ needs.check.outputs.sha }}
+          # Full history so extract-changelog.mjs can resolve each changelog
+          # entry's commit type (feat/fix/...) to group the release notes.
+          fetch-depth: 0
 
       # Pin Node for the changelog-extraction step in "Create GitHub Release"
       # rather than relying on the runner's ambient version.
@@ -125,10 +128,11 @@ jobs:
 
           # Body = the Changesets-owned CHANGELOG sections for the paired webapp
           # + server, merged (a server-only changeset lands only in the server
-          # file; dupes from a library cascade collapse to one), plus the Docker
-          # + cosign footer. Fall back to GitHub's --generate-notes only when
-          # neither package has a section for this version.
-          CHANGELOG=$(node scripts/extract-changelog.mjs "$VERSION" standalone/webapp standalone/server || true)
+          # file; dupes from a library cascade collapse to one) and regrouped by
+          # category (Features/Bug Fixes/...) from each entry's commit type, plus
+          # the Docker + cosign footer. Fall back to GitHub's --generate-notes
+          # only when neither package has a section for this version.
+          CHANGELOG=$(node scripts/extract-changelog.mjs "$VERSION" standalone/webapp standalone/server)
           {
             if [ -n "$CHANGELOG" ]; then printf '%s\n\n' "$CHANGELOG"; fi
             cat <<EOF

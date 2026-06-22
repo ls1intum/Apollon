@@ -16,10 +16,19 @@ import {
   ScrollOverlay,
   AlignmentGuides,
 } from "@/components"
+import { OverlayLayer } from "@/overlay/OverlayLayer"
 import "@xyflow/react/dist/style.css"
+// Register the bundled Inter @font-face at module load, so the face exists
+// before diagram <text> elements (which request the Inter family) first paint.
+import "@/styles/fonts.css"
 import "@/styles/app.css"
-import { useDiagramStore, useMetadataStore } from "./store/context"
+import {
+  useDiagramStore,
+  useMetadataStore,
+  useOverlayStore,
+} from "./store/context"
 import { useShallow } from "zustand/shallow"
+import { type CSSProperties } from "react"
 import { CANVAS } from "./constants"
 import { diagramEdgeTypes } from "./edges"
 import {
@@ -34,6 +43,10 @@ import { diagramNodeTypes } from "./nodes"
 import { useDiagramModifiable } from "./hooks/useDiagramModifiable"
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts"
 import { usePaneClicked } from "./hooks/usePaneClicked"
+import {
+  useRemoteDraggingNodes,
+  applyDraggingOverlay,
+} from "./hooks/useRemoteDraggingNodes"
 import { ApollonMode } from "./typings"
 import {
   getConnectionLineType,
@@ -67,7 +80,7 @@ const isPointArray = (value: unknown): value is IPoint[] =>
 function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
   useKeyboardShortcuts()
 
-  const { nodes, onNodesChange, edges, onEdgesChange, diagramId } =
+  const { nodes, onNodesChange, edges, onEdgesChange, diagramId, previewMode } =
     useDiagramStore(
       useShallow((state) => ({
         nodes: state.nodes,
@@ -75,6 +88,7 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
         edges: state.edges,
         onEdgesChange: state.onEdgesChange,
         diagramId: state.diagramId,
+        previewMode: state.previewMode,
       }))
     )
 
@@ -101,6 +115,23 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
   )
 
   const isDiagramModifiable = useDiagramModifiable()
+
+  // Publish the reserved overlay insets as CSS custom properties so the editor's
+  // own overlays (palette, presence bar, controls, minimap) slide to make room
+  // for host chrome instead of overlapping it.
+  const insets = useOverlayStore((state) => state.insets)
+
+  // Overlay the live positions/sizes of nodes peers are dragging (carried over
+  // ephemeral awareness, never the document) onto what React Flow renders, so
+  // remote drags stay live without per-frame CRDT writes. Suppressed during a
+  // version preview (matching CollaborationLayer's other remote visuals), and a
+  // no-op outside collaboration — `displayNodes` is then `nodes` by reference,
+  // so React Flow re-renders nothing.
+  const remoteDraggingNodes = useRemoteDraggingNodes(
+    awareness,
+    collaboration.enabled && !previewMode
+  )
+  const displayNodes = applyDraggingOverlay(nodes, remoteDraggingNodes)
 
   const connectionLineType = getConnectionLineType(diagramType)
   const onNodeDragStop = useNodeDragStop()
@@ -144,14 +175,27 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
       className={`apollon-editor ${readonly ? "apollon-editor--readonly" : ""} ${
         connectionGuidanceActive ? "apollon-editor--connection-guidance" : ""
       }`}
-      style={{
-        display: "flex",
-        height: "100%",
-        width: "100%",
-        overflow: "hidden",
-        backgroundColor: "var(--apollon-background, #ffffff)",
-        position: "relative",
-      }}
+      style={
+        {
+          display: "flex",
+          height: "100%",
+          width: "100%",
+          overflow: "hidden",
+          backgroundColor: "var(--apollon-background, #ffffff)",
+          position: "relative",
+          // Only emit the inset custom properties when chrome actually reserves
+          // room, so an editor with no overlays keeps the exact original style
+          // attribute (byte-identical DOM for embedders like Artemis).
+          ...(insets.top || insets.right || insets.bottom || insets.left
+            ? {
+                "--apollon-inset-top": `${insets.top}px`,
+                "--apollon-inset-right": `${insets.right}px`,
+                "--apollon-inset-bottom": `${insets.bottom}px`,
+                "--apollon-inset-left": `${insets.left}px`,
+              }
+            : {}),
+        } as CSSProperties
+      }
     >
       {mode === ApollonMode.Modelling && !readonly && <Sidebar />}
       <div className="apollon-canvas">
@@ -160,7 +204,7 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
           className="apollon-container"
           nodeTypes={diagramNodeTypes}
           edgeTypes={diagramEdgeTypes}
-          nodes={nodes}
+          nodes={displayNodes}
           edges={edges}
           onDragOver={onDragOver}
           onNodesChange={onNodesChange}
@@ -206,6 +250,8 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
           <CustomControls />
           <AlignmentGuides />
           <AssessmentSelectionDebug />
+          {/* Host-injected canvas chrome (header, rails, controls). */}
+          <OverlayLayer />
         </ReactFlow>
         <ScrollOverlay />
         <CollaborationLayer options={collaboration} awareness={awareness} />
