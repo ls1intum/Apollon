@@ -1,24 +1,21 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import {
+  ApollonEditable,
   ApollonFixture,
   fixtureByType,
   EditorStoreDecorator,
   ElementGallery,
   EdgeGallery,
-  SidebarHarness,
-  SeededPopoverHarness,
-  makeNode,
-  makeEdge,
 } from "../_support/editor"
-import { SfcActionTableEditPopover } from "@tumaet/apollon/components/popovers/sfcDiagram/SfcActionTableEditPopover"
-import { SfcEdgeEditPopover } from "@tumaet/apollon/components/popovers/sfcDiagram/SfcEdgeEditPopover"
 
 /**
- * Everything for the **SFC** (Sequential Function Chart) in one place: the full
- * diagram, the element palette, every node shape, every edge (transition) type,
- * and the edit popovers. Tagged `!test` — these mount editor source (a second
- * React copy under the Vitest browser runner), so they are visual: browse them
- * here.
+ * **SFC** (Sequential Function Chart) — everything in one place. `Playground`
+ * is the real, editable editor (palette, selection, edit popups) loaded with a
+ * sample; `Blank` is an empty editable canvas; `Preview` is a read-only render;
+ * `Elements` / `Edges` are galleries of every shape / connector. Edit popovers
+ * live under Popovers/. Use the toolbar to switch light / dark. Tagged `!test`
+ * (editor source = a 2nd React copy under the Vitest runner) — these are
+ * visual; browse them here.
  */
 const meta = {
   title: "Editor/SFC",
@@ -28,19 +25,24 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-// ── The whole diagram ────────────────────────────────────────────────────────
-export const Diagram: Story = {
+/** The real, editable editor + palette, pre-loaded with a sample to edit. */
+export const Playground: Story = {
+  parameters: { layout: "fullscreen" },
+  render: () => <ApollonEditable model={fixtureByType.Sfc} />,
+}
+
+/** Editable blank canvas — build an SFC from the palette. */
+export const Blank: Story = {
+  parameters: { layout: "fullscreen" },
+  render: () => <ApollonEditable type="Sfc" />,
+}
+
+/** Read-only render of a populated diagram (clean visual reference). */
+export const Preview: Story = {
   parameters: { layout: "fullscreen" },
   render: () => <ApollonFixture model={fixtureByType.Sfc} />,
 }
 
-/** The element palette (drag source) for this diagram type. */
-export const Palette: Story = {
-  parameters: { layout: "fullscreen" },
-  render: () => <SidebarHarness diagramType="Sfc" />,
-}
-
-// ── The parts ────────────────────────────────────────────────────────────────
 /** Every node shape this diagram can contain. */
 export const Elements: Story = {
   decorators: [EditorStoreDecorator],
@@ -52,61 +54,4 @@ export const Elements: Story = {
 export const Edges: Story = {
   parameters: { layout: "centered" },
   render: () => <EdgeGallery family="Sfc" />,
-}
-
-// ── Popovers (the edit UIs) ──────────────────────────────────────────────────
-/** Action-table editor — name plus a list of qualifier/description action rows. */
-export const ActionTableNodePopover: Story = {
-  parameters: { layout: "centered" },
-  render: () => (
-    <SeededPopoverHarness
-      diagramType="Sfc"
-      seed={(diagram) =>
-        diagram.getState().addNode(
-          makeNode("action-table-1", "sfcActionTable", {
-            name: "Conveyor",
-            actionRows: [
-              { id: "r1", identifier: "N", name: "Run motor" },
-              { id: "r2", identifier: "S", name: "Set alarm" },
-              { id: "r3", identifier: "R", name: "Reset counter" },
-            ],
-          })
-        )
-      }
-    >
-      <SfcActionTableEditPopover elementId="action-table-1" />
-    </SeededPopoverHarness>
-  ),
-}
-
-/** Transition editor — style plus a JSON-encoded condition (crossbar/negation). */
-export const TransitionEdgePopover: Story = {
-  parameters: { layout: "centered" },
-  render: () => (
-    <SeededPopoverHarness
-      diagramType="Sfc"
-      width={360}
-      seed={(diagram) => {
-        diagram.getState().addNode(makeNode("a", "sfcStep", { name: "Step 1" }))
-        diagram.getState().addNode(makeNode("b", "sfcStep", { name: "Step 2" }))
-        diagram.getState().addEdge(
-          makeEdge("edge-1", "SfcDiagramEdge", "a", "b", {
-            label: JSON.stringify({
-              isNegated: false,
-              displayName: "start & ready",
-              showBar: true,
-            }),
-          })
-        )
-      }}
-    >
-      <SfcEdgeEditPopover elementId="edge-1" />
-    </SeededPopoverHarness>
-  ),
-}
-
-/** The whole diagram, dark theme. */
-export const Dark: Story = {
-  ...Diagram,
-  globals: { theme: "dark" },
 }

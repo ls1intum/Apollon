@@ -138,6 +138,34 @@ export function ApollonFixture({
   )
 }
 
+/**
+ * A fully EDITABLE editor — the real thing: the element palette (sidebar) shows,
+ * elements are selectable/movable, and clicking opens edit popups. Pass `model`
+ * for a populated sample to edit, or `type` for a blank canvas of that diagram
+ * type to build from scratch. This is the surface to verify editing works.
+ */
+export function ApollonEditable({
+  model,
+  type,
+  height = 600,
+  dataTheme,
+}: {
+  model?: UMLModel
+  type?: UMLDiagramType
+  height?: number
+  dataTheme?: "light" | "dark"
+}) {
+  return (
+    <Apollon
+      defaultModel={model}
+      defaultType={type}
+      enablePopups
+      dataTheme={dataTheme}
+      style={{ height, width: "100%" }}
+    />
+  )
+}
+
 // ── Single-element path ─────────────────────────────────────────────────────
 /**
  * Provide the three zustand store contexts the SVG element renderers read
