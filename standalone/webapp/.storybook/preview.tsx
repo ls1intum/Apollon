@@ -97,6 +97,55 @@ const ThemedDocsContainer = ({
       channel.off("globalsUpdated", onGlobals)
     }
   }, [])
+
+  // `inline: false` stories (modals, editors) render in nested story iframes.
+  // Storybook does NOT pass the theme global to those iframe URLs, and the
+  // globals channel never reaches them — so their data-theme decorator defaults
+  // to light and never updates, leaving the preview light inside a dark docs
+  // page. The container knows the real theme, so push it into each child iframe
+  // and enforce it: the nested decorator sets light once on mount, so an observer
+  // on the iframe's <html> re-applies the correct theme the instant it diverges.
+  useEffect(() => {
+    const theme = isDark ? "dark" : "light"
+    const observers = new Set<MutationObserver>()
+    const enforce = (doc: Document) => {
+      if (doc.documentElement.getAttribute("data-theme") !== theme)
+        doc.documentElement.setAttribute("data-theme", theme)
+    }
+    const attach = (frame: HTMLIFrameElement) => {
+      let doc: Document | null = null
+      try {
+        doc = frame.contentDocument
+      } catch {
+        return
+      }
+      if (!doc) return
+      enforce(doc)
+      const mo = new MutationObserver(() => doc && enforce(doc))
+      mo.observe(doc.documentElement, {
+        attributes: true,
+        attributeFilter: ["data-theme"],
+      })
+      observers.add(mo)
+    }
+    const scan = () =>
+      document.querySelectorAll("iframe").forEach((f) => attach(f))
+    scan()
+    // story iframes lazy-load on scroll — catch each as it finishes loading,
+    // and any iframe added to the docs DOM later.
+    const onLoad = (e: Event) => {
+      if (e.target instanceof HTMLIFrameElement) attach(e.target)
+    }
+    document.addEventListener("load", onLoad, true)
+    const domObserver = new MutationObserver(scan)
+    domObserver.observe(document.body, { childList: true, subtree: true })
+    return () => {
+      document.removeEventListener("load", onLoad, true)
+      domObserver.disconnect()
+      observers.forEach((o) => o.disconnect())
+    }
+  }, [isDark])
+
   return (
     <DocsContainer
       context={context}
