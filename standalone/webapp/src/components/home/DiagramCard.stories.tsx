@@ -16,7 +16,7 @@ const TRANSPARENT_PNG =
 const sampleActionsMenu = (
   <DiagramActionsMenuView
     diagram={SAMPLE_LOCAL_DIAGRAM}
-    containerClassName="absolute z-30 [right:calc(var(--card-scale)*16px)] [top:calc(var(--card-scale)*16px)]"
+    containerClassName="pointer-events-auto relative"
     triggerClassName="flex cursor-pointer items-center justify-center rounded-md p-1"
     onOpen={fn()}
     onDuplicate={fn()}
@@ -168,7 +168,7 @@ export const SharedDiagram: Story = {
     actionsMenu: (
       <DiagramActionsMenuView
         diagram={SAMPLE_SHARED_DIAGRAM}
-        containerClassName="absolute z-30 [right:calc(var(--card-scale)*16px)] [top:calc(var(--card-scale)*16px)]"
+        containerClassName="pointer-events-auto relative"
         triggerClassName="flex cursor-pointer items-center justify-center rounded-md p-1"
         onOpen={fn()}
         onDuplicate={fn()}

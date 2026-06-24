@@ -18,9 +18,8 @@
    static, so this is @theme (not @theme inline). The diagram MODEL text (Inter,
    applied on SVG nodes via library/lib/fontStack.ts) is out of scope. */
 @theme {
-  --font-sans:
-    "Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue", Arial,
-    sans-serif;
+  --font-sans: "Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue",
+    Arial, sans-serif;
 }
 
 /* Accent bridge — webapp root scope ONLY (the published library default must not
@@ -249,9 +248,16 @@ body,
 }
 
 .home-diagram-card {
+  /* Single sizing knob for the diagram tile. The grid owns width (auto-fill
+     minmax 1fr); this floor keeps grid rows congruent now that the title can
+     wrap to two lines and the preview is aspect-driven. It is also the
+     off-screen placeholder estimate for content-visibility below — keep both
+     in sync. Derived from the 16:10 preview + header/footer at the grid's base
+     ~240px width. */
+  --card-min-h: 17.5rem;
   contain: layout paint;
   content-visibility: auto;
-  contain-intrinsic-size: auto 300px;
+  contain-intrinsic-size: auto var(--card-min-h);
 }
 
 /* Low-alpha slate shadows are invisible on dark surfaces, so dark hover uses a

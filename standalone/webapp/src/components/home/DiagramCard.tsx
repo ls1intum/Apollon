@@ -64,33 +64,6 @@ export type RecentDiagram = {
   lastSharedView?: DiagramView
 }
 
-/**
- * Card layout is authored at a 260x300 base size and uniformly scaled up on
- * larger breakpoints via the `--card-scale` CSS variable (see the root card
- * element). All inner spacing is expressed in these base-px steps and run
- * through `scalePx()` so the proportions hold at every scale.
- */
-const CARD_BASE_HEIGHT_PX = 300
-const CARD_HEADER_HEIGHT_PX = 243
-const CARD_FOOTER_HEIGHT_PX = 56
-const CARD_ICON_AREA_HEIGHT_PX = 138
-const CARD_PAD_X_PX = 16
-const CARD_HEADER_PAD_TOP_PX = 54
-const CARD_HEADER_PAD_BOTTOM_PX = 10
-const CARD_FOOTER_PAD_TOP_PX = 10
-const CARD_FOOTER_PAD_BOTTOM_PX = 14
-const CARD_ICON_GAP_PX = 8
-const CARD_ICON_BUTTON_PX = 30
-const CARD_BADGE_MAX_WIDTH_PX = 112
-
-/**
- * Card typography scale (in px). Kept small and named so every label on the
- * card maps to one of these steps instead of an inline literal.
- */
-const CARD_TYPE_TITLE_PX = 13
-const CARD_TYPE_META_PX = 11
-const CARD_TYPE_BADGE_PX = 10.5
-
 const formatRelativeLastModified = (lastModifiedAt: string, nowMs: number) => {
   const parsedDate = new Date(lastModifiedAt)
   if (Number.isNaN(parsedDate.getTime())) {
@@ -553,6 +526,113 @@ const FileDocumentIcon = ({ type }: { type: UMLDiagramType }) => {
 }
 
 /* ------------------------------------------------------------------ *\
+ * DiagramPreview — the 16:10 preview area, four mutually-exclusive states.
+\* ------------------------------------------------------------------ */
+
+type DiagramPreviewProps = {
+  diagram: RecentDiagram
+  title: string
+  lightDataUrl: string | null
+  darkDataUrl: string | null
+  /** Render the rendered thumbnail crossfade pair. */
+  showThumbnail: boolean
+  /** Show the loading spinner (incl. non-empty-but-no-thumbnail-yet anti-flicker). */
+  isLoading: boolean
+  /** Show the file-document placeholder panel (empty diagram). */
+  showPlaceholderIcon: boolean
+}
+
+/**
+ * The card's preview area. Aspect-ratio driven (16:10) so its height follows
+ * the grid-owned width with no magic px. Exactly one of four states renders:
+ * rendered thumbnail / loading spinner / empty placeholder panel / bare
+ * diagram-type icon panel.
+ */
+function DiagramPreview({
+  diagram,
+  title,
+  lightDataUrl,
+  darkDataUrl,
+  showThumbnail,
+  isLoading,
+  showPlaceholderIcon,
+}: DiagramPreviewProps) {
+  return (
+    <div className="flex aspect-[16/10] w-full items-center justify-center">
+      {showThumbnail ? (
+        <div className="relative h-full w-full">
+          <img
+            src={lightDataUrl!}
+            alt={`${title} diagram preview`}
+            className="theme-thumbnail-image theme-thumbnail-light"
+            loading="lazy"
+          />
+          {darkDataUrl && (
+            <img
+              src={darkDataUrl}
+              alt=""
+              aria-hidden="true"
+              className="theme-thumbnail-image theme-thumbnail-dark"
+              loading="lazy"
+            />
+          )}
+        </div>
+      ) : isLoading ? (
+        <div className="flex flex-col items-center gap-2">
+          <Spinner className="size-5 text-[var(--home-accent-base)]" />
+          <span className="text-xs font-medium text-[var(--home-text-secondary)]">
+            Loading...
+          </span>
+        </div>
+      ) : showPlaceholderIcon ? (
+        <FileDocumentIcon type={diagram.type} />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center text-[var(--home-text-on-badge)]">
+          {getDiagramTypeIcon(diagram.type, "w-12 h-12")}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ *\
+ * CardTag — one token-styled footer pill, three tones.
+\* ------------------------------------------------------------------ */
+
+type CardTagTone = "type" | "local" | "shared"
+
+const CARD_TAG_TONE: Record<CardTagTone, { bg: string; text: string }> = {
+  type: { bg: "var(--home-tag-type-bg)", text: "var(--home-tag-type-text)" },
+  local: { bg: "var(--home-tag-local-bg)", text: "var(--home-tag-local-text)" },
+  shared: {
+    bg: "var(--home-tag-shared-bg)",
+    text: "var(--home-tag-shared-text)",
+  },
+}
+
+/** A single footer pill (diagram type / source / sharing mode), tone-token styled. */
+function CardTag({
+  label,
+  tone,
+  weight,
+}: {
+  label: string
+  tone: CardTagTone
+  weight: 500 | 600
+}) {
+  const { bg, text } = CARD_TAG_TONE[tone]
+  return (
+    <Badge
+      className="h-auto max-w-[12ch] truncate rounded border-0 px-2 py-0.5 text-xs leading-tight"
+      title={label}
+      style={{ background: bg, color: text, fontWeight: weight }}
+    >
+      {label}
+    </Badge>
+  )
+}
+
+/* ------------------------------------------------------------------ *\
  * DiagramCardView — pure presentational diagram tile.
 \* ------------------------------------------------------------------ */
 
@@ -645,7 +725,16 @@ export function DiagramCardView({
   const shortTypeLabel = getDiagramTypeShortLabel(diagram.type)
   const sourceTypeLabel = isLocalDiagram ? "Local" : "Shared"
   const sharedViewLabel = getSharedDiagramViewBadge(diagram.lastSharedView)
-  const scalePx = (value: number) => `calc(var(--card-scale) * ${value}px)`
+
+  // Footer tag group: the diagram-type pill is always shown; a secondary pill
+  // is the Local/Shared source (in the "all diagrams" view) or, for shared
+  // diagrams, the current sharing mode.
+  const secondaryTag: { label: string; tone: CardTagTone } | null =
+    showSourceBadge
+      ? { label: sourceTypeLabel, tone: isLocalDiagram ? "local" : "shared" }
+      : !isLocalDiagram
+        ? { label: sharedViewLabel, tone: "shared" }
+        : null
 
   const nav = getDiagramNav(diagram)
 
@@ -654,29 +743,16 @@ export function DiagramCardView({
       ref={ref}
       role="listitem"
       className={cn(
-        "home-diagram-card group relative mx-auto flex flex-col gap-0 overflow-hidden py-0 ring-0 transition-all duration-[280ms] ease-[cubic-bezier(0.16,1,0.3,1)] [--card-scale:1] hover:bg-accent-hover md:[--card-scale:1.0769231] xl:[--card-scale:1.1538462]",
+        // Island look (same tokens as the editor chrome header islands): 12px
+        // radius, hairline chrome border, soft resting float — so the home
+        // reads as one design language with the editor. Width is grid-owned
+        // (auto-fill minmax 1fr); `--card-min-h` is the only sizing knob.
+        "home-diagram-card group relative flex min-h-[var(--card-min-h)] flex-col gap-0 overflow-hidden rounded-[var(--apollon-chrome-radius-lg)] border border-[var(--apollon-chrome-border)] py-0 shadow-[var(--apollon-chrome-shadow-floating)] ring-0 transition-all duration-[280ms] ease-[cubic-bezier(0.16,1,0.3,1)] focus-within:ring-2 focus-within:ring-[var(--home-accent-ring)]",
         isHighlighted
-          ? "bg-accent-hover"
-          : "hover:[box-shadow:0_6px_16px_var(--home-shadow-card-hover)]",
+          ? "animate-[diagram-highlight-pulse_2.4s_ease-out_forwards] bg-accent-hover shadow-[0_0_0_3px_color-mix(in_srgb,var(--home-accent-base)_35%,transparent)]"
+          : "hover:bg-accent-hover hover:shadow-[0_6px_16px_var(--home-shadow-card-hover)]",
         className
       )}
-      style={{
-        // Match the editor's floating "island" appearance (same tokens as the
-        // chrome header islands): 12px radius, hairline chrome border, soft
-        // resting float — so the home reads as one design language with the
-        // editor instead of a flat plate.
-        border: "1px solid var(--apollon-chrome-border)",
-        borderRadius: "var(--apollon-chrome-radius-lg)",
-        width: "100%",
-        maxWidth: "300px",
-        height: scalePx(CARD_BASE_HEIGHT_PX),
-        boxShadow: isHighlighted
-          ? "0 0 0 3px color-mix(in srgb, var(--home-accent-base) 35%, transparent)"
-          : "var(--apollon-chrome-shadow-floating)",
-        animation: isHighlighted
-          ? "diagram-highlight-pulse 2.4s ease-out forwards"
-          : undefined,
-      }}
     >
       {/* Expired overlay */}
       {isExpired && (
@@ -687,25 +763,23 @@ export function DiagramCardView({
               "color-mix(in srgb, var(--home-surface-raised) 80%, transparent)",
           }}
         >
-          <span
-            className="text-xs font-semibold"
-            style={{ color: "var(--home-text-secondary)" }}
-          >
+          <span className="text-xs font-semibold text-[var(--home-text-secondary)]">
             Link expired
           </span>
-          <span
-            className="text-[10px]"
-            style={{ color: "var(--home-text-muted)" }}
-          >
+          <span className="text-[10px] text-[var(--home-text-muted)]">
             This shared diagram is no longer available
           </span>
         </div>
       )}
 
       {/* Clickable card body. A real link so cmd/ctrl/middle-click opens the
-          diagram in a new tab; plain click still navigates within the SPA. */}
+          diagram in a new tab; plain click still navigates within the SPA. The
+          stretched `after` pseudo-element makes the whole card the hit target;
+          the overlaid controls sit above it via their z-20 wrapper. */}
       <Link
         {...nav}
+        // Expired links keep `preventDefault` AND `tabIndex={-1}`: aria-disabled
+        // is advisory only, so TanStack <Link> would still navigate on Enter.
         onClick={(event) => {
           if (isExpired) {
             event.preventDefault()
@@ -715,241 +789,121 @@ export function DiagramCardView({
         }}
         aria-label={isExpired ? `${title} (expired)` : `Open ${title}`}
         aria-disabled={isExpired}
-        className={`flex h-full w-full flex-col text-left focus-visible:outline-2 focus-visible:outline-offset-2 ${isExpired ? "cursor-default opacity-40" : "cursor-pointer"}`}
-        style={{ outlineColor: "var(--home-accent-ring)" }}
+        tabIndex={isExpired ? -1 : undefined}
+        className={cn(
+          "flex h-full w-full flex-col text-left outline-none after:absolute after:inset-0 after:z-10 after:content-['']",
+          isExpired ? "cursor-default" : "cursor-pointer"
+        )}
       >
-        {/* ---- Header Part: preview + title aligned horizontally ---- */}
+        {/* ---- Header: preview + title ---- */}
         <CardHeader
-          className="flex w-full flex-col gap-0 rounded-none px-0"
-          style={{
-            height: scalePx(CARD_HEADER_HEIGHT_PX),
-            background: "transparent",
-            padding: `${scalePx(CARD_HEADER_PAD_TOP_PX)} ${scalePx(CARD_PAD_X_PX)} ${scalePx(CARD_HEADER_PAD_BOTTOM_PX)} ${scalePx(CARD_PAD_X_PX)}`,
-          }}
+          className={cn(
+            "flex w-full flex-col gap-2 rounded-none px-4 pt-12 pb-2",
+            isExpired && "opacity-40"
+          )}
         >
-          {/* ---- Icon preview area (Transparent) ---- */}
-          <div
-            className="flex w-full items-center justify-center"
-            style={{
-              background: "transparent",
-              height: scalePx(CARD_ICON_AREA_HEIGHT_PX),
-              marginBottom: scalePx(CARD_ICON_GAP_PX),
-            }}
-          >
-            {shouldRenderDiagramThumbnail ? (
-              <div className="relative h-full w-full">
-                <img
-                  src={lightDataUrl!}
-                  alt={`${title} diagram preview`}
-                  className="theme-thumbnail-image theme-thumbnail-light"
-                  loading="lazy"
-                />
-                {darkDataUrl && (
-                  <img
-                    src={darkDataUrl}
-                    alt=""
-                    aria-hidden="true"
-                    className="theme-thumbnail-image theme-thumbnail-dark"
-                    loading="lazy"
-                  />
-                )}
-              </div>
-            ) : isEffectivelyLoading && !showPlaceholderIcon ? (
-              <div className="flex flex-col items-center gap-2">
-                <Spinner className="size-5 text-[var(--home-accent-base)]" />
-                <span
-                  className="text-xs font-medium"
-                  style={{ color: "var(--home-text-secondary)" }}
-                >
-                  Loading...
-                </span>
-              </div>
-            ) : showPlaceholderIcon ? (
-              <FileDocumentIcon type={diagram.type} />
-            ) : (
-              <div
-                className="flex h-full w-full items-center justify-center"
-                style={{ color: "var(--home-text-on-badge)" }}
-              >
-                {getDiagramTypeIcon(diagram.type, "w-12 h-12")}
-              </div>
-            )}
-          </div>
+          <DiagramPreview
+            diagram={diagram}
+            title={title}
+            lightDataUrl={lightDataUrl}
+            darkDataUrl={darkDataUrl}
+            showThumbnail={shouldRenderDiagramThumbnail}
+            isLoading={isEffectivelyLoading && !showPlaceholderIcon}
+            showPlaceholderIcon={showPlaceholderIcon}
+          />
 
-          {/* ---- Title section (smaller, bottom-left in header) ---- */}
           <CardContent className="mt-auto w-full px-0 text-left">
             <p
-              className="truncate"
+              className={cn(
+                "line-clamp-2 text-sm leading-snug font-medium",
+                isUntitled
+                  ? "text-[var(--home-text-muted)] italic"
+                  : "text-[var(--home-text-strong)]"
+              )}
               title={title}
-              style={{
-                color: isUntitled
-                  ? "var(--home-text-muted)"
-                  : "var(--home-text-strong)",
-                fontStyle: isUntitled ? "italic" : "normal",
-                fontSize: `${CARD_TYPE_TITLE_PX}px`,
-                fontWeight: 500,
-                lineHeight: "1.3",
-              }}
             >
               {title}
             </p>
           </CardContent>
         </CardHeader>
 
-        {/* ---- Divider line ---- */}
-        <Separator
-          className="bg-border-subtle"
-          style={{
-            height: "0.5px",
-            width: "auto",
-            margin: `0 ${scalePx(CARD_PAD_X_PX)}`,
-          }}
-        />
+        <Separator className="mx-4 h-px w-auto bg-border-subtle" />
 
-        {/* ---- Bottom metadata + tags row ---- */}
+        {/* ---- Footer: relative date + tag pills ---- */}
         <CardFooter
-          className="flex w-full items-center justify-between rounded-none border-t-0 bg-transparent p-0"
-          style={{
-            padding: `${scalePx(CARD_FOOTER_PAD_TOP_PX)} ${scalePx(CARD_PAD_X_PX)} ${scalePx(CARD_FOOTER_PAD_BOTTOM_PX)} ${scalePx(CARD_PAD_X_PX)}`,
-            height: scalePx(CARD_FOOTER_HEIGHT_PX),
-          }}
+          className={cn(
+            "flex w-full items-center justify-between gap-2 rounded-none border-t-0 bg-transparent px-4 pt-2.5 pb-3.5",
+            isExpired && "opacity-40"
+          )}
         >
-          {/* Relative last-modified date; full timestamp on hover */}
-          <div
-            className="flex flex-col text-left"
+          <time
+            dateTime={diagram.lastModifiedAt}
             title={new Date(diagram.lastModifiedAt).toLocaleString()}
+            className="truncate text-xs leading-tight font-medium text-[var(--home-text-muted)]"
           >
-            <span
-              style={{
-                color: "var(--home-text-muted)",
-                fontSize: `${CARD_TYPE_META_PX}px`,
-                lineHeight: "1.2",
-              }}
-            >
-              Modified:
-            </span>
-            <span
-              className="truncate font-medium"
-              style={{
-                color: "var(--home-text-muted)",
-                fontSize: `${CARD_TYPE_META_PX}px`,
-                lineHeight: "1.2",
-              }}
-            >
-              {relativeDate}
-            </span>
-          </div>
+            {relativeDate}
+          </time>
 
-          {/*
-            Tag group — always shows the diagram-type pill (primary).
-            A secondary source/mode pill is added when relevant:
-            - "all diagrams" view: Local or Shared
-            - shared diagrams: the sharing mode (view/edit)
-          */}
-          <div className="flex shrink-0 items-center gap-1 pl-2">
-            <Badge
-              className="h-auto rounded border-0 p-0 text-[length:inherit] font-[inherit]"
-              title={shortTypeLabel}
-              style={{
-                padding: "3px 8px",
-                fontSize: `${CARD_TYPE_BADGE_PX}px`,
-                lineHeight: 1.2,
-                background: "var(--home-tag-type-bg)",
-                color: "var(--home-tag-type-text)",
-                fontWeight: 500,
-                maxWidth: scalePx(CARD_BADGE_MAX_WIDTH_PX),
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {shortTypeLabel}
-            </Badge>
-            {showSourceBadge ? (
-              <Badge
-                className="h-auto rounded border-0 p-0 text-[length:inherit] font-[inherit]"
-                title={sourceTypeLabel}
-                style={{
-                  padding: "3px 8px",
-                  fontSize: `${CARD_TYPE_BADGE_PX}px`,
-                  lineHeight: 1.2,
-                  background: isLocalDiagram
-                    ? "var(--home-tag-local-bg)"
-                    : "var(--home-tag-shared-bg)",
-                  color: isLocalDiagram
-                    ? "var(--home-tag-local-text)"
-                    : "var(--home-tag-shared-text)",
-                  fontWeight: 600,
-                  maxWidth: scalePx(CARD_BADGE_MAX_WIDTH_PX),
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {sourceTypeLabel}
-              </Badge>
-            ) : !isLocalDiagram ? (
-              <Badge
-                className="h-auto rounded border-0 p-0 text-[length:inherit] font-[inherit]"
-                title={sharedViewLabel}
-                style={{
-                  padding: "3px 8px",
-                  fontSize: `${CARD_TYPE_BADGE_PX}px`,
-                  lineHeight: 1.2,
-                  background: "var(--home-tag-shared-bg)",
-                  color: "var(--home-tag-shared-text)",
-                  fontWeight: 600,
-                  maxWidth: scalePx(CARD_BADGE_MAX_WIDTH_PX),
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {sharedViewLabel}
-              </Badge>
+          <div className="flex shrink-0 items-center gap-1">
+            <CardTag label={shortTypeLabel} tone="type" weight={500} />
+            {secondaryTag ? (
+              <CardTag
+                label={secondaryTag.label}
+                tone={secondaryTag.tone}
+                weight={600}
+              />
             ) : null}
           </div>
         </CardFooter>
       </Link>
 
-      {/* ---- Star / Favorite button – overlaid top-left ---- */}
-      {onToggleFavorite && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-          className="home-card-icon-button absolute z-30"
-          style={{
-            left: scalePx(CARD_PAD_X_PX),
-            top: scalePx(CARD_PAD_X_PX),
-            width: scalePx(CARD_ICON_BUTTON_PX),
-            height: scalePx(CARD_ICON_BUTTON_PX),
-            outlineColor: "var(--home-accent-ring)",
-            color: isFavorite
-              ? "var(--home-favorite-star)"
-              : "var(--home-text-muted)",
-            ["--icon-hover-color" as string]: "var(--home-text-strong)",
-            ["--icon-active-color" as string]: "var(--home-favorite-star)",
-            ["--icon-hover-bg" as string]:
-              "color-mix(in srgb, var(--home-text-primary) 10%, transparent)",
-          }}
-          data-active={isFavorite ? "true" : "false"}
-          onClick={(event) => {
-            event.stopPropagation()
-            onToggleFavorite()
-          }}
-        >
-          <Star
-            className="size-[18px]"
-            aria-hidden="true"
-            fill={isFavorite ? "currentColor" : "none"}
-          />
-        </Button>
-      )}
+      {/* ---- Overlaid controls. The wrapper carries z-20 (above the link's
+          z-10 `after`) and `opacity-0` reveal — its own stacking context. On
+          touch (and when a favorite is set) the controls stay pinned visible. ---- */}
+      <div
+        data-fav={isFavorite ? "true" : undefined}
+        className="pointer-events-none absolute inset-x-3 top-3 z-20 flex items-start justify-between opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-100 data-[fav]:opacity-100"
+      >
+        {/* ---- Favorite star – top-left ---- */}
+        {onToggleFavorite ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            aria-label={
+              isFavorite ? "Remove from favorites" : "Add to favorites"
+            }
+            aria-pressed={isFavorite}
+            className="home-card-icon-button pointer-events-auto size-[30px]"
+            style={{
+              outlineColor: "var(--home-accent-ring)",
+              color: isFavorite
+                ? "var(--home-favorite-star)"
+                : "var(--home-text-muted)",
+              ["--icon-hover-color" as string]: "var(--home-text-strong)",
+              ["--icon-active-color" as string]: "var(--home-favorite-star)",
+              ["--icon-hover-bg" as string]:
+                "color-mix(in srgb, var(--home-text-primary) 10%, transparent)",
+            }}
+            data-active={isFavorite ? "true" : "false"}
+            onClick={(event) => {
+              event.stopPropagation()
+              onToggleFavorite()
+            }}
+          >
+            <Star
+              className="size-[18px]"
+              aria-hidden="true"
+              fill={isFavorite ? "currentColor" : "none"}
+            />
+          </Button>
+        ) : (
+          <span />
+        )}
 
-      {/* ---- Three-dot menu – overlaid top-right ---- */}
-      {actionsMenu}
+        {/* ---- Three-dot menu – top-right ---- */}
+        {actionsMenu}
+      </div>
     </Card>
   )
 }
@@ -1048,11 +1002,9 @@ const DiagramCardComponent = ({
           diagram={diagram}
           stopPropagation
           isExpired={isExpired}
-          containerClassName="absolute z-30 [right:calc(var(--card-scale)*16px)] [top:calc(var(--card-scale)*16px)]"
-          triggerClassName="flex cursor-pointer items-center justify-center rounded-md p-1 transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2"
+          containerClassName="pointer-events-auto relative"
+          triggerClassName="flex size-[30px] cursor-pointer items-center justify-center rounded-md p-1 transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2"
           triggerStyle={{
-            width: `calc(var(--card-scale) * ${CARD_ICON_BUTTON_PX}px)`,
-            height: `calc(var(--card-scale) * ${CARD_ICON_BUTTON_PX}px)`,
             outlineColor: "var(--home-accent-ring)",
             color: "var(--home-text-muted)",
             ["--icon-hover-color" as string]: "var(--home-text-strong)",
