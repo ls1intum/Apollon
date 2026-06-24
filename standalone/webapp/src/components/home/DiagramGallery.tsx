@@ -710,7 +710,7 @@ export const DiagramGallery = ({
 
   return (
     <div className="w-full transition-colors duration-200">
-      <div className="space-y-6 recent-diagrams-font">
+      <div className="space-y-6">
         {/* ── Page heading ── */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h1

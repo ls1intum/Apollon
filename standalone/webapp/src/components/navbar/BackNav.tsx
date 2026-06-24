@@ -6,10 +6,10 @@ import type { BackTarget } from "@/hooks/useBackTarget"
 type BackNavTone = "onDark" | "onSurface"
 
 const toneClass: Record<BackNavTone, string> = {
-  // Header chrome (editor + home): idles in muted chrome text and washes toward
+  // Header chrome (editor + home): idles in solid foreground and washes toward
   // the chrome hover surface, matching the sibling File/Share controls.
   onDark:
-    "text-[color:var(--apollon-chrome-text-muted)] hover:bg-[var(--apollon-chrome-surface-hover)] hover:text-[color:var(--apollon-chrome-text)] active:bg-[var(--apollon-chrome-surface-active)]",
+    "text-foreground hover:bg-[var(--apollon-chrome-surface-hover)] active:bg-[var(--apollon-chrome-surface-active)]",
   // Light popover surface (editor mobile menu).
   onSurface:
     "text-[color:var(--apollon-chrome-text)] hover:bg-[var(--apollon-chrome-surface-hover)] active:bg-[var(--apollon-chrome-surface-active)]",

@@ -113,7 +113,7 @@ export function ModalFrame({
               // Accent header = white-on-navy title; plain/divider header (white
               // surface) = dark body text.
               isHomeDialog
-                ? "truncate text-[clamp(0.95rem,4vw,1.3rem)] font-medium text-primary-foreground [font-family:Poppins,sans-serif]"
+                ? "truncate text-[clamp(0.95rem,4vw,1.3rem)] font-medium text-primary-foreground"
                 : "text-foreground"
             )}
           >

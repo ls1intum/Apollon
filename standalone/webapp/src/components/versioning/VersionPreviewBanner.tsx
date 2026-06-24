@@ -55,9 +55,6 @@ interface ViewProps {
   ref?: React.Ref<HTMLDivElement>
 }
 
-const BANNER_FONT =
-  '"Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue", Arial, sans-serif'
-
 // The warning palette comes from the `--home-banner-warning-*` tokens, so the
 // banner stays in the notification language across light/dark.
 const buttonStyle: CSSProperties = {
@@ -108,7 +105,6 @@ export function VersionPreviewBannerView({
         className
       )}
       style={{
-        fontFamily: BANNER_FONT,
         backgroundColor: "var(--home-banner-warning-bg)",
         color: "var(--home-banner-warning-text)",
         borderColor: "var(--home-banner-warning-border)",

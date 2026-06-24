@@ -98,7 +98,7 @@ export const MenuShell = ({
           aria-labelledby={buttonId}
           align={anchorHorizontal === "left" ? "start" : "end"}
           sideOffset={8}
-          className={`recent-diagrams-font ${menuPaperRadiusClassName} border border-border-subtle bg-card ${menuPaperPaddingClassName} text-foreground shadow-sm transition-colors duration-200 ${menuWidthClassName}`}
+          className={`${menuPaperRadiusClassName} border border-border-subtle bg-card ${menuPaperPaddingClassName} text-foreground shadow-sm transition-colors duration-200 ${menuWidthClassName}`}
         >
           {children}
         </DropdownMenuContent>

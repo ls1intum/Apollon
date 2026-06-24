@@ -63,12 +63,10 @@ export function EmbedSnippetPanel({
 
   return (
     <fieldset className="border border-[var(--home-border-subtle)] p-2 rounded-xl flex flex-col gap-2">
-      <legend className="text-sm px-2 text-[var(--apollon-primary-contrast)]">
-        Embed
-      </legend>
+      <legend className="text-sm px-2 text-foreground">Embed</legend>
 
       {!snippets ? (
-        <p className="text-sm opacity-75 text-[var(--apollon-primary-contrast)]">
+        <p className="text-sm opacity-75 text-foreground">
           Share the diagram to embed it.
         </p>
       ) : (
@@ -95,7 +93,7 @@ export function EmbedSnippetPanel({
               aria-label="Embed code"
               aria-describedby={hintId}
               onFocus={(e) => e.currentTarget.select()}
-              className="h-9 min-w-0 grow rounded-l-md border border-r-0 border-[var(--home-border-default)] bg-[var(--apollon-background)] px-3 font-mono text-xs text-[var(--apollon-primary-contrast)] outline-none"
+              className="h-9 min-w-0 grow rounded-l-md border border-r-0 border-[var(--home-border-default)] bg-[var(--apollon-background)] px-3 font-mono text-xs text-foreground outline-none"
             />
             <Button
               onClick={() => onCopy(snippets[format])}
@@ -107,10 +105,7 @@ export function EmbedSnippetPanel({
             </Button>
           </div>
 
-          <span
-            id={hintId}
-            className="text-xs opacity-70 text-[var(--apollon-primary-contrast)]"
-          >
+          <span id={hintId} className="text-xs opacity-70 text-foreground">
             {FORMAT_HINTS[format]}
           </span>
         </>

@@ -8,11 +8,7 @@ export const DiagramGallerySkeleton = ({ count = 6 }: Props) => {
   const cards = Array.from({ length: count }, (_, i) => i)
 
   return (
-    <div
-      className="w-full recent-diagrams-font"
-      role="status"
-      aria-label="Loading diagrams"
-    >
+    <div className="w-full" role="status" aria-label="Loading diagrams">
       <div className="space-y-6">
         <div className="flex w-full flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <Skeleton className="h-9 w-full md:max-w-xl" />

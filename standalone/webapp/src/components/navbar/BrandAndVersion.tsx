@@ -24,7 +24,7 @@ export const BrandAndVersion = () => {
         height="28"
         className="block shrink-0"
       />
-      <span className="overflow-visible whitespace-nowrap font-[family-name:var(--navbar-app-name-font)] text-base leading-none font-semibold tracking-[0.06em] text-[color:var(--apollon-chrome-text)] uppercase">
+      <span className="overflow-visible whitespace-nowrap text-base leading-none font-semibold tracking-[0.06em] text-[color:var(--apollon-chrome-text)] uppercase">
         Apollon
       </span>
     </div>

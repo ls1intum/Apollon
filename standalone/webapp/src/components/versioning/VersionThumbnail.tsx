@@ -123,7 +123,11 @@ export const VersionThumbnail: FC<Props> = ({
       // dark stroke/text colors regardless of host theme, so a white
       // backdrop keeps thumbnails legible in light and dark mode.
       className="flex shrink-0 items-center justify-center overflow-hidden rounded bg-white"
-      style={{ width: w, height: h, color: isAuto ? "#9aa0a6" : "#1a73e8" }}
+      style={{
+        width: w,
+        height: h,
+        color: isAuto ? "var(--home-text-muted)" : "var(--home-accent-base)",
+      }}
       aria-hidden
     >
       {src ? (

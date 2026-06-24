@@ -99,10 +99,7 @@ export const ShareDashboardModal = (
             </TooltipTrigger>
             <TooltipContent>
               {share.diagramId ? (
-                <span
-                  className="recent-diagrams-font"
-                  style={{ display: "block", lineHeight: "1.6" }}
-                >
+                <span style={{ display: "block", lineHeight: "1.6" }}>
                   • <b>Edit</b> — view &amp; modify, no live sync
                   <br />• <b>Collaborate</b> — real-time multi-user editing
                   <br />• <b>Add feedback</b> — reviewers annotate a read-only
@@ -111,7 +108,7 @@ export const ShareDashboardModal = (
                   annotations
                 </span>
               ) : (
-                <span className="recent-diagrams-font">
+                <span>
                   A snapshot is uploaded to our servers — your local diagram is
                   untouched. Links stay active for 120 days, and the clock
                   resets whenever the diagram is opened or edited.

@@ -108,9 +108,7 @@ export const ShareLinkRow = ({
           }
         />
         <TooltipContent side="top">
-          <span className="recent-diagrams-font">
-            {copied ? "Copied!" : "Copy link"}
-          </span>
+          <span>{copied ? "Copied!" : "Copy link"}</span>
         </TooltipContent>
       </Tooltip>
 

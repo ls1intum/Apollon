@@ -12,6 +12,17 @@
    resolver reliably inlines the precompiled dist file. */
 @import "../../../packages/ui/dist/components.css";
 
+/* Single source of truth for the app font. Defining `--font-sans` in @theme
+   makes BOTH the `font-sans` utility and Tailwind Preflight's default document
+   font resolve to Poppins, so the whole UI inherits one font. A font stack is
+   static, so this is @theme (not @theme inline). The diagram MODEL text (Inter,
+   applied on SVG nodes via library/lib/fontStack.ts) is out of scope. */
+@theme {
+  --font-sans:
+    "Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue", Arial,
+    sans-serif;
+}
+
 /* Accent bridge — webapp root scope ONLY (the published library default must not
    depend on --home-*). Drive the editor accent from the app accent so the
    homepage and the embedded editor share one brand color. --home-accent-base is
@@ -24,8 +35,6 @@
      editor Navbar and the chrome HomeNavbar share one source). */
   --navbar-bg: #212529;
   --navbar-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
-  --navbar-app-name-font: "Poppins", "Avenir Next", "Avenir", "Segoe UI",
-    "Helvetica Neue", Arial, sans-serif;
 
   /* Safe-area floor: map the UA insets onto the custom properties the mobile
      layout reads as `var(--safe-area-inset-*, 0px)`. With `viewport-fit=cover`
@@ -70,19 +79,6 @@ html {
 }
 
 body {
-  font-family:
-    -apple-system,
-    BlinkMacSystemFont,
-    Segoe UI,
-    Roboto,
-    Helvetica Neue,
-    Arial,
-    Noto Sans,
-    sans-serif,
-    Apple Color Emoji,
-    Segoe UI Emoji,
-    Segoe UI Symbol,
-    Noto Color Emoji;
   display: flex;
   flex-direction: column;
   height: 100dvh; /* Dynamic viewport height for iOS */
@@ -152,11 +148,6 @@ body,
 .app-scroll-y {
   overflow-y: auto;
   overflow-x: clip;
-}
-
-.recent-diagrams-font {
-  font-family: "Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue",
-    Arial, sans-serif;
 }
 
 .app-loading-screen {
@@ -567,8 +558,7 @@ body,
    accents. Theme-aware via --home-* tokens. */
 
 .home-toast-container {
-  --toastify-font-family: "Poppins", "Avenir Next", "Avenir", "Segoe UI",
-    "Helvetica Neue", Arial, sans-serif;
+  --toastify-font-family: var(--font-sans);
   --toastify-toast-bd-radius: var(--home-radius-lg);
   --toastify-toast-shadow: var(--home-shadow-overlay-box);
   --toastify-color-success: var(--home-toast-success);
@@ -597,8 +587,7 @@ body,
   color: var(--home-text-primary);
   border: 1px solid var(--home-border-subtle);
   border-radius: var(--home-radius-lg);
-  font-family: "Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue",
-    Arial, sans-serif;
+  font-family: var(--font-sans);
   font-size: 0.85rem;
   line-height: 1.45;
 }

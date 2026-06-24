@@ -26,7 +26,7 @@ const meta = {
   parameters: { layout: "centered" },
   decorators: [
     (Story) => (
-      <div className="recent-diagrams-font w-[420px] rounded-lg border border-border bg-card p-5">
+      <div className="w-[420px] rounded-lg border border-border bg-card p-5">
         <Story />
       </div>
     ),

@@ -274,7 +274,7 @@ export function DiagramActionsMenuView({
           aria-label="Diagram actions"
           align="end"
           sideOffset={8}
-          className={`recent-diagrams-font border-0 ${menuClassName}`}
+          className={`border-0 ${menuClassName}`}
           style={menuStyle}
         >
           {isExpired ? (
@@ -348,7 +348,7 @@ export function DiagramActionsMenuView({
                     </DropdownMenuSubTrigger>
                     <DropdownMenuSubContent
                       aria-label="Change sharing mode"
-                      className={`recent-diagrams-font border-0 ${menuClassName}`}
+                      className={`border-0 ${menuClassName}`}
                       style={menuStyle}
                     >
                       {SHARED_DIAGRAM_VIEW_OPTIONS.map((option) => (
