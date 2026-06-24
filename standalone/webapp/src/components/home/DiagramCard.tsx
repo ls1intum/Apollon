@@ -7,7 +7,7 @@ import {
   type ReactNode,
   type Ref,
 } from "react"
-import { MoreVertical, Star } from "lucide-react"
+import { MoreVertical, Star, Unlink } from "lucide-react"
 import type { UMLDiagramType } from "@tumaet/apollon"
 import {
   DropdownMenu,
@@ -510,20 +510,21 @@ export const DiagramActionsMenu = ({
 }
 
 /**
- * Empty-diagram placeholder: a centered, theme-aware framed tile holding the
- * diagram-type glyph. All tokens (no baked colors) so it reads cleanly on the
- * island surface in both themes and stays cohesive with the editor canvas.
+ * A centered, theme-aware framed tile shared by every preview state that has no
+ * thumbnail (type glyph, loading spinner, expired notice) so they share one
+ * footprint and the skeleton→card→thumbnail swaps never jump. All tokens (no
+ * baked colors) so it sits cleanly on the island surface in both themes.
  */
-const DiagramTypePlaceholder = ({ type }: { type: UMLDiagramType }) => {
+const PreviewTile = ({ children }: { children: ReactNode }) => {
   return (
     <div className="flex size-20 items-center justify-center rounded-xl border border-[var(--home-border-subtle)] bg-[color-mix(in_srgb,var(--home-text-primary)_4%,transparent)] text-[var(--home-text-muted)]">
-      {getDiagramTypeIcon(type, "size-9")}
+      {children}
     </div>
   )
 }
 
 /* ------------------------------------------------------------------ *\
- * DiagramPreview — the 16:10 preview area, four mutually-exclusive states.
+ * DiagramPreview — the 16:10 preview area, one of four states.
 \* ------------------------------------------------------------------ */
 
 type DiagramPreviewProps = {
@@ -535,12 +536,14 @@ type DiagramPreviewProps = {
   showThumbnail: boolean
   /** Show the loading spinner (incl. non-empty-but-no-thumbnail-yet anti-flicker). */
   isLoading: boolean
+  /** Show the "share no longer available" tile instead of a preview. */
+  isExpired: boolean
 }
 
 /**
  * The card's preview area. Aspect-ratio driven (16:10) so its height follows
- * the grid-owned width with no magic px. Exactly one of three states renders:
- * rendered thumbnail / loading spinner / empty diagram-type placeholder.
+ * the grid-owned width with no magic px. Exactly one state renders: expired
+ * notice / rendered thumbnail / loading spinner / empty diagram-type glyph.
  */
 function DiagramPreview({
   diagram,
@@ -549,10 +552,25 @@ function DiagramPreview({
   darkDataUrl,
   showThumbnail,
   isLoading,
+  isExpired,
 }: DiagramPreviewProps) {
   return (
     <div className="flex aspect-[16/10] w-full items-center justify-center">
-      {showThumbnail ? (
+      {isExpired ? (
+        <div className="flex flex-col items-center gap-2 text-center">
+          <PreviewTile>
+            <Unlink className="size-8" aria-hidden="true" />
+          </PreviewTile>
+          <div className="space-y-0.5">
+            <p className="text-xs font-semibold text-[var(--home-text-secondary)]">
+              Link expired
+            </p>
+            <p className="text-[10px] text-[var(--home-text-muted)]">
+              This shared diagram is no longer available
+            </p>
+          </div>
+        </div>
+      ) : showThumbnail ? (
         <div className="relative h-full w-full">
           <img
             src={lightDataUrl!}
@@ -571,14 +589,11 @@ function DiagramPreview({
           )}
         </div>
       ) : isLoading ? (
-        <div className="flex flex-col items-center gap-2">
-          <Spinner className="size-5 text-[var(--home-accent-base)]" />
-          <span className="text-xs font-medium text-[var(--home-text-secondary)]">
-            Loading...
-          </span>
-        </div>
+        <PreviewTile>
+          <Spinner className="size-6 text-[var(--home-accent-base)]" />
+        </PreviewTile>
       ) : (
-        <DiagramTypePlaceholder type={diagram.type} />
+        <PreviewTile>{getDiagramTypeIcon(diagram.type, "size-9")}</PreviewTile>
       )}
     </div>
   )
@@ -600,21 +615,18 @@ const CARD_TAG_TONE: Record<CardTagTone, { bg: string; text: string }> = {
 }
 
 /** A single footer pill (diagram type / source / sharing mode), tone-token styled. */
-function CardTag({
-  label,
-  tone,
-  weight,
-}: {
-  label: string
-  tone: CardTagTone
-  weight: 500 | 600
-}) {
+function CardTag({ label, tone }: { label: string; tone: CardTagTone }) {
   const { bg, text } = CARD_TAG_TONE[tone]
   return (
     <Badge
-      className="h-auto max-w-[12ch] truncate rounded border-0 px-2 py-0.5 text-xs leading-tight"
+      // The neutral type pill stays at the Badge's medium weight; the source /
+      // sharing-mode pill is emphasized to read as the card's primary tag.
+      className={cn(
+        "h-auto max-w-[12ch] truncate rounded border-0 px-2 py-0.5 text-xs leading-tight",
+        tone !== "type" && "font-semibold"
+      )}
       title={label}
-      style={{ background: bg, color: text, fontWeight: weight }}
+      style={{ background: bg, color: text }}
     >
       {label}
     </Badge>
@@ -650,7 +662,7 @@ export type DiagramCardViewProps = {
   showSourceBadge?: boolean
   /** Apply the just-created/imported highlight pulse treatment. */
   isHighlighted?: boolean
-  /** Render the expired overlay and disable interactions. */
+  /** Show the "share no longer available" state and disable navigation. */
   isExpired?: boolean
   /** Whether the diagram is favorited (drives the star fill + label). */
   isFavorite?: boolean
@@ -747,23 +759,6 @@ export function DiagramCardView({
       )}
     >
       {/* Expired overlay */}
-      {isExpired && (
-        <div
-          className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-1 rounded-sm"
-          style={{
-            background:
-              "color-mix(in srgb, var(--home-surface-raised) 80%, transparent)",
-          }}
-        >
-          <span className="text-xs font-semibold text-[var(--home-text-secondary)]">
-            Link expired
-          </span>
-          <span className="text-[10px] text-[var(--home-text-muted)]">
-            This shared diagram is no longer available
-          </span>
-        </div>
-      )}
-
       {/* Clickable card body. A real link so cmd/ctrl/middle-click opens the
           diagram in a new tab; plain click still navigates within the SPA. The
           stretched `after` pseudo-element makes the whole card the hit target;
@@ -791,12 +786,7 @@ export function DiagramCardView({
         )}
       >
         {/* ---- Header: preview + title ---- */}
-        <CardHeader
-          className={cn(
-            "flex w-full flex-col gap-2 rounded-none px-4 pt-12 pb-2",
-            isExpired && "opacity-40"
-          )}
-        >
+        <CardHeader className="flex w-full flex-col gap-2 rounded-none px-4 pt-12 pb-2">
           <DiagramPreview
             diagram={diagram}
             title={title}
@@ -804,15 +794,19 @@ export function DiagramCardView({
             darkDataUrl={darkDataUrl}
             showThumbnail={shouldRenderDiagramThumbnail}
             isLoading={isEffectivelyLoading && !showPlaceholderIcon}
+            isExpired={isExpired}
           />
 
           <CardContent className="mt-auto w-full px-0 text-left">
+            {/* Keep the title visible (dimmed) when expired so the user can tell
+                which shared entry to remove. */}
             <p
               className={cn(
                 "line-clamp-2 text-sm leading-snug font-medium",
                 isUntitled
                   ? "text-[var(--home-text-muted)] italic"
-                  : "text-[var(--home-text-strong)]"
+                  : "text-[var(--home-text-strong)]",
+                isExpired && "opacity-50"
               )}
               title={title}
             >
@@ -821,13 +815,15 @@ export function DiagramCardView({
           </CardContent>
         </CardHeader>
 
-        <Separator className="mx-4 h-px w-auto bg-border-subtle" />
+        {/* Inset hairline: w-auto + mx-4 overrides the primitive's full width;
+            border-subtle keeps it lighter than the default border tone. */}
+        <Separator className="mx-4 w-auto bg-border-subtle" />
 
         {/* ---- Footer: relative date + tag pills ---- */}
         <CardFooter
           className={cn(
             "flex w-full items-center justify-between gap-2 rounded-none border-t-0 bg-transparent px-4 pt-2.5 pb-3.5",
-            isExpired && "opacity-40"
+            isExpired && "opacity-50"
           )}
         >
           <time
@@ -839,13 +835,9 @@ export function DiagramCardView({
           </time>
 
           <div className="flex shrink-0 items-center gap-1">
-            <CardTag label={shortTypeLabel} tone="type" weight={500} />
+            <CardTag label={shortTypeLabel} tone="type" />
             {secondaryTag ? (
-              <CardTag
-                label={secondaryTag.label}
-                tone={secondaryTag.tone}
-                weight={600}
-              />
+              <CardTag label={secondaryTag.label} tone={secondaryTag.tone} />
             ) : null}
           </div>
         </CardFooter>

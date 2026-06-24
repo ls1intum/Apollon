@@ -87,7 +87,8 @@ const meta = {
     },
     isExpired: {
       control: "boolean",
-      description: "Render the expired overlay and disable interactions.",
+      description:
+        'Show the "share no longer available" state and disable navigation.',
       table: { category: "State" },
     },
     isHighlighted: {
@@ -174,6 +175,7 @@ export const SharedDiagram: Story = {
         onDelete={fn()}
         onShare={fn()}
         onCopySharedLink={fn()}
+        onSaveLocalCopy={fn()}
         onChangeSharedView={fn()}
         onRemoveSharedEntry={fn()}
       />
@@ -193,7 +195,7 @@ export const Highlighted: Story = {
   args: { isHighlighted: true },
 }
 
-/** An expired shared diagram — overlay and disabled interactions. */
+/** An expired shared diagram — "no longer available" tile, navigation disabled. */
 export const Expired: Story = {
   args: {
     diagram: SAMPLE_SHARED_DIAGRAM,
