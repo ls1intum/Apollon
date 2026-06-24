@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import {
+  editorStoryMeta,
   ApollonEditable,
   fixtureByType,
   EditorStoreDecorator,
@@ -13,28 +14,7 @@ import { DeploymentComponentEditPopover } from "@tumaet/apollon/components/popov
 import { DeploymentNodeEditPopover } from "@tumaet/apollon/components/popovers/deploymentDiagram/DeploymentNodeEditPopover"
 import { DeploymentEdgeEditPopover } from "@tumaet/apollon/components/popovers/edgePopovers/DeploymentDiagramEdgeEditPopover"
 
-/**
- * **Deployment Diagram** — the complete overview. `Playground` is the real,
- * editable editor (palette, selection, edit popups) loaded with a sample;
- * `Blank` is an empty editable canvas; `Elements` / `Edges` are galleries of
- * every shape / connector; the `Edit:` stories are the edit popovers. Use the
- * toolbar to switch light / dark. Everything for this diagram type lives in this
- * one Docs page.
- *
- * Tagged `!test` — these mount editor source (a 2nd React copy under the Vitest
- * runner), so they are visual: browse them here.
- */
-const meta = {
-  title: "Editor/Deployment Diagram",
-  tags: ["autodocs", "!test"],
-  // The Docs page is the complete overview, but every story mounts a real
-  // editor — rendering them all inline is slow. `inline: false` lazy-loads each
-  // story in its own iframe (rendered on scroll), so the Docs page opens fast
-  // while still showing everything.
-  parameters: {
-    docs: { story: { inline: false, height: "640px" } },
-  },
-} satisfies Meta
+const meta = { title: "Editor/Deployment Diagram", ...editorStoryMeta } satisfies Meta
 
 export default meta
 type Story = StoryObj<typeof meta>

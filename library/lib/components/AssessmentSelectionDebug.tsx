@@ -35,7 +35,7 @@ export function AssessmentSelectionDebug() {
         right: 10,
         background: "var(--apollon-chrome-glass)",
         border: "1px solid var(--apollon-chrome-border)",
-        borderRadius: "4px",
+        borderRadius: "var(--apollon-radius-sm, 4px)",
         padding: "10px",
         fontSize: "12px",
         fontFamily: "monospace",

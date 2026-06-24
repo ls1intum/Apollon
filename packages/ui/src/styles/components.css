@@ -116,7 +116,7 @@
     width: 28px;
     height: 28px;
     border: none;
-    border-radius: 4px;
+    border-radius: var(--apollon-radius-sm);
     background: transparent;
     cursor: pointer;
     padding: 0;

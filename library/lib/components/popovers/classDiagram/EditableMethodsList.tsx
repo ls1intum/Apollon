@@ -1,5 +1,5 @@
 import React, { useState, KeyboardEvent, ChangeEvent } from "react"
-import { GripVertical, Trash2 } from "lucide-react"
+import { GripVertical, Plus, Trash2 } from "lucide-react"
 import {
   IconButton,
   NodeStyleEditor,
@@ -72,7 +72,6 @@ const SortableMethodRow: React.FC<SortableMethodRowProps> = ({
         alignItems: "center",
       }}
     >
-      {/* Drag handle */}
       <div
         {...attributes}
         {...listeners}
@@ -218,21 +217,31 @@ export const EditableMethodsList: React.FC<Props> = ({ nodeId }) => {
         </SortableContext>
       </DndContext>
 
-      <TextField
-        size="small"
-        fullWidth
-        variant="outlined"
-        placeholder="+ Add method"
-        value={newItem}
-        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-          setNewItem(e.target.value)
-        }
-        onBlur={() => {
-          if (newItem.trim() !== "") handleAddItem()
-          else setNewItem("")
-        }}
-        onKeyDown={handleKeyDown}
-      />
+      <div className="apollon-add-row">
+        <TextField
+          size="small"
+          fullWidth
+          variant="outlined"
+          aria-label="New method"
+          placeholder="Add method"
+          value={newItem}
+          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+            setNewItem(e.target.value)
+          }
+          onBlur={() => {
+            if (newItem.trim() !== "") handleAddItem()
+            else setNewItem("")
+          }}
+          onKeyDown={handleKeyDown}
+        />
+        <IconButton
+          ariaLabel="Add method"
+          tooltip="Add method"
+          onClick={handleAddItem}
+        >
+          <Plus width={16} height={16} aria-hidden="true" />
+        </IconButton>
+      </div>
     </div>
   )
 }

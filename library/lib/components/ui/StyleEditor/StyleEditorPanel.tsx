@@ -93,10 +93,7 @@ export function StyleEditorPanel<K extends string>({
                 />
               </div>
               {index !== fields.length - 1 && (
-                <DividerLine
-                  backgroundColor="var(--apollon-border-subtle)"
-                  style={{ margin: 0 }}
-                />
+                <DividerLine color="var(--apollon-border-subtle)" margin={0} />
               )}
             </React.Fragment>
           ))}

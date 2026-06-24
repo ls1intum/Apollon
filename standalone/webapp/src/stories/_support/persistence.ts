@@ -25,8 +25,51 @@ import type {
   DiagramSource,
   RecentDiagram,
 } from "@/components/home/DiagramCard"
+import {
+  getCachedThumbnailSources,
+  type ThumbnailThemeSources,
+} from "@/utils/thumbnailTheme"
 
 export type { RecentDiagram, DiagramSource }
+
+/**
+ * A small but realistic multi-shape class-diagram SVG: white-filled, black-stroked
+ * boxes with black text and connectors — exactly the near-white-fill /
+ * near-black-stroke shape the dark-thumbnail recolor targets. Feeding this through
+ * `getCachedThumbnailSources` produces a dark variant that genuinely DIFFERS from
+ * the light one (light stroke + cool fill), so stories can prove the dark recolor
+ * reads on the dark card instead of vanishing into it.
+ */
+export const SAMPLE_DIAGRAM_THUMBNAIL_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 160" width="240" height="160">
+  <rect x="16" y="16" width="96" height="56" fill="#ffffff" stroke="#000000" stroke-width="1.5"/>
+  <line x1="16" y1="36" x2="112" y2="36" stroke="#000000" stroke-width="1"/>
+  <text x="24" y="30" fill="#000000" font-size="10">Order</text>
+  <rect x="128" y="16" width="96" height="56" fill="#ffffff" stroke="#000000" stroke-width="1.5"/>
+  <line x1="128" y1="36" x2="224" y2="36" stroke="#000000" stroke-width="1"/>
+  <text x="136" y="30" fill="#000000" font-size="10">Customer</text>
+  <rect x="72" y="96" width="96" height="48" fill="#ffffff" stroke="#000000" stroke-width="1.5"/>
+  <text x="80" y="116" fill="#000000" font-size="10">LineItem</text>
+  <path d="M112 44 L128 44" stroke="#000000" stroke-width="1" fill="none"/>
+  <path d="M64 72 L96 96" stroke="#000000" stroke-width="1" fill="none"/>
+</svg>`
+
+/**
+ * Run `SAMPLE_DIAGRAM_THUMBNAIL_SVG` through the real thumbnail pipeline EAGERLY
+ * (so the dark variant is actually recolored, not left equal to light) under a
+ * caller-namespaced key. Stories pass the result straight to `DiagramCardView`'s
+ * `thumbnail` prop.
+ */
+export function makeSampleThumbnailSources(
+  cacheKey = "story:diagram-thumbnail"
+): ThumbnailThemeSources {
+  const sources = getCachedThumbnailSources(
+    cacheKey,
+    SAMPLE_DIAGRAM_THUMBNAIL_SVG,
+    { eager: true }
+  )
+  // getCachedThumbnailSources only returns null for a null SVG; ours is a string.
+  return sources as ThumbnailThemeSources
+}
 
 /** The store's per-diagram envelope (mirrors `PersistentModelEntity`). */
 export type PersistentModelEntity = {

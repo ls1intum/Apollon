@@ -72,7 +72,7 @@ const avatarBase: CSSProperties = {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  color: "#fff",
+  color: "var(--apollon-on-collaboration-cursor, #fff)",
   fontSize: 11,
   fontWeight: 600,
   cursor: "default",
@@ -319,7 +319,7 @@ function CollaboratorCursors({
               <path
                 d="M2 1L2 18L6.5 13.8L9.5 19L12 17.7L9 12.6L15 12.2L2 1Z"
                 fill={collaborator.color}
-                stroke="#ffffff"
+                stroke="var(--apollon-on-collaboration-cursor, #ffffff)"
                 strokeWidth="1"
                 strokeLinejoin="round"
               />

@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { expect, fn, userEvent, within } from "storybook/test"
 import {
+  makeSampleThumbnailSources,
   SAMPLE_LOCAL_DIAGRAM,
   SAMPLE_SHARED_DIAGRAM,
 } from "../../stories/_support/persistence"
@@ -133,6 +134,28 @@ export const WithThumbnail: Story = {
   args: {
     showPlaceholderIcon: false,
     thumbnail: { lightDataUrl: TRANSPARENT_PNG, darkDataUrl: TRANSPARENT_PNG },
+  },
+}
+
+/**
+ * The real recolor pipeline on the dark card: a multi-shape diagram SVG is run
+ * through `getCachedThumbnailSources` eagerly, so the dark variant is genuinely
+ * recolored (light stroke + a cool shape fill that clears WCAG 1.4.11 non-text
+ * contrast on #1a1f27), not just the light SVG reused. Rendered in dark so the
+ * fix is catchable — a fill that vanished into the card would be visible here.
+ */
+export const DarkRecoloredThumbnail: Story = {
+  globals: { theme: "dark" },
+  args: {
+    showPlaceholderIcon: false,
+    thumbnail: makeSampleThumbnailSources(),
+  },
+  play: async ({ args }) => {
+    // The recolor must produce a dark variant distinct from the light source.
+    await expect(args.thumbnail?.darkDataUrl).toBeDefined()
+    await expect(args.thumbnail?.darkDataUrl).not.toBe(
+      args.thumbnail?.lightDataUrl
+    )
   },
 }
 

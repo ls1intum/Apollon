@@ -1,4 +1,3 @@
-export const secondary = "#A3A6A8"
 // The chrome surface behind the headers (home + editor) and the version-history
 // rail. A CSS variable pointing at the shared `--apollon-chrome-*` contract
 // (library app.css) so the whole UI — palette, controls, minimap, header,

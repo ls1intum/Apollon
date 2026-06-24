@@ -28,15 +28,6 @@ const variantTag: Record<TypographyVariant, keyof React.JSX.IntrinsicElements> =
     caption: "span",
   }
 
-const variantStyle: Partial<Record<TypographyVariant, React.CSSProperties>> = {
-  h6: { fontSize: "1.25rem", fontWeight: 500, margin: 0 },
-  subtitle1: { fontSize: "1rem", fontWeight: 400, margin: 0 },
-  subtitle2: { fontSize: "0.875rem", fontWeight: 500, margin: 0 },
-  body1: { fontSize: "1rem", margin: 0 },
-  body2: { fontSize: "0.875rem", margin: 0 },
-  caption: { fontSize: "0.75rem", margin: 0 },
-}
-
 export interface TypographyProps {
   variant?: TypographyVariant
   children?: React.ReactNode
@@ -46,6 +37,9 @@ export interface TypographyProps {
   id?: string
 }
 
+// Visual tokens (size / weight / color) live in app.css
+// ([data-slot="typography"][data-variant="…"], --apollon-* fallbacks). Callers
+// still pass sx/style for one-off layout; those win over the data-slot rule.
 export const Typography: React.FC<TypographyProps> = ({
   variant = "body1",
   children,
@@ -59,12 +53,9 @@ export const Typography: React.FC<TypographyProps> = ({
     <Tag
       id={id}
       className={className}
-      style={{
-        color: "var(--apollon-primary-contrast, #000000)",
-        ...variantStyle[variant],
-        ...sx,
-        ...style,
-      }}
+      data-slot="typography"
+      data-variant={variant}
+      style={{ ...sx, ...style }}
     >
       {children}
     </Tag>

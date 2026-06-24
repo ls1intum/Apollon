@@ -86,6 +86,65 @@ ergonomic alias `createApollonTheme` maps to the CSS variable.
 > verify the `background` ⇄ `primaryContrast` pair (and `primary` against the
 > surfaces it sits on) with a contrast checker.
 
+## Radius scale, elevation, and state tints (`--apollon-*`) — CSS-only hooks
+
+A second band of stable `--apollon-*` variables tunes the shared editor
+primitives' corner radii, drop shadow, and a couple of state tints. These are
+**CSS-variable-only** — they are not on `ApollonTheme` / `createApollonTheme`
+(the typed surface stays focused on color), but the names are part of the public
+contract, so set them directly via `style` / a stylesheet rule when you want to
+restyle the editor's shape or elevation:
+
+| CSS variable                        | Used for                                                                           |
+| ----------------------------------- | ---------------------------------------------------------------------------------- |
+| `--apollon-radius-sm`               | Small radius — node hover/selection rings, chips, pills (default 4px).             |
+| `--apollon-radius-md`               | Control radius — inputs, toggles. Routes through `--apollon-radius` (default 6px). |
+| `--apollon-radius-lg`               | Panel / popover / menu radius (default 8px).                                       |
+| `--apollon-shadow`                  | Drop shadow for floating surfaces — menus, popovers, select listboxes.             |
+| `--apollon-interactive-selection`   | Accent ring/fill marking interactive (quiz-pickable) elements (default amber).     |
+| `--apollon-hover-neutral`           | Neutral hover wash for quiet controls, derived off `--apollon-primary-contrast`.   |
+| `--apollon-dropzone-accent`         | Ring/stroke shown on an assessment feedback drop target on hover (default blue).   |
+| `--apollon-on-collaboration-cursor` | Ink (text/stroke) drawn on a collaborator's colored cursor/avatar (default white). |
+| `--apollon-assessment-icon-surface` | Fill of the neutral score-badge chip behind an assessment icon on the canvas.      |
+| `--apollon-assessment-icon-border`  | Border of the neutral score-badge chip behind an assessment icon on the canvas.    |
+
+```css
+/* Sharpen the editor's corners and lift its menus a touch more. */
+.apollon-editor {
+  --apollon-radius-sm: 2px;
+  --apollon-radius-md: 3px;
+  --apollon-radius-lg: 6px;
+  --apollon-shadow: 0 6px 20px rgb(0 0 0 / 22%);
+}
+```
+
+`--apollon-radius-md` references `--apollon-radius`, so tuning the single base
+`radius` token still flows through to controls; override `-md` explicitly only
+when you want it to diverge from the base. Like every editor variable, each is
+referenced as `var(--apollon-x, <fallback>)`, so an un-themed embed keeps the
+built-in defaults.
+
+## Collaboration cursor palette (`--apollon-collaboration-color-*`)
+
+When real-time collaboration is enabled, each remote participant's cursor,
+selection, and name tag is painted in one of eight stable palette slots. The
+slot is chosen deterministically from the participant's name, so the same person
+keeps the same color across a session. The defaults are an eight-hue ramp tuned
+to stay legible on both the light and dark canvas; override any subset to match
+your own brand or accessibility needs (the names are part of the public
+contract):
+
+| CSS variable                      | Used for                                   |
+| --------------------------------- | ------------------------------------------ |
+| `--apollon-collaboration-color-1` | Remote-participant cursor slot 1 (amber).  |
+| `--apollon-collaboration-color-2` | Remote-participant cursor slot 2 (green).  |
+| `--apollon-collaboration-color-3` | Remote-participant cursor slot 3 (blue).   |
+| `--apollon-collaboration-color-4` | Remote-participant cursor slot 4 (red).    |
+| `--apollon-collaboration-color-5` | Remote-participant cursor slot 5 (violet). |
+| `--apollon-collaboration-color-6` | Remote-participant cursor slot 6 (teal).   |
+| `--apollon-collaboration-color-7` | Remote-participant cursor slot 7 (orange). |
+| `--apollon-collaboration-color-8` | Remote-participant cursor slot 8 (cyan).   |
+
 ## Editor chrome (`--apollon-chrome-*`) — auto-derived, rarely set
 
 The floating editor chrome — the element palette, zoom / undo controls, minimap,

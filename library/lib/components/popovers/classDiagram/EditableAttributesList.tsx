@@ -1,5 +1,5 @@
 import React, { useState, KeyboardEvent, ChangeEvent } from "react"
-import { GripVertical, Trash2 } from "lucide-react"
+import { GripVertical, Plus, Trash2 } from "lucide-react"
 import {
   IconButton,
   NodeStyleEditor,
@@ -73,7 +73,6 @@ const SortableAttributeRow: React.FC<SortableAttributeRowProps> = ({
         alignItems: "center",
       }}
     >
-      {/* Drag handle */}
       <div
         {...attributes}
         {...listeners}
@@ -179,7 +178,6 @@ export const EditableAttributeList: React.FC<Props> = ({ nodeId }) => {
     if (event.key === "Enter") handleAddItem()
   }
 
-  // drag and drop setup
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -224,21 +222,31 @@ export const EditableAttributeList: React.FC<Props> = ({ nodeId }) => {
         </SortableContext>
       </DndContext>
 
-      <TextField
-        size="small"
-        fullWidth
-        variant="outlined"
-        placeholder="+ Add attribute"
-        value={newItem}
-        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-          setNewItem(e.target.value)
-        }
-        onBlur={() => {
-          if (newItem.trim() !== "") handleAddItem()
-          else setNewItem("")
-        }}
-        onKeyDown={handleKeyDown}
-      />
+      <div className="apollon-add-row">
+        <TextField
+          size="small"
+          fullWidth
+          variant="outlined"
+          aria-label="New attribute"
+          placeholder="Add attribute"
+          value={newItem}
+          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+            setNewItem(e.target.value)
+          }
+          onBlur={() => {
+            if (newItem.trim() !== "") handleAddItem()
+            else setNewItem("")
+          }}
+          onKeyDown={handleKeyDown}
+        />
+        <IconButton
+          ariaLabel="Add attribute"
+          tooltip="Add attribute"
+          onClick={handleAddItem}
+        >
+          <Plus width={16} height={16} aria-hidden="true" />
+        </IconButton>
+      </div>
     </div>
   )
 }

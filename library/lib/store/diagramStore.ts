@@ -27,11 +27,6 @@ import {
   toggleInteractiveRecord,
 } from "@/utils/interactiveUtils"
 
-export type DiagramStoreData = {
-  nodes: Node[]
-  edges: Edge[]
-}
-
 type InitialDiagramState = {
   nodes: Node[]
   edges: Edge[]

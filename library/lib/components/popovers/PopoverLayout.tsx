@@ -110,19 +110,6 @@ export const PopoverSection: React.FC<PopoverSectionProps> = ({
 )
 
 /**
- * Raw endpoint names for an edge — `undefined` when the node has no name (so
- * callers can tell "missing" apart from a real name, unlike a "Source"/"Target"
- * fallback). Pass React Flow's `getNode`.
- */
-export const edgeEndpointNames = (
-  edge: { source: string; target: string },
-  getNode: (id: string) => { data?: { name?: unknown } } | undefined
-): { source?: string; target?: string } => ({
-  source: getNode(edge.source)?.data?.name as string | undefined,
-  target: getNode(edge.target)?.data?.name as string | undefined,
-})
-
-/**
  * Whether an edge's endpoint names are worth showing to the user: both must be
  * present and distinct. When either is missing or they're identical, naming
  * them adds noise (e.g. "Source → Source"), so callers should fall back to
@@ -136,15 +123,6 @@ export const hasDistinctEndpointNames = (
   const t = target?.trim()
   return Boolean(s && t && s !== t)
 }
-
-/** Swap-direction tooltip — names the endpoints only when they're distinct. */
-export const swapDirectionTooltip = (
-  source?: string,
-  target?: string
-): string =>
-  hasDistinctEndpointNames(source, target)
-    ? `Swap edge direction: ${source} ↔ ${target}`
-    : "Swap edge direction"
 
 /**
  * The "Source → Target" relationship line shared by every directed-edge
@@ -186,7 +164,7 @@ export const AssessmentHeader: React.FC<{
         <span
           style={{
             padding: "1px 6px",
-            borderRadius: 4,
+            borderRadius: "var(--apollon-radius-sm, 4px)",
             fontWeight: 600,
             whiteSpace: "nowrap",
             backgroundColor:

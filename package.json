@@ -44,6 +44,7 @@
     "format:check": "prettier --ignore-path .prettierignore --check \"**/*.+(js|mjs|cjs|ts|tsx|json|md|mdx|yml|yaml)\"",
     "test": "pnpm --filter @tumaet/apollon run test",
     "test:e2e": "pnpm --filter @tumaet/webapp run test:e2e",
+    "knip": "knip",
     "sync:version": "node scripts/sync-library-version.mjs",
     "sync:version:check": "node scripts/sync-library-version.mjs --check",
     "changeset": "changeset",
@@ -71,6 +72,7 @@
     "@types/node": "catalog:",
     "concurrently": "9.1.0",
     "husky": "9.1.7",
+    "knip": "6.18.0",
     "lint-staged": "15.5.2",
     "prettier": "3.4.2"
   },

@@ -11,11 +11,6 @@ import { AssessmentSelectableElement } from "@/components/AssessmentSelectableEl
 import { StyledRect } from "../../StyledElements"
 import { getCustomColorsFromData } from "@/utils/layoutUtils"
 
-export interface MinSize {
-  minWidth: number
-  minHeight: number
-}
-
 export type ClassSVGProps = SVGComponentProps & {
   data: ClassNodeProps
 }

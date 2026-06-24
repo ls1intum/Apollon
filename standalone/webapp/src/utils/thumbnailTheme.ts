@@ -16,10 +16,46 @@ type RgbColor = {
   a: number
 }
 
-// Neutral (not blue-tinted) so dark-mode thumbnails read like the real diagram:
-// light strokes / a mid-dark shape fill on the warm-neutral surface.
-const DARK_THUMBNAIL_STROKE = "#e4e4e1"
-const DARK_THUMBNAIL_FILL = "#383934"
+// Dark-thumbnail recolor targets come from the design tokens
+// (--apollon-thumbnail-stroke / -fill in tokens.css), not hard-coded hex, so the
+// light stroke + cool shape fill stay in lockstep with the rest of the palette
+// and clear WCAG 1.4.11 non-text contrast on the dark card. The dark `data:` URL
+// is generated once and shown via a CSS theme swap regardless of the live theme,
+// so we must resolve the *dark-theme* token values specifically — done by
+// reading them off a detached element forced to data-theme="dark", memoized.
+const DARK_THEME_TOKEN_FALLBACK = {
+  stroke: "#e4e4e1",
+  fill: "#636e7e",
+} as const
+
+let darkThumbnailTokens: { stroke: string; fill: string } | null = null
+
+const resolveDarkThumbnailTokens = (): { stroke: string; fill: string } => {
+  if (darkThumbnailTokens) return darkThumbnailTokens
+
+  if (typeof document === "undefined") {
+    return DARK_THEME_TOKEN_FALLBACK
+  }
+
+  const probe = document.createElement("div")
+  probe.setAttribute("data-theme", "dark")
+  probe.style.display = "none"
+  document.body.appendChild(probe)
+  try {
+    const styles = getComputedStyle(probe)
+    const stroke = styles.getPropertyValue("--apollon-thumbnail-stroke").trim()
+    const fill = styles.getPropertyValue("--apollon-thumbnail-fill").trim()
+    darkThumbnailTokens = {
+      stroke: stroke || DARK_THEME_TOKEN_FALLBACK.stroke,
+      fill: fill || DARK_THEME_TOKEN_FALLBACK.fill,
+    }
+  } finally {
+    probe.remove()
+  }
+
+  return darkThumbnailTokens
+}
+
 const THUMBNAIL_THEME_CACHE_LIMIT = 300
 
 type ThumbnailThemeCacheEntry = {
@@ -114,12 +150,14 @@ const adaptSvgColorForDarkTheme = (
   const isNearBlack = luminance < 70
   const isNearWhite = luminance > 230
 
+  const { stroke, fill } = resolveDarkThumbnailTokens()
+
   if (isNearBlack) {
-    return DARK_THUMBNAIL_STROKE
+    return stroke
   }
 
   if (role === "fill" && isNearWhite) {
-    return DARK_THUMBNAIL_FILL
+    return fill
   }
 
   return value

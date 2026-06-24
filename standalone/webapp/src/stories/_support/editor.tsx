@@ -12,7 +12,7 @@
  * -> library/lib) so stories stay in lockstep with the editor.
  */
 import * as React from "react"
-import type { Decorator } from "@storybook/react-vite"
+import type { Decorator, Meta } from "@storybook/react-vite"
 import * as Y from "yjs"
 import {
   ReactFlow,
@@ -60,6 +60,20 @@ import bpmn from "../../../tests/fixtures/bpmn.json"
 import sfc from "../../../tests/fixtures/sfc.json"
 
 const asModel = (m: unknown) => m as unknown as UMLModel
+
+// ── Per-type story meta ───────────────────────────────────────────────────────
+/**
+ * Shared editor-story meta (everything but the per-file `title`). Spread into each
+ * per-type story's literal default export so the CSF static indexer can read a
+ * literal object. `!test` keeps these out of the Vitest runner (they mount a 2nd
+ * editor React copy); `docs.story.inline: false` lazy-loads each in its own iframe.
+ */
+export const editorStoryMeta = {
+  tags: ["autodocs", "!test"],
+  parameters: {
+    docs: { story: { inline: false, height: "640px" } },
+  },
+} satisfies Partial<Meta>
 
 /** Every diagram type → its sample model, in palette order. */
 export const diagramFixtures: {

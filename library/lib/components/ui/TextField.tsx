@@ -5,7 +5,8 @@ import { Textarea } from "@tumaet/ui/components/textarea"
 // Compatibility wrapper: the control (input / textarea) is now the shared
 // @tumaet/ui primitive (styling ships in the bundled, Tailwind-free
 // components.css via data-slot="input"/"textarea"), while the label + helper
-// chrome stay here as inline-styled, token-driven elements so the public API
+// chrome are token-driven elements (styled in app.css via
+// data-slot="textfield-label"/"textfield-helper") so the public API
 // (label, helperText, multiline, error, …) the editor relies on is unchanged.
 
 // Intersection so handlers get a `target` with `.value` for either element.
@@ -38,14 +39,10 @@ export interface TextFieldProps {
   sx?: React.CSSProperties
   className?: string
   style?: React.CSSProperties
+  /** Accessible name for the control when no visible `label` is rendered. */
+  "aria-label"?: string
   /** Forwarded to the control (e.g. `data-field` for focus management). */
   [dataAttr: `data-${string}`]: unknown
-}
-
-const labelStyle: React.CSSProperties = {
-  fontSize: "0.75rem",
-  color: "var(--apollon-primary-contrast)",
-  marginBottom: 2,
 }
 
 export const TextField: React.FC<TextFieldProps> = ({
@@ -110,7 +107,7 @@ export const TextField: React.FC<TextFieldProps> = ({
   return (
     <span style={wrapperStyle}>
       {label && (
-        <label htmlFor={inputId} style={labelStyle}>
+        <label htmlFor={inputId} data-slot="textfield-label">
           {label}
         </label>
       )}
@@ -120,15 +117,7 @@ export const TextField: React.FC<TextFieldProps> = ({
         <Input type={type ?? "text"} {...sharedProps} />
       )}
       {helperText && (
-        <span
-          style={{
-            fontSize: "0.75rem",
-            marginTop: 2,
-            color: error
-              ? "var(--apollon-alert-danger-color)"
-              : "var(--apollon-gray-variant)",
-          }}
-        >
+        <span data-slot="textfield-helper" data-error={error || undefined}>
           {helperText}
         </span>
       )}

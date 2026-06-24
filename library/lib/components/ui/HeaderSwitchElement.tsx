@@ -1,4 +1,3 @@
-import { ZINDEX } from "@/constants"
 import React from "react"
 import { Tooltip } from "./Tooltip"
 
@@ -35,9 +34,6 @@ export const HeaderSwitchElement: React.FC<Props> = ({
         aria-pressed={isComponentHeaderShown}
         aria-label={accessibleLabel}
         onClick={onClick}
-        style={{
-          zIndex: ZINDEX.HEADER_SWITCH,
-        }}
       >
         <span aria-hidden="true">{buttonLabel}</span>
       </button>

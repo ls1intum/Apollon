@@ -12,6 +12,10 @@ import { ToggleGroup, ToggleGroupItem } from "./toggle-group"
 // theme. A custom color picked through the native `input[type=color]` is a real
 // hex string. `cn()` is used for the few presentational utilities so a theming
 // embedder still recolors everything through the tokens.
+// `<input type="color">` requires a literal 7-char hex value — it rejects CSS
+// vars and the empty string — so this is the one hex the picker cannot tokenize.
+const NATIVE_COLOR_INPUT_FALLBACK = "#000000"
+
 const SWATCH_TOKENS = [
   { name: "Slate", token: "--color-swatch-slate" },
   { name: "Red", token: "--color-swatch-red" },
@@ -122,7 +126,7 @@ function ColorPicker({
               type="color"
               aria-label="Custom color"
               data-custom-active={isCustom || undefined}
-              value={isCustom ? selected : "#000000"}
+              value={isCustom ? selected : NATIVE_COLOR_INPUT_FALLBACK}
               onChange={(event) => setSelected(event.target.value)}
               className="border-input size-7 cursor-pointer rounded-md border bg-transparent p-0.5 outline-none data-[custom-active]:ring-2 data-[custom-active]:ring-ring"
             />

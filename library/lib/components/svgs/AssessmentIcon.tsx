@@ -40,8 +40,8 @@ const AssessmentIcon: React.FC<AssessmentIconProps> = ({ score, x, y }) => {
         cx={centerX}
         cy={centerY}
         r={RADIUS}
-        fill="#f0f0f0"
-        stroke="#ccc"
+        fill="var(--apollon-assessment-icon-surface, #f0f0f0)"
+        stroke="var(--apollon-assessment-icon-border, #ccc)"
         opacity={0.7}
       />
       <Icon {...iconProps} color={color} />

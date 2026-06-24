@@ -18,15 +18,6 @@ const isWithinThreshold = (
   inclusive: boolean
 ) => (inclusive ? delta <= threshold : delta < threshold)
 
-export type AlignmentInfo = {
-  horizontalGuides: number[] // x positions for vertical alignment lines
-  verticalGuides: number[] // y positions for horizontal alignment lines
-  snappedPosition?: {
-    x?: number
-    y?: number
-  }
-}
-
 /**
  * Get the bounds of a node (considering its position and dimensions)
  */

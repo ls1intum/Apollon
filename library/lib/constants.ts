@@ -82,6 +82,10 @@ export const CSS_VARIABLE_FALLBACKS: Readonly<Record<string, string>> =
     "--apollon-alert-warning-background": "#fff3cd",
     "--apollon-alert-warning-border": "#ffeeba",
     "--apollon-interactive-selection": "#f39c12",
+    "--apollon-dropzone-accent": "#0064ff",
+    "--apollon-on-collaboration-cursor": "#ffffff",
+    "--apollon-assessment-icon-surface": "#f0f0f0",
+    "--apollon-assessment-icon-border": "#cccccc",
     "--apollon-collaboration-color-1": "#ffb61e",
     "--apollon-collaboration-color-2": "#37b24d",
     "--apollon-collaboration-color-3": "#1c7ed6",
@@ -171,18 +175,6 @@ export const LAYOUT = Object.freeze({
   STEREOTYPE_LINE_HEIGHT: 15,
   STEREOTYPE_NAME_GAP: 4,
 } as const)
-
-/**
- * Treat narrow portrait viewports and short phone-landscape viewports as
- * mobile. The portrait bound stops just below 768px so iPads (768px portrait)
- * keep the regular desktop layout; the second clause catches phones in
- * landscape, where the short height distinguishes them from tablets.
- *
- * NOTE: mirrored in standalone/webapp/src/constants/responsive.ts (the webapp
- * can't import the library's curated public surface). Keep both in sync.
- */
-export const MOBILE_VIEW_QUERY =
-  "(max-width: 767.95px), (max-width: 950px) and (max-height: 500px)"
 
 const generateUUID = () => uuidv4()
 

@@ -67,7 +67,7 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
           so no per-node-type branching is needed. */}
       {preElements}
       {title && (
-        <Typography style={{ fontWeight: "bold", marginRight: 8 }}>
+        <Typography className="apollon-node-style-editor-title">
           {title}
         </Typography>
       )}

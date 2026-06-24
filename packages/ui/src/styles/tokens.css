@@ -133,6 +133,16 @@
      it never reads as a normal selection. */
   --primitive-interactive-selection: #f39c12;
 
+  /* Drop-target accent (light). The saturated blue ring/stroke shown on an
+     assessment feedback drop zone while a drag hovers it; a vivid signal blue,
+     distinct from the brand primary so it reads unambiguously as "drop here". */
+  --primitive-dropzone-accent: #0064ff;
+
+  /* Assessment-icon badge (light). The neutral chip behind a score icon on the
+     canvas — a near-white fill with a soft gray border, drawn at 0.7 opacity. */
+  --primitive-assessment-icon-bg: #f0f0f0;
+  --primitive-assessment-icon-border: #ccc;
+
   /* Live-collaboration cursor palette (light). A fixed, deterministic set of
      cursor/label colors assigned per collaborator by name hash; the editor
      reads these as tokens (NO inline hex array lives in the code). */
@@ -179,6 +189,40 @@
   --apollon-border-subtle: var(--primitive-border-subtle);
   --apollon-radius: 6px;
 
+  /* Public radius scale — the embedder-tunable corner ramp for the shared editor
+     primitives (cards/pills, controls/inputs, panels/popovers). sm/lg are
+     app-fixed; md routes through the base --apollon-radius so tuning that one
+     token still cascades to controls. These REPLACE the editor's former ad-hoc
+     4/6/8/10px radius literals and the webapp-private --home-radius-* the editor
+     used to reach into. */
+  --apollon-radius-sm: 4px;
+  --apollon-radius-md: var(--apollon-radius);
+  --apollon-radius-lg: 8px;
+
+  /* Public elevation — the popover/menu drop shadow for the shared editor
+     primitives (and the chrome shadows derived in app.css). Theme-independent:
+     the overlay tint reads the same in both themes. An embedder overriding this
+     restyles every floating editor surface. */
+  --apollon-shadow: 0 4px 12px var(--primitive-shadow-overlay);
+
+  /* Public neutral hover wash — a low-alpha veil off the foreground ink, used
+     for quiet hover states (e.g. the stereotype toggles) that must read on any
+     themed surface without assuming an accent. */
+  --apollon-hover-neutral: color-mix(
+    in srgb,
+    var(--apollon-primary-contrast, #000) 7.5%,
+    transparent
+  );
+
+  /* Diagram-thumbnail recolor (light). A diagram authored on the white canvas
+     already reads on the light card, so light = identity: near-black strokes
+     stay black, near-white shape fills stay white. The dark block below swaps
+     in a light stroke + a cool mid fill that clears WCAG 1.4.11 non-text
+     contrast (>=3:1) on the dark card. thumbnailTheme.ts reads these at recolor
+     time so the look is token-driven, never hard-coded hex. */
+  --apollon-thumbnail-stroke: var(--primitive-black);
+  --apollon-thumbnail-fill: var(--primitive-white);
+
   /* Color-picker swatch palette — the public editor-facing handle on the same
      fixed, accessible fill palette the webapp color-picker uses. References the
      --primitive-swatch-* layer (so it re-resolves per theme) and is the SINGLE
@@ -198,6 +242,26 @@
      primitive above. Theme-independent alias (the primitive re-resolves per
      theme), matching the library's --apollon-interactive-selection fallback. */
   --apollon-interactive-selection: var(--primitive-interactive-selection);
+
+  /* Drop-target accent — the public handle on the drop-zone signal blue. The
+     solid token strokes a path target; the translucent fill (40% alpha) is the
+     outline shown around box/div targets. */
+  --apollon-dropzone-accent: var(--primitive-dropzone-accent);
+  --apollon-dropzone-accent-fill: color-mix(
+    in srgb,
+    var(--apollon-dropzone-accent) 40%,
+    transparent
+  );
+
+  /* On-collaboration-cursor ink — the white text/stroke that reads on a
+     collaborator's colored cursor/avatar/label. Aliases the white primitive so
+     embedders can retheme on-cursor text without touching geometry. */
+  --apollon-on-collaboration-cursor: var(--primitive-white);
+
+  /* Assessment-icon badge — the public handles on the neutral score-chip
+     surface + border (re-resolve per theme via the primitives above). */
+  --apollon-assessment-icon-surface: var(--primitive-assessment-icon-bg);
+  --apollon-assessment-icon-border: var(--primitive-assessment-icon-border);
 
   /* Live-collaboration cursor palette — the public editor-facing handles on the
      --primitive-collab-* layer (so they re-resolve per theme) and the SINGLE
@@ -282,16 +346,17 @@
      re-resolve per theme. Use these everywhere instead of ad-hoc px shadows:
        md — menus / dropdowns / popovers
        overlay-box — modals / banners / toasts */
-  --home-shadow-md: 0 4px 12px var(--home-shadow-overlay);
+  --home-shadow-md: var(--apollon-shadow);
   --home-shadow-overlay-box: 0 8px 20px var(--home-shadow-overlay);
 
   /* Radius scale — theme-independent. Replaces ad-hoc 2/4/6/8/15px values.
      sm: cards & pills (crisp)  md: buttons & inputs  lg: menus/popovers  xl: modal shell
-     md routes through the public --apollon-radius so an embedder can tune the
-     base radius of the shared primitives; the others stay app-fixed. */
+     md/lg remap ONE-DIRECTIONALLY onto the public --apollon-radius-* scale so the
+     webapp shares the editor's tunable ramp; sm/xl stay app-only. (--apollon-*
+     must never depend back on --home-*.) */
   --home-radius-sm: 2px;
-  --home-radius-md: var(--apollon-radius);
-  --home-radius-lg: 8px;
+  --home-radius-md: var(--apollon-radius-md);
+  --home-radius-lg: var(--apollon-radius-lg);
   --home-radius-xl: 15px;
 
   /* Warning banner (e.g. version-preview) — soft-gold outlined style. */
@@ -350,6 +415,16 @@
   --primitive-border-strong: #48535f;
   --primitive-border-subtle: #242b34;
 
+  /* Diagram-thumbnail recolor (dark). The shape fill is a cool blue-slate that
+     clears WCAG 1.4.11 non-text contrast on the dark card (#636e7e = 3.20:1 on
+     #1a1f27, the surface-raised the thumbnail sits on transparently); the old
+     warm #383934 sat at 1.42:1 and read as the same plate as the card. The
+     stroke is a near-white neutral that reads on both the card (12.99:1) and
+     the shape fill (4.06:1). Defined as primitives so the light/dark pair stays
+     the abstraction. */
+  --primitive-thumbnail-stroke-dark: #e4e4e1;
+  --primitive-thumbnail-fill-dark: #636e7e;
+
   /* Home accent (dark). #236ebe keeps white/off-white button text at WCAG AA
      (4.90:1 on --accent-contrast, 5.19:1 on pure white); a lighter accent
      would drop below 4.5:1, so do not brighten it. */
@@ -406,6 +481,12 @@
      reads against the dark canvas. */
   --primitive-interactive-selection: #f5b041;
 
+  /* Assessment-icon badge (dark) — a dark neutral chip with a faint border so
+     the score icon's green/red/blue glyph still reads on the dark canvas. The
+     vivid drop-zone accent reads on both themes, so it has no dark delta. */
+  --primitive-assessment-icon-bg: #2a2f37;
+  --primitive-assessment-icon-border: #4a525e;
+
   /* Live-collaboration cursor palette (dark) — brightened a step so each
      cursor/label stays legible against the dark canvas. */
   --primitive-collab-1: #ffce5c;
@@ -445,6 +526,10 @@
   --apollon-surface-hover: var(--primitive-surface-raised-hover);
   --apollon-border: var(--primitive-border-default);
   --apollon-border-subtle: var(--primitive-border-subtle);
+
+  /* Diagram-thumbnail recolor — dark deltas (see primitives above). */
+  --apollon-thumbnail-stroke: var(--primitive-thumbnail-stroke-dark);
+  --apollon-thumbnail-fill: var(--primitive-thumbnail-fill-dark);
 
   /* ── Layer 3: --home-* (dark deltas) ───────────────────────────────────── */
   --home-surface-base: var(--apollon-background);

@@ -162,7 +162,7 @@
 
 .react-flow {
   --panel-background: var(--apollon-background, #fff);
-  --panel-shadow: var(--home-shadow-md, 0 4px 12px rgba(0, 0, 0, 0.18));
+  --panel-shadow: var(--apollon-shadow, 0 4px 12px rgba(0, 0, 0, 0.18));
   --text: var(--apollon-primary-contrast, #000);
   --xy-edge-stroke: var(--apollon-primary-contrast, #000);
   --xy-edge-stroke-width: 2px;
@@ -245,7 +245,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
+  border-radius: var(--apollon-radius-lg, 8px);
   border: 2px solid;
   background-color: var(--apollon-background, #fff);
   color: var(--apollon-primary-contrast, #000);
@@ -357,7 +357,7 @@
   margin-top: 4px;
   padding: 2px 6px;
   font-size: 12px;
-  border-radius: 6px;
+  border-radius: var(--apollon-radius-md, 6px);
   color: #fff;
   white-space: nowrap;
 }
@@ -1043,13 +1043,13 @@
 .react-flow__node:hover {
   opacity: 0.9;
   box-shadow: 0 0 0 2px var(--apollon-primary, #3e8acc);
-  border-radius: 4px;
+  border-radius: var(--apollon-radius-sm, 4px);
 }
 
 .react-flow__node.selected {
   opacity: 0.9;
   box-shadow: 0 0 0 2px var(--apollon-primary, #3e8acc);
-  border-radius: 4px;
+  border-radius: var(--apollon-radius-sm, 4px);
 }
 
 .apollon-interactive-selection {
@@ -1142,6 +1142,84 @@ svg.react-flow__connectionline {
   cursor: pointer;
 }
 
+/* Typography primitive. Color + per-variant size/weight (was an inline
+   React.CSSProperties map) keyed on data-variant, routed through the themed
+   contrast token. Callers' sx/style still override via the element's own
+   inline style (higher specificity than this rule). h1–h5 inherit by design. */
+[data-slot="typography"] {
+  color: var(--apollon-primary-contrast, #000000);
+}
+[data-slot="typography"][data-variant="h6"] {
+  font-size: 1.25rem;
+  font-weight: 500;
+  margin: 0;
+}
+[data-slot="typography"][data-variant="subtitle1"] {
+  font-size: 1rem;
+  font-weight: 400;
+  margin: 0;
+}
+[data-slot="typography"][data-variant="subtitle2"] {
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin: 0;
+}
+[data-slot="typography"][data-variant="body1"] {
+  font-size: 1rem;
+  margin: 0;
+}
+[data-slot="typography"][data-variant="body2"] {
+  font-size: 0.875rem;
+  margin: 0;
+}
+[data-slot="typography"][data-variant="caption"] {
+  font-size: 0.75rem;
+  margin: 0;
+}
+
+/* Text-field label + helper chrome. The TextField primitive sets the data-slot
+   (and data-error on the helper); the visual tokens — size, spacing, and the
+   themed contrast / danger / muted colors — live here, not inline. */
+[data-slot="textfield-label"] {
+  font-size: 0.75rem;
+  margin-bottom: 2px;
+  color: var(--apollon-primary-contrast, #000000);
+}
+[data-slot="textfield-helper"] {
+  font-size: 0.75rem;
+  margin-top: 2px;
+  color: var(--apollon-gray-variant, #495057);
+}
+[data-slot="textfield-helper"][data-error] {
+  color: var(--apollon-alert-danger-color, #721c24);
+}
+
+/* Divider line (StyleEditor color rows, etc). Visual tokens live here, routed
+   through --apollon-* fallbacks; callers tune geometry/color only via the
+   --divider-* custom properties (no inline visual styles). */
+[data-slot="divider-line"] {
+  width: var(--divider-width, 100%);
+  height: var(--divider-height, 1px);
+  margin: var(--divider-margin, 8px 0);
+  background-color: var(
+    --divider-color,
+    var(--apollon-primary-contrast, #000000)
+  );
+}
+
+/* Add-item row (attributes / methods lists): the text field grows, the named
+   add Button hugs its right edge so a screen-reader user gets a real action
+   rather than a nameless "+ Add" field. */
+.apollon-add-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.apollon-add-row > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
 /* Drag handle (DnD rows) */
 .apollon-drag-handle {
   cursor: grab;
@@ -1168,9 +1246,9 @@ svg.react-flow__connectionline {
   padding: 10px;
   background-color: var(--apollon-surface, #ffffff);
   color: var(--apollon-primary-contrast, #000);
-  border-radius: var(--home-radius-lg, 8px);
+  border-radius: var(--apollon-radius-lg, 8px);
   border: 1px solid var(--apollon-border, #cdd5df);
-  box-shadow: var(--home-shadow-md, 0 4px 12px rgba(0, 0, 0, 0.18));
+  box-shadow: var(--apollon-shadow, 0 4px 12px rgba(0, 0, 0, 0.18));
   transform-origin: var(--transform-origin, center);
   transition:
     opacity 100ms ease,
@@ -1211,7 +1289,7 @@ svg.react-flow__connectionline {
   color: var(--apollon-primary-contrast, #000);
   background-color: var(--apollon-surface-sunken, #ffffff);
   border: 1px solid var(--apollon-border, #cdd5df);
-  border-radius: var(--home-radius-md, 6px);
+  border-radius: var(--apollon-radius-md, 6px);
   cursor: pointer;
 }
 .apollon-select-trigger:focus-visible {
@@ -1235,8 +1313,8 @@ svg.react-flow__connectionline {
   background-color: var(--apollon-surface, #ffffff);
   color: var(--apollon-primary-contrast, #000);
   border: 1px solid var(--apollon-border, #cdd5df);
-  border-radius: var(--home-radius-lg, 8px);
-  box-shadow: var(--home-shadow-md, 0 4px 12px rgba(0, 0, 0, 0.18));
+  border-radius: var(--apollon-radius-lg, 8px);
+  box-shadow: var(--apollon-shadow, 0 4px 12px rgba(0, 0, 0, 0.18));
   transform-origin: var(--transform-origin, center);
   transition:
     opacity 100ms ease,
@@ -1264,7 +1342,7 @@ svg.react-flow__connectionline {
   color: var(--apollon-primary-contrast, #000);
   background-color: transparent;
   border: none;
-  border-radius: var(--home-radius-md, 6px);
+  border-radius: var(--apollon-radius-md, 6px);
   cursor: pointer;
   /* Avoid the 300ms tap delay / double-tap zoom on touch devices. */
   touch-action: manipulation;
@@ -1336,8 +1414,8 @@ svg.react-flow__connectionline {
   background-color: var(--apollon-surface, #ffffff);
   color: var(--apollon-primary-contrast, #000);
   border: 1px solid var(--apollon-border, #cdd5df);
-  border-radius: var(--home-radius-lg, 8px);
-  box-shadow: var(--home-shadow-md, 0 4px 12px rgba(0, 0, 0, 0.18));
+  border-radius: var(--apollon-radius-lg, 8px);
+  box-shadow: var(--apollon-shadow, 0 4px 12px rgba(0, 0, 0, 0.18));
   z-index: 10003;
 }
 .apollon-color-picker__grid {
@@ -1358,7 +1436,7 @@ svg.react-flow__connectionline {
   height: 28px;
   padding: 2px;
   border: 1px solid var(--apollon-border, #cdd5df);
-  border-radius: var(--home-radius-md, 6px);
+  border-radius: var(--apollon-radius-md, 6px);
   background: transparent;
   cursor: pointer;
 }
@@ -1402,6 +1480,13 @@ svg.react-flow__connectionline {
   .apollon-style-editor__header-actions {
   margin-left: 0;
 }
+/* Optional bold title that leads the header row (e.g. the «Title» node). The
+   bold weight + trailing gap were inline; they live here so NodeStyleEditor
+   only sets the class. Inherits the themed Typography color. */
+.apollon-node-style-editor-title {
+  font-weight: bold;
+  margin-right: 8px;
+}
 .apollon-style-editor__panel {
   display: flex;
   flex-direction: column;
@@ -1409,7 +1494,7 @@ svg.react-flow__connectionline {
   margin-bottom: 10px;
   background-color: var(--apollon-surface, #ffffff);
   border: 1px solid var(--apollon-border-subtle, #e3e8ef);
-  border-radius: var(--home-radius-md, 6px);
+  border-radius: var(--apollon-radius-md, 6px);
 }
 .apollon-style-editor__row {
   display: flex;
@@ -1432,6 +1517,9 @@ svg.react-flow__connectionline {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  /* Sits above sibling header content (was ZINDEX.HEADER_SWITCH inline). */
+  position: relative;
+  z-index: 1;
   min-height: 28px;
   padding: 0 10px;
   border: 1px solid
@@ -1453,12 +1541,12 @@ svg.react-flow__connectionline {
   border-left: 0;
 }
 .apollon-stereotype-group .apollon-stereotype-toggle:first-child {
-  border-top-left-radius: var(--apollon-chrome-radius-sm, 6px);
-  border-bottom-left-radius: var(--apollon-chrome-radius-sm, 6px);
+  border-top-left-radius: var(--apollon-radius-sm, 4px);
+  border-bottom-left-radius: var(--apollon-radius-sm, 4px);
 }
 .apollon-stereotype-group .apollon-stereotype-toggle:last-child {
-  border-top-right-radius: var(--apollon-chrome-radius-sm, 6px);
-  border-bottom-right-radius: var(--apollon-chrome-radius-sm, 6px);
+  border-top-right-radius: var(--apollon-radius-sm, 4px);
+  border-bottom-right-radius: var(--apollon-radius-sm, 4px);
 }
 .apollon-stereotype-toggle:hover {
   background-color: var(
@@ -1514,7 +1602,7 @@ svg.react-flow__connectionline {
 .scroll-overlay-hint-content {
   background-color: var(--apollon-surface, #ffffff);
   border: 2px solid var(--apollon-primary, #3e8acc);
-  border-radius: 8px;
+  border-radius: var(--apollon-radius-lg, 8px);
   padding: 16px 24px;
   box-shadow: 0 4px 12px var(--apollon-grid, rgba(36, 39, 36, 0.1));
   display: flex;
