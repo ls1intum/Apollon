@@ -218,7 +218,7 @@ export function DiagramActionsMenuView({
             <Button
               type="button"
               variant="ghost"
-              size="icon"
+              size="icon-lg"
               aria-label="Open diagram actions"
               // Hidden until the card is hovered/focused, but kept visible while
               // the menu is open (Base UI sets aria-expanded on the trigger) so
@@ -775,7 +775,7 @@ export function DiagramCardView({
           <Button
             type="button"
             variant="ghost"
-            size="icon"
+            size="icon-lg"
             aria-label={
               isFavorite ? "Remove from favorites" : "Add to favorites"
             }

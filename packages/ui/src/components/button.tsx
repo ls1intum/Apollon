@@ -43,11 +43,14 @@ function Button({
 }: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
   return (
     <ButtonPrimitive
-      data-slot="button"
       data-variant={variant}
       data-size={size}
       className={cn("group/button", className)}
       {...props}
+      // data-slot LAST so it survives the `render={<Button/>}` merge (Base UI
+      // triggers inject their own data-slot via props; a Button is always a
+      // button, and its CSS is keyed on data-slot="button").
+      data-slot="button"
     />
   )
 }
