@@ -17,7 +17,6 @@ const sampleActionsMenu = (
   <DiagramActionsMenuView
     diagram={SAMPLE_LOCAL_DIAGRAM}
     containerClassName="pointer-events-auto relative"
-    triggerClassName="flex cursor-pointer items-center justify-center rounded-md p-1"
     onOpen={fn()}
     onDuplicate={fn()}
     onDelete={fn()}
@@ -169,7 +168,6 @@ export const SharedDiagram: Story = {
       <DiagramActionsMenuView
         diagram={SAMPLE_SHARED_DIAGRAM}
         containerClassName="pointer-events-auto relative"
-        triggerClassName="flex cursor-pointer items-center justify-center rounded-md p-1"
         onOpen={fn()}
         onDuplicate={fn()}
         onDelete={fn()}

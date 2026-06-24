@@ -210,7 +210,13 @@
      islands, the version drawer, and the diagram cards now share one source):
      a 12px radius, a hairline border that auto-themes off the flipping
      ink/background, and a soft floating shadow (dark gets its own override below
-     since a light drop shadow vanishes on a dark canvas). */
+     since a light drop shadow vanishes on a dark canvas). The island FILL itself
+     is the canvas/background hue (the editor floats its glass plate over the
+     canvas and separates it by border+shadow, never by lightening the fill);
+     mirroring --apollon-chrome-surface here lets the home cards paint that same
+     island fill instead of a Material-style raised gray. The webapp does NOT
+     import the editor's app.css, so chrome tokens it consumes must live here. */
+  --apollon-chrome-surface: var(--apollon-background, #fff);
   --apollon-chrome-radius-lg: 12px;
   --apollon-chrome-border: color-mix(
     in srgb,
@@ -228,15 +234,6 @@
     var(--apollon-primary-contrast, #000) 7.5%,
     transparent
   );
-
-  /* Diagram-thumbnail recolor (light). A diagram authored on the white canvas
-     already reads on the light card, so light = identity: near-black strokes
-     stay black, near-white shape fills stay white. The dark block below swaps
-     in a light stroke + a cool mid fill that clears WCAG 1.4.11 non-text
-     contrast (>=3:1) on the dark card. thumbnailTheme.ts reads these at recolor
-     time so the look is token-driven, never hard-coded hex. */
-  --apollon-thumbnail-stroke: var(--primitive-black);
-  --apollon-thumbnail-fill: var(--primitive-white);
 
   /* Color-picker swatch palette — the public editor-facing handle on the same
      fixed, accessible fill palette the webapp color-picker uses. References the
@@ -299,6 +296,15 @@
   --home-surface-raised-hover: var(--apollon-surface-hover);
   --home-surface-raised-active: var(--primitive-surface-raised-active);
   --home-surface-row-alt: var(--primitive-surface-row-alt);
+
+  /* Diagram-card island fill — the home tiles are editor islands, so their
+     SURFACE is the editor chrome surface (= the canvas/background hue), NOT the
+     raised-gray --home-surface-raised. In dark this makes the card fill (#13161c)
+     match the editor header islands instead of sitting a notch lighter (#1a1f27);
+     the card already carries the chrome border + chrome floating shadow, which
+     separate it from the equally-#13161c home page exactly as the editor's island
+     separates from its canvas. Light is unchanged (#fff either way). */
+  --home-card-surface: var(--apollon-chrome-surface);
 
   /* Text */
   --home-text-primary: var(--apollon-primary-contrast);
@@ -430,16 +436,6 @@
   --primitive-border-strong: #48535f;
   --primitive-border-subtle: #242b34;
 
-  /* Diagram-thumbnail recolor (dark). The shape fill is a cool blue-slate that
-     clears WCAG 1.4.11 non-text contrast on the dark card (#636e7e = 3.20:1 on
-     #1a1f27, the surface-raised the thumbnail sits on transparently); the old
-     warm #383934 sat at 1.42:1 and read as the same plate as the card. The
-     stroke is a near-white neutral that reads on both the card (12.99:1) and
-     the shape fill (4.06:1). Defined as primitives so the light/dark pair stays
-     the abstraction. */
-  --primitive-thumbnail-stroke-dark: #e4e4e1;
-  --primitive-thumbnail-fill-dark: #636e7e;
-
   /* Home accent (dark). #236ebe keeps white/off-white button text at WCAG AA
      (4.90:1 on --accent-contrast, 5.19:1 on pure white); a lighter accent
      would drop below 4.5:1, so do not brighten it. */
@@ -547,10 +543,6 @@
      one). radius + the auto-theming chrome border need no dark delta. */
   --apollon-chrome-shadow-floating: 0 2px 12px 0 rgb(0 0 0 / 50%);
 
-  /* Diagram-thumbnail recolor — dark deltas (see primitives above). */
-  --apollon-thumbnail-stroke: var(--primitive-thumbnail-stroke-dark);
-  --apollon-thumbnail-fill: var(--primitive-thumbnail-fill-dark);
-
   /* ── Layer 3: --home-* (dark deltas) ───────────────────────────────────── */
   --home-surface-base: var(--apollon-background);
   --home-surface-sunken: var(--apollon-surface-sunken);
@@ -558,6 +550,7 @@
   --home-surface-raised-hover: var(--apollon-surface-hover);
   --home-surface-raised-active: var(--primitive-surface-raised-active);
   --home-surface-row-alt: var(--primitive-surface-row-alt);
+  --home-card-surface: var(--apollon-chrome-surface);
   --home-text-primary: var(--apollon-primary-contrast);
   --home-text-secondary: var(--primitive-text-secondary);
   --home-text-strong: var(--apollon-primary-contrast);

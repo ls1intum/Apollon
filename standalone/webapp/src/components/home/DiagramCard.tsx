@@ -2,18 +2,22 @@ import {
   useEffect,
   useMemo,
   useState,
-  type CSSProperties,
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
   type ReactNode,
   type Ref,
 } from "react"
-import { ChevronRight, MoreVertical, Star } from "lucide-react"
+import { MoreVertical, Star, Trash2 } from "lucide-react"
 import type { UMLDiagramType } from "@tumaet/apollon"
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
@@ -143,23 +147,11 @@ export type DiagramActionsMenuViewProps = {
   onRemoveSharedEntry: () => void
   /** Wrapper class for the relatively-positioned menu container. */
   containerClassName?: string
-  /** Class for the three-dot trigger button. */
-  triggerClassName?: string
-  /** Inline style for the three-dot trigger button. */
-  triggerStyle?: CSSProperties
-  /** Class for the popover menu content. */
-  menuClassName?: string
-  /** Inline style for the popover menu content. */
-  menuStyle?: CSSProperties
   /** Stop click/keydown/mousedown from bubbling to an enclosing card link. */
   stopPropagation?: boolean
 }
 
 const DEFAULT_MENU_CONTAINER_CLASS = "relative"
-const DEFAULT_MENU_TRIGGER_CLASS =
-  "cursor-pointer rounded-md border border-border bg-muted p-1.5 text-foreground shadow-sm transition-colors duration-200 hover:border-ring hover:bg-primary hover:text-[var(--home-text-on-badge)] focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
-const DEFAULT_MENU_CONTENT_CLASS =
-  "z-40 w-52 rounded-lg border border-border-subtle bg-card p-1 shadow-sm transition-colors duration-200"
 
 /**
  * Pure three-dot diagram actions menu: it renders the trigger + popover and
@@ -178,10 +170,6 @@ export function DiagramActionsMenuView({
   onChangeSharedView,
   onRemoveSharedEntry,
   containerClassName = DEFAULT_MENU_CONTAINER_CLASS,
-  triggerClassName = DEFAULT_MENU_TRIGGER_CLASS,
-  triggerStyle,
-  menuClassName = DEFAULT_MENU_CONTENT_CLASS,
-  menuStyle,
   stopPropagation = false,
 }: DiagramActionsMenuViewProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -189,8 +177,6 @@ export function DiagramActionsMenuView({
 
   const isLocalDiagram = (diagram.source ?? "local") === "local"
   const sharedView = diagram.lastSharedView ?? DiagramView.EDIT
-  const menuItemClassName =
-    "min-h-0 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors duration-200 hover:bg-accent-hover hover:text-foreground data-[highlighted]:bg-accent-hover data-[highlighted]:text-foreground focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
 
   const closeMenu = () => {
     setIsMenuOpen(false)
@@ -229,17 +215,20 @@ export function DiagramActionsMenuView({
       >
         <DropdownMenuTrigger
           render={
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon"
               aria-label="Open diagram actions"
-              className={`${triggerClassName} home-card-icon-button`}
-              style={triggerStyle}
-              data-active={isMenuOpen ? "true" : "false"}
+              // Hidden until the card is hovered/focused, but kept visible while
+              // the menu is open (Base UI sets aria-expanded on the trigger) so
+              // an open menu never floats over a vanished trigger.
+              className="pointer-events-auto text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 aria-expanded:opacity-100 [@media(hover:none)]:opacity-100"
               onClick={stopIfNeeded}
             />
           }
         >
-          <MoreVertical className="size-[18px]" aria-hidden="true" />
+          <MoreVertical className="size-5" aria-hidden="true" />
         </DropdownMenuTrigger>
 
         <DropdownMenuContent
@@ -247,139 +236,99 @@ export function DiagramActionsMenuView({
           aria-label="Diagram actions"
           align="end"
           sideOffset={8}
-          className={`border-0 ${menuClassName}`}
-          style={menuStyle}
         >
           {isExpired ? (
             <DropdownMenuItem
-              className="min-h-0 rounded-md px-3 py-2 text-sm transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
+              variant="destructive"
               onClick={() => runAndClose(onRemoveSharedEntry)}
             >
               Remove from shared list
             </DropdownMenuItem>
           ) : !isDeleteConfirmOpen ? (
-            <div className="space-y-1">
-              <DropdownMenuItem
-                className={menuItemClassName}
-                onClick={() => runAndClose(onOpen)}
-              >
-                {isLocalDiagram ? "Open" : "Open diagram"}
-              </DropdownMenuItem>
-              {isLocalDiagram ? (
-                <>
-                  <DropdownMenuItem
-                    className={menuItemClassName}
-                    onClick={() => runAndClose(onDuplicate)}
-                  >
-                    Duplicate
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className={menuItemClassName}
-                    onClick={() => runAndClose(onShare)}
-                  >
-                    Share
-                  </DropdownMenuItem>
-                  <div
-                    className="w-full"
-                    title={
-                      canDelete
-                        ? undefined
-                        : "Cannot delete diagram currently being edited"
-                    }
-                  >
-                    <DropdownMenuItem
-                      closeOnClick={false}
-                      disabled={!canDelete}
-                      className={`min-h-0 rounded-md px-3 py-2 text-sm transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2 ${
-                        canDelete
-                          ? "text-[var(--apollon-alert-danger-color)] hover:bg-[var(--apollon-alert-danger-background)] data-[highlighted]:bg-[var(--apollon-alert-danger-background)]"
-                          : "cursor-not-allowed bg-muted text-muted-foreground opacity-60"
-                      }`}
-                      onClick={() => setIsDeleteConfirmOpen(true)}
-                    >
-                      Delete
-                    </DropdownMenuItem>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <DropdownMenuItem
-                    className={menuItemClassName}
-                    onClick={() => runAndClose(onCopySharedLink)}
-                  >
-                    Copy link
-                  </DropdownMenuItem>
-                  <DropdownMenuSub>
-                    <DropdownMenuSubTrigger
-                      className={`${menuItemClassName} justify-between`}
-                    >
-                      Change sharing mode
-                      <ChevronRight
-                        className="ml-2 size-4 shrink-0"
-                        aria-hidden="true"
-                      />
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent
-                      aria-label="Change sharing mode"
-                      className={`border-0 ${menuClassName}`}
-                      style={menuStyle}
-                    >
-                      {SHARED_DIAGRAM_VIEW_OPTIONS.map((option) => (
-                        <DropdownMenuItem
-                          key={option.value}
-                          className={`min-h-0 rounded-md px-2 py-1.5 text-xs transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2 ${
-                            option.value === sharedView
-                              ? "bg-accent-hover text-foreground data-[highlighted]:bg-accent-hover"
-                              : "text-muted-foreground hover:bg-[color-mix(in_srgb,var(--home-surface-raised-hover)_50%,transparent)] hover:text-foreground data-[highlighted]:bg-[color-mix(in_srgb,var(--home-surface-raised-hover)_50%,transparent)] data-[highlighted]:text-foreground"
-                          }`}
-                          onClick={() =>
-                            runAndClose(() => onChangeSharedView(option.value))
-                          }
-                        >
-                          <span className="w-full">{option.badge}</span>
-                          {option.value === sharedView ? (
-                            <span className="font-medium text-foreground opacity-90">
-                              Selected
-                            </span>
-                          ) : null}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuSubContent>
-                  </DropdownMenuSub>
-                  <DropdownMenuItem
-                    className="min-h-0 rounded-md px-3 py-2 text-sm transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
-                    onClick={() => runAndClose(onRemoveSharedEntry)}
-                  >
-                    Remove from shared list
-                  </DropdownMenuItem>
-                </>
-              )}
-            </div>
-          ) : (
-            <div className="min-w-[220px] space-y-2 rounded-md border border-[var(--apollon-alert-danger-border)] bg-[var(--apollon-alert-danger-background)] p-3 text-sm transition-colors duration-200">
-              <p className="font-medium text-[var(--apollon-alert-danger-color)]">
-                Are you sure? This can&apos;t be undone.
-              </p>
-              <div className="flex justify-end gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="xs"
-                  className="cursor-pointer text-muted-foreground hover:bg-accent-hover hover:text-foreground"
-                  onClick={() => setIsDeleteConfirmOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  size="xs"
-                  className="cursor-pointer border border-[var(--apollon-alert-danger-border)] bg-[var(--apollon-alert-danger-color)] text-white transition-opacity duration-200 hover:bg-[var(--apollon-alert-danger-color)] hover:opacity-90"
-                  onClick={() => runAndClose(onDelete)}
+            isLocalDiagram ? (
+              <>
+                <DropdownMenuItem onClick={() => runAndClose(onOpen)}>
+                  Open
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => runAndClose(onDuplicate)}>
+                  Duplicate
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => runAndClose(onShare)}>
+                  Share
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  variant="destructive"
+                  disabled={!canDelete}
+                  closeOnClick={false}
+                  title={
+                    canDelete
+                      ? undefined
+                      : "Cannot delete diagram currently being edited"
+                  }
+                  onClick={() => setIsDeleteConfirmOpen(true)}
                 >
                   Delete
-                </Button>
-              </div>
-            </div>
+                </DropdownMenuItem>
+              </>
+            ) : (
+              <>
+                <DropdownMenuItem onClick={() => runAndClose(onOpen)}>
+                  Open
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => runAndClose(onCopySharedLink)}>
+                  Copy link
+                </DropdownMenuItem>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    Change sharing mode
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent aria-label="Change sharing mode">
+                    <DropdownMenuRadioGroup
+                      value={sharedView}
+                      onValueChange={(value) =>
+                        runAndClose(() =>
+                          onChangeSharedView(value as DiagramView)
+                        )
+                      }
+                    >
+                      {SHARED_DIAGRAM_VIEW_OPTIONS.map((option) => (
+                        <DropdownMenuRadioItem
+                          key={option.value}
+                          value={option.value}
+                        >
+                          {option.badge}
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() => runAndClose(onRemoveSharedEntry)}
+                >
+                  Remove from shared list
+                </DropdownMenuItem>
+              </>
+            )
+          ) : (
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>Delete this diagram?</DropdownMenuLabel>
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={() => runAndClose(onDelete)}
+              >
+                <Trash2 aria-hidden="true" />
+                Delete permanently
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                closeOnClick={false}
+                onClick={() => setIsDeleteConfirmOpen(false)}
+              >
+                Cancel
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
           )}
         </DropdownMenuContent>
       </DropdownMenu>
@@ -394,10 +343,6 @@ export function DiagramActionsMenuView({
 type DiagramActionsMenuProps = {
   diagram: RecentDiagram
   containerClassName?: string
-  triggerClassName?: string
-  triggerStyle?: CSSProperties
-  menuClassName?: string
-  menuStyle?: CSSProperties
   stopPropagation?: boolean
   isExpired?: boolean
   onSharedDiagramRemoved?: (diagramId: string) => void
@@ -407,10 +352,6 @@ type DiagramActionsMenuProps = {
 export const DiagramActionsMenu = ({
   diagram,
   containerClassName,
-  triggerClassName,
-  triggerStyle,
-  menuClassName,
-  menuStyle,
   stopPropagation = false,
   isExpired = false,
   onSharedDiagramRemoved,
@@ -449,10 +390,6 @@ export const DiagramActionsMenu = ({
       canDelete={isLocalDiagram && !isCurrentDiagramInEditor}
       stopPropagation={stopPropagation}
       containerClassName={containerClassName}
-      triggerClassName={triggerClassName}
-      triggerStyle={triggerStyle}
-      menuClassName={menuClassName}
-      menuStyle={menuStyle}
       onOpen={() => navigate(getDiagramNav(diagram))}
       onDuplicate={() => {
         if (isLocalDiagram) duplicateModel(diagram.id)
@@ -486,41 +423,15 @@ export const DiagramActionsMenu = ({
   )
 }
 
-/** Renders a file-document shaped placeholder with the diagram-type icon inside. */
-const FileDocumentIcon = ({ type }: { type: UMLDiagramType }) => {
+/**
+ * Empty-diagram placeholder: a centered, theme-aware framed tile holding the
+ * diagram-type glyph. All tokens (no baked colors) so it reads cleanly on the
+ * island surface in both themes and stays cohesive with the editor canvas.
+ */
+const DiagramTypePlaceholder = ({ type }: { type: UMLDiagramType }) => {
   return (
-    <div className="relative flex items-center justify-center">
-      {/* File-page SVG shape - scaled to 84x102 */}
-      <svg
-        width="84"
-        height="102"
-        viewBox="0 0 72 88"
-        fill="none"
-        aria-hidden="true"
-      >
-        {/* Page body */}
-        <path
-          d="M4 6C4 2.686 6.686 0 10 0H48L68 20V82C68 85.314 65.314 88 62 88H10C6.686 88 4 85.314 4 82V6Z"
-          fill="var(--home-badge-bg)"
-        />
-        {/* Folded corner */}
-        <path
-          d="M48 0L68 20H54C50.686 20 48 17.314 48 14V0Z"
-          fill="var(--home-badge-fold)"
-        />
-      </svg>
-      {/* Diagram type icon overlaid in the center of the document - scaled to w-8 h-8 */}
-      <div
-        className="absolute flex items-center justify-center"
-        style={{
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -35%)",
-          color: "var(--home-text-on-badge)",
-        }}
-      >
-        {getDiagramTypeIcon(type, "w-8 h-8")}
-      </div>
+    <div className="flex size-20 items-center justify-center rounded-xl border border-[var(--home-border-subtle)] bg-[color-mix(in_srgb,var(--home-text-primary)_4%,transparent)] text-[var(--home-text-muted)]">
+      {getDiagramTypeIcon(type, "size-9")}
     </div>
   )
 }
@@ -538,15 +449,12 @@ type DiagramPreviewProps = {
   showThumbnail: boolean
   /** Show the loading spinner (incl. non-empty-but-no-thumbnail-yet anti-flicker). */
   isLoading: boolean
-  /** Show the file-document placeholder panel (empty diagram). */
-  showPlaceholderIcon: boolean
 }
 
 /**
  * The card's preview area. Aspect-ratio driven (16:10) so its height follows
- * the grid-owned width with no magic px. Exactly one of four states renders:
- * rendered thumbnail / loading spinner / empty placeholder panel / bare
- * diagram-type icon panel.
+ * the grid-owned width with no magic px. Exactly one of three states renders:
+ * rendered thumbnail / loading spinner / empty diagram-type placeholder.
  */
 function DiagramPreview({
   diagram,
@@ -555,7 +463,6 @@ function DiagramPreview({
   darkDataUrl,
   showThumbnail,
   isLoading,
-  showPlaceholderIcon,
 }: DiagramPreviewProps) {
   return (
     <div className="flex aspect-[16/10] w-full items-center justify-center">
@@ -584,12 +491,8 @@ function DiagramPreview({
             Loading...
           </span>
         </div>
-      ) : showPlaceholderIcon ? (
-        <FileDocumentIcon type={diagram.type} />
       ) : (
-        <div className="flex h-full w-full items-center justify-center text-[var(--home-text-on-badge)]">
-          {getDiagramTypeIcon(diagram.type, "w-12 h-12")}
-        </div>
+        <DiagramTypePlaceholder type={diagram.type} />
       )}
     </div>
   )
@@ -743,11 +646,14 @@ export function DiagramCardView({
       ref={ref}
       role="listitem"
       className={cn(
-        // Island look (same tokens as the editor chrome header islands): 12px
-        // radius, hairline chrome border, soft resting float — so the home
-        // reads as one design language with the editor. Width is grid-owned
+        // Island look (same tokens as the editor chrome header islands): the
+        // chrome SURFACE fill (= canvas/background hue, not a raised gray), 12px
+        // radius, hairline chrome border, soft resting float — so the card reads
+        // as the SAME floating island as the editor in both themes, separated
+        // from the (equally-toned) home page by its border + shadow exactly as
+        // the editor island separates from its canvas. Width is grid-owned
         // (auto-fill minmax 1fr); `--card-min-h` is the only sizing knob.
-        "home-diagram-card group relative flex min-h-[var(--card-min-h)] flex-col gap-0 overflow-hidden rounded-[var(--apollon-chrome-radius-lg)] border border-[var(--apollon-chrome-border)] py-0 shadow-[var(--apollon-chrome-shadow-floating)] ring-0 transition-all duration-[280ms] ease-[cubic-bezier(0.16,1,0.3,1)] focus-within:ring-2 focus-within:ring-[var(--home-accent-ring)]",
+        "home-diagram-card group relative flex min-h-[var(--card-min-h)] flex-col gap-0 overflow-hidden rounded-[var(--apollon-chrome-radius-lg)] border border-[var(--apollon-chrome-border)] bg-[var(--home-card-surface)] py-0 shadow-[var(--apollon-chrome-shadow-floating)] transition-all duration-[280ms] ease-[cubic-bezier(0.16,1,0.3,1)]",
         isHighlighted
           ? "animate-[diagram-highlight-pulse_2.4s_ease-out_forwards] bg-accent-hover shadow-[0_0_0_3px_color-mix(in_srgb,var(--home-accent-base)_35%,transparent)]"
           : "hover:bg-accent-hover hover:shadow-[0_6px_16px_var(--home-shadow-card-hover)]",
@@ -791,7 +697,10 @@ export function DiagramCardView({
         aria-disabled={isExpired}
         tabIndex={isExpired ? -1 : undefined}
         className={cn(
-          "flex h-full w-full flex-col text-left outline-none after:absolute after:inset-0 after:z-10 after:content-['']",
+          // Keyboard-only focus ring (focus-visible, not focus-within): a mouse
+          // press no longer paints a ring. Inset + the design-system `ring` token
+          // so overflow-hidden can't clip it and it stays theme-aware.
+          "flex h-full w-full flex-col rounded-[inherit] text-left outline-none after:absolute after:inset-0 after:z-10 after:content-[''] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
           isExpired ? "cursor-default" : "cursor-pointer"
         )}
       >
@@ -809,7 +718,6 @@ export function DiagramCardView({
             darkDataUrl={darkDataUrl}
             showThumbnail={shouldRenderDiagramThumbnail}
             isLoading={isEffectivelyLoading && !showPlaceholderIcon}
-            showPlaceholderIcon={showPlaceholderIcon}
           />
 
           <CardContent className="mt-auto w-full px-0 text-left">
@@ -857,42 +765,34 @@ export function DiagramCardView({
         </CardFooter>
       </Link>
 
-      {/* ---- Overlaid controls. The wrapper carries z-20 (above the link's
-          z-10 `after`) and `opacity-0` reveal — its own stacking context. On
-          touch (and when a favorite is set) the controls stay pinned visible. ---- */}
-      <div
-        data-fav={isFavorite ? "true" : undefined}
-        className="pointer-events-none absolute inset-x-3 top-3 z-20 flex items-start justify-between opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-100 data-[fav]:opacity-100"
-      >
-        {/* ---- Favorite star – top-left ---- */}
+      {/* ---- Overlaid controls. The wrapper only positions (z-20, above the
+          link's z-10 `after`); each control owns its own reveal so the star can
+          stay pinned when favorited while the ⋮ reveals on hover/focus/open. ---- */}
+      <div className="pointer-events-none absolute inset-x-3 top-3 z-20 flex items-start justify-between">
+        {/* ---- Favorite star – top-left. Same shared ghost icon button as the
+            ⋮; pinned visible when favorited, otherwise reveals on hover/focus. ---- */}
         {onToggleFavorite ? (
           <Button
             type="button"
             variant="ghost"
-            size="icon-sm"
+            size="icon"
             aria-label={
               isFavorite ? "Remove from favorites" : "Add to favorites"
             }
             aria-pressed={isFavorite}
-            className="home-card-icon-button pointer-events-auto size-[30px]"
-            style={{
-              outlineColor: "var(--home-accent-ring)",
-              color: isFavorite
-                ? "var(--home-favorite-star)"
-                : "var(--home-text-muted)",
-              ["--icon-hover-color" as string]: "var(--home-text-strong)",
-              ["--icon-active-color" as string]: "var(--home-favorite-star)",
-              ["--icon-hover-bg" as string]:
-                "color-mix(in srgb, var(--home-text-primary) 10%, transparent)",
-            }}
-            data-active={isFavorite ? "true" : "false"}
+            className={cn(
+              "pointer-events-auto transition-opacity",
+              isFavorite
+                ? "text-[var(--home-favorite-star)] opacity-100"
+                : "text-muted-foreground opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100"
+            )}
             onClick={(event) => {
               event.stopPropagation()
               onToggleFavorite()
             }}
           >
             <Star
-              className="size-[18px]"
+              className="size-5"
               aria-hidden="true"
               fill={isFavorite ? "currentColor" : "none"}
             />
@@ -1003,16 +903,6 @@ const DiagramCardComponent = ({
           stopPropagation
           isExpired={isExpired}
           containerClassName="pointer-events-auto relative"
-          triggerClassName="flex size-[30px] cursor-pointer items-center justify-center rounded-md p-1 transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2"
-          triggerStyle={{
-            outlineColor: "var(--home-accent-ring)",
-            color: "var(--home-text-muted)",
-            ["--icon-hover-color" as string]: "var(--home-text-strong)",
-            ["--icon-active-color" as string]: "var(--home-text-strong)",
-            ["--icon-hover-bg" as string]:
-              "color-mix(in srgb, var(--home-text-primary) 10%, transparent)",
-          }}
-          menuClassName="z-40 w-52 rounded-lg border border-border-subtle bg-card p-1 shadow-sm"
           onSharedDiagramRemoved={onSharedDiagramRemoved}
           onSharedDiagramViewChange={onSharedDiagramViewChange}
         />
