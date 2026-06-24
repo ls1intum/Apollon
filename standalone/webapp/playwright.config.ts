@@ -41,8 +41,25 @@ export default defineConfig({
     {
       name: "chromium",
       // The perf suite has its own serial, retry-free project below; keep it
-      // out of the parallel functional run.
-      testIgnore: "**/perf/**",
+      // out of the parallel functional run. The how-to-use spec is owned by the
+      // dedicated "howto-assets" project (different snapshotPathTemplate), so
+      // exclude it here too.
+      testIgnore: ["**/perf/**", "**/how-to-use.visual.spec.ts"],
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: 1280, height: 720 },
+      },
+    },
+    {
+      // Generates the four "How this editor works" modal images straight from
+      // the live editor — ONE source of truth. Its snapshotPathTemplate writes
+      // (and reads, for the regression diff) the exact PNGs HowToUseModal.tsx
+      // imports under assets/images/, NOT the *-snapshots dirs the other
+      // projects use. Regenerate with:
+      //   pnpm exec playwright test --project howto-assets --update-snapshots
+      name: "howto-assets",
+      testMatch: "**/how-to-use.visual.spec.ts",
+      snapshotPathTemplate: "{testDir}/../assets/images/how-to-use-{arg}{ext}",
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 1280, height: 720 },
@@ -57,7 +74,9 @@ export default defineConfig({
       ? [
           {
             name: "firefox",
-            testIgnore: "**/perf/**",
+            // The how-to-use assets are baselined once, in the pinned chromium
+            // "howto-assets" project; don't regenerate/diff them on firefox.
+            testIgnore: ["**/perf/**", "**/how-to-use.visual.spec.ts"],
             use: {
               ...devices["Desktop Firefox"],
               viewport: { width: 1280, height: 720 },
