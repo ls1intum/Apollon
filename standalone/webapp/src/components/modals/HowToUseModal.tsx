@@ -1,5 +1,12 @@
 import type { ReactNode } from "react"
 import { Button } from "@tumaet/ui/components/button"
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@tumaet/ui/components/tabs"
+import { Separator } from "@tumaet/ui/components/separator"
 import NodeCreation from "assets/images/how-to-use-node-creation.png"
 import EdgeCreation from "assets/images/how-to-use-edge-creation.png"
 import NodeEdit from "assets/images/how-to-use-node-edit.png"
@@ -9,6 +16,40 @@ type HowToUseModalProps = {
   /** Called when the user dismisses the walkthrough via the Close button. */
   onClose: () => void
 }
+
+/**
+ * Display-only platform detection: macOS surfaces the Command symbol, every
+ * other platform surfaces "Ctrl". This never feeds the actual shortcut handler
+ * (see library `useKeyboardShortcuts`, which keys off `ctrlKey || metaKey`); it
+ * only picks the glyph we render in the cheat sheet.
+ */
+const isMac =
+  typeof navigator !== "undefined" &&
+  /mac|iphone|ipad|ipod/i.test(navigator.platform || navigator.userAgent)
+
+const MOD = isMac ? "⌘" : "Ctrl"
+
+/**
+ * A single, shared key-cap. Used both inline inside the walkthrough prose and
+ * inside the shortcuts grid so the two never drift apart visually.
+ */
+const Kbd = ({ children }: { children: ReactNode }) => (
+  <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-border bg-muted px-1.5 font-mono text-xs font-medium text-foreground">
+    {children}
+  </kbd>
+)
+
+/** Render a list of keys/gestures as caps joined by "+". */
+const Keys = ({ keys }: { keys: string[] }) => (
+  <span className="inline-flex flex-wrap items-center gap-1">
+    {keys.map((key, index) => (
+      <span key={key} className="inline-flex items-center gap-1">
+        {index > 0 && <span className="text-muted-foreground">+</span>}
+        <Kbd>{key}</Kbd>
+      </span>
+    ))}
+  </span>
+)
 
 type Step = {
   title: string
@@ -46,8 +87,8 @@ const STEPS: Step[] = [
     title: "Delete Class",
     description: (
       <>
-        Select it with a single click and press <kbd>Delete</kbd> or{" "}
-        <kbd>Backspace</kbd>.
+        Select it with a single click and press <Kbd>Delete</Kbd> or{" "}
+        <Kbd>Backspace</Kbd>.
       </>
     ),
   },
@@ -62,34 +103,138 @@ const STEPS: Step[] = [
     title: "Undo & Redo",
     description: (
       <>
-        Press <kbd>Ctrl</kbd>+<kbd>Z</kbd> to undo and <kbd>Ctrl</kbd>+
-        <kbd>Y</kbd> to redo your changes.
+        Press <Kbd>{MOD}</Kbd>+<Kbd>Z</Kbd> to undo and <Kbd>{MOD}</Kbd>+
+        <Kbd>Y</Kbd> to redo your changes.
       </>
     ),
   },
 ]
 
+type Shortcut = {
+  /** One or more key-cap groups; multiple entries render as "A or B". */
+  combos: string[][]
+  label: string
+}
+
+type ShortcutGroup = {
+  title: string
+  shortcuts: Shortcut[]
+}
+
+// Sourced from library `useKeyboardShortcuts` (keyboard) plus the React Flow
+// canvas gestures wired up in `App.tsx` (pointer). Keep this in sync with both.
+const SHORTCUT_GROUPS: ShortcutGroup[] = [
+  {
+    title: "Selection",
+    shortcuts: [
+      { combos: [[MOD, "A"]], label: "Select all" },
+      { combos: [["Esc"]], label: "Clear selection" },
+      { combos: [["Shift", "Click"]], label: "Add / remove from selection" },
+      { combos: [["Shift", "Drag"]], label: "Box-select an area" },
+    ],
+  },
+  {
+    title: "Editing",
+    shortcuts: [
+      { combos: [["Delete"], ["Backspace"]], label: "Delete selection" },
+      { combos: [[MOD, "C"]], label: "Copy" },
+      { combos: [[MOD, "X"]], label: "Cut" },
+      { combos: [[MOD, "V"]], label: "Paste" },
+      { combos: [["←"], ["↑"], ["→"], ["↓"]], label: "Nudge selection" },
+    ],
+  },
+  {
+    title: "History",
+    shortcuts: [
+      { combos: [[MOD, "Z"]], label: "Undo" },
+      {
+        combos: [
+          [MOD, "Shift", "Z"],
+          [MOD, "Y"],
+        ],
+        label: "Redo",
+      },
+    ],
+  },
+  {
+    title: "View",
+    shortcuts: [
+      { combos: [["Drag"]], label: "Pan the canvas" },
+      { combos: [["Scroll"]], label: "Zoom in / out" },
+    ],
+  },
+]
+
+const Walkthrough = () => (
+  <ol className="flex flex-col gap-8">
+    {STEPS.map((step) => (
+      <li key={step.title} className="flex flex-col gap-2">
+        <h5 className="text-base font-semibold">{step.title}</h5>
+        <p className="text-sm text-muted-foreground">{step.description}</p>
+        {step.image && (
+          <img
+            src={step.image}
+            alt={step.alt}
+            loading="lazy"
+            className="mt-1 block w-full rounded-lg border border-border"
+          />
+        )}
+      </li>
+    ))}
+  </ol>
+)
+
+const Shortcuts = () => (
+  <div className="flex flex-col gap-5">
+    {SHORTCUT_GROUPS.map((group, groupIndex) => (
+      <div key={group.title} className="flex flex-col gap-3">
+        {groupIndex > 0 && <Separator />}
+        <h5 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+          {group.title}
+        </h5>
+        <dl className="grid grid-cols-[1fr_auto] items-center gap-x-6 gap-y-2.5">
+          {group.shortcuts.map((shortcut) => (
+            <div key={shortcut.label} className="contents">
+              <dt className="text-sm text-foreground">{shortcut.label}</dt>
+              <dd className="flex items-center justify-end gap-1.5 text-right">
+                {shortcut.combos.map((combo, comboIndex) => (
+                  <span
+                    key={combo.join("+")}
+                    className="inline-flex items-center gap-1.5"
+                  >
+                    {comboIndex > 0 && (
+                      <span className="text-xs text-muted-foreground">or</span>
+                    )}
+                    <Keys keys={combo} />
+                  </span>
+                ))}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    ))}
+    <p className="text-xs text-muted-foreground">
+      Shortcuts are ignored while editing text in a field.
+    </p>
+  </div>
+)
+
 export const HowToUseModal = ({ onClose }: HowToUseModalProps) => {
   return (
     <div className="flex flex-col gap-6 p-6 text-foreground">
-      <ol className="flex flex-col gap-8">
-        {STEPS.map((step) => (
-          <li key={step.title} className="flex flex-col gap-2">
-            <h5 className="text-base font-semibold">{step.title}</h5>
-            <p className="text-sm text-muted-foreground [&_kbd]:rounded [&_kbd]:border [&_kbd]:border-border [&_kbd]:bg-muted [&_kbd]:px-1.5 [&_kbd]:py-0.5 [&_kbd]:font-mono [&_kbd]:text-xs [&_kbd]:text-foreground">
-              {step.description}
-            </p>
-            {step.image && (
-              <img
-                src={step.image}
-                alt={step.alt}
-                loading="lazy"
-                className="mt-1 block w-full rounded-lg border border-border"
-              />
-            )}
-          </li>
-        ))}
-      </ol>
+      <Tabs defaultValue="walkthrough" className="gap-6">
+        <TabsList className="w-full">
+          <TabsTrigger value="walkthrough">Walkthrough</TabsTrigger>
+          <TabsTrigger value="shortcuts">Shortcuts</TabsTrigger>
+        </TabsList>
+        <TabsContent value="walkthrough">
+          <Walkthrough />
+        </TabsContent>
+        <TabsContent value="shortcuts">
+          <Shortcuts />
+        </TabsContent>
+      </Tabs>
       <Button variant="default" onClick={onClose}>
         Close
       </Button>

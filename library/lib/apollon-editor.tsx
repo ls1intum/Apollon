@@ -441,6 +441,13 @@ export class ApollonEditor {
       id: `apollon:host:${region}`,
       region,
       inset: "auto",
+      // The host mount is a pass-through frame: the host paints its own chrome
+      // (header islands, rail panels) which re-opt into pointer events via their
+      // own `pointer-events: auto`. Without this, ControlSlot would wrap the whole
+      // region (e.g. the full-width header band) in a pointer-events:auto +
+      // nopan/nodrag/nowheel div, turning the transparent gaps between islands
+      // into a dead zone that swallows canvas drag/pan.
+      interactive: false,
       render: () => <RegionMount el={node} />,
     })
     return el

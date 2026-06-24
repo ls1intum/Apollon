@@ -251,6 +251,16 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
             nodesDraggable={isDiagramModifiable}
             panOnScroll={!scrollLock || scrollEnabled}
             zoomOnScroll={!scrollLock || scrollEnabled}
+            // Keep the default left-drag pan (panOnDrag=true) — we do NOT switch
+            // to selectionOnDrag/space-pan. Adding Shift to multiSelectionKeyCode
+            // makes Shift+CLICK on a node/edge toggle it in/out of the
+            // multi-selection. selectionKeyCode keeps its default (Shift), so a
+            // Shift+DRAG on the empty pane still box-selects — no conflict, since
+            // a click on a node and a drag on the pane are different surfaces.
+            multiSelectionKeyCode={["Shift", "Meta", "Control"]}
+            // Delete the current selection with either key (Backspace on macOS,
+            // Delete on full keyboards).
+            deleteKeyCode={["Backspace", "Delete"]}
           >
             <CustomBackground />
             <CustomMiniMap />
