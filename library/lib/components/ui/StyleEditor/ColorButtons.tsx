@@ -4,35 +4,30 @@ import { Popover } from "@base-ui/react/popover"
 import { ToggleGroup } from "@base-ui/react/toggle-group"
 import { Toggle } from "@base-ui/react/toggle"
 import { Button } from "@/components/ui"
+import {
+  NATIVE_COLOR_INPUT_FALLBACK,
+  SWATCH_NAMES,
+} from "@tumaet/ui/lib/color-swatch-tokens"
 
 // Embed-safe editor color-picker. Mirrors the @tumaet/ui color-picker
-// STRUCTURE — a swatch trigger that opens a Popover holding a swatch grid plus
-// a native custom-color input — but ships NO Tailwind utilities: every part
-// carries a data-slot and is styled by semantic CSS in app.css keyed on those
-// attributes and driven by --apollon-* tokens + the radius scale.
+// (color-picker.tsx) STRUCTURE — a swatch trigger that opens a Popover holding
+// a swatch grid plus a native custom-color input — but ships NO Tailwind
+// utilities: every part carries a data-slot and is styled by semantic CSS in
+// app.css keyed on those attributes and driven by --apollon-* tokens + the
+// radius scale. That parallel impl is intentional: the webapp twin can't be
+// reused in the Tailwind-free embed bundle.
 //
-// The palette is sourced from design tokens, NOT an inline hex array: each
-// entry names an --apollon-swatch-* token (defined in packages/ui tokens.css),
-// and the value handed back to the consumer is the CSS `var(...)` reference, so
-// a chosen swatch re-resolves per theme. A custom color picked through the
-// native input is a real hex string. There is no luminance/contrast math: the
-// selected check mark contrasts via mix-blend in CSS, not a JS helper.
-// `<input type="color">` requires a literal 7-char hex value attribute — it
-// rejects CSS vars and the empty string — so this platform-mandated fallback is
-// the one hex the picker cannot tokenize. Named so it isn't a magic literal.
-const NATIVE_COLOR_INPUT_FALLBACK = "#000000"
-
-const SWATCH_TOKENS = [
-  "--apollon-swatch-slate",
-  "--apollon-swatch-red",
-  "--apollon-swatch-orange",
-  "--apollon-swatch-amber",
-  "--apollon-swatch-green",
-  "--apollon-swatch-teal",
-  "--apollon-swatch-blue",
-  "--apollon-swatch-violet",
-  "--apollon-swatch-pink",
-] as const
+// The swatch palette + native-input fallback are shared DATA, imported from
+// @tumaet/ui/lib/color-swatch-tokens (plain TS, embed-safe — no CSS) so they
+// can't drift from the webapp twin. Here each base name maps to its
+// --apollon-swatch-* token (defined in packages/ui tokens.css), and the value
+// handed back to the consumer is the CSS `var(...)` reference, so a chosen
+// swatch re-resolves per theme. A custom color picked through the native input
+// is a real hex string. There is no luminance/contrast math: the selected check
+// mark contrasts via mix-blend in CSS, not a JS helper.
+const SWATCH_TOKENS = SWATCH_NAMES.map(
+  (name) => `--apollon-swatch-${name}`
+) as readonly string[]
 
 const swatchValue = (token: string) => `var(${token})`
 

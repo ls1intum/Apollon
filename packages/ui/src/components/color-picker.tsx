@@ -2,31 +2,27 @@ import { CheckIcon } from "lucide-react"
 import * as React from "react"
 
 import { cn } from "../lib/utils"
+import {
+  NATIVE_COLOR_INPUT_FALLBACK,
+  SWATCH_NAMES,
+} from "../lib/color-swatch-tokens"
 import { Popover, PopoverContent, PopoverTrigger } from "./popover"
 import { ToggleGroup, ToggleGroupItem } from "./toggle-group"
 
-// The swatch palette is sourced from design tokens, NOT an inline hex array:
-// each entry names a `--color-swatch-*` token (defined in styles/theme.css and
-// driven by the primitives in tokens.css), and the value handed back to the
-// consumer is the CSS `var(...)` reference, so a chosen swatch re-resolves per
-// theme. A custom color picked through the native `input[type=color]` is a real
-// hex string. `cn()` is used for the few presentational utilities so a theming
-// embedder still recolors everything through the tokens.
-// `<input type="color">` requires a literal 7-char hex value — it rejects CSS
-// vars and the empty string — so this is the one hex the picker cannot tokenize.
-const NATIVE_COLOR_INPUT_FALLBACK = "#000000"
-
-const SWATCH_TOKENS = [
-  { name: "Slate", token: "--color-swatch-slate" },
-  { name: "Red", token: "--color-swatch-red" },
-  { name: "Orange", token: "--color-swatch-orange" },
-  { name: "Amber", token: "--color-swatch-amber" },
-  { name: "Green", token: "--color-swatch-green" },
-  { name: "Teal", token: "--color-swatch-teal" },
-  { name: "Blue", token: "--color-swatch-blue" },
-  { name: "Violet", token: "--color-swatch-violet" },
-  { name: "Pink", token: "--color-swatch-pink" },
-] as const
+// The swatch palette + native-input fallback are shared DATA, imported from
+// ../lib/color-swatch-tokens so they can't drift from the editor's embed-safe
+// twin (library StyleEditor/ColorButtons.tsx — same structure, Tailwind-free).
+// Here each base name is bridged to a semantic `--color-swatch-*` token
+// (defined in styles/theme.css, driven by the primitives in tokens.css), and
+// the value handed back to the consumer is the CSS `var(...)` reference, so a
+// chosen swatch re-resolves per theme. A custom color picked through the native
+// `input[type=color]` is a real hex string. `cn()` is used for the few
+// presentational utilities so a theming embedder still recolors everything
+// through the tokens.
+const SWATCH_TOKENS = SWATCH_NAMES.map((name) => ({
+  name: `${name[0].toUpperCase()}${name.slice(1)}`,
+  token: `--color-swatch-${name}`,
+})) as readonly { name: string; token: string }[]
 
 const swatchValue = (token: string) => `var(${token})`
 

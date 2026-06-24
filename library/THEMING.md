@@ -104,6 +104,7 @@ restyle the editor's shape or elevation:
 | `--apollon-interactive-selection`   | Accent ring/fill marking interactive (quiz-pickable) elements (default amber).     |
 | `--apollon-hover-neutral`           | Neutral hover wash for quiet controls, derived off `--apollon-primary-contrast`.   |
 | `--apollon-dropzone-accent`         | Ring/stroke shown on an assessment feedback drop target on hover (default blue).   |
+| `--apollon-dropzone-accent-fill`    | Translucent fill (40% of `--apollon-dropzone-accent`) outlining box/div targets.   |
 | `--apollon-on-collaboration-cursor` | Ink (text/stroke) drawn on a collaborator's colored cursor/avatar (default white). |
 | `--apollon-assessment-icon-surface` | Fill of the neutral score-badge chip behind an assessment icon on the canvas.      |
 | `--apollon-assessment-icon-border`  | Border of the neutral score-badge chip behind an assessment icon on the canvas.    |
@@ -144,6 +145,25 @@ contract):
 | `--apollon-collaboration-color-6` | Remote-participant cursor slot 6 (teal).   |
 | `--apollon-collaboration-color-7` | Remote-participant cursor slot 7 (orange). |
 | `--apollon-collaboration-color-8` | Remote-participant cursor slot 8 (cyan).   |
+
+## Color-picker swatch palette (`--apollon-swatch-*`)
+
+The editor's color picker offers a fixed, accessibility-tuned nine-hue palette
+for fills and strokes. Each slot is a public, settable handle; the defaults
+re-resolve per theme so the swatches stay legible on both the light and dark
+canvas. Override any subset to match your own brand palette.
+
+| CSS variable              | Used for                                |
+| ------------------------- | --------------------------------------- |
+| `--apollon-swatch-slate`  | Color-picker swatch — slate (default).  |
+| `--apollon-swatch-red`    | Color-picker swatch — red (default).    |
+| `--apollon-swatch-orange` | Color-picker swatch — orange (default). |
+| `--apollon-swatch-amber`  | Color-picker swatch — amber (default).  |
+| `--apollon-swatch-green`  | Color-picker swatch — green (default).  |
+| `--apollon-swatch-teal`   | Color-picker swatch — teal (default).   |
+| `--apollon-swatch-blue`   | Color-picker swatch — blue (default).   |
+| `--apollon-swatch-violet` | Color-picker swatch — violet (default). |
+| `--apollon-swatch-pink`   | Color-picker swatch — pink (default).   |
 
 ## Editor chrome (`--apollon-chrome-*`) — auto-derived, rarely set
 

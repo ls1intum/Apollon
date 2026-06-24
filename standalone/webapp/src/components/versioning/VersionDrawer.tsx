@@ -331,10 +331,9 @@ export const VersionSidebarBody: FC<Props> = ({
 
   // Map version id → display number (#N). Prefer the server-assigned
   // monotonic `seq` so the number reflects "Nth version you ever made"
-  // and survives eviction. Pre-`seq` rows fall back to a derived
-  // rank-among-stored: that's what we used to display, accurate for
-  // diagrams that never hit the cap and degrade-gracefully for legacy
-  // rows committed before the counter existed.
+  // and survives eviction. Rows without a `seq` fall back to a derived
+  // rank-among-stored: accurate for diagrams that never hit the cap, and
+  // a graceful degrade for legacy rows committed before the counter existed.
   const versionNumberById = useMemo(() => {
     const saved = versions.filter((v) => !v.pending)
     const map = new Map<string, number>()

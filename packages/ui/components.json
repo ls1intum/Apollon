@@ -15,8 +15,7 @@
     "components": "@tumaet/ui/components",
     "ui": "@tumaet/ui/components",
     "utils": "@tumaet/ui/lib/utils",
-    "lib": "@tumaet/ui/lib",
-    "hooks": "@tumaet/ui/hooks"
+    "lib": "@tumaet/ui/lib"
   },
   "iconLibrary": "lucide"
 }

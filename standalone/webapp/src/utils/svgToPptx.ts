@@ -975,8 +975,9 @@ function emitTextLines(
     // SVG `<text y>` is the alphabetic baseline (the compat export resolves
     // dominant-baseline into it). Apollon centres labels on a point
     // BASELINE_TO_CENTER_EM above the baseline (Inter's middle-baseline metric,
-    // the same offset the export used to bake the baseline); the box is emitted
-    // with `valign:"middle"`, so the box top is that centre minus half the box.
+    // the baseline-to-visual-centre offset for the label font); the box is
+    // emitted with `valign:"middle"`, so the box top is that centre minus half
+    // the box.
     const topPx =
       line.baselineY - fontSize * BASELINE_TO_CENTER_EM - heightPx / 2
 

@@ -11,6 +11,10 @@
     "./styles/*": "./src/styles/*",
     "./components.css": "./dist/components.css",
     "./lib/utils": "./src/lib/utils.ts",
+    "./lib/color-swatch-tokens": {
+      "types": "./dist/lib/color-swatch-tokens.d.ts",
+      "default": "./src/lib/color-swatch-tokens.ts"
+    },
     "./theme": {
       "types": "./dist/theme.d.ts",
       "default": "./src/theme.ts"

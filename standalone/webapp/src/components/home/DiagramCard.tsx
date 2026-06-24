@@ -517,7 +517,7 @@ export const DiagramActionsMenu = ({
  */
 const PreviewTile = ({ children }: { children: ReactNode }) => {
   return (
-    <div className="flex size-20 items-center justify-center rounded-xl border border-[var(--home-border-subtle)] bg-[color-mix(in_srgb,var(--home-text-primary)_4%,transparent)] text-[var(--home-text-muted)]">
+    <div className="flex size-20 items-center justify-center rounded-xl border border-border-subtle bg-[color-mix(in_srgb,var(--home-text-primary)_4%,transparent)] text-muted-foreground">
       {children}
     </div>
   )
@@ -565,7 +565,7 @@ function DiagramPreview({
             <p className="text-xs font-semibold text-[var(--home-text-secondary)]">
               Link expired
             </p>
-            <p className="text-[10px] text-[var(--home-text-muted)]">
+            <p className="text-[10px] text-muted-foreground">
               This shared diagram is no longer available
             </p>
           </div>
@@ -590,7 +590,7 @@ function DiagramPreview({
         </div>
       ) : isLoading ? (
         <PreviewTile>
-          <Spinner className="size-6 text-[var(--home-accent-base)]" />
+          <Spinner className="size-6 text-primary" />
         </PreviewTile>
       ) : (
         <PreviewTile>{getDiagramTypeIcon(diagram.type, "size-9")}</PreviewTile>
@@ -804,7 +804,7 @@ export function DiagramCardView({
               className={cn(
                 "line-clamp-2 text-sm leading-snug font-medium",
                 isUntitled
-                  ? "text-[var(--home-text-muted)] italic"
+                  ? "text-muted-foreground italic"
                   : "text-[var(--home-text-strong)]",
                 isExpired && "opacity-50"
               )}
@@ -829,7 +829,7 @@ export function DiagramCardView({
           <time
             dateTime={diagram.lastModifiedAt}
             title={new Date(diagram.lastModifiedAt).toLocaleString()}
-            className="truncate text-xs leading-tight font-medium text-[var(--home-text-muted)]"
+            className="truncate text-xs leading-tight font-medium text-muted-foreground"
           >
             {relativeDate}
           </time>

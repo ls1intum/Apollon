@@ -39,6 +39,8 @@ import { getDiagramTypeLabel } from "./diagramTypeMeta"
 import { DropdownFilterMenu } from "./DropdownFilterMenu"
 import { Button } from "@tumaet/ui/components/button"
 import { Badge } from "@tumaet/ui/components/badge"
+import { Input } from "@tumaet/ui/components/input"
+import { Toggle } from "@tumaet/ui/components/toggle"
 import { Tabs, TabsList, TabsTrigger } from "@tumaet/ui/components/tabs"
 
 const normalize = (value: string) => value.trim().toLowerCase()
@@ -763,7 +765,7 @@ export const DiagramGallery = ({
                 />
               </svg>
             </span>
-            <input
+            <Input
               id="recent-diagrams-search"
               type="search"
               aria-label="Search diagrams by name"
@@ -773,7 +775,7 @@ export const DiagramGallery = ({
                 setVisibleCount(INITIAL_VISIBLE_COUNT)
               }}
               placeholder="Search by name..."
-              className="h-9 w-full rounded-md border border-border bg-background py-1.5 pl-8 pr-8 text-xs text-foreground outline-none transition-colors duration-200 placeholder:text-muted-foreground focus:border-ring"
+              className="pl-8 pr-8 text-xs md:text-xs"
             />
             {searchTerm && (
               <button
@@ -831,18 +833,13 @@ export const DiagramGallery = ({
                 ))}
               </TabsList>
             </Tabs>
-            <button
-              type="button"
-              onClick={() => {
+            <Toggle
+              pressed={showFavoritesOnly}
+              onPressedChange={() => {
                 setShowFavoritesOnly((current) => !current)
                 setVisibleCount(INITIAL_VISIBLE_COUNT)
               }}
-              aria-pressed={showFavoritesOnly}
-              className={`flex ${controlHeightClass} w-full cursor-pointer items-center justify-center gap-2 rounded-md border-0 px-3 text-xs font-semibold transition-all duration-200 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2 sm:w-auto sm:justify-start ${
-                showFavoritesOnly
-                  ? "bg-accent-hover text-[var(--home-favorite-star)]"
-                  : "bg-card text-muted-foreground hover:bg-accent-hover hover:text-[var(--home-favorite-star)]"
-              }`}
+              className={`${controlHeightClass} w-full cursor-pointer justify-center gap-2 px-3 text-xs font-semibold transition-all duration-200 sm:w-auto sm:justify-start bg-card text-muted-foreground hover:bg-accent-hover hover:text-[var(--home-favorite-star)] data-pressed:bg-accent-hover data-pressed:text-[var(--home-favorite-star)]`}
             >
               <svg
                 className="h-4 w-4"
@@ -858,7 +855,7 @@ export const DiagramGallery = ({
                 />
               </svg>
               Favorites
-            </button>
+            </Toggle>
           </div>
           <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:w-auto lg:grid-cols-[176px_220px_auto]">
             <DropdownFilterMenu
@@ -1123,7 +1120,7 @@ export const DiagramGallery = ({
                             const title =
                               diagram.title.trim() || "Untitled diagram"
                             const titleClass = isUntitled
-                              ? "truncate italic text-[var(--home-text-muted)]"
+                              ? "truncate italic text-muted-foreground"
                               : "truncate"
                             return (
                               <tr
