@@ -7,14 +7,12 @@ import {
   type ReactNode,
   type Ref,
 } from "react"
-import { MoreVertical, Star, Trash2 } from "lucide-react"
+import { MoreVertical, Star } from "lucide-react"
 import type { UMLDiagramType } from "@tumaet/apollon"
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
@@ -23,6 +21,16 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@tumaet/ui/components/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@tumaet/ui/components/alert-dialog"
 import { cn } from "@tumaet/ui/lib/utils"
 import { Spinner } from "@tumaet/ui/components/spinner"
 import { Badge } from "@tumaet/ui/components/badge"
@@ -48,11 +56,16 @@ import {
 } from "@/utils/sharedDiagramStorage"
 import {
   SHARED_DIAGRAM_VIEW_OPTIONS,
+  DEFAULT_SHARED_DIAGRAM_VIEW,
   sharedDiagramRoute,
   buildSharedDiagramUrl,
   getSharedDiagramViewBadge,
 } from "@/utils/sharedDiagramLinks"
 import { getCachedThumbnailSources } from "@/utils/thumbnailTheme"
+import { cloneModelAsLocalCopy } from "@/utils/saveLocalDiagramCopy"
+import { DiagramApiClient } from "@/services/DiagramApiClient"
+import { versioningStrings } from "@/components/versioning/strings"
+import { log } from "@/logger"
 import { runWhenIdle } from "@/utils/idle"
 
 export type DiagramSource = "local" | "shared"
@@ -112,7 +125,7 @@ const getDiagramNav = (diagram: RecentDiagram) => {
 
   return sharedDiagramRoute(
     diagram.id,
-    diagram.lastSharedView ?? DiagramView.EDIT
+    diagram.lastSharedView ?? DEFAULT_SHARED_DIAGRAM_VIEW
   )
 }
 
@@ -135,15 +148,17 @@ export type DiagramActionsMenuViewProps = {
   onOpen: () => void
   /** Duplicate the (local) diagram. */
   onDuplicate: () => void
-  /** Delete the (local) diagram after in-menu confirmation. */
+  /** Delete the (local) diagram after the destructive confirmation. */
   onDelete: () => void
   /** Open the share dashboard for the (local) diagram. */
   onShare: () => void
   /** Copy the shared link for the current sharing mode. */
   onCopySharedLink: () => void
+  /** Save the shared diagram as a new local copy on this device. */
+  onSaveLocalCopy: () => void
   /** Change the default sharing mode for a shared diagram. */
   onChangeSharedView: (view: DiagramView) => void
-  /** Remove a shared diagram from the local shared list. */
+  /** Remove a shared diagram from the local shared list after confirmation. */
   onRemoveSharedEntry: () => void
   /** Wrapper class for the relatively-positioned menu container. */
   containerClassName?: string
@@ -154,9 +169,42 @@ export type DiagramActionsMenuViewProps = {
 const DEFAULT_MENU_CONTAINER_CLASS = "relative"
 
 /**
+ * The two destructive actions the menu can confirm. Both flow through one
+ * controlled `AlertDialog`; `null` means no confirmation is pending.
+ */
+type PendingConfirm = "delete" | "remove"
+
+/** Title + description + confirm-label copy for each destructive confirmation. */
+const CONFIRM_COPY: Record<
+  PendingConfirm,
+  { title: string; description: string; confirmLabel: string }
+> = {
+  delete: {
+    title: "Delete this diagram?",
+    description:
+      "This permanently deletes the diagram from this device. This action cannot be undone.",
+    confirmLabel: "Delete",
+  },
+  remove: {
+    title: "Remove from shared list?",
+    description:
+      "This removes the diagram from your shared list on this device. The shared diagram itself stays available to anyone with the link.",
+    confirmLabel: "Remove",
+  },
+}
+
+/**
  * Pure three-dot diagram actions menu: it renders the trigger + popover and
  * reports every action via an `onX` callback. It owns only ephemeral UI state
- * (open / delete-confirm) — no store, navigation, clipboard, or modals.
+ * (menu open + which destructive confirmation is pending) — no store,
+ * navigation, clipboard, or modals.
+ *
+ * Both destructive actions (delete a local diagram; remove-from-shared) are
+ * confirmed through a single canonical `AlertDialog` rendered as a SIBLING of
+ * the menu, not nested inside a menu item. Selecting a destructive item closes
+ * the menu and arms `pendingConfirm`; the dialog then opens cleanly with its
+ * own focus trap (both portal to `document.body`, so the menu fully unmounts
+ * before the dialog mounts — no nested focus-trap fragility).
  */
 export function DiagramActionsMenuView({
   diagram,
@@ -167,26 +215,33 @@ export function DiagramActionsMenuView({
   onDelete,
   onShare,
   onCopySharedLink,
+  onSaveLocalCopy,
   onChangeSharedView,
   onRemoveSharedEntry,
   containerClassName = DEFAULT_MENU_CONTAINER_CLASS,
   stopPropagation = false,
 }: DiagramActionsMenuViewProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
+  const [pendingConfirm, setPendingConfirm] = useState<PendingConfirm | null>(
+    null
+  )
 
   const isLocalDiagram = (diagram.source ?? "local") === "local"
-  const sharedView = diagram.lastSharedView ?? DiagramView.EDIT
-
-  const closeMenu = () => {
-    setIsMenuOpen(false)
-    setIsDeleteConfirmOpen(false)
-  }
+  const sharedView = diagram.lastSharedView ?? DEFAULT_SHARED_DIAGRAM_VIEW
 
   const runAndClose = (action: () => void) => {
     action()
-    closeMenu()
+    setIsMenuOpen(false)
   }
+
+  // Close the menu first, then arm the confirmation. The dialog is a sibling, so
+  // it opens once the menu has dismissed — clean handoff of the focus trap.
+  const requestConfirm = (kind: PendingConfirm) => {
+    setIsMenuOpen(false)
+    setPendingConfirm(kind)
+  }
+
+  const confirmCopy = pendingConfirm ? CONFIRM_COPY[pendingConfirm] : null
 
   const stopIfNeeded = (
     event: ReactMouseEvent<HTMLElement> | ReactKeyboardEvent<HTMLElement>
@@ -205,13 +260,7 @@ export function DiagramActionsMenuView({
     >
       <DropdownMenu
         open={isMenuOpen}
-        onOpenChange={(open) => {
-          if (open) {
-            setIsMenuOpen(true)
-          } else {
-            closeMenu()
-          }
-        }}
+        onOpenChange={(open) => setIsMenuOpen(open)}
       >
         <DropdownMenuTrigger
           render={
@@ -240,98 +289,116 @@ export function DiagramActionsMenuView({
           {isExpired ? (
             <DropdownMenuItem
               variant="destructive"
-              onClick={() => runAndClose(onRemoveSharedEntry)}
+              closeOnClick={false}
+              onClick={() => requestConfirm("remove")}
             >
               Remove from shared list
             </DropdownMenuItem>
-          ) : !isDeleteConfirmOpen ? (
-            isLocalDiagram ? (
-              <>
-                <DropdownMenuItem onClick={() => runAndClose(onOpen)}>
-                  Open
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => runAndClose(onDuplicate)}>
-                  Duplicate
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => runAndClose(onShare)}>
-                  Share
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  variant="destructive"
-                  disabled={!canDelete}
-                  closeOnClick={false}
-                  title={
-                    canDelete
-                      ? undefined
-                      : "Cannot delete diagram currently being edited"
-                  }
-                  onClick={() => setIsDeleteConfirmOpen(true)}
-                >
-                  Delete
-                </DropdownMenuItem>
-              </>
-            ) : (
-              <>
-                <DropdownMenuItem onClick={() => runAndClose(onOpen)}>
-                  Open
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => runAndClose(onCopySharedLink)}>
-                  Copy link
-                </DropdownMenuItem>
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>
-                    Change sharing mode
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent aria-label="Change sharing mode">
-                    <DropdownMenuRadioGroup
-                      value={sharedView}
-                      onValueChange={(value) =>
-                        runAndClose(() =>
-                          onChangeSharedView(value as DiagramView)
-                        )
-                      }
-                    >
-                      {SHARED_DIAGRAM_VIEW_OPTIONS.map((option) => (
-                        <DropdownMenuRadioItem
-                          key={option.value}
-                          value={option.value}
-                        >
-                          {option.badge}
-                        </DropdownMenuRadioItem>
-                      ))}
-                    </DropdownMenuRadioGroup>
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  variant="destructive"
-                  onClick={() => runAndClose(onRemoveSharedEntry)}
-                >
-                  Remove from shared list
-                </DropdownMenuItem>
-              </>
-            )
-          ) : (
-            <DropdownMenuGroup>
-              <DropdownMenuLabel>Delete this diagram?</DropdownMenuLabel>
+          ) : isLocalDiagram ? (
+            <>
+              <DropdownMenuItem onClick={() => runAndClose(onOpen)}>
+                Open
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => runAndClose(onDuplicate)}>
+                Duplicate
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => runAndClose(onShare)}>
+                Share
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem
                 variant="destructive"
-                onClick={() => runAndClose(onDelete)}
-              >
-                <Trash2 aria-hidden="true" />
-                Delete permanently
-              </DropdownMenuItem>
-              <DropdownMenuItem
+                disabled={!canDelete}
                 closeOnClick={false}
-                onClick={() => setIsDeleteConfirmOpen(false)}
+                title={
+                  canDelete
+                    ? undefined
+                    : "Cannot delete diagram currently being edited"
+                }
+                onClick={() => requestConfirm("delete")}
               >
-                Cancel
+                Delete
               </DropdownMenuItem>
-            </DropdownMenuGroup>
+            </>
+          ) : (
+            <>
+              <DropdownMenuItem onClick={() => runAndClose(onOpen)}>
+                Open
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => runAndClose(onCopySharedLink)}>
+                Copy link
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => runAndClose(onSaveLocalCopy)}>
+                Save as local copy
+              </DropdownMenuItem>
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  Change sharing mode
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent aria-label="Change sharing mode">
+                  <DropdownMenuRadioGroup
+                    value={sharedView}
+                    onValueChange={(value) =>
+                      runAndClose(() =>
+                        onChangeSharedView(value as DiagramView)
+                      )
+                    }
+                  >
+                    {SHARED_DIAGRAM_VIEW_OPTIONS.map((option) => (
+                      <DropdownMenuRadioItem
+                        key={option.value}
+                        value={option.value}
+                      >
+                        {option.badge}
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                variant="destructive"
+                closeOnClick={false}
+                onClick={() => requestConfirm("remove")}
+              >
+                Remove from shared list
+              </DropdownMenuItem>
+            </>
           )}
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <AlertDialog
+        open={pendingConfirm !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingConfirm(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{confirmCopy?.title}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmCopy?.description}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => {
+                if (pendingConfirm === "delete") {
+                  onDelete()
+                } else if (pendingConfirm === "remove") {
+                  onRemoveSharedEntry()
+                }
+                setPendingConfirm(null)
+              }}
+            >
+              {confirmCopy?.confirmLabel}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
@@ -363,12 +430,13 @@ export const DiagramActionsMenu = ({
   const duplicateModel = usePersistenceModelStore(
     (state) => state.duplicateModel
   )
+  const createModel = usePersistenceModelStore((state) => state.createModel)
   const currentModelId = usePersistenceModelStore(
     (state) => state.currentModelId
   )
 
   const isLocalDiagram = (diagram.source ?? "local") === "local"
-  const sharedView = diagram.lastSharedView ?? DiagramView.EDIT
+  const sharedView = diagram.lastSharedView ?? DEFAULT_SHARED_DIAGRAM_VIEW
   const isCurrentDiagramInEditor = diagram.id === currentModelId
 
   const copySharedLink = async (view: DiagramView, message: string) => {
@@ -380,6 +448,23 @@ export const DiagramActionsMenu = ({
       toast.success(message)
     } catch {
       toast.error("Could not copy the shared link.")
+    }
+  }
+
+  // Same durability escape hatch as the navbar `SaveLocalCopyButton`, but from
+  // the gallery there is no live editor — fetch the shared model from the
+  // server first, then clone it into a fresh local copy via the shared helper.
+  const saveLocalCopy = async () => {
+    try {
+      const model = await DiagramApiClient.fetchDiagram(diagram.id)
+      const copy = cloneModelAsLocalCopy(model)
+      createModel(copy)
+      markSharedDiagramCopied(diagram.id, sharedView)
+      toast.success(versioningStrings.saveLocalCopySuccess, { autoClose: 6000 })
+      navigate({ to: "/local/$id", params: { id: copy.id }, replace: true })
+    } catch (err) {
+      log.error("Save a local copy from the gallery failed", err as Error)
+      toast.error(versioningStrings.saveLocalCopyFailed)
     }
   }
 
@@ -408,6 +493,7 @@ export const DiagramActionsMenu = ({
         }
       }}
       onCopySharedLink={() => void copySharedLink(sharedView, "Link copied.")}
+      onSaveLocalCopy={() => void saveLocalCopy()}
       onChangeSharedView={(view) => {
         updateSharedDiagramView(diagram.id, view)
         onSharedDiagramViewChange?.(diagram.id, view)

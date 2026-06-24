@@ -28,6 +28,7 @@ const meta = {
     onDelete: fn(),
     onShare: fn(),
     onCopySharedLink: fn(),
+    onSaveLocalCopy: fn(),
     onChangeSharedView: fn(),
     onRemoveSharedEntry: fn(),
   },
@@ -41,6 +42,10 @@ const meta = {
     onShare: { action: "share", table: { category: "Events" } },
     onCopySharedLink: {
       action: "copySharedLink",
+      table: { category: "Events" },
+    },
+    onSaveLocalCopy: {
+      action: "saveLocalCopy",
       table: { category: "Events" },
     },
     onChangeSharedView: {

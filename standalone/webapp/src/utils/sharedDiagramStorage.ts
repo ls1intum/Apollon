@@ -1,5 +1,5 @@
 import { DiagramView } from "@/types"
-import { normalizeSharedDiagramView } from "@/utils/sharedDiagramLinks"
+import { isDiagramView } from "@/utils/sharedDiagramLinks"
 
 const SHARED_DIAGRAM_STORE_KEY = "sharedDiagramStore"
 const SHARED_DIAGRAM_EXPIRY_GRACE_PERIOD_MS = 7 * 24 * 60 * 60 * 1000
@@ -66,7 +66,11 @@ const readStore = (): SharedDiagramStore => {
         id: entry.id,
         sharedAt: entry.sharedAt,
         favorite: Boolean((entry as Partial<SharedDiagramEntry>).favorite),
-        lastSharedView: normalizeSharedDiagramView(entry.lastSharedView),
+        // Legacy entries (no stored mode) keep their historical EDIT behaviour;
+        // the newer Collaborate default applies to NEW shares, not old links.
+        lastSharedView: isDiagramView(entry.lastSharedView)
+          ? entry.lastSharedView
+          : DiagramView.EDIT,
         sourceModelId:
           typeof entry.sourceModelId === "string"
             ? entry.sourceModelId
@@ -147,6 +151,9 @@ export const addSharedDiagramEntry = (
         lastSharedView:
           options.lastSharedView ??
           existingEntry?.lastSharedView ??
+          // Legacy entries (created before sharing modes) preserve their
+          // historical edit behaviour — the newer Collaborate default applies to
+          // NEW shares, not retroactively to old links.
           DiagramView.EDIT,
         sourceModelId: options.sourceModelId ?? existingEntry?.sourceModelId,
         lastCopiedAt: options.lastCopiedAt ?? existingEntry?.lastCopiedAt,

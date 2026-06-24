@@ -4,14 +4,13 @@ import {
   TooltipTrigger,
 } from "@tumaet/ui/components/tooltip"
 import { SaveIcon } from "lucide-react"
-import { v4 as uuidv4 } from "uuid"
 import { toast } from "react-toastify"
 import { useLocation, useNavigate } from "@tanstack/react-router"
-import type { UMLModel } from "@tumaet/apollon"
 import { useEditorContext } from "@/contexts"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { useDiagramIdFromPath } from "@/hooks/useDiagramIdFromPath"
 import { versioningStrings as t } from "@/components/versioning/strings"
+import { cloneModelAsLocalCopy } from "@/utils/saveLocalDiagramCopy"
 import { log } from "@/logger"
 import { navbarButtonStyle } from "./styleConstants"
 
@@ -53,18 +52,13 @@ export const SaveLocalCopyButton = ({
 
   const handleClick = () => {
     try {
-      // Deep-clone before mutating the id — a shallow spread would leave
-      // `nodes`/`edges`/`assessments` referenced by both the live editor
-      // model and the local copy, so subsequent edits in either would
-      // corrupt the other. `structuredClone` is Baseline 2022.
-      const newId = uuidv4()
-      const copy: UMLModel = { ...structuredClone(editor.model), id: newId }
+      const copy = cloneModelAsLocalCopy(editor.model)
       createModel(copy)
       toast.success(t.saveLocalCopySuccess, { autoClose: 6000 })
       // Mirrors `JsonFileImportButton` — navigate to the new local route so
       // the user lands on the diagram they just saved. `/` is now the
       // gallery, so we route to `/local/<newId>` explicitly.
-      navigate({ to: "/local/$id", params: { id: newId }, replace: true })
+      navigate({ to: "/local/$id", params: { id: copy.id }, replace: true })
     } catch (err) {
       log.error("Save a local copy failed", err as Error)
       toast.error(t.saveLocalCopyFailed)

@@ -35,16 +35,14 @@ describe("shared diagram link helpers", () => {
   })
 
   it("labels shared modes for dashboard badges", () => {
-    expect(getSharedDiagramViewBadge(DiagramView.EDIT)).toBe("Edit mode")
+    expect(getSharedDiagramViewBadge(DiagramView.EDIT)).toBe("Edit")
     expect(getSharedDiagramViewBadge(DiagramView.COLLABORATE)).toBe(
-      "Collaboration mode"
+      "Collaborate"
     )
     expect(getSharedDiagramViewBadge(DiagramView.GIVE_FEEDBACK)).toBe(
-      "Feedback mode"
+      "Feedback"
     )
-    expect(getSharedDiagramViewBadge(DiagramView.SEE_FEEDBACK)).toBe(
-      "Review mode"
-    )
+    expect(getSharedDiagramViewBadge(DiagramView.SEE_FEEDBACK)).toBe("Review")
   })
 })
 

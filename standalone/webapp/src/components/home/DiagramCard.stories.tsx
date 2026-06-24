@@ -22,6 +22,7 @@ const sampleActionsMenu = (
     onDelete={fn()}
     onShare={fn()}
     onCopySharedLink={fn()}
+    onSaveLocalCopy={fn()}
     onChangeSharedView={fn()}
     onRemoveSharedEntry={fn()}
   />
