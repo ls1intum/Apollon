@@ -661,14 +661,18 @@ export function DiagramCardView({
         className
       )}
       style={{
-        border: "1px solid var(--home-border-subtle)",
-        borderRadius: "var(--home-radius-sm)",
+        // Match the editor's floating "island" appearance (same tokens as the
+        // chrome header islands): 12px radius, hairline chrome border, soft
+        // resting float — so the home reads as one design language with the
+        // editor instead of a flat plate.
+        border: "1px solid var(--apollon-chrome-border)",
+        borderRadius: "var(--apollon-chrome-radius-lg)",
         width: "100%",
         maxWidth: "300px",
         height: scalePx(CARD_BASE_HEIGHT_PX),
         boxShadow: isHighlighted
           ? "0 0 0 3px color-mix(in srgb, var(--home-accent-base) 35%, transparent)"
-          : undefined,
+          : "var(--apollon-chrome-shadow-floating)",
         animation: isHighlighted
           ? "diagram-highlight-pulse 2.4s ease-out forwards"
           : undefined,

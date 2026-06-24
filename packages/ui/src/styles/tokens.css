@@ -205,6 +205,21 @@
      restyles every floating editor surface. */
   --apollon-shadow: 0 4px 12px var(--primitive-shadow-overlay);
 
+  /* Editor "island" surface treatment — mirrored from the editor's app.css so
+     the home reuses the EXACT floating-island appearance (the chrome header
+     islands, the version drawer, and the diagram cards now share one source):
+     a 12px radius, a hairline border that auto-themes off the flipping
+     ink/background, and a soft floating shadow (dark gets its own override below
+     since a light drop shadow vanishes on a dark canvas). */
+  --apollon-chrome-radius-lg: 12px;
+  --apollon-chrome-border: color-mix(
+    in srgb,
+    var(--apollon-primary-contrast, #000) 12%,
+    var(--apollon-background, #fff)
+  );
+  --apollon-chrome-shadow-floating: 0 0 1px 0 rgb(15 23 42 / 20%),
+    0 2px 8px 0 rgb(15 23 42 / 12%);
+
   /* Public neutral hover wash — a low-alpha veil off the foreground ink, used
      for quiet hover states (e.g. the stereotype toggles) that must read on any
      themed surface without assuming an accent. */
@@ -526,6 +541,11 @@
   --apollon-surface-hover: var(--primitive-surface-raised-hover);
   --apollon-border: var(--primitive-border-default);
   --apollon-border-subtle: var(--primitive-border-subtle);
+
+  /* Editor island floating shadow — dark override (mirrors app.css; the soft
+     light drop shadow is invisible on the dark canvas, so dark uses a deeper
+     one). radius + the auto-theming chrome border need no dark delta. */
+  --apollon-chrome-shadow-floating: 0 2px 12px 0 rgb(0 0 0 / 50%);
 
   /* Diagram-thumbnail recolor — dark deltas (see primitives above). */
   --apollon-thumbnail-stroke: var(--primitive-thumbnail-stroke-dark);
