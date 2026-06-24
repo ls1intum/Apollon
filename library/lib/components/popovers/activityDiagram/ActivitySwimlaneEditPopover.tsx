@@ -1,8 +1,8 @@
 import { ChangeEvent } from "react"
 import {
+  Button,
   IconButton,
   NodeStyleEditor,
-  PrimaryButton,
   Select,
   TextField,
   Typography,
@@ -18,7 +18,7 @@ import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import { ActivitySwimlaneProps, DefaultNodeProps, SwimlaneLane } from "@/types"
 import { PopoverProps } from "../types"
-import { GripVertical, Trash2 } from "lucide-react"
+import { GripVertical, Plus, Trash2 } from "lucide-react"
 import { type Node } from "@xyflow/react"
 import {
   DndContext,
@@ -316,9 +316,10 @@ export const ActivitySwimlaneEditPopover: React.FC<PopoverProps> = ({
         </DndContext>
       </div>
 
-      <PrimaryButton isSelected={false} onClick={handleAddLane}>
-        + Add lane
-      </PrimaryButton>
+      <Button variant="outlined" onClick={handleAddLane}>
+        <Plus />
+        Add lane
+      </Button>
     </div>
   )
 }

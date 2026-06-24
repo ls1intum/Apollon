@@ -81,6 +81,21 @@
   --color-destructive: var(--apollon-alert-danger-color);
   --color-destructive-foreground: var(--primitive-white);
 
+  /* Color-picker swatch palette. Exposed as semantic --color-swatch-* so the
+     component can render `bg-swatch-blue` etc. driven by the tokens (the palette
+     order/source lives in color-picker.tsx as a token-name list — no inline hex
+     in the component). Routed through the public --apollon-swatch-* layer so the
+     webapp and the embed-safe editor color-picker share ONE palette source. */
+  --color-swatch-slate: var(--apollon-swatch-slate);
+  --color-swatch-red: var(--apollon-swatch-red);
+  --color-swatch-orange: var(--apollon-swatch-orange);
+  --color-swatch-amber: var(--apollon-swatch-amber);
+  --color-swatch-green: var(--apollon-swatch-green);
+  --color-swatch-teal: var(--apollon-swatch-teal);
+  --color-swatch-blue: var(--apollon-swatch-blue);
+  --color-swatch-violet: var(--apollon-swatch-violet);
+  --color-swatch-pink: var(--apollon-swatch-pink);
+
   /* --radius-md routes through --home-radius-md onto the public --apollon-radius
      base radius, so an embedder can tune the shared primitives' rounding. */
   --radius-sm: var(--home-radius-sm);

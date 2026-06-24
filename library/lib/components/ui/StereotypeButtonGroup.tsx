@@ -1,8 +1,9 @@
 import React from "react"
+import { Toggle } from "@base-ui/react/toggle"
+import { ToggleGroup } from "@base-ui/react/toggle-group"
 import { ClassType } from "@/types"
 import { useShallow } from "zustand/shallow"
 import { useDiagramStore } from "@/store"
-import { PrimaryButton } from "./PrimaryButton"
 
 interface StereotypeButtonGroupProps {
   nodeId: string
@@ -15,10 +16,6 @@ const stereotypes: ClassType[] = [
   ClassType.Enumeration,
 ]
 
-const buttonGroupStyle: React.CSSProperties = {
-  display: "flex",
-}
-
 export const StereotypeButtonGroup: React.FC<StereotypeButtonGroupProps> = ({
   nodeId,
   selectedStereotype,
@@ -27,10 +24,7 @@ export const StereotypeButtonGroup: React.FC<StereotypeButtonGroupProps> = ({
     useShallow((state) => ({ setNodes: state.setNodes }))
   )
 
-  const handleStereotypeChange = (stereotype: ClassType | undefined) => {
-    const nextStereotype =
-      selectedStereotype === stereotype ? undefined : stereotype
-
+  const applyStereotype = (nextStereotype: ClassType | undefined) => {
     const needsShrink = !!selectedStereotype && !nextStereotype
     const needExpand = !!nextStereotype && !selectedStereotype
     const nodeHeightDifference = needExpand ? 10 : needsShrink ? -10 : 0
@@ -56,22 +50,34 @@ export const StereotypeButtonGroup: React.FC<StereotypeButtonGroupProps> = ({
     )
   }
 
+  // Single-select, allow-deselect: Base UI ToggleGroup (default `multiple`
+  // false) keeps at most one value pressed and clears it when the pressed item
+  // is toggled off, so the empty array maps to "no stereotype".
+  const handleValueChange = (groupValue: ClassType[]) => {
+    applyStereotype(groupValue[0])
+  }
+
   return (
-    <div style={buttonGroupStyle}>
-      {stereotypes.map((stereotype, index) => (
-        <PrimaryButton
-          style={
-            index === 0
-              ? { borderLeft: "1px solid var(--apollon-primary, #3e8acc)" }
-              : {}
-          }
+    <ToggleGroup
+      data-slot="toggle-group"
+      className="apollon-stereotype-group"
+      value={selectedStereotype ? [selectedStereotype] : []}
+      onValueChange={handleValueChange}
+    >
+      {stereotypes.map((stereotype) => (
+        <Toggle
           key={stereotype}
-          isSelected={selectedStereotype === stereotype}
-          onClick={() => handleStereotypeChange(stereotype)}
+          value={stereotype}
+          data-slot="toggle-group-item"
+          className="apollon-stereotype-toggle"
+          // Mirror the shadcn/@tumaet contract: expose selection as
+          // data-state="on" (styled in app.css) rather than a hardcoded
+          // colour. Base UI's own data-pressed stays for parity.
+          data-state={selectedStereotype === stereotype ? "on" : "off"}
         >
           {stereotype}
-        </PrimaryButton>
+        </Toggle>
       ))}
-    </div>
+    </ToggleGroup>
   )
 }

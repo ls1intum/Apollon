@@ -1,5 +1,4 @@
 export * from "./StereotypeButtonGroup"
-export * from "./PrimaryButton"
 export * from "./Button"
 export * from "./TextField"
 export * from "./Select"

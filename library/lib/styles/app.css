@@ -1287,7 +1287,9 @@ svg.react-flow__connectionline {
   );
 }
 
-/* Color swatch button */
+/* Color swatch — both the picker trigger and each grid swatch. The fill is the
+   chosen color via the --swatch-color custom property (a swatch var(...) token
+   or a hex); a transparent trigger shows the inherited/empty state. */
 .apollon-color-swatch {
   position: relative;
   display: inline-flex;
@@ -1296,9 +1298,9 @@ svg.react-flow__connectionline {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  border: none;
+  border: 1px solid var(--apollon-border-subtle, #e3e8ef);
   cursor: pointer;
-  background-color: var(--swatch-color, #000);
+  background-color: var(--swatch-color, transparent);
   box-sizing: border-box;
   transition: opacity 120ms ease;
   flex-shrink: 0;
@@ -1310,13 +1312,122 @@ svg.react-flow__connectionline {
   outline: 2px solid var(--apollon-primary, #3e8acc);
   outline-offset: 3px;
 }
-.apollon-color-swatch[aria-pressed="true"] {
+.apollon-color-swatch[aria-pressed="true"],
+.apollon-color-swatch[data-state="on"] {
   opacity: 1;
 }
+/* The selected check mark must read on ANY swatch fill with no JS luminance
+   math: white ink with a soft dark drop-shadow stays legible on both light and
+   dark swatches. */
 .apollon-color-swatch__icon {
   pointer-events: none;
+  color: #fff;
+  filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.6));
 }
 
+/* Editor color-picker (Base UI Popover) — mirrors the @tumaet/ui color-picker
+   STRUCTURE, styled here Tailwind-free via the data-slots the component sets. */
+.apollon-color-picker__popup {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background-color: var(--apollon-surface, #ffffff);
+  color: var(--apollon-primary-contrast, #000);
+  border: 1px solid var(--apollon-border, #cdd5df);
+  border-radius: var(--home-radius-lg, 8px);
+  box-shadow: var(--home-shadow-md, 0 4px 12px rgba(0, 0, 0, 0.18));
+  z-index: 10003;
+}
+.apollon-color-picker__grid {
+  display: grid;
+  grid-template-columns: repeat(5, auto);
+  gap: 8px;
+}
+.apollon-color-picker__custom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.8125rem;
+  color: var(--apollon-secondary, #6c757d);
+}
+.apollon-color-picker__custom input[type="color"] {
+  width: 28px;
+  height: 28px;
+  padding: 2px;
+  border: 1px solid var(--apollon-border, #cdd5df);
+  border-radius: var(--home-radius-md, 6px);
+  background: transparent;
+  cursor: pointer;
+}
+.apollon-color-picker__custom input[type="color"][data-custom-active] {
+  outline: 2px solid var(--apollon-primary, #3e8acc);
+  outline-offset: 1px;
+}
+.apollon-color-picker__reset {
+  align-self: stretch;
+}
+
+/* Style editor (shared Node/Edge panel). Header row, the opened color panel,
+   and each color row — formerly inline React.CSSProperties — keyed on the
+   data-slots StyleEditorPanel sets and driven by --apollon-* tokens. */
+.apollon-style-editor {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+.apollon-style-editor__header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex: 1;
+}
+.apollon-style-editor__header[data-variant="edge"] {
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  gap: 5px;
+}
+.apollon-style-editor__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+.apollon-style-editor__header[data-variant="edge"]
+  .apollon-style-editor__header-actions {
+  margin-left: 0;
+}
+.apollon-style-editor__panel {
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  background-color: var(--apollon-surface, #ffffff);
+  border: 1px solid var(--apollon-border-subtle, #e3e8ef);
+  border-radius: var(--home-radius-md, 6px);
+}
+.apollon-style-editor__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+}
+
+/* Stereotype selector: a Base UI ToggleGroup (single-select, allow-deselect)
+   mirroring the @tumaet/ui toggle-group STRUCTURE — data-slot wrapper + items
+   carrying data-state — but styled here, Tailwind-free, via --apollon-* tokens
+   and the radius ramp. Spacing-0: items share a seam, group rounds the ends. */
+.apollon-stereotype-group[data-slot="toggle-group"] {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  width: fit-content;
+}
 .apollon-stereotype-toggle {
   display: inline-flex;
   align-items: center;
@@ -1325,7 +1436,6 @@ svg.react-flow__connectionline {
   padding: 0 10px;
   border: 1px solid
     color-mix(in srgb, var(--apollon-primary, #3e8acc) 38%, transparent);
-  border-radius: 4px;
   background: transparent;
   color: var(--apollon-primary-contrast, #000);
   font: inherit;
@@ -1337,6 +1447,18 @@ svg.react-flow__connectionline {
     background-color 120ms ease,
     border-color 120ms ease,
     color 120ms ease;
+}
+/* Seam: collapse inner borders, round only the group's outer edges. */
+.apollon-stereotype-group .apollon-stereotype-toggle:not(:first-child) {
+  border-left: 0;
+}
+.apollon-stereotype-group .apollon-stereotype-toggle:first-child {
+  border-top-left-radius: var(--apollon-chrome-radius-sm, 6px);
+  border-bottom-left-radius: var(--apollon-chrome-radius-sm, 6px);
+}
+.apollon-stereotype-group .apollon-stereotype-toggle:last-child {
+  border-top-right-radius: var(--apollon-chrome-radius-sm, 6px);
+  border-bottom-right-radius: var(--apollon-chrome-radius-sm, 6px);
 }
 .apollon-stereotype-toggle:hover {
   background-color: var(
@@ -1351,8 +1473,9 @@ svg.react-flow__connectionline {
 .apollon-stereotype-toggle:focus-visible {
   outline: 2px solid var(--apollon-primary, #3e8acc);
   outline-offset: 2px;
+  z-index: 1; /* lift the focus ring above the shared seam */
 }
-.apollon-stereotype-toggle[aria-pressed="true"] {
+.apollon-stereotype-toggle[data-state="on"] {
   background-color: color-mix(
     in srgb,
     var(--apollon-primary, #3e8acc) 20%,
@@ -1360,6 +1483,7 @@ svg.react-flow__connectionline {
   );
   border-color: var(--apollon-primary, #3e8acc);
   color: var(--apollon-primary, #3e8acc);
+  z-index: 1; /* keep the selected item's full border over its neighbour seam */
 }
 
 .scroll-overlay {

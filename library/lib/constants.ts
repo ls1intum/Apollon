@@ -82,6 +82,14 @@ export const CSS_VARIABLE_FALLBACKS: Readonly<Record<string, string>> =
     "--apollon-alert-warning-background": "#fff3cd",
     "--apollon-alert-warning-border": "#ffeeba",
     "--apollon-interactive-selection": "#f39c12",
+    "--apollon-collaboration-color-1": "#ffb61e",
+    "--apollon-collaboration-color-2": "#37b24d",
+    "--apollon-collaboration-color-3": "#1c7ed6",
+    "--apollon-collaboration-color-4": "#f03e3e",
+    "--apollon-collaboration-color-5": "#ae3ec9",
+    "--apollon-collaboration-color-6": "#0ca678",
+    "--apollon-collaboration-color-7": "#f76707",
+    "--apollon-collaboration-color-8": "#1098ad",
     "--apollon-guide-vertical": "#d63031",
     "--apollon-guide-horizontal": "#0984e3",
     "--apollon-background": "#ffffff",
@@ -109,6 +117,33 @@ export const FILL_COLOR = CSS_VARIABLE_FALLBACKS["--apollon-background"]
 export { FONT_FAMILY, DEFAULT_FONT_SIZE }
 export const INTERACTIVE_SELECTION_COLOR = `var(--apollon-interactive-selection, ${CSS_VARIABLE_FALLBACKS["--apollon-interactive-selection"]})`
 export const INTERACTIVE_SELECTION_FILL = `color-mix(in srgb, var(--apollon-interactive-selection, ${CSS_VARIABLE_FALLBACKS["--apollon-interactive-selection"]}) 18%, transparent)`
+// Fainter fill + softer stroke for the secondary (highlighted, not selected)
+// state of the assessment selection overlay. Both derive from the SAME
+// --apollon-interactive-selection token as the solid color/fill above, so the
+// whole affordance themes from one source with no raw color.
+export const INTERACTIVE_SELECTION_FILL_FAINT = `color-mix(in srgb, var(--apollon-interactive-selection, ${CSS_VARIABLE_FALLBACKS["--apollon-interactive-selection"]}) 10%, transparent)`
+export const INTERACTIVE_SELECTION_STROKE_SOFT = `color-mix(in srgb, var(--apollon-interactive-selection, ${CSS_VARIABLE_FALLBACKS["--apollon-interactive-selection"]}) 50%, transparent)`
+// Stronger fill for the highlighted (hover/host-cued) state of the div/g
+// selection overlay. Same token, heavier mix — no raw color.
+export const INTERACTIVE_SELECTION_FILL_STRONG = `color-mix(in srgb, var(--apollon-interactive-selection, ${CSS_VARIABLE_FALLBACKS["--apollon-interactive-selection"]}) 50%, transparent)`
+
+/**
+ * Live-collaboration cursor palette. The SINGLE source the collaboration code
+ * reads — it holds no inline hex array. Each entry is a `var(...)` reference to
+ * an --apollon-collaboration-color-N token (defined in packages/ui tokens.css,
+ * light + dark) with its embed-safe fallback drawn from CSS_VARIABLE_FALLBACKS
+ * above, so an assigned cursor color re-resolves per theme yet still paints when
+ * the library is embedded standalone with no host tokens.
+ */
+export const COLLAB_CURSOR_PALETTE: ReadonlyArray<string> = Object.freeze(
+  Array.from(
+    { length: 8 },
+    (_, i) =>
+      `var(--apollon-collaboration-color-${i + 1}, ${
+        CSS_VARIABLE_FALLBACKS[`--apollon-collaboration-color-${i + 1}`]
+      })`
+  )
+)
 
 /* -------------------------------------------------------------------------- */
 /* Layout                                                                     */

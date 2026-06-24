@@ -115,6 +115,36 @@
   --primitive-toast-warning: #b7791f;
   --primitive-toast-info: #1f5e9e;
 
+  /* Color-picker swatch palette (light). A fixed, accessible set of element
+     fill colors offered by the color-picker; the component reads these as
+     tokens (NO inline hex array lives in the component). */
+  --primitive-swatch-slate: #64748b;
+  --primitive-swatch-red: #dc2626;
+  --primitive-swatch-orange: #ea580c;
+  --primitive-swatch-amber: #d97706;
+  --primitive-swatch-green: #16a34a;
+  --primitive-swatch-teal: #0d9488;
+  --primitive-swatch-blue: #2563eb;
+  --primitive-swatch-violet: #7c3aed;
+  --primitive-swatch-pink: #db2777;
+
+  /* Interactive-selection accent (light). The amber ring/fill used to mark
+     interactive (quiz-pickable) elements; distinct from the brand primary so
+     it never reads as a normal selection. */
+  --primitive-interactive-selection: #f39c12;
+
+  /* Live-collaboration cursor palette (light). A fixed, deterministic set of
+     cursor/label colors assigned per collaborator by name hash; the editor
+     reads these as tokens (NO inline hex array lives in the code). */
+  --primitive-collab-1: #ffb61e;
+  --primitive-collab-2: #37b24d;
+  --primitive-collab-3: #1c7ed6;
+  --primitive-collab-4: #f03e3e;
+  --primitive-collab-5: #ae3ec9;
+  --primitive-collab-6: #0ca678;
+  --primitive-collab-7: #f76707;
+  --primitive-collab-8: #1098ad;
+
   /* ── Layer 2: --apollon-* editor theming API (light) ───────────────────── */
   --apollon-primary: var(--primitive-blue-500);
   --apollon-primary-contrast: var(--primitive-text-primary);
@@ -148,6 +178,38 @@
   --apollon-border: var(--primitive-border-default);
   --apollon-border-subtle: var(--primitive-border-subtle);
   --apollon-radius: 6px;
+
+  /* Color-picker swatch palette — the public editor-facing handle on the same
+     fixed, accessible fill palette the webapp color-picker uses. References the
+     --primitive-swatch-* layer (so it re-resolves per theme) and is the SINGLE
+     source the embed-safe editor color-picker reads; the editor carries NO
+     inline hex array. The webapp's --color-swatch-* bridge mirrors these. */
+  --apollon-swatch-slate: var(--primitive-swatch-slate);
+  --apollon-swatch-red: var(--primitive-swatch-red);
+  --apollon-swatch-orange: var(--primitive-swatch-orange);
+  --apollon-swatch-amber: var(--primitive-swatch-amber);
+  --apollon-swatch-green: var(--primitive-swatch-green);
+  --apollon-swatch-teal: var(--primitive-swatch-teal);
+  --apollon-swatch-blue: var(--primitive-swatch-blue);
+  --apollon-swatch-violet: var(--primitive-swatch-violet);
+  --apollon-swatch-pink: var(--primitive-swatch-pink);
+
+  /* Interactive-selection accent — the public editor-facing handle on the
+     primitive above. Theme-independent alias (the primitive re-resolves per
+     theme), matching the library's --apollon-interactive-selection fallback. */
+  --apollon-interactive-selection: var(--primitive-interactive-selection);
+
+  /* Live-collaboration cursor palette — the public editor-facing handles on the
+     --primitive-collab-* layer (so they re-resolve per theme) and the SINGLE
+     source the editor reads; the collaboration code holds NO inline hex array. */
+  --apollon-collaboration-color-1: var(--primitive-collab-1);
+  --apollon-collaboration-color-2: var(--primitive-collab-2);
+  --apollon-collaboration-color-3: var(--primitive-collab-3);
+  --apollon-collaboration-color-4: var(--primitive-collab-4);
+  --apollon-collaboration-color-5: var(--primitive-collab-5);
+  --apollon-collaboration-color-6: var(--primitive-collab-6);
+  --apollon-collaboration-color-7: var(--primitive-collab-7);
+  --apollon-collaboration-color-8: var(--primitive-collab-8);
 
   /* ── Layer 3: --home-* app semantics (light) ───────────────────────────── */
 
@@ -327,6 +389,33 @@
   --primitive-toast-error: #f0747e;
   --primitive-toast-warning: #ffd47a;
   --primitive-toast-info: #5aa0e0;
+
+  /* Color-picker swatch palette (dark) — brightened a step so each swatch stays
+     legible against the dark popover surface. */
+  --primitive-swatch-slate: #94a3b8;
+  --primitive-swatch-red: #f87171;
+  --primitive-swatch-orange: #fb923c;
+  --primitive-swatch-amber: #fbbf24;
+  --primitive-swatch-green: #4ade80;
+  --primitive-swatch-teal: #2dd4bf;
+  --primitive-swatch-blue: #60a5fa;
+  --primitive-swatch-violet: #a78bfa;
+  --primitive-swatch-pink: #f472b6;
+
+  /* Interactive-selection accent (dark) — brightened a step so the amber ring
+     reads against the dark canvas. */
+  --primitive-interactive-selection: #f5b041;
+
+  /* Live-collaboration cursor palette (dark) — brightened a step so each
+     cursor/label stays legible against the dark canvas. */
+  --primitive-collab-1: #ffce5c;
+  --primitive-collab-2: #51cf66;
+  --primitive-collab-3: #4dabf7;
+  --primitive-collab-4: #ff6b6b;
+  --primitive-collab-5: #cc5de8;
+  --primitive-collab-6: #20c997;
+  --primitive-collab-7: #ff922b;
+  --primitive-collab-8: #22b8cf;
 
   /* ── Layer 2: --apollon-* (dark deltas) ────────────────────────────────── */
   --apollon-primary-contrast: var(--primitive-white);
