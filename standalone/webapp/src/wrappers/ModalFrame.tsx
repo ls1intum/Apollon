@@ -74,8 +74,13 @@ export function ModalFrame({
         className={cn(
           "flex max-w-none flex-col gap-0 overflow-hidden p-0",
           isHomeDialog
-            ? "rounded-[15px] bg-[var(--home-surface-base)]"
-            : "rounded-md bg-background",
+            ? // accent-header dialogs: a page-like base body that holds raised
+              // cards/rows (the cards provide the elevated surface + contrast).
+              "rounded-[15px] bg-[var(--home-surface-base)]"
+            : // divider-header utility/confirm dialogs: no accent anchor + simple
+              // content, so the body IS the raised surface (matches the popover/
+              // menu surface in dark, instead of blending into the page base).
+              "rounded-md bg-popover",
           !isHomeDialog && !isEditorShareDialog && "max-h-[90vh]"
         )}
         style={{

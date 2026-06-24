@@ -162,7 +162,7 @@
 
 .react-flow {
   --panel-background: var(--apollon-background, #fff);
-  --panel-shadow: 0 0 4px 0 var(--apollon-background-variant, #f8f9fa);
+  --panel-shadow: var(--home-shadow-md, 0 4px 12px rgba(0, 0, 0, 0.18));
   --text: var(--apollon-primary-contrast, #000);
   --xy-edge-stroke: var(--apollon-primary-contrast, #000);
   --xy-edge-stroke-width: 2px;
@@ -1166,11 +1166,10 @@ svg.react-flow__connectionline {
   flex: 1;
   flex-direction: column;
   padding: 10px;
-  background-color: var(--apollon-background-variant, #f8f9fa);
+  background-color: var(--apollon-surface, #ffffff);
   color: var(--apollon-primary-contrast, #000);
   border-radius: var(--home-radius-lg, 8px);
-  border: 1px solid
-    color-mix(in srgb, var(--apollon-primary-contrast, #000) 10%, transparent);
+  border: 1px solid var(--apollon-border, #cdd5df);
   box-shadow: var(--home-shadow-md, 0 4px 12px rgba(0, 0, 0, 0.18));
   transform-origin: var(--transform-origin, center);
   transition:
@@ -1210,9 +1209,8 @@ svg.react-flow__connectionline {
   font-family: inherit;
   text-align: left;
   color: var(--apollon-primary-contrast, #000);
-  background-color: var(--apollon-background, #fff);
-  border: 1px solid
-    color-mix(in srgb, var(--apollon-primary-contrast, #000) 15%, transparent);
+  background-color: var(--apollon-surface-sunken, #ffffff);
+  border: 1px solid var(--apollon-border, #cdd5df);
   border-radius: var(--home-radius-md, 6px);
   cursor: pointer;
 }
@@ -1234,10 +1232,9 @@ svg.react-flow__connectionline {
   color: var(--apollon-primary-contrast, #000);
 }
 .apollon-select-content {
-  background-color: var(--apollon-background, #fff);
+  background-color: var(--apollon-surface, #ffffff);
   color: var(--apollon-primary-contrast, #000);
-  border: 1px solid
-    color-mix(in srgb, var(--apollon-primary-contrast, #000) 10%, transparent);
+  border: 1px solid var(--apollon-border, #cdd5df);
   border-radius: var(--home-radius-lg, 8px);
   box-shadow: var(--home-shadow-md, 0 4px 12px rgba(0, 0, 0, 0.18));
   transform-origin: var(--transform-origin, center);
@@ -1391,7 +1388,7 @@ svg.react-flow__connectionline {
 }
 
 .scroll-overlay-hint-content {
-  background-color: var(--apollon-background, #fff);
+  background-color: var(--apollon-surface, #ffffff);
   border: 2px solid var(--apollon-primary, #3e8acc);
   border-radius: 8px;
   padding: 16px 24px;
