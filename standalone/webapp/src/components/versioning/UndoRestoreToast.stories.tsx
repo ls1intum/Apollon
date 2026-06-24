@@ -45,7 +45,14 @@ const meta = {
     (Story) => (
       <div style={{ minHeight: 200 }}>
         <Story />
-        <ToastContainer position="bottom-center" />
+        {/* Same themed classes the app's DeferredToastContainer uses, so the
+            toast follows the --home-* surface tokens (dark in dark) instead of
+            react-toastify's white default. */}
+        <ToastContainer
+          position="bottom-center"
+          className="home-toast-container"
+          toastClassName="home-toast"
+        />
       </div>
     ),
     WebappProviders,

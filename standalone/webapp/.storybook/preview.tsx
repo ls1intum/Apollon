@@ -22,24 +22,20 @@ import "../../../library/lib/styles/app.css"
 import "../../../library/lib/styles/alignmentGuides.css"
 import "./preview.css"
 
-// Paint the canvas with the design tokens so the dark theme is actually visible
-// (the data-theme flip only changes token values, not element backgrounds).
-const withSurface: Decorator = (Story, context) => {
-  // Editor/fullscreen stories manage their own sized container; don't wrap them
-  // in the padded surface (it would offset the canvas).
-  if (context.parameters.layout === "fullscreen") return <Story />
-  return (
-    <div
-      style={{
-        backgroundColor: "var(--home-surface-base)",
-        color: "var(--home-text-primary)",
-        padding: "2rem",
-      }}
-    >
+// The themed page background + text colour come from ONE place: webapp.css paints
+// `html`/`body` with `--apollon-background` / `--apollon-primary-contrast`, which
+// flip with the root `data-theme` the toolbar sets — so every story (fullscreen
+// or not) sits on the correct surface with no extra wiring. This decorator only
+// adds breathing room around centered/padded component stories; fullscreen
+// stories (editor canvas, modals) manage their own full-bleed layout.
+const withPadding: Decorator = (Story, context) =>
+  context.parameters.layout === "fullscreen" ? (
+    <Story />
+  ) : (
+    <div style={{ padding: "2rem" }}>
       <Story />
     </div>
   )
-}
 
 /**
  * autodocs pages render the story previews via the data-theme decorator (so they
@@ -214,7 +210,7 @@ const preview: Preview = {
       defaultTheme: "light",
       attributeName: "data-theme",
     }),
-    withSurface,
+    withPadding,
   ],
 }
 
