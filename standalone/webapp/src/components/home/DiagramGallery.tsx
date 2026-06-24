@@ -27,6 +27,7 @@ import {
 import {
   sharedDiagramRoute,
   getSharedDiagramViewBadge,
+  DEFAULT_SHARED_DIAGRAM_VIEW,
 } from "@/utils/sharedDiagramLinks"
 import {
   DiagramActionsMenu,
@@ -623,7 +624,7 @@ export const DiagramGallery = ({
       ? ({ to: "/local/$id", params: { id: diagram.id } } as const)
       : sharedDiagramRoute(
           diagram.id,
-          diagram.lastSharedView ?? DiagramView.EDIT
+          diagram.lastSharedView ?? DEFAULT_SHARED_DIAGRAM_VIEW
         )
 
   const handleOpenDiagram = (diagram: GalleryDiagram) => {

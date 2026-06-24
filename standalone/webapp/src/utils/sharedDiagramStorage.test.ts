@@ -76,6 +76,15 @@ describe("shared diagram storage", () => {
     ])
   })
 
+  it("defaults a brand-new share (no explicit mode) to collaborate", () => {
+    // useShareableDiagram registers a fresh share via addSharedDiagramEntry(id)
+    // with no mode; it must adopt the Collaborate default, NOT Edit.
+    addSharedDiagramEntry("fresh-share")
+    expect(getSharedDiagramEntries()[0].lastSharedView).toBe(
+      DiagramView.COLLABORATE
+    )
+  })
+
   it("stores and updates remembered link mode metadata", () => {
     addSharedDiagramEntry("shared-1", {
       lastSharedView: DiagramView.COLLABORATE,
