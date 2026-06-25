@@ -5,10 +5,13 @@ import { ErrorPage } from "./ErrorPage"
 /**
  * The full-page error/fallback screen. Renders inside `PageShell`, so a sticky
  * chrome header (with its own "All diagrams" back link) sits above a `<main>`
- * holding the title, message, and a router `<Link>` recovery CTA. The CTA's
- * default label is "Back to all diagrams" — distinct from the header's terse
- * "All diagrams" so the two links never collide on accessible name. All props
- * have sensible defaults so it doubles as a generic 404/500.
+ * holding a large DECORATIVE title splash (`aria-hidden`), the message, and a
+ * router `<Link>` recovery CTA. The page's single `<h1>` is the page title in
+ * the sticky title island — filling the formerly-empty header centre — so the
+ * body splash is presentational, not a second heading. The CTA's default label
+ * is "Back to all diagrams" — distinct from the header's terse "All diagrams" so
+ * the two links never collide on accessible name. All props have sensible
+ * defaults so it doubles as a generic 404/500.
  */
 const meta = {
   title: "Webapp/Pages/ErrorPage",
@@ -44,6 +47,15 @@ export const Default: Story = {
       name: /back to all diagrams/i,
     })
     await expect(cta).toHaveAttribute("href", "/")
+
+    // The page's SINGLE <h1> is the title in the sticky title island, NOT in the
+    // content: the body title splash is `aria-hidden` decoration. Assert exactly
+    // one heading carrying the title, and that `<main>` holds no heading — so the
+    // splash never reads as a second h1.
+    const headings = await canvas.findAllByRole("heading", { level: 1 })
+    await expect(headings).toHaveLength(1)
+    await expect(headings[0]).toHaveTextContent("Oops!")
+    await expect(main.queryByRole("heading", { level: 1 })).toBeNull()
   },
 }
 

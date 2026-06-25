@@ -221,7 +221,12 @@ function HomeActionsIsland({
             title="Refine"
           >
             <SlidersHorizontal className="size-4" aria-hidden />
-            <span className="hidden lg:inline">Refine</span>
+            {/* Reveal the label as soon as it fits, not at `lg`: the measured
+                geometry (brand 131 + labelled actions 523 + a ≥200px search
+                island + gaps/inset) fits from ~918px, so gating at `lg` (1024)
+                left 920–1023 icon-only with room to spare. `min-[940px]` reveals
+                the labels there while search stays above its floor. */}
+            <span className="hidden min-[940px]:inline">Refine</span>
             {chrome.refineCount > 0 && (
               <Badge className="ml-0.5 size-4 min-w-0 px-0 text-[10px]">
                 {chrome.refineCount}
@@ -239,7 +244,9 @@ function HomeActionsIsland({
         onClick={onImportJson}
       >
         <Upload className="size-4" aria-hidden />
-        <span className="hidden lg:inline">Import</span>
+        {/* Same threshold as Refine: reveal at `min-[940px]`, where the labelled
+            actions island + brand + a ≥200px search island still fit. */}
+        <span className="hidden min-[940px]:inline">Import</span>
       </button>
       <button
         type="button"

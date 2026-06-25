@@ -109,20 +109,18 @@ export function LegalPage({
 
   return (
     <PageShell
-      header={<ChromeSubHeader />}
+      header={<ChromeSubHeader title={title} />}
       // Legal prose wants a readable measure, not the home's full 1536px grid.
       contentClassName="max-w-3xl"
       // Pad the long copy past the bottom safe-area inset so the final line
       // clears a home indicator and isn't flush against the viewport edge.
       mainClassName="pb-[max(2.5rem,calc(env(safe-area-inset-bottom,0px)+1.5rem))]"
     >
-      {/* mt-2 restores the small gap the header band's pb-2 + the old pt left
-          between the band and the page heading. */}
+      {/* The page's single <h1> now lives in the sticky title island (see
+          ChromeSubHeader) so it stays visible while the long legal copy scrolls;
+          the body opens straight into the prose. mt-2 keeps the small gap the
+          header band's pb-2 left between the band and the first content row. */}
       <div className="mt-2">
-        <h1 className="mb-2 text-2xl font-semibold text-foreground md:text-3xl">
-          {title}
-        </h1>
-
         {resolved?.source === "disclaimer" ? (
           <Alert
             variant="destructive"

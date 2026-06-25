@@ -32,7 +32,7 @@ export const ErrorPage: React.FC<ErrorPageProps> = ({
 }) => {
   return (
     <PageShell
-      header={withChrome ? <ChromeSubHeader /> : null}
+      header={withChrome ? <ChromeSubHeader title={title} /> : null}
       mainClassName="pb-[max(2.5rem,env(safe-area-inset-bottom,0px))]"
     >
       {/* Center the message in the remaining space below the header, but inside
@@ -40,10 +40,18 @@ export const ErrorPage: React.FC<ErrorPageProps> = ({
           end on a short viewport instead of being clipped. `min-h` reserves the
           header-less viewport height so short copy still reads centered. */}
       <div className="flex min-h-[60vh] flex-col items-center justify-center px-2 text-center">
-        <h1 className="text-2xl font-bold text-foreground md:text-3xl">
+        {/* The page's single <h1> lives in the sticky title island (see
+            ChromeSubHeader). The body keeps the title as a LARGE DECORATIVE
+            splash (a quiet display glyph, e.g. "404"), `aria-hidden` so it isn't
+            a second heading and isn't read twice — the header h1 already names
+            the page. The recovery message + CTA stay the meaningful content. */}
+        <p
+          aria-hidden
+          className="text-5xl font-bold text-muted-foreground/70 select-none md:text-6xl"
+        >
           {title}
-        </h1>
-        <p className="mt-2 max-w-prose text-base text-muted-foreground">
+        </p>
+        <p className="mt-3 max-w-prose text-base text-muted-foreground">
           {message}
         </p>
         <Link

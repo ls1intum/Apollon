@@ -17,10 +17,17 @@ import { useBackTarget } from "@/hooks/useBackTarget"
  * resting offset) is supplied by the shared `PageShell` that wraps it, so the
  * brand island lands at the identical baseline and pins identically whether the
  * user is on the home or a sub-page. Left: the brand banner (logo + version)
- * linking home. Right: an actions island with the shared back affordance, the
- * Help menu, and the theme switcher.
+ * linking home + the shared back affordance. Center: the page TITLE in a quiet
+ * title island, mirroring the editor's `[brand/back][title][actions]` band and
+ * the home's `[brand][search][actions]` — so the sub-page reads as the same
+ * three-region band instead of a brand/actions pair with a vast empty centre.
+ * Right: an actions island with the Help menu and the theme switcher.
+ *
+ * The title island carries the page's SINGLE `<h1>` (persistently visible while
+ * long legal copy scrolls), so `LegalPage` / `ErrorPage` render no content `<h1>`
+ * of their own — exactly one `<h1>` per page, in the sticky band.
  */
-export const ChromeSubHeader = () => {
+export const ChromeSubHeader = ({ title }: { title: string }) => {
   const backTarget = useBackTarget()
 
   return (
@@ -41,7 +48,21 @@ export const ChromeSubHeader = () => {
         />
       </Island>
 
-      <div className="flex-1" />
+      {/* CENTER: the page title as a centered chip — a content-sized title
+          island (NOT the full-width search-field look) centred in the track, so
+          the band reads as a clean three-region masthead with the title in the
+          middle and symmetric whitespace, instead of an empty search box or a
+          one-sided void. Truncates if a title is ever long enough to crowd. */}
+      <div className="flex min-w-0 flex-1 justify-center">
+        <Island ariaLabel="Page">
+          <h1
+            className="truncate text-sm font-semibold"
+            style={{ color: "var(--apollon-chrome-text)" }}
+          >
+            {title}
+          </h1>
+        </Island>
+      </div>
 
       <Island ariaLabel="Page actions">
         <HomeHelpMenu />
