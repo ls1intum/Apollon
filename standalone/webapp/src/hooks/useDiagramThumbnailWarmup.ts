@@ -3,11 +3,13 @@ import type { UMLModel } from "@tumaet/apollon"
 import { log } from "@/logger"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { renderThumbnailSvgFromModel } from "@/utils/thumbnailSvg"
-import { waitForIdle } from "@/utils/idle"
 import type { ThumbnailViewportPriority } from "@/hooks/useThumbnailViewportPriority"
 import { dequeueNextDiagram } from "@/hooks/dequeueNextDiagram"
 
-const THUMBNAIL_WARMUP_DELAY_MS = 400
+// Start as soon as the page has loaded — no extra stall. The single worker then
+// converts back-to-back (no idle-gating, which would pause mid-scroll), and
+// viewport priority keeps on-screen cards first.
+const THUMBNAIL_WARMUP_DELAY_MS = 0
 
 type ThumbnailWarmupDiagram = {
   id: string
@@ -109,12 +111,6 @@ export const useDiagramThumbnailWarmup = <T extends ThumbnailWarmupDiagram>({
         }
 
         markLoading(id, true)
-        await waitForIdle()
-
-        if (isUnmountedRef.current) {
-          markLoading(id, false)
-          break
-        }
 
         try {
           const thumbnailSvg = await renderThumbnailSvgFromModel(
