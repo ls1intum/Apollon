@@ -55,8 +55,7 @@ export function HomeHeaderRow({
     // band simply stops at `top` once that padding scrolls past. A small bottom
     // padding gives the floating island shadow room to read over the first row.
     <div
-      className="sticky z-20 flex flex-col gap-1 pb-2"
-      style={{ top: "var(--safe-area-inset-top, 0px)" }}
+      className="sticky top-[calc(var(--safe-area-inset-top,0px)+0.75rem)] z-20 flex flex-col gap-1 pb-2 md:top-[calc(var(--safe-area-inset-top,0px)+1rem)]"
     >
       {/* The home's single page heading — rendered ONCE here (outside the
           md-gated bands) so exactly one visually-hidden <h1> exists at every

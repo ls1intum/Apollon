@@ -24,8 +24,7 @@ export const ChromeSubHeader = () => {
   return (
     <div className="home-content-x mx-auto w-full max-w-[1536px] pt-5 md:pt-6">
       <div
-        className="sticky z-20 flex items-start gap-[var(--apollon-chrome-gap)] pb-2"
-        style={{ top: "var(--safe-area-inset-top, 0px)" }}
+        className="sticky top-[calc(var(--safe-area-inset-top,0px)+0.75rem)] z-20 flex items-start gap-[var(--apollon-chrome-gap)] pb-2 md:top-[calc(var(--safe-area-inset-top,0px)+1rem)]"
       >
         <Island as="header" role="banner" ariaLabel="Home">
           <Link
