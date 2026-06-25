@@ -31,9 +31,11 @@
 
   /* Editor/home navbar chrome — an always-dark bar that does not react to the
      theme (folded here from the deleted navbar/styleConstants.ts so both the
-     editor Navbar and the chrome HomeNavbar share one source). */
-  --navbar-bg: #212529;
-  --navbar-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+     editor Navbar and the chrome HomeNavbar share one source). The literals live
+     in the primitive layer of @tumaet/ui tokens.css (single token source); these
+     are the webapp-semantic handles onto them. */
+  --navbar-bg: var(--primitive-navbar-bg);
+  --navbar-shadow: var(--primitive-navbar-shadow);
 
   /* Safe-area floor: map the UA insets onto the custom properties the mobile
      layout reads as `var(--safe-area-inset-*, 0px)`. With `viewport-fit=cover`
@@ -265,7 +267,7 @@ body,
    in sync with the light hover in DiagramCard.tsx. */
 :root[data-theme="dark"] .home-diagram-card:hover {
   box-shadow:
-    0 6px 16px color-mix(in srgb, #000 38%, transparent),
+    0 6px 16px color-mix(in srgb, var(--primitive-shadow-ink) 38%, transparent),
     0 0 0 1px color-mix(in srgb, var(--home-text-primary) 12%, transparent);
 }
 

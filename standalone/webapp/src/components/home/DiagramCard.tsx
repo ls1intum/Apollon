@@ -385,13 +385,15 @@ export function DiagramActionsMenuView({
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
+              // The Base UI Close primitive dismisses the dialog on activate,
+              // which fires onOpenChange(false) → setPendingConfirm(null). We only
+              // run the side-effect here; the close is the primitive's job.
               onClick={() => {
                 if (pendingConfirm === "delete") {
                   onDelete()
                 } else if (pendingConfirm === "remove") {
                   onRemoveSharedEntry()
                 }
-                setPendingConfirm(null)
               }}
             >
               {confirmCopy?.confirmLabel}

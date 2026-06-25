@@ -64,7 +64,10 @@
   /* Accent — reserved for meaning (primary action, selection, current marker).
      Chrome surfaces themselves stay neutral. */
   --apollon-chrome-accent: var(--apollon-primary, #3e8acc);
-  --apollon-chrome-accent-contrast: #fff;
+  --apollon-chrome-accent-contrast: var(
+    --apollon-on-collaboration-cursor,
+    #fff
+  );
 
   /* Radius ramp: sm pills, md controls, lg panels/rails. */
   --apollon-chrome-radius-sm: 6px;
@@ -358,7 +361,7 @@
   padding: 2px 6px;
   font-size: 12px;
   border-radius: var(--apollon-radius-md, 6px);
-  color: #fff;
+  color: var(--apollon-on-collaboration-cursor, #fff);
   white-space: nowrap;
 }
 
@@ -1399,7 +1402,7 @@ svg.react-flow__connectionline {
    dark swatches. */
 .apollon-color-swatch__icon {
   pointer-events: none;
-  color: #fff;
+  color: var(--apollon-on-collaboration-cursor, #fff);
   filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.6));
 }
 

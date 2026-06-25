@@ -8,6 +8,7 @@ import {
   collabColorFromName,
   randomCollabName,
 } from "@tumaet/apollon/react"
+import { Button } from "@tumaet/ui/components/button"
 import { useEditorContext } from "@/contexts"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import {
@@ -223,27 +224,29 @@ export const ApollonPlayground: React.FC = () => {
           <AssessmentScoreChips />
         )}
 
-        <button onClick={() => exportAsSvg()} className="border p-1 rounded-sm">
+        <Button variant="outline" size="sm" onClick={() => exportAsSvg()}>
           Export as SVG
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
           onClick={() => exportAsPNG({ setWhiteBackground: true })}
-          className="border p-1 rounded-sm"
         >
           Export as PNG(White Background)
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
           onClick={() => exportAsPNG({ setWhiteBackground: false })}
-          className="border p-1 rounded-sm"
         >
           Export as PNG
-        </button>
-        <button onClick={exportAsJSON} className="border p-1 rounded-sm">
+        </Button>
+        <Button variant="outline" size="sm" onClick={exportAsJSON}>
           Export as JSON
-        </button>
-        <button onClick={() => exportAsPDF()} className="border p-1 rounded-sm">
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => exportAsPDF()}>
           Export as PDF
-        </button>
+        </Button>
 
         <AssessmentDataBox
           assessmentSelectedElements={assessmentSelectedElements}

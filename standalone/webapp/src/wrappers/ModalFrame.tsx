@@ -76,7 +76,7 @@ export function ModalFrame({
           isHomeDialog
             ? // accent-header dialogs: a page-like base body that holds raised
               // cards/rows (the cards provide the elevated surface + contrast).
-              "rounded-[15px] bg-[var(--home-surface-base)]"
+              "rounded-xl bg-[var(--home-surface-base)]"
             : // divider-header utility/confirm dialogs: no accent anchor + simple
               // content, so the body IS the raised surface (matches the popover/
               // menu surface in dark, instead of blending into the page base).
@@ -108,7 +108,7 @@ export function ModalFrame({
           className={cn(
             "flex-row items-center justify-between gap-2",
             isHomeDialog
-              ? "rounded-t-[15px] bg-primary px-5 py-[18px] [@media(max-width:950px)_and_(max-height:500px)]:px-[14px] [@media(max-width:950px)_and_(max-height:500px)]:py-[10px]"
+              ? "rounded-t-xl bg-primary px-5 py-[18px] [@media(max-width:950px)_and_(max-height:500px)]:px-[14px] [@media(max-width:950px)_and_(max-height:500px)]:py-[10px]"
               : "border-b border-b-[var(--apollon-background-variant)] p-4 [@media(max-width:950px)_and_(max-height:500px)]:px-3 [@media(max-width:950px)_and_(max-height:500px)]:py-2"
           )}
         >

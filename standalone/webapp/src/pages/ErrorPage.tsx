@@ -52,7 +52,7 @@ export const ErrorPage: React.FC<ErrorPageProps> = ({
           padding: "10px 20px",
           backgroundColor: "var(--apollon-primary)",
           color: "var(--home-on-accent-text)",
-          borderRadius: "5px",
+          borderRadius: "var(--home-radius-md)",
           cursor: "pointer",
           textDecoration: "none",
           display: "inline-block",
