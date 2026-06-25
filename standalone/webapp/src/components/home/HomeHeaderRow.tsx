@@ -135,9 +135,13 @@ function HomeSearchIsland({
   }, [])
 
   return (
+    // Grows with the centre track up to a max, then stops + centres (symmetric
+    // whitespace) rather than stretching the full width — the wrapper's
+    // `justify-center` + `mx-auto` keep it centred once it caps.
     <Island
-      className="apollon-chrome-title-island w-full"
+      className="apollon-chrome-title-island mx-auto w-full"
       ariaLabel="Search diagrams"
+      style={{ maxWidth: "560px" }}
     >
       <Search
         className="size-3.5 shrink-0"

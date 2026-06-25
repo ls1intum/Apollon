@@ -48,14 +48,15 @@ export const Default: Story = {
     })
     await expect(cta).toHaveAttribute("href", "/")
 
-    // The page's SINGLE <h1> is the title in the sticky title island, NOT in the
-    // content: the body title splash is `aria-hidden` decoration. Assert exactly
-    // one heading carrying the title, and that `<main>` holds no heading — so the
-    // splash never reads as a second h1.
+    // The page's SINGLE <h1> is the title, a real heading in the content `<main>`
+    // (the header band carries no title). Assert exactly one level-1 heading,
+    // that it carries the title, and that it lives in main.
     const headings = await canvas.findAllByRole("heading", { level: 1 })
     await expect(headings).toHaveLength(1)
     await expect(headings[0]).toHaveTextContent("Oops!")
-    await expect(main.queryByRole("heading", { level: 1 })).toBeNull()
+    await expect(
+      await main.findByRole("heading", { level: 1 })
+    ).toHaveTextContent("Oops!")
   },
 }
 

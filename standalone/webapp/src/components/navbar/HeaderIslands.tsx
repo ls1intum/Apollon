@@ -107,12 +107,15 @@ export function HeaderTitleIsland() {
   }, [editor])
 
   return (
-    // The title island FILLS the centre track (`w-full`) so the actions stay
-    // pinned right with no dead gap floating between them — the same "centre
-    // island fills its track, borderless input fills the island" rule the home
-    // search island follows. The island is `flex-1` inside the spacer; the input
-    // is `flex-1 min-w-0` so it consumes the island and ellipsises when tight.
-    <Island className="apollon-chrome-title-island w-full">
+    // The title island grows with the centre track up to a max, then stops and
+    // centres (symmetric whitespace) — `mx-auto` centres it once it caps, so the
+    // actions never float beside a one-sided dead gap and a long title never
+    // stretches edge-to-edge. Same rule as the home search island. The input is
+    // `flex-1 min-w-0` so it fills the island and ellipsises when tight.
+    <Island
+      className="apollon-chrome-title-island mx-auto w-full"
+      style={{ maxWidth: "560px" }}
+    >
       <IslandInput
         value={title}
         onChange={(e) => {

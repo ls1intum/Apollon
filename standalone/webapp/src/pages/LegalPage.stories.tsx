@@ -125,13 +125,14 @@ export const RendersContent: Story = {
       await main.findByText(/example organization/i)
     ).toBeInTheDocument()
 
-    // The page's SINGLE <h1> now lives in the sticky title island (filling the
-    // formerly-empty header centre), NOT in the content. Assert exactly one
-    // heading, that it carries the page title, and that it is OUTSIDE `<main>` —
-    // pinning the moved-heading structure (one h1 per page, in the band).
+    // The page's SINGLE <h1> is the page title, a real heading at the top of the
+    // content `<main>` (the header band carries no title). Assert exactly one
+    // level-1 heading, that it carries the page title, and that it lives in main.
     const headings = await canvas.findAllByRole("heading", { level: 1 })
     await expect(headings).toHaveLength(1)
     await expect(headings[0]).toHaveTextContent(LEGAL_PAGE_TITLES.imprint)
-    await expect(main.queryByRole("heading", { level: 1 })).toBeNull()
+    await expect(
+      await main.findByRole("heading", { level: 1 })
+    ).toHaveTextContent(LEGAL_PAGE_TITLES.imprint)
   },
 }

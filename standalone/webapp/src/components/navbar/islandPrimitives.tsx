@@ -53,12 +53,20 @@ export function Island({
   role,
   ariaLabel,
   className,
+  style,
 }: {
   children: ReactNode
   as?: "header"
   role?: string
   ariaLabel?: string
   className?: string
+  /**
+   * Per-instance overrides merged over the shared layout (e.g. a `maxWidth` cap
+   * on the centre title/search island). Merged AFTER `ISLAND_LAYOUT_STYLE` so it
+   * wins — needed because the base layout sets `maxWidth: "100%"` inline, which
+   * a Tailwind `max-w-*` class can't override.
+   */
+  style?: CSSProperties
 }) {
   const Tag = as ?? "div"
   return (
@@ -66,7 +74,7 @@ export function Island({
       role={role}
       aria-label={ariaLabel}
       className={`apollon-glass apollon-chrome-island${className ? ` ${className}` : ""}`}
-      style={ISLAND_LAYOUT_STYLE}
+      style={style ? { ...ISLAND_LAYOUT_STYLE, ...style } : ISLAND_LAYOUT_STYLE}
     >
       {children}
     </Tag>

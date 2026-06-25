@@ -27,7 +27,7 @@ import { useBackTarget } from "@/hooks/useBackTarget"
  * long legal copy scrolls), so `LegalPage` / `ErrorPage` render no content `<h1>`
  * of their own — exactly one `<h1>` per page, in the sticky band.
  */
-export const ChromeSubHeader = ({ title }: { title: string }) => {
+export const ChromeSubHeader = () => {
   const backTarget = useBackTarget()
 
   return (
@@ -41,28 +41,19 @@ export const ChromeSubHeader = ({ title }: { title: string }) => {
           <BrandAndVersion />
         </Link>
         <GroupDivider />
+        {/* The sub-page band has a wide-open centre, so the "All diagrams" label
+            stays down to ~480px (it collapses to a bare chevron only when brand +
+            actions would otherwise overflow a narrow phone) — far longer than the
+            editor's tighter `lg` gate. The page title is NOT in the band; it is a
+            real <h1> in the page content (see LegalPage / ErrorPage). */}
         <BackNav
           {...backTarget}
           tone="onDark"
-          labelClassName="hidden lg:inline"
+          labelClassName="hidden min-[480px]:inline"
         />
       </Island>
 
-      {/* CENTER: the page title as a centered chip — a content-sized title
-          island (NOT the full-width search-field look) centred in the track, so
-          the band reads as a clean three-region masthead with the title in the
-          middle and symmetric whitespace, instead of an empty search box or a
-          one-sided void. Truncates if a title is ever long enough to crowd. */}
-      <div className="flex min-w-0 flex-1 justify-center">
-        <Island ariaLabel="Page">
-          <h1
-            className="truncate text-sm font-semibold"
-            style={{ color: "var(--apollon-chrome-text)" }}
-          >
-            {title}
-          </h1>
-        </Island>
-      </div>
+      <div className="flex-1" />
 
       <Island ariaLabel="Page actions">
         <HomeHelpMenu />
