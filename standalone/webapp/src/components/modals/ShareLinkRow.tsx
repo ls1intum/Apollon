@@ -70,6 +70,7 @@ export const ShareLinkRow = ({
     <div className="flex items-stretch">
       <input
         type="text"
+        aria-label="Shareable link"
         value={link}
         readOnly
         onFocus={(e) => e.currentTarget.select()}

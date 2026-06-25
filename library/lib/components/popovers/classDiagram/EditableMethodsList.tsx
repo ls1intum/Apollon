@@ -75,6 +75,10 @@ const SortableMethodRow: React.FC<SortableMethodRowProps> = ({
       <div
         {...attributes}
         {...listeners}
+        // dnd-kit's `attributes` set `role="button"` + `aria-roledescription`
+        // but no name; the grip icon is aria-hidden, so name the handle
+        // explicitly (axe: aria-command-name).
+        aria-label="Reorder method"
         className="apollon-drag-handle"
         style={{
           display: "flex",

@@ -21,9 +21,13 @@ const meta = {
   decorators: [
     DarkNavbarSurface,
     (Story) => (
-      <div role="listbox" aria-label="Version history" className="w-80 py-1">
+      <ul
+        role="list"
+        aria-label="Version history"
+        className="m-0 w-80 list-none p-0 py-1"
+      >
         <Story />
-      </div>
+      </ul>
     ),
   ],
   args: {
@@ -31,7 +35,6 @@ const meta = {
     onPreview: fn(),
     onRestore: fn(),
     onDelete: fn(),
-    activeRowId: null,
     previewingVersionId: null,
     versionNumberById: new Map<string, number>(),
     latestSavedId: undefined,
@@ -57,11 +60,6 @@ const meta = {
       control: "text",
       description: "Id of the latest saved version; gates each row's Restore.",
       table: { category: "Data" },
-    },
-    activeRowId: {
-      control: "text",
-      description: "Id of the keyboard-active row in the listbox.",
-      table: { category: "State" },
     },
     previewingVersionId: {
       control: "text",
@@ -103,12 +101,4 @@ export const Default: Story = {
 /** A large run of auto-saves. */
 export const ManyVersions: Story = {
   args: { group: makeAutoGroup(24) },
-}
-
-/** Group whose lead row is the active/selected row in the listbox. */
-export const Active: Story = {
-  args: {
-    group: makeAutoGroup(5),
-    activeRowId: "auto-1",
-  },
 }

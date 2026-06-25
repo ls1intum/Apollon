@@ -74,6 +74,7 @@ export const PetriNetPlaceEditPopover: React.FC<PopoverProps> = ({
 
           <TextField
             type="number"
+            aria-label="Tokens"
             onChange={(event) => {
               const value = event.target.value
               // Empty/invalid commits 0 so the edit isn't lost before blur.
@@ -99,6 +100,7 @@ export const PetriNetPlaceEditPopover: React.FC<PopoverProps> = ({
           <div style={{ position: "relative", flex: 1 }}>
             <TextField
               type="number"
+              aria-label="Capacity"
               onChange={(event) => {
                 const value = event.target.value
                 if (value === "") {

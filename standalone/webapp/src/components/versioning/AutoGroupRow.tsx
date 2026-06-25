@@ -10,7 +10,6 @@ interface AutoGroupRowProps {
   onPreview: (id: string) => void
   onRestore: (id: string) => void
   onDelete: (id: string) => void
-  activeRowId: string | null
   previewingVersionId: string | null
   versionNumberById: Map<string, number>
   latestSavedId?: string
@@ -24,7 +23,6 @@ export const AutoGroupRow: FC<AutoGroupRowProps> = ({
   onPreview,
   onRestore,
   onDelete,
-  activeRowId,
   previewingVersionId,
   versionNumberById,
   latestSavedId,
@@ -32,15 +30,9 @@ export const AutoGroupRow: FC<AutoGroupRowProps> = ({
 }) => {
   const [expanded, setExpanded] = useState(false)
   return (
-    <div>
+    <li className="list-none">
       <button
         type="button"
-        // Resolves the listbox's aria-activedescendant when the group is
-        // collapsed — the inner ListItems aren't mounted, so without this
-        // id the aria reference dangles.
-        id={`version-row-${group.first.id}`}
-        role="option"
-        aria-selected={group.first.id === activeRowId}
         onClick={() => setExpanded((v) => !v)}
         className="flex w-full cursor-pointer items-center gap-1 border-0 bg-transparent p-3 text-left text-sm transition-colors [&:hover]:[background:var(--row-hover-bg)]"
         style={
@@ -59,20 +51,23 @@ export const AutoGroupRow: FC<AutoGroupRowProps> = ({
         )}
         {group.versions.length} auto-saved versions
       </button>
-      {expanded &&
-        group.versions.map((v) => (
-          <VersionListItem
-            key={v.id}
-            diagramId={diagramId}
-            version={v}
-            versionNumber={versionNumberById.get(v.id)}
-            isPreviewing={previewingVersionId === v.id || v.id === activeRowId}
-            canRestore={v.id !== latestSavedId || hasUnsavedChanges}
-            onPreview={onPreview}
-            onRestore={onRestore}
-            onDelete={onDelete}
-          />
-        ))}
-    </div>
+      {expanded && (
+        <ul className="m-0 list-none p-0" role="list">
+          {group.versions.map((v) => (
+            <VersionListItem
+              key={v.id}
+              diagramId={diagramId}
+              version={v}
+              versionNumber={versionNumberById.get(v.id)}
+              isPreviewing={previewingVersionId === v.id}
+              canRestore={v.id !== latestSavedId || hasUnsavedChanges}
+              onPreview={onPreview}
+              onRestore={onRestore}
+              onDelete={onDelete}
+            />
+          ))}
+        </ul>
+      )}
+    </li>
   )
 }

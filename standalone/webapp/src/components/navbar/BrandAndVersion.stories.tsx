@@ -6,7 +6,8 @@ import { BrandAndVersion } from "./BrandAndVersion"
  * The Apollon logo + wordmark + app-version cluster shown at the left of the
  * navbar. The logo/wordmark is an indivisible, non-shrinking unit; the version
  * string is muted theme-independent white and hidden below the `sm` breakpoint.
- * The navbar is always dark, so the brand is previewed on a dark surface.
+ * The navbar is a theme-following chrome surface, so the brand is previewed on
+ * the matching themed chrome strip.
  */
 const meta = {
   title: "Webapp/Navbar/BrandAndVersion",

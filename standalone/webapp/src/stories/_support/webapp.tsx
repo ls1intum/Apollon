@@ -127,14 +127,23 @@ export function withModalFrame(opts: {
 }
 
 /**
- * Wraps a story on the dark navbar surface. The navbar and the version sidebar
- * paint on a fixed dark panel (the `--navbar-bg` token, the canonical name for
- * what was also hard-coded as `NAVBAR_BACKGROUND_COLOR` / `#1f2123` / `#212529`
- * across stories). Use this for any component whose real backdrop is that dark
- * chrome — navbar buttons, version rows — so its light-on-dark styling shows.
+ * Wraps a story on the editor's chrome surface — the SAME surface the navbar
+ * islands and version sidebar sit on in production.
+ *
+ * The navbar islands are THEME-FOLLOWING: they paint `.apollon-glass`
+ * (`--apollon-chrome-glass`, derived from `--apollon-background`) and their text
+ * uses `--apollon-chrome-text` (`--apollon-primary-contrast`) — both flip with
+ * the document theme, so contrast is always correct. An earlier version of this
+ * decorator hard-coded a fixed-dark `--navbar-bg` plate; that put the
+ * theme-following text on the wrong background (dark-ink-on-dark in light mode),
+ * a false color-contrast failure the production navbar never has. We render on
+ * the theme-following chrome surface instead so the story reflects real contrast.
+ *
+ * (The name is kept for its many call sites; the surface is no longer "dark" —
+ * it's the themed chrome surface.)
  */
 export const DarkNavbarSurface: Decorator = (Story) => (
-  <div className="rounded-md bg-[var(--navbar-bg)] p-4 text-white">
+  <div className="rounded-md bg-[var(--apollon-chrome-surface)] p-4 text-[color:var(--apollon-chrome-text)]">
     <Story />
   </div>
 )

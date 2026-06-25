@@ -61,6 +61,10 @@ export const StereotypeButtonGroup: React.FC<StereotypeButtonGroupProps> = ({
     <ToggleGroup
       data-slot="toggle-group"
       className="apollon-stereotype-group"
+      // Base UI's composite root emits `aria-orientation` on the `role="group"`
+      // element, which ARIA forbids on `group` (axe: aria-allowed-attr). Strip the
+      // disallowed attribute; keyboard nav and styling are unaffected.
+      aria-orientation={undefined}
       value={selectedStereotype ? [selectedStereotype] : []}
       onValueChange={handleValueChange}
     >

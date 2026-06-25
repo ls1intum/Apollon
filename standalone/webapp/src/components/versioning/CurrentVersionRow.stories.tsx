@@ -23,7 +23,8 @@ const meta = {
   title: "Webapp/Versioning/CurrentVersionRow",
   component: CurrentVersionRowView,
   parameters: { layout: "centered" },
-  // The sidebar surface is always dark; preview the row on a matching strip.
+  // The sidebar is a theme-following chrome surface; preview the row on the
+  // matching themed chrome strip (DarkNavbarSurface, despite its legacy name).
   decorators: [
     DarkNavbarSurface,
     (Story) => (

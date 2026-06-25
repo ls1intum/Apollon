@@ -99,7 +99,6 @@ export const VersionSidebarBody: FC<Props> = ({
 
   const [draft, setDraft] = useState("")
   const [submitting, setSubmitting] = useState(false)
-  const [activeRowId, setActiveRowId] = useState<string | null>(null)
   const composerRef = useRef<HTMLTextAreaElement | null>(null)
   // Subscribe to model changes so the empty-diagram check (drives Save
   // disable) reacts as the user adds the first node.
@@ -555,38 +554,14 @@ export const VersionSidebarBody: FC<Props> = ({
             )}
           </div>
         ) : (
+          // List/listitem (not listbox/option): each row carries its OWN
+          // focusable `<Link>` as the keyboard tab-stop + Enter target (like the
+          // gallery cards), so the row never nests interactive content inside a
+          // widget role (axe: nested-interactive). Native `<ul>` list semantics.
           <ul
             className="m-0 list-none p-0"
-            role="listbox"
+            role="list"
             aria-label={t.drawerTitle}
-            aria-activedescendant={
-              activeRowId ? `version-row-${activeRowId}` : undefined
-            }
-            tabIndex={0}
-            onKeyDown={(e) => {
-              const navigable = groupedVersions
-                .map((g) => (g.kind === "single" ? g.version : g.first))
-                .filter((v) => !v.pending)
-              if (navigable.length === 0) return
-              const idx = navigable.findIndex((v) => v.id === activeRowId)
-              if (e.key === "ArrowDown") {
-                e.preventDefault()
-                const next =
-                  navigable[Math.min(idx + 1, navigable.length - 1)] ??
-                  navigable[0]
-                if (next) setActiveRowId(next.id)
-              } else if (e.key === "ArrowUp") {
-                e.preventDefault()
-                const next = navigable[Math.max(idx - 1, 0)] ?? navigable[0]
-                if (next) setActiveRowId(next.id)
-              } else if (e.key === "Enter" && activeRowId) {
-                e.preventDefault()
-                handlePreview(activeRowId)
-              } else if (e.key === "Delete" && activeRowId) {
-                e.preventDefault()
-                handleDelete(activeRowId)
-              }
-            }}
           >
             {groupedVersions.map((entry) =>
               entry.kind === "auto-group" ? (
@@ -597,7 +572,6 @@ export const VersionSidebarBody: FC<Props> = ({
                   onPreview={handlePreview}
                   onRestore={handleRestore}
                   onDelete={handleDelete}
-                  activeRowId={activeRowId}
                   previewingVersionId={previewState?.versionId ?? null}
                   versionNumberById={versionNumberById}
                   latestSavedId={latestSavedVersion?.id}
@@ -609,10 +583,7 @@ export const VersionSidebarBody: FC<Props> = ({
                   diagramId={diagramId}
                   version={entry.version}
                   versionNumber={versionNumberById.get(entry.version.id)}
-                  isPreviewing={
-                    previewState?.versionId === entry.version.id ||
-                    entry.version.id === activeRowId
-                  }
+                  isPreviewing={previewState?.versionId === entry.version.id}
                   // Restore is meaningful unless this row IS the latest
                   // saved version AND the canvas already matches it. With
                   // unsaved changes, restoring even the latest version is

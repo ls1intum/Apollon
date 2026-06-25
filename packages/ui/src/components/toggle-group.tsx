@@ -38,6 +38,11 @@ function ToggleGroup({
       data-size={size}
       data-spacing={spacing}
       orientation={orientation}
+      // Base UI's composite root renders `aria-orientation` on the `role="group"`
+      // element (for keyboard nav), but ARIA forbids `aria-orientation` on `group`
+      // (axe: aria-allowed-attr). `orientation` still drives keyboard direction and
+      // `data-orientation` styling; we only strip the disallowed ARIA attribute.
+      aria-orientation={undefined}
       style={{ "--gap": `${spacing}px` } as React.CSSProperties}
       className={cn(
         "group/toggle-group flex w-fit flex-row items-center gap-[var(--gap)] rounded-md data-[orientation=vertical]:flex-col data-[orientation=vertical]:items-stretch data-[spacing=0]:data-[variant=outline]:shadow-xs",

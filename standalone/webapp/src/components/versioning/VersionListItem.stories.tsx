@@ -54,9 +54,16 @@ const meta = {
   decorators: [
     DarkNavbarSurface,
     (Story) => (
-      // The list paints onto the dark navbar surface; wrap in a <ul> so the
-      // row's <li>/role="option" markup is valid.
-      <ul className="m-0 w-80 list-none p-0">
+      // The list paints onto the themed chrome surface; wrap in the same
+      // `role="list"` <ul> the production VersionDrawer uses, so the row's
+      // native `listitem` semantics have their list parent and the markup is
+      // valid. (The row is a plain `<li>`, not a `role="option"`, so nothing
+      // nests interactive content — axe: nested-interactive.)
+      <ul
+        role="list"
+        aria-label="Version history"
+        className="m-0 w-80 list-none p-0"
+      >
         <Story />
       </ul>
     ),
@@ -158,7 +165,9 @@ export const ClickPreviews: Story = {
   tags: ["!autodocs"],
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement)
-    await userEvent.click(canvas.getByRole("option"))
+    // No router in stories → no stretched `<Link>`; the plain `<li>` row body
+    // owns the click (handleRowClick).
+    await userEvent.click(canvas.getByRole("listitem"))
     await expect(args.onPreview).toHaveBeenCalledWith(namedVersion.id)
   },
 }

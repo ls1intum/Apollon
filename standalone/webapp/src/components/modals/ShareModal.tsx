@@ -103,8 +103,11 @@ export const ShareModal = () => {
             />
           </HomeDialogField>
 
+          {/* No opacity dim on the note below: `--home-text-secondary` is
+              already a muted secondary tone (~6.4:1 on the dialog); a 70%
+              opacity dropped it to ~3.2:1, under WCAG AA. */}
           {hasLocalOriginal && (
-            <p className="text-xs text-[var(--home-text-secondary)] opacity-70">
+            <p className="text-xs text-[var(--home-text-secondary)]">
               Your local copy and its history stay on this device.
             </p>
           )}

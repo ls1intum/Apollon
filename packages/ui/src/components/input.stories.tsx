@@ -98,10 +98,10 @@ export const Dark: Story = {
   parameters: { controls: { disable: true } },
   render: () => (
     <div className="flex w-64 flex-col gap-3">
-      <Input placeholder="Type here…" />
-      <Input defaultValue="Apollon" />
-      <Input aria-invalid defaultValue="not-an-email" />
-      <Input disabled defaultValue="Read-only company" />
+      <Input aria-label="Default" placeholder="Type here…" />
+      <Input aria-label="Filled" defaultValue="Apollon" />
+      <Input aria-label="Invalid" aria-invalid defaultValue="not-an-email" />
+      <Input aria-label="Disabled" disabled defaultValue="Read-only company" />
     </div>
   ),
 }

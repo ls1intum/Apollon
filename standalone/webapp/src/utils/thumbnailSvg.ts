@@ -89,7 +89,13 @@ export const renderThumbnailSvgFromModel = async (
   mountNode.style.height = `${THUMBNAIL_MAX_HEIGHT}px`
   mountNode.style.opacity = "0"
   mountNode.style.pointerEvents = "none"
+  // The offscreen editor we mount to grab a thumbnail contains focusable controls
+  // (buttons, inputs). `aria-hidden` alone leaves that subtree keyboard-reachable,
+  // which is both an a11y bug (aria-hidden must not contain focusable content) and
+  // wrong for a non-interactive render scratchpad. `inert` removes it from the a11y
+  // tree AND makes every descendant unfocusable.
   mountNode.setAttribute("aria-hidden", "true")
+  mountNode.inert = true
   document.body.appendChild(mountNode)
 
   let instance: InstanceType<typeof ApollonEditor> | undefined

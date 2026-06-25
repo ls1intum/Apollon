@@ -87,7 +87,10 @@ export const ShareDashboardModal = (
           <Tooltip>
             <TooltipTrigger
               render={
-                <span className="ml-1 inline-flex cursor-help items-center" />
+                <button
+                  type="button"
+                  className="ml-1 inline-flex cursor-help items-center"
+                />
               }
               aria-label="More information"
             >

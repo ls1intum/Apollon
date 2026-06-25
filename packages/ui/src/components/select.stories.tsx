@@ -82,7 +82,7 @@ type Story = StoryObj<SelectStoryArgs>
 export const Default: Story = {
   render: ({ triggerSize, ...args }) => (
     <Select {...args}>
-      <SelectTrigger size={triggerSize} className="w-48">
+      <SelectTrigger size={triggerSize} aria-label="Fruit" className="w-48">
         <SelectValue placeholder="Select a fruit" />
       </SelectTrigger>
       <SelectContent>
@@ -113,7 +113,7 @@ export const Small: Story = {
 export const WithGroups: Story = {
   render: ({ triggerSize: _triggerSize, ...args }) => (
     <Select {...args}>
-      <SelectTrigger className="w-48">
+      <SelectTrigger aria-label="Food" className="w-48">
         <SelectValue placeholder="Select a food" />
       </SelectTrigger>
       <SelectContent>
@@ -140,7 +140,7 @@ export const WithGroups: Story = {
 export const ManyOptions: Story = {
   render: ({ triggerSize: _triggerSize, ...args }) => (
     <Select {...args}>
-      <SelectTrigger className="w-48">
+      <SelectTrigger aria-label="Timezone" className="w-48">
         <SelectValue placeholder="Select a timezone" />
       </SelectTrigger>
       <SelectContent>
@@ -164,7 +164,7 @@ export const Disabled: Story = {
   },
   render: ({ triggerSize: _triggerSize, ...args }) => (
     <Select {...args}>
-      <SelectTrigger className="w-48">
+      <SelectTrigger aria-label="Disabled select" className="w-48">
         <SelectValue placeholder="Unavailable" />
       </SelectTrigger>
       <SelectContent>
@@ -181,7 +181,7 @@ export const Disabled: Story = {
 export const DisabledOption: Story = {
   render: ({ triggerSize: _triggerSize, ...args }) => (
     <Select {...args}>
-      <SelectTrigger className="w-48">
+      <SelectTrigger aria-label="Fruit" className="w-48">
         <SelectValue placeholder="Select a fruit" />
       </SelectTrigger>
       <SelectContent>
@@ -201,7 +201,7 @@ export const DisabledOption: Story = {
 export const Invalid: Story = {
   render: ({ triggerSize: _triggerSize, ...args }) => (
     <Select {...args}>
-      <SelectTrigger aria-invalid className="w-48">
+      <SelectTrigger aria-invalid aria-label="Required field" className="w-48">
         <SelectValue placeholder="Required" />
       </SelectTrigger>
       <SelectContent>
@@ -226,7 +226,7 @@ export const Controlled: Story = {
             value={value}
             onValueChange={(next) => setValue(next as string | null)}
           >
-            <SelectTrigger className="w-48">
+            <SelectTrigger aria-label="Fruit" className="w-48">
               <SelectValue placeholder="Select a fruit" />
             </SelectTrigger>
             <SelectContent>
@@ -254,7 +254,7 @@ export const LongValue: Story = {
   },
   render: ({ triggerSize: _triggerSize, ...args }) => (
     <Select {...args}>
-      <SelectTrigger className="w-48">
+      <SelectTrigger aria-label="Option" className="w-48">
         <SelectValue placeholder="Select an option" />
       </SelectTrigger>
       <SelectContent>

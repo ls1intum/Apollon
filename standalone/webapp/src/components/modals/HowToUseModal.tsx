@@ -169,7 +169,9 @@ const Walkthrough = () => (
   <ol className="flex flex-col gap-8">
     {STEPS.map((step) => (
       <li key={step.title} className="flex flex-col gap-2">
-        <h5 className="text-base font-semibold">{step.title}</h5>
+        {/* h3: the modal's DialogTitle is the h2, so the step titles are the
+            next level. Visual size is set by classes, not the tag. */}
+        <h3 className="text-base font-semibold">{step.title}</h3>
         <p className="text-sm text-muted-foreground">{step.description}</p>
         {step.image && (
           <img
@@ -189,9 +191,12 @@ const Shortcuts = () => (
     {SHORTCUT_GROUPS.map((group, groupIndex) => (
       <div key={group.title} className="flex flex-col gap-3">
         {groupIndex > 0 && <Separator />}
-        <h5 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+        {/* A group LABEL for the shortcut grid below, not a document heading —
+            a non-heading element keeps the heading outline clean (no h-level
+            under the Shortcuts tab) while preserving the uppercase caption. */}
+        <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
           {group.title}
-        </h5>
+        </p>
         <dl className="grid grid-cols-[1fr_auto] items-center gap-x-6 gap-y-2.5">
           {group.shortcuts.map((shortcut) => (
             <div key={shortcut.label} className="contents">

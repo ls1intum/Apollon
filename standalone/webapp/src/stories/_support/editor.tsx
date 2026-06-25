@@ -519,8 +519,13 @@ function HiddenStoreFlow() {
     }))
   )
   return (
+    // This store-only ReactFlow exists purely to populate node/edge lookups; it
+    // must never be interactive. `aria-hidden` alone leaves ReactFlow's focusable
+    // viewport tabbable inside a hidden subtree (axe: aria-hidden-focus); `inert`
+    // both hides it from the a11y tree and makes every descendant unfocusable.
     <div
       aria-hidden
+      inert
       style={{ position: "absolute", width: 0, height: 0, overflow: "hidden" }}
     >
       <ReactFlow

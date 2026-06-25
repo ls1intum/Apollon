@@ -44,7 +44,10 @@ const meta = {
   tags: ["autodocs"],
   decorators: [
     (Story) => (
-      <div style={{ width: 300 }}>
+      // The card is `role="listitem"`; wrap it in the `role="list"` container the
+      // production gallery provides so its required list parent is present (axe:
+      // aria-required-parent).
+      <div role="list" style={{ width: 300 }}>
         <Story />
       </div>
     ),

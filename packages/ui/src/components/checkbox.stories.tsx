@@ -33,27 +33,27 @@ type Story = StoryObj<typeof meta>
 
 /** An unchecked checkbox. */
 export const Unchecked: Story = {
-  args: { defaultChecked: false },
+  args: { defaultChecked: false, "aria-label": "Unchecked" },
 }
 
 /** A checked checkbox shows the check indicator. */
 export const Checked: Story = {
-  args: { defaultChecked: true },
+  args: { defaultChecked: true, "aria-label": "Checked" },
 }
 
 /** The indeterminate state for partial selections. */
 export const Indeterminate: Story = {
-  args: { indeterminate: true },
+  args: { indeterminate: true, "aria-label": "Indeterminate" },
 }
 
 /** A disabled checkbox ignores user interaction. */
 export const Disabled: Story = {
-  args: { disabled: true, defaultChecked: true },
+  args: { disabled: true, defaultChecked: true, "aria-label": "Disabled" },
 }
 
 /** Set `aria-invalid` to surface a validation error state. */
 export const Invalid: Story = {
-  args: { "aria-invalid": true },
+  args: { "aria-invalid": true, "aria-label": "Invalid" },
 }
 
 /** Pair a checkbox with a `FieldLabel` for an accessible, clickable label. */
@@ -73,11 +73,11 @@ export const Dark: Story = {
   parameters: { controls: { disable: true } },
   render: () => (
     <div className="flex items-center gap-4">
-      <Checkbox defaultChecked={false} />
-      <Checkbox defaultChecked />
-      <Checkbox indeterminate />
-      <Checkbox aria-invalid />
-      <Checkbox disabled defaultChecked />
+      <Checkbox aria-label="Unchecked" defaultChecked={false} />
+      <Checkbox aria-label="Checked" defaultChecked />
+      <Checkbox aria-label="Indeterminate" indeterminate />
+      <Checkbox aria-label="Invalid" aria-invalid />
+      <Checkbox aria-label="Disabled" disabled defaultChecked />
     </div>
   ),
 }
@@ -85,7 +85,7 @@ export const Dark: Story = {
 /** Interaction test: clicking the checkbox toggles it on. */
 export const ToggleInteraction: Story = {
   tags: ["test", "!autodocs", "!dev"],
-  args: { defaultChecked: false },
+  args: { defaultChecked: false, "aria-label": "Toggle me" },
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement)
     const checkbox = canvas.getByRole("checkbox")

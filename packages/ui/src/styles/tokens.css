@@ -20,7 +20,7 @@
   /* Brand / neutral palette */
   --primitive-white: #fff;
   --primitive-black: #000000;
-  --primitive-blue-500: #3e8acc;
+  --primitive-blue-500: #2e78b6;
   --primitive-slate-500: #6c757d;
 
   /* Editor neutrals */
@@ -55,7 +55,7 @@
   /* Home text (light). text-muted is one step lighter than secondary but still
      clears WCAG AA (4.5:1) on every light surface incl. sunken (#616c7a = 5.0:1
      on cards, 4.71:1 on sunken); a lighter muted drops below AA on raised/sunken. */
-  --primitive-text-primary: #1e2530;
+  --primitive-text-primary: #12161f;
   --primitive-text-secondary: #54606f;
   --primitive-text-muted: #616c7a;
 
@@ -118,7 +118,7 @@
   --primitive-banner-warning-text: #122038;
   --primitive-banner-warning-muted: #4e5e79;
   --primitive-banner-warning-btn-bg: #f7faff;
-  --primitive-banner-warning-btn-text: #b7791f;
+  --primitive-banner-warning-btn-text: #8c5a10;
   --primitive-banner-warning-btn-border: #f6d28b;
   --primitive-banner-warning-btn-hover: #f5e8c8;
 

@@ -63,9 +63,17 @@ export const Dark: Story = {
   parameters: { controls: { disable: true } },
   render: () => (
     <div className="flex w-80 flex-col gap-3">
-      <Textarea placeholder="Type your message…" />
-      <Textarea aria-invalid defaultValue="Something is off" />
-      <Textarea disabled defaultValue="Read-only content" />
+      <Textarea aria-label="Default" placeholder="Type your message…" />
+      <Textarea
+        aria-label="Invalid"
+        aria-invalid
+        defaultValue="Something is off"
+      />
+      <Textarea
+        aria-label="Disabled"
+        disabled
+        defaultValue="Read-only content"
+      />
     </div>
   ),
 }

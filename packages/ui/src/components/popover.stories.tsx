@@ -101,7 +101,7 @@ export const Controlled: Story = {
       <PopoverTrigger render={<Button variant="outline" />}>
         Open popover
       </PopoverTrigger>
-      <PopoverContent>
+      <PopoverContent aria-label="Open popover">
         <p>This popover is open by default.</p>
       </PopoverContent>
     </Popover>

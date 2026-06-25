@@ -46,7 +46,7 @@ export const HelpMenuOpens: StoryObj<typeof HomeHelpMenu> = {
     await userEvent.click(
       canvas.getByRole("button", { name: /help and legal/i })
     )
-    const menu = await canvas.findByRole("menu")
+    const menu = await canvas.findByRole("group", { name: /help and legal/i })
     await expect(within(menu).getByText("Imprint")).toBeInTheDocument()
     await expect(within(menu).getByText("Privacy")).toBeInTheDocument()
   },

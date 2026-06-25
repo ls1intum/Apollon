@@ -24,9 +24,12 @@ const meta = {
   decorators: [
     WebappProviders,
     (Story) => (
-      // The header lives on the editor's dark canvas chrome; give it that
-      // backdrop and the full overlay width so the islands lay out as shipped.
-      <div className="bg-[var(--navbar-bg)] p-3">
+      // The header lives on the editor's THEME-FOLLOWING chrome surface (the
+      // islands paint `.apollon-glass` from `--apollon-background`, text uses
+      // `--apollon-chrome-text` — both flip with the theme). Render on that same
+      // themed surface (not a fixed-dark plate) so the story reflects real
+      // contrast and the islands lay out as shipped.
+      <div className="bg-[var(--apollon-chrome-surface)] p-3">
         <Story />
       </div>
     ),

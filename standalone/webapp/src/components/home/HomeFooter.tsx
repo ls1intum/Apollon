@@ -115,7 +115,7 @@ export const HomeHelpMenu = ({ className }: { className?: string }) => {
       <button
         type="button"
         aria-label="Help and legal"
-        aria-haspopup="menu"
+        aria-haspopup="true"
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
         className="flex h-9 w-9 items-center justify-center rounded-md text-[color:var(--apollon-chrome-text-muted)] transition-colors hover:bg-[var(--apollon-chrome-surface-hover)] hover:text-[color:var(--apollon-chrome-text)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--apollon-chrome-accent)]"
@@ -123,8 +123,13 @@ export const HomeHelpMenu = ({ className }: { className?: string }) => {
         <MoreHorizontal className="size-5" aria-hidden />
       </button>
       {open && (
+        // A disclosure panel of plain links/buttons — not an ARIA menu widget
+        // (no roving focus / arrow-key nav), so `role="menu"` was invalid: it
+        // forced its `button`/`a` children to be `menuitem` (axe:
+        // aria-required-children). A labelled group is the honest semantics.
         <div
-          role="menu"
+          role="group"
+          aria-label="Help and legal"
           className="absolute right-0 z-50 mt-1 flex min-w-44 flex-col items-start gap-2 rounded-md border border-border bg-card p-3 text-sm shadow-sm"
         >
           <HelpLinks onSelect={() => setOpen(false)} />

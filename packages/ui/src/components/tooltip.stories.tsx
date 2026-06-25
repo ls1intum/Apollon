@@ -112,7 +112,11 @@ export const RichContent: Story = {
       <TooltipContent>
         <div className="flex flex-col gap-1">
           <span className="font-medium">Save document</span>
-          <span className="text-muted-foreground">Press Cmd + S</span>
+          {/* The tooltip surface is inverted (`bg-foreground text-background`),
+              so a dimmed secondary line must dim the *background* colour, not
+              use `text-muted-foreground` (a mid-gray tuned for light surfaces —
+              ~3.4:1 on the dark tooltip). `text-background/70` stays legible. */}
+          <span className="text-background/70">Press Cmd + S</span>
         </div>
       </TooltipContent>
     </Tooltip>

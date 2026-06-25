@@ -64,6 +64,15 @@ type Story = StoryObj<typeof meta>
 
 /** A local diagram: open, duplicate, delete. */
 export const LocalDiagram: Story = {
+  parameters: {
+    a11y: {
+      // The opened Base UI dropdown injects its own focus-guard sentinels
+      // (`aria-hidden` spans with `tabindex="0"`) to trap Tab focus. They are a
+      // framework focus-management artifact, not our markup, and only exist while
+      // this interaction story holds the menu open.
+      options: { rules: { "aria-hidden-focus": { enabled: false } } },
+    },
+  },
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement)
     await userEvent.click(

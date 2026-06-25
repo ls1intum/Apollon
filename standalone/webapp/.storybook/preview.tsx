@@ -164,8 +164,21 @@ const preview: Preview = {
       },
     },
     a11y: {
-      // 'todo' surfaces a11y violations in the test UI without failing CI.
-      test: "todo",
+      // 'error' fails the suite on any a11y violation (axe-core) so they can't
+      // silently accumulate. Scope a narrow per-story disable (with a reason)
+      // for justified false positives — never reintroduce a global off-switch.
+      test: "error",
+      // Exclude Base UI's focus-guard sentinels from the scan. Base UI traps Tab
+      // focus inside an open overlay (menu/dialog/tooltip) with two
+      // `<span data-base-ui-focus-guard tabindex="0" aria-hidden="true">`
+      // sentinels. That `tabindex=0` + `aria-hidden` combination is INTENTIONAL
+      // framework markup, but axe's `aria-hidden-focus` rule flags it — and the
+      // sentinels live on `document.body` (the overlay portals there), so an
+      // overlay one story leaves open leaks into the NEXT story's body-wide scan,
+      // producing a non-deterministic `aria-hidden-focus` failure on innocent
+      // stories. These nodes are never author content and nothing we author can
+      // fix them, so they are excluded globally rather than chased per story.
+      context: { exclude: ["[data-base-ui-focus-guard]"] },
     },
     options: {
       storySort: {

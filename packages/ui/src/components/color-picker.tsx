@@ -91,7 +91,7 @@ function ColorPicker({
           )}
           style={{ backgroundColor: selected || "transparent" }}
         />
-        <PopoverContent className="w-auto" align="start">
+        <PopoverContent className="w-auto" align="start" aria-label={ariaLabel}>
           <ToggleGroup
             aria-label={ariaLabel}
             spacing={4}

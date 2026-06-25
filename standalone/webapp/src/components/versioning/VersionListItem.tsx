@@ -34,13 +34,21 @@ import {
 import { isNamedVersion } from "@/lib/version/predicates"
 
 /**
- * Wraps the clickable row body. The container injects a real `<Link>` to
- * `?version=<id>` so cmd/ctrl/middle-click opens the version's preview in a new
- * tab (same as gallery cards); plain left-click stays in-SPA via `onPreview`.
- * `(children) => children` so the {@link VersionListItemView} stays router-
- * agnostic (stories render it without a router and just get a plain wrapper).
+ * A REAL accessible `<Link>` (the container injects it) that carries the row's
+ * accessible name and a stretched `after:absolute after:inset-0` hit target, so
+ * the whole row is clickable. cmd/ctrl/middle-click opens the version's preview
+ * in a new tab (same as the gallery cards); plain left-click stays in-SPA via
+ * `onPreview`.
+ *
+ * It is a SIBLING of the row body and the kebab — never a wrapper — and the row
+ * is a plain non-interactive `<li>`, so nothing nests interactive content
+ * inside a widget role (axe: nested-interactive). Being focusable with an
+ * accessible name, the link is the per-row keyboard tab-stop + Enter target
+ * (like the diagram cards); the kebab is a focusable sibling above it.
+ * Omitted in router-less stories (the view then just renders the plain body).
+ * Receives the accessible name to put on the link's `aria-label`.
  */
-type RowLink = (children: ReactNode) => ReactNode
+type RowLink = (accessibleName: string) => ReactNode
 
 interface ViewProps {
   version: PendingVersion
@@ -67,8 +75,8 @@ interface ViewProps {
    */
   hasPermalink?: boolean
   /**
-   * Wraps the clickable row body — the container injects a TanStack `<Link>`
-   * for new-tab preview; defaults to a plain wrapper for router-less stories.
+   * Renders a stretched `<Link>` overlay for new-tab preview — the container
+   * injects a TanStack `<Link>`; omitted for router-less stories.
    */
   rowLink?: RowLink
   onPreview: (versionId: string) => void
@@ -280,23 +288,36 @@ export function VersionListItemView({
     </div>
   )
 
-  // A real `<Link>` (injected by the container) so cmd/ctrl/middle-click opens
-  // the version's preview in a new tab; plain left-click stays in-SPA via
-  // `onPreview`. Non-clickable rows (pending / editing) render the body plain.
-  const wrappedBody =
-    clickable && rowLink ? rowLink(rowBody) : <Fragment>{rowBody}</Fragment>
+  // The row's accessible name — carried by the real `<Link>` (or, in stories
+  // without a link, left on the body since the plain `<li>` needs none).
+  const accessibleName = `Version ${
+    versionNumber ? `#${versionNumber}` : "(saving)"
+  }, created ${ago}${label ? ` — ${label}` : ""}`
+
+  // The stretched `<Link>` (container-injected) carries the accessible name and
+  // a stretched `after:` hit target, making the whole row the click/new-tab
+  // target. It sits ABOVE the body but BELOW the kebab (z-20). It is a sibling,
+  // not a wrapper, so no interactive nesting. Clickable rows only.
+  const stretchedLink = clickable && rowLink ? rowLink(accessibleName) : null
 
   return (
     <Fragment>
       <li
         ref={ref}
         id={`version-row-${version.id}`}
-        role="option"
-        aria-selected={isPreviewing}
-        aria-label={`Version ${
-          versionNumber ? `#${versionNumber}` : "(saving)"
-        }, created ${ago}${label ? ` — ${label}` : ""}`}
-        onClick={rowLink ? undefined : handleRowClick}
+        // Explicit `role="listitem"` (vs leaning on the native `<li>`→`<ul>`
+        // pairing): Storybook wraps decorators, so the `<ul>` parent isn't
+        // always the literal DOM parent of this `<li>` — the role only needs a
+        // `role="list"` ANCESTOR (axe: aria-required-parent), which both the
+        // drawer's `<ul>` and the stories' wrapper provide.
+        role="listitem"
+        aria-current={isPreviewing ? true : undefined}
+        // With the stretched link present it owns the click + the accessible
+        // name (a real, focusable `<Link>`, like the gallery cards) — so the
+        // row stays a plain non-interactive `<li>` (no nested-interactive). The
+        // kebab is a focusable sibling above the link. Without a link (stories)
+        // the row body itself triggers the preview.
+        onClick={stretchedLink ? undefined : handleRowClick}
         className={cn(
           "relative flex list-none items-start gap-3 px-4 py-2 transition-colors data-[clickable=true]:cursor-pointer data-[clickable=true]:hover:[background:var(--row-hover-bg)]",
           className
@@ -304,7 +325,10 @@ export function VersionListItemView({
         data-clickable={clickable || undefined}
         style={
           {
-            opacity: version.pending ? 0.7 : 1,
+            // 0.85 (not lower): still reads as a dimmed optimistic row, but
+            // keeps the already-muted caption text above WCAG AA — the row
+            // opacity multiplies into the text colour.
+            opacity: version.pending ? 0.85 : 1,
             background: isPreviewing ? ROW_SELECTED_BG : "transparent",
             borderLeft: version.failed
               ? "3px solid var(--apollon-alert-danger-color)"
@@ -314,9 +338,10 @@ export function VersionListItemView({
           } as CSSProperties
         }
       >
-        {wrappedBody}
+        {rowBody}
+        {stretchedLink}
 
-        <div className="absolute top-3 right-2">
+        <div className="absolute top-3 right-2 z-20">
           <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
             <DropdownMenuTrigger
               aria-label="Version actions"
@@ -444,37 +469,31 @@ export const VersionListItem: FC<ContainerProps> = ({
     }
   }
 
-  // Real `<Link>` to `?version=<id>` so cmd/ctrl/middle-click opens the
-  // preview in a new tab (same as gallery cards); plain left-click stays
-  // in-SPA via `onPreview`. `tabIndex={-1}` keeps it out of the listbox tab
-  // order — keyboard nav drives selection from the list.
-  const rowLink: RowLink = (children) => (
+  // Real, focusable `<Link>` to `?version=<id>` so cmd/ctrl/middle-click opens
+  // the preview in a new tab (same as gallery cards); plain left-click stays
+  // in-SPA via `onPreview`. It is a SIBLING of the body + kebab (never a
+  // wrapper) and the row is a plain non-interactive `<li>`, so nothing nests
+  // interactive content (axe: nested-interactive). It carries the row's
+  // accessible name and is the per-row keyboard tab-stop + Enter target. The
+  // stretched `after:` pseudo-element makes the whole row the hit target; the
+  // kebab sits above it (z-20) and stays clickable.
+  const rowLink: RowLink = (accessibleName) => (
     <Link
       to="."
       search={(prev) => ({
         ...prev,
         [PREVIEW_VERSION_PARAM]: props.version.id,
       })}
-      tabIndex={-1}
+      aria-label={accessibleName}
       onClick={(e) => {
         // Let the browser handle modified clicks (open in a new tab/window).
         if (e.metaKey || e.ctrlKey || e.shiftKey) return
         e.preventDefault()
         props.onPreview(props.version.id)
       }}
-      style={{
-        display: "flex",
-        flex: 1,
-        minWidth: 0,
-        gap: "12px",
-        alignItems: "flex-start",
-        textDecoration: "none",
-        color: "inherit",
-        cursor: "pointer",
-      }}
-    >
-      {children}
-    </Link>
+      className="absolute inset-0 outline-none after:absolute after:inset-0 after:z-10 after:content-[''] focus-visible:ring-2 focus-visible:ring-inset focus-visible:[--tw-ring-color:var(--apollon-chrome-accent)]"
+      style={{ cursor: "pointer" }}
+    />
   )
 
   return (

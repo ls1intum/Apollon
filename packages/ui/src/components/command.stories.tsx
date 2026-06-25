@@ -152,6 +152,15 @@ export const Dark: Story = {
  */
 export const Behavior: Story = {
   tags: ["test", "!autodocs", "!dev"],
+  parameters: {
+    a11y: {
+      // This test types a non-matching query, so cmdk's `role="listbox"` ends up
+      // with only the "no results" empty state and zero `option` children — axe's
+      // aria-required-children flags the momentarily-empty listbox. That empty
+      // result set is the exact state under test, not a markup defect.
+      options: { rules: { "aria-required-children": { enabled: false } } },
+    },
+  },
   render: Default.render,
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
