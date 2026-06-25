@@ -107,7 +107,12 @@ export function HeaderTitleIsland() {
   }, [editor])
 
   return (
-    <Island className="apollon-chrome-title-island">
+    // The title island FILLS the centre track (`w-full`) so the actions stay
+    // pinned right with no dead gap floating between them — the same "centre
+    // island fills its track, borderless input fills the island" rule the home
+    // search island follows. The island is `flex-1` inside the spacer; the input
+    // is `flex-1 min-w-0` so it consumes the island and ellipsises when tight.
+    <Island className="apollon-chrome-title-island w-full">
       <IslandInput
         value={title}
         onChange={(e) => {
@@ -118,14 +123,10 @@ export function HeaderTitleIsland() {
         // "title" not "name" so it doesn't collide with the template dialog's
         // "Name" field under getByLabel('Name') in the e2e suite.
         aria-label="Diagram title"
-        // Grow the field with the name (in ch), clamped so short titles stay
-        // compact and long ones grow — maxWidth then bounds it in px. NOT
-        // capped by a vw fraction: the field uses the real slack left in the
-        // header track and only shrinks (ellipsis) when that track is tight.
-        size={Math.min(Math.max((title || "Untitled diagram").length, 12), 56)}
-        // Left-aligned, grows with the name up to 560px (and never past the
-        // track via 100%), then ellipsises — no artificial vw shrink.
-        style={{ maxWidth: "min(560px, 100%)" }}
+        // Fills the island and ellipsises when the track is tight — the field
+        // uses the real slack left in the header track (no `size`/maxWidth cap
+        // that would leave the rest of the track as dead glass).
+        className="flex-1"
       />
     </Island>
   )

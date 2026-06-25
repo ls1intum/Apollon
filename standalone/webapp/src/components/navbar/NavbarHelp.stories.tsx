@@ -7,8 +7,10 @@ import {
 import { NavbarHelp } from "./NavbarHelp"
 
 /**
- * The editor's Help dropdown: editor walkthrough, About, bug report, playground,
- * and the legal links (Imprint / Privacy). It stamps the originating path into
+ * The editor's Help dropdown is the SHARED `HomeHelpMenu` in its `editor`
+ * variant: the editor walkthrough leads, then the shared tail (About → Releases →
+ * GitHub → Report a problem), then Open Playground, a separator, and the legal
+ * links (Privacy → Imprint). The legal links stamp the originating path into
  * router state so the legal pages can offer a one-tap return to the diagram.
  */
 const meta = {

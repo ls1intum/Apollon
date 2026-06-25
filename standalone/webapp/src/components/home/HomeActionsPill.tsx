@@ -1,31 +1,17 @@
 import { useState } from "react"
-import {
-  Moon,
-  MoreVertical,
-  SlidersHorizontal,
-  Star,
-  Sun,
-  Upload,
-} from "lucide-react"
-import { Link } from "@tanstack/react-router"
+import { MoreVertical, SlidersHorizontal, Star, Upload } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@tumaet/ui/components/dropdown-menu"
 import { Badge } from "@tumaet/ui/components/badge"
 import type { UMLDiagramType } from "@tumaet/apollon"
-import { releasesLink, repositoryLink } from "@/constants/version"
-import { bugReportURL } from "@/constants/urls"
 import { ISLAND_LAYOUT_STYLE } from "@/components/navbar/islandPrimitives"
-import { useModalContext } from "@/contexts"
-import { readNavFrom } from "@/lib/navProvenance"
-import { useLocation } from "@tanstack/react-router"
-import { useThemeStore } from "@/stores/useThemeStore"
-import { useShallow } from "zustand/shallow"
+import { ThemeSwitcherMenu } from "@/components/navbar/ThemeSwitcher"
 import { RefinePopover } from "./RefinePopover"
+import { HelpMenuItems } from "./HomeHelpMenu"
 import type { HomeChrome } from "./useHomeChrome"
 
 /**
@@ -53,17 +39,6 @@ export function HomeActionsPill({
   onImportJson?: () => void
 }) {
   const [menuOpen, setMenuOpen] = useState(false)
-  const { currentTheme, toggleTheme } = useThemeStore(
-    useShallow((state) => ({
-      currentTheme: state.currentTheme,
-      toggleTheme: state.toggleTheme,
-    }))
-  )
-  const { openModal } = useModalContext()
-  // Forward the inherited origin so a legal hop still returns to the diagram.
-  const from = readNavFrom(useLocation().state)
-  const legalLinkState = from ? { from } : undefined
-  const isDarkMode = currentTheme === "dark"
   const closeMenu = () => setMenuOpen(false)
 
   return (
@@ -145,83 +120,15 @@ export function HomeActionsPill({
         <DropdownMenuContent
           align="end"
           side="bottom"
-          className="w-56 max-w-[calc(100vw-1rem)] [&_[data-slot=dropdown-menu-item]]:min-h-11"
+          className="w-60 max-w-[calc(100vw-1rem)] [&_[data-slot=dropdown-menu-item]]:min-h-11"
         >
-          {/* Theme leads; the remaining items mirror `HomeHelpMenu` exactly
-              (About → Releases → GitHub → Report, separator, Privacy/Imprint)
-              so the home's Help item SET/ORDER is identical everywhere. */}
-          <DropdownMenuItem
-            onClick={() => {
-              toggleTheme()
-              closeMenu()
-            }}
-            aria-label={
-              isDarkMode ? "Switch to light mode" : "Switch to dark mode"
-            }
-          >
-            {isDarkMode ? <Sun aria-hidden /> : <Moon aria-hidden />}
-            Theme
-          </DropdownMenuItem>
+          {/* Theme leads via the SHARED `ThemeSwitcherMenu asMenuItem` (identical
+              to the editor mobile overflow's Theme row), then the SHARED
+              `HelpMenuItems` body — the same About → Releases → GitHub → Report,
+              separator, Privacy → Imprint set/order used by every Help control. */}
+          <ThemeSwitcherMenu asMenuItem onToggle={closeMenu} />
           <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={() => {
-              openModal("AboutModal")
-              closeMenu()
-            }}
-          >
-            About
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            render={
-              <a
-                href={releasesLink}
-                target="_blank"
-                rel="noreferrer"
-                onClick={closeMenu}
-              >
-                Releases
-              </a>
-            }
-          />
-          <DropdownMenuItem
-            render={
-              <a
-                href={repositoryLink}
-                target="_blank"
-                rel="noreferrer"
-                onClick={closeMenu}
-              >
-                GitHub
-              </a>
-            }
-          />
-          <DropdownMenuItem
-            render={
-              <a
-                href={bugReportURL}
-                target="_blank"
-                rel="noreferrer"
-                onClick={closeMenu}
-              >
-                Report a problem
-              </a>
-            }
-          />
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            render={
-              <Link to="/privacy" state={legalLinkState} onClick={closeMenu}>
-                Privacy
-              </Link>
-            }
-          />
-          <DropdownMenuItem
-            render={
-              <Link to="/imprint" state={legalLinkState} onClick={closeMenu}>
-                Imprint
-              </Link>
-            }
-          />
+          <HelpMenuItems onSelect={closeMenu} />
         </DropdownMenuContent>
       </DropdownMenu>
     </div>

@@ -418,7 +418,13 @@ export const ApollonLocal: FC = () => {
   // All hooks above run unconditionally. Creation happens from the home
   // gallery; a missing diagram is a not-found state, not an auto-create.
   if (!diagramId || !diagram) {
-    return <ErrorPage message="Diagram not found." buttonLabel="All diagrams" />
+    return (
+      <ErrorPage
+        message="Diagram not found."
+        buttonLabel="All diagrams"
+        withChrome={false}
+      />
+    )
   }
 
   return (

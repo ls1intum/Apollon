@@ -8,6 +8,7 @@ import { useModalContext } from "@/contexts"
 import { DiagramGallerySkeleton } from "@/components/home/DiagramGallerySkeleton"
 import { HomeHeaderRow } from "@/components/home/HomeHeaderRow"
 import { HomeNewFab } from "@/components/home/HomeNewFab"
+import { PageShell } from "@/components/PageShell"
 import { useHomeChrome } from "@/components/home/useHomeChrome"
 import { getDiagramTypeLabel } from "@/components/home/diagramTypeMeta"
 import { pruneExpiredSharedDiagrams } from "@/utils/sharedDiagramStorage"
@@ -94,7 +95,21 @@ export const HomePage = () => {
   )
 
   return (
-    <div className="home-canvas-bg relative flex h-full min-h-0 flex-col overflow-hidden bg-background text-foreground transition-colors duration-200">
+    <PageShell
+      // Account for the floating New-diagram FAB on phones (pb-24) so the last
+      // gallery row clears it; less bottom room is needed on md+ where the FAB
+      // is hidden. Also pad past the bottom safe-area inset on notched devices.
+      mainClassName="pb-[max(6rem,calc(env(safe-area-inset-bottom,0px)+2.5rem))] md:pb-[max(2.5rem,env(safe-area-inset-bottom,0px))]"
+      header={
+        <HomeHeaderRow
+          chrome={chrome}
+          count={count}
+          typeOptions={typeOptions}
+          onNewDiagram={openNewDiagram}
+          onImportJson={triggerJsonImport}
+        />
+      }
+    >
       {/* Off-screen file input the Import button triggers programmatically. */}
       <input
         ref={jsonImportRef}
@@ -106,27 +121,20 @@ export const HomePage = () => {
         tabIndex={-1}
       />
 
-      <main className="home-page-scrollbar app-scroll-y relative z-10 w-full min-h-0 flex-1 pb-24 md:pb-10">
-        <div className="home-content-x mx-auto flex w-full max-w-[1536px] flex-col gap-6 pt-5 md:pt-6">
-          <HomeHeaderRow
+      {/* Top margin restores the old gap-6 rhythm between the header band and
+          the first gallery row now that they live in separate shell wrappers. */}
+      <div className="mt-4">
+        <Suspense fallback={<DiagramGallerySkeleton />}>
+          <DiagramGallery
             chrome={chrome}
-            count={count}
-            typeOptions={typeOptions}
-            onNewDiagram={openNewDiagram}
-            onImportJson={triggerJsonImport}
+            highlightSharedDiagramId={highlightSharedDiagramId}
+            onCountChange={setCount}
+            onTypeOptionsChange={setPresentTypes}
           />
-          <Suspense fallback={<DiagramGallerySkeleton />}>
-            <DiagramGallery
-              chrome={chrome}
-              highlightSharedDiagramId={highlightSharedDiagramId}
-              onCountChange={setCount}
-              onTypeOptionsChange={setPresentTypes}
-            />
-          </Suspense>
-        </div>
-      </main>
+        </Suspense>
+      </div>
 
       <HomeNewFab onNewDiagram={openNewDiagram} />
-    </div>
+    </PageShell>
   )
 }

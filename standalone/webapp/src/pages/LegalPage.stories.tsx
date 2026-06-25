@@ -116,8 +116,13 @@ export const RendersContent: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
+    // Scope to the `<main>` content region: PageShell renders the legal prose in
+    // `<main>`, a SIBLING of the sticky `<header role="banner">` (kept top-level
+    // so axe's landmark-banner-is-top-level passes). Asserting the content lands
+    // in `main` pins that structure, not just that the text exists somewhere.
+    const main = within(await canvas.findByRole("main"))
     await expect(
-      await canvas.findByText(/example organization/i)
+      await main.findByText(/example organization/i)
     ).toBeInTheDocument()
   },
 }

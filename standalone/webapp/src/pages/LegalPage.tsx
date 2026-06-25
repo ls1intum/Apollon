@@ -7,6 +7,8 @@ import {
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { Alert, AlertDescription } from "@tumaet/ui/components/alert"
+import { ChromeSubHeader } from "@/components/navbar/ChromeSubHeader"
+import { PageShell } from "@/components/PageShell"
 import { environment } from "@/environment"
 import {
   isSafeLegalHref,
@@ -106,47 +108,54 @@ export function LegalPage({
   }, [page, profile, resolver])
 
   return (
-    <div className="home-canvas-bg h-full overflow-hidden bg-background text-foreground">
-      <main className="home-page-scrollbar app-scroll-y">
-        <div className="home-content-x mx-auto w-full max-w-3xl pt-5 md:pt-6">
-          <h1 className="mb-2 text-2xl font-semibold text-foreground md:text-3xl">
-            {title}
-          </h1>
+    <PageShell
+      header={<ChromeSubHeader />}
+      // Legal prose wants a readable measure, not the home's full 1536px grid.
+      contentClassName="max-w-3xl"
+      // Pad the long copy past the bottom safe-area inset so the final line
+      // clears a home indicator and isn't flush against the viewport edge.
+      mainClassName="pb-[max(2.5rem,calc(env(safe-area-inset-bottom,0px)+1.5rem))]"
+    >
+      {/* mt-2 restores the small gap the header band's pb-2 + the old pt left
+          between the band and the page heading. */}
+      <div className="mt-2">
+        <h1 className="mb-2 text-2xl font-semibold text-foreground md:text-3xl">
+          {title}
+        </h1>
 
-          {resolved?.source === "disclaimer" ? (
-            <Alert
-              variant="destructive"
-              data-testid="legal-disclaimer-banner"
-              className="my-4"
+        {resolved?.source === "disclaimer" ? (
+          <Alert
+            variant="destructive"
+            data-testid="legal-disclaimer-banner"
+            className="my-4"
+          >
+            <AlertDescription>{DISCLAIMER_BANNER}</AlertDescription>
+          </Alert>
+        ) : null}
+
+        {error ? (
+          <Alert variant="destructive" className="my-4">
+            <AlertDescription>{ERROR_COPY}</AlertDescription>
+          </Alert>
+        ) : null}
+
+        {resolved ? (
+          <article
+            lang="en"
+            data-testid="legal-content"
+            data-source={resolved.source}
+            className="legal-content"
+          >
+            <ReactMarkdown
+              skipHtml
+              remarkPlugins={[remarkGfm]}
+              components={MARKDOWN_COMPONENTS}
             >
-              <AlertDescription>{DISCLAIMER_BANNER}</AlertDescription>
-            </Alert>
-          ) : null}
-
-          {error ? (
-            <Alert variant="destructive" className="my-4">
-              <AlertDescription>{ERROR_COPY}</AlertDescription>
-            </Alert>
-          ) : null}
-
-          {resolved ? (
-            <article
-              lang="en"
-              data-testid="legal-content"
-              data-source={resolved.source}
-              className="legal-content"
-            >
-              <ReactMarkdown
-                skipHtml
-                remarkPlugins={[remarkGfm]}
-                components={MARKDOWN_COMPONENTS}
-              >
-                {resolved.markdown}
-              </ReactMarkdown>
-            </article>
-          ) : null}
-        </div>
-      </main>
-    </div>
+              {resolved.markdown}
+            </ReactMarkdown>
+          </article>
+        ) : null}
+      </div>
+    </PageShell>
   )
 }

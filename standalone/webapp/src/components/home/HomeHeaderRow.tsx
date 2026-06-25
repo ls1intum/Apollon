@@ -54,9 +54,7 @@ export function HomeHeaderRow({
     // own `pt-5/md:pt-6` is the resting offset, so there is no layout jump — the
     // band simply stops at `top` once that padding scrolls past. A small bottom
     // padding gives the floating island shadow room to read over the first row.
-    <div
-      className="sticky top-[calc(var(--safe-area-inset-top,0px)+0.75rem)] z-20 flex flex-col gap-1 pb-2 md:top-[calc(var(--safe-area-inset-top,0px)+1rem)]"
-    >
+    <div className="sticky top-[calc(var(--safe-area-inset-top,0px)+0.75rem)] z-20 flex flex-col gap-1 pb-2 md:top-[calc(var(--safe-area-inset-top,0px)+1rem)]">
       {/* The home's single page heading — rendered ONCE here (outside the
           md-gated bands) so exactly one visually-hidden <h1> exists at every
           width. The desktop band shows a visible "Your diagrams" label aside the
@@ -153,8 +151,9 @@ function HomeSearchIsland({
         onChange={(event) => chrome.setSearchTerm(event.target.value)}
         placeholder="Search diagrams"
         aria-label="Search diagrams by name"
+        // Fills the island (no maxWidth cap that would leave the rest of the
+        // grown centre island as dead glass on wide viewports).
         className="flex-1"
-        style={{ maxWidth: "min(520px, 100%)" }}
       />
       <span
         aria-hidden

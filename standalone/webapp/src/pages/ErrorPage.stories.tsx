@@ -3,9 +3,12 @@ import { expect, within } from "storybook/test"
 import { ErrorPage } from "./ErrorPage"
 
 /**
- * The full-page error/fallback screen. Shows a title, a message, and a router
- * `<Link>` back to a recovery destination (defaults to the diagram dashboard).
- * All four props have sensible defaults so it doubles as a generic 404/500.
+ * The full-page error/fallback screen. Renders inside `PageShell`, so a sticky
+ * chrome header (with its own "All diagrams" back link) sits above a `<main>`
+ * holding the title, message, and a router `<Link>` recovery CTA. The CTA's
+ * default label is "Back to all diagrams" — distinct from the header's terse
+ * "All diagrams" so the two links never collide on accessible name. All props
+ * have sensible defaults so it doubles as a generic 404/500.
  */
 const meta = {
   title: "Webapp/Pages/ErrorPage",
@@ -14,7 +17,7 @@ const meta = {
   args: {
     title: "Oops!",
     message: "Something went wrong.",
-    buttonLabel: "All diagrams",
+    buttonLabel: "Back to all diagrams",
     backPath: "/",
   },
   argTypes: {
@@ -33,8 +36,14 @@ type Story = StoryObj<typeof meta>
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    const link = await canvas.findByRole("link", { name: /all diagrams/i })
-    await expect(link).toHaveAttribute("href", "/")
+    // Scope to the `<main>` content region: the chrome header also carries an
+    // "All diagrams" back link, so an unscoped /all diagrams/i query would match
+    // both. The recovery CTA lives in `main` and reads "Back to all diagrams".
+    const main = within(await canvas.findByRole("main"))
+    const cta = await main.findByRole("link", {
+      name: /back to all diagrams/i,
+    })
+    await expect(cta).toHaveAttribute("href", "/")
   },
 }
 
