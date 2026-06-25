@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router"
 import { useEffect, useRef, useState } from "react"
 import { Button } from "@tumaet/ui/components/button"
+import { ShareIcon } from "lucide-react"
 import {
   Tooltip,
   TooltipContent,
@@ -137,8 +138,10 @@ export function HeaderTitleIsland() {
 }
 
 /**
- * Top-right: document actions (File · Share · Save · Help) then view/identity
- * (Version history · theme), split by a hairline group divider.
+ * Top-right: document/view actions (File · Share · Save · Version history) then,
+ * after a SINGLE group divider, the {Help, Theme} identity/view cluster — the
+ * IDENTICAL grouping used by `ChromeSubHeader` and the home band's actions
+ * island, so all three headers read as one pattern.
  */
 export function HeaderActionsIsland() {
   const { openModal } = useModalContext()
@@ -156,6 +159,9 @@ export function HeaderActionsIsland() {
                   className={navbarButtonStyle()}
                   onClick={() => openModal("SHARE", { dialogVariant: "home" })}
                 >
+                  {/* Action control → ONE leading lucide glyph, no caret —
+                      matching the editor mobile pill's Share icon. */}
+                  <ShareIcon className="size-4" aria-hidden />
                   Share
                 </Button>
               }
@@ -163,11 +169,11 @@ export function HeaderActionsIsland() {
             <TooltipContent>Share</TooltipContent>
           </Tooltip>
           <SaveLocalCopyButton labelClassName="hidden lg:inline" />
-          <NavbarHelp />
+          <VersionHistoryButton labelClassName="hidden lg:inline" />
         </div>
         <GroupDivider />
         <div className="flex items-center gap-0.5">
-          <VersionHistoryButton labelClassName="hidden lg:inline" />
+          <NavbarHelp />
           <ThemeSwitcherMenu />
         </div>
       </Island>

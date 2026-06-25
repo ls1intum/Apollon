@@ -5,6 +5,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@tumaet/ui/components/tooltip"
+import { Button } from "@tumaet/ui/components/button"
+import { Textarea } from "@tumaet/ui/components/textarea"
 import { Spinner } from "@tumaet/ui/components/spinner"
 import { Skeleton } from "@tumaet/ui/components/skeleton"
 import { HistoryIcon } from "lucide-react"
@@ -374,7 +376,12 @@ export const VersionSidebarBody: FC<Props> = ({
           className="flex flex-col items-stretch gap-1.5 px-4 pt-3 pb-2"
           style={{ borderBottom: "1px solid var(--apollon-chrome-border)" }}
         >
-          <textarea
+          {/* shadcn Textarea: visible border-input, rounded-lg, and a
+              focus-visible ring come from its `data-slot` CSS. We override the
+              default 64px min-height for a one-line composer (field-sizing-content
+              still grows it as the user types) and theme the chrome via the
+              shared --apollon-chrome-* tokens so it follows light/dark. */}
+          <Textarea
             rows={1}
             placeholder={t.createPlaceholder}
             value={draft}
@@ -384,10 +391,11 @@ export const VersionSidebarBody: FC<Props> = ({
             onKeyDown={handleComposerKeyDown}
             ref={composerRef}
             aria-label="Describe this version"
-            className="max-h-[6.5rem] w-full resize-none border-0 bg-transparent p-0 text-[0.85rem] outline-none placeholder:opacity-100 placeholder:[color:var(--ph)]"
+            className="max-h-[6.5rem] min-h-9 resize-none px-2.5 py-1.5 text-[0.85rem] placeholder:opacity-100 placeholder:[color:var(--ph)] focus-visible:border-[var(--apollon-chrome-accent)] focus-visible:ring-[color-mix(in_srgb,var(--apollon-chrome-accent)_40%,transparent)]"
             style={
               {
                 color: TEXT_PRIMARY,
+                borderColor: "var(--apollon-chrome-border)",
                 "--ph": TEXT_MUTED,
               } as CSSProperties
             }
@@ -401,8 +409,13 @@ export const VersionSidebarBody: FC<Props> = ({
           >
             {t.composerHint}
           </span>
-          <button
+          {/* shadcn Button (default variant) for structure, focus-visible ring,
+              and disabled handling. The accent is the drawer's chrome accent,
+              not the global `bg-primary`, so we override the surface via style
+              while keeping the shadcn disabled state themed with chrome tokens. */}
+          <Button
             type="button"
+            size="sm"
             onClick={handleCreate}
             disabled={submitting || !canSave}
             title={
@@ -414,7 +427,7 @@ export const VersionSidebarBody: FC<Props> = ({
                     ? "No changes since the last saved version"
                     : undefined
             }
-            className="inline-flex cursor-pointer items-center justify-center self-end rounded-[var(--apollon-chrome-radius-md)] px-3.5 py-1 text-sm font-semibold transition hover:brightness-[0.94] disabled:cursor-not-allowed disabled:[background:var(--apollon-chrome-surface-active)] disabled:[color:var(--apollon-chrome-text-muted)]"
+            className="self-end font-semibold hover:brightness-[0.94] disabled:[background:var(--apollon-chrome-surface-active)] disabled:[color:var(--apollon-chrome-text-muted)] disabled:opacity-100"
             style={{
               color: "var(--apollon-chrome-accent-contrast)",
               background: "var(--apollon-chrome-accent)",
@@ -428,7 +441,7 @@ export const VersionSidebarBody: FC<Props> = ({
             ) : (
               t.createButton
             )}
-          </button>
+          </Button>
         </div>
       )}
 
@@ -525,22 +538,28 @@ export const VersionSidebarBody: FC<Props> = ({
                   {/* span wrapper so the tooltip still shows on the disabled
                       button (a disabled button emits no pointer events). */}
                   <TooltipTrigger render={<span className="inline-flex" />}>
-                    <button
+                    {/* shadcn Button (outline) — bordered CTA themed via the
+                        chrome tokens so it reads correctly on the glass surface
+                        in both light and dark. */}
+                    <Button
                       type="button"
+                      variant="outline"
+                      size="sm"
                       onClick={() => void handleCreate()}
                       disabled={submitting || !canSave}
-                      className="inline-flex cursor-pointer items-center justify-center rounded-md border px-3 py-1 text-sm font-medium transition-colors hover:[background:var(--row-hover-bg)] disabled:cursor-not-allowed disabled:[border-color:var(--apollon-chrome-border)] disabled:[color:var(--btn-disabled-color)]"
+                      className="hover:[background:var(--row-hover-bg)] disabled:[border-color:var(--apollon-chrome-border)] disabled:[color:var(--btn-disabled-color)] disabled:opacity-100"
                       style={
                         {
                           color: TEXT_PRIMARY,
                           borderColor: TEXT_MUTED,
+                          background: "transparent",
                           "--row-hover-bg": ROW_HOVER_BG,
                           "--btn-disabled-color": TEXT_MUTED,
                         } as CSSProperties
                       }
                     >
                       {t.emptyCtaLocal}
-                    </button>
+                    </Button>
                   </TooltipTrigger>
                   {(isEmptyDiagram || !canSave) && (
                     <TooltipContent>
@@ -599,11 +618,15 @@ export const VersionSidebarBody: FC<Props> = ({
             )}
             {nextCursor && (
               <li className="list-none px-4 py-3 text-center">
-                <button
+                {/* shadcn Button (ghost) — borderless "load older" affordance
+                    that themes its hover via the chrome row-hover token. */}
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => loadMoreVersions(diagramId)}
                   disabled={loading}
-                  className="cursor-pointer rounded-md bg-transparent px-2 py-1 text-sm font-medium transition-colors hover:[background:var(--row-hover-bg)] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="hover:[background:var(--row-hover-bg)]"
                   style={
                     {
                       color: TEXT_PRIMARY,
@@ -612,7 +635,7 @@ export const VersionSidebarBody: FC<Props> = ({
                   }
                 >
                   {t.loadOlder}
-                </button>
+                </Button>
               </li>
             )}
           </ul>
@@ -653,12 +676,30 @@ export const VersionRail: FC<Props> = ({
       // and bounded in height (scrolls internally) so it reads as an island,
       // not a column. Width + margins are what the band measures as the
       // reserved right inset (no reflow); the height cap doesn't affect width.
-      className="apollon-glass apollon-history-panel apollon-chrome-island m-2.5 self-start overflow-hidden rounded-[var(--apollon-chrome-radius-lg)]"
+      //
+      // The host node returned by `getRegionElement("right-rail")` is registered
+      // with `interactive: false` (see apollon-editor.tsx), so its ControlSlot
+      // frame stays `pointer-events: none` and carries NO `nopan/nodrag/nowheel`.
+      // A portal mounted into it therefore has to re-create the interactive
+      // ControlSlot mechanism itself, or pointer events fall through and pan the
+      // React Flow canvas. We mirror OverlayLayer's interactive branch exactly:
+      //   (a) `pointer-events: auto` (re-opt into receiving events),
+      //   (b) `nopan nodrag nowheel` (stop React Flow's drag/zoom/wheel
+      //       behaviour from claiming the gesture), and
+      //   (c) capture-phase `stopPropagation` on pointer/mouse/touch-down so the
+      //       canvas's listeners never see the gesture in the first place.
+      // All three are required: (a) makes the surface receive the event, (b)+(c)
+      // keep React Flow from panning/zooming when it does.
+      className="apollon-glass apollon-history-panel apollon-chrome-island nopan nodrag nowheel m-2.5 self-start overflow-hidden rounded-[var(--apollon-chrome-radius-lg)]"
       style={{
         width: SIDEBAR_WIDTH,
         maxHeight: "min(640px, 100%)",
         minHeight: 0,
+        pointerEvents: "auto",
       }}
+      onPointerDownCapture={(e) => e.stopPropagation()}
+      onMouseDownCapture={(e) => e.stopPropagation()}
+      onTouchStartCapture={(e) => e.stopPropagation()}
     >
       <VersionSidebarBody
         diagramId={diagramId}

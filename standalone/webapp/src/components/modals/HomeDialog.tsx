@@ -5,6 +5,7 @@ import { DialogFooter } from "@tumaet/ui/components/dialog"
 import { Input } from "@tumaet/ui/components/input"
 import { Field, FieldLabel } from "@tumaet/ui/components/field"
 import { Alert, AlertDescription } from "@tumaet/ui/components/alert"
+import { ModalFooterPortal } from "@/wrappers/ModalFrame"
 
 export type HomeDialogSize = "compact" | "wide"
 
@@ -109,6 +110,10 @@ export const HomeDialogOptionGroup = <T extends string>({
   hideLabel?: boolean
 }) => {
   const headingId = `${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-group`
+  // Icon tiles are a compact, scannable grid that never collapses to a single
+  // column in portrait — 2-up by default, 3-up from 480px. Text-only options
+  // keep their row layout (honouring the `columns` prop). #audit-create-grid.
+  const hasIcons = options.some((option) => option.icon)
 
   return (
     <section className="flex flex-col gap-2" aria-labelledby={headingId}>
@@ -121,7 +126,11 @@ export const HomeDialogOptionGroup = <T extends string>({
         {label}
       </h3>
       <div
-        className={`grid grid-cols-1 gap-2 ${columns === 2 ? "sm:grid-cols-2" : ""}`.trim()}
+        className={
+          hasIcons
+            ? "grid grid-cols-2 gap-2 min-[480px]:grid-cols-3"
+            : `grid grid-cols-1 gap-2 ${columns === 2 ? "sm:grid-cols-2" : ""}`.trim()
+        }
       >
         {options.map((option) => {
           const selected = option.value === value
@@ -134,10 +143,10 @@ export const HomeDialogOptionGroup = <T extends string>({
               onClick={() => onChange(option.value)}
               onDoubleClick={onConfirm}
               aria-pressed={selected}
-              className={`min-h-9 cursor-pointer rounded-md border text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-60 ${
+              className={`cursor-pointer rounded-md border transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-60 ${
                 option.icon
-                  ? "flex flex-col items-center gap-2 px-3 py-3 text-center"
-                  : "px-3 py-2 text-left"
+                  ? "flex flex-col items-center justify-center gap-1.5 px-2 py-2.5 text-center text-xs font-medium"
+                  : "min-h-9 px-3 py-2 text-left text-sm font-medium"
               } ${
                 selected
                   ? "border-primary bg-accent-soft text-accent-strong"
@@ -145,7 +154,7 @@ export const HomeDialogOptionGroup = <T extends string>({
               }`}
             >
               {option.icon}
-              {option.label}
+              <span className="line-clamp-2">{option.label}</span>
             </button>
           )
         })}
@@ -171,16 +180,21 @@ export const HomeDialogActions = ({
   onCancel: () => void
   onConfirm: () => void
 }) => (
-  <DialogFooter>
-    <Button variant="outline" disabled={loading} onClick={onCancel}>
-      {cancelLabel}
-    </Button>
-    <Button
-      variant="default"
-      disabled={loading || confirmDisabled}
-      onClick={onConfirm}
-    >
-      {loading && loadingLabel ? loadingLabel : confirmLabel}
-    </Button>
-  </DialogFooter>
+  // Portals into ModalFrame's pinned footer slot (a sibling AFTER the scroll
+  // body) so the action bar stays clickable in portrait without scrolling.
+  // Outside a frame (standalone Storybook block) it renders in flow.
+  <ModalFooterPortal>
+    <DialogFooter>
+      <Button variant="outline" disabled={loading} onClick={onCancel}>
+        {cancelLabel}
+      </Button>
+      <Button
+        variant="default"
+        disabled={loading || confirmDisabled}
+        onClick={onConfirm}
+      >
+        {loading && loadingLabel ? loadingLabel : confirmLabel}
+      </Button>
+    </DialogFooter>
+  </ModalFooterPortal>
 )

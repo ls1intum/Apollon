@@ -24,7 +24,12 @@ export const NAVBAR_MIN_HEIGHT = 52
  */
 export const navbarButtonStyle = (className?: string): string =>
   cn(
-    "inline-flex min-w-0 cursor-pointer items-center gap-1 whitespace-nowrap",
+    // `justify-start text-left` is load-bearing: these classes are merged onto a
+    // shadcn `Button` (DropdownMenuTrigger render=) whose own base sets
+    // `justify-center`/`text-center`. Without overriding here, File/Help labels
+    // mis-center against the right-pinned caret. Every text trigger is
+    // left-aligned content with the caret/icon pinned to the edges.
+    "inline-flex min-w-0 cursor-pointer items-center justify-start gap-1 whitespace-nowrap text-left",
     // Same 32px box, 6px radius and focus-ring as the icon buttons
     // (.apollon-chrome-iconbtn) so text + icon controls read as one family.
     "min-h-[var(--apollon-chrome-btn)] rounded-[var(--apollon-chrome-radius-sm)] px-2 py-1",

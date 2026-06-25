@@ -7,10 +7,11 @@ import {
 import { NavbarFile } from "./NavbarFile"
 
 /**
- * The editor's File dropdown: New Diagram, Import (JSON), and an Export submenu
- * (SVG / PNG / JSON / PDF / PPTX). The trigger color follows the navbar
- * convention — `secondary` on the always-dark desktop bar, or an explicit
- * `color` for the themed mobile sheet.
+ * The editor's File dropdown: New Diagram, Import (JSON), and a flat, labelled
+ * Export group (SVG / PNG / JSON / PDF / PPTX) — one level of nesting, no submenu,
+ * so the same body inlines cleanly into the mobile overflow. The trigger color
+ * follows the navbar convention — `secondary` on the always-dark desktop bar, or
+ * an explicit `color` for the themed mobile sheet.
  */
 const meta = {
   title: "Webapp/Navbar/NavbarFile",
@@ -51,8 +52,10 @@ export const MenuOpens: Story = {
     await expect(
       await body.findByRole("menuitem", { name: /new diagram/i })
     ).toBeInTheDocument()
+    // Export is now a flat, labelled group — no submenu trigger. Its formats are
+    // direct menuitems and the "Export" heading is a group label, not a menuitem.
     await expect(
-      body.getByRole("menuitem", { name: /export/i })
+      body.getByRole("menuitem", { name: /as svg/i })
     ).toBeInTheDocument()
   },
 }

@@ -85,7 +85,7 @@ export function TemplateThumbnail({ name }: { name: string }) {
       ) : lightSvg === null ? (
         // Render failed — fall back to the type glyph so the tile is never blank.
         <div className="flex h-full w-full items-center justify-center text-muted-foreground">
-          {getDiagramTypeIcon(UMLDiagramType.ClassDiagram, "h-9 w-9")}
+          {getDiagramTypeIcon(UMLDiagramType.ClassDiagram, "h-7 w-7")}
         </div>
       ) : (
         <div className="flex h-full w-full items-center justify-center">

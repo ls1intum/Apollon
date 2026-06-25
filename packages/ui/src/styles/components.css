@@ -30,6 +30,21 @@
 
 @import "./tokens.css";
 
+/* Border-color safety net (Tailwind v4.0.17 dropped Preflight's border reset, so
+   bare `border`/`border-t`/`border-b` utilities inherit `currentColor` =
+   foreground → near-black dividers in light, pure-white in dark). Restore
+   Preflight's behaviour: default every border to the design token so dividers
+   stay subtle and theme-following. This mirrors Tailwind v3 Preflight's exact
+   rule. Scoped under @layer base so any explicit border-color utility (which
+   Tailwind emits in the `utilities` layer) still wins. */
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: var(--color-border);
+  }
+}
+
 @layer components {
   /* ── Button (data-slot="button") ──────────────────────────────────────── */
   /* group/button is a marker class for group-* child variants; it emits no CSS

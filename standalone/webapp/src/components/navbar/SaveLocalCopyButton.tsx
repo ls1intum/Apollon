@@ -3,6 +3,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@tumaet/ui/components/tooltip"
+import { DropdownMenuItem } from "@tumaet/ui/components/dropdown-menu"
 import { SaveIcon } from "lucide-react"
 import { toast } from "react-toastify"
 import { useLocation, useNavigate } from "@tanstack/react-router"
@@ -22,6 +23,13 @@ interface Props {
   labelClassName?: string
   /** Mobile menu close callback when rendered inside the hamburger. */
   onAfter?: () => void
+  /**
+   * Render as a full-width `DropdownMenuItem` row (the editor mobile overflow)
+   * instead of the standalone tooltip-button used on the desktop island, so the
+   * overflow's `min-h-11` 44px row contract applies to it like every other row —
+   * mirroring `ThemeSwitcherMenu`'s `asMenuItem`.
+   */
+  asMenuItem?: boolean
 }
 
 /**
@@ -41,6 +49,7 @@ export const SaveLocalCopyButton = ({
   color,
   labelClassName,
   onAfter,
+  asMenuItem = false,
 }: Props) => {
   const diagramId = useDiagramIdFromPath()
   const { pathname } = useLocation()
@@ -65,6 +74,19 @@ export const SaveLocalCopyButton = ({
     } finally {
       onAfter?.()
     }
+  }
+
+  if (asMenuItem) {
+    return (
+      <DropdownMenuItem
+        onClick={handleClick}
+        aria-label={t.saveLocalCopyButton}
+        style={color ? { color } : undefined}
+      >
+        <SaveIcon className="size-4" aria-hidden />
+        {t.saveLocalCopyButton}
+      </DropdownMenuItem>
+    )
   }
 
   return (

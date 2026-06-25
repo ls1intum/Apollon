@@ -93,6 +93,7 @@ const diagramTiles = {
         strokeWidth="2"
       />
       <circle cx="38" cy="24" r="5" stroke="currentColor" strokeWidth="2" />
+      <circle cx="38" cy="24" r="2" fill="currentColor" />
       <line
         x1="14"
         y1="24"
@@ -109,7 +110,6 @@ const diagramTiles = {
         stroke="currentColor"
         strokeWidth="2"
       />
-      <path d="M31 22 L33 24 L31 26" stroke="currentColor" strokeWidth="2" />
     </svg>
   ),
   useCaseDiagram: makeTile(
@@ -162,6 +162,8 @@ const diagramTiles = {
   objectDiagram: makeTile(
     diagramTypes.ObjectDiagram,
     "Object Diagram",
+    // Object node: a single rectangle whose name is UNDERLINED (the sole UML
+    // distinction from a Class box — no header rule, no compartments).
     <svg className={iconClassName} viewBox="0 0 48 48" fill="none">
       <rect
         x="8"
@@ -173,26 +175,26 @@ const diagramTiles = {
         strokeWidth="2"
       />
       <line
-        x1="13"
-        y1="18"
-        x2="35"
-        y2="18"
+        x1="18"
+        y1="17"
+        x2="30"
+        y2="17"
         stroke="currentColor"
         strokeWidth="2"
       />
       <line
-        x1="13"
-        y1="22"
-        x2="27"
-        y2="22"
+        x1="14"
+        y1="20"
+        x2="34"
+        y2="20"
         stroke="currentColor"
         strokeWidth="2"
       />
       <line
-        x1="13"
-        y1="28"
-        x2="33"
-        y2="28"
+        x1="14"
+        y1="30"
+        x2="34"
+        y2="30"
         stroke="currentColor"
         strokeWidth="2"
       />
@@ -201,159 +203,132 @@ const diagramTiles = {
   componentDiagram: makeTile(
     diagramTypes.ComponentDiagram,
     "Component Diagram",
+    // Component node: a plain body rectangle with the UML «component» tab glyph
+    // (a small rectangle with two short stubs poking out past a vertical bar) in
+    // the top-right corner — the way the editor actually draws it.
     <svg className={iconClassName} viewBox="0 0 48 48" fill="none">
       <rect
-        x="10"
-        y="9"
-        width="28"
-        height="30"
+        x="8"
+        y="10"
+        width="32"
+        height="28"
         rx="2"
         stroke="currentColor"
         strokeWidth="2"
       />
-      <rect
-        x="14"
-        y="14"
-        width="6"
-        height="4"
+      <path
+        d="M30 14 H37 V25 H30 V22 M30 18 H27 M30 22 H27"
         stroke="currentColor"
         strokeWidth="2"
+        strokeLinejoin="round"
       />
-      <rect
-        x="14"
-        y="22"
-        width="6"
-        height="4"
-        stroke="currentColor"
-        strokeWidth="2"
-      />
-      <line
-        x1="23"
-        y1="20"
-        x2="34"
-        y2="20"
-        stroke="currentColor"
-        strokeWidth="2"
-      />
-      <line
-        x1="23"
-        y1="26"
-        x2="31"
-        y2="26"
-        stroke="currentColor"
-        strokeWidth="2"
-      />
+      <path d="M30 16 V20" stroke="currentColor" strokeWidth="2" />
     </svg>
   ),
   deploymentDiagram: makeTile(
     diagramTypes.DeploymentDiagram,
     "Deployment Diagram",
+    // Deployment «node»: a 3D box (cube). Front rectangle plus a top and a right
+    // face, mirroring the editor's DeploymentNodeSVG.
     <svg className={iconClassName} viewBox="0 0 48 48" fill="none">
       <rect
-        x="7"
-        y="12"
-        width="18"
-        height="12"
-        rx="2"
+        x="6"
+        y="14"
+        width="26"
+        height="22"
         stroke="currentColor"
         strokeWidth="2"
       />
-      <rect
-        x="23"
-        y="24"
-        width="18"
-        height="12"
-        rx="2"
+      <path
+        d="M6 14 l6 -6 H38 l-6 6"
         stroke="currentColor"
         strokeWidth="2"
+        strokeLinejoin="round"
       />
-      <line
-        x1="25"
-        y1="18"
-        x2="23"
-        y2="30"
+      <path
+        d="M38 8 V30 l-6 6"
         stroke="currentColor"
         strokeWidth="2"
+        strokeLinejoin="round"
       />
-      <path d="M25 28 L23 30 L21 28" stroke="currentColor" strokeWidth="2" />
     </svg>
   ),
   flowchart: makeTile(
     diagramTypes.Flowchart,
     "Flowchart",
+    // Flowchart: a process rectangle flowing (down an arrow) into a decision
+    // diamond — conveys FLOW, with the diamond as the signature shape.
     <svg className={iconClassName} viewBox="0 0 48 48" fill="none">
-      <polygon
-        points="24,8 36,20 24,32 12,20"
+      <rect
+        x="14"
+        y="6"
+        width="20"
+        height="10"
         stroke="currentColor"
         strokeWidth="2"
       />
       <line
         x1="24"
-        y1="32"
+        y1="16"
         x2="24"
-        y2="40"
+        y2="24"
         stroke="currentColor"
         strokeWidth="2"
       />
-      <path d="M22 38 L24 40 L26 38" stroke="currentColor" strokeWidth="2" />
+      <path d="M21 22 L24 25 L27 22" stroke="currentColor" strokeWidth="2" />
+      <polygon
+        points="24,25 35,35 24,45 13,35"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
     </svg>
   ),
   syntaxTree: makeTile(
     diagramTypes.SyntaxTree,
     "Syntax Tree",
+    // Syntax tree: one root node branching down to two leaves. Rounded-rect nodes
+    // match the editor; kept to three nodes so it stays legible at 36px.
     <svg className={iconClassName} viewBox="0 0 48 48" fill="none">
-      <circle cx="24" cy="10" r="4" stroke="currentColor" strokeWidth="2" />
-      <circle cx="14" cy="24" r="4" stroke="currentColor" strokeWidth="2" />
-      <circle cx="34" cy="24" r="4" stroke="currentColor" strokeWidth="2" />
-      <circle cx="10" cy="38" r="3" stroke="currentColor" strokeWidth="2" />
-      <circle cx="20" cy="38" r="3" stroke="currentColor" strokeWidth="2" />
-      <circle cx="28" cy="38" r="3" stroke="currentColor" strokeWidth="2" />
-      <circle cx="38" cy="38" r="3" stroke="currentColor" strokeWidth="2" />
+      <rect
+        x="18"
+        y="6"
+        width="12"
+        height="10"
+        rx="3"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <rect
+        x="6"
+        y="32"
+        width="12"
+        height="10"
+        rx="3"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <rect
+        x="30"
+        y="32"
+        width="12"
+        height="10"
+        rx="3"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
       <line
         x1="21"
-        y1="13"
-        x2="16"
-        y2="20"
+        y1="16"
+        x2="13"
+        y2="32"
         stroke="currentColor"
         strokeWidth="2"
       />
       <line
         x1="27"
-        y1="13"
-        x2="32"
-        y2="20"
-        stroke="currentColor"
-        strokeWidth="2"
-      />
-      <line
-        x1="12"
-        y1="27"
-        x2="10"
-        y2="35"
-        stroke="currentColor"
-        strokeWidth="2"
-      />
-      <line
-        x1="16"
-        y1="27"
-        x2="20"
-        y2="35"
-        stroke="currentColor"
-        strokeWidth="2"
-      />
-      <line
-        x1="32"
-        y1="27"
-        x2="28"
-        y2="35"
-        stroke="currentColor"
-        strokeWidth="2"
-      />
-      <line
-        x1="36"
-        y1="27"
-        x2="38"
-        y2="35"
+        y1="16"
+        x2="35"
+        y2="32"
         stroke="currentColor"
         strokeWidth="2"
       />
@@ -410,36 +385,54 @@ const diagramTiles = {
   communicationDiagram: makeTile(
     diagramTypes.CommunicationDiagram,
     "Communication Diagram",
+    // Communication diagram: object rectangles (with an underlined name tick)
+    // joined by SOLID links, one carrying a numbered message arrow.
     <svg className={iconClassName} viewBox="0 0 48 48" fill="none">
-      <circle cx="12" cy="14" r="4" stroke="currentColor" strokeWidth="2" />
-      <circle cx="36" cy="14" r="4" stroke="currentColor" strokeWidth="2" />
-      <circle cx="24" cy="34" r="4" stroke="currentColor" strokeWidth="2" />
+      <rect
+        x="6"
+        y="8"
+        width="14"
+        height="9"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
       <line
-        x1="16"
+        x1="9"
         y1="14"
-        x2="32"
+        x2="17"
         y2="14"
         stroke="currentColor"
         strokeWidth="2"
-        strokeDasharray="4 3"
       />
-      <line
-        x1="14"
-        y1="17"
-        x2="22"
-        y2="31"
+      <rect
+        x="28"
+        y="31"
+        width="14"
+        height="9"
         stroke="currentColor"
         strokeWidth="2"
-        strokeDasharray="4 3"
       />
       <line
-        x1="34"
-        y1="17"
-        x2="26"
-        y2="31"
+        x1="31"
+        y1="37"
+        x2="39"
+        y2="37"
         stroke="currentColor"
         strokeWidth="2"
-        strokeDasharray="4 3"
+      />
+      <line
+        x1="18"
+        y1="19"
+        x2="30"
+        y2="29"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <path
+        d="M30 24 L31 30 L25 29"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
       />
     </svg>
   ),
@@ -448,6 +441,7 @@ const diagramTiles = {
     "Petri Net",
     <svg className={iconClassName} viewBox="0 0 48 48" fill="none">
       <circle cx="10" cy="24" r="5" stroke="currentColor" strokeWidth="2" />
+      <circle cx="10" cy="24" r="1.8" fill="currentColor" />
       <rect
         x="20"
         y="18"
@@ -479,71 +473,91 @@ const diagramTiles = {
   reachabilityGraph: makeTile(
     diagramTypes.ReachabilityGraph,
     "Reachability Graph",
+    // Reachability graph: rounded-square markings (as the editor draws them)
+    // connected by directed arrows.
     <svg className={iconClassName} viewBox="0 0 48 48" fill="none">
-      <circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="2" />
-      <circle cx="36" cy="12" r="5" stroke="currentColor" strokeWidth="2" />
-      <circle cx="24" cy="34" r="5" stroke="currentColor" strokeWidth="2" />
+      <rect
+        x="6"
+        y="6"
+        width="12"
+        height="12"
+        rx="4"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <rect
+        x="30"
+        y="6"
+        width="12"
+        height="12"
+        rx="4"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <rect
+        x="18"
+        y="30"
+        width="12"
+        height="12"
+        rx="4"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
       <line
-        x1="17"
+        x1="18"
         y1="12"
-        x2="31"
+        x2="30"
         y2="12"
         stroke="currentColor"
         strokeWidth="2"
       />
-      <path d="M29 10 L31 12 L29 14" stroke="currentColor" strokeWidth="2" />
+      <path d="M28 10 L30 12 L28 14" stroke="currentColor" strokeWidth="2" />
       <line
-        x1="15"
-        y1="16"
-        x2="21"
-        y2="29"
-        stroke="currentColor"
-        strokeWidth="2"
-      />
-      <path d="M19 27 L21 29 L23 27" stroke="currentColor" strokeWidth="2" />
-      <line
-        x1="33"
-        y1="16"
+        x1="34"
+        y1="18"
         x2="27"
         y2="29"
         stroke="currentColor"
         strokeWidth="2"
       />
-      <path d="M25 27 L27 29 L29 27" stroke="currentColor" strokeWidth="2" />
+      <path d="M30 28 L27 30 L29 26" stroke="currentColor" strokeWidth="2" />
     </svg>
   ),
   bpmn: makeTile(
     diagramTypes.BPMN,
     "BPMN",
+    // BPMN: start event circle → exclusive gateway (diamond with an X) → end
+    // event circle. The gateway diamond is BPMN's signature flow element.
     <svg className={iconClassName} viewBox="0 0 48 48" fill="none">
-      <circle cx="10" cy="24" r="5" stroke="currentColor" strokeWidth="2" />
-      <rect
-        x="20"
-        y="16"
-        width="14"
-        height="16"
-        rx="3"
+      <circle cx="9" cy="24" r="5" stroke="currentColor" strokeWidth="2" />
+      <polygon
+        points="24,16 32,24 24,32 16,24"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M21 21 L27 27 M27 21 L21 27"
         stroke="currentColor"
         strokeWidth="2"
       />
-      <circle cx="41" cy="24" r="4" stroke="currentColor" strokeWidth="2" />
+      <circle cx="39" cy="24" r="5" stroke="currentColor" strokeWidth="2" />
       <line
-        x1="15"
+        x1="14"
         y1="24"
-        x2="20"
+        x2="16"
         y2="24"
         stroke="currentColor"
         strokeWidth="2"
       />
       <line
-        x1="34"
+        x1="32"
         y1="24"
-        x2="37"
+        x2="34"
         y2="24"
         stroke="currentColor"
         strokeWidth="2"
       />
-      <path d="M35 22 L37 24 L35 26" stroke="currentColor" strokeWidth="2" />
     </svg>
   ),
 }

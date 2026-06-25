@@ -19,6 +19,7 @@ import {
 import { Link } from "@tanstack/react-router"
 import { toast } from "react-toastify"
 import { cn } from "@tumaet/ui/lib/utils"
+import { Textarea } from "@tumaet/ui/components/textarea"
 import { log } from "@/logger"
 import { useVersionStore, type PendingVersion } from "@/stores/useVersionStore"
 import { getVersionRepository } from "@/services/versionRepository"
@@ -214,7 +215,11 @@ export function VersionListItemView({
 
       <div className="min-w-0 flex-1 pr-7">
         {editing ? (
-          <textarea
+          // shadcn Textarea: visible border-input, rounded-lg, and focus-visible
+          // ring come from its `data-slot` CSS. We drop the default 64px
+          // min-height for this compact inline rename (field-sizing-content still
+          // grows it) and theme the border/focus ring via the chrome tokens.
+          <Textarea
             autoFocus
             rows={1}
             value={draft}
@@ -226,10 +231,11 @@ export function VersionListItemView({
             onKeyDown={onEditKeyDown}
             placeholder={t.createPlaceholder}
             aria-label="Edit description"
-            className="mb-0.5 w-full resize-none border-0 bg-transparent p-0 text-[0.8125rem] outline-none placeholder:opacity-100 placeholder:[color:var(--ph)]"
+            className="mb-0.5 max-h-24 min-h-8 resize-none px-2 py-1 text-[0.8125rem] placeholder:opacity-100 placeholder:[color:var(--ph)] focus-visible:border-[var(--apollon-chrome-accent)] focus-visible:ring-[color-mix(in_srgb,var(--apollon-chrome-accent)_40%,transparent)]"
             style={
               {
                 color: TEXT_PRIMARY,
+                borderColor: "var(--apollon-chrome-border)",
                 "--ph": TEXT_MUTED,
               } as CSSProperties
             }

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import {
+  ChevronDownIcon,
   FolderInput,
   Plus,
   Search,
@@ -60,7 +61,7 @@ export function HomeHeaderRow({
     // own `pt-5/md:pt-6` is the resting offset, so there is no layout jump — the
     // band simply stops at `top` once that padding scrolls past. A small bottom
     // padding gives the floating island shadow room to read over the first row.
-    <div className="sticky top-[calc(var(--safe-area-inset-top,0px)+0.75rem)] z-20 flex flex-col gap-1 pb-2 md:top-[calc(var(--safe-area-inset-top,0px)+1rem)]">
+    <div className="sticky top-[calc(var(--safe-area-inset-top,0px)+0.75rem)] z-20 flex flex-col gap-[var(--apollon-chrome-gap)] pb-2 md:top-[calc(var(--safe-area-inset-top,0px)+1rem)]">
       {/* The home's single page heading — rendered ONCE here (outside the
           md-gated bands) so exactly one visually-hidden <h1> exists at every
           width. The desktop band shows a visible "Your diagrams" label aside the
@@ -230,6 +231,9 @@ function HomeActionsIsland({
             aria-label="Refine"
             title="Refine"
           >
+            {/* The one deliberately richer control: it keeps its meaningful
+                leading filter glyph + count badge AND — because it opens a
+                popover — gains the trailing caret of the menu family. */}
             <SlidersHorizontal className="size-4" aria-hidden />
             {/* Reveal the label as soon as it fits, not at `lg`: the measured
                 geometry (brand 131 + labelled actions 523 + a ≥200px search
@@ -238,10 +242,11 @@ function HomeActionsIsland({
                 the labels there while search stays above its floor. */}
             <span className="hidden min-[940px]:inline">Refine</span>
             {chrome.refineCount > 0 && (
-              <Badge className="ml-0.5 size-4 min-w-0 px-0 text-[10px]">
+              <Badge className="size-4 min-w-0 px-0 text-[10px]">
                 {chrome.refineCount}
               </Badge>
             )}
+            <ChevronDownIcon className="size-4" aria-hidden />
           </button>
         }
       />

@@ -69,12 +69,19 @@ function SheetContent({
         {...props}
       >
         {showCloseButton && (
-          // Pinned, not absolute: a zero-height `sticky top-0` row keeps the close
-          // affordance glued to the top of the panel's scroll viewport, so it can
-          // never scroll out of view even if a consumer makes the Popup itself
-          // (rather than the body region) scroll. Negative margins pull it back
-          // into the top-right corner so it overlays content like before.
-          <div className="pointer-events-none sticky top-0 z-10 -mb-4 flex h-0 justify-end">
+          // Pinned, not absolute-to-the-Popup: a `sticky top-0 h-0` row keeps the
+          // close affordance glued to the top of the panel's scroll viewport, so
+          // it can never scroll out of view even if a consumer makes the Popup
+          // itself (rather than the body region) scroll. The row carries NO height
+          // and — crucially — must not introduce a gap before the first real
+          // region. Because the Popup is a `flex flex-col gap-*` container, a
+          // normal flex child would inherit that column gap regardless of its own
+          // height; a consumer that overrides the Popup gap (e.g. `gap-0`) would
+          // then see the offset flip and the negative margin eat the header's
+          // padding. Removing the row from the flex flow with `absolute inset-x-0
+          // top-0` makes its presence — and the close button's placement — fully
+          // independent of whatever gap the Popup runs.
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex h-0 justify-end">
             <SheetPrimitive.Close
               data-slot="sheet-close"
               render={

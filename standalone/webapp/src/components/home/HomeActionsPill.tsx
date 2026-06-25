@@ -1,20 +1,10 @@
-import { useState } from "react"
-import {
-  FolderInput,
-  MoreVertical,
-  SlidersHorizontal,
-  Star,
-} from "lucide-react"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@tumaet/ui/components/dropdown-menu"
+import { FolderInput, SlidersHorizontal, Star } from "lucide-react"
+import { DropdownMenuSeparator } from "@tumaet/ui/components/dropdown-menu"
 import { Badge } from "@tumaet/ui/components/badge"
 import type { UMLDiagramType } from "@tumaet/apollon"
 import { ISLAND_LAYOUT_STYLE } from "@/components/navbar/islandPrimitives"
 import { ThemeSwitcherMenu } from "@/components/navbar/ThemeSwitcher"
+import { ChromeOverflowMenu } from "@/components/navbar/MobileIslands"
 import { RefinePopover } from "./RefinePopover"
 import { HelpMenuItems } from "./HomeHelpMenu"
 import type { HomeChrome } from "./useHomeChrome"
@@ -43,9 +33,6 @@ export function HomeActionsPill({
   typeOptions: readonly UMLDiagramType[]
   onImportJson?: () => void
 }) {
-  const [menuOpen, setMenuOpen] = useState(false)
-  const closeMenu = () => setMenuOpen(false)
-
   return (
     <div
       aria-label="Home actions"
@@ -113,31 +100,22 @@ export function HomeActionsPill({
         <FolderInput className="size-[18px]" aria-hidden />
       </button>
 
-      {/* "…" overflow — only the lower-frequency Theme + Help/legal items.
-          Uses the @tumaet/ui DropdownMenu defaults (editor-matched text-sm /
-          padding / rounded focus); `min-h-11` per row keeps the 44px target. */}
-      <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
-        <DropdownMenuTrigger
-          className="apollon-chrome-iconbtn"
-          aria-label="More options"
-          title="More"
-        >
-          <MoreVertical className="size-[18px]" aria-hidden />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="end"
-          side="bottom"
-          className="w-60 max-w-[calc(100vw-1rem)] [&_[data-slot=dropdown-menu-item]]:min-h-11"
-        >
-          {/* Theme leads via the SHARED `ThemeSwitcherMenu asMenuItem` (identical
-              to the editor mobile overflow's Theme row), then the SHARED
-              `HelpMenuItems` body — the same About → Releases → GitHub → Report,
-              separator, Privacy → Imprint set/order used by every Help control. */}
-          <ThemeSwitcherMenu asMenuItem onToggle={closeMenu} />
-          <DropdownMenuSeparator />
-          <HelpMenuItems onSelect={closeMenu} />
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {/* "…" overflow — the SHARED `ChromeOverflowMenu` (identical trigger +
+          content contract as the editor mobile pill). Holds only the
+          lower-frequency Help/legal items, with Theme as the LAST row — matching
+          the editor overflow exactly (Help body first, Theme last). */}
+      <ChromeOverflowMenu ariaLabel="More options" id="home-options">
+        {(close) => (
+          <>
+            {/* SHARED `HelpMenuItems` body — the same About → Releases → GitHub →
+                Report, separator, Privacy → Imprint set/order used by every Help
+                control. Theme is the LAST row, matching the editor overflow. */}
+            <HelpMenuItems onSelect={close} />
+            <DropdownMenuSeparator />
+            <ThemeSwitcherMenu asMenuItem onToggle={close} />
+          </>
+        )}
+      </ChromeOverflowMenu>
     </div>
   )
 }

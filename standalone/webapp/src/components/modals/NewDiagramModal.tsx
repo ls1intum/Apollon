@@ -64,7 +64,7 @@ const toDiagramOption = (
 ): HomeDialogOption<UMLDiagramType> => ({
   value: type,
   label: diagramTypeToTitle[type],
-  icon: getDiagramTypeIcon(type, "h-9 w-9"),
+  icon: getDiagramTypeIcon(type, "h-7 w-7"),
 })
 
 const structuralDiagramOptions: HomeDialogOption<UMLDiagramType>[] =

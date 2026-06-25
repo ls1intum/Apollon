@@ -41,10 +41,12 @@ export function ThemeSwitcherButton({
       onClick={onToggle}
       aria-label={title}
       title={title}
-      className={cn(
-        "relative inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-[var(--apollon-chrome-radius-sm)] border-0 bg-transparent p-0 text-foreground transition-colors duration-200 hover:bg-[color:var(--apollon-chrome-surface-hover)] active:bg-[color:var(--apollon-chrome-surface-active)] focus-visible:shadow-[0_0_0_2px_color-mix(in_srgb,var(--apollon-chrome-accent)_45%,transparent)] focus-visible:outline-none",
-        className
-      )}
+      // The shared chrome-icon class is the single source of the 32px paint box,
+      // 6px radius, hover/active wash, focus ring AND the 44px ::before hit
+      // target — so Theme reads as one family with the other icon-only triggers
+      // (Favorites, '…' overflow) and is touch-reachable. `relative` is already
+      // set by the class; the cross-fade spans below position against it.
+      className={cn("apollon-chrome-iconbtn", className)}
     >
       <span
         className={cn(

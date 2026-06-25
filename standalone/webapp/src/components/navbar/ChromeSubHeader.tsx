@@ -1,9 +1,11 @@
 import { Link } from "@tanstack/react-router"
+import { DropdownMenuSeparator } from "@tumaet/ui/components/dropdown-menu"
 import { Island, GroupDivider } from "./islandPrimitives"
 import { BackNav } from "./BackNav"
 import { BrandAndVersion } from "./BrandAndVersion"
 import { ThemeSwitcherMenu } from "./ThemeSwitcher"
-import { HomeHelpMenu } from "@/components/home/HomeHelpMenu"
+import { ChromeOverflowMenu } from "./MobileIslands"
+import { HomeHelpMenu, HelpMenuItems } from "@/components/home/HomeHelpMenu"
 import { useBackTarget } from "@/hooks/useBackTarget"
 
 /**
@@ -55,11 +57,36 @@ export const ChromeSubHeader = () => {
 
       <div className="flex-1" />
 
-      <Island ariaLabel="Page actions">
-        <HomeHelpMenu />
-        <GroupDivider />
-        <ThemeSwitcherMenu />
-      </Island>
+      {/* Desktop (md+): the {Help, Theme} cluster — grouped together, NO divider
+          between them — identical to the editor's HeaderActionsIsland and the
+          home band's actions island. The responsive gating sits on a plain
+          wrapper, NOT on the Island: the island's shared layout sets
+          `display:flex` INLINE, which would beat a Tailwind `hidden` class. */}
+      <div className="hidden md:block">
+        <Island ariaLabel="Page actions">
+          <HomeHelpMenu />
+          <ThemeSwitcherMenu />
+        </Island>
+      </div>
+
+      {/* Mobile (< md): a compact pill carrying ONLY the shared "…" overflow —
+          the sub-page has no document actions, so the pill is just the overflow
+          with the shared HelpMenuItems body + Theme as the LAST row, exactly like
+          the editor + home mobile overflows. Replaces the bare desktop text
+          triggers that previously shipped unchanged at 390px. */}
+      <div className="md:hidden">
+        <Island ariaLabel="Page actions">
+          <ChromeOverflowMenu ariaLabel="More options" id="subpage-options">
+            {(close) => (
+              <>
+                <HelpMenuItems onSelect={close} />
+                <DropdownMenuSeparator />
+                <ThemeSwitcherMenu asMenuItem onToggle={close} />
+              </>
+            )}
+          </ChromeOverflowMenu>
+        </Island>
+      </div>
     </div>
   )
 }

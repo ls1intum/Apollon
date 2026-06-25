@@ -200,14 +200,19 @@ export function RefinePopover({
         <SheetTrigger render={trigger as ReactElement} />
         {/* Three-region shadcn Sheet contract: the Popup is a NON-scrolling
             `flex flex-col` (the primitive's default) capped at 80vh, with its
-            own overflow hidden so it can never become the scroller — that keeps
-            the primitive's sticky close pinned. `gap-0` because each region owns
-            its own padding. The header pins at the top; only the MIDDLE body
-            scrolls; the footer pins at the bottom. Opaque `bg-popover` + the
-            primitive's ring/top-hairline (NOT `.apollon-glass`) so the edge is
-            readable in light as well as dark. */}
+            own overflow hidden so it can never become the scroller. `gap-0`
+            because each region owns its own padding — the header keeps its full
+            `p-4` top inset because nothing precedes it. The header pins at the
+            top; only the MIDDLE body scrolls; the footer pins at the bottom.
+            `showCloseButton={false}`: the sheet already carries a "Refine"
+            SheetTitle and a "Done" footer, so the corner X is redundant (mirrors
+            VersionDrawer). Dropping it also removes the close row entirely, so
+            the `gap-0` override can't collide with the row's offset. Opaque
+            `bg-popover` + the primitive's ring/top-hairline (NOT `.apollon-glass`)
+            so the edge is readable in light as well as dark. */}
         <SheetContent
           side="bottom"
+          showCloseButton={false}
           className="max-h-[80vh] gap-0 overflow-hidden"
         >
           <SheetHeader className="pb-3">
