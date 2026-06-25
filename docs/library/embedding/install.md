@@ -46,12 +46,12 @@ are specific to the `/react` build.
 | ----------------- | ---------- |
 | `yjs`             | `^13.6.0`  |
 | `y-protocols`     | `^1.0.6`   |
-| `react`           | `^18.3.0`  |
-| `react-dom`       | `^18.3.0`  |
+| `react`           | `^19.0.0`  |
+| `react-dom`       | `^19.0.0`  |
 | `@mui/material`   | `^6.4.0`   |
-| `@emotion/react`  | `^11.11.0` |
-| `@emotion/styled` | `^11.11.0` |
-| `@xyflow/react`   | `^12.3.0`  |
+| `@emotion/react`  | `^11.12.0` |
+| `@emotion/styled` | `^11.12.0` |
+| `@xyflow/react`   | `^12.9.0`  |
 
 The `/react` subpath keeps your final bundle from shipping a second copy of
 React. It is also the entry that exports the `<Apollon>` React component — the

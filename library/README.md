@@ -31,10 +31,10 @@ Apollon is the modeling editor behind [Artemis](https://artemis.tum.de/), TUM's 
 
 The package ships two builds with the same API. Pick one based on whether your host already uses React:
 
-| Import                        | React / MUI / emotion / xyflow | Size (min / gzip) | Use when                                                                                                |
-| ----------------------------- | ------------------------------ | ----------------- | ------------------------------------------------------------------------------------------------------- |
-| `@tumaet/apollon` _(default)_ | **bundled**                    | ~2.4 MB / ~540 KB | Your host is Angular, Vue, Svelte, or vanilla JS. Only `yjs` + `y-protocols` to install.                |
-| `@tumaet/apollon/react`       | **peer deps** (shared)         | ~875 KB / ~170 KB | Your host is React 18.3 and should share its React and MUI with the editor instead of duplicating them. |
+| Import                        | React / MUI / emotion / xyflow | Size (min / gzip) | Use when                                                                                              |
+| ----------------------------- | ------------------------------ | ----------------- | ----------------------------------------------------------------------------------------------------- |
+| `@tumaet/apollon` _(default)_ | **bundled**                    | ~2.4 MB / ~540 KB | Your host is Angular, Vue, Svelte, or vanilla JS. Only `yjs` + `y-protocols` to install.              |
+| `@tumaet/apollon/react`       | **peer deps** (shared)         | ~875 KB / ~170 KB | Your host is React 19 and should share its React and MUI with the editor instead of duplicating them. |
 
 Sizes are the published entry chunks. Gzip is the transfer size. The `/react` number excludes the peers your app already ships.
 
@@ -72,9 +72,9 @@ import "@tumaet/apollon/style.css"
 | Peer          | Range     |     | Peer              | Range      |
 | ------------- | --------- | --- | ----------------- | ---------- |
 | `yjs`         | `^13.6.0` |     | `@mui/material`   | `^6.4.0`   |
-| `y-protocols` | `^1.0.6`  |     | `@emotion/react`  | `^11.11.0` |
-| `react`       | `^18.3.0` |     | `@emotion/styled` | `^11.11.0` |
-| `react-dom`   | `^18.3.0` |     | `@xyflow/react`   | `^12.3.0`  |
+| `y-protocols` | `^1.0.6`  |     | `@emotion/react`  | `^11.12.0` |
+| `react`       | `^19.0.0` |     | `@emotion/styled` | `^11.12.0` |
+| `react-dom`   | `^19.0.0` |     | `@xyflow/react`   | `^12.9.0`  |
 
 ## Which build do I use?
 

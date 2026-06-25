@@ -19,7 +19,7 @@ Apollon ships as an npm library that any framework can embed. The public API is 
 | Subpath                       | React / MUI / emotion / xyflow | Bundle  | When to use                                                                                                                                                                                      |
 | ----------------------------- | ------------------------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `@tumaet/apollon` _(default)_ | bundled                        | ~2.4 MB | Any framework that doesn't already have React installed — Angular (the primary use case for [Artemis](https://artemis.tum.de/)), Vue, Svelte, vanilla JS. Only `yjs` + `y-protocols` to install. |
-| `@tumaet/apollon/react`       | externalized                   | ~875 KB | React 18.3 hosts that want to share their React instance with the editor and dedupe the bundle.                                                                                                  |
+| `@tumaet/apollon/react`       | externalized                   | ~875 KB | React 19 hosts that want to share their React instance with the editor and dedupe the bundle.                                                                                                    |
 
 `peerDependenciesMeta.optional` covers the six React-family peers, so `npm install @tumaet/apollon` never warns about missing React. `yjs` and `y-protocols` are required peers of both builds (the collaboration engine, kept external so the host owns a single Yjs instance) — most package managers add them automatically.
 
