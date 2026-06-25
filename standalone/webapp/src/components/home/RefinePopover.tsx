@@ -2,6 +2,11 @@ import { useState, type ReactElement, type ReactNode } from "react"
 import type { UMLDiagramType } from "@tumaet/apollon"
 import { Button } from "@tumaet/ui/components/button"
 import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from "@tumaet/ui/components/toggle-group"
+import { cn } from "@tumaet/ui/lib/utils"
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -34,9 +39,9 @@ import {
  * Favorites is intentionally absent — it is the band/pill star, not a Refine
  * block (it still earns a removable chip via `useHomeChrome.activeRefinements`).
  *
- * Every option is a real, focusable segmented `<button>` (no nested
- * interactives), and the panel sits on `.apollon-glass` so it reads as the same
- * floating-island material as the band.
+ * Every option is a real, focusable `ToggleGroupItem` (no nested interactives),
+ * and the panel sits on `.apollon-glass` so it reads as the same floating-island
+ * material as the band.
  */
 
 type RefineSegmentOption<T extends string> = {
@@ -44,17 +49,27 @@ type RefineSegmentOption<T extends string> = {
   label: ReactNode
 }
 
-/** One labelled block: a heading + a wrap of segmented choice buttons. */
+/**
+ * One labelled block: a heading + a wrap of segmented choices, rendered as a
+ * single-select `ToggleGroup` (spacing pulls the segments apart into individual
+ * pills; the primitive's `data-pressed` handles the selected fill, so there are
+ * no bespoke selected/unselected style objects). Base UI's group value is an
+ * array even when single-select, so we adapt `value`/`onSelect` at the edges and
+ * ignore a deselect (the home filters always carry exactly one value).
+ */
 function RefineGroup<T extends string>({
   label,
   options,
   value,
   onSelect,
+  segmentClassName,
 }: {
   label: string
   options: readonly RefineSegmentOption<T>[]
   value: T
   onSelect: (value: T) => void
+  /** Extra classes per segment (e.g. `min-h-11` to meet the mobile target). */
+  segmentClassName?: string
 }) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -64,33 +79,31 @@ function RefineGroup<T extends string>({
       >
         {label}
       </span>
-      <div role="group" aria-label={label} className="flex flex-wrap gap-1">
-        {options.map((option) => {
-          const selected = option.value === value
-          return (
-            <button
-              key={option.value}
-              type="button"
-              aria-pressed={selected}
-              onClick={() => onSelect(option.value)}
-              className="inline-flex min-h-[36px] cursor-pointer items-center rounded-[var(--apollon-chrome-radius-sm)] px-3 text-sm font-medium transition-colors focus-visible:shadow-[0_0_0_2px_color-mix(in_srgb,var(--apollon-chrome-accent)_45%,transparent)] focus-visible:outline-none"
-              style={
-                selected
-                  ? {
-                      background: "var(--apollon-chrome-accent)",
-                      color: "var(--apollon-chrome-accent-contrast)",
-                    }
-                  : {
-                      background: "var(--apollon-chrome-surface-hover)",
-                      color: "var(--apollon-chrome-text)",
-                    }
-              }
-            >
-              {option.label}
-            </button>
-          )
-        })}
-      </div>
+      <ToggleGroup
+        aria-label={label}
+        spacing={4}
+        value={[value]}
+        onValueChange={(next) => {
+          const selected = next.find((option) => option !== value)
+          if (selected !== undefined) {
+            onSelect(selected as T)
+          }
+        }}
+        className="flex-wrap"
+      >
+        {options.map((option) => (
+          <ToggleGroupItem
+            key={option.value}
+            value={option.value}
+            className={cn(
+              "min-h-[36px] rounded-[var(--apollon-chrome-radius-sm)] px-3 text-sm font-medium",
+              segmentClassName
+            )}
+          >
+            {option.label}
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
     </div>
   )
 }
@@ -99,10 +112,19 @@ export type RefineBodyProps = {
   chrome: HomeChrome
   /** Available diagram types (Phase 3 derives this from loaded diagrams). */
   typeOptions: readonly UMLDiagramType[]
+  /**
+   * Extra per-segment classes — the mobile sheet passes `min-h-11` so the
+   * primary mobile control meets the 44px touch target.
+   */
+  segmentClassName?: string
 }
 
 /** The shared Source → Type → Sort body, shell-agnostic. */
-export function RefineBody({ chrome, typeOptions }: RefineBodyProps) {
+export function RefineBody({
+  chrome,
+  typeOptions,
+  segmentClassName,
+}: RefineBodyProps) {
   const typeSegments: RefineSegmentOption<HomeChrome["type"]>[] = [
     { value: "all", label: "All" },
     ...typeOptions.map((type) => ({
@@ -118,6 +140,7 @@ export function RefineBody({ chrome, typeOptions }: RefineBodyProps) {
         options={HOME_SOURCE_OPTIONS}
         value={chrome.source}
         onSelect={chrome.setSource}
+        segmentClassName={segmentClassName}
       />
       <GroupDivider />
       <RefineGroup
@@ -125,6 +148,7 @@ export function RefineBody({ chrome, typeOptions }: RefineBodyProps) {
         options={typeSegments}
         value={chrome.type}
         onSelect={chrome.setType}
+        segmentClassName={segmentClassName}
       />
       <GroupDivider />
       <RefineGroup
@@ -132,12 +156,14 @@ export function RefineBody({ chrome, typeOptions }: RefineBodyProps) {
         options={HOME_SORT_FIELD_OPTIONS}
         value={chrome.sort.field}
         onSelect={chrome.setSortField}
+        segmentClassName={segmentClassName}
       />
       <RefineGroup
         label="Order"
         options={homeSortOrderOptions(chrome.sort.field)}
         value={chrome.sort.order}
         onSelect={chrome.setSortOrder}
+        segmentClassName={segmentClassName}
       />
     </div>
   )
@@ -176,7 +202,11 @@ export function RefinePopover({
               Refine
             </SheetTitle>
           </SheetHeader>
-          <RefineBody chrome={chrome} typeOptions={typeOptions} />
+          <RefineBody
+            chrome={chrome}
+            typeOptions={typeOptions}
+            segmentClassName="min-h-11"
+          />
           <Button
             type="button"
             variant="secondary"

@@ -1,5 +1,6 @@
 import React from "react"
 import { Link } from "@tanstack/react-router"
+import { navbarButtonStyle } from "@/components/navbar/styleConstants"
 
 type ErrorPageProps = {
   title?: string
@@ -15,48 +16,14 @@ export const ErrorPage: React.FC<ErrorPageProps> = ({
   backPath = "/",
 }) => {
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        height: "100vh",
-        textAlign: "center",
-        backgroundColor: "var(--apollon-background)",
-      }}
-    >
-      <h1
-        style={{
-          fontSize: "2rem",
-          fontWeight: "bold",
-          color: "var(--apollon-guide-vertical)",
-        }}
-      >
+    <div className="home-canvas-bg flex h-full flex-col items-center justify-center bg-background px-6 text-center text-foreground">
+      <h1 className="text-2xl font-bold text-foreground md:text-3xl">
         {title}
       </h1>
-      <p
-        style={{
-          fontSize: "1.2rem",
-          color: "var(--apollon-primary-contrast)",
-          marginTop: "8px",
-        }}
-      >
-        {message}
-      </p>
+      <p className="mt-2 text-base text-muted-foreground">{message}</p>
       <Link
         to={backPath}
-        className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--home-accent-ring)]"
-        style={{
-          marginTop: "16px",
-          padding: "10px 20px",
-          backgroundColor: "var(--apollon-primary)",
-          color: "var(--home-on-accent-text)",
-          borderRadius: "var(--home-radius-md)",
-          cursor: "pointer",
-          textDecoration: "none",
-          display: "inline-block",
-        }}
+        className={navbarButtonStyle("apollon-chrome-accent-btn mt-4")}
       >
         {buttonLabel}
       </Link>

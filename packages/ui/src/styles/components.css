@@ -286,6 +286,31 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* The text-accent peer of .apollon-chrome-iconbtn: the one place chrome paints
+   the accent fill (primary action — the home band's New-diagram button, the
+   HomeNewFab, the ErrorPage recovery link) so callers stop inlining
+   `background: var(--apollon-chrome-accent)`. Scoped to `button`/`a` so the
+   accent fill wins over navbarButtonStyle()'s `bg-transparent text-foreground`
+   when cn() merges this class last (cn() can't dedupe plain CSS declarations;
+   the element selector lifts specificity above the bare utility classes). */
+button.apollon-chrome-accent-btn,
+a.apollon-chrome-accent-btn {
+  background: var(--apollon-chrome-accent);
+  color: var(--apollon-chrome-accent-contrast);
+  transition: background-color var(--apollon-chrome-duration-hover)
+    var(--apollon-chrome-ease-standard);
+}
+
+button.apollon-chrome-accent-btn:hover:not(:disabled),
+a.apollon-chrome-accent-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--apollon-chrome-accent) 88%, black);
+}
+
+button.apollon-chrome-accent-btn:active:not(:disabled),
+a.apollon-chrome-accent-btn:active:not(:disabled) {
+  background: color-mix(in srgb, var(--apollon-chrome-accent) 80%, black);
+}
+
 /* The borderless-input-on-glass idiom (the editor's diagram-title capsule + the
    home band's search field). The island reads as a quiet capsule until focused,
    then lifts an accent ring; the field inside is borderless — the island IS its

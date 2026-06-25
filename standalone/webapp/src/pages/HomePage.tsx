@@ -6,8 +6,6 @@ import { log } from "@/logger"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { useModalContext } from "@/contexts"
 import { DiagramGallerySkeleton } from "@/components/home/DiagramGallerySkeleton"
-import { Capacitor } from "@capacitor/core"
-import { HomeFooter } from "@/components/home/HomeFooter"
 import { HomeHeaderRow } from "@/components/home/HomeHeaderRow"
 import { HomeNewFab } from "@/components/home/HomeNewFab"
 import { useHomeChrome } from "@/components/home/useHomeChrome"
@@ -24,7 +22,6 @@ const DiagramGallery = lazy(() =>
 
 export const HomePage = () => {
   useDocumentTitle("Your diagrams")
-  const isNative = Capacitor.isNativePlatform()
   const navigate = useNavigate()
   const location = useLocation()
   const highlightSharedDiagramId =
@@ -130,10 +127,6 @@ export const HomePage = () => {
       </main>
 
       <HomeNewFab onNewDiagram={openNewDiagram} />
-
-      {/* Web only: native (Capacitor) surfaces these links via the navbar menu
-          instead, and on mobile web the footer is hidden in favor of it. */}
-      {!isNative && <HomeFooter className="hidden md:flex" />}
     </div>
   )
 }

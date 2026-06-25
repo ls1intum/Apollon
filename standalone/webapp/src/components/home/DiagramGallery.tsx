@@ -7,6 +7,7 @@ import {
   useState,
 } from "react"
 import type { UMLDiagramType, UMLModel } from "@tumaet/apollon"
+import { Button } from "@tumaet/ui/components/button"
 import { DiagramGallerySkeleton } from "@/components/home/DiagramGallerySkeleton"
 import { DiagramView } from "@/types"
 import { playgroundModelId } from "@/constants/playgroundDefaultDiagram"
@@ -598,13 +599,14 @@ export const DiagramGallery = ({
               </p>
               {diagramSource === "shared" &&
                 sharedDiagramsStatus === "error" && (
-                  <button
-                    type="button"
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2"
                     onClick={() => setSharedReloadKey((current) => current + 1)}
-                    className="mt-2 rounded-md border border-border bg-card px-3 py-1.5 text-sm text-foreground transition-colors duration-200 hover:bg-accent-hover"
                   >
                     Try again
-                  </button>
+                  </Button>
                 )}
             </div>
           </div>

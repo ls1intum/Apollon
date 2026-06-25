@@ -1,5 +1,12 @@
 import { Link } from "@tanstack/react-router"
 import { useEffect, useRef, useState } from "react"
+import { Button } from "@tumaet/ui/components/button"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@tumaet/ui/components/tooltip"
 import { useEditorContext, useModalContext } from "@/contexts"
 import { ALL_DIAGRAMS_LABEL } from "@/lib/navProvenance"
 import { BrandAndVersion } from "./BrandAndVersion"
@@ -131,24 +138,34 @@ export function HeaderTitleIsland() {
 export function HeaderActionsIsland() {
   const { openModal } = useModalContext()
   return (
-    <Island ariaLabel="Editor actions">
-      <div className="flex items-center gap-0.5">
-        <NavbarFile />
-        <button
-          type="button"
-          className={navbarButtonStyle()}
-          onClick={() => openModal("SHARE", { dialogVariant: "home" })}
-        >
-          <span>Share</span>
-        </button>
-        <SaveLocalCopyButton labelClassName="hidden lg:inline" />
-        <NavbarHelp />
-      </div>
-      <GroupDivider />
-      <div className="flex items-center gap-0.5">
-        <VersionHistoryButton labelClassName="hidden lg:inline" />
-        <ThemeSwitcherMenu />
-      </div>
-    </Island>
+    <TooltipProvider>
+      <Island ariaLabel="Editor actions">
+        <div className="flex items-center gap-0.5">
+          <NavbarFile />
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={navbarButtonStyle()}
+                  onClick={() => openModal("SHARE", { dialogVariant: "home" })}
+                >
+                  Share
+                </Button>
+              }
+            />
+            <TooltipContent>Share</TooltipContent>
+          </Tooltip>
+          <SaveLocalCopyButton labelClassName="hidden lg:inline" />
+          <NavbarHelp />
+        </div>
+        <GroupDivider />
+        <div className="flex items-center gap-0.5">
+          <VersionHistoryButton labelClassName="hidden lg:inline" />
+          <ThemeSwitcherMenu />
+        </div>
+      </Island>
+    </TooltipProvider>
   )
 }

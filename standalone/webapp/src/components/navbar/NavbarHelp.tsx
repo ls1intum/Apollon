@@ -6,6 +6,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@tumaet/ui/components/dropdown-menu"
+import { Button } from "@tumaet/ui/components/button"
 import { ChevronDownIcon } from "lucide-react"
 import { useLocation, useNavigate } from "@tanstack/react-router"
 import { bugReportURL } from "@/constants/urls"
@@ -60,8 +61,14 @@ export const NavbarHelp: FC<Props> = ({ color }) => {
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger
         id="help-menu-button"
-        className={navbarButtonStyle()}
-        style={color ? { color } : undefined}
+        render={
+          <Button
+            variant="ghost"
+            size="sm"
+            className={navbarButtonStyle()}
+            style={color ? { color } : undefined}
+          />
+        }
       >
         <span>Help</span>
         <ChevronDownIcon className="ml-1 size-4" aria-hidden />

@@ -8,6 +8,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@tumaet/ui/components/dropdown-menu"
+import { Button } from "@tumaet/ui/components/button"
 import { ChevronDownIcon } from "lucide-react"
 import { toast } from "react-toastify"
 import { useModalContext } from "@/contexts"
@@ -114,8 +115,14 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger
         id="file-menu-button"
-        className={navbarButtonStyle()}
-        style={color ? { color } : undefined}
+        render={
+          <Button
+            variant="ghost"
+            size="sm"
+            className={navbarButtonStyle()}
+            style={color ? { color } : undefined}
+          />
+        }
       >
         <span>File</span>
         <ChevronDownIcon className="ml-1 size-4" aria-hidden />

@@ -1,11 +1,9 @@
 import { lazy, Suspense, useEffect } from "react"
 import { createRootRoute, Outlet, useRouterState } from "@tanstack/react-router"
-import { Capacitor } from "@capacitor/core"
 import { AppProviders } from "@/AppProviders"
 import { AppLoadingScreen } from "@/components/AppLoadingScreen"
 import { DeferredToastContainer } from "@/components/DeferredToastContainer"
-import { HomeNavbar } from "@/components/navbar/HomeNavbar"
-import { HomeFooter } from "@/components/home/HomeFooter"
+import { ChromeSubHeader } from "@/components/navbar/ChromeSubHeader"
 import { ErrorPage } from "@/pages/ErrorPage"
 import { ensureVersionStoreBootstrapped } from "@/stores/versionStoreBootstrap"
 
@@ -47,7 +45,7 @@ function RootLayout() {
           </a>
         )}
         {isEditorRoute && <EditorChromeHeader />}
-        {isChromeSubRoute && <HomeNavbar />}
+        {isChromeSubRoute && <ChromeSubHeader />}
         <div
           id="editor-area"
           data-testid="editor-area"
@@ -56,9 +54,6 @@ function RootLayout() {
         >
           <Outlet />
         </div>
-        {isChromeSubRoute && !Capacitor.isNativePlatform() && (
-          <HomeFooter className="hidden md:flex" />
-        )}
       </Suspense>
       <DeferredToastContainer />
     </AppProviders>

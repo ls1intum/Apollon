@@ -4,6 +4,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@tumaet/ui/components/dropdown-menu"
+import { IconButton } from "@tumaet/ui/components/icon-button"
 import { MoreVerticalIcon, ShareIcon } from "lucide-react"
 import { useModalContext } from "@/contexts"
 import { ALL_DIAGRAMS_LABEL } from "@/lib/navProvenance"
@@ -65,26 +66,29 @@ export function MobileActionsPill() {
     >
       {/* Primary actions stay visible as icons — same .apollon-chrome-iconbtn
           family (size/hover/radius/focus) as the zoom/minimap controls. */}
-      <button
-        type="button"
+      <IconButton
+        ariaLabel="Share"
+        tooltip="Share"
         className="apollon-chrome-iconbtn"
-        aria-label="Share"
-        title="Share"
         onClick={() => openModal("SHARE", { dialogVariant: "home" })}
       >
         <ShareIcon className="size-4" aria-hidden />
-      </button>
+      </IconButton>
       <VersionHistoryButton labelClassName="hidden" />
       {/* Trailing, lower-frequency actions collapse behind the overflow menu. */}
       <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger
           id="mobile-options-button"
-          className="apollon-chrome-iconbtn"
-          aria-label="open options"
-          title="More"
-        >
-          <MoreVerticalIcon className="size-4" aria-hidden />
-        </DropdownMenuTrigger>
+          render={
+            <IconButton
+              ariaLabel="open options"
+              tooltip="More"
+              className="apollon-chrome-iconbtn"
+            >
+              <MoreVerticalIcon className="size-4" aria-hidden />
+            </IconButton>
+          }
+        />
         <DropdownMenuContent
           id="mobile-options-menu"
           aria-labelledby="mobile-options-button"

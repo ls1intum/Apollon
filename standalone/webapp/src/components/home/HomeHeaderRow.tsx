@@ -15,6 +15,7 @@ import { RefinePopover } from "./RefinePopover"
 import { HomeRefinementChips } from "./HomeRefinementChips"
 import { HomeBrandPill } from "./HomeBrandPill"
 import { HomeActionsPill } from "./HomeActionsPill"
+import { HomeHelpMenu } from "./HomeHelpMenu"
 import type { HomeChrome } from "./useHomeChrome"
 
 /**
@@ -23,9 +24,9 @@ import type { HomeChrome } from "./useHomeChrome"
  * as the SAME floating-glass language as the editor chrome.
  *
  * One responsive component: desktop islands at `md+`, compact pills below `md`
- * (Tailwind `md` is the single structural switch — matching the home's existing
- * HomePage/HomeFooter/HomeNavbar cutover, NOT the editor's `isNarrow`). The chip
- * line sits flush under the band whenever a refinement is active.
+ * (Tailwind `md` is the single structural switch for the home chrome, NOT the
+ * editor's `isNarrow`). The chip line sits flush under the band whenever a
+ * refinement is active.
  */
 export type HomeHeaderRowProps = {
   chrome: HomeChrome
@@ -67,7 +68,7 @@ export function HomeHeaderRow({
       {/* ── Desktop band (md+): three islands ── */}
       <div className="hidden items-start gap-[var(--apollon-chrome-gap)] md:flex">
         <HomeBrandIsland />
-        <div className="flex min-w-0 flex-1 justify-center">
+        <div className="flex min-w-[200px] flex-1 justify-center">
           <HomeSearchIsland chrome={chrome} count={count} />
         </div>
         <HomeActionsIsland
@@ -98,22 +99,15 @@ export function HomeHeaderRow({
 }
 
 /**
- * LEFT desktop island (`role="banner"`): brand lockup + a quiet "Your diagrams"
- * label. The single page `<h1>` is rendered once by `HomeHeaderRow` (outside the
+ * LEFT desktop island (`role="banner"`): the brand lockup, nothing else — the
+ * "Your diagrams" label was dropped as redundant with the (single, sr-only)
+ * page `<h1>`. That `<h1>` is rendered once by `HomeHeaderRow` (outside the
  * md-gated bands) so it survives the mobile layout where this island is hidden.
  */
 function HomeBrandIsland() {
   return (
     <Island as="header" role="banner" ariaLabel="Home">
       <BrandAndVersion />
-      <GroupDivider />
-      <span
-        aria-hidden
-        className="text-sm font-semibold whitespace-nowrap"
-        style={{ color: "var(--apollon-chrome-text)" }}
-      >
-        Your diagrams
-      </span>
     </Island>
   )
 }
@@ -175,9 +169,10 @@ function HomeSearchIsland({
 }
 
 /**
- * RIGHT desktop island: ★ Favorites · Refine ▾ · Import / New diagram · Theme,
- * split into functional groups by hairline dividers. Icon controls use the
- * shared `.apollon-chrome-iconbtn` / `navbarButtonStyle` families.
+ * RIGHT desktop island: ★ Favorites · Refine ▾ · Import / New diagram · Help ▾
+ * · Theme, split into functional groups by hairline dividers. Icon controls use
+ * the shared `.apollon-chrome-iconbtn` / `navbarButtonStyle` families, and Help
+ * is the SHARED `HomeHelpMenu` (same source as the mobile pill + sub-routes).
  */
 function HomeActionsIsland({
   chrome,
@@ -225,9 +220,10 @@ function HomeActionsIsland({
             type="button"
             className={navbarButtonStyle("relative")}
             aria-label="Refine"
+            title="Refine"
           >
             <SlidersHorizontal className="size-4" aria-hidden />
-            <span>Refine</span>
+            <span className="hidden lg:inline">Refine</span>
             {chrome.refineCount > 0 && (
               <Badge className="ml-0.5 size-4 min-w-0 px-0 text-[10px]">
                 {chrome.refineCount}
@@ -249,12 +245,8 @@ function HomeActionsIsland({
       </button>
       <button
         type="button"
-        className={navbarButtonStyle()}
+        className={navbarButtonStyle("apollon-chrome-accent-btn")}
         onClick={onNewDiagram}
-        style={{
-          background: "var(--apollon-chrome-accent)",
-          color: "var(--apollon-chrome-accent-contrast)",
-        }}
       >
         <Plus className="size-4" aria-hidden />
         <span>New diagram</span>
@@ -262,6 +254,7 @@ function HomeActionsIsland({
 
       <GroupDivider />
 
+      <HomeHelpMenu />
       <ThemeSwitcherMenu />
     </Island>
   )

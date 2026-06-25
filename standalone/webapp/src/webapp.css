@@ -29,14 +29,6 @@
 :root {
   --apollon-primary: var(--home-accent-base);
 
-  /* Editor/home navbar chrome — an always-dark bar that does not react to the
-     theme (folded here from the deleted navbar/styleConstants.ts so both the
-     editor Navbar and the chrome HomeNavbar share one source). The literals live
-     in the primitive layer of @tumaet/ui tokens.css (single token source); these
-     are the webapp-semantic handles onto them. */
-  --navbar-bg: var(--primitive-navbar-bg);
-  --navbar-shadow: var(--primitive-navbar-shadow);
-
   /* Safe-area floor: map the UA insets onto the custom properties the mobile
      layout reads as `var(--safe-area-inset-*, 0px)`. With `viewport-fit=cover`
      (set in index.html) this works in any browser; on native the Capacitor

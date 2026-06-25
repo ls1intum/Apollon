@@ -106,44 +106,46 @@ export function LegalPage({
   }, [page, profile, resolver])
 
   return (
-    <div className="h-full overflow-y-auto bg-[var(--apollon-background)] text-[var(--apollon-primary-contrast)]">
-      <main className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 md:py-12">
-        <h1 className="mb-2 text-[1.8rem] font-normal text-[var(--apollon-primary-contrast)] md:text-[2.5rem]">
-          {title}
-        </h1>
+    <div className="home-canvas-bg h-full overflow-hidden bg-background text-foreground">
+      <main className="home-page-scrollbar app-scroll-y">
+        <div className="home-content-x mx-auto w-full max-w-3xl pt-5 md:pt-6">
+          <h1 className="mb-2 text-2xl font-semibold text-foreground md:text-3xl">
+            {title}
+          </h1>
 
-        {resolved?.source === "disclaimer" ? (
-          <Alert
-            variant="destructive"
-            data-testid="legal-disclaimer-banner"
-            className="my-4"
-          >
-            <AlertDescription>{DISCLAIMER_BANNER}</AlertDescription>
-          </Alert>
-        ) : null}
-
-        {error ? (
-          <Alert variant="destructive" className="my-4">
-            <AlertDescription>{ERROR_COPY}</AlertDescription>
-          </Alert>
-        ) : null}
-
-        {resolved ? (
-          <article
-            lang="en"
-            data-testid="legal-content"
-            data-source={resolved.source}
-            className="legal-content"
-          >
-            <ReactMarkdown
-              skipHtml
-              remarkPlugins={[remarkGfm]}
-              components={MARKDOWN_COMPONENTS}
+          {resolved?.source === "disclaimer" ? (
+            <Alert
+              variant="destructive"
+              data-testid="legal-disclaimer-banner"
+              className="my-4"
             >
-              {resolved.markdown}
-            </ReactMarkdown>
-          </article>
-        ) : null}
+              <AlertDescription>{DISCLAIMER_BANNER}</AlertDescription>
+            </Alert>
+          ) : null}
+
+          {error ? (
+            <Alert variant="destructive" className="my-4">
+              <AlertDescription>{ERROR_COPY}</AlertDescription>
+            </Alert>
+          ) : null}
+
+          {resolved ? (
+            <article
+              lang="en"
+              data-testid="legal-content"
+              data-source={resolved.source}
+              className="legal-content"
+            >
+              <ReactMarkdown
+                skipHtml
+                remarkPlugins={[remarkGfm]}
+                components={MARKDOWN_COMPONENTS}
+              >
+                {resolved.markdown}
+              </ReactMarkdown>
+            </article>
+          ) : null}
+        </div>
       </main>
     </div>
   )

@@ -19,11 +19,7 @@ export function HomeNewFab({ onNewDiagram }: { onNewDiagram?: () => void }) {
       onClick={onNewDiagram}
       aria-label="New diagram"
       title="New diagram"
-      className="apollon-glass fixed bottom-[var(--apollon-chrome-edge-safe-bottom)] left-1/2 z-30 inline-flex h-12 -translate-x-1/2 cursor-pointer items-center justify-center gap-2 rounded-full border-0 pr-5 pl-4 text-sm font-semibold transition-transform active:scale-95 focus-visible:shadow-[0_0_0_3px_color-mix(in_srgb,var(--apollon-chrome-accent)_50%,transparent)] focus-visible:outline-none md:hidden"
-      style={{
-        background: "var(--apollon-chrome-accent)",
-        color: "var(--apollon-chrome-accent-contrast)",
-      }}
+      className="apollon-chrome-accent-btn apollon-glass fixed bottom-[var(--apollon-chrome-edge-safe-bottom)] left-1/2 z-30 inline-flex h-12 -translate-x-1/2 cursor-pointer items-center justify-center gap-2 rounded-full border-0 pr-5 pl-4 text-sm font-semibold transition-transform active:scale-95 focus-visible:shadow-[0_0_0_3px_color-mix(in_srgb,var(--apollon-chrome-accent)_50%,transparent)] focus-visible:outline-none md:hidden"
     >
       <Plus className="size-5" aria-hidden />
       New diagram

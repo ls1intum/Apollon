@@ -20,6 +20,9 @@ import type { UMLDiagramType } from "@tumaet/apollon"
 import { releasesLink, repositoryLink } from "@/constants/version"
 import { bugReportURL } from "@/constants/urls"
 import { ISLAND_LAYOUT_STYLE } from "@/components/navbar/islandPrimitives"
+import { useModalContext } from "@/contexts"
+import { readNavFrom } from "@/lib/navProvenance"
+import { useLocation } from "@tanstack/react-router"
 import { useThemeStore } from "@/stores/useThemeStore"
 import { useShallow } from "zustand/shallow"
 import { RefinePopover } from "./RefinePopover"
@@ -56,6 +59,10 @@ export function HomeActionsPill({
       toggleTheme: state.toggleTheme,
     }))
   )
+  const { openModal } = useModalContext()
+  // Forward the inherited origin so a legal hop still returns to the diagram.
+  const from = readNavFrom(useLocation().state)
+  const legalLinkState = from ? { from } : undefined
   const isDarkMode = currentTheme === "dark"
   const closeMenu = () => setMenuOpen(false)
 
@@ -140,6 +147,9 @@ export function HomeActionsPill({
           side="bottom"
           className="w-56 max-w-[calc(100vw-1rem)] [&_[data-slot=dropdown-menu-item]]:min-h-11"
         >
+          {/* Theme leads; the remaining items mirror `HomeHelpMenu` exactly
+              (About → Releases → GitHub → Report, separator, Privacy/Imprint)
+              so the home's Help item SET/ORDER is identical everywhere. */}
           <DropdownMenuItem
             onClick={() => {
               toggleTheme()
@@ -154,19 +164,13 @@ export function HomeActionsPill({
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
-            render={
-              <Link to="/privacy" onClick={closeMenu}>
-                Privacy
-              </Link>
-            }
-          />
-          <DropdownMenuItem
-            render={
-              <Link to="/imprint" onClick={closeMenu}>
-                Imprint
-              </Link>
-            }
-          />
+            onClick={() => {
+              openModal("AboutModal")
+              closeMenu()
+            }}
+          >
+            About
+          </DropdownMenuItem>
           <DropdownMenuItem
             render={
               <a
@@ -201,6 +205,21 @@ export function HomeActionsPill({
               >
                 Report a problem
               </a>
+            }
+          />
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            render={
+              <Link to="/privacy" state={legalLinkState} onClick={closeMenu}>
+                Privacy
+              </Link>
+            }
+          />
+          <DropdownMenuItem
+            render={
+              <Link to="/imprint" state={legalLinkState} onClick={closeMenu}>
+                Imprint
+              </Link>
             }
           />
         </DropdownMenuContent>
