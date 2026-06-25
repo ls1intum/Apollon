@@ -65,7 +65,7 @@ export function HomeHeaderRow({
       {/* ── Desktop band (md+): three islands ── */}
       <div className="hidden items-start gap-[var(--apollon-chrome-gap)] md:flex">
         <HomeBrandIsland />
-        <div className="flex min-w-[200px] flex-1 justify-center">
+        <div className="flex min-w-[200px] flex-1">
           <HomeSearchIsland chrome={chrome} count={count} />
         </div>
         <HomeActionsIsland
@@ -135,11 +135,11 @@ function HomeSearchIsland({
   }, [])
 
   return (
-    // Grows with the centre track up to a max, then stops + centres (symmetric
-    // whitespace) rather than stretching the full width — the wrapper's
-    // `justify-center` + `mx-auto` keep it centred once it caps.
+    // Grows with the centre track up to a max, then stops — LEFT-aligned, so the
+    // remaining track stays open to its right rather than the field stretching
+    // full width.
     <Island
-      className="apollon-chrome-title-island mx-auto w-full"
+      className="apollon-chrome-title-island w-full"
       ariaLabel="Search diagrams"
       style={{ maxWidth: "560px" }}
     >

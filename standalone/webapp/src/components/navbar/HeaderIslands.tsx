@@ -107,13 +107,12 @@ export function HeaderTitleIsland() {
   }, [editor])
 
   return (
-    // The title island grows with the centre track up to a max, then stops and
-    // centres (symmetric whitespace) — `mx-auto` centres it once it caps, so the
-    // actions never float beside a one-sided dead gap and a long title never
-    // stretches edge-to-edge. Same rule as the home search island. The input is
+    // The title island grows with the centre track up to a max, then stops,
+    // LEFT-aligned (the remaining track stays open to its right) rather than
+    // stretching edge-to-edge. Same rule as the home search island. The input is
     // `flex-1 min-w-0` so it fills the island and ellipsises when tight.
     <Island
-      className="apollon-chrome-title-island mx-auto w-full"
+      className="apollon-chrome-title-island w-full"
       style={{ maxWidth: "560px" }}
     >
       <IslandInput

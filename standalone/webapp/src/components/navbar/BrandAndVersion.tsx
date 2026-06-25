@@ -24,7 +24,11 @@ export const BrandAndVersion = () => {
         height="28"
         className="block shrink-0"
       />
-      <span className="overflow-visible whitespace-nowrap pr-1 text-base leading-none font-semibold tracking-[0.06em] text-[color:var(--apollon-chrome-text)] uppercase">
+      {/* The wordmark hides below 480px (logo-only), so on a super-narrow phone
+          the brand never crowds out the back affordance beside it. Only the
+          sub-page header (ChromeSubHeader) shows the brand that narrow — the home
+          + editor render it at >=768 — so this only affects that case. */}
+      <span className="hidden overflow-visible pr-1 text-base leading-none font-semibold tracking-[0.06em] whitespace-nowrap text-[color:var(--apollon-chrome-text)] uppercase min-[480px]:inline">
         Apollon
       </span>
     </div>

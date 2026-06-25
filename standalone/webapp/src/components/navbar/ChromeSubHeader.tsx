@@ -42,14 +42,14 @@ export const ChromeSubHeader = () => {
         </Link>
         <GroupDivider />
         {/* The sub-page band has a wide-open centre, so the "All diagrams" label
-            stays down to ~480px (it collapses to a bare chevron only when brand +
-            actions would otherwise overflow a narrow phone) — far longer than the
-            editor's tighter `lg` gate. The page title is NOT in the band; it is a
-            real <h1> in the page content (see LegalPage / ErrorPage). */}
+            stays down to 360px — and below 480px the brand collapses to logo-only
+            (see BrandAndVersion), which frees the room for the label to survive
+            that far. It falls back to a bare chevron only under 360px. The page
+            title is NOT in the band; it is a real <h1> in the page content. */}
         <BackNav
           {...backTarget}
           tone="onDark"
-          labelClassName="hidden min-[480px]:inline"
+          labelClassName="hidden min-[360px]:inline"
         />
       </Island>
 
