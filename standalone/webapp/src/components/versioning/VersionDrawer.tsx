@@ -364,9 +364,10 @@ export const VersionSidebarBody: FC<Props> = ({
       role="complementary"
       aria-label={t.drawerTitle}
     >
-      {/* Composer: flat textarea with the Save button stacked underneath
-          so the save target is unambiguous and the textarea owns the full
-          width. Cmd/Ctrl+Enter submits; plain Enter inserts a newline.
+      {/* Composer: flat textarea over a single action row — the ⌘+Enter hint
+          on the left and the Save button on the right — so the textarea owns
+          the full width and the controls share one tidy line.
+          Cmd/Ctrl+Enter submits; plain Enter inserts a newline.
 
           Hidden entirely while previewing — there's nothing meaningful to
           save while the canvas reflects an old snapshot, and showing it
@@ -400,48 +401,49 @@ export const VersionSidebarBody: FC<Props> = ({
               } as CSSProperties
             }
           />
-          {/* ⌘/Ctrl+Enter hint — surface the keybinding so it's
-              discoverable instead of folklore. */}
-          <span
-            className="-mt-0.5 text-[0.7rem]"
-            style={{ color: TEXT_MUTED }}
-            aria-hidden
-          >
-            {t.composerHint}
-          </span>
-          {/* shadcn Button (default variant) for structure, focus-visible ring,
-              and disabled handling. The accent is the drawer's chrome accent,
-              not the global `bg-primary`, so we override the surface via style
-              while keeping the shadcn disabled state themed with chrome tokens. */}
-          <Button
-            type="button"
-            size="sm"
-            onClick={handleCreate}
-            disabled={submitting || !canSave}
-            title={
-              !canSave && previewState !== null
-                ? "Exit preview to save a new version"
-                : !canSave && isEmptyDiagram
-                  ? t.emptyDiagramTooltip
-                  : !canSave && !hasChanges
-                    ? "No changes since the last saved version"
-                    : undefined
-            }
-            className="self-end font-semibold hover:brightness-[0.94] disabled:[background:var(--apollon-chrome-surface-active)] disabled:[color:var(--apollon-chrome-text-muted)] disabled:opacity-100"
-            style={{
-              color: "var(--apollon-chrome-accent-contrast)",
-              background: "var(--apollon-chrome-accent)",
-            }}
-          >
-            {submitting ? (
-              <Spinner
-                className="size-3.5"
-                style={{ color: "var(--apollon-chrome-accent-contrast)" }}
-              />
-            ) : (
-              t.createButton
-            )}
-          </Button>
+          {/* One tidy row below the textarea: the ⌘/Ctrl+Enter hint on the
+              LEFT (muted, surfaces the keybinding so it's discoverable instead
+              of folklore) and the Save button pushed to the RIGHT. Sharing a
+              row removes the stacked-rows whitespace. */}
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs" style={{ color: TEXT_MUTED }} aria-hidden>
+              {t.composerHint}
+            </span>
+            {/* shadcn Button (default variant) for structure, focus-visible
+                ring, and disabled handling. The accent is the drawer's chrome
+                accent, not the global `bg-primary`, so we override the surface
+                via style while keeping the shadcn disabled state themed with
+                chrome tokens. */}
+            <Button
+              type="button"
+              size="sm"
+              onClick={handleCreate}
+              disabled={submitting || !canSave}
+              title={
+                !canSave && previewState !== null
+                  ? "Exit preview to save a new version"
+                  : !canSave && isEmptyDiagram
+                    ? t.emptyDiagramTooltip
+                    : !canSave && !hasChanges
+                      ? "No changes since the last saved version"
+                      : undefined
+              }
+              className="ml-auto font-semibold hover:brightness-[0.94] disabled:[background:var(--apollon-chrome-surface-active)] disabled:[color:var(--apollon-chrome-text-muted)] disabled:opacity-100"
+              style={{
+                color: "var(--apollon-chrome-accent-contrast)",
+                background: "var(--apollon-chrome-accent)",
+              }}
+            >
+              {submitting ? (
+                <Spinner
+                  className="size-3.5"
+                  style={{ color: "var(--apollon-chrome-accent-contrast)" }}
+                />
+              ) : (
+                t.createButton
+              )}
+            </Button>
+          </div>
         </div>
       )}
 

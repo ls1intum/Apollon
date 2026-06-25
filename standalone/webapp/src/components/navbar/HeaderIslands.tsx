@@ -2,12 +2,7 @@ import { Link } from "@tanstack/react-router"
 import { useEffect, useRef, useState } from "react"
 import { Button } from "@tumaet/ui/components/button"
 import { ShareIcon } from "lucide-react"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@tumaet/ui/components/tooltip"
+import { TooltipProvider } from "@tumaet/ui/components/tooltip"
 import { useEditorContext, useModalContext } from "@/contexts"
 import { ALL_DIAGRAMS_LABEL } from "@/lib/navProvenance"
 import { BrandAndVersion } from "./BrandAndVersion"
@@ -150,24 +145,21 @@ export function HeaderActionsIsland() {
       <Island ariaLabel="Editor actions">
         <div className="flex items-center gap-0.5">
           <NavbarFile />
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={navbarButtonStyle()}
-                  onClick={() => openModal("SHARE", { dialogVariant: "home" })}
-                >
-                  {/* Action control → ONE leading lucide glyph, no caret —
-                      matching the editor mobile pill's Share icon. */}
-                  <ShareIcon className="size-4" aria-hidden />
-                  Share
-                </Button>
-              }
-            />
-            <TooltipContent>Share</TooltipContent>
-          </Tooltip>
+          {/* Share carries a VISIBLE "Share" label, so it gets NO tooltip — a
+              tooltip repeating the label is pure noise. Tooltips are reserved
+              for icon-only controls (Save/Version when collapsed) where they
+              supply the otherwise-missing visible name. */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className={navbarButtonStyle()}
+            onClick={() => openModal("SHARE", { dialogVariant: "home" })}
+          >
+            {/* Action control → ONE leading lucide glyph, no caret —
+                matching the editor mobile pill's Share icon. */}
+            <ShareIcon className="size-4" aria-hidden />
+            Share
+          </Button>
           <SaveLocalCopyButton labelClassName="hidden lg:inline" />
           <VersionHistoryButton labelClassName="hidden lg:inline" />
         </div>
