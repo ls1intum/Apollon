@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from "react"
+import { useState } from "react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,25 +13,15 @@ import { NavbarHelp } from "./NavbarHelp"
 import { SaveLocalCopyButton } from "./SaveLocalCopyButton"
 import { ThemeSwitcherMenu } from "./ThemeSwitcher"
 import { VersionHistoryButton } from "./VersionHistoryButton"
+import { ISLAND_LAYOUT_STYLE } from "./islandPrimitives"
 
 /**
  * Compact mobile chrome pills (same material + height as the desktop islands),
- * sized to the phone-portrait / phone-landscape height budget.
+ * sized to the phone-portrait / phone-landscape height budget. They reuse the
+ * shared island flex box (ISLAND_LAYOUT_STYLE) — only the height-budget token
+ * differs between portrait/landscape, and that lives on the token, not here.
  */
-const PILL_STYLE: CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: "var(--apollon-chrome-gap)",
-  height: "var(--apollon-chrome-island-h)",
-  paddingLeft: "var(--apollon-chrome-pad)",
-  paddingRight: "var(--apollon-chrome-pad)",
-  paddingTop: 0,
-  paddingBottom: 0,
-  boxSizing: "border-box",
-  pointerEvents: "auto",
-  maxWidth: "100%",
-  minWidth: 0,
-}
+const PILL_STYLE = ISLAND_LAYOUT_STYLE
 
 /**
  * Left cluster on narrow phones: an ALWAYS-visible back affordance, NO brand

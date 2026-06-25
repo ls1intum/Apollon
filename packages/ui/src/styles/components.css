@@ -175,3 +175,131 @@
     @apply z-50 size-2.5 translate-y-[calc(-50%-2px)] rotate-45 rounded-[2px] bg-foreground fill-foreground data-[side=bottom]:top-1 data-[side=inline-end]:top-1/2! data-[side=inline-end]:-left-1 data-[side=inline-end]:-translate-y-1/2 data-[side=inline-start]:top-1/2! data-[side=inline-start]:-right-1 data-[side=inline-start]:-translate-y-1/2 data-[side=left]:top-1/2! data-[side=left]:-right-1 data-[side=left]:-translate-y-1/2 data-[side=right]:top-1/2! data-[side=right]:-left-1 data-[side=right]:-translate-y-1/2 data-[side=top]:-bottom-2.5;
   }
 }
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Shared editor CHROME — .apollon-glass + .apollon-chrome-iconbtn.
+
+   These were authored in the editor's library/lib/styles/app.css, but that file
+   only loads INSIDE a mounted editor. The webapp HOME (rendered with no editor
+   mounted) needs the same floating-glass surface + icon-control idiom for its
+   island band, so the class definitions live HERE in the webapp-available,
+   Preflight-/asset-free components.css instead — the editor still gets them
+   (App.tsx side-effect-imports this file), and they reference only the
+   --apollon-chrome-* tokens (single-sourced in tokens.css), so the rendered
+   surface/control is byte-identical wherever the class is applied. Plain CSS
+   (not @apply) and OUTSIDE @layer components so they keep the same unlayered
+   cascade weight the editor's app.css gave them.
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* Shared glass surface for every floating chrome object — header islands,
+   palette, zoom/undo controls, minimap, and the webapp home band — so they read
+   as one family of translucent panes. The tint floor keeps text legible over a
+   busy diagram; the inset hairline gives crispness in dark mode. */
+.apollon-glass {
+  background-color: var(--apollon-chrome-glass);
+  backdrop-filter: var(--apollon-chrome-glass-blur);
+  -webkit-backdrop-filter: var(--apollon-chrome-glass-blur);
+  border: 1px solid var(--apollon-chrome-border);
+  box-shadow: var(--apollon-chrome-shadow-floating),
+    var(--apollon-chrome-inset-hairline);
+  border-radius: var(--apollon-chrome-radius-lg);
+}
+
+/* Honour the OS reduced-transparency / increased-contrast preferences (the
+   editor's app.css carries the matching rules for its React-Flow panels). */
+@media (prefers-reduced-transparency: reduce) {
+  .apollon-glass {
+    background-color: var(--apollon-chrome-surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .apollon-glass {
+    border-color: var(--apollon-chrome-border-strong);
+  }
+}
+
+/* The single icon-control idiom for every floating chrome button (zoom, fit,
+   undo/redo, minimap handles, the webapp mobile pills): borderless on glass, the
+   pane supplies the border/radius, and state is a surface-layer fill — never a
+   border — so a control never reads as a box-inside-a-box. */
+.apollon-chrome-iconbtn {
+  box-sizing: border-box;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--apollon-chrome-btn);
+  height: var(--apollon-chrome-btn);
+  padding: 0;
+  border: 0;
+  border-radius: var(--apollon-chrome-radius-sm);
+  background: transparent;
+  color: var(--apollon-chrome-text);
+  cursor: pointer;
+  transition: background-color var(--apollon-chrome-duration-hover)
+    var(--apollon-chrome-ease-standard);
+}
+
+/* lucide icons are stroke-based (fill="none" stroke="currentColor"); the button's
+   `color` drives the stroke. Do NOT set `fill: currentColor` here — it would fill
+   the stroke paths into a solid blob. */
+
+/* The paint box stays compact, but the hit target extends to ≥44px (Apple HIG)
+   via an invisible overlay — so touch chrome doesn't have to grow the glyph. */
+.apollon-chrome-iconbtn::before {
+  content: "";
+  position: absolute;
+  inset: calc((var(--apollon-chrome-btn) - var(--apollon-chrome-hit)) / 2);
+}
+
+/* Lower-specificity states first (stylelint no-descending-specificity). */
+.apollon-chrome-iconbtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.apollon-chrome-iconbtn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px
+    color-mix(in srgb, var(--apollon-chrome-accent) 45%, transparent);
+}
+
+.apollon-chrome-iconbtn:hover:not(:disabled) {
+  background: var(--apollon-chrome-surface-hover);
+}
+
+.apollon-chrome-iconbtn:active:not(:disabled) {
+  background: var(--apollon-chrome-surface-active);
+}
+
+/* Numeric zoom readout: same idiom, auto width, tabular figures so the digits
+   don't jitter as the percentage changes. */
+.apollon-chrome-iconbtn--readout {
+  width: auto;
+  min-width: 48px;
+  padding: 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The borderless-input-on-glass idiom (the editor's diagram-title capsule + the
+   home band's search field). The island reads as a quiet capsule until focused,
+   then lifts an accent ring; the field inside is borderless — the island IS its
+   chrome. Inline styles can't target ::placeholder, so the placeholder colour
+   lives here. Single-sourced here (not app.css) so the home reuses it with no
+   editor mounted. */
+.apollon-chrome-title-island:focus-within {
+  border-color: var(--apollon-chrome-accent);
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--apollon-chrome-accent) 35%, transparent),
+    var(--apollon-chrome-shadow-floating);
+}
+
+.apollon-chrome-title-input::placeholder {
+  color: var(--apollon-chrome-text-muted);
+  opacity: 1;
+}

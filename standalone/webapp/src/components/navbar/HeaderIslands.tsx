@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router"
-import { useEffect, useRef, useState, type ReactNode } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useEditorContext, useModalContext } from "@/contexts"
 import { ALL_DIAGRAMS_LABEL } from "@/lib/navProvenance"
 import { BrandAndVersion } from "./BrandAndVersion"
@@ -11,6 +11,7 @@ import { VersionHistoryButton } from "./VersionHistoryButton"
 import { ThemeSwitcherMenu } from "./ThemeSwitcher"
 import { MobileBackPill, MobileActionsPill } from "./MobileIslands"
 import { navbarButtonStyle } from "./styleConstants"
+import { Island, GroupDivider, IslandInput } from "./islandPrimitives"
 
 /**
  * The whole editor header as one fluid flex row inside the `header` overlay band:
@@ -38,70 +39,6 @@ export function EditorHeaderRow({
       </div>
       {isNarrow ? <MobileActionsPill /> : <HeaderActionsIsland />}
     </div>
-  )
-}
-
-/**
- * One floating glass island. Portaled (by EditorChromeHeader) into a top-*
- * overlay region; `.apollon-glass` gives the shared surface, this wrapper lays
- * out content and re-enables pointer events over the transparent region.
- */
-function Island({
-  children,
-  as,
-  role,
-  ariaLabel,
-  className,
-}: {
-  children: ReactNode
-  as?: "header"
-  role?: string
-  ariaLabel?: string
-  className?: string
-}) {
-  const Tag = as ?? "div"
-  return (
-    <Tag
-      role={role}
-      aria-label={ariaLabel}
-      className={`apollon-glass apollon-chrome-island${className ? ` ${className}` : ""}`}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "var(--apollon-chrome-gap)",
-        // One shared height so brand/title/actions align their bottoms exactly;
-        // content centers within it (concentric radius: 12 outer − 6 pad = 6).
-        height: "var(--apollon-chrome-island-h)",
-        paddingLeft: "var(--apollon-chrome-pad)",
-        paddingRight: "var(--apollon-chrome-pad)",
-        paddingTop: 0,
-        paddingBottom: 0,
-        boxSizing: "border-box",
-        pointerEvents: "auto",
-        maxWidth: "100%",
-        minWidth: 0,
-      }}
-    >
-      {children}
-    </Tag>
-  )
-}
-
-/** Thin vertical hairline that separates functional groups inside an island. */
-function GroupDivider() {
-  return (
-    <div
-      aria-hidden
-      style={{
-        alignSelf: "stretch",
-        width: "1px",
-        marginTop: "3px",
-        marginBottom: "3px",
-        marginLeft: "2px",
-        marginRight: "2px",
-        backgroundColor: "var(--apollon-chrome-border)",
-      }}
-    />
   )
 }
 
@@ -164,8 +101,7 @@ export function HeaderTitleIsland() {
 
   return (
     <Island className="apollon-chrome-title-island">
-      <input
-        type="text"
+      <IslandInput
         value={title}
         onChange={(e) => {
           editor?.updateDiagramTitle(e.target.value)
@@ -180,26 +116,9 @@ export function HeaderTitleIsland() {
         // capped by a vw fraction: the field uses the real slack left in the
         // header track and only shrinks (ellipsis) when that track is tight.
         size={Math.min(Math.max((title || "Untitled diagram").length, 12), 56)}
-        // The placeholder colour is set on `.apollon-chrome-title-input` in
-        // webapp.css (input::placeholder can't be expressed inline).
-        className="apollon-chrome-title-input"
-        style={{
-          textAlign: "left",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-          border: 0,
-          outline: "none",
-          background: "transparent",
-          paddingLeft: 8,
-          paddingRight: 8,
-          minWidth: 0,
-          // Left-aligned, grows with the name up to 560px (and never past the
-          // track via 100%), then ellipsises — no artificial vw shrink.
-          maxWidth: "min(560px, 100%)",
-          fontSize: "0.875rem",
-          fontWeight: 600,
-          color: "var(--apollon-chrome-text)",
-        }}
+        // Left-aligned, grows with the name up to 560px (and never past the
+        // track via 100%), then ellipsises — no artificial vw shrink.
+        style={{ maxWidth: "min(560px, 100%)" }}
       />
     </Island>
   )

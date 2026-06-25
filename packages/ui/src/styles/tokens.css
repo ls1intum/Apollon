@@ -218,26 +218,143 @@
      restyles every floating editor surface. */
   --apollon-shadow: 0 4px 12px var(--primitive-shadow-overlay);
 
-  /* Editor "island" surface treatment — mirrored from the editor's app.css so
-     the home reuses the EXACT floating-island appearance (the chrome header
-     islands, the version drawer, and the diagram cards now share one source):
-     a 12px radius, a hairline border that auto-themes off the flipping
-     ink/background, and a soft floating shadow (dark gets its own override below
-     since a light drop shadow vanishes on a dark canvas). The island FILL itself
-     is the canvas/background hue (the editor floats its glass plate over the
-     canvas and separates it by border+shadow, never by lightening the fill);
-     mirroring --apollon-chrome-surface here lets the home cards paint that same
-     island fill instead of a Material-style raised gray. The webapp does NOT
-     import the editor's app.css, so chrome tokens it consumes must live here. */
+  /* ── Editor chrome (--apollon-chrome-*) — the SINGLE source ─────────────────
+     The full floating-chrome design system (glass surface, border/text ramp,
+     dimensional btn/pad/island system, motion). This used to live in the
+     editor's library/lib/styles/app.css :root, with only a 4-token subset
+     mirrored here; that split drifted. It now lives ONLY here so there is one
+     definition, and app.css/components.css/the webapp home all CONSUME it via
+     var(). Every surface/border/text value is color-mix-derived from the two
+     tokens a host already themes (--apollon-background + --apollon-primary-
+     contrast), so theming those two gives correct light/dark chrome for free;
+     only the shadows + the dark inset hairline need an explicit dark delta below.
+
+     Reaches every consumer with no duplication:
+       • editor runtime — tokens.css loads via @tumaet/ui components.css.
+       • published @tumaet/apollon/style.css — bundles components.css + app.css.
+       • headless export — EXPORT_LAYOUT_CSS concatenates components.css + app.css.
+       • webapp HOME (no editor mounted) — webapp.css imports components.css.
+
+     Per THEMING.md only accent + radius-sm/md/lg + edge + gap are a tunable
+     contract; the rest of this ramp is INTERNAL (derived / structural). */
+
+  /* Surface ladder: base == canvas; chrome separates via border + elevation.
+     The island FILL is the canvas/background hue — the editor floats its glass
+     plate over the canvas and separates it by border+shadow, never by lightening
+     the fill; the home cards/band reuse --apollon-chrome-surface to paint that
+     same island fill. */
   --apollon-chrome-surface: var(--apollon-background, #fff);
-  --apollon-chrome-radius-lg: 12px;
+  --apollon-chrome-surface-hover: color-mix(
+    in srgb,
+    var(--apollon-primary-contrast, #000) 8%,
+    var(--apollon-background, #fff)
+  );
+  --apollon-chrome-surface-active: color-mix(
+    in srgb,
+    var(--apollon-primary-contrast, #000) 14%,
+    var(--apollon-background, #fff)
+  );
+
+  /* Borders: opaque cool neutrals that hold their contrast in both themes. */
   --apollon-chrome-border: color-mix(
     in srgb,
     var(--apollon-primary-contrast, #000) 12%,
     var(--apollon-background, #fff)
   );
+  --apollon-chrome-border-strong: color-mix(
+    in srgb,
+    var(--apollon-primary-contrast, #000) 28%,
+    var(--apollon-background, #fff)
+  );
+
+  /* Text */
+  --apollon-chrome-text: var(--apollon-primary-contrast, #212529);
+  --apollon-chrome-text-muted: color-mix(
+    in srgb,
+    var(--apollon-primary-contrast, #000) 58%,
+    var(--apollon-background, #fff)
+  );
+
+  /* Accent — reserved for meaning (primary action, selection, current marker).
+     Chrome surfaces themselves stay neutral. */
+  --apollon-chrome-accent: var(--apollon-primary, #3e8acc);
+  --apollon-chrome-accent-contrast: var(
+    --apollon-on-collaboration-cursor,
+    #fff
+  );
+
+  /* Radius ramp: sm pills, md controls, lg panels/rails. */
+  --apollon-chrome-radius-sm: 6px;
+  --apollon-chrome-radius-md: 8px;
+  --apollon-chrome-radius-lg: 12px;
+
+  /* Harmonic dimensional system: every floating cluster shares one height
+     (island-h, below), so their bottom edges align and the palette clears them
+     by one even gap. One edge margin + one gap apply to all chrome. */
+  --apollon-chrome-edge: 10px; /* margin from the canvas edge (every cluster) */
+  --apollon-chrome-gap: 8px; /* gap between adjacent clusters / to the palette */
+  --apollon-chrome-btn: 32px; /* icon-button paint box */
+  --apollon-chrome-pad: 6px; /* inner padding of every floating cluster */
+  --apollon-chrome-hit: 44px; /* minimum touch target (Apple HIG) */
+
+  /* Edge margin that HUGS a device safe area instead of stacking on it: the
+     design edge when there's no inset, the inset alone when there is one — so
+     chrome aligns to the usable edge with no double-spacing under a notch / home
+     indicator. NO -top variant: the header top is intentionally additive
+     (safe-area-inset-top + edge) because the band is pinned under the notch and
+     still needs its own breathing room. */
+  --apollon-chrome-edge-safe-left: max(
+    var(--apollon-chrome-edge),
+    var(--safe-area-inset-left, 0px)
+  );
+  --apollon-chrome-edge-safe-right: max(
+    var(--apollon-chrome-edge),
+    var(--safe-area-inset-right, 0px)
+  );
+  --apollon-chrome-edge-safe-bottom: max(
+    var(--apollon-chrome-edge),
+    var(--safe-area-inset-bottom, 0px)
+  );
+
+  /* Shared OUTER cluster height = button + 2·padding + 2·1px border. Derived, so
+     fixed-height islands match the auto-height control/minimap panels to the
+     pixel and it self-corrects when btn/pad change (landscape overrides it). */
+  --apollon-chrome-island-h: calc(
+    var(--apollon-chrome-btn) + 2 * var(--apollon-chrome-pad) + 2px
+  );
+
+  /* Elevation: docked chrome (header/rail) = hairline + flat micro-shadow;
+     floating chrome (palette/controls/minimap) = soft halo. */
+  --apollon-chrome-shadow-docked: 0 1px 2px rgb(15 23 42 / 8%);
   --apollon-chrome-shadow-floating: 0 0 1px 0 rgb(15 23 42 / 20%),
     0 2px 8px 0 rgb(15 23 42 / 12%);
+
+  /* Lit up only in dark mode (a pure drop shadow vanishes on a dark canvas). */
+  --apollon-chrome-inset-hairline: 0 0 0 0 transparent;
+
+  /* Glass for floating chrome: a semi-opaque tint floor (keeps text legible —
+     translucency alone never carries it) under a backdrop blur, derived from the
+     canvas background so it themes automatically. */
+  --apollon-chrome-glass: color-mix(
+    in srgb,
+    var(--apollon-background, #fff) 80%,
+    transparent
+  );
+
+  /* Near-opaque tint for text-dense glass (the version-history list) so list
+     copy clears WCAG AA over a busy diagram while still reading as glass. */
+  --apollon-chrome-glass-solid: color-mix(
+    in srgb,
+    var(--apollon-background, #fff) 92%,
+    transparent
+  );
+  --apollon-chrome-glass-blur: saturate(180%) blur(20px);
+
+  /* Motion tokens: short, decelerated. */
+  --apollon-chrome-duration-hover: 120ms;
+  --apollon-chrome-duration-enter: 220ms;
+  --apollon-chrome-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --apollon-chrome-ease-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
 
   /* Public neutral hover wash — a low-alpha veil off the foreground ink, used
      for quiet hover states (e.g. the stereotype toggles) that must read on any
@@ -551,10 +668,13 @@
   --apollon-border: var(--primitive-border-default);
   --apollon-border-subtle: var(--primitive-border-subtle);
 
-  /* Editor island floating shadow — dark override (mirrors app.css; the soft
-     light drop shadow is invisible on the dark canvas, so dark uses a deeper
-     one). radius + the auto-theming chrome border need no dark delta. */
+  /* Editor chrome — dark deltas. The surface/border/text ramp already tracks the
+     dark --apollon-background via color-mix, so dark only fixes the shadows (a
+     soft light drop shadow vanishes on the dark canvas) and lights the contrast
+     inset hairline. radius + the auto-theming chrome border need no dark delta. */
+  --apollon-chrome-shadow-docked: 0 1px 2px rgb(0 0 0 / 40%);
   --apollon-chrome-shadow-floating: 0 2px 12px 0 rgb(0 0 0 / 50%);
+  --apollon-chrome-inset-hairline: inset 0 0 0 1px rgb(255 255 255 / 8%);
 
   /* ── Layer 3: --home-* (dark deltas) ───────────────────────────────────── */
   --home-surface-base: var(--apollon-background);
@@ -603,4 +723,15 @@
   --home-toast-error: var(--primitive-toast-error);
   --home-toast-warning: var(--primitive-toast-warning);
   --home-toast-info: var(--primitive-toast-info);
+}
+
+/* Touch: tighter island padding so the phone chrome stays compact; the icon
+   buttons keep a ≥44px hit target via the .apollon-chrome-iconbtn ::before
+   overlay (the paint box stays 32px). island-h derives from pad, so it follows
+   automatically. Lives here with the chrome tokens (the single source) so the
+   webapp home gets the same touch compaction the editor does. */
+@media (pointer: coarse) {
+  :root {
+    --apollon-chrome-pad: 4px;
+  }
 }

@@ -23,145 +23,15 @@
   --safe-area-inset-left: env(safe-area-inset-left, 0px);
 }
 
-/* Shared chrome tokens for every floating surface (palette, controls, minimap,
-   header islands, version rail). Surfaces derive from --apollon-background +
-   --apollon-primary-contrast via color-mix, so any host theming those two gets
-   correct chrome for free; only shadows need a dark-mode override (below). */
-:root {
-  /* Surface ladder: base == canvas; chrome separates via border + elevation. */
-  --apollon-chrome-surface: var(--apollon-background, #fff);
-  --apollon-chrome-surface-hover: color-mix(
-    in srgb,
-    var(--apollon-primary-contrast, #000) 8%,
-    var(--apollon-background, #fff)
-  );
-  --apollon-chrome-surface-active: color-mix(
-    in srgb,
-    var(--apollon-primary-contrast, #000) 14%,
-    var(--apollon-background, #fff)
-  );
-
-  /* Borders: opaque cool neutrals that hold their contrast in both themes. */
-  --apollon-chrome-border: color-mix(
-    in srgb,
-    var(--apollon-primary-contrast, #000) 12%,
-    var(--apollon-background, #fff)
-  );
-  --apollon-chrome-border-strong: color-mix(
-    in srgb,
-    var(--apollon-primary-contrast, #000) 28%,
-    var(--apollon-background, #fff)
-  );
-
-  /* Text */
-  --apollon-chrome-text: var(--apollon-primary-contrast, #212529);
-  --apollon-chrome-text-muted: color-mix(
-    in srgb,
-    var(--apollon-primary-contrast, #000) 58%,
-    var(--apollon-background, #fff)
-  );
-
-  /* Accent — reserved for meaning (primary action, selection, current marker).
-     Chrome surfaces themselves stay neutral. */
-  --apollon-chrome-accent: var(--apollon-primary, #3e8acc);
-  --apollon-chrome-accent-contrast: var(
-    --apollon-on-collaboration-cursor,
-    #fff
-  );
-
-  /* Radius ramp: sm pills, md controls, lg panels/rails. */
-  --apollon-chrome-radius-sm: 6px;
-  --apollon-chrome-radius-md: 8px;
-  --apollon-chrome-radius-lg: 12px;
-
-  /* Harmonic dimensional system: every floating cluster shares one height
-     (island-h, below), so their bottom edges align and the palette clears them
-     by one even gap. One edge margin + one gap apply to all chrome. */
-  --apollon-chrome-edge: 10px; /* margin from the canvas edge (every cluster) */
-  --apollon-chrome-gap: 8px; /* gap between adjacent clusters / to the palette */
-  --apollon-chrome-btn: 32px; /* icon-button paint box */
-  --apollon-chrome-pad: 6px; /* inner padding of every floating cluster */
-  --apollon-chrome-hit: 44px; /* minimum touch target (Apple HIG) */
-
-  /* Edge margin that HUGS a device safe area instead of stacking on it: the
-     design edge when there's no inset, the inset alone when there is one — so
-     chrome aligns to the usable edge with no double-spacing under a notch / home
-     indicator. NO -top variant: the header top is intentionally additive
-     (safe-area-inset-top + edge) because the band is pinned under the notch and
-     still needs its own breathing room. */
-  --apollon-chrome-edge-safe-left: max(
-    var(--apollon-chrome-edge),
-    var(--safe-area-inset-left, 0px)
-  );
-  --apollon-chrome-edge-safe-right: max(
-    var(--apollon-chrome-edge),
-    var(--safe-area-inset-right, 0px)
-  );
-  --apollon-chrome-edge-safe-bottom: max(
-    var(--apollon-chrome-edge),
-    var(--safe-area-inset-bottom, 0px)
-  );
-
-  /* Shared OUTER cluster height = button + 2·padding + 2·1px border. Derived, so
-     fixed-height islands match the auto-height control/minimap panels to the
-     pixel and it self-corrects when btn/pad change (landscape overrides it). */
-  --apollon-chrome-island-h: calc(
-    var(--apollon-chrome-btn) + 2 * var(--apollon-chrome-pad) + 2px
-  );
-
-  /* Elevation: docked chrome (header/rail) = hairline + flat micro-shadow;
-     floating chrome (palette/controls/minimap) = soft halo. */
-  --apollon-chrome-shadow-docked: 0 1px 2px rgb(15 23 42 / 8%);
-  --apollon-chrome-shadow-floating: 0 0 1px 0 rgb(15 23 42 / 20%),
-    0 2px 8px 0 rgb(15 23 42 / 12%);
-
-  /* Lit up only in dark mode (a pure drop shadow vanishes on a dark canvas). */
-  --apollon-chrome-inset-hairline: 0 0 0 0 transparent;
-
-  /* Glass for floating chrome: a semi-opaque tint floor (keeps text legible —
-     translucency alone never carries it) under a backdrop blur, derived from
-     the canvas background so it themes automatically. */
-  --apollon-chrome-glass: color-mix(
-    in srgb,
-    var(--apollon-background, #fff) 80%,
-    transparent
-  );
-
-  /* Near-opaque tint for text-dense glass (the version-history list) so list
-     copy clears WCAG AA over a busy diagram while still reading as glass. */
-  --apollon-chrome-glass-solid: color-mix(
-    in srgb,
-    var(--apollon-background, #fff) 92%,
-    transparent
-  );
-  --apollon-chrome-glass-blur: saturate(180%) blur(20px);
-
-  /* Motion tokens: short, decelerated. */
-  --apollon-chrome-duration-hover: 120ms;
-  --apollon-chrome-duration-enter: 220ms;
-  --apollon-chrome-ease-standard: cubic-bezier(0.2, 0, 0, 1);
-  --apollon-chrome-ease-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
-}
-
-/* Dark mode only needs to fix the shadows + add the contrast hairline; the
-   surfaces above already track the dark --apollon-background via color-mix.
-   `:root[data-theme]` is how the webapp flips the theme; the `.apollon-editor`
-   selector lets a standalone library host theme a single editor instance. */
-:root[data-theme="dark"],
-.apollon-editor[data-theme="dark"] {
-  --apollon-chrome-shadow-docked: 0 1px 2px rgb(0 0 0 / 40%);
-  --apollon-chrome-shadow-floating: 0 2px 12px 0 rgb(0 0 0 / 50%);
-  --apollon-chrome-inset-hairline: inset 0 0 0 1px rgb(255 255 255 / 8%);
-}
-
-/* Touch: tighter island padding so the phone chrome stays compact; the icon
-   buttons keep a ≥44px hit target via a ::before overlay (the paint box stays
-   32px). island-h derives from pad, so it follows automatically. */
-@media (pointer: coarse) {
-  :root {
-    --apollon-chrome-pad: 4px;
-  }
-}
+/* The shared chrome token system (--apollon-chrome-*: glass, the surface/border/
+   text ramp, the btn/pad/island dimensional system, motion) is the SINGLE source
+   and lives in @tumaet/ui tokens.css — loaded into the editor via the
+   components.css side-effect import in App.tsx, bundled into the published
+   style.css, concatenated into the headless-export chunk, AND available to the
+   webapp HOME (which imports components.css but NOT this app.css). The editor's
+   structural rules below CONSUME those tokens via var(); they are not redefined
+   here, so there is exactly one definition and no drift. (The light/dark/coarse-
+   pointer token blocks moved with them.) */
 
 .react-flow {
   --panel-background: var(--apollon-background, #fff);
@@ -597,72 +467,12 @@
   }
 }
 
-/* The single icon-control idiom for every floating chrome button (zoom, fit,
-   undo/redo, minimap handles): borderless on glass, the pane supplies the
-   border/radius, and state is a surface-layer fill — never a border — so a
-   control never reads as a box-inside-a-box. */
-.apollon-chrome-iconbtn {
-  box-sizing: border-box;
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--apollon-chrome-btn);
-  height: var(--apollon-chrome-btn);
-  padding: 0;
-  border: 0;
-  border-radius: var(--apollon-chrome-radius-sm);
-  background: transparent;
-  color: var(--apollon-chrome-text);
-  cursor: pointer;
-  transition: background-color var(--apollon-chrome-duration-hover)
-    var(--apollon-chrome-ease-standard);
-}
-
-/* lucide icons are stroke-based (fill="none" stroke="currentColor"); the button's
-   `color` drives the stroke. Do NOT set `fill: currentColor` here — it would fill
-   the stroke paths into a solid blob (the old fill-based custom icons needed it;
-   lucide does not). React-flow's own built-in zoom/fit glyphs are fill-based and
-   keep their fill rule below. */
-
-/* The paint box stays compact, but the hit target extends to ≥44px (Apple HIG)
-   via an invisible overlay — so touch chrome doesn't have to grow the glyph. */
-.apollon-chrome-iconbtn::before {
-  content: "";
-  position: absolute;
-  inset: calc((var(--apollon-chrome-btn) - var(--apollon-chrome-hit)) / 2);
-}
-
-/* Lower-specificity states first (stylelint no-descending-specificity). */
-.apollon-chrome-iconbtn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.apollon-chrome-iconbtn:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px
-    color-mix(in srgb, var(--apollon-chrome-accent) 45%, transparent);
-}
-
-.apollon-chrome-iconbtn:hover:not(:disabled) {
-  background: var(--apollon-chrome-surface-hover);
-}
-
-.apollon-chrome-iconbtn:active:not(:disabled) {
-  background: var(--apollon-chrome-surface-active);
-}
-
-/* Numeric zoom readout: same idiom, auto width, tabular figures so the digits
-   don't jitter as the percentage changes. */
-.apollon-chrome-iconbtn--readout {
-  width: auto;
-  min-width: 48px;
-  padding: 0 8px;
-  font-size: 13px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
+/* The .apollon-chrome-iconbtn idiom (the borderless-on-glass icon control used by
+   the floating chrome buttons AND the webapp mobile pills) is defined in the
+   webapp-available @tumaet/ui components.css, alongside .apollon-glass, so the
+   home band can reuse it with no editor mounted. The editor loads components.css
+   too (App.tsx), so editor chrome still gets it; it references only chrome tokens
+   so the rendered control is identical wherever the class is defined. */
 
 /* Expanded minimap = its own glass card (the .react-flow__panel glass rule
    supplies the pane). Drop the panel padding so the map fills the rounded card
@@ -719,8 +529,12 @@
 /* Shared glass surface for every floating chrome object — header islands,
    palette, zoom/undo controls, minimap — so they read as one family of
    translucent panes over the canvas. The tint floor keeps text legible over a
-   busy diagram; the inset hairline gives crispness in dark mode. */
-.apollon-glass,
+   busy diagram; the inset hairline gives crispness in dark mode.
+
+   React Flow's own panels/toolbars adopt the .apollon-glass treatment here; the
+   `.apollon-glass` CLASS itself is defined in the webapp-available components.css
+   (so the home band reuses the identical surface with no editor mounted). Both
+   resolve the same chrome tokens, so the surface is byte-identical either way. */
 .react-flow__panel,
 .react-flow__node-toolbar {
   background-color: var(--apollon-chrome-glass);
@@ -784,22 +598,10 @@
     var(--apollon-chrome-ease-decelerate) both;
 }
 
-/* The title island reads as a quiet capsule until focused, then lifts an accent
-   ring (the field inside is borderless — the island is its chrome). */
-.apollon-chrome-title-island:focus-within {
-  border-color: var(--apollon-chrome-accent);
-  box-shadow:
-    0 0 0 2px color-mix(in srgb, var(--apollon-chrome-accent) 35%, transparent),
-    var(--apollon-chrome-shadow-floating);
-}
-
-/* The diagram-title field is a borderless native input (the island is its
-   chrome); its placeholder uses the muted chrome token. Inline styles can't
-   target ::placeholder, so the rule lives here. */
-.apollon-chrome-title-input::placeholder {
-  color: var(--apollon-chrome-text-muted);
-  opacity: 1;
-}
+/* The borderless-input-on-glass construction (.apollon-chrome-title-island
+   focus ring + .apollon-chrome-title-input placeholder) is single-sourced in the
+   webapp-available components.css alongside .apollon-glass, so the home band's
+   search field reuses the identical idiom with no editor mounted. */
 
 @media (prefers-reduced-motion: reduce) {
   .apollon-chrome-island {
@@ -807,9 +609,10 @@
   }
 }
 
-/* Honour the OS reduced-transparency / increased-contrast / reduced-motion preferences. */
+/* Honour the OS reduced-transparency / increased-contrast preferences. The
+   `.apollon-glass` class carries its own matching fallbacks in components.css;
+   these cover the editor's React-Flow panels + palette. */
 @media (prefers-reduced-transparency: reduce) {
-  .apollon-glass,
   .react-flow__panel,
   .react-flow__node-toolbar,
   .apollon-palette {
@@ -820,7 +623,6 @@
 }
 
 @media (prefers-contrast: more) {
-  .apollon-glass,
   .react-flow__panel,
   .react-flow__node-toolbar,
   .apollon-palette {
