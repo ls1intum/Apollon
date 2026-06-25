@@ -109,6 +109,27 @@ body,
   transition: color 220ms ease;
 }
 
+/* ── Home canvas background ──────────────────────────────────────────────────
+   A subtle dot-grid behind the whole home page so it reads as "the same canvas
+   the editor floats over". The editor (library/lib/components/CustomBackground)
+   draws TWO ReactFlow line grids: a fine 5px grid in --apollon-gray and a major
+   50px grid in --apollon-grid (light rgba(36,39,36,.1) / dark #303530). We match
+   the editor's MAJOR grid here — same 50px cadence, same --apollon-grid color
+   token (so it tracks both themes automatically) — but render it as a dot at
+   each grid intersection instead of full rules, kept faint enough to read as
+   barely-there texture and NOT compete with the opaque cards or glass band that
+   sit on top. The dot color is mixed down from --apollon-grid so it stays subtle
+   in light AND dark. Painted on the page root, behind the z-10 scroll <main>. */
+.home-canvas-bg {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    color-mix(in srgb, var(--apollon-grid) 55%, transparent) 1px,
+    transparent 0
+  );
+  background-size: 50px 50px; /* = MAJOR_GRID_GAP (SNAP_TO_GRID_PX * 10) */
+  background-position: 0 0;
+}
+
 .home-page-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: var(--home-accent-base) var(--home-surface-sunken);

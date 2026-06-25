@@ -53,11 +53,31 @@ export const HOME_SORT_FIELD_OPTIONS = [
   { value: "lastModified", label: "Last modified" },
 ] satisfies readonly { value: HomeSortField; label: string }[]
 
-/** Sort-order options for the Refine block (DiagramGallery's "Order"). */
-export const HOME_SORT_ORDER_OPTIONS = [
-  { value: "oldest", label: "Oldest first" },
-  { value: "newest", label: "Newest first" },
-] satisfies readonly { value: HomeSortOrder; label: string }[]
+/**
+ * Sort-order option labels, ADAPTED to the active sort field so the order toggle
+ * always reads in the field's own vocabulary (the underlying asc/desc value is
+ * unchanged — only the wording tracks the field):
+ *
+ *  • alphabetical → "A–Z" (oldest/asc) / "Z–A" (newest/desc)
+ *  • dateCreated / lastModified → "Oldest" (asc) / "Newest" (desc)
+ *
+ * `oldest` is the ascending end (A first, earliest date first); `newest` is the
+ * descending end (Z first, latest date first), matching DiagramGallery's order
+ * semantics. The Refine "Order" block and the removable sort chip both read from
+ * here so they stay in lockstep.
+ */
+export const homeSortOrderOptions = (
+  field: HomeSortField
+): readonly { value: HomeSortOrder; label: string }[] =>
+  field === "alphabetical"
+    ? [
+        { value: "oldest", label: "A–Z" },
+        { value: "newest", label: "Z–A" },
+      ]
+    : [
+        { value: "newest", label: "Newest" },
+        { value: "oldest", label: "Oldest" },
+      ]
 
 const sourceLabel = (source: HomeSource) =>
   HOME_SOURCE_OPTIONS.find((option) => option.value === source)?.label ?? source
@@ -66,9 +86,9 @@ const sortFieldLabel = (field: HomeSortField) =>
   HOME_SORT_FIELD_OPTIONS.find((option) => option.value === field)?.label ??
   field
 
-const sortOrderLabel = (order: HomeSortOrder) =>
-  HOME_SORT_ORDER_OPTIONS.find((option) => option.value === order)?.label ??
-  order
+const sortOrderLabel = (sort: HomeSort) =>
+  homeSortOrderOptions(sort.field).find((option) => option.value === sort.order)
+    ?.label ?? sort.order
 
 /**
  * The kinds of refinement a chip can represent. `clear` resets that one facet
@@ -186,7 +206,7 @@ export function useHomeChrome(initialSearchTerm = ""): HomeChrome {
     if (!isDefaultSort(sort)) {
       chips.push({
         key: "sort",
-        label: `${sortFieldLabel(sort.field)} · ${sortOrderLabel(sort.order)}`,
+        label: `${sortFieldLabel(sort.field)} · ${sortOrderLabel(sort)}`,
         clear: () => setSort(DEFAULT_HOME_SORT),
       })
     }

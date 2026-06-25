@@ -97,7 +97,7 @@ export const HomePage = () => {
   )
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-background text-foreground transition-colors duration-200">
+    <div className="home-canvas-bg relative flex h-full min-h-0 flex-col overflow-hidden bg-background text-foreground transition-colors duration-200">
       {/* Off-screen file input the Import button triggers programmatically. */}
       <input
         ref={jsonImportRef}

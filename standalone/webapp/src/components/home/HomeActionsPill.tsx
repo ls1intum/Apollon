@@ -1,5 +1,12 @@
 import { useState } from "react"
-import { MoreVertical, SlidersHorizontal, Star, Upload } from "lucide-react"
+import {
+  Moon,
+  MoreVertical,
+  SlidersHorizontal,
+  Star,
+  Sun,
+  Upload,
+} from "lucide-react"
 import { Link } from "@tanstack/react-router"
 import {
   DropdownMenu,
@@ -9,7 +16,6 @@ import {
   DropdownMenuTrigger,
 } from "@tumaet/ui/components/dropdown-menu"
 import { Badge } from "@tumaet/ui/components/badge"
-import { Moon, Sun } from "lucide-react"
 import type { UMLDiagramType } from "@tumaet/apollon"
 import { releasesLink, repositoryLink } from "@/constants/version"
 import { bugReportURL } from "@/constants/urls"
@@ -21,15 +27,18 @@ import type { HomeChrome } from "./useHomeChrome"
 
 /**
  * Mobile actions pill (< md) — forked from the editor's `MobileActionsPill`, but
- * with HOME semantics (no Share / Version history). The single highest-value
- * action stays a direct 1-tap icon — ★ Favorites — and the lower-frequency
- * actions (Refine, Import, Theme, Help/legal) collapse behind a "…" overflow
- * dropdown.
+ * with HOME semantics (no Share / Version history). The resting pill surfaces the
+ * three highest-value actions as direct 1-tap controls — ★ Favorites, Refine,
+ * ⬆ Import — and collapses only the lower-frequency items (Theme, Help/legal)
+ * behind a "…" overflow dropdown.
  *
- * The overflow dropdown reuses the editor's themed `[&>*]:min-h-[42px]` content
- * contract so every row is a ≥42px touch target in light + dark. Refine opens
- * the bottom-`Sheet` variant of `RefinePopover` (thumb-reachable); its trigger
- * is a `DropdownMenuItem` so it slots into the same menu.
+ * The overflow dropdown uses the canonical @tumaet/ui DropdownMenu DEFAULTS — the
+ * same `text-sm`, padding and rounded-focus highlight as the editor's own desktop
+ * menus (NavbarFile / NavbarHelp), which are the correct visual reference. The
+ * only addition is `min-h-11` per row, which keeps the editor's typography and
+ * padding while still meeting the 44px touch-target gate (and avoids the squared
+ * `rounded-none` focus block that read as a stray "gray box"). Refine opens the
+ * bottom-`Sheet` variant of `RefinePopover` (thumb-reachable).
  */
 export function HomeActionsPill({
   chrome,
@@ -104,7 +113,20 @@ export function HomeActionsPill({
         }
       />
 
-      {/* "…" overflow — Import, Theme, Help/legal — themed ≥42px rows. */}
+      {/* ⬆ Import — direct 1-tap icon, surfaced out of the overflow. */}
+      <button
+        type="button"
+        className="apollon-chrome-iconbtn"
+        aria-label="Import diagram"
+        title="Import"
+        onClick={onImportJson}
+      >
+        <Upload className="size-[18px]" aria-hidden />
+      </button>
+
+      {/* "…" overflow — only the lower-frequency Theme + Help/legal items.
+          Uses the @tumaet/ui DropdownMenu defaults (editor-matched text-sm /
+          padding / rounded focus); `min-h-11` per row keeps the 44px target. */}
       <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
         <DropdownMenuTrigger
           className="apollon-chrome-iconbtn"
@@ -116,34 +138,19 @@ export function HomeActionsPill({
         <DropdownMenuContent
           align="end"
           side="bottom"
-          className="flex w-60 max-w-[calc(100vw-1rem)] flex-col text-[color:var(--apollon-primary-contrast)] [&>*]:min-h-[42px] [&>*]:w-full [&>*]:justify-start [&>*]:rounded-none [&>*]:px-4 [&>*]:text-base"
+          className="w-56 max-w-[calc(100vw-1rem)] [&_[data-slot=dropdown-menu-item]]:min-h-11"
         >
-          <DropdownMenuItem
-            onClick={() => {
-              onImportJson?.()
-              closeMenu()
-            }}
-          >
-            <Upload className="size-[18px]" aria-hidden /> Import
-          </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => {
               toggleTheme()
               closeMenu()
             }}
-            className="justify-between"
             aria-label={
               isDarkMode ? "Switch to light mode" : "Switch to dark mode"
             }
           >
-            <span className="inline-flex items-center gap-2">
-              {isDarkMode ? (
-                <Sun className="size-[18px]" aria-hidden />
-              ) : (
-                <Moon className="size-[18px]" aria-hidden />
-              )}
-              Theme
-            </span>
+            {isDarkMode ? <Sun aria-hidden /> : <Moon aria-hidden />}
+            Theme
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem

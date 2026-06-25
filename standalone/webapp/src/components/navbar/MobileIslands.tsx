@@ -90,7 +90,7 @@ export function MobileActionsPill() {
           aria-labelledby="mobile-options-button"
           align="end"
           side="bottom"
-          className="flex w-60 max-w-[calc(100vw-var(--safe-area-inset-left,0px)-var(--safe-area-inset-right,0px)-16px)] flex-col text-[color:var(--apollon-primary-contrast)] [&>*]:min-h-[42px] [&>*]:w-full [&>*]:justify-start [&>*]:rounded-none [&>*]:px-4 [&>*]:text-base"
+          className="flex w-60 max-w-[calc(100vw-var(--safe-area-inset-left,0px)-var(--safe-area-inset-right,0px)-16px)] flex-col [&_[data-slot=dropdown-menu-item]]:min-h-11"
         >
           {/* Back lives in the back pill; Share + Version on the bar; title in
               the header centre — so the menu is just the low-frequency tail. */}

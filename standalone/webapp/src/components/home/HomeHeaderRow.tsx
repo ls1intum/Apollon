@@ -45,7 +45,18 @@ export function HomeHeaderRow({
   onImportJson,
 }: HomeHeaderRowProps) {
   return (
-    <div className="flex flex-col gap-1">
+    // Sticky wrapper: the band FLOATS above the scrolling cards the way the
+    // editor header floats over the canvas. It pins to the top of the home
+    // scroll container (clearing the top safe-area inset) at a z-index above the
+    // cards, so the glass islands + their floating shadow overlay the grid as it
+    // scrolls under. `top` matches the safe-area model; the scroll container's
+    // own `pt-5/md:pt-6` is the resting offset, so there is no layout jump — the
+    // band simply stops at `top` once that padding scrolls past. A small bottom
+    // padding gives the floating island shadow room to read over the first row.
+    <div
+      className="sticky z-20 flex flex-col gap-1 pb-2"
+      style={{ top: "var(--safe-area-inset-top, 0px)" }}
+    >
       {/* The home's single page heading — rendered ONCE here (outside the
           md-gated bands) so exactly one visually-hidden <h1> exists at every
           width. The desktop band shows a visible "Your diagrams" label aside the

@@ -6,9 +6,10 @@ import { HomeActionsPill } from "./HomeActionsPill"
 import { useHomeChrome } from "./useHomeChrome"
 
 /**
- * The mobile (< md) home actions pill — direct ★ Favorites + a "…" overflow
- * dropdown (Refine sheet, Import, Theme, Help/legal). Reuses the editor's themed
- * `[&>*]:min-h-[42px]` dropdown contract for 44px touch targets in both themes.
+ * The mobile (< md) home actions pill — direct ★ Favorites · Refine · ⬆ Import,
+ * then a "…" overflow holding only the lower-frequency Theme + Help/legal items.
+ * The overflow uses the @tumaet/ui DropdownMenu defaults (editor-matched
+ * typography/padding) with a `min-h-11` floor per row for 44px touch targets.
  */
 
 const MOCK_TYPES: UMLDiagramType[] = ["ClassDiagram", "ActivityDiagram"]
@@ -41,7 +42,7 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-/** Favorites + the "…" overflow are reachable. */
+/** The resting pill surfaces Favorites, Import, and the "…" overflow directly. */
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -49,18 +50,21 @@ export const Default: Story = {
       canvas.getByRole("button", { name: /show favorites only/i })
     ).toBeInTheDocument()
     await expect(
+      canvas.getByRole("button", { name: /import diagram/i })
+    ).toBeInTheDocument()
+    await expect(
       canvas.getByRole("button", { name: /more options/i })
     ).toBeInTheDocument()
   },
 }
 
-/** Opening the overflow shows Import, Theme, and the legal links. */
+/** Opening the overflow shows the lower-frequency Theme + legal links. */
 export const OverflowMenu: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
     await userEvent.click(canvas.getByRole("button", { name: /more options/i }))
     const menu = within(canvasElement.ownerDocument.body)
-    await expect(await menu.findByText(/import/i)).toBeInTheDocument()
+    await expect(await menu.findByText(/theme/i)).toBeInTheDocument()
     await expect(await menu.findByText(/imprint/i)).toBeInTheDocument()
   },
 }

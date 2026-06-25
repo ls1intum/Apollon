@@ -17,8 +17,8 @@ import { GroupDivider } from "@/components/navbar/islandPrimitives"
 import { getDiagramTypeLabel } from "./diagramTypeMeta"
 import {
   HOME_SORT_FIELD_OPTIONS,
-  HOME_SORT_ORDER_OPTIONS,
   HOME_SOURCE_OPTIONS,
+  homeSortOrderOptions,
   type HomeChrome,
 } from "./useHomeChrome"
 
@@ -135,7 +135,7 @@ export function RefineBody({ chrome, typeOptions }: RefineBodyProps) {
       />
       <RefineGroup
         label="Order"
-        options={HOME_SORT_ORDER_OPTIONS}
+        options={homeSortOrderOptions(chrome.sort.field)}
         value={chrome.sort.order}
         onSelect={chrome.setSortOrder}
       />
