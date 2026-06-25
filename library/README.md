@@ -33,15 +33,17 @@ The package ships two builds with the same API. Pick one based on whether your h
 
 | Import                        | React / MUI / emotion / xyflow | Size (min / gzip) | Use when                                                                                                |
 | ----------------------------- | ------------------------------ | ----------------- | ------------------------------------------------------------------------------------------------------- |
-| `@tumaet/apollon` _(default)_ | **bundled**                    | ~2.4 MB / ~540 KB | Your host is Angular, Vue, Svelte, or vanilla JS. No peer deps to install.                              |
+| `@tumaet/apollon` _(default)_ | **bundled**                    | ~2.4 MB / ~540 KB | Your host is Angular, Vue, Svelte, or vanilla JS. Only `yjs` + `y-protocols` to install.                |
 | `@tumaet/apollon/react`       | **peer deps** (shared)         | ~875 KB / ~170 KB | Your host is React 18.3 and should share its React and MUI with the editor instead of duplicating them. |
 
 Sizes are the published entry chunks. Gzip is the transfer size. The `/react` number excludes the peers your app already ships.
 
-### Standalone build (any framework, no peer deps)
+`yjs` and `y-protocols` are required peer dependencies of **both** builds — they are the collaboration engine, and keeping them external means a host that already uses Yjs (or a second Apollon on the page) shares a single Yjs instance instead of loading a private, possibly mismatched copy. Most package managers install missing peers automatically; the explicit commands below are listed for clarity.
+
+### Standalone build (any framework)
 
 ```sh
-npm install @tumaet/apollon
+npm install @tumaet/apollon yjs y-protocols
 ```
 
 ```ts
@@ -49,12 +51,13 @@ import { ApollonEditor } from "@tumaet/apollon"
 import "@tumaet/apollon/style.css"
 ```
 
-React, MUI, emotion, and xyflow are bundled in. Nothing else to install.
+React, MUI, emotion, and xyflow are bundled in; only `yjs` and `y-protocols` are peers you provide.
 
 ### React build (share your host's React)
 
 ```sh
 npm install @tumaet/apollon \
+  yjs y-protocols \
   react react-dom \
   @emotion/react @emotion/styled @mui/material @xyflow/react
 ```
@@ -64,17 +67,20 @@ import { Apollon } from "@tumaet/apollon/react"
 import "@tumaet/apollon/style.css"
 ```
 
-| Peer            | Range     |     | Peer              | Range      |
-| --------------- | --------- | --- | ----------------- | ---------- |
-| `react`         | `^18.3.0` |     | `@mui/material`   | `^6.4.0`   |
-| `react-dom`     | `^18.3.0` |     | `@emotion/react`  | `^11.11.0` |
-| `@xyflow/react` | `^12.3.0` |     | `@emotion/styled` | `^11.11.0` |
+`yjs` and `y-protocols` are required for both builds; the React, MUI, emotion, and xyflow peers below are specific to the `/react` build.
+
+| Peer          | Range     |     | Peer              | Range      |
+| ------------- | --------- | --- | ----------------- | ---------- |
+| `yjs`         | `^13.6.0` |     | `@mui/material`   | `^6.4.0`   |
+| `y-protocols` | `^1.0.6`  |     | `@emotion/react`  | `^11.11.0` |
+| `react`       | `^18.3.0` |     | `@emotion/styled` | `^11.11.0` |
+| `react-dom`   | `^18.3.0` |     | `@xyflow/react`   | `^12.3.0`  |
 
 ## Which build do I use?
 
 It comes down to whether your host already runs React:
 
-- **Not a React app?** Use the default `@tumaet/apollon`. It bundles its own React, so there is nothing extra to install or configure.
+- **Not a React app?** Use the default `@tumaet/apollon`. It bundles its own React, so the only peers to install are `yjs` and `y-protocols`.
 - **A React app?** Use `@tumaet/apollon/react` and install the peers above. The default build bundles its own React, so in a React app you would load two copies. That causes "Invalid hook call" errors and a larger bundle. The `/react` subpath leaves React, MUI, emotion, and xyflow external so the editor shares the copies your app already has. It is also the only entry that exports the `<Apollon>` component, hooks, and provider.
 
 > **⚠️ Give the container an explicit, non-zero height** (`600px`, `80vh`, or a sized flex/grid child), whichever build you use. The canvas sizes itself to its parent, so with no resolvable height it collapses to zero pixels and renders blank. This is the most common embedding mistake. See [Troubleshooting](https://ls1intum.github.io/Apollon/library/troubleshooting).

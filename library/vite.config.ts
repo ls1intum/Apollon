@@ -86,6 +86,16 @@ export default defineConfig({
         /^@resvg\/resvg-wasm/,
         "jspdf",
         "svg2pdf.js",
+        // Yjs is a CRDT whose runtime relies on module-level singletons
+        // (`instanceof AbstractType` checks, the shared Doc/transaction state).
+        // A bundled copy would be a second, private Yjs that can't interoperate
+        // with the host's — both wasted bytes and a correctness hazard for hosts
+        // that already use Yjs (e.g. a collaborative code editor). Keep it (and
+        // the y-protocols awareness/sync helpers built on it) external in BOTH
+        // passes so the host provides exactly one instance; declared as required
+        // peerDependencies.
+        "yjs",
+        /^y-protocols(\/.*)?$/,
         ...(isPeerBuild
           ? [
               "react",
@@ -108,6 +118,10 @@ export default defineConfig({
       },
     },
     minify: true,
+    // Ship source maps so the dependencies we still inline (React, MUI,
+    // @dnd-kit, zustand, …) are attributable in consumers' bundle analyzers
+    // and SBOM tooling instead of vanishing into a minified blob.
+    sourcemap: true,
   },
   resolve: {
     alias: { "@": resolve(__dirname, "lib") },

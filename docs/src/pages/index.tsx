@@ -111,7 +111,9 @@ function Hero() {
           </Link>
         </div>
         <div className={styles.install}>
-          <CodeBlock language="bash">npm install @tumaet/apollon</CodeBlock>
+          <CodeBlock language="bash">
+            npm install @tumaet/apollon yjs y-protocols
+          </CodeBlock>
         </div>
       </div>
     </header>
@@ -224,8 +226,9 @@ const WAYS: LinkCard[] = [
     body: (
       <>
         <code>@tumaet/apollon</code> on npm. Framework-agnostic by default;
-        Angular hosts install <strong>zero peer deps</strong>. A{" "}
-        <code>/react</code> subpath dedupes React when the host already has it.
+        Angular hosts install just <code>yjs</code> + <code>y-protocols</code>.
+        A <code>/react</code> subpath dedupes React when the host already has
+        it.
       </>
     ),
     to: "/library/",

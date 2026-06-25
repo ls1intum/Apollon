@@ -54,7 +54,7 @@ versioned and reviewed like any other source.
 you need UML modeling inside an existing application.
 
 ```sh
-npm install @tumaet/apollon
+npm install @tumaet/apollon yjs y-protocols
 ```
 
 | You want to...                                  | Use this           |

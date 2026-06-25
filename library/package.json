@@ -104,7 +104,9 @@
     "@mui/material": "^6.4.0",
     "@xyflow/react": "^12.9.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "y-protocols": "^1.0.6",
+    "yjs": "^13.6.0"
   },
   "peerDependenciesMeta": {
     "@emotion/react": {
@@ -132,8 +134,6 @@
     "@dnd-kit/sortable": "10.0.0",
     "@dnd-kit/utilities": "3.2.2",
     "uuid": "catalog:",
-    "y-protocols": "1.0.6",
-    "yjs": "13.6.20",
     "zustand": "catalog:"
   },
   "optionalDependencies": {
@@ -171,6 +171,8 @@
     "typescript-json-schema": "0.67.4",
     "vite": "catalog:",
     "vite-plugin-dts": "4.3.0",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "y-protocols": "1.0.6",
+    "yjs": "13.6.20"
   }
 }

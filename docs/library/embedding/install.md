@@ -6,10 +6,15 @@ description: Install @tumaet/apollon — pick the standalone or /react subpath.
 
 # Install
 
+`yjs` and `y-protocols` are required peer dependencies of **both** builds — they
+are the collaboration engine, kept external so a host that already uses Yjs
+shares a single instance instead of loading a private, possibly mismatched copy.
+Most package managers install missing peers automatically.
+
 ## Standalone build (any framework)
 
 ```sh
-npm install @tumaet/apollon
+npm install @tumaet/apollon yjs y-protocols
 ```
 
 ```ts
@@ -17,12 +22,14 @@ import { ApollonEditor } from "@tumaet/apollon"
 import "@tumaet/apollon/style.css"
 ```
 
-No further installs — React, MUI, emotion, and xyflow are bundled inside the library tarball.
+React, MUI, emotion, and xyflow are bundled inside the library tarball; only
+`yjs` and `y-protocols` are peers you provide.
 
 ## Peer-dependency build (React hosts)
 
 ```sh
 npm install @tumaet/apollon \
+  yjs y-protocols \
   react react-dom \
   @emotion/react @emotion/styled @mui/material @xyflow/react
 ```
@@ -32,8 +39,13 @@ import { ApollonEditor } from "@tumaet/apollon/react"
 import "@tumaet/apollon/style.css"
 ```
 
+`yjs` and `y-protocols` are required for both builds; the remaining peers below
+are specific to the `/react` build.
+
 | Peer              | Range      |
 | ----------------- | ---------- |
+| `yjs`             | `^13.6.0`  |
+| `y-protocols`     | `^1.0.6`   |
 | `react`           | `^18.3.0`  |
 | `react-dom`       | `^18.3.0`  |
 | `@mui/material`   | `^6.4.0`   |
