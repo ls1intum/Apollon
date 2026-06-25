@@ -15,6 +15,7 @@ import { DiagramView } from "@/types"
 import { playgroundModelId } from "@/constants/playgroundDefaultDiagram"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { useDiagramThumbnailWarmup } from "@/hooks/useDiagramThumbnailWarmup"
+import { useThumbnailViewportPriority } from "@/hooks/useThumbnailViewportPriority"
 import { DiagramApiClient } from "@/services/DiagramApiClient"
 import {
   clearSharedDiagramExpiredState,
@@ -615,10 +616,12 @@ export const DiagramGallery = ({
     return () => window.clearTimeout(timer)
   }, [highlightSharedDiagramId])
 
+  const thumbnailViewportPriority = useThumbnailViewportPriority()
   const loadingThumbnailIds = useDiagramThumbnailWarmup({
     visibleDiagrams,
     isPending,
     isDiagramEmpty,
+    viewportPriority: thumbnailViewportPriority,
   })
 
   const diagramNav = (diagram: GalleryDiagram) =>
@@ -1081,6 +1084,7 @@ export const DiagramGallery = ({
                           onSharedDiagramViewChange={
                             handleSharedDiagramViewChange
                           }
+                          observeViewport={thumbnailViewportPriority.observe}
                         />
                       </div>
                     ))}

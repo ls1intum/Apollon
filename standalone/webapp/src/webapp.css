@@ -262,6 +262,14 @@ body,
   contain-intrinsic-size: auto var(--card-min-h);
 }
 
+/* On touch / native (no hover), reveal the card's hover-only overlay controls
+   (favorite + actions) permanently — there's no pointer to hover with. The root
+   is marked from a definitive native check / coarse pointer in App.tsx, because
+   @media(hover:none) is unreliable in Capacitor webviews. */
+:root[data-coarse-pointer] .home-card-control {
+  opacity: 1;
+}
+
 /* Low-alpha slate shadows are invisible on dark surfaces, so dark hover uses a
    black shadow instead of the `--home-shadow-card-hover` token. Keep its geometry
    in sync with the light hover in DiagramCard.tsx. */

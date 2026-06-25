@@ -1,6 +1,8 @@
 import {
+  useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
@@ -272,7 +274,7 @@ export function DiagramActionsMenuView({
               // Hidden until the card is hovered/focused, but kept visible while
               // the menu is open (Base UI sets aria-expanded on the trigger) so
               // an open menu never floats over a vanished trigger.
-              className="pointer-events-auto text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 aria-expanded:opacity-100 [@media(hover:none)]:opacity-100"
+              className="pointer-events-auto text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 aria-expanded:opacity-100 home-card-control"
               onClick={stopIfNeeded}
             />
           }
@@ -559,10 +561,8 @@ function DiagramPreview({
   return (
     <div className="flex aspect-[16/10] w-full items-center justify-center">
       {isExpired ? (
-        <div className="flex flex-col items-center gap-2 text-center">
-          <PreviewTile>
-            <Unlink className="size-8" aria-hidden="true" />
-          </PreviewTile>
+        <div className="flex flex-col items-center gap-2.5 text-center text-muted-foreground">
+          <Unlink className="size-10" aria-hidden="true" />
           <div className="space-y-0.5">
             <p className="text-xs font-semibold text-[var(--home-text-secondary)]">
               Link expired
@@ -867,7 +867,7 @@ export function DiagramCardView({
               "pointer-events-auto transition-opacity",
               isFavorite
                 ? "text-[var(--home-favorite-star)] opacity-100"
-                : "text-muted-foreground opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100"
+                : "text-muted-foreground opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 home-card-control"
             )}
             onClick={(event) => {
               event.stopPropagation()
@@ -905,6 +905,13 @@ type DiagramCardProps = {
   onToggleFavorite?: (diagram: RecentDiagram) => void
   onSharedDiagramRemoved?: (diagramId: string) => void
   onSharedDiagramViewChange?: (diagramId: string, view: DiagramView) => void
+  /**
+   * Register this card's root node with the shared thumbnail viewport-priority
+   * observer. While the card is on screen the warmup worker prefers it, so the
+   * thumbnail the user is looking at generates before off-screen ones. Returns a
+   * cleanup the card runs when its node detaches or it unmounts.
+   */
+  observeViewport?: (id: string, node: Element | null) => () => void
 }
 
 const DiagramCardComponent = ({
@@ -917,6 +924,7 @@ const DiagramCardComponent = ({
   onToggleFavorite,
   onSharedDiagramRemoved,
   onSharedDiagramViewChange,
+  observeViewport,
 }: DiagramCardProps) => {
   const toggleFavorite = usePersistenceModelStore(
     (state) => state.toggleFavorite
@@ -931,6 +939,24 @@ const DiagramCardComponent = ({
   const isLocalDiagram = (diagram.source ?? "local") === "local"
   const canToggleFavorite =
     !isExpired && (isLocalDiagram || Boolean(onToggleFavorite))
+
+  // Register the card's root node with the shared viewport-priority observer so
+  // the warmup worker prefers on-screen cards. Managed via a ref callback (not an
+  // effect) so it tracks the node, and the cleanup is held in a ref so a node
+  // swap or unmount always unobserves the previous node exactly once.
+  const cardObserveId = diagram.id
+  const observeCleanupRef = useRef<(() => void) | null>(null)
+  const cardRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      observeCleanupRef.current?.()
+      observeCleanupRef.current = null
+      if (node && observeViewport) {
+        observeCleanupRef.current = observeViewport(cardObserveId, node)
+      }
+    },
+    [observeViewport, cardObserveId]
+  )
+
   const thumbnailCacheKey = `${diagram.id}:${thumbnailRevision}`
   const lightDataUrl = useMemo(
     () =>
@@ -961,6 +987,7 @@ const DiagramCardComponent = ({
 
   return (
     <DiagramCardView
+      ref={cardRef}
       diagram={diagram}
       thumbnail={lightDataUrl ? { lightDataUrl, darkDataUrl } : null}
       isThumbnailLoading={isThumbnailLoading}
