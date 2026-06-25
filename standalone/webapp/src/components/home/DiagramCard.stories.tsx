@@ -85,7 +85,7 @@ const meta = {
     },
     isThumbnailLoading: {
       control: "boolean",
-      description: "Show the loading spinner instead of a thumbnail/icon.",
+      description: "Shimmer the preview in place instead of a thumbnail/icon.",
       table: { category: "State" },
     },
     isExpired: {
@@ -187,7 +187,9 @@ export const SharedDiagram: Story = {
 }
 
 /**
- * No thumbnail yet and not a placeholder — the card shows its loading spinner.
+ * No thumbnail yet and not a placeholder — the preview shimmers in place with
+ * the shared `Skeleton`, matching DiagramGallerySkeleton. Title + footer stay
+ * real, since only the thumbnail is still generating.
  */
 export const Loading: Story = {
   args: { showPlaceholderIcon: false, isThumbnailLoading: true },

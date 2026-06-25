@@ -32,7 +32,7 @@ import {
   AlertDialogTitle,
 } from "@tumaet/ui/components/alert-dialog"
 import { cn } from "@tumaet/ui/lib/utils"
-import { Spinner } from "@tumaet/ui/components/spinner"
+import { Skeleton } from "@tumaet/ui/components/skeleton"
 import { Badge } from "@tumaet/ui/components/badge"
 import { Button } from "@tumaet/ui/components/button"
 import {
@@ -512,10 +512,10 @@ export const DiagramActionsMenu = ({
 }
 
 /**
- * A centered, theme-aware framed tile shared by every preview state that has no
- * thumbnail (type glyph, loading spinner, expired notice) so they share one
- * footprint and the skeleton→card→thumbnail swaps never jump. All tokens (no
- * baked colors) so it sits cleanly on the island surface in both themes.
+ * A centered, theme-aware framed tile shared by the no-thumbnail preview states
+ * that show a glyph (empty diagram-type icon, expired notice). All tokens (no
+ * baked colors) so it sits cleanly on the island surface in both themes. The
+ * loading state is NOT a tile — it shimmers edge-to-edge (see DiagramPreview).
  */
 const PreviewTile = ({ children }: { children: ReactNode }) => {
   return (
@@ -536,7 +536,7 @@ type DiagramPreviewProps = {
   darkDataUrl: string | null
   /** Render the rendered thumbnail crossfade pair. */
   showThumbnail: boolean
-  /** Show the loading spinner (incl. non-empty-but-no-thumbnail-yet anti-flicker). */
+  /** Shimmer the preview in place (incl. non-empty-but-no-thumbnail-yet anti-flicker). */
   isLoading: boolean
   /** Show the "share no longer available" tile instead of a preview. */
   isExpired: boolean
@@ -545,7 +545,7 @@ type DiagramPreviewProps = {
 /**
  * The card's preview area. Aspect-ratio driven (16:10) so its height follows
  * the grid-owned width with no magic px. Exactly one state renders: expired
- * notice / rendered thumbnail / loading spinner / empty diagram-type glyph.
+ * notice / rendered thumbnail / in-place loading shimmer / empty type glyph.
  */
 function DiagramPreview({
   diagram,
@@ -591,9 +591,12 @@ function DiagramPreview({
           )}
         </div>
       ) : isLoading ? (
-        <PreviewTile>
-          <Spinner className="size-6 text-primary" />
-        </PreviewTile>
+        // The thumbnail is generating: shimmer the WHOLE preview in place, not a
+        // floating spinner tile. This is the exact same treatment as the
+        // gallery's DiagramGallerySkeleton (shared `Skeleton`, edge-to-edge over
+        // the 16:10 region), so per-card and whole-gallery loading read as one
+        // visual language and the eye stays put while the title/footer stay real.
+        <Skeleton className="size-full rounded-md" />
       ) : (
         <PreviewTile>{getDiagramTypeIcon(diagram.type, "size-9")}</PreviewTile>
       )}
@@ -653,10 +656,10 @@ export type DiagramCardViewProps = {
   diagram: RecentDiagram
   /**
    * Pre-rendered thumbnail sources, or `null` when there is no thumbnail (the
-   * card then shows the placeholder/type icon or the loading spinner).
+   * card then shows the placeholder/type icon or the loading shimmer).
    */
   thumbnail?: DiagramCardThumbnail | null
-  /** Show the loading spinner instead of a thumbnail/icon. */
+  /** Shimmer the preview in place instead of a thumbnail/icon. */
   isThumbnailLoading?: boolean
   /** Show the file-document placeholder icon instead of a thumbnail. */
   showPlaceholderIcon?: boolean
