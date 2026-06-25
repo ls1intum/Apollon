@@ -122,9 +122,18 @@ body,
   background-position: 0 0;
 }
 
+/* Neutral, theme-tracking scrollbar — the thumb is a translucent tint of the
+   secondary text color (NOT the brand navy --home-accent-base, which read as a
+   stray blue bar). Mixing down from --home-text-secondary keeps it subtle and
+   self-adjusting in both light and dark; the track sits on the sunken surface. */
 .home-page-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: var(--home-accent-base) var(--home-surface-sunken);
+  scrollbar-color: color-mix(
+      in srgb,
+      var(--home-text-secondary) 35%,
+      transparent
+    )
+    var(--home-surface-sunken);
 }
 
 .home-page-scrollbar::-webkit-scrollbar {
@@ -143,12 +152,13 @@ body,
 .home-page-scrollbar::-webkit-scrollbar-thumb {
   border: 2px solid transparent;
   border-radius: 999px;
-  background: var(--home-accent-base);
+  background: color-mix(in srgb, var(--home-text-secondary) 35%, transparent);
   background-clip: content-box;
 }
 
 .home-page-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--home-accent-base);
+  background: color-mix(in srgb, var(--home-text-secondary) 50%, transparent);
+  background-clip: content-box;
 }
 
 /* The gallery search renders its own Clear button, so hide the browser's

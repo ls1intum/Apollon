@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useId, useState } from "react"
 import { toast } from "react-toastify"
 import { Button } from "@tumaet/ui/components/button"
+import { DialogFooter } from "@tumaet/ui/components/dialog"
 import { Input } from "@tumaet/ui/components/input"
 import { RadioGroup, RadioGroupItem } from "@tumaet/ui/components/radio-group"
 import {
@@ -53,7 +54,7 @@ const FIT_HELPER_TEXT: Record<DiagramFitOption, string> = {
 }
 
 const RADIO_LABEL_CLASS =
-  "flex cursor-pointer items-start gap-2 py-0.5 text-[var(--apollon-primary-contrast)]"
+  "flex cursor-pointer items-start gap-2 py-0.5 text-foreground"
 
 type SlideRadioProps = {
   value: SlideSizeOption | DiagramFitOption
@@ -78,7 +79,7 @@ const FieldRadio = ({ value, title, description }: SlideRadioProps) => {
           {title}
         </span>
         {description && (
-          <span className="text-xs leading-tight text-[var(--apollon-secondary)]">
+          <span className="text-xs leading-tight text-muted-foreground">
             {description}
           </span>
         )}
@@ -170,16 +171,13 @@ export const PPTXExportModal = () => {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-      <p className="text-sm text-[var(--apollon-secondary)]">
+      <p className="text-sm text-muted-foreground">
         Create an editable PowerPoint (.pptx) file for PowerPoint, Keynote, and
         other compatible presentation apps.
       </p>
 
       <Field className="gap-1">
-        <FieldLabel
-          htmlFor={idFileName}
-          className="text-sm text-[var(--apollon-primary-contrast)]"
-        >
+        <FieldLabel htmlFor={idFileName} className="text-sm text-foreground">
           File name
         </FieldLabel>
         <div className="flex items-center gap-2">
@@ -189,15 +187,12 @@ export const PPTXExportModal = () => {
             value={fileName}
             onChange={(e) => setFileName(e.target.value)}
           />
-          <span className="text-sm text-[var(--apollon-secondary)]">.pptx</span>
+          <span className="text-sm text-muted-foreground">.pptx</span>
         </div>
       </Field>
 
       <Field className="gap-2">
-        <span
-          id={idSlideSize}
-          className="text-sm font-medium text-[var(--apollon-primary-contrast)]"
-        >
+        <span id={idSlideSize} className="text-sm font-medium text-foreground">
           Slide size
         </span>
         <RadioGroup
@@ -224,10 +219,7 @@ export const PPTXExportModal = () => {
       </Field>
 
       <Field className="gap-1">
-        <FieldLabel
-          htmlFor={idScale}
-          className="text-sm text-[var(--apollon-primary-contrast)]"
-        >
+        <FieldLabel htmlFor={idScale} className="text-sm text-foreground">
           Scale
         </FieldLabel>
         <div className="flex items-center gap-2">
@@ -243,7 +235,7 @@ export const PPTXExportModal = () => {
             aria-invalid={!isScaleValid}
             aria-describedby={idScaleHelp}
           />
-          <span className="text-sm text-[var(--apollon-secondary)]">%</span>
+          <span className="text-sm text-muted-foreground">%</span>
         </div>
         {isScaleValid ? (
           <FieldDescription id={idScaleHelp} className="text-xs">
@@ -267,7 +259,7 @@ export const PPTXExportModal = () => {
         <Field className="gap-1">
           <span
             id={idDiagramFit}
-            className="text-sm font-medium text-[var(--apollon-primary-contrast)]"
+            className="text-sm font-medium text-foreground"
           >
             Diagram size on slide
           </span>
@@ -288,10 +280,7 @@ export const PPTXExportModal = () => {
       )}
 
       <Field className="gap-1">
-        <span
-          id={idFont}
-          className="text-sm font-medium text-[var(--apollon-primary-contrast)]"
-        >
+        <span id={idFont} className="text-sm font-medium text-foreground">
           Font
         </span>
         <Select
@@ -315,28 +304,24 @@ export const PPTXExportModal = () => {
         </FieldDescription>
       </Field>
 
-      <div className="flex items-center justify-between pt-1">
+      <DialogFooter className="sm:items-center sm:justify-between">
         <Button
           type="button"
           variant="link"
           onClick={resetToDefaults}
-          className="h-auto px-0 text-sm text-[var(--apollon-primary)] hover:underline"
+          className="h-auto px-0 text-sm text-primary hover:underline"
         >
           Reset to defaults
         </Button>
-        <div className="flex gap-2">
-          <Button
-            variant="secondary"
-            onClick={closeModal}
-            disabled={submitting}
-          >
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button variant="outline" onClick={closeModal} disabled={submitting}>
             Cancel
           </Button>
-          <Button type="submit" disabled={!canSubmit}>
+          <Button type="submit" variant="default" disabled={!canSubmit}>
             {submitting ? "Exporting…" : "Export"}
           </Button>
         </div>
-      </div>
+      </DialogFooter>
     </form>
   )
 }

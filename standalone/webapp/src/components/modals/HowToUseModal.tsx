@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import { Button } from "@tumaet/ui/components/button"
+import { DialogFooter } from "@tumaet/ui/components/dialog"
 import {
   Tabs,
   TabsContent,
@@ -227,7 +228,7 @@ const Shortcuts = () => (
 
 export const HowToUseModal = ({ onClose }: HowToUseModalProps) => {
   return (
-    <div className="flex flex-col gap-6 p-6 text-foreground">
+    <div className="flex flex-col gap-6 text-foreground">
       <Tabs defaultValue="walkthrough" className="gap-6">
         <TabsList className="w-full">
           <TabsTrigger value="walkthrough">Walkthrough</TabsTrigger>
@@ -240,9 +241,11 @@ export const HowToUseModal = ({ onClose }: HowToUseModalProps) => {
           <Shortcuts />
         </TabsContent>
       </Tabs>
-      <Button variant="default" onClick={onClose}>
-        Close
-      </Button>
+      <DialogFooter>
+        <Button variant="outline" onClick={onClose}>
+          Close
+        </Button>
+      </DialogFooter>
     </div>
   )
 }

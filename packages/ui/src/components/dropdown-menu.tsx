@@ -1,10 +1,37 @@
 import { Menu as MenuPrimitive } from "@base-ui/react/menu"
 import { CheckIcon, ChevronRightIcon } from "lucide-react"
-import type * as React from "react"
+import * as React from "react"
 import { cn } from "../lib/utils"
+import { AnchorLossGuardContext, useAnchorLossGuard } from "./popover"
 
-function DropdownMenu({ ...props }: MenuPrimitive.Root.Props) {
-  return <MenuPrimitive.Root data-slot="dropdown-menu" {...props} />
+function DropdownMenu({
+  open: openProp,
+  defaultOpen = false,
+  onOpenChange: onOpenChangeProp,
+  ...props
+}: MenuPrimitive.Root.Props) {
+  // Same anchor-loss guard the Popover primitive uses: a Menu is also backed by
+  // Base UI's Positioner, so a trigger that unmounts while the menu is open
+  // (editor breakpoint swap, a filtered-out DiagramCard "⋮") would snap the
+  // popup to (0,0). Track open in both controlled/uncontrolled modes and let the
+  // guard force-close via the Root's imperative actionsRef.close().
+  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(defaultOpen)
+  const open = openProp ?? uncontrolledOpen
+  const guard = useAnchorLossGuard(open)
+  return (
+    <AnchorLossGuardContext.Provider value={guard.positionerRef}>
+      <MenuPrimitive.Root
+        data-slot="dropdown-menu"
+        open={open}
+        actionsRef={guard.actionsRef}
+        onOpenChange={(nextOpen, eventDetails) => {
+          setUncontrolledOpen(nextOpen)
+          onOpenChangeProp?.(nextOpen, eventDetails)
+        }}
+        {...props}
+      />
+    </AnchorLossGuardContext.Provider>
+  )
 }
 
 function DropdownMenuPortal({ ...props }: MenuPrimitive.Portal.Props) {
@@ -27,9 +54,14 @@ function DropdownMenuContent({
     MenuPrimitive.Positioner.Props,
     "align" | "alignOffset" | "side" | "sideOffset"
   >) {
+  // Attach the Root's anchor-loss guard to this Positioner. SubContent renders a
+  // null provider (see DropdownMenuSub) so a submenu's own Positioner never
+  // picks up the parent's guard ref.
+  const positionerRef = React.useContext(AnchorLossGuardContext)
   return (
     <MenuPrimitive.Portal>
       <MenuPrimitive.Positioner
+        ref={positionerRef ?? undefined}
         className="isolate z-50 outline-none"
         align={align}
         alignOffset={alignOffset}
@@ -43,7 +75,7 @@ function DropdownMenuContent({
             // Select which matches the trigger width. Forcing w-(--anchor-width)
             // here made long items ("Report a Problem") wrap under a narrow
             // trigger ("Help"). SubContent already uses w-auto.
-            "data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 ring-foreground/10 bg-popover text-popover-foreground min-w-32 rounded-lg p-1 shadow-md ring-1 duration-100 data-[side=inline-start]:slide-in-from-right-2 data-[side=inline-end]:slide-in-from-left-2 z-50 max-h-(--available-height) w-auto origin-(--transform-origin) overflow-x-hidden overflow-y-auto outline-none data-closed:overflow-hidden",
+            "data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 ring-foreground/10 bg-popover text-popover-foreground min-w-32 rounded-lg p-1 shadow-lg ring-1 duration-100 data-[side=inline-start]:slide-in-from-right-2 data-[side=inline-end]:slide-in-from-left-2 z-50 max-h-(--available-height) w-auto origin-(--transform-origin) overflow-x-hidden overflow-y-auto outline-none data-closed:overflow-hidden",
             className
           )}
           {...props}
@@ -101,7 +133,15 @@ function DropdownMenuItem({
 }
 
 function DropdownMenuSub({ ...props }: MenuPrimitive.SubmenuRoot.Props) {
-  return <MenuPrimitive.SubmenuRoot data-slot="dropdown-menu-sub" {...props} />
+  // A submenu's anchor is its sub-trigger INSIDE the open parent menu; it closes
+  // with the parent, so it needs no anchor-loss guard. Shadow the parent's guard
+  // context with null so the SubContent's Positioner (which reuses
+  // DropdownMenuContent) doesn't attach the parent's positioner ref to itself.
+  return (
+    <AnchorLossGuardContext.Provider value={null}>
+      <MenuPrimitive.SubmenuRoot data-slot="dropdown-menu-sub" {...props} />
+    </AnchorLossGuardContext.Provider>
+  )
 }
 
 function DropdownMenuSubTrigger({
@@ -140,7 +180,7 @@ function DropdownMenuSubContent({
     <DropdownMenuContent
       data-slot="dropdown-menu-sub-content"
       className={cn(
-        "data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 ring-foreground/10 bg-popover text-popover-foreground min-w-[96px] rounded-md p-1 shadow-lg ring-1 duration-100 w-auto",
+        "data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 ring-foreground/10 bg-popover text-popover-foreground min-w-[96px] rounded-lg p-1 shadow-lg ring-1 duration-100 w-auto",
         className
       )}
       align={align}

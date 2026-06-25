@@ -1,4 +1,5 @@
 import { Button } from "@tumaet/ui/components/button"
+import { DialogFooter } from "@tumaet/ui/components/dialog"
 import { Input } from "@tumaet/ui/components/input"
 import { useState } from "react"
 import type { KeyboardEvent } from "react"
@@ -37,12 +38,12 @@ export const CollaborateNameModal = ({
   }
 
   return (
-    <div className="flex flex-col gap-4 text-[var(--apollon-primary-contrast)]">
+    <div className="flex flex-col gap-4 text-foreground">
       <p className="text-sm">Enter a display name to collaborate.</p>
       <div className="flex flex-col gap-1.5">
         <label
           htmlFor="collaboration-name"
-          className="text-sm text-[var(--apollon-secondary)]"
+          className="text-sm text-muted-foreground"
         >
           Display name
         </label>
@@ -55,9 +56,14 @@ export const CollaborateNameModal = ({
           placeholder="Your name"
         />
       </div>
-      <Button onClick={handleConfirm} disabled={!isValid}>
-        Start Collaborating
-      </Button>
+      <DialogFooter>
+        <Button variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button variant="default" onClick={handleConfirm} disabled={!isValid}>
+          Start Collaborating
+        </Button>
+      </DialogFooter>
     </div>
   )
 }

@@ -13,7 +13,9 @@ import {
 } from "@tumaet/ui/components/popover"
 import {
   Sheet,
+  SheetClose,
   SheetContent,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -39,9 +41,12 @@ import {
  * Favorites is intentionally absent — it is the band/pill star, not a Refine
  * block (it still earns a removable chip via `useHomeChrome.activeRefinements`).
  *
- * Every option is a real, focusable `ToggleGroupItem` (no nested interactives),
- * and the panel sits on `.apollon-glass` so it reads as the same floating-island
- * material as the band.
+ * Every option is a real, focusable `ToggleGroupItem` (no nested interactives).
+ * The shells are the STANDARD shadcn overlay surfaces — the desktop `Popover`
+ * uses the same `bg-popover` / 8px / ring material as the Help menu and the
+ * card ⋮ menu (NOT `.apollon-glass`, which is reserved for the band islands), so
+ * the two popovers in the band never differ; the mobile `Sheet` uses the opaque
+ * `bg-popover` + ring/hairline so its edge reads in light AND dark.
  */
 
 type RefineSegmentOption<T extends string> = {
@@ -193,28 +198,39 @@ export function RefinePopover({
     return (
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger render={trigger as ReactElement} />
+        {/* Three-region shadcn Sheet contract: the Popup is a NON-scrolling
+            `flex flex-col` (the primitive's default) capped at 80vh, with its
+            own overflow hidden so it can never become the scroller — that keeps
+            the primitive's sticky close pinned. `gap-0` because each region owns
+            its own padding. The header pins at the top; only the MIDDLE body
+            scrolls; the footer pins at the bottom. Opaque `bg-popover` + the
+            primitive's ring/top-hairline (NOT `.apollon-glass`) so the edge is
+            readable in light as well as dark. */}
         <SheetContent
           side="bottom"
-          className="apollon-glass max-h-[80vh] gap-0 overflow-y-auto rounded-t-[var(--apollon-chrome-radius-lg)] border-0 px-4 pt-4 pb-[calc(var(--apollon-chrome-edge-safe-bottom)+1rem)]"
+          className="max-h-[80vh] gap-0 overflow-hidden"
         >
-          <SheetHeader className="p-0 pb-3">
+          <SheetHeader className="pb-3">
             <SheetTitle style={{ color: "var(--apollon-chrome-text)" }}>
               Refine
             </SheetTitle>
           </SheetHeader>
-          <RefineBody
-            chrome={chrome}
-            typeOptions={typeOptions}
-            segmentClassName="min-h-11"
-          />
-          <Button
-            type="button"
-            variant="secondary"
-            className="mt-4"
-            onClick={() => setOpen(false)}
-          >
-            Done
-          </Button>
+          <div className="min-h-0 flex-1 overflow-y-auto px-4">
+            <RefineBody
+              chrome={chrome}
+              typeOptions={typeOptions}
+              segmentClassName="min-h-11"
+            />
+          </div>
+          <SheetFooter className="pb-[calc(var(--apollon-chrome-edge-safe-bottom)+1rem)]">
+            <SheetClose
+              render={
+                <Button type="button" variant="default">
+                  Done
+                </Button>
+              }
+            />
+          </SheetFooter>
         </SheetContent>
       </Sheet>
     )
@@ -223,11 +239,14 @@ export function RefinePopover({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger render={trigger as ReactElement} />
+      {/* Standard shadcn PopoverContent surface (same as the Help menu + card ⋮):
+          `bg-popover`, 8px radius, ring and shadow all come from the primitive —
+          only the width is tuned for the grouped body. No `.apollon-glass`. */}
       <PopoverContent
         aria-label="Refine"
         align="end"
         sideOffset={8}
-        className="apollon-glass w-80 max-w-[calc(100vw-1.5rem)] border-0 p-3.5"
+        className="w-80 max-w-[calc(100vw-1.5rem)]"
       >
         <RefineBody chrome={chrome} typeOptions={typeOptions} />
       </PopoverContent>

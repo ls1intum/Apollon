@@ -90,10 +90,40 @@ export const SheetVariant: Story = {
     await userEvent.click(canvas.getByRole("button", { name: /refine/i }))
     const body = within(canvasElement.ownerDocument.body)
     await expect(await body.findByText(/^Source$/)).toBeInTheDocument()
+    await expect(
+      await body.findByRole("button", { name: /^Done$/ })
+    ).toBeInTheDocument()
   },
 }
 
 export const Dark: Story = {
   render: () => <BodyHarness />,
   globals: { theme: "dark" },
+}
+
+/** Desktop popover in dark — verifies the standard `bg-popover` surface. */
+export const PopoverVariantDark: Story = {
+  render: () => <PopoverHarness variant="popover" />,
+  globals: { theme: "dark" },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await userEvent.click(canvas.getByRole("button", { name: /refine/i }))
+    const body = within(canvasElement.ownerDocument.body)
+    await expect(await body.findByText(/^Source$/)).toBeInTheDocument()
+  },
+}
+
+/** Mobile sheet in dark — verifies the opaque sheet edge + pinned Done footer. */
+export const SheetVariantDark: Story = {
+  render: () => <PopoverHarness variant="sheet" />,
+  globals: { theme: "dark", viewport: { value: "mobile1" } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await userEvent.click(canvas.getByRole("button", { name: /refine/i }))
+    const body = within(canvasElement.ownerDocument.body)
+    await expect(await body.findByText(/^Source$/)).toBeInTheDocument()
+    await expect(
+      await body.findByRole("button", { name: /^Done$/ })
+    ).toBeInTheDocument()
+  },
 }

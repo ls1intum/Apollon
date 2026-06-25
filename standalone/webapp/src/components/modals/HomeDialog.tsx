@@ -1,6 +1,7 @@
 import type { InputHTMLAttributes, ReactNode } from "react"
 import type { ModalProps } from "@/types"
 import { Button } from "@tumaet/ui/components/button"
+import { DialogFooter } from "@tumaet/ui/components/dialog"
 import { Input } from "@tumaet/ui/components/input"
 import { Field, FieldLabel } from "@tumaet/ui/components/field"
 import { Alert, AlertDescription } from "@tumaet/ui/components/alert"
@@ -17,8 +18,8 @@ export type HomeDialogOption<T extends string> = {
 export const isHomeDialogVariant = (props?: ModalProps | unknown) =>
   Boolean(
     props &&
-    typeof props === "object" &&
-    (props as ModalProps).dialogVariant === "home"
+      typeof props === "object" &&
+      (props as ModalProps).dialogVariant === "home"
   )
 
 export const getHomeDialogWidth = (size: HomeDialogSize) =>
@@ -42,7 +43,7 @@ export const HomeDialogContent = ({
 )
 
 export const HomeDialogNotice = ({ children }: { children: ReactNode }) => (
-  <Alert className="border-l-[5px] border-l-primary bg-[color-mix(in_srgb,var(--home-accent-base)_12%,transparent)] p-2">
+  <Alert className="border-l-[5px] border-l-primary bg-accent-soft p-2">
     <AlertDescription className="text-sm font-normal text-foreground">
       {children}
     </AlertDescription>
@@ -170,8 +171,8 @@ export const HomeDialogActions = ({
   onCancel: () => void
   onConfirm: () => void
 }) => (
-  <div className="flex items-center justify-between gap-2 pt-4">
-    <Button variant="ghost" disabled={loading} onClick={onCancel}>
+  <DialogFooter>
+    <Button variant="outline" disabled={loading} onClick={onCancel}>
       {cancelLabel}
     </Button>
     <Button
@@ -181,5 +182,5 @@ export const HomeDialogActions = ({
     >
       {loading && loadingLabel ? loadingLabel : confirmLabel}
     </Button>
-  </div>
+  </DialogFooter>
 )

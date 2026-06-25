@@ -1,6 +1,11 @@
 import { useState } from "react"
 import { toast } from "react-toastify"
 import { Button } from "@tumaet/ui/components/button"
+import {
+  AlertDialogCancel,
+  AlertDialogDescription,
+  AlertDialogFooter,
+} from "@tumaet/ui/components/alert-dialog"
 import { useModalContext } from "@/contexts"
 import {
   selectScopedPreview,
@@ -35,6 +40,9 @@ export const DeleteVersionModal = ({ diagramId, versionId }: Props) => {
     try {
       if (previewingThis) closePreview()
       await deleteVersion(diagramId, versionId)
+      // Close only on success — a rejected delete keeps the dialog open so the
+      // error toast lands in context (so the destructive action owns its own
+      // close instead of the auto-dismissing AlertDialog primitive).
       closeModal()
     } catch (err) {
       log.error("Delete version failed", err)
@@ -50,19 +58,17 @@ export const DeleteVersionModal = ({ diagramId, versionId }: Props) => {
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-[var(--apollon-primary-contrast)]">
+      <AlertDialogDescription className="text-foreground">
         {label
           ? `'${label}' will be permanently removed. This cannot be undone.`
           : t.deleteFallbackBody}
-      </p>
-      <div className="flex justify-end gap-2">
-        <Button variant="ghost" onClick={closeModal} disabled={working}>
-          {t.cancel}
-        </Button>
+      </AlertDialogDescription>
+      <AlertDialogFooter>
+        <AlertDialogCancel disabled={working}>{t.cancel}</AlertDialogCancel>
         <Button variant="destructive" onClick={onConfirm} disabled={working}>
           {t.delete}
         </Button>
-      </div>
+      </AlertDialogFooter>
     </div>
   )
 }

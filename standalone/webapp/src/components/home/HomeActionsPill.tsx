@@ -1,5 +1,10 @@
 import { useState } from "react"
-import { MoreVertical, SlidersHorizontal, Star, Upload } from "lucide-react"
+import {
+  FolderInput,
+  MoreVertical,
+  SlidersHorizontal,
+  Star,
+} from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,7 +23,7 @@ import type { HomeChrome } from "./useHomeChrome"
  * Mobile actions pill (< md) — forked from the editor's `MobileActionsPill`, but
  * with HOME semantics (no Share / Version history). The resting pill surfaces the
  * three highest-value actions as direct 1-tap controls — ★ Favorites, Refine,
- * ⬆ Import — and collapses only the lower-frequency items (Theme, Help/legal)
+ * Import — and collapses only the lower-frequency items (Theme, Help/legal)
  * behind a "…" overflow dropdown.
  *
  * The overflow dropdown uses the canonical @tumaet/ui DropdownMenu DEFAULTS — the
@@ -95,7 +100,9 @@ export function HomeActionsPill({
         }
       />
 
-      {/* ⬆ Import — direct 1-tap icon, surfaced out of the overflow. */}
+      {/* Import — direct 1-tap icon (FolderInput = ingest into the library;
+          distinct from the editor's box+up-arrow Share motif), surfaced out of
+          the overflow. */}
       <button
         type="button"
         className="apollon-chrome-iconbtn"
@@ -103,7 +110,7 @@ export function HomeActionsPill({
         title="Import"
         onClick={onImportJson}
       >
-        <Upload className="size-[18px]" aria-hidden />
+        <FolderInput className="size-[18px]" aria-hidden />
       </button>
 
       {/* "…" overflow — only the lower-frequency Theme + Help/legal items.

@@ -1,6 +1,11 @@
 import { useState } from "react"
 import { toast } from "react-toastify"
 import { Button } from "@tumaet/ui/components/button"
+import {
+  AlertDialogCancel,
+  AlertDialogDescription,
+  AlertDialogFooter,
+} from "@tumaet/ui/components/alert-dialog"
 import { useModalContext } from "@/contexts"
 import { selectVersions, useVersionStore } from "@/stores/useVersionStore"
 import { log } from "@/logger"
@@ -34,6 +39,9 @@ export const ConfirmRestoreModal = ({
     setWorking(true)
     try {
       await onConfirm()
+      // Close only on success — a rejected restore keeps the dialog open so
+      // the error toast lands in context (so the confirm action owns its own
+      // close instead of the auto-dismissing AlertDialog primitive).
       closeModal()
     } catch (err) {
       log.error("Confirm restore failed", err as Error)
@@ -48,17 +56,15 @@ export const ConfirmRestoreModal = ({
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-[var(--apollon-primary-contrast)]">
+      <AlertDialogDescription className="text-foreground">
         {t.confirmRestoreBody(`'${label}'`)}
-      </p>
-      <div className="flex justify-end gap-2">
-        <Button variant="ghost" onClick={closeModal} disabled={working}>
-          {t.cancel}
-        </Button>
-        <Button onClick={handleConfirm} disabled={working}>
+      </AlertDialogDescription>
+      <AlertDialogFooter>
+        <AlertDialogCancel disabled={working}>{t.cancel}</AlertDialogCancel>
+        <Button variant="default" onClick={handleConfirm} disabled={working}>
           {t.confirmRestoreButton}
         </Button>
-      </div>
+      </AlertDialogFooter>
     </div>
   )
 }

@@ -6,6 +6,7 @@ import {
   repositoryLink,
 } from "@/constants"
 import { Button } from "@tumaet/ui/components/button"
+import { DialogFooter } from "@tumaet/ui/components/dialog"
 
 type AboutModalProps = {
   /** Called when the user dismisses the modal via the Close button. */
@@ -34,7 +35,7 @@ const ExternalLink = ({
 
 export const AboutModal = ({ onClose }: AboutModalProps) => {
   return (
-    <div className="flex flex-col gap-5 text-sm text-[var(--apollon-primary-contrast)]">
+    <div className="flex flex-col gap-5 text-sm text-foreground">
       <p className="leading-relaxed">
         Apollon is an open-source UML modeling editor built by the{" "}
         <ExternalLink href={aetLink}>AET team</ExternalLink> at{" "}
@@ -60,11 +61,11 @@ export const AboutModal = ({ onClose }: AboutModalProps) => {
         <ExternalLink href={licenseLink}>License (MIT)</ExternalLink>
       </div>
 
-      <div className="flex justify-end">
-        <Button variant="default" onClick={onClose}>
+      <DialogFooter>
+        <Button variant="outline" onClick={onClose}>
           Close
         </Button>
-      </div>
+      </DialogFooter>
     </div>
   )
 }

@@ -1,5 +1,11 @@
 import { useEffect, useRef, useState } from "react"
-import { Plus, Search, SlidersHorizontal, Star, Upload } from "lucide-react"
+import {
+  FolderInput,
+  Plus,
+  Search,
+  SlidersHorizontal,
+  Star,
+} from "lucide-react"
 import type { UMLDiagramType } from "@tumaet/apollon"
 import { Badge } from "@tumaet/ui/components/badge"
 import {
@@ -247,7 +253,7 @@ function HomeActionsIsland({
         className={navbarButtonStyle()}
         onClick={onImportJson}
       >
-        <Upload className="size-4" aria-hidden />
+        <FolderInput className="size-4" aria-hidden />
         {/* Same threshold as Refine: reveal at `min-[940px]`, where the labelled
             actions island + brand + a ≥200px search island still fit. */}
         <span className="hidden min-[940px]:inline">Import</span>
