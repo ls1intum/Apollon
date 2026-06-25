@@ -644,8 +644,24 @@ export const DiagramGallery = ({
                 ))}
               </div>
             ) : (
-              <div className="rounded-lg border border-dashed border-border bg-muted px-4 py-10 text-center text-sm text-muted-foreground transition-colors duration-200">
-                No diagrams match your search and filters.
+              <div className="flex min-h-[480px] flex-col items-center justify-center gap-6 text-center transition-colors duration-200">
+                <EmptyStateIllustration />
+                <div className="flex flex-col items-center gap-1.5">
+                  <p className="text-lg font-semibold text-foreground transition-colors duration-200">
+                    No matches
+                  </p>
+                  <p className="max-w-xs text-center text-sm text-muted-foreground">
+                    No diagrams match your search and filters.
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2"
+                    onClick={chrome.resetAll}
+                  >
+                    Clear filters
+                  </Button>
+                </div>
               </div>
             )}
 

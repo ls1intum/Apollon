@@ -1,5 +1,4 @@
 import { XIcon } from "lucide-react"
-import { Badge } from "@tumaet/ui/components/badge"
 import type { HomeChrome } from "./useHomeChrome"
 
 /**
@@ -13,8 +12,11 @@ import type { HomeChrome } from "./useHomeChrome"
  * region) sized to its content, so the chips read as the same floating-island
  * material as the band and "Clear all" stays legible over the scrolling cards.
  * Horizontally scrollable on mobile (chips never wrap to a second row), and each
- * chip is a single `<button>` (a secondary `Badge`) so there are no nested
- * interactives for the a11y gate to flag.
+ * chip is a single `<button>` so there are no nested interactives for the a11y
+ * gate to flag. The chips are painted on the chrome surface tokens (the same
+ * fill/hover/text the band's BackNav and File/Share controls idle on), NOT the
+ * `bg-secondary` Badge material — so they read as the same floating-glass island
+ * grammar as the band in both light and dark instead of a foreign accent block.
  */
 export function HomeRefinementChips({ chrome }: { chrome: HomeChrome }) {
   const { activeRefinements } = chrome
@@ -27,7 +29,7 @@ export function HomeRefinementChips({ chrome }: { chrome: HomeChrome }) {
     <div
       role="group"
       aria-label="Active filters"
-      className="apollon-glass inline-flex items-center gap-1.5 overflow-x-auto px-2 py-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="apollon-glass inline-flex items-center gap-[var(--apollon-chrome-gap)] overflow-x-auto p-[var(--apollon-chrome-pad)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       style={{
         width: "fit-content",
         maxWidth: "100%",
@@ -35,26 +37,21 @@ export function HomeRefinementChips({ chrome }: { chrome: HomeChrome }) {
       }}
     >
       {activeRefinements.map((refinement) => (
-        <Badge
+        <button
           key={refinement.key}
-          render={
-            <button
-              type="button"
-              onClick={refinement.clear}
-              aria-label={`Remove ${refinement.label} filter`}
-            />
-          }
-          variant="secondary"
-          className="min-h-9 shrink-0 cursor-pointer gap-1 px-2.5 transition-colors hover:bg-secondary/80 focus-visible:shadow-[0_0_0_2px_color-mix(in_srgb,var(--apollon-chrome-accent)_45%,transparent)] focus-visible:outline-none"
+          type="button"
+          onClick={refinement.clear}
+          aria-label={`Remove ${refinement.label} filter`}
+          className="inline-flex min-h-9 shrink-0 cursor-pointer items-center gap-1 rounded-[var(--apollon-chrome-radius-sm)] border border-[color:var(--apollon-chrome-border)] bg-[var(--apollon-chrome-surface-hover)] px-2.5 text-xs font-medium text-[color:var(--apollon-chrome-text)] transition-colors hover:bg-[var(--apollon-chrome-surface-active)] focus-visible:shadow-[0_0_0_2px_color-mix(in_srgb,var(--apollon-chrome-accent)_45%,transparent)] focus-visible:outline-none"
         >
           <span>{refinement.label}</span>
           <XIcon className="size-3 opacity-70" aria-hidden />
-        </Badge>
+        </button>
       ))}
       <button
         type="button"
         onClick={chrome.resetAll}
-        className="ml-0.5 inline-flex min-h-9 shrink-0 cursor-pointer items-center rounded-full px-2 text-xs font-medium transition-colors focus-visible:shadow-[0_0_0_2px_color-mix(in_srgb,var(--apollon-chrome-accent)_45%,transparent)] focus-visible:outline-none"
+        className="inline-flex min-h-9 shrink-0 cursor-pointer items-center rounded-[var(--apollon-chrome-radius-sm)] px-2 text-xs font-medium transition-colors hover:bg-[var(--apollon-chrome-surface-hover)] focus-visible:shadow-[0_0_0_2px_color-mix(in_srgb,var(--apollon-chrome-accent)_45%,transparent)] focus-visible:outline-none"
         style={{ color: "var(--apollon-chrome-text)" }}
       >
         Clear all

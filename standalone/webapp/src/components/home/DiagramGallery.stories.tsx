@@ -112,3 +112,39 @@ export const SearchFilters: Story = {
     })
   },
 }
+
+/**
+ * The no-results state: the store HAS diagrams but the active search matches
+ * none of them, so the gallery shows the modern empty state (illustration +
+ * "No matches" + helper line + a "Clear filters" button that resets the active
+ * refinements via `chrome.resetAll`) rather than the plain dashed muted box.
+ */
+export const NoMatches: Story = {
+  beforeEach: () => seedGallery(),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step(
+      "searching for nothing shows the modern empty state",
+      async () => {
+        const search = canvas.getByRole("searchbox", {
+          name: /search diagrams by name/i,
+        })
+        await userEvent.type(search, "zzzznomatchzzz")
+        await expect(await canvas.findByText("No matches")).toBeInTheDocument()
+        await expect(
+          canvas.getByText("No diagrams match your search and filters.")
+        ).toBeInTheDocument()
+      }
+    )
+
+    await step("Clear filters resets and restores the grid", async () => {
+      await userEvent.click(
+        canvas.getByRole("button", { name: /clear filters/i })
+      )
+      await expect(
+        await canvas.findByText("Banking Domain Model")
+      ).toBeInTheDocument()
+    })
+  },
+}
