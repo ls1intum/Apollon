@@ -2,4 +2,4 @@
 "@tumaet/webapp": minor
 ---
 
-Migrate the standalone web app from MUI 6 / Emotion to a shared shadcn-style component library (`@tumaet/ui`) built on Base UI primitives and `lucide-react`, unifying the editor shell, modals, version history, and home gallery with the Tailwind homepage. Design tokens now live in a single source of truth and are exposed to Tailwind via `@theme`, the navbar is a single responsive component, dialogs/menus/sheets use Base UI for accessible focus trapping and `Escape` handling, and the editor accent is bridged to the app accent for one coherent brand. Removes the `@mui/material`, `@mui/icons-material`, and `@emotion/*` dependencies.
+Rebuilds the web app's interface on one shared component system, so the editor shell, dialogs, version history, and diagram gallery now share a single consistent look — matching the homepage — in both light and dark. Menus, dialogs, and sheets are fully keyboard-accessible, with focus trapped inside them and `Escape` to close, and the app loads lighter after dropping its previous UI framework.

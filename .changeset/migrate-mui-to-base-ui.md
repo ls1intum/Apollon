@@ -2,4 +2,4 @@
 "@tumaet/apollon": minor
 ---
 
-Migrate UI components from MUI/Emotion to Base UI primitives, removing the MUI and Emotion dependencies. Introduces new internal components (Button, IconButton, Select, Tooltip, Typography, TextField) built on Base UI and styled with raw CSS via `--apollon-*` custom properties, and refactors all popovers, toolbars, controls, and the minimap to use the new system.
+Removes MUI and Emotion from the editor. Its controls, popovers, toolbars, and minimap are rebuilt on lightweight Base UI primitives and styled entirely through the public `--apollon-*` CSS variables, so embedding hosts get a smaller dependency footprint, no Emotion runtime, and no MUI global-style collisions — with the editor's look and behaviour unchanged.
