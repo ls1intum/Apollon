@@ -25,10 +25,10 @@ export default defineConfig({
     setupFiles: ["./tests/setup.ts"],
     server: {
       deps: {
-        // The workspace library is injected as a built ESM package that imports
-        // MUI subpaths (e.g. `@mui/material/Tooltip`). Inline it so Vite resolves
-        // those imports the same way the app bundle does, instead of failing
-        // under Node's externalized ESM directory-import resolution.
+        // The workspace library is injected as a built ESM package with subpath
+        // imports. Inline it so Vite resolves those the same way the app bundle
+        // does, instead of failing under Node's externalized ESM directory-import
+        // resolution.
         inline: [/@tumaet\/apollon/],
       },
     },
