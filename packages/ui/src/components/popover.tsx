@@ -51,13 +51,24 @@ function useAnchorLossGuard(open: boolean): {
   React.useEffect(() => {
     if (!open || positioner == null) return
 
-    const isHidden = () =>
-      positioner.hasAttribute("data-anchor-hidden") ||
-      // Belt-and-braces: a detached anchor that Floating UI has not yet
-      // re-measured can leave the positioner collapsed at the origin. Treat a
-      // zero-size positioner as anchor loss too.
-      (positioner.getBoundingClientRect().width === 0 &&
-        positioner.getBoundingClientRect().height === 0)
+    // Anchor-loss detection only makes sense once the popup has actually laid
+    // out. Without layout — every popup under jsdom, where getBoundingClientRect
+    // is always 0x0 — NEITHER signal is reliable: Floating UI sets
+    // `data-anchor-hidden` simply because it can't position, and the rect is
+    // trivially zero. So gate the whole check on having had layout at least once;
+    // until then the popup is never force-closed (which previously broke every
+    // Popover/Menu under jsdom by closing it on mount). Once it has had layout, a
+    // detached anchor surfaces as `data-anchor-hidden` or a collapse back to 0x0.
+    let hadLayout = false
+    const isHidden = () => {
+      const rect = positioner.getBoundingClientRect()
+      if (rect.width > 0 || rect.height > 0) hadLayout = true
+      if (!hadLayout) return false
+      return (
+        positioner.hasAttribute("data-anchor-hidden") ||
+        (rect.width === 0 && rect.height === 0)
+      )
+    }
 
     const check = () => {
       if (isHidden()) actionsRef.current?.close()

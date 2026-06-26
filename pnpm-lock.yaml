@@ -283,9 +283,6 @@ importers:
       '@dnd-kit/utilities':
         specifier: 3.2.2
         version: 3.2.2(react@19.2.7)
-      '@tumaet/ui':
-        specifier: workspace:*
-        version: link:../packages/ui
       lucide-react:
         specifier: 'catalog:'
         version: 1.18.0(react@19.2.7)
@@ -308,6 +305,9 @@ importers:
       '@testing-library/react':
         specifier: 'catalog:'
         version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      '@tumaet/ui':
+        specifier: workspace:*
+        version: link:../packages/ui
       '@types/node':
         specifier: 'catalog:'
         version: 24.12.4
@@ -827,7 +827,7 @@ importers:
     dependencies:
       '@tumaet/apollon':
         specifier: workspace:*
-        version: file:library(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(@xyflow/react@12.9.3(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(use-sync-external-store@1.6.0(react@19.2.7))(y-protocols@1.0.6(yjs@13.6.20))(yjs@13.6.20)
+        version: link:../library
     devDependencies:
       '@eslint/js':
         specifier: 'catalog:'
@@ -5076,29 +5076,6 @@ packages:
 
   '@tsconfig/node16@1.0.4':
     resolution: {integrity: sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==}
-
-  '@tumaet/apollon@file:library':
-    resolution: {directory: library, type: directory}
-    engines: {node: '>=22.0.0'}
-    peerDependencies:
-      '@xyflow/react': ^12.9.0
-      react: ^19.0.0
-      react-dom: ^19.0.0
-      y-protocols: ^1.0.6
-      yjs: ^13.6.0
-    peerDependenciesMeta:
-      '@xyflow/react':
-        optional: true
-      react:
-        optional: true
-      react-dom:
-        optional: true
-
-  '@tumaet/ui@file:packages/ui':
-    resolution: {directory: packages/ui, type: directory}
-    peerDependencies:
-      react: 'catalog:'
-      react-dom: 'catalog:'
 
   '@tybys/wasm-util@0.10.2':
     resolution: {integrity: sha512-RoBvJ2X0wuKlWFIjrwffGw1IqZHKQqzIchKaadZZfnNpsAYp2mM0h36JtPCjNDAHGgYez/15uMBpfGwchhiMgg==}
@@ -17946,51 +17923,6 @@ snapshots:
   '@tsconfig/node14@1.0.3': {}
 
   '@tsconfig/node16@1.0.4': {}
-
-  '@tumaet/apollon@file:library(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(@xyflow/react@12.9.3(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(use-sync-external-store@1.6.0(react@19.2.7))(y-protocols@1.0.6(yjs@13.6.20))(yjs@13.6.20)':
-    dependencies:
-      '@base-ui/react': 1.5.0(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      '@chenglou/pretext': 0.0.6
-      '@dnd-kit/core': 6.3.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      '@dnd-kit/sortable': 10.0.0(@dnd-kit/core@6.3.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)
-      '@dnd-kit/utilities': 3.2.2(react@19.2.7)
-      '@tumaet/ui': file:packages/ui(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      lucide-react: 1.18.0(react@19.2.7)
-      uuid: 11.0.3
-      y-protocols: 1.0.6(yjs@13.6.20)
-      yjs: 13.6.20
-      zustand: 5.0.12(@types/react@19.2.17)(react@19.2.7)(use-sync-external-store@1.6.0(react@19.2.7))
-    optionalDependencies:
-      '@resvg/resvg-wasm': 2.6.2
-      '@xyflow/react': 12.9.3(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      jspdf: 4.2.1
-      react: 19.2.7
-      react-dom: 19.2.7(react@19.2.7)
-      svg2pdf.js: 2.7.0(jspdf@4.2.1)
-    transitivePeerDependencies:
-      - '@date-fns/tz'
-      - '@types/react'
-      - '@types/react-dom'
-      - date-fns
-      - immer
-      - use-sync-external-store
-
-  '@tumaet/ui@file:packages/ui(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
-    dependencies:
-      '@base-ui/react': 1.5.0(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      class-variance-authority: 0.7.1
-      clsx: 2.1.1
-      cmdk: 1.1.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      lucide-react: 1.18.0(react@19.2.7)
-      react: 19.2.7
-      react-dom: 19.2.7(react@19.2.7)
-      tailwind-merge: 3.6.0
-      tailwindcss: 4.0.17
-    transitivePeerDependencies:
-      - '@date-fns/tz'
-      - '@types/react'
-      - '@types/react-dom'
-      - date-fns
 
   '@tybys/wasm-util@0.10.2':
     dependencies:

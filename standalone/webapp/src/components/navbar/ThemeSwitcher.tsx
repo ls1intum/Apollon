@@ -54,7 +54,7 @@ export function ThemeSwitcherButton({
     >
       <span
         className={cn(
-          "absolute inset-0 flex items-center justify-center transition-all duration-[250ms]",
+          "absolute inset-0 flex items-center justify-center transition-[transform,opacity] duration-[250ms]",
           isDarkMode
             ? "scale-100 rotate-0 opacity-100"
             : "scale-[0.6] -rotate-90 opacity-0"
@@ -67,7 +67,7 @@ export function ThemeSwitcherButton({
       </span>
       <span
         className={cn(
-          "absolute inset-0 flex items-center justify-center transition-all duration-[250ms]",
+          "absolute inset-0 flex items-center justify-center transition-[transform,opacity] duration-[250ms]",
           isDarkMode
             ? "scale-[0.6] rotate-90 opacity-0"
             : "scale-100 rotate-0 opacity-100"

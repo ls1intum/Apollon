@@ -67,15 +67,15 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "pnpm --filter @tumaet/ui run build:css && vite",
     "build": "pnpm --filter @tumaet/ui run build:css && pnpm --filter @tumaet/ui run build:types && tsc -b && vite build && LIB_PEERS=true vite build && LIB_EXTERNAL=true vite build && rm -rf dist/react/assets dist/external/assets && node scripts/localize-ui-types.mjs",
     "build:watch": "pnpm --filter @tumaet/ui run build:css && pnpm exec concurrently -k \"pnpm --filter @tumaet/ui run build:css:watch\" \"tsc -b --watch\" \"vite build --watch\"",
     "preview": "vite preview",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
+    "test": "pnpm --filter @tumaet/ui run build:css && vitest run",
+    "test:watch": "pnpm --filter @tumaet/ui run build:css && vitest",
+    "test:coverage": "pnpm --filter @tumaet/ui run build:css && vitest run --coverage",
     "size": "size-limit",
     "gen:fonts": "node scripts/gen-fonts.mjs",
     "gen:schema": "node scripts/gen-schema.mjs"
@@ -131,7 +131,6 @@
     "@dnd-kit/sortable": "10.0.0",
     "@dnd-kit/utilities": "3.2.2",
     "@base-ui/react": "catalog:",
-    "@tumaet/ui": "workspace:*",
     "lucide-react": "catalog:",
     "uuid": "catalog:",
     "zustand": "catalog:"
@@ -146,6 +145,7 @@
     "@size-limit/preset-big-lib": "catalog:",
     "@testing-library/jest-dom": "catalog:",
     "@testing-library/react": "catalog:",
+    "@tumaet/ui": "workspace:*",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

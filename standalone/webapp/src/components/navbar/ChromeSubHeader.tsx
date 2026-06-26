@@ -1,12 +1,10 @@
 import { Link } from "@tanstack/react-router"
-import { DropdownMenuSeparator } from "@tumaet/ui/components/dropdown-menu"
 import { TooltipProvider } from "@tumaet/ui/components/tooltip"
 import { Island, GroupDivider } from "./islandPrimitives"
 import { BackNav } from "./BackNav"
 import { BrandLockup } from "./BrandLockup"
 import { ThemeSwitcherMenu } from "./ThemeSwitcher"
-import { ChromeOverflowMenu } from "./MobileIslands"
-import { HomeHelpMenu, HelpMenuItems } from "@/components/home/HomeHelpMenu"
+import { HomeHelpMenu } from "@/components/home/HomeHelpMenu"
 import { useBackTarget } from "@/hooks/useBackTarget"
 
 /**
@@ -59,36 +57,16 @@ export const ChromeSubHeader = () => {
 
         <div className="flex-1" />
 
-        {/* Desktop (md+): the {Help, Theme} cluster — grouped together, NO divider
-          between them — identical to the editor's HeaderActionsIsland and the
-          home band's actions island. The responsive gating sits on a plain
-          wrapper, NOT on the Island: the island's shared layout sets
-          `display:flex` INLINE, which would beat a Tailwind `hidden` class. */}
-        <div className="hidden md:block">
-          <Island ariaLabel="Page actions">
-            <HomeHelpMenu reveal="always" />
-            <ThemeSwitcherMenu />
-          </Island>
-        </div>
-
-        {/* Mobile (< md): a compact pill carrying ONLY the shared "…" overflow.
-          The sub-page has no document actions, so — unlike the editor/home pills
-          (which keep Help as its own dropdown beside other controls) — the whole
-          tail collapses into one menu: the shared HelpMenuItems body + Theme as
-          the LAST row, the same item set/order as every other Help surface. */}
-        <div className="md:hidden">
-          <Island ariaLabel="Page actions">
-            <ChromeOverflowMenu label="More options" id="subpage-options">
-              {(close) => (
-                <>
-                  <HelpMenuItems onSelect={close} />
-                  <DropdownMenuSeparator />
-                  <ThemeSwitcherMenu variant="menuItem" onToggle={close} />
-                </>
-              )}
-            </ChromeOverflowMenu>
-          </Island>
-        </div>
+        {/* The {Help, Theme} cluster at every width — a sub-page has only these
+          two controls and there is always room for both, so Help is its own
+          dropdown (the real help-circle trigger, icon-only below lg, labelled at
+          lg+ via reveal) and Theme stays a 1-tap toggle. No "…" overflow: that
+          would hide Theme behind two taps for no space saving. Matches the
+          editor/home actions islands. */}
+        <Island ariaLabel="Page actions">
+          <HomeHelpMenu reveal="lg" />
+          <ThemeSwitcherMenu />
+        </Island>
       </div>
     </TooltipProvider>
   )

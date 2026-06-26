@@ -521,7 +521,14 @@
   --home-toast-info: var(--primitive-toast-info);
 }
 
-:root[data-theme="dark"] {
+/* `:root[data-theme="dark"]` themes the webapp (attribute on the document root);
+   the bare `[data-theme="dark"]` themes a SCOPED mount — the published editor sets
+   `data-theme` on its own container, not the document root, so `<Apollon
+   dataTheme="dark" />` / `new ApollonEditor(el, { dataTheme: "dark" })` must flip
+   the dark token deltas on that element's subtree without the host mutating
+   :root. Both selectors carry the identical deltas. */
+:root[data-theme="dark"],
+[data-theme="dark"] {
   color-scheme: dark;
 
   /* ── Layer 1: primitives (dark deltas) ─────────────────────────────────── */
