@@ -244,12 +244,6 @@ importers:
       uuid:
         specifier: 'catalog:'
         version: 11.0.3
-      y-protocols:
-        specifier: 1.0.6
-        version: 1.0.6(yjs@13.6.20)
-      yjs:
-        specifier: 13.6.20
-        version: 13.6.20
       zustand:
         specifier: 'catalog:'
         version: 5.0.12(@types/react@19.2.17)(react@19.2.7)(use-sync-external-store@1.6.0(react@19.2.7))
@@ -344,6 +338,12 @@ importers:
       vitest:
         specifier: 'catalog:'
         version: 4.1.2(@types/node@24.12.4)(jsdom@28.1.0(@napi-rs/canvas@1.0.0)(@noble/hashes@1.8.0))(vite@6.4.2(@types/node@24.12.4)(jiti@2.7.0)(lightningcss@1.29.2)(terser@5.47.1)(tsx@4.19.2)(yaml@2.9.0))
+      y-protocols:
+        specifier: 1.0.6
+        version: 1.0.6(yjs@13.6.20)
+      yjs:
+        specifier: 13.6.20
+        version: 13.6.20
     optionalDependencies:
       '@resvg/resvg-wasm':
         specifier: 'catalog:'

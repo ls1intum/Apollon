@@ -50,6 +50,10 @@
       "types": "./dist/react/react.d.ts",
       "import": "./dist/react/react.js"
     },
+    "./external": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/external/index.js"
+    },
     "./internals": {
       "types": "./dist/internals.d.ts",
       "import": "./dist/internals.js"
@@ -64,7 +68,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build && LIB_PEERS=true vite build && rm -rf dist/react/assets",
+    "build": "tsc -b && vite build && LIB_PEERS=true vite build && LIB_EXTERNAL=true vite build && rm -rf dist/react/assets dist/external/assets",
     "build:watch": "tsc -b --watch & vite build --watch",
     "preview": "vite preview",
     "lint": "eslint .",
@@ -88,6 +92,11 @@
       "limit": "112 kB"
     },
     {
+      "name": "/external entry (all deps external)",
+      "path": "dist/external/index.js",
+      "limit": "112 kB"
+    },
+    {
       "name": "yjs sync chunk",
       "path": "dist/yjsSync-*.js",
       "limit": "210 kB"
@@ -104,7 +113,9 @@
     "@mui/material": "^6.4.0",
     "@xyflow/react": "^12.9.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "y-protocols": "^1.0.6",
+    "yjs": "^13.6.0"
   },
   "peerDependenciesMeta": {
     "@emotion/react": {
@@ -132,8 +143,6 @@
     "@dnd-kit/sortable": "10.0.0",
     "@dnd-kit/utilities": "3.2.2",
     "uuid": "catalog:",
-    "y-protocols": "1.0.6",
-    "yjs": "13.6.20",
     "zustand": "catalog:"
   },
   "optionalDependencies": {
@@ -171,6 +180,8 @@
     "typescript-json-schema": "0.67.4",
     "vite": "catalog:",
     "vite-plugin-dts": "4.3.0",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "y-protocols": "1.0.6",
+    "yjs": "13.6.20"
   }
 }

@@ -9,6 +9,11 @@ description: Drop Apollon into a plain HTML page with one script tag.
 The standalone subpath works as a single ESM module loaded directly from a
 CDN. No build step, no bundler.
 
+`yjs` and `y-protocols` are required peers, but on the CDN path esm.sh resolves
+and serves them from the import URL automatically — there is nothing extra to
+load. (With a bundler you install the peers yourself — see
+[Install](/library/embedding/install).)
+
 ```html
 <link rel="stylesheet" href="https://esm.sh/@tumaet/apollon@4.8.0/style.css" />
 <div id="apollon" style="width: 100%; height: 600px"></div>
