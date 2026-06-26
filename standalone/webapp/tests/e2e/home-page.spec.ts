@@ -271,7 +271,7 @@ test.describe("Home page — diagram gallery", () => {
       .click()
     await page
       .getByRole("group", { name: "Order" })
-      .getByRole("button", { name: "Oldest first" })
+      .getByRole("button", { name: "Oldest" })
       .click()
     // A-Z ascending: Alpha first.
     await expect(cards(page).first()).toContainText("Alpha")
@@ -331,7 +331,7 @@ test.describe("Home page — last modified sort", () => {
     await page.getByRole("button", { name: "Refine" }).click()
     await page
       .getByRole("group", { name: "Order" })
-      .getByRole("button", { name: "Oldest first" })
+      .getByRole("button", { name: "Oldest" })
       .click()
     await expect(cards(page).first()).toContainText("Older")
     await expect(cards(page).last()).toContainText("Recent")
@@ -476,36 +476,35 @@ test.describe("Home page — accessibility basics", () => {
     await expect(page.locator('[role="list"]')).toBeAttached()
   })
 
-  test("legal links are reachable in the footer on desktop", async ({
+  test("legal links are reachable via the Help menu on desktop", async ({
     page,
   }) => {
     await seedEmpty(page)
-    const footer = page.getByRole("contentinfo")
-    await expect(footer.getByRole("link", { name: "Imprint" })).toHaveAttribute(
-      "href",
-      "/imprint"
-    )
-    await expect(footer.getByRole("link", { name: "Privacy" })).toHaveAttribute(
-      "href",
-      "/privacy"
-    )
+    // The footer was retired; the legal links + source attribution moved into
+    // the shared Help menu in the home band (anchor-backed `role=menuitem`s, the
+    // same body as the editor/mobile Help surfaces).
+    await page.getByRole("button", { name: "Help" }).click()
+    await expect(
+      page.getByRole("menuitem", { name: "Imprint" })
+    ).toHaveAttribute("href", "/imprint")
+    await expect(
+      page.getByRole("menuitem", { name: "Privacy" })
+    ).toHaveAttribute("href", "/privacy")
     // OSS conventions (matching Artemis/Hephaestus): a Releases link and a
     // GitHub source attribution.
     await expect(
-      footer.getByRole("link", { name: "Releases" })
+      page.getByRole("menuitem", { name: "Releases" })
     ).toHaveAttribute("href", /github\.com\/ls1intum\/Apollon\/releases$/)
-    await expect(footer.getByRole("link", { name: "GitHub" })).toHaveAttribute(
-      "href",
-      "https://github.com/ls1intum/Apollon"
-    )
+    await expect(
+      page.getByRole("menuitem", { name: "GitHub" })
+    ).toHaveAttribute("href", "https://github.com/ls1intum/Apollon")
   })
 
   test("the About dialog shows app info and source links", async ({ page }) => {
     await seedEmpty(page)
-    await page
-      .getByRole("contentinfo")
-      .getByRole("button", { name: "About" })
-      .click()
+    // About moved from the footer into the shared Help menu.
+    await page.getByRole("button", { name: "Help" }).click()
+    await page.getByRole("menuitem", { name: "About" }).click()
     const dialog = page.getByRole("dialog")
     await expect(dialog.getByText("Information about Apollon")).toBeVisible()
     await expect(dialog.getByRole("link", { name: "GitHub" })).toBeVisible()
@@ -620,40 +619,42 @@ test.describe("Legal pages", () => {
     ).toBeVisible()
   })
 
-  test("legal pages cross-link via the footer (imprint -> privacy)", async ({
+  test("legal pages cross-link via the Help menu (imprint -> privacy)", async ({
     page,
   }) => {
     await page.goto("/imprint")
-    await page
-      .getByRole("contentinfo")
-      .getByRole("link", { name: "Privacy" })
-      .click()
+    // The sub-page chrome header (ChromeSubHeader) carries the same Help menu;
+    // the footer is gone, so the imprint -> privacy hop goes through it.
+    await page.getByRole("button", { name: "Help" }).click()
+    await page.getByRole("menuitem", { name: "Privacy" }).click()
     await expect(page).toHaveURL(/\/privacy$/)
     // Still the chrome shell — not a dead end.
     await expect(page.getByRole("link", { name: "All diagrams" })).toBeVisible()
   })
 
-  test("legal pages reach legal links via the navbar menu on mobile", async ({
+  test("legal pages reach legal links via the overflow menu on mobile", async ({
     page,
   }) => {
-    // The sub-page HomeNavbar (rendered by the root layout, not the home band)
-    // surfaces legal links via its overflow menu when the footer is hidden.
+    // On mobile the sub-page ChromeSubHeader collapses its tail into a single
+    // "More options" overflow menu carrying the shared Help/legal items.
     await page.setViewportSize({ width: 390, height: 720 })
     await page.goto("/imprint")
     await expect(page.getByRole("contentinfo")).toBeHidden()
-    await page.getByRole("button", { name: "Help and legal" }).click()
-    await expect(page.getByRole("link", { name: "Privacy" })).toHaveAttribute(
-      "href",
-      "/privacy"
-    )
+    await page.getByRole("button", { name: "More options" }).click()
+    await expect(
+      page.getByRole("menuitem", { name: "Privacy" })
+    ).toHaveAttribute("href", "/privacy")
   })
 
-  test("keeps the sub-page navbar outside iPhone safe areas", async ({
+  test("keeps the sub-page chrome outside iPhone safe areas", async ({
     page,
   }) => {
-    // The HomeNavbar still serves legal/404 sub-pages; verify it hugs the notch.
-    // Headless Chromium reports 0 env() insets, so simulate a notch via the
-    // custom properties production derives from env() (webapp.css :root).
+    // ChromeSubHeader serves legal/404 sub-pages as a sticky island band inside
+    // PageShell. It clears the notch two ways: the sticky band's `top` offset
+    // adds the TOP inset, and the shared `.home-content-x` gutter hugs the
+    // LEFT/RIGHT insets (max(edge, inset)). Headless Chromium reports 0 env()
+    // insets, so simulate a notch via the custom properties production derives
+    // from env() (webapp.css :root).
     const INSET = 47
     const LANDSCAPE_WIDTH = 844
 
@@ -666,13 +667,14 @@ test.describe("Legal pages", () => {
       )
     }, INSET)
 
-    // The navbar uses the unified NAVBAR_MIN_HEIGHT (52) plus the top inset.
-    const navbar = page.locator(".home-navbar")
-    const portraitBox = await navbar.boundingBox()
-    expect(portraitBox?.height).toBeGreaterThanOrEqual(52 + INSET)
-
-    const content = page.locator(".home-navbar__content")
-    await expect(content).toHaveCSS("min-height", "52px")
+    // The band pins at `top: calc(safe-area-top + 0.75rem)`, so its resolved
+    // sticky offset clears the top inset rather than tucking under the notch.
+    const stickyTop = await page.evaluate(() => {
+      const banner = document.querySelector('header[aria-label="Home"]')
+      const sticky = banner?.parentElement
+      return sticky ? getComputedStyle(sticky).top : null
+    })
+    expect(parseFloat(stickyTop ?? "0")).toBeGreaterThanOrEqual(INSET)
 
     await page.setViewportSize({ width: LANDSCAPE_WIDTH, height: 390 })
     await page.evaluate((inset) => {
@@ -687,10 +689,6 @@ test.describe("Legal pages", () => {
       )
     }, INSET)
 
-    // Stays at the unified height in landscape (no compaction); top inset → 0.
-    const landscapeBox = await navbar.boundingBox()
-    expect(landscapeBox?.height).toBeLessThanOrEqual(52)
-
     // The chrome HUGS the safe area (max(edge, inset)): leading content sits at
     // the notch edge, never under it.
     const homeLinkBox = await page
@@ -698,7 +696,9 @@ test.describe("Legal pages", () => {
       .boundingBox()
     expect(homeLinkBox?.x).toBeGreaterThanOrEqual(INSET)
 
-    const themeButtonBox = await navbar
+    // Trailing content (the theme switcher in the md+ actions island) ends
+    // before the right inset.
+    const themeButtonBox = await page
       .getByRole("button", { name: /Switch to (light|dark) mode/ })
       .boundingBox()
     expect(themeButtonBox).not.toBeNull()

@@ -361,12 +361,14 @@ test.describe("Navbar", () => {
     await page.getByRole("menuitem", { name: "Privacy" }).click()
     await expect(page).toHaveURL(/\/privacy$/)
 
-    // Hop across legal pages via the footer; the origin must be forwarded, not
-    // replaced with the current /imprint|/privacy path.
-    const footer = page.getByRole("contentinfo")
-    await footer.getByRole("link", { name: "Imprint" }).click()
+    // Hop across legal pages via the sub-page Help menu (the footer is retired);
+    // the origin must be forwarded, not replaced with the current
+    // /imprint|/privacy path.
+    await page.getByRole("button", { name: "Help" }).click()
+    await page.getByRole("menuitem", { name: "Imprint" }).click()
     await expect(page).toHaveURL(/\/imprint$/)
-    await footer.getByRole("link", { name: "Privacy" }).click()
+    await page.getByRole("button", { name: "Help" }).click()
+    await page.getByRole("menuitem", { name: "Privacy" }).click()
     await expect(page).toHaveURL(/\/privacy$/)
 
     await page.getByRole("link", { name: "Back to diagram" }).click()

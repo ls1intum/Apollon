@@ -118,10 +118,10 @@
       "limit": "1300 kB"
     },
     {
-      "name": "all CSS (gzipped)",
+      "name": "all CSS (gzipped) — regression ceiling; the MUI/Emotion→shadcn migration moved runtime CSS-in-JS into static CSS (one-time step up), so the budget tracks the static stylesheet, not the old Emotion baseline",
       "path": "dist/assets/*.css",
       "gzip": true,
-      "limit": "30 kB"
+      "limit": "35 kB"
     }
   ]
 }

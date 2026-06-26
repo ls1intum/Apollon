@@ -18,8 +18,9 @@
    static, so this is @theme (not @theme inline). The diagram MODEL text (Inter,
    applied on SVG nodes via library/lib/fontStack.ts) is out of scope. */
 @theme {
-  --font-sans: "Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue",
-    Arial, sans-serif;
+  --font-sans:
+    "Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue", Arial,
+    sans-serif;
 }
 
 /* Accent bridge — webapp root scope ONLY (the published library default must not
@@ -181,15 +182,17 @@ body,
   flex: 1;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(
+  background:
+    linear-gradient(
       180deg,
       color-mix(in srgb, var(--home-surface-sunken) 42%, transparent),
       transparent 34%
     ),
     var(--home-surface-base);
   color: var(--home-text-primary);
-  font-family: "Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue",
-    Arial, sans-serif;
+  font-family:
+    "Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue", Arial,
+    sans-serif;
   transition:
     background-color 220ms ease,
     color 220ms ease;
@@ -202,7 +205,8 @@ body,
 .app-loading-screen--panel {
   min-height: min(52vh, 420px);
   border: 1px solid var(--home-border-subtle);
-  background: linear-gradient(
+  background:
+    linear-gradient(
       180deg,
       color-mix(in srgb, var(--home-surface-raised-hover) 46%, transparent),
       transparent 70%
@@ -374,13 +378,10 @@ body,
   flex-grow: 1;
 }
 
-.home-navbar {
-  padding-top: var(--safe-area-inset-top, 0);
-}
-
-/* Home page content gutter — hugs the safe area like the navbar, so the gallery
-   clears a side notch in landscape (the Tailwind px-4/md:px-6 it replaces had no
-   safe-area awareness). */
+/* Home/sub-page content gutter — hugs the safe area (max(edge, inset)) so the
+   gallery and the sticky ChromeSubHeader band clear a side notch in landscape
+   (the Tailwind px-4/md:px-6 it replaces had no safe-area awareness). The top
+   inset is handled by the sticky band's own `top` offset, not here. */
 .home-content-x {
   padding-left: max(1rem, var(--safe-area-inset-left, 0px));
   padding-right: max(1rem, var(--safe-area-inset-right, 0px));
@@ -390,27 +391,6 @@ body,
   .home-content-x {
     padding-left: max(1.5rem, var(--safe-area-inset-left, 0px));
     padding-right: max(1.5rem, var(--safe-area-inset-right, 0px));
-  }
-}
-
-.home-navbar__content {
-  box-sizing: border-box;
-
-  /* HUG the safe area (max), don't stack on top of it (calc + inset) — otherwise
-     the navbar sits further from a notch than the editor chrome, which uses the
-     max(edge, inset) model. */
-  padding-left: max(1rem, var(--safe-area-inset-left, 0px));
-  padding-right: max(1rem, var(--safe-area-inset-right, 0px));
-}
-
-@media (max-width: 950px) and (max-height: 500px) {
-  .home-navbar {
-    padding-top: 0;
-  }
-
-  .home-navbar__content {
-    padding-left: max(2rem, var(--safe-area-inset-left, 0px));
-    padding-right: max(2rem, var(--safe-area-inset-right, 0px));
   }
 }
 
