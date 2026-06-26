@@ -34,12 +34,9 @@
         "@capacitor/file-transfer",
         "@capacitor/splash-screen",
         "tailwindcss",
-        "tailwind-merge",
         "jspdf",
         "svg2pdf.js",
-        "@tanstack/history",
-        "@testing-library/jest-dom",
-        "vite-tsconfig-paths"
+        "@tanstack/history"
       ]
     },
     "standalone/server": {

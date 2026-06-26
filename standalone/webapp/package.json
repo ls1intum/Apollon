@@ -64,7 +64,6 @@
     "react-toastify": "11.0.5",
     "remark-gfm": "4.0.1",
     "svg2pdf.js": "catalog:",
-    "tailwind-merge": "catalog:",
     "tailwindcss": "catalog:",
     "uuid": "catalog:",
     "zustand": "catalog:"
@@ -82,7 +81,6 @@
     "@storybook/addon-vitest": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@tanstack/router-plugin": "1.168.18",
-    "@testing-library/jest-dom": "catalog:",
     "@testing-library/react": "catalog:",
     "@testing-library/user-event": "14.6.1",
     "@types/node": "catalog:",
@@ -106,7 +104,6 @@
     "typescript": "catalog:",
     "typescript-eslint": "catalog:",
     "vite": "catalog:",
-    "vite-tsconfig-paths": "5.1.4",
     "vitest": "catalog:",
     "yjs": "13.6.20"
   },
