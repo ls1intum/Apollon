@@ -28,7 +28,7 @@ export const FlowChartEdgeEditPopover: React.FC<PopoverProps> = ({
         handleDataFieldUpdate={(key, value) =>
           updateEdgeData(elementId, { ...edge.data, [key]: value })
         }
-        label="Flowline"
+        label="Style"
         sideElements={[
           handleSwap && (
             <IconButton
@@ -42,7 +42,7 @@ export const FlowChartEdgeEditPopover: React.FC<PopoverProps> = ({
         ]}
       />
 
-      <PopoverSection divider>
+      <PopoverSection title="Label" divider>
         <TextField
           value={edgeData?.label ?? ""}
           onChange={(e) => handleLabelChange(e.target.value)}

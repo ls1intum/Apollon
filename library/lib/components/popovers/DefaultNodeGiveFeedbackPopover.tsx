@@ -5,6 +5,7 @@ import { PopoverProps } from "./types"
 import { GiveFeedbackAssessmentBox } from "./GiveFeedbackAssessmentBox"
 import { Button } from "@tumaet/ui/components/button"
 import { useGoToNextAssessment } from "@/hooks"
+import { nodeTypeLabel } from "@/utils/nodeUtils"
 import { PopoverLayout } from "./PopoverLayout"
 
 export const DefaultNodeGiveFeedbackPopover = ({ elementId }: PopoverProps) => {
@@ -24,6 +25,7 @@ export const DefaultNodeGiveFeedbackPopover = ({ elementId }: PopoverProps) => {
         elementId={elementId}
         name={nodeData.name}
         type={node.type || "Node"} //fallback to node is never expected since all nodes should have a type
+        typeLabel={nodeTypeLabel(node.type)}
       />
       <Button variant="outline" onClick={handleGoToNextAssessment}>
         Next Assessment

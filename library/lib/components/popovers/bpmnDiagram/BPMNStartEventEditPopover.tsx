@@ -1,9 +1,11 @@
+import { Select } from "@/components/ui"
+import { NodeStyleEditor } from "@/components/styleEditor"
 import { useReactiveNode } from "@/hooks"
 import { useReactFlow } from "@xyflow/react"
 import { PopoverProps } from "../types"
-import { BPMNStartEventType } from "@/types"
-import { Select, TextField } from "@/components/ui"
-import { PopoverLayout } from "../PopoverLayout"
+import { BPMNEventProps, BPMNStartEventType } from "@/types"
+import { supportsMultilineName } from "@/utils/nodeUtils"
+import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 
 const START_TYPE_OPTIONS = [
   { value: "default", label: "Default" },
@@ -20,27 +22,32 @@ export const BPMNStartEventEditPopover: React.FC<PopoverProps> = ({
   const node = useReactiveNode(elementId)
   if (!node) return null
 
-  const data = node.data as { name?: string; eventType?: BPMNStartEventType }
+  const data = node.data as BPMNEventProps
 
-  const handleNameChange = (value: string) =>
-    updateNodeData(elementId, { name: value })
-  const handleTypeChange = (value: BPMNStartEventType) =>
-    updateNodeData(elementId, { eventType: value })
+  const handleDataFieldUpdate = (key: string, value: string) => {
+    updateNodeData(elementId, { [key]: value })
+  }
 
   return (
     <PopoverLayout title="Start Event">
-      <TextField
-        label="Name"
-        value={data.name ?? ""}
-        onChange={(e) => handleNameChange(e.target.value)}
-        fullWidth
+      <NodeStyleEditor
+        handleDataFieldUpdate={(key, value) =>
+          handleDataFieldUpdate(key, value)
+        }
+        nodeData={data}
+        isMultilineName={supportsMultilineName(node.type)}
       />
-      <Select
-        label="Start Type"
-        value={data.eventType ?? "default"}
-        options={START_TYPE_OPTIONS}
-        onChange={(value) => handleTypeChange(value as BPMNStartEventType)}
-      />
+
+      <PopoverSection title="Type" divider>
+        <Select
+          label="Start Type"
+          value={data.eventType ?? "default"}
+          options={START_TYPE_OPTIONS}
+          onChange={(value) =>
+            handleDataFieldUpdate("eventType", value as BPMNStartEventType)
+          }
+        />
+      </PopoverSection>
     </PopoverLayout>
   )
 }

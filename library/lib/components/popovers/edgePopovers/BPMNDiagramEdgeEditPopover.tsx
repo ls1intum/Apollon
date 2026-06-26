@@ -43,7 +43,7 @@ export const BPMNDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
         handleDataFieldUpdate={(key, value) =>
           updateEdgeData(elementId, { ...edge.data, [key]: value })
         }
-        label="Control Flow"
+        label="Style"
         sideElements={[
           handleSwap && (
             <IconButton
@@ -71,7 +71,7 @@ export const BPMNDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
         </PopoverSection>
       )}
 
-      <PopoverSection divider>
+      <PopoverSection title="Label" divider>
         <TextField
           value={edgeData?.label ?? ""}
           onChange={(e) => handleLabelChange(e.target.value)}

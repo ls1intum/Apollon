@@ -1,5 +1,5 @@
 import React from "react"
-import { TextField, Typography } from "@/components/ui"
+import { TextField } from "@/components/ui"
 import { ColorField, StyleEditorPanel } from "./StyleEditorPanel"
 import { DefaultNodeProps } from "@/types"
 
@@ -12,7 +12,6 @@ interface NodeStyleEditorProps {
   inputPlaceholder?: string
   noStrokeUpdate?: boolean
   showNameInputChange?: boolean
-  title?: string
   /**
    * Whether the name input accepts newlines (Enter inserts a hard break).
    * Default `false`. Set to `true` ONLY for node types whose SVG actually
@@ -32,7 +31,6 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
   noStrokeUpdate = false,
   showNameInputChange = true,
   isMultilineName = false,
-  title,
   preElements = [],
 }) => {
   // Three small literals; re-computed on every render is cheaper than memoizing.
@@ -66,11 +64,6 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
           the whole button group wraps below instead of crushing the input —
           so no per-node-type branching is needed. */}
       {preElements}
-      {title && (
-        <Typography className="apollon-node-style-editor-title">
-          {title}
-        </Typography>
-      )}
       {showNameInputChange && (
         <TextField
           onChange={(event) =>

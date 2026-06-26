@@ -44,7 +44,7 @@ export const UseCaseEdgeEditPopover: React.FC<PopoverProps> = ({
         handleDataFieldUpdate={(key, value) =>
           updateEdgeData(elementId, { ...edge.data, [key]: value })
         }
-        label="Edge Type"
+        label="Style"
         sideElements={[
           handleSwap && (
             <IconButton
@@ -74,7 +74,7 @@ export const UseCaseEdgeEditPopover: React.FC<PopoverProps> = ({
 
       {/* Show label input only for associations */}
       {edge.type === "UseCaseAssociation" && (
-        <PopoverSection divider>
+        <PopoverSection title="Label" divider>
           <TextField
             value={edgeData?.label ?? ""}
             onChange={(e) => handleLabelChange(e.target.value)}

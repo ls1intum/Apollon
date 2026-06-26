@@ -28,7 +28,7 @@ export const ReachabilityGraphEdgeEditPopover: React.FC<PopoverProps> = ({
         handleDataFieldUpdate={(key, value) =>
           updateEdgeData(elementId, { ...edge.data, [key]: value })
         }
-        label="Reachability Arc"
+        label="Style"
         sideElements={[
           handleSwap && (
             <IconButton
@@ -42,7 +42,7 @@ export const ReachabilityGraphEdgeEditPopover: React.FC<PopoverProps> = ({
         ]}
       />
 
-      <PopoverSection divider>
+      <PopoverSection title="Label" divider>
         <TextField
           value={edgeData?.label ?? ""}
           onChange={(e) => handleLabelChange(e.target.value)}

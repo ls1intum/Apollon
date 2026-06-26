@@ -1,7 +1,8 @@
 import { ChangeEvent } from "react"
-import { IconButton, Select, TextField, Typography } from "@/components/ui"
+import { IconButton, Select, TextField } from "@/components/ui"
 import { Button } from "@tumaet/ui/components/button"
 import { NodeStyleEditor } from "@/components/styleEditor"
+import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 import {
   flipSwimlaneChildPosition,
   generateUUID,
@@ -254,66 +255,66 @@ export const ActivitySwimlaneEditPopover: React.FC<PopoverProps> = ({
     patch((n) => ({ ...n, data: { ...n.data, [key]: value } }))
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+    <PopoverLayout title="Swimlane">
       <NodeStyleEditor
-        title="Swimlane"
         nodeData={data}
         handleDataFieldUpdate={handleDataFieldUpdate}
         showNameInputChange={false}
       />
 
-      <Select
-        id="swimlane-orientation-select"
-        aria-label="Orientation"
-        label="Orientation"
-        value={orientation}
-        onChange={(value) =>
-          handleOrientationChange(value as "vertical" | "horizontal")
-        }
-        options={[
-          { value: "vertical", label: "Vertical (columns)" },
-          { value: "horizontal", label: "Horizontal (rows)" },
-        ]}
-      />
+      <PopoverSection divider>
+        <Select
+          id="swimlane-orientation-select"
+          aria-label="Orientation"
+          label="Orientation"
+          value={orientation}
+          onChange={(value) =>
+            handleOrientationChange(value as "vertical" | "horizontal")
+          }
+          options={[
+            { value: "vertical", label: "Vertical (columns)" },
+            { value: "horizontal", label: "Horizontal (rows)" },
+          ]}
+        />
+      </PopoverSection>
 
-      <Typography variant="caption" sx={{ opacity: 0.7, marginTop: 4 }}>
-        Lanes
-      </Typography>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: 4,
-          maxHeight: 180,
-          overflowY: "auto",
-        }}
-      >
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleReorder}
+      <PopoverSection title="Lanes" divider>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+            maxHeight: 180,
+            overflowY: "auto",
+          }}
         >
-          <SortableContext
-            items={lanes.map((lane) => lane.id)}
-            strategy={verticalListSortingStrategy}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleReorder}
           >
-            {lanes.map((lane) => (
-              <SortableLaneRow
-                key={lane.id}
-                lane={lane}
-                canDelete={lanes.length > 1}
-                onRename={handleLaneNameChange}
-                onDelete={handleLaneDelete}
-              />
-            ))}
-          </SortableContext>
-        </DndContext>
-      </div>
+            <SortableContext
+              items={lanes.map((lane) => lane.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {lanes.map((lane) => (
+                <SortableLaneRow
+                  key={lane.id}
+                  lane={lane}
+                  canDelete={lanes.length > 1}
+                  onRename={handleLaneNameChange}
+                  onDelete={handleLaneDelete}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
+        </div>
 
-      <Button variant="outline" onClick={handleAddLane}>
-        <Plus />
-        Add lane
-      </Button>
-    </div>
+        <Button variant="outline" onClick={handleAddLane}>
+          <Plus />
+          Add lane
+        </Button>
+      </PopoverSection>
+    </PopoverLayout>
   )
 }

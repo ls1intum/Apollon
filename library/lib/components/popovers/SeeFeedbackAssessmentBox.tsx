@@ -3,6 +3,11 @@ import { useShallow } from "zustand/shallow"
 import { Typography } from "@/components/ui"
 import { AssessmentHeader, PopoverSection } from "./PopoverLayout"
 
+// Mirrors the popover spacing scale documented in PopoverLayout (the gap
+// between controls inside a section). Kept in step with that constant so the
+// See box stays on the same rhythm as GiveFeedbackAssessmentBox.
+const FIELD_GAP = 8
+
 export const SeeFeedbackAssessmentBox = ({
   type,
   typeLabel,
@@ -29,19 +34,19 @@ export const SeeFeedbackAssessmentBox = ({
       <div
         style={{
           display: "flex",
-          gap: 8,
+          gap: FIELD_GAP,
           justifyContent: "space-between",
           alignItems: "center",
         }}
       >
-        <Typography sx={{ opacity: 0.7 }}>Score</Typography>
+        <Typography variant="caption">Score</Typography>
         <Typography sx={{ fontWeight: 600 }}>
           {assessment?.score ?? "-"}
         </Typography>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-        <Typography sx={{ opacity: 0.7 }}>Feedback</Typography>
+      <div style={{ display: "flex", flexDirection: "column", gap: FIELD_GAP }}>
+        <Typography variant="caption">Feedback</Typography>
         <Typography>{assessment?.feedback || "-"}</Typography>
       </div>
     </PopoverSection>

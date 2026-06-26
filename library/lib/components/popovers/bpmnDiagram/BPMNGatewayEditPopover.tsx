@@ -1,9 +1,11 @@
+import { Select } from "@/components/ui"
+import { NodeStyleEditor } from "@/components/styleEditor"
 import { useReactiveNode } from "@/hooks"
 import { useReactFlow } from "@xyflow/react"
 import { PopoverProps } from "../types"
-import { BPMNGatewayType } from "@/types"
-import { Select, TextField } from "@/components/ui"
-import { PopoverLayout } from "../PopoverLayout"
+import { BPMNGatewayProps, BPMNGatewayType } from "@/types"
+import { supportsMultilineName } from "@/utils/nodeUtils"
+import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 
 const GATEWAY_TYPE_OPTIONS = [
   { value: "exclusive", label: "Exclusive" },
@@ -20,27 +22,32 @@ export const BPMNGatewayEditPopover: React.FC<PopoverProps> = ({
   const node = useReactiveNode(elementId)
   if (!node) return null
 
-  const data = node.data as { name?: string; gatewayType?: BPMNGatewayType }
+  const data = node.data as BPMNGatewayProps
 
-  const handleNameChange = (value: string) =>
-    updateNodeData(elementId, { name: value })
-  const handleTypeChange = (value: BPMNGatewayType) =>
-    updateNodeData(elementId, { gatewayType: value })
+  const handleDataFieldUpdate = (key: string, value: string) => {
+    updateNodeData(elementId, { [key]: value })
+  }
 
   return (
     <PopoverLayout title="Gateway">
-      <TextField
-        label="Name"
-        value={data.name ?? ""}
-        onChange={(e) => handleNameChange(e.target.value)}
-        fullWidth
+      <NodeStyleEditor
+        handleDataFieldUpdate={(key, value) =>
+          handleDataFieldUpdate(key, value)
+        }
+        nodeData={data}
+        isMultilineName={supportsMultilineName(node.type)}
       />
-      <Select
-        label="Gateway Type"
-        value={data.gatewayType ?? "exclusive"}
-        options={GATEWAY_TYPE_OPTIONS}
-        onChange={(value) => handleTypeChange(value as BPMNGatewayType)}
-      />
+
+      <PopoverSection title="Gateway Type" divider>
+        <Select
+          label="Gateway Type"
+          value={data.gatewayType ?? "exclusive"}
+          options={GATEWAY_TYPE_OPTIONS}
+          onChange={(value) =>
+            handleDataFieldUpdate("gatewayType", value as BPMNGatewayType)
+          }
+        />
+      </PopoverSection>
     </PopoverLayout>
   )
 }

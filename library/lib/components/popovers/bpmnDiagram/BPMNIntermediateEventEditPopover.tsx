@@ -1,9 +1,11 @@
+import { Select } from "@/components/ui"
+import { NodeStyleEditor } from "@/components/styleEditor"
 import { useReactiveNode } from "@/hooks"
 import { useReactFlow } from "@xyflow/react"
 import { PopoverProps } from "../types"
-import { BPMNIntermediateEventType } from "@/types"
-import { Select, TextField } from "@/components/ui"
-import { PopoverLayout } from "../PopoverLayout"
+import { BPMNEventProps, BPMNIntermediateEventType } from "@/types"
+import { supportsMultilineName } from "@/utils/nodeUtils"
+import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 
 const INTERMEDIATE_TYPE_OPTIONS = [
   { value: "default", label: "Default" },
@@ -26,32 +28,35 @@ export const BPMNIntermediateEventEditPopover: React.FC<PopoverProps> = ({
   const node = useReactiveNode(elementId)
   if (!node) return null
 
-  const data = node.data as {
-    name?: string
-    eventType?: BPMNIntermediateEventType
-  }
+  const data = node.data as BPMNEventProps
 
-  const handleNameChange = (value: string) =>
-    updateNodeData(elementId, { name: value })
-  const handleTypeChange = (value: BPMNIntermediateEventType) =>
-    updateNodeData(elementId, { eventType: value })
+  const handleDataFieldUpdate = (key: string, value: string) => {
+    updateNodeData(elementId, { [key]: value })
+  }
 
   return (
     <PopoverLayout title="Intermediate Event">
-      <TextField
-        label="Name"
-        value={data.name ?? ""}
-        onChange={(e) => handleNameChange(e.target.value)}
-        fullWidth
-      />
-      <Select
-        label="Intermediate Type"
-        value={data.eventType ?? "default"}
-        options={INTERMEDIATE_TYPE_OPTIONS}
-        onChange={(value) =>
-          handleTypeChange(value as BPMNIntermediateEventType)
+      <NodeStyleEditor
+        handleDataFieldUpdate={(key, value) =>
+          handleDataFieldUpdate(key, value)
         }
+        nodeData={data}
+        isMultilineName={supportsMultilineName(node.type)}
       />
+
+      <PopoverSection title="Type" divider>
+        <Select
+          label="Intermediate Type"
+          value={data.eventType ?? "default"}
+          options={INTERMEDIATE_TYPE_OPTIONS}
+          onChange={(value) =>
+            handleDataFieldUpdate(
+              "eventType",
+              value as BPMNIntermediateEventType
+            )
+          }
+        />
+      </PopoverSection>
     </PopoverLayout>
   )
 }
