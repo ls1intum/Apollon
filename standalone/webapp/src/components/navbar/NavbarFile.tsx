@@ -28,9 +28,9 @@ import { log } from "@/logger"
 import { JsonFileImportButton } from "./JsonFileImportButton"
 import { navbarButtonStyle } from "./styleConstants"
 
-interface Props {
+interface NavbarFileProps {
   color?: string
-  handleCloseNavMenu?: () => void
+  onClose?: () => void
 }
 
 type ExportFormat = "SVG" | "PNG" | "PDF" | "JSON"
@@ -182,15 +182,15 @@ export function FileMenuItems({ onSelect }: { onSelect: () => void }) {
   )
 }
 
-export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
+export const NavbarFile: FC<NavbarFileProps> = ({ color, onClose }) => {
   const [open, setOpen] = useState(false)
   // Label visible at `lg` ⇒ the tooltip would just repeat it, so disable it then.
   const isLg = useMediaQuery("(min-width: 1024px)")
 
   const close = useCallback(() => {
     setOpen(false)
-    handleCloseNavMenu?.()
-  }, [handleCloseNavMenu])
+    onClose?.()
+  }, [onClose])
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>

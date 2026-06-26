@@ -16,12 +16,15 @@ import { useClosePreview } from "@/hooks/useVersionPreviewUrlSync"
 import { log } from "@/logger"
 import { versioningStrings as t } from "./strings"
 
-interface Props {
+interface DeleteVersionModalProps {
   diagramId: string
   versionId: string
 }
 
-export const DeleteVersionModal = ({ diagramId, versionId }: Props) => {
+export const DeleteVersionModal = ({
+  diagramId,
+  versionId,
+}: DeleteVersionModalProps) => {
   const { closeModal } = useModalContext()
   const deleteVersion = useVersionStore((s) => s.deleteVersion)
   // Clearing `?version=` before delete stops the URL sync re-entering the

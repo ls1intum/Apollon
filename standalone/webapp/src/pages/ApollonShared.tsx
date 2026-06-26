@@ -478,7 +478,7 @@ export const ApollonShared: React.FC = () => {
                 containerWidth={canvasColumnWidth}
                 diagramId={diagramId}
                 canRestore={canRestoreFromPreview}
-                onExit={handleExitPreview}
+                onExitPreview={handleExitPreview}
                 onRestore={handleRestore}
               />
             </div>

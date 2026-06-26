@@ -78,7 +78,7 @@ export const ChromeSubHeader = () => {
           the LAST row, the same item set/order as every other Help surface. */}
         <div className="md:hidden">
           <Island ariaLabel="Page actions">
-            <ChromeOverflowMenu ariaLabel="More options" id="subpage-options">
+            <ChromeOverflowMenu label="More options" id="subpage-options">
               {(close) => (
                 <>
                   <HelpMenuItems onSelect={close} />

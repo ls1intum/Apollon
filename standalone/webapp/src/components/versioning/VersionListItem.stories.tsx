@@ -228,7 +228,17 @@ export const EditDescriptionFromMenu: Story = {
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement)
     const trigger = canvas.getByRole("button", { name: /version actions/i })
-    await userEvent.click(trigger)
+    // Open the menu, retrying the click until it actually opens. In the shared
+    // document.body of the portable-stories runner, a leaked overlay from a
+    // neighbouring story can swallow the first click (Base UI treats it as an
+    // outside-press); re-click until aria-expanded flips so the test is order-
+    // independent.
+    await waitFor(async () => {
+      if (trigger.getAttribute("aria-expanded") !== "true") {
+        await userEvent.click(trigger)
+      }
+      expect(trigger).toHaveAttribute("aria-expanded", "true")
+    })
     // Scope to the menu THIS trigger opened. Base UI portals the menu to
     // document.body, so a leaked menu from a neighbouring story (shared body)
     // could otherwise capture the click and leave this row in display mode.

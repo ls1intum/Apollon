@@ -91,7 +91,7 @@ export function ThemeSwitcherButton({
 }
 
 /** Props for the {@link ThemeSwitcherMenu} container. */
-interface Props {
+interface ThemeSwitcherMenuProps {
   /**
    * Render as a full-width labelled row inside a dropdown menu (the mobile
    * overflow menu) instead of the compact icon toggle used on the desktop bar.
@@ -106,7 +106,7 @@ interface Props {
  * either the pure {@link ThemeSwitcherButton} (desktop chrome) or a labelled
  * `DropdownMenuItem` row (mobile overflow menu, via `asMenuItem`).
  */
-export const ThemeSwitcherMenu: React.FC<Props> = ({
+export const ThemeSwitcherMenu: React.FC<ThemeSwitcherMenuProps> = ({
   asMenuItem = false,
   onToggle,
 }) => {

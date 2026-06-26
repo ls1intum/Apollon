@@ -1,4 +1,9 @@
-import { type ComponentProps, type CSSProperties, type ReactNode } from "react"
+import {
+  type AriaRole,
+  type ComponentProps,
+  type CSSProperties,
+  type ReactNode,
+} from "react"
 import { cn } from "@tumaet/ui/lib/utils"
 
 /**
@@ -72,7 +77,7 @@ export function Island({
 }: {
   children: ReactNode
   as?: "header"
-  role?: string
+  role?: AriaRole
   ariaLabel?: string
   className?: string
   /**

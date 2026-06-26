@@ -1,7 +1,7 @@
 import { FC } from "react"
 import { HomeHelpMenu } from "@/components/home/HomeHelpMenu"
 
-interface Props {
+interface NavbarHelpProps {
   /** Pins an explicit foreground on the themed mobile overflow menu. */
   color?: string
 }
@@ -13,6 +13,6 @@ interface Props {
  * "How does this Editor Work?" / "Open Playground" entries layered onto the same
  * shared body. There is exactly one Help/legal source in the app.
  */
-export const NavbarHelp: FC<Props> = ({ color }) => (
+export const NavbarHelp: FC<NavbarHelpProps> = ({ color }) => (
   <HomeHelpMenu variant="editor" color={color} />
 )

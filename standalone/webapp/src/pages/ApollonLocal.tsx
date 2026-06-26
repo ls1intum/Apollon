@@ -401,7 +401,7 @@ export const ApollonLocal: FC = () => {
           containerWidth={canvasColumnWidth}
           diagramId={diagramId}
           canRestore={canRestoreFromPreview}
-          onExit={handleExitPreview}
+          onExitPreview={handleExitPreview}
           onRestore={handleConfirmedRestore}
         />
       </div>

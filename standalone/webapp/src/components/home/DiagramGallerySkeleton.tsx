@@ -1,10 +1,12 @@
 import { Skeleton } from "@tumaet/ui/components/skeleton"
 
-type Props = {
+type DiagramGallerySkeletonProps = {
   count?: number
 }
 
-export const DiagramGallerySkeleton = ({ count = 6 }: Props) => {
+export const DiagramGallerySkeleton = ({
+  count = 6,
+}: DiagramGallerySkeletonProps) => {
   const cards = Array.from({ length: count }, (_, i) => i)
 
   return (

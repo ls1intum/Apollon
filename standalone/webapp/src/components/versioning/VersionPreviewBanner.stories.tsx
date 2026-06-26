@@ -7,7 +7,7 @@ import { VersionPreviewBannerView } from "./VersionPreviewBanner"
  * is being previewed. It shows the version's label and relative time and offers
  * "Exit preview" plus an optional "Restore" action. Everything is driven by
  * `args` — the label/time-ago are resolved by the container, the view just
- * renders them and reports clicks via `onExit` / `onRestore`.
+ * renders them and reports clicks via `onExitPreview` / `onRestore`.
  */
 
 const meta = {
@@ -19,7 +19,7 @@ const meta = {
     label: "Initial domain sketch with the core entities.",
     ago: "4d ago",
     versionId: "v5",
-    onExit: fn(),
+    onExitPreview: fn(),
     onRestore: fn(),
     canRestore: true,
     containerWidth: 900,
@@ -52,7 +52,7 @@ const meta = {
         "Measured container width (px); drives the compact / stacked layout.",
       table: { category: "State" },
     },
-    onExit: {
+    onExitPreview: {
       description: 'Called when the user clicks "Exit preview".',
       table: { category: "Events" },
     },
@@ -99,13 +99,13 @@ export const NoLabel: Story = {
   args: { label: "" },
 }
 
-/** Clicking "Exit preview" invokes `onExit`. */
+/** Clicking "Exit preview" invokes `onExitPreview`. */
 export const ExitInteraction: Story = {
   tags: ["test", "!autodocs", "!dev"],
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement)
     await userEvent.click(canvas.getByRole("button", { name: /exit preview/i }))
-    await expect(args.onExit).toHaveBeenCalledTimes(1)
+    await expect(args.onExitPreview).toHaveBeenCalledTimes(1)
   },
 }
 

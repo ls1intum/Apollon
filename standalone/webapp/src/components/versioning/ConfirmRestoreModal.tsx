@@ -11,7 +11,7 @@ import { selectVersions, useVersionStore } from "@/stores/useVersionStore"
 import { log } from "@/logger"
 import { versioningStrings as t } from "./strings"
 
-interface Props {
+interface ConfirmRestoreModalProps {
   diagramId: string
   versionId: string
   /** Async restore action — provided by the page; the modal awaits it. */
@@ -28,7 +28,7 @@ export const ConfirmRestoreModal = ({
   diagramId,
   versionId,
   onConfirm,
-}: Props) => {
+}: ConfirmRestoreModalProps) => {
   const { closeModal } = useModalContext()
   const target = useVersionStore((s) =>
     selectVersions(s, diagramId).find((v) => v.id === versionId)

@@ -102,12 +102,12 @@ export function ChromeOverflowMenu({
    * passes "More options", which the e2e suite selects by). Defaults to
    * "More options".
    */
-  ariaLabel = "More options",
+  label = "More options",
   /** Unique id pair for the trigger ↔ menu `aria-labelledby` link. */
   id = "chrome-overflow",
   children,
 }: {
-  ariaLabel?: string
+  label?: string
   id?: string
   children: (close: () => void) => ReactNode
 }) {
@@ -123,7 +123,7 @@ export function ChromeOverflowMenu({
             <DropdownMenuTrigger
               id={triggerId}
               className="apollon-chrome-iconbtn"
-              aria-label={ariaLabel}
+              aria-label={label}
             >
               <MoreVerticalIcon
                 className="size-[var(--apollon-chrome-icon)]"
@@ -132,7 +132,7 @@ export function ChromeOverflowMenu({
             </DropdownMenuTrigger>
           }
         />
-        <TooltipContent>{ariaLabel}</TooltipContent>
+        <TooltipContent>{label}</TooltipContent>
       </Tooltip>
       <DropdownMenuContent
         aria-labelledby={triggerId}

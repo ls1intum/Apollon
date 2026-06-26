@@ -7,9 +7,9 @@ import type { GroupedEntry } from "./utils"
 interface AutoGroupRowProps {
   group: Extract<GroupedEntry, { kind: "auto-group" }>
   diagramId: string
-  onPreview: (id: string) => void
-  onRestore: (id: string) => void
-  onDelete: (id: string) => void
+  onPreview: (versionId: string) => void
+  onRestore: (versionId: string) => void
+  onDelete: (versionId: string) => void
   previewingVersionId: string | null
   versionNumberById: Map<string, number>
   latestSavedId?: string

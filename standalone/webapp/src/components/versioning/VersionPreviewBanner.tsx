@@ -46,7 +46,7 @@ interface ViewProps {
    */
   containerWidth?: number
   /** Called when the user clicks "Exit preview". */
-  onExit: () => void
+  onExitPreview: () => void
   /** Called with the version id when the user clicks "Restore". */
   onRestore: (versionId: string) => void | Promise<void>
   /** Merged onto the root element's classes. */
@@ -79,7 +79,7 @@ export function VersionPreviewBannerView({
   versionId,
   canRestore,
   containerWidth,
-  onExit,
+  onExitPreview,
   onRestore,
   className,
   ref,
@@ -143,7 +143,7 @@ export function VersionPreviewBannerView({
       >
         <button
           type="button"
-          onClick={onExit}
+          onClick={onExitPreview}
           className="inline-flex cursor-pointer items-center justify-center rounded-md text-caption font-medium transition-colors hover:[background:var(--home-banner-warning-btn-hover)]"
           style={{
             ...buttonStyle,
@@ -180,7 +180,7 @@ export function VersionPreviewBannerView({
 
 interface ContainerProps {
   diagramId: string
-  onExit: () => void
+  onExitPreview: () => void
   onRestore: (versionId: string) => void | Promise<void>
   canRestore: boolean
   containerWidth?: number
@@ -195,7 +195,7 @@ interface ContainerProps {
  */
 export const VersionPreviewBanner: FC<ContainerProps> = ({
   diagramId,
-  onExit,
+  onExitPreview,
   onRestore,
   canRestore,
   containerWidth,
@@ -220,7 +220,7 @@ export const VersionPreviewBanner: FC<ContainerProps> = ({
       versionId={preview.versionId}
       canRestore={canRestore}
       containerWidth={containerWidth}
-      onExit={onExit}
+      onExitPreview={onExitPreview}
       onRestore={onRestore}
       className={className}
     />

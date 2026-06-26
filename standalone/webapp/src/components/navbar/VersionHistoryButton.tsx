@@ -69,9 +69,7 @@ export function VersionHistoryButtonView({
 }
 
 /** Props for the {@link VersionHistoryButton} container. */
-interface Props {
-  /** Foreground colour for the icon + label. See {@link VersionHistoryButtonView}. */
-  color?: string
+interface VersionHistoryButtonProps {
   /** Icon-only presentation. See {@link VersionHistoryButtonView}. */
   iconOnly?: boolean
 }
@@ -85,7 +83,9 @@ interface Props {
  * `/shared/:id`, so it is also covered. The gallery (`/`) and the
  * playground have no active diagram, so the button is hidden.
  */
-export const VersionHistoryButton = ({ color, iconOnly }: Props) => {
+export const VersionHistoryButton = ({
+  iconOnly,
+}: VersionHistoryButtonProps) => {
   const diagramId = useDiagramIdFromPath()
   const { pathname } = useLocation()
   // Both shared (Remote) and local (Local) repositories back a drawer.
@@ -106,7 +106,6 @@ export const VersionHistoryButton = ({ color, iconOnly }: Props) => {
   return (
     <VersionHistoryButtonView
       isOpen={isOpen}
-      color={color}
       iconOnly={iconOnly}
       onToggle={() => (isOpen ? closeDrawer(diagramId) : openDrawer(diagramId))}
     />
