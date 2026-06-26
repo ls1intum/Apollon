@@ -17,39 +17,50 @@ The primitives are shadcn **`base-nova`** components (the registry `style` in
 
 ## How the components are built
 
-Every primitive follows one deliberate pattern so it can ship to a Tailwind-free
-host without leaking utility classes:
+Every primitive is a thin React wrapper over a **Base UI** primitive (e.g.
+`Button`, `Dialog`, `Select`). Styling is delivered **two ways**, and which one a
+component uses depends on whether the **editor library also embeds it**:
 
-- A thin React wrapper over a **Base UI** primitive (e.g. `Button`, `Dialog`,
-  `Select`).
-- A **deliberately empty `cva()`** base — variants like `variant`/`size` only
-  validate props and surface the `VariantProps` type; they emit no classes.
-- The actual styling lives in `src/styles/components.css`, keyed on stable
-  `data-slot="…"` + `data-variant`/`data-size` attributes rather than inline
-  Tailwind utilities.
+- **Most components are standard shadcn `base-nova`** — they style themselves with
+  inline Tailwind utilities (a populated `cva()` base and/or `className`, e.g.
+  `alert`, `badge`, `select`, `dropdown-menu`, `sheet`, `field`, `toggle`,
+  `command`, `checkbox`, …). The **webapp** consumes these directly and runs
+  Tailwind itself, so the utilities resolve at build time. These are webapp-only.
+- **The five primitives the editor shares** — **`button`, `icon-button`, `input`,
+  `textarea`, `tooltip`** — are authored differently so they can ship to a
+  Tailwind-free host without leaking utility classes or a CSS reset:
+  - a **deliberately empty `cva()`** base — `variant`/`size` only validate props
+    and surface the `VariantProps` type; they emit no classes;
+  - the styling lives in `src/styles/components.css`, keyed on stable
+    `data-slot="…"` + `data-variant`/`-size` attributes and compiled via Tailwind
+    `@apply` (so `@apply bg-primary` resolves to
+    `background-color: var(--apollon-primary)` and nothing else leaks).
 
-`pnpm build:css` compiles `src/styles/components.css` into a Tailwind-free,
-Preflight-free `dist/components.css`. That compiled artifact is the styling layer
-both targets consume — do not hand-edit it.
+`pnpm build:css` compiles **only `src/styles/components.css`** (it does not scan
+the component sources) into a Preflight-free, Tailwind-free `dist/components.css`.
+That artifact therefore contains exactly those five editor-shared primitives plus
+the emitted `--primitive-*`/`--apollon-*`/`--home-*` tokens — **no bare utility
+classes** — which is what makes it embed-safe. Do not hand-edit it.
 
 ## Dual delivery
 
-The same source components reach the two targets differently:
+The targets consume the components differently:
 
-- **Webapp** — imports the React sources directly
-  (`@tumaet/ui/components/button`, …) and runs Tailwind itself via
-  `@tumaet/ui/styles/theme.css`, which generates the utilities used for app
-  layout. The shared primitives are styled by the precompiled
-  `dist/components.css`, imported alongside.
-- **Editor library** (`@tumaet/apollon`) — bundles the compiled, **Tailwind-free**
-  `dist/components.css` into its single self-contained `style.css`. The published
-  bundle ships **no Tailwind and no Preflight**, so an embed can't collide with a
-  host's utility classes or design tokens. Theming is framework-agnostic CSS
-  variables (see the **Theming** page).
+- **Webapp** — imports every component's React source directly
+  (`@tumaet/ui/components/select`, …) and runs Tailwind via
+  `@tumaet/ui/styles/theme.css`, which generates the inline utilities those
+  components (and the app layout) use. The five editor-shared primitives pick up
+  their data-slot CSS from the precompiled `dist/components.css`, imported
+  alongside.
+- **Editor library** (`@tumaet/apollon`) — imports **only** the five Tailwind-free
+  primitives and bundles `dist/components.css` (those primitives + the tokens)
+  into its single self-contained `style.css`. The published bundle ships **no
+  Tailwind and no Preflight**, so an embed can't reset or collide with a host.
+  Theming is framework-agnostic CSS variables (see the **Theming** page).
 
-Because both targets consume the same `components.css` and the same token files,
-a primitive looks and themes identically in the app and inside an embedded
-editor.
+So a shared primitive (button/input/tooltip/…) looks and themes identically in the
+app and inside an embedded editor, because both read it from the same
+`components.css` + token files.
 
 ## Tokens & theming (at a glance)
 
