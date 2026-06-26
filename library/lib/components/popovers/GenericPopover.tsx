@@ -1,6 +1,7 @@
 import React, { ReactNode, useMemo } from "react"
 import { Popover } from "@base-ui/react/popover"
 import { PopoverOrigin } from "@/types"
+import { resolveApollonThemeVars } from "@/components/ui/portalTheme"
 
 interface GenericPopoverProps {
   id: string
@@ -15,21 +16,6 @@ interface GenericPopoverProps {
   minWidth?: number
   style?: React.CSSProperties
 }
-
-// Forwarded onto the portaled content, which escapes the `.apollon-editor`
-// subtree and so wouldn't otherwise inherit these.
-const THEME_VARS = [
-  "--apollon-primary",
-  "--apollon-primary-contrast",
-  "--apollon-background",
-  "--apollon-background-variant",
-  "--apollon-hover-neutral",
-  "--apollon-gray-variant",
-  "--panel-background",
-  "--panel-shadow",
-  "--text",
-  "--popover-divider",
-] as const
 
 // MUI's `transformOrigin` is the popover's own corner, so it dictates growth
 // direction: anchored-left opens right, anchored-right opens left.
@@ -66,25 +52,11 @@ export const GenericPopover: React.FC<GenericPopoverProps> = ({
   minWidth = 200,
   style,
 }) => {
-  const popoverThemeVars = useMemo(() => {
-    const source =
-      anchorEl instanceof Element
-        ? (anchorEl.closest(".apollon-editor") ?? anchorEl)
-        : null
-
-    if (!source) return {}
-
-    const computed = getComputedStyle(source)
-    const resolved: Record<string, string> = {}
-    for (const variable of THEME_VARS) {
-      const value = computed.getPropertyValue(variable).trim()
-      if (value) {
-        resolved[variable] = value
-      }
-    }
-
-    return resolved
-  }, [anchorEl])
+  const popoverThemeVars = useMemo(
+    () =>
+      resolveApollonThemeVars(anchorEl instanceof Element ? anchorEl : null),
+    [anchorEl]
+  )
 
   const { side, align } = toSideAlign(transformOrigin)
 

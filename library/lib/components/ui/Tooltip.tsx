@@ -5,6 +5,7 @@ import {
   TooltipContent,
   TooltipProvider as SharedTooltipProvider,
 } from "@tumaet/ui/components/tooltip"
+import { resolveApollonThemeVars } from "./portalTheme"
 
 // Wraps the shared @tumaet/ui Tooltip so the editor renders the same primitive as
 // the webapp, exposing a `title` + default 700ms delay API for the editor's call
@@ -35,21 +36,41 @@ export const Tooltip: React.FC<TooltipProps> = ({
   side = "top",
   delayDuration,
 }) => {
+  // Base UI types the trigger ref as a button; we only read `.closest()` off it,
+  // so the concrete element type doesn't matter beyond satisfying that ref.
+  const triggerRef = React.useRef<HTMLButtonElement | null>(null)
+  // The content portals to <body>, escaping the `.apollon-editor` subtree that
+  // scopes `--apollon-*`; copy the resolved theme onto the popup (resolved at
+  // open time, off the trigger) so a dark or custom embed theme carries into the
+  // tooltip instead of falling back to the default light palette.
+  const [portalThemeVars, setPortalThemeVars] =
+    React.useState<React.CSSProperties>({})
+
   if (!title) return <>{children}</>
 
   const trigger = React.isValidElement(children) ? (
     <TooltipTrigger
+      ref={triggerRef}
       render={children as React.ReactElement<Record<string, unknown>>}
       delay={delayDuration}
     />
   ) : (
-    <TooltipTrigger delay={delayDuration}>{children}</TooltipTrigger>
+    <TooltipTrigger ref={triggerRef} delay={delayDuration}>
+      {children}
+    </TooltipTrigger>
   )
 
   return (
-    <SharedTooltip>
+    <SharedTooltip
+      onOpenChange={(next) => {
+        if (next)
+          setPortalThemeVars(resolveApollonThemeVars(triggerRef.current))
+      }}
+    >
       {trigger}
-      <TooltipContent side={side}>{title}</TooltipContent>
+      <TooltipContent side={side} style={portalThemeVars}>
+        {title}
+      </TooltipContent>
     </SharedTooltip>
   )
 }
