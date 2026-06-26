@@ -1,5 +1,5 @@
 import React from "react"
-import { TextField } from "@/components/ui"
+import { TextField, Typography } from "@/components/ui"
 import { ColorField, StyleEditorPanel } from "./StyleEditorPanel"
 import { DefaultNodeProps } from "@/types"
 
@@ -27,7 +27,7 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
   handleDataFieldUpdate,
   sideElements = [],
   colorEditorLabel,
-  inputPlaceholder = "Enter node name",
+  inputPlaceholder = "Name",
   noStrokeUpdate = false,
   showNameInputChange = true,
   isMultilineName = false,
@@ -64,7 +64,7 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
           the whole button group wraps below instead of crushing the input —
           so no per-node-type branching is needed. */}
       {preElements}
-      {showNameInputChange && (
+      {showNameInputChange ? (
         <TextField
           onChange={(event) =>
             handleDataFieldUpdate("name", event.target.value)
@@ -78,6 +78,13 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
           multiline={isMultilineName}
           minRows={isMultilineName ? 1 : undefined}
         />
+      ) : (
+        // Name-less nodes (swimlane, SFC action table, activity initial/final/
+        // fork) match the edge popovers' "Style" heading instead of a blank
+        // header row.
+        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+          Style
+        </Typography>
       )}
     </StyleEditorPanel>
   )

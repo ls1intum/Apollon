@@ -4,6 +4,7 @@ import { PopoverProps } from "../types"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import { HeaderSwitchElement } from "@/components"
+import { PopoverSection } from "../PopoverLayout"
 
 export const ComponentEditPopover: React.FC<PopoverProps> = ({
   elementId,
@@ -39,18 +40,17 @@ export const ComponentEditPopover: React.FC<PopoverProps> = ({
     )
   }
 
-  const HeaderSwitcher = (
-    <HeaderSwitchElement
-      onClick={switchHeaderShown}
-      isComponentHeaderShown={nodeData.isComponentHeaderShown}
-      stereotypeLabel="component"
-    />
-  )
+  // The «component» stereotype toggle gets its own row below the style editor,
+  // not crammed beside the paint roller on the name row.
   return (
-    <DefaultNodeEditPopover
-      elementId={elementId}
-      sideElements={[HeaderSwitcher]}
-      placeholder="Component name"
-    />
+    <DefaultNodeEditPopover elementId={elementId} placeholder="Component name">
+      <PopoverSection title="Stereotype" divider>
+        <HeaderSwitchElement
+          onClick={switchHeaderShown}
+          isComponentHeaderShown={nodeData.isComponentHeaderShown}
+          stereotypeLabel="component"
+        />
+      </PopoverSection>
+    </DefaultNodeEditPopover>
   )
 }

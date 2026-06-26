@@ -55,21 +55,17 @@ export const DeploymentNodeEditPopover: React.FC<PopoverProps> = ({
     )
   }
 
-  const HeaderSwitcher = (
-    <HeaderSwitchElement
-      onClick={switchHeaderShown}
-      isComponentHeaderShown={nodeData.isComponentHeaderShown}
-      stereotypeLabel="node"
-      stereotypeValue={nodeData.stereotype}
-    />
-  )
-
+  // One Stereotype section below the style editor holds both the «node» toggle
+  // and the editable value — no second copy crammed onto the name row.
   return (
-    <DefaultNodeEditPopover
-      elementId={elementId}
-      sideElements={[HeaderSwitcher]}
-    >
+    <DefaultNodeEditPopover elementId={elementId}>
       <PopoverSection title="Stereotype" divider>
+        <HeaderSwitchElement
+          onClick={switchHeaderShown}
+          isComponentHeaderShown={nodeData.isComponentHeaderShown}
+          stereotypeLabel="node"
+          stereotypeValue={nodeData.stereotype}
+        />
         <TextField
           value={nodeData.stereotype}
           onChange={(e) => handleStereotypeChange(e.target.value)}

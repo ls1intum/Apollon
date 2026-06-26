@@ -165,10 +165,10 @@ export const GiveFeedbackClass: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
     // One give-feedback box per row (node + attribute + method): each renders
-    // an empty Points input + Feedback textarea, all blank in the fresh-grade
-    // flow (nothing seeded into the assessments map).
-    const points = canvas.getAllByPlaceholderText("Points")
-    const feedback = canvas.getAllByPlaceholderText("Feedback")
+    // an empty Points input + Feedback textarea (labelled, not placeholdered),
+    // all blank in the fresh-grade flow (nothing seeded into the assessments map).
+    const points = canvas.getAllByLabelText("Points")
+    const feedback = canvas.getAllByLabelText("Feedback")
     await expect(points).toHaveLength(3)
     await expect(feedback).toHaveLength(3)
     await expect(points[0]).toHaveValue(null)
@@ -228,7 +228,7 @@ export const GiveFeedbackPrefilled: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
     // The number input holds the seeded score; type=number → numeric value.
-    const points = canvas.getAllByPlaceholderText("Points")
+    const points = canvas.getAllByLabelText("Points")
     await expect(points[0]).toHaveValue(7)
     // The textarea is pre-populated with the seeded feedback (re-grade flow).
     await expect(
@@ -283,26 +283,28 @@ export const SeeFeedbackClass: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    // Each box shows its read-only score + feedback (node 8, attr 2, method 3).
-    await expect(canvas.getByText("8")).toBeInTheDocument()
-    await expect(canvas.getByText("2")).toBeInTheDocument()
-    await expect(canvas.getByText("3")).toBeInTheDocument()
+    // Each box shows its read-only score as a signed badge + its feedback
+    // (node +8, attr +2, method +3).
+    await expect(canvas.getByText("+8")).toBeInTheDocument()
+    await expect(canvas.getByText("+2")).toBeInTheDocument()
+    await expect(canvas.getByText("+3")).toBeInTheDocument()
     await expect(canvas.getByText(/balance should be private/)).toBeVisible()
     await expect(canvas.getByText(/amount is positive/)).toBeVisible()
   },
 }
 
 /**
- * PROTOTYPICAL see-feedback coverage — every assessment state a See popover can
+ * PROTOTYPICAL see-feedback coverage — every tone the redesigned See box can
  * render, side by side in ONE class popover so the whole vocabulary is visible
- * at a glance:
- *  - node:    positive score + feedback
- *  - attr a0: score 0 + feedback (a graded "zero points" row)
- *  - attr aN: negative score + feedback
- *  - attr aB: graded but NO feedback → feedback renders as "-"
- *  - method mU: UNGRADED (id omitted from setAssessments) → score "-" AND
- *    feedback "-" (the box reads `getAssessment(id)` → undefined)
- *  - method mL: a ~480-char feedback paragraph (long-text wrap + popover scroll)
+ * at a glance. The box no longer shows an ambiguous bare "-"; each state has a
+ * distinct rendering:
+ *  - node:        positive score → a signed "+5" badge + feedback
+ *  - attr-zero:   score 0 → a "0" (blue/zero-tone) badge + feedback
+ *  - attr-neg:    negative score → a signed "-2" badge + feedback
+ *  - attr-nofb:   graded but EMPTY feedback → tone badge + muted "No comment"
+ *  - method-ungraded: UNGRADED (id omitted from setAssessments) → "Not graded"
+ *    badge, no feedback line (the box reads `getAssessment(id)` → undefined)
+ *  - method-long: a ~480-char feedback paragraph (long-text wrap + popover scroll)
  */
 export const SeeFeedbackStates: Story = {
   name: "Feedback (See): All states",
@@ -348,13 +350,14 @@ export const SeeFeedbackStates: Story = {
             score: -2,
             feedback: "Penalty: exposing a raw id breaks encapsulation.",
           },
-          // (d) graded with NO feedback → feedback shows "-"
+          // (d) graded with EMPTY feedback → tone badge + muted "No comment"
           "attr-nofb": {
             modelElementId: "attr-nofb",
             elementType: "attribute",
             score: 1,
+            feedback: "",
           },
-          // (e) method-ungraded is intentionally OMITTED → score "-" + feedback "-"
+          // (e) method-ungraded is intentionally OMITTED → "Not graded" badge
           // (f) graded + a long (~480 char) feedback paragraph
           "method-long": {
             modelElementId: "method-long",
@@ -371,13 +374,16 @@ export const SeeFeedbackStates: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    // A representative element of each state is visible:
-    // positive score (node = 5)…
-    await expect(canvas.getByText("5")).toBeInTheDocument()
-    // …the ungraded + no-feedback rows render a bare "-" (score and/or
-    // feedback); at least the ungraded method contributes two of them.
-    await expect(canvas.getAllByText("-").length).toBeGreaterThanOrEqual(2)
-    // …and the long feedback paragraph renders in full (partial match).
+    // Each of the four redesigned tones renders explicitly and unambiguously:
+    // a positive signed score (node = +5)…
+    await expect(canvas.getByText("+5")).toBeInTheDocument()
+    // …a negative signed score (attr-neg = -2)…
+    await expect(canvas.getByText("-2")).toBeInTheDocument()
+    // …the UNGRADED method (id omitted from setAssessments) → "Not graded"…
+    await expect(canvas.getByText("Not graded")).toBeInTheDocument()
+    // …and the graded-but-empty-feedback attr → muted "No comment".
+    await expect(canvas.getByText("No comment")).toBeInTheDocument()
+    // The long feedback paragraph still renders in full (partial match).
     await expect(
       canvas.getByText(/expected post-conditions in the method contract/)
     ).toBeVisible()
@@ -406,8 +412,8 @@ export const GiveFeedbackAssociation: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
     // A single give-feedback box for the edge: one blank Points + Feedback pair.
-    await expect(canvas.getByPlaceholderText("Points")).toHaveValue(null)
-    await expect(canvas.getByPlaceholderText("Feedback")).toHaveValue("")
+    await expect(canvas.getByLabelText("Points")).toHaveValue(null)
+    await expect(canvas.getByLabelText("Feedback")).toHaveValue("")
     await expect(
       canvas.getByRole("button", { name: /next assessment/i })
     ).toBeInTheDocument()
@@ -443,8 +449,8 @@ export const SeeFeedbackAssociation: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    // The stored edge assessment renders read-only: score 1 + its feedback.
-    await expect(canvas.getByText("1")).toBeInTheDocument()
+    // The stored edge assessment renders read-only: a signed +1 badge + feedback.
+    await expect(canvas.getByText("+1")).toBeInTheDocument()
     await expect(
       canvas.getByText(/Multiplicity is missing on the target end\./)
     ).toBeVisible()

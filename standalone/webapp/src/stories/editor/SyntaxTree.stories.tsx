@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
+import { within } from "storybook/test"
 import {
   editorStoryMeta,
   ApollonEditable,
@@ -13,6 +14,10 @@ import {
 import { SyntaxTreeNonterminalEditPopover } from "@tumaet/apollon/components/popovers/syntaxTreeDiagram/SyntaxTreeNonterminalEditPopover"
 import { SyntaxTreeTerminalEditPopover } from "@tumaet/apollon/components/popovers/syntaxTreeDiagram/SyntaxTreeTerminalEditPopover"
 import { SyntaxTreeEdgeEditPopover } from "@tumaet/apollon/components/popovers/edgePopovers/SyntaxTreeEdgeEditPopover"
+import { DefaultNodeGiveFeedbackPopover } from "@tumaet/apollon/components/popovers/DefaultNodeGiveFeedbackPopover"
+import { DefaultNodeSeeFeedbackPopover } from "@tumaet/apollon/components/popovers/DefaultNodeSeeFeedbackPopover"
+import { EdgeGiveFeedbackPopover } from "@tumaet/apollon/components/popovers/edgePopovers/EdgeGiveFeedbackPopover"
+import { EdgeSeeFeedbackPopover } from "@tumaet/apollon/components/popovers/edgePopovers/EdgeSeeFeedbackPopover"
 
 const meta = { title: "Editor/Syntax Tree", ...editorStoryMeta } satisfies Meta
 
@@ -114,4 +119,154 @@ export const EditLink: Story = {
       <SyntaxTreeEdgeEditPopover elementId="edge-1" />
     </SeededPopoverHarness>
   ),
+}
+
+// ── Feedback popovers (Assessment mode) ──────────────────────────────────────
+// Nonterminals render via the shared DEFAULT node, so these exercise the
+// DefaultNode give/see feedback popovers. Give = the grader's score + comment
+// form; See = the read-only review, which reads from the diagram store's
+// `assessments` map (keyed by model-element id).
+
+/** Give-feedback form for a nonterminal (shared default-node feedback popover). */
+export const GiveFeedbackNonterminal: Story = {
+  name: "Feedback (Give): Nonterminal",
+  tags: ["autodocs", "test"],
+  parameters: { layout: "centered" },
+  render: () => (
+    <SeededPopoverHarness
+      diagramType="SyntaxTree"
+      seed={(diagram) =>
+        diagram.getState().addNode(
+          makeNode("nonterminal-1", "syntaxTreeNonterminal", {
+            name: "Expression",
+          })
+        )
+      }
+    >
+      <DefaultNodeGiveFeedbackPopover elementId="nonterminal-1" />
+    </SeededPopoverHarness>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    // Header names the seeded nonterminal; the box renders a score + feedback form.
+    await canvas.findByText("Expression")
+    await canvas.findByPlaceholderText("0")
+    await canvas.findByPlaceholderText("Add a comment…")
+  },
+}
+
+/** See-feedback (read-only) view of a nonterminal with a graded assessment. */
+export const SeeFeedbackNonterminal: Story = {
+  name: "Feedback (See): Nonterminal",
+  tags: ["autodocs", "test"],
+  parameters: { layout: "centered" },
+  render: () => (
+    <SeededPopoverHarness
+      diagramType="SyntaxTree"
+      seed={(diagram) => {
+        diagram.getState().addNode(
+          makeNode("nonterminal-1", "syntaxTreeNonterminal", {
+            name: "Expression",
+          })
+        )
+        diagram.getState().setAssessments({
+          "nonterminal-1": {
+            modelElementId: "nonterminal-1",
+            elementType: "node",
+            score: 3,
+            feedback: "Correct nonterminal for this production.",
+          },
+        })
+      }}
+    >
+      <DefaultNodeSeeFeedbackPopover elementId="nonterminal-1" />
+    </SeededPopoverHarness>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    // The seeded node score + feedback are rendered read-only.
+    await canvas.findByText("+3")
+    await canvas.findByText("Correct nonterminal for this production.")
+  },
+}
+
+/** Give-feedback form for a syntax-tree link — a single score + comment row. */
+export const GiveFeedbackLink: Story = {
+  name: "Feedback (Give): Link",
+  tags: ["autodocs", "test"],
+  parameters: { layout: "centered" },
+  render: () => (
+    <SeededPopoverHarness
+      diagramType="SyntaxTree"
+      seed={(diagram) => {
+        diagram
+          .getState()
+          .addNode(
+            makeNode("a", "syntaxTreeNonterminal", { name: "Expression" })
+          )
+        diagram
+          .getState()
+          .addNode(makeNode("b", "syntaxTreeTerminal", { name: "number" }))
+        diagram
+          .getState()
+          .addEdge(
+            makeEdge("edge-1", "SyntaxTreeLink", "a", "b", { label: "" })
+          )
+      }}
+    >
+      <EdgeGiveFeedbackPopover elementId="edge-1" />
+    </SeededPopoverHarness>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    // The edge feedback box renders a single Points + Feedback form.
+    await canvas.findByPlaceholderText("0")
+    await canvas.findByPlaceholderText("Add a comment…")
+  },
+}
+
+/** See-feedback (read-only) view of a syntax-tree link with a graded assessment. */
+export const SeeFeedbackLink: Story = {
+  name: "Feedback (See): Link",
+  tags: ["autodocs", "test"],
+  parameters: { layout: "centered" },
+  render: () => (
+    <SeededPopoverHarness
+      diagramType="SyntaxTree"
+      seed={(diagram) => {
+        diagram
+          .getState()
+          .addNode(
+            makeNode("a", "syntaxTreeNonterminal", { name: "Expression" })
+          )
+        diagram
+          .getState()
+          .addNode(makeNode("b", "syntaxTreeTerminal", { name: "number" }))
+        diagram
+          .getState()
+          .addEdge(
+            makeEdge("edge-1", "SyntaxTreeLink", "a", "b", { label: "" })
+          )
+        diagram.getState().setAssessments({
+          "edge-1": {
+            modelElementId: "edge-1",
+            elementType: "edge",
+            score: 2,
+            feedback:
+              "Link correctly derives the terminal from the nonterminal.",
+          },
+        })
+      }}
+    >
+      <EdgeSeeFeedbackPopover elementId="edge-1" />
+    </SeededPopoverHarness>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    // The seeded edge score + feedback render read-only.
+    await canvas.findByText("+2")
+    await canvas.findByText(
+      "Link correctly derives the terminal from the nonterminal."
+    )
+  },
 }

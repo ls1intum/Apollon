@@ -163,9 +163,11 @@ export const GiveFeedbackCommunicationObject: Story = {
     const canvas = within(canvasElement)
     // Header names the seeded object; the box renders a score + feedback form.
     await canvas.findByText("cart: ShoppingCart")
-    const points = await canvas.findAllByPlaceholderText("Points")
+    // Points/Feedback are now FIELD LABELS (the points placeholder is "0"),
+    // so query by label, not by the old placeholder text.
+    const points = await canvas.findAllByLabelText("Points")
     expect(points.length).toBeGreaterThan(0)
-    expect(canvas.getAllByPlaceholderText("Feedback").length).toBeGreaterThan(0)
+    expect(canvas.getAllByLabelText("Feedback").length).toBeGreaterThan(0)
   },
 }
 
@@ -212,8 +214,9 @@ export const SeeFeedbackCommunicationObject: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    // The seeded node score + feedback are rendered read-only.
-    await canvas.findByText("4")
+    // The seeded node score renders as a signed tone badge (+4); the feedback
+    // is read-only text.
+    await canvas.findByText("+4")
     await canvas.findByText("Names the participating object clearly.")
     // The seeded attribute + method feedback render in their own rows.
     await canvas.findByText("Matches a message sent to this object.")
@@ -249,8 +252,9 @@ export const GiveFeedbackCommunicationLink: Story = {
     const canvas = within(canvasElement)
     // The edge feedback header names the edge by its type; the box is a form.
     await canvas.findByText("CommunicationLink")
-    await canvas.findByPlaceholderText("Points")
-    await canvas.findByPlaceholderText("Feedback")
+    // Points/Feedback are field LABELS now (placeholder is "0"), not placeholders.
+    await canvas.findByLabelText("Points")
+    await canvas.findByLabelText("Feedback")
   },
 }
 
@@ -289,9 +293,10 @@ export const SeeFeedbackCommunicationLink: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    // The seeded edge score + feedback render read-only under the edge header.
+    // The seeded edge score renders as a signed tone badge (+3); the feedback
+    // is read-only text under the edge header.
     await canvas.findByText("CommunicationLink")
-    await canvas.findByText("3")
+    await canvas.findByText("+3")
     await canvas.findByText("Messages are numbered in the wrong call order.")
   },
 }

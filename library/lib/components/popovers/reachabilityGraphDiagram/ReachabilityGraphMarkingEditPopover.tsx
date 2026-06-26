@@ -1,6 +1,7 @@
 import { ReachabilityGraphMarkingProps } from "@/types"
 import { useDiagramStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
+import { Checkbox } from "@/components/ui"
 import { PopoverProps } from "../types"
 import { DefaultNodeEditPopover } from "../DefaultNodeEditPopover"
 import { PopoverSection } from "../PopoverLayout"
@@ -42,18 +43,11 @@ export const ReachabilityGraphMarkingEditPopover: React.FC<PopoverProps> = ({
   return (
     <DefaultNodeEditPopover elementId={elementId}>
       <PopoverSection divider>
-        <label
-          className="apollon-checkbox-label"
-          style={{ display: "flex", gap: 8, alignItems: "center" }}
-        >
-          <input
-            type="checkbox"
-            className="apollon-checkbox"
-            checked={nodeData.isInitialMarking}
-            onChange={toggle}
-          />
-          Is Initial Marking
-        </label>
+        <Checkbox
+          checked={nodeData.isInitialMarking}
+          onCheckedChange={toggle}
+          label="Is Initial Marking"
+        />
       </PopoverSection>
     </DefaultNodeEditPopover>
   )

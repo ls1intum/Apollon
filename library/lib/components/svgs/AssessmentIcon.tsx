@@ -22,13 +22,25 @@ const AssessmentIcon: React.FC<AssessmentIconProps> = ({ score, x, y }) => {
     y: centerY - ICON_SIZE / 2,
   }
 
+  // The canvas-icon solids from the shared --apollon-assessment-* ramp (tokens.css,
+  // with light/dark deltas), so the canvas badge and the popover score pill read
+  // from one source of truth.
   const getIconConfig = () => {
     if (score > 0) {
-      return { Icon: Check, color: "green" }
+      return {
+        Icon: Check,
+        color: "var(--apollon-assessment-icon-positive, #15803d)",
+      }
     } else if (score < 0) {
-      return { Icon: X, color: "red" }
+      return {
+        Icon: X,
+        color: "var(--apollon-assessment-icon-negative, #b91c1c)",
+      }
     } else {
-      return { Icon: TriangleAlert, color: "blue" }
+      return {
+        Icon: TriangleAlert,
+        color: "var(--apollon-assessment-icon-zero, #1d4ed8)",
+      }
     }
   }
 

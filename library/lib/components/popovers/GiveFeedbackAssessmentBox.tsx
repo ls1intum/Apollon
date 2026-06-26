@@ -17,6 +17,19 @@ interface Props {
   divider?: boolean
 }
 
+/** Feedback comment cap, surfaced to the grader as an `n/500` helper. */
+const FEEDBACK_MAX_LENGTH = 500
+
+// The coarse `elementType` stored on an Assessment. Node parts arrive as
+// "Node"/"Attribute"/"Method", but edge callers pass the concrete edge type
+// (e.g. "ClassBidirectional"), so anything that isn't a known node part folds
+// to "edge" rather than being mis-stored as a node category.
+const NODE_PART_TYPES = ["node", "attribute", "method"]
+const resolveElementType = (type: string): string => {
+  const normalized = type.toLowerCase()
+  return NODE_PART_TYPES.includes(normalized) ? normalized : "edge"
+}
+
 export const GiveFeedbackAssessmentBox = ({
   elementId,
   name,
@@ -42,7 +55,7 @@ export const GiveFeedbackAssessmentBox = ({
 
     const updated: Assessment = {
       modelElementId: elementId,
-      elementType: type.toLowerCase() as "node" | "attribute" | "method",
+      elementType: resolveElementType(type),
       score: newScore === "" ? 0 : validScore,
       feedback: newFeedback || undefined,
       correctionStatus: { status: "NOT_VALIDATED" },
@@ -79,26 +92,30 @@ export const GiveFeedbackAssessmentBox = ({
       />
       <TextField
         type="number"
+        label="Points"
+        helperText="Negative points are allowed."
         value={score}
         onChange={(e) => {
           const value = e.target.value
           setScore(value)
           updateAssessment(value, feedback)
         }}
-        placeholder="Points"
+        placeholder="0"
         fullWidth
       />
       <TextField
         multiline
         minRows={3}
-        maxLength={500}
+        maxLength={FEEDBACK_MAX_LENGTH}
+        label="Feedback"
+        helperText={`${feedback.length}/${FEEDBACK_MAX_LENGTH}`}
         value={feedback}
         onChange={(e) => {
           const value = e.target.value
           setFeedback(value)
           updateAssessment(score, value)
         }}
-        placeholder="Feedback"
+        placeholder="Add a comment…"
         fullWidth
       />
     </PopoverSection>

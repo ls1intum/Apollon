@@ -181,8 +181,9 @@ export const GiveFeedbackUseCase: Story = {
     const canvas = within(canvasElement)
     // Header names the seeded use case; the box renders a score + feedback form.
     await canvas.findByText("Place Order")
-    await canvas.findByPlaceholderText("Points")
-    await canvas.findByPlaceholderText("Feedback")
+    // Points/Feedback are field LABELS now (placeholder is "0"), not placeholders.
+    await canvas.findByLabelText("Points")
+    await canvas.findByLabelText("Feedback")
   },
 }
 
@@ -213,8 +214,9 @@ export const SeeFeedbackUseCase: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    // The seeded node score + feedback are rendered read-only.
-    await canvas.findByText("3")
+    // The seeded node score renders as a signed tone badge (+3); the feedback
+    // is read-only text.
+    await canvas.findByText("+3")
     await canvas.findByText("Clear, goal-oriented use-case name.")
   },
 }
@@ -246,8 +248,9 @@ export const GiveFeedbackAssociation: Story = {
     const canvas = within(canvasElement)
     // The edge feedback header names the edge by its type; the box is a form.
     await canvas.findByText("UseCaseAssociation")
-    await canvas.findByPlaceholderText("Points")
-    await canvas.findByPlaceholderText("Feedback")
+    // Points/Feedback are field LABELS now (placeholder is "0"), not placeholders.
+    await canvas.findByLabelText("Points")
+    await canvas.findByLabelText("Feedback")
   },
 }
 
@@ -284,9 +287,10 @@ export const SeeFeedbackAssociation: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    // The seeded edge score + feedback render read-only under the edge header.
+    // The seeded edge score renders as a signed tone badge (+2); the feedback
+    // is read-only text under the edge header.
     await canvas.findByText("UseCaseAssociation")
-    await canvas.findByText("2")
+    await canvas.findByText("+2")
     await canvas.findByText(
       "The actor should associate with the use case directly."
     )

@@ -952,6 +952,65 @@ svg.react-flow__connectionline {
   cursor: pointer;
 }
 
+/* Checkbox primitive (Base UI). The clickable row, the 16px box, and the check
+   indicator, keyed on data-slot + Base UI's data-checked/data-disabled state,
+   routed through --apollon-* tokens (mirrors .apollon-stereotype-toggle). */
+[data-slot="checkbox-label"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: var(--apollon-primary-contrast, #000);
+  cursor: pointer;
+}
+
+[data-slot="checkbox"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 1px solid
+    color-mix(in srgb, var(--apollon-primary, #3e8acc) 50%, transparent);
+  border-radius: var(--apollon-radius-sm, 4px);
+  background: transparent;
+  /* The check sits on the primary fill once checked; no dedicated on-primary
+     token exists, so fall back through the page background to white. */
+  color: var(--apollon-primary-contrast-on-accent, var(--apollon-background, #fff));
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+}
+
+[data-slot="checkbox"][data-checked] {
+  background-color: var(--apollon-primary, #3e8acc);
+  border-color: var(--apollon-primary, #3e8acc);
+}
+
+[data-slot="checkbox"]:focus-visible {
+  outline: 2px solid var(--apollon-primary, #3e8acc);
+  outline-offset: 2px;
+}
+
+[data-slot="checkbox"][data-disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+[data-slot="checkbox-label"]:has([data-slot="checkbox"][data-disabled]) {
+  cursor: not-allowed;
+}
+
+[data-slot="checkbox-indicator"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+}
+
 /* Typography primitive. Color + per-variant size/weight keyed on data-variant,
    routed through the themed contrast token. Callers' style still overrides via
    the element's own inline style (higher specificity than this rule). h1–h5
@@ -1010,6 +1069,83 @@ svg.react-flow__connectionline {
 
 [data-slot="textfield-helper"][data-error] {
   color: var(--apollon-alert-danger-color, #721c24);
+}
+
+/* Score pill. Tone (set by the AssessmentScore primitive) selects a foreground
+   tone token + a soft same-hue tint from the --apollon-assessment-* ramp (the
+   single source in tokens.css, with light/dark deltas), so a graded element
+   reads identically here and on the canvas badge (AssessmentIcon). Geometry is
+   shared across tones. The tone pairs are SOLID AA tokens (not color-mix), so
+   axe can MEASURE the contrast and every pair clears WCAG AA in both themes. */
+[data-slot="assessment-score"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 2px 10px;
+  border-radius: var(--apollon-radius-md, 6px);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+}
+
+[data-slot="assessment-score"] > svg {
+  flex: none;
+}
+
+/* Tone pairs read the --apollon-assessment-* ramp (light/dark deltas live in
+   tokens.css). The var() fallbacks mirror the light values per this file's
+   convention; the real source — and the dark theme — lives in tokens.css. */
+[data-slot="assessment-score"][data-tone="positive"] {
+  color: var(--apollon-assessment-positive-text, #166534);
+  background-color: var(--apollon-assessment-positive-bg, #dcfce7);
+}
+
+[data-slot="assessment-score"][data-tone="negative"] {
+  color: var(--apollon-assessment-negative-text, #991b1b);
+  background-color: var(--apollon-assessment-negative-bg, #fee2e2);
+}
+
+[data-slot="assessment-score"][data-tone="zero"] {
+  color: var(--apollon-assessment-zero-text, #1e40af);
+  background-color: var(--apollon-assessment-zero-bg, #dbeafe);
+}
+
+[data-slot="assessment-score"][data-tone="ungraded"] {
+  color: var(--apollon-assessment-ungraded-text, #475569);
+  background-color: var(--apollon-assessment-ungraded-bg, #f1f5f9);
+}
+
+/* Feedback body text. The [data-empty] variant is the muted "No comment"
+   placeholder shown when an element is graded but carries no comment. */
+[data-slot="assessment-feedback"] {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--apollon-primary-contrast, #000);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+[data-slot="assessment-feedback"][data-empty] {
+  color: var(--apollon-gray-variant, #495057);
+  font-style: italic;
+}
+
+/* Assessment header name chip: the assessed element's name highlighted inline
+   (instead of quotation marks) so it wraps as part of the sentence. */
+[data-slot="assessment-name-chip"] {
+  padding: 1px 6px;
+  border-radius: var(--apollon-radius-sm, 4px);
+  font-weight: 600;
+  white-space: nowrap;
+  background-color: color-mix(
+    in srgb,
+    var(--apollon-primary, #3e8acc) 18%,
+    transparent
+  );
+  color: var(--apollon-primary-contrast, #000);
 }
 
 /* Divider line (StyleEditor color rows, etc). Visual tokens live here, routed

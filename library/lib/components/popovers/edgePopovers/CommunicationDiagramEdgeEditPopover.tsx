@@ -1,7 +1,7 @@
 import { useReactiveEdge, useReactiveNodeName } from "@/hooks"
 import { useReactFlow } from "@xyflow/react"
 import { CustomEdgeProps, MessageData } from "@/edges/EdgeProps"
-import { ArrowLeft, ArrowRight, Trash2 } from "lucide-react"
+import { ArrowLeft, ArrowRight, Plus, Trash2 } from "lucide-react"
 import { PopoverProps } from "../types"
 import { useState, useEffect } from "react"
 import { generateUUID } from "@/utils"
@@ -197,15 +197,24 @@ export const CommunicationDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
         })}
 
         {/* Add new message input */}
-        <TextField
-          value={newLabelInput}
-          onChange={(e) => handleInputChange(e.target.value)}
-          onKeyDown={handleKeyDown}
-          fullWidth
-          placeholder="+ Add Message"
-          error={duplicateError}
-          helperText={duplicateError ? "This message already exists" : ""}
-        />
+        <div className="apollon-add-row">
+          <TextField
+            value={newLabelInput}
+            onChange={(e) => handleInputChange(e.target.value)}
+            onKeyDown={handleKeyDown}
+            fullWidth
+            placeholder="Message"
+            error={duplicateError}
+            helperText={duplicateError ? "This message already exists" : ""}
+          />
+          <IconButton
+            ariaLabel="Add message"
+            tooltip="Add message"
+            onClick={handleAddMessage}
+          >
+            <Plus width={16} height={16} aria-hidden="true" />
+          </IconButton>
+        </div>
       </PopoverSection>
     </PopoverLayout>
   )

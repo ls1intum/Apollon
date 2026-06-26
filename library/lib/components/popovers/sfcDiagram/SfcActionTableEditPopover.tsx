@@ -1,5 +1,5 @@
 import React, { useState, KeyboardEvent, ChangeEvent } from "react"
-import { Trash2 } from "lucide-react"
+import { Plus, Trash2 } from "lucide-react"
 import { IconButton, TextField } from "@/components/ui"
 import { NodeStyleEditor } from "@/components/styleEditor"
 import { generateUUID } from "@/utils"
@@ -174,7 +174,7 @@ export const SfcActionTableEditPopover: React.FC<PopoverProps> = ({
                   }}
                 />,
               ]}
-              inputPlaceholder="Description"
+              inputPlaceholder="Action name"
             />
           </div>
         ))}
@@ -208,7 +208,7 @@ export const SfcActionTableEditPopover: React.FC<PopoverProps> = ({
           />
           <TextField
             fullWidth
-            placeholder="+ Add action name"
+            placeholder="Action name"
             value={newName}
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
               setNewName(e.target.value)
@@ -224,6 +224,13 @@ export const SfcActionTableEditPopover: React.FC<PopoverProps> = ({
             data-field="name"
             data-new="true"
           />
+          <IconButton
+            ariaLabel="Add action row"
+            tooltip="Add action row"
+            onClick={handleAddRow}
+          >
+            <Plus width={16} height={16} aria-hidden="true" />
+          </IconButton>
         </div>
       </PopoverSection>
     </PopoverLayout>

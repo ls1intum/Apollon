@@ -102,7 +102,20 @@ export const TextField: React.FC<TextFieldProps> = ({
         </label>
       )}
       {multiline ? (
-        <Textarea rows={minRows} {...sharedProps} style={{ resize: "none" }} />
+        // `field-sizing: content` (set on the shared textarea) auto-grows the
+        // box; these inline floors override the components.css min-height so a
+        // minRows={1} field starts single-line (≈ the <input> height) and grows
+        // one line per newline, capped at 12 lines with internal scroll.
+        <Textarea
+          rows={minRows}
+          {...sharedProps}
+          style={{
+            resize: "none",
+            minHeight: `calc(${minRows ?? 1} * 1lh + 1rem)`,
+            maxHeight: "12lh",
+            overflowY: "auto",
+          }}
+        />
       ) : (
         <Input type={type ?? "text"} {...sharedProps} />
       )}

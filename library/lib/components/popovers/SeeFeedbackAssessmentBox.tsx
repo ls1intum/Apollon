@@ -1,12 +1,7 @@
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
-import { Typography } from "@/components/ui"
+import { AssessmentScore } from "./AssessmentScore"
 import { AssessmentHeader, PopoverSection } from "./PopoverLayout"
-
-// Mirrors the popover spacing scale documented in PopoverLayout (the gap
-// between controls inside a section). Kept in step with that constant so the
-// See box stays on the same rhythm as GiveFeedbackAssessmentBox.
-const FIELD_GAP = 8
 
 export const SeeFeedbackAssessmentBox = ({
   type,
@@ -28,27 +23,22 @@ export const SeeFeedbackAssessmentBox = ({
   )
   const assessment = getAssessment(elementId)
 
+  // Three states the reader must be able to tell apart, each visually distinct:
+  //   no assessment   -> "Not graded" badge, no feedback line
+  //   graded, no note -> tone badge + muted "No comment"
+  //   graded, note    -> tone badge + the feedback text
   return (
     <PopoverSection divider={divider}>
       <AssessmentHeader type={typeLabel ?? type} name={name} />
-      <div
-        style={{
-          display: "flex",
-          gap: FIELD_GAP,
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <Typography variant="caption">Score</Typography>
-        <Typography sx={{ fontWeight: 600 }}>
-          {assessment?.score ?? "-"}
-        </Typography>
-      </div>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: FIELD_GAP }}>
-        <Typography variant="caption">Feedback</Typography>
-        <Typography>{assessment?.feedback || "-"}</Typography>
-      </div>
+      <AssessmentScore score={assessment?.score} />
+      {assessment &&
+        (assessment.feedback ? (
+          <p data-slot="assessment-feedback">{assessment.feedback}</p>
+        ) : (
+          <p data-slot="assessment-feedback" data-empty="">
+            No comment
+          </p>
+        ))}
     </PopoverSection>
   )
 }

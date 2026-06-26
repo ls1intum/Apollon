@@ -1,5 +1,5 @@
 import { useReactiveEdge } from "@/hooks"
-import { TextField } from "@/components/ui"
+import { Checkbox, TextField } from "@/components/ui"
 import { EdgeStyleEditor } from "@/components/styleEditor"
 import { PopoverProps } from "../types"
 import { PopoverLayout, PopoverSection } from "../PopoverLayout"
@@ -109,25 +109,17 @@ export const SfcEdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
 
         {edgeData.displayName && (
           <>
-            <label className="apollon-checkbox-label">
-              <input
-                type="checkbox"
-                className="apollon-checkbox"
-                checked={edgeData.showBar}
-                onChange={(e) => handleShowBarChange(e.target.checked)}
-              />
-              Show crossbar
-            </label>
+            <Checkbox
+              checked={edgeData.showBar}
+              onCheckedChange={handleShowBarChange}
+              label="Show crossbar"
+            />
 
-            <label className="apollon-checkbox-label">
-              <input
-                type="checkbox"
-                className="apollon-checkbox"
-                checked={edgeData.isNegated}
-                onChange={(e) => handleIsNegatedChange(e.target.checked)}
-              />
-              Negated condition (overline)
-            </label>
+            <Checkbox
+              checked={edgeData.isNegated}
+              onCheckedChange={handleIsNegatedChange}
+              label="Negated condition (overline)"
+            />
           </>
         )}
       </PopoverSection>

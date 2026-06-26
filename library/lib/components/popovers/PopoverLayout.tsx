@@ -160,21 +160,7 @@ export const AssessmentHeader: React.FC<{
     <Typography variant="subtitle2" sx={{ flex: 1 }}>
       Assessment for {type}
       {name && " "}
-      {name && (
-        <span
-          style={{
-            padding: "1px 6px",
-            borderRadius: "var(--apollon-radius-sm, 4px)",
-            fontWeight: 600,
-            whiteSpace: "nowrap",
-            backgroundColor:
-              "color-mix(in srgb, var(--apollon-primary, #3e8acc) 18%, transparent)",
-            color: "var(--apollon-primary-contrast, #000)",
-          }}
-        >
-          {name}
-        </span>
-      )}
+      {name && <span data-slot="assessment-name-chip">{name}</span>}
     </Typography>
     {action}
   </div>

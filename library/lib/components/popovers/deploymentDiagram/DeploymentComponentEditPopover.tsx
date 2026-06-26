@@ -4,6 +4,7 @@ import { useShallow } from "zustand/shallow"
 import { DefaultNodeEditPopover } from "../DefaultNodeEditPopover"
 import { PopoverProps } from "../types"
 import { HeaderSwitchElement } from "@/components"
+import { PopoverSection } from "../PopoverLayout"
 
 export const DeploymentComponentEditPopover: React.FC<PopoverProps> = ({
   elementId,
@@ -36,18 +37,17 @@ export const DeploymentComponentEditPopover: React.FC<PopoverProps> = ({
     )
   }
 
-  const HeaderSwitcher = (
-    <HeaderSwitchElement
-      onClick={switchHeaderShown}
-      isComponentHeaderShown={nodeData.isComponentHeaderShown}
-      stereotypeLabel="component"
-    />
-  )
-
+  // The «component» stereotype toggle gets its own row below the style editor,
+  // not crammed beside the paint roller on the name row.
   return (
-    <DefaultNodeEditPopover
-      elementId={elementId}
-      sideElements={[HeaderSwitcher]}
-    />
+    <DefaultNodeEditPopover elementId={elementId}>
+      <PopoverSection title="Stereotype" divider>
+        <HeaderSwitchElement
+          onClick={switchHeaderShown}
+          isComponentHeaderShown={nodeData.isComponentHeaderShown}
+          stereotypeLabel="component"
+        />
+      </PopoverSection>
+    </DefaultNodeEditPopover>
   )
 }

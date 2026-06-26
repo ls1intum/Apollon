@@ -1,4 +1,5 @@
 export * from "./TextField"
+export * from "./Checkbox"
 export * from "./Select"
 export * from "./Tooltip"
 // The editor's icon button IS the shared @tumaet/ui primitive — re-exported here
