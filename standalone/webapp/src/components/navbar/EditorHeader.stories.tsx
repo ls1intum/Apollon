@@ -35,14 +35,15 @@ const meta = {
     ),
   ],
   args: {
-    isNarrow: false,
+    layout: "full",
     hideBrand: false,
   },
   argTypes: {
-    isNarrow: {
-      control: "boolean",
+    layout: {
+      control: "inline-radio",
+      options: ["full", "narrow"],
       description:
-        "Portrait-phone layout: collapse to compact pills + overflow menu.",
+        "Layout mode: full island bar, or narrow portrait-phone pills + overflow menu.",
       table: { category: "Layout" },
     },
     hideBrand: {
@@ -67,7 +68,7 @@ export const BrandHidden: Story = {
 
 /** Narrow phone layout: the back pill and the actions overflow pill. */
 export const Narrow: Story = {
-  args: { isNarrow: true },
+  args: { layout: "narrow" },
 }
 
 /** Typing into the centred title field updates the input value. */

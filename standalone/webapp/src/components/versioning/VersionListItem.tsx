@@ -510,7 +510,7 @@ export const VersionListItem: FC<ContainerProps> = ({
           diagramId={diagramId}
           versionId={props.version.id}
           isAuto={!isNamedVersion(props.version)}
-          compact
+          size="compact"
         />
       }
       hasPermalink={Boolean(permalinkUrl)}

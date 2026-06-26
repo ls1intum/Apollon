@@ -83,7 +83,7 @@ export const ChromeSubHeader = () => {
                 <>
                   <HelpMenuItems onSelect={close} />
                   <DropdownMenuSeparator />
-                  <ThemeSwitcherMenu asMenuItem onToggle={close} />
+                  <ThemeSwitcherMenu variant="menuItem" onToggle={close} />
                 </>
               )}
             </ChromeOverflowMenu>

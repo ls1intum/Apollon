@@ -20,20 +20,18 @@ interface Props {
   /** Foreground colour, mirrors `VersionHistoryButton`'s convention. */
   color?: string
   /**
-   * Icon-only presentation, mirrors `VersionHistoryButton`. When `false` (the
-   * desktop bar) the label collapses to the icon below `lg` and the tooltip
-   * shows only while collapsed — never alongside the visible label.
+   * Presentation variant (one bounded axis, mirrors `VersionHistoryButton` /
+   * `ThemeSwitcherMenu`):
+   * - `"bar"` (default): the desktop island button; the label collapses to the
+   *   icon below `lg` and the tooltip shows only while collapsed.
+   * - `"icon"`: icon-only — the label is always hidden and the tooltip always
+   *   names it (the editor mobile pill).
+   * - `"menuItem"`: a full-width `DropdownMenuItem` row (the editor mobile
+   *   overflow), so the overflow's `min-h-11` 44px row contract applies to it.
    */
-  iconOnly?: boolean
+  variant?: "bar" | "icon" | "menuItem"
   /** Mobile menu close callback when rendered inside the hamburger. */
   onAfter?: () => void
-  /**
-   * Render as a full-width `DropdownMenuItem` row (the editor mobile overflow)
-   * instead of the standalone tooltip-button used on the desktop island, so the
-   * overflow's `min-h-11` 44px row contract applies to it like every other row —
-   * mirroring `ThemeSwitcherMenu`'s `asMenuItem`.
-   */
-  asMenuItem?: boolean
 }
 
 /**
@@ -51,10 +49,10 @@ interface Props {
  */
 export const SaveLocalCopyButton = ({
   color,
-  iconOnly = false,
+  variant = "bar",
   onAfter,
-  asMenuItem = false,
 }: Props) => {
+  const iconOnly = variant === "icon"
   const diagramId = useDiagramIdFromPath()
   const { pathname } = useLocation()
   const { editor } = useEditorContext()
@@ -81,7 +79,7 @@ export const SaveLocalCopyButton = ({
     }
   }
 
-  if (asMenuItem) {
+  if (variant === "menuItem") {
     return (
       <DropdownMenuItem
         onClick={handleClick}

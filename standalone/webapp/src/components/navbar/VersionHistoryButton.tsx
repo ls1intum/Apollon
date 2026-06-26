@@ -26,12 +26,13 @@ interface VersionHistoryButtonViewProps {
    */
   color?: string
   /**
-   * Icon-only presentation: the mobile pill passes `true` so the label is always
-   * hidden and the tooltip always names it. The header leaves it `false`, so the
-   * label collapses to the icon below `lg` and the tooltip shows only while
-   * collapsed — never alongside the visible label.
+   * Presentation variant (one bounded axis):
+   * - `"bar"` (default): the header button — the label collapses to the icon
+   *   below `lg` and the tooltip shows only while collapsed.
+   * - `"icon"`: icon-only — the mobile pill, so the label is always hidden and
+   *   the tooltip always names it.
    */
-  iconOnly?: boolean
+  variant?: "bar" | "icon"
 }
 
 /**
@@ -43,8 +44,9 @@ export function VersionHistoryButtonView({
   isOpen,
   onToggle,
   color,
-  iconOnly = false,
+  variant = "bar",
 }: VersionHistoryButtonViewProps) {
+  const iconOnly = variant === "icon"
   // 1024px is Tailwind `lg`, the same breakpoint the label span collapses at.
   const isLg = useMediaQuery("(min-width: 1024px)")
   return (
@@ -70,8 +72,8 @@ export function VersionHistoryButtonView({
 
 /** Props for the {@link VersionHistoryButton} container. */
 interface VersionHistoryButtonProps {
-  /** Icon-only presentation. See {@link VersionHistoryButtonView}. */
-  iconOnly?: boolean
+  /** Presentation variant. See {@link VersionHistoryButtonView}. */
+  variant?: "bar" | "icon"
 }
 
 /**
@@ -84,7 +86,7 @@ interface VersionHistoryButtonProps {
  * playground have no active diagram, so the button is hidden.
  */
 export const VersionHistoryButton = ({
-  iconOnly,
+  variant,
 }: VersionHistoryButtonProps) => {
   const diagramId = useDiagramIdFromPath()
   const { pathname } = useLocation()
@@ -106,7 +108,7 @@ export const VersionHistoryButton = ({
   return (
     <VersionHistoryButtonView
       isOpen={isOpen}
-      iconOnly={iconOnly}
+      variant={variant}
       onToggle={() => (isOpen ? closeDrawer(diagramId) : openDrawer(diagramId))}
     />
   )

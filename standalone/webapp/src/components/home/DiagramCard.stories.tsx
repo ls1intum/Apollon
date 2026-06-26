@@ -55,7 +55,7 @@ const meta = {
   parameters: { layout: "centered" },
   args: {
     diagram: SAMPLE_LOCAL_DIAGRAM,
-    showPlaceholderIcon: true,
+    previewState: "placeholder",
     isFavorite: false,
     onToggleFavorite: fn(),
     onOpen: fn(),
@@ -83,26 +83,17 @@ const meta = {
       description: "Whether the diagram is favorited (drives the star).",
       table: { category: "State" },
     },
-    isThumbnailLoading: {
-      control: "boolean",
-      description: "Shimmer the preview in place instead of a thumbnail/icon.",
-      table: { category: "State" },
-    },
-    isExpired: {
-      control: "boolean",
+    previewState: {
+      control: "select",
+      options: ["thumbnail", "loading", "placeholder", "expired"],
       description:
-        'Show the "share no longer available" state and disable navigation.',
+        'Which of the four mutually-exclusive preview states to render. "expired" also disables navigation + dims the card.',
       table: { category: "State" },
     },
     isHighlighted: {
       control: "boolean",
       description: "Apply the just-created/imported highlight pulse.",
       table: { category: "State" },
-    },
-    showPlaceholderIcon: {
-      control: "boolean",
-      description: "Show the file-document placeholder icon.",
-      table: { category: "Appearance" },
     },
     showSourceBadge: {
       control: "boolean",
@@ -134,7 +125,7 @@ export const LocalDiagram: Story = {}
 /** A local diagram showing its rendered thumbnail preview. */
 export const WithThumbnail: Story = {
   args: {
-    showPlaceholderIcon: false,
+    previewState: "thumbnail",
     thumbnail: { lightDataUrl: TRANSPARENT_PNG, darkDataUrl: TRANSPARENT_PNG },
   },
 }
@@ -150,7 +141,7 @@ export const DarkRecoloredThumbnail: Story = {
   tags: ["!autodocs"],
   globals: { theme: "dark" },
   args: {
-    showPlaceholderIcon: false,
+    previewState: "thumbnail",
     thumbnail: makeSampleThumbnailSources(),
   },
 }
@@ -184,7 +175,7 @@ export const SharedDiagram: Story = {
  * real, since only the thumbnail is still generating.
  */
 export const Loading: Story = {
-  args: { showPlaceholderIcon: false, isThumbnailLoading: true },
+  args: { previewState: "loading" },
 }
 
 /** A highlighted (just-created/imported) card with the pulse treatment. */
@@ -196,7 +187,7 @@ export const Highlighted: Story = {
 export const Expired: Story = {
   args: {
     diagram: SAMPLE_SHARED_DIAGRAM,
-    isExpired: true,
+    previewState: "expired",
     onToggleFavorite: undefined,
   },
 }

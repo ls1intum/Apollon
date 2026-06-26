@@ -93,10 +93,12 @@ export function ThemeSwitcherButton({
 /** Props for the {@link ThemeSwitcherMenu} container. */
 interface ThemeSwitcherMenuProps {
   /**
-   * Render as a full-width labelled row inside a dropdown menu (the mobile
-   * overflow menu) instead of the compact icon toggle used on the desktop bar.
+   * Presentation variant (one bounded axis):
+   * - `"icon"` (default): the compact icon toggle used on the desktop bar.
+   * - `"menuItem"`: a full-width labelled row inside a dropdown menu (the mobile
+   *   overflow menu).
    */
-  asMenuItem?: boolean
+  variant?: "icon" | "menuItem"
   /** Fired in addition to toggling — e.g. to close the overflow menu it lives in. */
   onToggle?: () => void
 }
@@ -104,10 +106,10 @@ interface ThemeSwitcherMenuProps {
 /**
  * Container: reads `currentTheme`/`toggleTheme` from the theme store and renders
  * either the pure {@link ThemeSwitcherButton} (desktop chrome) or a labelled
- * `DropdownMenuItem` row (mobile overflow menu, via `asMenuItem`).
+ * `DropdownMenuItem` row (mobile overflow menu, via `variant="menuItem"`).
  */
 export const ThemeSwitcherMenu: React.FC<ThemeSwitcherMenuProps> = ({
-  asMenuItem = false,
+  variant = "icon",
   onToggle,
 }) => {
   const { currentTheme, toggleTheme } = useThemeStore(
@@ -124,7 +126,7 @@ export const ThemeSwitcherMenu: React.FC<ThemeSwitcherMenuProps> = ({
     onToggle?.()
   }
 
-  if (asMenuItem) {
+  if (variant === "menuItem") {
     return (
       <DropdownMenuItem
         onClick={handleToggle}

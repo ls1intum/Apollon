@@ -25,14 +25,15 @@ const meta = {
   args: {
     diagramId: "diagram-versions",
     versionId: "v5",
-    compact: true,
+    size: "compact",
     isAuto: false,
   },
   argTypes: {
     diagramId: { control: false, table: { category: "Data" } },
     versionId: { control: false, table: { category: "Data" } },
-    compact: {
-      control: "boolean",
+    size: {
+      control: "inline-radio",
+      options: ["compact", "banner"],
       description: "Small list-row size (64x40) vs the compare-banner size.",
       table: { category: "Layout" },
     },
@@ -52,7 +53,7 @@ export const Compact: Story = {}
 
 /** The larger compare-banner size. */
 export const Banner: Story = {
-  args: { compact: false },
+  args: { size: "banner" },
 }
 
 /** Auto-save variant — muted colour and history-glyph fallback. */

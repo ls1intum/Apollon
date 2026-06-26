@@ -45,8 +45,11 @@ function enqueueRender<T>(fn: () => Promise<T>): Promise<T> {
 interface Props {
   diagramId: string
   versionId: string
-  /** When true, render the small list-row variant; otherwise compare-banner size. */
-  compact?: boolean
+  /**
+   * Thumbnail size (one bounded axis): `"compact"` is the small list-row tile
+   * (64x40); `"banner"` (default) is the larger compare-banner size (160x100).
+   */
+  size?: "compact" | "banner"
   isAuto?: boolean
 }
 
@@ -60,9 +63,10 @@ function svgToDataUrl(svgText: string): string {
 export const VersionThumbnail: FC<Props> = ({
   diagramId,
   versionId,
-  compact = true,
+  size = "banner",
   isAuto = false,
 }) => {
+  const compact = size === "compact"
   const cacheKey = `${diagramId}/${versionId}`
   const [src, setSrc] = useState<string | null>(cache.get(cacheKey) ?? null)
   const [errored, setErrored] = useState(false)

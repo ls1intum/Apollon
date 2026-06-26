@@ -628,13 +628,21 @@ export const DiagramGallery = ({
                   >
                     <DiagramCard
                       diagram={diagram}
-                      showPlaceholderIcon={isDiagramEmpty(diagram)}
-                      isThumbnailLoading={Boolean(
-                        loadingThumbnailIds[diagram.id]
-                      )}
+                      // Same conditions that drove the old preview booleans,
+                      // collapsed to one bounded axis (expired › placeholder ›
+                      // loading › thumbnail). The container finalizes loading vs
+                      // thumbnail against the actual thumbnail data.
+                      previewState={
+                        diagram.isExpired
+                          ? "expired"
+                          : isDiagramEmpty(diagram)
+                            ? "placeholder"
+                            : loadingThumbnailIds[diagram.id]
+                              ? "loading"
+                              : "thumbnail"
+                      }
                       showSourceBadge={isAllDiagramSource}
                       isHighlighted={diagram.id === highlightedDiagramId}
-                      isExpired={diagram.isExpired}
                       onToggleFavorite={handleToggleDiagramFavorite}
                       onSharedDiagramRemoved={handleRemoveSharedDiagram}
                       onSharedDiagramViewChange={handleSharedDiagramViewChange}

@@ -34,11 +34,21 @@ import { Island, GroupDivider, IslandInput } from "./islandPrimitives"
  * instantly and with one shared timing.
  */
 interface EditorHeaderRowProps {
-  isNarrow: boolean
+  /**
+   * Layout mode: `"full"` is the desktop island bar; `"narrow"` (portrait phone)
+   * collapses to compact pills with an overflow menu.
+   */
+  layout: "full" | "narrow"
+  /**
+   * Hide the brand wordmark in the full layout (native app). Independent of
+   * `layout` — a native, non-narrow viewport is `"full"` yet still hides the
+   * brand — so it stays a separate boolean rather than folding into `layout`.
+   */
   hideBrand: boolean
 }
 
-export function EditorHeaderRow({ isNarrow, hideBrand }: EditorHeaderRowProps) {
+export function EditorHeaderRow({ layout, hideBrand }: EditorHeaderRowProps) {
+  const isNarrow = layout === "narrow"
   return (
     <TooltipProvider>
       <div className="apollon-chrome-header-row">

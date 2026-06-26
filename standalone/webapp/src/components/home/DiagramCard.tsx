@@ -533,17 +533,25 @@ const PreviewTile = ({ children }: { children: ReactNode }) => {
 
 // DiagramPreview — the 16:10 preview area, one of four states.
 
+/**
+ * Which of the four mutually-exclusive states the 16:10 preview area renders.
+ * One bounded axis instead of the old `showThumbnail`/`isLoading`/`isExpired`
+ * boolean trio (plus the `thumbnail`-presence check): the precedence (expired ›
+ * thumbnail › loading › placeholder) is resolved upstream into this one value.
+ */
+export type DiagramPreviewState =
+  | "thumbnail"
+  | "loading"
+  | "placeholder"
+  | "expired"
+
 type DiagramPreviewProps = {
   diagram: RecentDiagram
   title: string
   lightDataUrl: string | null
   darkDataUrl: string | null
-  /** Render the rendered thumbnail crossfade pair. */
-  showThumbnail: boolean
-  /** Shimmer the preview in place (incl. non-empty-but-no-thumbnail-yet anti-flicker). */
-  isLoading: boolean
-  /** Show the "share no longer available" tile instead of a preview. */
-  isExpired: boolean
+  /** Which of the four mutually-exclusive preview states to render. */
+  state: DiagramPreviewState
 }
 
 /**
@@ -556,13 +564,11 @@ function DiagramPreview({
   title,
   lightDataUrl,
   darkDataUrl,
-  showThumbnail,
-  isLoading,
-  isExpired,
+  state,
 }: DiagramPreviewProps) {
   return (
     <div className="flex aspect-[16/10] w-full items-center justify-center">
-      {isExpired ? (
+      {state === "expired" ? (
         <div className="flex flex-col items-center gap-2.5 text-center text-muted-foreground">
           <Unlink className="size-10" aria-hidden="true" />
           <div className="space-y-0.5">
@@ -574,7 +580,7 @@ function DiagramPreview({
             </p>
           </div>
         </div>
-      ) : showThumbnail ? (
+      ) : state === "thumbnail" ? (
         <div className="relative h-full w-full">
           <img
             src={lightDataUrl!}
@@ -592,7 +598,7 @@ function DiagramPreview({
             />
           )}
         </div>
-      ) : isLoading ? (
+      ) : state === "loading" ? (
         // The thumbnail is generating: shimmer the WHOLE preview in place, not a
         // floating spinner tile. This is the exact same treatment as the
         // gallery's DiagramGallerySkeleton (shared `Skeleton`, edge-to-edge over
@@ -657,16 +663,15 @@ export type DiagramCardViewProps = {
    * card then shows the placeholder/type icon or the loading shimmer).
    */
   thumbnail?: DiagramCardThumbnail | null
-  /** Shimmer the preview in place instead of a thumbnail/icon. */
-  isThumbnailLoading?: boolean
-  /** Show the file-document placeholder icon instead of a thumbnail. */
-  showPlaceholderIcon?: boolean
+  /**
+   * Which of the four mutually-exclusive preview states to render. `"expired"`
+   * also drives the disabled-navigation + dimmed treatment on the whole card.
+   */
+  previewState: DiagramPreviewState
   /** Show the secondary Local/Shared source badge. */
   showSourceBadge?: boolean
   /** Apply the just-created/imported highlight pulse treatment. */
   isHighlighted?: boolean
-  /** Show the "share no longer available" state and disable navigation. */
-  isExpired?: boolean
   /** Whether the diagram is favorited (drives the star fill + label). */
   isFavorite?: boolean
   /**
@@ -693,11 +698,9 @@ export type DiagramCardViewProps = {
 export function DiagramCardView({
   diagram,
   thumbnail = null,
-  isThumbnailLoading = false,
-  showPlaceholderIcon = false,
+  previewState,
   showSourceBadge = false,
   isHighlighted = false,
-  isExpired = false,
   isFavorite = false,
   onToggleFavorite,
   onOpen,
@@ -705,6 +708,9 @@ export function DiagramCardView({
   className,
   ref,
 }: DiagramCardViewProps) {
+  // Expired drives both the preview tile AND the card-level disabled/dimmed
+  // treatment; it is the single highest-precedence preview state.
+  const isExpired = previewState === "expired"
   // Untitled diagrams keep an empty real title and show a muted placeholder.
   const isUntitled = !diagram.title.trim()
   const title = diagram.title.trim() || "Untitled diagram"
@@ -712,12 +718,6 @@ export function DiagramCardView({
   const lightDataUrl = thumbnail?.lightDataUrl ?? null
   const darkDataUrl = thumbnail?.darkDataUrl ?? null
 
-  const shouldRenderDiagramThumbnail =
-    !showPlaceholderIcon && Boolean(lightDataUrl)
-  // Non-empty diagram with no thumbnail yet — treat as loading to avoid
-  // flashing the fallback type icon during the pre-warmup delay.
-  const isEffectivelyLoading =
-    isThumbnailLoading || (!showPlaceholderIcon && !lightDataUrl)
   // Re-render once a minute (via a shared interval) so the relative date stays fresh.
   useMinuteTick()
   const relativeDate = formatRelativeLastModified(
@@ -794,9 +794,7 @@ export function DiagramCardView({
             title={title}
             lightDataUrl={lightDataUrl}
             darkDataUrl={darkDataUrl}
-            showThumbnail={shouldRenderDiagramThumbnail}
-            isLoading={isEffectivelyLoading && !showPlaceholderIcon}
-            isExpired={isExpired}
+            state={previewState}
           />
 
           <CardContent className="mt-auto w-full px-0 text-left">
@@ -892,11 +890,14 @@ export function DiagramCardView({
 
 type DiagramCardProps = {
   diagram: RecentDiagram
-  isThumbnailLoading?: boolean
-  showPlaceholderIcon?: boolean
+  /**
+   * The requested preview state from the gallery (`"expired"`/`"placeholder"`
+   * resolve directly; `"loading"`/`"thumbnail"` are finalized here against the
+   * actual thumbnail data so the eventual rendered state matches the data).
+   */
+  previewState: DiagramPreviewState
   showSourceBadge?: boolean
   isHighlighted?: boolean
-  isExpired?: boolean
   onToggleFavorite?: (diagram: RecentDiagram) => void
   onSharedDiagramRemoved?: (diagramId: string) => void
   onSharedDiagramViewChange?: (diagramId: string, view: DiagramView) => void
@@ -911,11 +912,9 @@ type DiagramCardProps = {
 
 const DiagramCardComponent = ({
   diagram,
-  isThumbnailLoading = false,
-  showPlaceholderIcon = false,
+  previewState,
   showSourceBadge = false,
   isHighlighted = false,
-  isExpired = false,
   onToggleFavorite,
   onSharedDiagramRemoved,
   onSharedDiagramViewChange,
@@ -931,6 +930,7 @@ const DiagramCardComponent = ({
     (state) => state.thumbnailRevisions[diagram.id] ?? 0
   )
 
+  const isExpired = previewState === "expired"
   const isLocalDiagram = (diagram.source ?? "local") === "local"
   const canToggleFavorite =
     !isExpired && (isLocalDiagram || Boolean(onToggleFavorite))
@@ -980,16 +980,24 @@ const DiagramCardComponent = ({
     })
   }, [thumbnailCacheKey, thumbnailSvg])
 
+  // Expired/placeholder are terminal; loading vs thumbnail is decided here by the
+  // actual thumbnail data (a non-empty diagram with no thumbnail yet shimmers as
+  // loading to avoid flashing the fallback type icon during the pre-warmup delay).
+  const resolvedPreviewState: DiagramPreviewState =
+    previewState === "expired" || previewState === "placeholder"
+      ? previewState
+      : lightDataUrl
+        ? "thumbnail"
+        : "loading"
+
   return (
     <DiagramCardView
       ref={cardRef}
       diagram={diagram}
       thumbnail={lightDataUrl ? { lightDataUrl, darkDataUrl } : null}
-      isThumbnailLoading={isThumbnailLoading}
-      showPlaceholderIcon={showPlaceholderIcon}
+      previewState={resolvedPreviewState}
       showSourceBadge={showSourceBadge}
       isHighlighted={isHighlighted}
-      isExpired={isExpired}
       isFavorite={diagram.favorite}
       onToggleFavorite={
         canToggleFavorite

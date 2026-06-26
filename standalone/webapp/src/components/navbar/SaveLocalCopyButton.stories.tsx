@@ -45,10 +45,11 @@ const meta = {
       description: "Explicit foreground colour (themed mobile dropdown).",
       table: { category: "Appearance" },
     },
-    iconOnly: {
-      control: "boolean",
+    variant: {
+      control: "inline-radio",
+      options: ["bar", "icon", "menuItem"],
       description:
-        "Icon-only presentation (always hides the label, always tooltips).",
+        "Presentation: desktop bar / icon-only (always tooltips) / dropdown menu-item row.",
       table: { category: "Appearance" },
     },
   },
@@ -62,7 +63,7 @@ export const Default: Story = {}
 
 /** Icon-only presentation (the editor mobile pill). */
 export const IconOnly: Story = {
-  args: { iconOnly: true },
+  args: { variant: "icon" },
 }
 
 /** On a non-shared route the button self-hides (renders nothing). */

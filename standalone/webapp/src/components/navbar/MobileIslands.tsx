@@ -216,7 +216,7 @@ export function MobileActionsPill() {
           <>
             <FileMenuItems onSelect={close} />
             <DropdownMenuSeparator />
-            <SaveLocalCopyButton asMenuItem onAfter={close} />
+            <SaveLocalCopyButton variant="menuItem" onAfter={close} />
           </>
         )}
       </MobileMenuButton>
@@ -232,7 +232,7 @@ export function MobileActionsPill() {
       >
         <ShareIcon className="size-4" aria-hidden />
       </IconButton>
-      <VersionHistoryButton iconOnly />
+      <VersionHistoryButton variant="icon" />
 
       {/* Help — its OWN dropdown (separate from File). The shared Help/legal body
           in the editor variant. */}

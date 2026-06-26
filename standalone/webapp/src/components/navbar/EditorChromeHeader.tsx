@@ -28,7 +28,10 @@ export function EditorChromeHeader() {
 
   if (!headerHost) return null
   return createPortal(
-    <EditorHeaderRow isNarrow={isNarrow} hideBrand={isNarrow || isNative} />,
+    <EditorHeaderRow
+      layout={isNarrow ? "narrow" : "full"}
+      hideBrand={isNarrow || isNative}
+    />,
     headerHost
   )
 }
