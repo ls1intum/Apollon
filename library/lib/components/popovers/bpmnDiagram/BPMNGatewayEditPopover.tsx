@@ -30,7 +30,6 @@ export const BPMNGatewayEditPopover: React.FC<PopoverProps> = ({
   return (
     <PopoverLayout title="Gateway">
       <TextField
-        size="small"
         label="Name"
         value={data.name ?? ""}
         onChange={(e) => handleNameChange(e.target.value)}

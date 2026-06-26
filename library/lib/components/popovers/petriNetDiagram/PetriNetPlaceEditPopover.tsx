@@ -81,7 +81,6 @@ export const PetriNetPlaceEditPopover: React.FC<PopoverProps> = ({
               const numValue = parseInt(value)
               handleTokensChange(value === "" || isNaN(numValue) ? 0 : numValue)
             }}
-            size="small"
             value={nodeData.tokens ?? 0}
             fullWidth
           />
@@ -110,7 +109,6 @@ export const PetriNetPlaceEditPopover: React.FC<PopoverProps> = ({
                   handleCapacityChange(isNaN(numValue) ? undefined : numValue)
                 }
               }}
-              size="small"
               value={
                 nodeData.capacity === "Infinity"
                   ? ""

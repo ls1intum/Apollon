@@ -224,9 +224,7 @@ export const EditableAttributeList: React.FC<Props> = ({ nodeId }) => {
 
       <div className="apollon-add-row">
         <TextField
-          size="small"
           fullWidth
-          variant="outline"
           aria-label="New attribute"
           placeholder="Add attribute"
           value={newItem}

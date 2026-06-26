@@ -219,9 +219,7 @@ export const EditableMethodsList: React.FC<Props> = ({ nodeId }) => {
 
       <div className="apollon-add-row">
         <TextField
-          size="small"
           fullWidth
-          variant="outline"
           aria-label="New method"
           placeholder="Add method"
           value={newItem}

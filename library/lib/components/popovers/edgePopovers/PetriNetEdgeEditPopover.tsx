@@ -47,7 +47,6 @@ export const PetriNetEdgeEditPopover: React.FC<PopoverProps> = ({
           value={edgeData?.label ?? ""}
           onChange={(e) => handleLabelChange(e.target.value)}
           placeholder="Weight"
-          size="small"
           fullWidth
         />
       </PopoverSection>

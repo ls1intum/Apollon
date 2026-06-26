@@ -74,7 +74,6 @@ export const DeploymentNodeEditPopover: React.FC<PopoverProps> = ({
           value={nodeData.stereotype}
           onChange={(e) => handleStereotypeChange(e.target.value)}
           onBlur={() => handleStereotypeChange(nodeData.stereotype)}
-          size="small"
           placeholder="e.g. «device»"
           fullWidth
         />

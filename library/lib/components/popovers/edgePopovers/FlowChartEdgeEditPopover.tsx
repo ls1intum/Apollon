@@ -47,7 +47,6 @@ export const FlowChartEdgeEditPopover: React.FC<PopoverProps> = ({
           value={edgeData?.label ?? ""}
           onChange={(e) => handleLabelChange(e.target.value)}
           placeholder="Label"
-          size="small"
           fullWidth
         />
       </PopoverSection>

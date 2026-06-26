@@ -178,7 +178,6 @@ export const CommunicationDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
               <TextField
                 value={message.text}
                 onChange={(e) => handleMessageTextUpdate(index, e.target.value)}
-                size="small"
                 fullWidth
                 placeholder={`Message ${index + 1}`}
                 error={isDuplicateText}
@@ -202,7 +201,6 @@ export const CommunicationDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
           value={newLabelInput}
           onChange={(e) => handleInputChange(e.target.value)}
           onKeyDown={handleKeyDown}
-          size="small"
           fullWidth
           placeholder="+ Add Message"
           error={duplicateError}

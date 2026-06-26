@@ -25,16 +25,12 @@ export interface TextFieldProps {
   type?: React.HTMLInputTypeAttribute
   disabled?: boolean
   autoFocus?: boolean
-  size?: "small" | "medium"
   fullWidth?: boolean
   multiline?: boolean
   minRows?: number
-  maxRows?: number
   maxLength?: number
   error?: boolean
   helperText?: React.ReactNode
-  /** Accepted for API compatibility; ignored. */
-  variant?: string
   sx?: React.CSSProperties
   className?: string
   style?: React.CSSProperties
@@ -58,17 +54,12 @@ export const TextField: React.FC<TextFieldProps> = ({
   type,
   disabled,
   autoFocus,
-  // accepted for API compatibility; the shared control owns its sizing
-  size: _size = "medium",
   fullWidth,
   multiline,
   minRows,
-  // accepted for API compatibility; native <textarea> has no auto-grow
-  maxRows: _maxRows,
   maxLength,
   error,
   helperText,
-  variant: _variant,
   sx,
   className,
   style,

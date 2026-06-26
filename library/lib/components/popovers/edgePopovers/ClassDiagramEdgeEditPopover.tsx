@@ -78,7 +78,6 @@ export const EdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
           label={`${sourceName} Multiplicity`}
           value={edgeData?.sourceMultiplicity ?? ""}
           onChange={(e) => handleSourceMultiplicityChange(e.target.value)}
-          size="small"
           fullWidth
           data-testid="edge-source-multiplicity"
         />
@@ -86,7 +85,6 @@ export const EdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
           label={`${sourceName} Role`}
           value={edgeData?.sourceRole ?? ""}
           onChange={(e) => handleSourceRoleChange(e.target.value)}
-          size="small"
           fullWidth
           data-testid="edge-source-role"
         />
@@ -97,7 +95,6 @@ export const EdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
           label={`${targetName} Multiplicity`}
           value={edgeData?.targetMultiplicity ?? ""}
           onChange={(e) => handleTargetMultiplicityChange(e.target.value)}
-          size="small"
           fullWidth
           data-testid="edge-target-multiplicity"
         />
@@ -105,7 +102,6 @@ export const EdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
           label={`${targetName} Role`}
           value={edgeData?.targetRole ?? ""}
           onChange={(e) => handleTargetRoleChange(e.target.value)}
-          size="small"
           fullWidth
           data-testid="edge-target-role"
         />

@@ -32,7 +32,6 @@ export const BPMNEndEventEditPopover: React.FC<PopoverProps> = ({
   return (
     <PopoverLayout title="End Event">
       <TextField
-        size="small"
         label="Name"
         value={data.name ?? ""}
         onChange={(e) => handleNameChange(e.target.value)}

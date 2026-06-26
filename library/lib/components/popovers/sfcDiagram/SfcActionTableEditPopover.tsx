@@ -164,7 +164,6 @@ export const SfcActionTableEditPopover: React.FC<PopoverProps> = ({
               preElements={[
                 <TextField
                   key={`${row.id}-identifier`}
-                  size="small"
                   value={row.identifier}
                   placeholder="ID"
                   onChange={(e: ChangeEvent<HTMLInputElement>) =>
@@ -188,7 +187,6 @@ export const SfcActionTableEditPopover: React.FC<PopoverProps> = ({
           }}
         >
           <TextField
-            size="small"
             placeholder="ID"
             value={newIdentifier}
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
@@ -209,7 +207,6 @@ export const SfcActionTableEditPopover: React.FC<PopoverProps> = ({
             }}
           />
           <TextField
-            size="small"
             fullWidth
             placeholder="+ Add action name"
             value={newName}

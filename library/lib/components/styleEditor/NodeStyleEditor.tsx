@@ -73,12 +73,10 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
       )}
       {showNameInputChange && (
         <TextField
-          variant="outline"
           onChange={(event) =>
             handleDataFieldUpdate("name", event.target.value)
           }
           sx={{ flex: 1, minWidth: 90 }}
-          size="small"
           value={nodeData.name ?? ""}
           placeholder={inputPlaceholder}
           // Only enable multiline — which lets Enter insert a hard line
@@ -86,7 +84,6 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
           // Single-line nodes keep their classic single-line <input>.
           multiline={isMultilineName}
           minRows={isMultilineName ? 1 : undefined}
-          maxRows={isMultilineName ? 6 : undefined}
         />
       )}
     </StyleEditorPanel>

@@ -78,7 +78,6 @@ export const UseCaseEdgeEditPopover: React.FC<PopoverProps> = ({
           <TextField
             value={edgeData?.label ?? ""}
             onChange={(e) => handleLabelChange(e.target.value)}
-            size="small"
             fullWidth
             placeholder="Label"
           />

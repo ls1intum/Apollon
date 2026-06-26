@@ -104,7 +104,6 @@ export const SfcEdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
           value={edgeData.displayName}
           onChange={(e) => handleDisplayNameChange(e.target.value)}
           placeholder="Condition"
-          size="small"
           fullWidth
         />
 

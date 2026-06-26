@@ -80,7 +80,6 @@ const SortableLaneRow: React.FC<LaneRowProps> = ({
         <GripVertical width={16} height={16} />
       </div>
       <TextField
-        size="small"
         // flex + minWidth:0 so the field shrinks to leave room for the controls;
         // `fullWidth` (100%) would push them out of the popover and clip them.
         sx={{ flex: 1, minWidth: 0 }}

@@ -86,13 +86,11 @@ export const GiveFeedbackAssessmentBox = ({
           updateAssessment(value, feedback)
         }}
         placeholder="Points"
-        size="small"
         fullWidth
       />
       <TextField
         multiline
         minRows={3}
-        maxRows={6}
         maxLength={500}
         value={feedback}
         onChange={(e) => {
@@ -101,7 +99,6 @@ export const GiveFeedbackAssessmentBox = ({
           updateAssessment(score, value)
         }}
         placeholder="Feedback"
-        size="small"
         fullWidth
       />
     </PopoverSection>
