@@ -495,7 +495,10 @@ importers:
     dependencies:
       '@tumaet/apollon':
         specifier: workspace:*
-        version: file:library(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(@xyflow/react@12.9.3(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(use-sync-external-store@1.6.0(react@19.2.7))
+        version: link:../../library
+      '@xyflow/react':
+        specifier: 'catalog:'
+        version: 12.9.3(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       canvas:
         specifier: npm:@napi-rs/canvas@1.0.0
         version: '@napi-rs/canvas@1.0.0'
@@ -529,6 +532,12 @@ importers:
       pino-http:
         specifier: 10.4.0
         version: 10.4.0
+      react:
+        specifier: 'catalog:'
+        version: 19.2.7
+      react-dom:
+        specifier: 'catalog:'
+        version: 19.2.7(react@19.2.7)
       redis:
         specifier: 5.11.0
         version: 5.11.0
@@ -566,6 +575,12 @@ importers:
       '@types/pdfmake':
         specifier: 0.3.3
         version: 0.3.3
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.2.17
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 19.2.3(@types/react@19.2.17)
       '@types/supertest':
         specifier: 6.0.2
         version: 6.0.2
