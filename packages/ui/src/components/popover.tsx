@@ -80,8 +80,13 @@ function useAnchorLossGuard(open: boolean): {
 
 // Shared between the Popover and Menu primitives: the Root captures the
 // open/close machinery, the Content's Positioner consumes the guard ref.
-const AnchorLossGuardContext =
-  React.createContext<React.RefCallback<HTMLDivElement> | null>(null)
+// Typed as a plain void-returning callback (not `React.RefCallback`, whose
+// React-19 cleanup-return references an internal `@types/react` brand that
+// `tsc` can't name in the emitted `.d.ts` — TS4023); a `(node) => void` is
+// still a valid `ref` callback at the use site.
+const AnchorLossGuardContext = React.createContext<
+  ((node: HTMLDivElement | null) => void) | null
+>(null)
 
 function Popover({
   open: openProp,
