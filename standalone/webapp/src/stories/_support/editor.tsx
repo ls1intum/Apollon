@@ -22,7 +22,7 @@ import {
 } from "@xyflow/react"
 import { useShallow } from "zustand/shallow"
 
-import { Apollon } from "@tumaet/apollon/react"
+import { Apollon, ApollonMode } from "@tumaet/apollon/react"
 import type { UMLModel, UMLDiagramType, DiagramEdgeType } from "@tumaet/apollon"
 import { ApollonView } from "@tumaet/apollon/typings"
 import { Sidebar } from "@tumaet/apollon/components/Sidebar"
@@ -173,6 +173,41 @@ export function ApollonEditable({
     <Apollon
       defaultModel={model}
       defaultType={type}
+      enablePopups
+      dataTheme={dataTheme}
+      style={{ height, width: "100%" }}
+    />
+  )
+}
+
+/**
+ * The full editor mounted in ASSESSMENT mode — the grading surface. This is the
+ * counterpart to <ApollonEditable>: it drives the editor with the exact same
+ * prop the `/playground` page uses (`mode={ApollonMode.Assessment}`), so the
+ * give-/see-feedback popovers wire up identically to production.
+ *
+ * - `readonly={false}` (default) → the GIVE-feedback workflow: clicking an
+ *   element opens its give-feedback popover to enter a score + comment.
+ * - `readonly` → the SEE-feedback (review) workflow: popovers show the stored
+ *   assessment read-only. Pass a `model` whose `assessments` are populated to
+ *   see filled-in feedback.
+ */
+export function ApollonAssessable({
+  model,
+  readonly = false,
+  height = "100vh",
+  dataTheme,
+}: {
+  model: UMLModel
+  readonly?: boolean
+  height?: number | string
+  dataTheme?: "light" | "dark"
+}) {
+  return (
+    <Apollon
+      defaultModel={model}
+      mode={ApollonMode.Assessment}
+      readonly={readonly}
       enablePopups
       dataTheme={dataTheme}
       style={{ height, width: "100%" }}

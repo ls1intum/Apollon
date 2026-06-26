@@ -11,6 +11,8 @@ import {
   makeEdge,
 } from "../_support/editor"
 import { ObjectEditPopover } from "@tumaet/apollon/components/popovers/objectDiagram/ObjectEditPopover"
+import { ObjectGiveFeedbackPopover } from "@tumaet/apollon/components/popovers/objectDiagram/ObjectGiveFeedbackPopover"
+import { ObjectSeeFeedbackPopover } from "@tumaet/apollon/components/popovers/objectDiagram/ObjectSeeFeedbackPopover"
 import { ObjectDiagramEdgeEditPopover } from "@tumaet/apollon/components/popovers/edgePopovers/ObjectDiagramEdgeEditPopover"
 
 const meta = {
@@ -92,6 +94,75 @@ export const EditObjectLink: Story = {
       }}
     >
       <ObjectDiagramEdgeEditPopover elementId="edge-1" />
+    </SeededPopoverHarness>
+  ),
+}
+
+// ── Feedback popovers (Assessment mode) ──────────────────────────────────────
+// Give = the grader's score + comment form; See = the read-only review. The See
+// story seeds the diagram store's `assessments` map (keyed by model-element id),
+// which is where SeeFeedbackAssessmentBox reads score/feedback via getAssessment.
+
+/** Give-feedback form for an object node — score + comment for node, attrs, methods. */
+export const GiveFeedbackObject: Story = {
+  name: "Feedback (Give): Object",
+  parameters: { layout: "centered" },
+  render: () => (
+    <SeededPopoverHarness
+      diagramType="ObjectDiagram"
+      seed={(diagram) =>
+        diagram.getState().addNode(
+          makeNode("object-1", "objectName", {
+            name: "account: Account",
+            attributes: [{ id: "a1", name: "balance = 1200" }],
+            methods: [{ id: "m1", name: "deposit(amount)" }],
+          })
+        )
+      }
+    >
+      <ObjectGiveFeedbackPopover elementId="object-1" />
+    </SeededPopoverHarness>
+  ),
+}
+
+/** See-feedback (read-only) view of an object node with a graded assessment. */
+export const SeeFeedbackObject: Story = {
+  name: "Feedback (See): Object",
+  parameters: { layout: "centered" },
+  render: () => (
+    <SeededPopoverHarness
+      diagramType="ObjectDiagram"
+      seed={(diagram) => {
+        diagram.getState().addNode(
+          makeNode("object-1", "objectName", {
+            name: "account: Account",
+            attributes: [{ id: "a1", name: "balance = 1200" }],
+            methods: [{ id: "m1", name: "deposit(amount)" }],
+          })
+        )
+        diagram.getState().setAssessments({
+          "object-1": {
+            modelElementId: "object-1",
+            elementType: "node",
+            score: 5,
+            feedback: "Correct instance — names the class it instantiates.",
+          },
+          a1: {
+            modelElementId: "a1",
+            elementType: "attribute",
+            score: 2,
+            feedback: "Concrete value supplied, good.",
+          },
+          m1: {
+            modelElementId: "m1",
+            elementType: "method",
+            score: 0,
+            feedback: "Objects typically omit methods in an object diagram.",
+          },
+        })
+      }}
+    >
+      <ObjectSeeFeedbackPopover elementId="object-1" />
     </SeededPopoverHarness>
   ),
 }

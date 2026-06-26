@@ -11,6 +11,8 @@ import {
   makeEdge,
 } from "../_support/editor"
 import { DefaultNodeEditPopover } from "@tumaet/apollon/components/popovers/DefaultNodeEditPopover"
+import { DefaultNodeGiveFeedbackPopover } from "@tumaet/apollon/components/popovers/DefaultNodeGiveFeedbackPopover"
+import { DefaultNodeSeeFeedbackPopover } from "@tumaet/apollon/components/popovers/DefaultNodeSeeFeedbackPopover"
 import { UseCaseEdgeEditPopover } from "@tumaet/apollon/components/popovers/edgePopovers/UseCaseDiagramEdgeEditPopover"
 
 const meta = {
@@ -117,6 +119,56 @@ export const EditInclude: Story = {
       }}
     >
       <UseCaseEdgeEditPopover elementId="edge-1" />
+    </SeededPopoverHarness>
+  ),
+}
+
+// ── Feedback popovers (Assessment mode) ──────────────────────────────────────
+// Use cases render via the shared DEFAULT node, so these also exercise the
+// DefaultNode give/see feedback popovers used across most diagram families.
+// Give = the grader's score + comment form; See = the read-only review, which
+// reads from the diagram store's `assessments` map (keyed by model-element id).
+
+/** Give-feedback form for a use case (shared default-node feedback popover). */
+export const GiveFeedbackUseCase: Story = {
+  name: "Feedback (Give): Use Case",
+  parameters: { layout: "centered" },
+  render: () => (
+    <SeededPopoverHarness
+      diagramType="UseCaseDiagram"
+      seed={(diagram) =>
+        diagram
+          .getState()
+          .addNode(makeNode("usecase-1", "useCase", { name: "Place Order" }))
+      }
+    >
+      <DefaultNodeGiveFeedbackPopover elementId="usecase-1" />
+    </SeededPopoverHarness>
+  ),
+}
+
+/** See-feedback (read-only) view of a use case with a graded assessment. */
+export const SeeFeedbackUseCase: Story = {
+  name: "Feedback (See): Use Case",
+  parameters: { layout: "centered" },
+  render: () => (
+    <SeededPopoverHarness
+      diagramType="UseCaseDiagram"
+      seed={(diagram) => {
+        diagram
+          .getState()
+          .addNode(makeNode("usecase-1", "useCase", { name: "Place Order" }))
+        diagram.getState().setAssessments({
+          "usecase-1": {
+            modelElementId: "usecase-1",
+            elementType: "node",
+            score: 3,
+            feedback: "Clear, goal-oriented use-case name.",
+          },
+        })
+      }}
+    >
+      <DefaultNodeSeeFeedbackPopover elementId="usecase-1" />
     </SeededPopoverHarness>
   ),
 }

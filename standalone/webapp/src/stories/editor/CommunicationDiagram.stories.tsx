@@ -11,6 +11,8 @@ import {
   makeEdge,
 } from "../_support/editor"
 import { CommunicationObjectNameEditPopover } from "@tumaet/apollon/components/popovers/communicationDiagram/CommunicationObjectNameEditPopover"
+import { CommunicationObjectNameGiveFeedbackPopover } from "@tumaet/apollon/components/popovers/communicationDiagram/CommunicationObjectNameGiveFeedbackPopover"
+import { CommunicationObjectNameSeeFeedbackPopover } from "@tumaet/apollon/components/popovers/communicationDiagram/CommunicationObjectNameSeeFeedbackPopover"
 import { CommunicationDiagramEdgeEditPopover } from "@tumaet/apollon/components/popovers/edgePopovers/CommunicationDiagramEdgeEditPopover"
 
 const meta = {
@@ -100,6 +102,75 @@ export const EditCommunicationLink: Story = {
       }}
     >
       <CommunicationDiagramEdgeEditPopover elementId="edge-1" />
+    </SeededPopoverHarness>
+  ),
+}
+
+// ── Feedback popovers (Assessment mode) ──────────────────────────────────────
+// Give = the grader's score + comment form; See = the read-only review. The See
+// story seeds the diagram store's `assessments` map (keyed by model-element id),
+// which is where SeeFeedbackAssessmentBox reads score/feedback via getAssessment.
+
+/** Give-feedback form for a communication object — score + comment per row. */
+export const GiveFeedbackCommunicationObject: Story = {
+  name: "Feedback (Give): Communication Object",
+  parameters: { layout: "centered" },
+  render: () => (
+    <SeededPopoverHarness
+      diagramType="CommunicationDiagram"
+      seed={(diagram) =>
+        diagram.getState().addNode(
+          makeNode("object-1", "communicationObjectName", {
+            name: "cart: ShoppingCart",
+            attributes: [{ id: "a1", name: "itemCount = 3" }],
+            methods: [{ id: "m1", name: "checkout()" }],
+          })
+        )
+      }
+    >
+      <CommunicationObjectNameGiveFeedbackPopover elementId="object-1" />
+    </SeededPopoverHarness>
+  ),
+}
+
+/** See-feedback (read-only) view of a communication object with an assessment. */
+export const SeeFeedbackCommunicationObject: Story = {
+  name: "Feedback (See): Communication Object",
+  parameters: { layout: "centered" },
+  render: () => (
+    <SeededPopoverHarness
+      diagramType="CommunicationDiagram"
+      seed={(diagram) => {
+        diagram.getState().addNode(
+          makeNode("object-1", "communicationObjectName", {
+            name: "cart: ShoppingCart",
+            attributes: [{ id: "a1", name: "itemCount = 3" }],
+            methods: [{ id: "m1", name: "checkout()" }],
+          })
+        )
+        diagram.getState().setAssessments({
+          "object-1": {
+            modelElementId: "object-1",
+            elementType: "node",
+            score: 4,
+            feedback: "Names the participating object clearly.",
+          },
+          a1: {
+            modelElementId: "a1",
+            elementType: "attribute",
+            score: 1,
+            feedback: "Concrete state shown.",
+          },
+          m1: {
+            modelElementId: "m1",
+            elementType: "method",
+            score: 2,
+            feedback: "Matches a message sent to this object.",
+          },
+        })
+      }}
+    >
+      <CommunicationObjectNameSeeFeedbackPopover elementId="object-1" />
     </SeededPopoverHarness>
   ),
 }
