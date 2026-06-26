@@ -169,7 +169,7 @@ export const SfcActionTableEditPopover: React.FC<PopoverProps> = ({
                   onChange={(e: ChangeEvent<HTMLInputElement>) =>
                     handleRowChange(row.id, "identifier", e.target.value)
                   }
-                  sx={{
+                  style={{
                     width: "60px",
                   }}
                 />,
@@ -202,7 +202,7 @@ export const SfcActionTableEditPopover: React.FC<PopoverProps> = ({
             onKeyDown={(e) => handleKeyDown(e, "identifier")}
             data-field="identifier"
             data-new="true"
-            sx={{
+            style={{
               width: "60px",
             }}
           />

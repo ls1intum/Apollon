@@ -1,8 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { within } from "storybook/test"
+import type { Assessment, UMLModel } from "@tumaet/apollon"
 import {
   editorStoryMeta,
   ApollonEditable,
+  ApollonAssessable,
   fixtureByType,
   EditorStoreDecorator,
   ElementGallery,
@@ -259,4 +261,86 @@ export const SeeFeedbackControlFlow: Story = {
       "The guard condition should label this control flow."
     )
   },
+}
+
+// ── Assessment editor (full editor, grading mode) ────────────────────────────
+/** The full editor in Assessment mode — click an element to give feedback. */
+export const Assessment: Story = {
+  name: "Assessment: Give Feedback",
+  parameters: { layout: "fullscreen" },
+  render: () => <ApollonAssessable model={fixtureByType.ActivityDiagram} />,
+}
+
+// The shipped ActivityDiagram fixture has `assessments: {}`, so the read-only
+// review surface would render an entirely UNGRADED diagram. Spread a real
+// assessment map (keyed by the fixture's actual node / edge ids — read from
+// tests/fixtures/activity-diagram.json) so the canvas shows every on-canvas
+// AssessmentIcon state at once: score>0 → green check, score<0 → red cross,
+// score===0 → blue warn, plus graded-without-feedback, while several elements
+// (Start, Fork, End, …) stay ungraded (no icon).
+const A = (
+  modelElementId: string,
+  elementType: string,
+  score: number,
+  feedback?: string
+): Assessment => ({ modelElementId, elementType, score, feedback })
+
+const gradedActivityModel: UMLModel = {
+  ...fixtureByType.ActivityDiagram,
+  assessments: {
+    // ── green (score > 0) ──
+    "770e8400-e29b-41d4-a716-446655440021": A(
+      "770e8400-e29b-41d4-a716-446655440021",
+      "node",
+      5,
+      "Clear, verb-first activity name."
+    ),
+    "edge-flow-initial-process": A(
+      "edge-flow-initial-process",
+      "edge",
+      1,
+      "Correct control flow out of the initial node."
+    ),
+    // ── red (score < 0) ──
+    "770e8400-e29b-41d4-a716-446655440023": A(
+      "770e8400-e29b-41d4-a716-446655440023",
+      "node",
+      -2,
+      "Ship Item should be an activity, not a bare action here."
+    ),
+    "edge-flow-process-merge": A(
+      "edge-flow-process-merge",
+      "edge",
+      -1,
+      "This flow should target the decision, not a merge node."
+    ),
+    // ── blue (score === 0) ──
+    "770e8400-e29b-41d4-a716-446655440022": A(
+      "770e8400-e29b-41d4-a716-446655440022",
+      "node",
+      0,
+      "Acceptable, but adds no points here."
+    ),
+    // ── graded, but no feedback (icon shows, no comment) ──
+    "770e8400-e29b-41d4-a716-446655440024": A(
+      "770e8400-e29b-41d4-a716-446655440024",
+      "node",
+      2
+    ),
+    // Start (…440020), Fork (…440025), End (…440026), HFork (…440027) and the
+    // remaining edges are intentionally left UNGRADED (no icon).
+  },
+}
+
+/**
+ * The full editor in Assessment + readonly mode — the see-feedback review
+ * surface, rendered over a fully GRADED model so every on-canvas
+ * AssessmentIcon state shows: green check (score>0), red cross (score<0),
+ * blue warn (score===0), plus graded-without-feedback, with several elements
+ * left ungraded.
+ */
+export const AssessmentReview: Story = {
+  name: "Assessment: See Feedback (graded)",
+  parameters: { layout: "fullscreen" },
+  render: () => <ApollonAssessable model={gradedActivityModel} readonly />,
 }

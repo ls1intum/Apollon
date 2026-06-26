@@ -1,8 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { within } from "storybook/test"
+import type { Assessment, UMLModel } from "@tumaet/apollon"
 import {
   editorStoryMeta,
   ApollonEditable,
+  ApollonAssessable,
   fixtureByType,
   EditorStoreDecorator,
   ElementGallery,
@@ -200,13 +202,11 @@ export const GiveFeedbackArc: Story = {
             isInitialMarking: false,
           })
         )
-        diagram
-          .getState()
-          .addEdge(
-            makeEdge("edge-1", "ReachabilityGraphArc", "a", "b", {
-              label: "t1",
-            })
-          )
+        diagram.getState().addEdge(
+          makeEdge("edge-1", "ReachabilityGraphArc", "a", "b", {
+            label: "t1",
+          })
+        )
       }}
     >
       <EdgeGiveFeedbackPopover elementId="edge-1" />
@@ -241,13 +241,11 @@ export const SeeFeedbackArc: Story = {
             isInitialMarking: false,
           })
         )
-        diagram
-          .getState()
-          .addEdge(
-            makeEdge("edge-1", "ReachabilityGraphArc", "a", "b", {
-              label: "t1",
-            })
-          )
+        diagram.getState().addEdge(
+          makeEdge("edge-1", "ReachabilityGraphArc", "a", "b", {
+            label: "t1",
+          })
+        )
         diagram.getState().setAssessments({
           "edge-1": {
             modelElementId: "edge-1",
@@ -267,4 +265,89 @@ export const SeeFeedbackArc: Story = {
     await canvas.findByText("+2")
     await canvas.findByText("Firing t1 correctly reaches the next marking.")
   },
+}
+
+// ── Assessment editor (full editor, grading mode) ────────────────────────────
+/** The full editor in Assessment mode — click an element to give feedback. */
+export const Assessment: Story = {
+  name: "Assessment: Give Feedback",
+  parameters: { layout: "fullscreen" },
+  render: () => <ApollonAssessable model={fixtureByType.ReachabilityGraph} />,
+}
+
+// The shipped ReachabilityGraph fixture has `assessments: {}`, so the read-only
+// review surface would render an entirely UNGRADED diagram. Spread a real
+// assessment map (keyed by the fixture's actual marking / arc ids — read from
+// tests/fixtures/reachability-graph.json) so the canvas shows every on-canvas
+// AssessmentIcon state at once: score>0 → green check, score<0 → red cross,
+// score===0 → blue warn, plus graded-without-feedback, while >=1 element stays
+// ungraded (no icon).
+const A = (
+  modelElementId: string,
+  elementType: string,
+  score: number,
+  feedback?: string
+): Assessment => ({ modelElementId, elementType, score, feedback })
+
+const gradedReachabilityGraphModel: UMLModel = {
+  ...fixtureByType.ReachabilityGraph,
+  assessments: {
+    // ── green (score > 0) ──
+    "aaaa1111-bbbb-4ccc-dddd-eeee11111111": A(
+      "aaaa1111-bbbb-4ccc-dddd-eeee11111111",
+      "node",
+      5,
+      "Correct initial marking (2,0,0)."
+    ),
+    "aaaa2222-bbbb-4ccc-dddd-eeee22222222": A(
+      "aaaa2222-bbbb-4ccc-dddd-eeee22222222",
+      "node",
+      2,
+      "Reachable marking (1,1,0) is correct."
+    ),
+    "edge-200-110": A(
+      "edge-200-110",
+      "edge",
+      2,
+      "Firing this transition reaches (1,1,0)."
+    ),
+    // ── red (score < 0) ──
+    "aaaa3333-bbbb-4ccc-dddd-eeee33333333": A(
+      "aaaa3333-bbbb-4ccc-dddd-eeee33333333",
+      "node",
+      -1,
+      "Marking (1,0,1) is not actually reachable here."
+    ),
+    "edge-200-101": A(
+      "edge-200-101",
+      "edge",
+      -1,
+      "This arc represents an impossible firing."
+    ),
+    // ── blue (score === 0) ──
+    "aaaa4444-bbbb-4ccc-dddd-eeee44444444": A(
+      "aaaa4444-bbbb-4ccc-dddd-eeee44444444",
+      "node",
+      0,
+      "Marking (0,1,1) is fine but earns no points."
+    ),
+    // ── graded, but no feedback (icon shows, See popover feedback is "-") ──
+    "edge-110-011": A("edge-110-011", "edge", 3),
+    // edge-101-011 is intentionally left UNGRADED (no icon).
+  },
+}
+
+/**
+ * The full editor in Assessment + readonly mode — the see-feedback review
+ * surface, rendered over a fully GRADED model so every on-canvas
+ * AssessmentIcon state shows: green check (score>0), red cross (score<0),
+ * blue warn (score===0), plus graded-without-feedback, with several elements
+ * left ungraded.
+ */
+export const AssessmentReview: Story = {
+  name: "Assessment: See Feedback (graded)",
+  parameters: { layout: "fullscreen" },
+  render: () => (
+    <ApollonAssessable model={gradedReachabilityGraphModel} readonly />
+  ),
 }

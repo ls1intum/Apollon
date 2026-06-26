@@ -7,44 +7,21 @@ interface AssessmentIconProps {
   y: number
 }
 
+// The on-canvas feedback badge. A soft tone-tinted disc with the matching status
+// glyph — the SAME --apollon-assessment-* tones as the popover score pill, so the
+// canvas and the popover read as one system. Positive = check, negative = cross,
+// zero = alert; an ungraded element renders no badge.
 const AssessmentIcon: React.FC<AssessmentIconProps> = ({ score, x, y }) => {
   if (score === undefined) return null
 
-  const RADIUS = 15
-  const ICON_SIZE = 20
+  const RADIUS = 14
+  const ICON_SIZE = 17
   const centerX = x + RADIUS
   const centerY = y + RADIUS
 
-  const iconProps = {
-    width: ICON_SIZE,
-    height: ICON_SIZE,
-    x: centerX - ICON_SIZE / 2,
-    y: centerY - ICON_SIZE / 2,
-  }
-
-  // The canvas-icon solids from the shared --apollon-assessment-* ramp (tokens.css,
-  // with light/dark deltas), so the canvas badge and the popover score pill read
-  // from one source of truth.
-  const getIconConfig = () => {
-    if (score > 0) {
-      return {
-        Icon: Check,
-        color: "var(--apollon-assessment-icon-positive, #15803d)",
-      }
-    } else if (score < 0) {
-      return {
-        Icon: X,
-        color: "var(--apollon-assessment-icon-negative, #b91c1c)",
-      }
-    } else {
-      return {
-        Icon: TriangleAlert,
-        color: "var(--apollon-assessment-icon-zero, #1d4ed8)",
-      }
-    }
-  }
-
-  const { Icon, color } = getIconConfig()
+  const tone = score > 0 ? "positive" : score < 0 ? "negative" : "zero"
+  const Icon = score > 0 ? Check : score < 0 ? X : TriangleAlert
+  const fg = `var(--apollon-assessment-${tone}-text)`
 
   return (
     <g className="apollon-assessment-icon">
@@ -52,11 +29,18 @@ const AssessmentIcon: React.FC<AssessmentIconProps> = ({ score, x, y }) => {
         cx={centerX}
         cy={centerY}
         r={RADIUS}
-        fill="var(--apollon-assessment-icon-surface, #f0f0f0)"
-        stroke="var(--apollon-assessment-icon-border, #ccc)"
-        opacity={0.7}
+        fill={`var(--apollon-assessment-${tone}-bg)`}
+        stroke={fg}
+        strokeWidth={1.5}
       />
-      <Icon {...iconProps} color={color} />
+      <Icon
+        width={ICON_SIZE}
+        height={ICON_SIZE}
+        x={centerX - ICON_SIZE / 2}
+        y={centerY - ICON_SIZE / 2}
+        color={fg}
+        strokeWidth={2.5}
+      />
     </g>
   )
 }

@@ -31,7 +31,7 @@ export const EdgeStyleEditor: React.FC<EdgeStyleEditorProps> = ({
       sideElements={sideElements}
       headerVariant="edge"
     >
-      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+      <Typography variant="subtitle2" style={{ fontWeight: 600 }}>
         {label}
       </Typography>
     </StyleEditorPanel>

@@ -42,7 +42,7 @@ export const PopoverLayout: React.FC<PopoverLayoutProps> = ({
       {title && (
         <Typography
           variant="subtitle2"
-          sx={{
+          style={{
             textTransform: "uppercase",
             fontWeight: 600,
           }}
@@ -96,7 +96,7 @@ export const PopoverSection: React.FC<PopoverSectionProps> = ({
         }}
       >
         {title ? (
-          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+          <Typography variant="subtitle2" style={{ fontWeight: 600 }}>
             {title}
           </Typography>
         ) : (
@@ -133,7 +133,7 @@ export const ConnectionInfo: React.FC<{
   target?: string
 }> = ({ source, target }) =>
   hasDistinctEndpointNames(source, target) ? (
-    <Typography variant="body2" sx={{ opacity: 0.7 }}>
+    <Typography variant="body2" style={{ opacity: 0.7 }}>
       {source} → {target}
     </Typography>
   ) : null
@@ -157,7 +157,7 @@ export const AssessmentHeader: React.FC<{
   >
     {/* One flowing sentence: the name is an inline highlighted span, so it
         wraps as part of the text instead of floating to its own line. */}
-    <Typography variant="subtitle2" sx={{ flex: 1 }}>
+    <Typography variant="subtitle2" style={{ flex: 1 }}>
       Assessment for {type}
       {name && " "}
       {name && <span data-slot="assessment-name-chip">{name}</span>}

@@ -1,8 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { within } from "storybook/test"
+import type { Assessment, UMLModel } from "@tumaet/apollon"
 import {
   editorStoryMeta,
   ApollonEditable,
+  ApollonAssessable,
   fixtureByType,
   EditorStoreDecorator,
   ElementGallery,
@@ -295,4 +297,86 @@ export const SeeFeedbackAssociation: Story = {
       "The actor should associate with the use case directly."
     )
   },
+}
+
+// ── Assessment editor (full editor, grading mode) ────────────────────────────
+/** The full editor in Assessment mode — click an element to give feedback. */
+export const Assessment: Story = {
+  name: "Assessment: Give Feedback",
+  parameters: { layout: "fullscreen" },
+  render: () => <ApollonAssessable model={fixtureByType.UseCaseDiagram} />,
+}
+
+// The shipped UseCaseDiagram fixture has `assessments: {}`, so the read-only
+// review surface would render an entirely UNGRADED diagram. Spread a real
+// assessment map (keyed by the fixture's actual node / edge ids — read from
+// tests/fixtures/use-case-diagram.json) so the canvas shows every on-canvas
+// AssessmentIcon state at once: score>0 → green check, score<0 → red cross,
+// score===0 → blue warn, plus graded-without-feedback, while several elements
+// (Online Store, Admin, Premium Customer, …) stay ungraded (no icon).
+const A = (
+  modelElementId: string,
+  elementType: string,
+  score: number,
+  feedback?: string
+): Assessment => ({ modelElementId, elementType, score, feedback })
+
+const gradedUseCaseModel: UMLModel = {
+  ...fixtureByType.UseCaseDiagram,
+  assessments: {
+    // ── green (score > 0) ──
+    "880e8400-e29b-41d4-a716-446655440031": A(
+      "880e8400-e29b-41d4-a716-446655440031",
+      "node",
+      5,
+      "Customer is the correct primary actor."
+    ),
+    "edge-assoc-customer-browse": A(
+      "edge-assoc-customer-browse",
+      "edge",
+      2,
+      "Correct association between the actor and the use case."
+    ),
+    // ── red (score < 0) ──
+    "880e8400-e29b-41d4-a716-446655440033": A(
+      "880e8400-e29b-41d4-a716-446655440033",
+      "node",
+      -1,
+      "Browse Products should sit inside the system boundary differently."
+    ),
+    "edge-include-order-browse": A(
+      "edge-include-order-browse",
+      "edge",
+      -1,
+      "This «include» points the wrong way around."
+    ),
+    // ── blue (score === 0) ──
+    "880e8400-e29b-41d4-a716-446655440034": A(
+      "880e8400-e29b-41d4-a716-446655440034",
+      "node",
+      0,
+      "Acceptable, but adds no points here."
+    ),
+    // ── graded, but no feedback (icon shows, no comment) ──
+    "880e8400-e29b-41d4-a716-446655440035": A(
+      "880e8400-e29b-41d4-a716-446655440035",
+      "node",
+      3
+    ),
+    // Online Store (…440030), Admin (…440032), Premium Customer (…440036) and
+    // the remaining edges are intentionally left UNGRADED (no icon).
+  },
+}
+
+/**
+ * The full editor in Assessment + readonly mode — the see-feedback review
+ * surface, rendered over a fully GRADED model so every on-canvas
+ * AssessmentIcon state shows: green check (score>0), red cross (score<0),
+ * blue warn (score===0), plus graded-without-feedback, with several elements
+ * left ungraded.
+ */
+export const AssessmentReview: Story = {
+  name: "Assessment: See Feedback (graded)",
+  parameters: { layout: "fullscreen" },
+  render: () => <ApollonAssessable model={gradedUseCaseModel} readonly />,
 }

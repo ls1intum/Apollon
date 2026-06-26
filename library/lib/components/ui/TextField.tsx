@@ -31,7 +31,6 @@ export interface TextFieldProps {
   maxLength?: number
   error?: boolean
   helperText?: React.ReactNode
-  sx?: React.CSSProperties
   className?: string
   style?: React.CSSProperties
   /** Accessible name for the control when no visible `label` is rendered. */
@@ -60,7 +59,6 @@ export const TextField: React.FC<TextFieldProps> = ({
   maxLength,
   error,
   helperText,
-  sx,
   className,
   style,
   ...rest
@@ -72,7 +70,6 @@ export const TextField: React.FC<TextFieldProps> = ({
     display: "inline-flex",
     flexDirection: "column",
     width: fullWidth ? "100%" : undefined,
-    ...sx,
     ...style,
   }
 

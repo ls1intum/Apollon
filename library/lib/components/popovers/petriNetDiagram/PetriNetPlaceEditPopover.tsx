@@ -70,7 +70,7 @@ export const PetriNetPlaceEditPopover: React.FC<PopoverProps> = ({
             alignItems: "center",
           }}
         >
-          <Typography sx={{ width: 72, flexShrink: 0 }}>Tokens</Typography>
+          <Typography style={{ width: 72, flexShrink: 0 }}>Tokens</Typography>
 
           <TextField
             type="number"
@@ -94,7 +94,7 @@ export const PetriNetPlaceEditPopover: React.FC<PopoverProps> = ({
             alignItems: "center",
           }}
         >
-          <Typography sx={{ width: 72, flexShrink: 0 }}>Capacity</Typography>
+          <Typography style={{ width: 72, flexShrink: 0 }}>Capacity</Typography>
 
           <div style={{ position: "relative", flex: 1 }}>
             <TextField

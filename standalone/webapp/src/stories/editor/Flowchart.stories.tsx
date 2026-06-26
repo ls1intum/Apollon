@@ -1,8 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { within } from "storybook/test"
+import type { Assessment, UMLModel } from "@tumaet/apollon"
 import {
   editorStoryMeta,
   ApollonEditable,
+  ApollonAssessable,
   fixtureByType,
   EditorStoreDecorator,
   ElementGallery,
@@ -119,13 +121,11 @@ export const GiveFeedbackProcess: Story = {
     <SeededPopoverHarness
       diagramType="Flowchart"
       seed={(diagram) =>
-        diagram
-          .getState()
-          .addNode(
-            makeNode("process-1", "flowchartProcess", {
-              name: "Validate input",
-            })
-          )
+        diagram.getState().addNode(
+          makeNode("process-1", "flowchartProcess", {
+            name: "Validate input",
+          })
+        )
       }
     >
       <DefaultNodeGiveFeedbackPopover elementId="process-1" />
@@ -149,13 +149,11 @@ export const SeeFeedbackProcess: Story = {
     <SeededPopoverHarness
       diagramType="Flowchart"
       seed={(diagram) => {
-        diagram
-          .getState()
-          .addNode(
-            makeNode("process-1", "flowchartProcess", {
-              name: "Validate input",
-            })
-          )
+        diagram.getState().addNode(
+          makeNode("process-1", "flowchartProcess", {
+            name: "Validate input",
+          })
+        )
         diagram.getState().setAssessments({
           "process-1": {
             modelElementId: "process-1",
@@ -247,4 +245,86 @@ export const SeeFeedbackFlowline: Story = {
     await canvas.findByText("+2")
     await canvas.findByText("Label the branch that leaves the decision.")
   },
+}
+
+// ── Assessment editor (full editor, grading mode) ────────────────────────────
+/** The full editor in Assessment mode — click an element to give feedback. */
+export const Assessment: Story = {
+  name: "Assessment: Give Feedback",
+  parameters: { layout: "fullscreen" },
+  render: () => <ApollonAssessable model={fixtureByType.Flowchart} />,
+}
+
+// The shipped Flowchart fixture has `assessments: {}`, so the read-only review
+// surface would render an entirely UNGRADED diagram. Spread a real assessment
+// map (keyed by the fixture's actual node / edge ids — read from
+// tests/fixtures/flowchart.json) so the canvas shows every on-canvas
+// AssessmentIcon state at once: score>0 → green check, score<0 → red cross,
+// score===0 → blue warn, plus graded-without-feedback, while the print/cleanup/
+// end steps and the remaining flowlines stay ungraded (no icon).
+const A = (
+  modelElementId: string,
+  elementType: string,
+  score: number,
+  feedback?: string
+): Assessment => ({ modelElementId, elementType, score, feedback })
+
+const gradedFlowchartModel: UMLModel = {
+  ...fixtureByType.Flowchart,
+  assessments: {
+    // ── green (score > 0) ──
+    "10a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c": A(
+      "10a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c",
+      "node",
+      2,
+      "Correct start terminal for the flow."
+    ),
+    "edge-start-init": A(
+      "edge-start-init",
+      "edge",
+      1,
+      "Flowline correctly enters the initialisation step."
+    ),
+    // ── red (score < 0) ──
+    "40d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f": A(
+      "40d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+      "node",
+      -1,
+      "Incrementing here will overflow the loop bound."
+    ),
+    "edge-init-decision": A(
+      "edge-init-decision",
+      "edge",
+      -1,
+      "This flowline bypasses the required guard."
+    ),
+    // ── blue (score === 0) ──
+    "30c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e": A(
+      "30c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+      "node",
+      0,
+      "Decision is acceptable but adds no points here."
+    ),
+    // ── graded, but no feedback (icon shows, See popover feedback is "-") ──
+    "20b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d": A(
+      "20b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "node",
+      3
+    ),
+    // The print / cleanup / end steps and the remaining flowlines are
+    // intentionally left UNGRADED (no icon).
+  },
+}
+
+/**
+ * The full editor in Assessment + readonly mode — the see-feedback review
+ * surface, rendered over a fully GRADED model so every on-canvas
+ * AssessmentIcon state shows: green check (score>0), red cross (score<0),
+ * blue warn (score===0), plus graded-without-feedback, with several elements
+ * left ungraded.
+ */
+export const AssessmentReview: Story = {
+  name: "Assessment: See Feedback (graded)",
+  parameters: { layout: "fullscreen" },
+  render: () => <ApollonAssessable model={gradedFlowchartModel} readonly />,
 }

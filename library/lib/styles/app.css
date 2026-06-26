@@ -1117,6 +1117,16 @@ svg.react-flow__connectionline {
   background-color: var(--apollon-assessment-ungraded-bg, #f1f5f9);
 }
 
+/* On-canvas feedback badge: a soft drop-shadow lifts the tone-tinted disc off
+   the element it marks so it stays legible over any node fill. (Export inlines
+   the assessment tokens via CSS_VARIABLE_FALLBACKS, not this rule.) */
+.apollon-assessment-icon {
+  filter: drop-shadow(
+    0 1px 2px
+      color-mix(in srgb, var(--apollon-primary-contrast, #000) 28%, transparent)
+  );
+}
+
 /* Feedback body text. The [data-empty] variant is the muted "No comment"
    placeholder shown when an element is graded but carries no comment. */
 [data-slot="assessment-feedback"] {

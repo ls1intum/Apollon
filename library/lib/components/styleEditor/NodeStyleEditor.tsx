@@ -69,7 +69,7 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
           onChange={(event) =>
             handleDataFieldUpdate("name", event.target.value)
           }
-          sx={{ flex: 1, minWidth: 90 }}
+          style={{ flex: 1, minWidth: 90 }}
           value={nodeData.name ?? ""}
           placeholder={inputPlaceholder}
           // Only enable multiline — which lets Enter insert a hard line
@@ -82,7 +82,7 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
         // Name-less nodes (swimlane, SFC action table, activity initial/final/
         // fork) match the edge popovers' "Style" heading instead of a blank
         // header row.
-        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+        <Typography variant="subtitle2" style={{ fontWeight: 600 }}>
           Style
         </Typography>
       )}

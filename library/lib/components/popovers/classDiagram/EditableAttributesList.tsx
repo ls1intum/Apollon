@@ -196,7 +196,7 @@ export const EditableAttributeList: React.FC<Props> = ({ nodeId }) => {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+      <Typography variant="subtitle2" style={{ fontWeight: 600 }}>
         Attributes
       </Typography>
 

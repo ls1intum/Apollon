@@ -1,8 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { within } from "storybook/test"
+import type { Assessment, UMLModel } from "@tumaet/apollon"
 import {
   editorStoryMeta,
   ApollonEditable,
+  ApollonAssessable,
   fixtureByType,
   EditorStoreDecorator,
   ElementGallery,
@@ -231,4 +233,87 @@ export const SeeFeedbackArc: Story = {
     await canvas.findByText("+2")
     await canvas.findByText("Arc weight matches the transition's demand.")
   },
+}
+
+// ── Assessment editor (full editor, grading mode) ────────────────────────────
+/** The full editor in Assessment mode — click an element to give feedback. */
+export const Assessment: Story = {
+  name: "Assessment: Give Feedback",
+  parameters: { layout: "fullscreen" },
+  render: () => <ApollonAssessable model={fixtureByType.PetriNet} />,
+}
+
+// The shipped PetriNet fixture has `assessments: {}`, so the read-only review
+// surface would render an entirely UNGRADED diagram. Spread a real assessment
+// map (keyed by the fixture's actual place / transition / arc ids — read from
+// tests/fixtures/petri-net.json) so the canvas shows every on-canvas
+// AssessmentIcon state at once: score>0 → green check, score<0 → red cross,
+// score===0 → blue warn, plus graded-without-feedback, while >=1 element (P4
+// and the remaining arcs) stays ungraded (no icon).
+const A = (
+  modelElementId: string,
+  elementType: string,
+  score: number,
+  feedback?: string
+): Assessment => ({ modelElementId, elementType, score, feedback })
+
+const gradedPetriNetModel: UMLModel = {
+  ...fixtureByType.PetriNet,
+  assessments: {
+    // ── green (score > 0) ──
+    "11111111-1111-4111-a111-111111111111": A(
+      "11111111-1111-4111-a111-111111111111",
+      "node",
+      5,
+      "Correct initial marking on P1."
+    ),
+    "22222222-2222-4222-a222-222222222222": A(
+      "22222222-2222-4222-a222-222222222222",
+      "node",
+      2,
+      "Transition T1 is well placed."
+    ),
+    "edge-p1-t1": A("edge-p1-t1", "edge", 2, "Arc weight matches T1's demand."),
+    // ── red (score < 0) ──
+    "33333333-3333-4333-a333-333333333333": A(
+      "33333333-3333-4333-a333-333333333333",
+      "node",
+      -1,
+      "P2 capacity should not be bounded here."
+    ),
+    "edge-t1-p2": A(
+      "edge-t1-p2",
+      "edge",
+      -1,
+      "This arc direction is reversed."
+    ),
+    // ── blue (score === 0) ──
+    "44444444-4444-4444-a444-444444444444": A(
+      "44444444-4444-4444-a444-444444444444",
+      "node",
+      0,
+      "P3 is acceptable but earns no points here."
+    ),
+    // ── graded, but no feedback (icon shows, See popover feedback is "-") ──
+    "55555555-5555-4555-a555-555555555555": A(
+      "55555555-5555-4555-a555-555555555555",
+      "node",
+      3
+    ),
+    // P4 (…666666) and the remaining arcs (edge-t1-p3, edge-p2-t2, edge-p3-t2,
+    // edge-t2-p4) are intentionally left UNGRADED (no icon).
+  },
+}
+
+/**
+ * The full editor in Assessment + readonly mode — the see-feedback review
+ * surface, rendered over a fully GRADED model so every on-canvas
+ * AssessmentIcon state shows: green check (score>0), red cross (score<0),
+ * blue warn (score===0), plus graded-without-feedback, with several elements
+ * left ungraded.
+ */
+export const AssessmentReview: Story = {
+  name: "Assessment: See Feedback (graded)",
+  parameters: { layout: "fullscreen" },
+  render: () => <ApollonAssessable model={gradedPetriNetModel} readonly />,
 }

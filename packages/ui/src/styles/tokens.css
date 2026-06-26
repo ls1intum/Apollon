@@ -143,15 +143,11 @@
      distinct from the brand primary so it reads unambiguously as "drop here". */
   --primitive-dropzone-accent: #0064ff;
 
-  /* Assessment-icon badge (light). The neutral chip behind a score icon on the
-     canvas — a near-white fill with a soft gray border, drawn at 0.7 opacity. */
-  --primitive-assessment-icon-bg: #f0f0f0;
-  --primitive-assessment-icon-border: #ccc;
-
-  /* Assessment soft-badge ramp (light). The score-pill tone pairs: -800 text on
-     a -100 same-hue tint (positive=green, negative=red, zero=blue, ungraded=
-     slate). SOLID values — not color-mix/alpha — so axe can MEASURE the contrast;
-     every pair clears WCAG AA 4.5:1 (text on its own tint). */
+  /* Assessment soft-badge ramp (light). The tone pairs shared by the popover
+     score pill AND the on-canvas feedback badge: -800 text on a -100 same-hue
+     tint (positive=green, negative=red, zero=blue, ungraded=slate). SOLID values
+     — not color-mix/alpha — so axe can MEASURE the contrast; every pair clears
+     WCAG AA 4.5:1 (text on its own tint). Ungraded has no canvas badge. */
   --primitive-assessment-positive-text: #166534;
   --primitive-assessment-positive-bg: #dcfce7;
   --primitive-assessment-negative-text: #991b1b;
@@ -160,13 +156,6 @@
   --primitive-assessment-zero-bg: #dbeafe;
   --primitive-assessment-ungraded-text: #475569;
   --primitive-assessment-ungraded-bg: #f1f5f9;
-
-  /* Assessment canvas-icon solids (light). The graphic glyph fill on the canvas
-     badge (a 3:1 graphic context); a step brighter than the badge text shade.
-     There is no ungraded icon — an ungraded element renders no canvas badge. */
-  --primitive-assessment-icon-positive: #15803d;
-  --primitive-assessment-icon-negative: #b91c1c;
-  --primitive-assessment-icon-zero: #1d4ed8;
 
   /* Live-collaboration cursor palette (light). A fixed, deterministic set of
      cursor/label colors assigned per collaborator by name hash; the editor
@@ -409,16 +398,11 @@
      embedders can retheme on-cursor text without touching geometry. */
   --apollon-on-collaboration-cursor: var(--primitive-white);
 
-  /* Assessment-icon badge — the public handles on the neutral score-chip
-     surface + border (re-resolve per theme via the primitives above). */
-  --apollon-assessment-icon-surface: var(--primitive-assessment-icon-bg);
-  --apollon-assessment-icon-border: var(--primitive-assessment-icon-border);
-
-  /* Assessment tone tokens — the public handles on the score-pill ramp + the
-     canvas-icon solids. The SINGLE source for assessment colour: the popover
-     score pill (app.css) and the canvas badge (AssessmentIcon) both read these,
-     so a graded element reads identically in both places. Each references a
-     primitive that carries its own dark delta, so no dark override is needed. */
+  /* Assessment tone tokens — the public handles on the score ramp. The SINGLE
+     source for assessment colour: the popover score pill (app.css) and the
+     on-canvas feedback badge (AssessmentIcon) both read these, so a graded
+     element reads identically in both places. Each references a primitive that
+     carries its own dark delta, so no dark override is needed. */
   --apollon-assessment-positive-text: var(--primitive-assessment-positive-text);
   --apollon-assessment-positive-bg: var(--primitive-assessment-positive-bg);
   --apollon-assessment-negative-text: var(--primitive-assessment-negative-text);
@@ -427,9 +411,6 @@
   --apollon-assessment-zero-bg: var(--primitive-assessment-zero-bg);
   --apollon-assessment-ungraded-text: var(--primitive-assessment-ungraded-text);
   --apollon-assessment-ungraded-bg: var(--primitive-assessment-ungraded-bg);
-  --apollon-assessment-icon-positive: var(--primitive-assessment-icon-positive);
-  --apollon-assessment-icon-negative: var(--primitive-assessment-icon-negative);
-  --apollon-assessment-icon-zero: var(--primitive-assessment-icon-zero);
 
   /* Live-collaboration cursor palette — the public editor-facing handles on the
      --primitive-collab-* layer (so they re-resolve per theme) and the SINGLE
@@ -655,12 +636,6 @@
      reads against the dark canvas. */
   --primitive-interactive-selection: #f5b041;
 
-  /* Assessment-icon badge (dark) — a dark neutral chip with a faint border so
-     the score icon's green/red/blue glyph still reads on the dark canvas. The
-     vivid drop-zone accent reads on both themes, so it has no dark delta. */
-  --primitive-assessment-icon-bg: #2a2f37;
-  --primitive-assessment-icon-border: #4a525e;
-
   /* Assessment soft-badge ramp (dark) — the AA pairs flip to -300 text on a -900
      same-hue tint; still solid so axe can measure them, still clearing 4.5:1. */
   --primitive-assessment-positive-text: #86efac;
@@ -671,11 +646,6 @@
   --primitive-assessment-zero-bg: #1e3a8a;
   --primitive-assessment-ungraded-text: #cbd5e1;
   --primitive-assessment-ungraded-bg: #334155;
-
-  /* Assessment canvas-icon solids (dark) — brightened a step to read on canvas. */
-  --primitive-assessment-icon-positive: #4ade80;
-  --primitive-assessment-icon-negative: #f87171;
-  --primitive-assessment-icon-zero: #60a5fa;
 
   /* Live-collaboration cursor palette (dark) — brightened a step so each
      cursor/label stays legible against the dark canvas. */

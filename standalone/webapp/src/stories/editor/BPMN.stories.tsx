@@ -1,8 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { within } from "storybook/test"
+import type { Assessment, UMLModel } from "@tumaet/apollon"
 import {
   editorStoryMeta,
   ApollonEditable,
+  ApollonAssessable,
   fixtureByType,
   EditorStoreDecorator,
   ElementGallery,
@@ -354,4 +356,92 @@ export const SeeFeedbackSequenceFlow: Story = {
     await canvas.findByText("+1")
     await canvas.findByText("Label the outgoing flow with its guard condition.")
   },
+}
+
+// ── Assessment editor (full editor, grading mode) ────────────────────────────
+/** The full editor in Assessment mode — click an element to give feedback. */
+export const Assessment: Story = {
+  name: "Assessment: Give Feedback",
+  parameters: { layout: "fullscreen" },
+  render: () => <ApollonAssessable model={fixtureByType.BPMN} />,
+}
+
+// The shipped BPMN fixture has `assessments: {}`, so the read-only review
+// surface would render an entirely UNGRADED diagram. Spread a real assessment
+// map (keyed by the fixture's actual node / edge ids — read from
+// tests/fixtures/bpmn.json) so the canvas shows every on-canvas AssessmentIcon
+// state at once: score>0 → green check, score<0 → red cross, score===0 → blue
+// warn, plus graded-without-feedback, while many elements (pool, end events,
+// the palette-catalog nodes, …) stay ungraded (no icon).
+const A = (
+  modelElementId: string,
+  elementType: string,
+  score: number,
+  feedback?: string
+): Assessment => ({ modelElementId, elementType, score, feedback })
+
+const gradedBpmnModel: UMLModel = {
+  ...fixtureByType.BPMN,
+  assessments: {
+    // ── green (score > 0) ──
+    "bb2c3d4e-f5a6-4b7c-8d9e-0f1a2b3c4d5e": A(
+      "bb2c3d4e-f5a6-4b7c-8d9e-0f1a2b3c4d5e",
+      "node",
+      2,
+      "Correct start event for the order trigger."
+    ),
+    "cc3d4e5f-a6b7-4c8d-9e0f-1a2b3c4d5e6f": A(
+      "cc3d4e5f-a6b7-4c8d-9e0f-1a2b3c4d5e6f",
+      "node",
+      3,
+      "Validating the order first is the right activity."
+    ),
+    "edge-start-validate": A(
+      "edge-start-validate",
+      "edge",
+      1,
+      "Sequence flow is correctly ordered."
+    ),
+    // ── red (score < 0) ──
+    "ee5f6a7b-c8d9-4e0f-1a2b-3c4d5e6f7a8b": A(
+      "ee5f6a7b-c8d9-4e0f-1a2b-3c4d5e6f7a8b",
+      "node",
+      -1,
+      "Payment should only run after a successful validation."
+    ),
+    "edge-validate-gateway": A(
+      "edge-validate-gateway",
+      "edge",
+      -1,
+      "This flow skips the required check."
+    ),
+    // ── blue (score === 0) ──
+    "dd4e5f6a-b7c8-4d9e-0f1a-2b3c4d5e6f7a": A(
+      "dd4e5f6a-b7c8-4d9e-0f1a-2b3c4d5e6f7a",
+      "node",
+      0,
+      "Exclusive gateway is acceptable but earns no points here."
+    ),
+    // ── graded, but no feedback (icon shows, See popover feedback is "-") ──
+    "ff6a7b8c-d9e0-4f1a-2b3c-4d5e6f7a8b9c": A(
+      "ff6a7b8c-d9e0-4f1a-2b3c-4d5e6f7a8b9c",
+      "node",
+      2
+    ),
+    // The pool, end events and the palette-catalog nodes / remaining edges are
+    // intentionally left UNGRADED (no icon).
+  },
+}
+
+/**
+ * The full editor in Assessment + readonly mode — the see-feedback review
+ * surface, rendered over a fully GRADED model so every on-canvas
+ * AssessmentIcon state shows: green check (score>0), red cross (score<0),
+ * blue warn (score===0), plus graded-without-feedback, with many elements
+ * left ungraded.
+ */
+export const AssessmentReview: Story = {
+  name: "Assessment: See Feedback (graded)",
+  parameters: { layout: "fullscreen" },
+  render: () => <ApollonAssessable model={gradedBpmnModel} readonly />,
 }

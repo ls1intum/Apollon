@@ -1,8 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { within } from "storybook/test"
+import type { Assessment, UMLModel } from "@tumaet/apollon"
 import {
   editorStoryMeta,
   ApollonEditable,
+  ApollonAssessable,
   fixtureByType,
   EditorStoreDecorator,
   ElementGallery,
@@ -246,4 +248,92 @@ export const SeeFeedbackTransition: Story = {
       "Transition condition fires the next step correctly."
     )
   },
+}
+
+// ── Assessment editor (full editor, grading mode) ────────────────────────────
+/** The full editor in Assessment mode — click an element to give feedback. */
+export const Assessment: Story = {
+  name: "Assessment: Give Feedback",
+  parameters: { layout: "fullscreen" },
+  render: () => <ApollonAssessable model={fixtureByType.Sfc} />,
+}
+
+// The shipped SFC fixture has `assessments: {}`, so the read-only review
+// surface would render an entirely UNGRADED diagram. Spread a real assessment
+// map (keyed by the fixture's actual step / action-table / jump / edge ids —
+// read from tests/fixtures/sfc.json) so the canvas shows every on-canvas
+// AssessmentIcon state at once: score>0 → green check, score<0 → red cross,
+// score===0 → blue warn, plus graded-without-feedback, while >=1 element stays
+// ungraded (no icon).
+const A = (
+  modelElementId: string,
+  elementType: string,
+  score: number,
+  feedback?: string
+): Assessment => ({ modelElementId, elementType, score, feedback })
+
+const gradedSfcModel: UMLModel = {
+  ...fixtureByType.Sfc,
+  assessments: {
+    // ── green (score > 0) ──
+    "11aa2bb3-cc4d-4e5f-6a7b-8c9d0e1f2a3b": A(
+      "11aa2bb3-cc4d-4e5f-6a7b-8c9d0e1f2a3b",
+      "node",
+      5,
+      "Correct initial step for this sequence."
+    ),
+    "33cc4dd5-ee6f-4a7b-8c9d-0e1f2a3b4c5d": A(
+      "33cc4dd5-ee6f-4a7b-8c9d-0e1f2a3b4c5d",
+      "node",
+      2,
+      "Step 1 is modelled correctly."
+    ),
+    "edge-step1-actiontable": A(
+      "edge-step1-actiontable",
+      "edge",
+      2,
+      "Action table is wired to the right step."
+    ),
+    // ── red (score < 0) ──
+    "44dd5ee6-ff7a-4b8c-9d0e-1f2a3b4c5d6e": A(
+      "44dd5ee6-ff7a-4b8c-9d0e-1f2a3b4c5d6e",
+      "node",
+      -1,
+      "Action qualifiers are wrong for this table."
+    ),
+    "edge-step1-trans2": A(
+      "edge-step1-trans2",
+      "edge",
+      -1,
+      "This branch skips the required transition."
+    ),
+    // ── blue (score === 0) ──
+    "66ff7aa8-bb9c-4d0e-1f2a-3b4c5d6e7f8a": A(
+      "66ff7aa8-bb9c-4d0e-1f2a-3b4c5d6e7f8a",
+      "node",
+      0,
+      "Step 2 is acceptable but earns no points here."
+    ),
+    // ── graded, but no feedback (icon shows, See popover feedback is "-") ──
+    "88bb9cc0-dd1e-4f2a-3b4c-5d6e7f8a9b0c": A(
+      "88bb9cc0-dd1e-4f2a-3b4c-5d6e7f8a9b0c",
+      "node",
+      3
+    ),
+    // The transition branches and the remaining edges are intentionally left
+    // UNGRADED (no icon).
+  },
+}
+
+/**
+ * The full editor in Assessment + readonly mode — the see-feedback review
+ * surface, rendered over a fully GRADED model so every on-canvas
+ * AssessmentIcon state shows: green check (score>0), red cross (score<0),
+ * blue warn (score===0), plus graded-without-feedback, with several elements
+ * left ungraded.
+ */
+export const AssessmentReview: Story = {
+  name: "Assessment: See Feedback (graded)",
+  parameters: { layout: "fullscreen" },
+  render: () => <ApollonAssessable model={gradedSfcModel} readonly />,
 }

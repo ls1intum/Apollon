@@ -1,8 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { within } from "storybook/test"
+import type { Assessment, UMLModel } from "@tumaet/apollon"
 import {
   editorStoryMeta,
   ApollonEditable,
+  ApollonAssessable,
   fixtureByType,
   EditorStoreDecorator,
   ElementGallery,
@@ -295,4 +297,86 @@ export const SeeFeedbackDependency: Story = {
     await canvas.findByText("+2")
     await canvas.findByText("This dependency points the wrong way around.")
   },
+}
+
+// ── Assessment editor (full editor, grading mode) ────────────────────────────
+/** The full editor in Assessment mode — click an element to give feedback. */
+export const Assessment: Story = {
+  name: "Assessment: Give Feedback",
+  parameters: { layout: "fullscreen" },
+  render: () => <ApollonAssessable model={fixtureByType.ComponentDiagram} />,
+}
+
+// The shipped ComponentDiagram fixture has `assessments: {}`, so the read-only
+// review surface would render an entirely UNGRADED diagram. Spread a real
+// assessment map (keyed by the fixture's actual node / interface / edge ids —
+// read from tests/fixtures/component-diagram.json) so the canvas shows every
+// on-canvas AssessmentIcon state at once: score>0 → green check, score<0 → red
+// cross, score===0 → blue warn, plus graded-without-feedback, while the
+// subsystem and the loose interfaces stay ungraded (no icon).
+const A = (
+  modelElementId: string,
+  elementType: string,
+  score: number,
+  feedback?: string
+): Assessment => ({ modelElementId, elementType, score, feedback })
+
+const gradedComponentModel: UMLModel = {
+  ...fixtureByType.ComponentDiagram,
+  assessments: {
+    // ── green (score > 0) ──
+    "6ba7b810-9dad-4d11-80b4-00c04fd430c8": A(
+      "6ba7b810-9dad-4d11-80b4-00c04fd430c8",
+      "node",
+      4,
+      "Well-scoped client component."
+    ),
+    "edge-server-database": A(
+      "edge-server-database",
+      "edge",
+      2,
+      "Correct dependency from the server onto the database."
+    ),
+    // ── red (score < 0) ──
+    "a87ff679-a2f3-4e71-9bda-d16a21e1a2f3": A(
+      "a87ff679-a2f3-4e71-9bda-d16a21e1a2f3",
+      "node",
+      -1,
+      "A database should not be modelled as a plain component here."
+    ),
+    "edge-client-interface": A(
+      "edge-client-interface",
+      "edge",
+      -1,
+      "The client provides — it should not also expose — this interface."
+    ),
+    // ── blue (score === 0) ──
+    "7c9e6679-7425-40de-944b-e07fc1f90ae7": A(
+      "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+      "node",
+      0,
+      "Server component is fine but adds no points here."
+    ),
+    // ── graded, but no feedback (icon shows, See popover feedback is "-") ──
+    "1b4e28ba-2fa1-4d11-a2d3-b8f04f4e5c6d": A(
+      "1b4e28ba-2fa1-4d11-a2d3-b8f04f4e5c6d",
+      "node",
+      1
+    ),
+    // The subsystem and the loose 3/4 + 1/4 interfaces are intentionally left
+    // UNGRADED (no icon).
+  },
+}
+
+/**
+ * The full editor in Assessment + readonly mode — the see-feedback review
+ * surface, rendered over a fully GRADED model so every on-canvas
+ * AssessmentIcon state shows: green check (score>0), red cross (score<0),
+ * blue warn (score===0), plus graded-without-feedback, with several elements
+ * left ungraded.
+ */
+export const AssessmentReview: Story = {
+  name: "Assessment: See Feedback (graded)",
+  parameters: { layout: "fullscreen" },
+  render: () => <ApollonAssessable model={gradedComponentModel} readonly />,
 }

@@ -1,8 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { within, expect } from "storybook/test"
+import type { Assessment, UMLModel } from "@tumaet/apollon"
 import {
   editorStoryMeta,
   ApollonEditable,
+  ApollonAssessable,
   fixtureByType,
   EditorStoreDecorator,
   ElementGallery,
@@ -299,4 +301,78 @@ export const SeeFeedbackCommunicationLink: Story = {
     await canvas.findByText("+3")
     await canvas.findByText("Messages are numbered in the wrong call order.")
   },
+}
+
+// ── Assessment editor (full editor, grading mode) ────────────────────────────
+/** The full editor in Assessment mode — click an element to give feedback. */
+export const Assessment: Story = {
+  name: "Assessment: Give Feedback",
+  parameters: { layout: "fullscreen" },
+  render: () => (
+    <ApollonAssessable model={fixtureByType.CommunicationDiagram} />
+  ),
+}
+
+// The shipped CommunicationDiagram fixture has `assessments: {}`, so the
+// read-only review surface would render an entirely UNGRADED diagram. Spread a
+// real assessment map (keyed by the fixture's actual node / edge ids — read
+// from tests/fixtures/communication-diagram.json) so the canvas shows every
+// on-canvas AssessmentIcon state at once: score>0 → green check, score<0 → red
+// cross, score===0 → blue warn, plus graded-without-feedback, while >=1 element
+// stays ungraded (no icon).
+const A = (
+  modelElementId: string,
+  elementType: string,
+  score: number,
+  feedback?: string
+): Assessment => ({ modelElementId, elementType, score, feedback })
+
+const gradedCommunicationModel: UMLModel = {
+  ...fixtureByType.CommunicationDiagram,
+  assessments: {
+    // ── green (score > 0) ──
+    "990e8400-e29b-41d4-a716-446655440040": A(
+      "990e8400-e29b-41d4-a716-446655440040",
+      "node",
+      4,
+      "Names the participating object clearly."
+    ),
+    "edge-comm-client-server": A(
+      "edge-comm-client-server",
+      "edge",
+      2,
+      "Request/response messages are numbered correctly."
+    ),
+    // ── red (score < 0) ──
+    "990e8400-e29b-41d4-a716-446655440041": A(
+      "990e8400-e29b-41d4-a716-446655440041",
+      "node",
+      -2,
+      "The server object is missing its class type."
+    ),
+    // ── blue (score === 0) ──
+    "990e8400-e29b-41d4-a716-446655440042": A(
+      "990e8400-e29b-41d4-a716-446655440042",
+      "node",
+      0,
+      "Acceptable, but adds no points here."
+    ),
+    // ── graded, but no feedback (icon shows, no comment) ──
+    a1: A("a1", "attribute", 1),
+    // edge-comm-server-db and the remaining attributes are intentionally left
+    // UNGRADED (no icon).
+  },
+}
+
+/**
+ * The full editor in Assessment + readonly mode — the see-feedback review
+ * surface, rendered over a fully GRADED model so every on-canvas
+ * AssessmentIcon state shows: green check (score>0), red cross (score<0),
+ * blue warn (score===0), plus graded-without-feedback, with the remaining
+ * element left ungraded.
+ */
+export const AssessmentReview: Story = {
+  name: "Assessment: See Feedback (graded)",
+  parameters: { layout: "fullscreen" },
+  render: () => <ApollonAssessable model={gradedCommunicationModel} readonly />,
 }

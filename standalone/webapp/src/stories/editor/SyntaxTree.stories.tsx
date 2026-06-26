@@ -1,8 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { within } from "storybook/test"
+import type { Assessment, UMLModel } from "@tumaet/apollon"
 import {
   editorStoryMeta,
   ApollonEditable,
+  ApollonAssessable,
   fixtureByType,
   EditorStoreDecorator,
   ElementGallery,
@@ -269,4 +271,92 @@ export const SeeFeedbackLink: Story = {
       "Link correctly derives the terminal from the nonterminal."
     )
   },
+}
+
+// ── Assessment editor (full editor, grading mode) ────────────────────────────
+/** The full editor in Assessment mode — click an element to give feedback. */
+export const Assessment: Story = {
+  name: "Assessment: Give Feedback",
+  parameters: { layout: "fullscreen" },
+  render: () => <ApollonAssessable model={fixtureByType.SyntaxTree} />,
+}
+
+// The shipped SyntaxTree fixture has `assessments: {}`, so the read-only review
+// surface would render an entirely UNGRADED diagram. Spread a real assessment
+// map (keyed by the fixture's actual nonterminal / terminal / link ids — read
+// from tests/fixtures/syntax-tree.json) so the canvas shows every on-canvas
+// AssessmentIcon state at once: score>0 → green check, score<0 → red cross,
+// score===0 → blue warn, plus graded-without-feedback, while >=1 element stays
+// ungraded (no icon).
+const A = (
+  modelElementId: string,
+  elementType: string,
+  score: number,
+  feedback?: string
+): Assessment => ({ modelElementId, elementType, score, feedback })
+
+const gradedSyntaxTreeModel: UMLModel = {
+  ...fixtureByType.SyntaxTree,
+  assessments: {
+    // ── green (score > 0) ──
+    "d0e1f2a3-b4c5-4d6e-7f8a-9b0c1d2e3f4a": A(
+      "d0e1f2a3-b4c5-4d6e-7f8a-9b0c1d2e3f4a",
+      "node",
+      5,
+      "Correct root nonterminal (Expr)."
+    ),
+    "e1f2a3b4-c5d6-4e7f-8a9b-0c1d2e3f4a5b": A(
+      "e1f2a3b4-c5d6-4e7f-8a9b-0c1d2e3f4a5b",
+      "node",
+      2,
+      "Term nonterminal is correct."
+    ),
+    "edge-expr-term-left": A(
+      "edge-expr-term-left",
+      "edge",
+      2,
+      "Correct derivation from Expr to the left Term."
+    ),
+    // ── red (score < 0) ──
+    "f2a3b4c5-d6e7-4f8a-9b0c-1d2e3f4a5b6c": A(
+      "f2a3b4c5-d6e7-4f8a-9b0c-1d2e3f4a5b6c",
+      "node",
+      -1,
+      "This Term does not belong in this production."
+    ),
+    "edge-expr-term-right": A(
+      "edge-expr-term-right",
+      "edge",
+      -1,
+      "This link derives the wrong child."
+    ),
+    // ── blue (score === 0) ──
+    "a3b4c5d6-e7f8-4a9b-0c1d-2e3f4a5b6c7d": A(
+      "a3b4c5d6-e7f8-4a9b-0c1d-2e3f4a5b6c7d",
+      "node",
+      0,
+      "Terminal 'a' is fine but earns no points here."
+    ),
+    // ── graded, but no feedback (icon shows, See popover feedback is "-") ──
+    "b4c5d6e7-f8a9-4b0c-1d2e-3f4a5b6c7d8e": A(
+      "b4c5d6e7-f8a9-4b0c-1d2e-3f4a5b6c7d8e",
+      "node",
+      3
+    ),
+    // Terminal 'c' (c5d6e7f8…) and the remaining links are intentionally left
+    // UNGRADED (no icon).
+  },
+}
+
+/**
+ * The full editor in Assessment + readonly mode — the see-feedback review
+ * surface, rendered over a fully GRADED model so every on-canvas
+ * AssessmentIcon state shows: green check (score>0), red cross (score<0),
+ * blue warn (score===0), plus graded-without-feedback, with several elements
+ * left ungraded.
+ */
+export const AssessmentReview: Story = {
+  name: "Assessment: See Feedback (graded)",
+  parameters: { layout: "fullscreen" },
+  render: () => <ApollonAssessable model={gradedSyntaxTreeModel} readonly />,
 }

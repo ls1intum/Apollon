@@ -24,7 +24,6 @@ const variantTag: Record<TypographyVariant, keyof React.JSX.IntrinsicElements> =
 export interface TypographyProps {
   variant?: TypographyVariant
   children?: React.ReactNode
-  sx?: React.CSSProperties
   style?: React.CSSProperties
   className?: string
   id?: string
@@ -32,11 +31,10 @@ export interface TypographyProps {
 
 // Visual tokens (size / weight / color) live in app.css
 // ([data-slot="typography"][data-variant="…"], --apollon-* fallbacks). Callers
-// still pass sx/style for one-off layout; those win over the data-slot rule.
+// still pass `style` for one-off layout; it wins over the data-slot rule.
 export const Typography: React.FC<TypographyProps> = ({
   variant = "body1",
   children,
-  sx,
   style,
   className,
   id,
@@ -48,7 +46,7 @@ export const Typography: React.FC<TypographyProps> = ({
       className={className}
       data-slot="typography"
       data-variant={variant}
-      style={{ ...sx, ...style }}
+      style={style}
     >
       {children}
     </Tag>

@@ -1,8 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { within, expect } from "storybook/test"
+import type { Assessment, UMLModel } from "@tumaet/apollon"
 import {
   editorStoryMeta,
   ApollonEditable,
+  ApollonAssessable,
   fixtureByType,
   EditorStoreDecorator,
   ElementGallery,
@@ -285,4 +287,76 @@ export const SeeFeedbackObjectLink: Story = {
       "The link should be undirected between these objects."
     )
   },
+}
+
+// ── Assessment editor (full editor, grading mode) ────────────────────────────
+/** The full editor in Assessment mode — click an element to give feedback. */
+export const Assessment: Story = {
+  name: "Assessment: Give Feedback",
+  parameters: { layout: "fullscreen" },
+  render: () => <ApollonAssessable model={fixtureByType.ObjectDiagram} />,
+}
+
+// The shipped ObjectDiagram fixture has `assessments: {}`, so the read-only
+// review surface would render an entirely UNGRADED diagram. Spread a real
+// assessment map (keyed by the fixture's actual node / edge ids — read from
+// tests/fixtures/object-diagram.json) so the canvas shows every on-canvas
+// AssessmentIcon state at once: score>0 → green check, score<0 → red cross,
+// score===0 → blue warn, plus graded-without-feedback, while >=1 element stays
+// ungraded (no icon).
+const A = (
+  modelElementId: string,
+  elementType: string,
+  score: number,
+  feedback?: string
+): Assessment => ({ modelElementId, elementType, score, feedback })
+
+const gradedObjectModel: UMLModel = {
+  ...fixtureByType.ObjectDiagram,
+  assessments: {
+    // ── green (score > 0) ──
+    "660e8400-e29b-41d4-a716-446655440010": A(
+      "660e8400-e29b-41d4-a716-446655440010",
+      "node",
+      5,
+      "Correct instance — names the class it instantiates."
+    ),
+    "edge-link-dog-owner": A(
+      "edge-link-dog-owner",
+      "edge",
+      2,
+      "Correct link between the two objects."
+    ),
+    // ── red (score < 0) ──
+    "660e8400-e29b-41d4-a716-446655440011": A(
+      "660e8400-e29b-41d4-a716-446655440011",
+      "node",
+      -1,
+      "The owner object is missing its class type."
+    ),
+    // ── blue (score === 0) ──
+    "660e8400-e29b-41d4-a716-446655440012": A(
+      "660e8400-e29b-41d4-a716-446655440012",
+      "node",
+      0,
+      "Acceptable, but adds no points here."
+    ),
+    // ── graded, but no feedback (icon shows, no comment) ──
+    a1: A("a1", "attribute", 1),
+    // edge-link-dog-collar and the remaining attributes are intentionally left
+    // UNGRADED (no icon).
+  },
+}
+
+/**
+ * The full editor in Assessment + readonly mode — the see-feedback review
+ * surface, rendered over a fully GRADED model so every on-canvas
+ * AssessmentIcon state shows: green check (score>0), red cross (score<0),
+ * blue warn (score===0), plus graded-without-feedback, with the remaining
+ * element left ungraded.
+ */
+export const AssessmentReview: Story = {
+  name: "Assessment: See Feedback (graded)",
+  parameters: { layout: "fullscreen" },
+  render: () => <ApollonAssessable model={gradedObjectModel} readonly />,
 }
