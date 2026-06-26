@@ -66,6 +66,7 @@ export const Default: Story = {
  * dark.
  */
 export const Sides: Story = {
+  tags: ["!autodocs"],
   render: () => (
     <div className="flex flex-wrap gap-4">
       {sides.map((side) => (
@@ -158,6 +159,7 @@ export const DelayProvider: Story = {
  * contrast, and arrow.
  */
 export const Dark: Story = {
+  tags: ["!autodocs"],
   globals: { theme: "dark" },
   args: {
     open: true,

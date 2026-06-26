@@ -87,6 +87,7 @@ export const Instant: Story = {
  * One trigger per `side` value to review placement in light and dark.
  */
 export const Sides: Story = {
+  tags: ["!autodocs"],
   render: () => (
     <div className="flex flex-wrap gap-2">
       {sides.map((side) => (
@@ -107,6 +108,7 @@ export const Sides: Story = {
  * The hover card pinned open in dark mode to review surface, ring, and text.
  */
 export const Dark: Story = {
+  tags: ["!autodocs"],
   args: {
     defaultOpen: true,
   },

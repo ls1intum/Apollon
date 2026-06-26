@@ -83,7 +83,8 @@ export const Default: Story = {
 /**
  * One trigger per edge so every `side` value can be reviewed in light and dark.
  */
-export const SidesMatrix: Story = {
+export const Sides: Story = {
+  tags: ["!autodocs"],
   parameters: { layout: "centered" },
   render: () => (
     <div className="flex flex-wrap gap-2">
@@ -198,6 +199,7 @@ export const Open: Story = {
  * The sheet pinned open in dark mode to review the overlay, border, and footer.
  */
 export const Dark: Story = {
+  tags: ["!autodocs"],
   args: {
     defaultOpen: true,
   },

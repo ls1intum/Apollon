@@ -267,6 +267,7 @@ export const DisabledItem: Story = {
  * The menu pinned open in dark mode to review surface, focus, and shortcuts.
  */
 export const Dark: Story = {
+  tags: ["!autodocs"],
   args: {
     defaultOpen: true,
   },

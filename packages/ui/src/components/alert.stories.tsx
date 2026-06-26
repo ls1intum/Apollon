@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { AlertTriangleIcon, InfoIcon, XIcon } from "lucide-react"
+import { expect, within } from "storybook/test"
 
 import { Alert, AlertAction, AlertDescription, AlertTitle } from "./alert"
 import { IconButton } from "./icon-button"
@@ -115,8 +116,57 @@ export const Long: Story = {
   ),
 }
 
+/**
+ * Every variant crossed with each content shape — icon only, icon + title,
+ * icon + title + description, and the full layout with a trailing action.
+ */
+export const Matrix: Story = {
+  tags: ["!autodocs"],
+  parameters: { controls: { disable: true } },
+  render: () => {
+    const variants = ["default", "destructive"] as const
+    const Icon = (variant: (typeof variants)[number]) =>
+      variant === "destructive" ? <AlertTriangleIcon /> : <InfoIcon />
+    return (
+      <div className="flex flex-col gap-6">
+        {variants.map((variant) => (
+          <div key={variant} className="flex flex-col gap-3">
+            <Alert variant={variant} className="max-w-md">
+              {Icon(variant)}
+            </Alert>
+            <Alert variant={variant} className="max-w-md">
+              {Icon(variant)}
+              <AlertTitle>Heads up</AlertTitle>
+            </Alert>
+            <Alert variant={variant} className="max-w-md">
+              {Icon(variant)}
+              <AlertTitle>Heads up</AlertTitle>
+              <AlertDescription>
+                You can add components to your app using the CLI.
+              </AlertDescription>
+            </Alert>
+            <Alert variant={variant} className="max-w-md">
+              {Icon(variant)}
+              <AlertTitle>Update available</AlertTitle>
+              <AlertDescription>
+                Version 2.0 is ready to install.
+              </AlertDescription>
+              <AlertAction>
+                <IconButton ariaLabel="Dismiss">
+                  <XIcon />
+                </IconButton>
+              </AlertAction>
+            </Alert>
+          </div>
+        ))}
+      </div>
+    )
+  },
+}
+
 /** Destructive variant pinned to dark for contrast review. */
-export const DestructiveDark: Story = {
+export const Dark: Story = {
+  tags: ["!autodocs"],
   args: { variant: "destructive" },
   globals: { theme: "dark" },
   render: (args) => (
@@ -126,4 +176,21 @@ export const DestructiveDark: Story = {
       <AlertDescription>Check your network and try again.</AlertDescription>
     </Alert>
   ),
+}
+
+/**
+ * Interaction test: the root exposes `role="alert"` and renders both the title
+ * and description content.
+ */
+export const Behavior: Story = {
+  tags: ["test", "!autodocs", "!dev"],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const alert = canvas.getByRole("alert")
+    await expect(alert).toBeInTheDocument()
+    await expect(within(alert).getByText("Heads up")).toBeInTheDocument()
+    await expect(
+      within(alert).getByText(/add components to your app/i)
+    ).toBeInTheDocument()
+  },
 }

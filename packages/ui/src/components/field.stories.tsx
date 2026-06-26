@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
-import { fn } from "storybook/test"
+import { expect, fn, userEvent, within } from "storybook/test"
 
 import { Checkbox } from "./checkbox"
 import {
@@ -29,6 +29,10 @@ const meta = {
     orientation: {
       control: "select",
       options: ["vertical", "horizontal", "responsive"],
+      description:
+        "Layout of the label relative to its control: stacked, inline, or " +
+        "stacked-then-inline at the `@md` container width.",
+      table: { category: "Appearance" },
     },
   },
   args: {
@@ -74,13 +78,24 @@ export const WithDescription: Story = {
   ),
 }
 
-/** Mark the field invalid and surface a `FieldError` message. */
+/**
+ * Mark the field invalid and surface a `FieldError` message. The input is wired
+ * to the error via `aria-describedby` so assistive tech announces it.
+ */
 export const WithError: Story = {
   render: (args) => (
     <Field {...args} data-invalid className="w-72">
       <FieldLabel htmlFor="field-error">Email</FieldLabel>
-      <Input id="field-error" type="email" aria-invalid defaultValue="nope" />
-      <FieldError>Enter a valid email address.</FieldError>
+      <Input
+        id="field-error"
+        type="email"
+        aria-invalid="true"
+        aria-describedby="field-error-message"
+        defaultValue="nope"
+      />
+      <FieldError id="field-error-message">
+        Enter a valid email address.
+      </FieldError>
     </Field>
   ),
 }
@@ -193,6 +208,49 @@ export const Matrix: Story = {
       </Field>
     </div>
   ),
+}
+
+/**
+ * Interaction test for the primitive's core promise — label↔control
+ * association. Clicking the `FieldLabel` focuses its associated input (via
+ * `htmlFor`), and the invalid input resolves its `aria-describedby` to the
+ * `FieldError` text so screen readers announce the message.
+ */
+export const Association: Story = {
+  tags: ["test", "!autodocs", "!dev"],
+  parameters: { controls: { disable: true } },
+  render: () => (
+    <Field data-invalid className="w-72">
+      <FieldLabel htmlFor="assoc-email">Email</FieldLabel>
+      <Input
+        id="assoc-email"
+        type="email"
+        aria-invalid="true"
+        aria-describedby="assoc-email-error"
+        defaultValue="nope"
+      />
+      <FieldError id="assoc-email-error">
+        Enter a valid email address.
+      </FieldError>
+    </Field>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const input = canvas.getByRole("textbox", { name: "Email" })
+
+    await step("clicking the label focuses the associated input", async () => {
+      await userEvent.click(canvas.getByText("Email"))
+      await expect(input).toHaveFocus()
+    })
+
+    await step("the invalid input is described by its error", async () => {
+      await expect(input).toHaveAttribute("aria-invalid", "true")
+      const describedBy = input.getAttribute("aria-describedby")
+      expect(describedBy).toBeTruthy()
+      const error = canvasElement.ownerDocument.getElementById(describedBy!)
+      await expect(error).toHaveTextContent("Enter a valid email address.")
+    })
+  },
 }
 
 /** Pinned dark-theme review of an invalid field. */

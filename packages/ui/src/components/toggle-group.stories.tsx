@@ -167,6 +167,43 @@ export const Controlled: Story = {
   },
 }
 
+/** Every variant across every size and both spacings for visual review. */
+export const Matrix: Story = {
+  tags: ["!autodocs"],
+  parameters: { controls: { disable: true } },
+  render: () => {
+    const variants = ["default", "outline"] as const
+    const sizes = ["sm", "default", "lg"] as const
+    const spacings = [0, 4] as const
+    return (
+      <div className="flex flex-col gap-6">
+        {spacings.map((spacing) => (
+          <div key={spacing} className="flex flex-col gap-3">
+            <span className="text-muted-foreground text-sm">
+              spacing: {spacing}
+            </span>
+            {variants.map((variant) => (
+              <div key={variant} className="flex items-center gap-4">
+                {sizes.map((size) => (
+                  <ToggleGroup
+                    key={size}
+                    variant={variant}
+                    size={size}
+                    spacing={spacing}
+                    defaultValue={["center"]}
+                  >
+                    {alignItems}
+                  </ToggleGroup>
+                ))}
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    )
+  },
+}
+
 /** Pinned dark-theme review across variants and spacing. */
 export const Dark: Story = {
   tags: ["!autodocs"],

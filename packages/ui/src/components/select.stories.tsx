@@ -273,6 +273,7 @@ export const LongValue: Story = {
  * checkmark indicator.
  */
 export const Dark: Story = {
+  tags: ["!autodocs"],
   args: {
     defaultValue: "banana",
   },

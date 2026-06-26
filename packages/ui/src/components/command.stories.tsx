@@ -8,7 +8,7 @@ import {
   UserIcon,
 } from "lucide-react"
 import * as React from "react"
-import { expect, userEvent, waitFor, within } from "storybook/test"
+import { expect, fn, userEvent, waitFor, within } from "storybook/test"
 
 import { Button } from "./button"
 import {
@@ -22,6 +22,11 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from "./command"
+
+type CommandStoryArgs = React.ComponentProps<typeof Command> & {
+  /** Story-only: wired onto each `CommandItem` so selection is observable. */
+  onSelect?: (value: string) => void
+}
 
 /**
  * A composable command palette built on [`cmdk`](https://cmdk.paco.me). It
@@ -37,43 +42,82 @@ const meta = {
   parameters: {
     layout: "centered",
   },
-} satisfies Meta<typeof Command>
+  args: {
+    onValueChange: fn(),
+  },
+  argTypes: {
+    value: {
+      control: "text",
+      description: "Controlled value of the active (highlighted) item.",
+      table: { category: "State" },
+    },
+    onValueChange: {
+      description:
+        "Called with the value of the active item as the highlight moves.",
+      table: { category: "Events" },
+    },
+    shouldFilter: {
+      control: "boolean",
+      description:
+        "Whether cmdk filters and sorts items as you type. Disable to filter " +
+        "server-side and render the results yourself.",
+      table: { category: "Data" },
+    },
+    loop: {
+      control: "boolean",
+      description:
+        "Whether arrow-key navigation wraps around at the list boundaries.",
+      table: { category: "Appearance" },
+    },
+    onSelect: {
+      control: false,
+      description:
+        "Story-only: wired onto each `CommandItem`; called with the selected " +
+        "item's value on Enter or click.",
+      table: { category: "Events" },
+    },
+  },
+} satisfies Meta<CommandStoryArgs>
 
 export default meta
 
-type Story = StoryObj<typeof meta>
+type Story = StoryObj<CommandStoryArgs>
 
-function PaletteItems() {
+function PaletteItems({
+  onSelect,
+}: {
+  onSelect?: (value: string) => void
+} = {}) {
   return (
     <CommandList>
       <CommandEmpty>No results found.</CommandEmpty>
       <CommandGroup heading="Suggestions">
-        <CommandItem>
+        <CommandItem onSelect={onSelect}>
           <CalendarIcon />
           Calendar
         </CommandItem>
-        <CommandItem>
+        <CommandItem onSelect={onSelect}>
           <SmileIcon />
           Search Emoji
         </CommandItem>
-        <CommandItem disabled>
+        <CommandItem disabled onSelect={onSelect}>
           <CalculatorIcon />
           Calculator
         </CommandItem>
       </CommandGroup>
       <CommandSeparator />
       <CommandGroup heading="Settings">
-        <CommandItem>
+        <CommandItem onSelect={onSelect}>
           <UserIcon />
           Profile
           <CommandShortcut>⌘P</CommandShortcut>
         </CommandItem>
-        <CommandItem>
+        <CommandItem onSelect={onSelect}>
           <CreditCardIcon />
           Billing
           <CommandShortcut>⌘B</CommandShortcut>
         </CommandItem>
-        <CommandItem>
+        <CommandItem onSelect={onSelect}>
           <SettingsIcon />
           Settings
           <CommandShortcut>⌘S</CommandShortcut>
@@ -87,13 +131,13 @@ function PaletteItems() {
  * An inline palette: search input, grouped items, separators, and shortcuts.
  */
 export const Default: Story = {
-  render: (args) => (
+  render: ({ onSelect, ...args }) => (
     <Command
       {...args}
       className="w-96 rounded-lg ring-1 ring-foreground/10 shadow-md"
     >
       <CommandInput placeholder="Type a command or search..." />
-      <PaletteItems />
+      <PaletteItems onSelect={onSelect} />
     </Command>
   ),
 }
@@ -137,9 +181,38 @@ export const Dialog: Story = {
 }
 
 /**
+ * The empty state: when the query matches nothing, `CommandEmpty` renders in
+ * place of the option list. Shown here with a non-matching controlled query.
+ */
+export const Empty: Story = {
+  parameters: {
+    a11y: {
+      // With no matching options the `role="listbox"` holds only the empty-state
+      // text and zero `option` children — axe's aria-required-children flags the
+      // empty listbox. That empty result set is the exact state under test.
+      options: { rules: { "aria-required-children": { enabled: false } } },
+    },
+  },
+  render: ({ onSelect: _onSelect, ...args }) => (
+    <Command
+      {...args}
+      className="w-96 rounded-lg ring-1 ring-foreground/10 shadow-md"
+    >
+      <CommandInput
+        value="no such command"
+        onValueChange={() => {}}
+        placeholder="Type a command or search..."
+      />
+      <PaletteItems />
+    </Command>
+  ),
+}
+
+/**
  * The inline palette reviewed in dark mode.
  */
 export const Dark: Story = {
+  tags: ["!autodocs"],
   globals: {
     theme: "dark",
   },
@@ -147,11 +220,14 @@ export const Dark: Story = {
 }
 
 /**
- * Typing filters the visible options; a non-matching query shows the empty
- * state.
+ * Typing filters the visible options, a non-matching query shows the empty
+ * state, and ArrowDown + Enter selects the highlighted item.
  */
 export const Behavior: Story = {
   tags: ["test", "!autodocs", "!dev"],
+  args: {
+    onSelect: fn(),
+  },
   parameters: {
     a11y: {
       // This test types a non-matching query, so cmdk's `role="listbox"` ends up
@@ -162,7 +238,7 @@ export const Behavior: Story = {
     },
   },
   render: Default.render,
-  play: async ({ canvasElement, step }) => {
+  play: async ({ args, canvasElement, step }) => {
     const canvas = within(canvasElement)
     const input = canvas.getByRole("combobox")
 
@@ -188,5 +264,24 @@ export const Behavior: Story = {
       await userEvent.type(input, "zzzz")
       await waitFor(() => expect(canvas.getByText(/no results/i)).toBeVisible())
     })
+
+    await step(
+      "ArrowDown then Enter selects the highlighted item",
+      async () => {
+        await userEvent.clear(input)
+        await userEvent.type(input, "calen")
+        await waitFor(() =>
+          expect(
+            canvas.getByRole("option", { name: /calendar/i })
+          ).toBeVisible()
+        )
+        await userEvent.keyboard("{Enter}")
+        await waitFor(() =>
+          expect(args.onSelect).toHaveBeenCalledWith(
+            expect.stringMatching(/calendar/i)
+          )
+        )
+      }
+    )
   },
 }

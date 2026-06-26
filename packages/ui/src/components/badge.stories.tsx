@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { CheckIcon, ExternalLinkIcon } from "lucide-react"
+import { expect, within } from "storybook/test"
 
 import { Badge } from "./badge"
 
@@ -92,10 +93,17 @@ export const WithIconEnd: Story = {
 
 /** Polymorphic render: an anchor badge picks up the `[a]:hover` affordances. */
 export const AsLink: Story = {
+  tags: ["test", "!autodocs", "!dev"],
   args: {
     variant: "link",
     render: <a href="#badge" />,
     children: "Go to docs",
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const link = canvas.getByRole("link", { name: /go to docs/i })
+    expect(link.tagName).toBe("A")
+    expect(link).toHaveAttribute("href", "#badge")
   },
 }
 
@@ -114,6 +122,7 @@ export const LongText: Story = {
 
 /** Every variant at a glance, for visual + dark-theme review. */
 export const Matrix: Story = {
+  tags: ["!autodocs"],
   parameters: { controls: { disable: true } },
   render: () => (
     <div className="flex flex-wrap items-center gap-3">
@@ -136,7 +145,8 @@ export const Matrix: Story = {
 }
 
 /** Destructive badge pinned to dark for contrast review (background tint + ring). */
-export const DestructiveDark: Story = {
+export const Dark: Story = {
+  tags: ["!autodocs"],
   args: { variant: "destructive", children: "Failed" },
   globals: { theme: "dark" },
 }

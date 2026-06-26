@@ -13,10 +13,25 @@ const meta = {
   component: Checkbox,
   tags: ["autodocs"],
   argTypes: {
-    checked: { control: "boolean" },
-    indeterminate: { control: "boolean" },
-    disabled: { control: "boolean" },
-    onCheckedChange: { action: "checkedChange" },
+    checked: {
+      control: "boolean",
+      description: "Controlled checked state.",
+      table: { category: "State" },
+    },
+    indeterminate: {
+      control: "boolean",
+      description: "Render the indeterminate (partial selection) state.",
+      table: { category: "State" },
+    },
+    disabled: {
+      control: "boolean",
+      description: "Disable the checkbox and ignore user interaction.",
+      table: { category: "State" },
+    },
+    onCheckedChange: {
+      description: "Called with the next checked state when the user toggles.",
+      table: { category: "Events" },
+    },
   },
   args: {
     disabled: false,
@@ -63,6 +78,21 @@ export const WithLabel: Story = {
       <Checkbox id="terms" {...args} />
       <FieldLabel htmlFor="terms">Accept terms and conditions</FieldLabel>
     </Field>
+  ),
+}
+
+/** Every visual state side by side for light-theme review. */
+export const Matrix: Story = {
+  tags: ["!autodocs"],
+  parameters: { controls: { disable: true } },
+  render: () => (
+    <div className="flex items-center gap-4">
+      <Checkbox aria-label="Unchecked" defaultChecked={false} />
+      <Checkbox aria-label="Checked" defaultChecked />
+      <Checkbox aria-label="Indeterminate" indeterminate />
+      <Checkbox aria-label="Invalid" aria-invalid />
+      <Checkbox aria-label="Disabled" disabled defaultChecked />
+    </div>
   ),
 }
 

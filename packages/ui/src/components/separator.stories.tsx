@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
+import { expect, within } from "storybook/test"
 
 import { Button } from "./button"
 import { Separator } from "./separator"
@@ -18,6 +19,7 @@ const meta = {
       control: "select",
       options: ["horizontal", "vertical"],
       description: "Layout axis; reflected as data-horizontal / data-vertical.",
+      table: { category: "Appearance" },
     },
   },
   args: {
@@ -49,19 +51,6 @@ export const Vertical: Story = {
       <span>Source</span>
       <Separator {...args} />
       <span>About</span>
-    </div>
-  ),
-}
-
-/** Inline within a row of text, separating breadcrumb-like segments. */
-export const InText: Story = {
-  render: () => (
-    <div className="flex h-5 items-center gap-2 text-sm text-muted-foreground">
-      <span>Workspace</span>
-      <Separator orientation="vertical" />
-      <span>Diagrams</span>
-      <Separator orientation="vertical" />
-      <span>Class Diagram</span>
     </div>
   ),
 }
@@ -101,4 +90,48 @@ export const Dark: Story = {
       </div>
     </div>
   ),
+}
+
+/**
+ * Interaction test: both orientations expose `role="separator"` and the matching
+ * `aria-orientation`, so assistive tech announces the divider and its axis.
+ */
+export const Behavior: Story = {
+  tags: ["test", "!autodocs", "!dev"],
+  parameters: { controls: { disable: true } },
+  render: () => (
+    <div className="flex flex-col gap-6">
+      <div data-testid="horizontal-row" className="w-64 space-y-3">
+        <p className="text-sm">Profile</p>
+        <Separator orientation="horizontal" />
+      </div>
+      <div
+        data-testid="vertical-row"
+        className="flex h-8 items-center gap-3 text-sm"
+      >
+        <span>Docs</span>
+        <Separator orientation="vertical" />
+        <span>Source</span>
+      </div>
+    </div>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("horizontal separator exposes its role and axis", async () => {
+      const horizontal = within(canvas.getByTestId("horizontal-row")).getByRole(
+        "separator"
+      )
+      await expect(horizontal).toBeInTheDocument()
+      await expect(horizontal).toHaveAttribute("aria-orientation", "horizontal")
+    })
+
+    await step("vertical separator exposes its role and axis", async () => {
+      const vertical = within(canvas.getByTestId("vertical-row")).getByRole(
+        "separator"
+      )
+      await expect(vertical).toBeInTheDocument()
+      await expect(vertical).toHaveAttribute("aria-orientation", "vertical")
+    })
+  },
 }

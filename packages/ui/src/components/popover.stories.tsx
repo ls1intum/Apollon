@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { expect, fn, userEvent, waitFor, within } from "storybook/test"
+import { useState } from "react"
 
 import { Button } from "./button"
 import { Field, FieldLabel } from "./field"
@@ -33,15 +34,22 @@ const meta = {
     open: {
       control: "boolean",
       description: "Controlled open state.",
+      table: { category: "State" },
     },
     defaultOpen: {
       control: "boolean",
       description: "Open state on mount (uncontrolled).",
+      table: { category: "State" },
     },
     modal: {
       control: "boolean",
       description:
         "Whether the popover blocks interaction with the rest of the page.",
+      table: { category: "State" },
+    },
+    onOpenChange: {
+      description: "Called with the next open state when it changes.",
+      table: { category: "Events" },
     },
   },
 } satisfies Meta<typeof Popover>
@@ -90,9 +98,9 @@ export const WithHeader: Story = {
 }
 
 /**
- * A popover whose open state is controlled via the `open` arg.
+ * A popover pinned open on mount via the uncontrolled `defaultOpen` arg.
  */
-export const Controlled: Story = {
+export const Open: Story = {
   args: {
     defaultOpen: true,
   },
@@ -106,6 +114,75 @@ export const Controlled: Story = {
       </PopoverContent>
     </Popover>
   ),
+}
+
+/**
+ * A genuinely controlled popover: local React state drives `open` and is kept
+ * in sync through `onOpenChange`, and an external button toggles it from
+ * outside the `Popover`.
+ */
+export const Controlled: Story = {
+  render: (args) => {
+    const Demo = () => {
+      const [open, setOpen] = useState(false)
+      return (
+        <div className="flex items-center gap-3">
+          <Button variant="secondary" onClick={() => setOpen((o) => !o)}>
+            Toggle externally
+          </Button>
+          <Popover
+            {...args}
+            open={open}
+            onOpenChange={(next, details) => {
+              setOpen(next)
+              args.onOpenChange?.(next, details)
+            }}
+          >
+            <PopoverTrigger render={<Button variant="outline" />}>
+              Anchor
+            </PopoverTrigger>
+            <PopoverContent aria-label="Controlled popover">
+              <p>Driven by external React state.</p>
+            </PopoverContent>
+          </Popover>
+        </div>
+      )
+    }
+    return <Demo />
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const body = within(canvasElement.ownerDocument.body)
+    const toggle = canvas.getByRole("button", { name: /toggle externally/i })
+
+    await step("external button opens the popover", async () => {
+      await userEvent.click(toggle)
+      await waitFor(() =>
+        expect(body.getByText(/driven by external react state/i)).toBeVisible()
+      )
+    })
+
+    await step("Escape closes the controlled popover", async () => {
+      await userEvent.keyboard("{Escape}")
+      await waitFor(() =>
+        expect(
+          body.queryByText(/driven by external react state/i)
+        ).not.toBeInTheDocument()
+      )
+    })
+
+    await step(
+      "external button re-opens it (state is the source of truth)",
+      async () => {
+        await userEvent.click(toggle)
+        await waitFor(() =>
+          expect(
+            body.getByText(/driven by external react state/i)
+          ).toBeVisible()
+        )
+      }
+    )
+  },
 }
 
 /**
@@ -161,6 +238,7 @@ export const WithForm: Story = {
  * The popover pinned open in dark mode to review surface, ring, and text.
  */
 export const Dark: Story = {
+  tags: ["!autodocs"],
   args: {
     defaultOpen: true,
   },

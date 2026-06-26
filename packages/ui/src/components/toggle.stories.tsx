@@ -116,6 +116,40 @@ export const Sizes: Story = {
   ),
 }
 
+/** Every variant across every size, both unpressed and pressed. */
+export const Matrix: Story = {
+  tags: ["!autodocs"],
+  parameters: { controls: { disable: true } },
+  render: () => {
+    const variants = ["default", "outline"] as const
+    const sizes = ["sm", "default", "lg"] as const
+    return (
+      <div className="flex flex-col gap-4">
+        {variants.map((variant) =>
+          [false, true].map((pressed) => (
+            <div
+              key={`${variant}-${pressed}`}
+              className="flex items-center gap-3"
+            >
+              {sizes.map((size) => (
+                <Toggle
+                  key={size}
+                  variant={variant}
+                  size={size}
+                  defaultPressed={pressed}
+                  aria-label={`${variant} ${size} ${pressed ? "pressed" : "unpressed"}`}
+                >
+                  <BoldIcon />
+                </Toggle>
+              ))}
+            </div>
+          ))
+        )}
+      </div>
+    )
+  },
+}
+
 /** Pinned dark-theme review across variants and states. */
 export const Dark: Story = {
   tags: ["!autodocs"],

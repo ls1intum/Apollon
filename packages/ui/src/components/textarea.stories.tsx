@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
-import { fn } from "storybook/test"
+import { expect, fn, userEvent, within } from "storybook/test"
 
 import { Field, FieldLabel } from "./field"
 import { Textarea } from "./textarea"
@@ -14,10 +14,13 @@ const meta = {
   component: Textarea,
   tags: ["autodocs"],
   argTypes: {
-    placeholder: { control: "text" },
-    rows: { control: "number" },
-    disabled: { control: "boolean" },
-    onChange: { action: "changed" },
+    placeholder: { control: "text", table: { category: "Data" } },
+    rows: { control: "number", table: { category: "Appearance" } },
+    disabled: { control: "boolean", table: { category: "State" } },
+    onChange: {
+      description: "Fires when the textarea value changes.",
+      table: { category: "Events" },
+    },
   },
   args: {
     placeholder: "Type your message…",
@@ -101,4 +104,18 @@ export const Resize: Story = {
       </Field>
     </div>
   ),
+}
+
+/** Interaction test: typing updates the textarea's value. */
+export const TypeInteraction: Story = {
+  tags: ["test", "!autodocs", "!dev"],
+  args: { placeholder: "Type your message…" },
+  render: (args) => <Textarea className="w-80" {...args} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const textarea =
+      canvas.getByPlaceholderText<HTMLTextAreaElement>("Type your message…")
+    await userEvent.type(textarea, "Hello Apollon")
+    await expect(textarea).toHaveValue("Hello Apollon")
+  },
 }

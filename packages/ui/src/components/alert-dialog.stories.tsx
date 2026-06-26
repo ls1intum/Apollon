@@ -86,6 +86,7 @@ export const Open: Story = {
  * contrast.
  */
 export const Dark: Story = {
+  tags: ["!autodocs"],
   args: {
     defaultOpen: true,
   },

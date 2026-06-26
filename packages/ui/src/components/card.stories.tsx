@@ -173,6 +173,7 @@ export const OnSurface: Story = {
 
 /** Default vs `sm` spacing side by side for visual + dark review. */
 export const Matrix: Story = {
+  tags: ["!autodocs"],
   parameters: { controls: { disable: true } },
   render: () => (
     <div className="flex flex-wrap items-start gap-4">
