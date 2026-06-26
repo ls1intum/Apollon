@@ -1,5 +1,23 @@
 # @tumaet/apollon
 
+## 4.9.0
+
+### Minor Changes
+
+- [#773](https://github.com/ls1intum/Apollon/pull/773) [`8251733`](https://github.com/ls1intum/Apollon/commit/8251733a965e9fd3cd0beb7565e3abf138a895d5) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Adds swimlanes (activity partitions) to activity diagrams. Drop a swimlane from the sidebar, then add, remove, rename, or reorder its lanes and switch between vertical columns and horizontal rows from its edit popover. Drag a lane separator to resize the lanes. Activity elements dropped into a swimlane become its children and move with it; place each element under the lane for the role or system that performs that step.
+
+- [#778](https://github.com/ls1intum/Apollon/pull/778) [`d03f562`](https://github.com/ls1intum/Apollon/commit/d03f562b3fabfc92e7cff870fe08061d678926f6) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Add a canvas overlay/control API so host applications can mount their own floating controls — toolbars, side panels, banners — directly inside the editor, in any corner or edge region. Registered chrome is collision-free and the diagram automatically makes room for it, so the canvas stays usable beneath it. The editor's built-in chrome (element palette, zoom/undo controls, minimap) is restyled onto one shared Liquid-Glass surface — translucent tint floor, backdrop blur, concentric radii and consistent elevation — that adapts to light and dark and honours reduced-transparency, increased-contrast and reduced-motion preferences. An untitled diagram now keeps an empty title (consumers can show their own placeholder) instead of being auto-named "Untitled Diagram".
+
+- [#782](https://github.com/ls1intum/Apollon/pull/782) [`515777b`](https://github.com/ls1intum/Apollon/commit/515777ba6a45c0110adfa24c1fdb76251d0e9636) Thanks [@krusche](https://github.com/krusche)! - Two packaging improvements for embedding hosts. First, `yjs` and `y-protocols` are now required peer dependencies instead of being bundled, so your app and Apollon share a single Yjs instance — no duplicate payload and no cross-instance document errors. Second, a new `@tumaet/apollon/external` entry exposes the same imperative `ApollonEditor` API as the default entry but leaves **every** dependency external (React, MUI, emotion, xyflow, @dnd-kit, zustand, uuid, @chenglou/pretext, …) — so a bundler host of any framework resolves and de-duplicates each one from its own `node_modules` and gets full supply-chain / SBOM visibility, instead of a copy inlined invisibly into the bundle. The default `@tumaet/apollon` (self-contained) and `@tumaet/apollon/react` entries are unchanged. Action required only if you adopt the new entry or the Yjs peer: install the corresponding peers (most package managers do this automatically).
+
+### Patch Changes
+
+- [#645](https://github.com/ls1intum/Apollon/pull/645) [`2115fe3`](https://github.com/ls1intum/Apollon/commit/2115fe3d2c787a9055e6d9fbeab61a122eaaf6eb) Thanks [@tamang29](https://github.com/tamang29)! - Communication diagram message labels no longer overlap the edge line, and on vertical edges the two message directions now appear on the correct sides.
+
+- [#777](https://github.com/ls1intum/Apollon/pull/777) [`295a627`](https://github.com/ls1intum/Apollon/commit/295a627e1067c0d23fd71ef3e26c8554a4a6e073) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Edge and interface labels now lay out neatly and consistently. Relationship and stereotype labels sit centered just above their edge and move to a clear arm and side when they would otherwise overlap the edge's own bends, a connected node, or another edge; role and multiplicity labels stay on the correct side of bent edges; and communication-diagram message arrows point the right way. Provided/required interface names in component and deployment diagrams now sit centered below the interface symbol (and wrap if long) instead of floating off its top-right corner, and automatically move to a clear side when an edge connects where the name would otherwise sit. Multi-word use-case actor names (e.g. "Premium Customer") now wrap below the figure instead of truncating. Labels are now placed identically in the editor and in PNG/PDF/SVG exports.
+
+- [#783](https://github.com/ls1intum/Apollon/pull/783) [`451ca97`](https://github.com/ls1intum/Apollon/commit/451ca97872d1afb5478e628179151f7acc71aab7) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Activity-diagram lane separators now snap to the canvas grid while you drag them, matching how nodes and edge bends already snap. Lane boundaries line up cleanly instead of landing on arbitrary sub-pixel positions.
+
 ## 4.8.0
 
 ### Minor Changes
