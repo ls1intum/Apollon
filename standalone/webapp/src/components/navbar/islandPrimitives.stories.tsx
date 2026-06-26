@@ -50,7 +50,11 @@ export const GlassSurface: Story = {
     // browser actually resolved a non-empty backdrop-filter + border from the
     // single-sourced chrome tokens (i.e. components.css reached the home).
     const cs = getComputedStyle(probe)
-    await expect(cs.backdropFilter || cs.webkitBackdropFilter).not.toBe("none")
+    // `-webkit-backdrop-filter` via getPropertyValue: the camelCase
+    // `webkitBackdropFilter` isn't on the TS `CSSStyleDeclaration` type.
+    await expect(
+      cs.backdropFilter || cs.getPropertyValue("-webkit-backdrop-filter")
+    ).not.toBe("none")
     await expect(cs.borderTopWidth).toBe("1px")
   },
 }
