@@ -75,6 +75,7 @@ const VANILLA_SNIPPET = `<link
 <div id="apollon" style="width: 100%; height: 600px"></div>
 
 <script type="module">
+  // esm.sh serves Apollon's required yjs/y-protocols peers automatically.
   import { ApollonEditor } from "https://esm.sh/@tumaet/apollon@4.8.0"
 
   const saved = localStorage.getItem("diagram")
