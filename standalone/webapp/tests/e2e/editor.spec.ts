@@ -97,6 +97,104 @@ test.describe("Editor loading", () => {
 })
 
 // ---------------------------------------------------------------------------
+// Palette drag alignment — the dragged preview must stay pixel-pinned to the
+// cursor (regression guard for the flex-centring "jump on grab" bug).
+// ---------------------------------------------------------------------------
+
+test.describe("Palette drag alignment", () => {
+  test.beforeEach(async ({ page }) => {
+    await openTemporaryLocalDiagram(page)
+    await waitForCanvasReady(page, false)
+  })
+
+  // Read the live on-screen rect of the drag ghost's preview. The ghost is a
+  // fixed-position portal appended to <body>, so its preview is the one
+  // `[data-draggable-preview]` that is NOT inside the palette <aside>.
+  const ghostPreviewRect = (page: Page) =>
+    page.evaluate(() => {
+      const g = Array.from(
+        document.querySelectorAll<HTMLElement>("[data-draggable-preview]")
+      ).find((p) => !p.closest('[data-testid="apollon-palette"]'))
+      if (!g) return null
+      const r = g.getBoundingClientRect()
+      return { left: r.left, top: r.top, width: r.width, height: r.height }
+    })
+
+  test("the grabbed point stays under the cursor — no jump on grab", async ({
+    page,
+  }) => {
+    const palette = page.locator('[data-testid="apollon-palette"]').first()
+    const preview = palette.locator("[data-draggable-preview]").first()
+    await expect(preview).toBeVisible()
+    const box = await preview.boundingBox()
+    expect(box).not.toBeNull()
+
+    // Grab at the preview's centre and drag by a known delta.
+    const grabX = box!.x + box!.width / 2
+    const grabY = box!.y + box!.height / 2
+    await page.mouse.move(grabX, grabY)
+    await page.mouse.down()
+    const DX = 160
+    const DY = 120
+    await page.mouse.move(grabX + DX, grabY + DY, { steps: 8 })
+
+    const ghost = await ghostPreviewRect(page)
+    expect(ghost, "drag ghost should be rendered").not.toBeNull()
+
+    // The grabbed point (the preview's centre) must sit exactly under the cursor.
+    // A "jump on grab" would offset the ghost's centre from the cursor; the bug
+    // was the palette entry's flex-centring being applied twice.
+    const ghostCenterX = ghost!.left + ghost!.width / 2
+    const ghostCenterY = ghost!.top + ghost!.height / 2
+    expect(Math.abs(ghostCenterX - (grabX + DX))).toBeLessThanOrEqual(1)
+    expect(Math.abs(ghostCenterY - (grabY + DY))).toBeLessThanOrEqual(1)
+
+    await page.mouse.up()
+  })
+
+  test("the ghost matches the dropped node's on-screen size at the current zoom", async ({
+    page,
+  }) => {
+    const palette = page.locator('[data-testid="apollon-palette"]').first()
+    const preview = palette.locator("[data-draggable-preview]").first()
+    await expect(preview).toBeVisible()
+    const box = await preview.boundingBox()
+    expect(box).not.toBeNull()
+
+    // Drag the item onto the canvas centre.
+    await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2)
+    await page.mouse.down()
+    const canvas = page.locator(".react-flow").first()
+    const cbox = await canvas.boundingBox()
+    expect(cbox).not.toBeNull()
+    await page.mouse.move(
+      cbox!.x + cbox!.width / 2,
+      cbox!.y + cbox!.height / 2,
+      { steps: 10 }
+    )
+
+    // Size of the dragged ghost, captured mid-drag.
+    const ghost = await ghostPreviewRect(page)
+    expect(ghost, "drag ghost should be rendered").not.toBeNull()
+
+    await page.mouse.up()
+
+    // The node that just landed.
+    const node = page.locator(".react-flow__node").first()
+    await expect(node).toBeVisible()
+    const nodeBox = await node.boundingBox()
+    expect(nodeBox).not.toBeNull()
+
+    // WYSIWYG: the dragged ghost is the same on-screen size as the dropped node
+    // (both scale with the canvas zoom). Before the fix the ghost was a fixed
+    // 0.8x palette preview, so it mismatched the zoom-scaled node by ~20%+.
+    // Tolerance covers the node's border/padding vs the bare preview SVG.
+    expect(Math.abs(ghost!.width - nodeBox!.width)).toBeLessThanOrEqual(6)
+    expect(Math.abs(ghost!.height - nodeBox!.height)).toBeLessThanOrEqual(6)
+  })
+})
+
+// ---------------------------------------------------------------------------
 // Template loading – ensures a non-empty diagram
 // ---------------------------------------------------------------------------
 

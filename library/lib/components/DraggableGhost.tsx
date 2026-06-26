@@ -60,7 +60,8 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
   const nodeSnapStepPx = CANVAS.SNAP_TO_GRID_PX
   const diagramId = useDiagramStore(useShallow((state) => state.diagramId))
   // Hooks from react-flow and zustand store for node management
-  const { screenToFlowPosition, getIntersectingNodes } = useReactFlow()
+  const { screenToFlowPosition, getIntersectingNodes, getViewport } =
+    useReactFlow()
   const { nodes, setNodes } = useDiagramStore(
     useShallow((state) => ({
       nodes: state.nodes,
@@ -68,10 +69,25 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
     }))
   )
 
-  // Local state to track drag status, ghost position, and pointer offset
+  // Local state to track drag status, ghost position, and pointer offsets.
   const [isDragging, setIsDragging] = useState(false)
   const [ghostPosition, setGhostPosition] = useState({ x: 0, y: 0 })
+  // Cursor offset within the PREVIEW shape — converted (via previewScale) into the
+  // dropped node's placement so the grabbed point of the shape stays under the
+  // cursor on drop.
   const [clickOffset, setClickOffset] = useState({ x: 0, y: 0 })
+  // Cursor offset within the ENTRY (the element actually rendered in the ghost) —
+  // positions the ghost. It differs from clickOffset because the entry flex-centres
+  // the preview in its cell; positioning the ghost by the preview offset would
+  // re-apply that centring and make the shape visibly jump away from the cursor on
+  // grab. Tracked separately so the ghost stays pixel-aligned AND the drop lands true.
+  const [ghostOffset, setGhostOffset] = useState({ x: 0, y: 0 })
+  // Visual scale applied to the ghost so it matches the size the node will have on
+  // the canvas at the current zoom (WYSIWYG). The palette preview is rendered at
+  // `previewScale`; a dropped node renders at `zoom`, so scaling by `zoom /
+  // previewScale` makes the dragged shape the same on-screen size as the drop —
+  // captured on grab (zoom can't change mid palette-drag).
+  const [ghostScale, setGhostScale] = useState(1)
 
   /* ----------------------------------------------------------------------
      onDrop: Handles the pointer up event by calculating the drop position,
@@ -229,26 +245,43 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
     event.preventDefault()
     disableScroll()
 
+    // Drop offset: cursor relative to the PREVIEW shape's top-left.
     const previewElement = event.currentTarget.querySelector<HTMLElement>(
       "[data-draggable-preview]"
     )
-    const elementRect = (
+    const previewRect = (
       previewElement ?? event.currentTarget
     ).getBoundingClientRect()
-    const offsetX = event.clientX - elementRect.left
-    const offsetY = event.clientY - elementRect.top
+    setClickOffset({
+      x: event.clientX - previewRect.left,
+      y: event.clientY - previewRect.top,
+    })
 
-    setClickOffset({ x: offsetX, y: offsetY })
-    setGhostPosition({ x: event.clientX - offsetX, y: event.clientY - offsetY })
+    // Ghost offset: cursor relative to the ENTRY's top-left (the entry is the
+    // child rendered inside the ghost portal). Positioning the ghost by this
+    // keeps the entry — and therefore its flex-centred preview — exactly where it
+    // sat in the palette, so the shape never jumps out from under the cursor.
+    const entry = (event.currentTarget.firstElementChild ??
+      event.currentTarget) as HTMLElement
+    const entryRect = entry.getBoundingClientRect()
+    const ghostX = event.clientX - entryRect.left
+    const ghostY = event.clientY - entryRect.top
+    setGhostOffset({ x: ghostX, y: ghostY })
+    setGhostPosition({ x: event.clientX - ghostX, y: event.clientY - ghostY })
+
+    // Scale the ghost to the on-screen size the node will have at this zoom.
+    setGhostScale(getViewport().zoom / previewScale)
+
     setIsDragging(true)
   }
 
-  // Update ghost position during dragging
+  // Update ghost position during dragging — keep the entry pinned to the cursor
+  // by the same ghost offset captured on grab.
   const handlePointerMove = (event: PointerEvent) => {
     if (!isDragging) return
     setGhostPosition({
-      x: event.clientX - clickOffset.x,
-      y: event.clientY - clickOffset.y,
+      x: event.clientX - ghostOffset.x,
+      y: event.clientY - ghostOffset.y,
     })
   }
 
@@ -293,7 +326,7 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
       document.removeEventListener("pointerup", handlePointerUp)
       document.removeEventListener("pointercancel", handlePointerCancel)
     }
-  }, [isDragging, clickOffset])
+  }, [isDragging, ghostOffset])
 
   /* ----------------------------------------------------------------------
      Render the ghost element via a portal when dragging
@@ -312,6 +345,11 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
         pointerEvents: "none",
         zIndex: ZINDEX.DRAGGABLE_ELEMENT,
         opacity: 0.8,
+        // Scale to the drop's on-screen size, pivoting on the grabbed point
+        // (ghostOffset, measured from the entry's top-left) so the scale never
+        // shifts the shape out from under the cursor.
+        transform: `scale(${ghostScale})`,
+        transformOrigin: `${ghostOffset.x}px ${ghostOffset.y}px`,
       }}
     >
       {children}
