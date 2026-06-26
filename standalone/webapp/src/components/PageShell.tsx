@@ -2,18 +2,8 @@ import type { ReactNode } from "react"
 import { cn } from "@tumaet/ui/lib/utils"
 
 /**
- * The single page shell for every NON-EDITOR route (home, legal, 404).
- *
- * Before this existed the home owned its header INSIDE its own scroll container
- * (a sticky `HomeHeaderRow`) while the sub-routes got a `ChromeSubHeader`
- * rendered in `__root` OUTSIDE the scroll container, above an `overflow:hidden`
- * editor area. That structural divergence read differently (home: scroll-then-
- * stick; sub-page: fixed) AND was a real bug: a sub-page root that wasn't a
- * bounded flex column gave its `app-scroll-y` <main> no height to scroll
- * against, so legal content past the first viewport was clipped — privacy /
- * imprint could not scroll.
- *
- * `PageShell` eliminates the divergence. ONE pattern for all three:
+ * The single page shell for every NON-EDITOR route (home, legal, 404). ONE
+ * layout pattern for all three:
  *
  *   <div flex-col h-full min-h-0 overflow-hidden>        ← bounded flex column
  *     <div app-scroll-y flex-1 min-h-0>                  ← the ONE scroll viewport
@@ -24,26 +14,25 @@ import { cn } from "@tumaet/ui/lib/utils"
  *     </div>
  *   </div>
  *
+ * The outer wrapper must be a bounded flex column so the `app-scroll-y` scroll
+ * viewport has a height to scroll against — otherwise legal copy past the first
+ * viewport clips and can't scroll.
+ *
  * Why the scroll root is a `<div>` and NOT a `<main>`: the header node
  * (`HomeHeaderRow` / `ChromeSubHeader`) contains a `<header role="banner">`
  * island, and the banner landmark must be top-level — axe's
  * `landmark-banner-is-top-level` forbids a banner nested inside another landmark.
- * If the scroll root were the `<main>`, the banner would sit inside `main`. So
- * the scroll viewport is a plain `<div>`, and inside the shared gutter wrapper
+ * So the scroll viewport is a plain `<div>`, and inside the shared gutter wrapper
  * the `{header}` (banner) and the `<main>` that wraps `{children}` are SIBLINGS —
- * banner top-level, main top-level, both landmarks at the document root.
+ * both landmarks at the document root.
  *
- * The header + main still share ONE gutter wrapper on purpose: a `sticky` element
- * pins only within its containing block, so this wrapper (which spans the full
- * scroll height) is what keeps the header pinned the whole way down — give the
- * header its own short wrapper and it un-sticks the moment you scroll past it.
- * That wrapper carries the SHARED rhythm — the `home-content-x` gutter, the
- * 1536px max width and the `pt-5/md:pt-6` resting offset — and the header node it
- * wraps is the sticky island row itself, pinning at
- * `top: calc(safe-area-top + 0.75rem / md:1rem)`. So the brand island lands at
- * the identical baseline and sticks identically whether the user is on the home
- * or a sub-page: the SAME floating-glass island grammar scrolls through that
- * padding, then pins.
+ * The header + main share ONE gutter wrapper on purpose: a `sticky` element pins
+ * only within its containing block, so this wrapper (which spans the full scroll
+ * height) keeps the header pinned the whole way down — give the header its own
+ * short wrapper and it un-sticks the moment you scroll past it. That wrapper
+ * carries the SHARED rhythm — the `home-content-x` gutter, the 1536px max width
+ * and the `pt-5/md:pt-6` resting offset — so the brand island lands at the
+ * identical baseline and sticks identically on home and sub-pages.
  *
  * Content chooses its own measure via `contentClassName` (the home gallery fills
  * the 1536px column; legal prose re-centers in a readable `max-w-3xl`) — the

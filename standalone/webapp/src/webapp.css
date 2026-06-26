@@ -5,9 +5,8 @@
 @import "@tumaet/ui/styles/theme.css";
 
 /* The shared primitives (button / icon-button / input / textarea / tooltip) are
-   now styled by semantic data-slot rules instead of inline Tailwind utilities,
-   so pull in the precompiled, Preflight-free components.css that defines them.
-   Tailwind still drives app layout + the other inline-utility components.
+   styled by semantic data-slot rules in this precompiled, Preflight-free
+   components.css. Tailwind still drives app layout + inline-utility components.
    Relative path (not the package export) so the Tailwind Vite plugin's CSS
    resolver reliably inlines the precompiled dist file. */
 @import "../../../packages/ui/dist/components.css";
@@ -96,24 +95,18 @@ html,
 body,
 #root {
   /* Only the text colour eases on a theme switch. Animating background-color
-     here made every backdrop-blur surface above it (home navbar, glass islands)
-     re-rasterise its blur each frame for 220ms — a visible flicker on toggle.
-     The background flips in one frame instead (how tldraw/Linear/VS Code do it),
-     so the blurred plates never sample a tweening backdrop. */
+     here forces every backdrop-blur surface above it (home navbar, glass
+     plates) to re-rasterise its blur each frame for 220ms — a visible flicker.
+     Flip the background in one frame so the blurred plates never sample a
+     tweening backdrop. */
   transition: color 220ms ease;
 }
 
-/* ── Home canvas background ──────────────────────────────────────────────────
-   A subtle dot-grid behind the whole home page so it reads as "the same canvas
-   the editor floats over". The editor (library/lib/components/CustomBackground)
-   draws TWO ReactFlow line grids: a fine 5px grid in --apollon-gray and a major
-   50px grid in --apollon-grid (light rgba(36,39,36,.1) / dark #303530). We match
-   the editor's MAJOR grid here — same 50px cadence, same --apollon-grid color
-   token (so it tracks both themes automatically) — but render it as a dot at
-   each grid intersection instead of full rules, kept faint enough to read as
-   barely-there texture and NOT compete with the opaque cards or glass band that
-   sit on top. The dot color is mixed down from --apollon-grid so it stays subtle
-   in light AND dark. Painted on the page root, behind the z-10 scroll <main>. */
+/* Subtle dot-grid behind the home page so it reads as "the same canvas the
+   editor floats over". Matches the editor's MAJOR grid (CustomBackground): same
+   50px cadence and --apollon-grid token (so it tracks both themes), but rendered
+   as faint dots at each intersection, mixed down so it never competes with the
+   cards/glass on top. Painted on the page root, behind the z-10 scroll <main>. */
 .home-canvas-bg {
   background-image: radial-gradient(
     circle at 1px 1px,
@@ -377,9 +370,8 @@ body,
 }
 
 /* Home/sub-page content gutter — hugs the safe area (max(edge, inset)) so the
-   gallery and the sticky ChromeSubHeader band clear a side notch in landscape
-   (the Tailwind px-4/md:px-6 it replaces had no safe-area awareness). The top
-   inset is handled by the sticky band's own `top` offset, not here. */
+   gallery and the sticky ChromeSubHeader band clear a side notch in landscape.
+   The top inset is handled by the sticky band's own `top` offset, not here. */
 .home-content-x {
   padding-left: max(1rem, var(--safe-area-inset-left, 0px));
   padding-right: max(1rem, var(--safe-area-inset-right, 0px));

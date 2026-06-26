@@ -78,10 +78,6 @@ async function request<T>(
   return { data: parsed as T, res }
 }
 
-// ---------------------------------------------------------------------------
-// Diagram CRUD
-// ---------------------------------------------------------------------------
-
 export const DiagramApiClient = {
   async fetchDiagram(
     diagramId: string,
@@ -139,10 +135,6 @@ export const DiagramApiClient = {
     }
   },
 }
-
-// ---------------------------------------------------------------------------
-// Version history
-// ---------------------------------------------------------------------------
 
 export interface ListVersionsResponse {
   versions: VersionSummary[]
@@ -246,15 +238,10 @@ export const VersionApiClient = {
   },
 
   /**
-   * Convenience permalink to a specific version, opened in preview mode.
-   *
-   * Preserves the current `view` query parameter — `ApollonShared`
-   * rejects URLs that omit it ("Invalid view type") because the editor's
-   * mode (collaborate / give-feedback / see-feedback) is configured up
-   * front from that param. Without preserving it, a copied link would
-   * 404 on click. Falls back to `collaborate` if the current page has no
-   * `view` (e.g. local mode), since shared links overwhelmingly target
-   * collaborative diagrams.
+   * Permalink to a specific version, opened in preview mode. Preserves the
+   * current `view` param — ApollonShared rejects URLs that omit it ("Invalid
+   * view type"), so a copied link would 404. Falls back to `collaborate` when
+   * the page has no `view` (e.g. local mode).
    */
   permalink(diagramId: string, versionId: string): string {
     const current = new URLSearchParams(window.location.search)

@@ -1,24 +1,18 @@
 /**
- * Convert an Apollon-exported (compat-mode) SVG string into a flat sequence of
- * native PPTX shapes on a single slide. The goal is *animatability*: each
- * visible diagram element (rectangle, line, text label, arrowhead) becomes its
- * own `<p:sp>` so users can apply per-element animations from PowerPoint's
- * (or Keynote's) Animation panel.
+ * Convert an Apollon-exported (compat-mode) SVG into native PPTX shapes on one
+ * slide. Each visible element becomes its own `<p:sp>` so users can apply
+ * per-element animations from PowerPoint's/Keynote's Animation panel.
  *
- * Coordinate strategy: PPTX uses inches; pixels → inches via PX_PER_INCH (96).
- * Apollon's SVG sets `viewBox="clip.x clip.y W H"`, so we subtract the clip
- * origin from every absolute coordinate. Inside each `.react-flow__node` group
- * the inner `<svg>` has its own viewBox that maps 1:1 onto its pixel size, so
- * we recurse with an accumulated transform.
+ * Coordinates: PPTX is in inches (px → in via PX_PER_INCH). The SVG viewBox is
+ * `clip.x clip.y W H`, so the clip origin is subtracted from every absolute
+ * coordinate; nested `<svg>` viewBoxes are followed via an accumulated CTM.
  *
- * Paint inheritance: SVG lets a parent `<g>` set `stroke`, `fill`,
- * `stroke-width` etc. for its descendants. The walker carries an inherited
- * paint-style object so children that omit those attributes pick them up
- * (Apollon's use-case actor stick figure relies on this for its lines).
+ * Paint inheritance: the walker carries an inherited paint-style object so
+ * children that omit fill/stroke/stroke-width pick them up from an ancestor
+ * `<g>` (Apollon's use-case actor stick figure relies on this).
  *
- * Rotation: 2D affine matrices that came from `rotate()` are decomposed back
- * into rotation + scale + flip and applied to the emitted shape's `rotate`
- * property so PowerPoint/Keynote render them correctly.
+ * Rotation: affine matrices from `rotate()` are decomposed back into
+ * rotation + scale + flip and applied to the shape's `rotate` property.
  */
 import type pptxgen from "pptxgenjs"
 import { parsePath, pathBBox, type PathSegment, type Pt } from "./svgPathParser"
@@ -29,8 +23,8 @@ const PT_PER_PX = 0.75
 
 /**
  * Offset (in em) from the alphabetic baseline up to the point Apollon centres
- * labels on — Inter's middle baseline. Matches the `compat` export's
- * baseline-resolution constant, so PPTX text lands where the editor draws it.
+ * labels on (Inter's middle baseline). Matches the compat export so PPTX text
+ * lands where the editor draws it.
  */
 const BASELINE_TO_CENTER_EM = 0.25
 /** Slack added to canvas-measured run width so glyph edges don't clip. */
@@ -60,9 +54,8 @@ const multiply = (a: Mat, b: Mat): Mat => [
 ]
 
 /**
- * Decompose an affine matrix into rotation (degrees) + uniform scale +
- * (optional) flip. We only emit a non-zero `rotate` when the rotation is
- * appreciable, otherwise PowerPoint adds tiny visual jitter.
+ * Decompose an affine matrix into rotation (degrees) + scale. Rotations below
+ * 0.01° are zeroed, otherwise PowerPoint adds tiny visual jitter.
  */
 function decomposeRotation(m: Mat): {
   rotateDeg: number
@@ -75,8 +68,8 @@ function decomposeRotation(m: Mat): {
   const d = m[3]
   const scaleX = Math.sqrt(a * a + b * b) || 1
   const scaleY = Math.sqrt(c * c + d * d) || 1
-  // Determinant negative → reflection. We don't carry that into shape flipH/V
-  // because Apollon's compat-mode export doesn't reflect anything.
+  // Negative determinant → reflection, not carried into flipH/V because
+  // Apollon's compat-mode export never reflects.
   const rotateRad = Math.atan2(b, a)
   const rotateDeg = (rotateRad * 180) / Math.PI
   return {
@@ -126,11 +119,7 @@ function parseTransform(value: string | null): Mat {
   return m
 }
 
-/**
- * Subset of CSS named colors that Apollon's compat-mode export can produce
- * after CSS-variable resolution. Hoisted to module scope to avoid per-call
- * allocation.
- */
+/** CSS named colors Apollon's compat export can emit after CSS-var resolution. */
 const NAMED_COLORS: Record<string, string> = {
   black: "000000",
   white: "FFFFFF",
@@ -150,13 +139,10 @@ const hexByte = (n: number) =>
 
 /**
  * Resolve a color string ("#rgb", "#rrggbb", "#rrggbbaa", "rgb(…)", "rgba(…)",
- * or named) into a 6-char uppercase hex plus an alpha channel in [0, 1].
- *
- * Returns null for "none" / "transparent" / unrecognized so callers can decide
- * whether to skip emission. `currentColor` returns null too — Apollon's compat
- * mode resolves these upstream, so seeing one in the export is a contract
- * violation worth letting bubble up as "missing fill" rather than silently
- * substituting.
+ * or named) into 6-char uppercase hex plus alpha in [0, 1]. Returns null for
+ * "none"/"transparent"/unrecognized so callers skip emission. `currentColor`
+ * also returns null: compat mode resolves it upstream, so its presence is a
+ * contract violation better surfaced as "missing fill" than silently filled.
  */
 function resolveColor(raw: string | null | undefined): ResolvedColor | null {
   if (!raw) return null
@@ -234,9 +220,8 @@ function getNum(
 }
 
 /**
- * Map an SVG `stroke-dasharray` to one of the OOXML preset dash kinds. Lossy
- * — pptxgenjs doesn't expose custom dash arrays — but covers the dotted /
- * short-dash / long-dash families Apollon emits.
+ * Map an SVG `stroke-dasharray` to an OOXML preset dash kind. Lossy (pptxgenjs
+ * has no custom dash arrays) but covers the families Apollon emits.
  */
 function dashType(
   value: string | null
@@ -252,10 +237,6 @@ function dashType(
   if (tokens.length >= 4) return "dashDot"
   return "dash"
 }
-
-/* ------------------------------------------------------------------ */
-/* Inherited paint                                                     */
-/* ------------------------------------------------------------------ */
 
 type PaintStyle = {
   fill: string | null
@@ -279,10 +260,9 @@ const DEFAULT_PAINT: PaintStyle = {
 }
 
 /**
- * Parse a numeric SVG attribute, falling back to `parent` when the value is
- * absent OR malformed (NaN). Crucially treats `0` as a valid input: a
- * `||`-style fallback would reinterpret legal `stroke-width="0"` or
- * `opacity="0"` as "inherit", which is wrong per SVG spec.
+ * Parse a numeric SVG attribute, inheriting `parent` when absent or NaN.
+ * Treats `0` as valid: a `||` fallback would wrongly reinterpret legal
+ * `stroke-width="0"` / `opacity="0"` as "inherit".
  */
 const parseNumOrInherit = (raw: string | null, parent: number): number => {
   if (raw === null) return parent
@@ -324,9 +304,8 @@ function inheritPaint(
     strokeWidth: parseNumOrInherit(swRaw, parent.strokeWidth),
     strokeDash: sdRaw ?? parent.strokeDash,
     opacity: parseNumOrInherit(opRaw, parent.opacity),
-    // Multiply any rgba/#rrggbbaa alpha into the corresponding paint-opacity
-    // so callers see one channel; SVG spec lets fill-opacity and the color's
-    // own alpha both contribute, and PPTX has only one transparency knob.
+    // Fold the color's own alpha into the paint-opacity: SVG lets both
+    // fill-opacity and the color's alpha contribute, but PPTX has one knob.
     fillOpacity:
       parseNumOrInherit(foRaw, parent.fillOpacity) * (fillResolved?.alpha ?? 1),
     strokeOpacity:
@@ -359,17 +338,10 @@ function lineProps(ctx: EmitContext, p: PaintStyle): pptxgen.ShapeLineProps {
   }
 }
 
-/* ------------------------------------------------------------------ */
-/* Shape emit context                                                  */
-/* ------------------------------------------------------------------ */
-
 /**
- * The viewport defines how a point in SVG-px space (with origin at the
- * diagram's clip) is projected onto the PPTX slide canvas (in inches).
- *
- * For "fit" slide-size, scale=1/96 (px → in) and offset=0.
- * For fixed slide sizes, scale shrinks the diagram so it fits inside the
- * canvas (no enlargement past 1× in/px), and offset centres it.
+ * Projects a point in SVG-px space (origin at the diagram clip) onto the PPTX
+ * slide canvas (inches). "Fit" sizing uses scale=1/96 and offset=0; fixed
+ * sizes shrink the diagram to fit (no enlargement past 1× in/px) and centre it.
  */
 type SlideViewport = {
   /** Slide width in inches. */
@@ -415,18 +387,16 @@ const toStrokePt = (ctx: EmitContext, swPx: number): number =>
   swPx * ctx.viewport.scale * PT_PER_PX
 
 /**
- * Apollon renders text in `Inter, system-ui, Avenir, Helvetica, Arial,
- * sans-serif`. PPTX/OOXML stores a single font name with no fallback chain,
- * so we have to pick one that's actually installed wherever the file is
- * opened. Mac users (and the receiving Mac viewers) get SF Pro Text — the
- * system font that drives `system-ui` in their browser preview, so the
- * exported file matches what they saw on screen. Everyone else gets Inter.
+ * PPTX/OOXML stores a single font name with no fallback chain, so pick one
+ * that's actually installed where the file opens. Mac/iOS exporters get
+ * SF Pro Text (what drives `system-ui` in their preview, so the file matches
+ * what they saw); everyone else gets Inter.
  */
 function detectExportFontFace(override?: string): string {
   if (override) return override
   if (typeof navigator === "undefined") return "Inter"
   const ua = navigator.userAgent || ""
-  // `navigator.platform` is partially deprecated but still the most reliable
+  // navigator.platform is partially deprecated but still the most reliable
   // Mac signal in practice; fall back to userAgent.
   const platform =
     (navigator as Navigator & { platform?: string }).platform || ""
@@ -434,10 +404,7 @@ function detectExportFontFace(override?: string): string {
   return isMac ? "SF Pro Text" : "Inter"
 }
 
-/**
- * Apollon-default font-family tokens that should be rewritten to whatever the
- * user picked at export time; explicit non-generic names are preserved.
- */
+/** Apollon system-stack font tokens rewritten to the chosen export font. */
 const APOLLON_GENERIC_FONTS = new Set([
   "inter",
   "system-ui",
@@ -450,11 +417,7 @@ const APOLLON_GENERIC_FONTS = new Set([
   "",
 ])
 
-/**
- * Decide what font to emit for a given SVG run. If the SVG declared the
- * Apollon system stack ("Inter", "system-ui", "sans-serif" etc.) we override
- * with the chosen export font; if it's an explicit family we respect it.
- */
+/** Override the export font for system-stack runs; respect explicit families. */
 function resolveExportFontFace(
   svgFontFace: string,
   exportFace: string
@@ -468,10 +431,6 @@ function nextName(ctx: EmitContext, kind: string): string {
   const owner = ctx.ownerName ? `${ctx.ownerName} · ` : ""
   return `${owner}${kind} ${ctx.counter.n}`
 }
-
-/* ------------------------------------------------------------------ */
-/* Emitters                                                            */
-/* ------------------------------------------------------------------ */
 
 function emitRect(
   ctx: EmitContext,
@@ -490,9 +449,8 @@ function emitRect(
   const ry = getNum(el, "ry", style, rx)
 
   const { rotateDeg } = decomposeRotation(ctm)
-  // We compute the axis-aligned bbox in *unrotated* space (origin at the
-  // rect's local 0,0) then translate the bbox center via CTM and ask PPTX to
-  // rotate around it. PPTX rotates around the shape's center.
+  // Size the bbox in unrotated local space, place its centre via the CTM, and
+  // let PPTX rotate around that centre (PPTX rotates around the shape centre).
   const localCenter = { x: x + w / 2, y: y + h / 2 }
   const center = apply(ctm, localCenter)
   const topLeftSvgX = center.x - w / 2
@@ -664,8 +622,8 @@ function emitPath(ctx: EmitContext, el: Element, ctm: Mat, paint: PaintStyle) {
 
 type PathKind = "Path" | "Polygon" | "Polyline" | "Arrowhead"
 type PptxPoints = NonNullable<pptxgen.ShapeProps["points"]>
-// pptxgenjs accepts a string here at runtime even though the typed enum
-// (still) omits "custGeom" in v4.0.1; cast once, document why.
+// pptxgenjs accepts this string at runtime even though its typed enum omits
+// "custGeom"; cast once here.
 const CUST_GEOM = "custGeom" as unknown as pptxgen.ShapeType
 
 const isFinitePoint = (...vs: number[]) => vs.every(Number.isFinite)
@@ -678,8 +636,8 @@ function emitPathSegments(
 ) {
   if (segs.length === 0) return
   const bbox = pathBBox(segs)
-  // Pad bbox by half the stroke width so PPTX path-w/path-h doesn't clip the
-  // stroke itself when an endpoint sits exactly on the bbox edge.
+  // Pad by half the stroke width so PPTX doesn't clip the stroke when an
+  // endpoint sits exactly on the bbox edge.
   const pad = Math.max(0.5, paint.strokeWidth / 2)
   const bx = bbox.x - pad
   const by = bbox.y - pad
@@ -734,10 +692,6 @@ function emitPathSegments(
     objectName: nextName(ctx, kind),
   })
 }
-
-/* ------------------------------------------------------------------ */
-/* Text                                                                */
-/* ------------------------------------------------------------------ */
 
 type TextStyle = {
   fontFace: string
@@ -821,7 +775,7 @@ function readTextStyle(
 /** Browser-side text width measurer using a single shared canvas. */
 function makeCanvasMeasurer(): EmitContext["measureText"] {
   if (typeof document === "undefined") {
-    // Node/jsdom path — fall back to a heuristic.
+    // Node/jsdom: no canvas, fall back to a heuristic.
     return (text, fontSize, bold) => {
       const factor = bold ? 0.62 : 0.55
       return text.length * fontSize * factor
@@ -915,9 +869,8 @@ function buildTextLines(
       cursorY = newY
       newLineAt(newX, newY, tspanStyle.textAnchor)
     } else if (dx !== 0) {
-      // Approximate the dx by padding the next run with leading spaces — we
-      // can't truly inject horizontal whitespace inside an addText() run set,
-      // but PPTX preserves leading space.
+      // A pure dx only advances the cursor; addText() can't inject true
+      // horizontal whitespace inside a run.
       cursorX += dx
     }
     el.childNodes.forEach((c) => walk(c, tspanStyle))
@@ -959,9 +912,8 @@ function emitTextLines(
         runFace
       )
     }
-    // Tight box; autoFit=false and wrap=false make PPTX render the run as-is.
-    // The horizontal slack avoids one-pixel clipping at edge glyphs in
-    // PowerPoint (it adds a tiny inset).
+    // Tight box (autoFit/wrap off render the run as-is); horizontal slack
+    // avoids one-pixel edge-glyph clipping in PowerPoint.
     const widthPx = Math.max(
       totalWidthPx + fontSize * TEXT_BOX_HORIZONTAL_SLACK_FACTOR,
       fontSize * TEXT_BOX_MIN_WIDTH_FACTOR
@@ -972,12 +924,9 @@ function emitTextLines(
     if (line.textAnchor === "middle") leftPx = line.anchorX - widthPx / 2
     else if (line.textAnchor === "end") leftPx = line.anchorX - widthPx
     else leftPx = line.anchorX
-    // SVG `<text y>` is the alphabetic baseline (the compat export resolves
-    // dominant-baseline into it). Apollon centres labels on a point
-    // BASELINE_TO_CENTER_EM above the baseline (Inter's middle-baseline metric,
-    // the baseline-to-visual-centre offset for the label font); the box is
-    // emitted with `valign:"middle"`, so the box top is that centre minus half
-    // the box.
+    // SVG `<text y>` is the alphabetic baseline. Apollon centres labels
+    // BASELINE_TO_CENTER_EM above it; the box uses valign:"middle", so the box
+    // top is that centre minus half the box height.
     const topPx =
       line.baselineY - fontSize * BASELINE_TO_CENTER_EM - heightPx / 2
 
@@ -1026,10 +975,6 @@ function emitTextLines(
     )
   }
 }
-
-/* ------------------------------------------------------------------ */
-/* Walker                                                              */
-/* ------------------------------------------------------------------ */
 
 function walk(
   ctx: EmitContext,
@@ -1107,10 +1052,6 @@ function walk(
   })
 }
 
-/* ------------------------------------------------------------------ */
-/* Public API                                                          */
-/* ------------------------------------------------------------------ */
-
 export type SvgToPptxOptions = {
   /**
    * Slide background color as a 6-char hex (no `#`). Pass `null` to omit any
@@ -1132,14 +1073,13 @@ export type SvgToPptxOptions = {
 }
 
 /**
- * Compute the viewport (slide-canvas size + SVG→slide transform) for a given
- * clip, slide-canvas, fit mode, and source scale. The diagram is centred in
- * the canvas. When `slideCanvasInches` is omitted, the canvas matches the
- * scaled diagram exactly and `fit` is ignored.
+ * Compute the viewport (slide-canvas size + SVG→slide transform). The diagram
+ * is centred in the canvas; when `slideCanvasInches` is omitted the canvas
+ * matches the scaled diagram and `fit` is ignored.
  *
- * The slide canvas is clamped to a 1″ minimum because PowerPoint refuses to
- * open files with sub-1″ slides on some renderer paths (observed on Office
- * for Mac 16.x); the diagram still anchors at (0, 0) inside that minimum.
+ * The canvas is clamped to a 1″ minimum because PowerPoint refuses to open
+ * sub-1″ slides on some renderer paths (observed on Office for Mac 16.x); the
+ * diagram still anchors at (0, 0) inside that minimum.
  */
 export function computeSlideViewport(
   clip: { width: number; height: number },
@@ -1219,10 +1159,9 @@ export function renderSvgToSlide(
     measureText: makeCanvasMeasurer(),
   }
 
-  // Apollon's getSVG() emits exactly two top-level <g>s — nodes then edges —
-  // so we name the first "Node", the second "Edge", and anything else
-  // "Group N". This labelling drives the Animation Pane in PowerPoint, so
-  // it stays robust if upstream ever adds a third layer.
+  // Apollon's getSVG() emits two top-level <g>s (nodes then edges); name them
+  // "Node"/"Edge", anything else "Group N". Drives the PowerPoint Animation
+  // Pane, and stays robust if upstream ever adds a third layer.
   const topGroups = Array.from(svg.children).filter(
     (c) => c.tagName.toLowerCase() === "g"
   )

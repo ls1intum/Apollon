@@ -69,8 +69,8 @@ const readStore = (): SharedDiagramStore => {
         id: entry.id,
         sharedAt: entry.sharedAt,
         favorite: Boolean((entry as Partial<SharedDiagramEntry>).favorite),
-        // Legacy entries (no stored mode) keep their historical EDIT behaviour;
-        // the newer Collaborate default applies to NEW shares, not old links.
+        // Entries with no stored mode default to EDIT (the Collaborate default
+        // applies only to new shares, added on write).
         lastSharedView: isDiagramView(entry.lastSharedView)
           ? entry.lastSharedView
           : DiagramView.EDIT,
@@ -151,10 +151,9 @@ export const addSharedDiagramEntry = (
         id: normalizedId,
         sharedAt: now,
         favorite: existingEntry?.favorite ?? false,
-        // A brand-new share with no explicit mode adopts the default
-        // (Collaborate); an existing entry keeps the mode it already had. (Legacy
-        // entries from before sharing modes are handled separately on load, where
-        // they preserve their historical Edit behaviour.)
+        // New share with no explicit mode adopts the Collaborate default; an
+        // existing entry keeps its mode. (Stored entries with no mode default to
+        // EDIT on load instead.)
         lastSharedView:
           options.lastSharedView ??
           existingEntry?.lastSharedView ??

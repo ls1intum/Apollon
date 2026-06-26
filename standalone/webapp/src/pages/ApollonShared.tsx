@@ -112,9 +112,9 @@ export const ApollonShared: React.FC = () => {
   })
 
   useEffect(() => {
-    // Bind the remote repository before this effect fetches versions (the
-    // drawer no longer self-fetches). Set in the effect, not render, so render
-    // stays pure; ordering before the fetch below is guaranteed.
+    // Bind the remote repository before this effect fetches versions. Set in
+    // the effect, not render, so render stays pure; ordering before the fetch
+    // below is guaranteed.
     setVersionRepository(RemoteVersionRepository)
     const nextLifecycleKey = `${diagramId ?? ""}:${viewType ?? ""}`
 

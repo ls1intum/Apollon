@@ -20,18 +20,12 @@ import { HelpMenuItems } from "./HomeHelpMenu"
 import type { HomeChrome } from "./useHomeChrome"
 
 /**
- * Mobile actions pill (< md) with HOME semantics (no Share / Version history).
- * Every control is a DIRECT icon — ★ Favorites · Refine · Import · Help▾ · Theme
- * — in the SAME left-to-right order as the desktop home actions island, so no
- * control jumps position between the desktop band and this pill. Help is its own
- * small dropdown (the shared {@link HelpMenuItems} body) and Theme a direct
- * 1-tap toggle, mirroring the editor mobile pill's Help▾ · Theme tail — no
- * merged "…" overflow on either surface.
- *
- * Every icon-only control wears the shared {@link Tooltip} as its visible name
- * (instant reveal via the band's `TooltipProvider`), the SAME idiom as the
- * editor pill and the desktop islands. Refine opens the bottom-`Sheet` variant
- * of `RefinePopover` (thumb-reachable).
+ * Mobile actions pill (< md), home semantics (no Share / Version history). Every
+ * control is a direct icon — ★ Favorites · Refine · Import · Help▾ · Theme — in
+ * the same left-to-right order as the desktop actions island so nothing jumps
+ * position between the two layouts. Each icon-only control wears the shared
+ * {@link Tooltip} as its visible name (instant reveal via the band's
+ * `TooltipProvider`). Refine opens the bottom-`Sheet` variant of `RefinePopover`.
  */
 export function HomeActionsPill({
   chrome,
@@ -49,7 +43,6 @@ export function HomeActionsPill({
         className="apollon-glass apollon-chrome-island"
         style={ISLAND_LAYOUT_STYLE}
       >
-        {/* ★ Favorites — direct 1-tap icon, pressed→favorite-star colour. */}
         <Tooltip>
           <TooltipTrigger
             render={
@@ -80,7 +73,6 @@ export function HomeActionsPill({
           <TooltipContent>Favorites</TooltipContent>
         </Tooltip>
 
-        {/* Refine — opens the mobile bottom-sheet variant. */}
         <Tooltip>
           <RefinePopover
             variant="sheet"
@@ -114,8 +106,8 @@ export function HomeActionsPill({
           <TooltipContent>Refine</TooltipContent>
         </Tooltip>
 
-        {/* Import — direct 1-tap icon (FolderInput = ingest into the library;
-            distinct from the editor's box+up-arrow Share motif). */}
+        {/* Import — FolderInput (ingest into the library), distinct from the
+            editor's Share motif. */}
         <Tooltip>
           <TooltipTrigger
             render={
@@ -135,8 +127,8 @@ export function HomeActionsPill({
           <TooltipContent>Import</TooltipContent>
         </Tooltip>
 
-        {/* Help — its OWN dropdown (the shared Help/legal body), matching the
-            editor pill's Help▾ rather than a merged "…" overflow. */}
+        {/* Help — its own dropdown (the shared Help/legal body), not a merged
+            "…" overflow. */}
         <MobileMenuButton
           id="home-help"
           label="Help"
@@ -150,7 +142,6 @@ export function HomeActionsPill({
           {(close) => <HelpMenuItems onSelect={close} />}
         </MobileMenuButton>
 
-        {/* Theme — a direct 1-tap icon toggle (no menu row needed). */}
         <ThemeSwitcherMenu />
       </div>
     </TooltipProvider>

@@ -89,11 +89,9 @@ export const renderThumbnailSvgFromModel = async (
   mountNode.style.height = `${THUMBNAIL_MAX_HEIGHT}px`
   mountNode.style.opacity = "0"
   mountNode.style.pointerEvents = "none"
-  // The offscreen editor we mount to grab a thumbnail contains focusable controls
-  // (buttons, inputs). `aria-hidden` alone leaves that subtree keyboard-reachable,
-  // which is both an a11y bug (aria-hidden must not contain focusable content) and
-  // wrong for a non-interactive render scratchpad. `inert` removes it from the a11y
-  // tree AND makes every descendant unfocusable.
+  // The offscreen editor has focusable controls; `aria-hidden` alone leaves the
+  // subtree keyboard-reachable (and aria-hidden must not contain focusable
+  // content). `inert` removes it from the a11y tree and unfocuses descendants.
   mountNode.setAttribute("aria-hidden", "true")
   mountNode.inert = true
   document.body.appendChild(mountNode)

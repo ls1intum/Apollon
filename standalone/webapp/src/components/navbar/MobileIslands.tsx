@@ -32,16 +32,12 @@ import {
 
 /**
  * An ICON-ONLY menu trigger for the mobile editor pill: a `.apollon-chrome-iconbtn`
- * glyph (so it reads as one family with the Share / Version / Theme icons) that
- * opens its OWN small dropdown. With no visible text label it carries an
- * `aria-label` (the accessible name) and the shared {@link Tooltip} as its
- * on-hover/-focus visible name — the SAME instant-reveal tooltip idiom as every
- * other icon-only chrome control, composed onto the menu trigger via Base UI's
- * `render=` so one button is both tooltip-anchor and menu-trigger.
- *
- * This is what keeps File and Help as TWO SEPARATE, scannable menus on the phone
- * (no merged mega-overflow): each gets its own trigger + its own inlined body.
- * `children` receive a `close` callback so a chosen row can dismiss the menu.
+ * glyph (one family with the Share / Version / Theme icons) that opens its OWN
+ * small dropdown. Carries an `aria-label` plus the shared {@link Tooltip} as its
+ * visible name, composed onto the trigger via Base UI's `render=` so one button is
+ * both tooltip-anchor and menu-trigger. Keeps File and Help as two separate,
+ * scannable menus on the phone (no merged mega-overflow), each with its own
+ * trigger + inlined body. `children` receive a `close` callback to dismiss it.
  */
 export function MobileMenuButton({
   label,
@@ -89,11 +85,10 @@ export function MobileMenuButton({
 /**
  * The "…" overflow control for the chrome SUB-ROUTE pill (imprint / privacy /
  * 404): a `DropdownMenuTrigger` wearing `.apollon-chrome-iconbtn` directly (no
- * IconButton wrapper, to avoid double-styling), the shared instant-reveal
- * {@link Tooltip}, and the shared {@link MOBILE_MENU_CONTENT_CLASS} contract.
- * The sub-route's short Help + Theme tail reads as one menu. The editor and home
- * pills instead keep Help as its own {@link MobileMenuButton} dropdown — no
- * merged overflow. Children receive a `close` callback to dismiss after acting.
+ * IconButton wrapper, to avoid double-styling), the shared {@link Tooltip}, and
+ * the shared {@link MOBILE_MENU_CONTENT_CLASS} contract. The sub-route's short
+ * Help + Theme tail reads as one menu; the editor and home pills instead keep Help
+ * as its own {@link MobileMenuButton} dropdown. Children receive a `close` callback.
  */
 export function ChromeOverflowMenu({
   /**
@@ -176,19 +171,15 @@ export function MobileBackPill() {
 }
 
 /**
- * Right cluster on narrow phones — a compact row of icon-only triggers that fits
- * a 390px pill beside the back pill + title:
+ * Right cluster on narrow phones — a compact row of icon-only triggers:
  *
  *   File▾ · Share · Version · Help▾ · Theme
  *
  * The left-to-right order matches the desktop actions island exactly, so no
- * control jumps position between the desktop bar and this pill — Save just folds
- * into File▾ here (it has no standalone slot on the pill) without moving the
- * visible siblings. File and Help stay as two separate dropdowns (not one
- * mega-overflow) so each is a small, scannable menu. File▾ holds New / Import,
- * the flat Export group, and Save-a-local-copy; Help▾ is the shared Help/legal
- * body. Each icon-only control carries a tooltip as its accessible name. The
- * diagram title lives in the header's centre track, not here.
+ * control jumps position between bar and pill — Save just folds into File▾ here
+ * (it has no standalone slot). File and Help stay as two separate dropdowns (not
+ * one mega-overflow) so each is a small, scannable menu. Each icon-only control
+ * carries a tooltip as its accessible name.
  */
 export function MobileActionsPill() {
   const { openModal } = useModalContext()
@@ -199,9 +190,8 @@ export function MobileActionsPill() {
       className="apollon-glass apollon-chrome-island"
       style={PILL_STYLE}
     >
-      {/* File — its OWN dropdown (not merged with Help). New / Import + the flat
-          labelled Export group, then Save-a-local-copy (a file action, parked
-          here off the desktop bar to keep the pill compact). */}
+      {/* File — New / Import + the flat Export group, then Save-a-local-copy
+          (parked here off the desktop bar to keep the pill compact). */}
       <MobileMenuButton
         id="mobile-file"
         label="File"
@@ -221,9 +211,8 @@ export function MobileActionsPill() {
         )}
       </MobileMenuButton>
 
-      {/* Share + Version stay visible as icons — same .apollon-chrome-iconbtn
-          family (size/hover/radius/focus) as the zoom/minimap controls. Each is
-          icon-only, so its tooltip supplies the otherwise-missing visible name. */}
+      {/* Share + Version stay visible as icons in the .apollon-chrome-iconbtn
+          family; each is icon-only, so its tooltip supplies the visible name. */}
       <IconButton
         ariaLabel="Share"
         tooltip="Share"

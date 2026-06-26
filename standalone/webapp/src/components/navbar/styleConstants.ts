@@ -1,20 +1,15 @@
 import { cn } from "@tumaet/ui/lib/utils"
 
 /**
- * Shared Tailwind classes for every text action button in the header (File,
- * Share, Help, Version history, Save copy) so they all match the `BackNav`
- * "All diagrams" link: compact, no uppercase, and the same hover. Idles in
- * solid foreground (matching the wordmark/title) with a background-only wash
- * toward the chrome hover surface on hover/focus — the shadcn menubar contract.
- * Inner text/icons use `currentColor` so they track the label.
+ * Shared Tailwind classes for every text action button in the header so they all
+ * match the `BackNav` "All diagrams" link: compact, no uppercase, same hover. Idles
+ * in solid foreground with a background-only wash toward the chrome hover surface
+ * on hover/focus — the shadcn menubar contract. Inner text/icons use `currentColor`
+ * so they track the label.
  *
- * Returns a className string: pass it to a `@tumaet/ui` Button /
- * DropdownMenuTrigger via `className`, and merge
- * extra classes through the argument (it runs through `cn`, so callers can
- * override). The idle foreground is the solid `text-foreground` token by
- * default; the mobile overflow menu pins an explicit
- * `var(--apollon-primary-contrast)` foreground via `style={{ color }}` so the
- * label stays legible on the themed dropdown.
+ * Returns a className string merged through `cn` (callers can override). The mobile
+ * overflow menu pins an explicit `var(--apollon-primary-contrast)` foreground via
+ * `style={{ color }}` so the label stays legible on the themed dropdown.
  */
 export const navbarButtonStyle = (className?: string): string =>
   cn(

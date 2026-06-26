@@ -121,8 +121,8 @@ export const HomePage = () => {
         tabIndex={-1}
       />
 
-      {/* Top margin restores the old gap-6 rhythm between the header band and
-          the first gallery row now that they live in separate shell wrappers. */}
+      {/* Sets the gap between the header band and the first gallery row, which
+          live in separate shell wrappers. */}
       <div className="mt-4">
         <Suspense fallback={<DiagramGallerySkeleton />}>
           <DiagramGallery

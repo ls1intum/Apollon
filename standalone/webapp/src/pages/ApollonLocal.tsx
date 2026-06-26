@@ -141,8 +141,8 @@ export const ApollonLocal: FC = () => {
   useEffect(() => {
     if (!containerRef.current || !diagram) return
     // Bind the local repository before this effect's `fetchVersions` runs.
-    // The drawer no longer self-fetches, so this is the only fetch path and
-    // ordering is guaranteed within the effect — no render-time mutation.
+    // This is the only fetch path, so ordering is guaranteed within the
+    // effect — no render-time mutation.
     setVersionRepository(LocalVersionRepository)
     isThumbnailExportCanceledRef.current = false
     setCurrentModelId(diagram.id)

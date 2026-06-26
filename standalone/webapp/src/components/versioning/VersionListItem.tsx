@@ -35,19 +35,10 @@ import {
 import { isNamedVersion } from "@/lib/version/predicates"
 
 /**
- * A REAL accessible `<Link>` (the container injects it) that carries the row's
- * accessible name and a stretched `after:absolute after:inset-0` hit target, so
- * the whole row is clickable. cmd/ctrl/middle-click opens the version's preview
- * in a new tab (same as the gallery cards); plain left-click stays in-SPA via
- * `onPreview`.
- *
- * It is a SIBLING of the row body and the kebab — never a wrapper — and the row
- * is a plain non-interactive `<li>`, so nothing nests interactive content
- * inside a widget role (axe: nested-interactive). Being focusable with an
- * accessible name, the link is the per-row keyboard tab-stop + Enter target
- * (like the diagram cards); the kebab is a focusable sibling above it.
- * Omitted in router-less stories (the view then just renders the plain body).
- * Receives the accessible name to put on the link's `aria-label`.
+ * Renders the stretched, focusable `<Link>` overlay for a row (container-
+ * injected). Receives the row's accessible name for the link's `aria-label`;
+ * omitted in router-less stories. See the container's `rowLink` for the
+ * sibling / non-interactive-nesting rationale.
  */
 type RowLink = (accessibleName: string) => ReactNode
 

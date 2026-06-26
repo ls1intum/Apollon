@@ -25,10 +25,10 @@ import { useDiagramTitle } from "./useDiagramTitle"
 
 /**
  * The whole editor header as one fluid flex row inside the `header` overlay band:
- * `[brand/back] [title — flex middle] [actions]`. Because the three groups are
- * flex siblings (not independent absolutely-positioned Panels), the title gets a
- * real, bounded middle column — it grows then shrinks with ellipsis and can never
- * overlap the brand/actions — and the gaps stay constant at every width.
+ * `[brand/back] [title — flex middle] [actions]`. The three groups are flex
+ * siblings, so the title gets a real, bounded middle column — it grows then
+ * shrinks with ellipsis and can never overlap the brand/actions — and the gaps
+ * stay constant at every width.
  *
  * One `TooltipProvider` (delay 0) wraps the whole header so every icon-only
  * control — desktop island and mobile pill alike — reveals its tooltip

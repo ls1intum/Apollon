@@ -17,9 +17,9 @@ import { getHomeDialogWidth } from "@/components/modals/HomeDialog"
 
 /**
  * The shared modal chrome — the open Base UI {@link Dialog} plus the responsive
- * {@link DialogContent} box every Apollon modal is presented in. Extracted from
- * `ModalWrapper` so the app **and** the Storybook stories render modal bodies in
- * the exact same frame (single source of truth — no duplicated chrome).
+ * {@link DialogContent} box every Apollon modal is presented in. The app **and**
+ * the Storybook stories render modal bodies in this same frame (single source of
+ * truth — no duplicated chrome).
  *
  * ModalFrame **styles** the canonical `DialogContent`: it keeps the primitive's
  * `bg-popover`, `rounded-xl`, ring, shadow and default close button, and only
@@ -33,7 +33,7 @@ import { getHomeDialogWidth } from "@/components/modals/HomeDialog"
  *   2. the scrollable BODY (`min-h-0 flex-1 overflow-y-auto`) — the ONLY part
  *      that scrolls, so the footer never sinks below the fold, and
  *   3. the FOOTER, a sibling AFTER the body so it pins to the dialog's true
- *      bottom edge in portrait (the audit's root-cause fix).
+ *      bottom edge in portrait.
  *
  * The footer is filled either by the `footer` prop OR by a body that renders
  * `HomeDialogActions`: those actions portal into the {@link ModalFooterSlot}

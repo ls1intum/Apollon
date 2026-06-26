@@ -110,10 +110,9 @@ export function HomeHeaderRow({
 }
 
 /**
- * LEFT desktop island (`role="banner"`): the brand lockup, nothing else — the
- * "Your diagrams" label was dropped as redundant with the (single, sr-only)
- * page `<h1>`. That `<h1>` is rendered once by `HomeHeaderRow` (outside the
- * md-gated bands) so it survives the mobile layout where this island is hidden.
+ * LEFT desktop island (`role="banner"`): the brand lockup only. The page `<h1>`
+ * lives in `HomeHeaderRow` (outside the md-gated bands) so it survives the mobile
+ * layout where this island is hidden.
  */
 function HomeBrandIsland() {
   return (

@@ -93,8 +93,8 @@ export const PPTXExportModal = () => {
   const { closeModal } = useModalContext()
   const exportPptx = useExportAsPPTX()
 
-  // Generate stable ids for label↔control association so screen readers
-  // announce each field by its label. `useId` is stable across renders.
+  // Stable ids for label↔control association so screen readers announce each
+  // field by its label.
   const idFileName = useId()
   const idSlideSize = useId()
   const idScale = useId()

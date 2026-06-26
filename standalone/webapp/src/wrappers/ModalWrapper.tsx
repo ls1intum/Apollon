@@ -29,14 +29,11 @@ interface ModalWrapperProps {
   closeModal: () => void
 }
 
-// Each modal keeps its own real props type. The registry only asserts that
-// every `ModalName` maps to *some* component (exhaustive + no stray names)
-// without widening any entry to `ComponentType<ModalProps>` — so e.g.
-// `ShareDashboardModal` can be typed honestly as `{ modelId?: string }` instead
-// of accepting the loose props bag. The single unavoidable type erasure is the
-// dynamic spread in the renderer below, where the runtime `name` and the
-// loosely-typed `props` meet; it's localized there rather than scattered as
-// per-entry `as ComponentType<unknown>` casts.
+// `satisfies Record<ModalName, ...>` keeps the registry exhaustive (no missing
+// or stray names) while each entry keeps its own real props type — e.g.
+// `ShareDashboardModal` stays `{ modelId?: string }` rather than widening to the
+// loose props bag. The one unavoidable erasure is the dynamic spread in the
+// renderer below.
 const MODAL_COMPONENTS = {
   NEW_DIAGRAM: NewDiagramModal,
   SHARE: ShareModal,
@@ -77,10 +74,8 @@ const ModalProgressBar = () => {
 }
 
 export const ModalWrapper: React.FC<ModalWrapperProps> = ({ name, props }) => {
-  // Dynamic dispatch: `name` is a runtime value and `props` is the loosely
-  // typed context bag, so this is the one place the per-modal prop types can't
-  // be statically tied together. The registry above keeps each entry honestly
-  // typed; the erasure is localized to this single cast.
+  // The single erasure noted above: the runtime `name` and the loosely-typed
+  // `props` bag meet here, so per-modal prop types can't be statically tied.
   const SpecificModal = MODAL_COMPONENTS[
     name
   ] as unknown as React.ComponentType<ModalProps & { onClose?: () => void }>

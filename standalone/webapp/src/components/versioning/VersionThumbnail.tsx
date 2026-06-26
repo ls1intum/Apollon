@@ -15,12 +15,6 @@ import { log } from "@/logger"
  * `ApollonEditor.exportModelAsSvg`. Result is data-URL'd and stamped into
  * an `<img>` so the browser handles `object-fit: contain` framing for free.
  *
- * Why not server-side render? The previous implementation hit a server
- * endpoint that booted JSDOM + the full library bundle on every cold call,
- * cost a network round-trip per thumbnail, and didn't exist in local mode.
- * Snapshots are immutable JSON and the library can render in-browser — the
- * server's job here was a wasted boundary.
- *
  * Concurrency note: `exportModelAsSvg` mounts a temporary 4000x4000 div
  * during rendering, so we serialize via a tiny module-level queue to avoid
  * stacking many of those at once. With viewport-gated lazy loading the

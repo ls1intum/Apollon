@@ -148,8 +148,7 @@ export const useDiagramThumbnailWarmup = <T extends ThumbnailWarmupDiagram>({
 
       thumbnailWorkerActiveRef.current = false
       if (thumbnailQueueRef.current.length > 0 && !isUnmountedRef.current) {
-        // Recursive drain — the worker re-invokes itself (self-reference in a
-        // useCallback, evaluated at call time, not during render).
+        // Drain anything queued while the worker was running.
         // eslint-disable-next-line react-hooks/immutability
         processThumbnailQueue()
       }

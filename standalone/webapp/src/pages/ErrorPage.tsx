@@ -21,11 +21,10 @@ type ErrorPageProps = {
 export const ErrorPage: React.FC<ErrorPageProps> = ({
   title = "Oops!",
   message = "Something went wrong.",
-  // "Back to all diagrams" — NOT the header BackNav's "All diagrams". With the
-  // chrome header now on the 404, an identical CTA label would produce two links
-  // with the same accessible name ("All diagrams"), reading redundantly and
-  // making `getByRole("link", {name})` ambiguous. The verb-led recovery CTA
-  // stays distinct from the header's terse dashboard affordance.
+  // "Back to all diagrams" — deliberately NOT the header BackNav's "All
+  // diagrams". An identical CTA label would produce two links with the same
+  // accessible name, making `getByRole("link", {name})` ambiguous. The verb-led
+  // recovery CTA stays distinct from the header's terse dashboard affordance.
   buttonLabel = "Back to all diagrams",
   backPath = "/",
   withChrome = true,

@@ -2,25 +2,19 @@ import { XIcon } from "lucide-react"
 import type { HomeChrome } from "./useHomeChrome"
 
 /**
- * The removable-chip line that sits FLUSH under the Home Island Band whenever
- * any refinement is active (`refineCount > 0`, OR favorites is on — i.e.
- * `activeRefinements` is non-empty). One chip per active facet, each with an
- * inline "×" that resets just that facet; a trailing "Clear all" resets every
- * refinement at once.
+ * The removable-chip line, flush under the Home Island Band whenever any
+ * refinement is active (`activeRefinements` non-empty). One chip per active facet
+ * with an inline "×" that resets just that facet; a trailing "Clear all" resets
+ * everything.
  *
- * The whole row rides a single `apollon-glass` plate (a labelled `role="group"`
- * region) so the chips read as the same floating-island material as the band and
- * "Clear all" stays legible over the scrolling cards. Below `md` the plate spans
- * the full width and the chips WRAP onto as many rows as needed (no horizontal
- * scroll, no hidden scrollbar — a phone can surface all four facets at once); at
- * `md+` it collapses back to a content-sized, single-row inline plate. Each chip
- * is a single `<button>` so there are no nested interactives for the a11y gate to
- * flag, and each chip's label is `truncate`d under a per-chip `max-w` so even the
- * long "Last modified · Newest" sort chip can never overrun the narrowest phone
- * plate. The chips are painted on the chrome surface tokens (the same
- * fill/hover/text the band's BackNav and File/Share controls idle on), NOT the
- * `bg-secondary` Badge material — so they read as the same floating-glass island
- * grammar as the band in both light and dark instead of a foreign accent block.
+ * Rides a single `apollon-glass` plate (a labelled `role="group"`). Below `md`
+ * the plate spans full width and the chips WRAP onto as many rows as needed (no
+ * horizontal scroll, so a phone can surface all facets at once); at `md+` it
+ * collapses to a content-sized single row. Each chip is a single `<button>` (no
+ * nested interactives), its label `truncate`d under a per-chip `max-w` so even
+ * the long sort chip never overruns the narrowest phone plate. The chips paint on
+ * the chrome surface tokens, not the `bg-secondary` Badge material, so they read
+ * as the same floating-glass grammar as the band in light and dark.
  */
 export function HomeRefinementChips({ chrome }: { chrome: HomeChrome }) {
   const { activeRefinements } = chrome

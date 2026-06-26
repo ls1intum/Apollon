@@ -1,16 +1,11 @@
 import { Plus } from "lucide-react"
 
 /**
- * Mobile "New diagram" action (< md only). The desktop band carries an explicit
- * accent "New diagram" button; on a phone that primary action moves to a
- * thumb-reachable bottom-center floating pill — a `+` icon plus an explicit
- * "New diagram" label so the primary action is never a bare, unlabeled glyph.
- *
- * STATICALLY pinned — no scroll listener — at the bottom-center, clear of the
- * home-indicator via `--apollon-chrome-edge-safe-bottom`. It paints the same
- * `.apollon-glass` material as the band, tinted with the chrome accent so it
- * reads as the primary action. Kept tasteful: a compact pill (not a full-width
- * bar), ≥44px tall for the touch target.
+ * Mobile "New diagram" action (< md only). The desktop band carries the accent
+ * "New diagram" button; on a phone the primary action moves to a thumb-reachable
+ * bottom-center floating pill (a `+` icon plus an explicit label, never a bare
+ * glyph). Statically pinned, clear of the home-indicator via
+ * `--apollon-chrome-edge-safe-bottom`, ≥44px tall for the touch target.
  */
 export function HomeNewFab({ onNewDiagram }: { onNewDiagram?: () => void }) {
   return (

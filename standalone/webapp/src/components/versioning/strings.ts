@@ -1,12 +1,8 @@
 /**
- * Drawer-local strings for the versioning UI. English-only in the first
- * release; punted to the wider webapp i18n when that lands. Toast copy
- * emitted from stores/pages (eviction warnings, REDIS_UNAVAILABLE,
- * collaborator-restore notice) stays inline at its emission site by
- * convention — the table here covers the drawer's static UI only. Keep
- * keys stable. Each key has at least one reference; orphans are pruned
- * aggressively because adding strings without consumers is how
- * translation drift starts.
+ * Drawer-local strings for the versioning UI. English-only. Toast copy emitted
+ * from stores/pages (eviction warnings, REDIS_UNAVAILABLE, collaborator-restore
+ * notice) stays inline at its emission site — this table covers the drawer's
+ * static UI only.
  */
 
 /** Mirrors `MAX_DESCRIPTION_LENGTH` in the server config; client trims to avoid a round-trip 400. */

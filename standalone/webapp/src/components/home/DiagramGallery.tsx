@@ -160,8 +160,8 @@ type DiagramGalleryProps = {
   /** Reports the filtered result total up for the band's search-island count. */
   onCountChange?: (count: number) => void
   /**
-   * Reports the diagram types actually present in the loaded data up for the
-   * band's Refine "Type" block — matching the old Type filter's option list.
+   * Reports the diagram types actually present in the loaded data, for the
+   * band's Refine "Type" block.
    */
   onTypeOptionsChange?: (types: readonly UMLDiagramType[]) => void
 }
@@ -429,8 +429,7 @@ export const DiagramGallery = ({
   const isPending = deferredFilteredDiagrams !== filteredDiagrams
 
   // Reset pagination to the first page whenever a refinement narrows the list,
-  // so the user always lands at the top of the freshly-filtered results. (The
-  // old toolbar did this inline on every control change.)
+  // so the user always lands at the top of the freshly-filtered results.
   useEffect(() => {
     setVisibleCount(INITIAL_VISIBLE_COUNT)
   }, [
@@ -628,10 +627,10 @@ export const DiagramGallery = ({
                   >
                     <DiagramCard
                       diagram={diagram}
-                      // Same conditions that drove the old preview booleans,
-                      // collapsed to one bounded axis (expired › placeholder ›
-                      // loading › thumbnail). The container finalizes loading vs
-                      // thumbnail against the actual thumbnail data.
+                      // One bounded axis with fixed precedence (expired ›
+                      // placeholder › loading › thumbnail). The container
+                      // finalizes loading vs thumbnail against the actual
+                      // thumbnail data.
                       previewState={
                         diagram.isExpired
                           ? "expired"

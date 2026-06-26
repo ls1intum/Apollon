@@ -144,31 +144,22 @@ export const VersionSidebarBody: FC<Props> = ({
     ? t.lastVersion(relativeTime(latestVersion.createdAt))
     : t.noVersionYet
 
-  // ---------------------------------------------------------------------------
-  // Dirty-detection via structural fingerprint. Whenever a snapshot lands
-  // (manual save, server-fired auto-version, collaborator save) we capture
-  // a fingerprint of the editor's model at that moment. On every Yjs/store
-  // change we recompute the fingerprint and compare. Selection clicks,
-  // measurement noise, and other React-Flow ephemera are filtered out by
-  // the replacer in `structuralFingerprint` — only user-meaningful changes
-  // flip the state.
-  // ---------------------------------------------------------------------------
+  // Dirty-detection via structural fingerprint: capture a fingerprint of the
+  // editor model whenever a snapshot lands (manual/auto/collaborator save), then
+  // recompute and compare on every model change. Selection clicks, measurement
+  // noise, and other React-Flow ephemera are filtered by `structuralFingerprint`'s
+  // replacer, so only user-meaningful changes flip the state.
   const latestSavedVersion = versions.find((v) => !v.pending && !v.failed)
   const [savedFingerprint, setSavedFingerprint] = useState<string | null>(null)
   const [hasChanges, setHasChanges] = useState(true)
 
-  // Re-baseline the fingerprint on every new latest-saved version.
-  //
-  // Two cases:
-  //  1. Local save (handleCreate just ran): `lastLocalSaveIdRef.current`
-  //     matches the new version id. At this point `editor.model` IS the
-  //     saved state, so we can fingerprint it synchronously — no fetch
-  //     needed and no async race.
-  //  2. Collaborator/server-fired version, or initial mount: we do NOT
-  //     know what the editor model was at save time, so we fetch the
-  //     actual version body from the server and fingerprint that. This is
-  //     the only way to get a correct baseline on page load (the editor
-  //     may already have unsaved changes) or after a collaborator saves.
+  // Re-baseline the fingerprint on every new latest-saved version. Two cases:
+  //  1. Local save (handleCreate just ran): `lastLocalSaveIdRef.current` matches
+  //     the new id, so `editor.model` IS the saved state — fingerprint it
+  //     synchronously, no fetch and no async race.
+  //  2. Collaborator/server version or initial mount: the editor model at save
+  //     time is unknown, so fetch the version body and fingerprint that (the only
+  //     correct baseline on page load, where the editor may already be dirty).
   useEffect(() => {
     if (!editor) return
     if (!latestSavedVersion) {
@@ -367,24 +358,18 @@ export const VersionSidebarBody: FC<Props> = ({
       role="complementary"
       aria-label={t.drawerTitle}
     >
-      {/* Composer: flat textarea over a single action row — the ⌘+Enter hint
-          on the left and the Save button on the right — so the textarea owns
-          the full width and the controls share one tidy line.
-          Cmd/Ctrl+Enter submits; plain Enter inserts a newline.
-
-          Hidden entirely while previewing — there's nothing meaningful to
-          save while the canvas reflects an old snapshot, and showing it
-          alongside the read-only banner is contradictory UX. */}
+      {/* Composer: textarea over an action row (⌘+Enter hint left, Save right).
+          Cmd/Ctrl+Enter submits; plain Enter inserts a newline. Hidden while
+          previewing — saving an old snapshot is meaningless and contradicts the
+          read-only banner. */}
       {previewState === null && (
         <div
           className="flex flex-col items-stretch gap-1.5 px-4 pt-3 pb-2"
           style={{ borderBottom: "1px solid var(--apollon-chrome-border)" }}
         >
-          {/* shadcn Textarea: visible border-input, rounded-lg, and a
-              focus-visible ring come from its `data-slot` CSS. We override the
-              default 64px min-height for a one-line composer (field-sizing-content
-              still grows it as the user types) and theme the chrome via the
-              shared --apollon-chrome-* tokens so it follows light/dark. */}
+          {/* Override the default 64px min-height for a one-line composer
+              (field-sizing-content still grows it as the user types); chrome
+              themed via the shared --apollon-chrome-* tokens for light/dark. */}
           <Textarea
             rows={1}
             placeholder={t.createPlaceholder}
@@ -404,19 +389,15 @@ export const VersionSidebarBody: FC<Props> = ({
               } as CSSProperties
             }
           />
-          {/* One tidy row below the textarea: the ⌘/Ctrl+Enter hint on the
-              LEFT (muted, surfaces the keybinding so it's discoverable instead
-              of folklore) and the Save button pushed to the RIGHT. Sharing a
-              row removes the stacked-rows whitespace. */}
+          {/* ⌘/Ctrl+Enter hint on the left (surfaces the keybinding) and the
+              Save button on the right. */}
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs" style={{ color: TEXT_MUTED }} aria-hidden>
               {t.composerHint}
             </span>
-            {/* shadcn Button (default variant) for structure, focus-visible
-                ring, and disabled handling. The accent is the drawer's chrome
-                accent, not the global `bg-primary`, so we override the surface
-                via style while keeping the shadcn disabled state themed with
-                chrome tokens. */}
+            {/* Accent is the drawer's chrome accent, not the global `bg-primary`,
+                so the surface is overridden via style; disabled state stays themed
+                with chrome tokens. */}
             <Button
               type="button"
               size="sm"
@@ -450,10 +431,8 @@ export const VersionSidebarBody: FC<Props> = ({
         </div>
       )}
 
-      {/* Section meta: counter + "last saved Xm ago" + autosave filter
-          toggle. Borderless — separation comes from spacing. The toggle
-          mirrors Figma's "Show autosave versions" — default on; flipping
-          off hides every empty-meta row for a milestone-only view. */}
+      {/* Section meta: counter + "last saved Xm ago" + autosave filter toggle
+          (default on; off → milestone-only view). */}
       <div className="flex items-center gap-2 px-4 py-1">
         <span
           className="text-xs font-semibold whitespace-nowrap"
@@ -543,9 +522,6 @@ export const VersionSidebarBody: FC<Props> = ({
                   {/* span wrapper so the tooltip still shows on the disabled
                       button (a disabled button emits no pointer events). */}
                   <TooltipTrigger render={<span className="inline-flex" />}>
-                    {/* shadcn Button (outline) — bordered CTA themed via the
-                        chrome tokens so it reads correctly on the glass surface
-                        in both light and dark. */}
                     <Button
                       type="button"
                       variant="outline"
@@ -623,8 +599,6 @@ export const VersionSidebarBody: FC<Props> = ({
             )}
             {nextCursor && (
               <li className="list-none px-4 py-3 text-center">
-                {/* shadcn Button (ghost) — borderless "load older" affordance
-                    that themes its hover via the chrome row-hover token. */}
                 <Button
                   type="button"
                   variant="ghost"
@@ -651,12 +625,10 @@ export const VersionSidebarBody: FC<Props> = ({
 }
 
 /**
- * Desktop version-history panel, rehomed onto the library's overlay/control API.
- * Instead of being a flex sibling that pushes the canvas (a reflow on every
- * open/close), it is portaled into the editor's `right-rail` overlay region: the
- * canvas stays full-bleed beneath it and the diagram makes room via the measured
- * inset (no reflow). The panel unmounts when closed, releasing the
- * SVG-thumbnail observer. Mobile keeps the bottom-sheet `<VersionDrawer>`.
+ * Desktop version-history panel, portaled into the editor's `right-rail` overlay
+ * region: the canvas stays full-bleed beneath it and the diagram makes room via
+ * the measured inset (no reflow). Unmounts when closed, releasing the
+ * SVG-thumbnail observer. Mobile uses the bottom-sheet `<VersionDrawer>`.
  */
 export const VersionRail: FC<Props> = ({
   diagramId,

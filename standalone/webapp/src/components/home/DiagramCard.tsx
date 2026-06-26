@@ -135,36 +135,20 @@ const getDiagramNav = (diagram: RecentDiagram) => {
   )
 }
 
-// DiagramActionsMenuView — pure presentational three-dot menu.
-
-/** The action callbacks `DiagramActionsMenuView` reports; all payload-only. */
 export type DiagramActionsMenuViewProps = {
-  /** The diagram the menu acts on (drives labels + the shared/local fork). */
   diagram: RecentDiagram
   /** When `true`, only the "remove from shared list" entry is shown. */
   isExpired?: boolean
-  /**
-   * Whether the diagram may be deleted. `false` disables the Delete entry (e.g.
-   * the diagram is open in the editor).
-   */
+  /** `false` disables the Delete entry (e.g. the diagram is open in the editor). */
   canDelete?: boolean
-  /** Open the diagram in the editor. */
   onOpen: () => void
-  /** Duplicate the (local) diagram. */
   onDuplicate: () => void
-  /** Delete the (local) diagram after the destructive confirmation. */
   onDelete: () => void
-  /** Open the share dashboard for the (local) diagram. */
   onShare: () => void
-  /** Copy the shared link for the current sharing mode. */
   onCopySharedLink: () => void
-  /** Save the shared diagram as a new local copy on this device. */
   onSaveLocalCopy: () => void
-  /** Change the default sharing mode for a shared diagram. */
   onChangeSharedView: (view: DiagramView) => void
-  /** Remove a shared diagram from the local shared list after confirmation. */
   onRemoveSharedEntry: () => void
-  /** Wrapper class for the relatively-positioned menu container. */
   containerClassName?: string
   /** Stop click/keydown/mousedown from bubbling to an enclosing card link. */
   stopPropagation?: boolean
@@ -198,17 +182,14 @@ const CONFIRM_COPY: Record<
 }
 
 /**
- * Pure three-dot diagram actions menu: it renders the trigger + popover and
- * reports every action via an `onX` callback. It owns only ephemeral UI state
- * (menu open + which destructive confirmation is pending) — no store,
- * navigation, clipboard, or modals.
+ * Pure three-dot actions menu: renders the trigger + popover and reports every
+ * action via an `onX` callback; owns only ephemeral UI state (menu open +
+ * pending confirmation).
  *
- * Both destructive actions (delete a local diagram; remove-from-shared) are
- * confirmed through a single canonical `AlertDialog` rendered as a SIBLING of
- * the menu, not nested inside a menu item. Selecting a destructive item closes
- * the menu and arms `pendingConfirm`; the dialog then opens cleanly with its
- * own focus trap (both portal to `document.body`, so the menu fully unmounts
- * before the dialog mounts — no nested focus-trap fragility).
+ * Both destructive actions are confirmed through one `AlertDialog` rendered as a
+ * SIBLING of the menu, not nested in a menu item — both portal to
+ * `document.body`, so the menu fully unmounts before the dialog mounts (no
+ * nested focus-trap fragility).
  */
 export function DiagramActionsMenuView({
   diagram,
@@ -413,8 +394,6 @@ export function DiagramActionsMenuView({
   )
 }
 
-// DiagramActionsMenu — thin container wiring store/navigation/etc.
-
 type DiagramActionsMenuProps = {
   diagram: RecentDiagram
   containerClassName?: string
@@ -518,10 +497,9 @@ export const DiagramActionsMenu = ({
 }
 
 /**
- * A centered, theme-aware framed tile shared by the no-thumbnail preview states
- * that show a glyph (empty diagram-type icon, expired notice). All tokens (no
- * baked colors) so it sits cleanly on the island surface in both themes. The
- * loading state is NOT a tile — it shimmers edge-to-edge (see DiagramPreview).
+ * Centered, theme-aware framed tile for the no-thumbnail glyph states (empty
+ * type icon, expired notice). Token-styled so it sits on the island surface in
+ * both themes. The loading state is NOT a tile — it shimmers edge-to-edge.
  */
 const PreviewTile = ({ children }: { children: ReactNode }) => {
   return (
@@ -531,13 +509,10 @@ const PreviewTile = ({ children }: { children: ReactNode }) => {
   )
 }
 
-// DiagramPreview — the 16:10 preview area, one of four states.
-
 /**
  * Which of the four mutually-exclusive states the 16:10 preview area renders.
- * One bounded axis instead of the old `showThumbnail`/`isLoading`/`isExpired`
- * boolean trio (plus the `thumbnail`-presence check): the precedence (expired ›
- * thumbnail › loading › placeholder) is resolved upstream into this one value.
+ * One bounded axis; the precedence (expired › thumbnail › loading › placeholder)
+ * is resolved upstream into this one value.
  */
 export type DiagramPreviewState =
   | "thumbnail"
@@ -599,11 +574,9 @@ function DiagramPreview({
           )}
         </div>
       ) : state === "loading" ? (
-        // The thumbnail is generating: shimmer the WHOLE preview in place, not a
-        // floating spinner tile. This is the exact same treatment as the
-        // gallery's DiagramGallerySkeleton (shared `Skeleton`, edge-to-edge over
-        // the 16:10 region), so per-card and whole-gallery loading read as one
-        // visual language and the eye stays put while the title/footer stay real.
+        // Thumbnail generating: shimmer the WHOLE preview in place (same shared
+        // `Skeleton` as DiagramGallerySkeleton) so per-card and whole-gallery
+        // loading read as one visual language.
         <Skeleton className="size-full rounded-md" />
       ) : (
         <PreviewTile>{getDiagramTypeIcon(diagram.type, "size-9")}</PreviewTile>
@@ -611,8 +584,6 @@ function DiagramPreview({
     </div>
   )
 }
-
-// CardTag — one token-styled footer pill, three tones.
 
 type CardTagTone = "type" | "local" | "shared"
 
@@ -625,7 +596,6 @@ const CARD_TAG_TONE: Record<CardTagTone, { bg: string; text: string }> = {
   },
 }
 
-/** A single footer pill (diagram type / source / sharing mode), tone-token styled. */
 function CardTag({ label, tone }: { label: string; tone: CardTagTone }) {
   const { bg, text } = CARD_TAG_TONE[tone]
   return (
@@ -644,56 +614,34 @@ function CardTag({ label, tone }: { label: string; tone: CardTagTone }) {
   )
 }
 
-// DiagramCardView — pure presentational diagram tile.
-
-/** Pre-rendered thumbnail data URLs for the light + dark theme variants. */
 export type DiagramCardThumbnail = {
-  /** Data URL of the light-theme thumbnail; `null` while none is available. */
   lightDataUrl: string | null
-  /** Data URL of the dark-theme thumbnail; `null` while none is available. */
   darkDataUrl: string | null
 }
 
-/** The pure props `DiagramCardView` renders from. */
 export type DiagramCardViewProps = {
-  /** The diagram tile to render. */
   diagram: RecentDiagram
-  /**
-   * Pre-rendered thumbnail sources, or `null` when there is no thumbnail (the
-   * card then shows the placeholder/type icon or the loading shimmer).
-   */
+  /** `null` when there is no thumbnail (placeholder/type icon or loading shimmer). */
   thumbnail?: DiagramCardThumbnail | null
-  /**
-   * Which of the four mutually-exclusive preview states to render. `"expired"`
-   * also drives the disabled-navigation + dimmed treatment on the whole card.
-   */
+  /** `"expired"` also drives the disabled-navigation + dimmed treatment on the card. */
   previewState: DiagramPreviewState
   /** Show the secondary Local/Shared source badge. */
   showSourceBadge?: boolean
-  /** Apply the just-created/imported highlight pulse treatment. */
   isHighlighted?: boolean
-  /** Whether the diagram is favorited (drives the star fill + label). */
   isFavorite?: boolean
-  /**
-   * Toggle the favorite star. When omitted the star is hidden (e.g. expired
-   * shared diagrams that can't be favorited).
-   */
+  /** When omitted the star is hidden (e.g. expired shared diagrams). */
   onToggleFavorite?: () => void
-  /** Called when the card link is activated. */
   onOpen?: () => void
   /** The three-dot actions menu, slotted in by the container. */
   actionsMenu?: ReactNode
-  /** Extra classes merged onto the root card. */
   className?: string
-  /** Forwarded to the root card element. */
   ref?: Ref<HTMLDivElement>
 }
 
 /**
- * Pure diagram tile: type icon/thumbnail, title, relative last-modified date,
- * type/source badges, a favorite star, and a slot for the three-dot actions
- * menu. It takes its thumbnail + favorite state as props and reports the
- * favorite toggle and card-open as callbacks — no store, router, or effects.
+ * Pure diagram tile: thumbnail, title, relative date, type/source badges, a
+ * favorite star, and a slot for the three-dot actions menu. Takes thumbnail +
+ * favorite state as props; reports toggle/open as callbacks — no store or router.
  */
 export function DiagramCardView({
   diagram,
@@ -747,13 +695,11 @@ export function DiagramCardView({
       ref={ref}
       role="listitem"
       className={cn(
-        // Island look (same tokens as the editor chrome header islands): the
-        // chrome SURFACE fill (= canvas/background hue, not a raised gray), 12px
-        // radius, hairline chrome border, soft resting float — so the card reads
-        // as the SAME floating island as the editor in both themes, separated
-        // from the (equally-toned) home page by its border + shadow exactly as
-        // the editor island separates from its canvas. Width is grid-owned
-        // (auto-fill minmax 1fr); `--card-min-h` is the only sizing knob.
+        // Island look (shared chrome tokens): chrome SURFACE fill, 12px radius,
+        // hairline chrome border, soft resting float — so the card reads as a
+        // floating island separated from the home page by its border + shadow.
+        // Width is grid-owned (auto-fill minmax 1fr); `--card-min-h` is the only
+        // sizing knob.
         "home-diagram-card group relative flex min-h-[var(--card-min-h)] flex-col gap-0 overflow-hidden rounded-[var(--apollon-chrome-radius-lg)] border border-[var(--apollon-chrome-border)] bg-[var(--home-card-surface)] py-0 shadow-[var(--apollon-chrome-shadow-floating)] transition-all duration-[280ms] ease-[cubic-bezier(0.16,1,0.3,1)]",
         isHighlighted
           ? "animate-[diagram-highlight-pulse_2.4s_ease-out_forwards] bg-accent-hover shadow-[0_0_0_3px_color-mix(in_srgb,var(--home-accent-base)_35%,transparent)]"
@@ -787,7 +733,6 @@ export function DiagramCardView({
           isExpired ? "cursor-default" : "cursor-pointer"
         )}
       >
-        {/* ---- Header: preview + title ---- */}
         <CardHeader className="flex w-full flex-col gap-2 rounded-none px-4 pt-12 pb-2">
           <DiagramPreview
             diagram={diagram}
@@ -819,7 +764,6 @@ export function DiagramCardView({
             border-subtle keeps it lighter than the default border tone. */}
         <Separator className="mx-4 w-auto bg-border-subtle" />
 
-        {/* ---- Footer: relative date + tag pills ---- */}
         <CardFooter
           className={cn(
             "flex w-full items-center justify-between gap-2 rounded-none border-t-0 bg-transparent px-4 pt-2.5 pb-3.5",
@@ -843,12 +787,11 @@ export function DiagramCardView({
         </CardFooter>
       </Link>
 
-      {/* ---- Overlaid controls. The wrapper only positions (z-20, above the
-          link's z-10 `after`); each control owns its own reveal so the star can
-          stay pinned when favorited while the ⋮ reveals on hover/focus/open. ---- */}
+      {/* Overlaid controls: the wrapper only positions (z-20, above the link's
+          z-10 `after`); each control owns its own reveal so the star stays
+          pinned when favorited while the ⋮ reveals on hover/focus/open. */}
       <div className="pointer-events-none absolute inset-x-3 top-3 z-20 flex items-start justify-between">
-        {/* ---- Favorite star – top-left. Same shared ghost icon button as the
-            ⋮; pinned visible when favorited, otherwise reveals on hover/focus. ---- */}
+        {/* Favorite star: pinned visible when favorited, else reveals on hover/focus. */}
         {onToggleFavorite ? (
           <Button
             type="button"
@@ -879,14 +822,11 @@ export function DiagramCardView({
           <span />
         )}
 
-        {/* ---- Three-dot menu – top-right ---- */}
         {actionsMenu}
       </div>
     </Card>
   )
 }
-
-// DiagramCard — thin container wiring store thumbnails + favorites.
 
 type DiagramCardProps = {
   diagram: RecentDiagram

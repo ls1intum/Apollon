@@ -34,9 +34,9 @@ function RootLayout() {
   // 404) instead owns its own sticky island header INSIDE its scroll container
   // via `PageShell`, so the header scrolls-then-sticks identically everywhere and
   // the page's `app-scroll-y` scroll viewport always has a bounded height to
-  // scroll against. (Rendering the sub-header here, above an `overflow:hidden`
-  // wrapper, was what clipped privacy/imprint — the page had no bounded scroll
-  // root.)
+  // scroll against. Do NOT render a sub-header here above the `overflow:hidden`
+  // wrapper: the page would have no bounded scroll root and long legal copy
+  // would clip.
   //
   // Providers live inside the router so a modal's useNavigate binds to it.
   return (
