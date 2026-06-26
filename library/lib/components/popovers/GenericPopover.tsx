@@ -9,7 +9,6 @@ interface GenericPopoverProps {
   open: boolean
   onClose: () => void
   children: ReactNode
-  anchorOrigin?: PopoverOrigin
   transformOrigin?: PopoverOrigin
   maxHeight?: number
   maxWidth?: number

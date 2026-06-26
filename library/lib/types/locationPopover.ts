@@ -6,6 +6,5 @@ export type PopoverOrigin = {
 }
 
 export type LocationPopover = {
-  anchorOrigin: PopoverOrigin
   transformOrigin: PopoverOrigin
 }

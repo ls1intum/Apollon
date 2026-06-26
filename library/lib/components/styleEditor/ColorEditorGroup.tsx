@@ -1,7 +1,7 @@
 import React, {
   createContext,
   useCallback,
-  useContext,
+  use,
   useId,
   useMemo,
   useState,
@@ -46,7 +46,7 @@ export const useColorEditorDisclosure = (): {
   setOpen: (next: boolean) => void
 } => {
   const id = useId()
-  const group = useContext(ColorEditorGroupContext)
+  const group = use(ColorEditorGroupContext)
   const [localOpen, setLocalOpen] = useState(false)
 
   const open = group ? group.openId === id : localOpen

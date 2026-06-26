@@ -1,9 +1,4 @@
-import {
-  forwardRef,
-  type CSSProperties,
-  type InputHTMLAttributes,
-  type ReactNode,
-} from "react"
+import { type ComponentProps, type CSSProperties, type ReactNode } from "react"
 import { cn } from "@tumaet/ui/lib/utils"
 
 /**
@@ -128,13 +123,13 @@ export function GroupDivider() {
  * home band's search field. All native input props (value, onChange, size,
  * placeholder, aria-label …) pass through; callers may extend the base style.
  */
-export const IslandInput = forwardRef<
-  HTMLInputElement,
-  InputHTMLAttributes<HTMLInputElement>
->(function IslandInput({ className, style, ...props }, ref) {
+export const IslandInput = ({
+  className,
+  style,
+  ...props
+}: ComponentProps<"input">) => {
   return (
     <input
-      ref={ref}
       type="text"
       // The placeholder colour is set on `.apollon-chrome-title-input` in
       // components.css (input::placeholder can't be expressed inline).
@@ -157,4 +152,4 @@ export const IslandInput = forwardRef<
       {...props}
     />
   )
-})
+}

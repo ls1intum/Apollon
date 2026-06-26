@@ -603,7 +603,6 @@ export const PopoverManager = ({
   }
 
   let popoverOrigin: LocationPopover = {
-    anchorOrigin: { vertical: "top", horizontal: "right" },
     transformOrigin: { vertical: "top", horizontal: "left" },
   }
 
@@ -634,7 +633,6 @@ export const PopoverManager = ({
       open={open}
       anchorEl={anchorEl}
       onClose={onClose}
-      anchorOrigin={popoverOrigin.anchorOrigin}
       transformOrigin={popoverOrigin.transformOrigin}
       maxHeight={500}
       maxWidth={isEditing ? 278 : 400}
