@@ -8,8 +8,8 @@
       "types": "./dist/components/*.d.ts",
       "default": "./src/components/*"
     },
-    "./styles/*": "./src/styles/*",
-    "./components.css": "./dist/components.css",
+    "./styles/theme.css": "./src/styles/theme.css",
+    "./styles/tokens.css": "./src/styles/tokens.css",
     "./lib/utils": "./src/lib/utils.ts",
     "./lib/color-swatch-tokens": {
       "types": "./dist/lib/color-swatch-tokens.d.ts",
