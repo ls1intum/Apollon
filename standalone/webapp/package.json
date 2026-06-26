@@ -73,7 +73,7 @@
     "@capacitor/assets": "3.0.5",
     "@capacitor/cli": "8.3.0",
     "@eslint/js": "catalog:",
-    "@playwright/test": "1.59.1",
+    "@playwright/test": "catalog:",
     "@resvg/resvg-js": "2.6.2",
     "@size-limit/file": "catalog:",
     "@storybook/addon-a11y": "catalog:",

@@ -31,13 +31,16 @@ catalog:
   "@storybook/addon-a11y": "10.4.6"
   "@storybook/addon-themes": "10.4.6"
   "@storybook/addon-vitest": "10.4.6"
-  # Storybook browser tests use @vitest/browser-playwright, which needs a modern
-  # playwright (>=1.6x). e2e + the committed visual baselines are pinned to
-  # @playwright/test 1.59.1 (CI's v1.59.1-noble image). Both packages ship a
-  # `playwright` CLI bin, so e2e/visual invoke @playwright/test's CLI directly
-  # (see webapp test:e2e / test:visual) to avoid the bin collision; this package
-  # is consumed only via its API by the browser-test provider.
-  playwright: "1.61.0"
+  # `@playwright/test` (e2e + visual) and `playwright` (the browser-test provider
+  # API, via @vitest/browser-playwright) are kept on ONE version so the workspace
+  # resolves a single `playwright-core` + browser-binary set — no drift. Pinned to
+  # match CI's v1.59.1-noble image and the committed visual baselines;
+  # @vitest/browser-playwright accepts any playwright (peer `*`) and its Storybook
+  # browser tests run locally only. Both packages ship a `playwright` CLI bin, so
+  # e2e/visual invoke @playwright/test's CLI directly (see webapp test:e2e /
+  # test:visual) to avoid the bin collision.
+  "@playwright/test": "1.59.1"
+  playwright: "1.59.1"
   "@tailwindcss/vite": "4.0.17"
   "@testing-library/jest-dom": "6.9.1"
   "@testing-library/react": "16.3.2"
