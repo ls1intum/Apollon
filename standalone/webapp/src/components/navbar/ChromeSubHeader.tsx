@@ -24,7 +24,7 @@ export const ChromeSubHeader = () => {
 
   return (
     <TooltipProvider>
-      <div className="sticky top-[calc(var(--safe-area-inset-top,0px)+0.75rem)] z-20 flex items-start gap-[var(--apollon-chrome-gap)] pb-2 md:top-[calc(var(--safe-area-inset-top,0px)+1rem)]">
+      <div className="sticky top-[calc(var(--safe-area-inset-top,0px)_+_0.75rem)] z-20 flex items-start gap-[var(--apollon-chrome-gap)] pb-2 md:top-[calc(var(--safe-area-inset-top,0px)_+_1rem)]">
         <Island as="header" role="banner" ariaLabel="Home">
           <Link
             to="/"

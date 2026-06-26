@@ -269,9 +269,11 @@ test.describe("Home page — diagram gallery", () => {
       .getByRole("group", { name: "Sort by" })
       .getByRole("button", { name: "Alphabetical" })
       .click()
+    // For the Alphabetical field the Order toggle reads in its own vocabulary:
+    // "A–Z" (ascending) / "Z–A" — not Oldest/Newest (see homeSortOrderOptions).
     await page
       .getByRole("group", { name: "Order" })
-      .getByRole("button", { name: "Oldest" })
+      .getByRole("button", { name: "A–Z" })
       .click()
     // A-Z ascending: Alpha first.
     await expect(cards(page).first()).toContainText("Alpha")
@@ -632,15 +634,16 @@ test.describe("Legal pages", () => {
     await expect(page.getByRole("link", { name: "All diagrams" })).toBeVisible()
   })
 
-  test("legal pages reach legal links via the overflow menu on mobile", async ({
+  test("legal pages reach legal links via the Help menu on mobile", async ({
     page,
   }) => {
-    // On mobile the sub-page ChromeSubHeader collapses its tail into a single
-    // "More options" overflow menu carrying the shared Help/legal items.
+    // On mobile the sub-page ChromeSubHeader keeps the Help dropdown (icon-only
+    // below lg) beside the Theme toggle; the shared Help menu carries the legal
+    // links — there is room for both, so there is no "…" overflow.
     await page.setViewportSize({ width: 390, height: 720 })
     await page.goto("/imprint")
     await expect(page.getByRole("contentinfo")).toBeHidden()
-    await page.getByRole("button", { name: "More options" }).click()
+    await page.getByRole("button", { name: "Help" }).click()
     await expect(
       page.getByRole("menuitem", { name: "Privacy" })
     ).toHaveAttribute("href", "/privacy")
@@ -660,6 +663,9 @@ test.describe("Legal pages", () => {
 
     await page.setViewportSize({ width: 390, height: 844 })
     await page.goto("/imprint")
+    // Wait for the chrome band to render before reading layout off it — the
+    // evaluate() below queries the DOM directly and would otherwise race React.
+    await expect(page.getByRole("banner")).toBeVisible()
     await page.evaluate((inset) => {
       document.documentElement.style.setProperty(
         "--safe-area-inset-top",
