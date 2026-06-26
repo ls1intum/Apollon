@@ -13,7 +13,10 @@ import {
 import { ReachabilityGraphMarkingEditPopover } from "@tumaet/apollon/components/popovers/reachabilityGraphDiagram/ReachabilityGraphMarkingEditPopover"
 import { ReachabilityGraphEdgeEditPopover } from "@tumaet/apollon/components/popovers/edgePopovers/ReachabilityGraphEdgeEditPopover"
 
-const meta = { title: "Editor/Reachability Graph", ...editorStoryMeta } satisfies Meta
+const meta = {
+  title: "Editor/Reachability Graph",
+  ...editorStoryMeta,
+} satisfies Meta
 
 export default meta
 type Story = StoryObj<typeof meta>

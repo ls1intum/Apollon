@@ -14,7 +14,10 @@ import { DeploymentComponentEditPopover } from "@tumaet/apollon/components/popov
 import { DeploymentNodeEditPopover } from "@tumaet/apollon/components/popovers/deploymentDiagram/DeploymentNodeEditPopover"
 import { DeploymentEdgeEditPopover } from "@tumaet/apollon/components/popovers/edgePopovers/DeploymentDiagramEdgeEditPopover"
 
-const meta = { title: "Editor/Deployment Diagram", ...editorStoryMeta } satisfies Meta
+const meta = {
+  title: "Editor/Deployment Diagram",
+  ...editorStoryMeta,
+} satisfies Meta
 
 export default meta
 type Story = StoryObj<typeof meta>

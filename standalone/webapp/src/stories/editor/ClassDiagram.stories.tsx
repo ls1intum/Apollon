@@ -21,7 +21,10 @@ import command from "assets/diagramTemplates/Command.json"
 import observer from "assets/diagramTemplates/Observer.json"
 import factory from "assets/diagramTemplates/Factory.json"
 
-const meta = { title: "Editor/Class Diagram", ...editorStoryMeta } satisfies Meta
+const meta = {
+  title: "Editor/Class Diagram",
+  ...editorStoryMeta,
+} satisfies Meta
 
 export default meta
 type Story = StoryObj<typeof meta>

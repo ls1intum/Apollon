@@ -13,7 +13,10 @@ import {
 import { ObjectEditPopover } from "@tumaet/apollon/components/popovers/objectDiagram/ObjectEditPopover"
 import { ObjectDiagramEdgeEditPopover } from "@tumaet/apollon/components/popovers/edgePopovers/ObjectDiagramEdgeEditPopover"
 
-const meta = { title: "Editor/Object Diagram", ...editorStoryMeta } satisfies Meta
+const meta = {
+  title: "Editor/Object Diagram",
+  ...editorStoryMeta,
+} satisfies Meta
 
 export default meta
 type Story = StoryObj<typeof meta>

@@ -10,9 +10,7 @@
         "lib/export/index.ts"
       ],
       "project": ["lib/**/*.{ts,tsx}"],
-      "ignoreBinaries": [
-        "build"
-      ]
+      "ignoreBinaries": ["build"]
     },
     "packages/ui": {
       "entry": [
@@ -22,10 +20,7 @@
         "tests/**/*.test.{ts,tsx}"
       ],
       "project": ["src/**/*.{ts,tsx}", "tests/**/*.{ts,tsx}"],
-      "ignoreDependencies": [
-        "@tailwindcss/vite",
-        "@vitest/coverage-v8"
-      ]
+      "ignoreDependencies": ["@tailwindcss/vite", "@vitest/coverage-v8"]
     },
     "standalone/webapp": {
       "entry": [
@@ -53,9 +48,7 @@
     },
     "vscode-extension": {
       "entry": ["webview-vite.config.ts"],
-      "ignoreBinaries": [
-        "vsce"
-      ]
+      "ignoreBinaries": ["vsce"]
     },
     "vscode-extension/editor": {
       "entry": ["src/index.tsx"],
@@ -76,10 +69,7 @@
       ]
     },
     "docs": {
-      "entry": [
-        "sidebars.{user,library,contributor}.ts",
-        "src/**/*.{ts,tsx}"
-      ],
+      "entry": ["sidebars.{user,library,contributor}.ts", "src/**/*.{ts,tsx}"],
       "project": ["src/**/*.{ts,tsx}", "*.ts"],
       "ignoreDependencies": [
         "@docusaurus/plugin-content-docs",

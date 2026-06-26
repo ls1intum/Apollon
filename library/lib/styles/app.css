@@ -51,6 +51,7 @@
 .apollon-editor {
   background-color: var(--apollon-background, #fff);
   color: var(--apollon-primary-contrast, #000);
+
   --popover-divider: color-mix(
     in srgb,
     var(--apollon-primary-contrast, #000) 10%,
@@ -165,6 +166,7 @@
     opacity: 0;
     transform: translate(-50%, -8px);
   }
+
   to {
     opacity: 1;
     transform: translate(-50%, 0);
@@ -913,12 +915,15 @@ svg.react-flow__connectionline {
 .horizontally-not-resizable .react-flow__resize-control.top.line:hover {
   cursor: grab;
 }
+
 .horizontally-not-resizable .react-flow__resize-control.bottom.line:hover {
   cursor: grab;
 }
+
 .vertically-not-resizable .react-flow__resize-control.right.line:hover {
   cursor: grab;
 }
+
 .vertically-not-resizable .react-flow__resize-control.left.line:hover {
   cursor: grab;
 }
@@ -940,6 +945,7 @@ svg.react-flow__connectionline {
   color: var(--apollon-primary-contrast, #000);
   cursor: pointer;
 }
+
 .apollon-checkbox {
   accent-color: var(--apollon-primary, #3e8acc);
   width: 16px;
@@ -952,31 +958,37 @@ svg.react-flow__connectionline {
    contrast token. Callers' sx/style still override via the element's own
    inline style (higher specificity than this rule). h1–h5 inherit by design. */
 [data-slot="typography"] {
-  color: var(--apollon-primary-contrast, #000000);
+  color: var(--apollon-primary-contrast, #000);
 }
+
 [data-slot="typography"][data-variant="h6"] {
   font-size: 1.25rem;
   font-weight: 500;
   margin: 0;
 }
+
 [data-slot="typography"][data-variant="subtitle1"] {
   font-size: 1rem;
   font-weight: 400;
   margin: 0;
 }
+
 [data-slot="typography"][data-variant="subtitle2"] {
   font-size: 0.875rem;
   font-weight: 500;
   margin: 0;
 }
+
 [data-slot="typography"][data-variant="body1"] {
   font-size: 1rem;
   margin: 0;
 }
+
 [data-slot="typography"][data-variant="body2"] {
   font-size: 0.875rem;
   margin: 0;
 }
+
 [data-slot="typography"][data-variant="caption"] {
   font-size: 0.75rem;
   margin: 0;
@@ -988,13 +1000,15 @@ svg.react-flow__connectionline {
 [data-slot="textfield-label"] {
   font-size: 0.75rem;
   margin-bottom: 2px;
-  color: var(--apollon-primary-contrast, #000000);
+  color: var(--apollon-primary-contrast, #000);
 }
+
 [data-slot="textfield-helper"] {
   font-size: 0.75rem;
   margin-top: 2px;
   color: var(--apollon-gray-variant, #495057);
 }
+
 [data-slot="textfield-helper"][data-error] {
   color: var(--apollon-alert-danger-color, #721c24);
 }
@@ -1006,10 +1020,7 @@ svg.react-flow__connectionline {
   width: var(--divider-width, 100%);
   height: var(--divider-height, 1px);
   margin: var(--divider-margin, 8px 0);
-  background-color: var(
-    --divider-color,
-    var(--apollon-primary-contrast, #000000)
-  );
+  background-color: var(--divider-color, var(--apollon-primary-contrast, #000));
 }
 
 /* Add-item row (attributes / methods lists): the text field grows, the named
@@ -1020,6 +1031,7 @@ svg.react-flow__connectionline {
   align-items: center;
   gap: 4px;
 }
+
 .apollon-add-row > :first-child {
   flex: 1;
   min-width: 0;
@@ -1030,6 +1042,7 @@ svg.react-flow__connectionline {
   cursor: grab;
   color: var(--apollon-gray-variant, #495057);
 }
+
 .apollon-drag-handle:active {
   cursor: grabbing;
 }
@@ -1038,6 +1051,7 @@ svg.react-flow__connectionline {
 .apollon-edge-toolbar {
   pointer-events: none;
 }
+
 .apollon-edge-toolbar > * {
   pointer-events: auto;
 }
@@ -1049,7 +1063,7 @@ svg.react-flow__connectionline {
   flex: 1;
   flex-direction: column;
   padding: 10px;
-  background-color: var(--apollon-surface, #ffffff);
+  background-color: var(--apollon-surface, #fff);
   color: var(--apollon-primary-contrast, #000);
   border-radius: var(--apollon-radius-lg, 8px);
   border: 1px solid var(--apollon-border, #cdd5df);
@@ -1074,11 +1088,13 @@ svg.react-flow__connectionline {
   display: inline-flex;
   flex-direction: column;
 }
+
 .apollon-select-label {
   font-size: 0.8125rem; /* 13px — up from 0.75rem (12px) for legibility */
   color: var(--apollon-primary-contrast, #000);
   margin-bottom: 2px;
 }
+
 .apollon-select-trigger {
   display: flex;
   align-items: center;
@@ -1092,30 +1108,35 @@ svg.react-flow__connectionline {
   font-family: inherit;
   text-align: left;
   color: var(--apollon-primary-contrast, #000);
-  background-color: var(--apollon-surface-sunken, #ffffff);
+  background-color: var(--apollon-surface-sunken, #fff);
   border: 1px solid var(--apollon-border, #cdd5df);
   border-radius: var(--apollon-radius-md, 6px);
   cursor: pointer;
 }
+
 .apollon-select-trigger:focus-visible {
   border-color: var(--apollon-primary, #3e8acc);
   box-shadow: 0 0 0 1px var(--apollon-primary, #3e8acc);
   outline: none;
 }
+
 .apollon-select-value {
   flex: 1;
   min-width: 0;
 }
+
 .apollon-select-placeholder {
   color: var(--apollon-gray-variant, #495057);
   opacity: 0.7;
 }
+
 .apollon-select-icon {
   flex: 0 0 auto;
   color: var(--apollon-primary-contrast, #000);
 }
+
 .apollon-select-content {
-  background-color: var(--apollon-surface, #ffffff);
+  background-color: var(--apollon-surface, #fff);
   color: var(--apollon-primary-contrast, #000);
   border: 1px solid var(--apollon-border, #cdd5df);
   border-radius: var(--apollon-radius-lg, 8px);
@@ -1127,6 +1148,7 @@ svg.react-flow__connectionline {
   z-index: 10004;
   overflow: hidden;
 }
+
 .apollon-select-listbox {
   max-height: inherit;
   overflow-y: auto;
@@ -1134,6 +1156,7 @@ svg.react-flow__connectionline {
   -webkit-overflow-scrolling: touch;
   padding: 4px;
 }
+
 .apollon-select-option {
   display: flex;
   align-items: center;
@@ -1152,6 +1175,7 @@ svg.react-flow__connectionline {
   /* Avoid the 300ms tap delay / double-tap zoom on touch devices. */
   touch-action: manipulation;
 }
+
 .apollon-select-option:hover,
 .apollon-select-option:focus-visible {
   background-color: color-mix(
@@ -1161,6 +1185,7 @@ svg.react-flow__connectionline {
   );
   outline: none;
 }
+
 .apollon-select-option--selected {
   font-weight: 600;
   background-color: color-mix(
@@ -1188,13 +1213,16 @@ svg.react-flow__connectionline {
   transition: opacity 120ms ease;
   flex-shrink: 0;
 }
+
 .apollon-color-swatch:hover {
   opacity: 0.72;
 }
+
 .apollon-color-swatch:focus-visible {
   outline: 2px solid var(--apollon-primary, #3e8acc);
   outline-offset: 3px;
 }
+
 .apollon-color-swatch[aria-pressed="true"],
 .apollon-color-swatch[data-state="on"] {
   opacity: 1;
@@ -1216,18 +1244,20 @@ svg.react-flow__connectionline {
   flex-direction: column;
   gap: 10px;
   padding: 12px;
-  background-color: var(--apollon-surface, #ffffff);
+  background-color: var(--apollon-surface, #fff);
   color: var(--apollon-primary-contrast, #000);
   border: 1px solid var(--apollon-border, #cdd5df);
   border-radius: var(--apollon-radius-lg, 8px);
   box-shadow: var(--apollon-shadow, 0 4px 12px rgba(0, 0, 0, 0.18));
   z-index: 10003;
 }
+
 .apollon-color-picker__grid {
   display: grid;
   grid-template-columns: repeat(5, auto);
   gap: 8px;
 }
+
 .apollon-color-picker__custom {
   display: flex;
   align-items: center;
@@ -1236,6 +1266,7 @@ svg.react-flow__connectionline {
   font-size: 0.8125rem;
   color: var(--apollon-secondary, #6c757d);
 }
+
 .apollon-color-picker__custom input[type="color"] {
   width: 28px;
   height: 28px;
@@ -1245,10 +1276,12 @@ svg.react-flow__connectionline {
   background: transparent;
   cursor: pointer;
 }
+
 .apollon-color-picker__custom input[type="color"][data-custom-active] {
   outline: 2px solid var(--apollon-primary, #3e8acc);
   outline-offset: 1px;
 }
+
 .apollon-color-picker__reset {
   align-self: stretch;
 }
@@ -1261,6 +1294,7 @@ svg.react-flow__connectionline {
   flex-direction: column;
   width: 100%;
 }
+
 .apollon-style-editor__header {
   display: flex;
   flex-direction: row;
@@ -1269,11 +1303,13 @@ svg.react-flow__connectionline {
   gap: 8px;
   flex: 1;
 }
+
 .apollon-style-editor__header[data-variant="edge"] {
   flex-wrap: nowrap;
   justify-content: space-between;
   gap: 5px;
 }
+
 .apollon-style-editor__header-actions {
   display: flex;
   align-items: center;
@@ -1281,6 +1317,7 @@ svg.react-flow__connectionline {
   flex-shrink: 0;
   margin-left: auto;
 }
+
 .apollon-style-editor__header[data-variant="edge"]
   .apollon-style-editor__header-actions {
   margin-left: 0;
@@ -1292,15 +1329,17 @@ svg.react-flow__connectionline {
   font-weight: bold;
   margin-right: 8px;
 }
+
 .apollon-style-editor__panel {
   display: flex;
   flex-direction: column;
   margin-top: 10px;
   margin-bottom: 10px;
-  background-color: var(--apollon-surface, #ffffff);
+  background-color: var(--apollon-surface, #fff);
   border: 1px solid var(--apollon-border-subtle, #e3e8ef);
   border-radius: var(--apollon-radius-md, 6px);
 }
+
 .apollon-style-editor__row {
   display: flex;
   align-items: center;
@@ -1318,6 +1357,7 @@ svg.react-flow__connectionline {
   align-items: center;
   width: fit-content;
 }
+
 .apollon-stereotype-toggle {
   display: inline-flex;
   align-items: center;
@@ -1345,29 +1385,30 @@ svg.react-flow__connectionline {
 .apollon-stereotype-group .apollon-stereotype-toggle:not(:first-child) {
   border-left: 0;
 }
+
 .apollon-stereotype-group .apollon-stereotype-toggle:first-child {
   border-top-left-radius: var(--apollon-radius-sm, 4px);
   border-bottom-left-radius: var(--apollon-radius-sm, 4px);
 }
+
 .apollon-stereotype-group .apollon-stereotype-toggle:last-child {
   border-top-right-radius: var(--apollon-radius-sm, 4px);
   border-bottom-right-radius: var(--apollon-radius-sm, 4px);
 }
+
 .apollon-stereotype-toggle:hover {
   background-color: var(
     --apollon-hover-neutral,
-    color-mix(
-      in srgb,
-      var(--apollon-primary-contrast, #000000) 7.5%,
-      transparent
-    )
+    color-mix(in srgb, var(--apollon-primary-contrast, #000) 7.5%, transparent)
   );
 }
+
 .apollon-stereotype-toggle:focus-visible {
   outline: 2px solid var(--apollon-primary, #3e8acc);
   outline-offset: 2px;
   z-index: 1; /* lift the focus ring above the shared seam */
 }
+
 .apollon-stereotype-toggle[data-state="on"] {
   background-color: color-mix(
     in srgb,
@@ -1405,7 +1446,7 @@ svg.react-flow__connectionline {
 }
 
 .scroll-overlay-hint-content {
-  background-color: var(--apollon-surface, #ffffff);
+  background-color: var(--apollon-surface, #fff);
   border: 2px solid var(--apollon-primary, #3e8acc);
   border-radius: var(--apollon-radius-lg, 8px);
   padding: 16px 24px;
@@ -1427,6 +1468,7 @@ svg.react-flow__connectionline {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
