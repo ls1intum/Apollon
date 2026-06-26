@@ -15,10 +15,12 @@ This monorepo contains every piece of the Apollon platform:
 ## Use the library
 
 ```sh
-npm install @tumaet/apollon
+npm install @tumaet/apollon yjs y-protocols
 ```
 
-See the [library README](./library/README.md) for the API.
+`yjs` and `y-protocols` are required peer dependencies (the collaboration
+engine, kept external so the host owns a single Yjs instance). See the
+[library README](./library/README.md) for the API and the other build entries.
 
 ## Run the stack locally
 

@@ -200,12 +200,23 @@ export class DiagramEditorComponent {
 
 ### Vanilla JS / CDN
 
+`yjs` and `y-protocols` are required peers, so the no-bundler path must resolve them too. Declare them in an import map and load Apollon with `?external=yjs,y-protocols`, so the page shares a single Yjs instance:
+
 ```html
 <link rel="stylesheet" href="https://esm.sh/@tumaet/apollon@4.8.0/style.css" />
 <div id="apollon" style="width: 100%; height: 600px"></div>
 
+<script type="importmap">
+  {
+    "imports": {
+      "yjs": "https://esm.sh/yjs@13.6.20",
+      "y-protocols": "https://esm.sh/y-protocols@1.0.6"
+    }
+  }
+</script>
+
 <script type="module">
-  import { ApollonEditor } from "https://esm.sh/@tumaet/apollon@4.8.0"
+  import { ApollonEditor } from "https://esm.sh/@tumaet/apollon@4.8.0?external=yjs,y-protocols"
 
   const saved = localStorage.getItem("diagram")
   const editor = new ApollonEditor(document.getElementById("apollon"), {
