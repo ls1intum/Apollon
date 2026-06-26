@@ -36,9 +36,11 @@ import {
   createDiagramStore,
   createMetadataStore,
   createAssessmentSelectionStore,
+  createPopoverStore,
   DiagramStoreContext,
   MetadataStoreContext,
   AssessmentSelectionStoreContext,
+  PopoverStoreContext,
   useDiagramStore,
 } from "@tumaet/apollon/store"
 
@@ -598,10 +600,14 @@ export function SeededPopoverHarness({
     const diagram = createDiagramStore(ydoc)
     const metadata = createMetadataStore(ydoc)
     const assessment = createAssessmentSelectionStore()
+    // Feedback popovers reach the popover store (via useGoToNextAssessment), so
+    // it must be provided too — without it the popover throws "PopoverStoreContext
+    // not provided" and renders nothing.
+    const popover = createPopoverStore()
     if (diagramType) metadata.getState().updateDiagramType(diagramType)
     metadata.getState().setView(ApollonView.Modelling)
     seed(diagram, metadata)
-    return { diagram, metadata, assessment }
+    return { diagram, metadata, assessment, popover }
     // seed is referentially stable per story; diagramType keys the rebuild.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [diagramType])
@@ -610,14 +616,16 @@ export function SeededPopoverHarness({
     <DiagramStoreContext.Provider value={stores.diagram}>
       <MetadataStoreContext.Provider value={stores.metadata}>
         <AssessmentSelectionStoreContext.Provider value={stores.assessment}>
-          <ReactFlowProvider>
-            <div className="apollon-editor">
-              <HiddenStoreFlow />
-              <div className="apollon-popover" style={{ width }}>
-                {children}
+          <PopoverStoreContext.Provider value={stores.popover}>
+            <ReactFlowProvider>
+              <div className="apollon-editor">
+                <HiddenStoreFlow />
+                <div className="apollon-popover" style={{ width }}>
+                  {children}
+                </div>
               </div>
-            </div>
-          </ReactFlowProvider>
+            </ReactFlowProvider>
+          </PopoverStoreContext.Provider>
         </AssessmentSelectionStoreContext.Provider>
       </MetadataStoreContext.Provider>
     </DiagramStoreContext.Provider>
