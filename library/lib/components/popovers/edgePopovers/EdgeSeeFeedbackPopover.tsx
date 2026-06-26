@@ -21,7 +21,7 @@ export const EdgeSeeFeedbackPopover = ({ elementId }: PopoverProps) => {
         type={edge.type ?? ""}
         typeLabel="Edge"
       />
-      <Button variant="outlined" onClick={handleGoToNextAssessment}>
+      <Button variant="outline" onClick={handleGoToNextAssessment}>
         Next Assessment
       </Button>
     </PopoverLayout>

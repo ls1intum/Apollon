@@ -1,4 +1,5 @@
-import { EdgeStyleEditor, IconButton, TextField } from "@/components/ui"
+import { IconButton, TextField } from "@/components/ui"
+import { EdgeStyleEditor } from "@/components/styleEditor"
 import { ArrowLeftRight } from "lucide-react"
 import { useReactFlow } from "@xyflow/react"
 import { CustomEdgeProps } from "@/edges/EdgeProps"

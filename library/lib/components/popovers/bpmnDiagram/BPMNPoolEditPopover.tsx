@@ -52,7 +52,7 @@ export const BPMNPoolEditPopover = ({ elementId }: PopoverProps) => {
         label="Name"
         value={poolName}
         onChange={(e) => handlePoolNameChange(e.target.value)}
-        variant="outlined"
+        variant="outline"
         size="small"
       />
     </PopoverLayout>

@@ -73,7 +73,7 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
       )}
       {showNameInputChange && (
         <TextField
-          variant="outlined"
+          variant="outline"
           onChange={(event) =>
             handleDataFieldUpdate("name", event.target.value)
           }

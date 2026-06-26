@@ -1,4 +1,4 @@
-import { NodeStyleEditor } from "@/components/ui"
+import { NodeStyleEditor } from "@/components/styleEditor"
 import { useDiagramStore } from "@/store"
 import { ObjectNodeProps } from "@/types"
 import { useShallow } from "zustand/shallow"

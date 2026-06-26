@@ -1,5 +1,6 @@
 import { useReactiveEdge } from "@/hooks"
-import { EdgeStyleEditor, TextField } from "@/components/ui"
+import { TextField } from "@/components/ui"
+import { EdgeStyleEditor } from "@/components/styleEditor"
 import { PopoverProps } from "../types"
 import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 import { useReactFlow } from "@xyflow/react"

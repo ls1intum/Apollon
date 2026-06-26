@@ -3,8 +3,7 @@ import { DefaultNodeEditPopover } from "../DefaultNodeEditPopover"
 import { PopoverProps } from "../types"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
-import { HeaderSwitchElement } from "@/components/ui"
-
+import { HeaderSwitchElement } from "@/components/styleEditor"
 export const ComponentSubsystemEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }: PopoverProps) => {

@@ -2,11 +2,11 @@ import { ChangeEvent } from "react"
 import {
   Button,
   IconButton,
-  NodeStyleEditor,
   Select,
   TextField,
   Typography,
 } from "@/components/ui"
+import { NodeStyleEditor } from "@/components/styleEditor"
 import {
   flipSwimlaneChildPosition,
   generateUUID,
@@ -316,7 +316,7 @@ export const ActivitySwimlaneEditPopover: React.FC<PopoverProps> = ({
         </DndContext>
       </div>
 
-      <Button variant="outlined" onClick={handleAddLane}>
+      <Button variant="outline" onClick={handleAddLane}>
         <Plus />
         Add lane
       </Button>

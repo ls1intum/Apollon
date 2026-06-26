@@ -2,7 +2,7 @@ import { DefaultNodeProps } from "@/types"
 import { useDiagramStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { PopoverProps } from "./types"
-import { NodeStyleEditor } from "../ui"
+import { NodeStyleEditor } from "@/components/styleEditor"
 import {
   nodeTypeLabel,
   rendersNameLabel,

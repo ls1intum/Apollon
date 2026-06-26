@@ -1,6 +1,6 @@
 import React from "react"
 import { Typography } from "@/components/ui"
-import { ColorEditorGroupProvider } from "@/components/ui/StyleEditor/ColorEditorGroup"
+import { ColorEditorGroupProvider } from "@/components/styleEditor/ColorEditorGroup"
 
 /**
  * Shared layout primitives for node/edge edit popovers.

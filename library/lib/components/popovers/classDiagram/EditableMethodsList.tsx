@@ -1,11 +1,7 @@
 import React, { useState, KeyboardEvent, ChangeEvent } from "react"
 import { GripVertical, Plus, Trash2 } from "lucide-react"
-import {
-  IconButton,
-  NodeStyleEditor,
-  TextField,
-  Typography,
-} from "@/components/ui"
+import { IconButton, TextField, Typography } from "@/components/ui"
+import { NodeStyleEditor } from "@/components/styleEditor"
 import { generateUUID } from "@/utils"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
@@ -225,7 +221,7 @@ export const EditableMethodsList: React.FC<Props> = ({ nodeId }) => {
         <TextField
           size="small"
           fullWidth
-          variant="outlined"
+          variant="outline"
           aria-label="New method"
           placeholder="Add method"
           value={newItem}

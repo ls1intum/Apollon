@@ -129,7 +129,7 @@ export const EditorColorPicker: React.FC<EditorColorPickerProps> = ({
 
             {onReset && (
               <Button
-                variant="outlined"
+                variant="outline"
                 data-slot="color-picker-reset"
                 className="apollon-color-picker__reset"
                 onClick={onReset}

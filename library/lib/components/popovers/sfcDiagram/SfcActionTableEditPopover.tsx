@@ -1,6 +1,7 @@
 import React, { useState, KeyboardEvent, ChangeEvent } from "react"
 import { Trash2 } from "lucide-react"
-import { IconButton, NodeStyleEditor, TextField } from "@/components/ui"
+import { IconButton, TextField } from "@/components/ui"
+import { NodeStyleEditor } from "@/components/styleEditor"
 import { generateUUID } from "@/utils"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"

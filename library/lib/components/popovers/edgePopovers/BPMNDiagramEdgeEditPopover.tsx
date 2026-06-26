@@ -3,7 +3,8 @@ import { useReactFlow } from "@xyflow/react"
 import { useEdgePopOver, useReactiveEdge, useReactiveNodeName } from "@/hooks"
 import { PopoverProps } from "../types"
 import { ArrowLeftRight } from "lucide-react"
-import { EdgeStyleEditor, IconButton, TextField } from "@/components/ui"
+import { IconButton, TextField } from "@/components/ui"
+import { EdgeStyleEditor } from "@/components/styleEditor"
 import { EdgeTypeSelect, EdgeTypeOption } from "./EdgeTypeSelect"
 import {
   ConnectionInfo,

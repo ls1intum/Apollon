@@ -1,4 +1,5 @@
-import { NodeStyleEditor, Select } from "@/components/ui"
+import { Select } from "@/components/ui"
+import { NodeStyleEditor } from "@/components/styleEditor"
 import { useReactiveNode } from "@/hooks"
 import { useReactFlow } from "@xyflow/react"
 import { PopoverProps } from "../types"

@@ -1,7 +1,7 @@
 import { useReactFlow } from "@xyflow/react"
 import { useReactiveEdge } from "@/hooks"
 import { PopoverProps } from "../types"
-import { EdgeStyleEditor } from "@/components/ui"
+import { EdgeStyleEditor } from "@/components/styleEditor"
 import { CustomEdgeProps } from "@/edges"
 import { PopoverLayout } from "../PopoverLayout"
 

@@ -4,7 +4,7 @@ import { useShallow } from "zustand/shallow"
 import { EditableAttributeList } from "../classDiagram/EditableAttributesList"
 import { EditableMethodsList } from "../classDiagram/EditableMethodsList"
 import { PopoverProps } from "../types"
-import { NodeStyleEditor } from "@/components/ui"
+import { NodeStyleEditor } from "@/components/styleEditor"
 import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 
 export const CommunicationObjectNameEditPopover: React.FC<PopoverProps> = ({

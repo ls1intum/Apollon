@@ -44,7 +44,7 @@ export const CommunicationObjectNameGiveFeedbackPopover = ({
           divider
         />
       ))}
-      <Button variant="outlined" onClick={handleGoToNextAssessment}>
+      <Button variant="outline" onClick={handleGoToNextAssessment}>
         Next Assessment
       </Button>
     </PopoverLayout>

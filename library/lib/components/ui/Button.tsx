@@ -1,33 +1,17 @@
 import React from "react"
 import { Button as SharedButton } from "@tumaet/ui/components/button"
 
-// Adapts the shared @tumaet/ui Button to the editor's variant vocabulary
-// (outlined/contained/text) so the editor and webapp render one primitive.
-// Styling comes from the bundled, Tailwind-free components.css
-// (data-slot/data-variant rules).
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "outlined" | "contained" | "text"
-  /** Accepted for API compatibility; ignored — the shared primitive owns its size. */
-  size?: "small" | "medium" | "large"
-}
-
-const variantMap = {
-  outlined: "outline",
-  contained: "default",
-  text: "ghost",
-} as const
+// The editor's Button IS the shared @tumaet/ui Button, with two editor defaults:
+//   • variant="outline" — the editor's resting button look (the shared default is
+//     the filled "default"); most editor buttons sit on glass/popover surfaces.
+//   • type="button" — these render inside popovers and inline forms, where an
+//     accidental implicit submit would be a real bug.
+// The full shadcn variant/size vocabulary passes straight through; styling ships
+// in the bundled, Tailwind-free components.css (data-slot="button").
+export type ButtonProps = React.ComponentProps<typeof SharedButton>
 
 export const Button: React.FC<ButtonProps> = ({
-  variant = "outlined",
-  size: _size,
+  variant = "outline",
   type = "button",
-  children,
   ...props
-}) => {
-  return (
-    <SharedButton type={type} variant={variantMap[variant]} {...props}>
-      {children}
-    </SharedButton>
-  )
-}
+}) => <SharedButton variant={variant} type={type} {...props} />

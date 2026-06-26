@@ -42,7 +42,7 @@ export const ObjectSeeFeedbackPopover = ({ elementId }: PopoverProps) => {
           divider
         />
       ))}
-      <Button variant="outlined" onClick={handleGoToNextAssessment}>
+      <Button variant="outline" onClick={handleGoToNextAssessment}>
         Next Assessment
       </Button>
     </PopoverLayout>

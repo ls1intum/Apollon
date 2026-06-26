@@ -23,7 +23,7 @@ export const DefaultNodeSeeFeedbackPopover = ({ elementId }: PopoverProps) => {
         name={nodeData.name}
         type={node.type ?? ""}
       />
-      <Button variant="outlined" onClick={handleGoToNextAssessment}>
+      <Button variant="outline" onClick={handleGoToNextAssessment}>
         Next Assessment
       </Button>
     </PopoverLayout>
