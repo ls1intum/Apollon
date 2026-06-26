@@ -120,6 +120,22 @@ describe("resizeLaneDivider", () => {
   it("ignores an out-of-range divider index", () => {
     expect(resizeLaneDivider(lanes, 1, 40, 400)).toBe(lanes)
   })
+
+  it("snaps the moved boundary to the grid when a step is given", () => {
+    // 400px equal lanes (boundary at 200); drag +43px → boundary 243 snaps to
+    // the nearest multiple of 5 (245), so lane A becomes 245 and B 155.
+    const next = resizeLaneDivider(lanes, 0, 43, 400, 5)
+    expect(next[0].size).toBeCloseTo(245)
+    expect(next[1].size).toBeCloseTo(155)
+    expect((next[0].size ?? 0) + (next[1].size ?? 0)).toBeCloseTo(400)
+  })
+
+  it("still honours the minimum after snapping", () => {
+    // Snap target would floor B below the minimum; the clamp wins.
+    const next = resizeLaneDivider(lanes, 0, 9999, 400, 5)
+    expect(next[0].size).toBeCloseTo(360)
+    expect(next[1].size).toBeCloseTo(40)
+  })
 })
 
 describe("flipSwimlaneChildPosition", () => {
