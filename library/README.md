@@ -91,7 +91,7 @@ import { ApollonEditor } from "@tumaet/apollon/external"
 import "@tumaet/apollon/style.css"
 ```
 
-Same imperative `ApollonEditor` API as the default entry, but **every** dependency is left external — the React family above _and_ Apollon's own runtime deps (`@dnd-kit`, `zustand`, `uuid`, `@chenglou/pretext`), which arrive transitively when you install the package. Your bundler then resolves and de-duplicates each one against your app's `node_modules`, and your bundle analyzer / SBOM tooling sees them as the real packages they are instead of code inlined invisibly into one chunk. Use this from any framework with a bundler — even a non-React one (the editor still runs on the React you provide internally; your own code never touches it). This is the entry [Artemis](https://artemis.tum.de/) uses.
+Same imperative `ApollonEditor` API as the default entry, but **every** dependency is left external — the React family above _and_ Apollon's own runtime deps (`@dnd-kit`, `zustand`, `uuid`, `@chenglou/pretext`), which arrive transitively when you install the package. Your bundler then resolves and de-duplicates each one against your app's `node_modules`, and your bundle analyzer / SBOM tooling sees them as the real packages they are instead of code inlined invisibly into one chunk. Use this from any framework with a bundler — even a non-React one (the editor still runs on the React you provide internally; your own code never touches it).
 
 ## Which build do I use?
 
