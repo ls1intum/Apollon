@@ -17,6 +17,17 @@ export const APOLLON_PORTAL_THEME_VARS = [
   "--apollon-background-variant",
   "--apollon-hover-neutral",
   "--apollon-gray-variant",
+  // Assessment score-pill tones — the give/see-feedback popovers portal to
+  // <body>, so without these the pills would fall back to root/light values
+  // while the scoped editor (dataTheme / a custom theme) shows different ones.
+  "--apollon-assessment-positive-text",
+  "--apollon-assessment-positive-bg",
+  "--apollon-assessment-negative-text",
+  "--apollon-assessment-negative-bg",
+  "--apollon-assessment-zero-text",
+  "--apollon-assessment-zero-bg",
+  "--apollon-assessment-ungraded-text",
+  "--apollon-assessment-ungraded-bg",
   "--panel-background",
   "--panel-shadow",
   "--text",

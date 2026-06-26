@@ -6,12 +6,20 @@ import { useShallow } from "zustand/shallow"
 import { IconButton, TextField } from "../ui"
 import { AssessmentHeader, PopoverSection } from "./PopoverLayout"
 
+/** The coarse category stored on an Assessment's `elementType`. */
+type ElementType = "node" | "attribute" | "method" | "edge"
+
 interface Props {
   elementId: string
   name: string
-  /** Drives the stored `elementType` — keep as the real element type. */
-  type: string
-  /** Display-only label for the header (e.g. "Edge"). Defaults to `type`. */
+  /**
+   * The coarse category stored on the Assessment. Passed explicitly by each
+   * caller — a node popover stores "node" regardless of the concrete node type
+   * (flowchartProcess, …); deriving it from the concrete type would mis-store
+   * every default node as "edge".
+   */
+  elementType: ElementType
+  /** Display label for the header. Defaults to the capitalized `elementType`. */
   typeLabel?: string
   /** Draw a separator above this box. Off for the first box in a popover. */
   divider?: boolean
@@ -20,20 +28,17 @@ interface Props {
 /** Feedback comment cap, surfaced to the grader as an `n/500` helper. */
 const FEEDBACK_MAX_LENGTH = 500
 
-// The coarse `elementType` stored on an Assessment. Node parts arrive as
-// "Node"/"Attribute"/"Method", but edge callers pass the concrete edge type
-// (e.g. "ClassBidirectional"), so anything that isn't a known node part folds
-// to "edge" rather than being mis-stored as a node category.
-const NODE_PART_TYPES = ["node", "attribute", "method"]
-const resolveElementType = (type: string): string => {
-  const normalized = type.toLowerCase()
-  return NODE_PART_TYPES.includes(normalized) ? normalized : "edge"
+const ELEMENT_TYPE_LABEL: Record<ElementType, string> = {
+  node: "Node",
+  attribute: "Attribute",
+  method: "Method",
+  edge: "Edge",
 }
 
 export const GiveFeedbackAssessmentBox = ({
   elementId,
   name,
-  type,
+  elementType,
   typeLabel,
   divider = false,
 }: Props) => {
@@ -55,7 +60,7 @@ export const GiveFeedbackAssessmentBox = ({
 
     const updated: Assessment = {
       modelElementId: elementId,
-      elementType: resolveElementType(type),
+      elementType,
       score: newScore === "" ? 0 : validScore,
       feedback: newFeedback || undefined,
       correctionStatus: { status: "NOT_VALIDATED" },
@@ -78,7 +83,7 @@ export const GiveFeedbackAssessmentBox = ({
   return (
     <PopoverSection divider={divider}>
       <AssessmentHeader
-        type={typeLabel ?? type}
+        type={typeLabel ?? ELEMENT_TYPE_LABEL[elementType]}
         name={name}
         action={
           <IconButton

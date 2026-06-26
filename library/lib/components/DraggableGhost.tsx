@@ -86,8 +86,12 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
   // the canvas at the current zoom (WYSIWYG). The palette preview is rendered at
   // `previewScale`; a dropped node renders at `zoom`, so scaling by `zoom /
   // previewScale` makes the dragged shape the same on-screen size as the drop —
-  // captured on grab (zoom can't change mid palette-drag).
-  const [ghostScale, setGhostScale] = useState(1)
+  // captured on grab (zoom can't change mid palette-drag). Scaled per-axis because
+  // some elements drop at a different size than they preview (e.g. a swimlane
+  // previews 160×100 but drops 400×240); the drop/preview ratio folds in so the
+  // ghost is as wide/tall as the node will actually be. Ratio is 1 (no change) for
+  // the common case where drop size == preview size.
+  const [ghostScale, setGhostScale] = useState({ x: 1, y: 1 })
 
   /* ----------------------------------------------------------------------
      onDrop: Handles the pointer up event by calculating the drop position,
@@ -150,12 +154,25 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
         )
       }
 
+      // Drop size may differ from the sidebar preview size (e.g. a swimlane
+      // previews 160×100 but drops 400×240). The drop/preview ratio maps the
+      // grabbed point's fraction of the preview onto the DROP dimensions, so the
+      // cursor stays over the same relative point of the (larger) dropped node.
+      // Ratio is 1 when drop size == preview size, leaving normal elements
+      // unchanged.
+      const ratioX =
+        (dropElementConfig.dropWidth ?? dropElementConfig.width) /
+        dropElementConfig.width
+      const ratioY =
+        (dropElementConfig.dropHeight ?? dropElementConfig.height) /
+        dropElementConfig.height
+
       // Prepare the drop data including offset adjustments
       const dropData: DropNodeData = {
         type: dropElementConfig.type,
         data: defaultData,
-        offsetX: clickOffset.x / previewScale,
-        offsetY: clickOffset.y / previewScale,
+        offsetX: (clickOffset.x / previewScale) * ratioX,
+        offsetY: (clickOffset.y / previewScale) * ratioY,
       }
 
       // Find potential parent node by checking intersections with a potential Parent node type
@@ -181,12 +198,12 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
         y: event.clientY,
       })
 
-      // Snap position to grid
+      // Snap position to grid (same drop/preview ratio as the offsets above)
       position.x -=
-        Math.floor(clickOffset.x / previewScale / nodeSnapStepPx) *
+        Math.floor(((clickOffset.x / previewScale) * ratioX) / nodeSnapStepPx) *
         nodeSnapStepPx
       position.y -=
-        Math.floor(clickOffset.y / previewScale / nodeSnapStepPx) *
+        Math.floor(((clickOffset.y / previewScale) * ratioY) / nodeSnapStepPx) *
         nodeSnapStepPx
 
       if (parentId) {
@@ -270,7 +287,20 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
     setGhostPosition({ x: event.clientX - ghostX, y: event.clientY - ghostY })
 
     // Scale the ghost to the on-screen size the node will have at this zoom.
-    setGhostScale(getViewport().zoom / previewScale)
+    // Per-axis: fold in the drop/preview ratio so an element that drops larger
+    // than it previews (e.g. a swimlane: 160×100 preview → 400×240 drop) renders
+    // its ghost at the true dropped size. Ratio is 1 for normal elements.
+    const zoom = getViewport().zoom
+    const ratioX =
+      (dropElementConfig.dropWidth ?? dropElementConfig.width) /
+      dropElementConfig.width
+    const ratioY =
+      (dropElementConfig.dropHeight ?? dropElementConfig.height) /
+      dropElementConfig.height
+    setGhostScale({
+      x: (ratioX * zoom) / previewScale,
+      y: (ratioY * zoom) / previewScale,
+    })
 
     setIsDragging(true)
   }
@@ -348,7 +378,7 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
         // Scale to the drop's on-screen size, pivoting on the grabbed point
         // (ghostOffset, measured from the entry's top-left) so the scale never
         // shifts the shape out from under the cursor.
-        transform: `scale(${ghostScale})`,
+        transform: `scale(${ghostScale.x}, ${ghostScale.y})`,
         transformOrigin: `${ghostOffset.x}px ${ghostOffset.y}px`,
       }}
     >

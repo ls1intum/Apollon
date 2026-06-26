@@ -20,35 +20,41 @@ function fileMenuButton(page: Page) {
   return page.locator("#file-menu-button").first()
 }
 
-async function openTemporaryLocalDiagram(page: Page) {
+async function openTemporaryLocalDiagram(
+  page: Page,
+  diagramType = "ClassDiagram"
+) {
   const modelId = "e2e-local-model-id"
 
   await page.goto("/")
-  await page.evaluate((id) => {
-    const storeValue = JSON.stringify({
-      state: {
-        models: {
-          [id]: {
-            id,
-            model: {
+  await page.evaluate(
+    ({ id, type }) => {
+      const storeValue = JSON.stringify({
+        state: {
+          models: {
+            [id]: {
               id,
-              type: "ClassDiagram",
-              assessments: {},
-              edges: [],
-              nodes: [],
-              title: "E2E Diagram",
-              version: "4.0.0",
+              model: {
+                id,
+                type,
+                assessments: {},
+                edges: [],
+                nodes: [],
+                title: "E2E Diagram",
+                version: "4.0.0",
+              },
+              lastModifiedAt: new Date().toISOString(),
             },
-            lastModifiedAt: new Date().toISOString(),
           },
+          currentModelId: id,
         },
-        currentModelId: id,
-      },
-      version: 0,
-    })
+        version: 0,
+      })
 
-    localStorage.setItem("persistenceModelStore", storeValue)
-  }, modelId)
+      localStorage.setItem("persistenceModelStore", storeValue)
+    },
+    { id: modelId, type: diagramType }
+  )
 
   await page.goto(`/local/${modelId}`)
   const isLegacyRouting =
@@ -191,6 +197,79 @@ test.describe("Palette drag alignment", () => {
     // Tolerance covers the node's border/padding vs the bare preview SVG.
     expect(Math.abs(ghost!.width - nodeBox!.width)).toBeLessThanOrEqual(6)
     expect(Math.abs(ghost!.height - nodeBox!.height)).toBeLessThanOrEqual(6)
+  })
+
+  // The activity swimlane previews small (160×100) but drops large (400×240),
+  // so its ghost must fold the drop/preview ratio (~2.5× wide, ~2.4× tall) into
+  // the scale — otherwise it would drag at the tiny preview size and land wrong.
+  test("the swimlane ghost reflects its larger drop size, not its small preview", async ({
+    page,
+  }) => {
+    // Re-open as an Activity diagram so the palette exposes the swimlane.
+    await openTemporaryLocalDiagram(page, "ActivityDiagram")
+    await waitForCanvasReady(page, false)
+
+    const palette = page.locator('[data-testid="apollon-palette"]').first()
+    // The swimlane is the one Activity palette entry whose SVG renders the
+    // 160×100 preview viewBox (see dropElementConfigs in
+    // library/lib/constants.ts) — a stable id that survives palette re-ordering.
+    const preview = palette.locator(
+      '[data-draggable-preview]:has(svg[viewBox="0 0 160 100"])'
+    )
+    await expect(preview).toBeVisible()
+    const box = await preview.boundingBox()
+    expect(box).not.toBeNull()
+
+    // Drag the swimlane onto the canvas centre.
+    await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2)
+    await page.mouse.down()
+    const canvas = page.locator(".react-flow").first()
+    const cbox = await canvas.boundingBox()
+    expect(cbox).not.toBeNull()
+    await page.mouse.move(
+      cbox!.x + cbox!.width / 2,
+      cbox!.y + cbox!.height / 2,
+      { steps: 10 }
+    )
+
+    // Size of the dragged ghost, captured mid-drag.
+    const ghost = await ghostPreviewRect(page)
+    expect(ghost, "drag ghost should be rendered").not.toBeNull()
+
+    // Read the live canvas zoom from the React Flow viewport transform
+    // (matrix(scaleX, …)). The palette preview is NOT zoom-scaled but everything
+    // on the canvas is, so the ghost's true on-screen drop size is dropW/H × zoom.
+    const zoom = await page.evaluate(() => {
+      const vp = document.querySelector<HTMLElement>(".react-flow__viewport")
+      if (!vp) return null
+      const m = new DOMMatrixReadOnly(getComputedStyle(vp).transform)
+      return m.a
+    })
+    expect(zoom, "canvas zoom should be readable").not.toBeNull()
+
+    // The ghost reflects the 400×240 DROP size (× zoom), not the 160×100 preview
+    // size. Before the fix the ghost scaled only by zoom/previewScale, so it
+    // rendered ~2.5× too narrow and ~2.4× too short. Tolerance covers sub-pixel
+    // rounding in the transform.
+    expect(Math.abs(ghost!.width - 400 * zoom!)).toBeLessThanOrEqual(4)
+    expect(Math.abs(ghost!.height - 240 * zoom!)).toBeLessThanOrEqual(4)
+
+    // And it is materially bigger than its own (non-zoom-scaled) palette preview:
+    // at zoom 1 the width ratio is dropWidth/width × 1/previewScale ≈ 2.5/0.8.
+    expect(ghost!.width).toBeGreaterThan(box!.width * 2)
+    expect(ghost!.height).toBeGreaterThan(box!.height * 2)
+
+    await page.mouse.up()
+
+    // WYSIWYG end-to-end: the ghost matches the swimlane node that just landed
+    // at its true 400×240 drop size. Without the ratio fix the ghost would be
+    // ~2.5× too small versus this node.
+    const node = page.locator(".react-flow__node").first()
+    await expect(node).toBeVisible()
+    const nodeBox = await node.boundingBox()
+    expect(nodeBox).not.toBeNull()
+    expect(Math.abs(ghost!.width - nodeBox!.width)).toBeLessThanOrEqual(8)
+    expect(Math.abs(ghost!.height - nodeBox!.height)).toBeLessThanOrEqual(8)
   })
 })
 

@@ -19,7 +19,7 @@ export const EdgeGiveFeedbackPopover = ({ elementId }: PopoverProps) => {
       <GiveFeedbackAssessmentBox
         elementId={elementId}
         name={edgeType ?? ""}
-        type={edgeType ?? ""}
+        elementType="edge"
         typeLabel="Edge"
       />
 

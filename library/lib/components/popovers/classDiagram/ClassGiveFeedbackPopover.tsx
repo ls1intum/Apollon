@@ -22,7 +22,7 @@ export const ClassGiveFeedbackPopover = ({ elementId }: PopoverProps) => {
       <GiveFeedbackAssessmentBox
         elementId={elementId}
         name={nodeData.name}
-        type="Node"
+        elementType="node"
         typeLabel={nodeTypeLabel(node.type)}
       />
       {nodeData.attributes.map((attr) => (
@@ -30,7 +30,7 @@ export const ClassGiveFeedbackPopover = ({ elementId }: PopoverProps) => {
           key={attr.id}
           elementId={attr.id}
           name={attr.name}
-          type="Attribute"
+          elementType="attribute"
           divider
         />
       ))}
@@ -39,7 +39,7 @@ export const ClassGiveFeedbackPopover = ({ elementId }: PopoverProps) => {
           key={method.id}
           elementId={method.id}
           name={method.name}
-          type="Method"
+          elementType="method"
           divider
         />
       ))}
