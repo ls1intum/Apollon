@@ -76,9 +76,9 @@ const REACT_PEERS = [
 // `@tumaet/apollon` declares in `dependencies`. Inlined everywhere except the
 // fully external build, where the host resolves them from its own node_modules:
 // one shared copy and full SBOM visibility instead of a copy buried inside the
-// bundle. Base UI + lucide are the editor's UI primitives (they replaced MUI +
-// emotion); the editor imports them directly AND through the bundled
-// `@tumaet/ui`, so externalizing them here also de-duplicates @tumaet/ui's copy.
+// bundle. Base UI + lucide are the editor's UI primitives; the editor imports
+// them directly AND through the bundled `@tumaet/ui`, so externalizing them here
+// also de-duplicates @tumaet/ui's copy.
 // @tumaet/ui's other deps (cmdk / cva / clsx / tailwind-merge) are NOT declared
 // by @tumaet/apollon, so they stay bundled — a consumer couldn't install them.
 // Base UI + zustand are matched with subpaths (`@base-ui/react/menu`,

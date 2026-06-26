@@ -1,9 +1,8 @@
 import React from "react"
 
-// The live variant set — every one has a rule in app.css
-// ([data-slot="typography"][data-variant="…"]). The MUI h1–h5 scale was dead
-// (unused AND unstyled), so it's gone; this is a small semantic-text helper, not
-// a type ramp.
+// A small semantic-text helper, not a type ramp. Each variant has a rule in
+// app.css ([data-slot="typography"][data-variant="…"]); the variant set below is
+// exactly the styled, in-use set.
 type TypographyVariant =
   | "h6"
   | "subtitle1"
