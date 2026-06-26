@@ -69,7 +69,7 @@ export const Edges: Story = {
 export const EditClass: Story = {
   name: "Edit: Class",
   parameters: { layout: "centered" },
-  tags: ["test", "!autodocs", "!dev"],
+  tags: ["autodocs", "test"],
   render: () => (
     <SeededPopoverHarness
       diagramType="ClassDiagram"
@@ -104,7 +104,7 @@ export const EditClass: Story = {
 export const EditAssociation: Story = {
   name: "Edit: Association",
   parameters: { layout: "centered" },
-  tags: ["test", "!autodocs", "!dev"],
+  tags: ["autodocs", "test"],
   render: () => (
     <SeededPopoverHarness
       diagramType="ClassDiagram"
@@ -145,7 +145,7 @@ export const EditAssociation: Story = {
 export const GiveFeedbackClass: Story = {
   name: "Feedback (Give): Class",
   parameters: { layout: "centered" },
-  tags: ["test", "!autodocs", "!dev"],
+  tags: ["autodocs", "test"],
   render: () => (
     <SeededPopoverHarness
       diagramType="ClassDiagram"
@@ -188,7 +188,7 @@ export const GiveFeedbackClass: Story = {
 export const GiveFeedbackPrefilled: Story = {
   name: "Feedback (Give): Class — pre-filled",
   parameters: { layout: "centered" },
-  tags: ["test", "!autodocs", "!dev"],
+  tags: ["autodocs", "test"],
   render: () => (
     <SeededPopoverHarness
       diagramType="ClassDiagram"
@@ -244,7 +244,7 @@ export const GiveFeedbackPrefilled: Story = {
 export const SeeFeedbackClass: Story = {
   name: "Feedback (See): Class",
   parameters: { layout: "centered" },
-  tags: ["test", "!autodocs", "!dev"],
+  tags: ["autodocs", "test"],
   render: () => (
     <SeededPopoverHarness
       diagramType="ClassDiagram"
@@ -307,7 +307,7 @@ export const SeeFeedbackClass: Story = {
 export const SeeFeedbackStates: Story = {
   name: "Feedback (See): All states",
   parameters: { layout: "centered" },
-  tags: ["test", "!autodocs", "!dev"],
+  tags: ["autodocs", "test"],
   render: () => (
     <SeededPopoverHarness
       diagramType="ClassDiagram"
@@ -388,7 +388,7 @@ export const SeeFeedbackStates: Story = {
 export const GiveFeedbackAssociation: Story = {
   name: "Feedback (Give): Association",
   parameters: { layout: "centered" },
-  tags: ["test", "!autodocs", "!dev"],
+  tags: ["autodocs", "test"],
   render: () => (
     <SeededPopoverHarness
       diagramType="ClassDiagram"
@@ -418,7 +418,7 @@ export const GiveFeedbackAssociation: Story = {
 export const SeeFeedbackAssociation: Story = {
   name: "Feedback (See): Association",
   parameters: { layout: "centered" },
-  tags: ["test", "!autodocs", "!dev"],
+  tags: ["autodocs", "test"],
   render: () => (
     <SeededPopoverHarness
       diagramType="ClassDiagram"

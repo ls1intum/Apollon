@@ -31,7 +31,7 @@ type Story = StoryObj<typeof meta>
 // `play` asserts the seeded content actually rendered (so a regression that
 // blanks a popover fails the suite rather than passing silently). The full
 // editor stories (Playground/Blank) stay untestable — they mount a 2nd editor.
-const popoverTags = ["test", "!autodocs", "!dev"]
+const popoverTags = ["autodocs", "test"]
 
 // ── Editor ───────────────────────────────────────────────────────────────────
 /** The real, editable editor + palette, pre-loaded with a sample to edit. */

@@ -67,7 +67,7 @@ export const HostHighlights: Story = {
 /** A single element selected on the see-feedback review surface — carries the selection border + fill. */
 export const SelectionSingle: Story = {
   name: "Selection: Single Element",
-  tags: ["test", "!autodocs", "!dev"],
+  tags: ["autodocs", "test"],
   parameters: { layout: "centered" },
   render: () => (
     <SelectionHarness
@@ -98,7 +98,7 @@ export const SelectionSingle: Story = {
 /** Selecting a class node auto-selects its nested members — node, attribute and method all read selected. */
 export const SelectionNested: Story = {
   name: "Selection: Node With Nested Members",
-  tags: ["test", "!autodocs", "!dev"],
+  tags: ["autodocs", "test"],
   parameters: { layout: "centered" },
   render: () => (
     <SelectionHarness
@@ -142,7 +142,7 @@ export const SelectionNested: Story = {
 /** Hovering an unselected element on the review surface paints the same highlight ring — proven by hover in play. */
 export const SelectionHover: Story = {
   name: "Selection: Hover Highlight",
-  tags: ["test", "!autodocs", "!dev"],
+  tags: ["autodocs", "test"],
   parameters: { layout: "centered" },
   render: () => (
     <SelectionHarness
