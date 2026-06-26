@@ -63,10 +63,6 @@ export const Line: Story = {
   ),
 }
 
-export const Horizontal: Story = {
-  args: { orientation: "horizontal" },
-}
-
 export const Vertical: Story = {
   args: { orientation: "vertical" },
   render: (args) => (

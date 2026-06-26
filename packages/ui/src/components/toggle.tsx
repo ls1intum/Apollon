@@ -38,7 +38,7 @@ function Toggle({
       data-slot="toggle"
       data-variant={variant}
       data-size={size}
-      className={cn(toggleVariants({ variant, size, className }))}
+      className={cn(toggleVariants({ variant, size }), className)}
       {...props}
     />
   )

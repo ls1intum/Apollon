@@ -14,37 +14,38 @@ export interface IconButtonProps
   children: React.ReactNode
 }
 
-const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
-  (
-    { ariaLabel, tooltip, className, type = "button", children, ...props },
-    ref
-  ) => {
-    const button = (
-      <ButtonPrimitive
-        ref={ref}
-        type={type}
-        data-slot="icon-button"
-        className={cn(className)}
-        aria-label={ariaLabel}
-        {...props}
-      >
-        {children}
-      </ButtonPrimitive>
-    )
+// React 19: `ref` is an ordinary prop and flows through `...props` onto the
+// underlying button — no forwardRef wrapper or displayName needed.
+function IconButton({
+  ariaLabel,
+  tooltip,
+  className,
+  type = "button",
+  children,
+  ...props
+}: IconButtonProps) {
+  const button = (
+    <ButtonPrimitive
+      type={type}
+      data-slot="icon-button"
+      className={cn(className)}
+      aria-label={ariaLabel}
+      {...props}
+    >
+      {children}
+    </ButtonPrimitive>
+  )
 
-    if (!tooltip) {
-      return button
-    }
-
-    return (
-      <Tooltip>
-        <TooltipTrigger render={button} />
-        <TooltipContent>{tooltip}</TooltipContent>
-      </Tooltip>
-    )
+  if (!tooltip) {
+    return button
   }
-)
 
-IconButton.displayName = "IconButton"
+  return (
+    <Tooltip>
+      <TooltipTrigger render={button} />
+      <TooltipContent>{tooltip}</TooltipContent>
+    </Tooltip>
+  )
+}
 
 export { IconButton }

@@ -72,15 +72,3 @@ export const Widescreen: Story = {
     ratio: 16 / 9,
   },
 }
-
-/**
- * The thumbnail frame reviewed in dark mode.
- */
-export const Dark: Story = {
-  args: {
-    ratio: 16 / 10,
-  },
-  globals: {
-    theme: "dark",
-  },
-}

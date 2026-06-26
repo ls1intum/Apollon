@@ -57,7 +57,7 @@ function DropdownMenuContent({
   // Attach the Root's anchor-loss guard to this Positioner. SubContent renders a
   // null provider (see DropdownMenuSub) so a submenu's own Positioner never
   // picks up the parent's guard ref.
-  const positionerRef = React.useContext(AnchorLossGuardContext)
+  const positionerRef = React.use(AnchorLossGuardContext)
   return (
     <MenuPrimitive.Portal>
       <MenuPrimitive.Positioner

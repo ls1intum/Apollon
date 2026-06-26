@@ -78,12 +78,6 @@ export const Horizontal: Story = {
   ),
 }
 
-/** The default stacked vertical layout. */
-export const Vertical: Story = {
-  render: Default.render,
-  args: { defaultValue: "team" },
-}
-
 /** A disabled radio group ignores user interaction. */
 export const Disabled: Story = {
   render: Default.render,

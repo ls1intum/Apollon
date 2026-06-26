@@ -57,7 +57,9 @@ const meta = {
             Make changes to your profile here. Click save when you are done.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter showCloseButton />
+        <DialogFooter>
+          <DialogClose render={<Button variant="outline" />}>Close</DialogClose>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   ),
@@ -159,7 +161,9 @@ export const LongScrollingContent: Story = {
             </p>
           ))}
         </div>
-        <DialogFooter showCloseButton />
+        <DialogFooter>
+          <DialogClose render={<Button variant="outline" />}>Close</DialogClose>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   ),

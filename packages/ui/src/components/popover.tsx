@@ -132,7 +132,7 @@ function PopoverContent({
     PopoverPrimitive.Positioner.Props,
     "align" | "alignOffset" | "side" | "sideOffset"
   >) {
-  const positionerRef = React.useContext(AnchorLossGuardContext)
+  const positionerRef = React.use(AnchorLossGuardContext)
   return (
     <PopoverPrimitive.Portal>
       <PopoverPrimitive.Positioner
