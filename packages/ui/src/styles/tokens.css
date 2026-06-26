@@ -633,33 +633,22 @@
   --primitive-collab-8: #22b8cf;
 
   /* ── Layer 2: --apollon-* (dark deltas) ────────────────────────────────── */
+  /* Only literal/inverted dark deltas live here. Tokens whose light value is a
+     primitive var() whose primitive itself carries a dark delta (secondary,
+     grid, alerts, guides, surface, border) are intentionally absent: var()
+     re-resolves at use time, so the light declaration already yields the dark
+     value. Do NOT re-add an inert "apollon: var(primitive)" mirror line here —
+     it does nothing and only clobbers an embedder override in dark mode. */
   --apollon-primary-contrast: var(--primitive-white);
-  --apollon-secondary: var(--primitive-slate-500);
-  --apollon-alert-warning-yellow: var(--primitive-warning-yellow);
-  --apollon-alert-warning-background: var(--primitive-warning-bg);
-  --apollon-alert-warning-border: var(--primitive-warning-border);
   --apollon-background: #13161c;
   --apollon-background-inverse: var(--primitive-white);
   --apollon-background-variant: #303530;
   --apollon-gray: #242724;
-  --apollon-grid: var(--primitive-grid);
   --apollon-gray-variant: #f8f9fa;
-  --apollon-alert-danger-color: var(--primitive-danger-color);
-  --apollon-alert-danger-background: var(--primitive-danger-bg);
-  --apollon-alert-danger-border: var(--primitive-danger-border);
   --apollon-switch-box-border-color: #3d423d;
   --apollon-list-group-color: #303130;
   --apollon-btn-outline-secondary-color: #b8c0c5;
   --apollon-modal-bottom-border: #979797;
-  --apollon-guide-vertical: var(--primitive-guide-vertical);
-  --apollon-guide-horizontal: var(--primitive-guide-horizontal);
-
-  /* Surface / border — dark deltas (radius is theme-independent). */
-  --apollon-surface: var(--primitive-surface-raised);
-  --apollon-surface-sunken: var(--primitive-surface-sunken);
-  --apollon-surface-hover: var(--primitive-surface-raised-hover);
-  --apollon-border: var(--primitive-border-default);
-  --apollon-border-subtle: var(--primitive-border-subtle);
 
   /* Editor chrome — dark deltas. The surface/border/text ramp already tracks the
      dark --apollon-background via color-mix, so dark only fixes the shadows (a
@@ -669,53 +658,10 @@
   --apollon-chrome-shadow-floating: 0 2px 12px 0 rgb(0 0 0 / 50%);
   --apollon-chrome-inset-hairline: inset 0 0 0 1px rgb(255 255 255 / 8%);
 
-  /* ── Layer 3: --home-* (dark deltas) ───────────────────────────────────── */
-  --home-surface-base: var(--apollon-background);
-  --home-surface-sunken: var(--apollon-surface-sunken);
-  --home-surface-raised: var(--apollon-surface);
-  --home-surface-raised-hover: var(--apollon-surface-hover);
-  --home-surface-raised-active: var(--primitive-surface-raised-active);
-  --home-surface-row-alt: var(--primitive-surface-row-alt);
-  --home-card-surface: var(--apollon-chrome-surface);
-  --home-text-primary: var(--apollon-primary-contrast);
-  --home-text-secondary: var(--primitive-text-secondary);
-  --home-text-strong: var(--apollon-primary-contrast);
-  --home-text-muted: var(--primitive-text-muted);
-  --home-border-default: var(--apollon-border);
-  --home-border-strong: var(--primitive-border-strong);
-  --home-border-subtle: var(--apollon-border-subtle);
-  --home-accent-base: var(--primitive-accent-base);
-  --home-accent-soft: var(--primitive-accent-soft);
-  --home-accent-strong: var(--primitive-accent-strong);
-  --home-accent-ring: var(--primitive-accent-ring);
-  --home-accent-contrast: var(--primitive-accent-contrast);
-  --home-badge-bg: var(--primitive-badge-bg);
-  --home-badge-fold: var(--primitive-badge-fold);
-  --home-text-on-badge: var(--primitive-text-on-badge);
-  --home-favorite-star: var(--primitive-favorite-star);
-  --home-tag-type-bg: var(--primitive-tag-type-bg);
-  --home-tag-type-text: var(--primitive-tag-type-text);
-  --home-tag-local-bg: var(--primitive-tag-local-bg);
-  --home-tag-local-text: var(--primitive-tag-local-text);
-  --home-tag-shared-bg: var(--primitive-tag-shared-bg);
-  --home-tag-shared-text: var(--primitive-tag-shared-text);
-
-  /* Warning banner — dark theme. */
-  --home-banner-warning-bg: var(--primitive-banner-warning-bg);
-  --home-banner-warning-border: var(--primitive-banner-warning-border);
-  --home-banner-warning-icon: var(--primitive-banner-warning-icon);
-  --home-banner-warning-text: var(--primitive-banner-warning-text);
-  --home-banner-warning-muted: var(--primitive-banner-warning-muted);
-  --home-banner-warning-btn-bg: var(--primitive-banner-warning-btn-bg);
-  --home-banner-warning-btn-text: var(--primitive-banner-warning-btn-text);
-  --home-banner-warning-btn-border: var(--primitive-banner-warning-btn-border);
-  --home-banner-warning-btn-hover: var(--primitive-banner-warning-btn-hover);
-
-  /* Toast (notification) semantic accents — dark theme. */
-  --home-toast-success: var(--primitive-toast-success);
-  --home-toast-error: var(--primitive-toast-error);
-  --home-toast-warning: var(--primitive-toast-warning);
-  --home-toast-info: var(--primitive-toast-info);
+  /* No --home- dark deltas: every --home- token's light value is a var() of an
+     --apollon- or --primitive- token that already carries its own dark delta, so
+     the light declarations re-resolve to dark automatically. Re-adding a mirror
+     line here would be inert (and would clobber an embedder override). */
 }
 
 /* Touch: tighter island padding so the phone chrome stays compact; the icon

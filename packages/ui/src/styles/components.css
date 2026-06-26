@@ -43,6 +43,19 @@
   ::after {
     border-color: var(--color-border);
   }
+
+  /* Box-sizing floor for the primitives. Tailwind v4 dropped Preflight's
+     `box-sizing: border-box`, and the library ships Preflight-free, so in a
+     content-box host the `@apply` sizing (e.g. h-9 + px-2.5 + border on the
+     button/input) would over-size controls. The webapp gets border-box from its
+     own Preflight; this guarantees it in any embed. Scoped to OUR data-slot
+     elements (and their box pseudo-els) so it never resets host DOM. */
+  [data-slot],
+  [data-slot] *,
+  [data-slot] ::before,
+  [data-slot] ::after {
+    box-sizing: border-box;
+  }
 }
 
 @layer components {

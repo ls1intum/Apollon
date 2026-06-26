@@ -18,17 +18,18 @@
    static, so this is @theme (not @theme inline). The diagram MODEL text (Inter,
    applied on SVG nodes via library/lib/fontStack.ts) is out of scope. */
 @theme {
-  --font-sans:
-    "Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue", Arial,
-    sans-serif;
+  --font-sans: "Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue",
+    Arial, sans-serif;
 }
 
 /* Accent bridge — webapp root scope ONLY (the published library default must not
-   depend on --home-*). Drive the editor accent from the app accent so the
-   homepage and the embedded editor share one brand color. --home-accent-base is
-   itself redefined per data-theme in tokens.css, so this re-resolves in dark. */
+   depend on app tokens). Drive the editor accent from the brand primitive so the
+   homepage and the embedded editor share one brand color. --primitive-accent-base
+   carries its own light/dark values in tokens.css, so this re-resolves in dark.
+   Points straight at the primitive (not --home-accent-base) so the token graph
+   stays a clean DAG: --apollon-* never depends back on the --home-* layer. */
 :root {
-  --apollon-primary: var(--home-accent-base);
+  --apollon-primary: var(--primitive-accent-base);
 
   /* Safe-area floor: map the UA insets onto the custom properties the mobile
      layout reads as `var(--safe-area-inset-*, 0px)`. With `viewport-fit=cover`
@@ -182,17 +183,15 @@ body,
   flex: 1;
   align-items: center;
   justify-content: center;
-  background:
-    linear-gradient(
+  background: linear-gradient(
       180deg,
       color-mix(in srgb, var(--home-surface-sunken) 42%, transparent),
       transparent 34%
     ),
     var(--home-surface-base);
   color: var(--home-text-primary);
-  font-family:
-    "Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue", Arial,
-    sans-serif;
+  font-family: "Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue",
+    Arial, sans-serif;
   transition:
     background-color 220ms ease,
     color 220ms ease;
@@ -205,8 +204,7 @@ body,
 .app-loading-screen--panel {
   min-height: min(52vh, 420px);
   border: 1px solid var(--home-border-subtle);
-  background:
-    linear-gradient(
+  background: linear-gradient(
       180deg,
       color-mix(in srgb, var(--home-surface-raised-hover) 46%, transparent),
       transparent 70%
