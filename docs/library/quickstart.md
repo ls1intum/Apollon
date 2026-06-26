@@ -17,9 +17,10 @@ npm install @tumaet/apollon yjs y-protocols
 ```
 
 This is the standalone build: React, MUI, emotion, and xyflow are bundled
-inside the tarball; `yjs` and `y-protocols` are the only peers you install (the
-collaboration engine, kept external so a host that already uses Yjs shares one
-instance). React hosts should instead use the `/react` subpath — see
+inside the tarball; `yjs` and `y-protocols` are the only peers you install. They
+power Apollon's document model and undo/redo (and live collaboration when
+enabled), kept external so a host that already uses Yjs shares one instance.
+React hosts should instead use the `/react` subpath — see
 [Install](/library/embedding/install).
 
 :::danger The editor MUST have an explicit height

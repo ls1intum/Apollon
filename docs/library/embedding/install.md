@@ -6,10 +6,12 @@ description: Install @tumaet/apollon — pick the standalone or /react subpath.
 
 # Install
 
-`yjs` and `y-protocols` are required peer dependencies of **both** builds — they
-are the collaboration engine, kept external so a host that already uses Yjs
-shares a single instance instead of loading a private, possibly mismatched copy.
-Most package managers install missing peers automatically.
+`yjs` and `y-protocols` are required peer dependencies of **every** build — they
+power Apollon's document model and undo/redo (and live collaboration when
+enabled), so the editor needs them whether or not you collaborate. Keeping them
+external lets a host that already uses Yjs share a single instance instead of a
+private, possibly mismatched copy. Most package managers install missing peers
+automatically.
 
 ## Standalone build (any framework)
 
@@ -39,8 +41,8 @@ import { ApollonEditor } from "@tumaet/apollon/react"
 import "@tumaet/apollon/style.css"
 ```
 
-`yjs` and `y-protocols` are required for both builds; the remaining peers below
-are specific to the `/react` build.
+`yjs` and `y-protocols` are required for every build; the React, MUI, emotion,
+and xyflow peers below are needed by the `/react` and `/external` builds.
 
 | Peer              | Range      |
 | ----------------- | ---------- |

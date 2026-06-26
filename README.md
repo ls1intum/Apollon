@@ -18,8 +18,9 @@ This monorepo contains every piece of the Apollon platform:
 npm install @tumaet/apollon yjs y-protocols
 ```
 
-`yjs` and `y-protocols` are required peer dependencies (the collaboration
-engine, kept external so the host owns a single Yjs instance). See the
+`yjs` and `y-protocols` are required peer dependencies — they power Apollon's
+document model and undo/redo (and live collaboration when enabled), kept
+external so the host owns a single Yjs instance. See the
 [library README](./library/README.md) for the API and the other build entries.
 
 ## Run the stack locally

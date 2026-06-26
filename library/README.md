@@ -39,7 +39,7 @@ The package ships three builds with the same imperative API. Pick one based on h
 
 Sizes are the published entry chunks. Gzip is the transfer size. The `/react` and `/external` numbers exclude the peers your app already ships.
 
-`yjs` and `y-protocols` are required peer dependencies of **all three** builds — they are the collaboration engine, and keeping them external means a host that already uses Yjs (or a second Apollon on the page) shares a single Yjs instance instead of loading a private, possibly mismatched copy. Most package managers install missing peers automatically; the explicit commands below are listed for clarity.
+`yjs` and `y-protocols` are required peer dependencies of **all three** builds — they power Apollon's document model and undo/redo (and live collaboration when you enable it), so every editor needs them, collaboration or not. Keeping them external means a host that already uses Yjs (or a second Apollon on the page) shares a single Yjs instance instead of loading a private, possibly mismatched copy. Most package managers install missing peers automatically; the explicit commands below are listed for clarity.
 
 ### Standalone build (any framework)
 

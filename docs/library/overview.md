@@ -22,7 +22,7 @@ Apollon ships as an npm library that any framework can embed. The public API is 
 | `@tumaet/apollon/react`       | React family external    | ~875 KB | A React host that shares its own React/MUI and wants the `<Apollon>` component.                                                                                            |
 | `@tumaet/apollon/external`    | everything external      | ~840 KB | A bundler host of any framework — Angular (e.g. [Artemis](https://artemis.tum.de/)), Vue, Svelte, React — that wants one shared, fully auditable copy of every dependency. |
 
-`peerDependenciesMeta.optional` covers the six React-family peers, so `npm install @tumaet/apollon` never warns about missing React. `yjs` and `y-protocols` are required peers of all builds (the collaboration engine, kept external so the host owns a single Yjs instance) — most package managers add them automatically. The `/external` entry additionally externalizes Apollon's own runtime deps (`@dnd-kit`, `zustand`, `uuid`, `@chenglou/pretext`), which install transitively with the package.
+`peerDependenciesMeta.optional` covers the six React-family peers, so `npm install @tumaet/apollon` never warns about missing React. `yjs` and `y-protocols` are required peers of all builds — they power Apollon's document model and undo/redo (and live collaboration when enabled), so the editor needs them either way, and keeping them external lets a host that already uses Yjs own a single instance. Most package managers add them automatically. The `/external` entry additionally externalizes Apollon's own runtime deps (`@dnd-kit`, `zustand`, `uuid`, `@chenglou/pretext`), which install transitively with the package.
 
 ## What's next
 
