@@ -22,6 +22,7 @@ import {
   CHROME_REVEAL,
   type ChromeReveal,
 } from "@/components/navbar/styleConstants"
+import { MOBILE_MENU_CONTENT_CLASS } from "@/components/navbar/islandPrimitives"
 import { useHelpMenu } from "./useHelpMenu"
 
 /**
@@ -198,7 +199,10 @@ export function HomeHelpMenu({
         />
         <TooltipContent>Help</TooltipContent>
       </Tooltip>
-      <DropdownMenuContent aria-labelledby="help-menu-button">
+      <DropdownMenuContent
+        aria-labelledby="help-menu-button"
+        className={MOBILE_MENU_CONTENT_CLASS}
+      >
         <HelpMenuItems variant={variant} onSelect={close} />
       </DropdownMenuContent>
     </DropdownMenu>

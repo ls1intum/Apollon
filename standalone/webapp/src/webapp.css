@@ -102,6 +102,18 @@ body,
   transition: color 220ms ease;
 }
 
+/* The theme swap carries data-theme-switching on the root for a single frame
+   (see useThemeStore.applyThemeToDocument). Kill every transition while it's set
+   so the whole UI — the chrome header's buttons and glass surfaces included —
+   recolours in one frame, instead of each control tweening its own colour/
+   background at its own hover duration (which reads as a slow, staggered flip).
+   Hover and interaction transitions resume the moment the attribute is removed. */
+:root[data-theme-switching] *,
+:root[data-theme-switching] *::before,
+:root[data-theme-switching] *::after {
+  transition: none !important;
+}
+
 /* Subtle dot-grid behind the home page so it reads as "the same canvas the
    editor floats over". Matches the editor's MAJOR grid (CustomBackground): same
    50px cadence and --apollon-grid token (so it tracks both themes), but rendered

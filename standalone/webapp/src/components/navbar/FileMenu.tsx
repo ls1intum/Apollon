@@ -27,6 +27,7 @@ import {
 import { log } from "@/logger"
 import { JsonFileImportButton } from "./JsonFileImportButton"
 import { navbarButtonStyle } from "./styleConstants"
+import { MOBILE_MENU_CONTENT_CLASS } from "./islandPrimitives"
 
 interface FileMenuProps {
   color?: string
@@ -217,7 +218,10 @@ export const FileMenu: FC<FileMenuProps> = ({ color, onClose }) => {
         />
         <TooltipContent>File</TooltipContent>
       </Tooltip>
-      <DropdownMenuContent aria-labelledby="file-menu-button">
+      <DropdownMenuContent
+        aria-labelledby="file-menu-button"
+        className={MOBILE_MENU_CONTENT_CLASS}
+      >
         <FileMenuItems onSelect={close} />
       </DropdownMenuContent>
     </DropdownMenu>

@@ -39,9 +39,24 @@ const applyThemeToDocument = (theme: ThemeMode) => {
   }
 
   const root = document.documentElement
+  // Flip the theme in a single frame. Without this, every header control's own
+  // hover/colour transition also fires on the theme swap — each at its own
+  // duration — so the chrome reads as a slow, staggered recolour while the body
+  // snaps. Mark the root for one frame so a global rule can disable transitions
+  // during the swap; hover/interaction transitions resume immediately after.
+  root.setAttribute("data-theme-switching", "")
   root.setAttribute("data-theme", theme)
   // Let the browser style native controls/scrollbars for the active scheme.
   root.style.colorScheme = theme
+  if (typeof window !== "undefined" && window.requestAnimationFrame) {
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() =>
+        root.removeAttribute("data-theme-switching")
+      )
+    })
+  } else {
+    root.removeAttribute("data-theme-switching")
+  }
 }
 
 interface ThemeState {
