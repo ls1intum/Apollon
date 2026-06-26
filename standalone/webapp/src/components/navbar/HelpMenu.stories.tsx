@@ -4,18 +4,18 @@ import {
   DarkNavbarSurface,
   WebappProviders,
 } from "../../stories/_support/webapp"
-import { NavbarFile } from "./NavbarFile"
+import { HelpMenu } from "./HelpMenu"
 
 /**
- * The editor's File dropdown: New Diagram, Import (JSON), and a flat, labelled
- * Export group (SVG / PNG / JSON / PDF / PPTX) — one level of nesting, no submenu,
- * so the same body inlines cleanly into the mobile overflow. The trigger color
- * follows the navbar convention — `secondary` on the always-dark desktop bar, or
- * an explicit `color` for the themed mobile sheet.
+ * The editor's Help dropdown is the SHARED `HomeHelpMenu` in its `editor`
+ * variant: the editor walkthrough leads, then the shared tail (About → Releases →
+ * GitHub → Report a problem), then Open Playground, a separator, and the legal
+ * links (Privacy → Imprint). The legal links stamp the originating path into
+ * router state so the legal pages can offer a one-tap return to the diagram.
  */
 const meta = {
-  title: "Webapp/Navbar/NavbarFile",
-  component: NavbarFile,
+  title: "Webapp/Navbar/HelpMenu",
+  component: HelpMenu,
   tags: ["autodocs"],
   decorators: [WebappProviders],
   parameters: { layout: "centered" },
@@ -27,7 +27,7 @@ const meta = {
       table: { category: "Appearance" },
     },
   },
-} satisfies Meta<typeof NavbarFile>
+} satisfies Meta<typeof HelpMenu>
 
 export default meta
 type Story = StoryObj<typeof meta>
@@ -42,21 +42,19 @@ export const OnSurface: Story = {
   args: { color: "var(--apollon-primary-contrast)" },
 }
 
-/** Opening the menu reveals the file actions in a body portal. */
+/** Opening the menu reveals the help/legal items in a body portal. */
 export const MenuOpens: Story = {
   tags: ["test", "!autodocs", "!dev"],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    await userEvent.click(canvas.getByRole("button", { name: /file/i }))
+    await userEvent.click(canvas.getByRole("button", { name: /help/i }))
 
     const body = within(document.body)
     await expect(
-      await body.findByRole("menuitem", { name: /new diagram/i })
+      await body.findByRole("menuitem", { name: /how does this editor work/i })
     ).toBeInTheDocument()
-    // Export is a flat, labelled group — no submenu trigger. Its formats are
-    // direct menuitems and the "Export" heading is a group label, not a menuitem.
     await expect(
-      body.getByRole("menuitem", { name: /as svg/i })
+      body.getByRole("menuitem", { name: /imprint/i })
     ).toBeInTheDocument()
   },
 }

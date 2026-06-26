@@ -3,7 +3,7 @@ import { DropdownMenuSeparator } from "@tumaet/ui/components/dropdown-menu"
 import { TooltipProvider } from "@tumaet/ui/components/tooltip"
 import { Island, GroupDivider } from "./islandPrimitives"
 import { BackNav } from "./BackNav"
-import { BrandAndVersion } from "./BrandAndVersion"
+import { BrandLockup } from "./BrandLockup"
 import { ThemeSwitcherMenu } from "./ThemeSwitcher"
 import { ChromeOverflowMenu } from "./MobileIslands"
 import { HomeHelpMenu, HelpMenuItems } from "@/components/home/HomeHelpMenu"
@@ -42,12 +42,12 @@ export const ChromeSubHeader = () => {
             aria-label="Apollon home"
             className="flex shrink-0 items-center rounded-sm text-[color:var(--apollon-chrome-text)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--apollon-chrome-accent)]"
           >
-            <BrandAndVersion />
+            <BrandLockup />
           </Link>
           <GroupDivider />
           {/* The sub-page band has a wide-open centre, so the "All diagrams" label
             stays down to 360px — and below 480px the brand collapses to logo-only
-            (see BrandAndVersion), which frees the room for the label to survive
+            (see BrandLockup), which frees the room for the label to survive
             that far. It falls back to a bare chevron only under 360px. The page
             title is NOT in the band; it is a real <h1> in the page content. */}
           <BackNav

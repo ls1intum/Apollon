@@ -21,7 +21,7 @@ interface VersionHistoryButtonViewProps {
    * Foreground colour for the icon + label. Omitted on the chrome header (idles
    * muted, washes to `--apollon-chrome-text` on hover via `navbarButtonStyle`);
    * the mobile overflow menu passes `var(--apollon-primary-contrast)` so the
-   * label stays legible on the themed dropdown. `NavbarFile`/`NavbarHelp`/
+   * label stays legible on the themed dropdown. `FileMenu`/`HelpMenu`/
    * `SaveLocalCopyButton` follow the same convention.
    */
   color?: string

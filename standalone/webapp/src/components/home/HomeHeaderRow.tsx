@@ -23,7 +23,7 @@ import {
 } from "@tumaet/ui/components/tooltip"
 import { navbarButtonStyle } from "@/components/navbar/styleConstants"
 import { useMediaQuery } from "@/hooks"
-import { BrandAndVersion } from "@/components/navbar/BrandAndVersion"
+import { BrandLockup } from "@/components/navbar/BrandLockup"
 import { ThemeSwitcherMenu } from "@/components/navbar/ThemeSwitcher"
 import { RefinePopover } from "./RefinePopover"
 import { HomeRefinementChips } from "./HomeRefinementChips"
@@ -118,7 +118,7 @@ export function HomeHeaderRow({
 function HomeBrandIsland() {
   return (
     <Island as="header" role="banner" ariaLabel="Home">
-      <BrandAndVersion />
+      <BrandLockup />
     </Island>
   )
 }

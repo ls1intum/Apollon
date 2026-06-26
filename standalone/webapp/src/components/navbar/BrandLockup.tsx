@@ -8,7 +8,7 @@ import TumLogo from "assets/images/tum-logo-579x579.png"
  * logo is a compact ~28px so the brand island stays the same height as its
  * sibling islands.
  */
-export const BrandAndVersion = () => {
+export const BrandLockup = () => {
   return (
     // Logo + wordmark are one indivisible unit: never shrink, never wrap, never
     // truncate (no "Apol…" on narrow viewports). The version string lives in the

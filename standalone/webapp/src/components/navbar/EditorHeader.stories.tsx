@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { expect, userEvent, within } from "storybook/test"
 import { WebappProviders } from "../../stories/_support/webapp"
-import { EditorHeaderRow } from "./HeaderIslands"
+import { EditorHeaderRow } from "./EditorHeader"
 
 /**
  * The whole editor header as one fluid flex row: `[brand/back] [title] [actions]`.

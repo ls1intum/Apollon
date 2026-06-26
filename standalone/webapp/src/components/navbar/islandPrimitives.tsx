@@ -8,7 +8,7 @@ import { cn } from "@tumaet/ui/lib/utils"
 
 /**
  * Shared island primitives — the floating-glass "island band" grammar lifted out
- * of HeaderIslands.tsx / MobileIslands.tsx so BOTH the editor chrome header and
+ * of EditorHeader.tsx / MobileIslands.tsx so BOTH the editor chrome header and
  * the (forthcoming) webapp HOME band build their bands from one source.
  *
  * Everything here is presentational and editor-agnostic: it paints the

@@ -68,7 +68,7 @@ export default [
       "src/components/home/DiagramGallery.tsx",
       "src/components/modals/TemplateThumbnail.tsx",
       "src/components/navbar/Navbar.tsx",
-      "src/components/navbar/HeaderIslands.tsx",
+      "src/components/navbar/EditorHeader.tsx",
       "src/components/navbar/MobileIslands.tsx",
       "src/components/versioning/VersionDrawer.tsx",
       "src/hooks/useRegionHost.ts",

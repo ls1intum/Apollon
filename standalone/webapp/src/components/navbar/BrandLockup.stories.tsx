@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { DarkNavbarSurface } from "../../stories/_support/webapp"
-import { BrandAndVersion } from "./BrandAndVersion"
+import { BrandLockup } from "./BrandLockup"
 
 /**
  * The Apollon logo + wordmark + app-version cluster shown at the left of the
@@ -10,12 +10,12 @@ import { BrandAndVersion } from "./BrandAndVersion"
  * the matching themed chrome strip.
  */
 const meta = {
-  title: "Webapp/Navbar/BrandAndVersion",
-  component: BrandAndVersion,
+  title: "Webapp/Navbar/BrandLockup",
+  component: BrandLockup,
   parameters: { layout: "centered" },
   decorators: [DarkNavbarSurface],
   tags: ["autodocs"],
-} satisfies Meta<typeof BrandAndVersion>
+} satisfies Meta<typeof BrandLockup>
 
 export default meta
 type Story = StoryObj<typeof meta>

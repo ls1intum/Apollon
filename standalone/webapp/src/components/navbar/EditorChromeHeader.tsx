@@ -4,7 +4,7 @@ import { useMediaQuery } from "@/hooks/useMediaQuery"
 import { useEditorContext } from "@/contexts"
 import { useRegionHost } from "@/hooks/useRegionHost"
 import { NARROW_VIEW_QUERY } from "@/constants"
-import { EditorHeaderRow } from "./HeaderIslands"
+import { EditorHeaderRow } from "./EditorHeader"
 
 /**
  * Mounts the editor header into the library's single full-width `header` overlay

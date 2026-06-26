@@ -11,10 +11,10 @@ import {
 import { useEditorContext, useModalContext } from "@/contexts"
 import { useMediaQuery } from "@/hooks"
 import { ALL_DIAGRAMS_LABEL } from "@/lib/navProvenance"
-import { BrandAndVersion } from "./BrandAndVersion"
+import { BrandLockup } from "./BrandLockup"
 import { BackNav } from "./BackNav"
-import { NavbarFile } from "./NavbarFile"
-import { NavbarHelp } from "./NavbarHelp"
+import { FileMenu } from "./FileMenu"
+import { HelpMenu } from "./HelpMenu"
 import { SaveLocalCopyButton } from "./SaveLocalCopyButton"
 import { VersionHistoryButton } from "./VersionHistoryButton"
 import { ThemeSwitcherMenu } from "./ThemeSwitcher"
@@ -33,13 +33,12 @@ import { Island, GroupDivider, IslandInput } from "./islandPrimitives"
  * control — desktop island and mobile pill alike — reveals its tooltip
  * instantly and with one shared timing.
  */
-export function EditorHeaderRow({
-  isNarrow,
-  hideBrand,
-}: {
+interface EditorHeaderRowProps {
   isNarrow: boolean
   hideBrand: boolean
-}) {
+}
+
+export function EditorHeaderRow({ isNarrow, hideBrand }: EditorHeaderRowProps) {
   return (
     <TooltipProvider>
       <div className="apollon-chrome-header-row">
@@ -79,7 +78,7 @@ export function HeaderBrandIsland({ showLogo = true }: { showLogo?: boolean }) {
               textDecoration: "none",
             }}
           >
-            <BrandAndVersion />
+            <BrandLockup />
           </Link>
           <GroupDivider />
         </>
@@ -158,7 +157,7 @@ export function HeaderActionsIsland() {
   return (
     <Island ariaLabel="Editor actions">
       <div className="flex items-center gap-0.5">
-        <NavbarFile />
+        <FileMenu />
         {/* Action control → ONE leading glyph + a label that collapses below `lg`,
             with the shared tooltip naming it when icon-only. No caret (it isn't a
             menu) — matching Save/Version. */}
@@ -184,7 +183,7 @@ export function HeaderActionsIsland() {
       </div>
       <GroupDivider />
       <div className="flex items-center gap-0.5">
-        <NavbarHelp />
+        <HelpMenu />
         <ThemeSwitcherMenu />
       </div>
     </Island>

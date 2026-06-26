@@ -28,7 +28,7 @@ import { log } from "@/logger"
 import { JsonFileImportButton } from "./JsonFileImportButton"
 import { navbarButtonStyle } from "./styleConstants"
 
-interface NavbarFileProps {
+interface FileMenuProps {
   color?: string
   onClose?: () => void
 }
@@ -182,7 +182,7 @@ export function FileMenuItems({ onSelect }: { onSelect: () => void }) {
   )
 }
 
-export const NavbarFile: FC<NavbarFileProps> = ({ color, onClose }) => {
+export const FileMenu: FC<FileMenuProps> = ({ color, onClose }) => {
   const [open, setOpen] = useState(false)
   // Label visible at `lg` ⇒ the tooltip would just repeat it, so disable it then.
   const isLg = useMediaQuery("(min-width: 1024px)")
