@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
-import { expect, fn, userEvent, within } from "storybook/test"
+import { expect, fn, userEvent, waitFor, within } from "storybook/test"
 import { DarkNavbarSurface } from "@/stories/_support/webapp"
 import {
   makeAutoVersion,
@@ -107,27 +107,22 @@ const meta = {
       table: { category: "State" },
     },
     onPreview: {
-      action: "preview",
       description: "Called with the version id when the row is clicked.",
       table: { category: "Events" },
     },
     onRestore: {
-      action: "restore",
       description: 'Called when "Restore this version" is chosen.',
       table: { category: "Events" },
     },
     onDelete: {
-      action: "delete",
       description: 'Called when "Delete" is chosen.',
       table: { category: "Events" },
     },
     onEditDescription: {
-      action: "editDescription",
       description: "Persists a new description; rejects to revert the draft.",
       table: { category: "Events" },
     },
     onCopyLink: {
-      action: "copyLink",
       description: "Copies a shareable permalink to the clipboard.",
       table: { category: "Events" },
     },
@@ -162,7 +157,7 @@ export const Pending: Story = {
 
 /** Clicking the row reports a preview request with the version id. */
 export const ClickPreviews: Story = {
-  tags: ["!autodocs"],
+  tags: ["test", "!autodocs", "!dev"],
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement)
     // No router in stories → no stretched `<Link>`; the plain `<li>` row body
@@ -174,7 +169,7 @@ export const ClickPreviews: Story = {
 
 /** The kebab menu portals to the body; Restore reports the version id. */
 export const RestoreFromMenu: Story = {
-  tags: ["!autodocs"],
+  tags: ["test", "!autodocs", "!dev"],
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement)
     await userEvent.click(
@@ -185,5 +180,78 @@ export const RestoreFromMenu: Story = {
       await menu.findByRole("menuitem", { name: /restore/i })
     )
     await expect(args.onRestore).toHaveBeenCalledWith(namedVersion.id)
+  },
+}
+
+/** "Copy link" from the kebab reports the version id to `onCopyLink`. */
+export const CopyLinkFromMenu: Story = {
+  tags: ["test", "!autodocs", "!dev"],
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+    await userEvent.click(
+      canvas.getByRole("button", { name: /version actions/i })
+    )
+    const menu = within(canvasElement.ownerDocument.body)
+    await userEvent.click(
+      await menu.findByRole("menuitem", { name: /copy link/i })
+    )
+    await expect(args.onCopyLink).toHaveBeenCalledWith(namedVersion.id)
+  },
+}
+
+/**
+ * "Delete" is offered only for named versions — a raw auto-save's kebab omits
+ * it (and "Add description" replaces "Edit description").
+ */
+export const AutosaveMenuOmitsDelete: Story = {
+  tags: ["test", "!autodocs", "!dev"],
+  args: { version: autoVersion, versionNumber: 6 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await userEvent.click(
+      canvas.getByRole("button", { name: /version actions/i })
+    )
+    const menu = within(canvasElement.ownerDocument.body)
+    await expect(
+      await menu.findByRole("menuitem", { name: /add description/i })
+    ).toBeInTheDocument()
+    expect(menu.queryByRole("menuitem", { name: /^delete$/i })).toBeNull()
+  },
+}
+
+/**
+ * Editing the description inline through the kebab and submitting with
+ * Cmd/Ctrl+Enter persists the trimmed draft via `onEditDescription`.
+ */
+export const EditDescriptionFromMenu: Story = {
+  tags: ["test", "!autodocs", "!dev"],
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+    const trigger = canvas.getByRole("button", { name: /version actions/i })
+    await userEvent.click(trigger)
+    // Scope to the menu THIS trigger opened. Base UI portals the menu to
+    // document.body, so a leaked menu from a neighbouring story (shared body)
+    // could otherwise capture the click and leave this row in display mode.
+    const body = canvasElement.ownerDocument.body
+    const menuItem = await waitFor(() => {
+      const id = trigger.getAttribute("aria-controls")
+      const root = (id && body.querySelector(`#${CSS.escape(id)}`)) || body
+      return within(root as HTMLElement).getByRole("menuitem", {
+        name: /edit description/i,
+      })
+    })
+    await userEvent.click(menuItem)
+    const field = await canvas.findByRole("textbox", {
+      name: /edit description/i,
+    })
+    await userEvent.clear(field)
+    await userEvent.type(field, "Reworked aggregate boundaries")
+    await userEvent.keyboard("{Meta>}{Enter}{/Meta}")
+    await waitFor(() =>
+      expect(args.onEditDescription).toHaveBeenCalledWith(
+        namedVersion.id,
+        "Reworked aggregate boundaries"
+      )
+    )
   },
 }

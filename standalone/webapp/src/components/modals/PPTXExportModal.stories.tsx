@@ -28,10 +28,11 @@ type Story = StoryObj<typeof meta>
 export const Default: Story = {}
 
 /**
- * An out-of-range scale value surfaces the inline validation error and the
- * helper text switches accordingly.
+ * An out-of-range scale value surfaces the inline validation error, flips the
+ * field to `aria-invalid`, and disables Export until it is corrected.
  */
 export const InvalidScale: Story = {
+  tags: ["test", "!autodocs", "!dev"],
   play: async ({ step }) => {
     const canvas = within(document.body)
 
@@ -41,10 +42,54 @@ export const InvalidScale: Story = {
       await userEvent.type(scale, "9999")
     })
 
-    await step("the validation error appears", async () => {
-      await expect(
-        await canvas.findByText(/enter a value from/i)
-      ).toBeInTheDocument()
-    })
+    await step(
+      "the validation error appears and Export is blocked",
+      async () => {
+        await expect(
+          await canvas.findByText(/enter a value from/i)
+        ).toBeInTheDocument()
+        await expect(canvas.getByLabelText("Scale")).toHaveAttribute(
+          "aria-invalid",
+          "true"
+        )
+        await expect(
+          canvas.getByRole("button", { name: /^export$/i })
+        ).toBeDisabled()
+      }
+    )
+
+    await step(
+      "a valid scale clears the error and re-enables Export",
+      async () => {
+        const scale = canvas.getByLabelText("Scale")
+        await userEvent.clear(scale)
+        await userEvent.type(scale, "120")
+        await expect(canvas.getByText(/100% keeps the current/i)).toBeVisible()
+        await expect(
+          canvas.getByRole("button", { name: /^export$/i })
+        ).toBeEnabled()
+      }
+    )
+  },
+}
+
+/**
+ * The file name is required: clearing it disables Export (an empty name can't
+ * be the basis of an export file).
+ */
+export const FileNameRequired: Story = {
+  tags: ["test", "!autodocs", "!dev"],
+  play: async () => {
+    const canvas = within(document.body)
+    const fileName = canvas.getByLabelText("File name")
+    await userEvent.clear(fileName)
+    await expect(
+      canvas.getByRole("button", { name: /^export$/i })
+    ).toBeDisabled()
+
+    await userEvent.type(fileName, "architecture")
+    await expect(
+      canvas.getByRole("button", { name: /^export$/i })
+    ).toBeEnabled()
   },
 }

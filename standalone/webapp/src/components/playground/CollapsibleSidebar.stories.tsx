@@ -29,12 +29,39 @@ const meta = {
     side: {
       control: "select",
       options: ["left", "right"],
+      description: "Which edge the rail docks to (also flips the chevron).",
       table: { category: "Layout" },
     },
     surface: {
       control: "select",
       options: ["base", "variant"],
+      description: "Background surface; the toggle contrasts against it.",
       table: { category: "Appearance" },
+    },
+    width: {
+      control: "number",
+      description: "Expanded width in px; collapses to a thin strip.",
+      table: { category: "Layout" },
+    },
+    open: {
+      control: "boolean",
+      description: "Controlled open state, driven by the caller via onToggle.",
+      table: { category: "State" },
+    },
+    label: {
+      control: "text",
+      description:
+        "Used in the toggle's accessible name, e.g. 'Expand {label}'.",
+      table: { category: "Accessibility" },
+    },
+    testId: {
+      control: false,
+      description: "data-testid on the aside; seeds the content region id.",
+      table: { category: "Data" },
+    },
+    onToggle: {
+      description: "Fired when the chevron toggle is clicked.",
+      table: { category: "Events" },
     },
   },
   decorators: [
@@ -112,6 +139,24 @@ export const Right: Story = {
 /** Starts collapsed to the thin strip. */
 export const Collapsed: Story = {
   render: () => <SidebarHarness side="left" startOpen={false} />,
+  tags: ["test", "!autodocs", "!dev"],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    // While collapsed the toggle reports "Expand", drops aria-controls, and the
+    // content region is unmounted entirely (not just hidden).
+    const toggle = await canvas.findByRole("button", {
+      name: /expand elements panel/i,
+    })
+    await expect(toggle).toHaveAttribute("aria-expanded", "false")
+    await expect(toggle).not.toHaveAttribute("aria-controls")
+    await expect(canvas.queryByText(/panel contents go here/i)).toBeNull()
+
+    // Expanding mounts the content and re-points aria-controls at it.
+    await userEvent.click(toggle)
+    await expect(
+      await canvas.findByText(/panel contents go here/i)
+    ).toBeInTheDocument()
+  },
 }
 
 /** The `variant` surface for the contrasting background. */

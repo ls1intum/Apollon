@@ -74,13 +74,31 @@ export const SingleSelection: Story = {
 /** Nothing selected — the panel renders nothing. */
 export const Empty: Story = {
   args: { assessmentSelectedElements: [] },
+  tags: ["test", "!autodocs", "!dev"],
+  play: async ({ canvasElement }) => {
+    // The component's empty contract is `return null`: with no selection the
+    // panel must not render its heading or any id row at all.
+    const canvas = within(canvasElement)
+    await expect(canvas.queryByText(/selected elements ids/i)).toBeNull()
+  },
 }
 
-/** The selected ids are listed in the panel. */
+/**
+ * Every selected id gets its own row under the heading; on the empty playground
+ * diagram no id resolves to assessment data, so no detail (score/feedback) rows
+ * appear — the panel stays the plain id list.
+ */
 export const ListsSelectedIds: Story = {
-  play: async ({ canvasElement }) => {
+  args: { assessmentSelectedElements: ["node-element-1", "edge-element-2"] },
+  tags: ["test", "!autodocs", "!dev"],
+  play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement)
     await expect(canvas.getByText(/selected elements ids/i)).toBeInTheDocument()
-    await expect(canvas.getByText(/node-element-1/)).toBeInTheDocument()
+    for (const id of args.assessmentSelectedElements) {
+      await expect(canvas.getByText(new RegExp(id))).toBeInTheDocument()
+    }
+    // No id resolves on the empty playground, so the detail rows stay absent.
+    await expect(canvas.queryByText(/score:/i)).toBeNull()
+    await expect(canvas.queryByText(/feedback:/i)).toBeNull()
   },
 }

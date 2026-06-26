@@ -67,6 +67,7 @@ export const IconOnly: Story = {
 
 /** On a non-shared route the button self-hides (renders nothing). */
 export const HiddenOffShared: Story = {
+  tags: ["test", "!autodocs", "!dev"],
   parameters: {
     tanstackRouter: { initialEntry: "/local/demo", routePaths: ["/local/$id"] },
   },
@@ -80,6 +81,7 @@ export const HiddenOffShared: Story = {
 
 /** The button is present and labelled on the shared route. */
 export const VisibleOnShared: Story = {
+  tags: ["test", "!autodocs", "!dev"],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
     await expect(

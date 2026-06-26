@@ -51,24 +51,41 @@ type Story = StoryObj<typeof meta>
 /** Confirmation naming the targeted version from its description. */
 export const Default: Story = {}
 
-/** No matching version in the store — the generic fallback copy is shown. */
+/**
+ * No matching version in the store — the generic fallback copy is shown and the
+ * named label never appears.
+ */
 export const FallbackCopy: Story = {
+  tags: ["test", "!autodocs", "!dev"],
   beforeEach: () => {
     resetVersionStore()
   },
   args: { versionId: "missing-version" },
-}
-
-/** The named version is surfaced in the warning text. */
-export const ShowsVersionLabel: Story = {
   play: async () => {
     const canvas = within(document.body)
-    await expect(canvas.getByText(/initial domain sketch/i)).toBeInTheDocument()
+    await expect(
+      canvas.getByText(/this version will be permanently removed/i)
+    ).toBeInTheDocument()
+    expect(canvas.queryByText(/initial domain sketch/i)).not.toBeInTheDocument()
+  },
+}
+
+/** The seeded version's description is woven into the destructive warning copy. */
+export const ShowsVersionLabel: Story = {
+  tags: ["test", "!autodocs", "!dev"],
+  play: async () => {
+    const canvas = within(document.body)
+    await expect(
+      canvas.getByText(
+        /'initial domain sketch with the core entities\.' will be permanently removed/i
+      )
+    ).toBeInTheDocument()
   },
 }
 
 /** Clicking Delete invokes the store's `deleteVersion` for the target. */
 export const ConfirmDeletes: Story = {
+  tags: ["test", "!autodocs", "!dev"],
   beforeEach: () => {
     resetVersionStore()
     seedVersions([target])
@@ -83,5 +100,21 @@ export const ConfirmDeletes: Story = {
       SAMPLE_DIAGRAM_ID,
       VERSION_ID
     )
+  },
+}
+
+/** Cancel dismisses the dialog without deleting the version. */
+export const CancelKeepsVersion: Story = {
+  tags: ["test", "!autodocs", "!dev"],
+  beforeEach: () => {
+    resetVersionStore()
+    seedVersions([target])
+    useVersionStore.setState({ deleteVersion: fn(async () => {}) })
+  },
+  play: async () => {
+    const canvas = within(document.body)
+    const deleteVersion = useVersionStore.getState().deleteVersion
+    await userEvent.click(canvas.getByRole("button", { name: /cancel/i }))
+    await expect(deleteVersion).not.toHaveBeenCalled()
   },
 }

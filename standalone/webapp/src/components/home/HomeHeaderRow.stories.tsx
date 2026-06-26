@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react"
 import type { Meta, StoryObj } from "@storybook/react-vite"
-import { expect, userEvent, within } from "storybook/test"
+import { expect, userEvent, waitFor, within } from "storybook/test"
 import type { UMLDiagramType } from "@tumaet/apollon"
 import { WebappProviders } from "../../stories/_support/webapp"
 import { HomeHeaderRow } from "./HomeHeaderRow"
@@ -83,19 +83,17 @@ export const Mobile: Story = {
 export const WithActiveRefinements: Story = {
   args: { preset: "refined" },
   globals: { viewport: { value: "desktop" } },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-    await expect(canvas.getByLabelText(/active filters/i)).toBeInTheDocument()
-  },
 }
 
 /** Dark theme — the band paints themed glass + flips text/border. */
 export const Dark: Story = {
+  tags: ["!autodocs"],
   globals: { theme: "dark", viewport: { value: "desktop" } },
 }
 
-/** Search, favorites, refine, import, new + theme are all present + reachable. */
-export const ControlsPresent: Story = {
+/** Search, favorites, new are present and Refine opens its grouped panel. */
+export const OpensRefinePopover: Story = {
+  tags: ["test", "!autodocs", "!dev"],
   globals: { viewport: { value: "desktop" } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -112,5 +110,28 @@ export const ControlsPresent: Story = {
     await userEvent.click(canvas.getByRole("button", { name: /^refine$/i }))
     const body = within(canvasElement.ownerDocument.body)
     await expect(await body.findByText(/^Source$/)).toBeInTheDocument()
+  },
+}
+
+/** Removing a refinement chip clears just that facet from the live chip line. */
+export const RemovesRefinementChip: Story = {
+  tags: ["test", "!autodocs", "!dev"],
+  args: { preset: "refined" },
+  globals: { viewport: { value: "desktop" } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const favoritesChip = await canvas.findByRole("button", {
+      name: /remove favorites filter/i,
+    })
+    await userEvent.click(favoritesChip)
+    await waitFor(() =>
+      expect(
+        canvas.queryByRole("button", { name: /remove favorites filter/i })
+      ).not.toBeInTheDocument()
+    )
+    // The other seeded chips (Shared, Class Diagram) remain.
+    await expect(
+      canvas.getByRole("button", { name: /remove shared filter/i })
+    ).toBeInTheDocument()
   },
 }

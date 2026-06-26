@@ -27,7 +27,6 @@ const meta = {
       table: { category: "State" },
     },
     onToggle: {
-      action: "toggled",
       description: "Fired when the toggle is clicked.",
       table: { category: "Events" },
     },
@@ -54,10 +53,11 @@ export const DarkMode: Story = {
 
 /** Clicking the switcher reports the toggle to the caller. */
 export const TogglesTheme: Story = {
+  tags: ["test", "!autodocs", "!dev"],
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement)
     const toggle = canvas.getByRole("button", { name: /switch to dark mode/i })
     await userEvent.click(toggle)
-    await expect(args.onToggle).toHaveBeenCalled()
+    await expect(args.onToggle).toHaveBeenCalledTimes(1)
   },
 }

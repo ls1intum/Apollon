@@ -32,7 +32,6 @@ const meta = {
       table: { category: "Appearance" },
     },
     onToggle: {
-      action: "toggled",
       description: "Fired when the button is clicked.",
       table: { category: "Events" },
     },
@@ -65,11 +64,12 @@ export const OnSurface: Story = {
 
 /** Clicking the button reports the toggle and exposes the pressed state. */
 export const TogglesDrawer: Story = {
+  tags: ["test", "!autodocs", "!dev"],
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement)
     const button = canvas.getByRole("button", { name: /version history/i })
     await expect(button).toHaveAttribute("aria-pressed", "false")
     await userEvent.click(button)
-    await expect(args.onToggle).toHaveBeenCalled()
+    await expect(args.onToggle).toHaveBeenCalledTimes(1)
   },
 }

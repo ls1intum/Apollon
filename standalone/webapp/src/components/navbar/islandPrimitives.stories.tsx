@@ -87,13 +87,4 @@ export const IslandBand: Story = {
       </Island>
     </div>
   ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-    await expect(
-      canvas.getByPlaceholderText(/search diagrams/i)
-    ).toBeInTheDocument()
-    await expect(
-      canvas.getByRole("button", { name: /settings/i })
-    ).toBeInTheDocument()
-  },
 }

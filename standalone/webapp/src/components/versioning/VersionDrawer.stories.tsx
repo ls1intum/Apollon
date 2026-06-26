@@ -40,6 +40,13 @@ const meta = {
     ),
   ],
   args: { diagramId: SAMPLE_DIAGRAM_ID },
+  argTypes: {
+    diagramId: {
+      control: false,
+      description: "The diagram whose version history is shown.",
+      table: { category: "Data" },
+    },
+  },
   beforeEach: () => {
     resetVersionStore()
   },

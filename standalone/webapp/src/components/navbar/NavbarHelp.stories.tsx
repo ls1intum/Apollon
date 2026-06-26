@@ -44,6 +44,7 @@ export const OnSurface: Story = {
 
 /** Opening the menu reveals the help/legal items in a body portal. */
 export const MenuOpens: Story = {
+  tags: ["test", "!autodocs", "!dev"],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
     await userEvent.click(canvas.getByRole("button", { name: /help/i }))

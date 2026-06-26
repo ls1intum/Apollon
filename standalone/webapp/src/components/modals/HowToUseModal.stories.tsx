@@ -24,7 +24,6 @@ const meta = {
   },
   argTypes: {
     onClose: {
-      action: "close",
       table: { category: "Events" },
       description: "Called when the user clicks the Close button.",
     },

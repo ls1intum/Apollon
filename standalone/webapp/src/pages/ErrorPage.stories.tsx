@@ -67,6 +67,21 @@ export const NotFound: Story = {
     message: "We couldn't find the page you were looking for.",
     buttonLabel: "Back to dashboard",
   },
+  tags: ["test", "!autodocs", "!dev"],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    // Custom title/message/buttonLabel props must flow through to the rendered
+    // heading, copy and CTA, and the CTA still links to the (default) backPath.
+    const main = within(await canvas.findByRole("main"))
+    await expect(
+      await main.findByRole("heading", { level: 1 })
+    ).toHaveTextContent("404")
+    await expect(
+      main.getByText("We couldn't find the page you were looking for.")
+    ).toBeInTheDocument()
+    const cta = await main.findByRole("link", { name: /back to dashboard/i })
+    await expect(cta).toHaveAttribute("href", "/")
+  },
 }
 
 /** A longer, wrapping error message. */

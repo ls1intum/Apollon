@@ -46,7 +46,6 @@ const meta = {
     diagramId: { control: false, table: { category: "Data" } },
     versionId: { control: false, table: { category: "Data" } },
     onConfirm: {
-      action: "confirm",
       description: "Async restore action awaited before the modal closes.",
       table: { category: "Events" },
     },
@@ -65,31 +64,45 @@ export const Default: Story = {}
 
 /** No matching version in the store — the generic "this version" fallback. */
 export const FallbackLabel: Story = {
+  tags: ["test", "!autodocs", "!dev"],
   beforeEach: () => {
     resetVersionStore()
   },
   args: { versionId: "missing-version" },
-}
-
-/** The named version is surfaced in the warning copy. */
-export const ShowsVersionLabel: Story = {
   play: async () => {
     const canvas = within(document.body)
-    await expect(canvas.getByText(/initial domain sketch/i)).toBeInTheDocument()
+    await expect(
+      canvas.getByText(/restore 'this version'\? this replaces your current/i)
+    ).toBeInTheDocument()
   },
 }
 
-/** Clicking Restore awaits `onConfirm`, then closes the modal. */
+/** The seeded version's description is woven into the confirm copy. */
+export const ShowsVersionLabel: Story = {
+  tags: ["test", "!autodocs", "!dev"],
+  play: async () => {
+    const canvas = within(document.body)
+    await expect(
+      canvas.getByText(
+        /restore 'initial domain sketch with the core entities\.'\?/i
+      )
+    ).toBeInTheDocument()
+  },
+}
+
+/** Clicking Restore awaits `onConfirm` exactly once. */
 export const ConfirmRestores: Story = {
+  tags: ["test", "!autodocs", "!dev"],
   play: async ({ args }) => {
     const canvas = within(document.body)
     await userEvent.click(canvas.getByRole("button", { name: /^restore$/i }))
-    await expect(args.onConfirm).toHaveBeenCalled()
+    await expect(args.onConfirm).toHaveBeenCalledTimes(1)
   },
 }
 
 /** Cancel leaves the restore untriggered. */
 export const CancelKeepsCanvas: Story = {
+  tags: ["test", "!autodocs", "!dev"],
   play: async ({ args }) => {
     const canvas = within(document.body)
     await userEvent.click(canvas.getByRole("button", { name: /cancel/i }))

@@ -14,7 +14,8 @@ const meta = {
   argTypes: {
     count: {
       control: { type: "number", min: 0, max: 12 },
-      table: { category: "Content" },
+      description: "Number of card placeholders rendered in the skeleton grid.",
+      table: { category: "Appearance" },
     },
   },
   tags: ["autodocs"],

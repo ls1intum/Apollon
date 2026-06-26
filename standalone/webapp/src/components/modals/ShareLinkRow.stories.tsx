@@ -66,12 +66,10 @@ const meta = {
       table: { category: "State" },
     },
     onCopy: {
-      action: "copy",
       description: "Called when the copy button is clicked.",
       table: { category: "Events" },
     },
     onSelectMode: {
-      action: "selectMode",
       description: "Called with the chosen mode from the dropdown.",
       table: { category: "Events" },
     },
@@ -96,6 +94,7 @@ export const EditMode: Story = {
 
 /** Clicking the copy button reports the copy intent. */
 export const CopyClick: Story = {
+  tags: ["test", "!autodocs", "!dev"],
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement)
     await userEvent.click(canvas.getByRole("button", { name: /copy link/i }))
@@ -105,6 +104,7 @@ export const CopyClick: Story = {
 
 /** Opening the mode dropdown and picking Edit reports the new mode. */
 export const SwitchMode: Story = {
+  tags: ["test", "!autodocs", "!dev"],
   // Drive the controlled `mode` so the picked option reflects back into the row.
   render: (args) => <ControlledShareLinkRow {...args} />,
   play: async ({ args, canvasElement }) => {

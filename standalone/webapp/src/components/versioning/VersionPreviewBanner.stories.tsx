@@ -53,12 +53,10 @@ const meta = {
       table: { category: "State" },
     },
     onExit: {
-      action: "exit",
       description: 'Called when the user clicks "Exit preview".',
       table: { category: "Events" },
     },
     onRestore: {
-      action: "restore",
       description: 'Called with the version id when "Restore" is clicked.',
       table: { category: "Events" },
     },
@@ -78,7 +76,17 @@ export const Default: Story = {}
 
 /** Restore hidden (canRestore=false) — only "Exit preview" remains. */
 export const ExitOnly: Story = {
+  tags: ["test", "!autodocs", "!dev"],
   args: { canRestore: false },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await expect(
+      canvas.getByRole("button", { name: /exit preview/i })
+    ).toBeInTheDocument()
+    expect(
+      canvas.queryByRole("button", { name: /restore/i })
+    ).not.toBeInTheDocument()
+  },
 }
 
 /** Narrow container: the buttons stack and the copy tightens. */
@@ -93,15 +101,17 @@ export const NoLabel: Story = {
 
 /** Clicking "Exit preview" invokes `onExit`. */
 export const ExitInteraction: Story = {
+  tags: ["test", "!autodocs", "!dev"],
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement)
     await userEvent.click(canvas.getByRole("button", { name: /exit preview/i }))
-    await expect(args.onExit).toHaveBeenCalled()
+    await expect(args.onExit).toHaveBeenCalledTimes(1)
   },
 }
 
 /** Clicking "Restore" invokes `onRestore` with the version id. */
 export const RestoreInteraction: Story = {
+  tags: ["test", "!autodocs", "!dev"],
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement)
     await userEvent.click(canvas.getByRole("button", { name: /restore/i }))

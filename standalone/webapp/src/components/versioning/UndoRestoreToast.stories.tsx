@@ -71,10 +71,22 @@ export const Default: Story = {
 }
 
 /** No active window — the driver renders nothing and no toast appears. */
-export const NoWindow: Story = {}
+export const NoWindow: Story = {
+  tags: ["test", "!autodocs", "!dev"],
+  play: async ({ canvasElement }) => {
+    const body = within(canvasElement.ownerDocument.body)
+    // The driver renders null when the store has no undo window; no toast text
+    // should surface.
+    await expect(body.queryByText(/restored '/i)).not.toBeInTheDocument()
+    expect(
+      body.queryByRole("button", { name: /undo restore/i })
+    ).not.toBeInTheDocument()
+  },
+}
 
 /** The toast carries the restored name and an Undo control. */
 export const ShowsUndoToast: Story = {
+  tags: ["test", "!autodocs", "!dev"],
   beforeEach: () => seedUndoWindow("Add payment flow"),
   play: async ({ canvasElement }) => {
     const body = within(canvasElement.ownerDocument.body)
@@ -83,6 +95,6 @@ export const ShowsUndoToast: Story = {
     )
     await expect(
       body.getByRole("button", { name: /undo restore/i })
-    ).toBeInTheDocument()
+    ).toBeEnabled()
   },
 }

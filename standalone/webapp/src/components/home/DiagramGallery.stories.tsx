@@ -87,6 +87,7 @@ export const Empty: Story = {
  * diagram and updates the count chip.
  */
 export const SearchFilters: Story = {
+  tags: ["test", "!autodocs", "!dev"],
   beforeEach: () => seedGallery(),
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
@@ -120,6 +121,7 @@ export const SearchFilters: Story = {
  * refinements via `chrome.resetAll`) rather than the plain dashed muted box.
  */
 export const NoMatches: Story = {
+  tags: ["test", "!autodocs", "!dev"],
   beforeEach: () => seedGallery(),
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)

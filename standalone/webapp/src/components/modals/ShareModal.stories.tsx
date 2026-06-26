@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
-import { expect, within } from "storybook/test"
+import { expect, userEvent, within } from "storybook/test"
 import { withModalFrame } from "../../stories/_support/webapp"
 import { ShareModal } from "./ShareModal"
 
@@ -27,14 +27,25 @@ type Story = StoryObj<typeof meta>
 /** The mode chooser with the four share actions and the recent-link field. */
 export const Default: Story = {}
 
-/** The pre-share state offers a name field and the create-link action. */
+/**
+ * The pre-share state: a name field gates the create action — a blank name
+ * disables "Create share link", and typing one re-enables it. (Clicking would
+ * upload a copy, so the test stops at the gate.)
+ */
 export const CreateState: Story = {
+  tags: ["test", "!autodocs", "!dev"],
   play: async () => {
     const canvas = within(document.body)
-    await expect(canvas.getByLabelText(/name/i)).toBeInTheDocument()
-    await expect(
-      canvas.getByRole("button", { name: /create share link/i })
-    ).toBeInTheDocument()
+    const name = canvas.getByLabelText<HTMLInputElement>(/^name$/i)
+    const create = canvas.getByRole("button", { name: /create share link/i })
+
+    await expect(create).toBeEnabled()
+    await userEvent.clear(name)
+    await expect(create).toBeDisabled()
+
+    await userEvent.type(name, "Order Processing")
+    await expect(name).toHaveValue("Order Processing")
+    await expect(create).toBeEnabled()
   },
 }
 

@@ -60,6 +60,7 @@ export const NotShared: Story = {
 
 /** Switching to the iframe tab swaps the snippet to an `<iframe …>` string. */
 export const SwitchFormat: Story = {
+  tags: ["test", "!autodocs", "!dev"],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
     await userEvent.click(canvas.getByRole("tab", { name: /^iframe$/i }))
@@ -70,6 +71,7 @@ export const SwitchFormat: Story = {
 
 /** Copying reports success via a toast. */
 export const CopySnippet: Story = {
+  tags: ["test", "!autodocs", "!dev"],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
     // The browser test runner doesn't grant clipboard permission, so the real

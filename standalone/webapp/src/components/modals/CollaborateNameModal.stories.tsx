@@ -30,12 +30,10 @@ const meta = {
       description: "Seeds the input; the field stays uncontrolled afterwards.",
     },
     onConfirm: {
-      action: "confirm",
       table: { category: "Events" },
       description: "Called with the trimmed display name when confirmed.",
     },
     onClose: {
-      action: "close",
       table: { category: "Events" },
       description: "Called after a successful confirm so the host dismisses.",
     },
@@ -65,7 +63,22 @@ export const Default: Story = {
   },
 }
 
-/** Pre-filled with an initial name. */
+/** Pre-filled with an initial name; pressing Enter confirms with it. */
 export const Prefilled: Story = {
   args: { initialName: "Grace Hopper" },
+  play: async ({ args }) => {
+    const canvas = within(document.body)
+    const input =
+      await canvas.findByLabelText<HTMLInputElement>(/display name/i)
+    await expect(input).toHaveValue("Grace Hopper")
+    await expect(
+      canvas.getByRole("button", { name: /start collaborating/i })
+    ).toBeEnabled()
+
+    // Enter confirms with the trimmed name, then asks the host to dismiss.
+    input.focus()
+    await userEvent.keyboard("{Enter}")
+    await expect(args.onConfirm).toHaveBeenCalledWith("Grace Hopper")
+    await expect(args.onClose).toHaveBeenCalled()
+  },
 }

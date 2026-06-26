@@ -31,7 +31,6 @@ const meta = {
       table: { category: "Data" },
     },
     onNavigate: {
-      action: "navigate",
       description:
         "Fired in addition to navigating — e.g. to close the menu it lives in.",
       table: { category: "Events" },

@@ -6,10 +6,10 @@ import { HomeActionsPill } from "./HomeActionsPill"
 import { useHomeChrome } from "./useHomeChrome"
 
 /**
- * The mobile (< md) home actions pill — direct ★ Favorites · Refine · ⬆ Import,
- * then a "…" overflow holding only the lower-frequency Theme + Help/legal items.
- * The overflow uses the @tumaet/ui DropdownMenu defaults (editor-matched
- * typography/padding) with a `min-h-11` floor per row for 44px touch targets.
+ * The mobile (< md) home actions pill — direct ★ Favorites · Refine · Import,
+ * then a small Help▾ dropdown (the shared Help/legal body) and a 1-tap Theme
+ * toggle, in the same left-to-right order as the desktop actions island. Every
+ * icon-only control wears the shared instant-reveal Tooltip as its visible name.
  */
 
 const MOCK_TYPES: UMLDiagramType[] = ["ClassDiagram", "ActivityDiagram"]
@@ -28,6 +28,7 @@ function ActionsPillHarness() {
 const meta = {
   title: "Webapp/Home/HomeActionsPill",
   component: ActionsPillHarness,
+  tags: ["autodocs"],
   parameters: { layout: "centered" },
   decorators: [
     WebappProviders,
@@ -42,33 +43,40 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-/** The resting pill surfaces Favorites, Import, and the "…" overflow directly. */
-export const Default: Story = {
+/** The resting pill surfaces Favorites, Refine, Import, Help, and Theme. */
+export const Default: Story = {}
+
+/** Tapping Favorites toggles the filter — the button's pressed state + name flip. */
+export const FavoritesToggle: Story = {
+  tags: ["test", "!autodocs", "!dev"],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    await expect(
-      canvas.getByRole("button", { name: /show favorites only/i })
-    ).toBeInTheDocument()
-    await expect(
-      canvas.getByRole("button", { name: /import diagram/i })
-    ).toBeInTheDocument()
-    await expect(
-      canvas.getByRole("button", { name: /more options/i })
-    ).toBeInTheDocument()
+    const favorites = canvas.getByRole("button", {
+      name: /show favorites only/i,
+    })
+    await expect(favorites).toHaveAttribute("aria-pressed", "false")
+
+    await userEvent.click(favorites)
+
+    const active = canvas.getByRole("button", { name: /show all diagrams/i })
+    await expect(active).toHaveAttribute("aria-pressed", "true")
   },
 }
 
-/** Opening the overflow shows the lower-frequency Theme + legal links. */
-export const OverflowMenu: Story = {
+/** Opening Help reveals the shared About + legal (Imprint) entries. */
+export const HelpMenu: Story = {
+  tags: ["test", "!autodocs", "!dev"],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    await userEvent.click(canvas.getByRole("button", { name: /more options/i }))
+    await userEvent.click(canvas.getByRole("button", { name: /^help$/i }))
     const menu = within(canvasElement.ownerDocument.body)
-    await expect(await menu.findByText(/theme/i)).toBeInTheDocument()
-    await expect(await menu.findByText(/imprint/i)).toBeInTheDocument()
+    await expect(await menu.findByText("About")).toBeInTheDocument()
+    await expect(menu.getByText("Imprint")).toBeInTheDocument()
   },
 }
 
+/** Dark theme — the pill paints themed glass + flips text/border. */
 export const Dark: Story = {
+  tags: ["!autodocs"],
   globals: { theme: "dark" },
 }

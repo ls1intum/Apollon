@@ -100,12 +100,35 @@ export const DisclaimerFallback: Story = {
       "disclaimer"
     ),
   },
+  tags: ["test", "!autodocs", "!dev"],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    // The "disclaimer" source must surface the banner AND still render the
+    // placeholder prose (tagged data-source="disclaimer"), not swallow it.
+    await expect(
+      await canvas.findByTestId("legal-disclaimer-banner")
+    ).toHaveTextContent(/has not been configured with a legal profile/i)
+    await expect(await canvas.findByTestId("legal-content")).toHaveAttribute(
+      "data-source",
+      "disclaimer"
+    )
+  },
 }
 
 /** Error state: the resolver rejects and the page shows the error alert. */
 export const ErrorState: Story = {
   args: {
     resolver: failingResolver,
+  },
+  tags: ["test", "!autodocs", "!dev"],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    // A rejected resolver swaps the article for the error alert: assert the
+    // copy appears and that no content article was rendered.
+    await expect(
+      await canvas.findByText(/unable to load legal content/i)
+    ).toBeInTheDocument()
+    await expect(canvas.queryByTestId("legal-content")).toBeNull()
   },
 }
 

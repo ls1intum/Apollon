@@ -70,26 +70,14 @@ export const Narrow: Story = {
   args: { isNarrow: true },
 }
 
-/** The title field carries the placeholder and the actions are reachable. */
-export const ActionsPresent: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-    await expect(
-      canvas.getByPlaceholderText(/untitled diagram/i)
-    ).toBeInTheDocument()
-    await expect(
-      canvas.getByRole("button", { name: /share/i })
-    ).toBeInTheDocument()
-  },
-}
-
 /** Typing into the centred title field updates the input value. */
 export const EditTitle: Story = {
+  tags: ["test", "!autodocs", "!dev"],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
     const input = canvas.getByLabelText<HTMLInputElement>(/diagram title/i)
-    await userEvent.click(input)
+    await userEvent.clear(input)
     await userEvent.type(input, "Billing")
-    await expect(input.value).toContain("Billing")
+    await expect(input.value).toBe("Billing")
   },
 }

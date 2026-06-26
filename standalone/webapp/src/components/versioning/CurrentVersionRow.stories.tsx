@@ -58,7 +58,6 @@ const meta = {
       table: { category: "State" },
     },
     onExitPreview: {
-      action: "exitPreview",
       description: 'Called when the user clicks "Return to current".',
       table: { category: "Events" },
     },
@@ -94,12 +93,15 @@ export const Previewing: Story = {
 
 /** Clicking "Return to current" reports `onExitPreview`. */
 export const ExitPreviewInteraction: Story = {
+  tags: ["test", "!autodocs", "!dev"],
   args: { isPreviewing: true },
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement)
-    await userEvent.click(
-      canvas.getByRole("button", { name: /return to current canvas/i })
-    )
-    await expect(args.onExitPreview).toHaveBeenCalled()
+    const button = canvas.getByRole("button", {
+      name: /return to current canvas/i,
+    })
+    await expect(button).toHaveTextContent(/return to current/i)
+    await userEvent.click(button)
+    await expect(args.onExitPreview).toHaveBeenCalledTimes(1)
   },
 }

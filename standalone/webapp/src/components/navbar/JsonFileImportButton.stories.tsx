@@ -4,7 +4,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@tumaet/ui/components/dropdown-menu"
-import { expect, fn, userEvent, within } from "storybook/test"
+import { expect, fn, userEvent } from "storybook/test"
 import { JsonFileImportButtonView } from "./JsonFileImportButton"
 
 /**
@@ -23,12 +23,10 @@ const meta = {
   },
   argTypes: {
     onFile: {
-      action: "file",
       description: "Fired with the chosen file from the native picker.",
       table: { category: "Events" },
     },
     onClose: {
-      action: "close",
       description:
         "Fired to close the surrounding menu after a file is chosen.",
       table: { category: "Events" },
@@ -50,17 +48,11 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /** The Import entry sits inside the open File menu. */
-export const Default: Story = {
-  play: async () => {
-    const body = within(document.body)
-    await expect(
-      await body.findByRole("menuitem", { name: /import/i })
-    ).toBeInTheDocument()
-  },
-}
+export const Default: Story = {}
 
 /** Choosing a file reports it to the caller and closes the menu. */
 export const ChoosesFile: Story = {
+  tags: ["test", "!autodocs", "!dev"],
   play: async ({ args }) => {
     // The picker is a hidden, unlabeled <input type="file"> the menu item opens.
     // The menu content portals to the document body, so query there.

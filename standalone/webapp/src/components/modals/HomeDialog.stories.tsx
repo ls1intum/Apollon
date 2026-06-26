@@ -37,7 +37,7 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-/** Stable spies for the composed form so the play test can assert the click. */
+/** Stable spies for the composed form so the play test can assert the clicks. */
 const composedActions = { onCancel: fn(), onConfirm: fn() }
 
 /** A composed dialog body using most of the blocks together. */
@@ -83,9 +83,22 @@ export const Composed: Story = {
   },
   play: async ({ canvasElement }) => {
     composedActions.onConfirm.mockClear()
+    composedActions.onCancel.mockClear()
     const canvas = within(canvasElement)
+
+    // Editing the name field reflects the typed value (controlled input).
+    const name = canvas.getByLabelText<HTMLInputElement>("Diagram name")
+    await userEvent.clear(name)
+    await userEvent.type(name, "Payments flow")
+    await expect(name).toHaveValue("Payments flow")
+
+    // The two action buttons route to their own callbacks.
+    await userEvent.click(canvas.getByRole("button", { name: /cancel/i }))
+    await expect(composedActions.onCancel).toHaveBeenCalledTimes(1)
+    await expect(composedActions.onConfirm).not.toHaveBeenCalled()
+
     await userEvent.click(canvas.getByRole("button", { name: /create/i }))
-    await expect(composedActions.onConfirm).toHaveBeenCalled()
+    await expect(composedActions.onConfirm).toHaveBeenCalledTimes(1)
   },
 }
 
@@ -147,6 +160,18 @@ export const OptionGroups: Story = {
       )
     }
     return <Demo />
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    // Single-select: the chosen option carries aria-pressed, the rest reset.
+    const privateOption = canvas.getByRole("button", { name: "Private" })
+    const sharedOption = canvas.getByRole("button", { name: "Shared" })
+    await expect(privateOption).toHaveAttribute("aria-pressed", "true")
+    await expect(sharedOption).toHaveAttribute("aria-pressed", "false")
+
+    await userEvent.click(sharedOption)
+    await expect(sharedOption).toHaveAttribute("aria-pressed", "true")
+    await expect(privateOption).toHaveAttribute("aria-pressed", "false")
   },
 }
 

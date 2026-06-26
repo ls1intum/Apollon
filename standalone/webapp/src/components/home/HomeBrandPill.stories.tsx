@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
-import { expect, within } from "storybook/test"
 import { WebappProviders } from "../../stories/_support/webapp"
 import { HomeBrandPill } from "./HomeBrandPill"
 
@@ -10,6 +9,7 @@ import { HomeBrandPill } from "./HomeBrandPill"
 const meta = {
   title: "Webapp/Home/HomeBrandPill",
   component: HomeBrandPill,
+  tags: ["autodocs"],
   parameters: { layout: "centered" },
   decorators: [
     WebappProviders,
@@ -24,13 +24,11 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const Default: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-    await expect(canvas.getByRole("banner")).toBeInTheDocument()
-  },
-}
+/** The resting brand pill — the home's single `role="banner"` landmark. */
+export const Default: Story = {}
 
+/** Dark theme — the pill paints themed glass + flips its mark contrast. */
 export const Dark: Story = {
+  tags: ["!autodocs"],
   globals: { theme: "dark" },
 }

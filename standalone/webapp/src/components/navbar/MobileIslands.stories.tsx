@@ -64,6 +64,7 @@ export const ActionsPill: Story = {
  * drives the router there and injects a minimal editor stub.
  */
 export const FileMenu: Story = {
+  tags: ["test", "!autodocs", "!dev"],
   render: () => <MobileActionsPill />,
   // "Save a local copy" only renders on a /shared/:id route with a live editor.
   parameters: {
@@ -108,6 +109,7 @@ export const FileMenu: Story = {
 
 /** The Help menu is a SEPARATE dropdown — the shared Help/legal body (editor variant). */
 export const HelpMenu: Story = {
+  tags: ["test", "!autodocs", "!dev"],
   render: () => <MobileActionsPill />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)

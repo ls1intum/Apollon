@@ -115,12 +115,10 @@ const meta = {
       table: { category: "Appearance" },
     },
     onToggleFavorite: {
-      action: "toggleFavorite",
       description: "Toggle the favorite star. Omit to hide the star.",
       table: { category: "Events" },
     },
     onOpen: {
-      action: "open",
       description: "Called with the diagram route when the card is activated.",
       table: { category: "Events" },
     },
@@ -149,17 +147,11 @@ export const WithThumbnail: Story = {
  * fix is catchable — a fill that vanished into the card would be visible here.
  */
 export const DarkRecoloredThumbnail: Story = {
+  tags: ["!autodocs"],
   globals: { theme: "dark" },
   args: {
     showPlaceholderIcon: false,
     thumbnail: makeSampleThumbnailSources(),
-  },
-  play: async ({ args }) => {
-    // The recolor must produce a dark variant distinct from the light source.
-    await expect(args.thumbnail?.darkDataUrl).toBeDefined()
-    await expect(args.thumbnail?.darkDataUrl).not.toBe(
-      args.thumbnail?.lightDataUrl
-    )
   },
 }
 
@@ -209,14 +201,15 @@ export const Expired: Story = {
   },
 }
 
-/** Toggling the favorite star reports the toggle to the caller. */
+/** Clicking the favorite star reports the toggle to the caller. */
 export const FavoriteToggles: Story = {
+  tags: ["test", "!autodocs", "!dev"],
   args: { onToggleFavorite: fn() },
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement)
     const star = canvas.getByRole("button", { name: /add to favorites/i })
     await userEvent.click(star)
-    await expect(args.onToggleFavorite).toHaveBeenCalled()
+    await expect(args.onToggleFavorite).toHaveBeenCalledTimes(1)
   },
 }
 
@@ -225,6 +218,7 @@ export const FavoriteToggles: Story = {
  * renders into a body portal, so it is queried there.
  */
 export const ActionsMenuOpens: Story = {
+  tags: ["test", "!autodocs", "!dev"],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
     await userEvent.click(

@@ -73,17 +73,14 @@ const meta = {
       table: { category: "State" },
     },
     onPreview: {
-      action: "preview",
       description: "Called with the version id when a child row is clicked.",
       table: { category: "Events" },
     },
     onRestore: {
-      action: "restore",
       description: 'Called when a child row\'s "Restore" is chosen.',
       table: { category: "Events" },
     },
     onDelete: {
-      action: "delete",
       description: 'Called when a child row\'s "Delete" is chosen.',
       table: { category: "Events" },
     },
