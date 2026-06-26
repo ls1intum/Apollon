@@ -23,7 +23,12 @@ import {
 import { useShallow } from "zustand/shallow"
 
 import { Apollon, ApollonMode } from "@tumaet/apollon/react"
-import type { UMLModel, UMLDiagramType, DiagramEdgeType } from "@tumaet/apollon"
+import type {
+  UMLModel,
+  UMLDiagramType,
+  DiagramEdgeType,
+  ApollonEditor,
+} from "@tumaet/apollon"
 import { ApollonView } from "@tumaet/apollon/typings"
 import { Sidebar } from "@tumaet/apollon/components/Sidebar"
 import { EdgeTypePreviewIcon } from "@tumaet/apollon/components/popovers/edgePopovers/EdgeTypePreviewIcon"
@@ -139,16 +144,20 @@ export function ApollonFixture({
   model,
   height = "100vh",
   dataTheme,
+  onMount,
 }: {
   model: UMLModel
   height?: number | string
   dataTheme?: "light" | "dark"
+  /** Receives the imperative {@link ApollonEditor} once after mount. */
+  onMount?: (editor: ApollonEditor) => void
 }) {
   return (
     <Apollon
       readonly
       defaultModel={model}
       dataTheme={dataTheme}
+      onMount={onMount}
       style={{ height, width: "100%" }}
     />
   )
@@ -199,11 +208,14 @@ export function ApollonAssessable({
   readonly = false,
   height = "100vh",
   dataTheme,
+  onMount,
 }: {
   model: UMLModel
   readonly?: boolean
   height?: number | string
   dataTheme?: "light" | "dark"
+  /** Receives the imperative {@link ApollonEditor} once after mount. */
+  onMount?: (editor: ApollonEditor) => void
 }) {
   return (
     <Apollon
@@ -212,6 +224,69 @@ export function ApollonAssessable({
       readonly={readonly}
       enablePopups
       dataTheme={dataTheme}
+      onMount={onMount}
+      style={{ height, width: "100%" }}
+    />
+  )
+}
+
+// ── Highlight / interactive-element path ────────────────────────────────────
+/**
+ * The full editor opened on the INTERACTIVE-ELEMENT picker (the "Highlight"
+ * view) — the surface where an author marks elements interactive for an
+ * exam/quiz. Drives the editor with the same INIT-only props the host uses:
+ * `defaultView={Highlight}` opens directly in the picker and `availableViews`
+ * exposes the Modelling↔Highlight toggle. `defaultView`/`availableViews` are
+ * snapshotted on mount, so re-key the story to change them.
+ */
+export function ApollonHighlightPicker({
+  model,
+  height = "100vh",
+  dataTheme,
+}: {
+  model: UMLModel
+  height?: number | string
+  dataTheme?: "light" | "dark"
+}) {
+  return (
+    <Apollon
+      defaultModel={model}
+      readonly={false}
+      defaultView={ApollonView.Highlight}
+      availableViews={[ApollonView.Modelling, ApollonView.Highlight]}
+      enablePopups
+      dataTheme={dataTheme}
+      style={{ height, width: "100%" }}
+    />
+  )
+}
+
+/**
+ * A read-only editor with HOST-DRIVEN highlights painted on top — the
+ * documented `editor.setElementHighlights(...)` overlay API (id → CSS color).
+ * Hosts use this to tint elements that are e.g. missing feedback, or that
+ * Athena flagged with a suggestion. The overlay is ephemeral: it is never
+ * written into the model, serialized, or shared with collaborators. Applied
+ * once via `onMount`, the imperative-handle entry point.
+ */
+export function ApollonWithHighlights({
+  model,
+  highlights,
+  height = "100vh",
+  dataTheme,
+}: {
+  model: UMLModel
+  /** Element id → any valid CSS color, e.g. `"rgba(23,162,184,0.3)"`. */
+  highlights: Record<string, string>
+  height?: number | string
+  dataTheme?: "light" | "dark"
+}) {
+  return (
+    <Apollon
+      readonly
+      defaultModel={model}
+      dataTheme={dataTheme}
+      onMount={(editor) => editor.setElementHighlights(highlights)}
       style={{ height, width: "100%" }}
     />
   )
@@ -623,6 +698,77 @@ export function SeededPopoverHarness({
                 <div className="apollon-popover" style={{ width }}>
                   {children}
                 </div>
+              </div>
+            </ReactFlowProvider>
+          </PopoverStoreContext.Provider>
+        </AssessmentSelectionStoreContext.Provider>
+      </MetadataStoreContext.Provider>
+    </DiagramStoreContext.Provider>
+  )
+}
+
+// ── Selection path ───────────────────────────────────────────────────────────
+/**
+ * Like {@link SeededPopoverHarness} but for the ASSESSMENT-SELECTION store —
+ * the grading surface's multi-select. `seed` populates the diagram store with
+ * the element(s) to show; the harness then mounts in `mode=Assessment` +
+ * `readonly` (the combo under which element renderers read selection/hover from
+ * the assessment-selection store, not the diagram store), turns selection mode
+ * on, and selects `selectedIds`. A hidden controlled ReactFlow populates the
+ * node/edge lookups so the seeded element resolves, exactly as in the popover
+ * harness. Children render inside `.apollon-editor` so theme + selected/hover
+ * styling apply.
+ */
+export function SelectionHarness({
+  diagramType,
+  seed,
+  selectedIds,
+  width = 320,
+  children,
+}: {
+  diagramType?: UMLDiagramType
+  seed: (
+    diagram: ReturnType<typeof createDiagramStore>,
+    metadata: ReturnType<typeof createMetadataStore>
+  ) => void
+  /** Element ids to select. One id → `selectElement`; many → `selectMultipleElements`. */
+  selectedIds: string[]
+  width?: number
+  children: React.ReactNode
+}) {
+  const stores = React.useMemo(() => {
+    const ydoc = new Y.Doc()
+    const diagram = createDiagramStore(ydoc)
+    const metadata = createMetadataStore(ydoc)
+    const assessment = createAssessmentSelectionStore()
+    const popover = createPopoverStore()
+    if (diagramType) metadata.getState().updateDiagramType(diagramType)
+    metadata.getState().setView(ApollonView.Modelling)
+    // The see-feedback (review) surface: Assessment + readonly is the exact
+    // combo under which selection/hover come from the assessment-selection store.
+    metadata.getState().setMode(ApollonMode.Assessment)
+    metadata.getState().setReadonly(true)
+    seed(diagram, metadata)
+    assessment.getState().setAssessmentSelectionMode(true)
+    if (selectedIds.length === 1) {
+      assessment.getState().selectElement(selectedIds[0])
+    } else if (selectedIds.length > 1) {
+      assessment.getState().selectMultipleElements(selectedIds)
+    }
+    return { diagram, metadata, assessment, popover }
+    // seed is referentially stable per story; diagramType keys the rebuild.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [diagramType])
+
+  return (
+    <DiagramStoreContext.Provider value={stores.diagram}>
+      <MetadataStoreContext.Provider value={stores.metadata}>
+        <AssessmentSelectionStoreContext.Provider value={stores.assessment}>
+          <PopoverStoreContext.Provider value={stores.popover}>
+            <ReactFlowProvider>
+              <div className="apollon-editor">
+                <HiddenStoreFlow />
+                <div style={{ width }}>{children}</div>
               </div>
             </ReactFlowProvider>
           </PopoverStoreContext.Provider>

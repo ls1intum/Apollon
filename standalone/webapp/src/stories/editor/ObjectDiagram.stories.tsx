@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
+import { within, expect } from "storybook/test"
 import {
   editorStoryMeta,
   ApollonEditable,
@@ -14,6 +15,8 @@ import { ObjectEditPopover } from "@tumaet/apollon/components/popovers/objectDia
 import { ObjectGiveFeedbackPopover } from "@tumaet/apollon/components/popovers/objectDiagram/ObjectGiveFeedbackPopover"
 import { ObjectSeeFeedbackPopover } from "@tumaet/apollon/components/popovers/objectDiagram/ObjectSeeFeedbackPopover"
 import { ObjectDiagramEdgeEditPopover } from "@tumaet/apollon/components/popovers/edgePopovers/ObjectDiagramEdgeEditPopover"
+import { EdgeGiveFeedbackPopover } from "@tumaet/apollon/components/popovers/edgePopovers/EdgeGiveFeedbackPopover"
+import { EdgeSeeFeedbackPopover } from "@tumaet/apollon/components/popovers/edgePopovers/EdgeSeeFeedbackPopover"
 
 const meta = {
   title: "Editor/Object Diagram",
@@ -22,6 +25,13 @@ const meta = {
 
 export default meta
 type Story = StoryObj<typeof meta>
+
+// The lightweight popover-harness stories below run in the Vitest runner: the
+// `["test","!autodocs","!dev"]` tag overrides editorStoryMeta's `!test`, and a
+// `play` asserts the seeded content actually rendered (so a regression that
+// blanks a popover fails the suite rather than passing silently). The full
+// editor stories (Playground/Blank) stay untestable — they mount a 2nd editor.
+const popoverTags = ["test", "!autodocs", "!dev"]
 
 // ── Editor ───────────────────────────────────────────────────────────────────
 /** The real, editable editor + palette, pre-loaded with a sample to edit. */
@@ -54,6 +64,7 @@ export const Edges: Story = {
 /** Object node editor — name, color, attributes, methods. */
 export const EditObject: Story = {
   name: "Edit: Object",
+  tags: popoverTags,
   parameters: { layout: "centered" },
   render: () => (
     <SeededPopoverHarness
@@ -71,11 +82,19 @@ export const EditObject: Story = {
       <ObjectEditPopover elementId="object-1" />
     </SeededPopoverHarness>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    // The seeded object name is bound to the name input's value.
+    await canvas.findByDisplayValue("account: Account")
+    // The seeded attribute row is also editable.
+    await canvas.findByDisplayValue("balance = 1200")
+  },
 }
 
 /** Object link editor — line/style controls for the association between objects. */
 export const EditObjectLink: Story = {
   name: "Edit: Object Link",
+  tags: popoverTags,
   parameters: { layout: "centered" },
   render: () => (
     <SeededPopoverHarness
@@ -96,6 +115,12 @@ export const EditObjectLink: Story = {
       <ObjectDiagramEdgeEditPopover elementId="edge-1" />
     </SeededPopoverHarness>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    // The edge popover resolves via ReactFlow's edgeLookup (async); findBy
+    // retries until the "Edge" title header renders.
+    await canvas.findByText("Edge")
+  },
 }
 
 // ── Feedback popovers (Assessment mode) ──────────────────────────────────────
@@ -106,6 +131,7 @@ export const EditObjectLink: Story = {
 /** Give-feedback form for an object node — score + comment for node, attrs, methods. */
 export const GiveFeedbackObject: Story = {
   name: "Feedback (Give): Object",
+  tags: popoverTags,
   parameters: { layout: "centered" },
   render: () => (
     <SeededPopoverHarness
@@ -123,11 +149,20 @@ export const GiveFeedbackObject: Story = {
       <ObjectGiveFeedbackPopover elementId="object-1" />
     </SeededPopoverHarness>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    // Header names the seeded object; the box renders a score + feedback form.
+    await canvas.findByText("account: Account")
+    const points = await canvas.findAllByPlaceholderText("Points")
+    expect(points.length).toBeGreaterThan(0)
+    expect(canvas.getAllByPlaceholderText("Feedback").length).toBeGreaterThan(0)
+  },
 }
 
 /** See-feedback (read-only) view of an object node with a graded assessment. */
 export const SeeFeedbackObject: Story = {
   name: "Feedback (See): Object",
+  tags: popoverTags,
   parameters: { layout: "centered" },
   render: () => (
     <SeededPopoverHarness
@@ -165,4 +200,84 @@ export const SeeFeedbackObject: Story = {
       <ObjectSeeFeedbackPopover elementId="object-1" />
     </SeededPopoverHarness>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    // The seeded node score + feedback are rendered read-only.
+    await canvas.findByText("5")
+    await canvas.findByText(
+      "Correct instance — names the class it instantiates."
+    )
+    // The seeded attribute + method feedback render in their own rows.
+    await canvas.findByText("Concrete value supplied, good.")
+  },
+}
+
+/** Give-feedback form for an object link edge — a single score + comment row. */
+export const GiveFeedbackObjectLink: Story = {
+  name: "Feedback (Give): Object Link",
+  tags: popoverTags,
+  parameters: { layout: "centered" },
+  render: () => (
+    <SeededPopoverHarness
+      diagramType="ObjectDiagram"
+      seed={(diagram) => {
+        diagram
+          .getState()
+          .addNode(makeNode("a", "objectName", { name: "order: Order" }))
+        diagram
+          .getState()
+          .addNode(makeNode("b", "objectName", { name: "customer: Customer" }))
+        diagram.getState().addEdge(makeEdge("edge-1", "ObjectLink", "a", "b"))
+      }}
+    >
+      <EdgeGiveFeedbackPopover elementId="edge-1" />
+    </SeededPopoverHarness>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    // The edge feedback header names the edge by its type; the box is a form.
+    await canvas.findByText("ObjectLink")
+    await canvas.findByPlaceholderText("Points")
+    await canvas.findByPlaceholderText("Feedback")
+  },
+}
+
+/** See-feedback (read-only) view of an object link edge with a graded assessment. */
+export const SeeFeedbackObjectLink: Story = {
+  name: "Feedback (See): Object Link",
+  tags: popoverTags,
+  parameters: { layout: "centered" },
+  render: () => (
+    <SeededPopoverHarness
+      diagramType="ObjectDiagram"
+      seed={(diagram) => {
+        diagram
+          .getState()
+          .addNode(makeNode("a", "objectName", { name: "order: Order" }))
+        diagram
+          .getState()
+          .addNode(makeNode("b", "objectName", { name: "customer: Customer" }))
+        diagram.getState().addEdge(makeEdge("edge-1", "ObjectLink", "a", "b"))
+        diagram.getState().setAssessments({
+          "edge-1": {
+            modelElementId: "edge-1",
+            elementType: "edge",
+            score: 2,
+            feedback: "The link should be undirected between these objects.",
+          },
+        })
+      }}
+    >
+      <EdgeSeeFeedbackPopover elementId="edge-1" />
+    </SeededPopoverHarness>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    // The seeded edge score + feedback render read-only under the edge header.
+    await canvas.findByText("ObjectLink")
+    await canvas.findByText("2")
+    await canvas.findByText(
+      "The link should be undirected between these objects."
+    )
+  },
 }

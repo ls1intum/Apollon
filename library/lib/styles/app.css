@@ -1408,7 +1408,16 @@ svg.react-flow__connectionline {
     transparent
   );
   border-color: var(--apollon-primary, #3e8acc);
-  color: var(--apollon-primary, #3e8acc);
+  /* WCAG: bare --apollon-primary as text on the primary@20% tint is only
+     ~3.6:1 (light) / ~3.8:1 (dark). Pull the label 30% toward
+     --apollon-primary-contrast — black in light (darkens the blue), white in
+     dark (lightens it) — which lifts contrast over the tint to >=4.5:1 in both
+     themes while keeping the selected accent unmistakably the primary blue. */
+  color: color-mix(
+    in srgb,
+    var(--apollon-primary, #3e8acc) 70%,
+    var(--apollon-primary-contrast, #000)
+  );
   z-index: 1; /* keep the selected item's full border over its neighbour seam */
 }
 
