@@ -1,5 +1,18 @@
 # @tumaet/webapp
 
+## 4.9.0
+
+### Minor Changes
+
+- [#677](https://github.com/ls1intum/Apollon/pull/677) [`41059b1`](https://github.com/ls1intum/Apollon/commit/41059b1c93e4edc483c8f0c039d4378a7bab2489) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Embed your diagrams anywhere. Drop one into a README, an issue, a pull request, or any page as a Markdown image — it renders inline as a polished framed card with the diagram, its title, and an "Open in Apollon" button, matches light and dark themes, and updates as you keep editing — or paste a ready-made iframe snippet. The share dialog gains an "Embed" panel with copy-paste code, and embedding needs no sign-in or tokens: the diagram link is the key, exactly like opening it in the editor. Sharing now leads with live collaboration by default, and the dialog uploads a single shared copy whose access (collaborate, edit, or feedback) you can switch without ever creating duplicates. Embedded diagrams stay alive as long as they're viewed, so they won't quietly disappear from a README, and a popular one stays fast no matter how many people open it.
+
+- [#778](https://github.com/ls1intum/Apollon/pull/778) [`d03f562`](https://github.com/ls1intum/Apollon/commit/d03f562b3fabfc92e7cff870fe08061d678926f6) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Rebuild the editor chrome as cohesive floating glass. The header is no longer a flat bar — it is rounded, translucent islands (brand + navigation, the document title, and actions/version/theme) that hover over a full-bleed canvas with the same margins and material as the element palette and zoom controls. The title sits next to the navigation and grows with the diagram name; the header fluidly collapses labels to icons as space tightens and, on phones, into an overflow menu rather than hiding controls. Version history becomes a floating glass panel — a right-side rail on wider screens, a floating card on phones — that the diagram makes room for without shifting. The chrome hugs device safe areas (notch, Dynamic Island, home indicator) on iOS and Android. New diagrams are created untitled (no auto-generated name): the dashboard shows a muted "Untitled diagram" placeholder and the editor a placeholder in the title field, instead of a literal "Untitled Diagram" name. The dashboard header gets a frosted-glass refresh and a "Skip to diagram" link speeds up keyboard navigation. Everything themes in light and dark and respects reduced-transparency, increased-contrast and reduced-motion preferences.
+
+### Patch Changes
+
+- Updated dependencies [[`8251733`](https://github.com/ls1intum/Apollon/commit/8251733a965e9fd3cd0beb7565e3abf138a895d5), [`d03f562`](https://github.com/ls1intum/Apollon/commit/d03f562b3fabfc92e7cff870fe08061d678926f6), [`2115fe3`](https://github.com/ls1intum/Apollon/commit/2115fe3d2c787a9055e6d9fbeab61a122eaaf6eb), [`295a627`](https://github.com/ls1intum/Apollon/commit/295a627e1067c0d23fd71ef3e26c8554a4a6e073), [`515777b`](https://github.com/ls1intum/Apollon/commit/515777ba6a45c0110adfa24c1fdb76251d0e9636), [`451ca97`](https://github.com/ls1intum/Apollon/commit/451ca97872d1afb5478e628179151f7acc71aab7)]:
+  - @tumaet/apollon@4.9.0
+
 ## 4.8.0
 
 ### Minor Changes
@@ -17,7 +30,7 @@
 - [#675](https://github.com/ls1intum/Apollon/pull/675) [`1bb280d`](https://github.com/ls1intum/Apollon/commit/1bb280d23f9a4cfb9339a04b2311c1c50aeffae7) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Fixes PNG and PDF export on large or complex diagrams. Exporting one used to do nothing — the menu closed and either no file or a 0-byte image was saved. Now the PNG downloads reliably, the PDF stays sharp at any zoom, and if a diagram is too large to export the app tells you instead of failing silently.
 
 - Updated dependencies [[`82942cd`](https://github.com/ls1intum/Apollon/commit/82942cddec7d3dd33711d3f38eba92e10c1da0c9), [`5013fc6`](https://github.com/ls1intum/Apollon/commit/5013fc632ea0e18c9fce5baf1f66f1d50617a358), [`5d4a8dd`](https://github.com/ls1intum/Apollon/commit/5d4a8dd5d6d34d1c26d4258a99aadc02faca1c17), [`1bb280d`](https://github.com/ls1intum/Apollon/commit/1bb280d23f9a4cfb9339a04b2311c1c50aeffae7)]:
-  - @tumaet/apollon@4.8.0
+  - @tumaet/apollon@4.9.0
 
 ## 4.7.0
 
@@ -34,7 +47,7 @@
 - [#765](https://github.com/ls1intum/Apollon/pull/765) [`6fe657c`](https://github.com/ls1intum/Apollon/commit/6fe657cfabbb1f60936d03b758039fe1e7fade6f) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Simplify PPTX text positioning. `@tumaet/apollon`'s `compat` export now resolves `dominant-baseline` into an explicit baseline `y`, so the PPTX exporter no longer needs its empirically-tuned `TEXT_BASELINE_OFFSET_PX` fudge — the text-box top is derived directly from the resolved baseline and the box height.
 
 - Updated dependencies [[`6fe657c`](https://github.com/ls1intum/Apollon/commit/6fe657cfabbb1f60936d03b758039fe1e7fade6f), [`6fe657c`](https://github.com/ls1intum/Apollon/commit/6fe657cfabbb1f60936d03b758039fe1e7fade6f), [`21c6f99`](https://github.com/ls1intum/Apollon/commit/21c6f9914b1ab24d79fa6f6d6527ca6260db8c43), [`1fc31cc`](https://github.com/ls1intum/Apollon/commit/1fc31cc7c1d2c8dedb3555edb5d5d063f572acae)]:
-  - @tumaet/apollon@4.8.0
+  - @tumaet/apollon@4.9.0
 
 ## 4.6.0
 
@@ -47,7 +60,7 @@
 - [#744](https://github.com/ls1intum/Apollon/pull/744) [`1fdb9bc`](https://github.com/ls1intum/Apollon/commit/1fdb9bc70b2fcfc119619876d595b36eebb36f8a) Thanks [@tamang29](https://github.com/tamang29)! - The playground can now simulate a live collaboration session across two browser tabs, with collapsible side panels that mimic host-app chrome — handy for trying out shared cursors and presence locally.
 
 - Updated dependencies [[`1fdb9bc`](https://github.com/ls1intum/Apollon/commit/1fdb9bc70b2fcfc119619876d595b36eebb36f8a), [`dfb4479`](https://github.com/ls1intum/Apollon/commit/dfb4479bbf15671a6332c96b659efd9dd31c127b)]:
-  - @tumaet/apollon@4.8.0
+  - @tumaet/apollon@4.9.0
 
 ## 4.5.1
 
@@ -70,7 +83,7 @@
 ### Patch Changes
 
 - Updated dependencies:
-  - @tumaet/apollon@4.8.0
+  - @tumaet/apollon@4.9.0
 
 ## 4.4.1
 
