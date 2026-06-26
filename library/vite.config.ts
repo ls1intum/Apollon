@@ -66,7 +66,15 @@ const REACT_PEERS = [
 // Apollon's own non-framework runtime deps. Inlined everywhere except the fully
 // external build, where the host resolves them — one shared copy and full SBOM
 // visibility instead of a copy buried inside the bundle.
-const RUNTIME_DEPS = [/^@dnd-kit\//, "zustand", "uuid", "@chenglou/pretext"]
+// Zustand is matched with subpaths (`zustand/middleware`, `zustand/shallow`) —
+// Rollup treats those as distinct ids, so an exact `"zustand"` would still
+// inline them into the external build.
+const RUNTIME_DEPS = [
+  /^@dnd-kit\//,
+  /^zustand(\/.*)?$/,
+  "uuid",
+  "@chenglou/pretext",
+]
 
 export default defineConfig({
   plugins: [
