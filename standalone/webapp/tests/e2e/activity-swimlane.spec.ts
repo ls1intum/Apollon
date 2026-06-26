@@ -273,7 +273,17 @@ test.describe("activity swimlane", () => {
     // The lifted item gets aria-pressed once the keyboard drag is active; wait
     // for that so the move key can't arrive before the pick-up is registered.
     await expect(handle).toHaveAttribute("aria-pressed", "true")
+
+    // dnd-kit announces every keyboard step in its aria-live region. Capture the
+    // pick-up announcement, fire the move, then wait for the announcement to
+    // CHANGE before dropping — otherwise under loaded CI the drop (Space) can land
+    // before ArrowUp commits, leaving the lane in its original slot (a flake).
+    const dndLiveRegion = page.locator('[id^="DndLiveRegion"]').first()
+    const pickupAnnouncement = (await dndLiveRegion.textContent()) ?? ""
     await page.keyboard.press("ArrowUp")
+    await expect
+      .poll(async () => (await dndLiveRegion.textContent()) ?? "")
+      .not.toBe(pickupAnnouncement)
     await page.keyboard.press("Space")
 
     // Lane labels swapped.
