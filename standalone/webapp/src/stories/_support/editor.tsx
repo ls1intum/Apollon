@@ -1,12 +1,14 @@
-/* Shared foundation for the editor (@tumaet/apollon) stories.
- *
- * Two render paths, mirroring the audit:
- *  - <ApollonFixture> renders a full read-only editor from a serialized UMLModel
- *    fixture. This is the canonical "show every diagram" path — the editor wires
- *    its own stores/ReactFlow internally, so no decorator is needed.
- *  - <ElementPreview> + EditorStoreDecorator render a single SVG element renderer
- *    in isolation (the same call the Sidebar makes for its drag ghosts), wrapped
- *    in the three zustand store contexts those SVGs read.
+/* Shared foundation for the editor (@tumaet/apollon) stories. Render paths, from
+ * heaviest to lightest:
+ *  - Full editor: <ApollonFixture> (read-only), <ApollonEditable>, <ApollonAssessable>
+ *    (assessment mode), <ApollonHighlightPicker> / <ApollonWithHighlights>. The
+ *    editor wires its own stores/ReactFlow, so no decorator is needed.
+ *  - Popovers: <SeededPopoverHarness> renders an edit/feedback popover's content
+ *    in isolation, seeding the diagram store + the four store contexts it reads;
+ *    <SelectionHarness> seeds the assessment-selection store for selection states.
+ *  - Single element: <ElementPreview> + EditorStoreDecorator (one SVG renderer,
+ *    as the Sidebar draws its drag ghosts); <ElementGallery>/<EdgeGallery> for the
+ *    per-type catalogs.
  *
  * Everything resolves from source via the webapp's vite aliases (@tumaet/apollon
  * -> library/lib) so stories stay in lockstep with the editor.

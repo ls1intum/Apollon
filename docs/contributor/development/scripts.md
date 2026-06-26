@@ -60,15 +60,16 @@ Run a production build locally — assumes `pnpm build` already ran.
 
 ## Lint and format
 
-| Script              | Does                                                       |
-| ------------------- | ---------------------------------------------------------- |
-| `pnpm lint`         | ESLint across library, server, webapp, vscode, and docs    |
-| `pnpm lint:fix`     | ESLint with `--fix` across library, server, webapp, vscode |
-| `pnpm format`       | Prettier write across all supported file types             |
-| `pnpm format:check` | Prettier check only — no writes (used in CI)               |
+| Script              | Does                                                           |
+| ------------------- | -------------------------------------------------------------- |
+| `pnpm lint`         | ESLint across ui, library, server, webapp, vscode, and docs    |
+| `pnpm lint:fix`     | ESLint with `--fix` across ui, library, server, webapp, vscode |
+| `pnpm format`       | Prettier write across all supported file types                 |
+| `pnpm format:check` | Prettier check only — no writes (used in CI)                   |
 
-Per-workspace variants (`lint:lib`, `lint:server`, `lint:webapp`, `lint:vscode`,
-`lint:docs`, and their `lint:fix:*` counterparts) exist for narrower runs.
+Per-workspace variants (`lint:ui`, `lint:lib`, `lint:server`, `lint:webapp`,
+`lint:vscode`, `lint:docs`, and their `lint:fix:*` counterparts) exist for
+narrower runs.
 `lint:docs` runs `markdownlint-cli2` over the docs Markdown **and** `tsc
 --noEmit` on the Docusaurus config + theme.
 

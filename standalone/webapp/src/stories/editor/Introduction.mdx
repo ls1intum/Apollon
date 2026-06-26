@@ -7,42 +7,91 @@ import { Meta } from "@storybook/addon-docs/blocks"
 The editor (`@tumaet/apollon`) is a Tailwind-free library that wires its own
 zustand stores and ReactFlow canvas internally. Its stories resolve from source
 via the webapp's Vite aliases (`@tumaet/apollon` → `library/lib`) so they stay
-in lockstep with the editor.
+in lockstep with the editor. The shared harness for every story below lives in
+`src/stories/_support/editor.tsx`.
 
-There are **three render paths**, mirroring the audit. The shared harness for all
-three lives in `src/stories/_support/editor.tsx`.
+Each of the 13 diagram types gets its own story file (`Editor/Class Diagram`,
+`Editor/BPMN`, …) with ~10–19 stories, plus two cross-cutting files:
+`Editor/Modes` and `Editor/Playground`. The 13 canonical per-type fixtures —
+which also drive the visual-regression suite — are exported from the harness as
+`diagramFixtures` / `fixtureByType`.
 
-## 1. `<ApollonFixture>` — the full editor
+## What the stories cover
 
-Renders a complete read-only editor from a serialized `UMLModel` fixture. This is
-the canonical "show every diagram" path — the editor wires its own
-stores/ReactFlow internally, so **no decorator is needed**. A sized container is
-required (the canvas renders blank with zero height), so these stories use
+Stories mount the editor (or a slice of it) through a small set of harness
+components, each isolating a different surface. A full-editor mount needs a sized
+container — the canvas renders blank at zero height — so those stories use
 `layout: "fullscreen"`.
 
-The 13 canonical per-type diagrams (which also drive the visual-regression
-suite) are exported as `diagramFixtures` / `fixtureByType`.
+### Full editor
 
-## 2. `<ElementPreview>` — a single SVG element
+- **`<ApollonFixture>`** — a complete read-only editor from a serialized
+  `UMLModel`. The canonical "show every diagram" path (and the GoF class-diagram
+  templates). The editor wires its own stores/ReactFlow, so **no decorator is
+  needed**.
+- **`<ApollonEditable>`** — the fully editable editor: the element palette
+  (Sidebar) shows, elements are selectable/movable, and clicking opens edit
+  popups. Pass a `model` to edit a populated sample or a `type` for a blank
+  canvas to build from scratch. This is the dominant per-type "Playground" /
+  "Blank" surface.
+- **`<ApollonAssessable>`** — the editor in **assessment** mode
+  (`mode={ApollonMode.Assessment}`), the grading surface. Default is the
+  _give-feedback_ workflow (click an element to score + comment); `readonly`
+  switches to the _see-feedback_ review workflow over populated `assessments`.
 
-Renders one SVG element renderer in isolation — the same call the editor Sidebar
-makes for its drag ghosts. It must be wrapped in `EditorStoreDecorator`, which
-provides the three zustand store contexts those SVGs read (diagram / metadata /
-assessment-selection), built from one fresh `Y.Doc` like a blank editor.
+### Highlights (quiz / interactive elements)
 
-`elementConfigsFor(type)` returns every palette element config for a diagram
-type, driving a per-family element gallery.
+- **`<ApollonHighlightPicker>`** — opens the editor on the **Highlight** view,
+  where an author marks elements interactive for an exam/quiz
+  (`defaultView`/`availableViews` expose the Modelling↔Highlight toggle).
+- **`<ApollonWithHighlights>`** — a read-only editor with **host-driven**
+  highlights painted on via the imperative `editor.setElementHighlights(...)`
+  overlay (id → CSS color), e.g. Athena suggestions or missing-feedback tints.
+  The overlay is ephemeral — never serialized or shared.
 
-## 3. `<SidebarHarness>` — the element palette
+### Galleries (elements & edges)
 
-Renders the editor Sidebar (the element palette) in isolation, per diagram type.
-The Sidebar reads `diagramType` / `view` from the metadata store and renders one
-`DraggableGhost` per palette element; `DraggableGhost` calls `useReactFlow()`, so
-a `ReactFlowProvider` is required — it's `@xyflow/react`'s documented way to
-mount flow-aware components outside the full canvas, not a workaround. The
-harness seeds the metadata store with the requested type and the Modelling view.
+- **`<ElementGallery>` / `<ElementPreview>`** — render the SVG element renderers
+  in isolation, the same call the Sidebar makes for its drag ghosts. These read
+  the three zustand stores, so they're wrapped in `EditorStoreDecorator`
+  (diagram / metadata / assessment-selection, built from one fresh `Y.Doc`).
+  `elementConfigsFor(type)` returns every palette element config for a type.
+- **`<EdgeGallery>` / `<EdgePreview>`** — every connector a diagram family
+  draws, via the editor's own `EdgeTypePreviewIcon` (the exact mini-edge the
+  edge-type dropdown shows). `edgeTypeCatalog` enumerates them.
+
+### Edit & feedback popovers
+
+- **`<SeededPopoverHarness>`** — renders a single edit or feedback popover's
+  content in isolation. `seed` populates the diagram store with the node/edge the
+  popover targets; the harness supplies the store contexts plus a hidden,
+  controlled ReactFlow (so edge/BPMN popovers resolve their element) inside
+  `.apollon-editor > .apollon-popover` for theme + popup styling. Drives the edit
+  popovers and the **give-/see-feedback** popovers (`ClassGiveFeedbackPopover`,
+  `ClassSeeFeedbackPopover`, the edge variants, …).
+
+### Assessment-review selection
+
+- **`<SelectionHarness>`** — the grading surface's multi-select. Mounts in
+  `mode=Assessment` + `readonly` (the combo under which renderers read
+  selection/hover from the assessment-selection store) and selects the given
+  ids, so stories can assert single, nested, and hover selection styling.
+
+### Modes (`Editor/Modes`)
+
+A focused set proving the editor's non-default surfaces against the Class
+fixture: the **Highlight** picker, the host-driven **highlight overlay**, the
+assessment-review **selection** model (single / nested / hover), the
+**Exporting** mode (static export — selection, popovers, and editing
+affordances dropped), and the **dark** theme. These carry `play` assertions
+where the rendered state is testable.
+
+### Playground (`Editor/Playground`)
+
+A single interactive editor with a live `readonly` toggle in assessment mode —
+flip between the give-feedback workflow and the see-feedback review surface.
 
 ## Browse
 
-Explore the rendered diagrams, elements, and chrome under **Editor** in the
-sidebar.
+Explore the rendered diagrams, elements, edges, popovers, and modes under
+**Editor** in the sidebar.

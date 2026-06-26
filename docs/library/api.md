@@ -46,19 +46,25 @@ Container, lifecycle, and two layers of editor options.
 `children` rendered alongside the canvas inside the editor's context
 provider.
 
+**Theming.** `theme` (a `--apollon-*` token object, typically from
+`createApollonTheme(...)`) and `dataTheme` (`"light" | "dark"`) are spread onto
+the mount node's `style` / `data-theme` on every render, so they are reactive in
+the React wrapper. See [Theming](/library/theming).
+
 **Initial-only options** — snapshotted at mount, ignored if they change
 afterwards. Re-key the component to apply them to a new editor.
 
-| Prop                   | Type             | Effect                                                          |
-| ---------------------- | ---------------- | --------------------------------------------------------------- |
-| `defaultModel`         | `UMLModel`       | Initial diagram.                                                |
-| `defaultType`          | `UMLDiagramType` | Initial diagram type when no `defaultModel` is supplied.        |
-| `defaultMode`          | `ApollonMode`    | Initial mode — `Modelling`, `Assessment`, or `Exporting`.       |
-| `defaultView`          | `ApollonView`    | Initial view.                                                   |
-| `availableViews`       | `ApollonView[]`  | Views the user may switch between at runtime.                   |
-| `enablePopups`         | `boolean`        | Enable inline edit/property popovers.                           |
-| `collaborationEnabled` | `boolean`        | Opt into Yjs real-time sync; wire the transport from `onMount`. |
-| `debug`                | `boolean`        | Debug overlays/logging.                                         |
+| Prop                   | Type                          | Effect                                                                                                                              |
+| ---------------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `defaultModel`         | `UMLModel`                    | Initial diagram.                                                                                                                    |
+| `defaultType`          | `UMLDiagramType`              | Initial diagram type when no `defaultModel` is supplied.                                                                            |
+| `defaultMode`          | `ApollonMode`                 | Initial mode — `Modelling`, `Assessment`, or `Exporting`.                                                                           |
+| `defaultView`          | `ApollonView`                 | Initial view.                                                                                                                       |
+| `availableViews`       | `ApollonView[]`               | Views the user may switch between at runtime.                                                                                       |
+| `enablePopups`         | `boolean`                     | Enable inline edit/property popovers.                                                                                               |
+| `collaborationEnabled` | `boolean`                     | Opt into Yjs real-time sync; wire the transport from `onMount`.                                                                     |
+| `collaboration`        | `ApollonCollaborationOptions` | Fine-grained collaboration config (user identity + per-feature presence/cursor/follow toggles). Superset of `collaborationEnabled`. |
+| `debug`                | `boolean`                     | Debug overlays/logging.                                                                                                             |
 
 **Reactive options** — applied via the matching setter when the prop
 changes; no rebuild. Passing `undefined` for any reactive prop leaves the
@@ -104,19 +110,22 @@ new ApollonEditor(element: HTMLElement, options?: ApollonOptions)
 
 Every field is optional.
 
-| Option                 | Type             | Default                        | Effect                                                                                                                                                                                           |
-| ---------------------- | ---------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `type`                 | `UMLDiagramType` | `model.type` or `ClassDiagram` | Diagram type for a fresh canvas. Ignored when `model` is supplied and carries its own `type`.                                                                                                    |
-| `mode`                 | `ApollonMode`    | `Modelling`                    | `Modelling`, `Exporting`, or `Assessment`. Drives which UI affordances render.                                                                                                                   |
-| `view`                 | `ApollonView`    | `Modelling`                    | `Modelling`, `Exporting`, or `Highlight`. Initial view.                                                                                                                                          |
-| `availableViews`       | `ApollonView[]`  | `[Modelling]`                  | Views the user may switch between. If supplied, the editor merges `Modelling`, the array, and the configured `view`. If omitted and `view` is `Highlight`, defaults to `[Modelling, Highlight]`. |
-| `readonly`             | `boolean`        | `false`                        | Locks the canvas. Can also be toggled at runtime with `setReadonly`.                                                                                                                             |
-| `enablePopups`         | `boolean`        | `true`                         | Enables the inline edit/property popovers.                                                                                                                                                       |
-| `model`                | `UMLModel`       | empty diagram                  | Initial diagram. Use `importDiagram` first if the JSON may be a v2/v3 model.                                                                                                                     |
-| `locale`               | `Locale`         | `en`                           | Accepted for forward compatibility; the editor currently renders in English regardless.                                                                                                          |
-| `debug`                | `boolean`        | `false`                        | Enables debug overlays/logging.                                                                                                                                                                  |
-| `collaborationEnabled` | `boolean`        | `false`                        | Opt into Yjs real-time sync. See [Collaboration](/library/api/collaboration). Disables the local undo manager.                                                                                   |
-| `scrollLock`           | `boolean`        | `false`                        | Prevents the canvas from capturing page scroll.                                                                                                                                                  |
+| Option                 | Type                          | Default                        | Effect                                                                                                                                                                                                                                                                                                  |
+| ---------------------- | ----------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type`                 | `UMLDiagramType`              | `model.type` or `ClassDiagram` | Diagram type for a fresh canvas. Ignored when `model` is supplied and carries its own `type`.                                                                                                                                                                                                           |
+| `mode`                 | `ApollonMode`                 | `Modelling`                    | `Modelling`, `Exporting`, or `Assessment`. Drives which UI affordances render.                                                                                                                                                                                                                          |
+| `view`                 | `ApollonView`                 | `Modelling`                    | `Modelling`, `Exporting`, or `Highlight`. Initial view.                                                                                                                                                                                                                                                 |
+| `availableViews`       | `ApollonView[]`               | `[Modelling]`                  | Views the user may switch between. If supplied, the editor merges `Modelling`, the array, and the configured `view`. If omitted and `view` is `Highlight`, defaults to `[Modelling, Highlight]`.                                                                                                        |
+| `readonly`             | `boolean`                     | `false`                        | Locks the canvas. Can also be toggled at runtime with `setReadonly`.                                                                                                                                                                                                                                    |
+| `enablePopups`         | `boolean`                     | `true`                         | Enables the inline edit/property popovers.                                                                                                                                                                                                                                                              |
+| `model`                | `UMLModel`                    | empty diagram                  | Initial diagram. Use `importDiagram` first if the JSON may be a v2/v3 model.                                                                                                                                                                                                                            |
+| `locale`               | `Locale`                      | `en`                           | Accepted for forward compatibility; the editor currently renders in English regardless.                                                                                                                                                                                                                 |
+| `debug`                | `boolean`                     | `false`                        | Enables debug overlays/logging.                                                                                                                                                                                                                                                                         |
+| `collaborationEnabled` | `boolean`                     | `false`                        | Opt into Yjs real-time sync. See [Collaboration](/library/api/collaboration). Disables the local undo manager.                                                                                                                                                                                          |
+| `scrollLock`           | `boolean`                     | `false`                        | Prevents the canvas from capturing page scroll.                                                                                                                                                                                                                                                         |
+| `collaboration`        | `ApollonCollaborationOptions` | —                              | Fine-grained collaboration config — `user` identity plus per-feature `showPresence` / `showCursors` / `showSelectionHighlights` / `showFollow` toggles. A superset of `collaborationEnabled`; setting `enabled` (or a `user`) here also turns sync on. See [Collaboration](/library/api/collaboration). |
+| `theme`                | `--apollon-*` token map       | —                              | `--apollon-*` CSS custom properties applied to the mount element. Build one with `createApollonTheme`. Unset tokens fall back to the built-in light/dark values. See [Theming](/library/theming).                                                                                                       |
+| `dataTheme`            | `"light" \| "dark"`           | inherited                      | Sets `data-theme` on the mount element. Omit to inherit whatever an ancestor declares (or the light default). See [Theming](/library/theming).                                                                                                                                                          |
 
 ## Lifecycle
 

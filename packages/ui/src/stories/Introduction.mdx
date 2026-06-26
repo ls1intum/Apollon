@@ -4,20 +4,86 @@ import { Meta } from "@storybook/addon-docs/blocks"
 
 # @tumaet/ui
 
-The shared shadcn component library for Apollon — base-nova components built on
-[Base UI](https://base-ui.com) and Tailwind CSS v4.
+`@tumaet/ui` is Apollon's shared component library and design-token system. It is
+the single source of truth for the UI primitives and the `--apollon-*` /
+`--home-*` tokens used by **both** delivery targets in the monorepo:
 
-These primitives are consumed by the webapp and (via the Tailwind-free
-`dist/components.css`) embedded by the editor library across host environments.
+- the **standalone webapp** (`standalone/webapp`), and
+- the **embeddable editor library** (`@tumaet/apollon`).
 
-## Theming
+The primitives are shadcn **`base-nova`** components (the registry `style` in
+`packages/ui/components.json`) built on [Base UI](https://base-ui.com)
+(`@base-ui/react`) and Tailwind CSS v4. Lucide provides the icon set.
 
-Components are themed entirely through CSS custom properties (the
-`--primitive-*` / `--apollon-*` / `--home-*` token layers in
-`src/styles/tokens.css`). Dark mode is a single mechanism: the
-`data-theme="dark"` attribute on the document root. Use the toolbar theme
-switcher above to toggle light/dark.
+## How the components are built
 
-## Browse
+Every primitive follows one deliberate pattern so it can ship to a Tailwind-free
+host without leaking utility classes:
 
-Explore the rendered primitives under **Components** in the sidebar.
+- A thin React wrapper over a **Base UI** primitive (e.g. `Button`, `Dialog`,
+  `Select`).
+- A **deliberately empty `cva()`** base — variants like `variant`/`size` only
+  validate props and surface the `VariantProps` type; they emit no classes.
+- The actual styling lives in `src/styles/components.css`, keyed on stable
+  `data-slot="…"` + `data-variant`/`data-size` attributes rather than inline
+  Tailwind utilities.
+
+`pnpm build:css` compiles `src/styles/components.css` into a Tailwind-free,
+Preflight-free `dist/components.css`. That compiled artifact is the styling layer
+both targets consume — do not hand-edit it.
+
+## Dual delivery
+
+The same source components reach the two targets differently:
+
+- **Webapp** — imports the React sources directly
+  (`@tumaet/ui/components/button`, …) and runs Tailwind itself via
+  `@tumaet/ui/styles/theme.css`, which generates the utilities used for app
+  layout. The shared primitives are styled by the precompiled
+  `dist/components.css`, imported alongside.
+- **Editor library** (`@tumaet/apollon`) — bundles the compiled, **Tailwind-free**
+  `dist/components.css` into its single self-contained `style.css`. The published
+  bundle ships **no Tailwind and no Preflight**, so an embed can't collide with a
+  host's utility classes or design tokens. Theming is framework-agnostic CSS
+  variables (see the **Theming** page).
+
+Because both targets consume the same `components.css` and the same token files,
+a primitive looks and themes identically in the app and inside an embedded
+editor.
+
+## Tokens & theming (at a glance)
+
+Theming is entirely CSS custom properties — there is no runtime `<style>`
+injection, so first paint is always correct. Tokens cascade through layers
+defined in `src/styles/tokens.css`:
+
+1. `--primitive-*` — the literal brand/neutral palette (the only place `#hex` /
+   `rgb()` values live).
+2. `--apollon-*` — the **large, public** editor theming API embedders override.
+3. `--home-*` — the webapp's app-level semantics, routed through `--apollon-*`.
+
+A fourth, internal bridge in `src/styles/theme.css` (`@theme inline`) maps
+`--apollon-*` / `--home-*` onto Tailwind's `--color-*` / `--radius-*` so utility
+classes such as `bg-card` resolve to the tokens. See the **Theming** page for the
+full story and the **Tokens** page for a live, re-theming swatch view.
+
+## Dark mode
+
+Dark mode is one mechanism: the **`data-theme="dark"`** attribute. The webapp
+sets it on the document root (`:root[data-theme="dark"]`); the published editor
+sets it on its own mount node so a scoped `[data-theme="dark"]` themes a mounted
+editor without touching `:root`. Components read the semantic tokens, so the flip
+re-themes everything with no per-component dark variants. Use the **theme toolbar
+toggle** above to switch light / dark.
+
+## Component families
+
+Browse the rendered primitives under **Components** in the sidebar:
+
+- **Actions** — `button`, `icon-button`, `toggle`, `toggle-group`.
+- **Forms & inputs** — `input`, `textarea`, `checkbox`, `radio-group`, `field`,
+  `label`, `color-picker`.
+- **Overlays & menus** — `dialog`, `alert-dialog`, `sheet`, `popover`,
+  `hover-card`, `tooltip`, `dropdown-menu`, `select`, `command`.
+- **Navigation & layout** — `tabs`, `card`, `separator`, `aspect-ratio`.
+- **Feedback & status** — `alert`, `badge`, `skeleton`, `spinner`.
