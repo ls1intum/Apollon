@@ -18,9 +18,6 @@ const isWithinThreshold = (
   inclusive: boolean
 ) => (inclusive ? delta <= threshold : delta < threshold)
 
-/**
- * Get the bounds of a node (considering its position and dimensions)
- */
 export const getNodeBounds = (node: Node, allNodes?: Node[]) => {
   const position = allNodes
     ? getPositionOnCanvas(node, allNodes)
@@ -94,9 +91,7 @@ const shouldUseAsGuideTarget = (
   const nodeParentId = getContainingParentId(node, allNodes, draggedNode.id)
 
   if (!draggedParentId) {
-    // Dragged node is top-level: align with everything except nodes that
-    // are children of a parent the dragged node has no relation to...
-    // actually align with all nodes including parent frames
+    // Dragged node is top-level: align with all nodes, including parent frames.
     return true
   }
 
@@ -112,9 +107,6 @@ const shouldUseAsGuideTarget = (
   return isSibling || isTopLevel
 }
 
-/**
- * Calculate alignment guides based on dragged node and other nodes
- */
 export const calculateAlignmentGuides = (
   draggedNode: Node,
   allNodes: Node[],
@@ -236,9 +228,6 @@ export const calculateAlignmentGuides = (
   return guides
 }
 
-/**
- * Snap node position to nearby nodes
- */
 export const snapNodeToGuides = (
   draggedNode: Node,
   guides: AlignmentGuide[],

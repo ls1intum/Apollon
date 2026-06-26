@@ -30,8 +30,7 @@
    style.css, concatenated into the headless-export chunk, AND available to the
    webapp HOME (which imports components.css but NOT this app.css). The editor's
    structural rules below CONSUME those tokens via var(); they are not redefined
-   here, so there is exactly one definition and no drift. (The light/dark/coarse-
-   pointer token blocks moved with them.) */
+   here, so there is exactly one definition and no drift. */
 
 .react-flow {
   --panel-background: var(--apollon-background, #fff);
@@ -354,8 +353,8 @@
   cursor: pointer;
   font-weight: 600;
   white-space: nowrap;
-  /* Bumped from 12px: the prior editor labels read a touch small. 13px keeps the
-     palette compact while matching the select/label/hint baseline below. */
+  /* 13px keeps the palette compact while matching the select/label/hint
+     baseline below. */
   font-size: 13px;
 }
 
@@ -375,7 +374,7 @@
   width: 100%;
   max-width: 160px;
   padding: 4px;
-  font-size: 13px; /* up from 11px — see view-button note above */
+  font-size: 13px; /* matches the view-button baseline above */
   line-height: 1.4;
 }
 
@@ -928,13 +927,13 @@ svg.react-flow__connectionline {
   cursor: grab;
 }
 
-/* Native UI primitives (formerly MUI), tokened via `--apollon-*`. Base UI
-   portals to `document.body`, so these are global, not scoped under
-   `.apollon-editor`; theme vars are forwarded by `GenericPopover`. */
+/* Native UI primitives, tokened via `--apollon-*`. Base UI portals to
+   `document.body`, so these are global, not scoped under `.apollon-editor`;
+   theme vars are forwarded by `GenericPopover`. */
 
-/* The button / icon-button / text-field / tooltip primitives are now shared
-   from @tumaet/ui and styled by the bundled, Tailwind-free components.css
-   (data-slot rules), so their former `.apollon-*` rules live there, not here. */
+/* The button / icon-button / text-field / tooltip primitives are shared from
+   @tumaet/ui and styled by the bundled, Tailwind-free components.css (data-slot
+   rules), so their `.apollon-*` rules live there, not here. */
 
 /* Checkbox */
 .apollon-checkbox-label {
@@ -953,10 +952,10 @@ svg.react-flow__connectionline {
   cursor: pointer;
 }
 
-/* Typography primitive. Color + per-variant size/weight (was an inline
-   React.CSSProperties map) keyed on data-variant, routed through the themed
-   contrast token. Callers' sx/style still override via the element's own
-   inline style (higher specificity than this rule). h1–h5 inherit by design. */
+/* Typography primitive. Color + per-variant size/weight keyed on data-variant,
+   routed through the themed contrast token. Callers' style still overrides via
+   the element's own inline style (higher specificity than this rule). h1–h5
+   inherit by design. */
 [data-slot="typography"] {
   color: var(--apollon-primary-contrast, #000);
 }
@@ -1090,7 +1089,7 @@ svg.react-flow__connectionline {
 }
 
 .apollon-select-label {
-  font-size: 0.8125rem; /* 13px — up from 0.75rem (12px) for legibility */
+  font-size: 0.8125rem; /* 13px for legibility */
   color: var(--apollon-primary-contrast, #000);
   margin-bottom: 2px;
 }
@@ -1287,8 +1286,8 @@ svg.react-flow__connectionline {
 }
 
 /* Style editor (shared Node/Edge panel). Header row, the opened color panel,
-   and each color row — formerly inline React.CSSProperties — keyed on the
-   data-slots StyleEditorPanel sets and driven by --apollon-* tokens. */
+   and each color row, keyed on the data-slots StyleEditorPanel sets and driven
+   by --apollon-* tokens. */
 .apollon-style-editor {
   display: flex;
   flex-direction: column;
@@ -1322,9 +1321,8 @@ svg.react-flow__connectionline {
   .apollon-style-editor__header-actions {
   margin-left: 0;
 }
-/* Optional bold title that leads the header row (e.g. the «Title» node). The
-   bold weight + trailing gap were inline; they live here so NodeStyleEditor
-   only sets the class. Inherits the themed Typography color. */
+/* Optional bold title that leads the header row (e.g. the «Title» node), so
+   NodeStyleEditor only sets the class. Inherits the themed Typography color. */
 .apollon-node-style-editor-title {
   font-weight: bold;
   margin-right: 8px;
@@ -1362,7 +1360,7 @@ svg.react-flow__connectionline {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  /* Sits above sibling header content (was ZINDEX.HEADER_SWITCH inline). */
+  /* Sits above sibling header content. */
   position: relative;
   z-index: 1;
   min-height: 28px;
@@ -1372,7 +1370,7 @@ svg.react-flow__connectionline {
   background: transparent;
   color: var(--apollon-primary-contrast, #000);
   font: inherit;
-  font-size: 0.8125rem; /* 13px — up from 0.75rem (12px) for legibility */
+  font-size: 0.8125rem; /* 13px for legibility */
   line-height: 1;
   white-space: nowrap;
   cursor: pointer;

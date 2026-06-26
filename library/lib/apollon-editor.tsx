@@ -927,11 +927,9 @@ export class ApollonEditor {
 
   /**
    * Host-driven element highlighting. Paints a translucent overlay over each
-   * given node / edge / class-member id in the supplied CSS color — the v4
-   * replacement for v3's `UMLModelElement.highlight` field and
-   * `ApollonEditor.select()`. Typical hosts: an assessment editor marking
-   * elements that are missing feedback, or Athena marking elements that have
-   * automatic-feedback suggestions.
+   * given node / edge / class-member id in the supplied CSS color. Typical
+   * hosts: an assessment editor marking elements that are missing feedback, or
+   * Athena marking elements that have automatic-feedback suggestions.
    *
    * The highlight is an ephemeral view overlay: it is NOT written into the
    * model, NOT serialized by `get model`, and NOT shared with collaborators.

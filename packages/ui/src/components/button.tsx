@@ -7,7 +7,7 @@ import { cn } from "../lib/utils"
 // data-slot="button" + data-variant/-size, so the published, Tailwind-free
 // editor library can bundle the compiled CSS and embed anywhere (no inline
 // Tailwind utilities to leak into a host). cva here only validates/defaults the
-// variant + size and surfaces the same VariantProps type the API always had.
+// variant + size and surfaces the VariantProps type.
 const buttonVariants = cva("", {
   variants: {
     variant: {

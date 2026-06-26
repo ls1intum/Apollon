@@ -9,9 +9,6 @@ import {
   getSmoothStepPath,
 } from "@xyflow/react"
 
-/**
- * Adjusts the target coordinates based on the position and marker padding.
- */
 export const adjustTargetCoordinates = (
   targetX: number,
   targetY: number,
@@ -30,9 +27,6 @@ export const adjustTargetCoordinates = (
   return { targetX, targetY }
 }
 
-/**
- * Adjusts the source coordinates based on the position and marker padding.
- */
 export const adjustSourceCoordinates = (
   sourceX: number,
   sourceY: number,
@@ -399,11 +393,10 @@ const buildOffsets = (visible: number[]): AxisHandlePlan["offsets"] => {
   return [v4, v4, v4, v4, v4, v4, v4, v4, v4]
 }
 
-// Stage-1 placement (three-arc layout, classic). Uses the historical
-// arithmetic-progression search inside the cosmetic [HANDLE_RATIO_START,
-// HANDLE_RATIO_END] band so the corner arcs land exactly where they did
-// before this refactor. Returns the three visible arc positions, or null if
-// the side is too short for the band-based search to be meaningful.
+// Stage-1 placement (three-arc layout). An arithmetic-progression search
+// inside the cosmetic [HANDLE_RATIO_START, HANDLE_RATIO_END] band places the
+// corner arcs. Returns the three visible arc positions, or null if the side is
+// too short for the band-based search to be meaningful.
 const findStage1Offsets = (axisLength: number): number[] | null => {
   if (axisLength <= 0) return null
 
@@ -443,9 +436,8 @@ const findStage1Offsets = (axisLength: number): number[] | null => {
   }
 
   if (!bestOffsets) return null
-  // The historical layout exposes the band's slot 0, slot 2 and slot 4 as
-  // visible arcs; the inner slots 1 and 3 are not used as arcs in this
-  // stage.
+  // Expose the band's slot 0, slot 2 and slot 4 as visible arcs; the inner
+  // slots 1 and 3 are not used as arcs in this stage.
   return [bestOffsets[0], bestOffsets[2], bestOffsets[4]]
 }
 
@@ -472,8 +464,8 @@ const findStage2Offsets = (axisLength: number): number[] | null => {
 // arcs:
 //   * stage 2 — five arcs, requires adjacent arcs ≥ ARC_LENGTH_PX apart in
 //               the band-based layout.
-//   * stage 1 — three arcs at the historical band positions; arcs sit at
-//               slots 0, 4, 8 of the nine-slot model.
+//   * stage 1 — three arcs at the band positions; arcs sit at slots 0, 4, 8
+//               of the nine-slot model.
 //   * stage 0 — single arc at the centre.
 const solveAxisPlan = (axisLength: number): AxisHandlePlan => {
   if (!Number.isFinite(axisLength) || axisLength <= 0) return EMPTY_PLAN
@@ -814,9 +806,6 @@ export function findClosestHandle({
   return closest.label
 }
 
-/**
- * Helper function to get handle position on ellipse perimeter
- */
 export function getEllipseHandlePosition(
   centerX: number,
   centerY: number,

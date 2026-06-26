@@ -592,7 +592,7 @@ export const createDiagramStore = (
               })
             }
 
-            // Select changes are handled previously
+            // Select changes are handled elsewhere; drop them here.
             const filteredChanges = changes.filter(
               (change) => change.type !== "select"
             )

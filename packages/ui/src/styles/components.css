@@ -10,7 +10,7 @@
    the webapp (button, icon-button, input/text-field, tooltip) get their styles
    from THIS file, compiled to a self-contained, Preflight-free dist/components.css.
 
-   Mechanism (proven):
+   Mechanism:
      - `@reference "tailwindcss"` + `@reference "./theme.css"` make Tailwind's
        utilities and the project's `@theme inline` color/radius mappings
        available to `@apply` WITHOUT emitting Tailwind's default theme or any
@@ -30,13 +30,12 @@
 
 @import "./tokens.css";
 
-/* Border-color safety net (Tailwind v4.0.17 dropped Preflight's border reset, so
-   bare `border`/`border-t`/`border-b` utilities inherit `currentColor` =
-   foreground → near-black dividers in light, pure-white in dark). Restore
-   Preflight's behaviour: default every border to the design token so dividers
-   stay subtle and theme-following. This mirrors Tailwind v3 Preflight's exact
-   rule. Scoped under @layer base so any explicit border-color utility (which
-   Tailwind emits in the `utilities` layer) still wins. */
+/* Border-color safety net (Tailwind v4 ships no Preflight border reset, so bare
+   `border`/`border-t`/`border-b` utilities inherit `currentColor` = foreground →
+   near-black dividers in light, pure-white in dark). Default every border to the
+   design token so dividers stay subtle and theme-following. Scoped under @layer
+   base so any explicit border-color utility (which Tailwind emits in the
+   `utilities` layer) still wins. */
 @layer base {
   *,
   ::before,
@@ -221,16 +220,14 @@
 /* ──────────────────────────────────────────────────────────────────────────
    Shared editor CHROME — .apollon-glass + .apollon-chrome-iconbtn.
 
-   These were authored in the editor's library/lib/styles/app.css, but that file
-   only loads INSIDE a mounted editor. The webapp HOME (rendered with no editor
-   mounted) needs the same floating-glass surface + icon-control idiom for its
-   island band, so the class definitions live HERE in the webapp-available,
-   Preflight-/asset-free components.css instead — the editor still gets them
-   (App.tsx side-effect-imports this file), and they reference only the
-   --apollon-chrome-* tokens (single-sourced in tokens.css), so the rendered
-   surface/control is byte-identical wherever the class is applied. Plain CSS
-   (not @apply) and OUTSIDE @layer components so they keep the same unlayered
-   cascade weight the editor's app.css gave them.
+   The webapp HOME (rendered with no editor mounted) needs the same floating-glass
+   surface + icon-control idiom for its island band, so the class definitions live
+   HERE in the webapp-available, Preflight-/asset-free components.css — the editor
+   gets them too (App.tsx side-effect-imports this file), and they reference only
+   the --apollon-chrome-* tokens (single-sourced in tokens.css), so the rendered
+   surface/control is byte-identical wherever the class is applied. Plain CSS (not
+   @apply) and OUTSIDE @layer components so they stay unlayered — unlayered
+   declarations outrank the @layer components rules.
    ────────────────────────────────────────────────────────────────────────── */
 
 /* Shared glass surface for every floating chrome object — header islands,

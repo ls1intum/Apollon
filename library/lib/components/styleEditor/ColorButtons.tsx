@@ -9,22 +9,21 @@ import {
   SWATCH_NAMES,
 } from "@tumaet/ui/lib/color-swatch-tokens"
 
-// Embed-safe editor color-picker. Mirrors the @tumaet/ui color-picker
-// (color-picker.tsx) STRUCTURE — a swatch trigger that opens a Popover holding
-// a swatch grid plus a native custom-color input — but ships NO Tailwind
-// utilities: every part carries a data-slot and is styled by semantic CSS in
-// app.css keyed on those attributes and driven by --apollon-* tokens + the
-// radius scale. That parallel impl is intentional: the webapp twin can't be
-// reused in the Tailwind-free embed bundle.
+// Embed-safe editor color-picker. Mirrors the @tumaet/ui color-picker STRUCTURE
+// — a swatch trigger that opens a Popover holding a swatch grid plus a native
+// custom-color input — but ships NO Tailwind utilities: every part carries a
+// data-slot and is styled by semantic CSS in app.css keyed on those attributes
+// and driven by --apollon-* tokens. The parallel impl exists because the webapp
+// twin can't be reused in the Tailwind-free embed bundle.
 //
 // The swatch palette + native-input fallback are shared DATA, imported from
 // @tumaet/ui/lib/color-swatch-tokens (plain TS, embed-safe — no CSS) so they
-// can't drift from the webapp twin. Here each base name maps to its
-// --apollon-swatch-* token (defined in packages/ui tokens.css), and the value
-// handed back to the consumer is the CSS `var(...)` reference, so a chosen
-// swatch re-resolves per theme. A custom color picked through the native input
-// is a real hex string. There is no luminance/contrast math: the selected check
-// mark contrasts via mix-blend in CSS, not a JS helper.
+// can't drift from the webapp twin. Each base name maps to its
+// --apollon-swatch-* token (packages/ui tokens.css); the value handed back to
+// the consumer is the CSS `var(...)` reference, so a chosen swatch re-resolves
+// per theme. A custom color picked through the native input is a real hex
+// string. No luminance/contrast math: the selected check mark contrasts via
+// mix-blend in CSS, not a JS helper.
 const SWATCH_TOKENS = SWATCH_NAMES.map(
   (name) => `--apollon-swatch-${name}`
 ) as readonly string[]

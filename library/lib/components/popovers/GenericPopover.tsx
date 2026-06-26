@@ -16,7 +16,7 @@ interface GenericPopoverProps {
   style?: React.CSSProperties
 }
 
-// MUI's `transformOrigin` is the popover's own corner, so it dictates growth
+// `transformOrigin` is the popover's own corner, so it dictates growth
 // direction: anchored-left opens right, anchored-right opens left.
 function toSideAlign(transformOrigin: PopoverOrigin): {
   side: "top" | "bottom" | "left" | "right"

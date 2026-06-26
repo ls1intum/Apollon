@@ -197,9 +197,7 @@
   /* Public radius scale — the embedder-tunable corner ramp for the shared editor
      primitives (cards/pills, controls/inputs, panels/popovers). sm/lg are
      app-fixed; md routes through the base --apollon-radius so tuning that one
-     token still cascades to controls. These REPLACE the editor's former ad-hoc
-     4/6/8/10px radius literals and the webapp-private --home-radius-* the editor
-     used to reach into. */
+     token still cascades to controls. */
   --apollon-radius-sm: 4px;
   --apollon-radius-md: var(--apollon-radius);
   --apollon-radius-lg: 8px;
@@ -212,10 +210,8 @@
 
   /* ── Editor chrome (--apollon-chrome-*) — the SINGLE source ─────────────────
      The full floating-chrome design system (glass surface, border/text ramp,
-     dimensional btn/pad/island system, motion). This used to live in the
-     editor's library/lib/styles/app.css :root, with only a 4-token subset
-     mirrored here; that split drifted. It now lives ONLY here so there is one
-     definition, and app.css/components.css/the webapp home all CONSUME it via
+     dimensional btn/pad/island system, motion). It lives ONLY here so there is
+     one definition, and app.css/components.css/the webapp home all CONSUME it via
      var(). Every surface/border/text value is color-mix-derived from the two
      tokens a host already themes (--apollon-background + --apollon-primary-
      contrast), so theming those two gives correct light/dark chrome for free;
@@ -493,7 +489,7 @@
   --home-shadow-md: var(--apollon-shadow);
   --home-shadow-overlay-box: 0 8px 20px var(--home-shadow-overlay);
 
-  /* Radius scale — theme-independent. Replaces ad-hoc 2/4/6/8/15px values.
+  /* Radius scale — theme-independent.
      sm: cards & pills (crisp)  md: buttons & inputs  lg: menus/popovers  xl: modal shell
      md/lg remap ONE-DIRECTIONALLY onto the public --apollon-radius-* scale so the
      webapp shares the editor's tunable ramp; sm/xl stay app-only. (--apollon-*
@@ -535,10 +531,10 @@
 
   /* Editor neutrals / status (dark). These primitives are REDEFINED in light too,
      so they stay as named primitives (the light/dark pair is the abstraction).
-     Editor surfaces that had a single dark-only pass-through primitive
-     (bg-base/-variant, gray-base/-variant, switch-border, list-group,
-     btn-outline-secondary, modal-bottom-border) are now inlined straight into the
-     --apollon-* dark deltas below, since a one-use 1:1 alias added no value. */
+     Editor surfaces with a single dark-only value (bg-base/-variant,
+     gray-base/-variant, switch-border, list-group, btn-outline-secondary,
+     modal-bottom-border) are inlined straight into the --apollon-* dark deltas
+     below, since a one-use 1:1 alias would add no value. */
   --primitive-slate-500: #888;
   --primitive-grid: #303530;
   --primitive-warning-yellow: #ffffff;

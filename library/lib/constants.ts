@@ -178,8 +178,7 @@ export const LAYOUT = Object.freeze({
 
 const generateUUID = () => uuidv4()
 
-// Interface-component sizing. The flat aliases below are local-only —
-// they were leaking publicly through the constants module before. Public
+// Interface-component sizing. The flat aliases below are local-only; public
 // consumers (and the rest of the library) should reach for `INTERFACE.*`.
 const INTERFACE_SIZE = 30
 const INTERFACE_RADIUS = INTERFACE_SIZE / 2
@@ -198,7 +197,7 @@ export const INTERFACE = Object.freeze({
 /* -------------------------------------------------------------------------- */
 // Base marker size. `MARKER_BASE_SIZE` scales the inline reachability-graph
 // arrow against the shared MARKERS sprite; `BPMN_MARKER_SIZE` is local-only
-// (used a few lines below for BPMN message markers — was incorrectly public).
+// (used a few lines below for BPMN message markers).
 export const MARKER_BASE_SIZE = 18
 const BPMN_MARKER_SIZE = 11
 

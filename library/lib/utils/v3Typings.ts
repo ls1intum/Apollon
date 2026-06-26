@@ -6,7 +6,6 @@ export type V3Selection = {
   relationships: { [id: string]: boolean }
 }
 
-// Add specific V3 element types based on the old typings
 export type V3UMLClassifier = {
   attributes: string[] // Array of attribute element IDs
   methods: string[] // Array of method element IDs
@@ -96,7 +95,7 @@ export type V3UMLReachabilityGraphMarking = {
 
 export interface V3UMLModel {
   version: string
-  type: string // Changed from UMLDiagramType to string to allow any type during conversion
+  type: string // Loose `string` (not UMLDiagramType) to allow any type during conversion
   size: {
     width: number
     height: number

@@ -14,11 +14,10 @@ type Props = Omit<SVGProps<SVGTextElement>, "x" | "y"> & {
    * Anchor y coordinate (meaning depends on `verticalAnchor`).
    *
    * For every anchor mode we treat `y` as if it were the `y` of a single-line
-   * `<text>` with `dominantBaseline="middle"`. That makes `MultilineText` a
-   * drop-in replacement for the old `<CustomText>` pattern: the first line (or
-   * the only line) renders at exactly the same visual position as before, and
-   * additional lines grow in the natural direction (down for `top`, up for
-   * `bottom`, split either way for `middle`).
+   * `<text>` with `dominantBaseline="middle"`: the first line (or the only
+   * line) renders at exactly that visual position, and additional lines grow in
+   * the natural direction (down for `top`, up for `bottom`, split either way
+   * for `middle`).
    */
   y: number
   /** Maximum line width in SVG user units. */
