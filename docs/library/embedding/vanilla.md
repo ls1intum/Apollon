@@ -9,24 +9,17 @@ description: Drop Apollon into a plain HTML page with one script tag.
 The standalone subpath works as a single ESM module loaded directly from a
 CDN. No build step, no bundler.
 
-`yjs` and `y-protocols` are required peers, so the no-bundler path must resolve
-them too. Declare them in an [import map](https://developer.mozilla.org/docs/Web/HTML/Element/script/type/importmap):
+`yjs` and `y-protocols` are required peers, but on the CDN path esm.sh resolves
+and serves them from the import URL automatically — there is nothing extra to
+load. (With a bundler you install the peers yourself — see
+[Install](/library/embedding/install).)
 
 ```html
 <link rel="stylesheet" href="https://esm.sh/@tumaet/apollon@4.8.0/style.css" />
 <div id="apollon" style="width: 100%; height: 600px"></div>
 
-<script type="importmap">
-  {
-    "imports": {
-      "yjs": "https://esm.sh/yjs@13.6.20",
-      "y-protocols": "https://esm.sh/y-protocols@1.0.6"
-    }
-  }
-</script>
-
 <script type="module">
-  import { ApollonEditor } from "https://esm.sh/@tumaet/apollon@4.8.0?external=yjs,y-protocols"
+  import { ApollonEditor } from "https://esm.sh/@tumaet/apollon@4.8.0"
 
   const saved = localStorage.getItem("diagram")
   const editor = new ApollonEditor(document.getElementById("apollon"), {
@@ -43,15 +36,6 @@ them too. Declare them in an [import map](https://developer.mozilla.org/docs/Web
 
 Refresh the page and the diagram is still there. Defaults — class diagram,
 modelling mode, English — fill in for everything the example doesn't pass.
-
-:::note Why the import map and `?external`
-Yjs must be a **singleton** — a page must never load two copies. The
-`?external=yjs,y-protocols` query tells esm.sh not to inline its own Yjs into
-the Apollon bundle, and the import map points both Apollon and any other code on
-the page (a host that already loads Yjs, for example) at the same module URL, so
-they share one instance. Keep the import-map versions inside Apollon's peer
-ranges (`yjs ^13.6.0`, `y-protocols ^1.0.6`).
-:::
 
 ## Why esm.sh
 
@@ -82,7 +66,7 @@ import {
   ApollonEditor,
   ApollonMode,
   UMLDiagramType,
-} from "https://esm.sh/@tumaet/apollon@4.8.0?external=yjs,y-protocols"
+} from "https://esm.sh/@tumaet/apollon@4.8.0"
 
 const editor = new ApollonEditor(document.getElementById("apollon"), {
   type: UMLDiagramType.BPMN,
