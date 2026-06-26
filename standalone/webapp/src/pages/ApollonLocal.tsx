@@ -364,8 +364,9 @@ export const ApollonLocal: FC = () => {
           return
         }
         openModal("CONFIRM_RESTORE", {
-          diagramId,
-          versionId,
+          // Resolve the target here (we already hold the list) so the modal
+          // doesn't re-read the store for data we have.
+          version: versions.find((v) => v.id === versionId) ?? null,
           onConfirm: async () => {
             await performRestore(versionId)
           },
@@ -375,7 +376,7 @@ export const ApollonLocal: FC = () => {
         toast.error(t.restoreFailed)
       }
     },
-    [editor, diagramId, resolveBody, performRestore, openModal]
+    [editor, diagramId, versions, resolveBody, performRestore, openModal]
   )
 
   const handleVersionSaved = useCallback(() => {

@@ -24,22 +24,11 @@ import { ShareLinkRow, MODE_OPTIONS } from "./ShareLinkRow"
 import { useShareableDiagram } from "./useShareableDiagram"
 
 type ShareDashboardModalProps = {
+  /** The persisted model to share; opened from the dashboard card. */
   modelId?: string
 }
 
-const resolveProps = (props: unknown): ShareDashboardModalProps => {
-  if (!props || typeof props !== "object") return {}
-  const candidate = props as ShareDashboardModalProps
-  return {
-    modelId:
-      typeof candidate.modelId === "string" ? candidate.modelId : undefined,
-  }
-}
-
-export const ShareDashboardModal = (
-  props: ShareDashboardModalProps | Record<string, unknown>
-) => {
-  const { modelId } = resolveProps(props)
+export const ShareDashboardModal = ({ modelId }: ShareDashboardModalProps) => {
   const { closeModal, openModal } = useModalContext()
   const navigate = useNavigate()
 

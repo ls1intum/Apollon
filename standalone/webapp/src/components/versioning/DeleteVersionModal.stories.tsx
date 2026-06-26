@@ -11,9 +11,9 @@ import {
 import { DeleteVersionModal } from "./DeleteVersionModal"
 
 /**
- * Body of the delete-version confirmation modal. It reads the target version
- * from `useVersionStore` to name it in the warning copy, and only deletes on
- * confirm. With no matching version seeded it falls back to generic copy.
+ * Body of the delete-version confirmation modal. The opener passes the target
+ * `version` to name it in the warning copy, and it only deletes on confirm.
+ * With `version: null` it falls back to generic copy.
  */
 
 const VERSION_ID = "version-5"
@@ -34,10 +34,15 @@ const meta = {
     docs: { story: { inline: false, height: "360px" } },
   },
   decorators: [withModalFrame({ title: "Delete version", variant: "confirm" })],
-  args: { diagramId: SAMPLE_DIAGRAM_ID, versionId: VERSION_ID },
+  args: {
+    diagramId: SAMPLE_DIAGRAM_ID,
+    versionId: VERSION_ID,
+    version: target,
+  },
   argTypes: {
     diagramId: { control: false, table: { category: "Data" } },
     versionId: { control: false, table: { category: "Data" } },
+    version: { control: false, table: { category: "Data" } },
   },
   beforeEach: () => {
     resetVersionStore()
@@ -60,7 +65,7 @@ export const FallbackCopy: Story = {
   beforeEach: () => {
     resetVersionStore()
   },
-  args: { versionId: "missing-version" },
+  args: { versionId: "missing-version", version: null },
   play: async () => {
     const canvas = within(document.body)
     await expect(

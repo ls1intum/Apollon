@@ -1,5 +1,4 @@
 import { Link } from "@tanstack/react-router"
-import { useEffect, useRef, useState } from "react"
 import { Button } from "@tumaet/ui/components/button"
 import { ShareIcon } from "lucide-react"
 import {
@@ -8,7 +7,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@tumaet/ui/components/tooltip"
-import { useEditorContext, useModalContext } from "@/contexts"
+import { useModalContext } from "@/contexts"
 import { useMediaQuery } from "@/hooks"
 import { ALL_DIAGRAMS_LABEL } from "@/lib/navProvenance"
 import { BrandLockup } from "./BrandLockup"
@@ -20,7 +19,9 @@ import { VersionHistoryButton } from "./VersionHistoryButton"
 import { ThemeSwitcherMenu } from "./ThemeSwitcher"
 import { MobileBackPill, MobileActionsPill } from "./MobileIslands"
 import { navbarButtonStyle } from "./styleConstants"
-import { Island, GroupDivider, IslandInput } from "./islandPrimitives"
+import { Island, GroupDivider } from "./islandPrimitives"
+import { HeaderTitleField } from "./HeaderTitleField"
+import { useDiagramTitle } from "./useDiagramTitle"
 
 /**
  * The whole editor header as one fluid flex row inside the `header` overlay band:
@@ -103,54 +104,12 @@ export function HeaderBrandIsland({ showLogo = true }: { showLogo?: boolean }) {
 }
 
 /**
- * Top-center: the diagram title as a quiet document-identity capsule (a
- * borderless field on the glass surface; the island itself is the input chrome).
+ * Top-center container: pairs the {@link useDiagramTitle} editor-store wiring
+ * with the pure {@link HeaderTitleField} view.
  */
 export function HeaderTitleIsland() {
-  const { editor } = useEditorContext()
-  const [title, setTitle] = useState(
-    editor?.getDiagramMetadata().diagramTitle || ""
-  )
-  const subId = useRef<number | undefined>(undefined)
-
-  useEffect(() => {
-    if (!editor) return
-    subId.current = editor.subscribeToDiagramNameChange((t) => setTitle(t))
-    // Initial read from the editor store on (re)mount / editor swap.
-    setTitle(editor.getDiagramMetadata().diagramTitle || "")
-    return () => {
-      if (subId.current !== undefined) editor.unsubscribe(subId.current)
-    }
-  }, [editor])
-
-  return (
-    // The title island is sized to the TITLE TEXT (`w-fit` + the input's `size`),
-    // not the track — a short name gets a short field, growing as you type up to
-    // the 560px cap (then the text scrolls). It sits LEFT-aligned with the rest of
-    // the track open to its right.
-    <Island
-      className="apollon-chrome-title-island w-fit"
-      style={{ maxWidth: "560px" }}
-    >
-      <IslandInput
-        value={title}
-        onChange={(e) => {
-          editor?.updateDiagramTitle(e.target.value)
-          setTitle(e.target.value)
-        }}
-        placeholder="Untitled diagram"
-        // "title" not "name" so it doesn't collide with the template dialog's
-        // "Name" field under getByLabel('Name') in the e2e suite.
-        aria-label="Diagram title"
-        // `size` grows the field with the text length (the empty field fits the
-        // placeholder); a 12-char floor keeps short titles comfortably clickable.
-        // `max-w-full` caps it to the island's 560px so a very long title scrolls
-        // rather than overflowing.
-        size={Math.max(12, (title || "Untitled diagram").length + 2)}
-        className="min-w-0 max-w-full"
-      />
-    </Island>
-  )
+  const { value, onValueChange } = useDiagramTitle()
+  return <HeaderTitleField value={value} onValueChange={onValueChange} />
 }
 
 /**

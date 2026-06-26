@@ -9,8 +9,8 @@ import {
 import { useModalContext } from "@/contexts"
 import {
   selectScopedPreview,
-  selectVersions,
   useVersionStore,
+  type PendingVersion,
 } from "@/stores/useVersionStore"
 import { useClosePreview } from "@/hooks/useVersionPreviewUrlSync"
 import { log } from "@/logger"
@@ -19,11 +19,18 @@ import { versioningStrings as t } from "./strings"
 interface DeleteVersionModalProps {
   diagramId: string
   versionId: string
+  /**
+   * The target version, already resolved by the opener (which has it in hand) —
+   * passed in rather than re-read from the store, used only to name it in the
+   * warning copy. `null` falls back to the generic body.
+   */
+  version: PendingVersion | null
 }
 
 export const DeleteVersionModal = ({
   diagramId,
   versionId,
+  version,
 }: DeleteVersionModalProps) => {
   const { closeModal } = useModalContext()
   const deleteVersion = useVersionStore((s) => s.deleteVersion)
@@ -33,12 +40,9 @@ export const DeleteVersionModal = ({
   const previewingThis = useVersionStore(
     (s) => selectScopedPreview(s, diagramId)?.versionId === versionId
   )
-  const target = useVersionStore((s) =>
-    selectVersions(s, diagramId).find((v) => v.id === versionId)
-  )
   const [working, setWorking] = useState(false)
 
-  const onConfirm = async () => {
+  const handleConfirm = async () => {
     setWorking(true)
     try {
       if (previewingThis) closePreview()
@@ -55,8 +59,8 @@ export const DeleteVersionModal = ({
     }
   }
 
-  const label = target
-    ? target.description?.trim() || target.name?.trim() || t.unnamed
+  const label = version
+    ? version.description?.trim() || version.name?.trim() || t.unnamed
     : null
 
   return (
@@ -68,7 +72,11 @@ export const DeleteVersionModal = ({
       </AlertDialogDescription>
       <AlertDialogFooter>
         <AlertDialogCancel disabled={working}>{t.cancel}</AlertDialogCancel>
-        <Button variant="destructive" onClick={onConfirm} disabled={working}>
+        <Button
+          variant="destructive"
+          onClick={handleConfirm}
+          disabled={working}
+        >
           {t.delete}
         </Button>
       </AlertDialogFooter>

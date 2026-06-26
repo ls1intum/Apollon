@@ -69,7 +69,11 @@ describe("URL-driven preview exit", () => {
 
     const { router } = renderWithRouter(
       <ModalProvider>
-        <DeleteVersionModal diagramId={DIAGRAM_ID} versionId={VERSION_ID} />
+        <DeleteVersionModal
+          diagramId={DIAGRAM_ID}
+          versionId={VERSION_ID}
+          version={null}
+        />
       </ModalProvider>,
       {
         initialEntry: `/local/${DIAGRAM_ID}?version=${VERSION_ID}`,

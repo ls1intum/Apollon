@@ -323,9 +323,12 @@ export const VersionSidebarBody: FC<Props> = ({
 
   const handleDelete = useCallback(
     (versionId: string) => {
-      openModal("DELETE_VERSION", { diagramId, versionId })
+      // Resolve the target here (we already hold the list) and pass it down so
+      // the modal doesn't re-read the store for data we have.
+      const version = versions.find((v) => v.id === versionId) ?? null
+      openModal("DELETE_VERSION", { diagramId, versionId, version })
     },
-    [openModal, diagramId]
+    [openModal, diagramId, versions]
   )
 
   const totalDisplay = total ?? versions.filter((v) => !v.pending).length

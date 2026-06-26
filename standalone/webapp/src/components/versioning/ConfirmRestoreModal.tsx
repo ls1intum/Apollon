@@ -7,13 +7,17 @@ import {
   AlertDialogFooter,
 } from "@tumaet/ui/components/alert-dialog"
 import { useModalContext } from "@/contexts"
-import { selectVersions, useVersionStore } from "@/stores/useVersionStore"
+import type { PendingVersion } from "@/stores/useVersionStore"
 import { log } from "@/logger"
 import { versioningStrings as t } from "./strings"
 
 interface ConfirmRestoreModalProps {
-  diagramId: string
-  versionId: string
+  /**
+   * The target version, already resolved by the opener (which has it in hand) —
+   * passed in rather than re-read from the store. `null` falls back to generic
+   * "this version" copy.
+   */
+  version: PendingVersion | null
   /** Async restore action — provided by the page; the modal awaits it. */
   onConfirm: () => Promise<void> | void
 }
@@ -25,14 +29,10 @@ interface ConfirmRestoreModalProps {
  * is the always-visible durable undo that pairs with this dialog.
  */
 export const ConfirmRestoreModal = ({
-  diagramId,
-  versionId,
+  version,
   onConfirm,
 }: ConfirmRestoreModalProps) => {
   const { closeModal } = useModalContext()
-  const target = useVersionStore((s) =>
-    selectVersions(s, diagramId).find((v) => v.id === versionId)
-  )
   const [working, setWorking] = useState(false)
 
   const handleConfirm = async () => {
@@ -52,7 +52,7 @@ export const ConfirmRestoreModal = ({
   }
 
   const label =
-    target?.description?.trim() || target?.name?.trim() || "this version"
+    version?.description?.trim() || version?.name?.trim() || "this version"
 
   return (
     <div className="flex flex-col gap-4">

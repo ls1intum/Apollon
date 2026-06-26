@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 import { expect, fn, userEvent, within } from "storybook/test"
 import { withModalFrame } from "../../stories/_support/webapp"
 import {
-  SAMPLE_DIAGRAM_ID,
   makeVersion,
   resetVersionStore,
   seedVersions,
@@ -11,9 +10,9 @@ import { ConfirmRestoreModal } from "./ConfirmRestoreModal"
 
 /**
  * The local-mode confirm-when-dirty restore dialog (collab's 10s undo snackbar
- * has no equivalent locally). It reads the target version from `useVersionStore`
- * to name it in the warning copy, falling back to "this version" when no match
- * is seeded, and awaits the page-provided async `onConfirm` while disabling both
+ * has no equivalent locally). The opener passes the target `version` to name it
+ * in the warning copy, falling back to "this version" when `version: null`, and
+ * the modal awaits the page-provided async `onConfirm` while disabling both
  * buttons.
  */
 
@@ -38,13 +37,11 @@ const meta = {
     withModalFrame({ title: "Restore this version?", variant: "confirm" }),
   ],
   args: {
-    diagramId: SAMPLE_DIAGRAM_ID,
-    versionId: VERSION_ID,
+    version: target,
     onConfirm: fn(),
   },
   argTypes: {
-    diagramId: { control: false, table: { category: "Data" } },
-    versionId: { control: false, table: { category: "Data" } },
+    version: { control: false, table: { category: "Data" } },
     onConfirm: {
       description: "Async restore action awaited before the modal closes.",
       table: { category: "Events" },
@@ -68,7 +65,7 @@ export const FallbackLabel: Story = {
   beforeEach: () => {
     resetVersionStore()
   },
-  args: { versionId: "missing-version" },
+  args: { version: null },
   play: async () => {
     const canvas = within(document.body)
     await expect(

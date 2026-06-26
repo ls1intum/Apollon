@@ -29,21 +29,25 @@ interface ModalWrapperProps {
   closeModal: () => void
 }
 
-const MODAL_COMPONENTS: Record<ModalName, React.ComponentType<ModalProps>> = {
+// Each modal keeps its own real props type. The registry only asserts that
+// every `ModalName` maps to *some* component (exhaustive + no stray names)
+// without widening any entry to `ComponentType<ModalProps>` — so e.g.
+// `ShareDashboardModal` can be typed honestly as `{ modelId?: string }` instead
+// of accepting the loose props bag. The single unavoidable type erasure is the
+// dynamic spread in the renderer below, where the runtime `name` and the
+// loosely-typed `props` meet; it's localized there rather than scattered as
+// per-entry `as ComponentType<unknown>` casts.
+const MODAL_COMPONENTS = {
   NEW_DIAGRAM: NewDiagramModal,
   SHARE: ShareModal,
   SHARE_DASHBOARD: ShareDashboardModal,
-  // These presentational bodies take required props (onClose / onConfirm) that
-  // the open-set `ModalProps` index signature can't express, so — like
-  // DeleteVersionModal — they're cast through the registry's component type
-  // until the deferred ModalProps discriminated union lands.
-  COLLABORATE_NAME: CollaborateNameModal as React.ComponentType<unknown>,
+  COLLABORATE_NAME: CollaborateNameModal,
   EXPORT_PPTX: PPTXExportModal,
-  HowToUseModal: HowToUseModal as React.ComponentType<unknown>,
-  AboutModal: AboutModal as React.ComponentType<unknown>,
-  DELETE_VERSION: DeleteVersionModal as React.ComponentType<unknown>,
-  CONFIRM_RESTORE: ConfirmRestoreModal as React.ComponentType<unknown>,
-}
+  HowToUseModal,
+  AboutModal,
+  DELETE_VERSION: DeleteVersionModal,
+  CONFIRM_RESTORE: ConfirmRestoreModal,
+} satisfies Record<ModalName, React.ComponentType<never>>
 
 const MODAL_TITLES: Record<ModalName, string> = {
   NEW_DIAGRAM: "New Diagram",
@@ -73,7 +77,13 @@ const ModalProgressBar = () => {
 }
 
 export const ModalWrapper: React.FC<ModalWrapperProps> = ({ name, props }) => {
-  const SpecificModal = MODAL_COMPONENTS[name]
+  // Dynamic dispatch: `name` is a runtime value and `props` is the loosely
+  // typed context bag, so this is the one place the per-modal prop types can't
+  // be statically tied together. The registry above keeps each entry honestly
+  // typed; the erasure is localized to this single cast.
+  const SpecificModal = MODAL_COMPONENTS[
+    name
+  ] as unknown as React.ComponentType<ModalProps & { onClose?: () => void }>
   const { closeModal } = useModalContext()
   const isContentOverflow = Boolean(
     props && typeof props === "object" && props.contentOverflow

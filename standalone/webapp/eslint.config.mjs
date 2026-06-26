@@ -68,7 +68,9 @@ export default [
       "src/components/home/DiagramGallery.tsx",
       "src/components/modals/TemplateThumbnail.tsx",
       "src/components/navbar/Navbar.tsx",
-      "src/components/navbar/EditorHeader.tsx",
+      // The navbar title subscription moved out of EditorHeader.tsx into its
+      // own container hook (Phase 4 presentational/container split).
+      "src/components/navbar/useDiagramTitle.ts",
       "src/components/navbar/MobileIslands.tsx",
       "src/components/versioning/VersionDrawer.tsx",
       "src/hooks/useRegionHost.ts",

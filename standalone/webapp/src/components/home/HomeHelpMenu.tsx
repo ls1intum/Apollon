@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { ChevronDownIcon, CircleHelpIcon } from "lucide-react"
-import { Link, useLocation } from "@tanstack/react-router"
+import { Link } from "@tanstack/react-router"
 import { Button } from "@tumaet/ui/components/button"
 import {
   DropdownMenu,
@@ -14,16 +14,15 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@tumaet/ui/components/tooltip"
-import { useModalContext } from "@/contexts"
 import { useMediaQuery } from "@/hooks"
 import { bugReportURL } from "@/constants/urls"
 import { releasesLink, repositoryLink } from "@/constants/version"
-import { readNavFrom } from "@/lib/navProvenance"
 import {
   navbarButtonStyle,
   CHROME_REVEAL,
   type ChromeReveal,
 } from "@/components/navbar/styleConstants"
+import { useHelpMenu } from "./useHelpMenu"
 
 /**
  * The SINGLE Help/legal menu source for the WHOLE app — home band, home mobile
@@ -59,26 +58,16 @@ export function HelpMenuItems({
   /** Closes the surrounding menu after an item is chosen. */
   onSelect: () => void
 }) {
-  const { openModal } = useModalContext()
-  const location = useLocation()
-  // Provenance for the legal links differs by where Help lives:
-  //  • editor  → this IS the origin, so STAMP the current diagram path as `from`
-  //    (so /privacy can offer a real "Back to diagram").
-  //  • home / sub-route → this page is itself a hop, so FORWARD the inherited
-  //    `from` (an imprint → privacy hop still returns to the diagram, not to
-  //    /imprint). `readNavFrom` reads the origin out of the current router state.
-  const from =
-    variant === "editor"
-      ? location.pathname + location.searchStr
-      : readNavFrom(location.state)
-  const legalLinkState = from ? { from } : undefined
+  // Impure wiring (modal opening + router-derived legal provenance) lives in the
+  // hook; the item rendering below stays pure relative to its outputs.
+  const { legalLinkState, openHowToUse, openAbout } = useHelpMenu(variant)
 
   return (
     <>
       {variant === "editor" && (
         <DropdownMenuItem
           onClick={() => {
-            openModal("HowToUseModal")
+            openHowToUse()
             onSelect()
           }}
         >
@@ -87,7 +76,7 @@ export function HelpMenuItems({
       )}
       <DropdownMenuItem
         onClick={() => {
-          openModal("AboutModal")
+          openAbout()
           onSelect()
         }}
       >
