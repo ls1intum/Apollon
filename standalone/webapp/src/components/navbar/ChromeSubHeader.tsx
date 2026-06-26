@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router"
 import { DropdownMenuSeparator } from "@tumaet/ui/components/dropdown-menu"
+import { TooltipProvider } from "@tumaet/ui/components/tooltip"
 import { Island, GroupDivider } from "./islandPrimitives"
 import { BackNav } from "./BackNav"
 import { BrandAndVersion } from "./BrandAndVersion"
@@ -33,60 +34,62 @@ export const ChromeSubHeader = () => {
   const backTarget = useBackTarget()
 
   return (
-    <div className="sticky top-[calc(var(--safe-area-inset-top,0px)+0.75rem)] z-20 flex items-start gap-[var(--apollon-chrome-gap)] pb-2 md:top-[calc(var(--safe-area-inset-top,0px)+1rem)]">
-      <Island as="header" role="banner" ariaLabel="Home">
-        <Link
-          to="/"
-          aria-label="Apollon home"
-          className="flex shrink-0 items-center rounded-sm text-[color:var(--apollon-chrome-text)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--apollon-chrome-accent)]"
-        >
-          <BrandAndVersion />
-        </Link>
-        <GroupDivider />
-        {/* The sub-page band has a wide-open centre, so the "All diagrams" label
+    <TooltipProvider>
+      <div className="sticky top-[calc(var(--safe-area-inset-top,0px)+0.75rem)] z-20 flex items-start gap-[var(--apollon-chrome-gap)] pb-2 md:top-[calc(var(--safe-area-inset-top,0px)+1rem)]">
+        <Island as="header" role="banner" ariaLabel="Home">
+          <Link
+            to="/"
+            aria-label="Apollon home"
+            className="flex shrink-0 items-center rounded-sm text-[color:var(--apollon-chrome-text)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--apollon-chrome-accent)]"
+          >
+            <BrandAndVersion />
+          </Link>
+          <GroupDivider />
+          {/* The sub-page band has a wide-open centre, so the "All diagrams" label
             stays down to 360px — and below 480px the brand collapses to logo-only
             (see BrandAndVersion), which frees the room for the label to survive
             that far. It falls back to a bare chevron only under 360px. The page
             title is NOT in the band; it is a real <h1> in the page content. */}
-        <BackNav
-          {...backTarget}
-          tone="onDark"
-          labelClassName="hidden min-[360px]:inline"
-        />
-      </Island>
+          <BackNav
+            {...backTarget}
+            tone="onDark"
+            labelClassName="hidden min-[360px]:inline"
+          />
+        </Island>
 
-      <div className="flex-1" />
+        <div className="flex-1" />
 
-      {/* Desktop (md+): the {Help, Theme} cluster — grouped together, NO divider
+        {/* Desktop (md+): the {Help, Theme} cluster — grouped together, NO divider
           between them — identical to the editor's HeaderActionsIsland and the
           home band's actions island. The responsive gating sits on a plain
           wrapper, NOT on the Island: the island's shared layout sets
           `display:flex` INLINE, which would beat a Tailwind `hidden` class. */}
-      <div className="hidden md:block">
-        <Island ariaLabel="Page actions">
-          <HomeHelpMenu />
-          <ThemeSwitcherMenu />
-        </Island>
-      </div>
+        <div className="hidden md:block">
+          <Island ariaLabel="Page actions">
+            <HomeHelpMenu reveal="always" />
+            <ThemeSwitcherMenu />
+          </Island>
+        </div>
 
-      {/* Mobile (< md): a compact pill carrying ONLY the shared "…" overflow —
-          the sub-page has no document actions, so the pill is just the overflow
-          with the shared HelpMenuItems body + Theme as the LAST row, exactly like
-          the editor + home mobile overflows. Replaces the bare desktop text
-          triggers that previously shipped unchanged at 390px. */}
-      <div className="md:hidden">
-        <Island ariaLabel="Page actions">
-          <ChromeOverflowMenu ariaLabel="More options" id="subpage-options">
-            {(close) => (
-              <>
-                <HelpMenuItems onSelect={close} />
-                <DropdownMenuSeparator />
-                <ThemeSwitcherMenu asMenuItem onToggle={close} />
-              </>
-            )}
-          </ChromeOverflowMenu>
-        </Island>
+        {/* Mobile (< md): a compact pill carrying ONLY the shared "…" overflow.
+          The sub-page has no document actions, so — unlike the editor/home pills
+          (which keep Help as its own dropdown beside other controls) — the whole
+          tail collapses into one menu: the shared HelpMenuItems body + Theme as
+          the LAST row, the same item set/order as every other Help surface. */}
+        <div className="md:hidden">
+          <Island ariaLabel="Page actions">
+            <ChromeOverflowMenu ariaLabel="More options" id="subpage-options">
+              {(close) => (
+                <>
+                  <HelpMenuItems onSelect={close} />
+                  <DropdownMenuSeparator />
+                  <ThemeSwitcherMenu asMenuItem onToggle={close} />
+                </>
+              )}
+            </ChromeOverflowMenu>
+          </Island>
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   )
 }

@@ -45,9 +45,10 @@ const meta = {
       description: "Explicit foreground colour (themed mobile dropdown).",
       table: { category: "Appearance" },
     },
-    labelClassName: {
-      control: "text",
-      description: "Label-span classes (e.g. `hidden lg:inline`).",
+    iconOnly: {
+      control: "boolean",
+      description:
+        "Icon-only presentation (always hides the label, always tooltips).",
       table: { category: "Appearance" },
     },
   },
@@ -59,9 +60,9 @@ type Story = StoryObj<typeof meta>
 /** The button as it appears in the desktop actions island. */
 export const Default: Story = {}
 
-/** Collapsed to the icon at tight widths (the bar passes `hidden lg:inline`). */
+/** Icon-only presentation (the editor mobile pill). */
 export const IconOnly: Story = {
-  args: { labelClassName: "hidden" },
+  args: { iconOnly: true },
 }
 
 /** On a non-shared route the button self-hides (renders nothing). */

@@ -1,11 +1,5 @@
 import { cn } from "@tumaet/ui/lib/utils"
 
-export const NAVBAR_DROP_SHADOW = "var(--apollon-chrome-shadow-docked)"
-
-// Single source of truth for the app header height — keeps the home dashboard
-// header and the editor chrome header the same height everywhere.
-export const NAVBAR_MIN_HEIGHT = 52
-
 /**
  * Shared Tailwind classes for every text action button in the header (File,
  * Share, Help, Version history, Save copy) so they all match the `BackNav`
@@ -14,8 +8,8 @@ export const NAVBAR_MIN_HEIGHT = 52
  * toward the chrome hover surface on hover/focus — the shadcn menubar contract.
  * Inner text/icons use `currentColor` so they track the label.
  *
- * Returns a className string (shadcn idiom) rather than an MUI `SxProps`: pass
- * it to a `@tumaet/ui` Button / DropdownMenuTrigger via `className`, and merge
+ * Returns a className string: pass it to a `@tumaet/ui` Button /
+ * DropdownMenuTrigger via `className`, and merge
  * extra classes through the argument (it runs through `cn`, so callers can
  * override). The idle foreground is the solid `text-foreground` token by
  * default; the mobile overflow menu pins an explicit
@@ -40,3 +34,21 @@ export const navbarButtonStyle = (className?: string): string =>
     "focus-visible:shadow-[0_0_0_2px_color-mix(in_srgb,var(--apollon-chrome-accent)_45%,transparent)] focus-visible:outline-none",
     className
   )
+
+/**
+ * Where each chrome surface reveals an action's text label. `labelClass` toggles
+ * the label span; `mq` is the matching media query so a control can disable its
+ * icon-only tooltip exactly when the label shows. The Tailwind classes are
+ * literal so the JIT compiler can see them. Shared so the one `HomeHelpMenu` can
+ * render in the editor band (`lg`), the home band (`wide`, a measured 940px), and
+ * the sub-route header (`always`, an md+ island with room) without forking.
+ */
+export type ChromeReveal = "lg" | "wide" | "always"
+export const CHROME_REVEAL: Record<
+  ChromeReveal,
+  { labelClass: string; mq: string }
+> = {
+  lg: { labelClass: "hidden lg:inline", mq: "(min-width: 1024px)" },
+  wide: { labelClass: "hidden min-[940px]:inline", mq: "(min-width: 940px)" },
+  always: { labelClass: "inline", mq: "(min-width: 0px)" },
+}

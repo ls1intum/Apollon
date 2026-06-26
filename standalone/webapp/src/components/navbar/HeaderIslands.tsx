@@ -2,8 +2,14 @@ import { Link } from "@tanstack/react-router"
 import { useEffect, useRef, useState } from "react"
 import { Button } from "@tumaet/ui/components/button"
 import { ShareIcon } from "lucide-react"
-import { TooltipProvider } from "@tumaet/ui/components/tooltip"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@tumaet/ui/components/tooltip"
 import { useEditorContext, useModalContext } from "@/contexts"
+import { useMediaQuery } from "@/hooks"
 import { ALL_DIAGRAMS_LABEL } from "@/lib/navProvenance"
 import { BrandAndVersion } from "./BrandAndVersion"
 import { BackNav } from "./BackNav"
@@ -22,6 +28,10 @@ import { Island, GroupDivider, IslandInput } from "./islandPrimitives"
  * flex siblings (not independent absolutely-positioned Panels), the title gets a
  * real, bounded middle column — it grows then shrinks with ellipsis and can never
  * overlap the brand/actions — and the gaps stay constant at every width.
+ *
+ * One `TooltipProvider` (delay 0) wraps the whole header so every icon-only
+ * control — desktop island and mobile pill alike — reveals its tooltip
+ * instantly and with one shared timing.
  */
 export function EditorHeaderRow({
   isNarrow,
@@ -31,17 +41,19 @@ export function EditorHeaderRow({
   hideBrand: boolean
 }) {
   return (
-    <div className="apollon-chrome-header-row">
-      {isNarrow ? (
-        <MobileBackPill />
-      ) : (
-        <HeaderBrandIsland showLogo={!hideBrand} />
-      )}
-      <div className="apollon-chrome-header-spacer">
-        <HeaderTitleIsland />
+    <TooltipProvider>
+      <div className="apollon-chrome-header-row">
+        {isNarrow ? (
+          <MobileBackPill />
+        ) : (
+          <HeaderBrandIsland showLogo={!hideBrand} />
+        )}
+        <div className="apollon-chrome-header-spacer">
+          <HeaderTitleIsland />
+        </div>
+        {isNarrow ? <MobileActionsPill /> : <HeaderActionsIsland />}
       </div>
-      {isNarrow ? <MobileActionsPill /> : <HeaderActionsIsland />}
-    </div>
+    </TooltipProvider>
   )
 }
 
@@ -140,35 +152,41 @@ export function HeaderTitleIsland() {
  */
 export function HeaderActionsIsland() {
   const { openModal } = useModalContext()
+  // Label visible at `lg` ⇒ disable the icon-only tooltip, matching the rest of
+  // the action family (File, Save, Version).
+  const isLg = useMediaQuery("(min-width: 1024px)")
   return (
-    <TooltipProvider>
-      <Island ariaLabel="Editor actions">
-        <div className="flex items-center gap-0.5">
-          <NavbarFile />
-          {/* Share carries a VISIBLE "Share" label, so it gets NO tooltip — a
-              tooltip repeating the label is pure noise. Tooltips are reserved
-              for icon-only controls (Save/Version when collapsed) where they
-              supply the otherwise-missing visible name. */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className={navbarButtonStyle()}
-            onClick={() => openModal("SHARE", { dialogVariant: "home" })}
-          >
-            {/* Action control → ONE leading lucide glyph, no caret —
-                matching the editor mobile pill's Share icon. */}
-            <ShareIcon className="size-4" aria-hidden />
-            Share
-          </Button>
-          <SaveLocalCopyButton labelClassName="hidden lg:inline" />
-          <VersionHistoryButton labelClassName="hidden lg:inline" />
-        </div>
-        <GroupDivider />
-        <div className="flex items-center gap-0.5">
-          <NavbarHelp />
-          <ThemeSwitcherMenu />
-        </div>
-      </Island>
-    </TooltipProvider>
+    <Island ariaLabel="Editor actions">
+      <div className="flex items-center gap-0.5">
+        <NavbarFile />
+        {/* Action control → ONE leading glyph + a label that collapses below `lg`,
+            with the shared tooltip naming it when icon-only. No caret (it isn't a
+            menu) — matching Save/Version. */}
+        <Tooltip disabled={isLg}>
+          <TooltipTrigger
+            render={
+              <Button
+                variant="ghost"
+                size="sm"
+                className={navbarButtonStyle()}
+                aria-label="Share"
+                onClick={() => openModal("SHARE", { dialogVariant: "home" })}
+              >
+                <ShareIcon className="size-4" aria-hidden />
+                <span className="hidden lg:inline">Share</span>
+              </Button>
+            }
+          />
+          <TooltipContent>Share</TooltipContent>
+        </Tooltip>
+        <SaveLocalCopyButton />
+        <VersionHistoryButton />
+      </div>
+      <GroupDivider />
+      <div className="flex items-center gap-0.5">
+        <NavbarHelp />
+        <ThemeSwitcherMenu />
+      </div>
+    </Island>
   )
 }

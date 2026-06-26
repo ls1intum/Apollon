@@ -95,8 +95,7 @@ export const ShareDashboardModal = (
               aria-label="More information"
             >
               <InfoIcon
-                className="size-4"
-                style={{ color: "var(--home-accent-base)" }}
+                className="size-4 text-[color:var(--home-accent-base)]"
                 aria-hidden
               />
             </TooltipTrigger>

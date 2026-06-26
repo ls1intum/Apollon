@@ -1,15 +1,14 @@
 import React from "react"
 import { Button as SharedButton } from "@tumaet/ui/components/button"
 
-// Thin compatibility wrapper over the shared @tumaet/ui Button so the editor
-// renders the same primitive as the webapp. Keeps the editor's existing
-// (MUI-flavoured) public API — variant names + an ignored `size` — so callers
-// are unchanged; the styling comes from the bundled, Tailwind-free
-// components.css (data-slot/data-variant rules).
+// Adapts the shared @tumaet/ui Button to the editor's variant vocabulary
+// (outlined/contained/text) so the editor and webapp render one primitive.
+// Styling comes from the bundled, Tailwind-free components.css
+// (data-slot/data-variant rules).
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "outlined" | "contained" | "text"
-  /** MUI-only; accepted for compatibility, ignored. */
+  /** Accepted for API compatibility; ignored — the shared primitive owns its size. */
   size?: "small" | "medium" | "large"
 }
 

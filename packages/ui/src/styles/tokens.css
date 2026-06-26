@@ -288,6 +288,7 @@
   --apollon-chrome-btn: 32px; /* icon-button paint box */
   --apollon-chrome-pad: 6px; /* inner padding of every floating cluster */
   --apollon-chrome-hit: 44px; /* minimum touch target (Apple HIG) */
+  --apollon-chrome-icon: 18px; /* action-icon glyph box (between size-4 and size-5) */
 
   /* Edge margin that HUGS a device safe area instead of stacking on it: the
      design edge when there's no inset, the inset alone when there is one — so

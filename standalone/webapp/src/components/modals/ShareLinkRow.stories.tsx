@@ -24,8 +24,8 @@ function ControlledShareLinkRow(props: ComponentProps<typeof ShareLinkRow>) {
 
 /**
  * The share-link control reused by both share dialogs: a read-only link field, a
- * copy button with a transient "copied" check, and a custom dropdown that switches
- * the access mode (Collaborate / Edit / Add feedback / View feedback). It is fully
+ * copy button with a transient "copied" check, and a `Select` that switches the
+ * access mode (Collaborate / Edit / Add feedback / View feedback). It is fully
  * controlled — `copied` and `mode` are props — so every state is one `args` combo.
  */
 
@@ -109,8 +109,13 @@ export const SwitchMode: Story = {
   render: (args) => <ControlledShareLinkRow {...args} />,
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement)
-    await userEvent.click(canvas.getByRole("button", { name: /collaborate/i }))
-    await userEvent.click(await canvas.findByRole("option", { name: /edit/i }))
+    // The Select popup is portaled to the document body, so options are queried
+    // there rather than within the story canvas.
+    const body = within(canvasElement.ownerDocument.body)
+    await userEvent.click(
+      canvas.getByRole("combobox", { name: /access mode/i })
+    )
+    await userEvent.click(await body.findByRole("option", { name: /edit/i }))
     await expect(args.onSelectMode).toHaveBeenCalledWith(DiagramView.EDIT)
   },
 }

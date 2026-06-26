@@ -391,25 +391,23 @@ test.describe("Mobile responsive layout", () => {
     await openTemporaryLocalDiagram(page)
     await waitForCanvasReady(page, false)
 
-    await page.getByRole("button", { name: "open options" }).click()
+    // The editor mobile pill carries File as its OWN dropdown (no "…" overflow).
+    await page.getByRole("button", { name: "File" }).click()
 
-    const optionsMenu = page.getByRole("menu", { name: "open options" })
-    await optionsMenu.getByRole("button", { name: "File" }).click()
-    await page.getByRole("menuitem", { name: "Export" }).click()
-
-    const exportMenu = page.getByRole("menu", { name: "Export" })
-    await expect(exportMenu).toBeVisible()
+    // Export is a flat labelled group inside the File menu, not a nested submenu.
+    const fileMenu = page.getByRole("menu", { name: "File" })
+    await expect(fileMenu).toBeVisible()
     await expect(
-      exportMenu.getByRole("menuitem", { name: "As SVG" })
+      fileMenu.getByRole("menuitem", { name: "As SVG" })
     ).toBeVisible()
     await expect(
-      exportMenu.getByRole("menuitem", { name: "As PDF" })
+      fileMenu.getByRole("menuitem", { name: "As PDF" })
     ).toBeVisible()
 
-    const exportMenuBox = await exportMenu.boundingBox()
-    expect(exportMenuBox).not.toBeNull()
-    expect(exportMenuBox!.x).toBeGreaterThanOrEqual(0)
-    expect(exportMenuBox!.x + exportMenuBox!.width).toBeLessThanOrEqual(
+    const fileMenuBox = await fileMenu.boundingBox()
+    expect(fileMenuBox).not.toBeNull()
+    expect(fileMenuBox!.x).toBeGreaterThanOrEqual(0)
+    expect(fileMenuBox!.x + fileMenuBox!.width).toBeLessThanOrEqual(
       PHONE_PORTRAIT.width
     )
   })
@@ -421,11 +419,12 @@ test.describe("Mobile responsive layout", () => {
     await openTemporaryLocalDiagram(page)
     await waitForCanvasReady(page, false)
 
-    await page.getByRole("button", { name: "open options" }).click()
+    await page.getByRole("button", { name: "File" }).click()
 
-    const optionsMenu = page.getByRole("menu", { name: "open options" })
-    await optionsMenu.getByRole("button", { name: "File" }).click()
-    await page.getByRole("menuitem", { name: "New Diagram" }).click()
+    await page
+      .getByRole("menu", { name: "File" })
+      .getByRole("menuitem", { name: "New Diagram" })
+      .click()
 
     const dialog = page.getByRole("dialog", { name: "New Diagram" })
     await expect(dialog).toBeVisible()
@@ -455,9 +454,7 @@ test.describe("Mobile responsive layout", () => {
     await openTemporaryLocalDiagram(page)
     await waitForCanvasReady(page, false)
 
-    await expect(
-      page.getByRole("button", { name: "open options" })
-    ).toBeVisible()
+    await expect(page.getByRole("button", { name: "File" })).toBeVisible()
 
     const palette = page.getByTestId("apollon-palette")
     await expect(palette).toBeVisible()
@@ -473,17 +470,20 @@ test.describe("Mobile responsive layout", () => {
     )
     expect(overflow).toBeLessThanOrEqual(1)
 
-    await page.getByRole("button", { name: "open options" }).click()
-
-    const menu = page.getByRole("menu", { name: "open options" })
-    await expect(menu).toBeVisible()
-    await expect(menu.getByText("Theme", { exact: true })).toBeVisible()
-
-    const menuBox = await menu.boundingBox()
+    // The File dropdown uses the shared mobile-menu width contract (≤ 240px).
+    await page.getByRole("button", { name: "File" }).click()
+    const fileMenu = page.getByRole("menu", { name: "File" })
+    await expect(fileMenu).toBeVisible()
+    const menuBox = await fileMenu.boundingBox()
     expect(menuBox?.width).toBeLessThanOrEqual(240)
-
-    // Share is a primary icon on the pill, not in the overflow menu.
     await page.keyboard.press("Escape")
+
+    // Theme is a direct icon toggle on the pill, not tucked behind an overflow.
+    await expect(
+      page.getByRole("button", { name: /Switch to (light|dark) mode/ })
+    ).toBeVisible()
+
+    // Share is a primary icon on the pill too.
     await page.getByRole("button", { name: "Share" }).click()
 
     const shareDialog = page.getByRole("dialog", { name: "Share" })
@@ -526,8 +526,8 @@ test.describe("Mobile responsive layout", () => {
       )
     }, SAFE_INSET)
 
-    // Landscape is wide enough for the full action bar — it keeps every control
-    // (the overflow "open options" pill is for narrow portrait only).
+    // Landscape keeps the same compact pill of icon-only controls (File · Share ·
+    // Version · Help · Theme) — every control stays reachable on the pill.
     const actions = page.locator('[aria-label="Editor actions"]')
     await expect(actions).toBeVisible()
 

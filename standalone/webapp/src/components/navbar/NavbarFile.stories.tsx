@@ -52,7 +52,7 @@ export const MenuOpens: Story = {
     await expect(
       await body.findByRole("menuitem", { name: /new diagram/i })
     ).toBeInTheDocument()
-    // Export is now a flat, labelled group — no submenu trigger. Its formats are
+    // Export is a flat, labelled group — no submenu trigger. Its formats are
     // direct menuitems and the "Export" heading is a group label, not a menuitem.
     await expect(
       body.getByRole("menuitem", { name: /as svg/i })

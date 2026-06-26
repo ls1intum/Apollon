@@ -10,6 +10,7 @@ import { useLocation, useNavigate } from "@tanstack/react-router"
 import { useEditorContext } from "@/contexts"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { useDiagramIdFromPath } from "@/hooks/useDiagramIdFromPath"
+import { useMediaQuery } from "@/hooks"
 import { versioningStrings as t } from "@/components/versioning/strings"
 import { cloneModelAsLocalCopy } from "@/utils/saveLocalDiagramCopy"
 import { log } from "@/logger"
@@ -18,9 +19,12 @@ import { navbarButtonStyle } from "./styleConstants"
 interface Props {
   /** Foreground colour, mirrors `VersionHistoryButton`'s convention. */
   color?: string
-  /** Label-span classes, mirrors `VersionHistoryButton` — the desktop bar
-   * passes `"hidden lg:inline"` to collapse to the icon when space is tight. */
-  labelClassName?: string
+  /**
+   * Icon-only presentation, mirrors `VersionHistoryButton`. When `false` (the
+   * desktop bar) the label collapses to the icon below `lg` and the tooltip
+   * shows only while collapsed — never alongside the visible label.
+   */
+  iconOnly?: boolean
   /** Mobile menu close callback when rendered inside the hamburger. */
   onAfter?: () => void
   /**
@@ -47,7 +51,7 @@ interface Props {
  */
 export const SaveLocalCopyButton = ({
   color,
-  labelClassName,
+  iconOnly = false,
   onAfter,
   asMenuItem = false,
 }: Props) => {
@@ -56,6 +60,8 @@ export const SaveLocalCopyButton = ({
   const { editor } = useEditorContext()
   const createModel = usePersistenceModelStore((s) => s.createModel)
   const navigate = useNavigate()
+  // 1024px is Tailwind `lg`, the same breakpoint the label span collapses at.
+  const isLg = useMediaQuery("(min-width: 1024px)")
 
   if (!diagramId || !editor || !pathname.startsWith("/shared/")) return null
 
@@ -64,9 +70,8 @@ export const SaveLocalCopyButton = ({
       const copy = cloneModelAsLocalCopy(editor.model)
       createModel(copy)
       toast.success(t.saveLocalCopySuccess, { autoClose: 6000 })
-      // Mirrors `JsonFileImportButton` — navigate to the new local route so
-      // the user lands on the diagram they just saved. `/` is now the
-      // gallery, so we route to `/local/<newId>` explicitly.
+      // Navigate to the new local route so the user lands on the diagram they
+      // just saved. `/` is the gallery, so route to `/local/<newId>` explicitly.
       navigate({ to: "/local/$id", params: { id: copy.id }, replace: true })
     } catch (err) {
       log.error("Save a local copy failed", err as Error)
@@ -90,7 +95,7 @@ export const SaveLocalCopyButton = ({
   }
 
   return (
-    <Tooltip>
+    <Tooltip disabled={!iconOnly && isLg}>
       <TooltipTrigger
         className={navbarButtonStyle()}
         style={color ? { color } : undefined}
@@ -98,7 +103,9 @@ export const SaveLocalCopyButton = ({
         aria-label={t.saveLocalCopyButton}
       >
         <SaveIcon className="size-4" aria-hidden />
-        <span className={labelClassName}>{t.saveLocalCopyButton}</span>
+        <span className={iconOnly ? "hidden" : "hidden lg:inline"}>
+          {t.saveLocalCopyButton}
+        </span>
       </TooltipTrigger>
       <TooltipContent>{t.saveLocalCopyButton}</TooltipContent>
     </Tooltip>

@@ -108,9 +108,9 @@ export function VersionPreviewBannerView({
         backgroundColor: "var(--home-banner-warning-bg)",
         color: "var(--home-banner-warning-text)",
         borderColor: "var(--home-banner-warning-border)",
-        // Soft floating-chrome elevation, matching the island shadow language.
-        boxShadow:
-          "0 0 1px 0 rgb(15 23 42 / 20%), 0 2px 8px 0 rgb(15 23 42 / 12%)",
+        // Soft floating-chrome elevation — the shared island token, so it darkens
+        // with the rest of the chrome in dark mode.
+        boxShadow: "var(--apollon-chrome-shadow-floating)",
         padding: "0.25rem 0.625rem",
         gap: isSmall ? "0.5rem" : "0.625rem",
       }}
@@ -125,8 +125,7 @@ export function VersionPreviewBannerView({
           description rides along as a hover tooltip rather than a second row,
           so the banner stays a compact pill instead of a tall card. */}
       <div
-        className="min-w-0 flex-1 font-semibold whitespace-nowrap"
-        style={{ fontSize: "0.8125rem", lineHeight: 1.2 }}
+        className="min-w-0 flex-1 text-caption font-semibold whitespace-nowrap"
         title={label || undefined}
       >
         Read-only preview{ago && ` · ${ago}`}
@@ -145,11 +144,10 @@ export function VersionPreviewBannerView({
         <button
           type="button"
           onClick={onExit}
-          className="inline-flex cursor-pointer items-center justify-center rounded-md font-medium transition-colors hover:[background:var(--home-banner-warning-btn-hover)]"
+          className="inline-flex cursor-pointer items-center justify-center rounded-md text-caption font-medium transition-colors hover:[background:var(--home-banner-warning-btn-hover)]"
           style={{
             ...buttonStyle,
             padding: "0.125rem 0.5rem",
-            fontSize: "0.8125rem",
           }}
         >
           {t.exitPreview}
@@ -166,11 +164,10 @@ export function VersionPreviewBannerView({
                 setRestoring(false)
               }
             }}
-            className="inline-flex cursor-pointer items-center justify-center rounded-md font-semibold transition-colors hover:[background:var(--home-banner-warning-btn-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex cursor-pointer items-center justify-center rounded-md text-caption font-semibold transition-colors hover:[background:var(--home-banner-warning-btn-hover)] disabled:cursor-not-allowed disabled:opacity-60"
             style={{
               ...buttonStyle,
               padding: "0.125rem 0.625rem",
-              fontSize: "0.8125rem",
             }}
           >
             {t.restoreThis}

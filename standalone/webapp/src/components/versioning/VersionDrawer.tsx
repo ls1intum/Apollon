@@ -392,7 +392,7 @@ export const VersionSidebarBody: FC<Props> = ({
             onKeyDown={handleComposerKeyDown}
             ref={composerRef}
             aria-label="Describe this version"
-            className="max-h-[6.5rem] min-h-9 resize-none px-2.5 py-1.5 text-[0.85rem] placeholder:opacity-100 placeholder:[color:var(--ph)] focus-visible:border-[var(--apollon-chrome-accent)] focus-visible:ring-[color-mix(in_srgb,var(--apollon-chrome-accent)_40%,transparent)]"
+            className="max-h-[6.5rem] min-h-9 resize-none px-2.5 py-1.5 text-caption placeholder:opacity-100 placeholder:[color:var(--ph)] focus-visible:border-[var(--apollon-chrome-accent)] focus-visible:ring-[color-mix(in_srgb,var(--apollon-chrome-accent)_40%,transparent)]"
             style={
               {
                 color: TEXT_PRIMARY,

@@ -9,7 +9,7 @@ type CollaborateNameModalProps = {
   onConfirm: (name: string) => void
   /** Called after a successful confirm so the host can dismiss the modal. */
   onClose: () => void
-  /** Seeds the input; the field stays uncontrolled afterwards. */
+  /** Initial display-name value; the user can edit it freely. */
   initialName?: string
 }
 

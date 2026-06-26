@@ -24,7 +24,7 @@ const meta = {
   component: CurrentVersionRowView,
   parameters: { layout: "centered" },
   // The sidebar is a theme-following chrome surface; preview the row on the
-  // matching themed chrome strip (DarkNavbarSurface, despite its legacy name).
+  // matching themed chrome strip (DarkNavbarSurface).
   decorators: [
     DarkNavbarSurface,
     (Story) => (

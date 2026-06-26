@@ -8,6 +8,7 @@ import { useLocation } from "@tanstack/react-router"
 import { useVersionStore } from "@/stores/useVersionStore"
 import { versioningStrings as t } from "@/components/versioning/strings"
 import { useDiagramIdFromPath } from "@/hooks/useDiagramIdFromPath"
+import { useMediaQuery } from "@/hooks"
 import { navbarButtonStyle } from "./styleConstants"
 
 /** Props for the pure {@link VersionHistoryButtonView}. */
@@ -25,11 +26,12 @@ interface VersionHistoryButtonViewProps {
    */
   color?: string
   /**
-   * Classes for the label span — the header passes `"hidden lg:inline"` to
-   * collapse to the icon when space is tight; the mobile menu omits it so the
-   * label always shows.
+   * Icon-only presentation: the mobile pill passes `true` so the label is always
+   * hidden and the tooltip always names it. The header leaves it `false`, so the
+   * label collapses to the icon below `lg` and the tooltip shows only while
+   * collapsed — never alongside the visible label.
    */
-  labelClassName?: string
+  iconOnly?: boolean
 }
 
 /**
@@ -41,19 +43,25 @@ export function VersionHistoryButtonView({
   isOpen,
   onToggle,
   color,
-  labelClassName,
+  iconOnly = false,
 }: VersionHistoryButtonViewProps) {
+  // 1024px is Tailwind `lg`, the same breakpoint the label span collapses at.
+  const isLg = useMediaQuery("(min-width: 1024px)")
   return (
-    <Tooltip>
+    <Tooltip disabled={!iconOnly && isLg}>
       <TooltipTrigger
         className={navbarButtonStyle()}
         style={color ? { color } : undefined}
-        aria-label={t.drawerTitle}
+        // Same text as the tooltip, so the accessible name matches what sighted
+        // users see on hover (and announces the keyboard shortcut to AT).
+        aria-label={t.fabTooltip}
         aria-pressed={isOpen}
         onClick={onToggle}
       >
         <HistoryIcon className="size-4" aria-hidden />
-        <span className={labelClassName}>{t.navMenuItem}</span>
+        <span className={iconOnly ? "hidden" : "hidden lg:inline"}>
+          {t.navMenuItem}
+        </span>
       </TooltipTrigger>
       <TooltipContent>{t.fabTooltip}</TooltipContent>
     </Tooltip>
@@ -64,8 +72,8 @@ export function VersionHistoryButtonView({
 interface Props {
   /** Foreground colour for the icon + label. See {@link VersionHistoryButtonView}. */
   color?: string
-  /** Classes for the label span. See {@link VersionHistoryButtonView}. */
-  labelClassName?: string
+  /** Icon-only presentation. See {@link VersionHistoryButtonView}. */
+  iconOnly?: boolean
 }
 
 /**
@@ -77,7 +85,7 @@ interface Props {
  * `/shared/:id`, so it is also covered. The gallery (`/`) and the
  * playground have no active diagram, so the button is hidden.
  */
-export const VersionHistoryButton = ({ color, labelClassName }: Props) => {
+export const VersionHistoryButton = ({ color, iconOnly }: Props) => {
   const diagramId = useDiagramIdFromPath()
   const { pathname } = useLocation()
   // Both shared (Remote) and local (Local) repositories back a drawer.
@@ -99,7 +107,7 @@ export const VersionHistoryButton = ({ color, labelClassName }: Props) => {
     <VersionHistoryButtonView
       isOpen={isOpen}
       color={color}
-      labelClassName={labelClassName}
+      iconOnly={iconOnly}
       onToggle={() => (isOpen ? closeDrawer(diagramId) : openDrawer(diagramId))}
     />
   )

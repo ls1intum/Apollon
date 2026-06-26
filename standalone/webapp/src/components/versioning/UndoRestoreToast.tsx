@@ -13,9 +13,8 @@ const UNDO_RESTORE_TOAST_ID = "undo-restore"
  * (with an inline Undo button) so every notification in the app shares one
  * system and look. Auto-dismisses when the store's window expires.
  *
- * Kept as a component (mounted globally near the editor) so the call site in
- * ApollonShared is unchanged — only the rendering mechanism swapped
- * from an MUI Snackbar to a toast.
+ * A component (mounted globally near the editor) rather than an imperative call,
+ * so the wiring lives in one place in ApollonShared.
  */
 const UndoRestoreToastBody: FC<{ restoredVersionName: string }> = ({
   restoredVersionName,

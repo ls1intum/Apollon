@@ -514,17 +514,17 @@ test.describe("Home page — accessibility basics", () => {
     ).toBeVisible()
   })
 
-  test("legal links are reachable via the band overflow on mobile", async ({
+  test("legal links are reachable via the Help menu on mobile", async ({
     page,
   }) => {
     await page.setViewportSize({ width: 390, height: 720 })
     await seedEmpty(page)
     await expect(page.getByRole("contentinfo")).toBeHidden()
-    // On mobile the home band's actions pill collapses Import/Theme/legal behind
-    // a "More options" overflow menu.
-    await page.getByRole("button", { name: "More options" }).click()
+    // On mobile the home band's actions pill surfaces a Help dropdown carrying
+    // the shared Help/legal items (the same body as the desktop Help menu).
+    await page.getByRole("button", { name: "Help" }).click()
     // The legal links are anchor-backed menu items (role=menuitem) inside the
-    // overflow dropdown — assert their hrefs.
+    // Help dropdown — assert their hrefs.
     await expect(
       page.getByRole("menuitem", { name: "Imprint" })
     ).toHaveAttribute("href", "/imprint")

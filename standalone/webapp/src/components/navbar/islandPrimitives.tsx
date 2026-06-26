@@ -4,6 +4,7 @@ import {
   type InputHTMLAttributes,
   type ReactNode,
 } from "react"
+import { cn } from "@tumaet/ui/lib/utils"
 
 /**
  * Shared island primitives — the floating-glass "island band" grammar lifted out
@@ -43,6 +44,25 @@ export const ISLAND_LAYOUT_STYLE: CSSProperties = {
 }
 
 /**
+ * The `DropdownMenuContent` contract every chrome menu shares: a fixed `w-60`
+ * capped to the viewport (minus safe-area + 16px) so a phone never overflows it,
+ * and a 44px `min-h-11` touch target on every actionable row (item + sub-trigger),
+ * gated to `max-md` so menus that also mount on desktop (the diagram-card "…"
+ * menu) keep the compact desktop rows that match the navbar menus. Single-sourced
+ * so the editor File / Help menus, the home overflow, and the diagram-card menu
+ * size their rows identically.
+ *
+ * A sub-content renders in its OWN portal, so a parent-content class can't reach
+ * it — apply {@link MOBILE_MENU_SUBCONTENT_CLASS} to the `DropdownMenuSubContent`.
+ */
+export const MOBILE_MENU_CONTENT_CLASS =
+  "flex w-60 max-w-[calc(100vw-var(--safe-area-inset-left,0px)-var(--safe-area-inset-right,0px)-16px)] flex-col [&_[data-slot=dropdown-menu-item]]:max-md:min-h-11 [&_[data-slot=dropdown-menu-sub-trigger]]:max-md:min-h-11"
+
+/** Row touch-target floor for a `DropdownMenuSubContent` (its own portal). */
+export const MOBILE_MENU_SUBCONTENT_CLASS =
+  "[&_[data-slot=dropdown-menu-radio-item]]:max-md:min-h-11 [&_[data-slot=dropdown-menu-item]]:max-md:min-h-11"
+
+/**
  * One floating glass island. Portaled (by the consumer) into an overlay region;
  * `.apollon-glass` gives the shared surface, this wrapper lays out content and
  * re-enables pointer events over the transparent region.
@@ -73,7 +93,7 @@ export function Island({
     <Tag
       role={role}
       aria-label={ariaLabel}
-      className={`apollon-glass apollon-chrome-island${className ? ` ${className}` : ""}`}
+      className={cn("apollon-glass apollon-chrome-island", className)}
       style={style ? { ...ISLAND_LAYOUT_STYLE, ...style } : ISLAND_LAYOUT_STYLE}
     >
       {children}
@@ -118,7 +138,7 @@ export const IslandInput = forwardRef<
       type="text"
       // The placeholder colour is set on `.apollon-chrome-title-input` in
       // components.css (input::placeholder can't be expressed inline).
-      className={`apollon-chrome-title-input${className ? ` ${className}` : ""}`}
+      className={cn("apollon-chrome-title-input", className)}
       style={{
         textAlign: "left",
         textOverflow: "ellipsis",

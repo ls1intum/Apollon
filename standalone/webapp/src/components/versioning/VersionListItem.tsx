@@ -231,7 +231,7 @@ export function VersionListItemView({
             onKeyDown={onEditKeyDown}
             placeholder={t.createPlaceholder}
             aria-label="Edit description"
-            className="mb-0.5 max-h-24 min-h-8 resize-none px-2 py-1 text-[0.8125rem] placeholder:opacity-100 placeholder:[color:var(--ph)] focus-visible:border-[var(--apollon-chrome-accent)] focus-visible:ring-[color-mix(in_srgb,var(--apollon-chrome-accent)_40%,transparent)]"
+            className="mb-0.5 max-h-24 min-h-8 resize-none px-2 py-1 text-caption placeholder:opacity-100 placeholder:[color:var(--ph)] focus-visible:border-[var(--apollon-chrome-accent)] focus-visible:ring-[color-mix(in_srgb,var(--apollon-chrome-accent)_40%,transparent)]"
             style={
               {
                 color: TEXT_PRIMARY,
@@ -244,7 +244,7 @@ export function VersionListItemView({
           // User-authored description — rendered slightly smaller and muted
           // so the #N · time-ago line reads as the primary identifier.
           <div
-            className="mb-0.5 text-[0.8125rem] leading-snug break-words whitespace-pre-wrap"
+            className="mb-0.5 text-caption leading-snug break-words whitespace-pre-wrap"
             style={{ color: TEXT_MUTED }}
           >
             {description}
@@ -389,8 +389,8 @@ export function VersionListItemView({
                 </DropdownMenuItem>
               )}
               {/* Adding a description on an empty-meta row promotes it visually
-                  (no longer eligible for collapse) and protects it from the
-                  eviction-priority sweep. Pure metadata — no protocol event.
+                  (ineligible for collapse once it has a description) and protects
+                  it from the eviction-priority sweep. Pure metadata — no protocol event.
 
                   We defer `startEditing` past the menu's focus-restoration
                   tick (Base UI Menu returns focus to the kebab on close).
@@ -438,7 +438,7 @@ type ContainerProps = Omit<
 /**
  * Thin container — supplies the live thumbnail, the new-tab preview link, and
  * the description-persist / copy-link side effects (store + version repository)
- * to {@link VersionListItemView}. Existing call sites keep working unchanged.
+ * to {@link VersionListItemView}.
  */
 export const VersionListItem: FC<ContainerProps> = ({
   diagramId,

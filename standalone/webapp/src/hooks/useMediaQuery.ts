@@ -2,8 +2,7 @@ import { useEffect, useState } from "react"
 
 /**
  * Subscribes to a CSS media query and returns whether it currently matches,
- * updating live as the viewport crosses the breakpoint. A tiny replacement
- * for MUI's `useMediaQuery` (the only thing we used it for).
+ * updating live as the viewport crosses the breakpoint.
  *
  * Use this **only** for page-level layout decisions that can't be expressed
  * as Tailwind `hidden`/`block` responsive classes — e.g. choosing between

@@ -1,6 +1,5 @@
 // Diagram-type metadata: maps each UML diagram type to its display label and
-// glyph icon. Consumed by the dashboard gallery and cards. (Previously this
-// file also rendered a type-picker grid; that UI has been removed.)
+// glyph icon. Consumed by the dashboard gallery and cards.
 import { cloneElement, isValidElement, type ReactElement } from "react"
 import type { UMLDiagramType } from "@tumaet/apollon"
 

@@ -11,7 +11,7 @@ interface Props {
  * variant — so the editor and the home Help controls are byte-identical in
  * trigger composition, surface, item set/order, and a11y, with the editor-only
  * "How does this Editor Work?" / "Open Playground" entries layered onto the same
- * shared body. There is now exactly one Help/legal source in the app.
+ * shared body. There is exactly one Help/legal source in the app.
  */
 export const NavbarHelp: FC<Props> = ({ color }) => (
   <HomeHelpMenu variant="editor" color={color} />

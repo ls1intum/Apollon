@@ -78,10 +78,7 @@ function RefineGroup<T extends string>({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <span
-        className="text-[11px] font-semibold tracking-wide uppercase"
-        style={{ color: "var(--apollon-chrome-text)" }}
-      >
+      <span className="text-[11px] font-semibold tracking-wide text-[color:var(--apollon-chrome-text)] uppercase">
         {label}
       </span>
       <ToggleGroup
@@ -115,7 +112,7 @@ function RefineGroup<T extends string>({
 
 export type RefineBodyProps = {
   chrome: HomeChrome
-  /** Available diagram types (Phase 3 derives this from loaded diagrams). */
+  /** Diagram types offered in the Type filter — those present in the loaded diagrams. */
   typeOptions: readonly UMLDiagramType[]
   /**
    * Extra per-segment classes — the mobile sheet passes `min-h-11` so the
@@ -216,7 +213,7 @@ export function RefinePopover({
           className="max-h-[80vh] gap-0 overflow-hidden"
         >
           <SheetHeader className="pb-3">
-            <SheetTitle style={{ color: "var(--apollon-chrome-text)" }}>
+            <SheetTitle className="text-[color:var(--apollon-chrome-text)]">
               Refine
             </SheetTitle>
           </SheetHeader>

@@ -6,13 +6,13 @@ import {
   TooltipProvider as SharedTooltipProvider,
 } from "@tumaet/ui/components/tooltip"
 
-// Compatibility wrapper over the shared @tumaet/ui Tooltip so the editor renders
-// the same primitive as the webapp. Keeps the editor's MUI-flavoured API
-// (`title`, default 700ms delay) so callers are unchanged; styling ships in the
-// bundled, Tailwind-free components.css (data-slot="tooltip-content").
+// Wraps the shared @tumaet/ui Tooltip so the editor renders the same primitive as
+// the webapp, exposing a `title` + default 700ms delay API for the editor's call
+// sites; styling ships in the bundled, Tailwind-free components.css
+// (data-slot="tooltip-content").
 
 export interface TooltipProps {
-  /** Tooltip text (mirrors MUI's `title`). */
+  /** Tooltip text. */
   title: React.ReactNode
   children: React.ReactNode
   side?: "top" | "bottom" | "left" | "right"

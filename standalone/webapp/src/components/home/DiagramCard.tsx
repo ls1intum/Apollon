@@ -52,6 +52,10 @@ import { useMinuteTick } from "@/hooks/useMinuteTick"
 import { DiagramView } from "@/types"
 import { getDiagramTypeIcon, getDiagramTypeShortLabel } from "./diagramTypeMeta"
 import {
+  MOBILE_MENU_CONTENT_CLASS,
+  MOBILE_MENU_SUBCONTENT_CLASS,
+} from "@/components/navbar/islandPrimitives"
+import {
   markSharedDiagramCopied,
   removeSharedDiagramEntry,
   updateSharedDiagramView,
@@ -131,9 +135,7 @@ const getDiagramNav = (diagram: RecentDiagram) => {
   )
 }
 
-/* ------------------------------------------------------------------ *\
- * DiagramActionsMenuView — pure presentational three-dot menu.
-\* ------------------------------------------------------------------ */
+// DiagramActionsMenuView — pure presentational three-dot menu.
 
 /** The action callbacks `DiagramActionsMenuView` reports; all payload-only. */
 export type DiagramActionsMenuViewProps = {
@@ -287,6 +289,7 @@ export function DiagramActionsMenuView({
           aria-label="Diagram actions"
           align="end"
           sideOffset={8}
+          className={MOBILE_MENU_CONTENT_CLASS}
         >
           {isExpired ? (
             <DropdownMenuItem
@@ -337,7 +340,10 @@ export function DiagramActionsMenuView({
                 <DropdownMenuSubTrigger>
                   Change sharing mode
                 </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent aria-label="Change sharing mode">
+                <DropdownMenuSubContent
+                  aria-label="Change sharing mode"
+                  className={MOBILE_MENU_SUBCONTENT_CLASS}
+                >
                   <DropdownMenuRadioGroup
                     value={sharedView}
                     onValueChange={(value) =>
@@ -407,9 +413,7 @@ export function DiagramActionsMenuView({
   )
 }
 
-/* ------------------------------------------------------------------ *\
- * DiagramActionsMenu — thin container wiring store/navigation/etc.
-\* ------------------------------------------------------------------ */
+// DiagramActionsMenu — thin container wiring store/navigation/etc.
 
 type DiagramActionsMenuProps = {
   diagram: RecentDiagram
@@ -527,9 +531,7 @@ const PreviewTile = ({ children }: { children: ReactNode }) => {
   )
 }
 
-/* ------------------------------------------------------------------ *\
- * DiagramPreview — the 16:10 preview area, one of four states.
-\* ------------------------------------------------------------------ */
+// DiagramPreview — the 16:10 preview area, one of four states.
 
 type DiagramPreviewProps = {
   diagram: RecentDiagram
@@ -604,9 +606,7 @@ function DiagramPreview({
   )
 }
 
-/* ------------------------------------------------------------------ *\
- * CardTag — one token-styled footer pill, three tones.
-\* ------------------------------------------------------------------ */
+// CardTag — one token-styled footer pill, three tones.
 
 type CardTagTone = "type" | "local" | "shared"
 
@@ -638,9 +638,7 @@ function CardTag({ label, tone }: { label: string; tone: CardTagTone }) {
   )
 }
 
-/* ------------------------------------------------------------------ *\
- * DiagramCardView — pure presentational diagram tile.
-\* ------------------------------------------------------------------ */
+// DiagramCardView — pure presentational diagram tile.
 
 /** Pre-rendered thumbnail data URLs for the light + dark theme variants. */
 export type DiagramCardThumbnail = {
@@ -763,7 +761,6 @@ export function DiagramCardView({
         className
       )}
     >
-      {/* Expired overlay */}
       {/* Clickable card body. A real link so cmd/ctrl/middle-click opens the
           diagram in a new tab; plain click still navigates within the SPA. The
           stretched `after` pseudo-element makes the whole card the hit target;
@@ -784,7 +781,7 @@ export function DiagramCardView({
         tabIndex={isExpired ? -1 : undefined}
         className={cn(
           // Keyboard-only focus ring (focus-visible, not focus-within): a mouse
-          // press no longer paints a ring. Inset + the design-system `ring` token
+          // press does not paint a ring. Inset + the design-system `ring` token
           // so overflow-hidden can't clip it and it stays theme-aware.
           "flex h-full w-full flex-col rounded-[inherit] text-left outline-none after:absolute after:inset-0 after:z-10 after:content-[''] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
           isExpired ? "cursor-default" : "cursor-pointer"
@@ -891,9 +888,7 @@ export function DiagramCardView({
   )
 }
 
-/* ------------------------------------------------------------------ *\
- * DiagramCard — thin container wiring store thumbnails + favorites.
-\* ------------------------------------------------------------------ */
+// DiagramCard — thin container wiring store thumbnails + favorites.
 
 type DiagramCardProps = {
   diagram: RecentDiagram

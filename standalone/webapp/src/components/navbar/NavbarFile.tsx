@@ -9,9 +9,15 @@ import {
   DropdownMenuTrigger,
 } from "@tumaet/ui/components/dropdown-menu"
 import { Button } from "@tumaet/ui/components/button"
-import { ChevronDownIcon } from "lucide-react"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@tumaet/ui/components/tooltip"
+import { ChevronDownIcon, FilesIcon } from "lucide-react"
 import { toast } from "react-toastify"
 import { useModalContext } from "@/contexts"
+import { useMediaQuery } from "@/hooks"
 import {
   useExportAsJSON,
   useExportAsPDF,
@@ -178,6 +184,8 @@ export function FileMenuItems({ onSelect }: { onSelect: () => void }) {
 
 export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
   const [open, setOpen] = useState(false)
+  // Label visible at `lg` ⇒ the tooltip would just repeat it, so disable it then.
+  const isLg = useMediaQuery("(min-width: 1024px)")
 
   const close = useCallback(() => {
     setOpen(false)
@@ -186,21 +194,29 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
-      <DropdownMenuTrigger
-        id="file-menu-button"
-        render={
-          <Button
-            variant="ghost"
-            size="sm"
-            className={navbarButtonStyle()}
-            style={color ? { color } : undefined}
-          />
-        }
-      >
-        <span>File</span>
-        {/* Menu-opening control → trailing caret pinned to the right edge. */}
-        <ChevronDownIcon className="ml-auto size-4" aria-hidden />
-      </DropdownMenuTrigger>
+      <Tooltip disabled={isLg}>
+        <TooltipTrigger
+          render={
+            <DropdownMenuTrigger
+              id="file-menu-button"
+              render={
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={navbarButtonStyle()}
+                  style={color ? { color } : undefined}
+                  aria-label="File"
+                />
+              }
+            >
+              <FilesIcon className="size-4" aria-hidden />
+              <span className="hidden lg:inline">File</span>
+              <ChevronDownIcon className="size-4" aria-hidden />
+            </DropdownMenuTrigger>
+          }
+        />
+        <TooltipContent>File</TooltipContent>
+      </Tooltip>
       <DropdownMenuContent aria-labelledby="file-menu-button">
         <FileMenuItems onSelect={close} />
       </DropdownMenuContent>

@@ -2,12 +2,11 @@ import React, { useId } from "react"
 import { Input } from "@tumaet/ui/components/input"
 import { Textarea } from "@tumaet/ui/components/textarea"
 
-// Compatibility wrapper: the control (input / textarea) is now the shared
-// @tumaet/ui primitive (styling ships in the bundled, Tailwind-free
-// components.css via data-slot="input"/"textarea"), while the label + helper
-// chrome are token-driven elements (styled in app.css via
-// data-slot="textfield-label"/"textfield-helper") so the public API
-// (label, helperText, multiline, error, …) the editor relies on is unchanged.
+// Wraps the shared @tumaet/ui Input/Textarea (styled in the bundled, Tailwind-free
+// components.css via data-slot="input"/"textarea") with a token-driven label +
+// helper chrome (styled in app.css via
+// data-slot="textfield-label"/"textfield-helper"), exposing one
+// (label, helperText, multiline, error, …) API for the editor's forms.
 
 // Intersection so handlers get a `target` with `.value` for either element.
 type TextFieldElement = HTMLInputElement & HTMLTextAreaElement
@@ -34,7 +33,7 @@ export interface TextFieldProps {
   maxLength?: number
   error?: boolean
   helperText?: React.ReactNode
-  /** MUI-only; accepted for compatibility, ignored. */
+  /** Accepted for API compatibility; ignored. */
   variant?: string
   sx?: React.CSSProperties
   className?: string
@@ -59,12 +58,12 @@ export const TextField: React.FC<TextFieldProps> = ({
   type,
   disabled,
   autoFocus,
-  // accepted for MUI compat; the shared control owns its sizing
+  // accepted for API compatibility; the shared control owns its sizing
   size: _size = "medium",
   fullWidth,
   multiline,
   minRows,
-  // accepted for MUI compat; native <textarea> has no auto-grow
+  // accepted for API compatibility; native <textarea> has no auto-grow
   maxRows: _maxRows,
   maxLength,
   error,

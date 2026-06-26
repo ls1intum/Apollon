@@ -6,10 +6,9 @@ import { getDiagramTypeLabel } from "./diagramTypeMeta"
  * Shared home-chrome refinement state — the single source of truth for the
  * Home Island Band's search / favorites / source / type / sort controls.
  *
- * It is lifted out of `DiagramGallery` VERBATIM (same option lists, same field
- * names, same defaults) so Phase 3 can drop it in: `DiagramGallery` keeps its
- * heavy data-loading concerns (models, shared fetch, infinite scroll) and reads
- * its refinement state from this hook instead of its own `useState` cluster.
+ * It owns only refinement state (option lists, field names, defaults).
+ * `DiagramGallery` keeps the heavy data-loading concerns (models, shared fetch,
+ * infinite scroll) and reads its refinement state from this hook.
  *
  * Nothing here touches the editor, the router, or any store — it is pure UI
  * state + derived chip metadata, so the band can mount in isolation (Storybook)

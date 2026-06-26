@@ -1,5 +1,11 @@
-import { useEffect, useRef, useState } from "react"
-import { Check, ChevronDown, Copy } from "lucide-react"
+import { Check, Copy } from "lucide-react"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@tumaet/ui/components/select"
 import {
   Tooltip,
   TooltipContent,
@@ -23,8 +29,10 @@ export const MODE_OPTIONS: readonly ShareModeOption[] = [
 
 /**
  * The share-link control: a read-only link field, an explicit copy button with a
- * transient "copied" check, and a dropdown that switches the access mode. Shared
- * by the editor and dashboard share dialogs so both behave identically.
+ * transient "copied" check, and a `Select` that switches the access mode. Shared
+ * by the editor and dashboard share dialogs so both behave identically. The mode
+ * switch is the `Select` primitive (portaled, keyboard-navigable) rather than a
+ * hand-rolled list — the three controls read as one segmented input group.
  */
 export const ShareLinkRow = ({
   link,
@@ -41,31 +49,6 @@ export const ShareLinkRow = ({
   options: readonly ShareModeOption[]
   onSelectMode: (mode: DiagramView) => void
 }) => {
-  const [open, setOpen] = useState(false)
-  const triggerRef = useRef<HTMLButtonElement | null>(null)
-  const activeLabel = options.find((o) => o.value === mode)?.label ?? "Edit"
-
-  useEffect(() => {
-    if (!open) return
-    const onClickOutside = (e: MouseEvent) => {
-      if (
-        triggerRef.current &&
-        !triggerRef.current
-          .closest("[data-mode-dropdown]")
-          ?.contains(e.target as Node)
-      ) {
-        setOpen(false)
-      }
-    }
-    document.addEventListener("mousedown", onClickOutside)
-    return () => document.removeEventListener("mousedown", onClickOutside)
-  }, [open])
-
-  const select = (next: DiagramView) => {
-    onSelectMode(next)
-    setOpen(false)
-  }
-
   return (
     <div className="flex items-stretch">
       <input
@@ -113,61 +96,32 @@ export const ShareLinkRow = ({
         </TooltipContent>
       </Tooltip>
 
-      <div className="relative" data-mode-dropdown="">
-        <button
-          ref={triggerRef}
-          type="button"
-          onClick={() => setOpen((o) => !o)}
-          className="flex h-9 items-center gap-1.5 rounded-r-md border px-3 text-xs font-medium transition-colors duration-150 hover:opacity-80"
+      <Select
+        value={mode}
+        onValueChange={(value) => onSelectMode(value as DiagramView)}
+      >
+        <SelectTrigger
+          aria-label="Link access mode"
+          className="gap-1.5 border px-3 text-xs font-medium transition-colors duration-150 hover:opacity-80"
           style={{
+            height: "2.25rem",
+            borderRadius: "0 0.375rem 0.375rem 0",
             borderColor: "var(--home-border-default)",
             background: "var(--home-surface-raised)",
             color: "var(--home-text-primary)",
             minWidth: "max-content",
           }}
-          aria-haspopup="listbox"
-          aria-expanded={open}
         >
-          {activeLabel}
-          <ChevronDown className="size-3 shrink-0" aria-hidden="true" />
-        </button>
-
-        {open && (
-          <ul
-            role="listbox"
-            className="absolute right-0 top-full z-10 mt-1 min-w-[160px] rounded-lg border p-1"
-            style={{
-              borderColor: "var(--home-border-default)",
-              background: "var(--home-surface-raised)",
-              boxShadow: "0 8px 24px var(--home-shadow-overlay)",
-            }}
-          >
-            {options.map((opt) => {
-              const selected = mode === opt.value
-              return (
-                <li
-                  key={opt.value}
-                  role="option"
-                  aria-selected={selected}
-                  onClick={() => select(opt.value)}
-                  className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-xs transition-colors duration-100"
-                  style={{
-                    background: selected
-                      ? "var(--home-accent-soft)"
-                      : "transparent",
-                    color: selected
-                      ? "var(--home-accent-strong)"
-                      : "var(--home-text-primary)",
-                  }}
-                >
-                  {selected && <Check className="size-4" aria-hidden="true" />}
-                  <span className={selected ? "" : "pl-6"}>{opt.label}</span>
-                </li>
-              )
-            })}
-          </ul>
-        )}
-      </div>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((opt) => (
+            <SelectItem key={opt.value} value={opt.value}>
+              {opt.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   )
 }

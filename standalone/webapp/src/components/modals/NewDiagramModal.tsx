@@ -236,7 +236,6 @@ export const NewDiagramModal = () => {
                 value={selectedDiagramType}
                 onChange={handleDiagramTypeChange}
                 onConfirm={handleCreateDiagram}
-                columns={2}
                 hideLabel
               />
             </section>
@@ -252,7 +251,6 @@ export const NewDiagramModal = () => {
                   value={selectedDiagramType}
                   onChange={handleDiagramTypeChange}
                   onConfirm={handleCreateDiagram}
-                  columns={2}
                   hideLabel
                 />
               </section>
@@ -301,6 +299,7 @@ export const NewDiagramModal = () => {
               value={selectedTemplate}
               onChange={handleTemplateChange}
               onConfirm={() => void handleCreateFromTemplate()}
+              columns={2}
               hideLabel
             />
           </section>

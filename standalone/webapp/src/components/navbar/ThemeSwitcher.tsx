@@ -1,4 +1,9 @@
 import { DropdownMenuItem } from "@tumaet/ui/components/dropdown-menu"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@tumaet/ui/components/tooltip"
 import { cn } from "@tumaet/ui/lib/utils"
 import React from "react"
 import { Moon, Sun } from "lucide-react"
@@ -34,13 +39,12 @@ export function ThemeSwitcherButton({
 }: ThemeSwitcherButtonProps) {
   const title = isDarkMode ? "Switch to light mode" : "Switch to dark mode"
 
-  return (
+  const button = (
     <button
       ref={ref}
       type="button"
       onClick={onToggle}
       aria-label={title}
-      title={title}
       // The shared chrome-icon class is the single source of the 32px paint box,
       // 6px radius, hover/active wash, focus ring AND the 44px ::before hit
       // target — so Theme reads as one family with the other icon-only triggers
@@ -56,7 +60,10 @@ export function ThemeSwitcherButton({
             : "scale-[0.6] -rotate-90 opacity-0"
         )}
       >
-        <Moon className="size-[18px]" aria-hidden="true" />
+        <Moon
+          className="size-[var(--apollon-chrome-icon)]"
+          aria-hidden="true"
+        />
       </span>
       <span
         className={cn(
@@ -66,9 +73,20 @@ export function ThemeSwitcherButton({
             : "scale-100 rotate-0 opacity-100"
         )}
       >
-        <Sun className="size-[18px]" aria-hidden="true" />
+        <Sun className="size-[var(--apollon-chrome-icon)]" aria-hidden="true" />
       </span>
     </button>
+  )
+
+  // The shared Tooltip (not a native `title`) so Theme reveals with the same
+  // instant timing as the other icon-only triggers under the header's delay-0
+  // TooltipProvider. Theme is a plain toggle (no DropdownMenu), so there is no
+  // trigger conflict with the tooltip.
+  return (
+    <Tooltip>
+      <TooltipTrigger render={button} />
+      <TooltipContent>{title}</TooltipContent>
+    </Tooltip>
   )
 }
 
@@ -115,9 +133,15 @@ export const ThemeSwitcherMenu: React.FC<Props> = ({
       >
         Theme
         {isDarkMode ? (
-          <Sun className="size-[18px]" aria-hidden="true" />
+          <Sun
+            className="size-[var(--apollon-chrome-icon)]"
+            aria-hidden="true"
+          />
         ) : (
-          <Moon className="size-[18px]" aria-hidden="true" />
+          <Moon
+            className="size-[var(--apollon-chrome-icon)]"
+            aria-hidden="true"
+          />
         )}
       </DropdownMenuItem>
     )

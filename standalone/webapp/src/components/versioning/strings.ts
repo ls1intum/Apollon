@@ -73,10 +73,6 @@ export const versioningStrings = {
   saveLocalCopySuccess:
     "Saved as a local copy on this device. You can keep editing here.",
   saveLocalCopyFailed: "Couldn't save a local copy. Try again.",
-  // Share-flow notice — local versions stay attached to the original
-  // local UUID, not the new server-assigned id.
-  shareKeepsLocal:
-    "Sharing creates a new collaborative copy. Your local version history stays on this device under the original diagram.",
   justNow: "just now",
   minutesAgo: (n: number) => `${n}m ago`,
   hoursAgo: (n: number) => `${n}h ago`,

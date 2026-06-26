@@ -102,4 +102,9 @@
   --radius-md: var(--home-radius-md);
   --radius-lg: var(--home-radius-lg);
   --radius-xl: var(--home-radius-xl);
+
+  /* Small-caption type role (version sidebar descriptions, preview-banner pill
+     and actions). One size, so the role can't drift between 13px and 13.6px. */
+  --text-caption: 0.8125rem;
+  --text-caption--line-height: 1.2;
 }

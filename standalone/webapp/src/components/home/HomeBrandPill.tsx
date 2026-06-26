@@ -3,9 +3,9 @@ import TumLogo from "assets/images/tum-logo-579x579.png"
 import { ISLAND_LAYOUT_STYLE } from "@/components/navbar/islandPrimitives"
 
 /**
- * Mobile brand pill (< md) — forked from the editor's `MobileBackPill`, but with
- * HOME semantics: the home has no "back", so this is the brand MARK only (TUM
- * logo, no wordmark — on a phone the wordmark is noise that crowds the controls),
+ * Mobile brand pill (< md) with HOME semantics: the home has no "back", so this
+ * is the brand MARK only (TUM logo, no wordmark — on a phone the wordmark is
+ * noise that crowds the controls),
  * wrapped as the single `<header role="banner">` so the home keeps one banner
  * landmark.
  *

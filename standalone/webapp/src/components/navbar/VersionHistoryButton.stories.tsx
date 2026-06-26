@@ -7,8 +7,8 @@ import { VersionHistoryButtonView } from "./VersionHistoryButton"
  * Pure navbar entry point for the version-history drawer. It reflects the
  * drawer's open state via `aria-pressed` and reports clicks via `onToggle` — no
  * store, no routing, so every state is one `args` combo. `color` pins an explicit
- * foreground (the themed mobile dropdown); `labelClassName` can collapse the
- * label to the icon when space is tight.
+ * foreground (the themed mobile dropdown); `iconOnly` collapses it to the icon
+ * with an always-on tooltip.
  */
 const meta = {
   title: "Webapp/Navbar/VersionHistoryButton",
@@ -36,9 +36,10 @@ const meta = {
       description: "Fired when the button is clicked.",
       table: { category: "Events" },
     },
-    labelClassName: {
-      control: "text",
-      description: "Classes for the label span (e.g. `hidden lg:inline`).",
+    iconOnly: {
+      control: "boolean",
+      description:
+        "Icon-only presentation (always hides the label, always tooltips).",
       table: { category: "Appearance" },
     },
   },

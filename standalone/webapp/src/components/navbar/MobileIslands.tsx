@@ -7,6 +7,11 @@ import {
 } from "@tumaet/ui/components/dropdown-menu"
 import { IconButton } from "@tumaet/ui/components/icon-button"
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@tumaet/ui/components/tooltip"
+import {
   CircleHelpIcon,
   FilesIcon,
   MoreVerticalIcon,
@@ -20,36 +25,25 @@ import { HelpMenuItems } from "@/components/home/HomeHelpMenu"
 import { SaveLocalCopyButton } from "./SaveLocalCopyButton"
 import { ThemeSwitcherMenu } from "./ThemeSwitcher"
 import { VersionHistoryButton } from "./VersionHistoryButton"
-import { ISLAND_LAYOUT_STYLE } from "./islandPrimitives"
-
-/**
- * The shadcn `DropdownMenuContent` contract every mobile chrome menu shares: a
- * fixed `w-60` capped to the viewport (minus safe-area + 16px) so a phone never
- * overflows it, with every row forced to a 44px `min-h-11` touch target. Pulled
- * out as a constant so the editor's File / Help menus and the home overflow all
- * size and space their rows identically.
- */
-const MOBILE_MENU_CONTENT_CLASS =
-  "flex w-60 max-w-[calc(100vw-var(--safe-area-inset-left,0px)-var(--safe-area-inset-right,0px)-16px)] flex-col [&_[data-slot=dropdown-menu-item]]:min-h-11"
+import {
+  ISLAND_LAYOUT_STYLE,
+  MOBILE_MENU_CONTENT_CLASS,
+} from "./islandPrimitives"
 
 /**
  * An ICON-ONLY menu trigger for the mobile editor pill: a `.apollon-chrome-iconbtn`
  * glyph (so it reads as one family with the Share / Version / Theme icons) that
- * opens its OWN small dropdown. Because the trigger has no visible text label it
- * carries BOTH an `aria-label` (the accessible name) and a native `title` (the
- * on-hover visible name) — the same icon-only tooltip idiom as
- * `ThemeSwitcherButton` and `ChromeOverflowMenu`. A `title` is used rather than
- * the shared `Tooltip` component on purpose: two base-ui triggers (Tooltip +
- * DropdownMenu) on one button fight over the press handler and the menu never
- * opens. Keeping a `title` is correct here — these are icon-only controls — and
- * is the opposite of the redundant `Tooltip` removed from the labelled Share
- * button.
+ * opens its OWN small dropdown. With no visible text label it carries an
+ * `aria-label` (the accessible name) and the shared {@link Tooltip} as its
+ * on-hover/-focus visible name — the SAME instant-reveal tooltip idiom as every
+ * other icon-only chrome control, composed onto the menu trigger via Base UI's
+ * `render=` so one button is both tooltip-anchor and menu-trigger.
  *
  * This is what keeps File and Help as TWO SEPARATE, scannable menus on the phone
  * (no merged mega-overflow): each gets its own trigger + its own inlined body.
  * `children` receive a `close` callback so a chosen row can dismiss the menu.
  */
-function MobileMenuButton({
+export function MobileMenuButton({
   label,
   icon,
   id,
@@ -66,14 +60,20 @@ function MobileMenuButton({
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
-      <DropdownMenuTrigger
-        id={triggerId}
-        className="apollon-chrome-iconbtn"
-        aria-label={label}
-        title={label}
-      >
-        {icon}
-      </DropdownMenuTrigger>
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <DropdownMenuTrigger
+              id={triggerId}
+              className="apollon-chrome-iconbtn"
+              aria-label={label}
+            >
+              {icon}
+            </DropdownMenuTrigger>
+          }
+        />
+        <TooltipContent>{label}</TooltipContent>
+      </Tooltip>
       <DropdownMenuContent
         aria-labelledby={triggerId}
         align="end"
@@ -87,26 +87,22 @@ function MobileMenuButton({
 }
 
 /**
- * The shared "…" overflow control still used by the HOME mobile pill — a
- * `DropdownMenuTrigger` wearing `.apollon-chrome-iconbtn` directly (no IconButton
- * wrapper to avoid double-styling), a `MoreVertical` glyph, and the shared
- * {@link MOBILE_MENU_CONTENT_CLASS} content contract.
- *
- * The EDITOR mobile pill no longer uses this — per user direction it keeps File
- * and Help as two SEPARATE {@link MobileMenuButton} menus rather than merging
- * everything into one overflow. The home pill (a much shorter Help+Theme tail)
- * still reads best as a single "…", so the control stays for it.
- *
- * Children receive a `close` callback so each row can dismiss the menu after it
- * acts.
+ * The "…" overflow control for the chrome SUB-ROUTE pill (imprint / privacy /
+ * 404): a `DropdownMenuTrigger` wearing `.apollon-chrome-iconbtn` directly (no
+ * IconButton wrapper, to avoid double-styling), the shared instant-reveal
+ * {@link Tooltip}, and the shared {@link MOBILE_MENU_CONTENT_CLASS} contract.
+ * The sub-route's short Help + Theme tail reads as one menu. The editor and home
+ * pills instead keep Help as its own {@link MobileMenuButton} dropdown — no
+ * merged overflow. Children receive a `close` callback to dismiss after acting.
  */
 export function ChromeOverflowMenu({
   /**
    * Accessible name of BOTH the trigger button and (via `aria-labelledby`) the
-   * menu it opens — so the overflow menu keeps a real accessible name (e2e selects
-   * the editor's by `name: "open options"`). Defaults to "open options".
+   * menu it opens, so the overflow keeps a real accessible name (the sub-route
+   * passes "More options", which the e2e suite selects by). Defaults to
+   * "More options".
    */
-  ariaLabel = "open options",
+  ariaLabel = "More options",
   /** Unique id pair for the trigger ↔ menu `aria-labelledby` link. */
   id = "chrome-overflow",
   children,
@@ -121,14 +117,23 @@ export function ChromeOverflowMenu({
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
-      <DropdownMenuTrigger
-        id={triggerId}
-        className="apollon-chrome-iconbtn"
-        aria-label={ariaLabel}
-        title={ariaLabel}
-      >
-        <MoreVerticalIcon className="size-[18px]" aria-hidden />
-      </DropdownMenuTrigger>
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <DropdownMenuTrigger
+              id={triggerId}
+              className="apollon-chrome-iconbtn"
+              aria-label={ariaLabel}
+            >
+              <MoreVerticalIcon
+                className="size-[var(--apollon-chrome-icon)]"
+                aria-hidden
+              />
+            </DropdownMenuTrigger>
+          }
+        />
+        <TooltipContent>{ariaLabel}</TooltipContent>
+      </Tooltip>
       <DropdownMenuContent
         aria-labelledby={triggerId}
         align="end"
@@ -171,22 +176,19 @@ export function MobileBackPill() {
 }
 
 /**
- * Right cluster on narrow phones: a compact row of icon controls — NOT a single
- * mega-overflow. Per user direction the editor keeps File and Help as TWO
- * SEPARATE menus on the phone (each a small, scannable dropdown), so the pill is:
+ * Right cluster on narrow phones — a compact row of icon-only triggers that fits
+ * a 390px pill beside the back pill + title:
  *
- *   Share · Version · File▾ · Help▾ · Theme
+ *   File▾ · Share · Version · Help▾ · Theme
  *
- * all collapsed to icon-only triggers so they fit a 390px pill beside the back
- * pill + title. File▾ opens its own dropdown — New / Import + the flat Export
- * group, plus Save-a-local-copy (a file action, parked here to save pill space).
- * Help▾ opens the shared Help/legal body (editor variant). Theme is a direct
- * 1-tap icon toggle. No nested flyouts, no 18-item dump.
- *
- * Every icon-only control carries a tooltip (its only visible name) — keeping
- * those is correct, unlike the redundant tooltip removed from the labelled
- * desktop Share button. The diagram title is NOT here — it lives in the header's
- * centre track (see EditorHeaderRow).
+ * The left-to-right order matches the desktop actions island exactly, so no
+ * control jumps position between the desktop bar and this pill — Save just folds
+ * into File▾ here (it has no standalone slot on the pill) without moving the
+ * visible siblings. File and Help stay as two separate dropdowns (not one
+ * mega-overflow) so each is a small, scannable menu. File▾ holds New / Import,
+ * the flat Export group, and Save-a-local-copy; Help▾ is the shared Help/legal
+ * body. Each icon-only control carries a tooltip as its accessible name. The
+ * diagram title lives in the header's centre track, not here.
  */
 export function MobileActionsPill() {
   const { openModal } = useModalContext()
@@ -197,26 +199,18 @@ export function MobileActionsPill() {
       className="apollon-glass apollon-chrome-island"
       style={PILL_STYLE}
     >
-      {/* Primary actions stay visible as icons — same .apollon-chrome-iconbtn
-          family (size/hover/radius/focus) as the zoom/minimap controls. Each is
-          icon-only, so its tooltip is its visible name and is kept. */}
-      <IconButton
-        ariaLabel="Share"
-        tooltip="Share"
-        className="apollon-chrome-iconbtn"
-        onClick={() => openModal("SHARE", { dialogVariant: "home" })}
-      >
-        <ShareIcon className="size-4" aria-hidden />
-      </IconButton>
-      <VersionHistoryButton labelClassName="hidden" />
-
       {/* File — its OWN dropdown (not merged with Help). New / Import + the flat
           labelled Export group, then Save-a-local-copy (a file action, parked
           here off the desktop bar to keep the pill compact). */}
       <MobileMenuButton
         id="mobile-file"
         label="File"
-        icon={<FilesIcon className="size-[18px]" aria-hidden />}
+        icon={
+          <FilesIcon
+            className="size-[var(--apollon-chrome-icon)]"
+            aria-hidden
+          />
+        }
       >
         {(close) => (
           <>
@@ -227,12 +221,30 @@ export function MobileActionsPill() {
         )}
       </MobileMenuButton>
 
+      {/* Share + Version stay visible as icons — same .apollon-chrome-iconbtn
+          family (size/hover/radius/focus) as the zoom/minimap controls. Each is
+          icon-only, so its tooltip supplies the otherwise-missing visible name. */}
+      <IconButton
+        ariaLabel="Share"
+        tooltip="Share"
+        className="apollon-chrome-iconbtn"
+        onClick={() => openModal("SHARE", { dialogVariant: "home" })}
+      >
+        <ShareIcon className="size-4" aria-hidden />
+      </IconButton>
+      <VersionHistoryButton iconOnly />
+
       {/* Help — its OWN dropdown (separate from File). The shared Help/legal body
           in the editor variant. */}
       <MobileMenuButton
         id="mobile-help"
         label="Help"
-        icon={<CircleHelpIcon className="size-[18px]" aria-hidden />}
+        icon={
+          <CircleHelpIcon
+            className="size-[var(--apollon-chrome-icon)]"
+            aria-hidden
+          />
+        }
       >
         {(close) => <HelpMenuItems variant="editor" onSelect={close} />}
       </MobileMenuButton>

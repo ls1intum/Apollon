@@ -54,8 +54,7 @@ export function HomeRefinementChips({ chrome }: { chrome: HomeChrome }) {
       <button
         type="button"
         onClick={chrome.resetAll}
-        className="inline-flex min-h-9 cursor-pointer items-center rounded-[var(--apollon-chrome-radius-sm)] px-2 text-xs font-medium whitespace-nowrap transition-colors hover:bg-[var(--apollon-chrome-surface-hover)] focus-visible:shadow-[0_0_0_2px_color-mix(in_srgb,var(--apollon-chrome-accent)_45%,transparent)] focus-visible:outline-none"
-        style={{ color: "var(--apollon-chrome-text)" }}
+        className="inline-flex min-h-9 cursor-pointer items-center rounded-[var(--apollon-chrome-radius-sm)] px-2 text-xs font-medium whitespace-nowrap text-[color:var(--apollon-chrome-text)] transition-colors hover:bg-[var(--apollon-chrome-surface-hover)] focus-visible:shadow-[0_0_0_2px_color-mix(in_srgb,var(--apollon-chrome-accent)_45%,transparent)] focus-visible:outline-none"
       >
         Clear all
       </button>

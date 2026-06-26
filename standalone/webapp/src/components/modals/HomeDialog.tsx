@@ -5,6 +5,7 @@ import { DialogFooter } from "@tumaet/ui/components/dialog"
 import { Input } from "@tumaet/ui/components/input"
 import { Field, FieldLabel } from "@tumaet/ui/components/field"
 import { Alert, AlertDescription } from "@tumaet/ui/components/alert"
+import { cn } from "@tumaet/ui/lib/utils"
 import { ModalFooterPortal } from "@/wrappers/ModalFrame"
 
 export type HomeDialogSize = "compact" | "wide"
@@ -37,7 +38,7 @@ export const HomeDialogContent = ({
 }) => (
   <div
     data-testid={testId}
-    className={`flex min-w-0 flex-col gap-5 ${className}`.trim()}
+    className={cn("flex min-w-0 flex-col gap-5", className)}
   >
     {children}
   </div>
@@ -80,7 +81,10 @@ export const HomeDialogTextInput = (
 ) => (
   <Input
     {...props}
-    className={`h-9 rounded-md border-border bg-background px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-60 ${props.className ?? ""}`.trim()}
+    className={cn(
+      "h-9 rounded-md border-border bg-background px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-60",
+      props.className
+    )}
   />
 )
 
@@ -111,8 +115,10 @@ export const HomeDialogOptionGroup = <T extends string>({
 }) => {
   const headingId = `${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-group`
   // Icon tiles are a compact, scannable grid that never collapses to a single
-  // column in portrait — 2-up by default, 3-up from 480px. Text-only options
-  // keep their row layout (honouring the `columns` prop). #audit-create-grid.
+  // column in portrait: 2-up by default and 3-up from 480px for small glyph
+  // tiles, or a fixed 2-up when the caller asks for `columns={2}` (wide
+  // landscape tiles like template thumbnails). Text-only options honour
+  // `columns` as their row layout.
   const hasIcons = options.some((option) => option.icon)
 
   return (
@@ -126,11 +132,14 @@ export const HomeDialogOptionGroup = <T extends string>({
         {label}
       </h3>
       <div
-        className={
+        className={cn(
+          "grid gap-2",
           hasIcons
-            ? "grid grid-cols-2 gap-2 min-[480px]:grid-cols-3"
-            : `grid grid-cols-1 gap-2 ${columns === 2 ? "sm:grid-cols-2" : ""}`.trim()
-        }
+            ? columns === 2
+              ? "grid-cols-2"
+              : "grid-cols-2 min-[480px]:grid-cols-3"
+            : ["grid-cols-1", columns === 2 && "sm:grid-cols-2"]
+        )}
       >
         {options.map((option) => {
           const selected = option.value === value
@@ -143,15 +152,15 @@ export const HomeDialogOptionGroup = <T extends string>({
               onClick={() => onChange(option.value)}
               onDoubleClick={onConfirm}
               aria-pressed={selected}
-              className={`cursor-pointer rounded-md border transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-60 ${
+              className={cn(
+                "cursor-pointer rounded-md border transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-60",
                 option.icon
                   ? "flex flex-col items-center justify-center gap-1.5 px-2 py-2.5 text-center text-xs font-medium"
-                  : "min-h-9 px-3 py-2 text-left text-sm font-medium"
-              } ${
+                  : "min-h-9 px-3 py-2 text-left text-sm font-medium",
                 selected
                   ? "border-primary bg-accent-soft text-accent-strong"
                   : "border-border bg-card text-foreground hover:bg-accent-hover"
-              }`}
+              )}
             >
               {option.icon}
               <span className="line-clamp-2">{option.label}</span>

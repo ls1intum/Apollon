@@ -15,7 +15,14 @@ import {
   IslandInput,
   ISLAND_LAYOUT_STYLE,
 } from "@/components/navbar/islandPrimitives"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@tumaet/ui/components/tooltip"
 import { navbarButtonStyle } from "@/components/navbar/styleConstants"
+import { useMediaQuery } from "@/hooks"
 import { BrandAndVersion } from "@/components/navbar/BrandAndVersion"
 import { ThemeSwitcherMenu } from "@/components/navbar/ThemeSwitcher"
 import { RefinePopover } from "./RefinePopover"
@@ -151,8 +158,7 @@ function HomeSearchIsland({
       style={{ maxWidth: "560px" }}
     >
       <Search
-        className="size-3.5 shrink-0"
-        style={{ color: "var(--apollon-chrome-text-muted)" }}
+        className="size-3.5 shrink-0 text-[color:var(--apollon-chrome-text-muted)]"
         aria-hidden
       />
       <IslandInput
@@ -168,8 +174,7 @@ function HomeSearchIsland({
       />
       <span
         aria-hidden
-        className="shrink-0 px-1 text-xs font-medium tabular-nums select-none"
-        style={{ color: "var(--apollon-chrome-text)" }}
+        className="shrink-0 px-1 text-xs font-medium tabular-nums select-none text-[color:var(--apollon-chrome-text)]"
       >
         {count}
       </span>
@@ -194,89 +199,110 @@ function HomeActionsIsland({
   onNewDiagram?: () => void
   onImportJson?: () => void
 }) {
+  // Refine/Import reveal their labels at 940 ⇒ disable their icon-only tooltip
+  // there, matching the Help/Save/Version family rule.
+  const isWide = useMediaQuery("(min-width: 940px)")
   return (
-    <Island ariaLabel="Home actions">
-      <button
-        type="button"
-        className="apollon-chrome-iconbtn"
-        aria-pressed={chrome.favoritesOnly}
-        aria-label={
-          chrome.favoritesOnly ? "Show all diagrams" : "Show favorites only"
-        }
-        title="Favorites"
-        onClick={chrome.toggleFavoritesOnly}
-        style={
-          chrome.favoritesOnly
-            ? { color: "var(--home-favorite-star)" }
-            : undefined
-        }
-      >
-        <Star
-          className="size-[18px]"
-          fill={chrome.favoritesOnly ? "currentColor" : "none"}
-          aria-hidden
-        />
-      </button>
+    <TooltipProvider>
+      <Island ariaLabel="Home actions">
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <button
+                type="button"
+                className="apollon-chrome-iconbtn"
+                aria-pressed={chrome.favoritesOnly}
+                aria-label={
+                  chrome.favoritesOnly
+                    ? "Show all diagrams"
+                    : "Show favorites only"
+                }
+                onClick={chrome.toggleFavoritesOnly}
+                style={
+                  chrome.favoritesOnly
+                    ? { color: "var(--home-favorite-star)" }
+                    : undefined
+                }
+              >
+                <Star
+                  className="size-[var(--apollon-chrome-icon)]"
+                  fill={chrome.favoritesOnly ? "currentColor" : "none"}
+                  aria-hidden
+                />
+              </button>
+            }
+          />
+          <TooltipContent>Favorites</TooltipContent>
+        </Tooltip>
 
-      <GroupDivider />
+        <GroupDivider />
 
-      <RefinePopover
-        variant="popover"
-        chrome={chrome}
-        typeOptions={typeOptions}
-        trigger={
-          <button
-            type="button"
-            className={navbarButtonStyle("relative")}
-            aria-label="Refine"
-            title="Refine"
-          >
-            {/* The one deliberately richer control: it keeps its meaningful
-                leading filter glyph + count badge AND — because it opens a
-                popover — gains the trailing caret of the menu family. */}
-            <SlidersHorizontal className="size-4" aria-hidden />
-            {/* Reveal the label as soon as it fits, not at `lg`: the measured
-                geometry (brand 131 + labelled actions 523 + a ≥200px search
-                island + gaps/inset) fits from ~918px, so gating at `lg` (1024)
-                left 920–1023 icon-only with room to spare. `min-[940px]` reveals
-                the labels there while search stays above its floor. */}
-            <span className="hidden min-[940px]:inline">Refine</span>
-            {chrome.refineCount > 0 && (
-              <Badge className="size-4 min-w-0 px-0 text-[10px]">
-                {chrome.refineCount}
-              </Badge>
-            )}
-            <ChevronDownIcon className="size-4" aria-hidden />
-          </button>
-        }
-      />
+        <Tooltip disabled={isWide}>
+          <RefinePopover
+            variant="popover"
+            chrome={chrome}
+            typeOptions={typeOptions}
+            trigger={
+              <TooltipTrigger
+                render={
+                  <button
+                    type="button"
+                    className={navbarButtonStyle("relative")}
+                    aria-label="Refine"
+                  >
+                    {/* Leading filter glyph + count badge, a label that reveals
+                        once it fits (measured ~918px ⇒ `min-[940px]`, not `lg`),
+                        and — because it opens a popover — a trailing caret. */}
+                    <SlidersHorizontal className="size-4" aria-hidden />
+                    <span className="hidden min-[940px]:inline">Refine</span>
+                    {chrome.refineCount > 0 && (
+                      <Badge className="size-4 min-w-0 px-0 text-[10px]">
+                        {chrome.refineCount}
+                      </Badge>
+                    )}
+                    <ChevronDownIcon className="size-4" aria-hidden />
+                  </button>
+                }
+              />
+            }
+          />
+          <TooltipContent>Refine</TooltipContent>
+        </Tooltip>
 
-      <GroupDivider />
+        <GroupDivider />
 
-      <button
-        type="button"
-        className={navbarButtonStyle()}
-        onClick={onImportJson}
-      >
-        <FolderInput className="size-4" aria-hidden />
-        {/* Same threshold as Refine: reveal at `min-[940px]`, where the labelled
-            actions island + brand + a ≥200px search island still fit. */}
-        <span className="hidden min-[940px]:inline">Import</span>
-      </button>
-      <button
-        type="button"
-        className={navbarButtonStyle("apollon-chrome-accent-btn")}
-        onClick={onNewDiagram}
-      >
-        <Plus className="size-4" aria-hidden />
-        <span>New diagram</span>
-      </button>
+        <Tooltip disabled={isWide}>
+          <TooltipTrigger
+            render={
+              <button
+                type="button"
+                className={navbarButtonStyle()}
+                aria-label="Import"
+                onClick={onImportJson}
+              >
+                <FolderInput className="size-4" aria-hidden />
+                {/* Same 940px threshold as Refine. */}
+                <span className="hidden min-[940px]:inline">Import</span>
+              </button>
+            }
+          />
+          <TooltipContent>Import</TooltipContent>
+        </Tooltip>
+        <button
+          type="button"
+          className={navbarButtonStyle("apollon-chrome-accent-btn")}
+          onClick={onNewDiagram}
+        >
+          <Plus className="size-4" aria-hidden />
+          <span>New diagram</span>
+        </button>
 
-      <GroupDivider />
+        <GroupDivider />
 
-      <HomeHelpMenu />
-      <ThemeSwitcherMenu />
-    </Island>
+        <HomeHelpMenu reveal="wide" />
+        <ThemeSwitcherMenu />
+      </Island>
+    </TooltipProvider>
   )
 }
 
@@ -313,14 +339,10 @@ function MobileSearchPill({
         style={{ ...ISLAND_LAYOUT_STYLE, width: "100%" }}
       >
         <Search
-          className="size-4 shrink-0"
-          style={{ color: "var(--apollon-chrome-text-muted)" }}
+          className="size-4 shrink-0 text-[color:var(--apollon-chrome-text-muted)]"
           aria-hidden
         />
-        <span
-          className="min-w-0 truncate text-sm font-medium"
-          style={{ color: "var(--apollon-chrome-text)" }}
-        >
+        <span className="min-w-0 truncate text-sm font-medium text-[color:var(--apollon-chrome-text)]">
           Search diagrams
         </span>
       </button>
@@ -333,8 +355,7 @@ function MobileSearchPill({
       style={{ ...ISLAND_LAYOUT_STYLE, width: "100%" }}
     >
       <Search
-        className="size-4 shrink-0"
-        style={{ color: "var(--apollon-chrome-text-muted)" }}
+        className="size-4 shrink-0 text-[color:var(--apollon-chrome-text-muted)]"
         aria-hidden
       />
       <IslandInput
@@ -349,8 +370,7 @@ function MobileSearchPill({
       />
       <span
         aria-hidden
-        className="shrink-0 px-1 text-xs font-medium tabular-nums select-none"
-        style={{ color: "var(--apollon-chrome-text)" }}
+        className="shrink-0 px-1 text-xs font-medium tabular-nums select-none text-[color:var(--apollon-chrome-text)]"
       >
         {count}
       </span>

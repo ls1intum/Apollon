@@ -367,8 +367,8 @@ export const DiagramGallery = ({
     [allDiagrams]
   )
 
-  // Report the present-type list up so the band's Refine "Type" block mirrors
-  // the old Type filter (only types actually present in the loaded data).
+  // Report the present-type list up so the band's Refine "Type" block offers
+  // only the types actually present in the loaded data.
   useEffect(() => {
     onTypeOptionsChange?.(diagramTypeOptions)
   }, [diagramTypeOptions, onTypeOptionsChange])
