@@ -1,11 +1,10 @@
 import React from "react"
 
+// The live variant set — every one has a rule in app.css
+// ([data-slot="typography"][data-variant="…"]). The MUI h1–h5 scale was dead
+// (unused AND unstyled), so it's gone; this is a small semantic-text helper, not
+// a type ramp.
 type TypographyVariant =
-  | "h1"
-  | "h2"
-  | "h3"
-  | "h4"
-  | "h5"
   | "h6"
   | "subtitle1"
   | "subtitle2"
@@ -15,11 +14,6 @@ type TypographyVariant =
 
 const variantTag: Record<TypographyVariant, keyof React.JSX.IntrinsicElements> =
   {
-    h1: "h1",
-    h2: "h2",
-    h3: "h3",
-    h4: "h4",
-    h5: "h5",
     h6: "h6",
     subtitle1: "p",
     subtitle2: "p",

@@ -3,7 +3,7 @@ import { Check } from "lucide-react"
 import { Popover } from "@base-ui/react/popover"
 import { ToggleGroup } from "@base-ui/react/toggle-group"
 import { Toggle } from "@base-ui/react/toggle"
-import { Button } from "@/components/ui"
+import { Button } from "@tumaet/ui/components/button"
 import {
   NATIVE_COLOR_INPUT_FALLBACK,
   SWATCH_NAMES,

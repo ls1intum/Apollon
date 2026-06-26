@@ -1,11 +1,6 @@
 import { ChangeEvent } from "react"
-import {
-  Button,
-  IconButton,
-  Select,
-  TextField,
-  Typography,
-} from "@/components/ui"
+import { IconButton, Select, TextField, Typography } from "@/components/ui"
+import { Button } from "@tumaet/ui/components/button"
 import { NodeStyleEditor } from "@/components/styleEditor"
 import {
   flipSwimlaneChildPosition,

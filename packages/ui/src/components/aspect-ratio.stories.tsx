@@ -31,9 +31,11 @@ const meta = {
   ],
   render: (args) => (
     <AspectRatio {...args} className="overflow-hidden rounded-lg bg-muted">
+      {/* Self-contained inline SVG (no network request) so the story renders
+          offline and never flakes the CI a11y/visual run on a dropped fetch. */}
       <img
-        src="https://images.unsplash.com/photo-1576075796033-848c2a5f3696?w=800&dpr=2&q=80"
-        alt="Abstract architecture"
+        src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='450'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%230f3a66'/><stop offset='1' stop-color='%232e78b6'/></linearGradient></defs><rect width='100%25' height='100%25' fill='url(%23g)'/><text x='50%25' y='50%25' fill='%23ffffff' font-family='sans-serif' font-size='28' text-anchor='middle' dominant-baseline='middle'>16 : 9</text></svg>"
+        alt="Placeholder"
         className="absolute inset-0 size-full object-cover"
       />
     </AspectRatio>

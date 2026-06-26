@@ -101,8 +101,10 @@ export const WithAction: Story = {
 export const WithImage: Story = {
   render: (args) => (
     <Card {...args} className="w-80">
+      {/* Self-contained inline SVG (no network request) so the story renders
+          offline and never flakes the CI a11y/visual run on a dropped fetch. */}
       <img
-        src="https://placehold.co/320x160/0f3a66/ffffff/png?text=Preview"
+        src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='160'><rect width='100%25' height='100%25' fill='%230f3a66'/><text x='50%25' y='50%25' fill='%23ffffff' font-family='sans-serif' font-size='18' text-anchor='middle' dominant-baseline='middle'>Preview</text></svg>"
         alt="Diagram preview"
         className="h-40 w-full object-cover"
       />

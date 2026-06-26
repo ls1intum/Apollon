@@ -2,7 +2,7 @@ import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import { PopoverProps } from "../types"
 import { GiveFeedbackAssessmentBox } from "../GiveFeedbackAssessmentBox"
-import { Button } from "@/components/ui"
+import { Button } from "@tumaet/ui/components/button"
 import { useGoToNextAssessment } from "@/hooks"
 import { PopoverLayout } from "../PopoverLayout"
 

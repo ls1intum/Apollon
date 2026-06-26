@@ -4,7 +4,7 @@ import { ObjectNodeProps } from "@/types"
 import { PopoverProps } from "../types"
 import { SeeFeedbackAssessmentBox } from "../SeeFeedbackAssessmentBox"
 import { useGoToNextAssessment } from "@/hooks"
-import { Button } from "@/components/ui"
+import { Button } from "@tumaet/ui/components/button"
 import { PopoverLayout } from "../PopoverLayout"
 
 export const ObjectSeeFeedbackPopover = ({ elementId }: PopoverProps) => {
