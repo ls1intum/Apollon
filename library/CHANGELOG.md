@@ -1,5 +1,21 @@
 # @tumaet/apollon
 
+## 4.10.0
+
+### Minor Changes
+
+- [#759](https://github.com/ls1intum/Apollon/pull/759) [`e4a44f2`](https://github.com/ls1intum/Apollon/commit/e4a44f200c864e8684d01bf4113968c7dfc7fa96) Thanks [@FadyGergesRezk](https://github.com/FadyGergesRezk)! - Adds a public theming API for embedding hosts. You can now theme the editor with a typed helper instead of hand-writing CSS variables: `createApollonTheme()` maps a structured `ApollonTheme` (primary, background, grid, etc.) to the underlying `--apollon-*` custom properties, and `<Apollon>` accepts optional `theme` and `dataTheme` props (also available as `ApollonOptions` fields) that are applied to the editor mount node.
+
+  ```ts
+  import { Apollon, createApollonTheme } from "@tumaet/apollon/react"
+
+  <Apollon theme={createApollonTheme({ primary: "#6d28d9", background: "#0b0b0c" })} dataTheme="dark" />
+  ```
+
+  The CSS custom-property contract remains the framework-agnostic source of truth (documented in `THEMING.md`); the helper is an ergonomic, type-safe wrapper over it. Un-themed embeds are unaffected.
+
+- [#759](https://github.com/ls1intum/Apollon/pull/759) [`e4a44f2`](https://github.com/ls1intum/Apollon/commit/e4a44f200c864e8684d01bf4113968c7dfc7fa96) Thanks [@FadyGergesRezk](https://github.com/FadyGergesRezk)! - Removes MUI and Emotion from the editor. Its controls, popovers, toolbars, and minimap are rebuilt on lightweight Base UI primitives and styled entirely through the public `--apollon-*` CSS variables, so embedding hosts get a smaller dependency footprint, no Emotion runtime, and no MUI global-style collisions — with the editor's look and behaviour unchanged.
+
 ## 4.9.0
 
 ### Minor Changes

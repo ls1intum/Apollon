@@ -1,5 +1,16 @@
 # @tumaet/webapp
 
+## 4.10.0
+
+### Minor Changes
+
+- [#759](https://github.com/ls1intum/Apollon/pull/759) [`e4a44f2`](https://github.com/ls1intum/Apollon/commit/e4a44f200c864e8684d01bf4113968c7dfc7fa96) Thanks [@FadyGergesRezk](https://github.com/FadyGergesRezk)! - Rebuilds the web app's interface on one shared component system, so the editor shell, dialogs, version history, and diagram gallery now share a single consistent look — matching the homepage — in both light and dark. Menus, dialogs, and sheets are fully keyboard-accessible, with focus trapped inside them and `Escape` to close, and the app loads lighter after dropping its previous UI framework.
+
+### Patch Changes
+
+- Updated dependencies [[`e4a44f2`](https://github.com/ls1intum/Apollon/commit/e4a44f200c864e8684d01bf4113968c7dfc7fa96), [`e4a44f2`](https://github.com/ls1intum/Apollon/commit/e4a44f200c864e8684d01bf4113968c7dfc7fa96)]:
+  - @tumaet/apollon@4.10.0
+
 ## 4.9.0
 
 ### Minor Changes
@@ -11,7 +22,7 @@
 ### Patch Changes
 
 - Updated dependencies [[`8251733`](https://github.com/ls1intum/Apollon/commit/8251733a965e9fd3cd0beb7565e3abf138a895d5), [`d03f562`](https://github.com/ls1intum/Apollon/commit/d03f562b3fabfc92e7cff870fe08061d678926f6), [`2115fe3`](https://github.com/ls1intum/Apollon/commit/2115fe3d2c787a9055e6d9fbeab61a122eaaf6eb), [`295a627`](https://github.com/ls1intum/Apollon/commit/295a627e1067c0d23fd71ef3e26c8554a4a6e073), [`515777b`](https://github.com/ls1intum/Apollon/commit/515777ba6a45c0110adfa24c1fdb76251d0e9636), [`451ca97`](https://github.com/ls1intum/Apollon/commit/451ca97872d1afb5478e628179151f7acc71aab7)]:
-  - @tumaet/apollon@4.9.0
+  - @tumaet/apollon@4.10.0
 
 ## 4.8.0
 
@@ -30,7 +41,7 @@
 - [#675](https://github.com/ls1intum/Apollon/pull/675) [`1bb280d`](https://github.com/ls1intum/Apollon/commit/1bb280d23f9a4cfb9339a04b2311c1c50aeffae7) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Fixes PNG and PDF export on large or complex diagrams. Exporting one used to do nothing — the menu closed and either no file or a 0-byte image was saved. Now the PNG downloads reliably, the PDF stays sharp at any zoom, and if a diagram is too large to export the app tells you instead of failing silently.
 
 - Updated dependencies [[`82942cd`](https://github.com/ls1intum/Apollon/commit/82942cddec7d3dd33711d3f38eba92e10c1da0c9), [`5013fc6`](https://github.com/ls1intum/Apollon/commit/5013fc632ea0e18c9fce5baf1f66f1d50617a358), [`5d4a8dd`](https://github.com/ls1intum/Apollon/commit/5d4a8dd5d6d34d1c26d4258a99aadc02faca1c17), [`1bb280d`](https://github.com/ls1intum/Apollon/commit/1bb280d23f9a4cfb9339a04b2311c1c50aeffae7)]:
-  - @tumaet/apollon@4.9.0
+  - @tumaet/apollon@4.10.0
 
 ## 4.7.0
 
@@ -47,7 +58,7 @@
 - [#765](https://github.com/ls1intum/Apollon/pull/765) [`6fe657c`](https://github.com/ls1intum/Apollon/commit/6fe657cfabbb1f60936d03b758039fe1e7fade6f) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Simplify PPTX text positioning. `@tumaet/apollon`'s `compat` export now resolves `dominant-baseline` into an explicit baseline `y`, so the PPTX exporter no longer needs its empirically-tuned `TEXT_BASELINE_OFFSET_PX` fudge — the text-box top is derived directly from the resolved baseline and the box height.
 
 - Updated dependencies [[`6fe657c`](https://github.com/ls1intum/Apollon/commit/6fe657cfabbb1f60936d03b758039fe1e7fade6f), [`6fe657c`](https://github.com/ls1intum/Apollon/commit/6fe657cfabbb1f60936d03b758039fe1e7fade6f), [`21c6f99`](https://github.com/ls1intum/Apollon/commit/21c6f9914b1ab24d79fa6f6d6527ca6260db8c43), [`1fc31cc`](https://github.com/ls1intum/Apollon/commit/1fc31cc7c1d2c8dedb3555edb5d5d063f572acae)]:
-  - @tumaet/apollon@4.9.0
+  - @tumaet/apollon@4.10.0
 
 ## 4.6.0
 
@@ -60,7 +71,7 @@
 - [#744](https://github.com/ls1intum/Apollon/pull/744) [`1fdb9bc`](https://github.com/ls1intum/Apollon/commit/1fdb9bc70b2fcfc119619876d595b36eebb36f8a) Thanks [@tamang29](https://github.com/tamang29)! - The playground can now simulate a live collaboration session across two browser tabs, with collapsible side panels that mimic host-app chrome — handy for trying out shared cursors and presence locally.
 
 - Updated dependencies [[`1fdb9bc`](https://github.com/ls1intum/Apollon/commit/1fdb9bc70b2fcfc119619876d595b36eebb36f8a), [`dfb4479`](https://github.com/ls1intum/Apollon/commit/dfb4479bbf15671a6332c96b659efd9dd31c127b)]:
-  - @tumaet/apollon@4.9.0
+  - @tumaet/apollon@4.10.0
 
 ## 4.5.1
 
@@ -83,7 +94,7 @@
 ### Patch Changes
 
 - Updated dependencies:
-  - @tumaet/apollon@4.9.0
+  - @tumaet/apollon@4.10.0
 
 ## 4.4.1
 
