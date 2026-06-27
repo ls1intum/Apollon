@@ -100,7 +100,7 @@ React app it ships a second React that fights the host's.
 peer dependencies:
 
 ```ts
-import { ApollonEditor } from "@tumaet/apollon/react"
+import { ApollonEditor } from "@tumaet/apollon"
 ```
 
 The `/react` build externalizes React and friends so the editor shares the

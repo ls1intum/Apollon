@@ -46,14 +46,6 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./react": {
-      "types": "./dist/react/react.d.ts",
-      "import": "./dist/react/react.js"
-    },
-    "./external": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/external/index.js"
-    },
     "./internals": {
       "types": "./dist/internals.d.ts",
       "import": "./dist/internals.js"
@@ -68,7 +60,7 @@
   },
   "scripts": {
     "dev": "pnpm --filter @tumaet/ui run build:css && vite",
-    "build": "pnpm --filter @tumaet/ui run build:css && pnpm --filter @tumaet/ui run build:types && tsc -b && vite build && LIB_PEERS=true vite build && LIB_EXTERNAL=true vite build && rm -rf dist/react/assets dist/external/assets && node scripts/localize-ui-types.mjs",
+    "build": "pnpm --filter @tumaet/ui run build:css && pnpm --filter @tumaet/ui run build:types && tsc -b && vite build",
     "build:watch": "pnpm --filter @tumaet/ui run build:css && pnpm exec concurrently -k \"pnpm --filter @tumaet/ui run build:css:watch\" \"tsc -b --watch\" \"vite build --watch\"",
     "preview": "vite preview",
     "lint": "eslint .",
@@ -82,19 +74,9 @@
   },
   "size-limit": [
     {
-      "name": "standalone entry (peers inlined)",
+      "name": "main entry (all deps external)",
       "path": "dist/index.js",
-      "limit": "220 kB"
-    },
-    {
-      "name": "/react entry (peers external, Base UI + lucide bundled)",
-      "path": "dist/react/react.js",
-      "limit": "150 kB"
-    },
-    {
-      "name": "/external entry (all deps external)",
-      "path": "dist/external/index.js",
-      "limit": "112 kB"
+      "limit": "120 kB"
     },
     {
       "name": "yjs sync chunk",
@@ -113,17 +95,6 @@
     "react-dom": "^19.0.0",
     "y-protocols": "^1.0.6",
     "yjs": "^13.6.0"
-  },
-  "peerDependenciesMeta": {
-    "@xyflow/react": {
-      "optional": true
-    },
-    "react": {
-      "optional": true
-    },
-    "react-dom": {
-      "optional": true
-    }
   },
   "dependencies": {
     "@chenglou/pretext": "0.0.6",

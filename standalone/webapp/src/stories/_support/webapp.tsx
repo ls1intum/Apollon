@@ -20,7 +20,7 @@ import {
   createRoute,
   createRouter,
 } from "@tanstack/react-router"
-import type { ApollonEditor, UMLModel } from "@tumaet/apollon/react"
+import type { ApollonEditor, UMLModel } from "@tumaet/apollon"
 import { EditorContext, EditorProvider } from "@/contexts/EditorContext"
 import { ModalProvider } from "@/contexts/ModalContext"
 import { ModalProgressProvider } from "@/contexts/ModalProgressContext"

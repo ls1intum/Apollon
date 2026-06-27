@@ -1,4 +1,4 @@
-import { Apollon } from "@tumaet/apollon/react"
+import { Apollon } from "@tumaet/apollon"
 import "@tumaet/apollon/style.css"
 
 /**

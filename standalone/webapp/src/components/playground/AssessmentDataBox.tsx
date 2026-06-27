@@ -4,7 +4,7 @@ import {
   AssessmentViewData,
   getEdgeAssessmentDataById,
   getNodeAssessmentDataByNodeElementId,
-} from "@tumaet/apollon/react"
+} from "@tumaet/apollon"
 import React, { useMemo } from "react"
 
 interface Props {

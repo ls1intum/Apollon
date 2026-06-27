@@ -12,7 +12,7 @@ const HOSTED_URL = "https://apollon.aet.cit.tum.de"
 
 // The read+write loop people actually write: load a saved model and
 // persist edits as they happen. In each host's current idiom.
-const REACT_SNIPPET = `import { Apollon } from "@tumaet/apollon/react"
+const REACT_SNIPPET = `import { Apollon } from "@tumaet/apollon"
 import type { UMLModel } from "@tumaet/apollon"
 import "@tumaet/apollon/style.css"
 

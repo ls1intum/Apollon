@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import type { ApollonEditor } from "@tumaet/apollon/react"
+import type { ApollonEditor } from "@tumaet/apollon"
 import { WebSocketManager } from "./WebSocketManager"
 
 class FakeWebSocket {

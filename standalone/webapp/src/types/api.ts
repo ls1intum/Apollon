@@ -2,7 +2,7 @@
 // Kept in sync manually; small surface, two engineers, type-only duplication
 // is cheaper than a shared workspace at this scale.
 
-import type { UMLModel } from "@tumaet/apollon/react"
+import type { UMLModel } from "@tumaet/apollon"
 
 /**
  * Wire shape for the live diagram (HEAD) and snapshot bodies. Extends the

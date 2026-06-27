@@ -1,4 +1,4 @@
-import type { ApollonEditor } from "@tumaet/apollon/react"
+import type { ApollonEditor } from "@tumaet/apollon"
 
 // `__perf` is an internal dev probe stripped from the published `.d.ts`
 // (@internal + stripInternal), so it isn't on the public `ApollonEditor` type.

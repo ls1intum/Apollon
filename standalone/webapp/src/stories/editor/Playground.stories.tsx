@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
-import { Apollon, ApollonMode } from "@tumaet/apollon/react"
+import { Apollon, ApollonMode } from "@tumaet/apollon"
 import type { UMLDiagramType } from "@tumaet/apollon"
 import {
   editorStoryMeta,

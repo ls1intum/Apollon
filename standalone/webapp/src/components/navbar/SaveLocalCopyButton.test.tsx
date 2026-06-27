@@ -8,7 +8,7 @@ import { SaveLocalCopyButton } from "./SaveLocalCopyButton"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { EditorContext } from "@/contexts"
 import type { UMLModel } from "@tumaet/apollon"
-import type { ApollonEditor } from "@tumaet/apollon/react"
+import type { ApollonEditor } from "@tumaet/apollon"
 
 const fakeModel: UMLModel = {
   version: "4.0.0",
