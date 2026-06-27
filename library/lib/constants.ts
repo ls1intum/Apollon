@@ -180,6 +180,18 @@ export const LAYOUT = Object.freeze({
   STEREOTYPE_NAME_GAP: 4,
 } as const)
 
+/**
+ * Media query for the compact "mobile" palette layout. The portrait bound stops
+ * just below 768px so iPads (768px portrait) keep the regular desktop layout;
+ * the second clause catches phones in landscape, where the short height
+ * distinguishes them from tablets.
+ *
+ * NOTE: mirrored in standalone/webapp/src/constants/responsive.ts (the webapp
+ * can't import the library's curated public surface). Keep both in sync.
+ */
+export const MOBILE_VIEW_QUERY =
+  "(max-width: 767.95px), (max-width: 950px) and (max-height: 500px)"
+
 const generateUUID = () => uuidv4()
 
 // Interface-component sizing. The flat aliases below are local-only; public
