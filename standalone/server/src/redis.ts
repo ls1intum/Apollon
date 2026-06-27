@@ -1,4 +1,4 @@
-import { createClient, type RedisClientType } from "redis"
+import { createClient } from "redis"
 import { gzipSync, gunzipSync } from "node:zlib"
 import { logger } from "./logger.js"
 
@@ -6,13 +6,24 @@ import { logger } from "./logger.js"
 // Client
 // ---------------------------------------------------------------------------
 
-export type Redis = RedisClientType
-
-export function createRedisClient(url: string): Redis {
-  const client: RedisClientType = createClient({ url })
+export function createRedisClient(url: string) {
+  // node-redis@6 defaults to RESP3, which changes the *raw* reply shape of
+  // `sendCommand` (e.g. MODULE LIST returns a Map instead of a flat array).
+  // This module parses raw replies directly (see bootLoadFunction / fcall), so
+  // we pin RESP2 — the officially documented escape hatch — to preserve the
+  // exact wire shapes the parsing relies on. No behavior change vs redis@5.
+  // https://github.com/redis/node-redis/releases (v6.0.0)
+  const client = createClient({ url, RESP: 2 })
   client.on("error", (err) => logger.error({ err }, "redis client error"))
   return client
 }
+
+/**
+ * The concrete node-redis client type used across the server. Derived from the
+ * factory so it carries the RESP2 protocol param (`RedisClientType<…, 2, …>`)
+ * rather than the v6 default RESP3 — keeping it assignable to the real client.
+ */
+export type Redis = ReturnType<typeof createRedisClient>
 
 // ---------------------------------------------------------------------------
 // Key builders — all keys carry the {<id>} hash tag (curly braces are literal;

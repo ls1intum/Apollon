@@ -1,6 +1,9 @@
 import type { NextFunction, Request, Response } from "express"
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto"
-import * as cookie from "cookie"
+// cookie@2 renamed its exports: `parse` -> `parseCookie`,
+// `serialize` -> `stringifySetCookie` (which now takes a single object).
+// https://github.com/jshttp/cookie/releases (v2.0.0)
+import { parseCookie, stringifySetCookie } from "cookie"
 
 const COOKIE_PREFIX = "apollon_owner_"
 const MAX_AGE_SECONDS = 60 * 60 * 24 * 180 // 180 days
@@ -73,7 +76,7 @@ export function ownerReader({ secret }: OwnerCookieOptions) {
       next()
       return
     }
-    const cookies = cookie.parse(req.header("cookie") ?? "")
+    const cookies = parseCookie(req.header("cookie") ?? "")
     const token = cookies[`${COOKIE_PREFIX}${diagramId}`]
     const ok = verify(diagramId, token, secret)
     req.isOwner = ok
@@ -96,7 +99,9 @@ export function setOwnerCookie(
   secret: string
 ): void {
   const value = tokenFor(diagramId, secret)
-  const serialized = cookie.serialize(`${COOKIE_PREFIX}${diagramId}`, value, {
+  const serialized = stringifySetCookie({
+    name: `${COOKIE_PREFIX}${diagramId}`,
+    value,
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
