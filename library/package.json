@@ -141,6 +141,7 @@
   },
   "devDependencies": {
     "@eslint/js": "catalog:",
+    "@microsoft/api-extractor": "7.58.9",
     "@size-limit/preset-big-lib": "catalog:",
     "@testing-library/jest-dom": "catalog:",
     "@testing-library/react": "catalog:",
@@ -166,7 +167,7 @@
     "typescript-eslint": "catalog:",
     "typescript-json-schema": "0.67.4",
     "vite": "catalog:",
-    "vite-plugin-dts": "4.5.4",
+    "vite-plugin-dts": "5.0.3",
     "vitest": "catalog:",
     "y-protocols": "^1.0.7",
     "yjs": "^13.6.31"

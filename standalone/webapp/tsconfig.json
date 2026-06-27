@@ -21,11 +21,8 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
 
-    "ignoreDeprecations": "6.0",
-
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
+      "@/*": ["./src/*"],
       "@tumaet/apollon": ["../../library/dist/index.d.ts"],
       "@tumaet/apollon/react": ["../../library/dist/react/react.d.ts"],
       "@tumaet/apollon/*": ["../../library/dist/*"],
