@@ -1,14 +1,11 @@
-import {
-  DividerLine,
-  StereotypeButtonGroup,
-  NodeStyleEditor,
-} from "@/components"
+import { StereotypeButtonGroup, NodeStyleEditor } from "@/components"
 import { useDiagramStore } from "@/store"
 import { ClassNodeProps } from "@/types"
 import { useShallow } from "zustand/shallow"
 import { EditableAttributeList } from "./EditableAttributesList"
 import { EditableMethodsList } from "./EditableMethodsList"
 import { PopoverProps } from "../types"
+import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 
 export const ClassEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
   const { nodes, setNodes } = useDiagramStore(
@@ -43,20 +40,24 @@ export const ClassEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
   }
 
   return (
-    <>
+    <PopoverLayout title="Class">
       <NodeStyleEditor
         nodeData={nodeData}
+        colorEditorLabel="class"
         handleDataFieldUpdate={handleDataFieldUpdate}
       />
-      <DividerLine width="100%" />
-      <StereotypeButtonGroup
-        nodeId={elementId}
-        selectedStereotype={nodeData.stereotype}
-      />
-      <DividerLine width="100%" />
-      <EditableAttributeList nodeId={elementId} />
-      <DividerLine width="100%" />
-      <EditableMethodsList nodeId={elementId} />
-    </>
+      <PopoverSection title="Stereotype" divider>
+        <StereotypeButtonGroup
+          nodeId={elementId}
+          selectedStereotype={nodeData.stereotype}
+        />
+      </PopoverSection>
+      <PopoverSection divider>
+        <EditableAttributeList nodeId={elementId} />
+      </PopoverSection>
+      <PopoverSection divider>
+        <EditableMethodsList nodeId={elementId} />
+      </PopoverSection>
+    </PopoverLayout>
   )
 }

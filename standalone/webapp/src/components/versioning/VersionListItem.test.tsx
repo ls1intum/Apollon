@@ -66,7 +66,9 @@ describe("VersionListItem row navigation", () => {
 
   it("does not render an anchor for a pending row", async () => {
     renderRow({ pending: true })
-    await screen.findByRole("option")
+    // The row is always a `role="listitem"` (see VersionListItem); a pending row
+    // just renders its body as plain content instead of the navigating anchor.
+    await screen.findByRole("listitem")
     expect(screen.queryByRole("link")).toBeNull()
   })
 })

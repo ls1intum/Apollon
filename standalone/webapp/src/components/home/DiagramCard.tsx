@@ -1,14 +1,49 @@
 import {
+  useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
-  type CSSProperties,
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
+  type ReactNode,
+  type Ref,
 } from "react"
+import { MoreVertical, Star, Unlink } from "lucide-react"
 import type { UMLDiagramType } from "@tumaet/apollon"
-import Menu from "@mui/material/Menu"
-import MenuItem from "@mui/material/MenuItem"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@tumaet/ui/components/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@tumaet/ui/components/alert-dialog"
+import { cn } from "@tumaet/ui/lib/utils"
+import { Skeleton } from "@tumaet/ui/components/skeleton"
+import { Badge } from "@tumaet/ui/components/badge"
+import { Button } from "@tumaet/ui/components/button"
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@tumaet/ui/components/card"
+import { Separator } from "@tumaet/ui/components/separator"
 import { Link, useNavigate } from "@tanstack/react-router"
 import { toast } from "react-toastify"
 import { useModalContext } from "@/contexts"
@@ -17,17 +52,26 @@ import { useMinuteTick } from "@/hooks/useMinuteTick"
 import { DiagramView } from "@/types"
 import { getDiagramTypeIcon, getDiagramTypeShortLabel } from "./diagramTypeMeta"
 import {
+  MOBILE_MENU_CONTENT_CLASS,
+  MOBILE_MENU_SUBCONTENT_CLASS,
+} from "@/components/navbar/islandPrimitives"
+import {
   markSharedDiagramCopied,
   removeSharedDiagramEntry,
   updateSharedDiagramView,
 } from "@/utils/sharedDiagramStorage"
 import {
   SHARED_DIAGRAM_VIEW_OPTIONS,
+  DEFAULT_SHARED_DIAGRAM_VIEW,
   sharedDiagramRoute,
   buildSharedDiagramUrl,
   getSharedDiagramViewBadge,
 } from "@/utils/sharedDiagramLinks"
 import { getCachedThumbnailSources } from "@/utils/thumbnailTheme"
+import { cloneModelAsLocalCopy } from "@/utils/saveLocalDiagramCopy"
+import { DiagramApiClient } from "@/services/DiagramApiClient"
+import { versioningStrings } from "@/components/versioning/strings"
+import { log } from "@/logger"
 import { runWhenIdle } from "@/utils/idle"
 
 export type DiagramSource = "local" | "shared"
@@ -42,33 +86,6 @@ export type RecentDiagram = {
   createdAt?: string
   lastSharedView?: DiagramView
 }
-
-/**
- * Card layout is authored at a 260x300 base size and uniformly scaled up on
- * larger breakpoints via the `--card-scale` CSS variable (see the root card
- * element). All inner spacing is expressed in these base-px steps and run
- * through `scalePx()` so the proportions hold at every scale.
- */
-const CARD_BASE_HEIGHT_PX = 300
-const CARD_HEADER_HEIGHT_PX = 243
-const CARD_FOOTER_HEIGHT_PX = 56
-const CARD_ICON_AREA_HEIGHT_PX = 138
-const CARD_PAD_X_PX = 16
-const CARD_HEADER_PAD_TOP_PX = 54
-const CARD_HEADER_PAD_BOTTOM_PX = 10
-const CARD_FOOTER_PAD_TOP_PX = 10
-const CARD_FOOTER_PAD_BOTTOM_PX = 14
-const CARD_ICON_GAP_PX = 8
-const CARD_ICON_BUTTON_PX = 30
-const CARD_BADGE_MAX_WIDTH_PX = 112
-
-/**
- * Card typography scale (in px). Kept small and named so every label on the
- * card maps to one of these steps instead of an inline literal.
- */
-const CARD_TYPE_TITLE_PX = 13
-const CARD_TYPE_META_PX = 11
-const CARD_TYPE_BADGE_PX = 10.5
 
 const formatRelativeLastModified = (lastModifiedAt: string, nowMs: number) => {
   const parsedDate = new Date(lastModifiedAt)
@@ -114,17 +131,272 @@ const getDiagramNav = (diagram: RecentDiagram) => {
 
   return sharedDiagramRoute(
     diagram.id,
-    diagram.lastSharedView ?? DiagramView.EDIT
+    diagram.lastSharedView ?? DEFAULT_SHARED_DIAGRAM_VIEW
+  )
+}
+
+export type DiagramActionsMenuViewProps = {
+  diagram: RecentDiagram
+  /** When `true`, only the "remove from shared list" entry is shown. */
+  isExpired?: boolean
+  /** `false` disables the Delete entry (e.g. the diagram is open in the editor). */
+  canDelete?: boolean
+  onOpen: () => void
+  onDuplicate: () => void
+  onDelete: () => void
+  onShare: () => void
+  onCopySharedLink: () => void
+  onSaveLocalCopy: () => void
+  onChangeSharedView: (view: DiagramView) => void
+  onRemoveSharedEntry: () => void
+  containerClassName?: string
+  /** Stop click/keydown/mousedown from bubbling to an enclosing card link. */
+  stopPropagation?: boolean
+}
+
+const DEFAULT_MENU_CONTAINER_CLASS = "relative"
+
+/**
+ * The two destructive actions the menu can confirm. Both flow through one
+ * controlled `AlertDialog`; `null` means no confirmation is pending.
+ */
+type PendingConfirm = "delete" | "remove"
+
+/** Title + description + confirm-label copy for each destructive confirmation. */
+const CONFIRM_COPY: Record<
+  PendingConfirm,
+  { title: string; description: string; confirmLabel: string }
+> = {
+  delete: {
+    title: "Delete this diagram?",
+    description:
+      "This permanently deletes the diagram from this device. This action cannot be undone.",
+    confirmLabel: "Delete",
+  },
+  remove: {
+    title: "Remove from shared list?",
+    description:
+      "This removes the diagram from your shared list on this device. The shared diagram itself stays available to anyone with the link.",
+    confirmLabel: "Remove",
+  },
+}
+
+/**
+ * Pure three-dot actions menu: renders the trigger + popover and reports every
+ * action via an `onX` callback; owns only ephemeral UI state (menu open +
+ * pending confirmation).
+ *
+ * Both destructive actions are confirmed through one `AlertDialog` rendered as a
+ * SIBLING of the menu, not nested in a menu item — both portal to
+ * `document.body`, so the menu fully unmounts before the dialog mounts (no
+ * nested focus-trap fragility).
+ */
+export function DiagramActionsMenuView({
+  diagram,
+  isExpired = false,
+  canDelete = true,
+  onOpen,
+  onDuplicate,
+  onDelete,
+  onShare,
+  onCopySharedLink,
+  onSaveLocalCopy,
+  onChangeSharedView,
+  onRemoveSharedEntry,
+  containerClassName = DEFAULT_MENU_CONTAINER_CLASS,
+  stopPropagation = false,
+}: DiagramActionsMenuViewProps) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [pendingConfirm, setPendingConfirm] = useState<PendingConfirm | null>(
+    null
+  )
+
+  const isLocalDiagram = (diagram.source ?? "local") === "local"
+  const sharedView = diagram.lastSharedView ?? DEFAULT_SHARED_DIAGRAM_VIEW
+
+  const runAndClose = (action: () => void) => {
+    action()
+    setIsMenuOpen(false)
+  }
+
+  // Close the menu first, then arm the confirmation. The dialog is a sibling, so
+  // it opens once the menu has dismissed — clean handoff of the focus trap.
+  const requestConfirm = (kind: PendingConfirm) => {
+    setIsMenuOpen(false)
+    setPendingConfirm(kind)
+  }
+
+  const confirmCopy = pendingConfirm ? CONFIRM_COPY[pendingConfirm] : null
+
+  const stopIfNeeded = (
+    event: ReactMouseEvent<HTMLElement> | ReactKeyboardEvent<HTMLElement>
+  ) => {
+    if (stopPropagation) {
+      event.stopPropagation()
+    }
+  }
+
+  return (
+    <div
+      className={containerClassName}
+      onClick={stopIfNeeded}
+      onMouseDown={stopIfNeeded}
+      onKeyDown={stopIfNeeded}
+    >
+      <DropdownMenu
+        open={isMenuOpen}
+        onOpenChange={(open) => setIsMenuOpen(open)}
+      >
+        <DropdownMenuTrigger
+          render={
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-lg"
+              aria-label="Open diagram actions"
+              // Hidden until the card is hovered/focused, but kept visible while
+              // the menu is open (Base UI sets aria-expanded on the trigger) so
+              // an open menu never floats over a vanished trigger.
+              className="pointer-events-auto text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 aria-expanded:opacity-100 home-card-control"
+              onClick={stopIfNeeded}
+            />
+          }
+        >
+          <MoreVertical className="size-5" aria-hidden="true" />
+        </DropdownMenuTrigger>
+
+        <DropdownMenuContent
+          id={`diagram-actions-menu-${diagram.id}`}
+          aria-label="Diagram actions"
+          align="end"
+          sideOffset={8}
+          className={MOBILE_MENU_CONTENT_CLASS}
+        >
+          {isExpired ? (
+            <DropdownMenuItem
+              variant="destructive"
+              closeOnClick={false}
+              onClick={() => requestConfirm("remove")}
+            >
+              Remove from shared list
+            </DropdownMenuItem>
+          ) : isLocalDiagram ? (
+            <>
+              <DropdownMenuItem onClick={() => runAndClose(onOpen)}>
+                Open
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => runAndClose(onDuplicate)}>
+                Duplicate
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => runAndClose(onShare)}>
+                Share
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                variant="destructive"
+                disabled={!canDelete}
+                closeOnClick={false}
+                title={
+                  canDelete
+                    ? undefined
+                    : "Cannot delete diagram currently being edited"
+                }
+                onClick={() => requestConfirm("delete")}
+              >
+                Delete
+              </DropdownMenuItem>
+            </>
+          ) : (
+            <>
+              <DropdownMenuItem onClick={() => runAndClose(onOpen)}>
+                Open
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => runAndClose(onCopySharedLink)}>
+                Copy link
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => runAndClose(onSaveLocalCopy)}>
+                Save as local copy
+              </DropdownMenuItem>
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  Change sharing mode
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent
+                  aria-label="Change sharing mode"
+                  className={MOBILE_MENU_SUBCONTENT_CLASS}
+                >
+                  <DropdownMenuRadioGroup
+                    value={sharedView}
+                    onValueChange={(value) =>
+                      runAndClose(() =>
+                        onChangeSharedView(value as DiagramView)
+                      )
+                    }
+                  >
+                    {SHARED_DIAGRAM_VIEW_OPTIONS.map((option) => (
+                      <DropdownMenuRadioItem
+                        key={option.value}
+                        value={option.value}
+                      >
+                        {option.badge}
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                variant="destructive"
+                closeOnClick={false}
+                onClick={() => requestConfirm("remove")}
+              >
+                Remove from shared list
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <AlertDialog
+        open={pendingConfirm !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingConfirm(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{confirmCopy?.title}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmCopy?.description}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              // The Base UI Close primitive dismisses the dialog on activate,
+              // which fires onOpenChange(false) → setPendingConfirm(null). We only
+              // run the side-effect here; the close is the primitive's job.
+              onClick={() => {
+                if (pendingConfirm === "delete") {
+                  onDelete()
+                } else if (pendingConfirm === "remove") {
+                  onRemoveSharedEntry()
+                }
+              }}
+            >
+              {confirmCopy?.confirmLabel}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
   )
 }
 
 type DiagramActionsMenuProps = {
   diagram: RecentDiagram
   containerClassName?: string
-  triggerClassName?: string
-  triggerStyle?: CSSProperties
-  menuClassName?: string
-  menuStyle?: CSSProperties
   stopPropagation?: boolean
   isExpired?: boolean
   onSharedDiagramRemoved?: (diagramId: string) => void
@@ -133,11 +405,7 @@ type DiagramActionsMenuProps = {
 
 export const DiagramActionsMenu = ({
   diagram,
-  containerClassName = "relative",
-  triggerClassName = "cursor-pointer rounded-md border border-[var(--home-border-default)] bg-[var(--home-surface-sunken)] p-1.5 text-[var(--home-text-primary)] shadow-sm transition-colors duration-200 hover:border-[var(--home-accent-ring)] hover:bg-[var(--home-accent-ring)] hover:text-[var(--home-text-on-badge)] focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2",
-  triggerStyle,
-  menuClassName = "z-40 w-52 rounded-lg border border-[var(--home-border-subtle)] bg-[var(--home-surface-raised)] p-1 shadow-2xl transition-colors duration-200",
-  menuStyle,
+  containerClassName,
   stopPropagation = false,
   isExpired = false,
   onSharedDiagramRemoved,
@@ -149,75 +417,14 @@ export const DiagramActionsMenu = ({
   const duplicateModel = usePersistenceModelStore(
     (state) => state.duplicateModel
   )
+  const createModel = usePersistenceModelStore((state) => state.createModel)
   const currentModelId = usePersistenceModelStore(
     (state) => state.currentModelId
   )
 
-  const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLButtonElement | null>(
-    null
-  )
-  const [sharingModeAnchorEl, setSharingModeAnchorEl] =
-    useState<HTMLElement | null>(null)
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
-  const isMenuOpen = Boolean(menuAnchorEl)
-  const isSharingModeMenuOpen = Boolean(sharingModeAnchorEl)
-
-  const diagramSource = diagram.source ?? "local"
-  const isLocalDiagram = diagramSource === "local"
-  const sharedView = diagram.lastSharedView ?? DiagramView.EDIT
+  const isLocalDiagram = (diagram.source ?? "local") === "local"
+  const sharedView = diagram.lastSharedView ?? DEFAULT_SHARED_DIAGRAM_VIEW
   const isCurrentDiagramInEditor = diagram.id === currentModelId
-  const menuItemClassName =
-    "home-filter-menu-item !min-h-0 !rounded-md !px-3 !py-2 !text-sm !text-[var(--home-text-secondary)] transition-colors duration-200 hover:!bg-[var(--home-surface-raised-hover)] hover:!text-[var(--home-text-primary)] focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2"
-
-  const openSharingModeMenu = (anchorEl: HTMLElement) => {
-    setSharingModeAnchorEl(anchorEl)
-  }
-
-  const closeSharingModeMenu = () => {
-    setSharingModeAnchorEl(null)
-  }
-
-  const closeMenu = () => {
-    closeSharingModeMenu()
-    setMenuAnchorEl(null)
-    setIsDeleteConfirmOpen(false)
-  }
-
-  const handleOpen = () => {
-    navigate(getDiagramNav(diagram))
-    closeMenu()
-  }
-
-  const handleDuplicate = () => {
-    if (!isLocalDiagram) {
-      return
-    }
-
-    duplicateModel(diagram.id)
-    closeMenu()
-  }
-
-  const handleDelete = () => {
-    if (!isLocalDiagram || isCurrentDiagramInEditor) {
-      return
-    }
-
-    deleteModel(diagram.id)
-    closeMenu()
-  }
-
-  const handleShare = () => {
-    if (!isLocalDiagram) {
-      return
-    }
-
-    openModal("SHARE_DASHBOARD", { modelId: diagram.id, contentOverflow: true })
-    closeMenu()
-  }
-
-  const handleCopySharedLink = async () => {
-    await copySharedLink(sharedView, "Link copied.")
-  }
 
   const copySharedLink = async (view: DiagramView, message: string) => {
     try {
@@ -226,394 +433,239 @@ export const DiagramActionsMenu = ({
       )
       markSharedDiagramCopied(diagram.id, view)
       toast.success(message)
-      closeMenu()
     } catch {
       toast.error("Could not copy the shared link.")
     }
   }
 
-  const handleChangeSharedView = (view: DiagramView) => {
-    updateSharedDiagramView(diagram.id, view)
-    onSharedDiagramViewChange?.(diagram.id, view)
-    toast.success(`${getSharedDiagramViewBadge(view)} is now the default link.`)
-    closeMenu()
-  }
-
-  const handleRemoveSharedEntry = () => {
-    removeSharedDiagramEntry(diagram.id)
-    onSharedDiagramRemoved?.(diagram.id)
-    closeMenu()
-  }
-
-  const handleContainerClick = (event: ReactMouseEvent<HTMLElement>) => {
-    if (stopPropagation) {
-      event.stopPropagation()
-    }
-  }
-
-  const handleContainerMouseDown = (event: ReactMouseEvent<HTMLElement>) => {
-    if (stopPropagation) {
-      event.stopPropagation()
-    }
-  }
-
-  const handleContainerKeyDown = (event: ReactKeyboardEvent<HTMLElement>) => {
-    if (stopPropagation) {
-      event.stopPropagation()
+  // Same durability escape hatch as the navbar `SaveLocalCopyButton`, but from
+  // the gallery there is no live editor — fetch the shared model from the
+  // server first, then clone it into a fresh local copy via the shared helper.
+  const saveLocalCopy = async () => {
+    try {
+      const model = await DiagramApiClient.fetchDiagram(diagram.id)
+      const copy = cloneModelAsLocalCopy(model)
+      createModel(copy)
+      markSharedDiagramCopied(diagram.id, sharedView)
+      toast.success(versioningStrings.saveLocalCopySuccess, { autoClose: 6000 })
+      navigate({ to: "/local/$id", params: { id: copy.id }, replace: true })
+    } catch (err) {
+      log.error("Save a local copy from the gallery failed", err as Error)
+      toast.error(versioningStrings.saveLocalCopyFailed)
     }
   }
 
   return (
-    <div
-      className={containerClassName}
-      onClick={handleContainerClick}
-      onMouseDown={handleContainerMouseDown}
-      onKeyDown={handleContainerKeyDown}
-    >
-      <button
-        type="button"
-        aria-label="Open diagram actions"
-        className={`${triggerClassName} home-card-icon-button`}
-        style={triggerStyle}
-        data-active={isMenuOpen ? "true" : "false"}
-        onClick={(event) => {
-          if (stopPropagation) {
-            event.stopPropagation()
-          }
-          setMenuAnchorEl((prevAnchorEl) => {
-            if (prevAnchorEl) {
-              setIsDeleteConfirmOpen(false)
-              closeSharingModeMenu()
-              return null
-            }
-            return event.currentTarget
+    <DiagramActionsMenuView
+      diagram={diagram}
+      isExpired={isExpired}
+      canDelete={isLocalDiagram && !isCurrentDiagramInEditor}
+      stopPropagation={stopPropagation}
+      containerClassName={containerClassName}
+      onOpen={() => navigate(getDiagramNav(diagram))}
+      onDuplicate={() => {
+        if (isLocalDiagram) duplicateModel(diagram.id)
+      }}
+      onDelete={() => {
+        if (isLocalDiagram && !isCurrentDiagramInEditor) {
+          deleteModel(diagram.id)
+        }
+      }}
+      onShare={() => {
+        if (isLocalDiagram) {
+          openModal("SHARE_DASHBOARD", {
+            modelId: diagram.id,
+            contentOverflow: true,
           })
-        }}
-      >
-        <svg
-          className="h-[18px] w-[18px]"
-          viewBox="0 0 24 24"
-          fill="none"
-          aria-hidden="true"
-        >
-          <circle cx="12" cy="5" r="1.7" fill="currentColor" />
-          <circle cx="12" cy="12" r="1.7" fill="currentColor" />
-          <circle cx="12" cy="19" r="1.7" fill="currentColor" />
-        </svg>
-      </button>
-
-      <Menu
-        id={`diagram-actions-menu-${diagram.id}`}
-        anchorEl={menuAnchorEl}
-        open={isMenuOpen}
-        onClose={closeMenu}
-        elevation={0}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        transformOrigin={{ vertical: "top", horizontal: "right" }}
-        PaperProps={{
-          className: `home-filter-menu-paper recent-diagrams-font ${menuClassName}`,
-          style: menuStyle,
-          sx: { mt: 1 },
-        }}
-        MenuListProps={{
-          "aria-label": "Diagram actions",
-          disablePadding: true,
-          className: "home-filter-menu-list recent-diagrams-font p-1",
-          onClick: stopPropagation
-            ? (event) => event.stopPropagation()
-            : undefined,
-        }}
-      >
-        {isExpired ? (
-          <div className="space-y-1">
-            <MenuItem
-              disableGutters
-              sx={{ minHeight: 0 }}
-              className="home-filter-menu-item home-filter-menu-item-delete !min-h-0 !rounded-md !px-3 !py-2 !text-sm transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2"
-              onMouseEnter={closeSharingModeMenu}
-              onClick={handleRemoveSharedEntry}
-            >
-              Remove from shared list
-            </MenuItem>
-          </div>
-        ) : !isDeleteConfirmOpen ? (
-          <div className="space-y-1">
-            <MenuItem
-              disableGutters
-              sx={{ minHeight: 0 }}
-              className={menuItemClassName}
-              onClick={handleOpen}
-            >
-              {isLocalDiagram ? "Open" : "Open diagram"}
-            </MenuItem>
-            {isLocalDiagram ? (
-              <>
-                <MenuItem
-                  disableGutters
-                  sx={{ minHeight: 0 }}
-                  className={menuItemClassName}
-                  onClick={handleDuplicate}
-                >
-                  Duplicate
-                </MenuItem>
-                <MenuItem
-                  disableGutters
-                  sx={{ minHeight: 0 }}
-                  className={menuItemClassName}
-                  onClick={handleShare}
-                >
-                  Share
-                </MenuItem>
-                <div
-                  className="w-full"
-                  title={
-                    isCurrentDiagramInEditor
-                      ? "Cannot delete diagram currently being edited"
-                      : undefined
-                  }
-                >
-                  <MenuItem
-                    disableGutters
-                    sx={{ minHeight: 0 }}
-                    aria-disabled={isCurrentDiagramInEditor}
-                    disabled={isCurrentDiagramInEditor}
-                    className={`home-filter-menu-item !min-h-0 !rounded-md !px-3 !py-2 !text-sm transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2 ${
-                      isCurrentDiagramInEditor
-                        ? "cursor-not-allowed bg-[var(--home-surface-sunken)] text-[var(--home-text-secondary)] opacity-60"
-                        : "home-filter-menu-item-delete !text-[var(--apollon-alert-danger-color)] hover:!bg-[var(--apollon-alert-danger-background)]"
-                    }`}
-                    onClick={() => setIsDeleteConfirmOpen(true)}
-                  >
-                    Delete
-                  </MenuItem>
-                </div>
-              </>
-            ) : (
-              <>
-                <MenuItem
-                  disableGutters
-                  sx={{ minHeight: 0 }}
-                  className={menuItemClassName}
-                  onMouseEnter={closeSharingModeMenu}
-                  onClick={() => void handleCopySharedLink()}
-                >
-                  Copy link
-                </MenuItem>
-                <MenuItem
-                  disableGutters
-                  className={menuItemClassName}
-                  onClick={(event) => openSharingModeMenu(event.currentTarget)}
-                  onMouseEnter={(event) =>
-                    openSharingModeMenu(event.currentTarget)
-                  }
-                  onFocus={(event) => openSharingModeMenu(event.currentTarget)}
-                  aria-haspopup="menu"
-                  aria-controls={
-                    isSharingModeMenuOpen
-                      ? `diagram-sharing-mode-menu-${diagram.id}`
-                      : undefined
-                  }
-                  aria-expanded={isSharingModeMenuOpen ? "true" : undefined}
-                  sx={{
-                    minHeight: 0,
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  Change sharing mode
-                  <svg
-                    className="ml-2 h-4 w-4 shrink-0"
-                    viewBox="0 0 20 20"
-                    fill="none"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M7 4l6 6-6 6"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </MenuItem>
-                <MenuItem
-                  disableGutters
-                  sx={{ minHeight: 0 }}
-                  className="home-filter-menu-item home-filter-menu-item-delete !min-h-0 !rounded-md !px-3 !py-2 !text-sm transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2"
-                  onMouseEnter={closeSharingModeMenu}
-                  onClick={handleRemoveSharedEntry}
-                >
-                  Remove from shared list
-                </MenuItem>
-              </>
-            )}
-          </div>
-        ) : (
-          <div className="min-w-[220px] space-y-2 rounded-md border border-[var(--apollon-alert-danger-border)] bg-[var(--apollon-alert-danger-background)] p-3 text-sm transition-colors duration-200">
-            <p className="font-medium text-[var(--apollon-alert-danger-color)]">
-              Are you sure? This can&apos;t be undone.
-            </p>
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                className="cursor-pointer rounded-md border border-[var(--home-border-default)] bg-[var(--home-surface-base)] px-2 py-1 text-xs text-[var(--home-text-secondary)] transition-colors duration-200 hover:bg-[var(--home-surface-raised-hover)] hover:text-[var(--home-text-primary)] focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2"
-                onClick={() => setIsDeleteConfirmOpen(false)}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="cursor-pointer rounded-md border border-[var(--apollon-alert-danger-border)] bg-[var(--apollon-alert-danger-color)] px-2 py-1 text-xs text-white transition-opacity duration-200 hover:opacity-90 focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2"
-                onClick={handleDelete}
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        )}
-      </Menu>
-      <Menu
-        id={`diagram-sharing-mode-menu-${diagram.id}`}
-        anchorEl={sharingModeAnchorEl}
-        open={isSharingModeMenuOpen}
-        onClose={closeSharingModeMenu}
-        elevation={0}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-        transformOrigin={{ vertical: "top", horizontal: "left" }}
-        PaperProps={{
-          className: `home-filter-menu-paper recent-diagrams-font ${menuClassName}`,
-          style: menuStyle,
-        }}
-        MenuListProps={{
-          "aria-label": "Change sharing mode",
-          disablePadding: true,
-          className: "home-filter-menu-list recent-diagrams-font p-1",
-          onMouseLeave: closeSharingModeMenu,
-          onClick: stopPropagation
-            ? (event) => event.stopPropagation()
-            : undefined,
-        }}
-      >
-        {SHARED_DIAGRAM_VIEW_OPTIONS.map((option) => (
-          <MenuItem
-            key={option.value}
-            disableGutters
-            selected={option.value === sharedView}
-            className={`home-filter-menu-item !min-h-0 !rounded-md !px-2 !py-1.5 !text-xs transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2 ${
-              option.value === sharedView
-                ? "!bg-[var(--home-surface-raised-hover)] !text-[var(--home-text-primary)]"
-                : "!text-[var(--home-text-secondary)] hover:!bg-[color-mix(in_srgb,var(--home-surface-raised-hover)_50%,transparent)] hover:!text-[var(--home-text-primary)]"
-            }`}
-            onClick={() => handleChangeSharedView(option.value)}
-          >
-            <span className="w-full">{option.badge}</span>
-            {option.value === sharedView ? (
-              <span className="font-medium text-[var(--home-text-primary)] opacity-90">
-                Selected
-              </span>
-            ) : null}
-          </MenuItem>
-        ))}
-      </Menu>
-    </div>
+        }
+      }}
+      onCopySharedLink={() => void copySharedLink(sharedView, "Link copied.")}
+      onSaveLocalCopy={() => void saveLocalCopy()}
+      onChangeSharedView={(view) => {
+        updateSharedDiagramView(diagram.id, view)
+        onSharedDiagramViewChange?.(diagram.id, view)
+        toast.success(
+          `${getSharedDiagramViewBadge(view)} is now the default link.`
+        )
+      }}
+      onRemoveSharedEntry={() => {
+        removeSharedDiagramEntry(diagram.id)
+        onSharedDiagramRemoved?.(diagram.id)
+      }}
+    />
   )
 }
 
-/** Renders a file-document shaped placeholder with the diagram-type icon inside. */
-const FileDocumentIcon = ({ type }: { type: UMLDiagramType }) => {
+/**
+ * Centered, theme-aware framed tile for the no-thumbnail glyph states (empty
+ * type icon, expired notice). Token-styled so it sits on the island surface in
+ * both themes. The loading state is NOT a tile — it shimmers edge-to-edge.
+ */
+const PreviewTile = ({ children }: { children: ReactNode }) => {
   return (
-    <div className="relative flex items-center justify-center">
-      {/* File-page SVG shape - scaled to 84x102 */}
-      <svg
-        width="84"
-        height="102"
-        viewBox="0 0 72 88"
-        fill="none"
-        aria-hidden="true"
-      >
-        {/* Page body */}
-        <path
-          d="M4 6C4 2.686 6.686 0 10 0H48L68 20V82C68 85.314 65.314 88 62 88H10C6.686 88 4 85.314 4 82V6Z"
-          fill="var(--home-badge-bg)"
-        />
-        {/* Folded corner */}
-        <path
-          d="M48 0L68 20H54C50.686 20 48 17.314 48 14V0Z"
-          fill="var(--home-badge-fold)"
-        />
-      </svg>
-      {/* Diagram type icon overlaid in the center of the document - scaled to w-8 h-8 */}
-      <div
-        className="absolute flex items-center justify-center"
-        style={{
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -35%)",
-          color: "var(--home-text-on-badge)",
-        }}
-      >
-        {getDiagramTypeIcon(type, "w-8 h-8")}
-      </div>
+    <div className="flex size-20 items-center justify-center rounded-xl border border-border-subtle bg-[color-mix(in_srgb,var(--home-text-primary)_4%,transparent)] text-muted-foreground">
+      {children}
     </div>
   )
 }
 
-type DiagramCardProps = {
+/**
+ * Which of the four mutually-exclusive states the 16:10 preview area renders.
+ * One bounded axis; the precedence (expired › thumbnail › loading › placeholder)
+ * is resolved upstream into this one value.
+ */
+export type DiagramPreviewState =
+  | "thumbnail"
+  | "loading"
+  | "placeholder"
+  | "expired"
+
+type DiagramPreviewProps = {
   diagram: RecentDiagram
-  isThumbnailLoading?: boolean
-  showPlaceholderIcon?: boolean
+  title: string
+  lightDataUrl: string | null
+  darkDataUrl: string | null
+  /** Which of the four mutually-exclusive preview states to render. */
+  state: DiagramPreviewState
+}
+
+/**
+ * The card's preview area. Aspect-ratio driven (16:10) so its height follows
+ * the grid-owned width with no magic px. Exactly one state renders: expired
+ * notice / rendered thumbnail / in-place loading shimmer / empty type glyph.
+ */
+function DiagramPreview({
+  diagram,
+  title,
+  lightDataUrl,
+  darkDataUrl,
+  state,
+}: DiagramPreviewProps) {
+  return (
+    <div className="flex aspect-[16/10] w-full items-center justify-center">
+      {state === "expired" ? (
+        <div className="flex flex-col items-center gap-2.5 text-center text-muted-foreground">
+          <Unlink className="size-10" aria-hidden="true" />
+          <div className="space-y-0.5">
+            <p className="text-xs font-semibold text-[var(--home-text-secondary)]">
+              Link expired
+            </p>
+            <p className="text-[10px] text-muted-foreground">
+              This shared diagram is no longer available
+            </p>
+          </div>
+        </div>
+      ) : state === "thumbnail" ? (
+        <div className="relative h-full w-full">
+          <img
+            src={lightDataUrl!}
+            alt={`${title} diagram preview`}
+            className="theme-thumbnail-image theme-thumbnail-light"
+            loading="lazy"
+          />
+          {darkDataUrl && (
+            <img
+              src={darkDataUrl}
+              alt=""
+              aria-hidden="true"
+              className="theme-thumbnail-image theme-thumbnail-dark"
+              loading="lazy"
+            />
+          )}
+        </div>
+      ) : state === "loading" ? (
+        // Thumbnail generating: shimmer the WHOLE preview in place (same shared
+        // `Skeleton` as DiagramGallerySkeleton) so per-card and whole-gallery
+        // loading read as one visual language.
+        <Skeleton className="size-full rounded-md" />
+      ) : (
+        <PreviewTile>{getDiagramTypeIcon(diagram.type, "size-9")}</PreviewTile>
+      )}
+    </div>
+  )
+}
+
+type CardTagTone = "type" | "local" | "shared"
+
+const CARD_TAG_TONE: Record<CardTagTone, { bg: string; text: string }> = {
+  type: { bg: "var(--home-tag-type-bg)", text: "var(--home-tag-type-text)" },
+  local: { bg: "var(--home-tag-local-bg)", text: "var(--home-tag-local-text)" },
+  shared: {
+    bg: "var(--home-tag-shared-bg)",
+    text: "var(--home-tag-shared-text)",
+  },
+}
+
+function CardTag({ label, tone }: { label: string; tone: CardTagTone }) {
+  const { bg, text } = CARD_TAG_TONE[tone]
+  return (
+    <Badge
+      // The neutral type pill stays at the Badge's medium weight; the source /
+      // sharing-mode pill is emphasized to read as the card's primary tag.
+      className={cn(
+        "h-auto max-w-[12ch] truncate rounded border-0 px-2 py-0.5 text-xs leading-tight",
+        tone !== "type" && "font-semibold"
+      )}
+      title={label}
+      style={{ background: bg, color: text }}
+    >
+      {label}
+    </Badge>
+  )
+}
+
+export type DiagramCardThumbnail = {
+  lightDataUrl: string | null
+  darkDataUrl: string | null
+}
+
+export type DiagramCardViewProps = {
+  diagram: RecentDiagram
+  /** `null` when there is no thumbnail (placeholder/type icon or loading shimmer). */
+  thumbnail?: DiagramCardThumbnail | null
+  /** `"expired"` also drives the disabled-navigation + dimmed treatment on the card. */
+  previewState: DiagramPreviewState
+  /** Show the secondary Local/Shared source badge. */
   showSourceBadge?: boolean
   isHighlighted?: boolean
-  isExpired?: boolean
-  onToggleFavorite?: (diagram: RecentDiagram) => void
-  onSharedDiagramRemoved?: (diagramId: string) => void
-  onSharedDiagramViewChange?: (diagramId: string, view: DiagramView) => void
+  isFavorite?: boolean
+  /** When omitted the star is hidden (e.g. expired shared diagrams). */
+  onToggleFavorite?: () => void
+  onOpen?: () => void
+  /** The three-dot actions menu, slotted in by the container. */
+  actionsMenu?: ReactNode
+  className?: string
+  ref?: Ref<HTMLDivElement>
 }
 
-const DiagramCardComponent = ({
+/**
+ * Pure diagram tile: thumbnail, title, relative date, type/source badges, a
+ * favorite star, and a slot for the three-dot actions menu. Takes thumbnail +
+ * favorite state as props; reports toggle/open as callbacks — no store or router.
+ */
+export function DiagramCardView({
   diagram,
-  isThumbnailLoading = false,
-  showPlaceholderIcon = false,
+  thumbnail = null,
+  previewState,
   showSourceBadge = false,
   isHighlighted = false,
-  isExpired = false,
+  isFavorite = false,
   onToggleFavorite,
-  onSharedDiagramRemoved,
-  onSharedDiagramViewChange,
-}: DiagramCardProps) => {
-  const toggleFavorite = usePersistenceModelStore(
-    (state) => state.toggleFavorite
-  )
-  const thumbnailSvg = usePersistenceModelStore(
-    (state) => state.thumbnails[diagram.id] ?? null
-  )
-  const thumbnailRevision = usePersistenceModelStore(
-    (state) => state.thumbnailRevisions[diagram.id] ?? 0
-  )
-
+  onOpen,
+  actionsMenu,
+  className,
+  ref,
+}: DiagramCardViewProps) {
+  // Expired drives both the preview tile AND the card-level disabled/dimmed
+  // treatment; it is the single highest-precedence preview state.
+  const isExpired = previewState === "expired"
   // Untitled diagrams keep an empty real title and show a muted placeholder.
   const isUntitled = !diagram.title.trim()
   const title = diagram.title.trim() || "Untitled diagram"
-  const diagramSource = diagram.source ?? "local"
-  const isLocalDiagram = diagramSource === "local"
-  const canToggleFavorite =
-    !isExpired && (isLocalDiagram || Boolean(onToggleFavorite))
-  const thumbnailCacheKey = `${diagram.id}:${thumbnailRevision}`
-  const lightDataUrl = useMemo(
-    () =>
-      getCachedThumbnailSources(thumbnailCacheKey, thumbnailSvg)
-        ?.lightDataUrl ?? null,
-    [thumbnailCacheKey, thumbnailSvg]
-  )
-  const [darkDataUrl, setDarkDataUrl] = useState<string | null>(null)
+  const isLocalDiagram = (diagram.source ?? "local") === "local"
+  const lightDataUrl = thumbnail?.lightDataUrl ?? null
+  const darkDataUrl = thumbnail?.darkDataUrl ?? null
 
-  const shouldRenderDiagramThumbnail =
-    !showPlaceholderIcon && Boolean(lightDataUrl)
-  // Non-empty diagram with no thumbnail yet — treat as loading to avoid
-  // flashing the fallback type icon during the pre-warmup delay.
-  const isEffectivelyLoading =
-    isThumbnailLoading || (!showPlaceholderIcon && !lightDataUrl)
   // Re-render once a minute (via a shared interval) so the relative date stays fresh.
   useMinuteTick()
   const relativeDate = formatRelativeLastModified(
@@ -625,7 +677,229 @@ const DiagramCardComponent = ({
   const shortTypeLabel = getDiagramTypeShortLabel(diagram.type)
   const sourceTypeLabel = isLocalDiagram ? "Local" : "Shared"
   const sharedViewLabel = getSharedDiagramViewBadge(diagram.lastSharedView)
-  const scalePx = (value: number) => `calc(var(--card-scale) * ${value}px)`
+
+  // Footer tag group: the diagram-type pill is always shown; a secondary pill
+  // is the Local/Shared source (in the "all diagrams" view) or, for shared
+  // diagrams, the current sharing mode.
+  const secondaryTag: { label: string; tone: CardTagTone } | null =
+    showSourceBadge
+      ? { label: sourceTypeLabel, tone: isLocalDiagram ? "local" : "shared" }
+      : !isLocalDiagram
+        ? { label: sharedViewLabel, tone: "shared" }
+        : null
+
+  const nav = getDiagramNav(diagram)
+
+  return (
+    <Card
+      ref={ref}
+      role="listitem"
+      className={cn(
+        // Island look (shared chrome tokens): chrome SURFACE fill, 12px radius,
+        // hairline chrome border, soft resting float — so the card reads as a
+        // floating island separated from the home page by its border + shadow.
+        // Width is grid-owned (auto-fill minmax 1fr); `--card-min-h` is the only
+        // sizing knob.
+        "home-diagram-card group relative flex min-h-[var(--card-min-h)] flex-col gap-0 overflow-hidden rounded-[var(--apollon-chrome-radius-lg)] border border-[var(--apollon-chrome-border)] bg-[var(--home-card-surface)] py-0 shadow-[var(--apollon-chrome-shadow-floating)] transition-all duration-[280ms] ease-[cubic-bezier(0.16,1,0.3,1)]",
+        isHighlighted
+          ? "animate-[diagram-highlight-pulse_2.4s_ease-out_forwards] bg-accent-hover shadow-[0_0_0_3px_color-mix(in_srgb,var(--home-accent-base)_35%,transparent)]"
+          : "hover:bg-accent-hover hover:shadow-[0_6px_16px_var(--home-shadow-card-hover)]",
+        className
+      )}
+    >
+      {/* Clickable card body. A real link so cmd/ctrl/middle-click opens the
+          diagram in a new tab; plain click still navigates within the SPA. The
+          stretched `after` pseudo-element makes the whole card the hit target;
+          the overlaid controls sit above it via their z-20 wrapper. */}
+      <Link
+        {...nav}
+        // Expired links keep `preventDefault` AND `tabIndex={-1}`: aria-disabled
+        // is advisory only, so TanStack <Link> would still navigate on Enter.
+        onClick={(event) => {
+          if (isExpired) {
+            event.preventDefault()
+            return
+          }
+          onOpen?.()
+        }}
+        aria-label={isExpired ? `${title} (expired)` : `Open ${title}`}
+        aria-disabled={isExpired}
+        tabIndex={isExpired ? -1 : undefined}
+        className={cn(
+          // Keyboard-only focus ring (focus-visible, not focus-within): a mouse
+          // press does not paint a ring. Inset + the design-system `ring` token
+          // so overflow-hidden can't clip it and it stays theme-aware.
+          "flex h-full w-full flex-col rounded-[inherit] text-left outline-none after:absolute after:inset-0 after:z-10 after:content-[''] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+          isExpired ? "cursor-default" : "cursor-pointer"
+        )}
+      >
+        <CardHeader className="flex w-full flex-col gap-2 rounded-none px-4 pt-12 pb-2">
+          <DiagramPreview
+            diagram={diagram}
+            title={title}
+            lightDataUrl={lightDataUrl}
+            darkDataUrl={darkDataUrl}
+            state={previewState}
+          />
+
+          <CardContent className="mt-auto w-full px-0 text-left">
+            {/* Keep the title visible (dimmed) when expired so the user can tell
+                which shared entry to remove. */}
+            <p
+              className={cn(
+                "line-clamp-2 text-sm leading-snug font-medium",
+                isUntitled
+                  ? "text-muted-foreground italic"
+                  : "text-[var(--home-text-strong)]",
+                isExpired && "opacity-50"
+              )}
+              title={title}
+            >
+              {title}
+            </p>
+          </CardContent>
+        </CardHeader>
+
+        {/* Inset hairline: w-auto + mx-4 overrides the primitive's full width;
+            border-subtle keeps it lighter than the default border tone. */}
+        <Separator className="mx-4 w-auto bg-border-subtle" />
+
+        <CardFooter
+          className={cn(
+            "flex w-full items-center justify-between gap-2 rounded-none border-t-0 bg-transparent px-4 pt-2.5 pb-3.5",
+            isExpired && "opacity-50"
+          )}
+        >
+          <time
+            dateTime={diagram.lastModifiedAt}
+            title={new Date(diagram.lastModifiedAt).toLocaleString()}
+            className="truncate text-xs leading-tight font-medium text-muted-foreground"
+          >
+            {relativeDate}
+          </time>
+
+          <div className="flex shrink-0 items-center gap-1">
+            <CardTag label={shortTypeLabel} tone="type" />
+            {secondaryTag ? (
+              <CardTag label={secondaryTag.label} tone={secondaryTag.tone} />
+            ) : null}
+          </div>
+        </CardFooter>
+      </Link>
+
+      {/* Overlaid controls: the wrapper only positions (z-20, above the link's
+          z-10 `after`); each control owns its own reveal so the star stays
+          pinned when favorited while the ⋮ reveals on hover/focus/open. */}
+      <div className="pointer-events-none absolute inset-x-3 top-3 z-20 flex items-start justify-between">
+        {/* Favorite star: pinned visible when favorited, else reveals on hover/focus. */}
+        {onToggleFavorite ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-lg"
+            aria-label={
+              isFavorite ? "Remove from favorites" : "Add to favorites"
+            }
+            aria-pressed={isFavorite}
+            className={cn(
+              "pointer-events-auto transition-opacity",
+              isFavorite
+                ? "text-[var(--home-favorite-star)] opacity-100"
+                : "text-muted-foreground opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 home-card-control"
+            )}
+            onClick={(event) => {
+              event.stopPropagation()
+              onToggleFavorite()
+            }}
+          >
+            <Star
+              className="size-5"
+              aria-hidden="true"
+              fill={isFavorite ? "currentColor" : "none"}
+            />
+          </Button>
+        ) : (
+          <span />
+        )}
+
+        {actionsMenu}
+      </div>
+    </Card>
+  )
+}
+
+type DiagramCardProps = {
+  diagram: RecentDiagram
+  /**
+   * The requested preview state from the gallery (`"expired"`/`"placeholder"`
+   * resolve directly; `"loading"`/`"thumbnail"` are finalized here against the
+   * actual thumbnail data so the eventual rendered state matches the data).
+   */
+  previewState: DiagramPreviewState
+  showSourceBadge?: boolean
+  isHighlighted?: boolean
+  onToggleFavorite?: (diagram: RecentDiagram) => void
+  onSharedDiagramRemoved?: (diagramId: string) => void
+  onSharedDiagramViewChange?: (diagramId: string, view: DiagramView) => void
+  /**
+   * Register this card's root node with the shared thumbnail viewport-priority
+   * observer. While the card is on screen the warmup worker prefers it, so the
+   * thumbnail the user is looking at generates before off-screen ones. Returns a
+   * cleanup the card runs when its node detaches or it unmounts.
+   */
+  observeViewport?: (id: string, node: Element | null) => () => void
+}
+
+const DiagramCardComponent = ({
+  diagram,
+  previewState,
+  showSourceBadge = false,
+  isHighlighted = false,
+  onToggleFavorite,
+  onSharedDiagramRemoved,
+  onSharedDiagramViewChange,
+  observeViewport,
+}: DiagramCardProps) => {
+  const toggleFavorite = usePersistenceModelStore(
+    (state) => state.toggleFavorite
+  )
+  const thumbnailSvg = usePersistenceModelStore(
+    (state) => state.thumbnails[diagram.id] ?? null
+  )
+  const thumbnailRevision = usePersistenceModelStore(
+    (state) => state.thumbnailRevisions[diagram.id] ?? 0
+  )
+
+  const isExpired = previewState === "expired"
+  const isLocalDiagram = (diagram.source ?? "local") === "local"
+  const canToggleFavorite =
+    !isExpired && (isLocalDiagram || Boolean(onToggleFavorite))
+
+  // Register the card's root node with the shared viewport-priority observer so
+  // the warmup worker prefers on-screen cards. Managed via a ref callback (not an
+  // effect) so it tracks the node, and the cleanup is held in a ref so a node
+  // swap or unmount always unobserves the previous node exactly once.
+  const cardObserveId = diagram.id
+  const observeCleanupRef = useRef<(() => void) | null>(null)
+  const cardRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      observeCleanupRef.current?.()
+      observeCleanupRef.current = null
+      if (node && observeViewport) {
+        observeCleanupRef.current = observeViewport(cardObserveId, node)
+      }
+    },
+    [observeViewport, cardObserveId]
+  )
+
+  const thumbnailCacheKey = `${diagram.id}:${thumbnailRevision}`
+  const lightDataUrl = useMemo(
+    () =>
+      getCachedThumbnailSources(thumbnailCacheKey, thumbnailSvg)
+        ?.lightDataUrl ?? null,
+    [thumbnailCacheKey, thumbnailSvg]
+  )
+  const [darkDataUrl, setDarkDataUrl] = useState<string | null>(null)
 
   useEffect(() => {
     if (!thumbnailSvg) {
@@ -646,342 +920,47 @@ const DiagramCardComponent = ({
     })
   }, [thumbnailCacheKey, thumbnailSvg])
 
-  const handleFavoriteToggle = (event: ReactMouseEvent<HTMLButtonElement>) => {
-    event.stopPropagation()
-    if (onToggleFavorite) {
-      onToggleFavorite(diagram)
-      return
-    }
-
-    if (isLocalDiagram) {
-      toggleFavorite(diagram.id)
-    }
-  }
+  // Expired/placeholder are terminal; loading vs thumbnail is decided here by the
+  // actual thumbnail data (a non-empty diagram with no thumbnail yet shimmers as
+  // loading to avoid flashing the fallback type icon during the pre-warmup delay).
+  const resolvedPreviewState: DiagramPreviewState =
+    previewState === "expired" || previewState === "placeholder"
+      ? previewState
+      : lightDataUrl
+        ? "thumbnail"
+        : "loading"
 
   return (
-    <div
-      role="listitem"
-      className={`home-diagram-card group relative mx-auto flex flex-col overflow-hidden bg-[var(--home-surface-raised)] transition-all duration-[280ms] ease-[cubic-bezier(0.16,1,0.3,1)] [--card-scale:1] hover:bg-[var(--home-surface-raised-hover)] md:[--card-scale:1.0769231] xl:[--card-scale:1.1538462] ${
-        isHighlighted
-          ? "bg-[var(--home-surface-raised-hover)]"
-          : "hover:[box-shadow:0_6px_16px_var(--home-shadow-card-hover)]"
-      }`}
-      style={{
-        border: "1px solid var(--home-border-subtle)",
-        borderRadius: "var(--home-radius-sm)",
-        width: "100%",
-        maxWidth: "300px",
-        height: scalePx(CARD_BASE_HEIGHT_PX),
-        boxShadow: isHighlighted
-          ? "0 0 0 4px var(--home-glow-neutral), 0 8px 32px var(--home-glow-neutral)"
-          : undefined,
-        animation: isHighlighted
-          ? "diagram-highlight-pulse 2.4s ease-out forwards"
-          : undefined,
-      }}
-    >
-      {/* Expired overlay */}
-      {isExpired && (
-        <div
-          className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-1 rounded-[var(--home-radius-sm)]"
-          style={{
-            background:
-              "color-mix(in srgb, var(--home-surface-raised) 80%, transparent)",
-          }}
-        >
-          <span
-            className="text-xs font-semibold"
-            style={{ color: "var(--home-text-secondary)" }}
-          >
-            Link expired
-          </span>
-          <span
-            className="text-[10px]"
-            style={{ color: "var(--home-text-muted)" }}
-          >
-            This shared diagram is no longer available
-          </span>
-        </div>
-      )}
-
-      {/* Clickable card body. A real link so cmd/ctrl/middle-click opens the
-          diagram in a new tab; plain click still navigates within the SPA. */}
-      <Link
-        {...getDiagramNav(diagram)}
-        onClick={(event) => {
-          if (isExpired) event.preventDefault()
-        }}
-        aria-label={isExpired ? `${title} (expired)` : `Open ${title}`}
-        aria-disabled={isExpired}
-        className={`flex h-full w-full flex-col text-left focus-visible:outline-2 focus-visible:outline-offset-2 ${isExpired ? "cursor-default opacity-40" : "cursor-pointer"}`}
-        style={{ outlineColor: "var(--home-accent-ring)" }}
-      >
-        {/* ---- Header Part: preview + title aligned horizontally ---- */}
-        <div
-          className="flex w-full flex-col"
-          style={{
-            height: scalePx(CARD_HEADER_HEIGHT_PX),
-            background: "transparent",
-            padding: `${scalePx(CARD_HEADER_PAD_TOP_PX)} ${scalePx(CARD_PAD_X_PX)} ${scalePx(CARD_HEADER_PAD_BOTTOM_PX)} ${scalePx(CARD_PAD_X_PX)}`,
-          }}
-        >
-          {/* ---- Icon preview area (Transparent) ---- */}
-          <div
-            className="flex w-full items-center justify-center"
-            style={{
-              background: "transparent",
-              height: scalePx(CARD_ICON_AREA_HEIGHT_PX),
-              marginBottom: scalePx(CARD_ICON_GAP_PX),
-            }}
-          >
-            {shouldRenderDiagramThumbnail ? (
-              <div className="relative h-full w-full">
-                <img
-                  src={lightDataUrl!}
-                  alt={`${title} diagram preview`}
-                  className="theme-thumbnail-image theme-thumbnail-light"
-                  loading="lazy"
-                />
-                {darkDataUrl && (
-                  <img
-                    src={darkDataUrl}
-                    alt=""
-                    aria-hidden="true"
-                    className="theme-thumbnail-image theme-thumbnail-dark"
-                    loading="lazy"
-                  />
-                )}
-              </div>
-            ) : isEffectivelyLoading && !showPlaceholderIcon ? (
-              <div className="flex flex-col items-center gap-2">
-                <span
-                  className="h-5 w-5 animate-spin rounded-full border-2"
-                  style={{
-                    borderColor: "var(--home-border-default)",
-                    borderTopColor: "var(--home-accent-base)",
-                  }}
-                />
-                <span
-                  className="text-xs font-medium"
-                  style={{ color: "var(--home-text-secondary)" }}
-                >
-                  Loading...
-                </span>
-              </div>
-            ) : showPlaceholderIcon ? (
-              <FileDocumentIcon type={diagram.type} />
-            ) : (
-              <div
-                className="flex h-full w-full items-center justify-center"
-                style={{ color: "var(--home-text-on-badge)" }}
-              >
-                {getDiagramTypeIcon(diagram.type, "w-12 h-12")}
-              </div>
-            )}
-          </div>
-
-          {/* ---- Title section (smaller, bottom-left in header) ---- */}
-          <div className="mt-auto w-full text-left">
-            <p
-              className="truncate"
-              title={title}
-              style={{
-                color: isUntitled
-                  ? "var(--home-text-muted)"
-                  : "var(--home-text-strong)",
-                fontStyle: isUntitled ? "italic" : "normal",
-                fontSize: `${CARD_TYPE_TITLE_PX}px`,
-                fontWeight: 500,
-                lineHeight: "1.3",
-              }}
-            >
-              {title}
-            </p>
-          </div>
-        </div>
-
-        {/* ---- Divider line ---- */}
-        <div
-          style={{
-            borderTop: "0.5px solid var(--home-border-subtle)",
-            margin: `0 ${scalePx(CARD_PAD_X_PX)}`,
-          }}
+    <DiagramCardView
+      ref={cardRef}
+      diagram={diagram}
+      thumbnail={lightDataUrl ? { lightDataUrl, darkDataUrl } : null}
+      previewState={resolvedPreviewState}
+      showSourceBadge={showSourceBadge}
+      isHighlighted={isHighlighted}
+      isFavorite={diagram.favorite}
+      onToggleFavorite={
+        canToggleFavorite
+          ? () => {
+              if (onToggleFavorite) {
+                onToggleFavorite(diagram)
+              } else if (isLocalDiagram) {
+                toggleFavorite(diagram.id)
+              }
+            }
+          : undefined
+      }
+      actionsMenu={
+        <DiagramActionsMenu
+          diagram={diagram}
+          stopPropagation
+          isExpired={isExpired}
+          containerClassName="pointer-events-auto relative"
+          onSharedDiagramRemoved={onSharedDiagramRemoved}
+          onSharedDiagramViewChange={onSharedDiagramViewChange}
         />
-
-        {/* ---- Bottom metadata + tags row ---- */}
-        <div
-          className="flex items-center justify-between w-full"
-          style={{
-            padding: `${scalePx(CARD_FOOTER_PAD_TOP_PX)} ${scalePx(CARD_PAD_X_PX)} ${scalePx(CARD_FOOTER_PAD_BOTTOM_PX)} ${scalePx(CARD_PAD_X_PX)}`,
-            height: scalePx(CARD_FOOTER_HEIGHT_PX),
-          }}
-        >
-          {/* Relative last-modified date; full timestamp on hover */}
-          <div
-            className="flex flex-col text-left"
-            title={new Date(diagram.lastModifiedAt).toLocaleString()}
-          >
-            <span
-              style={{
-                color: "var(--home-text-muted)",
-                fontSize: `${CARD_TYPE_META_PX}px`,
-                lineHeight: "1.2",
-              }}
-            >
-              Modified:
-            </span>
-            <span
-              className="truncate font-medium"
-              style={{
-                color: "var(--home-text-muted)",
-                fontSize: `${CARD_TYPE_META_PX}px`,
-                lineHeight: "1.2",
-              }}
-            >
-              {relativeDate}
-            </span>
-          </div>
-
-          {/*
-            Tag group — always shows the diagram-type pill (primary).
-            A secondary source/mode pill is added when relevant:
-            - "all diagrams" view: Local or Shared
-            - shared diagrams: the sharing mode (view/edit)
-          */}
-          <div className="flex shrink-0 items-center gap-1 pl-2">
-            <span
-              className="rounded"
-              title={shortTypeLabel}
-              style={{
-                padding: "3px 8px",
-                fontSize: `${CARD_TYPE_BADGE_PX}px`,
-                lineHeight: 1.2,
-                background: "var(--home-tag-type-bg)",
-                color: "var(--home-tag-type-text)",
-                fontWeight: 500,
-                maxWidth: scalePx(CARD_BADGE_MAX_WIDTH_PX),
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {shortTypeLabel}
-            </span>
-            {showSourceBadge ? (
-              <span
-                className="rounded"
-                title={sourceTypeLabel}
-                style={{
-                  padding: "3px 8px",
-                  fontSize: `${CARD_TYPE_BADGE_PX}px`,
-                  lineHeight: 1.2,
-                  background: isLocalDiagram
-                    ? "var(--home-tag-local-bg)"
-                    : "var(--home-tag-shared-bg)",
-                  color: isLocalDiagram
-                    ? "var(--home-tag-local-text)"
-                    : "var(--home-tag-shared-text)",
-                  fontWeight: 600,
-                  maxWidth: scalePx(CARD_BADGE_MAX_WIDTH_PX),
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {sourceTypeLabel}
-              </span>
-            ) : !isLocalDiagram ? (
-              <span
-                className="rounded"
-                title={sharedViewLabel}
-                style={{
-                  padding: "3px 8px",
-                  fontSize: `${CARD_TYPE_BADGE_PX}px`,
-                  lineHeight: 1.2,
-                  background: "var(--home-tag-shared-bg)",
-                  color: "var(--home-tag-shared-text)",
-                  fontWeight: 600,
-                  maxWidth: scalePx(CARD_BADGE_MAX_WIDTH_PX),
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {sharedViewLabel}
-              </span>
-            ) : null}
-          </div>
-        </div>
-      </Link>
-
-      {/* ---- Star / Favorite button – overlaid top-left ---- */}
-      {canToggleFavorite && (
-        <button
-          type="button"
-          aria-label={
-            diagram.favorite ? "Remove from favorites" : "Add to favorites"
-          }
-          className="home-card-icon-button absolute z-30 flex cursor-pointer items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2"
-          style={{
-            left: scalePx(CARD_PAD_X_PX),
-            top: scalePx(CARD_PAD_X_PX),
-            width: scalePx(CARD_ICON_BUTTON_PX),
-            height: scalePx(CARD_ICON_BUTTON_PX),
-            outlineColor: "var(--home-accent-ring)",
-            color: diagram.favorite
-              ? "var(--home-favorite-star)"
-              : "var(--home-text-muted)",
-            ["--icon-hover-color" as string]: "var(--home-text-strong)",
-            ["--icon-active-color" as string]: "var(--home-favorite-star)",
-            ["--icon-hover-bg" as string]:
-              "color-mix(in srgb, var(--home-text-primary) 10%, transparent)",
-          }}
-          data-active={diagram.favorite ? "true" : "false"}
-          onClick={handleFavoriteToggle}
-        >
-          <svg
-            className="h-[18px] w-[18px]"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-            fill={diagram.favorite ? "currentColor" : "none"}
-          >
-            <path
-              d="M12 3.7l2.6 5.3 5.9.9-4.3 4.2 1 5.9-5.2-2.8-5.2 2.8 1-5.9-4.3-4.2 5.9-.9L12 3.7z"
-              stroke="currentColor"
-              strokeWidth="1.7"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
-      )}
-
-      {/* ---- Three-dot menu – overlaid top-right ---- */}
-      <DiagramActionsMenu
-        diagram={diagram}
-        stopPropagation
-        isExpired={isExpired}
-        containerClassName="absolute z-30 [right:calc(var(--card-scale)*16px)] [top:calc(var(--card-scale)*16px)]"
-        triggerClassName="flex cursor-pointer items-center justify-center rounded-md p-1 transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2"
-        triggerStyle={{
-          width: scalePx(CARD_ICON_BUTTON_PX),
-          height: scalePx(CARD_ICON_BUTTON_PX),
-          outlineColor: "var(--home-accent-ring)",
-          color: "var(--home-text-muted)",
-          ["--icon-hover-color" as string]: "var(--home-text-strong)",
-          ["--icon-active-color" as string]: "var(--home-text-strong)",
-          ["--icon-hover-bg" as string]:
-            "color-mix(in srgb, var(--home-text-primary) 10%, transparent)",
-        }}
-        menuClassName="z-40 w-52 rounded-lg p-1 shadow-2xl"
-        menuStyle={{
-          background: "var(--home-surface-raised)",
-          border: "none",
-          boxShadow: "0 16px 36px var(--home-shadow-overlay)",
-        }}
-        onSharedDiagramRemoved={onSharedDiagramRemoved}
-        onSharedDiagramViewChange={onSharedDiagramViewChange}
-      />
-    </div>
+      }
+    />
   )
 }
 

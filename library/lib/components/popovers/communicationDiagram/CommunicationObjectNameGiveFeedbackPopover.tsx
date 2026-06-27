@@ -3,9 +3,10 @@ import { useShallow } from "zustand/shallow"
 import { CommunicationObjectNodeProps } from "@/types"
 import { PopoverProps } from "../types"
 import { GiveFeedbackAssessmentBox } from "../GiveFeedbackAssessmentBox"
-import Button from "@mui/material/Button"
+import { Button } from "@tumaet/ui/components/button"
 import { useGoToNextAssessment } from "@/hooks"
-import { DiagramNodeTypeRecord } from "@/nodes"
+import { nodeTypeLabel } from "@/utils/nodeUtils"
+import { PopoverLayout } from "../PopoverLayout"
 
 export const CommunicationObjectNameGiveFeedbackPopover = ({
   elementId,
@@ -19,18 +20,20 @@ export const CommunicationObjectNameGiveFeedbackPopover = ({
   const nodeData = node.data as CommunicationObjectNodeProps
 
   return (
-    <>
+    <PopoverLayout>
       <GiveFeedbackAssessmentBox
         elementId={elementId}
         name={nodeData.name}
-        type={node.type || DiagramNodeTypeRecord.communicationObjectName}
+        elementType="node"
+        typeLabel={nodeTypeLabel(node.type)}
       />
       {nodeData.attributes.map((attr) => (
         <GiveFeedbackAssessmentBox
           key={attr.id}
           elementId={attr.id}
           name={attr.name}
-          type="attribute"
+          elementType="attribute"
+          divider
         />
       ))}
       {nodeData.methods.map((method) => (
@@ -38,16 +41,13 @@ export const CommunicationObjectNameGiveFeedbackPopover = ({
           key={method.id}
           elementId={method.id}
           name={method.name}
-          type="method"
+          elementType="method"
+          divider
         />
       ))}
-      <Button
-        variant="outlined"
-        onClick={handleGoToNextAssessment}
-        sx={{ mt: 1 }}
-      >
-        Next
+      <Button variant="outline" onClick={handleGoToNextAssessment}>
+        Next Assessment
       </Button>
-    </>
+    </PopoverLayout>
   )
 }

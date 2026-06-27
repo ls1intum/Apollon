@@ -1,14 +1,8 @@
 import { ChangeEvent } from "react"
-import {
-  Box,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  IconButton,
-  Typography,
-} from "@mui/material"
-import { NodeStyleEditor, PrimaryButton, TextField } from "@/components/ui"
+import { IconButton, Select, TextField } from "@/components/ui"
+import { Button } from "@tumaet/ui/components/button"
+import { NodeStyleEditor } from "@/components/styleEditor"
+import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 import {
   flipSwimlaneChildPosition,
   generateUUID,
@@ -20,7 +14,7 @@ import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import { ActivitySwimlaneProps, DefaultNodeProps, SwimlaneLane } from "@/types"
 import { PopoverProps } from "../types"
-import { DeleteIcon, DragHandleIcon } from "@/components/Icon"
+import { GripVertical, Plus, Trash2 } from "lucide-react"
 import { type Node } from "@xyflow/react"
 import {
   DndContext,
@@ -68,30 +62,28 @@ const SortableLaneRow: React.FC<LaneRowProps> = ({
     zIndex: isDragging ? 999 : undefined,
   }
   return (
-    <Box
+    <div
       ref={setNodeRef}
-      style={style}
-      sx={{ display: "flex", gap: 0.5, alignItems: "center" }}
+      style={{ ...style, display: "flex", gap: 4, alignItems: "center" }}
     >
-      <Box
+      <div
         {...attributes}
         {...listeners}
         aria-label="Reorder lane"
-        sx={{
+        className="apollon-swimlane-drag-handle"
+        style={{
           cursor: "grab",
           display: "flex",
           alignItems: "center",
           flexShrink: 0,
-          "&:active": { cursor: "grabbing" },
         }}
       >
-        <DragHandleIcon width={16} height={16} />
-      </Box>
+        <GripVertical width={16} height={16} />
+      </div>
       <TextField
-        size="small"
         // flex + minWidth:0 so the field shrinks to leave room for the controls;
         // `fullWidth` (100%) would push them out of the popover and clip them.
-        sx={{ flex: 1, minWidth: 0 }}
+        style={{ flex: 1, minWidth: 0 }}
         value={lane.name}
         placeholder="Lane name"
         onChange={(e: ChangeEvent<HTMLInputElement>) =>
@@ -99,15 +91,14 @@ const SortableLaneRow: React.FC<LaneRowProps> = ({
         }
       />
       <IconButton
-        size="small"
-        aria-label="Delete lane"
+        ariaLabel="Delete lane"
         disabled={!canDelete}
         onClick={() => onDelete(lane.id)}
-        sx={{ flexShrink: 0 }}
+        style={{ flexShrink: 0 }}
       >
-        <DeleteIcon width={16} height={16} />
+        <Trash2 width={16} height={16} />
       </IconButton>
-    </Box>
+    </div>
   )
 }
 
@@ -264,67 +255,66 @@ export const ActivitySwimlaneEditPopover: React.FC<PopoverProps> = ({
     patch((n) => ({ ...n, data: { ...n.data, [key]: value } }))
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+    <PopoverLayout title="Swimlane">
       <NodeStyleEditor
-        title="Swimlane"
         nodeData={data}
         handleDataFieldUpdate={handleDataFieldUpdate}
         showNameInputChange={false}
       />
 
-      <FormControl fullWidth size="small">
-        <InputLabel id="swimlane-orientation-label">Orientation</InputLabel>
+      <PopoverSection divider>
         <Select
-          labelId="swimlane-orientation-label"
           id="swimlane-orientation-select"
-          value={orientation}
+          aria-label="Orientation"
           label="Orientation"
-          onChange={(e) =>
-            handleOrientationChange(e.target.value as "vertical" | "horizontal")
+          value={orientation}
+          onChange={(value) =>
+            handleOrientationChange(value as "vertical" | "horizontal")
           }
-        >
-          <MenuItem value="vertical">Vertical (columns)</MenuItem>
-          <MenuItem value="horizontal">Horizontal (rows)</MenuItem>
-        </Select>
-      </FormControl>
+          options={[
+            { value: "vertical", label: "Vertical (columns)" },
+            { value: "horizontal", label: "Horizontal (rows)" },
+          ]}
+        />
+      </PopoverSection>
 
-      <Typography variant="caption" sx={{ opacity: 0.7, mt: 0.5 }}>
-        Lanes
-      </Typography>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          gap: 0.5,
-          maxHeight: 180,
-          overflowY: "auto",
-        }}
-      >
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleReorder}
+      <PopoverSection title="Lanes" divider>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+            maxHeight: 180,
+            overflowY: "auto",
+          }}
         >
-          <SortableContext
-            items={lanes.map((lane) => lane.id)}
-            strategy={verticalListSortingStrategy}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleReorder}
           >
-            {lanes.map((lane) => (
-              <SortableLaneRow
-                key={lane.id}
-                lane={lane}
-                canDelete={lanes.length > 1}
-                onRename={handleLaneNameChange}
-                onDelete={handleLaneDelete}
-              />
-            ))}
-          </SortableContext>
-        </DndContext>
-      </Box>
+            <SortableContext
+              items={lanes.map((lane) => lane.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {lanes.map((lane) => (
+                <SortableLaneRow
+                  key={lane.id}
+                  lane={lane}
+                  canDelete={lanes.length > 1}
+                  onRename={handleLaneNameChange}
+                  onDelete={handleLaneDelete}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
+        </div>
 
-      <PrimaryButton isSelected={false} onClick={handleAddLane}>
-        + Add lane
-      </PrimaryButton>
-    </Box>
+        <Button variant="outline" onClick={handleAddLane}>
+          <Plus />
+          Add lane
+        </Button>
+      </PopoverSection>
+    </PopoverLayout>
   )
 }

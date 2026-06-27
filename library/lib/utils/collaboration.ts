@@ -1,15 +1,5 @@
+import { COLLAB_CURSOR_PALETTE } from "@/constants"
 import type { CollaborationViewport, DraggingNode } from "@/typings"
-
-const COLLAB_COLORS = [
-  "#ffb61e",
-  "#37b24d",
-  "#1c7ed6",
-  "#f03e3e",
-  "#ae3ec9",
-  "#0ca678",
-  "#f76707",
-  "#1098ad",
-]
 
 const ADJECTIVES = [
   "Swift",
@@ -46,8 +36,8 @@ export const collabColorFromName = (name: string): string => {
     hash |= 0
   }
 
-  const index = Math.abs(hash) % COLLAB_COLORS.length
-  return COLLAB_COLORS[index]
+  const index = Math.abs(hash) % COLLAB_CURSOR_PALETTE.length
+  return COLLAB_CURSOR_PALETTE[index]
 }
 
 /**

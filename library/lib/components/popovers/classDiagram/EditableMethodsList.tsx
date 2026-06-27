@@ -1,11 +1,11 @@
 import React, { useState, KeyboardEvent, ChangeEvent } from "react"
-import { Box } from "@mui/material"
-import { NodeStyleEditor, TextField, Typography } from "@/components/ui"
+import { GripVertical, Plus, Trash2 } from "lucide-react"
+import { IconButton, TextField, Typography } from "@/components/ui"
+import { NodeStyleEditor } from "@/components/styleEditor"
 import { generateUUID } from "@/utils"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import { ClassNodeProps } from "@/types"
-import { DeleteIcon, DragHandleIcon } from "@/components/Icon"
 import {
   DndContext,
   closestCenter,
@@ -58,48 +58,52 @@ const SortableMethodRow: React.FC<SortableMethodRowProps> = ({
   }
 
   return (
-    <Box
+    <div
       ref={setNodeRef}
-      style={style}
-      sx={{
+      style={{
+        ...style,
         display: "flex",
-        gap: 0.5,
+        gap: 4,
         justifyContent: "space-between",
         alignItems: "center",
       }}
     >
-      <Box
+      <div
         {...attributes}
         {...listeners}
-        sx={{
-          cursor: "grab",
+        // dnd-kit's `attributes` set `role="button"` + `aria-roledescription`
+        // but no name; the grip icon is aria-hidden, so name the handle
+        // explicitly (axe: aria-command-name).
+        aria-label="Reorder method"
+        className="apollon-drag-handle"
+        style={{
           display: "flex",
           alignItems: "center",
-          color: "text.secondary",
-          "&:active": { cursor: "grabbing" },
           flexShrink: 0,
         }}
       >
-        <DragHandleIcon width={16} height={16} />
-      </Box>
+        <GripVertical width={16} height={16} aria-hidden="true" />
+      </div>
 
       <NodeStyleEditor
         noStrokeUpdate
         nodeData={item}
+        colorEditorLabel="method"
         handleDataFieldUpdate={(key, value) =>
           onMethodChange(item.id, key, value)
         }
         sideElements={[
-          <DeleteIcon
+          <IconButton
             key={`delete_${item.id}`}
-            width={16}
-            height={16}
-            style={{ cursor: "pointer" }}
+            ariaLabel="Delete method"
+            tooltip="Delete method"
             onClick={() => onDelete(item.id)}
-          />,
+          >
+            <Trash2 width={16} height={16} aria-hidden="true" />
+          </IconButton>,
         ]}
       />
-    </Box>
+    </div>
   )
 }
 
@@ -187,8 +191,10 @@ export const EditableMethodsList: React.FC<Props> = ({ nodeId }) => {
   }
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-      <Typography variant="h6">Methods</Typography>
+    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+      <Typography variant="subtitle2" style={{ fontWeight: 600 }}>
+        Methods
+      </Typography>
 
       <DndContext
         sensors={sensors}
@@ -211,21 +217,29 @@ export const EditableMethodsList: React.FC<Props> = ({ nodeId }) => {
         </SortableContext>
       </DndContext>
 
-      <TextField
-        size="small"
-        fullWidth
-        variant="outlined"
-        placeholder="+ Add method"
-        value={newItem}
-        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-          setNewItem(e.target.value)
-        }
-        onBlur={() => {
-          if (newItem.trim() !== "") handleAddItem()
-          else setNewItem("")
-        }}
-        onKeyDown={handleKeyDown}
-      />
-    </Box>
+      <div className="apollon-add-row">
+        <TextField
+          fullWidth
+          aria-label="New method"
+          placeholder="Add method"
+          value={newItem}
+          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+            setNewItem(e.target.value)
+          }
+          onBlur={() => {
+            if (newItem.trim() !== "") handleAddItem()
+            else setNewItem("")
+          }}
+          onKeyDown={handleKeyDown}
+        />
+        <IconButton
+          ariaLabel="Add method"
+          tooltip="Add method"
+          onClick={handleAddItem}
+        >
+          <Plus width={16} height={16} aria-hidden="true" />
+        </IconButton>
+      </div>
+    </div>
   )
 }

@@ -20,7 +20,10 @@ export function AssessmentSelectionDebug() {
   )
   const assessments = useDiagramStore(useShallow((state) => state.assessments))
 
-  if (!isAssessmentSelectionMode || !debug) {
+  // Pure dev instrumentation: the `import.meta.env.DEV` guard lets the bundler
+  // tree-shake this overlay (and its raw debug styling) out of production
+  // builds entirely. The runtime `debug` flag still gates it during development.
+  if (!import.meta.env.DEV || !isAssessmentSelectionMode || !debug) {
     return null
   }
 
@@ -30,9 +33,9 @@ export function AssessmentSelectionDebug() {
         position: "fixed",
         top: 10,
         right: 10,
-        background: "rgba(255, 255, 255, 0.9)",
-        border: "1px solid #ccc",
-        borderRadius: "4px",
+        background: "var(--apollon-chrome-glass)",
+        border: "1px solid var(--apollon-chrome-border)",
+        borderRadius: "var(--apollon-radius-sm, 4px)",
         padding: "10px",
         fontSize: "12px",
         fontFamily: "monospace",
@@ -69,8 +72,7 @@ export function AssessmentSelectionDebug() {
               <div
                 key={id}
                 style={{
-                  border:
-                    "2px solid var(--apollon-grid, rgba(36, 39, 36, 0.1))",
+                  border: "2px solid var(--apollon-grid)",
                   padding: "4px",
                 }}
               >
@@ -96,7 +98,12 @@ export function AssessmentSelectionDebug() {
           })}
         </div>
       ) : (
-        <div style={{ fontStyle: "italic", color: "#666" }}>
+        <div
+          style={{
+            fontStyle: "italic",
+            color: "var(--apollon-chrome-text-muted)",
+          }}
+        >
           No elements selected
         </div>
       )}

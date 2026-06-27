@@ -239,9 +239,7 @@ test.describe("activity swimlane", () => {
     expect(Math.abs(after.width - sl.width)).toBeLessThanOrEqual(TOL)
   })
 
-  test("lanes can be reordered by dragging in the popover", async ({
-    page,
-  }) => {
+  test("lanes can be reordered in the popover", async ({ page }) => {
     // Action sits in lane 2 ("System") — right half of the swimlane.
     await openFixtureInLocalEditor(
       page,
@@ -260,19 +258,35 @@ test.describe("activity swimlane", () => {
       .dblclick({ position: { x: 30, y: 12 } })
     const handles = page.getByLabel("Reorder lane")
     await expect(handles).toHaveCount(2)
-    const h1 = (await handles.nth(1).boundingBox())!
-    const h0 = (await handles.nth(0).boundingBox())!
-    // Drag the second lane's handle above the first (dnd-kit needs an initial
-    // nudge to start, then a move over the target).
-    await page.mouse.move(h1.x + h1.width / 2, h1.y + h1.height / 2)
-    await page.mouse.down()
-    await page.mouse.move(h1.x + h1.width / 2, h1.y + h1.height / 2 - 6, {
-      steps: 3,
-    })
-    await page.mouse.move(h0.x + h0.width / 2, h0.y - 4, { steps: 8 })
-    await page.mouse.up()
 
-    // Lane labels swapped...
+    // Reorder via dnd-kit's KeyboardSensor instead of a synthetic pointer drag.
+    // A mouse drag's success hinges on collision detection sampling the pointer
+    // mid-move, which is racy under loaded CI; the keyboard sensor is a
+    // deterministic state machine: pick the second lane's handle up (Space),
+    // move it up one slot (ArrowUp), and drop it (Space).
+    const handle = handles.nth(1)
+    // `press` targets the handle element directly (focus + key), so activation
+    // can't be lost to the popover's own focus management the way a bare
+    // `page.keyboard` press after `.focus()` can. dnd-kit then keeps focus on
+    // the lifted item, so the move/drop keys go to the right place.
+    await handle.press("Space")
+    // The lifted item gets aria-pressed once the keyboard drag is active; wait
+    // for that so the move key can't arrive before the pick-up is registered.
+    await expect(handle).toHaveAttribute("aria-pressed", "true")
+
+    // dnd-kit announces every keyboard step in its aria-live region. Capture the
+    // pick-up announcement, fire the move, then wait for the announcement to
+    // CHANGE before dropping — otherwise under loaded CI the drop (Space) can land
+    // before ArrowUp commits, leaving the lane in its original slot (a flake).
+    const dndLiveRegion = page.locator('[id^="DndLiveRegion"]').first()
+    const pickupAnnouncement = (await dndLiveRegion.textContent()) ?? ""
+    await page.keyboard.press("ArrowUp")
+    await expect
+      .poll(async () => (await dndLiveRegion.textContent()) ?? "")
+      .not.toBe(pickupAnnouncement)
+    await page.keyboard.press("Space")
+
+    // Lane labels swapped.
     await expect
       .poll(async () =>
         page

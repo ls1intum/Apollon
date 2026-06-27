@@ -1,14 +1,16 @@
-import React, { lazy, Suspense, useEffect, useRef } from "react"
+import React, { lazy, Suspense, useEffect, useMemo, useRef } from "react"
 import { useNavigate, useLocation } from "@tanstack/react-router"
-import { importDiagram } from "@tumaet/apollon"
+import { importDiagram, type UMLDiagramType } from "@tumaet/apollon"
 import { toast } from "react-toastify"
 import { log } from "@/logger"
-import { HomeNavbar } from "@/components/navbar/HomeNavbar"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { useModalContext } from "@/contexts"
 import { DiagramGallerySkeleton } from "@/components/home/DiagramGallerySkeleton"
-import { Capacitor } from "@capacitor/core"
-import { HomeFooter } from "@/components/home/HomeFooter"
+import { HomeHeaderRow } from "@/components/home/HomeHeaderRow"
+import { HomeNewFab } from "@/components/home/HomeNewFab"
+import { PageShell } from "@/components/PageShell"
+import { useHomeChrome } from "@/components/home/useHomeChrome"
+import { getDiagramTypeLabel } from "@/components/home/diagramTypeMeta"
 import { pruneExpiredSharedDiagrams } from "@/utils/sharedDiagramStorage"
 import { readHighlightSharedDiagramId } from "@/lib/navProvenance"
 import { useDocumentTitle } from "@/hooks/useDocumentTitle"
@@ -21,7 +23,6 @@ const DiagramGallery = lazy(() =>
 
 export const HomePage = () => {
   useDocumentTitle("Your diagrams")
-  const isNative = Capacitor.isNativePlatform()
   const navigate = useNavigate()
   const location = useLocation()
   const highlightSharedDiagramId =
@@ -31,6 +32,15 @@ export const HomePage = () => {
     (state) => state.setCurrentModelId
   )
   const jsonImportRef = useRef<HTMLInputElement>(null)
+
+  // The single source of truth for the band's search / favorites / source /
+  // type / sort controls. Passed to BOTH the band and the gallery so they share
+  // one refinement state.
+  const chrome = useHomeChrome()
+
+  const openNewDiagram = () =>
+    openModal("NEW_DIAGRAM", { dialogVariant: "home" })
+  const triggerJsonImport = () => jsonImportRef.current?.click()
 
   const handleJsonImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -66,10 +76,40 @@ export const HomePage = () => {
     pruneExpiredSharedDiagrams()
   }, [])
 
-  return (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[var(--home-surface-base)] text-[var(--home-text-primary)] transition-colors duration-200">
-      <HomeNavbar />
+  // `count` (filtered result total) and `typeOptions` (the diagram types that are
+  // actually present) are derived from the gallery's async-loaded data — local +
+  // shared — so the gallery reports them up for the band to render. Memoize the
+  // setters so they don't re-trigger the gallery's report effects each render.
+  const [count, setCount] = React.useState(0)
+  const [presentTypes, setPresentTypes] = React.useState<
+    readonly UMLDiagramType[]
+  >([])
+  const typeOptions = useMemo(
+    () =>
+      [...presentTypes].sort((firstType, secondType) =>
+        getDiagramTypeLabel(firstType).localeCompare(
+          getDiagramTypeLabel(secondType)
+        )
+      ),
+    [presentTypes]
+  )
 
+  return (
+    <PageShell
+      // Account for the floating New-diagram FAB on phones (pb-24) so the last
+      // gallery row clears it; less bottom room is needed on md+ where the FAB
+      // is hidden. Also pad past the bottom safe-area inset on notched devices.
+      mainClassName="pb-[max(6rem,calc(env(safe-area-inset-bottom,0px)+2.5rem))] md:pb-[max(2.5rem,env(safe-area-inset-bottom,0px))]"
+      header={
+        <HomeHeaderRow
+          chrome={chrome}
+          count={count}
+          typeOptions={typeOptions}
+          onNewDiagram={openNewDiagram}
+          onImportJson={triggerJsonImport}
+        />
+      }
+    >
       {/* Off-screen file input the Import button triggers programmatically. */}
       <input
         ref={jsonImportRef}
@@ -81,23 +121,20 @@ export const HomePage = () => {
         tabIndex={-1}
       />
 
-      <main className="home-page-scrollbar app-scroll-y relative z-10 w-full min-h-0 flex-1 pb-24 md:pb-10">
-        <div className="home-content-x mx-auto flex w-full max-w-[1536px] flex-col gap-6 pt-5 md:pt-6">
-          <Suspense fallback={<DiagramGallerySkeleton />}>
-            <DiagramGallery
-              highlightSharedDiagramId={highlightSharedDiagramId}
-              onNewDiagram={() =>
-                openModal("NEW_DIAGRAM", { dialogVariant: "home" })
-              }
-              onImportJson={() => jsonImportRef.current?.click()}
-            />
-          </Suspense>
-        </div>
-      </main>
+      {/* Sets the gap between the header band and the first gallery row, which
+          live in separate shell wrappers. */}
+      <div className="mt-4">
+        <Suspense fallback={<DiagramGallerySkeleton />}>
+          <DiagramGallery
+            chrome={chrome}
+            highlightSharedDiagramId={highlightSharedDiagramId}
+            onCountChange={setCount}
+            onTypeOptionsChange={setPresentTypes}
+          />
+        </Suspense>
+      </div>
 
-      {/* Web only: native (Capacitor) surfaces these links via the navbar menu
-          instead, and on mobile web the footer is hidden in favor of it. */}
-      {!isNative && <HomeFooter className="hidden md:flex" />}
-    </div>
+      <HomeNewFab onNewDiagram={openNewDiagram} />
+    </PageShell>
   )
 }

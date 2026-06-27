@@ -7,7 +7,7 @@ import type { VersionRepository } from "./types"
  * (not React context) because `useVersionStore`'s async actions read it
  * outside the React tree. Each editor page binds it from its mount effect —
  * before that effect's `fetchVersions` — so the read happens after the write.
- * React Router renders `ApollonLocal` and `ApollonWithConnection` mutually
+ * React Router renders `ApollonLocal` and `ApollonShared` mutually
  * exclusively, so there is no concurrent mount race; the assignment is
  * idempotent under StrictMode/HMR.
  *

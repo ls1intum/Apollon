@@ -6,6 +6,12 @@ import { useNavigate } from "@tanstack/react-router"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { getDiagramTypeIcon } from "@/components/home/diagramTypeMeta"
 import { TemplateThumbnail } from "./TemplateThumbnail"
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@tumaet/ui/components/tabs"
 import { log } from "@/logger"
 import {
   HomeDialogActions,
@@ -58,7 +64,7 @@ const toDiagramOption = (
 ): HomeDialogOption<UMLDiagramType> => ({
   value: type,
   label: diagramTypeToTitle[type],
-  icon: getDiagramTypeIcon(type, "h-9 w-9"),
+  icon: getDiagramTypeIcon(type, "h-7 w-7"),
 })
 
 const structuralDiagramOptions: HomeDialogOption<UMLDiagramType>[] =
@@ -196,45 +202,32 @@ export const NewDiagramModal = () => {
 
   return (
     <HomeDialogContent>
-      <div className="flex border-b border-[var(--home-border-default)]">
-        <button
-          type="button"
-          onClick={() => handleTabChange("scratch")}
-          className={`px-3 py-2 text-sm font-medium transition-colors ${
-            activeTab === "scratch"
-              ? "border-b-2 border-[var(--home-accent-base)] text-[var(--home-accent-strong)]"
-              : "text-[var(--home-text-secondary)]"
-          }`}
-        >
-          Blank diagram
-        </button>
-        <button
-          type="button"
-          onClick={() => handleTabChange("template")}
-          className={`px-3 py-2 text-sm font-medium transition-colors ${
-            activeTab === "template"
-              ? "border-b-2 border-[var(--home-accent-base)] text-[var(--home-accent-strong)]"
-              : "text-[var(--home-text-secondary)]"
-          }`}
-        >
-          Use template
-        </button>
-      </div>
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) =>
+          handleTabChange(value as "scratch" | "template")
+        }
+      >
+        <TabsList>
+          <TabsTrigger value="scratch">Blank diagram</TabsTrigger>
+          <TabsTrigger value="template">Use template</TabsTrigger>
+        </TabsList>
 
-      {activeTab === "scratch" ? (
-        <>
-          <HomeDialogField label="Name" htmlFor="diagram-title">
-            <HomeDialogTextInput
-              id="diagram-title"
-              value={newDiagramTitle}
-              onChange={handleDiagramNameChange}
-              placeholder="Enter diagram name"
-            />
-          </HomeDialogField>
+        {error && <HomeDialogNotice>{error}</HomeDialogNotice>}
 
+        <HomeDialogField label="Name" htmlFor="diagram-title">
+          <HomeDialogTextInput
+            id="diagram-title"
+            value={newDiagramTitle}
+            onChange={handleDiagramNameChange}
+            placeholder="Enter diagram name"
+          />
+        </HomeDialogField>
+
+        <TabsContent value="scratch" className="flex flex-col gap-5">
           <div className="flex flex-col gap-4">
             <section className="flex flex-col gap-2">
-              <h3 className="text-xs font-semibold text-[var(--home-text-primary)]">
+              <h3 className="text-xs font-semibold text-foreground">
                 Structural Diagrams
               </h3>
               <HomeDialogOptionGroup
@@ -243,14 +236,13 @@ export const NewDiagramModal = () => {
                 value={selectedDiagramType}
                 onChange={handleDiagramTypeChange}
                 onConfirm={handleCreateDiagram}
-                columns={2}
                 hideLabel
               />
             </section>
 
             {diagramTypes.behavioral.length > 0 && (
               <section className="flex flex-col gap-2">
-                <h3 className="text-xs font-semibold text-[var(--home-text-primary)]">
+                <h3 className="text-xs font-semibold text-foreground">
                   Behavioral Diagrams
                 </h3>
                 <HomeDialogOptionGroup
@@ -259,28 +251,16 @@ export const NewDiagramModal = () => {
                   value={selectedDiagramType}
                   onChange={handleDiagramTypeChange}
                   onConfirm={handleCreateDiagram}
-                  columns={2}
                   hideLabel
                 />
               </section>
             )}
           </div>
-        </>
-      ) : (
-        <>
-          {error && <HomeDialogNotice>{error}</HomeDialogNotice>}
+        </TabsContent>
 
-          <HomeDialogField label="Name" htmlFor="diagram-title">
-            <HomeDialogTextInput
-              id="diagram-title"
-              value={newDiagramTitle}
-              onChange={handleDiagramNameChange}
-              placeholder="Enter diagram name"
-            />
-          </HomeDialogField>
-
+        <TabsContent value="template" className="flex flex-col gap-5">
           <section className="flex flex-col gap-2">
-            <h3 className="text-xs font-semibold text-[var(--home-text-primary)]">
+            <h3 className="text-xs font-semibold text-foreground">
               Structural
             </h3>
             <HomeDialogOptionGroup
@@ -295,7 +275,7 @@ export const NewDiagramModal = () => {
           </section>
 
           <section className="flex flex-col gap-2">
-            <h3 className="text-xs font-semibold text-[var(--home-text-primary)]">
+            <h3 className="text-xs font-semibold text-foreground">
               Behavioral
             </h3>
             <HomeDialogOptionGroup
@@ -310,7 +290,7 @@ export const NewDiagramModal = () => {
           </section>
 
           <section className="flex flex-col gap-2">
-            <h3 className="text-xs font-semibold text-[var(--home-text-primary)]">
+            <h3 className="text-xs font-semibold text-foreground">
               Creational
             </h3>
             <HomeDialogOptionGroup
@@ -319,11 +299,12 @@ export const NewDiagramModal = () => {
               value={selectedTemplate}
               onChange={handleTemplateChange}
               onConfirm={() => void handleCreateFromTemplate()}
+              columns={2}
               hideLabel
             />
           </section>
-        </>
-      )}
+        </TabsContent>
+      </Tabs>
 
       <HomeDialogActions
         cancelLabel="Cancel"

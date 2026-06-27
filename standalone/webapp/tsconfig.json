@@ -21,14 +21,32 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
 
-    "baseUrl": "",
+    "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
       "@tumaet/apollon": ["../../library/dist/index.d.ts"],
       "@tumaet/apollon/react": ["../../library/dist/react/react.d.ts"],
-      "@tumaet/apollon/*": ["../../library/dist/*"]
+      "@tumaet/apollon/*": ["../../library/dist/*"],
+      "@tumaet/ui/lib/utils": ["../../packages/ui/src/lib/utils.ts"],
+      "@tumaet/ui/theme": ["../../packages/ui/src/theme.ts"],
+      "@tumaet/ui/components/*": ["../../packages/ui/src/components/*"],
+      "@tumaet/ui/styles/*": ["../../packages/ui/src/styles/*"]
     }
   },
   "include": ["src"],
-  "exclude": ["node_modules", "dist"]
+  // The editor (@tumaet/apollon) story files import editor *source* internals
+  // (store factories, dropElementConfigs, Sidebar) that the Vite build resolves
+  // via the `@tumaet/apollon -> library/lib` alias + the library's own `@/`
+  // rewrite plugin. tsc has no such per-file rewrite, and the library's dist
+  // exports map deliberately doesn't expose these internals, so they can't be
+  // type-checked against dist here. These are dev-only, `!test` visual stories
+  // validated at runtime by build-storybook + the Playwright visual suite, so
+  // exclude them from the app's production typecheck rather than couple it to
+  // library internals. Regular webapp component stories stay type-checked.
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/stories/editor",
+    "src/stories/_support/editor.tsx"
+  ]
 }

@@ -1,6 +1,32 @@
-import { useId } from "react"
-import { Box, FormControl, InputLabel, MenuItem, Select } from "@mui/material"
+import { useMemo } from "react"
+import { Select, type SelectOption } from "@/components/ui"
 import { EdgeTypePreviewIcon } from "./EdgeTypePreviewIcon"
+
+// Label + preview-icon row shared by the option list and the collapsed value.
+const EdgeTypeRow = ({
+  label,
+  edgeType,
+  gap,
+  justify,
+}: {
+  label: string
+  edgeType: string
+  gap: number
+  justify?: "space-between"
+}) => (
+  <span
+    style={{
+      alignItems: "center",
+      display: "flex",
+      gap,
+      justifyContent: justify,
+      width: justify ? "100%" : undefined,
+    }}
+  >
+    <span>{label}</span>
+    <EdgeTypePreviewIcon edgeType={edgeType} />
+  </span>
+)
 
 export interface EdgeTypeOption {
   value: string
@@ -18,41 +44,33 @@ export const EdgeTypeSelect = ({
   options: ReadonlyArray<EdgeTypeOption>
   onChange: (value: string) => void
 }) => {
-  const labelId = useId()
-  const selectedLabel = options.find((o) => o.value === value)?.label
+  const selectOptions: SelectOption[] = useMemo(
+    () =>
+      options.map((option) => ({
+        value: option.value,
+        label: option.label,
+        renderOption: () => (
+          <EdgeTypeRow
+            label={option.label}
+            edgeType={option.value}
+            gap={16}
+            justify="space-between"
+          />
+        ),
+        renderValue: () => (
+          <EdgeTypeRow label={option.label} edgeType={option.value} gap={8} />
+        ),
+      })),
+    [options]
+  )
 
   return (
-    <FormControl fullWidth size="small">
-      <InputLabel id={labelId}>Edge Type</InputLabel>
-      <Select
-        labelId={labelId}
-        value={value ?? ""}
-        label="Edge Type"
-        onChange={(e) => onChange(e.target.value)}
-        renderValue={() => (
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Box component="span">{selectedLabel}</Box>
-            {value && <EdgeTypePreviewIcon edgeType={value} />}
-          </Box>
-        )}
-      >
-        {options.map((option) => (
-          <MenuItem key={option.value} value={option.value}>
-            <Box
-              sx={{
-                alignItems: "center",
-                display: "flex",
-                gap: 2,
-                justifyContent: "space-between",
-                width: "100%",
-              }}
-            >
-              <Box component="span">{option.label}</Box>
-              <EdgeTypePreviewIcon edgeType={option.value} />
-            </Box>
-          </MenuItem>
-        ))}
-      </Select>
-    </FormControl>
+    <Select
+      label="Edge Type"
+      aria-label="Edge Type"
+      value={value}
+      options={selectOptions}
+      onChange={onChange}
+    />
   )
 }

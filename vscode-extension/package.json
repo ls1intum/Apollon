@@ -67,8 +67,11 @@
   },
   "devDependencies": {
     "@eslint/js": "catalog:",
+    "@tailwindcss/vite": "catalog:",
     "@types/node": "catalog:",
     "@types/vscode": "~1.86.0",
+    "@vitejs/plugin-react": "catalog:",
+    "babel-plugin-react-compiler": "catalog:",
     "eslint": "catalog:",
     "eslint-plugin-react-hooks": "catalog:",
     "globals": "catalog:",

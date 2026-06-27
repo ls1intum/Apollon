@@ -9,6 +9,7 @@ const sidebars: SidebarsConfig = {
       collapsed: false,
       items: [
         "development/project-structure",
+        "development/component-guidelines",
         "development/scripts",
         "development/diagram-version-history",
         "development/visual-tests",

@@ -155,7 +155,6 @@ export const edgeConfig = {
 
 export type DiagramEdgeType = keyof typeof diagramEdgeTypes
 
-export interface IPoint {
-  x: number
-  y: number
-}
+// IPoint has one canonical definition in ./Connection; re-export it here so
+// `@/edges` keeps exposing it without a second, drift-prone declaration.
+export type { IPoint } from "./Connection"

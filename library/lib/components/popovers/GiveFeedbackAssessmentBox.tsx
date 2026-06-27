@@ -1,17 +1,47 @@
 import { useState } from "react"
+import { Trash2 } from "lucide-react"
 import { useDiagramStore } from "@/store"
 import { Assessment } from "@/typings"
 import { useShallow } from "zustand/shallow"
-import { DeleteIcon } from "../Icon"
-import { Typography } from "../ui"
+import { IconButton, TextField } from "../ui"
+import { AssessmentHeader, PopoverSection } from "./PopoverLayout"
+
+/** The coarse category stored on an Assessment's `elementType`. */
+type ElementType = "node" | "attribute" | "method" | "edge"
 
 interface Props {
   elementId: string
   name: string
-  type: string
+  /**
+   * The coarse category stored on the Assessment. Passed explicitly by each
+   * caller — a node popover stores "node" regardless of the concrete node type
+   * (flowchartProcess, …); deriving it from the concrete type would mis-store
+   * every default node as "edge".
+   */
+  elementType: ElementType
+  /** Display label for the header. Defaults to the capitalized `elementType`. */
+  typeLabel?: string
+  /** Draw a separator above this box. Off for the first box in a popover. */
+  divider?: boolean
 }
 
-export const GiveFeedbackAssessmentBox = ({ elementId, name, type }: Props) => {
+/** Feedback comment cap, surfaced to the grader as an `n/500` helper. */
+const FEEDBACK_MAX_LENGTH = 500
+
+const ELEMENT_TYPE_LABEL: Record<ElementType, string> = {
+  node: "Node",
+  attribute: "Attribute",
+  method: "Method",
+  edge: "Edge",
+}
+
+export const GiveFeedbackAssessmentBox = ({
+  elementId,
+  name,
+  elementType,
+  typeLabel,
+  divider = false,
+}: Props) => {
   const { assessments, setAssessments } = useDiagramStore(
     useShallow((state) => ({
       assessments: state.assessments,
@@ -30,7 +60,7 @@ export const GiveFeedbackAssessmentBox = ({ elementId, name, type }: Props) => {
 
     const updated: Assessment = {
       modelElementId: elementId,
-      elementType: type.toLowerCase() as "node" | "attribute" | "method",
+      elementType,
       score: newScore === "" ? 0 : validScore,
       feedback: newFeedback || undefined,
       correctionStatus: { status: "NOT_VALIDATED" },
@@ -43,7 +73,6 @@ export const GiveFeedbackAssessmentBox = ({ elementId, name, type }: Props) => {
   }
   const handleDelete = () => {
     setAssessments((prev) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { [elementId]: _, ...rest } = prev
       return rest
     })
@@ -52,77 +81,48 @@ export const GiveFeedbackAssessmentBox = ({ elementId, name, type }: Props) => {
   }
 
   return (
-    <>
-      <Typography>{`Assessment for ${type} "${name}"`}</Typography>
-      <div
-        style={{
-          display: "flex",
-          gap: "4px",
-          marginTop: "px",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <div
-          style={{ display: "flex", gap: "4px", alignItems: "center", flex: 1 }}
-        >
-          <Typography>Points:</Typography>
-          <input
-            style={{
-              border: "1px solid black",
-              borderRadius: "4px",
-              padding: "4px",
-              flex: 1,
-              backgroundColor: "var(--apollon-background, white)",
-              color: "var(--apollon-primary-contrast, #000000)",
-            }}
-            maxLength={20}
-            type="number"
-            value={score}
-            onChange={(e) => {
-              const value = e.target.value
-              setScore(value)
-              updateAssessment(value, feedback)
-            }}
-          />
-        </div>
-
-        <DeleteIcon onClick={handleDelete} />
-      </div>
-      <div style={{ marginTop: "8px" }}>
-        <Typography>Feedback:</Typography>
-        <div style={{ display: "flex" }}>
-          <textarea
-            style={{
-              border: "1px solid black",
-              borderRadius: "4px",
-              padding: "4px",
-              flex: 1,
-              resize: "vertical",
-              backgroundColor: "var(--apollon-background, white)",
-              color: "var(--apollon-primary-contrast, #000000)",
-            }}
-            placeholder="You can enter feedback here..."
-            maxLength={500}
-            rows={3}
-            value={feedback}
-            onChange={(e) => {
-              const value = e.target.value
-              setFeedback(value)
-              updateAssessment(score, value)
-            }}
-          />
-        </div>
-      </div>
-      <div
-        style={{
-          marginTop: "12px",
-          marginBottom: "12px",
-          width: "100%",
-          height: "1px",
-          backgroundColor: "#ccc",
-        }}
+    <PopoverSection divider={divider}>
+      <AssessmentHeader
+        type={typeLabel ?? ELEMENT_TYPE_LABEL[elementType]}
+        name={name}
+        action={
+          <IconButton
+            ariaLabel={`Delete assessment for ${name}`}
+            tooltip="Delete assessment"
+            onClick={handleDelete}
+          >
+            <Trash2 width={16} height={16} aria-hidden="true" />
+          </IconButton>
+        }
       />
-    </>
+      <TextField
+        type="number"
+        label="Points"
+        helperText="Negative points are allowed."
+        value={score}
+        onChange={(e) => {
+          const value = e.target.value
+          setScore(value)
+          updateAssessment(value, feedback)
+        }}
+        placeholder="0"
+        fullWidth
+      />
+      <TextField
+        multiline
+        minRows={3}
+        maxLength={FEEDBACK_MAX_LENGTH}
+        label="Feedback"
+        helperText={`${feedback.length}/${FEEDBACK_MAX_LENGTH}`}
+        value={feedback}
+        onChange={(e) => {
+          const value = e.target.value
+          setFeedback(value)
+          updateAssessment(score, value)
+        }}
+        placeholder="Add a comment…"
+        fullWidth
+      />
+    </PopoverSection>
   )
 }

@@ -69,19 +69,16 @@ export const FeedbackDropzone: React.FC<Props> = ({
 
   const getHoverStyle = () => {
     if (isDragOver) {
-      if (asElement === "div") {
-        return {
-          outline: "3px solid #0064ff66",
-        }
-      }
       if (asElement === "path") {
         return {
-          stroke: "#0064ff",
+          stroke: "var(--apollon-dropzone-accent, #0064ff)",
         }
       }
 
+      // div and g (default) targets share the translucent outline.
       return {
-        outline: "3px solid #0064ff66",
+        outline:
+          "3px solid var(--apollon-dropzone-accent-fill, rgba(0, 100, 255, 0.4))",
       }
     }
   }

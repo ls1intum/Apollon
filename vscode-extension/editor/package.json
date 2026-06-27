@@ -8,9 +8,6 @@
     "build": "vite build"
   },
   "dependencies": {
-    "@emotion/react": "catalog:",
-    "@emotion/styled": "catalog:",
-    "@mui/material": "catalog:",
     "@tumaet/apollon": "workspace:*",
     "@types/vscode-webview": "catalog:",
     "@xyflow/react": "catalog:",

@@ -1,9 +1,19 @@
-import { Box, FormControl, InputLabel, MenuItem, Select } from "@mui/material"
+import { Select } from "@/components/ui"
+import { NodeStyleEditor } from "@/components/styleEditor"
 import { useReactiveNode } from "@/hooks"
 import { useReactFlow } from "@xyflow/react"
 import { PopoverProps } from "../types"
-import { BPMNStartEventType } from "@/types"
-import { TextField } from "@/components/ui"
+import { BPMNEventProps, BPMNStartEventType } from "@/types"
+import { supportsMultilineName } from "@/utils/nodeUtils"
+import { PopoverLayout, PopoverSection } from "../PopoverLayout"
+
+const START_TYPE_OPTIONS = [
+  { value: "default", label: "Default" },
+  { value: "message", label: "Message" },
+  { value: "timer", label: "Timer" },
+  { value: "conditional", label: "Conditional" },
+  { value: "signal", label: "Signal" },
+]
 
 export const BPMNStartEventEditPopover: React.FC<PopoverProps> = ({
   elementId,
@@ -12,42 +22,32 @@ export const BPMNStartEventEditPopover: React.FC<PopoverProps> = ({
   const node = useReactiveNode(elementId)
   if (!node) return null
 
-  const data = node.data as { name?: string; eventType?: BPMNStartEventType }
+  const data = node.data as BPMNEventProps
 
-  const handleNameChange = (value: string) =>
-    updateNodeData(elementId, { name: value })
-  const handleTypeChange = (value: BPMNStartEventType) =>
-    updateNodeData(elementId, { eventType: value })
+  const handleDataFieldUpdate = (key: string, value: string) => {
+    updateNodeData(elementId, { [key]: value })
+  }
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-      <TextField
-        size="small"
-        label="Name"
-        value={data.name ?? ""}
-        onChange={(e) => handleNameChange(e.target.value)}
+    <PopoverLayout title="Start Event">
+      <NodeStyleEditor
+        handleDataFieldUpdate={(key, value) =>
+          handleDataFieldUpdate(key, value)
+        }
+        nodeData={data}
+        isMultilineName={supportsMultilineName(node.type)}
       />
-      <FormControl fullWidth size="small">
-        <InputLabel sx={{ color: "red" }} id="bpmn-start-type-label">
-          Start Type
-        </InputLabel>
+
+      <PopoverSection title="Type" divider>
         <Select
-          sx={{ color: "red" }}
-          labelId="bpmn-start-type-label"
-          id="bpmn-start-type-select"
-          value={data.eventType ?? "default"}
           label="Start Type"
-          onChange={(e) =>
-            handleTypeChange(e.target.value as BPMNStartEventType)
+          value={data.eventType ?? "default"}
+          options={START_TYPE_OPTIONS}
+          onChange={(value) =>
+            handleDataFieldUpdate("eventType", value as BPMNStartEventType)
           }
-        >
-          <MenuItem value="default">Default</MenuItem>
-          <MenuItem value="message">Message</MenuItem>
-          <MenuItem value="timer">Timer</MenuItem>
-          <MenuItem value="conditional">Conditional</MenuItem>
-          <MenuItem value="signal">Signal</MenuItem>
-        </Select>
-      </FormControl>
-    </Box>
+        />
+      </PopoverSection>
+    </PopoverLayout>
   )
 }

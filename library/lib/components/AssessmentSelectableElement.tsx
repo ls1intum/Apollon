@@ -1,4 +1,9 @@
-import { INTERACTIVE_SELECTION_COLOR } from "@/constants"
+import {
+  INTERACTIVE_SELECTION_COLOR,
+  INTERACTIVE_SELECTION_FILL,
+  INTERACTIVE_SELECTION_FILL_FAINT,
+  INTERACTIVE_SELECTION_STROKE_SOFT,
+} from "@/constants"
 import { useAssessmentSelection } from "@/hooks"
 import {
   useAssessmentSelectionStore,
@@ -138,9 +143,15 @@ export const AssessmentSelectableElement: FC<
           width={width}
           height={itemHeight}
           fill={
-            isSelected ? "rgba(25, 118, 210, 0.2)" : "rgba(25, 118, 210, 0.1)"
+            isSelected
+              ? INTERACTIVE_SELECTION_FILL
+              : INTERACTIVE_SELECTION_FILL_FAINT
           }
-          stroke={isSelected ? "#1976d2" : "rgba(25, 118, 210, 0.5)"}
+          stroke={
+            isSelected
+              ? INTERACTIVE_SELECTION_COLOR
+              : INTERACTIVE_SELECTION_STROKE_SOFT
+          }
           strokeWidth={isSelected ? 2 : 1}
           rx={2}
           pointerEvents="none"

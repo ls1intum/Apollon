@@ -1,4 +1,5 @@
 import baseCss from "@xyflow/react/dist/base.css?inline"
+import componentsCss from "../../../packages/ui/dist/components.css?inline"
 import appCss from "@/styles/app.css?inline"
 
 /**
@@ -21,6 +22,11 @@ import appCss from "@/styles/app.css?inline"
  * `app.css` adds `.apollon-canvas { flex: 1; ... }` so the canvas fills the
  * 4000×4000 mount container.
  *
+ * The @tumaet/ui `components.css` (design tokens + embed-safe primitive styles,
+ * Tailwind-/Preflight-free and asset-free) is concatenated too, so a headless
+ * mount resolves the same `--apollon-*` tokens app.css relies on without
+ * `@import`-ing it from app.css (which must stay `@import`-free, below).
+ *
  * WARNING: `app.css` is inlined verbatim into this lazy chunk. It must stay
  * free of `@font-face`, `url(...)`, and `@import`, or those assets leak into
  * this chunk (the Inter font is shipped separately, see `exportFonts.ts`).
@@ -30,4 +36,4 @@ import appCss from "@/styles/app.css?inline"
  * bundle (mirrors the `exportFonts.ts` pattern). The chunk is emitted per build
  * entry (`dist/` and `dist/react/`).
  */
-export const EXPORT_LAYOUT_CSS = `${baseCss}\n${appCss}`
+export const EXPORT_LAYOUT_CSS = `${baseCss}\n${componentsCss}\n${appCss}`

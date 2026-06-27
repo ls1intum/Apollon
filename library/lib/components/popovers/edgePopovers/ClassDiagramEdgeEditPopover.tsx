@@ -1,11 +1,12 @@
-import { Box } from "@mui/material"
-import { EdgeStyleEditor, TextField, Typography } from "@/components/ui"
+import { IconButton, TextField } from "@/components/ui"
+import { EdgeStyleEditor } from "@/components/styleEditor"
 import { useReactFlow } from "@xyflow/react"
 import { CustomEdgeProps } from "@/edges/EdgeProps"
+import { ArrowLeftRight } from "lucide-react"
 import { useEdgePopOver, useReactiveEdge, useReactiveNodeName } from "@/hooks"
 import { PopoverProps } from "../types"
 import { EdgeTypeSelect, EdgeTypeOption } from "./EdgeTypeSelect"
-import { SwapEndsButton } from "./SwapEndsButton"
+import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 
 const CLASS_EDGE_TYPE_OPTIONS: ReadonlyArray<EdgeTypeOption> = [
   { value: "ClassBidirectional", label: "Bi-Association" },
@@ -44,79 +45,67 @@ export const EdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
   const edgeData = edge.data as CustomEdgeProps | undefined
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+    <PopoverLayout title="Edge">
       <EdgeStyleEditor
         edgeData={edgeData}
         handleDataFieldUpdate={(key, value) =>
           updateEdgeData(elementId, { ...edge.data, [key]: value })
         }
-        label="Edge Type"
-        sideElements={[handleSwap && <SwapEndsButton onClick={handleSwap} />]}
+        label="Style"
+        sideElements={[
+          handleSwap && (
+            <IconButton
+              ariaLabel="Swap source and target"
+              tooltip="Swap source and target"
+              onClick={handleSwap}
+            >
+              <ArrowLeftRight width={16} height={16} aria-hidden="true" />
+            </IconButton>
+          ),
+        ]}
       />
 
-      <EdgeTypeSelect
-        value={edge.type}
-        options={CLASS_EDGE_TYPE_OPTIONS}
-        onChange={handleEdgeTypeChange}
-      />
+      <PopoverSection divider>
+        <EdgeTypeSelect
+          value={edge.type}
+          options={CLASS_EDGE_TYPE_OPTIONS}
+          onChange={handleEdgeTypeChange}
+        />
+      </PopoverSection>
 
-      {
-        <>
-          {/* Source subheadline */}
-          <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-            {sourceName}
-          </Typography>
+      <PopoverSection title="Source" divider>
+        <TextField
+          label={`${sourceName} Multiplicity`}
+          value={edgeData?.sourceMultiplicity ?? ""}
+          onChange={(e) => handleSourceMultiplicityChange(e.target.value)}
+          fullWidth
+          data-testid="edge-source-multiplicity"
+        />
+        <TextField
+          label={`${sourceName} Role`}
+          value={edgeData?.sourceRole ?? ""}
+          onChange={(e) => handleSourceRoleChange(e.target.value)}
+          fullWidth
+          data-testid="edge-source-role"
+        />
+      </PopoverSection>
 
-          {/* Source Multiplicity */}
-          <TextField
-            label={sourceName + " Multiplicity"}
-            value={edgeData?.sourceMultiplicity ?? ""}
-            onChange={(e) => handleSourceMultiplicityChange(e.target.value)}
-            size="small"
-            fullWidth
-            slotProps={{
-              htmlInput: { "data-testid": "edge-source-multiplicity" },
-            }}
-          />
-
-          {/* Source Role */}
-          <TextField
-            label={sourceName + " Role"}
-            value={edgeData?.sourceRole ?? ""}
-            onChange={(e) => handleSourceRoleChange(e.target.value)}
-            size="small"
-            fullWidth
-            slotProps={{ htmlInput: { "data-testid": "edge-source-role" } }}
-          />
-
-          {/* Target subheadline */}
-          <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-            {targetName}
-          </Typography>
-
-          {/* Target Multiplicity */}
-          <TextField
-            label={targetName + " Multiplicity"}
-            value={edgeData?.targetMultiplicity ?? ""}
-            onChange={(e) => handleTargetMultiplicityChange(e.target.value)}
-            size="small"
-            fullWidth
-            slotProps={{
-              htmlInput: { "data-testid": "edge-target-multiplicity" },
-            }}
-          />
-
-          {/* Target Role */}
-          <TextField
-            label={targetName + " Role"}
-            value={edgeData?.targetRole ?? ""}
-            onChange={(e) => handleTargetRoleChange(e.target.value)}
-            size="small"
-            fullWidth
-            slotProps={{ htmlInput: { "data-testid": "edge-target-role" } }}
-          />
-        </>
-      }
-    </Box>
+      <PopoverSection title="Target" divider>
+        <TextField
+          label={`${targetName} Multiplicity`}
+          value={edgeData?.targetMultiplicity ?? ""}
+          onChange={(e) => handleTargetMultiplicityChange(e.target.value)}
+          fullWidth
+          data-testid="edge-target-multiplicity"
+        />
+        <TextField
+          label={`${targetName} Role`}
+          value={edgeData?.targetRole ?? ""}
+          onChange={(e) => handleTargetRoleChange(e.target.value)}
+          fullWidth
+          data-testid="edge-target-role"
+        />
+      </PopoverSection>
+    </PopoverLayout>
   )
 }

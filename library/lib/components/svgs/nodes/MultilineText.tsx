@@ -14,11 +14,10 @@ type Props = Omit<SVGProps<SVGTextElement>, "x" | "y"> & {
    * Anchor y coordinate (meaning depends on `verticalAnchor`).
    *
    * For every anchor mode we treat `y` as if it were the `y` of a single-line
-   * `<text>` with `dominantBaseline="middle"`. That makes `MultilineText` a
-   * drop-in replacement for the old `<CustomText>` pattern: the first line (or
-   * the only line) renders at exactly the same visual position as before, and
-   * additional lines grow in the natural direction (down for `top`, up for
-   * `bottom`, split either way for `middle`).
+   * `<text>` with `dominantBaseline="middle"`: the first line (or the only
+   * line) renders at exactly that visual position, and additional lines grow in
+   * the natural direction (down for `top`, up for `bottom`, split either way
+   * for `middle`).
    */
   y: number
   /** Maximum line width in SVG user units. */
@@ -114,13 +113,20 @@ export const MultilineText: FC<Props> = ({
 
   // Assistive tech reads each <tspan> as a separate utterance, which
   // fragments a wrapped label into "Register" "new" "user…" instead of
-  // the whole sentence. `aria-label` on the parent <text> overrides that
-  // with the original (un-truncated) string so the label remains
-  // intelligible even when the visual rendering is ellipsised. Skip the
-  // attribute entirely for whitespace-only content — otherwise some
-  // screen readers announce "group" for a named-but-empty element.
+  // the whole sentence. We hide the per-line tspans and expose the
+  // original (un-truncated) string as a single accessible name so the
+  // label stays intelligible even when the visual rendering is wrapped or
+  // ellipsised.
+  //
+  // The name lives on a wrapping `<g role="img" aria-label>`, not on the
+  // `<text>` itself: `aria-label` is prohibited on a bare SVG `<text>`
+  // (it has no implicit role), but it is valid on an explicit `role="img"`
+  // graphic. Whitespace-only content gets a plain <g> with no role/name —
+  // otherwise some screen readers announce "group" for a named-but-empty
+  // element.
   const accessibleName = text.trim() ? text : undefined
-  return (
+
+  const textEl = (
     <text
       x={x}
       y={y}
@@ -132,7 +138,6 @@ export const MultilineText: FC<Props> = ({
       fontStyle={fontStyle}
       fill={fill}
       pointerEvents={pointerEvents}
-      aria-label={accessibleName}
       {...rest}
     >
       {displayLines.map((line, i) => (
@@ -146,5 +151,15 @@ export const MultilineText: FC<Props> = ({
         </tspan>
       ))}
     </text>
+  )
+
+  if (!accessibleName) {
+    return textEl
+  }
+
+  return (
+    <g role="img" aria-label={accessibleName}>
+      {textEl}
+    </g>
   )
 }

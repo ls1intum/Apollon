@@ -1,17 +1,16 @@
 import { createPortal } from "react-dom"
 import { Capacitor } from "@capacitor/core"
-import useMediaQuery from "@mui/material/useMediaQuery"
+import { useMediaQuery } from "@/hooks/useMediaQuery"
 import { useEditorContext } from "@/contexts"
 import { useRegionHost } from "@/hooks/useRegionHost"
 import { NARROW_VIEW_QUERY } from "@/constants"
-import { EditorHeaderRow } from "./HeaderIslands"
+import { EditorHeaderRow } from "./EditorHeader"
 
 /**
  * Mounts the editor header into the library's single full-width `header` overlay
  * band as one fluid flex row: `[brand/back] [title — flex] [actions]`. A shared
- * flex track means the centered title can grow with the name and then shrink
- * (ellipsis) but never overlap its neighbours, and the gaps stay constant — the
- * three-independent-Panels layout could not guarantee either. createPortal keeps
+ * flex track lets the centered title grow with the name then shrink (ellipsis)
+ * without overlapping its neighbours, keeping the gaps constant. createPortal keeps
  * the row in the webapp React tree (theme, router, contexts); only its DOM lands
  * in the canvas band.
  *
@@ -28,7 +27,10 @@ export function EditorChromeHeader() {
 
   if (!headerHost) return null
   return createPortal(
-    <EditorHeaderRow isNarrow={isNarrow} hideBrand={isNarrow || isNative} />,
+    <EditorHeaderRow
+      layout={isNarrow ? "narrow" : "full"}
+      hideBrand={isNarrow || isNative}
+    />,
     headerHost
   )
 }

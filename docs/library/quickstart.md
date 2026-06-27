@@ -13,12 +13,15 @@ idiomatic version — but the two steps below are all Apollon needs.
 ## 1. Install
 
 ```sh
-npm install @tumaet/apollon
+npm install @tumaet/apollon yjs y-protocols
 ```
 
-This is the standalone build: React, MUI, emotion, and xyflow are bundled
-inside the tarball, so there are no peer dependencies to install. React hosts
-should instead use the `/react` subpath — see [Install](/library/embedding/install).
+This is the standalone build: React, Base UI, lucide, and xyflow are bundled
+inside the tarball; `yjs` and `y-protocols` are the only peers you install. They
+power Apollon's document model and undo/redo (and live collaboration when
+enabled), kept external so a host that already uses Yjs shares one instance.
+React hosts should instead use the `/react` subpath — see
+[Install](/library/embedding/install).
 
 :::danger The editor MUST have an explicit height
 Apollon renders onto a React Flow canvas, which sizes itself to its parent. If

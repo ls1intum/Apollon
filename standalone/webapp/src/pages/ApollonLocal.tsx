@@ -7,7 +7,6 @@ import {
   type FC,
 } from "react"
 import { getRouteApi, useRouter } from "@tanstack/react-router"
-import { Box } from "@mui/material"
 import { toast } from "react-toastify"
 import {
   ApollonEditor,
@@ -142,8 +141,8 @@ export const ApollonLocal: FC = () => {
   useEffect(() => {
     if (!containerRef.current || !diagram) return
     // Bind the local repository before this effect's `fetchVersions` runs.
-    // The drawer no longer self-fetches, so this is the only fetch path and
-    // ordering is guaranteed within the effect — no render-time mutation.
+    // This is the only fetch path, so ordering is guaranteed within the
+    // effect — no render-time mutation.
     setVersionRepository(LocalVersionRepository)
     isThumbnailExportCanceledRef.current = false
     setCurrentModelId(diagram.id)
@@ -365,8 +364,9 @@ export const ApollonLocal: FC = () => {
           return
         }
         openModal("CONFIRM_RESTORE", {
-          diagramId,
-          versionId,
+          // Resolve the target here (we already hold the list) so the modal
+          // doesn't re-read the store for data we have.
+          version: versions.find((v) => v.id === versionId) ?? null,
           onConfirm: async () => {
             await performRestore(versionId)
           },
@@ -376,7 +376,7 @@ export const ApollonLocal: FC = () => {
         toast.error(t.restoreFailed)
       }
     },
-    [editor, diagramId, resolveBody, performRestore, openModal]
+    [editor, diagramId, versions, resolveBody, performRestore, openModal]
   )
 
   const handleVersionSaved = useCallback(() => {
@@ -391,31 +391,21 @@ export const ApollonLocal: FC = () => {
   const banner = useMemo(() => {
     if (!preview || !diagramId) return null
     return (
-      <Box
-        sx={{
-          position: "absolute",
-          // Sit one gap BELOW the floating header islands (safe-area + edge 10 +
-          // island-h 46 + gap 8) so the banner never overlaps the brand/title/
-          // actions chrome — it reads as a sibling island on the row beneath.
-          top: "calc(var(--safe-area-inset-top, 0px) + 64px)",
-          left: 0,
-          right: 0,
-          display: "flex",
-          justifyContent: "center",
-          pointerEvents: "none",
-          zIndex: 5,
-          px: 2,
-          "& > *": { pointerEvents: "auto" },
-        }}
+      <div
+        // Sit one gap BELOW the floating header islands (safe-area + edge 10 +
+        // island-h 46 + gap 8) so the banner never overlaps the brand/title/
+        // actions chrome — it reads as a sibling island on the row beneath.
+        className="pointer-events-none absolute right-0 left-0 z-[5] flex justify-center px-4 [&>*]:pointer-events-auto"
+        style={{ top: "calc(var(--safe-area-inset-top, 0px) + 64px)" }}
       >
         <VersionPreviewBanner
           containerWidth={canvasColumnWidth}
           diagramId={diagramId}
           canRestore={canRestoreFromPreview}
-          onExit={handleExitPreview}
+          onExitPreview={handleExitPreview}
           onRestore={handleConfirmedRestore}
         />
-      </Box>
+      </div>
     )
   }, [
     preview,
@@ -429,45 +419,36 @@ export const ApollonLocal: FC = () => {
   // All hooks above run unconditionally. Creation happens from the home
   // gallery; a missing diagram is a not-found state, not an auto-create.
   if (!diagramId || !diagram) {
-    return <ErrorPage message="Diagram not found." buttonLabel="All diagrams" />
+    return (
+      <ErrorPage
+        message="Diagram not found."
+        buttonLabel="All diagrams"
+        withChrome={false}
+      />
+    )
   }
 
   return (
     <div className="h-full flex flex-col">
-      <Box
-        sx={{
-          display: "flex",
-          flex: 1,
-          minHeight: 0,
-          overflow: "hidden",
-        }}
-      >
-        <Box
-          ref={canvasColumnRef}
-          sx={{
-            flex: 1,
-            minWidth: 0,
-            height: "100%",
-            position: "relative",
-          }}
-        >
-          <Box ref={containerRef} sx={{ width: "100%", height: "100%" }} />
+      <div className="flex min-h-0 flex-1 overflow-hidden">
+        <div ref={canvasColumnRef} className="relative h-full min-w-0 flex-1">
+          <div ref={containerRef} className="h-full w-full" />
           {banner}
-        </Box>
+        </div>
         <VersionRail
           diagramId={diagramId}
           onConfirmedRestore={handleConfirmedRestore}
           onVersionSaved={handleVersionSaved}
           onPreview={openPreview}
         />
-      </Box>
+      </div>
       <VersionDrawer
         diagramId={diagramId}
         onConfirmedRestore={handleConfirmedRestore}
         onVersionSaved={handleVersionSaved}
         onPreview={openPreview}
       />
-      {/* No <UndoRestoreSnackbar /> in local mode — auto-snapshot rows
+      {/* No <UndoRestoreToast /> in local mode — auto-snapshot rows
           in the drawer are the durable replacement. */}
     </div>
   )

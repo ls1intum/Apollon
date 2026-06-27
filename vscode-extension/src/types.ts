@@ -32,5 +32,3 @@ export const createDefaultDiagram = (
     lastUpdate: new Date().toISOString(),
   }
 }
-
-export const defaultDiagram: Diagram = createDefaultDiagram()
