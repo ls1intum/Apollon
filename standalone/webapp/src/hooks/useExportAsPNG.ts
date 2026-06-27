@@ -1,5 +1,5 @@
 import type { SvgToPngResult } from "@tumaet/apollon/export"
-import { isPlatform } from "@ionic/react"
+import { isIOS, isAndroid } from "@/utils/platform"
 import { Filesystem, Directory } from "@capacitor/filesystem"
 import { Share } from "@capacitor/share"
 import { useFileDownload } from "./useFileDownload"
@@ -44,7 +44,7 @@ export const useExportAsPNG = () => {
     })
     const fileName = `${editor.model.title}.png`
 
-    if (isPlatform("ios") || isPlatform("android")) {
+    if (isIOS() || isAndroid()) {
       const base64String = await blobToBase64(result.blob)
       await Filesystem.writeFile({
         path: fileName,

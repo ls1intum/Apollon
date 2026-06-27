@@ -1,5 +1,5 @@
 import type { SvgExportMode } from "@tumaet/apollon/react"
-import { isPlatform } from "@ionic/react"
+import { isIOS, isAndroid } from "@/utils/platform"
 import { Filesystem, Directory, Encoding } from "@capacitor/filesystem"
 import { Share } from "@capacitor/share"
 import { useFileDownload } from "./useFileDownload"
@@ -31,7 +31,7 @@ export const useExportAsSVG = (
     const diagramTitle = editor.model.title || "diagram"
     const fileName = buildSvgFileName(diagramTitle, fileNameSuffix)
 
-    if (isPlatform("ios") || isPlatform("android")) {
+    if (isIOS() || isAndroid()) {
       await Filesystem.writeFile({
         path: fileName,
         data: apollonSVG.svg,

@@ -97,11 +97,6 @@
       "limit": "112 kB"
     },
     {
-      "name": "yjs sync chunk",
-      "path": "dist/yjsSync-*.js",
-      "limit": "210 kB"
-    },
-    {
       "name": "/export lazy chunk (renderers external; Inter ttf inlined)",
       "path": "dist/export.js",
       "limit": "700 kB"

@@ -1,5 +1,4 @@
-import { vi } from "vitest"
-
-// `@ionic/react` pulls in `@ionic/core` whose Stencil runtime doesn't
-// evaluate under jsdom. `isPlatform` is a leaf no-op in tests.
-vi.mock("@ionic/react", () => ({ isPlatform: () => false }))
+// Intentionally empty. Platform detection now lives in src/utils/platform.ts
+// (a tiny user-agent helper); under jsdom its UA is neither iOS nor Android, so
+// the export hooks naturally take the browser-download branch with no mocking.
+export {}
