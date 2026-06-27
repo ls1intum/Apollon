@@ -3,8 +3,9 @@ import { DeploymentNodeProps } from "@/types"
 import { useShallow } from "zustand/shallow"
 import { DefaultNodeEditPopover } from "../DefaultNodeEditPopover"
 import { PopoverProps } from "../types"
-import { Divider } from "@mui/material"
-import { HeaderSwitchElement, TextField } from "@/components/ui"
+import { TextField } from "@/components/ui"
+import { HeaderSwitchElement } from "@/components/styleEditor"
+import { PopoverSection } from "../PopoverLayout"
 
 export const DeploymentNodeEditPopover: React.FC<PopoverProps> = ({
   elementId,
@@ -54,37 +55,25 @@ export const DeploymentNodeEditPopover: React.FC<PopoverProps> = ({
     )
   }
 
-  const HeaderSwitcher = (
-    <HeaderSwitchElement
-      onClick={switchHeaderShown}
-      isComponentHeaderShown={nodeData.isComponentHeaderShown}
-    />
-  )
-
+  // One Stereotype section below the style editor holds both the «node» toggle
+  // and the editable value — no second copy crammed onto the name row.
   return (
-    <DefaultNodeEditPopover
-      elementId={elementId}
-      sideElements={[HeaderSwitcher]}
-    >
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "8px",
-          marginTop: "8px",
-          width: "100%",
-        }}
-      >
-        <Divider />
+    <DefaultNodeEditPopover elementId={elementId}>
+      <PopoverSection title="Stereotype" divider>
+        <HeaderSwitchElement
+          onClick={switchHeaderShown}
+          isComponentHeaderShown={nodeData.isComponentHeaderShown}
+          stereotypeLabel="node"
+          stereotypeValue={nodeData.stereotype}
+        />
         <TextField
           value={nodeData.stereotype}
           onChange={(e) => handleStereotypeChange(e.target.value)}
           onBlur={() => handleStereotypeChange(nodeData.stereotype)}
-          size="small"
-          sx={{ backgroundColor: "#fff" }}
+          placeholder="e.g. «device»"
           fullWidth
         />
-      </div>
+      </PopoverSection>
     </DefaultNodeEditPopover>
   )
 }

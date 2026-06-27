@@ -1,5 +1,6 @@
-import { Alert, Box, Button } from "@mui/material"
-import { useState, type FC } from "react"
+import { TriangleAlertIcon } from "lucide-react"
+import { useState, type CSSProperties, type FC } from "react"
+import { cn } from "@tumaet/ui/lib/utils"
 import {
   selectScopedPreview,
   selectVersions,
@@ -9,7 +10,7 @@ import { versioningStrings as t } from "./strings"
 import { relativeTime } from "./relativeTime"
 
 /**
- * Compactness thresholds in **container pixels**, not viewport pixels.
+ * Compactness threshold in **container pixels**, not viewport pixels.
  * The banner overlays the canvas column; that column's width depends on
  * whether the desktop sidebar is open (it shrinks the canvas by 320px),
  * whether devtools are docked, etc. Querying `window` widths gives the
@@ -17,10 +18,17 @@ import { relativeTime } from "./relativeTime"
  */
 const COMPACT_WIDTH_PX = 768
 
-interface Props {
-  diagramId: string
-  onExit: () => void
-  onRestore: (versionId: string) => void | Promise<void>
+interface ViewProps {
+  /**
+   * The version's user-facing label (description, falling back to name, then
+   * the catch-all). Rides along as the title's hover tooltip rather than a
+   * second row, so the banner stays a compact pill.
+   */
+  label: string
+  /** Relative "time ago" of the previewed version (e.g. "2h ago"). */
+  ago: string
+  /** Id of the previewed version, handed back to {@link ViewProps.onRestore}. */
+  versionId: string
   /**
    * False when restoring this version would not change the canvas — e.g.
    * the user clicked the latest saved version with no unsaved local
@@ -34,31 +42,165 @@ interface Props {
    * column). When `undefined` the banner falls back to its desktop
    * layout — first paint may be off for a frame, then settles.
    */
-  containerWidth: number | undefined
+  containerWidth?: number
+  /** Called when the user clicks "Exit preview". */
+  onExitPreview: () => void
+  /** Called with the version id when the user clicks "Restore". */
+  onRestore: (versionId: string) => void | Promise<void>
+  /** Merged onto the root element's classes. */
+  className?: string
+  /** Forwarded to the root element. */
+  ref?: React.Ref<HTMLDivElement>
+}
+
+// The warning palette comes from the `--home-banner-warning-*` tokens, so the
+// banner stays in the notification language across light/dark.
+const buttonStyle: CSSProperties = {
+  fontFamily: "inherit",
+  whiteSpace: "nowrap",
+  border: "1px solid var(--home-banner-warning-btn-border)",
+  backgroundColor: "var(--home-banner-warning-btn-bg)",
+  color: "var(--home-banner-warning-btn-text)",
 }
 
 /**
- * Compact preview banner. Standard MUI `<Alert severity="warning">` with
- * the two actions in `action`. Hosting layout overlays it on the canvas
- * (see `ApollonWithConnection`), so the canvas itself never reflows on
- * preview enter/exit.
+ * Pure presentational preview banner — props in, callbacks out. A compact,
+ * content-hugging soft-gold warning pill: a single vertically-centred row of
+ * icon · message · actions, with the snapshot description carried as a hover
+ * tooltip rather than a second row. Hosting layout overlays it on the canvas
+ * (see `ApollonShared`), so the canvas itself never reflows on preview
+ * enter/exit.
  */
-export const VersionPreviewBanner: FC<Props> = ({
-  diagramId,
-  onExit,
-  onRestore,
+export function VersionPreviewBannerView({
+  label,
+  ago,
+  versionId,
   canRestore,
   containerWidth,
-}) => {
+  onExitPreview,
+  onRestore,
+  className,
+  ref,
+}: ViewProps) {
   // Container-relative compactness (tightens icon/action gaps on a narrow
   // canvas column). Falls back to "not compact" until the first ResizeObserver
   // tick lands — first paint may be slightly off, then settles within a frame.
   const isSmall =
     containerWidth !== undefined && containerWidth < COMPACT_WIDTH_PX
 
+  const [restoring, setRestoring] = useState(false)
+
+  return (
+    <div
+      ref={ref}
+      role="status"
+      aria-live="polite"
+      // Compact, content-hugging pill (centred by the parent), not a fixed slab
+      // — a single vertically-centred row of icon · message · actions. Capped to
+      // viewport width minus a small inset for narrow screens.
+      className={cn(
+        "flex w-max max-w-[calc(100%-16px)] items-center rounded-lg border",
+        className
+      )}
+      style={{
+        backgroundColor: "var(--home-banner-warning-bg)",
+        color: "var(--home-banner-warning-text)",
+        borderColor: "var(--home-banner-warning-border)",
+        // Soft floating-chrome elevation — the shared island token, so it darkens
+        // with the rest of the chrome in dark mode.
+        boxShadow: "var(--apollon-chrome-shadow-floating)",
+        padding: "0.25rem 0.625rem",
+        gap: isSmall ? "0.5rem" : "0.625rem",
+      }}
+    >
+      <TriangleAlertIcon
+        className="size-4 shrink-0"
+        style={{ color: "var(--home-banner-warning-icon)" }}
+        aria-hidden
+      />
+
+      {/* One concise line: "Read-only preview · 2h ago". The snapshot
+          description rides along as a hover tooltip rather than a second row,
+          so the banner stays a compact pill instead of a tall card. */}
+      <div
+        className="min-w-0 flex-1 text-caption font-semibold whitespace-nowrap"
+        title={label || undefined}
+      >
+        Read-only preview{ago && ` · ${ago}`}
+      </div>
+
+      {/* Short labels for the compact pill. `whitespace-nowrap` (via
+          buttonStyle) prevents mid-word wraps so the two actions stay on one
+          row. */}
+      <div
+        className="flex shrink-0 flex-row items-center"
+        style={{
+          gap: "0.5rem",
+          marginLeft: isSmall ? "0.5rem" : "0.875rem",
+        }}
+      >
+        <button
+          type="button"
+          onClick={onExitPreview}
+          className="inline-flex cursor-pointer items-center justify-center rounded-md text-caption font-medium transition-colors hover:[background:var(--home-banner-warning-btn-hover)]"
+          style={{
+            ...buttonStyle,
+            padding: "0.125rem 0.5rem",
+          }}
+        >
+          {t.exitPreview}
+        </button>
+        {canRestore && (
+          <button
+            type="button"
+            disabled={restoring}
+            onClick={async () => {
+              setRestoring(true)
+              try {
+                await onRestore(versionId)
+              } finally {
+                setRestoring(false)
+              }
+            }}
+            className="inline-flex cursor-pointer items-center justify-center rounded-md text-caption font-semibold transition-colors hover:[background:var(--home-banner-warning-btn-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+            style={{
+              ...buttonStyle,
+              padding: "0.125rem 0.625rem",
+            }}
+          >
+            {t.restoreThis}
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+interface ContainerProps {
+  diagramId: string
+  onExitPreview: () => void
+  onRestore: (versionId: string) => void | Promise<void>
+  canRestore: boolean
+  containerWidth?: number
+  className?: string
+}
+
+/**
+ * Thin container — reads the active preview (scoped to this diagram) + the
+ * matching version summary from `useVersionStore` to resolve the label /
+ * time-ago, then renders {@link VersionPreviewBannerView}. Renders nothing
+ * when no preview is active for this diagram.
+ */
+export const VersionPreviewBanner: FC<ContainerProps> = ({
+  diagramId,
+  onExitPreview,
+  onRestore,
+  canRestore,
+  containerWidth,
+  className,
+}) => {
   const preview = useVersionStore((s) => selectScopedPreview(s, diagramId))
   const versions = useVersionStore((s) => selectVersions(s, diagramId))
-  const [restoring, setRestoring] = useState(false)
   if (!preview) return null
 
   const summary = versions.find((v) => v.id === preview.versionId)
@@ -70,128 +212,15 @@ export const VersionPreviewBanner: FC<Props> = ({
   const ago = summary ? relativeTime(summary.createdAt) : ""
 
   return (
-    <Alert
-      severity="warning"
-      variant="filled"
-      role="status"
-      aria-live="polite"
-      sx={{
-        // Soft-gold outlined warning: tinted body, gold border, neutral text,
-        // amber icon. Poppins + lg radius to match the notification language.
-        fontFamily:
-          '"Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue", Arial, sans-serif',
-        bgcolor: "var(--home-banner-warning-bg)",
-        color: "var(--home-banner-warning-text)",
-        border: "1px solid var(--home-banner-warning-border)",
-        borderRadius: "var(--home-radius-lg)",
-        // Soft floating-chrome elevation, matching the island shadow language.
-        boxShadow:
-          "0 0 1px 0 rgb(15 23 42 / 20%), 0 2px 8px 0 rgb(15 23 42 / 12%)",
-        // Compact, content-hugging pill (centred by the parent), not a 720px
-        // slab — a single vertically-centred row of icon · message · actions.
-        alignItems: "center",
-        width: "max-content",
-        maxWidth: "calc(100% - 16px)",
-        px: 1.25,
-        py: 0.5,
-        "& .MuiAlert-icon": {
-          py: 0,
-          mr: isSmall ? 0.75 : 1,
-          fontSize: "1.1rem",
-          color: "var(--home-banner-warning-icon)",
-        },
-        "& .MuiAlert-message": { minWidth: 0, flex: 1, py: 0.25 },
-        "& .MuiAlert-action": {
-          p: 0,
-          mr: 0,
-          ml: isSmall ? 1 : 1.75,
-          mt: 0,
-          alignItems: "center",
-          alignSelf: "center",
-        },
-      }}
-      action={
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "row",
-            gap: 0.5,
-            alignItems: "center",
-          }}
-        >
-          {/* Short labels for the compact pill. `whiteSpace: nowrap` prevents
-              mid-word wraps so the two actions stay on one row. */}
-          <Button
-            onClick={onExit}
-            size="small"
-            sx={{
-              textTransform: "none",
-              fontFamily: "inherit",
-              fontSize: "0.8125rem",
-              px: 1,
-              py: 0.25,
-              minWidth: 0,
-              whiteSpace: "nowrap",
-              border: "1px solid var(--home-banner-warning-btn-border)",
-              bgcolor: "var(--home-banner-warning-btn-bg)",
-              color: "var(--home-banner-warning-btn-text)",
-              "&:hover": {
-                bgcolor: "var(--home-banner-warning-btn-hover)",
-              },
-            }}
-          >
-            {t.exitPreview}
-          </Button>
-          {canRestore && (
-            <Button
-              disableElevation
-              disabled={restoring}
-              onClick={async () => {
-                setRestoring(true)
-                try {
-                  await onRestore(preview.versionId)
-                } finally {
-                  setRestoring(false)
-                }
-              }}
-              size="small"
-              sx={{
-                textTransform: "none",
-                fontFamily: "inherit",
-                fontWeight: 600,
-                fontSize: "0.8125rem",
-                px: 1.25,
-                py: 0.25,
-                minWidth: 0,
-                whiteSpace: "nowrap",
-                border: "1px solid var(--home-banner-warning-btn-border)",
-                bgcolor: "var(--home-banner-warning-btn-bg)",
-                color: "var(--home-banner-warning-btn-text)",
-                "&:hover": {
-                  bgcolor: "var(--home-banner-warning-btn-hover)",
-                },
-              }}
-            >
-              {t.restoreThis}
-            </Button>
-          )}
-        </Box>
-      }
-    >
-      {/* One concise line: "Read-only preview · 2h ago". The snapshot
-          description rides along as a hover tooltip rather than a second row,
-          so the banner stays a compact pill instead of a tall card. */}
-      <Box
-        title={label || undefined}
-        sx={{
-          fontWeight: 600,
-          fontSize: "0.8125rem",
-          lineHeight: 1.2,
-          whiteSpace: "nowrap",
-        }}
-      >
-        Read-only preview{ago && ` · ${ago}`}
-      </Box>
-    </Alert>
+    <VersionPreviewBannerView
+      label={label}
+      ago={ago}
+      versionId={preview.versionId}
+      canRestore={canRestore}
+      containerWidth={containerWidth}
+      onExitPreview={onExitPreview}
+      onRestore={onRestore}
+      className={className}
+    />
   )
 }

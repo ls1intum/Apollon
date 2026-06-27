@@ -1,11 +1,9 @@
 import { create } from "zustand"
 import { persist, createJSONStorage } from "zustand/middleware"
-import themings from "@/constants/themings.json"
 
 const THEME_STORE_VERSION = 2
 const LEGACY_THEME_STORE_NAME = "theme-storage"
 const THEME_STORE_NAME = "apollon-theme"
-const THEME_STYLE_ELEMENT_ID = "apollon-theme-token-styles"
 
 // Run once at module load: if the new key is absent but the legacy key exists,
 // copy its payload under the new key so zustand's hydration picks it up.
@@ -27,10 +25,6 @@ if (typeof localStorage !== "undefined") {
 }
 
 type ThemeMode = "light" | "dark"
-type ThemeTokenMap = Record<string, string>
-type ThemeTokenConfig = Record<ThemeMode, ThemeTokenMap>
-
-const themeTokenConfig = themings as ThemeTokenConfig
 
 const coerceThemeMode = (value: unknown): ThemeMode | null => {
   if (value === "light" || value === "dark") {
@@ -39,42 +33,30 @@ const coerceThemeMode = (value: unknown): ThemeMode | null => {
   return null
 }
 
-const buildThemeBlock = (theme: ThemeMode): string => {
-  const declarations = Object.entries(themeTokenConfig[theme])
-    .map(([cssVariableName, cssVariableValue]) => {
-      return `${cssVariableName}:${cssVariableValue};`
-    })
-    .join("")
-
-  return `:root[data-theme="${theme}"]{${declarations}}`
-}
-
-const ensureThemeStyleElement = () => {
-  if (typeof document === "undefined") {
-    return
-  }
-
-  if (document.getElementById(THEME_STYLE_ELEMENT_ID)) {
-    return
-  }
-
-  const styleElement = document.createElement("style")
-  styleElement.id = THEME_STYLE_ELEMENT_ID
-  styleElement.textContent = `${buildThemeBlock("light")}${buildThemeBlock("dark")}`
-  document.head.appendChild(styleElement)
-}
-
 const applyThemeToDocument = (theme: ThemeMode) => {
   if (typeof document === "undefined") {
     return
   }
 
-  ensureThemeStyleElement()
-
   const root = document.documentElement
+  // Flip the theme in a single frame. Without this, every header control's own
+  // hover/colour transition also fires on the theme swap — each at its own
+  // duration — so the chrome reads as a slow, staggered recolour while the body
+  // snaps. Mark the root for one frame so a global rule can disable transitions
+  // during the swap; hover/interaction transitions resume immediately after.
+  root.setAttribute("data-theme-switching", "")
   root.setAttribute("data-theme", theme)
   // Let the browser style native controls/scrollbars for the active scheme.
   root.style.colorScheme = theme
+  if (typeof window !== "undefined" && window.requestAnimationFrame) {
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() =>
+        root.removeAttribute("data-theme-switching")
+      )
+    })
+  } else {
+    root.removeAttribute("data-theme-switching")
+  }
 }
 
 interface ThemeState {
@@ -143,7 +125,6 @@ export const useThemeStore = create<ThemeState>()(
           applyThemeState(newTheme, { userThemePreference: newTheme })
         },
         initializeTheme: () => {
-          ensureThemeStyleElement()
           const { userThemePreference } = get()
 
           if (!userThemePreference) {

@@ -1,14 +1,15 @@
 import React, { useState, KeyboardEvent, ChangeEvent } from "react"
-import { Box } from "@mui/material"
-import { NodeStyleEditor, TextField } from "@/components/ui"
+import { Plus, Trash2 } from "lucide-react"
+import { IconButton, TextField } from "@/components/ui"
+import { NodeStyleEditor } from "@/components/styleEditor"
 import { generateUUID } from "@/utils"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import { SfcActionTableProps, SfcActionRow } from "@/types"
 import { PopoverProps } from "../types"
 import { LAYOUT } from "@/constants"
-import { DeleteIcon } from "@/components/Icon"
 import { useReactFlow } from "@xyflow/react"
+import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 
 export const SfcActionTableEditPopover: React.FC<PopoverProps> = ({
   elementId,
@@ -129,107 +130,109 @@ export const SfcActionTableEditPopover: React.FC<PopoverProps> = ({
   }
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+    <PopoverLayout title="Action Table">
       <NodeStyleEditor
-        title="Actions"
         nodeData={nodeData}
         handleDataFieldUpdate={handleDataFieldUpdate}
         showNameInputChange={false}
       />
-      {actionRows.map((row) => (
-        <Box
-          key={row.id}
-          sx={{
+      <PopoverSection title="Actions" divider>
+        {actionRows.map((row) => (
+          <div
+            key={row.id}
+            style={{
+              display: "flex",
+              gap: 4,
+              alignItems: "center",
+            }}
+          >
+            <NodeStyleEditor
+              nodeData={row}
+              handleDataFieldUpdate={(key, value) => {
+                handleRowChange(row.id, key, value)
+              }}
+              sideElements={[
+                <IconButton
+                  key={`${row.id}-delete`}
+                  ariaLabel="Delete action row"
+                  tooltip="Delete action row"
+                  onClick={() => handleRowDelete(row.id)}
+                >
+                  <Trash2 width={16} height={16} aria-hidden="true" />
+                </IconButton>,
+              ]}
+              preElements={[
+                <TextField
+                  key={`${row.id}-identifier`}
+                  value={row.identifier}
+                  placeholder="ID"
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    handleRowChange(row.id, "identifier", e.target.value)
+                  }
+                  style={{
+                    width: "60px",
+                  }}
+                />,
+              ]}
+              inputPlaceholder="Action name"
+            />
+          </div>
+        ))}
+
+        <div
+          style={{
             display: "flex",
-            gap: 0.5,
+            gap: 4,
             alignItems: "center",
           }}
         >
-          <NodeStyleEditor
-            nodeData={row}
-            handleDataFieldUpdate={(key, value) => {
-              handleRowChange(row.id, key, value)
+          <TextField
+            placeholder="ID"
+            value={newIdentifier}
+            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+              setNewIdentifier(e.target.value)
+            }
+            onBlur={() => {
+              if (newIdentifier.trim() === "" && newName.trim() === "") {
+                setNewIdentifier("")
+              } else if (newIdentifier.trim() !== "" && newName.trim() !== "") {
+                handleAddRow()
+              }
             }}
-            sideElements={[
-              <DeleteIcon
-                key={`${row.id}-delete`}
-                width={16}
-                height={16}
-                style={{ cursor: "pointer" }}
-                onClick={() => handleRowDelete(row.id)}
-              />,
-            ]}
-            preElements={[
-              <TextField
-                key={`${row.id}-identifier`}
-                size="small"
-                value={row.identifier}
-                placeholder="ID"
-                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                  handleRowChange(row.id, "identifier", e.target.value)
-                }
-                sx={{
-                  width: "60px",
-                }}
-              />,
-            ]}
-            inputPlaceholder="Description"
+            onKeyDown={(e) => handleKeyDown(e, "identifier")}
+            data-field="identifier"
+            data-new="true"
+            style={{
+              width: "60px",
+            }}
           />
-        </Box>
-      ))}
-
-      <Box
-        sx={{
-          display: "flex",
-          gap: 0.5,
-          alignItems: "center",
-        }}
-      >
-        <TextField
-          size="small"
-          placeholder="ID"
-          value={newIdentifier}
-          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            setNewIdentifier(e.target.value)
-          }
-          onBlur={() => {
-            if (newIdentifier.trim() === "" && newName.trim() === "") {
-              setNewIdentifier("")
-            } else if (newIdentifier.trim() !== "" && newName.trim() !== "") {
-              handleAddRow()
+          <TextField
+            fullWidth
+            placeholder="Action name"
+            value={newName}
+            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+              setNewName(e.target.value)
             }
-          }}
-          onKeyDown={(e) => handleKeyDown(e, "identifier")}
-          data-field="identifier"
-          data-new="true"
-          sx={{
-            backgroundColor: "var(--apollon-background, white)",
-            width: "60px",
-          }}
-        />
-        <TextField
-          size="small"
-          fullWidth
-          placeholder="+ Add action name"
-          value={newName}
-          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            setNewName(e.target.value)
-          }
-          onBlur={() => {
-            if (newIdentifier.trim() === "" && newName.trim() === "") {
-              setNewName("")
-            } else if (newIdentifier.trim() !== "" && newName.trim() !== "") {
-              handleAddRow()
-            }
-          }}
-          onKeyDown={(e) => handleKeyDown(e, "name")}
-          data-field="name"
-          data-new="true"
-          sx={{
-            backgroundColor: "var(--apollon-background, white)",
-          }}
-        />
-      </Box>
-    </Box>
+            onBlur={() => {
+              if (newIdentifier.trim() === "" && newName.trim() === "") {
+                setNewName("")
+              } else if (newIdentifier.trim() !== "" && newName.trim() !== "") {
+                handleAddRow()
+              }
+            }}
+            onKeyDown={(e) => handleKeyDown(e, "name")}
+            data-field="name"
+            data-new="true"
+          />
+          <IconButton
+            ariaLabel="Add action row"
+            tooltip="Add action row"
+            onClick={handleAddRow}
+          >
+            <Plus width={16} height={16} aria-hidden="true" />
+          </IconButton>
+        </div>
+      </PopoverSection>
+    </PopoverLayout>
   )
 }

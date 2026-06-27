@@ -1,11 +1,17 @@
-import { Box } from "@mui/material"
-import { EdgeStyleEditor, TextField, Typography } from "@/components/ui"
+import { IconButton, TextField } from "@/components/ui"
+import { EdgeStyleEditor } from "@/components/styleEditor"
+import { ArrowLeftRight } from "lucide-react"
 import { useReactFlow } from "@xyflow/react"
 import { CustomEdgeProps } from "@/edges/EdgeProps"
 import { useEdgePopOver, useReactiveEdge, useReactiveNodeName } from "@/hooks"
 import { PopoverProps } from "../types"
 import { EdgeTypeSelect, EdgeTypeOption } from "./EdgeTypeSelect"
-import { SwapEndsButton } from "./SwapEndsButton"
+import {
+  ConnectionInfo,
+  hasDistinctEndpointNames,
+  PopoverLayout,
+  PopoverSection,
+} from "../PopoverLayout"
 
 const DEPLOYMENT_EDGE_TYPE_OPTIONS: ReadonlyArray<EdgeTypeOption> = [
   { value: "DeploymentAssociation", label: "Deployment Association" },
@@ -32,37 +38,51 @@ export const DeploymentEdgeEditPopover: React.FC<PopoverProps> = ({
   const edgeData = edge.data as CustomEdgeProps | undefined
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+    <PopoverLayout title="Edge">
       <EdgeStyleEditor
         edgeData={edgeData}
         handleDataFieldUpdate={(key, value) =>
           updateEdgeData(elementId, { ...edge.data, [key]: value })
         }
-        label="Edge Type"
-        sideElements={[handleSwap && <SwapEndsButton onClick={handleSwap} />]}
-      />
-      <EdgeTypeSelect
-        value={edge.type}
-        options={DEPLOYMENT_EDGE_TYPE_OPTIONS}
-        onChange={handleEdgeTypeChange}
+        label="Style"
+        sideElements={[
+          handleSwap && (
+            <IconButton
+              ariaLabel="Swap source and target"
+              tooltip="Swap source and target"
+              onClick={handleSwap}
+            >
+              <ArrowLeftRight width={16} height={16} aria-hidden="true" />
+            </IconButton>
+          ),
+        ]}
       />
 
-      {/* Connection info */}
-      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-        {sourceName} → {targetName}
-      </Typography>
+      <PopoverSection divider>
+        <EdgeTypeSelect
+          value={edge.type}
+          options={DEPLOYMENT_EDGE_TYPE_OPTIONS}
+          onChange={handleEdgeTypeChange}
+        />
+      </PopoverSection>
+
+      {hasDistinctEndpointNames(sourceName, targetName) && (
+        <PopoverSection title="Connection" divider>
+          <ConnectionInfo source={sourceName} target={targetName} />
+        </PopoverSection>
+      )}
 
       {/* Show label input only for associations */}
       {edge.type === "DeploymentAssociation" && (
-        <TextField
-          label="Edge Label"
-          value={edgeData?.label ?? ""}
-          onChange={(e) => handleLabelChange(e.target.value)}
-          size="small"
-          fullWidth
-          placeholder="Optional label for association"
-        />
+        <PopoverSection title="Label" divider>
+          <TextField
+            value={edgeData?.label ?? ""}
+            onChange={(e) => handleLabelChange(e.target.value)}
+            fullWidth
+            placeholder="Label"
+          />
+        </PopoverSection>
       )}
-    </Box>
+    </PopoverLayout>
   )
 }

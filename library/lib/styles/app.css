@@ -1,3 +1,10 @@
+/* The shared, embed-safe primitives + --apollon-/--home- design tokens are NOT
+   `@import`-ed here: this file is inlined verbatim into the headless-export CSS
+   chunk, which must stay `@import`-free (see the NOTE below and
+   exportSelfContained.test.ts). The @tumaet/ui `components.css` is instead
+   pulled in as a side-effect import in `App.tsx` (runtime) and concatenated
+   into the export chunk in `exportStyles.ts` (headless). */
+
 /* NOTE: this file is inlined verbatim into the headless-export CSS chunk
    (see lib/utils/exportStyles.ts). Keep it free of `@font-face`, `url(...)`,
    and `@import`, or those assets leak into that chunk. The Inter font ships
@@ -16,146 +23,18 @@
   --safe-area-inset-left: env(safe-area-inset-left, 0px);
 }
 
-/* Shared chrome tokens for every floating surface (palette, controls, minimap,
-   header islands, version rail). Surfaces derive from --apollon-background +
-   --apollon-primary-contrast via color-mix, so any host theming those two gets
-   correct chrome for free; only shadows need a dark-mode override (below). */
-:root {
-  /* Surface ladder: base == canvas; chrome separates via border + elevation. */
-  --apollon-chrome-surface: var(--apollon-background, #fff);
-  --apollon-chrome-surface-hover: color-mix(
-    in srgb,
-    var(--apollon-primary-contrast, #000) 8%,
-    var(--apollon-background, #fff)
-  );
-  --apollon-chrome-surface-active: color-mix(
-    in srgb,
-    var(--apollon-primary-contrast, #000) 14%,
-    var(--apollon-background, #fff)
-  );
-
-  /* Borders: opaque cool neutrals that hold their contrast in both themes. */
-  --apollon-chrome-border: color-mix(
-    in srgb,
-    var(--apollon-primary-contrast, #000) 12%,
-    var(--apollon-background, #fff)
-  );
-  --apollon-chrome-border-strong: color-mix(
-    in srgb,
-    var(--apollon-primary-contrast, #000) 28%,
-    var(--apollon-background, #fff)
-  );
-
-  /* Text */
-  --apollon-chrome-text: var(--apollon-primary-contrast, #212529);
-  --apollon-chrome-text-muted: color-mix(
-    in srgb,
-    var(--apollon-primary-contrast, #000) 58%,
-    var(--apollon-background, #fff)
-  );
-
-  /* Accent — reserved for meaning (primary action, selection, current marker).
-     Chrome surfaces themselves stay neutral. */
-  --apollon-chrome-accent: var(--apollon-primary, #3e8acc);
-  --apollon-chrome-accent-contrast: #fff;
-
-  /* Radius ramp: sm pills, md controls, lg panels/rails. */
-  --apollon-chrome-radius-sm: 6px;
-  --apollon-chrome-radius-md: 8px;
-  --apollon-chrome-radius-lg: 12px;
-
-  /* Harmonic dimensional system: every floating cluster shares one height
-     (island-h, below), so their bottom edges align and the palette clears them
-     by one even gap. One edge margin + one gap apply to all chrome. */
-  --apollon-chrome-edge: 10px; /* margin from the canvas edge (every cluster) */
-  --apollon-chrome-gap: 8px; /* gap between adjacent clusters / to the palette */
-  --apollon-chrome-btn: 32px; /* icon-button paint box */
-  --apollon-chrome-pad: 6px; /* inner padding of every floating cluster */
-  --apollon-chrome-hit: 44px; /* minimum touch target (Apple HIG) */
-
-  /* Edge margin that HUGS a device safe area instead of stacking on it: the
-     design edge when there's no inset, the inset alone when there is one — so
-     chrome aligns to the usable edge with no double-spacing under a notch / home
-     indicator. NO -top variant: the header top is intentionally additive
-     (safe-area-inset-top + edge) because the band is pinned under the notch and
-     still needs its own breathing room. */
-  --apollon-chrome-edge-safe-left: max(
-    var(--apollon-chrome-edge),
-    var(--safe-area-inset-left, 0px)
-  );
-  --apollon-chrome-edge-safe-right: max(
-    var(--apollon-chrome-edge),
-    var(--safe-area-inset-right, 0px)
-  );
-  --apollon-chrome-edge-safe-bottom: max(
-    var(--apollon-chrome-edge),
-    var(--safe-area-inset-bottom, 0px)
-  );
-
-  /* Shared OUTER cluster height = button + 2·padding + 2·1px border. Derived, so
-     fixed-height islands match the auto-height control/minimap panels to the
-     pixel and it self-corrects when btn/pad change (landscape overrides it). */
-  --apollon-chrome-island-h: calc(
-    var(--apollon-chrome-btn) + 2 * var(--apollon-chrome-pad) + 2px
-  );
-
-  /* Elevation: docked chrome (header/rail) = hairline + flat micro-shadow;
-     floating chrome (palette/controls/minimap) = soft halo. */
-  --apollon-chrome-shadow-docked: 0 1px 2px rgb(15 23 42 / 8%);
-  --apollon-chrome-shadow-floating: 0 0 1px 0 rgb(15 23 42 / 20%),
-    0 2px 8px 0 rgb(15 23 42 / 12%);
-
-  /* Lit up only in dark mode (a pure drop shadow vanishes on a dark canvas). */
-  --apollon-chrome-inset-hairline: 0 0 0 0 transparent;
-
-  /* Glass for floating chrome: a semi-opaque tint floor (keeps text legible —
-     translucency alone never carries it) under a backdrop blur, derived from
-     the canvas background so it themes automatically. */
-  --apollon-chrome-glass: color-mix(
-    in srgb,
-    var(--apollon-background, #fff) 80%,
-    transparent
-  );
-
-  /* Near-opaque tint for text-dense glass (the version-history list) so list
-     copy clears WCAG AA over a busy diagram while still reading as glass. */
-  --apollon-chrome-glass-solid: color-mix(
-    in srgb,
-    var(--apollon-background, #fff) 92%,
-    transparent
-  );
-  --apollon-chrome-glass-blur: saturate(180%) blur(20px);
-
-  /* Motion tokens: short, decelerated. */
-  --apollon-chrome-duration-hover: 120ms;
-  --apollon-chrome-duration-enter: 220ms;
-  --apollon-chrome-ease-standard: cubic-bezier(0.2, 0, 0, 1);
-  --apollon-chrome-ease-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
-}
-
-/* Dark mode only needs to fix the shadows + add the contrast hairline; the
-   surfaces above already track the dark --apollon-background via color-mix.
-   `:root[data-theme]` is how the webapp flips the theme; the `.apollon-editor`
-   selector lets a standalone library host theme a single editor instance. */
-:root[data-theme="dark"],
-.apollon-editor[data-theme="dark"] {
-  --apollon-chrome-shadow-docked: 0 1px 2px rgb(0 0 0 / 40%);
-  --apollon-chrome-shadow-floating: 0 2px 12px 0 rgb(0 0 0 / 50%);
-  --apollon-chrome-inset-hairline: inset 0 0 0 1px rgb(255 255 255 / 8%);
-}
-
-/* Touch: tighter island padding so the phone chrome stays compact; the icon
-   buttons keep a ≥44px hit target via a ::before overlay (the paint box stays
-   32px). island-h derives from pad, so it follows automatically. */
-@media (pointer: coarse) {
-  :root {
-    --apollon-chrome-pad: 4px;
-  }
-}
+/* The shared chrome token system (--apollon-chrome-*: glass, the surface/border/
+   text ramp, the btn/pad/island dimensional system, motion) is the SINGLE source
+   and lives in @tumaet/ui tokens.css — loaded into the editor via the
+   components.css side-effect import in App.tsx, bundled into the published
+   style.css, concatenated into the headless-export chunk, AND available to the
+   webapp HOME (which imports components.css but NOT this app.css). The editor's
+   structural rules below CONSUME those tokens via var(); they are not redefined
+   here, so there is exactly one definition and no drift. */
 
 .react-flow {
   --panel-background: var(--apollon-background, #fff);
-  --panel-shadow: 0 0 4px 0 var(--apollon-background-variant, #f8f9fa);
+  --panel-shadow: var(--apollon-shadow, 0 4px 12px rgba(0, 0, 0, 0.18));
   --text: var(--apollon-primary-contrast, #000);
   --xy-edge-stroke: var(--apollon-primary-contrast, #000);
   --xy-edge-stroke-width: 2px;
@@ -171,6 +50,12 @@
 .apollon-editor {
   background-color: var(--apollon-background, #fff);
   color: var(--apollon-primary-contrast, #000);
+
+  --popover-divider: color-mix(
+    in srgb,
+    var(--apollon-primary-contrast, #000) 10%,
+    transparent
+  );
 
   /* Own stacking context so the editor's internal z-indexes (canvas content at
      9998–10001, collaboration overlays at 10001–10004, overlay chrome at
@@ -195,7 +80,7 @@
 /* Positioning context + clip region for the absolutely-positioned
    collaboration cursor layer. Keep `position` as `relative` only: a
    `transform`/`filter`/`perspective` here would become the containing block
-   for the body-portaled MUI popovers (see GenericPopover) and misplace them. */
+   for the body-portaled Base UI popovers (see GenericPopover) and misplace them. */
 .apollon-canvas {
   position: relative;
   flex: 1;
@@ -233,7 +118,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
+  border-radius: var(--apollon-radius-lg, 8px);
   border: 2px solid;
   background-color: var(--apollon-background, #fff);
   color: var(--apollon-primary-contrast, #000);
@@ -280,6 +165,7 @@
     opacity: 0;
     transform: translate(-50%, -8px);
   }
+
   to {
     opacity: 1;
     transform: translate(-50%, 0);
@@ -345,8 +231,8 @@
   margin-top: 4px;
   padding: 2px 6px;
   font-size: 12px;
-  border-radius: 6px;
-  color: #fff;
+  border-radius: var(--apollon-radius-md, 6px);
+  color: var(--apollon-on-collaboration-cursor, #fff);
   white-space: nowrap;
 }
 
@@ -362,7 +248,6 @@
   stroke-width: 4.5px !important;
   filter: drop-shadow(0 0 4px var(--apollon-collaboration-highlight-color));
 }
-
 /* Floating element palette — an overlay on the canvas for every viewport
    (there is no docked variant). Its grid columns/gap and each cell's size are
    set inline from `computePaletteLayout`, so it fits every element in view
@@ -468,7 +353,9 @@
   cursor: pointer;
   font-weight: 600;
   white-space: nowrap;
-  font-size: 12px;
+  /* 13px keeps the palette compact while matching the select/label/hint
+     baseline below. */
+  font-size: 13px;
 }
 
 .apollon-palette__view-button:hover {
@@ -487,7 +374,7 @@
   width: 100%;
   max-width: 160px;
   padding: 4px;
-  font-size: 11px;
+  font-size: 13px; /* matches the view-button baseline above */
   line-height: 1.4;
 }
 
@@ -581,70 +468,12 @@
   }
 }
 
-/* The single icon-control idiom for every floating chrome button (zoom, fit,
-   undo/redo, minimap handles): borderless on glass, the pane supplies the
-   border/radius, and state is a surface-layer fill — never a border — so a
-   control never reads as a box-inside-a-box. */
-.apollon-chrome-iconbtn {
-  box-sizing: border-box;
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--apollon-chrome-btn);
-  height: var(--apollon-chrome-btn);
-  padding: 0;
-  border: 0;
-  border-radius: var(--apollon-chrome-radius-sm);
-  background: transparent;
-  color: var(--apollon-chrome-text);
-  cursor: pointer;
-  transition: background-color var(--apollon-chrome-duration-hover)
-    var(--apollon-chrome-ease-standard);
-}
-
-.apollon-chrome-iconbtn > svg {
-  fill: currentColor;
-}
-
-/* The paint box stays compact, but the hit target extends to ≥44px (Apple HIG)
-   via an invisible overlay — so touch chrome doesn't have to grow the glyph. */
-.apollon-chrome-iconbtn::before {
-  content: "";
-  position: absolute;
-  inset: calc((var(--apollon-chrome-btn) - var(--apollon-chrome-hit)) / 2);
-}
-
-/* Lower-specificity states first (stylelint no-descending-specificity). */
-.apollon-chrome-iconbtn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.apollon-chrome-iconbtn:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px
-    color-mix(in srgb, var(--apollon-chrome-accent) 45%, transparent);
-}
-
-.apollon-chrome-iconbtn:hover:not(:disabled) {
-  background: var(--apollon-chrome-surface-hover);
-}
-
-.apollon-chrome-iconbtn:active:not(:disabled) {
-  background: var(--apollon-chrome-surface-active);
-}
-
-/* Numeric zoom readout: same idiom, auto width, tabular figures so the digits
-   don't jitter as the percentage changes. */
-.apollon-chrome-iconbtn--readout {
-  width: auto;
-  min-width: 48px;
-  padding: 0 8px;
-  font-size: 13px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
+/* The .apollon-chrome-iconbtn idiom (the borderless-on-glass icon control used by
+   the floating chrome buttons AND the webapp mobile pills) is defined in the
+   webapp-available @tumaet/ui components.css, alongside .apollon-glass, so the
+   home band can reuse it with no editor mounted. The editor loads components.css
+   too (App.tsx), so editor chrome still gets it; it references only chrome tokens
+   so the rendered control is identical wherever the class is defined. */
 
 /* Expanded minimap = its own glass card (the .react-flow__panel glass rule
    supplies the pane). Drop the panel padding so the map fills the rounded card
@@ -701,8 +530,12 @@
 /* Shared glass surface for every floating chrome object — header islands,
    palette, zoom/undo controls, minimap — so they read as one family of
    translucent panes over the canvas. The tint floor keeps text legible over a
-   busy diagram; the inset hairline gives crispness in dark mode. */
-.apollon-glass,
+   busy diagram; the inset hairline gives crispness in dark mode.
+
+   React Flow's own panels/toolbars adopt the .apollon-glass treatment here; the
+   `.apollon-glass` CLASS itself is defined in the webapp-available components.css
+   (so the home band reuses the identical surface with no editor mounted). Both
+   resolve the same chrome tokens, so the surface is byte-identical either way. */
 .react-flow__panel,
 .react-flow__node-toolbar {
   background-color: var(--apollon-chrome-glass);
@@ -766,14 +599,10 @@
     var(--apollon-chrome-ease-decelerate) both;
 }
 
-/* The title island reads as a quiet capsule until focused, then lifts an accent
-   ring (the field inside is borderless — the island is its chrome). */
-.apollon-chrome-title-island:focus-within {
-  border-color: var(--apollon-chrome-accent);
-  box-shadow:
-    0 0 0 2px color-mix(in srgb, var(--apollon-chrome-accent) 35%, transparent),
-    var(--apollon-chrome-shadow-floating);
-}
+/* The borderless-input-on-glass construction (.apollon-chrome-title-island
+   focus ring + .apollon-chrome-title-input placeholder) is single-sourced in the
+   webapp-available components.css alongside .apollon-glass, so the home band's
+   search field reuses the identical idiom with no editor mounted. */
 
 @media (prefers-reduced-motion: reduce) {
   .apollon-chrome-island {
@@ -781,9 +610,10 @@
   }
 }
 
-/* Honour the OS reduced-transparency / increased-contrast / reduced-motion preferences. */
+/* Honour the OS reduced-transparency / increased-contrast preferences. The
+   `.apollon-glass` class carries its own matching fallbacks in components.css;
+   these cover the editor's React-Flow panels + palette. */
 @media (prefers-reduced-transparency: reduce) {
-  .apollon-glass,
   .react-flow__panel,
   .react-flow__node-toolbar,
   .apollon-palette {
@@ -794,7 +624,6 @@
 }
 
 @media (prefers-contrast: more) {
-  .apollon-glass,
   .react-flow__panel,
   .react-flow__node-toolbar,
   .apollon-palette {
@@ -985,16 +814,10 @@
 .react-flow__edge:hover .edge-overlay {
   opacity: 0;
 }
-.react-flow__edge:hover .edge-marker-highlight {
-  opacity: 0;
-}
 
 .react-flow__edge.selected .edge-overlay {
   opacity: 0;
   pointer-events: none;
-}
-.react-flow__edge.selected .edge-marker-highlight {
-  opacity: 0;
 }
 
 .react-flow__edge:hover .react-flow__edge-path,
@@ -1026,13 +849,13 @@
 .react-flow__node:hover {
   opacity: 0.9;
   box-shadow: 0 0 0 2px var(--apollon-primary, #3e8acc);
-  border-radius: 4px;
+  border-radius: var(--apollon-radius-sm, 4px);
 }
 
 .react-flow__node.selected {
   opacity: 0.9;
   box-shadow: 0 0 0 2px var(--apollon-primary, #3e8acc);
-  border-radius: 4px;
+  border-radius: var(--apollon-radius-sm, 4px);
 }
 
 .apollon-interactive-selection {
@@ -1050,8 +873,7 @@
   stroke-width: 3px;
 }
 
-.apollon-interactive-selection--selected .edge-overlay,
-.apollon-interactive-selection--selected .edge-marker-highlight {
+.apollon-interactive-selection--selected .edge-overlay {
   opacity: 0.45;
   stroke: var(--apollon-interactive-selection-color);
   stroke-width: 15px;
@@ -1092,28 +914,659 @@ svg.react-flow__connectionline {
 .horizontally-not-resizable .react-flow__resize-control.top.line:hover {
   cursor: grab;
 }
+
 .horizontally-not-resizable .react-flow__resize-control.bottom.line:hover {
   cursor: grab;
 }
+
 .vertically-not-resizable .react-flow__resize-control.right.line:hover {
   cursor: grab;
 }
+
 .vertically-not-resizable .react-flow__resize-control.left.line:hover {
   cursor: grab;
 }
 
-.apollon-editor .MuiSelect-select {
-  color: var(--apollon-primary-contrast, #000) !important;
+/* Native UI primitives, tokened via `--apollon-*`. Base UI portals to
+   `document.body`, so these are global, not scoped under `.apollon-editor`;
+   theme vars are forwarded by `GenericPopover`. */
+
+/* The button / icon-button / text-field / tooltip primitives are shared from
+   @tumaet/ui and styled by the bundled, Tailwind-free components.css (data-slot
+   rules), so their `.apollon-*` rules live there, not here. */
+
+/* Checkbox */
+.apollon-checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: var(--apollon-primary-contrast, #000);
+  cursor: pointer;
 }
-.apollon-editor .MuiFormLabel-root {
-  color: var(--apollon-primary-contrast, #000) !important;
+
+.apollon-checkbox {
+  accent-color: var(--apollon-primary, #3e8acc);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
 }
-.apollon-editor .MuiOutlinedInput-notchedOutline {
-  border-color: var(--apollon-primary-contrast, #000) !important;
+
+/* Checkbox primitive (Base UI). The clickable row, the 16px box, and the check
+   indicator, keyed on data-slot + Base UI's data-checked/data-disabled state,
+   routed through --apollon-* tokens (mirrors .apollon-stereotype-toggle). */
+[data-slot="checkbox-label"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: var(--apollon-primary-contrast, #000);
+  cursor: pointer;
 }
-.apollon-editor .MuiSvgIcon-root {
-  color: var(--apollon-primary-contrast, #000) !important;
+
+[data-slot="checkbox"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 1px solid
+    color-mix(in srgb, var(--apollon-primary, #3e8acc) 50%, transparent);
+  border-radius: var(--apollon-radius-sm, 4px);
+  background: transparent;
+  /* The check sits on the primary fill once checked; no dedicated on-primary
+     token exists, so fall back through the page background to white. */
+  color: var(--apollon-primary-contrast-on-accent, var(--apollon-background, #fff));
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
 }
+
+[data-slot="checkbox"][data-checked] {
+  background-color: var(--apollon-primary, #3e8acc);
+  border-color: var(--apollon-primary, #3e8acc);
+}
+
+[data-slot="checkbox"]:focus-visible {
+  outline: 2px solid var(--apollon-primary, #3e8acc);
+  outline-offset: 2px;
+}
+
+[data-slot="checkbox"][data-disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+[data-slot="checkbox-label"]:has([data-slot="checkbox"][data-disabled]) {
+  cursor: not-allowed;
+}
+
+[data-slot="checkbox-indicator"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+}
+
+/* Typography primitive. Color + per-variant size/weight keyed on data-variant,
+   routed through the themed contrast token. Callers' style still overrides via
+   the element's own inline style (higher specificity than this rule). h1–h5
+   inherit by design. */
+[data-slot="typography"] {
+  color: var(--apollon-primary-contrast, #000);
+}
+
+[data-slot="typography"][data-variant="h6"] {
+  font-size: 1.25rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+[data-slot="typography"][data-variant="subtitle1"] {
+  font-size: 1rem;
+  font-weight: 400;
+  margin: 0;
+}
+
+[data-slot="typography"][data-variant="subtitle2"] {
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+[data-slot="typography"][data-variant="body1"] {
+  font-size: 1rem;
+  margin: 0;
+}
+
+[data-slot="typography"][data-variant="body2"] {
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+[data-slot="typography"][data-variant="caption"] {
+  font-size: 0.75rem;
+  margin: 0;
+}
+
+/* Text-field label + helper chrome. The TextField primitive sets the data-slot
+   (and data-error on the helper); the visual tokens — size, spacing, and the
+   themed contrast / danger / muted colors — live here, not inline. */
+[data-slot="textfield-label"] {
+  font-size: 0.75rem;
+  margin-bottom: 2px;
+  color: var(--apollon-primary-contrast, #000);
+}
+
+[data-slot="textfield-helper"] {
+  font-size: 0.75rem;
+  margin-top: 2px;
+  color: var(--apollon-gray-variant, #495057);
+}
+
+[data-slot="textfield-helper"][data-error] {
+  color: var(--apollon-alert-danger-color, #721c24);
+}
+
+/* Score pill. Tone (set by the AssessmentScore primitive) selects a foreground
+   tone token + a soft same-hue tint from the --apollon-assessment-* ramp (the
+   single source in tokens.css, with light/dark deltas), so a graded element
+   reads identically here and on the canvas badge (AssessmentIcon). Geometry is
+   shared across tones. The tone pairs are SOLID AA tokens (not color-mix), so
+   axe can MEASURE the contrast and every pair clears WCAG AA in both themes. */
+[data-slot="assessment-score"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 2px 10px;
+  border-radius: var(--apollon-radius-md, 6px);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+}
+
+[data-slot="assessment-score"] > svg {
+  flex: none;
+}
+
+/* Tone pairs read the --apollon-assessment-* ramp (light/dark deltas live in
+   tokens.css). The var() fallbacks mirror the light values per this file's
+   convention; the real source — and the dark theme — lives in tokens.css. */
+[data-slot="assessment-score"][data-tone="positive"] {
+  color: var(--apollon-assessment-positive-text, #166534);
+  background-color: var(--apollon-assessment-positive-bg, #dcfce7);
+}
+
+[data-slot="assessment-score"][data-tone="negative"] {
+  color: var(--apollon-assessment-negative-text, #991b1b);
+  background-color: var(--apollon-assessment-negative-bg, #fee2e2);
+}
+
+[data-slot="assessment-score"][data-tone="zero"] {
+  color: var(--apollon-assessment-zero-text, #1e40af);
+  background-color: var(--apollon-assessment-zero-bg, #dbeafe);
+}
+
+[data-slot="assessment-score"][data-tone="ungraded"] {
+  color: var(--apollon-assessment-ungraded-text, #475569);
+  background-color: var(--apollon-assessment-ungraded-bg, #f1f5f9);
+}
+
+/* On-canvas feedback badge: a soft drop-shadow lifts the tone-tinted disc off
+   the element it marks so it stays legible over any node fill. (Export inlines
+   the assessment tokens via CSS_VARIABLE_FALLBACKS, not this rule.) */
+.apollon-assessment-icon {
+  filter: drop-shadow(
+    0 1px 2px
+      color-mix(in srgb, var(--apollon-primary-contrast, #000) 28%, transparent)
+  );
+}
+
+/* Feedback body text. The [data-empty] variant is the muted "No comment"
+   placeholder shown when an element is graded but carries no comment. */
+[data-slot="assessment-feedback"] {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--apollon-primary-contrast, #000);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+[data-slot="assessment-feedback"][data-empty] {
+  color: var(--apollon-gray-variant, #495057);
+  font-style: italic;
+}
+
+/* Assessment header name chip: the assessed element's name highlighted inline
+   (instead of quotation marks) so it wraps as part of the sentence. */
+[data-slot="assessment-name-chip"] {
+  padding: 1px 6px;
+  border-radius: var(--apollon-radius-sm, 4px);
+  font-weight: 600;
+  white-space: nowrap;
+  background-color: color-mix(
+    in srgb,
+    var(--apollon-primary, #3e8acc) 18%,
+    transparent
+  );
+  color: var(--apollon-primary-contrast, #000);
+}
+
+/* Divider line (StyleEditor color rows, etc). Visual tokens live here, routed
+   through --apollon-* fallbacks; callers tune geometry/color only via the
+   --divider-* custom properties (no inline visual styles). */
+[data-slot="divider-line"] {
+  width: var(--divider-width, 100%);
+  height: var(--divider-height, 1px);
+  margin: var(--divider-margin, 8px 0);
+  background-color: var(--divider-color, var(--apollon-primary-contrast, #000));
+}
+
+/* Add-item row (attributes / methods lists): the text field grows, the named
+   add Button hugs its right edge so a screen-reader user gets a real action
+   rather than a nameless "+ Add" field. */
+.apollon-add-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.apollon-add-row > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Drag handle (DnD rows) */
+.apollon-drag-handle {
+  cursor: grab;
+  color: var(--apollon-gray-variant, #495057);
+}
+
+.apollon-drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Edge toolbar: only buttons capture pointer events, not the box body. */
+.apollon-edge-toolbar {
+  pointer-events: none;
+}
+
+.apollon-edge-toolbar > * {
+  pointer-events: auto;
+}
+
+/* Popover (Base UI) */
+.apollon-popover {
+  box-sizing: border-box;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 10px;
+  background-color: var(--apollon-surface, #fff);
+  color: var(--apollon-primary-contrast, #000);
+  border-radius: var(--apollon-radius-lg, 8px);
+  border: 1px solid var(--apollon-border, #cdd5df);
+  box-shadow: var(--apollon-shadow, 0 4px 12px rgba(0, 0, 0, 0.18));
+  transform-origin: var(--transform-origin, center);
+  transition:
+    opacity 100ms ease,
+    transform 100ms ease;
+  z-index: 10003;
+}
+
+.apollon-popover[data-starting-style],
+.apollon-popover[data-ending-style],
+.apollon-select-content[data-starting-style],
+.apollon-select-content[data-ending-style] {
+  opacity: 0;
+  transform: scale(0.96);
+}
+
+/* Select (Base UI Popover listbox) */
+.apollon-select {
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.apollon-select-label {
+  font-size: 0.8125rem; /* 13px for legibility */
+  color: var(--apollon-primary-contrast, #000);
+  margin-bottom: 2px;
+}
+
+.apollon-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 36px;
+  padding: 6px 10px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  text-align: left;
+  color: var(--apollon-primary-contrast, #000);
+  background-color: var(--apollon-surface-sunken, #fff);
+  border: 1px solid var(--apollon-border, #cdd5df);
+  border-radius: var(--apollon-radius-md, 6px);
+  cursor: pointer;
+}
+
+.apollon-select-trigger:focus-visible {
+  border-color: var(--apollon-primary, #3e8acc);
+  box-shadow: 0 0 0 1px var(--apollon-primary, #3e8acc);
+  outline: none;
+}
+
+.apollon-select-value {
+  flex: 1;
+  min-width: 0;
+}
+
+.apollon-select-placeholder {
+  color: var(--apollon-gray-variant, #495057);
+  opacity: 0.7;
+}
+
+.apollon-select-icon {
+  flex: 0 0 auto;
+  color: var(--apollon-primary-contrast, #000);
+}
+
+.apollon-select-content {
+  background-color: var(--apollon-surface, #fff);
+  color: var(--apollon-primary-contrast, #000);
+  border: 1px solid var(--apollon-border, #cdd5df);
+  border-radius: var(--apollon-radius-lg, 8px);
+  box-shadow: var(--apollon-shadow, 0 4px 12px rgba(0, 0, 0, 0.18));
+  transform-origin: var(--transform-origin, center);
+  transition:
+    opacity 100ms ease,
+    transform 100ms ease;
+  z-index: 10004;
+  overflow: hidden;
+}
+
+.apollon-select-listbox {
+  max-height: inherit;
+  overflow-y: auto;
+  /* Reliable touch scrolling inside Capacitor WebViews. */
+  -webkit-overflow-scrolling: touch;
+  padding: 4px;
+}
+
+.apollon-select-option {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 40px;
+  padding: 8px 10px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  text-align: left;
+  color: var(--apollon-primary-contrast, #000);
+  background-color: transparent;
+  border: none;
+  border-radius: var(--apollon-radius-md, 6px);
+  cursor: pointer;
+  /* Avoid the 300ms tap delay / double-tap zoom on touch devices. */
+  touch-action: manipulation;
+}
+
+.apollon-select-option:hover,
+.apollon-select-option:focus-visible {
+  background-color: color-mix(
+    in srgb,
+    var(--apollon-primary, #3e8acc) 14%,
+    transparent
+  );
+  outline: none;
+}
+
+.apollon-select-option--selected {
+  font-weight: 600;
+  background-color: color-mix(
+    in srgb,
+    var(--apollon-primary, #3e8acc) 22%,
+    transparent
+  );
+}
+
+/* Color swatch — both the picker trigger and each grid swatch. The fill is the
+   chosen color via the --swatch-color custom property (a swatch var(...) token
+   or a hex); a transparent trigger shows the inherited/empty state. */
+.apollon-color-swatch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--apollon-border-subtle, #e3e8ef);
+  cursor: pointer;
+  background-color: var(--swatch-color, transparent);
+  box-sizing: border-box;
+  transition: opacity 120ms ease;
+  flex-shrink: 0;
+}
+
+.apollon-color-swatch:hover {
+  opacity: 0.72;
+}
+
+.apollon-color-swatch:focus-visible {
+  outline: 2px solid var(--apollon-primary, #3e8acc);
+  outline-offset: 3px;
+}
+
+.apollon-color-swatch[aria-pressed="true"],
+.apollon-color-swatch[data-state="on"] {
+  opacity: 1;
+}
+/* The selected check mark must read on ANY swatch fill with no JS luminance
+   math: white ink with a soft dark drop-shadow stays legible on both light and
+   dark swatches. */
+.apollon-color-swatch__icon {
+  pointer-events: none;
+  color: var(--apollon-on-collaboration-cursor, #fff);
+  filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.6));
+}
+
+/* Editor color-picker (Base UI Popover) — mirrors the @tumaet/ui color-picker
+   STRUCTURE, styled here Tailwind-free via the data-slots the component sets. */
+.apollon-color-picker__popup {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background-color: var(--apollon-surface, #fff);
+  color: var(--apollon-primary-contrast, #000);
+  border: 1px solid var(--apollon-border, #cdd5df);
+  border-radius: var(--apollon-radius-lg, 8px);
+  box-shadow: var(--apollon-shadow, 0 4px 12px rgba(0, 0, 0, 0.18));
+  z-index: 10003;
+}
+
+.apollon-color-picker__grid {
+  display: grid;
+  grid-template-columns: repeat(5, auto);
+  gap: 8px;
+}
+
+.apollon-color-picker__custom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.8125rem;
+  color: var(--apollon-secondary, #6c757d);
+}
+
+.apollon-color-picker__custom input[type="color"] {
+  width: 28px;
+  height: 28px;
+  padding: 2px;
+  border: 1px solid var(--apollon-border, #cdd5df);
+  border-radius: var(--apollon-radius-md, 6px);
+  background: transparent;
+  cursor: pointer;
+}
+
+.apollon-color-picker__custom input[type="color"][data-custom-active] {
+  outline: 2px solid var(--apollon-primary, #3e8acc);
+  outline-offset: 1px;
+}
+
+.apollon-color-picker__reset {
+  align-self: stretch;
+}
+
+/* Style editor (shared Node/Edge panel). Header row, the opened color panel,
+   and each color row, keyed on the data-slots StyleEditorPanel sets and driven
+   by --apollon-* tokens. */
+.apollon-style-editor {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.apollon-style-editor__header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex: 1;
+}
+
+.apollon-style-editor__header[data-variant="edge"] {
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  gap: 5px;
+}
+
+.apollon-style-editor__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.apollon-style-editor__header[data-variant="edge"]
+  .apollon-style-editor__header-actions {
+  margin-left: 0;
+}
+
+.apollon-style-editor__panel {
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  background-color: var(--apollon-surface, #fff);
+  border: 1px solid var(--apollon-border-subtle, #e3e8ef);
+  border-radius: var(--apollon-radius-md, 6px);
+}
+
+.apollon-style-editor__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+}
+
+/* Stereotype selector: a Base UI ToggleGroup (single-select, allow-deselect)
+   mirroring the @tumaet/ui toggle-group STRUCTURE — data-slot wrapper + items
+   carrying data-state — but styled here, Tailwind-free, via --apollon-* tokens
+   and the radius ramp. Spacing-0: items share a seam, group rounds the ends. */
+.apollon-stereotype-group[data-slot="toggle-group"] {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  width: fit-content;
+}
+
+.apollon-stereotype-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Sits above sibling header content. */
+  position: relative;
+  z-index: 1;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid
+    color-mix(in srgb, var(--apollon-primary, #3e8acc) 38%, transparent);
+  background: transparent;
+  color: var(--apollon-primary-contrast, #000);
+  font: inherit;
+  font-size: 0.8125rem; /* 13px for legibility */
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+}
+/* Seam: collapse inner borders, round only the group's outer edges. */
+.apollon-stereotype-group .apollon-stereotype-toggle:not(:first-child) {
+  border-left: 0;
+}
+
+.apollon-stereotype-group .apollon-stereotype-toggle:first-child {
+  border-top-left-radius: var(--apollon-radius-sm, 4px);
+  border-bottom-left-radius: var(--apollon-radius-sm, 4px);
+}
+
+.apollon-stereotype-group .apollon-stereotype-toggle:last-child {
+  border-top-right-radius: var(--apollon-radius-sm, 4px);
+  border-bottom-right-radius: var(--apollon-radius-sm, 4px);
+}
+
+.apollon-stereotype-toggle:hover {
+  background-color: var(
+    --apollon-hover-neutral,
+    color-mix(in srgb, var(--apollon-primary-contrast, #000) 7.5%, transparent)
+  );
+}
+
+.apollon-stereotype-toggle:focus-visible {
+  outline: 2px solid var(--apollon-primary, #3e8acc);
+  outline-offset: 2px;
+  z-index: 1; /* lift the focus ring above the shared seam */
+}
+
+.apollon-stereotype-toggle[data-state="on"] {
+  background-color: color-mix(
+    in srgb,
+    var(--apollon-primary, #3e8acc) 20%,
+    transparent
+  );
+  border-color: var(--apollon-primary, #3e8acc);
+  /* WCAG: bare --apollon-primary as text on the primary@20% tint is only
+     ~3.6:1 (light) / ~3.8:1 (dark). Pull the label 30% toward
+     --apollon-primary-contrast — black in light (darkens the blue), white in
+     dark (lightens it) — which lifts contrast over the tint to >=4.5:1 in both
+     themes while keeping the selected accent unmistakably the primary blue. */
+  color: color-mix(
+    in srgb,
+    var(--apollon-primary, #3e8acc) 70%,
+    var(--apollon-primary-contrast, #000)
+  );
+  z-index: 1; /* keep the selected item's full border over its neighbour seam */
+}
+
 .scroll-overlay {
   position: absolute;
   top: 0;
@@ -1140,9 +1593,9 @@ svg.react-flow__connectionline {
 }
 
 .scroll-overlay-hint-content {
-  background-color: var(--apollon-background, #fff);
+  background-color: var(--apollon-surface, #fff);
   border: 2px solid var(--apollon-primary, #3e8acc);
-  border-radius: 8px;
+  border-radius: var(--apollon-radius-lg, 8px);
   padding: 16px 24px;
   box-shadow: 0 4px 12px var(--apollon-grid, rgba(36, 39, 36, 0.1));
   display: flex;
@@ -1162,6 +1615,7 @@ svg.react-flow__connectionline {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }

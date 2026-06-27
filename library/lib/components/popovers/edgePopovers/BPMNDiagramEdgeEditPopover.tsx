@@ -1,11 +1,17 @@
-import { Box } from "@mui/material"
 import { CustomEdgeProps } from "@/edges/EdgeProps"
 import { useReactFlow } from "@xyflow/react"
 import { useEdgePopOver, useReactiveEdge, useReactiveNodeName } from "@/hooks"
 import { PopoverProps } from "../types"
-import { EdgeStyleEditor, TextField, Typography } from "@/components/ui"
+import { ArrowLeftRight } from "lucide-react"
+import { IconButton, TextField } from "@/components/ui"
+import { EdgeStyleEditor } from "@/components/styleEditor"
 import { EdgeTypeSelect, EdgeTypeOption } from "./EdgeTypeSelect"
-import { SwapEndsButton } from "./SwapEndsButton"
+import {
+  ConnectionInfo,
+  hasDistinctEndpointNames,
+  PopoverLayout,
+  PopoverSection,
+} from "../PopoverLayout"
 
 const BPMN_EDGE_TYPE_OPTIONS: ReadonlyArray<EdgeTypeOption> = [
   { value: "BPMNSequenceFlow", label: "Sequence Flow" },
@@ -31,31 +37,48 @@ export const BPMNDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
   const edgeData = edge.data as CustomEdgeProps | undefined
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+    <PopoverLayout title="Edge">
       <EdgeStyleEditor
         edgeData={edgeData}
         handleDataFieldUpdate={(key, value) =>
           updateEdgeData(elementId, { ...edge.data, [key]: value })
         }
-        label="Control Flow"
-        sideElements={[handleSwap && <SwapEndsButton onClick={handleSwap} />]}
-      />
-      <EdgeTypeSelect
-        value={edge.type}
-        options={BPMN_EDGE_TYPE_OPTIONS}
-        onChange={handleEdgeTypeChange}
+        label="Style"
+        sideElements={[
+          handleSwap && (
+            <IconButton
+              ariaLabel="Swap source and target"
+              tooltip="Swap source and target"
+              onClick={handleSwap}
+            >
+              <ArrowLeftRight width={16} height={16} aria-hidden="true" />
+            </IconButton>
+          ),
+        ]}
       />
 
-      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-        {sourceName} → {targetName}
-      </Typography>
-      {/* Label update */}
-      <TextField
-        value={edgeData?.label ?? ""}
-        onChange={(e) => handleLabelChange(e.target.value)}
-        size="small"
-        fullWidth
-      />
-    </Box>
+      <PopoverSection divider>
+        <EdgeTypeSelect
+          value={edge.type}
+          options={BPMN_EDGE_TYPE_OPTIONS}
+          onChange={handleEdgeTypeChange}
+        />
+      </PopoverSection>
+
+      {hasDistinctEndpointNames(sourceName, targetName) && (
+        <PopoverSection title="Connection" divider>
+          <ConnectionInfo source={sourceName} target={targetName} />
+        </PopoverSection>
+      )}
+
+      <PopoverSection title="Label" divider>
+        <TextField
+          value={edgeData?.label ?? ""}
+          onChange={(e) => handleLabelChange(e.target.value)}
+          placeholder="Label"
+          fullWidth
+        />
+      </PopoverSection>
+    </PopoverLayout>
   )
 }

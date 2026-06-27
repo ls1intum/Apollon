@@ -35,43 +35,6 @@ const snapToGrid = (value: number, grid: number): number => {
   return Math.round(value / grid) * grid
 }
 
-export function hasArmCollapse(points: IPoint[], proximityPx: number): boolean {
-  if (points.length < 4) return false
-  for (let i = 0; i < points.length - 1; i++) {
-    const aStart = points[i]
-    const aEnd = points[i + 1]
-    const aIsH = Math.abs(aStart.y - aEnd.y) <= ORIENTATION_TOLERANCE_PX
-    const aIsV = Math.abs(aStart.x - aEnd.x) <= ORIENTATION_TOLERANCE_PX
-    if (!aIsH && !aIsV) continue
-
-    for (let j = i + 2; j < points.length - 1; j++) {
-      const bStart = points[j]
-      const bEnd = points[j + 1]
-      const bIsH = Math.abs(bStart.y - bEnd.y) <= ORIENTATION_TOLERANCE_PX
-      const bIsV = Math.abs(bStart.x - bEnd.x) <= ORIENTATION_TOLERANCE_PX
-
-      if (aIsH && bIsH) {
-        if (Math.abs(aStart.y - bStart.y) <= proximityPx) {
-          const aMinX = Math.min(aStart.x, aEnd.x)
-          const aMaxX = Math.max(aStart.x, aEnd.x)
-          const bMinX = Math.min(bStart.x, bEnd.x)
-          const bMaxX = Math.max(bStart.x, bEnd.x)
-          if (Math.max(aMinX, bMinX) < Math.min(aMaxX, bMaxX)) return true
-        }
-      } else if (aIsV && bIsV) {
-        if (Math.abs(aStart.x - bStart.x) <= proximityPx) {
-          const aMinY = Math.min(aStart.y, aEnd.y)
-          const aMaxY = Math.max(aStart.y, aEnd.y)
-          const bMinY = Math.min(bStart.y, bEnd.y)
-          const bMaxY = Math.max(bStart.y, bEnd.y)
-          if (Math.max(aMinY, bMinY) < Math.min(aMaxY, bMaxY)) return true
-        }
-      }
-    }
-  }
-  return false
-}
-
 export function getSegmentOrientation(
   points: IPoint[],
   segmentIndex: number
@@ -89,23 +52,6 @@ export function getSegmentKind(
   if (segmentIndex === 0) return "source-terminal"
   if (segmentIndex === totalPoints - 2) return "target-terminal"
   return "inner"
-}
-
-export function getSegmentEffectiveLength(
-  points: IPoint[],
-  segmentIndex: number,
-  stubLength: number
-): number {
-  const start = points[segmentIndex]
-  const end = points[segmentIndex + 1]
-  if (!start || !end) return 0
-
-  const rawLength = Math.abs(end.x - start.x) + Math.abs(end.y - start.y)
-  let deduction = 0
-  if (segmentIndex === 0) deduction += stubLength
-  if (segmentIndex === points.length - 2) deduction += stubLength
-
-  return Math.max(0, rawLength - deduction)
 }
 
 /**

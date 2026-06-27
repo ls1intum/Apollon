@@ -101,4 +101,46 @@ describe("self-contained headless export — source invariants", () => {
     expect(rules).not.toMatch(/\burl\(/i)
     expect(rules).not.toMatch(/@import/i)
   })
+
+  it("app.css stays embed-safe: no Tailwind Preflight / global element resets leak in", () => {
+    // The library's app.css ships into ANY host page (GitHub/GitLab/iframe
+    // embeds). Unlike the webapp, the editor must NOT carry Tailwind Preflight
+    // or any unscoped global reset: a `@tailwind`/`@layer base` directive or a
+    // bare `*`/`html`/`body`/`button`/`a`/`h1…` rule would re-style the HOST
+    // page's own elements (zero their margins, strip their button borders, …).
+    // Every rule here must be class/data-attribute scoped (`.apollon-*`,
+    // `.react-flow*`, `:root` token blocks). This guard fails loudly the moment
+    // a global reset — or a `@tailwind`/Preflight import — sneaks into the
+    // shipped editor stylesheet.
+    const appCss = readFileSync(
+      join(import.meta.dirname, "../../lib/styles/app.css"),
+      "utf8"
+    )
+
+    // No Tailwind entrypoints / Preflight import surface.
+    expect(appCss).not.toMatch(/@tailwind\b/i)
+    expect(appCss).not.toMatch(/@import\s+["']?tailwindcss/i)
+    expect(appCss).not.toMatch(/tailwindcss\/preflight/i)
+    // No cascade `@layer` either — Preflight lands in `@layer base`.
+    expect(appCss).not.toMatch(/@layer\b/i)
+
+    // Drop comments + at-rule preludes, then scan only the SELECTOR that opens
+    // each rule block. A leaked global reset shows up as a selector that starts
+    // with `*` or a bare HTML element name (not a class / attribute / `:root`).
+    const withoutComments = appCss.replace(/\/\*[\s\S]*?\*\//g, "")
+    const selectors = [...withoutComments.matchAll(/(^|})([^{}@]+)\{/g)]
+      .map((m) => m[2].trim())
+      .filter(Boolean)
+
+    const GLOBAL_RESET =
+      /(^|,)\s*(\*|html|body|button|input|textarea|select|a|p|ul|ol|li|table|h[1-6])(\s*[,{:[]|\s+[.#:[]|\s*$)/i
+
+    const leaked = selectors.filter((sel) => GLOBAL_RESET.test(sel))
+    expect(
+      leaked,
+      `unscoped global element reset(s) leaked into library/lib/styles/app.css: ${leaked.join(
+        " | "
+      )} — every editor rule must be class/data/:root scoped so embeds don't restyle the host page`
+    ).toEqual([])
+  })
 })

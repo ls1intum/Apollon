@@ -1,0 +1,369 @@
+/* ──────────────────────────────────────────────────────────────────────────
+   components.css — the shared primitives' styling, authored as semantic rules
+   keyed on data-slot + data-variant/-size and compiled via Tailwind v4 @apply.
+
+   WHY this file exists (and why it isn't inline utilities like the rest of
+   @tumaet/ui): the editor library (@tumaet/apollon) is published Tailwind-free
+   and embeds into ANY host (VS Code, docs, Angular/Vue/Svelte/vanilla). It
+   can't ship Tailwind's Preflight/reset or bare utility classes — those would
+   collide with or reset the host. So the four primitives the editor shares with
+   the webapp (button, icon-button, input/text-field, tooltip) get their styles
+   from THIS file, compiled to a self-contained, Preflight-free dist/components.css.
+
+   Mechanism:
+     - `@reference "tailwindcss"` + `@reference "./theme.css"` make Tailwind's
+       utilities and the project's `@theme inline` color/radius mappings
+       available to `@apply` WITHOUT emitting Tailwind's default theme or any
+       Preflight/reset. So `@apply bg-primary` resolves to
+       `background-color: var(--apollon-primary)` and nothing else leaks.
+     - `@import "./tokens.css"` EMITS the real --primitive-/--apollon-/--home-*
+       token values so the shipped stylesheet is self-contained (the editor's
+       public theming API resolves standalone, with only --apollon-* set).
+
+   The rules mirror the EXACT utility strings from the canonical components
+   (button.tsx / input.tsx / textarea.tsx / tooltip.tsx) so rendering is
+   pixel-identical to the webapp's inline-utility primitives.
+   ────────────────────────────────────────────────────────────────────────── */
+
+@reference "tailwindcss";
+@reference "./theme.css";
+
+@import "./tokens.css";
+
+/* Border-color safety net (Tailwind v4 ships no Preflight border reset, so bare
+   `border`/`border-t`/`border-b` utilities inherit `currentColor` = foreground →
+   near-black dividers in light, pure-white in dark). Default every border to the
+   design token so dividers stay subtle and theme-following. Scoped under @layer
+   base so any explicit border-color utility (which Tailwind emits in the
+   `utilities` layer) still wins. */
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: var(--color-border);
+  }
+
+  /* Box-sizing floor for the primitives. Tailwind v4 dropped Preflight's
+     `box-sizing: border-box`, and the library ships Preflight-free, so in a
+     content-box host the `@apply` sizing (e.g. h-9 + px-2.5 + border on the
+     button/input) would over-size controls. The webapp gets border-box from its
+     own Preflight; this guarantees it in any embed. Scoped to OUR data-slot
+     elements (and their box pseudo-els) so it never resets host DOM. */
+  [data-slot],
+  [data-slot] *,
+  [data-slot] ::before,
+  [data-slot] ::after {
+    box-sizing: border-box;
+  }
+}
+
+@layer components {
+  /* ── Button (data-slot="button") ──────────────────────────────────────── */
+  /* group/button is a marker class for group-* child variants; it emits no CSS
+     itself and none of these rules use it, so it stays on the element (in
+     button.tsx) but is omitted from @apply (not apply-able under @reference). */
+  [data-slot="button"] {
+    @apply inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40;
+  }
+
+  [data-slot="button"] svg {
+    @apply pointer-events-none shrink-0;
+  }
+
+  [data-slot="button"] svg:not([class*="size-"]) {
+    @apply size-4;
+  }
+
+  /* variants */
+  [data-slot="button"][data-variant="default"] {
+    @apply bg-primary text-primary-foreground hover:bg-primary/80;
+  }
+
+  [data-slot="button"][data-variant="outline"] {
+    @apply border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50;
+  }
+
+  [data-slot="button"][data-variant="secondary"] {
+    @apply bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground;
+  }
+
+  [data-slot="button"][data-variant="ghost"] {
+    @apply hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50;
+  }
+
+  [data-slot="button"][data-variant="destructive"] {
+    @apply bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40;
+  }
+
+  [data-slot="button"][data-variant="link"] {
+    @apply text-primary underline-offset-4 hover:underline;
+  }
+
+  /* sizes */
+  /* Default control height is 36px (h-9): comfortable hit area, still compact and
+     text-sm. Icon-only size variants are intentionally left untouched (they have
+     their own square paint boxes). */
+  [data-slot="button"][data-size="default"] {
+    @apply h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2;
+  }
+
+  [data-slot="button"][data-size="xs"] {
+    @apply h-6 gap-1 rounded-[min(var(--radius-md),10px)] px-2 text-xs in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5;
+  }
+
+  [data-slot="button"][data-size="xs"] svg:not([class*="size-"]) {
+    @apply size-3;
+  }
+
+  [data-slot="button"][data-size="sm"] {
+    @apply h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5;
+  }
+
+  [data-slot="button"][data-size="sm"] svg:not([class*="size-"]) {
+    @apply size-3.5;
+  }
+
+  [data-slot="button"][data-size="lg"] {
+    @apply h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2;
+  }
+
+  [data-slot="button"][data-size="icon"] {
+    @apply size-8;
+  }
+
+  [data-slot="button"][data-size="icon-xs"] {
+    @apply size-6 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-lg;
+  }
+
+  [data-slot="button"][data-size="icon-xs"] svg:not([class*="size-"]) {
+    @apply size-3;
+  }
+
+  [data-slot="button"][data-size="icon-sm"] {
+    @apply size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg;
+  }
+
+  [data-slot="button"][data-size="icon-lg"] {
+    @apply size-9;
+  }
+
+  /* ── Icon button (data-slot="icon-button") ────────────────────────────── */
+  /* No inline-utility canonical exists for this one (the webapp uses
+     <Button size="icon-*">); its canonical source is the editor's hand-written
+     .apollon-icon-button rules, reproduced verbatim here on the shared slot so
+     both surfaces render identically. Tokened via --apollon-* so it themes in a
+     standalone embed. */
+  [data-slot="icon-button"] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: var(--apollon-radius-sm);
+    background: transparent;
+    cursor: pointer;
+    padding: 0;
+    color: var(--apollon-primary-contrast);
+    transition: background-color 120ms ease;
+  }
+
+  [data-slot="icon-button"]:hover {
+    background-color: var(
+      --apollon-hover-neutral,
+      color-mix(in srgb, var(--apollon-primary-contrast) 7.5%, transparent)
+    );
+  }
+
+  [data-slot="icon-button"]:focus-visible {
+    outline: 2px solid var(--apollon-primary);
+    outline-offset: 2px;
+  }
+
+  [data-slot="icon-button"][aria-expanded="true"] {
+    background-color: color-mix(
+      in srgb,
+      var(--apollon-primary) 20%,
+      transparent
+    );
+  }
+
+  /* ── Input (data-slot="input") ────────────────────────────────────────── */
+  /* h-9 (36px) matches the default button height for aligned form rows. */
+  [data-slot="input"] {
+    @apply h-9 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40;
+  }
+
+  /* ── Textarea (data-slot="textarea") ──────────────────────────────────── */
+  [data-slot="textarea"] {
+    @apply flex field-sizing-content min-h-16 w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40;
+  }
+
+  /* ── Tooltip (data-slot="tooltip-content") ────────────────────────────── */
+  /* The tooltip's animate-in/slide/fade utilities come from tw-animate-css, which
+     this project doesn't import, so they're intentionally omitted here (@apply
+     errors on unknown utilities rather than dropping them). No animation either
+     way. */
+  [data-slot="tooltip-positioner"] {
+    @apply isolate z-50;
+  }
+
+  [data-slot="tooltip-content"] {
+    @apply z-50 inline-flex w-fit max-w-xs origin-(--transform-origin) items-center gap-1.5 rounded-md bg-foreground px-3 py-1.5 text-xs text-background;
+  }
+
+  [data-slot="tooltip-content"] [data-slot="tooltip-arrow"] {
+    @apply z-50 size-2.5 translate-y-[calc(-50%-2px)] rotate-45 rounded-[2px] bg-foreground fill-foreground data-[side=bottom]:top-1 data-[side=inline-end]:top-1/2! data-[side=inline-end]:-left-1 data-[side=inline-end]:-translate-y-1/2 data-[side=inline-start]:top-1/2! data-[side=inline-start]:-right-1 data-[side=inline-start]:-translate-y-1/2 data-[side=left]:top-1/2! data-[side=left]:-right-1 data-[side=left]:-translate-y-1/2 data-[side=right]:top-1/2! data-[side=right]:-left-1 data-[side=right]:-translate-y-1/2 data-[side=top]:-bottom-2.5;
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Shared editor CHROME — .apollon-glass + .apollon-chrome-iconbtn.
+
+   The webapp HOME (rendered with no editor mounted) needs the same floating-glass
+   surface + icon-control idiom for its island band, so the class definitions live
+   HERE in the webapp-available, Preflight-/asset-free components.css — the editor
+   gets them too (App.tsx side-effect-imports this file), and they reference only
+   the --apollon-chrome-* tokens (single-sourced in tokens.css), so the rendered
+   surface/control is byte-identical wherever the class is applied. Plain CSS (not
+   @apply) and OUTSIDE @layer components so they stay unlayered — unlayered
+   declarations outrank the @layer components rules.
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* Shared glass surface for every floating chrome object — header islands,
+   palette, zoom/undo controls, minimap, and the webapp home band — so they read
+   as one family of translucent panes. The tint floor keeps text legible over a
+   busy diagram; the inset hairline gives crispness in dark mode. */
+.apollon-glass {
+  background-color: var(--apollon-chrome-glass);
+  backdrop-filter: var(--apollon-chrome-glass-blur);
+  -webkit-backdrop-filter: var(--apollon-chrome-glass-blur);
+  border: 1px solid var(--apollon-chrome-border);
+  box-shadow: var(--apollon-chrome-shadow-floating),
+    var(--apollon-chrome-inset-hairline);
+  border-radius: var(--apollon-chrome-radius-lg);
+}
+
+/* Honour the OS reduced-transparency / increased-contrast preferences (the
+   editor's app.css carries the matching rules for its React-Flow panels). */
+@media (prefers-reduced-transparency: reduce) {
+  .apollon-glass {
+    background-color: var(--apollon-chrome-surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .apollon-glass {
+    border-color: var(--apollon-chrome-border-strong);
+  }
+}
+
+/* The single icon-control idiom for every floating chrome button (zoom, fit,
+   undo/redo, minimap handles, the webapp mobile pills): borderless on glass, the
+   pane supplies the border/radius, and state is a surface-layer fill — never a
+   border — so a control never reads as a box-inside-a-box. */
+.apollon-chrome-iconbtn {
+  box-sizing: border-box;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--apollon-chrome-btn);
+  height: var(--apollon-chrome-btn);
+  padding: 0;
+  border: 0;
+  border-radius: var(--apollon-chrome-radius-sm);
+  background: transparent;
+  color: var(--apollon-chrome-text);
+  cursor: pointer;
+  transition: background-color var(--apollon-chrome-duration-hover)
+    var(--apollon-chrome-ease-standard);
+}
+
+/* lucide icons are stroke-based (fill="none" stroke="currentColor"); the button's
+   `color` drives the stroke. Do NOT set `fill: currentColor` here — it would fill
+   the stroke paths into a solid blob. */
+
+/* The paint box stays compact, but the hit target extends to ≥44px (Apple HIG)
+   via an invisible overlay — so touch chrome doesn't have to grow the glyph. */
+.apollon-chrome-iconbtn::before {
+  content: "";
+  position: absolute;
+  inset: calc((var(--apollon-chrome-btn) - var(--apollon-chrome-hit)) / 2);
+}
+
+/* Lower-specificity states first (stylelint no-descending-specificity). */
+.apollon-chrome-iconbtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.apollon-chrome-iconbtn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px
+    color-mix(in srgb, var(--apollon-chrome-accent) 45%, transparent);
+}
+
+.apollon-chrome-iconbtn:hover:not(:disabled) {
+  background: var(--apollon-chrome-surface-hover);
+}
+
+.apollon-chrome-iconbtn:active:not(:disabled) {
+  background: var(--apollon-chrome-surface-active);
+}
+
+/* Numeric zoom readout: same idiom, auto width, tabular figures so the digits
+   don't jitter as the percentage changes. */
+.apollon-chrome-iconbtn--readout {
+  width: auto;
+  min-width: 48px;
+  padding: 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The text-accent peer of .apollon-chrome-iconbtn: the one place chrome paints
+   the accent fill (primary action — the home band's New-diagram button, the
+   HomeNewFab, the ErrorPage recovery link) so callers stop inlining
+   `background: var(--apollon-chrome-accent)`. Scoped to `button`/`a` so the
+   accent fill wins over navbarButtonStyle()'s `bg-transparent text-foreground`
+   when cn() merges this class last (cn() can't dedupe plain CSS declarations;
+   the element selector lifts specificity above the bare utility classes). */
+button.apollon-chrome-accent-btn,
+a.apollon-chrome-accent-btn {
+  background: var(--apollon-chrome-accent);
+  color: var(--apollon-chrome-accent-contrast);
+  transition: background-color var(--apollon-chrome-duration-hover)
+    var(--apollon-chrome-ease-standard);
+}
+
+button.apollon-chrome-accent-btn:hover:not(:disabled),
+a.apollon-chrome-accent-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--apollon-chrome-accent) 88%, black);
+}
+
+button.apollon-chrome-accent-btn:active:not(:disabled),
+a.apollon-chrome-accent-btn:active:not(:disabled) {
+  background: color-mix(in srgb, var(--apollon-chrome-accent) 80%, black);
+}
+
+/* The borderless-input-on-glass idiom (the editor's diagram-title capsule + the
+   home band's search field). The island reads as a quiet capsule until focused,
+   then lifts an accent ring; the field inside is borderless — the island IS its
+   chrome. Inline styles can't target ::placeholder, so the placeholder colour
+   lives here. Single-sourced here (not app.css) so the home reuses it with no
+   editor mounted. */
+.apollon-chrome-title-island:focus-within {
+  border-color: var(--apollon-chrome-accent);
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--apollon-chrome-accent) 35%, transparent),
+    var(--apollon-chrome-shadow-floating);
+}
+
+.apollon-chrome-title-input::placeholder {
+  color: var(--apollon-chrome-text-muted);
+  opacity: 1;
+}

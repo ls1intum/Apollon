@@ -46,6 +46,16 @@ type PersistedPersistenceModelStore = Pick<
     >
   >
 
+/** Shallow copy of `record` with `key` removed (immutable delete for the maps). */
+const omitKey = <V,>(
+  record: Record<string, V>,
+  key: string
+): Record<string, V> => {
+  const rest = { ...record }
+  delete rest[key]
+  return rest
+}
+
 const populateNewModel = () => ({
   id: uuidv4(),
   type: "ClassDiagram" as UMLDiagramType,
@@ -286,23 +296,15 @@ export const usePersistenceModelStore = create<PersistenceModelStore>()(
 
         deleteModel: (id) => {
           set(
-            (state) => {
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              const { [id]: _, ...rest } = state.models
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              const { [id]: __, ...thumbnailRest } = state.thumbnails
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              const { [id]: ___, ...revisionRest } = state.thumbnailRevisions
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              const { [id]: ____, ...thumbnailLastModifiedAtRest } =
-                state.thumbnailLastModifiedAt
-              return {
-                models: rest,
-                thumbnails: thumbnailRest,
-                thumbnailRevisions: revisionRest,
-                thumbnailLastModifiedAt: thumbnailLastModifiedAtRest,
-              }
-            },
+            (state) => ({
+              models: omitKey(state.models, id),
+              thumbnails: omitKey(state.thumbnails, id),
+              thumbnailRevisions: omitKey(state.thumbnailRevisions, id),
+              thumbnailLastModifiedAt: omitKey(
+                state.thumbnailLastModifiedAt,
+                id
+              ),
+            }),
             false,
             "deleteModel"
           )

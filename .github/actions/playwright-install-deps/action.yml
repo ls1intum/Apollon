@@ -31,7 +31,7 @@ runs:
         set -u
         for attempt in $(seq 1 "${{ inputs.attempts }}"); do
           echo "::group::playwright install-deps ${{ inputs.browser }} (attempt $attempt)"
-          if timeout "${{ inputs.timeout-seconds }}" pnpm --filter @tumaet/webapp exec playwright install-deps "${{ inputs.browser }}"; then
+          if timeout "${{ inputs.timeout-seconds }}" pnpm --filter @tumaet/webapp exec node node_modules/@playwright/test/cli.js install-deps "${{ inputs.browser }}"; then
             echo "::endgroup::"
             exit 0
           fi

@@ -105,6 +105,19 @@ export class ApollonEditor {
       throw new Error("Element is required to initialize Apollon")
     }
 
+    // Theming: spread `--apollon-*` overrides onto the mount node and respect
+    // an incoming `data-theme`. Both optional — un-themed mounts keep the
+    // element's existing attributes / inherited values and the built-in
+    // light/dark fallbacks. Only sets the keys provided.
+    if (options?.theme) {
+      for (const [key, value] of Object.entries(options.theme)) {
+        if (value !== undefined) element.style.setProperty(key, value)
+      }
+    }
+    if (options?.dataTheme !== undefined) {
+      element.setAttribute("data-theme", options.dataTheme)
+    }
+
     this.ydoc = new Y.Doc()
     this.diagramStore = createDiagramStore(this.ydoc)
     this.metadataStore = createMetadataStore(
@@ -428,6 +441,13 @@ export class ApollonEditor {
       id: `apollon:host:${region}`,
       region,
       inset: "auto",
+      // The host mount is a pass-through frame: the host paints its own chrome
+      // (header islands, rail panels) which re-opt into pointer events via their
+      // own `pointer-events: auto`. Without this, ControlSlot would wrap the whole
+      // region (e.g. the full-width header band) in a pointer-events:auto +
+      // nopan/nodrag/nowheel div, turning the transparent gaps between islands
+      // into a dead zone that swallows canvas drag/pan.
+      interactive: false,
       render: () => <RegionMount el={node} />,
     })
     return el
@@ -907,11 +927,9 @@ export class ApollonEditor {
 
   /**
    * Host-driven element highlighting. Paints a translucent overlay over each
-   * given node / edge / class-member id in the supplied CSS color — the v4
-   * replacement for v3's `UMLModelElement.highlight` field and
-   * `ApollonEditor.select()`. Typical hosts: an assessment editor marking
-   * elements that are missing feedback, or Athena marking elements that have
-   * automatic-feedback suggestions.
+   * given node / edge / class-member id in the supplied CSS color. Typical
+   * hosts: an assessment editor marking elements that are missing feedback, or
+   * Athena marking elements that have automatic-feedback suggestions.
    *
    * The highlight is an ephemeral view overlay: it is NOT written into the
    * model, NOT serialized by `get model`, and NOT shared with collaborators.

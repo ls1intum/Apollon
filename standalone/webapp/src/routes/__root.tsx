@@ -1,11 +1,8 @@
 import { lazy, Suspense, useEffect } from "react"
 import { createRootRoute, Outlet, useRouterState } from "@tanstack/react-router"
-import { Capacitor } from "@capacitor/core"
 import { AppProviders } from "@/AppProviders"
 import { AppLoadingScreen } from "@/components/AppLoadingScreen"
 import { DeferredToastContainer } from "@/components/DeferredToastContainer"
-import { HomeNavbar } from "@/components/navbar/HomeNavbar"
-import { HomeFooter } from "@/components/home/HomeFooter"
 import { ErrorPage } from "@/pages/ErrorPage"
 import { ensureVersionStoreBootstrapped } from "@/stores/versionStoreBootstrap"
 
@@ -27,13 +24,20 @@ function RootLayout() {
 
   // Pathname read OUTSIDE any matched route — the root renders above every match.
   const path = useRouterState({ select: (s) => s.location.pathname })
-  const isHomeRoute = path === "/"
   const isEditorRoute =
     path.startsWith("/local/") ||
     path.startsWith("/shared/") ||
     path === "/playground"
-  const isChromeSubRoute = !isHomeRoute && !isEditorRoute
 
+  // The editor mounts its chrome as in-canvas overlay (portaled into the canvas)
+  // — so it renders here, above the Outlet. Every NON-editor route (home, legal,
+  // 404) instead owns its own sticky island header INSIDE its scroll container
+  // via `PageShell`, so the header scrolls-then-sticks identically everywhere and
+  // the page's `app-scroll-y` scroll viewport always has a bounded height to
+  // scroll against. Do NOT render a sub-header here above the `overflow:hidden`
+  // wrapper: the page would have no bounded scroll root and long legal copy
+  // would clip.
+  //
   // Providers live inside the router so a modal's useNavigate binds to it.
   return (
     <AppProviders>
@@ -47,18 +51,14 @@ function RootLayout() {
           </a>
         )}
         {isEditorRoute && <EditorChromeHeader />}
-        {isChromeSubRoute && <HomeNavbar />}
         <div
           id="editor-area"
           data-testid="editor-area"
           tabIndex={-1}
-          style={{ flex: 1, overflow: "hidden" }}
+          style={{ flex: 1, minHeight: 0, overflow: "hidden" }}
         >
           <Outlet />
         </div>
-        {isChromeSubRoute && !Capacitor.isNativePlatform() && (
-          <HomeFooter className="hidden md:flex" />
-        )}
       </Suspense>
       <DeferredToastContainer />
     </AppProviders>

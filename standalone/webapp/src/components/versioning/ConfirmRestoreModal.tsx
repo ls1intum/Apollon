@@ -1,15 +1,23 @@
-import { Button, Stack } from "@mui/material"
 import { useState } from "react"
 import { toast } from "react-toastify"
-import { Typography } from "@/components/Typography"
+import { Button } from "@tumaet/ui/components/button"
+import {
+  AlertDialogCancel,
+  AlertDialogDescription,
+  AlertDialogFooter,
+} from "@tumaet/ui/components/alert-dialog"
 import { useModalContext } from "@/contexts"
-import { selectVersions, useVersionStore } from "@/stores/useVersionStore"
+import type { PendingVersion } from "@/stores/useVersionStore"
 import { log } from "@/logger"
 import { versioningStrings as t } from "./strings"
 
-interface Props {
-  diagramId: string
-  versionId: string
+interface ConfirmRestoreModalProps {
+  /**
+   * The target version, already resolved by the opener (which has it in hand) —
+   * passed in rather than re-read from the store. `null` falls back to generic
+   * "this version" copy.
+   */
+  version: PendingVersion | null
   /** Async restore action — provided by the page; the modal awaits it. */
   onConfirm: () => Promise<void> | void
 }
@@ -21,20 +29,19 @@ interface Props {
  * is the always-visible durable undo that pairs with this dialog.
  */
 export const ConfirmRestoreModal = ({
-  diagramId,
-  versionId,
+  version,
   onConfirm,
-}: Props) => {
+}: ConfirmRestoreModalProps) => {
   const { closeModal } = useModalContext()
-  const target = useVersionStore((s) =>
-    selectVersions(s, diagramId).find((v) => v.id === versionId)
-  )
   const [working, setWorking] = useState(false)
 
   const handleConfirm = async () => {
     setWorking(true)
     try {
       await onConfirm()
+      // Close only on success — a rejected restore keeps the dialog open so
+      // the error toast lands in context (so the confirm action owns its own
+      // close instead of the auto-dismissing AlertDialog primitive).
       closeModal()
     } catch (err) {
       log.error("Confirm restore failed", err as Error)
@@ -45,24 +52,19 @@ export const ConfirmRestoreModal = ({
   }
 
   const label =
-    target?.description?.trim() || target?.name?.trim() || "this version"
+    version?.description?.trim() || version?.name?.trim() || "this version"
 
   return (
-    <Stack spacing={2}>
-      <Typography>{t.confirmRestoreBody(`'${label}'`)}</Typography>
-      <Stack direction="row" spacing={1} justifyContent="flex-end">
-        <Button onClick={closeModal} disabled={working}>
-          {t.cancel}
-        </Button>
-        <Button
-          color="primary"
-          variant="contained"
-          onClick={handleConfirm}
-          disabled={working}
-        >
+    <div className="flex flex-col gap-4">
+      <AlertDialogDescription className="text-foreground">
+        {t.confirmRestoreBody(`'${label}'`)}
+      </AlertDialogDescription>
+      <AlertDialogFooter>
+        <AlertDialogCancel disabled={working}>{t.cancel}</AlertDialogCancel>
+        <Button variant="default" onClick={handleConfirm} disabled={working}>
           {t.confirmRestoreButton}
         </Button>
-      </Stack>
-    </Stack>
+      </AlertDialogFooter>
+    </div>
   )
 }

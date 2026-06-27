@@ -1,49 +1,44 @@
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
-import { Typography } from "@/components/ui"
+import { AssessmentScore } from "./AssessmentScore"
+import { AssessmentHeader, PopoverSection } from "./PopoverLayout"
 
 export const SeeFeedbackAssessmentBox = ({
   type,
+  typeLabel,
   name,
   elementId,
+  divider = false,
 }: {
   type: string
+  /** Display-only label for the header (e.g. "Edge"). Defaults to `type`. */
+  typeLabel?: string
   name: string
   elementId: string
+  /** Draw a separator above this box. Off for the first box in a popover. */
+  divider?: boolean
 }) => {
   const getAssessment = useDiagramStore(
     useShallow((state) => state.getAssessment)
   )
   const assessment = getAssessment(elementId)
 
+  // Three states the reader must be able to tell apart, each visually distinct:
+  //   no assessment   -> "Not graded" badge, no feedback line
+  //   graded, no note -> tone badge + muted "No comment"
+  //   graded, note    -> tone badge + the feedback text
   return (
-    <>
-      <Typography variant="subtitle1">{`Assessment for ${type} "${name}"`}</Typography>
-      <div
-        style={{
-          display: "flex",
-          flex: 1,
-          gap: "8px",
-          marginTop: "8px",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <Typography>Score:</Typography>
-        <Typography>{assessment?.score ?? "-"}</Typography>
-      </div>
-
-      <Typography>Feedback:</Typography>
-      <Typography>{assessment?.feedback}</Typography>
-      <div
-        style={{
-          marginTop: "12px",
-          marginBottom: "12px",
-          width: "100%",
-          height: "1px",
-          backgroundColor: "#ccc",
-        }}
-      />
-    </>
+    <PopoverSection divider={divider}>
+      <AssessmentHeader type={typeLabel ?? type} name={name} />
+      <AssessmentScore score={assessment?.score} />
+      {assessment &&
+        (assessment.feedback ? (
+          <p data-slot="assessment-feedback">{assessment.feedback}</p>
+        ) : (
+          <p data-slot="assessment-feedback" data-empty="">
+            No comment
+          </p>
+        ))}
+    </PopoverSection>
   )
 }

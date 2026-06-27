@@ -31,13 +31,13 @@ Apollon is the modeling editor behind [Artemis](https://artemis.tum.de/), TUM's 
 
 The package ships three builds with the same imperative API. Pick one based on how your host bundles (or doesn't):
 
-| Import                        | Dependencies                 | Size (min / gzip) | Use when                                                                                                                                                          |
-| ----------------------------- | ---------------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@tumaet/apollon` _(default)_ | **all bundled** (except Yjs) | ~2.4 MB / ~540 KB | No bundler — vanilla JS, a `<script>` tag, or a CDN. Self-contained; only `yjs` + `y-protocols` to install.                                                       |
-| `@tumaet/apollon/react`       | **React family external**    | ~875 KB / ~170 KB | A React host that shares its own React and MUI with the editor. Also ships the `<Apollon>` component, hooks, provider.                                            |
-| `@tumaet/apollon/external`    | **everything external**      | ~840 KB / ~175 KB | A bundler host (Angular, Vue, Svelte, React) that wants every dependency resolved from its own `node_modules` — one shared copy and full SBOM / audit visibility. |
+| Import                        | Dependencies                 | Use when                                                                                                                                                          |
+| ----------------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@tumaet/apollon` _(default)_ | **all bundled** (except Yjs) | No bundler — vanilla JS, a `<script>` tag, or a CDN. Self-contained; only `yjs` + `y-protocols` to install.                                                       |
+| `@tumaet/apollon/react`       | **React family external**    | A React host that shares its own React with the editor. Also ships the `<Apollon>` component, hooks, provider.                                                    |
+| `@tumaet/apollon/external`    | **everything external**      | A bundler host (Angular, Vue, Svelte, React) that wants every dependency resolved from its own `node_modules` — one shared copy and full SBOM / audit visibility. |
 
-Sizes are the published entry chunks. Gzip is the transfer size. The `/react` and `/external` numbers exclude the peers your app already ships.
+The `/react` and `/external` builds ship a smaller chunk than the self-contained default because the peers you already have are left external; `/external` is the smallest, since it externalizes every runtime dependency.
 
 `yjs` and `y-protocols` are required peer dependencies of **all three** builds — they power Apollon's document model and undo/redo (and live collaboration when you enable it), so every editor needs them, collaboration or not. Keeping them external means a host that already uses Yjs (or a second Apollon on the page) shares a single Yjs instance instead of loading a private, possibly mismatched copy. Most package managers install missing peers automatically; the explicit commands below are listed for clarity.
 
@@ -52,7 +52,7 @@ import { ApollonEditor } from "@tumaet/apollon"
 import "@tumaet/apollon/style.css"
 ```
 
-React, MUI, emotion, and xyflow are bundled in; only `yjs` and `y-protocols` are peers you provide.
+React, Base UI, lucide, and xyflow are bundled in; only `yjs` and `y-protocols` are peers you provide.
 
 ### React build (share your host's React)
 
@@ -60,7 +60,7 @@ React, MUI, emotion, and xyflow are bundled in; only `yjs` and `y-protocols` are
 npm install @tumaet/apollon \
   yjs y-protocols \
   react react-dom \
-  @emotion/react @emotion/styled @mui/material @xyflow/react
+  @xyflow/react
 ```
 
 ```tsx
@@ -68,14 +68,15 @@ import { Apollon } from "@tumaet/apollon/react"
 import "@tumaet/apollon/style.css"
 ```
 
-`yjs` and `y-protocols` are required for all builds; the React, MUI, emotion, and xyflow peers below are specific to the `/react` and `/external` builds.
+`yjs` and `y-protocols` are required for all builds; the React and xyflow peers below are specific to the `/react` and `/external` builds.
 
-| Peer          | Range     |     | Peer              | Range      |
-| ------------- | --------- | --- | ----------------- | ---------- |
-| `yjs`         | `^13.6.0` |     | `@mui/material`   | `^6.4.0`   |
-| `y-protocols` | `^1.0.6`  |     | `@emotion/react`  | `^11.12.0` |
-| `react`       | `^19.0.0` |     | `@emotion/styled` | `^11.12.0` |
-| `react-dom`   | `^19.0.0` |     | `@xyflow/react`   | `^12.9.0`  |
+| Peer            | Range     |
+| --------------- | --------- |
+| `yjs`           | `^13.6.0` |
+| `y-protocols`   | `^1.0.6`  |
+| `react`         | `^19.0.0` |
+| `react-dom`     | `^19.0.0` |
+| `@xyflow/react` | `^12.9.0` |
 
 ### Fully external build (any bundler host)
 
@@ -83,7 +84,7 @@ import "@tumaet/apollon/style.css"
 npm install @tumaet/apollon \
   yjs y-protocols \
   react react-dom \
-  @emotion/react @emotion/styled @mui/material @xyflow/react
+  @xyflow/react
 ```
 
 ```ts
@@ -91,12 +92,12 @@ import { ApollonEditor } from "@tumaet/apollon/external"
 import "@tumaet/apollon/style.css"
 ```
 
-Same imperative `ApollonEditor` API as the default entry, but **every** dependency is left external — the React family above _and_ Apollon's own runtime deps (`@dnd-kit`, `zustand`, `uuid`, `@chenglou/pretext`), which arrive transitively when you install the package. Your bundler then resolves and de-duplicates each one against your app's `node_modules`, and your bundle analyzer / SBOM tooling sees them as the real packages they are instead of code inlined invisibly into one chunk. Use this from any framework with a bundler — even a non-React one (the editor still runs on the React you provide internally; your own code never touches it).
+Same imperative `ApollonEditor` API as the default entry, but **every** dependency is left external — the React family above _and_ Apollon's own runtime deps (`@base-ui/react`, `lucide-react`, `@dnd-kit`, `zustand`, `uuid`, `@chenglou/pretext`), which arrive transitively when you install the package. Your bundler then resolves and de-duplicates each one against your app's `node_modules`, and your bundle analyzer / SBOM tooling sees them as the real packages they are instead of code inlined invisibly into one chunk. Use this from any framework with a bundler — even a non-React one (the editor still runs on the React you provide internally; your own code never touches it).
 
 ## Which build do I use?
 
 - **No bundler** (vanilla JS, `<script>`, CDN)? Use the default `@tumaet/apollon`. It inlines its own React, so the only peers to install are `yjs` and `y-protocols`.
-- **A React app?** Use `@tumaet/apollon/react` and install the peers above. The default build bundles its own React, so in a React app you would load two copies — that causes "Invalid hook call" errors and a larger bundle. The `/react` subpath leaves React, MUI, emotion, and xyflow external so the editor shares the copies your app already has. It is also the only entry that exports the `<Apollon>` component, hooks, and provider.
+- **A React app?** Use `@tumaet/apollon/react` and install the peers above. The default build bundles its own React, so in a React app you would load two copies — that causes "Invalid hook call" errors and a larger bundle. The `/react` subpath leaves React and xyflow external so the editor shares the copies your app already has. It is also the only entry that exports the `<Apollon>` component, hooks, and provider.
 - **A bundler host that wants one shared, fully auditable copy of every dependency?** Use `@tumaet/apollon/external` and install the peers above. Works from any framework.
 
 > **⚠️ Give the container an explicit, non-zero height** (`600px`, `80vh`, or a sized flex/grid child), whichever build you use. The canvas sizes itself to its parent, so with no resolvable height it collapses to zero pixels and renders blank. This is the most common embedding mistake. See [Troubleshooting](https://ls1intum.github.io/Apollon/library/troubleshooting).

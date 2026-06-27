@@ -1,0 +1,78 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "ignoreExportsUsedInFile": true,
+  "workspaces": {
+    "library": {
+      "entry": [
+        "lib/index.tsx",
+        "lib/react.tsx",
+        "lib/internals.ts",
+        "lib/export/index.ts"
+      ],
+      "project": ["lib/**/*.{ts,tsx}"],
+      "ignoreBinaries": ["build"]
+    },
+    "packages/ui": {
+      "entry": [
+        "src/components/*.{ts,tsx}",
+        "src/styles/*",
+        "src/**/*.stories.{ts,tsx}",
+        "tests/**/*.test.{ts,tsx}"
+      ],
+      "project": ["src/**/*.{ts,tsx}", "tests/**/*.{ts,tsx}"],
+      "ignoreDependencies": ["@tailwindcss/vite", "@vitest/coverage-v8"]
+    },
+    "standalone/webapp": {
+      "entry": [
+        "src/**/*.stories.{ts,tsx}",
+        "src/stories/_support/*.{ts,tsx}",
+        ".storybook/{main,preview,vitest.setup}.{ts,tsx}",
+        "tests/**/*.{test,spec}.{ts,tsx}"
+      ],
+      "project": ["src/**/*.{ts,tsx}", "tests/**/*.{ts,tsx}"],
+      "ignoreDependencies": [
+        "@capacitor/file-transfer",
+        "@capacitor/splash-screen",
+        "tailwindcss",
+        "jspdf",
+        "svg2pdf.js",
+        "@tanstack/history"
+      ]
+    },
+    "standalone/server": {
+      "entry": ["src/workers/*.{ts,mjs}"],
+      "ignoreDependencies": ["@types/express-serve-static-core"]
+    },
+    "vscode-extension": {
+      "entry": ["webview-vite.config.ts"],
+      "ignoreBinaries": ["vsce"]
+    },
+    "vscode-extension/editor": {
+      "entry": ["src/index.tsx"],
+      "ignoreDependencies": [
+        "@tailwindcss/vite",
+        "@vitejs/plugin-react",
+        "babel-plugin-react-compiler",
+        "@types/vscode-webview"
+      ]
+    },
+    "vscode-extension/menu": {
+      "entry": ["src/index.tsx"],
+      "ignoreDependencies": [
+        "@tailwindcss/vite",
+        "@vitejs/plugin-react",
+        "babel-plugin-react-compiler",
+        "@types/vscode-webview"
+      ]
+    },
+    "docs": {
+      "entry": ["sidebars.{user,library,contributor}.ts", "src/**/*.{ts,tsx}"],
+      "project": ["src/**/*.{ts,tsx}", "*.ts"],
+      "ignoreDependencies": [
+        "@docusaurus/plugin-content-docs",
+        "@easyops-cn/docusaurus-search-local",
+        "@easyops-cn/docusaurus-plugin-docusaurus-search-local"
+      ]
+    }
+  }
+}

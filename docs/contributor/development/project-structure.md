@@ -14,6 +14,10 @@ Apollon/
 │   ├── lib/                  # TypeScript source
 │   ├── tests/
 │   └── package.json
+├── packages/
+│   └── ui/                   # @tumaet/ui — shadcn-style design system (Base UI + Tailwind v4)
+│       ├── src/              # components, stories, compiled CSS sources
+│       └── package.json
 ├── standalone/
 │   ├── server/               # @tumaet/server — Express + Redis + WebSocket relay
 │   │   ├── src/
@@ -44,6 +48,7 @@ Apollon/
 | Workspace                  | Name                    | Published as                                                                                     |
 | -------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------ |
 | `library/`                 | `@tumaet/apollon`       | [npm](https://www.npmjs.com/package/@tumaet/apollon)                                             |
+| `packages/ui/`             | `@tumaet/ui`            | internal design system (consumed by the webapp; not published)                                   |
 | `standalone/webapp/`       | `@tumaet/webapp`        | `ghcr.io/ls1intum/apollon/webapp`                                                                |
 | `standalone/server/`       | `@tumaet/server`        | `ghcr.io/ls1intum/apollon/server`                                                                |
 | `vscode-extension/`        | `apollon-vscode`        | [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=tumaet.apollon-vscode) |

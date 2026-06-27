@@ -6,7 +6,9 @@ import {
 } from "react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
-import { Alert, Box, Container, Link, Typography } from "@mui/material"
+import { Alert, AlertDescription } from "@tumaet/ui/components/alert"
+import { ChromeSubHeader } from "@/components/navbar/ChromeSubHeader"
+import { PageShell } from "@/components/PageShell"
 import { environment } from "@/environment"
 import {
   isSafeLegalHref,
@@ -36,26 +38,19 @@ function SafeAnchor({
   }
   const isExternal = /^https?:/i.test(href)
   return (
-    <Link
+    <a
       href={href}
       rel={isExternal ? "noopener noreferrer" : undefined}
       target={isExternal ? "_blank" : undefined}
     >
       {children}
-    </Link>
+    </a>
   )
 }
 
 function SafeImage({ src, alt }: ImgHTMLAttributes<HTMLImageElement>) {
   if (!isSafeLegalImageSrc(src)) return null
-  return (
-    <Box
-      component="img"
-      src={src}
-      alt={alt ?? ""}
-      sx={{ maxWidth: "100%", height: "auto" }}
-    />
-  )
+  return <img src={src} alt={alt ?? ""} className="h-auto max-w-full" />
 }
 
 const MARKDOWN_COMPONENTS = { a: SafeAnchor, img: SafeImage }
@@ -82,6 +77,8 @@ export function LegalPage({
 
   useEffect(() => {
     const controller = new AbortController()
+    // Clear stale content synchronously when the page/profile changes so the
+    // loading state shows immediately before the resolver resolves.
     setError(null)
     setResolved(null)
     resolver(page, { signal: controller.signal, profile })
@@ -111,123 +108,43 @@ export function LegalPage({
   }, [page, profile, resolver])
 
   return (
-    <Box
-      sx={{
-        height: "100%",
-        overflowY: "auto",
-        bgcolor: "var(--apollon-background)",
-        color: "var(--apollon-primary-contrast)",
-      }}
+    <PageShell
+      header={<ChromeSubHeader />}
+      // Legal prose wants a readable measure, not the home's full 1536px grid.
+      contentClassName="max-w-3xl"
+      // Pad the long copy past the bottom safe-area inset so the final line
+      // clears a home indicator and isn't flush against the viewport edge.
+      mainClassName="pb-[max(2.5rem,calc(env(safe-area-inset-bottom,0px)+1.5rem))]"
     >
-      <Container
-        component="main"
-        maxWidth="md"
-        sx={{
-          py: { xs: 3, md: 6 },
-          px: { xs: 2, sm: 3 },
-        }}
-      >
-        <Typography
-          variant="h3"
-          component="h1"
-          gutterBottom
-          sx={{
-            color: "var(--apollon-primary-contrast)",
-            fontSize: { xs: "1.8rem", md: "2.5rem" },
-          }}
-        >
+      {/* The page title is a real <h1> at the top of the content (not in the
+          header band). mt-2 keeps the small gap the header band's pb-2 left
+          between the band and the first content row. */}
+      <div className="mt-2">
+        <h1 className="mb-2 text-2xl font-semibold text-foreground md:text-3xl">
           {title}
-        </Typography>
-
+        </h1>
         {resolved?.source === "disclaimer" ? (
           <Alert
-            severity="error"
-            role="alert"
+            variant="destructive"
             data-testid="legal-disclaimer-banner"
-            sx={{ my: 2 }}
+            className="my-4"
           >
-            {DISCLAIMER_BANNER}
+            <AlertDescription>{DISCLAIMER_BANNER}</AlertDescription>
           </Alert>
         ) : null}
 
         {error ? (
-          <Alert severity="error" role="alert" sx={{ my: 2 }}>
-            {ERROR_COPY}
+          <Alert variant="destructive" className="my-4">
+            <AlertDescription>{ERROR_COPY}</AlertDescription>
           </Alert>
         ) : null}
 
         {resolved ? (
-          <Box
-            component="article"
+          <article
             lang="en"
             data-testid="legal-content"
             data-source={resolved.source}
-            sx={{
-              overflowWrap: "anywhere",
-              wordBreak: "break-word",
-              color: "var(--apollon-primary-contrast)",
-              "& h1, & h2, & h3, & h4, & h5, & h6": {
-                mt: 3,
-                mb: 1,
-                fontWeight: 600,
-                lineHeight: 1.3,
-                color: "var(--apollon-primary-contrast)",
-              },
-              "& h2": { fontSize: { xs: "1.35rem", md: "1.5rem" } },
-              "& h3": { fontSize: { xs: "1.15rem", md: "1.25rem" } },
-              "& p, & ul, & ol": { mb: 2, lineHeight: 1.7 },
-              "& ul": { pl: 3, listStyleType: "disc" },
-              "& ol": { pl: 3, listStyleType: "decimal" },
-              "& ul ul": { listStyleType: "circle", mb: 0 },
-              "& ol ol": { listStyleType: "lower-alpha", mb: 0 },
-              "& li": { mb: 0.5, display: "list-item" },
-              "& li::marker": { color: "var(--apollon-primary-contrast)" },
-              "& a": {
-                color: "var(--apollon-primary)",
-                textDecoration: "underline",
-              },
-              // Tables are authored by operators; on narrow screens let them
-              // scroll horizontally rather than break the page layout.
-              "& table": {
-                display: "block",
-                overflowX: "auto",
-                borderCollapse: "collapse",
-                width: "100%",
-                my: 2,
-                WebkitOverflowScrolling: "touch",
-              },
-              "& th, & td": {
-                border: "1px solid var(--apollon-gray)",
-                p: 1,
-                textAlign: "left",
-                verticalAlign: "top",
-              },
-              "& th": { bgcolor: "var(--apollon-background-variant)" },
-              "& code": {
-                bgcolor: "var(--apollon-background-variant)",
-                px: 0.5,
-                borderRadius: 0.5,
-                fontSize: "0.95em",
-                wordBreak: "break-all",
-              },
-              "& pre": {
-                bgcolor: "var(--apollon-background-variant)",
-                p: 2,
-                borderRadius: 1,
-                overflowX: "auto",
-              },
-              "& blockquote": {
-                borderLeft: "4px solid var(--apollon-gray)",
-                pl: 2,
-                my: 2,
-                color: "var(--apollon-gray)",
-              },
-              "& hr": {
-                border: "none",
-                borderTop: "1px solid var(--apollon-gray)",
-                my: 3,
-              },
-            }}
+            className="legal-content"
           >
             <ReactMarkdown
               skipHtml
@@ -236,9 +153,9 @@ export function LegalPage({
             >
               {resolved.markdown}
             </ReactMarkdown>
-          </Box>
+          </article>
         ) : null}
-      </Container>
-    </Box>
+      </div>
+    </PageShell>
   )
 }

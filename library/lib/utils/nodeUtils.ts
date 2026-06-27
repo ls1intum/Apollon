@@ -220,6 +220,43 @@ export const rendersNameLabel = (nodeType?: string): boolean => {
   return NODE_LABEL_CAPABILITIES[nodeType as DiagramNodeType].rendersNameLabel
 }
 
+// Camel-case diagram prefixes stripped from a node type before humanising, so
+// the popover title reads as the bare element name ("petriNetTransition" ->
+// "Transition") to match the hand-written titles on type-specific popovers.
+const NODE_TYPE_DIAGRAM_PREFIXES = [
+  "petriNet",
+  "reachabilityGraph",
+  "syntaxTree",
+  "flowchart",
+  "activity",
+  "useCase",
+  "component",
+  "deployment",
+  "communication",
+  "bpmn",
+  "sfc",
+]
+
+/**
+ * Human-readable title for a node type, derived generically from the type
+ * string — no per-type table. Strips a leading diagram prefix, then splits
+ * camelCase into Title Case (e.g. "petriNetTransition" -> "Transition",
+ * "flowchartInputOutput" -> "Input Output").
+ */
+export const nodeTypeLabel = (nodeType?: string): string => {
+  if (!nodeType) return "Element"
+
+  const prefix = NODE_TYPE_DIAGRAM_PREFIXES.find(
+    (p) => nodeType.startsWith(p) && nodeType.length > p.length
+  )
+  const base = prefix ? nodeType.slice(prefix.length) : nodeType
+
+  return base
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/^./, (c) => c.toUpperCase())
+    .trim()
+}
+
 export const isParentNodeType = (nodeType?: string) => {
   if (!nodeType) {
     return false

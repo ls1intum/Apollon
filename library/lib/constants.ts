@@ -82,11 +82,29 @@ export const CSS_VARIABLE_FALLBACKS: Readonly<Record<string, string>> =
     "--apollon-alert-warning-background": "#fff3cd",
     "--apollon-alert-warning-border": "#ffeeba",
     "--apollon-interactive-selection": "#f39c12",
+    "--apollon-dropzone-accent": "#0064ff",
+    "--apollon-on-collaboration-cursor": "#ffffff",
+    "--apollon-assessment-positive-text": "#166534",
+    "--apollon-assessment-positive-bg": "#dcfce7",
+    "--apollon-assessment-negative-text": "#991b1b",
+    "--apollon-assessment-negative-bg": "#fee2e2",
+    "--apollon-assessment-zero-text": "#1e40af",
+    "--apollon-assessment-zero-bg": "#dbeafe",
+    "--apollon-collaboration-color-1": "#ffb61e",
+    "--apollon-collaboration-color-2": "#37b24d",
+    "--apollon-collaboration-color-3": "#1c7ed6",
+    "--apollon-collaboration-color-4": "#f03e3e",
+    "--apollon-collaboration-color-5": "#ae3ec9",
+    "--apollon-collaboration-color-6": "#0ca678",
+    "--apollon-collaboration-color-7": "#f76707",
+    "--apollon-collaboration-color-8": "#1098ad",
     "--apollon-guide-vertical": "#d63031",
     "--apollon-guide-horizontal": "#0984e3",
     "--apollon-background": "#ffffff",
     "--apollon-background-inverse": "#000000",
     "--apollon-background-variant": "#f8f9fa",
+    "--apollon-hover-neutral":
+      "color-mix(in srgb, var(--apollon-primary-contrast, #000000) 7.5%, transparent)",
     "--apollon-gray": "#e9ecef",
     "--apollon-grid": "rgba(36, 39, 36, 0.1)",
     "--apollon-gray-variant": "#495057",
@@ -107,6 +125,33 @@ export const FILL_COLOR = CSS_VARIABLE_FALLBACKS["--apollon-background"]
 export { FONT_FAMILY, DEFAULT_FONT_SIZE }
 export const INTERACTIVE_SELECTION_COLOR = `var(--apollon-interactive-selection, ${CSS_VARIABLE_FALLBACKS["--apollon-interactive-selection"]})`
 export const INTERACTIVE_SELECTION_FILL = `color-mix(in srgb, var(--apollon-interactive-selection, ${CSS_VARIABLE_FALLBACKS["--apollon-interactive-selection"]}) 18%, transparent)`
+// Fainter fill + softer stroke for the secondary (highlighted, not selected)
+// state of the assessment selection overlay. Both derive from the SAME
+// --apollon-interactive-selection token as the solid color/fill above, so the
+// whole affordance themes from one source with no raw color.
+export const INTERACTIVE_SELECTION_FILL_FAINT = `color-mix(in srgb, var(--apollon-interactive-selection, ${CSS_VARIABLE_FALLBACKS["--apollon-interactive-selection"]}) 10%, transparent)`
+export const INTERACTIVE_SELECTION_STROKE_SOFT = `color-mix(in srgb, var(--apollon-interactive-selection, ${CSS_VARIABLE_FALLBACKS["--apollon-interactive-selection"]}) 50%, transparent)`
+// Stronger fill for the highlighted (hover/host-cued) state of the div/g
+// selection overlay. Same token, heavier mix — no raw color.
+export const INTERACTIVE_SELECTION_FILL_STRONG = `color-mix(in srgb, var(--apollon-interactive-selection, ${CSS_VARIABLE_FALLBACKS["--apollon-interactive-selection"]}) 50%, transparent)`
+
+/**
+ * Live-collaboration cursor palette. The SINGLE source the collaboration code
+ * reads — it holds no inline hex array. Each entry is a `var(...)` reference to
+ * an --apollon-collaboration-color-N token (defined in packages/ui tokens.css,
+ * light + dark) with its embed-safe fallback drawn from CSS_VARIABLE_FALLBACKS
+ * above, so an assigned cursor color re-resolves per theme yet still paints when
+ * the library is embedded standalone with no host tokens.
+ */
+export const COLLAB_CURSOR_PALETTE: ReadonlyArray<string> = Object.freeze(
+  Array.from(
+    { length: 8 },
+    (_, i) =>
+      `var(--apollon-collaboration-color-${i + 1}, ${
+        CSS_VARIABLE_FALLBACKS[`--apollon-collaboration-color-${i + 1}`]
+      })`
+  )
+)
 
 /* -------------------------------------------------------------------------- */
 /* Layout                                                                     */
@@ -135,22 +180,9 @@ export const LAYOUT = Object.freeze({
   STEREOTYPE_NAME_GAP: 4,
 } as const)
 
-/**
- * Treat narrow portrait viewports and short phone-landscape viewports as
- * mobile. The portrait bound stops just below 768px so iPads (768px portrait)
- * keep the regular desktop layout; the second clause catches phones in
- * landscape, where the short height distinguishes them from tablets.
- *
- * NOTE: mirrored in standalone/webapp/src/constants/responsive.ts (the webapp
- * can't import the library's curated public surface). Keep both in sync.
- */
-export const MOBILE_VIEW_QUERY =
-  "(max-width: 767.95px), (max-width: 950px) and (max-height: 500px)"
-
 const generateUUID = () => uuidv4()
 
-// Interface-component sizing. The flat aliases below are local-only —
-// they were leaking publicly through the constants module before. Public
+// Interface-component sizing. The flat aliases below are local-only; public
 // consumers (and the rest of the library) should reach for `INTERFACE.*`.
 const INTERFACE_SIZE = 30
 const INTERFACE_RADIUS = INTERFACE_SIZE / 2
@@ -169,7 +201,7 @@ export const INTERFACE = Object.freeze({
 /* -------------------------------------------------------------------------- */
 // Base marker size. `MARKER_BASE_SIZE` scales the inline reachability-graph
 // arrow against the shared MARKERS sprite; `BPMN_MARKER_SIZE` is local-only
-// (used a few lines below for BPMN message markers — was incorrectly public).
+// (used a few lines below for BPMN message markers).
 export const MARKER_BASE_SIZE = 18
 const BPMN_MARKER_SIZE = 11
 

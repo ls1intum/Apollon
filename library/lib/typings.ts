@@ -1,10 +1,8 @@
 import { DiagramEdgeType, IPoint } from "./edges/types"
 import { DiagramNodeType } from "./nodes/types"
 import { UMLDiagramType } from "./types/DiagramType"
-import { Styles } from "./styles/theme"
 
 export { UMLDiagramType, type DiagramNodeType, type DiagramEdgeType }
-export { type Styles }
 
 export type Unsubscriber = () => void
 
@@ -156,6 +154,18 @@ export type ApollonOptions = {
   collaborationEnabled?: boolean
   collaboration?: ApollonCollaborationOptions
   scrollLock?: boolean
+  /**
+   * Optional `--apollon-*` CSS custom properties applied to the editor's mount
+   * element. Build one with `createApollonTheme(...)`. Fully optional — an
+   * un-themed editor falls back to the library's built-in light/dark values.
+   */
+  theme?: Partial<Record<`--apollon-${string}`, string>>
+  /**
+   * Sets `data-theme` on the mount element. Optional — when omitted the editor
+   * keeps any `data-theme` already on the element / inherited from an ancestor.
+   * See `library/THEMING.md`.
+   */
+  dataTheme?: "light" | "dark"
 }
 
 export type FeedbackCorrectionStatus = {

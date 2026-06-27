@@ -1,5 +1,5 @@
 "use client"
-// React-only entry — externalizes React, MUI, emotion, xyflow.
+// React-only entry — externalizes the React family + xyflow.
 // The vite config adds a runtime `"use client"` banner because Rollup strips
 // source-level directives during bundling.
 export * from "./index"

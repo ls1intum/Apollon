@@ -1,0 +1,117 @@
+import { Meta } from "@storybook/addon-docs/blocks"
+
+<Meta title="UI/Theming" />
+
+# Theming
+
+`@tumaet/ui` is themed entirely through CSS custom properties defined in
+`src/styles/tokens.css`. There is no runtime `<style>` injection — the tokens are
+static CSS so the first paint is always correct, and dark mode is a single
+attribute flip.
+
+## The token layers
+
+Tokens cascade through three layers in `tokens.css`, plus a fourth internal
+Tailwind bridge in `theme.css`. The cascade is a strict one-directional DAG —
+each layer references the one above it and never the layer below — so an external
+embedder can theme the editor without ever touching app-level semantics.
+
+1. **Primitives — `--primitive-*`.** The brand/neutral palette. This is the ONLY
+   layer where literal `#hex` / `rgb()` values live. Everything else references
+   these.
+
+2. **Editor theming API — `--apollon-*`.** The public, documented contract that
+   embedders of `@tumaet/apollon` override. It is a **large** surface — not a
+   handful of tokens — spanning primary/secondary, background & surfaces,
+   border & radius & shadow, alerts, the `chrome-*` floating-UI system,
+   assessment tones, collaboration-cursor and color-picker palettes, the
+   interactive-selection and drop-zone accents, and the switch/list/btn/modal
+   editor primitives. It references **primitives only**, never `--home-*`, so an
+   external host that themes the editor never depends on app-level semantics.
+   (Most of the `chrome-*` ramp is internal/derived — see `library/THEMING.md`
+   for exactly which `--apollon-*` names are the stable contract vs. structural.)
+
+3. **App semantics — `--home-*`.** The webapp's semantic tokens (surfaces, text,
+   borders, accent, badges, tags, banners, toasts, radius). These reference
+   `--apollon-*` and primitives, so re-theming the `--apollon-*` layer flows
+   through to the app automatically.
+
+```
+--primitive-*  →  --apollon-*  →  --home-*
+  (literals)      (public API)    (app semantics)
+```
+
+4. **Tailwind bridge — `--color-*` / `--radius-*` (internal).** `theme.css` uses
+   `@theme inline` to map the `--apollon-*` / `--home-*` tokens onto Tailwind's
+   own variables, so semantic utility classes resolve to the tokens (e.g.
+   `bg-card` → `--color-card` → `--home-surface-raised` → `--apollon-surface`).
+   `inline` means the utilities emit `var(--token)` and re-resolve when
+   `data-theme` flips rather than freezing the light value at build time. These
+   unprefixed names are **private** — embedders theme through `--apollon-*`, not
+   `--color-*`.
+
+## The `data-theme` contract
+
+Dark mode is a single mechanism: the **`data-theme="dark"`** attribute. Light
+values live in the `:root` block of `tokens.css`; dark mode is a small set of
+**deltas** under the selector:
+
+```css
+:root[data-theme="dark"],
+[data-theme="dark"] {
+  /* dark deltas */
+}
+```
+
+Both forms carry the identical deltas, on purpose:
+
+- `:root[data-theme="dark"]` themes the **document** — the webapp sets the
+  attribute on `<html>`.
+- the bare, scoped `[data-theme="dark"]` themes a **mounted editor** whose own
+  container carries `data-theme` (e.g. `<Apollon dataTheme="dark" />` /
+  `new ApollonEditor(el, { dataTheme: "dark" })`), so an embed can go dark without
+  the host mutating `:root`.
+
+The deltas re-point primitives and a few `--apollon-*` literals; there are no
+`--home-*` deltas — every `--home-*` token resolves through a `var()` to an
+`--apollon-*`/`--primitive-*` token that already carries its own dark value.
+Because components consume the semantic tokens, the flip re-themes everything
+without per-component dark variants.
+
+Use the **theme toolbar toggle** above to switch light / dark — it is wired
+through `@storybook/addon-themes`' `withThemeByDataAttribute` with
+`attributeName: "data-theme"` on the document root, matching the production
+contract exactly.
+
+## Theming the editor from a host: `createApollonTheme`
+
+Embedders override the public `--apollon-*` tokens. `createApollonTheme` (from
+`@tumaet/ui/theme`, re-exported by `@tumaet/apollon`) turns a typed, partial
+`ApollonTheme` object into a framework-agnostic style object of `--apollon-*`
+custom properties you can spread onto any element's `style`. Only the keys you
+provide are emitted, so un-themed tokens keep their built-in light/dark
+fallbacks.
+
+```tsx
+import { createApollonTheme } from "@tumaet/ui/theme"
+
+const style = createApollonTheme({
+  primary: "#ff5722",
+  surface: "var(--my-brand-surface)",
+  radius: "10px",
+})
+
+// style === { "--apollon-primary": "#ff5722", "--apollon-surface": "…", … }
+;<Apollon theme={style} />
+```
+
+`ApollonTheme` is the typed, color-focused subset of the contract (primary,
+background & surfaces, borders, radius, alerts, and the switch/list/btn/modal
+editor primitives). The wider `--apollon-*` contract — the radius scale, shadow,
+collaboration and swatch palettes, assessment tones, and the tunable `chrome-*`
+hooks — is CSS-variable-only; set those directly via `style` / a stylesheet rule.
+
+See `library/THEMING.md` for the full variable contract and host patterns, and
+the **Tokens** page for a live swatch view of the `--apollon-*` public contract,
+the `--primitive-*` palette, and the `--home-*` app semantics (every chip
+re-themes as you toggle the toolbar).

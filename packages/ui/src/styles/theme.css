@@ -1,0 +1,110 @@
+@import "tailwindcss";
+@import "./tokens.css";
+
+/* Tailwind's automatic content detection scans from the consuming app's root and
+   skips this workspace package, so utilities used *only* inside @tumaet/ui
+   components (e.g. the dialog's `top-1/2`/`-translate-y-1/2`, `bg-card`) would
+   never be generated. Register this package's component source explicitly.
+   `@source` is resolved relative to THIS file, so every consumer that imports
+   this stylesheet picks it up; the library is Tailwind-free and never imports
+   it, so its bundle is unaffected. */
+@source "../components";
+
+/* Dark mode = one mechanism: the root data-theme attribute. The token blocks in
+   tokens.css do ~95% of dark styling; `dark:` utilities are a rare escape hatch
+   for the few spots that need an explicit per-theme override. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* Map semantic Tailwind utilities onto the design tokens. `inline` so the
+   utilities emit `var(--token)` and re-resolve when data-theme flips, instead of
+   freezing the light value at build time. This lets components use
+   `bg-background` / `text-muted-foreground` instead of `bg-[var(--home-*)]`. */
+@theme inline {
+  --color-background: var(--apollon-background);
+  --color-foreground: var(--apollon-primary-contrast);
+
+  /* Accent tokens follow the editor's public --apollon-* theming API so the
+     shared primitives respond to an external embedder's theme. The webapp's
+     accent bridge (--apollon-primary <- --home-accent-base) keeps the navy
+     accent in the app, so this is identical there.
+     primary-foreground is the text that sits ON the primary swatch (white-on-
+     navy), i.e. the accent's CONTRAST — NOT --apollon-primary-contrast, which is
+     the dark body text used for --color-foreground above. Mixing them gave
+     primary buttons + the accent dialog header dark-on-navy text. */
+  --color-primary: var(--apollon-primary);
+  --color-primary-foreground: var(--home-accent-contrast);
+
+  --color-secondary: var(--home-surface-raised);
+  --color-secondary-foreground: var(--home-text-secondary);
+
+  /* Surface vocabulary (single source of truth for author intent):
+       cards            -> bg-card
+       menus / popovers -> bg-popover
+       hover / highlight -> bg-accent  (shadcn convention)
+     shadcn's stock primitives (dropdown-menu, select, command, …) paint their
+     highlighted/hovered item with `bg-accent` on a `bg-popover` surface, so
+     `--color-accent` MUST differ from `--color-popover` or the highlight is
+     invisible. It is therefore the raised-surface HOVER tint (not the resting
+     surface). `--color-accent-hover` is the same tint kept as an explicit alias
+     the webapp's bespoke hover/selected states use; `-strong`/`-soft` are the
+     accent-color (brand) variants. All resolve through --home-surface-* onto
+     the public --apollon-surface/-surface-hover, so an embedder theming those
+     restyles the shared primitives. */
+  --color-accent: var(--home-surface-raised-hover);
+  --color-accent-foreground: var(--home-text-primary);
+  /* Explicit alias of --color-accent (the webapp's bespoke hover/selected states
+     use bg-accent-hover); kept named so those call sites read intentionally. */
+  --color-accent-hover: var(--home-surface-raised-hover);
+  --color-accent-strong: var(--home-accent-strong);
+  --color-accent-soft: var(--home-accent-soft);
+
+  --color-muted: var(--home-surface-sunken);
+  --color-muted-foreground: var(--home-text-muted);
+
+  /* Borders resolve through --home-border-* onto the public
+     --apollon-border/-border-subtle. */
+  --color-border: var(--home-border-default);
+  --color-border-subtle: var(--home-border-subtle);
+  --color-input: var(--home-border-default);
+  --color-ring: var(--apollon-primary);
+
+  --color-surface: var(--home-surface-base);
+  --color-surface-raised: var(--home-surface-raised);
+  --color-surface-alt: var(--home-surface-row-alt);
+
+  /* Popovers / menus / cards share the raised surface + default border. */
+  --color-popover: var(--home-surface-raised);
+  --color-popover-foreground: var(--home-text-primary);
+  --color-card: var(--home-surface-raised);
+  --color-card-foreground: var(--home-text-primary);
+
+  --color-destructive: var(--apollon-alert-danger-color);
+  --color-destructive-foreground: var(--primitive-white);
+
+  /* Color-picker swatch palette. Exposed as semantic --color-swatch-* so the
+     component can render `bg-swatch-blue` etc. driven by the tokens (the palette
+     order/source lives in color-picker.tsx as a token-name list — no inline hex
+     in the component). Routed through the public --apollon-swatch-* layer so the
+     webapp and the embed-safe editor color-picker share ONE palette source. */
+  --color-swatch-slate: var(--apollon-swatch-slate);
+  --color-swatch-red: var(--apollon-swatch-red);
+  --color-swatch-orange: var(--apollon-swatch-orange);
+  --color-swatch-amber: var(--apollon-swatch-amber);
+  --color-swatch-green: var(--apollon-swatch-green);
+  --color-swatch-teal: var(--apollon-swatch-teal);
+  --color-swatch-blue: var(--apollon-swatch-blue);
+  --color-swatch-violet: var(--apollon-swatch-violet);
+  --color-swatch-pink: var(--apollon-swatch-pink);
+
+  /* --radius-md routes through --home-radius-md onto the public --apollon-radius
+     base radius, so an embedder can tune the shared primitives' rounding. */
+  --radius-sm: var(--home-radius-sm);
+  --radius-md: var(--home-radius-md);
+  --radius-lg: var(--home-radius-lg);
+  --radius-xl: var(--home-radius-xl);
+
+  /* Small-caption type role (version sidebar descriptions, preview-banner pill
+     and actions). One size, so the role can't drift between 13px and 13.6px. */
+  --text-caption: 0.8125rem;
+  --text-caption--line-height: 1.2;
+}

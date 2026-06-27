@@ -1,0 +1,30 @@
+{
+  "id": "f1c0ffee-0001-4000-8000-000000000001",
+  "version": "4.0.0",
+  "title": "Class Diagram",
+  "type": "ClassDiagram",
+  "nodes": [
+    {
+      "id": "95aac2b6-3e6b-4e6d-9201-52a498e6ea20",
+      "width": 160,
+      "height": 100,
+      "type": "class",
+      "position": { "x": 360, "y": 220 },
+      "data": {
+        "name": "Class",
+        "methods": [
+          { "id": "bcb348aa-e5cd-458d-a424-138c885e01bf", "name": "+ method()" }
+        ],
+        "attributes": [
+          {
+            "id": "3ff22a38-2fb9-4009-8d62-1027d24581f7",
+            "name": "+ attribute: Type"
+          }
+        ]
+      },
+      "measured": { "width": 160, "height": 100 }
+    }
+  ],
+  "edges": [],
+  "assessments": {}
+}

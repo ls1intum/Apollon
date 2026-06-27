@@ -1,169 +1,56 @@
-@import "tailwindcss";
+/* Tailwind + the shared design-token system (the single source of truth for all
+   --apollon-* and --home-* tokens, plus the semantic @theme utilities) live in
+   @tumaet/ui. This webapp.css keeps only app-chrome (scrollbars, loading screen,
+   toast) plus the accent bridge below. */
+@import "@tumaet/ui/styles/theme.css";
 
+/* The shared primitives (button / icon-button / input / textarea / tooltip) are
+   styled by semantic data-slot rules in this precompiled, Preflight-free
+   components.css. Tailwind still drives app layout + inline-utility components.
+   Relative path (not the package export) so the Tailwind Vite plugin's CSS
+   resolver reliably inlines the precompiled dist file. */
+@import "../../../packages/ui/dist/components.css";
+
+/* Single source of truth for the app font. Defining `--font-sans` in @theme
+   makes BOTH the `font-sans` utility and Tailwind Preflight's default document
+   font resolve to Poppins, so the whole UI inherits one font. A font stack is
+   static, so this is @theme (not @theme inline). The diagram MODEL text (Inter,
+   applied on SVG nodes via library/lib/fontStack.ts) is out of scope. */
+@theme {
+  --font-sans: "Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue",
+    Arial, sans-serif;
+}
+
+/* Accent bridge — webapp root scope ONLY (the published library default must not
+   depend on app tokens). Drive the editor accent from the brand primitive so the
+   homepage and the embedded editor share one brand color. --primitive-accent-base
+   carries its own light/dark values in tokens.css, so this re-resolves in dark.
+   Points straight at the primitive (not --home-accent-base) so the token graph
+   stays a clean DAG: --apollon-* never depends back on the --home-* layer. */
 :root {
-  color-scheme: light dark;
+  --apollon-primary: var(--primitive-accent-base);
 
   /* Safe-area floor: map the UA insets onto the custom properties the mobile
      layout reads as `var(--safe-area-inset-*, 0px)`. With `viewport-fit=cover`
      (set in index.html) this works in any browser; on native the Capacitor
-     safe-area plugin overrides these via an inline style on documentElement. */
+     safe-area plugin overrides these via an inline style on documentElement.
+     The full home/apollon token palette (light + dark) is owned by @tumaet/ui
+     (tokens.css), imported above — only app-chrome lives here. */
   --safe-area-inset-top: env(safe-area-inset-top, 0px);
   --safe-area-inset-right: env(safe-area-inset-right, 0px);
   --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
   --safe-area-inset-left: env(safe-area-inset-left, 0px);
-
-  /* --home-* light tokens are the first-paint fallback; source of truth is
-     themings.json. Keep these in sync with the light block there (concrete
-     equivalents of its var(--apollon-*) refs) so the page doesn't flash. */
-
-  /* Surfaces — neutral white page canvas up through softly raised cards.
-     Cool, slightly blue-tinted neutrals. */
-  --home-surface-base: #fff;
-  --home-surface-sunken: #eaeef3;
-  --home-surface-raised: #f1f3f6;
-  --home-surface-raised-hover: #e9edf2;
-  --home-surface-raised-active: #dfe4ec;
-  --home-surface-row-alt: #f6f8fb;
-
-  /* Text — secondary/muted darkened so all text clears WCAG AA (≥4.5:1) on
-     every home surface. */
-  --home-text-primary: #212529;
-  --home-text-secondary: #49515d;
-  --home-text-strong: #212529;
-  --home-text-muted: #545d6a;
-
-  /* Borders / dividers — cool neutrals, ordered subtle < default < strong.
-     `default` is the input/control border, ≥3:1 against the canvas and raised
-     surfaces it sits on (WCAG 1.4.11); `strong` is the most prominent divider;
-     `subtle` is a decorative hairline (dividers, card edge). */
-  --home-border-default: #7e8796;
-  --home-border-strong: #6e7686;
-  --home-border-subtle: #e3e7ee;
-
-  /* Accent */
-  --home-accent-base: #0f3a66;
-  --home-accent-soft: #d3e7fb;
-  --home-accent-strong: #0f3a66;
-  --home-accent-ring: #0f3a66;
-  --home-accent-contrast: #fff;
-
-  /* On-accent surfaces (translucent white over accent banner / dark navbar) */
-  --home-on-accent-bg: rgba(255, 255, 255, 0.14);
-  --home-on-accent-bg-hover: rgba(255, 255, 255, 0.24);
-  --home-on-accent-border: rgba(255, 255, 255, 0.22);
-  --home-on-accent-text: #fff;
-
-  /* Badge / status */
-  --home-badge-bg: #c2cfdd;
-  --home-badge-fold: #0f3a66;
-  --home-text-on-badge: #142334;
-  --home-favorite-star: #f2b200;
-
-  /* Diagram tags — type pill (primary, steel-slate) */
-  --home-tag-type-bg: #d4dce7;
-  --home-tag-type-text: #2e4a65;
-
-  /* Diagram tags — "Local" pill (warm sand) */
-  --home-tag-local-bg: #e6dfc8;
-  --home-tag-local-text: #5a4a28;
-
-  /* Diagram tags — "Shared" pill (teal-seafoam) */
-  --home-tag-shared-bg: #c5e4e2;
-  --home-tag-shared-text: #1d514e;
-
-  /* Shadows / glow — slate-tinted, low-opacity elevation. */
-  --home-shadow-card-hover: rgba(15, 23, 42, 0.12);
-  --home-shadow-overlay: rgba(15, 23, 42, 0.32);
-  --home-glow-neutral: rgba(15, 58, 102, 0.78);
-
-  /* Radius scale — theme-independent, monotonic ramp.
-     sm: cards & pills  md: buttons & inputs  lg: menus/popovers & banners */
-  --home-radius-sm: 6px;
-  --home-radius-md: 8px;
-  --home-radius-lg: 12px;
-
-  /* Warning banner (e.g. version-preview) — soft-gold outlined style.
-     Per-theme; dark values live in the dark block below. */
-  --home-banner-warning-bg: #fff7e6;
-  --home-banner-warning-border: #f6d28b;
-  --home-banner-warning-icon: #b7791f;
-  --home-banner-warning-text: #122038;
-  --home-banner-warning-muted: #4e5e79;
-  --home-banner-warning-btn-bg: #f7faff;
-  --home-banner-warning-btn-text: #b7791f;
-  --home-banner-warning-btn-border: #f6d28b;
-  --home-banner-warning-btn-hover: #f5e8c8;
-
-  /* Toast (notification) semantic accents — light theme.
-     Warning matches the gold banner family. */
-  --home-toast-success: #197d4e;
-  --home-toast-error: #c33640;
-  --home-toast-warning: #b7791f;
-  --home-toast-info: #1f5e9e;
-}
-
-:root[data-theme="dark"] {
-  color-scheme: dark;
-
-  /* Editor base tokens — dark first-paint fallback. */
-  --apollon-background: #181a1f;
-  --apollon-primary-contrast: #fff;
-
-  /* Dark first-paint fallback for the home surfaces/text/borders (kept in sync
-     with themings.json's dark block) so dark mode doesn't flash the light
-     palette before the runtime tokens are injected. */
-  --home-surface-base: #181a1f;
-  --home-surface-sunken: #131519;
-  --home-surface-raised: #20232a;
-  --home-surface-raised-hover: #2a2e36;
-  --home-surface-raised-active: #343a44;
-  --home-surface-row-alt: #23262e;
-  --home-text-primary: #fff;
-  --home-text-secondary: #c3c8d0;
-  --home-text-strong: #fff;
-  --home-text-muted: #c3c8d0;
-  --home-border-default: #6a7280;
-  --home-border-strong: #828a98;
-  --home-border-subtle: #2a2e36;
-
-  /* Diagram tags — type / "Local" / "Shared" pills. */
-  --home-tag-type-bg: #343740;
-  --home-tag-type-text: #9bb3cc;
-  --home-tag-local-bg: #3a3628;
-  --home-tag-local-text: #c9b47e;
-  --home-tag-shared-bg: #1e3434;
-  --home-tag-shared-text: #70bab6;
-
-  /* Warning banner — dark theme. */
-  --home-banner-warning-bg: #3a2f17;
-  --home-banner-warning-border: #7a5c18;
-  --home-banner-warning-icon: #ffd47a;
-  --home-banner-warning-text: #ecf2fb;
-  --home-banner-warning-muted: #abb8ce;
-  --home-banner-warning-btn-bg: #1c222c;
-  --home-banner-warning-btn-text: #ffd47a;
-  --home-banner-warning-btn-border: #7a5c18;
-  --home-banner-warning-btn-hover: #29313e;
-
-  /* Toast (notification) semantic accents — dark theme.
-     Warning matches the gold banner family. */
-  --home-toast-success: #4cc38a;
-  --home-toast-error: #f0747e;
-  --home-toast-warning: #ffd47a;
-  --home-toast-info: #5aa0e0;
 }
 
 @keyframes diagram-highlight-pulse {
   0% {
-    box-shadow:
-      0 0 0 4px var(--home-glow-neutral),
-      0 8px 32px var(--home-glow-neutral);
+    box-shadow: 0 0 0 3px
+      color-mix(in srgb, var(--home-accent-base) 35%, transparent);
   }
 
   60% {
-    box-shadow:
-      0 0 0 4px var(--home-glow-neutral),
-      0 8px 32px var(--home-glow-neutral);
+    box-shadow: 0 0 0 3px
+      color-mix(in srgb, var(--home-accent-base) 35%, transparent);
   }
 
   100% {
@@ -186,19 +73,6 @@ html {
 }
 
 body {
-  font-family:
-    -apple-system,
-    BlinkMacSystemFont,
-    Segoe UI,
-    Roboto,
-    Helvetica Neue,
-    Arial,
-    Noto Sans,
-    sans-serif,
-    Apple Color Emoji,
-    Segoe UI Emoji,
-    Segoe UI Symbol,
-    Noto Color Emoji;
   display: flex;
   flex-direction: column;
   height: 100dvh; /* Dynamic viewport height for iOS */
@@ -221,16 +95,52 @@ html,
 body,
 #root {
   /* Only the text colour eases on a theme switch. Animating background-color
-     here made every backdrop-blur surface above it (home navbar, glass islands)
-     re-rasterise its blur each frame for 220ms — a visible flicker on toggle.
-     The background flips in one frame instead (how tldraw/Linear/VS Code do it),
-     so the blurred plates never sample a tweening backdrop. */
+     here forces every backdrop-blur surface above it (home navbar, glass
+     plates) to re-rasterise its blur each frame for 220ms — a visible flicker.
+     Flip the background in one frame so the blurred plates never sample a
+     tweening backdrop. */
   transition: color 220ms ease;
 }
 
+/* The theme swap carries data-theme-switching on the root for a single frame
+   (see useThemeStore.applyThemeToDocument). Kill every transition while it's set
+   so the whole UI — the chrome header's buttons and glass surfaces included —
+   recolours in one frame, instead of each control tweening its own colour/
+   background at its own hover duration (which reads as a slow, staggered flip).
+   Hover and interaction transitions resume the moment the attribute is removed. */
+:root[data-theme-switching] *,
+:root[data-theme-switching] *::before,
+:root[data-theme-switching] *::after {
+  transition: none !important;
+}
+
+/* Subtle dot-grid behind the home page so it reads as "the same canvas the
+   editor floats over". Matches the editor's MAJOR grid (CustomBackground): same
+   50px cadence and --apollon-grid token (so it tracks both themes), but rendered
+   as faint dots at each intersection, mixed down so it never competes with the
+   cards/glass on top. Painted on the page root, behind the z-10 scroll <main>. */
+.home-canvas-bg {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    color-mix(in srgb, var(--apollon-grid) 55%, transparent) 1px,
+    transparent 0
+  );
+  background-size: 50px 50px; /* = MAJOR_GRID_GAP (SNAP_TO_GRID_PX * 10) */
+  background-position: 0 0;
+}
+
+/* Neutral, theme-tracking scrollbar — the thumb is a translucent tint of the
+   secondary text color (NOT the brand navy --home-accent-base, which read as a
+   stray blue bar). Mixing down from --home-text-secondary keeps it subtle and
+   self-adjusting in both light and dark; the track sits on the sunken surface. */
 .home-page-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: var(--home-accent-base) var(--home-surface-sunken);
+  scrollbar-color: color-mix(
+      in srgb,
+      var(--home-text-secondary) 35%,
+      transparent
+    )
+    var(--home-surface-sunken);
 }
 
 .home-page-scrollbar::-webkit-scrollbar {
@@ -249,12 +159,13 @@ body,
 .home-page-scrollbar::-webkit-scrollbar-thumb {
   border: 2px solid transparent;
   border-radius: 999px;
-  background: var(--home-accent-base);
+  background: color-mix(in srgb, var(--home-text-secondary) 35%, transparent);
   background-clip: content-box;
 }
 
 .home-page-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--home-accent-base);
+  background: color-mix(in srgb, var(--home-text-secondary) 50%, transparent);
+  background-clip: content-box;
 }
 
 /* The gallery search renders its own Clear button, so hide the browser's
@@ -268,11 +179,6 @@ body,
 .app-scroll-y {
   overflow-y: auto;
   overflow-x: clip;
-}
-
-.recent-diagrams-font {
-  font-family: "Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue",
-    Arial, sans-serif;
 }
 
 .app-loading-screen {
@@ -351,7 +257,6 @@ body,
   width: 42%;
   border-radius: inherit;
   background: var(--home-accent-base);
-  box-shadow: 0 0 18px var(--home-glow-neutral);
   content: "";
   transform: translateX(-120%);
   animation: app-loading-progress 1100ms ease-in-out infinite;
@@ -375,9 +280,24 @@ body,
 }
 
 .home-diagram-card {
+  /* Single sizing knob for the diagram tile. The grid owns width (auto-fill
+     minmax 1fr); this floor keeps grid rows congruent now that the title can
+     wrap to two lines and the preview is aspect-driven. It is also the
+     off-screen placeholder estimate for content-visibility below — keep both
+     in sync. Derived from the 16:10 preview + header/footer at the grid's base
+     ~240px width. */
+  --card-min-h: 17.5rem;
   contain: layout paint;
   content-visibility: auto;
-  contain-intrinsic-size: auto 300px;
+  contain-intrinsic-size: auto var(--card-min-h);
+}
+
+/* On touch / native (no hover), reveal the card's hover-only overlay controls
+   (favorite + actions) permanently — there's no pointer to hover with. The root
+   is marked from a definitive native check / coarse pointer in App.tsx, because
+   @media(hover:none) is unreliable in Capacitor webviews. */
+:root[data-coarse-pointer] .home-card-control {
+  opacity: 1;
 }
 
 /* Low-alpha slate shadows are invisible on dark surfaces, so dark hover uses a
@@ -385,7 +305,7 @@ body,
    in sync with the light hover in DiagramCard.tsx. */
 :root[data-theme="dark"] .home-diagram-card:hover {
   box-shadow:
-    0 6px 16px color-mix(in srgb, #000 38%, transparent),
+    0 6px 16px color-mix(in srgb, var(--primitive-shadow-ink) 38%, transparent),
     0 0 0 1px color-mix(in srgb, var(--home-text-primary) 12%, transparent);
 }
 
@@ -461,13 +381,9 @@ body,
   flex-grow: 1;
 }
 
-.home-navbar {
-  padding-top: var(--safe-area-inset-top, 0);
-}
-
-/* Home page content gutter — hugs the safe area like the navbar, so the gallery
-   clears a side notch in landscape (the Tailwind px-4/md:px-6 it replaces had no
-   safe-area awareness). */
+/* Home/sub-page content gutter — hugs the safe area (max(edge, inset)) so the
+   gallery and the sticky ChromeSubHeader band clear a side notch in landscape.
+   The top inset is handled by the sticky band's own `top` offset, not here. */
 .home-content-x {
   padding-left: max(1rem, var(--safe-area-inset-left, 0px));
   padding-right: max(1rem, var(--safe-area-inset-right, 0px));
@@ -480,83 +396,131 @@ body,
   }
 }
 
-.home-navbar__content {
-  box-sizing: border-box;
-
-  /* HUG the safe area (max), don't stack on top of it (calc + inset) — otherwise
-     the navbar sits further from a notch than the editor chrome, which uses the
-     max(edge, inset) model. */
-  padding-left: max(1rem, var(--safe-area-inset-left, 0px));
-  padding-right: max(1rem, var(--safe-area-inset-right, 0px));
+/* Operator-authored legal Markdown (8px spacing scale) so rendered legal pages
+   keep their typography + tokens. */
+.legal-content {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  color: var(--apollon-primary-contrast);
 }
 
-@media (max-width: 950px) and (max-height: 500px) {
-  .home-navbar {
-    padding-top: 0;
+.legal-content :is(h1, h2, h3, h4, h5, h6) {
+  margin-top: 24px;
+  margin-bottom: 8px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--apollon-primary-contrast);
+}
+
+.legal-content h2 {
+  font-size: 1.35rem;
+}
+
+.legal-content h3 {
+  font-size: 1.15rem;
+}
+
+@media (min-width: 768px) {
+  .legal-content h2 {
+    font-size: 1.5rem;
   }
 
-  .home-navbar__content {
-    padding-left: max(2rem, var(--safe-area-inset-left, 0px));
-    padding-right: max(2rem, var(--safe-area-inset-right, 0px));
+  .legal-content h3 {
+    font-size: 1.25rem;
   }
 }
 
-/* MUI has no theme here, so Menus/Selects render their portaled Paper with the
-   default light surface — which shows through the menu's rounded corners and
-   edges in dark mode. Theme the Paper itself (not just the inner list). */
-.MuiPopover-paper,
-.MuiMenu-paper {
-  background-color: var(--apollon-background) !important;
-  color: var(--apollon-primary-contrast) !important;
+.legal-content :is(p, ul, ol) {
+  margin-bottom: 16px;
+  line-height: 1.7;
 }
 
-.MuiMenu-list {
-  background-color: var(--apollon-background) !important;
-  color: var(--apollon-primary-contrast) !important;
+.legal-content ul {
+  padding-left: 24px;
+  list-style-type: disc;
 }
 
-.MuiMenu-list .MuiMenuItem-root:hover,
-.MuiMenu-list .MuiMenuItem-root.Mui-selected {
-  background-color: var(--apollon-background-variant) !important;
+.legal-content ol {
+  padding-left: 24px;
+  list-style-type: decimal;
 }
 
-.MuiMenu-list .MuiMenuItem-root.Mui-selected:hover {
-  background-color: var(--apollon-gray) !important;
+.legal-content ul ul {
+  list-style-type: circle;
+  margin-bottom: 0;
 }
 
-/* Scope overrides for home-gallery MUI filter menus so they keep
-   home tokens and typography when rendered via MUI portal. */
-.home-filter-menu-paper.MuiPaper-root {
-  background-color: var(--home-surface-raised) !important;
-  background-image: none !important;
-  color: var(--home-text-primary) !important;
+.legal-content ol ol {
+  list-style-type: lower-alpha;
+  margin-bottom: 0;
 }
 
-.home-filter-menu-list.MuiMenu-list {
-  background-color: var(--home-surface-raised) !important;
-  color: var(--home-text-primary) !important;
+.legal-content li {
+  margin-bottom: 4px;
+  display: list-item;
 }
 
-.home-filter-menu-list.MuiMenu-list .home-filter-menu-item.MuiMenuItem-root {
-  font-family: "Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue",
-    Arial, sans-serif;
+.legal-content li::marker {
+  color: var(--apollon-primary-contrast);
 }
 
-.home-filter-menu-list.MuiMenu-list
-  .home-filter-menu-item.MuiMenuItem-root
-  + .home-filter-menu-item.MuiMenuItem-root {
-  margin-top: 4px;
+.legal-content a {
+  color: var(--apollon-primary);
+  text-decoration: underline;
 }
 
-.home-filter-menu-list.MuiMenu-list
-  .home-filter-menu-item-delete.MuiMenuItem-root {
-  color: var(--apollon-alert-danger-color) !important;
+/* Tables are authored by operators; on narrow screens let them scroll
+   horizontally rather than break the page layout. */
+.legal-content table {
+  display: block;
+  overflow-x: auto;
+  border-collapse: collapse;
+  width: 100%;
+  margin-top: 16px;
+  margin-bottom: 16px;
+  -webkit-overflow-scrolling: touch;
 }
 
-.home-filter-menu-list.MuiMenu-list
-  .home-filter-menu-item-delete.MuiMenuItem-root:hover {
-  background-color: var(--apollon-alert-danger-background) !important;
-  color: var(--apollon-alert-danger-color) !important;
+.legal-content :is(th, td) {
+  border: 1px solid var(--apollon-gray);
+  padding: 8px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.legal-content th {
+  background-color: var(--apollon-background-variant);
+}
+
+.legal-content code {
+  background-color: var(--apollon-background-variant);
+  padding-left: 4px;
+  padding-right: 4px;
+  border-radius: 4px;
+  font-size: 0.95em;
+  word-break: break-all;
+}
+
+.legal-content pre {
+  background-color: var(--apollon-background-variant);
+  padding: 16px;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+.legal-content blockquote {
+  border-left: 4px solid var(--apollon-gray);
+  padding-left: 16px;
+  margin-top: 16px;
+  margin-bottom: 16px;
+  color: var(--apollon-gray);
+}
+
+.legal-content hr {
+  border: none;
+  border-top: 1px solid var(--apollon-gray);
+  margin-top: 24px;
+  margin-bottom: 24px;
 }
 
 /* Progress bar for share modal upload */
@@ -574,7 +538,6 @@ body,
   inset: 0;
   width: 42%;
   background: var(--home-accent-base);
-  box-shadow: 0 0 18px var(--home-glow-neutral);
   content: "";
   transform: translateX(-120%);
   animation: app-loading-progress 1100ms ease-in-out infinite;
@@ -611,16 +574,14 @@ body,
 }
 
 /* ───────────────────────── Notifications ─────────────────────────
-   Unified look for all notification surfaces: react-toastify toasts
-   (below) plus the MUI Snackbars (styled inline in their components)
-   share the same surface, text, Poppins font, radius and the
-   --home-toast-* semantic accents. Theme-aware via --home-* tokens. */
+   Unified look for all notification surfaces: react-toastify toasts share the
+   same surface, text, Poppins font, radius and the --home-toast-* semantic
+   accents. Theme-aware via --home-* tokens. */
 
 .home-toast-container {
-  --toastify-font-family: "Poppins", "Avenir Next", "Avenir", "Segoe UI",
-    "Helvetica Neue", Arial, sans-serif;
+  --toastify-font-family: var(--font-sans);
   --toastify-toast-bd-radius: var(--home-radius-lg);
-  --toastify-toast-shadow: 0 12px 32px var(--home-shadow-overlay);
+  --toastify-toast-shadow: var(--home-shadow-overlay-box);
   --toastify-color-success: var(--home-toast-success);
   --toastify-color-error: var(--home-toast-error);
   --toastify-color-warning: var(--home-toast-warning);
@@ -638,14 +599,16 @@ body,
 
 /* The toast card: our raised surface + primary text with a thin, uniform
    border. Severity is signalled solely by the colored icon + progress bar
-   (no left accent stripe — it would double up with the progress bar). */
-.home-toast {
+   (no left accent stripe — it would double up with the progress bar).
+   Qualified with `.Toastify__toast` so the design surface always beats
+   react-toastify's single-class `theme--light/dark` background regardless of
+   stylesheet import order (otherwise the toast renders white in dark). */
+.Toastify__toast.home-toast {
   background: var(--home-surface-raised);
   color: var(--home-text-primary);
   border: 1px solid var(--home-border-subtle);
   border-radius: var(--home-radius-lg);
-  font-family: "Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue",
-    Arial, sans-serif;
+  font-family: var(--font-sans);
   font-size: 0.85rem;
   line-height: 1.45;
 }

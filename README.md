@@ -55,7 +55,7 @@ To preview the documentation site instead, run `pnpm dev:docs` from the repo roo
 | ------------- | -------------------------------------------------------------------- |
 | Library       | React, TypeScript, React Flow (`@xyflow/react`), Yjs, Zustand, Vite  |
 | Server        | Express 5, Redis (RedisJSON), WebSocket relay                        |
-| Webapp        | React, TypeScript, Vite, MUI, Tailwind                               |
+| Webapp        | React, TypeScript, Vite, shadcn-style UI (Base UI), Tailwind         |
 | Storage       | Redis with RedisJSON (diagrams expire after 120 days via native TTL) |
 | Reverse proxy | Traefik v3 (production)                                              |
 

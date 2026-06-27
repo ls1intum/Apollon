@@ -16,7 +16,7 @@ import {
 } from "./HomeDialog"
 import { ShareLinkRow, MODE_OPTIONS } from "./ShareLinkRow"
 import { useShareableDiagram } from "./useShareableDiagram"
-import { EmbedHints } from "./EmbedHints"
+import { EmbedSnippetPanel } from "./EmbedSnippetPanel"
 
 /**
  * In-editor "Share" dialog. Uploads a snapshot of the current diagram ONCE, then
@@ -103,13 +103,16 @@ export const ShareModal = () => {
             />
           </HomeDialogField>
 
+          {/* No opacity dim on the note below: `--home-text-secondary` is
+              already a muted secondary tone (~6.4:1 on the dialog); a 70%
+              opacity dropped it to ~3.2:1, under WCAG AA. */}
           {hasLocalOriginal && (
-            <p className="text-xs opacity-70 text-[var(--home-text-secondary)]">
+            <p className="text-xs text-[var(--home-text-secondary)]">
               Your local copy and its history stay on this device.
             </p>
           )}
 
-          <EmbedHints diagramId={share.diagramId} title={name} />
+          <EmbedSnippetPanel diagramId={share.diagramId} title={name} />
         </>
       )}
 

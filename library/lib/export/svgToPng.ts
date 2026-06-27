@@ -123,6 +123,10 @@ async function loadBundledFonts(): Promise<Uint8Array[]> {
   return cachedFonts
 }
 
+// The SVG spec's default text fill is black, applied when a <text> carries no
+// explicit fill — resvg won't infer it, so we make the spec default explicit.
+const SVG_DEFAULT_TEXT_FILL = "#000000"
+
 /**
  * Prepare the SVG for resvg: normalise the italic claim away (resvg has no
  * italic face — see normalizeExportSvg) and add a same-colour hairline stroke
@@ -133,7 +137,7 @@ function prepareSvgForRaster(svg: string): string {
   const doc = new DOMParser().parseFromString(svg, "image/svg+xml")
   normalizeExportSvg(doc.documentElement)
   doc.querySelectorAll("text").forEach((text) => {
-    const fill = text.getAttribute("fill") || "#000000"
+    const fill = text.getAttribute("fill") || SVG_DEFAULT_TEXT_FILL
     if (fill === "none") return
     const fontSize =
       parseFloat(text.getAttribute("font-size") ?? "") || DEFAULT_FONT_SIZE

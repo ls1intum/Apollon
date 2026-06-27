@@ -1,12 +1,8 @@
 /**
- * Drawer-local strings for the versioning UI. English-only in the first
- * release; punted to the wider webapp i18n when that lands. Toast copy
- * emitted from stores/pages (eviction warnings, REDIS_UNAVAILABLE,
- * collaborator-restore notice) stays inline at its emission site by
- * convention — the table here covers the drawer's static UI only. Keep
- * keys stable. Each key has at least one reference; orphans are pruned
- * aggressively because adding strings without consumers is how
- * translation drift starts.
+ * Drawer-local strings for the versioning UI. English-only. Toast copy emitted
+ * from stores/pages (eviction warnings, REDIS_UNAVAILABLE, collaborator-restore
+ * notice) stays inline at its emission site — this table covers the drawer's
+ * static UI only.
  */
 
 /** Mirrors `MAX_DESCRIPTION_LENGTH` in the server config; client trims to avoid a round-trip 400. */
@@ -73,10 +69,6 @@ export const versioningStrings = {
   saveLocalCopySuccess:
     "Saved as a local copy on this device. You can keep editing here.",
   saveLocalCopyFailed: "Couldn't save a local copy. Try again.",
-  // Share-flow notice — local versions stay attached to the original
-  // local UUID, not the new server-assigned id.
-  shareKeepsLocal:
-    "Sharing creates a new collaborative copy. Your local version history stays on this device under the original diagram.",
   justNow: "just now",
   minutesAgo: (n: number) => `${n}m ago`,
   hoursAgo: (n: number) => `${n}h ago`,

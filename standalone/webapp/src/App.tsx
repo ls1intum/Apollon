@@ -1,3 +1,5 @@
+import { useEffect } from "react"
+import { Capacitor } from "@capacitor/core"
 import { createRouter, RouterProvider } from "@tanstack/react-router"
 import { AppLoadingScreen } from "@/components/AppLoadingScreen"
 import { routeTree } from "./routeTree.gen"
@@ -34,6 +36,24 @@ declare module "@tanstack/history" {
 // webapp.css / library app.css). Ref: https://capacitorjs.com/docs/apis/system-bars
 
 function App() {
+  // Mark the root on touch/native so hover-only affordances (e.g. the diagram
+  // card's overlay controls) can reveal themselves where there is no hover.
+  // `@media(hover:none)` is unreliable in Capacitor webviews (Android WebView
+  // reports hover:hover), so key off a definitive native check OR a coarse
+  // pointer instead; CSS targets [data-coarse-pointer].
+  useEffect(() => {
+    const root = document.documentElement
+    const coarse = window.matchMedia?.("(pointer: coarse)")
+    const update = () =>
+      root.toggleAttribute(
+        "data-coarse-pointer",
+        Capacitor.isNativePlatform() || Boolean(coarse?.matches)
+      )
+    update()
+    coarse?.addEventListener("change", update)
+    return () => coarse?.removeEventListener("change", update)
+  }, [])
+
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
       <RouterProvider router={router} />

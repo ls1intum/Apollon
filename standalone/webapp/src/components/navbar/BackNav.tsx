@@ -1,14 +1,15 @@
 import { Link } from "@tanstack/react-router"
+import { ChevronLeft } from "lucide-react"
+import { cn } from "@tumaet/ui/lib/utils"
 import type { BackTarget } from "@/hooks/useBackTarget"
-import { cn } from "@/lib/utils"
 
 type BackNavTone = "onDark" | "onSurface"
 
 const toneClass: Record<BackNavTone, string> = {
-  // Header chrome (editor + home): idles in muted chrome text and washes toward
+  // Header chrome (editor + home): idles in solid foreground and washes toward
   // the chrome hover surface, matching the sibling File/Share controls.
   onDark:
-    "text-[color:var(--apollon-chrome-text-muted)] hover:bg-[var(--apollon-chrome-surface-hover)] hover:text-[color:var(--apollon-chrome-text)] active:bg-[var(--apollon-chrome-surface-active)]",
+    "text-foreground hover:bg-[var(--apollon-chrome-surface-hover)] active:bg-[var(--apollon-chrome-surface-active)]",
   // Light popover surface (editor mobile menu).
   onSurface:
     "text-[color:var(--apollon-chrome-text)] hover:bg-[var(--apollon-chrome-surface-hover)] active:bg-[var(--apollon-chrome-surface-active)]",
@@ -49,16 +50,7 @@ export const BackNav = ({
       className
     )}
   >
-    <svg
-      className="h-4 w-4 shrink-0"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      aria-hidden
-    >
-      <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
+    <ChevronLeft className="size-4 shrink-0" aria-hidden />
     <span className={labelClassName}>{label}</span>
   </Link>
 )

@@ -177,7 +177,7 @@ function LiveDemo() {
               >
                 {() => {
                   // Lazy-require: BrowserOnly only runs this on the client,
-                  // so the editor's emotion/MUI/xyflow imports stay out of
+                  // so the editor's Base UI / xyflow imports stay out of
                   // Docusaurus's SSR bundle.
                   const ApollonEmbed =
                     require("../components/ApollonEmbed").default

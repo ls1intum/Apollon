@@ -1,5 +1,6 @@
 packages:
   - "library"
+  - "packages/*"
   - "standalone/*"
   - "vscode-extension"
   - "vscode-extension/menu"
@@ -18,11 +19,28 @@ blockExoticSubdeps: true
 # references the entry via `"<pkg>": "catalog:"` instead of a duplicate
 # version string, so Renovate bumps a dep in one place instead of N.
 catalog:
-  "@emotion/react": "11.14.0"
-  "@emotion/styled": "11.14.1"
+  "@base-ui/react": "1.5.0"
   "@eslint/js": "9.17.0"
-  "@mui/material": "6.4.2"
   "@resvg/resvg-wasm": "2.6.2"
+  "@size-limit/file": "11.2.0"
+  "@size-limit/preset-big-lib": "11.2.0"
+  # Storybook 10.x — all @storybook/* MUST share one exact version.
+  storybook: "10.4.6"
+  "@storybook/react-vite": "10.4.6"
+  "@storybook/addon-docs": "10.4.6"
+  "@storybook/addon-a11y": "10.4.6"
+  "@storybook/addon-themes": "10.4.6"
+  "@storybook/addon-vitest": "10.4.6"
+  # `@playwright/test` (e2e + visual) and `playwright` (the browser-test provider
+  # API, via @vitest/browser-playwright) are kept on ONE version so the workspace
+  # resolves a single `playwright-core` + browser-binary set — no drift. Pinned to
+  # match CI's v1.59.1-noble image and the committed visual baselines;
+  # @vitest/browser-playwright accepts any playwright (peer `*`) and its Storybook
+  # browser tests run locally only. Both packages ship a `playwright` CLI bin, so
+  # e2e/visual invoke @playwright/test's CLI directly (see webapp test:e2e /
+  # test:visual) to avoid the bin collision.
+  "@playwright/test": "1.59.1"
+  playwright: "1.59.1"
   "@tailwindcss/vite": "4.0.17"
   "@testing-library/jest-dom": "6.9.1"
   "@testing-library/react": "16.3.2"
@@ -32,21 +50,28 @@ catalog:
   "@types/uuid": "10.0.0"
   "@types/vscode-webview": "1.57.5"
   "@vitejs/plugin-react": "4.3.4"
+  "@vitest/browser": "4.1.2"
+  "@vitest/browser-playwright": "4.1.2"
   "@vitest/coverage-v8": "4.1.2"
   "@xyflow/react": "12.9.3"
   # React Compiler (stable v1). Wired via @vitejs/plugin-react's Babel slot.
   # Pinned exact — the compiler has not committed to SemVer-safe output yet.
   babel-plugin-react-compiler: "1.0.0"
+  class-variance-authority: "0.7.1"
   clsx: "2.1.1"
+  cmdk: "1.1.1"
   eslint: "9.17.0"
   eslint-plugin-react: "7.37.2"
   eslint-plugin-react-hooks: "7.1.1"
   globals: "15.13.0"
   jsdom: "28.1.0"
   jspdf: "4.2.1"
+  lucide-react: "1.18.0"
   react: "19.2.7"
   react-dom: "19.2.7"
+  size-limit: "11.2.0"
   "svg2pdf.js": "2.7.0"
+  tailwind-merge: "3.6.0"
   tailwindcss: "4.0.17"
   typescript: "5.7.2"
   typescript-eslint: "8.18.1"
@@ -69,6 +94,7 @@ overrides:
 
 # pnpm 10+ blocks lifecycle scripts by default.
 allowBuilds:
+  "@parcel/watcher": false # Storybook transitive; optional native FS watcher
   "@swc/core": true # docusaurus-faster (Rspack + SWC build path)
   "@vscode/vsce-sign": true
   "core-js": false # jspdf transitive; "thank-you" postinstall, no native build

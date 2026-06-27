@@ -61,10 +61,10 @@ async function seedDiagrams(
   )
   await page.reload()
 
-  const countLabel = `${diagrams.length} diagrams`
-  await page.getByText(countLabel, { exact: true }).waitFor({
-    timeout: 15_000,
-  })
+  // The seeded cards hydrating is the deterministic ready signal (the old
+  // "{n} diagrams" count label moved into the band as a bare number). The grid
+  // pages at 9 cards, so wait on the first card rather than the full set.
+  await page.locator('[role="listitem"]').first().waitFor({ timeout: 15_000 })
 }
 
 async function seedEmpty(page: Page) {
@@ -113,11 +113,12 @@ test.describe("Home page — initial load", () => {
     await expect(page.getByRole("button", { name: "Import" })).toBeVisible()
   })
 
-  test("shows HomeNavbar with a theme toggle", async ({ page }) => {
-    const header = page.locator("header").first()
-    await expect(header).toBeVisible()
+  test("shows the home band with a theme toggle", async ({ page }) => {
+    // The band's brand island carries the page banner; the theme toggle lives
+    // in the actions island on the right.
+    await expect(page.getByRole("banner", { name: "Home" })).toBeVisible()
     await expect(
-      header.getByRole("button", { name: /Switch to (light|dark) mode/ })
+      page.getByRole("button", { name: /Switch to (light|dark) mode/ })
     ).toBeVisible()
   })
 
@@ -157,12 +158,8 @@ test.describe("Home page — empty state (no diagrams)", () => {
     await expect(
       page.getByRole("dialog").getByText("New Diagram", { exact: true })
     ).toBeVisible()
-    await expect(
-      page.getByRole("button", { name: "Blank diagram" })
-    ).toBeVisible()
-    await expect(
-      page.getByRole("button", { name: "Use template" })
-    ).toBeVisible()
+    await expect(page.getByRole("tab", { name: "Blank diagram" })).toBeVisible()
+    await expect(page.getByRole("tab", { name: "Use template" })).toBeVisible()
   })
 
   test("the shared name field updates with the selected creation mode", async ({
@@ -175,7 +172,7 @@ test.describe("Home page — empty state (no diagrams)", () => {
     // A blank diagram is created untitled (empty name → muted placeholder); a
     // template pre-fills its own name as the sensible default.
     await expect(nameInput).toHaveValue("")
-    await page.getByRole("button", { name: "Use template" }).click()
+    await page.getByRole("tab", { name: "Use template" }).click()
     await expect(nameInput).toHaveValue("Adapter")
     await expect(page.getByText("Selected Template")).toHaveCount(0)
     await page.getByRole("button", { name: "Observer" }).click()
@@ -200,62 +197,89 @@ test.describe("Home page — diagram gallery", () => {
     await expect(cards(page)).toHaveCount(3)
   })
 
-  test("shows the diagram count label", async ({ page }) => {
-    await expect(page.getByText("3 diagrams")).toBeVisible()
+  test("shows the result count in the search island", async ({ page }) => {
+    // The count moved into the band's search island as a bare number alongside
+    // the search field.
+    const search = page.getByRole("searchbox", {
+      name: "Search diagrams by name",
+    })
+    await expect(
+      search.locator("xpath=ancestor::*[@aria-label='Search diagrams']")
+    ).toContainText("3")
   })
 
   test("search filters cards by title", async ({ page }) => {
-    await page.locator("#recent-diagrams-search").fill("Alpha")
+    await page
+      .getByRole("searchbox", { name: "Search diagrams by name" })
+      .fill("Alpha")
     await expect(cards(page)).toHaveCount(1)
     await expect(cards(page).first()).toContainText("Alpha")
   })
 
   test("clearing search restores all cards", async ({ page }) => {
-    const search = page.locator("#recent-diagrams-search")
+    const search = page.getByRole("searchbox", {
+      name: "Search diagrams by name",
+    })
     await search.fill("Alpha")
     await expect(cards(page)).toHaveCount(1)
-    // The clear button (×) resets the search.
-    await page.getByRole("button", { name: "Clear search" }).click()
+    await search.fill("")
     await expect(cards(page)).toHaveCount(3)
   })
 
   test("no-match search shows the 'No diagrams match' message", async ({
     page,
   }) => {
-    await page.locator("#recent-diagrams-search").fill("zzz-no-match")
+    await page
+      .getByRole("searchbox", { name: "Search diagrams by name" })
+      .fill("zzz-no-match")
     await expect(
       page.getByText("No diagrams match your search and filters.")
     ).toBeVisible()
   })
 
-  test("source filter narrows to local diagrams", async ({ page }) => {
-    // All seeded diagrams are local — switching to "Local" keeps all 3,
-    // switching to "Shared" shows the empty shared state.
-    await page.getByRole("button", { name: "Local diagrams" }).click()
+  test("source scope (via Refine) narrows to local diagrams", async ({
+    page,
+  }) => {
+    // Source moved into the Refine popover. All seeded diagrams are local, so
+    // "Local" keeps all 3; "Shared" shows the empty shared state.
+    await page.getByRole("button", { name: "Refine" }).click()
+    await page.getByRole("button", { name: "Local", exact: true }).click()
     await expect(cards(page)).toHaveCount(3)
-    await page.getByRole("button", { name: "Shared diagrams" }).click()
+    await page.getByRole("button", { name: "Shared", exact: true }).click()
     await expect(page.getByText("No shared diagrams yet")).toBeVisible()
   })
 
-  test("type filter shows only matching diagrams", async ({ page }) => {
-    await page.locator("#diagram-type-filter-button").click()
-    // Every seeded diagram is a ClassDiagram, so its type appears in the menu.
+  test("type filter (via Refine) shows only matching diagrams", async ({
+    page,
+  }) => {
+    await page.getByRole("button", { name: "Refine" }).click()
+    // Every seeded diagram is a ClassDiagram, so its type appears in the panel.
     await page
-      .getByRole("menuitem", { name: "Class Diagram", exact: true })
+      .getByRole("group", { name: "Type" })
+      .getByRole("button", { name: "Class Diagram", exact: true })
       .click()
     await expect(cards(page)).toHaveCount(3)
   })
 
-  test("sort menu can switch to alphabetical order", async ({ page }) => {
-    await page.locator("#diagram-sort-menu-button").click()
-    await page.getByRole("menuitem", { name: "Alphabetical" }).click()
-    await page.locator("#diagram-sort-menu-button").click()
-    await page.getByRole("menuitem", { name: "Oldest first" }).click()
+  test("sort (via Refine) can switch to alphabetical, oldest first", async ({
+    page,
+  }) => {
+    await page.getByRole("button", { name: "Refine" }).click()
+    await page
+      .getByRole("group", { name: "Sort by" })
+      .getByRole("button", { name: "Alphabetical" })
+      .click()
+    // For the Alphabetical field the Order toggle reads in its own vocabulary:
+    // "A–Z" (ascending) / "Z–A" — not Oldest/Newest (see homeSortOrderOptions).
+    await page
+      .getByRole("group", { name: "Order" })
+      .getByRole("button", { name: "A–Z" })
+      .click()
     // A-Z ascending: Alpha first.
     await expect(cards(page).first()).toContainText("Alpha")
   })
 
-  test("favorites toggle filters to favorited diagrams only", async ({
+  test("favorites star filters to favorited diagrams only", async ({
     page,
   }) => {
     // Favorite the first card via its star button.
@@ -263,9 +287,9 @@ test.describe("Home page — diagram gallery", () => {
       .first()
       .getByRole("button", { name: "Add to favorites" })
       .click()
-    await page.getByRole("button", { name: "Favorites", exact: true }).click()
+    // The band's favorites star toggles the favorites-only scope.
+    await page.getByRole("button", { name: "Show favorites only" }).click()
     await expect(cards(page)).toHaveCount(1)
-    await expect(page.getByText("1 favorites")).toBeVisible()
   })
 })
 
@@ -295,10 +319,9 @@ test.describe("Home page — last modified sort", () => {
   test("defaults to sorting by last modified, newest first", async ({
     page,
   }) => {
-    // The default sort control reads "Last modified" (not "Last viewed").
-    await expect(page.locator("#diagram-sort-menu-button")).toContainText(
-      "Last modified"
-    )
+    // The default sort (Last modified · Newest first) is not active, so the
+    // Refine button shows no count badge and the chip line stays hidden.
+    await expect(page.getByLabel("Active filters")).toHaveCount(0)
     // Newest-modified card is first, oldest is last.
     await expect(cards(page).first()).toContainText("Recent")
     await expect(cards(page).last()).toContainText("Older")
@@ -307,16 +330,13 @@ test.describe("Home page — last modified sort", () => {
   test("switching to oldest-first reverses by last modified", async ({
     page,
   }) => {
-    await page.locator("#diagram-sort-menu-button").click()
-    await page.getByRole("menuitem", { name: "Oldest first" }).click()
+    await page.getByRole("button", { name: "Refine" }).click()
+    await page
+      .getByRole("group", { name: "Order" })
+      .getByRole("button", { name: "Oldest" })
+      .click()
     await expect(cards(page).first()).toContainText("Older")
     await expect(cards(page).last()).toContainText("Recent")
-  })
-
-  test("table view shows a 'Last modified' column", async ({ page }) => {
-    await page.getByRole("button", { name: "Table view" }).click()
-    await expect(page.locator("table thead")).toContainText("Last modified")
-    await expect(page.locator("table thead")).not.toContainText("Last viewed")
   })
 })
 
@@ -397,15 +417,21 @@ test.describe("Home page — diagram card actions", () => {
   test("'Delete' shows the confirm panel", async ({ page }) => {
     await page.getByRole("button", { name: "Open diagram actions" }).click()
     await page.getByRole("menuitem", { name: "Delete" }).click()
-    await expect(page.getByText(/Are you sure/)).toBeVisible()
-    await expect(page.getByRole("button", { name: "Cancel" })).toBeVisible()
+    const confirm = page.getByRole("alertdialog", {
+      name: "Delete this diagram?",
+    })
+    await expect(confirm).toBeVisible()
+    await expect(confirm.getByRole("button", { name: "Cancel" })).toBeVisible()
   })
 
   test("Cancel dismisses the confirm panel", async ({ page }) => {
     await page.getByRole("button", { name: "Open diagram actions" }).click()
     await page.getByRole("menuitem", { name: "Delete" }).click()
-    await page.getByRole("button", { name: "Cancel" }).click()
-    await expect(page.getByText(/Are you sure/)).not.toBeVisible()
+    const confirm = page.getByRole("alertdialog", {
+      name: "Delete this diagram?",
+    })
+    await confirm.getByRole("button", { name: "Cancel" }).click()
+    await expect(confirm).not.toBeVisible()
   })
 
   test("confirming Delete removes the card and shows the empty state", async ({
@@ -415,8 +441,7 @@ test.describe("Home page — diagram card actions", () => {
     await page.getByRole("menuitem", { name: "Delete" }).click()
     // The confirm panel's own "Delete" button commits the deletion.
     await page
-      .getByText(/Are you sure/)
-      .locator("..")
+      .getByRole("alertdialog", { name: "Delete this diagram?" })
       .getByRole("button", { name: "Delete" })
       .click()
     await expect(cards(page)).toHaveCount(0)
@@ -437,35 +462,7 @@ test.describe("Home page — diagram card actions", () => {
 })
 
 // ---------------------------------------------------------------------------
-// 6. Grid / table view toggle
-// ---------------------------------------------------------------------------
-
-test.describe("Home page — view toggle", () => {
-  test.beforeEach(async ({ page }) => {
-    await seedDiagrams(page, [
-      { id: "v1", title: "View One" },
-      { id: "v2", title: "View Two" },
-    ])
-  })
-
-  test("switching to table view renders a table; grid view restores cards", async ({
-    page,
-  }) => {
-    // Default grid view renders role="listitem" cards.
-    await expect(cards(page)).toHaveCount(2)
-
-    await page.getByRole("button", { name: "Table view" }).click()
-    await expect(page.locator("table")).toBeVisible()
-    await expect(page.locator("table thead")).toContainText("Name")
-    await expect(cards(page)).toHaveCount(0)
-
-    await page.getByRole("button", { name: "Grid view" }).click()
-    await expect(cards(page)).toHaveCount(2)
-  })
-})
-
-// ---------------------------------------------------------------------------
-// 7. Accessibility basics
+// 6. Accessibility basics
 // ---------------------------------------------------------------------------
 
 test.describe("Home page — accessibility basics", () => {
@@ -481,36 +478,35 @@ test.describe("Home page — accessibility basics", () => {
     await expect(page.locator('[role="list"]')).toBeAttached()
   })
 
-  test("legal links are reachable in the footer on desktop", async ({
+  test("legal links are reachable via the Help menu on desktop", async ({
     page,
   }) => {
     await seedEmpty(page)
-    const footer = page.getByRole("contentinfo")
-    await expect(footer.getByRole("link", { name: "Imprint" })).toHaveAttribute(
-      "href",
-      "/imprint"
-    )
-    await expect(footer.getByRole("link", { name: "Privacy" })).toHaveAttribute(
-      "href",
-      "/privacy"
-    )
+    // The footer was retired; the legal links + source attribution moved into
+    // the shared Help menu in the home band (anchor-backed `role=menuitem`s, the
+    // same body as the editor/mobile Help surfaces).
+    await page.getByRole("button", { name: "Help" }).click()
+    await expect(
+      page.getByRole("menuitem", { name: "Imprint" })
+    ).toHaveAttribute("href", "/imprint")
+    await expect(
+      page.getByRole("menuitem", { name: "Privacy" })
+    ).toHaveAttribute("href", "/privacy")
     // OSS conventions (matching Artemis/Hephaestus): a Releases link and a
     // GitHub source attribution.
     await expect(
-      footer.getByRole("link", { name: "Releases" })
+      page.getByRole("menuitem", { name: "Releases" })
     ).toHaveAttribute("href", /github\.com\/ls1intum\/Apollon\/releases$/)
-    await expect(footer.getByRole("link", { name: "GitHub" })).toHaveAttribute(
-      "href",
-      "https://github.com/ls1intum/Apollon"
-    )
+    await expect(
+      page.getByRole("menuitem", { name: "GitHub" })
+    ).toHaveAttribute("href", "https://github.com/ls1intum/Apollon")
   })
 
   test("the About dialog shows app info and source links", async ({ page }) => {
     await seedEmpty(page)
-    await page
-      .getByRole("contentinfo")
-      .getByRole("button", { name: "About" })
-      .click()
+    // About moved from the footer into the shared Help menu.
+    await page.getByRole("button", { name: "Help" }).click()
+    await page.getByRole("menuitem", { name: "About" }).click()
     const dialog = page.getByRole("dialog")
     await expect(dialog.getByText("Information about Apollon")).toBeVisible()
     await expect(dialog.getByRole("link", { name: "GitHub" })).toBeVisible()
@@ -519,76 +515,23 @@ test.describe("Home page — accessibility basics", () => {
     ).toBeVisible()
   })
 
-  test("legal links are reachable via the menu on mobile", async ({ page }) => {
+  test("legal links are reachable via the Help menu on mobile", async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 390, height: 720 })
     await seedEmpty(page)
     await expect(page.getByRole("contentinfo")).toBeHidden()
-    await page.getByRole("button", { name: "Help and legal" }).click()
-    await expect(page.getByRole("link", { name: "Imprint" })).toHaveAttribute(
-      "href",
-      "/imprint"
-    )
-    await expect(page.getByRole("link", { name: "Privacy" })).toHaveAttribute(
-      "href",
-      "/privacy"
-    )
-  })
-
-  test("keeps the home navbar outside iPhone safe areas", async ({ page }) => {
-    // Headless Chromium reports 0 env() insets, so simulate a notch by setting
-    // the custom properties production derives from env() (webapp.css :root).
-    const INSET = 47
-    const LANDSCAPE_WIDTH = 844
-
-    await page.setViewportSize({ width: 390, height: 844 })
-    await seedEmpty(page)
-    await page.evaluate((inset) => {
-      document.documentElement.style.setProperty(
-        "--safe-area-inset-top",
-        `${inset}px`
-      )
-    }, INSET)
-
-    // The app header uses the unified NAVBAR_MIN_HEIGHT (52) plus the top inset.
-    const navbar = page.locator(".home-navbar")
-    const portraitBox = await navbar.boundingBox()
-    expect(portraitBox?.height).toBeGreaterThanOrEqual(52 + INSET)
-
-    const content = page.locator(".home-navbar__content")
-    await expect(content).toHaveCSS("min-height", "52px")
-
-    await page.setViewportSize({ width: LANDSCAPE_WIDTH, height: 390 })
-    await page.evaluate((inset) => {
-      document.documentElement.style.setProperty("--safe-area-inset-top", "0px")
-      document.documentElement.style.setProperty(
-        "--safe-area-inset-left",
-        `${inset}px`
-      )
-      document.documentElement.style.setProperty(
-        "--safe-area-inset-right",
-        `${inset}px`
-      )
-    }, INSET)
-
-    // Home stays at the unified height in landscape (no compaction — the
-    // dashboard scrolls, unlike the editor canvas); top inset drops to 0.
-    const landscapeBox = await navbar.boundingBox()
-    expect(landscapeBox?.height).toBeLessThanOrEqual(52)
-
-    // The chrome HUGS the safe area (max(edge, inset)), same as the editor: the
-    // leading content sits at the notch edge, never under it.
-    const homeLinkBox = await page
-      .getByRole("link", { name: "Apollon home" })
-      .boundingBox()
-    expect(homeLinkBox?.x).toBeGreaterThanOrEqual(INSET)
-
-    const themeButtonBox = await navbar
-      .getByRole("button", { name: /Switch to (light|dark) mode/ })
-      .boundingBox()
-    expect(themeButtonBox).not.toBeNull()
-    expect(themeButtonBox!.x + themeButtonBox!.width).toBeLessThanOrEqual(
-      LANDSCAPE_WIDTH - INSET
-    )
+    // On mobile the home band's actions pill surfaces a Help dropdown carrying
+    // the shared Help/legal items (the same body as the desktop Help menu).
+    await page.getByRole("button", { name: "Help" }).click()
+    // The legal links are anchor-backed menu items (role=menuitem) inside the
+    // Help dropdown — assert their hrefs.
+    await expect(
+      page.getByRole("menuitem", { name: "Imprint" })
+    ).toHaveAttribute("href", "/imprint")
+    await expect(
+      page.getByRole("menuitem", { name: "Privacy" })
+    ).toHaveAttribute("href", "/privacy")
   })
 })
 
@@ -678,16 +621,95 @@ test.describe("Legal pages", () => {
     ).toBeVisible()
   })
 
-  test("legal pages cross-link via the footer (imprint -> privacy)", async ({
+  test("legal pages cross-link via the Help menu (imprint -> privacy)", async ({
     page,
   }) => {
     await page.goto("/imprint")
-    await page
-      .getByRole("contentinfo")
-      .getByRole("link", { name: "Privacy" })
-      .click()
+    // The sub-page chrome header (ChromeSubHeader) carries the same Help menu;
+    // the footer is gone, so the imprint -> privacy hop goes through it.
+    await page.getByRole("button", { name: "Help" }).click()
+    await page.getByRole("menuitem", { name: "Privacy" }).click()
     await expect(page).toHaveURL(/\/privacy$/)
     // Still the chrome shell — not a dead end.
     await expect(page.getByRole("link", { name: "All diagrams" })).toBeVisible()
+  })
+
+  test("legal pages reach legal links via the Help menu on mobile", async ({
+    page,
+  }) => {
+    // On mobile the sub-page ChromeSubHeader keeps the Help dropdown (icon-only
+    // below lg) beside the Theme toggle; the shared Help menu carries the legal
+    // links — there is room for both, so there is no "…" overflow.
+    await page.setViewportSize({ width: 390, height: 720 })
+    await page.goto("/imprint")
+    await expect(page.getByRole("contentinfo")).toBeHidden()
+    await page.getByRole("button", { name: "Help" }).click()
+    await expect(
+      page.getByRole("menuitem", { name: "Privacy" })
+    ).toHaveAttribute("href", "/privacy")
+  })
+
+  test("keeps the sub-page chrome outside iPhone safe areas", async ({
+    page,
+  }) => {
+    // ChromeSubHeader serves legal/404 sub-pages as a sticky island band inside
+    // PageShell. It clears the notch two ways: the sticky band's `top` offset
+    // adds the TOP inset, and the shared `.home-content-x` gutter hugs the
+    // LEFT/RIGHT insets (max(edge, inset)). Headless Chromium reports 0 env()
+    // insets, so simulate a notch via the custom properties production derives
+    // from env() (webapp.css :root).
+    const INSET = 47
+    const LANDSCAPE_WIDTH = 844
+
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto("/imprint")
+    // Wait for the chrome band to render before reading layout off it — the
+    // evaluate() below queries the DOM directly and would otherwise race React.
+    await expect(page.getByRole("banner")).toBeVisible()
+    await page.evaluate((inset) => {
+      document.documentElement.style.setProperty(
+        "--safe-area-inset-top",
+        `${inset}px`
+      )
+    }, INSET)
+
+    // The band pins at `top: calc(safe-area-top + 0.75rem)`, so its resolved
+    // sticky offset clears the top inset rather than tucking under the notch.
+    const stickyTop = await page.evaluate(() => {
+      const banner = document.querySelector('header[aria-label="Home"]')
+      const sticky = banner?.parentElement
+      return sticky ? getComputedStyle(sticky).top : null
+    })
+    expect(parseFloat(stickyTop ?? "0")).toBeGreaterThanOrEqual(INSET)
+
+    await page.setViewportSize({ width: LANDSCAPE_WIDTH, height: 390 })
+    await page.evaluate((inset) => {
+      document.documentElement.style.setProperty("--safe-area-inset-top", "0px")
+      document.documentElement.style.setProperty(
+        "--safe-area-inset-left",
+        `${inset}px`
+      )
+      document.documentElement.style.setProperty(
+        "--safe-area-inset-right",
+        `${inset}px`
+      )
+    }, INSET)
+
+    // The chrome HUGS the safe area (max(edge, inset)): leading content sits at
+    // the notch edge, never under it.
+    const homeLinkBox = await page
+      .getByRole("link", { name: "Apollon home" })
+      .boundingBox()
+    expect(homeLinkBox?.x).toBeGreaterThanOrEqual(INSET)
+
+    // Trailing content (the theme switcher in the md+ actions island) ends
+    // before the right inset.
+    const themeButtonBox = await page
+      .getByRole("button", { name: /Switch to (light|dark) mode/ })
+      .boundingBox()
+    expect(themeButtonBox).not.toBeNull()
+    expect(themeButtonBox!.x + themeButtonBox!.width).toBeLessThanOrEqual(
+      LANDSCAPE_WIDTH - INSET
+    )
   })
 })

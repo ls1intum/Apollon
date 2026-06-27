@@ -16,6 +16,10 @@ WORKDIR /app
 
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json .npmrc ./
 COPY library/package.json ./library/
+# The library now depends on the @tumaet/ui workspace package; without it the
+# pnpm install can't link it and `pnpm --filter @tumaet/ui run build:*` no-ops,
+# so the library's tsc -b fails to resolve @tumaet/ui/components/*.
+COPY packages/ui/package.json ./packages/ui/
 COPY standalone/webapp/package.json ./standalone/webapp/
 COPY standalone/server/package.json ./standalone/server/
 COPY vscode-extension/package.json ./vscode-extension/
@@ -26,6 +30,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile
 
 COPY library ./library
+COPY packages/ui ./packages/ui
 COPY standalone/webapp ./standalone/webapp
 COPY tsconfig*.json ./
 

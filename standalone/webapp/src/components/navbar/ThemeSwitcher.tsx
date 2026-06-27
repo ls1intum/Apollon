@@ -1,16 +1,115 @@
-import { useThemeStore } from "@/stores/useThemeStore"
-import MenuItem from "@mui/material/MenuItem"
+import { DropdownMenuItem } from "@tumaet/ui/components/dropdown-menu"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@tumaet/ui/components/tooltip"
+import { cn } from "@tumaet/ui/lib/utils"
 import React from "react"
+import { Moon, Sun } from "lucide-react"
 import { useShallow } from "zustand/shallow"
-import { MoonIcon, SunIcon } from "../Icon"
+import { useThemeStore } from "@/stores/useThemeStore"
 
-interface Props {
-  asMenuItem?: boolean
+/** Props for the pure {@link ThemeSwitcherButton} view. */
+interface ThemeSwitcherButtonProps {
+  /**
+   * Whether dark mode is currently active. Drives the cross-fade between the
+   * moon (dark) and sun (light) icons and the accessible label.
+   */
+  isDarkMode: boolean
+  /** Fired when the user clicks the toggle to switch the theme. */
+  onToggle: () => void
+  /** Merged with the component's own classes. */
+  className?: string
+  /** Forwarded to the underlying `<button>` element. */
+  ref?: React.Ref<HTMLButtonElement>
+}
+
+/**
+ * Pure light/dark toggle for the header chrome. Cross-fades a sun/moon icon
+ * based on `isDarkMode` and reports clicks via `onToggle`. No store, no effects —
+ * wire it up with {@link ThemeSwitcherMenu}. Styled in the shared chrome-icon
+ * family (size/hover/radius/focus matching `.apollon-chrome-iconbtn`).
+ */
+export function ThemeSwitcherButton({
+  isDarkMode,
+  onToggle,
+  className,
+  ref,
+}: ThemeSwitcherButtonProps) {
+  const title = isDarkMode ? "Switch to light mode" : "Switch to dark mode"
+
+  const button = (
+    <button
+      ref={ref}
+      type="button"
+      onClick={onToggle}
+      aria-label={title}
+      // The shared chrome-icon class is the single source of the 32px paint box,
+      // 6px radius, hover/active wash, focus ring AND the 44px ::before hit
+      // target — so Theme reads as one family with the other icon-only triggers
+      // (Favorites, '…' overflow) and is touch-reachable. `relative` is already
+      // set by the class; the cross-fade spans below position against it.
+      className={cn("apollon-chrome-iconbtn", className)}
+    >
+      <span
+        className={cn(
+          "absolute inset-0 flex items-center justify-center transition-[transform,opacity] duration-[250ms]",
+          isDarkMode
+            ? "scale-100 rotate-0 opacity-100"
+            : "scale-[0.6] -rotate-90 opacity-0"
+        )}
+      >
+        <Moon
+          className="size-[var(--apollon-chrome-icon)]"
+          aria-hidden="true"
+        />
+      </span>
+      <span
+        className={cn(
+          "absolute inset-0 flex items-center justify-center transition-[transform,opacity] duration-[250ms]",
+          isDarkMode
+            ? "scale-[0.6] rotate-90 opacity-0"
+            : "scale-100 rotate-0 opacity-100"
+        )}
+      >
+        <Sun className="size-[var(--apollon-chrome-icon)]" aria-hidden="true" />
+      </span>
+    </button>
+  )
+
+  // The shared Tooltip (not a native `title`) so Theme reveals with the same
+  // instant timing as the other icon-only triggers under the header's delay-0
+  // TooltipProvider. Theme is a plain toggle (no DropdownMenu), so there is no
+  // trigger conflict with the tooltip.
+  return (
+    <Tooltip>
+      <TooltipTrigger render={button} />
+      <TooltipContent>{title}</TooltipContent>
+    </Tooltip>
+  )
+}
+
+/** Props for the {@link ThemeSwitcherMenu} container. */
+interface ThemeSwitcherMenuProps {
+  /**
+   * Presentation variant (one bounded axis):
+   * - `"icon"` (default): the compact icon toggle used on the desktop bar.
+   * - `"menuItem"`: a full-width labelled row inside a dropdown menu (the mobile
+   *   overflow menu).
+   */
+  variant?: "icon" | "menuItem"
+  /** Fired in addition to toggling — e.g. to close the overflow menu it lives in. */
   onToggle?: () => void
 }
 
-export const ThemeSwitcherMenu: React.FC<Props> = ({
-  asMenuItem = false,
+/**
+ * Container: reads `currentTheme`/`toggleTheme` from the theme store and renders
+ * either the pure {@link ThemeSwitcherButton} (desktop chrome) or a labelled
+ * `DropdownMenuItem` row (mobile overflow menu, via `variant="menuItem"`).
+ */
+export const ThemeSwitcherMenu: React.FC<ThemeSwitcherMenuProps> = ({
+  variant = "icon",
   onToggle,
 }) => {
   const { currentTheme, toggleTheme } = useThemeStore(
@@ -27,45 +126,28 @@ export const ThemeSwitcherMenu: React.FC<Props> = ({
     onToggle?.()
   }
 
-  if (asMenuItem) {
+  if (variant === "menuItem") {
     return (
-      <MenuItem
+      <DropdownMenuItem
         onClick={handleToggle}
         aria-label={title}
-        sx={{ justifyContent: "space-between !important" }}
+        className="justify-between"
       >
         Theme
-        {isDarkMode ? <SunIcon /> : <MoonIcon />}
-      </MenuItem>
+        {isDarkMode ? (
+          <Sun
+            className="size-[var(--apollon-chrome-icon)]"
+            aria-hidden="true"
+          />
+        ) : (
+          <Moon
+            className="size-[var(--apollon-chrome-icon)]"
+            aria-hidden="true"
+          />
+        )}
+      </DropdownMenuItem>
     )
   }
 
-  return (
-    <button
-      type="button"
-      onClick={handleToggle}
-      aria-label={title}
-      title={title}
-      className="relative inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-[var(--apollon-chrome-radius-sm)] border-0 bg-transparent p-0 text-[color:var(--apollon-chrome-text-muted)] transition-colors duration-200 hover:bg-[color:var(--apollon-chrome-surface-hover)] hover:text-[color:var(--apollon-chrome-text)] active:bg-[color:var(--apollon-chrome-surface-active)] focus-visible:shadow-[0_0_0_2px_color-mix(in_srgb,var(--apollon-chrome-accent)_45%,transparent)] focus-visible:outline-none"
-    >
-      <span
-        className={`absolute inset-0 flex items-center justify-center transition-all duration-[250ms] ${
-          isDarkMode
-            ? "scale-100 rotate-0 opacity-100"
-            : "scale-[0.6] -rotate-90 opacity-0"
-        }`}
-      >
-        <MoonIcon width={18} height={18} fill="currentColor" />
-      </span>
-      <span
-        className={`absolute inset-0 flex items-center justify-center transition-all duration-[250ms] ${
-          isDarkMode
-            ? "scale-[0.6] rotate-90 opacity-0"
-            : "scale-100 rotate-0 opacity-100"
-        }`}
-      >
-        <SunIcon width={18} height={18} fill="currentColor" />
-      </span>
-    </button>
-  )
+  return <ThemeSwitcherButton isDarkMode={isDarkMode} onToggle={handleToggle} />
 }

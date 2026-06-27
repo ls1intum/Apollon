@@ -9,9 +9,6 @@ import {
   getSmoothStepPath,
 } from "@xyflow/react"
 
-/**
- * Adjusts the target coordinates based on the position and marker padding.
- */
 export const adjustTargetCoordinates = (
   targetX: number,
   targetY: number,
@@ -30,9 +27,6 @@ export const adjustTargetCoordinates = (
   return { targetX, targetY }
 }
 
-/**
- * Adjusts the source coordinates based on the position and marker padding.
- */
 export const adjustSourceCoordinates = (
   sourceX: number,
   sourceY: number,
@@ -323,33 +317,6 @@ const HANDLE_RATIO_END = 0.8
 const clamp = (value: number, min: number, max: number): number =>
   Math.max(min, Math.min(max, value))
 
-export function getNormalizedHandleOffset(
-  axisLength: number,
-  ratio: number
-): number {
-  if (!Number.isFinite(axisLength) || axisLength <= 0) return 0
-
-  // Keep exact boundaries exact when callers explicitly ask for them.
-  if (ratio <= 0) return 0
-  if (ratio >= 1) return axisLength
-
-  const raw = axisLength * ratio
-  const snapped = Math.round(raw / HANDLE_SNAP_STEP_PX) * HANDLE_SNAP_STEP_PX
-  return clamp(snapped, 0, axisLength)
-}
-
-export function getNormalizedHandleOffsetPercent(
-  axisLength: number,
-  ratio: number
-): string {
-  if (!Number.isFinite(axisLength) || axisLength <= 0) {
-    return `${ratio * 100}%`
-  }
-
-  const normalizedOffset = getNormalizedHandleOffset(axisLength, ratio)
-  return `${(normalizedOffset / axisLength) * 100}%`
-}
-
 // Visible half-circle arc-dragger length along the side it sits on. Two
 // adjacent visible arcs must have centers separated by at least this much
 // to avoid overlapping each other.
@@ -426,11 +393,10 @@ const buildOffsets = (visible: number[]): AxisHandlePlan["offsets"] => {
   return [v4, v4, v4, v4, v4, v4, v4, v4, v4]
 }
 
-// Stage-1 placement (three-arc layout, classic). Uses the historical
-// arithmetic-progression search inside the cosmetic [HANDLE_RATIO_START,
-// HANDLE_RATIO_END] band so the corner arcs land exactly where they did
-// before this refactor. Returns the three visible arc positions, or null if
-// the side is too short for the band-based search to be meaningful.
+// Stage-1 placement (three-arc layout). An arithmetic-progression search
+// inside the cosmetic [HANDLE_RATIO_START, HANDLE_RATIO_END] band places the
+// corner arcs. Returns the three visible arc positions, or null if the side is
+// too short for the band-based search to be meaningful.
 const findStage1Offsets = (axisLength: number): number[] | null => {
   if (axisLength <= 0) return null
 
@@ -470,9 +436,8 @@ const findStage1Offsets = (axisLength: number): number[] | null => {
   }
 
   if (!bestOffsets) return null
-  // The historical layout exposes the band's slot 0, slot 2 and slot 4 as
-  // visible arcs; the inner slots 1 and 3 are not used as arcs in this
-  // stage.
+  // Expose the band's slot 0, slot 2 and slot 4 as visible arcs; the inner
+  // slots 1 and 3 are not used as arcs in this stage.
   return [bestOffsets[0], bestOffsets[2], bestOffsets[4]]
 }
 
@@ -499,8 +464,8 @@ const findStage2Offsets = (axisLength: number): number[] | null => {
 // arcs:
 //   * stage 2 — five arcs, requires adjacent arcs ≥ ARC_LENGTH_PX apart in
 //               the band-based layout.
-//   * stage 1 — three arcs at the historical band positions; arcs sit at
-//               slots 0, 4, 8 of the nine-slot model.
+//   * stage 1 — three arcs at the band positions; arcs sit at slots 0, 4, 8
+//               of the nine-slot model.
 //   * stage 0 — single arc at the centre.
 const solveAxisPlan = (axisLength: number): AxisHandlePlan => {
   if (!Number.isFinite(axisLength) || axisLength <= 0) return EMPTY_PLAN
@@ -602,112 +567,6 @@ export function getDistributedHandleOffsetPercents(
     string,
     string,
   ]
-}
-
-type HandleSide = "top" | "right" | "bottom" | "left"
-
-const SIDE_HANDLE_IDS: Record<HandleSide, Record<number, string[]>> = {
-  top: {
-    1: ["top"],
-    3: ["top-left", "top", "top-right"],
-    5: ["top-left", "top-mid-left", "top", "top-mid-right", "top-right"],
-    9: [
-      "top-left",
-      "top-between-left-mid-left",
-      "top-mid-left",
-      "top-between-mid-left-center",
-      "top",
-      "top-between-center-mid-right",
-      "top-mid-right",
-      "top-between-mid-right-right",
-      "top-right",
-    ],
-  },
-  right: {
-    1: ["right"],
-    3: ["right-top", "right", "right-bottom"],
-    5: [
-      "right-top",
-      "right-mid-top",
-      "right",
-      "right-mid-bottom",
-      "right-bottom",
-    ],
-    9: [
-      "right-top",
-      "right-between-top-mid-top",
-      "right-mid-top",
-      "right-between-mid-top-center",
-      "right",
-      "right-between-center-mid-bottom",
-      "right-mid-bottom",
-      "right-between-mid-bottom-bottom",
-      "right-bottom",
-    ],
-  },
-  bottom: {
-    1: ["bottom"],
-    3: ["bottom-left", "bottom", "bottom-right"],
-    5: [
-      "bottom-left",
-      "bottom-mid-left",
-      "bottom",
-      "bottom-mid-right",
-      "bottom-right",
-    ],
-    9: [
-      "bottom-left",
-      "bottom-between-mid-left-left",
-      "bottom-mid-left",
-      "bottom-between-center-mid-left",
-      "bottom",
-      "bottom-between-mid-right-center",
-      "bottom-mid-right",
-      "bottom-between-right-mid-right",
-      "bottom-right",
-    ],
-  },
-  left: {
-    1: ["left"],
-    3: ["left-top", "left", "left-bottom"],
-    5: ["left-top", "left-mid-top", "left", "left-mid-bottom", "left-bottom"],
-    9: [
-      "left-top",
-      "left-between-mid-top-top",
-      "left-mid-top",
-      "left-between-center-mid-top",
-      "left",
-      "left-between-mid-bottom-center",
-      "left-mid-bottom",
-      "left-between-bottom-mid-bottom",
-      "left-bottom",
-    ],
-  },
-}
-
-const GENERATED_SLOT_PREFIX = "slot"
-
-export function getHandleIdForSideSlot(
-  side: HandleSide,
-  slotIndex: number,
-  slotCount: number
-): string {
-  const knownIds = SIDE_HANDLE_IDS[side][slotCount]
-  if (knownIds) return knownIds[slotIndex]
-
-  const semanticIds = SIDE_HANDLE_IDS[side][9]
-  const semanticIndex = new Map<number, string>()
-  for (let i = 0; i < semanticIds.length; i++) {
-    const targetIndex = Math.round(
-      (i / (semanticIds.length - 1)) * (slotCount - 1)
-    )
-    semanticIndex.set(targetIndex, semanticIds[i])
-  }
-
-  return (
-    semanticIndex.get(slotIndex) ??
-    `${side}-${GENERATED_SLOT_PREFIX}-${slotIndex}`
-  )
 }
 
 function getCanonicalHandlePoints(
@@ -947,9 +806,6 @@ export function findClosestHandle({
   return closest.label
 }
 
-/**
- * Helper function to get handle position on ellipse perimeter
- */
 export function getEllipseHandlePosition(
   centerX: number,
   centerY: number,

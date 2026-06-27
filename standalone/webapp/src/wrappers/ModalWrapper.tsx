@@ -19,14 +19,9 @@ import {
   useModalProgress,
 } from "@/contexts/ModalProgressContext"
 import { ModalName, ModalProps } from "@/types"
-import { Modal, Paper, Box, Divider, IconButton } from "@mui/material"
-import { Typography } from "@/components/Typography"
-import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined"
 import { log } from "@/logger"
-import {
-  getHomeDialogWidth,
-  isHomeDialogVariant,
-} from "@/components/modals/HomeDialog"
+import { isHomeDialogVariant } from "@/components/modals/HomeDialog"
+import { ModalFrame, type ModalVariant } from "./ModalFrame"
 
 interface ModalWrapperProps {
   name: ModalName
@@ -34,17 +29,22 @@ interface ModalWrapperProps {
   closeModal: () => void
 }
 
-const MODAL_COMPONENTS: Record<ModalName, React.ComponentType<ModalProps>> = {
+// `satisfies Record<ModalName, ...>` keeps the registry exhaustive (no missing
+// or stray names) while each entry keeps its own real props type — e.g.
+// `ShareDashboardModal` stays `{ modelId?: string }` rather than widening to the
+// loose props bag. The one unavoidable erasure is the dynamic spread in the
+// renderer below.
+const MODAL_COMPONENTS = {
   NEW_DIAGRAM: NewDiagramModal,
   SHARE: ShareModal,
   SHARE_DASHBOARD: ShareDashboardModal,
   COLLABORATE_NAME: CollaborateNameModal,
   EXPORT_PPTX: PPTXExportModal,
-  HowToUseModal: HowToUseModal,
-  AboutModal: AboutModal,
-  DELETE_VERSION: DeleteVersionModal as React.ComponentType<unknown>,
-  CONFIRM_RESTORE: ConfirmRestoreModal as React.ComponentType<unknown>,
-}
+  HowToUseModal,
+  AboutModal,
+  DELETE_VERSION: DeleteVersionModal,
+  CONFIRM_RESTORE: ConfirmRestoreModal,
+} satisfies Record<ModalName, React.ComponentType<never>>
 
 const MODAL_TITLES: Record<ModalName, string> = {
   NEW_DIAGRAM: "New Diagram",
@@ -57,20 +57,6 @@ const MODAL_TITLES: Record<ModalName, string> = {
   DELETE_VERSION: "Delete version",
   CONFIRM_RESTORE: v.confirmRestoreTitle,
 }
-
-const style = {
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  display: "flex",
-  flexDirection: "column",
-  minWidth: "20vw",
-  maxWidth: "90vw",
-  width: "50vw",
-  gap: 1,
-  bgcolor: "var(--apollon-background)",
-} as const
 
 const ModalProgressBar = () => {
   const { isLoading } = useModalProgress()
@@ -88,14 +74,30 @@ const ModalProgressBar = () => {
 }
 
 export const ModalWrapper: React.FC<ModalWrapperProps> = ({ name, props }) => {
-  const SpecificModal = MODAL_COMPONENTS[name]
+  // The single erasure noted above: the runtime `name` and the loosely-typed
+  // `props` bag meet here, so per-modal prop types can't be statically tied.
+  const SpecificModal = MODAL_COMPONENTS[
+    name
+  ] as unknown as React.ComponentType<ModalProps & { onClose?: () => void }>
   const { closeModal } = useModalContext()
   const isContentOverflow = Boolean(
     props && typeof props === "object" && props.contentOverflow
   )
   const isHomeDialog = isContentOverflow || isHomeDialogVariant(props)
-  const isWideHomeDialog = name === "NEW_DIAGRAM" && isHomeDialog
-  const isEditorShareDialog = name === "SHARE"
+  const isConfirmModal =
+    name === "DELETE_VERSION" ||
+    name === "CONFIRM_RESTORE" ||
+    name === "COLLABORATE_NAME"
+  const variant: ModalVariant =
+    name === "SHARE"
+      ? "editor-share"
+      : isHomeDialog
+        ? name === "NEW_DIAGRAM"
+          ? "home-wide"
+          : "home-compact"
+        : isConfirmModal
+          ? "confirm"
+          : "plain"
 
   if (!SpecificModal) {
     log.error(`No modal found for name: ${name}`)
@@ -117,129 +119,21 @@ export const ModalWrapper: React.FC<ModalWrapperProps> = ({ name, props }) => {
 
   return (
     <ModalProgressProvider>
-      <Modal
-        open
-        onClose={handleClose}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
+      <ModalFrame
+        title={MODAL_TITLES[name]}
+        variant={variant}
+        contentOverflow={isContentOverflow}
+        onOpenChange={(open) => {
+          if (!open) handleClose()
+        }}
+        beforeBody={<ModalProgressBar />}
       >
-        <Paper
-          sx={{
-            ...style,
-            width: isEditorShareDialog
-              ? "min(560px, calc(100vw - var(--safe-area-inset-left, 0px) - var(--safe-area-inset-right, 0px) - 24px))"
-              : isHomeDialog
-                ? getHomeDialogWidth(isWideHomeDialog ? "wide" : "compact")
-                : style.width,
-            minWidth: isEditorShareDialog
-              ? 0
-              : isHomeDialog
-                ? "320px"
-                : style.minWidth,
-            maxWidth:
-              "calc(100vw - var(--safe-area-inset-left, 0px) - var(--safe-area-inset-right, 0px) - 24px)",
-            borderRadius: isHomeDialog ? "15px" : undefined,
-            overflow: isHomeDialog ? "visible" : undefined,
-            maxHeight:
-              isHomeDialog || isEditorShareDialog
-                ? "calc(100dvh - var(--safe-area-inset-top, 0px) - var(--safe-area-inset-bottom, 0px) - 24px)"
-                : undefined,
-            bgcolor: isHomeDialog
-              ? "var(--home-surface-base)"
-              : "var(--apollon-background)",
-          }}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="modal-modal-title"
-        >
-          {/* Header */}
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: 1,
-              p: isHomeDialog ? "18px 20px" : 2,
-              bgcolor: isHomeDialog ? "var(--home-accent-base)" : undefined,
-              borderTopLeftRadius: isHomeDialog ? "15px" : undefined,
-              borderTopRightRadius: isHomeDialog ? "15px" : undefined,
-              "@media (max-width: 950px) and (max-height: 500px)": {
-                p: isHomeDialog ? "10px 14px" : "8px 12px",
-              },
-            }}
-          >
-            <Typography
-              variant="h5"
-              id="modal-modal-title"
-              noWrap={isHomeDialog}
-              sx={{
-                fontFamily: isHomeDialog ? "Poppins, sans-serif" : undefined,
-                fontWeight: isHomeDialog ? 500 : undefined,
-                // Scale the title down on narrow screens instead of wrapping it
-                // to a second line. Stays on one line; ellipsis is the last resort.
-                fontSize: isHomeDialog
-                  ? "clamp(0.95rem, 4vw, 1.3rem)"
-                  : undefined,
-                color: isHomeDialog
-                  ? "var(--home-accent-contrast)"
-                  : "var(--apollon-primary-contrast)",
-                ...(isHomeDialog ? { minWidth: 0, whiteSpace: "nowrap" } : {}),
-              }}
-            >
-              {MODAL_TITLES[name]}
-            </Typography>
-            <IconButton
-              size="small"
-              aria-label="Close"
-              sx={{
-                color: isHomeDialog
-                  ? "var(--home-accent-contrast)"
-                  : "var(--apollon-primary-contrast)",
-                borderRadius: isHomeDialog ? "6px" : "2px",
-                flexShrink: 0,
-                "&:hover": {
-                  bgcolor: isHomeDialog
-                    ? "var(--home-on-accent-bg-hover)"
-                    : "var(--apollon-background-variant)",
-                  color: isHomeDialog
-                    ? "var(--home-on-accent-text)"
-                    : "var(--apollon-primary-contrast)",
-                },
-              }}
-              onClick={handleClose}
-            >
-              <CloseOutlinedIcon />
-            </IconButton>
-          </Box>
-          {!isHomeDialog && (
-            <Divider sx={{ bgcolor: "var(--apollon-background-variant)" }} />
-          )}
-
-          {/* Progress bar — sits between header and content, outside scroll */}
-          <ModalProgressBar />
-
-          {/* Scrollable Content */}
-          <Box
-            sx={{
-              p: isHomeDialog ? "24px 16px 16px" : 2,
-              overflowY: isContentOverflow ? "visible" : "auto",
-              maxHeight: isContentOverflow
-                ? "none"
-                : isHomeDialog
-                  ? "calc(92vh - 84px)"
-                  : "calc(90vh - 60px)",
-              flexGrow: 1,
-              "@media (max-width: 950px) and (max-height: 500px)": {
-                p: isHomeDialog ? "12px" : "10px 12px",
-                maxHeight:
-                  "calc(100dvh - var(--safe-area-inset-top, 0px) - var(--safe-area-inset-bottom, 0px) - 64px)",
-              },
-            }}
-          >
-            {SpecificModal && <SpecificModal {...props} />}
-          </Box>
-        </Paper>
-      </Modal>
+        {/* The presentational modal bodies report dismissal through an
+            `onClose` callback instead of reaching into the modal context. We
+            wire it to `closeModal` *after* spreading the caller props so a
+            caller-supplied `onClose` never shadows the body's close action. */}
+        <SpecificModal {...props} onClose={closeModal} />
+      </ModalFrame>
     </ModalProgressProvider>
   )
 }

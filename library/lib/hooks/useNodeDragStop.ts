@@ -41,17 +41,15 @@ export const useNodeDragStop = () => {
       // clear; resize (no drag-stop) clears from `onNodesChange` instead.
       try {
         const draggedLastPoint = screenToFlowPosition({
+          // The library types this as a MouseEvent, but on mobile it's a
+          // TouchEvent; read the touch point when `changedTouches` is present.
           x:
             "changedTouches" in event
-              ? // event is handled as Mouse event in the library but also it is touch event for mobile users
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (event as any).changedTouches[0].clientX
+              ? (event.changedTouches as TouchList)[0].clientX
               : event.clientX,
           y:
             "changedTouches" in event
-              ? // event is handled as Mouse event in the library but also it is touch event for mobile users
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (event as any).changedTouches[0].clientY
+              ? (event.changedTouches as TouchList)[0].clientY
               : event.clientY,
         })
 

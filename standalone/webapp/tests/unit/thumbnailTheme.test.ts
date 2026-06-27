@@ -13,19 +13,19 @@ describe("applyDarkThemeToThumbnailSvg", () => {
     const out = applyDarkThemeToThumbnailSvg(
       svg(`<path stroke="#000" fill="#000000"/>`)
     )
-    expect(out).toContain('stroke="#e4e4e1"')
-    expect(out).toContain('fill="#e4e4e1"')
+    expect(out).toContain('stroke="#ffffff"')
+    expect(out).toContain('fill="#ffffff"')
   })
 
   it("recolors a near-white FILL to the dark surface fill", () => {
     const out = applyDarkThemeToThumbnailSvg(svg(`<rect fill="#ffffff"/>`))
-    expect(out).toContain('fill="#383934"')
+    expect(out).toContain('fill="#13161c"')
   })
 
   it("leaves a near-white STROKE untouched (role-gated)", () => {
     const out = applyDarkThemeToThumbnailSvg(svg(`<rect stroke="#ffffff"/>`))
     expect(out).toContain('stroke="#ffffff"')
-    expect(out).not.toContain("#383934")
+    expect(out).not.toContain("#13161c")
   })
 
   it("leaves non-color keywords untouched", () => {
@@ -40,8 +40,8 @@ describe("applyDarkThemeToThumbnailSvg", () => {
     const out = applyDarkThemeToThumbnailSvg(
       svg(`<path style="stroke:#000;fill:#fff"/>`)
     )
-    expect(out).toContain("stroke:#e4e4e1")
-    expect(out).toContain("fill:#383934")
+    expect(out).toContain("stroke:#ffffff")
+    expect(out).toContain("fill:#13161c")
   })
 
   it("returns the input unchanged when it is not valid SVG", () => {

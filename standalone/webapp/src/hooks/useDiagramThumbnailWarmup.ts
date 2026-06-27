@@ -3,9 +3,13 @@ import type { UMLModel } from "@tumaet/apollon"
 import { log } from "@/logger"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { renderThumbnailSvgFromModel } from "@/utils/thumbnailSvg"
-import { waitForIdle } from "@/utils/idle"
+import type { ThumbnailViewportPriority } from "@/hooks/useThumbnailViewportPriority"
+import { dequeueNextDiagram } from "@/hooks/dequeueNextDiagram"
 
-const THUMBNAIL_WARMUP_DELAY_MS = 400
+// Start as soon as the page has loaded — no extra stall. The single worker then
+// converts back-to-back (no idle-gating, which would pause mid-scroll), and
+// viewport priority keeps on-screen cards first.
+const THUMBNAIL_WARMUP_DELAY_MS = 0
 
 type ThumbnailWarmupDiagram = {
   id: string
@@ -17,10 +21,18 @@ export const useDiagramThumbnailWarmup = <T extends ThumbnailWarmupDiagram>({
   visibleDiagrams,
   isPending,
   isDiagramEmpty,
+  viewportPriority,
 }: {
   visibleDiagrams: T[]
   isPending: boolean
   isDiagramEmpty: (diagram: T) => boolean
+  /**
+   * Optional viewport-priority registry. When provided, the worker generates the
+   * thumbnail for the topmost on-screen card next instead of draining the
+   * infinite-scroll window in list order, so the card the user is looking at
+   * loads first. Off-screen cards still warm in the background (queue order).
+   */
+  viewportPriority?: ThumbnailViewportPriority
 }): Record<string, true> => {
   const [canWarmThumbnails, setCanWarmThumbnails] = useState(false)
   const [loadingThumbnailIds, setLoadingThumbnailIds] = useState<
@@ -47,9 +59,12 @@ export const useDiagramThumbnailWarmup = <T extends ThumbnailWarmupDiagram>({
   const thumbnailWorkerActiveRef = useRef(false)
   const isUnmountedRef = useRef(false)
   const isDiagramEmptyRef = useRef(isDiagramEmpty)
-  // Latest-value ref read only inside the async queue worker, never in render.
-  // eslint-disable-next-line react-hooks/refs
+  const viewportPriorityRef = useRef(viewportPriority)
+  // Latest-value refs read only inside the async queue worker, never in render.
+  /* eslint-disable react-hooks/refs */
   isDiagramEmptyRef.current = isDiagramEmpty
+  viewportPriorityRef.current = viewportPriority
+  /* eslint-enable react-hooks/refs */
 
   const processThumbnailQueue = useCallback(() => {
     if (thumbnailWorkerActiveRef.current || isUnmountedRef.current) {
@@ -74,7 +89,10 @@ export const useDiagramThumbnailWarmup = <T extends ThumbnailWarmupDiagram>({
       thumbnailWorkerActiveRef.current = true
 
       while (thumbnailQueueRef.current.length > 0 && !isUnmountedRef.current) {
-        const nextDiagram = thumbnailQueueRef.current.shift()
+        const nextDiagram = dequeueNextDiagram(
+          thumbnailQueueRef.current,
+          viewportPriorityRef.current
+        )
         if (!nextDiagram) {
           continue
         }
@@ -93,12 +111,6 @@ export const useDiagramThumbnailWarmup = <T extends ThumbnailWarmupDiagram>({
         }
 
         markLoading(id, true)
-        await waitForIdle()
-
-        if (isUnmountedRef.current) {
-          markLoading(id, false)
-          break
-        }
 
         try {
           const thumbnailSvg = await renderThumbnailSvgFromModel(
@@ -136,8 +148,7 @@ export const useDiagramThumbnailWarmup = <T extends ThumbnailWarmupDiagram>({
 
       thumbnailWorkerActiveRef.current = false
       if (thumbnailQueueRef.current.length > 0 && !isUnmountedRef.current) {
-        // Recursive drain — the worker re-invokes itself (self-reference in a
-        // useCallback, evaluated at call time, not during render).
+        // Drain anything queued while the worker was running.
         // eslint-disable-next-line react-hooks/immutability
         processThumbnailQueue()
       }
