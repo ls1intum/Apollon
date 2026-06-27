@@ -105,7 +105,17 @@ export default defineConfig({
       : [
           dts({
             include: ["lib"],
-            rollupTypes: !isPeerBuild,
+            // vite-plugin-dts 5 (unplugin-dts) renamed `rollupTypes` →
+            // `bundleTypes`. The default + external builds bundle every entry
+            // into a single self-contained .d.ts via @microsoft/api-extractor;
+            // the peer build stays per-file (bundleTypes:false) and localises the
+            // one @tumaet/ui re-export in a post-build step (package.json
+            // `build`).
+            bundleTypes: !isPeerBuild && {
+              // api-extractor (rollupTypes) otherwise leaves @tumaet/ui external;
+              // bundle it so the rolled .d.ts is self-contained.
+              bundledPackages: ["@tumaet/ui"],
+            },
             // The JS build aliases @tumaet/ui to its TS source so the runtime
             // inlines into dist. For TYPES, resolve the package's published
             // declarations (via package.json `exports#types`) instead, so the
@@ -114,9 +124,6 @@ export default defineConfig({
             // declarations, so a post-build step (see package.json `build`)
             // localises the @tumaet/ui/theme re-export.
             aliasesExclude: [/^@tumaet\/ui/],
-            // api-extractor (rollupTypes) otherwise leaves @tumaet/ui external;
-            // bundle it so the rolled .d.ts is self-contained.
-            bundledPackages: ["@tumaet/ui"],
           }),
         ]),
     // Every pass embeds Inter (style.css inline in the default pass; the lazy
@@ -187,6 +194,9 @@ export default defineConfig({
         banner: isPeerBuild ? '"use client";' : undefined,
       },
     },
+    // Vite 8 minifies with Oxc, whose compressor drops `debugger` statements by
+    // default — no transform-level `drop` needed (the old `esbuild.drop` option
+    // is ignored under Oxc and only emitted a deprecation warning).
     minify: true,
   },
   resolve: {
@@ -199,5 +209,4 @@ export default defineConfig({
       "@tumaet/ui": resolve(__dirname, "../packages/ui/src"),
     },
   },
-  esbuild: { drop: ["debugger"] },
 })

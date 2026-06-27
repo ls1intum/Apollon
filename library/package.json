@@ -126,11 +126,11 @@
     }
   },
   "dependencies": {
+    "@base-ui/react": "catalog:",
     "@chenglou/pretext": "0.0.6",
     "@dnd-kit/core": "6.3.1",
     "@dnd-kit/sortable": "10.0.0",
     "@dnd-kit/utilities": "3.2.2",
-    "@base-ui/react": "catalog:",
     "lucide-react": "catalog:",
     "uuid": "catalog:",
     "zustand": "catalog:"
@@ -142,6 +142,7 @@
   },
   "devDependencies": {
     "@eslint/js": "catalog:",
+    "@microsoft/api-extractor": "7.58.9",
     "@size-limit/preset-big-lib": "catalog:",
     "@testing-library/jest-dom": "catalog:",
     "@testing-library/react": "catalog:",
@@ -167,7 +168,7 @@
     "typescript-eslint": "catalog:",
     "typescript-json-schema": "0.67.4",
     "vite": "catalog:",
-    "vite-plugin-dts": "4.3.0",
+    "vite-plugin-dts": "5.0.3",
     "vitest": "catalog:",
     "y-protocols": "1.0.6",
     "yjs": "13.6.20"

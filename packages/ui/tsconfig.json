@@ -22,11 +22,22 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
 
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  // Dev-only stories/tests are never part of the published types (no `exports`
+  // entry points at them) — emitting their declarations only pollutes `dist`
+  // and, under TS 6.0's stricter declaration emit, surfaces non-portable
+  // inferred-type errors from Storybook `meta`/Base UI internals. Storybook and
+  // Vitest type-check these via their own configs.
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/**/*.stories.ts",
+    "src/**/*.stories.tsx",
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx"
+  ]
 }
