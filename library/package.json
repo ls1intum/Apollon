@@ -126,11 +126,11 @@
     }
   },
   "dependencies": {
-    "@chenglou/pretext": "0.0.6",
+    "@base-ui/react": "catalog:",
+    "@chenglou/pretext": "0.0.8",
     "@dnd-kit/core": "6.3.1",
     "@dnd-kit/sortable": "10.0.0",
     "@dnd-kit/utilities": "3.2.2",
-    "@base-ui/react": "catalog:",
     "lucide-react": "catalog:",
     "zustand": "catalog:"
   },
@@ -150,7 +150,7 @@
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "@vitest/coverage-v8": "catalog:",
-    "@xyflow/react": "catalog:",
+    "@xyflow/react": "^12.11.1",
     "ajv": "8.20.0",
     "babel-plugin-react-compiler": "catalog:",
     "eslint": "catalog:",
@@ -158,17 +158,17 @@
     "eslint-plugin-react-hooks": "catalog:",
     "globals": "catalog:",
     "jsdom": "catalog:",
-    "react": "catalog:",
-    "react-dom": "catalog:",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "size-limit": "catalog:",
     "subset-font": "2.5.0",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:",
     "typescript-json-schema": "0.67.4",
     "vite": "catalog:",
-    "vite-plugin-dts": "4.3.0",
+    "vite-plugin-dts": "4.5.4",
     "vitest": "catalog:",
-    "y-protocols": "1.0.6",
-    "yjs": "13.6.20"
+    "y-protocols": "^1.0.7",
+    "yjs": "^13.6.31"
   }
 }
