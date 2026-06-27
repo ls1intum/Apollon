@@ -1,6 +1,6 @@
 {
   "name": "@tumaet/apollon",
-  "version": "4.9.0",
+  "version": "4.10.0",
   "description": "Embeddable UML modeling editor. Mounts into any DOM node — works inside Angular, Vue, Svelte, vanilla JS, or React hosts.",
   "keywords": [
     "uml",

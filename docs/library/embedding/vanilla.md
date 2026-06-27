@@ -15,11 +15,11 @@ load. (With a bundler you install the peers yourself — see
 [Install](/library/embedding/install).)
 
 ```html
-<link rel="stylesheet" href="https://esm.sh/@tumaet/apollon@4.9.0/style.css" />
+<link rel="stylesheet" href="https://esm.sh/@tumaet/apollon@4.10.0/style.css" />
 <div id="apollon" style="width: 100%; height: 600px"></div>
 
 <script type="module">
-  import { ApollonEditor } from "https://esm.sh/@tumaet/apollon@4.9.0"
+  import { ApollonEditor } from "https://esm.sh/@tumaet/apollon@4.10.0"
 
   const saved = localStorage.getItem("diagram")
   const editor = new ApollonEditor(document.getElementById("apollon"), {
@@ -66,7 +66,7 @@ import {
   ApollonEditor,
   ApollonMode,
   UMLDiagramType,
-} from "https://esm.sh/@tumaet/apollon@4.9.0"
+} from "https://esm.sh/@tumaet/apollon@4.10.0"
 
 const editor = new ApollonEditor(document.getElementById("apollon"), {
   type: UMLDiagramType.BPMN,
