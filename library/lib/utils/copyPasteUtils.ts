@@ -1,4 +1,4 @@
-/* eslint-disable */
+/* eslint-disable @typescript-eslint/no-explicit-any -- V3 legacy model shapes are untyped JSON at the version-conversion boundary; typing them fully is tracked separately. */
 import { generateUUID } from "@/utils"
 import type { Node, Edge } from "@xyflow/react"
 

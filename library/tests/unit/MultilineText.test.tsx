@@ -135,7 +135,7 @@ describe("MultilineText", () => {
     expect(tspans[tspans.length - 1].textContent).toMatch(/…$/)
   })
 
-  it("exposes the full untruncated text via aria-label", () => {
+  it("exposes the full untruncated text via a role=img wrapper", () => {
     const full = "one two three four five six"
     const { container } = renderInSvg(
       <MultilineText
@@ -147,13 +147,27 @@ describe("MultilineText", () => {
         maxLines={2}
       />
     )
-    const text = container.querySelector("text")
-    expect(text?.getAttribute("aria-label")).toBe(full)
+    // `aria-label` is prohibited on a bare SVG <text>; the accessible name
+    // lives on a wrapping `<g role="img">` instead, which is a valid host.
+    const group = container.querySelector("g[role='img']")
+    expect(group?.getAttribute("aria-label")).toBe(full)
+    expect(container.querySelector("text")?.hasAttribute("aria-label")).toBe(
+      false
+    )
     // The per-line tspans must be hidden from assistive tech — otherwise
     // a screen reader would read each wrapped fragment as a separate
     // utterance, fragmenting the label.
     for (const tspan of container.querySelectorAll("tspan")) {
       expect(tspan.getAttribute("aria-hidden")).toBe("true")
     }
+  })
+
+  it("omits the role=img wrapper for whitespace-only content", () => {
+    const { container } = renderInSvg(
+      <MultilineText text="   " x={100} y={50} maxWidth={180} fontSize={16} />
+    )
+    // A named-but-empty graphic makes some screen readers announce "group";
+    // whitespace-only text must not produce a role=img/aria-label host.
+    expect(container.querySelector("g[role='img']")).toBeNull()
   })
 })

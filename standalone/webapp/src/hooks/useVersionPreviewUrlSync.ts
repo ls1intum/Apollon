@@ -33,7 +33,7 @@ export function useClosePreview() {
  * the URL via the returned `openPreview` / `closePreview`; this hook's effect
  * mirrors URL → version store (`enterPreview` / `exitPreview`). That's what
  * makes reload re-enter the preview, a single Back exit it, and a deep link /
- * new tab open it — none of which worked when preview lived only in memory.
+ * new tab open it — because the URL, not in-memory state, is the source of truth.
  *
  * - `openPreview` pushes a history entry on the FIRST hop from live and
  *   replaces on every version→version hop, so cycling N versions leaves exactly

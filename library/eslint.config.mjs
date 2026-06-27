@@ -26,6 +26,30 @@ export default [
       "react-hooks/exhaustive-deps": "warn",
       "react/prop-types": "off",
       "no-console": "error",
+      // Allow intentionally-unused `_`-prefixed bindings.
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      ],
+      // The library is migrated to Base UI + raw CSS + --apollon-* tokens.
+      // It must never depend on MUI or a CSS-in-JS runtime (Emotion).
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@mui/*", "@mui"],
+              message:
+                "MUI is removed from the library. Use Base UI (@base-ui/react) primitives and lucide-react icons instead.",
+            },
+            {
+              group: ["@emotion/*", "@emotion"],
+              message:
+                "The library styles with raw CSS + --apollon-* tokens, never CSS-in-JS. Do not import Emotion.",
+            },
+          ],
+        },
+      ],
     },
   },
   {

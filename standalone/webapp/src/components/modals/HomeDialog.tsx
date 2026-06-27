@@ -1,6 +1,12 @@
 import type { InputHTMLAttributes, ReactNode } from "react"
 import type { ModalProps } from "@/types"
-import { Button } from "@/components/ui/button"
+import { Button } from "@tumaet/ui/components/button"
+import { DialogFooter } from "@tumaet/ui/components/dialog"
+import { Input } from "@tumaet/ui/components/input"
+import { Field, FieldLabel } from "@tumaet/ui/components/field"
+import { Alert, AlertDescription } from "@tumaet/ui/components/alert"
+import { cn } from "@tumaet/ui/lib/utils"
+import { ModalFooterPortal } from "@/wrappers/ModalFrame"
 
 export type HomeDialogSize = "compact" | "wide"
 
@@ -32,18 +38,18 @@ export const HomeDialogContent = ({
 }) => (
   <div
     data-testid={testId}
-    className={`recent-diagrams-font flex min-w-0 flex-col gap-5 ${className}`.trim()}
+    className={cn("flex min-w-0 flex-col gap-5", className)}
   >
     {children}
   </div>
 )
 
 export const HomeDialogNotice = ({ children }: { children: ReactNode }) => (
-  <div className="rounded-md border-l-[5px] border-l-[var(--home-accent-base)] bg-[color-mix(in_srgb,var(--home-accent-base)_12%,transparent)] p-2">
-    <p className="text-sm font-normal text-[var(--home-text-primary)]">
+  <Alert className="border-l-[5px] border-l-primary bg-accent-soft p-2">
+    <AlertDescription className="text-sm font-normal text-foreground">
       {children}
-    </p>
-  </div>
+    </AlertDescription>
+  </Alert>
 )
 
 export const HomeDialogField = ({
@@ -55,34 +61,35 @@ export const HomeDialogField = ({
   htmlFor?: string
   children: ReactNode
 }) => (
-  <div className="flex flex-col gap-1.5">
+  <Field className="gap-1.5">
     {htmlFor ? (
-      <label
+      <FieldLabel
         htmlFor={htmlFor}
-        className="text-xs font-semibold text-[var(--home-text-primary)]"
+        className="text-xs font-semibold text-foreground"
       >
         {label}
-      </label>
+      </FieldLabel>
     ) : (
-      <span className="text-xs font-semibold text-[var(--home-text-primary)]">
-        {label}
-      </span>
+      <span className="text-xs font-semibold text-foreground">{label}</span>
     )}
     {children}
-  </div>
+  </Field>
 )
 
 export const HomeDialogTextInput = (
   props: InputHTMLAttributes<HTMLInputElement>
 ) => (
-  <input
+  <Input
     {...props}
-    className={`h-9 w-full rounded-md border border-[var(--home-border-default)] bg-[var(--home-surface-base)] px-3 py-1.5 text-sm text-[var(--home-text-primary)] outline-none transition-colors duration-150 placeholder:text-[var(--home-text-secondary)] focus:border-[var(--home-accent-ring)] disabled:cursor-not-allowed disabled:opacity-60 ${props.className ?? ""}`.trim()}
+    className={cn(
+      "h-9 rounded-md border-border bg-background px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-60",
+      props.className
+    )}
   />
 )
 
 export const HomeDialogValueBox = ({ children }: { children: ReactNode }) => (
-  <div className="h-9 rounded-md border border-[var(--home-border-default)] bg-[var(--home-surface-sunken)] px-3 py-2 text-sm font-medium text-[var(--home-text-primary)]">
+  <div className="h-9 rounded-md border border-border bg-muted px-3 py-2 text-sm font-medium text-foreground">
     {children}
   </div>
 )
@@ -107,21 +114,32 @@ export const HomeDialogOptionGroup = <T extends string>({
   hideLabel?: boolean
 }) => {
   const headingId = `${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-group`
+  // Icon tiles are a compact, scannable grid that never collapses to a single
+  // column in portrait: 2-up by default and 3-up from 480px for small glyph
+  // tiles, or a fixed 2-up when the caller asks for `columns={2}` (wide
+  // landscape tiles like template thumbnails). Text-only options honour
+  // `columns` as their row layout.
+  const hasIcons = options.some((option) => option.icon)
 
   return (
     <section className="flex flex-col gap-2" aria-labelledby={headingId}>
       <h3
         id={headingId}
         className={
-          hideLabel
-            ? "sr-only"
-            : "text-xs font-semibold text-[var(--home-text-primary)]"
+          hideLabel ? "sr-only" : "text-xs font-semibold text-foreground"
         }
       >
         {label}
       </h3>
       <div
-        className={`grid grid-cols-1 gap-2 ${columns === 2 ? "sm:grid-cols-2" : ""}`.trim()}
+        className={cn(
+          "grid gap-2",
+          hasIcons
+            ? columns === 2
+              ? "grid-cols-2"
+              : "grid-cols-2 min-[480px]:grid-cols-3"
+            : ["grid-cols-1", columns === 2 && "sm:grid-cols-2"]
+        )}
       >
         {options.map((option) => {
           const selected = option.value === value
@@ -134,18 +152,18 @@ export const HomeDialogOptionGroup = <T extends string>({
               onClick={() => onChange(option.value)}
               onDoubleClick={onConfirm}
               aria-pressed={selected}
-              className={`min-h-9 cursor-pointer rounded-md border text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-60 ${
+              className={cn(
+                "cursor-pointer rounded-md border transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-60",
                 option.icon
-                  ? "flex flex-col items-center gap-2 px-3 py-3 text-center"
-                  : "px-3 py-2 text-left"
-              } ${
+                  ? "flex flex-col items-center justify-center gap-1.5 px-2 py-2.5 text-center text-xs font-medium"
+                  : "min-h-9 px-3 py-2 text-left text-sm font-medium",
                 selected
-                  ? "border-[var(--home-accent-base)] bg-[var(--home-accent-soft)] text-[var(--home-accent-strong)]"
-                  : "border-[var(--home-border-default)] bg-[var(--home-surface-raised)] text-[var(--home-text-primary)] hover:bg-[var(--home-surface-raised-hover)]"
-              }`}
+                  ? "border-primary bg-accent-soft text-accent-strong"
+                  : "border-border bg-card text-foreground hover:bg-accent-hover"
+              )}
             >
               {option.icon}
-              {option.label}
+              <span className="line-clamp-2">{option.label}</span>
             </button>
           )
         })}
@@ -171,16 +189,21 @@ export const HomeDialogActions = ({
   onCancel: () => void
   onConfirm: () => void
 }) => (
-  <div className="flex items-center justify-between gap-2 pt-4">
-    <Button variant="ghost" disabled={loading} onClick={onCancel}>
-      {cancelLabel}
-    </Button>
-    <Button
-      variant="default"
-      disabled={loading || confirmDisabled}
-      onClick={onConfirm}
-    >
-      {loading && loadingLabel ? loadingLabel : confirmLabel}
-    </Button>
-  </div>
+  // Portals into ModalFrame's pinned footer slot (a sibling AFTER the scroll
+  // body) so the action bar stays clickable in portrait without scrolling.
+  // Outside a frame (standalone Storybook block) it renders in flow.
+  <ModalFooterPortal>
+    <DialogFooter>
+      <Button variant="outline" disabled={loading} onClick={onCancel}>
+        {cancelLabel}
+      </Button>
+      <Button
+        variant="default"
+        disabled={loading || confirmDisabled}
+        onClick={onConfirm}
+      >
+        {loading && loadingLabel ? loadingLabel : confirmLabel}
+      </Button>
+    </DialogFooter>
+  </ModalFooterPortal>
 )

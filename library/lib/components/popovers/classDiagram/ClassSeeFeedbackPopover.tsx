@@ -4,7 +4,9 @@ import { ClassNodeProps } from "@/types"
 import { PopoverProps } from "../types"
 import { SeeFeedbackAssessmentBox } from "../SeeFeedbackAssessmentBox"
 import { useGoToNextAssessment } from "@/hooks"
-import Button from "@mui/material/Button"
+import { nodeTypeLabel } from "@/utils/nodeUtils"
+import { Button } from "@tumaet/ui/components/button"
+import { PopoverLayout } from "../PopoverLayout"
 
 export const ClassSeeFeedbackPopover = ({ elementId }: PopoverProps) => {
   const nodes = useDiagramStore(useShallow((state) => state.nodes))
@@ -16,11 +18,12 @@ export const ClassSeeFeedbackPopover = ({ elementId }: PopoverProps) => {
   const nodeData = node.data as ClassNodeProps
 
   return (
-    <>
+    <PopoverLayout>
       <SeeFeedbackAssessmentBox
         elementId={elementId}
         name={nodeData.name}
         type={node.type ?? ""}
+        typeLabel={nodeTypeLabel(node.type)}
       />
 
       {nodeData.attributes.map((attr) => (
@@ -29,6 +32,7 @@ export const ClassSeeFeedbackPopover = ({ elementId }: PopoverProps) => {
           elementId={attr.id}
           name={attr.name}
           type="Attribute"
+          divider
         />
       ))}
 
@@ -38,11 +42,12 @@ export const ClassSeeFeedbackPopover = ({ elementId }: PopoverProps) => {
           elementId={method.id}
           name={method.name}
           type="Method"
+          divider
         />
       ))}
-      <Button variant="outlined" onClick={handleGoToNextAssessment}>
+      <Button variant="outline" onClick={handleGoToNextAssessment}>
         Next Assessment
       </Button>
-    </>
+    </PopoverLayout>
   )
 }

@@ -1,24 +1,79 @@
-import { Button, Tooltip } from "@mui/material"
-import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@tumaet/ui/components/tooltip"
+import { HistoryIcon } from "lucide-react"
 import { useLocation } from "@tanstack/react-router"
 import { useVersionStore } from "@/stores/useVersionStore"
 import { versioningStrings as t } from "@/components/versioning/strings"
 import { useDiagramIdFromPath } from "@/hooks/useDiagramIdFromPath"
+import { useMediaQuery } from "@/hooks"
 import { navbarButtonStyle } from "./styleConstants"
 
-interface Props {
+/** Props for the pure {@link VersionHistoryButtonView}. */
+interface VersionHistoryButtonViewProps {
+  /** Whether the version-history drawer is currently open (drives `aria-pressed`). */
+  isOpen: boolean
+  /** Fired when the user clicks the button to toggle the drawer. */
+  onToggle: () => void
   /**
    * Foreground colour for the icon + label. Omitted on the chrome header (idles
    * muted, washes to `--apollon-chrome-text` on hover via `navbarButtonStyle`);
    * the mobile overflow menu passes `var(--apollon-primary-contrast)` so the
-   * label stays legible on the themed dropdown. `NavbarFile`/`NavbarHelp`/
+   * label stays legible on the themed dropdown. `FileMenu`/`HelpMenu`/
    * `SaveLocalCopyButton` follow the same convention.
    */
   color?: string
-  /** Classes for the label span — the header passes `"hidden lg:inline"` to
-   * collapse to the icon when space is tight; the mobile menu omits it so the
-   * label always shows. */
-  labelClassName?: string
+  /**
+   * Presentation variant (one bounded axis):
+   * - `"bar"` (default): the header button — the label collapses to the icon
+   *   below `lg` and the tooltip shows only while collapsed.
+   * - `"icon"`: icon-only — the mobile pill, so the label is always hidden and
+   *   the tooltip always names it.
+   */
+  variant?: "bar" | "icon"
+}
+
+/**
+ * Pure navbar entry point for the version-history drawer. Renders a tooltip
+ * trigger that reflects the drawer's open state via `aria-pressed` and reports
+ * clicks via `onToggle`. No store, no routing — see {@link VersionHistoryButton}.
+ */
+export function VersionHistoryButtonView({
+  isOpen,
+  onToggle,
+  color,
+  variant = "bar",
+}: VersionHistoryButtonViewProps) {
+  const iconOnly = variant === "icon"
+  // 1024px is Tailwind `lg`, the same breakpoint the label span collapses at.
+  const isLg = useMediaQuery("(min-width: 1024px)")
+  return (
+    <Tooltip disabled={!iconOnly && isLg}>
+      <TooltipTrigger
+        className={navbarButtonStyle()}
+        style={color ? { color } : undefined}
+        // Same text as the tooltip, so the accessible name matches what sighted
+        // users see on hover (and announces the keyboard shortcut to AT).
+        aria-label={t.fabTooltip}
+        aria-pressed={isOpen}
+        onClick={onToggle}
+      >
+        <HistoryIcon className="size-4" aria-hidden />
+        <span className={iconOnly ? "hidden" : "hidden lg:inline"}>
+          {t.navMenuItem}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent>{t.fabTooltip}</TooltipContent>
+    </Tooltip>
+  )
+}
+
+/** Props for the {@link VersionHistoryButton} container. */
+interface VersionHistoryButtonProps {
+  /** Presentation variant. See {@link VersionHistoryButtonView}. */
+  variant?: "bar" | "icon"
 }
 
 /**
@@ -30,7 +85,9 @@ interface Props {
  * `/shared/:id`, so it is also covered. The gallery (`/`) and the
  * playground have no active diagram, so the button is hidden.
  */
-export const VersionHistoryButton = ({ color, labelClassName }: Props) => {
+export const VersionHistoryButton = ({
+  variant,
+}: VersionHistoryButtonProps) => {
   const diagramId = useDiagramIdFromPath()
   const { pathname } = useLocation()
   // Both shared (Remote) and local (Local) repositories back a drawer.
@@ -49,18 +106,10 @@ export const VersionHistoryButton = ({ color, labelClassName }: Props) => {
   if (!diagramId || !hasVersioning) return null
 
   return (
-    <Tooltip title={t.fabTooltip}>
-      <Button
-        sx={navbarButtonStyle(color)}
-        onClick={() =>
-          isOpen ? closeDrawer(diagramId) : openDrawer(diagramId)
-        }
-        aria-label={t.drawerTitle}
-        aria-pressed={isOpen}
-        startIcon={<HistoryRoundedIcon fontSize="small" aria-hidden />}
-      >
-        <span className={labelClassName}>{t.navMenuItem}</span>
-      </Button>
-    </Tooltip>
+    <VersionHistoryButtonView
+      isOpen={isOpen}
+      variant={variant}
+      onToggle={() => (isOpen ? closeDrawer(diagramId) : openDrawer(diagramId))}
+    />
   )
 }

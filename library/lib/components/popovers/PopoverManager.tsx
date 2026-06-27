@@ -142,75 +142,7 @@ type EdgePopoverType =
 
 type PopoverType = NodePopoverType | EdgePopoverType
 
-const editPopovers: {
-  class: React.FC<PopoverProps>
-  objectName: React.FC<PopoverProps>
-  communicationObjectName: React.FC<PopoverProps>
-  default: React.FC<PopoverProps>
-  ClassAggregation: React.FC<PopoverProps>
-  ClassInheritance: React.FC<PopoverProps>
-  ClassRealization: React.FC<PopoverProps>
-  ClassComposition: React.FC<PopoverProps>
-  ClassBidirectional: React.FC<PopoverProps>
-  ClassUnidirectional: React.FC<PopoverProps>
-  ClassDependency: React.FC<PopoverProps>
-  ActivityControlFlow: React.FC<PopoverProps>
-  ObjectLink: React.FC<PopoverProps>
-  CommunicationLink: React.FC<PopoverProps>
-  UseCaseAssociation: React.FC<PopoverProps>
-  UseCaseInclude: React.FC<PopoverProps>
-  UseCaseExtend: React.FC<PopoverProps>
-  UseCaseGeneralization: React.FC<PopoverProps>
-  PetriNetArc: React.FC<PopoverProps>
-  BPMNSequenceFlow: React.FC<PopoverProps>
-  BPMNMessageFlow: React.FC<PopoverProps>
-  BPMNAssociationFlow: React.FC<PopoverProps>
-  BPMNDataAssociationFlow: React.FC<PopoverProps>
-  SfcDiagramEdge: React.FC<PopoverProps>
-  ComponentDependency: React.FC<PopoverProps>
-  ComponentProvidedInterface: React.FC<PopoverProps>
-  ComponentRequiredInterface: React.FC<PopoverProps>
-  ComponentRequiredThreeQuarterInterface: React.FC<PopoverProps>
-  ComponentRequiredQuarterInterface: React.FC<PopoverProps>
-  DeploymentAssociation: React.FC<PopoverProps>
-  DeploymentDependency: React.FC<PopoverProps>
-  DeploymentProvidedInterface: React.FC<PopoverProps>
-  DeploymentRequiredInterface: React.FC<PopoverProps>
-  DeploymentRequiredThreeQuarterInterface: React.FC<PopoverProps>
-  DeploymentRequiredQuarterInterface: React.FC<PopoverProps>
-  FlowChartFlowline: React.FC<PopoverProps>
-  SyntaxTreeLink: React.FC<PopoverProps>
-  ReachabilityGraphArc: React.FC<PopoverProps>
-  Component: React.FC<PopoverProps>
-  ComponentSubsystem: React.FC<PopoverProps>
-  FlowchartTerminal: React.FC<PopoverProps>
-  FlowchartProcess: React.FC<PopoverProps>
-  FlowchartDecision: React.FC<PopoverProps>
-  FlowchartInputOutput: React.FC<PopoverProps>
-  FlowchartFunctionCall: React.FC<PopoverProps>
-  DeploymentComponent: React.FC<PopoverProps>
-  DeploymentNode: React.FC<PopoverProps>
-  SyntaxTreeNonterminal: React.FC<PopoverProps>
-  SyntaxTreeTerminal: React.FC<PopoverProps>
-  PetriNetPlace: React.FC<PopoverProps>
-  BPMNTask: React.FC<PopoverProps>
-  BPMNStartEvent: React.FC<PopoverProps>
-  BPMNIntermediateEvent: React.FC<PopoverProps>
-  BPMNEndEvent: React.FC<PopoverProps>
-  BPMNGateway: React.FC<PopoverProps>
-  BPMNSubprocess: React.FC<PopoverProps>
-  BPMNTransaction: React.FC<PopoverProps>
-  BPMNCallActivity: React.FC<PopoverProps>
-  BPMNAnnotation: React.FC<PopoverProps>
-  BPMNDataObject: React.FC<PopoverProps>
-  BPMNDataStore: React.FC<PopoverProps>
-  BPMNPool: React.FC<PopoverProps>
-  BPMNGroup: React.FC<PopoverProps>
-  ReachabilityGraphMarking: React.FC<PopoverProps>
-  Sfc: React.FC<PopoverProps>
-  SfcActionTable: React.FC<PopoverProps>
-  ActivitySwimlane: React.FC<PopoverProps>
-} = {
+const editPopovers: Record<PopoverType, React.FC<PopoverProps>> = {
   class: ClassEditPopover,
   objectName: ObjectEditPopover,
   communicationObjectName: CommunicationObjectNameEditPopover,
@@ -280,75 +212,7 @@ const editPopovers: {
   ActivitySwimlane: ActivitySwimlaneEditPopover,
 }
 
-const giveFeedbackPopovers: {
-  class: React.FC<PopoverProps>
-  objectName: React.FC<PopoverProps>
-  communicationObjectName: React.FC<PopoverProps>
-  default: React.FC<PopoverProps>
-  ClassAggregation: React.FC<PopoverProps>
-  ClassInheritance: React.FC<PopoverProps>
-  ClassRealization: React.FC<PopoverProps>
-  ClassComposition: React.FC<PopoverProps>
-  ClassBidirectional: React.FC<PopoverProps>
-  ClassUnidirectional: React.FC<PopoverProps>
-  ClassDependency: React.FC<PopoverProps>
-  ActivityControlFlow: React.FC<PopoverProps>
-  ObjectLink: React.FC<PopoverProps>
-  CommunicationLink: React.FC<PopoverProps>
-  UseCaseAssociation: React.FC<PopoverProps>
-  UseCaseInclude: React.FC<PopoverProps>
-  UseCaseExtend: React.FC<PopoverProps>
-  UseCaseGeneralization: React.FC<PopoverProps>
-  BPMNSequenceFlow: React.FC<PopoverProps>
-  BPMNMessageFlow: React.FC<PopoverProps>
-  BPMNAssociationFlow: React.FC<PopoverProps>
-  BPMNDataAssociationFlow: React.FC<PopoverProps>
-  ComponentDependency: React.FC<PopoverProps>
-  ComponentProvidedInterface: React.FC<PopoverProps>
-  ComponentRequiredInterface: React.FC<PopoverProps>
-  ComponentRequiredThreeQuarterInterface: React.FC<PopoverProps>
-  ComponentRequiredQuarterInterface: React.FC<PopoverProps>
-  DeploymentAssociation: React.FC<PopoverProps>
-  DeploymentDependency: React.FC<PopoverProps>
-  DeploymentProvidedInterface: React.FC<PopoverProps>
-  DeploymentRequiredInterface: React.FC<PopoverProps>
-  DeploymentRequiredThreeQuarterInterface: React.FC<PopoverProps>
-  DeploymentRequiredQuarterInterface: React.FC<PopoverProps>
-  FlowChartFlowline: React.FC<PopoverProps>
-  SyntaxTreeLink: React.FC<PopoverProps>
-  ReachabilityGraphArc: React.FC<PopoverProps>
-  PetriNetArc: React.FC<PopoverProps>
-  Component: React.FC<PopoverProps>
-  ComponentSubsystem: React.FC<PopoverProps>
-  FlowchartTerminal: React.FC<PopoverProps>
-  FlowchartProcess: React.FC<PopoverProps>
-  FlowchartDecision: React.FC<PopoverProps>
-  FlowchartInputOutput: React.FC<PopoverProps>
-  FlowchartFunctionCall: React.FC<PopoverProps>
-  DeploymentComponent: React.FC<PopoverProps>
-  DeploymentNode: React.FC<PopoverProps>
-  SyntaxTreeNonterminal: React.FC<PopoverProps>
-  SyntaxTreeTerminal: React.FC<PopoverProps>
-  PetriNetPlace: React.FC<PopoverProps>
-  BPMNTask: React.FC<PopoverProps>
-  BPMNStartEvent: React.FC<PopoverProps>
-  BPMNIntermediateEvent: React.FC<PopoverProps>
-  BPMNEndEvent: React.FC<PopoverProps>
-  BPMNGateway: React.FC<PopoverProps>
-  BPMNSubprocess: React.FC<PopoverProps>
-  BPMNTransaction: React.FC<PopoverProps>
-  BPMNCallActivity: React.FC<PopoverProps>
-  BPMNAnnotation: React.FC<PopoverProps>
-  BPMNDataObject: React.FC<PopoverProps>
-  BPMNDataStore: React.FC<PopoverProps>
-  BPMNPool: React.FC<PopoverProps>
-  BPMNGroup: React.FC<PopoverProps>
-  ReachabilityGraphMarking: React.FC<PopoverProps>
-  Sfc: React.FC<PopoverProps>
-  SfcActionTable: React.FC<PopoverProps>
-  ActivitySwimlane: React.FC<PopoverProps>
-  SfcDiagramEdge: React.FC<PopoverProps>
-} = {
+const giveFeedbackPopovers: Record<PopoverType, React.FC<PopoverProps>> = {
   class: ClassGiveFeedbackPopover,
   objectName: ObjectGiveFeedbackPopover,
   communicationObjectName: CommunicationObjectNameGiveFeedbackPopover,
@@ -418,75 +282,7 @@ const giveFeedbackPopovers: {
   SfcDiagramEdge: EdgeGiveFeedbackPopover,
 }
 
-const seeFeedbackPopovers: {
-  class: React.FC<PopoverProps>
-  objectName: React.FC<PopoverProps>
-  communicationObjectName: React.FC<PopoverProps>
-  default: React.FC<PopoverProps>
-  ClassAggregation: React.FC<PopoverProps>
-  ClassInheritance: React.FC<PopoverProps>
-  ClassRealization: React.FC<PopoverProps>
-  ClassComposition: React.FC<PopoverProps>
-  ClassBidirectional: React.FC<PopoverProps>
-  ClassUnidirectional: React.FC<PopoverProps>
-  ClassDependency: React.FC<PopoverProps>
-  ActivityControlFlow: React.FC<PopoverProps>
-  ObjectLink: React.FC<PopoverProps>
-  ReachabilityGraphArc: React.FC<PopoverProps>
-  CommunicationLink: React.FC<PopoverProps>
-  PetriNetArc: React.FC<PopoverProps>
-  UseCaseAssociation: React.FC<PopoverProps>
-  UseCaseInclude: React.FC<PopoverProps>
-  UseCaseExtend: React.FC<PopoverProps>
-  UseCaseGeneralization: React.FC<PopoverProps>
-  BPMNSequenceFlow: React.FC<PopoverProps>
-  BPMNMessageFlow: React.FC<PopoverProps>
-  BPMNAssociationFlow: React.FC<PopoverProps>
-  BPMNDataAssociationFlow: React.FC<PopoverProps>
-  ComponentDependency: React.FC<PopoverProps>
-  ComponentProvidedInterface: React.FC<PopoverProps>
-  ComponentRequiredInterface: React.FC<PopoverProps>
-  ComponentRequiredThreeQuarterInterface: React.FC<PopoverProps>
-  ComponentRequiredQuarterInterface: React.FC<PopoverProps>
-  DeploymentAssociation: React.FC<PopoverProps>
-  DeploymentDependency: React.FC<PopoverProps>
-  DeploymentProvidedInterface: React.FC<PopoverProps>
-  DeploymentRequiredInterface: React.FC<PopoverProps>
-  DeploymentRequiredThreeQuarterInterface: React.FC<PopoverProps>
-  DeploymentRequiredQuarterInterface: React.FC<PopoverProps>
-  FlowChartFlowline: React.FC<PopoverProps>
-  SyntaxTreeLink: React.FC<PopoverProps>
-  Component: React.FC<PopoverProps>
-  ComponentSubsystem: React.FC<PopoverProps>
-  FlowchartTerminal: React.FC<PopoverProps>
-  FlowchartProcess: React.FC<PopoverProps>
-  FlowchartDecision: React.FC<PopoverProps>
-  FlowchartInputOutput: React.FC<PopoverProps>
-  FlowchartFunctionCall: React.FC<PopoverProps>
-  DeploymentComponent: React.FC<PopoverProps>
-  DeploymentNode: React.FC<PopoverProps>
-  SyntaxTreeNonterminal: React.FC<PopoverProps>
-  SyntaxTreeTerminal: React.FC<PopoverProps>
-  PetriNetPlace: React.FC<PopoverProps>
-  BPMNTask: React.FC<PopoverProps>
-  BPMNStartEvent: React.FC<PopoverProps>
-  BPMNIntermediateEvent: React.FC<PopoverProps>
-  BPMNEndEvent: React.FC<PopoverProps>
-  BPMNGateway: React.FC<PopoverProps>
-  BPMNSubprocess: React.FC<PopoverProps>
-  BPMNTransaction: React.FC<PopoverProps>
-  BPMNCallActivity: React.FC<PopoverProps>
-  BPMNAnnotation: React.FC<PopoverProps>
-  BPMNDataObject: React.FC<PopoverProps>
-  BPMNDataStore: React.FC<PopoverProps>
-  BPMNPool: React.FC<PopoverProps>
-  BPMNGroup: React.FC<PopoverProps>
-  ReachabilityGraphMarking: React.FC<PopoverProps>
-  Sfc: React.FC<PopoverProps>
-  SfcActionTable: React.FC<PopoverProps>
-  ActivitySwimlane: React.FC<PopoverProps>
-  SfcDiagramEdge: React.FC<PopoverProps>
-} = {
+const seeFeedbackPopovers: Record<PopoverType, React.FC<PopoverProps>> = {
   class: ClassSeeFeedbackPopover,
   objectName: ObjectSeeFeedbackPopover,
   communicationObjectName: CommunicationObjectNameSeeFeedbackPopover,
@@ -603,7 +399,6 @@ export const PopoverManager = ({
   }
 
   let popoverOrigin: LocationPopover = {
-    anchorOrigin: { vertical: "top", horizontal: "right" },
     transformOrigin: { vertical: "top", horizontal: "left" },
   }
 
@@ -634,7 +429,6 @@ export const PopoverManager = ({
       open={open}
       anchorEl={anchorEl}
       onClose={onClose}
-      anchorOrigin={popoverOrigin.anchorOrigin}
       transformOrigin={popoverOrigin.transformOrigin}
       maxHeight={500}
       maxWidth={isEditing ? 278 : 400}

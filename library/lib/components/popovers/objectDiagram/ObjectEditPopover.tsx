@@ -1,10 +1,11 @@
-import { DividerLine, NodeStyleEditor } from "@/components/ui"
+import { NodeStyleEditor } from "@/components/styleEditor"
 import { useDiagramStore } from "@/store"
 import { ObjectNodeProps } from "@/types"
 import { useShallow } from "zustand/shallow"
 import { EditableAttributeList } from "../classDiagram/EditableAttributesList"
 import { EditableMethodsList } from "../classDiagram/EditableMethodsList"
 import { PopoverProps } from "../types"
+import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 
 export const ObjectEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
   const { nodes, setNodes } = useDiagramStore(
@@ -39,15 +40,18 @@ export const ObjectEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
   }
 
   return (
-    <>
+    <PopoverLayout title="Object">
       <NodeStyleEditor
         nodeData={nodeData}
+        colorEditorLabel="object"
         handleDataFieldUpdate={handleDataFieldUpdate}
       />
-      <DividerLine width="100%" />
-      <EditableAttributeList nodeId={elementId} />
-      <DividerLine width="100%" />
-      <EditableMethodsList nodeId={elementId} />
-    </>
+      <PopoverSection divider>
+        <EditableAttributeList nodeId={elementId} />
+      </PopoverSection>
+      <PopoverSection divider>
+        <EditableMethodsList nodeId={elementId} />
+      </PopoverSection>
+    </PopoverLayout>
   )
 }

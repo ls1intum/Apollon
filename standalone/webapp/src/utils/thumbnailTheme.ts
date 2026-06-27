@@ -16,10 +16,57 @@ type RgbColor = {
   a: number
 }
 
-// Neutral (not blue-tinted) so dark-mode thumbnails read like the real diagram:
-// light strokes / a mid-dark shape fill on the warm-neutral surface.
-const DARK_THUMBNAIL_STROKE = "#e4e4e1"
-const DARK_THUMBNAIL_FILL = "#383934"
+// In `compat` mode the exported SVG bakes the LIGHT palette (white fills, black
+// strokes/text) regardless of the live theme, so the dark variant must be
+// derived by recolor. To stay authentic the recolor mirrors the editor's own
+// dark token swap rather than inventing a palette: baked near-white fill is
+// --apollon-background, baked near-black stroke/text is --apollon-primary-contrast;
+// both are re-resolved against the live dark-theme tokens below.
+const DARK_THEME_TOKEN_FALLBACK = {
+  ink: "#ffffff",
+  surface: "#13161c",
+} as const
+
+let darkThumbnailTokens: { ink: string; surface: string } | null = null
+
+// The dark tokens are scoped to `:root[data-theme="dark"]`, so a detached probe
+// element can't read them — only <html> can. Force data-theme="dark" on the
+// document element, read the computed tokens, then restore. The mutation is
+// reverted within the same task so no dark frame paints; result is memoized.
+const resolveDarkThumbnailTokens = (): { ink: string; surface: string } => {
+  if (darkThumbnailTokens) return darkThumbnailTokens
+
+  if (typeof document === "undefined") {
+    return DARK_THEME_TOKEN_FALLBACK
+  }
+
+  const root = document.documentElement
+  const previousTheme = root.getAttribute("data-theme")
+
+  root.setAttribute("data-theme", "dark")
+  try {
+    const styles = getComputedStyle(root)
+    // getComputedStyle resolves var() to concrete colors; guard against an
+    // unresolved/empty value by falling back to the known dark hex.
+    const ink = styles.getPropertyValue("--apollon-primary-contrast").trim()
+    const surface = styles.getPropertyValue("--apollon-background").trim()
+    darkThumbnailTokens = {
+      ink: parseCssColor(ink) ? ink : DARK_THEME_TOKEN_FALLBACK.ink,
+      surface: parseCssColor(surface)
+        ? surface
+        : DARK_THEME_TOKEN_FALLBACK.surface,
+    }
+  } finally {
+    if (previousTheme === null) {
+      root.removeAttribute("data-theme")
+    } else {
+      root.setAttribute("data-theme", previousTheme)
+    }
+  }
+
+  return darkThumbnailTokens
+}
+
 const THUMBNAIL_THEME_CACHE_LIMIT = 300
 
 type ThumbnailThemeCacheEntry = {
@@ -114,12 +161,17 @@ const adaptSvgColorForDarkTheme = (
   const isNearBlack = luminance < 70
   const isNearWhite = luminance > 230
 
+  const { ink, surface } = resolveDarkThumbnailTokens()
+
+  // Mirror the editor's dark token swap: baked near-black stroke/text -> ink,
+  // baked near-white fill -> surface. User-authored colors aren't near-black/
+  // near-white, so the gate leaves them untouched.
   if (isNearBlack) {
-    return DARK_THUMBNAIL_STROKE
+    return ink
   }
 
   if (role === "fill" && isNearWhite) {
-    return DARK_THUMBNAIL_FILL
+    return surface
   }
 
   return value

@@ -10,7 +10,7 @@
  *
  * Run via: pnpm --filter @tumaet/server run migrate:string-to-json
  */
-import "../loadEnvironment.js"
+import "dotenv/config"
 import { loadConfig } from "../config.js"
 import { createRedisClient, k } from "../redis.js"
 import { logger } from "../logger.js"

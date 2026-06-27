@@ -18,6 +18,10 @@ FROM base AS builder
 
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json .npmrc ./
 COPY library/package.json ./library/
+# The library depends on the @tumaet/ui workspace package (build-time, bundled
+# into its dist) — needed for the library build below to resolve and for
+# `pnpm deploy` to walk the library's dependency tree.
+COPY packages/ui/package.json ./packages/ui/
 COPY standalone/server/package.json ./standalone/server/
 COPY standalone/webapp/package.json ./standalone/webapp/
 COPY vscode-extension/package.json ./vscode-extension/
@@ -28,6 +32,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile
 
 COPY library ./library
+COPY packages/ui ./packages/ui
 COPY standalone/server ./standalone/server
 COPY tsconfig*.json ./
 
@@ -38,6 +43,9 @@ FROM base AS deploy
 # Only the trees `pnpm deploy --filter=@tumaet/server` walks — skip webapp / vscode.
 COPY --from=builder /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml /app/.npmrc ./
 COPY --from=builder /app/library ./library
+# library declares @tumaet/ui as a dependency, so `pnpm deploy` walks it; its
+# files must be present (the copied node_modules links into here).
+COPY --from=builder /app/packages/ui ./packages/ui
 COPY --from=builder /app/standalone/server ./standalone/server
 COPY --from=builder /app/node_modules ./node_modules
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \

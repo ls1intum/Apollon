@@ -1,7 +1,8 @@
-import { Box, FormControlLabel, Checkbox } from "@mui/material"
 import { useReactiveEdge } from "@/hooks"
-import { EdgeStyleEditor, TextField } from "@/components/ui"
+import { Checkbox, TextField } from "@/components/ui"
+import { EdgeStyleEditor } from "@/components/styleEditor"
 import { PopoverProps } from "../types"
+import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 import { useReactFlow } from "@xyflow/react"
 import { useState, useCallback, useEffect } from "react"
 import { CustomEdgeProps } from "@/edges"
@@ -89,49 +90,39 @@ export const SfcEdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
   const edgeDataCustom = edge.data as CustomEdgeProps
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+    <PopoverLayout title="Edge">
       <EdgeStyleEditor
-        label="Edit Transition"
+        label="Style"
         edgeData={edgeDataCustom}
         handleDataFieldUpdate={(key, value) =>
           updateEdgeData(elementId, { [key]: value })
         }
       />
 
-      <TextField
-        label="Condition"
-        value={edgeData.displayName}
-        onChange={(e) => handleDisplayNameChange(e.target.value)}
-        placeholder="Enter transition condition"
-        size="small"
-        fullWidth
-      />
+      <PopoverSection title="Condition" divider>
+        <TextField
+          value={edgeData.displayName}
+          onChange={(e) => handleDisplayNameChange(e.target.value)}
+          placeholder="Condition"
+          fullWidth
+        />
 
-      {edgeData.displayName && (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={edgeData.showBar}
-                onChange={(e) => handleShowBarChange(e.target.checked)}
-                size="small"
-              />
-            }
-            label="Show crossbar"
-          />
+        {edgeData.displayName && (
+          <>
+            <Checkbox
+              checked={edgeData.showBar}
+              onCheckedChange={handleShowBarChange}
+              label="Show crossbar"
+            />
 
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={edgeData.isNegated}
-                onChange={(e) => handleIsNegatedChange(e.target.checked)}
-                size="small"
-              />
-            }
-            label="Negated condition (overline)"
-          />
-        </Box>
-      )}
-    </Box>
+            <Checkbox
+              checked={edgeData.isNegated}
+              onCheckedChange={handleIsNegatedChange}
+              label="Negated condition (overline)"
+            />
+          </>
+        )}
+      </PopoverSection>
+    </PopoverLayout>
   )
 }

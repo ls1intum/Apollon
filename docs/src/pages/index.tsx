@@ -70,12 +70,13 @@ export class DiagramComponent {
 
 const VANILLA_SNIPPET = `<link
   rel="stylesheet"
-  href="https://esm.sh/@tumaet/apollon@4.8.0/style.css"
+  href="https://esm.sh/@tumaet/apollon@4.9.0/style.css"
 />
 <div id="apollon" style="width: 100%; height: 600px"></div>
 
 <script type="module">
-  import { ApollonEditor } from "https://esm.sh/@tumaet/apollon@4.8.0"
+  // esm.sh serves Apollon's required yjs/y-protocols peers automatically.
+  import { ApollonEditor } from "https://esm.sh/@tumaet/apollon@4.9.0"
 
   const saved = localStorage.getItem("diagram")
   const editor = new ApollonEditor(document.getElementById("apollon"), {
@@ -111,7 +112,9 @@ function Hero() {
           </Link>
         </div>
         <div className={styles.install}>
-          <CodeBlock language="bash">npm install @tumaet/apollon</CodeBlock>
+          <CodeBlock language="bash">
+            npm install @tumaet/apollon yjs y-protocols
+          </CodeBlock>
         </div>
       </div>
     </header>
@@ -174,7 +177,7 @@ function LiveDemo() {
               >
                 {() => {
                   // Lazy-require: BrowserOnly only runs this on the client,
-                  // so the editor's emotion/MUI/xyflow imports stay out of
+                  // so the editor's Base UI / xyflow imports stay out of
                   // Docusaurus's SSR bundle.
                   const ApollonEmbed =
                     require("../components/ApollonEmbed").default
@@ -224,8 +227,9 @@ const WAYS: LinkCard[] = [
     body: (
       <>
         <code>@tumaet/apollon</code> on npm. Framework-agnostic by default;
-        Angular hosts install <strong>zero peer deps</strong>. A{" "}
-        <code>/react</code> subpath dedupes React when the host already has it.
+        Angular hosts install just <code>yjs</code> + <code>y-protocols</code>.
+        A <code>/react</code> subpath dedupes React when the host already has
+        it.
       </>
     ),
     to: "/library/",

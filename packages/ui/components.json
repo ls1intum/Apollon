@@ -1,0 +1,21 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "base-nova",
+  "base": "base",
+  "rsc": false,
+  "tsx": true,
+  "tailwind": {
+    "config": "",
+    "css": "src/styles/theme.css",
+    "baseColor": "zinc",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "aliases": {
+    "components": "@tumaet/ui/components",
+    "ui": "@tumaet/ui/components",
+    "utils": "@tumaet/ui/lib/utils",
+    "lib": "@tumaet/ui/lib"
+  },
+  "iconLibrary": "lucide"
+}

@@ -75,6 +75,28 @@ jobs:
       - name: Check release-note taxonomy sync
         run: node scripts/check-release-taxonomy.mjs
 
+  # The webapp and the published library are fully migrated off MUI/Emotion
+  # onto Base UI + lucide + tokens. Fail fast if either creeps back into
+  # source — this is the cheap backstop behind the ESLint no-restricted-imports
+  # rules (a stray import in a non-linted path, or a disabled rule, still trips
+  # here). Pure grep — no install needed.
+  no-mui-emotion:
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.should-skip != 'true' && needs.detect-changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Assert no MUI/Emotion imports in webapp/library source
+        run: |
+          if grep -rEn "@mui|@emotion" standalone/webapp/src library/lib; then
+            echo "::error::Found a @mui or @emotion reference in standalone/webapp/src or library/lib. These are fully removed — use @tumaet/ui (Base UI) + lucide-react instead."
+            exit 1
+          fi
+          echo "No @mui/@emotion references in standalone/webapp/src or library/lib."
+
   lint-and-format-check:
     needs: [detect-changes]
     if: needs.detect-changes.outputs.should-skip != 'true' && needs.detect-changes.outputs.code == 'true'
@@ -103,6 +125,13 @@ jobs:
         # scripts/) isn't affected.
         run: node scripts/check-no-perf-hooks.mjs
 
+      - name: Enforce webapp bundle-size budget
+        # Budgets in standalone/webapp/package.json#size-limit. MUI/Emotion
+        # removal materially shrank the bundle — capture the win so a heavy
+        # dependency (or a re-introduced CSS-in-JS runtime) can't silently
+        # regress it. Runs after build so dist/ exists.
+        run: pnpm --filter @tumaet/webapp run size
+
       - name: Typecheck docs
         # `docs/` imports `@tumaet/apollon` for the live embed, so its
         # `tsc --noEmit` resolves through the library's exports map and
@@ -111,6 +140,10 @@ jobs:
 
       - name: Run unit tests
         run: pnpm run test
+
+      - name: Run shared-ui unit tests
+        # The @tumaet/ui component suite (Base UI primitives + a11y behaviour).
+        run: pnpm --filter @tumaet/ui run test
 
       - name: Run webapp unit tests
         # Root `pnpm run test` covers only the library; run the webapp's vitest
@@ -169,7 +202,11 @@ jobs:
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: pnpm --filter @tumaet/webapp exec playwright install chromium
+        # Invoke @playwright/test's own CLI (not `pnpm exec playwright`): the
+        # webapp also has `playwright@1.61` for Storybook's vitest browser runner,
+        # so the bare `playwright` bin resolves to 1.61 and installs browsers the
+        # 1.59.1 test runner can't find. cli.js installs 1.59.1's browsers.
+        run: pnpm --filter @tumaet/webapp exec node node_modules/@playwright/test/cli.js install chromium
 
       # Shared with perf-firefox-tests; the dpkg-lock hang it guards is
       # documented in the composite action.
@@ -179,7 +216,10 @@ jobs:
           browser: chromium
 
       - name: Run E2E tests
-        run: pnpm --filter @tumaet/webapp exec playwright test tests/e2e/
+        # Use the test:e2e script (node …/@playwright/test/cli.js): running via
+        # `pnpm exec playwright test` picks up the 1.61 runner against 1.59.1 test
+        # files → "did not expect test.describe()".
+        run: pnpm --filter @tumaet/webapp run test:e2e
 
       # No chromium document-growth budget: the metric is engine-independent and
       # the Firefox budget (perf-firefox-tests below) is the per-PR guard for the
@@ -235,7 +275,9 @@ jobs:
 
       - name: Install Playwright Firefox
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: pnpm --filter @tumaet/webapp exec playwright install firefox
+        # @playwright/test's own CLI, so Firefox matches the 1.59.1 test runner
+        # (see the e2e job's install step for why `pnpm exec playwright` is wrong).
+        run: pnpm --filter @tumaet/webapp exec node node_modules/@playwright/test/cli.js install firefox
 
       # Shared with e2e-tests; the dpkg-lock hang it guards is documented in
       # the composite action.
@@ -395,6 +437,7 @@ jobs:
       [
         detect-changes,
         version-sync-check,
+        no-mui-emotion,
         lint-and-format-check,
         server-tests,
         library-node22-compat,

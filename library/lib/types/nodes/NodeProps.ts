@@ -48,10 +48,9 @@ export type ObjectNodeProps = {
   attributes: ClassNodeElement[]
 } & DefaultNodeProps
 
-export type CommunicationObjectNodeProps = {
-  methods: ClassNodeElement[]
-  attributes: ClassNodeElement[]
-} & DefaultNodeProps
+// A communication-diagram object is shaped identically to an object-diagram
+// object; alias rather than duplicate the definition.
+export type CommunicationObjectNodeProps = ObjectNodeProps
 
 export type ComponentNodeProps = {
   isComponentHeaderShown: boolean

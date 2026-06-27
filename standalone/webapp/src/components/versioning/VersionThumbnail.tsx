@@ -1,6 +1,5 @@
-import { Box, Skeleton } from "@mui/material"
-import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded"
-import BookmarkRoundedIcon from "@mui/icons-material/BookmarkRounded"
+import { Skeleton } from "@tumaet/ui/components/skeleton"
+import { HistoryIcon, BookmarkIcon } from "lucide-react"
 import { useEffect, useRef, useState, type FC } from "react"
 import {
   ApollonEditor,
@@ -15,12 +14,6 @@ import { log } from "@/logger"
  * enters the viewport (`IntersectionObserver`) and rendered client-side via
  * `ApollonEditor.exportModelAsSvg`. Result is data-URL'd and stamped into
  * an `<img>` so the browser handles `object-fit: contain` framing for free.
- *
- * Why not server-side render? The previous implementation hit a server
- * endpoint that booted JSDOM + the full library bundle on every cold call,
- * cost a network round-trip per thumbnail, and didn't exist in local mode.
- * Snapshots are immutable JSON and the library can render in-browser — the
- * server's job here was a wasted boundary.
  *
  * Concurrency note: `exportModelAsSvg` mounts a temporary 4000x4000 div
  * during rendering, so we serialize via a tiny module-level queue to avoid
@@ -46,8 +39,11 @@ function enqueueRender<T>(fn: () => Promise<T>): Promise<T> {
 interface Props {
   diagramId: string
   versionId: string
-  /** When true, render the small list-row variant; otherwise compare-banner size. */
-  compact?: boolean
+  /**
+   * Thumbnail size (one bounded axis): `"compact"` is the small list-row tile
+   * (64x40); `"banner"` (default) is the larger compare-banner size (160x100).
+   */
+  size?: "compact" | "banner"
   isAuto?: boolean
 }
 
@@ -61,9 +57,10 @@ function svgToDataUrl(svgText: string): string {
 export const VersionThumbnail: FC<Props> = ({
   diagramId,
   versionId,
-  compact = true,
+  size = "banner",
   isAuto = false,
 }) => {
+  const compact = size === "compact"
   const cacheKey = `${diagramId}/${versionId}`
   const [src, setSrc] = useState<string | null>(cache.get(cacheKey) ?? null)
   const [errored, setErrored] = useState(false)
@@ -113,27 +110,21 @@ export const VersionThumbnail: FC<Props> = ({
     }
   }, [diagramId, versionId, src, errored])
 
-  const KindIcon = isAuto ? HistoryRoundedIcon : BookmarkRoundedIcon
+  const KindIcon = isAuto ? HistoryIcon : BookmarkIcon
   const w = compact ? 64 : 160
   const h = compact ? 40 : 100
 
   return (
-    <Box
+    <div
       ref={ref}
-      sx={{
+      // Fixed light plate — the library exports diagrams with concrete
+      // dark stroke/text colors regardless of host theme, so a white
+      // backdrop keeps thumbnails legible in light and dark mode.
+      className="flex shrink-0 items-center justify-center overflow-hidden rounded bg-white"
+      style={{
         width: w,
         height: h,
-        flexShrink: 0,
-        // Fixed light plate — the library exports diagrams with concrete
-        // dark stroke/text colors regardless of host theme, so a white
-        // backdrop keeps thumbnails legible in light and dark mode.
-        bgcolor: "#ffffff",
-        borderRadius: 1,
-        overflow: "hidden",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        color: isAuto ? "#9aa0a6" : "#1a73e8",
+        color: isAuto ? "var(--home-text-muted)" : "var(--home-accent-base)",
       }}
       aria-hidden
     >
@@ -151,10 +142,10 @@ export const VersionThumbnail: FC<Props> = ({
           }}
         />
       ) : errored ? (
-        <KindIcon fontSize={compact ? "small" : "medium"} aria-hidden />
+        <KindIcon className={compact ? "size-4" : "size-6"} aria-hidden />
       ) : (
-        <Skeleton variant="rectangular" width={w} height={h} />
+        <Skeleton className="rounded-none" style={{ width: w, height: h }} />
       )}
-    </Box>
+    </div>
   )
 }

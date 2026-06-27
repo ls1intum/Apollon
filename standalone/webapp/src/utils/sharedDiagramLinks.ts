@@ -11,32 +11,32 @@ export type SharedDiagramViewOption = {
 
 export const SHARED_DIAGRAM_VIEW_OPTIONS: readonly SharedDiagramViewOption[] = [
   {
-    value: DiagramView.EDIT,
-    label: "Edit",
-    badge: "Edit mode",
-    description: "Anyone with this link can open and edit this shared copy.",
-  },
-  {
     value: DiagramView.COLLABORATE,
     label: "Collaborate",
-    badge: "Collaboration mode",
+    badge: "Collaborate",
     description: "Open the same shared copy as a live collaboration session.",
+  },
+  {
+    value: DiagramView.EDIT,
+    label: "Edit",
+    badge: "Edit",
+    description: "Anyone with this link can open and edit this shared copy.",
   },
   {
     value: DiagramView.GIVE_FEEDBACK,
     label: "Give feedback",
-    badge: "Feedback mode",
+    badge: "Feedback",
     description: "Let reviewers add feedback without changing modelling mode.",
   },
   {
     value: DiagramView.SEE_FEEDBACK,
     label: "Review feedback",
-    badge: "Review mode",
+    badge: "Review",
     description: "Open feedback in read-only review mode.",
   },
 ]
 
-export const DEFAULT_SHARED_DIAGRAM_VIEW = DiagramView.EDIT
+export const DEFAULT_SHARED_DIAGRAM_VIEW = DiagramView.COLLABORATE
 
 export const isDiagramView = (value: unknown): value is DiagramView =>
   typeof value === "string" &&

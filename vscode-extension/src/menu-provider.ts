@@ -321,10 +321,10 @@ export default class MenuProvider implements vscode.WebviewViewProvider {
       vscode.Uri.joinPath(this._extensionUri, bundleDir, "dist", "index.css")
     )
     const nonce = randomBytes(16).toString("base64")
-    // style-src 'unsafe-inline' required by emotion, which @tumaet/apollon
-    // ships in the editor webview. Emotion injects runtime <style data-emotion>
-    // tags without a nonce. Removing this needs a CSP-nonce option in the
-    // library's createCache call — see emotion-js/emotion#403.
+    // style-src 'unsafe-inline' is required because the editor (React Flow /
+    // xyflow) sets inline `style` attributes on nodes/edges at runtime, which a
+    // nonce-based CSP cannot cover. Keep it until the webview no longer relies on
+    // inline styles.
     const csp = [
       `default-src 'none'`,
       // `blob:` is required for PNG export: the SVG→PNG converter loads the

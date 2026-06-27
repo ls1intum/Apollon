@@ -20,35 +20,41 @@ function fileMenuButton(page: Page) {
   return page.locator("#file-menu-button").first()
 }
 
-async function openTemporaryLocalDiagram(page: Page) {
+async function openTemporaryLocalDiagram(
+  page: Page,
+  diagramType = "ClassDiagram"
+) {
   const modelId = "e2e-local-model-id"
 
   await page.goto("/")
-  await page.evaluate((id) => {
-    const storeValue = JSON.stringify({
-      state: {
-        models: {
-          [id]: {
-            id,
-            model: {
+  await page.evaluate(
+    ({ id, type }) => {
+      const storeValue = JSON.stringify({
+        state: {
+          models: {
+            [id]: {
               id,
-              type: "ClassDiagram",
-              assessments: {},
-              edges: [],
-              nodes: [],
-              title: "E2E Diagram",
-              version: "4.0.0",
+              model: {
+                id,
+                type,
+                assessments: {},
+                edges: [],
+                nodes: [],
+                title: "E2E Diagram",
+                version: "4.0.0",
+              },
+              lastModifiedAt: new Date().toISOString(),
             },
-            lastModifiedAt: new Date().toISOString(),
           },
+          currentModelId: id,
         },
-        currentModelId: id,
-      },
-      version: 0,
-    })
+        version: 0,
+      })
 
-    localStorage.setItem("persistenceModelStore", storeValue)
-  }, modelId)
+      localStorage.setItem("persistenceModelStore", storeValue)
+    },
+    { id: modelId, type: diagramType }
+  )
 
   await page.goto(`/local/${modelId}`)
   const isLegacyRouting =
@@ -97,6 +103,177 @@ test.describe("Editor loading", () => {
 })
 
 // ---------------------------------------------------------------------------
+// Palette drag alignment — the dragged preview must stay pixel-pinned to the
+// cursor (regression guard for the flex-centring "jump on grab" bug).
+// ---------------------------------------------------------------------------
+
+test.describe("Palette drag alignment", () => {
+  test.beforeEach(async ({ page }) => {
+    await openTemporaryLocalDiagram(page)
+    await waitForCanvasReady(page, false)
+  })
+
+  // Read the live on-screen rect of the drag ghost's preview. The ghost is a
+  // fixed-position portal appended to <body>, so its preview is the one
+  // `[data-draggable-preview]` that is NOT inside the palette <aside>.
+  const ghostPreviewRect = (page: Page) =>
+    page.evaluate(() => {
+      const g = Array.from(
+        document.querySelectorAll<HTMLElement>("[data-draggable-preview]")
+      ).find((p) => !p.closest('[data-testid="apollon-palette"]'))
+      if (!g) return null
+      const r = g.getBoundingClientRect()
+      return { left: r.left, top: r.top, width: r.width, height: r.height }
+    })
+
+  test("the grabbed point stays under the cursor — no jump on grab", async ({
+    page,
+  }) => {
+    const palette = page.locator('[data-testid="apollon-palette"]').first()
+    const preview = palette.locator("[data-draggable-preview]").first()
+    await expect(preview).toBeVisible()
+    const box = await preview.boundingBox()
+    expect(box).not.toBeNull()
+
+    // Grab at the preview's centre and drag by a known delta.
+    const grabX = box!.x + box!.width / 2
+    const grabY = box!.y + box!.height / 2
+    await page.mouse.move(grabX, grabY)
+    await page.mouse.down()
+    const DX = 160
+    const DY = 120
+    await page.mouse.move(grabX + DX, grabY + DY, { steps: 8 })
+
+    const ghost = await ghostPreviewRect(page)
+    expect(ghost, "drag ghost should be rendered").not.toBeNull()
+
+    // The grabbed point (the preview's centre) must sit exactly under the cursor.
+    // A "jump on grab" would offset the ghost's centre from the cursor; the bug
+    // was the palette entry's flex-centring being applied twice.
+    const ghostCenterX = ghost!.left + ghost!.width / 2
+    const ghostCenterY = ghost!.top + ghost!.height / 2
+    expect(Math.abs(ghostCenterX - (grabX + DX))).toBeLessThanOrEqual(1)
+    expect(Math.abs(ghostCenterY - (grabY + DY))).toBeLessThanOrEqual(1)
+
+    await page.mouse.up()
+  })
+
+  test("the ghost matches the dropped node's on-screen size at the current zoom", async ({
+    page,
+  }) => {
+    const palette = page.locator('[data-testid="apollon-palette"]').first()
+    const preview = palette.locator("[data-draggable-preview]").first()
+    await expect(preview).toBeVisible()
+    const box = await preview.boundingBox()
+    expect(box).not.toBeNull()
+
+    // Drag the item onto the canvas centre.
+    await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2)
+    await page.mouse.down()
+    const canvas = page.locator(".react-flow").first()
+    const cbox = await canvas.boundingBox()
+    expect(cbox).not.toBeNull()
+    await page.mouse.move(
+      cbox!.x + cbox!.width / 2,
+      cbox!.y + cbox!.height / 2,
+      { steps: 10 }
+    )
+
+    // Size of the dragged ghost, captured mid-drag.
+    const ghost = await ghostPreviewRect(page)
+    expect(ghost, "drag ghost should be rendered").not.toBeNull()
+
+    await page.mouse.up()
+
+    // The node that just landed.
+    const node = page.locator(".react-flow__node").first()
+    await expect(node).toBeVisible()
+    const nodeBox = await node.boundingBox()
+    expect(nodeBox).not.toBeNull()
+
+    // WYSIWYG: the dragged ghost is the same on-screen size as the dropped node
+    // (both scale with the canvas zoom). Before the fix the ghost was a fixed
+    // 0.8x palette preview, so it mismatched the zoom-scaled node by ~20%+.
+    // Tolerance covers the node's border/padding vs the bare preview SVG.
+    expect(Math.abs(ghost!.width - nodeBox!.width)).toBeLessThanOrEqual(6)
+    expect(Math.abs(ghost!.height - nodeBox!.height)).toBeLessThanOrEqual(6)
+  })
+
+  // The activity swimlane previews small (160×100) but drops large (400×240),
+  // so its ghost must fold the drop/preview ratio (~2.5× wide, ~2.4× tall) into
+  // the scale — otherwise it would drag at the tiny preview size and land wrong.
+  test("the swimlane ghost reflects its larger drop size, not its small preview", async ({
+    page,
+  }) => {
+    // Re-open as an Activity diagram so the palette exposes the swimlane.
+    await openTemporaryLocalDiagram(page, "ActivityDiagram")
+    await waitForCanvasReady(page, false)
+
+    const palette = page.locator('[data-testid="apollon-palette"]').first()
+    // The swimlane is the one Activity palette entry whose SVG renders the
+    // 160×100 preview viewBox (see dropElementConfigs in
+    // library/lib/constants.ts) — a stable id that survives palette re-ordering.
+    const preview = palette.locator(
+      '[data-draggable-preview]:has(svg[viewBox="0 0 160 100"])'
+    )
+    await expect(preview).toBeVisible()
+    const box = await preview.boundingBox()
+    expect(box).not.toBeNull()
+
+    // Drag the swimlane onto the canvas centre.
+    await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2)
+    await page.mouse.down()
+    const canvas = page.locator(".react-flow").first()
+    const cbox = await canvas.boundingBox()
+    expect(cbox).not.toBeNull()
+    await page.mouse.move(
+      cbox!.x + cbox!.width / 2,
+      cbox!.y + cbox!.height / 2,
+      { steps: 10 }
+    )
+
+    // Size of the dragged ghost, captured mid-drag.
+    const ghost = await ghostPreviewRect(page)
+    expect(ghost, "drag ghost should be rendered").not.toBeNull()
+
+    // Read the live canvas zoom from the React Flow viewport transform
+    // (matrix(scaleX, …)). The palette preview is NOT zoom-scaled but everything
+    // on the canvas is, so the ghost's true on-screen drop size is dropW/H × zoom.
+    const zoom = await page.evaluate(() => {
+      const vp = document.querySelector<HTMLElement>(".react-flow__viewport")
+      if (!vp) return null
+      const m = new DOMMatrixReadOnly(getComputedStyle(vp).transform)
+      return m.a
+    })
+    expect(zoom, "canvas zoom should be readable").not.toBeNull()
+
+    // The ghost reflects the 400×240 DROP size (× zoom), not the 160×100 preview
+    // size. Before the fix the ghost scaled only by zoom/previewScale, so it
+    // rendered ~2.5× too narrow and ~2.4× too short. Tolerance covers sub-pixel
+    // rounding in the transform.
+    expect(Math.abs(ghost!.width - 400 * zoom!)).toBeLessThanOrEqual(4)
+    expect(Math.abs(ghost!.height - 240 * zoom!)).toBeLessThanOrEqual(4)
+
+    // And it is materially bigger than its own (non-zoom-scaled) palette preview:
+    // at zoom 1 the width ratio is dropWidth/width × 1/previewScale ≈ 2.5/0.8.
+    expect(ghost!.width).toBeGreaterThan(box!.width * 2)
+    expect(ghost!.height).toBeGreaterThan(box!.height * 2)
+
+    await page.mouse.up()
+
+    // WYSIWYG end-to-end: the ghost matches the swimlane node that just landed
+    // at its true 400×240 drop size. Without the ratio fix the ghost would be
+    // ~2.5× too small versus this node.
+    const node = page.locator(".react-flow__node").first()
+    await expect(node).toBeVisible()
+    const nodeBox = await node.boundingBox()
+    expect(nodeBox).not.toBeNull()
+    expect(Math.abs(ghost!.width - nodeBox!.width)).toBeLessThanOrEqual(8)
+    expect(Math.abs(ghost!.height - nodeBox!.height)).toBeLessThanOrEqual(8)
+  })
+})
+
+// ---------------------------------------------------------------------------
 // Template loading – ensures a non-empty diagram
 // ---------------------------------------------------------------------------
 
@@ -108,7 +285,7 @@ test.describe("Template diagram interactions", () => {
     // Load the Adapter template via File → New Diagram → Use template → Create
     await fileMenuButton(page).click()
     await page.getByText("New Diagram").click()
-    await page.getByRole("button", { name: "Use template" }).click()
+    await page.getByRole("tab", { name: "Use template" }).click()
     await page.getByRole("button", { name: "Create Diagram" }).click()
     await waitForCanvasReady(page)
 
@@ -153,7 +330,7 @@ test.describe("Template diagram interactions", () => {
 
     await fileMenuButton(page).click()
     await page.getByText("New Diagram").click()
-    await page.getByRole("button", { name: "Use template" }).click()
+    await page.getByRole("tab", { name: "Use template" }).click()
 
     const nameInput = page.getByLabel("Name")
     await expect(nameInput).toHaveValue("Adapter")
@@ -183,7 +360,7 @@ test.describe("Template diagram interactions", () => {
 
     await fileMenuButton(page).click()
     await page.getByText("New Diagram").click()
-    await page.getByRole("button", { name: "Use template" }).click()
+    await page.getByRole("tab", { name: "Use template" }).click()
 
     // Previews render lazily off an idle queue (a hidden editor per template),
     // so allow generous time for the first light-mode thumbnail to appear. Assert
@@ -200,7 +377,7 @@ test.describe("Template diagram interactions", () => {
     const createFromTemplate = async () => {
       await fileMenuButton(page).click()
       await page.getByText("New Diagram").click()
-      await page.getByRole("button", { name: "Use template" }).click()
+      await page.getByRole("tab", { name: "Use template" }).click()
       await page.getByRole("button", { name: "Create Diagram" }).click()
       await waitForCanvasReady(page)
     }
@@ -361,12 +538,14 @@ test.describe("Navbar", () => {
     await page.getByRole("menuitem", { name: "Privacy" }).click()
     await expect(page).toHaveURL(/\/privacy$/)
 
-    // Hop across legal pages via the footer; the origin must be forwarded, not
-    // replaced with the current /imprint|/privacy path.
-    const footer = page.getByRole("contentinfo")
-    await footer.getByRole("link", { name: "Imprint" }).click()
+    // Hop across legal pages via the sub-page Help menu (the footer is retired);
+    // the origin must be forwarded, not replaced with the current
+    // /imprint|/privacy path.
+    await page.getByRole("button", { name: "Help" }).click()
+    await page.getByRole("menuitem", { name: "Imprint" }).click()
     await expect(page).toHaveURL(/\/imprint$/)
-    await footer.getByRole("link", { name: "Privacy" }).click()
+    await page.getByRole("button", { name: "Help" }).click()
+    await page.getByRole("menuitem", { name: "Privacy" }).click()
     await expect(page).toHaveURL(/\/privacy$/)
 
     await page.getByRole("link", { name: "Back to diagram" }).click()
@@ -391,25 +570,23 @@ test.describe("Mobile responsive layout", () => {
     await openTemporaryLocalDiagram(page)
     await waitForCanvasReady(page, false)
 
-    await page.getByRole("button", { name: "open options" }).click()
+    // The editor mobile pill carries File as its OWN dropdown (no "…" overflow).
+    await page.getByRole("button", { name: "File" }).click()
 
-    const optionsMenu = page.getByRole("menu", { name: "open options" })
-    await optionsMenu.getByRole("button", { name: "File" }).click()
-    await page.getByRole("menuitem", { name: "Export" }).click()
-
-    const exportMenu = page.getByRole("menu", { name: "Export" })
-    await expect(exportMenu).toBeVisible()
+    // Export is a flat labelled group inside the File menu, not a nested submenu.
+    const fileMenu = page.getByRole("menu", { name: "File" })
+    await expect(fileMenu).toBeVisible()
     await expect(
-      exportMenu.getByRole("menuitem", { name: "As SVG" })
+      fileMenu.getByRole("menuitem", { name: "As SVG" })
     ).toBeVisible()
     await expect(
-      exportMenu.getByRole("menuitem", { name: "As PDF" })
+      fileMenu.getByRole("menuitem", { name: "As PDF" })
     ).toBeVisible()
 
-    const exportMenuBox = await exportMenu.boundingBox()
-    expect(exportMenuBox).not.toBeNull()
-    expect(exportMenuBox!.x).toBeGreaterThanOrEqual(0)
-    expect(exportMenuBox!.x + exportMenuBox!.width).toBeLessThanOrEqual(
+    const fileMenuBox = await fileMenu.boundingBox()
+    expect(fileMenuBox).not.toBeNull()
+    expect(fileMenuBox!.x).toBeGreaterThanOrEqual(0)
+    expect(fileMenuBox!.x + fileMenuBox!.width).toBeLessThanOrEqual(
       PHONE_PORTRAIT.width
     )
   })
@@ -421,19 +598,20 @@ test.describe("Mobile responsive layout", () => {
     await openTemporaryLocalDiagram(page)
     await waitForCanvasReady(page, false)
 
-    await page.getByRole("button", { name: "open options" }).click()
+    await page.getByRole("button", { name: "File" }).click()
 
-    const optionsMenu = page.getByRole("menu", { name: "open options" })
-    await optionsMenu.getByRole("button", { name: "File" }).click()
-    await page.getByRole("menuitem", { name: "New Diagram" }).click()
+    await page
+      .getByRole("menu", { name: "File" })
+      .getByRole("menuitem", { name: "New Diagram" })
+      .click()
 
     const dialog = page.getByRole("dialog", { name: "New Diagram" })
     await expect(dialog).toBeVisible()
     await expect(
-      dialog.getByRole("button", { name: "Blank diagram" })
+      dialog.getByRole("tab", { name: "Blank diagram" })
     ).toBeVisible()
     await expect(
-      dialog.getByRole("button", { name: "Use template" })
+      dialog.getByRole("tab", { name: "Use template" })
     ).toBeVisible()
 
     const dialogBox = await dialog.boundingBox()
@@ -455,9 +633,7 @@ test.describe("Mobile responsive layout", () => {
     await openTemporaryLocalDiagram(page)
     await waitForCanvasReady(page, false)
 
-    await expect(
-      page.getByRole("button", { name: "open options" })
-    ).toBeVisible()
+    await expect(page.getByRole("button", { name: "File" })).toBeVisible()
 
     const palette = page.getByTestId("apollon-palette")
     await expect(palette).toBeVisible()
@@ -480,17 +656,20 @@ test.describe("Mobile responsive layout", () => {
     )
     expect(overflow).toBeLessThanOrEqual(1)
 
-    await page.getByRole("button", { name: "open options" }).click()
-
-    const menu = page.getByRole("menu", { name: "open options" })
-    await expect(menu).toBeVisible()
-    await expect(menu.getByText("Theme", { exact: true })).toBeVisible()
-
-    const menuBox = await menu.boundingBox()
+    // The File dropdown uses the shared mobile-menu width contract (≤ 240px).
+    await page.getByRole("button", { name: "File" }).click()
+    const fileMenu = page.getByRole("menu", { name: "File" })
+    await expect(fileMenu).toBeVisible()
+    const menuBox = await fileMenu.boundingBox()
     expect(menuBox?.width).toBeLessThanOrEqual(240)
-
-    // Share is a primary icon on the pill, not in the overflow menu.
     await page.keyboard.press("Escape")
+
+    // Theme is a direct icon toggle on the pill, not tucked behind an overflow.
+    await expect(
+      page.getByRole("button", { name: /Switch to (light|dark) mode/ })
+    ).toBeVisible()
+
+    // Share is a primary icon on the pill too.
     await page.getByRole("button", { name: "Share" }).click()
 
     const shareDialog = page.getByRole("dialog", { name: "Share" })
@@ -533,8 +712,8 @@ test.describe("Mobile responsive layout", () => {
       )
     }, SAFE_INSET)
 
-    // Landscape is wide enough for the full action bar — it keeps every control
-    // (the overflow "open options" pill is for narrow portrait only).
+    // Landscape keeps the same compact pill of icon-only controls (File · Share ·
+    // Version · Help · Theme) — every control stays reachable on the pill.
     const actions = page.locator('[aria-label="Editor actions"]')
     await expect(actions).toBeVisible()
 

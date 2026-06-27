@@ -5,8 +5,13 @@ import {
   releasesLink,
   repositoryLink,
 } from "@/constants"
-import { useModalContext } from "@/contexts"
-import { Button } from "@/components/ui/button"
+import { Button } from "@tumaet/ui/components/button"
+import { DialogFooter } from "@tumaet/ui/components/dialog"
+
+type AboutModalProps = {
+  /** Called when the user dismisses the modal via the Close button. */
+  onClose: () => void
+}
 
 const npmLink = "https://www.npmjs.com/package/@tumaet/apollon"
 const licenseLink = `${repositoryLink}/blob/main/LICENSE`
@@ -14,7 +19,7 @@ const aetLink = "https://github.com/ls1intum"
 const tumLink = "https://www.tum.de/en/"
 
 const linkClass =
-  "rounded-sm text-[var(--home-accent-base)] underline underline-offset-2 transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-[var(--home-accent-ring)] focus-visible:outline-offset-2"
+  "rounded-sm text-primary underline underline-offset-2 transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
 
 const ExternalLink = ({
   href,
@@ -28,11 +33,9 @@ const ExternalLink = ({
   </a>
 )
 
-export const AboutModal = () => {
-  const { closeModal } = useModalContext()
-
+export const AboutModal = ({ onClose }: AboutModalProps) => {
   return (
-    <div className="flex flex-col gap-5 text-sm text-[var(--apollon-primary-contrast)]">
+    <div className="flex flex-col gap-5 text-sm text-foreground">
       <p className="leading-relaxed">
         Apollon is an open-source UML modeling editor built by the{" "}
         <ExternalLink href={aetLink}>AET team</ExternalLink> at{" "}
@@ -58,11 +61,11 @@ export const AboutModal = () => {
         <ExternalLink href={licenseLink}>License (MIT)</ExternalLink>
       </div>
 
-      <div className="flex justify-end">
-        <Button variant="default" onClick={closeModal}>
+      <DialogFooter>
+        <Button variant="outline" onClick={onClose}>
           Close
         </Button>
-      </div>
+      </DialogFooter>
     </div>
   )
 }

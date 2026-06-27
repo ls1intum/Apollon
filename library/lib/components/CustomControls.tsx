@@ -1,9 +1,8 @@
 import { Controls, useReactFlow, useStore } from "@xyflow/react"
 import { useDiagramStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
-import { UndoIcon } from "./Icon/UndoIcon"
-import { RedoIcon } from "./Icon/RedoIcon"
-import { Tooltip } from "@mui/material"
+import { Redo2, Undo2 } from "lucide-react"
+import { Tooltip } from "@/components/ui"
 
 /**
  * Bottom-left control cluster. Every button shares one idiom
@@ -58,7 +57,7 @@ export const CustomControls = () => {
               disabled={!canUndo}
               aria-label="Undo"
             >
-              <UndoIcon width={18} height={18} fill="currentColor" />
+              <Undo2 width={18} height={18} aria-hidden="true" />
             </button>
           </span>
         </Tooltip>
@@ -73,7 +72,7 @@ export const CustomControls = () => {
               disabled={!canRedo}
               aria-label="Redo"
             >
-              <RedoIcon width={18} height={18} fill="currentColor" />
+              <Redo2 width={18} height={18} aria-hidden="true" />
             </button>
           </span>
         </Tooltip>

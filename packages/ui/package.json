@@ -1,0 +1,69 @@
+{
+  "name": "@tumaet/ui",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    "./components/*": {
+      "types": "./dist/components/*.d.ts",
+      "default": "./src/components/*"
+    },
+    "./styles/theme.css": "./src/styles/theme.css",
+    "./styles/tokens.css": "./src/styles/tokens.css",
+    "./lib/utils": "./src/lib/utils.ts",
+    "./lib/color-swatch-tokens": {
+      "types": "./dist/lib/color-swatch-tokens.d.ts",
+      "default": "./src/lib/color-swatch-tokens.ts"
+    },
+    "./theme": {
+      "types": "./dist/theme.d.ts",
+      "default": "./src/theme.ts"
+    }
+  },
+  "scripts": {
+    "build:types": "tsc -p tsconfig.json --declaration --emitDeclarationOnly --noEmit false --outDir dist",
+    "build:css": "tailwindcss -i src/styles/components.css -o dist/components.css",
+    "build:css:watch": "tailwindcss -i src/styles/components.css -o dist/components.css --watch",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "peerDependencies": {
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "dependencies": {
+    "@base-ui/react": "catalog:",
+    "class-variance-authority": "catalog:",
+    "clsx": "catalog:",
+    "cmdk": "catalog:",
+    "lucide-react": "catalog:",
+    "tailwind-merge": "catalog:",
+    "tailwindcss": "catalog:"
+  },
+  "devDependencies": {
+    "@eslint/js": "catalog:",
+    "@storybook/addon-docs": "catalog:",
+    "@storybook/react-vite": "catalog:",
+    "@tailwindcss/cli": "4.0.17",
+    "@tailwindcss/vite": "catalog:",
+    "@testing-library/jest-dom": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@testing-library/user-event": "14.6.1",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "eslint": "catalog:",
+    "eslint-plugin-react": "catalog:",
+    "eslint-plugin-react-hooks": "catalog:",
+    "globals": "catalog:",
+    "jsdom": "catalog:",
+    "storybook": "catalog:",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  }
+}

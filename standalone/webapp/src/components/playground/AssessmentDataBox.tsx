@@ -39,7 +39,7 @@ export const AssessmentDataBox: React.FC<Props> = ({
   }
 
   return (
-    <div className="p-2 border border-gray-400 rounded-md flex flex-col gap-2">
+    <div className="p-2 border border-border rounded-md flex flex-col gap-2">
       <label className="font-semibold">Selected Elements ids:</label>
       <div className="flex flex-col">
         {assessmentSelectedElements.map((id) => (
@@ -50,7 +50,7 @@ export const AssessmentDataBox: React.FC<Props> = ({
       </div>
 
       {assessmentDatas.map((data) => (
-        <div key={data.feedback} className="border-b border-gray-300 text-sm">
+        <div key={data.feedback} className="border-b border-border text-sm">
           <div>
             <span className="font-bold">name:</span> {data.name}
           </div>

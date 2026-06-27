@@ -1,0 +1,702 @@
+/* ──────────────────────────────────────────────────────────────────────────
+   tokens.css — the SINGLE source of truth for Apollon's design tokens.
+
+   Three layers (light values in :root, dark deltas in :root[data-theme="dark"]):
+
+     1. Primitives — the only place literal hex/rgb live (brand palette).
+     2. --apollon-* — the public editor theming API. References primitives ONLY,
+        never --home-*, so external embedders of @tumaet/apollon work standalone.
+     3. --home-* — app-level semantics for the webapp. References --apollon-*
+        and primitives.
+
+   Static CSS = correct first paint, no runtime <style> injection.
+   ────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  color-scheme: light dark;
+
+  /* ── Layer 1: primitives (light) ───────────────────────────────────────── */
+
+  /* Brand / neutral palette */
+  --primitive-white: #fff;
+  --primitive-black: #000000;
+  --primitive-blue-500: #2e78b6;
+  --primitive-slate-500: #6c757d;
+
+  /* Editor neutrals */
+  --primitive-gray-50: #f8f9fa;
+  --primitive-gray-100: #e9ecef;
+  --primitive-gray-200: #dee2e6;
+  --primitive-gray-700: #495057;
+
+  /* Editor status */
+  --primitive-warning-yellow: #ffc107;
+  --primitive-warning-bg: #fff3cd;
+  --primitive-warning-border: #ffeeba;
+  --primitive-danger-color: #721c24;
+  --primitive-danger-bg: #f8d7da;
+  --primitive-danger-border: #f5c6cb;
+  --primitive-guide-vertical: #d63031;
+  --primitive-guide-horizontal: #0984e3;
+  --primitive-grid: rgba(36, 39, 36, 0.1);
+
+  /* Home surfaces (light) — shadcn-canonical elevation: the RESTING raised
+     surface (cards / popovers / menus) is WHITE; separation comes from their
+     border + shadow, not a gray plate. The cool neutral-slate grays are reserved
+     for interaction states — hover/highlight (raised-hover, = --color-accent) and
+     the recessed muted well (sunken, = --color-muted) — and are kept DISTINCT so
+     the elevation model doesn't collapse (hover is lighter, sunken is deeper). */
+  --primitive-surface-raised: #ffffff;
+  --primitive-surface-raised-hover: #f1f5f9;
+  --primitive-surface-sunken: #eef2f6;
+  --primitive-surface-raised-active: #e2e8f0;
+  --primitive-surface-row-alt: #f8fafc;
+
+  /* Home text (light). text-muted is one step lighter than secondary but still
+     clears WCAG AA (4.5:1) on every light surface incl. sunken (#616c7a = 5.0:1
+     on cards, 4.71:1 on sunken); a lighter muted drops below AA on raised/sunken. */
+  --primitive-text-primary: #12161f;
+  --primitive-text-secondary: #54606f;
+  --primitive-text-muted: #616c7a;
+
+  /* Home borders (light) — cool slate */
+  --primitive-border-default: #cdd5df;
+  --primitive-border-strong: #aeb8c5;
+  --primitive-border-subtle: #e3e8ef;
+
+  /* Home accent (light). base is the brand navy; -ring (focus rings) is the same
+     navy in BOTH themes, so it references base. -strong (text/icon ON a soft
+     accent fill) equals base in light but diverges in dark (-> white), so it gets
+     its own literal here and a dark override below. */
+  --primitive-accent-base: #0f3a66;
+  --primitive-accent-soft: #d3e7fb;
+  --primitive-accent-strong: var(--primitive-accent-base);
+  --primitive-accent-ring: var(--primitive-accent-base);
+  --primitive-accent-contrast: #fff;
+
+  /* On-accent (translucent white over accent banner / dark navbar) */
+  --primitive-on-accent-bg: rgba(255, 255, 255, 0.14);
+  --primitive-on-accent-bg-hover: rgba(255, 255, 255, 0.24);
+  --primitive-on-accent-border: rgba(255, 255, 255, 0.22);
+  --primitive-on-accent-text: #fff;
+
+  /* Badge / status (light) */
+  --primitive-badge-bg: #c2cfdd;
+  --primitive-badge-fold: #0f3a66;
+  --primitive-text-on-badge: #142334;
+  --primitive-favorite-star: #f2b200;
+
+  /* Diagram tags (light) */
+  --primitive-tag-type-bg: #d4dce7;
+  --primitive-tag-type-text: #2e4a65;
+  --primitive-tag-local-bg: #e6dfc8;
+  --primitive-tag-local-text: #5a4a28;
+  --primitive-tag-shared-bg: #c5e4e2;
+  --primitive-tag-shared-text: #1d514e;
+
+  /* Shadows / glow (light) */
+  --primitive-shadow-card-hover: rgba(0, 0, 0, 0.1);
+  --primitive-shadow-overlay: rgba(0, 0, 0, 0.18);
+
+  /* Pure-black shadow ink — the color-mix base for shadows that must read on a
+     DARK surface (a low-alpha slate vanishes there). Theme-independent: black is
+     black in both themes, so this is defined once. */
+  --primitive-shadow-ink: #000;
+
+  /* Warning banner (light) */
+  --primitive-banner-warning-bg: #fff7e6;
+  --primitive-banner-warning-border: #f6d28b;
+  --primitive-banner-warning-icon: #b7791f;
+  --primitive-banner-warning-text: #122038;
+  --primitive-banner-warning-muted: #4e5e79;
+  --primitive-banner-warning-btn-bg: #f7faff;
+  --primitive-banner-warning-btn-text: #8c5a10;
+  --primitive-banner-warning-btn-border: #f6d28b;
+  --primitive-banner-warning-btn-hover: #f5e8c8;
+
+  /* Toast semantic accents (light) */
+  --primitive-toast-success: #197d4e;
+  --primitive-toast-error: #c33640;
+  --primitive-toast-warning: #b7791f;
+  --primitive-toast-info: #1f5e9e;
+
+  /* Color-picker swatch palette (light). A fixed, accessible set of element
+     fill colors offered by the color-picker; the component reads these as
+     tokens (NO inline hex array lives in the component). */
+  --primitive-swatch-slate: #64748b;
+  --primitive-swatch-red: #dc2626;
+  --primitive-swatch-orange: #ea580c;
+  --primitive-swatch-amber: #d97706;
+  --primitive-swatch-green: #16a34a;
+  --primitive-swatch-teal: #0d9488;
+  --primitive-swatch-blue: #2563eb;
+  --primitive-swatch-violet: #7c3aed;
+  --primitive-swatch-pink: #db2777;
+
+  /* Interactive-selection accent (light). The amber ring/fill used to mark
+     interactive (quiz-pickable) elements; distinct from the brand primary so
+     it never reads as a normal selection. */
+  --primitive-interactive-selection: #f39c12;
+
+  /* Drop-target accent (light). The saturated blue ring/stroke shown on an
+     assessment feedback drop zone while a drag hovers it; a vivid signal blue,
+     distinct from the brand primary so it reads unambiguously as "drop here". */
+  --primitive-dropzone-accent: #0064ff;
+
+  /* Assessment soft-badge ramp (light). The tone pairs shared by the popover
+     score pill AND the on-canvas feedback badge: -800 text on a -100 same-hue
+     tint (positive=green, negative=red, zero=blue, ungraded=slate). SOLID values
+     — not color-mix/alpha — so axe can MEASURE the contrast; every pair clears
+     WCAG AA 4.5:1 (text on its own tint). Ungraded has no canvas badge. */
+  --primitive-assessment-positive-text: #166534;
+  --primitive-assessment-positive-bg: #dcfce7;
+  --primitive-assessment-negative-text: #991b1b;
+  --primitive-assessment-negative-bg: #fee2e2;
+  --primitive-assessment-zero-text: #1e40af;
+  --primitive-assessment-zero-bg: #dbeafe;
+  --primitive-assessment-ungraded-text: #475569;
+  --primitive-assessment-ungraded-bg: #f1f5f9;
+
+  /* Live-collaboration cursor palette (light). A fixed, deterministic set of
+     cursor/label colors assigned per collaborator by name hash; the editor
+     reads these as tokens (NO inline hex array lives in the code). */
+  --primitive-collab-1: #ffb61e;
+  --primitive-collab-2: #37b24d;
+  --primitive-collab-3: #1c7ed6;
+  --primitive-collab-4: #f03e3e;
+  --primitive-collab-5: #ae3ec9;
+  --primitive-collab-6: #0ca678;
+  --primitive-collab-7: #f76707;
+  --primitive-collab-8: #1098ad;
+
+  /* ── Layer 2: --apollon-* editor theming API (light) ───────────────────── */
+  --apollon-primary: var(--primitive-blue-500);
+  --apollon-primary-contrast: var(--primitive-text-primary);
+  --apollon-secondary: var(--primitive-slate-500);
+  --apollon-alert-warning-yellow: var(--primitive-warning-yellow);
+  --apollon-alert-warning-background: var(--primitive-warning-bg);
+  --apollon-alert-warning-border: var(--primitive-warning-border);
+  --apollon-background: var(--primitive-white);
+  --apollon-background-inverse: var(--primitive-black);
+  --apollon-background-variant: var(--primitive-gray-50);
+  --apollon-gray: var(--primitive-gray-100);
+  --apollon-grid: var(--primitive-grid);
+  --apollon-gray-variant: var(--primitive-gray-700);
+  --apollon-alert-danger-color: var(--primitive-danger-color);
+  --apollon-alert-danger-background: var(--primitive-danger-bg);
+  --apollon-alert-danger-border: var(--primitive-danger-border);
+  --apollon-switch-box-border-color: var(--primitive-gray-200);
+  --apollon-list-group-color: var(--primitive-white);
+  --apollon-btn-outline-secondary-color: var(--primitive-slate-500);
+  --apollon-modal-bottom-border: var(--primitive-gray-100);
+  --apollon-guide-vertical: var(--primitive-guide-vertical);
+  --apollon-guide-horizontal: var(--primitive-guide-horizontal);
+
+  /* Surface / border / radius — public theming hooks for the shared editor
+     primitives (cards, popovers, menus, inputs). An embedder overriding these
+     restyles the editor's surfaces; the webapp's --home-* bridge below routes
+     its visuals through them so DEFAULT values are unchanged. */
+  --apollon-surface: var(--primitive-surface-raised);
+  --apollon-surface-sunken: var(--primitive-surface-sunken);
+  --apollon-surface-hover: var(--primitive-surface-raised-hover);
+  --apollon-border: var(--primitive-border-default);
+  --apollon-border-subtle: var(--primitive-border-subtle);
+  --apollon-radius: 6px;
+
+  /* Public radius scale — the embedder-tunable corner ramp for the shared editor
+     primitives (cards/pills, controls/inputs, panels/popovers). sm/lg are
+     app-fixed; md routes through the base --apollon-radius so tuning that one
+     token still cascades to controls. */
+  --apollon-radius-sm: 4px;
+  --apollon-radius-md: var(--apollon-radius);
+  --apollon-radius-lg: 8px;
+
+  /* Public elevation — the popover/menu drop shadow for the shared editor
+     primitives (and the chrome shadows derived in app.css). Theme-independent:
+     the overlay tint reads the same in both themes. An embedder overriding this
+     restyles every floating editor surface. */
+  --apollon-shadow: 0 4px 12px var(--primitive-shadow-overlay);
+
+  /* ── Editor chrome (--apollon-chrome-*) — the SINGLE source ─────────────────
+     The full floating-chrome design system (glass surface, border/text ramp,
+     dimensional btn/pad/island system, motion). It lives ONLY here so there is
+     one definition, and app.css/components.css/the webapp home all CONSUME it via
+     var(). Every surface/border/text value is color-mix-derived from the two
+     tokens a host already themes (--apollon-background + --apollon-primary-
+     contrast), so theming those two gives correct light/dark chrome for free;
+     only the shadows + the dark inset hairline need an explicit dark delta below.
+
+     Reaches every consumer with no duplication:
+       • editor runtime — tokens.css loads via @tumaet/ui components.css.
+       • published @tumaet/apollon/style.css — bundles components.css + app.css.
+       • headless export — EXPORT_LAYOUT_CSS concatenates components.css + app.css.
+       • webapp HOME (no editor mounted) — webapp.css imports components.css.
+
+     Per THEMING.md only accent + radius-sm/md/lg + edge + gap are a tunable
+     contract; the rest of this ramp is INTERNAL (derived / structural). */
+
+  /* Surface ladder: base == canvas; chrome separates via border + elevation.
+     The island FILL is the canvas/background hue — the editor floats its glass
+     plate over the canvas and separates it by border+shadow, never by lightening
+     the fill; the home cards/band reuse --apollon-chrome-surface to paint that
+     same island fill. */
+  --apollon-chrome-surface: var(--apollon-background, #fff);
+  --apollon-chrome-surface-hover: color-mix(
+    in srgb,
+    var(--apollon-primary-contrast, #000) 8%,
+    var(--apollon-background, #fff)
+  );
+  --apollon-chrome-surface-active: color-mix(
+    in srgb,
+    var(--apollon-primary-contrast, #000) 14%,
+    var(--apollon-background, #fff)
+  );
+
+  /* Borders: opaque cool neutrals that hold their contrast in both themes. */
+  --apollon-chrome-border: color-mix(
+    in srgb,
+    var(--apollon-primary-contrast, #000) 12%,
+    var(--apollon-background, #fff)
+  );
+  --apollon-chrome-border-strong: color-mix(
+    in srgb,
+    var(--apollon-primary-contrast, #000) 28%,
+    var(--apollon-background, #fff)
+  );
+
+  /* Text */
+  --apollon-chrome-text: var(--apollon-primary-contrast, #212529);
+  --apollon-chrome-text-muted: color-mix(
+    in srgb,
+    var(--apollon-primary-contrast, #000) 58%,
+    var(--apollon-background, #fff)
+  );
+
+  /* Accent — reserved for meaning (primary action, selection, current marker).
+     Chrome surfaces themselves stay neutral. */
+  --apollon-chrome-accent: var(--apollon-primary, #3e8acc);
+  --apollon-chrome-accent-contrast: var(
+    --apollon-on-collaboration-cursor,
+    #fff
+  );
+
+  /* Radius ramp: sm pills, md controls, lg panels/rails. */
+  --apollon-chrome-radius-sm: 6px;
+  --apollon-chrome-radius-md: 8px;
+  --apollon-chrome-radius-lg: 12px;
+
+  /* Harmonic dimensional system: every floating cluster shares one height
+     (island-h, below), so their bottom edges align and the palette clears them
+     by one even gap. One edge margin + one gap apply to all chrome. */
+  --apollon-chrome-edge: 10px; /* margin from the canvas edge (every cluster) */
+  --apollon-chrome-gap: 8px; /* gap between adjacent clusters / to the palette */
+  --apollon-chrome-btn: 32px; /* icon-button paint box */
+  --apollon-chrome-pad: 6px; /* inner padding of every floating cluster */
+  --apollon-chrome-hit: 44px; /* minimum touch target (Apple HIG) */
+  --apollon-chrome-icon: 18px; /* action-icon glyph box (between size-4 and size-5) */
+
+  /* Edge margin that HUGS a device safe area instead of stacking on it: the
+     design edge when there's no inset, the inset alone when there is one — so
+     chrome aligns to the usable edge with no double-spacing under a notch / home
+     indicator. NO -top variant: the header top is intentionally additive
+     (safe-area-inset-top + edge) because the band is pinned under the notch and
+     still needs its own breathing room. */
+  --apollon-chrome-edge-safe-left: max(
+    var(--apollon-chrome-edge),
+    var(--safe-area-inset-left, 0px)
+  );
+  --apollon-chrome-edge-safe-right: max(
+    var(--apollon-chrome-edge),
+    var(--safe-area-inset-right, 0px)
+  );
+  --apollon-chrome-edge-safe-bottom: max(
+    var(--apollon-chrome-edge),
+    var(--safe-area-inset-bottom, 0px)
+  );
+
+  /* Shared OUTER cluster height = button + 2·padding + 2·1px border. Derived, so
+     fixed-height islands match the auto-height control/minimap panels to the
+     pixel and it self-corrects when btn/pad change (landscape overrides it). */
+  --apollon-chrome-island-h: calc(
+    var(--apollon-chrome-btn) + 2 * var(--apollon-chrome-pad) + 2px
+  );
+
+  /* Elevation: docked chrome (header/rail) = hairline + flat micro-shadow;
+     floating chrome (palette/controls/minimap) = soft halo. */
+  --apollon-chrome-shadow-docked: 0 1px 2px rgb(15 23 42 / 8%);
+  --apollon-chrome-shadow-floating: 0 0 1px 0 rgb(15 23 42 / 20%),
+    0 2px 8px 0 rgb(15 23 42 / 12%);
+
+  /* Lit up only in dark mode (a pure drop shadow vanishes on a dark canvas). */
+  --apollon-chrome-inset-hairline: 0 0 0 0 transparent;
+
+  /* Glass for floating chrome: a semi-opaque tint floor (keeps text legible —
+     translucency alone never carries it) under a backdrop blur, derived from the
+     canvas background so it themes automatically. */
+  --apollon-chrome-glass: color-mix(
+    in srgb,
+    var(--apollon-background, #fff) 80%,
+    transparent
+  );
+
+  /* Near-opaque tint for text-dense glass (the version-history list) so list
+     copy clears WCAG AA over a busy diagram while still reading as glass. */
+  --apollon-chrome-glass-solid: color-mix(
+    in srgb,
+    var(--apollon-background, #fff) 92%,
+    transparent
+  );
+  --apollon-chrome-glass-blur: saturate(180%) blur(20px);
+
+  /* Motion tokens: short, decelerated. */
+  --apollon-chrome-duration-hover: 120ms;
+  --apollon-chrome-duration-enter: 220ms;
+  --apollon-chrome-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --apollon-chrome-ease-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
+
+  /* Public neutral hover wash — a low-alpha veil off the foreground ink, used
+     for quiet hover states (e.g. the stereotype toggles) that must read on any
+     themed surface without assuming an accent. */
+  --apollon-hover-neutral: color-mix(
+    in srgb,
+    var(--apollon-primary-contrast, #000) 7.5%,
+    transparent
+  );
+
+  /* Color-picker swatch palette — the public editor-facing handle on the same
+     fixed, accessible fill palette the webapp color-picker uses. References the
+     --primitive-swatch-* layer (so it re-resolves per theme) and is the SINGLE
+     source the embed-safe editor color-picker reads; the editor carries NO
+     inline hex array. The webapp's --color-swatch-* bridge mirrors these. */
+  --apollon-swatch-slate: var(--primitive-swatch-slate);
+  --apollon-swatch-red: var(--primitive-swatch-red);
+  --apollon-swatch-orange: var(--primitive-swatch-orange);
+  --apollon-swatch-amber: var(--primitive-swatch-amber);
+  --apollon-swatch-green: var(--primitive-swatch-green);
+  --apollon-swatch-teal: var(--primitive-swatch-teal);
+  --apollon-swatch-blue: var(--primitive-swatch-blue);
+  --apollon-swatch-violet: var(--primitive-swatch-violet);
+  --apollon-swatch-pink: var(--primitive-swatch-pink);
+
+  /* Interactive-selection accent — the public editor-facing handle on the
+     primitive above. Theme-independent alias (the primitive re-resolves per
+     theme), matching the library's --apollon-interactive-selection fallback. */
+  --apollon-interactive-selection: var(--primitive-interactive-selection);
+
+  /* Drop-target accent — the public handle on the drop-zone signal blue. The
+     solid token strokes a path target; the translucent fill (40% alpha) is the
+     outline shown around box/div targets. */
+  --apollon-dropzone-accent: var(--primitive-dropzone-accent);
+  --apollon-dropzone-accent-fill: color-mix(
+    in srgb,
+    var(--apollon-dropzone-accent) 40%,
+    transparent
+  );
+
+  /* On-collaboration-cursor ink — the white text/stroke that reads on a
+     collaborator's colored cursor/avatar/label. Aliases the white primitive so
+     embedders can retheme on-cursor text without touching geometry. */
+  --apollon-on-collaboration-cursor: var(--primitive-white);
+
+  /* Assessment tone tokens — the public handles on the score ramp. The SINGLE
+     source for assessment colour: the popover score pill (app.css) and the
+     on-canvas feedback badge (AssessmentIcon) both read these, so a graded
+     element reads identically in both places. Each references a primitive that
+     carries its own dark delta, so no dark override is needed. */
+  --apollon-assessment-positive-text: var(--primitive-assessment-positive-text);
+  --apollon-assessment-positive-bg: var(--primitive-assessment-positive-bg);
+  --apollon-assessment-negative-text: var(--primitive-assessment-negative-text);
+  --apollon-assessment-negative-bg: var(--primitive-assessment-negative-bg);
+  --apollon-assessment-zero-text: var(--primitive-assessment-zero-text);
+  --apollon-assessment-zero-bg: var(--primitive-assessment-zero-bg);
+  --apollon-assessment-ungraded-text: var(--primitive-assessment-ungraded-text);
+  --apollon-assessment-ungraded-bg: var(--primitive-assessment-ungraded-bg);
+
+  /* Live-collaboration cursor palette — the public editor-facing handles on the
+     --primitive-collab-* layer (so they re-resolve per theme) and the SINGLE
+     source the editor reads; the collaboration code holds NO inline hex array. */
+  --apollon-collaboration-color-1: var(--primitive-collab-1);
+  --apollon-collaboration-color-2: var(--primitive-collab-2);
+  --apollon-collaboration-color-3: var(--primitive-collab-3);
+  --apollon-collaboration-color-4: var(--primitive-collab-4);
+  --apollon-collaboration-color-5: var(--primitive-collab-5);
+  --apollon-collaboration-color-6: var(--primitive-collab-6);
+  --apollon-collaboration-color-7: var(--primitive-collab-7);
+  --apollon-collaboration-color-8: var(--primitive-collab-8);
+
+  /* ── Layer 3: --home-* app semantics (light) ───────────────────────────── */
+
+  /* Surfaces — neutral white page canvas up through softly raised cards */
+  --home-surface-base: var(--apollon-background);
+  --home-surface-sunken: var(--apollon-surface-sunken);
+  --home-surface-raised: var(--apollon-surface);
+  --home-surface-raised-hover: var(--apollon-surface-hover);
+  --home-surface-raised-active: var(--primitive-surface-raised-active);
+  --home-surface-row-alt: var(--primitive-surface-row-alt);
+
+  /* Diagram-card island fill — the home tiles are editor islands, so their
+     SURFACE is the editor chrome surface (= the canvas/background hue), NOT the
+     raised-gray --home-surface-raised. In dark this makes the card fill (#13161c)
+     match the editor header islands instead of sitting a notch lighter (#1a1f27);
+     the card already carries the chrome border + chrome floating shadow, which
+     separate it from the equally-#13161c home page exactly as the editor's island
+     separates from its canvas. Light is unchanged (#fff either way). */
+  --home-card-surface: var(--apollon-chrome-surface);
+
+  /* Text */
+  --home-text-primary: var(--apollon-primary-contrast);
+  --home-text-secondary: var(--primitive-text-secondary);
+  --home-text-strong: var(--apollon-primary-contrast);
+  --home-text-muted: var(--primitive-text-muted);
+
+  /* Borders / dividers */
+  --home-border-default: var(--apollon-border);
+  --home-border-strong: var(--primitive-border-strong);
+  --home-border-subtle: var(--apollon-border-subtle);
+
+  /* Accent */
+  --home-accent-base: var(--primitive-accent-base);
+  --home-accent-soft: var(--primitive-accent-soft);
+  --home-accent-strong: var(--primitive-accent-strong);
+  --home-accent-ring: var(--primitive-accent-ring);
+  --home-accent-contrast: var(--primitive-accent-contrast);
+
+  /* On-accent surfaces (translucent white over accent banner / dark navbar) */
+  --home-on-accent-bg: var(--primitive-on-accent-bg);
+  --home-on-accent-bg-hover: var(--primitive-on-accent-bg-hover);
+  --home-on-accent-border: var(--primitive-on-accent-border);
+  --home-on-accent-text: var(--primitive-on-accent-text);
+
+  /* On-dark plate (the version-history navbar/drawer surface is intentionally
+     ALWAYS dark, independent of the document theme). Translucent-white text,
+     border, and row tints sit on that fixed-dark plate — so these are defined
+     once here and are NOT overridden in the dark block below. */
+  --home-on-dark-text: rgba(255, 255, 255, 0.92);
+  --home-on-dark-text-muted: rgba(255, 255, 255, 0.55);
+  --home-on-dark-border: rgba(255, 255, 255, 0.06);
+  --home-on-dark-row-hover: rgba(255, 255, 255, 0.06);
+  --home-on-dark-row-selected: rgba(255, 255, 255, 0.1);
+  --home-on-dark-row-disabled: rgba(255, 255, 255, 0.12);
+
+  /* Badge / status */
+  --home-badge-bg: var(--primitive-badge-bg);
+  --home-badge-fold: var(--primitive-badge-fold);
+  --home-text-on-badge: var(--primitive-text-on-badge);
+  --home-favorite-star: var(--primitive-favorite-star);
+
+  /* Diagram tags — type pill (primary, steel-slate) */
+  --home-tag-type-bg: var(--primitive-tag-type-bg);
+  --home-tag-type-text: var(--primitive-tag-type-text);
+
+  /* Diagram tags — "Local" pill (warm sand) */
+  --home-tag-local-bg: var(--primitive-tag-local-bg);
+  --home-tag-local-text: var(--primitive-tag-local-text);
+
+  /* Diagram tags — "Shared" pill (teal-seafoam) */
+  --home-tag-shared-bg: var(--primitive-tag-shared-bg);
+  --home-tag-shared-text: var(--primitive-tag-shared-text);
+
+  /* Shadows / glow */
+  --home-shadow-card-hover: var(--primitive-shadow-card-hover);
+  --home-shadow-overlay: var(--primitive-shadow-overlay);
+
+  /* Semantic elevation scale. Reference the softened shadow primitives so they
+     re-resolve per theme. Use these everywhere instead of ad-hoc px shadows:
+       md — menus / dropdowns / popovers
+       overlay-box — modals / banners / toasts */
+  --home-shadow-md: var(--apollon-shadow);
+  --home-shadow-overlay-box: 0 8px 20px var(--home-shadow-overlay);
+
+  /* Radius scale — theme-independent.
+     sm: cards & pills (crisp)  md: buttons & inputs  lg: menus/popovers  xl: modal shell
+     md/lg remap ONE-DIRECTIONALLY onto the public --apollon-radius-* scale so the
+     webapp shares the editor's tunable ramp; sm/xl stay app-only. (--apollon-*
+     must never depend back on --home-*.) */
+  --home-radius-sm: 2px;
+  --home-radius-md: var(--apollon-radius-md);
+  --home-radius-lg: var(--apollon-radius-lg);
+  --home-radius-xl: 15px;
+
+  /* Warning banner (e.g. version-preview) — soft-gold outlined style. */
+  --home-banner-warning-bg: var(--primitive-banner-warning-bg);
+  --home-banner-warning-border: var(--primitive-banner-warning-border);
+  --home-banner-warning-icon: var(--primitive-banner-warning-icon);
+  --home-banner-warning-text: var(--primitive-banner-warning-text);
+  --home-banner-warning-muted: var(--primitive-banner-warning-muted);
+  --home-banner-warning-btn-bg: var(--primitive-banner-warning-btn-bg);
+  --home-banner-warning-btn-text: var(--primitive-banner-warning-btn-text);
+  --home-banner-warning-btn-border: var(--primitive-banner-warning-btn-border);
+  --home-banner-warning-btn-hover: var(--primitive-banner-warning-btn-hover);
+
+  /* Toast (notification) semantic accents — warning matches the gold banner. */
+  --home-toast-success: var(--primitive-toast-success);
+  --home-toast-error: var(--primitive-toast-error);
+  --home-toast-warning: var(--primitive-toast-warning);
+  --home-toast-info: var(--primitive-toast-info);
+}
+
+/* `:root[data-theme="dark"]` themes the webapp (attribute on the document root);
+   the bare `[data-theme="dark"]` themes a SCOPED mount — the published editor sets
+   `data-theme` on its own container, not the document root, so `<Apollon
+   dataTheme="dark" />` / `new ApollonEditor(el, { dataTheme: "dark" })` must flip
+   the dark token deltas on that element's subtree without the host mutating
+   :root. Both selectors carry the identical deltas. */
+:root[data-theme="dark"],
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* ── Layer 1: primitives (dark deltas) ─────────────────────────────────── */
+
+  /* Editor neutrals / status (dark). These primitives are REDEFINED in light too,
+     so they stay as named primitives (the light/dark pair is the abstraction).
+     Editor surfaces with a single dark-only value (bg-base/-variant,
+     gray-base/-variant, switch-border, list-group, btn-outline-secondary,
+     modal-bottom-border) are inlined straight into the --apollon-* dark deltas
+     below, since a one-use 1:1 alias would add no value. */
+  --primitive-slate-500: #888;
+  --primitive-grid: #303530;
+  --primitive-warning-yellow: #ffffff;
+  --primitive-warning-bg: #f39c12;
+  --primitive-warning-border: #000000;
+  --primitive-danger-color: #ef8b80;
+  --primitive-danger-bg: #370b07;
+  --primitive-danger-border: #e43725;
+  --primitive-guide-vertical: #ff7675;
+  --primitive-guide-horizontal: #74b9ff;
+
+  /* Home surfaces (dark) — widened elevation steps */
+  --primitive-surface-sunken: #0f1216;
+  --primitive-surface-raised: #1a1f27;
+  --primitive-surface-raised-hover: #222934;
+  --primitive-surface-raised-active: #2b3340;
+  --primitive-surface-row-alt: #181c23;
+
+  /* Home text (dark) */
+  --primitive-text-secondary: #a3b0c2;
+  --primitive-text-muted: #8b97a8;
+
+  /* Home borders (dark) */
+  --primitive-border-default: #323b48;
+  --primitive-border-strong: #48535f;
+  --primitive-border-subtle: #242b34;
+
+  /* Home accent (dark). #236ebe keeps white/off-white button text at WCAG AA
+     (4.90:1 on --accent-contrast, 5.19:1 on pure white); a lighter accent
+     would drop below 4.5:1, so do not brighten it. */
+  --primitive-accent-base: #236ebe;
+  --primitive-accent-soft: #223548;
+  --primitive-accent-strong: #ffffff; /* diverges from base: white on the dark soft fill */
+  --primitive-accent-ring: var(--primitive-accent-base);
+  --primitive-accent-contrast: #f4f9ff;
+
+  /* Badge / status (dark) */
+  --primitive-badge-bg: #87868d;
+  --primitive-badge-fold: #c1c0c6;
+  --primitive-text-on-badge: #15161b;
+  --primitive-favorite-star: #ffd47a;
+
+  /* Diagram tags (dark) */
+  --primitive-tag-type-bg: #343740;
+  --primitive-tag-type-text: #9bb3cc;
+  --primitive-tag-local-bg: #3a3628;
+  --primitive-tag-local-text: #c9b47e;
+  --primitive-tag-shared-bg: #1e3434;
+  --primitive-tag-shared-text: #70bab6;
+
+  /* Warning banner (dark) */
+  --primitive-banner-warning-bg: #3a2f17;
+  --primitive-banner-warning-border: #7a5c18;
+  --primitive-banner-warning-icon: #ffd47a;
+  --primitive-banner-warning-text: #ecf2fb;
+  --primitive-banner-warning-muted: #abb8ce;
+  --primitive-banner-warning-btn-bg: #1c222c;
+  --primitive-banner-warning-btn-text: #ffd47a;
+  --primitive-banner-warning-btn-border: #7a5c18;
+  --primitive-banner-warning-btn-hover: #29313e;
+
+  /* Toast semantic accents (dark) */
+  --primitive-toast-success: #4cc38a;
+  --primitive-toast-error: #f0747e;
+  --primitive-toast-warning: #ffd47a;
+  --primitive-toast-info: #5aa0e0;
+
+  /* Color-picker swatch palette (dark) — brightened a step so each swatch stays
+     legible against the dark popover surface. */
+  --primitive-swatch-slate: #94a3b8;
+  --primitive-swatch-red: #f87171;
+  --primitive-swatch-orange: #fb923c;
+  --primitive-swatch-amber: #fbbf24;
+  --primitive-swatch-green: #4ade80;
+  --primitive-swatch-teal: #2dd4bf;
+  --primitive-swatch-blue: #60a5fa;
+  --primitive-swatch-violet: #a78bfa;
+  --primitive-swatch-pink: #f472b6;
+
+  /* Interactive-selection accent (dark) — brightened a step so the amber ring
+     reads against the dark canvas. */
+  --primitive-interactive-selection: #f5b041;
+
+  /* Assessment soft-badge ramp (dark) — the AA pairs flip to -300 text on a -900
+     same-hue tint; still solid so axe can measure them, still clearing 4.5:1. */
+  --primitive-assessment-positive-text: #86efac;
+  --primitive-assessment-positive-bg: #14532d;
+  --primitive-assessment-negative-text: #fca5a5;
+  --primitive-assessment-negative-bg: #7f1d1d;
+  --primitive-assessment-zero-text: #93c5fd;
+  --primitive-assessment-zero-bg: #1e3a8a;
+  --primitive-assessment-ungraded-text: #cbd5e1;
+  --primitive-assessment-ungraded-bg: #334155;
+
+  /* Live-collaboration cursor palette (dark) — brightened a step so each
+     cursor/label stays legible against the dark canvas. */
+  --primitive-collab-1: #ffce5c;
+  --primitive-collab-2: #51cf66;
+  --primitive-collab-3: #4dabf7;
+  --primitive-collab-4: #ff6b6b;
+  --primitive-collab-5: #cc5de8;
+  --primitive-collab-6: #20c997;
+  --primitive-collab-7: #ff922b;
+  --primitive-collab-8: #22b8cf;
+
+  /* ── Layer 2: --apollon-* (dark deltas) ────────────────────────────────── */
+  /* Only literal/inverted dark deltas live here. Tokens whose light value is a
+     primitive var() whose primitive itself carries a dark delta (secondary,
+     grid, alerts, guides, surface, border) are intentionally absent: var()
+     re-resolves at use time, so the light declaration already yields the dark
+     value. Do NOT re-add an inert "apollon: var(primitive)" mirror line here —
+     it does nothing and only clobbers an embedder override in dark mode. */
+  --apollon-primary-contrast: var(--primitive-white);
+  --apollon-background: #13161c;
+  --apollon-background-inverse: var(--primitive-white);
+  --apollon-background-variant: #303530;
+  --apollon-gray: #242724;
+  --apollon-gray-variant: #f8f9fa;
+  --apollon-switch-box-border-color: #3d423d;
+  --apollon-list-group-color: #303130;
+  --apollon-btn-outline-secondary-color: #b8c0c5;
+  --apollon-modal-bottom-border: #979797;
+
+  /* Editor chrome — dark deltas. The surface/border/text ramp already tracks the
+     dark --apollon-background via color-mix, so dark only fixes the shadows (a
+     soft light drop shadow vanishes on the dark canvas) and lights the contrast
+     inset hairline. radius + the auto-theming chrome border need no dark delta. */
+  --apollon-chrome-shadow-docked: 0 1px 2px rgb(0 0 0 / 40%);
+  --apollon-chrome-shadow-floating: 0 2px 12px 0 rgb(0 0 0 / 50%);
+  --apollon-chrome-inset-hairline: inset 0 0 0 1px rgb(255 255 255 / 8%);
+
+  /* No --home- dark deltas: every --home- token's light value is a var() of an
+     --apollon- or --primitive- token that already carries its own dark delta, so
+     the light declarations re-resolve to dark automatically. Re-adding a mirror
+     line here would be inert (and would clobber an embedder override). */
+}
+
+/* Touch: tighter island padding so the phone chrome stays compact; the icon
+   buttons keep a ≥44px hit target via the .apollon-chrome-iconbtn ::before
+   overlay (the paint box stays 32px). island-h derives from pad, so it follows
+   automatically. Lives here with the chrome tokens (the single source) so the
+   webapp home gets the same touch compaction the editor does. */
+@media (pointer: coarse) {
+  :root {
+    --apollon-chrome-pad: 4px;
+  }
+}

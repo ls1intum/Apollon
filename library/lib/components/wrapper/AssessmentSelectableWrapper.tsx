@@ -2,6 +2,7 @@ import React from "react"
 import {
   INTERACTIVE_SELECTION_COLOR,
   INTERACTIVE_SELECTION_FILL,
+  INTERACTIVE_SELECTION_FILL_STRONG,
 } from "@/constants"
 import { useAssessmentSelection } from "@/hooks/useAssessmentSelection"
 import {
@@ -160,13 +161,13 @@ export const AssessmentSelectableWrapper: React.FC<
     cursor: "pointer",
     ...(highlightColor && { position: "relative" }),
     ...(isSelected && {
-      backgroundColor: "rgba(25, 118, 210, 0.2)",
-      border: "2px solid #1976d2",
+      backgroundColor: INTERACTIVE_SELECTION_FILL,
+      border: `2px solid ${INTERACTIVE_SELECTION_COLOR}`,
     }),
     ...(isHighlighted &&
       !isSelected && {
-        backgroundColor: "rgba(25, 118, 210, 0.5)",
-        border: "2px solid #1976d2",
+        backgroundColor: INTERACTIVE_SELECTION_FILL_STRONG,
+        border: `2px solid ${INTERACTIVE_SELECTION_COLOR}`,
       }),
   }
 
@@ -175,11 +176,11 @@ export const AssessmentSelectableWrapper: React.FC<
       cursor: "pointer",
       ...(highlightColor && { filter: highlightEdgeFilter }),
       ...(isSelected && {
-        stroke: "rgba(25, 118, 210, 0.2)",
+        stroke: INTERACTIVE_SELECTION_FILL,
       }),
       ...(isHighlighted &&
         !isSelected && {
-          stroke: "rgba(25, 118, 210, 0.5)",
+          stroke: INTERACTIVE_SELECTION_FILL_STRONG,
         }),
     }
 

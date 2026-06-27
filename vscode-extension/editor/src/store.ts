@@ -8,7 +8,7 @@ interface Store {
   options: EditorOptions
 }
 
-export const useStore = create<Store>(() => ({
+const useStore = create<Store>(() => ({
   model: undefined,
   loadVersion: 0,
   options: defaultEditorOptions,

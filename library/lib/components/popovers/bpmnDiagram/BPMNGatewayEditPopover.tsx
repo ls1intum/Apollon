@@ -1,9 +1,19 @@
-import { Box, FormControl, InputLabel, MenuItem, Select } from "@mui/material"
+import { Select } from "@/components/ui"
+import { NodeStyleEditor } from "@/components/styleEditor"
 import { useReactiveNode } from "@/hooks"
 import { useReactFlow } from "@xyflow/react"
 import { PopoverProps } from "../types"
-import { BPMNGatewayType } from "@/types"
-import { TextField } from "@/components/ui"
+import { BPMNGatewayProps, BPMNGatewayType } from "@/types"
+import { supportsMultilineName } from "@/utils/nodeUtils"
+import { PopoverLayout, PopoverSection } from "../PopoverLayout"
+
+const GATEWAY_TYPE_OPTIONS = [
+  { value: "exclusive", label: "Exclusive" },
+  { value: "parallel", label: "Parallel" },
+  { value: "inclusive", label: "Inclusive" },
+  { value: "event-based", label: "Event-based" },
+  { value: "complex", label: "Complex" },
+]
 
 export const BPMNGatewayEditPopover: React.FC<PopoverProps> = ({
   elementId,
@@ -12,37 +22,32 @@ export const BPMNGatewayEditPopover: React.FC<PopoverProps> = ({
   const node = useReactiveNode(elementId)
   if (!node) return null
 
-  const data = node.data as { name?: string; gatewayType?: BPMNGatewayType }
+  const data = node.data as BPMNGatewayProps
 
-  const handleNameChange = (value: string) =>
-    updateNodeData(elementId, { name: value })
-  const handleTypeChange = (value: BPMNGatewayType) =>
-    updateNodeData(elementId, { gatewayType: value })
+  const handleDataFieldUpdate = (key: string, value: string) => {
+    updateNodeData(elementId, { [key]: value })
+  }
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-      <TextField
-        size="small"
-        label="Name"
-        value={data.name ?? ""}
-        onChange={(e) => handleNameChange(e.target.value)}
+    <PopoverLayout title="Gateway">
+      <NodeStyleEditor
+        handleDataFieldUpdate={(key, value) =>
+          handleDataFieldUpdate(key, value)
+        }
+        nodeData={data}
+        isMultilineName={supportsMultilineName(node.type)}
       />
-      <FormControl fullWidth size="small">
-        <InputLabel id="bpmn-gateway-type-label">Gateway Type</InputLabel>
+
+      <PopoverSection title="Gateway Type" divider>
         <Select
-          labelId="bpmn-gateway-type-label"
-          id="bpmn-gateway-type-select"
-          value={data.gatewayType ?? "exclusive"}
           label="Gateway Type"
-          onChange={(e) => handleTypeChange(e.target.value as BPMNGatewayType)}
-        >
-          <MenuItem value="exclusive">Exclusive</MenuItem>
-          <MenuItem value="parallel">Parallel</MenuItem>
-          <MenuItem value="inclusive">Inclusive</MenuItem>
-          <MenuItem value="event-based">Event-based</MenuItem>
-          <MenuItem value="complex">Complex</MenuItem>
-        </Select>
-      </FormControl>
-    </Box>
+          value={data.gatewayType ?? "exclusive"}
+          options={GATEWAY_TYPE_OPTIONS}
+          onChange={(value) =>
+            handleDataFieldUpdate("gatewayType", value as BPMNGatewayType)
+          }
+        />
+      </PopoverSection>
+    </PopoverLayout>
   )
 }

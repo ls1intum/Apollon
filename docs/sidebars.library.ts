@@ -15,6 +15,7 @@ const sidebars: SidebarsConfig = {
         "embedding/vanilla",
       ],
     },
+    { type: "doc", id: "theming", label: "Theming" },
     {
       type: "category",
       label: "API reference",

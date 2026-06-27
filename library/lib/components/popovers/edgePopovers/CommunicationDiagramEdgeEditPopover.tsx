@@ -1,12 +1,13 @@
-import { Box, IconButton } from "@mui/material"
 import { useReactiveEdge, useReactiveNodeName } from "@/hooks"
 import { useReactFlow } from "@xyflow/react"
 import { CustomEdgeProps, MessageData } from "@/edges/EdgeProps"
-import { ArrowBackIcon, ArrowForwardIcon, DeleteIcon } from "@/components/Icon"
+import { ArrowLeft, ArrowRight, Plus, Trash2 } from "lucide-react"
 import { PopoverProps } from "../types"
 import { useState, useEffect } from "react"
 import { generateUUID } from "@/utils"
-import { EdgeStyleEditor, TextField } from "@/components/ui"
+import { IconButton, TextField } from "@/components/ui"
+import { EdgeStyleEditor } from "@/components/styleEditor"
+import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 import { log } from "../../../logger"
 
 export const CommunicationDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
@@ -120,93 +121,101 @@ export const CommunicationDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
     }
   }
 
+  const getMessageLabel = (message: MessageData, index: number) => {
+    const trimmedText = message.text.trim()
+
+    return trimmedText || `message ${index + 1}`
+  }
+
   if (!edge) {
     return null
   }
   const edgeData = edge.data as CustomEdgeProps | undefined
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+    <PopoverLayout title="Edge">
       <EdgeStyleEditor
         edgeData={edgeData}
         handleDataFieldUpdate={(key, value) =>
           updateEdgeData(elementId, { ...edge.data, [key]: value })
         }
-        label="Communication Link"
+        label="Style"
       />
 
-      {messages.map((message, index) => {
-        const isDuplicateText = messages.some(
-          (msg, i) =>
-            i !== index &&
-            msg.text.toLowerCase() === message.text.toLowerCase() &&
-            message.text.trim() !== ""
-        )
+      <PopoverSection title="Messages" divider>
+        {messages.map((message, index) => {
+          const isDuplicateText = messages.some(
+            (msg, i) =>
+              i !== index &&
+              msg.text.toLowerCase() === message.text.toLowerCase() &&
+              message.text.trim() !== ""
+          )
+          const directionText =
+            message.direction === "target"
+              ? `${sourceName} → ${targetName}`
+              : `${targetName} → ${sourceName}`
+          const messageLabel = getMessageLabel(message, index)
 
-        return (
-          <Box
-            key={index}
-            sx={{ display: "flex", alignItems: "center", gap: 1 }}
-          >
-            {/* Direction Toggle Button */}
-            <IconButton
-              size="small"
-              onClick={() => handleMessageDirectionToggle(index)}
-              color={message.direction === "target" ? "primary" : "secondary"}
-              title={`Direction: ${
-                message.direction === "target"
-                  ? `${sourceName} → ${targetName}`
-                  : `${targetName} → ${sourceName}`
-              }`}
+          return (
+            <div
+              key={index}
+              style={{ display: "flex", alignItems: "center", gap: 8 }}
             >
-              {message.direction === "target" ? (
-                <ArrowForwardIcon
-                  fontSize="small"
-                  fill="var(--apollon-primary-contrast, #000000)"
-                />
-              ) : (
-                <ArrowBackIcon
-                  fontSize="small"
-                  fill="var(--apollon-primary-contrast, #000000)"
-                />
-              )}
-            </IconButton>
+              {/* Direction Toggle Button */}
+              <IconButton
+                ariaLabel={`Switch direction for ${messageLabel}: ${directionText}`}
+                tooltip={`Switch direction: ${directionText}`}
+                onClick={() => handleMessageDirectionToggle(index)}
+              >
+                {message.direction === "target" ? (
+                  <ArrowRight width={16} height={16} aria-hidden="true" />
+                ) : (
+                  <ArrowLeft width={16} height={16} aria-hidden="true" />
+                )}
+              </IconButton>
 
-            {/* Message Text Field */}
-            <TextField
-              value={message.text}
-              onChange={(e) => handleMessageTextUpdate(index, e.target.value)}
-              size="small"
-              fullWidth
-              placeholder={`Message ${index + 1}`}
-              error={isDuplicateText}
-              helperText={isDuplicateText ? "Duplicate message" : ""}
-            />
+              {/* Message Text Field */}
+              <TextField
+                value={message.text}
+                onChange={(e) => handleMessageTextUpdate(index, e.target.value)}
+                fullWidth
+                placeholder={`Message ${index + 1}`}
+                error={isDuplicateText}
+                helperText={isDuplicateText ? "Duplicate message" : ""}
+              />
 
-            {/* Delete Button */}
-            <DeleteIcon
-              width={16}
-              height={16}
-              style={{ cursor: "pointer" }}
-              onClick={() => handleDeleteMessage(index)}
-            />
-          </Box>
-        )
-      })}
+              {/* Delete Button */}
+              <IconButton
+                ariaLabel={`Delete ${messageLabel}`}
+                tooltip={`Delete ${messageLabel}`}
+                onClick={() => handleDeleteMessage(index)}
+              >
+                <Trash2 width={16} height={16} aria-hidden="true" />
+              </IconButton>
+            </div>
+          )
+        })}
 
-      {/* Add new message input */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-        <TextField
-          value={newLabelInput}
-          onChange={(e) => handleInputChange(e.target.value)}
-          onKeyDown={handleKeyDown}
-          size="small"
-          fullWidth
-          placeholder="+ Add Message"
-          error={duplicateError}
-          helperText={duplicateError ? "This message already exists" : ""}
-        />
-      </Box>
-    </Box>
+        {/* Add new message input */}
+        <div className="apollon-add-row">
+          <TextField
+            value={newLabelInput}
+            onChange={(e) => handleInputChange(e.target.value)}
+            onKeyDown={handleKeyDown}
+            fullWidth
+            placeholder="Message"
+            error={duplicateError}
+            helperText={duplicateError ? "This message already exists" : ""}
+          />
+          <IconButton
+            ariaLabel="Add message"
+            tooltip="Add message"
+            onClick={handleAddMessage}
+          >
+            <Plus width={16} height={16} aria-hidden="true" />
+          </IconButton>
+        </div>
+      </PopoverSection>
+    </PopoverLayout>
   )
 }

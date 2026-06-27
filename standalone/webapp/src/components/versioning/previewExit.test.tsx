@@ -7,6 +7,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { cleanup, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
+import {
+  AlertDialog,
+  AlertDialogContent,
+} from "@tumaet/ui/components/alert-dialog"
 import { renderWithRouter } from "@/test/renderWithRouter"
 import { ModalProvider } from "@/contexts"
 import { CurrentVersionRow } from "./CurrentVersionRow"
@@ -68,8 +72,20 @@ describe("URL-driven preview exit", () => {
     useVersionStore.setState({ deleteVersion })
 
     const { router } = renderWithRouter(
+      // DeleteVersionModal renders only the AlertDialog *body* (footer, cancel,
+      // description); production mounts it inside ModalFrame's dialog root. Give
+      // it an open AlertDialog root here so its AlertDialog parts resolve their
+      // root context, mirroring how it actually renders.
       <ModalProvider>
-        <DeleteVersionModal diagramId={DIAGRAM_ID} versionId={VERSION_ID} />
+        <AlertDialog open>
+          <AlertDialogContent>
+            <DeleteVersionModal
+              diagramId={DIAGRAM_ID}
+              versionId={VERSION_ID}
+              version={null}
+            />
+          </AlertDialogContent>
+        </AlertDialog>
       </ModalProvider>,
       {
         initialEntry: `/local/${DIAGRAM_ID}?version=${VERSION_ID}`,

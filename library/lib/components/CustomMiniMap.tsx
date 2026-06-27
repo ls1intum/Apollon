@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { MiniMap, MiniMapNodeProps, Panel } from "@xyflow/react"
+import { ArrowDownRight, Map } from "lucide-react"
 import { useReactiveNode } from "@/hooks/useReactiveElement"
 import {
   ClassSVG,
@@ -51,8 +52,6 @@ import {
   ReachabilityGraphMarkingSVG,
 } from "./svgs"
 import { DiagramNodeType } from "@/typings"
-import { MapIcon } from "./Icon/MapIcon"
-import { SouthEastArrowIcon } from "./Icon/SouthEastArrowIcon"
 import {
   BPMNEventProps,
   BPMNGatewayProps,
@@ -86,7 +85,7 @@ export const CustomMiniMap = () => {
           title="Show minimap (overview)"
           onClick={() => setMinimapCollapsed(false)}
         >
-          <MapIcon width={18} height={18} fill="currentColor" />
+          <Map width={18} height={18} aria-hidden="true" />
         </button>
       </Panel>
     )
@@ -116,7 +115,7 @@ export const CustomMiniMap = () => {
           title="Hide minimap"
           onClick={() => setMinimapCollapsed(true)}
         >
-          <SouthEastArrowIcon width={18} height={18} fill="currentColor" />
+          <ArrowDownRight width={18} height={18} aria-hidden="true" />
         </button>
       </Panel>
     </>

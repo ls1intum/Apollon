@@ -2,8 +2,9 @@ import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import { PopoverProps } from "../types"
 import { GiveFeedbackAssessmentBox } from "../GiveFeedbackAssessmentBox"
-import Button from "@mui/material/Button"
+import { Button } from "@tumaet/ui/components/button"
 import { useGoToNextAssessment } from "@/hooks"
+import { PopoverLayout } from "../PopoverLayout"
 
 export const EdgeGiveFeedbackPopover = ({ elementId }: PopoverProps) => {
   const edges = useDiagramStore(useShallow((state) => state.edges))
@@ -14,16 +15,17 @@ export const EdgeGiveFeedbackPopover = ({ elementId }: PopoverProps) => {
 
   const edgeType = edge.type
   return (
-    <>
+    <PopoverLayout>
       <GiveFeedbackAssessmentBox
         elementId={elementId}
         name={edgeType ?? ""}
-        type={edgeType ?? ""}
+        elementType="edge"
+        typeLabel="Edge"
       />
 
-      <Button variant="outlined" onClick={handleGoToNextAssessment}>
+      <Button variant="outline" onClick={handleGoToNextAssessment}>
         Next Assessment
       </Button>
-    </>
+    </PopoverLayout>
   )
 }

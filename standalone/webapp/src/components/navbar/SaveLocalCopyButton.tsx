@@ -1,22 +1,35 @@
-import { Button, Tooltip } from "@mui/material"
-import SaveAltIcon from "@mui/icons-material/SaveAlt"
-import { v4 as uuidv4 } from "uuid"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@tumaet/ui/components/tooltip"
+import { DropdownMenuItem } from "@tumaet/ui/components/dropdown-menu"
+import { SaveIcon } from "lucide-react"
 import { toast } from "react-toastify"
 import { useLocation, useNavigate } from "@tanstack/react-router"
-import type { UMLModel } from "@tumaet/apollon"
 import { useEditorContext } from "@/contexts"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { useDiagramIdFromPath } from "@/hooks/useDiagramIdFromPath"
+import { useMediaQuery } from "@/hooks"
 import { versioningStrings as t } from "@/components/versioning/strings"
+import { cloneModelAsLocalCopy } from "@/utils/saveLocalDiagramCopy"
 import { log } from "@/logger"
 import { navbarButtonStyle } from "./styleConstants"
 
 interface Props {
   /** Foreground colour, mirrors `VersionHistoryButton`'s convention. */
   color?: string
-  /** Label-span classes, mirrors `VersionHistoryButton` — the desktop bar
-   * passes `"hidden lg:inline"` to collapse to the icon when space is tight. */
-  labelClassName?: string
+  /**
+   * Presentation variant (one bounded axis, mirrors `VersionHistoryButton` /
+   * `ThemeSwitcherMenu`):
+   * - `"bar"` (default): the desktop island button; the label collapses to the
+   *   icon below `lg` and the tooltip shows only while collapsed.
+   * - `"icon"`: icon-only — the label is always hidden and the tooltip always
+   *   names it (the editor mobile pill).
+   * - `"menuItem"`: a full-width `DropdownMenuItem` row (the editor mobile
+   *   overflow), so the overflow's `min-h-11` 44px row contract applies to it.
+   */
+  variant?: "bar" | "icon" | "menuItem"
   /** Mobile menu close callback when rendered inside the hamburger. */
   onAfter?: () => void
 }
@@ -36,31 +49,28 @@ interface Props {
  */
 export const SaveLocalCopyButton = ({
   color,
-  labelClassName,
+  variant = "bar",
   onAfter,
 }: Props) => {
+  const iconOnly = variant === "icon"
   const diagramId = useDiagramIdFromPath()
   const { pathname } = useLocation()
   const { editor } = useEditorContext()
   const createModel = usePersistenceModelStore((s) => s.createModel)
   const navigate = useNavigate()
+  // 1024px is Tailwind `lg`, the same breakpoint the label span collapses at.
+  const isLg = useMediaQuery("(min-width: 1024px)")
 
   if (!diagramId || !editor || !pathname.startsWith("/shared/")) return null
 
   const handleClick = () => {
     try {
-      // Deep-clone before mutating the id — a shallow spread would leave
-      // `nodes`/`edges`/`assessments` referenced by both the live editor
-      // model and the local copy, so subsequent edits in either would
-      // corrupt the other. `structuredClone` is Baseline 2022.
-      const newId = uuidv4()
-      const copy: UMLModel = { ...structuredClone(editor.model), id: newId }
+      const copy = cloneModelAsLocalCopy(editor.model)
       createModel(copy)
       toast.success(t.saveLocalCopySuccess, { autoClose: 6000 })
-      // Mirrors `JsonFileImportButton` — navigate to the new local route so
-      // the user lands on the diagram they just saved. `/` is now the
-      // gallery, so we route to `/local/<newId>` explicitly.
-      navigate({ to: "/local/$id", params: { id: newId }, replace: true })
+      // Navigate to the new local route so the user lands on the diagram they
+      // just saved. `/` is the gallery, so route to `/local/<newId>` explicitly.
+      navigate({ to: "/local/$id", params: { id: copy.id }, replace: true })
     } catch (err) {
       log.error("Save a local copy failed", err as Error)
       toast.error(t.saveLocalCopyFailed)
@@ -69,16 +79,33 @@ export const SaveLocalCopyButton = ({
     }
   }
 
-  return (
-    <Tooltip title={t.saveLocalCopyButton}>
-      <Button
-        sx={navbarButtonStyle(color)}
+  if (variant === "menuItem") {
+    return (
+      <DropdownMenuItem
         onClick={handleClick}
         aria-label={t.saveLocalCopyButton}
-        startIcon={<SaveAltIcon fontSize="small" aria-hidden />}
+        style={color ? { color } : undefined}
       >
-        <span className={labelClassName}>{t.saveLocalCopyButton}</span>
-      </Button>
+        <SaveIcon className="size-4" aria-hidden />
+        {t.saveLocalCopyButton}
+      </DropdownMenuItem>
+    )
+  }
+
+  return (
+    <Tooltip disabled={!iconOnly && isLg}>
+      <TooltipTrigger
+        className={navbarButtonStyle()}
+        style={color ? { color } : undefined}
+        onClick={handleClick}
+        aria-label={t.saveLocalCopyButton}
+      >
+        <SaveIcon className="size-4" aria-hidden />
+        <span className={iconOnly ? "hidden" : "hidden lg:inline"}>
+          {t.saveLocalCopyButton}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent>{t.saveLocalCopyButton}</TooltipContent>
     </Tooltip>
   )
 }

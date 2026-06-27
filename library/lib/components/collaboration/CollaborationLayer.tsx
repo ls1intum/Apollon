@@ -1,4 +1,4 @@
-import Tooltip from "@mui/material/Tooltip"
+import { Tooltip } from "@/components/ui"
 import {
   useCallback,
   useEffect,
@@ -72,7 +72,7 @@ const avatarBase: CSSProperties = {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  color: "#fff",
+  color: "var(--apollon-on-collaboration-cursor, #fff)",
   fontSize: 11,
   fontWeight: 600,
   cursor: "default",
@@ -190,16 +190,7 @@ function CollaboratorPresenceBar({
               : c.name
 
         return (
-          <Tooltip
-            key={c.id}
-            title={label}
-            arrow
-            slotProps={{
-              popper: {
-                modifiers: [{ name: "offset", options: { offset: [0, -4] } }],
-              },
-            }}
-          >
+          <Tooltip key={c.id} title={label}>
             <div
               aria-label={label}
               role={isFollowable ? "button" : undefined}
@@ -328,7 +319,7 @@ function CollaboratorCursors({
               <path
                 d="M2 1L2 18L6.5 13.8L9.5 19L12 17.7L9 12.6L15 12.2L2 1Z"
                 fill={collaborator.color}
-                stroke="#ffffff"
+                stroke="var(--apollon-on-collaboration-cursor, #ffffff)"
                 strokeWidth="1"
                 strokeLinejoin="round"
               />

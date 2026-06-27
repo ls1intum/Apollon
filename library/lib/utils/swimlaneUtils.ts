@@ -73,16 +73,28 @@ export const laneIndexAtOffset = (
  * shared boundary by `deltaPx`, growing one lane and shrinking the other by the
  * same amount so the swimlane's outer size never changes. Neither lane drops
  * below `MIN_LANE_EXTENT`. Returns lanes with an explicit `size` on every entry.
+ *
+ * When `snapGridPx > 0` the moved boundary is snapped to that grid, so a lane
+ * separator lands on the same grid that nodes and edge bends snap to. The lane
+ * offsets are measured from the swimlane's own origin, which React Flow already
+ * keeps grid-aligned, so the snapped boundary lines up with the absolute grid.
  */
 export const resizeLaneDivider = (
   lanes: SwimlaneLane[],
   index: number,
   deltaPx: number,
-  primaryExtent: number
+  primaryExtent: number,
+  snapGridPx = 0
 ): SwimlaneLane[] => {
   if (index < 0 || index >= lanes.length - 1) return lanes
-  const extents = getLaneOffsets(lanes, primaryExtent).map((o) => o.extent)
+  const offsets = getLaneOffsets(lanes, primaryExtent)
+  const extents = offsets.map((o) => o.extent)
   let delta = deltaPx
+  if (snapGridPx > 0) {
+    const boundary = offsets[index + 1].start + delta
+    const snapped = Math.round(boundary / snapGridPx) * snapGridPx
+    delta = snapped - offsets[index + 1].start
+  }
   delta = Math.max(delta, MIN_LANE_EXTENT - extents[index])
   delta = Math.min(delta, extents[index + 1] - MIN_LANE_EXTENT)
   extents[index] += delta

@@ -4,7 +4,7 @@ interface Store {
   diagrams?: string[]
 }
 
-export const useStore = create<Store>(() => ({
+const useStore = create<Store>(() => ({
   diagrams: undefined,
 }))
 

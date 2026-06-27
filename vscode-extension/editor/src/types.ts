@@ -1,22 +1,4 @@
-import { ApollonMode, UMLDiagramType, UMLModel } from "@tumaet/apollon/react"
-import { uuid } from "./utils/uuid"
-
-export type Diagram = {
-  id: string
-  title: string
-  model?: UMLModel
-  lastUpdate: string
-  versions?: Diagram[]
-  description?: string
-  token?: string
-}
-
-export const defaultDiagram: Diagram = {
-  id: uuid(),
-  title: "UMLClassDiagram",
-  model: undefined,
-  lastUpdate: new Date().toISOString(),
-}
+import { ApollonMode, UMLDiagramType } from "@tumaet/apollon/react"
 
 export type EditorOptions = {
   type: UMLDiagramType

@@ -1,5 +1,5 @@
 export { VersionDrawer, VersionRail } from "./VersionDrawer"
 export { VersionPreviewBanner } from "./VersionPreviewBanner"
-export { UndoRestoreSnackbar } from "./UndoRestoreSnackbar"
+export { UndoRestoreToast } from "./UndoRestoreToast"
 export { DeleteVersionModal } from "./DeleteVersionModal"
 export { ConfirmRestoreModal } from "./ConfirmRestoreModal"

@@ -55,7 +55,7 @@ async function toolbarBoxSize(page: Page, id: string) {
   return page.evaluate((edgeId) => {
     const box = document
       .querySelector(`.react-flow__edge[data-id="${edgeId}"] foreignObject`)
-      ?.querySelector(".MuiBox-root") as HTMLElement | null
+      ?.querySelector(".apollon-edge-toolbar") as HTMLElement | null
     if (!box) return null
     const r = box.getBoundingClientRect()
     return { w: Math.round(r.width), h: Math.round(r.height) }
@@ -154,7 +154,7 @@ test("the edit toolbar keeps a constant on-screen size across zoom (does not sca
     )
   }
 
-  const zoomIn = page.locator(".react-flow__controls-zoomin")
+  const zoomIn = page.locator(".react-flow__controls-zoomin").first()
   for (let i = 0; i < 5; i++) {
     if (!(await zoomIn.isEnabled())) break
     await zoomIn.click()

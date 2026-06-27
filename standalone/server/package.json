@@ -1,6 +1,6 @@
 {
   "name": "@tumaet/server",
-  "version": "4.8.0",
+  "version": "4.9.0",
   "private": true,
   "type": "module",
   "license": "MIT",
@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@tumaet/apollon": "workspace:*",
+    "@xyflow/react": "catalog:",
     "canvas": "npm:@napi-rs/canvas@1.0.0",
     "cookie": "1.0.2",
     "cors": "2.8.5",
@@ -31,6 +32,8 @@
     "pdfmake": "0.3.7",
     "pino": "9.6.0",
     "pino-http": "10.4.0",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "redis": "5.11.0",
     "ulid": "2.3.0",
     "ws": "8.18.1",
@@ -45,6 +48,8 @@
     "@types/express-serve-static-core": "5.1.1",
     "@types/node": "catalog:",
     "@types/pdfmake": "0.3.3",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "@types/supertest": "6.0.2",
     "@types/ws": "8.18.1",
     "@vitest/coverage-v8": "catalog:",

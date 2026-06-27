@@ -15,10 +15,13 @@ This monorepo contains every piece of the Apollon platform:
 ## Use the library
 
 ```sh
-npm install @tumaet/apollon
+npm install @tumaet/apollon yjs y-protocols
 ```
 
-See the [library README](./library/README.md) for the API.
+`yjs` and `y-protocols` are required peer dependencies — they power Apollon's
+document model and undo/redo (and live collaboration when enabled), kept
+external so the host owns a single Yjs instance. See the
+[library README](./library/README.md) for the API and the other build entries.
 
 ## Run the stack locally
 
@@ -52,7 +55,7 @@ To preview the documentation site instead, run `pnpm dev:docs` from the repo roo
 | ------------- | -------------------------------------------------------------------- |
 | Library       | React, TypeScript, React Flow (`@xyflow/react`), Yjs, Zustand, Vite  |
 | Server        | Express 5, Redis (RedisJSON), WebSocket relay                        |
-| Webapp        | React, TypeScript, Vite, MUI, Tailwind                               |
+| Webapp        | React, TypeScript, Vite, shadcn-style UI (Base UI), Tailwind         |
 | Storage       | Redis with RedisJSON (diagrams expire after 120 days via native TTL) |
 | Reverse proxy | Traefik v3 (production)                                              |
 

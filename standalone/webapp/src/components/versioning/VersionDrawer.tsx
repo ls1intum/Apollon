@@ -1,29 +1,29 @@
+import { Sheet, SheetContent } from "@tumaet/ui/components/sheet"
 import {
-  Box,
-  Button,
-  CircularProgress,
-  Drawer,
-  IconButton,
-  InputBase,
-  List,
-  Skeleton,
   Tooltip,
-  Typography,
-  useMediaQuery,
-} from "@mui/material"
-import HistoryToggleOffIcon from "@mui/icons-material/HistoryToggleOff"
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@tumaet/ui/components/tooltip"
+import { Button } from "@tumaet/ui/components/button"
+import { Textarea } from "@tumaet/ui/components/textarea"
+import { Spinner } from "@tumaet/ui/components/spinner"
+import { Skeleton } from "@tumaet/ui/components/skeleton"
+import { HistoryIcon } from "lucide-react"
 import {
   useCallback,
   useEffect,
   useMemo,
   useRef,
   useState,
+  type CSSProperties,
   type FC,
   type KeyboardEvent,
 } from "react"
 import { createPortal } from "react-dom"
 import { toast } from "react-toastify"
 import { useEditorContext, useModalContext } from "@/contexts"
+import { useMediaQuery } from "@/hooks"
 import { useRegionHost } from "@/hooks/useRegionHost"
 import {
   selectScopedPreview,
@@ -41,7 +41,7 @@ import {
 import { relativeTime } from "./relativeTime"
 import { CurrentVersionRow } from "./CurrentVersionRow"
 import { VersionListItem } from "./VersionListItem"
-import AutoGroupRow from "./AutoGroupRow"
+import { AutoGroupRow } from "./AutoGroupRow"
 import { TEXT_PRIMARY, TEXT_MUTED, ROW_HOVER_BG } from "./theme"
 import { structuralFingerprint, isNamedVersion } from "@/lib/version/predicates"
 import { groupUnnamedRuns } from "./utils"
@@ -49,14 +49,6 @@ import { groupUnnamedRuns } from "./utils"
 /** Panel width on desktop. Narrow enough to keep the canvas usable. */
 const SIDEBAR_WIDTH = 320
 
-/**
- * Switches the sidebar to a bottom-sheet drawer at the same breakpoint
- * the navbar switches to its compact mobile layout. This is the *only* place
- * where a viewport media query is the right tool — sidebar↔bottom-sheet is a
- * page-level layout decision driven by viewport chrome. Component-internal layout
- * (e.g. the preview banner) responds to its own container width via
- * `useElementWidth`, not this constant.
- */
 interface Props {
   diagramId: string
   onVersionSaved?: (headRev?: number) => void
@@ -81,8 +73,8 @@ interface Props {
  *  - `VersionRail` (desktop ≥ md): portaled into the editor's `right-rail`
  *    overlay region; the canvas stays full-bleed and makes room via the
  *    measured inset (no reflow).
- *  - `VersionDrawer` (mobile <sm): rendered inside an MUI bottom-sheet
- *    Drawer because there isn't room for two columns on small viewports.
+ *  - `VersionDrawer` (mobile <sm): rendered inside a bottom-sheet because
+ *    there isn't room for two columns on small viewports.
  */
 export const VersionSidebarBody: FC<Props> = ({
   diagramId,
@@ -109,7 +101,6 @@ export const VersionSidebarBody: FC<Props> = ({
 
   const [draft, setDraft] = useState("")
   const [submitting, setSubmitting] = useState(false)
-  const [activeRowId, setActiveRowId] = useState<string | null>(null)
   const composerRef = useRef<HTMLTextAreaElement | null>(null)
   // Subscribe to model changes so the empty-diagram check (drives Save
   // disable) reacts as the user adds the first node.
@@ -132,7 +123,7 @@ export const VersionSidebarBody: FC<Props> = ({
    */
   const lastLocalSaveIdRef = useRef<string | null>(null)
 
-  // No fetch-on-mount here: the editor page (ApollonLocal / ApollonWithConnection)
+  // No fetch-on-mount here: the editor page (ApollonLocal / ApollonShared)
   // binds the repository and fetches in one effect, and the bootstrap keeps the
   // list fresh (cross-tab + visibility refetch, collab control events). A fetch
   // here would race the page's repository binding on a reload with the drawer
@@ -153,31 +144,22 @@ export const VersionSidebarBody: FC<Props> = ({
     ? t.lastVersion(relativeTime(latestVersion.createdAt))
     : t.noVersionYet
 
-  // ---------------------------------------------------------------------------
-  // Dirty-detection via structural fingerprint. Whenever a snapshot lands
-  // (manual save, server-fired auto-version, collaborator save) we capture
-  // a fingerprint of the editor's model at that moment. On every Yjs/store
-  // change we recompute the fingerprint and compare. Selection clicks,
-  // measurement noise, and other React-Flow ephemera are filtered out by
-  // the replacer in `structuralFingerprint` — only user-meaningful changes
-  // flip the state.
-  // ---------------------------------------------------------------------------
+  // Dirty-detection via structural fingerprint: capture a fingerprint of the
+  // editor model whenever a snapshot lands (manual/auto/collaborator save), then
+  // recompute and compare on every model change. Selection clicks, measurement
+  // noise, and other React-Flow ephemera are filtered by `structuralFingerprint`'s
+  // replacer, so only user-meaningful changes flip the state.
   const latestSavedVersion = versions.find((v) => !v.pending && !v.failed)
   const [savedFingerprint, setSavedFingerprint] = useState<string | null>(null)
   const [hasChanges, setHasChanges] = useState(true)
 
-  // Re-baseline the fingerprint on every new latest-saved version.
-  //
-  // Two cases:
-  //  1. Local save (handleCreate just ran): `lastLocalSaveIdRef.current`
-  //     matches the new version id. At this point `editor.model` IS the
-  //     saved state, so we can fingerprint it synchronously — no fetch
-  //     needed and no async race.
-  //  2. Collaborator/server-fired version, or initial mount: we do NOT
-  //     know what the editor model was at save time, so we fetch the
-  //     actual version body from the server and fingerprint that. This is
-  //     the only way to get a correct baseline on page load (the editor
-  //     may already have unsaved changes) or after a collaborator saves.
+  // Re-baseline the fingerprint on every new latest-saved version. Two cases:
+  //  1. Local save (handleCreate just ran): `lastLocalSaveIdRef.current` matches
+  //     the new id, so `editor.model` IS the saved state — fingerprint it
+  //     synchronously, no fetch and no async race.
+  //  2. Collaborator/server version or initial mount: the editor model at save
+  //     time is unknown, so fetch the version body and fingerprint that (the only
+  //     correct baseline on page load, where the editor may already be dirty).
   useEffect(() => {
     if (!editor) return
     if (!latestSavedVersion) {
@@ -332,19 +314,21 @@ export const VersionSidebarBody: FC<Props> = ({
 
   const handleDelete = useCallback(
     (versionId: string) => {
-      openModal("DELETE_VERSION", { diagramId, versionId })
+      // Resolve the target here (we already hold the list) and pass it down so
+      // the modal doesn't re-read the store for data we have.
+      const version = versions.find((v) => v.id === versionId) ?? null
+      openModal("DELETE_VERSION", { diagramId, versionId, version })
     },
-    [openModal, diagramId]
+    [openModal, diagramId, versions]
   )
 
   const totalDisplay = total ?? versions.filter((v) => !v.pending).length
 
   // Map version id → display number (#N). Prefer the server-assigned
   // monotonic `seq` so the number reflects "Nth version you ever made"
-  // and survives eviction. Pre-`seq` rows fall back to a derived
-  // rank-among-stored: that's what we used to display, accurate for
-  // diagrams that never hit the cap and degrade-gracefully for legacy
-  // rows committed before the counter existed.
+  // and survives eviction. Rows without a `seq` fall back to a derived
+  // rank-among-stored: accurate for diagrams that never hit the cap, and
+  // a graceful degrade for legacy rows committed before the counter existed.
   const versionNumberById = useMemo(() => {
     const saved = versions.filter((v) => !v.pending)
     const map = new Map<string, number>()
@@ -365,174 +349,136 @@ export const VersionSidebarBody: FC<Props> = ({
   }
 
   return (
-    <Box
-      sx={{
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        // Transparent: the desktop rail's glass panel (VersionRail) and the
-        // mobile drawer's Paper own the surface, so the body just themes its text
-        // via the shared --apollon-chrome-* tokens.
-        bgcolor: "transparent",
-        color: TEXT_PRIMARY,
-      }}
+    <div
+      // Transparent: the desktop rail's glass panel (VersionRail) and the
+      // mobile drawer own the surface, so the body just themes its text via the
+      // shared --apollon-chrome-* tokens.
+      className="flex h-full flex-col bg-transparent"
+      style={{ color: TEXT_PRIMARY }}
       role="complementary"
       aria-label={t.drawerTitle}
     >
-      {/* Composer: flat textarea with the Save button stacked underneath
-          so the save target is unambiguous and the textarea owns the full
-          width. Cmd/Ctrl+Enter submits; plain Enter inserts a newline.
-
-          Hidden entirely while previewing — there's nothing meaningful to
-          save while the canvas reflects an old snapshot, and showing it
-          alongside the read-only banner is contradictory UX. */}
+      {/* Composer: textarea over an action row (⌘+Enter hint left, Save right).
+          Cmd/Ctrl+Enter submits; plain Enter inserts a newline. Hidden while
+          previewing — saving an old snapshot is meaningless and contradicts the
+          read-only banner. */}
       {previewState === null && (
-        <Box
-          sx={{
-            px: 2,
-            pt: 1.5,
-            pb: 1,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "stretch",
-            gap: 0.75,
-            borderBottom: "1px solid var(--apollon-chrome-border)",
-          }}
+        <div
+          className="flex flex-col items-stretch gap-1.5 px-4 pt-3 pb-2"
+          style={{ borderBottom: "1px solid var(--apollon-chrome-border)" }}
         >
-          <InputBase
-            multiline
-            maxRows={4}
-            fullWidth
+          {/* Override the default 64px min-height for a one-line composer
+              (field-sizing-content still grows it as the user types); chrome
+              themed via the shared --apollon-chrome-* tokens for light/dark. */}
+          <Textarea
+            rows={1}
             placeholder={t.createPlaceholder}
             value={draft}
             onChange={(e) =>
               setDraft(e.target.value.slice(0, MAX_DESCRIPTION_LENGTH))
             }
             onKeyDown={handleComposerKeyDown}
-            inputRef={composerRef}
-            inputProps={{ "aria-label": "Describe this version" }}
-            sx={{
-              fontSize: "0.85rem",
-              color: TEXT_PRIMARY,
-              "& textarea::placeholder": { color: TEXT_MUTED, opacity: 1 },
-            }}
-          />
-          {/* ⌘/Ctrl+Enter hint — surface the keybinding so it's
-              discoverable instead of folklore. */}
-          <Typography
-            variant="caption"
-            sx={{
-              color: TEXT_MUTED,
-              fontSize: "0.7rem",
-              mt: -0.25,
-            }}
-            aria-hidden
-          >
-            {t.composerHint}
-          </Typography>
-          <Button
-            variant="contained"
-            size="small"
-            onClick={handleCreate}
-            disabled={submitting || !canSave}
-            title={
-              !canSave && previewState !== null
-                ? "Exit preview to save a new version"
-                : !canSave && isEmptyDiagram
-                  ? t.emptyDiagramTooltip
-                  : !canSave && !hasChanges
-                    ? "No changes since the last saved version"
-                    : undefined
+            ref={composerRef}
+            aria-label="Describe this version"
+            className="max-h-[6.5rem] min-h-9 resize-none px-2.5 py-1.5 text-caption placeholder:opacity-100 placeholder:[color:var(--ph)] focus-visible:border-[var(--apollon-chrome-accent)] focus-visible:ring-[color-mix(in_srgb,var(--apollon-chrome-accent)_40%,transparent)]"
+            style={
+              {
+                color: TEXT_PRIMARY,
+                borderColor: "var(--apollon-chrome-border)",
+                "--ph": TEXT_MUTED,
+              } as CSSProperties
             }
-            disableElevation
-            sx={{
-              alignSelf: "flex-end",
-              textTransform: "none",
-              px: 1.75,
-              py: 0.5,
-              fontWeight: 600,
-              borderRadius: "var(--apollon-chrome-radius-md)",
-              color: "var(--apollon-chrome-accent-contrast)",
-              backgroundColor: "var(--apollon-chrome-accent)",
-              "&:hover": {
-                backgroundColor: "var(--apollon-chrome-accent)",
-                filter: "brightness(0.94)",
-              },
-              "&.Mui-disabled": {
-                backgroundColor: "var(--apollon-chrome-surface-active)",
-                color: "var(--apollon-chrome-text-muted)",
-              },
-            }}
-          >
-            {submitting ? (
-              <CircularProgress
-                size={14}
-                sx={{ color: "var(--apollon-chrome-accent-contrast)" }}
-              />
-            ) : (
-              t.createButton
-            )}
-          </Button>
-        </Box>
+          />
+          {/* ⌘/Ctrl+Enter hint on the left (surfaces the keybinding) and the
+              Save button on the right. */}
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs" style={{ color: TEXT_MUTED }} aria-hidden>
+              {t.composerHint}
+            </span>
+            {/* Accent is the drawer's chrome accent, not the global `bg-primary`,
+                so the surface is overridden via style; disabled state stays themed
+                with chrome tokens. */}
+            <Button
+              type="button"
+              size="sm"
+              onClick={handleCreate}
+              disabled={submitting || !canSave}
+              title={
+                !canSave && previewState !== null
+                  ? "Exit preview to save a new version"
+                  : !canSave && isEmptyDiagram
+                    ? t.emptyDiagramTooltip
+                    : !canSave && !hasChanges
+                      ? "No changes since the last saved version"
+                      : undefined
+              }
+              className="ml-auto font-semibold hover:brightness-[0.94] disabled:[background:var(--apollon-chrome-surface-active)] disabled:[color:var(--apollon-chrome-text-muted)] disabled:opacity-100"
+              style={{
+                color: "var(--apollon-chrome-accent-contrast)",
+                background: "var(--apollon-chrome-accent)",
+              }}
+            >
+              {submitting ? (
+                <Spinner
+                  className="size-3.5"
+                  style={{ color: "var(--apollon-chrome-accent-contrast)" }}
+                />
+              ) : (
+                t.createButton
+              )}
+            </Button>
+          </div>
+        </div>
       )}
 
-      {/* Section meta: counter + "last saved Xm ago" + autosave filter
-          toggle. Borderless — separation comes from spacing. The toggle
-          mirrors Figma's "Show autosave versions" — default on; flipping
-          off hides every empty-meta row for a milestone-only view. */}
-      <Box
-        sx={{
-          px: 2,
-          py: 0.5,
-          display: "flex",
-          alignItems: "center",
-          gap: 1,
-        }}
-      >
-        <Typography
-          variant="caption"
-          sx={{ color: TEXT_PRIMARY, fontWeight: 600, whiteSpace: "nowrap" }}
+      {/* Section meta: counter + "last saved Xm ago" + autosave filter toggle
+          (default on; off → milestone-only view). */}
+      <div className="flex items-center gap-2 px-4 py-1">
+        <span
+          className="text-xs font-semibold whitespace-nowrap"
+          style={{ color: TEXT_PRIMARY }}
         >
           {totalDisplay}
-          <Box component="span" sx={{ color: TEXT_MUTED, fontWeight: 400 }}>
+          <span className="font-normal" style={{ color: TEXT_MUTED }}>
             {" / "}
             {MAX_VERSIONS}
-          </Box>
-        </Typography>
-        <Typography
-          variant="caption"
-          sx={{
-            color: TEXT_MUTED,
-            flex: 1,
-            minWidth: 0,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
+          </span>
+        </span>
+        <span
+          className="min-w-0 flex-1 overflow-hidden text-xs text-ellipsis whitespace-nowrap"
+          style={{ color: TEXT_MUTED }}
           title={sectionSubtitle}
         >
           · {sectionSubtitle}
-        </Typography>
-        <Tooltip
-          title={
-            showAutosaves ? "Hide autosave versions" : "Show autosave versions"
-          }
-        >
-          <IconButton
-            size="small"
-            onClick={() => setShowAutosaves((v) => !v)}
-            aria-label={
-              showAutosaves
+        </span>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger
+              onClick={() => setShowAutosaves((v) => !v)}
+              aria-label={
+                showAutosaves
+                  ? "Hide autosave versions"
+                  : "Show autosave versions"
+              }
+              aria-pressed={showAutosaves}
+              className="inline-flex size-6 cursor-pointer items-center justify-center rounded-md bg-transparent p-0.5 outline-none transition-colors hover:[background:var(--row-hover-bg)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:[outline-color:var(--apollon-chrome-accent)]"
+              style={
+                {
+                  color: showAutosaves ? TEXT_PRIMARY : TEXT_MUTED,
+                  "--row-hover-bg": ROW_HOVER_BG,
+                } as CSSProperties
+              }
+            >
+              <HistoryIcon className="size-4" aria-hidden />
+            </TooltipTrigger>
+            <TooltipContent>
+              {showAutosaves
                 ? "Hide autosave versions"
-                : "Show autosave versions"
-            }
-            aria-pressed={showAutosaves}
-            sx={{ color: showAutosaves ? TEXT_PRIMARY : TEXT_MUTED, p: 0.25 }}
-          >
-            <HistoryToggleOffIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      </Box>
+                : "Show autosave versions"}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
 
       <CurrentVersionRow
         diagramId={diagramId}
@@ -540,102 +486,82 @@ export const VersionSidebarBody: FC<Props> = ({
         latestSavedVersion={latestSavedVersion}
       />
 
-      <Box sx={{ flex: 1, overflow: "auto" }}>
+      <div className="flex-1 overflow-auto">
         {errorCode === "REDIS_UNAVAILABLE" ? (
-          <Box sx={{ p: 2 }}>
-            <Typography
-              variant="body2"
-              sx={{ color: "var(--apollon-alert-warning-yellow)" }}
+          <div className="p-4">
+            <p
+              className="text-sm"
+              style={{ color: "var(--apollon-alert-warning-yellow)" }}
             >
               {t.failureRedis}
-            </Typography>
-          </Box>
+            </p>
+          </div>
         ) : loading && versions.length === 0 ? (
-          <List>
+          <ul className="m-0 list-none p-0">
             {[0, 1, 2].map((i) => (
-              <Box key={i} sx={{ p: 2, display: "flex", gap: 1.5 }}>
-                <Skeleton variant="rectangular" width={64} height={40} />
-                <Box sx={{ flex: 1 }}>
-                  <Skeleton width="60%" />
-                  <Skeleton width="30%" />
-                </Box>
-              </Box>
+              <li key={i} className="flex list-none gap-3 p-4">
+                <Skeleton
+                  className="rounded-none"
+                  style={{ width: 64, height: 40 }}
+                />
+                <div className="flex-1">
+                  <Skeleton className="h-4 w-[60%]" />
+                  <Skeleton className="mt-1 h-4 w-[30%]" />
+                </div>
+              </li>
             ))}
-          </List>
+          </ul>
         ) : versions.length === 0 ? (
-          <Box sx={{ px: 3, py: 4, textAlign: "center" }}>
-            <Typography variant="body2" sx={{ color: TEXT_MUTED, mb: 1.5 }}>
+          <div className="px-6 py-8 text-center">
+            <p className="mb-3 text-sm" style={{ color: TEXT_MUTED }}>
               {isLocal ? t.emptyBodyLocal : t.emptyBody}
-            </Typography>
+            </p>
             {isLocal && (
-              <Tooltip
-                title={
-                  isEmptyDiagram
-                    ? t.emptyDiagramTooltip
-                    : !canSave
-                      ? "Add something to the canvas first"
-                      : ""
-                }
-              >
-                {/* span wrapper so the tooltip still shows on the disabled button */}
-                <span>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    onClick={() => void handleCreate()}
-                    disabled={submitting || !canSave}
-                    sx={{
-                      textTransform: "none",
-                      color: TEXT_PRIMARY,
-                      borderColor: TEXT_MUTED,
-                      "&:hover": {
-                        borderColor: TEXT_PRIMARY,
-                        backgroundColor: ROW_HOVER_BG,
-                      },
-                      "&.Mui-disabled": {
-                        color: TEXT_MUTED,
-                        borderColor: "var(--apollon-chrome-border)",
-                      },
-                    }}
-                  >
-                    {t.emptyCtaLocal}
-                  </Button>
-                </span>
-              </Tooltip>
+              <TooltipProvider>
+                <Tooltip>
+                  {/* span wrapper so the tooltip still shows on the disabled
+                      button (a disabled button emits no pointer events). */}
+                  <TooltipTrigger render={<span className="inline-flex" />}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void handleCreate()}
+                      disabled={submitting || !canSave}
+                      className="hover:[background:var(--row-hover-bg)] disabled:[border-color:var(--apollon-chrome-border)] disabled:[color:var(--btn-disabled-color)] disabled:opacity-100"
+                      style={
+                        {
+                          color: TEXT_PRIMARY,
+                          borderColor: TEXT_MUTED,
+                          background: "transparent",
+                          "--row-hover-bg": ROW_HOVER_BG,
+                          "--btn-disabled-color": TEXT_MUTED,
+                        } as CSSProperties
+                      }
+                    >
+                      {t.emptyCtaLocal}
+                    </Button>
+                  </TooltipTrigger>
+                  {(isEmptyDiagram || !canSave) && (
+                    <TooltipContent>
+                      {isEmptyDiagram
+                        ? t.emptyDiagramTooltip
+                        : "Add something to the canvas first"}
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
             )}
-          </Box>
+          </div>
         ) : (
-          <List
-            role="listbox"
+          // List/listitem (not listbox/option): each row carries its OWN
+          // focusable `<Link>` as the keyboard tab-stop + Enter target (like the
+          // gallery cards), so the row never nests interactive content inside a
+          // widget role (axe: nested-interactive). Native `<ul>` list semantics.
+          <ul
+            className="m-0 list-none p-0"
+            role="list"
             aria-label={t.drawerTitle}
-            aria-activedescendant={
-              activeRowId ? `version-row-${activeRowId}` : undefined
-            }
-            tabIndex={0}
-            onKeyDown={(e) => {
-              const navigable = groupedVersions
-                .map((g) => (g.kind === "single" ? g.version : g.first))
-                .filter((v) => !v.pending)
-              if (navigable.length === 0) return
-              const idx = navigable.findIndex((v) => v.id === activeRowId)
-              if (e.key === "ArrowDown") {
-                e.preventDefault()
-                const next =
-                  navigable[Math.min(idx + 1, navigable.length - 1)] ??
-                  navigable[0]
-                if (next) setActiveRowId(next.id)
-              } else if (e.key === "ArrowUp") {
-                e.preventDefault()
-                const next = navigable[Math.max(idx - 1, 0)] ?? navigable[0]
-                if (next) setActiveRowId(next.id)
-              } else if (e.key === "Enter" && activeRowId) {
-                e.preventDefault()
-                handlePreview(activeRowId)
-              } else if (e.key === "Delete" && activeRowId) {
-                e.preventDefault()
-                handleDelete(activeRowId)
-              }
-            }}
           >
             {groupedVersions.map((entry) =>
               entry.kind === "auto-group" ? (
@@ -646,7 +572,6 @@ export const VersionSidebarBody: FC<Props> = ({
                   onPreview={handlePreview}
                   onRestore={handleRestore}
                   onDelete={handleDelete}
-                  activeRowId={activeRowId}
                   previewingVersionId={previewState?.versionId ?? null}
                   versionNumberById={versionNumberById}
                   latestSavedId={latestSavedVersion?.id}
@@ -658,10 +583,7 @@ export const VersionSidebarBody: FC<Props> = ({
                   diagramId={diagramId}
                   version={entry.version}
                   versionNumber={versionNumberById.get(entry.version.id)}
-                  isPreviewing={
-                    previewState?.versionId === entry.version.id ||
-                    entry.version.id === activeRowId
-                  }
+                  isPreviewing={previewState?.versionId === entry.version.id}
                   // Restore is meaningful unless this row IS the latest
                   // saved version AND the canvas already matches it. With
                   // unsaved changes, restoring even the latest version is
@@ -676,31 +598,37 @@ export const VersionSidebarBody: FC<Props> = ({
               )
             )}
             {nextCursor && (
-              <Box sx={{ px: 2, py: 1.5, textAlign: "center" }}>
+              <li className="list-none px-4 py-3 text-center">
                 <Button
-                  size="small"
+                  type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => loadMoreVersions(diagramId)}
                   disabled={loading}
-                  sx={{ textTransform: "none", color: TEXT_PRIMARY }}
+                  className="hover:[background:var(--row-hover-bg)]"
+                  style={
+                    {
+                      color: TEXT_PRIMARY,
+                      "--row-hover-bg": ROW_HOVER_BG,
+                    } as CSSProperties
+                  }
                 >
                   {t.loadOlder}
                 </Button>
-              </Box>
+              </li>
             )}
-          </List>
+          </ul>
         )}
-      </Box>
-    </Box>
+      </div>
+    </div>
   )
 }
 
 /**
- * Desktop version-history panel, rehomed onto the library's overlay/control API.
- * Instead of being a flex sibling that pushes the canvas (a reflow on every
- * open/close), it is portaled into the editor's `right-rail` overlay region: the
- * canvas stays full-bleed beneath it and the diagram makes room via the measured
- * inset (no reflow). The panel unmounts when closed, releasing the
- * SVG-thumbnail observer. Mobile keeps the bottom-sheet `<VersionDrawer>`.
+ * Desktop version-history panel, portaled into the editor's `right-rail` overlay
+ * region: the canvas stays full-bleed beneath it and the diagram makes room via
+ * the measured inset (no reflow). Unmounts when closed, releasing the
+ * SVG-thumbnail observer. Mobile uses the bottom-sheet `<VersionDrawer>`.
  */
 export const VersionRail: FC<Props> = ({
   diagramId,
@@ -719,22 +647,36 @@ export const VersionRail: FC<Props> = ({
   if (!host) return null
 
   return createPortal(
-    <Box
-      className="apollon-glass apollon-history-panel apollon-chrome-island"
-      sx={{
-        // A floating glass card — the right-side mirror of the left palette, NOT
-        // a full-height docked slab. Anchored to the top of the right-rail band
-        // and bounded in height (scrolls internally) so it reads as an island,
-        // not a column. Width + margins are what the band measures as the
-        // reserved right inset (no reflow); the height cap doesn't affect width.
+    <div
+      // A floating glass card — the right-side mirror of the left palette, NOT
+      // a full-height docked slab. Anchored to the top of the right-rail band
+      // and bounded in height (scrolls internally) so it reads as an island,
+      // not a column. Width + margins are what the band measures as the
+      // reserved right inset (no reflow); the height cap doesn't affect width.
+      //
+      // The host node returned by `getRegionElement("right-rail")` is registered
+      // with `interactive: false` (see apollon-editor.tsx), so its ControlSlot
+      // frame stays `pointer-events: none` and carries NO `nopan/nodrag/nowheel`.
+      // A portal mounted into it therefore has to re-create the interactive
+      // ControlSlot mechanism itself, or pointer events fall through and pan the
+      // React Flow canvas. We mirror OverlayLayer's interactive branch exactly:
+      //   (a) `pointer-events: auto` (re-opt into receiving events),
+      //   (b) `nopan nodrag nowheel` (stop React Flow's drag/zoom/wheel
+      //       behaviour from claiming the gesture), and
+      //   (c) capture-phase `stopPropagation` on pointer/mouse/touch-down so the
+      //       canvas's listeners never see the gesture in the first place.
+      // All three are required: (a) makes the surface receive the event, (b)+(c)
+      // keep React Flow from panning/zooming when it does.
+      className="apollon-glass apollon-history-panel apollon-chrome-island nopan nodrag nowheel m-2.5 self-start overflow-hidden rounded-[var(--apollon-chrome-radius-lg)]"
+      style={{
         width: SIDEBAR_WIDTH,
-        alignSelf: "flex-start",
         maxHeight: "min(640px, 100%)",
         minHeight: 0,
-        m: "10px",
-        overflow: "hidden",
-        borderRadius: "var(--apollon-chrome-radius-lg)",
+        pointerEvents: "auto",
       }}
+      onPointerDownCapture={(e) => e.stopPropagation()}
+      onMouseDownCapture={(e) => e.stopPropagation()}
+      onTouchStartCapture={(e) => e.stopPropagation()}
     >
       <VersionSidebarBody
         diagramId={diagramId}
@@ -742,7 +684,7 @@ export const VersionRail: FC<Props> = ({
         onConfirmedRestore={onConfirmedRestore}
         onPreview={onPreview}
       />
-    </Box>,
+    </div>,
     host
   )
 }
@@ -760,36 +702,37 @@ export const VersionDrawer: FC<Props> = ({
   const isSmall = useMediaQuery(NARROW_VIEW_QUERY)
   const open = useVersionStore((s) => Boolean(s.drawerOpenByDiagram[diagramId]))
   const closeDrawer = useVersionStore((s) => s.closeDrawer)
-  // Desktop uses the inline sidebar; this component is mobile-only.
+  // Desktop uses the inline rail; this component is mobile-only.
   if (!isSmall) return null
   return (
-    <Drawer
-      anchor="bottom"
+    <Sheet
       open={open}
-      onClose={() => closeDrawer(diagramId)}
-      PaperProps={{
-        // A floating glass card detached from the edges (margins + radius +
-        // blur), not a full-bleed bottom sheet — the mobile mirror of the
-        // desktop rail island. backgroundColor MUST be set via sx: emotion beats
-        // MUI's default `.MuiPaper-root` white, but a plain class loses the
-        // specificity tie and the sheet renders white in dark mode.
-        className: "apollon-glass apollon-history-panel",
-        sx: {
-          m: "var(--apollon-chrome-edge)",
-          maxHeight: "70vh",
-          borderRadius: "var(--apollon-chrome-radius-lg)",
+      onOpenChange={(next) => {
+        if (!next) closeDrawer(diagramId)
+      }}
+    >
+      {/* A floating glass card detached from the edges (margins + radius +
+          blur), not a full-bleed bottom sheet — the mobile mirror of the
+          desktop rail island. The chrome glass background overrides shadcn's
+          default `bg-background` so the sheet themes charcoal in dark mode. */}
+      <SheetContent
+        side="bottom"
+        showCloseButton={false}
+        className="apollon-glass apollon-history-panel m-[var(--apollon-chrome-edge)] h-auto max-h-[70vh] w-auto gap-0 rounded-[var(--apollon-chrome-radius-lg)] border-0 bg-clip-border p-0"
+        style={{
           backgroundColor: "var(--apollon-chrome-glass-solid)",
           backgroundImage: "none",
           color: "var(--apollon-chrome-text)",
-        },
-      }}
-    >
-      <VersionSidebarBody
-        diagramId={diagramId}
-        onVersionSaved={onVersionSaved}
-        onConfirmedRestore={onConfirmedRestore}
-        onPreview={onPreview}
-      />
-    </Drawer>
+        }}
+        aria-label={t.drawerTitle}
+      >
+        <VersionSidebarBody
+          diagramId={diagramId}
+          onVersionSaved={onVersionSaved}
+          onConfirmedRestore={onConfirmedRestore}
+          onPreview={onPreview}
+        />
+      </SheetContent>
+    </Sheet>
   )
 }

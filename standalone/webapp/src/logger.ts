@@ -4,23 +4,16 @@ type Sink = Pick<Console, "debug" | "warn" | "error">
 
 const noop = () => {}
 
-let sink: Sink =
+const sink: Sink =
   typeof process !== "undefined" && process.env.NODE_ENV !== "production"
     ? console
     : { debug: noop, warn: noop, error: noop }
 
-let level: LogLevel =
+const level = (
   typeof process !== "undefined" && process.env.NODE_ENV !== "production"
     ? "debug"
     : "silent"
-
-export function setLogger(next: Partial<Sink>) {
-  sink = { ...sink, ...next }
-}
-
-export function setLogLevel(next: LogLevel) {
-  level = next
-}
+) as LogLevel
 
 export const log = {
   debug: (...a: unknown[]) => (level === "debug" ? sink.debug(...a) : void 0),

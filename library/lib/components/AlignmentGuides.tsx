@@ -1,7 +1,6 @@
 import { useStore } from "@xyflow/react"
 import { useAlignmentGuidesStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
-import { AlignmentGuide } from "@/store/alignmentGuidesStore"
 import "@/styles/alignmentGuides.css"
 
 // A reusable pool of guide-line slots. The guide <line>s carry an infinite CSS
@@ -21,7 +20,7 @@ export const AlignmentGuides = () => {
   const { guides } = useAlignmentGuidesStore(
     useShallow((state) => ({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      guides: state.guides as any as AlignmentGuide[],
+      guides: state.guides,
     }))
   )
 

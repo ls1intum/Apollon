@@ -1,23 +1,37 @@
-import { Button, Stack } from "@mui/material"
 import { useState } from "react"
 import { toast } from "react-toastify"
+import { Button } from "@tumaet/ui/components/button"
+import {
+  AlertDialogCancel,
+  AlertDialogDescription,
+  AlertDialogFooter,
+} from "@tumaet/ui/components/alert-dialog"
 import { useModalContext } from "@/contexts"
 import {
   selectScopedPreview,
-  selectVersions,
   useVersionStore,
+  type PendingVersion,
 } from "@/stores/useVersionStore"
-import { Typography } from "@/components/Typography"
 import { useClosePreview } from "@/hooks/useVersionPreviewUrlSync"
 import { log } from "@/logger"
 import { versioningStrings as t } from "./strings"
 
-interface Props {
+interface DeleteVersionModalProps {
   diagramId: string
   versionId: string
+  /**
+   * The target version, already resolved by the opener (which has it in hand) —
+   * passed in rather than re-read from the store, used only to name it in the
+   * warning copy. `null` falls back to the generic body.
+   */
+  version: PendingVersion | null
 }
 
-export const DeleteVersionModal = ({ diagramId, versionId }: Props) => {
+export const DeleteVersionModal = ({
+  diagramId,
+  versionId,
+  version,
+}: DeleteVersionModalProps) => {
   const { closeModal } = useModalContext()
   const deleteVersion = useVersionStore((s) => s.deleteVersion)
   // Clearing `?version=` before delete stops the URL sync re-entering the
@@ -26,16 +40,16 @@ export const DeleteVersionModal = ({ diagramId, versionId }: Props) => {
   const previewingThis = useVersionStore(
     (s) => selectScopedPreview(s, diagramId)?.versionId === versionId
   )
-  const target = useVersionStore((s) =>
-    selectVersions(s, diagramId).find((v) => v.id === versionId)
-  )
   const [working, setWorking] = useState(false)
 
-  const onConfirm = async () => {
+  const handleConfirm = async () => {
     setWorking(true)
     try {
       if (previewingThis) closePreview()
       await deleteVersion(diagramId, versionId)
+      // Close only on success — a rejected delete keeps the dialog open so the
+      // error toast lands in context (so the destructive action owns its own
+      // close instead of the auto-dismissing AlertDialog primitive).
       closeModal()
     } catch (err) {
       log.error("Delete version failed", err)
@@ -45,30 +59,27 @@ export const DeleteVersionModal = ({ diagramId, versionId }: Props) => {
     }
   }
 
-  const label = target
-    ? target.description?.trim() || target.name?.trim() || t.unnamed
+  const label = version
+    ? version.description?.trim() || version.name?.trim() || t.unnamed
     : null
 
   return (
-    <Stack spacing={2}>
-      <Typography>
+    <div className="flex flex-col gap-4">
+      <AlertDialogDescription className="text-foreground">
         {label
           ? `'${label}' will be permanently removed. This cannot be undone.`
           : t.deleteFallbackBody}
-      </Typography>
-      <Stack direction="row" spacing={1} justifyContent="flex-end">
-        <Button onClick={closeModal} disabled={working}>
-          {t.cancel}
-        </Button>
+      </AlertDialogDescription>
+      <AlertDialogFooter>
+        <AlertDialogCancel disabled={working}>{t.cancel}</AlertDialogCancel>
         <Button
-          color="error"
-          variant="contained"
-          onClick={onConfirm}
+          variant="destructive"
+          onClick={handleConfirm}
           disabled={working}
         >
           {t.delete}
         </Button>
-      </Stack>
-    </Stack>
+      </AlertDialogFooter>
+    </div>
   )
 }

@@ -240,12 +240,16 @@ test.describe("Local version history (#670, /local/:id routing)", () => {
     await ensureDrawerOpen(page)
     await composer(page).fill("snapshot one")
     await saveVersionButton(page).click()
-    const row = page.getByText("snapshot one").first()
-    await expect(row).toBeVisible()
+    await expect(page.getByText("snapshot one").first()).toBeVisible()
 
     // Clicking a saved row enters read-only preview — the banner's "Exit
-    // preview" affordance appears and the composer is hidden.
-    await row.click()
+    // preview" affordance appears and the composer is hidden. The row is a
+    // stretched-link card (like the gallery cards): its overlay <a> owns the
+    // click and intercepts pointer events over the bare text, so target the link.
+    await page
+      .getByRole("link", { name: /snapshot one/i })
+      .first()
+      .click()
     const exitPreview = page.getByRole("button", { name: /Exit preview/i })
     await expect(exitPreview).toBeVisible()
     await expect(composer(page)).toHaveCount(0)
@@ -266,8 +270,12 @@ test.describe("Local version history (#670, /local/:id routing)", () => {
     await saveVersionButton(page).click()
     await expect(page.getByText("milestone").first()).toBeVisible()
 
-    // Clicking a row writes ?version=<id> (the source of truth).
-    await page.getByText("milestone").first().click()
+    // Clicking a row writes ?version=<id> (the source of truth). The row's
+    // stretched-link <a> owns the click, so target the link, not the bare text.
+    await page
+      .getByRole("link", { name: /milestone/i })
+      .first()
+      .click()
     await expect(page).toHaveURL(/[?&]version=/)
     await expect(
       page.getByRole("button", { name: /Exit preview/i })
@@ -313,7 +321,8 @@ test.describe("Local version history (#670, /local/:id routing)", () => {
     await ensureDrawerOpen(page)
     await composer(page).fill("v1")
     await saveVersionButton(page).click()
-    await page.getByText("v1", { exact: true }).first().click()
+    // Target the row's stretched-link <a> (it intercepts clicks over the text).
+    await page.getByRole("link", { name: /— v1$/i }).first().click()
     await expect(page).toHaveURL(/[?&]version=/)
     await expect(
       page.getByRole("button", { name: /Exit preview/i })
@@ -418,8 +427,7 @@ test.describe("Local version history (#670, /local/:id routing)", () => {
       .click()
     await galleryWin.getByRole("menuitem", { name: "Delete" }).click()
     await galleryWin
-      .getByText(/Are you sure/)
-      .locator("..")
+      .getByRole("alertdialog", { name: "Delete this diagram?" })
       .getByRole("button", { name: "Delete" })
       .click()
 
