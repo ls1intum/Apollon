@@ -1,6 +1,5 @@
 import { create } from "zustand"
 import type { UMLModel, UMLDiagramType } from "@tumaet/apollon"
-import { v4 as uuidv4 } from "uuid"
 import { persist, devtools } from "zustand/middleware"
 import {
   PlaygroundDefaultModel,
@@ -57,7 +56,7 @@ const omitKey = <V,>(
 }
 
 const populateNewModel = () => ({
-  id: uuidv4(),
+  id: crypto.randomUUID(),
   type: "ClassDiagram" as UMLDiagramType,
   assessments: {},
   edges: [],
@@ -251,7 +250,7 @@ export const usePersistenceModelStore = create<PersistenceModelStore>()(
             counter += 1
           }
 
-          const duplicatedId = uuidv4()
+          const duplicatedId = crypto.randomUUID()
           const duplicatedModel: UMLModel = {
             ...clonedModel,
             id: duplicatedId,

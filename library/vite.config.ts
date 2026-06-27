@@ -44,7 +44,7 @@ function emitFontLicense(): Plugin {
 //                        Artemis.
 //
 // `@tumaet/ui` (Apollon's private design-system package) and its small styling
-// utilities (cmdk / class-variance-authority / clsx / tailwind-merge) are NOT
+// utilities (class-variance-authority / clsx / tailwind-merge) are NOT
 // publishable on their own, so they stay bundled in EVERY pass — only deps a
 // consumer can actually install from `@tumaet/apollon` are externalized.
 //
@@ -79,7 +79,7 @@ const REACT_PEERS = [
 // bundle. Base UI + lucide are the editor's UI primitives; the editor imports
 // them directly AND through the bundled `@tumaet/ui`, so externalizing them here
 // also de-duplicates @tumaet/ui's copy.
-// @tumaet/ui's other deps (cmdk / cva / clsx / tailwind-merge) are NOT declared
+// @tumaet/ui's other deps (cva / clsx / tailwind-merge) are NOT declared
 // by @tumaet/apollon, so they stay bundled — a consumer couldn't install them.
 // Base UI + zustand are matched with subpaths (`@base-ui/react/menu`,
 // `zustand/middleware`) — Rollup treats those as distinct ids, so an exact

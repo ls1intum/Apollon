@@ -132,7 +132,6 @@
     "@dnd-kit/utilities": "3.2.2",
     "@base-ui/react": "catalog:",
     "lucide-react": "catalog:",
-    "uuid": "catalog:",
     "zustand": "catalog:"
   },
   "optionalDependencies": {
