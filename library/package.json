@@ -141,6 +141,7 @@
     "svg2pdf.js": "catalog:"
   },
   "devDependencies": {
+    "@eslint-react/eslint-plugin": "catalog:",
     "@eslint/js": "catalog:",
     "@size-limit/preset-big-lib": "catalog:",
     "@testing-library/jest-dom": "catalog:",
@@ -155,7 +156,6 @@
     "ajv": "8.20.0",
     "babel-plugin-react-compiler": "catalog:",
     "eslint": "catalog:",
-    "eslint-plugin-react": "catalog:",
     "eslint-plugin-react-hooks": "catalog:",
     "globals": "catalog:",
     "jsdom": "catalog:",
