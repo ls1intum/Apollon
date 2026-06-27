@@ -1,6 +1,7 @@
-import { Router } from "express"
+import { Hono } from "hono"
 import { randomBytes } from "node:crypto"
 import type { Config } from "../config.js"
+import type { AppEnv } from "../http/env.js"
 import { k, type Redis } from "../redis.js"
 import type { Diagram } from "../types.js"
 import type { RelayHook } from "../http/app.js"
@@ -146,14 +147,14 @@ function generateDiagramId(): string {
 export function mountDiagramRoutes(
   { config, redis }: Deps,
   relay?: RelayHook
-): Router {
-  const router = Router()
+): Hono<AppEnv> {
+  const router = new Hono<AppEnv>()
 
   router.post(
     "/diagrams",
     validate(
       { body: DiagramBody.omit({ id: true }).partial() },
-      async (_req, res, _next, { body }) => {
+      async (c, { body }) => {
         const id = generateDiagramId()
         const now = new Date().toISOString()
         const diagram: Diagram = {
@@ -168,41 +169,34 @@ export function mountDiagramRoutes(
           updatedAt: now,
         }
         await saveHead(redis, config, diagram)
-        setOwnerCookie(res, id, config.OWNER_SECRET)
-        res.status(201).json(diagram)
+        setOwnerCookie(c, id, config.OWNER_SECRET)
+        return c.json(diagram, 201)
       }
     )
   )
 
   router.get(
     "/diagrams/:diagramId",
-    validate(
-      { params: DiagramIdParams },
-      async (_req, res, _next, { params }) => {
-        const diagram = await readDiagram(redis, params.diagramId)
-        if (!diagram) throw Errors.notFound("diagram not found")
-        // Opening a diagram counts as activity — slide its TTL forward.
-        await refreshDiagramTtl(
-          redis,
-          config.DIAGRAM_TTL_SECONDS,
-          params.diagramId
-        )
-        res.status(200).json(diagram)
-      }
-    )
+    validate({ params: DiagramIdParams }, async (c, { params }) => {
+      const diagram = await readDiagram(redis, params.diagramId)
+      if (!diagram) throw Errors.notFound("diagram not found")
+      // Opening a diagram counts as activity — slide its TTL forward.
+      await refreshDiagramTtl(redis, config.DIAGRAM_TTL_SECONDS, params.diagramId)
+      return c.json(diagram, 200)
+    })
   )
 
   router.put(
     "/diagrams/:diagramId",
     validate(
       { params: DiagramIdParams, body: PutDiagramBody },
-      async (req, res, _next, { params, body }) => {
+      async (c, { params, body }) => {
         const existing = await readDiagram(redis, params.diagramId)
 
         // If-Match advisory race detection. Optional; the client drives the
         // retry loop. LWW remains the documented contract — this header
         // exists only to give clients a chance to refetch + rebase.
-        const ifMatch = req.header("if-match")
+        const ifMatch = c.req.header("if-match")
         if (ifMatch && existing) {
           const headRevStr = await redis.hGet(
             k.diagramMeta(params.diagramId),
@@ -230,8 +224,8 @@ export function mountDiagramRoutes(
 
         // Issue the owner cookie on first PUT for diagrams created before
         // the soft-cookie feature shipped (back-compat).
-        if (!req.isOwner) {
-          setOwnerCookie(res, params.diagramId, config.OWNER_SECRET)
+        if (!c.get("isOwner")) {
+          setOwnerCookie(c, params.diagramId, config.OWNER_SECRET)
         }
 
         // Fire-and-forget auto-version. The HEAD response is what the client
@@ -250,30 +244,27 @@ export function mountDiagramRoutes(
           )
         })
 
-        res.setHeader("etag", `"${headRev}"`)
-        res.status(200).json({ headRev, updatedAt })
+        c.header("etag", `"${headRev}"`)
+        return c.json({ headRev, updatedAt }, 200)
       }
     )
   )
 
   router.delete(
     "/diagrams/:diagramId",
-    validate(
-      { params: DiagramIdParams },
-      async (_req, res, _next, { params }) => {
-        const deleted = await cascadeDeleteDiagram(redis, params.diagramId)
-        relay?.publishControl(params.diagramId, { type: "DIAGRAM_DELETED" })
-        logger.info(
-          {
-            event: "diagram.deleted",
-            diagramId: params.diagramId,
-            deletedKeys: deleted,
-          },
-          "diagram deleted"
-        )
-        res.status(204).end()
-      }
-    )
+    validate({ params: DiagramIdParams }, async (c, { params }) => {
+      const deleted = await cascadeDeleteDiagram(redis, params.diagramId)
+      relay?.publishControl(params.diagramId, { type: "DIAGRAM_DELETED" })
+      logger.info(
+        {
+          event: "diagram.deleted",
+          diagramId: params.diagramId,
+          deletedKeys: deleted,
+        },
+        "diagram deleted"
+      )
+      return c.body(null, 204)
+    })
   )
 
   return router
