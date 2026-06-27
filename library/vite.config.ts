@@ -35,7 +35,7 @@ function emitFontLicense(): Plugin {
 //                        hosts that share their own React.
 //   LIB_EXTERNAL=true  → dist/external/index.js
 //                        EVERY runtime dependency externalized (the React family
-//                        plus Base UI, lucide, @dnd-kit, zustand, uuid, and
+//                        plus Base UI, lucide, @dnd-kit, zustand, and
 //                        @chenglou/pretext). Same imperative API as the default
 //                        entry, but the host's bundler resolves, de-duplicates,
 //                        and gets full SBOM attribution for each dependency
@@ -89,7 +89,6 @@ const RUNTIME_DEPS = [
   "lucide-react",
   /^@dnd-kit\//,
   /^zustand(\/.*)?$/,
-  "uuid",
   "@chenglou/pretext",
 ]
 
