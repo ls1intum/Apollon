@@ -2,7 +2,7 @@
 import globals from "globals"
 import pluginJs from "@eslint/js"
 import tseslint from "typescript-eslint"
-import reactPlugin from "eslint-plugin-react"
+import eslintReact from "@eslint-react/eslint-plugin"
 import reactHooks from "eslint-plugin-react-hooks"
 
 /** @type {import('eslint').Linter.Config[]} */
@@ -12,15 +12,30 @@ export default [
   { languageOptions: { globals: globals.browser } },
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
-  reactPlugin.configs.flat.recommended,
-  reactPlugin.configs.flat["jsx-runtime"],
+  // @eslint-react (the eslint-react project) is our React linter: flat-config +
+  // ESLint 10 native. It replaces jsx-eslint/eslint-plugin-react, which has no
+  // ESLint 10 release (peer caps at `^9.7`). `recommended-typescript` covers the
+  // old plugin's recommended set and disables the prop-types rules TypeScript
+  // already enforces — so the previous `react/prop-types: off` is no longer
+  // needed. It also self-detects the React version, replacing `settings.react`.
+  eslintReact.configs["recommended-typescript"],
   {
-    settings: { react: { version: "detect" } },
     plugins: { "react-hooks": reactHooks },
+    // eslint-plugin-react-hooks v7 is the hooks / React-Compiler authority here;
+    // turn off @eslint-react's overlapping hook-rule copies so each concern is
+    // reported once, by react-hooks.
     rules: {
       ...reactHooks.configs.recommended.rules,
+      "@eslint-react/error-boundaries": "off",
+      "@eslint-react/exhaustive-deps": "off",
+      "@eslint-react/purity": "off",
+      "@eslint-react/rules-of-hooks": "off",
+      "@eslint-react/set-state-in-effect": "off",
+      "@eslint-react/set-state-in-render": "off",
+      "@eslint-react/static-components": "off",
+      "@eslint-react/unsupported-syntax": "off",
+      "@eslint-react/use-memo": "off",
       "react-hooks/exhaustive-deps": "warn",
-      "react/prop-types": "off",
       // Allow intentionally-unused `_`-prefixed bindings.
       "@typescript-eslint/no-unused-vars": [
         "error",

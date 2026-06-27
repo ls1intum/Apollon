@@ -70,6 +70,7 @@
   "devDependencies": {
     "@capacitor/assets": "3.0.5",
     "@capacitor/cli": "8.4.1",
+    "@eslint-react/eslint-plugin": "catalog:",
     "@eslint/js": "catalog:",
     "@playwright/test": "catalog:",
     "@resvg/resvg-js": "2.6.2",
@@ -90,7 +91,6 @@
     "@vitest/browser-playwright": "catalog:",
     "babel-plugin-react-compiler": "catalog:",
     "eslint": "catalog:",
-    "eslint-plugin-react": "catalog:",
     "eslint-plugin-react-hooks": "catalog:",
     "fake-indexeddb": "6.2.5",
     "globals": "catalog:",

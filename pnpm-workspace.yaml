@@ -20,7 +20,11 @@ blockExoticSubdeps: true
 # version string, so Renovate bumps a dep in one place instead of N.
 catalog:
   "@base-ui/react": "1.6.0"
-  "@eslint/js": "9.39.4"
+  "@eslint/js": "10.0.1"
+  # Modern, flat-config-native React linter (the eslint-react project). Replaces
+  # jsx-eslint/eslint-plugin-react, which has no ESLint 10 release (peer caps at
+  # `^9.7`; the v10 RuleContext fix in PR #3979 is still open/unreleased).
+  "@eslint-react/eslint-plugin": "5.9.3"
   "@resvg/resvg-wasm": "2.6.2"
   "@size-limit/file": "12.1.0"
   "@size-limit/preset-big-lib": "12.1.0"
@@ -58,8 +62,7 @@ catalog:
   babel-plugin-react-compiler: "1.0.0"
   class-variance-authority: "0.7.1"
   clsx: "2.1.1"
-  eslint: "9.39.4"
-  eslint-plugin-react: "7.37.5"
+  eslint: "10.5.0"
   eslint-plugin-react-hooks: "7.1.1"
   globals: "17.7.0"
   jsdom: "29.1.1"

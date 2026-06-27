@@ -158,8 +158,6 @@ export function getPathEndInfo(pathD: string): PathEndInfo | null {
 
       case "C": // Cubic Bezier (x1 y1 x2 y2 x y)
         for (let i = 0; i + 5 < params.length; i += 6) {
-          prevX = currentX
-          prevY = currentY
           // For direction, use last control point (x2, y2)
           lastControlX = isRelative ? currentX + params[i + 2] : params[i + 2]
           lastControlY = isRelative ? currentY + params[i + 3] : params[i + 3]
@@ -173,8 +171,6 @@ export function getPathEndInfo(pathD: string): PathEndInfo | null {
 
       case "S": // Smooth Cubic Bezier (x2 y2 x y)
         for (let i = 0; i + 3 < params.length; i += 4) {
-          prevX = currentX
-          prevY = currentY
           lastControlX = isRelative ? currentX + params[i] : params[i]
           lastControlY = isRelative ? currentY + params[i + 1] : params[i + 1]
           currentX = isRelative ? currentX + params[i + 2] : params[i + 2]
@@ -186,8 +182,6 @@ export function getPathEndInfo(pathD: string): PathEndInfo | null {
 
       case "Q": // Quadratic Bezier (x1 y1 x y)
         for (let i = 0; i + 3 < params.length; i += 4) {
-          prevX = currentX
-          prevY = currentY
           lastControlX = isRelative ? currentX + params[i] : params[i]
           lastControlY = isRelative ? currentY + params[i + 1] : params[i + 1]
           currentX = isRelative ? currentX + params[i + 2] : params[i + 2]
@@ -199,8 +193,6 @@ export function getPathEndInfo(pathD: string): PathEndInfo | null {
 
       case "T": // Smooth Quadratic Bezier (x y)
         for (let i = 0; i + 1 < params.length; i += 2) {
-          prevX = currentX
-          prevY = currentY
           // Reflect previous control point
           if (lastCommandType === "Q" || lastCommandType === "T") {
             lastControlX = 2 * currentX - lastControlX
