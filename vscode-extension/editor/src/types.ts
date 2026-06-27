@@ -1,4 +1,4 @@
-import { ApollonMode, UMLDiagramType } from "@tumaet/apollon/react"
+import { ApollonMode, UMLDiagramType } from "@tumaet/apollon"
 
 export type EditorOptions = {
   type: UMLDiagramType

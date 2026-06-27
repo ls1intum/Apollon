@@ -58,7 +58,7 @@ overlay store — only real option changes (region, inset, order, …) push an
 update.
 
 ```tsx
-import { Apollon, ApollonControl, UMLDiagramType } from "@tumaet/apollon/react"
+import { Apollon, ApollonControl, UMLDiagramType } from "@tumaet/apollon"
 
 function Editor() {
   return (

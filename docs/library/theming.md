@@ -49,7 +49,7 @@ stylesheet's built-in defaults.
 ## Quick start
 
 ```tsx
-import { Apollon } from "@tumaet/apollon/react"
+import { Apollon } from "@tumaet/apollon"
 import { createApollonTheme } from "@tumaet/apollon"
 
 export function Editor() {
@@ -301,7 +301,7 @@ A complete rebrand — a brand accent, a matching dark palette, and softer
 corners — driven from the host's own dark-mode state.
 
 ```tsx
-import { Apollon } from "@tumaet/apollon/react"
+import { Apollon } from "@tumaet/apollon"
 import { createApollonTheme } from "@tumaet/apollon"
 import "@tumaet/apollon/style.css"
 

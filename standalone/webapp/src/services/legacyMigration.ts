@@ -1,5 +1,5 @@
 import { registerPlugin, Capacitor } from "@capacitor/core"
-import { importDiagram, type UMLModel } from "@tumaet/apollon/react"
+import { importDiagram, type UMLModel } from "@tumaet/apollon"
 import { toast } from "react-toastify"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { log } from "@/logger"

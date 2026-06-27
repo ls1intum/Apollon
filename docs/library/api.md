@@ -29,11 +29,11 @@ documented below remains the API for non-React hosts and for advanced control.
 
 For React hosts, `<Apollon>` wraps `ApollonEditor` and owns its lifecycle: it
 constructs the editor on mount and destroys it on unmount. Import it from the
-`@tumaet/apollon/react` subpath — see [React](/library/embedding/react) for
+`@tumaet/apollon` subpath — see [React](/library/embedding/react) for
 the full integration story (hooks, provider, ref, controlled-model overlay).
 
 ```tsx
-import { Apollon } from "@tumaet/apollon/react"
+import { Apollon } from "@tumaet/apollon"
 import "@tumaet/apollon/style.css"
 ;<Apollon style={{ height: 600 }} />
 ```

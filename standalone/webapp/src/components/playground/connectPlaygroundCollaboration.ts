@@ -1,4 +1,4 @@
-import type { ApollonEditor } from "@tumaet/apollon/react"
+import type { ApollonEditor } from "@tumaet/apollon"
 
 export const PLAYGROUND_COLLABORATION_CHANNEL =
   "apollon-playground-collaboration"

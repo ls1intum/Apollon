@@ -12,7 +12,7 @@ import {
   randomCollabName,
   type ApollonOptions,
   type UMLModel,
-} from "@tumaet/apollon/react"
+} from "@tumaet/apollon"
 import { getRouteApi, useNavigate } from "@tanstack/react-router"
 import { toast } from "react-toastify"
 import { DiagramView } from "@/types"

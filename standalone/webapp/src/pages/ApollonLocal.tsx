@@ -8,11 +8,7 @@ import {
 } from "react"
 import { getRouteApi, useRouter } from "@tanstack/react-router"
 import { toast } from "react-toastify"
-import {
-  ApollonEditor,
-  importDiagram,
-  type UMLModel,
-} from "@tumaet/apollon/react"
+import { ApollonEditor, importDiagram, type UMLModel } from "@tumaet/apollon"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { useEditorContext, useModalContext } from "@/contexts"
 import { useElementWidth } from "@/hooks/useElementWidth"

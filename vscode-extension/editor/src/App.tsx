@@ -4,7 +4,7 @@ import {
   ApollonControl,
   ApollonEditor,
   UMLModel,
-} from "@tumaet/apollon/react"
+} from "@tumaet/apollon"
 import { vscode } from "./index"
 import { convertRenderedSVGToPNG } from "./utils/converter"
 import useStore from "./store"

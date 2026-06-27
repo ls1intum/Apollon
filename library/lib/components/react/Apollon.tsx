@@ -82,7 +82,7 @@ export interface ApollonProps {
   ref?: Ref<ApollonEditor | null>
 }
 
-/** React wrapper around {@link ApollonEditor}. See `@tumaet/apollon/react` docs. */
+/** React wrapper around {@link ApollonEditor}. See `@tumaet/apollon` docs. */
 export function Apollon(props: ApollonProps) {
   const {
     className,

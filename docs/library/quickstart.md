@@ -13,14 +13,13 @@ idiomatic version — but the two steps below are all Apollon needs.
 ## 1. Install
 
 ```sh
-npm install @tumaet/apollon yjs y-protocols
+npm install @tumaet/apollon react react-dom @xyflow/react yjs y-protocols
 ```
 
-This is the standalone build: React, Base UI, lucide, and xyflow are bundled
-inside the tarball; `yjs` and `y-protocols` are the only peers you install. They
-power Apollon's document model and undo/redo (and live collaboration when
-enabled), kept external so a host that already uses Yjs shares one instance.
-React hosts should instead use the `/react` subpath — see
+Apollon externalizes its dependencies, so you install them as peers: `react`,
+`react-dom`, `@xyflow/react`, `yjs`, and `y-protocols`. Most package managers
+add missing peers automatically. They are kept external so a host that already
+uses React or Yjs shares one instance with the editor — see
 [Install](/library/embedding/install).
 
 :::danger The editor MUST have an explicit height
@@ -43,7 +42,7 @@ Install the `/react` subpath (see [Install](/library/embedding/install)) and
 render the `<Apollon>` component. It owns the editor's lifecycle.
 
 ```tsx
-import { Apollon } from "@tumaet/apollon/react"
+import { Apollon } from "@tumaet/apollon"
 import "@tumaet/apollon/style.css"
 
 export function Diagram() {

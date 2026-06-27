@@ -7,7 +7,7 @@ import {
   ApollonEditor,
   collabColorFromName,
   randomCollabName,
-} from "@tumaet/apollon/react"
+} from "@tumaet/apollon"
 import { Button } from "@tumaet/ui/components/button"
 import { useEditorContext } from "@/contexts"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"

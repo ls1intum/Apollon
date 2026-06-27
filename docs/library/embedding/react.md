@@ -1,7 +1,7 @@
 ---
 id: react
 title: React
-description: Embed Apollon in React with the <Apollon> component, hooks, and provider from the /react subpath.
+description: Embed Apollon in React with the <Apollon> component, hooks, and provider.
 ---
 
 # React
@@ -11,7 +11,7 @@ from the **`/react` subpath** so the editor shares your host's copy of React
 and xyflow instead of bundling a second one.
 
 ```tsx
-import { Apollon } from "@tumaet/apollon/react"
+import { Apollon } from "@tumaet/apollon"
 import type { UMLModel } from "@tumaet/apollon"
 import "@tumaet/apollon/style.css"
 
@@ -38,11 +38,10 @@ supplied; pass `defaultType` for a different one.
 
 ## Import from `/react`
 
-`<Apollon>` is exported **only** from the `@tumaet/apollon/react` subpath, which
-externalises React so the editor shares your host's copy. The default
-`@tumaet/apollon` subpath (the standalone build) bundles its own React and
-does not export the component — importing `<Apollon>` from there is a compile
-error. Import the component, the hooks, and the types from `@tumaet/apollon/react`.
+`<Apollon>`, the hooks, and the provider are exported from `@tumaet/apollon`.
+The editor externalises React, so the component renders on your host's own React
+copy — there is no second React instance. Non-React hosts that import only the
+imperative `ApollonEditor` tree-shake the component out automatically.
 
 ## Reaching the editor instance
 
@@ -65,7 +64,7 @@ import {
   useApollonEditor,
   useApollonSubscription,
   type ApollonEditor,
-} from "@tumaet/apollon/react"
+} from "@tumaet/apollon"
 
 function Toolbar() {
   const editor = useApollonEditor()
@@ -145,7 +144,7 @@ a non-React harness, a test fixture) but you still want React descendants to
 reach the instance, wrap them in `<ApollonProvider>`:
 
 ```tsx
-import { ApollonProvider } from "@tumaet/apollon/react"
+import { ApollonProvider } from "@tumaet/apollon"
 ;<ApollonProvider editor={instance}>
   <Toolbar />
 </ApollonProvider>

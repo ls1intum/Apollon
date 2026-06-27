@@ -1,22 +1,16 @@
 ---
 id: install
 title: Install
-description: Install @tumaet/apollon — pick the standalone or /react subpath.
+description: Install @tumaet/apollon and its peer dependencies.
 ---
 
 # Install
 
-`yjs` and `y-protocols` are required peer dependencies of **every** build — they
-power Apollon's document model and undo/redo (and live collaboration when
-enabled), so the editor needs them whether or not you collaborate. Keeping them
-external lets a host that already uses Yjs share a single instance instead of a
-private, possibly mismatched copy. Most package managers install missing peers
-automatically.
-
-## Standalone build (any framework)
-
 ```sh
-npm install @tumaet/apollon yjs y-protocols
+npm install @tumaet/apollon \
+  react react-dom \
+  @xyflow/react \
+  yjs y-protocols
 ```
 
 ```ts
@@ -24,62 +18,49 @@ import { ApollonEditor } from "@tumaet/apollon"
 import "@tumaet/apollon/style.css"
 ```
 
-React, Base UI, lucide, and xyflow are bundled inside the library tarball; only
-`yjs` and `y-protocols` are peers you provide.
+Apollon ships **one** build with every runtime dependency left external — the
+React family (`react`, `react-dom`, `@xyflow/react`), the CRDT singletons
+(`yjs`, `y-protocols`), and Apollon's own UI deps (`@base-ui/react`,
+`lucide-react`, `@dnd-kit`, `zustand`, `uuid`, `@chenglou/pretext`), which
+arrive transitively when you install the package. Your bundler resolves and
+de-duplicates each one against your app's `node_modules`, and your bundle
+analyzer / SBOM tooling sees them as the real packages they are instead of code
+inlined invisibly into one chunk. Use it from any framework with a bundler
+(Angular, Vue, Svelte, React).
 
-## Peer-dependency build (React hosts)
+## Peer dependencies
 
-```sh
-npm install @tumaet/apollon \
-  yjs y-protocols \
-  react react-dom \
-  @xyflow/react
-```
+| Peer            | Range     | Powers                                                |
+| --------------- | --------- | ----------------------------------------------------- |
+| `react`         | `^19.0.0` | the editor's rendering                                |
+| `react-dom`     | `^19.0.0` | the editor's rendering                                |
+| `@xyflow/react` | `^12.9.0` | the diagram canvas                                    |
+| `yjs`           | `^13.6.0` | the document model, undo/redo, and live collaboration |
+| `y-protocols`   | `^1.0.6`  | collaboration sync/awareness                          |
 
-```ts
-import { ApollonEditor } from "@tumaet/apollon/react"
-import "@tumaet/apollon/style.css"
-```
+Most package managers install missing peers automatically. Keeping these
+external lets a host that already uses React or Yjs share a single instance with
+the editor instead of loading a private, possibly mismatched copy — no duplicate
+payload and no "Invalid hook call" or cross-instance-document errors.
 
-`yjs` and `y-protocols` are required for every build; the React and xyflow peers
-below are needed by the `/react` and `/external` builds.
+## React vs non-React hosts
 
-| Peer            | Range     |
-| --------------- | --------- |
-| `yjs`           | `^13.6.0` |
-| `y-protocols`   | `^1.0.6`  |
-| `react`         | `^19.0.0` |
-| `react-dom`     | `^19.0.0` |
-| `@xyflow/react` | `^12.9.0` |
+The API is imperative — `new ApollonEditor(container, options)` — and the editor
+renders its own React tree inside the container, so non-React hosts (Angular,
+Vue, Svelte, vanilla) never import React themselves; they only install it as a
+peer the editor uses internally.
 
-The `/react` subpath keeps your final bundle from shipping a second copy of
-React. It is also the entry that exports the `<Apollon>` React component — the
-recommended way to embed in React. See [React](/library/embedding/react).
+React hosts import the `<Apollon>` component, hooks, and provider from the same
+entry — `import { Apollon } from "@tumaet/apollon"` — rendering on the React they
+already have. See [React](/library/embedding/react). Because the package is
+side-effect-free except for CSS, non-React hosts tree-shake the component out.
 
-## Fully external build (any bundler host)
+## No bundler (CDN)
 
-```sh
-npm install @tumaet/apollon \
-  yjs y-protocols \
-  react react-dom \
-  @xyflow/react
-```
-
-```ts
-import { ApollonEditor } from "@tumaet/apollon/external"
-import "@tumaet/apollon/style.css"
-```
-
-Same imperative `ApollonEditor` API as the default entry, but **every**
-dependency is external — the React family above _and_ Apollon's own runtime
-deps (`@base-ui/react`, `lucide-react`, `@dnd-kit`, `zustand`, `uuid`,
-`@chenglou/pretext`), which arrive transitively with the package. Your bundler
-resolves and de-duplicates each one against your app's `node_modules`, and your
-bundle analyzer / SBOM tooling sees them as real packages instead of code
-inlined invisibly into one chunk. Use it from any framework with a bundler,
-including non-React ones (the editor still runs on the React you provide
-internally; your own code never touches it).
+On the CDN path, esm.sh resolves and serves the peers from the import URL
+automatically — there is nothing extra to load. See
+[Vanilla JS / CDN](/library/embedding/vanilla).
 
 ## Type definitions
 
-Types ship with the package (`dist/index.d.ts`) and are identical for every subpath. Requires TypeScript 5.0+ with `moduleResolution: "bundler" | "node16" | "nodenext"`.
+Types ship with the package (`dist/index.d.ts`). Requires TypeScript 5.0+ with `moduleResolution: "bundler" | "node16" | "nodenext"`.
