@@ -3,12 +3,7 @@
   "ignoreExportsUsedInFile": true,
   "workspaces": {
     "library": {
-      "entry": [
-        "lib/index.tsx",
-        "lib/react.tsx",
-        "lib/internals.ts",
-        "lib/export/index.ts"
-      ],
+      "entry": ["lib/index.tsx", "lib/internals.ts", "lib/export/index.ts"],
       "project": ["lib/**/*.{ts,tsx}"],
       "ignoreBinaries": ["build"]
     },

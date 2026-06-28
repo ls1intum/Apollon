@@ -1,7 +1,7 @@
 ---
 id: angular
 title: Angular
-description: Embed Apollon in an Angular host using the default standalone bundle.
+description: Embed Apollon in an Angular host with the imperative ApollonEditor API.
 ---
 
 # Angular

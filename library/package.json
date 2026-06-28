@@ -76,15 +76,15 @@
     {
       "name": "main entry (all deps external)",
       "path": "dist/index.js",
-      "limit": "120 kB"
+      "limit": "85 kB"
     },
     {
       "name": "yjs sync chunk",
       "path": "dist/yjsSync-*.js",
-      "limit": "210 kB"
+      "limit": "100 kB"
     },
     {
-      "name": "/export lazy chunk (renderers external; Inter ttf inlined)",
+      "name": "/export lazy chunk (renderers external)",
       "path": "dist/export.js",
       "limit": "700 kB"
     }

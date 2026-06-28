@@ -23,8 +23,7 @@ import "@tumaet/apollon/style.css" // the editor stylesheet (loads the defaults)
 ## Quick start
 
 ```tsx
-import { Apollon } from "@tumaet/apollon"
-import { createApollonTheme } from "@tumaet/apollon"
+import { Apollon, createApollonTheme } from "@tumaet/apollon"
 
 export function Editor() {
   return (
@@ -267,8 +266,7 @@ Pass `theme` (and optionally `dataTheme`) to `<Apollon>`. Drive dark mode from
 your app's own state:
 
 ```tsx
-import { Apollon } from "@tumaet/apollon"
-import { createApollonTheme } from "@tumaet/apollon"
+import { Apollon, createApollonTheme } from "@tumaet/apollon"
 
 function EmbeddedEditor({ dark }: { dark: boolean }) {
   return (

@@ -29,7 +29,7 @@ documented below remains the API for non-React hosts and for advanced control.
 
 For React hosts, `<Apollon>` wraps `ApollonEditor` and owns its lifecycle: it
 constructs the editor on mount and destroys it on unmount. Import it from the
-`@tumaet/apollon` subpath — see [React](/library/embedding/react) for
+package's main entry, `@tumaet/apollon` — see [React](/library/embedding/react) for
 the full integration story (hooks, provider, ref, controlled-model overlay).
 
 ```tsx

@@ -33,7 +33,6 @@ import appCss from "@/styles/app.css?inline"
  *
  * Reached only via a dynamic `import()` in `exportModelAsSvg`, so Rollup emits
  * it as its own chunk and these ~26 KB of CSS-as-string stay out of the main
- * bundle (mirrors the `exportFonts.ts` pattern). The chunk is emitted per build
- * entry (`dist/` and `dist/react/`).
+ * bundle (mirrors the `exportFonts.ts` pattern).
  */
 export const EXPORT_LAYOUT_CSS = `${baseCss}\n${componentsCss}\n${appCss}`

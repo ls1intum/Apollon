@@ -7,8 +7,9 @@ description: Embed Apollon in React with the <Apollon> component, hooks, and pro
 # React
 
 Apollon ships a React component, a context provider, and subscription hooks
-from the **`/react` subpath** so the editor shares your host's copy of React
-and xyflow instead of bundling a second one.
+from its **main entry** (`@tumaet/apollon`). React and `@xyflow/react` are
+external peers, so the component renders on your host's copy — there is never a
+second React or xyflow.
 
 ```tsx
 import { Apollon } from "@tumaet/apollon"
@@ -36,7 +37,7 @@ unmount. The `onMount` return is the React-19-style cleanup that runs before
 destroy. The diagram type defaults to `ClassDiagram` when no `defaultModel` is
 supplied; pass `defaultType` for a different one.
 
-## Import from `/react`
+## Import from `@tumaet/apollon`
 
 `<Apollon>`, the hooks, and the provider are exported from `@tumaet/apollon`.
 The editor externalises React, so the component renders on your host's own React

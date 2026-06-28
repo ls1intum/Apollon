@@ -355,10 +355,8 @@ jobs:
       # decompressed buffer on each chunk callback instead of accumulating.
       # Any tarball that decompresses across multiple fflate chunks (ours
       # is ~750 KB → 3 chunks) crashes with `Cannot read properties of
-      # undefined (reading 'filename')`. The standalone subpath
-      # deliberately bundles peers (~2.4 MB) so the tarball is over
-      # threshold by design. `publint` above plus the `import.meta.resolve`
-      # exports-map check below cover the same ground.
+      # undefined (reading 'filename')`. `publint` above plus the
+      # `import.meta.resolve` exports-map check below cover the same ground.
       - name: Enforce bundle-size budget
         working-directory: library
         # Budgets in library/package.json#size-limit. Fails on regression

@@ -18,15 +18,10 @@ import { ApollonEditor } from "@tumaet/apollon"
 import "@tumaet/apollon/style.css"
 ```
 
-Apollon ships **one** build with every runtime dependency left external — the
-React family (`react`, `react-dom`, `@xyflow/react`), the CRDT singletons
-(`yjs`, `y-protocols`), and Apollon's own UI deps (`@base-ui/react`,
-`lucide-react`, `@dnd-kit`, `zustand`, `uuid`, `@chenglou/pretext`), which
-arrive transitively when you install the package. Your bundler resolves and
-de-duplicates each one against your app's `node_modules`, and your bundle
-analyzer / SBOM tooling sees them as the real packages they are instead of code
-inlined invisibly into one chunk. Use it from any framework with a bundler
-(Angular, Vue, Svelte, React).
+Apollon externalizes every runtime dependency, so your bundler resolves and
+de-duplicates each one and your SBOM tooling attributes it correctly (see
+[Overview](/library/)). Use it from any framework with a bundler (Angular, Vue,
+Svelte, React); install the peers below alongside the package.
 
 ## Peer dependencies
 

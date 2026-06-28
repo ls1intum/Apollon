@@ -61,14 +61,12 @@ const REACT_PEERS = [
 ]
 
 // Apollon's own non-framework runtime deps — every third-party package
-// `@tumaet/apollon` declares in `dependencies`. Externalized so the host
-// resolves them from its own node_modules: one shared copy and full SBOM
-// visibility instead of a copy buried inside the bundle. Base UI + lucide are
-// the editor's UI primitives; the editor imports them directly AND through the
-// bundled `@tumaet/ui`, so externalizing them here also de-duplicates
-// @tumaet/ui's copy. Base UI + zustand are matched with subpaths
-// (`@base-ui/react/menu`, `zustand/middleware`) — Rollup treats those as
-// distinct ids, so an exact specifier would still inline them.
+// `@tumaet/apollon` declares in `dependencies`, externalized like the peers
+// above. Base UI + lucide are imported both directly AND through the bundled
+// `@tumaet/ui`, so externalizing them here also de-duplicates @tumaet/ui's copy.
+// Base UI + zustand use subpath regexes (`@base-ui/react/menu`,
+// `zustand/middleware`) — Rollup treats subpaths as distinct ids, so an exact
+// specifier would still inline them.
 const RUNTIME_DEPS = [
   /^@base-ui\/react(\/.*)?$/,
   "lucide-react",

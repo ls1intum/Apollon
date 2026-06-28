@@ -1,7 +1,7 @@
 ---
 id: overview
 title: Overview
-description: Embeddable UML modeling editor. Framework-agnostic by default; React-shared opt-in for bundle dedupe.
+description: Embeddable UML modeling editor. One external build that shares the host's React, xyflow, and Yjs.
 slug: /
 ---
 

@@ -38,8 +38,8 @@ See [Troubleshooting](/library/troubleshooting) for the full diagnosis.
 
 ### React hosts
 
-Install the `/react` subpath (see [Install](/library/embedding/install)) and
-render the `<Apollon>` component. It owns the editor's lifecycle.
+Import the `<Apollon>` component from `@tumaet/apollon` (see
+[Install](/library/embedding/install)) and render it. It owns the editor's lifecycle.
 
 ```tsx
 import { Apollon } from "@tumaet/apollon"
@@ -105,7 +105,7 @@ editor.destroy()
 
 ## Next steps
 
-- [Install](/library/embedding/install) — standalone vs. `/react` build, peer deps
+- [Install](/library/embedding/install) — package and peer deps
 - [React](/library/embedding/react) · [Angular](/library/embedding/angular) · [Vanilla JS / CDN](/library/embedding/vanilla)
 - [API reference](/library/api) — the complete `ApollonEditor` surface
 - [Overlay controls](/library/api/overlay-controls) — inject your own chrome into the canvas

@@ -63,7 +63,7 @@ The API is imperative — `new ApollonEditor(container, options)` — and the ed
 
 Import the `<Apollon>` component, hooks, and provider from the same entry: `import { Apollon } from "@tumaet/apollon"`. They render on the React you already have. Because the package is side-effect-free except for CSS, non-React hosts tree-shake the component and hooks out automatically.
 
-> **⚠️ Give the container an explicit, non-zero height** (`600px`, `80vh`, or a sized flex/grid child), whichever build you use. The canvas sizes itself to its parent, so with no resolvable height it collapses to zero pixels and renders blank. This is the most common embedding mistake. See [Troubleshooting](https://ls1intum.github.io/Apollon/library/troubleshooting).
+> **⚠️ Give the container an explicit, non-zero height** (`600px`, `80vh`, or a sized flex/grid child). The canvas sizes itself to its parent, so with no resolvable height it collapses to zero pixels and renders blank. This is the most common embedding mistake. See [Troubleshooting](https://ls1intum.github.io/Apollon/library/troubleshooting).
 
 ## Quick start
 
