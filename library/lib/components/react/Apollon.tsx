@@ -66,7 +66,12 @@ export interface ApollonProps {
   scrollLock?: boolean
   /** Local-only preview overlay. See {@link ApollonEditor.setPreviewMode}. */
   previewMode?: boolean
-  /** Controlled-model overlay — every change applies via `editor.model = value`. */
+  /**
+   * One-way reactive model push — each new value applies via
+   * `editor.model = value`. NOT a two-way controlled value: the editor's own
+   * edits are not mirrored back, and feeding `subscribeToModelChange` into this
+   * prop loops. For save-on-change use `defaultModel` + an `onMount` subscription.
+   */
   model?: UMLModel
 
   /**

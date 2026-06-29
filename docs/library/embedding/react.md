@@ -69,7 +69,7 @@ import {
 
 function Toolbar() {
   const editor = useApollonEditor()
-  const selection = useApollonSubscription(
+  const selection = useApollonSubscription<string[]>(
     (e, cb) => e.subscribeToSelectionChange(cb),
     (e) => e.getSelectedElements()
   )
@@ -109,7 +109,17 @@ unmount.
 
 The full table — every prop, its type, and what it maps to — lives in the
 [API reference](/library/api#apollonprops). Passing `undefined` to a reactive
-prop leaves the live value alone; re-key the component to fully reset.
+prop leaves the live value alone; re-key the component to fully reset:
+
+```tsx
+<Apollon key={diagramId} defaultModel={model} />
+```
+
+`model` is a **one-way** reactive push, not a two-way controlled value: each new
+reference is applied to the editor, but the editor's own edits are not mirrored
+back. Do **not** feed `subscribeToModelChange` into `model` — that loops. For
+save-on-change, use `defaultModel` plus an `onMount` subscription (the first
+example above).
 
 ## Hooks
 
@@ -127,16 +137,23 @@ subscription — replace any manual `subscribeTo* + unsubscribe` boilerplate
 with one call:
 
 ```tsx
-const model = useApollonSubscription(
+import type { UMLModel, CollaboratorInfo } from "@tumaet/apollon"
+
+const model = useApollonSubscription<UMLModel>(
   (editor, cb) => editor.subscribeToModelChange(cb),
   (editor) => editor.model
 )
 
-const collaborators = useApollonSubscription(
+const collaborators = useApollonSubscription<CollaboratorInfo[]>(
   (editor, cb) => editor.subscribeToCollaboratorChanges(cb),
   (editor) => editor.getCollaborators()
 )
 ```
+
+`getSnapshot` must return a **referentially stable** value when nothing changed —
+hand back the editor's own value (`editor.model`, `getSelectedElements()`), never
+a fresh array/object allocated inside the selector, or `useSyncExternalStore`
+re-renders in a loop.
 
 ## Providing an externally-owned editor
 
@@ -178,6 +195,10 @@ export default function Page() {
 ```
 
 Remix and Nuxt have equivalent client-only loading.
+
+`@tumaet/apollon` is a client module in its entirety (`"use client"`), so its
+pure helpers (`importDiagram`, `createApollonTheme`, …) are client-only too —
+import them from client components, not Server Components.
 
 Non-React hosts that want imperative control mount `ApollonEditor` directly —
 see [Vanilla JS / CDN](/library/embedding/vanilla).
