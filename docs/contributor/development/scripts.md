@@ -70,8 +70,9 @@ Run a production build locally — assumes `pnpm build` already ran.
 Per-workspace variants (`lint:ui`, `lint:lib`, `lint:server`, `lint:webapp`,
 `lint:vscode`, `lint:docs`, and their `lint:fix:*` counterparts) exist for
 narrower runs.
-`lint:docs` runs `markdownlint-cli2` over the docs Markdown **and** `tsc
---noEmit` on the Docusaurus config + theme.
+`lint:docs` runs `markdownlint-cli2` over the docs Markdown. Type-checking — the
+Docusaurus config/theme (`typecheck`) and the doc code examples
+(`check:doc-snippets`) — runs separately in CI, not as part of `lint`.
 
 ## Test
 

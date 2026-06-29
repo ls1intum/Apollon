@@ -79,10 +79,24 @@ const pdfBlob = await svgToPdf(svg, clip, { title: "diagram" })
 ```
 
 `@resvg/resvg-wasm`, `jspdf` and `svg2pdf.js` are optional dependencies the
-consumer installs; they load lazily, so importing the editor never pulls them
-in. Over-budget diagrams come back with `clamped: true` and a reduced
-`appliedScale`; an over-budget PNG throws `RasterTooLargeError`.
-Inter ships Regular + Bold only, so italics render upright — matching the server.
+consumer installs (`npm install @resvg/resvg-wasm jspdf svg2pdf.js`); they load
+lazily, so importing the editor never pulls them in. Over-budget diagrams come
+back with `clamped: true` and a reduced `appliedScale`; an over-budget PNG throws
+`RasterTooLargeError`. Inter ships Regular + Bold only, so italics render upright
+— matching the server.
+
+### Loading the resvg wasm per bundler
+
+`svgToPng` needs the `@resvg/resvg-wasm` binary, passed as `wasmInput` (anything
+resvg's `initWasm` accepts — `fetch(url)` is idiomatic). The library does **not**
+bundle the wasm, so how you get the URL depends on your bundler:
+
+- **Vite** — `import resvgWasmUrl from "@resvg/resvg-wasm/index_bg.wasm?url"` (the snippet above).
+- **Webpack 5** — add a rule `{ test: /\.wasm$/, type: "asset/resource" }`, then `const resvgWasmUrl = new URL("@resvg/resvg-wasm/index_bg.wasm", import.meta.url).href`.
+- **Angular** — copy the binary with an `assets` glob (`node_modules/@resvg/resvg-wasm/index_bg.wasm` → `assets/resvg/`), then `wasmInput: fetch("assets/resvg/index_bg.wasm")`.
+
+`svgToPdf` needs no wasm. Both helpers inline the Inter font in the browser, so
+you only set `fontBuffers` / `fonts` for headless Node.
 
 > Server-side instead? The standalone server renders SVG, PNG, and PDF over
 > HTTP via a Skia canvas + `pdfmake` — see the **[Conversion API](./conversion-api)**.

@@ -12,6 +12,11 @@ idiomatic version — but the two steps below are all Apollon needs.
 
 ## 1. Install
 
+:::info Requires React 19
+The `react` / `react-dom` peers are `^19`. On React 18 the install fails with an
+`ERESOLVE` peer error.
+:::
+
 ```sh
 npm install @tumaet/apollon react react-dom @xyflow/react yjs y-protocols
 ```

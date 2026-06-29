@@ -35,7 +35,9 @@ export function Diagram({ initialModel }: { initialModel?: UMLModel }) {
 The component owns the editor's lifecycle — constructs on mount, destroys on
 unmount. The `onMount` return is the React-19-style cleanup that runs before
 destroy. The diagram type defaults to `ClassDiagram` when no `defaultModel` is
-supplied; pass `defaultType` for a different one.
+supplied; pass `defaultType` for a different one. It is StrictMode-safe — React's
+dev double mount/unmount constructs and destroys the editor cleanly, with no
+leaked instance or Yjs document.
 
 ## Import from `@tumaet/apollon`
 

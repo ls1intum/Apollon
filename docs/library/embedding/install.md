@@ -1,10 +1,37 @@
 ---
 id: install
 title: Install
-description: Install @tumaet/apollon and its peer dependencies.
+description: Install @tumaet/apollon and its peer dependencies — React host vs non-React host.
 ---
 
 # Install
+
+:::info Requires React 19
+Apollon renders on React 19 (`react` / `react-dom` `^19`). On React 18 the
+install fails with an `ERESOLVE` peer error — upgrade your host to React 19 first.
+:::
+
+## React hosts
+
+You already have `react` and `react-dom` — add the remaining peers:
+
+```sh
+npm install @tumaet/apollon @xyflow/react yjs y-protocols
+```
+
+```tsx
+import { Apollon } from "@tumaet/apollon"
+import "@tumaet/apollon/style.css"
+```
+
+The `<Apollon>` component, hooks, and provider render on the React you already
+have — see [React](/library/embedding/react).
+
+## Non-React hosts (Angular, Vue, Svelte, vanilla)
+
+Install all five peers. The API is imperative —
+`new ApollonEditor(container, options)` — and the editor renders its own React
+tree inside the container, so your own code never imports React:
 
 ```sh
 npm install @tumaet/apollon \
@@ -18,11 +45,6 @@ import { ApollonEditor } from "@tumaet/apollon"
 import "@tumaet/apollon/style.css"
 ```
 
-Apollon externalizes every runtime dependency, so your bundler resolves and
-de-duplicates each one and your SBOM tooling attributes it correctly (see
-[Overview](/library/)). Use it from any framework with a bundler (Angular, Vue,
-Svelte, React); install the peers below alongside the package.
-
 ## Peer dependencies
 
 | Peer            | Range     | Powers                                                |
@@ -33,22 +55,24 @@ Svelte, React); install the peers below alongside the package.
 | `yjs`           | `^13.6.0` | the document model, undo/redo, and live collaboration |
 | `y-protocols`   | `^1.0.6`  | collaboration sync/awareness                          |
 
-Most package managers install missing peers automatically. Keeping these
-external lets a host that already uses React or Yjs share a single instance with
-the editor instead of loading a private, possibly mismatched copy — no duplicate
-payload and no "Invalid hook call" or cross-instance-document errors.
+npm 7+ auto-installs missing peers; **pnpm and yarn users add them explicitly**.
+Apollon externalizes every runtime dependency, so a host that already uses React
+or Yjs shares a single instance with the editor instead of a private, possibly
+mismatched copy — no duplicate payload, and no "Invalid hook call" or
+cross-instance-document errors. Your bundler resolves and de-duplicates each one,
+and your SBOM tooling attributes it correctly (see [Overview](/library/)).
 
-## React vs non-React hosts
+## Optional: PNG / PDF export
 
-The API is imperative — `new ApollonEditor(container, options)` — and the editor
-renders its own React tree inside the container, so non-React hosts (Angular,
-Vue, Svelte, vanilla) never import React themselves; they only install it as a
-peer the editor uses internally.
+SVG and JSON export are built in. For PNG and PDF, install the optional renderers
+and import them from `@tumaet/apollon/export`:
 
-React hosts import the `<Apollon>` component, hooks, and provider from the same
-entry — `import { Apollon } from "@tumaet/apollon"` — rendering on the React they
-already have. See [React](/library/embedding/react). Because the package is
-side-effect-free except for CSS, non-React hosts tree-shake the component out.
+```sh
+npm install @resvg/resvg-wasm jspdf svg2pdf.js
+```
+
+See [Export](/library/api/export) for usage and the per-bundler wasm setup (PNG
+needs the resvg wasm; PDF needs nothing extra).
 
 ## No bundler (CDN)
 

@@ -13,7 +13,7 @@ Conventions for AI coding agents in this repo, the TUM UML diagram editor. Follo
 
 A pnpm + Vite monorepo (the server compiles with `tsc`, not Vite).
 
-- **`library/`** — `@tumaet/apollon`, the embeddable React editor, published to npm. Native HTML + Base UI primitives (`@base-ui-components/react`) styled via `--apollon-*` CSS variables; `lucide-react` icons; Yjs collaboration — the live-cursor/presence layer lives here ([`collaboration.md`](docs/library/api/collaboration.md)).
+- **`library/`** — `@tumaet/apollon`, the embeddable React editor, published to npm. Native HTML + Base UI primitives (`@base-ui/react`) styled via `--apollon-*` CSS variables; `lucide-react` icons; Yjs collaboration — the live-cursor/presence layer lives here ([`collaboration.md`](docs/library/api/collaboration.md)).
 - **`standalone/webapp/`** — `@tumaet/webapp` (private). React + Vite + Tailwind; Capacitor for iOS/Android.
 - **`standalone/server/`** — `@tumaet/server` (private). Express + Redis Stack (RedisJSON diagram storage + version history).
 - **`vscode-extension/`** — `apollon-vscode`, with nested `menu/` and `editor/` webview sub-packages.

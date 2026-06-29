@@ -21,6 +21,60 @@ editor.sendBroadcastMessage((base64) => transport.send(base64))
 transport.onMessage((base64) => editor.receiveBroadcastedMessage(base64))
 ```
 
+## A complete transport (BroadcastChannel)
+
+A full, working transport using the browser's `BroadcastChannel` — two tabs of
+the same origin edit one diagram live. Swap `BroadcastChannel` for your
+WebSocket/WebRTC channel; the editor calls are identical.
+
+```ts
+import { ApollonEditor } from "@tumaet/apollon"
+
+export function connectCollaboration(editor: ApollonEditor, room = "apollon") {
+  const channel = new BroadcastChannel(room)
+
+  // 1. Register the outbound sink FIRST — broadcasts are no-ops until it's set.
+  editor.sendBroadcastMessage((base64) => channel.postMessage(base64))
+
+  // 2. Forward every inbound frame to the editor; it demuxes by message type.
+  channel.onmessage = (e: MessageEvent<string>) =>
+    editor.receiveBroadcastedMessage(e.data)
+
+  // 3. On (re)connect: pull peers' document + presence, then push our own.
+  channel.postMessage(ApollonEditor.generateInitialSyncMessage())
+  channel.postMessage(ApollonEditor.generateInitialAwarenessSyncMessage())
+  editor.broadcastFullState()
+
+  return () => channel.close()
+}
+```
+
+**Order matters.** Register the outbound sink before requesting sync or pushing
+state. On every (re)connect, `generateInitialSyncMessage()` pulls peers' document
+into a late joiner, `generateInitialAwarenessSyncMessage()` pulls their presence,
+and `broadcastFullState()` pushes your own edits outward. Inbound frames all go
+through `receiveBroadcastedMessage` — the editor demuxes them, so you never branch
+on message type.
+
+## Who's online
+
+`subscribeToCollaboratorChanges` fires with the current collaborators — each a
+`CollaboratorInfo` (`{ id, name, color, imageUrl?, clientIds, isLocal }`):
+
+```ts
+import { ApollonEditor, type CollaboratorInfo } from "@tumaet/apollon"
+
+function watchCollaborators(editor: ApollonEditor) {
+  const subId = editor.subscribeToCollaboratorChanges(
+    (collaborators: CollaboratorInfo[]) => {
+      const remote = collaborators.filter((c) => !c.isLocal)
+      console.log(`${remote.length} other editor(s) online`)
+    }
+  )
+  return () => editor.unsubscribe(subId)
+}
+```
+
 ## Backing transports
 
 Any Yjs-compatible transport works. The standalone server uses a custom WebSocket relay (see [`standalone/server/src/ws.ts`](https://github.com/ls1intum/Apollon/blob/main/standalone/server/src/ws.ts)); other deployments commonly use:
