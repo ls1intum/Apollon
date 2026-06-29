@@ -59,8 +59,7 @@ npm 7+ auto-installs missing peers; **pnpm and yarn users add them explicitly**.
 Apollon externalizes every runtime dependency, so a host that already uses React
 or Yjs shares a single instance with the editor instead of a private, possibly
 mismatched copy — no duplicate payload, and no "Invalid hook call" or
-cross-instance-document errors. Your bundler resolves and de-duplicates each one,
-and your SBOM tooling attributes it correctly (see [Overview](/library/)).
+cross-instance-document errors.
 
 ## Optional: PNG / PDF export
 

@@ -1,22 +1,9 @@
 // @ts-check
-// Type-checks the fenced ```ts / ```tsx code examples in the library docs
-// against the REAL @tumaet/apollon types (library/dist), so the published
-// examples can't silently rot when the public API changes. Pure Node + the
-// `typescript` already installed in docs/.
-//
-//   node scripts/check-doc-snippets.mjs        # exit 1 on any type error
-//
-// A block is type-checked as a standalone module by default, so it must carry
-// its own imports. Mark incomplete blocks — bare fragments that reference an
-// undeclared `editor`, type-signature illustrations, or examples importing
-// framework-specific modules (@angular/core, next/dynamic, the resvg `?url`
-// wasm) — with `no-check` in the fence info string:
-//
-//   ```ts no-check
-//
-// Docusaurus, GitHub and npm all ignore the info string after the language when
-// rendering, so `no-check` is invisible to readers. Documented in
-// docs/contributor/development/scripts.md.
+// Type-checks the fenced ```ts / ```tsx examples in the library docs against the
+// real built @tumaet/apollon types, so published examples can't silently rot when
+// the public API changes. Each block is a standalone module (must carry its own
+// imports); tag a fence ```ts no-check to skip incomplete/framework-specific ones.
+// See docs/contributor/development/scripts.md.
 
 import {
   readFileSync,

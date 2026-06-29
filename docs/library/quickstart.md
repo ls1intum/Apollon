@@ -22,10 +22,8 @@ npm install @tumaet/apollon react react-dom @xyflow/react yjs y-protocols
 ```
 
 Apollon externalizes its dependencies, so you install them as peers: `react`,
-`react-dom`, `@xyflow/react`, `yjs`, and `y-protocols`. Most package managers
-add missing peers automatically. They are kept external so a host that already
-uses React or Yjs shares one instance with the editor — see
-[Install](/library/embedding/install).
+`react-dom`, `@xyflow/react`, `yjs`, and `y-protocols`. Most package managers add
+them automatically — see [Install](/library/embedding/install).
 
 :::danger The editor MUST have an explicit height
 Apollon renders onto a React Flow canvas, which sizes itself to its parent. If

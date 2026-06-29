@@ -53,14 +53,14 @@ if (!container) throw new Error("#apollon container missing")
 const editor = new ApollonEditor(container, { mode: ApollonMode.Assessment })
 
 const assessment: Assessment = {
-  modelElementId: "node-1", // the diagram element's id
+  modelElementId: "node-1",
   elementType: "Class",
   score: 2,
   feedback: "Good — but the association multiplicity is missing.",
 }
 editor.addOrUpdateAssessment(assessment)
 
-// Assessments live on the model, keyed by element id — read them back any time:
+// Assessments live on the model, keyed by element id:
 const all: Record<string, Assessment> = editor.model.assessments
 ```
 

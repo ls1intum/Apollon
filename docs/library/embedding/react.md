@@ -41,10 +41,9 @@ leaked instance or Yjs document.
 
 ## Import from `@tumaet/apollon`
 
-`<Apollon>`, the hooks, and the provider are exported from `@tumaet/apollon`.
-The editor externalises React, so the component renders on your host's own React
-copy — there is no second React instance. Non-React hosts that import only the
-imperative `ApollonEditor` tree-shake the component out automatically.
+`<Apollon>`, the hooks, and the provider are all exported from `@tumaet/apollon`.
+Non-React hosts that import only the imperative `ApollonEditor` tree-shake the
+component out automatically.
 
 ## Reaching the editor instance
 

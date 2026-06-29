@@ -33,14 +33,14 @@ import { ApollonEditor } from "@tumaet/apollon"
 export function connectCollaboration(editor: ApollonEditor, room = "apollon") {
   const channel = new BroadcastChannel(room)
 
-  // 1. Register the outbound sink FIRST — broadcasts are no-ops until it's set.
+  // Register the outbound sink before anything else — broadcasts are no-ops until set.
   editor.sendBroadcastMessage((base64) => channel.postMessage(base64))
 
-  // 2. Forward every inbound frame to the editor; it demuxes by message type.
+  // Forward every inbound frame to the editor; it demuxes by message type.
   channel.onmessage = (e: MessageEvent<string>) =>
     editor.receiveBroadcastedMessage(e.data)
 
-  // 3. On (re)connect: pull peers' document + presence, then push our own.
+  // On (re)connect: pull peers' document + presence, then push our own.
   channel.postMessage(ApollonEditor.generateInitialSyncMessage())
   channel.postMessage(ApollonEditor.generateInitialAwarenessSyncMessage())
   editor.broadcastFullState()
@@ -48,13 +48,6 @@ export function connectCollaboration(editor: ApollonEditor, room = "apollon") {
   return () => channel.close()
 }
 ```
-
-**Order matters.** Register the outbound sink before requesting sync or pushing
-state. On every (re)connect, `generateInitialSyncMessage()` pulls peers' document
-into a late joiner, `generateInitialAwarenessSyncMessage()` pulls their presence,
-and `broadcastFullState()` pushes your own edits outward. Inbound frames all go
-through `receiveBroadcastedMessage` — the editor demuxes them, so you never branch
-on message type.
 
 ## Who's online
 

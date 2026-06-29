@@ -65,8 +65,7 @@ a `<canvas>`, and `svgToPdf` emits true vector PDF.
 
 ```ts no-check
 import { svgToPng, svgToPdf } from "@tumaet/apollon/export"
-// resvg's wasm binary isn't portably exported, so the host bundler supplies it.
-import resvgWasmUrl from "@resvg/resvg-wasm/index_bg.wasm?url" // Vite
+import resvgWasmUrl from "@resvg/resvg-wasm/index_bg.wasm?url" // Vite — see below
 
 const { svg, clip } = await editor.exportAsSVG({ svgMode: "compat" })
 

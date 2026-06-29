@@ -43,8 +43,6 @@ import { Apollon, useApollonEditor } from "@tumaet/apollon/react"
 import { ApollonEditor, Apollon, useApollonEditor } from "@tumaet/apollon"
 ```
 
-The APIs are identical; only the specifier changes.
-
 ## Install the required peers
 
 `react`, `react-dom`, and `@xyflow/react` were optional before and are now
@@ -58,9 +56,7 @@ npm install @tumaet/apollon \
 ```
 
 npm 7+ auto-installs missing peers; **pnpm and yarn users must add them
-explicitly**. Keeping them external lets a host that already uses React or Yjs
-share a single instance with the editor — no duplicate payload, and no "Invalid
-hook call" or cross-instance-document errors.
+explicitly**. See [Install](/library/embedding/install) for why they're external.
 
 ## React 19 is required
 
@@ -82,8 +78,3 @@ The `exports` map no longer has `./react` or `./external` keys — they are
 removed, not deprecated. A deep import of `@tumaet/apollon/external` (including
 via a CDN such as esm.sh) now **fails to resolve**. Point every reference at the
 bare `@tumaet/apollon` specifier instead.
-
-## Unchanged
-
-Nothing to change for `@tumaet/apollon/internals` and `@tumaet/apollon/export` —
-both keep their existing entry points and APIs.
