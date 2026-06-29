@@ -11,6 +11,7 @@
     "build:webapp": "pnpm --filter @tumaet/webapp run build",
     "build:vscode": "pnpm --filter apollon-vscode run build:all",
     "build:docs": "pnpm run build:lib && pnpm --filter @tumaet/apollon-docs run build",
+    "check:doc-snippets": "pnpm run build:lib && node scripts/check-doc-snippets.mjs",
     "storybook": "pnpm --filter @tumaet/webapp run storybook",
     "build-storybook": "pnpm --filter @tumaet/webapp run build-storybook",
     "test-storybook": "pnpm --filter @tumaet/webapp run test:storybook",

@@ -111,7 +111,7 @@ The full table — every prop, its type, and what it maps to — lives in the
 [API reference](/library/api#apollonprops). Passing `undefined` to a reactive
 prop leaves the live value alone; re-key the component to fully reset:
 
-```tsx
+```tsx no-check
 <Apollon key={diagramId} defaultModel={model} />
 ```
 
@@ -123,7 +123,7 @@ example above).
 
 ## Hooks
 
-```ts
+```ts no-check
 useApollonEditor(): ApollonEditor | null
 useApollonEditorOrThrow(): ApollonEditor
 useApollonSubscription<T>(
@@ -137,7 +137,11 @@ subscription — replace any manual `subscribeTo* + unsubscribe` boilerplate
 with one call:
 
 ```tsx
-import type { UMLModel, CollaboratorInfo } from "@tumaet/apollon"
+import {
+  useApollonSubscription,
+  type UMLModel,
+  type CollaboratorInfo,
+} from "@tumaet/apollon"
 
 const model = useApollonSubscription<UMLModel>(
   (editor, cb) => editor.subscribeToModelChange(cb),
@@ -161,7 +165,7 @@ If the host owns the `ApollonEditor` lifecycle directly (a framework adapter,
 a non-React harness, a test fixture) but you still want React descendants to
 reach the instance, wrap them in `<ApollonProvider>`:
 
-```tsx
+```tsx no-check
 import { ApollonProvider } from "@tumaet/apollon"
 ;<ApollonProvider editor={instance}>
   <Toolbar />
@@ -183,7 +187,7 @@ canvas collapses to zero pixels and renders blank. See
 The editor is client-only — it touches `window` at construction. In SSR
 frameworks, load `<Apollon>` client-side only. In the Next.js App Router:
 
-```tsx
+```tsx no-check
 "use client"
 import dynamic from "next/dynamic"
 

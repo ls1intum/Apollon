@@ -76,3 +76,6 @@ docs/build/
 
 # Stray pnpm store if pnpm is run outside the workspace root
 .pnpm-store/
+
+# Temp dir used by scripts/check-doc-snippets.mjs (removed on each run)
+docs/.snippet-typecheck/

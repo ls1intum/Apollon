@@ -121,7 +121,7 @@ Reach the instance through `ref`, the `onMount(editor)` callback, or the `useApo
 
 ### Angular (17.3+ signal-based)
 
-```ts
+```ts no-check
 import {
   Component,
   DestroyRef,
@@ -194,7 +194,7 @@ Class, Object, Activity, Use Case, Communication, Component, Deployment, Petri N
 
 Collaboration is opt-in and transport-agnostic. Set `collaborationEnabled: true`, then wire up your transport:
 
-```ts
+```ts no-check
 const editor = new ApollonEditor(container, { collaborationEnabled: true })
 
 // Outbound: the editor calls back when it has bytes to send.
@@ -206,7 +206,7 @@ transport.onMessage((base64) => editor.receiveBroadcastedMessage(base64))
 
 To let the library render participant presence, live cursors, and remote node/edge selection highlights, pass the optional `collaboration` UI config:
 
-```ts
+```ts no-check
 const editor = new ApollonEditor(container, {
   collaborationEnabled: true,
   collaboration: {
@@ -223,7 +223,7 @@ Any Yjs-compatible transport works: `y-websocket`, `y-webrtc`, BroadcastChannel,
 - **SVG**: `await editor.exportAsSVG(options)` resolves to `{ svg, clip }`. `svgMode: "web"` (the default) keeps CSS variables for theme-adaptive output; `"compat"` inlines them for PDF and Inkscape.
 - **JSON**: `editor.model` returns the `UMLModel`, and assigning it back is round-trip safe. Use `importDiagram(json)` to normalize older v2/v3 models first.
 - **Headless**: `ApollonEditor.exportModelAsSvg(model, options)` renders a model without a mounted editor.
-- **PNG / PDF**: not built in. Generate them from the exported SVG. The standalone webapp and server in this repo do this with `@resvg/resvg-js` (PNG) and `pdfmake` (PDF).
+- **PNG / PDF**: not built in, but the library ships `svgToPng` / `svgToPdf` renderers under [`@tumaet/apollon/export`](https://ls1intum.github.io/Apollon/library/api/export) (PNG via `@resvg/resvg-wasm`, PDF via `svg2pdf.js` + `jspdf`, installed as optional peers). The standalone server in this repo renders server-side instead, with `@napi-rs/canvas` (PNG) and `pdfmake` (PDF).
 
 See [Export](https://ls1intum.github.io/Apollon/library/api/export) for the full `ExportOptions`.
 

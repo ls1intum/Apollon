@@ -8,6 +8,7 @@ Collapse the three build variants (`@tumaet/apollon`, `/react`, `/external`) int
 
 - `@tumaet/apollon/external` → `@tumaet/apollon` (same `ApollonEditor` API; drop the subpath).
 - `@tumaet/apollon/react` → `@tumaet/apollon` (component, hooks, provider on the main entry).
-- Consumers must now provide `react`, `react-dom`, `@xyflow/react` (peers; most package managers auto-install missing peers).
+- Consumers must now provide `react`, `react-dom`, `@xyflow/react` (peers; npm 7+ auto-installs them, pnpm/yarn users add them explicitly).
+- The `exports` map no longer has `./react` or `./external` keys — a deep import of `@tumaet/apollon/external` (incl. via a CDN) now fails to resolve; it is removed, not deprecated.
 - The main entry is now a client module (`"use client"`); React Server Components must treat `@tumaet/apollon` as client-only.
 - `/internals` and `/export` are unchanged.

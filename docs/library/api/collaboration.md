@@ -8,7 +8,7 @@ description: Yjs-based multi-user editing — transport-agnostic, opt-in.
 
 Apollon's collaboration layer is built on [Yjs](https://yjs.dev/). Set `collaborationEnabled: true` in the constructor options, then wire your transport. The editor doesn't care whether messages travel over WebSocket, WebRTC, BroadcastChannel, or anything else — it hands you opaque base64 strings to ship and accepts them back.
 
-```ts
+```ts no-check
 const editor = new ApollonEditor(container, {
   type: UMLDiagramType.ClassDiagram,
   collaborationEnabled: true,
@@ -36,7 +36,7 @@ Awareness state — who's online, where their cursor is, what they have selected
 
 The presence bar, cursors, selection highlights, and viewport-following are toggled per-feature on the `collaboration` option:
 
-```ts
+```ts no-check
 const editor = new ApollonEditor(container, {
   collaboration: {
     enabled: true,

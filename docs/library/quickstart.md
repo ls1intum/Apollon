@@ -86,7 +86,7 @@ grid to start a class diagram.
 
 Read the current diagram, replace it, and observe changes:
 
-```ts
+```ts no-check
 const model = editor.model // UMLModel as plain JSON
 editor.model = model // round-trip safe
 
@@ -99,7 +99,7 @@ editor.unsubscribe(id)
 Always destroy the editor before removing its container or mounting a new one
 on the same node:
 
-```ts
+```ts no-check
 editor.destroy()
 ```
 

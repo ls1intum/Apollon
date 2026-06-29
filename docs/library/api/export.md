@@ -8,7 +8,7 @@ description: SVG, PNG, PDF, and JSON export from a mounted editor or a headless 
 
 ## SVG
 
-```ts
+```ts no-check
 const { svg, clip } = await editor.exportAsSVG({ svgMode: "web" })
 ```
 
@@ -27,7 +27,7 @@ const { svg, clip } = await editor.exportAsSVG({ svgMode: "web" })
 
 ## Headless SVG export (no mounted editor)
 
-```ts
+```ts no-check
 import { ApollonEditor, importDiagram } from "@tumaet/apollon"
 
 const svgExport = await ApollonEditor.exportModelAsSvg(importDiagram(model), {
@@ -63,7 +63,7 @@ For browsers and embedders, import the ready-made helpers from
 fix the canvas-area cap (#667) — `svgToPng` rasterises in wasm memory instead of
 a `<canvas>`, and `svgToPdf` emits true vector PDF.
 
-```ts
+```ts no-check
 import { svgToPng, svgToPdf } from "@tumaet/apollon/export"
 // resvg's wasm binary isn't portably exported, so the host bundler supplies it.
 import resvgWasmUrl from "@resvg/resvg-wasm/index_bg.wasm?url" // Vite
@@ -89,7 +89,7 @@ Inter ships Regular + Bold only, so italics render upright — matching the serv
 
 ## JSON
 
-```ts
+```ts no-check
 const model = editor.model // UMLModel
 const json = JSON.stringify(model)
 ```
@@ -102,7 +102,7 @@ The library reads v2, v3, and v4 model JSON. Use `importDiagram(any)` to
 normalise any version to the current v4 shape before assigning to `editor.model`
 or passing to `exportModelAsSvg`.
 
-```ts
+```ts no-check
 import { importDiagram } from "@tumaet/apollon"
 
 editor.model = importDiagram(maybeV2OrV3Json)

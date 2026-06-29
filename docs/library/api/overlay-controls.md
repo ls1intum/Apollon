@@ -57,7 +57,7 @@ keeps owning their reconciliation and context. Children changes never touch the
 overlay store — only real option changes (region, inset, order, …) push an
 update.
 
-```tsx
+```tsx no-check
 import { Apollon, ApollonControl, UMLDiagramType } from "@tumaet/apollon"
 
 function Editor() {
@@ -84,7 +84,7 @@ When you hold an `ApollonEditor` instance and want to register a one-off widget,
 call `addControl`. It takes the options plus a `render: () => ReactNode` and
 **returns a disposer** — call it to remove the control.
 
-```ts
+```ts no-check
 const dispose = editor.addControl({
   id: "my-app:banner",
   region: "top-center",
@@ -101,7 +101,7 @@ your host's React context (theme providers, router). If you need that, use the
 
 Companion methods:
 
-```ts
+```ts no-check
 // Patch a registered control's options or renderer (no-op if absent).
 // The id is immutable — pass it first; any `id` in the patch is ignored.
 editor.updateControl("my-app:banner", { region: "top-right" })
@@ -117,7 +117,7 @@ root** to keep its context (theme tokens, router, i18n), ask the editor for a
 stable DOM node anchored in a region and render into it yourself with
 `createPortal`.
 
-```tsx
+```tsx no-check
 import { createPortal } from "react-dom"
 
 // A stable node whose lifetime is the editor instance, not your subtree.
@@ -166,7 +166,7 @@ set `inset`. The reserved space is measured per region on its dominant axis
 | `"auto"`                    | string literal                                   | Auto-measure the control on the region's dominant axis. |
 | `{ top: 48, left: "auto" }` | `Partial<Record<OverlaySide, number \| "auto">>` | Mix explicit pixels with per-side `"auto"`.             |
 
-```ts
+```ts no-check
 editor.addControl({
   id: "my-app:header",
   region: "header",
@@ -181,7 +181,7 @@ content-inset rect from all measurements and is the only inset authority.
 
 `fitView` consumes those insets:
 
-```ts
+```ts no-check
 editor.fitView() // respectInsets defaults to true
 ```
 

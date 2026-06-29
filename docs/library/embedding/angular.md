@@ -11,7 +11,7 @@ inside the container — but React is a peer the editor uses internally, so you
 install it alongside Apollon:
 `npm install @tumaet/apollon react react-dom @xyflow/react yjs y-protocols`.
 
-```ts
+```ts no-check
 import {
   Component,
   DestroyRef,
@@ -68,7 +68,7 @@ The `<div>` must have an explicit height, or the editor renders blank — see
 
 Pass options as the constructor's second argument:
 
-```ts
+```ts no-check
 import { ApollonEditor, ApollonMode, UMLDiagramType } from "@tumaet/apollon"
 
 new ApollonEditor(this.host().nativeElement, {

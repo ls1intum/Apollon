@@ -10,7 +10,7 @@ description: The complete ApollonEditor reference — constructor options, lifec
 into the DOM node you hand it and exposes an imperative API — your host code
 never touches React.
 
-```ts
+```ts no-check
 import { ApollonEditor, UMLDiagramType } from "@tumaet/apollon"
 import "@tumaet/apollon/style.css"
 
@@ -97,7 +97,7 @@ live value untouched (no reset). Re-key the component to fully reset.
 
 ## Constructor
 
-```ts
+```ts no-check
 new ApollonEditor(element: HTMLElement, options?: ApollonOptions)
 ```
 
@@ -212,7 +212,7 @@ prev/next equality check.
 | `subscribeToCollaboratorChanges(cb)` | `(collaborators: CollaboratorInfo[]) => void`       |
 | `unsubscribe(subscriptionId)`        | `(number) => void`                                  |
 
-```ts
+```ts no-check
 const id = editor.subscribeToModelChange((model) => persist(model))
 // later
 editor.unsubscribe(id)

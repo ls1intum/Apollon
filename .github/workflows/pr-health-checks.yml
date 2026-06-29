@@ -38,6 +38,8 @@ jobs:
               - 'library/**'
               - 'standalone/**'
               - 'vscode-extension/**'
+              - 'docs/**'
+              - 'scripts/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -137,6 +139,14 @@ jobs:
         # `tsc --noEmit` resolves through the library's exports map and
         # needs `library/dist/` to exist — keep this step after build.
         run: pnpm --filter @tumaet/apollon-docs run typecheck
+
+      - name: Typecheck doc code examples
+        # Compiles the ```ts / ```tsx examples in library/README.md,
+        # library/THEMING.md and docs/library/** against the real
+        # @tumaet/apollon types — fails if the public API drifts from the
+        # docs. Resolves through docs/node_modules → library/dist, so it must
+        # run after the build above.
+        run: pnpm run check:doc-snippets
 
       - name: Run unit tests
         run: pnpm run test

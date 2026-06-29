@@ -214,11 +214,11 @@ mode to a subtree instead of the whole page. The `<Apollon>` component and the
 imperative `ApollonEditor` both accept a `dataTheme` option that sets the
 attribute directly on the mount node:
 
-```tsx
+```tsx no-check
 <Apollon dataTheme="dark" />
 ```
 
-```ts
+```ts no-check
 new ApollonEditor(element, { dataTheme: "dark" })
 ```
 
@@ -244,12 +244,12 @@ object of `--apollon-*` CSS custom properties. Only the keys you provide are
 emitted — unset tokens keep the stylesheet's fallbacks. The result is a plain
 object, so it composes with any styling layer:
 
-```tsx
+```tsx no-check
 // React inline style
 <Apollon theme={createApollonTheme({ primary: "tomato" })} />
 ```
 
-```ts
+```ts no-check
 // Imperative — set on the host element yourself
 const vars = createApollonTheme({ primary: "tomato" })
 for (const [key, value] of Object.entries(vars)) {
@@ -299,7 +299,7 @@ body.vscode-high-contrast {
 }
 ```
 
-```ts
+```ts no-check
 // or: mirror the body class onto data-theme once, then rely on the defaults
 const sync = () => {
   const dark = document.body.classList.contains("vscode-dark")
