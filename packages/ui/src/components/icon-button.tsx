@@ -7,8 +7,10 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip"
 // Compact square icon-only button. Styling lives in styles/components.css keyed
 // on data-slot="icon-button" (see button.tsx for the embed-safe rationale).
 // When `tooltip` is set the button is wrapped in a shared Tooltip.
-export interface IconButtonProps
-  extends Omit<ButtonPrimitive.Props, "aria-label" | "children"> {
+export interface IconButtonProps extends Omit<
+  ButtonPrimitive.Props,
+  "aria-label" | "children"
+> {
   ariaLabel: string
   tooltip?: React.ReactNode
   children: React.ReactNode

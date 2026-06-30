@@ -55,6 +55,7 @@ export const EdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
         sideElements={[
           handleSwap && (
             <IconButton
+              key="swap-source-target"
               ariaLabel="Swap source and target"
               tooltip="Swap source and target"
               onClick={handleSwap}

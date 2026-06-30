@@ -11,12 +11,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@tumaet/ui/components/tooltip"
-import {
-  CircleHelpIcon,
-  FilesIcon,
-  MoreVerticalIcon,
-  ShareIcon,
-} from "lucide-react"
+import { CircleHelpIcon, FilesIcon, ShareIcon } from "lucide-react"
 import { useModalContext } from "@/contexts"
 import { ALL_DIAGRAMS_LABEL } from "@/lib/navProvenance"
 import { BackNav } from "./BackNav"
@@ -65,65 +60,6 @@ export function MobileMenuButton({
               aria-label={label}
             >
               {icon}
-            </DropdownMenuTrigger>
-          }
-        />
-        <TooltipContent>{label}</TooltipContent>
-      </Tooltip>
-      <DropdownMenuContent
-        aria-labelledby={triggerId}
-        align="end"
-        side="bottom"
-        className={MOBILE_MENU_CONTENT_CLASS}
-      >
-        {children(close)}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
-}
-
-/**
- * The "…" overflow control for the chrome SUB-ROUTE pill (imprint / privacy /
- * 404): a `DropdownMenuTrigger` wearing `.apollon-chrome-iconbtn` directly (no
- * IconButton wrapper, to avoid double-styling), the shared {@link Tooltip}, and
- * the shared {@link MOBILE_MENU_CONTENT_CLASS} contract. The sub-route's short
- * Help + Theme tail reads as one menu; the editor and home pills instead keep Help
- * as its own {@link MobileMenuButton} dropdown. Children receive a `close` callback.
- */
-export function ChromeOverflowMenu({
-  /**
-   * Accessible name of BOTH the trigger button and (via `aria-labelledby`) the
-   * menu it opens, so the overflow keeps a real accessible name (the sub-route
-   * passes "More options", which the e2e suite selects by). Defaults to
-   * "More options".
-   */
-  label = "More options",
-  /** Unique id pair for the trigger ↔ menu `aria-labelledby` link. */
-  id = "chrome-overflow",
-  children,
-}: {
-  label?: string
-  id?: string
-  children: (close: () => void) => ReactNode
-}) {
-  const [open, setOpen] = useState(false)
-  const close = () => setOpen(false)
-  const triggerId = `${id}-button`
-
-  return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <DropdownMenuTrigger
-              id={triggerId}
-              className="apollon-chrome-iconbtn"
-              aria-label={label}
-            >
-              <MoreVerticalIcon
-                className="size-[var(--apollon-chrome-icon)]"
-                aria-hidden
-              />
             </DropdownMenuTrigger>
           }
         />

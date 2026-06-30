@@ -1,4 +1,5 @@
-import { Router } from "express"
+import { Hono } from "hono"
+import type { AppEnv } from "../http/env.js"
 import type { Redis } from "../redis.js"
 
 interface Deps {
@@ -38,30 +39,32 @@ async function deepCheck(redis: Redis): Promise<boolean> {
   }
 }
 
-export function mountHealthRoutes({ redis }: Deps): Router {
-  const router = Router()
+export function mountHealthRoutes({ redis }: Deps): Hono<AppEnv> {
+  const router = new Hono<AppEnv>()
 
   // Liveness — instant. Connectivity only.
-  router.get("/", async (_req, res) => {
+  router.get("/", async (c) => {
     try {
       await redis.ping()
-      res.status(200).json({ status: "ok" })
+      return c.json({ status: "ok" }, 200)
     } catch {
-      res.status(503).json({ status: "error", message: "redis unavailable" })
+      return c.json({ status: "error", message: "redis unavailable" }, 503)
     }
   })
 
   // Readiness — deeper. Confirms Lua functions are loaded, so a half-booted
   // server (Redis up but `bootLoadFunction` failed) doesn't get marked
   // ready. Cached 30 s to keep the load-balancer probe cheap.
-  router.get("/ready", async (_req, res) => {
+  router.get("/ready", async (c) => {
     const ok = await deepCheck(redis)
-    if (ok) res.status(200).json({ status: "ok" })
-    else
-      res.status(503).json({
+    if (ok) return c.json({ status: "ok" }, 200)
+    return c.json(
+      {
         status: "error",
         message: "redis function library 'apollon' missing or unreachable",
-      })
+      },
+      503
+    )
   })
 
   return router

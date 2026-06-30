@@ -1,4 +1,4 @@
-import { isPlatform } from "@ionic/react"
+import { isIOS, isAndroid } from "@/utils/platform"
 import { Filesystem, Directory } from "@capacitor/filesystem"
 import { Share } from "@capacitor/share"
 import { useEditorContext } from "@/contexts"
@@ -27,7 +27,7 @@ export const useExportAsPDF = () => {
     const blob = await svgToPdf(svg, clip, { title })
     const fileName = `${title}.pdf`
 
-    if (isPlatform("ios") || isPlatform("android")) {
+    if (isIOS() || isAndroid()) {
       const base64String = await blobToBase64(blob)
       await Filesystem.writeFile({
         path: fileName,

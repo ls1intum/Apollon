@@ -1,20 +1,20 @@
-import type { NextFunction, Request, Response } from "express"
+import { createMiddleware } from "hono/factory"
 import { randomUUID } from "node:crypto"
-
-declare module "express-serve-static-core" {
-  interface Request {
-    requestId: string
-  }
-}
+import type { AppEnv } from "../env.js"
 
 const HEADER = "x-request-id"
 
+/**
+ * Assigns a correlation id to every request: honours an inbound `x-request-id`
+ * (capped at 128 chars) or mints a UUID, stashes it on the context for the
+ * logger / error handler to read, and echoes it on the response.
+ */
 export function requestId() {
-  return (req: Request, res: Response, next: NextFunction) => {
-    const incoming = req.header(HEADER)
+  return createMiddleware<AppEnv>(async (c, next) => {
+    const incoming = c.req.header(HEADER)
     const id = incoming && incoming.length <= 128 ? incoming : randomUUID()
-    req.requestId = id
-    res.setHeader(HEADER, id)
-    next()
-  }
+    c.set("requestId", id)
+    c.header(HEADER, id)
+    await next()
+  })
 }

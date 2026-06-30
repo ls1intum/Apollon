@@ -1,8 +1,11 @@
 {
   "extends": "@docusaurus/tsconfig",
   "compilerOptions": {
-    "baseUrl": ".",
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    // @docusaurus/tsconfig (the external base) still sets `baseUrl`, which TS 6.0
+    // flags as a hard deprecation error (TS5101). We can't edit that base, so opt
+    // into the TS-sanctioned escape hatch until Docusaurus drops baseUrl.
+    "ignoreDeprecations": "6.0"
   },
   "include": ["src/", "docusaurus.config.ts", "sidebars.*.ts"]
 }

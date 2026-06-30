@@ -1,4 +1,4 @@
-import type { ErrorRequestHandler } from "express"
+import type { Context } from "hono"
 import {
   ClientClosedError,
   ClientOfflineError,
@@ -8,19 +8,22 @@ import {
   SocketClosedUnexpectedlyError,
 } from "redis"
 import { ApiError } from "../errors.js"
+import type { AppEnv } from "../env.js"
 import type { ApiErrorBody } from "../../types.js"
 import { logger } from "../../logger.js"
 
 /**
  * Maps ApiError → typed error body. Falls back to 500 INTERNAL for unknown
- * errors. Always includes the request ID so support can correlate.
+ * errors. Always includes the request ID so support can correlate. Registered
+ * as the app-level `onError`, so any error thrown by a middleware or handler
+ * routes through here.
  */
-export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
-  const requestId = req.requestId ?? ""
+export function errorHandler(err: Error, c: Context<AppEnv>): Response {
+  const requestId = c.get("requestId") ?? ""
 
   // Error responses must never be cached — a 404 is heuristically cacheable by
   // default (RFC 9111 §4.2.2), which would pin a transient miss against a URL.
-  res.setHeader("cache-control", "no-store")
+  c.header("cache-control", "no-store")
 
   if (err instanceof ApiError) {
     const body: ApiErrorBody = {
@@ -35,7 +38,7 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
       // field) so Camo/browsers back off.
       const retryAfter = err.meta.retryAfterSeconds
       if (typeof retryAfter === "number") {
-        res.setHeader("retry-after", String(retryAfter))
+        c.header("retry-after", String(retryAfter))
       }
     }
     if (err.status >= 500) {
@@ -49,23 +52,7 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
         "api.clientError"
       )
     }
-    res.status(err.status).json(body)
-    return
-  }
-
-  // Body-parser tags its error with `err.type === "entity.too.large"` —
-  // that's the public contract; the message string can be reworded in any
-  // patch release of body-parser without notice.
-  const bodyParserType = (err as { type?: string }).type
-  const status = (err as { statusCode?: number }).statusCode
-  if (bodyParserType === "entity.too.large" || status === 413) {
-    const body: ApiErrorBody = {
-      error: "BODY_TOO_LARGE",
-      message: "Request body exceeds the configured size limit",
-      requestId,
-    }
-    res.status(413).json(body)
-    return
+    return c.json(body, err.status as never)
   }
 
   // node-redis raises these when the client is disconnected mid-request,
@@ -83,8 +70,7 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
       message: "Storage is temporarily unavailable",
       requestId,
     }
-    res.status(503).json(body)
-    return
+    return c.json(body, 503)
   }
 
   logger.error({ err, requestId }, "api.unhandled")
@@ -93,5 +79,5 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
     message: "Something went wrong",
     requestId,
   }
-  res.status(500).json(body)
+  return c.json(body, 500)
 }

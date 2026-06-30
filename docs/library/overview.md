@@ -19,7 +19,7 @@ Apollon ships as an npm library that any framework can embed. The public API is 
 `@tumaet/apollon` ships a single build that externalizes every runtime
 dependency a host can install — the React family (`react`, `react-dom`,
 `@xyflow/react`), the CRDT singletons (`yjs`, `y-protocols`), and Apollon's own
-runtime deps (`@base-ui/react`, `lucide-react`, `@dnd-kit`, `zustand`, `uuid`,
+runtime deps (`@base-ui/react`, `lucide-react`, `@dnd-kit`, `zustand`,
 `@chenglou/pretext`), which install transitively with the package. Your bundler
 resolves and de-duplicates each one against your app's `node_modules`, and your
 bundle analyzer / SBOM tooling sees them as the real packages they are — never a
