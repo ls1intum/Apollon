@@ -60,8 +60,8 @@ cause of garbled output.
 
 For browsers and embedders, import the ready-made helpers from
 `@tumaet/apollon/export`. They consume the compat-mode SVG produced above and
-fix the canvas-area cap (#667) — `svgToPng` rasterises in wasm memory instead of
-a `<canvas>`, and `svgToPdf` emits true vector PDF.
+work around the browser's canvas-area limit — `svgToPng` rasterises in wasm
+memory instead of a `<canvas>`, and `svgToPdf` emits true vector PDF.
 
 ```ts no-check
 import { svgToPng, svgToPdf } from "@tumaet/apollon/export"
