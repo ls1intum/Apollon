@@ -7,11 +7,13 @@ import { useApollonEditor } from "./context"
  *
  * `getSnapshot` MUST return a referentially stable value when nothing changed;
  * do not allocate inside it. Returns `undefined` while no editor is mounted
- * (including during SSR).
+ * (including during SSR). Pass the value type explicitly —
+ * `useApollonSubscription<string[]>(...)` — it can't be inferred from the
+ * `subscribe` callback (its `value` parameter is a contravariant position).
  *
  * @example
  * ```tsx
- * const selection = useApollonSubscription(
+ * const selection = useApollonSubscription<string[]>(
  *   (editor, cb) => editor.subscribeToSelectionChange(cb),
  *   (editor) => editor.getSelectedElements(),
  * )

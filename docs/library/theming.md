@@ -49,8 +49,7 @@ stylesheet's built-in defaults.
 ## Quick start
 
 ```tsx
-import { Apollon } from "@tumaet/apollon/react"
-import { createApollonTheme } from "@tumaet/apollon"
+import { Apollon, createApollonTheme } from "@tumaet/apollon"
 
 export function Editor() {
   return (
@@ -93,7 +92,7 @@ Values are any valid CSS color/length string (`"#3e8acc"`, `"rgb(62 138 204)"`,
 `"var(--my-brand)"`). The result is a plain object — spread it into a React
 `style`/`theme` prop, or apply it imperatively:
 
-```ts
+```ts no-check
 const vars = createApollonTheme({ primary: "tomato" })
 for (const [key, value] of Object.entries(vars)) {
   element.style.setProperty(key, value)
@@ -265,11 +264,11 @@ mode to a subtree instead of the whole page. Both the `<Apollon>` component and
 the imperative `ApollonEditor` accept a `dataTheme` option that sets the
 attribute directly on the mount node:
 
-```tsx
+```tsx no-check
 <Apollon dataTheme="dark" />
 ```
 
-```ts
+```ts no-check
 new ApollonEditor(element, { dataTheme: "dark" })
 ```
 
@@ -301,8 +300,7 @@ A complete rebrand — a brand accent, a matching dark palette, and softer
 corners — driven from the host's own dark-mode state.
 
 ```tsx
-import { Apollon } from "@tumaet/apollon/react"
-import { createApollonTheme } from "@tumaet/apollon"
+import { Apollon, createApollonTheme } from "@tumaet/apollon"
 import "@tumaet/apollon/style.css"
 
 const light = createApollonTheme({
@@ -380,7 +378,7 @@ VS Code applies `vscode-light` / `vscode-dark` / `vscode-high-contrast` classes
 to `<body>`. Mirror those onto `data-theme` so the editor follows live theme
 switches:
 
-```ts
+```ts no-check
 const sync = () => {
   const dark = document.body.classList.contains("vscode-dark")
   document.documentElement.setAttribute("data-theme", dark ? "dark" : "light")

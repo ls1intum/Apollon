@@ -82,7 +82,7 @@ measures text at module load, so the font and DOM must exist first. Register the
 **same Inter** the library bundles (and that resvg uses for rasterising) so the
 measured metrics match the editor:
 
-```ts
+```ts no-check
 // setup.ts — imported first, before @tumaet/apollon
 import { GlobalFonts } from "canvas"
 import "global-jsdom/register"
@@ -119,7 +119,7 @@ the reference `jsdom-shims.ts`).
 each node's `width` / `height` / `measured` and edge handles before exporting
 (see `normalizeModelForServerRender` in the reference `conversion-service.ts`):
 
-```ts
+```ts no-check
 import { ApollonEditor, importDiagram } from "@tumaet/apollon"
 
 const { svg, clip } = await ApollonEditor.exportModelAsSvg(

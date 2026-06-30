@@ -1,4 +1,4 @@
-import { UMLDiagramType, UMLModel } from "@tumaet/apollon/react"
+import { UMLDiagramType, UMLModel } from "@tumaet/apollon"
 
 export const playgroundModelId = "playgroundModelId"
 

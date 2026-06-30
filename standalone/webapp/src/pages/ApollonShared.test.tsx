@@ -70,7 +70,7 @@ const FakeApollonEditor = vi.hoisted(
     }
 )
 
-vi.mock("@tumaet/apollon/react", async (importOriginal) => {
+vi.mock("@tumaet/apollon", async (importOriginal) => {
   const actual = (await importOriginal()) as Record<string, unknown>
   const React = await import("react")
   // The real <Apollon> instantiates the real ApollonEditor (jsdom-incompatible).

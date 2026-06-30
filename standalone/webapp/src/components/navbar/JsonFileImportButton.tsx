@@ -2,7 +2,7 @@ import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { DropdownMenuItem } from "@tumaet/ui/components/dropdown-menu"
 import React, { useRef } from "react"
 import { useNavigate } from "@tanstack/react-router"
-import { importDiagram } from "@tumaet/apollon/react"
+import { importDiagram } from "@tumaet/apollon"
 import { log } from "@/logger"
 
 /** Props for the pure {@link JsonFileImportButtonView}. */

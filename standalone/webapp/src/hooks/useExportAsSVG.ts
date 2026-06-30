@@ -1,4 +1,4 @@
-import type { SvgExportMode } from "@tumaet/apollon/react"
+import type { SvgExportMode } from "@tumaet/apollon"
 import { isPlatform } from "@ionic/react"
 import { Filesystem, Directory, Encoding } from "@capacitor/filesystem"
 import { Share } from "@capacitor/share"

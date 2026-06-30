@@ -64,7 +64,7 @@ export const GenericPopover: React.FC<GenericPopoverProps> = ({
   return (
     <Popover.Root
       open={open}
-      onOpenChange={(next) => {
+      onOpenChange={(next: boolean) => {
         if (!next) onClose()
       }}
     >

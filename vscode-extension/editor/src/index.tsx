@@ -4,7 +4,7 @@ import "./index.css"
 import "@tumaet/apollon/style.css"
 import App from "./App"
 import useStore from "./store"
-import { UMLDiagramType, UMLModel } from "@tumaet/apollon/react"
+import { UMLDiagramType, UMLModel } from "@tumaet/apollon"
 
 export const vscode = acquireVsCodeApi()
 

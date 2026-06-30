@@ -1,16 +1,17 @@
 ---
 id: angular
 title: Angular
-description: Embed Apollon in an Angular host using the default standalone bundle.
+description: Embed Apollon in an Angular host with the imperative ApollonEditor API.
 ---
 
 # Angular
 
-Use the **standalone subpath** (`@tumaet/apollon`). Angular hosts get the
-editor with React bundled inside the tarball; the only peers to install are
-`yjs` and `y-protocols` (`npm install @tumaet/apollon yjs y-protocols`).
+Angular never imports React itself — the editor renders its own React tree
+inside the container — but React is a peer the editor uses internally, so you
+install it alongside Apollon:
+`npm install @tumaet/apollon react react-dom @xyflow/react yjs y-protocols`.
 
-```ts
+```ts no-check
 import {
   Component,
   DestroyRef,
@@ -67,7 +68,7 @@ The `<div>` must have an explicit height, or the editor renders blank — see
 
 Pass options as the constructor's second argument:
 
-```ts
+```ts no-check
 import { ApollonEditor, ApollonMode, UMLDiagramType } from "@tumaet/apollon"
 
 new ApollonEditor(this.host().nativeElement, {

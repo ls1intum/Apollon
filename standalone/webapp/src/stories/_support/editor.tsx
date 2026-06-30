@@ -24,7 +24,7 @@ import {
 } from "@xyflow/react"
 import { useShallow } from "zustand/shallow"
 
-import { Apollon, ApollonMode } from "@tumaet/apollon/react"
+import { Apollon, ApollonMode } from "@tumaet/apollon"
 import type {
   UMLModel,
   UMLDiagramType,

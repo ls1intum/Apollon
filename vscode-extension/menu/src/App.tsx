@@ -1,5 +1,5 @@
 import { useState } from "react"
-import type { UMLDiagramType } from "@tumaet/apollon/react"
+import type { UMLDiagramType } from "@tumaet/apollon"
 import useStore from "./store"
 import { vscode } from "./index"
 

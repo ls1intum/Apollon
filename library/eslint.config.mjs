@@ -31,7 +31,7 @@ export default [
         "error",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
-      // The library is migrated to Base UI + raw CSS + --apollon-* tokens.
+      // The library styles with Base UI + raw CSS + --apollon-* tokens.
       // It must never depend on MUI or a CSS-in-JS runtime (Emotion).
       "no-restricted-imports": [
         "error",

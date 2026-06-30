@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { v4 as uuidv4 } from "uuid"
 import { useModalContext } from "@/contexts/ModalContext"
-import { UMLDiagramType } from "@tumaet/apollon/react"
+import { UMLDiagramType } from "@tumaet/apollon"
 import { useNavigate } from "@tanstack/react-router"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { getDiagramTypeIcon } from "@/components/home/diagramTypeMeta"

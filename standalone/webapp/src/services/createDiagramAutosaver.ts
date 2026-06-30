@@ -1,4 +1,4 @@
-import type { UMLModel } from "@tumaet/apollon/react"
+import type { UMLModel } from "@tumaet/apollon"
 import { ApiError, DiagramApiClient } from "@/services/DiagramApiClient"
 import { log } from "@/logger"
 

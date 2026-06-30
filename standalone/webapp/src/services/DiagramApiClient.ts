@@ -1,4 +1,4 @@
-import type { UMLModel } from "@tumaet/apollon/react"
+import type { UMLModel } from "@tumaet/apollon"
 import { serverURL } from "@/constants"
 import { resolveShareOrigin } from "@/utils/sharedDiagramLinks"
 import type {

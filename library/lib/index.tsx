@@ -34,3 +34,23 @@ export type { LogLevel } from "./logger"
 // Public theming API. The helper is bundled from @tumaet/ui into dist, so
 // external consumers don't take a dependency on the private workspace package.
 export { createApollonTheme, type ApollonTheme } from "@tumaet/ui/theme"
+
+// React surface, exported from the main entry (no separate `/react` entry).
+// React is externalized (see vite.config.ts), so these render on the host's
+// single React copy; non-React hosts tree-shake them out (package is
+// side-effect-free except CSS). The `index` chunk carries a `"use client"`
+// banner (vite.config.ts) for Next.js App Router — note it marks the whole
+// entry client-only.
+export { Apollon, type ApollonProps } from "./components/react/Apollon"
+export {
+  ApollonProvider,
+  useApollonEditor,
+  useApollonEditorOrThrow,
+} from "./components/react/context"
+export { useApollonSubscription } from "./components/react/useApollonSubscription"
+// Canvas overlay / control API (React surface): declaratively inject floating
+// chrome into the editor canvas.
+export {
+  ApollonControl,
+  type ApollonControlProps,
+} from "./components/react/ApollonControl"

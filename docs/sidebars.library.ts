@@ -25,6 +25,7 @@ const sidebars: SidebarsConfig = {
       link: { type: "doc", id: "api" },
       items: [
         "api/overlay-controls",
+        "api/assessment",
         "api/collaboration",
         "api/export",
         "api/headless-rendering",
@@ -33,6 +34,7 @@ const sidebars: SidebarsConfig = {
       ],
     },
     { type: "doc", id: "troubleshooting", label: "Troubleshooting" },
+    { type: "doc", id: "upgrading", label: "Upgrading" },
   ],
 }
 

@@ -37,7 +37,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
       name={name}
       checked={checked}
       defaultChecked={defaultChecked}
-      onCheckedChange={(next) => onCheckedChange?.(next)}
+      onCheckedChange={(next: boolean) => onCheckedChange?.(next)}
       disabled={disabled}
       aria-label={label ? undefined : ariaLabel}
       data-slot="checkbox"

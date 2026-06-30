@@ -87,26 +87,20 @@ import "@tumaet/apollon/style.css"
 For a CDN / plain-HTML host, link it instead — see
 [Vanilla JS / CDN](/library/embedding/vanilla).
 
-## Two copies of React (`/react` subpath vs. default build)
+## Duplicate React or "Invalid hook call"
 
-**Symptom.** In a React host: hook errors ("Invalid hook call", "more than one
-copy of React"), broken context, or a bundle that is larger than expected.
+**Symptom.** Hook errors ("Invalid hook call", "more than one copy of React"),
+broken context, or a larger-than-expected bundle.
 
-**Cause.** The default `@tumaet/apollon` build **bundles its own copy** of
-React and xyflow. That is correct for non-React hosts, but in a
-React app it ships a second React that fights the host's.
+**Cause.** Two copies of React on the page. Apollon externalizes `react` and
+`react-dom` and renders on the host's copy, so this only happens when your
+install resolves a _second_ React — a peer-range mismatch, a duplicated
+`node_modules`, or a monorepo hoisting gap.
 
-**Fix.** In a React host, import from the `/react` subpath and install the
-peer dependencies:
-
-```ts
-import { ApollonEditor } from "@tumaet/apollon/react"
-```
-
-The `/react` build externalizes React and friends so the editor shares the
-host's single instance. Non-React hosts (Angular, Vue, Svelte, vanilla) should
-keep the default `@tumaet/apollon` import. See
-[Install](/library/embedding/install) for the peer-dependency list.
+**Fix.** Ensure a single React: align `react` / `react-dom` on `^19`, dedupe
+(`npm dedupe`, or the pnpm/yarn equivalent), and confirm your bundler resolves
+one instance. Apollon never bundles its own React, so there is no build variant
+to choose. See [Install](/library/embedding/install) for the peer list.
 
 ## Re-mounting leaks or double-renders
 
