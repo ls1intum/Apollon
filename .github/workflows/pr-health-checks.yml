@@ -151,6 +151,11 @@ jobs:
       - name: Run unit tests
         run: pnpm run test
 
+      - name: Typecheck @tumaet/ui (incl. stories)
+        # The declaration build excludes stories/tests (they are not public API),
+        # so type-check the full source here to keep stories type-safe.
+        run: pnpm --filter @tumaet/ui run typecheck
+
       - name: Run shared-ui unit tests
         # The @tumaet/ui component suite (Base UI primitives + a11y behaviour).
         run: pnpm --filter @tumaet/ui run test
