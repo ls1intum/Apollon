@@ -1,14 +1,13 @@
 ---
-"@tumaet/apollon": major
+"@tumaet/apollon": minor
 ---
 
-Collapse the three build variants (`@tumaet/apollon`, `/react`, `/external`) into a single fully-external entry. Every runtime dependency is now externalized — resolved from the host's `node_modules` — so the bundler de-duplicates it and SBOM tooling attributes it correctly, instead of a copy inlined into the bundle. `react`, `react-dom`, and `@xyflow/react` become **required** peers (joining `yjs`/`y-protocols`); they were previously marked optional. The `<Apollon>` component, hooks, and provider now ship from the main entry.
+Everything ships from one entry now: `@tumaet/apollon` exports the `<Apollon>` React component, the hooks, the provider, and the imperative `ApollonEditor` API together, with every dependency external. `react`, `react-dom`, and `@xyflow/react` are required peers alongside `yjs` / `y-protocols`, so your app and the editor share a single copy of each — no duplicate React, and your bundle analyzer / SBOM sees the real packages instead of a copy inlined into one chunk.
 
-### Migration
+If you used the short-lived `/react` or `/external` subpaths (introduced in 4.9.0):
 
-- `@tumaet/apollon/external` → `@tumaet/apollon` (same `ApollonEditor` API; drop the subpath).
-- `@tumaet/apollon/react` → `@tumaet/apollon` (component, hooks, provider on the main entry).
-- Consumers must now provide `react`, `react-dom`, `@xyflow/react` (peers; npm 7+ auto-installs them, pnpm/yarn users add them explicitly).
-- The `exports` map no longer has `./react` or `./external` keys — a deep import of `@tumaet/apollon/external` (incl. via a CDN) now fails to resolve; it is removed, not deprecated.
-- The main entry is now a client module (`"use client"`); React Server Components must treat `@tumaet/apollon` as client-only.
-- `/internals` and `/export` are unchanged.
+- `@tumaet/apollon/external` → `@tumaet/apollon` — same `ApollonEditor` API, just drop the subpath.
+- `@tumaet/apollon/react` → `@tumaet/apollon` — the component, hooks, and provider are on the main entry now.
+- Install the peers if you haven't: `react react-dom @xyflow/react` (npm 7+ auto-installs them; pnpm/yarn users add them explicitly).
+- The main entry is a client module (`"use client"`) — import it from client components, not React Server Components.
+- `@tumaet/apollon/internals` and `@tumaet/apollon/export` are unchanged.
