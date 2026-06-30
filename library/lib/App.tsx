@@ -233,7 +233,7 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
             // edges so an overlapping edge's interaction ribbon can't steal the
             // pointer from a visible handle.
             elevateEdgesOnSelect
-            onInit={(instance) => {
+            onInit={(instance: ReactFlowInstance) => {
               instance.fitView({ maxZoom: 1.0, minZoom: 1.0 })
               handleReactFlowInit(instance)
             }}
