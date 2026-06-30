@@ -37,10 +37,10 @@ function emitFontLicense(): Plugin {
 // This is the only published shape: `import { ApollonEditor } from
 // "@tumaet/apollon"` for bundler hosts of any framework (Angular, Vue, Svelte —
 // e.g. Artemis), and `import { Apollon } from "@tumaet/apollon"` for React
-// hosts. Both render on the host's single React copy, so there is no inlined /
-// `/external` / `/react` split anymore. CDN / no-bundler users load it via a
-// CDN that resolves the peers (e.g. esm.sh); the React family / xyflow / yjs /
-// y-protocols are declared as required peerDependencies.
+// hosts. Both render on the host's single React copy — one entry, no per-host or
+// inlined build variants. CDN / no-bundler users load it via a CDN that resolves
+// the peers (e.g. esm.sh); the React family / xyflow / yjs / y-protocols are
+// declared as required peerDependencies.
 //
 // `@tumaet/ui` (Apollon's private, unpublishable design-system package) and its
 // styling utilities (cmdk / class-variance-authority / clsx / tailwind-merge)
