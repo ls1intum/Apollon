@@ -24,32 +24,36 @@ const apollonAliases = [
 ]
 
 // The editor library uses a `@/` alias -> library/lib, which collides with the
-// webapp's own `@/` -> src. Rewrite `@/…` to an absolute library/lib path only
-// inside files under the library directory; the webapp's `@/` keeps mapping to src.
+// webapp's own `@/` -> src. Rewrite `@/…` imports in library files to an absolute
+// library/lib path (the webapp's `@/` keeps mapping to src). Only files that
+// actually import `@/…` are intercepted, so every other library file keeps Vite's
+// native source maps; the rewrite is line-preserving, so only the import lines of
+// the rewritten files shift.
 const apollonAliasResolver = {
   name: "apollon-alias-resolver",
   enforce: "pre" as const,
   async load(id: string) {
     const libraryRoot = resolve(__dirname, "../../library").replace(/\\/g, "/")
     if (!id.replace(/\\/g, "/").includes(libraryRoot)) return null
+    let original: string
     try {
-      let code = await fs.promises.readFile(id, "utf-8")
-      const libRoot = resolve(__dirname, "../../library/lib").replace(
-        /\\/g,
-        "/"
-      )
-      code = code.replace(
-        /from\s+["']@\/([^"']+)["']/g,
-        (_m, p) => `from "${resolve(libRoot, p).replace(/\\/g, "/")}"`
-      )
-      code = code.replace(
-        /import\s+["']@\/([^"']+)["']/g,
-        (_m, p) => `import "${resolve(libRoot, p).replace(/\\/g, "/")}"`
-      )
-      return { code, map: null }
+      original = await fs.promises.readFile(id, "utf-8")
     } catch {
       return null
     }
+    if (!original.includes("@/")) return null
+    const libRoot = resolve(__dirname, "../../library/lib").replace(/\\/g, "/")
+    const code = original
+      .replace(
+        /from\s+["']@\/([^"']+)["']/g,
+        (_m, p) => `from "${resolve(libRoot, p).replace(/\\/g, "/")}"`
+      )
+      .replace(
+        /import\s+["']@\/([^"']+)["']/g,
+        (_m, p) => `import "${resolve(libRoot, p).replace(/\\/g, "/")}"`
+      )
+    if (code === original) return null
+    return { code, map: null }
   },
 }
 
