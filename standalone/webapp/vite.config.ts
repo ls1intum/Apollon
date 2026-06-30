@@ -5,11 +5,11 @@ import { resolve } from "path"
 import fs from "fs"
 import tailwindcss from "@tailwindcss/vite"
 
-// Cross-package source aliases. Kept INLINE (not imported from ./build/viteResolve)
-// so vite's esbuild config loader stays self-contained — importing a sibling
-// module that pulls `vite` types crashes the esbuild config bundle in the CI
-// visual container (mcr.microsoft.com/playwright noble). The Storybook config
-// still uses build/viteResolve; only this config must be esbuild-load-safe.
+// Cross-package source aliases. Kept INLINE here (and mirrored in ./viteResolve
+// for the Storybook vitest config) rather than imported: importing a sibling
+// module crashes Vite's esbuild config loader in the CI Playwright container
+// (mcr.microsoft.com/playwright noble), so only this config must stay
+// self-contained. Keep the two copies in sync.
 const apollonAliases = [
   { find: "@", replacement: resolve(__dirname, "src") },
   { find: "assets", replacement: resolve(__dirname, "assets") },

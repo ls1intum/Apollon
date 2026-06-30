@@ -5,7 +5,7 @@
     "library": {
       "entry": ["lib/index.tsx", "lib/internals.ts", "lib/export/index.ts"],
       "project": ["lib/**/*.{ts,tsx}"],
-      "ignoreBinaries": ["build"]
+      "ignoreBinaries": ["build", "run"]
     },
     "packages/ui": {
       "entry": [
@@ -28,6 +28,7 @@
       "ignoreDependencies": [
         "@capacitor/file-transfer",
         "@capacitor/splash-screen",
+        "@capacitor/android",
         "tailwindcss",
         "jspdf",
         "svg2pdf.js",
@@ -40,7 +41,8 @@
     },
     "vscode-extension": {
       "entry": ["webview-vite.config.ts"],
-      "ignoreBinaries": ["vsce"]
+      "ignoreBinaries": ["vsce"],
+      "ignoreDependencies": ["babel-plugin-react-compiler"]
     },
     "vscode-extension/editor": {
       "entry": ["src/index.tsx"],
