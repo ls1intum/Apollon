@@ -21,7 +21,9 @@
     }
   },
   "scripts": {
+    "build": "pnpm run build:css && pnpm run build:types",
     "build:types": "tsc -p tsconfig.json --declaration --emitDeclarationOnly --noEmit false --outDir dist",
+    "build:types:watch": "tsc -p tsconfig.json --declaration --emitDeclarationOnly --noEmit false --outDir dist --watch --preserveWatchOutput",
     "build:css": "tailwindcss -i src/styles/components.css -o dist/components.css",
     "build:css:watch": "tailwindcss -i src/styles/components.css -o dist/components.css --watch",
     "lint": "eslint .",

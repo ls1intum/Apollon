@@ -59,9 +59,9 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "dev": "pnpm --filter @tumaet/ui run build:css && vite",
-    "build": "pnpm --filter @tumaet/ui run build:css && pnpm --filter @tumaet/ui run build:types && tsc -b && vite build",
-    "build:watch": "pnpm --filter @tumaet/ui run build:css && pnpm exec concurrently -k \"pnpm --filter @tumaet/ui run build:css:watch\" \"tsc -b --watch\" \"vite build --watch\"",
+    "dev": "pnpm --filter @tumaet/ui run build && vite",
+    "build": "pnpm --filter @tumaet/ui run build && tsc -b && vite build",
+    "build:watch": "pnpm exec concurrently -k \"pnpm --filter @tumaet/ui run build:css:watch\" \"pnpm --filter @tumaet/ui run build:types:watch\" \"tsc -b --watch\" \"vite build --watch\"",
     "preview": "vite preview",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",

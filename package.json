@@ -15,7 +15,7 @@
     "storybook": "pnpm --filter @tumaet/webapp run storybook",
     "build-storybook": "pnpm --filter @tumaet/webapp run build-storybook",
     "test-storybook": "pnpm --filter @tumaet/webapp run test:storybook",
-    "dev": "node scripts/dev.mjs",
+    "dev": "pnpm --filter @tumaet/ui run build && node scripts/dev.mjs",
     "dev:lib": "pnpm --filter @tumaet/apollon run build:watch",
     "dev:server": "pnpm run ensure:localdb && pnpm --filter @tumaet/server run dev",
     "dev:webapp": "pnpm --filter @tumaet/webapp run start",
