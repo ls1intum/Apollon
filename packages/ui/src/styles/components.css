@@ -233,11 +233,13 @@
 /* Shared glass surface for every floating chrome object — header islands,
    palette, zoom/undo controls, minimap, and the webapp home band — so they read
    as one family of translucent panes. The tint floor keeps text legible over a
-   busy diagram; the inset hairline gives crispness in dark mode. */
+   busy diagram; the inset hairline gives crispness in dark mode.
+   -webkit-backdrop-filter is ordered before backdrop-filter because the CSS
+   minifier collapses an identical-value prefix pair to the last declaration. */
 .apollon-glass {
   background-color: var(--apollon-chrome-glass);
-  backdrop-filter: var(--apollon-chrome-glass-blur);
   -webkit-backdrop-filter: var(--apollon-chrome-glass-blur);
+  backdrop-filter: var(--apollon-chrome-glass-blur);
   border: 1px solid var(--apollon-chrome-border);
   box-shadow: var(--apollon-chrome-shadow-floating),
     var(--apollon-chrome-inset-hairline);
@@ -249,8 +251,8 @@
 @media (prefers-reduced-transparency: reduce) {
   .apollon-glass {
     background-color: var(--apollon-chrome-surface);
-    backdrop-filter: none;
     -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
 }
 
