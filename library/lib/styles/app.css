@@ -304,8 +304,8 @@
   overflow-y: auto;
   overscroll-behavior: contain;
   background: var(--apollon-chrome-glass);
-  backdrop-filter: var(--apollon-chrome-glass-blur);
   -webkit-backdrop-filter: var(--apollon-chrome-glass-blur);
+  backdrop-filter: var(--apollon-chrome-glass-blur);
   color: var(--apollon-chrome-text);
   border: 1px solid var(--apollon-chrome-border);
   border-radius: var(--apollon-chrome-radius-lg);
@@ -539,8 +539,8 @@
 .react-flow__panel,
 .react-flow__node-toolbar {
   background-color: var(--apollon-chrome-glass);
-  backdrop-filter: var(--apollon-chrome-glass-blur);
   -webkit-backdrop-filter: var(--apollon-chrome-glass-blur);
+  backdrop-filter: var(--apollon-chrome-glass-blur);
   border: 1px solid var(--apollon-chrome-border);
   box-shadow: var(--apollon-chrome-shadow-floating),
     var(--apollon-chrome-inset-hairline);
@@ -567,8 +567,8 @@
 .apollon-overlay-band,
 .apollon-overlay-panel {
   background-color: transparent;
-  backdrop-filter: none;
   -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   border: 0;
   box-shadow: none;
   border-radius: 0;
@@ -618,8 +618,8 @@
   .react-flow__node-toolbar,
   .apollon-palette {
     background-color: var(--apollon-chrome-surface);
-    backdrop-filter: none;
     -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
 }
 
