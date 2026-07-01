@@ -1,7 +1,7 @@
 {
   "name": "@tumaet/webapp",
   "private": true,
-  "version": "5.0.0",
+  "version": "5.0.1",
   "type": "module",
   "engines": {
     "node": ">=24.15.0"
