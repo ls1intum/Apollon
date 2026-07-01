@@ -1,5 +1,11 @@
 # @tumaet/apollon
 
+## 5.0.1
+
+### Patch Changes
+
+- [#787](https://github.com/ls1intum/Apollon/pull/787) [`82ef0af`](https://github.com/ls1intum/Apollon/commit/82ef0af97792d17495f318ebdfee908ba0cdbf13) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Fixes the editor's floating chrome — palette, node toolbars, and zoom/undo controls — losing its frosted-glass blur in Chrome and Firefox, where it rendered as a flat translucent panel.
+
 ## 5.0.0
 
 ### Major Changes
