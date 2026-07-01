@@ -1,5 +1,39 @@
 # @tumaet/apollon
 
+## 5.0.0
+
+### Major Changes
+
+- [#785](https://github.com/ls1intum/Apollon/pull/785) [`91d36ad`](https://github.com/ls1intum/Apollon/commit/91d36addd69f1982c79df1dfc68c8a5da17e7f8a) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Everything ships from one entry now: `@tumaet/apollon` exports the `<Apollon>` React component, the hooks, the provider, and the imperative `ApollonEditor` API together, with every dependency external. `react`, `react-dom`, and `@xyflow/react` are required peers alongside `yjs` / `y-protocols`, so your app and the editor share a single copy of each — no duplicate React, and your bundle analyzer / SBOM sees the real packages instead of a copy inlined into one chunk.
+
+  If you imported from the `/react` or `/external` subpaths, switch to `@tumaet/apollon`:
+
+  - `@tumaet/apollon/external` → `@tumaet/apollon` — same `ApollonEditor` API, just drop the subpath.
+  - `@tumaet/apollon/react` → `@tumaet/apollon` — the component, hooks, and provider are on the main entry.
+  - Install the peers if you haven't: `react react-dom @xyflow/react` (npm 7+ auto-installs them; pnpm/yarn users add them explicitly).
+  - The main entry is a client module (`"use client"`) — import it from client components, not React Server Components.
+  - `@tumaet/apollon/internals` and `@tumaet/apollon/export` are unchanged.
+
+  See the [Upgrading guide](https://ls1intum.github.io/Apollon/library/upgrading) for the full walkthrough.
+
+### Minor Changes
+
+- [#759](https://github.com/ls1intum/Apollon/pull/759) [`e4a44f2`](https://github.com/ls1intum/Apollon/commit/e4a44f200c864e8684d01bf4113968c7dfc7fa96) Thanks [@FadyGergesRezk](https://github.com/FadyGergesRezk)! - Adds a public theming API for embedding hosts. You can now theme the editor with a typed helper instead of hand-writing CSS variables: `createApollonTheme()` maps a structured `ApollonTheme` (primary, background, grid, etc.) to the underlying `--apollon-*` custom properties, and `<Apollon>` accepts optional `theme` and `dataTheme` props (also available as `ApollonOptions` fields) that are applied to the editor mount node.
+
+  ```ts
+  import { Apollon, createApollonTheme } from "@tumaet/apollon"
+
+  <Apollon theme={createApollonTheme({ primary: "#6d28d9", background: "#0b0b0c" })} dataTheme="dark" />
+  ```
+
+  The CSS custom-property contract remains the framework-agnostic source of truth (documented in `THEMING.md`); the helper is an ergonomic, type-safe wrapper over it. Un-themed embeds are unaffected.
+
+- [#759](https://github.com/ls1intum/Apollon/pull/759) [`e4a44f2`](https://github.com/ls1intum/Apollon/commit/e4a44f200c864e8684d01bf4113968c7dfc7fa96) Thanks [@FadyGergesRezk](https://github.com/FadyGergesRezk)! - Removes MUI and Emotion from the editor. Its controls, popovers, toolbars, and minimap are rebuilt on lightweight Base UI primitives and styled entirely through the public `--apollon-*` CSS variables, so embedding hosts get a smaller dependency footprint, no Emotion runtime, and no MUI global-style collisions — with the editor's look and behaviour unchanged.
+
+### Patch Changes
+
+- [#786](https://github.com/ls1intum/Apollon/pull/786) [`16e90a7`](https://github.com/ls1intum/Apollon/commit/16e90a739b5e50938fd9276660494b317473d6ca) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Modernize the build toolchain and cut a runtime dependency, behavior-identical. `uuid` is gone — the editor now mints RFC-4122 v4 IDs from an embed-safe `crypto.getRandomValues` (works in any context, unlike `crypto.randomUUID`). The build moves to Vite 8 (Rolldown/Oxc), TypeScript 6.0, and vite-plugin-dts 5 (+ `@microsoft/api-extractor`), and every remaining runtime dependency (`@base-ui/react`, `lucide-react`, `@chenglou/pretext`, …) is verified at its latest release. No public API or rendering change.
+
 ## 4.9.0
 
 ### Minor Changes
