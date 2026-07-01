@@ -988,7 +988,8 @@ export class ApollonEditor {
         storeNodeWrites: number
       }
     | undefined {
-    if (!import.meta.env.DEV) return undefined
+    if (!import.meta.env.DEV && import.meta.env.VITE_E2E !== "true")
+      return undefined
 
     const counters = getPerfCounters()
 

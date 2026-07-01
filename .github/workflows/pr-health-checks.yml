@@ -213,14 +213,14 @@ jobs:
           # Browser-specific key: the chromium and firefox jobs share this cache
           # path but install different browsers, so they must not share a key
           # (a firefox-only cache would make this job skip its chromium install).
-          key: playwright-chromium-${{ runner.os }}-v1.59.1-${{ hashFiles('standalone/webapp/package.json') }}
+          key: playwright-chromium-${{ runner.os }}-v1.61.1-${{ hashFiles('standalone/webapp/package.json') }}
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         # Invoke @playwright/test's own CLI (not `pnpm exec playwright`): the
-        # webapp also has `playwright@1.61` for Storybook's vitest browser runner,
-        # so the bare `playwright` bin resolves to 1.61 and installs browsers the
-        # 1.59.1 test runner can't find. cli.js installs 1.59.1's browsers.
+        # webapp also has the `playwright` package (Storybook's vitest browser
+        # runner), and both ship a `playwright` bin, so the bare bin can resolve
+        # to the wrong package. cli.js pins the install to @playwright/test.
         run: pnpm --filter @tumaet/webapp exec node node_modules/@playwright/test/cli.js install chromium
 
       # Shared with perf-firefox-tests; the dpkg-lock hang it guards is
@@ -232,8 +232,8 @@ jobs:
 
       - name: Run E2E tests
         # Use the test:e2e script (node …/@playwright/test/cli.js): running via
-        # `pnpm exec playwright test` picks up the 1.61 runner against 1.59.1 test
-        # files → "did not expect test.describe()".
+        # `pnpm exec playwright test` can pick up the `playwright` package's CLI
+        # (bin collision) instead of @playwright/test's test runner.
         run: pnpm --filter @tumaet/webapp run test:e2e
 
       # No chromium document-growth budget: the metric is engine-independent and
@@ -286,12 +286,13 @@ jobs:
           path: ~/.cache/ms-playwright
           # Firefox-specific key — must differ from the chromium jobs' key (same
           # cache path, different browser) so neither poisons the other's cache.
-          key: playwright-firefox-${{ runner.os }}-v1.59.1-${{ hashFiles('standalone/webapp/package.json') }}
+          key: playwright-firefox-${{ runner.os }}-v1.61.1-${{ hashFiles('standalone/webapp/package.json') }}
 
       - name: Install Playwright Firefox
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        # @playwright/test's own CLI, so Firefox matches the 1.59.1 test runner
-        # (see the e2e job's install step for why `pnpm exec playwright` is wrong).
+        # @playwright/test's own CLI, so the install targets the test runner's
+        # package — both packages ship a `playwright` bin (see the e2e job's
+        # install step for why `pnpm exec playwright` is wrong).
         run: pnpm --filter @tumaet/webapp exec node node_modules/@playwright/test/cli.js install firefox
 
       # Shared with e2e-tests; the dpkg-lock hang it guards is documented in
@@ -393,7 +394,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     container:
-      image: mcr.microsoft.com/playwright:v1.59.1-noble
+      image: mcr.microsoft.com/playwright:v1.61.1-noble
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6

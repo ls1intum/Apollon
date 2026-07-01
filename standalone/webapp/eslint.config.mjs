@@ -2,7 +2,7 @@
 import globals from "globals"
 import pluginJs from "@eslint/js"
 import tseslint from "typescript-eslint"
-import reactPlugin from "eslint-plugin-react"
+import eslintReact from "@eslint-react/eslint-plugin"
 import reactHooks from "eslint-plugin-react-hooks"
 
 /** @type {import('eslint').Linter.Config[]} */
@@ -26,16 +26,26 @@ export default [
   { languageOptions: { globals: globals.browser } },
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
-  reactPlugin.configs.flat.recommended,
-  reactPlugin.configs.flat["jsx-runtime"],
+  // recommended-typescript disables the prop-types rules TypeScript already enforces.
+  eslintReact.configs["recommended-typescript"],
   {
-    settings: { react: { version: "detect" } },
     plugins: { "react-hooks": reactHooks },
+    // eslint-plugin-react-hooks is the hooks / React-Compiler authority here;
+    // turn off @eslint-react's overlapping hook-rule copies so each concern is
+    // reported once, by react-hooks.
     rules: {
       ...reactHooks.configs.flat.recommended.rules,
+      "@eslint-react/error-boundaries": "off",
+      "@eslint-react/exhaustive-deps": "off",
+      "@eslint-react/purity": "off",
+      "@eslint-react/rules-of-hooks": "off",
+      "@eslint-react/set-state-in-effect": "off",
+      "@eslint-react/set-state-in-render": "off",
+      "@eslint-react/static-components": "off",
+      "@eslint-react/unsupported-syntax": "off",
+      "@eslint-react/use-memo": "off",
       // Match library config: exhaustive-deps as warning.
       "react-hooks/exhaustive-deps": "warn",
-      "react/prop-types": "off",
       // The webapp is fully migrated off MUI/Emotion onto @tumaet/ui
       // (Base UI) + lucide-react. Ban re-introducing them.
       "no-restricted-imports": [

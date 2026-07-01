@@ -41,7 +41,7 @@ import { ApollonEditor } from "@tumaet/apollon"
 import "@tumaet/apollon/style.css"
 ```
 
-Apollon ships **one** build with every runtime dependency left external — the React family (`react`, `react-dom`, `@xyflow/react`), the CRDT singletons (`yjs`, `y-protocols`), and Apollon's own UI deps (`@base-ui/react`, `lucide-react`, `@dnd-kit`, `zustand`, `uuid`, `@chenglou/pretext`), which arrive transitively when you install the package. Your bundler resolves and de-duplicates each one against your app's `node_modules`, and your bundle analyzer / SBOM tooling sees them as the real packages they are — never a copy inlined invisibly into one chunk. This works from any framework with a bundler (Angular, Vue, Svelte, React).
+Apollon ships **one** build with every runtime dependency left external — the React family (`react`, `react-dom`, `@xyflow/react`), the CRDT singletons (`yjs`, `y-protocols`), and Apollon's own UI deps (`@base-ui/react`, `lucide-react`, `@dnd-kit`, `zustand`, `@chenglou/pretext`), which arrive transitively when you install the package. Your bundler resolves and de-duplicates each one against your app's `node_modules`, and your bundle analyzer / SBOM tooling sees them as the real packages they are — never a copy inlined invisibly into one chunk. This works from any framework with a bundler (Angular, Vue, Svelte, React).
 
 These are the peers you install explicitly:
 

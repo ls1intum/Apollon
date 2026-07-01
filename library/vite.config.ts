@@ -29,7 +29,7 @@ function emitFontLicense(): Plugin {
 //
 // EVERY runtime dependency a consumer can install from `@tumaet/apollon` is
 // externalized: the React family (react / react-dom / @xyflow/react), the UI
-// primitives (Base UI, lucide), @dnd-kit, zustand, uuid, @chenglou/pretext, and
+// primitives (Base UI, lucide), @dnd-kit, zustand, @chenglou/pretext, and
 // the CRDT singletons (yjs / y-protocols). The host's bundler resolves and
 // de-duplicates them and gets full SBOM attribution for each — instead of a
 // minified copy inlined into one chunk and invisible to supply-chain tooling.
@@ -60,7 +60,6 @@ const REACT_PEERS = [
   "@xyflow/react",
 ]
 
-// Apollon's own non-framework runtime deps — every third-party package
 // `@tumaet/apollon` declares in `dependencies`, externalized like the peers
 // above. Base UI + lucide are imported both directly AND through the bundled
 // `@tumaet/ui`, so externalizing them here also de-duplicates @tumaet/ui's copy.
@@ -72,7 +71,6 @@ const RUNTIME_DEPS = [
   "lucide-react",
   /^@dnd-kit\//,
   /^zustand(\/.*)?$/,
-  "uuid",
   "@chenglou/pretext",
 ]
 
@@ -83,16 +81,19 @@ export default defineConfig({
     }),
     dts({
       include: ["lib"],
-      rollupTypes: true,
+      // vite-plugin-dts 5 renamed `rollupTypes` → `bundleTypes`: bundle every
+      // entry into one self-contained .d.ts via @microsoft/api-extractor.
+      bundleTypes: {
+        // api-extractor otherwise leaves @tumaet/ui external; bundle it so the
+        // rolled .d.ts is self-contained (no dependency on the private workspace
+        // package).
+        bundledPackages: ["@tumaet/ui"],
+      },
       // The JS build aliases @tumaet/ui to its TS source so the runtime inlines
       // into dist. For TYPES, resolve the package's published declarations (via
       // package.json `exports#types`) instead, so the rolled-up .d.ts doesn't
       // inline raw .ts source.
       aliasesExclude: [/^@tumaet\/ui/],
-      // api-extractor (rollupTypes) otherwise leaves @tumaet/ui external; bundle
-      // it so the rolled .d.ts is self-contained (no dependency on the private
-      // workspace package).
-      bundledPackages: ["@tumaet/ui"],
     }),
     // style.css base64-inlines Inter; the lazy exportFonts/exportStyles chunks
     // do too — OFL clause 2 requires the license to travel with the artifact.
@@ -155,6 +156,8 @@ export default defineConfig({
         banner: (chunk) => (chunk.name === "index" ? '"use client";' : ""),
       },
     },
+    // Vite 8 minifies with Oxc, which drops `debugger` by default, so no `drop`
+    // needed.
     minify: true,
   },
   resolve: {
@@ -166,5 +169,4 @@ export default defineConfig({
       "@tumaet/ui": resolve(__dirname, "../packages/ui/src"),
     },
   },
-  esbuild: { drop: ["debugger"] },
 })

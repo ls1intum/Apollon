@@ -20,8 +20,8 @@ export type HomeDialogOption<T extends string> = {
 export const isHomeDialogVariant = (props?: ModalProps | unknown) =>
   Boolean(
     props &&
-      typeof props === "object" &&
-      (props as ModalProps).dialogVariant === "home"
+    typeof props === "object" &&
+    (props as ModalProps).dialogVariant === "home"
   )
 
 export const getHomeDialogWidth = (size: HomeDialogSize) =>

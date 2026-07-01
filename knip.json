@@ -15,7 +15,7 @@
         "tests/**/*.test.{ts,tsx}"
       ],
       "project": ["src/**/*.{ts,tsx}", "tests/**/*.{ts,tsx}"],
-      "ignoreDependencies": ["@tailwindcss/vite", "@vitest/coverage-v8"]
+      "ignoreDependencies": ["@tailwindcss/vite"]
     },
     "standalone/webapp": {
       "entry": [
@@ -36,13 +36,11 @@
       ]
     },
     "standalone/server": {
-      "entry": ["src/workers/*.{ts,mjs}"],
-      "ignoreDependencies": ["@types/express-serve-static-core"]
+      "entry": ["src/workers/*.{ts,mjs}"]
     },
     "vscode-extension": {
       "entry": ["webview-vite.config.ts"],
-      "ignoreBinaries": ["vsce"],
-      "ignoreDependencies": ["babel-plugin-react-compiler"]
+      "ignoreBinaries": ["vsce"]
     },
     "vscode-extension/editor": {
       "entry": ["src/index.tsx"],

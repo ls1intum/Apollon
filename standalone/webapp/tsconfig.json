@@ -21,9 +21,8 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
 
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
+      "@/*": ["./src/*"],
       "@tumaet/apollon": ["../../library/dist/index.d.ts"],
       "@tumaet/apollon/*": ["../../library/dist/*"],
       "@tumaet/ui/lib/utils": ["../../packages/ui/src/lib/utils.ts"],

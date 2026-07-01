@@ -19,17 +19,19 @@ StatusBar.hide().catch(() => {
   // Silently fail if not on mobile
 })
 
-// DEV-ONLY safe-area preview. Browser device-emulators draw a notch / Dynamic
+// Safe-area preview seam. Browser device-emulators draw a notch / Dynamic
 // Island but report env(safe-area-inset-*) = 0, so chrome can't be verified
-// against a notch in a plain browser. This lets a developer simulate insets
-// WITHOUT shipping a hardcoded floor: it is gated on import.meta.env.DEV (never
-// in a production/native bundle), and on real devices the insets come from
-// env() (iOS) / Capacitor System Bars (Android). Usage from the console:
+// against a notch in a plain browser. This lets a developer (and the Playwright
+// suite) simulate insets WITHOUT shipping a hardcoded floor. Gated on DEV or the
+// dedicated e2e build (VITE_E2E) — both statically false in a real
+// production/native bundle, so this tree-shakes out of the shipped app; on real
+// devices the insets come from env() (iOS) / Capacitor System Bars (Android).
+// Usage from the console:
 //   __apollonSafeArea(47)            // 47px on all four sides
 //   __apollonSafeArea([0, 59, 34, 59]) // [top, right, bottom, left]
 //   __apollonSafeArea(null)          // clear
 // The value persists via localStorage so a reload keeps the simulated notch.
-if (import.meta.env.DEV) {
+if (import.meta.env.DEV || import.meta.env.VITE_E2E === "true") {
   const SIDES = ["top", "right", "bottom", "left"] as const
   const applySafeArea = (value: number | number[] | null) => {
     const root = document.documentElement.style

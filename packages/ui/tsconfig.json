@@ -22,11 +22,13 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
 
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src/**/*"],
+  // Full-source typecheck config (incl. stories/tests) — used by the `typecheck`
+  // script. Declaration emit runs from tsconfig.build.json, which excludes
+  // stories so they never land in `dist`.
   "exclude": ["node_modules", "dist"]
 }
