@@ -50,6 +50,9 @@ jobs:
         run: pnpm --filter @tumaet/webapp run test:visual:update
 
       - name: Commit and push refreshed baselines
+        # Force bash: the container otherwise runs this under dash, which rejects
+        # `set -o pipefail` and fails the step before it can push.
+        shell: bash
         env:
           REF: ${{ github.event.inputs.ref }}
         run: |
