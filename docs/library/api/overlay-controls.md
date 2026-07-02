@@ -314,6 +314,30 @@ control never drags the diagram.
   and each region container `data-apollon-region="<region>"` — stable hooks for
   tests and DOM inspection (not styling targets).
 
+## Patterns & boundaries
+
+- **Bands reserve by default; slots don't.** A control in `header` / `footer` /
+  `left-rail` / `right-rail` reserves its measured cross-size with no `inset` set;
+  a corner slot floats and reserves nothing. Only pass `inset` to opt a **slot**
+  into reserving room (or to set explicit pixels). Passing `inset: "auto"` on a
+  band is a redundant no-op.
+- **Stack multiple bars on one edge by composing inside one control.** A host that
+  owns an edge (a header with a sub-banner, a footer with a notice above the
+  action row) stacks them as a flex column inside a single `<ApollonControl>` — the
+  auto-inset measures the whole stack. Registering two separate controls in the
+  same band lays them out along the band's axis (side by side for `header`/`footer`)
+  and reserves the taller, not the sum.
+- **Resizable rails work.** A host that makes its rail content drag-resizable gets
+  live inset tracking for free — the shared `ResizeObserver` re-measures and the
+  diagram re-fits as the width changes.
+- **Modals stay in your tree.** There is no scrim/overlay region; render dialogs,
+  confirms and toasts in your own React tree (or your host modal system), not as
+  controls. The controls API is for chrome anchored to the canvas edges/corners.
+- **Selection-anchored toolbars.** `on-canvas` renders in diagram coordinates and
+  scales with zoom, so it suits diagram-space annotations, not a constant-size
+  toolbar pinned to the current selection. For that, use React Flow's `NodeToolbar`
+  in a custom node.
+
 ## Accessibility & theming
 
 - Setting `groupLabel` wraps the control in an element with `role="group"` and the
