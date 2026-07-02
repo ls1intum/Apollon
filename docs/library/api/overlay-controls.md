@@ -349,8 +349,8 @@ control never drags the diagram.
 - **i18n.** The editor's own strings are host-overridable via `labels`
   (see [i18n](#i18n) below); pass a partial map in your language.
 - **Resizable rails work.** A host that makes its rail content drag-resizable gets
-  live inset tracking for free — the shared `ResizeObserver` re-measures and the
-  diagram re-fits as the width changes.
+  live inset tracking — the shared `ResizeObserver` re-measures and the diagram
+  re-fits as the width changes.
 - **Keyboard-aware footer.** The `footer` band and bottom chrome ride above the
   mobile soft keyboard, so an action bar stays reachable while an input has focus.
 - **Modals stay in your tree.** There is no scrim/overlay region; render dialogs,

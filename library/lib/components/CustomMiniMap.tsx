@@ -121,8 +121,6 @@ export const CustomMiniMap = ({
   const [minimapCollapsed, setMinimapCollapsed] = useState(true)
   const t = useLabels()
   const CollapseArrow = COLLAPSE_ARROW[position] ?? ArrowDownRight
-  // Force-collapse on narrow canvases so the expanded card can't overlap the zoom
-  // cluster; it re-expands automatically when there's room again.
   const canvasWidth = useStore((s) => s.width)
   const tooNarrowToExpand =
     canvasWidth > 0 && canvasWidth < MINIMAP_EXPAND_MIN_WIDTH

@@ -349,14 +349,6 @@ describe("OverlayLayer band rendering (rendered lane stacking)", () => {
       )
     expect(lanes(header!)).toEqual(["0", "1"])
     expect(lanes(footer!)).toEqual(["0", "1"])
-
-    // Composed guarantee for the footer: lane 0 renders first in the DOM AND the
-    // stack reverses ⇒ lane 0 is the visually bottom-most row, flush to the edge.
-    expect(
-      footer!
-        .querySelector("[data-apollon-lane]")
-        ?.getAttribute("data-apollon-lane")
-    ).toBe("0")
   })
 })
 
