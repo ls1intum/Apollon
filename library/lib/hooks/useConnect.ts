@@ -223,7 +223,11 @@ export const useConnect = () => {
             const sourceNodeId = connectionState.fromNode!.id
             const sourceHandleId = connectionState.fromHandle?.id
 
-            if (sourceNodeId === nodeOnTop.id) {
+            // Disallow loop from a handle to the same handle on the same node.
+            if (
+              sourceNodeId === nodeOnTop.id &&
+              sourceHandleId === targetHandle
+            ) {
               return
             }
 

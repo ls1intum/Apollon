@@ -446,11 +446,10 @@ export const useStepPathEdge = ({
 
   const hasStoredManualPoints = Boolean(data?.points && data.points.length > 0)
   const hasLocalManualPoints = customPoints.length > 0
-  const shouldPreferComputedPath =
-    freeformAnchorsEnabled && computedPoints.length === 2
   const hasManualPoints =
-    !shouldPreferComputedPath &&
-    (hasStoredManualPoints || (!freeformAnchorsEnabled && hasLocalManualPoints))
+    hasStoredManualPoints || (!freeformAnchorsEnabled && hasLocalManualPoints)
+  const shouldPreferComputedPath =
+    freeformAnchorsEnabled && computedPoints.length === 2 && !hasManualPoints
 
   const activePoints = useMemo(() => {
     if (shouldPreferComputedPath) {
