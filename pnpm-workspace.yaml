@@ -87,7 +87,7 @@ overrides:
   "@eslint/plugin-kit": ">=0.3.4" # GHSA-7q7g-4xm8-89cq
   "@xmldom/xmldom": ">=0.8.12" # GHSA-9pgh-qqpf-7wqj
   "brace-expansion": ">=2.0.2" # GHSA-v6h2-p8h4-qcjw
-  "esbuild": "0.27.4" # evanw/esbuild#4436 — regression, not a CVE
+  "esbuild": "0.28.1" # evanw/esbuild#4436 — regression, not a CVE
   "flatted": ">=3.4.2" # GHSA-rwm2-mxc8-7m93
   "handlebars": ">=4.7.9" # GHSA-q42p-pg8m-cqh6
   "lodash": ">=4.17.21" # GHSA-jf85-cpcp-j695 (CVE-2019-10744 fixed in 4.17.12)
