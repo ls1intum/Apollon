@@ -788,6 +788,18 @@
   vector-effect: non-scaling-stroke;
 }
 
+.edge-endpoint-grip {
+  opacity: 0;
+  fill: var(--apollon-background, #fff);
+  stroke: var(--apollon-primary, #3e8acc);
+  stroke-width: 2px;
+  transition:
+    fill 120ms ease,
+    opacity 120ms ease,
+    stroke 120ms ease;
+  vector-effect: non-scaling-stroke;
+}
+
 .edge-endpoint-handle {
   fill: transparent;
   stroke: transparent;
@@ -804,6 +816,19 @@
 .react-flow__edge.selected .edge-bend-handle {
   opacity: 1;
   fill: var(--apollon-primary, #3e8acc);
+}
+
+.react-flow__edge:hover .edge-endpoint-grip,
+.react-flow__edge.selected .edge-endpoint-grip {
+  opacity: 1;
+}
+
+.react-flow__edge.selected .edge-endpoint-grip {
+  fill: color-mix(
+    in srgb,
+    var(--apollon-primary, #3e8acc) 18%,
+    var(--apollon-background, #fff)
+  );
 }
 
 .react-flow__edge:hover .edge-bend-handle:hover,

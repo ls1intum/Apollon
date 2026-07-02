@@ -8,10 +8,38 @@ import {
   OnEdgesDelete,
 } from "@xyflow/react"
 import { useCallback, useRef } from "react"
-import { findClosestHandle, generateUUID, getDefaultEdgeType } from "@/utils"
+import {
+  findClosestHandle,
+  generateUUID,
+  getDefaultEdgeType,
+  getFreeformAnchorFromPoint,
+  getSideHandleIdForPosition,
+} from "@/utils"
 import { DiagramNodeTypeRecord } from "@/nodes"
 import { useDiagramStore, useMetadataStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
+import { UMLDiagramType } from "@/types"
+
+const withEndpointAnchor = (
+  data: Edge["data"],
+  endpoint: "source" | "target",
+  anchor: ReturnType<typeof getFreeformAnchorFromPoint> | null
+): Edge["data"] => {
+  const nextData = { ...((data ?? {}) as Record<string, unknown>) }
+  const key = endpoint === "source" ? "sourceAnchor" : "targetAnchor"
+
+  if (anchor) {
+    nextData[key] = anchor
+  } else {
+    delete nextData[key]
+  }
+
+  if (!Array.isArray(nextData.points)) {
+    nextData.points = []
+  }
+
+  return nextData
+}
 
 export const useConnect = () => {
   const startEdge = useRef<Edge | null>(null)
@@ -132,16 +160,23 @@ export const useConnect = () => {
           )
             return
 
-          const targetHandle = findClosestHandle({
-            point: dropPosition,
-            rect: {
-              x: internalNodeData.internals.positionAbsolute.x,
-              y: internalNodeData.internals.positionAbsolute.y,
-              width: nodeOnTop.width,
-              height: nodeOnTop.height,
-            },
-            useFourHandles: isFourHandleNode(nodeOnTop.type),
-          })
+          const targetRect = {
+            x: internalNodeData.internals.positionAbsolute.x,
+            y: internalNodeData.internals.positionAbsolute.y,
+            width: nodeOnTop.width,
+            height: nodeOnTop.height,
+          }
+          const targetAnchor =
+            diagramType === UMLDiagramType.ClassDiagram
+              ? getFreeformAnchorFromPoint(dropPosition, targetRect)
+              : null
+          const targetHandle = targetAnchor
+            ? getSideHandleIdForPosition(targetAnchor.side)
+            : findClosestHandle({
+                point: dropPosition,
+                rect: targetRect,
+                useFourHandles: isFourHandleNode(nodeOnTop.type),
+              })
 
           if (!targetHandle) return
 
@@ -153,11 +188,25 @@ export const useConnect = () => {
             if (!updatedEdge) return
             const newEdge =
               connectionStartParams.current?.handleType === "source"
-                ? { ...updatedEdge, target: nodeOnTop.id, targetHandle }
+                ? {
+                    ...updatedEdge,
+                    target: nodeOnTop.id,
+                    targetHandle,
+                    data: withEndpointAnchor(
+                      updatedEdge.data,
+                      "target",
+                      targetAnchor
+                    ),
+                  }
                 : {
                     ...updatedEdge,
                     source: nodeOnTop.id,
                     sourceHandle: targetHandle,
+                    data: withEndpointAnchor(
+                      updatedEdge.data,
+                      "source",
+                      targetAnchor
+                    ),
                   }
 
             // Disallow loop from a handle to the same handle on the same node.
@@ -175,11 +224,7 @@ export const useConnect = () => {
             const sourceNodeId = connectionState.fromNode!.id
             const sourceHandleId = connectionState.fromHandle?.id
 
-            // Disallow loop from a handle to itself, but allow loops to other handles.
-            if (
-              sourceNodeId === nodeOnTop.id &&
-              sourceHandleId === targetHandle
-            ) {
+            if (sourceNodeId === nodeOnTop.id) {
               return
             }
 
@@ -191,6 +236,7 @@ export const useConnect = () => {
                 type: defaultEdgeType,
                 sourceHandle: sourceHandleId,
                 targetHandle,
+                data: withEndpointAnchor(undefined, "target", targetAnchor),
               })
             )
           }
@@ -203,6 +249,7 @@ export const useConnect = () => {
     },
     [
       defaultEdgeType,
+      diagramType,
       edges,
       getDropPosition,
       getInternalNode,
@@ -217,7 +264,7 @@ export const useConnect = () => {
     startEdge.current = null
     connectionStartParams.current = null
     stopConnectionGuidance()
-  }, [setEdges, stopConnectionGuidance])
+  }, [stopConnectionGuidance])
 
   return { onConnect, onConnectEnd, onConnectStart, onEdgesDelete }
 }

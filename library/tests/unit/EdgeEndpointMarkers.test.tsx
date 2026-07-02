@@ -1,5 +1,6 @@
 import { fireEvent, render } from "@testing-library/react"
 import { Position, ReactFlowProvider } from "@xyflow/react"
+import type { ComponentProps } from "react"
 import { describe, expect, it, vi } from "vitest"
 import { EdgeEndpointMarkers } from "@/edges/GenericEdge"
 import { EDGES } from "@/constants"
@@ -9,9 +10,13 @@ import { EDGES } from "@/constants"
 const renderEndpointMarkers = ({
   isDiagramModifiable = true,
   canEditEndpoint = true,
+  onEndpointPointerDown,
 }: {
   isDiagramModifiable?: boolean
   canEditEndpoint?: boolean
+  onEndpointPointerDown?: ComponentProps<
+    typeof EdgeEndpointMarkers
+  >["onEndpointPointerDown"]
 } = {}) =>
   render(
     <ReactFlowProvider>
@@ -26,6 +31,7 @@ const renderEndpointMarkers = ({
             targetPosition={Position.Left}
             isDiagramModifiable={isDiagramModifiable}
             canEditEndpoint={canEditEndpoint}
+            onEndpointPointerDown={onEndpointPointerDown}
             diagramType="step"
           />
         </g>
@@ -38,6 +44,7 @@ describe("EdgeEndpointMarkers", () => {
     const { container } = renderEndpointMarkers()
 
     expect(container.querySelectorAll(".edge-endpoint-handle")).toHaveLength(2)
+    expect(container.querySelectorAll(".edge-endpoint-grip")).toHaveLength(0)
   })
 
   it("keeps endpoint hit targets large and on the edge side of the heads", () => {
@@ -132,5 +139,70 @@ describe("EdgeEndpointMarkers", () => {
     )
 
     expect(onNativeMouseDown).toHaveBeenCalledTimes(1)
+  })
+
+  it("uses a larger invisible hit target for freeform endpoint dragging", () => {
+    const { container } = renderEndpointMarkers({
+      onEndpointPointerDown: vi.fn(),
+    })
+    const sourceHandle = container.querySelector(
+      ".edge-endpoint-handle--source"
+    )
+    const targetHandle = container.querySelector(
+      ".edge-endpoint-handle--target"
+    )
+
+    expect(sourceHandle).toHaveAttribute("width", "44")
+    expect(sourceHandle).toHaveAttribute("height", "44")
+    expect(sourceHandle).toHaveAttribute("x", "10")
+    expect(sourceHandle).toHaveAttribute("y", "-2")
+    expect(targetHandle).toHaveAttribute("x", "66")
+    expect(targetHandle).toHaveAttribute("y", "98")
+  })
+
+  it("renders visible endpoint grips centered in the freeform hit targets", () => {
+    const { container } = renderEndpointMarkers({
+      onEndpointPointerDown: vi.fn(),
+    })
+    const sourceGrip = container.querySelector(".edge-endpoint-grip--source")
+    const targetGrip = container.querySelector(".edge-endpoint-grip--target")
+
+    expect(container.querySelectorAll(".edge-endpoint-grip")).toHaveLength(2)
+    expect(sourceGrip).toHaveAttribute("width", "18")
+    expect(sourceGrip).toHaveAttribute("height", "8")
+    expect(sourceGrip).toHaveAttribute("x", "23")
+    expect(sourceGrip).toHaveAttribute("y", "16")
+    expect(sourceGrip).toHaveAttribute("rx", "4")
+    expect(sourceGrip).toHaveAttribute("pointer-events", "none")
+    expect(targetGrip).toHaveAttribute("width", "18")
+    expect(targetGrip).toHaveAttribute("height", "8")
+    expect(targetGrip).toHaveAttribute("x", "79")
+    expect(targetGrip).toHaveAttribute("y", "116")
+  })
+
+  it("uses the freeform pointer handler instead of native reconnect when provided", () => {
+    const onEndpointPointerDown = vi.fn()
+    const { container } = renderEndpointMarkers({ onEndpointPointerDown })
+    const nativeUpdater = container.querySelector(
+      ".react-flow__edgeupdater-source"
+    )
+    const onNativeMouseDown = vi.fn()
+    nativeUpdater?.addEventListener("mousedown", onNativeMouseDown)
+
+    fireEvent.pointerDown(
+      container.querySelector(".edge-endpoint-handle--source")!,
+      {
+        button: 0,
+        buttons: 1,
+        clientX: 10,
+        clientY: 20,
+      }
+    )
+    fireEvent.mouseDown(
+      container.querySelector(".edge-endpoint-handle--source")!
+    )
+
+    expect(onEndpointPointerDown).toHaveBeenCalledTimes(1)
+    expect(onNativeMouseDown).not.toHaveBeenCalled()
   })
 })
