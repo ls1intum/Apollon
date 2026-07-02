@@ -72,7 +72,6 @@
 }
 
 /* Overlay chrome regions sit above canvas content + collaboration overlays. */
-.apollon-overlay-panel,
 .apollon-overlay-grid {
   z-index: var(--apollon-z-chrome);
 }
@@ -91,11 +90,13 @@
   inset: 0;
   display: grid;
   grid-template-columns: auto 1fr auto;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto auto minmax(0, 1fr) auto auto;
   grid-template-areas:
-    "header header header"
-    "leftrail center rightrail"
-    "footer footer footer";
+    "header   header    header"
+    "topleft  topcenter topright"
+    "leftrail center    rightrail"
+    "botleft  botcenter botright"
+    "footer   footer    footer";
   pointer-events: none;
   padding-top: var(--safe-area-inset-top, 0px);
   padding-left: var(--safe-area-inset-left, 0px);
@@ -600,12 +601,12 @@
   background-color: var(--apollon-chrome-glass-solid);
 }
 
-/* The overlay-band regions (header / side rails) AND the overlay corner Panels
+/* The overlay-band regions (header / side rails) AND the overlay corner cells
    are pass-through containers — the portaled chrome (a header island, the
    version rail) paints its own glass surface, so the region wrapper must not
    double up a pane/shadow/blur of its own. */
 .apollon-overlay-band,
-.apollon-overlay-panel {
+.apollon-overlay-corner {
   background-color: transparent;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
@@ -615,9 +616,10 @@
   padding: 0;
 }
 
-/* Corner overlay panels (header islands, host controls) float 10px from the
-   edge, matching the palette and zoom/minimap controls. */
-.apollon-overlay-panel {
+/* Corner clusters (zoom, minimap toggle, host buttons) float one edge margin in
+   from the container edge, matching the palette's gap. The grid pins each corner
+   cell flush to its edge (safe-area padding only), so the gap is this margin. */
+.apollon-overlay-corner {
   margin: var(--apollon-chrome-edge);
 }
 

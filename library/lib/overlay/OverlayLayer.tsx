@@ -1,4 +1,4 @@
-import { Panel, ViewportPortal, type PanelPosition } from "@xyflow/react"
+import { ViewportPortal } from "@xyflow/react"
 import {
   Fragment,
   useCallback,
@@ -10,12 +10,7 @@ import {
   type ReactNode,
 } from "react"
 import { useOverlayStore } from "../store/context"
-import {
-  PANEL_REGIONS,
-  REGION_EDGE,
-  type OverlayControl,
-  type OverlayRegion,
-} from "./types"
+import { REGION_EDGE, type OverlayControl, type OverlayRegion } from "./types"
 
 /** Library-owned bands rendered as areas of the `.apollon-overlay-grid` frame. */
 const BAND_REGIONS: OverlayRegion[] = [
@@ -39,18 +34,53 @@ const MEASURE_AXIS: Partial<Record<OverlayRegion, "width" | "height">> = {
   "right-rail": "width",
 }
 
-// The four bands are placed in a CSS-grid frame (see `.apollon-overlay-grid` in
-// app.css) instead of being absolutely positioned off JS-measured insets. The
-// header/footer own the full top/bottom rows and the rails own the side columns
-// of the middle row, so a rail can NEVER overlap the header/footer — the collision
-// is structurally impossible, independent of measurement timing. `justifySelf`
-// pins the rails to their outer edge (the centre column is the canvas hole).
-const BAND_STYLE: Record<string, CSSProperties> = {
+// EVERY region — bands AND the six corners — is placed as a cell of the one
+// `.apollon-overlay-grid` frame (see app.css), never absolutely positioned off a
+// JS-measured inset. Because the header/footer own the full top/bottom rows, the
+// corner rows sit BETWEEN them and the canvas, and the rails own the middle-row
+// side columns, no region can overlap another — the layout is structural, so
+// there is no measurement-timing race and no second positioning system to drift.
+// `justifySelf`/`alignSelf` pin each cell's content to its edge of the grid area.
+type Placement = Pick<CSSProperties, "gridArea" | "justifySelf" | "alignSelf">
+const REGION_PLACEMENT: Partial<Record<OverlayRegion, Placement>> = {
   header: { gridArea: "header" },
   footer: { gridArea: "footer" },
   "left-rail": { gridArea: "leftrail", justifySelf: "start" },
   "right-rail": { gridArea: "rightrail", justifySelf: "end" },
+  "top-left": { gridArea: "topleft", justifySelf: "start", alignSelf: "start" },
+  "top-center": {
+    gridArea: "topcenter",
+    justifySelf: "center",
+    alignSelf: "start",
+  },
+  "top-right": { gridArea: "topright", justifySelf: "end", alignSelf: "start" },
+  "bottom-left": {
+    gridArea: "botleft",
+    justifySelf: "start",
+    alignSelf: "end",
+  },
+  "bottom-center": {
+    gridArea: "botcenter",
+    justifySelf: "center",
+    alignSelf: "end",
+  },
+  "bottom-right": {
+    gridArea: "botright",
+    justifySelf: "end",
+    alignSelf: "end",
+  },
 }
+
+/** The six floating corners stack their controls in a flex box; bands run their
+ *  own lane machinery (below). */
+const CORNER_REGIONS: OverlayRegion[] = [
+  "top-left",
+  "top-center",
+  "top-right",
+  "bottom-left",
+  "bottom-center",
+  "bottom-right",
+]
 
 /**
  * A band stacks its LANES across its cross-axis; lane 0 sits against the anchor
@@ -326,27 +356,6 @@ export function OverlayLayer() {
 
   return (
     <>
-      {PANEL_REGIONS.filter((r) => byRegion.has(r)).map((region) => (
-        <Panel
-          key={region}
-          position={region as PanelPosition}
-          className="apollon-overlay-panel"
-          style={{
-            pointerEvents: "none",
-            display: "flex",
-            gap: "var(--apollon-chrome-gap)",
-          }}
-        >
-          {byRegion.get(region)!.map((c) => (
-            <ControlSlot
-              key={c.id}
-              control={c}
-              registerMeasure={registerMeasure}
-            />
-          ))}
-        </Panel>
-      ))}
-
       <div className="apollon-overlay-grid">
         {BAND_REGIONS.filter((r) => byRegion.has(r)).map((region) => {
           const horizontal = region === "header" || region === "footer"
@@ -358,7 +367,7 @@ export function OverlayLayer() {
               style={{
                 display: "flex",
                 pointerEvents: "none",
-                ...BAND_STYLE[region],
+                ...REGION_PLACEMENT[region],
                 flexDirection: LANE_STACK_DIRECTION[region],
               }}
             >
@@ -391,6 +400,28 @@ export function OverlayLayer() {
             </div>
           )
         })}
+
+        {CORNER_REGIONS.filter((r) => byRegion.has(r)).map((region) => (
+          <div
+            key={region}
+            data-apollon-region={region}
+            className="apollon-overlay-corner"
+            style={{
+              display: "flex",
+              gap: "var(--apollon-chrome-gap)",
+              pointerEvents: "none",
+              ...REGION_PLACEMENT[region],
+            }}
+          >
+            {byRegion.get(region)!.map((c) => (
+              <ControlSlot
+                key={c.id}
+                control={c}
+                registerMeasure={registerMeasure}
+              />
+            ))}
+          </div>
+        ))}
       </div>
 
       {selfPositioned.map((c) => (

@@ -3,6 +3,7 @@ import {
   MiniMap,
   MiniMapNodeProps,
   Panel,
+  useStore,
   type PanelPosition,
 } from "@xyflow/react"
 import {
@@ -105,6 +106,13 @@ const COLLAPSE_ARROW: Partial<Record<PanelPosition, typeof ArrowDownRight>> = {
   "bottom-right": ArrowDownRight,
 }
 
+// Below this canvas width the expanded minimap can't share the bottom edge with
+// the zoom cluster without overlapping (a ~250px zoom + ~200px minimap don't fit),
+// so the minimap stays collapsed to its toggle — the standard small-screen
+// behaviour (tldraw/Figma hide or collapse the minimap on narrow viewports). The
+// collapsed toggle is tiny and never collides.
+const MINIMAP_EXPAND_MIN_WIDTH = 640
+
 export const CustomMiniMap = ({
   position = "bottom-right",
   pannable = true,
@@ -113,8 +121,13 @@ export const CustomMiniMap = ({
   const [minimapCollapsed, setMinimapCollapsed] = useState(true)
   const t = useLabels()
   const CollapseArrow = COLLAPSE_ARROW[position] ?? ArrowDownRight
+  // Force-collapse on narrow canvases so the expanded card can't overlap the zoom
+  // cluster; it re-expands automatically when there's room again.
+  const canvasWidth = useStore((s) => s.width)
+  const tooNarrowToExpand =
+    canvasWidth > 0 && canvasWidth < MINIMAP_EXPAND_MIN_WIDTH
 
-  if (minimapCollapsed) {
+  if (minimapCollapsed || tooNarrowToExpand) {
     return (
       <Panel position={position}>
         <button
