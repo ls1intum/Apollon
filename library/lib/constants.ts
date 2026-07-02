@@ -75,11 +75,9 @@ export const CANVAS = Object.freeze({
 export const CSS_VARIABLE_FALLBACKS: Readonly<Record<string, string>> =
   Object.freeze({
     "--apollon-primary": "#3e8acc",
-    "--apollon-primary-contrast": "#000000",
+    "--apollon-primary-foreground": "#ffffff",
+    "--apollon-foreground": "#000000",
     "--apollon-secondary": "#6c757d",
-    "--apollon-alert-warning-yellow": "#ffc107",
-    "--apollon-alert-warning-background": "#fff3cd",
-    "--apollon-alert-warning-border": "#ffeeba",
     "--apollon-interactive-selection": "#f39c12",
     "--apollon-dropzone-accent": "#0064ff",
     "--apollon-on-collaboration-cursor": "#ffffff",
@@ -100,23 +98,16 @@ export const CSS_VARIABLE_FALLBACKS: Readonly<Record<string, string>> =
     "--apollon-guide-vertical": "#d63031",
     "--apollon-guide-horizontal": "#0984e3",
     "--apollon-background": "#ffffff",
-    "--apollon-background-inverse": "#000000",
     "--apollon-background-variant": "#f8f9fa",
     "--apollon-hover-neutral":
-      "color-mix(in srgb, var(--apollon-primary-contrast, #000000) 7.5%, transparent)",
+      "color-mix(in srgb, var(--apollon-foreground, #000000) 7.5%, transparent)",
     "--apollon-gray": "#e9ecef",
     "--apollon-grid": "rgba(36, 39, 36, 0.1)",
     "--apollon-gray-variant": "#495057",
-    "--apollon-alert-danger-color": "#721c24",
-    "--apollon-alert-danger-background": "#f8d7da",
-    "--apollon-alert-danger-border": "#f5c6cb",
-    "--apollon-switch-box-border-color": "#dee2e6",
-    "--apollon-list-group-color": "#ffffff",
-    "--apollon-btn-outline-secondary-color": "#6c757d",
-    "--apollon-modal-bottom-border": "#e9ecef",
+    "--apollon-danger": "#721c24",
   })
 
-export const STROKE_COLOR = CSS_VARIABLE_FALLBACKS["--apollon-primary-contrast"]
+export const STROKE_COLOR = CSS_VARIABLE_FALLBACKS["--apollon-foreground"]
 export const FILL_COLOR = CSS_VARIABLE_FALLBACKS["--apollon-background"]
 
 // Re-exported from the leaf module (see lib/fontStack.ts) so `@/constants`

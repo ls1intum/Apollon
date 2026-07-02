@@ -39,7 +39,7 @@ deltas in `:root[data-theme="dark"]`:
 - **Editor chrome (`--apollon-chrome-*`)** — the floating palette, controls,
   minimap, header islands, and version rail. Almost every chrome value is
   `color-mix()`-**derived from the two tokens you already theme**
-  (`--apollon-background` and `--apollon-primary-contrast`), so theming those two
+  (`--apollon-background` and `--apollon-foreground`), so theming those two
   gives the chrome correct, cohesive light/dark values for free.
 
 Every selector references its variable as `var(--apollon-x, <fallback>)`, so
@@ -57,7 +57,8 @@ export function Editor() {
       style={{ height: 600 }}
       theme={createApollonTheme({
         primary: "#ff5722",
-        primaryContrast: "#ffffff",
+        background: "#ffffff",
+        foreground: "#1a1a1a",
       })}
     />
   )
@@ -78,12 +79,12 @@ import { createApollonTheme, type ApollonTheme } from "@tumaet/apollon"
 
 const vars = createApollonTheme({
   primary: "#0f3a66",
-  primaryContrast: "#ffffff",
+  foreground: "#12161f",
   background: "#fafafa",
 })
 // → {
 //     "--apollon-primary": "#0f3a66",
-//     "--apollon-primary-contrast": "#ffffff",
+//     "--apollon-foreground": "#12161f",
 //     "--apollon-background": "#fafafa",
 //   }
 ```
@@ -108,42 +109,44 @@ These are the documented, stable color/radius tokens. The `ApollonTheme` field
 is the ergonomic alias `createApollonTheme` maps to the CSS variable; you can
 also set the variable directly in CSS.
 
-| `ApollonTheme` field       | CSS variable                            | Used for                                            |
-| -------------------------- | --------------------------------------- | --------------------------------------------------- |
-| `primary`                  | `--apollon-primary`                     | Accent / brand color (selection, links, highlights) |
-| `primaryContrast`          | `--apollon-primary-contrast`            | Foreground text on `background`                     |
-| `secondary`                | `--apollon-secondary`                   | Muted / secondary accent                            |
-| `background`               | `--apollon-background`                  | Canvas / surface background                         |
-| `backgroundInverse`        | `--apollon-background-inverse`          | Inverse surface (e.g. tooltips)                     |
-| `backgroundVariant`        | `--apollon-background-variant`          | Slightly raised surface variant                     |
-| `surface`                  | `--apollon-surface`                     | Raised card / popover / menu surface                |
-| `surfaceSunken`            | `--apollon-surface-sunken`              | Sunken / recessed surface                           |
-| `surfaceHover`             | `--apollon-surface-hover`               | Hover state of the raised surface                   |
-| `border`                   | `--apollon-border`                      | Default border / divider color                      |
-| `borderSubtle`             | `--apollon-border-subtle`               | Subtle border / divider color                       |
-| `radius`                   | `--apollon-radius`                      | Base corner radius for shared primitives            |
-| `gray`                     | `--apollon-gray`                        | Neutral gray surface                                |
-| `grayVariant`              | `--apollon-gray-variant`                | Stronger gray (borders / dividers)                  |
-| `grid`                     | `--apollon-grid`                        | Canvas grid line color                              |
-| `guideVertical`            | `--apollon-guide-vertical`              | Vertical alignment guide                            |
-| `guideHorizontal`          | `--apollon-guide-horizontal`            | Horizontal alignment guide                          |
-| `warning`                  | `--apollon-alert-warning-yellow`        | Warning alert accent                                |
-| `warningBackground`        | `--apollon-alert-warning-background`    | Warning alert background                            |
-| `warningBorder`            | `--apollon-alert-warning-border`        | Warning alert border                                |
-| `danger`                   | `--apollon-alert-danger-color`          | Danger alert text                                   |
-| `dangerBackground`         | `--apollon-alert-danger-background`     | Danger alert background                             |
-| `dangerBorder`             | `--apollon-alert-danger-border`         | Danger alert border                                 |
-| `switchBoxBorderColor`     | `--apollon-switch-box-border-color`     | Toggle / switch outline                             |
-| `listGroupColor`           | `--apollon-list-group-color`            | List-group surface color                            |
-| `btnOutlineSecondaryColor` | `--apollon-btn-outline-secondary-color` | Outline-secondary button color                      |
-| `modalBottomBorder`        | `--apollon-modal-bottom-border`         | Modal footer divider                                |
+| `ApollonTheme` field | CSS variable                   | Used for                                            |
+| -------------------- | ------------------------------ | --------------------------------------------------- |
+| `primary`            | `--apollon-primary`            | Accent / brand color (selection, links, highlights) |
+| `primaryForeground`  | `--apollon-primary-foreground` | Ink on `primary` — set it when `primary` is light   |
+| `foreground`         | `--apollon-foreground`         | Page foreground — the ink drawn on `background`     |
+| `secondary`          | `--apollon-secondary`          | Muted / secondary accent                            |
+| `background`         | `--apollon-background`         | Canvas / surface background                         |
+| `backgroundVariant`  | `--apollon-background-variant` | Slightly raised surface variant                     |
+| `surface`            | `--apollon-surface`            | Raised card / popover / menu surface                |
+| `surfaceSunken`      | `--apollon-surface-sunken`     | Sunken / recessed surface                           |
+| `border`             | `--apollon-border`             | Default border / divider color                      |
+| `borderSubtle`       | `--apollon-border-subtle`      | Subtle border / divider color                       |
+| `radius`             | `--apollon-radius`             | Base corner radius for shared primitives            |
+| `gray`               | `--apollon-gray`               | Neutral gray surface                                |
+| `grayVariant`        | `--apollon-gray-variant`       | Stronger gray (borders / dividers)                  |
+| `grid`               | `--apollon-grid`               | Canvas grid line color                              |
+| `guideVertical`      | `--apollon-guide-vertical`     | Vertical alignment guide                            |
+| `guideHorizontal`    | `--apollon-guide-horizontal`   | Horizontal alignment guide                          |
+| `danger`             | `--apollon-danger`             | Error / danger text (e.g. validation messages)      |
+
+:::info Reshaped the typed theming API
+If you set a typed theme, two tokens were **renamed**: `primaryContrast` → `foreground` (CSS var
+`--apollon-primary-contrast` → `--apollon-foreground`), and the danger CSS var
+`--apollon-alert-danger-color` → `--apollon-danger`. Eleven Bootstrap-era fields
+carried over from Apollon v3 (`backgroundInverse`, `warning` / `warningBackground`
+/ `warningBorder`, `dangerBackground` / `dangerBorder`, `switchBoxBorderColor`,
+`listGroupColor`, `btnOutlineSecondaryColor`, `modalBottomBorder`, `surfaceHover`)
+were **removed** — the Base UI editor never painted them, so setting them already
+did nothing; delete them from your theme object (TypeScript flags the removed
+keys). Un-themed embeds need no changes.
+:::
 
 :::tip Keep contrasting pairs in sync
-The palette is internally balanced for WCAG AA. If you override `background` or
-`primary`, override `primaryContrast` to match — `primaryContrast` is the
-foreground used on top of `background`, and changing only one side can drop
-text/UI below the AA contrast ratio. Verify the `background` ⇄ `primaryContrast`
-pair (and `primary` against the surfaces it sits on) with a contrast checker.
+The palette is internally balanced for WCAG AA. When you override one side of a
+pair, override the other: `foreground` is the ink on `background`, and
+`primaryForeground` is the ink on `primary`. Changing only one side can drop text
+below the AA contrast ratio — verify each pair (`background` ⇄ `foreground`,
+`primary` ⇄ `primaryForeground`) with a contrast checker.
 :::
 
 ### Shape, elevation, and state tints (CSS-variable-only)
@@ -160,7 +163,7 @@ set them directly through `style` or a stylesheet rule.
 | `--apollon-radius-lg`                | Panel / popover / menu radius (default `8px`).                                       |
 | `--apollon-shadow`                   | Drop shadow for floating surfaces — menus, popovers, select listboxes.               |
 | `--apollon-interactive-selection`    | Accent ring/fill marking interactive (quiz-pickable) elements (default amber).       |
-| `--apollon-hover-neutral`            | Neutral hover wash for quiet controls, derived off `--apollon-primary-contrast`.     |
+| `--apollon-hover-neutral`            | Neutral hover wash for quiet controls, derived off `--apollon-foreground`.           |
 | `--apollon-dropzone-accent`          | Ring/stroke shown on an assessment feedback drop target on hover (default blue).     |
 | `--apollon-dropzone-accent-fill`     | Translucent fill (40% of `--apollon-dropzone-accent`) outlining box/div targets.     |
 | `--apollon-on-collaboration-cursor`  | Ink drawn on a collaborator's colored cursor/avatar (default white).                 |
@@ -229,7 +232,7 @@ defaults re-resolve per theme so the swatches stay legible on both canvases.
 The floating chrome (element palette, zoom/undo controls, minimap, header
 islands, version rail) is painted from the `--apollon-chrome-*` band. **You
 almost never set these.** Every chrome surface, border, and text color is
-`color-mix()`-derived from `--apollon-background` and `--apollon-primary-contrast`,
+`color-mix()`-derived from `--apollon-background` and `--apollon-foreground`,
 so theming those two gives the chrome correct light/dark values for free. The
 handful that are genuinely meant to be tuned:
 
@@ -246,7 +249,10 @@ Everything else under `--apollon-chrome-*` (the derived surface/border/text ramp
 the glass tint and blur, shadows, motion tokens, and the dimensional
 `btn`/`pad`/`hit`/`island-h` system) is **internal** — derived or structural, not
 part of the stable contract. Don't depend on those names; theme `background` +
-`primaryContrast` and let the chrome derive.
+`foreground` and let the chrome derive. The one exception is the ink _on_ the
+accent (`--apollon-chrome-accent-contrast`): it follows `primaryForeground`
+(default white), so a light `primary` needs `primaryForeground` set to a dark
+value or on-accent text falls below the WCAG contrast floor.
 
 ## Light and dark mode
 
@@ -272,9 +278,23 @@ attribute directly on the mount node:
 new ApollonEditor(element, { dataTheme: "dark" })
 ```
 
+Scoped `dataTheme` themes the **entire editor** — canvas, derived glass chrome,
+and every floating surface (menus, selects, tooltips, the color picker), even
+though those portal to `document.body` outside the mount subtree. It does **not**
+touch the surrounding document (`<html>`/`<body>`, native form controls, your own
+app chrome) — for a fully dark _page_, set `data-theme` on the document root
+instead and the editor inherits it.
+
 If you omit `dataTheme`, the editor inherits whatever `data-theme` an ancestor
-declares (or the light default). Per-variable `theme` overrides apply on top of
-whichever light/dark base is active.
+declares (or the light default).
+
+:::caution A `theme` value overrides both light and dark
+Inline `theme` variables win over _both_ the light and the dark base for that
+token, so overriding `background` / `foreground` / `surface` pins it in **both**
+themes — toggling `dataTheme` won't change it. Fine for theme-independent brand
+accents (e.g. `primary`); for surface colors, swap the theme object per theme (as
+the worked example below does) or drive dark from the document root.
+:::
 
 :::note OS dark mode is not automatic
 The editor switches to dark **only** when `data-theme="dark"` is present — it
@@ -305,14 +325,14 @@ import "@tumaet/apollon/style.css"
 
 const light = createApollonTheme({
   primary: "#7c3aed", // brand violet
-  primaryContrast: "#1a1024", // body ink on the light canvas
+  foreground: "#1a1024", // body ink on the light canvas
   background: "#ffffff",
   radius: "10px", // rounder controls (flows through --apollon-radius-md)
 })
 
 const dark = createApollonTheme({
   primary: "#a78bfa", // lighter violet, legible on a dark canvas
-  primaryContrast: "#f5f3ff", // near-white ink
+  foreground: "#f5f3ff", // near-white ink
   background: "#161122", // deep violet-tinted canvas
   radius: "10px",
 })
@@ -332,7 +352,7 @@ What this does:
 
 - `primary` becomes the selection / link / highlight accent **and** the chrome
   accent (chrome falls back to `--apollon-primary`).
-- `background` + `primaryContrast` re-derive the entire floating chrome
+- `background` + `foreground` re-derive the entire floating chrome
   (surfaces, borders, text) for both themes automatically — no chrome tokens set.
 - `radius` retunes the base control rounding; the extra inline
   `--apollon-radius-lg` rounds menus/popovers further. Both are read as
@@ -354,7 +374,7 @@ new ApollonEditor(el, { dataTheme: "dark" })
 - **Set the stylesheet.** Themes only re-color what `@tumaet/apollon/style.css`
   draws. If you forget the import, there is nothing to theme.
 - **Override contrasting pairs together.** Changing `background` without
-  `primaryContrast` (or vice versa) can break WCAG AA. The two also drive the
+  `foreground` (or vice versa) can break WCAG AA. The two also drive the
   whole derived chrome ramp, so a mismatched pair degrades chrome legibility too.
 - **Don't theme internal tokens.** `--color-*`, `--radius-*`, `--home-*`, and the
   non-listed `--apollon-chrome-*` tokens are internal and may change. Only the

@@ -122,7 +122,7 @@ export const PetriNetPlaceEditPopover: React.FC<PopoverProps> = ({
                   position: "absolute",
                   top: 12,
                   left: 8,
-                  color: "var(--apollon-primary-contrast, #000000)",
+                  color: "var(--apollon-foreground, #000000)",
                 }}
               >
                 <InfinityIcon width={16} height={16} aria-hidden="true" />

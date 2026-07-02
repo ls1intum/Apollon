@@ -47,7 +47,7 @@ export const NodeToolbar: FC<Props> = ({ elementId, showEdit = true }) => {
             pointerEvents: "auto",
             width: 16,
             height: 16,
-            color: "var(--apollon-primary-contrast, #000000)",
+            color: "var(--apollon-foreground, #000000)",
           }}
         />
 
@@ -61,7 +61,7 @@ export const NodeToolbar: FC<Props> = ({ elementId, showEdit = true }) => {
               pointerEvents: "auto",
               width: 16,
               height: 16,
-              color: "var(--apollon-primary-contrast, #000000)",
+              color: "var(--apollon-foreground, #000000)",
             }}
           />
         )}

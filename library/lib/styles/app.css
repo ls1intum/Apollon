@@ -35,8 +35,8 @@
 .react-flow {
   --panel-background: var(--apollon-background, #fff);
   --panel-shadow: var(--apollon-shadow, 0 4px 12px rgba(0, 0, 0, 0.18));
-  --text: var(--apollon-primary-contrast, #000);
-  --xy-edge-stroke: var(--apollon-primary-contrast, #000);
+  --text: var(--apollon-foreground, #000);
+  --xy-edge-stroke: var(--apollon-foreground, #000);
   --xy-edge-stroke-width: 2px;
   --xy-controls-button-background-color: var(--apollon-background, #fff);
 
@@ -49,11 +49,11 @@
 
 .apollon-editor {
   background-color: var(--apollon-background, #fff);
-  color: var(--apollon-primary-contrast, #000);
+  color: var(--apollon-foreground, #000);
 
   --popover-divider: color-mix(
     in srgb,
-    var(--apollon-primary-contrast, #000) 10%,
+    var(--apollon-foreground, #000) 10%,
     transparent
   );
 
@@ -121,7 +121,7 @@
   border-radius: var(--apollon-radius-lg, 8px);
   border: 2px solid;
   background-color: var(--apollon-background, #fff);
-  color: var(--apollon-primary-contrast, #000);
+  color: var(--apollon-foreground, #000);
   font-size: 8px;
   font-weight: 700;
 }
@@ -149,9 +149,9 @@
   border-radius: 999px;
   border: 1px solid;
   background-color: var(--apollon-background, #fff);
-  color: var(--apollon-primary-contrast, #000);
+  color: var(--apollon-foreground, #000);
   box-shadow: 0 2px 12px
-    color-mix(in srgb, var(--apollon-primary-contrast, #000) 22%, transparent);
+    color-mix(in srgb, var(--apollon-foreground, #000) 22%, transparent);
   font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
@@ -202,7 +202,7 @@
   padding: 3px 12px;
   font: inherit;
   font-weight: 600;
-  background-color: var(--apollon-primary-contrast, #000);
+  background-color: var(--apollon-foreground, #000);
   color: var(--apollon-background, #fff);
 }
 
@@ -309,8 +309,8 @@
   color: var(--apollon-chrome-text);
   border: 1px solid var(--apollon-chrome-border);
   border-radius: var(--apollon-chrome-radius-lg);
-  box-shadow: var(--apollon-chrome-shadow-floating),
-    var(--apollon-chrome-inset-hairline);
+  box-shadow:
+    var(--apollon-chrome-shadow-floating), var(--apollon-chrome-inset-hairline);
 }
 
 /* grid-template-columns and gap come inline from the computed layout. */
@@ -542,8 +542,8 @@
   -webkit-backdrop-filter: var(--apollon-chrome-glass-blur);
   backdrop-filter: var(--apollon-chrome-glass-blur);
   border: 1px solid var(--apollon-chrome-border);
-  box-shadow: var(--apollon-chrome-shadow-floating),
-    var(--apollon-chrome-inset-hairline);
+  box-shadow:
+    var(--apollon-chrome-shadow-floating), var(--apollon-chrome-inset-hairline);
   border-radius: var(--apollon-chrome-radius-lg);
 }
 
@@ -941,7 +941,7 @@ svg.react-flow__connectionline {
   align-items: center;
   gap: 8px;
   font-size: 0.875rem;
-  color: var(--apollon-primary-contrast, #000);
+  color: var(--apollon-foreground, #000);
   cursor: pointer;
 }
 
@@ -960,7 +960,7 @@ svg.react-flow__connectionline {
   align-items: center;
   gap: 8px;
   font-size: 0.875rem;
-  color: var(--apollon-primary-contrast, #000);
+  color: var(--apollon-foreground, #000);
   cursor: pointer;
 }
 
@@ -978,7 +978,7 @@ svg.react-flow__connectionline {
   background: transparent;
   /* The check sits on the primary fill once checked; no dedicated on-primary
      token exists, so fall back through the page background to white. */
-  color: var(--apollon-primary-contrast-on-accent, var(--apollon-background, #fff));
+  color: var(--apollon-foreground-on-accent, var(--apollon-background, #fff));
   cursor: pointer;
   transition:
     background-color 120ms ease,
@@ -1016,7 +1016,7 @@ svg.react-flow__connectionline {
    the element's own inline style (higher specificity than this rule). h1–h5
    inherit by design. */
 [data-slot="typography"] {
-  color: var(--apollon-primary-contrast, #000);
+  color: var(--apollon-foreground, #000);
 }
 
 [data-slot="typography"][data-variant="h6"] {
@@ -1058,7 +1058,7 @@ svg.react-flow__connectionline {
 [data-slot="textfield-label"] {
   font-size: 0.75rem;
   margin-bottom: 2px;
-  color: var(--apollon-primary-contrast, #000);
+  color: var(--apollon-foreground, #000);
 }
 
 [data-slot="textfield-helper"] {
@@ -1068,7 +1068,7 @@ svg.react-flow__connectionline {
 }
 
 [data-slot="textfield-helper"][data-error] {
-  color: var(--apollon-alert-danger-color, #721c24);
+  color: var(--apollon-danger, #721c24);
 }
 
 /* Score pill. Tone (set by the AssessmentScore primitive) selects a foreground
@@ -1123,7 +1123,7 @@ svg.react-flow__connectionline {
 .apollon-assessment-icon {
   filter: drop-shadow(
     0 1px 2px
-      color-mix(in srgb, var(--apollon-primary-contrast, #000) 28%, transparent)
+      color-mix(in srgb, var(--apollon-foreground, #000) 28%, transparent)
   );
 }
 
@@ -1133,7 +1133,7 @@ svg.react-flow__connectionline {
   margin: 0;
   font-size: 0.875rem;
   line-height: 1.5;
-  color: var(--apollon-primary-contrast, #000);
+  color: var(--apollon-foreground, #000);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
@@ -1155,7 +1155,7 @@ svg.react-flow__connectionline {
     var(--apollon-primary, #3e8acc) 18%,
     transparent
   );
-  color: var(--apollon-primary-contrast, #000);
+  color: var(--apollon-foreground, #000);
 }
 
 /* Divider line (StyleEditor color rows, etc). Visual tokens live here, routed
@@ -1165,7 +1165,7 @@ svg.react-flow__connectionline {
   width: var(--divider-width, 100%);
   height: var(--divider-height, 1px);
   margin: var(--divider-margin, 8px 0);
-  background-color: var(--divider-color, var(--apollon-primary-contrast, #000));
+  background-color: var(--divider-color, var(--apollon-foreground, #000));
 }
 
 /* Add-item row (attributes / methods lists): the text field grows, the named
@@ -1209,7 +1209,7 @@ svg.react-flow__connectionline {
   flex-direction: column;
   padding: 10px;
   background-color: var(--apollon-surface, #fff);
-  color: var(--apollon-primary-contrast, #000);
+  color: var(--apollon-foreground, #000);
   border-radius: var(--apollon-radius-lg, 8px);
   border: 1px solid var(--apollon-border, #cdd5df);
   box-shadow: var(--apollon-shadow, 0 4px 12px rgba(0, 0, 0, 0.18));
@@ -1236,7 +1236,7 @@ svg.react-flow__connectionline {
 
 .apollon-select-label {
   font-size: 0.8125rem; /* 13px for legibility */
-  color: var(--apollon-primary-contrast, #000);
+  color: var(--apollon-foreground, #000);
   margin-bottom: 2px;
 }
 
@@ -1252,7 +1252,7 @@ svg.react-flow__connectionline {
   font-size: 0.875rem;
   font-family: inherit;
   text-align: left;
-  color: var(--apollon-primary-contrast, #000);
+  color: var(--apollon-foreground, #000);
   background-color: var(--apollon-surface-sunken, #fff);
   border: 1px solid var(--apollon-border, #cdd5df);
   border-radius: var(--apollon-radius-md, 6px);
@@ -1277,12 +1277,12 @@ svg.react-flow__connectionline {
 
 .apollon-select-icon {
   flex: 0 0 auto;
-  color: var(--apollon-primary-contrast, #000);
+  color: var(--apollon-foreground, #000);
 }
 
 .apollon-select-content {
   background-color: var(--apollon-surface, #fff);
-  color: var(--apollon-primary-contrast, #000);
+  color: var(--apollon-foreground, #000);
   border: 1px solid var(--apollon-border, #cdd5df);
   border-radius: var(--apollon-radius-lg, 8px);
   box-shadow: var(--apollon-shadow, 0 4px 12px rgba(0, 0, 0, 0.18));
@@ -1312,7 +1312,7 @@ svg.react-flow__connectionline {
   font-size: 0.875rem;
   font-family: inherit;
   text-align: left;
-  color: var(--apollon-primary-contrast, #000);
+  color: var(--apollon-foreground, #000);
   background-color: transparent;
   border: none;
   border-radius: var(--apollon-radius-md, 6px);
@@ -1390,7 +1390,7 @@ svg.react-flow__connectionline {
   gap: 10px;
   padding: 12px;
   background-color: var(--apollon-surface, #fff);
-  color: var(--apollon-primary-contrast, #000);
+  color: var(--apollon-foreground, #000);
   border: 1px solid var(--apollon-border, #cdd5df);
   border-radius: var(--apollon-radius-lg, 8px);
   box-shadow: var(--apollon-shadow, 0 4px 12px rgba(0, 0, 0, 0.18));
@@ -1508,7 +1508,7 @@ svg.react-flow__connectionline {
   border: 1px solid
     color-mix(in srgb, var(--apollon-primary, #3e8acc) 38%, transparent);
   background: transparent;
-  color: var(--apollon-primary-contrast, #000);
+  color: var(--apollon-foreground, #000);
   font: inherit;
   font-size: 0.8125rem; /* 13px for legibility */
   line-height: 1;
@@ -1537,7 +1537,7 @@ svg.react-flow__connectionline {
 .apollon-stereotype-toggle:hover {
   background-color: var(
     --apollon-hover-neutral,
-    color-mix(in srgb, var(--apollon-primary-contrast, #000) 7.5%, transparent)
+    color-mix(in srgb, var(--apollon-foreground, #000) 7.5%, transparent)
   );
 }
 
@@ -1556,13 +1556,13 @@ svg.react-flow__connectionline {
   border-color: var(--apollon-primary, #3e8acc);
   /* WCAG: bare --apollon-primary as text on the primary@20% tint is only
      ~3.6:1 (light) / ~3.8:1 (dark). Pull the label 30% toward
-     --apollon-primary-contrast — black in light (darkens the blue), white in
+     --apollon-foreground — black in light (darkens the blue), white in
      dark (lightens it) — which lifts contrast over the tint to >=4.5:1 in both
      themes while keeping the selected accent unmistakably the primary blue. */
   color: color-mix(
     in srgb,
     var(--apollon-primary, #3e8acc) 70%,
-    var(--apollon-primary-contrast, #000)
+    var(--apollon-foreground, #000)
   );
   z-index: 1; /* keep the selected item's full border over its neighbour seam */
 }

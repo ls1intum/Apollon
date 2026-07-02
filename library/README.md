@@ -227,9 +227,35 @@ Any Yjs-compatible transport works: `y-websocket`, `y-webrtc`, BroadcastChannel,
 
 See [Export](https://ls1intum.github.io/Apollon/library/api/export) for the full `ExportOptions`.
 
+## Theming
+
+Theme the editor through the `--apollon-*` CSS custom properties (typed via
+`createApollonTheme`) plus a `data-theme` light/dark switch — framework-agnostic,
+Tailwind-free. A first rebrand is three tokens: `primary`, `background`,
+`foreground`.
+
+```tsx
+import { Apollon, createApollonTheme } from "@tumaet/apollon"
+
+declare const dark: boolean // your app's light/dark state
+;<Apollon
+  style={{ height: "80vh" }}
+  theme={createApollonTheme({
+    primary: "#ff5722",
+    background: "#fff",
+    foreground: "#1a1a1a",
+  })}
+  dataTheme={dark ? "dark" : undefined}
+/>
+```
+
+See [Theming](https://ls1intum.github.io/Apollon/library/theming) (or
+[`THEMING.md`](./THEMING.md)) for the full contract, dark mode, and host patterns.
+
 ## Documentation
 
 - [Library overview](https://ls1intum.github.io/Apollon/library/): install, quickstart, embedding
+- [Theming](https://ls1intum.github.io/Apollon/library/theming): the `--apollon-*` contract, `createApollonTheme`, light/dark
 - [API reference](https://ls1intum.github.io/Apollon/library/api): the full `ApollonEditor` and `<Apollon>` surface
 - [Troubleshooting](https://ls1intum.github.io/Apollon/library/troubleshooting): blank canvas, SSR, duplicate React, and other gotchas
 

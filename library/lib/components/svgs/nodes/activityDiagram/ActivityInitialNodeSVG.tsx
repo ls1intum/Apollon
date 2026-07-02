@@ -28,7 +28,7 @@ export const ActivityInitialNodeSVG: React.FC<SVGComponentProps> = ({
         cx={width / 2}
         cy={height / 2}
         r={width / 2}
-        fill="var(--apollon-primary-contrast, #000000)"
+        fill="var(--apollon-foreground, #000000)"
       />
 
       {showAssessmentResults && (

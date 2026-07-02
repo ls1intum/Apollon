@@ -60,7 +60,7 @@ export const DrawerOpen: Story = {
 
 /** Themed mobile-dropdown foreground (explicit `color`). */
 export const OnSurface: Story = {
-  args: { color: "var(--apollon-primary-contrast)" },
+  args: { color: "var(--apollon-foreground)" },
 }
 
 /** Clicking the button reports the toggle and exposes the pressed state. */
