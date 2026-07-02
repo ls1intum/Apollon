@@ -234,7 +234,12 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
             // pointer from a visible handle.
             elevateEdgesOnSelect
             onInit={(instance: ReactFlowInstance) => {
-              instance.fitView({ maxZoom: 1.0, minZoom: 1.0 })
+              // fitView on an empty canvas stays queued until nodes exist, then
+              // fires on the first one and jerks the viewport. Only fit with
+              // content; empty keeps the default (0,0)/zoom-1.
+              if (instance.getNodes().length > 0) {
+                instance.fitView({ maxZoom: 1.0, minZoom: 1.0 })
+              }
               handleReactFlowInit(instance)
             }}
             minZoom={CANVAS.MIN_SCALE_TO_ZOOM_OUT}
