@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test"
-import { waitForCanvasReady } from "../helpers/canvas"
+import { openFixtureInLocalEditor, waitForCanvasReady } from "../helpers/canvas"
 
 /**
  * Dropping the first palette element onto an empty canvas must not move the
@@ -7,41 +7,15 @@ import { waitForCanvasReady } from "../helpers/canvas"
  * the first node, re-framing it and jerking the canvas.
  */
 
-async function openTemporaryLocalDiagram(
-  page: Page,
-  diagramType = "ClassDiagram"
-) {
-  const modelId = "e2e-first-drop-model-id"
-  await page.goto("/")
-  await page.evaluate(
-    ({ id, type }) => {
-      const storeValue = JSON.stringify({
-        state: {
-          models: {
-            [id]: {
-              id,
-              model: {
-                id,
-                type,
-                assessments: {},
-                edges: [],
-                nodes: [],
-                title: "E2E Diagram",
-                version: "4.0.0",
-              },
-              lastModifiedAt: new Date().toISOString(),
-            },
-          },
-          currentModelId: id,
-        },
-        version: 0,
-      })
-      localStorage.setItem("persistenceModelStore", storeValue)
-    },
-    { id: modelId, type: diagramType }
-  )
-  await page.goto(`/local/${modelId}`)
-  await expect(page).toHaveURL(new RegExp(`/local/${modelId}$`))
+// An empty Class Diagram — no nodes, so the very next drop is the first node.
+const EMPTY_MODEL = {
+  id: "e2e-first-drop-model-id",
+  type: "ClassDiagram",
+  assessments: {},
+  edges: [],
+  nodes: [],
+  title: "E2E Diagram",
+  version: "4.0.0",
 }
 
 // Read the .react-flow__viewport transform matrix -> {zoom, x, y}.
@@ -69,7 +43,11 @@ async function dropFirstPaletteElementAt(page: Page, x: number, y: number) {
 
 test.describe("First palette drop — no canvas jump", () => {
   test.beforeEach(async ({ page }) => {
-    await openTemporaryLocalDiagram(page)
+    // Seed the fixture via addInitScript BEFORE navigating (openFixtureInLocalEditor),
+    // then go straight to /local/<id>. Writing localStorage after a goto("/")
+    // races app hydration and can land on the "Diagram not found" page.
+    await openFixtureInLocalEditor(page, EMPTY_MODEL)
+    await expect(page).toHaveURL(new RegExp(`/local/${EMPTY_MODEL.id}$`))
     await waitForCanvasReady(page, false)
   })
 
