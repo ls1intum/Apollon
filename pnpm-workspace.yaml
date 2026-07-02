@@ -11,8 +11,10 @@ packages:
 # produces a self-contained server runtime image.
 injectWorkspacePackages: true
 
-# Supply-chain hardening.
-minimumReleaseAge: 1440 # 1 day
+# Supply-chain hardening. Dependency-age cooldown is owned by Renovate
+# (minimumReleaseAge in renovate.json), which is the single soak authority:
+# a pnpm-level age floor rejects the exact versions Renovate pins in the
+# catalog/overrides and blocks it from regenerating the lockfile.
 blockExoticSubdeps: true
 
 # Shared version pins across 2+ workspaces. Each workspace package.json
@@ -106,6 +108,3 @@ allowBuilds:
   protobufjs: false # testcontainers→dockerode transitive; pure-JS, no native build
   "sharp": true
   "ssh2": true
-minimumReleaseAgeExclude:
-  # Renovate security update: pnpm@11.8.0
-  - pnpm@11.8.0
