@@ -3,6 +3,24 @@ import react from "@vitejs/plugin-react"
 import dts from "vite-plugin-dts"
 import { resolve } from "path"
 import { readFileSync } from "fs"
+import type {
+  ExtractorMessage,
+  IExtractorInvokeOptions,
+} from "@microsoft/api-extractor"
+
+// vite-plugin-dts rolls the .d.ts up with @microsoft/api-extractor, which has no
+// release for the project's TypeScript major yet. It therefore analyses with its
+// own older bundled TypeScript and prints a "consider upgrading API Extractor"
+// notice on every entry point. The rolled .d.ts is correct regardless, so drop
+// that one non-actionable console notice (the "using bundled version X" preamble
+// is left as-is). Remove this once api-extractor supports the project's TS major.
+const dtsInvokeOptions: IExtractorInvokeOptions = {
+  messageCallback(message: ExtractorMessage) {
+    if (message.messageId === "console-compiler-version-notice") {
+      message.handled = true
+    }
+  },
+}
 
 // The bundled Inter woff2 is base64-inlined into style.css (and index.js via
 // `?inline`), so the SIL Open Font License binary ships inside our artifacts.
@@ -88,6 +106,8 @@ export default defineConfig({
         // rolled .d.ts is self-contained (no dependency on the private workspace
         // package).
         bundledPackages: ["@tumaet/ui"],
+        // Silence api-extractor's non-actionable TS-version notice (see above).
+        invokeOptions: dtsInvokeOptions,
       },
       // The JS build aliases @tumaet/ui to its TS source so the runtime inlines
       // into dist. For TYPES, resolve the package's published declarations (via
