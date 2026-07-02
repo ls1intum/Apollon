@@ -239,3 +239,29 @@ test("a new same-node edge can connect different handles", async ({ page }) => {
     targetHandle: "top",
   })
 })
+
+test("a new same-node edge cannot reconnect to the same handle", async ({
+  page,
+}) => {
+  await openFixtureInLocalEditor(page, classNoEdgeFixture)
+  await waitForCanvasReady(page)
+
+  const node = page.locator(`.react-flow__node[data-id="${CLASS_SOURCE}"]`)
+
+  await node.hover()
+  await page.waitForTimeout(120)
+  const rightHandle = node.locator('.react-flow__handle[data-handleid="right"]')
+  const handleBox = await rightHandle.first().boundingBox()
+  if (!handleBox) throw new Error("source handle has no bounding box")
+
+  const x = handleBox.x + handleBox.width / 2
+  const y = handleBox.y + handleBox.height / 2
+  await page.mouse.move(x, y)
+  await page.mouse.down()
+  await page.mouse.move(x + 16, y, { steps: 4 })
+  await page.mouse.move(x, y, { steps: 4 })
+  await page.mouse.up()
+  await page.waitForTimeout(400)
+
+  expect(await storedEdges(page)).toHaveLength(0)
+})

@@ -40,6 +40,87 @@ const withEndpointAnchor = (
   return nextData
 }
 
+const handleSlotBySide: Record<string, Record<string, number>> = {
+  top: {
+    "top-left": 0,
+    "top-between-left-mid-left": 1,
+    "top-mid-left": 2,
+    "top-between-mid-left-center": 3,
+    top: 4,
+    "top-between-center-mid-right": 5,
+    "top-mid-right": 6,
+    "top-between-mid-right-right": 7,
+    "top-right": 8,
+  },
+  right: {
+    "right-top": 0,
+    "right-between-top-mid-top": 1,
+    "right-mid-top": 2,
+    "right-between-mid-top-center": 3,
+    right: 4,
+    "right-between-center-mid-bottom": 5,
+    "right-mid-bottom": 6,
+    "right-between-mid-bottom-bottom": 7,
+    "right-bottom": 8,
+  },
+  bottom: {
+    "bottom-right": 0,
+    "bottom-between-right-mid-right": 1,
+    "bottom-mid-right": 2,
+    "bottom-between-mid-right-center": 3,
+    bottom: 4,
+    "bottom-between-center-mid-left": 5,
+    "bottom-mid-left": 6,
+    "bottom-between-mid-left-left": 7,
+    "bottom-left": 8,
+  },
+  left: {
+    "left-bottom": 0,
+    "left-between-bottom-mid-bottom": 1,
+    "left-mid-bottom": 2,
+    "left-between-mid-bottom-center": 3,
+    left: 4,
+    "left-between-center-mid-top": 5,
+    "left-mid-top": 6,
+    "left-between-mid-top-top": 7,
+    "left-top": 8,
+  },
+}
+
+const getHandleSideAndSlot = (
+  handleId?: string | null
+): { side: string; slot: number } | null => {
+  if (!handleId) return null
+
+  for (const [side, slots] of Object.entries(handleSlotBySide)) {
+    const slot = slots[handleId]
+    if (slot != null) return { side, slot }
+  }
+
+  return null
+}
+
+const isSameNodeSameHandleArea = (
+  source: string | null,
+  target: string | null,
+  sourceHandle?: string | null,
+  targetHandle?: string | null
+): boolean => {
+  if (!source || source !== target) return false
+
+  const sourceHandlePosition = getHandleSideAndSlot(sourceHandle)
+  const targetHandlePosition = getHandleSideAndSlot(targetHandle)
+
+  if (!sourceHandlePosition || !targetHandlePosition) {
+    return sourceHandle === targetHandle
+  }
+
+  return (
+    sourceHandlePosition.side === targetHandlePosition.side &&
+    Math.abs(sourceHandlePosition.slot - targetHandlePosition.slot) <= 1
+  )
+}
+
 export const useConnect = () => {
   const startEdge = useRef<Edge | null>(null)
   const connectionStartParams = useRef<OnConnectStartParams | null>(null)
@@ -119,6 +200,17 @@ export const useConnect = () => {
 
   const onConnect = useCallback(
     (connection: Connection) => {
+      if (
+        isSameNodeSameHandleArea(
+          connection.source,
+          connection.target,
+          connection.sourceHandle,
+          connection.targetHandle
+        )
+      ) {
+        return
+      }
+
       const newEdge: Edge = {
         ...connection,
         id: generateUUID(),
@@ -210,8 +302,12 @@ export const useConnect = () => {
 
             // Disallow loop from a handle to the same handle on the same node.
             if (
-              newEdge.source === newEdge.target &&
-              newEdge.sourceHandle === newEdge.targetHandle
+              isSameNodeSameHandleArea(
+                newEdge.source,
+                newEdge.target,
+                newEdge.sourceHandle,
+                newEdge.targetHandle
+              )
             ) {
               return
             }
@@ -225,8 +321,12 @@ export const useConnect = () => {
 
             // Disallow loop from a handle to the same handle on the same node.
             if (
-              sourceNodeId === nodeOnTop.id &&
-              sourceHandleId === targetHandle
+              isSameNodeSameHandleArea(
+                sourceNodeId,
+                nodeOnTop.id,
+                sourceHandleId,
+                targetHandle
+              )
             ) {
               return
             }
