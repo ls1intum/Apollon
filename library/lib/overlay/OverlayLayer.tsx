@@ -39,42 +39,17 @@ const MEASURE_AXIS: Partial<Record<OverlayRegion, "width" | "height">> = {
   "right-rail": "width",
 }
 
+// The four bands are placed in a CSS-grid frame (see `.apollon-overlay-grid` in
+// app.css) instead of being absolutely positioned off JS-measured insets. The
+// header/footer own the full top/bottom rows and the rails own the side columns
+// of the middle row, so a rail can NEVER overlap the header/footer — the collision
+// is structurally impossible, independent of measurement timing. `justifySelf`
+// pins the rails to their outer edge (the centre column is the canvas hole).
 const BAND_STYLE: Record<string, CSSProperties> = {
-  // Pinned edges add the device safe-area inset so generic embedders (the iOS
-  // Capacitor app, a VS Code webview) don't paint chrome under a notch.
-  header: {
-    top: "var(--safe-area-inset-top, 0px)",
-    left: 0,
-    right: 0,
-  },
-  // Symmetric to the header: a full-width band pinned to the bottom edge (e.g. an
-  // assessment action bar), plus the device safe-area inset for gesture bars and
-  // the soft-keyboard overlap so it rides above an open mobile keyboard.
-  footer: {
-    bottom:
-      "calc(var(--safe-area-inset-bottom, 0px) + var(--apollon-keyboard-inset, 0px))",
-    left: 0,
-    right: 0,
-  },
-  // Side rails sit between the top chrome and any bottom chrome so they never
-  // tuck under a full-width header band. --apollon-inset-top/bottom come from the
-  // overlay store (the single inset authority), seeded synchronously at
-  // registration so a rail that mounts alongside top chrome (e.g. version history
-  // already open on load) starts clear of it with no pre-measurement overlap —
-  // and collapses to the safe-area edge (0 default) when there is no such chrome.
-  // The safe-area inset is added on top so a notched device clears the notch too.
-  "left-rail": {
-    top: "calc(var(--safe-area-inset-top, 0px) + var(--apollon-inset-top, 0px))",
-    bottom:
-      "calc(var(--safe-area-inset-bottom, 0px) + var(--apollon-keyboard-inset, 0px) + var(--apollon-inset-bottom, 0px))",
-    left: "var(--safe-area-inset-left, 0px)",
-  },
-  "right-rail": {
-    top: "calc(var(--safe-area-inset-top, 0px) + var(--apollon-inset-top, 0px))",
-    bottom:
-      "calc(var(--safe-area-inset-bottom, 0px) + var(--apollon-keyboard-inset, 0px) + var(--apollon-inset-bottom, 0px))",
-    right: "var(--safe-area-inset-right, 0px)",
-  },
+  header: { gridArea: "header" },
+  footer: { gridArea: "footer" },
+  "left-rail": { gridArea: "leftrail", justifySelf: "start" },
+  "right-rail": { gridArea: "rightrail", justifySelf: "end" },
 }
 
 /**
@@ -372,47 +347,51 @@ export function OverlayLayer() {
         </Panel>
       ))}
 
-      {BAND_REGIONS.filter((r) => byRegion.has(r)).map((region) => {
-        const horizontal = region === "header" || region === "footer"
-        return (
-          <div
-            key={region}
-            data-apollon-region={region}
-            className="apollon-overlay-band"
-            style={{
-              position: "absolute",
-              display: "flex",
-              pointerEvents: "none",
-              ...BAND_STYLE[region],
-              flexDirection: LANE_STACK_DIRECTION[region],
-            }}
-          >
-            {groupByLane(byRegion.get(region)!).map(([lane, laneControls]) => (
-              <div
-                key={lane}
-                data-apollon-lane={lane}
-                className="apollon-overlay-lane"
-                style={{
-                  display: "flex",
-                  flexDirection: LANE_MAIN_DIRECTION[region],
-                  gap: "var(--apollon-chrome-gap)",
-                  // Fill the band's main axis so `fillRow` controls stretch edge
-                  // to edge; the cross-axis stays content-sized (the reserved inset).
-                  ...(horizontal ? { width: "100%" } : { height: "100%" }),
-                }}
-              >
-                {laneControls.map((c) => (
-                  <ControlSlot
-                    key={c.id}
-                    control={c}
-                    registerMeasure={registerMeasure}
-                  />
-                ))}
-              </div>
-            ))}
-          </div>
-        )
-      })}
+      <div className="apollon-overlay-grid">
+        {BAND_REGIONS.filter((r) => byRegion.has(r)).map((region) => {
+          const horizontal = region === "header" || region === "footer"
+          return (
+            <div
+              key={region}
+              data-apollon-region={region}
+              className="apollon-overlay-band"
+              style={{
+                display: "flex",
+                pointerEvents: "none",
+                ...BAND_STYLE[region],
+                flexDirection: LANE_STACK_DIRECTION[region],
+              }}
+            >
+              {groupByLane(byRegion.get(region)!).map(
+                ([lane, laneControls]) => (
+                  <div
+                    key={lane}
+                    data-apollon-lane={lane}
+                    className="apollon-overlay-lane"
+                    style={{
+                      display: "flex",
+                      flexDirection: LANE_MAIN_DIRECTION[region],
+                      gap: "var(--apollon-chrome-gap)",
+                      // Fill the band's main axis so `fillRow` controls stretch edge
+                      // to edge; the cross-axis stays content-sized (the reserved
+                      // inset).
+                      ...(horizontal ? { width: "100%" } : { height: "100%" }),
+                    }}
+                  >
+                    {laneControls.map((c) => (
+                      <ControlSlot
+                        key={c.id}
+                        control={c}
+                        registerMeasure={registerMeasure}
+                      />
+                    ))}
+                  </div>
+                )
+              )}
+            </div>
+          )
+        })}
+      </div>
 
       {selfPositioned.map((c) => (
         <Fragment key={c.id}>{c.render()}</Fragment>
