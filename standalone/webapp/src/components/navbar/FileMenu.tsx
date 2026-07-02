@@ -15,7 +15,7 @@ import {
   TooltipTrigger,
 } from "@tumaet/ui/components/tooltip"
 import { ChevronDownIcon, FilesIcon } from "lucide-react"
-import { toast } from "react-toastify"
+import { toast, type ToastContentProps } from "react-toastify"
 import { useModalContext } from "@/contexts"
 import { useMediaQuery } from "@/hooks"
 import {
@@ -108,10 +108,12 @@ export function FileMenuItems({ onSelect }: { onSelect: () => void }) {
         await toast.promise(action(), {
           pending: `Exporting ${format}…`,
           success: {
-            render: ({ data }) => exportSuccessMessage(format, data),
+            render: ({ data }: ToastContentProps<ExportRunResult | void>) =>
+              exportSuccessMessage(format, data),
           },
           error: {
-            render: ({ data }) => exportErrorMessage(format, data),
+            render: ({ data }: ToastContentProps<unknown>) =>
+              exportErrorMessage(format, data),
           },
         })
       } catch (err) {
