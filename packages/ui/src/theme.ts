@@ -21,15 +21,24 @@
 export interface ApollonTheme {
   /** Accent / brand color. Maps to `--apollon-primary`. */
   primary?: string
-  /** Foreground used on top of `background`. Maps to `--apollon-primary-contrast`. */
-  primaryContrast?: string
+  /**
+   * Ink drawn ON `primary` (accent buttons, the active tool). Defaults to white;
+   * set it when `primary` is light so on-accent text stays legible (white-on-light
+   * otherwise). Maps to `--apollon-primary-foreground`.
+   */
+  primaryForeground?: string
+  /**
+   * Page foreground — the ink drawn on `background` (text, icons, chrome).
+   * This is NOT "a color that contrasts with `primary`"; it is the editor's
+   * base text color, and the whole chrome ramp derives from it plus
+   * `background`. Maps to `--apollon-foreground`.
+   */
+  foreground?: string
   /** Muted/secondary accent. Maps to `--apollon-secondary`. */
   secondary?: string
 
   /** Canvas / surface background. Maps to `--apollon-background`. */
   background?: string
-  /** Inverse of `background` (e.g. tooltips). Maps to `--apollon-background-inverse`. */
-  backgroundInverse?: string
   /** Slightly raised surface variant. Maps to `--apollon-background-variant`. */
   backgroundVariant?: string
 
@@ -46,73 +55,44 @@ export interface ApollonTheme {
   /** Horizontal alignment guide color. Maps to `--apollon-guide-horizontal`. */
   guideHorizontal?: string
 
-  /** Warning alert accent. Maps to `--apollon-alert-warning-yellow`. */
-  warning?: string
-  /** Warning alert background. Maps to `--apollon-alert-warning-background`. */
-  warningBackground?: string
-  /** Warning alert border. Maps to `--apollon-alert-warning-border`. */
-  warningBorder?: string
-
-  /** Danger alert text color. Maps to `--apollon-alert-danger-color`. */
+  /** Error/danger text color (e.g. validation messages). Maps to `--apollon-danger`. */
   danger?: string
-  /** Danger alert background. Maps to `--apollon-alert-danger-background`. */
-  dangerBackground?: string
-  /** Danger alert border. Maps to `--apollon-alert-danger-border`. */
-  dangerBorder?: string
 
   /** Raised card/popover/menu surface. Maps to `--apollon-surface`. */
   surface?: string
   /** Sunken/recessed surface (e.g. wells, muted areas). Maps to `--apollon-surface-sunken`. */
   surfaceSunken?: string
-  /** Hover state of the raised surface. Maps to `--apollon-surface-hover`. */
-  surfaceHover?: string
   /** Default border / divider color. Maps to `--apollon-border`. */
   border?: string
   /** Subtle border / divider color. Maps to `--apollon-border-subtle`. */
   borderSubtle?: string
   /** Base corner radius for shared primitives (CSS length). Maps to `--apollon-radius`. */
   radius?: string
-
-  /** Toggle/switch outline. Maps to `--apollon-switch-box-border-color`. */
-  switchBoxBorderColor?: string
-  /** List-group surface color. Maps to `--apollon-list-group-color`. */
-  listGroupColor?: string
-  /** Outline-secondary button color. Maps to `--apollon-btn-outline-secondary-color`. */
-  btnOutlineSecondaryColor?: string
-  /** Modal footer divider. Maps to `--apollon-modal-bottom-border`. */
-  modalBottomBorder?: string
 }
 
 // Single source of truth mapping each typed field to its CSS custom property.
 // Keeps `createApollonTheme` declarative and the THEMING.md table verifiable.
+//
+// The typed surface is intentionally minimal: only tokens the Base UI editor
+// paints. The chrome derives from `background` + `foreground`.
 const TOKEN_VAR_MAP: Record<keyof ApollonTheme, `--apollon-${string}`> = {
   primary: "--apollon-primary",
-  primaryContrast: "--apollon-primary-contrast",
+  primaryForeground: "--apollon-primary-foreground",
+  foreground: "--apollon-foreground",
   secondary: "--apollon-secondary",
   background: "--apollon-background",
-  backgroundInverse: "--apollon-background-inverse",
   backgroundVariant: "--apollon-background-variant",
   gray: "--apollon-gray",
   grayVariant: "--apollon-gray-variant",
   grid: "--apollon-grid",
   guideVertical: "--apollon-guide-vertical",
   guideHorizontal: "--apollon-guide-horizontal",
-  warning: "--apollon-alert-warning-yellow",
-  warningBackground: "--apollon-alert-warning-background",
-  warningBorder: "--apollon-alert-warning-border",
-  danger: "--apollon-alert-danger-color",
-  dangerBackground: "--apollon-alert-danger-background",
-  dangerBorder: "--apollon-alert-danger-border",
+  danger: "--apollon-danger",
   surface: "--apollon-surface",
   surfaceSunken: "--apollon-surface-sunken",
-  surfaceHover: "--apollon-surface-hover",
   border: "--apollon-border",
   borderSubtle: "--apollon-border-subtle",
   radius: "--apollon-radius",
-  switchBoxBorderColor: "--apollon-switch-box-border-color",
-  listGroupColor: "--apollon-list-group-color",
-  btnOutlineSecondaryColor: "--apollon-btn-outline-secondary-color",
-  modalBottomBorder: "--apollon-modal-bottom-border",
 }
 
 /**

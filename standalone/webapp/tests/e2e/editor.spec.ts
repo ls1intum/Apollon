@@ -441,22 +441,28 @@ test.describe("Playground page", () => {
     await page.goto("/playground")
     await waitForCanvasReady(page, false)
 
-    const selector = page.locator("select").first()
-    await expect(selector).toBeVisible()
+    // The diagram-type control is a shadcn Select (Base UI): a button trigger
+    // that opens a listbox of options in a portal.
+    const trigger = page.getByTestId("playground-diagram-type")
+    await expect(trigger).toBeVisible()
+    await trigger.click()
 
     // Should list at least the 13 diagram types
-    const optionCount = await selector.locator("option").count()
-    expect(optionCount).toBeGreaterThanOrEqual(13)
+    const options = page.getByRole("option")
+    await expect(options.first()).toBeVisible()
+    expect(await options.count()).toBeGreaterThanOrEqual(13)
+    await page.keyboard.press("Escape")
   })
 
   test("changing diagram type re-renders the sidebar", async ({ page }) => {
     await page.goto("/playground")
     await waitForCanvasReady(page, false)
 
-    const typeSelector = page.locator("select").first()
-
-    // Switch to ActivityDiagram
-    await typeSelector.selectOption("ActivityDiagram")
+    // Switch to ActivityDiagram via the shadcn Select.
+    await page.getByTestId("playground-diagram-type").click()
+    await page
+      .getByRole("option", { name: "ActivityDiagram", exact: true })
+      .click()
     await waitForCanvasReady(page, false)
 
     // The element palette should have changed – just verify it is still

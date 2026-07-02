@@ -48,7 +48,7 @@ export const calculateMinHeight = (
 // renders correctly even when the host page never defines the theme
 // variables (e.g. embedded on a plain site). Without the fallback an
 // undefined variable makes the SVG `fill`/`stroke` default to black.
-const STROKE_VAR = "var(--apollon-primary-contrast, #000000)"
+const STROKE_VAR = "var(--apollon-foreground, #000000)"
 const FILL_VAR = "var(--apollon-background, #ffffff)"
 
 export const getCustomColorsFromData = (data: DefaultNodeProps) => {

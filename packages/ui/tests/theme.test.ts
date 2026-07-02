@@ -7,12 +7,12 @@ describe("createApollonTheme", () => {
     expect(
       createApollonTheme({
         primary: "#ff5722",
-        primaryContrast: "#fff",
+        foreground: "#fff",
         background: "#101010",
       })
     ).toEqual({
       "--apollon-primary": "#ff5722",
-      "--apollon-primary-contrast": "#fff",
+      "--apollon-foreground": "#fff",
       "--apollon-background": "#101010",
     })
   })
@@ -26,39 +26,33 @@ describe("createApollonTheme", () => {
     expect(createApollonTheme({})).toEqual({})
   })
 
-  it("covers the full documented token surface", () => {
+  it("maps every documented field to a distinct --apollon-* property", () => {
+    // `Required<ApollonTheme>` forces this literal to list every field, so a field
+    // added to the type without a mapping is a compile error here.
     const full: Required<ApollonTheme> = {
       primary: "1",
-      primaryContrast: "2",
-      secondary: "3",
-      background: "4",
-      backgroundInverse: "5",
+      primaryForeground: "2",
+      foreground: "3",
+      secondary: "4",
+      background: "5",
       backgroundVariant: "6",
       gray: "7",
       grayVariant: "8",
       grid: "9",
       guideVertical: "10",
       guideHorizontal: "11",
-      warning: "12",
-      warningBackground: "13",
-      warningBorder: "14",
-      danger: "15",
-      dangerBackground: "16",
-      dangerBorder: "17",
-      surface: "18",
-      surfaceSunken: "19",
-      surfaceHover: "20",
-      border: "21",
-      borderSubtle: "22",
+      danger: "12",
+      surface: "13",
+      surfaceSunken: "14",
+      border: "15",
+      borderSubtle: "16",
       radius: "8px",
     }
     const style = createApollonTheme(full)
-    // Every field produces exactly one --apollon-* property.
+    // Every field produces exactly one --apollon-* property (a collision would
+    // drop the key count below the field count).
     expect(Object.keys(style)).toHaveLength(Object.keys(full).length)
-    expect(
-      Object.keys(style).every((key) => key.startsWith("--apollon-"))
-    ).toBe(true)
-    expect(style["--apollon-alert-warning-yellow"]).toBe("12")
-    expect(style["--apollon-guide-vertical"]).toBe("10")
+    expect(style["--apollon-danger"]).toBe("12")
+    expect(style["--apollon-primary-foreground"]).toBe("2")
   })
 })

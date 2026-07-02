@@ -20,7 +20,7 @@ type RgbColor = {
 // strokes/text) regardless of the live theme, so the dark variant must be
 // derived by recolor. To stay authentic the recolor mirrors the editor's own
 // dark token swap rather than inventing a palette: baked near-white fill is
-// --apollon-background, baked near-black stroke/text is --apollon-primary-contrast;
+// --apollon-background, baked near-black stroke/text is --apollon-foreground;
 // both are re-resolved against the live dark-theme tokens below.
 const DARK_THEME_TOKEN_FALLBACK = {
   ink: "#ffffff",
@@ -48,7 +48,7 @@ const resolveDarkThumbnailTokens = (): { ink: string; surface: string } => {
     const styles = getComputedStyle(root)
     // getComputedStyle resolves var() to concrete colors; guard against an
     // unresolved/empty value by falling back to the known dark hex.
-    const ink = styles.getPropertyValue("--apollon-primary-contrast").trim()
+    const ink = styles.getPropertyValue("--apollon-foreground").trim()
     const surface = styles.getPropertyValue("--apollon-background").trim()
     darkThumbnailTokens = {
       ink: parseCssColor(ink) ? ink : DARK_THEME_TOKEN_FALLBACK.ink,

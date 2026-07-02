@@ -171,24 +171,23 @@
 
   /* ── Layer 2: --apollon-* editor theming API (light) ───────────────────── */
   --apollon-primary: var(--primitive-blue-500);
-  --apollon-primary-contrast: var(--primitive-text-primary);
+
+  /* Ink drawn ON `primary` (accent buttons, active tool). White by default (the
+     accent is a saturated brand color that white reads on in light and dark);
+     override when `primary` is light so on-accent text stays legible. */
+  --apollon-primary-foreground: var(--primitive-white);
+  --apollon-foreground: var(--primitive-text-primary);
   --apollon-secondary: var(--primitive-slate-500);
+
+  /* Not a typed ApollonTheme field — kept because the webapp version drawer's
+     "unsaved changes" marker consumes it directly. */
   --apollon-alert-warning-yellow: var(--primitive-warning-yellow);
-  --apollon-alert-warning-background: var(--primitive-warning-bg);
-  --apollon-alert-warning-border: var(--primitive-warning-border);
   --apollon-background: var(--primitive-white);
-  --apollon-background-inverse: var(--primitive-black);
   --apollon-background-variant: var(--primitive-gray-50);
   --apollon-gray: var(--primitive-gray-100);
   --apollon-grid: var(--primitive-grid);
   --apollon-gray-variant: var(--primitive-gray-700);
-  --apollon-alert-danger-color: var(--primitive-danger-color);
-  --apollon-alert-danger-background: var(--primitive-danger-bg);
-  --apollon-alert-danger-border: var(--primitive-danger-border);
-  --apollon-switch-box-border-color: var(--primitive-gray-200);
-  --apollon-list-group-color: var(--primitive-white);
-  --apollon-btn-outline-secondary-color: var(--primitive-slate-500);
-  --apollon-modal-bottom-border: var(--primitive-gray-100);
+  --apollon-danger: var(--primitive-danger-color);
   --apollon-guide-vertical: var(--primitive-guide-vertical);
   --apollon-guide-horizontal: var(--primitive-guide-horizontal);
 
@@ -198,6 +197,9 @@
      its visuals through them so DEFAULT values are unchanged. */
   --apollon-surface: var(--primitive-surface-raised);
   --apollon-surface-sunken: var(--primitive-surface-sunken);
+
+  /* Internal raw var (not a typed ApollonTheme field); consumed by the webapp
+     home's --home-surface-raised-hover. */
   --apollon-surface-hover: var(--primitive-surface-raised-hover);
   --apollon-border: var(--primitive-border-default);
   --apollon-border-subtle: var(--primitive-border-subtle);
@@ -217,68 +219,13 @@
      restyles every floating editor surface. */
   --apollon-shadow: 0 4px 12px var(--primitive-shadow-overlay);
 
-  /* ── Editor chrome (--apollon-chrome-*) — the SINGLE source ─────────────────
-     The full floating-chrome design system (glass surface, border/text ramp,
-     dimensional btn/pad/island system, motion). It lives ONLY here so there is
-     one definition, and app.css/components.css/the webapp home all CONSUME it via
-     var(). Every surface/border/text value is color-mix-derived from the two
-     tokens a host already themes (--apollon-background + --apollon-primary-
-     contrast), so theming those two gives correct light/dark chrome for free;
-     only the shadows + the dark inset hairline need an explicit dark delta below.
-
-     Reaches every consumer with no duplication:
-       • editor runtime — tokens.css loads via @tumaet/ui components.css.
-       • published @tumaet/apollon/style.css — bundles components.css + app.css.
-       • headless export — EXPORT_LAYOUT_CSS concatenates components.css + app.css.
-       • webapp HOME (no editor mounted) — webapp.css imports components.css.
-
-     Per THEMING.md only accent + radius-sm/md/lg + edge + gap are a tunable
-     contract; the rest of this ramp is INTERNAL (derived / structural). */
-
-  /* Surface ladder: base == canvas; chrome separates via border + elevation.
-     The island FILL is the canvas/background hue — the editor floats its glass
-     plate over the canvas and separates it by border+shadow, never by lightening
-     the fill; the home cards/band reuse --apollon-chrome-surface to paint that
-     same island fill. */
-  --apollon-chrome-surface: var(--apollon-background, #fff);
-  --apollon-chrome-surface-hover: color-mix(
-    in srgb,
-    var(--apollon-primary-contrast, #000) 8%,
-    var(--apollon-background, #fff)
-  );
-  --apollon-chrome-surface-active: color-mix(
-    in srgb,
-    var(--apollon-primary-contrast, #000) 14%,
-    var(--apollon-background, #fff)
-  );
-
-  /* Borders: opaque cool neutrals that hold their contrast in both themes. */
-  --apollon-chrome-border: color-mix(
-    in srgb,
-    var(--apollon-primary-contrast, #000) 12%,
-    var(--apollon-background, #fff)
-  );
-  --apollon-chrome-border-strong: color-mix(
-    in srgb,
-    var(--apollon-primary-contrast, #000) 28%,
-    var(--apollon-background, #fff)
-  );
-
-  /* Text */
-  --apollon-chrome-text: var(--apollon-primary-contrast, #212529);
-  --apollon-chrome-text-muted: color-mix(
-    in srgb,
-    var(--apollon-primary-contrast, #000) 58%,
-    var(--apollon-background, #fff)
-  );
-
-  /* Accent — reserved for meaning (primary action, selection, current marker).
-     Chrome surfaces themselves stay neutral. */
-  --apollon-chrome-accent: var(--apollon-primary, #3e8acc);
-  --apollon-chrome-accent-contrast: var(
-    --apollon-on-collaboration-cursor,
-    #fff
-  );
+  /* ── Editor chrome (--apollon-chrome-*) ────────────────────────────────────
+     STRUCTURAL tokens (radius / spacing / elevation / motion) live here. The
+     DERIVED color ramp (surface, border, text, accent, glass) lives in the
+     `:root, .apollon-editor` rule below the dark block, so it re-resolves under a
+     scoped theme. Per THEMING.md only accent + radius-sm/md/lg + edge + gap are a
+     tunable contract; the rest is internal. Consumed via var() by app.css,
+     components.css, and the webapp home. */
 
   /* Radius ramp: sm pills, md controls, lg panels/rails. */
   --apollon-chrome-radius-sm: 6px;
@@ -321,31 +268,15 @@
     var(--apollon-chrome-btn) + 2 * var(--apollon-chrome-pad) + 2px
   );
 
-  /* Elevation: docked chrome (header/rail) = hairline + flat micro-shadow;
-     floating chrome (palette/controls/minimap) = soft halo. */
-  --apollon-chrome-shadow-docked: 0 1px 2px rgb(15 23 42 / 8%);
-  --apollon-chrome-shadow-floating: 0 0 1px 0 rgb(15 23 42 / 20%),
-    0 2px 8px 0 rgb(15 23 42 / 12%);
+  /* Elevation for floating chrome (palette/controls/minimap): a soft halo. */
+  --apollon-chrome-shadow-floating:
+    0 0 1px 0 rgb(15 23 42 / 20%), 0 2px 8px 0 rgb(15 23 42 / 12%);
 
   /* Lit up only in dark mode (a pure drop shadow vanishes on a dark canvas). */
   --apollon-chrome-inset-hairline: 0 0 0 0 transparent;
 
-  /* Glass for floating chrome: a semi-opaque tint floor (keeps text legible —
-     translucency alone never carries it) under a backdrop blur, derived from the
-     canvas background so it themes automatically. */
-  --apollon-chrome-glass: color-mix(
-    in srgb,
-    var(--apollon-background, #fff) 80%,
-    transparent
-  );
-
-  /* Near-opaque tint for text-dense glass (the version-history list) so list
-     copy clears WCAG AA over a busy diagram while still reading as glass. */
-  --apollon-chrome-glass-solid: color-mix(
-    in srgb,
-    var(--apollon-background, #fff) 92%,
-    transparent
-  );
+  /* Backdrop blur for floating glass chrome (structural — theme-independent;
+     the glass tint colors themselves are in the `:root, .apollon-editor` rule). */
   --apollon-chrome-glass-blur: saturate(180%) blur(20px);
 
   /* Motion tokens: short, decelerated. */
@@ -353,15 +284,6 @@
   --apollon-chrome-duration-enter: 220ms;
   --apollon-chrome-ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --apollon-chrome-ease-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
-
-  /* Public neutral hover wash — a low-alpha veil off the foreground ink, used
-     for quiet hover states (e.g. the stereotype toggles) that must read on any
-     themed surface without assuming an accent. */
-  --apollon-hover-neutral: color-mix(
-    in srgb,
-    var(--apollon-primary-contrast, #000) 7.5%,
-    transparent
-  );
 
   /* Color-picker swatch palette — the public editor-facing handle on the same
      fixed, accessible fill palette the webapp color-picker uses. References the
@@ -444,9 +366,9 @@
   --home-card-surface: var(--apollon-chrome-surface);
 
   /* Text */
-  --home-text-primary: var(--apollon-primary-contrast);
+  --home-text-primary: var(--apollon-foreground);
   --home-text-secondary: var(--primitive-text-secondary);
-  --home-text-strong: var(--apollon-primary-contrast);
+  --home-text-strong: var(--apollon-foreground);
   --home-text-muted: var(--primitive-text-muted);
 
   /* Borders / dividers */
@@ -533,6 +455,71 @@
   --home-toast-error: var(--primitive-toast-error);
   --home-toast-warning: var(--primitive-toast-warning);
   --home-toast-info: var(--primitive-toast-info);
+}
+
+/* Derived chrome color ramp — the internal `--apollon-chrome-*` colors (+ the
+   hover veil) that are COMPUTED from the themeable base tokens via color-mix/var.
+   An unregistered custom property resolves its var()/color-mix() at the declaring
+   element and inherits the computed value, so a ramp declared only at :root freezes
+   to the document's base and ignores a scoped `dataTheme`/`theme` override on the
+   mount node (the glass/palette/borders/hover veil would stay light). Declaring it
+   on `.apollon-editor` too lets it recompute against the editor's own base tokens;
+   the :root scope keeps the webapp home's `--home-card-surface` working. (The
+   overridable BASE tokens — surface/border/swatches/etc. — cannot live here: a
+   declaration on `.apollon-editor` would clobber an embedder's inline `theme`
+   override; they re-resolve under a scoped dark mount via their dark-block deltas
+   instead.) Structural chrome (radius, spacing, shadows, motion) doesn't derive
+   from theme colors and stays in :root above. */
+:root,
+.apollon-editor {
+  --apollon-chrome-surface: var(--apollon-background, #fff);
+  --apollon-chrome-surface-hover: color-mix(
+    in srgb,
+    var(--apollon-foreground, #000) 8%,
+    var(--apollon-background, #fff)
+  );
+  --apollon-chrome-surface-active: color-mix(
+    in srgb,
+    var(--apollon-foreground, #000) 14%,
+    var(--apollon-background, #fff)
+  );
+  --apollon-chrome-border: color-mix(
+    in srgb,
+    var(--apollon-foreground, #000) 12%,
+    var(--apollon-background, #fff)
+  );
+  --apollon-chrome-border-strong: color-mix(
+    in srgb,
+    var(--apollon-foreground, #000) 28%,
+    var(--apollon-background, #fff)
+  );
+  --apollon-chrome-text: var(--apollon-foreground, #212529);
+  --apollon-chrome-text-muted: color-mix(
+    in srgb,
+    var(--apollon-foreground, #000) 58%,
+    var(--apollon-background, #fff)
+  );
+  --apollon-chrome-accent: var(--apollon-primary, #3e8acc);
+  --apollon-chrome-accent-contrast: var(--apollon-primary-foreground, #fff);
+  --apollon-chrome-glass: color-mix(
+    in srgb,
+    var(--apollon-background, #fff) 80%,
+    transparent
+  );
+  --apollon-chrome-glass-solid: color-mix(
+    in srgb,
+    var(--apollon-background, #fff) 92%,
+    transparent
+  );
+
+  /* Public neutral hover wash — a low-alpha veil off the foreground ink for quiet
+     hover states (e.g. stereotype toggles). Foreground-derived, so it lives here
+     to re-resolve under a scoped dark mount rather than freeze to the base. */
+  --apollon-hover-neutral: color-mix(
+    in srgb,
+    var(--apollon-foreground, #000) 7.5%,
+    transparent
+  );
 }
 
 /* `:root[data-theme="dark"]` themes the webapp (attribute on the document root);
@@ -659,28 +646,64 @@
   --primitive-collab-8: #22b8cf;
 
   /* ── Layer 2: --apollon-* (dark deltas) ────────────────────────────────── */
-  /* Only literal/inverted dark deltas live here. Tokens whose light value is a
-     primitive var() whose primitive itself carries a dark delta (secondary,
-     grid, alerts, guides, surface, border) are intentionally absent: var()
-     re-resolves at use time, so the light declaration already yields the dark
-     value. Do NOT re-add an inert "apollon: var(primitive)" mirror line here —
-     it does nothing and only clobbers an embedder override in dark mode. */
-  --apollon-primary-contrast: var(--primitive-white);
+
+  /* EVERY --apollon-* token whose value varies by theme must be re-declared here,
+     including 1:1 `var(--primitive-*)` mirrors. A custom property is substituted at
+     COMPUTED-VALUE time on its declaring element: an `--apollon-x: var(--primitive-y)`
+     declared only at :root freezes to the :root (light) value, and that frozen value
+     inherits into a scoped `[data-theme="dark"]` mount — it does NOT re-resolve
+     against the mount's dark primitive. Re-declaring here makes the var() resolve on
+     whichever element carries the attribute (document root OR a scoped mount), so
+     `<Apollon dataTheme="dark" />` themes its whole subtree, not just the canvas.
+     Embedder overrides via the `theme` prop are inline styles and still win. The
+     dark-freeze drift test fails if any theme-varying token is missing here. */
+  --apollon-foreground: var(--primitive-white);
   --apollon-background: #13161c;
-  --apollon-background-inverse: var(--primitive-white);
   --apollon-background-variant: #303530;
   --apollon-gray: #242724;
   --apollon-gray-variant: #f8f9fa;
-  --apollon-switch-box-border-color: #3d423d;
-  --apollon-list-group-color: #303130;
-  --apollon-btn-outline-secondary-color: #b8c0c5;
-  --apollon-modal-bottom-border: #979797;
+  --apollon-secondary: var(--primitive-slate-500);
+  --apollon-alert-warning-yellow: var(--primitive-warning-yellow);
+  --apollon-grid: var(--primitive-grid);
+  --apollon-danger: var(--primitive-danger-color);
+  --apollon-guide-vertical: var(--primitive-guide-vertical);
+  --apollon-guide-horizontal: var(--primitive-guide-horizontal);
+  --apollon-surface: var(--primitive-surface-raised);
+  --apollon-surface-sunken: var(--primitive-surface-sunken);
+  --apollon-surface-hover: var(--primitive-surface-raised-hover);
+  --apollon-border: var(--primitive-border-default);
+  --apollon-border-subtle: var(--primitive-border-subtle);
+  --apollon-interactive-selection: var(--primitive-interactive-selection);
+  --apollon-swatch-slate: var(--primitive-swatch-slate);
+  --apollon-swatch-red: var(--primitive-swatch-red);
+  --apollon-swatch-orange: var(--primitive-swatch-orange);
+  --apollon-swatch-amber: var(--primitive-swatch-amber);
+  --apollon-swatch-green: var(--primitive-swatch-green);
+  --apollon-swatch-teal: var(--primitive-swatch-teal);
+  --apollon-swatch-blue: var(--primitive-swatch-blue);
+  --apollon-swatch-violet: var(--primitive-swatch-violet);
+  --apollon-swatch-pink: var(--primitive-swatch-pink);
+  --apollon-assessment-positive-text: var(--primitive-assessment-positive-text);
+  --apollon-assessment-positive-bg: var(--primitive-assessment-positive-bg);
+  --apollon-assessment-negative-text: var(--primitive-assessment-negative-text);
+  --apollon-assessment-negative-bg: var(--primitive-assessment-negative-bg);
+  --apollon-assessment-zero-text: var(--primitive-assessment-zero-text);
+  --apollon-assessment-zero-bg: var(--primitive-assessment-zero-bg);
+  --apollon-assessment-ungraded-text: var(--primitive-assessment-ungraded-text);
+  --apollon-assessment-ungraded-bg: var(--primitive-assessment-ungraded-bg);
+  --apollon-collaboration-color-1: var(--primitive-collab-1);
+  --apollon-collaboration-color-2: var(--primitive-collab-2);
+  --apollon-collaboration-color-3: var(--primitive-collab-3);
+  --apollon-collaboration-color-4: var(--primitive-collab-4);
+  --apollon-collaboration-color-5: var(--primitive-collab-5);
+  --apollon-collaboration-color-6: var(--primitive-collab-6);
+  --apollon-collaboration-color-7: var(--primitive-collab-7);
+  --apollon-collaboration-color-8: var(--primitive-collab-8);
 
   /* Editor chrome — dark deltas. The surface/border/text ramp already tracks the
      dark --apollon-background via color-mix, so dark only fixes the shadows (a
      soft light drop shadow vanishes on the dark canvas) and lights the contrast
      inset hairline. radius + the auto-theming chrome border need no dark delta. */
-  --apollon-chrome-shadow-docked: 0 1px 2px rgb(0 0 0 / 40%);
   --apollon-chrome-shadow-floating: 0 2px 12px 0 rgb(0 0 0 / 50%);
   --apollon-chrome-inset-hairline: inset 0 0 0 1px rgb(255 255 255 / 8%);
 

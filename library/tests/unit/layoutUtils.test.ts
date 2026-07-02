@@ -18,8 +18,8 @@ describe("getCustomColorsFromData", () => {
     } as DefaultNodeProps)
 
     expect(fillColor).toBe("var(--apollon-background, #ffffff)")
-    expect(strokeColor).toBe("var(--apollon-primary-contrast, #000000)")
-    expect(textColor).toBe("var(--apollon-primary-contrast, #000000)")
+    expect(strokeColor).toBe("var(--apollon-foreground, #000000)")
+    expect(textColor).toBe("var(--apollon-foreground, #000000)")
   })
 
   it("passes through explicit colors from data unchanged", () => {
@@ -42,8 +42,8 @@ describe("getCustomColorsFromDataForEdge", () => {
   it("emits a themed var() reference with a literal fallback", () => {
     const { strokeColor, textColor } = getCustomColorsFromDataForEdge()
 
-    expect(strokeColor).toBe("var(--apollon-primary-contrast, #000000)")
-    expect(textColor).toBe("var(--apollon-primary-contrast, #000000)")
+    expect(strokeColor).toBe("var(--apollon-foreground, #000000)")
+    expect(textColor).toBe("var(--apollon-foreground, #000000)")
   })
 
   it("passes through explicit edge colors unchanged", () => {

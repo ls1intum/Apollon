@@ -205,7 +205,6 @@ const APOLLON_PRIMARY: Token[] = [
   { name: "Primary", varName: "--apollon-primary" },
   { name: "Secondary", varName: "--apollon-secondary" },
   { name: "Background", varName: "--apollon-background" },
-  { name: "Background Inverse", varName: "--apollon-background-inverse" },
   { name: "Background Variant", varName: "--apollon-background-variant" },
   { name: "Gray", varName: "--apollon-gray" },
 ]
@@ -219,7 +218,6 @@ const APOLLON_SURFACE: Token[] = [
 const APOLLON_BORDER: Token[] = [
   { name: "Border", varName: "--apollon-border" },
   { name: "Border Subtle", varName: "--apollon-border-subtle" },
-  { name: "Switch Box Border", varName: "--apollon-switch-box-border-color" },
 ]
 
 const APOLLON_RADIUS: Token[] = [
@@ -325,36 +323,19 @@ export const ApollonContract: Story = {
       </Section>
 
       <Section
-        title="Alerts"
-        description="Warning (yellow) and danger (red) alert families."
+        title="Status colors"
+        description="Warning (yellow, internal) and the typed danger text color."
       >
-        <PairSwatch
-          name="Warning"
-          bgVar="--apollon-alert-warning-background"
-          textVar="--apollon-alert-danger-color"
-        />
         <ColorSwatch
           name="Warning Yellow"
           varName="--apollon-alert-warning-yellow"
         />
-        <ColorSwatch
-          name="Warning Border"
-          varName="--apollon-alert-warning-border"
-        />
-        <PairSwatch
-          name="Danger"
-          bgVar="--apollon-alert-danger-background"
-          textVar="--apollon-alert-danger-color"
-        />
-        <ColorSwatch
-          name="Danger Border"
-          varName="--apollon-alert-danger-border"
-        />
+        <ColorSwatch name="Danger" varName="--apollon-danger" />
       </Section>
 
       <Section
         title="Editor chrome (--apollon-chrome-*)"
-        description="The floating-UI system: surface ramp, glass, accent. Mostly color-mix-derived from --apollon-background + --apollon-primary-contrast — only the tunable subset is shown."
+        description="The floating-UI system: surface ramp, glass, accent. Mostly color-mix-derived from --apollon-background + --apollon-foreground — only the tunable subset is shown."
       >
         {APOLLON_CHROME.map((t) => (
           <ColorSwatch key={t.varName} {...t} />

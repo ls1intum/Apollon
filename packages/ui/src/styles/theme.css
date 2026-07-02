@@ -21,14 +21,14 @@
    `bg-background` / `text-muted-foreground` instead of `bg-[var(--home-*)]`. */
 @theme inline {
   --color-background: var(--apollon-background);
-  --color-foreground: var(--apollon-primary-contrast);
+  --color-foreground: var(--apollon-foreground);
 
   /* Accent tokens follow the editor's public --apollon-* theming API so the
      shared primitives respond to an external embedder's theme. The webapp's
      accent bridge (--apollon-primary <- --home-accent-base) keeps the navy
      accent in the app, so this is identical there.
      primary-foreground is the text that sits ON the primary swatch (white-on-
-     navy), i.e. the accent's CONTRAST — NOT --apollon-primary-contrast, which is
+     navy), i.e. the accent's CONTRAST — NOT --apollon-foreground, which is
      the dark body text used for --color-foreground above. Mixing them gave
      primary buttons + the accent dialog header dark-on-navy text. */
   --color-primary: var(--apollon-primary);
@@ -48,8 +48,8 @@
      surface). `--color-accent-hover` is the same tint kept as an explicit alias
      the webapp's bespoke hover/selected states use; `-strong`/`-soft` are the
      accent-color (brand) variants. All resolve through --home-surface-* onto
-     the public --apollon-surface/-surface-hover, so an embedder theming those
-     restyles the shared primitives. */
+     `--apollon-surface-hover` (the internal raised-hover var, not part of the
+     typed theming API); the resting surface follows the public --apollon-surface. */
   --color-accent: var(--home-surface-raised-hover);
   --color-accent-foreground: var(--home-text-primary);
   /* Explicit alias of --color-accent (the webapp's bespoke hover/selected states
@@ -78,7 +78,7 @@
   --color-card: var(--home-surface-raised);
   --color-card-foreground: var(--home-text-primary);
 
-  --color-destructive: var(--apollon-alert-danger-color);
+  --color-destructive: var(--apollon-danger);
   --color-destructive-foreground: var(--primitive-white);
 
   /* Color-picker swatch palette. Exposed as semantic --color-swatch-* so the

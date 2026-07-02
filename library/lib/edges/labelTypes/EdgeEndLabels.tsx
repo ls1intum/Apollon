@@ -29,7 +29,7 @@ export const EdgeEndLabels = ({
   targetY,
   sourcePosition,
   targetPosition,
-  textColor = "var(--apollon-primary-contrast, #000000)",
+  textColor = "var(--apollon-foreground, #000000)",
 }: EdgeEndLabelsProps) => {
   const sourceLabels = useMemo(() => {
     if (activePoints.length < 2) {

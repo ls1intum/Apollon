@@ -18,7 +18,10 @@ const TIP = { x: 2, y: 1 }
 
 const openCollaboratingTab = async (page: Page) => {
   await page.goto("/playground")
-  await page.locator("#collaboration-viewport-test").check()
+  // Base UI's Checkbox forwards its id to a hidden proxy input; the clickable
+  // control is the role=checkbox button, wired to its label. Toggle it by
+  // clicking the label text (the page loads with it unchecked).
+  await page.getByText("Collaboration viewport test", { exact: true }).click()
   await page.locator(".react-flow").first().waitFor({ state: "visible" })
 }
 

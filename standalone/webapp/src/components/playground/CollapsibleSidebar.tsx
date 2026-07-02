@@ -34,11 +34,12 @@ export const CollapsibleSidebar = ({
     <aside
       data-testid={testId}
       className={clsx(
-        "relative h-full shrink-0 overflow-hidden text-[var(--apollon-primary-contrast)] transition-[width] duration-200 ease-in-out border-[var(--apollon-gray)]",
+        // Webapp chrome → styled with shadcn surface tokens (NOT the editor's
+        // --apollon-* namespace), so the rails match the design system in both
+        // themes instead of the editor's canvas palette.
+        "text-foreground border-border relative h-full shrink-0 overflow-hidden transition-[width] duration-200 ease-in-out",
         side === "left" ? "border-r" : "border-l",
-        surface === "variant"
-          ? "bg-[var(--apollon-background-variant)]"
-          : "bg-[var(--apollon-background)]"
+        surface === "variant" ? "bg-muted" : "bg-card"
       )}
       style={{ width: open ? width : COLLAPSED_WIDTH }}
     >
@@ -50,11 +51,9 @@ export const CollapsibleSidebar = ({
         aria-controls={open ? contentId : undefined}
         onClick={onToggle}
         className={clsx(
-          "absolute top-2 z-[1] flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border border-[var(--apollon-gray)] hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--apollon-primary-contrast)]",
+          "border-border hover:bg-accent focus-visible:outline-ring absolute top-2 z-[1] flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border transition-colors focus-visible:outline focus-visible:outline-2",
           side === "left" ? "right-1.5" : "left-1.5",
-          surface === "variant"
-            ? "bg-[var(--apollon-background)]"
-            : "bg-[var(--apollon-background-variant)]"
+          surface === "variant" ? "bg-card" : "bg-muted"
         )}
       >
         <Chevron className="size-5" />
