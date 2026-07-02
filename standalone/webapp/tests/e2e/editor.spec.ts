@@ -758,9 +758,9 @@ test.describe("Mobile responsive layout", () => {
       PHONE_LANDSCAPE.width - SAFE_INSET
     )
 
-    // React Flow controls/minimap stay inside the left/right insets.
+    // The zoom cluster / minimap stay inside the left/right insets.
     const controlsBox = await page
-      .locator(".react-flow__controls")
+      .getByRole("toolbar", { name: "Zoom and history controls" })
       .boundingBox()
     expect(controlsBox?.x).toBeGreaterThanOrEqual(SAFE_INSET)
 
@@ -810,9 +810,11 @@ test.describe("Mobile responsive layout", () => {
 
     // The palette height is ResizeObserver-driven, so poll the relation rather
     // than asserting on a single possibly-pre-reflow frame: the palette bottom
-    // edge stays above the controls' top edge.
+    // edge stays above the zoom cluster's top edge.
     const palette = page.getByTestId("apollon-palette")
-    const controls = page.locator(".react-flow__controls")
+    const controls = page.getByRole("toolbar", {
+      name: "Zoom and history controls",
+    })
     await expect
       .poll(async () => {
         const p = await palette.boundingBox()

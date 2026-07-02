@@ -46,7 +46,7 @@ const viewportZoom = (page: Page) =>
  * deterministic regardless of animation speed. Returns the final zoom.
  */
 async function zoomOutUntil(page: Page, targetZoom: number): Promise<number> {
-  const zoomOut = page.locator(".react-flow__controls-zoomout").first()
+  const zoomOut = page.getByRole("button", { name: "Zoom out" })
   let previousZoom = await viewportZoom(page)
   // The canvas minZoom is 0.4; cap iterations so a clamped/disabled control
   // can never hang the test.
@@ -102,7 +102,7 @@ test("edge handles stay usable when zoomed out and grow when zoomed in", async (
 
   // Zoom in: the handle grows with the (now-thicker) edge, staying proportional
   // rather than looking like a tiny dot on it.
-  const zoomIn = page.locator(".react-flow__controls-zoomin").first()
+  const zoomIn = page.getByRole("button", { name: "Zoom in" })
   for (let i = 0; i < 3; i++) {
     await zoomIn.click()
     await page.waitForTimeout(70)
@@ -115,7 +115,7 @@ test("edge handles stay usable when zoomed out and grow when zoomed in", async (
   // Zoom back out below 1x: the handle counter-scales to keep a usable minimum
   // on-screen size instead of shrinking to a few px.
   for (let i = 0; i < 6; i++) {
-    await page.locator(".react-flow__controls-zoomout").first().click()
+    await page.getByRole("button", { name: "Zoom out" }).click()
     await page.waitForTimeout(70)
   }
   const zoomedOut = await measure()
@@ -147,7 +147,7 @@ test("node connection indicators keep a constant on-screen size across zoom", as
   const atDefault = await arcScreenWidth()
   expect(atDefault).toBeGreaterThan(0)
 
-  const zoomOut = page.locator(".react-flow__controls-zoomout").first()
+  const zoomOut = page.getByRole("button", { name: "Zoom out" })
   for (let i = 0; i < 4; i++) {
     await zoomOut.click()
     await page.waitForTimeout(70)

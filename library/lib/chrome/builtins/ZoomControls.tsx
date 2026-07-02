@@ -4,6 +4,7 @@ import { Maximize, Redo2, Undo2, ZoomIn, ZoomOut } from "lucide-react"
 import { useDiagramStore, useOverlayStore } from "@/store/context"
 import { insetAwareFitView } from "@/overlay/fitView"
 import { Tooltip } from "@/components/ui"
+import { useRovingToolbar } from "../useRovingToolbar"
 import type { ZoomProps } from "../config"
 
 /**
@@ -38,8 +39,13 @@ export function ZoomControls({
     }))
   )
 
+  const { ref: toolbarRef, onKeyDown: onToolbarKeyDown } =
+    useRovingToolbar<HTMLDivElement>()
+
   return (
     <div
+      ref={toolbarRef}
+      onKeyDown={onToolbarKeyDown}
       className="apollon-chrome-cluster"
       role="toolbar"
       aria-label="Zoom and history controls"
