@@ -2,7 +2,7 @@ import { FC } from "react"
 import { ClassStereotype } from "@/types"
 import { CustomText } from "./CustomText"
 import { LAYOUT } from "@/constants"
-import { stereotypeLabel, withAbstractMarker } from "@/utils"
+import { stereotypeLabel } from "@/utils"
 
 interface HeaderSectionProps {
   showStereotype: boolean
@@ -56,7 +56,7 @@ export const HeaderSection: FC<HeaderSectionProps> = ({
           dy={showStereotype && stereotype ? "18" : "0"}
           fontStyle={isAbstract ? "italic" : "normal"}
         >
-          {withAbstractMarker(name, isAbstract)}
+          {name}
         </tspan>
       </CustomText>
     </>

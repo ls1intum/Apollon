@@ -4,7 +4,6 @@ import { describe, it, expect } from "vitest"
 import { computeAppliedScale, svgToPng } from "@/export/svgToPng"
 import { svgToPdf } from "@/export/svgToPdf"
 import { preProcessSvgForPdf } from "@/export/preProcessSvgForPdf"
-import { normalizeExportSvg } from "@/export/normalizeExportSvg"
 import { RasterTooLargeError } from "@/export/exportErrors"
 
 // resvg-wasm and the Inter ttf are normally fetched via bundler `?url` assets;
@@ -120,18 +119,6 @@ describe("preProcessSvgForPdf", () => {
     expect(root.querySelector("text")!.getAttribute("font-family")).toBe(
       "Helvetica, Inter"
     )
-  })
-})
-
-describe("normalizeExportSvg", () => {
-  it("drops the italic claim abstract headers emit (no italic face is shipped)", () => {
-    const doc = parse(
-      `<svg xmlns="http://www.w3.org/2000/svg"><text font-style="italic">Abstract</text><text font-style="normal">Concrete</text></svg>`
-    )
-    normalizeExportSvg(doc)
-    const texts = Array.from(doc.querySelectorAll("text"))
-    expect(texts[0].hasAttribute("font-style")).toBe(false)
-    expect(texts[1].getAttribute("font-style")).toBe("normal")
   })
 })
 

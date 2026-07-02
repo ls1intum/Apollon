@@ -1417,6 +1417,21 @@ describe("normalizeClassStereotypes (legacy 4.x class nodes)", () => {
     expect(node.height).toBe(110)
   })
 
+  it("heals a keyword carrying a stray abstract modifier (interface/enum can't be abstract)", () => {
+    const node = makeV4ClassNode("Interface")
+    ;(node.data as { isAbstract?: boolean }).isAbstract = true
+    const model = makeV4ClassModel([node])
+    normalizeClassStereotypes(model)
+    const data = model.nodes[0].data as {
+      stereotype: string
+      isAbstract?: boolean
+    }
+    // Keyword kept + lowercased; the invalid modifier dropped, no height change.
+    expect(data.stereotype).toBe("interface")
+    expect(data.isAbstract).toBe(false)
+    expect((model.nodes[0] as { height: number }).height).toBe(110)
+  })
+
   it("runs on the editor load path via importDiagram", () => {
     const result = importDiagram(
       makeV4ClassModel([makeV4ClassNode("Abstract", 110)])

@@ -14,9 +14,10 @@
  */
 import interBoldUrl from "@/assets/fonts/Inter-Bold.ttf?url"
 import interRegularUrl from "@/assets/fonts/Inter-Regular.ttf?url"
+import interItalicUrl from "@/assets/fonts/Inter-Italic.ttf?url"
+import interBoldItalicUrl from "@/assets/fonts/Inter-BoldItalic.ttf?url"
 import { DEFAULT_FONT_SIZE } from "@/fontStack"
 import { RasterTooLargeError } from "./exportErrors"
-import { normalizeExportSvg } from "./normalizeExportSvg"
 
 /** 75 MP — well under the wasm32 4 GB ceiling at resvg's ~4× working set. */
 const DEFAULT_MAX_AREA_PX = 75_000_000
@@ -112,12 +113,14 @@ async function ensureWasm(
 async function loadBundledFonts(): Promise<Uint8Array[]> {
   if (!cachedFonts) {
     cachedFonts = Promise.all(
-      [interRegularUrl, interBoldUrl].map(async (url) => {
-        const res = await fetch(url)
-        if (!res.ok)
-          throw new Error(`Failed to load font ${url}: ${res.status}`)
-        return new Uint8Array(await res.arrayBuffer())
-      })
+      [interRegularUrl, interBoldUrl, interItalicUrl, interBoldItalicUrl].map(
+        async (url) => {
+          const res = await fetch(url)
+          if (!res.ok)
+            throw new Error(`Failed to load font ${url}: ${res.status}`)
+          return new Uint8Array(await res.arrayBuffer())
+        }
+      )
     )
   }
   return cachedFonts
@@ -128,14 +131,13 @@ async function loadBundledFonts(): Promise<Uint8Array[]> {
 const SVG_DEFAULT_TEXT_FILL = "#000000"
 
 /**
- * Prepare the SVG for resvg: normalise the italic claim away (resvg has no
- * italic face — see normalizeExportSvg) and add a same-colour hairline stroke
- * to every `<text>`/`<tspan>` (see STEM_DARKEN_EM). Returns the serialised SVG;
- * mutates a parsed clone, not the caller's string.
+ * Prepare the SVG for resvg: add a same-colour hairline stroke to every
+ * `<text>`/`<tspan>` (see STEM_DARKEN_EM). Returns the serialised SVG; mutates a
+ * parsed clone, not the caller's string. (Italic is left intact — resvg now
+ * carries the real Inter italic faces in `loadBundledFonts`.)
  */
 function prepareSvgForRaster(svg: string): string {
   const doc = new DOMParser().parseFromString(svg, "image/svg+xml")
-  normalizeExportSvg(doc.documentElement)
   doc.querySelectorAll("text").forEach((text) => {
     const fill = text.getAttribute("fill") || SVG_DEFAULT_TEXT_FILL
     if (fill === "none") return

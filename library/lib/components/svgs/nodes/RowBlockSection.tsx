@@ -4,7 +4,7 @@ import { FC } from "react"
 import AssessmentIcon from "../AssessmentIcon"
 import { FeedbackDropzone } from "@/components/wrapper/FeedbackDropzone"
 import { AssessmentSelectableElement } from "@/components/AssessmentSelectableElement"
-import { getCustomColorsFromData, withAbstractMarker } from "@/utils"
+import { getCustomColorsFromData } from "@/utils"
 import { LAYOUT } from "@/constants"
 
 interface RowBlockSectionProps {
@@ -56,7 +56,7 @@ export const RowBlockSection: FC<RowBlockSectionProps> = ({
                 fill={textColor}
                 fontStyle={item.isAbstract ? "italic" : "normal"}
               >
-                {withAbstractMarker(item.name, item.isAbstract)}
+                {item.name}
               </CustomText>
             </FeedbackDropzone>
             {showAssessmentResults && typeof item.score === "number" && (

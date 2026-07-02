@@ -85,10 +85,10 @@ test.describe("How-to-use modal assets", () => {
     await expect(editorArea(page)).toHaveScreenshot("edge-creation.png")
   })
 
-  // node-edit: a class node with its Edit popover open (stereotype ToggleGroup
-  // ABSTRACT/INTERFACE/ENUMERATION + name/attributes/methods fields visible).
-  // The popover is portaled to <body>, so screenshot the full page (not just
-  // the editor-area locator) to capture the canvas node AND the popover.
+  // node-edit: a class node with its Edit popover open (the "Class type" kind
+  // Select, plus the name/attributes/methods fields visible). The popover is
+  // portaled to <body>, so screenshot the full page (not just the editor-area
+  // locator) to capture the canvas node AND the popover.
   test("node-edit", async ({ page }) => {
     await openFixtureInLocalEditor(page, singleClass)
     await waitForCanvasReady(page)
@@ -99,10 +99,10 @@ test.describe("How-to-use modal assets", () => {
     // names.
     await page.locator(".react-flow__node-toolbar svg").nth(1).click()
 
-    // The popover renders the stereotype ToggleGroup — wait for its first
-    // toggle button (CSS uppercases the "Abstract" label to "ABSTRACT").
+    // The popover renders the "Class type" Select — wait for its trigger to
+    // confirm the popover has painted.
     await expect(
-      page.locator(".apollon-stereotype-toggle").first()
+      page.locator('.apollon-select-trigger[aria-label="Class type"]')
     ).toBeVisible({ timeout: 10_000 })
     await page.mouse.move(0, 0)
     await page.waitForTimeout(400)

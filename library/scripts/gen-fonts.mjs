@@ -53,7 +53,15 @@ for (const [a, b] of ranges) {
 // exports; the truetype subset of the SAME source feeds @tumaet/apollon/export
 // (resvg fontBuffers + jsPDF VFS, neither of which reads woff2). One source
 // keeps exported PNG/PDF glyphs identical to what the editor measures/renders.
-const fonts = ["Inter-Regular", "Inter-Bold"]
+const fonts = [
+  "Inter-Regular",
+  "Inter-Bold",
+  // Italic faces back the abstract-class / abstract-method notation (italic
+  // name + signature). Real faces, not a synthetic slant, so canvas
+  // measureText, the editor, resvg and jsPDF all agree on the advance widths.
+  "Inter-Italic",
+  "Inter-BoldItalic",
+]
 
 for (const name of fonts) {
   const buf = await readFile(resolve(SRC_DIR, `${name}.ttf`))

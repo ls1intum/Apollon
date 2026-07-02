@@ -942,6 +942,14 @@ export function normalizeClassStereotypes(model: UMLModel): UMLModel {
     } else if (raw && raw in V4_STEREOTYPE) {
       data.stereotype = V4_STEREOTYPE[raw]
     }
+    // A metaclass keyword and the abstract modifier are mutually exclusive in a
+    // valid model: an «interface» is inherently abstract, an «enumeration»
+    // cannot be. An older two-control editor could set both (leaving an italic
+    // «interface» name), so drop the stray modifier. No height change —
+    // abstractness adds italics, never a header line.
+    if (data.stereotype && data.isAbstract) {
+      data.isAbstract = false
+    }
   }
   return model
 }
