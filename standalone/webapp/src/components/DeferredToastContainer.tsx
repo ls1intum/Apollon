@@ -26,6 +26,7 @@ export const DeferredToastContainer = () => {
   return (
     <Suspense fallback={null}>
       <ToastContainer
+        aria-label="Notifications"
         theme={currentTheme === "dark" ? "dark" : "light"}
         className="home-toast-container"
         toastClassName="home-toast"
