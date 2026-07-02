@@ -465,12 +465,28 @@
   border-radius: inherit;
 }
 
-/* Hairline separating action families within one cluster (view vs history). */
-.apollon-chrome-cluster-divider {
-  align-self: stretch;
-  width: 1px;
-  margin: 4px 2px;
-  background: var(--apollon-chrome-border);
+/* A toolbar of glass islands (the zoom cluster: view + history). The toolbar row
+   itself is a transparent layout track; each `.apollon-chrome-cluster` inside is a
+   glass island — the overlay panel wrapper is pass-through, so the island paints
+   the pane (mirroring the palette/header islands). */
+.apollon-chrome-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--apollon-chrome-gap);
+}
+
+.apollon-chrome-cluster {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: var(--apollon-chrome-pad);
+  background-color: var(--apollon-chrome-glass);
+  -webkit-backdrop-filter: var(--apollon-chrome-glass-blur);
+  backdrop-filter: var(--apollon-chrome-glass-blur);
+  border: 1px solid var(--apollon-chrome-border);
+  box-shadow:
+    var(--apollon-chrome-shadow-floating), var(--apollon-chrome-inset-hairline);
+  border-radius: var(--apollon-chrome-radius-lg);
 }
 
 /* React Flow's built-in zoom/fit buttons adopt the same borderless idiom. */

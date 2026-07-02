@@ -66,10 +66,8 @@ export interface MinimapProps {
 
 /** Tunables for the built-in zoom / history cluster. */
 export interface ZoomProps {
-  /** Show the zoom-out / zoom-in / fit buttons + %-readout. Default `true`. */
-  showZoom?: boolean
-  /** Show the undo / redo buttons (when an undo manager exists). Default `true`. */
-  showHistory?: boolean
+  /** Show the undo / redo island (when an undo manager exists). Default `true`. */
+  history?: boolean
 }
 
 /**

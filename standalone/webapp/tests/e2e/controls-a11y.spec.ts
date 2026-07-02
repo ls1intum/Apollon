@@ -54,9 +54,10 @@ test.describe("built-in controls accessibility", () => {
     await tabbable.focus()
     expect(await activeLabel(page)).toBe("Zoom out")
 
-    // ArrowRight moves focus along the toolbar, still one tab stop.
+    // ArrowRight roves across BOTH glass islands (view [−][%][+][fit] then
+    // history), staying a single tab stop — the toolbar spans both islands.
     await page.keyboard.press("ArrowRight")
-    expect(await activeLabel(page)).toBe("Zoom in")
+    expect(await activeLabel(page)).toBe("Zoom is 100%, reset to 100%")
     await expect(toolbar.locator("button[tabindex='0']")).toHaveCount(1)
 
     // End jumps to the last control, Home back to the first.
@@ -66,7 +67,9 @@ test.describe("built-in controls accessibility", () => {
     await page.keyboard.press("Home")
     expect(await activeLabel(page)).toBe("Zoom out")
 
-    // The fit-view control is keyboard-reachable within the toolbar.
+    // The fit-view control is keyboard-reachable within the toolbar
+    // (Zoom out → %-reset → Zoom in → Fit view).
+    await page.keyboard.press("ArrowRight")
     await page.keyboard.press("ArrowRight")
     await page.keyboard.press("ArrowRight")
     expect(await activeLabel(page)).toBe("Fit view")
