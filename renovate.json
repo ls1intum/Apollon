@@ -1,20 +1,19 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "description": "Dashboard-only mode — PRs created only when approved from the dashboard",
-  "extends": [
-    "config:best-practices",
-    "docker:pinDigests",
-    "helpers:pinGitHubActionDigests",
-    ":semanticCommitTypeAll(chore)",
-    ":dependencyDashboardApproval"
-  ],
+  "description": "Auto-PR flow: non-major updates open weekly grouped PRs; low-risk lanes automerge on green CI; majors are gated on the dashboard.",
+  "extends": ["config:best-practices", ":semanticCommitTypeAll(chore)"],
   "labels": ["dependencies"],
 
   "timezone": "Europe/Berlin",
   "schedule": ["before 7am on monday"],
-  "minimumReleaseAge": "3 days",
 
-  "platformAutomerge": true,
+  "minimumReleaseAge": "7 days",
+  "internalChecksFilter": "strict",
+
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 2,
+
+  "platformAutomerge": false,
   "automergeStrategy": "squash",
   "semanticCommitScope": "deps",
 
@@ -26,35 +25,48 @@
 
   "lockFileMaintenance": {
     "enabled": true,
-    "schedule": ["before 7am on monday"],
+    "schedule": ["before 7am on tuesday"],
+    "automerge": true,
     "labels": ["dependencies", "lockfile-maintenance"]
   },
 
   "packageRules": [
     {
-      "description": "Group all minor and patch updates",
+      "description": "Batch every non-major update into one weekly review PR.",
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "minor and patch dependencies",
       "labels": ["dependencies"],
       "matchPackageNames": ["*"]
     },
     {
-      "description": "Major updates require extra care",
+      "description": "Majors carry breaking changes: gate them on the dashboard and soak longer so a human opts in per package.",
       "matchUpdateTypes": ["major"],
-      "minimumReleaseAge": "7 days",
+      "dependencyDashboardApproval": true,
+      "minimumReleaseAge": "14 days",
       "labels": ["dependencies", "breaking"]
     },
     {
-      "description": "GitHub Actions",
+      "description": "GitHub Actions are SHA-pinned and run cheap CI.",
       "matchManagers": ["github-actions"],
       "groupName": "GitHub Actions",
       "labels": ["dependencies", "ci"]
     },
     {
-      "description": "Docker images",
+      "description": "Docker base-image version bumps ship into published images — group them for review.",
       "matchManagers": ["dockerfile", "docker-compose"],
       "groupName": "Docker images",
       "labels": ["dependencies", "infrastructure"]
+    },
+    {
+      "description": "Automerge non-major GitHub Actions once CI is green — SHA-pinned, cheap to verify, high-toil to hand-merge.",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["minor", "patch", "digest", "pinDigest"],
+      "automerge": true
+    },
+    {
+      "description": "Automerge digest-only re-pins (same tag, new SHA) across managers — no version change to review.",
+      "matchUpdateTypes": ["digest", "pinDigest"],
+      "automerge": true
     },
     {
       "description": "@types/pdfmake — pinned to 0.2.x because 0.3.x removed the .vfs property used by standalone/server/src/workers/pdf-conversion-worker-thread.ts. Re-evaluate when migrating the worker to the 0.3 API.",
@@ -63,12 +75,13 @@
     }
   ],
 
+  "osvVulnerabilityAlerts": true,
+
   "vulnerabilityAlerts": {
     "labels": ["security", "dependencies"],
     "schedule": ["at any time"],
     "minimumReleaseAge": null,
     "dependencyDashboardApproval": false,
-    "prPriority": 10,
     "automerge": true,
     "groupName": null
   },
