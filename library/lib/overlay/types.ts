@@ -63,6 +63,16 @@ export interface OverlayControlOptions {
   inset?: InsetContribution
   /** Stacking within a region; lower renders toward the region's anchor edge. */
   order?: number
+  /**
+   * Band lane (bands only). Controls in the SAME lane sit along the band's axis
+   * (side by side on `header`/`footer`, top-to-bottom on the rails) and reserve
+   * the taller/wider of them. Controls in DIFFERENT lanes STACK across the band's
+   * cross-axis and their reservations SUM — so two independently-registered bars
+   * on one edge (e.g. an exam bar in lane 0 and a "problem statement changed"
+   * banner in lane 1) both get room instead of overlapping. Lane 0 (default) sits
+   * against the band's anchor edge; higher lanes stack toward the canvas. Ignored
+   * for slots and `on-canvas`. */
+  lane?: number
   /** When false the region frame stays pointer-transparent here too. Default true. */
   interactive?: boolean
   /** Wraps the control in a `role="group"` with this aria-label. No focus

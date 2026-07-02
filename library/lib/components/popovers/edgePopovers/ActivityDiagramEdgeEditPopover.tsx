@@ -5,11 +5,13 @@ import { CustomEdgeProps } from "@/edges/EdgeProps"
 import { ArrowLeftRight } from "lucide-react"
 import { useEdgePopOver, useReactiveEdge } from "@/hooks"
 import { PopoverProps } from "../types"
+import { useLabels } from "@/i18n/useLabels"
 import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 
 export const ActivityDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
+  const t = useLabels()
   const { updateEdgeData } = useReactFlow()
   const edge = useReactiveEdge(elementId)
 
@@ -22,7 +24,7 @@ export const ActivityDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
   const edgeData = edge.data as CustomEdgeProps | undefined
 
   return (
-    <PopoverLayout title="Edge">
+    <PopoverLayout title={t.edge}>
       <EdgeStyleEditor
         edgeData={edgeData}
         handleDataFieldUpdate={(key, value) =>
@@ -43,11 +45,11 @@ export const ActivityDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
         ]}
       />
 
-      <PopoverSection title="Label" divider>
+      <PopoverSection title={t.label} divider>
         <TextField
           value={edgeData?.label ?? ""}
           onChange={(e) => handleLabelChange(e.target.value)}
-          placeholder="Label"
+          placeholder={t.label}
           fullWidth
         />
       </PopoverSection>

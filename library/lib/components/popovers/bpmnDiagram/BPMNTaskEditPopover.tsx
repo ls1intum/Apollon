@@ -5,6 +5,7 @@ import { useReactFlow } from "@xyflow/react"
 import { PopoverProps } from "../types"
 import { BPMNMarkerType, BPMNTaskProps, BPMNTaskType } from "@/types"
 import { supportsMultilineName } from "@/utils/nodeUtils"
+import { useLabels } from "@/i18n/useLabels"
 import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 
 const TASK_TYPE_OPTIONS = [
@@ -25,6 +26,7 @@ const MARKER_OPTIONS = [
 ]
 
 export const BPMNTaskEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
+  const t = useLabels()
   const { updateNodeData } = useReactFlow()
   const node = useReactiveNode(elementId)
   if (!node) return null
@@ -36,7 +38,7 @@ export const BPMNTaskEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
   }
 
   return (
-    <PopoverLayout title="Task">
+    <PopoverLayout title={t.task}>
       <NodeStyleEditor
         handleDataFieldUpdate={(key, value) =>
           handleDataFieldUpdate(key, value)

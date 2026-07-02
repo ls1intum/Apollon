@@ -5,6 +5,7 @@ import { useReactFlow } from "@xyflow/react"
 import { PopoverProps } from "../types"
 import { BPMNEventProps, BPMNIntermediateEventType } from "@/types"
 import { supportsMultilineName } from "@/utils/nodeUtils"
+import { useLabels } from "@/i18n/useLabels"
 import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 
 const INTERMEDIATE_TYPE_OPTIONS = [
@@ -24,6 +25,7 @@ const INTERMEDIATE_TYPE_OPTIONS = [
 export const BPMNIntermediateEventEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
+  const t = useLabels()
   const { updateNodeData } = useReactFlow()
   const node = useReactiveNode(elementId)
   if (!node) return null
@@ -35,7 +37,7 @@ export const BPMNIntermediateEventEditPopover: React.FC<PopoverProps> = ({
   }
 
   return (
-    <PopoverLayout title="Intermediate Event">
+    <PopoverLayout title={t.intermediateEvent}>
       <NodeStyleEditor
         handleDataFieldUpdate={(key, value) =>
           handleDataFieldUpdate(key, value)
@@ -44,7 +46,7 @@ export const BPMNIntermediateEventEditPopover: React.FC<PopoverProps> = ({
         isMultilineName={supportsMultilineName(node.type)}
       />
 
-      <PopoverSection title="Type" divider>
+      <PopoverSection title={t.type} divider>
         <Select
           label="Intermediate Type"
           value={data.eventType ?? "default"}

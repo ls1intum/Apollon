@@ -263,6 +263,36 @@ test.describe("controls layout engine", () => {
     expect(overlaps(await box(paletteEl(page)), zoom)).toBe(false)
   })
 
+  test("labels override re-labels the chrome reactively (i18n)", async ({
+    page,
+  }) => {
+    // Ships English.
+    await expect(page.getByRole("button", { name: "Zoom in" })).toBeVisible()
+
+    // A host swaps in its own language at runtime — no remount.
+    await page.evaluate(() => {
+      const ed = (window as unknown as { apollonEditor?: any }).apollonEditor
+      ed?.setLabels({
+        zoomIn: "Vergrößern",
+        zoomOut: "Verkleinern",
+        showMinimap: "Übersicht anzeigen",
+      })
+    })
+
+    await expect(page.getByRole("button", { name: "Vergrößern" })).toBeVisible()
+    await expect(
+      page.getByRole("button", { name: "Verkleinern" })
+    ).toBeVisible()
+    // Un-overridden keys fall back to English.
+    await expect(page.getByRole("button", { name: "Fit view" })).toBeVisible()
+    // The minimap toggle (a self-positioned widget) re-labels too.
+    await expect(
+      page.getByRole("button", { name: "Übersicht anzeigen" })
+    ).toBeVisible()
+    // The old English label is gone.
+    await expect(page.getByRole("button", { name: "Zoom in" })).toHaveCount(0)
+  })
+
   test("every corner placement keeps the zoom cluster fully on-screen", async ({
     page,
   }) => {

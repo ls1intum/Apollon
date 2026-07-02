@@ -5,9 +5,11 @@ import { useShallow } from "zustand/shallow"
 import { EditableAttributeList } from "../classDiagram/EditableAttributesList"
 import { EditableMethodsList } from "../classDiagram/EditableMethodsList"
 import { PopoverProps } from "../types"
+import { useLabels } from "@/i18n/useLabels"
 import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 
 export const ObjectEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
+  const t = useLabels()
   const { nodes, setNodes } = useDiagramStore(
     useShallow((state) => ({
       nodes: state.nodes,
@@ -40,7 +42,7 @@ export const ObjectEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
   }
 
   return (
-    <PopoverLayout title="Object">
+    <PopoverLayout title={t.object}>
       <NodeStyleEditor
         nodeData={nodeData}
         colorEditorLabel="object"

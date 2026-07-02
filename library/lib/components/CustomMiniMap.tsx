@@ -13,6 +13,7 @@ import {
   Map,
 } from "lucide-react"
 import { useReactiveNode } from "@/hooks/useReactiveElement"
+import { useLabels } from "@/i18n/useLabels"
 import {
   ClassSVG,
   PackageSVG,
@@ -110,6 +111,7 @@ export const CustomMiniMap = ({
   zoomable = true,
 }: CustomMiniMapProps = {}) => {
   const [minimapCollapsed, setMinimapCollapsed] = useState(true)
+  const t = useLabels()
   const CollapseArrow = COLLAPSE_ARROW[position] ?? ArrowDownRight
 
   if (minimapCollapsed) {
@@ -118,8 +120,8 @@ export const CustomMiniMap = ({
         <button
           type="button"
           className="apollon-chrome-iconbtn"
-          aria-label="Show minimap"
-          title="Show minimap (overview)"
+          aria-label={t.showMinimap}
+          title={t.showMinimapHint}
           onClick={() => setMinimapCollapsed(false)}
         >
           <Map width={18} height={18} aria-hidden="true" />
@@ -149,8 +151,8 @@ export const CustomMiniMap = ({
         <button
           type="button"
           className="apollon-chrome-iconbtn"
-          aria-label="Hide minimap"
-          title="Hide minimap"
+          aria-label={t.hideMinimap}
+          title={t.hideMinimap}
           onClick={() => setMinimapCollapsed(true)}
         >
           <CollapseArrow width={18} height={18} aria-hidden="true" />

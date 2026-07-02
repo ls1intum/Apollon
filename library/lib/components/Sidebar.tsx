@@ -39,7 +39,7 @@ const previewExtraHeight = (type: string) =>
 const VIEW_SWITCH_HEIGHT = 64
 
 export const Sidebar = () => {
-  const { diagramType, view, setView, availableViews, mode, readonly } =
+  const { diagramType, view, setView, availableViews, mode, readonly, labels } =
     useMetadataStore(
       useShallow((state) => ({
         diagramType: state.diagramType,
@@ -48,6 +48,7 @@ export const Sidebar = () => {
         availableViews: state.availableViews,
         mode: state.mode,
         readonly: state.readonly,
+        labels: state.labels,
       }))
     )
   // The palette only makes sense while modelling an editable diagram. Gating here
@@ -186,7 +187,7 @@ export const Sidebar = () => {
       ref={asideRef}
       className="apollon-palette"
       data-testid="apollon-palette"
-      aria-label="Element palette"
+      aria-label={labels.elementPalette}
       // Bounded to the rail band the engine reserved (grid math already fits
       // within it; this caps the rare overflow case to a scroll, not spill).
       style={canvas.h ? { maxHeight: canvas.h } : undefined}

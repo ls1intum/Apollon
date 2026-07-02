@@ -5,6 +5,7 @@ import { useReactFlow } from "@xyflow/react"
 import { PopoverProps } from "../types"
 import { BPMNEventProps, BPMNStartEventType } from "@/types"
 import { supportsMultilineName } from "@/utils/nodeUtils"
+import { useLabels } from "@/i18n/useLabels"
 import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 
 const START_TYPE_OPTIONS = [
@@ -18,6 +19,7 @@ const START_TYPE_OPTIONS = [
 export const BPMNStartEventEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
+  const t = useLabels()
   const { updateNodeData } = useReactFlow()
   const node = useReactiveNode(elementId)
   if (!node) return null
@@ -29,7 +31,7 @@ export const BPMNStartEventEditPopover: React.FC<PopoverProps> = ({
   }
 
   return (
-    <PopoverLayout title="Start Event">
+    <PopoverLayout title={t.startEvent}>
       <NodeStyleEditor
         handleDataFieldUpdate={(key, value) =>
           handleDataFieldUpdate(key, value)
@@ -38,7 +40,7 @@ export const BPMNStartEventEditPopover: React.FC<PopoverProps> = ({
         isMultilineName={supportsMultilineName(node.type)}
       />
 
-      <PopoverSection title="Type" divider>
+      <PopoverSection title={t.type} divider>
         <Select
           label="Start Type"
           value={data.eventType ?? "default"}

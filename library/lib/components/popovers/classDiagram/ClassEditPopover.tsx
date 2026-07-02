@@ -5,9 +5,11 @@ import { useShallow } from "zustand/shallow"
 import { EditableAttributeList } from "./EditableAttributesList"
 import { EditableMethodsList } from "./EditableMethodsList"
 import { PopoverProps } from "../types"
+import { useLabels } from "@/i18n/useLabels"
 import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 
 export const ClassEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
+  const t = useLabels()
   const { nodes, setNodes } = useDiagramStore(
     useShallow((state) => ({
       nodes: state.nodes,
@@ -40,13 +42,13 @@ export const ClassEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
   }
 
   return (
-    <PopoverLayout title="Class">
+    <PopoverLayout title={t.class}>
       <NodeStyleEditor
         nodeData={nodeData}
         colorEditorLabel="class"
         handleDataFieldUpdate={handleDataFieldUpdate}
       />
-      <PopoverSection title="Stereotype" divider>
+      <PopoverSection title={t.stereotype} divider>
         <StereotypeButtonGroup
           nodeId={elementId}
           selectedStereotype={nodeData.stereotype}

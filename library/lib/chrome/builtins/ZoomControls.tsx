@@ -4,6 +4,7 @@ import { Maximize, Redo2, Undo2, ZoomIn, ZoomOut } from "lucide-react"
 import { useDiagramStore, useOverlayStore } from "@/store/context"
 import { insetAwareFitView } from "@/overlay/fitView"
 import { Tooltip } from "@/components/ui"
+import { useLabels } from "@/i18n/useLabels"
 import { useRovingToolbar } from "../useRovingToolbar"
 
 export interface ZoomControlsProps {
@@ -23,6 +24,7 @@ export interface ZoomControlsProps {
  */
 export function ZoomControls({ history = true }: ZoomControlsProps) {
   const rf = useReactFlow()
+  const t = useLabels()
   const zoomLevelPercent = Math.round(useStore((s) => s.transform[2]) * 100)
   const insets = useOverlayStore((s) => s.insets)
 
@@ -45,47 +47,47 @@ export function ZoomControls({ history = true }: ZoomControlsProps) {
       onKeyDown={onToolbarKeyDown}
       className="apollon-chrome-toolbar"
       role="toolbar"
-      aria-label="Zoom and history controls"
+      aria-label={t.zoomToolbar}
       aria-orientation="horizontal"
     >
       <div className="apollon-chrome-cluster">
-        <Tooltip title="Zoom out">
+        <Tooltip title={t.zoomOut}>
           <button
             type="button"
             className="apollon-chrome-iconbtn"
             onClick={() => rf.zoomOut()}
-            aria-label="Zoom out"
+            aria-label={t.zoomOut}
           >
             <ZoomOut width={18} height={18} aria-hidden="true" />
           </button>
         </Tooltip>
         {/* Clickable zoom readout — resets to 100% (Figma/Excalidraw). */}
-        <Tooltip title="Reset zoom to 100%">
+        <Tooltip title={t.resetZoom}>
           <button
             type="button"
             className="apollon-chrome-iconbtn apollon-chrome-iconbtn--readout"
             onClick={() => rf.zoomTo(1)}
-            aria-label={`Zoom is ${zoomLevelPercent}%, reset to 100%`}
+            aria-label={t.zoomReadout(zoomLevelPercent)}
           >
             {zoomLevelPercent}%
           </button>
         </Tooltip>
-        <Tooltip title="Zoom in">
+        <Tooltip title={t.zoomIn}>
           <button
             type="button"
             className="apollon-chrome-iconbtn"
             onClick={() => rf.zoomIn()}
-            aria-label="Zoom in"
+            aria-label={t.zoomIn}
           >
             <ZoomIn width={18} height={18} aria-hidden="true" />
           </button>
         </Tooltip>
-        <Tooltip title="Fit view">
+        <Tooltip title={t.fitView}>
           <button
             type="button"
             className="apollon-chrome-iconbtn"
             onClick={() => insetAwareFitView(rf, insets)}
-            aria-label="Fit view"
+            aria-label={t.fitView}
           >
             <Maximize width={18} height={18} aria-hidden="true" />
           </button>
@@ -94,27 +96,27 @@ export function ZoomControls({ history = true }: ZoomControlsProps) {
 
       {history && undoManagerExist && (
         <div className="apollon-chrome-cluster">
-          <Tooltip title="Undo (Ctrl+Z)">
+          <Tooltip title={t.undoHint}>
             <span>
               <button
                 type="button"
                 className="apollon-chrome-iconbtn"
                 onClick={undo}
                 disabled={!canUndo}
-                aria-label="Undo"
+                aria-label={t.undo}
               >
                 <Undo2 width={18} height={18} aria-hidden="true" />
               </button>
             </span>
           </Tooltip>
-          <Tooltip title="Redo (Ctrl+Y or Ctrl+Shift+Z)">
+          <Tooltip title={t.redoHint}>
             <span>
               <button
                 type="button"
                 className="apollon-chrome-iconbtn"
                 onClick={redo}
                 disabled={!canRedo}
-                aria-label="Redo"
+                aria-label={t.redo}
               >
                 <Redo2 width={18} height={18} aria-hidden="true" />
               </button>

@@ -2,6 +2,7 @@ import React, { useState, KeyboardEvent, ChangeEvent } from "react"
 import { GripVertical, Plus, Trash2 } from "lucide-react"
 import { IconButton, TextField, Typography } from "@/components/ui"
 import { NodeStyleEditor } from "@/components/styleEditor"
+import { useLabels } from "@/i18n/useLabels"
 import { generateUUID } from "@/utils"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
@@ -41,6 +42,7 @@ const SortableMethodRow: React.FC<SortableMethodRowProps> = ({
   onMethodChange,
   onDelete,
 }) => {
+  const t = useLabels()
   const {
     attributes,
     listeners,
@@ -74,7 +76,7 @@ const SortableMethodRow: React.FC<SortableMethodRowProps> = ({
         // dnd-kit's `attributes` set `role="button"` + `aria-roledescription`
         // but no name; the grip icon is aria-hidden, so name the handle
         // explicitly (axe: aria-command-name).
-        aria-label="Reorder method"
+        aria-label={t.reorderMethod}
         className="apollon-drag-handle"
         style={{
           display: "flex",
@@ -108,6 +110,7 @@ const SortableMethodRow: React.FC<SortableMethodRowProps> = ({
 }
 
 export const EditableMethodsList: React.FC<Props> = ({ nodeId }) => {
+  const t = useLabels()
   const { nodes, setNodes } = useDiagramStore(
     useShallow((state) => ({ setNodes: state.setNodes, nodes: state.nodes }))
   )
@@ -220,8 +223,8 @@ export const EditableMethodsList: React.FC<Props> = ({ nodeId }) => {
       <div className="apollon-add-row">
         <TextField
           fullWidth
-          aria-label="New method"
-          placeholder="Add method"
+          aria-label={t.newMethod}
+          placeholder={t.addMethod}
           value={newItem}
           onChange={(e: ChangeEvent<HTMLInputElement>) =>
             setNewItem(e.target.value)

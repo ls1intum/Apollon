@@ -2,6 +2,7 @@ import { useReactiveEdge } from "@/hooks"
 import { Checkbox, TextField } from "@/components/ui"
 import { EdgeStyleEditor } from "@/components/styleEditor"
 import { PopoverProps } from "../types"
+import { useLabels } from "@/i18n/useLabels"
 import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 import { useReactFlow } from "@xyflow/react"
 import { useState, useCallback, useEffect } from "react"
@@ -35,6 +36,7 @@ function serializeSfcEdgeLabel(data: SfcEdgeData): string {
 }
 
 export const SfcEdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
+  const t = useLabels()
   const { updateEdgeData } = useReactFlow()
   const edge = useReactiveEdge(elementId)
 
@@ -90,7 +92,7 @@ export const SfcEdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
   const edgeDataCustom = edge.data as CustomEdgeProps
 
   return (
-    <PopoverLayout title="Edge">
+    <PopoverLayout title={t.edge}>
       <EdgeStyleEditor
         label="Style"
         edgeData={edgeDataCustom}
@@ -99,11 +101,11 @@ export const SfcEdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
         }
       />
 
-      <PopoverSection title="Condition" divider>
+      <PopoverSection title={t.condition} divider>
         <TextField
           value={edgeData.displayName}
           onChange={(e) => handleDisplayNameChange(e.target.value)}
-          placeholder="Condition"
+          placeholder={t.condition}
           fullWidth
         />
 

@@ -10,6 +10,7 @@ import {
 import { ApollonEditor } from "@/apollon-editor"
 import type {
   ApollonCollaborationOptions,
+  ApollonLabels,
   ApollonMode,
   ApollonOptions,
   ApollonView,
@@ -18,6 +19,7 @@ import type {
 } from "@/typings"
 import { ApollonInstanceContext } from "./context"
 import { ApollonPalette, ApollonZoom, ApollonMiniMap } from "./builtins"
+import { ApollonSelectionToolbar } from "./ApollonSelectionToolbar"
 
 /**
  * Props for the {@link Apollon} React component.
@@ -65,6 +67,8 @@ export interface ApollonProps {
   view?: ApollonView
   mode?: ApollonMode
   scrollLock?: boolean
+  /** Override the editor's own strings for i18n. See {@link ApollonEditor.setLabels}. */
+  labels?: Partial<ApollonLabels>
   /** Local-only preview overlay. See {@link ApollonEditor.setPreviewMode}. */
   previewMode?: boolean
   /**
@@ -111,6 +115,7 @@ export function Apollon(props: ApollonProps) {
     view,
     mode,
     scrollLock,
+    labels,
     previewMode,
     model,
 
@@ -131,6 +136,7 @@ export function Apollon(props: ApollonProps) {
     collaborationEnabled,
     collaboration,
     debug,
+    labels,
     // React always owns the chrome: the editor registers nothing, and `<Apollon>`
     // renders the default `<Apollon.*>` as fallback children when the consumer
     // composes none. That keeps composing-ness reactive — a control appearing or
@@ -193,6 +199,10 @@ export function Apollon(props: ApollonProps) {
   }, [editor, scrollLock])
 
   useEffect(() => {
+    if (editor && labels !== undefined) editor.setLabels(labels)
+  }, [editor, labels])
+
+  useEffect(() => {
     if (editor && previewMode !== undefined) editor.setPreviewMode(previewMode)
   }, [editor, previewMode])
 
@@ -252,3 +262,4 @@ function DefaultChildren() {
 Apollon.Palette = ApollonPalette
 Apollon.Zoom = ApollonZoom
 Apollon.MiniMap = ApollonMiniMap
+Apollon.SelectionToolbar = ApollonSelectionToolbar

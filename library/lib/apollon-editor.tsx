@@ -35,6 +35,7 @@ import {
 } from "./store/context"
 import { createOverlayStore, type OverlayStore } from "./overlay/overlayStore"
 import { defaultControls } from "./chrome/builtins/controls"
+import { mergeLabels } from "./i18n/labels"
 import { RegionMount } from "./overlay/RegionMount"
 import {
   type OverlayControlInput,
@@ -201,6 +202,9 @@ export class ApollonEditor {
     }
     if (options?.scrollLock !== undefined) {
       this.metadataStore.getState().setScrollLock(options.scrollLock)
+    }
+    if (options?.labels !== undefined) {
+      this.metadataStore.getState().setLabels(mergeLabels(options.labels))
     }
     // Register the chrome: the given descriptors (even `[]`, an explicit bare
     // canvas), or the palette + zoom + minimap defaults when omitted. The React
@@ -877,6 +881,16 @@ export class ApollonEditor {
   /** Live-toggle whether the canvas captures page scroll. */
   public setScrollLock(scrollLock: boolean): void {
     this.metadataStore.getState().setScrollLock(scrollLock)
+  }
+
+  /**
+   * Replace the editor's user-facing strings (i18n). Merged over the English
+   * defaults, so a partial map only changes the keys it provides. Reactive — the
+   * chrome re-renders, so a host can switch language without remounting.
+   * @param labels - A partial {@link ApollonLabels} in the host's language.
+   */
+  public setLabels(labels: Partial<Apollon.ApollonLabels>): void {
+    this.metadataStore.getState().setLabels(mergeLabels(labels))
   }
 
   /**

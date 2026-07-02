@@ -6,6 +6,7 @@ import { ArrowLeftRight } from "lucide-react"
 import { IconButton, TextField } from "@/components/ui"
 import { EdgeStyleEditor } from "@/components/styleEditor"
 import { EdgeTypeSelect, EdgeTypeOption } from "./EdgeTypeSelect"
+import { useLabels } from "@/i18n/useLabels"
 import {
   ConnectionInfo,
   hasDistinctEndpointNames,
@@ -23,6 +24,7 @@ const BPMN_EDGE_TYPE_OPTIONS: ReadonlyArray<EdgeTypeOption> = [
 export const BPMNDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
+  const t = useLabels()
   const { updateEdgeData } = useReactFlow()
 
   const edge = useReactiveEdge(elementId)
@@ -37,7 +39,7 @@ export const BPMNDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
   const edgeData = edge.data as CustomEdgeProps | undefined
 
   return (
-    <PopoverLayout title="Edge">
+    <PopoverLayout title={t.edge}>
       <EdgeStyleEditor
         edgeData={edgeData}
         handleDataFieldUpdate={(key, value) =>
@@ -67,16 +69,16 @@ export const BPMNDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
       </PopoverSection>
 
       {hasDistinctEndpointNames(sourceName, targetName) && (
-        <PopoverSection title="Connection" divider>
+        <PopoverSection title={t.connection} divider>
           <ConnectionInfo source={sourceName} target={targetName} />
         </PopoverSection>
       )}
 
-      <PopoverSection title="Label" divider>
+      <PopoverSection title={t.label} divider>
         <TextField
           value={edgeData?.label ?? ""}
           onChange={(e) => handleLabelChange(e.target.value)}
-          placeholder="Label"
+          placeholder={t.label}
           fullWidth
         />
       </PopoverSection>

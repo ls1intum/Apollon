@@ -2,6 +2,8 @@ import { DiagramEdgeType, IPoint } from "./edges/types"
 import { DiagramNodeType } from "./nodes/types"
 import { UMLDiagramType } from "./types/DiagramType"
 import type { OverlayControlInput } from "./overlay/types"
+import type { ApollonLabels } from "./i18n/labels"
+export type { ApollonLabels } from "./i18n/labels"
 
 export { UMLDiagramType, type DiagramNodeType, type DiagramEdgeType }
 
@@ -164,6 +166,13 @@ export type ApollonOptions = {
    * children instead — both compile to the same registry records.
    */
   controls?: OverlayControlInput[]
+  /**
+   * Override any of the editor's own user-facing strings (palette / zoom / minimap
+   * tooltips and aria-labels) for i18n. Ships English; a host passes a partial map
+   * in its own language and the rest fall back to English. Reactive via
+   * `<Apollon labels>` / `editor.setLabels`. See {@link ApollonLabels}.
+   */
+  labels?: Partial<ApollonLabels>
   /**
    * Optional `--apollon-*` CSS custom properties applied to the editor's mount
    * element. Build one with `createApollonTheme(...)`. Fully optional — an

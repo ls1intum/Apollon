@@ -4,11 +4,13 @@ import { useShallow } from "zustand/shallow"
 import { DefaultNodeEditPopover } from "../DefaultNodeEditPopover"
 import { PopoverProps } from "../types"
 import { HeaderSwitchElement } from "@/components"
+import { useLabels } from "@/i18n/useLabels"
 import { PopoverSection } from "../PopoverLayout"
 
 export const DeploymentComponentEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
+  const t = useLabels()
   const { nodes, setNodes } = useDiagramStore(
     useShallow((state) => ({ setNodes: state.setNodes, nodes: state.nodes }))
   )
@@ -41,7 +43,7 @@ export const DeploymentComponentEditPopover: React.FC<PopoverProps> = ({
   // not crammed beside the paint roller on the name row.
   return (
     <DefaultNodeEditPopover elementId={elementId}>
-      <PopoverSection title="Stereotype" divider>
+      <PopoverSection title={t.stereotype} divider>
         <HeaderSwitchElement
           onClick={switchHeaderShown}
           isComponentHeaderShown={nodeData.isComponentHeaderShown}

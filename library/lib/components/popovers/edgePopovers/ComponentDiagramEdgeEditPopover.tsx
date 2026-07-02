@@ -5,6 +5,7 @@ import { ArrowLeftRight } from "lucide-react"
 import { useEdgePopOver, useReactiveEdge, useReactiveNodeName } from "@/hooks"
 import { PopoverProps } from "../types"
 import { CustomEdgeProps } from "@/edges"
+import { useLabels } from "@/i18n/useLabels"
 import { EdgeTypeSelect, EdgeTypeOption } from "./EdgeTypeSelect"
 import {
   ConnectionInfo,
@@ -22,6 +23,7 @@ const COMPONENT_EDGE_TYPE_OPTIONS: ReadonlyArray<EdgeTypeOption> = [
 export const ComponentEdgeEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
+  const t = useLabels()
   const { updateEdgeData } = useReactFlow()
 
   const edge = useReactiveEdge(elementId)
@@ -36,7 +38,7 @@ export const ComponentEdgeEditPopover: React.FC<PopoverProps> = ({
   const edgeData = edge.data as CustomEdgeProps | undefined
 
   return (
-    <PopoverLayout title="Edge">
+    <PopoverLayout title={t.edge}>
       <EdgeStyleEditor
         edgeData={edgeData}
         handleDataFieldUpdate={(key, value) =>
@@ -66,7 +68,7 @@ export const ComponentEdgeEditPopover: React.FC<PopoverProps> = ({
       </PopoverSection>
 
       {hasDistinctEndpointNames(sourceName, targetName) && (
-        <PopoverSection title="Connection" divider>
+        <PopoverSection title={t.connection} divider>
           <ConnectionInfo source={sourceName} target={targetName} />
         </PopoverSection>
       )}

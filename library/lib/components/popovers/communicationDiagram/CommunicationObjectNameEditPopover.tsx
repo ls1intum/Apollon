@@ -5,11 +5,13 @@ import { EditableAttributeList } from "../classDiagram/EditableAttributesList"
 import { EditableMethodsList } from "../classDiagram/EditableMethodsList"
 import { PopoverProps } from "../types"
 import { NodeStyleEditor } from "@/components/styleEditor"
+import { useLabels } from "@/i18n/useLabels"
 import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 
 export const CommunicationObjectNameEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
+  const t = useLabels()
   const { nodes, setNodes } = useDiagramStore(
     useShallow((state) => ({
       nodes: state.nodes,
@@ -42,7 +44,7 @@ export const CommunicationObjectNameEditPopover: React.FC<PopoverProps> = ({
   }
 
   return (
-    <PopoverLayout title="Object">
+    <PopoverLayout title={t.object}>
       <NodeStyleEditor
         nodeData={nodeData}
         colorEditorLabel="communication object"

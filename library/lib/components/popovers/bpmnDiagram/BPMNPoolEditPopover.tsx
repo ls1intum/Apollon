@@ -4,9 +4,11 @@ import { useReactFlow } from "@xyflow/react"
 import { PopoverProps } from "../types"
 import { BPMNPoolProps } from "@/types"
 import { supportsMultilineName } from "@/utils/nodeUtils"
+import { useLabels } from "@/i18n/useLabels"
 import { PopoverLayout } from "../PopoverLayout"
 
 export const BPMNPoolEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
+  const t = useLabels()
   const { updateNodeData } = useReactFlow()
   const node = useReactiveNode(elementId)
   if (!node) return null
@@ -18,7 +20,7 @@ export const BPMNPoolEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
   }
 
   return (
-    <PopoverLayout title="Pool">
+    <PopoverLayout title={t.pool}>
       <NodeStyleEditor
         handleDataFieldUpdate={(key, value) =>
           handleDataFieldUpdate(key, value)

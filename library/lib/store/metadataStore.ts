@@ -6,6 +6,7 @@ import { getDiagramMetadata, STORE_ORIGIN } from "@/sync/ydoc"
 import { UMLDiagramType } from "@/types"
 import { ApollonMode, ApollonView } from "@/typings"
 import { IPoint } from "@/edges/Connection"
+import { DEFAULT_LABELS, type ApollonLabels } from "@/i18n/labels"
 
 export type MetadataStore = {
   diagramTitle: string
@@ -16,6 +17,8 @@ export type MetadataStore = {
   readonly: boolean
   debug: boolean
   scrollLock: boolean
+  /** User-facing strings for the editor's own chrome; host-overridable for i18n. */
+  labels: ApollonLabels
   scrollEnabled: boolean
   connectionGuidanceActive: boolean
   connectionGuidanceSourceNodeId: string | null
@@ -28,6 +31,7 @@ export type MetadataStore = {
   setAvailableViews: (availableViews: ApollonView[]) => void
   setReadonly: (readonly: boolean) => void
   setScrollLock: (scrollLock: boolean) => void
+  setLabels: (labels: ApollonLabels) => void
   setScrollEnabled: (scrollEnabled: boolean) => void
   startConnectionGuidance: (
     sourceNodeId: string | null,
@@ -57,6 +61,7 @@ type InitialMetadataState = {
   readonly: boolean
   debug: boolean
   scrollLock: boolean
+  labels: ApollonLabels
   scrollEnabled: boolean
   connectionGuidanceActive: boolean
   connectionGuidanceSourceNodeId: string | null
@@ -76,6 +81,7 @@ const initialMetadataState: InitialMetadataState = {
   readonly: false,
   debug: false,
   scrollLock: false,
+  labels: DEFAULT_LABELS,
   scrollEnabled: false,
   connectionGuidanceActive: false,
   connectionGuidanceSourceNodeId: null,
@@ -165,6 +171,10 @@ export const createMetadataStore = (
 
         setScrollLock: (scrollLock: boolean) => {
           set({ scrollLock }, undefined, "setScrollLock")
+        },
+
+        setLabels: (labels) => {
+          set({ labels }, undefined, "setLabels")
         },
 
         setScrollEnabled: (scrollEnabled: boolean) => {

@@ -5,6 +5,7 @@ import { useReactFlow } from "@xyflow/react"
 import { CustomEdgeProps } from "@/edges/EdgeProps"
 import { useEdgePopOver, useReactiveEdge, useReactiveNodeName } from "@/hooks"
 import { PopoverProps } from "../types"
+import { useLabels } from "@/i18n/useLabels"
 import { EdgeTypeSelect, EdgeTypeOption } from "./EdgeTypeSelect"
 import {
   ConnectionInfo,
@@ -23,6 +24,7 @@ const DEPLOYMENT_EDGE_TYPE_OPTIONS: ReadonlyArray<EdgeTypeOption> = [
 export const DeploymentEdgeEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
+  const t = useLabels()
   const { updateEdgeData } = useReactFlow()
 
   const edge = useReactiveEdge(elementId)
@@ -38,7 +40,7 @@ export const DeploymentEdgeEditPopover: React.FC<PopoverProps> = ({
   const edgeData = edge.data as CustomEdgeProps | undefined
 
   return (
-    <PopoverLayout title="Edge">
+    <PopoverLayout title={t.edge}>
       <EdgeStyleEditor
         edgeData={edgeData}
         handleDataFieldUpdate={(key, value) =>
@@ -68,19 +70,19 @@ export const DeploymentEdgeEditPopover: React.FC<PopoverProps> = ({
       </PopoverSection>
 
       {hasDistinctEndpointNames(sourceName, targetName) && (
-        <PopoverSection title="Connection" divider>
+        <PopoverSection title={t.connection} divider>
           <ConnectionInfo source={sourceName} target={targetName} />
         </PopoverSection>
       )}
 
       {/* Show label input only for associations */}
       {edge.type === "DeploymentAssociation" && (
-        <PopoverSection title="Label" divider>
+        <PopoverSection title={t.label} divider>
           <TextField
             value={edgeData?.label ?? ""}
             onChange={(e) => handleLabelChange(e.target.value)}
             fullWidth
-            placeholder="Label"
+            placeholder={t.label}
           />
         </PopoverSection>
       )}

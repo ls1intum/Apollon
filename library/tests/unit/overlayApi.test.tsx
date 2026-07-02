@@ -244,6 +244,56 @@ describe("computeInsets: band vs slot reservation", () => {
       }).bottom
     ).toBe(56)
   })
+
+  it("two bars in different lanes STACK — their band insets sum", () => {
+    // An exam bar (lane 0) + a 'problem statement changed' banner (lane 1) on the
+    // header: independently registered, each gets room, so the top inset is 48+24.
+    expect(
+      computeInsets(
+        [
+          ctrl("bar", "header", { lane: 0 }),
+          ctrl("banner", "header", { lane: 1 }),
+        ],
+        { bar: { top: 48 }, banner: { top: 24 } }
+      ).top
+    ).toBe(72)
+  })
+
+  it("two bars in the SAME lane sit side by side — the band reserves the taller", () => {
+    expect(
+      computeInsets(
+        [ctrl("a", "header"), ctrl("b", "header")], // both default lane 0
+        { a: { top: 48 }, b: { top: 32 } }
+      ).top
+    ).toBe(48)
+  })
+
+  it("lane summing is per band edge; opposite bands stay independent", () => {
+    expect(
+      computeInsets(
+        [
+          ctrl("h0", "header", { lane: 0 }),
+          ctrl("h1", "header", { lane: 1 }),
+          ctrl("f", "footer"),
+        ],
+        { h0: { top: 40 }, h1: { top: 20 }, f: { bottom: 50 } }
+      )
+    ).toEqual({ top: 60, right: 0, bottom: 50, left: 0 })
+  })
+
+  it("an explicit inset opts a band control out of lane summing (manual reservation)", () => {
+    // A header control with an explicit inset combines by max, not lane-sum — so a
+    // host can pin a fixed reservation without it stacking onto the auto lanes.
+    expect(
+      computeInsets(
+        [
+          ctrl("auto", "header", { lane: 0 }),
+          ctrl("fixed", "header", { lane: 1, inset: { top: 30 } }),
+        ],
+        { auto: { top: 48 } }
+      ).top
+    ).toBe(48) // max(48 auto-lane, 30 explicit), not 48+30
+  })
 })
 
 // A compound built-in (`<Apollon.Zoom history={…}>`) refreshes its content by

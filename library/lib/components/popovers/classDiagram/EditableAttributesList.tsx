@@ -2,6 +2,7 @@ import React, { useState, KeyboardEvent, ChangeEvent } from "react"
 import { GripVertical, Plus, Trash2 } from "lucide-react"
 import { IconButton, TextField, Typography } from "@/components/ui"
 import { NodeStyleEditor } from "@/components/styleEditor"
+import { useLabels } from "@/i18n/useLabels"
 import { generateUUID } from "@/utils"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
@@ -42,6 +43,7 @@ const SortableAttributeRow: React.FC<SortableAttributeRowProps> = ({
   onAttributeChange,
   onDelete,
 }) => {
+  const t = useLabels()
   const {
     attributes,
     listeners,
@@ -75,7 +77,7 @@ const SortableAttributeRow: React.FC<SortableAttributeRowProps> = ({
         // dnd-kit's `attributes` set `role="button"` + `aria-roledescription`
         // but no name; the grip icon is aria-hidden, so name the handle
         // explicitly (axe: aria-command-name).
-        aria-label="Reorder attribute"
+        aria-label={t.reorderAttribute}
         className="apollon-drag-handle"
         style={{
           display: "flex",
@@ -109,6 +111,7 @@ const SortableAttributeRow: React.FC<SortableAttributeRowProps> = ({
 }
 
 export const EditableAttributeList: React.FC<Props> = ({ nodeId }) => {
+  const t = useLabels()
   const { nodes, setNodes } = useDiagramStore(
     useShallow((state) => ({ setNodes: state.setNodes, nodes: state.nodes }))
   )
@@ -225,8 +228,8 @@ export const EditableAttributeList: React.FC<Props> = ({ nodeId }) => {
       <div className="apollon-add-row">
         <TextField
           fullWidth
-          aria-label="New attribute"
-          placeholder="Add attribute"
+          aria-label={t.newAttribute}
+          placeholder={t.addAttribute}
           value={newItem}
           onChange={(e: ChangeEvent<HTMLInputElement>) =>
             setNewItem(e.target.value)

@@ -59,15 +59,15 @@ const BAND_STYLE: Record<string, CSSProperties> = {
     top: "var(--safe-area-inset-top, 0px)",
     left: 0,
     right: 0,
-    flexDirection: "row",
   },
   // Symmetric to the header: a full-width band pinned to the bottom edge (e.g. an
-  // assessment action bar), plus the device safe-area inset for gesture bars.
+  // assessment action bar), plus the device safe-area inset for gesture bars and
+  // the soft-keyboard overlap so it rides above an open mobile keyboard.
   footer: {
-    bottom: "var(--safe-area-inset-bottom, 0px)",
+    bottom:
+      "calc(var(--safe-area-inset-bottom, 0px) + var(--apollon-keyboard-inset, 0px))",
     left: 0,
     right: 0,
-    flexDirection: "row",
   },
   // Side rails sit between the top chrome and any bottom chrome so they never
   // tuck under a full-width header band. --apollon-inset-top/bottom come from the
@@ -79,17 +79,78 @@ const BAND_STYLE: Record<string, CSSProperties> = {
   "left-rail": {
     top: "calc(var(--safe-area-inset-top, 0px) + var(--apollon-inset-top, 0px))",
     bottom:
-      "calc(var(--safe-area-inset-bottom, 0px) + var(--apollon-inset-bottom, 0px))",
+      "calc(var(--safe-area-inset-bottom, 0px) + var(--apollon-keyboard-inset, 0px) + var(--apollon-inset-bottom, 0px))",
     left: "var(--safe-area-inset-left, 0px)",
-    flexDirection: "column",
   },
   "right-rail": {
     top: "calc(var(--safe-area-inset-top, 0px) + var(--apollon-inset-top, 0px))",
     bottom:
-      "calc(var(--safe-area-inset-bottom, 0px) + var(--apollon-inset-bottom, 0px))",
+      "calc(var(--safe-area-inset-bottom, 0px) + var(--apollon-keyboard-inset, 0px) + var(--apollon-inset-bottom, 0px))",
     right: "var(--safe-area-inset-right, 0px)",
-    flexDirection: "column",
   },
+}
+
+/**
+ * A band stacks its LANES across its cross-axis; lane 0 sits against the anchor
+ * edge (top for `header`, bottom for `footer`, outer edge for the rails), higher
+ * lanes toward the canvas. The `-reverse` variants keep lane 0 edge-flush even
+ * though it renders first. Lanes are flush (no inter-lane gap) so the summed
+ * inset matches the painted height exactly.
+ */
+const LANE_STACK_DIRECTION: Record<string, CSSProperties["flexDirection"]> = {
+  header: "column",
+  footer: "column-reverse",
+  "left-rail": "row",
+  "right-rail": "row-reverse",
+}
+
+/** Within one lane, controls sit along the band's MAIN axis. */
+const LANE_MAIN_DIRECTION: Record<string, CSSProperties["flexDirection"]> = {
+  header: "row",
+  footer: "row",
+  "left-rail": "column",
+  "right-rail": "column",
+}
+
+/** Group a band's controls by lane, ascending — lane 0 first (rendered against
+ *  the anchor edge). Controls keep their incoming `order` within each lane. */
+function groupByLane(controls: OverlayControl[]): [number, OverlayControl[]][] {
+  const byLane = new Map<number, OverlayControl[]>()
+  for (const control of controls) {
+    const lane = control.lane ?? 0
+    const list = byLane.get(lane) ?? []
+    list.push(control)
+    byLane.set(lane, list)
+  }
+  return [...byLane.entries()].sort((a, b) => a[0] - b[0])
+}
+
+/**
+ * Publishes the on-screen keyboard's overlap (mobile soft keyboard, or any bottom
+ * obstruction the visual viewport reports) as `--apollon-keyboard-inset` on the
+ * document root. A `bottom: 0` footer band sits at the LAYOUT-viewport bottom,
+ * which the keyboard covers; adding this inset lifts the footer (and the rails'
+ * bottom) to the VISUAL-viewport bottom so an action bar stays reachable while a
+ * label editor has focus. No-op (0) on desktop / where `visualViewport` is absent.
+ */
+function useKeyboardInset(): void {
+  useEffect(() => {
+    const vv = window.visualViewport
+    if (!vv) return
+    const root = document.documentElement
+    const update = () => {
+      const overlap = Math.max(0, window.innerHeight - vv.height - vv.offsetTop)
+      root.style.setProperty("--apollon-keyboard-inset", `${overlap}px`)
+    }
+    update()
+    vv.addEventListener("resize", update)
+    vv.addEventListener("scroll", update)
+    return () => {
+      vv.removeEventListener("resize", update)
+      vv.removeEventListener("scroll", update)
+      root.style.removeProperty("--apollon-keyboard-inset")
+    }
+  }, [])
 }
 
 interface ControlSlotProps {
@@ -164,6 +225,7 @@ function ControlSlot({ control, registerMeasure }: ControlSlotProps) {
 export function OverlayLayer() {
   const controls = useOverlayStore((s) => s.controls)
   const setMeasured = useOverlayStore((s) => s.setMeasured)
+  useKeyboardInset()
 
   const visibleControls = useMemo(
     () =>
@@ -299,28 +361,47 @@ export function OverlayLayer() {
         </Panel>
       ))}
 
-      {BAND_REGIONS.filter((r) => byRegion.has(r)).map((region) => (
-        <div
-          key={region}
-          data-apollon-region={region}
-          className="apollon-overlay-band"
-          style={{
-            position: "absolute",
-            display: "flex",
-            gap: "var(--apollon-chrome-gap)",
-            pointerEvents: "none",
-            ...BAND_STYLE[region],
-          }}
-        >
-          {byRegion.get(region)!.map((c) => (
-            <ControlSlot
-              key={c.id}
-              control={c}
-              registerMeasure={registerMeasure}
-            />
-          ))}
-        </div>
-      ))}
+      {BAND_REGIONS.filter((r) => byRegion.has(r)).map((region) => {
+        const horizontal = region === "header" || region === "footer"
+        return (
+          <div
+            key={region}
+            data-apollon-region={region}
+            className="apollon-overlay-band"
+            style={{
+              position: "absolute",
+              display: "flex",
+              pointerEvents: "none",
+              ...BAND_STYLE[region],
+              flexDirection: LANE_STACK_DIRECTION[region],
+            }}
+          >
+            {groupByLane(byRegion.get(region)!).map(([lane, laneControls]) => (
+              <div
+                key={lane}
+                data-apollon-lane={lane}
+                className="apollon-overlay-lane"
+                style={{
+                  display: "flex",
+                  flexDirection: LANE_MAIN_DIRECTION[region],
+                  gap: "var(--apollon-chrome-gap)",
+                  // Fill the band's main axis so `fillRow` controls stretch edge
+                  // to edge; the cross-axis stays content-sized (the reserved inset).
+                  ...(horizontal ? { width: "100%" } : { height: "100%" }),
+                }}
+              >
+                {laneControls.map((c) => (
+                  <ControlSlot
+                    key={c.id}
+                    control={c}
+                    registerMeasure={registerMeasure}
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
+        )
+      })}
 
       {selfPositioned.map((c) => (
         <Fragment key={c.id}>{c.render()}</Fragment>

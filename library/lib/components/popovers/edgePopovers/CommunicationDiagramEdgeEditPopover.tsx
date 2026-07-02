@@ -7,12 +7,14 @@ import { useState, useEffect } from "react"
 import { generateUUID } from "@/utils"
 import { IconButton, TextField } from "@/components/ui"
 import { EdgeStyleEditor } from "@/components/styleEditor"
+import { useLabels } from "@/i18n/useLabels"
 import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 import { log } from "../../../logger"
 
 export const CommunicationDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
+  const t = useLabels()
   const { setEdges, updateEdgeData } = useReactFlow()
   const edge = useReactiveEdge(elementId)
   const [messages, setMessages] = useState<MessageData[]>([])
@@ -133,7 +135,7 @@ export const CommunicationDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
   const edgeData = edge.data as CustomEdgeProps | undefined
 
   return (
-    <PopoverLayout title="Edge">
+    <PopoverLayout title={t.edge}>
       <EdgeStyleEditor
         edgeData={edgeData}
         handleDataFieldUpdate={(key, value) =>
@@ -142,7 +144,7 @@ export const CommunicationDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
         label="Style"
       />
 
-      <PopoverSection title="Messages" divider>
+      <PopoverSection title={t.messages} divider>
         {messages.map((message, index) => {
           const isDuplicateText = messages.some(
             (msg, i) =>
@@ -203,7 +205,7 @@ export const CommunicationDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
             onChange={(e) => handleInputChange(e.target.value)}
             onKeyDown={handleKeyDown}
             fullWidth
-            placeholder="Message"
+            placeholder={t.message}
             error={duplicateError}
             helperText={duplicateError ? "This message already exists" : ""}
           />

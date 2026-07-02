@@ -2,6 +2,7 @@ import { ChangeEvent } from "react"
 import { IconButton, Select, TextField } from "@/components/ui"
 import { Button } from "@tumaet/ui/components/button"
 import { NodeStyleEditor } from "@/components/styleEditor"
+import { useLabels } from "@/i18n/useLabels"
 import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 import {
   flipSwimlaneChildPosition,
@@ -47,6 +48,7 @@ const SortableLaneRow: React.FC<LaneRowProps> = ({
   onRename,
   onDelete,
 }) => {
+  const t = useLabels()
   const {
     attributes,
     listeners,
@@ -69,7 +71,7 @@ const SortableLaneRow: React.FC<LaneRowProps> = ({
       <div
         {...attributes}
         {...listeners}
-        aria-label="Reorder lane"
+        aria-label={t.reorderLane}
         className="apollon-swimlane-drag-handle"
         style={{
           cursor: "grab",
@@ -85,7 +87,7 @@ const SortableLaneRow: React.FC<LaneRowProps> = ({
         // `fullWidth` (100%) would push them out of the popover and clip them.
         style={{ flex: 1, minWidth: 0 }}
         value={lane.name}
-        placeholder="Lane name"
+        placeholder={t.laneName}
         onChange={(e: ChangeEvent<HTMLInputElement>) =>
           onRename(lane.id, e.target.value)
         }
@@ -105,6 +107,7 @@ const SortableLaneRow: React.FC<LaneRowProps> = ({
 export const ActivitySwimlaneEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
+  const t = useLabels()
   const { nodes, setNodes } = useDiagramStore(
     useShallow((state) => ({ nodes: state.nodes, setNodes: state.setNodes }))
   )
@@ -255,7 +258,7 @@ export const ActivitySwimlaneEditPopover: React.FC<PopoverProps> = ({
     patch((n) => ({ ...n, data: { ...n.data, [key]: value } }))
 
   return (
-    <PopoverLayout title="Swimlane">
+    <PopoverLayout title={t.swimlane}>
       <NodeStyleEditor
         nodeData={data}
         handleDataFieldUpdate={handleDataFieldUpdate}
@@ -265,8 +268,8 @@ export const ActivitySwimlaneEditPopover: React.FC<PopoverProps> = ({
       <PopoverSection divider>
         <Select
           id="swimlane-orientation-select"
-          aria-label="Orientation"
-          label="Orientation"
+          aria-label={t.orientation}
+          label={t.orientation}
           value={orientation}
           onChange={(value) =>
             handleOrientationChange(value as "vertical" | "horizontal")
@@ -278,7 +281,7 @@ export const ActivitySwimlaneEditPopover: React.FC<PopoverProps> = ({
         />
       </PopoverSection>
 
-      <PopoverSection title="Lanes" divider>
+      <PopoverSection title={t.lanes} divider>
         <div
           style={{
             display: "flex",

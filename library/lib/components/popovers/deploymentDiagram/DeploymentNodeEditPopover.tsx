@@ -5,11 +5,13 @@ import { DefaultNodeEditPopover } from "../DefaultNodeEditPopover"
 import { PopoverProps } from "../types"
 import { TextField } from "@/components/ui"
 import { HeaderSwitchElement } from "@/components/styleEditor"
+import { useLabels } from "@/i18n/useLabels"
 import { PopoverSection } from "../PopoverLayout"
 
 export const DeploymentNodeEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
+  const t = useLabels()
   const { nodes, setNodes } = useDiagramStore(
     useShallow((state) => ({ setNodes: state.setNodes, nodes: state.nodes }))
   )
@@ -59,7 +61,7 @@ export const DeploymentNodeEditPopover: React.FC<PopoverProps> = ({
   // and the editable value — no second copy crammed onto the name row.
   return (
     <DefaultNodeEditPopover elementId={elementId}>
-      <PopoverSection title="Stereotype" divider>
+      <PopoverSection title={t.stereotype} divider>
         <HeaderSwitchElement
           onClick={switchHeaderShown}
           isComponentHeaderShown={nodeData.isComponentHeaderShown}
@@ -70,7 +72,7 @@ export const DeploymentNodeEditPopover: React.FC<PopoverProps> = ({
           value={nodeData.stereotype}
           onChange={(e) => handleStereotypeChange(e.target.value)}
           onBlur={() => handleStereotypeChange(nodeData.stereotype)}
-          placeholder="e.g. «device»"
+          placeholder={t.stereotypePlaceholder}
           fullWidth
         />
       </PopoverSection>

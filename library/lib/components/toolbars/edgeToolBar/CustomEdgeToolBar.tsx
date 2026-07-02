@@ -5,6 +5,7 @@ import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
 import { useIsOnlyThisElementSelected } from "@/hooks/useIsOnlyThisElementSelected"
 import { useStore } from "@xyflow/react"
 import { useMemo } from "react"
+import { useLabels } from "@/i18n/useLabels"
 
 interface CustomEdgeToolbarProps {
   edgeId: string
@@ -24,6 +25,7 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
   onDeleteClick,
   anchorRef,
 }) => {
+  const t = useLabels()
   const isDiagramModifiable = useDiagramModifiable()
   const selected = useIsOnlyThisElementSelected(edgeId)
   // The toolbar lives inside the zoomed SVG viewport, so by default it grows
@@ -96,7 +98,7 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
           >
             <button
               type="button"
-              aria-label="Delete edge"
+              aria-label={t.deleteEdge}
               style={{
                 width: "16px",
                 height: "16px",
@@ -119,7 +121,7 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
             </button>
             <button
               type="button"
-              aria-label="Edit edge"
+              aria-label={t.editEdge}
               style={{
                 width: "16px",
                 height: "16px",

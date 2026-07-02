@@ -4,6 +4,7 @@ import {
   Apollon,
   ApollonControl,
   ApollonMode,
+  type ApollonLabels,
   type OverlayRegion,
 } from "@tumaet/apollon"
 import { editorStoryMeta, fixtureByType } from "../_support/editor"
@@ -480,6 +481,112 @@ export const DarkMode: Story = {
       </ApollonControl>
       <Apollon.Zoom region="bottom-left" history={false} />
       <Apollon.MiniMap region="top-right" />
+    </Apollon>
+  ),
+}
+
+/**
+ * **Independently-owned stacked bars (lanes)** — unlike `StackedChrome` (which
+ * composes one control), here TWO separately-registered `<ApollonControl>`s share
+ * the header: an exam bar in lane 0 and a "problem statement changed" banner in
+ * lane 1. Different lanes STACK across the band and their reserved insets SUM, so
+ * both get room and the diagram clears both — the cross-owner case (e.g. library
+ * presence + host header) that a single composed control can't express.
+ */
+export const IndependentLanes: Story = {
+  render: () => (
+    <Apollon
+      defaultModel={fixtureByType.ClassDiagram}
+      defaultMode={ApollonMode.Exam}
+      enablePopups
+      style={FULLSCREEN}
+    >
+      <ApollonControl id="host:exambar" region="header" lane={0}>
+        <HeaderBar title="Final exam · Task 3" right={<ExamTimer />} />
+      </ApollonControl>
+      <ApollonControl id="host:banner" region="header" lane={1}>
+        <Banner tone="linear-gradient(90deg,#0891b2,#0e7490)">
+          ⓘ The problem statement was updated — re-read Task 3 before
+          continuing.
+        </Banner>
+      </ApollonControl>
+
+      <Apollon.Zoom region="bottom-left" history={false} />
+      <Apollon.MiniMap region="bottom-right" />
+    </Apollon>
+  ),
+}
+
+/**
+ * **Selection-anchored toolbar** — the Figma/tldraw pattern via
+ * `<Apollon.SelectionToolbar>`: select a node and a constant-size toolbar appears
+ * just above it, follows it as it moves, and does NOT scale with zoom. Screen-space
+ * (contrast `on-canvas`, which lives in diagram space). Select a class to see it.
+ */
+export const SelectionToolbar: Story = {
+  render: () => (
+    <Apollon
+      defaultModel={fixtureByType.ClassDiagram}
+      defaultMode={ApollonMode.Modelling}
+      enablePopups
+      style={FULLSCREEN}
+    >
+      <Apollon.SelectionToolbar position="top">
+        <div style={{ ...glass, gap: 4, padding: 4 }}>
+          <Btn>Duplicate</Btn>
+          <Btn>Bring to front</Btn>
+          <Btn variant="danger">Delete</Btn>
+        </div>
+      </Apollon.SelectionToolbar>
+
+      <Apollon.Palette />
+      <Apollon.Zoom region="bottom-left" />
+      <Apollon.MiniMap region="bottom-right" />
+    </Apollon>
+  ),
+}
+
+// A host's German strings for the editor's own chrome. Partial — every key it
+// omits falls back to the shipped English.
+const GERMAN: Partial<ApollonLabels> = {
+  zoomIn: "Vergrößern",
+  zoomOut: "Verkleinern",
+  fitView: "Ansicht einpassen",
+  resetZoom: "Zoom auf 100 % zurücksetzen",
+  zoomReadout: (percent) => `Zoom bei ${percent} %, auf 100 % zurücksetzen`,
+  undo: "Rückgängig",
+  redo: "Wiederherstellen",
+  showMinimap: "Übersicht anzeigen",
+  showMinimapHint: "Übersichtskarte anzeigen",
+  hideMinimap: "Übersicht ausblenden",
+  elementPalette: "Elementpalette",
+}
+
+/**
+ * **Internationalized (i18n)** — the same editor with a host's German strings
+ * passed via `labels`. The palette / zoom / minimap tooltips and aria-labels
+ * (hover the zoom cluster) now read German, alongside German host chrome — so the
+ * editor stops stranding English tooltips inside a localized UI. `labels` is
+ * reactive: a host can switch language without remounting.
+ */
+export const Internationalized: Story = {
+  render: () => (
+    <Apollon
+      defaultModel={fixtureByType.ClassDiagram}
+      defaultMode={ApollonMode.Modelling}
+      labels={GERMAN}
+      enablePopups
+      style={FULLSCREEN}
+    >
+      <ApollonControl id="host:header" region="header">
+        <HeaderBar
+          title="Klassendiagramm · Aufgabe 3"
+          right={<Btn variant="primary">Speichern</Btn>}
+        />
+      </ApollonControl>
+      <Apollon.Palette />
+      <Apollon.Zoom region="bottom-left" />
+      <Apollon.MiniMap region="bottom-right" />
     </Apollon>
   ),
 }

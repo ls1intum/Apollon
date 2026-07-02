@@ -321,22 +321,55 @@ control never drags the diagram.
   a corner slot floats and reserves nothing. Only pass `inset` to opt a **slot**
   into reserving room (or to set explicit pixels). Passing `inset: "auto"` on a
   band is a redundant no-op.
-- **Stack multiple bars on one edge by composing inside one control.** A host that
-  owns an edge (a header with a sub-banner, a footer with a notice above the
-  action row) stacks them as a flex column inside a single `<ApollonControl>` — the
-  auto-inset measures the whole stack. Registering two separate controls in the
-  same band lays them out along the band's axis (side by side for `header`/`footer`)
-  and reserves the taller, not the sum.
+- **Stack multiple bars on one edge two ways.** Compose them in one control (a flex
+  column inside a single `<ApollonControl>`) when one owner lays out the whole
+  edge; or give independently-registered controls different **`lane`** numbers when
+  separate owners share the edge (e.g. an exam bar in `lane: 0` and a "problem
+  statement changed" banner in `lane: 1`, or the library's own presence sitting
+  above host chrome). Same-lane controls sit along the band's axis and reserve the
+  larger; different lanes stack and their insets **sum**. Either way the diagram
+  clears the full stack.
+- **Corner slots clear bands.** A corner control (zoom, minimap, a host button)
+  floats within the reserved band area — a bottom-corner cluster rides above a
+  footer band, a top-corner control below a header band — instead of tucking under
+  it. Automatic; no offset math on the host side.
+- **Selection-anchored toolbars** — `<Apollon.SelectionToolbar>` (Figma/tldraw
+  style): a screen-space, constant-size toolbar that follows the current selection.
+  Distinct from `on-canvas`, which lives in diagram space and scales with zoom.
+- **i18n.** The editor's own strings are host-overridable via `labels`
+  (see [i18n](#i18n) below); pass a partial map in your language.
 - **Resizable rails work.** A host that makes its rail content drag-resizable gets
   live inset tracking for free — the shared `ResizeObserver` re-measures and the
   diagram re-fits as the width changes.
+- **Keyboard-aware footer.** The `footer` band and bottom chrome ride above the
+  mobile soft keyboard, so an action bar stays reachable while an input has focus.
 - **Modals stay in your tree.** There is no scrim/overlay region; render dialogs,
   confirms and toasts in your own React tree (or your host modal system), not as
   controls. The controls API is for chrome anchored to the canvas edges/corners.
-- **Selection-anchored toolbars.** `on-canvas` renders in diagram coordinates and
-  scales with zoom, so it suits diagram-space annotations, not a constant-size
-  toolbar pinned to the current selection. For that, use React Flow's `NodeToolbar`
-  in a custom node.
+
+## i18n
+
+Every string the editor renders itself — palette / zoom / minimap tooltips and
+aria-labels, and the editing popovers — is a key in the typed `ApollonLabels`
+dictionary, shipped with English defaults. Override any subset:
+
+```tsx
+<Apollon
+  labels={{
+    zoomIn: "Vergrößern",
+    zoomOut: "Verkleinern",
+    showMinimap: "Übersicht anzeigen",
+    zoomReadout: (percent) => `Zoom bei ${percent} %`,
+  }}
+/>
+```
+
+Imperative: `new ApollonEditor(el, { labels })` or `editor.setLabels(labels)`.
+Both merge over the English defaults per key (omitted keys stay English) and are
+**reactive** — switching language re-renders the chrome without a remount. Read
+the active set inside custom chrome with `useLabels()`. The few strings that
+interpolate a value (e.g. the zoom readout) are functions so a translation keeps
+control of word order.
 
 ## Accessibility & theming
 

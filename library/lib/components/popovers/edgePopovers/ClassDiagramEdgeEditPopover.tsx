@@ -6,6 +6,7 @@ import { ArrowLeftRight } from "lucide-react"
 import { useEdgePopOver, useReactiveEdge, useReactiveNodeName } from "@/hooks"
 import { PopoverProps } from "../types"
 import { EdgeTypeSelect, EdgeTypeOption } from "./EdgeTypeSelect"
+import { useLabels } from "@/i18n/useLabels"
 import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 
 const CLASS_EDGE_TYPE_OPTIONS: ReadonlyArray<EdgeTypeOption> = [
@@ -19,6 +20,7 @@ const CLASS_EDGE_TYPE_OPTIONS: ReadonlyArray<EdgeTypeOption> = [
 ]
 
 export const EdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
+  const t = useLabels()
   const { updateEdgeData } = useReactFlow()
 
   // Subscribe reactively to the edge and its endpoint names so the popover
@@ -45,7 +47,7 @@ export const EdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
   const edgeData = edge.data as CustomEdgeProps | undefined
 
   return (
-    <PopoverLayout title="Edge">
+    <PopoverLayout title={t.edge}>
       <EdgeStyleEditor
         edgeData={edgeData}
         handleDataFieldUpdate={(key, value) =>
@@ -74,7 +76,7 @@ export const EdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
         />
       </PopoverSection>
 
-      <PopoverSection title="Source" divider>
+      <PopoverSection title={t.source} divider>
         <TextField
           label={`${sourceName} Multiplicity`}
           value={edgeData?.sourceMultiplicity ?? ""}
@@ -91,7 +93,7 @@ export const EdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
         />
       </PopoverSection>
 
-      <PopoverSection title="Target" divider>
+      <PopoverSection title={t.target} divider>
         <TextField
           label={`${targetName} Multiplicity`}
           value={edgeData?.targetMultiplicity ?? ""}

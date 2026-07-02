@@ -5,11 +5,13 @@ import { useDiagramStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { PopoverProps } from "../types"
 import { DefaultNodeEditPopover } from "../DefaultNodeEditPopover"
+import { useLabels } from "@/i18n/useLabels"
 import { PopoverSection } from "../PopoverLayout"
 
 export const PetriNetPlaceEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
+  const t = useLabels()
   const { nodes, setNodes } = useDiagramStore(
     useShallow((state) => ({
       nodes: state.nodes,
@@ -61,7 +63,7 @@ export const PetriNetPlaceEditPopover: React.FC<PopoverProps> = ({
 
   return (
     <DefaultNodeEditPopover elementId={elementId}>
-      <PopoverSection title="Marking" divider>
+      <PopoverSection title={t.marking} divider>
         <div
           style={{
             display: "flex",
@@ -70,11 +72,13 @@ export const PetriNetPlaceEditPopover: React.FC<PopoverProps> = ({
             alignItems: "center",
           }}
         >
-          <Typography style={{ width: 72, flexShrink: 0 }}>Tokens</Typography>
+          <Typography style={{ width: 72, flexShrink: 0 }}>
+            {t.tokens}
+          </Typography>
 
           <TextField
             type="number"
-            aria-label="Tokens"
+            aria-label={t.tokens}
             onChange={(event) => {
               const value = event.target.value
               // Empty/invalid commits 0 so the edit isn't lost before blur.
@@ -94,12 +98,14 @@ export const PetriNetPlaceEditPopover: React.FC<PopoverProps> = ({
             alignItems: "center",
           }}
         >
-          <Typography style={{ width: 72, flexShrink: 0 }}>Capacity</Typography>
+          <Typography style={{ width: 72, flexShrink: 0 }}>
+            {t.capacity}
+          </Typography>
 
           <div style={{ position: "relative", flex: 1 }}>
             <TextField
               type="number"
-              aria-label="Capacity"
+              aria-label={t.capacity}
               onChange={(event) => {
                 const value = event.target.value
                 if (value === "") {

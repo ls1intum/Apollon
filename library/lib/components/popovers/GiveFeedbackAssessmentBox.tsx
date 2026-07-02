@@ -4,6 +4,7 @@ import { useDiagramStore } from "@/store"
 import { Assessment } from "@/typings"
 import { useShallow } from "zustand/shallow"
 import { IconButton, TextField } from "../ui"
+import { useLabels } from "@/i18n/useLabels"
 import { AssessmentHeader, PopoverSection } from "./PopoverLayout"
 
 /** The coarse category stored on an Assessment's `elementType`. */
@@ -42,6 +43,7 @@ export const GiveFeedbackAssessmentBox = ({
   typeLabel,
   divider = false,
 }: Props) => {
+  const t = useLabels()
   const { assessments, setAssessments } = useDiagramStore(
     useShallow((state) => ({
       assessments: state.assessments,
@@ -120,7 +122,7 @@ export const GiveFeedbackAssessmentBox = ({
           setFeedback(value)
           updateAssessment(score, value)
         }}
-        placeholder="Add a comment…"
+        placeholder={t.addComment}
         fullWidth
       />
     </PopoverSection>

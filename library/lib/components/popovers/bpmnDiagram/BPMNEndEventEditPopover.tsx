@@ -5,6 +5,7 @@ import { useReactFlow } from "@xyflow/react"
 import { PopoverProps } from "../types"
 import { BPMNEventProps, BPMNEndEventType } from "@/types"
 import { supportsMultilineName } from "@/utils/nodeUtils"
+import { useLabels } from "@/i18n/useLabels"
 import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 
 const END_TYPE_OPTIONS = [
@@ -20,6 +21,7 @@ const END_TYPE_OPTIONS = [
 export const BPMNEndEventEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
+  const t = useLabels()
   const { updateNodeData } = useReactFlow()
   const node = useReactiveNode(elementId)
   if (!node) return null
@@ -31,7 +33,7 @@ export const BPMNEndEventEditPopover: React.FC<PopoverProps> = ({
   }
 
   return (
-    <PopoverLayout title="End Event">
+    <PopoverLayout title={t.endEvent}>
       <NodeStyleEditor
         handleDataFieldUpdate={(key, value) =>
           handleDataFieldUpdate(key, value)
@@ -40,7 +42,7 @@ export const BPMNEndEventEditPopover: React.FC<PopoverProps> = ({
         isMultilineName={supportsMultilineName(node.type)}
       />
 
-      <PopoverSection title="Type" divider>
+      <PopoverSection title={t.type} divider>
         <Select
           label="End Type"
           value={data.eventType ?? "default"}
