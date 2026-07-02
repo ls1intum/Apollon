@@ -80,6 +80,7 @@ export const ComponentDiagramEdge = ({
     markerStart,
     strokeDashArray,
     handlePointerDown,
+    handleEndpointPointerDown,
     sourcePoint,
     targetPoint,
     isDiagramModifiable,
@@ -130,6 +131,7 @@ export const ComponentDiagramEdge = ({
           canEditEndpoint={canEditEndpoint}
           allowMidpointDragging={allowMidpointDragging}
           bendHandles={bendHandles}
+          handleEndpointPointerDown={handleEndpointPointerDown}
           handlePointerDown={handlePointerDown}
         />
 

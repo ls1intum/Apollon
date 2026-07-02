@@ -63,6 +63,7 @@ export const BPMNDiagramEdge = ({
     markerStart,
     strokeDashArray,
     handlePointerDown,
+    handleEndpointPointerDown,
     sourcePoint,
     targetPoint,
     isDiagramModifiable,
@@ -113,6 +114,7 @@ export const BPMNDiagramEdge = ({
           canEditEndpoint={canEditEndpoint}
           allowMidpointDragging={allowMidpointDragging}
           bendHandles={bendHandles}
+          handleEndpointPointerDown={handleEndpointPointerDown}
           handlePointerDown={handlePointerDown}
         />
 

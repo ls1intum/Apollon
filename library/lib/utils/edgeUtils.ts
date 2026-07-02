@@ -334,10 +334,6 @@ const HANDLE_RATIO_END = 0.8
 const clamp = (value: number, min: number, max: number): number =>
   Math.max(min, Math.min(max, value))
 
-export function isClassDiagramEdgeType(type: string | undefined): boolean {
-  return typeof type === "string" && type.startsWith("Class")
-}
-
 export function isFreeformEdgeAnchor(
   anchor: unknown
 ): anchor is FreeformEdgeAnchor {

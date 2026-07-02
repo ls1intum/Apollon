@@ -2,4 +2,4 @@
 "@tumaet/apollon": minor
 ---
 
-Place Class diagram edge endpoints anywhere along node borders while reconnecting them.
+Place edge endpoints anywhere along node borders across supported diagrams while reconnecting them.

@@ -55,6 +55,7 @@ export const ActivityDiagramEdge = ({
     markerStart,
     strokeDashArray,
     handlePointerDown,
+    handleEndpointPointerDown,
     sourcePoint,
     targetPoint,
     isDiagramModifiable,
@@ -105,6 +106,7 @@ export const ActivityDiagramEdge = ({
           canEditEndpoint={canEditEndpoint}
           allowMidpointDragging={allowMidpointDragging}
           bendHandles={bendHandles}
+          handleEndpointPointerDown={handleEndpointPointerDown}
           handlePointerDown={handlePointerDown}
         />
 

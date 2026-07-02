@@ -81,6 +81,7 @@ export const SfcDiagramEdge = ({
     markerStart,
     strokeDashArray,
     handlePointerDown,
+    handleEndpointPointerDown,
     sourcePoint,
     targetPoint,
     isDiagramModifiable,
@@ -187,6 +188,7 @@ export const SfcDiagramEdge = ({
           canEditEndpoint={canEditEndpoint}
           allowMidpointDragging={allowMidpointDragging}
           bendHandles={visibleBendHandles}
+          handleEndpointPointerDown={handleEndpointPointerDown}
           handlePointerDown={handlePointerDown}
         >
           {/* SFC transition crossbar + condition label. Decorative, so it sets

@@ -5,15 +5,21 @@ import { fileURLToPath } from "node:url"
 import { waitForCanvasReady, openFixtureInLocalEditor } from "../helpers/canvas"
 
 const __d = path.dirname(fileURLToPath(import.meta.url))
-const fixture = JSON.parse(
+const classFixture = JSON.parse(
   fs.readFileSync(
     path.join(__d, "..", "fixtures", "two-class-fresh-edge.json"),
     "utf-8"
   )
 ) as Record<string, unknown>
-
-const EDGE = "231f7ef5-b43d-4187-8996-f7726ed6e919"
-const TARGET = "32659cdc-bd03-46f3-918c-ee8dbba9c15b"
+const objectFixture = JSON.parse(
+  fs.readFileSync(
+    path.join(__d, "..", "fixtures", "object-diagram.json"),
+    "utf-8"
+  )
+) as Record<string, unknown>
+const syntaxTreeFixture = JSON.parse(
+  fs.readFileSync(path.join(__d, "..", "fixtures", "syntax-tree.json"), "utf-8")
+) as Record<string, unknown>
 
 type Pt = { x: number; y: number }
 
@@ -30,7 +36,7 @@ async function selectEdge(page: Page, id: string): Promise<Locator> {
 
 function endPointOf(d: string | null): Pt {
   if (!d) throw new Error("edge path has no d attribute")
-  const matches = [...d.matchAll(/[ML]\s*(-?[\d.]+)\s+(-?[\d.]+)/g)]
+  const matches = [...d.matchAll(/[ML]\s*(-?[\d.]+)[,\s]+(-?[\d.]+)/g)]
   if (matches.length === 0) throw new Error(`edge path has no points: ${d}`)
   const end = matches[matches.length - 1]
   return { x: Number(end[1]), y: Number(end[2]) }
@@ -42,7 +48,7 @@ async function targetPointOf(edge: Locator): Promise<Pt> {
   )
 }
 
-async function storedTargetPosition(page: Page): Promise<Pt> {
+async function storedNodePosition(page: Page, targetId: string): Promise<Pt> {
   return page.evaluate((targetId) => {
     const raw = localStorage.getItem("persistenceModelStore")
     if (!raw) throw new Error("missing persistence model")
@@ -54,7 +60,7 @@ async function storedTargetPosition(page: Page): Promise<Pt> {
     })
     if (!node) throw new Error(`missing node ${targetId}`)
     return node.position as Pt
-  }, TARGET)
+  }, targetId)
 }
 
 async function dragLocatorBy(
@@ -74,13 +80,21 @@ async function dragLocatorBy(
   await page.waitForTimeout(350)
 }
 
-test("a freeform Class edge endpoint follows its node after the node moves", async ({
+async function expectFreeformTargetFollowsMovedNode({
   page,
-}) => {
+  fixture,
+  edgeId,
+  targetId,
+}: {
+  page: Page
+  fixture: Record<string, unknown>
+  edgeId: string
+  targetId: string
+}) {
   await openFixtureInLocalEditor(page, fixture)
   await waitForCanvasReady(page)
 
-  const edge = await selectEdge(page, EDGE)
+  const edge = await selectEdge(page, edgeId)
   const targetHandle = edge.locator(".edge-endpoint-handle--target")
   const targetGrip = edge.locator(".edge-endpoint-grip--target")
   await expect(targetHandle).toBeVisible()
@@ -95,9 +109,12 @@ test("a freeform Class edge endpoint follows its node after the node moves", asy
   const initialHandleBox = await targetHandle.boundingBox()
   if (!initialHandleBox) throw new Error("target endpoint has no bounding box")
   expect(targetGripBox.width).toBeLessThan(initialHandleBox.width / 2)
-  expect(targetGripBox.width).toBeGreaterThan(targetGripBox.height)
+  expect(targetGripBox.height).toBeLessThan(initialHandleBox.height / 2)
+  expect(Math.max(targetGripBox.width, targetGripBox.height)).toBeGreaterThan(
+    Math.min(targetGripBox.width, targetGripBox.height)
+  )
 
-  const targetNode = page.locator(`.react-flow__node[data-id="${TARGET}"]`)
+  const targetNode = page.locator(`.react-flow__node[data-id="${targetId}"]`)
   const targetBox = await targetNode.boundingBox()
   if (!targetBox) throw new Error("target node has no bounding box")
 
@@ -111,12 +128,12 @@ test("a freeform Class edge endpoint follows its node after the node moves", asy
   await page.waitForTimeout(400)
 
   const targetBefore = await targetPointOf(edge)
-  const nodeBefore = await storedTargetPosition(page)
+  const nodeBefore = await storedNodePosition(page, targetId)
 
   await dragLocatorBy(page, targetNode, 90, 45)
 
   const targetAfter = await targetPointOf(edge)
-  const nodeAfter = await storedTargetPosition(page)
+  const nodeAfter = await storedNodePosition(page, targetId)
   const nodeDelta = {
     x: nodeAfter.x - nodeBefore.x,
     y: nodeAfter.y - nodeBefore.y,
@@ -128,4 +145,38 @@ test("a freeform Class edge endpoint follows its node after the node moves", asy
 
   expect(endpointDelta.x).toBeCloseTo(nodeDelta.x, 0)
   expect(endpointDelta.y).toBeCloseTo(nodeDelta.y, 0)
-})
+}
+
+const cases = [
+  {
+    name: "ClassDiagram",
+    fixture: classFixture,
+    edgeId: "231f7ef5-b43d-4187-8996-f7726ed6e919",
+    targetId: "32659cdc-bd03-46f3-918c-ee8dbba9c15b",
+  },
+  {
+    name: "ObjectDiagram",
+    fixture: objectFixture,
+    edgeId: "edge-link-dog-owner",
+    targetId: "660e8400-e29b-41d4-a716-446655440011",
+  },
+  {
+    name: "SyntaxTree",
+    fixture: syntaxTreeFixture,
+    edgeId: "edge-expr-term-left",
+    targetId: "e1f2a3b4-c5d6-4e7f-8a9b-0c1d2e3f4a5b",
+  },
+]
+
+for (const { name, fixture, edgeId, targetId } of cases) {
+  test(`a freeform ${name} edge endpoint follows its node after the node moves`, async ({
+    page,
+  }) => {
+    await expectFreeformTargetFollowsMovedNode({
+      page,
+      fixture,
+      edgeId,
+      targetId,
+    })
+  })
+}

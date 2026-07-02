@@ -62,6 +62,7 @@ export const PetriNetEdge = ({
     isDiagramModifiable,
     isReconnecting,
     canEditEndpoint,
+    handleEndpointPointerDown,
   } = useStraightPathEdge({
     id,
     type,
@@ -75,6 +76,7 @@ export const PetriNetEdge = ({
     targetPosition,
     sourceHandleId,
     targetHandleId,
+    data,
   })
 
   const { strokeColor, textColor } = getCustomColorsFromDataForEdge(data)
@@ -122,6 +124,7 @@ export const PetriNetEdge = ({
               targetPosition={targetPosition}
               isDiagramModifiable={isDiagramModifiable}
               canEditEndpoint={canEditEndpoint}
+              onEndpointPointerDown={handleEndpointPointerDown}
             />
           )}
         </g>

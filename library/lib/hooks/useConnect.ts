@@ -18,7 +18,6 @@ import {
 import { DiagramNodeTypeRecord } from "@/nodes"
 import { useDiagramStore, useMetadataStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
-import { UMLDiagramType } from "@/types"
 
 const withEndpointAnchor = (
   data: Edge["data"],
@@ -166,10 +165,10 @@ export const useConnect = () => {
             width: nodeOnTop.width,
             height: nodeOnTop.height,
           }
-          const targetAnchor =
-            diagramType === UMLDiagramType.ClassDiagram
-              ? getFreeformAnchorFromPoint(dropPosition, targetRect)
-              : null
+          const targetAnchor = getFreeformAnchorFromPoint(
+            dropPosition,
+            targetRect
+          )
           const targetHandle = targetAnchor
             ? getSideHandleIdForPosition(targetAnchor.side)
             : findClosestHandle({
@@ -249,7 +248,6 @@ export const useConnect = () => {
     },
     [
       defaultEdgeType,
-      diagramType,
       edges,
       getDropPosition,
       getInternalNode,
