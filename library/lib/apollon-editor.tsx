@@ -321,6 +321,10 @@ export class ApollonEditor {
       if (!rf) return
       const rfNodes = rf.getNodes()
       const expected = this.diagramStore.getState().nodes.length
+      // fitView on an empty canvas stays queued until nodes exist, then fires
+      // on the first one and jerks the viewport. No-op when there's nothing to
+      // frame.
+      if (expected === 0) return
       const allMeasured =
         rfNodes.length >= expected &&
         rfNodes.every(
@@ -988,7 +992,8 @@ export class ApollonEditor {
         storeNodeWrites: number
       }
     | undefined {
-    if (!import.meta.env.DEV) return undefined
+    if (!import.meta.env.DEV && import.meta.env.VITE_E2E !== "true")
+      return undefined
 
     const counters = getPerfCounters()
 

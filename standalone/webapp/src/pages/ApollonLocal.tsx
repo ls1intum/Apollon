@@ -8,11 +8,7 @@ import {
 } from "react"
 import { getRouteApi, useRouter } from "@tanstack/react-router"
 import { toast } from "react-toastify"
-import {
-  ApollonEditor,
-  importDiagram,
-  type UMLModel,
-} from "@tumaet/apollon/react"
+import { ApollonEditor, importDiagram, type UMLModel } from "@tumaet/apollon"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { useEditorContext, useModalContext } from "@/contexts"
 import { useElementWidth } from "@/hooks/useElementWidth"
@@ -194,11 +190,11 @@ export const ApollonLocal: FC = () => {
     setEditor(instance)
     void fetchVersions(diagram.id)
 
-    // E2E seam (dev builds only — `import.meta.env.DEV` is statically false in
-    // production, so this is dead-code-eliminated from the shipped bundle).
-    // Exposes the imperative editor so Playwright can drive API surfaces that
-    // have no UI affordance, e.g. `setElementHighlights`.
-    if (import.meta.env.DEV) {
+    // E2E seam. Exposes the imperative editor so Playwright can drive API
+    // surfaces that have no UI affordance, e.g. `setElementHighlights`. Gated on
+    // DEV or the dedicated e2e build (VITE_E2E); both are statically false in a
+    // real production build, so this dead-code-eliminates from the shipped bundle.
+    if (import.meta.env.DEV || import.meta.env.VITE_E2E === "true") {
       ;(window as Window & { apollonEditor?: ApollonEditor }).apollonEditor =
         instance
     }
@@ -208,7 +204,7 @@ export const ApollonLocal: FC = () => {
       isThumbnailExportCanceledRef.current = true
       thumbnailExportSequenceRef.current += 1
       removePerfHooks()
-      if (import.meta.env.DEV) {
+      if (import.meta.env.DEV || import.meta.env.VITE_E2E === "true") {
         delete (window as Window & { apollonEditor?: ApollonEditor })
           .apollonEditor
       }

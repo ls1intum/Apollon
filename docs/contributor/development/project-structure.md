@@ -19,7 +19,7 @@ Apollon/
 │       ├── src/              # components, stories, compiled CSS sources
 │       └── package.json
 ├── standalone/
-│   ├── server/               # @tumaet/server — Express + Redis + WebSocket relay
+│   ├── server/               # @tumaet/server — Hono + Redis + WebSocket relay
 │   │   ├── src/
 │   │   ├── Dockerfile
 │   │   └── package.json

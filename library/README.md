@@ -29,22 +29,11 @@ Apollon is the modeling editor behind [Artemis](https://artemis.tum.de/), TUM's 
 
 ## Install
 
-The package ships three builds with the same imperative API. Pick one based on how your host bundles (or doesn't):
-
-| Import                        | Dependencies                 | Use when                                                                                                                                                          |
-| ----------------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@tumaet/apollon` _(default)_ | **all bundled** (except Yjs) | No bundler — vanilla JS, a `<script>` tag, or a CDN. Self-contained; only `yjs` + `y-protocols` to install.                                                       |
-| `@tumaet/apollon/react`       | **React family external**    | A React host that shares its own React with the editor. Also ships the `<Apollon>` component, hooks, provider.                                                    |
-| `@tumaet/apollon/external`    | **everything external**      | A bundler host (Angular, Vue, Svelte, React) that wants every dependency resolved from its own `node_modules` — one shared copy and full SBOM / audit visibility. |
-
-The `/react` and `/external` builds ship a smaller chunk than the self-contained default because the peers you already have are left external; `/external` is the smallest, since it externalizes every runtime dependency.
-
-`yjs` and `y-protocols` are required peer dependencies of **all three** builds — they power Apollon's document model and undo/redo (and live collaboration when you enable it), so every editor needs them, collaboration or not. Keeping them external means a host that already uses Yjs (or a second Apollon on the page) shares a single Yjs instance instead of loading a private, possibly mismatched copy. Most package managers install missing peers automatically; the explicit commands below are listed for clarity.
-
-### Standalone build (any framework)
-
 ```sh
-npm install @tumaet/apollon yjs y-protocols
+npm install @tumaet/apollon \
+  react react-dom \
+  @xyflow/react \
+  yjs y-protocols
 ```
 
 ```ts
@@ -52,55 +41,29 @@ import { ApollonEditor } from "@tumaet/apollon"
 import "@tumaet/apollon/style.css"
 ```
 
-React, Base UI, lucide, and xyflow are bundled in; only `yjs` and `y-protocols` are peers you provide.
+Apollon ships **one** build with every runtime dependency left external — the React family (`react`, `react-dom`, `@xyflow/react`), the CRDT singletons (`yjs`, `y-protocols`), and Apollon's own UI deps (`@base-ui/react`, `lucide-react`, `@dnd-kit`, `zustand`, `@chenglou/pretext`), which arrive transitively when you install the package. Your bundler resolves and de-duplicates each one against your app's `node_modules`, and your bundle analyzer / SBOM tooling sees them as the real packages they are — never a copy inlined invisibly into one chunk. This works from any framework with a bundler (Angular, Vue, Svelte, React).
 
-### React build (share your host's React)
+These are the peers you install explicitly:
 
-```sh
-npm install @tumaet/apollon \
-  yjs y-protocols \
-  react react-dom \
-  @xyflow/react
-```
+| Peer            | Range     | Powers                                                |
+| --------------- | --------- | ----------------------------------------------------- |
+| `react`         | `^19.0.0` | the editor's rendering                                |
+| `react-dom`     | `^19.0.0` | the editor's rendering                                |
+| `@xyflow/react` | `^12.9.0` | the diagram canvas                                    |
+| `yjs`           | `^13.6.0` | the document model, undo/redo, and live collaboration |
+| `y-protocols`   | `^1.0.6`  | collaboration sync/awareness                          |
 
-```tsx
-import { Apollon } from "@tumaet/apollon/react"
-import "@tumaet/apollon/style.css"
-```
+Most package managers install missing peers automatically; the explicit command above is listed for clarity. Keeping these external means a host that already uses React or Yjs shares a single instance with the editor instead of loading a private, possibly mismatched copy — no duplicate payload, and no "Invalid hook call" or cross-instance-document errors.
 
-`yjs` and `y-protocols` are required for all builds; the React and xyflow peers below are specific to the `/react` and `/external` builds.
+### Non-React hosts (Angular, Vue, Svelte, vanilla)
 
-| Peer            | Range     |
-| --------------- | --------- |
-| `yjs`           | `^13.6.0` |
-| `y-protocols`   | `^1.0.6`  |
-| `react`         | `^19.0.0` |
-| `react-dom`     | `^19.0.0` |
-| `@xyflow/react` | `^12.9.0` |
+The API is imperative — `new ApollonEditor(container, options)` — and the editor renders its own React tree inside the container, so your own code never imports or touches React. You still install the React peers (the editor uses them internally), but Apollon is the only thing on the page that does.
 
-### Fully external build (any bundler host)
+### React hosts
 
-```sh
-npm install @tumaet/apollon \
-  yjs y-protocols \
-  react react-dom \
-  @xyflow/react
-```
+Import the `<Apollon>` component, hooks, and provider from the same entry: `import { Apollon } from "@tumaet/apollon"`. They render on the React you already have. Because the package is side-effect-free except for CSS, non-React hosts tree-shake the component and hooks out automatically.
 
-```ts
-import { ApollonEditor } from "@tumaet/apollon/external"
-import "@tumaet/apollon/style.css"
-```
-
-Same imperative `ApollonEditor` API as the default entry, but **every** dependency is left external — the React family above _and_ Apollon's own runtime deps (`@base-ui/react`, `lucide-react`, `@dnd-kit`, `zustand`, `uuid`, `@chenglou/pretext`), which arrive transitively when you install the package. Your bundler then resolves and de-duplicates each one against your app's `node_modules`, and your bundle analyzer / SBOM tooling sees them as the real packages they are instead of code inlined invisibly into one chunk. Use this from any framework with a bundler — even a non-React one (the editor still runs on the React you provide internally; your own code never touches it).
-
-## Which build do I use?
-
-- **No bundler** (vanilla JS, `<script>`, CDN)? Use the default `@tumaet/apollon`. It inlines its own React, so the only peers to install are `yjs` and `y-protocols`.
-- **A React app?** Use `@tumaet/apollon/react` and install the peers above. The default build bundles its own React, so in a React app you would load two copies — that causes "Invalid hook call" errors and a larger bundle. The `/react` subpath leaves React and xyflow external so the editor shares the copies your app already has. It is also the only entry that exports the `<Apollon>` component, hooks, and provider.
-- **A bundler host that wants one shared, fully auditable copy of every dependency?** Use `@tumaet/apollon/external` and install the peers above. Works from any framework.
-
-> **⚠️ Give the container an explicit, non-zero height** (`600px`, `80vh`, or a sized flex/grid child), whichever build you use. The canvas sizes itself to its parent, so with no resolvable height it collapses to zero pixels and renders blank. This is the most common embedding mistake. See [Troubleshooting](https://ls1intum.github.io/Apollon/library/troubleshooting).
+> **⚠️ Give the container an explicit, non-zero height** (`600px`, `80vh`, or a sized flex/grid child). The canvas sizes itself to its parent, so with no resolvable height it collapses to zero pixels and renders blank. This is the most common embedding mistake. See [Troubleshooting](https://ls1intum.github.io/Apollon/library/troubleshooting).
 
 ## Quick start
 
@@ -131,10 +94,10 @@ The editor is client-only. In SSR frameworks (Next.js, Remix, SvelteKit, Nuxt), 
 
 ### React
 
-Render the `<Apollon>` component from the `@tumaet/apollon/react` subpath. It owns the editor's lifecycle: it constructs on mount and destroys on unmount.
+Render the `<Apollon>` component from `@tumaet/apollon`. It owns the editor's lifecycle: it constructs on mount and destroys on unmount.
 
 ```tsx
-import { Apollon } from "@tumaet/apollon/react"
+import { Apollon } from "@tumaet/apollon"
 import type { UMLModel } from "@tumaet/apollon"
 import "@tumaet/apollon/style.css"
 
@@ -158,7 +121,7 @@ Reach the instance through `ref`, the `onMount(editor)` callback, or the `useApo
 
 ### Angular (17.3+ signal-based)
 
-```ts
+```ts no-check
 import {
   Component,
   DestroyRef,
@@ -204,11 +167,11 @@ export class DiagramEditorComponent {
 `yjs` and `y-protocols` are required peers, but on the CDN path esm.sh resolves and serves them from the import URL automatically — there is nothing extra to load. (With a bundler you install the peers yourself.)
 
 ```html
-<link rel="stylesheet" href="https://esm.sh/@tumaet/apollon@4.9.0/style.css" />
+<link rel="stylesheet" href="https://esm.sh/@tumaet/apollon@5.0.1/style.css" />
 <div id="apollon" style="width: 100%; height: 600px"></div>
 
 <script type="module">
-  import { ApollonEditor } from "https://esm.sh/@tumaet/apollon@4.9.0"
+  import { ApollonEditor } from "https://esm.sh/@tumaet/apollon@5.0.1"
 
   const saved = localStorage.getItem("diagram")
   const editor = new ApollonEditor(document.getElementById("apollon"), {
@@ -231,7 +194,7 @@ Class, Object, Activity, Use Case, Communication, Component, Deployment, Petri N
 
 Collaboration is opt-in and transport-agnostic. Set `collaborationEnabled: true`, then wire up your transport:
 
-```ts
+```ts no-check
 const editor = new ApollonEditor(container, { collaborationEnabled: true })
 
 // Outbound: the editor calls back when it has bytes to send.
@@ -243,7 +206,7 @@ transport.onMessage((base64) => editor.receiveBroadcastedMessage(base64))
 
 To let the library render participant presence, live cursors, and remote node/edge selection highlights, pass the optional `collaboration` UI config:
 
-```ts
+```ts no-check
 const editor = new ApollonEditor(container, {
   collaborationEnabled: true,
   collaboration: {
@@ -260,7 +223,7 @@ Any Yjs-compatible transport works: `y-websocket`, `y-webrtc`, BroadcastChannel,
 - **SVG**: `await editor.exportAsSVG(options)` resolves to `{ svg, clip }`. `svgMode: "web"` (the default) keeps CSS variables for theme-adaptive output; `"compat"` inlines them for PDF and Inkscape.
 - **JSON**: `editor.model` returns the `UMLModel`, and assigning it back is round-trip safe. Use `importDiagram(json)` to normalize older v2/v3 models first.
 - **Headless**: `ApollonEditor.exportModelAsSvg(model, options)` renders a model without a mounted editor.
-- **PNG / PDF**: not built in. Generate them from the exported SVG. The standalone webapp and server in this repo do this with `@resvg/resvg-js` (PNG) and `pdfmake` (PDF).
+- **PNG / PDF**: not built in, but the library ships `svgToPng` / `svgToPdf` renderers under [`@tumaet/apollon/export`](https://ls1intum.github.io/Apollon/library/api/export) (PNG via `@resvg/resvg-wasm`, PDF via `svg2pdf.js` + `jspdf`, installed as optional peers). The standalone server in this repo renders server-side instead, with `@napi-rs/canvas` (PNG) and `pdfmake` (PDF).
 
 See [Export](https://ls1intum.github.io/Apollon/library/api/export) for the full `ExportOptions`.
 

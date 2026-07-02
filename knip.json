@@ -3,14 +3,9 @@
   "ignoreExportsUsedInFile": true,
   "workspaces": {
     "library": {
-      "entry": [
-        "lib/index.tsx",
-        "lib/react.tsx",
-        "lib/internals.ts",
-        "lib/export/index.ts"
-      ],
+      "entry": ["lib/index.tsx", "lib/internals.ts", "lib/export/index.ts"],
       "project": ["lib/**/*.{ts,tsx}"],
-      "ignoreBinaries": ["build"]
+      "ignoreBinaries": ["build", "run"]
     },
     "packages/ui": {
       "entry": [
@@ -20,7 +15,7 @@
         "tests/**/*.test.{ts,tsx}"
       ],
       "project": ["src/**/*.{ts,tsx}", "tests/**/*.{ts,tsx}"],
-      "ignoreDependencies": ["@tailwindcss/vite", "@vitest/coverage-v8"]
+      "ignoreDependencies": ["@tailwindcss/vite"]
     },
     "standalone/webapp": {
       "entry": [
@@ -33,6 +28,7 @@
       "ignoreDependencies": [
         "@capacitor/file-transfer",
         "@capacitor/splash-screen",
+        "@capacitor/android",
         "tailwindcss",
         "jspdf",
         "svg2pdf.js",
@@ -40,8 +36,7 @@
       ]
     },
     "standalone/server": {
-      "entry": ["src/workers/*.{ts,mjs}"],
-      "ignoreDependencies": ["@types/express-serve-static-core"]
+      "entry": ["src/workers/*.{ts,mjs}"]
     },
     "vscode-extension": {
       "entry": ["webview-vite.config.ts"],

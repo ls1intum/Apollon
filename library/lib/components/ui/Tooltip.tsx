@@ -62,7 +62,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
 
   return (
     <SharedTooltip
-      onOpenChange={(next) => {
+      onOpenChange={(next: boolean) => {
         if (next)
           setPortalThemeVars(resolveApollonThemeVars(triggerRef.current))
       }}

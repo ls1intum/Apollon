@@ -10,7 +10,7 @@ description: The complete ApollonEditor reference — constructor options, lifec
 into the DOM node you hand it and exposes an imperative API — your host code
 never touches React.
 
-```ts
+```ts no-check
 import { ApollonEditor, UMLDiagramType } from "@tumaet/apollon"
 import "@tumaet/apollon/style.css"
 
@@ -29,11 +29,11 @@ documented below remains the API for non-React hosts and for advanced control.
 
 For React hosts, `<Apollon>` wraps `ApollonEditor` and owns its lifecycle: it
 constructs the editor on mount and destroys it on unmount. Import it from the
-`@tumaet/apollon/react` subpath — see [React](/library/embedding/react) for
+package's main entry, `@tumaet/apollon` — see [React](/library/embedding/react) for
 the full integration story (hooks, provider, ref, controlled-model overlay).
 
 ```tsx
-import { Apollon } from "@tumaet/apollon/react"
+import { Apollon } from "@tumaet/apollon"
 import "@tumaet/apollon/style.css"
 ;<Apollon style={{ height: 600 }} />
 ```
@@ -97,7 +97,7 @@ live value untouched (no reset). Re-key the component to fully reset.
 
 ## Constructor
 
-```ts
+```ts no-check
 new ApollonEditor(element: HTMLElement, options?: ApollonOptions)
 ```
 
@@ -212,7 +212,7 @@ prev/next equality check.
 | `subscribeToCollaboratorChanges(cb)` | `(collaborators: CollaboratorInfo[]) => void`       |
 | `unsubscribe(subscriptionId)`        | `(number) => void`                                  |
 
-```ts
+```ts no-check
 const id = editor.subscribeToModelChange((model) => persist(model))
 // later
 editor.unsubscribe(id)

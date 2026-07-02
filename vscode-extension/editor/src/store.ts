@@ -1,5 +1,5 @@
 import { create } from "zustand"
-import type { UMLModel } from "@tumaet/apollon/react"
+import type { UMLModel } from "@tumaet/apollon"
 import { defaultEditorOptions, type EditorOptions } from "./types"
 
 interface Store {

@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from "uuid"
 import type { UMLModel } from "@tumaet/apollon"
 
 /**
@@ -13,5 +12,5 @@ import type { UMLModel } from "@tumaet/apollon"
  */
 export const cloneModelAsLocalCopy = (source: UMLModel): UMLModel => ({
   ...structuredClone(source),
-  id: uuidv4(),
+  id: crypto.randomUUID(),
 })

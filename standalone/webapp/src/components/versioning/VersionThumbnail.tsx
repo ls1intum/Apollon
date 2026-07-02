@@ -1,11 +1,7 @@
 import { Skeleton } from "@tumaet/ui/components/skeleton"
 import { HistoryIcon, BookmarkIcon } from "lucide-react"
 import { useEffect, useRef, useState, type FC } from "react"
-import {
-  ApollonEditor,
-  importDiagram,
-  type UMLModel,
-} from "@tumaet/apollon/react"
+import { ApollonEditor, importDiagram, type UMLModel } from "@tumaet/apollon"
 import { getVersionRepository } from "@/services/versionRepository"
 import { log } from "@/logger"
 

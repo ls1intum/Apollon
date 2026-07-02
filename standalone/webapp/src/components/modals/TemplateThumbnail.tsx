@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { UMLDiagramType } from "@tumaet/apollon/react"
+import { UMLDiagramType } from "@tumaet/apollon"
 import { Spinner } from "@tumaet/ui/components/spinner"
 import { getDiagramTypeIcon } from "@/components/home/diagramTypeMeta"
 import { getCachedThumbnailSources } from "@/utils/thumbnailTheme"

@@ -1,7 +1,6 @@
 import { useState } from "react"
-import { v4 as uuidv4 } from "uuid"
 import { useModalContext } from "@/contexts/ModalContext"
-import { UMLDiagramType } from "@tumaet/apollon/react"
+import { UMLDiagramType } from "@tumaet/apollon"
 import { useNavigate } from "@tanstack/react-router"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { getDiagramTypeIcon } from "@/components/home/diagramTypeMeta"
@@ -184,7 +183,7 @@ export const NewDiagramModal = () => {
       // Templates ship with fixed ids (several even share one), so give each
       // created diagram a fresh id — otherwise creating two collides on the
       // same store key and one silently overwrites the other.
-      templateModel.id = uuidv4()
+      templateModel.id = crypto.randomUUID()
 
       createModel(templateModel)
       closeModal()

@@ -29,7 +29,7 @@ https://unpkg.com/@tumaet/apollon/schema/uml-model-4.schema.json
 
 Validate a model with any JSON Schema validator, e.g. [ajv](https://ajv.js.org):
 
-```ts
+```ts no-check
 import Ajv from "ajv"
 import schema from "@tumaet/apollon/schema" with { type: "json" }
 
@@ -41,7 +41,7 @@ if (!validate(model)) console.error(validate.errors)
 
 A v4 model is:
 
-```ts
+```ts no-check
 type UMLModel = {
   version: `4.${number}.${number}` // wire-format version, e.g. "4.0.0"
   id: string
@@ -86,7 +86,7 @@ an already-v4 model passes through with its existing version string untouched.
 The schema describes **canonical v4 — the output of `importDiagram()`**. Older
 v2 / v3 payloads are _not_ covered: normalise them first.
 
-```ts
+```ts no-check
 import { importDiagram } from "@tumaet/apollon"
 
 editor.model = importDiagram(maybeV2OrV3Json) // → guaranteed v4

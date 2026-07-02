@@ -8,7 +8,7 @@ description: SVG, PNG, PDF, and JSON export from a mounted editor or a headless 
 
 ## SVG
 
-```ts
+```ts no-check
 const { svg, clip } = await editor.exportAsSVG({ svgMode: "web" })
 ```
 
@@ -27,7 +27,7 @@ const { svg, clip } = await editor.exportAsSVG({ svgMode: "web" })
 
 ## Headless SVG export (no mounted editor)
 
-```ts
+```ts no-check
 import { ApollonEditor, importDiagram } from "@tumaet/apollon"
 
 const svgExport = await ApollonEditor.exportModelAsSvg(importDiagram(model), {
@@ -60,13 +60,12 @@ cause of garbled output.
 
 For browsers and embedders, import the ready-made helpers from
 `@tumaet/apollon/export`. They consume the compat-mode SVG produced above and
-fix the canvas-area cap (#667) — `svgToPng` rasterises in wasm memory instead of
-a `<canvas>`, and `svgToPdf` emits true vector PDF.
+work around the browser's canvas-area limit — `svgToPng` rasterises in wasm
+memory instead of a `<canvas>`, and `svgToPdf` emits true vector PDF.
 
-```ts
+```ts no-check
 import { svgToPng, svgToPdf } from "@tumaet/apollon/export"
-// resvg's wasm binary isn't portably exported, so the host bundler supplies it.
-import resvgWasmUrl from "@resvg/resvg-wasm/index_bg.wasm?url" // Vite
+import resvgWasmUrl from "@resvg/resvg-wasm/index_bg.wasm?url" // Vite — see below
 
 const { svg, clip } = await editor.exportAsSVG({ svgMode: "compat" })
 
@@ -79,17 +78,31 @@ const pdfBlob = await svgToPdf(svg, clip, { title: "diagram" })
 ```
 
 `@resvg/resvg-wasm`, `jspdf` and `svg2pdf.js` are optional dependencies the
-consumer installs; they load lazily, so importing the editor never pulls them
-in. Over-budget diagrams come back with `clamped: true` and a reduced
-`appliedScale`; an over-budget PNG throws `RasterTooLargeError`.
-Inter ships Regular + Bold only, so italics render upright — matching the server.
+consumer installs (`npm install @resvg/resvg-wasm jspdf svg2pdf.js`); they load
+lazily, so importing the editor never pulls them in. Over-budget diagrams come
+back with `clamped: true` and a reduced `appliedScale`; an over-budget PNG throws
+`RasterTooLargeError`. Inter ships Regular + Bold only, so italics render upright
+— matching the server.
+
+### Loading the resvg wasm per bundler
+
+`svgToPng` needs the `@resvg/resvg-wasm` binary, passed as `wasmInput` (anything
+resvg's `initWasm` accepts — `fetch(url)` is idiomatic). The library does **not**
+bundle the wasm, so how you get the URL depends on your bundler:
+
+- **Vite** — `import resvgWasmUrl from "@resvg/resvg-wasm/index_bg.wasm?url"` (the snippet above).
+- **Webpack 5** — add a rule `{ test: /\.wasm$/, type: "asset/resource" }`, then `const resvgWasmUrl = new URL("@resvg/resvg-wasm/index_bg.wasm", import.meta.url).href`.
+- **Angular** — copy the binary with an `assets` glob (`node_modules/@resvg/resvg-wasm/index_bg.wasm` → `assets/resvg/`), then `wasmInput: fetch("assets/resvg/index_bg.wasm")`.
+
+`svgToPdf` needs no wasm. Both helpers inline the Inter font in the browser, so
+you only set `fontBuffers` / `fonts` for headless Node.
 
 > Server-side instead? The standalone server renders SVG, PNG, and PDF over
 > HTTP via a Skia canvas + `pdfmake` — see the **[Conversion API](./conversion-api)**.
 
 ## JSON
 
-```ts
+```ts no-check
 const model = editor.model // UMLModel
 const json = JSON.stringify(model)
 ```
@@ -102,7 +115,7 @@ The library reads v2, v3, and v4 model JSON. Use `importDiagram(any)` to
 normalise any version to the current v4 shape before assigning to `editor.model`
 or passing to `exportModelAsSvg`.
 
-```ts
+```ts no-check
 import { importDiagram } from "@tumaet/apollon"
 
 editor.model = importDiagram(maybeV2OrV3Json)

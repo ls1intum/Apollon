@@ -56,7 +56,6 @@ import {
 import { ReachabilityGraphMarkingSVG } from "@/components/svgs/nodes/reachabilityGraphDiagram/ReachabilityGraphMarkingSVG"
 import { DiagramNodeType } from "@/nodes"
 import { ClassType, UMLDiagramType } from "@/types"
-import { v4 as uuidv4 } from "uuid"
 
 /* -------------------------------------------------------------------------- */
 /* Canvas                                                                     */
@@ -186,13 +185,27 @@ export const LAYOUT = Object.freeze({
  * the second clause catches phones in landscape, where the short height
  * distinguishes them from tablets.
  *
- * NOTE: mirrored in standalone/webapp/src/constants/responsive.ts (the webapp
- * can't import the library's curated public surface). Keep both in sync.
+ * This governs the element PALETTE only. The webapp's editor chrome uses its
+ * own width-only `NARROW_VIEW_QUERY` (standalone/webapp/src/constants/responsive.ts,
+ * 767.95px) which deliberately does NOT match phone-landscape — so on a
+ * landscape phone the navbar keeps the full desktop action set while the
+ * palette still compacts to reclaim canvas height.
  */
 export const MOBILE_VIEW_QUERY =
   "(max-width: 767.95px), (max-width: 950px) and (max-height: 500px)"
 
-const generateUUID = () => uuidv4()
+// RFC 4122 v4 UUID via crypto.getRandomValues — available in every context the
+// editor runs in (secure or not, browser or Node ≥19 (global Web Crypto)),
+// unlike crypto.randomUUID() which requires a secure context an embeddable host
+// can't be assumed to provide.
+export const generateUUID = (): string => {
+  const b = crypto.getRandomValues(new Uint8Array(16))
+  // RFC-4122 v4: version nibble (4) at byte 6, variant (10xx) at byte 8.
+  b[6] = (b[6] & 0x0f) | 0x40
+  b[8] = (b[8] & 0x3f) | 0x80
+  const h = Array.from(b, (x) => x.toString(16).padStart(2, "0"))
+  return `${h.slice(0, 4).join("")}-${h.slice(4, 6).join("")}-${h.slice(6, 8).join("")}-${h.slice(8, 10).join("")}-${h.slice(10, 16).join("")}`
+}
 
 // Interface-component sizing. The flat aliases below are local-only; public
 // consumers (and the rest of the library) should reach for `INTERFACE.*`.

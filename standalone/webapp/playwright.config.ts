@@ -123,9 +123,20 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: "pnpm run start",
+    // CI serves a bundled build via `vite preview`; local runs use the dev
+    // server. Bundling matters for e2e: the dev server transforms the heavy
+    // editor route on demand, so a fresh browser context per test refetches
+    // hundreds of ESM modules — slow and nondeterministic under parallel workers,
+    // where a bundled build is a handful of static files. `VITE_E2E=true` keeps
+    // the test seams (src/pages/ApollonLocal.tsx, src/index.tsx,
+    // src/utils/perfHooks) a plain prod build strips; `build:lib` runs earlier in
+    // the e2e job so the webapp build resolves `@tumaet/apollon`.
+    command: process.env.CI
+      ? "VITE_E2E=true pnpm run build && pnpm exec vite preview --port 5173 --strictPort"
+      : "pnpm run start",
     url: "http://localhost:5173",
     reuseExistingServer: !process.env.CI,
-    timeout: 120000,
+    // CI rebuilds before serving, so allow more startup time.
+    timeout: process.env.CI ? 240_000 : 120_000,
   },
 })

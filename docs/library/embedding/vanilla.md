@@ -6,20 +6,19 @@ description: Drop Apollon into a plain HTML page with one script tag.
 
 # Vanilla JS / CDN
 
-The standalone subpath works as a single ESM module loaded directly from a
-CDN. No build step, no bundler.
+Apollon loads directly from a CDN as an ESM module. No build step, no bundler.
 
-`yjs` and `y-protocols` are required peers, but on the CDN path esm.sh resolves
-and serves them from the import URL automatically — there is nothing extra to
-load. (With a bundler you install the peers yourself — see
-[Install](/library/embedding/install).)
+Apollon externalizes its peers (`react`, `react-dom`, `@xyflow/react`, `yjs`,
+`y-protocols`), but on the CDN path esm.sh resolves and serves them from the
+import URL automatically — there is nothing extra to load. (With a bundler you
+install the peers yourself — see [Install](/library/embedding/install).)
 
 ```html
-<link rel="stylesheet" href="https://esm.sh/@tumaet/apollon@4.9.0/style.css" />
+<link rel="stylesheet" href="https://esm.sh/@tumaet/apollon@5.0.1/style.css" />
 <div id="apollon" style="width: 100%; height: 600px"></div>
 
 <script type="module">
-  import { ApollonEditor } from "https://esm.sh/@tumaet/apollon@4.9.0"
+  import { ApollonEditor } from "https://esm.sh/@tumaet/apollon@5.0.1"
 
   const saved = localStorage.getItem("diagram")
   const editor = new ApollonEditor(document.getElementById("apollon"), {
@@ -66,7 +65,7 @@ import {
   ApollonEditor,
   ApollonMode,
   UMLDiagramType,
-} from "https://esm.sh/@tumaet/apollon@4.9.0"
+} from "https://esm.sh/@tumaet/apollon@5.0.1"
 
 const editor = new ApollonEditor(document.getElementById("apollon"), {
   type: UMLDiagramType.BPMN,

@@ -12,16 +12,18 @@ idiomatic version — but the two steps below are all Apollon needs.
 
 ## 1. Install
 
+:::info Requires React 19
+The `react` / `react-dom` peers are `^19`. On React 18 the install fails with an
+`ERESOLVE` peer error.
+:::
+
 ```sh
-npm install @tumaet/apollon yjs y-protocols
+npm install @tumaet/apollon react react-dom @xyflow/react yjs y-protocols
 ```
 
-This is the standalone build: React, Base UI, lucide, and xyflow are bundled
-inside the tarball; `yjs` and `y-protocols` are the only peers you install. They
-power Apollon's document model and undo/redo (and live collaboration when
-enabled), kept external so a host that already uses Yjs shares one instance.
-React hosts should instead use the `/react` subpath — see
-[Install](/library/embedding/install).
+Apollon externalizes its dependencies, so you install them as peers: `react`,
+`react-dom`, `@xyflow/react`, `yjs`, and `y-protocols`. Most package managers add
+them automatically — see [Install](/library/embedding/install).
 
 :::danger The editor MUST have an explicit height
 Apollon renders onto a React Flow canvas, which sizes itself to its parent. If
@@ -39,11 +41,11 @@ See [Troubleshooting](/library/troubleshooting) for the full diagnosis.
 
 ### React hosts
 
-Install the `/react` subpath (see [Install](/library/embedding/install)) and
-render the `<Apollon>` component. It owns the editor's lifecycle.
+Import the `<Apollon>` component from `@tumaet/apollon` (see
+[Install](/library/embedding/install)) and render it. It owns the editor's lifecycle.
 
 ```tsx
-import { Apollon } from "@tumaet/apollon/react"
+import { Apollon } from "@tumaet/apollon"
 import "@tumaet/apollon/style.css"
 
 export function Diagram() {
@@ -87,7 +89,7 @@ grid to start a class diagram.
 
 Read the current diagram, replace it, and observe changes:
 
-```ts
+```ts no-check
 const model = editor.model // UMLModel as plain JSON
 editor.model = model // round-trip safe
 
@@ -100,13 +102,13 @@ editor.unsubscribe(id)
 Always destroy the editor before removing its container or mounting a new one
 on the same node:
 
-```ts
+```ts no-check
 editor.destroy()
 ```
 
 ## Next steps
 
-- [Install](/library/embedding/install) — standalone vs. `/react` build, peer deps
+- [Install](/library/embedding/install) — package and peer deps
 - [React](/library/embedding/react) · [Angular](/library/embedding/angular) · [Vanilla JS / CDN](/library/embedding/vanilla)
 - [API reference](/library/api) — the complete `ApollonEditor` surface
 - [Overlay controls](/library/api/overlay-controls) — inject your own chrome into the canvas

@@ -11,10 +11,11 @@
     "build:webapp": "pnpm --filter @tumaet/webapp run build",
     "build:vscode": "pnpm --filter apollon-vscode run build:all",
     "build:docs": "pnpm run build:lib && pnpm --filter @tumaet/apollon-docs run build",
+    "check:doc-snippets": "pnpm run build:lib && node scripts/check-doc-snippets.mjs",
     "storybook": "pnpm --filter @tumaet/webapp run storybook",
     "build-storybook": "pnpm --filter @tumaet/webapp run build-storybook",
     "test-storybook": "pnpm --filter @tumaet/webapp run test:storybook",
-    "dev": "node scripts/dev.mjs",
+    "dev": "pnpm --filter @tumaet/ui run build && node scripts/dev.mjs",
     "dev:lib": "pnpm --filter @tumaet/apollon run build:watch",
     "dev:server": "pnpm run ensure:localdb && pnpm --filter @tumaet/server run dev",
     "dev:webapp": "pnpm --filter @tumaet/webapp run start",
@@ -67,14 +68,14 @@
   "devDependencies": {
     "@changesets/changelog-github": "0.7.0",
     "@changesets/cli": "2.31.0",
-    "@commitlint/cli": "19.6.0",
-    "@commitlint/config-conventional": "19.6.0",
+    "@commitlint/cli": "21.1.0",
+    "@commitlint/config-conventional": "21.1.0",
     "@types/node": "catalog:",
-    "concurrently": "9.1.0",
+    "concurrently": "10.0.3",
     "husky": "9.1.7",
-    "knip": "6.18.0",
-    "lint-staged": "15.5.2",
-    "prettier": "3.4.2"
+    "knip": "6.20.0",
+    "lint-staged": "17.0.8",
+    "prettier": "3.8.4"
   },
   "lint-staged": {
     "*.{js,jsx,mjs,cjs,ts,tsx,json,md,mdx,yml,yaml}": "prettier --ignore-unknown --write"

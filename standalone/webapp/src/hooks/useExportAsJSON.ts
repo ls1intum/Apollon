@@ -1,4 +1,4 @@
-import { isPlatform } from "@ionic/react"
+import { isIOS, isAndroid } from "@/utils/platform"
 import { Filesystem, Directory, Encoding } from "@capacitor/filesystem"
 import { Share } from "@capacitor/share"
 import { useFileDownload } from "./useFileDownload"
@@ -19,7 +19,7 @@ export const useExportAsJSON = () => {
     const jsonContent = JSON.stringify(editor.model, null, 2)
     const fileName = `${editor.model.title || "diagram"}.json`
 
-    if (isPlatform("ios") || isPlatform("android")) {
+    if (isIOS() || isAndroid()) {
       await Filesystem.writeFile({
         path: fileName,
         data: jsonContent,
