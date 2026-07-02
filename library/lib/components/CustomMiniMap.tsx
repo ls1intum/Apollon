@@ -5,7 +5,13 @@ import {
   Panel,
   type PanelPosition,
 } from "@xyflow/react"
-import { ArrowDownRight, Map } from "lucide-react"
+import {
+  ArrowDownLeft,
+  ArrowDownRight,
+  ArrowUpLeft,
+  ArrowUpRight,
+  Map,
+} from "lucide-react"
 import { useReactiveNode } from "@/hooks/useReactiveElement"
 import {
   ClassSVG,
@@ -86,12 +92,25 @@ export interface CustomMiniMapProps {
   zoomable?: boolean
 }
 
+// The collapse affordance points toward the corner the minimap tucks into, so it
+// stays intuitive at every position (a top-left minimap collapses up-left, not
+// down-right). Center positions bias to the nearest vertical edge's right.
+const COLLAPSE_ARROW: Partial<Record<PanelPosition, typeof ArrowDownRight>> = {
+  "top-left": ArrowUpLeft,
+  "top-center": ArrowUpRight,
+  "top-right": ArrowUpRight,
+  "bottom-left": ArrowDownLeft,
+  "bottom-center": ArrowDownRight,
+  "bottom-right": ArrowDownRight,
+}
+
 export const CustomMiniMap = ({
   position = "bottom-right",
   pannable = true,
   zoomable = true,
 }: CustomMiniMapProps = {}) => {
   const [minimapCollapsed, setMinimapCollapsed] = useState(true)
+  const CollapseArrow = COLLAPSE_ARROW[position] ?? ArrowDownRight
 
   if (minimapCollapsed) {
     return (
@@ -134,7 +153,7 @@ export const CustomMiniMap = ({
           title="Hide minimap"
           onClick={() => setMinimapCollapsed(true)}
         >
-          <ArrowDownRight width={18} height={18} aria-hidden="true" />
+          <CollapseArrow width={18} height={18} aria-hidden="true" />
         </button>
       </Panel>
     </>
