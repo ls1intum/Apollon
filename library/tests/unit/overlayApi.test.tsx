@@ -224,6 +224,26 @@ describe("computeInsets: band vs slot reservation", () => {
       }).bottom
     ).toBe(40)
   })
+
+  it("a footer band reserves its height on the bottom edge, symmetric to the header", () => {
+    expect(
+      computeInsets([ctrl("h", "header"), ctrl("f", "footer")], {
+        h: { top: 48 },
+        f: { bottom: 56 },
+      })
+    ).toEqual({ top: 48, right: 0, bottom: 56, left: 0 })
+  })
+
+  it("a footer band and a bottom-corner slot don't double-count the bottom edge", () => {
+    // The footer reserves; the slot floats over it (reserves nothing), so the
+    // bottom inset is the footer's height alone — not footer + cluster.
+    expect(
+      computeInsets([ctrl("f", "footer"), ctrl("z", "bottom-right")], {
+        f: { bottom: 56 },
+        z: { bottom: 40 },
+      }).bottom
+    ).toBe(56)
+  })
 })
 
 // A compound built-in (`<Apollon.Zoom history={…}>`) refreshes its content by

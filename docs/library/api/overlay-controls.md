@@ -40,13 +40,14 @@ React Flow panels; `header` / `left-rail` / `right-rail` are library-owned bands
 | `bottom-center` | Bottom edge, centered, screen-space.                                    |
 | `bottom-right`  | Bottom-right corner, screen-space.                                      |
 | `header`        | Full-width band pinned to the container top, above the `top-*` regions. |
+| `footer`        | Full-width band pinned to the container bottom (e.g. an action bar).    |
 | `left-rail`     | Full-height left band (e.g. the element palette).                       |
 | `right-rail`    | Full-height right band (e.g. version history).                          |
 | `on-canvas`     | Anchored in diagram coordinates — pans and zooms with the canvas.       |
 
-Bands honor device safe-area insets: the `header` clears a notch, and the rails
-sit between the header and any bottom chrome so they never tuck under a
-full-width header band. Within one region, controls are ordered by
+Bands honor device safe-area insets: `header`/`footer` clear a notch or gesture
+bar, and the rails sit between them so they never tuck under a full-width band.
+Within one region, controls are ordered by
 [`order`](#overlaycontroloptions) (lower renders toward the region's anchor edge).
 
 ## The React way: `<ApollonControl>`
@@ -230,8 +231,8 @@ re-acquire starts clean.
 
 By default a control floats and reserves nothing. To make the diagram make way,
 set `inset`. The reserved space is measured per region on its dominant axis
-(height for top/bottom regions and `header`; width for the rails) and fed into
-`fitView` padding.
+(height for top/bottom regions and `header`/`footer`; width for the rails) and
+fed into `fitView` padding.
 
 `InsetContribution`:
 

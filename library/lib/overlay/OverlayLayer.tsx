@@ -18,11 +18,17 @@ import {
 } from "./types"
 
 /** Library-owned bands rendered as absolutely-positioned containers. */
-const BAND_REGIONS: OverlayRegion[] = ["header", "left-rail", "right-rail"]
+const BAND_REGIONS: OverlayRegion[] = [
+  "header",
+  "footer",
+  "left-rail",
+  "right-rail",
+]
 
 /** Which side a band/panel region measures for its auto inset. */
 const MEASURE_AXIS: Partial<Record<OverlayRegion, "width" | "height">> = {
   header: "height",
+  footer: "height",
   "top-left": "height",
   "top-center": "height",
   "top-right": "height",
@@ -35,6 +41,7 @@ const MEASURE_AXIS: Partial<Record<OverlayRegion, "width" | "height">> = {
 
 const REGION_PRIMARY_SIDE: Partial<Record<OverlayRegion, OverlaySide>> = {
   header: "top",
+  footer: "bottom",
   "top-left": "top",
   "top-center": "top",
   "top-right": "top",
@@ -50,6 +57,14 @@ const BAND_STYLE: Record<string, CSSProperties> = {
   // Capacitor app, a VS Code webview) don't paint chrome under a notch.
   header: {
     top: "var(--safe-area-inset-top, 0px)",
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+  },
+  // Symmetric to the header: a full-width band pinned to the bottom edge (e.g. an
+  // assessment action bar), plus the device safe-area inset for gesture bars.
+  footer: {
+    bottom: "var(--safe-area-inset-bottom, 0px)",
     left: 0,
     right: 0,
     flexDirection: "row",

@@ -234,6 +234,35 @@ test.describe("controls layout engine", () => {
     await expect(toolbar.locator("button[tabindex='0']")).toHaveCount(1)
   })
 
+  test("the footer band pins a control to the bottom edge and reserves bottom room", async ({
+    page,
+  }) => {
+    const viewport = page.viewportSize()!
+    const insetBottom = () =>
+      page.evaluate(() => {
+        const el = document.querySelector(".apollon-editor") as HTMLElement
+        return parseFloat(
+          getComputedStyle(el).getPropertyValue("--apollon-inset-bottom")
+        )
+      })
+
+    // Baseline: the bottom-left zoom slot floats and reserves nothing.
+    expect(await insetBottom()).toBe(0)
+
+    // Move the zoom cluster into the new full-width `footer` band with make-way
+    // reservation. It should pin to the bottom edge and, as a band, reserve its
+    // height as the bottom inset (unlike a floating slot).
+    await updateControl(page, ZOOM_ID, { region: "footer", inset: "auto" })
+
+    const zoom = await box(zoomEl(page))
+    expect(zoom.y + zoom.height).toBeGreaterThan(viewport.height - 60)
+    expect(await insetBottom()).toBeGreaterThan(0)
+
+    // The palette (a left-rail band) is stretched between the reserved insets, so
+    // it never overlaps the footer control.
+    expect(overlaps(await box(paletteEl(page)), zoom)).toBe(false)
+  })
+
   test("every corner placement keeps the zoom cluster fully on-screen", async ({
     page,
   }) => {

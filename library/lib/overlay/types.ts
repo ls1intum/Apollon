@@ -13,6 +13,7 @@ export type OverlayRegion =
   | "bottom-center"
   | "bottom-right"
   | "header" // full-width band pinned to the container top, above top-* regions
+  | "footer" // full-width band pinned to the container bottom, below bottom-* regions
   | "left-rail" // full-height left band (e.g. the element palette)
   | "right-rail" // full-height right band (e.g. version history)
   | "on-canvas" // viewport-transformed, pans + zooms with the diagram
@@ -31,6 +32,7 @@ export const PANEL_REGIONS = [
 export const OVERLAY_REGIONS: readonly OverlayRegion[] = [
   ...PANEL_REGIONS,
   "header",
+  "footer",
   "left-rail",
   "right-rail",
   "on-canvas",

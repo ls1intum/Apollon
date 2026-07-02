@@ -15,10 +15,16 @@ import {
  * shortening the left-rail palette it never touches. The primary edge is also the
  * one an explicit `inset: "auto"` opt-in measures against.
  */
-const BANDS = new Set<OverlayRegion>(["header", "left-rail", "right-rail"])
+const BANDS = new Set<OverlayRegion>([
+  "header",
+  "footer",
+  "left-rail",
+  "right-rail",
+])
 
 const REGION_EDGE: Partial<Record<OverlayRegion, OverlaySide>> = {
   header: "top",
+  footer: "bottom",
   "top-left": "top",
   "top-center": "top",
   "top-right": "top",
