@@ -349,7 +349,11 @@ export class ApollonEditor {
           ? this.overlayStore.getState().insets
           : ZERO_INSETS
         insetAwareFitView(rf, insets, { padding: explicit, duration })
+        return
       }
+      // Nodes aren't measured yet — re-queue so the fit lands once React Flow
+      // has sized them, instead of framing an unmeasured (empty-bounds) graph.
+      requestAnimationFrame(attempt)
     }
     requestAnimationFrame(attempt)
   }

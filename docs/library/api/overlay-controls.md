@@ -282,17 +282,18 @@ defaults to 16px, or your per-side `padding` override). The fit is capped at
 
 The shared option set across all three facades.
 
-| Field         | Type                | Default | Effect                                                                                          |
-| ------------- | ------------------- | ------- | ----------------------------------------------------------------------------------------------- |
-| `id`          | `string`            | —       | Stable, unique id. Re-adding the same id **replaces** (idempotent, StrictMode-safe). Required.  |
-| `region`      | `OverlayRegion`     | —       | Where the control is anchored. Required.                                                        |
-| `inset`       | `InsetContribution` | —       | Reserve viewport room so the diagram makes way. Default: reserves nothing (the control floats). |
-| `order`       | `number`            | `0`     | Stacking within a region; lower renders toward the region's anchor edge.                        |
-| `interactive` | `boolean`           | `true`  | When `false`, the region frame stays pointer-transparent over the control too.                  |
-| `groupLabel`  | `string`            | —       | Wraps the control in a `role="group"` with this `aria-label`. No focus management is imposed.   |
-| `visible`     | `boolean`           | `true`  | Hide without unregistering. While hidden, reserves no inset.                                    |
-| `className`   | `string`            | —       | Applied to the control's wrapper element.                                                       |
-| `style`       | `CSSProperties`     | —       | Inline style on the control's wrapper element.                                                  |
+| Field         | Type                | Default | Effect                                                                                                                                                                                       |
+| ------------- | ------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`          | `string`            | —       | Stable, unique id. Re-adding the same id **replaces** (idempotent, StrictMode-safe). Required.                                                                                               |
+| `region`      | `OverlayRegion`     | —       | Where the control is anchored. Required.                                                                                                                                                     |
+| `inset`       | `InsetContribution` | —       | Reserve viewport room so the diagram makes way. Default: reserves nothing (the control floats).                                                                                              |
+| `order`       | `number`            | `0`     | Stacking within a region; lower renders toward the region's anchor edge.                                                                                                                     |
+| `lane`        | `number`            | `0`     | Band-only. Same-lane controls sit along the band's axis and reserve the larger; different lanes stack across the cross-axis and their reservations **sum**. Ignored for corners/`on-canvas`. |
+| `interactive` | `boolean`           | `true`  | When `false`, the region frame stays pointer-transparent over the control too.                                                                                                               |
+| `groupLabel`  | `string`            | —       | Wraps the control in a `role="group"` with this `aria-label`. No focus management is imposed.                                                                                                |
+| `visible`     | `boolean`           | `true`  | Hide without unregistering. While hidden, reserves no inset.                                                                                                                                 |
+| `className`   | `string`            | —       | Applied to the control's wrapper element.                                                                                                                                                    |
+| `style`       | `CSSProperties`     | —       | Inline style on the control's wrapper element.                                                                                                                                               |
 
 An interactive control opts pointer events back in over the pointer-transparent
 region frame and blocks canvas pan / zoom / wheel beneath it, so dragging the
