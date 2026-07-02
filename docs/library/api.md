@@ -179,6 +179,7 @@ for regions, the `<ApollonControl>` React component, and the "make room" model.
 | ------------------------------ | ------------------------------------------------ | ----------------------------------------------------------------------------------- |
 | `addControl(control)`          | `(OverlayControlInput) => () => void`            | Register a floating control; returns a disposer. Throws on a bad region / empty id. |
 | `updateControl(id, patch)`     | `(string, Partial<OverlayControlInput>) => void` | Patch a control's options/renderer (no-op if absent; `id` is immutable).            |
+| `removeControl(id)`            | `(string) => void`                               | Unregister a control by id (no-op if absent); the imperative hide for a built-in.   |
 | `hasControl(id)`               | `(string) => boolean`                            | Whether a control with this id is registered.                                       |
 | `getRegionElement(region)`     | `(OverlayRegion) => HTMLElement`                 | Stable node to `createPortal` host chrome into (keeps host React context).          |
 | `releaseRegionElement(region)` | `(OverlayRegion) => void`                        | Release a region acquired via `getRegionElement`.                                   |

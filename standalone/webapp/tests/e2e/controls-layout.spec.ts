@@ -10,7 +10,7 @@ import { openFixtureInLocalEditor, waitForCanvasReady } from "../helpers/canvas"
  *
  * Reserved built-in ids (stable public surface): the palette and zoom cluster
  * are slotted controls (`[data-apollon-control]`); the minimap self-positions as
- * a React-Flow-native widget (`.react-flow__minimap`).
+ * a React-Flow-native widget (collapsed by default to a "Show minimap" toggle).
  */
 const PALETTE_ID = "apollon:palette"
 const ZOOM_ID = "apollon:zoom"

@@ -106,9 +106,83 @@ Companion methods:
 // The id is immutable — pass it first; any `id` in the patch is ignored.
 editor.updateControl("my-app:banner", { region: "top-right" })
 
+// Unregister by id (no-op if absent) — equivalent to the disposer above.
+editor.removeControl("my-app:banner")
+
 // Has this id been registered?
 editor.hasControl("my-app:banner") // boolean
 ```
+
+## Built-in controls
+
+The editor's own chrome — the element **palette**, the **minimap**, and the
+**zoom / history** cluster — are ordinary records in this same registry under
+reserved ids (`PALETTE_ID`, `ZOOM_ID`, `MINIMAP_ID`). You compose them the same
+two ways.
+
+**React — as `<Apollon>` children.** Presence renders, omission hides, typed
+props reconfigure. Passing _any_ children opts out of the defaults, so you list
+exactly the chrome you want (an empty composition is a bare canvas).
+
+```tsx no-check
+import { Apollon } from "@tumaet/apollon"
+
+function Editor() {
+  return (
+    <Apollon defaultType={UMLDiagramType.ClassDiagram}>
+      <Apollon.Palette />
+      <Apollon.Zoom region="bottom-center" history={false} />
+      <Apollon.MiniMap region="bottom-right" />
+      {/* minimap omitted? then it is hidden */}
+    </Apollon>
+  )
+}
+```
+
+Replace a built-in by rendering your own control at its reserved id with
+`useControl` — because its `render` runs inside React Flow, a replacement can
+drive the viewport (`useReactFlow`):
+
+```tsx no-check
+import { useControl, ZOOM_ID } from "@tumaet/apollon"
+
+function BrandedZoom({ region = "bottom-left" }) {
+  useControl(
+    () => ({ id: ZOOM_ID, region, render: () => <MyZoom /> }),
+    [region]
+  )
+  return null
+}
+```
+
+**Vanilla / imperative — descriptor factories.** `paletteControl()`,
+`zoomControl({ history })`, and `miniMapControl()` build the same records. Omit
+`controls` for the defaults, pass `[]` for a bare canvas, or a subset to show
+only those:
+
+```ts no-check
+import { zoomControl, paletteControl } from "@tumaet/apollon"
+
+new ApollonEditor(el, {
+  controls: [paletteControl(), zoomControl({ history: false })],
+})
+
+// Later, address a built-in by its reserved id:
+editor.updateControl(ZOOM_ID, { region: "bottom-center" }) // move
+editor.removeControl(ZOOM_ID) // hide
+```
+
+To keep every default **and** add your own, spread `defaultControls()`:
+
+```ts no-check
+import { defaultControls } from "@tumaet/apollon"
+
+new ApollonEditor(el, { controls: [...defaultControls(), myBanner()] })
+```
+
+The minimap is a self-positioning React-Flow-native widget (`selfPositioned`):
+it renders its own `<Panel>` and reserves no room, so moving other chrome never
+resizes it, and it never resizes the palette.
 
 ## The host-portal escape hatch
 

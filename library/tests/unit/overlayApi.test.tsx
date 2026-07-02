@@ -3,6 +3,11 @@ import { render, cleanup } from "@testing-library/react"
 import { ApollonEditor } from "@/apollon-editor"
 import { ApollonProvider } from "@/components/react/context"
 import { ApollonControl } from "@/components/react/ApollonControl"
+import {
+  ApollonPalette,
+  ApollonZoom,
+  ApollonMiniMap,
+} from "@/components/react/builtins"
 import { computeInsets, createOverlayStore } from "@/overlay/overlayStore"
 import type { OverlayControl, OverlayRegion } from "@/overlay/types"
 import {
@@ -228,26 +233,22 @@ describe("overlay store: re-registration keeps insets identity-stable", () => {
 
   it("re-registering a band with an unchanged measured size reuses insets", () => {
     const store = createOverlayStore()
-    store
-      .getState()
-      .register({
-        id: "apollon:palette",
-        region: "left-rail",
-        render: () => null,
-      })
+    store.getState().register({
+      id: "apollon:palette",
+      region: "left-rail",
+      render: () => null,
+    })
     store.getState().setMeasured("apollon:palette", { left: 160 })
 
     const insetsBefore = store.getState().insets
     expect(insetsBefore.left).toBe(160)
 
     // Re-register (e.g. the palette component re-rendered) — same size, so identity holds.
-    store
-      .getState()
-      .register({
-        id: "apollon:palette",
-        region: "left-rail",
-        render: () => null,
-      })
+    store.getState().register({
+      id: "apollon:palette",
+      region: "left-rail",
+      render: () => null,
+    })
     expect(store.getState().insets).toBe(insetsBefore)
   })
 })
@@ -322,5 +323,67 @@ describe("<ApollonControl> facade", () => {
     )
     expect(editor.updateControl).toHaveBeenCalledTimes(1)
     expect(editor.addControl).toHaveBeenCalledTimes(1)
+  })
+})
+
+// The compound built-ins (`<Apollon.Palette|Zoom|MiniMap>`) are thin `useControl`
+// wrappers: mounting registers the reserved id, a prop change re-registers, and
+// unmount disposes — the composition contract behind "presence renders, omission
+// hides". Same fake-editor harness (jsdom can't lay the real editor out).
+describe("compound built-in components", () => {
+  function makeFakeEditor() {
+    const controls = new Set<string>()
+    const editor = {
+      addControl: vi.fn((c: { id: string }) => {
+        controls.add(c.id)
+        return () => controls.delete(c.id)
+      }),
+      updateControl: vi.fn(),
+      hasControl: (id: string) => controls.has(id),
+    }
+    return editor as typeof editor & ApollonEditor
+  }
+
+  afterEach(cleanup)
+
+  it("register their reserved ids on mount and dispose on unmount", () => {
+    const editor = makeFakeEditor()
+    const { unmount } = render(
+      <ApollonProvider editor={editor}>
+        <ApollonPalette />
+        <ApollonZoom history={false} />
+        <ApollonMiniMap region="top-right" />
+      </ApollonProvider>
+    )
+
+    expect(editor.hasControl(PALETTE_ID)).toBe(true)
+    expect(editor.hasControl(ZOOM_ID)).toBe(true)
+    expect(editor.hasControl(MINIMAP_ID)).toBe(true)
+
+    unmount()
+    expect(editor.hasControl(PALETTE_ID)).toBe(false)
+    expect(editor.hasControl(ZOOM_ID)).toBe(false)
+    expect(editor.hasControl(MINIMAP_ID)).toBe(false)
+  })
+
+  it("re-register (dispose + add) when a prop changes, but not on an unrelated render", () => {
+    const editor = makeFakeEditor()
+    const tree = (history: boolean, extra: string) => (
+      <ApollonProvider editor={editor}>
+        <ApollonZoom history={history} />
+        <span>{extra}</span>
+      </ApollonProvider>
+    )
+    const { rerender } = render(tree(true, "a"))
+    expect(editor.addControl).toHaveBeenCalledTimes(1)
+
+    // Sibling-only change: the zoom deps are unchanged, so no re-register.
+    rerender(tree(true, "b"))
+    expect(editor.addControl).toHaveBeenCalledTimes(1)
+
+    // A real prop change re-registers (the descriptor's `render` closes over it).
+    rerender(tree(false, "b"))
+    expect(editor.addControl).toHaveBeenCalledTimes(2)
+    expect(editor.hasControl(ZOOM_ID)).toBe(true)
   })
 })

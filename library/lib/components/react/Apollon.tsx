@@ -17,7 +17,6 @@ import type {
   UMLModel,
 } from "@/typings"
 import { ApollonInstanceContext } from "./context"
-import { ApollonControl } from "./ApollonControl"
 import { ApollonPalette, ApollonZoom, ApollonMiniMap } from "./builtins"
 
 /**
@@ -234,11 +233,10 @@ export function Apollon(props: ApollonProps) {
 
 /**
  * Compound built-in chrome, so consumers compose `<Apollon.Palette/>`,
- * `<Apollon.Zoom/>`, `<Apollon.MiniMap/>` as children. Presence renders it,
- * omission hides it, typed props reconfigure it; replacing one is an
- * `<ApollonControl>` at the reserved id. Also exported bare for named imports.
+ * `<Apollon.Zoom/>`, `<Apollon.MiniMap/>` as children — presence renders, omission
+ * hides, typed props reconfigure. Custom controls / replacements use the bare
+ * `<ApollonControl>` (or `useControl`) at a reserved id. Also exported by name.
  */
 Apollon.Palette = ApollonPalette
 Apollon.Zoom = ApollonZoom
 Apollon.MiniMap = ApollonMiniMap
-Apollon.Control = ApollonControl
