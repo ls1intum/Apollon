@@ -84,9 +84,16 @@ interface ControlSlotProps {
 /**
  * Renders a single control: opts pointer events back in over the
  * pointer-transparent region frame, blocks canvas pan/zoom/wheel via
- * nopan/nodrag/nowheel + capture-phase stopPropagation (pointer events only,
+ * nopan/nodrag/nowheel + BUBBLE-phase stopPropagation (pointer events only,
  * never keyboard — so focus/tab order is preserved), and applies the
  * role="group" wrapper.
+ *
+ * The stop is bubble-phase, not capture: a capture-phase stop fires top-down and
+ * would swallow the pointerdown BEFORE it reached an interactive child's own
+ * handler — e.g. the palette's pointer-based drag never starts. Bubble-phase lets
+ * the child handle the event first, then stops it climbing to any React Flow
+ * ancestor. (Panels are siblings of the pane, so `nopan` already blocks panning;
+ * this is belt-and-suspenders for wheel/drag on nested containers.)
  */
 function ControlSlot({ control, registerMeasure }: ControlSlotProps) {
   const interactive = control.interactive !== false
@@ -126,9 +133,9 @@ function ControlSlot({ control, registerMeasure }: ControlSlotProps) {
         ...(fillRow ? { flex: "1 1 auto", minWidth: 0 } : null),
         ...control.style,
       }}
-      onPointerDownCapture={interactive ? stop : undefined}
-      onMouseDownCapture={interactive ? stop : undefined}
-      onTouchStartCapture={interactive ? stop : undefined}
+      onPointerDown={interactive ? stop : undefined}
+      onMouseDown={interactive ? stop : undefined}
+      onTouchStart={interactive ? stop : undefined}
     >
       {content}
     </div>
@@ -160,7 +167,7 @@ export function OverlayLayer() {
   // callbacks are STABLE (created once) — they read the latest controls /
   // setMeasured through refs, so registering a new control never tears the
   // observer down (which would drop existing measurements).
-  const elById = useRef(new Map<string, HTMLElement>())
+  const elByIdRef = useRef(new Map<string, HTMLElement>())
   const rafRef = useRef<number | null>(null)
   const observerRef = useRef<ResizeObserver | null>(null)
   const controlsRef = useRef(controls)
@@ -174,7 +181,7 @@ export function OverlayLayer() {
 
   const flushMeasure = useCallback(() => {
     rafRef.current = null
-    for (const [id, el] of elById.current) {
+    for (const [id, el] of elByIdRef.current) {
       const control = controlsRef.current[id]
       if (!control) continue
       const axis = MEASURE_AXIS[control.region]
@@ -223,13 +230,13 @@ export function OverlayLayer() {
   const registerMeasure = useCallback(
     (id: string, el: HTMLElement | null) => {
       const observer = observerRef.current
-      const prev = elById.current.get(id)
+      const prev = elByIdRef.current.get(id)
       if (prev && prev !== el) {
         observer?.unobserve(prev)
-        elById.current.delete(id)
+        elByIdRef.current.delete(id)
       }
       if (el) {
-        elById.current.set(id, el)
+        elByIdRef.current.set(id, el)
         observer?.observe(el)
         scheduleMeasure()
       }

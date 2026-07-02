@@ -248,46 +248,24 @@
   stroke-width: 4.5px !important;
   filter: drop-shadow(0 0 4px var(--apollon-collaboration-highlight-color));
 }
-/* Floating element palette — an overlay on the canvas for every viewport
-   (there is no docked variant). Its grid columns/gap and each cell's size are
-   set inline from `computePaletteLayout`, so it fits every element in view
-   without scrolling; `overflow-y` is only the rare last resort. */
+/* Floating element palette — a `left-rail` overlay control. The engine's rail
+   band positions it (top/bottom pinned to the reserved insets, so it always
+   clears the header and bottom controls); the palette only adds its own edge/gap
+   breathing room and paints the glass card. Its grid columns/gap and each cell's
+   size come inline from `computePaletteLayout`, sized to the band height so every
+   element stays in view without scrolling; `overflow-y` is the rare last resort.
+   No self-positioning and no cross-component DOM query: the inset engine is the
+   single authority on where it sits and how much room it has. */
 .apollon-palette {
   box-sizing: border-box;
-  position: absolute;
 
-  /* --apollon-inset-top is the room the top chrome reserves (0 when there is
-     none), published by App.tsx straight from the overlay store — the single
-     inset authority. Adding the safe-area top (the islands drop by it too)
-     lands the palette an even --apollon-chrome-gap below every island, notch
-     and all. The store seeds an "auto" inset synchronously at registration
-     (OverlayLayer's layout-effect measure), so the var is already correct on
-     first paint — no pre-measurement slide and, crucially, no phantom gap when
-     no top chrome exists (the 0px default simply collapses the offset). */
-  top: calc(
-    var(--safe-area-inset-top, 0px) + var(--apollon-chrome-gap) +
-      var(--apollon-inset-top, 0px)
-  );
-  left: calc(
-    var(--apollon-chrome-edge-safe-left) + var(--apollon-inset-left, 0px)
-  );
+  /* One gap in from the band's top/bottom edges (which already sit clear of the
+     header and bottom controls via the reserved insets) and one edge in from the
+     safe-area-adjusted left the band pins to. */
+  margin-top: var(--apollon-chrome-gap);
+  margin-bottom: var(--apollon-chrome-gap);
+  margin-left: var(--apollon-chrome-edge);
 
-  /* Above React Flow's interactive canvas content (renderer, edges 9999,
-     nodes 9998) so taps/drags always land on the palette and a node placed
-     under it can't cover it. Contained by the editor's own stacking context
-     (`.apollon-editor { isolation: isolate }`), so it stays below host-app
-     chrome. The body-portaled drag ghost renders above it regardless. */
-  z-index: 10000;
-
-  /* Fill the space between the palette's own top offset and the bottom controls:
-     subtract the top offset (safe-top + gap + inset-top) and the bottom controls
-     footprint (edge + island-h + gap + inset-bottom + safe-bottom). */
-  max-height: calc(
-    100% - var(--safe-area-inset-top, 0px) - var(--apollon-chrome-gap) -
-      var(--apollon-inset-top, 0px) - var(--apollon-chrome-edge-safe-bottom) -
-      var(--apollon-chrome-island-h) - var(--apollon-chrome-gap) -
-      var(--apollon-inset-bottom, 0px)
-  );
   display: flex;
   flex-direction: column;
   gap: var(--apollon-chrome-gap);

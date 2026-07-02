@@ -8,15 +8,14 @@ import {
 import { type MouseEvent as ReactMouseEvent, useCallback } from "react"
 import {
   CustomBackground,
-  CustomControls,
   CustomMiniMap,
   ReconnectConnectionLine,
-  Sidebar,
   AssessmentSelectionDebug,
   ScrollOverlay,
   AlignmentGuides,
 } from "@/components"
 import { OverlayLayer } from "@/overlay/OverlayLayer"
+import { BuiltInControls } from "@/chrome/BuiltInControls"
 import "@xyflow/react/dist/style.css"
 // Shared, embed-safe @tumaet/ui primitives + --apollon-/--home- design tokens
 // (Tailwind-free, Preflight-free). Loaded here rather than `@import`-ed from
@@ -205,7 +204,6 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
           } as CSSProperties
         }
       >
-        {mode === ApollonMode.Modelling && !readonly && <Sidebar />}
         <div className="apollon-canvas">
           <ReactFlow
             id={`react-flow-library-${diagramId}`}
@@ -270,10 +268,15 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
           >
             <CustomBackground />
             <CustomMiniMap />
-            <CustomControls />
             <AlignmentGuides />
             <AssessmentSelectionDebug />
-            {/* Host-injected canvas chrome (header, rails, controls). */}
+            {/* Register the built-in controls (palette, zoom) through the overlay
+                engine so they share the one inset-aware layout. */}
+            <BuiltInControls
+              showPalette={mode === ApollonMode.Modelling && !readonly}
+            />
+            {/* Renders every registered control (built-in + host-injected) into
+                its region: header, rails, corners, on-canvas. */}
             <OverlayLayer />
           </ReactFlow>
           <ScrollOverlay />

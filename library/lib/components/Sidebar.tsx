@@ -56,36 +56,37 @@ export const Sidebar = () => {
     [diagramType]
   )
 
-  // Measure the canvas the palette floats over (its positioned ancestor) so the
-  // grid can size itself to the available room.
+  // The palette is a `left-rail` overlay control: the engine sizes its band
+  // between the reserved top/bottom insets, so the grid fills exactly the room
+  // the header and bottom controls left — read straight off the band, with the
+  // canvas width as the horizontal budget. No cross-component `.react-flow__*`
+  // DOM query: the inset engine is the single authority on the available room.
   const asideRef = useRef<HTMLElement>(null)
   const [canvas, setCanvas] = useState({ w: 0, h: 0, compact: false })
 
   useLayoutEffect(() => {
     const aside = asideRef.current
-    const parent = aside?.offsetParent as HTMLElement | null
-    if (!aside || !parent) return
+    const band = aside?.closest(".apollon-overlay-band") as HTMLElement | null
+    const canvasEl = aside?.closest(".apollon-canvas") as HTMLElement | null
+    if (!aside || !band || !canvasEl) return
     const mobileQuery = window.matchMedia(MOBILE_VIEW_QUERY)
     const measure = () => {
-      const rect = parent.getBoundingClientRect()
-      // Size the grid to the palette's ACTUAL available height — the gap between
-      // its own top and the bottom controls — not the full canvas height. The
-      // palette is CSS-capped to that band (max-height), so using the canvas
-      // height over-counts by the top/bottom chrome and overflows on short
-      // viewports. Measuring real elements keeps this in sync with the CSS
-      // without duplicating the max-height formula in JS.
-      const asideTop = aside.getBoundingClientRect().top
-      const controls = parent.querySelector(".react-flow__controls")
-      const GAP = 8 // --apollon-chrome-gap: palette clears the controls by one
-      const bottomLimit = controls
-        ? controls.getBoundingClientRect().top - GAP
-        : rect.bottom - (asideTop - rect.top) // symmetric fallback
-      const h = Math.max(0, bottomLimit - asideTop)
-      setCanvas({ w: rect.width, h, compact: mobileQuery.matches })
+      // Height budget = the rail band (already inset between top/bottom chrome)
+      // minus the palette's own top+bottom breathing gap; width budget = the
+      // canvas the palette floats over. The gap is read from the single token
+      // source so JS and CSS never drift.
+      const gap =
+        parseFloat(
+          getComputedStyle(aside).getPropertyValue("--apollon-chrome-gap")
+        ) || 8
+      const h = Math.max(0, band.clientHeight - 2 * gap)
+      const w = canvasEl.getBoundingClientRect().width
+      setCanvas({ w, h, compact: mobileQuery.matches })
     }
     measure()
     const observer = new ResizeObserver(measure)
-    observer.observe(parent)
+    observer.observe(band)
+    observer.observe(canvasEl)
     mobileQuery.addEventListener("change", measure)
     return () => {
       observer.disconnect()
@@ -177,6 +178,10 @@ export const Sidebar = () => {
       ref={asideRef}
       className="apollon-palette"
       data-testid="apollon-palette"
+      aria-label="Element palette"
+      // Bounded to the rail band the engine reserved (grid math already fits
+      // within it; this caps the rare overflow case to a scroll, not spill).
+      style={canvas.h ? { maxHeight: canvas.h } : undefined}
     >
       {showInteractiveSelectionView && (
         <div className="apollon-palette__view-switch">
