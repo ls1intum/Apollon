@@ -1567,6 +1567,18 @@ svg.react-flow__connectionline {
   z-index: 1; /* keep the selected item's full border over its neighbour seam */
 }
 
+/* Per-method "abstract" toggle in the class editor — an icon button that marks a
+   method abstract (renders its signature in italics). Mirrors the stereotype
+   toggle's selected accent so the two controls read as one family. */
+.apollon-abstract-toggle[data-state="on"] {
+  background-color: color-mix(
+    in srgb,
+    var(--apollon-primary, #3e8acc) 20%,
+    transparent
+  );
+  color: var(--apollon-primary, #3e8acc);
+}
+
 .scroll-overlay {
   position: absolute;
   top: 0;

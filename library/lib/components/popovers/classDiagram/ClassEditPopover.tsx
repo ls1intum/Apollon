@@ -50,6 +50,7 @@ export const ClassEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
         <StereotypeButtonGroup
           nodeId={elementId}
           selectedStereotype={nodeData.stereotype}
+          isAbstract={nodeData.isAbstract}
         />
       </PopoverSection>
       <PopoverSection divider>

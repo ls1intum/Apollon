@@ -10,6 +10,8 @@ import {
   measureTextWidth,
   calculateMinWidth,
   calculateMinHeight,
+  stereotypeLabel,
+  withAbstractMarker,
 } from "@/utils"
 import { LAYOUT } from "@/constants"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
@@ -27,7 +29,7 @@ export function Class({
       setNodes: state.setNodes,
     }))
   )
-  const { name, stereotype, attributes, methods } = data
+  const { name, stereotype, isAbstract, attributes, methods } = data
 
   const isDiagramModifiable = useDiagramModifiable()
 
@@ -46,14 +48,14 @@ export function Class({
   // Calculate the widest text accurately
   const maxTextWidth = useMemo(() => {
     const headerTextWidths = [
-      stereotype ? measureTextWidth(`«${stereotype}»`, font) : 0,
-      measureTextWidth(name, font),
+      stereotype ? measureTextWidth(stereotypeLabel(stereotype), font) : 0,
+      measureTextWidth(withAbstractMarker(name, isAbstract), font),
     ]
     const attributesTextWidths = attributes.map((attr) =>
       measureTextWidth(attr.name, font)
     )
     const methodsTextWidths = methods.map((method) =>
-      measureTextWidth(method.name, font)
+      measureTextWidth(withAbstractMarker(method.name, method.isAbstract), font)
     )
     const allTextWidths = [
       ...headerTextWidths,
@@ -63,7 +65,7 @@ export function Class({
 
     const result = Math.max(...allTextWidths, 0)
     return result
-  }, [stereotype, name, attributes, methods, font])
+  }, [stereotype, name, isAbstract, attributes, methods, font])
 
   const minWidth = useMemo(() => {
     const result = calculateMinWidth(maxTextWidth, padding)

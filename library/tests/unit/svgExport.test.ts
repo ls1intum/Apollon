@@ -27,7 +27,7 @@ const SAMPLE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="
   <svg x="0" y="0" width="120" height="60" viewBox="0 0 120 60" overflow="visible">
     <rect x="0" y="0" width="120" height="60" fill="#ffffff" stroke="#000"/>
     <text x="60" y="20" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-weight="600" fill="#000">
-      <tspan x="60" y="16" font-size="13.6px">«Interface»</tspan>
+      <tspan x="60" y="16" font-size="13.6px">«interface»</tspan>
       <tspan x="60" y="32">MyClass</tspan>
     </text>
   </svg>
@@ -80,7 +80,7 @@ describe("preProcessSvgForPdf", () => {
     const root = preProcessSvgForPdf(parse(SAMPLE_SVG))
     const texts = Array.from(root.querySelectorAll("text"))
     expect(texts.length).toBe(2)
-    expect(texts.some((t) => t.textContent === "«Interface»")).toBe(true)
+    expect(texts.some((t) => t.textContent === "«interface»")).toBe(true)
     expect(texts.some((t) => t.textContent === "MyClass")).toBe(true)
     // No <text> retains <tspan> children.
     expect(root.querySelectorAll("tspan").length).toBe(0)
@@ -90,7 +90,7 @@ describe("preProcessSvgForPdf", () => {
     const root = preProcessSvgForPdf(
       parse(
         `<svg xmlns="http://www.w3.org/2000/svg"><text x="0" y="0" font-size="16px">` +
-          `<tspan x="0" dy="0" font-size="13.6px">«Abstract»</tspan>` +
+          `<tspan x="0" dy="0" font-size="13.6px">«interface»</tspan>` +
           `<tspan x="0" dy="18">ClassName</tspan></text></svg>`
       )
     )
@@ -100,7 +100,7 @@ describe("preProcessSvgForPdf", () => {
         t.getAttribute("font-size"),
       ])
     )
-    expect(byText["«Abstract»"]).toBe("13.6px") // own size preserved
+    expect(byText["«interface»"]).toBe("13.6px") // own size preserved
     expect(byText["ClassName"]).toBe("16px") // inherited from parent <text>
   })
 

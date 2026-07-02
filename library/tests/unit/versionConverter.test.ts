@@ -10,8 +10,9 @@ import {
   isV3Format,
   isV4Format,
   importDiagram,
+  normalizeClassStereotypes,
 } from "@/utils/versionConverter"
-import { ClassType } from "@/types/nodes/enums"
+import { ClassStereotype } from "@/types/nodes/enums"
 
 // ---------------------------------------------------------------------------
 // Helpers to build minimal valid V3 / V2 / V4 fixtures
@@ -533,33 +534,40 @@ describe("convertV3ToV4", () => {
     expect(nd.methods).toHaveLength(1)
   })
 
-  // --- Class stereotype mapping ---
-  it("sets stereotype to Abstract for AbstractClass", () => {
+  // --- Class stereotype / abstract mapping ---
+  // Abstract is a modifier (italic name), NOT a keyword: AbstractClass maps to
+  // `isAbstract`, never to a stereotype.
+  it("maps AbstractClass to isAbstract, not a stereotype", () => {
     const el = makeV3Element({ id: "ac1", type: "AbstractClass" })
     const data = makeV3Wrapped({ elements: { ac1: el } })
     const result = convertV3ToV4(data)
-    expect(result.nodes[0].data.stereotype).toBe(ClassType.Abstract)
+    expect(result.nodes[0].data.isAbstract).toBe(true)
+    expect(result.nodes[0].data.stereotype).toBeUndefined()
   })
 
-  it("sets stereotype to Interface for Interface", () => {
+  it("sets the lowercase interface keyword for Interface", () => {
     const el = makeV3Element({ id: "i1", type: "Interface" })
     const data = makeV3Wrapped({ elements: { i1: el } })
     const result = convertV3ToV4(data)
-    expect(result.nodes[0].data.stereotype).toBe(ClassType.Interface)
+    expect(result.nodes[0].data.stereotype).toBe(ClassStereotype.Interface)
+    expect(result.nodes[0].data.stereotype).toBe("interface")
+    expect(result.nodes[0].data.isAbstract).toBeFalsy()
   })
 
-  it("sets stereotype to Enumeration for Enumeration", () => {
+  it("sets the lowercase enumeration keyword for Enumeration", () => {
     const el = makeV3Element({ id: "e1", type: "Enumeration" })
     const data = makeV3Wrapped({ elements: { e1: el } })
     const result = convertV3ToV4(data)
-    expect(result.nodes[0].data.stereotype).toBe(ClassType.Enumeration)
+    expect(result.nodes[0].data.stereotype).toBe(ClassStereotype.Enumeration)
+    expect(result.nodes[0].data.stereotype).toBe("enumeration")
   })
 
-  it("does not set stereotype for plain Class", () => {
+  it("does not set stereotype or isAbstract for plain Class", () => {
     const el = makeV3Element({ id: "c1", type: "Class" })
     const data = makeV3Wrapped({ elements: { c1: el } })
     const result = convertV3ToV4(data)
     expect(result.nodes[0].data.stereotype).toBeUndefined()
+    expect(result.nodes[0].data.isAbstract).toBeFalsy()
   })
 
   // --- Child element relative positioning ---
@@ -1324,5 +1332,100 @@ describe("importDiagram", () => {
     const result = importDiagram(hybrid)
     // Returns as-is since isV4Format matches first
     expect(result.version).toBe("4.0.0")
+  })
+})
+
+// ---------------------------------------------------------------------------
+// v4 class-stereotype normalizer — guards against silently corrupting already-
+// saved 4.0.0 diagrams, whose class nodes still carry the old capitalized
+// `stereotype` (including the invalid `"Abstract"` keyword). isV4Format passes
+// these through verbatim, so the normalizer is the only thing standing between
+// a saved diagram and a `«Abstract»` / `«Interface»` regression.
+// ---------------------------------------------------------------------------
+
+function makeV4ClassNode(stereotype: string, height = 110) {
+  return {
+    id: "c1",
+    type: "class",
+    position: { x: 0, y: 0 },
+    width: 200,
+    height,
+    measured: { width: 200, height },
+    data: { name: "C", stereotype, methods: [], attributes: [] },
+  }
+}
+
+function makeV4ClassModel(nodes: unknown[]) {
+  return {
+    version: "4.0.0",
+    id: "d1",
+    title: "",
+    type: "ClassDiagram",
+    nodes,
+    edges: [],
+    assessments: {},
+  } as never
+}
+
+describe("normalizeClassStereotypes (legacy 4.x class nodes)", () => {
+  it('migrates the invalid "Abstract" keyword to the isAbstract modifier', () => {
+    const model = makeV4ClassModel([makeV4ClassNode("Abstract", 110)])
+    normalizeClassStereotypes(model)
+    const data = model.nodes[0].data as {
+      stereotype?: string
+      isAbstract?: boolean
+    }
+    expect(data.isAbstract).toBe(true)
+    expect(data.stereotype).toBeUndefined()
+  })
+
+  it("sheds the vanished keyword line’s 10px from a migrated abstract class", () => {
+    const model = makeV4ClassModel([makeV4ClassNode("Abstract", 110)])
+    normalizeClassStereotypes(model)
+    const node = model.nodes[0] as {
+      height: number
+      measured: { height: number }
+    }
+    expect(node.height).toBe(100)
+    expect(node.measured.height).toBe(100)
+  })
+
+  it("lowercases the Interface / Enumeration keywords to the UML spelling", () => {
+    const model = makeV4ClassModel([
+      makeV4ClassNode("Interface"),
+      { ...makeV4ClassNode("Enumeration"), id: "c2" },
+    ])
+    normalizeClassStereotypes(model)
+    expect((model.nodes[0].data as { stereotype: string }).stereotype).toBe(
+      "interface"
+    )
+    expect((model.nodes[1].data as { stereotype: string }).stereotype).toBe(
+      "enumeration"
+    )
+  })
+
+  it("is idempotent — already-current nodes are untouched", () => {
+    const model = makeV4ClassModel([makeV4ClassNode("interface", 110)])
+    normalizeClassStereotypes(model)
+    normalizeClassStereotypes(model)
+    const node = model.nodes[0] as {
+      height: number
+      data: { stereotype: string; isAbstract?: boolean }
+    }
+    expect(node.data.stereotype).toBe("interface")
+    expect(node.data.isAbstract).toBeUndefined()
+    expect(node.height).toBe(110)
+  })
+
+  it("runs on the editor load path via importDiagram", () => {
+    const result = importDiagram(
+      makeV4ClassModel([makeV4ClassNode("Abstract", 110)])
+    )
+    const data = result.nodes[0].data as {
+      stereotype?: string
+      isAbstract?: boolean
+    }
+    expect(data.isAbstract).toBe(true)
+    expect(data.stereotype).toBeUndefined()
   })
 })

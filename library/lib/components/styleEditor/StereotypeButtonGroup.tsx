@@ -1,60 +1,83 @@
 import React from "react"
 import { Toggle } from "@base-ui/react/toggle"
 import { ToggleGroup } from "@base-ui/react/toggle-group"
-import { ClassType } from "@/types"
+import { ClassStereotype } from "@/types"
 import { useShallow } from "zustand/shallow"
 import { useDiagramStore } from "@/store"
 
 interface StereotypeButtonGroupProps {
   nodeId: string
-  selectedStereotype?: ClassType
+  selectedStereotype?: ClassStereotype
+  isAbstract?: boolean
 }
 
-const stereotypes: ClassType[] = [
-  ClassType.Abstract,
-  ClassType.Interface,
-  ClassType.Enumeration,
+// The class "kind" is presented as one exclusive toggle group, but maps to two
+// orthogonal model fields. `Abstract` is a MODIFIER (UML 2.5.1 §9.2.4: italic
+// name, no keyword) stored as `isAbstract`; `Interface`/`Enumeration` are
+// metaclass KEYWORDS (`«interface»` / `«enumeration»`) stored as `stereotype`.
+// Keeping them mutually exclusive in the UI matches the educational model — a
+// class is abstract, an interface, an enumeration, or plain.
+const ABSTRACT_CHOICE = "abstract" as const
+type KindChoice = typeof ABSTRACT_CHOICE | ClassStereotype
+
+const CHOICES: { value: KindChoice; label: string }[] = [
+  { value: ABSTRACT_CHOICE, label: "Abstract" },
+  { value: ClassStereotype.Interface, label: "Interface" },
+  { value: ClassStereotype.Enumeration, label: "Enumeration" },
 ]
 
 export const StereotypeButtonGroup: React.FC<StereotypeButtonGroupProps> = ({
   nodeId,
   selectedStereotype,
+  isAbstract = false,
 }) => {
   const { setNodes } = useDiagramStore(
     useShallow((state) => ({ setNodes: state.setNodes }))
   )
 
-  const applyStereotype = (nextStereotype: ClassType | undefined) => {
-    const needsShrink = !!selectedStereotype && !nextStereotype
-    const needExpand = !!nextStereotype && !selectedStereotype
-    const nodeHeightDifference = needExpand ? 10 : needsShrink ? -10 : 0
+  const selected: KindChoice | undefined = isAbstract
+    ? ABSTRACT_CHOICE
+    : selectedStereotype
+
+  const applyChoice = (next: KindChoice | undefined) => {
+    const willHaveKeyword =
+      next === ClassStereotype.Interface || next === ClassStereotype.Enumeration
+    // Only the keyword line changes header height; the abstract modifier renders
+    // an italic name with no extra line, so toggling it leaves the box height
+    // untouched.
+    const hadKeyword = !!selectedStereotype
+    const heightDifference =
+      willHaveKeyword && !hadKeyword
+        ? 10
+        : !willHaveKeyword && hadKeyword
+          ? -10
+          : 0
 
     setNodes((nodes) =>
       nodes.map((node) => {
-        if (node.id === nodeId) {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              stereotype: nextStereotype,
-            },
-            height: node.height! + nodeHeightDifference,
-            measured: {
-              ...node.measured,
-              height: node.height! + nodeHeightDifference,
-            },
-          }
+        if (node.id !== nodeId) return node
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            stereotype: willHaveKeyword ? (next as ClassStereotype) : undefined,
+            isAbstract: next === ABSTRACT_CHOICE,
+          },
+          height: node.height! + heightDifference,
+          measured: {
+            ...node.measured,
+            height: node.height! + heightDifference,
+          },
         }
-        return node
       })
     )
   }
 
   // Single-select, allow-deselect: Base UI ToggleGroup (default `multiple`
   // false) keeps at most one value pressed and clears it when the pressed item
-  // is toggled off, so the empty array maps to "no stereotype".
-  const handleValueChange = (groupValue: ClassType[]) => {
-    applyStereotype(groupValue[0])
+  // is toggled off, so the empty array maps to "plain class".
+  const handleValueChange = (groupValue: KindChoice[]) => {
+    applyChoice(groupValue[0])
   }
 
   return (
@@ -65,21 +88,21 @@ export const StereotypeButtonGroup: React.FC<StereotypeButtonGroupProps> = ({
       // element, which ARIA forbids on `group` (axe: aria-allowed-attr). Strip the
       // disallowed attribute; keyboard nav and styling are unaffected.
       aria-orientation={undefined}
-      value={selectedStereotype ? [selectedStereotype] : []}
+      value={selected ? [selected] : []}
       onValueChange={handleValueChange}
     >
-      {stereotypes.map((stereotype) => (
+      {CHOICES.map(({ value, label }) => (
         <Toggle
-          key={stereotype}
-          value={stereotype}
+          key={value}
+          value={value}
           data-slot="toggle-group-item"
           className="apollon-stereotype-toggle"
           // Mirror the shadcn/@tumaet contract: expose selection as
           // data-state="on" (styled in app.css) rather than a hardcoded
           // colour. Base UI's own data-pressed stays for parity.
-          data-state={selectedStereotype === stereotype ? "on" : "off"}
+          data-state={selected === value ? "on" : "off"}
         >
-          {stereotype}
+          {label}
         </Toggle>
       ))}
     </ToggleGroup>
