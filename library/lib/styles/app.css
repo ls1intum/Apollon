@@ -348,32 +348,38 @@
   line-height: 1.4;
 }
 
-/* One edge margin for every floating corner cluster (islands, controls,
-   minimap, host panels) — replaces React Flow's default 15px so they line up
-   with the palette at exactly --apollon-chrome-edge from the canvas edge, PLUS
-   the device safe-area inset on each pinned side so chrome never tucks under a
-   notch / home indicator / rounded corner (Capacitor, viewport-fit=cover).
-   Declared before the landscape block so its extra notch nudge still wins. */
-.react-flow__panel.top.left,
-.react-flow__panel.top.right {
+/* Every floating corner slot floats one edge margin in from the canvas (replacing
+   React Flow's default 15px so slots line up with the palette at
+   --apollon-chrome-edge), PLUS the device safe-area on each pinned side (notch /
+   home indicator / rounded corner; Capacitor, viewport-fit=cover), PLUS the
+   reserved band inset on that edge so a slot clears the bands instead of painting
+   over them: top slots drop below the header, left/right slots shift clear of the
+   rails. The band insets are 0 when no band occupies that edge, so a slot with no
+   adjacent band sits exactly at the edge margin. Declared before the landscape
+   block so its extra notch nudge still wins. */
+.react-flow__panel.top {
   margin-top: calc(
-    var(--apollon-chrome-edge) + var(--safe-area-inset-top, 0px)
+    var(--apollon-chrome-edge) + var(--safe-area-inset-top, 0px) +
+      var(--apollon-inset-top, 0px)
   );
 }
 
-.react-flow__panel.bottom.left,
-.react-flow__panel.bottom.right {
-  margin-bottom: var(--apollon-chrome-edge-safe-bottom);
+.react-flow__panel.bottom {
+  margin-bottom: calc(
+    var(--apollon-chrome-edge-safe-bottom) + var(--apollon-inset-bottom, 0px)
+  );
 }
 
-.react-flow__panel.top.left,
-.react-flow__panel.bottom.left {
-  margin-left: var(--apollon-chrome-edge-safe-left);
+.react-flow__panel.left {
+  margin-left: calc(
+    var(--apollon-chrome-edge-safe-left) + var(--apollon-inset-left, 0px)
+  );
 }
 
-.react-flow__panel.top.right,
-.react-flow__panel.bottom.right {
-  margin-right: var(--apollon-chrome-edge-safe-right);
+.react-flow__panel.right {
+  margin-right: calc(
+    var(--apollon-chrome-edge-safe-right) + var(--apollon-inset-right, 0px)
+  );
 }
 
 /* The editor header is one fluid flex row inside the full-width `header` band:

@@ -3,7 +3,8 @@ import { render, cleanup } from "@testing-library/react"
 import { ApollonEditor } from "@/apollon-editor"
 import { ApollonProvider } from "@/components/react/context"
 import { ApollonControl } from "@/components/react/ApollonControl"
-import { createOverlayStore } from "@/overlay/overlayStore"
+import { computeInsets, createOverlayStore } from "@/overlay/overlayStore"
+import type { OverlayControl, OverlayRegion } from "@/overlay/types"
 
 // Drives the public overlay/control API against the real editor (no mock);
 // asserts at the store level (jsdom has no layout).
@@ -108,6 +109,68 @@ describe("built-in controls config (imperative)", () => {
     expect(ed.getControlConfig("palette")).toBeUndefined()
 
     ed.destroy()
+  })
+})
+
+// Two-tier chrome: BANDS (header/left-rail/right-rail) reserve their cross-size on
+// their one edge; SLOTS (the panel corners) float and reserve nothing. This is the
+// model that keeps a bottom-corner control from shortening the left-rail palette —
+// the user-reported "it does not adapt" bug. Unit the reservation math directly.
+describe("computeInsets: band vs slot reservation", () => {
+  const ctrl = (
+    id: string,
+    region: OverlayRegion,
+    extra: Partial<OverlayControl> = {}
+  ): OverlayControl => ({ id, region, render: () => null, ...extra })
+
+  it("a band reserves its measured cross-size on its own edge; a slot reserves nothing", () => {
+    expect(
+      computeInsets([ctrl("p", "left-rail")], { p: { left: 150 } })
+    ).toEqual({
+      top: 0,
+      right: 0,
+      bottom: 0,
+      left: 150,
+    })
+    expect(
+      computeInsets([ctrl("z", "bottom-center")], { z: { bottom: 40 } })
+    ).toEqual({ top: 0, right: 0, bottom: 0, left: 0 })
+  })
+
+  it("a bottom slot never couples to the left-rail — moving it changes no inset", () => {
+    const measured = { p: { left: 150 }, z: { bottom: 40 } }
+    const left = computeInsets(
+      [ctrl("p", "left-rail"), ctrl("z", "bottom-left")],
+      measured
+    )
+    const center = computeInsets(
+      [ctrl("p", "left-rail"), ctrl("z", "bottom-center")],
+      measured
+    )
+    expect(left).toEqual(center)
+    expect(left).toEqual({ top: 0, right: 0, bottom: 0, left: 150 })
+  })
+
+  it("disjoint bands stay independent; a hidden band reserves nothing", () => {
+    expect(
+      computeInsets(
+        [ctrl("h", "header"), ctrl("l", "left-rail"), ctrl("r", "right-rail")],
+        { h: { top: 48 }, l: { left: 150 }, r: { right: 120 } }
+      )
+    ).toEqual({ top: 48, right: 120, bottom: 0, left: 150 })
+    expect(
+      computeInsets([ctrl("l", "left-rail", { visible: false })], {
+        l: { left: 150 },
+      })
+    ).toEqual({ top: 0, right: 0, bottom: 0, left: 0 })
+  })
+
+  it("an explicit inset opts a slot into make-way reservation", () => {
+    expect(
+      computeInsets([ctrl("z", "bottom-left", { inset: "auto" })], {
+        z: { bottom: 40 },
+      }).bottom
+    ).toBe(40)
   })
 })
 

@@ -174,7 +174,7 @@ export function BuiltInControls({
     paletteSigRef.current = sig
     const input = resolveControl(
       PALETTE_CONTROL_ID,
-      { region: "left-rail", inset: "auto", order: 0 },
+      { region: "left-rail", order: 0 },
       controls?.palette,
       PALETTE_SLOT,
       showPalette
@@ -190,7 +190,7 @@ export function BuiltInControls({
     zoomSigRef.current = sig
     const input = resolveControl(
       ZOOM_CONTROL_ID,
-      { region: "bottom-left", inset: "auto", order: 0 },
+      { region: "bottom-left", order: 0 },
       controls?.zoom,
       ZOOM_SLOT,
       true

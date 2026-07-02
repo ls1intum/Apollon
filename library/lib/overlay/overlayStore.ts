@@ -9,37 +9,48 @@ import {
   ZERO_INSETS,
 } from "./types"
 
-/** Which edges a region can push the diagram away from. */
-const REGION_SIDES: Record<OverlayRegion, OverlaySide[]> = {
-  header: ["top"],
-  "top-left": ["top"],
-  "top-center": ["top"],
-  "top-right": ["top"],
-  "bottom-left": ["bottom"],
-  "bottom-center": ["bottom"],
-  "bottom-right": ["bottom"],
-  "left-rail": ["left"],
-  "right-rail": ["right"],
-  "on-canvas": [],
+/**
+ * Two-tier chrome. A BAND owns a full edge and displaces the diagram; a SLOT (a
+ * React-Flow panel corner) floats over the canvas and displaces nothing. Only
+ * bands reserve room by default — this is what keeps a bottom-corner cluster from
+ * shortening the left-rail palette it never touches. The primary edge is also the
+ * one an explicit `inset: "auto"` opt-in measures against.
+ */
+const BANDS = new Set<OverlayRegion>(["header", "left-rail", "right-rail"])
+
+const REGION_EDGE: Partial<Record<OverlayRegion, OverlaySide>> = {
+  header: "top",
+  "top-left": "top",
+  "top-center": "top",
+  "top-right": "top",
+  "bottom-left": "bottom",
+  "bottom-center": "bottom",
+  "bottom-right": "bottom",
+  "left-rail": "left",
+  "right-rail": "right",
 }
 
 /**
- * Per-control reserved px per side, combining its declared `inset` config with
- * the measured rect (written by the shared ResizeObserver). `"auto"` resolves to
- * the measured value for the side; explicit numbers win.
+ * Per-control reserved px per side. By default a band reserves its measured
+ * cross-size on its one edge and a slot reserves nothing; an explicit `inset`
+ * overrides — `"auto"` measures the region's edge, an object sets per-side px
+ * (with per-side `"auto"` measured). This drives fitView padding AND band
+ * positioning, so slots must contribute 0 or they couple unrelated chrome.
  */
 function controlContribution(
   control: OverlayControl,
   measured: Partial<Record<OverlaySide, number>> | undefined
 ): Partial<Record<OverlaySide, number>> {
   const { inset, region } = control
-  if (inset === undefined) return {}
-  const out: Partial<Record<OverlaySide, number>> = {}
+  const edge = REGION_EDGE[region]
 
-  if (inset === "auto") {
-    for (const side of REGION_SIDES[region]) out[side] = measured?.[side] ?? 0
-    return out
+  if (inset === undefined) {
+    return BANDS.has(region) && edge ? { [edge]: measured?.[edge] ?? 0 } : {}
   }
+  if (inset === "auto") {
+    return edge ? { [edge]: measured?.[edge] ?? 0 } : {}
+  }
+  const out: Partial<Record<OverlaySide, number>> = {}
   for (const side of Object.keys(inset) as OverlaySide[]) {
     const v = inset[side]
     out[side] = v === "auto" ? (measured?.[side] ?? 0) : (v ?? 0)
@@ -68,10 +79,27 @@ export function computeInsets(
   return result
 }
 
+const insetsEqual = (a: Insets, b: Insets): boolean =>
+  a.top === b.top &&
+  a.right === b.right &&
+  a.bottom === b.bottom &&
+  a.left === b.left
+
+/**
+ * Recompute the inset rect, reusing the previous object when the values are
+ * unchanged. Identity stability lets `insets` subscribers (App's CSS vars,
+ * fitView) skip re-rendering when a registration only replaces a control's
+ * renderer or restacks same-size chrome — so re-applying a config literal never
+ * thrashes layout, without a parallel reconciliation layer.
+ */
 const recompute = (
+  prev: Insets,
   controls: Record<string, OverlayControl>,
   measured: Record<string, Partial<Record<OverlaySide, number>>>
-): Insets => computeInsets(Object.values(controls), measured)
+): Insets => {
+  const next = computeInsets(Object.values(controls), measured)
+  return insetsEqual(prev, next) ? prev : next
+}
 
 export type OverlayStore = {
   controls: Record<string, OverlayControl>
@@ -112,7 +140,10 @@ export const createOverlayStore = (): UseBoundStore<StoreApi<OverlayStore>> =>
           set(
             (s) => {
               const controls = { ...s.controls, [control.id]: control }
-              return { controls, insets: recompute(controls, s.measured) }
+              return {
+                controls,
+                insets: recompute(s.insets, controls, s.measured),
+              }
             },
             undefined,
             "register"
@@ -132,7 +163,7 @@ export const createOverlayStore = (): UseBoundStore<StoreApi<OverlayStore>> =>
                 controls,
                 measured,
                 renders,
-                insets: recompute(controls, measured),
+                insets: recompute(s.insets, controls, measured),
               }
             },
             undefined,
@@ -146,7 +177,10 @@ export const createOverlayStore = (): UseBoundStore<StoreApi<OverlayStore>> =>
               // can never leak into the computed insets.
               if (!(id in s.controls)) return s
               const measured = { ...s.measured, [id]: rect }
-              return { measured, insets: recompute(s.controls, measured) }
+              return {
+                measured,
+                insets: recompute(s.insets, s.controls, measured),
+              }
             },
             undefined,
             "setMeasured"
