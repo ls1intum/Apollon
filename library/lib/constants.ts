@@ -179,6 +179,20 @@ export const LAYOUT = Object.freeze({
   STEREOTYPE_NAME_GAP: 4,
 } as const)
 
+/**
+ * Media query for the compact "mobile" palette layout. First clause: portrait
+ * phones, stopping below 768px so iPad portrait keeps the desktop layout. Second
+ * clause: phones in landscape, where the short height distinguishes them from
+ * tablets.
+ *
+ * Governs the PALETTE only. The webapp navbar uses its own width-only
+ * `NARROW_VIEW_QUERY` (standalone/webapp/src/constants/responsive.ts) which does
+ * not match landscape phones, so there the navbar stays full-size while the
+ * palette still compacts.
+ */
+export const MOBILE_VIEW_QUERY =
+  "(max-width: 767.95px), (max-width: 950px) and (max-height: 500px)"
+
 // RFC 4122 v4 UUID via crypto.getRandomValues — available in every context the
 // editor runs in (secure or not, browser or Node ≥19 (global Web Crypto)),
 // unlike crypto.randomUUID() which requires a secure context an embeddable host

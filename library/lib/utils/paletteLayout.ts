@@ -49,6 +49,27 @@ export const PALETTE = Object.freeze({
   CONTENT_INSET: 6,
 } as const)
 
+/**
+ * Mobile palettes should stay dense instead of expanding sparse element lists
+ * to fill the available height. The 44px floor remains intact for touch, while
+ * the lower comfort/cap sizes remove the large empty bands around previews.
+ */
+export const COMPACT_PALETTE = Object.freeze({
+  CELL_MIN_H: 44,
+  COMFORT_MIN_H: 52,
+  // Capped tight: a capped grid can't shrink, and the CSS-clamped palette height
+  // renders a few px under the JS-measured band, so a dense grid needs that slack
+  // to avoid scrolling. Kept above COMFORT_MIN_H so cells stay legible.
+  CELL_MAX_H: 56,
+  CELL_RATIO: 1.6,
+  GAP: 4,
+  PAD: 4,
+  MAX_FRAC_W: 0.5,
+  CONTENT_INSET: 4,
+} as const)
+
+type PaletteMetrics = typeof PALETTE | typeof COMPACT_PALETTE
+
 export interface PaletteLayout {
   cols: number
   cellW: number
@@ -67,9 +88,9 @@ function cellHeightFor(
   count: number,
   budgetW: number,
   budgetH: number,
-  chromeH: number
+  chromeH: number,
+  p: PaletteMetrics
 ): number {
-  const p = PALETTE
   const rows = Math.ceil(count / cols)
   const fillH = (budgetH - chromeH - 2 * p.PAD - (rows - 1) * p.GAP) / rows
   const cellW = (budgetW - 2 * p.PAD - (cols - 1) * p.GAP) / cols
@@ -82,14 +103,16 @@ function cellHeightFor(
  * @param availW    measured canvas width
  * @param availH    measured canvas height
  * @param chromeH   height of non-grid palette chrome (view switch / hint), 0 if none
+ * @param compact   use denser mobile spacing and cell caps
  */
 export function computePaletteLayout(
   itemCount: number,
   availW: number,
   availH: number,
-  chromeH: number
+  chromeH: number,
+  compact = false
 ): PaletteLayout {
-  const p = PALETTE
+  const p = compact ? COMPACT_PALETTE : PALETTE
   const floorCellW = Math.round(p.CELL_RATIO * p.CELL_MIN_H)
   if (itemCount <= 0 || availW <= 0 || availH <= 0) {
     return { cols: 1, cellW: floorCellW, cellH: p.CELL_MIN_H, scroll: false }
@@ -114,7 +137,7 @@ export function computePaletteLayout(
   let bestCols = 1
   let bestCellH = 0
   for (let cols = 1; cols <= maxCols; cols++) {
-    const cellH = cellHeightFor(cols, itemCount, budgetW, budgetH, chromeH)
+    const cellH = cellHeightFor(cols, itemCount, budgetW, budgetH, chromeH, p)
     if (cellH >= p.COMFORT_MIN_H) {
       return {
         cols,
@@ -152,9 +175,11 @@ export function previewScaleForCell(
   naturalWidth: number,
   naturalHeight: number,
   cellW: number,
-  cellH: number
+  cellH: number,
+  compact = false
 ): number {
-  const inset = 2 * PALETTE.CONTENT_INSET
+  const metrics = compact ? COMPACT_PALETTE : PALETTE
+  const inset = 2 * metrics.CONTENT_INSET
   return Math.min(
     (cellW - inset) / naturalWidth,
     (cellH - inset) / naturalHeight
