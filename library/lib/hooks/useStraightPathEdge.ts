@@ -5,7 +5,7 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react"
-import { useReactFlow, useStore, type Node } from "@xyflow/react"
+import { Position, useReactFlow, useStore, type Node } from "@xyflow/react"
 import {
   calculateOverlayPath,
   calculateStraightPath,
@@ -51,6 +51,8 @@ type StraightEndpointDragCommit = {
   nodeId: string
   handleId: string
   anchor: FreeformEdgeAnchor
+  sourcePosition: Position
+  targetPosition: Position
   sourceEndpoint: IPoint
   targetEndpoint: IPoint
 }
@@ -82,6 +84,10 @@ export const useStraightPathEdge = ({
   const [dragPreviewPoints, setDragPreviewPoints] = useState<IPoint[] | null>(
     null
   )
+  const [dragPreviewPositions, setDragPreviewPositions] = useState<{
+    sourcePosition: Position
+    targetPosition: Position
+  } | null>(null)
   const sourceAnchor = data?.sourceAnchor
   const targetAnchor = data?.targetAnchor
   const shouldSubscribeToNodeGeometry =
@@ -279,6 +285,10 @@ export const useStraightPathEdge = ({
     ]
   )
   const renderPoints = dragPreviewPoints ?? basePoints
+  const renderSourcePosition =
+    dragPreviewPositions?.sourcePosition ?? resolvedSourcePosition
+  const renderTargetPosition =
+    dragPreviewPositions?.targetPosition ?? resolvedTargetPosition
 
   // Publish this edge's real geometry so other edges bridge over it accurately.
   usePublishEdgeGeometry(id, renderPoints)
@@ -478,6 +488,14 @@ export const useStraightPathEdge = ({
           nodeId: nodeOnTop.id,
           handleId: getSideHandleIdForPosition(resolvedAnchor.position),
           anchor,
+          sourcePosition:
+            endpoint === "source"
+              ? resolvedAnchor.position
+              : resolvedSourcePosition,
+          targetPosition:
+            endpoint === "target"
+              ? resolvedAnchor.position
+              : resolvedTargetPosition,
           sourceEndpoint,
           targetEndpoint,
         }
@@ -489,12 +507,21 @@ export const useStraightPathEdge = ({
         setDragPreviewPoints(
           commit ? [commit.sourceEndpoint, commit.targetEndpoint] : null
         )
+        setDragPreviewPositions(
+          commit
+            ? {
+                sourcePosition: commit.sourcePosition,
+                targetPosition: commit.targetPosition,
+              }
+            : null
+        )
       }
 
       const handlePointerUp = () => {
         const commit = endpointDragCommitRef.current
         endpointDragCommitRef.current = null
         setDragPreviewPoints(null)
+        setDragPreviewPositions(null)
 
         if (commit) {
           setEdges((edges) =>
@@ -542,6 +569,8 @@ export const useStraightPathEdge = ({
       getIntersectingNodes,
       getNodeRect,
       id,
+      resolvedSourcePosition,
+      resolvedTargetPosition,
       screenToFlowPosition,
       setEdges,
     ]
@@ -561,5 +590,7 @@ export const useStraightPathEdge = ({
     isReconnecting,
     canEditEndpoint,
     handleEndpointPointerDown,
+    sourcePosition: renderSourcePosition,
+    targetPosition: renderTargetPosition,
   }
 }

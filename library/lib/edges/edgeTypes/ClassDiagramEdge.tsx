@@ -71,6 +71,8 @@ export const ClassDiagramEdge = ({
     handleEndpointPointerDown,
     sourcePoint,
     targetPoint,
+    sourcePosition: renderSourcePosition,
+    targetPosition: renderTargetPosition,
     isDiagramModifiable,
     canEditEndpoint,
   } = useStepPathEdge({
@@ -113,8 +115,8 @@ export const ClassDiagramEdge = ({
           markerEnd={markerEnd}
           sourcePoint={sourcePoint}
           targetPoint={targetPoint}
-          sourcePosition={sourcePosition}
-          targetPosition={targetPosition}
+          sourcePosition={renderSourcePosition}
+          targetPosition={renderTargetPosition}
           isDiagramModifiable={isDiagramModifiable}
           canEditEndpoint={canEditEndpoint}
           handleEndpointPointerDown={handleEndpointPointerDown}
@@ -130,8 +132,8 @@ export const ClassDiagramEdge = ({
           sourceY={sourceY}
           targetX={targetX}
           targetY={targetY}
-          sourcePosition={sourcePosition}
-          targetPosition={targetPosition}
+          sourcePosition={renderSourcePosition}
+          targetPosition={renderTargetPosition}
           textColor={textColor}
         />
 
