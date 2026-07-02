@@ -11,6 +11,12 @@ const classFixture = JSON.parse(
     "utf-8"
   )
 ) as Record<string, unknown>
+const classNoEdgeFixture = JSON.parse(
+  fs.readFileSync(
+    path.join(__d, "..", "fixtures", "two-class-no-edge.json"),
+    "utf-8"
+  )
+) as Record<string, unknown>
 const objectFixture = JSON.parse(
   fs.readFileSync(
     path.join(__d, "..", "fixtures", "object-diagram.json"),
@@ -22,6 +28,7 @@ const syntaxTreeFixture = JSON.parse(
 ) as Record<string, unknown>
 
 type Pt = { x: number; y: number }
+const CLASS_SOURCE = "95aac2b6-3e6b-4e6d-9201-52a498e6ea20"
 
 function edgeById(page: Page, id: string): Locator {
   return page.locator(`.react-flow__edge[data-id="${id}"]`)
@@ -61,6 +68,23 @@ async function storedNodePosition(page: Page, targetId: string): Promise<Pt> {
     if (!node) throw new Error(`missing node ${targetId}`)
     return node.position as Pt
   }, targetId)
+}
+
+async function storedEdges(page: Page): Promise<
+  Array<{
+    source: string
+    target: string
+    sourceHandle?: string | null
+    targetHandle?: string | null
+  }>
+> {
+  return page.evaluate(() => {
+    const raw = localStorage.getItem("persistenceModelStore")
+    if (!raw) throw new Error("missing persistence model")
+    const parsed = JSON.parse(raw)
+    const id = parsed.state.currentModelId
+    return parsed.state.models[id]?.model?.edges ?? []
+  })
 }
 
 async function dragLocatorBy(
@@ -180,3 +204,38 @@ for (const { name, fixture, edgeId, targetId } of cases) {
     })
   })
 }
+
+test("a new same-node edge can connect different handles", async ({ page }) => {
+  await openFixtureInLocalEditor(page, classNoEdgeFixture)
+  await waitForCanvasReady(page)
+
+  const node = page.locator(`.react-flow__node[data-id="${CLASS_SOURCE}"]`)
+  const nodeBox = await node.boundingBox()
+  if (!nodeBox) throw new Error("source node has no bounding box")
+
+  await node.hover()
+  await page.waitForTimeout(120)
+  const rightHandle = node.locator('.react-flow__handle[data-handleid="right"]')
+  const handleBox = await rightHandle.first().boundingBox()
+  if (!handleBox) throw new Error("source handle has no bounding box")
+
+  await page.mouse.move(
+    handleBox.x + handleBox.width / 2,
+    handleBox.y + handleBox.height / 2
+  )
+  await page.mouse.down()
+  await page.mouse.move(nodeBox.x + nodeBox.width / 2, nodeBox.y + 4, {
+    steps: 12,
+  })
+  await page.mouse.up()
+  await page.waitForTimeout(400)
+
+  const edges = await storedEdges(page)
+  expect(edges).toHaveLength(1)
+  expect(edges[0]).toMatchObject({
+    source: CLASS_SOURCE,
+    target: CLASS_SOURCE,
+    sourceHandle: "right",
+    targetHandle: "top",
+  })
+})
