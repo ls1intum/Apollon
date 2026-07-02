@@ -43,67 +43,81 @@ const FULLSCREEN: CSSProperties = { height: "100vh", width: "100%" }
 // Deliberately host-owned UI (no React Flow context needed): `<ApollonControl>`
 // portals these from the story's React tree, so they keep their own state/handlers.
 
+// A floating glass island — the editor's OWN chrome recipe, straight off the
+// `--apollon-chrome-*` design tokens (glass surface, saturated blur, hairline
+// border, 12px radius, layered floating shadow). Matches the standalone's palette /
+// zoom / header islands exactly and re-themes for free in light and dark.
 const glass: CSSProperties = {
   display: "flex",
   alignItems: "center",
-  gap: 8,
-  padding: "6px 12px",
-  borderRadius: 12,
-  background: "var(--apollon-chrome-surface, rgba(255,255,255,0.82))",
-  border: "1px solid var(--apollon-border, rgba(0,0,0,0.08))",
-  boxShadow: "0 6px 20px rgba(0,0,0,0.10)",
-  backdropFilter: "blur(12px)",
-  WebkitBackdropFilter: "blur(12px)",
-  font: "500 13px/1.2 system-ui, sans-serif",
-  color: "var(--apollon-foreground, #1a1a1a)",
+  gap: "var(--apollon-chrome-gap, 8px)",
+  padding: "var(--apollon-chrome-pad, 6px)",
+  background: "var(--apollon-chrome-glass)",
+  backdropFilter: "var(--apollon-chrome-glass-blur)",
+  WebkitBackdropFilter: "var(--apollon-chrome-glass-blur)",
+  border: "1px solid var(--apollon-chrome-border)",
+  borderRadius: "var(--apollon-chrome-radius-lg, 12px)",
+  boxShadow:
+    "var(--apollon-chrome-shadow-floating), var(--apollon-chrome-inset-hairline)",
+  color: "var(--apollon-chrome-text)",
+  font: "600 13px/1.2 system-ui, sans-serif",
   pointerEvents: "auto",
 }
 
+// A rounded accent badge (status / score / timer) — a filled pill island.
 function pill(bg: string, fg = "#fff"): CSSProperties {
   return {
     ...glass,
     background: bg,
     color: fg,
     border: "none",
-    fontWeight: 600,
+    borderRadius: 999,
+    padding: "6px 12px",
+    fontWeight: 700,
   }
 }
 
-/** A full-width header row: back + editable-ish title + actions. */
+// A transparent full-width band row that FLOATS its islands (like the standalone's
+// `.apollon-chrome-header-row`) — the band paints nothing; the pills do.
+const bandRow: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "var(--apollon-chrome-gap, 8px)",
+  width: "100%",
+  padding: "var(--apollon-chrome-edge, 10px)",
+  pointerEvents: "none",
+}
+
+/** A header as floating islands: [back] [title] … [actions] — not a solid bar. */
 function HeaderBar({ title, right }: { title: string; right?: ReactNode }) {
   return (
-    <div
-      style={{
-        ...glass,
-        width: "100%",
-        borderRadius: 0,
-        border: "none",
-        borderBottom: "1px solid var(--apollon-border, rgba(0,0,0,0.08))",
-        boxShadow: "0 1px 0 rgba(0,0,0,0.04)",
-        background: "var(--apollon-chrome-surface, rgba(255,255,255,0.9))",
-        padding: "8px 16px",
-        gap: 12,
-      }}
-    >
-      <button type="button" style={{ ...glass, padding: "4px 10px" }}>
+    <div style={bandRow}>
+      <button
+        type="button"
+        style={{ ...glass, padding: "6px 12px", cursor: "pointer" }}
+      >
         ← All diagrams
       </button>
-      <strong style={{ fontSize: 15, fontWeight: 700 }}>{title}</strong>
+      <div
+        style={{ ...glass, padding: "6px 14px", fontSize: 14, fontWeight: 700 }}
+      >
+        {title}
+      </div>
       <span style={{ flex: 1 }} />
       {right}
     </div>
   )
 }
 
-/** The "All saved / Saving…" indicator Artemis draws above the canvas. */
+/** The "All saved / Saving…" indicator, as a glass island with a status dot. */
 function SavedStatus() {
   const [state, setState] = useState<"saved" | "saving" | "unsaved">("saved")
   const label =
     state === "saved"
-      ? "✓ All changes saved"
+      ? "All changes saved"
       : state === "saving"
-        ? "⟳ Saving…"
-        : "● Unsaved changes"
+        ? "Saving…"
+        : "Unsaved changes"
   const color =
     state === "saved" ? "#16a34a" : state === "saving" ? "#2563eb" : "#d97706"
   return (
@@ -114,9 +128,19 @@ function SavedStatus() {
           s === "saved" ? "unsaved" : s === "unsaved" ? "saving" : "saved"
         )
       }
-      style={{ ...glass, color, fontWeight: 600 }}
+      style={{ ...glass, padding: "6px 12px", cursor: "pointer" }}
       title="Click to cycle status (demo)"
     >
+      <span
+        aria-hidden="true"
+        style={{
+          width: 8,
+          height: 8,
+          borderRadius: 999,
+          background: color,
+          boxShadow: `0 0 0 3px color-mix(in srgb, ${color} 22%, transparent)`,
+        }}
+      />
       {label}
     </button>
   )
@@ -131,7 +155,8 @@ function ScoreChip({ score, max }: { score: number; max: number }) {
   )
 }
 
-/** A collapsible right-rail panel (problem statement, grading instructions). */
+/** A collapsible right-rail panel (problem statement, grading instructions), as a
+ *  floating glass island that fills the rail height with an edge margin. */
 function RailPanel({
   heading,
   children,
@@ -146,21 +171,24 @@ function RailPanel({
         ...glass,
         flexDirection: "column",
         alignItems: "stretch",
+        flex: "1 1 auto",
+        margin: "var(--apollon-chrome-gap, 8px)",
         gap: 10,
-        width: open ? 300 : 44,
-        height: "100%",
-        borderRadius: 0,
-        borderLeft: "1px solid var(--apollon-border, rgba(0,0,0,0.08))",
-        boxShadow: "-4px 0 20px rgba(0,0,0,0.06)",
+        width: open ? 300 : 52,
         overflow: "hidden",
-        padding: open ? 16 : 8,
+        padding: open ? 14 : 8,
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
-          style={{ ...glass, padding: "2px 8px" }}
+          style={{
+            ...glass,
+            padding: "4px 9px",
+            borderRadius: "var(--apollon-chrome-radius-md, 8px)",
+            cursor: "pointer",
+          }}
           aria-label={open ? "Collapse panel" : "Expand panel"}
         >
           {open ? "›" : "‹"}
@@ -176,24 +204,11 @@ function RailPanel({
   )
 }
 
-/** A bottom action bar (assessment / exam submit). No `width: 100%` — the footer
- *  band fills its row (symmetric to the header), so host chrome need not know it. */
+/** A footer as a floating right-aligned actions island (not a solid bar). */
 function ActionBar({ children }: { children: ReactNode }) {
   return (
-    <div
-      style={{
-        ...glass,
-        justifyContent: "flex-end",
-        gap: 10,
-        borderRadius: 0,
-        border: "none",
-        borderTop: "1px solid var(--apollon-border, rgba(0,0,0,0.08))",
-        boxShadow: "0 -1px 0 rgba(0,0,0,0.04)",
-        background: "var(--apollon-chrome-surface, rgba(255,255,255,0.92))",
-        padding: "10px 16px",
-      }}
-    >
-      {children}
+    <div style={{ ...bandRow, justifyContent: "flex-end" }}>
+      <div style={{ ...glass, gap: 6 }}>{children}</div>
     </div>
   )
 }
@@ -205,21 +220,29 @@ function Btn({
   children: ReactNode
   variant?: "primary" | "danger" | "ghost"
 }) {
-  const bg =
+  const base: CSSProperties = {
+    borderRadius: "var(--apollon-chrome-radius-md, 8px)",
+    padding: "7px 13px",
+    font: "600 13px/1 system-ui, sans-serif",
+    cursor: "pointer",
+    whiteSpace: "nowrap",
+  }
+  const variantStyle: CSSProperties =
     variant === "primary"
-      ? "linear-gradient(135deg,#4f46e5,#6366f1)"
+      ? {
+          background: "var(--apollon-chrome-accent)",
+          color: "var(--apollon-chrome-accent-contrast)",
+          border: "none",
+        }
       : variant === "danger"
-        ? "linear-gradient(135deg,#dc2626,#ef4444)"
-        : "transparent"
+        ? { background: "#dc2626", color: "#fff", border: "none" }
+        : {
+            background: "var(--apollon-chrome-surface)",
+            color: "var(--apollon-chrome-text)",
+            border: "1px solid var(--apollon-chrome-border-strong)",
+          }
   return (
-    <button
-      type="button"
-      style={{
-        ...(variant === "ghost" ? glass : pill(bg)),
-        padding: "8px 16px",
-        cursor: "pointer",
-      }}
-    >
+    <button type="button" style={{ ...base, ...variantStyle }}>
       {children}
     </button>
   )
@@ -234,23 +257,25 @@ function ExamTimer() {
   )
 }
 
-/** A secondary notice row (e.g. Athena feedback suggestions, problem-statement diff). */
+/** A secondary notice (Athena suggestions, problem-statement diff) as a centered
+ *  floating pill — a toast island, not a full-width strip. */
 function Banner({ tone, children }: { tone: string; children: ReactNode }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 8,
-        width: "100%",
-        padding: "6px 16px",
-        fontSize: 12.5,
-        fontWeight: 500,
-        color: "#fff",
-        background: tone,
-      }}
-    >
-      {children}
+    <div style={{ ...bandRow, justifyContent: "center", paddingTop: 0 }}>
+      <div
+        style={{
+          ...glass,
+          background: tone,
+          color: "#fff",
+          border: "none",
+          borderRadius: 999,
+          padding: "6px 14px",
+          fontSize: 12.5,
+          fontWeight: 600,
+        }}
+      >
+        {children}
+      </div>
     </div>
   )
 }
