@@ -12,11 +12,16 @@ import {
 
 /**
  * Register an overlay control for the component's lifetime, re-applying when
- * `deps` change and disposing on unmount. The compound built-in components below
- * — and any host wrapper — are thin declarative façades over this (react-map-gl's
- * `useControl` shape). The built-ins' `render` runs inside the editor's overlay
- * layer, so it resolves React Flow + store context regardless of where the
- * component sits in the consumer's tree.
+ * `deps` change and disposing on unmount (react-map-gl's `useControl` shape). The
+ * built-in `render` runs inside the editor's overlay layer, so it resolves React
+ * Flow + store context regardless of where the component sits in the consumer's
+ * tree.
+ *
+ * `deps` gate re-registration, so — exactly as with `useMemo`/`useEffect` — they
+ * MUST list every value `make`'s returned `render` closes over, or the control
+ * keeps rendering stale values. Unlike `<ApollonControl>` (which portals children
+ * that reconcile on their own), here the closure IS the content, so the dep list
+ * is the only update signal.
  */
 export function useControl(
   make: () => OverlayControlInput,

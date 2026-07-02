@@ -15,7 +15,7 @@ Make the editor's built-in controls composition-first. The element palette, mini
 </Apollon>
 ```
 
-Passing any children opts out of the defaults, so an empty composition is a bare canvas. `useControl(makeDescriptor, deps)` is the underlying primitive (react-map-gl shape) for custom controls and replacements — its `render` runs inside React Flow, so a replacement can drive the viewport.
+Composing children opts out of the defaults (omit children for the palette + zoom + minimap), so an empty composition is a bare canvas. `useControl(makeDescriptor, deps)` is the underlying primitive (react-map-gl shape) for custom controls and replacements — its `render` runs inside React Flow, so a replacement can drive the viewport.
 
 **Vanilla / imperative — descriptor factories.** `paletteControl()`, `zoomControl({ history })`, `miniMapControl()` build the same records:
 

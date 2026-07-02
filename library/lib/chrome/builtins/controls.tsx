@@ -1,6 +1,7 @@
 import type { PanelPosition } from "@xyflow/react"
 import { Sidebar } from "@/components/Sidebar"
 import { CustomMiniMap } from "@/components/CustomMiniMap"
+import { useOverlayStore } from "@/store/context"
 import type {
   OverlayControlInput,
   OverlayControlOptions,
@@ -58,6 +59,26 @@ export interface MiniMapControlOptions extends BuiltInPlacement {
   zoomable?: boolean
 }
 
+/**
+ * Renders the minimap at the registry's LIVE region rather than a value captured
+ * when the control was built, so `editor.updateControl(MINIMAP_ID, { region })`
+ * actually repositions it (its position isn't baked into the render closure — the
+ * behaviour `pannable`/`zoomable` still is, as neither is a layout option).
+ */
+function BuiltInMiniMap({
+  pannable,
+  zoomable,
+}: Pick<MiniMapControlOptions, "pannable" | "zoomable">) {
+  const region = useOverlayStore((s) => s.controls[MINIMAP_ID]?.region)
+  return (
+    <CustomMiniMap
+      position={(region as PanelPosition | undefined) ?? "bottom-right"}
+      pannable={pannable}
+      zoomable={zoomable}
+    />
+  )
+}
+
 export function miniMapControl({
   pannable,
   zoomable,
@@ -72,13 +93,7 @@ export function miniMapControl({
     region,
     selfPositioned: true,
     ...placement,
-    render: () => (
-      <CustomMiniMap
-        position={region as PanelPosition}
-        pannable={pannable}
-        zoomable={zoomable}
-      />
-    ),
+    render: () => <BuiltInMiniMap pannable={pannable} zoomable={zoomable} />,
   }
 }
 

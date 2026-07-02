@@ -14,7 +14,6 @@ import {
   AlignmentGuides,
 } from "@/components"
 import { OverlayLayer } from "@/overlay/OverlayLayer"
-import { DefaultControls } from "@/chrome/DefaultControls"
 import "@xyflow/react/dist/style.css"
 // Shared, embed-safe @tumaet/ui primitives + --apollon-/--home- design tokens
 // (Tailwind-free, Preflight-free). Loaded here rather than `@import`-ed from
@@ -50,7 +49,6 @@ import {
   useRemoteDraggingNodes,
   applyDraggingOverlay,
 } from "./hooks/useRemoteDraggingNodes"
-import { ApollonMode } from "./typings"
 import {
   getConnectionLineType,
   resolveReconnectPreviewBasePoints,
@@ -97,23 +95,19 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
     )
 
   const {
-    mode,
     diagramType,
     readonly,
     scrollLock,
     scrollEnabled,
-    controlsProvided,
     connectionGuidanceActive,
     startReconnectPreview,
     stopReconnectPreview,
   } = useMetadataStore(
     useShallow((state) => ({
-      mode: state.mode,
       diagramType: state.diagramType,
       readonly: state.readonly,
       scrollLock: state.scrollLock,
       scrollEnabled: state.scrollEnabled,
-      controlsProvided: state.controlsProvided,
       connectionGuidanceActive: state.connectionGuidanceActive,
       startReconnectPreview: state.startReconnectPreview,
       stopReconnectPreview: state.stopReconnectPreview,
@@ -191,13 +185,9 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
             backgroundColor: "var(--apollon-background, #ffffff)",
             position: "relative",
             // Always publish the reserved insets (default 0) so the overlay store
-            // is the single layout authority: the palette and every band position
-            // straight off these vars. Suppressing them when zero forced the CSS
-            // to a hardcoded `edge + island-h` fallback that could not tell "top
-            // chrome registered but not yet measured" from "no top chrome at all",
-            // so an editor with no header reserved ~64px of phantom space (the
-            // "huge gap from palette to top"). With the vars always present the
-            // fallback is gone and the gap collapses to 0 when nothing is there.
+            // is the single layout authority — the palette and every band position
+            // straight off these vars, and the gap collapses to 0 when no chrome
+            // reserves that edge (no hardcoded CSS fallback to second-guess it).
             "--apollon-inset-top": `${insets.top}px`,
             "--apollon-inset-right": `${insets.right}px`,
             "--apollon-inset-bottom": `${insets.bottom}px`,
@@ -270,15 +260,9 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
             <CustomBackground />
             <AlignmentGuides />
             <AssessmentSelectionDebug />
-            {/* Registers the editor's default chrome (palette + zoom + minimap)
-                unless the consumer supplied their own `controls` / composed
-                `<Apollon>` children. The palette shows only while modelling. */}
-            <DefaultControls
-              enabled={!controlsProvided}
-              showPalette={mode === ApollonMode.Modelling && !readonly}
-            />
             {/* Renders every registered control (built-in + host-injected) into
-                its region: header, rails, corners, on-canvas. */}
+                its region: header, rails, corners, on-canvas. The chrome itself is
+                registered at construction (imperative) or by the React wrapper. */}
             <OverlayLayer />
           </ReactFlow>
           <ScrollOverlay />

@@ -16,9 +16,6 @@ export type MetadataStore = {
   readonly: boolean
   debug: boolean
   scrollLock: boolean
-  /** True once the consumer supplied their own `controls` (vanilla) or composed
-   *  chrome as `<Apollon>` children — the editor then registers no default chrome. */
-  controlsProvided: boolean
   scrollEnabled: boolean
   connectionGuidanceActive: boolean
   connectionGuidanceSourceNodeId: string | null
@@ -31,7 +28,6 @@ export type MetadataStore = {
   setAvailableViews: (availableViews: ApollonView[]) => void
   setReadonly: (readonly: boolean) => void
   setScrollLock: (scrollLock: boolean) => void
-  setControlsProvided: (controlsProvided: boolean) => void
   setScrollEnabled: (scrollEnabled: boolean) => void
   startConnectionGuidance: (
     sourceNodeId: string | null,
@@ -61,7 +57,6 @@ type InitialMetadataState = {
   readonly: boolean
   debug: boolean
   scrollLock: boolean
-  controlsProvided: boolean
   scrollEnabled: boolean
   connectionGuidanceActive: boolean
   connectionGuidanceSourceNodeId: string | null
@@ -81,7 +76,6 @@ const initialMetadataState: InitialMetadataState = {
   readonly: false,
   debug: false,
   scrollLock: false,
-  controlsProvided: false,
   scrollEnabled: false,
   connectionGuidanceActive: false,
   connectionGuidanceSourceNodeId: null,
@@ -169,9 +163,6 @@ export const createMetadataStore = (
           set({ readonly }, undefined, "setReadonly")
         },
 
-        setControlsProvided: (controlsProvided) => {
-          set({ controlsProvided }, undefined, "setControlsProvided")
-        },
         setScrollLock: (scrollLock: boolean) => {
           set({ scrollLock }, undefined, "setScrollLock")
         },

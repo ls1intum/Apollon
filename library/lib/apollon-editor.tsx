@@ -34,6 +34,7 @@ import {
   OverlayStoreContext,
 } from "./store/context"
 import { createOverlayStore, type OverlayStore } from "./overlay/overlayStore"
+import { defaultControls } from "./chrome/builtins/controls"
 import { RegionMount } from "./overlay/RegionMount"
 import {
   type OverlayControlInput,
@@ -201,13 +202,13 @@ export class ApollonEditor {
     if (options?.scrollLock !== undefined) {
       this.metadataStore.getState().setScrollLock(options.scrollLock)
     }
-    // Supplying `controls` (even `[]`) opts out of the default chrome; the editor
-    // registers exactly the given descriptors. Omit it for the palette + zoom +
-    // minimap defaults (registered by the React tree once the canvas mounts).
-    if (options?.controls !== undefined) {
-      this.metadataStore.getState().setControlsProvided(true)
-      for (const control of options.controls) this.addControl(control)
-    }
+    // Register the chrome: the given descriptors (even `[]`, an explicit bare
+    // canvas), or the palette + zoom + minimap defaults when omitted. The React
+    // `<Apollon>` wrapper always passes `[]` and instead composes its own defaults
+    // as fallback children, so composing-ness stays fully reactive (no mount-time
+    // snapshot, no default fighting a composed control over a reserved id).
+    for (const control of options?.controls ?? defaultControls())
+      this.addControl(control)
 
     this.diagramStore.getState().setCollaborationEnabled(collaboration.enabled)
 
@@ -413,6 +414,10 @@ export class ApollonEditor {
   public updateControl(id: string, patch: Partial<OverlayControlInput>): void {
     const existing = this.overlayStore.getState().controls[id]
     if (!existing) return
+    if (patch.region !== undefined && !OVERLAY_REGIONS.includes(patch.region))
+      throw new Error(
+        `[ApollonEditor] updateControl: unknown region: ${patch.region}`
+      )
     // Pin id last so a stray `patch.id` can't fork the control under a new key.
     this.overlayStore.getState().register({ ...existing, ...patch, id })
   }
@@ -433,6 +438,15 @@ export class ApollonEditor {
    */
   public hasControl(id: string): boolean {
     return id in this.overlayStore.getState().controls
+  }
+
+  /**
+   * @param id - A control id.
+   * @returns The registered control (options + `render`), or `undefined` if absent
+   *   — e.g. to read a built-in's current `region` after `updateControl`.
+   */
+  public getControl(id: string): OverlayControlInput | undefined {
+    return this.overlayStore.getState().controls[id]
   }
 
   /**

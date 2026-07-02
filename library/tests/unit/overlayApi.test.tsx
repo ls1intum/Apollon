@@ -136,6 +136,32 @@ describe("built-in controls (imperative descriptors)", () => {
 
     ed.destroy()
   })
+
+  it("omitting controls registers all three defaults", () => {
+    el = document.createElement("div")
+    document.body.appendChild(el)
+    const ed = new ApollonEditor(el)
+
+    expect(ed.hasControl(PALETTE_ID)).toBe(true)
+    expect(ed.hasControl(ZOOM_ID)).toBe(true)
+    expect(ed.hasControl(MINIMAP_ID)).toBe(true)
+
+    ed.destroy()
+  })
+
+  it("updateControl(MINIMAP_ID, { region }) moves it — the region is not frozen in the render", () => {
+    el = document.createElement("div")
+    document.body.appendChild(el)
+    const ed = new ApollonEditor(el)
+
+    // The minimap self-positions from its LIVE registry region (BuiltInMiniMap reads
+    // it), so patching region must actually land on the record — not a no-op behind
+    // a captured closure. Read the field back (the blind spot that hid the bug).
+    ed.updateControl(MINIMAP_ID, { region: "top-left" })
+    expect(ed.getControl(MINIMAP_ID)?.region).toBe("top-left")
+
+    ed.destroy()
+  })
 })
 
 // Two-tier chrome: BANDS (header/left-rail/right-rail) reserve their cross-size on

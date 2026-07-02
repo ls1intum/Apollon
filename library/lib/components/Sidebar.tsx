@@ -8,7 +8,7 @@ import {
 import { useMetadataStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { DraggableGhost } from "./DraggableGhost"
-import { ApollonView } from "@/typings"
+import { ApollonMode, ApollonView } from "@/typings"
 import {
   COMPACT_PALETTE,
   PALETTE,
@@ -39,14 +39,22 @@ const previewExtraHeight = (type: string) =>
 const VIEW_SWITCH_HEIGHT = 64
 
 export const Sidebar = () => {
-  const { diagramType, view, setView, availableViews } = useMetadataStore(
-    useShallow((state) => ({
-      diagramType: state.diagramType,
-      view: state.view,
-      setView: state.setView,
-      availableViews: state.availableViews,
-    }))
-  )
+  const { diagramType, view, setView, availableViews, mode, readonly } =
+    useMetadataStore(
+      useShallow((state) => ({
+        diagramType: state.diagramType,
+        view: state.view,
+        setView: state.setView,
+        availableViews: state.availableViews,
+        mode: state.mode,
+        readonly: state.readonly,
+      }))
+    )
+  // The palette only makes sense while modelling an editable diagram. Gating here
+  // (not in the caller) keeps every registration path identical — the default
+  // chrome, `<Apollon.Palette/>`, and the vanilla `paletteControl()` all hide it
+  // outside modelling, and the empty left-rail band then reserves no room.
+  const showPalette = mode === ApollonMode.Modelling && !readonly
   const showInteractiveSelectionView =
     availableViews.includes(ApollonView.Highlight) ||
     view === ApollonView.Highlight
@@ -130,7 +138,7 @@ export const Sidebar = () => {
     )
   }, [paletteItems, layout.cellW, layout.cellH, canvas.compact])
 
-  if (paletteItems.length === 0) {
+  if (!showPalette || paletteItems.length === 0) {
     return null
   }
 

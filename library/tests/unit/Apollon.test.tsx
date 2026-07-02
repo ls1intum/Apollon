@@ -27,6 +27,9 @@ vi.mock("@/apollon-editor", () => ({
     setMode = vi.fn()
     setScrollLock = vi.fn()
     setPreviewMode = setPreviewModeSpy
+    // The wrapper renders default `<Apollon.*>` chrome as fallback children, which
+    // register through `addControl`; return a no-op disposer.
+    addControl = vi.fn(() => () => {})
   },
 }))
 

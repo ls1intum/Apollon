@@ -84,17 +84,12 @@ interface ControlSlotProps {
 
 /**
  * Renders a single control: opts pointer events back in over the
- * pointer-transparent region frame, blocks canvas pan/zoom/wheel via
- * nopan/nodrag/nowheel + BUBBLE-phase stopPropagation (pointer events only,
- * never keyboard — so focus/tab order is preserved), and applies the
- * role="group" wrapper.
+ * pointer-transparent region frame, applies the optional `role="group"` wrapper,
+ * and blocks canvas pan/zoom/wheel via nopan/nodrag/nowheel + stopPropagation.
  *
- * The stop is bubble-phase, not capture: a capture-phase stop fires top-down and
- * would swallow the pointerdown BEFORE it reached an interactive child's own
- * handler — e.g. the palette's pointer-based drag never starts. Bubble-phase lets
- * the child handle the event first, then stops it climbing to any React Flow
- * ancestor. (Panels are siblings of the pane, so `nopan` already blocks panning;
- * this is belt-and-suspenders for wheel/drag on nested containers.)
+ * The stop is BUBBLE-phase (pointer events only, never keyboard — focus/tab order
+ * is preserved): a capture-phase stop would swallow the pointerdown before an
+ * interactive child's own handler runs, so e.g. the palette's drag never starts.
  */
 function ControlSlot({ control, registerMeasure }: ControlSlotProps) {
   const interactive = control.interactive !== false

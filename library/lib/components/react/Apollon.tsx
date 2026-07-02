@@ -131,12 +131,11 @@ export function Apollon(props: ApollonProps) {
     collaborationEnabled,
     collaboration,
     debug,
-    // Passing ANY `children` (even a conditional that renders nothing) opts out of
-    // the editor defaults (`[]`), so the composed `<Apollon.*>` / `<ApollonControl>`
-    // children own the layout — and toggling them all off yields a bare canvas, not
-    // a surprise fallback. Omitting `children` entirely keeps the palette + zoom +
-    // minimap defaults.
-    controls: children !== undefined ? [] : undefined,
+    // React always owns the chrome: the editor registers nothing, and `<Apollon>`
+    // renders the default `<Apollon.*>` as fallback children when the consumer
+    // composes none. That keeps composing-ness reactive — a control appearing or
+    // disappearing is a normal mount/unmount — with a single owner per reserved id.
+    controls: [],
   })
 
   // Commit-time write — StrictMode-safe latest-closure ref.
@@ -226,8 +225,21 @@ export function Apollon(props: ApollonProps) {
         style={mergedStyle}
         data-theme={dataTheme}
       />
-      {children}
+      {children ?? <DefaultChildren />}
     </ApollonInstanceContext.Provider>
+  )
+}
+
+/** The editor's default chrome, composed for the no-children case. Rendering
+ *  these (vs. the consumer's own children) is what "omitting children keeps the
+ *  defaults" means — and each is a normal, reactively-mounted control. */
+function DefaultChildren() {
+  return (
+    <>
+      <ApollonPalette />
+      <ApollonZoom />
+      <ApollonMiniMap />
+    </>
   )
 }
 
