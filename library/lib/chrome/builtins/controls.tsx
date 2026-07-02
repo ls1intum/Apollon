@@ -85,9 +85,6 @@ export function miniMapControl({
   region = "bottom-right",
   ...placement
 }: MiniMapControlOptions = {}): OverlayControlInput {
-  // The minimap is a React-Flow-native, self-positioning widget: it renders its
-  // own `<Panel position>` and reserves nothing, so it registers `selfPositioned`
-  // (the engine renders it bare, not inside a region slot).
   return {
     id: MINIMAP_ID,
     region,

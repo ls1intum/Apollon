@@ -23,7 +23,7 @@ import { editorStoryMeta, fixtureByType } from "../_support/editor"
  * story wires every knob to Storybook controls; the rest are focused recipes.
  */
 
-// The six React-Flow panel corners the zoom cluster can anchor to.
+// The six corner regions the zoom cluster can anchor to.
 const CORNER_REGIONS = [
   "top-left",
   "top-center",

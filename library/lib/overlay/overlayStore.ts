@@ -10,11 +10,10 @@ import {
 } from "./types"
 
 /**
- * Two-tier chrome. A BAND owns a full edge and displaces the diagram; a SLOT (a
- * React-Flow panel corner) floats over the canvas and displaces nothing. Only
- * bands reserve room by default — this is what keeps a bottom-corner cluster from
- * shortening the left-rail palette it never touches. The primary edge is also the
- * one an explicit `inset: "auto"` opt-in measures against.
+ * Reservation is two-tier: a BAND owns a full edge and displaces the diagram; a
+ * corner SLOT floats over the canvas and reserves nothing by default (which keeps
+ * a bottom-corner cluster from shortening the palette it never touches). A slot
+ * can opt in with an explicit `inset`, whose `"auto"` measures the region's edge.
  */
 const BANDS = new Set<OverlayRegion>([
   "header",
@@ -27,8 +26,8 @@ const BANDS = new Set<OverlayRegion>([
  * Per-control reserved px per side. By default a band reserves its measured
  * cross-size on its one edge and a slot reserves nothing; an explicit `inset`
  * overrides — `"auto"` measures the region's edge, an object sets per-side px
- * (with per-side `"auto"` measured). This drives fitView padding AND band
- * positioning, so slots must contribute 0 or they couple unrelated chrome.
+ * (with per-side `"auto"` measured). This feeds the fitView camera padding, so a
+ * slot must contribute 0 or it couples unrelated chrome into the fit.
  */
 function controlContribution(
   control: OverlayControl,

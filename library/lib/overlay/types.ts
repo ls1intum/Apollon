@@ -1,9 +1,9 @@
 import { type ReactNode, type CSSProperties } from "react"
 
 /**
- * Where a control is anchored. The six React Flow `<Panel>` corners are
- * screen-space and rendered through React Flow; `header`/`left-rail`/`right-rail`
- * are library-owned bands; `on-canvas` pans/zooms with the diagram.
+ * Where a control is anchored. The six corners and the `header`/`footer`/rail
+ * bands are screen-space cells of the overlay grid; `on-canvas` pans/zooms with
+ * the diagram.
  */
 export type OverlayRegion =
   | "top-left"

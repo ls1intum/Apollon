@@ -166,8 +166,8 @@ function ControlSlot({ control, registerMeasure }: ControlSlotProps) {
   // A full-width band (header OR footer) must fill its row, not shrink-wrap to
   // content — otherwise a short-content bar (e.g. the mobile navbar with a short
   // title, or an action bar with two buttons) collapses to its content width and
-  // its right-aligned controls drift inward (colliding with the floating palette).
-  // Side rails already size correctly along their axis.
+  // its right-aligned controls drift inward. Side rails already size correctly
+  // along their axis.
   const fillRow = control.region === "header" || control.region === "footer"
 
   return (
@@ -272,10 +272,8 @@ export function OverlayLayer() {
 
   // Measure synchronously (pre-paint) whenever the set of controls changes, so a
   // newly-registered auto-inset control reserves its room on the SAME frame it
-  // first paints — never one frame at inset 0. That first-paint correctness is
-  // what lets the CSS drop its hardcoded `edge + island-h` fallback: the store is
-  // authoritative from frame one, so there is neither a pre-measurement slide nor
-  // a phantom gap. The ResizeObserver below keeps it in sync on later resizes.
+  // first paints — never one frame at inset 0. The ResizeObserver below keeps it
+  // in sync on later resizes.
   useLayoutEffect(() => {
     flushMeasure()
   }, [controls, flushMeasure])
