@@ -4,6 +4,7 @@ import {
   Position,
   useStore,
   useReactFlow,
+  type Node,
 } from "@xyflow/react"
 import { EDGES } from "@/constants"
 import {
@@ -33,6 +34,12 @@ import {
   normalizeOrthogonalEdgePoints,
   resolveOrthogonalEdgeReleasePoints,
   isInvalidOrthogonalEdgeRelease,
+  getFreeformAnchorFromPoint,
+  getFreeformAnchorPoint,
+  getSideHandleIdForPosition,
+  isClassDiagramEdgeType,
+  isFreeformEdgeAnchor,
+  type FreeformEdgeAnchor,
 } from "@/utils/edgeUtils"
 import {
   type BendHandle,
@@ -68,7 +75,11 @@ interface UseStepPathEdgeProps {
   targetPosition: Position
   sourceHandleId?: string | null
   targetHandleId?: string | null
-  data?: { points?: IPoint[] }
+  data?: {
+    points?: IPoint[]
+    sourceAnchor?: FreeformEdgeAnchor
+    targetAnchor?: FreeformEdgeAnchor
+  }
   allowMidpointDragging?: boolean
   enableStraightPath?: boolean
 }
@@ -92,6 +103,25 @@ export interface StepPathEdgeData {
   neighborGeometry: IPoint[][]
 }
 
+type EndpointType = "source" | "target"
+
+type EndpointDragCommit = {
+  endpoint: EndpointType
+  nodeId: string
+  handleId: string
+  anchor: FreeformEdgeAnchor
+  points: IPoint[]
+  sourceEndpoint: IPoint
+  targetEndpoint: IPoint
+  sourcePosition: Position
+  targetPosition: Position
+  sourceRect: Rect
+  targetRect: Rect
+  directPoints: IPoint[] | null
+}
+
+const FREEFORM_ENDPOINT_SNAP_RADIUS_PX = 48
+
 const arePointsEqual = (a: IPoint[], b: IPoint[]): boolean =>
   a.length === b.length &&
   a.every((point, index) => point.x === b[index].x && point.y === b[index].y)
@@ -101,12 +131,12 @@ export const useStepPathEdge = ({
   type,
   source,
   target,
-  sourceX,
-  sourceY,
-  targetX,
-  targetY,
-  sourcePosition,
-  targetPosition,
+  sourceX: reactFlowSourceX,
+  sourceY: reactFlowSourceY,
+  targetX: reactFlowTargetX,
+  targetY: reactFlowTargetY,
+  sourcePosition: reactFlowSourcePosition,
+  targetPosition: reactFlowTargetPosition,
   data,
   allowMidpointDragging = true,
   enableStraightPath = false,
@@ -121,13 +151,15 @@ export const useStepPathEdge = ({
   // release falls back to THIS — clamping at the last good position — instead
   // of snapping all the way back to the pre-drag shape.
   const lastValidDragRef = useRef<IPoint[]>([])
+  const endpointDragCommitRef = useRef<EndpointDragCommit | null>(null)
 
   const isDiagramModifiable = useDiagramModifiable()
   const zoom = useStore((state) => state.transform[2])
   const isReconnecting = useMetadataStore(
     (state) => state.reconnectPreviewEdgeId === id
   )
-  const { getNode, getNodes, screenToFlowPosition } = useReactFlow()
+  const { getIntersectingNodes, getNode, getNodes, screenToFlowPosition } =
+    useReactFlow()
 
   const [draggingHandle, setDraggingHandle] = useState<BendHandle | null>(null)
   // While a bend handle is being dragged we render from this live geometry
@@ -141,10 +173,63 @@ export const useStepPathEdge = ({
   )
 
   const { customPoints, setCustomPoints } = useEdgeState(data?.points)
-  const { setEdges } = useDiagramStore(
-    useShallow((state) => ({
-      setEdges: state.setEdges,
-    }))
+  const freeformAnchorsEnabled = isClassDiagramEdgeType(type)
+  const sourceAnchor = data?.sourceAnchor
+  const targetAnchor = data?.targetAnchor
+  const shouldSubscribeToNodeGeometry =
+    freeformAnchorsEnabled &&
+    (isFreeformEdgeAnchor(sourceAnchor) || isFreeformEdgeAnchor(targetAnchor))
+  const {
+    setEdges,
+    sourceNodePositionX,
+    sourceNodePositionY,
+    sourceNodeWidth,
+    sourceNodeHeight,
+    targetNodePositionX,
+    targetNodePositionY,
+    targetNodeWidth,
+    targetNodeHeight,
+  } = useDiagramStore(
+    useShallow((state) => {
+      if (!shouldSubscribeToNodeGeometry) {
+        return {
+          setEdges: state.setEdges,
+          sourceNodePositionX: undefined,
+          sourceNodePositionY: undefined,
+          sourceNodeWidth: undefined,
+          sourceNodeHeight: undefined,
+          targetNodePositionX: undefined,
+          targetNodePositionY: undefined,
+          targetNodeWidth: undefined,
+          targetNodeHeight: undefined,
+        }
+      }
+
+      const storeSourceNode = state.nodes.find((node) => node.id === source)
+      const storeTargetNode = state.nodes.find((node) => node.id === target)
+      const storeSourcePosition = storeSourceNode
+        ? getPositionOnCanvas(storeSourceNode, state.nodes)
+        : null
+      const storeTargetPosition = storeTargetNode
+        ? getPositionOnCanvas(storeTargetNode, state.nodes)
+        : null
+
+      return {
+        setEdges: state.setEdges,
+        sourceNodePositionX: storeSourcePosition?.x,
+        sourceNodePositionY: storeSourcePosition?.y,
+        sourceNodeWidth:
+          storeSourceNode?.width ?? storeSourceNode?.measured?.width,
+        sourceNodeHeight:
+          storeSourceNode?.height ?? storeSourceNode?.measured?.height,
+        targetNodePositionX: storeTargetPosition?.x,
+        targetNodePositionY: storeTargetPosition?.y,
+        targetNodeWidth:
+          storeTargetNode?.width ?? storeTargetNode?.measured?.width,
+        targetNodeHeight:
+          storeTargetNode?.height ?? storeTargetNode?.measured?.height,
+      }
+    })
   )
 
   const {
@@ -155,19 +240,105 @@ export const useStepPathEdge = ({
     offset = 0,
   } = getEdgeMarkerStyles(type)
   const padding = markerPadding ?? EDGES.MARKER_PADDING
-  const sourceNode = getNode(source)!
-  const targetNode = getNode(target)!
   const allNodes = getNodes()
+  const sourceNode =
+    allNodes.find((node) => node.id === source) ?? getNode(source)!
+  const targetNode =
+    allNodes.find((node) => node.id === target) ?? getNode(target)!
 
   const sourceAbsolutePosition = useMemo(() => {
-    if (!sourceNode) return { x: sourceX, y: sourceY }
+    if (sourceNodePositionX != null && sourceNodePositionY != null) {
+      return { x: sourceNodePositionX, y: sourceNodePositionY }
+    }
+    if (!sourceNode) return { x: reactFlowSourceX, y: reactFlowSourceY }
     return getPositionOnCanvas(sourceNode, allNodes)
-  }, [sourceNode, allNodes, sourceX, sourceY])
+  }, [
+    sourceNodePositionX,
+    sourceNodePositionY,
+    sourceNode,
+    allNodes,
+    reactFlowSourceX,
+    reactFlowSourceY,
+  ])
 
   const targetAbsolutePosition = useMemo(() => {
-    if (!targetNode) return { x: targetX, y: targetY }
+    if (targetNodePositionX != null && targetNodePositionY != null) {
+      return { x: targetNodePositionX, y: targetNodePositionY }
+    }
+    if (!targetNode) return { x: reactFlowTargetX, y: reactFlowTargetY }
     return getPositionOnCanvas(targetNode, allNodes)
-  }, [targetNode, allNodes, targetX, targetY])
+  }, [
+    targetNodePositionX,
+    targetNodePositionY,
+    targetNode,
+    allNodes,
+    reactFlowTargetX,
+    reactFlowTargetY,
+  ])
+
+  const sourceRect = useMemo(
+    () =>
+      sourceNode
+        ? {
+            x: sourceAbsolutePosition.x,
+            y: sourceAbsolutePosition.y,
+            width: sourceNodeWidth ?? sourceNode.width ?? 0,
+            height: sourceNodeHeight ?? sourceNode.height ?? 0,
+          }
+        : null,
+    [
+      sourceAbsolutePosition.x,
+      sourceAbsolutePosition.y,
+      sourceNode,
+      sourceNodeWidth,
+      sourceNodeHeight,
+    ]
+  )
+  const targetRect = useMemo(
+    () =>
+      targetNode
+        ? {
+            x: targetAbsolutePosition.x,
+            y: targetAbsolutePosition.y,
+            width: targetNodeWidth ?? targetNode.width ?? 0,
+            height: targetNodeHeight ?? targetNode.height ?? 0,
+          }
+        : null,
+    [
+      targetAbsolutePosition.x,
+      targetAbsolutePosition.y,
+      targetNode,
+      targetNodeWidth,
+      targetNodeHeight,
+    ]
+  )
+  const resolvedSourceAnchor = useMemo(
+    () =>
+      freeformAnchorsEnabled && sourceRect && isFreeformEdgeAnchor(sourceAnchor)
+        ? getFreeformAnchorPoint(sourceRect, sourceAnchor)
+        : null,
+    [freeformAnchorsEnabled, sourceAnchor, sourceRect]
+  )
+  const resolvedTargetAnchor = useMemo(
+    () =>
+      freeformAnchorsEnabled && targetRect && isFreeformEdgeAnchor(targetAnchor)
+        ? getFreeformAnchorPoint(targetRect, targetAnchor)
+        : null,
+    [freeformAnchorsEnabled, targetAnchor, targetRect]
+  )
+
+  const sourceX = resolvedSourceAnchor?.point.x ?? reactFlowSourceX
+  const sourceY = resolvedSourceAnchor?.point.y ?? reactFlowSourceY
+  const targetX = resolvedTargetAnchor?.point.x ?? reactFlowTargetX
+  const targetY = resolvedTargetAnchor?.point.y ?? reactFlowTargetY
+  const sourcePosition =
+    resolvedSourceAnchor?.position ?? reactFlowSourcePosition
+  const targetPosition =
+    resolvedTargetAnchor?.position ?? reactFlowTargetPosition
+  const sourceConnectionPointPadding = resolvedSourceAnchor
+    ? 0
+    : EDGES.SOURCE_CONNECTION_POINT_PADDING
+  const targetConnectionPointPadding = resolvedTargetAnchor ? 0 : padding
 
   // Round coordinates to whole pixels for pixel-perfect rendering
   // React Flow may return fractional values when node dimensions are odd
@@ -180,13 +351,13 @@ export const useStepPathEdge = ({
     roundedTargetX,
     roundedTargetY,
     targetPosition,
-    padding
+    targetConnectionPointPadding
   )
   const adjustedSourceCoordinates = adjustSourceCoordinates(
     roundedSourceX,
     roundedSourceY,
     sourcePosition,
-    EDGES.SOURCE_CONNECTION_POINT_PADDING
+    sourceConnectionPointPadding
   )
   const basePath = useMemo(() => {
     if (!enableStraightPath) {
@@ -206,14 +377,14 @@ export const useStepPathEdge = ({
     const straightPathPoints = tryFindStraightPath(
       {
         position: { x: sourceAbsolutePosition.x, y: sourceAbsolutePosition.y },
-        width: sourceNode.width ?? 100,
-        height: sourceNode.height ?? 160,
+        width: sourceRect?.width ?? sourceNode.width ?? 100,
+        height: sourceRect?.height ?? sourceNode.height ?? 160,
         direction: sourcePosition,
       },
       {
         position: { x: targetAbsolutePosition.x, y: targetAbsolutePosition.y },
-        width: targetNode.width ?? 100,
-        height: targetNode.height ?? 160,
+        width: targetRect?.width ?? targetNode.width ?? 100,
+        height: targetRect?.height ?? targetNode.height ?? 160,
         direction: targetPosition,
       },
       padding,
@@ -245,7 +416,11 @@ export const useStepPathEdge = ({
     sourceAbsolutePosition,
     targetAbsolutePosition,
     sourceNode,
+    sourceRect?.width,
+    sourceRect?.height,
     targetNode,
+    targetRect?.width,
+    targetRect?.height,
     sourcePosition,
     targetPosition,
     roundedSourceX,
@@ -266,15 +441,27 @@ export const useStepPathEdge = ({
     return result
   }, [basePath])
 
+  const hasStoredManualPoints = Boolean(data?.points && data.points.length > 0)
+  const hasLocalManualPoints = customPoints.length > 0
+  const shouldPreferComputedPath =
+    freeformAnchorsEnabled && computedPoints.length === 2
   const hasManualPoints =
-    (data?.points && data.points.length > 0) || customPoints.length > 0
+    !shouldPreferComputedPath &&
+    (hasStoredManualPoints || (!freeformAnchorsEnabled && hasLocalManualPoints))
 
   const activePoints = useMemo(() => {
+    if (shouldPreferComputedPath) {
+      return computedPoints
+    }
+
     let points: IPoint[]
     if (data?.points && data.points.length > 0) {
       points = data.points
     } else {
-      points = customPoints.length ? customPoints : computedPoints
+      points =
+        !freeformAnchorsEnabled && customPoints.length
+          ? customPoints
+          : computedPoints
     }
 
     if (hasManualPoints && points.length >= 2) {
@@ -298,7 +485,9 @@ export const useStepPathEdge = ({
     customPoints,
     computedPoints,
     data?.points,
+    freeformAnchorsEnabled,
     hasManualPoints,
+    shouldPreferComputedPath,
     adjustedSourceCoordinates.sourceX,
     adjustedSourceCoordinates.sourceY,
     adjustedTargetCoordinates.targetX,
@@ -308,6 +497,22 @@ export const useStepPathEdge = ({
   ])
 
   useEffect(() => {
+    if (shouldPreferComputedPath) {
+      if (hasLocalManualPoints) {
+        setCustomPoints([])
+      }
+      if (hasStoredManualPoints) {
+        setEdges((edges) =>
+          edges.map((edge) =>
+            edge.id === id
+              ? { ...edge, data: { ...edge.data, points: [] } }
+              : edge
+          )
+        )
+      }
+      return
+    }
+
     if (!hasManualPoints) return
 
     const storedPoints =
@@ -344,10 +549,13 @@ export const useStepPathEdge = ({
     activePoints,
     customPoints,
     data?.points,
+    hasLocalManualPoints,
     hasManualPoints,
+    hasStoredManualPoints,
     id,
     setCustomPoints,
     setEdges,
+    shouldPreferComputedPath,
     adjustedSourceCoordinates.sourceX,
     adjustedSourceCoordinates.sourceY,
     adjustedTargetCoordinates.targetX,
@@ -689,6 +897,7 @@ export const useStepPathEdge = ({
       id,
       setEdges,
       allowMidpointDragging,
+      screenToFlowPosition,
       setCustomPoints,
       targetPosition,
       sourcePosition,
@@ -696,6 +905,289 @@ export const useStepPathEdge = ({
       adjustedSourceCoordinates.sourceY,
       adjustedTargetCoordinates.targetX,
       adjustedTargetCoordinates.targetY,
+    ]
+  )
+
+  const getNodeRect = useCallback(
+    (node: Node): Rect | null => {
+      const nodes = getNodes()
+      const currentNode = nodes.find((candidate) => candidate.id === node.id)
+      const resolvedNode = currentNode ?? node
+      const width = resolvedNode.width ?? 0
+      const height = resolvedNode.height ?? 0
+
+      if (!width || !height) return null
+
+      const position = getPositionOnCanvas(resolvedNode, nodes)
+      return { x: position.x, y: position.y, width, height }
+    },
+    [getNodes]
+  )
+
+  const findFreeformEndpointNode = useCallback(
+    (flowPoint: IPoint): { node: Node; rect: Rect } | null => {
+      const nodes = getNodes()
+      let best: { node: Node; rect: Rect; distance: number } | null = null
+
+      for (const node of nodes) {
+        if (isParentNodeType(node.type)) continue
+
+        const rect = getNodeRect(node)
+        if (!rect) continue
+
+        const dx =
+          flowPoint.x < rect.x
+            ? rect.x - flowPoint.x
+            : flowPoint.x > rect.x + rect.width
+              ? flowPoint.x - (rect.x + rect.width)
+              : 0
+        const dy =
+          flowPoint.y < rect.y
+            ? rect.y - flowPoint.y
+            : flowPoint.y > rect.y + rect.height
+              ? flowPoint.y - (rect.y + rect.height)
+              : 0
+        const distance = Math.hypot(dx, dy)
+
+        if (
+          distance <= FREEFORM_ENDPOINT_SNAP_RADIUS_PX &&
+          (!best || distance < best.distance)
+        ) {
+          best = { node, rect, distance }
+        }
+      }
+
+      return best ? { node: best.node, rect: best.rect } : null
+    },
+    [getNodeRect, getNodes]
+  )
+
+  const handleEndpointPointerDown = useCallback(
+    (event: React.PointerEvent<SVGRectElement>, endpoint: EndpointType) => {
+      if (!freeformAnchorsEnabled) return
+
+      event.preventDefault()
+      event.stopPropagation()
+      endpointDragCommitRef.current = null
+
+      const ownerDocument = event.currentTarget.ownerDocument
+      const dragBaseline = [...activePoints]
+      const currentSourceEndpoint = {
+        x: adjustedSourceCoordinates.sourceX,
+        y: adjustedSourceCoordinates.sourceY,
+      }
+      const currentTargetEndpoint = {
+        x: adjustedTargetCoordinates.targetX,
+        y: adjustedTargetCoordinates.targetY,
+      }
+
+      if (dragBaseline.length >= 2) {
+        dragBaseline[0] = currentSourceEndpoint
+        dragBaseline[dragBaseline.length - 1] = currentTargetEndpoint
+      }
+
+      const resolveDragCommit = (
+        clientX: number,
+        clientY: number
+      ): EndpointDragCommit | null => {
+        const flowPoint = screenToFlowPosition({ x: clientX, y: clientY })
+        const intersectingNodes = getIntersectingNodes({
+          x: flowPoint.x - FREEFORM_ENDPOINT_SNAP_RADIUS_PX,
+          y: flowPoint.y - FREEFORM_ENDPOINT_SNAP_RADIUS_PX,
+          width: FREEFORM_ENDPOINT_SNAP_RADIUS_PX * 2,
+          height: FREEFORM_ENDPOINT_SNAP_RADIUS_PX * 2,
+        })
+        const directHitNode = intersectingNodes.findLast(
+          (node) =>
+            node.width != null &&
+            node.height != null &&
+            !isParentNodeType(node.type)
+        )
+        const directHitRect = directHitNode ? getNodeRect(directHitNode) : null
+        const snapTarget =
+          directHitNode && directHitRect
+            ? { node: directHitNode, rect: directHitRect }
+            : findFreeformEndpointNode(flowPoint)
+
+        if (!snapTarget) return null
+
+        const { node: nodeOnTop, rect } = snapTarget
+
+        const anchor = getFreeformAnchorFromPoint(flowPoint, rect)
+        const resolvedAnchor = getFreeformAnchorPoint(rect, anchor)
+        let sourceEndpoint = currentSourceEndpoint
+        let targetEndpoint = currentTargetEndpoint
+
+        if (endpoint === "source") {
+          const movingEndpoint = adjustSourceCoordinates(
+            resolvedAnchor.point.x,
+            resolvedAnchor.point.y,
+            resolvedAnchor.position,
+            0
+          )
+          sourceEndpoint = {
+            x: movingEndpoint.sourceX,
+            y: movingEndpoint.sourceY,
+          }
+        } else {
+          const movingEndpoint = adjustTargetCoordinates(
+            resolvedAnchor.point.x,
+            resolvedAnchor.point.y,
+            resolvedAnchor.position,
+            0
+          )
+          targetEndpoint = {
+            x: movingEndpoint.targetX,
+            y: movingEndpoint.targetY,
+          }
+        }
+        const nextSourcePosition =
+          endpoint === "source" ? resolvedAnchor.position : sourcePosition
+        const nextTargetPosition =
+          endpoint === "target" ? resolvedAnchor.position : targetPosition
+        const nextSourceRect =
+          endpoint === "source" ? rect : (sourceRect ?? rect)
+        const nextTargetRect =
+          endpoint === "target" ? rect : (targetRect ?? rect)
+        const directPoints = tryFindStraightPath(
+          {
+            position: { x: nextSourceRect.x, y: nextSourceRect.y },
+            width: nextSourceRect.width,
+            height: nextSourceRect.height,
+            direction: nextSourcePosition,
+          },
+          {
+            position: { x: nextTargetRect.x, y: nextTargetRect.y },
+            width: nextTargetRect.width,
+            height: nextTargetRect.height,
+            direction: nextTargetPosition,
+          },
+          0,
+          {
+            sourceX: sourceEndpoint.x,
+            sourceY: sourceEndpoint.y,
+            targetX: targetEndpoint.x,
+            targetY: targetEndpoint.y,
+          }
+        )
+        const preservedPoints = preserveOrthogonalEdgePoints(
+          dragBaseline,
+          sourceEndpoint,
+          targetEndpoint,
+          nextSourcePosition,
+          nextTargetPosition
+        )
+
+        return {
+          endpoint,
+          nodeId: nodeOnTop.id,
+          handleId: getSideHandleIdForPosition(resolvedAnchor.position),
+          anchor,
+          sourceEndpoint,
+          targetEndpoint,
+          sourcePosition: nextSourcePosition,
+          targetPosition: nextTargetPosition,
+          sourceRect: nextSourceRect,
+          targetRect: nextTargetRect,
+          directPoints,
+          points: directPoints ?? preservedPoints,
+        }
+      }
+
+      const handlePointerMove = (e: PointerEvent) => {
+        const commit = resolveDragCommit(e.clientX, e.clientY)
+        endpointDragCommitRef.current = commit
+        setDragPreviewPoints(commit?.points ?? null)
+      }
+
+      const handlePointerUp = () => {
+        const commit = endpointDragCommitRef.current
+        endpointDragCommitRef.current = null
+        setDragPreviewPoints(null)
+
+        if (commit) {
+          const normalizedPoints = hasManualPoints
+            ? normalizeOrthogonalEdgePoints(
+                commit.points,
+                commit.sourceEndpoint,
+                commit.targetEndpoint,
+                commit.sourcePosition,
+                commit.targetPosition
+              )
+            : null
+          const shouldClearManualPoints = commit.directPoints !== null
+
+          if (shouldClearManualPoints) {
+            setCustomPoints([])
+          } else if (normalizedPoints) {
+            setCustomPoints(normalizedPoints)
+          }
+
+          setEdges((edges) =>
+            edges.map((edge) => {
+              if (edge.id !== id) return edge
+
+              const nextData = {
+                ...((edge.data ?? {}) as Record<string, unknown>),
+              }
+              if (commit.endpoint === "source") {
+                nextData.sourceAnchor = commit.anchor
+              } else {
+                nextData.targetAnchor = commit.anchor
+              }
+              if (shouldClearManualPoints) {
+                nextData.points = []
+              } else if (normalizedPoints) {
+                nextData.points = normalizedPoints
+              } else if (!Array.isArray(nextData.points)) {
+                nextData.points = []
+              }
+
+              return commit.endpoint === "source"
+                ? {
+                    ...edge,
+                    source: commit.nodeId,
+                    sourceHandle: commit.handleId,
+                    data: nextData,
+                  }
+                : {
+                    ...edge,
+                    target: commit.nodeId,
+                    targetHandle: commit.handleId,
+                    data: nextData,
+                  }
+            })
+          )
+        }
+
+        ownerDocument.removeEventListener("pointermove", handlePointerMove)
+        ownerDocument.removeEventListener("pointerup", handlePointerUp)
+      }
+
+      ownerDocument.addEventListener("pointermove", handlePointerMove)
+      ownerDocument.addEventListener("pointerup", handlePointerUp, {
+        once: true,
+      })
+    },
+    [
+      activePoints,
+      adjustedSourceCoordinates.sourceX,
+      adjustedSourceCoordinates.sourceY,
+      adjustedTargetCoordinates.targetX,
+      adjustedTargetCoordinates.targetY,
+      freeformAnchorsEnabled,
+      findFreeformEndpointNode,
+      getIntersectingNodes,
+      getNodeRect,
+      hasManualPoints,
+      id,
+      screenToFlowPosition,
+      setCustomPoints,
+      setEdges,
+      sourceRect,
+      sourcePosition,
+      targetRect,
+      targetPosition,
     ]
   )
 
@@ -739,6 +1231,9 @@ export const useStepPathEdge = ({
     markerStart,
     strokeDashArray,
     handlePointerDown,
+    handleEndpointPointerDown: freeformAnchorsEnabled
+      ? handleEndpointPointerDown
+      : undefined,
     sourcePoint,
     targetPoint,
     toolbarPosition,

@@ -68,6 +68,7 @@ export const ClassDiagramEdge = ({
     markerStart,
     strokeDashArray,
     handlePointerDown,
+    handleEndpointPointerDown,
     sourcePoint,
     targetPoint,
     isDiagramModifiable,
@@ -116,6 +117,7 @@ export const ClassDiagramEdge = ({
           targetPosition={targetPosition}
           isDiagramModifiable={isDiagramModifiable}
           canEditEndpoint={canEditEndpoint}
+          handleEndpointPointerDown={handleEndpointPointerDown}
           allowMidpointDragging={allowMidpointDragging}
           bendHandles={bendHandles}
           handlePointerDown={handlePointerDown}

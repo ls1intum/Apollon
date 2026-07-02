@@ -15,9 +15,13 @@ import {
   getDefaultEdgeType,
   getDistributedHandleOffsets,
   getDistributedHandleOffsetPercents,
+  getFreeformAnchorFromPoint,
+  getFreeformAnchorPoint,
+  getSideHandleIdForPosition,
   reduceVisibleArcCountForZoom,
   getEdgeMarkerStyles,
   getMarkerSegmentPath,
+  isClassDiagramEdgeType,
   isInvalidOrthogonalEdgeRelease,
   normalizeOrthogonalEdgePoints,
   parseSvgPath,
@@ -464,6 +468,40 @@ describe("findClosestHandle", () => {
       rect,
     })
     expect(result).toBe("top-mid-left")
+  })
+})
+
+describe("freeform rectangle anchors", () => {
+  const rect = { x: 10, y: 20, width: 100, height: 80 }
+
+  it("stores the nearest side and resolves back to a rounded pixel", () => {
+    const anchor = getFreeformAnchorFromPoint({ x: 112, y: 57.4 }, rect)
+
+    expect(anchor.side).toBe(Position.Right)
+    expect(anchor.ratio).toBeCloseTo(37 / 80)
+    expect(getSideHandleIdForPosition(anchor.side)).toBe("right")
+    expect(getFreeformAnchorPoint(rect, anchor)).toEqual({
+      point: { x: 110, y: 57 },
+      position: Position.Right,
+    })
+  })
+
+  it("uses the boundary point closest to the pointer", () => {
+    const anchor = getFreeformAnchorFromPoint({ x: 33.6, y: 17 }, rect)
+
+    expect(anchor.side).toBe(Position.Top)
+    expect(anchor.ratio).toBeCloseTo(24 / 100)
+    expect(getFreeformAnchorPoint(rect, anchor)).toEqual({
+      point: { x: 34, y: 20 },
+      position: Position.Top,
+    })
+  })
+
+  it("detects class diagram edge types only", () => {
+    expect(isClassDiagramEdgeType("ClassUnidirectional")).toBe(true)
+    expect(isClassDiagramEdgeType("ClassDependency")).toBe(true)
+    expect(isClassDiagramEdgeType("ObjectLink")).toBe(false)
+    expect(isClassDiagramEdgeType(undefined)).toBe(false)
   })
 })
 

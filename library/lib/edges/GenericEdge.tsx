@@ -39,6 +39,10 @@ const useHandleScreenScale = (): number =>
   getHandleScreenScale(useStore((state) => state.transform[2]))
 
 export type BaseEdgeProps = ExtendedEdgeProps
+const FREEFORM_ENDPOINT_HIT_TARGET_SIZE = 44
+const FREEFORM_ENDPOINT_GRIP_LONG_AXIS = 18
+const FREEFORM_ENDPOINT_GRIP_SHORT_AXIS = 8
+const FREEFORM_ENDPOINT_GRIP_RADIUS = 4
 
 export const useEdgeState = (initialPoints?: IPoint[]) => {
   const [customPoints, setCustomPoints] = useState<IPoint[]>([])
@@ -75,9 +79,10 @@ const getEndpointDirection = (side?: EndpointSide): IPoint => {
 export const getEndpointHitTargetRect = (
   point: IPoint,
   side?: EndpointSide,
-  screenScale = 1
+  screenScale = 1,
+  hitTargetSize: number = EDGES.ENDPOINT_HIT_TARGET_SIZE
 ) => {
-  const hitSize = EDGES.ENDPOINT_HIT_TARGET_SIZE * screenScale
+  const hitSize = hitTargetSize * screenScale
   const hitOffset = hitSize / 2
   const direction = getEndpointDirection(side)
 
@@ -90,6 +95,30 @@ export const getEndpointHitTargetRect = (
   }
 }
 
+const getEndpointGripRect = (
+  hitTarget: ReturnType<typeof getEndpointHitTargetRect>,
+  side?: EndpointSide,
+  screenScale = 1
+) => {
+  const isHorizontalGrip = side === Position.Left || side === Position.Right
+  const width =
+    (isHorizontalGrip
+      ? FREEFORM_ENDPOINT_GRIP_LONG_AXIS
+      : FREEFORM_ENDPOINT_GRIP_SHORT_AXIS) * screenScale
+  const height =
+    (isHorizontalGrip
+      ? FREEFORM_ENDPOINT_GRIP_SHORT_AXIS
+      : FREEFORM_ENDPOINT_GRIP_LONG_AXIS) * screenScale
+
+  return {
+    x: hitTarget.x + hitTarget.width / 2 - width / 2,
+    y: hitTarget.y + hitTarget.height / 2 - height / 2,
+    width,
+    height,
+    radius: FREEFORM_ENDPOINT_GRIP_RADIUS * screenScale,
+  }
+}
+
 export const EdgeEndpointMarkers = ({
   sourcePoint,
   targetPoint,
@@ -97,6 +126,7 @@ export const EdgeEndpointMarkers = ({
   targetPosition,
   isDiagramModifiable,
   canEditEndpoint = true,
+  onEndpointPointerDown,
 }: {
   sourcePoint: IPoint
   targetPoint: IPoint
@@ -104,6 +134,10 @@ export const EdgeEndpointMarkers = ({
   targetPosition?: EndpointSide
   isDiagramModifiable: boolean
   canEditEndpoint?: boolean
+  onEndpointPointerDown?: (
+    event: ReactPointerEvent<SVGRectElement>,
+    endpoint: "source" | "target"
+  ) => void
 }) => {
   const sourceHandleRef = useRef<SVGRectElement | null>(null)
   const screenScale = useHandleScreenScale()
@@ -175,12 +209,14 @@ export const EdgeEndpointMarkers = ({
   const sourceHitTarget = getEndpointHitTargetRect(
     sourcePoint,
     sourcePosition,
-    screenScale
+    screenScale,
+    onEndpointPointerDown ? FREEFORM_ENDPOINT_HIT_TARGET_SIZE : undefined
   )
   const targetHitTarget = getEndpointHitTargetRect(
     targetPoint,
     targetPosition,
-    screenScale
+    screenScale,
+    onEndpointPointerDown ? FREEFORM_ENDPOINT_HIT_TARGET_SIZE : undefined
   )
   const className = [
     "edge-endpoint-handle",
@@ -188,9 +224,44 @@ export const EdgeEndpointMarkers = ({
   ]
     .filter(Boolean)
     .join(" ")
+  const showEndpointGrips = Boolean(onEndpointPointerDown)
+  const sourceGrip = getEndpointGripRect(
+    sourceHitTarget,
+    sourcePosition,
+    screenScale
+  )
+  const targetGrip = getEndpointGripRect(
+    targetHitTarget,
+    targetPosition,
+    screenScale
+  )
 
   return (
     <>
+      {showEndpointGrips && (
+        <>
+          <rect
+            className="edge-circle edge-endpoint-grip edge-endpoint-grip--source"
+            x={sourceGrip.x}
+            y={sourceGrip.y}
+            width={sourceGrip.width}
+            height={sourceGrip.height}
+            rx={sourceGrip.radius}
+            ry={sourceGrip.radius}
+            pointerEvents="none"
+          />
+          <rect
+            className="edge-circle edge-endpoint-grip edge-endpoint-grip--target"
+            x={targetGrip.x}
+            y={targetGrip.y}
+            width={targetGrip.width}
+            height={targetGrip.height}
+            rx={targetGrip.radius}
+            ry={targetGrip.radius}
+            pointerEvents="none"
+          />
+        </>
+      )}
       <rect
         ref={sourceHandleRef}
         className={`${className} edge-endpoint-handle--source`}
@@ -201,8 +272,13 @@ export const EdgeEndpointMarkers = ({
         rx={sourceHitTarget.radius}
         ry={sourceHitTarget.radius}
         pointerEvents={canEditEndpoint ? "all" : "none"}
+        onPointerDown={
+          canEditEndpoint && onEndpointPointerDown
+            ? (event) => onEndpointPointerDown(event, "source")
+            : undefined
+        }
         onMouseDown={
-          canEditEndpoint
+          canEditEndpoint && !onEndpointPointerDown
             ? (event) => forwardToNativeReconnect(event, "source")
             : undefined
         }
@@ -216,8 +292,13 @@ export const EdgeEndpointMarkers = ({
         rx={targetHitTarget.radius}
         ry={targetHitTarget.radius}
         pointerEvents={canEditEndpoint ? "all" : "none"}
+        onPointerDown={
+          canEditEndpoint && onEndpointPointerDown
+            ? (event) => onEndpointPointerDown(event, "target")
+            : undefined
+        }
         onMouseDown={
-          canEditEndpoint
+          canEditEndpoint && !onEndpointPointerDown
             ? (event) => forwardToNativeReconnect(event, "target")
             : undefined
         }
@@ -292,6 +373,7 @@ export const StepEdgeBody = ({
   targetPosition,
   isDiagramModifiable,
   canEditEndpoint,
+  handleEndpointPointerDown,
   allowMidpointDragging,
   bendHandles,
   handlePointerDown,
@@ -316,6 +398,10 @@ export const StepEdgeBody = ({
   targetPosition?: Position
   isDiagramModifiable: boolean
   canEditEndpoint: boolean
+  handleEndpointPointerDown?: (
+    event: ReactPointerEvent<SVGRectElement>,
+    endpoint: "source" | "target"
+  ) => void
   allowMidpointDragging: boolean
   bendHandles: BendHandle[]
   handlePointerDown: (
@@ -366,6 +452,7 @@ export const StepEdgeBody = ({
         targetPosition={targetPosition}
         isDiagramModifiable={isDiagramModifiable}
         canEditEndpoint={canEditEndpoint}
+        onEndpointPointerDown={handleEndpointPointerDown}
       />
 
       {isDiagramModifiable &&
