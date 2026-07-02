@@ -6,7 +6,7 @@
 import { UMLModel, ApollonNode, ApollonEdge, Assessment } from "../typings"
 import { transformEdges } from "../services/migration/EdgeTransformer"
 import { UMLDiagramType } from "../types/DiagramType"
-import { ClassType } from "../types/nodes/enums"
+import { ClassStereotype } from "../types/nodes/enums"
 import { IPoint } from "../edges/Connection"
 import {
   V3DiagramFormat,
@@ -437,14 +437,17 @@ function convertV3NodeDataToV4(
         }
       })
 
-      // Determine stereotype
-      let stereotype: ClassType | undefined
+      // Determine metaclass keyword (interface/enumeration) and the abstract
+      // modifier separately: UML abstractness is a property (italic name), not a
+      // keyword, so `AbstractClass` maps to `isAbstract`, never to a stereotype.
+      let stereotype: ClassStereotype | undefined
+      let isAbstract = false
       if (element.type === "AbstractClass") {
-        stereotype = ClassType.Abstract
+        isAbstract = true
       } else if (element.type === "Interface") {
-        stereotype = ClassType.Interface
+        stereotype = ClassStereotype.Interface
       } else if (element.type === "Enumeration") {
-        stereotype = ClassType.Enumeration
+        stereotype = ClassStereotype.Enumeration
       }
 
       const classData: ClassNodeProps = {
@@ -452,6 +455,7 @@ function convertV3NodeDataToV4(
         methods,
         attributes,
         ...(stereotype && { stereotype }),
+        ...(isAbstract && { isAbstract: true }),
       }
       return classData
     }
@@ -908,6 +912,56 @@ export function isV4Format(data: any): data is UMLModel {
 }
 
 /**
+ * Bring class nodes from earlier 4.x models onto the current stereotype shape,
+ * in place and idempotently:
+ *   - `stereotype: "Abstract"` → `isAbstract: true` (abstractness is a modifier,
+ *     an italic name — not a keyword), shedding the now-absent keyword line's
+ *     10px of header height so the box isn't left with a dead band.
+ *   - `stereotype: "Interface" | "Enumeration"` → the lowercase keyword spelling
+ *     (`"interface"` / `"enumeration"`) required by UML 2.5.1 Table C.1.
+ * Already-current models pass through untouched, so this is safe to run on every
+ * load (see `normalizeModel`), covering v4 pass-through, v3/v2 conversions, and
+ * direct editor hydration in one place.
+ */
+export function normalizeClassStereotypes(model: UMLModel): UMLModel {
+  const V4_STEREOTYPE: Record<string, ClassStereotype> = {
+    Interface: ClassStereotype.Interface,
+    Enumeration: ClassStereotype.Enumeration,
+  }
+  for (const node of model.nodes) {
+    if (node.type !== "class") continue
+    const data = node.data as ClassNodeProps
+    const raw = data.stereotype as unknown as string | undefined
+    if (raw === "Abstract") {
+      data.isAbstract = true
+      delete (data as { stereotype?: unknown }).stereotype
+      if (typeof node.height === "number") node.height -= 10
+      if (node.measured && typeof node.measured.height === "number") {
+        node.measured.height -= 10
+      }
+    } else if (raw && raw in V4_STEREOTYPE) {
+      data.stereotype = V4_STEREOTYPE[raw]
+    }
+    // A keyword and the abstract modifier are mutually exclusive: an «interface»
+    // is inherently abstract, an «enumeration» can't be. Drop a stray modifier if
+    // both are set. No height change — abstractness never adds a header line.
+    if (data.stereotype && data.isAbstract) {
+      data.isAbstract = false
+    }
+  }
+  return model
+}
+
+/**
+ * The single normalization pass every incoming model must pass through, whatever
+ * its origin. Keep it idempotent and version-agnostic so already-saved `4.0.0`
+ * files are repaired on load rather than gated behind a version check.
+ */
+export function normalizeModel(model: UMLModel): UMLModel {
+  return normalizeClassStereotypes(model)
+}
+
+/**
  * Universal import function that handles v2, v3 and v4 formats
  */
 export function importDiagram(data: any | V3UMLModel): UMLModel {
@@ -929,5 +983,5 @@ export function importDiagram(data: any | V3UMLModel): UMLModel {
   }
 
   // Strip stale runtime-only edge geometry (computedSegments) from imports.
-  return transformEdges(model)
+  return transformEdges(normalizeModel(model))
 }

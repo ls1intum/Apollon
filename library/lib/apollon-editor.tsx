@@ -14,6 +14,11 @@ import {
   getSVG,
   getRenderedDiagramBounds,
 } from "./utils"
+// Internal (not re-exported through the public `./utils` barrel): brings any
+// incoming model onto the current schema (e.g. legacy class stereotypes) at
+// every hydration boundary, since editor load does NOT route through the public
+// `importDiagram`.
+import { normalizeModel } from "./utils/versionConverter"
 import { UMLDiagramType } from "./types"
 import { createDiagramStore, type DiagramStore } from "@/store/diagramStore"
 import { createMetadataStore, type MetadataStore } from "@/store/metadataStore"
@@ -161,12 +166,13 @@ export class ApollonEditor {
       .updateMetaData(diagramName, parseDiagramType(diagramType))
 
     if (options?.model) {
-      const nodes = options.model.nodes || []
-      const edges = options.model.edges || []
-      const assessments = options.model.assessments || {}
+      const model = normalizeModel(options.model)
+      const nodes = model.nodes || []
+      const edges = model.edges || []
+      const assessments = model.assessments || {}
       this.diagramStore.getState().setNodesAndEdges(nodes, edges)
       this.diagramStore.getState().setAssessments(assessments)
-      this.diagramStore.getState().setInteractive(options.model.interactive)
+      this.diagramStore.getState().setInteractive(model.interactive)
     }
 
     if (options?.mode) {
@@ -498,6 +504,9 @@ export class ApollonEditor {
     model: Apollon.UMLModel,
     options?: Apollon.ExportOptions
   ): Promise<Apollon.SVG> {
+    // Off-screen render path bypasses the constructor, so normalize here too
+    // (in place) — otherwise a legacy model exports with the old stereotypes.
+    normalizeModel(model)
     const container = document.createElement("div")
     container.style.display = "flex"
     container.style.width = "4000px"
@@ -624,15 +633,20 @@ export class ApollonEditor {
       // Wait for webfonts to load before we measure: canvas text measurement
       // (used by the wrap layout) otherwise falls back to the generic-family
       // metrics and the exported SVG's wrap decisions would drift from the
-      // on-screen render. Explicitly load Inter — `document.fonts.ready` alone
-      // would not wait for the injected `@font-face` until a glyph requests it —
-      // then await `ready` for any other pending faces. Best-effort throughout
-      // (older browsers / jsdom may lack `document.fonts`).
+      // on-screen render. Explicitly load each Inter face — `document.fonts.ready`
+      // alone would not wait for an injected `@font-face` until a glyph requests
+      // it — then await `ready` for any other pending faces. The italic faces
+      // back abstract classes/methods; omitting them would measure/render that
+      // text in a fallback family. Best-effort throughout (older browsers / jsdom
+      // may lack `document.fonts`).
       if (typeof document !== "undefined" && document.fonts) {
         if (document.fonts.load) {
+          const size = DEFAULT_FONT_SIZE
           await Promise.all([
-            document.fonts.load(`400 ${DEFAULT_FONT_SIZE}px ${FONT_FAMILY}`),
-            document.fonts.load(`700 ${DEFAULT_FONT_SIZE}px ${FONT_FAMILY}`),
+            document.fonts.load(`400 ${size}px ${FONT_FAMILY}`),
+            document.fonts.load(`700 ${size}px ${FONT_FAMILY}`),
+            document.fonts.load(`italic 400 ${size}px ${FONT_FAMILY}`),
+            document.fonts.load(`italic 700 ${size}px ${FONT_FAMILY}`),
           ]).catch(() => {})
         }
         if (document.fonts.ready) {
@@ -906,7 +920,7 @@ export class ApollonEditor {
     const interactive = this.getInteractiveForSerialization()
     return {
       id: diagramId,
-      version: "4.0.0",
+      version: "4.1.0",
       title: diagramTitle,
       type: diagramType,
       nodes: nodes.map((node) => mapFromReactFlowNodeToApollonNode(node)),
@@ -916,7 +930,8 @@ export class ApollonEditor {
     }
   }
 
-  set model(model: Apollon.UMLModel) {
+  set model(incoming: Apollon.UMLModel) {
+    const model = normalizeModel(incoming)
     const { nodes, edges, assessments, interactive } = model
     // Every store action below routes its Yjs writes through the
     // shared `transactStore` helper that no-ops in preview mode, so

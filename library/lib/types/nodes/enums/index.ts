@@ -1,1 +1,1 @@
-export * from "./ClassType"
+export * from "./ClassStereotype"
