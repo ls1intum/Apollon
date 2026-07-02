@@ -12,6 +12,13 @@ import { openFixtureInLocalEditor, waitForCanvasReady } from "../helpers/canvas"
  * are slotted controls (`[data-apollon-control]`); the minimap self-positions as
  * a React-Flow-native widget (collapsed by default to a "Show minimap" toggle).
  */
+/** The dev-only editor handle exposed on `window` for e2e driving. */
+type EditorHandle = {
+  updateControl: (id: string, patch: Record<string, unknown>) => void
+  removeControl: (id: string) => void
+  setLabels: (labels: Record<string, string>) => void
+}
+
 const PALETTE_ID = "apollon:palette"
 const ZOOM_ID = "apollon:zoom"
 const MINIMAP_ID = "apollon:minimap"
@@ -75,7 +82,8 @@ async function updateControl(
 ) {
   await page.evaluate(
     ([id, patch]) => {
-      const ed = (window as unknown as { apollonEditor?: any }).apollonEditor
+      const ed = (window as unknown as { apollonEditor?: EditorHandle })
+        .apollonEditor
       ed?.updateControl(id, patch)
     },
     [id, patch] as const
@@ -84,7 +92,8 @@ async function updateControl(
 
 async function removeControl(page: Page, id: string) {
   await page.evaluate((id) => {
-    const ed = (window as unknown as { apollonEditor?: any }).apollonEditor
+    const ed = (window as unknown as { apollonEditor?: EditorHandle })
+      .apollonEditor
     ed?.removeControl(id)
   }, id)
 }
@@ -330,7 +339,8 @@ test.describe("controls layout engine", () => {
 
     // A host swaps in its own language at runtime — no remount.
     await page.evaluate(() => {
-      const ed = (window as unknown as { apollonEditor?: any }).apollonEditor
+      const ed = (window as unknown as { apollonEditor?: EditorHandle })
+        .apollonEditor
       ed?.setLabels({
         zoomIn: "Vergrößern",
         zoomOut: "Verkleinern",
@@ -408,7 +418,8 @@ test.describe("controls layout engine", () => {
     // A host swaps the label at runtime while the popover is OPEN — it must update
     // live (the popover subscribes to the labels store), no remount.
     await page.evaluate(() => {
-      const ed = (window as unknown as { apollonEditor?: any }).apollonEditor
+      const ed = (window as unknown as { apollonEditor?: EditorHandle })
+        .apollonEditor
       ed?.setLabels({ stereotype: "Stereotyp-DE" })
     })
 
