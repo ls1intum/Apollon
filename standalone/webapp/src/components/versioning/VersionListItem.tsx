@@ -328,7 +328,7 @@ export function VersionListItemView({
             opacity: version.pending ? 0.85 : 1,
             background: isPreviewing ? ROW_SELECTED_BG : "transparent",
             borderLeft: version.failed
-              ? "3px solid var(--apollon-alert-danger-color)"
+              ? "3px solid var(--apollon-danger)"
               : "3px solid transparent",
             color: TEXT_PRIMARY,
             "--row-hover-bg": ROW_HOVER_BG,

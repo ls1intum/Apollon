@@ -11,7 +11,7 @@ type Props = Omit<SVGProps<SVGTextElement>, "x" | "y"> & {
 
 export const CustomText: FC<Props> = ({
   children,
-  fill = "var(--apollon-primary-contrast, #000000)",
+  fill = "var(--apollon-foreground, #000000)",
   x = "50%",
   y = "50%",
   dominantBaseline = "central",

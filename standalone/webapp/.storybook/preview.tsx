@@ -23,7 +23,7 @@ import "../../../library/lib/styles/alignmentGuides.css"
 import "./preview.css"
 
 // The themed page background + text colour come from ONE place: webapp.css paints
-// `html`/`body` with `--apollon-background` / `--apollon-primary-contrast`, which
+// `html`/`body` with `--apollon-background` / `--apollon-foreground`, which
 // flip with the root `data-theme` the toolbar sets — so every story (fullscreen
 // or not) sits on the correct surface with no extra wiring. This decorator only
 // adds breathing room around centered/padded component stories; fullscreen

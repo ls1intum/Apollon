@@ -20,24 +20,15 @@ export async function extractSVGFromPage(page: Page): Promise<string> {
 
     const CSS_VARIABLE_FALLBACKS: Record<string, string> = {
       "--apollon-primary": "#3e8acc",
-      "--apollon-primary-contrast": "#000000",
+      "--apollon-foreground": "#000000",
       "--apollon-secondary": "#6c757d",
       "--apollon-alert-warning-yellow": "#ffc107",
-      "--apollon-alert-warning-background": "#fff3cd",
-      "--apollon-alert-warning-border": "#ffeeba",
       "--apollon-background": "#ffffff",
-      "--apollon-background-inverse": "#000000",
       "--apollon-background-variant": "#f8f9fa",
       "--apollon-gray": "#e9ecef",
       "--apollon-grid": "rgba(36, 39, 36, 0.1)",
       "--apollon-gray-variant": "#495057",
-      "--apollon-alert-danger-color": "#721c24",
-      "--apollon-alert-danger-background": "#f8d7da",
-      "--apollon-alert-danger-border": "#f5c6cb",
-      "--apollon-switch-box-border-color": "#dee2e6",
-      "--apollon-list-group-color": "#ffffff",
-      "--apollon-btn-outline-secondary-color": "#6c757d",
-      "--apollon-modal-bottom-border": "#e9ecef",
+      "--apollon-danger": "#721c24",
     }
 
     function collectCSSVariables(

@@ -8,7 +8,7 @@ import { cn } from "@tumaet/ui/lib/utils"
  * so they track the label.
  *
  * Returns a className string merged through `cn` (callers can override). The mobile
- * overflow menu pins an explicit `var(--apollon-primary-contrast)` foreground via
+ * overflow menu pins an explicit `var(--apollon-foreground)` foreground via
  * `style={{ color }}` so the label stays legible on the themed dropdown.
  */
 export const navbarButtonStyle = (className?: string): string =>

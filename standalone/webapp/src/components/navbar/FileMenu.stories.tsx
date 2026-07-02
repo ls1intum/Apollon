@@ -39,7 +39,7 @@ export const Default: Story = {
 
 /** The mobile sheet passes an explicit contrast color for the themed surface. */
 export const OnSurface: Story = {
-  args: { color: "var(--apollon-primary-contrast)" },
+  args: { color: "var(--apollon-foreground)" },
 }
 
 /** Opening the menu reveals the file actions in a body portal. */

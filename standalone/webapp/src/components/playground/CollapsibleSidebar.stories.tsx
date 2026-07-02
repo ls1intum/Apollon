@@ -66,7 +66,7 @@ const meta = {
   },
   decorators: [
     (Story) => (
-      <div className="flex h-[360px] bg-[var(--apollon-background-variant)]">
+      <div className="bg-background flex h-[360px]">
         <Story />
       </div>
     ),
@@ -164,7 +164,7 @@ export const VariantSurface: Story = {
   render: () => <SidebarHarness side="left" surface="variant" />,
   decorators: [
     (Story) => (
-      <div className="flex h-[360px] bg-[var(--apollon-background)]">
+      <div className="bg-card flex h-[360px]">
         <Story />
       </div>
     ),
