@@ -18,8 +18,9 @@ export type OverlayRegion =
   | "right-rail" // full-height right band (e.g. version history)
   | "on-canvas" // viewport-transformed, pans + zooms with the diagram
 
-/** Regions that map directly onto a React Flow `<Panel position>`. */
-export const PANEL_REGIONS = [
+/** The six floating corner regions — grid cells of `.apollon-overlay-grid` that
+ *  sit between the bands and the canvas. */
+export const CORNER_REGIONS = [
   "top-left",
   "top-center",
   "top-right",
@@ -30,7 +31,7 @@ export const PANEL_REGIONS = [
 
 /** Every valid region — used to validate control registration at the API edge. */
 export const OVERLAY_REGIONS: readonly OverlayRegion[] = [
-  ...PANEL_REGIONS,
+  ...CORNER_REGIONS,
   "header",
   "footer",
   "left-rail",
@@ -41,9 +42,8 @@ export const OVERLAY_REGIONS: readonly OverlayRegion[] = [
 /** One of the four edges a control can sit against / reserve room on. */
 export type OverlaySide = "top" | "right" | "bottom" | "left"
 
-/** The edge each region reserves room on / measures against. Single source for
- *  both the inset math (overlayStore) and the measurement pipeline (OverlayLayer);
- *  `on-canvas` has none. */
+/** The edge each region reserves room on / measures against; `on-canvas` has
+ *  none. Single source for the inset math and the measurement pipeline. */
 export const REGION_EDGE: Partial<Record<OverlayRegion, OverlaySide>> = {
   header: "top",
   footer: "bottom",

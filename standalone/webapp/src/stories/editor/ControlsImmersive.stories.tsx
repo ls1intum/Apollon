@@ -407,7 +407,7 @@ export const ExamMode: Story = {
 
       <ApollonControl id="host:problem" region="right-rail">
         <RailPanel heading="Your task">
-          Draw an activity diagram for the <b>checkout</b> process. You have{" "}
+          Model the <b>checkout</b> domain as a class diagram. You have{" "}
           <b>42 minutes</b> of working time remaining. Your work saves
           automatically.
         </RailPanel>
@@ -633,80 +633,4 @@ export const Internationalized: Story = {
     await canvas.findByRole("button", { name: "Vergrößern" })
     await canvas.findByRole("button", { name: "Verkleinern" })
   },
-}
-
-/**
- * **Help as a control** — the standalone's "How to use this editor" content,
- * surfaced as an in-canvas corner control that toggles a floating help card,
- * instead of a header menu entry that lives outside the editor.
- */
-export const HelpAsControl: Story = {
-  render: () => <HelpStory />,
-}
-
-function HelpStory() {
-  const [open, setOpen] = useState(false)
-  return (
-    <Apollon
-      defaultModel={fixtureByType.ClassDiagram}
-      enablePopups
-      style={FULLSCREEN}
-    >
-      <ApollonControl id="host:help" region="top-right">
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "flex-end",
-            gap: 8,
-          }}
-        >
-          <button
-            type="button"
-            onClick={() => setOpen((o) => !o)}
-            aria-label="How to use this editor"
-            aria-expanded={open}
-            style={{
-              ...glass,
-              width: 38,
-              height: 38,
-              justifyContent: "center",
-              borderRadius: 999,
-              fontSize: 18,
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            ?
-          </button>
-          {open && (
-            <div
-              style={{
-                ...glass,
-                flexDirection: "column",
-                alignItems: "stretch",
-                width: 280,
-                padding: 16,
-                gap: 8,
-              }}
-            >
-              <strong>How to use this editor</strong>
-              <div style={{ fontSize: 13, lineHeight: 1.6 }}>
-                <div>
-                  • Drag an element from the left palette onto the canvas.
-                </div>
-                <div>• Hover an element and drag from its edge to connect.</div>
-                <div>• Double-click to rename · ⌫ to delete.</div>
-                <div>• ⌘Z / ⌘⇧Z to undo / redo.</div>
-              </div>
-            </div>
-          )}
-        </div>
-      </ApollonControl>
-
-      <Apollon.Palette />
-      <Apollon.Zoom region="bottom-left" />
-      <Apollon.MiniMap region="bottom-right" />
-    </Apollon>
-  )
 }

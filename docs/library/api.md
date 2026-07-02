@@ -181,6 +181,7 @@ for regions, the `<ApollonControl>` React component, and the "make room" model.
 | `updateControl(id, patch)`     | `(string, Partial<OverlayControlInput>) => void` | Patch a control's options/renderer (no-op if absent; `id` is immutable).            |
 | `removeControl(id)`            | `(string) => void`                               | Unregister a control by id (no-op if absent); the imperative hide for a built-in.   |
 | `hasControl(id)`               | `(string) => boolean`                            | Whether a control with this id is registered.                                       |
+| `getControl(id)`               | `(string) => OverlayControlInput \| undefined`   | Read a registered control's current options + renderer (undefined if absent).       |
 | `getRegionElement(region)`     | `(OverlayRegion) => HTMLElement`                 | Stable node to `createPortal` host chrome into (keeps host React context).          |
 | `releaseRegionElement(region)` | `(OverlayRegion) => void`                        | Release a region acquired via `getRegionElement`.                                   |
 

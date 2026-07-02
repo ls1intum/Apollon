@@ -16,8 +16,9 @@ A control is positioned by **region** (where it sits) and can optionally
 **reserve space** so the diagram "makes way" for it. Reservation is measured, not
 guessed: a control that opts into an inset is measured by a shared
 `ResizeObserver`, and the reserved space feeds `fitView` padding the way MapLibre
-pads its viewport around UI. Reservation is per-side **max**, not sum — two
-controls on the same side reserve the larger, not the total.
+pads its viewport around UI. Two controls on the same side reserve the **larger**,
+not the total — except across different band **lanes**, which stack and sum (see
+below).
 
 There are three facades over the same engine. Pick by how your host renders:
 
@@ -27,9 +28,10 @@ There are three facades over the same engine. Pick by how your host renders:
 
 ## Regions
 
-Every control names one `OverlayRegion`. The six corner regions are screen-space
-React Flow panels; `header` / `left-rail` / `right-rail` are library-owned bands;
-`on-canvas` is viewport-transformed and pans + zooms with the diagram.
+Every control names one `OverlayRegion`. The six corner regions and the `header` /
+`footer` / `left-rail` / `right-rail` bands are screen-space cells of a single CSS
+grid laid over the canvas, so they can't overlap one another. `on-canvas` is
+viewport-transformed and pans + zooms with the diagram.
 
 | Region          | Where it sits                                                           |
 | --------------- | ----------------------------------------------------------------------- |
@@ -253,9 +255,10 @@ editor.addControl({
 })
 ```
 
-Reservation is **per-side max, not sum**: if two controls reserve on the same
-side, the diagram clears the larger, not the total. The store derives a single
-content-inset rect from all measurements and is the only inset authority.
+Two controls reserving on the same side (or the same band lane) clear the
+**larger**, not the total; controls in different band lanes stack and their
+reservations **sum**. The store derives a single content-inset rect from all
+measurements and is the only inset authority.
 
 `fitView` consumes those insets:
 
@@ -333,10 +336,12 @@ control never drags the diagram.
   above host chrome). Same-lane controls sit along the band's axis and reserve the
   larger; different lanes stack and their insets **sum**. Either way the diagram
   clears the full stack.
-- **Corner slots clear bands.** A corner control (zoom, minimap, a host button)
-  floats within the reserved band area — a bottom-corner cluster rides above a
-  footer band, a top-corner control below a header band — instead of tucking under
-  it. Automatic; no offset math on the host side.
+- **Corners never overlap bands.** The six corner regions are grid cells in
+  dedicated rows between the header/footer rows and the canvas, so a bottom-corner
+  cluster always sits above a footer band and a top-corner control below a header
+  band — structurally, not by reading a measured inset. Automatic; no offset math
+  on the host side. (The minimap is the exception: it self-positions as a React
+  Flow `<Panel>` and clears bands via inset vars rather than a grid cell.)
 - **Selection-anchored toolbars** — `<Apollon.SelectionToolbar>` (Figma/tldraw
   style): a screen-space, constant-size toolbar that follows the current selection.
   Distinct from `on-canvas`, which lives in diagram space and scales with zoom.

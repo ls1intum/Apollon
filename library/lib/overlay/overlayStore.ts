@@ -101,103 +101,35 @@ const insetsEqual = (a: Insets, b: Insets): boolean =>
   a.bottom === b.bottom &&
   a.left === b.left
 
-/**
- * The bottom corners clear a side rail only where the rail actually reaches down
- * to them. A rail is top-anchored, so the top corners always meet it (that stays
- * `insets.left/right`), but a rail that ends well above the bottom leaves the
- * bottom corners free — this is what stops a top-anchored palette from shoving the
- * bottom-left zoom cluster right across an empty column (the wasted-space bug).
- *
- * The decision is made from the rail's REAL geometry: `railGaps` is the measured
- * px between each rail's bottom edge and the container's bottom edge. We compare
- * that to `CORNER_CLUSTER_H` — the room a bottom corner cluster (a zoom/minimap
- * island plus its edge margin) needs. Measuring the gap directly, rather than
- * reconstructing it from the rail height minus the top/bottom band insets, keeps
- * the result stable when an unrelated band inset (e.g. a host header still
- * settling its measurement) shifts the rail's position without changing the gap.
- */
-const CORNER_CLUSTER_H = 60
-
-export type FarCorners = { left: number; right: number }
-export const ZERO_FAR_CORNERS: FarCorners = { left: 0, right: 0 }
-
-const farCornersEqual = (a: FarCorners, b: FarCorners): boolean =>
-  a.left === b.left && a.right === b.right
-
-/** Cross-size a bottom corner must clear on each rail side (0 = rail ends clear of
- *  the bottom, so the corner floats flush). `railGaps[id]` = measured px from that
- *  rail's bottom to the container bottom. */
-export function computeFarCorners(
-  insets: Insets,
-  controls: OverlayControl[],
-  railGaps: Record<string, number>
-): FarCorners {
-  const reaches = (side: "left" | "right"): boolean => {
-    if (insets[side] <= 0) return false
-    const region = side === "left" ? "left-rail" : "right-rail"
-    let minGap = Number.POSITIVE_INFINITY
-    for (const c of controls) {
-      if (c.visible === false || c.region !== region) continue
-      const gap = railGaps[c.id]
-      if (gap !== undefined) minGap = Math.min(minGap, gap)
-    }
-    // No measured rail (or all unmeasured) → can't say it reaches → stay flush.
-    return minGap < CORNER_CLUSTER_H
-  }
-  return {
-    left: reaches("left") ? insets.left : 0,
-    right: reaches("right") ? insets.right : 0,
-  }
-}
-
-/**
- * Recompute the derived layout products (camera `insets` + extent-aware
- * `farCorners`), reusing the previous objects when values are unchanged so
- * subscribers (CSS vars, fitView) don't re-render when a registration only swaps a
- * renderer or restacks same-size chrome.
- */
+/** Recompute the inset rect, reusing the previous object when values are
+ *  unchanged so `insets` subscribers (CSS vars, fitView) don't re-render when a
+ *  registration only swaps a renderer or restacks same-size chrome. */
 const recompute = (
-  prevInsets: Insets,
-  prevFar: FarCorners,
+  prev: Insets,
   controls: Record<string, OverlayControl>,
-  measured: Record<string, Partial<Record<OverlaySide, number>>>,
-  railGaps: Record<string, number>
-): { insets: Insets; farCorners: FarCorners } => {
-  const list = Object.values(controls)
-  const nextInsets = computeInsets(list, measured)
-  const insets = insetsEqual(prevInsets, nextInsets) ? prevInsets : nextInsets
-  const nextFar = computeFarCorners(insets, list, railGaps)
-  const farCorners = farCornersEqual(prevFar, nextFar) ? prevFar : nextFar
-  return { insets, farCorners }
+  measured: Record<string, Partial<Record<OverlaySide, number>>>
+): Insets => {
+  const next = computeInsets(Object.values(controls), measured)
+  return insetsEqual(prev, next) ? prev : next
 }
 
 export type OverlayStore = {
   controls: Record<string, OverlayControl>
   /** Measured rects per control id (written by the shared ResizeObserver). */
   measured: Record<string, Partial<Record<OverlaySide, number>>>
-  /** Measured px from each rail's bottom edge to the container's bottom edge —
-   *  how far a rail falls short of the bottom, used to free the bottom corners it
-   *  doesn't reach. */
-  railGaps: Record<string, number>
-  /** Derived content-inset rect (per-edge union) — the CAMERA reservation that
-   *  `fitView` pads against. Recomputed on every registry mutation. */
+  /** Reserved room per edge — the camera reservation `fitView` pads against, and
+   *  the room the self-positioning minimap Panel clears the bands by. */
   insets: Insets
-  /** Derived cross-size each BOTTOM corner must clear per rail side — extent-aware,
-   *  so a short rail leaves its far corners flush to the edge. */
-  farCorners: FarCorners
 
   register: (control: OverlayControl) => void
   unregister: (id: string) => void
   setMeasured: (id: string, rect: Partial<Record<OverlaySide, number>>) => void
-  setRailGap: (id: string, gap: number) => void
 }
 
 const initialState = {
   controls: {} as Record<string, OverlayControl>,
   measured: {} as Record<string, Partial<Record<OverlaySide, number>>>,
-  railGaps: {} as Record<string, number>,
   insets: ZERO_INSETS,
-  farCorners: ZERO_FAR_CORNERS,
 }
 
 export const createOverlayStore = (): UseBoundStore<StoreApi<OverlayStore>> =>
@@ -212,13 +144,7 @@ export const createOverlayStore = (): UseBoundStore<StoreApi<OverlayStore>> =>
               const controls = { ...s.controls, [control.id]: control }
               return {
                 controls,
-                ...recompute(
-                  s.insets,
-                  s.farCorners,
-                  controls,
-                  s.measured,
-                  s.railGaps
-                ),
+                insets: recompute(s.insets, controls, s.measured),
               }
             },
             undefined,
@@ -231,21 +157,12 @@ export const createOverlayStore = (): UseBoundStore<StoreApi<OverlayStore>> =>
               if (!(id in s.controls)) return s
               const controls = { ...s.controls }
               const measured = { ...s.measured }
-              const railGaps = { ...s.railGaps }
               delete controls[id]
               delete measured[id]
-              delete railGaps[id]
               return {
                 controls,
                 measured,
-                railGaps,
-                ...recompute(
-                  s.insets,
-                  s.farCorners,
-                  controls,
-                  measured,
-                  railGaps
-                ),
+                insets: recompute(s.insets, controls, measured),
               }
             },
             undefined,
@@ -261,37 +178,11 @@ export const createOverlayStore = (): UseBoundStore<StoreApi<OverlayStore>> =>
               const measured = { ...s.measured, [id]: rect }
               return {
                 measured,
-                ...recompute(
-                  s.insets,
-                  s.farCorners,
-                  s.controls,
-                  measured,
-                  s.railGaps
-                ),
+                insets: recompute(s.insets, s.controls, measured),
               }
             },
             undefined,
             "setMeasured"
-          ),
-
-        setRailGap: (id, gap) =>
-          set(
-            (s) => {
-              if (!(id in s.controls) || s.railGaps[id] === gap) return s
-              const railGaps = { ...s.railGaps, [id]: gap }
-              return {
-                railGaps,
-                ...recompute(
-                  s.insets,
-                  s.farCorners,
-                  s.controls,
-                  s.measured,
-                  railGaps
-                ),
-              }
-            },
-            undefined,
-            "setRailGap"
           ),
       }),
       { name: "OverlayStore", enabled: import.meta.env?.DEV ?? false }

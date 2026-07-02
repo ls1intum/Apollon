@@ -10,7 +10,12 @@ import {
   type ReactNode,
 } from "react"
 import { useOverlayStore } from "../store/context"
-import { REGION_EDGE, type OverlayControl, type OverlayRegion } from "./types"
+import {
+  CORNER_REGIONS,
+  REGION_EDGE,
+  type OverlayControl,
+  type OverlayRegion,
+} from "./types"
 
 /** Library-owned bands rendered as areas of the `.apollon-overlay-grid` frame. */
 const BAND_REGIONS: OverlayRegion[] = [
@@ -20,27 +25,11 @@ const BAND_REGIONS: OverlayRegion[] = [
   "right-rail",
 ]
 
-/** Which side a band/panel region measures for its auto inset. */
-const MEASURE_AXIS: Partial<Record<OverlayRegion, "width" | "height">> = {
-  header: "height",
-  footer: "height",
-  "top-left": "height",
-  "top-center": "height",
-  "top-right": "height",
-  "bottom-left": "height",
-  "bottom-center": "height",
-  "bottom-right": "height",
-  "left-rail": "width",
-  "right-rail": "width",
-}
-
-// EVERY region — bands AND the six corners — is placed as a cell of the one
-// `.apollon-overlay-grid` frame (see app.css), never absolutely positioned off a
-// JS-measured inset. Because the header/footer own the full top/bottom rows, the
-// corner rows sit BETWEEN them and the canvas, and the rails own the middle-row
-// side columns, no region can overlap another — the layout is structural, so
-// there is no measurement-timing race and no second positioning system to drift.
-// `justifySelf`/`alignSelf` pin each cell's content to its edge of the grid area.
+// Every region — bands and the six corners — is a cell of the one
+// `.apollon-overlay-grid` frame (see app.css): the header/footer own the top/bottom
+// rows, the corner rows sit between them and the canvas, and the rails own the
+// middle-row side columns, so no region can overlap another. `justifySelf`/
+// `alignSelf` pin each cell's content to its edge of the grid area.
 type Placement = Pick<CSSProperties, "gridArea" | "justifySelf" | "alignSelf">
 const REGION_PLACEMENT: Partial<Record<OverlayRegion, Placement>> = {
   header: { gridArea: "header" },
@@ -70,17 +59,6 @@ const REGION_PLACEMENT: Partial<Record<OverlayRegion, Placement>> = {
     alignSelf: "end",
   },
 }
-
-/** The six floating corners stack their controls in a flex box; bands run their
- *  own lane machinery (below). */
-const CORNER_REGIONS: OverlayRegion[] = [
-  "top-left",
-  "top-center",
-  "top-right",
-  "bottom-left",
-  "bottom-center",
-  "bottom-right",
-]
 
 /**
  * A band stacks its LANES across its cross-axis; lane 0 sits against the anchor
@@ -216,16 +194,14 @@ function ControlSlot({ control, registerMeasure }: ControlSlotProps) {
 }
 
 /**
- * The single in-canvas host layer. Renders every registered overlay control into
- * its region (React Flow `<Panel>` for the six corners, library-owned bands for
- * header/rails, `<ViewportPortal>` for on-canvas) and measures auto-inset
- * controls with one shared ResizeObserver (the store derives the content-inset
- * rect from those measurements — it is the single inset authority).
+ * The single in-canvas host layer. Renders every registered overlay control as a
+ * cell of the `.apollon-overlay-grid` frame (bands and the six corners) or through
+ * `<ViewportPortal>` (on-canvas), and measures the bands with one shared
+ * ResizeObserver so the store can derive the content-inset rect.
  */
 export function OverlayLayer() {
   const controls = useOverlayStore((s) => s.controls)
   const setMeasured = useOverlayStore((s) => s.setMeasured)
-  const setRailGap = useOverlayStore((s) => s.setRailGap)
   useKeyboardInset()
 
   const visibleControls = useMemo(
@@ -247,27 +223,27 @@ export function OverlayLayer() {
   const observerRef = useRef<ResizeObserver | null>(null)
   const controlsRef = useRef(controls)
   const setMeasuredRef = useRef(setMeasured)
-  const setRailGapRef = useRef(setRailGap)
   // Sync in the layout phase (before the synchronous measure below reads them),
   // not a passive effect, so flushMeasure never sees a stale control set.
   useLayoutEffect(() => {
     controlsRef.current = controls
     setMeasuredRef.current = setMeasured
-    setRailGapRef.current = setRailGap
-  }, [controls, setMeasured, setRailGap])
+  }, [controls, setMeasured])
 
   const flushMeasure = useCallback(() => {
     rafRef.current = null
     for (const [id, el] of elByIdRef.current) {
       const control = controlsRef.current[id]
       if (!control) continue
-      const axis = MEASURE_AXIS[control.region]
       const side = REGION_EDGE[control.region]
-      if (!axis || !side) continue
-      // offsetWidth/Height excludes the corner Panel's CSS margin, so add it
-      // back (read live from --apollon-chrome-edge, the single source of truth)
-      // — else the reserved inset is one margin short and neighbouring chrome
-      // sits flush. Bands are edge-flush and reserve their raw box.
+      if (!side) continue
+      // A control reserves its size along the axis PERPENDICULAR to its edge:
+      // top/bottom edges reserve height, left/right reserve width.
+      const axis = side === "left" || side === "right" ? "width" : "height"
+      // offsetWidth/Height excludes the corner cell's CSS margin, so add it back
+      // (read live from --apollon-chrome-edge) — else the reserved inset is one
+      // margin short and the camera frames content flush against the chrome.
+      // Bands are edge-flush and reserve their raw box.
       const raw = axis === "width" ? el.offsetWidth : el.offsetHeight
       const edge = BAND_REGIONS.includes(control.region)
         ? 0
@@ -275,19 +251,6 @@ export function OverlayLayer() {
             getComputedStyle(el).getPropertyValue("--apollon-chrome-edge")
           ) || 0
       setMeasuredRef.current(id, { [side]: raw + edge })
-      // A rail reserves its width (cross axis) as the inset, but a bottom corner
-      // also needs to know whether the rail reaches DOWN to it. Measure the gap
-      // from the rail's real bottom to the container's bottom — the physical
-      // quantity, robust to an unrelated band inset shifting the rail's position.
-      if (control.region === "left-rail" || control.region === "right-rail") {
-        const container = el.closest(".apollon-canvas")
-        if (container) {
-          const gap =
-            container.getBoundingClientRect().bottom -
-            el.getBoundingClientRect().bottom
-          setRailGapRef.current(id, gap)
-        }
-      }
     }
   }, [])
 
@@ -431,8 +394,8 @@ export function OverlayLayer() {
       {onCanvas.length > 0 && (
         <ViewportPortal>
           {/* Wrapped in ControlSlot so interactive on-canvas chrome blocks
-              canvas pan/zoom/wheel (nopan/nodrag/nowheel + capture stop) instead
-              of dragging the diagram under the pointer. */}
+              canvas pan/zoom/wheel (nopan/nodrag/nowheel + bubble-phase stop)
+              instead of dragging the diagram under the pointer. */}
           {onCanvas.map((c) => (
             <ControlSlot
               key={c.id}

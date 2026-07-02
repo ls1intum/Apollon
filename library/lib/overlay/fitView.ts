@@ -10,9 +10,9 @@ const GUTTER = 16
  * chrome. `padding` as a per-side object overrides the base gutter on that side;
  * as a number it sets the fraction used when nothing is reserved. With no reserved
  * chrome and no per-side override it falls back to a plain fraction fit —
- * byte-identical to an editor that registers no overlays. The single fit routine
- * behind `ApollonEditor.fitView` (and thus the on-init fit) and the zoom cluster's
- * fit button, so both make way identically.
+ * byte-identical to an editor that registers no overlays. Shared by
+ * `ApollonEditor.fitView` and the zoom cluster's fit button so both make way
+ * identically.
  */
 export function insetAwareFitView(
   rf: Pick<ReactFlowInstance, "fitView">,

@@ -1,14 +1,6 @@
 import { describe, expect, it } from "vitest"
-import {
-  computeFarCorners,
-  computeInsets,
-  createOverlayStore,
-} from "@/overlay/overlayStore"
-import {
-  type Insets,
-  type OverlayControl,
-  type OverlayRegion,
-} from "@/overlay/types"
+import { computeInsets, createOverlayStore } from "@/overlay/overlayStore"
+import { type OverlayControl, type OverlayRegion } from "@/overlay/types"
 
 const control = (over: Partial<OverlayControl>): OverlayControl => ({
   id: "c",
@@ -91,10 +83,8 @@ describe("overlayStore", () => {
 })
 
 // Two-tier chrome: BANDS (header/footer/left-rail/right-rail) reserve their
-// cross-size on their one edge; SLOTS (the panel corners) float and reserve
-// nothing. This is the model that keeps a bottom-corner control from shortening
-// the left-rail palette — the user-reported "it does not adapt" bug. Bands stack
-// per lane (lane max within a lane, summed across lanes). Unit the math directly.
+// cross-size on their one edge; SLOTS (the corners) reserve nothing. Bands stack
+// per lane: the max within a lane, summed across lanes.
 describe("computeInsets: band vs slot reservation", () => {
   it("a band reserves its measured cross-size on its own edge; a slot reserves nothing", () => {
     expect(
@@ -268,125 +258,5 @@ describe("overlay store: re-registration keeps insets identity-stable", () => {
       render: () => null,
     })
     expect(store.getState().insets).toBe(insetsBefore)
-  })
-})
-
-// The core of the extent-aware corner fix. The camera `insets` reserve the rail's
-// full width on the left edge (correct — content must clear it), but a BOTTOM
-// corner should only clear the rail where it actually reaches DOWN to it. The
-// decision uses the rail's real geometry: `railGaps[id]` = measured px from the
-// rail's bottom to the container bottom. A small gap ⇒ the rail reaches the corner
-// (clear it); a large gap ⇒ the rail ends high, so the corner sits flush. Measuring
-// the gap (not reconstructing it from insets) keeps it stable when an unrelated
-// band inset shifts the rail's position without changing where its bottom lands.
-describe("computeFarCorners (extent-aware bottom-corner clearance)", () => {
-  const insets = (over: Partial<Insets> = {}): Insets => ({
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
-    ...over,
-  })
-  const rail = (id: string, side: "left" | "right"): OverlayControl =>
-    ctrl(id, side === "left" ? "left-rail" : "right-rail")
-
-  it("frees a bottom corner when the rail ends well above it (the wasted-space bug)", () => {
-    // A ~300px gap below the palette — far more than a corner cluster needs — so
-    // the bottom-left corner clears NOTHING and the zoom cluster sits flush.
-    const far = computeFarCorners(
-      insets({ left: 150 }),
-      [rail("pal", "left")],
-      {
-        pal: 300,
-      }
-    )
-    expect(far.left).toBe(0)
-  })
-
-  it("clears the rail when it reaches down to the far corner", () => {
-    // A full-height left rail (e.g. a version-history panel) ends ~10px from the
-    // bottom, so the bottom-left corner must clear its full width or they'd overlap.
-    const far = computeFarCorners(
-      insets({ left: 150 }),
-      [rail("hist", "left")],
-      {
-        hist: 10,
-      }
-    )
-    expect(far.left).toBe(150)
-  })
-
-  it("uses the corner-cluster threshold, not a bare touch test", () => {
-    // A 40px gap is smaller than one cluster (~60px), so a flush cluster WOULD
-    // overlap → clear. A 90px gap leaves room → flush.
-    expect(
-      computeFarCorners(insets({ left: 150 }), [rail("r", "left")], { r: 40 })
-        .left
-    ).toBe(150)
-    expect(
-      computeFarCorners(insets({ left: 150 }), [rail("r", "left")], { r: 90 })
-        .left
-    ).toBe(0)
-  })
-
-  it("resolves each side independently", () => {
-    // Short left palette (frees bottom-left), full-height right rail (clears
-    // bottom-right) — the two far corners are decided separately.
-    const far = computeFarCorners(
-      insets({ left: 150, right: 120 }),
-      [rail("pal", "left"), rail("hist", "right")],
-      { pal: 300, hist: 10 }
-    )
-    expect(far).toEqual({ left: 0, right: 120 })
-  })
-
-  it("is zero when the edge reserves nothing or the rail is unmeasured", () => {
-    expect(
-      computeFarCorners(insets(), [rail("p", "left")], { p: 10 }).left
-    ).toBe(0)
-    // No measured gap yet (pre-layout) → can't decide, so stay flush (0), never
-    // guess a clearance that would jump the cluster on first paint.
-    expect(
-      computeFarCorners(insets({ left: 150 }), [rail("p", "left")], {}).left
-    ).toBe(0)
-  })
-
-  it("ignores a hidden rail", () => {
-    const far = computeFarCorners(
-      insets({ left: 150 }),
-      [ctrl("p", "left-rail", { visible: false })],
-      { p: 10 }
-    )
-    // The hidden rail contributes no extent, so nothing reaches the corner.
-    expect(far.left).toBe(0)
-  })
-
-  it("is wired into the store: setRailGap drives farCorners", () => {
-    const store = createOverlayStore()
-    store.getState().register(rail("pal", "left"))
-    store.getState().setMeasured("pal", { left: 150 })
-    // Short palette (big gap below) → bottom-left free, though the camera inset
-    // still reserves 150 for content framing.
-    store.getState().setRailGap("pal", 300)
-    expect(store.getState().insets.left).toBe(150)
-    expect(store.getState().farCorners.left).toBe(0)
-
-    // The palette grows to reach the bottom (tiny gap) → the far corner must clear.
-    store.getState().setRailGap("pal", 10)
-    expect(store.getState().farCorners.left).toBe(150)
-  })
-
-  it("stays flush when an unrelated band inset shifts the rail but not its gap", () => {
-    // The regression this design prevents: a host header's inset settling from 0
-    // to 56 shifts the rail down, but the measured gap below the rail is what
-    // matters — as long as the rail still ends clear of the bottom, the corner
-    // stays flush (no jump).
-    const store = createOverlayStore()
-    store.getState().register(rail("pal", "left"))
-    store.getState().setMeasured("pal", { left: 150 })
-    store.getState().setRailGap("pal", 122) // header inset 0: gap large
-    expect(store.getState().farCorners.left).toBe(0)
-    store.getState().setRailGap("pal", 66) // header pushed rail down; still clear
-    expect(store.getState().farCorners.left).toBe(0)
   })
 })

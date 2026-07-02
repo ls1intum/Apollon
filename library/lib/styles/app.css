@@ -76,15 +76,14 @@
   z-index: var(--apollon-z-chrome);
 }
 
-/* The band frame. A CSS grid over the full-bleed canvas: the header/footer own
-   the top/bottom rows, the rails own the side columns of the middle row, and the
-   centre cell is the canvas hole. Because the bands live in disjoint grid areas
-   they can NEVER overlap each other — a rail always sits below the header and
-   above the footer structurally, with no dependence on JS-measured insets (the
-   source of the old palette-over-header collision at first paint). The frame is
-   pointer-transparent; each control opts its own box back in. Device safe-area
-   insets and the mobile-keyboard overlap are grid padding, so every band clears
-   the notch / gesture bar / soft keyboard in one place. */
+/* The chrome frame. A CSS grid over the full-bleed canvas: the header/footer own
+   the top/bottom rows, the six corners the rows just inside them, the rails the
+   middle-row side columns, and the centre cell is the canvas hole. Placing every
+   region in a disjoint grid area is what keeps them from overlapping, with no
+   JS-measured offsets. The frame is pointer-transparent; each control opts its own
+   box back in. Device safe-area insets and the mobile-keyboard overlap are grid
+   padding, so every region clears the notch / gesture bar / soft keyboard in one
+   place. */
 .apollon-overlay-grid {
   position: absolute;
   inset: 0;
@@ -118,10 +117,8 @@
   overflow: hidden;
 }
 
-/* Presence avatars are registered as a top-right overlay control, so the engine
-   positions them (clearing header/right-rail bands via the inset-aware panel) and
-   deconflicts them with host chrome in the same corner. This rule is now just the
-   inner layout of the bar within its slot. */
+/* Presence avatars register as a top-right overlay control, so the grid places
+   and deconflicts them; this is the inner layout of the bar within its cell. */
 .apollon-collaboration-presence-bar {
   display: flex;
   align-items: center;
@@ -377,15 +374,13 @@
   line-height: 1.4;
 }
 
-/* Every floating corner slot floats one edge margin in from the canvas (replacing
-   React Flow's default 15px so slots line up with the palette at
-   --apollon-chrome-edge), PLUS the device safe-area on each pinned side (notch /
-   home indicator / rounded corner; Capacitor, viewport-fit=cover), PLUS the
-   reserved band inset on that edge so a slot clears the bands instead of painting
-   over them: top slots drop below the header, left/right slots shift clear of the
-   rails. The band insets are 0 when no band occupies that edge, so a slot with no
-   adjacent band sits exactly at the edge margin. Declared before the landscape
-   block so its extra notch nudge still wins. */
+/* The minimap is the one control React Flow positions itself (a `<Panel>`), so it
+   is offset here rather than by the grid: one edge margin in (replacing React
+   Flow's default 15px so it lines up with the grid chrome), the device safe-area
+   on each pinned side (notch / home indicator; Capacitor, viewport-fit=cover), and
+   the reserved band inset on that edge so it clears a band instead of painting
+   over it (0 when no band occupies that edge). Declared before the landscape block
+   so its extra notch nudge still wins. */
 .react-flow__panel.top {
   margin-top: calc(
     var(--apollon-chrome-edge) + var(--safe-area-inset-top, 0px) +
@@ -400,13 +395,6 @@
   );
 }
 
-/* A left/right slot clears the rail on its edge. The TOP corners always meet a
-   (top-anchored) rail, so they clear its full width via the per-edge inset. The
-   BOTTOM corners clear it only where it actually reaches them: `--apollon-far-*`
-   is the rail's width when it extends to the bottom, else 0 — so a short palette
-   leaves the bottom-left zoom cluster flush to the edge instead of shoved across
-   an empty column. The `.bottom.left/right` rules outrank the `.left/.right` ones
-   (three classes vs two), so only the far corners opt into the extent-aware var. */
 .react-flow__panel.left {
   margin-left: calc(
     var(--apollon-chrome-edge-safe-left) + var(--apollon-inset-left, 0px)
@@ -416,18 +404,6 @@
 .react-flow__panel.right {
   margin-right: calc(
     var(--apollon-chrome-edge-safe-right) + var(--apollon-inset-right, 0px)
-  );
-}
-
-.react-flow__panel.bottom.left {
-  margin-left: calc(
-    var(--apollon-chrome-edge-safe-left) + var(--apollon-far-left, 0px)
-  );
-}
-
-.react-flow__panel.bottom.right {
-  margin-right: calc(
-    var(--apollon-chrome-edge-safe-right) + var(--apollon-far-right, 0px)
   );
 }
 

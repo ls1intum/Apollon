@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { render, cleanup, act } from "@testing-library/react"
-import { ReactFlowProvider } from "@xyflow/react"
 import { ApollonEditor } from "@/apollon-editor"
 import { ApollonProvider } from "@/components/react/context"
 import { ApollonControl } from "@/components/react/ApollonControl"
@@ -47,9 +46,9 @@ describe("ApollonEditor overlay/control API", () => {
       region: "top-left",
       render: () => null,
     })
-    expect(editor.hasControl("ctrl")).toBe(true)
+    expect(editor.getControl("ctrl")?.region).toBe("top-left")
     editor.addControl({ id: "ctrl", region: "top-right", render: () => null })
-    expect(editor.hasControl("ctrl")).toBe(true)
+    expect(editor.getControl("ctrl")?.region).toBe("top-right")
     dispose()
     expect(editor.hasControl("ctrl")).toBe(false)
   })
@@ -57,7 +56,7 @@ describe("ApollonEditor overlay/control API", () => {
   it("updateControl patches a registered control; missing id is a no-op", () => {
     editor.addControl({ id: "c", region: "header", render: () => null })
     editor.updateControl("c", { region: "bottom-center" })
-    expect(editor.hasControl("c")).toBe(true)
+    expect(editor.getControl("c")?.region).toBe("bottom-center")
     editor.updateControl("missing", { region: "header" })
     expect(editor.hasControl("missing")).toBe(false)
   })
@@ -158,9 +157,9 @@ describe("built-in controls (imperative descriptors)", () => {
     document.body.appendChild(el)
     const ed = new ApollonEditor(el)
 
-    // The minimap self-positions from its LIVE registry region (BuiltInMiniMap reads
-    // it), so patching region must actually land on the record — not a no-op behind
-    // a captured closure. Read the field back (the blind spot that hid the bug).
+    // The minimap self-positions from its LIVE registry region (BuiltInMiniMap
+    // reads it), so patching region must land on the record, not behind a captured
+    // closure — read the field back rather than trusting hasControl.
     ed.updateControl(MINIMAP_ID, { region: "top-left" })
     expect(ed.getControl(MINIMAP_ID)?.region).toBe("top-left")
 
@@ -303,15 +302,11 @@ describe("compound built-in components", () => {
   })
 })
 
-// The bands render their lanes as a flex stack whose DIRECTION is what pins lane 0
-// to the anchor edge: `header` stacks downward (`column`) so lane 0 is the top row,
-// `footer` stacks upward (`column-reverse`) so lane 0 is the BOTTOM row even though
-// it renders first. A flipped direction would paint a footer's stacked bars upside
-// down (reservation still summing correctly, so the bug is invisible to the store
-// tests). Mount the real OverlayLayer against a live store and assert the DOM.
-// OverlayLayer always renders inside React Flow (it reads the pane size for
-// extent-aware corner clearance), so wrap it in a ReactFlowProvider. Only bands
-// are registered here, so no <Panel>/<ViewportPortal> is actually instantiated.
+// Lane DIRECTION is what pins lane 0 to the anchor edge: `header` stacks downward
+// (`column`) so lane 0 is the top row; `footer` stacks upward (`column-reverse`)
+// so lane 0 is the bottom row though it renders first. The store's summed
+// reservation is direction-agnostic, so only a rendered assertion catches a
+// flipped stack.
 describe("OverlayLayer band rendering (rendered lane stacking)", () => {
   afterEach(cleanup)
 
@@ -319,11 +314,9 @@ describe("OverlayLayer band rendering (rendered lane stacking)", () => {
     const store = createOverlayStore()
     for (const c of controls) store.getState().register(c)
     return render(
-      <ReactFlowProvider>
-        <OverlayStoreContext.Provider value={store}>
-          <OverlayLayer />
-        </OverlayStoreContext.Provider>
-      </ReactFlowProvider>
+      <OverlayStoreContext.Provider value={store}>
+        <OverlayLayer />
+      </OverlayStoreContext.Provider>
     )
   }
 
@@ -378,11 +371,9 @@ describe("useKeyboardInset (OverlayLayer)", () => {
   function renderLayer() {
     const store = createOverlayStore()
     return render(
-      <ReactFlowProvider>
-        <OverlayStoreContext.Provider value={store}>
-          <OverlayLayer />
-        </OverlayStoreContext.Provider>
-      </ReactFlowProvider>
+      <OverlayStoreContext.Provider value={store}>
+        <OverlayLayer />
+      </OverlayStoreContext.Provider>
     )
   }
 

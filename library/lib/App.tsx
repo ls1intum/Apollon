@@ -116,14 +116,11 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
 
   const isDiagramModifiable = useDiagramModifiable()
 
-  // Publish the reserved overlay insets as CSS custom properties so the editor's
-  // own overlays (palette, presence bar, controls, minimap) slide to make room
-  // for host chrome instead of overlapping it.
+  // The reserved-room rect, published as CSS custom properties so the
+  // self-positioning minimap Panel can clear the bands (the grid places every
+  // other control structurally) — and read by fitView to frame content clear of
+  // chrome.
   const insets = useOverlayStore((state) => state.insets)
-  // The BOTTOM corners clear a rail only where it actually reaches them (0 when a
-  // top-anchored rail ends above, so the bottom-left zoom cluster sits flush
-  // instead of clearing an empty column). The camera `insets` above stay per-edge.
-  const farCorners = useOverlayStore((state) => state.farCorners)
 
   // Overlay the live positions/sizes of nodes peers are dragging (carried over
   // ephemeral awareness, never the document) onto what React Flow renders, so
@@ -188,19 +185,12 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
             overflow: "hidden",
             backgroundColor: "var(--apollon-background, #ffffff)",
             position: "relative",
-            // Always publish the reserved insets (default 0) so the overlay store
-            // is the single layout authority — the palette and every band position
-            // straight off these vars, and the gap collapses to 0 when no chrome
-            // reserves that edge (no hardcoded CSS fallback to second-guess it).
+            // The minimap Panel clears the bands off these (0 when no chrome
+            // reserves that edge).
             "--apollon-inset-top": `${insets.top}px`,
             "--apollon-inset-right": `${insets.right}px`,
             "--apollon-inset-bottom": `${insets.bottom}px`,
             "--apollon-inset-left": `${insets.left}px`,
-            // Extent-aware bottom-corner clearance (0 unless a rail reaches down
-            // to it). Bottom corners key off these; top corners still use the
-            // per-edge insets above (a rail always meets the top corner).
-            "--apollon-far-left": `${farCorners.left}px`,
-            "--apollon-far-right": `${farCorners.right}px`,
           } as CSSProperties
         }
       >
