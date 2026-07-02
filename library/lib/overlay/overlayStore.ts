@@ -1,5 +1,6 @@
 import { create, StoreApi, UseBoundStore } from "zustand"
 import { devtools } from "zustand/middleware"
+import type { ReactNode } from "react"
 import {
   type Insets,
   type OverlayControl,
@@ -78,16 +79,27 @@ export type OverlayStore = {
   measured: Record<string, Partial<Record<OverlaySide, number>>>
   /** Derived content-inset rect — recomputed on every registry mutation. */
   insets: Insets
+  /**
+   * Live render thunk per control id, kept separate from the control's registered
+   * `render` so a host swapping a built-in's `render`/`props` refreshes just that
+   * slot (the subscribing `BuiltInRender` re-renders) without re-registering —
+   * which would recompute insets and thrash the ResizeObserver. Registered render
+   * thunks read from here; see `BuiltInControls`.
+   */
+  renders: Record<string, () => ReactNode>
 
   register: (control: OverlayControl) => void
   unregister: (id: string) => void
   setMeasured: (id: string, rect: Partial<Record<OverlaySide, number>>) => void
+  /** Update a control's live render thunk without touching layout/insets. */
+  setRender: (id: string, render: () => ReactNode) => void
 }
 
 const initialState = {
   controls: {} as Record<string, OverlayControl>,
   measured: {} as Record<string, Partial<Record<OverlaySide, number>>>,
   insets: ZERO_INSETS,
+  renders: {} as Record<string, () => ReactNode>,
 }
 
 export const createOverlayStore = (): UseBoundStore<StoreApi<OverlayStore>> =>
@@ -112,11 +124,14 @@ export const createOverlayStore = (): UseBoundStore<StoreApi<OverlayStore>> =>
               if (!(id in s.controls)) return s
               const controls = { ...s.controls }
               const measured = { ...s.measured }
+              const renders = { ...s.renders }
               delete controls[id]
               delete measured[id]
+              delete renders[id]
               return {
                 controls,
                 measured,
+                renders,
                 insets: recompute(controls, measured),
               }
             },
@@ -135,6 +150,13 @@ export const createOverlayStore = (): UseBoundStore<StoreApi<OverlayStore>> =>
             },
             undefined,
             "setMeasured"
+          ),
+
+        setRender: (id, render) =>
+          set(
+            (s) => ({ renders: { ...s.renders, [id]: render } }),
+            undefined,
+            "setRender"
           ),
       }),
       { name: "OverlayStore", enabled: import.meta.env?.DEV ?? false }

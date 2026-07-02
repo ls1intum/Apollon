@@ -3,6 +3,7 @@ import { render, cleanup } from "@testing-library/react"
 import { ApollonEditor } from "@/apollon-editor"
 import { ApollonProvider } from "@/components/react/context"
 import { ApollonControl } from "@/components/react/ApollonControl"
+import { createOverlayStore } from "@/overlay/overlayStore"
 
 // Drives the public overlay/control API against the real editor (no mock);
 // asserts at the store level (jsdom has no layout).
@@ -107,6 +108,56 @@ describe("built-in controls config (imperative)", () => {
     expect(ed.getControlConfig("palette")).toBeUndefined()
 
     ed.destroy()
+  })
+})
+
+// The built-ins swap their *content* through the store's `renders` map (read by
+// the `BuiltInRender` slot), never by re-registering — so a host changing a
+// control's `render`/`props` refreshes just that slot without recomputing insets
+// or thrashing the ResizeObserver. jsdom can't lay the editor out, so we assert
+// this contract at the store level (see the note on <ApollonControl> below).
+describe("overlay store: live render swap without re-registration", () => {
+  it("setRender swaps the render thunk but leaves registration and insets identical", () => {
+    const store = createOverlayStore()
+    const slot = () => null
+    store.getState().register({
+      id: "x",
+      region: "left-rail",
+      inset: "auto",
+      order: 0,
+      render: slot,
+    })
+    store.getState().setMeasured("x", { left: 120 })
+
+    const controlBefore = store.getState().controls.x
+    const insetsBefore = store.getState().insets
+    expect(insetsBefore.left).toBe(120)
+
+    const v1 = () => "v1"
+    store.getState().setRender("x", v1)
+    expect(store.getState().renders.x).toBe(v1)
+    // The registered control and the derived inset rect are the SAME objects:
+    // swapping content neither re-registers nor recomputes layout.
+    expect(store.getState().controls.x).toBe(controlBefore)
+    expect(store.getState().insets).toBe(insetsBefore)
+
+    const v2 = () => "v2"
+    store.getState().setRender("x", v2)
+    expect(store.getState().renders.x).toBe(v2)
+    expect(store.getState().controls.x).toBe(controlBefore)
+    expect(store.getState().insets).toBe(insetsBefore)
+  })
+
+  it("unregister clears the live render", () => {
+    const store = createOverlayStore()
+    store
+      .getState()
+      .register({ id: "x", region: "top-left", render: () => null })
+    store.getState().setRender("x", () => null)
+    expect(store.getState().renders.x).toBeDefined()
+
+    store.getState().unregister("x")
+    expect(store.getState().renders.x).toBeUndefined()
   })
 })
 

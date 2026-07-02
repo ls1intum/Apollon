@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react"
+import { useEffect, useLayoutEffect, useRef, type ReactNode } from "react"
 import { PANEL_REGIONS, type OverlayControlInput } from "@/overlay/types"
 import type { PanelPosition } from "@xyflow/react"
 import { useOverlayStore } from "@/store/context"
@@ -43,10 +43,29 @@ function asObject(
   return config && config !== true ? config : {}
 }
 
-/** Stable string that changes only when a control's registration meaningfully
+/**
+ * Renders a built-in's *live* render thunk from the overlay store, subscribing to
+ * only that slot. This is what the registered (stable) `render` resolves to, so a
+ * host swapping a control's `render`/`props` re-renders just this node — no
+ * re-registration, no inset recompute. Rendered inside `<ReactFlow>`, so it
+ * resolves React Flow + store context.
+ */
+function BuiltInRender({ id }: { id: string }) {
+  const render = useOverlayStore((s) => s.renders[id])
+  return render ? <>{render()}</> : null
+}
+
+// Stable per-id slot thunks: the registered `render` never changes identity, so
+// registration is driven purely by placement (see `signature`), while the actual
+// content flows through `setRender` → `BuiltInRender`.
+const PALETTE_SLOT = () => <BuiltInRender id={PALETTE_CONTROL_ID} />
+const ZOOM_SLOT = () => <BuiltInRender id={ZOOM_CONTROL_ID} />
+
+/** Stable string that changes only when a control's *placement* meaningfully
  *  changes — so the registering effect re-runs on real edits, never on every
- *  render (which would re-register → recompute insets → re-render → loop). The
- *  render function is represented by presence only; see the note in the effect. */
+ *  render (which would re-register → recompute insets → re-render → loop).
+ *  `render`/`props` are deliberately absent: they flow through `setRender` and so
+ *  never trigger a re-registration. */
 function signature(
   config: BuiltInControlConfig | undefined,
   baseVisible: boolean
@@ -61,18 +80,27 @@ function signature(
     visible: baseVisible && (c.visible ?? true),
     className: c.className ?? null,
     style: c.style ?? null,
-    props: c.props ?? null,
-    hasRender: !!c.render,
   })
 }
 
-/** Merge a built-in's defaults with its config into a full control input, or
- *  `null` when it should be unregistered (hidden). */
+/** The live render for a built-in: the host's `render` if given, else the default
+ *  rendered with the config's `props`. Re-derived every render and pushed to the
+ *  store via `setRender`, so swapping either takes effect without re-registering. */
+function currentRender(
+  config: BuiltInControlConfig | undefined,
+  renderDefault: (props: Record<string, unknown>) => ReactNode
+): () => ReactNode {
+  const c = asObject(config)
+  return c.render ?? (() => renderDefault(c.props ?? {}))
+}
+
+/** Merge a built-in's defaults with its config into a full control input (with the
+ *  stable slot thunk as `render`), or `null` when it should be unregistered. */
 function resolveControl(
   id: string,
   defaults: Pick<OverlayControlInput, "region" | "inset" | "order">,
   config: BuiltInControlConfig | undefined,
-  renderDefault: (props: Record<string, unknown>) => ReactNode,
+  slot: () => ReactNode,
   baseVisible: boolean
 ): OverlayControlInput | null {
   if (config === false) return null
@@ -86,7 +114,7 @@ function resolveControl(
     interactive: c.interactive,
     className: c.className,
     style: c.style,
-    render: c.render ?? (() => renderDefault(c.props ?? {})),
+    render: slot,
   }
 }
 
@@ -113,11 +141,32 @@ export function BuiltInControls({
 }: BuiltInControlsProps) {
   const register = useOverlayStore((s) => s.register)
   const unregister = useOverlayStore((s) => s.unregister)
+  const setRender = useOverlayStore((s) => s.setRender)
 
-  // Each effect depends on the real config values (so the deps are honest), but
-  // bails via a remembered signature when nothing meaningful changed — an inline
-  // `controls={{…}}` that is a new object every render still re-registers zero
-  // times (which would otherwise recompute insets → re-render → loop).
+  // Keep each built-in's live render current (layout phase, so it lands before
+  // paint on the same commit that swapped it — no stale frame). Keyed on the
+  // config, so an unrelated editor re-render (e.g. a diagram edit) never re-pushes
+  // it. This is what makes `render`/`props` reactive without a re-registration.
+  useLayoutEffect(() => {
+    setRender(
+      PALETTE_CONTROL_ID,
+      currentRender(controls?.palette, () => <Sidebar />)
+    )
+  }, [controls, setRender])
+  useLayoutEffect(() => {
+    setRender(
+      ZOOM_CONTROL_ID,
+      currentRender(controls?.zoom, (props) => (
+        <ZoomControls {...(props as ZoomProps)} />
+      ))
+    )
+  }, [controls, setRender])
+
+  // Registration depends on the real config values (so the deps are honest), but
+  // bails via a remembered *placement* signature when nothing layout-relevant
+  // changed — an inline `controls={{…}}` that is a new object every render still
+  // re-registers zero times (which would otherwise recompute insets → re-render →
+  // loop). Content changes ride the `setRender` effects above instead.
   const paletteSigRef = useRef<string>(undefined)
   useEffect(() => {
     const sig = signature(controls?.palette, showPalette)
@@ -127,7 +176,7 @@ export function BuiltInControls({
       PALETTE_CONTROL_ID,
       { region: "left-rail", inset: "auto", order: 0 },
       controls?.palette,
-      () => <Sidebar />,
+      PALETTE_SLOT,
       showPalette
     )
     if (input) register(input)
@@ -143,7 +192,7 @@ export function BuiltInControls({
       ZOOM_CONTROL_ID,
       { region: "bottom-left", inset: "auto", order: 0 },
       controls?.zoom,
-      (props) => <ZoomControls {...(props as ZoomProps)} />,
+      ZOOM_SLOT,
       true
     )
     if (input) register(input)
