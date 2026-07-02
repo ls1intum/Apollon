@@ -1,5 +1,6 @@
 import { Panel, ViewportPortal, type PanelPosition } from "@xyflow/react"
 import {
+  Fragment,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -244,9 +245,17 @@ export function OverlayLayer() {
     [scheduleMeasure]
   )
 
+  // Self-positioning controls (the React-Flow-native minimap) render their own
+  // `<Panel position>`, so they are rendered bare — never wrapped in a region slot.
+  const selfPositioned = useMemo(
+    () => visibleControls.filter((c) => c.selfPositioned),
+    [visibleControls]
+  )
+
   const byRegion = useMemo(() => {
     const map = new Map<OverlayRegion, OverlayControl[]>()
     for (const c of visibleControls) {
+      if (c.selfPositioned) continue
       const list = map.get(c.region) ?? []
       list.push(c)
       map.set(c.region, list)
@@ -300,6 +309,10 @@ export function OverlayLayer() {
             />
           ))}
         </div>
+      ))}
+
+      {selfPositioned.map((c) => (
+        <Fragment key={c.id}>{c.render()}</Fragment>
       ))}
 
       {onCanvas.length > 0 && (

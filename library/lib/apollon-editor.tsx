@@ -42,7 +42,6 @@ import {
   OVERLAY_REGIONS,
   ZERO_INSETS,
 } from "./overlay/types"
-import type { BuiltInControlKey, ControlsOptions } from "./chrome/config"
 import { getPerfCounters } from "./sync/perfCounters"
 import { MessageType, SendBroadcastMessage, YjsSync } from "./sync/yjsSync"
 import { getNodesMap } from "./sync/ydoc"
@@ -202,8 +201,12 @@ export class ApollonEditor {
     if (options?.scrollLock !== undefined) {
       this.metadataStore.getState().setScrollLock(options.scrollLock)
     }
+    // Supplying `controls` (even `[]`) opts out of the default chrome; the editor
+    // registers exactly the given descriptors. Omit it for the palette + zoom +
+    // minimap defaults (registered by the React tree once the canvas mounts).
     if (options?.controls !== undefined) {
-      this.metadataStore.getState().setControls(options.controls)
+      this.metadataStore.getState().setControlsProvided(true)
+      for (const control of options.controls) this.addControl(control)
     }
 
     this.diagramStore.getState().setCollaborationEnabled(collaboration.enabled)
@@ -415,49 +418,21 @@ export class ApollonEditor {
   }
 
   /**
+   * Unregister a control by id (a no-op if absent). Hides a built-in imperatively
+   * — e.g. `editor.removeControl(ZOOM_ID)` — the parity for omitting it from a
+   * React composition. Equivalent to the disposer `addControl` returns.
+   * @param id - The control's id.
+   */
+  public removeControl(id: string): void {
+    this.overlayStore.getState().unregister(id)
+  }
+
+  /**
    * @param id - A control id.
    * @returns `true` if a control with this id is currently registered.
    */
   public hasControl(id: string): boolean {
     return id in this.overlayStore.getState().controls
-  }
-
-  // ---- Built-in control config ------------------------------------------
-  // The palette, minimap and zoom cluster are first-class controls. This config
-  // is the parity surface with `<Apollon controls={…}>`: identical shape, applied
-  // reactively. Arbitrary custom controls still go through `addControl`.
-
-  /**
-   * Replace the whole built-in `controls` config (palette / minimap / zoom).
-   * Omitted keys revert to the editor default.
-   * @param controls - The new {@link ControlsOptions}.
-   */
-  public setControls(controls: ControlsOptions): void {
-    this.metadataStore.getState().setControls(controls)
-  }
-
-  /**
-   * Patch a single built-in's config, leaving the others untouched.
-   * @param key - `"palette" | "minimap" | "zoom"`.
-   * @param config - `false` to hide, a placement object to move / re-configure,
-   *   or `{ render }` to replace.
-   */
-  public setControl<K extends BuiltInControlKey>(
-    key: K,
-    config: ControlsOptions[K]
-  ): void {
-    const current = this.metadataStore.getState().controls
-    this.metadataStore.getState().setControls({ ...current, [key]: config })
-  }
-
-  /**
-   * @param key - `"palette" | "minimap" | "zoom"`.
-   * @returns The current config for that built-in (`undefined` if unset).
-   */
-  public getControlConfig<K extends BuiltInControlKey>(
-    key: K
-  ): ControlsOptions[K] {
-    return this.metadataStore.getState().controls[key]
   }
 
   /**

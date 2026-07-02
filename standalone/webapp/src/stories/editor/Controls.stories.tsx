@@ -1,27 +1,26 @@
 import type { CSSProperties } from "react"
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { useReactFlow } from "@xyflow/react"
-import { Apollon } from "@tumaet/apollon"
-import type { ControlsOptions } from "@tumaet/apollon"
+import { Apollon, useControl, ZOOM_ID } from "@tumaet/apollon"
 import { editorStoryMeta, fixtureByType } from "../_support/editor"
 
 /**
  * The public **controls API** (`@tumaet/apollon`). The editor's built-in chrome —
  * the element **palette**, the **minimap**, and the **zoom / history** cluster —
- * are first-class controls on the overlay engine, driven by one `controls` option
- * that is byte-identical across `new ApollonEditor(el, { controls })`,
- * `<Apollon controls={…}/>`, and the imperative `editor.setControls(…)` /
- * `setControl(key, …)`.
+ * are first-class controls on one overlay registry. In React you **compose** them
+ * as `<Apollon>` children:
  *
- * Each built-in accepts three levels of control:
- *   - `false` — hide it.
- *   - a **placement** object — `{ region, order, inset, className, style, props }`
- *     to move / re-order / re-style / re-configure it.
- *   - `{ render }` — replace it entirely with your own node.
+ *   - **Presence renders it** — `<Apollon.Zoom/>` shows the cluster.
+ *   - **Omission hides it** — leave a child out and it is gone (pass *some*
+ *     children and the editor drops its defaults, so an empty compose = bare canvas).
+ *   - **Typed props reconfigure it** — `<Apollon.Zoom region="bottom-center"
+ *     history={false}/>`.
+ *   - **Replace it** — register your own control at the reserved id (`ZOOM_ID`)
+ *     with `useControl`, so it renders inside React Flow and can drive the viewport.
  *
- * The `Playground` story wires every knob to Storybook controls; because
- * `<Apollon controls>` is reactive, editing a control re-renders the live editor.
- * The remaining stories are focused recipes.
+ * The same descriptors drive the vanilla path — `new ApollonEditor(el, { controls:
+ * [zoomControl(), …] })` — since both compile to the one registry. The `Playground`
+ * story wires every knob to Storybook controls; the rest are focused recipes.
  */
 
 // The six React-Flow panel corners the zoom cluster can anchor to.
@@ -43,10 +42,10 @@ const MINIMAP_CORNERS = [
 ] as const
 
 /**
- * A fully-functional REPLACEMENT for the zoom cluster: rendered inside ReactFlow,
- * so it can drive the viewport through `useReactFlow`. This is what a host passes
- * as `controls.zoom.render` — proof that a replacement is a real control, not a
- * static badge.
+ * A fully-functional REPLACEMENT for the zoom cluster. It drives the viewport
+ * through `useReactFlow`, which only resolves because `useControl` runs its
+ * `render` INSIDE React Flow — the proof that a replacement is a real control, not
+ * a static badge. Registering it at `ZOOM_ID` supersedes the built-in zoom.
  */
 function BrandedZoom() {
   const rf = useReactFlow()
@@ -99,6 +98,19 @@ function BrandedZoom() {
   )
 }
 
+/** Compose a replacement built-in: register `BrandedZoom` at the reserved zoom id. */
+function ReplacementZoom({
+  region,
+}: {
+  region: (typeof CORNER_REGIONS)[number]
+}) {
+  useControl(
+    () => ({ id: ZOOM_ID, region, render: () => <BrandedZoom /> }),
+    [region]
+  )
+  return null
+}
+
 interface ControlArgs {
   palette: boolean
   minimap: boolean
@@ -106,27 +118,8 @@ interface ControlArgs {
   minimapPannable: boolean
   zoom: boolean
   zoomRegion: (typeof CORNER_REGIONS)[number]
-  zoomShowZoom: boolean
-  zoomShowHistory: boolean
+  zoomHistory: boolean
   replaceZoom: boolean
-}
-
-/** Assemble the public `controls` object from the flat Storybook args. */
-function controlsFromArgs(a: ControlArgs): ControlsOptions {
-  return {
-    palette: a.palette ? {} : false,
-    minimap: a.minimap
-      ? { region: a.minimapPosition, props: { pannable: a.minimapPannable } }
-      : false,
-    zoom: !a.zoom
-      ? false
-      : a.replaceZoom
-        ? { region: a.zoomRegion, render: () => <BrandedZoom /> }
-        : {
-            region: a.zoomRegion,
-            props: { showZoom: a.zoomShowZoom, showHistory: a.zoomShowHistory },
-          },
-  }
 }
 
 const meta = {
@@ -141,11 +134,14 @@ const meta = {
 export default meta
 type Story = StoryObj<ControlArgs>
 
+const FULLSCREEN: CSSProperties = { height: "100vh", width: "100%" }
+
 // ── Interactive playground ────────────────────────────────────────────────────
 /**
  * Every knob of the controls API, wired to Storybook controls. Toggle a built-in
- * off, move it to another region, flip its `props`, or replace the zoom cluster —
- * the live editor reacts because `<Apollon controls>` is reactive.
+ * off (it vanishes), move it to another region, drop the zoom cluster's history,
+ * or swap in a custom zoom — each edit re-composes the children, so the live
+ * editor reacts.
  */
 export const Playground: Story = {
   name: "Playground (interactive)",
@@ -156,8 +152,7 @@ export const Playground: Story = {
     minimapPannable: true,
     zoom: true,
     zoomRegion: "bottom-left",
-    zoomShowZoom: true,
-    zoomShowHistory: true,
+    zoomHistory: true,
     replaceZoom: false,
   },
   argTypes: {
@@ -183,19 +178,13 @@ export const Playground: Story = {
     },
     replaceZoom: {
       control: "boolean",
-      description: "Replace the cluster with a custom `render`",
+      description: "Replace the cluster with a custom control at `ZOOM_ID`",
       table: { category: "Zoom" },
       if: { arg: "zoom", truthy: true },
     },
-    zoomShowZoom: {
+    zoomHistory: {
       control: "boolean",
-      description: "`props.showZoom` — the zoom buttons + readout",
-      table: { category: "Zoom" },
-      if: { arg: "replaceZoom", truthy: false },
-    },
-    zoomShowHistory: {
-      control: "boolean",
-      description: "`props.showHistory` — the undo / redo buttons",
+      description: "`history` — show the undo / redo island",
       table: { category: "Zoom" },
       if: { arg: "replaceZoom", truthy: false },
     },
@@ -204,33 +193,47 @@ export const Playground: Story = {
     <Apollon
       defaultModel={fixtureByType.ClassDiagram}
       enablePopups
-      controls={controlsFromArgs(args)}
-      style={{ height: "100vh", width: "100%" }}
-    />
+      style={FULLSCREEN}
+    >
+      {args.palette && <Apollon.Palette />}
+      {args.zoom &&
+        (args.replaceZoom ? (
+          <ReplacementZoom region={args.zoomRegion} />
+        ) : (
+          <Apollon.Zoom region={args.zoomRegion} history={args.zoomHistory} />
+        ))}
+      {args.minimap && (
+        <Apollon.MiniMap
+          region={args.minimapPosition}
+          pannable={args.minimapPannable}
+        />
+      )}
+    </Apollon>
   ),
 }
 
 // ── Focused recipes ───────────────────────────────────────────────────────────
-/** The editor as shipped — palette, minimap, and zoom/history cluster in their default homes. */
+/** The editor as shipped — no children, so the palette + minimap + zoom defaults render. */
 export const Default: Story = {
   render: () => (
     <Apollon
       defaultModel={fixtureByType.ClassDiagram}
       enablePopups
-      style={{ height: "100vh", width: "100%" }}
+      style={FULLSCREEN}
     />
   ),
 }
 
-/** `{ palette: false, minimap: false, zoom: false }` — a distraction-free canvas with no chrome. */
+/** Pass an (empty) composition — some children, none of them chrome — for a bare canvas. */
 export const BareCanvas: Story = {
   render: () => (
     <Apollon
       defaultModel={fixtureByType.ClassDiagram}
       enablePopups
-      controls={{ palette: false, minimap: false, zoom: false }}
-      style={{ height: "100vh", width: "100%" }}
-    />
+      style={FULLSCREEN}
+    >
+      {false}
+    </Apollon>
   ),
 }
 
@@ -240,35 +243,41 @@ export const Relocated: Story = {
     <Apollon
       defaultModel={fixtureByType.ClassDiagram}
       enablePopups
-      controls={{
-        zoom: { region: "bottom-center" },
-        minimap: { region: "top-right" },
-      }}
-      style={{ height: "100vh", width: "100%" }}
-    />
+      style={FULLSCREEN}
+    >
+      <Apollon.Palette />
+      <Apollon.Zoom region="bottom-center" />
+      <Apollon.MiniMap region="top-right" />
+    </Apollon>
   ),
 }
 
-/** Re-configure via `props`: drop undo/redo from the zoom cluster (`showHistory: false`). */
+/** Reconfigure via typed props: drop undo/redo from the zoom cluster (`history={false}`). */
 export const ZoomWithoutHistory: Story = {
   render: () => (
     <Apollon
       defaultModel={fixtureByType.ClassDiagram}
       enablePopups
-      controls={{ zoom: { props: { showHistory: false } } }}
-      style={{ height: "100vh", width: "100%" }}
-    />
+      style={FULLSCREEN}
+    >
+      <Apollon.Palette />
+      <Apollon.Zoom history={false} />
+      <Apollon.MiniMap />
+    </Apollon>
   ),
 }
 
-/** Replace the zoom cluster with a custom, fully-functional control via `render`. */
+/** Replace the zoom cluster with a custom, fully-functional control at `ZOOM_ID`. */
 export const CustomZoom: Story = {
   render: () => (
     <Apollon
       defaultModel={fixtureByType.ClassDiagram}
       enablePopups
-      controls={{ zoom: { render: () => <BrandedZoom /> } }}
-      style={{ height: "100vh", width: "100%" }}
-    />
+      style={FULLSCREEN}
+    >
+      <Apollon.Palette />
+      <ReplacementZoom region="bottom-left" />
+      <Apollon.MiniMap />
+    </Apollon>
   ),
 }

@@ -5,6 +5,14 @@ import { ApollonProvider } from "@/components/react/context"
 import { ApollonControl } from "@/components/react/ApollonControl"
 import { computeInsets, createOverlayStore } from "@/overlay/overlayStore"
 import type { OverlayControl, OverlayRegion } from "@/overlay/types"
+import {
+  MINIMAP_ID,
+  PALETTE_ID,
+  ZOOM_ID,
+  miniMapControl,
+  paletteControl,
+  zoomControl,
+} from "@/chrome/builtins/controls"
 
 // Drives the public overlay/control API against the real editor (no mock);
 // asserts at the store level (jsdom has no layout).
@@ -75,10 +83,11 @@ describe("ApollonEditor overlay/control API", () => {
   })
 })
 
-// The imperative built-in-controls config surface — parity with
-// `<Apollon controls={…}>`. Store-level (jsdom has no layout), so this asserts
-// the config round-trips; placement/rendering is covered by e2e.
-describe("built-in controls config (imperative)", () => {
+// The imperative built-in surface: `options.controls` is a descriptor array built
+// from the same factories the React compound components wrap. Supplying it opts
+// out of the defaults; each descriptor registers under its reserved id. Store-
+// level (jsdom has no layout); placement/rendering is covered by e2e.
+describe("built-in controls (imperative descriptors)", () => {
   let el: HTMLElement
 
   afterEach(() => {
@@ -86,27 +95,39 @@ describe("built-in controls config (imperative)", () => {
     el?.remove()
   })
 
-  it("initializes from options.controls and round-trips via get / set", () => {
+  it("registers exactly the supplied descriptors; omitted built-ins stay hidden", () => {
     el = document.createElement("div")
     document.body.appendChild(el)
     const ed = new ApollonEditor(el, {
-      controls: { minimap: false, zoom: { region: "bottom-center" } },
+      controls: [zoomControl({ region: "bottom-center" })],
     })
 
-    expect(ed.getControlConfig("minimap")).toBe(false)
-    expect(ed.getControlConfig("zoom")).toEqual({ region: "bottom-center" })
-    expect(ed.getControlConfig("palette")).toBeUndefined()
+    // Supplied → registered; the palette + minimap were omitted → not registered.
+    expect(ed.hasControl(ZOOM_ID)).toBe(true)
+    expect(ed.hasControl(PALETTE_ID)).toBe(false)
+    expect(ed.hasControl(MINIMAP_ID)).toBe(false)
 
-    // setControl patches one key, leaves siblings intact.
-    ed.setControl("palette", { visible: false })
-    expect(ed.getControlConfig("palette")).toEqual({ visible: false })
-    expect(ed.getControlConfig("minimap")).toBe(false)
+    // addControl / removeControl are the imperative show / hide for a built-in.
+    ed.addControl(miniMapControl())
+    expect(ed.hasControl(MINIMAP_ID)).toBe(true)
+    ed.removeControl(ZOOM_ID)
+    expect(ed.hasControl(ZOOM_ID)).toBe(false)
 
-    // setControls replaces the whole config.
-    ed.setControls({ zoom: true })
-    expect(ed.getControlConfig("zoom")).toBe(true)
-    expect(ed.getControlConfig("minimap")).toBeUndefined()
-    expect(ed.getControlConfig("palette")).toBeUndefined()
+    ed.destroy()
+  })
+
+  it("an empty array opts out of the default chrome entirely", () => {
+    el = document.createElement("div")
+    document.body.appendChild(el)
+    const ed = new ApollonEditor(el, { controls: [] })
+
+    expect(ed.hasControl(ZOOM_ID)).toBe(false)
+    expect(ed.hasControl(PALETTE_ID)).toBe(false)
+    expect(ed.hasControl(MINIMAP_ID)).toBe(false)
+
+    // A factory descriptor added later still lands under its reserved id.
+    ed.addControl(paletteControl())
+    expect(ed.hasControl(PALETTE_ID)).toBe(true)
 
     ed.destroy()
   })
@@ -174,53 +195,60 @@ describe("computeInsets: band vs slot reservation", () => {
   })
 })
 
-// The built-ins swap their *content* through the store's `renders` map (read by
-// the `BuiltInRender` slot), never by re-registering — so a host changing a
-// control's `render`/`props` refreshes just that slot without recomputing insets
-// or thrashing the ResizeObserver. jsdom can't lay the editor out, so we assert
-// this contract at the store level (see the note on <ApollonControl> below).
-describe("overlay store: live render swap without re-registration", () => {
-  it("setRender swaps the render thunk but leaves registration and insets identical", () => {
+// A compound built-in (`<Apollon.Zoom history={…}>`) refreshes its content by
+// RE-REGISTERING the descriptor with a new `render` — there is no separate render
+// map. That is only cheap because `recompute` returns the SAME `insets` object
+// when the values are unchanged, so an `insets` subscriber (App's CSS vars,
+// fitView) never re-renders just because a control swapped its renderer. Assert
+// that identity contract at the store level.
+describe("overlay store: re-registration keeps insets identity-stable", () => {
+  it("re-registering the same id with a new render reuses the insets object", () => {
     const store = createOverlayStore()
-    const slot = () => null
     store.getState().register({
-      id: "x",
-      region: "left-rail",
-      inset: "auto",
-      order: 0,
-      render: slot,
+      id: "apollon:zoom",
+      region: "bottom-left",
+      render: () => "v1",
     })
-    store.getState().setMeasured("x", { left: 120 })
+    store.getState().setMeasured("apollon:zoom", { bottom: 48 })
 
-    const controlBefore = store.getState().controls.x
     const insetsBefore = store.getState().insets
-    expect(insetsBefore.left).toBe(120)
+    // A slot reserves nothing, so the zoom cluster never couples the bottom edge.
+    expect(insetsBefore.bottom).toBe(0)
 
-    const v1 = () => "v1"
-    store.getState().setRender("x", v1)
-    expect(store.getState().renders.x).toBe(v1)
-    // The registered control and the derived inset rect are the SAME objects:
-    // swapping content neither re-registers nor recomputes layout.
-    expect(store.getState().controls.x).toBe(controlBefore)
-    expect(store.getState().insets).toBe(insetsBefore)
-
-    const v2 = () => "v2"
-    store.getState().setRender("x", v2)
-    expect(store.getState().renders.x).toBe(v2)
-    expect(store.getState().controls.x).toBe(controlBefore)
+    store.getState().register({
+      id: "apollon:zoom",
+      region: "bottom-left",
+      render: () => "v2",
+    })
+    // New renderer took effect, but the derived inset rect is the SAME object —
+    // re-registration didn't thrash layout.
+    expect(store.getState().controls["apollon:zoom"].render()).toBe("v2")
     expect(store.getState().insets).toBe(insetsBefore)
   })
 
-  it("unregister clears the live render", () => {
+  it("re-registering a band with an unchanged measured size reuses insets", () => {
     const store = createOverlayStore()
     store
       .getState()
-      .register({ id: "x", region: "top-left", render: () => null })
-    store.getState().setRender("x", () => null)
-    expect(store.getState().renders.x).toBeDefined()
+      .register({
+        id: "apollon:palette",
+        region: "left-rail",
+        render: () => null,
+      })
+    store.getState().setMeasured("apollon:palette", { left: 160 })
 
-    store.getState().unregister("x")
-    expect(store.getState().renders.x).toBeUndefined()
+    const insetsBefore = store.getState().insets
+    expect(insetsBefore.left).toBe(160)
+
+    // Re-register (e.g. the palette component re-rendered) — same size, so identity holds.
+    store
+      .getState()
+      .register({
+        id: "apollon:palette",
+        region: "left-rail",
+        render: () => null,
+      })
+    expect(store.getState().insets).toBe(insetsBefore)
   })
 })
 

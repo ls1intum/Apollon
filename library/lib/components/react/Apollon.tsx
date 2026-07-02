@@ -16,8 +16,9 @@ import type {
   UMLDiagramType,
   UMLModel,
 } from "@/typings"
-import type { ControlsOptions } from "@/chrome/config"
 import { ApollonInstanceContext } from "./context"
+import { ApollonControl } from "./ApollonControl"
+import { ApollonPalette, ApollonZoom, ApollonMiniMap } from "./builtins"
 
 /**
  * Props for the {@link Apollon} React component.
@@ -65,12 +66,6 @@ export interface ApollonProps {
   view?: ApollonView
   mode?: ApollonMode
   scrollLock?: boolean
-  /**
-   * Configure the built-in controls (palette / minimap / zoom): hide, move,
-   * re-configure, or replace each. Reactive — applied via `editor.setControls`.
-   * Memoize the object (or its nested configs) to avoid re-applying every render.
-   */
-  controls?: ControlsOptions
   /** Local-only preview overlay. See {@link ApollonEditor.setPreviewMode}. */
   previewMode?: boolean
   /**
@@ -117,7 +112,6 @@ export function Apollon(props: ApollonProps) {
     view,
     mode,
     scrollLock,
-    controls,
     previewMode,
     model,
 
@@ -138,7 +132,12 @@ export function Apollon(props: ApollonProps) {
     collaborationEnabled,
     collaboration,
     debug,
-    controls,
+    // Passing ANY `children` (even a conditional that renders nothing) opts out of
+    // the editor defaults (`[]`), so the composed `<Apollon.*>` / `<ApollonControl>`
+    // children own the layout — and toggling them all off yields a bare canvas, not
+    // a surprise fallback. Omitting `children` entirely keeps the palette + zoom +
+    // minimap defaults.
+    controls: children !== undefined ? [] : undefined,
   })
 
   // Commit-time write — StrictMode-safe latest-closure ref.
@@ -196,10 +195,6 @@ export function Apollon(props: ApollonProps) {
   }, [editor, scrollLock])
 
   useEffect(() => {
-    if (editor && controls !== undefined) editor.setControls(controls)
-  }, [editor, controls])
-
-  useEffect(() => {
     if (editor && previewMode !== undefined) editor.setPreviewMode(previewMode)
   }, [editor, previewMode])
 
@@ -236,3 +231,14 @@ export function Apollon(props: ApollonProps) {
     </ApollonInstanceContext.Provider>
   )
 }
+
+/**
+ * Compound built-in chrome, so consumers compose `<Apollon.Palette/>`,
+ * `<Apollon.Zoom/>`, `<Apollon.MiniMap/>` as children. Presence renders it,
+ * omission hides it, typed props reconfigure it; replacing one is an
+ * `<ApollonControl>` at the reserved id. Also exported bare for named imports.
+ */
+Apollon.Palette = ApollonPalette
+Apollon.Zoom = ApollonZoom
+Apollon.MiniMap = ApollonMiniMap
+Apollon.Control = ApollonControl

@@ -5,7 +5,11 @@ import { useDiagramStore, useOverlayStore } from "@/store/context"
 import { insetAwareFitView } from "@/overlay/fitView"
 import { Tooltip } from "@/components/ui"
 import { useRovingToolbar } from "../useRovingToolbar"
-import type { ZoomProps } from "../config"
+
+export interface ZoomControlsProps {
+  /** Show the undo / redo island (when an undo manager exists). Default `true`. */
+  history?: boolean
+}
 
 /**
  * The bottom-left zoom / history cluster: two glass islands in one roving toolbar.
@@ -17,7 +21,7 @@ import type { ZoomProps } from "../config"
  * `history: false` drops the history island. One `role="toolbar"` spans both
  * islands (≥3 controls, APG-valid) so a single Tab stop + arrows rove every button.
  */
-export function ZoomControls({ history = true }: ZoomProps) {
+export function ZoomControls({ history = true }: ZoomControlsProps) {
   const rf = useReactFlow()
   const zoomLevelPercent = Math.round(useStore((s) => s.transform[2]) * 100)
   const insets = useOverlayStore((s) => s.insets)

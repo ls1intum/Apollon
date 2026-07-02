@@ -5,7 +5,6 @@ import * as Y from "yjs"
 import { getDiagramMetadata, STORE_ORIGIN } from "@/sync/ydoc"
 import { UMLDiagramType } from "@/types"
 import { ApollonMode, ApollonView } from "@/typings"
-import type { ControlsOptions } from "@/chrome/config"
 import { IPoint } from "@/edges/Connection"
 
 export type MetadataStore = {
@@ -17,8 +16,9 @@ export type MetadataStore = {
   readonly: boolean
   debug: boolean
   scrollLock: boolean
-  /** Built-in control config (hide/move/replace palette, minimap, zoom). */
-  controls: ControlsOptions
+  /** True once the consumer supplied their own `controls` (vanilla) or composed
+   *  chrome as `<Apollon>` children — the editor then registers no default chrome. */
+  controlsProvided: boolean
   scrollEnabled: boolean
   connectionGuidanceActive: boolean
   connectionGuidanceSourceNodeId: string | null
@@ -31,7 +31,7 @@ export type MetadataStore = {
   setAvailableViews: (availableViews: ApollonView[]) => void
   setReadonly: (readonly: boolean) => void
   setScrollLock: (scrollLock: boolean) => void
-  setControls: (controls: ControlsOptions) => void
+  setControlsProvided: (controlsProvided: boolean) => void
   setScrollEnabled: (scrollEnabled: boolean) => void
   startConnectionGuidance: (
     sourceNodeId: string | null,
@@ -61,7 +61,7 @@ type InitialMetadataState = {
   readonly: boolean
   debug: boolean
   scrollLock: boolean
-  controls: ControlsOptions
+  controlsProvided: boolean
   scrollEnabled: boolean
   connectionGuidanceActive: boolean
   connectionGuidanceSourceNodeId: string | null
@@ -81,7 +81,7 @@ const initialMetadataState: InitialMetadataState = {
   readonly: false,
   debug: false,
   scrollLock: false,
-  controls: {},
+  controlsProvided: false,
   scrollEnabled: false,
   connectionGuidanceActive: false,
   connectionGuidanceSourceNodeId: null,
@@ -169,8 +169,8 @@ export const createMetadataStore = (
           set({ readonly }, undefined, "setReadonly")
         },
 
-        setControls: (controls) => {
-          set({ controls }, undefined, "setControls")
+        setControlsProvided: (controlsProvided) => {
+          set({ controlsProvided }, undefined, "setControlsProvided")
         },
         setScrollLock: (scrollLock: boolean) => {
           set({ scrollLock }, undefined, "setScrollLock")

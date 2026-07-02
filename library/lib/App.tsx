@@ -14,7 +14,7 @@ import {
   AlignmentGuides,
 } from "@/components"
 import { OverlayLayer } from "@/overlay/OverlayLayer"
-import { BuiltInControls } from "@/chrome/BuiltInControls"
+import { DefaultControls } from "@/chrome/DefaultControls"
 import "@xyflow/react/dist/style.css"
 // Shared, embed-safe @tumaet/ui primitives + --apollon-/--home- design tokens
 // (Tailwind-free, Preflight-free). Loaded here rather than `@import`-ed from
@@ -102,7 +102,7 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
     readonly,
     scrollLock,
     scrollEnabled,
-    controls,
+    controlsProvided,
     connectionGuidanceActive,
     startReconnectPreview,
     stopReconnectPreview,
@@ -113,7 +113,7 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
       readonly: state.readonly,
       scrollLock: state.scrollLock,
       scrollEnabled: state.scrollEnabled,
-      controls: state.controls,
+      controlsProvided: state.controlsProvided,
       connectionGuidanceActive: state.connectionGuidanceActive,
       startReconnectPreview: state.startReconnectPreview,
       stopReconnectPreview: state.stopReconnectPreview,
@@ -270,11 +270,11 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
             <CustomBackground />
             <AlignmentGuides />
             <AssessmentSelectionDebug />
-            {/* Owns the built-in controls: registers the palette + zoom through
-                the overlay engine and renders the minimap, all driven by the
-                public `controls` config (hide / move / re-configure / replace). */}
-            <BuiltInControls
-              controls={controls}
+            {/* Registers the editor's default chrome (palette + zoom + minimap)
+                unless the consumer supplied their own `controls` / composed
+                `<Apollon>` children. The palette shows only while modelling. */}
+            <DefaultControls
+              enabled={!controlsProvided}
               showPalette={mode === ApollonMode.Modelling && !readonly}
             />
             {/* Renders every registered control (built-in + host-injected) into

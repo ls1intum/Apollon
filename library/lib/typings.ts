@@ -1,7 +1,7 @@
 import { DiagramEdgeType, IPoint } from "./edges/types"
 import { DiagramNodeType } from "./nodes/types"
 import { UMLDiagramType } from "./types/DiagramType"
-import type { ControlsOptions } from "./chrome/config"
+import type { OverlayControlInput } from "./overlay/types"
 
 export { UMLDiagramType, type DiagramNodeType, type DiagramEdgeType }
 
@@ -156,12 +156,14 @@ export type ApollonOptions = {
   collaboration?: ApollonCollaborationOptions
   scrollLock?: boolean
   /**
-   * Configure the editor's built-in controls (element palette, minimap, zoom /
-   * history cluster): hide, move to another region, re-configure, or replace
-   * each. Same shape as `<Apollon controls={…}>` and `editor.setControls(…)`.
-   * Arbitrary custom controls go through `addControl` / `<ApollonControl>`.
+   * The chrome to register (vanilla / imperative). Build descriptors with the
+   * built-in factories — `paletteControl()`, `zoomControl({ history })`,
+   * `miniMapControl()` — and/or your own. OMIT for the editor defaults (palette +
+   * zoom + minimap); pass `[]` for a bare canvas; pass a subset to show only
+   * those. In React, compose `<Apollon.Palette|Zoom|MiniMap>` / `<ApollonControl>`
+   * children instead — both compile to the same registry records.
    */
-  controls?: ControlsOptions
+  controls?: OverlayControlInput[]
   /**
    * Optional `--apollon-*` CSS custom properties applied to the editor's mount
    * element. Build one with `createApollonTheme(...)`. Fully optional — an

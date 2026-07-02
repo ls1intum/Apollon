@@ -11,18 +11,22 @@ export type {
   OverlayControlOptions,
   OverlayControlInput,
 } from "./overlay/types"
-// Built-in control config (hide / move / re-configure / replace the palette,
-// minimap, zoom) — the shape shared by `ApollonOptions.controls`,
-// `<Apollon controls>`, and `editor.setControls`.
-export type {
-  ControlsOptions,
-  BuiltInControlKey,
-  BuiltInControlConfig,
-  ControlPlacement,
-  PaletteProps,
-  MinimapProps,
-  ZoomProps,
-} from "./chrome/config"
+// Built-in chrome descriptor factories — the framework-agnostic source of truth
+// for the palette, zoom cluster, and minimap. Pass the results to
+// `ApollonOptions.controls` (or omit for the defaults); the React compound
+// components below wrap the same factories.
+export {
+  paletteControl,
+  zoomControl,
+  miniMapControl,
+  defaultControls,
+  PALETTE_ID,
+  ZOOM_ID,
+  MINIMAP_ID,
+  type BuiltInPlacement,
+  type ZoomControlOptions,
+  type MiniMapControlOptions,
+} from "./chrome/builtins/controls"
 export {
   // Artemis-facing assessment helpers (host consumes these directly).
   getAssessmentNameForArtemis,
@@ -66,3 +70,12 @@ export {
   ApollonControl,
   type ApollonControlProps,
 } from "./components/react/ApollonControl"
+// Compound built-in chrome + the `useControl` primitive. Compose them as
+// `<Apollon>` children — presence renders, omission hides, typed props
+// reconfigure — or drop to the vanilla factories above.
+export {
+  useControl,
+  ApollonPalette,
+  ApollonZoom,
+  ApollonMiniMap,
+} from "./components/react/builtins"
