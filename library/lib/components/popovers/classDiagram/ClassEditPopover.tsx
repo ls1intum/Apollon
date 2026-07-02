@@ -9,10 +9,9 @@ import { ClassTypeSelect, type ClassKind } from "./ClassTypeSelect"
 import { PopoverProps } from "../types"
 import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 
-// The kind picker is a lossless projection of the orthogonal data model. Writing
-// BOTH fields on every change is what keeps the two axes consistent — a plain
-// class can never keep a stale `isAbstract`, and a keyword can never carry the
-// (redundant/invalid) abstract modifier.
+// A kind maps to both fields at once. Writing both on every change keeps them
+// consistent: a plain class can't keep a stale `isAbstract`, and a keyword can't
+// carry the (invalid) abstract modifier.
 const KIND_TO_DATA: Record<
   ClassKind,
   { stereotype?: ClassStereotype; isAbstract: boolean }
@@ -27,8 +26,7 @@ const hasKeyword = (kind: ClassKind) =>
   kind === "interface" || kind === "enumeration"
 
 const kindOf = (data: ClassNodeProps): ClassKind => {
-  // Stereotype wins, so a legacy/degenerate `isAbstract` alongside a keyword can
-  // never surface (it is also cleared on load, see normalizeClassStereotypes).
+  // Stereotype wins, so a stray `isAbstract` beside a keyword never surfaces.
   if (data.stereotype === ClassStereotype.Enumeration) return "enumeration"
   if (data.stereotype === ClassStereotype.Interface) return "interface"
   if (data.isAbstract) return "abstract"
@@ -70,9 +68,7 @@ export const ClassEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
 
   const setKind = (next: ClassKind) => {
     const mapped = KIND_TO_DATA[next]
-    // A `«keyword»` adds a header line; the abstract modifier is italics only
-    // and never changes height. Derive the line height from LAYOUT so the header
-    // geometry has a single source of truth.
+    // A keyword adds a header line; the abstract modifier (italics) does not.
     const keywordLinePx =
       LAYOUT.DEFAULT_HEADER_HEIGHT_WITH_STEREOTYPE -
       LAYOUT.DEFAULT_HEADER_HEIGHT

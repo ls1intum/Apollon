@@ -43,9 +43,8 @@ export function Class({
   const methodHeight = LAYOUT.DEFAULT_METHOD_HEIGHT
   const padding = LAYOUT.DEFAULT_PADDING
   const font = LAYOUT.DEFAULT_FONT
-  // Abstract text renders in the real Inter italic face, whose advance widths
-  // differ from upright — so it must be MEASURED italic too, or the box mis-sizes
-  // (the measured==rendered invariant, see fontStack.ts).
+  // Italic advance widths differ from upright, so abstract text must be measured
+  // italic too or the box mis-sizes (the measured==rendered invariant, fontStack.ts).
   const italicFont = `italic ${font}`
 
   // Calculate the widest text accurately

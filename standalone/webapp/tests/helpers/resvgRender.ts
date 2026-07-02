@@ -23,8 +23,7 @@ const FONT_DIR = path.join(__dirname, "..", "fonts")
 const FONT_FILES = [
   path.join(FONT_DIR, "Inter-Regular.ttf"),
   path.join(FONT_DIR, "Inter-Bold.ttf"),
-  // Real italic faces back abstract classes/methods (italic name + signature),
-  // so exported SVGs render slanted in resvg instead of falling back to upright.
+  // Italic faces so abstract classes/methods render slanted in resvg.
   path.join(FONT_DIR, "Inter-Italic.ttf"),
   path.join(FONT_DIR, "Inter-BoldItalic.ttf"),
   path.join(FONT_DIR, "LiberationSans-Regular.ttf"),

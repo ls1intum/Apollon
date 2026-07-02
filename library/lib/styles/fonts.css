@@ -22,10 +22,8 @@
   src: url("../assets/fonts/Inter-Bold.woff2") format("woff2");
 }
 
-/* Real italic faces back the abstract-class / abstract-method notation (italic
- * name + signature). Shipping the face — instead of a browser-synthesized
- * oblique the export renderers can't reproduce — keeps the slant identical
- * across the editor, resvg (PNG) and jsPDF (PDF). */
+/* Italic faces for abstract classes/methods. Shipping the real face keeps the
+ * slant identical across the editor, resvg (PNG) and jsPDF (PDF). */
 @font-face {
   font-family: "Inter";
   font-style: italic;

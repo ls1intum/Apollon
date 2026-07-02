@@ -56,9 +56,8 @@ for (const [a, b] of ranges) {
 const fonts = [
   "Inter-Regular",
   "Inter-Bold",
-  // Italic faces back the abstract-class / abstract-method notation (italic
-  // name + signature). Real faces, not a synthetic slant, so canvas
-  // measureText, the editor, resvg and jsPDF all agree on the advance widths.
+  // Italic faces for abstract classes/methods. Real faces (not a synthetic
+  // slant) so canvas measureText, the editor, resvg and jsPDF agree on widths.
   "Inter-Italic",
   "Inter-BoldItalic",
 ]

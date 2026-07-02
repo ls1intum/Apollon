@@ -25,8 +25,7 @@ describe("HeaderSection (class header)", () => {
     // Abstract is a modifier, not a keyword — no «…» line.
     expect(tspans.some((t) => t.textContent?.includes("«"))).toBe(false)
     const nameTspan = tspans.find((t) => t.textContent === "Shape")!
-    // Italic name is the whole cue — the real Inter italic face carries it
-    // through the editor and every export path (UML 2.5.1 §9.2.4).
+    // Italic name is the whole abstract cue (UML 2.5.1 §9.2.4).
     expect(nameTspan.getAttribute("font-style")).toBe("italic")
   })
 

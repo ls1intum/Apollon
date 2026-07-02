@@ -133,8 +133,7 @@ const SVG_DEFAULT_TEXT_FILL = "#000000"
 /**
  * Prepare the SVG for resvg: add a same-colour hairline stroke to every
  * `<text>`/`<tspan>` (see STEM_DARKEN_EM). Returns the serialised SVG; mutates a
- * parsed clone, not the caller's string. (Italic is left intact — resvg now
- * carries the real Inter italic faces in `loadBundledFonts`.)
+ * parsed clone, not the caller's string.
  */
 function prepareSvgForRaster(svg: string): string {
   const doc = new DOMParser().parseFromString(svg, "image/svg+xml")

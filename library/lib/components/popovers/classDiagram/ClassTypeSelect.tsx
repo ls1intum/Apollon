@@ -4,11 +4,9 @@ import { ClassStereotype } from "@/types"
 import { stereotypeLabel } from "@/utils"
 
 /**
- * The four class-diagram classifier kinds a student picks between. They are a
- * lossless projection of the orthogonal data model (`{stereotype, isAbstract}`):
- * the two illegal combinations — an abstract enumeration, and a redundant
- * abstract interface — are simply unrepresentable here, which is the whole point
- * of collapsing the two axes into one control.
+ * The four class classifier kinds. They map onto `{stereotype, isAbstract}`; the
+ * two invalid combinations (abstract enumeration, redundant abstract interface)
+ * are unrepresentable here by design.
  */
 export type ClassKind = "class" | "abstract" | "interface" | "enumeration"
 
@@ -36,8 +34,7 @@ const KINDS: readonly KindDescriptor[] = [
   },
 ]
 
-// Each row previews how the kind actually renders — a `«keyword»` chip and/or an
-// italic name — so the menu teaches the notation instead of just naming it.
+// Each row previews the notation: a `«keyword»` chip and/or an italic name.
 const KindRow = ({ label, keyword, italic }: KindDescriptor) => (
   <span style={{ alignItems: "baseline", display: "flex", gap: 8 }}>
     {keyword && (
@@ -55,10 +52,8 @@ interface ClassTypeSelectProps {
 }
 
 /**
- * Single "Class type" picker — the popover mirror of the four class palette
- * tiles, and consistent with the other node/edge kind `Select`s (Edge Type,
- * Task Type, Gateway Type). Its value maps to `{stereotype, isAbstract}` in
- * `ClassEditPopover`; a class is always exactly one kind, so there is no empty
+ * Single "Class type" picker; its value maps to `{stereotype, isAbstract}` in
+ * `ClassEditPopover`. A class is always exactly one kind, so there is no empty
  * state.
  */
 export const ClassTypeSelect = ({ value, onChange }: ClassTypeSelectProps) => {

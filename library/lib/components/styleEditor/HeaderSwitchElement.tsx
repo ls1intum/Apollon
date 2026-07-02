@@ -31,9 +31,8 @@ export const HeaderSwitchElement: React.FC<Props> = ({
       <button
         type="button"
         className="apollon-stereotype-toggle"
-        // The active styling is keyed on `data-state="on"`. `aria-pressed`
-        // alone — the previous state — matched no CSS rule, so the toggle never
-        // showed its pressed highlight.
+        // Active styling keys on `data-state="on"` (`aria-pressed` matches no
+        // CSS rule on its own), so keep the two in sync.
         data-state={isComponentHeaderShown ? "on" : "off"}
         aria-pressed={isComponentHeaderShown}
         aria-label={accessibleLabel}
