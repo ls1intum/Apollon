@@ -17,7 +17,7 @@ import {
   type OverlayRegion,
 } from "./types"
 
-/** Library-owned bands rendered as absolutely-positioned containers. */
+/** Library-owned bands rendered as areas of the `.apollon-overlay-grid` frame. */
 const BAND_REGIONS: OverlayRegion[] = [
   "header",
   "footer",
