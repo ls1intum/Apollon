@@ -10,6 +10,12 @@ import interRegularWoff2 from "@/assets/fonts/Inter-Regular.woff2?inline"
  *
  * Data-only and loaded lazily (dynamic `import()` in `exportModelAsSvg`) so the
  * woff2 lands in its own chunk instead of the main bundle.
+ *
+ * Only the upright faces are inlined. Italic is omitted on purpose: it would
+ * roughly double this payload to cover just a raw `.svg` opened in a renderer
+ * that won't synthesize oblique (e.g. Inkscape). The editor and the PNG/PDF
+ * paths carry the real italic face, and browsers synthesize the slant from the
+ * embedded regular — so abstract text only falls back to upright in that case.
  */
 export const INTER_FONT_FACE_CSS = `
 @font-face {

@@ -55,7 +55,7 @@ import {
 } from "@/components"
 import { ReachabilityGraphMarkingSVG } from "@/components/svgs/nodes/reachabilityGraphDiagram/ReachabilityGraphMarkingSVG"
 import { DiagramNodeType } from "@/nodes"
-import { ClassType, UMLDiagramType } from "@/types"
+import { ClassStereotype, UMLDiagramType } from "@/types"
 
 /* -------------------------------------------------------------------------- */
 /* Canvas                                                                     */
@@ -477,10 +477,12 @@ export const dropElementConfigs: Readonly<
     {
       type: "class",
       width: DROPS.DEFAULT_ELEMENT_WIDTH,
-      height: 110,
+      // No keyword line (abstract is an italic name, not a «keyword»), so this
+      // is 10px shorter than the interface/enumeration templates.
+      height: 100,
       defaultData: {
         name: "Abstract",
-        stereotype: ClassType.Abstract,
+        isAbstract: true,
         methods: [{ id: generateUUID(), name: "+ method()" }],
         attributes: [{ id: generateUUID(), name: "+ attribute: Type" }],
       },
@@ -492,7 +494,7 @@ export const dropElementConfigs: Readonly<
       height: 140,
       defaultData: {
         name: "Enumeration",
-        stereotype: ClassType.Enumeration,
+        stereotype: ClassStereotype.Enumeration,
         methods: [],
         attributes: [
           { id: generateUUID(), name: "Case 1" },
@@ -508,7 +510,7 @@ export const dropElementConfigs: Readonly<
       height: 110,
       defaultData: {
         name: "Interface",
-        stereotype: ClassType.Interface,
+        stereotype: ClassStereotype.Interface,
         methods: [{ id: generateUUID(), name: "+ method()" }],
         attributes: [{ id: generateUUID(), name: "+ attribute: Type" }],
       },

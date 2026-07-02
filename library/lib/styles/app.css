@@ -1485,17 +1485,9 @@ svg.react-flow__connectionline {
   padding: 16px;
 }
 
-/* Stereotype selector: a Base UI ToggleGroup (single-select, allow-deselect)
-   mirroring the @tumaet/ui toggle-group STRUCTURE — data-slot wrapper + items
-   carrying data-state — but styled here, Tailwind-free, via --apollon-* tokens
-   and the radius ramp. Spacing-0: items share a seam, group rounds the ends. */
-.apollon-stereotype-group[data-slot="toggle-group"] {
-  display: inline-flex;
-  flex-direction: row;
-  align-items: center;
-  width: fit-content;
-}
-
+/* Stereotype show/hide toggle: the standalone `«keyword»` chip on
+   component/deployment headers (HeaderSwitchElement). Tailwind-free, styled via
+   --apollon-* tokens; active state keys on data-state="on". */
 .apollon-stereotype-toggle {
   display: inline-flex;
   align-items: center;
@@ -1518,20 +1510,6 @@ svg.react-flow__connectionline {
     background-color 120ms ease,
     border-color 120ms ease,
     color 120ms ease;
-}
-/* Seam: collapse inner borders, round only the group's outer edges. */
-.apollon-stereotype-group .apollon-stereotype-toggle:not(:first-child) {
-  border-left: 0;
-}
-
-.apollon-stereotype-group .apollon-stereotype-toggle:first-child {
-  border-top-left-radius: var(--apollon-radius-sm, 4px);
-  border-bottom-left-radius: var(--apollon-radius-sm, 4px);
-}
-
-.apollon-stereotype-group .apollon-stereotype-toggle:last-child {
-  border-top-right-radius: var(--apollon-radius-sm, 4px);
-  border-bottom-right-radius: var(--apollon-radius-sm, 4px);
 }
 
 .apollon-stereotype-toggle:hover {
@@ -1565,6 +1543,18 @@ svg.react-flow__connectionline {
     var(--apollon-foreground, #000)
   );
   z-index: 1; /* keep the selected item's full border over its neighbour seam */
+}
+
+/* Per-method "abstract" toggle in the class editor — an icon button that marks a
+   method abstract (renders its signature in italics). Mirrors the stereotype
+   toggle's selected accent so the two controls read as one family. */
+.apollon-abstract-toggle[data-state="on"] {
+  background-color: color-mix(
+    in srgb,
+    var(--apollon-primary, #3e8acc) 20%,
+    transparent
+  );
+  color: var(--apollon-primary, #3e8acc);
 }
 
 .scroll-overlay {

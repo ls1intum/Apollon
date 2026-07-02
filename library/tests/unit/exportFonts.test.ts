@@ -6,9 +6,12 @@ import { __testing } from "@/utils/exportUtils"
 
 const { embedFontFaceCss } = __testing
 
-it("INTER_FONT_FACE_CSS embeds both weights as self-contained base64 woff2", () => {
+it("INTER_FONT_FACE_CSS inlines only the two upright faces as base64 woff2", () => {
   expect(INTER_FONT_FACE_CSS).toContain("font-weight: 400")
   expect(INTER_FONT_FACE_CSS).toContain("font-weight: 700")
+  // Italic is intentionally NOT inlined — it would ~double this payload for the
+  // Inkscape-only case; browsers synthesize it and PNG/PDF ship the ttf faces.
+  expect(INTER_FONT_FACE_CSS).not.toContain("font-style: italic")
   const dataUrls = INTER_FONT_FACE_CSS.match(
     /url\(data:font\/woff2;base64,[A-Za-z0-9+/=]+\)/g
   )
@@ -43,13 +46,15 @@ describe("embedFontFaceCss", () => {
 // on disk), where size-limit's webpack preset can't measure it — so budget the
 // source bytes here. Covers Latin + Greek + Cyrillic + Vietnamese (~85 KB each);
 // the ceiling guards against accidentally re-adding CJK or the full ~410 KB TTF.
-it.each(["Inter-Regular.woff2", "Inter-Bold.woff2"])(
-  "%s subset stays within budget (< 100 KB)",
-  (name) => {
-    const bytes = readFileSync(
-      join(import.meta.dirname, "../../lib/assets/fonts", name)
-    ).byteLength
-    expect(bytes).toBeGreaterThan(10_000)
-    expect(bytes).toBeLessThan(100_000)
-  }
-)
+it.each([
+  "Inter-Regular.woff2",
+  "Inter-Bold.woff2",
+  "Inter-Italic.woff2",
+  "Inter-BoldItalic.woff2",
+])("%s subset stays within budget (< 100 KB)", (name) => {
+  const bytes = readFileSync(
+    join(import.meta.dirname, "../../lib/assets/fonts", name)
+  ).byteLength
+  expect(bytes).toBeGreaterThan(10_000)
+  expect(bytes).toBeLessThan(100_000)
+})

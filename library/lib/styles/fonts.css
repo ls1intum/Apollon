@@ -21,3 +21,21 @@
   font-display: swap;
   src: url("../assets/fonts/Inter-Bold.woff2") format("woff2");
 }
+
+/* Italic faces for abstract classes/methods. Shipping the real face keeps the
+ * slant identical across the editor, resvg (PNG) and jsPDF (PDF). */
+@font-face {
+  font-family: "Inter";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/Inter-Italic.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../assets/fonts/Inter-BoldItalic.woff2") format("woff2");
+}
