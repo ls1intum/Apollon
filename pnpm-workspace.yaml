@@ -106,3 +106,6 @@ allowBuilds:
   protobufjs: false # testcontainers→dockerode transitive; pure-JS, no native build
   "sharp": true
   "ssh2": true
+minimumReleaseAgeExclude:
+  # Renovate security update: pnpm@11.8.0
+  - pnpm@11.8.0
