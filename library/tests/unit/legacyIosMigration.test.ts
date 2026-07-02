@@ -178,11 +178,11 @@ describe("legacy iOS class diagram", () => {
     expect(data.methods.map((m) => m.id)).toEqual(["meth-1"])
   })
 
-  it("maps the abstract stereotype", () => {
+  it("maps an abstract class to the isAbstract modifier, not a stereotype", () => {
     const abstract = model.nodes.find((n) => n.id === "class-2")!
-    expect((abstract.data as { stereotype?: string }).stereotype).toBe(
-      "Abstract"
-    )
+    const data = abstract.data as { stereotype?: string; isAbstract?: boolean }
+    expect(data.isAbstract).toBe(true)
+    expect(data.stereotype).toBeUndefined()
   })
 
   it("converts the inheritance relationship to an edge with preserved ids", () => {

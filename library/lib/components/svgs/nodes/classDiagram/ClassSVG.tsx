@@ -25,7 +25,7 @@ export const ClassSVG = ({
   data,
 }: ClassSVGProps) => {
   // Layout constants
-  const { attributes, methods, name, stereotype } = data
+  const { attributes, methods, name, stereotype, isAbstract } = data
   const showStereotype = !!stereotype
   const headerHeight = showStereotype
     ? LAYOUT.DEFAULT_HEADER_HEIGHT_WITH_STEREOTYPE
@@ -79,6 +79,7 @@ export const ClassSVG = ({
           name={name}
           width={width}
           headerHeight={headerHeight}
+          isAbstract={isAbstract}
           textColor={textColor}
           fill={fillColor}
         />

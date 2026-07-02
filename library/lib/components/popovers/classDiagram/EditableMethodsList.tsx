@@ -1,12 +1,12 @@
 import React, { useState, KeyboardEvent, ChangeEvent } from "react"
-import { GripVertical, Plus, Trash2 } from "lucide-react"
+import { GripVertical, Italic, Plus, Trash2 } from "lucide-react"
 import { IconButton, TextField, Typography } from "@/components/ui"
 import { NodeStyleEditor } from "@/components/styleEditor"
 import { useLabels } from "@/i18n/useLabels"
 import { generateUUID } from "@/utils"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
-import { ClassNodeProps } from "@/types"
+import { ClassNodeElement, ClassNodeProps } from "@/types"
 import {
   DndContext,
   closestCenter,
@@ -31,8 +31,9 @@ interface Props {
 
 interface SortableMethodRowProps {
   id: string
-  item: { id: string; name: string }
+  item: ClassNodeElement
   onMethodChange: (id: string, key: string, value: string) => void
+  onToggleAbstract: (id: string) => void
   onDelete: (id: string) => void
 }
 
@@ -40,6 +41,7 @@ const SortableMethodRow: React.FC<SortableMethodRowProps> = ({
   id,
   item,
   onMethodChange,
+  onToggleAbstract,
   onDelete,
 }) => {
   const t = useLabels()
@@ -96,6 +98,21 @@ const SortableMethodRow: React.FC<SortableMethodRowProps> = ({
         }
         sideElements={[
           <IconButton
+            key={`abstract_${item.id}`}
+            ariaLabel={
+              item.isAbstract
+                ? "Unmark method as abstract"
+                : "Mark method as abstract"
+            }
+            tooltip="Abstract method (italic)"
+            aria-pressed={!!item.isAbstract}
+            data-state={item.isAbstract ? "on" : "off"}
+            className="apollon-abstract-toggle"
+            onClick={() => onToggleAbstract(item.id)}
+          >
+            <Italic width={16} height={16} aria-hidden="true" />
+          </IconButton>,
+          <IconButton
             key={`delete_${item.id}`}
             ariaLabel={t.deleteMethod}
             tooltip={t.deleteMethod}
@@ -135,6 +152,14 @@ export const EditableMethodsList: React.FC<Props> = ({ nodeId }) => {
     patchMethods(
       methods.map((item) =>
         item.id === id ? { ...item, [key]: newName } : item
+      )
+    )
+  }
+
+  const handleToggleAbstract = (id: string) => {
+    patchMethods(
+      methods.map((item) =>
+        item.id === id ? { ...item, isAbstract: !item.isAbstract } : item
       )
     )
   }
@@ -214,6 +239,7 @@ export const EditableMethodsList: React.FC<Props> = ({ nodeId }) => {
               id={item.id}
               item={item}
               onMethodChange={handleMethodChange}
+              onToggleAbstract={handleToggleAbstract}
               onDelete={handleItemDelete}
             />
           ))}

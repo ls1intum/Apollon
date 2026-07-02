@@ -411,24 +411,24 @@ test.describe("controls layout engine", () => {
     const popover = page.locator(".apollon-popover")
     await expect(popover).toBeVisible()
 
-    // The class popover renders a "Stereotype" section title wired to `useLabels`
-    // (t.stereotype) — a stable, popover-owned string, not chrome.
-    await expect(popover.getByText("Stereotype", { exact: true })).toBeVisible()
+    // The class popover renders an "Attributes" section title wired to `useLabels`
+    // (t.attributes) — a stable, popover-owned string, not chrome.
+    await expect(popover.getByText("Attributes", { exact: true })).toBeVisible()
 
     // A host swaps the label at runtime while the popover is OPEN — it must update
     // live (the popover subscribes to the labels store), no remount.
     await page.evaluate(() => {
       const ed = (window as unknown as { apollonEditor?: EditorHandle })
         .apollonEditor
-      ed?.setLabels({ stereotype: "Stereotyp-DE" })
+      ed?.setLabels({ attributes: "Merkmale-DE" })
     })
 
     await expect(
-      popover.getByText("Stereotyp-DE", { exact: true })
+      popover.getByText("Merkmale-DE", { exact: true })
     ).toBeVisible()
     // The old English section title is gone (exact match — not a substring of the
     // new value).
-    await expect(popover.getByText("Stereotype", { exact: true })).toHaveCount(
+    await expect(popover.getByText("Attributes", { exact: true })).toHaveCount(
       0
     )
   })

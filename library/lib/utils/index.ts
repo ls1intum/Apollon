@@ -8,6 +8,7 @@ export * from "./edgeUtils"
 export * from "./exportUtils"
 export * from "./diagramTypeUtils"
 export * from "./storeUtils"
+export * from "./stereotypeLabel"
 export * from "./bpmnConstraints"
 export * from "./swimlaneUtils"
 // Only `importDiagram` is public; the V2/V3 convert helpers and format

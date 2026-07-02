@@ -4,7 +4,6 @@ import { describe, it, expect } from "vitest"
 import { computeAppliedScale, svgToPng } from "@/export/svgToPng"
 import { svgToPdf } from "@/export/svgToPdf"
 import { preProcessSvgForPdf } from "@/export/preProcessSvgForPdf"
-import { normalizeExportSvg } from "@/export/normalizeExportSvg"
 import { RasterTooLargeError } from "@/export/exportErrors"
 
 // resvg-wasm and the Inter ttf are normally fetched via bundler `?url` assets;
@@ -27,7 +26,7 @@ const SAMPLE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="
   <svg x="0" y="0" width="120" height="60" viewBox="0 0 120 60" overflow="visible">
     <rect x="0" y="0" width="120" height="60" fill="#ffffff" stroke="#000"/>
     <text x="60" y="20" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-weight="600" fill="#000">
-      <tspan x="60" y="16" font-size="13.6px">«Interface»</tspan>
+      <tspan x="60" y="16" font-size="13.6px">«interface»</tspan>
       <tspan x="60" y="32">MyClass</tspan>
     </text>
   </svg>
@@ -80,7 +79,7 @@ describe("preProcessSvgForPdf", () => {
     const root = preProcessSvgForPdf(parse(SAMPLE_SVG))
     const texts = Array.from(root.querySelectorAll("text"))
     expect(texts.length).toBe(2)
-    expect(texts.some((t) => t.textContent === "«Interface»")).toBe(true)
+    expect(texts.some((t) => t.textContent === "«interface»")).toBe(true)
     expect(texts.some((t) => t.textContent === "MyClass")).toBe(true)
     // No <text> retains <tspan> children.
     expect(root.querySelectorAll("tspan").length).toBe(0)
@@ -90,7 +89,7 @@ describe("preProcessSvgForPdf", () => {
     const root = preProcessSvgForPdf(
       parse(
         `<svg xmlns="http://www.w3.org/2000/svg"><text x="0" y="0" font-size="16px">` +
-          `<tspan x="0" dy="0" font-size="13.6px">«Abstract»</tspan>` +
+          `<tspan x="0" dy="0" font-size="13.6px">«interface»</tspan>` +
           `<tspan x="0" dy="18">ClassName</tspan></text></svg>`
       )
     )
@@ -100,7 +99,7 @@ describe("preProcessSvgForPdf", () => {
         t.getAttribute("font-size"),
       ])
     )
-    expect(byText["«Abstract»"]).toBe("13.6px") // own size preserved
+    expect(byText["«interface»"]).toBe("13.6px") // own size preserved
     expect(byText["ClassName"]).toBe("16px") // inherited from parent <text>
   })
 
@@ -120,18 +119,6 @@ describe("preProcessSvgForPdf", () => {
     expect(root.querySelector("text")!.getAttribute("font-family")).toBe(
       "Helvetica, Inter"
     )
-  })
-})
-
-describe("normalizeExportSvg", () => {
-  it("drops the italic claim abstract headers emit (no italic face is shipped)", () => {
-    const doc = parse(
-      `<svg xmlns="http://www.w3.org/2000/svg"><text font-style="italic">Abstract</text><text font-style="normal">Concrete</text></svg>`
-    )
-    normalizeExportSvg(doc)
-    const texts = Array.from(doc.querySelectorAll("text"))
-    expect(texts[0].hasAttribute("font-style")).toBe(false)
-    expect(texts[1].getAttribute("font-style")).toBe("normal")
   })
 })
 
