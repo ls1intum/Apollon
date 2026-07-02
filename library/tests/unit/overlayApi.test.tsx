@@ -73,6 +73,43 @@ describe("ApollonEditor overlay/control API", () => {
   })
 })
 
+// The imperative built-in-controls config surface — parity with
+// `<Apollon controls={…}>`. Store-level (jsdom has no layout), so this asserts
+// the config round-trips; placement/rendering is covered by e2e.
+describe("built-in controls config (imperative)", () => {
+  let el: HTMLElement
+
+  afterEach(() => {
+    cleanup()
+    el?.remove()
+  })
+
+  it("initializes from options.controls and round-trips via get / set", () => {
+    el = document.createElement("div")
+    document.body.appendChild(el)
+    const ed = new ApollonEditor(el, {
+      controls: { minimap: false, zoom: { region: "bottom-center" } },
+    })
+
+    expect(ed.getControlConfig("minimap")).toBe(false)
+    expect(ed.getControlConfig("zoom")).toEqual({ region: "bottom-center" })
+    expect(ed.getControlConfig("palette")).toBeUndefined()
+
+    // setControl patches one key, leaves siblings intact.
+    ed.setControl("palette", { visible: false })
+    expect(ed.getControlConfig("palette")).toEqual({ visible: false })
+    expect(ed.getControlConfig("minimap")).toBe(false)
+
+    // setControls replaces the whole config.
+    ed.setControls({ zoom: true })
+    expect(ed.getControlConfig("zoom")).toBe(true)
+    expect(ed.getControlConfig("minimap")).toBeUndefined()
+    expect(ed.getControlConfig("palette")).toBeUndefined()
+
+    ed.destroy()
+  })
+})
+
 // The <ApollonControl> facade in isolation (a fake editor, so we exercise the
 // component's register/update/dispose effects without mounting the real editor's
 // heavy tree — which jsdom can't render, see Apollon.test.tsx).

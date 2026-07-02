@@ -5,6 +5,7 @@ import * as Y from "yjs"
 import { getDiagramMetadata, STORE_ORIGIN } from "@/sync/ydoc"
 import { UMLDiagramType } from "@/types"
 import { ApollonMode, ApollonView } from "@/typings"
+import type { ControlsOptions } from "@/chrome/config"
 import { IPoint } from "@/edges/Connection"
 
 export type MetadataStore = {
@@ -16,6 +17,8 @@ export type MetadataStore = {
   readonly: boolean
   debug: boolean
   scrollLock: boolean
+  /** Built-in control config (hide/move/replace palette, minimap, zoom). */
+  controls: ControlsOptions
   scrollEnabled: boolean
   connectionGuidanceActive: boolean
   connectionGuidanceSourceNodeId: string | null
@@ -28,6 +31,7 @@ export type MetadataStore = {
   setAvailableViews: (availableViews: ApollonView[]) => void
   setReadonly: (readonly: boolean) => void
   setScrollLock: (scrollLock: boolean) => void
+  setControls: (controls: ControlsOptions) => void
   setScrollEnabled: (scrollEnabled: boolean) => void
   startConnectionGuidance: (
     sourceNodeId: string | null,
@@ -57,6 +61,7 @@ type InitialMetadataState = {
   readonly: boolean
   debug: boolean
   scrollLock: boolean
+  controls: ControlsOptions
   scrollEnabled: boolean
   connectionGuidanceActive: boolean
   connectionGuidanceSourceNodeId: string | null
@@ -76,6 +81,7 @@ const initialMetadataState: InitialMetadataState = {
   readonly: false,
   debug: false,
   scrollLock: false,
+  controls: {},
   scrollEnabled: false,
   connectionGuidanceActive: false,
   connectionGuidanceSourceNodeId: null,
@@ -163,6 +169,9 @@ export const createMetadataStore = (
           set({ readonly }, undefined, "setReadonly")
         },
 
+        setControls: (controls) => {
+          set({ controls }, undefined, "setControls")
+        },
         setScrollLock: (scrollLock: boolean) => {
           set({ scrollLock }, undefined, "setScrollLock")
         },

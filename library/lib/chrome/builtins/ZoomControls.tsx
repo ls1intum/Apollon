@@ -4,6 +4,7 @@ import { Maximize, Redo2, Undo2, ZoomIn, ZoomOut } from "lucide-react"
 import { useDiagramStore, useOverlayStore } from "@/store/context"
 import { insetAwareFitView } from "@/overlay/fitView"
 import { Tooltip } from "@/components/ui"
+import type { ZoomProps } from "../config"
 
 /**
  * The bottom-left zoom / history cluster, rendered as a slotted overlay control
@@ -13,8 +14,15 @@ import { Tooltip } from "@/components/ui"
  * a clickable %-reset) then, past a hairline, history (undo / redo). The fit
  * button reserves the current overlay insets so it frames content clear of the
  * chrome, exactly like the imperative `ApollonEditor.fitView`.
+ *
+ * `showZoom` / `showHistory` (from the public `controls.zoom.props`) drop either
+ * family; hiding both leaves an empty cluster the caller almost certainly meant
+ * to hide via `controls.zoom: false` instead.
  */
-export function ZoomControls() {
+export function ZoomControls({
+  showZoom = true,
+  showHistory = true,
+}: ZoomProps) {
   const rf = useReactFlow()
   const zoomLevel = useStore((state) => state.transform[2])
   const zoomLevelPercent = Math.round(zoomLevel * 100)
@@ -38,52 +46,58 @@ export function ZoomControls() {
       aria-orientation="horizontal"
       style={{ display: "flex", gap: 2, alignItems: "center" }}
     >
-      <Tooltip title="Zoom out">
-        <button
-          type="button"
-          className="apollon-chrome-iconbtn"
-          onClick={() => rf.zoomOut()}
-          aria-label="Zoom out"
-        >
-          <ZoomOut width={18} height={18} aria-hidden="true" />
-        </button>
-      </Tooltip>
-      <Tooltip title="Zoom in">
-        <button
-          type="button"
-          className="apollon-chrome-iconbtn"
-          onClick={() => rf.zoomIn()}
-          aria-label="Zoom in"
-        >
-          <ZoomIn width={18} height={18} aria-hidden="true" />
-        </button>
-      </Tooltip>
-      <Tooltip title="Fit view">
-        <button
-          type="button"
-          className="apollon-chrome-iconbtn"
-          onClick={() => insetAwareFitView(rf, insets)}
-          aria-label="Fit view"
-        >
-          <Maximize width={18} height={18} aria-hidden="true" />
-        </button>
-      </Tooltip>
-
-      {/* Clickable zoom readout — resets to 100% (Figma/Excalidraw pattern). */}
-      <Tooltip title="Reset zoom to 100%">
-        <button
-          type="button"
-          className="apollon-chrome-iconbtn apollon-chrome-iconbtn--readout"
-          onClick={() => rf.zoomTo(1)}
-          aria-label={`Zoom is ${zoomLevelPercent}%, reset to 100%`}
-        >
-          {zoomLevelPercent}%
-        </button>
-      </Tooltip>
-
-      {undoManagerExist && (
+      {showZoom && (
         <>
-          <div className="apollon-chrome-cluster-divider" aria-hidden />
+          <Tooltip title="Zoom out">
+            <button
+              type="button"
+              className="apollon-chrome-iconbtn"
+              onClick={() => rf.zoomOut()}
+              aria-label="Zoom out"
+            >
+              <ZoomOut width={18} height={18} aria-hidden="true" />
+            </button>
+          </Tooltip>
+          <Tooltip title="Zoom in">
+            <button
+              type="button"
+              className="apollon-chrome-iconbtn"
+              onClick={() => rf.zoomIn()}
+              aria-label="Zoom in"
+            >
+              <ZoomIn width={18} height={18} aria-hidden="true" />
+            </button>
+          </Tooltip>
+          <Tooltip title="Fit view">
+            <button
+              type="button"
+              className="apollon-chrome-iconbtn"
+              onClick={() => insetAwareFitView(rf, insets)}
+              aria-label="Fit view"
+            >
+              <Maximize width={18} height={18} aria-hidden="true" />
+            </button>
+          </Tooltip>
+
+          {/* Clickable zoom readout — resets to 100% (Figma/Excalidraw). */}
+          <Tooltip title="Reset zoom to 100%">
+            <button
+              type="button"
+              className="apollon-chrome-iconbtn apollon-chrome-iconbtn--readout"
+              onClick={() => rf.zoomTo(1)}
+              aria-label={`Zoom is ${zoomLevelPercent}%, reset to 100%`}
+            >
+              {zoomLevelPercent}%
+            </button>
+          </Tooltip>
+        </>
+      )}
+
+      {showHistory && undoManagerExist && (
+        <>
+          {showZoom && (
+            <div className="apollon-chrome-cluster-divider" aria-hidden />
+          )}
           <Tooltip title="Undo (Ctrl+Z)">
             <span>
               <button

@@ -11,6 +11,18 @@ export type {
   OverlayControlOptions,
   OverlayControlInput,
 } from "./overlay/types"
+// Built-in control config (hide / move / re-configure / replace the palette,
+// minimap, zoom) — the shape shared by `ApollonOptions.controls`,
+// `<Apollon controls>`, and `editor.setControls`.
+export type {
+  ControlsOptions,
+  BuiltInControlKey,
+  BuiltInControlConfig,
+  ControlPlacement,
+  PaletteProps,
+  MinimapProps,
+  ZoomProps,
+} from "./chrome/config"
 export {
   // Artemis-facing assessment helpers (host consumes these directly).
   getAssessmentNameForArtemis,

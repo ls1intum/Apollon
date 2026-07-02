@@ -16,6 +16,7 @@ import type {
   UMLDiagramType,
   UMLModel,
 } from "@/typings"
+import type { ControlsOptions } from "@/chrome/config"
 import { ApollonInstanceContext } from "./context"
 
 /**
@@ -64,6 +65,12 @@ export interface ApollonProps {
   view?: ApollonView
   mode?: ApollonMode
   scrollLock?: boolean
+  /**
+   * Configure the built-in controls (palette / minimap / zoom): hide, move,
+   * re-configure, or replace each. Reactive — applied via `editor.setControls`.
+   * Memoize the object (or its nested configs) to avoid re-applying every render.
+   */
+  controls?: ControlsOptions
   /** Local-only preview overlay. See {@link ApollonEditor.setPreviewMode}. */
   previewMode?: boolean
   /**
@@ -110,6 +117,7 @@ export function Apollon(props: ApollonProps) {
     view,
     mode,
     scrollLock,
+    controls,
     previewMode,
     model,
 
@@ -130,6 +138,7 @@ export function Apollon(props: ApollonProps) {
     collaborationEnabled,
     collaboration,
     debug,
+    controls,
   })
 
   // Commit-time write — StrictMode-safe latest-closure ref.
@@ -185,6 +194,10 @@ export function Apollon(props: ApollonProps) {
   useEffect(() => {
     if (editor && scrollLock !== undefined) editor.setScrollLock(scrollLock)
   }, [editor, scrollLock])
+
+  useEffect(() => {
+    if (editor && controls !== undefined) editor.setControls(controls)
+  }, [editor, controls])
 
   useEffect(() => {
     if (editor && previewMode !== undefined) editor.setPreviewMode(previewMode)

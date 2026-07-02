@@ -1,6 +1,7 @@
 import { DiagramEdgeType, IPoint } from "./edges/types"
 import { DiagramNodeType } from "./nodes/types"
 import { UMLDiagramType } from "./types/DiagramType"
+import type { ControlsOptions } from "./chrome/config"
 
 export { UMLDiagramType, type DiagramNodeType, type DiagramEdgeType }
 
@@ -154,6 +155,13 @@ export type ApollonOptions = {
   collaborationEnabled?: boolean
   collaboration?: ApollonCollaborationOptions
   scrollLock?: boolean
+  /**
+   * Configure the editor's built-in controls (element palette, minimap, zoom /
+   * history cluster): hide, move to another region, re-configure, or replace
+   * each. Same shape as `<Apollon controls={…}>` and `editor.setControls(…)`.
+   * Arbitrary custom controls go through `addControl` / `<ApollonControl>`.
+   */
+  controls?: ControlsOptions
   /**
    * Optional `--apollon-*` CSS custom properties applied to the editor's mount
    * element. Build one with `createApollonTheme(...)`. Fully optional — an

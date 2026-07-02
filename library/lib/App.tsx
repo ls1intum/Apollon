@@ -8,7 +8,6 @@ import {
 import { type MouseEvent as ReactMouseEvent, useCallback } from "react"
 import {
   CustomBackground,
-  CustomMiniMap,
   ReconnectConnectionLine,
   AssessmentSelectionDebug,
   ScrollOverlay,
@@ -103,6 +102,7 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
     readonly,
     scrollLock,
     scrollEnabled,
+    controls,
     connectionGuidanceActive,
     startReconnectPreview,
     stopReconnectPreview,
@@ -113,6 +113,7 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
       readonly: state.readonly,
       scrollLock: state.scrollLock,
       scrollEnabled: state.scrollEnabled,
+      controls: state.controls,
       connectionGuidanceActive: state.connectionGuidanceActive,
       startReconnectPreview: state.startReconnectPreview,
       stopReconnectPreview: state.stopReconnectPreview,
@@ -267,12 +268,13 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
             deleteKeyCode={["Backspace", "Delete"]}
           >
             <CustomBackground />
-            <CustomMiniMap />
             <AlignmentGuides />
             <AssessmentSelectionDebug />
-            {/* Register the built-in controls (palette, zoom) through the overlay
-                engine so they share the one inset-aware layout. */}
+            {/* Owns the built-in controls: registers the palette + zoom through
+                the overlay engine and renders the minimap, all driven by the
+                public `controls` config (hide / move / re-configure / replace). */}
             <BuiltInControls
+              controls={controls}
               showPalette={mode === ApollonMode.Modelling && !readonly}
             />
             {/* Renders every registered control (built-in + host-injected) into

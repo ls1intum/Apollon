@@ -1,5 +1,10 @@
 import { useState } from "react"
-import { MiniMap, MiniMapNodeProps, Panel } from "@xyflow/react"
+import {
+  MiniMap,
+  MiniMapNodeProps,
+  Panel,
+  type PanelPosition,
+} from "@xyflow/react"
 import { ArrowDownRight, Map } from "lucide-react"
 import { useReactiveNode } from "@/hooks/useReactiveElement"
 import {
@@ -72,12 +77,25 @@ import {
   SfcTransitionBranchNodeProps,
 } from "@/types/nodes/NodeProps"
 
-export const CustomMiniMap = () => {
+export interface CustomMiniMapProps {
+  /** Corner the minimap and its toggle anchor to. Default `"bottom-right"`. */
+  position?: PanelPosition
+  /** Drag the minimap to pan the diagram. Default `true`. */
+  pannable?: boolean
+  /** Scroll over the minimap to zoom the diagram. Default `true`. */
+  zoomable?: boolean
+}
+
+export const CustomMiniMap = ({
+  position = "bottom-right",
+  pannable = true,
+  zoomable = true,
+}: CustomMiniMapProps = {}) => {
   const [minimapCollapsed, setMinimapCollapsed] = useState(true)
 
   if (minimapCollapsed) {
     return (
-      <Panel position="bottom-right">
+      <Panel position={position}>
         <button
           type="button"
           className="apollon-chrome-iconbtn"
@@ -92,22 +110,23 @@ export const CustomMiniMap = () => {
   }
 
   // Expanded: the MiniMap renders as its own glass card (a React Flow Panel), and
-  // the collapse arrow is a SIBLING bottom-right Panel that is IDENTICAL to the
-  // collapsed open button (same glass panel + .apollon-chrome-iconbtn, same
-  // bottom-right corner) — so toggling reads as one control and the cursor never
-  // moves. Rendering the MiniMap normally (not nested) keeps its sizing intact;
-  // a tight offsetScale avoids a fat empty margin around the diagram.
+  // the collapse arrow is a SIBLING Panel at the same corner that is IDENTICAL to
+  // the collapsed open button (same glass panel + .apollon-chrome-iconbtn) — so
+  // toggling reads as one control and the cursor never moves. Rendering the
+  // MiniMap normally (not nested) keeps its sizing intact; a tight offsetScale
+  // avoids a fat empty margin around the diagram.
   return (
     <>
       <MiniMap
-        zoomable
-        pannable
+        zoomable={zoomable}
+        pannable={pannable}
+        position={position}
         nodeComponent={MiniMapNode}
         offsetScale={6}
         bgColor="transparent"
         className="apollon-minimap"
       />
-      <Panel position="bottom-right">
+      <Panel position={position}>
         <button
           type="button"
           className="apollon-chrome-iconbtn"
