@@ -175,13 +175,13 @@ function RailPanel({
   )
 }
 
-/** A full-width bottom action bar (assessment / exam submit). */
+/** A bottom action bar (assessment / exam submit). No `width: 100%` — the footer
+ *  band fills its row (symmetric to the header), so host chrome need not know it. */
 function ActionBar({ children }: { children: ReactNode }) {
   return (
     <div
       style={{
         ...glass,
-        width: "100%",
         justifyContent: "flex-end",
         gap: 10,
         borderRadius: 0,
@@ -233,6 +233,27 @@ function ExamTimer() {
   )
 }
 
+/** A secondary notice row (e.g. Athena feedback suggestions, problem-statement diff). */
+function Banner({ tone, children }: { tone: string; children: ReactNode }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        width: "100%",
+        padding: "6px 16px",
+        fontSize: 12.5,
+        fontWeight: 500,
+        color: "#fff",
+        background: tone,
+      }}
+    >
+      {children}
+    </div>
+  )
+}
+
 // ── Stories ──────────────────────────────────────────────────────────────────
 
 /**
@@ -248,7 +269,7 @@ export const StudentModeling: Story = {
       enablePopups
       style={FULLSCREEN}
     >
-      <ApollonControl id="host:header" region="header" inset="auto">
+      <ApollonControl id="host:header" region="header">
         <HeaderBar
           title="Library System — Class Diagram"
           right={
@@ -262,7 +283,7 @@ export const StudentModeling: Story = {
         />
       </ApollonControl>
 
-      <ApollonControl id="host:problem" region="right-rail" inset="auto">
+      <ApollonControl id="host:problem" region="right-rail">
         <RailPanel heading="Problem statement">
           Model the domain of a university <b>library</b>: a <code>Book</code>{" "}
           has many <code>Copy</code>s; a <code>Member</code> can{" "}
@@ -294,14 +315,14 @@ export const TutorAssessment: Story = {
       enablePopups
       style={FULLSCREEN}
     >
-      <ApollonControl id="host:header" region="header" inset="auto">
+      <ApollonControl id="host:header" region="header">
         <HeaderBar
           title="Assessment · submission #482"
           right={<ScoreChip score={7} max={10} />}
         />
       </ApollonControl>
 
-      <ApollonControl id="host:instructions" region="right-rail" inset="auto">
+      <ApollonControl id="host:instructions" region="right-rail">
         <RailPanel heading="Grading instructions">
           <ul style={{ margin: 0, paddingLeft: 18 }}>
             <li>+2 P — all core classes present</li>
@@ -312,7 +333,7 @@ export const TutorAssessment: Story = {
         </RailPanel>
       </ApollonControl>
 
-      <ApollonControl id="host:actions" region="footer" inset="auto">
+      <ApollonControl id="host:actions" region="footer">
         <ActionBar>
           <Btn>Cancel</Btn>
           <Btn>Override</Btn>
@@ -339,7 +360,7 @@ export const ExamMode: Story = {
       enablePopups
       style={FULLSCREEN}
     >
-      <ApollonControl id="host:exambar" region="header" inset="auto">
+      <ApollonControl id="host:exambar" region="header">
         <HeaderBar
           title="Final Exam · Task 3 — Modeling"
           right={
@@ -351,7 +372,7 @@ export const ExamMode: Story = {
         />
       </ApollonControl>
 
-      <ApollonControl id="host:problem" region="right-rail" inset="auto">
+      <ApollonControl id="host:problem" region="right-rail">
         <RailPanel heading="Your task">
           Draw an activity diagram for the <b>checkout</b> process. You have{" "}
           <b>42 minutes</b> of working time remaining. Your work saves
@@ -359,7 +380,7 @@ export const ExamMode: Story = {
         </RailPanel>
       </ApollonControl>
 
-      <ApollonControl id="host:submit" region="footer" inset="auto">
+      <ApollonControl id="host:submit" region="footer">
         <ActionBar>
           <SavedStatus />
           <span style={{ flex: 1 }} />
@@ -370,6 +391,95 @@ export const ExamMode: Story = {
       <Apollon.Palette />
       <Apollon.Zoom region="bottom-center" />
       <Apollon.MiniMap region="bottom-right" />
+    </Apollon>
+  ),
+}
+
+/**
+ * **Stacked chrome in one band** — a host that owns an edge stacks several bars
+ * on it by composing them vertically inside a single `<ApollonControl>`: here a
+ * primary header row + an Athena feedback-suggestions banner + a
+ * problem-statement-changed notice. The band's auto-inset measures the whole
+ * stack, so the diagram makes room for all three rows — no per-bar registration
+ * needed, and the reserved space is exactly the composed height.
+ */
+export const StackedChrome: Story = {
+  render: () => (
+    <Apollon
+      defaultModel={fixtureByType.ClassDiagram}
+      defaultMode={ApollonMode.Assessment}
+      enablePopups
+      style={FULLSCREEN}
+    >
+      <ApollonControl id="host:header-stack" region="header">
+        <div
+          style={{ width: "100%", display: "flex", flexDirection: "column" }}
+        >
+          <HeaderBar
+            title="Assessment · submission #482"
+            right={<ScoreChip score={7} max={10} />}
+          />
+          <Banner tone="linear-gradient(90deg,#7c3aed,#6366f1)">
+            ✨ Athena suggested 3 feedback items — review before submitting.
+          </Banner>
+          <Banner tone="linear-gradient(90deg,#0891b2,#0e7490)">
+            ⓘ The problem statement was updated 2 minutes ago.
+          </Banner>
+        </div>
+      </ApollonControl>
+
+      <ApollonControl id="host:actions" region="footer">
+        <ActionBar>
+          <Btn>Cancel</Btn>
+          <Btn variant="primary">Save &amp; submit</Btn>
+        </ActionBar>
+      </ApollonControl>
+
+      <Apollon.Zoom region="bottom-left" history={false} />
+      <Apollon.MiniMap region="bottom-right" />
+    </Apollon>
+  ),
+}
+
+/**
+ * **Dark mode** — the same immersive assessment layout under `dataTheme="dark"`.
+ * Host chrome that reads the `--apollon-*` tokens (surface, border, foreground)
+ * re-themes with the editor, so header/footer/rail chrome stays cohesive in both
+ * themes instead of a light bar stranded on a dark canvas.
+ */
+export const DarkMode: Story = {
+  render: () => (
+    <Apollon
+      defaultModel={fixtureByType.ClassDiagram}
+      defaultMode={ApollonMode.Assessment}
+      dataTheme="dark"
+      enablePopups
+      style={FULLSCREEN}
+    >
+      <ApollonControl id="host:header" region="header">
+        <HeaderBar
+          title="Assessment · submission #482"
+          right={<ScoreChip score={7} max={10} />}
+        />
+      </ApollonControl>
+      <ApollonControl id="host:instructions" region="right-rail">
+        <RailPanel heading="Grading instructions">
+          <ul style={{ margin: 0, paddingLeft: 18 }}>
+            <li>+2 P — all core classes present</li>
+            <li>+3 P — correct multiplicities</li>
+            <li>+2 P — inheritance modelled</li>
+          </ul>
+        </RailPanel>
+      </ApollonControl>
+      <ApollonControl id="host:actions" region="footer">
+        <ActionBar>
+          <Btn>Cancel</Btn>
+          <Btn variant="primary">Save &amp; submit</Btn>
+          <Btn variant="primary">Assess next →</Btn>
+        </ActionBar>
+      </ApollonControl>
+      <Apollon.Zoom region="bottom-left" history={false} />
+      <Apollon.MiniMap region="top-right" />
     </Apollon>
   ),
 }
