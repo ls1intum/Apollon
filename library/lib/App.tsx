@@ -190,17 +190,18 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
             overflow: "hidden",
             backgroundColor: "var(--apollon-background, #ffffff)",
             position: "relative",
-            // Only emit the inset custom properties when chrome actually reserves
-            // room, so an editor with no overlays keeps the exact original style
-            // attribute (byte-identical DOM for embedders like Artemis).
-            ...(insets.top || insets.right || insets.bottom || insets.left
-              ? {
-                  "--apollon-inset-top": `${insets.top}px`,
-                  "--apollon-inset-right": `${insets.right}px`,
-                  "--apollon-inset-bottom": `${insets.bottom}px`,
-                  "--apollon-inset-left": `${insets.left}px`,
-                }
-              : {}),
+            // Always publish the reserved insets (default 0) so the overlay store
+            // is the single layout authority: the palette and every band position
+            // straight off these vars. Suppressing them when zero forced the CSS
+            // to a hardcoded `edge + island-h` fallback that could not tell "top
+            // chrome registered but not yet measured" from "no top chrome at all",
+            // so an editor with no header reserved ~64px of phantom space (the
+            // "huge gap from palette to top"). With the vars always present the
+            // fallback is gone and the gap collapses to 0 when nothing is there.
+            "--apollon-inset-top": `${insets.top}px`,
+            "--apollon-inset-right": `${insets.right}px`,
+            "--apollon-inset-bottom": `${insets.bottom}px`,
+            "--apollon-inset-left": `${insets.left}px`,
           } as CSSProperties
         }
       >

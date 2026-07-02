@@ -2,6 +2,7 @@ import { Panel, ViewportPortal, type PanelPosition } from "@xyflow/react"
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   type CSSProperties,
@@ -52,23 +53,24 @@ const BAND_STYLE: Record<string, CSSProperties> = {
     right: 0,
     flexDirection: "row",
   },
-  // Side rails sit between the header and any bottom chrome so they never tuck
-  // under a full-width header band. The inset fallback is the header/controls'
-  // deterministic footprint (edge + island-h) — NOT 0 — so a rail that mounts
-  // before the first ResizeObserver tick (e.g. version history already open on
-  // load) still starts clear of the top-right island instead of overlapping it.
+  // Side rails sit between the top chrome and any bottom chrome so they never
+  // tuck under a full-width header band. --apollon-inset-top/bottom come from the
+  // overlay store (the single inset authority), seeded synchronously at
+  // registration so a rail that mounts alongside top chrome (e.g. version history
+  // already open on load) starts clear of it with no pre-measurement overlap —
+  // and collapses to the safe-area edge (0 default) when there is no such chrome.
   // The safe-area inset is added on top so a notched device clears the notch too.
   "left-rail": {
-    top: "calc(var(--safe-area-inset-top, 0px) + var(--apollon-inset-top, calc(var(--apollon-chrome-edge) + var(--apollon-chrome-island-h))))",
+    top: "calc(var(--safe-area-inset-top, 0px) + var(--apollon-inset-top, 0px))",
     bottom:
-      "calc(var(--safe-area-inset-bottom, 0px) + var(--apollon-inset-bottom, calc(var(--apollon-chrome-edge) + var(--apollon-chrome-island-h))))",
+      "calc(var(--safe-area-inset-bottom, 0px) + var(--apollon-inset-bottom, 0px))",
     left: "var(--safe-area-inset-left, 0px)",
     flexDirection: "column",
   },
   "right-rail": {
-    top: "calc(var(--safe-area-inset-top, 0px) + var(--apollon-inset-top, calc(var(--apollon-chrome-edge) + var(--apollon-chrome-island-h))))",
+    top: "calc(var(--safe-area-inset-top, 0px) + var(--apollon-inset-top, 0px))",
     bottom:
-      "calc(var(--safe-area-inset-bottom, 0px) + var(--apollon-inset-bottom, calc(var(--apollon-chrome-edge) + var(--apollon-chrome-island-h))))",
+      "calc(var(--safe-area-inset-bottom, 0px) + var(--apollon-inset-bottom, 0px))",
     right: "var(--safe-area-inset-right, 0px)",
     flexDirection: "column",
   },
@@ -163,7 +165,9 @@ export function OverlayLayer() {
   const observerRef = useRef<ResizeObserver | null>(null)
   const controlsRef = useRef(controls)
   const setMeasuredRef = useRef(setMeasured)
-  useEffect(() => {
+  // Sync in the layout phase (before the synchronous measure below reads them),
+  // not a passive effect, so flushMeasure never sees a stale control set.
+  useLayoutEffect(() => {
     controlsRef.current = controls
     setMeasuredRef.current = setMeasured
   }, [controls, setMeasured])
@@ -206,11 +210,15 @@ export function OverlayLayer() {
     }
   }, [scheduleMeasure])
 
-  // Re-measure when the set of controls changes (a newly-registered auto-inset
-  // control needs its first measurement; a removed one is dropped from elById).
-  useEffect(() => {
-    scheduleMeasure()
-  }, [controls, scheduleMeasure])
+  // Measure synchronously (pre-paint) whenever the set of controls changes, so a
+  // newly-registered auto-inset control reserves its room on the SAME frame it
+  // first paints — never one frame at inset 0. That first-paint correctness is
+  // what lets the CSS drop its hardcoded `edge + island-h` fallback: the store is
+  // authoritative from frame one, so there is neither a pre-measurement slide nor
+  // a phantom gap. The ResizeObserver below keeps it in sync on later resizes.
+  useLayoutEffect(() => {
+    flushMeasure()
+  }, [controls, flushMeasure])
 
   const registerMeasure = useCallback(
     (id: string, el: HTMLElement | null) => {

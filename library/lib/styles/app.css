@@ -256,22 +256,17 @@
   box-sizing: border-box;
   position: absolute;
 
-  /* --apollon-inset-top measures the (uniform-height) top islands + their edge
-     margin; adding the safe-area top (the islands drop by it too) lands the
-     palette an even --apollon-chrome-gap below every island, notch and all.
-     The fallback equals what the ResizeObserver will write for a top island
-     (offsetHeight == island-h, plus the corner Panel's edge margin re-added in
-     OverlayLayer.flushMeasure) — so before the first measurement lands the
-     palette already sits clear of the brand, and the real var arrives
-     byte-identical with no slide. (The race this kills: the var is published
-     only once an inset is non-zero, so a 0px fallback let the palette start
-     over the brand for the frames before measurement.) */
+  /* --apollon-inset-top is the room the top chrome reserves (0 when there is
+     none), published by App.tsx straight from the overlay store — the single
+     inset authority. Adding the safe-area top (the islands drop by it too)
+     lands the palette an even --apollon-chrome-gap below every island, notch
+     and all. The store seeds an "auto" inset synchronously at registration
+     (OverlayLayer's layout-effect measure), so the var is already correct on
+     first paint — no pre-measurement slide and, crucially, no phantom gap when
+     no top chrome exists (the 0px default simply collapses the offset). */
   top: calc(
     var(--safe-area-inset-top, 0px) + var(--apollon-chrome-gap) +
-      var(
-        --apollon-inset-top,
-        calc(var(--apollon-chrome-edge) + var(--apollon-chrome-island-h))
-      )
+      var(--apollon-inset-top, 0px)
   );
   left: calc(
     var(--apollon-chrome-edge-safe-left) + var(--apollon-inset-left, 0px)
@@ -289,12 +284,9 @@
      footprint (edge + island-h + gap + inset-bottom + safe-bottom). */
   max-height: calc(
     100% - var(--safe-area-inset-top, 0px) - var(--apollon-chrome-gap) -
-      var(
-        --apollon-inset-top,
-        calc(var(--apollon-chrome-edge) + var(--apollon-chrome-island-h))
-      ) -
-      var(--apollon-chrome-edge-safe-bottom) - var(--apollon-chrome-island-h) -
-      var(--apollon-chrome-gap) - var(--apollon-inset-bottom, 0px)
+      var(--apollon-inset-top, 0px) - var(--apollon-chrome-edge-safe-bottom) -
+      var(--apollon-chrome-island-h) - var(--apollon-chrome-gap) -
+      var(--apollon-inset-bottom, 0px)
   );
   display: flex;
   flex-direction: column;
