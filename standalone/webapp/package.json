@@ -26,7 +26,7 @@
     "test:perf": "node node_modules/@playwright/test/cli.js test --project=perf",
     "test:perf:firefox": "PLAYWRIGHT_FIREFOX=1 node node_modules/@playwright/test/cli.js test --project=perf-firefox",
     "test:visual": "node node_modules/@playwright/test/cli.js test tests/visual/",
-    "test:visual:update": "node node_modules/@playwright/test/cli.js test tests/visual/ --update-snapshots=all",
+    "test:visual:update": "node node_modules/@playwright/test/cli.js test tests/visual/ --update-snapshots",
     "capacitor:add:android": "cap add android",
     "capacitor:add:ios": "cap add ios --packagemanager CocoaPods",
     "capacitor:sync": "cap sync",
