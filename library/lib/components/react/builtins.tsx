@@ -1,6 +1,6 @@
 import { useEffect } from "react"
 import { useApollonEditor } from "./context"
-import type { OverlayControlInput } from "../../overlay/types"
+import type { OverlayControlInput } from "@/overlay/types"
 import {
   miniMapControl,
   paletteControl,
@@ -8,7 +8,7 @@ import {
   type BuiltInPlacement,
   type MiniMapControlOptions,
   type ZoomControlOptions,
-} from "../../chrome/builtins/controls"
+} from "@/chrome/builtins/controls"
 
 /**
  * Register an overlay control for the component's lifetime, re-applying when
@@ -31,7 +31,6 @@ export function useControl(
   useEffect(() => {
     if (!editor) return
     return editor.addControl(make())
-    // `make` closes over the current props; `deps` gate re-registration.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor, ...deps])
 }

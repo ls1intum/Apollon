@@ -1,15 +1,19 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
-import { render, cleanup } from "@testing-library/react"
+import { render, cleanup, act } from "@testing-library/react"
+import { ReactFlowProvider } from "@xyflow/react"
 import { ApollonEditor } from "@/apollon-editor"
 import { ApollonProvider } from "@/components/react/context"
 import { ApollonControl } from "@/components/react/ApollonControl"
+import { ApollonSelectionToolbar } from "@/components/react/ApollonSelectionToolbar"
 import {
   ApollonPalette,
   ApollonZoom,
   ApollonMiniMap,
 } from "@/components/react/builtins"
-import { computeInsets, createOverlayStore } from "@/overlay/overlayStore"
-import type { OverlayControl, OverlayRegion } from "@/overlay/types"
+import { createOverlayStore } from "@/overlay/overlayStore"
+import { OverlayLayer } from "@/overlay/OverlayLayer"
+import { OverlayStoreContext } from "@/store/context"
+import type { OverlayControlInput } from "@/overlay/types"
 import {
   MINIMAP_ID,
   PALETTE_ID,
@@ -164,191 +168,6 @@ describe("built-in controls (imperative descriptors)", () => {
   })
 })
 
-// Two-tier chrome: BANDS (header/left-rail/right-rail) reserve their cross-size on
-// their one edge; SLOTS (the panel corners) float and reserve nothing. This is the
-// model that keeps a bottom-corner control from shortening the left-rail palette —
-// the user-reported "it does not adapt" bug. Unit the reservation math directly.
-describe("computeInsets: band vs slot reservation", () => {
-  const ctrl = (
-    id: string,
-    region: OverlayRegion,
-    extra: Partial<OverlayControl> = {}
-  ): OverlayControl => ({ id, region, render: () => null, ...extra })
-
-  it("a band reserves its measured cross-size on its own edge; a slot reserves nothing", () => {
-    expect(
-      computeInsets([ctrl("p", "left-rail")], { p: { left: 150 } })
-    ).toEqual({
-      top: 0,
-      right: 0,
-      bottom: 0,
-      left: 150,
-    })
-    expect(
-      computeInsets([ctrl("z", "bottom-center")], { z: { bottom: 40 } })
-    ).toEqual({ top: 0, right: 0, bottom: 0, left: 0 })
-  })
-
-  it("a bottom slot never couples to the left-rail — moving it changes no inset", () => {
-    const measured = { p: { left: 150 }, z: { bottom: 40 } }
-    const left = computeInsets(
-      [ctrl("p", "left-rail"), ctrl("z", "bottom-left")],
-      measured
-    )
-    const center = computeInsets(
-      [ctrl("p", "left-rail"), ctrl("z", "bottom-center")],
-      measured
-    )
-    expect(left).toEqual(center)
-    expect(left).toEqual({ top: 0, right: 0, bottom: 0, left: 150 })
-  })
-
-  it("disjoint bands stay independent; a hidden band reserves nothing", () => {
-    expect(
-      computeInsets(
-        [ctrl("h", "header"), ctrl("l", "left-rail"), ctrl("r", "right-rail")],
-        { h: { top: 48 }, l: { left: 150 }, r: { right: 120 } }
-      )
-    ).toEqual({ top: 48, right: 120, bottom: 0, left: 150 })
-    expect(
-      computeInsets([ctrl("l", "left-rail", { visible: false })], {
-        l: { left: 150 },
-      })
-    ).toEqual({ top: 0, right: 0, bottom: 0, left: 0 })
-  })
-
-  it("an explicit inset opts a slot into make-way reservation", () => {
-    expect(
-      computeInsets([ctrl("z", "bottom-left", { inset: "auto" })], {
-        z: { bottom: 40 },
-      }).bottom
-    ).toBe(40)
-  })
-
-  it("a footer band reserves its height on the bottom edge, symmetric to the header", () => {
-    expect(
-      computeInsets([ctrl("h", "header"), ctrl("f", "footer")], {
-        h: { top: 48 },
-        f: { bottom: 56 },
-      })
-    ).toEqual({ top: 48, right: 0, bottom: 56, left: 0 })
-  })
-
-  it("a footer band and a bottom-corner slot don't double-count the bottom edge", () => {
-    // The footer reserves; the slot floats over it (reserves nothing), so the
-    // bottom inset is the footer's height alone — not footer + cluster.
-    expect(
-      computeInsets([ctrl("f", "footer"), ctrl("z", "bottom-right")], {
-        f: { bottom: 56 },
-        z: { bottom: 40 },
-      }).bottom
-    ).toBe(56)
-  })
-
-  it("two bars in different lanes STACK — their band insets sum", () => {
-    // An exam bar (lane 0) + a 'problem statement changed' banner (lane 1) on the
-    // header: independently registered, each gets room, so the top inset is 48+24.
-    expect(
-      computeInsets(
-        [
-          ctrl("bar", "header", { lane: 0 }),
-          ctrl("banner", "header", { lane: 1 }),
-        ],
-        { bar: { top: 48 }, banner: { top: 24 } }
-      ).top
-    ).toBe(72)
-  })
-
-  it("two bars in the SAME lane sit side by side — the band reserves the taller", () => {
-    expect(
-      computeInsets(
-        [ctrl("a", "header"), ctrl("b", "header")], // both default lane 0
-        { a: { top: 48 }, b: { top: 32 } }
-      ).top
-    ).toBe(48)
-  })
-
-  it("lane summing is per band edge; opposite bands stay independent", () => {
-    expect(
-      computeInsets(
-        [
-          ctrl("h0", "header", { lane: 0 }),
-          ctrl("h1", "header", { lane: 1 }),
-          ctrl("f", "footer"),
-        ],
-        { h0: { top: 40 }, h1: { top: 20 }, f: { bottom: 50 } }
-      )
-    ).toEqual({ top: 60, right: 0, bottom: 50, left: 0 })
-  })
-
-  it("an explicit inset opts a band control out of lane summing (manual reservation)", () => {
-    // A header control with an explicit inset combines by max, not lane-sum — so a
-    // host can pin a fixed reservation without it stacking onto the auto lanes.
-    expect(
-      computeInsets(
-        [
-          ctrl("auto", "header", { lane: 0 }),
-          ctrl("fixed", "header", { lane: 1, inset: { top: 30 } }),
-        ],
-        { auto: { top: 48 } }
-      ).top
-    ).toBe(48) // max(48 auto-lane, 30 explicit), not 48+30
-  })
-})
-
-// A compound built-in (`<Apollon.Zoom history={…}>`) refreshes its content by
-// RE-REGISTERING the descriptor with a new `render` — there is no separate render
-// map. That is only cheap because `recompute` returns the SAME `insets` object
-// when the values are unchanged, so an `insets` subscriber (App's CSS vars,
-// fitView) never re-renders just because a control swapped its renderer. Assert
-// that identity contract at the store level.
-describe("overlay store: re-registration keeps insets identity-stable", () => {
-  it("re-registering the same id with a new render reuses the insets object", () => {
-    const store = createOverlayStore()
-    store.getState().register({
-      id: "apollon:zoom",
-      region: "bottom-left",
-      render: () => "v1",
-    })
-    store.getState().setMeasured("apollon:zoom", { bottom: 48 })
-
-    const insetsBefore = store.getState().insets
-    // A slot reserves nothing, so the zoom cluster never couples the bottom edge.
-    expect(insetsBefore.bottom).toBe(0)
-
-    store.getState().register({
-      id: "apollon:zoom",
-      region: "bottom-left",
-      render: () => "v2",
-    })
-    // New renderer took effect, but the derived inset rect is the SAME object —
-    // re-registration didn't thrash layout.
-    expect(store.getState().controls["apollon:zoom"].render()).toBe("v2")
-    expect(store.getState().insets).toBe(insetsBefore)
-  })
-
-  it("re-registering a band with an unchanged measured size reuses insets", () => {
-    const store = createOverlayStore()
-    store.getState().register({
-      id: "apollon:palette",
-      region: "left-rail",
-      render: () => null,
-    })
-    store.getState().setMeasured("apollon:palette", { left: 160 })
-
-    const insetsBefore = store.getState().insets
-    expect(insetsBefore.left).toBe(160)
-
-    // Re-register (e.g. the palette component re-rendered) — same size, so identity holds.
-    store.getState().register({
-      id: "apollon:palette",
-      region: "left-rail",
-      render: () => null,
-    })
-    expect(store.getState().insets).toBe(insetsBefore)
-  })
-})
-
 // The <ApollonControl> facade in isolation (a fake editor, so we exercise the
 // component's register/update/dispose effects without mounting the real editor's
 // heavy tree — which jsdom can't render, see Apollon.test.tsx).
@@ -481,5 +300,195 @@ describe("compound built-in components", () => {
     rerender(tree(false, "b"))
     expect(editor.addControl).toHaveBeenCalledTimes(2)
     expect(editor.hasControl(ZOOM_ID)).toBe(true)
+  })
+})
+
+// The bands render their lanes as a flex stack whose DIRECTION is what pins lane 0
+// to the anchor edge: `header` stacks downward (`column`) so lane 0 is the top row,
+// `footer` stacks upward (`column-reverse`) so lane 0 is the BOTTOM row even though
+// it renders first. A flipped direction would paint a footer's stacked bars upside
+// down (reservation still summing correctly, so the bug is invisible to the store
+// tests). Mount the real OverlayLayer against a live store and assert the DOM.
+// OverlayLayer always renders inside React Flow (it reads the pane size for
+// extent-aware corner clearance), so wrap it in a ReactFlowProvider. Only bands
+// are registered here, so no <Panel>/<ViewportPortal> is actually instantiated.
+describe("OverlayLayer band rendering (rendered lane stacking)", () => {
+  afterEach(cleanup)
+
+  function renderBands(controls: OverlayControlInput[]) {
+    const store = createOverlayStore()
+    for (const c of controls) store.getState().register(c)
+    return render(
+      <ReactFlowProvider>
+        <OverlayStoreContext.Provider value={store}>
+          <OverlayLayer />
+        </OverlayStoreContext.Provider>
+      </ReactFlowProvider>
+    )
+  }
+
+  it("stacks header lanes downward and footer lanes upward, lane 0 flush to each anchor edge", () => {
+    const { container } = renderBands([
+      { id: "h0", region: "header", lane: 0, render: () => <span>h0</span> },
+      { id: "h1", region: "header", lane: 1, render: () => <span>h1</span> },
+      { id: "f0", region: "footer", lane: 0, render: () => <span>f0</span> },
+      { id: "f1", region: "footer", lane: 1, render: () => <span>f1</span> },
+    ])
+
+    const header = container.querySelector<HTMLElement>(
+      '[data-apollon-region="header"]'
+    )
+    const footer = container.querySelector<HTMLElement>(
+      '[data-apollon-region="footer"]'
+    )
+    expect(header).not.toBeNull()
+    expect(footer).not.toBeNull()
+
+    // The cross-axis stacking direction — the load-bearing fact. `column` puts the
+    // first-rendered lane (0) at the top; `column-reverse` puts it at the bottom.
+    expect(header!.style.flexDirection).toBe("column")
+    expect(footer!.style.flexDirection).toBe("column-reverse")
+
+    // Both bands render their lanes in ascending DOM order (lane 0 first).
+    const lanes = (band: HTMLElement) =>
+      [...band.querySelectorAll("[data-apollon-lane]")].map((el) =>
+        el.getAttribute("data-apollon-lane")
+      )
+    expect(lanes(header!)).toEqual(["0", "1"])
+    expect(lanes(footer!)).toEqual(["0", "1"])
+
+    // Composed guarantee for the footer: lane 0 renders first in the DOM AND the
+    // stack reverses ⇒ lane 0 is the visually bottom-most row, flush to the edge.
+    expect(
+      footer!
+        .querySelector("[data-apollon-lane]")
+        ?.getAttribute("data-apollon-lane")
+    ).toBe("0")
+  })
+})
+
+// `useKeyboardInset` (inside OverlayLayer) mirrors the visual viewport's bottom
+// overlap (a mobile soft keyboard) into `--apollon-keyboard-inset` on the document
+// root. The var is SHARED by every editor on the page, so it is ref-counted: one
+// editor unmounting must not wipe it out from under the others. Exercised through
+// OverlayLayer since the hook is internal.
+describe("useKeyboardInset (OverlayLayer)", () => {
+  afterEach(cleanup)
+
+  function renderLayer() {
+    const store = createOverlayStore()
+    return render(
+      <ReactFlowProvider>
+        <OverlayStoreContext.Provider value={store}>
+          <OverlayLayer />
+        </OverlayStoreContext.Provider>
+      </ReactFlowProvider>
+    )
+  }
+
+  it("publishes the viewport overlap and removes the var only when the last writer unmounts", () => {
+    const root = document.documentElement
+    const listeners: Record<string, Set<() => void>> = {}
+    const vv = {
+      height: 668,
+      offsetTop: 0,
+      addEventListener: (type: string, cb: () => void) => {
+        ;(listeners[type] ??= new Set()).add(cb)
+      },
+      removeEventListener: (type: string, cb: () => void) => {
+        listeners[type]?.delete(cb)
+      },
+    }
+    const origInner = Object.getOwnPropertyDescriptor(window, "innerHeight")
+    Object.defineProperty(window, "innerHeight", {
+      configurable: true,
+      value: 768,
+    })
+    Object.defineProperty(window, "visualViewport", {
+      configurable: true,
+      value: vv,
+    })
+
+    try {
+      // First editor mounts → overlap = innerHeight − vv.height − offsetTop.
+      const first = renderLayer()
+      expect(root.style.getPropertyValue("--apollon-keyboard-inset")).toBe(
+        "100px"
+      )
+
+      // A soft keyboard opens: the visual viewport shrinks, a resize re-measures.
+      act(() => {
+        vv.height = 468
+        listeners.resize?.forEach((cb) => cb())
+      })
+      expect(root.style.getPropertyValue("--apollon-keyboard-inset")).toBe(
+        "300px"
+      )
+
+      // A second editor mounts (shares the one document-root var).
+      const second = renderLayer()
+      expect(root.style.getPropertyValue("--apollon-keyboard-inset")).toBe(
+        "300px"
+      )
+
+      // Unmounting ONE editor must not clear the shared var while another writes it.
+      first.unmount()
+      expect(root.style.getPropertyValue("--apollon-keyboard-inset")).toBe(
+        "300px"
+      )
+
+      // Only the LAST writer unmounting removes the var.
+      second.unmount()
+      expect(root.style.getPropertyValue("--apollon-keyboard-inset")).toBe("")
+    } finally {
+      if (origInner) Object.defineProperty(window, "innerHeight", origInner)
+      // @ts-expect-error clear the stubbed property (jsdom has none by default)
+      delete window.visualViewport
+    }
+  })
+})
+
+// `<Apollon.SelectionToolbar>` composes a selection-anchored toolbar. Like the
+// compound built-ins it is a thin register/dispose wrapper — mounting registers
+// the reserved `apollon:selection-toolbar` id as a self-positioned `on-canvas`
+// control (NodeToolbar does the positioning), and unmount disposes it. Same
+// fake-editor harness (the descriptor's `render` — a NodeToolbar reading RF store
+// state — is never invoked here, so no ReactFlowProvider is needed).
+describe("<Apollon.SelectionToolbar>", () => {
+  function makeFakeEditor() {
+    const controls = new Map<string, OverlayControlInput>()
+    const editor = {
+      addControl: vi.fn((c: OverlayControlInput) => {
+        controls.set(c.id, c)
+        return () => controls.delete(c.id)
+      }),
+      updateControl: vi.fn(),
+      hasControl: (id: string) => controls.has(id),
+      getControl: (id: string) => controls.get(id),
+    }
+    return editor as typeof editor & ApollonEditor
+  }
+
+  afterEach(cleanup)
+
+  it("registers a self-positioned on-canvas control on mount and disposes on unmount", () => {
+    const editor = makeFakeEditor()
+    const { unmount } = render(
+      <ApollonProvider editor={editor}>
+        <ApollonSelectionToolbar position="top">
+          <button type="button">Delete</button>
+        </ApollonSelectionToolbar>
+      </ApollonProvider>
+    )
+
+    expect(editor.hasControl("apollon:selection-toolbar")).toBe(true)
+    expect(editor.addControl).toHaveBeenCalledTimes(1)
+    const descriptor = editor.addControl.mock.calls[0][0]
+    expect(descriptor.id).toBe("apollon:selection-toolbar")
+    expect(descriptor.region).toBe("on-canvas")
+    expect(descriptor.selfPositioned).toBe(true)
+
+    unmount()
+    expect(editor.hasControl("apollon:selection-toolbar")).toBe(false)
   })
 })

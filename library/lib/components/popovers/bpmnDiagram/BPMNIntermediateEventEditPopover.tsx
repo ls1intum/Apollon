@@ -8,20 +8,6 @@ import { supportsMultilineName } from "@/utils/nodeUtils"
 import { useLabels } from "@/i18n/useLabels"
 import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 
-const INTERMEDIATE_TYPE_OPTIONS = [
-  { value: "default", label: "Default" },
-  { value: "message-catch", label: "Message Catch" },
-  { value: "message-throw", label: "Message Throw" },
-  { value: "timer-catch", label: "Timer Catch" },
-  { value: "escalation-throw", label: "Escalation Throw" },
-  { value: "conditional-catch", label: "Conditional Catch" },
-  { value: "link-catch", label: "Link Catch" },
-  { value: "link-throw", label: "Link Throw" },
-  { value: "compensation-throw", label: "Compensation Throw" },
-  { value: "signal-catch", label: "Signal Catch" },
-  { value: "signal-throw", label: "Signal Throw" },
-]
-
 export const BPMNIntermediateEventEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
@@ -31,6 +17,20 @@ export const BPMNIntermediateEventEditPopover: React.FC<PopoverProps> = ({
   if (!node) return null
 
   const data = node.data as BPMNEventProps
+
+  const INTERMEDIATE_TYPE_OPTIONS = [
+    { value: "default", label: t.bpmnDefault },
+    { value: "message-catch", label: t.bpmnMessageCatch },
+    { value: "message-throw", label: t.bpmnMessageThrow },
+    { value: "timer-catch", label: t.bpmnTimerCatch },
+    { value: "escalation-throw", label: t.bpmnEscalationThrow },
+    { value: "conditional-catch", label: t.bpmnConditionalCatch },
+    { value: "link-catch", label: t.bpmnLinkCatch },
+    { value: "link-throw", label: t.bpmnLinkThrow },
+    { value: "compensation-throw", label: t.bpmnCompensationThrow },
+    { value: "signal-catch", label: t.bpmnSignalCatch },
+    { value: "signal-throw", label: t.bpmnSignalThrow },
+  ]
 
   const handleDataFieldUpdate = (key: string, value: string) => {
     updateNodeData(elementId, { [key]: value })
@@ -48,7 +48,7 @@ export const BPMNIntermediateEventEditPopover: React.FC<PopoverProps> = ({
 
       <PopoverSection title={t.type} divider>
         <Select
-          label="Intermediate Type"
+          label={t.intermediateType}
           value={data.eventType ?? "default"}
           options={INTERMEDIATE_TYPE_OPTIONS}
           onChange={(value) =>

@@ -45,7 +45,7 @@ export const ClassEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
     <PopoverLayout title={t.class}>
       <NodeStyleEditor
         nodeData={nodeData}
-        colorEditorLabel="class"
+        colorEditorLabel={t.classWord}
         handleDataFieldUpdate={handleDataFieldUpdate}
       />
       <PopoverSection title={t.stereotype} divider>

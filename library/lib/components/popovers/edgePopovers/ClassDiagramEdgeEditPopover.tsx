@@ -9,27 +9,27 @@ import { EdgeTypeSelect, EdgeTypeOption } from "./EdgeTypeSelect"
 import { useLabels } from "@/i18n/useLabels"
 import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 
-const CLASS_EDGE_TYPE_OPTIONS: ReadonlyArray<EdgeTypeOption> = [
-  { value: "ClassBidirectional", label: "Bi-Association" },
-  { value: "ClassUnidirectional", label: "Uni-Association" },
-  { value: "ClassAggregation", label: "Aggregation" },
-  { value: "ClassComposition", label: "Composition" },
-  { value: "ClassInheritance", label: "Inheritance" },
-  { value: "ClassDependency", label: "Dependency" },
-  { value: "ClassRealization", label: "Realization" },
-]
-
 export const EdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
   const t = useLabels()
   const { updateEdgeData } = useReactFlow()
+
+  const CLASS_EDGE_TYPE_OPTIONS: ReadonlyArray<EdgeTypeOption> = [
+    { value: "ClassBidirectional", label: t.biAssociation },
+    { value: "ClassUnidirectional", label: t.uniAssociation },
+    { value: "ClassAggregation", label: t.aggregation },
+    { value: "ClassComposition", label: t.composition },
+    { value: "ClassInheritance", label: t.inheritance },
+    { value: "ClassDependency", label: t.dependency },
+    { value: "ClassRealization", label: t.realization },
+  ]
 
   // Subscribe reactively to the edge and its endpoint names so the popover
   // reflects live changes (swap, collaboration). Reading getEdge/getNode
   // imperatively during render is non-reactive and goes stale once the React
   // Compiler memoizes this component.
   const edge = useReactiveEdge(elementId)
-  const sourceName = useReactiveNodeName(edge?.source, "Source")
-  const targetName = useReactiveNodeName(edge?.target, "Target")
+  const sourceName = useReactiveNodeName(edge?.source, t.source)
+  const targetName = useReactiveNodeName(edge?.target, t.target)
 
   const {
     handleSourceRoleChange,
@@ -53,13 +53,13 @@ export const EdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
         handleDataFieldUpdate={(key, value) =>
           updateEdgeData(elementId, { ...edge.data, [key]: value })
         }
-        label="Style"
+        label={t.style}
         sideElements={[
           handleSwap && (
             <IconButton
               key="swap-source-target"
-              ariaLabel="Swap source and target"
-              tooltip="Swap source and target"
+              ariaLabel={t.swapSourceTarget}
+              tooltip={t.swapSourceTarget}
               onClick={handleSwap}
             >
               <ArrowLeftRight width={16} height={16} aria-hidden="true" />
@@ -78,14 +78,14 @@ export const EdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
 
       <PopoverSection title={t.source} divider>
         <TextField
-          label={`${sourceName} Multiplicity`}
+          label={t.multiplicityLabel(sourceName)}
           value={edgeData?.sourceMultiplicity ?? ""}
           onChange={(e) => handleSourceMultiplicityChange(e.target.value)}
           fullWidth
           data-testid="edge-source-multiplicity"
         />
         <TextField
-          label={`${sourceName} Role`}
+          label={t.roleLabel(sourceName)}
           value={edgeData?.sourceRole ?? ""}
           onChange={(e) => handleSourceRoleChange(e.target.value)}
           fullWidth
@@ -95,14 +95,14 @@ export const EdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
 
       <PopoverSection title={t.target} divider>
         <TextField
-          label={`${targetName} Multiplicity`}
+          label={t.multiplicityLabel(targetName)}
           value={edgeData?.targetMultiplicity ?? ""}
           onChange={(e) => handleTargetMultiplicityChange(e.target.value)}
           fullWidth
           data-testid="edge-target-multiplicity"
         />
         <TextField
-          label={`${targetName} Role`}
+          label={t.roleLabel(targetName)}
           value={edgeData?.targetRole ?? ""}
           onChange={(e) => handleTargetRoleChange(e.target.value)}
           fullWidth

@@ -97,8 +97,8 @@ const SortableMethodRow: React.FC<SortableMethodRowProps> = ({
         sideElements={[
           <IconButton
             key={`delete_${item.id}`}
-            ariaLabel="Delete method"
-            tooltip="Delete method"
+            ariaLabel={t.deleteMethod}
+            tooltip={t.deleteMethod}
             onClick={() => onDelete(item.id)}
           >
             <Trash2 width={16} height={16} aria-hidden="true" />
@@ -196,7 +196,7 @@ export const EditableMethodsList: React.FC<Props> = ({ nodeId }) => {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
       <Typography variant="subtitle2" style={{ fontWeight: 600 }}>
-        Methods
+        {t.methods}
       </Typography>
 
       <DndContext
@@ -236,8 +236,8 @@ export const EditableMethodsList: React.FC<Props> = ({ nodeId }) => {
           onKeyDown={handleKeyDown}
         />
         <IconButton
-          ariaLabel="Add method"
-          tooltip="Add method"
+          ariaLabel={t.addMethod}
+          tooltip={t.addMethod}
           onClick={handleAddItem}
         >
           <Plus width={16} height={16} aria-hidden="true" />

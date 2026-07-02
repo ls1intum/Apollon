@@ -170,10 +170,9 @@ function CollaboratorPresenceBar({
   const remoteCount = collaborators.filter((c) => !c.isLocal).length
   const shouldShow = active && remoteCount > 0
 
-  // Dogfood: presence is registered as a top-right overlay control (not a
-  // hand-positioned absolute div), so the engine places it — clearing header /
-  // right-rail bands via the inset-aware corner slot — and deconflicts it with any
-  // host chrome in the same corner instead of silently overlapping it.
+  // Registered as a top-right overlay control (not a hand-positioned absolute
+  // div), so the engine places it — clearing header / right-rail bands via the
+  // inset-aware corner slot — and deconflicts it with host chrome in that corner.
   useEffect(() => {
     if (!host || !shouldShow) return
     register({

@@ -36,6 +36,7 @@ import {
 import { createOverlayStore, type OverlayStore } from "./overlay/overlayStore"
 import { defaultControls } from "./chrome/builtins/controls"
 import { mergeLabels } from "./i18n/labels"
+import { insetAwareFitView } from "./overlay/fitView"
 import { RegionMount } from "./overlay/RegionMount"
 import {
   type OverlayControlInput,
@@ -323,7 +324,6 @@ export class ApollonEditor {
     const duration = options?.duration ?? 200
     const respectInsets = options?.respectInsets ?? true
     const explicit = options?.padding
-    const explicitObject = typeof explicit === "object" && explicit !== null
     const maxAttempts = 10
     let attempts = 0
 
@@ -348,34 +348,7 @@ export class ApollonEditor {
         const insets = respectInsets
           ? this.overlayStore.getState().insets
           : ZERO_INSETS
-        const hasInsets =
-          insets.top || insets.right || insets.bottom || insets.left
-        // No reserved chrome and a scalar/absent padding -> fraction-based fit,
-        // byte-identical to an embedder that registers no overlays.
-        if (!hasInsets && !explicitObject) {
-          rf.fitView({
-            padding: typeof explicit === "number" ? explicit : 0.15,
-            duration,
-            maxZoom: 1.0,
-          })
-          return
-        }
-        // Reserve room MapLibre-style: per-side px = inset + a base gutter
-        // (or the host's explicit per-side override).
-        const obj = explicitObject
-          ? (explicit as Partial<Record<OverlaySide, number>>)
-          : {}
-        const GUTTER = 16
-        rf.fitView({
-          padding: {
-            top: `${insets.top + (obj.top ?? GUTTER)}px`,
-            right: `${insets.right + (obj.right ?? GUTTER)}px`,
-            bottom: `${insets.bottom + (obj.bottom ?? GUTTER)}px`,
-            left: `${insets.left + (obj.left ?? GUTTER)}px`,
-          },
-          duration,
-          maxZoom: 1.0,
-        })
+        insetAwareFitView(rf, insets, { padding: explicit, duration })
       }
     }
     requestAnimationFrame(attempt)

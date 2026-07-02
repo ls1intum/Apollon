@@ -40,6 +40,22 @@ export const OVERLAY_REGIONS: readonly OverlayRegion[] = [
 
 /** One of the four edges a control can sit against / reserve room on. */
 export type OverlaySide = "top" | "right" | "bottom" | "left"
+
+/** The edge each region reserves room on / measures against. Single source for
+ *  both the inset math (overlayStore) and the measurement pipeline (OverlayLayer);
+ *  `on-canvas` has none. */
+export const REGION_EDGE: Partial<Record<OverlayRegion, OverlaySide>> = {
+  header: "top",
+  footer: "bottom",
+  "top-left": "top",
+  "top-center": "top",
+  "top-right": "top",
+  "bottom-left": "bottom",
+  "bottom-center": "bottom",
+  "bottom-right": "bottom",
+  "left-rail": "left",
+  "right-rail": "right",
+}
 /** Reserved room per side, in px. */
 export type Insets = Record<OverlaySide, number>
 export const ZERO_INSETS: Insets = { top: 0, right: 0, bottom: 0, left: 0 }

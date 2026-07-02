@@ -224,7 +224,12 @@ export const Default: Story = {
   ),
 }
 
-/** Pass an (empty) composition — some children, none of them chrome — for a bare canvas. */
+/**
+ * Bare canvas. Providing ANY children (even the non-rendering `{false}` here) means
+ * "I'm composing the chrome myself", so the editor stops injecting its palette /
+ * zoom / minimap defaults. None of these children are chrome → nothing renders.
+ * (Contrast `Default`, which passes no children at all and gets the full defaults.)
+ */
 export const BareCanvas: Story = {
   render: () => (
     <Apollon

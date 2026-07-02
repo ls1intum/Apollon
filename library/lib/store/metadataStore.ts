@@ -174,7 +174,22 @@ export const createMetadataStore = (
         },
 
         setLabels: (labels) => {
-          set({ labels }, undefined, "setLabels")
+          // Skip the write when the merged labels are value-equal to the current
+          // set. Hosts routinely pass an inline `labels={{…}}` literal (new object
+          // every render); without this guard every parent render would rewrite
+          // the store and re-render every `useLabels` subscriber (all chrome).
+          set(
+            (s) => {
+              const next = labels as unknown as Record<string, unknown>
+              const cur = s.labels as unknown as Record<string, unknown>
+              for (const key in next) {
+                if (next[key] !== cur[key]) return { labels }
+              }
+              return s
+            },
+            undefined,
+            "setLabels"
+          )
         },
 
         setScrollEnabled: (scrollEnabled: boolean) => {

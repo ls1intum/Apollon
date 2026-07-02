@@ -156,8 +156,8 @@ export const SfcActionTableEditPopover: React.FC<PopoverProps> = ({
               sideElements={[
                 <IconButton
                   key={`${row.id}-delete`}
-                  ariaLabel="Delete action row"
-                  tooltip="Delete action row"
+                  ariaLabel={t.deleteActionRow}
+                  tooltip={t.deleteActionRow}
                   onClick={() => handleRowDelete(row.id)}
                 >
                   <Trash2 width={16} height={16} aria-hidden="true" />
@@ -227,8 +227,8 @@ export const SfcActionTableEditPopover: React.FC<PopoverProps> = ({
             data-new="true"
           />
           <IconButton
-            ariaLabel="Add action row"
-            tooltip="Add action row"
+            ariaLabel={t.addActionRow}
+            tooltip={t.addActionRow}
             onClick={handleAddRow}
           >
             <Plus width={16} height={16} aria-hidden="true" />

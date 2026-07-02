@@ -8,14 +8,6 @@ import { supportsMultilineName } from "@/utils/nodeUtils"
 import { useLabels } from "@/i18n/useLabels"
 import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 
-const START_TYPE_OPTIONS = [
-  { value: "default", label: "Default" },
-  { value: "message", label: "Message" },
-  { value: "timer", label: "Timer" },
-  { value: "conditional", label: "Conditional" },
-  { value: "signal", label: "Signal" },
-]
-
 export const BPMNStartEventEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
@@ -25,6 +17,14 @@ export const BPMNStartEventEditPopover: React.FC<PopoverProps> = ({
   if (!node) return null
 
   const data = node.data as BPMNEventProps
+
+  const START_TYPE_OPTIONS = [
+    { value: "default", label: t.bpmnDefault },
+    { value: "message", label: t.message },
+    { value: "timer", label: t.bpmnTimer },
+    { value: "conditional", label: t.bpmnConditional },
+    { value: "signal", label: t.bpmnSignal },
+  ]
 
   const handleDataFieldUpdate = (key: string, value: string) => {
     updateNodeData(elementId, { [key]: value })
@@ -42,7 +42,7 @@ export const BPMNStartEventEditPopover: React.FC<PopoverProps> = ({
 
       <PopoverSection title={t.type} divider>
         <Select
-          label="Start Type"
+          label={t.startType}
           value={data.eventType ?? "default"}
           options={START_TYPE_OPTIONS}
           onChange={(value) =>

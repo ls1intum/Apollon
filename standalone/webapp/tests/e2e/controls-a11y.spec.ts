@@ -60,10 +60,20 @@ test.describe("built-in controls accessibility", () => {
     expect(await activeLabel(page)).toBe("Zoom is 100%, reset to 100%")
     await expect(toolbar.locator("button[tabindex='0']")).toHaveCount(1)
 
-    // End jumps to the last control, Home back to the first.
+    // End jumps to the last ENABLED control (roving skips disabled buttons). With
+    // a freshly-loaded diagram the history island is either absent (no undo
+    // manager) or its undo/redo start disabled, so the last reachable control is
+    // the fit-view button; if an enabled redo is present it is "Redo". Assert the
+    // concrete last DOM control — not merely "not the first".
+    const expectedLast = await toolbar
+      .locator("button:enabled")
+      .last()
+      .getAttribute("aria-label")
+    expect(["Fit view", "Redo"]).toContain(expectedLast)
     await page.keyboard.press("End")
-    const last = await activeLabel(page)
-    expect(last).not.toBe("Zoom out")
+    expect(await activeLabel(page)).toBe(expectedLast)
+
+    // Home back to the first.
     await page.keyboard.press("Home")
     expect(await activeLabel(page)).toBe("Zoom out")
 

@@ -45,7 +45,7 @@ export const ObjectEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
     <PopoverLayout title={t.object}>
       <NodeStyleEditor
         nodeData={nodeData}
-        colorEditorLabel="object"
+        colorEditorLabel={t.objectWord}
         handleDataFieldUpdate={handleDataFieldUpdate}
       />
       <PopoverSection divider>

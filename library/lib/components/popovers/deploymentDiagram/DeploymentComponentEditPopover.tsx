@@ -47,7 +47,7 @@ export const DeploymentComponentEditPopover: React.FC<PopoverProps> = ({
         <HeaderSwitchElement
           onClick={switchHeaderShown}
           isComponentHeaderShown={nodeData.isComponentHeaderShown}
-          stereotypeLabel="component"
+          stereotypeLabel={t.componentWord}
         />
       </PopoverSection>
     </DefaultNodeEditPopover>

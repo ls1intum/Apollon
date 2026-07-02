@@ -63,6 +63,11 @@ function overlaps(a: Box, b: Box): boolean {
   )
 }
 
+// Fire-and-forget imperative mutations. They do NOT wait: the overlay re-measure
+// + re-fit is asynchronous (ResizeObserver → rAF → fitView), so each CALL SITE
+// asserts the resulting geometry/state with a web-first, auto-retrying matcher
+// (`expect.poll`, `toBeVisible`, `toHaveCount`) — the wait is on a CONDITION, not
+// a fixed 250ms clock guess that flakes on a slow re-fit and idles on a fast one.
 async function updateControl(
   page: Page,
   id: string,
@@ -75,8 +80,6 @@ async function updateControl(
     },
     [id, patch] as const
   )
-  // Let the overlay re-measure + the diagram re-fit against the new insets.
-  await page.waitForTimeout(250)
 }
 
 async function removeControl(page: Page, id: string) {
@@ -84,7 +87,14 @@ async function removeControl(page: Page, id: string) {
     const ed = (window as unknown as { apollonEditor?: any }).apollonEditor
     ed?.removeControl(id)
   }, id)
-  await page.waitForTimeout(250)
+}
+
+/** The zoom cluster's live bounding box, polled — resolves once it exists. */
+async function zoomBox(page: Page): Promise<Box> {
+  return box(zoomEl(page))
+}
+async function paletteBox(page: Page): Promise<Box> {
+  return box(paletteEl(page))
 }
 
 const CORNERS = [
@@ -134,15 +144,26 @@ test.describe("controls layout engine", () => {
       "top-right",
     ] as const) {
       await updateControl(page, ZOOM_ID, { region })
-      const moved = await box(paletteEl(page))
-      expect(Math.abs(moved.width - baseline.width)).toBeLessThanOrEqual(1)
+      // Web-first: settle on the zoom having relocated (its box is the effect of
+      // the mutation), then assert the palette dimensions are unchanged.
+      await expect
+        .poll(async () =>
+          Math.abs((await paletteBox(page)).width - baseline.width)
+        )
+        .toBeLessThanOrEqual(1)
+      const moved = await paletteBox(page)
       expect(Math.abs(moved.height - baseline.height)).toBeLessThanOrEqual(1)
     }
 
     // Removing the zoom cluster entirely also leaves the palette untouched.
     await removeControl(page, ZOOM_ID)
-    const withoutZoom = await box(paletteEl(page))
-    expect(Math.abs(withoutZoom.width - baseline.width)).toBeLessThanOrEqual(1)
+    await expect(zoomEl(page)).toHaveCount(0)
+    await expect
+      .poll(async () =>
+        Math.abs((await paletteBox(page)).width - baseline.width)
+      )
+      .toBeLessThanOrEqual(1)
+    const withoutZoom = await paletteBox(page)
     expect(Math.abs(withoutZoom.height - baseline.height)).toBeLessThanOrEqual(
       1
     )
@@ -153,13 +174,21 @@ test.describe("controls layout engine", () => {
   }) => {
     for (const region of ["bottom-left", "bottom-center"] as const) {
       await updateControl(page, ZOOM_ID, { region })
-      const palette = await box(paletteEl(page))
-      const zoom = await box(zoomEl(page))
-      expect(overlaps(palette, zoom)).toBe(false)
-      // A bottom-left cluster is offset past the left-rail band, so it sits to
-      // the RIGHT of the palette rather than under it.
+      // Web-first: poll until the (re-fit) layout has the cluster clear of the
+      // palette, rather than reading a single possibly-mid-animation frame.
+      await expect
+        .poll(async () => overlaps(await paletteBox(page), await zoomBox(page)))
+        .toBe(false)
+      // Extent-aware clearance: the palette is top-anchored and short, so it ends
+      // ABOVE the bottom-left corner. The zoom cluster therefore sits FLUSH at the
+      // left edge — it must NOT be shoved right past the palette's width (the
+      // wasted-space bug). It clears the palette because the palette isn't there,
+      // not by reserving its full column.
       if (region === "bottom-left") {
-        expect(zoom.x).toBeGreaterThanOrEqual(palette.x + palette.width - 1)
+        const palette = await paletteBox(page)
+        await expect
+          .poll(async () => (await zoomBox(page)).x)
+          .toBeLessThan(palette.x + palette.width / 2)
       }
     }
   })
@@ -172,14 +201,40 @@ test.describe("controls layout engine", () => {
     const midY = viewport.height / 2
 
     await updateControl(page, ZOOM_ID, { region: "top-right" })
-    let zoom = await box(zoomEl(page))
-    expect(zoom.x).toBeGreaterThan(midX)
-    expect(zoom.y).toBeLessThan(midY)
+    await expect.poll(async () => (await zoomBox(page)).x).toBeGreaterThan(midX)
+    expect((await zoomBox(page)).y).toBeLessThan(midY)
 
     await updateControl(page, ZOOM_ID, { region: "bottom-right" })
-    zoom = await box(zoomEl(page))
-    expect(zoom.x).toBeGreaterThan(midX)
-    expect(zoom.y + zoom.height).toBeGreaterThan(midY)
+    await expect
+      .poll(async () => {
+        const zoom = await zoomBox(page)
+        return zoom.y + zoom.height
+      })
+      .toBeGreaterThan(midY)
+    expect((await zoomBox(page)).x).toBeGreaterThan(midX)
+  })
+
+  test("the bottom-left zoom cluster sits flush, not shoved right by a short palette (dead-space regression)", async ({
+    page,
+  }) => {
+    // The palette is a top-anchored left-rail. On a tall viewport it ends far
+    // above the bottom-left corner, so reserving its full width down the whole
+    // left edge (the old per-edge scalar model) left the zoom cluster stranded in
+    // an empty column. The cluster must now sit flush at the edge margin.
+    await page.setViewportSize({ width: 1280, height: 1000 })
+    await expect(paletteEl(page)).toBeVisible()
+    await expect(zoomEl(page)).toBeVisible()
+
+    const palette = await box(paletteEl(page))
+    const zoom = await box(zoomEl(page))
+
+    // The palette really does end above the cluster (precondition for "flush").
+    expect(palette.y + palette.height).toBeLessThan(zoom.y)
+    // Flush: the cluster's left edge is at the edge margin, near the palette's own
+    // left — NOT pushed out past the palette's width.
+    expect(zoom.x).toBeLessThan(palette.x + palette.width / 2)
+    // And of course they don't overlap.
+    expect(overlaps(palette, zoom)).toBe(false)
   })
 
   test("hiding the palette removes it from the DOM; the other chrome stays", async ({
@@ -218,9 +273,11 @@ test.describe("controls layout engine", () => {
 
     await updateControl(page, ZOOM_ID, { visible: true })
     await expect(zoomEl(page)).toBeVisible()
-    const after = await box(zoomEl(page))
-    expect(Math.abs(after.x - before.x)).toBeLessThanOrEqual(2)
-    expect(Math.abs(after.y - before.y)).toBeLessThanOrEqual(2)
+    // Web-first: poll the restored position back to its pre-hide spot.
+    await expect
+      .poll(async () => Math.abs((await zoomBox(page)).x - before.x))
+      .toBeLessThanOrEqual(2)
+    expect(Math.abs((await zoomBox(page)).y - before.y)).toBeLessThanOrEqual(2)
   })
 
   test("the zoom cluster stays a labelled single-tab-stop toolbar after relocation", async ({
@@ -254,13 +311,15 @@ test.describe("controls layout engine", () => {
     // height as the bottom inset (unlike a floating slot).
     await updateControl(page, ZOOM_ID, { region: "footer", inset: "auto" })
 
-    const zoom = await box(zoomEl(page))
+    // Web-first: the band reservation applying is the settled-state signal.
+    await expect.poll(insetBottom).toBeGreaterThan(0)
+
+    const zoom = await zoomBox(page)
     expect(zoom.y + zoom.height).toBeGreaterThan(viewport.height - 60)
-    expect(await insetBottom()).toBeGreaterThan(0)
 
     // The palette (a left-rail band) is stretched between the reserved insets, so
     // it never overlaps the footer control.
-    expect(overlaps(await box(paletteEl(page)), zoom)).toBe(false)
+    expect(overlaps(await paletteBox(page), zoom)).toBe(false)
   })
 
   test("labels override re-labels the chrome reactively (i18n)", async ({
@@ -293,17 +352,73 @@ test.describe("controls layout engine", () => {
     await expect(page.getByRole("button", { name: "Zoom in" })).toHaveCount(0)
   })
 
-  test("every corner placement keeps the zoom cluster fully on-screen", async ({
+  test("every corner placement lands the zoom cluster in that corner's half AND fully on-screen", async ({
     page,
   }) => {
     const viewport = page.viewportSize()!
+    const midX = viewport.width / 2
+    const midY = viewport.height / 2
+
     for (const region of CORNERS) {
       await updateControl(page, ZOOM_ID, { region })
-      const zoom = await box(zoomEl(page))
+
+      // Web-first: settle on the cluster having reached the correct VERTICAL half
+      // (the unambiguous axis for all six placements — the center regions share
+      // the horizontal band), which also proves the mutation was applied.
+      const wantsTop = region.startsWith("top")
+      await expect
+        .poll(async () => {
+          const z = await zoomBox(page)
+          return wantsTop ? z.y < midY : z.y + z.height > midY
+        })
+        .toBe(true)
+
+      const zoom = await zoomBox(page)
+      // Concrete horizontal quadrant for the left/right placements (skip center).
+      if (region.endsWith("left")) {
+        expect(zoom.x).toBeLessThan(midX)
+      } else if (region.endsWith("right")) {
+        expect(zoom.x + zoom.width).toBeGreaterThan(midX)
+      }
+
+      // …and still fully within the viewport (never clipped off-screen).
       expect(zoom.x).toBeGreaterThanOrEqual(-1)
       expect(zoom.y).toBeGreaterThanOrEqual(-1)
       expect(zoom.x + zoom.width).toBeLessThanOrEqual(viewport.width + 1)
       expect(zoom.y + zoom.height).toBeLessThanOrEqual(viewport.height + 1)
     }
+  })
+
+  test("an open edit popover re-labels reactively when setLabels is called (i18n)", async ({
+    page,
+  }) => {
+    // Open the class node's edit popover: select it, then click the pencil icon
+    // on its node toolbar (icon [1] = edit, [0] = delete — see the toolbar spec).
+    const node = page.locator(".react-flow__node").filter({ hasText: "Alpha" })
+    await node.click()
+    await page.locator(".react-flow__node-toolbar svg").nth(1).click()
+
+    const popover = page.locator(".apollon-popover")
+    await expect(popover).toBeVisible()
+
+    // The class popover renders a "Stereotype" section title wired to `useLabels`
+    // (t.stereotype) — a stable, popover-owned string, not chrome.
+    await expect(popover.getByText("Stereotype", { exact: true })).toBeVisible()
+
+    // A host swaps the label at runtime while the popover is OPEN — it must update
+    // live (the popover subscribes to the labels store), no remount.
+    await page.evaluate(() => {
+      const ed = (window as unknown as { apollonEditor?: any }).apollonEditor
+      ed?.setLabels({ stereotype: "Stereotyp-DE" })
+    })
+
+    await expect(
+      popover.getByText("Stereotyp-DE", { exact: true })
+    ).toBeVisible()
+    // The old English section title is gone (exact match — not a substring of the
+    // new value).
+    await expect(popover.getByText("Stereotype", { exact: true })).toHaveCount(
+      0
+    )
   })
 })

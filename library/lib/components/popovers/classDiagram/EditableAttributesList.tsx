@@ -98,8 +98,8 @@ const SortableAttributeRow: React.FC<SortableAttributeRowProps> = ({
         sideElements={[
           <IconButton
             key={`delete_${item.id}`}
-            ariaLabel="Delete attribute"
-            tooltip="Delete attribute"
+            ariaLabel={t.deleteAttribute}
+            tooltip={t.deleteAttribute}
             onClick={() => onDelete(item.id)}
           >
             <Trash2 width={16} height={16} aria-hidden="true" />
@@ -200,7 +200,7 @@ export const EditableAttributeList: React.FC<Props> = ({ nodeId }) => {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
       <Typography variant="subtitle2" style={{ fontWeight: 600 }}>
-        Attributes
+        {t.attributes}
       </Typography>
 
       <DndContext
@@ -241,8 +241,8 @@ export const EditableAttributeList: React.FC<Props> = ({ nodeId }) => {
           onKeyDown={handleKeyDown}
         />
         <IconButton
-          ariaLabel="Add attribute"
-          tooltip="Add attribute"
+          ariaLabel={t.addAttribute}
+          tooltip={t.addAttribute}
           onClick={handleAddItem}
         >
           <Plus width={16} height={16} aria-hidden="true" />

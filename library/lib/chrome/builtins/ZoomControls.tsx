@@ -13,14 +13,11 @@ export interface ZoomControlsProps {
 }
 
 /**
- * The bottom-left zoom / history cluster: two glass islands in one roving toolbar.
- * View reads [zoom-out][%-reset][zoom-in][fit] (Excalidraw muscle memory); history
- * ([undo][redo]) is a SEPARATE island a gap away, not crammed behind a hairline.
- * Rendered as a slotted overlay control so it shares the one inset-aware layout;
- * the fit button reserves the current insets so content frames clear of the chrome.
- *
- * `history: false` drops the history island. One `role="toolbar"` spans both
- * islands (≥3 controls, APG-valid) so a single Tab stop + arrows rove every button.
+ * The zoom / history cluster: a [zoom-out][%-reset][zoom-in][fit] island and a
+ * separate [undo][redo] history island. The fit button reserves the current insets
+ * so content frames clear of the chrome. `history: false` drops the history island.
+ * One `role="toolbar"` spans both islands so a single Tab stop + arrows rove every
+ * button (roving-tabindex, APG-valid at ≥3 controls).
  */
 export function ZoomControls({ history = true }: ZoomControlsProps) {
   const rf = useReactFlow()

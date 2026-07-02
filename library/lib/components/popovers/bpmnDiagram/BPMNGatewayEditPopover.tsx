@@ -8,14 +8,6 @@ import { supportsMultilineName } from "@/utils/nodeUtils"
 import { useLabels } from "@/i18n/useLabels"
 import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 
-const GATEWAY_TYPE_OPTIONS = [
-  { value: "exclusive", label: "Exclusive" },
-  { value: "parallel", label: "Parallel" },
-  { value: "inclusive", label: "Inclusive" },
-  { value: "event-based", label: "Event-based" },
-  { value: "complex", label: "Complex" },
-]
-
 export const BPMNGatewayEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
@@ -25,6 +17,14 @@ export const BPMNGatewayEditPopover: React.FC<PopoverProps> = ({
   if (!node) return null
 
   const data = node.data as BPMNGatewayProps
+
+  const GATEWAY_TYPE_OPTIONS = [
+    { value: "exclusive", label: t.bpmnExclusive },
+    { value: "parallel", label: t.bpmnParallel },
+    { value: "inclusive", label: t.bpmnInclusive },
+    { value: "event-based", label: t.bpmnEventBased },
+    { value: "complex", label: t.bpmnComplex },
+  ]
 
   const handleDataFieldUpdate = (key: string, value: string) => {
     updateNodeData(elementId, { [key]: value })
@@ -42,7 +42,7 @@ export const BPMNGatewayEditPopover: React.FC<PopoverProps> = ({
 
       <PopoverSection title={t.gatewayType} divider>
         <Select
-          label="Gateway Type"
+          label={t.gatewayType}
           value={data.gatewayType ?? "exclusive"}
           options={GATEWAY_TYPE_OPTIONS}
           onChange={(value) =>

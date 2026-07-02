@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode } from "react"
 import { createPortal } from "react-dom"
 import { NodeToolbar, Position, useStore } from "@xyflow/react"
 import { useApollonEditor } from "./context"
-import { RegionMount } from "../../overlay/RegionMount"
+import { RegionMount } from "@/overlay/RegionMount"
 
 const POSITION: Record<string, Position> = {
   top: Position.Top,
@@ -35,14 +35,16 @@ function SelectionToolbarMount({
   position: Position
   offset: number
 }) {
-  // Selected node ids as a stable string so the selector doesn't churn identity.
+  // Selected node ids joined into a stable string so the selector doesn't churn
+  // identity (returning a fresh array every store tick would). Newline-separated
+  // because it can't appear in a node id, so the round-trip can't fracture.
   const selected = useStore((s) => {
     const ids: string[] = []
     for (const node of s.nodeLookup.values())
       if (node.selected) ids.push(node.id)
-    return ids.join(",")
+    return ids.join("\n")
   })
-  const ids = selected ? selected.split(",") : []
+  const ids = selected ? selected.split("\n") : []
   return (
     <NodeToolbar
       nodeId={ids}

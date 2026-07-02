@@ -169,9 +169,7 @@ export function Apollon(props: ApollonProps) {
     const userCleanup = onMountRef.current?.(instance)
 
     return () => {
-      // Order: user cleanup → destroy → null ref. A destroyed instance
-      // briefly visible through the ref is more honest than a still-running
-      // editor that a sibling layout effect could touch.
+      // Order: user cleanup → destroy → null ref.
       if (typeof userCleanup === "function") userCleanup()
       instance.destroy()
 

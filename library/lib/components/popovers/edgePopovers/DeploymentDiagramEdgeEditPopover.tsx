@@ -14,22 +14,22 @@ import {
   PopoverSection,
 } from "../PopoverLayout"
 
-const DEPLOYMENT_EDGE_TYPE_OPTIONS: ReadonlyArray<EdgeTypeOption> = [
-  { value: "DeploymentAssociation", label: "Deployment Association" },
-  { value: "DeploymentDependency", label: "Deployment Dependency" },
-  { value: "DeploymentProvidedInterface", label: "Provided Interface" },
-  { value: "DeploymentRequiredInterface", label: "Required Interface" },
-]
-
 export const DeploymentEdgeEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
   const t = useLabels()
   const { updateEdgeData } = useReactFlow()
 
+  const DEPLOYMENT_EDGE_TYPE_OPTIONS: ReadonlyArray<EdgeTypeOption> = [
+    { value: "DeploymentAssociation", label: t.deploymentAssociation },
+    { value: "DeploymentDependency", label: t.deploymentDependency },
+    { value: "DeploymentProvidedInterface", label: t.providedInterface },
+    { value: "DeploymentRequiredInterface", label: t.requiredInterface },
+  ]
+
   const edge = useReactiveEdge(elementId)
-  const sourceName = useReactiveNodeName(edge?.source, "Source")
-  const targetName = useReactiveNodeName(edge?.target, "Target")
+  const sourceName = useReactiveNodeName(edge?.source, t.source)
+  const targetName = useReactiveNodeName(edge?.target, t.target)
   const { handleEdgeTypeChange, handleLabelChange, handleSwap } =
     useEdgePopOver(elementId)
 
@@ -46,13 +46,13 @@ export const DeploymentEdgeEditPopover: React.FC<PopoverProps> = ({
         handleDataFieldUpdate={(key, value) =>
           updateEdgeData(elementId, { ...edge.data, [key]: value })
         }
-        label="Style"
+        label={t.style}
         sideElements={[
           handleSwap && (
             <IconButton
               key="swap-source-target"
-              ariaLabel="Swap source and target"
-              tooltip="Swap source and target"
+              ariaLabel={t.swapSourceTarget}
+              tooltip={t.swapSourceTarget}
               onClick={handleSwap}
             >
               <ArrowLeftRight width={16} height={16} aria-hidden="true" />

@@ -112,6 +112,9 @@ editor.removeControl("my-app:banner")
 
 // Has this id been registered?
 editor.hasControl("my-app:banner") // boolean
+
+// Read a registered control's current options + renderer (undefined if absent).
+editor.getControl("my-app:banner")?.region
 ```
 
 ## Built-in controls
@@ -319,8 +322,9 @@ control never drags the diagram.
 - **Bands reserve by default; slots don't.** A control in `header` / `footer` /
   `left-rail` / `right-rail` reserves its measured cross-size with no `inset` set;
   a corner slot floats and reserves nothing. Only pass `inset` to opt a **slot**
-  into reserving room (or to set explicit pixels). Passing `inset: "auto"` on a
-  band is a redundant no-op.
+  into reserving room. On a band, `inset: "auto"` is redundant (it already
+  measures); an explicit `inset` just sets that control's own lane contribution
+  instead of measuring it — it still stacks with the other lanes.
 - **Stack multiple bars on one edge two ways.** Compose them in one control (a flex
   column inside a single `<ApollonControl>`) when one owner lays out the whole
   edge; or give independently-registered controls different **`lane`** numbers when
@@ -370,6 +374,11 @@ Both merge over the English defaults per key (omitted keys stay English) and are
 the active set inside custom chrome with `useLabels()`. The few strings that
 interpolate a value (e.g. the zoom readout) are functions so a translation keeps
 control of word order.
+
+The library ships English only and bundles no locale files: the host owns the
+translation table and any locale plumbing (which language to load, RTL direction,
+number/date formatting). `labels` is the single seam — Apollon does not read the
+browser locale or format numbers on the host's behalf.
 
 ## Accessibility & theming
 

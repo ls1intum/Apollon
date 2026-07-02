@@ -2,6 +2,7 @@ import React from "react"
 import { TextField, Typography } from "@/components/ui"
 import { ColorField, StyleEditorPanel } from "./StyleEditorPanel"
 import { DefaultNodeProps } from "@/types"
+import { useLabels } from "@/i18n/useLabels"
 
 interface NodeStyleEditorProps {
   nodeData: DefaultNodeProps
@@ -27,27 +28,28 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
   handleDataFieldUpdate,
   sideElements = [],
   colorEditorLabel,
-  inputPlaceholder = "Name",
+  inputPlaceholder,
   noStrokeUpdate = false,
   showNameInputChange = true,
   isMultilineName = false,
   preElements = [],
 }) => {
+  const t = useLabels()
   // Three small literals; re-computed on every render is cheaper than memoizing.
   const colorFields: ColorField<keyof DefaultNodeProps>[] = noStrokeUpdate
     ? [
-        { key: "fillColor", label: "Fill Color" },
-        { key: "textColor", label: "Text Color" },
+        { key: "fillColor", label: t.fillColor },
+        { key: "textColor", label: t.textColor },
       ]
     : [
-        { key: "fillColor", label: "Fill Color" },
-        { key: "strokeColor", label: "Line Color" },
-        { key: "textColor", label: "Text Color" },
+        { key: "fillColor", label: t.fillColor },
+        { key: "strokeColor", label: t.lineColor },
+        { key: "textColor", label: t.textColor },
       ]
 
   const colorEditorActionLabel = colorEditorLabel
-    ? `Edit ${colorEditorLabel} colors`
-    : "Edit colors"
+    ? t.editColorsFor(colorEditorLabel)
+    : t.editColors
 
   return (
     <StyleEditorPanel
@@ -71,7 +73,7 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
           }
           style={{ flex: 1, minWidth: 90 }}
           value={nodeData.name ?? ""}
-          placeholder={inputPlaceholder}
+          placeholder={inputPlaceholder ?? t.namePlaceholder}
           // Only enable multiline — which lets Enter insert a hard line
           // break — for node types whose SVG actually wraps the label.
           // Single-line nodes keep their classic single-line <input>.
@@ -83,7 +85,7 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
         // fork) match the edge popovers' "Style" heading instead of a blank
         // header row.
         <Typography variant="subtitle2" style={{ fontWeight: 600 }}>
-          Style
+          {t.style}
         </Typography>
       )}
     </StyleEditorPanel>

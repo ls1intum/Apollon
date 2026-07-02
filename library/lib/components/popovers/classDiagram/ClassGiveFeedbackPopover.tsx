@@ -5,11 +5,13 @@ import { PopoverProps } from "../types"
 import { GiveFeedbackAssessmentBox } from "../GiveFeedbackAssessmentBox"
 import { Button } from "@tumaet/ui/components/button"
 import { useGoToNextAssessment } from "@/hooks"
+import { useLabels } from "@/i18n/useLabels"
 import { nodeTypeLabel } from "@/utils/nodeUtils"
 import { PopoverLayout } from "../PopoverLayout"
 
 export const ClassGiveFeedbackPopover = ({ elementId }: PopoverProps) => {
   const nodes = useDiagramStore(useShallow((state) => state.nodes))
+  const t = useLabels()
   const handleGoToNextAssessment = useGoToNextAssessment(elementId)
 
   const node = nodes.find((node) => node.id === elementId)
@@ -44,7 +46,7 @@ export const ClassGiveFeedbackPopover = ({ elementId }: PopoverProps) => {
         />
       ))}
       <Button variant="outline" onClick={handleGoToNextAssessment}>
-        Next Assessment
+        {t.nextAssessment}
       </Button>
     </PopoverLayout>
   )

@@ -93,7 +93,7 @@ const SortableLaneRow: React.FC<LaneRowProps> = ({
         }
       />
       <IconButton
-        ariaLabel="Delete lane"
+        ariaLabel={t.deleteLane}
         disabled={!canDelete}
         onClick={() => onDelete(lane.id)}
         style={{ flexShrink: 0 }}
@@ -275,8 +275,8 @@ export const ActivitySwimlaneEditPopover: React.FC<PopoverProps> = ({
             handleOrientationChange(value as "vertical" | "horizontal")
           }
           options={[
-            { value: "vertical", label: "Vertical (columns)" },
-            { value: "horizontal", label: "Horizontal (rows)" },
+            { value: "vertical", label: t.orientationVertical },
+            { value: "horizontal", label: t.orientationHorizontal },
           ]}
         />
       </PopoverSection>
@@ -315,7 +315,7 @@ export const ActivitySwimlaneEditPopover: React.FC<PopoverProps> = ({
 
         <Button variant="outline" onClick={handleAddLane}>
           <Plus />
-          Add lane
+          {t.addLane}
         </Button>
       </PopoverSection>
     </PopoverLayout>

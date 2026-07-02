@@ -12,9 +12,9 @@ import {
 import { useOverlayStore } from "../store/context"
 import {
   PANEL_REGIONS,
+  REGION_EDGE,
   type OverlayControl,
   type OverlayRegion,
-  type OverlaySide,
 } from "./types"
 
 /** Library-owned bands rendered as absolutely-positioned containers. */
@@ -37,19 +37,6 @@ const MEASURE_AXIS: Partial<Record<OverlayRegion, "width" | "height">> = {
   "bottom-right": "height",
   "left-rail": "width",
   "right-rail": "width",
-}
-
-const REGION_PRIMARY_SIDE: Partial<Record<OverlayRegion, OverlaySide>> = {
-  header: "top",
-  footer: "bottom",
-  "top-left": "top",
-  "top-center": "top",
-  "top-right": "top",
-  "bottom-left": "bottom",
-  "bottom-center": "bottom",
-  "bottom-right": "bottom",
-  "left-rail": "left",
-  "right-rail": "right",
 }
 
 const BAND_STYLE: Record<string, CSSProperties> = {
@@ -133,6 +120,10 @@ function groupByLane(controls: OverlayControl[]): [number, OverlayControl[]][] {
  * bottom) to the VISUAL-viewport bottom so an action bar stays reachable while a
  * label editor has focus. No-op (0) on desktop / where `visualViewport` is absent.
  */
+// The keyboard var lives on the document root (one on-screen keyboard, shared by
+// every editor). Ref-count writers so unmounting ONE editor doesn't wipe the var
+// out from under the others until they'd next re-measure on a viewport event.
+let keyboardInsetWriters = 0
 function useKeyboardInset(): void {
   useEffect(() => {
     const vv = window.visualViewport
@@ -143,12 +134,16 @@ function useKeyboardInset(): void {
       root.style.setProperty("--apollon-keyboard-inset", `${overlap}px`)
     }
     update()
+    keyboardInsetWriters += 1
     vv.addEventListener("resize", update)
     vv.addEventListener("scroll", update)
     return () => {
       vv.removeEventListener("resize", update)
       vv.removeEventListener("scroll", update)
-      root.style.removeProperty("--apollon-keyboard-inset")
+      keyboardInsetWriters -= 1
+      if (keyboardInsetWriters === 0) {
+        root.style.removeProperty("--apollon-keyboard-inset")
+      }
     }
   }, [])
 }
@@ -225,6 +220,7 @@ function ControlSlot({ control, registerMeasure }: ControlSlotProps) {
 export function OverlayLayer() {
   const controls = useOverlayStore((s) => s.controls)
   const setMeasured = useOverlayStore((s) => s.setMeasured)
+  const setRailGap = useOverlayStore((s) => s.setRailGap)
   useKeyboardInset()
 
   const visibleControls = useMemo(
@@ -246,12 +242,14 @@ export function OverlayLayer() {
   const observerRef = useRef<ResizeObserver | null>(null)
   const controlsRef = useRef(controls)
   const setMeasuredRef = useRef(setMeasured)
+  const setRailGapRef = useRef(setRailGap)
   // Sync in the layout phase (before the synchronous measure below reads them),
   // not a passive effect, so flushMeasure never sees a stale control set.
   useLayoutEffect(() => {
     controlsRef.current = controls
     setMeasuredRef.current = setMeasured
-  }, [controls, setMeasured])
+    setRailGapRef.current = setRailGap
+  }, [controls, setMeasured, setRailGap])
 
   const flushMeasure = useCallback(() => {
     rafRef.current = null
@@ -259,7 +257,7 @@ export function OverlayLayer() {
       const control = controlsRef.current[id]
       if (!control) continue
       const axis = MEASURE_AXIS[control.region]
-      const side = REGION_PRIMARY_SIDE[control.region]
+      const side = REGION_EDGE[control.region]
       if (!axis || !side) continue
       // offsetWidth/Height excludes the corner Panel's CSS margin, so add it
       // back (read live from --apollon-chrome-edge, the single source of truth)
@@ -272,6 +270,19 @@ export function OverlayLayer() {
             getComputedStyle(el).getPropertyValue("--apollon-chrome-edge")
           ) || 0
       setMeasuredRef.current(id, { [side]: raw + edge })
+      // A rail reserves its width (cross axis) as the inset, but a bottom corner
+      // also needs to know whether the rail reaches DOWN to it. Measure the gap
+      // from the rail's real bottom to the container's bottom — the physical
+      // quantity, robust to an unrelated band inset shifting the rail's position.
+      if (control.region === "left-rail" || control.region === "right-rail") {
+        const container = el.closest(".apollon-canvas")
+        if (container) {
+          const gap =
+            container.getBoundingClientRect().bottom -
+            el.getBoundingClientRect().bottom
+          setRailGapRef.current(id, gap)
+        }
+      }
     }
   }, [])
 

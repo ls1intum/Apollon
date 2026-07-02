@@ -1,28 +1,20 @@
 import { useState, type CSSProperties, type ReactNode } from "react"
 import type { Meta, StoryObj } from "@storybook/react-vite"
+import { within, userEvent } from "storybook/test"
 import {
   Apollon,
   ApollonControl,
   ApollonMode,
   type ApollonLabels,
-  type OverlayRegion,
 } from "@tumaet/apollon"
 import { editorStoryMeta, fixtureByType } from "../_support/editor"
 
 /**
- * **Immersive host chrome via the controls API.** These stories dogfood the
- * overlay/controls API the way a real host (the Apollon standalone, or Artemis)
- * would: instead of stacking a title bar, a submit bar, a problem-statement panel
- * and a score badge OUTSIDE the canvas — each fighting the palette/zoom/minimap
- * for space — every piece of host chrome is registered INTO the editor as an
- * `<ApollonControl>` in a named region. The engine then lays them all out
- * collision-free and makes the diagram "make room": header/footer **bands** reserve
- * an edge and displace the canvas; corners **float**.
- *
- * The point being proven: the palette, zoom cluster and minimap coexist with a
- * host header, footer action bar, side rails and corner buttons with zero manual
- * spacing hacks (contrast Artemis's `margin-top: 30px` nudge to keep its floating
- * fullscreen button off the palette).
+ * **Immersive host chrome via the controls API.** Each story registers host chrome
+ * (header, footer action bar, side rails, corner buttons) into the editor as
+ * `<ApollonControl>`s in named regions, so the engine lays it out collision-free
+ * with the built-in palette/zoom/minimap: header/footer bands reserve an edge and
+ * displace the canvas; corners float.
  */
 
 const meta = {
@@ -38,6 +30,15 @@ export default meta
 type Story = StoryObj
 
 const FULLSCREEN: CSSProperties = { height: "100vh", width: "100%" }
+
+// Shared so the light (TutorAssessment) and dark (DarkMode) grading rails stay
+// identical instead of drifting.
+const GRADING_INSTRUCTIONS = [
+  "+2 P — all core classes present",
+  "+3 P — correct multiplicities",
+  "+2 P — inheritance modelled",
+  "−1 P — each missing association role",
+]
 
 // ── Reusable mock host chrome ────────────────────────────────────────────────
 // Deliberately host-owned UI (no React Flow context needed): `<ApollonControl>`
@@ -327,9 +328,10 @@ export const StudentModeling: Story = {
 }
 
 /**
- * **Tutor assessment** — no palette (assessment mode self-hides it). A header
- * carries the title + live score chip, a right rail shows grading instructions,
- * and a full-width **footer** action bar (the new `footer` band) holds
+ * **Tutor assessment** — the built-in `<Apollon.Palette/>` is composed but
+ * self-hides in `Assessment` mode (nothing to drag), so the tutor gets a clean
+ * grading surface for free. A header carries the title + live score chip, a right
+ * rail shows grading instructions, and a full-width **footer** band holds
  * Save / Override / Cancel / Assess-next — reserving bottom space so the diagram
  * and the zoom cluster sit clear above it.
  */
@@ -351,10 +353,9 @@ export const TutorAssessment: Story = {
       <ApollonControl id="host:instructions" region="right-rail">
         <RailPanel heading="Grading instructions">
           <ul style={{ margin: 0, paddingLeft: 18 }}>
-            <li>+2 P — all core classes present</li>
-            <li>+3 P — correct multiplicities</li>
-            <li>+2 P — inheritance modelled</li>
-            <li>−1 P — each missing association role</li>
+            {GRADING_INSTRUCTIONS.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
           </ul>
         </RailPanel>
       </ApollonControl>
@@ -368,21 +369,27 @@ export const TutorAssessment: Story = {
         </ActionBar>
       </ApollonControl>
 
-      <Apollon.Zoom region="bottom-left" history={false} />
-      <Apollon.MiniMap region="top-right" />
+      {/* Composed but self-hidden in Assessment mode — proves the built-in gates
+          itself instead of the host conditionally omitting it. */}
+      <Apollon.Palette />
+      <Apollon.Zoom region="bottom-left" />
+      <Apollon.MiniMap region="bottom-right" />
     </Apollon>
   ),
 }
 
 /**
- * **Exam mode** — a global exam bar (timer + hand-in-early) as the header, the
- * problem statement as a right rail, and a footer submit bar. Everything the
- * candidate needs frames the canvas without a single overlap.
+ * **Exam chrome** — a normal modelling canvas (the candidate draws, so the palette
+ * shows) wrapped in exam host chrome: a global exam bar (timer + hand-in-early) as
+ * the header, the problem statement as a right rail, and a footer submit bar.
+ * "Exam" is the host framing, not an editor mode — everything frames the canvas
+ * without a single overlap.
  */
 export const ExamMode: Story = {
   render: () => (
     <Apollon
       defaultModel={fixtureByType.ClassDiagram}
+      defaultMode={ApollonMode.Modelling}
       enablePopups
       style={FULLSCREEN}
     >
@@ -461,7 +468,7 @@ export const StackedChrome: Story = {
         </ActionBar>
       </ApollonControl>
 
-      <Apollon.Zoom region="bottom-left" history={false} />
+      <Apollon.Zoom region="bottom-left" />
       <Apollon.MiniMap region="bottom-right" />
     </Apollon>
   ),
@@ -491,9 +498,9 @@ export const DarkMode: Story = {
       <ApollonControl id="host:instructions" region="right-rail">
         <RailPanel heading="Grading instructions">
           <ul style={{ margin: 0, paddingLeft: 18 }}>
-            <li>+2 P — all core classes present</li>
-            <li>+3 P — correct multiplicities</li>
-            <li>+2 P — inheritance modelled</li>
+            {GRADING_INSTRUCTIONS.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
           </ul>
         </RailPanel>
       </ApollonControl>
@@ -504,8 +511,8 @@ export const DarkMode: Story = {
           <Btn variant="primary">Assess next →</Btn>
         </ActionBar>
       </ApollonControl>
-      <Apollon.Zoom region="bottom-left" history={false} />
-      <Apollon.MiniMap region="top-right" />
+      <Apollon.Zoom region="bottom-left" />
+      <Apollon.MiniMap region="bottom-right" />
     </Apollon>
   ),
 }
@@ -522,7 +529,7 @@ export const IndependentLanes: Story = {
   render: () => (
     <Apollon
       defaultModel={fixtureByType.ClassDiagram}
-      defaultMode={ApollonMode.Exam}
+      defaultMode={ApollonMode.Modelling}
       enablePopups
       style={FULLSCREEN}
     >
@@ -536,7 +543,7 @@ export const IndependentLanes: Story = {
         </Banner>
       </ApollonControl>
 
-      <Apollon.Zoom region="bottom-left" history={false} />
+      <Apollon.Zoom region="bottom-left" />
       <Apollon.MiniMap region="bottom-right" />
     </Apollon>
   ),
@@ -546,7 +553,8 @@ export const IndependentLanes: Story = {
  * **Selection-anchored toolbar** — the Figma/tldraw pattern via
  * `<Apollon.SelectionToolbar>`: select a node and a constant-size toolbar appears
  * just above it, follows it as it moves, and does NOT scale with zoom. Screen-space
- * (contrast `on-canvas`, which lives in diagram space). Select a class to see it.
+ * (contrast `on-canvas`, which lives in diagram space). The `play` selects a node
+ * so the toolbar is visible without manual interaction.
  */
 export const SelectionToolbar: Story = {
   render: () => (
@@ -569,6 +577,12 @@ export const SelectionToolbar: Story = {
       <Apollon.MiniMap region="bottom-right" />
     </Apollon>
   ),
+  play: async ({ canvasElement }) => {
+    const node = canvasElement.querySelector<HTMLElement>(".react-flow__node")
+    if (node) await userEvent.click(node)
+    // The toolbar only renders while something is selected.
+    await within(canvasElement).findByText("Bring to front")
+  },
 }
 
 // A host's German strings for the editor's own chrome. Partial — every key it
@@ -589,10 +603,10 @@ const GERMAN: Partial<ApollonLabels> = {
 
 /**
  * **Internationalized (i18n)** — the same editor with a host's German strings
- * passed via `labels`. The palette / zoom / minimap tooltips and aria-labels
- * (hover the zoom cluster) now read German, alongside German host chrome — so the
- * editor stops stranding English tooltips inside a localized UI. `labels` is
- * reactive: a host can switch language without remounting.
+ * passed via `labels`. The `play` asserts the built-in zoom control's accessible
+ * name is now German ("Vergrößern"/"Verkleinern") — proving `labels` reaches the
+ * editor's OWN chrome, not just the host's hardcoded header. `labels` is reactive:
+ * a host can switch language without remounting.
  */
 export const Internationalized: Story = {
   render: () => (
@@ -614,6 +628,11 @@ export const Internationalized: Story = {
       <Apollon.MiniMap region="bottom-right" />
     </Apollon>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await canvas.findByRole("button", { name: "Vergrößern" })
+    await canvas.findByRole("button", { name: "Verkleinern" })
+  },
 }
 
 /**
@@ -627,14 +646,13 @@ export const HelpAsControl: Story = {
 
 function HelpStory() {
   const [open, setOpen] = useState(false)
-  const region: OverlayRegion = "top-right"
   return (
     <Apollon
       defaultModel={fixtureByType.ClassDiagram}
       enablePopups
       style={FULLSCREEN}
     >
-      <ApollonControl id="host:help" region={region}>
+      <ApollonControl id="host:help" region="top-right">
         <div
           style={{
             display: "flex",

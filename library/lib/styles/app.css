@@ -366,10 +366,18 @@
 
 .react-flow__panel.bottom {
   margin-bottom: calc(
-    var(--apollon-chrome-edge-safe-bottom) + var(--apollon-inset-bottom, 0px)
+    var(--apollon-chrome-edge-safe-bottom) + var(--apollon-keyboard-inset, 0px) +
+      var(--apollon-inset-bottom, 0px)
   );
 }
 
+/* A left/right slot clears the rail on its edge. The TOP corners always meet a
+   (top-anchored) rail, so they clear its full width via the per-edge inset. The
+   BOTTOM corners clear it only where it actually reaches them: `--apollon-far-*`
+   is the rail's width when it extends to the bottom, else 0 — so a short palette
+   leaves the bottom-left zoom cluster flush to the edge instead of shoved across
+   an empty column. The `.bottom.left/right` rules outrank the `.left/.right` ones
+   (three classes vs two), so only the far corners opt into the extent-aware var. */
 .react-flow__panel.left {
   margin-left: calc(
     var(--apollon-chrome-edge-safe-left) + var(--apollon-inset-left, 0px)
@@ -379,6 +387,18 @@
 .react-flow__panel.right {
   margin-right: calc(
     var(--apollon-chrome-edge-safe-right) + var(--apollon-inset-right, 0px)
+  );
+}
+
+.react-flow__panel.bottom.left {
+  margin-left: calc(
+    var(--apollon-chrome-edge-safe-left) + var(--apollon-far-left, 0px)
+  );
+}
+
+.react-flow__panel.bottom.right {
+  margin-right: calc(
+    var(--apollon-chrome-edge-safe-right) + var(--apollon-far-right, 0px)
   );
 }
 
@@ -571,29 +591,6 @@
    edge, matching the palette and zoom/minimap controls. */
 .apollon-overlay-panel {
   margin: var(--apollon-chrome-edge);
-}
-
-/* Corner slots float WITHIN the reserved band area: each edge adds the matching
-   content inset so a corner control (zoom, minimap, presence, a host button)
-   clears a header/footer/rail band instead of tucking under it. Insets are 0 by
-   default (no bands), so this is a no-op until a band reserves room. React Flow
-   tags each Panel with its edge classes (.top/.bottom/.left/.right). */
-.apollon-overlay-panel.top {
-  margin-top: calc(var(--apollon-chrome-edge) + var(--apollon-inset-top, 0px));
-}
-.apollon-overlay-panel.bottom {
-  margin-bottom: calc(
-    var(--apollon-chrome-edge) + var(--apollon-keyboard-inset, 0px) +
-      var(--apollon-inset-bottom, 0px)
-  );
-}
-.apollon-overlay-panel.left {
-  margin-left: calc(var(--apollon-chrome-edge) + var(--apollon-inset-left, 0px));
-}
-.apollon-overlay-panel.right {
-  margin-right: calc(
-    var(--apollon-chrome-edge) + var(--apollon-inset-right, 0px)
-  );
 }
 
 /* Header islands settle in on mount (decelerated, short). */

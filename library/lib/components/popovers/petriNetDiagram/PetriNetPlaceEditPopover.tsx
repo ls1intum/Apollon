@@ -138,13 +138,13 @@ export const PetriNetPlaceEditPopover: React.FC<PopoverProps> = ({
           <IconButton
             ariaLabel={
               nodeData.capacity === "Infinity"
-                ? "Set a finite capacity"
-                : "Set capacity to infinite"
+                ? t.setFiniteCapacity
+                : t.setInfiniteCapacity
             }
             tooltip={
               nodeData.capacity === "Infinity"
-                ? "Set a finite capacity"
-                : "Set capacity to infinite"
+                ? t.setFiniteCapacity
+                : t.setInfiniteCapacity
             }
             aria-pressed={nodeData.capacity === "Infinity"}
             onClick={() =>

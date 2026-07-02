@@ -65,7 +65,7 @@ export const DeploymentNodeEditPopover: React.FC<PopoverProps> = ({
         <HeaderSwitchElement
           onClick={switchHeaderShown}
           isComponentHeaderShown={nodeData.isComponentHeaderShown}
-          stereotypeLabel="node"
+          stereotypeLabel={t.nodeWord}
           stereotypeValue={nodeData.stereotype}
         />
         <TextField

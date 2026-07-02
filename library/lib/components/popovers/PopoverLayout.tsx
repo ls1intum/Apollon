@@ -1,6 +1,7 @@
 import React from "react"
 import { Typography } from "@/components/ui"
 import { ColorEditorGroupProvider } from "@/components/styleEditor/ColorEditorGroup"
+import { useLabels } from "@/i18n/useLabels"
 
 /**
  * Shared layout primitives for node/edge edit popovers.
@@ -147,21 +148,24 @@ export const AssessmentHeader: React.FC<{
   type: string
   name: string
   action?: React.ReactNode
-}> = ({ type, name, action }) => (
-  <div
-    style={{
-      display: "flex",
-      alignItems: "center",
-      gap: FIELD_GAP,
-    }}
-  >
-    {/* One flowing sentence: the name is an inline highlighted span, so it
-        wraps as part of the text instead of floating to its own line. */}
-    <Typography variant="subtitle2" style={{ flex: 1 }}>
-      Assessment for {type}
-      {name && " "}
-      {name && <span data-slot="assessment-name-chip">{name}</span>}
-    </Typography>
-    {action}
-  </div>
-)
+}> = ({ type, name, action }) => {
+  const t = useLabels()
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: FIELD_GAP,
+      }}
+    >
+      {/* One flowing sentence: the name is an inline highlighted span, so it
+          wraps as part of the text instead of floating to its own line. */}
+      <Typography variant="subtitle2" style={{ flex: 1 }}>
+        {t.assessmentFor(type)}
+        {name && " "}
+        {name && <span data-slot="assessment-name-chip">{name}</span>}
+      </Typography>
+      {action}
+    </div>
+  )
+}

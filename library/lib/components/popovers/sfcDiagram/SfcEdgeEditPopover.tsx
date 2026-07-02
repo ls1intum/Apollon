@@ -94,7 +94,7 @@ export const SfcEdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
   return (
     <PopoverLayout title={t.edge}>
       <EdgeStyleEditor
-        label="Style"
+        label={t.style}
         edgeData={edgeDataCustom}
         handleDataFieldUpdate={(key, value) =>
           updateEdgeData(elementId, { [key]: value })
@@ -114,13 +114,13 @@ export const SfcEdgeEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
             <Checkbox
               checked={edgeData.showBar}
               onCheckedChange={handleShowBarChange}
-              label="Show crossbar"
+              label={t.showCrossbar}
             />
 
             <Checkbox
               checked={edgeData.isNegated}
               onCheckedChange={handleIsNegatedChange}
-              label="Negated condition (overline)"
+              label={t.negatedCondition}
             />
           </>
         )}

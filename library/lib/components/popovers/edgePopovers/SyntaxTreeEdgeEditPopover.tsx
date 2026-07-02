@@ -25,7 +25,7 @@ export const SyntaxTreeEdgeEditPopover: React.FC<PopoverProps> = ({
         handleDataFieldUpdate={(key, value) =>
           updateEdgeData(elementId, { ...edge.data, [key]: value })
         }
-        label="Style"
+        label={t.style}
       />
     </PopoverLayout>
   )

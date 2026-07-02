@@ -47,7 +47,7 @@ export const CommunicationObjectNameEditPopover: React.FC<PopoverProps> = ({
     <PopoverLayout title={t.object}>
       <NodeStyleEditor
         nodeData={nodeData}
-        colorEditorLabel="communication object"
+        colorEditorLabel={t.communicationObjectWord}
         handleDataFieldUpdate={handleDataFieldUpdate}
       />
       <PopoverSection divider>

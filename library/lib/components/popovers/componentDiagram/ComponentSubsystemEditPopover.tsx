@@ -50,7 +50,7 @@ export const ComponentSubsystemEditPopover: React.FC<PopoverProps> = ({
         <HeaderSwitchElement
           onClick={switchHeaderShown}
           isComponentHeaderShown={nodeData.isComponentSubsystemHeaderShown}
-          stereotypeLabel="subsystem"
+          stereotypeLabel={t.subsystemWord}
         />
       </PopoverSection>
     </DefaultNodeEditPopover>

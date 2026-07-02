@@ -30,13 +30,13 @@ export const PetriNetEdgeEditPopover: React.FC<PopoverProps> = ({
         handleDataFieldUpdate={(key, value) =>
           updateEdgeData(elementId, { ...edge.data, [key]: value })
         }
-        label="Style"
+        label={t.style}
         sideElements={[
           handleSwap && (
             <IconButton
               key="swap-source-target"
-              ariaLabel="Swap source and target"
-              tooltip="Swap source and target"
+              ariaLabel={t.swapSourceTarget}
+              tooltip={t.swapSourceTarget}
               onClick={handleSwap}
             >
               <ArrowLeftRight width={16} height={16} aria-hidden="true" />

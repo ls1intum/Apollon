@@ -21,8 +21,8 @@ export const CommunicationDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
   const [newLabelInput, setNewLabelInput] = useState("")
   const [duplicateError, setDuplicateError] = useState(false)
 
-  const sourceName = useReactiveNodeName(edge?.source, "Source")
-  const targetName = useReactiveNodeName(edge?.target, "Target")
+  const sourceName = useReactiveNodeName(edge?.source, t.source)
+  const targetName = useReactiveNodeName(edge?.target, t.target)
 
   useEffect(() => {
     if (edge?.data) {
@@ -126,7 +126,7 @@ export const CommunicationDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
   const getMessageLabel = (message: MessageData, index: number) => {
     const trimmedText = message.text.trim()
 
-    return trimmedText || `message ${index + 1}`
+    return trimmedText || t.messageFallbackLabel(index + 1)
   }
 
   if (!edge) {
@@ -141,7 +141,7 @@ export const CommunicationDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
         handleDataFieldUpdate={(key, value) =>
           updateEdgeData(elementId, { ...edge.data, [key]: value })
         }
-        label="Style"
+        label={t.style}
       />
 
       <PopoverSection title={t.messages} divider>
@@ -165,8 +165,8 @@ export const CommunicationDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
             >
               {/* Direction Toggle Button */}
               <IconButton
-                ariaLabel={`Switch direction for ${messageLabel}: ${directionText}`}
-                tooltip={`Switch direction: ${directionText}`}
+                ariaLabel={t.switchDirectionFor(messageLabel, directionText)}
+                tooltip={t.switchDirection(directionText)}
                 onClick={() => handleMessageDirectionToggle(index)}
               >
                 {message.direction === "target" ? (
@@ -181,15 +181,15 @@ export const CommunicationDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
                 value={message.text}
                 onChange={(e) => handleMessageTextUpdate(index, e.target.value)}
                 fullWidth
-                placeholder={`Message ${index + 1}`}
+                placeholder={t.messagePlaceholder(index + 1)}
                 error={isDuplicateText}
-                helperText={isDuplicateText ? "Duplicate message" : ""}
+                helperText={isDuplicateText ? t.duplicateMessage : ""}
               />
 
               {/* Delete Button */}
               <IconButton
-                ariaLabel={`Delete ${messageLabel}`}
-                tooltip={`Delete ${messageLabel}`}
+                ariaLabel={t.deleteMessage(messageLabel)}
+                tooltip={t.deleteMessage(messageLabel)}
                 onClick={() => handleDeleteMessage(index)}
               >
                 <Trash2 width={16} height={16} aria-hidden="true" />
@@ -207,11 +207,11 @@ export const CommunicationDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
             fullWidth
             placeholder={t.message}
             error={duplicateError}
-            helperText={duplicateError ? "This message already exists" : ""}
+            helperText={duplicateError ? t.messageExists : ""}
           />
           <IconButton
-            ariaLabel="Add message"
-            tooltip="Add message"
+            ariaLabel={t.addMessage}
+            tooltip={t.addMessage}
             onClick={handleAddMessage}
           >
             <Plus width={16} height={16} aria-hidden="true" />
