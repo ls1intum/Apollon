@@ -65,6 +65,8 @@ export const UseCaseEdge = ({
     strokeDashArray,
     sourcePoint,
     targetPoint,
+    sourcePosition: renderSourcePosition,
+    targetPosition: renderTargetPosition,
     isDiagramModifiable,
     canEditEndpoint,
     handleEndpointPointerDown,
@@ -125,8 +127,8 @@ export const UseCaseEdge = ({
             <EdgeEndpointMarkers
               sourcePoint={sourcePoint}
               targetPoint={targetPoint}
-              sourcePosition={sourcePosition}
-              targetPosition={targetPosition}
+              sourcePosition={renderSourcePosition}
+              targetPosition={renderTargetPosition}
               isDiagramModifiable={isDiagramModifiable}
               canEditEndpoint={canEditEndpoint}
               onEndpointPointerDown={handleEndpointPointerDown}

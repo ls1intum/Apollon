@@ -59,6 +59,8 @@ export const PetriNetEdge = ({
     strokeDashArray,
     sourcePoint,
     targetPoint,
+    sourcePosition: renderSourcePosition,
+    targetPosition: renderTargetPosition,
     isDiagramModifiable,
     isReconnecting,
     canEditEndpoint,
@@ -120,8 +122,8 @@ export const PetriNetEdge = ({
             <EdgeEndpointMarkers
               sourcePoint={sourcePoint}
               targetPoint={targetPoint}
-              sourcePosition={sourcePosition}
-              targetPosition={targetPosition}
+              sourcePosition={renderSourcePosition}
+              targetPosition={renderTargetPosition}
               isDiagramModifiable={isDiagramModifiable}
               canEditEndpoint={canEditEndpoint}
               onEndpointPointerDown={handleEndpointPointerDown}

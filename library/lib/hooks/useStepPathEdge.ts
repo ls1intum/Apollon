@@ -170,6 +170,10 @@ export const useStepPathEdge = ({
   const [dragPreviewPoints, setDragPreviewPoints] = useState<IPoint[] | null>(
     null
   )
+  const [dragPreviewPositions, setDragPreviewPositions] = useState<{
+    sourcePosition: Position
+    targetPosition: Position
+  } | null>(null)
 
   const { customPoints, setCustomPoints } = useEdgeState(data?.points)
   const freeformAnchorsEnabled = true
@@ -568,6 +572,10 @@ export const useStepPathEdge = ({
   // decorations; the persistence effect above stays keyed on `activePoints`
   // so a live preview never leaks into the store mid-drag.
   const renderPoints = dragPreviewPoints ?? activePoints
+  const renderSourcePosition =
+    dragPreviewPositions?.sourcePosition ?? sourcePosition
+  const renderTargetPosition =
+    dragPreviewPositions?.targetPosition ?? targetPosition
 
   // Bridge over edges this one crosses. Computed from `renderPoints` so the
   // arcs follow a live bend drag frame-by-frame (during a bend only THIS edge's
@@ -584,8 +592,8 @@ export const useStepPathEdge = ({
   )
 
   const markerSegmentPath = useMemo(
-    () => getMarkerSegmentPath(renderPoints, offset, targetPosition),
-    [renderPoints, offset, targetPosition]
+    () => getMarkerSegmentPath(renderPoints, offset, renderTargetPosition),
+    [renderPoints, offset, renderTargetPosition]
   )
 
   const overlayPath = useMemo(() => {
@@ -603,8 +611,8 @@ export const useStepPathEdge = ({
     if (!allowMidpointDragging) return []
     return getBendableSegments(
       renderPoints,
-      sourcePosition,
-      targetPosition,
+      renderSourcePosition,
+      renderTargetPosition,
       EDGES.BEND_HANDLE_SAFE_AREA_PX,
       minSegmentScreenLength,
       zoom
@@ -612,8 +620,8 @@ export const useStepPathEdge = ({
   }, [
     renderPoints,
     allowMidpointDragging,
-    sourcePosition,
-    targetPosition,
+    renderSourcePosition,
+    renderTargetPosition,
     minSegmentScreenLength,
     zoom,
   ])
@@ -1097,12 +1105,21 @@ export const useStepPathEdge = ({
         const commit = resolveDragCommit(e.clientX, e.clientY)
         endpointDragCommitRef.current = commit
         setDragPreviewPoints(commit?.points ?? null)
+        setDragPreviewPositions(
+          commit
+            ? {
+                sourcePosition: commit.sourcePosition,
+                targetPosition: commit.targetPosition,
+              }
+            : null
+        )
       }
 
       const handlePointerUp = () => {
         const commit = endpointDragCommitRef.current
         endpointDragCommitRef.current = null
         setDragPreviewPoints(null)
+        setDragPreviewPositions(null)
 
         if (commit) {
           const normalizedPoints = hasManualPoints
@@ -1238,5 +1255,7 @@ export const useStepPathEdge = ({
     toolbarPosition,
     isDiagramModifiable,
     canEditEndpoint,
+    sourcePosition: renderSourcePosition,
+    targetPosition: renderTargetPosition,
   }
 }

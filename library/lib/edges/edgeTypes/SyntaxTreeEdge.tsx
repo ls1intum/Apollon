@@ -51,6 +51,8 @@ export const SyntaxTreeEdge = ({
     strokeDashArray,
     sourcePoint,
     targetPoint,
+    sourcePosition: renderSourcePosition,
+    targetPosition: renderTargetPosition,
     isDiagramModifiable,
     canEditEndpoint,
     handleEndpointPointerDown,
@@ -102,8 +104,8 @@ export const SyntaxTreeEdge = ({
           <EdgeEndpointMarkers
             sourcePoint={sourcePoint}
             targetPoint={targetPoint}
-            sourcePosition={sourcePosition}
-            targetPosition={targetPosition}
+            sourcePosition={renderSourcePosition}
+            targetPosition={renderTargetPosition}
             isDiagramModifiable={isDiagramModifiable}
             canEditEndpoint={canEditEndpoint}
             onEndpointPointerDown={handleEndpointPointerDown}
