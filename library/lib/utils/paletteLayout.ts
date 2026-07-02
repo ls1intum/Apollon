@@ -57,13 +57,9 @@ export const PALETTE = Object.freeze({
 export const COMPACT_PALETTE = Object.freeze({
   CELL_MIN_H: 44,
   COMFORT_MIN_H: 52,
-  // Capped a touch below the ~60px "comfortable" ceiling so a dense grid (e.g.
-  // BPMN's 14 cells) keeps a few px of slack under the band. The cap fixes the
-  // grid's height, and the CSS-clamped palette height (max-height) renders a
-  // few px shorter than this JS-measured band in some environments (taller
-  // chrome/fonts on CI/Linux); with a capped grid the cells can't shrink to
-  // absorb that, so a 60px cap tipped BPMN-landscape into a 4px scroll. 56 keeps
-  // it legible (> COMFORT_MIN_H) while leaving room.
+  // Capped tight: a capped grid can't shrink, and the CSS-clamped palette height
+  // renders a few px under the JS-measured band, so a dense grid needs that slack
+  // to avoid scrolling. Kept above COMFORT_MIN_H so cells stay legible.
   CELL_MAX_H: 56,
   CELL_RATIO: 1.6,
   GAP: 4,

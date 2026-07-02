@@ -180,16 +180,15 @@ export const LAYOUT = Object.freeze({
 } as const)
 
 /**
- * Media query for the compact "mobile" palette layout. The portrait bound stops
- * just below 768px so iPads (768px portrait) keep the regular desktop layout;
- * the second clause catches phones in landscape, where the short height
- * distinguishes them from tablets.
+ * Media query for the compact "mobile" palette layout. First clause: portrait
+ * phones, stopping below 768px so iPad portrait keeps the desktop layout. Second
+ * clause: phones in landscape, where the short height distinguishes them from
+ * tablets.
  *
- * This governs the element PALETTE only. The webapp's editor chrome uses its
- * own width-only `NARROW_VIEW_QUERY` (standalone/webapp/src/constants/responsive.ts,
- * 767.95px) which deliberately does NOT match phone-landscape — so on a
- * landscape phone the navbar keeps the full desktop action set while the
- * palette still compacts to reclaim canvas height.
+ * Governs the PALETTE only. The webapp navbar uses its own width-only
+ * `NARROW_VIEW_QUERY` (standalone/webapp/src/constants/responsive.ts) which does
+ * not match landscape phones, so there the navbar stays full-size while the
+ * palette still compacts.
  */
 export const MOBILE_VIEW_QUERY =
   "(max-width: 767.95px), (max-width: 950px) and (max-height: 500px)"
