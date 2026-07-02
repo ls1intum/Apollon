@@ -37,7 +37,6 @@ import {
   getFreeformAnchorFromPoint,
   getFreeformAnchorPoint,
   getSideHandleIdForPosition,
-  isClassDiagramEdgeType,
   isFreeformEdgeAnchor,
   type FreeformEdgeAnchor,
 } from "@/utils/edgeUtils"
@@ -173,7 +172,7 @@ export const useStepPathEdge = ({
   )
 
   const { customPoints, setCustomPoints } = useEdgeState(data?.points)
-  const freeformAnchorsEnabled = isClassDiagramEdgeType(type)
+  const freeformAnchorsEnabled = true
   const sourceAnchor = data?.sourceAnchor
   const targetAnchor = data?.targetAnchor
   const shouldSubscribeToNodeGeometry =

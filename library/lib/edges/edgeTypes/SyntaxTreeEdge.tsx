@@ -1,5 +1,9 @@
 import { BaseEdge } from "@xyflow/react"
-import { BaseEdgeProps, CommonEdgeElements } from "../GenericEdge"
+import {
+  BaseEdgeProps,
+  CommonEdgeElements,
+  EdgeEndpointMarkers,
+} from "../GenericEdge"
 import { useStraightPathEdge } from "@/hooks/useStraightPathEdge"
 import { useDiagramStore, usePopoverStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
@@ -45,7 +49,11 @@ export const SyntaxTreeEdge = ({
     markerEnd,
     markerStart,
     strokeDashArray,
+    sourcePoint,
+    targetPoint,
     isDiagramModifiable,
+    canEditEndpoint,
+    handleEndpointPointerDown,
   } = useStraightPathEdge({
     id,
     type,
@@ -59,6 +67,7 @@ export const SyntaxTreeEdge = ({
     targetPosition,
     sourceHandleId,
     targetHandleId,
+    data,
   })
   const { strokeColor } = getCustomColorsFromDataForEdge(data)
   const markerKey = `${id}-${markerStart ?? "none"}-${markerEnd ?? "none"}`
@@ -88,6 +97,16 @@ export const SyntaxTreeEdge = ({
             strokeWidth={EDGES.EDGE_HIGHLIGHT_STROKE_WIDTH}
             pointerEvents="stroke"
             style={{ opacity: 0.4 }}
+          />
+
+          <EdgeEndpointMarkers
+            sourcePoint={sourcePoint}
+            targetPoint={targetPoint}
+            sourcePosition={sourcePosition}
+            targetPosition={targetPosition}
+            isDiagramModifiable={isDiagramModifiable}
+            canEditEndpoint={canEditEndpoint}
+            onEndpointPointerDown={handleEndpointPointerDown}
           />
         </g>
 

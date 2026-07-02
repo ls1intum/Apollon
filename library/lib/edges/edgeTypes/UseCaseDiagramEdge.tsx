@@ -1,5 +1,9 @@
 import { BaseEdge } from "@xyflow/react"
-import { BaseEdgeProps, CommonEdgeElements } from "../GenericEdge"
+import {
+  BaseEdgeProps,
+  CommonEdgeElements,
+  EdgeEndpointMarkers,
+} from "../GenericEdge"
 import { EdgeMiddleLabels } from "../labelTypes/EdgeMiddleLabels"
 import { EdgeIncludeExtendLabel } from "../labelTypes/EdgeIncludeExtendLabel"
 import { useEdgeConfig } from "@/hooks/useEdgeConfig"
@@ -59,7 +63,11 @@ export const UseCaseEdge = ({
     markerEnd,
     markerStart,
     strokeDashArray,
+    sourcePoint,
+    targetPoint,
     isDiagramModifiable,
+    canEditEndpoint,
+    handleEndpointPointerDown,
   } = useStraightPathEdge({
     id,
     type,
@@ -73,6 +81,7 @@ export const UseCaseEdge = ({
     targetPosition,
     sourceHandleId,
     targetHandleId,
+    data,
   })
 
   const { strokeColor, textColor } = getCustomColorsFromDataForEdge(data)
@@ -111,6 +120,18 @@ export const UseCaseEdge = ({
             pointerEvents="stroke"
             style={{ opacity: 0.4 }}
           />
+
+          {!isReconnecting && (
+            <EdgeEndpointMarkers
+              sourcePoint={sourcePoint}
+              targetPoint={targetPoint}
+              sourcePosition={sourcePosition}
+              targetPosition={targetPosition}
+              isDiagramModifiable={isDiagramModifiable}
+              canEditEndpoint={canEditEndpoint}
+              onEndpointPointerDown={handleEndpointPointerDown}
+            />
+          )}
         </g>
 
         <EdgeMiddleLabels

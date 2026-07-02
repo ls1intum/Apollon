@@ -21,7 +21,6 @@ import {
   reduceVisibleArcCountForZoom,
   getEdgeMarkerStyles,
   getMarkerSegmentPath,
-  isClassDiagramEdgeType,
   isInvalidOrthogonalEdgeRelease,
   normalizeOrthogonalEdgePoints,
   parseSvgPath,
@@ -497,11 +496,13 @@ describe("freeform rectangle anchors", () => {
     })
   })
 
-  it("detects class diagram edge types only", () => {
-    expect(isClassDiagramEdgeType("ClassUnidirectional")).toBe(true)
-    expect(isClassDiagramEdgeType("ClassDependency")).toBe(true)
-    expect(isClassDiagramEdgeType("ObjectLink")).toBe(false)
-    expect(isClassDiagramEdgeType(undefined)).toBe(false)
+  it("recognizes persisted freeform anchors", () => {
+    expect(
+      getFreeformAnchorPoint(rect, { side: Position.Left, ratio: 0.5 })
+    ).toEqual({
+      point: { x: 10, y: 60 },
+      position: Position.Left,
+    })
   })
 })
 
