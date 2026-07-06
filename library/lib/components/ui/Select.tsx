@@ -151,7 +151,7 @@ export const Select: React.FC<SelectProps> = ({
       )}
       <Popover.Root
         open={open}
-        onOpenChange={(next) => {
+        onOpenChange={(next: boolean) => {
           if (next)
             setPortalThemeVars(resolveApollonThemeVars(triggerRef.current))
           setOpen(next)

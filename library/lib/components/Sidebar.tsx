@@ -1,10 +1,16 @@
 import React, { useLayoutEffect, useMemo, useRef, useState } from "react"
-import { ColorDescriptionConfig, dropElementConfigs, LAYOUT } from "@/constants"
+import {
+  ColorDescriptionConfig,
+  dropElementConfigs,
+  LAYOUT,
+  MOBILE_VIEW_QUERY,
+} from "@/constants"
 import { useMetadataStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { DraggableGhost } from "./DraggableGhost"
 import { ApollonView } from "@/typings"
 import {
+  COMPACT_PALETTE,
   PALETTE,
   computePaletteLayout,
   previewScaleForCell,
@@ -53,12 +59,13 @@ export const Sidebar = () => {
   // Measure the canvas the palette floats over (its positioned ancestor) so the
   // grid can size itself to the available room.
   const asideRef = useRef<HTMLElement>(null)
-  const [canvas, setCanvas] = useState({ w: 0, h: 0 })
+  const [canvas, setCanvas] = useState({ w: 0, h: 0, compact: false })
 
   useLayoutEffect(() => {
     const aside = asideRef.current
     const parent = aside?.offsetParent as HTMLElement | null
     if (!aside || !parent) return
+    const mobileQuery = window.matchMedia(MOBILE_VIEW_QUERY)
     const measure = () => {
       const rect = parent.getBoundingClientRect()
       // Size the grid to the palette's ACTUAL available height — the gap between
@@ -74,21 +81,33 @@ export const Sidebar = () => {
         ? controls.getBoundingClientRect().top - GAP
         : rect.bottom - (asideTop - rect.top) // symmetric fallback
       const h = Math.max(0, bottomLimit - asideTop)
-      setCanvas({ w: rect.width, h })
+      setCanvas({ w: rect.width, h, compact: mobileQuery.matches })
     }
     measure()
     const observer = new ResizeObserver(measure)
     observer.observe(parent)
-    return () => observer.disconnect()
+    mobileQuery.addEventListener("change", measure)
+    return () => {
+      observer.disconnect()
+      mobileQuery.removeEventListener("change", measure)
+    }
   }, [])
 
   // The color-description element is the last grid cell.
   const cellCount = paletteItems.length + 1
   const chromeHeight = showInteractiveSelectionView ? VIEW_SWITCH_HEIGHT : 0
   const layout = useMemo(
-    () => computePaletteLayout(cellCount, canvas.w, canvas.h, chromeHeight),
-    [cellCount, canvas.w, canvas.h, chromeHeight]
+    () =>
+      computePaletteLayout(
+        cellCount,
+        canvas.w,
+        canvas.h,
+        chromeHeight,
+        canvas.compact
+      ),
+    [cellCount, canvas.w, canvas.h, canvas.compact, chromeHeight]
   )
+  const paletteMetrics = canvas.compact ? COMPACT_PALETTE : PALETTE
 
   // One uniform scale for the whole palette: pick the largest scale at which
   // EVERY element still fits its cell, then render them all at it. This keeps
@@ -103,11 +122,12 @@ export const Sidebar = () => {
           config.width,
           config.height + previewExtraHeight(config.type),
           layout.cellW,
-          layout.cellH
+          layout.cellH,
+          canvas.compact
         )
       )
     )
-  }, [paletteItems, layout.cellW, layout.cellH])
+  }, [paletteItems, layout.cellW, layout.cellH, canvas.compact])
 
   if (paletteItems.length === 0) {
     return null
@@ -196,7 +216,7 @@ export const Sidebar = () => {
           className="apollon-palette__entries"
           style={{
             gridTemplateColumns: `repeat(${layout.cols}, ${layout.cellW}px)`,
-            gap: PALETTE.GAP,
+            gap: paletteMetrics.GAP,
           }}
         >
           {paletteItems.map((config, index) =>

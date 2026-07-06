@@ -1,4 +1,4 @@
-import { ClassType } from "./enums"
+import { ClassStereotype } from "./enums"
 
 export type DefaultNodeProps = {
   name: string
@@ -9,6 +9,12 @@ export type DefaultNodeProps = {
 
 export type ClassNodeElement = {
   id: string
+  /**
+   * Abstract modifier — renders the member's signature in italics (UML 2.5.1
+   * §9.4). Only ever set on *methods*: attributes are `StructuralFeature`s and
+   * cannot be abstract, so the attribute editor never surfaces the control.
+   */
+  isAbstract?: boolean
 } & DefaultNodeProps
 
 /** A single partition (lane) inside an activity swimlane. */
@@ -40,7 +46,13 @@ export type ActivitySwimlaneProps = DefaultNodeProps & {
 export type ClassNodeProps = {
   methods: ClassNodeElement[]
   attributes: ClassNodeElement[]
-  stereotype?: ClassType
+  /** Metaclass keyword only (`«interface»` / `«enumeration»`). */
+  stereotype?: ClassStereotype
+  /**
+   * Class-level abstract modifier — renders the class name in italics (UML
+   * 2.5.1 §9.2.4). Orthogonal to `stereotype`; there is no `«abstract»` keyword.
+   */
+  isAbstract?: boolean
 } & DefaultNodeProps
 
 export type ObjectNodeProps = {

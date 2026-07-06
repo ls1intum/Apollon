@@ -141,10 +141,8 @@ describe("resolveCSSVariable", () => {
     expect(resolveCSSVariable("var(--apollon-primary)")).toBe("#3e8acc")
   })
 
-  it("resolves --apollon-primary-contrast", () => {
-    expect(resolveCSSVariable("var(--apollon-primary-contrast)")).toBe(
-      "#000000"
-    )
+  it("resolves --apollon-foreground", () => {
+    expect(resolveCSSVariable("var(--apollon-foreground)")).toBe("#000000")
   })
 
   it("resolves --apollon-background", () => {
@@ -205,7 +203,7 @@ describe("replaceCSSVariables", () => {
 
   it("resolves var() in stroke attribute", () => {
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path")
-    path.setAttribute("stroke", "var(--apollon-primary-contrast)")
+    path.setAttribute("stroke", "var(--apollon-foreground)")
     svg.appendChild(path)
 
     replaceCSSVariables(svg)

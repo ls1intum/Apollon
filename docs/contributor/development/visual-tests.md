@@ -6,7 +6,7 @@ description: Regenerating Playwright snapshots inside the pinned Docker image.
 
 # Visual regression tests
 
-Apollon's visual regression tests run on **every PR** as the `visual-regression-tests` job in `pr-health-checks.yml`, feeding the required **PR Health Gate** check. Gating per-PR forces a rendering change to refresh its own baselines in the same PR; running them nightly-only instead lets a rendering change merge green and resurface later as an orphaned failure on an unrelated PR. They use Playwright with the `mcr.microsoft.com/playwright:v1.59.1-noble` Docker image so snapshots are pinned to one Linux rendering stack regardless of contributor OS.
+Apollon's visual regression tests run on **every PR** as the `visual-regression-tests` job in `pr-health-checks.yml`, feeding the required **PR Health Gate** check. Gating per-PR forces a rendering change to refresh its own baselines in the same PR; running them nightly-only instead lets a rendering change merge green and resurface later as an orphaned failure on an unrelated PR. They use Playwright with the `mcr.microsoft.com/playwright:v1.61.1-noble` Docker image so snapshots are pinned to one Linux rendering stack regardless of contributor OS.
 
 ## Regenerating baselines
 
@@ -22,7 +22,7 @@ From the repo root:
 
 ```sh
 docker run --rm -v "$(pwd)":/work -w /work --ipc=host \
-  mcr.microsoft.com/playwright:v1.59.1-noble \
+  mcr.microsoft.com/playwright:v1.61.1-noble \
   bash -c "curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
     && apt-get install -y nodejs \
     && npm install -g pnpm@11.1.3 \

@@ -3,6 +3,7 @@ import { CustomText } from "./CustomText"
 import { MultilineText } from "./MultilineText"
 import { LAYOUT } from "@/constants"
 import { maxLinesForHeight, wrapTextInRect } from "@/utils/svgTextLayout"
+import { stereotypeLabel } from "@/utils/stereotypeLabel"
 
 type VerticalAnchor = "center" | "top"
 
@@ -149,7 +150,7 @@ export const StereotypeAndName: FC<Props> = ({
           fill={fill}
           fontSize="0.8em"
         >
-          {`«${stereotype}»`}
+          {stereotypeLabel(stereotype)}
         </CustomText>
       )}
       <MultilineText

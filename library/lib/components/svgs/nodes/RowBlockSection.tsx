@@ -54,6 +54,7 @@ export const RowBlockSection: FC<RowBlockSectionProps> = ({
                 dominantBaseline="middle"
                 textAnchor="start"
                 fill={textColor}
+                fontStyle={item.isAbstract ? "italic" : "normal"}
               >
                 {item.name}
               </CustomText>

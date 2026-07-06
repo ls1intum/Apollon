@@ -12,6 +12,6 @@ export const TEXT_PRIMARY = "var(--apollon-chrome-text)"
 // a stronger 70% mix that clears 4.5:1 on every surface in both themes
 // (light: ~6.7:1 base / ~5.0:1 selected; dark: ~6.7:1 base / ~6.1:1 selected).
 export const TEXT_MUTED =
-  "color-mix(in srgb, var(--apollon-primary-contrast, #000) 70%, var(--apollon-background, #fff))"
+  "color-mix(in srgb, var(--apollon-foreground, #000) 70%, var(--apollon-background, #fff))"
 export const ROW_HOVER_BG = "var(--apollon-chrome-surface-hover)"
 export const ROW_SELECTED_BG = "var(--apollon-chrome-surface-active)"

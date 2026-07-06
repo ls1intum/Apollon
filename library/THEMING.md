@@ -22,17 +22,26 @@ import "@tumaet/apollon/style.css" // the editor stylesheet (loads the defaults)
 
 ## Quick start
 
+**Start here.** For a first rebrand you only need a handful of tokens. Set
+`primary` (your accent), `background` (the canvas), and `foreground` (the ink on
+that canvas); optionally `radius`. The entire floating chrome — palette, toolbars,
+minimap, menus — re-derives from `background` + `foreground`, so those three get
+you ~90% of the way. One caveat: text drawn _on_ `primary` defaults to white,
+so if your `primary` is light, also set `primaryForeground` to a dark ink.
+Everything below is fine-tuning.
+
 ```tsx
-import { Apollon } from "@tumaet/apollon/react"
-import { createApollonTheme } from "@tumaet/apollon"
+import { Apollon, createApollonTheme } from "@tumaet/apollon"
 
 export function Editor() {
   return (
     <Apollon
-      style={{ height: "100%" }}
+      // Give the mount a real, resolvable height — a 0px box renders blank.
+      style={{ height: "80vh" }}
       theme={createApollonTheme({
         primary: "#ff5722",
-        primaryContrast: "#ffffff",
+        background: "#ffffff",
+        foreground: "#1a1a1a",
       })}
     />
   )
@@ -49,42 +58,43 @@ stylesheet references them as `var(--apollon-x, <fallback>)`, so overriding any
 subset is safe and forward-compatible. The typed `ApollonTheme` field is the
 ergonomic alias `createApollonTheme` maps to the CSS variable.
 
-| `ApollonTheme` field       | CSS variable                            | Used for                                            |
-| -------------------------- | --------------------------------------- | --------------------------------------------------- |
-| `primary`                  | `--apollon-primary`                     | Accent / brand color (selection, links, highlights) |
-| `primaryContrast`          | `--apollon-primary-contrast`            | Foreground text on `background`                     |
-| `secondary`                | `--apollon-secondary`                   | Muted / secondary accent                            |
-| `background`               | `--apollon-background`                  | Canvas / surface background                         |
-| `backgroundInverse`        | `--apollon-background-inverse`          | Inverse surface (e.g. tooltips)                     |
-| `backgroundVariant`        | `--apollon-background-variant`          | Slightly raised surface variant                     |
-| `surface`                  | `--apollon-surface`                     | Raised card / popover / menu surface                |
-| `surfaceSunken`            | `--apollon-surface-sunken`              | Sunken / recessed surface                           |
-| `surfaceHover`             | `--apollon-surface-hover`               | Hover state of the raised surface                   |
-| `border`                   | `--apollon-border`                      | Default border / divider color                      |
-| `borderSubtle`             | `--apollon-border-subtle`               | Subtle border / divider color                       |
-| `radius`                   | `--apollon-radius`                      | Base corner radius for shared primitives            |
-| `gray`                     | `--apollon-gray`                        | Neutral gray surface                                |
-| `grayVariant`              | `--apollon-gray-variant`                | Stronger gray (borders / dividers)                  |
-| `grid`                     | `--apollon-grid`                        | Canvas grid line color                              |
-| `guideVertical`            | `--apollon-guide-vertical`              | Vertical alignment guide                            |
-| `guideHorizontal`          | `--apollon-guide-horizontal`            | Horizontal alignment guide                          |
-| `warning`                  | `--apollon-alert-warning-yellow`        | Warning alert accent                                |
-| `warningBackground`        | `--apollon-alert-warning-background`    | Warning alert background                            |
-| `warningBorder`            | `--apollon-alert-warning-border`        | Warning alert border                                |
-| `danger`                   | `--apollon-alert-danger-color`          | Danger alert text                                   |
-| `dangerBackground`         | `--apollon-alert-danger-background`     | Danger alert background                             |
-| `dangerBorder`             | `--apollon-alert-danger-border`         | Danger alert border                                 |
-| `switchBoxBorderColor`     | `--apollon-switch-box-border-color`     | Toggle / switch outline                             |
-| `listGroupColor`           | `--apollon-list-group-color`            | List-group surface color                            |
-| `btnOutlineSecondaryColor` | `--apollon-btn-outline-secondary-color` | Outline-secondary button color                      |
-| `modalBottomBorder`        | `--apollon-modal-bottom-border`         | Modal footer divider                                |
+| `ApollonTheme` field | CSS variable                   | Used for                                            |
+| -------------------- | ------------------------------ | --------------------------------------------------- |
+| `primary`            | `--apollon-primary`            | Accent / brand color (selection, links, highlights) |
+| `primaryForeground`  | `--apollon-primary-foreground` | Ink on `primary` — set it when `primary` is light   |
+| `foreground`         | `--apollon-foreground`         | Page foreground — the ink drawn on `background`     |
+| `secondary`          | `--apollon-secondary`          | Muted / secondary accent                            |
+| `background`         | `--apollon-background`         | Canvas / surface background                         |
+| `backgroundVariant`  | `--apollon-background-variant` | Slightly raised surface variant                     |
+| `surface`            | `--apollon-surface`            | Raised card / popover / menu surface                |
+| `surfaceSunken`      | `--apollon-surface-sunken`     | Sunken / recessed surface                           |
+| `border`             | `--apollon-border`             | Default border / divider color                      |
+| `borderSubtle`       | `--apollon-border-subtle`      | Subtle border / divider color                       |
+| `radius`             | `--apollon-radius`             | Base corner radius for shared primitives            |
+| `gray`               | `--apollon-gray`               | Neutral gray surface                                |
+| `grayVariant`        | `--apollon-gray-variant`       | Stronger gray (borders / dividers)                  |
+| `grid`               | `--apollon-grid`               | Canvas grid line color                              |
+| `guideVertical`      | `--apollon-guide-vertical`     | Vertical alignment guide                            |
+| `guideHorizontal`    | `--apollon-guide-horizontal`   | Horizontal alignment guide                          |
+| `danger`             | `--apollon-danger`             | Error / danger text (e.g. validation messages)      |
 
-> **Contrast / pairing.** The palette is internally balanced for WCAG AA. If you
-> override `background` or `primary`, override `primaryContrast` to match —
-> `primaryContrast` is the foreground used on top of `background`, and changing
-> only one side can drop text/UI below the AA contrast ratio. When in doubt,
-> verify the `background` ⇄ `primaryContrast` pair (and `primary` against the
-> surfaces it sits on) with a contrast checker.
+> **Reshaped the typed theming API.** The typed surface was slimmed and two tokens
+> renamed. **No action** is needed for un-themed embeds. If you set a typed
+> theme: rename `primaryContrast` → **`foreground`** (CSS var
+> `--apollon-primary-contrast` → **`--apollon-foreground`**), and the danger CSS
+> var `--apollon-alert-danger-color` → **`--apollon-danger`**. Eleven Bootstrap-era
+> fields (`backgroundInverse`, `warning` / `warningBackground` / `warningBorder`,
+> `dangerBackground` / `dangerBorder`, `switchBoxBorderColor`, `listGroupColor`,
+> `btnOutlineSecondaryColor`, `modalBottomBorder`, `surfaceHover`) were removed —
+> the Base UI editor never painted them, so setting them already did nothing;
+> delete them from your theme object (TypeScript will flag the removed keys).
+
+> **Contrast / pairing.** The palette is internally balanced for WCAG AA. When you
+> override one side of a pair, override the other: `foreground` is the ink on
+> `background` (and the whole chrome ramp derives from that pair), and
+> `primaryForeground` is the ink on `primary`. Changing only one side can drop
+> text below the AA contrast ratio — verify each pair (`background` ⇄
+> `foreground`, `primary` ⇄ `primaryForeground`) with a contrast checker.
 
 ## Radius scale, elevation, and state tints (`--apollon-*`) — CSS-only hooks
 
@@ -102,7 +112,7 @@ restyle the editor's shape or elevation:
 | `--apollon-radius-lg`                | Panel / popover / menu radius (default 8px).                                       |
 | `--apollon-shadow`                   | Drop shadow for floating surfaces — menus, popovers, select listboxes.             |
 | `--apollon-interactive-selection`    | Accent ring/fill marking interactive (quiz-pickable) elements (default amber).     |
-| `--apollon-hover-neutral`            | Neutral hover wash for quiet controls, derived off `--apollon-primary-contrast`.   |
+| `--apollon-hover-neutral`            | Neutral hover wash for quiet controls, derived off `--apollon-foreground`.         |
 | `--apollon-dropzone-accent`          | Ring/stroke shown on an assessment feedback drop target on hover (default blue).   |
 | `--apollon-dropzone-accent-fill`     | Translucent fill (40% of `--apollon-dropzone-accent`) outlining box/div targets.   |
 | `--apollon-on-collaboration-cursor`  | Ink (text/stroke) drawn on a collaborator's colored cursor/avatar (default white). |
@@ -177,8 +187,10 @@ The floating editor chrome — the element palette, zoom / undo controls, minima
 header islands, and version rail — is painted from a second band of variables,
 `--apollon-chrome-*`. **You almost never set these.** Every chrome surface,
 border, and text color is `color-mix()`-**derived from the two tokens you already
-theme** — `--apollon-background` and `--apollon-primary-contrast` — so theming
-those two gives the chrome correct, cohesive light/dark values for free. They are
+theme** — `--apollon-background` and `--apollon-foreground` — so theming
+those two gives the chrome correct, cohesive light/dark values for free. (The one
+exception is the ink _on_ the accent, `--apollon-chrome-accent-contrast`, which
+follows `primaryForeground` — set that if your `primary` is light.) They are
 deliberately kept out of `ApollonTheme` / `createApollonTheme` for that reason:
 the typed API is the surface you tune; chrome follows.
 
@@ -197,7 +209,7 @@ Everything else under `--apollon-chrome-*` (the derived surface / border / text
 ramp, the glass tint + blur, shadows, motion tokens, and the dimensional
 `btn`/`pad`/`hit`/`island-h` system) is **internal** — derived or structural, not
 part of the stable contract. Don't depend on those names; theme `background` +
-`primaryContrast` and let the chrome derive.
+`foreground` and let the chrome derive.
 
 ## Light / dark — the `data-theme` mechanism
 
@@ -215,17 +227,35 @@ mode to a subtree instead of the whole page. The `<Apollon>` component and the
 imperative `ApollonEditor` both accept a `dataTheme` option that sets the
 attribute directly on the mount node:
 
-```tsx
+```tsx no-check
 <Apollon dataTheme="dark" />
 ```
 
-```ts
+```ts no-check
 new ApollonEditor(element, { dataTheme: "dark" })
 ```
 
+Scoped `dataTheme` themes the **entire editor** — the canvas, the derived glass
+chrome, and every floating surface (menus, selects, tooltips, the color picker),
+even though those portal to `document.body` outside the mount subtree. Use it
+when you want the editor dark on an otherwise-light page.
+
+The one thing scoped `dataTheme` does _not_ touch is the surrounding **document**
+— `<html>`/`<body>`, native form controls, and your own app chrome keep their
+own theme. If you want the whole page dark, set `data-theme` on the document root
+instead (the snippet above); the editor inherits it automatically.
+
 If you omit `dataTheme`, the editor inherits whatever `data-theme` an ancestor
-declares (or the light default). The per-variable `theme` overrides apply on
-top of whichever light/dark base is active.
+declares (or the light default).
+
+> **A `theme` value is theme-independent.** Inline `theme` variables are spread
+> on the mount node and win over _both_ the light and the dark base for that
+> token. So `theme={createApollonTheme({ background: "#fafafa" })}` pins that
+> background in **both** light and dark — toggling `dataTheme` won't change it.
+> That's correct for brand colors that read on either theme (e.g. `primary`); but
+> if you override `background` / `foreground` / `surface`, provide a matching
+> value per theme (swap the theme object when you toggle `dataTheme`), or drive
+> dark from the document root and only override theme-independent accents.
 
 ## `createApollonTheme`
 
@@ -234,10 +264,10 @@ import { createApollonTheme, type ApollonTheme } from "@tumaet/apollon"
 
 const theme: Record<`--apollon-${string}`, string> = createApollonTheme({
   primary: "#0f3a66",
-  primaryContrast: "#ffffff",
+  foreground: "#12161f",
   background: "#fafafa",
 })
-// → { "--apollon-primary": "#0f3a66", "--apollon-primary-contrast": "#ffffff", "--apollon-background": "#fafafa" }
+// → { "--apollon-primary": "#0f3a66", "--apollon-foreground": "#12161f", "--apollon-background": "#fafafa" }
 ```
 
 `createApollonTheme(theme: ApollonTheme)` returns a framework-agnostic style
@@ -245,12 +275,12 @@ object of `--apollon-*` CSS custom properties. Only the keys you provide are
 emitted — unset tokens keep the stylesheet's fallbacks. The result is a plain
 object, so it composes with any styling layer:
 
-```tsx
+```tsx no-check
 // React inline style
 <Apollon theme={createApollonTheme({ primary: "tomato" })} />
 ```
 
-```ts
+```ts no-check
 // Imperative — set on the host element yourself
 const vars = createApollonTheme({ primary: "tomato" })
 for (const [key, value] of Object.entries(vars)) {
@@ -267,13 +297,12 @@ Pass `theme` (and optionally `dataTheme`) to `<Apollon>`. Drive dark mode from
 your app's own state:
 
 ```tsx
-import { Apollon } from "@tumaet/apollon/react"
-import { createApollonTheme } from "@tumaet/apollon"
+import { Apollon, createApollonTheme } from "@tumaet/apollon"
 
 function EmbeddedEditor({ dark }: { dark: boolean }) {
   return (
     <Apollon
-      style={{ height: "100%" }}
+      style={{ height: "80vh" }}
       dataTheme={dark ? "dark" : undefined}
       theme={createApollonTheme({ primary: "#0f3a66" })}
     />
@@ -296,12 +325,12 @@ the palette per class (what the bundled Apollon VS Code editor does):
 body.vscode-dark,
 body.vscode-high-contrast {
   --apollon-background: #181a18;
-  --apollon-primary-contrast: white;
+  --apollon-foreground: white;
   /* …the rest of the dark contract… */
 }
 ```
 
-```ts
+```ts no-check
 // or: mirror the body class onto data-theme once, then rely on the defaults
 const sync = () => {
   const dark = document.body.classList.contains("vscode-dark")
@@ -330,29 +359,3 @@ the neutral blue default unless they opt in.
 keep working exactly as before: the stylesheet's per-property fallbacks
 (`var(--apollon-primary, #3e8acc)`, etc.) and the `:root` / `:root[data-theme]`
 blocks fully define the default light and dark looks.
-
-## Architecture guardrail
-
-A few structural choices in the styling pipeline are **load-bearing and
-intentional** — they exist to keep the published bundle framework-agnostic and
-Tailwind-free. They are not accidental over-customization to "clean up":
-
-- **Tailwind-free `--apollon-*` / raw-CSS surface.** The published library ships
-  one self-contained, Preflight-free `style.css` that references `--apollon-*`
-  variables with built-in fallbacks. There is intentionally **no Tailwind and no
-  unprefixed token leakage** in the bundle, so embeds can't collide with a
-  host's own utility classes or design tokens.
-- **Empty-cva + `data-slot` primitives.** Components in `packages/ui` use
-  deliberately empty `cva()` bases and `data-slot` attributes as stable styling
-  hooks. The emptiness is the point — styling flows through the compiled CSS and
-  `data-slot` selectors, not inline variants.
-- **`@apply`-compiled `components.css`.** `packages/ui/dist/components.css` is
-  compiled from `src/styles/components.css` (which uses `@apply`) by the
-  `build:css` step. The compiled artifact is what consumers load; do not hand-
-  edit it.
-- **Canonical base-nova arbitrary values.** The arbitrary values baked into the
-  base-nova primitives in `packages/ui` are the canonical design source. Keep
-  them as-is rather than "rounding" them to nearby scale steps.
-
-Treat these as fixed contracts. Changes here ripple into every embed and the
-framework-agnostic guarantee, so they should be deliberate, not cosmetic.

@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest"
 import {
+  COMPACT_PALETTE,
   PALETTE,
   computePaletteLayout,
   previewScaleForCell,
@@ -92,6 +93,41 @@ describe("computePaletteLayout", () => {
     }
   })
 
+  it("keeps sparse mobile palettes compact in portrait and landscape", () => {
+    const portrait = computePaletteLayout(4, 375, 540, 0, true)
+    expect(portrait.cols).toBe(1)
+    expect(portrait.cellH).toBe(COMPACT_PALETTE.CELL_MAX_H)
+
+    const portraitRows = Math.ceil(4 / portrait.cols)
+    const portraitHeight =
+      portraitRows * portrait.cellH +
+      (portraitRows - 1) * COMPACT_PALETTE.GAP +
+      2 * COMPACT_PALETTE.PAD
+    expect(portraitHeight).toBeLessThanOrEqual(268)
+
+    const landscape = computePaletteLayout(6, 844, 250, 0, true)
+    expect(landscape.cols).toBe(2)
+    expect(landscape.cellH).toBe(COMPACT_PALETTE.CELL_MAX_H)
+    expect(landscape.scroll).toBe(false)
+  })
+
+  it("still fits a dense mobile palette without scrolling", () => {
+    for (const [w, h] of [
+      [375, 540],
+      [844, 250],
+    ] as const) {
+      const layout = computePaletteLayout(14, w, h, 0, true)
+      const rows = Math.ceil(14 / layout.cols)
+      const height =
+        rows * layout.cellH +
+        (rows - 1) * COMPACT_PALETTE.GAP +
+        2 * COMPACT_PALETTE.PAD
+
+      expect(layout.scroll).toBe(false)
+      expect(height).toBeLessThanOrEqual(h)
+    }
+  })
+
   it("handles empty / degenerate input safely", () => {
     expect(computePaletteLayout(0, 800, 600, 0).cols).toBe(1)
     expect(computePaletteLayout(5, 0, 0, 0).cols).toBe(1)
@@ -110,5 +146,11 @@ describe("previewScaleForCell", () => {
   it("fits a tall/square element to the cell height", () => {
     const s = previewScaleForCell(40, 40, 90, 56)
     expect(s).toBeCloseTo((56 - inset) / 40, 5)
+  })
+
+  it("uses the tighter content inset for compact cells", () => {
+    const compactInset = 2 * COMPACT_PALETTE.CONTENT_INSET
+    const scale = previewScaleForCell(160, 60, 100, 60, true)
+    expect(scale).toBeCloseTo((100 - compactInset) / 160, 5)
   })
 })

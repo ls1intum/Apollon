@@ -1,7 +1,7 @@
 {
   "name": "@tumaet/ui",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "exports": {
     "./components/*": {
@@ -21,9 +21,12 @@
     }
   },
   "scripts": {
-    "build:types": "tsc -p tsconfig.json --declaration --emitDeclarationOnly --noEmit false --outDir dist",
+    "build": "pnpm run build:css && pnpm run build:types",
+    "build:types": "tsc -p tsconfig.build.json --declaration --emitDeclarationOnly --noEmit false --outDir dist",
+    "build:types:watch": "tsc -p tsconfig.build.json --declaration --emitDeclarationOnly --noEmit false --outDir dist --watch --preserveWatchOutput",
     "build:css": "tailwindcss -i src/styles/components.css -o dist/components.css",
     "build:css:watch": "tailwindcss -i src/styles/components.css -o dist/components.css --watch",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "test": "vitest run",
@@ -37,16 +40,16 @@
     "@base-ui/react": "catalog:",
     "class-variance-authority": "catalog:",
     "clsx": "catalog:",
-    "cmdk": "catalog:",
     "lucide-react": "catalog:",
     "tailwind-merge": "catalog:",
     "tailwindcss": "catalog:"
   },
   "devDependencies": {
+    "@eslint-react/eslint-plugin": "catalog:",
     "@eslint/js": "catalog:",
     "@storybook/addon-docs": "catalog:",
     "@storybook/react-vite": "catalog:",
-    "@tailwindcss/cli": "4.0.17",
+    "@tailwindcss/cli": "4.3.1",
     "@tailwindcss/vite": "catalog:",
     "@testing-library/jest-dom": "catalog:",
     "@testing-library/react": "catalog:",
@@ -54,9 +57,7 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
-    "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
-    "eslint-plugin-react": "catalog:",
     "eslint-plugin-react-hooks": "catalog:",
     "globals": "catalog:",
     "jsdom": "catalog:",

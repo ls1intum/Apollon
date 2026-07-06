@@ -1,4 +1,5 @@
-import { Router, type Request } from "express"
+import { Hono, type Context } from "hono"
+import type { AppEnv } from "../http/env.js"
 import type { Redis } from "../redis.js"
 import { k } from "../redis.js"
 import { Errors } from "../http/errors.js"
@@ -279,124 +280,116 @@ ${inner}${footer}
 </svg>`
 }
 
-export function mountEmbedApiRoutes(deps: Deps): Router {
+export function mountEmbedApiRoutes(deps: Deps): Hono<AppEnv> {
   const { redis, config } = deps
-  const router = Router()
+  const router = new Hono<AppEnv>()
 
-  router.get(
+  // Registered for GET *and* HEAD: the handler serves HEAD itself (metadata
+  // without the render cost), branching on `c.req.method`, mirroring Express'
+  // automatic GET→HEAD routing.
+  router.on(
+    ["GET", "HEAD"],
     "/diagrams/:diagramId/preview.svg",
-    validate(
-      { params: DiagramIdParams },
-      async (req, res, _next, { params }) => {
-        const found = await readDiagramWithEtag(redis, params.diagramId)
-        if (!found) throw Errors.notFound("diagram not found")
-        // A fetch (incl. Camo revalidating to a 304) means the embed is live —
-        // slide the TTL so it doesn't expire out from under the README.
-        await refreshDiagramTtl(
-          redis,
-          config.DIAGRAM_TTL_SECONDS,
-          params.diagramId,
-          found.ttlSeconds
-        )
+    validate({ params: DiagramIdParams }, async (c, { params }) => {
+      const found = await readDiagramWithEtag(redis, params.diagramId)
+      if (!found) throw Errors.notFound("diagram not found")
+      // A fetch (incl. Camo revalidating to a 304) means the embed is live —
+      // slide the TTL so it doesn't expire out from under the README.
+      await refreshDiagramTtl(
+        redis,
+        config.DIAGRAM_TTL_SECONDS,
+        params.diagramId,
+        found.ttlSeconds
+      )
 
-        // Conditional GET / HEAD short-circuit — before any render. Cache
-        // headers are set here and on the 200 path only, never before the
-        // render, so a 503/500 is never cached against the diagramId.
-        if (ifNoneMatch(req.header("if-none-match"), found.etag)) {
-          res.setHeader("etag", found.etag)
-          res.setHeader("cache-control", CACHE_CONTROL)
-          res.status(304).end()
-          return
-        }
-
-        const setHeaders = () => {
-          res.type("image/svg+xml")
-          res.setHeader("etag", found.etag)
-          res.setHeader("cache-control", CACHE_CONTROL)
-          res.setHeader("x-content-type-options", "nosniff")
-          res.setHeader("content-security-policy", SVG_CSP)
-        }
-
-        // HEAD returns the metadata without paying the render cost.
-        if (req.method === "HEAD") {
-          setHeaders()
-          res.status(200).end()
-          return
-        }
-
-        const raw = await renderSvg(deps, found.diagram, found.etag)
-        // `?frame=plain` drops the footer/CTA — used by the non-clickable embed
-        // snippet, where an "Open in Apollon" button would link nowhere.
-        const svg = frameDiagramSvg(
-          raw,
-          found.diagram.title || "Apollon diagram",
-          req.query.frame !== "plain"
-        )
-        setHeaders()
-        res.status(200).send(svg)
+      // Conditional GET / HEAD short-circuit — before any render. Cache
+      // headers are set here and on the 200 path only, never before the
+      // render, so a 503/500 is never cached against the diagramId.
+      if (ifNoneMatch(c.req.header("if-none-match"), found.etag)) {
+        c.header("etag", found.etag)
+        c.header("cache-control", CACHE_CONTROL)
+        return c.body(null, 304)
       }
-    )
+
+      const setHeaders = () => {
+        c.header("content-type", "image/svg+xml")
+        c.header("etag", found.etag)
+        c.header("cache-control", CACHE_CONTROL)
+        c.header("x-content-type-options", "nosniff")
+        c.header("content-security-policy", SVG_CSP)
+      }
+
+      // HEAD returns the metadata without paying the render cost.
+      if (c.req.method === "HEAD") {
+        setHeaders()
+        return c.body(null, 200)
+      }
+
+      const raw = await renderSvg(deps, found.diagram, found.etag)
+      // `?frame=plain` drops the footer/CTA — used by the non-clickable embed
+      // snippet, where an "Open in Apollon" button would link nowhere.
+      const svg = frameDiagramSvg(
+        raw,
+        found.diagram.title || "Apollon diagram",
+        c.req.query("frame") !== "plain"
+      )
+      setHeaders()
+      return c.body(svg, 200)
+    })
   )
 
   return router
 }
 
-export function mountEmbedRoutes(deps: Deps): Router {
+export function mountEmbedRoutes(deps: Deps): Hono<AppEnv> {
   const { redis, config } = deps
-  const router = Router()
+  const router = new Hono<AppEnv>()
 
-  router.get(
+  router.on(
+    ["GET", "HEAD"],
     "/:diagramId",
-    validate(
-      { params: DiagramIdParams },
-      async (req, res, _next, { params }) => {
-        const found = await readDiagramWithEtag(redis, params.diagramId)
-        if (!found) throw Errors.notFound("diagram not found")
-        // Viewing the embed page keeps the diagram alive (see the SVG route).
-        await refreshDiagramTtl(
-          redis,
-          config.DIAGRAM_TTL_SECONDS,
-          params.diagramId,
-          found.ttlSeconds
-        )
+    validate({ params: DiagramIdParams }, async (c, { params }) => {
+      const found = await readDiagramWithEtag(redis, params.diagramId)
+      if (!found) throw Errors.notFound("diagram not found")
+      // Viewing the embed page keeps the diagram alive (see the SVG route).
+      await refreshDiagramTtl(
+        redis,
+        config.DIAGRAM_TTL_SECONDS,
+        params.diagramId,
+        found.ttlSeconds
+      )
 
-        if (ifNoneMatch(req.header("if-none-match"), found.etag)) {
-          res.setHeader("etag", found.etag)
-          res.setHeader("cache-control", CACHE_CONTROL)
-          res.status(304).end()
-          return
-        }
-
-        const setHeaders = () => {
-          res.type("html")
-          res.setHeader("etag", found.etag)
-          res.setHeader("cache-control", CACHE_CONTROL)
-          res.setHeader("x-content-type-options", "nosniff")
-          res.setHeader("content-security-policy", HTML_CSP)
-          res.setHeader("referrer-policy", "no-referrer")
-          // Opt out of FLoC and its Topics-API successor.
-          res.setHeader(
-            "permissions-policy",
-            "interest-cohort=(), browsing-topics=()"
-          )
-        }
-
-        if (req.method === "HEAD") {
-          setHeaders()
-          res.status(200).end()
-          return
-        }
-
-        const raw = await renderSvg(deps, found.diagram, found.etag)
-        const html = renderEmbedHtml({
-          title: found.diagram.title || "Apollon diagram",
-          svg: withOpaqueBackground(raw),
-          editorHref: buildEditorHref(req, found.diagram.id),
-        })
-        setHeaders()
-        res.status(200).send(html)
+      if (ifNoneMatch(c.req.header("if-none-match"), found.etag)) {
+        c.header("etag", found.etag)
+        c.header("cache-control", CACHE_CONTROL)
+        return c.body(null, 304)
       }
-    )
+
+      const setHeaders = () => {
+        c.header("content-type", "text/html; charset=utf-8")
+        c.header("etag", found.etag)
+        c.header("cache-control", CACHE_CONTROL)
+        c.header("x-content-type-options", "nosniff")
+        c.header("content-security-policy", HTML_CSP)
+        c.header("referrer-policy", "no-referrer")
+        // Opt out of FLoC and its Topics-API successor.
+        c.header("permissions-policy", "interest-cohort=(), browsing-topics=()")
+      }
+
+      if (c.req.method === "HEAD") {
+        setHeaders()
+        return c.body(null, 200)
+      }
+
+      const raw = await renderSvg(deps, found.diagram, found.etag)
+      const html = renderEmbedHtml({
+        title: found.diagram.title || "Apollon diagram",
+        svg: withOpaqueBackground(raw),
+        editorHref: buildEditorHref(c, found.diagram.id),
+      })
+      setHeaders()
+      return c.body(html, 200)
+    })
   )
 
   return router
@@ -404,13 +397,20 @@ export function mountEmbedRoutes(deps: Deps): Router {
 
 /**
  * Absolute editor URL for the webapp's `/shared/:id?view=COLLABORATE` route (the
- * bare `/:id` 404s without `?view`). Uses `req.get("host")` (the verbatim `Host`
- * header), not `req.hostname`, which under `trust proxy` honours the
- * client-spoofable `X-Forwarded-Host`.
+ * bare `/:id` 404s without `?view`). Uses the verbatim `Host` header — never
+ * the client-spoofable `X-Forwarded-Host`. The scheme honours `X-Forwarded-Proto`
+ * (set by the production reverse proxy) so the link isn't blocked as mixed
+ * content from inside an HTTPS-served iframe; absent that header it falls back to
+ * the request's own scheme. This reproduces the Express `trust proxy = 1`
+ * `req.protocol` + `req.get("host")` behaviour without Express.
  */
-function buildEditorHref(req: Request, diagramId: string): string {
-  const host = req.get("host") ?? ""
-  return `${req.protocol}://${host}/shared/${encodeURIComponent(diagramId)}?view=COLLABORATE`
+function buildEditorHref(c: Context<AppEnv>, diagramId: string): string {
+  const host = c.req.header("host") ?? ""
+  const forwardedProto = c.req.header("x-forwarded-proto")
+  const protocol = forwardedProto
+    ? (forwardedProto.split(",")[0]?.trim() ?? "http")
+    : new URL(c.req.url).protocol.replace(/:$/, "")
+  return `${protocol}://${host}/shared/${encodeURIComponent(diagramId)}?view=COLLABORATE`
 }
 
 interface EmbedHtmlInput {

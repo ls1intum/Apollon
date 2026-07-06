@@ -7,7 +7,7 @@ import {
 import { computeSlideViewport, renderSvgToSlide } from "@/utils/svgToPptx"
 import { Filesystem, Directory } from "@capacitor/filesystem"
 import { Share } from "@capacitor/share"
-import { isPlatform } from "@ionic/react"
+import { isNativePlatform } from "@/utils/platform"
 import { useFileDownload } from "./useFileDownload"
 
 /**
@@ -69,7 +69,7 @@ export const useExportAsPPTX = () => {
 
     const blob = (await pres.write({ outputType: "blob" })) as Blob
 
-    if (isPlatform("capacitor")) {
+    if (isNativePlatform()) {
       const base64String = await blobToBase64(blob)
 
       await Filesystem.writeFile({

@@ -1,6 +1,6 @@
 {
   "name": "@tumaet/apollon",
-  "version": "4.9.0",
+  "version": "5.0.1",
   "description": "Embeddable UML modeling editor. Mounts into any DOM node — works inside Angular, Vue, Svelte, vanilla JS, or React hosts.",
   "keywords": [
     "uml",
@@ -46,14 +46,6 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./react": {
-      "types": "./dist/react/react.d.ts",
-      "import": "./dist/react/react.js"
-    },
-    "./external": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/external/index.js"
-    },
     "./internals": {
       "types": "./dist/internals.d.ts",
       "import": "./dist/internals.js"
@@ -67,9 +59,9 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "dev": "pnpm --filter @tumaet/ui run build:css && vite",
-    "build": "pnpm --filter @tumaet/ui run build:css && pnpm --filter @tumaet/ui run build:types && tsc -b && vite build && LIB_PEERS=true vite build && LIB_EXTERNAL=true vite build && rm -rf dist/react/assets dist/external/assets && node scripts/localize-ui-types.mjs",
-    "build:watch": "pnpm --filter @tumaet/ui run build:css && pnpm exec concurrently -k \"pnpm --filter @tumaet/ui run build:css:watch\" \"tsc -b --watch\" \"vite build --watch\"",
+    "dev": "pnpm --filter @tumaet/ui run build && vite",
+    "build": "pnpm --filter @tumaet/ui run build && tsc -b && vite build",
+    "build:watch": "pnpm exec concurrently -k \"pnpm --filter @tumaet/ui run build:css:watch\" \"pnpm --filter @tumaet/ui run build:types:watch\" \"tsc -b --watch\" \"vite build --watch\"",
     "preview": "vite preview",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
@@ -82,24 +74,9 @@
   },
   "size-limit": [
     {
-      "name": "standalone entry (peers inlined)",
+      "name": "main entry (all deps external)",
       "path": "dist/index.js",
-      "limit": "220 kB"
-    },
-    {
-      "name": "/react entry (peers external, Base UI + lucide bundled)",
-      "path": "dist/react/react.js",
-      "limit": "150 kB"
-    },
-    {
-      "name": "/external entry (all deps external)",
-      "path": "dist/external/index.js",
-      "limit": "112 kB"
-    },
-    {
-      "name": "yjs sync chunk",
-      "path": "dist/yjsSync-*.js",
-      "limit": "210 kB"
+      "limit": "85 kB"
     },
     {
       "name": "/export lazy chunk (renderers external; Inter ttf inlined)",
@@ -114,25 +91,13 @@
     "y-protocols": "^1.0.6",
     "yjs": "^13.6.0"
   },
-  "peerDependenciesMeta": {
-    "@xyflow/react": {
-      "optional": true
-    },
-    "react": {
-      "optional": true
-    },
-    "react-dom": {
-      "optional": true
-    }
-  },
   "dependencies": {
-    "@chenglou/pretext": "0.0.6",
+    "@base-ui/react": "catalog:",
+    "@chenglou/pretext": "0.0.8",
     "@dnd-kit/core": "6.3.1",
     "@dnd-kit/sortable": "10.0.0",
     "@dnd-kit/utilities": "3.2.2",
-    "@base-ui/react": "catalog:",
     "lucide-react": "catalog:",
-    "uuid": "catalog:",
     "zustand": "catalog:"
   },
   "optionalDependencies": {
@@ -141,7 +106,9 @@
     "svg2pdf.js": "catalog:"
   },
   "devDependencies": {
+    "@eslint-react/eslint-plugin": "catalog:",
     "@eslint/js": "catalog:",
+    "@microsoft/api-extractor": "7.58.9",
     "@size-limit/preset-big-lib": "catalog:",
     "@testing-library/jest-dom": "catalog:",
     "@testing-library/react": "catalog:",
@@ -155,7 +122,6 @@
     "ajv": "8.20.0",
     "babel-plugin-react-compiler": "catalog:",
     "eslint": "catalog:",
-    "eslint-plugin-react": "catalog:",
     "eslint-plugin-react-hooks": "catalog:",
     "globals": "catalog:",
     "jsdom": "catalog:",
@@ -167,9 +133,9 @@
     "typescript-eslint": "catalog:",
     "typescript-json-schema": "0.67.4",
     "vite": "catalog:",
-    "vite-plugin-dts": "4.3.0",
+    "vite-plugin-dts": "5.0.3",
     "vitest": "catalog:",
-    "y-protocols": "1.0.6",
-    "yjs": "13.6.20"
+    "y-protocols": "catalog:",
+    "yjs": "catalog:"
   }
 }

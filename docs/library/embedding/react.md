@@ -1,17 +1,18 @@
 ---
 id: react
 title: React
-description: Embed Apollon in React with the <Apollon> component, hooks, and provider from the /react subpath.
+description: Embed Apollon in React with the <Apollon> component, hooks, and provider.
 ---
 
 # React
 
 Apollon ships a React component, a context provider, and subscription hooks
-from the **`/react` subpath** so the editor shares your host's copy of React
-and xyflow instead of bundling a second one.
+from its **main entry** (`@tumaet/apollon`). React and `@xyflow/react` are
+external peers, so the component renders on your host's copy — there is never a
+second React or xyflow.
 
 ```tsx
-import { Apollon } from "@tumaet/apollon/react"
+import { Apollon } from "@tumaet/apollon"
 import type { UMLModel } from "@tumaet/apollon"
 import "@tumaet/apollon/style.css"
 
@@ -34,15 +35,15 @@ export function Diagram({ initialModel }: { initialModel?: UMLModel }) {
 The component owns the editor's lifecycle — constructs on mount, destroys on
 unmount. The `onMount` return is the React-19-style cleanup that runs before
 destroy. The diagram type defaults to `ClassDiagram` when no `defaultModel` is
-supplied; pass `defaultType` for a different one.
+supplied; pass `defaultType` for a different one. It is StrictMode-safe — React's
+dev double mount/unmount constructs and destroys the editor cleanly, with no
+leaked instance or Yjs document.
 
-## Import from `/react`
+## Import from `@tumaet/apollon`
 
-`<Apollon>` is exported **only** from the `@tumaet/apollon/react` subpath, which
-externalises React so the editor shares your host's copy. The default
-`@tumaet/apollon` subpath (the standalone build) bundles its own React and
-does not export the component — importing `<Apollon>` from there is a compile
-error. Import the component, the hooks, and the types from `@tumaet/apollon/react`.
+`<Apollon>`, the hooks, and the provider are all exported from `@tumaet/apollon`.
+Non-React hosts that import only the imperative `ApollonEditor` tree-shake the
+component out automatically.
 
 ## Reaching the editor instance
 
@@ -65,11 +66,11 @@ import {
   useApollonEditor,
   useApollonSubscription,
   type ApollonEditor,
-} from "@tumaet/apollon/react"
+} from "@tumaet/apollon"
 
 function Toolbar() {
   const editor = useApollonEditor()
-  const selection = useApollonSubscription(
+  const selection = useApollonSubscription<string[]>(
     (e, cb) => e.subscribeToSelectionChange(cb),
     (e) => e.getSelectedElements()
   )
@@ -109,11 +110,21 @@ unmount.
 
 The full table — every prop, its type, and what it maps to — lives in the
 [API reference](/library/api#apollonprops). Passing `undefined` to a reactive
-prop leaves the live value alone; re-key the component to fully reset.
+prop leaves the live value alone; re-key the component to fully reset:
+
+```tsx no-check
+<Apollon key={diagramId} defaultModel={model} />
+```
+
+`model` is a **one-way** reactive push, not a two-way controlled value: each new
+reference is applied to the editor, but the editor's own edits are not mirrored
+back. Do **not** feed `subscribeToModelChange` into `model` — that loops. For
+save-on-change, use `defaultModel` plus an `onMount` subscription (the first
+example above).
 
 ## Hooks
 
-```ts
+```ts no-check
 useApollonEditor(): ApollonEditor | null
 useApollonEditorOrThrow(): ApollonEditor
 useApollonSubscription<T>(
@@ -127,16 +138,27 @@ subscription — replace any manual `subscribeTo* + unsubscribe` boilerplate
 with one call:
 
 ```tsx
-const model = useApollonSubscription(
+import {
+  useApollonSubscription,
+  type UMLModel,
+  type CollaboratorInfo,
+} from "@tumaet/apollon"
+
+const model = useApollonSubscription<UMLModel>(
   (editor, cb) => editor.subscribeToModelChange(cb),
   (editor) => editor.model
 )
 
-const collaborators = useApollonSubscription(
+const collaborators = useApollonSubscription<CollaboratorInfo[]>(
   (editor, cb) => editor.subscribeToCollaboratorChanges(cb),
   (editor) => editor.getCollaborators()
 )
 ```
+
+`getSnapshot` must return a **referentially stable** value when nothing changed —
+hand back the editor's own value (`editor.model`, `getSelectedElements()`), never
+a fresh array/object allocated inside the selector, or `useSyncExternalStore`
+re-renders in a loop.
 
 ## Providing an externally-owned editor
 
@@ -144,8 +166,8 @@ If the host owns the `ApollonEditor` lifecycle directly (a framework adapter,
 a non-React harness, a test fixture) but you still want React descendants to
 reach the instance, wrap them in `<ApollonProvider>`:
 
-```tsx
-import { ApollonProvider } from "@tumaet/apollon/react"
+```tsx no-check
+import { ApollonProvider } from "@tumaet/apollon"
 ;<ApollonProvider editor={instance}>
   <Toolbar />
 </ApollonProvider>
@@ -166,7 +188,7 @@ canvas collapses to zero pixels and renders blank. See
 The editor is client-only — it touches `window` at construction. In SSR
 frameworks, load `<Apollon>` client-side only. In the Next.js App Router:
 
-```tsx
+```tsx no-check
 "use client"
 import dynamic from "next/dynamic"
 
@@ -178,6 +200,10 @@ export default function Page() {
 ```
 
 Remix and Nuxt have equivalent client-only loading.
+
+`@tumaet/apollon` is a client module in its entirety (`"use client"`), so its
+pure helpers (`importDiagram`, `createApollonTheme`, …) are client-only too —
+import them from client components, not Server Components.
 
 Non-React hosts that want imperative control mount `ApollonEditor` directly —
 see [Vanilla JS / CDN](/library/embedding/vanilla).

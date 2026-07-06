@@ -4,7 +4,7 @@ import {
   ApollonControl,
   ApollonEditor,
   UMLModel,
-} from "@tumaet/apollon/react"
+} from "@tumaet/apollon"
 import { vscode } from "./index"
 import { convertRenderedSVGToPNG } from "./utils/converter"
 import useStore from "./store"
@@ -22,7 +22,7 @@ const STATUS_COLOR: Record<ExportStatus, string> = {
   idle: "var(--apollon-chrome-text-muted)",
   exporting: "var(--home-toast-warning, #b7791f)",
   synced: "var(--home-toast-success, #197d4e)",
-  error: "var(--apollon-alert-danger-color, #d33)",
+  error: "var(--apollon-danger, #d33)",
 }
 
 function App() {

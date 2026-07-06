@@ -16,7 +16,7 @@
  * `args`. The seed helpers exist only for the thin-container integration stories
  * that still read `useVersionStore`.
  */
-import type { UMLModel } from "@tumaet/apollon/react"
+import type { UMLModel } from "@tumaet/apollon"
 import { useVersionStore, type PendingVersion } from "@/stores/useVersionStore"
 
 export type { PendingVersion }

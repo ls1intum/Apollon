@@ -1,6 +1,4 @@
-import { v4 as uuidv4 } from "uuid"
-
-export const generateUUID = () => uuidv4()
+export { generateUUID } from "@/constants"
 export * from "./layoutUtils"
 export * from "./textUtils"
 export * from "./popoverUtils"
@@ -10,6 +8,7 @@ export * from "./edgeUtils"
 export * from "./exportUtils"
 export * from "./diagramTypeUtils"
 export * from "./storeUtils"
+export * from "./stereotypeLabel"
 export * from "./bpmnConstraints"
 export * from "./swimlaneUtils"
 // Only `importDiagram` is public; the V2/V3 convert helpers and format

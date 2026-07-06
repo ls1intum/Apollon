@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { within, expect, userEvent, waitFor } from "storybook/test"
-import { Apollon, ApollonMode } from "@tumaet/apollon/react"
+import { Apollon, ApollonMode } from "@tumaet/apollon"
 import { AssessmentSelectableWrapper } from "@tumaet/apollon/components/wrapper/AssessmentSelectableWrapper"
 import {
   editorStoryMeta,

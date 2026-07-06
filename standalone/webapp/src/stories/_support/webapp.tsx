@@ -20,7 +20,7 @@ import {
   createRoute,
   createRouter,
 } from "@tanstack/react-router"
-import type { ApollonEditor, UMLModel } from "@tumaet/apollon/react"
+import type { ApollonEditor, UMLModel } from "@tumaet/apollon"
 import { EditorContext, EditorProvider } from "@/contexts/EditorContext"
 import { ModalProvider } from "@/contexts/ModalContext"
 import { ModalProgressProvider } from "@/contexts/ModalProgressContext"
@@ -132,7 +132,7 @@ export function withModalFrame(opts: {
  *
  * The navbar islands are THEME-FOLLOWING: they paint `.apollon-glass`
  * (`--apollon-chrome-glass`, derived from `--apollon-background`) and their text
- * uses `--apollon-chrome-text` (`--apollon-primary-contrast`) — both flip with
+ * uses `--apollon-chrome-text` (`--apollon-foreground`) — both flip with
  * the document theme, so contrast is always correct. An earlier version of this
  * decorator hard-coded a fixed-dark `--navbar-bg` plate; that put the
  * theme-following text on the wrong background (dark-ink-on-dark in light mode),

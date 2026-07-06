@@ -55,8 +55,7 @@ import {
 } from "@/components"
 import { ReachabilityGraphMarkingSVG } from "@/components/svgs/nodes/reachabilityGraphDiagram/ReachabilityGraphMarkingSVG"
 import { DiagramNodeType } from "@/nodes"
-import { ClassType, UMLDiagramType } from "@/types"
-import { v4 as uuidv4 } from "uuid"
+import { ClassStereotype, UMLDiagramType } from "@/types"
 
 /* -------------------------------------------------------------------------- */
 /* Canvas                                                                     */
@@ -76,11 +75,9 @@ export const CANVAS = Object.freeze({
 export const CSS_VARIABLE_FALLBACKS: Readonly<Record<string, string>> =
   Object.freeze({
     "--apollon-primary": "#3e8acc",
-    "--apollon-primary-contrast": "#000000",
+    "--apollon-primary-foreground": "#ffffff",
+    "--apollon-foreground": "#000000",
     "--apollon-secondary": "#6c757d",
-    "--apollon-alert-warning-yellow": "#ffc107",
-    "--apollon-alert-warning-background": "#fff3cd",
-    "--apollon-alert-warning-border": "#ffeeba",
     "--apollon-interactive-selection": "#f39c12",
     "--apollon-dropzone-accent": "#0064ff",
     "--apollon-on-collaboration-cursor": "#ffffff",
@@ -101,23 +98,16 @@ export const CSS_VARIABLE_FALLBACKS: Readonly<Record<string, string>> =
     "--apollon-guide-vertical": "#d63031",
     "--apollon-guide-horizontal": "#0984e3",
     "--apollon-background": "#ffffff",
-    "--apollon-background-inverse": "#000000",
     "--apollon-background-variant": "#f8f9fa",
     "--apollon-hover-neutral":
-      "color-mix(in srgb, var(--apollon-primary-contrast, #000000) 7.5%, transparent)",
+      "color-mix(in srgb, var(--apollon-foreground, #000000) 7.5%, transparent)",
     "--apollon-gray": "#e9ecef",
     "--apollon-grid": "rgba(36, 39, 36, 0.1)",
     "--apollon-gray-variant": "#495057",
-    "--apollon-alert-danger-color": "#721c24",
-    "--apollon-alert-danger-background": "#f8d7da",
-    "--apollon-alert-danger-border": "#f5c6cb",
-    "--apollon-switch-box-border-color": "#dee2e6",
-    "--apollon-list-group-color": "#ffffff",
-    "--apollon-btn-outline-secondary-color": "#6c757d",
-    "--apollon-modal-bottom-border": "#e9ecef",
+    "--apollon-danger": "#721c24",
   })
 
-export const STROKE_COLOR = CSS_VARIABLE_FALLBACKS["--apollon-primary-contrast"]
+export const STROKE_COLOR = CSS_VARIABLE_FALLBACKS["--apollon-foreground"]
 export const FILL_COLOR = CSS_VARIABLE_FALLBACKS["--apollon-background"]
 
 // Re-exported from the leaf module (see lib/fontStack.ts) so `@/constants`
@@ -180,7 +170,32 @@ export const LAYOUT = Object.freeze({
   STEREOTYPE_NAME_GAP: 4,
 } as const)
 
-const generateUUID = () => uuidv4()
+/**
+ * Media query for the compact "mobile" palette layout. First clause: portrait
+ * phones, stopping below 768px so iPad portrait keeps the desktop layout. Second
+ * clause: phones in landscape, where the short height distinguishes them from
+ * tablets.
+ *
+ * Governs the PALETTE only. The webapp navbar uses its own width-only
+ * `NARROW_VIEW_QUERY` (standalone/webapp/src/constants/responsive.ts) which does
+ * not match landscape phones, so there the navbar stays full-size while the
+ * palette still compacts.
+ */
+export const MOBILE_VIEW_QUERY =
+  "(max-width: 767.95px), (max-width: 950px) and (max-height: 500px)"
+
+// RFC 4122 v4 UUID via crypto.getRandomValues — available in every context the
+// editor runs in (secure or not, browser or Node ≥19 (global Web Crypto)),
+// unlike crypto.randomUUID() which requires a secure context an embeddable host
+// can't be assumed to provide.
+export const generateUUID = (): string => {
+  const b = crypto.getRandomValues(new Uint8Array(16))
+  // RFC-4122 v4: version nibble (4) at byte 6, variant (10xx) at byte 8.
+  b[6] = (b[6] & 0x0f) | 0x40
+  b[8] = (b[8] & 0x3f) | 0x80
+  const h = Array.from(b, (x) => x.toString(16).padStart(2, "0"))
+  return `${h.slice(0, 4).join("")}-${h.slice(4, 6).join("")}-${h.slice(6, 8).join("")}-${h.slice(8, 10).join("")}-${h.slice(10, 16).join("")}`
+}
 
 // Interface-component sizing. The flat aliases below are local-only; public
 // consumers (and the rest of the library) should reach for `INTERFACE.*`.
@@ -462,10 +477,12 @@ export const dropElementConfigs: Readonly<
     {
       type: "class",
       width: DROPS.DEFAULT_ELEMENT_WIDTH,
-      height: 110,
+      // No keyword line (abstract is an italic name, not a «keyword»), so this
+      // is 10px shorter than the interface/enumeration templates.
+      height: 100,
       defaultData: {
         name: "Abstract",
-        stereotype: ClassType.Abstract,
+        isAbstract: true,
         methods: [{ id: generateUUID(), name: "+ method()" }],
         attributes: [{ id: generateUUID(), name: "+ attribute: Type" }],
       },
@@ -477,7 +494,7 @@ export const dropElementConfigs: Readonly<
       height: 140,
       defaultData: {
         name: "Enumeration",
-        stereotype: ClassType.Enumeration,
+        stereotype: ClassStereotype.Enumeration,
         methods: [],
         attributes: [
           { id: generateUUID(), name: "Case 1" },
@@ -493,7 +510,7 @@ export const dropElementConfigs: Readonly<
       height: 110,
       defaultData: {
         name: "Interface",
-        stereotype: ClassType.Interface,
+        stereotype: ClassStereotype.Interface,
         methods: [{ id: generateUUID(), name: "+ method()" }],
         attributes: [{ id: generateUUID(), name: "+ attribute: Type" }],
       },

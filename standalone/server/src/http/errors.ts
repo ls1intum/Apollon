@@ -15,6 +15,12 @@ export class ApiError extends Error {
 export const Errors = {
   invalidParams: (msg = "Invalid request parameters") =>
     new ApiError(422, "INVALID_PARAMS", msg),
+  // Raised by the bodyLimit middleware when a request body exceeds
+  // MAX_SNAPSHOT_BYTES. Routed through the shared error handler so the 413
+  // carries the same typed envelope (`error: BODY_TOO_LARGE`) the previous
+  // body-parser path produced.
+  bodyTooLarge: (msg = "Request body exceeds the configured size limit") =>
+    new ApiError(413, "BODY_TOO_LARGE", msg),
   notFound: (msg = "Not found") => new ApiError(404, "NOT_FOUND", msg),
   noHead: (msg = "Diagram does not exist") => new ApiError(404, "NO_HEAD", msg),
   revisionMismatch: (currentHeadRev: number) =>

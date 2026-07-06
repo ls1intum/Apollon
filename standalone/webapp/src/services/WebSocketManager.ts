@@ -1,4 +1,4 @@
-import { ApollonEditor } from "@tumaet/apollon/react"
+import { ApollonEditor } from "@tumaet/apollon"
 import { serverWSSUrl } from "@/constants"
 import { type ControlEvent, type Envelope, WebSocketMessage } from "@/types"
 import { log } from "@/logger"

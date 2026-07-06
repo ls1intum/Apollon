@@ -70,8 +70,9 @@ Run a production build locally — assumes `pnpm build` already ran.
 Per-workspace variants (`lint:ui`, `lint:lib`, `lint:server`, `lint:webapp`,
 `lint:vscode`, `lint:docs`, and their `lint:fix:*` counterparts) exist for
 narrower runs.
-`lint:docs` runs `markdownlint-cli2` over the docs Markdown **and** `tsc
---noEmit` on the Docusaurus config + theme.
+`lint:docs` runs `markdownlint-cli2` over the docs Markdown. Type-checking — the
+Docusaurus config/theme (`typecheck`) and the doc code examples
+(`check:doc-snippets`) — runs separately in CI, not as part of `lint`.
 
 ## Test
 
@@ -93,14 +94,40 @@ Playwright visual regression lives in the webapp workspace — see
 
 ## Docs
 
-| Script            | Does                                           |
-| ----------------- | ---------------------------------------------- |
-| `pnpm dev:docs`   | Library build, then the Docusaurus dev server  |
-| `pnpm build:docs` | Library build, then the static Docusaurus site |
+| Script                    | Does                                                   |
+| ------------------------- | ------------------------------------------------------ |
+| `pnpm dev:docs`           | Library build, then the Docusaurus dev server          |
+| `pnpm build:docs`         | Library build, then the static Docusaurus site         |
+| `pnpm check:doc-snippets` | Library build, then type-check the docs' code examples |
 
 The docs site is published at <https://ls1intum.github.io/Apollon/>. The
 Docusaurus build uses `onBrokenLinks: "throw"`, so a bad internal link fails
 `build:docs`.
+
+### Doc code examples are type-checked
+
+`check:doc-snippets` (`scripts/check-doc-snippets.mjs`) compiles every fenced
+`ts`/`tsx` block in `library/README.md`, `library/THEMING.md`, and
+`docs/library/**` against the **real** built `@tumaet/apollon` types, so a public
+API change that breaks a documented example fails CI (`pr-health-checks`) instead
+of shipping rotten docs. Each block is checked as a standalone module, so it must
+carry its own imports.
+
+Mark a block `no-check` in the fence info string to skip it — for bare fragments
+that reference an undeclared `editor`, type-signature illustrations, or
+framework-specific examples (`@angular/core`, `next/dynamic`, the resvg `?url`
+wasm import) that can't compile in isolation:
+
+````md
+```ts no-check
+editor.fitView() // `editor` is illustrative, not declared here
+```
+````
+
+The `no-check` token lives after the language in the info string, which
+Docusaurus, GitHub, and npm all ignore when rendering — readers never see it.
+Prefer making a block self-contained (add the imports) over `no-check` when it's
+a real copy-paste example.
 
 ## Capacitor
 

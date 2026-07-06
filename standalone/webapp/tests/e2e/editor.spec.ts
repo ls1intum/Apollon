@@ -441,22 +441,28 @@ test.describe("Playground page", () => {
     await page.goto("/playground")
     await waitForCanvasReady(page, false)
 
-    const selector = page.locator("select").first()
-    await expect(selector).toBeVisible()
+    // The diagram-type control is a shadcn Select (Base UI): a button trigger
+    // that opens a listbox of options in a portal.
+    const trigger = page.getByTestId("playground-diagram-type")
+    await expect(trigger).toBeVisible()
+    await trigger.click()
 
     // Should list at least the 13 diagram types
-    const optionCount = await selector.locator("option").count()
-    expect(optionCount).toBeGreaterThanOrEqual(13)
+    const options = page.getByRole("option")
+    await expect(options.first()).toBeVisible()
+    expect(await options.count()).toBeGreaterThanOrEqual(13)
+    await page.keyboard.press("Escape")
   })
 
   test("changing diagram type re-renders the sidebar", async ({ page }) => {
     await page.goto("/playground")
     await waitForCanvasReady(page, false)
 
-    const typeSelector = page.locator("select").first()
-
-    // Switch to ActivityDiagram
-    await typeSelector.selectOption("ActivityDiagram")
+    // Switch to ActivityDiagram via the shadcn Select.
+    await page.getByTestId("playground-diagram-type").click()
+    await page
+      .getByRole("option", { name: "ActivityDiagram", exact: true })
+      .click()
     await waitForCanvasReady(page, false)
 
     // The element palette should have changed – just verify it is still
@@ -638,6 +644,13 @@ test.describe("Mobile responsive layout", () => {
     const palette = page.getByTestId("apollon-palette")
     await expect(palette).toBeVisible()
 
+    const paletteBox = await palette.boundingBox()
+    expect(paletteBox).not.toBeNull()
+    // Six class-diagram entries stay in a dense single column instead of
+    // stretching their rows to consume the full portrait height.
+    expect(paletteBox!.width).toBeLessThanOrEqual(112)
+    expect(paletteBox!.height).toBeLessThanOrEqual(396)
+
     // Portrait uses the unified app-header height (NAVBAR_MIN_HEIGHT = 52).
     const navbar = page.locator("header")
     const navbarBox = await navbar.boundingBox()
@@ -678,7 +691,9 @@ test.describe("Mobile responsive layout", () => {
     expect(hasHorizontalOverflow).toBe(false)
   })
 
-  test("keeps the phone layout in landscape", async ({ page }) => {
+  test("keeps the full action set in landscape and clears the side safe-area insets", async ({
+    page,
+  }) => {
     await page.setViewportSize(PHONE_LANDSCAPE)
     await openTemporaryLocalDiagram(page)
     await waitForCanvasReady(page, false)
@@ -705,21 +720,31 @@ test.describe("Mobile responsive layout", () => {
       )
     }, SAFE_INSET)
 
-    // Landscape keeps the same compact pill of icon-only controls (File · Share ·
-    // Version · Help · Theme) — every control stays reachable on the pill.
+    // A landscape phone is wide enough (844px > NARROW_VIEW_QUERY's 767.95px) to
+    // keep the full desktop action set rather than the portrait compact pill —
+    // a deliberate choice (see constants/responsive.ts).
     const actions = page.locator('[aria-label="Editor actions"]')
     await expect(actions).toBeVisible()
 
     const palette = page.getByTestId("apollon-palette")
     await expect(palette).toBeVisible()
-    // The floating palette fits every element without scrolling here too.
+    const paletteBox = await palette.boundingBox()
+    expect(paletteBox).not.toBeNull()
+    // Landscape uses two compact columns, leaving substantially more canvas
+    // visible than the old height-filling grid.
+    expect(paletteBox!.width).toBeLessThanOrEqual(210)
+    expect(paletteBox!.height).toBeLessThanOrEqual(210)
+    // The floating palette fits every element without meaningful scroll in the
+    // short (390px) viewport too; tolerance covers sub-pixel rounding.
     const overflow = await palette.evaluate(
       (el) => el.scrollHeight - el.clientHeight
     )
-    expect(overflow).toBeLessThanOrEqual(1)
+    expect(overflow).toBeLessThanOrEqual(4)
 
+    // Same unified app-header height as portrait (≤ NAVBAR_MIN_HEIGHT = 52) — the
+    // full desktop chrome, not the shorter compact pill.
     const navbarBox = await page.locator("header").boundingBox()
-    expect(navbarBox?.height).toBeLessThanOrEqual(36)
+    expect(navbarBox?.height).toBeLessThanOrEqual(52)
 
     // Logo and actions clear the dynamic island by hugging the side safe area.
     const homeLinkBox = await page

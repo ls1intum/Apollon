@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Apollon monorepo — UML modeling editor (library, webapp, server, VS Code extension).",
   "private": true,
-  "packageManager": "pnpm@11.1.3+sha512.c85357fe17ca12dd23dd7071822666dfd7e3cb76fe214e3370b5ea2fb34f2a231185509b63e717f3cd0acb38dd3f8d82bcd5e8172400ae678b70ea4fbed0896d",
+  "packageManager": "pnpm@11.8.0+sha512.c1f5e7c4cb241c8f174b743851d82f42b802324afc8b0f116b96adb15aa06664948dde36960a3ba1079ba5b4b29dd0140135b94b5b5f5263592249d68e555f26",
   "scripts": {
     "build": "pnpm run build:lib && concurrently \"pnpm run build:server\" \"pnpm run build:webapp\"",
     "build:lib": "pnpm --filter @tumaet/apollon run build",
@@ -11,10 +11,11 @@
     "build:webapp": "pnpm --filter @tumaet/webapp run build",
     "build:vscode": "pnpm --filter apollon-vscode run build:all",
     "build:docs": "pnpm run build:lib && pnpm --filter @tumaet/apollon-docs run build",
+    "check:doc-snippets": "pnpm run build:lib && node scripts/check-doc-snippets.mjs",
     "storybook": "pnpm --filter @tumaet/webapp run storybook",
     "build-storybook": "pnpm --filter @tumaet/webapp run build-storybook",
     "test-storybook": "pnpm --filter @tumaet/webapp run test:storybook",
-    "dev": "node scripts/dev.mjs",
+    "dev": "pnpm --filter @tumaet/ui run build && node scripts/dev.mjs",
     "dev:lib": "pnpm --filter @tumaet/apollon run build:watch",
     "dev:server": "pnpm run ensure:localdb && pnpm --filter @tumaet/server run dev",
     "dev:webapp": "pnpm --filter @tumaet/webapp run start",
@@ -62,19 +63,19 @@
   "license": "MIT",
   "engines": {
     "node": ">=24.15.0",
-    "pnpm": ">=11.1.0"
+    "pnpm": ">=11.8.0"
   },
   "devDependencies": {
     "@changesets/changelog-github": "0.7.0",
     "@changesets/cli": "2.31.0",
-    "@commitlint/cli": "19.6.0",
-    "@commitlint/config-conventional": "19.6.0",
+    "@commitlint/cli": "21.1.0",
+    "@commitlint/config-conventional": "21.1.0",
     "@types/node": "catalog:",
-    "concurrently": "9.1.0",
+    "concurrently": "10.0.3",
     "husky": "9.1.7",
-    "knip": "6.18.0",
-    "lint-staged": "15.5.2",
-    "prettier": "3.4.2"
+    "knip": "6.20.0",
+    "lint-staged": "17.0.8",
+    "prettier": "3.8.4"
   },
   "lint-staged": {
     "*.{js,jsx,mjs,cjs,ts,tsx,json,md,mdx,yml,yaml}": "prettier --ignore-unknown --write"

@@ -1,15 +1,18 @@
 import { FC } from "react"
-import { ClassType } from "@/types"
+import { ClassStereotype } from "@/types"
 import { CustomText } from "./CustomText"
 import { LAYOUT } from "@/constants"
+import { stereotypeLabel } from "@/utils"
 
 interface HeaderSectionProps {
   showStereotype: boolean
-  stereotype?: ClassType
+  stereotype?: ClassStereotype
   name: string
   width: number
   headerHeight: number
   isUnderlined?: boolean
+  /** Abstract class → italic name (UML 2.5.1 §9.2.4). */
+  isAbstract?: boolean
   textColor?: string
   fill?: string
 }
@@ -21,6 +24,7 @@ export const HeaderSection: FC<HeaderSectionProps> = ({
   width,
   headerHeight,
   isUnderlined = false,
+  isAbstract = false,
   textColor,
   fill = "var(--apollon-background, white)",
 }) => {
@@ -42,15 +46,15 @@ export const HeaderSection: FC<HeaderSectionProps> = ({
         textDecoration={isUnderlined ? "underline" : "normal"}
         fill={textColor}
       >
-        {showStereotype && (
+        {showStereotype && stereotype && (
           <tspan x={width / 2} dy="-8" fontSize="85%">
-            {`«${stereotype}»`}
+            {stereotypeLabel(stereotype)}
           </tspan>
         )}
         <tspan
           x={width / 2}
-          dy={showStereotype ? "18" : "0"}
-          fontStyle={stereotype === ClassType.Abstract ? "italic" : "normal"}
+          dy={showStereotype && stereotype ? "18" : "0"}
+          fontStyle={isAbstract ? "italic" : "normal"}
         >
           {name}
         </tspan>

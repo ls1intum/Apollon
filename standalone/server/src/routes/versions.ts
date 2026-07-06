@@ -1,7 +1,8 @@
-import { Router } from "express"
+import { Hono } from "hono"
 import { z } from "zod"
 import { ulid } from "ulid"
 import type { Config } from "../config.js"
+import type { AppEnv } from "../http/env.js"
 import {
   fcall,
   gunzipJson,
@@ -190,15 +191,15 @@ async function restoreVersion(
 export function mountVersionRoutes(
   { config, redis }: Deps,
   relay?: RelayHook
-): Router {
-  const router = Router()
+): Hono<AppEnv> {
+  const router = new Hono<AppEnv>()
 
   // GET /diagrams/:diagramId/versions
   router.get(
     "/diagrams/:diagramId/versions",
     validate(
       { params: DiagramIdParams, query: PaginationQuery },
-      async (_req, res, _next, { params, query }) => {
+      async (c, { params, query }) => {
         // Resolve the cursor's score so the Lua function can break
         // same-millisecond ties by member-lex. Without this, multiple
         // versions written within one ms would silently disappear on the
@@ -212,8 +213,7 @@ export function mountVersionRoutes(
             query.before
           )
           if (score === null || score === undefined) {
-            res.status(200).json({ versions: [] })
-            return
+            return c.json({ versions: [] }, 200)
           }
           beforeScore = String(score)
           beforeMember = query.before
@@ -237,7 +237,7 @@ export function mountVersionRoutes(
         // Total count across the whole index — lets the client render an
         // accurate "N / cap" header without waiting for every page to load.
         const total = await redis.zCard(k.versionsIndex(params.diagramId))
-        res.status(200).json({ versions, nextCursor, total })
+        return c.json({ versions, nextCursor, total }, 200)
       }
     )
   )
@@ -255,7 +255,7 @@ export function mountVersionRoutes(
           body: DiagramBody,
         }),
       },
-      async (req, res, _next, { params, body }) => {
+      async (c, { params, body }) => {
         try {
           // Require an existing diagram. Snapshots cannot create HEAD.
           const existing = await readDiagram(redis, params.diagramId)
@@ -285,8 +285,8 @@ export function mountVersionRoutes(
             body: flushed,
           })
 
-          if (!req.isOwner)
-            setOwnerCookie(res, params.diagramId, config.OWNER_SECRET)
+          if (!c.get("isOwner"))
+            setOwnerCookie(c, params.diagramId, config.OWNER_SECRET)
 
           const summary = await readVersionMeta(redis, params.diagramId, vid)
           if (!summary)
@@ -316,7 +316,7 @@ export function mountVersionRoutes(
               evictedVersionIds: result.evictedIds,
               evictedKinds: result.evictedKinds,
               librarySchemaVersion: flushed.version,
-              requestId: req.requestId,
+              requestId: c.get("requestId"),
             },
             "version.created"
           )
@@ -326,13 +326,16 @@ export function mountVersionRoutes(
           // `MAX_VERSIONS_PER_DIAGRAM` named rows and dropped the oldest
           // one — that's user data loss that needs a stronger message
           // than "autosave removed".
-          res.status(201).json({
-            ...summary,
-            evictedVersionIds: result.evictedIds,
-            evictedKinds: result.evictedKinds,
-            total,
-            headRev,
-          })
+          return c.json(
+            {
+              ...summary,
+              evictedVersionIds: result.evictedIds,
+              evictedKinds: result.evictedKinds,
+              total,
+              headRev,
+            },
+            201
+          )
         } catch (err) {
           if (err instanceof RedisAppError && err.code === "NO_HEAD") {
             throw Errors.noHead()
@@ -351,20 +354,17 @@ export function mountVersionRoutes(
   // mode). PDF export is unaffected — it has its own worker path.
   router.get(
     "/diagrams/:diagramId/versions/:versionId",
-    validate(
-      { params: DiagramIdAndVersionIdParams },
-      async (_req, res, _next, { params }) => {
-        const body = await readVersionBody(
-          redis,
-          params.diagramId,
-          params.versionId
-        )
-        if (!body) throw Errors.notFound("version not found")
-        res.setHeader("etag", `"${params.versionId}"`)
-        res.setHeader("cache-control", "private, max-age=86400, immutable")
-        res.status(200).json(body)
-      }
-    )
+    validate({ params: DiagramIdAndVersionIdParams }, async (c, { params }) => {
+      const body = await readVersionBody(
+        redis,
+        params.diagramId,
+        params.versionId
+      )
+      if (!body) throw Errors.notFound("version not found")
+      c.header("etag", `"${params.versionId}"`)
+      c.header("cache-control", "private, max-age=86400, immutable")
+      return c.json(body, 200)
+    })
   )
 
   // POST /diagrams/:diagramId/versions/:versionId/restore
@@ -378,7 +378,7 @@ export function mountVersionRoutes(
           actor: z.string().max(100).optional(),
         }),
       },
-      async (req, res, _next, { params, body }) => {
+      async (c, { params, body }) => {
         try {
           // Capture the user's actual canvas as the pre-restore auto-snapshot.
           // currentBody (when sent) reflects what they see; otherwise we fall
@@ -441,16 +441,19 @@ export function mountVersionRoutes(
               autoSnapshotVersionId: result.autoSnapshotVersionId,
               evictedVersionIds: result.evicted,
               headRev: result.headRev,
-              requestId: req.requestId,
+              requestId: c.get("requestId"),
             },
             "version.restored"
           )
 
-          res.status(200).json({
-            headRev: result.headRev,
-            updatedAt: result.updatedAt,
-            autoSnapshotVersionId: result.autoSnapshotVersionId,
-          })
+          return c.json(
+            {
+              headRev: result.headRev,
+              updatedAt: result.updatedAt,
+              autoSnapshotVersionId: result.autoSnapshotVersionId,
+            },
+            200
+          )
         } catch (err) {
           if (err instanceof RedisAppError) {
             if (err.code === "NO_HEAD") throw Errors.noHead()
@@ -474,7 +477,7 @@ export function mountVersionRoutes(
           description: z.string().max(config.MAX_DESCRIPTION_LENGTH).optional(),
         }),
       },
-      async (req, res, _next, { params, body }) => {
+      async (c, { params, body }) => {
         const existing = await readVersionMeta(
           redis,
           params.diagramId,
@@ -493,8 +496,7 @@ export function mountVersionRoutes(
           updates.kind = "user"
         }
         if (Object.keys(updates).length === 0) {
-          res.status(200).json(existing)
-          return
+          return c.json(existing, 200)
         }
 
         await redis.hSet(
@@ -519,12 +521,12 @@ export function mountVersionRoutes(
             event: "version.renamed",
             diagramId: params.diagramId,
             versionId: params.versionId,
-            requestId: req.requestId,
+            requestId: c.get("requestId"),
           },
           "version.renamed"
         )
 
-        res.status(200).json(updated)
+        return c.json(updated, 200)
       }
     )
   )
@@ -532,39 +534,36 @@ export function mountVersionRoutes(
   // DELETE /diagrams/:diagramId/versions/:versionId
   router.delete(
     "/diagrams/:diagramId/versions/:versionId",
-    validate(
-      { params: DiagramIdAndVersionIdParams },
-      async (req, res, _next, { params }) => {
-        const existing = await readVersionMeta(
-          redis,
-          params.diagramId,
-          params.versionId
-        )
-        if (!existing) throw Errors.notFound("version not found")
+    validate({ params: DiagramIdAndVersionIdParams }, async (c, { params }) => {
+      const existing = await readVersionMeta(
+        redis,
+        params.diagramId,
+        params.versionId
+      )
+      if (!existing) throw Errors.notFound("version not found")
 
-        const multi = redis.multi()
-        multi.del(k.versionBody(params.diagramId, params.versionId))
-        multi.del(k.versionMeta(params.diagramId, params.versionId))
-        multi.zRem(k.versionsIndex(params.diagramId), params.versionId)
-        await multi.exec()
+      const multi = redis.multi()
+      multi.del(k.versionBody(params.diagramId, params.versionId))
+      multi.del(k.versionMeta(params.diagramId, params.versionId))
+      multi.zRem(k.versionsIndex(params.diagramId), params.versionId)
+      await multi.exec()
 
-        relay?.publishControl(params.diagramId, {
-          type: "VERSION_DELETED",
+      relay?.publishControl(params.diagramId, {
+        type: "VERSION_DELETED",
+        versionId: params.versionId,
+      })
+
+      logger.info(
+        {
+          event: "version.deleted",
+          diagramId: params.diagramId,
           versionId: params.versionId,
-        })
-
-        logger.info(
-          {
-            event: "version.deleted",
-            diagramId: params.diagramId,
-            versionId: params.versionId,
-            requestId: req.requestId,
-          },
-          "version.deleted"
-        )
-        res.status(204).end()
-      }
-    )
+          requestId: c.get("requestId"),
+        },
+        "version.deleted"
+      )
+      return c.body(null, 204)
+    })
   )
 
   return router

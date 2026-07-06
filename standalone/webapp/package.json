@@ -1,7 +1,7 @@
 {
   "name": "@tumaet/webapp",
   "private": true,
-  "version": "4.9.0",
+  "version": "5.0.1",
   "type": "module",
   "engines": {
     "node": ">=24.15.0"
@@ -36,20 +36,19 @@
     "capacitor:assets:generate:android": "capacitor-assets generate --android"
   },
   "dependencies": {
-    "@capacitor/android": "8.3.0",
+    "@capacitor/android": "8.4.1",
     "@capacitor/clipboard": "8.0.1",
-    "@capacitor/core": "8.3.0",
+    "@capacitor/core": "8.4.1",
     "@capacitor/file-transfer": "2.0.4",
     "@capacitor/filesystem": "8.1.2",
-    "@capacitor/ios": "8.3.0",
+    "@capacitor/ios": "8.4.1",
     "@capacitor/share": "8.0.1",
     "@capacitor/splash-screen": "8.0.1",
     "@capacitor/status-bar": "8.0.2",
-    "@ionic/react": "8.7.13",
     "@resvg/resvg-wasm": "catalog:",
     "@tailwindcss/vite": "catalog:",
     "@tanstack/history": "1.162.0",
-    "@tanstack/react-router": "1.170.15",
+    "@tanstack/react-router": "1.170.16",
     "@tumaet/apollon": "workspace:*",
     "@tumaet/ui": "workspace:*",
     "@xyflow/react": "catalog:",
@@ -61,16 +60,16 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-markdown": "10.1.0",
-    "react-toastify": "11.0.5",
+    "react-toastify": "11.1.0",
     "remark-gfm": "4.0.1",
     "svg2pdf.js": "catalog:",
     "tailwindcss": "catalog:",
-    "uuid": "catalog:",
     "zustand": "catalog:"
   },
   "devDependencies": {
     "@capacitor/assets": "3.0.5",
-    "@capacitor/cli": "8.3.0",
+    "@capacitor/cli": "8.4.1",
+    "@eslint-react/eslint-plugin": "catalog:",
     "@eslint/js": "catalog:",
     "@playwright/test": "catalog:",
     "@resvg/resvg-js": "2.6.2",
@@ -86,13 +85,11 @@
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "@types/uuid": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "@vitest/browser": "catalog:",
     "@vitest/browser-playwright": "catalog:",
     "babel-plugin-react-compiler": "catalog:",
     "eslint": "catalog:",
-    "eslint-plugin-react": "catalog:",
     "eslint-plugin-react-hooks": "catalog:",
     "fake-indexeddb": "6.2.5",
     "globals": "catalog:",
@@ -105,7 +102,7 @@
     "typescript-eslint": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:",
-    "yjs": "13.6.20"
+    "yjs": "catalog:"
   },
   "size-limit": [
     {

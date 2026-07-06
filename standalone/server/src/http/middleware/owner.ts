@@ -1,17 +1,15 @@
-import type { NextFunction, Request, Response } from "express"
+import { createMiddleware } from "hono/factory"
+import type { Context } from "hono"
+// hono/cookie replaces the `cookie` package: getCookie reads a named cookie
+// from the request, setCookie appends a Set-Cookie header (multiple calls
+// append rather than overwrite). https://hono.dev/docs/helpers/cookie
+import { getCookie, setCookie } from "hono/cookie"
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto"
-import * as cookie from "cookie"
+import type { AppEnv } from "../env.js"
 
 const COOKIE_PREFIX = "apollon_owner_"
 const MAX_AGE_SECONDS = 60 * 60 * 24 * 180 // 180 days
 const NONCE_BYTES = 16
-
-declare module "express-serve-static-core" {
-  interface Request {
-    /** True if the request carries a valid owner cookie for the diagram on this route. */
-    isOwner: boolean
-  }
-}
 
 interface OwnerCookieOptions {
   secret: string
@@ -48,38 +46,38 @@ function verify(
   }
 }
 
-// Mounted as global middleware on the Express app, so route params are not
-// yet bound. Parse from the URL path directly. Matches:
+// Mounted as global middleware on the app, so route params are not yet bound.
+// Parse from the URL path directly. Matches:
 //   /api/diagrams/:diagramId
 //   /api/diagrams/:diagramId/versions[/...]
 const DIAGRAM_ID_RE = /^\/api\/diagrams\/([A-Za-z0-9_-]+)(?:\/|$)/
 
-function readDiagramIdFromRequest(req: Request): string | undefined {
-  const match = DIAGRAM_ID_RE.exec(req.path)
+function readDiagramIdFromPath(path: string): string | undefined {
+  const match = DIAGRAM_ID_RE.exec(path)
   return match ? match[1] : undefined
 }
 
 /**
  * Reads the owner cookie for the diagram on this route. Always sets
- * `req.isOwner` (true|false) and `X-Owner-Match` response header.
+ * `c.var.isOwner` (true|false) and — when a diagram id is present in the path —
+ * the `X-Owner-Match` response header.
  *
  * Never blocks a request — friction, not security.
  */
 export function ownerReader({ secret }: OwnerCookieOptions) {
-  return (req: Request, res: Response, next: NextFunction) => {
-    const diagramId = readDiagramIdFromRequest(req)
+  return createMiddleware<AppEnv>(async (c, next) => {
+    const diagramId = readDiagramIdFromPath(c.req.path)
     if (!diagramId) {
-      req.isOwner = false
-      next()
+      c.set("isOwner", false)
+      await next()
       return
     }
-    const cookies = cookie.parse(req.header("cookie") ?? "")
-    const token = cookies[`${COOKIE_PREFIX}${diagramId}`]
+    const token = getCookie(c, `${COOKIE_PREFIX}${diagramId}`)
     const ok = verify(diagramId, token, secret)
-    req.isOwner = ok
-    res.setHeader("x-owner-match", ok ? "true" : "false")
-    next()
-  }
+    c.set("isOwner", ok)
+    c.header("x-owner-match", ok ? "true" : "false")
+    await next()
+  })
 }
 
 /**
@@ -91,25 +89,16 @@ export function ownerReader({ secret }: OwnerCookieOptions) {
  * `http://localhost` flows work without a TLS proxy.
  */
 export function setOwnerCookie(
-  res: Response,
+  c: Context<AppEnv>,
   diagramId: string,
   secret: string
 ): void {
   const value = tokenFor(diagramId, secret)
-  const serialized = cookie.serialize(`${COOKIE_PREFIX}${diagramId}`, value, {
+  setCookie(c, `${COOKIE_PREFIX}${diagramId}`, value, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    sameSite: "Lax",
     path: "/",
     maxAge: MAX_AGE_SECONDS,
   })
-  // Append (don't replace) so callers can set multiple cookies.
-  const existing = res.getHeader("set-cookie")
-  if (Array.isArray(existing)) {
-    res.setHeader("set-cookie", [...existing, serialized])
-  } else if (typeof existing === "string") {
-    res.setHeader("set-cookie", [existing, serialized])
-  } else {
-    res.setHeader("set-cookie", serialized)
-  }
 }

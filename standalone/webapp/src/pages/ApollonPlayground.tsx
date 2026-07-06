@@ -7,8 +7,22 @@ import {
   ApollonEditor,
   collabColorFromName,
   randomCollabName,
-} from "@tumaet/apollon/react"
+} from "@tumaet/apollon"
 import { Button } from "@tumaet/ui/components/button"
+import { Checkbox } from "@tumaet/ui/components/checkbox"
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+} from "@tumaet/ui/components/field"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@tumaet/ui/components/select"
 import { useEditorContext } from "@/contexts"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import {
@@ -26,12 +40,9 @@ import { useShallow } from "zustand/shallow"
 import { AssessmentDataBox } from "@/components/playground/AssessmentDataBox"
 import { CollapsibleSidebar } from "@/components/playground/CollapsibleSidebar"
 import { connectPlaygroundCollaboration } from "@/components/playground/connectPlaygroundCollaboration"
+import { ThemeConfigurator } from "@/components/playground/theme/ThemeConfigurator"
 
 const UMLDiagramTypes = Object.values(UMLDiagramType)
-const playgroundSelectClassName =
-  "flex w-[200px] rounded-md border border-[var(--apollon-gray-variant,#495057)] bg-[var(--apollon-background)] p-1 text-[var(--apollon-primary-contrast)]"
-const playgroundOptionClassName =
-  "bg-[var(--apollon-background)] text-[var(--apollon-primary-contrast)]"
 
 export const ApollonPlayground: React.FC = () => {
   const { setEditor } = useEditorContext()
@@ -64,6 +75,31 @@ export const ApollonPlayground: React.FC = () => {
     useState(false)
   const [controlsSidebarOpen, setControlsSidebarOpen] = useState(true)
   const [testSidebarOpen, setTestSidebarOpen] = useState(true)
+  const [themeSidebarOpen, setThemeSidebarOpen] = useState(true)
+  const [themeOverrides, setThemeOverrides] = useState<Record<string, string>>(
+    {}
+  )
+
+  const setThemeOverride = (cssVar: string, value: string) =>
+    setThemeOverrides((prev) => ({ ...prev, [cssVar]: value }))
+  const clearThemeOverride = (cssVar: string) =>
+    setThemeOverrides((prev) => {
+      const next = { ...prev }
+      delete next[cssVar]
+      return next
+    })
+  const resetAllThemeOverrides = () => setThemeOverrides({})
+
+  const revealThemeContext = (
+    context: "assessment" | "collaboration" | "highlight"
+  ) => {
+    if (context === "assessment") setMode(ApollonMode.Assessment)
+    else if (context === "highlight") setHighlightEnabled(true)
+    else {
+      setCollaborationViewportTest(true)
+      setTestSidebarOpen(true)
+    }
+  }
   const [collaborationUser] = useState(() => {
     const name = randomCollabName()
     return { name, color: collabColorFromName(name) }
@@ -110,143 +146,154 @@ export const ApollonPlayground: React.FC = () => {
         open={controlsSidebarOpen}
         onToggle={() => setControlsSidebarOpen((open) => !open)}
       >
-        <div>
-          <label className="font-semibold ">Select Diagram Type</label>
-          <select
-            className={playgroundSelectClassName}
-            value={diagramType}
-            onChange={(e) => setDiagramType(e.target.value as UMLDiagramType)}
-          >
-            {UMLDiagramTypes.map((type) => (
-              <option
-                key={type}
-                value={type}
-                className={playgroundOptionClassName}
+        <FieldGroup>
+          <Field>
+            <FieldLabel htmlFor="playground-diagram-type">
+              Diagram type
+            </FieldLabel>
+            <Select
+              value={diagramType}
+              onValueChange={(value) => setDiagramType(value as UMLDiagramType)}
+            >
+              <SelectTrigger
+                id="playground-diagram-type"
+                data-testid="playground-diagram-type"
+                className="w-full"
               >
-                {type}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="font-semibold ">Mode</label>
-          <select
-            value={mode}
-            className={playgroundSelectClassName}
-            onChange={(e) => setMode(e.target.value as ApollonMode)}
-          >
-            <option
-              value={ApollonMode.Assessment}
-              className={playgroundOptionClassName}
-            >
-              Assessment
-            </option>
-            <option
-              value={ApollonMode.Exporting}
-              className={playgroundOptionClassName}
-            >
-              Exporting
-            </option>
-            <option
-              value={ApollonMode.Modelling}
-              className={playgroundOptionClassName}
-            >
-              Modelling
-            </option>
-          </select>
-        </div>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {UMLDiagramTypes.map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {type}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
 
-        {mode === ApollonMode.Assessment && (
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={debug}
-              onChange={(event) => setDebug(event.target.checked)}
+          <Field>
+            <FieldLabel htmlFor="playground-mode">Mode</FieldLabel>
+            <Select
+              value={mode}
+              onValueChange={(value) => setMode(value as ApollonMode)}
+            >
+              <SelectTrigger
+                id="playground-mode"
+                data-testid="playground-mode"
+                className="w-full"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ApollonMode.Modelling}>Modelling</SelectItem>
+                <SelectItem value={ApollonMode.Assessment}>
+                  Assessment
+                </SelectItem>
+                <SelectItem value={ApollonMode.Exporting}>Exporting</SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
+
+          {mode === ApollonMode.Assessment && (
+            <Field orientation="horizontal">
+              <Checkbox
+                id="playground-debug"
+                checked={debug}
+                onCheckedChange={(checked) => setDebug(checked === true)}
+              />
+              <FieldLabel htmlFor="playground-debug">Debug feedback</FieldLabel>
+            </Field>
+          )}
+
+          <Field orientation="horizontal">
+            <Checkbox
+              id="playground-readonly"
+              checked={readonly}
+              onCheckedChange={(checked) => setReadonly(checked === true)}
             />
-            <label className="font-semibold">Debug Mode for See feedback</label>
-          </div>
-        )}
+            <FieldLabel htmlFor="playground-readonly">Readonly</FieldLabel>
+          </Field>
 
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={readonly}
-            onChange={(event) => setReadonly(event.target.checked)}
-          />
-          <label className="font-semibold">Readonly</label>
-        </div>
+          <Field orientation="horizontal">
+            <Checkbox
+              id="playground-scroll-lock"
+              checked={scrollLock}
+              onCheckedChange={(checked) => setScrollLock(checked === true)}
+            />
+            <FieldLabel htmlFor="playground-scroll-lock">
+              Scroll lock
+            </FieldLabel>
+          </Field>
 
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={scrollLock}
-            onChange={(event) => setScrollLock(event.target.checked)}
-          />
-          <label className="font-semibold">Scroll Lock</label>
-        </div>
+          <Field orientation="horizontal">
+            <Checkbox
+              id="playground-highlight"
+              checked={highlightEnabled}
+              onCheckedChange={(checked) =>
+                setHighlightEnabled(checked === true)
+              }
+            />
+            <FieldLabel htmlFor="playground-highlight">
+              Enable highlight view
+            </FieldLabel>
+          </Field>
 
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={highlightEnabled}
-            onChange={(event) => setHighlightEnabled(event.target.checked)}
-          />
-          <label className="font-semibold">Enable Highlight View</label>
-        </div>
+          <Field orientation="horizontal">
+            <Checkbox
+              id="collaboration-viewport-test"
+              checked={collaborationViewportTest}
+              onCheckedChange={(checked) => {
+                const enabled = checked === true
+                setCollaborationViewportTest(enabled)
+                if (enabled) setTestSidebarOpen(true)
+              }}
+            />
+            <FieldLabel htmlFor="collaboration-viewport-test">
+              Collaboration viewport test
+            </FieldLabel>
+          </Field>
 
-        <div className="flex items-center gap-2">
-          <input
-            id="collaboration-viewport-test"
-            type="checkbox"
-            checked={collaborationViewportTest}
-            onChange={(event) => {
-              const enabled = event.target.checked
-              setCollaborationViewportTest(enabled)
-              if (enabled) setTestSidebarOpen(true)
-            }}
-          />
-          <label
-            className="font-semibold"
-            htmlFor="collaboration-viewport-test"
-          >
-            Collaboration viewport test
-          </label>
-        </div>
-
-        {collaborationViewportTest && (
-          <p className="m-0 text-xs">
-            Local user: {collaborationUser.name}. Open a second playground tab
-            and enable this test there to exchange live cursors.
-          </p>
-        )}
+          {collaborationViewportTest && (
+            <FieldDescription>
+              Local user: {collaborationUser.name}. Open a second playground tab
+              and enable this test there to exchange live cursors.
+            </FieldDescription>
+          )}
+        </FieldGroup>
 
         {mode === ApollonMode.Assessment && !readonly && (
           <AssessmentScoreChips />
         )}
 
-        <Button variant="outline" size="sm" onClick={() => exportAsSvg()}>
-          Export as SVG
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => exportAsPNG({ setWhiteBackground: true })}
-        >
-          Export as PNG(White Background)
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => exportAsPNG({ setWhiteBackground: false })}
-        >
-          Export as PNG
-        </Button>
-        <Button variant="outline" size="sm" onClick={exportAsJSON}>
-          Export as JSON
-        </Button>
-        <Button variant="outline" size="sm" onClick={() => exportAsPDF()}>
-          Export as PDF
-        </Button>
+        <div className="flex flex-col gap-2">
+          <span className="text-muted-foreground text-xs font-medium">
+            Export
+          </span>
+          <Button variant="outline" size="sm" onClick={() => exportAsSvg()}>
+            Export as SVG
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => exportAsPNG({ setWhiteBackground: true })}
+          >
+            Export as PNG (white background)
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => exportAsPNG({ setWhiteBackground: false })}
+          >
+            Export as PNG
+          </Button>
+          <Button variant="outline" size="sm" onClick={exportAsJSON}>
+            Export as JSON
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => exportAsPDF()}>
+            Export as PDF
+          </Button>
+        </div>
 
         <AssessmentDataBox
           assessmentSelectedElements={assessmentSelectedElements}
@@ -256,6 +303,10 @@ export const ApollonPlayground: React.FC = () => {
       <div className="flex h-full min-w-0 flex-1">
         <Apollon
           key={mountKey}
+          className="playground-apollon-editor"
+          theme={
+            themeOverrides as Partial<Record<`--apollon-${string}`, string>>
+          }
           defaultModel={defaultModel}
           availableViews={availableViews}
           collaboration={
@@ -317,6 +368,23 @@ export const ApollonPlayground: React.FC = () => {
             </p>
           </CollapsibleSidebar>
         )}
+        <CollapsibleSidebar
+          side="right"
+          width={360}
+          surface="variant"
+          label="theme configuration"
+          testId="playground-theme-sidebar"
+          open={themeSidebarOpen}
+          onToggle={() => setThemeSidebarOpen((open) => !open)}
+        >
+          <ThemeConfigurator
+            overrides={themeOverrides}
+            onChange={setThemeOverride}
+            onReset={clearThemeOverride}
+            onResetAll={resetAllThemeOverrides}
+            onReveal={revealThemeContext}
+          />
+        </CollapsibleSidebar>
       </div>
     </div>
   )

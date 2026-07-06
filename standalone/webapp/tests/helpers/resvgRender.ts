@@ -23,6 +23,9 @@ const FONT_DIR = path.join(__dirname, "..", "fonts")
 const FONT_FILES = [
   path.join(FONT_DIR, "Inter-Regular.ttf"),
   path.join(FONT_DIR, "Inter-Bold.ttf"),
+  // Italic faces so abstract classes/methods render slanted in resvg.
+  path.join(FONT_DIR, "Inter-Italic.ttf"),
+  path.join(FONT_DIR, "Inter-BoldItalic.ttf"),
   path.join(FONT_DIR, "LiberationSans-Regular.ttf"),
   path.join(FONT_DIR, "LiberationSans-Bold.ttf"),
 ]

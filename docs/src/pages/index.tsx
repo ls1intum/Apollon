@@ -12,7 +12,7 @@ const HOSTED_URL = "https://apollon.aet.cit.tum.de"
 
 // The read+write loop people actually write: load a saved model and
 // persist edits as they happen. In each host's current idiom.
-const REACT_SNIPPET = `import { Apollon } from "@tumaet/apollon/react"
+const REACT_SNIPPET = `import { Apollon } from "@tumaet/apollon"
 import type { UMLModel } from "@tumaet/apollon"
 import "@tumaet/apollon/style.css"
 
@@ -70,13 +70,14 @@ export class DiagramComponent {
 
 const VANILLA_SNIPPET = `<link
   rel="stylesheet"
-  href="https://esm.sh/@tumaet/apollon@4.9.0/style.css"
+  href="https://esm.sh/@tumaet/apollon@5.0.1/style.css"
 />
 <div id="apollon" style="width: 100%; height: 600px"></div>
 
 <script type="module">
-  // esm.sh serves Apollon's required yjs/y-protocols peers automatically.
-  import { ApollonEditor } from "https://esm.sh/@tumaet/apollon@4.9.0"
+  // esm.sh resolves and serves Apollon's required peers (react, react-dom,
+  // @xyflow/react, yjs, y-protocols) automatically.
+  import { ApollonEditor } from "https://esm.sh/@tumaet/apollon@5.0.1"
 
   const saved = localStorage.getItem("diagram")
   const editor = new ApollonEditor(document.getElementById("apollon"), {
@@ -113,7 +114,8 @@ function Hero() {
         </div>
         <div className={styles.install}>
           <CodeBlock language="bash">
-            npm install @tumaet/apollon yjs y-protocols
+            npm install @tumaet/apollon react react-dom @xyflow/react yjs
+            y-protocols
           </CodeBlock>
         </div>
       </div>
@@ -226,10 +228,10 @@ const WAYS: LinkCard[] = [
     title: "Embed it",
     body: (
       <>
-        <code>@tumaet/apollon</code> on npm. Framework-agnostic by default;
-        Angular hosts install just <code>yjs</code> + <code>y-protocols</code>.
-        A <code>/react</code> subpath dedupes React when the host already has
-        it.
+        <code>@tumaet/apollon</code> on npm. One build, every framework:{" "}
+        <code>react</code>, <code>react-dom</code>, <code>@xyflow/react</code>,{" "}
+        <code>yjs</code>, and <code>y-protocols</code> are required peers the
+        host shares with the editor.
       </>
     ),
     to: "/library/",

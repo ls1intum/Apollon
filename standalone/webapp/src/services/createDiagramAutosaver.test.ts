@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import type { UMLModel } from "@tumaet/apollon/react"
+import type { UMLModel } from "@tumaet/apollon"
 import { createDiagramAutosaver } from "./createDiagramAutosaver"
 import { ApiError, DiagramApiClient } from "@/services/DiagramApiClient"
 

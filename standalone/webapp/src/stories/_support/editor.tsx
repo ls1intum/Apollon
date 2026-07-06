@@ -24,7 +24,7 @@ import {
 } from "@xyflow/react"
 import { useShallow } from "zustand/shallow"
 
-import { Apollon, ApollonMode } from "@tumaet/apollon/react"
+import { Apollon, ApollonMode } from "@tumaet/apollon"
 import type {
   UMLModel,
   UMLDiagramType,
@@ -541,7 +541,7 @@ export function EdgePreview({
         alignItems: "center",
         gap: 6,
         padding: "12px 16px",
-        color: "var(--apollon-primary-contrast)",
+        color: "var(--apollon-foreground)",
       }}
       data-edge-type={edgeType}
     >

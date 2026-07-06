@@ -26,6 +26,12 @@ export const NodeToolbar: FC<Props> = ({ elementId, showEdit = true }) => {
       position={Position.Top}
       align="end"
       offset={10}
+      // The toolbar wrapper is larger than its two icons; left opaque to the
+      // pointer, its empty margins and the gap between the icons swallow clicks
+      // meant for whatever node sits beneath (the toolbar floats at the node's
+      // top-right). Make the box transparent and re-enable only the icons, so
+      // only the icons themselves capture — matching the edge toolbar.
+      style={{ pointerEvents: "none" }}
     >
       <div
         className="nodrag nopan"
@@ -38,9 +44,10 @@ export const NodeToolbar: FC<Props> = ({ elementId, showEdit = true }) => {
           onClick={handleDelete}
           style={{
             cursor: "pointer",
+            pointerEvents: "auto",
             width: 16,
             height: 16,
-            color: "var(--apollon-primary-contrast, #000000)",
+            color: "var(--apollon-foreground, #000000)",
           }}
         />
 
@@ -51,9 +58,10 @@ export const NodeToolbar: FC<Props> = ({ elementId, showEdit = true }) => {
             }}
             style={{
               cursor: "pointer",
+              pointerEvents: "auto",
               width: 16,
               height: 16,
-              color: "var(--apollon-primary-contrast, #000000)",
+              color: "var(--apollon-foreground, #000000)",
             }}
           />
         )}

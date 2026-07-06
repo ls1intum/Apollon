@@ -2,7 +2,7 @@
 import globals from "globals"
 import pluginJs from "@eslint/js"
 import tseslint from "typescript-eslint"
-import reactPlugin from "eslint-plugin-react"
+import eslintReact from "@eslint-react/eslint-plugin"
 import reactHooks from "eslint-plugin-react-hooks"
 
 /** @type {import('eslint').Linter.Config[]} */
@@ -12,26 +12,35 @@ export default [
   { languageOptions: { globals: globals.browser } },
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
-  reactPlugin.configs.flat.recommended,
-  reactPlugin.configs.flat["jsx-runtime"],
+  // recommended-typescript disables the prop-types rules TypeScript already enforces.
+  eslintReact.configs["recommended-typescript"],
   {
-    settings: { react: { version: "detect" } },
     plugins: { "react-hooks": reactHooks },
-    // eslint-plugin-react-hooks v7 flat preset — bundles the React Compiler
-    // lint rules (preserve-manual-memoization, refs, purity, immutability,
-    // set-state-in-effect, …). exhaustive-deps stays at warn: the only
+    // eslint-plugin-react-hooks is the hooks / React-Compiler authority here
+    // (preserve-manual-memoization, refs, purity, immutability,
+    // set-state-in-effect, …). @eslint-react ships its own copies of those hook
+    // rules in `recommended-typescript`; turn them off so each concern is
+    // reported once, by react-hooks. exhaustive-deps stays at warn: the only
     // remaining exhaustive-deps suppression is Apollon.tsx's mount-once lifecycle.
     rules: {
       ...reactHooks.configs.flat.recommended.rules,
+      "@eslint-react/error-boundaries": "off",
+      "@eslint-react/exhaustive-deps": "off",
+      "@eslint-react/purity": "off",
+      "@eslint-react/rules-of-hooks": "off",
+      "@eslint-react/set-state-in-effect": "off",
+      "@eslint-react/set-state-in-render": "off",
+      "@eslint-react/static-components": "off",
+      "@eslint-react/unsupported-syntax": "off",
+      "@eslint-react/use-memo": "off",
       "react-hooks/exhaustive-deps": "warn",
-      "react/prop-types": "off",
       "no-console": "error",
       // Allow intentionally-unused `_`-prefixed bindings.
       "@typescript-eslint/no-unused-vars": [
         "error",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
-      // The library is migrated to Base UI + raw CSS + --apollon-* tokens.
+      // The library styles with Base UI + raw CSS + --apollon-* tokens.
       // It must never depend on MUI or a CSS-in-JS runtime (Emotion).
       "no-restricted-imports": [
         "error",

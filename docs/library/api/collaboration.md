@@ -8,7 +8,7 @@ description: Yjs-based multi-user editing — transport-agnostic, opt-in.
 
 Apollon's collaboration layer is built on [Yjs](https://yjs.dev/). Set `collaborationEnabled: true` in the constructor options, then wire your transport. The editor doesn't care whether messages travel over WebSocket, WebRTC, BroadcastChannel, or anything else — it hands you opaque base64 strings to ship and accepts them back.
 
-```ts
+```ts no-check
 const editor = new ApollonEditor(container, {
   type: UMLDiagramType.ClassDiagram,
   collaborationEnabled: true,
@@ -19,6 +19,53 @@ editor.sendBroadcastMessage((base64) => transport.send(base64))
 
 // Inbound: forward every received frame back to the editor.
 transport.onMessage((base64) => editor.receiveBroadcastedMessage(base64))
+```
+
+## A complete transport (BroadcastChannel)
+
+A full, working transport using the browser's `BroadcastChannel` — two tabs of
+the same origin edit one diagram live. Swap `BroadcastChannel` for your
+WebSocket/WebRTC channel; the editor calls are identical.
+
+```ts
+import { ApollonEditor } from "@tumaet/apollon"
+
+export function connectCollaboration(editor: ApollonEditor, room = "apollon") {
+  const channel = new BroadcastChannel(room)
+
+  // Register the outbound sink before anything else — broadcasts are no-ops until set.
+  editor.sendBroadcastMessage((base64) => channel.postMessage(base64))
+
+  // Forward every inbound frame to the editor; it demuxes by message type.
+  channel.onmessage = (e: MessageEvent<string>) =>
+    editor.receiveBroadcastedMessage(e.data)
+
+  // On (re)connect: pull peers' document + presence, then push our own.
+  channel.postMessage(ApollonEditor.generateInitialSyncMessage())
+  channel.postMessage(ApollonEditor.generateInitialAwarenessSyncMessage())
+  editor.broadcastFullState()
+
+  return () => channel.close()
+}
+```
+
+## Who's online
+
+`subscribeToCollaboratorChanges` fires with the current collaborators — each a
+`CollaboratorInfo` (`{ id, name, color, imageUrl?, clientIds, isLocal }`):
+
+```ts
+import { ApollonEditor, type CollaboratorInfo } from "@tumaet/apollon"
+
+function watchCollaborators(editor: ApollonEditor) {
+  const subId = editor.subscribeToCollaboratorChanges(
+    (collaborators: CollaboratorInfo[]) => {
+      const remote = collaborators.filter((c) => !c.isLocal)
+      console.log(`${remote.length} other editor(s) online`)
+    }
+  )
+  return () => editor.unsubscribe(subId)
+}
 ```
 
 ## Backing transports
@@ -36,7 +83,7 @@ Awareness state — who's online, where their cursor is, what they have selected
 
 The presence bar, cursors, selection highlights, and viewport-following are toggled per-feature on the `collaboration` option:
 
-```ts
+```ts no-check
 const editor = new ApollonEditor(container, {
   collaboration: {
     enabled: true,
