@@ -64,7 +64,12 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
         x={toolbarPosition.x + 20 - SHADOW_MARGIN}
         y={toolbarPosition.y + 20 - SHADOW_MARGIN}
         overflow="visible"
-        style={{ overflow: "visible" }}
+        // The foreignObject is ALWAYS present (it anchors the popover) and sits
+        // offset from the edge line, so if it captured the pointer it would select
+        // the edge from an empty region well away from the visible line. Keep the
+        // box transparent to the pointer; the toolbar buttons re-enable themselves
+        // (`.apollon-edge-toolbar > *`). Anchoring is geometric, so it's unaffected.
+        style={{ overflow: "visible", pointerEvents: "none" }}
       >
         {showToolbar && (
           // `.apollon-edge-toolbar` makes only the buttons (not the box body)
