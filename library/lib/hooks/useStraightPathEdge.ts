@@ -441,12 +441,15 @@ export const useStraightPathEdge = ({
           width: FREEFORM_ENDPOINT_SNAP_RADIUS_PX * 2,
           height: FREEFORM_ENDPOINT_SNAP_RADIUS_PX * 2,
         })
-        const directHitNode = intersectingNodes.findLast(
-          (node) =>
-            node.width != null &&
-            node.height != null &&
-            !isParentNodeType(node.type)
+        // Prefer the top-most CHILD under the pointer, but fall back to a
+        // container (parent) when nothing else is there — so an edge endpoint can
+        // still be reconnected onto an activity/package/pool/subsystem itself.
+        const sizedHits = intersectingNodes.filter(
+          (node) => node.width != null && node.height != null
         )
+        const directHitNode =
+          sizedHits.findLast((node) => !isParentNodeType(node.type)) ??
+          sizedHits[sizedHits.length - 1]
         const directHitRect = directHitNode ? getNodeRect(directHitNode) : null
         const snapTarget =
           directHitNode && directHitRect

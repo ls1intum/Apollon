@@ -76,15 +76,25 @@ const getEndpointDirection = (side?: EndpointSide): IPoint => {
   }
 }
 
+const normalizeDir = (v: IPoint): IPoint => {
+  const len = Math.hypot(v.x, v.y)
+  return len === 0 ? { x: 0, y: 0 } : { x: v.x / len, y: v.y / len }
+}
+
 export const getEndpointHitTargetRect = (
   point: IPoint,
   side?: EndpointSide,
   screenScale = 1,
-  hitTargetSize: number = EDGES.ENDPOINT_HIT_TARGET_SIZE
+  hitTargetSize: number = EDGES.ENDPOINT_HIT_TARGET_SIZE,
+  // Straight (direct) edges leave the node at an angle; pass the real outward
+  // edge direction so the target follows the line instead of an orthogonal side.
+  outwardDir?: IPoint
 ) => {
   const hitSize = hitTargetSize * screenScale
   const hitOffset = hitSize / 2
-  const direction = getEndpointDirection(side)
+  const direction = outwardDir
+    ? normalizeDir(outwardDir)
+    : getEndpointDirection(side)
 
   return {
     x: point.x + direction.x * hitOffset - hitOffset,
@@ -98,34 +108,53 @@ export const getEndpointHitTargetRect = (
 const getEndpointGripRect = (
   point: IPoint,
   side?: EndpointSide,
-  screenScale = 1
+  screenScale = 1,
+  outwardDir?: IPoint
 ) => {
-  const isHorizontalGrip = side === Position.Left || side === Position.Right
-  const width =
-    (isHorizontalGrip
-      ? FREEFORM_ENDPOINT_GRIP_LONG_AXIS
-      : FREEFORM_ENDPOINT_GRIP_SHORT_AXIS) * screenScale
-  const height =
-    (isHorizontalGrip
-      ? FREEFORM_ENDPOINT_GRIP_SHORT_AXIS
-      : FREEFORM_ENDPOINT_GRIP_LONG_AXIS) * screenScale
-
   // Anchor the grip to the endpoint (+ small clearance for the marker), not the
   // centre of the wide hit-target — otherwise it floats ~22px off the tip when
   // zoomed out. The hit-target stays wide for grabbing.
+  const radius = FREEFORM_ENDPOINT_GRIP_RADIUS * screenScale
+  const long = FREEFORM_ENDPOINT_GRIP_LONG_AXIS * screenScale
+  const short = FREEFORM_ENDPOINT_GRIP_SHORT_AXIS * screenScale
+
+  if (outwardDir) {
+    // Straight edge: a bar whose long axis runs ALONG the edge, offset outward
+    // along it and rotated to its angle — so the grip tracks the line, not an
+    // orthogonal N/E/S/W side.
+    const dir = normalizeDir(outwardDir)
+    const clearance = long / 2 + radius
+    const cx = point.x + dir.x * clearance
+    const cy = point.y + dir.y * clearance
+    return {
+      x: cx - long / 2,
+      y: cy - short / 2,
+      width: long,
+      height: short,
+      radius,
+      rotationDeg: (Math.atan2(dir.y, dir.x) * 180) / Math.PI,
+      centerX: cx,
+      centerY: cy,
+    }
+  }
+
+  // Step edge: orthogonal grip aligned to the endpoint's side.
+  const isHorizontalGrip = side === Position.Left || side === Position.Right
+  const width = isHorizontalGrip ? long : short
+  const height = isHorizontalGrip ? short : long
   const dir = getEndpointDirection(side)
-  const clearance =
-    (isHorizontalGrip ? width : height) / 2 +
-    FREEFORM_ENDPOINT_GRIP_RADIUS * screenScale
+  const clearance = (isHorizontalGrip ? width : height) / 2 + radius
   const cx = point.x + dir.x * clearance
   const cy = point.y + dir.y * clearance
-
   return {
     x: cx - width / 2,
     y: cy - height / 2,
     width,
     height,
-    radius: FREEFORM_ENDPOINT_GRIP_RADIUS * screenScale,
+    radius,
+    rotationDeg: 0,
+    centerX: cx,
+    centerY: cy,
   }
 }
 
@@ -137,6 +166,7 @@ export const EdgeEndpointMarkers = ({
   isDiagramModifiable,
   canEditEndpoint = true,
   onEndpointPointerDown,
+  straight = false,
 }: {
   sourcePoint: IPoint
   targetPoint: IPoint
@@ -148,6 +178,9 @@ export const EdgeEndpointMarkers = ({
     event: ReactPointerEvent<SVGRectElement>,
     endpoint: "source" | "target"
   ) => void
+  // Direct/straight edges: orient the grip + hit-target along the actual edge
+  // angle instead of the endpoint's orthogonal N/E/S/W side.
+  straight?: boolean
 }) => {
   const sourceHandleRef = useRef<SVGRectElement | null>(null)
   const screenScale = useHandleScreenScale()
@@ -216,17 +249,27 @@ export const EdgeEndpointMarkers = ({
       })
     )
   }
+  // For a straight edge the outward direction at each end is along the line
+  // between the two endpoints; step edges fall back to the orthogonal side.
+  const sourceOutward = straight
+    ? { x: sourcePoint.x - targetPoint.x, y: sourcePoint.y - targetPoint.y }
+    : undefined
+  const targetOutward = straight
+    ? { x: targetPoint.x - sourcePoint.x, y: targetPoint.y - sourcePoint.y }
+    : undefined
   const sourceHitTarget = getEndpointHitTargetRect(
     sourcePoint,
     sourcePosition,
     screenScale,
-    onEndpointPointerDown ? FREEFORM_ENDPOINT_HIT_TARGET_SIZE : undefined
+    onEndpointPointerDown ? FREEFORM_ENDPOINT_HIT_TARGET_SIZE : undefined,
+    sourceOutward
   )
   const targetHitTarget = getEndpointHitTargetRect(
     targetPoint,
     targetPosition,
     screenScale,
-    onEndpointPointerDown ? FREEFORM_ENDPOINT_HIT_TARGET_SIZE : undefined
+    onEndpointPointerDown ? FREEFORM_ENDPOINT_HIT_TARGET_SIZE : undefined,
+    targetOutward
   )
   const className = [
     "edge-endpoint-handle",
@@ -238,12 +281,14 @@ export const EdgeEndpointMarkers = ({
   const sourceGrip = getEndpointGripRect(
     sourcePoint,
     sourcePosition,
-    screenScale
+    screenScale,
+    sourceOutward
   )
   const targetGrip = getEndpointGripRect(
     targetPoint,
     targetPosition,
-    screenScale
+    screenScale,
+    targetOutward
   )
 
   return (
@@ -258,6 +303,7 @@ export const EdgeEndpointMarkers = ({
             height={sourceGrip.height}
             rx={sourceGrip.radius}
             ry={sourceGrip.radius}
+            transform={`rotate(${sourceGrip.rotationDeg} ${sourceGrip.centerX} ${sourceGrip.centerY})`}
             pointerEvents="none"
           />
           <rect
@@ -268,6 +314,7 @@ export const EdgeEndpointMarkers = ({
             height={targetGrip.height}
             rx={targetGrip.radius}
             ry={targetGrip.radius}
+            transform={`rotate(${targetGrip.rotationDeg} ${targetGrip.centerX} ${targetGrip.centerY})`}
             pointerEvents="none"
           />
         </>

@@ -109,6 +109,7 @@ export const SyntaxTreeEdge = ({
             isDiagramModifiable={isDiagramModifiable}
             canEditEndpoint={canEditEndpoint}
             onEndpointPointerDown={handleEndpointPointerDown}
+            straight
           />
         </g>
 

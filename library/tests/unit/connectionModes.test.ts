@@ -23,18 +23,28 @@ describe("getConnectionMode", () => {
   })
 
   it("classifies each non-rect shape by its real geometry", () => {
-    expect(getConnectionMode("useCase")).toBe("ellipse")
-    expect(getConnectionMode("bpmnStartEvent")).toBe("ellipse")
-    expect(getConnectionMode("petriNetPlace")).toBe("ellipse")
+    expect(getConnectionMode("useCase")).toBe("ellipse") // the one full-handle oval
+    expect(getConnectionMode("bpmnStartEvent")).toBe("four-center") // circle, 4 handles
+    expect(getConnectionMode("petriNetPlace")).toBe("four-center") // circle, 4 handles
     expect(getConnectionMode("flowchartDecision")).toBe("four-center")
     expect(getConnectionMode("bpmnGateway")).toBe("four-center")
-    expect(getConnectionMode("componentInterface")).toBe("single-point")
-    expect(getConnectionMode("deploymentInterface")).toBe("single-point")
+    expect(getConnectionMode("componentInterface")).toBe("four-center")
+    expect(getConnectionMode("deploymentInterface")).toBe("four-center")
     expect(getConnectionMode("activitySwimlane")).toBe("none")
   })
 
-  it("corrects petriNetTransition (a bar, not a circle) to freeform-rect", () => {
-    expect(getConnectionMode("petriNetTransition")).toBe("freeform-rect")
+  it("gives every FOUR_WAY-handle node exactly four points (mode matches handles)", () => {
+    for (const t of [
+      "activityInitialNode",
+      "activityFinalNode",
+      "bpmnStartEvent",
+      "petriNetPlace",
+      "petriNetTransition",
+      "componentInterface",
+      "sfcTransitionBranch",
+    ]) {
+      expect(getConnectionMode(t)).toBe("four-center")
+    }
   })
 })
 
@@ -76,16 +86,16 @@ describe("four-center mode", () => {
   })
 })
 
-describe("single-point mode", () => {
-  it("collapses every anchor to the node centre (the lollipop ball)", () => {
+describe("four-center interface", () => {
+  it("snaps an interface drop to a side midpoint (N/E/S/W), like its handles", () => {
     const anchor = getEdgeAnchorFromPoint(
       "componentInterface",
-      { x: rect.x, y: rect.y },
+      { x: rect.x + 4, y: cy + 4 }, // near the left edge
       rect
     )!
-    expect(
-      getEdgeAnchorPoint("componentInterface", rect, anchor).point
-    ).toEqual({ x: cx, y: cy })
+    const resolved = getEdgeAnchorPoint("componentInterface", rect, anchor)
+    expect(resolved.position).toBe(Position.Left)
+    expect(resolved.point).toEqual({ x: rect.x, y: cy })
   })
 })
 

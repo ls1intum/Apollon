@@ -132,6 +132,7 @@ export const UseCaseEdge = ({
               isDiagramModifiable={isDiagramModifiable}
               canEditEndpoint={canEditEndpoint}
               onEndpointPointerDown={handleEndpointPointerDown}
+              straight
             />
           )}
         </g>

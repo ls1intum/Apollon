@@ -19,38 +19,39 @@ import {
  */
 export type ConnectionMode =
   | "freeform-rect" // anywhere on the rectangle border (default box shapes)
-  | "ellipse" // on the inscribed oval/circle, at the angle you aimed
-  | "four-center" // only the four side midpoints (diamonds, symmetric nodes)
-  | "single-point" // the node IS the connector (lollipop interfaces) → its centre
+  | "ellipse" // on the inscribed oval, at the angle you aimed (use-case)
+  | "four-center" // only the four side points — N/E/S/W (FOUR_WAY-handle nodes)
   | "none" // not a connection target at all (legends, annotations, swimlanes)
 
-// Only the exceptions to the `freeform-rect` default are listed. `ellipse`
-// covers both ovals (use-case) and circles (events, initial/final, place, …) —
-// a circle is just an ellipse with equal radii, and both are "sticky": the
-// endpoint stays where you dropped it rather than chasing the other node.
+// The guiding rule: a node's connectable points must MATCH the handles it
+// renders. Nodes that render the full handle set stay `freeform-rect` (the
+// default) and connect anywhere along their border. Nodes that render only the
+// four side handles (FOUR_WAY_HANDLES_PRESET) connect at exactly those four
+// points. The use-case oval is the one shape that renders full handles but
+// isn't a rectangle, so it gets `ellipse`. Only the exceptions are listed here.
 const MODE_OVERRIDES: Record<string, ConnectionMode> = {
   // Not connectable — legends / annotations / partition containers.
   colorDescription: "none",
   titleAndDesctiption: "none",
   activitySwimlane: "none",
-  // Ovals & circles → the curve.
+  // The one true oval — full handles, so connect anywhere along the curve.
   useCase: "ellipse",
-  activityInitialNode: "ellipse",
-  activityFinalNode: "ellipse",
-  bpmnStartEvent: "ellipse",
-  bpmnIntermediateEvent: "ellipse",
-  bpmnEndEvent: "ellipse",
-  petriNetPlace: "ellipse",
-  sfcTransitionBranch: "ellipse",
-  // Diamonds & symmetric nodes → four vertices/midpoints.
+  // Everything below renders only the four side handles, so it connects at
+  // exactly those four N/E/S/W points (keep this list in sync with the nodes
+  // that pass FOUR_WAY_HANDLES_PRESET).
+  activityInitialNode: "four-center",
+  activityFinalNode: "four-center",
   activityMergeNode: "four-center",
+  bpmnStartEvent: "four-center",
+  bpmnIntermediateEvent: "four-center",
+  bpmnEndEvent: "four-center",
   bpmnGateway: "four-center",
   flowchartDecision: "four-center",
-  flowchartInputOutput: "four-center",
-  useCaseActor: "four-center",
-  // The interface lollipop is a single connector.
-  componentInterface: "single-point",
-  deploymentInterface: "single-point",
+  petriNetPlace: "four-center",
+  petriNetTransition: "four-center",
+  componentInterface: "four-center",
+  deploymentInterface: "four-center",
+  sfcTransitionBranch: "four-center",
 }
 
 export function getConnectionMode(nodeType?: string): ConnectionMode {
@@ -128,9 +129,6 @@ export function getEdgeAnchorFromPoint(
   switch (getConnectionMode(nodeType)) {
     case "none":
       return null
-    case "single-point":
-      // Any anchor renders at the centre; keep it stable.
-      return { side: Position.Top, ratio: 0.5 }
     case "four-center":
       return { side: nearestSide(rect, point), ratio: 0.5 }
     // ellipse & freeform-rect both store the nearest rect-border anchor; the
@@ -153,8 +151,6 @@ export function getEdgeAnchorPoint(
   anchor: FreeformEdgeAnchor
 ): { point: XYPosition; position: Position } {
   switch (getConnectionMode(nodeType)) {
-    case "single-point":
-      return { point: centerOf(rect), position: anchor.side }
     case "four-center": {
       const pts = getFourCenterPoints(nodeType, rect)
       return { point: pts[anchor.side], position: anchor.side }

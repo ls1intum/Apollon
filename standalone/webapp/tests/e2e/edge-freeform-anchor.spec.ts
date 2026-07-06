@@ -127,16 +127,19 @@ async function expectFreeformTargetFollowsMovedNode({
       targetGrip.evaluate((element) => getComputedStyle(element).opacity)
     )
     .toBe("1")
-  const targetGripBox = await targetGrip.boundingBox()
-  if (!targetGripBox)
-    throw new Error("target endpoint grip has no bounding box")
+  // The visible grip is a small elongated pill, well under the hit target.
+  // Assert on its intrinsic size (width/height attributes), not its on-screen
+  // bounding box — on a straight (direct) edge the grip is rotated to the edge
+  // angle, which enlarges the axis-aligned bounding box.
+  const gripW = Number(await targetGrip.getAttribute("width"))
+  const gripH = Number(await targetGrip.getAttribute("height"))
   const initialHandleBox = await targetHandle.boundingBox()
   if (!initialHandleBox) throw new Error("target endpoint has no bounding box")
-  expect(targetGripBox.width).toBeLessThan(initialHandleBox.width / 2)
-  expect(targetGripBox.height).toBeLessThan(initialHandleBox.height / 2)
-  expect(Math.max(targetGripBox.width, targetGripBox.height)).toBeGreaterThan(
-    Math.min(targetGripBox.width, targetGripBox.height)
-  )
+  const handleW = Number(await targetHandle.getAttribute("width"))
+  const handleH = Number(await targetHandle.getAttribute("height"))
+  expect(gripW).toBeLessThan(handleW / 2)
+  expect(gripH).toBeLessThan(handleH / 2)
+  expect(Math.max(gripW, gripH)).toBeGreaterThan(Math.min(gripW, gripH))
 
   const targetNode = page.locator(`.react-flow__node[data-id="${targetId}"]`)
   const targetBox = await targetNode.boundingBox()

@@ -5,15 +5,14 @@ import { fileURLToPath } from "node:url"
 import { waitForCanvasReady, openFixtureInLocalEditor } from "../helpers/canvas"
 
 const __d = path.dirname(fileURLToPath(import.meta.url))
-const useCaseFixture = JSON.parse(
-  fs.readFileSync(
-    path.join(__d, "..", "fixtures", "use-case-diagram.json"),
-    "utf-8"
-  )
-)
+const readFixture = (name: string) =>
+  JSON.parse(fs.readFileSync(path.join(__d, "..", "fixtures", name), "utf-8"))
+const useCaseFixture = readFixture("use-case-diagram.json")
+const activityFixture = readFixture("activity-diagram.json")
 
 const BROWSE = "880e8400-e29b-41d4-a716-446655440033" // use-case oval
 const INVENTORY = "880e8400-e29b-41d4-a716-446655440035" // use-case oval
+const ACTIVITY_CONTAINER = "770e8400-e29b-41d4-a716-446655440021" // "Process Order"
 
 async function nodeBox(page: Page, id: string) {
   return (await page
@@ -99,4 +98,63 @@ test("connecting to a use-case oval lands the endpoint on the ellipse curve, not
   // And it landed where we aimed (upper-right), not snapped to a side midpoint.
   expect(end!.x).toBeGreaterThan(g.cx)
   expect(end!.y).toBeLessThan(g.cy)
+})
+
+test("an edge endpoint can be reconnected onto a container node (e.g. an Activity)", async ({
+  page,
+}) => {
+  // Regression: container/parent nodes (activity, package, pool, subsystem …)
+  // used to be excluded as freeform reconnect targets, so an endpoint dragged
+  // onto them silently reverted.
+  await openFixtureInLocalEditor(page, activityFixture)
+  await waitForCanvasReady(page)
+  const EDGE = "edge-flow-merge-ship"
+  const edgePath = page.locator(
+    `.react-flow__edge[data-id="${EDGE}"] path.react-flow__edge-path`
+  )
+  const pb = await edgePath.boundingBox()
+  await page.mouse.click(pb!.x + pb!.width / 2, pb!.y + pb!.height / 2)
+  await page.waitForTimeout(200)
+
+  const container = await nodeBox(page, ACTIVITY_CONTAINER)
+  const targetEnd = () =>
+    page.evaluate((id) => {
+      const p = document.querySelector(
+        `.react-flow__edge[data-id="${id}"] path.react-flow__edge-path`
+      ) as SVGPathElement | null
+      const ctm = p?.getScreenCTM()
+      if (!p || !ctm) return null
+      const q = p.getPointAtLength(p.getTotalLength())
+      const m = new DOMPoint(q.x, q.y).matrixTransform(ctm)
+      return { x: m.x, y: m.y }
+    }, EDGE)
+
+  const before = await targetEnd()
+  const handle = await page
+    .locator(
+      `.react-flow__edge[data-id="${EDGE}"] .edge-endpoint-handle--target`
+    )
+    .boundingBox()
+  const aim = {
+    x: container.x + container.width * 0.6,
+    y: container.y + container.height - 4,
+  }
+  await page.mouse.move(
+    handle!.x + handle!.width / 2,
+    handle!.y + handle!.height / 2
+  )
+  await page.mouse.down()
+  await page.mouse.move(aim.x, aim.y, { steps: 18 })
+  await page.mouse.up()
+  await page.waitForTimeout(250)
+
+  const after = await targetEnd()
+  expect(before && after).toBeTruthy()
+  // The endpoint moved and now sits on the container's border.
+  expect(
+    Math.hypot(after!.x - before!.x, after!.y - before!.y)
+  ).toBeGreaterThan(20)
+  expect(Math.abs(after!.y - (container.y + container.height))).toBeLessThan(14)
+  expect(after!.x).toBeGreaterThan(container.x)
+  expect(after!.x).toBeLessThan(container.x + container.width)
 })
