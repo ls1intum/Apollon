@@ -216,3 +216,62 @@ test("reconnecting onto the input/output parallelogram follows the slanted outli
   expect(insetTop).toBeGreaterThan(insetBottom + 5) // sheared: top is inset more
   expect(insetBottom).toBeLessThan(6) // flush with the bbox at the bottom
 })
+
+test("a tiny reconnect drag on a straight edge keeps the arrow on the node (no gap)", async ({
+  page,
+}) => {
+  // Regression (the user's report): dragging a straight edge's endpoint a little
+  // way along the edge left a ~15px gap between the arrowhead and the node,
+  // because the drag preview applied the marker padding the committed edge does
+  // not. The tip must stay on the target's border throughout a small drag.
+  await openFixtureInLocalEditor(page, readFixture("two-class-fresh-edge.json"))
+  await waitForCanvasReady(page)
+  const EDGE = "231f7ef5-b43d-4187-8996-f7726ed6e919"
+  const TARGET = "32659cdc-bd03-46f3-918c-ee8dbba9c15b"
+  const tgt = await nodeBox(page, TARGET) // edge enters its LEFT border (tgt.x)
+
+  const tipX = () =>
+    page.evaluate((id) => {
+      const p = document.querySelector(
+        `.react-flow__edge[data-id="${id}"] path.react-flow__edge-path`
+      ) as SVGPathElement | null
+      const ctm = p?.getScreenCTM()
+      if (!p || !ctm) return null
+      const q = p.getPointAtLength(p.getTotalLength())
+      return new DOMPoint(q.x, q.y).matrixTransform(ctm).x
+    }, EDGE)
+
+  const pb = await page
+    .locator(`.react-flow__edge[data-id="${EDGE}"] path.react-flow__edge-path`)
+    .boundingBox()
+  await page.mouse.click(pb!.x + pb!.width / 2, pb!.y + pb!.height / 2)
+  await page.waitForTimeout(200)
+  const handle = await page
+    .locator(
+      `.react-flow__edge[data-id="${EDGE}"] .edge-endpoint-handle--target`
+    )
+    .boundingBox()
+
+  for (const dx of [8, 16]) {
+    await page.mouse.move(
+      handle!.x + handle!.width / 2,
+      handle!.y + handle!.height / 2
+    )
+    await page.mouse.down()
+    await page.mouse.move(
+      handle!.x + handle!.width / 2 - dx,
+      handle!.y + handle!.height / 2,
+      {
+        steps: 5,
+      }
+    )
+    await page.waitForTimeout(100)
+    const gap = (await tipX())! - tgt.x
+    await page.mouse.up()
+    await page.waitForTimeout(100)
+    expect(
+      Math.abs(gap),
+      `tiny drag (${dx}px) must not detach the arrow`
+    ).toBeLessThan(6)
+  }
+})

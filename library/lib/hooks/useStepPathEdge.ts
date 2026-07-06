@@ -1074,7 +1074,10 @@ export const useStepPathEdge = ({
             height: nextTargetRect.height,
             direction: nextTargetPosition,
           },
-          0,
+          // Use the edge's real marker padding (not 0, which tryFindStraightPath
+          // maps to a 15px offset) so the preview tip meets the node like the
+          // committed edge does — no gap on a straight drag.
+          padding,
           {
             sourceX: sourceEndpoint.x,
             sourceY: sourceEndpoint.y,
