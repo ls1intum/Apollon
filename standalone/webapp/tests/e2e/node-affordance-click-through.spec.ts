@@ -157,6 +157,41 @@ test("a hovered node still starts a connection from its handle (not over-correct
   await expect(page.locator(".react-flow__edge")).toHaveCount(1)
 })
 
+test("hovering an arc during connection guidance keeps it inert (no invisible swallow)", async ({
+  page,
+}) => {
+  // Guidance hides the arcs and connects from the circle handles. The hover rule
+  // that arms the arc ::before must NOT out-specify the guidance "arcs off" rule,
+  // or a hovered node re-arms an invisible (opacity:0) arc that swallows clicks
+  // over its neighbours — the bug this fix removes.
+  await openFixtureInLocalEditor(page, OVERLAP_MODEL as Record<string, unknown>)
+  await waitForCanvasReady(page)
+
+  const arcBeforePE = () =>
+    page.evaluate(() => {
+      const arc = document.querySelector(
+        ".react-flow__node .react-flow__handle.apollon-arc-handle"
+      )
+      return arc ? getComputedStyle(arc, "::before").pointerEvents : null
+    })
+
+  const setGuidance = (on: boolean) =>
+    page.evaluate((g) => {
+      document
+        .querySelector(".apollon-editor")!
+        .classList.toggle("apollon-editor--connection-guidance", g)
+    }, on)
+
+  await node(page, "Alpha").hover()
+  await page.waitForTimeout(120)
+  expect(await arcBeforePE()).toBe("all") // grabbable normally
+
+  await setGuidance(true)
+  await node(page, "Alpha").hover()
+  await page.waitForTimeout(120)
+  expect(await arcBeforePE()).toBe("none") // inert during guidance
+})
+
 test.describe("touch / coarse pointer", () => {
   // Touch devices never fire :hover, so the hover gating above must fall back to
   // arming affordances on selection — otherwise a finger could never start a

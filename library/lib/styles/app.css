@@ -738,8 +738,17 @@
 }
 .react-flow__node:hover .react-flow__handle,
 .react-flow__node:hover .react-flow__handle.connectionindicator,
-.react-flow__node:hover .react-flow__handle.apollon-arc-handle::before,
 .apollon-editor--connection-guidance .react-flow__handle.connectionindicator {
+  pointer-events: all;
+}
+/* The arc ::before is armed on hover too, but scoped OUT of guidance mode: its
+   selector would otherwise out-specify the guidance "arcs off" rule below and
+   re-arm an invisible (opacity:0) arc, swallowing clicks over neighbours — the
+   very bug this fix removes. Guidance drives connections from the circle handle,
+   not the arc, so the arc stays inert there. */
+.apollon-editor:not(.apollon-editor--connection-guidance)
+  .react-flow__node:hover
+  .react-flow__handle.apollon-arc-handle::before {
   pointer-events: all;
 }
 
