@@ -275,3 +275,66 @@ test("a tiny reconnect drag on a straight edge keeps the arrow on the node (no g
     ).toBeLessThan(6)
   }
 })
+
+test("the ghost preview matches where a use-case oval connection lands (no drift)", async ({
+  page,
+}) => {
+  // The oval connects continuously along its curve via the freeform path, so a
+  // new connection must land exactly where the dashed ghost previewed it — not a
+  // few px off at a fixed handle.
+  await openFixtureInLocalEditor(page, useCaseFixture)
+  await waitForCanvasReady(page)
+  const dst = await nodeBox(page, INVENTORY)
+  const before = await page.evaluate(() =>
+    Array.from(document.querySelectorAll(".react-flow__edge")).map((e) =>
+      e.getAttribute("data-id")
+    )
+  )
+  await page.locator(`.react-flow__node[data-id="${BROWSE}"]`).hover()
+  await page.waitForTimeout(150)
+  const h = await page
+    .locator(
+      `.react-flow__node[data-id="${BROWSE}"] .react-flow__handle[data-handleid="bottom"]`
+    )
+    .first()
+    .boundingBox()
+  // A clearly OFF-cardinal aim (upper-left of the oval), where handle-snapping
+  // and the ray projection diverge most.
+  await page.mouse.move(h!.x + h!.width / 2, h!.y + h!.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(dst.x + 22, dst.y + 20, { steps: 18 })
+  await page.waitForTimeout(120)
+  const ghost = await page.evaluate(() => {
+    const p = document.querySelector(
+      "path.react-flow__connection-path"
+    ) as SVGPathElement | null
+    const ctm = p?.getScreenCTM()
+    if (!p || !ctm || p.getTotalLength() === 0) return null
+    const q = p.getPointAtLength(p.getTotalLength())
+    const m = new DOMPoint(q.x, q.y).matrixTransform(ctm)
+    return { x: m.x, y: m.y }
+  })
+  await page.mouse.up()
+  await page.waitForTimeout(300)
+  const commit = await page.evaluate((b) => {
+    const now = Array.from(document.querySelectorAll(".react-flow__edge")).map(
+      (e) => e.getAttribute("data-id")
+    )
+    const id = now.find((x) => !b.includes(x))
+    if (!id) return null
+    const p = document.querySelector(
+      `.react-flow__edge[data-id="${id}"] path.react-flow__edge-path`
+    ) as SVGPathElement | null
+    const ctm = p?.getScreenCTM()
+    if (!p || !ctm) return null
+    const q = p.getPointAtLength(p.getTotalLength())
+    const m = new DOMPoint(q.x, q.y).matrixTransform(ctm)
+    return { x: m.x, y: m.y }
+  }, before)
+  expect(
+    ghost && commit,
+    "a connection must be created with a ghost preview"
+  ).toBeTruthy()
+  // The committed endpoint (nearer the oval) matches the ghost within a couple px.
+  expect(Math.hypot(ghost!.x - commit!.x, ghost!.y - commit!.y)).toBeLessThan(8)
+})

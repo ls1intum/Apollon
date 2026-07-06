@@ -200,6 +200,12 @@ export function UseCase({
           }
           isConnectable={isDiagramModifiable}
           isConnectableStart={handle.isPrimaryHandle && isDiagramModifiable}
+          // Never END a connection on a handle: the oval connects CONTINUOUSLY
+          // along its curve via the freeform path (onConnectEnd), so the drop
+          // projects onto the ellipse exactly where the ghost previews it.
+          // Handle-snapping here would land the edge at a fixed parametric
+          // handle instead, a few px off the ghost.
+          isConnectableEnd={false}
         />
       ))}
 
