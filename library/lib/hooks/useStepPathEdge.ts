@@ -34,12 +34,14 @@ import {
   normalizeOrthogonalEdgePoints,
   resolveOrthogonalEdgeReleasePoints,
   isInvalidOrthogonalEdgeRelease,
-  getFreeformAnchorFromPoint,
-  getFreeformAnchorPoint,
   getSideHandleIdForPosition,
   isFreeformEdgeAnchor,
   type FreeformEdgeAnchor,
 } from "@/utils/edgeUtils"
+import {
+  getEdgeAnchorFromPoint,
+  getEdgeAnchorPoint,
+} from "@/utils/connectionModes"
 import {
   type BendHandle,
   applyInnerSegmentBend,
@@ -318,16 +320,16 @@ export const useStepPathEdge = ({
   const resolvedSourceAnchor = useMemo(
     () =>
       freeformAnchorsEnabled && sourceRect && isFreeformEdgeAnchor(sourceAnchor)
-        ? getFreeformAnchorPoint(sourceRect, sourceAnchor)
+        ? getEdgeAnchorPoint(sourceNode?.type, sourceRect, sourceAnchor)
         : null,
-    [freeformAnchorsEnabled, sourceAnchor, sourceRect]
+    [freeformAnchorsEnabled, sourceAnchor, sourceRect, sourceNode?.type]
   )
   const resolvedTargetAnchor = useMemo(
     () =>
       freeformAnchorsEnabled && targetRect && isFreeformEdgeAnchor(targetAnchor)
-        ? getFreeformAnchorPoint(targetRect, targetAnchor)
+        ? getEdgeAnchorPoint(targetNode?.type, targetRect, targetAnchor)
         : null,
-    [freeformAnchorsEnabled, targetAnchor, targetRect]
+    [freeformAnchorsEnabled, targetAnchor, targetRect, targetNode?.type]
   )
 
   const sourceX = resolvedSourceAnchor?.point.x ?? reactFlowSourceX
@@ -1019,8 +1021,9 @@ export const useStepPathEdge = ({
 
         const { node: nodeOnTop, rect } = snapTarget
 
-        const anchor = getFreeformAnchorFromPoint(flowPoint, rect)
-        const resolvedAnchor = getFreeformAnchorPoint(rect, anchor)
+        const anchor = getEdgeAnchorFromPoint(nodeOnTop.type, flowPoint, rect)
+        if (!anchor) return null // node is not a connection target (mode "none")
+        const resolvedAnchor = getEdgeAnchorPoint(nodeOnTop.type, rect, anchor)
         let sourceEndpoint = currentSourceEndpoint
         let targetEndpoint = currentTargetEndpoint
 

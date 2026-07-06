@@ -1,5 +1,6 @@
 import { useCallback } from "react"
 import { useReactFlow, type Rect, type XYPosition } from "@xyflow/react"
+import { getConnectionMode } from "@/utils/connectionModes"
 
 // Half-size of the box hit-tested around a drop point. A drop must land within
 // this of a node to attach — matching React Flow's own pointer hit slop.
@@ -32,6 +33,8 @@ export function useFreeformDropTarget() {
         hits.findLast((node) => node.id !== fromNodeId) ?? hits[hits.length - 1]
       const internal = getInternalNode(top.id)
       if (!internal || top.width == null || top.height == null) return null
+      // Legends, annotations and swimlane partitions are not connection targets.
+      if (getConnectionMode(top.type) === "none") return null
       return {
         id: top.id,
         type: top.type,

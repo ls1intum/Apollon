@@ -12,12 +12,14 @@ import {
   getEdgeMarkerStyles,
   adjustSourceCoordinates,
   adjustTargetCoordinates,
-  getFreeformAnchorFromPoint,
-  getFreeformAnchorPoint,
   getSideHandleIdForPosition,
   isFreeformEdgeAnchor,
   type FreeformEdgeAnchor,
 } from "@/utils/edgeUtils"
+import {
+  getEdgeAnchorFromPoint,
+  getEdgeAnchorPoint,
+} from "@/utils/connectionModes"
 import { EDGES } from "@/constants"
 import { useDiagramModifiable } from "./useDiagramModifiable"
 import { IPoint } from "../edges/Connection"
@@ -221,16 +223,16 @@ export const useStraightPathEdge = ({
   const resolvedSourceAnchor = useMemo(
     () =>
       sourceRect && isFreeformEdgeAnchor(sourceAnchor)
-        ? getFreeformAnchorPoint(sourceRect, sourceAnchor)
+        ? getEdgeAnchorPoint(sourceNode?.type, sourceRect, sourceAnchor)
         : null,
-    [sourceAnchor, sourceRect]
+    [sourceAnchor, sourceRect, sourceNode?.type]
   )
   const resolvedTargetAnchor = useMemo(
     () =>
       targetRect && isFreeformEdgeAnchor(targetAnchor)
-        ? getFreeformAnchorPoint(targetRect, targetAnchor)
+        ? getEdgeAnchorPoint(targetNode?.type, targetRect, targetAnchor)
         : null,
-    [targetAnchor, targetRect]
+    [targetAnchor, targetRect, targetNode?.type]
   )
   const resolvedSourceX = resolvedSourceAnchor?.point.x ?? sourceX
   const resolvedSourceY = resolvedSourceAnchor?.point.y ?? sourceY
@@ -454,8 +456,9 @@ export const useStraightPathEdge = ({
         if (!snapTarget) return null
 
         const { node: nodeOnTop, rect } = snapTarget
-        const anchor = getFreeformAnchorFromPoint(flowPoint, rect)
-        const resolvedAnchor = getFreeformAnchorPoint(rect, anchor)
+        const anchor = getEdgeAnchorFromPoint(nodeOnTop.type, flowPoint, rect)
+        if (!anchor) return null // node is not a connection target (mode "none")
+        const resolvedAnchor = getEdgeAnchorPoint(nodeOnTop.type, rect, anchor)
         let sourceEndpoint = currentSourceEndpoint
         let targetEndpoint = currentTargetEndpoint
 

@@ -16,10 +16,12 @@ import {
   adjustSourceCoordinates,
   adjustTargetCoordinates,
   getEdgeMarkerStyles,
-  getFreeformAnchorFromPoint,
-  getFreeformAnchorPoint,
   preserveOrthogonalEdgePoints,
 } from "@/utils/edgeUtils"
+import {
+  getEdgeAnchorFromPoint,
+  getEdgeAnchorPoint,
+} from "@/utils/connectionModes"
 
 // Hide the new-connection ghost until dragged this far from the source, so a
 // stray click doesn't flash a preview. Bypassed while hovering a node.
@@ -106,8 +108,11 @@ export const ReconnectConnectionLine = ({
       // the pointer (that's how a drop on your own body becomes a self-loop);
       // the ghost never previews that, so a drag near the source stays gated.
       if (!target || target.id === fromNode?.id) return null
-      const anchor = getFreeformAnchorFromPoint(pointer, target.rect)
-      return getFreeformAnchorPoint(target.rect, anchor)
+      // Shape-aware, and shared with the commit, so the preview lands on the
+      // node's real shape (oval curve, diamond vertex, interface centre, …).
+      const anchor = getEdgeAnchorFromPoint(target.type, pointer, target.rect)
+      if (!anchor) return null // node is not a connection target (mode "none")
+      return getEdgeAnchorPoint(target.type, target.rect, anchor)
     }
 
     if (
