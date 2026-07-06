@@ -110,12 +110,9 @@ const getEndpointGripRect = (
       ? FREEFORM_ENDPOINT_GRIP_SHORT_AXIS
       : FREEFORM_ENDPOINT_GRIP_LONG_AXIS) * screenScale
 
-  // Sit the visible grip just OUTSIDE the true endpoint (a small, size-scaled
-  // clearance so it clears the arrowhead/marker), NOT at the centre of the wide
-  // invisible hit-target — that put it ~half the hit-target (a constant ~22px)
-  // away, so on a zoomed-out edge the grip floated detached from its endpoint.
-  // Anchoring to the endpoint keeps it hugging the edge tip at every zoom while
-  // the hit-target stays wide for easy grabbing.
+  // Anchor the grip to the endpoint (+ small clearance for the marker), not the
+  // centre of the wide hit-target — otherwise it floats ~22px off the tip when
+  // zoomed out. The hit-target stays wide for grabbing.
   const dir = getEndpointDirection(side)
   const clearance =
     (isHorizontalGrip ? width : height) / 2 +
