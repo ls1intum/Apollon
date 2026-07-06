@@ -504,17 +504,25 @@ export const useStraightPathEdge = ({
       const handlePointerMove = (e: PointerEvent) => {
         const commit = resolveDragCommit(e.clientX, e.clientY)
         endpointDragCommitRef.current = commit
+        if (commit) {
+          setDragPreviewPoints([commit.sourceEndpoint, commit.targetEndpoint])
+          setDragPreviewPositions({
+            sourcePosition: commit.sourcePosition,
+            targetPosition: commit.targetPosition,
+          })
+          return
+        }
+        // No snap target under the pointer (empty canvas): show a FREE preview
+        // whose dragged end follows the cursor, so the reconnection is visible
+        // in flight instead of the edge snapping back. No commit is set, so
+        // releasing here reverts the edge (no reconnect).
+        const flowPoint = screenToFlowPosition({ x: e.clientX, y: e.clientY })
         setDragPreviewPoints(
-          commit ? [commit.sourceEndpoint, commit.targetEndpoint] : null
+          endpoint === "source"
+            ? [flowPoint, currentTargetEndpoint]
+            : [currentSourceEndpoint, flowPoint]
         )
-        setDragPreviewPositions(
-          commit
-            ? {
-                sourcePosition: commit.sourcePosition,
-                targetPosition: commit.targetPosition,
-              }
-            : null
-        )
+        setDragPreviewPositions(null)
       }
 
       const handlePointerUp = () => {

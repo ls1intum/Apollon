@@ -1103,15 +1103,56 @@ export const useStepPathEdge = ({
       const handlePointerMove = (e: PointerEvent) => {
         const commit = resolveDragCommit(e.clientX, e.clientY)
         endpointDragCommitRef.current = commit
-        setDragPreviewPoints(commit?.points ?? null)
-        setDragPreviewPositions(
-          commit
-            ? {
-                sourcePosition: commit.sourcePosition,
-                targetPosition: commit.targetPosition,
-              }
-            : null
+        if (commit) {
+          setDragPreviewPoints(commit.points)
+          setDragPreviewPositions({
+            sourcePosition: commit.sourcePosition,
+            targetPosition: commit.targetPosition,
+          })
+          return
+        }
+        // No snap target under the pointer (empty canvas): show a FREE preview
+        // whose dragged end follows the cursor. Route it ORTHOGONALLY (same step
+        // routing + preserved bends as the committed edge) so the ghost roughly
+        // matches the predicted edge instead of collapsing to a straight line —
+        // the edge keeps its own appearance (type, markers). No commit is set, so
+        // releasing here reverts the edge (no reconnect).
+        const flowPoint = screenToFlowPosition({ x: e.clientX, y: e.clientY })
+        const movingIsSource = endpoint === "source"
+        const fixedPoint = movingIsSource
+          ? currentTargetEndpoint
+          : currentSourceEndpoint
+        // Infer the dragged end's side from the drag direction so the step route
+        // enters/exits the free endpoint facing back toward the fixed end.
+        const dx = flowPoint.x - fixedPoint.x
+        const dy = flowPoint.y - fixedPoint.y
+        const movingPosition =
+          Math.abs(dx) >= Math.abs(dy)
+            ? dx >= 0
+              ? Position.Left
+              : Position.Right
+            : dy >= 0
+              ? Position.Top
+              : Position.Bottom
+        const previewSourcePosition = movingIsSource
+          ? movingPosition
+          : sourcePosition
+        const previewTargetPosition = movingIsSource
+          ? targetPosition
+          : movingPosition
+        setDragPreviewPoints(
+          preserveOrthogonalEdgePoints(
+            dragBaseline,
+            movingIsSource ? flowPoint : currentSourceEndpoint,
+            movingIsSource ? currentTargetEndpoint : flowPoint,
+            previewSourcePosition,
+            previewTargetPosition
+          )
         )
+        setDragPreviewPositions({
+          sourcePosition: previewSourcePosition,
+          targetPosition: previewTargetPosition,
+        })
       }
 
       const handlePointerUp = () => {

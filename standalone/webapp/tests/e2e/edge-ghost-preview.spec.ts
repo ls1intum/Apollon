@@ -251,3 +251,133 @@ test("reconnecting the target onto a specific side lands on that side", async ({
     expect(sideOf(d, end!), `reconnect aimed ${aim}`).toBe(aim)
   }
 })
+
+/** The rendered live edge path: both endpoints (screen), total length, straight-
+ * line distance between endpoints, and whether it still carries a marker (proof
+ * it keeps the real edge's appearance, not a bare line). */
+async function livePath(page: Page, edgeId: string) {
+  return page.evaluate((eid) => {
+    const g = document.querySelector(`.react-flow__edge[data-id="${eid}"]`)
+    const p = g?.querySelector(
+      "path.react-flow__edge-path"
+    ) as SVGPathElement | null
+    const ctm = p?.getScreenCTM()
+    if (!p || !ctm || p.getTotalLength() === 0) return null
+    const at = (len: number) => {
+      const q = p.getPointAtLength(len)
+      const m = new DOMPoint(q.x, q.y).matrixTransform(ctm)
+      return { x: m.x, y: m.y }
+    }
+    const total = p.getTotalLength()
+    const s = at(0)
+    const t = at(total)
+    // Sample the interior polyline to confirm axis-aligned (orthogonal) segments.
+    const N = 24
+    let orthogonalRun = 0
+    let prev = at(0)
+    for (let i = 1; i <= N; i++) {
+      const cur = at((total * i) / N)
+      const dx = Math.abs(cur.x - prev.x)
+      const dy = Math.abs(cur.y - prev.y)
+      if (dx < 1.5 || dy < 1.5) orthogonalRun++ // this sample step is axis-aligned
+      prev = cur
+    }
+    return {
+      source: s,
+      target: t,
+      total,
+      straight: Math.hypot(t.x - s.x, t.y - s.y),
+      orthogonalFraction: orthogonalRun / N,
+      // Proof the ghost keeps the REAL edge's appearance: it's still the typed
+      // ClassInheritance edge and still draws its decoration (the base path plus
+      // the inheritance triangle), not a bare line.
+      typeClass: g?.getAttribute("class") ?? "",
+      pathCount: g?.querySelectorAll("path").length ?? 0,
+    }
+  }, edgeId)
+}
+
+for (const end of ["target", "source"] as const) {
+  test(`dragging the ${end} endpoint into empty space: a STEP-routed ghost follows the cursor, keeps the edge markers, and reverts on release`, async ({
+    page,
+  }) => {
+    await openFixtureInLocalEditor(page, fx("class-diagram.json"))
+    await waitForCanvasReady(page)
+    await page.locator(`.react-flow__edge[data-id="${EDGE}"]`).waitFor()
+
+    const pb = await page
+      .locator(
+        `.react-flow__edge[data-id="${EDGE}"] path.react-flow__edge-path`
+      )
+      .boundingBox()
+    await page.mouse.click(pb!.x + pb!.width / 2, pb!.y + pb!.height / 2)
+    await page.waitForTimeout(150)
+    const before = (await livePath(page, EDGE))!
+    expect(before.typeClass).toContain("ClassInheritance")
+    expect(
+      before.pathCount,
+      "inheritance edge draws its triangle"
+    ).toBeGreaterThanOrEqual(2)
+    const movedBefore = end === "target" ? before.target : before.source
+
+    const handle = await page
+      .locator(
+        `.react-flow__edge[data-id="${EDGE}"] .edge-endpoint-handle--${end}`
+      )
+      .boundingBox()
+    await page.mouse.move(
+      handle!.x + handle!.width / 2,
+      handle!.y + handle!.height / 2
+    )
+    await page.mouse.down()
+
+    // Two distinct, clearly DIAGONAL empty-canvas points.
+    for (const p of [
+      { x: handle!.x + 150, y: handle!.y - 90 },
+      { x: handle!.x + 240, y: handle!.y + 80 },
+    ]) {
+      await page.mouse.move(p.x, p.y, { steps: 8 })
+      await page.waitForTimeout(60)
+      const live = (await livePath(page, EDGE))!
+      const moved = end === "target" ? live.target : live.source
+
+      // 1. The dragged end follows the cursor (within a marker/grid offset) AND
+      //    has genuinely tracked far from its original committed position — so a
+      //    regression that leaves the endpoint pinned to its node is caught.
+      expect(
+        Math.hypot(moved.x - p.x, moved.y - p.y),
+        `${end} endpoint must follow the cursor in empty space`
+      ).toBeLessThanOrEqual(35)
+      expect(
+        Math.hypot(moved.x - movedBefore.x, moved.y - movedBefore.y),
+        `${end} endpoint must move with the drag, not stay pinned to its node`
+      ).toBeGreaterThan(100)
+      // 2. The ghost is STEP-routed (orthogonal), not a straight diagonal: its
+      //    path is longer than the straight line and mostly axis-aligned.
+      expect(
+        live.total,
+        "ghost must be orthogonal (step) routed, longer than a straight line"
+      ).toBeGreaterThan(live.straight * 1.12)
+      expect(
+        live.orthogonalFraction,
+        "ghost segments must be predominantly axis-aligned (step routing)"
+      ).toBeGreaterThanOrEqual(0.8)
+      // 3. It keeps the real edge's appearance (typed edge + triangle decoration).
+      expect(live.typeClass).toContain("ClassInheritance")
+      expect(
+        live.pathCount,
+        "ghost must keep the edge's decoration (not collapse to a bare line)"
+      ).toBeGreaterThanOrEqual(2)
+    }
+
+    // Release over empty canvas: the edge must REVERT (no reconnect).
+    await page.mouse.up()
+    await page.waitForTimeout(150)
+    const after = (await livePath(page, EDGE))!
+    const movedAfter = end === "target" ? after.target : after.source
+    expect(
+      Math.hypot(movedAfter.x - movedBefore.x, movedAfter.y - movedBefore.y),
+      "releasing over empty canvas must revert the endpoint (no false reconnect)"
+    ).toBeLessThanOrEqual(4)
+  })
+}
