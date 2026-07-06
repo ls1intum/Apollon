@@ -9,10 +9,12 @@ const readFixture = (name: string) =>
   JSON.parse(fs.readFileSync(path.join(__d, "..", "fixtures", name), "utf-8"))
 const useCaseFixture = readFixture("use-case-diagram.json")
 const activityFixture = readFixture("activity-diagram.json")
+const flowchartFixture = readFixture("flowchart.json")
 
 const BROWSE = "880e8400-e29b-41d4-a716-446655440033" // use-case oval
 const INVENTORY = "880e8400-e29b-41d4-a716-446655440035" // use-case oval
 const ACTIVITY_CONTAINER = "770e8400-e29b-41d4-a716-446655440021" // "Process Order"
+const IO_NODE = "50e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a" // flowchart parallelogram
 
 async function nodeBox(page: Page, id: string) {
   return (await page
@@ -157,4 +159,60 @@ test("an edge endpoint can be reconnected onto a container node (e.g. an Activit
   expect(Math.abs(after!.y - (container.y + container.height))).toBeLessThan(14)
   expect(after!.x).toBeGreaterThan(container.x)
   expect(after!.x).toBeLessThan(container.x + container.width)
+})
+
+test("reconnecting onto the input/output parallelogram follows the slanted outline", async ({
+  page,
+}) => {
+  await openFixtureInLocalEditor(page, flowchartFixture)
+  await waitForCanvasReady(page)
+  const io = await nodeBox(page, IO_NODE)
+  const EDGE = "edge-decision-print" // its target sits on the IO node's left side
+
+  const targetEnd = () =>
+    page.evaluate((id) => {
+      const p = document.querySelector(
+        `.react-flow__edge[data-id="${id}"] path.react-flow__edge-path`
+      ) as SVGPathElement | null
+      const ctm = p?.getScreenCTM()
+      if (!p || !ctm) return null
+      const q = p.getPointAtLength(p.getTotalLength())
+      const m = new DOMPoint(q.x, q.y).matrixTransform(ctm)
+      return { x: m.x, y: m.y }
+    }, EDGE)
+
+  const reconnectTo = async (y: number) => {
+    const pb = await page
+      .locator(
+        `.react-flow__edge[data-id="${EDGE}"] path.react-flow__edge-path`
+      )
+      .boundingBox()
+    await page.mouse.click(pb!.x + pb!.width / 2, pb!.y + pb!.height / 2)
+    await page.waitForTimeout(150)
+    const handle = await page
+      .locator(
+        `.react-flow__edge[data-id="${EDGE}"] .edge-endpoint-handle--target`
+      )
+      .boundingBox()
+    await page.mouse.move(
+      handle!.x + handle!.width / 2,
+      handle!.y + handle!.height / 2
+    )
+    await page.mouse.down()
+    await page.mouse.move(io.x + 4, y, { steps: 14 })
+    await page.mouse.up()
+    await page.waitForTimeout(200)
+    return targetEnd()
+  }
+
+  // Left edge slants from inset-at-top to flush-at-bottom, so a drop high up
+  // lands further right than one low down — proving a continuous outline, not a
+  // fixed point, and never in the empty bbox corner.
+  const top = await reconnectTo(io.y + 8)
+  const bottom = await reconnectTo(io.y + io.height - 8)
+  expect(top && bottom).toBeTruthy()
+  const insetTop = top!.x - io.x
+  const insetBottom = bottom!.x - io.x
+  expect(insetTop).toBeGreaterThan(insetBottom + 5) // sheared: top is inset more
+  expect(insetBottom).toBeLessThan(6) // flush with the bbox at the bottom
 })

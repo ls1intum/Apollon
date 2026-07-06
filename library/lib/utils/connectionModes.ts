@@ -20,6 +20,7 @@ import {
 export type ConnectionMode =
   | "freeform-rect" // anywhere on the rectangle border (default box shapes)
   | "ellipse" // on the inscribed oval, at the angle you aimed (use-case)
+  | "parallelogram" // anywhere along the sheared outline (flowchart input/output)
   | "four-center" // only the four side points — N/E/S/W (FOUR_WAY-handle nodes)
   | "none" // not a connection target at all (legends, annotations, swimlanes)
 
@@ -52,6 +53,8 @@ const MODE_OVERRIDES: Record<string, ConnectionMode> = {
   componentInterface: "four-center",
   deploymentInterface: "four-center",
   sfcTransitionBranch: "four-center",
+  // Continuous along the sheared outline, like the oval is along its curve.
+  flowchartInputOutput: "parallelogram",
 }
 
 export function getConnectionMode(nodeType?: string): ConnectionMode {
@@ -91,9 +94,7 @@ const projectOntoEllipse = (
   }
 }
 
-/** The four side-midpoint connection points of a node, keyed by side. Default is
- * the bounding-rectangle midpoints; a couple of shapes whose figure is inset
- * from the bbox override this (see notes). */
+/** The four side-midpoint connection points of a node, keyed by side. */
 export function getFourCenterPoints(
   _nodeType: string | undefined,
   rect: Rect
@@ -105,6 +106,45 @@ export function getFourCenterPoints(
     [Position.Bottom]: { x: c.x, y: rect.y + rect.height },
     [Position.Left]: { x: rect.x, y: c.y },
   } as Record<Position, XYPosition>
+}
+
+// The flowchart input/output parallelogram slants its left/right edges inward by
+// this many px (see FlowchartInputOutput SVG `M20,0 L${width},0 L${width-20},…`).
+const FLOWCHART_IO_SLANT = 20
+
+/** Shear a bounding-box border point onto the parallelogram's actual outline so
+ * the endpoint sits ON the slanted edge (no gap) at any height. */
+const projectOntoParallelogram = (
+  rect: Rect,
+  anchor: FreeformEdgeAnchor
+): { point: XYPosition; position: Position } => {
+  const { point, position } = getFreeformAnchorPoint(rect, anchor)
+  const o = FLOWCHART_IO_SLANT
+  const ty = (point.y - rect.y) / (rect.height || 1) // 0 at top → 1 at bottom
+  switch (position) {
+    case Position.Left: // slants from x+o (top) to x (bottom)
+      return { point: { x: rect.x + o * (1 - ty), y: point.y }, position }
+    case Position.Right: // slants from x+w (top) to x+w-o (bottom)
+      return {
+        point: { x: rect.x + rect.width - o * ty, y: point.y },
+        position,
+      }
+    case Position.Top: // top edge starts o in from the left
+      return {
+        point: { x: Math.max(point.x, rect.x + o), y: rect.y },
+        position,
+      }
+    case Position.Bottom: // bottom edge ends o short of the right
+      return {
+        point: {
+          x: Math.min(point.x, rect.x + rect.width - o),
+          y: rect.y + rect.height,
+        },
+        position,
+      }
+    default:
+      return { point, position }
+  }
 }
 
 const nearestSide = (rect: Rect, point: XYPosition): Position => {
@@ -131,9 +171,11 @@ export function getEdgeAnchorFromPoint(
       return null
     case "four-center":
       return { side: nearestSide(rect, point), ratio: 0.5 }
-    // ellipse & freeform-rect both store the nearest rect-border anchor; the
-    // ellipse projection happens at render, so the round-trip lands on the curve.
+    // ellipse, parallelogram & freeform-rect all store the nearest rect-border
+    // anchor; the shape projection happens at render, so the round-trip lands on
+    // the curve / slanted outline / border respectively.
     case "ellipse":
+    case "parallelogram":
     case "freeform-rect":
     default:
       return getFreeformAnchorFromPoint(point, rect)
@@ -160,6 +202,8 @@ export function getEdgeAnchorPoint(
         rect,
         getFreeformAnchorPoint(rect, anchor).point
       )
+    case "parallelogram":
+      return projectOntoParallelogram(rect, anchor)
     case "none":
     case "freeform-rect":
     default:

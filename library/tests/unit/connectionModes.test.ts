@@ -73,6 +73,42 @@ describe("ellipse mode", () => {
   })
 })
 
+describe("parallelogram mode", () => {
+  // 20px slant: left edge runs x+20 (top) → x (bottom); right edge x+w (top) →
+  // x+w-20 (bottom). rect here is 160 wide, 100 tall, top-left (100,100).
+  it("shears a left-side anchor onto the slanted edge (top vs bottom differ)", () => {
+    const io = "flowchartInputOutput"
+    const top = getEdgeAnchorPoint(io, rect, { side: Position.Left, ratio: 0 })
+    const bottom = getEdgeAnchorPoint(io, rect, {
+      side: Position.Left,
+      ratio: 1,
+    })
+    expect(top.point.x).toBeCloseTo(rect.x + 20, 5) // inset at the top
+    expect(bottom.point.x).toBeCloseTo(rect.x, 5) // flush at the bottom
+  })
+
+  it("shears the right side the opposite way", () => {
+    const io = "flowchartInputOutput"
+    const top = getEdgeAnchorPoint(io, rect, { side: Position.Right, ratio: 0 })
+    const bottom = getEdgeAnchorPoint(io, rect, {
+      side: Position.Right,
+      ratio: 1,
+    })
+    expect(top.point.x).toBeCloseTo(rect.x + rect.width, 5) // flush at the top
+    expect(bottom.point.x).toBeCloseTo(rect.x + rect.width - 20, 5) // inset below
+  })
+
+  it("stays continuous (a mid-height drop is not snapped to a fixed point)", () => {
+    const io = "flowchartInputOutput"
+    const a = getEdgeAnchorFromPoint(io, { x: rect.x, y: rect.y + 20 }, rect)!
+    const b = getEdgeAnchorFromPoint(io, { x: rect.x, y: rect.y + 70 }, rect)!
+    expect(getEdgeAnchorPoint(io, rect, a).point.y).not.toBeCloseTo(
+      getEdgeAnchorPoint(io, rect, b).point.y,
+      1
+    )
+  })
+})
+
 describe("four-center mode", () => {
   it("snaps to the nearest side midpoint", () => {
     const anchor = getEdgeAnchorFromPoint(

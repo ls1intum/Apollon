@@ -249,13 +249,16 @@ export const EdgeEndpointMarkers = ({
       })
     )
   }
-  // For a straight edge the outward direction at each end is along the line
-  // between the two endpoints; step edges fall back to the orthogonal side.
+  // For a straight edge the grip sits on the line, offset from its endpoint
+  // TOWARD the other endpoint (so it clears the marker on the node side) and
+  // rotated to the edge angle — the same "along the edge, away from the node"
+  // placement the orthogonal side gives a step edge. Step edges pass no
+  // direction and fall back to the side.
   const sourceOutward = straight
-    ? { x: sourcePoint.x - targetPoint.x, y: sourcePoint.y - targetPoint.y }
+    ? { x: targetPoint.x - sourcePoint.x, y: targetPoint.y - sourcePoint.y }
     : undefined
   const targetOutward = straight
-    ? { x: targetPoint.x - sourcePoint.x, y: targetPoint.y - sourcePoint.y }
+    ? { x: sourcePoint.x - targetPoint.x, y: sourcePoint.y - targetPoint.y }
     : undefined
   const sourceHitTarget = getEndpointHitTargetRect(
     sourcePoint,
