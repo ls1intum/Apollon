@@ -651,6 +651,7 @@
   background-color: var(--apollon-primary, #3e8acc);
   opacity: 0.4;
   box-sizing: border-box;
+
   /* Off by default; only grabbable while the node is hovered (or in click-to-
      connect guidance mode) — see the hit-area note near the hover rules below. */
   pointer-events: none;
@@ -736,11 +737,13 @@
 .react-flow__handle.connectionindicator {
   pointer-events: none;
 }
+
 .react-flow__node:hover .react-flow__handle,
-.react-flow__node:hover .react-flow__handle.connectionindicator,
-.apollon-editor--connection-guidance .react-flow__handle.connectionindicator {
+.apollon-editor--connection-guidance .react-flow__handle.connectionindicator,
+.react-flow__node:hover .react-flow__handle.connectionindicator {
   pointer-events: all;
 }
+
 /* The arc ::before is armed on hover too, but scoped OUT of guidance mode: its
    selector would otherwise out-specify the guidance "arcs off" rule below and
    re-arm an invisible (opacity:0) arc, swallowing clicks over neighbours — the
