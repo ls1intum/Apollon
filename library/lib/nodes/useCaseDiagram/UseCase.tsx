@@ -200,11 +200,13 @@ export function UseCase({
           }
           isConnectable={isDiagramModifiable}
           isConnectableStart={handle.isPrimaryHandle && isDiagramModifiable}
-          // Never END a connection on a handle: the oval connects CONTINUOUSLY
-          // along its curve via the freeform path (onConnectEnd), so the drop
-          // projects onto the ellipse exactly where the ghost previews it.
-          // Handle-snapping here would land the edge at a fixed parametric
-          // handle instead, a few px off the ghost.
+          // Never END a connection on a fixed handle: React Flow would only show
+          // its snap circle at the 4 cardinal handles, so connecting anywhere
+          // else felt like a dead zone. Every drop instead routes through the
+          // freeform path, which attaches CONTINUOUSLY along the curve and draws
+          // its own snap circle at the live attach point (see
+          // ReconnectConnectionLine), so the preview matches the landing at every
+          // angle.
           isConnectableEnd={false}
         />
       ))}

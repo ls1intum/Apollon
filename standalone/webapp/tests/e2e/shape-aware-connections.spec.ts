@@ -338,3 +338,74 @@ test("the ghost preview matches where a use-case oval connection lands (no drift
   // The committed endpoint (nearer the oval) matches the ghost within a couple px.
   expect(Math.hypot(ghost!.x - commit!.x, ghost!.y - commit!.y)).toBeLessThan(8)
 })
+
+test("connecting to a use-case oval shows a snap circle at the live attach point, at any angle", async ({
+  page,
+}) => {
+  await openFixtureInLocalEditor(page, useCaseFixture)
+  await waitForCanvasReady(page)
+  const dst = await nodeBox(page, INVENTORY)
+  const cx = dst.x + dst.width / 2
+  const cy = dst.y + dst.height / 2
+  await page.locator(`.react-flow__node[data-id="${BROWSE}"]`).hover()
+  await page.waitForTimeout(150)
+  const h = await page
+    .locator(
+      `.react-flow__node[data-id="${BROWSE}"] .react-flow__handle[data-handleid="bottom"]`
+    )
+    .first()
+    .boundingBox()
+  // Aim at an OFF-cardinal point (~60°) — the case with no visible handle.
+  const aim = {
+    x: cx + (dst.width / 2) * 0.5 * 0.9,
+    y: cy + (dst.height / 2) * 0.87 * 0.9,
+  }
+  await page.mouse.move(h!.x + h!.width / 2, h!.y + h!.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(aim.x, aim.y, { steps: 16 })
+  await page.waitForTimeout(100)
+  const circle = await page.evaluate(() => {
+    const c = document.querySelector(
+      ".apollon-connection-snap-circle"
+    ) as SVGCircleElement | null
+    const ctm = c?.getScreenCTM()
+    if (!c || !ctm) return null
+    const m = new DOMPoint(
+      c.cx.baseVal.value,
+      c.cy.baseVal.value
+    ).matrixTransform(ctm)
+    return { x: m.x, y: m.y }
+  })
+  expect(
+    circle,
+    "a snap circle must appear off-cardinal on the oval"
+  ).toBeTruthy()
+  await page.mouse.up()
+  await page.waitForTimeout(250)
+  // The committed edge's endpoint on the oval matches where the circle showed.
+  const end = await page.evaluate((c) => {
+    const paths = Array.from(
+      document.querySelectorAll(".react-flow__edge path.react-flow__edge-path")
+    ) as SVGPathElement[]
+    let best: { x: number; y: number } | null = null
+    let bd = Infinity
+    for (const p of paths) {
+      const ctm = p.getScreenCTM()
+      if (!ctm || p.getTotalLength() === 0) continue
+      for (const len of [0, p.getTotalLength()]) {
+        const q = p.getPointAtLength(len)
+        const m = new DOMPoint(q.x, q.y).matrixTransform(ctm)
+        const d = Math.hypot(m.x - c.x, m.y - c.y)
+        if (d < bd) {
+          bd = d
+          best = { x: m.x, y: m.y }
+        }
+      }
+    }
+    return best
+  }, circle)
+  expect(
+    Math.hypot(end!.x - circle!.x, end!.y - circle!.y),
+    "the edge lands where the snap circle showed"
+  ).toBeLessThan(6)
+})

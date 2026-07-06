@@ -19,6 +19,7 @@ import {
   preserveOrthogonalEdgePoints,
 } from "@/utils/edgeUtils"
 import {
+  getConnectionMode,
   getEdgeAnchorFromPoint,
   getEdgeAnchorPoint,
 } from "@/utils/connectionModes"
@@ -28,6 +29,7 @@ import {
 const GHOST_MIN_DRAG_DISTANCE_PX = 40
 const GHOST_STROKE_WIDTH = 2
 const GHOST_DASH = "6 5"
+const GHOST_SNAP_CIRCLE_RADIUS = 5
 
 const getFallbackConnectionPath = (
   connectionLineType: ConnectionLineType,
@@ -102,7 +104,11 @@ export const ReconnectConnectionLine = ({
     // (null over empty canvas or only the source node).
     const snapToNodeUnder = (
       pointer: XYPosition
-    ): { point: XYPosition; position: Position } | null => {
+    ): {
+      point: XYPosition
+      position: Position
+      showSnapCircle: boolean
+    } | null => {
       const target = resolveDropTarget(pointer, fromNode?.id)
       // The resolver falls back to the source node when nothing else is under
       // the pointer (that's how a drop on your own body becomes a self-loop);
@@ -112,7 +118,13 @@ export const ReconnectConnectionLine = ({
       // node's real shape (oval curve, diamond vertex, interface centre, …).
       const anchor = getEdgeAnchorFromPoint(target.type, pointer, target.rect)
       if (!anchor) return null // node is not a connection target (mode "none")
-      return getEdgeAnchorPoint(target.type, target.rect, anchor)
+      return {
+        ...getEdgeAnchorPoint(target.type, target.rect, anchor),
+        // Only the oval attaches purely via the freeform path (no native handle
+        // circles); other shapes get React Flow's own handle highlights, so we
+        // don't draw a second circle that could drift from a handle-snapped drop.
+        showSnapCircle: getConnectionMode(target.type) === "ellipse",
+      }
     }
 
     if (
@@ -126,18 +138,24 @@ export const ReconnectConnectionLine = ({
       const snapped = snapToNodeUnder(pointer)
       const draggedFar =
         Math.hypot(toX - fromX, toY - fromY) >= GHOST_MIN_DRAG_DISTANCE_PX
-      if (!draggedFar && !snapped) return ""
+      if (!draggedFar && !snapped) return { d: "", snapPoint: null }
 
       const end = snapped ?? { point: pointer, position: toPosition }
-      return getFallbackConnectionPath(
-        connectionLineType,
-        fromX,
-        fromY,
-        end.point.x,
-        end.point.y,
-        fromPosition,
-        end.position
-      )
+      return {
+        d: getFallbackConnectionPath(
+          connectionLineType,
+          fromX,
+          fromY,
+          end.point.x,
+          end.point.y,
+          fromPosition,
+          end.position
+        ),
+        // A snap circle at the live attach point tells you exactly where the
+        // edge will connect — continuously, at any angle on the curve, not just
+        // at fixed handles.
+        snapPoint: snapped?.showSnapCircle ? snapped.point : null,
+      }
     }
 
     const markerPadding =
@@ -183,7 +201,7 @@ export const ReconnectConnectionLine = ({
       targetAnchor.position
     )
 
-    return pointsToSvgPath(reconnectPreviewPoints)
+    return { d: pointsToSvgPath(reconnectPreviewPoints), snapPoint: null }
   }, [
     connectionLineType,
     fromNode,
@@ -207,23 +225,39 @@ export const ReconnectConnectionLine = ({
       ? previewEdge.data.strokeColor
       : undefined
 
+  const stroke =
+    edgeStrokeColor ??
+    connectionLineStyle?.stroke ??
+    "var(--apollon-primary, #3e8acc)"
+
   // Dashed, primary-coloured ghost (the default line was a faint hairline);
-  // an empty `d` renders nothing when the ghost is gated off.
+  // an empty `d` renders nothing when the ghost is gated off. The snap circle
+  // marks the exact live attach point on the target.
   return (
-    <path
-      d={path}
-      fill="none"
-      className="react-flow__connection-path"
-      style={{
-        ...connectionLineStyle,
-        stroke:
-          edgeStrokeColor ??
-          connectionLineStyle?.stroke ??
-          "var(--apollon-primary, #3e8acc)",
-        strokeWidth: GHOST_STROKE_WIDTH,
-        strokeDasharray: GHOST_DASH,
-        opacity: 1, // override React Flow's dimmed default; empty `d` hides it
-      }}
-    />
+    <>
+      <path
+        d={path.d}
+        fill="none"
+        className="react-flow__connection-path"
+        style={{
+          ...connectionLineStyle,
+          stroke,
+          strokeWidth: GHOST_STROKE_WIDTH,
+          strokeDasharray: GHOST_DASH,
+          opacity: 1, // override React Flow's dimmed default; empty `d` hides it
+        }}
+      />
+      {path.snapPoint && (
+        <circle
+          className="apollon-connection-snap-circle"
+          cx={path.snapPoint.x}
+          cy={path.snapPoint.y}
+          r={GHOST_SNAP_CIRCLE_RADIUS}
+          fill="var(--apollon-background, #fff)"
+          stroke={stroke}
+          strokeWidth={GHOST_STROKE_WIDTH}
+        />
+      )}
+    </>
   )
 }
