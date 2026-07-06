@@ -157,6 +157,39 @@ const nearestSide = (rect: Rect, point: XYPosition): Position => {
   )
 }
 
+const clampRatio = (r: number) => (r < 0 ? 0 : r > 1 ? 1 : r)
+
+/**
+ * The bounding-box border anchor where the ray from the CENTRE through `point`
+ * exits the rect. Projecting this onto the ellipse (which also rays from the
+ * centre) lands the endpoint at exactly the aimed ANGLE — including diagonals,
+ * where routing through the nearest bbox side instead would pull the point
+ * ~10° toward a cardinal.
+ */
+const rectBorderAlongRay = (
+  rect: Rect,
+  point: XYPosition
+): FreeformEdgeAnchor => {
+  const c = centerOf(rect)
+  const dx = point.x - c.x
+  const dy = point.y - c.y
+  if (dx === 0 && dy === 0) return { side: Position.Top, ratio: 0.5 }
+  const tx = dx !== 0 ? rect.width / 2 / Math.abs(dx) : Infinity
+  const ty = dy !== 0 ? rect.height / 2 / Math.abs(dy) : Infinity
+  if (tx <= ty) {
+    const yEdge = c.y + tx * dy
+    return {
+      side: dx > 0 ? Position.Right : Position.Left,
+      ratio: clampRatio((yEdge - rect.y) / rect.height),
+    }
+  }
+  const xEdge = c.x + ty * dx
+  return {
+    side: dy > 0 ? Position.Bottom : Position.Top,
+    ratio: clampRatio((xEdge - rect.x) / rect.width),
+  }
+}
+
 /**
  * SHAPE-AWARE forward: turn a drop point into the stored `{side, ratio}` anchor.
  * Returns null when the node is not a connection target (`none`).
@@ -171,10 +204,12 @@ export function getEdgeAnchorFromPoint(
       return null
     case "four-center":
       return { side: nearestSide(rect, point), ratio: 0.5 }
-    // ellipse, parallelogram & freeform-rect all store the nearest rect-border
-    // anchor; the shape projection happens at render, so the round-trip lands on
-    // the curve / slanted outline / border respectively.
     case "ellipse":
+      // Store the anchor ALONG THE RAY to the cursor so the curve projection
+      // lands at the aimed angle (no diagonal drift).
+      return rectBorderAlongRay(rect, point)
+    // parallelogram & freeform-rect store the nearest rect-border anchor; the
+    // shape projection at render lands on the slanted outline / border.
     case "parallelogram":
     case "freeform-rect":
     default:

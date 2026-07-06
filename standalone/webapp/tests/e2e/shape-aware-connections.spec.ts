@@ -409,3 +409,66 @@ test("connecting to a use-case oval shows a snap circle at the live attach point
     "the edge lands where the snap circle showed"
   ).toBeLessThan(6)
 })
+
+test("a use-case oval connection lands at the aimed angle, including diagonals (no drift)", async ({
+  page,
+}) => {
+  // Regression: diagonal aims used to land ~12px off (routed through the nearest
+  // bbox side); they must now land where aimed at every angle.
+  await openFixtureInLocalEditor(page, useCaseFixture)
+  await waitForCanvasReady(page)
+  const g = await ovalGeom(page, INVENTORY)
+  for (const deg of [45, 135, 225, 315]) {
+    await openFixtureInLocalEditor(page, useCaseFixture)
+    await waitForCanvasReady(page)
+    const before = await page.evaluate(() =>
+      Array.from(document.querySelectorAll(".react-flow__edge")).map((e) =>
+        e.getAttribute("data-id")
+      )
+    )
+    await page.locator(`.react-flow__node[data-id="${BROWSE}"]`).hover()
+    await page.waitForTimeout(120)
+    const h = await page
+      .locator(
+        `.react-flow__node[data-id="${BROWSE}"] .react-flow__handle[data-handleid="bottom"]`
+      )
+      .first()
+      .boundingBox()
+    const th = (deg * Math.PI) / 180
+    const aim = { x: g.cx + g.rx * Math.cos(th), y: g.cy + g.ry * Math.sin(th) }
+    await page.mouse.move(h!.x + h!.width / 2, h!.y + h!.height / 2)
+    await page.mouse.down()
+    await page.mouse.move(aim.x, aim.y, { steps: 14 })
+    await page.mouse.up()
+    await page.waitForTimeout(250)
+    const end = await page.evaluate(
+      ({ b, cx, cy }) => {
+        const now = Array.from(
+          document.querySelectorAll(".react-flow__edge")
+        ).map((e) => e.getAttribute("data-id"))
+        const id = now.find((x) => !b.includes(x))
+        if (!id) return null
+        const p = document.querySelector(
+          `.react-flow__edge[data-id="${id}"] path.react-flow__edge-path`
+        ) as SVGPathElement | null
+        const ctm = p?.getScreenCTM()
+        if (!p || !ctm) return null
+        const pts = [0, p.getTotalLength()].map((l) => {
+          const q = p.getPointAtLength(l)
+          const m = new DOMPoint(q.x, q.y).matrixTransform(ctm)
+          return { x: m.x, y: m.y }
+        })
+        return Math.hypot(pts[0].x - cx, pts[0].y - cy) <
+          Math.hypot(pts[1].x - cx, pts[1].y - cy)
+          ? pts[0]
+          : pts[1]
+      },
+      { b: before, cx: g.cx, cy: g.cy }
+    )
+    expect(end, `edge created aiming ${deg}°`).toBeTruthy()
+    expect(
+      Math.hypot(end!.x - aim.x, end!.y - aim.y),
+      `${deg}° must land at the aimed point, not drift to a cardinal`
+    ).toBeLessThan(8)
+  }
+})
