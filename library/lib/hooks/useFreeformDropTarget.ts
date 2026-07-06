@@ -3,8 +3,11 @@ import { useReactFlow, type Rect, type XYPosition } from "@xyflow/react"
 import { getConnectionMode } from "@/utils/connectionModes"
 
 // Half-size of the box hit-tested around a drop point. A drop must land within
-// this of a node to attach — matching React Flow's own pointer hit slop.
-const DROP_HIT_RADIUS_PX = 5
+// this of a node's bounding box to attach. Kept a little generous so a drop just
+// outside a rounded shape still connects: an oval's box hugs the curve at the
+// cardinals but bulges out at the diagonals, and too small a slop made the
+// cardinals feel like dead zones while the diagonals connected.
+const DROP_HIT_RADIUS_PX = 11
 
 export type FreeformDropTarget = { id: string; type?: string; rect: Rect }
 
