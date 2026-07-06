@@ -651,7 +651,9 @@
   background-color: var(--apollon-primary, #3e8acc);
   opacity: 0.4;
   box-sizing: border-box;
-  pointer-events: all;
+  /* Off by default; only grabbable while the node is hovered (or in click-to-
+     connect guidance mode) — see the hit-area note near the hover rules below. */
+  pointer-events: none;
   cursor: crosshair;
 
   /* --arc-scale is set by DefaultNodeWrapper to 1/zoom so the indicator keeps
@@ -711,24 +713,48 @@
   transition: opacity 120ms ease;
 }
 
+/* Hit-area rule (generalises the #791 node-toolbar fix): a node's resize controls
+   and connection handles PROTRUDE past its box — resize handles straddle the
+   corners, connection arcs stick ~14px outside the edge. A selected node is also
+   lifted above its neighbours (`elevateNodesOnSelect`), so if these protruding
+   affordances captured the pointer merely because the node is selected, they would
+   swallow clicks meant for an overlapping node sitting beneath them. So they SHOW
+   when selected but only become pointer-interactive when the node is HOVERED —
+   every gesture that uses them (grab a resize handle, drag out a connection) starts
+   by hovering the node, so nothing is lost, while a selected-not-hovered node lets
+   clicks fall through to whatever it overlaps. */
+.react-flow__node:hover .react-flow__resize-control {
+  pointer-events: all;
+}
 .react-flow__node:hover .react-flow__resize-control,
 .react-flow__node.selected .react-flow__resize-control {
   opacity: 1;
+}
+
+/* React Flow marks every connectable handle `.connectionindicator` and gives it
+   `pointer-events: all` unconditionally; override that so handles follow the
+   hover-gated model above. Click-to-connect guidance mode is exempt (its circle
+   handles are clicked without hovering their node); guidance hides the arcs, so
+   only `.connectionindicator` is re-enabled there, not the arc ::before. */
+.react-flow__handle.connectionindicator {
+  pointer-events: none;
+}
+.react-flow__node:hover .react-flow__handle,
+.react-flow__node:hover .react-flow__handle.connectionindicator,
+.react-flow__node:hover .react-flow__handle.apollon-arc-handle::before,
+.apollon-editor--connection-guidance .react-flow__handle.connectionindicator {
   pointer-events: all;
 }
 
 .react-flow__node:hover .react-flow__handle {
   opacity: 1;
   background-color: transparent;
-  pointer-events: all;
   cursor: crosshair;
 }
 
 .react-flow__node.selected .react-flow__handle {
   opacity: 1;
   background-color: transparent;
-  pointer-events: all;
-  cursor: crosshair;
 }
 
 .apollon-editor--connection-guidance
