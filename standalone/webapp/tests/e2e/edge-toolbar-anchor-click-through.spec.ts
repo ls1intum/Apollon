@@ -5,13 +5,9 @@ import { fileURLToPath } from "url"
 import { openFixtureInLocalEditor, waitForCanvasReady } from "../helpers/canvas"
 
 /**
- * An edge's edit/delete toolbar is anchored to an SVG <foreignObject> that is
- * ALWAYS present (it positions the popover) and sits OFFSET from the edge line —
- * its box doesn't overlap the visible edge at all. If that box captured the
- * pointer it would select the edge from an empty region ~50px away from the line.
- * The box must be transparent to the pointer: an edge is selected only by clicking
- * its line, while the toolbar's own buttons stay clickable. Same hit-area fix as
- * the node toolbar (#791) and the node handles.
+ * The edge toolbar's <foreignObject> anchor sits offset from the edge line and is
+ * always present, so it must not capture clicks: an edge is selected only by its
+ * line, while the toolbar buttons stay clickable. (Why: CustomEdgeToolBar.tsx.)
  */
 
 const __dirname2 = path.dirname(fileURLToPath(import.meta.url))

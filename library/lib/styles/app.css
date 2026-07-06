@@ -713,16 +713,13 @@
   transition: opacity 120ms ease;
 }
 
-/* Hit-area rule (generalises the #791 node-toolbar fix): a node's resize controls
-   and connection handles PROTRUDE past its box — resize handles straddle the
-   corners, connection arcs stick ~14px outside the edge. A selected node is also
-   lifted above its neighbours (`elevateNodesOnSelect`), so if these protruding
-   affordances captured the pointer merely because the node is selected, they would
-   swallow clicks meant for an overlapping node sitting beneath them. So they SHOW
-   when selected but only become pointer-interactive when the node is HOVERED —
-   every gesture that uses them (grab a resize handle, drag out a connection) starts
-   by hovering the node, so nothing is lost, while a selected-not-hovered node lets
-   clicks fall through to whatever it overlaps. */
+/* Hit-area fix (same idea as the #791 node-toolbar fix). A node's resize controls
+   and connection arcs PROTRUDE past its box, and a selected node is lifted above
+   its neighbours (`elevateNodesOnSelect`), so arming these affordances just because
+   the node is selected makes them swallow clicks meant for an overlapping node
+   beneath them. On a fine pointer we arm them on :hover instead — every gesture
+   that uses them starts by hovering — so a selected-not-hovered node lets clicks
+   fall through. Touch has no :hover; see the coarse-pointer fallback below. */
 .react-flow__node:hover .react-flow__resize-control {
   pointer-events: all;
 }
@@ -761,6 +758,23 @@
   .react-flow__handle.apollon-arc-handle::before {
   opacity: 0;
   pointer-events: none;
+}
+
+/* Coarse-pointer fallback for the hit-area fix above. Touch devices never fire
+   :hover, so the hover-gated rules would leave a selected node's affordances
+   ungrabbable — you could not start a connection or resize with a finger. Arm
+   them on selection instead, matching pre-fix behaviour. (A coarse pointer can't
+   hover to disambiguate an overlap anyway, so it keeps the swallow the fine-pointer
+   path removes.) The arc ::before is excluded in guidance mode so its hidden arcs
+   stay inert while the circle handles drive the connection. */
+@media (hover: none), (pointer: coarse) {
+  .react-flow__node.selected .react-flow__handle.connectionindicator,
+  .react-flow__node.selected .react-flow__resize-control,
+  .apollon-editor:not(.apollon-editor--connection-guidance)
+    .react-flow__node.selected
+    .react-flow__handle.apollon-arc-handle::before {
+    pointer-events: all;
+  }
 }
 
 /* During connection guidance, lift only the source and target nodes (and their

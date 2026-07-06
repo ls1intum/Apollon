@@ -2,17 +2,10 @@ import { test, expect, type Page, type Locator } from "@playwright/test"
 import { openFixtureInLocalEditor, waitForCanvasReady } from "../helpers/canvas"
 
 /**
- * Generalises the node-toolbar click-through fix (#791) to a node's OTHER
- * floating affordances: its connection handles (arcs that stick ~14px past the
- * node edge) and its resize handles (8px squares straddling the corners).
- *
- * Selecting a node lifts it above its neighbours (`elevateNodesOnSelect`). If
- * those protruding affordances captured the pointer just because the node is
- * selected, they'd swallow clicks meant for an overlapping node sitting beneath
- * them — the node becomes unselectable exactly where the affordances overhang it.
- * They must show when selected but only capture while the node is HOVERED (every
- * gesture that uses them starts by hovering the node), so a selected-not-hovered
- * node lets clicks fall through to whatever it overlaps.
+ * A selected node is lifted above its neighbours (`elevateNodesOnSelect`), so its
+ * protruding connection arcs and corner resize handles must not swallow clicks
+ * meant for an overlapping node beneath them. On a fine pointer they capture only
+ * while hovered; on touch, only once selected. (Why: app.css "Hit-area fix".)
  */
 
 // Beta covers Alpha's right third, so Alpha's right-edge connection handles and
@@ -162,4 +155,52 @@ test("a hovered node still starts a connection from its handle (not over-correct
   await page.waitForTimeout(300)
 
   await expect(page.locator(".react-flow__edge")).toHaveCount(1)
+})
+
+test.describe("touch / coarse pointer", () => {
+  // Touch devices never fire :hover, so the hover gating above must fall back to
+  // arming affordances on selection — otherwise a finger could never start a
+  // connection or resize. isMobile makes matchMedia report (pointer: coarse) /
+  // (hover: none); it is Chromium-only.
+  test.skip(
+    ({ browserName }) => browserName !== "chromium",
+    "isMobile emulation is Chromium-only"
+  )
+  test.use({
+    isMobile: true,
+    hasTouch: true,
+    viewport: { width: 800, height: 900 },
+  })
+
+  test("a selected node keeps its handles grabbable on touch", async ({
+    page,
+  }) => {
+    await openFixtureInLocalEditor(
+      page,
+      OVERLAP_MODEL as Record<string, unknown>
+    )
+    await waitForCanvasReady(page)
+
+    const alpha = node(page, "Alpha")
+    const aBox = (await alpha.boundingBox())!
+    await page.mouse.click(aBox.x + 12, aBox.y + aBox.height / 2)
+    await page.waitForTimeout(200)
+    expect(await selectedNames(page)).toEqual(["Alpha"])
+
+    const pe = await page.evaluate(() => {
+      const sel = document.querySelector(".react-flow__node.selected")
+      const handle = sel?.querySelector(
+        ".react-flow__handle.connectionindicator"
+      )
+      const resize = sel?.querySelector(".react-flow__resize-control")
+      return {
+        coarse: window.matchMedia("(pointer: coarse)").matches,
+        handle: handle ? getComputedStyle(handle).pointerEvents : null,
+        resize: resize ? getComputedStyle(resize).pointerEvents : null,
+      }
+    })
+    expect(pe.coarse).toBe(true)
+    expect(pe.handle).toBe("all")
+    expect(pe.resize).toBe("all")
+  })
 })
