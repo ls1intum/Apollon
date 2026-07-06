@@ -5,13 +5,12 @@ import {
   getSmoothStepPath,
   getStraightPath,
   Position,
-  useStore,
-  type Rect,
   type XYPosition,
 } from "@xyflow/react"
 import { EDGES } from "@/constants"
 import { pointsToSvgPath } from "@/edges/Connection"
 import { useDiagramStore, useMetadataStore } from "@/store/context"
+import { useFreeformDropTarget } from "@/hooks/useFreeformDropTarget"
 import { useShallow } from "zustand/shallow"
 import {
   adjustSourceCoordinates,
@@ -22,13 +21,11 @@ import {
   preserveOrthogonalEdgePoints,
 } from "@/utils/edgeUtils"
 
-// A new-connection ghost stays hidden until the pointer has been dragged at
-// least this far (flow px) from the source handle — so a stray click or a tiny
-// drag doesn't flash a preview, and the ghost reads as an intentional gesture
-// once you commit to pulling away from the node. It also appears immediately
-// while hovering ANY node, so short connections to a near neighbour still
-// preview.
+// Hide the new-connection ghost until dragged this far from the source, so a
+// stray click doesn't flash a preview. Bypassed while hovering a node.
 const GHOST_MIN_DRAG_DISTANCE_PX = 40
+const GHOST_STROKE_WIDTH = 2
+const GHOST_DASH = "6 5"
 
 const getFallbackConnectionPath = (
   connectionLineType: ConnectionLineType,
@@ -66,6 +63,7 @@ const getFallbackConnectionPath = (
 export const ReconnectConnectionLine = ({
   connectionLineStyle,
   connectionLineType,
+  fromNode,
   fromX,
   fromY,
   toX,
@@ -93,65 +91,23 @@ export const ReconnectConnectionLine = ({
     )
   )
 
-  // Live node rectangles so the ghost can SNAP its free end onto the freeform
-  // anchor point of whatever node the pointer is currently over — previewing
-  // exactly where the edge will attach on release.
-  const nodeLookup = useStore((s) => s.nodeLookup)
+  // Resolve the drop target the SAME way the connection commit does, so the
+  // preview snaps exactly where the edge will attach on release.
+  const resolveDropTarget = useFreeformDropTarget()
 
   const path = useMemo(() => {
-    const rectOf = (
-      node: typeof nodeLookup extends Map<string, infer N> ? N : never
-    ): Rect | null => {
-      const width = node.measured?.width ?? node.width
-      const height = node.measured?.height ?? node.height
-      if (!width || !height) return null
-      return {
-        x: node.internals.positionAbsolute.x,
-        y: node.internals.positionAbsolute.y,
-        width,
-        height,
-      }
-    }
-    const contains = (r: Rect, p: XYPosition, halo = 0) =>
-      p.x >= r.x - halo &&
-      p.x <= r.x + r.width + halo &&
-      p.y >= r.y - halo &&
-      p.y <= r.y + r.height + halo
-
-    // The node the connection STARTS on (its border holds the source handle),
-    // so the ghost's own source node is never treated as a snap target.
-    const sourcePoint: XYPosition = { x: fromX, y: fromY }
-    let sourceNodeId: string | null = null
-    for (const node of nodeLookup.values()) {
-      const r = rectOf(node)
-      if (r && contains(r, sourcePoint, 2)) {
-        sourceNodeId = node.id
-        break
-      }
-    }
-
-    // Snap a pointer to the freeform border point of the smallest OTHER node
-    // under it (grown by a small halo so drops on the arc/just-outside still
-    // snap). Null when over empty canvas or only the source node.
+    // Snap a pointer to the freeform border point of the node it would attach to
+    // (null over empty canvas or only the source node).
     const snapToNodeUnder = (
       pointer: XYPosition
     ): { point: XYPosition; position: Position } | null => {
-      const HALO = 16
-      let best: Rect | null = null
-      let bestArea = Infinity
-      for (const node of nodeLookup.values()) {
-        if (node.id === sourceNodeId) continue
-        const r = rectOf(node)
-        if (!r || !contains(r, pointer, HALO)) continue
-        const area = r.width * r.height
-        if (area < bestArea) {
-          bestArea = area
-          best = r
-        }
-      }
-      if (!best) return null
-      const anchor = getFreeformAnchorFromPoint(pointer, best)
-      return getFreeformAnchorPoint(best, anchor)
+      const target = resolveDropTarget(pointer, fromNode?.id)
+      // The resolver falls back to the source node when nothing else is under
+      // the pointer (that's how a drop on your own body becomes a self-loop);
+      // the ghost never previews that, so a drag near the source stays gated.
+      if (!target || target.id === fromNode?.id) return null
+      const anchor = getFreeformAnchorFromPoint(pointer, target.rect)
+      return getFreeformAnchorPoint(target.rect, anchor)
     }
 
     if (
@@ -159,9 +115,8 @@ export const ReconnectConnectionLine = ({
       !reconnectPreviewHandleType ||
       reconnectPreviewBasePoints.length < 2
     ) {
-      // NEW connection. Distance-gate: keep the ghost hidden until the pointer
-      // is dragged away from the source, unless it is already hovering a node
-      // (so short hops to a neighbour still preview).
+      // NEW connection — hidden until dragged clear of the source, or already
+      // hovering a node (see GHOST_MIN_DRAG_DISTANCE_PX).
       const pointer: XYPosition = { x: toX, y: toY }
       const snapped = snapToNodeUnder(pointer)
       const draggedFar =
@@ -226,16 +181,17 @@ export const ReconnectConnectionLine = ({
     return pointsToSvgPath(reconnectPreviewPoints)
   }, [
     connectionLineType,
+    fromNode,
     fromPosition,
     fromX,
     fromY,
     previewEdge,
     reconnectPreviewBasePoints,
     reconnectPreviewHandleType,
+    resolveDropTarget,
     toPosition,
     toX,
     toY,
-    nodeLookup,
   ])
 
   const edgeStrokeColor =
@@ -246,23 +202,22 @@ export const ReconnectConnectionLine = ({
       ? previewEdge.data.strokeColor
       : undefined
 
-  // A prominent, dashed ghost so the preview reads clearly (the default line was
-  // a faint hairline). Uses the edge's own colour while reconnecting, else the
-  // primary accent for a new connection.
+  // Dashed, primary-coloured ghost (the default line was a faint hairline);
+  // an empty `d` renders nothing when the ghost is gated off.
   return (
     <path
       d={path}
       fill="none"
-      className="react-flow__connection-path apollon-connection-ghost"
+      className="react-flow__connection-path"
       style={{
         ...connectionLineStyle,
         stroke:
           edgeStrokeColor ??
           connectionLineStyle?.stroke ??
           "var(--apollon-primary, #3e8acc)",
-        strokeWidth: 2,
-        strokeDasharray: "6 5",
-        opacity: path ? 1 : 0,
+        strokeWidth: GHOST_STROKE_WIDTH,
+        strokeDasharray: GHOST_DASH,
+        opacity: 1, // override React Flow's dimmed default; empty `d` hides it
       }}
     />
   )

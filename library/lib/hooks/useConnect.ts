@@ -17,6 +17,7 @@ import {
 } from "@/utils"
 import { DiagramNodeTypeRecord } from "@/nodes"
 import { useDiagramStore, useMetadataStore } from "@/store/context"
+import { useFreeformDropTarget } from "./useFreeformDropTarget"
 import { useShallow } from "zustand/shallow"
 
 const withEndpointAnchor = (
@@ -124,8 +125,8 @@ const isSameNodeSameHandleArea = (
 export const useConnect = () => {
   const startEdge = useRef<Edge | null>(null)
   const connectionStartParams = useRef<OnConnectStartParams | null>(null)
-  const { screenToFlowPosition, getIntersectingNodes, getInternalNode } =
-    useReactFlow()
+  const { screenToFlowPosition, getIntersectingNodes } = useReactFlow()
+  const resolveDropTarget = useFreeformDropTarget()
   const { setEdges, addEdge, edges } = useDiagramStore(
     useShallow((state) => ({
       setEdges: state.setEdges,
@@ -228,35 +229,13 @@ export const useConnect = () => {
       try {
         if (!connectionState.isValid) {
           const dropPosition = getDropPosition(event)
-          const intersectingNodes = getIntersectingNodes({
-            x: dropPosition.x - 5,
-            y: dropPosition.y - 5,
-            width: 10,
-            height: 10,
-          })
-
-          if (intersectingNodes.length === 0) return
-
-          const fromNodeId = connectionState.fromNode?.id
-          const nodeOnTop =
-            intersectingNodes.findLast((node) => node.id !== fromNodeId) ??
-            intersectingNodes[intersectingNodes.length - 1]
-
-          const internalNodeData = getInternalNode(nodeOnTop.id)
-
-          if (
-            !internalNodeData ||
-            nodeOnTop.width == null ||
-            nodeOnTop.height == null
+          const nodeOnTop = resolveDropTarget(
+            dropPosition,
+            connectionState.fromNode?.id
           )
-            return
+          if (!nodeOnTop) return
 
-          const targetRect = {
-            x: internalNodeData.internals.positionAbsolute.x,
-            y: internalNodeData.internals.positionAbsolute.y,
-            width: nodeOnTop.width,
-            height: nodeOnTop.height,
-          }
+          const targetRect = nodeOnTop.rect
           const targetAnchor = getFreeformAnchorFromPoint(
             dropPosition,
             targetRect
@@ -354,8 +333,7 @@ export const useConnect = () => {
       defaultEdgeType,
       edges,
       getDropPosition,
-      getInternalNode,
-      getIntersectingNodes,
+      resolveDropTarget,
       isFourHandleNode,
       setEdges,
       stopConnectionGuidance,

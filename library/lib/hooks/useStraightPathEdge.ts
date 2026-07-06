@@ -512,10 +512,10 @@ export const useStraightPathEdge = ({
           })
           return
         }
-        // No snap target under the pointer (empty canvas): show a FREE preview
-        // whose dragged end follows the cursor, so the reconnection is visible
-        // in flight instead of the edge snapping back. No commit is set, so
-        // releasing here reverts the edge (no reconnect).
+        // No snap target (empty canvas): free preview whose dragged end follows
+        // the cursor (straight, matching this edge). No commit ⇒ reverts on
+        // release. Positions are irrelevant for a straight preview (the marker
+        // orients along the path, not by side).
         const flowPoint = screenToFlowPosition({ x: e.clientX, y: e.clientY })
         setDragPreviewPoints(
           endpoint === "source"

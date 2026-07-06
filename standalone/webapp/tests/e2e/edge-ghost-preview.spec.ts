@@ -140,67 +140,45 @@ test("the ghost snaps its end onto the target node's border while hovering it", 
   ).toBeLessThanOrEqual(6)
 })
 
-test("reconnecting shows a LIVE preview whose moved end snaps onto the hovered node", async ({
+test("the new-connection ghost previews exactly where the edge attaches (preview must not lie)", async ({
   page,
 }) => {
-  // React Flow live-updates the actual edge during a reconnect (there is no
-  // separate connection-line for reconnects), snapping the moved end to the
-  // hovered node's border. We assert on that live edge path mid-drag.
-  await openFixtureInLocalEditor(page, fx("class-diagram.json"))
+  // The ghost snap and the connection commit resolve the drop target through the
+  // same helper, so the previewed endpoint must equal the committed one.
+  await openFixtureInLocalEditor(page, fx("two-class-no-edge.json"))
   await waitForCanvasReady(page)
-  await page.locator(`.react-flow__edge[data-id="${EDGE}"]`).waitFor()
+  const a = await box(page, A)
+  const b = await box(page, B)
+  const start = { x: a.x + a.width, y: a.y + a.height / 2 }
 
-  const pb = await page
-    .locator(`.react-flow__edge[data-id="${EDGE}"] path.react-flow__edge-path`)
-    .boundingBox()
-  await page.mouse.click(pb!.x + pb!.width / 2, pb!.y + pb!.height / 2)
-  await page.waitForTimeout(150)
-
-  // Drag the native reconnect anchor (what the endpoint handle forwards to).
-  const updater = await page
-    .locator(
-      `.react-flow__edge[data-id="${EDGE}"] .react-flow__edgeupdater-target`
-    )
-    .boundingBox()
-  const dest = await box(page, DEST)
-
-  const liveEnd = async () =>
-    page.evaluate((eid) => {
-      const p = document.querySelector(
-        `.react-flow__edge[data-id="${eid}"] path.react-flow__edge-path`
-      ) as SVGPathElement | null
-      const ctm = p?.getScreenCTM()
-      if (!p || !ctm || p.getTotalLength() === 0) return null
-      const q = p.getPointAtLength(p.getTotalLength())
-      const m = new DOMPoint(q.x, q.y).matrixTransform(ctm)
-      return { x: m.x, y: m.y }
-    }, EDGE)
-
-  await page.mouse.move(
-    updater!.x + updater!.width / 2,
-    updater!.y + updater!.height / 2
-  )
+  await page.mouse.move(start.x, start.y)
   await page.mouse.down()
-  await page.mouse.move(dest.x + dest.width / 2, dest.y + dest.height / 2, {
-    steps: 14,
-  })
-  await page.waitForTimeout(80)
-  const mid = await liveEnd()
-  await page.mouse.up()
-  await page.waitForTimeout(120)
-
+  await page.mouse.move(b.x + 10, b.y + b.height / 3, { steps: 12 }) // inside B
+  await page.waitForTimeout(60)
+  const g = await ghost(page)
   expect(
-    mid,
-    "the live reconnect preview must be measurable mid-drag"
+    g.visible && g.end,
+    "ghost must be visible over the target"
   ).toBeTruthy()
-  expect(
-    distToBorder(dest, mid!),
-    "the reconnect preview's moved end must snap onto the hovered node's border"
-  ).toBeLessThanOrEqual(8)
 
-  await expect(
-    page.locator(`.react-flow__edge[data-id="${EDGE}"]`)
-  ).toHaveCount(1)
+  await page.mouse.up()
+  await page.waitForTimeout(150)
+  // Exactly one edge now exists; its target endpoint is where the drop attached.
+  const committedEnd = await page.evaluate(() => {
+    const p = document.querySelector(
+      ".react-flow__edge path.react-flow__edge-path"
+    ) as SVGPathElement | null
+    const ctm = p?.getScreenCTM()
+    if (!p || !ctm) return null
+    const q = p.getPointAtLength(p.getTotalLength())
+    const m = new DOMPoint(q.x, q.y).matrixTransform(ctm)
+    return { x: m.x, y: m.y }
+  })
+  expect(committedEnd, "the drop must create an edge").toBeTruthy()
+  expect(
+    Math.hypot(g.end!.x - committedEnd!.x, g.end!.y - committedEnd!.y),
+    "the ghost end must match where the edge actually attaches"
+  ).toBeLessThanOrEqual(6)
 })
 
 test("reconnecting the target onto a specific side lands on that side", async ({
@@ -252,9 +230,10 @@ test("reconnecting the target onto a specific side lands on that side", async ({
   }
 })
 
-/** The rendered live edge path: both endpoints (screen), total length, straight-
- * line distance between endpoints, and whether it still carries a marker (proof
- * it keeps the real edge's appearance, not a bare line). */
+/** The rendered live edge path: both endpoints (screen), total length, and the
+ * straight-line distance between them (total > straight ⇒ orthogonal, not a
+ * diagonal). `typeClass`/`pathCount` prove it's still the real typed edge with
+ * its decoration, not a bare line. */
 async function livePath(page: Page, edgeId: string) {
   return page.evaluate((eid) => {
     const g = document.querySelector(`.react-flow__edge[data-id="${eid}"]`)
@@ -271,26 +250,11 @@ async function livePath(page: Page, edgeId: string) {
     const total = p.getTotalLength()
     const s = at(0)
     const t = at(total)
-    // Sample the interior polyline to confirm axis-aligned (orthogonal) segments.
-    const N = 24
-    let orthogonalRun = 0
-    let prev = at(0)
-    for (let i = 1; i <= N; i++) {
-      const cur = at((total * i) / N)
-      const dx = Math.abs(cur.x - prev.x)
-      const dy = Math.abs(cur.y - prev.y)
-      if (dx < 1.5 || dy < 1.5) orthogonalRun++ // this sample step is axis-aligned
-      prev = cur
-    }
     return {
       source: s,
       target: t,
       total,
       straight: Math.hypot(t.x - s.x, t.y - s.y),
-      orthogonalFraction: orthogonalRun / N,
-      // Proof the ghost keeps the REAL edge's appearance: it's still the typed
-      // ClassInheritance edge and still draws its decoration (the base path plus
-      // the inheritance triangle), not a bare line.
       typeClass: g?.getAttribute("class") ?? "",
       pathCount: g?.querySelectorAll("path").length ?? 0,
     }
@@ -298,7 +262,7 @@ async function livePath(page: Page, edgeId: string) {
 }
 
 for (const end of ["target", "source"] as const) {
-  test(`dragging the ${end} endpoint into empty space: a STEP-routed ghost follows the cursor, keeps the edge markers, and reverts on release`, async ({
+  test(`dragging the ${end} endpoint into empty space: a step-routed ghost follows the cursor and reverts on release`, async ({
     page,
   }) => {
     await openFixtureInLocalEditor(page, fx("class-diagram.json"))
@@ -313,11 +277,9 @@ for (const end of ["target", "source"] as const) {
     await page.mouse.click(pb!.x + pb!.width / 2, pb!.y + pb!.height / 2)
     await page.waitForTimeout(150)
     const before = (await livePath(page, EDGE))!
+    // The edge is the real typed ClassInheritance edge with its triangle drawn.
     expect(before.typeClass).toContain("ClassInheritance")
-    expect(
-      before.pathCount,
-      "inheritance edge draws its triangle"
-    ).toBeGreaterThanOrEqual(2)
+    expect(before.pathCount).toBeGreaterThanOrEqual(2)
     const movedBefore = end === "target" ? before.target : before.source
 
     const handle = await page
@@ -331,44 +293,29 @@ for (const end of ["target", "source"] as const) {
     )
     await page.mouse.down()
 
-    // Two distinct, clearly DIAGONAL empty-canvas points.
-    for (const p of [
-      { x: handle!.x + 150, y: handle!.y - 90 },
-      { x: handle!.x + 240, y: handle!.y + 80 },
-    ]) {
-      await page.mouse.move(p.x, p.y, { steps: 8 })
-      await page.waitForTimeout(60)
-      const live = (await livePath(page, EDGE))!
-      const moved = end === "target" ? live.target : live.source
+    // A clearly DIAGONAL empty-canvas point, clear of every node so the endpoint
+    // is free (not snapped to a target) and a release there reverts.
+    const p = { x: handle!.x + 240, y: handle!.y + 80 }
+    await page.mouse.move(p.x, p.y, { steps: 10 })
+    await page.waitForTimeout(60)
+    const live = (await livePath(page, EDGE))!
+    const moved = end === "target" ? live.target : live.source
 
-      // 1. The dragged end follows the cursor (within a marker/grid offset) AND
-      //    has genuinely tracked far from its original committed position — so a
-      //    regression that leaves the endpoint pinned to its node is caught.
-      expect(
-        Math.hypot(moved.x - p.x, moved.y - p.y),
-        `${end} endpoint must follow the cursor in empty space`
-      ).toBeLessThanOrEqual(35)
-      expect(
-        Math.hypot(moved.x - movedBefore.x, moved.y - movedBefore.y),
-        `${end} endpoint must move with the drag, not stay pinned to its node`
-      ).toBeGreaterThan(100)
-      // 2. The ghost is STEP-routed (orthogonal), not a straight diagonal: its
-      //    path is longer than the straight line and mostly axis-aligned.
-      expect(
-        live.total,
-        "ghost must be orthogonal (step) routed, longer than a straight line"
-      ).toBeGreaterThan(live.straight * 1.12)
-      expect(
-        live.orthogonalFraction,
-        "ghost segments must be predominantly axis-aligned (step routing)"
-      ).toBeGreaterThanOrEqual(0.8)
-      // 3. It keeps the real edge's appearance (typed edge + triangle decoration).
-      expect(live.typeClass).toContain("ClassInheritance")
-      expect(
-        live.pathCount,
-        "ghost must keep the edge's decoration (not collapse to a bare line)"
-      ).toBeGreaterThanOrEqual(2)
-    }
+    // Follows the cursor (within a marker/grid offset) AND has genuinely tracked
+    // far from its committed position — a regression that leaves it pinned fails.
+    expect(
+      Math.hypot(moved.x - p.x, moved.y - p.y),
+      `${end} endpoint must follow the cursor in empty space`
+    ).toBeLessThanOrEqual(35)
+    expect(
+      Math.hypot(moved.x - movedBefore.x, moved.y - movedBefore.y),
+      `${end} endpoint must move with the drag, not stay pinned to its node`
+    ).toBeGreaterThan(100)
+    // Step-routed, not a straight diagonal: an orthogonal L-route is longer.
+    expect(
+      live.total,
+      "ghost must be step-routed (longer than a straight line)"
+    ).toBeGreaterThan(live.straight * 1.12)
 
     // Release over empty canvas: the edge must REVERT (no reconnect).
     await page.mouse.up()

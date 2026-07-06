@@ -1111,12 +1111,9 @@ export const useStepPathEdge = ({
           })
           return
         }
-        // No snap target under the pointer (empty canvas): show a FREE preview
-        // whose dragged end follows the cursor. Route it ORTHOGONALLY (same step
-        // routing + preserved bends as the committed edge) so the ghost roughly
-        // matches the predicted edge instead of collapsing to a straight line —
-        // the edge keeps its own appearance (type, markers). No commit is set, so
-        // releasing here reverts the edge (no reconnect).
+        // No snap target (empty canvas): free preview whose dragged end follows
+        // the cursor, still step-routed (preserved bends) to match the predicted
+        // edge. No commit is set, so releasing here reverts (no reconnect).
         const flowPoint = screenToFlowPosition({ x: e.clientX, y: e.clientY })
         const movingIsSource = endpoint === "source"
         const fixedPoint = movingIsSource
