@@ -96,7 +96,7 @@ export const getEndpointHitTargetRect = (
 }
 
 const getEndpointGripRect = (
-  hitTarget: ReturnType<typeof getEndpointHitTargetRect>,
+  point: IPoint,
   side?: EndpointSide,
   screenScale = 1
 ) => {
@@ -110,9 +110,22 @@ const getEndpointGripRect = (
       ? FREEFORM_ENDPOINT_GRIP_SHORT_AXIS
       : FREEFORM_ENDPOINT_GRIP_LONG_AXIS) * screenScale
 
+  // Sit the visible grip just OUTSIDE the true endpoint (a small, size-scaled
+  // clearance so it clears the arrowhead/marker), NOT at the centre of the wide
+  // invisible hit-target — that put it ~half the hit-target (a constant ~22px)
+  // away, so on a zoomed-out edge the grip floated detached from its endpoint.
+  // Anchoring to the endpoint keeps it hugging the edge tip at every zoom while
+  // the hit-target stays wide for easy grabbing.
+  const dir = getEndpointDirection(side)
+  const clearance =
+    (isHorizontalGrip ? width : height) / 2 +
+    FREEFORM_ENDPOINT_GRIP_RADIUS * screenScale
+  const cx = point.x + dir.x * clearance
+  const cy = point.y + dir.y * clearance
+
   return {
-    x: hitTarget.x + hitTarget.width / 2 - width / 2,
-    y: hitTarget.y + hitTarget.height / 2 - height / 2,
+    x: cx - width / 2,
+    y: cy - height / 2,
     width,
     height,
     radius: FREEFORM_ENDPOINT_GRIP_RADIUS * screenScale,
@@ -226,12 +239,12 @@ export const EdgeEndpointMarkers = ({
     .join(" ")
   const showEndpointGrips = Boolean(onEndpointPointerDown)
   const sourceGrip = getEndpointGripRect(
-    sourceHitTarget,
+    sourcePoint,
     sourcePosition,
     screenScale
   )
   const targetGrip = getEndpointGripRect(
-    targetHitTarget,
+    targetPoint,
     targetPosition,
     screenScale
   )
