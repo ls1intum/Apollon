@@ -24,7 +24,12 @@ export function BPMNAnnotation({
   }
 
   return (
-    <DefaultNodeWrapper width={width} height={height} elementId={id}>
+    <DefaultNodeWrapper
+      width={width}
+      height={height}
+      elementId={id}
+      isConnectableEnd={false}
+    >
       <NodeToolbar elementId={id} />
 
       <NodeResizer

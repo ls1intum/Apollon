@@ -1,0 +1,5 @@
+---
+"@tumaet/apollon": minor
+---
+
+Place and reconnect edge endpoints anywhere along a node's border, snapping to the grid, with a drag handle for moving an endpoint. Endpoints attach to each node's real shape rather than its bounding box and match the handles a node shows: use-case ovals connect along their curve, the flowchart input/output parallelogram along its slanted outline, and round or diamond nodes — activity start/end, BPMN events and gateways, flowchart decisions, petri places, and component/deployment interfaces — at their four N/E/S/W points. Legends, annotations, and swimlanes are not connection targets, and endpoints can be reconnected onto container nodes (activity, package, pool, subsystem). Drawing a connection shows a dashed preview that lands exactly where the edge will attach, dragging an endpoint across empty canvas follows the cursor instead of snapping back, connection arcs respond as soon as you reach them, and a connection attaches to the nearest node when several sit close together.

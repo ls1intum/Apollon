@@ -55,8 +55,11 @@ export const ActivityDiagramEdge = ({
     markerStart,
     strokeDashArray,
     handlePointerDown,
+    handleEndpointPointerDown,
     sourcePoint,
     targetPoint,
+    sourcePosition: renderSourcePosition,
+    targetPosition: renderTargetPosition,
     isDiagramModifiable,
     canEditEndpoint,
   } = useStepPathEdge({
@@ -99,12 +102,13 @@ export const ActivityDiagramEdge = ({
           markerEnd={markerEnd}
           sourcePoint={sourcePoint}
           targetPoint={targetPoint}
-          sourcePosition={sourcePosition}
-          targetPosition={targetPosition}
+          sourcePosition={renderSourcePosition}
+          targetPosition={renderTargetPosition}
           isDiagramModifiable={isDiagramModifiable}
           canEditEndpoint={canEditEndpoint}
           allowMidpointDragging={allowMidpointDragging}
           bendHandles={bendHandles}
+          handleEndpointPointerDown={handleEndpointPointerDown}
           handlePointerDown={handlePointerDown}
         />
 

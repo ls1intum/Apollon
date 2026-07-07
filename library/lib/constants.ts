@@ -770,7 +770,7 @@ export const dropElementConfigs: Readonly<
       type: "flowchartInputOutput",
       width: 140,
       height: 70,
-      defaultData: { name: "Input/Output" },
+      defaultData: { name: "Input / Output" },
       svg: FlowchartInputOutputNodeSVG,
     },
     {

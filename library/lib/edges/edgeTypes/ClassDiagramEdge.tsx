@@ -68,8 +68,11 @@ export const ClassDiagramEdge = ({
     markerStart,
     strokeDashArray,
     handlePointerDown,
+    handleEndpointPointerDown,
     sourcePoint,
     targetPoint,
+    sourcePosition: renderSourcePosition,
+    targetPosition: renderTargetPosition,
     isDiagramModifiable,
     canEditEndpoint,
   } = useStepPathEdge({
@@ -112,10 +115,11 @@ export const ClassDiagramEdge = ({
           markerEnd={markerEnd}
           sourcePoint={sourcePoint}
           targetPoint={targetPoint}
-          sourcePosition={sourcePosition}
-          targetPosition={targetPosition}
+          sourcePosition={renderSourcePosition}
+          targetPosition={renderTargetPosition}
           isDiagramModifiable={isDiagramModifiable}
           canEditEndpoint={canEditEndpoint}
+          handleEndpointPointerDown={handleEndpointPointerDown}
           allowMidpointDragging={allowMidpointDragging}
           bendHandles={bendHandles}
           handlePointerDown={handlePointerDown}
@@ -128,8 +132,8 @@ export const ClassDiagramEdge = ({
           sourceY={sourceY}
           targetX={targetX}
           targetY={targetY}
-          sourcePosition={sourcePosition}
-          targetPosition={targetPosition}
+          sourcePosition={renderSourcePosition}
+          targetPosition={renderTargetPosition}
           textColor={textColor}
         />
 

@@ -299,6 +299,23 @@ type RectHandlePoint = {
   side: Position
 }
 
+export type FreeformEdgeAnchor = {
+  side: Position
+  /**
+   * Offset along the side, normalized to the current node side length. The
+   * editor rounds the resolved point to whole flow pixels, so a drop can land
+   * on any pixel while still scaling sensibly if the node is resized later.
+   */
+  ratio: number
+}
+
+const sideToHandleId: Record<Position, "top" | "right" | "bottom" | "left"> = {
+  top: "top",
+  right: "right",
+  bottom: "bottom",
+  left: "left",
+}
+
 // Match the canvas grid step. Handle offsets snap to this so the X (or Y)
 // distance between any two handles on equally-sized nodes is always a
 // multiple of the grid step — which means a user dragging a node on the grid
@@ -316,6 +333,129 @@ const HANDLE_RATIO_END = 0.8
 
 const clamp = (value: number, min: number, max: number): number =>
   Math.max(min, Math.min(max, value))
+
+export function isFreeformEdgeAnchor(
+  anchor: unknown
+): anchor is FreeformEdgeAnchor {
+  if (!anchor || typeof anchor !== "object") return false
+
+  const candidate = anchor as Partial<FreeformEdgeAnchor>
+  return (
+    (candidate.side === "top" ||
+      candidate.side === "right" ||
+      candidate.side === "bottom" ||
+      candidate.side === "left") &&
+    typeof candidate.ratio === "number" &&
+    Number.isFinite(candidate.ratio)
+  )
+}
+
+export function getSideHandleIdForPosition(
+  position: Position
+): "top" | "right" | "bottom" | "left" {
+  return sideToHandleId[position]
+}
+
+export function getFreeformAnchorFromPoint(
+  point: XYPosition,
+  rect: Rect
+): FreeformEdgeAnchor {
+  const right = rect.x + rect.width
+  const bottom = rect.y + rect.height
+  const x = clamp(point.x, rect.x, right)
+  const y = clamp(point.y, rect.y, bottom)
+  const candidates: Array<{
+    side: Position
+    point: XYPosition
+    axisLength: number
+    offset: number
+  }> = [
+    {
+      side: "top" as Position,
+      point: { x, y: rect.y },
+      axisLength: rect.width,
+      offset: x - rect.x,
+    },
+    {
+      side: "right" as Position,
+      point: { x: right, y },
+      axisLength: rect.height,
+      offset: y - rect.y,
+    },
+    {
+      side: "bottom" as Position,
+      point: { x, y: bottom },
+      axisLength: rect.width,
+      offset: x - rect.x,
+    },
+    {
+      side: "left" as Position,
+      point: { x: rect.x, y },
+      axisLength: rect.height,
+      offset: y - rect.y,
+    },
+  ]
+
+  let closest = candidates[0]
+  let minDistance = distance(point, closest.point)
+
+  for (const candidate of candidates.slice(1)) {
+    const candidateDistance = distance(point, candidate.point)
+    if (candidateDistance < minDistance) {
+      closest = candidate
+      minDistance = candidateDistance
+    }
+  }
+
+  const roundedOffset = clamp(Math.round(closest.offset), 0, closest.axisLength)
+
+  return {
+    side: closest.side,
+    ratio: closest.axisLength > 0 ? roundedOffset / closest.axisLength : 0.5,
+  }
+}
+
+export function getFreeformAnchorPoint(
+  rect: Rect,
+  anchor: FreeformEdgeAnchor
+): { point: XYPosition; position: Position } {
+  const ratio = clamp(anchor.ratio, 0, 1)
+
+  switch (anchor.side) {
+    case Position.Top: {
+      const offset = Math.round(rect.width * ratio)
+      return {
+        point: { x: rect.x + offset, y: rect.y },
+        position: Position.Top,
+      }
+    }
+    case Position.Right: {
+      const offset = Math.round(rect.height * ratio)
+      return {
+        point: { x: rect.x + rect.width, y: rect.y + offset },
+        position: Position.Right,
+      }
+    }
+    case Position.Bottom: {
+      const offset = Math.round(rect.width * ratio)
+      return {
+        point: { x: rect.x + offset, y: rect.y + rect.height },
+        position: Position.Bottom,
+      }
+    }
+    case Position.Left: {
+      const offset = Math.round(rect.height * ratio)
+      return {
+        point: { x: rect.x, y: rect.y + offset },
+        position: Position.Left,
+      }
+    }
+    default: {
+      const unhandled: never = anchor.side
+      throw new Error(`getFreeformAnchorPoint: unhandled side ${unhandled}`)
+    }
+  }
+}
 
 // Visible half-circle arc-dragger length along the side it sits on. Two
 // adjacent visible arcs must have centers separated by at least this much

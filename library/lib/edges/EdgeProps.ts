@@ -1,5 +1,6 @@
 import { Edge, EdgeProps } from "@xyflow/react"
 import { IPoint } from "./Connection"
+import type { FreeformEdgeAnchor } from "@/utils/edgeUtils"
 
 // Define message structure with direction
 export interface MessageData {
@@ -14,6 +15,8 @@ export type CustomEdgeProps = {
   targetRole: string | null
   targetMultiplicity: string | null
   points: IPoint[]
+  sourceAnchor?: FreeformEdgeAnchor
+  targetAnchor?: FreeformEdgeAnchor
   label?: string | null
   messages?: MessageData[] // For communication diagram edges with direction-aware messages
   strokeColor?: string
