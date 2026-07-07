@@ -101,10 +101,12 @@ async function centerOf(locator: Locator): Promise<Pt> {
 
 async function storedEdges(page: Page): Promise<
   Array<{
+    id: string
     source: string
     target: string
     sourceHandle?: string | null
     targetHandle?: string | null
+    data?: Record<string, unknown>
   }>
 > {
   return page.evaluate(() => {
@@ -199,6 +201,53 @@ async function expectFreeformTargetFollowsMovedNode({
 
   expect(endpointDelta.x).toBeCloseTo(nodeDelta.x, 0)
   expect(endpointDelta.y).toBeCloseTo(nodeDelta.y, 0)
+}
+
+async function expectEndpointCanRetargetToNode({
+  page,
+  fixture,
+  edgeId,
+  targetId,
+  targetHandle = "left",
+  targetRatio = { x: 0.05, y: 0.2 },
+}: {
+  page: Page
+  fixture: Record<string, unknown>
+  edgeId: string
+  targetId: string
+  targetHandle?: string
+  targetRatio?: Pt
+}) {
+  await openFixtureInLocalEditor(page, fixture)
+  await waitForCanvasReady(page)
+
+  const edge = await selectEdge(page, edgeId)
+  const endpointHandle = edge.locator(".edge-endpoint-handle--target")
+  await expect(endpointHandle).toBeVisible()
+
+  const endpointBox = await endpointHandle.boundingBox()
+  if (!endpointBox) throw new Error("target endpoint has no bounding box")
+
+  const targetNode = page.locator(`.react-flow__node[data-id="${targetId}"]`)
+  const targetBox = await targetNode.boundingBox()
+  if (!targetBox) throw new Error("target node has no bounding box")
+
+  await page.mouse.move(
+    endpointBox.x + endpointBox.width / 2,
+    endpointBox.y + endpointBox.height / 2
+  )
+  await page.mouse.down()
+  await page.mouse.move(
+    targetBox.x + targetBox.width * targetRatio.x,
+    targetBox.y + targetBox.height * targetRatio.y,
+    { steps: 12 }
+  )
+  await page.mouse.up()
+  await page.waitForTimeout(400)
+
+  const edgeState = (await storedEdges(page)).find((edge) => edge.id === edgeId)
+  expect(edgeState).toMatchObject({ target: targetId, targetHandle })
+  expect(edgeState?.data).toHaveProperty("targetAnchor")
 }
 
 const cases = [
@@ -366,6 +415,42 @@ for (const { name, fixture, edgeId, targetId } of cases) {
     })
   })
 }
+
+test("a freeform ComponentDiagram endpoint can retarget to a component subsystem", async ({
+  page,
+}) => {
+  await expectEndpointCanRetargetToNode({
+    page,
+    fixture: componentFixture,
+    edgeId: "edge-server-database",
+    targetId: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+    targetRatio: { x: 0.03, y: 0.12 },
+  })
+})
+
+test("a freeform DeploymentDiagram endpoint can retarget to a deployment node", async ({
+  page,
+}) => {
+  await expectEndpointCanRetargetToNode({
+    page,
+    fixture: deploymentFixture,
+    edgeId: "edge-appcontainer-interface",
+    targetId: "a7b8c9d0-e1f2-4a3b-4c5d-6e7f80910213",
+    targetRatio: { x: 0.05, y: 0.2 },
+  })
+})
+
+test("a freeform DeploymentDiagram endpoint can retarget to a deployment component", async ({
+  page,
+}) => {
+  await expectEndpointCanRetargetToNode({
+    page,
+    fixture: deploymentFixture,
+    edgeId: "edge-appcontainer-interface",
+    targetId: "b8c9d0e1-f2a3-4b4c-5d6e-7f8091021324",
+    targetRatio: { x: 0.08, y: 0.25 },
+  })
+})
 
 test("a new same-node edge can connect different handles", async ({ page }) => {
   await openFixtureInLocalEditor(page, classNoEdgeFixture)

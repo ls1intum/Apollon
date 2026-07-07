@@ -936,8 +936,6 @@ export const useStepPathEdge = ({
       let best: { node: Node; rect: Rect; distance: number } | null = null
 
       for (const node of nodes) {
-        if (isParentNodeType(node.type)) continue
-
         const rect = getNodeRect(node)
         if (!rect) continue
 
@@ -998,16 +996,13 @@ export const useStepPathEdge = ({
       ): EndpointDragCommit | null => {
         const flowPoint = screenToFlowPosition({ x: clientX, y: clientY })
         const intersectingNodes = getIntersectingNodes({
-          x: flowPoint.x - FREEFORM_ENDPOINT_SNAP_RADIUS_PX,
-          y: flowPoint.y - FREEFORM_ENDPOINT_SNAP_RADIUS_PX,
-          width: FREEFORM_ENDPOINT_SNAP_RADIUS_PX * 2,
-          height: FREEFORM_ENDPOINT_SNAP_RADIUS_PX * 2,
+          x: flowPoint.x - 1,
+          y: flowPoint.y - 1,
+          width: 2,
+          height: 2,
         })
         const directHitNode = intersectingNodes.findLast(
-          (node) =>
-            node.width != null &&
-            node.height != null &&
-            !isParentNodeType(node.type)
+          (node) => node.width != null && node.height != null
         )
         const directHitRect = directHitNode ? getNodeRect(directHitNode) : null
         const snapTarget =
