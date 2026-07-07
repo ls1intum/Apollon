@@ -105,9 +105,9 @@ test("connecting to a use-case oval lands the endpoint on the ellipse curve, not
 test("an edge endpoint can be reconnected onto a container node (e.g. an Activity)", async ({
   page,
 }) => {
-  // Regression: container/parent nodes (activity, package, pool, subsystem …)
-  // used to be excluded as freeform reconnect targets, so an endpoint dragged
-  // onto them silently reverted.
+  // A container/parent node (activity, package, pool, subsystem …) is a valid
+  // freeform reconnect target: an endpoint dragged onto one attaches to its
+  // border instead of reverting.
   await openFixtureInLocalEditor(page, activityFixture)
   await waitForCanvasReady(page)
   const EDGE = "edge-flow-merge-ship"
@@ -413,8 +413,8 @@ test("connecting to a use-case oval shows a snap circle at the live attach point
 test("a use-case oval connection lands at the aimed angle, including diagonals (no drift)", async ({
   page,
 }) => {
-  // Regression: diagonal aims used to land ~12px off (routed through the nearest
-  // bbox side); they must now land where aimed at every angle.
+  // A diagonal aim lands where aimed at every angle, not pulled toward the
+  // nearest bounding-box side.
   await openFixtureInLocalEditor(page, useCaseFixture)
   await waitForCanvasReady(page)
   const g = await ovalGeom(page, INVENTORY)
@@ -581,9 +581,9 @@ test("a connection arc is grabbable when approached directly, not only via the b
 test("a selected node's protruding arc does not swallow clicks meant for an overlapping neighbour", async ({
   page,
 }) => {
-  // #791 guard: a selected node is elevated; its armed arcs must not eat clicks
-  // on a node beneath them. Approaching the neighbour from its own side (not
-  // through the selected node's body) must select the neighbour.
+  // A selected node is elevated; its armed arcs must not eat clicks on a node
+  // beneath them. Approaching the neighbour from its own side (not through the
+  // selected node's body) must select the neighbour.
   const A = "95aac2b6-3e6b-4e6d-9201-52a498e6ea20"
   const B = "32659cdc-bd03-46f3-918c-ee8dbba9c15b"
   const fixture = readFixture("two-class-no-edge.json")

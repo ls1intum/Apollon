@@ -105,10 +105,9 @@ async function targetGripOffset(page: Page, id: string): Promise<number> {
 test("the endpoint reconnect grip stays anchored to the endpoint across zoom", async ({
   page,
 }) => {
-  // Regression: the visible grip used to be centred on the wide invisible
-  // hit-target (offset ~22px outward), so it floated off the endpoint — glaring
-  // when zoomed out, where the whole edge is tiny. It must hug the endpoint at
-  // any zoom (the hit-target stays wide for grabbing; only the grip moved).
+  // The visible grip hugs the endpoint at any zoom, while the invisible
+  // hit-target stays wide for grabbing — the grip is not centred on that wide
+  // target, which would float it off the endpoint when zoomed out.
   await openFixtureInLocalEditor(page, classDiagram)
   await waitForCanvasReady(page)
   const id = "edge-inheritance-dog-animal"
