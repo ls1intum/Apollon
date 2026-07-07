@@ -570,11 +570,11 @@ test("a connection arc is grabbable when approached directly, not only via the b
     await page.mouse.down()
     await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2, { steps: 14 })
     await page.mouse.up()
-    await page.waitForTimeout(150)
-    expect(
-      await edgeCount(),
-      `${side} arc must be grabbable from outside`
-    ).toBe(before + 1)
+    await expect
+      .poll(edgeCount, {
+        message: `${side} arc must be grabbable from outside`,
+      })
+      .toBe(before + 1)
   }
 })
 
