@@ -633,7 +633,7 @@ export const useStepPathEdge = ({
     // drop below the handle threshold).
     // Never strand an edge: if it is too short to offer a bend handle, the
     // endpoints must stay draggable so the user can always reshape it by
-    // reconnecting. (Avoids the "no handle, weird workaround" dead state.)
+    // reconnecting.
     const committedBendableCount = allowMidpointDragging
       ? getBendableSegments(
           activePoints,
@@ -665,12 +665,9 @@ export const useStepPathEdge = ({
   ])
 
   // The mid-segment midpoint + orientation, derived synchronously and purely
-  // from the polyline (no DOM measurement). This replaces a racy
-  // getPointAtLength + setTimeout(0) effect that lagged a frame, could lock to
-  // an off-edge/misclassified value (#634/#129), and never resolved in headless
-  // export — so exported labels fell back to the straight-line guess. Computed
-  // from renderPoints (pre line-jump bridges) it is also frame-stable and
-  // identical interactively and in export.
+  // from the polyline (no DOM measurement). Computed from renderPoints (pre
+  // line-jump bridges) so it is frame-stable and identical interactively and in
+  // headless export.
   const midSegment = useMemo(
     () =>
       getMidSegment(
@@ -1005,12 +1002,11 @@ export const useStepPathEdge = ({
           width: FREEFORM_ENDPOINT_SNAP_RADIUS_PX * 2,
           height: FREEFORM_ENDPOINT_SNAP_RADIUS_PX * 2,
         })
-        // Snap to the NEAREST node under the pointer (distance to its box, 0 when
-        // inside), not the top-most — so with nodes close together the endpoint
-        // grabs the one it is actually over, not a neighbour its box merely
-        // grazed. Prefer a child; fall back to a container (parent) when that is
-        // the only thing there, so an endpoint can still land on an
-        // activity/package/pool/subsystem itself.
+        // Snap to the nearest node under the pointer (distance to its box, 0
+        // when inside), not the top-most, so tightly packed nodes grab the one
+        // actually under the cursor. Prefer a child; fall back to a container
+        // (parent) only when it is the sole hit, so an endpoint can still land
+        // on an activity/package/pool/subsystem itself.
         const sizedHits = intersectingNodes.filter(
           (node) => node.width != null && node.height != null
         )
@@ -1310,7 +1306,7 @@ export const useStepPathEdge = ({
     bendHandles,
     isBendDragging: draggingHandle !== null,
     draggingHandleSegmentIndex: draggingHandle?.segmentIndex ?? null,
-    // The midpoint is now known synchronously on first render, so there is no
+    // The midpoint is known synchronously on first render, so there is no
     // pre-measurement straight-line flash to fade past — always true.
     hasInitialCalculation: true,
     isReconnecting,

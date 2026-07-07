@@ -6,16 +6,13 @@ import {
 } from "./edgeUtils"
 
 /**
- * How an edge endpoint may attach to a node, decided by the node's real visible
- * SHAPE (not its bounding box). This is the single source of truth; the anchor
- * math below branches on it so a drop, its preview, and the rendered edge all
- * agree.
+ * How an edge endpoint may attach to a node, decided by the node's visible
+ * shape rather than its bounding box. The anchor math below branches on this so
+ * a drop, its preview, and the rendered edge all agree.
  *
- * The stored anchor stays the existing `{side, ratio}` on the node's bounding
- * rectangle — non-breaking, no data migration. The mode only changes how that
- * anchor is turned INTO a pixel (project onto the oval, snap to a vertex, …) and
- * how a drop is turned into an anchor, so existing diagrams simply start
- * rendering their endpoints on the correct shape.
+ * The stored anchor is always `{side, ratio}` on the node's bounding rectangle;
+ * the mode only changes how that anchor is turned into a pixel (project onto the
+ * oval, snap to a vertex, …) and how a drop is turned into an anchor.
  */
 export type ConnectionMode =
   | "freeform-rect" // anywhere on the rectangle border (default box shapes)
@@ -24,12 +21,12 @@ export type ConnectionMode =
   | "four-center" // only the four side points — N/E/S/W (FOUR_WAY-handle nodes)
   | "none" // not a connection target at all (legends, annotations, swimlanes)
 
-// The guiding rule: a node's connectable points must MATCH the handles it
-// renders. Nodes that render the full handle set stay `freeform-rect` (the
-// default) and connect anywhere along their border. Nodes that render only the
-// four side handles (FOUR_WAY_HANDLES_PRESET) connect at exactly those four
-// points. The use-case oval is the one shape that renders full handles but
-// isn't a rectangle, so it gets `ellipse`. Only the exceptions are listed here.
+// A node's connectable points must match the handles it renders. Nodes that
+// render the full handle set stay `freeform-rect` (the default) and connect
+// anywhere along their border. Nodes that render only the four side handles
+// (FOUR_WAY_HANDLES_PRESET) connect at exactly those four points. The use-case
+// oval renders full handles but isn't a rectangle, so it gets `ellipse`. Only
+// the exceptions are listed here.
 const MODE_OVERRIDES: Record<string, ConnectionMode> = {
   // Not connectable — legends / annotations / partition containers.
   colorDescription: "none",
@@ -191,7 +188,7 @@ const rectBorderAlongRay = (
 }
 
 /**
- * SHAPE-AWARE forward: turn a drop point into the stored `{side, ratio}` anchor.
+ * Shape-aware forward: turn a drop point into the stored `{side, ratio}` anchor.
  * Returns null when the node is not a connection target (`none`).
  */
 export function getEdgeAnchorFromPoint(
@@ -218,9 +215,9 @@ export function getEdgeAnchorFromPoint(
 }
 
 /**
- * SHAPE-AWARE inverse: turn a stored anchor into the rendered pixel + Position,
- * projecting onto the node's real shape. Legacy rect anchors on round/diamond/
- * interface nodes convert here on the fly (no data migration needed).
+ * Shape-aware inverse: turn a stored anchor into the rendered pixel + Position,
+ * projecting onto the node's real shape. Rect anchors stored on round/diamond/
+ * interface nodes convert here on the fly.
  */
 export function getEdgeAnchorPoint(
   nodeType: string | undefined,

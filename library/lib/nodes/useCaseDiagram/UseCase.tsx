@@ -200,12 +200,11 @@ export function UseCase({
           }
           isConnectable={isDiagramModifiable}
           isConnectableStart={handle.isPrimaryHandle && isDiagramModifiable}
-          // Never END a connection on a fixed handle: React Flow would only show
-          // its snap circle at the 4 cardinal handles, so connecting anywhere
-          // else felt like a dead zone. Every drop instead routes through the
-          // freeform path, which attaches CONTINUOUSLY along the curve and draws
-          // its own snap circle at the live attach point (see
-          // ReconnectConnectionLine), so the preview matches the landing at every
+          // Never end a connection on a fixed handle: React Flow only shows its
+          // snap circle at the 4 cardinal handles. Every drop instead routes
+          // through the freeform path, which attaches continuously along the
+          // curve and draws its own snap circle at the live attach point (see
+          // ReconnectConnectionLine), so the preview matches the landing at any
           // angle.
           isConnectableEnd={false}
         />

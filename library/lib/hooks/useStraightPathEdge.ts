@@ -304,9 +304,8 @@ export const useStraightPathEdge = ({
   )
 
   // Midpoint + orientation derived purely from the two endpoints. A straight
-  // edge's middle is analytic, so this replaces the old getPointAtLength +
-  // setTimeout effect (and its two redundant fallback effects) with one
-  // synchronous, DOM-free, export-stable computation.
+  // edge's middle is analytic, so it is computed synchronously, DOM-free, and
+  // export-stable.
   const { point: pathMiddlePosition, isHorizontal: isMiddlePathHorizontal } =
     useMemo(
       () => getMidSegment(renderPoints, renderPoints[0], renderPoints[1]),
@@ -441,12 +440,11 @@ export const useStraightPathEdge = ({
           width: FREEFORM_ENDPOINT_SNAP_RADIUS_PX * 2,
           height: FREEFORM_ENDPOINT_SNAP_RADIUS_PX * 2,
         })
-        // Snap to the NEAREST node under the pointer (distance to its box, 0 when
-        // inside), not the top-most — so with nodes close together the endpoint
-        // grabs the one it is actually over, not a neighbour its box merely
-        // grazed. Prefer a child; fall back to a container (parent) when that is
-        // the only thing there, so an endpoint can still land on an
-        // activity/package/pool/subsystem itself.
+        // Snap to the nearest node under the pointer (distance to its box, 0
+        // when inside), not the top-most, so tightly packed nodes grab the one
+        // actually under the cursor. Prefer a child; fall back to a container
+        // (parent) only when it is the sole hit, so an endpoint can still land
+        // on an activity/package/pool/subsystem itself.
         const sizedHits = intersectingNodes.filter(
           (node) => node.width != null && node.height != null
         )

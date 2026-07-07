@@ -9,11 +9,11 @@ const distanceToRect = (p: XYPosition, r: Rect): number => {
   return Math.hypot(dx, dy)
 }
 
-// Half-size of the box hit-tested around a drop point. A drop must land within
-// this of a node's bounding box to attach. Kept a little generous so a drop just
-// outside a rounded shape still connects: an oval's box hugs the curve at the
-// cardinals but bulges out at the diagonals, and too small a slop made the
-// cardinals feel like dead zones while the diagonals connected.
+// Half-size of the box hit-tested around a drop point; a drop must land within
+// this of a node's bounding box to attach. Kept generous so a drop just outside
+// a rounded shape still connects: an oval's box hugs the curve at the cardinals
+// but bulges out at the diagonals, so too small a value would reject
+// near-cardinal drops that visually sit on the shape.
 const DROP_HIT_RADIUS_PX = 11
 
 export type FreeformDropTarget = { id: string; type?: string; rect: Rect }
@@ -21,13 +21,12 @@ export type FreeformDropTarget = { id: string; type?: string; rect: Rect }
 /**
  * Resolve which node a freeform connection drop lands on, and its rectangle.
  *
- * This is the SINGLE source of truth shared by the connection commit
- * (`useConnect.onConnectEnd`) and the new-connection ghost preview
- * (`ReconnectConnectionLine`), so the preview can never promise a target the
- * drop won't actually honour. Returns the NEAREST intersecting node to the drop
- * (distance to its box, 0 when the drop is inside it), skipping the drag's own
- * source, ties broken by z order — so a drop that merely grazes a neighbour's
- * box still attaches to the node it is actually over. Null over empty canvas.
+ * Shared by the connection commit (`useConnect.onConnectEnd`) and the
+ * connection ghost preview (`ReconnectConnectionLine`) so the preview never
+ * promises a target the drop won't honour. Returns the nearest intersecting
+ * node to the drop (distance to its box, 0 when inside it), skipping the drag's
+ * own source, ties broken by z order, so a drop that merely grazes a
+ * neighbour's box still attaches to the node it is over. Null over empty canvas.
  */
 export function useFreeformDropTarget() {
   const { getIntersectingNodes, getInternalNode } = useReactFlow()

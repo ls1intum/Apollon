@@ -22,7 +22,7 @@ import { CANVAS, EDGES } from "@/constants"
 // Edge handles live inside the zoomed React Flow viewport. We want them to
 // keep a usable MINIMUM on-screen size when zoomed out (so they never shrink to
 // a few px), but to GROW with the edge when zoomed in (so they stay in
-// proportion to the now-thick edge instead of looking like a tiny dot on it).
+// proportion to the thick edge instead of looking like a tiny dot on it).
 //
 //   scale = 1 / min(zoom, 1)   (zoom floored to the canvas minimum)
 //     zoom <= 1  → 1/zoom  → constant on-screen size (counter-scaled)
@@ -188,9 +188,9 @@ export const EdgeEndpointMarkers = ({
   useEffect(() => {
     if (!isDiagramModifiable) return
 
-    // NOTE: `.react-flow__edgeupdater*` are React Flow v12 internal class names.
-    // We deliberately defer reconnection to RF's native updater while our hit
-    // target controls UX; pin to RF v12 (revisit on a major React Flow bump).
+    // `.react-flow__edgeupdater*` are React Flow v12 internal class names.
+    // Reconnection defers to RF's native updater while the hit target controls
+    // UX; pinned to RF v12 (revisit on a major React Flow bump).
     const edgeGroup = sourceHandleRef.current?.closest(".react-flow__edge")
     const nativeUpdaters = Array.from(
       edgeGroup?.querySelectorAll<SVGElement>(".react-flow__edgeupdater") ?? []
@@ -230,8 +230,8 @@ export const EdgeEndpointMarkers = ({
     event.stopPropagation()
     const eventWindow = event.currentTarget.ownerDocument.defaultView ?? window
 
-    // Deliberately hand off to React Flow's native reconnect updater so
-    // reconnection stays owned by React Flow while our hit target controls UX.
+    // Hand off to React Flow's native reconnect updater so reconnection stays
+    // owned by React Flow while the hit target controls UX.
     nativeUpdater.dispatchEvent(
       new eventWindow.MouseEvent("mousedown", {
         bubbles: true,

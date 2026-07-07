@@ -29,8 +29,8 @@ import {
 const GHOST_MIN_DRAG_DISTANCE_PX = 40
 const GHOST_STROKE_WIDTH = 2
 const GHOST_DASH = "6 5"
-// Matches the app's connection indicator (`.connectionindicator`): a solid,
-// opaque, ~10px primary dot that marks the connection point.
+// Matches the connection indicator (`.connectionindicator`): a solid, opaque,
+// ~10px primary dot marking the connection point.
 const GHOST_SNAP_CIRCLE_RADIUS = 5
 
 const getFallbackConnectionPath = (
@@ -97,13 +97,13 @@ export const ReconnectConnectionLine = ({
     )
   )
 
-  // Resolve the drop target the SAME way the connection commit does, so the
-  // preview snaps exactly where the edge will attach on release.
+  // Resolve the drop target the same way the connection commit does, so the
+  // preview snaps exactly where the edge attaches on release.
   const resolveDropTarget = useFreeformDropTarget()
 
   const path = useMemo(() => {
-    // Snap a pointer to the freeform border point of the node it would attach to
-    // (null over empty canvas or only the source node).
+    // Snap a pointer to the freeform border point of the node it would attach
+    // to; null over empty canvas or only the source node.
     const snapToNodeUnder = (
       pointer: XYPosition
     ): {
@@ -113,18 +113,18 @@ export const ReconnectConnectionLine = ({
     } | null => {
       const target = resolveDropTarget(pointer, fromNode?.id)
       // The resolver falls back to the source node when nothing else is under
-      // the pointer (that's how a drop on your own body becomes a self-loop);
-      // the ghost never previews that, so a drag near the source stays gated.
+      // the pointer (a drop on your own body becomes a self-loop); the ghost
+      // never previews that, so a drag near the source stays gated.
       if (!target || target.id === fromNode?.id) return null
-      // Shape-aware, and shared with the commit, so the preview lands on the
+      // Shape-aware and shared with the commit, so the preview lands on the
       // node's real shape (oval curve, diamond vertex, interface centre, …).
       const anchor = getEdgeAnchorFromPoint(target.type, pointer, target.rect)
       if (!anchor) return null // node is not a connection target (mode "none")
       return {
         ...getEdgeAnchorPoint(target.type, target.rect, anchor),
         // Only the oval attaches purely via the freeform path (no native handle
-        // circles); other shapes get React Flow's own handle highlights, so we
-        // don't draw a second circle that could drift from a handle-snapped drop.
+        // circles); other shapes get React Flow's own handle highlights, so a
+        // second circle here could drift from a handle-snapped drop.
         showSnapCircle: getConnectionMode(target.type) === "ellipse",
       }
     }
@@ -134,10 +134,10 @@ export const ReconnectConnectionLine = ({
       !reconnectPreviewHandleType ||
       reconnectPreviewBasePoints.length < 2
     ) {
-      // NEW connection — hidden until dragged clear of the source, or already
-      // hovering a node (see GHOST_MIN_DRAG_DISTANCE_PX). Snap the pointer to the
-      // grid so the preview lands on the same grid-snapped point the commit will
-      // (useConnect resolves the drop through the editor's grid snapping too).
+      // New connection — hidden until dragged clear of the source, or already
+      // hovering a node (see GHOST_MIN_DRAG_DISTANCE_PX). Grid-snap the pointer
+      // so the preview lands on the same point the commit does (useConnect
+      // resolves the drop through the editor's grid snapping too).
       const snap = (v: number) =>
         Math.round(v / CANVAS.SNAP_TO_GRID_PX) * CANVAS.SNAP_TO_GRID_PX
       const pointer: XYPosition = { x: snap(toX), y: snap(toY) }
@@ -157,9 +157,8 @@ export const ReconnectConnectionLine = ({
           fromPosition,
           end.position
         ),
-        // A snap circle at the live attach point tells you exactly where the
-        // edge will connect — continuously, at any angle on the curve, not just
-        // at fixed handles.
+        // Snap circle marks the live attach point: the edge connects
+        // continuously at any angle on the curve, not just at fixed handles.
         snapPoint: snapped?.showSnapCircle ? snapped.point : null,
       }
     }
@@ -236,9 +235,8 @@ export const ReconnectConnectionLine = ({
     connectionLineStyle?.stroke ??
     "var(--apollon-primary, #3e8acc)"
 
-  // Dashed, primary-coloured ghost (the default line was a faint hairline);
-  // an empty `d` renders nothing when the ghost is gated off. The snap circle
-  // marks the exact live attach point on the target.
+  // Dashed, primary-coloured ghost; an empty `d` renders nothing when the ghost
+  // is gated off. The snap circle marks the live attach point on the target.
   return (
     <>
       <path

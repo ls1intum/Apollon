@@ -148,9 +148,9 @@ export const useConnect = () => {
     (event: MouseEvent | TouchEvent) => {
       const { clientX, clientY } =
         "changedTouches" in event ? event.changedTouches[0] : event
-      // Inherit the editor's grid snapping (don't force it off) so a NEW edge
-      // snaps its endpoint to the grid exactly like RECONNECT does — the path
-      // hooks call screenToFlowPosition without overriding snapToGrid.
+      // Inherit the editor's grid snapping so a new edge snaps its endpoint to
+      // the grid exactly like reconnect does; screenToFlowPosition is called
+      // without overriding snapToGrid.
       return screenToFlowPosition({ x: clientX, y: clientY })
     },
     [screenToFlowPosition]
