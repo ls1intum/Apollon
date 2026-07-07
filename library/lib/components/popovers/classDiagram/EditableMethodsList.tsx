@@ -92,7 +92,7 @@ const SortableMethodRow: React.FC<SortableMethodRowProps> = ({
       <NodeStyleEditor
         noStrokeUpdate
         nodeData={item}
-        colorEditorLabel="method"
+        colorEditorLabel={t.methodWord}
         handleDataFieldUpdate={(key, value) =>
           onMethodChange(item.id, key, value)
         }
@@ -101,10 +101,10 @@ const SortableMethodRow: React.FC<SortableMethodRowProps> = ({
             key={`abstract_${item.id}`}
             ariaLabel={
               item.isAbstract
-                ? "Unmark method as abstract"
-                : "Mark method as abstract"
+                ? t.unmarkMethodAsAbstract
+                : t.markMethodAsAbstract
             }
-            tooltip="Abstract method (italic)"
+            tooltip={t.abstractMethod}
             aria-pressed={!!item.isAbstract}
             data-state={item.isAbstract ? "on" : "off"}
             className="apollon-abstract-toggle"

@@ -107,6 +107,7 @@ export class ApollonEditor {
   private readonly assessmentSelectionStore: StoreApi<AssessmentSelectionStore>
   private readonly overlayStore: StoreApi<OverlayStore>
   private readonly hostRegionEls = new Map<OverlayRegion, HTMLElement>()
+  private readonly controlGenerations = new Map<string, number>()
   private subscribers: Apollon.Subscribers = {}
   constructor(element: HTMLElement, options?: Apollon.ApollonOptions) {
     if (!(element instanceof HTMLElement)) {
@@ -389,8 +390,14 @@ export class ApollonEditor {
       throw new Error(
         `[ApollonEditor] addControl: unknown region: ${control.region}`
       )
+    const generation = (this.controlGenerations.get(control.id) ?? 0) + 1
+    this.controlGenerations.set(control.id, generation)
     this.overlayStore.getState().register(control)
-    return () => this.overlayStore.getState().unregister(control.id)
+    return () => {
+      if (this.controlGenerations.get(control.id) !== generation) return
+      this.overlayStore.getState().unregister(control.id)
+      this.controlGenerations.delete(control.id)
+    }
   }
 
   /**
@@ -416,6 +423,7 @@ export class ApollonEditor {
    * @param id - The control's id.
    */
   public removeControl(id: string): void {
+    this.controlGenerations.delete(id)
     this.overlayStore.getState().unregister(id)
   }
 
@@ -433,7 +441,8 @@ export class ApollonEditor {
    *   — e.g. to read a built-in's current `region` after `updateControl`.
    */
   public getControl(id: string): OverlayControlInput | undefined {
-    return this.overlayStore.getState().controls[id]
+    const control = this.overlayStore.getState().controls[id]
+    return control ? Object.freeze({ ...control }) : undefined
   }
 
   /**
@@ -502,6 +511,7 @@ export class ApollonEditor {
       this.root.unmount()
       this.ydoc.destroy()
       this.hostRegionEls.clear()
+      this.controlGenerations.clear()
       this.reactFlowInstance = null
     } catch (err) {
       // destroy() is best-effort — partial teardown is acceptable, but log

@@ -262,6 +262,8 @@ export function OverlayLayer() {
   useEffect(() => {
     const observer = new ResizeObserver(() => scheduleMeasure())
     observerRef.current = observer
+    for (const el of elByIdRef.current.values()) observer.observe(el)
+    scheduleMeasure()
     return () => {
       observer.disconnect()
       observerRef.current = null

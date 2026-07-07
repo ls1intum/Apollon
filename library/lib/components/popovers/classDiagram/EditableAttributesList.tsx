@@ -91,7 +91,7 @@ const SortableAttributeRow: React.FC<SortableAttributeRowProps> = ({
       <NodeStyleEditor
         noStrokeUpdate
         nodeData={item}
-        colorEditorLabel="attribute"
+        colorEditorLabel={t.attributeWord}
         handleDataFieldUpdate={(key, value) =>
           onAttributeChange(item.id, key, value)
         }

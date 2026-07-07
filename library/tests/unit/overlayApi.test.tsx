@@ -40,17 +40,34 @@ describe("ApollonEditor overlay/control API", () => {
     container.remove()
   })
 
-  it("addControl registers, returns a disposer, and re-adds by id replaces", () => {
+  it("addControl registers, returns an ownership-safe disposer, and re-adds by id replaces", () => {
     const dispose = editor.addControl({
       id: "ctrl",
       region: "top-left",
       render: () => null,
     })
     expect(editor.getControl("ctrl")?.region).toBe("top-left")
-    editor.addControl({ id: "ctrl", region: "top-right", render: () => null })
+    const disposeReplacement = editor.addControl({
+      id: "ctrl",
+      region: "top-right",
+      render: () => null,
+    })
     expect(editor.getControl("ctrl")?.region).toBe("top-right")
     dispose()
+    expect(editor.getControl("ctrl")?.region).toBe("top-right")
+    disposeReplacement()
     expect(editor.hasControl("ctrl")).toBe(false)
+  })
+
+  it("getControl returns an immutable snapshot instead of the store object", () => {
+    editor.addControl({ id: "ctrl", region: "top-left", render: () => null })
+    const control = editor.getControl("ctrl")
+    expect(control).toBeDefined()
+    expect(Object.isFrozen(control)).toBe(true)
+    expect(() => {
+      ;(control as OverlayControlInput).region = "top-right"
+    }).toThrow()
+    expect(editor.getControl("ctrl")?.region).toBe("top-left")
   })
 
   it("updateControl patches a registered control; missing id is a no-op", () => {
@@ -164,6 +181,15 @@ describe("built-in controls (imperative descriptors)", () => {
     expect(ed.getControl(MINIMAP_ID)?.region).toBe("top-left")
 
     ed.destroy()
+  })
+
+  it("built-in factories reject regions their renderers do not support", () => {
+    expect(() => paletteControl({ region: "bottom-right" as never })).toThrow(
+      /unsupported region/
+    )
+    expect(() => miniMapControl({ region: "header" as never })).toThrow(
+      /unsupported region/
+    )
   })
 })
 
@@ -349,6 +375,28 @@ describe("OverlayLayer band rendering (rendered lane stacking)", () => {
       )
     expect(lanes(header!)).toEqual(["0", "1"])
     expect(lanes(footer!)).toEqual(["0", "1"])
+  })
+
+  it("observes controls that were already mounted before the ResizeObserver effect runs", async () => {
+    const original = global.ResizeObserver
+    const observe = vi.fn()
+    class TestResizeObserver {
+      observe = observe
+      unobserve = vi.fn()
+      disconnect = vi.fn()
+    }
+    global.ResizeObserver =
+      TestResizeObserver as unknown as typeof global.ResizeObserver
+
+    try {
+      renderBands([
+        { id: "h", region: "header", render: () => <span>header</span> },
+      ])
+      await act(async () => {})
+      expect(observe).toHaveBeenCalled()
+    } finally {
+      global.ResizeObserver = original
+    }
   })
 })
 

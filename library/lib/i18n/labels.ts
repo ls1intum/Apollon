@@ -21,12 +21,16 @@ export interface ApollonLabels {
   redoHint: string
 
   // Minimap
+  miniMap: string
   showMinimap: string
   /** Tooltip on the collapsed minimap toggle. */
   showMinimapHint: string
   hideMinimap: string
 
   elementPalette: string
+  paletteModelView: string
+  paletteSelectElementsView: string
+  paletteHighlightHint: string
 
   // Edit popovers (shared)
   edge: string
@@ -117,6 +121,10 @@ export interface ApollonLabels {
 
   // Class diagram
   class: string
+  classType: string
+  abstractClass: string
+  interface: string
+  enumeration: string
   reorderAttribute: string
   newAttribute: string
   addAttribute: string
@@ -127,6 +135,9 @@ export interface ApollonLabels {
   addMethod: string
   deleteMethod: string
   methods: string
+  markMethodAsAbstract: string
+  unmarkMethodAsAbstract: string
+  abstractMethod: string
 
   // Communication diagram
   messages: string
@@ -150,6 +161,7 @@ export interface ApollonLabels {
   orientation: string
   orientationVertical: string
   orientationHorizontal: string
+  resizeLane: string
 
   // Component / deployment diagram
   componentName: string
@@ -239,10 +251,15 @@ export const DEFAULT_LABELS: ApollonLabels = Object.freeze<ApollonLabels>({
   undoHint: "Undo (Ctrl+Z)",
   redo: "Redo",
   redoHint: "Redo (Ctrl+Y or Ctrl+Shift+Z)",
+  miniMap: "Mini map",
   showMinimap: "Show minimap",
   showMinimapHint: "Show minimap (overview)",
   hideMinimap: "Hide minimap",
   elementPalette: "Element palette",
+  paletteModelView: "Model",
+  paletteSelectElementsView: "Select Elements",
+  paletteHighlightHint:
+    "Click nodes or relationships to toggle whether they are interactive.",
   edge: "Edge",
   label: "Label",
   type: "Type",
@@ -319,6 +336,10 @@ export const DEFAULT_LABELS: ApollonLabels = Object.freeze<ApollonLabels>({
   nonterminal: "Nonterminal",
   terminal: "Terminal",
   class: "Class",
+  classType: "Class type",
+  abstractClass: "Abstract Class",
+  interface: "Interface",
+  enumeration: "Enumeration",
   reorderAttribute: "Reorder attribute",
   newAttribute: "New attribute",
   addAttribute: "Add attribute",
@@ -329,6 +350,9 @@ export const DEFAULT_LABELS: ApollonLabels = Object.freeze<ApollonLabels>({
   addMethod: "Add method",
   deleteMethod: "Delete method",
   methods: "Methods",
+  markMethodAsAbstract: "Mark method as abstract",
+  unmarkMethodAsAbstract: "Unmark method as abstract",
+  abstractMethod: "Abstract method (italic)",
   messages: "Messages",
   message: "Message",
   addMessage: "Add message",
@@ -349,6 +373,7 @@ export const DEFAULT_LABELS: ApollonLabels = Object.freeze<ApollonLabels>({
   orientation: "Orientation",
   orientationVertical: "Vertical (columns)",
   orientationHorizontal: "Horizontal (rows)",
+  resizeLane: "Resize lane",
   componentName: "Component name",
   subsystemName: "Subsystem name",
   stereotypePlaceholder: "e.g. «device»",

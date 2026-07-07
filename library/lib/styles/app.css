@@ -10,17 +10,17 @@
    and `@import`, or those assets leak into that chunk. The Inter font ships
    separately (lib/styles/fonts.css + lib/utils/exportFonts.ts). */
 
-/* Safe-area floor. Consumers below read `var(--safe-area-inset-*, 0px)`; this
+/* Safe-area floor. Consumers below read `var(--safe-area-inset-*, 0)`; this
    maps them to the UA insets so they work in any browser/embedded webview
    (Artemis, vscode) with `viewport-fit=cover`. The standalone webapp may
    override these at runtime via the Capacitor safe-area plugin (inline style
    on documentElement wins); off-native and everywhere else, env() is the
-   source of truth and resolves to 0px when there is no inset. */
+   source of truth and resolves to 0 when there is no inset. */
 :root {
-  --safe-area-inset-top: env(safe-area-inset-top, 0px);
-  --safe-area-inset-right: env(safe-area-inset-right, 0px);
-  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
-  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+  --safe-area-inset-top: env(safe-area-inset-top, 0);
+  --safe-area-inset-right: env(safe-area-inset-right, 0);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0);
+  --safe-area-inset-left: env(safe-area-inset-left, 0);
 }
 
 /* The shared chrome token system (--apollon-chrome-*: glass, the surface/border/
@@ -97,11 +97,11 @@
     "botleft  botcenter botright"
     "footer   footer    footer";
   pointer-events: none;
-  padding-top: var(--safe-area-inset-top, 0px);
-  padding-left: var(--safe-area-inset-left, 0px);
-  padding-right: var(--safe-area-inset-right, 0px);
+  padding-top: var(--safe-area-inset-top, 0);
+  padding-left: var(--safe-area-inset-left, 0);
+  padding-right: var(--safe-area-inset-right, 0);
   padding-bottom: calc(
-    var(--safe-area-inset-bottom, 0px) + var(--apollon-keyboard-inset, 0px)
+    var(--safe-area-inset-bottom, 0) + var(--apollon-keyboard-inset, 0)
   );
 }
 
@@ -274,6 +274,7 @@
   stroke-width: 4.5px !important;
   filter: drop-shadow(0 0 4px var(--apollon-collaboration-highlight-color));
 }
+
 /* Floating element palette — a `left-rail` overlay control. The engine's rail
    band positions it (top/bottom pinned to the reserved insets, so it always
    clears the header and bottom controls); the palette only adds its own edge/gap
@@ -383,27 +384,27 @@
    so its extra notch nudge still wins. */
 .react-flow__panel.top {
   margin-top: calc(
-    var(--apollon-chrome-edge) + var(--safe-area-inset-top, 0px) +
-      var(--apollon-inset-top, 0px)
+    var(--apollon-chrome-edge) + var(--safe-area-inset-top, 0) +
+      var(--apollon-inset-top, 0)
   );
 }
 
 .react-flow__panel.bottom {
   margin-bottom: calc(
-    var(--apollon-chrome-edge-safe-bottom) + var(--apollon-keyboard-inset, 0px) +
-      var(--apollon-inset-bottom, 0px)
+    var(--apollon-chrome-edge-safe-bottom) + var(--apollon-keyboard-inset, 0) +
+      var(--apollon-inset-bottom, 0)
   );
 }
 
 .react-flow__panel.left {
   margin-left: calc(
-    var(--apollon-chrome-edge-safe-left) + var(--apollon-inset-left, 0px)
+    var(--apollon-chrome-edge-safe-left) + var(--apollon-inset-left, 0)
   );
 }
 
 .react-flow__panel.right {
   margin-right: calc(
-    var(--apollon-chrome-edge-safe-right) + var(--apollon-inset-right, 0px)
+    var(--apollon-chrome-edge-safe-right) + var(--apollon-inset-right, 0)
   );
 }
 

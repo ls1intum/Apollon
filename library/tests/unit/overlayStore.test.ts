@@ -80,6 +80,19 @@ describe("overlayStore", () => {
     store.getState().register(control({ ...base, visible: true }))
     expect(store.getState().insets.top).toBe(40)
   })
+
+  it("ignores repeated identical measurements", () => {
+    const store = createOverlayStore()
+    store.getState().register(control({ id: "h", region: "header" }))
+    store.getState().setMeasured("h", { top: 40 })
+    const measured = store.getState().measured
+    const insets = store.getState().insets
+
+    store.getState().setMeasured("h", { top: 40 })
+
+    expect(store.getState().measured).toBe(measured)
+    expect(store.getState().insets).toBe(insets)
+  })
 })
 
 // Two-tier chrome: BANDS (header/footer/left-rail/right-rail) reserve their

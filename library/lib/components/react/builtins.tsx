@@ -5,7 +5,7 @@ import {
   miniMapControl,
   paletteControl,
   zoomControl,
-  type BuiltInPlacement,
+  type PaletteControlOptions,
   type MiniMapControlOptions,
   type ZoomControlOptions,
 } from "@/chrome/builtins/controls"
@@ -45,7 +45,7 @@ const key = (o: object): string => JSON.stringify(o)
  * three register through the one overlay registry, identical to the vanilla
  * `paletteControl()/zoomControl()/miniMapControl()` descriptors.
  */
-export function ApollonPalette(props: BuiltInPlacement = {}): null {
+export function ApollonPalette(props: PaletteControlOptions = {}): null {
   useControl(() => paletteControl(props), [key(props)])
   return null
 }

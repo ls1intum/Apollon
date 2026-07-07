@@ -90,7 +90,12 @@ export const Sidebar = () => {
         ) || 8
       const h = Math.max(0, band.clientHeight - 2 * gap)
       const w = canvasEl.getBoundingClientRect().width
-      setCanvas({ w, h, compact: mobileQuery.matches })
+      const compact = mobileQuery.matches
+      setCanvas((prev) =>
+        prev.w === w && prev.h === h && prev.compact === compact
+          ? prev
+          : { w, h, compact }
+      )
     }
     measure()
     const observer = new ResizeObserver(measure)
@@ -203,7 +208,7 @@ export const Sidebar = () => {
                 : "apollon-palette__view-button"
             }
           >
-            Model
+            {labels.paletteModelView}
           </button>
           <button
             type="button"
@@ -214,14 +219,14 @@ export const Sidebar = () => {
                 : "apollon-palette__view-button"
             }
           >
-            Select Elements
+            {labels.paletteSelectElementsView}
           </button>
         </div>
       )}
 
       {view === ApollonView.Highlight && (
         <div className="apollon-palette__hint">
-          Click nodes or relationships to toggle whether they are interactive.
+          {labels.paletteHighlightHint}
         </div>
       )}
 

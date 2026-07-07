@@ -23,7 +23,7 @@ export {
   PALETTE_ID,
   ZOOM_ID,
   MINIMAP_ID,
-  type BuiltInPlacement,
+  type PaletteControlOptions,
   type ZoomControlOptions,
   type MiniMapControlOptions,
 } from "./chrome/builtins/controls"

@@ -153,6 +153,7 @@ export const CustomMiniMap = ({
         zoomable={zoomable}
         pannable={pannable}
         position={position}
+        ariaLabel={t.miniMap}
         nodeComponent={MiniMapNode}
         offsetScale={6}
         bgColor="transparent"

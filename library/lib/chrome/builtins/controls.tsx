@@ -21,42 +21,77 @@ export const PALETTE_ID = "apollon:palette"
 export const ZOOM_ID = "apollon:zoom"
 export const MINIMAP_ID = "apollon:minimap"
 
-/** Placement/appearance a caller may override on a built-in (never its id). */
-export type BuiltInPlacement = Partial<Omit<OverlayControlOptions, "id">>
-
-export function paletteControl(
-  options: BuiltInPlacement = {}
-): OverlayControlInput {
-  return {
-    id: PALETTE_ID,
-    region: "left-rail",
-    ...options,
-    render: () => <Sidebar />,
-  }
+type BuiltInPlacement<Region extends OverlayControlOptions["region"]> = Partial<
+  Omit<OverlayControlOptions, "id" | "region" | "selfPositioned">
+> & {
+  region?: Region
 }
 
-export interface ZoomControlOptions extends BuiltInPlacement {
+type PaletteRegion = "left-rail" | "right-rail"
+type MiniMapRegion = Extract<PanelPosition, OverlayControlOptions["region"]>
+
+export type PaletteControlOptions = BuiltInPlacement<PaletteRegion>
+export type ZoomControlOptions = BuiltInPlacement<
+  OverlayControlOptions["region"]
+> & {
   /** Show the undo / redo island (when an undo manager exists). Default `true`. */
   history?: boolean
 }
-
-export function zoomControl({
-  history,
-  ...placement
-}: ZoomControlOptions = {}): OverlayControlInput {
-  return {
-    id: ZOOM_ID,
-    region: "bottom-left",
-    ...placement,
-    render: () => <ZoomControls history={history} />,
-  }
-}
-
-export interface MiniMapControlOptions extends BuiltInPlacement {
+export type MiniMapControlOptions = BuiltInPlacement<MiniMapRegion> & {
   /** Drag the minimap to pan the diagram. Default `true`. */
   pannable?: boolean
   /** Scroll over the minimap to zoom the diagram. Default `true`. */
   zoomable?: boolean
+}
+
+const PALETTE_REGIONS = new Set<PaletteRegion>(["left-rail", "right-rail"])
+const MINIMAP_REGIONS = new Set<MiniMapRegion>([
+  "top-left",
+  "top-center",
+  "top-right",
+  "bottom-left",
+  "bottom-center",
+  "bottom-right",
+])
+
+function assertBuiltInRegion(
+  name: string,
+  region: string,
+  supported: ReadonlySet<string>
+): void {
+  if (!supported.has(region)) {
+    throw new Error(
+      `[${name}] unsupported region "${region}". Supported regions: ${[
+        ...supported,
+      ].join(", ")}`
+    )
+  }
+}
+
+export function paletteControl(
+  options: PaletteControlOptions = {}
+): OverlayControlInput {
+  const region = options.region ?? "left-rail"
+  assertBuiltInRegion("paletteControl", region, PALETTE_REGIONS)
+  return {
+    ...options,
+    id: PALETTE_ID,
+    region,
+    render: () => <Sidebar />,
+  }
+}
+
+export function zoomControl({
+  history,
+  region = "bottom-left",
+  ...placement
+}: ZoomControlOptions = {}): OverlayControlInput {
+  return {
+    ...placement,
+    id: ZOOM_ID,
+    region,
+    render: () => <ZoomControls history={history} />,
+  }
 }
 
 /**
@@ -72,7 +107,11 @@ function BuiltInMiniMap({
   const region = useOverlayStore((s) => s.controls[MINIMAP_ID]?.region)
   return (
     <CustomMiniMap
-      position={(region as PanelPosition | undefined) ?? "bottom-right"}
+      position={
+        region && MINIMAP_REGIONS.has(region as MiniMapRegion)
+          ? (region as MiniMapRegion)
+          : "bottom-right"
+      }
       pannable={pannable}
       zoomable={zoomable}
     />
@@ -85,11 +124,12 @@ export function miniMapControl({
   region = "bottom-right",
   ...placement
 }: MiniMapControlOptions = {}): OverlayControlInput {
+  assertBuiltInRegion("miniMapControl", region, MINIMAP_REGIONS)
   return {
+    ...placement,
     id: MINIMAP_ID,
     region,
     selfPositioned: true,
-    ...placement,
     render: () => <BuiltInMiniMap pannable={pannable} zoomable={zoomable} />,
   }
 }

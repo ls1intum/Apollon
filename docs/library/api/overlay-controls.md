@@ -131,7 +131,7 @@ props reconfigure. Passing _any_ children opts out of the defaults, so you list
 exactly the chrome you want (an empty composition is a bare canvas).
 
 ```tsx no-check
-import { Apollon } from "@tumaet/apollon"
+import { Apollon, UMLDiagramType } from "@tumaet/apollon"
 
 function Editor() {
   return (
@@ -346,8 +346,9 @@ control never drags the diagram.
 - **Selection-anchored toolbars** — `<Apollon.SelectionToolbar>` (Figma/tldraw
   style): a screen-space, constant-size toolbar that follows the current selection.
   Distinct from `on-canvas`, which lives in diagram space and scales with zoom.
-- **i18n.** The editor's own strings are host-overridable via `labels`
-  (see [i18n](#i18n) below); pass a partial map in your language.
+- **i18n.** Editor UI strings exposed in `ApollonLabels` are
+  host-overridable via `labels` (see [i18n](#i18n) below); pass a partial map in
+  your language.
 - **Resizable rails work.** A host that makes its rail content drag-resizable gets
   live inset tracking — the shared `ResizeObserver` re-measures and the diagram
   re-fits as the width changes.
@@ -359,19 +360,25 @@ control never drags the diagram.
 
 ## i18n
 
-Every string the editor renders itself — palette / zoom / minimap tooltips and
-aria-labels, and the editing popovers — is a key in the typed `ApollonLabels`
-dictionary, shipped with English defaults. Override any subset:
+The editor UI strings exposed in the typed `ApollonLabels` dictionary — including
+the built-in palette / zoom / minimap tooltips and aria-labels, plus the
+edit/assessment popover copy — ship with English defaults. Override any subset:
 
 ```tsx
-<Apollon
-  labels={{
-    zoomIn: "Vergrößern",
-    zoomOut: "Verkleinern",
-    showMinimap: "Übersicht anzeigen",
-    zoomReadout: (percent) => `Zoom bei ${percent} %`,
-  }}
-/>
+import { Apollon } from "@tumaet/apollon"
+
+export function LocalizedEditor() {
+  return (
+    <Apollon
+      labels={{
+        zoomIn: "Vergrößern",
+        zoomOut: "Verkleinern",
+        showMinimap: "Übersicht anzeigen",
+        zoomReadout: (percent: number) => `Zoom bei ${percent} %`,
+      }}
+    />
+  )
+}
 ```
 
 Imperative: `new ApollonEditor(el, { labels })` or `editor.setLabels(labels)`.

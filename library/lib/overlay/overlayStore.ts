@@ -100,6 +100,15 @@ const insetsEqual = (a: Insets, b: Insets): boolean =>
   a.bottom === b.bottom &&
   a.left === b.left
 
+const measuredEqual = (
+  a: Partial<Record<OverlaySide, number>> | undefined,
+  b: Partial<Record<OverlaySide, number>>
+): boolean =>
+  (a?.top ?? 0) === (b.top ?? 0) &&
+  (a?.right ?? 0) === (b.right ?? 0) &&
+  (a?.bottom ?? 0) === (b.bottom ?? 0) &&
+  (a?.left ?? 0) === (b.left ?? 0)
+
 /** Recompute the inset rect, reusing the previous object when values are
  *  unchanged so `insets` subscribers (CSS vars, fitView) don't re-render when a
  *  registration only swaps a renderer or restacks same-size chrome. */
@@ -174,6 +183,7 @@ export const createOverlayStore = (): UseBoundStore<StoreApi<OverlayStore>> =>
               // Ignore measurements for an unregistered id so an orphan rect
               // can never leak into the computed insets.
               if (!(id in s.controls)) return s
+              if (measuredEqual(s.measured[id], rect)) return s
               const measured = { ...s.measured, [id]: rect }
               return {
                 measured,
