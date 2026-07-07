@@ -450,12 +450,10 @@ export function getFreeformAnchorPoint(
         position: "left" as Position,
       }
     }
-  }
-
-  const offset = Math.round(rect.width * ratio)
-  return {
-    point: { x: rect.x + offset, y: rect.y },
-    position: "top" as Position,
+    default: {
+      const unhandled: never = anchor.side
+      throw new Error(`getFreeformAnchorPoint: unhandled side ${unhandled}`)
+    }
   }
 }
 

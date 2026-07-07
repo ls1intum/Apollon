@@ -17,6 +17,7 @@ import {
   type FreeformEdgeAnchor,
 } from "@/utils/edgeUtils"
 import {
+  distanceToRect,
   getEdgeAnchorFromPoint,
   getEdgeAnchorPoint,
   pickNearestConnectable,
@@ -393,19 +394,7 @@ export const useStraightPathEdge = ({
         const rect = getNodeRect(node)
         if (!rect) continue
 
-        const dx =
-          flowPoint.x < rect.x
-            ? rect.x - flowPoint.x
-            : flowPoint.x > rect.x + rect.width
-              ? flowPoint.x - (rect.x + rect.width)
-              : 0
-        const dy =
-          flowPoint.y < rect.y
-            ? rect.y - flowPoint.y
-            : flowPoint.y > rect.y + rect.height
-              ? flowPoint.y - (rect.y + rect.height)
-              : 0
-        const distance = Math.hypot(dx, dy)
+        const distance = distanceToRect(flowPoint, rect)
 
         if (
           distance <= FREEFORM_ENDPOINT_SNAP_RADIUS_PX &&
