@@ -127,6 +127,7 @@ export const PetriNetEdge = ({
               isDiagramModifiable={isDiagramModifiable}
               canEditEndpoint={canEditEndpoint}
               onEndpointPointerDown={handleEndpointPointerDown}
+              straight
             />
           )}
         </g>

@@ -99,6 +99,18 @@ async function centerOf(locator: Locator): Promise<Pt> {
   }
 }
 
+/** The persisted `{side, ratio}` anchor of an edge's target endpoint. */
+async function targetAnchorOf(page: Page, edgeId: string) {
+  return page.evaluate((id) => {
+    const raw = localStorage.getItem("persistenceModelStore")
+    if (!raw) return null
+    const p = JSON.parse(raw)
+    const model = p.state.models[p.state.currentModelId]?.model
+    const edge = (model?.edges || []).find((e: { id: string }) => e.id === id)
+    return edge?.data?.targetAnchor ?? null
+  }, edgeId)
+}
+
 async function storedEdges(page: Page): Promise<
   Array<{
     id: string
@@ -126,8 +138,10 @@ async function dragLocatorBy(
 ) {
   const box = await locator.boundingBox()
   if (!box) throw new Error("locator has no bounding box")
+  // Grab near the top edge, not the centre: a container's centre is covered by
+  // its children (dragging there would move a child, not the container).
   const x = box.x + box.width / 2
-  const y = box.y + box.height / 2
+  const y = box.y + Math.min(box.height * 0.2, 8)
   await page.mouse.move(x, y)
   await page.mouse.down()
   await page.mouse.move(x + dx, y + dy, { steps: 12 })
@@ -153,16 +167,24 @@ async function expectFreeformTargetFollowsMovedNode({
   const targetHandle = edge.locator(".edge-endpoint-handle--target")
   const targetGrip = edge.locator(".edge-endpoint-grip--target")
   await expect(targetHandle).toBeVisible()
-  const targetGripBox = await targetGrip.boundingBox()
-  if (!targetGripBox)
-    throw new Error("target endpoint grip has no bounding box")
+  // Wait for the grip to lay out before dragging. boundingBox is opacity-
+  // independent, so it also covers edges whose grip only fades in on hover, and
+  // it settles the edge geometry first.
+  const gripBox = await targetGrip.boundingBox()
+  if (!gripBox) throw new Error("target endpoint grip has no bounding box")
+  // The visible grip is a small elongated pill, well under the hit target.
+  // Assert on its intrinsic size (width/height attributes), not its on-screen
+  // bounding box — on a straight (direct) edge the grip is rotated to the edge
+  // angle, which enlarges the axis-aligned bounding box.
+  const gripW = Number(await targetGrip.getAttribute("width"))
+  const gripH = Number(await targetGrip.getAttribute("height"))
   const initialHandleBox = await targetHandle.boundingBox()
   if (!initialHandleBox) throw new Error("target endpoint has no bounding box")
-  expect(targetGripBox.width).toBeLessThan(initialHandleBox.width / 2)
-  expect(targetGripBox.height).toBeLessThan(initialHandleBox.height / 2)
-  expect(Math.max(targetGripBox.width, targetGripBox.height)).toBeGreaterThan(
-    Math.min(targetGripBox.width, targetGripBox.height)
-  )
+  const handleW = Number(await targetHandle.getAttribute("width"))
+  const handleH = Number(await targetHandle.getAttribute("height"))
+  expect(gripW).toBeLessThan(handleW / 2)
+  expect(gripH).toBeLessThan(handleH / 2)
+  expect(Math.max(gripW, gripH)).toBeGreaterThan(Math.min(gripW, gripH))
 
   const targetNode = page.locator(`.react-flow__node[data-id="${targetId}"]`)
   const targetBox = await targetNode.boundingBox()
@@ -183,24 +205,49 @@ async function expectFreeformTargetFollowsMovedNode({
   await page.mouse.up()
   await page.waitForTimeout(400)
 
-  const targetBefore = await centerOf(targetHandle)
+  const anchorBefore = await targetAnchorOf(page, edgeId)
   const nodeBefore = await centerOf(targetNode)
+  const endpointBefore = await centerOf(targetHandle)
 
-  await dragLocatorBy(page, targetNode, 90, 45)
+  // Move the node so its endpoint has to follow. A child pinned to its parent's
+  // border (e.g. a component interface) can't be dragged freely on its own, so
+  // move its parent — the child, and the endpoint, travel with it rigidly.
+  const parentId = await page.evaluate((id) => {
+    const raw = localStorage.getItem("persistenceModelStore")
+    if (!raw) return null
+    const p = JSON.parse(raw)
+    const model = p.state.models[p.state.currentModelId]?.model
+    return (
+      model?.nodes.find((n: { id: string }) => n.id === id)?.parentId ?? null
+    )
+  }, targetId)
+  const nodeToMove = parentId
+    ? page.locator(`.react-flow__node[data-id="${parentId}"]`)
+    : targetNode
+  await dragLocatorBy(page, nodeToMove, 90, 45)
+  await page.waitForTimeout(500) // let the moved node and its edge re-render settle
 
-  const targetAfter = await centerOf(targetHandle)
   const nodeAfter = await centerOf(targetNode)
+  const endpointAfter = await centerOf(targetHandle)
+  const anchorAfter = await targetAnchorOf(page, edgeId)
   const nodeDelta = {
     x: nodeAfter.x - nodeBefore.x,
     y: nodeAfter.y - nodeBefore.y,
   }
   const endpointDelta = {
-    x: targetAfter.x - targetBefore.x,
-    y: targetAfter.y - targetBefore.y,
+    x: endpointAfter.x - endpointBefore.x,
+    y: endpointAfter.y - endpointBefore.y,
   }
 
-  expect(endpointDelta.x).toBeCloseTo(nodeDelta.x, 0)
-  expect(endpointDelta.y).toBeCloseTo(nodeDelta.y, 0)
+  // The move must actually displace the node, or the follow check is vacuous.
+  expect(Math.hypot(nodeDelta.x, nodeDelta.y)).toBeGreaterThan(20)
+  // The endpoint travels with the node. A few px of slack absorbs a straight
+  // edge's grip rotating to the new angle (which nudges the handle's axis-aligned
+  // bbox centre); a freeform endpoint's stored {side, ratio} is exact, so assert
+  // that too when the endpoint carries one.
+  expect(Math.abs(endpointDelta.x - nodeDelta.x)).toBeLessThan(12)
+  expect(Math.abs(endpointDelta.y - nodeDelta.y)).toBeLessThan(12)
+  if (anchorBefore !== null) expect(anchorAfter).toEqual(anchorBefore)
 }
 
 async function expectEndpointCanRetargetToNode({

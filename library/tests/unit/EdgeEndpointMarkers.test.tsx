@@ -160,7 +160,11 @@ describe("EdgeEndpointMarkers", () => {
     expect(targetHandle).toHaveAttribute("y", "98")
   })
 
-  it("renders visible endpoint grips centered in the freeform hit targets", () => {
+  it("anchors the visible endpoint grips to the endpoints, just clear of the heads", () => {
+    // The grip hugs the endpoint (offset by half its length + the marker
+    // clearance), not the centre of the wide hit-target — so it never floats off
+    // the tip when zoomed out. Source at (10,20) exits right, target at (110,120)
+    // enters from the left; clearance = 18/2 + 4 = 13.
     const { container } = renderEndpointMarkers({
       onEndpointPointerDown: vi.fn(),
     })
@@ -170,13 +174,13 @@ describe("EdgeEndpointMarkers", () => {
     expect(container.querySelectorAll(".edge-endpoint-grip")).toHaveLength(2)
     expect(sourceGrip).toHaveAttribute("width", "18")
     expect(sourceGrip).toHaveAttribute("height", "8")
-    expect(sourceGrip).toHaveAttribute("x", "23")
+    expect(sourceGrip).toHaveAttribute("x", "14") // 10 + 13 clearance − 9 half-width
     expect(sourceGrip).toHaveAttribute("y", "16")
     expect(sourceGrip).toHaveAttribute("rx", "4")
     expect(sourceGrip).toHaveAttribute("pointer-events", "none")
     expect(targetGrip).toHaveAttribute("width", "18")
     expect(targetGrip).toHaveAttribute("height", "8")
-    expect(targetGrip).toHaveAttribute("x", "79")
+    expect(targetGrip).toHaveAttribute("x", "88") // 110 − 13 clearance − 9 half-width
     expect(targetGrip).toHaveAttribute("y", "116")
   })
 

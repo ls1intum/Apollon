@@ -9,20 +9,20 @@ import {
 } from "@xyflow/react"
 import { useCallback, useRef } from "react"
 import {
-  findClosestHandle,
   generateUUID,
   getDefaultEdgeType,
-  getFreeformAnchorFromPoint,
   getSideHandleIdForPosition,
+  type FreeformEdgeAnchor,
 } from "@/utils"
-import { DiagramNodeTypeRecord } from "@/nodes"
+import { getEdgeAnchorFromPoint } from "@/utils/connectionModes"
 import { useDiagramStore, useMetadataStore } from "@/store/context"
+import { useFreeformDropTarget } from "./useFreeformDropTarget"
 import { useShallow } from "zustand/shallow"
 
 const withEndpointAnchor = (
   data: Edge["data"],
   endpoint: "source" | "target",
-  anchor: ReturnType<typeof getFreeformAnchorFromPoint> | null
+  anchor: FreeformEdgeAnchor | null
 ): Edge["data"] => {
   const nextData = { ...((data ?? {}) as Record<string, unknown>) }
   const key = endpoint === "source" ? "sourceAnchor" : "targetAnchor"
@@ -124,8 +124,8 @@ const isSameNodeSameHandleArea = (
 export const useConnect = () => {
   const startEdge = useRef<Edge | null>(null)
   const connectionStartParams = useRef<OnConnectStartParams | null>(null)
-  const { screenToFlowPosition, getIntersectingNodes, getInternalNode } =
-    useReactFlow()
+  const { screenToFlowPosition, getIntersectingNodes } = useReactFlow()
+  const resolveDropTarget = useFreeformDropTarget()
   const { setEdges, addEdge, edges } = useDiagramStore(
     useShallow((state) => ({
       setEdges: state.setEdges,
@@ -144,22 +144,14 @@ export const useConnect = () => {
 
   const defaultEdgeType = getDefaultEdgeType(diagramType)
 
-  const isFourHandleNode = useCallback(
-    (nodeType?: string) =>
-      nodeType === DiagramNodeTypeRecord.componentInterface ||
-      nodeType === DiagramNodeTypeRecord.petriNetPlace ||
-      nodeType === DiagramNodeTypeRecord.petriNetTransition ||
-      nodeType === DiagramNodeTypeRecord.sfcTransitionBranch,
-    []
-  )
   const getDropPosition = useCallback(
     (event: MouseEvent | TouchEvent) => {
       const { clientX, clientY } =
         "changedTouches" in event ? event.changedTouches[0] : event
-      return screenToFlowPosition(
-        { x: clientX, y: clientY },
-        { snapToGrid: false }
-      )
+      // Inherit the editor's grid snapping so a new edge snaps its endpoint to
+      // the grid exactly like reconnect does; screenToFlowPosition is called
+      // without overriding snapToGrid.
+      return screenToFlowPosition({ x: clientX, y: clientY })
     },
     [screenToFlowPosition]
   )
@@ -228,48 +220,22 @@ export const useConnect = () => {
       try {
         if (!connectionState.isValid) {
           const dropPosition = getDropPosition(event)
-          const intersectingNodes = getIntersectingNodes({
-            x: dropPosition.x - 5,
-            y: dropPosition.y - 5,
-            width: 10,
-            height: 10,
-          })
-
-          if (intersectingNodes.length === 0) return
-
-          const fromNodeId = connectionState.fromNode?.id
-          const nodeOnTop =
-            intersectingNodes.findLast((node) => node.id !== fromNodeId) ??
-            intersectingNodes[intersectingNodes.length - 1]
-
-          const internalNodeData = getInternalNode(nodeOnTop.id)
-
-          if (
-            !internalNodeData ||
-            nodeOnTop.width == null ||
-            nodeOnTop.height == null
+          const nodeOnTop = resolveDropTarget(
+            dropPosition,
+            connectionState.fromNode?.id
           )
-            return
+          if (!nodeOnTop) return
 
-          const targetRect = {
-            x: internalNodeData.internals.positionAbsolute.x,
-            y: internalNodeData.internals.positionAbsolute.y,
-            width: nodeOnTop.width,
-            height: nodeOnTop.height,
-          }
-          const targetAnchor = getFreeformAnchorFromPoint(
+          const targetRect = nodeOnTop.rect
+          // Shape-aware: the anchor lands on the node's real shape (oval curve,
+          // diamond vertex, interface centre, …), not just its bounding box.
+          const targetAnchor = getEdgeAnchorFromPoint(
+            nodeOnTop.type,
             dropPosition,
             targetRect
           )
-          const targetHandle = targetAnchor
-            ? getSideHandleIdForPosition(targetAnchor.side)
-            : findClosestHandle({
-                point: dropPosition,
-                rect: targetRect,
-                useFourHandles: isFourHandleNode(nodeOnTop.type),
-              })
-
-          if (!targetHandle) return
+          if (!targetAnchor) return // node is not a connection target (mode "none")
+          const targetHandle = getSideHandleIdForPosition(targetAnchor.side)
 
           if (startEdge.current) {
             const updatedEdge = edges.find(
@@ -354,9 +320,7 @@ export const useConnect = () => {
       defaultEdgeType,
       edges,
       getDropPosition,
-      getInternalNode,
-      getIntersectingNodes,
-      isFourHandleNode,
+      resolveDropTarget,
       setEdges,
       stopConnectionGuidance,
     ]

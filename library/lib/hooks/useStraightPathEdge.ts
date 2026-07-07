@@ -12,12 +12,14 @@ import {
   getEdgeMarkerStyles,
   adjustSourceCoordinates,
   adjustTargetCoordinates,
-  getFreeformAnchorFromPoint,
-  getFreeformAnchorPoint,
   getSideHandleIdForPosition,
   isFreeformEdgeAnchor,
   type FreeformEdgeAnchor,
 } from "@/utils/edgeUtils"
+import {
+  getEdgeAnchorFromPoint,
+  getEdgeAnchorPoint,
+} from "@/utils/connectionModes"
 import { EDGES } from "@/constants"
 import { useDiagramModifiable } from "./useDiagramModifiable"
 import { IPoint } from "../edges/Connection"
@@ -34,7 +36,7 @@ import {
 } from "./useEdgeLineJumps"
 import { useDiagramStore, useMetadataStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
-import { getPositionOnCanvas } from "@/utils"
+import { getPositionOnCanvas, isParentNodeType } from "@/utils"
 
 export interface StraightPathEdgeData {
   pathMiddlePosition: IPoint
@@ -221,16 +223,16 @@ export const useStraightPathEdge = ({
   const resolvedSourceAnchor = useMemo(
     () =>
       sourceRect && isFreeformEdgeAnchor(sourceAnchor)
-        ? getFreeformAnchorPoint(sourceRect, sourceAnchor)
+        ? getEdgeAnchorPoint(sourceNode?.type, sourceRect, sourceAnchor)
         : null,
-    [sourceAnchor, sourceRect]
+    [sourceAnchor, sourceRect, sourceNode?.type]
   )
   const resolvedTargetAnchor = useMemo(
     () =>
       targetRect && isFreeformEdgeAnchor(targetAnchor)
-        ? getFreeformAnchorPoint(targetRect, targetAnchor)
+        ? getEdgeAnchorPoint(targetNode?.type, targetRect, targetAnchor)
         : null,
-    [targetAnchor, targetRect]
+    [targetAnchor, targetRect, targetNode?.type]
   )
   const resolvedSourceX = resolvedSourceAnchor?.point.x ?? sourceX
   const resolvedSourceY = resolvedSourceAnchor?.point.y ?? sourceY
@@ -302,9 +304,8 @@ export const useStraightPathEdge = ({
   )
 
   // Midpoint + orientation derived purely from the two endpoints. A straight
-  // edge's middle is analytic, so this replaces the old getPointAtLength +
-  // setTimeout effect (and its two redundant fallback effects) with one
-  // synchronous, DOM-free, export-stable computation.
+  // edge's middle is analytic, so it is computed synchronously, DOM-free, and
+  // export-stable.
   const { point: pathMiddlePosition, isHorizontal: isMiddlePathHorizontal } =
     useMemo(
       () => getMidSegment(renderPoints, renderPoints[0], renderPoints[1]),
@@ -386,6 +387,8 @@ export const useStraightPathEdge = ({
       } | null = null
 
       for (const node of nodes) {
+        if (isParentNodeType(node.type)) continue
+
         const rect = getNodeRect(node)
         if (!rect) continue
 
@@ -432,25 +435,52 @@ export const useStraightPathEdge = ({
       ): StraightEndpointDragCommit | null => {
         const flowPoint = screenToFlowPosition({ x: clientX, y: clientY })
         const intersectingNodes = getIntersectingNodes({
-          x: flowPoint.x - 1,
-          y: flowPoint.y - 1,
-          width: 2,
-          height: 2,
+          x: flowPoint.x - FREEFORM_ENDPOINT_SNAP_RADIUS_PX,
+          y: flowPoint.y - FREEFORM_ENDPOINT_SNAP_RADIUS_PX,
+          width: FREEFORM_ENDPOINT_SNAP_RADIUS_PX * 2,
+          height: FREEFORM_ENDPOINT_SNAP_RADIUS_PX * 2,
         })
-        const directHitNode = intersectingNodes.findLast(
+        // Snap to the NEAREST node (distance to its box, 0 when inside), not the
+        // top-most, so tightly packed nodes grab the one under the cursor. On an
+        // exact tie — nested nodes both under the pointer — the later, top-most
+        // node wins: the innermost child, or a container where no child sits.
+        const sizedHits = intersectingNodes.filter(
           (node) => node.width != null && node.height != null
         )
-        const directHitRect = directHitNode ? getNodeRect(directHitNode) : null
+        let snapNode: (typeof sizedHits)[number] | null = null
+        let snapRect: ReturnType<typeof getNodeRect> = null
+        let bestDistance = Infinity
+        for (const node of sizedHits) {
+          const rect = getNodeRect(node)
+          if (!rect) continue
+          const dx = Math.max(
+            rect.x - flowPoint.x,
+            0,
+            flowPoint.x - (rect.x + rect.width)
+          )
+          const dy = Math.max(
+            rect.y - flowPoint.y,
+            0,
+            flowPoint.y - (rect.y + rect.height)
+          )
+          const distance = Math.hypot(dx, dy)
+          if (distance <= bestDistance) {
+            bestDistance = distance
+            snapNode = node
+            snapRect = rect
+          }
+        }
         const snapTarget =
-          directHitNode && directHitRect
-            ? { node: directHitNode, rect: directHitRect }
+          snapNode && snapRect
+            ? { node: snapNode, rect: snapRect }
             : findFreeformEndpointNode(flowPoint)
 
         if (!snapTarget) return null
 
         const { node: nodeOnTop, rect } = snapTarget
-        const anchor = getFreeformAnchorFromPoint(flowPoint, rect)
-        const resolvedAnchor = getFreeformAnchorPoint(rect, anchor)
+        const anchor = getEdgeAnchorFromPoint(nodeOnTop.type, flowPoint, rect)
+        if (!anchor) return null // node is not a connection target (mode "none")
+        const resolvedAnchor = getEdgeAnchorPoint(nodeOnTop.type, rect, anchor)
         let sourceEndpoint = currentSourceEndpoint
         let targetEndpoint = currentTargetEndpoint
 
@@ -499,17 +529,25 @@ export const useStraightPathEdge = ({
       const handlePointerMove = (e: PointerEvent) => {
         const commit = resolveDragCommit(e.clientX, e.clientY)
         endpointDragCommitRef.current = commit
+        if (commit) {
+          setDragPreviewPoints([commit.sourceEndpoint, commit.targetEndpoint])
+          setDragPreviewPositions({
+            sourcePosition: commit.sourcePosition,
+            targetPosition: commit.targetPosition,
+          })
+          return
+        }
+        // No snap target (empty canvas): free preview whose dragged end follows
+        // the cursor (straight, matching this edge). No commit ⇒ reverts on
+        // release. Positions are irrelevant for a straight preview (the marker
+        // orients along the path, not by side).
+        const flowPoint = screenToFlowPosition({ x: e.clientX, y: e.clientY })
         setDragPreviewPoints(
-          commit ? [commit.sourceEndpoint, commit.targetEndpoint] : null
+          endpoint === "source"
+            ? [flowPoint, currentTargetEndpoint]
+            : [currentSourceEndpoint, flowPoint]
         )
-        setDragPreviewPositions(
-          commit
-            ? {
-                sourcePosition: commit.sourcePosition,
-                targetPosition: commit.targetPosition,
-              }
-            : null
-        )
+        setDragPreviewPositions(null)
       }
 
       const handlePointerUp = () => {
