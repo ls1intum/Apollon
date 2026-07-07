@@ -114,8 +114,9 @@ const projectOntoEllipse = (
   const rx = rect.width / 2 || 1
   const ry = rect.height / 2 || 1
   const dx = point.x - c.x
+  const dyRaw = point.y - c.y
   // degenerate: a drop exactly at the centre defaults to the top
-  const dy = point.x - c.x === 0 && point.y - c.y === 0 ? -1 : point.y - c.y
+  const dy = dx === 0 && dyRaw === 0 ? -1 : dyRaw
   const t = 1 / Math.hypot(dx / rx, dy / ry)
   return {
     point: { x: c.x + t * dx, y: c.y + t * dy },

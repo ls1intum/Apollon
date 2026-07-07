@@ -58,23 +58,43 @@ test("connecting to a use-case oval lands the endpoint on the ellipse curve, not
   const inv = await nodeBox(page, INVENTORY)
   const aim = { x: inv.x + inv.width - 12, y: inv.y + 12 }
 
+  const edgeIds = () =>
+    page.evaluate(() =>
+      Array.from(document.querySelectorAll(".react-flow__edge[data-id]")).map(
+        (e) => (e as HTMLElement).dataset.id as string
+      )
+    )
+  const beforeIds = await edgeIds()
+
   await page.mouse.move(hb!.x + hb!.width / 2, hb!.y + hb!.height / 2)
   await page.mouse.down()
   await page.mouse.move(aim.x, aim.y, { steps: 16 })
   await page.mouse.up()
-  await page.waitForTimeout(250)
+
+  // Isolate the edge just drawn — scanning ALL edges would let a pre-existing
+  // edge's endpoint satisfy the assertion even if this connection never formed.
+  let newEdgeId: string | undefined
+  await expect
+    .poll(
+      async () => {
+        newEdgeId = (await edgeIds()).find((cur) => !beforeIds.includes(cur))
+        return newEdgeId
+      },
+      { message: "a connection to the oval must be created" }
+    )
+    .toBeTruthy()
 
   const g = await ovalGeom(page, INVENTORY)
-  // The endpoint of some edge closest to the Inventory oval's centre.
-  const end = await page.evaluate((geom) => {
-    const paths = Array.from(
-      document.querySelectorAll(".react-flow__edge path.react-flow__edge-path")
-    ) as SVGPathElement[]
-    let best: { x: number; y: number } | null = null
-    let bestD = Infinity
-    for (const p of paths) {
-      const ctm = p.getScreenCTM()
-      if (!ctm || p.getTotalLength() === 0) continue
+  // The endpoint of the NEW edge closest to the Inventory oval's centre.
+  const end = await page.evaluate(
+    ({ geom, id }) => {
+      const p = document.querySelector(
+        `.react-flow__edge[data-id="${id}"] path.react-flow__edge-path`
+      ) as SVGPathElement | null
+      const ctm = p?.getScreenCTM()
+      if (!p || !ctm || p.getTotalLength() === 0) return null
+      let best: { x: number; y: number } | null = null
+      let bestD = Infinity
       for (const len of [0, p.getTotalLength()]) {
         const q = p.getPointAtLength(len)
         const m = new DOMPoint(q.x, q.y).matrixTransform(ctm)
@@ -84,11 +104,12 @@ test("connecting to a use-case oval lands the endpoint on the ellipse curve, not
           best = { x: m.x, y: m.y }
         }
       }
-    }
-    return best
-  }, g)
+      return best
+    },
+    { geom: g, id: newEdgeId as string }
+  )
 
-  expect(end, "a connection to the oval must exist").toBeTruthy()
+  expect(end, "the new edge's endpoint must exist").toBeTruthy()
   // On the ellipse, ((x-cx)/rx)² + ((y-cy)/ry)² == 1. The bbox top-right corner
   // would be ~2. Allow a little slack for the arrow-marker gap.
   const onEllipse =
