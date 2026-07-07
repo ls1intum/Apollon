@@ -1,13 +1,6 @@
 import { useCallback } from "react"
 import { useReactFlow, type Rect, type XYPosition } from "@xyflow/react"
-import { getConnectionMode } from "@/utils/connectionModes"
-
-/** Distance from a point to a rectangle (0 when the point is inside it). */
-const distanceToRect = (p: XYPosition, r: Rect): number => {
-  const dx = Math.max(r.x - p.x, 0, p.x - (r.x + r.width))
-  const dy = Math.max(r.y - p.y, 0, p.y - (r.y + r.height))
-  return Math.hypot(dx, dy)
-}
+import { pickNearestConnectable } from "@/utils/connectionModes"
 
 // Half-size of the box hit-tested around a drop point; a drop must land within
 // this of a node's bounding box to attach. Kept generous so a drop just outside
@@ -45,27 +38,27 @@ export function useFreeformDropTarget() {
       const nonSource = hits.filter((node) => node.id !== fromNodeId)
       const pool = nonSource.length > 0 ? nonSource : hits
 
-      let best: FreeformDropTarget | null = null
-      let bestDistance = Infinity
-      // Iterate low→high z so, on a distance tie, the later (top-most) node wins.
-      pool.forEach((node) => {
-        // Legends, annotations and swimlane partitions are not targets.
-        if (getConnectionMode(node.type) === "none") return
+      const candidates = pool.flatMap((node) => {
         const internal = getInternalNode(node.id)
-        if (!internal) return
-        const rect: Rect = {
-          x: internal.internals.positionAbsolute.x,
-          y: internal.internals.positionAbsolute.y,
-          width: node.width!,
-          height: node.height!,
-        }
-        const distance = distanceToRect(point, rect)
-        if (distance <= bestDistance) {
-          bestDistance = distance
-          best = { id: node.id, type: node.type, rect }
-        }
+        return internal
+          ? [
+              {
+                node,
+                type: node.type,
+                rect: {
+                  x: internal.internals.positionAbsolute.x,
+                  y: internal.internals.positionAbsolute.y,
+                  width: node.width!,
+                  height: node.height!,
+                },
+              },
+            ]
+          : []
       })
+      const best = pickNearestConnectable(candidates, point)
       return best
+        ? { id: best.node.id, type: best.node.type, rect: best.rect }
+        : null
     },
     [getIntersectingNodes, getInternalNode]
   )

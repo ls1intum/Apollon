@@ -4,7 +4,6 @@ import {
   Position,
   useStore,
   useReactFlow,
-  type Node,
 } from "@xyflow/react"
 import { EDGES } from "@/constants"
 import {
@@ -41,7 +40,12 @@ import {
 import {
   getEdgeAnchorFromPoint,
   getEdgeAnchorPoint,
+  pickNearestConnectable,
 } from "@/utils/connectionModes"
+import {
+  FREEFORM_ENDPOINT_SNAP_RADIUS_PX,
+  useFreeformEndpointNode,
+} from "./useFreeformEndpointNode"
 import {
   type BendHandle,
   applyInnerSegmentBend,
@@ -121,8 +125,6 @@ type EndpointDragCommit = {
   directPoints: IPoint[] | null
 }
 
-const FREEFORM_ENDPOINT_SNAP_RADIUS_PX = 48
-
 const arePointsEqual = (a: IPoint[], b: IPoint[]): boolean =>
   a.length === b.length &&
   a.every((point, index) => point.x === b[index].x && point.y === b[index].y)
@@ -178,12 +180,10 @@ export const useStepPathEdge = ({
   } | null>(null)
 
   const { customPoints, setCustomPoints } = useEdgeState(data?.points)
-  const freeformAnchorsEnabled = true
   const sourceAnchor = data?.sourceAnchor
   const targetAnchor = data?.targetAnchor
   const shouldSubscribeToNodeGeometry =
-    freeformAnchorsEnabled &&
-    (isFreeformEdgeAnchor(sourceAnchor) || isFreeformEdgeAnchor(targetAnchor))
+    isFreeformEdgeAnchor(sourceAnchor) || isFreeformEdgeAnchor(targetAnchor)
   const {
     setEdges,
     sourceNodePositionX,
@@ -247,9 +247,9 @@ export const useStepPathEdge = ({
   const padding = markerPadding ?? EDGES.MARKER_PADDING
   const allNodes = getNodes()
   const sourceNode =
-    allNodes.find((node) => node.id === source) ?? getNode(source)!
+    allNodes.find((node) => node.id === source) ?? getNode(source)
   const targetNode =
-    allNodes.find((node) => node.id === target) ?? getNode(target)!
+    allNodes.find((node) => node.id === target) ?? getNode(target)
 
   const sourceAbsolutePosition = useMemo(() => {
     if (sourceNodePositionX != null && sourceNodePositionY != null) {
@@ -319,17 +319,17 @@ export const useStepPathEdge = ({
   )
   const resolvedSourceAnchor = useMemo(
     () =>
-      freeformAnchorsEnabled && sourceRect && isFreeformEdgeAnchor(sourceAnchor)
+      sourceRect && isFreeformEdgeAnchor(sourceAnchor)
         ? getEdgeAnchorPoint(sourceNode?.type, sourceRect, sourceAnchor)
         : null,
-    [freeformAnchorsEnabled, sourceAnchor, sourceRect, sourceNode?.type]
+    [sourceAnchor, sourceRect, sourceNode?.type]
   )
   const resolvedTargetAnchor = useMemo(
     () =>
-      freeformAnchorsEnabled && targetRect && isFreeformEdgeAnchor(targetAnchor)
+      targetRect && isFreeformEdgeAnchor(targetAnchor)
         ? getEdgeAnchorPoint(targetNode?.type, targetRect, targetAnchor)
         : null,
-    [freeformAnchorsEnabled, targetAnchor, targetRect, targetNode?.type]
+    [targetAnchor, targetRect, targetNode?.type]
   )
 
   const sourceX = resolvedSourceAnchor?.point.x ?? reactFlowSourceX
@@ -382,14 +382,14 @@ export const useStepPathEdge = ({
     const straightPathPoints = tryFindStraightPath(
       {
         position: { x: sourceAbsolutePosition.x, y: sourceAbsolutePosition.y },
-        width: sourceRect?.width ?? sourceNode.width ?? 100,
-        height: sourceRect?.height ?? sourceNode.height ?? 160,
+        width: sourceRect?.width ?? sourceNode?.width ?? 100,
+        height: sourceRect?.height ?? sourceNode?.height ?? 160,
         direction: sourcePosition,
       },
       {
         position: { x: targetAbsolutePosition.x, y: targetAbsolutePosition.y },
-        width: targetRect?.width ?? targetNode.width ?? 100,
-        height: targetRect?.height ?? targetNode.height ?? 160,
+        width: targetRect?.width ?? targetNode?.width ?? 100,
+        height: targetRect?.height ?? targetNode?.height ?? 160,
         direction: targetPosition,
       },
       padding,
@@ -448,10 +448,9 @@ export const useStepPathEdge = ({
 
   const hasStoredManualPoints = Boolean(data?.points && data.points.length > 0)
   const hasLocalManualPoints = customPoints.length > 0
-  const hasManualPoints =
-    hasStoredManualPoints || (!freeformAnchorsEnabled && hasLocalManualPoints)
+  const hasManualPoints = hasStoredManualPoints
   const shouldPreferComputedPath =
-    freeformAnchorsEnabled && computedPoints.length === 2 && !hasManualPoints
+    computedPoints.length === 2 && !hasManualPoints
 
   const activePoints = useMemo(() => {
     if (shouldPreferComputedPath) {
@@ -462,10 +461,7 @@ export const useStepPathEdge = ({
     if (data?.points && data.points.length > 0) {
       points = data.points
     } else {
-      points =
-        !freeformAnchorsEnabled && customPoints.length
-          ? customPoints
-          : computedPoints
+      points = computedPoints
     }
 
     if (hasManualPoints && points.length >= 2) {
@@ -486,10 +482,8 @@ export const useStepPathEdge = ({
 
     return points
   }, [
-    customPoints,
     computedPoints,
     data?.points,
-    freeformAnchorsEnabled,
     hasManualPoints,
     shouldPreferComputedPath,
     adjustedSourceCoordinates.sourceX,
@@ -913,64 +907,10 @@ export const useStepPathEdge = ({
     ]
   )
 
-  const getNodeRect = useCallback(
-    (node: Node): Rect | null => {
-      const nodes = getNodes()
-      const currentNode = nodes.find((candidate) => candidate.id === node.id)
-      const resolvedNode = currentNode ?? node
-      const width = resolvedNode.width ?? 0
-      const height = resolvedNode.height ?? 0
-
-      if (!width || !height) return null
-
-      const position = getPositionOnCanvas(resolvedNode, nodes)
-      return { x: position.x, y: position.y, width, height }
-    },
-    [getNodes]
-  )
-
-  const findFreeformEndpointNode = useCallback(
-    (flowPoint: IPoint): { node: Node; rect: Rect } | null => {
-      const nodes = getNodes()
-      let best: { node: Node; rect: Rect; distance: number } | null = null
-
-      for (const node of nodes) {
-        if (isParentNodeType(node.type)) continue
-
-        const rect = getNodeRect(node)
-        if (!rect) continue
-
-        const dx =
-          flowPoint.x < rect.x
-            ? rect.x - flowPoint.x
-            : flowPoint.x > rect.x + rect.width
-              ? flowPoint.x - (rect.x + rect.width)
-              : 0
-        const dy =
-          flowPoint.y < rect.y
-            ? rect.y - flowPoint.y
-            : flowPoint.y > rect.y + rect.height
-              ? flowPoint.y - (rect.y + rect.height)
-              : 0
-        const distance = Math.hypot(dx, dy)
-
-        if (
-          distance <= FREEFORM_ENDPOINT_SNAP_RADIUS_PX &&
-          (!best || distance < best.distance)
-        ) {
-          best = { node, rect, distance }
-        }
-      }
-
-      return best ? { node: best.node, rect: best.rect } : null
-    },
-    [getNodeRect, getNodes]
-  )
+  const { getNodeRect, findFreeformEndpointNode } = useFreeformEndpointNode()
 
   const handleEndpointPointerDown = useCallback(
     (event: React.PointerEvent<SVGRectElement>, endpoint: EndpointType) => {
-      if (!freeformAnchorsEnabled) return
-
       event.preventDefault()
       event.stopPropagation()
       endpointDragCommitRef.current = null
@@ -1002,40 +942,15 @@ export const useStepPathEdge = ({
           width: FREEFORM_ENDPOINT_SNAP_RADIUS_PX * 2,
           height: FREEFORM_ENDPOINT_SNAP_RADIUS_PX * 2,
         })
-        // Snap to the NEAREST node (distance to its box, 0 when inside), not the
-        // top-most, so tightly packed nodes grab the one under the cursor. On an
-        // exact tie — nested nodes both under the pointer — the later, top-most
-        // node wins: the innermost child, or a container where no child sits.
-        const sizedHits = intersectingNodes.filter(
-          (node) => node.width != null && node.height != null
-        )
-        let snapNode: (typeof sizedHits)[number] | null = null
-        let snapRect: ReturnType<typeof getNodeRect> = null
-        let bestDistance = Infinity
-        for (const node of sizedHits) {
+        // Snap to the nearest connectable node under the pointer (see
+        // pickNearestConnectable); fall back to the wider freeform search.
+        const candidates = intersectingNodes.flatMap((node) => {
           const rect = getNodeRect(node)
-          if (!rect) continue
-          const dx = Math.max(
-            rect.x - flowPoint.x,
-            0,
-            flowPoint.x - (rect.x + rect.width)
-          )
-          const dy = Math.max(
-            rect.y - flowPoint.y,
-            0,
-            flowPoint.y - (rect.y + rect.height)
-          )
-          const distance = Math.hypot(dx, dy)
-          if (distance <= bestDistance) {
-            bestDistance = distance
-            snapNode = node
-            snapRect = rect
-          }
-        }
+          return rect ? [{ node, type: node.type, rect }] : []
+        })
         const snapTarget =
-          snapNode && snapRect
-            ? { node: snapNode, rect: snapRect }
-            : findFreeformEndpointNode(flowPoint)
+          pickNearestConnectable(candidates, flowPoint) ??
+          findFreeformEndpointNode(flowPoint)
 
         if (!snapTarget) return null
 
@@ -1254,7 +1169,6 @@ export const useStepPathEdge = ({
       adjustedSourceCoordinates.sourceY,
       adjustedTargetCoordinates.targetX,
       adjustedTargetCoordinates.targetY,
-      freeformAnchorsEnabled,
       findFreeformEndpointNode,
       getIntersectingNodes,
       getNodeRect,
@@ -1310,9 +1224,7 @@ export const useStepPathEdge = ({
     markerStart,
     strokeDashArray,
     handlePointerDown,
-    handleEndpointPointerDown: freeformAnchorsEnabled
-      ? handleEndpointPointerDown
-      : undefined,
+    handleEndpointPointerDown,
     sourcePoint,
     targetPoint,
     toolbarPosition,

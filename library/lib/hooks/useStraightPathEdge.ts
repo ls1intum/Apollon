@@ -5,7 +5,7 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react"
-import { Position, useReactFlow, useStore, type Node } from "@xyflow/react"
+import { Position, useReactFlow, useStore } from "@xyflow/react"
 import {
   calculateOverlayPath,
   calculateStraightPath,
@@ -19,7 +19,12 @@ import {
 import {
   getEdgeAnchorFromPoint,
   getEdgeAnchorPoint,
+  pickNearestConnectable,
 } from "@/utils/connectionModes"
+import {
+  FREEFORM_ENDPOINT_SNAP_RADIUS_PX,
+  useFreeformEndpointNode,
+} from "./useFreeformEndpointNode"
 import { EDGES } from "@/constants"
 import { useDiagramModifiable } from "./useDiagramModifiable"
 import { IPoint } from "../edges/Connection"
@@ -36,7 +41,7 @@ import {
 } from "./useEdgeLineJumps"
 import { useDiagramStore, useMetadataStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
-import { getPositionOnCanvas, isParentNodeType } from "@/utils"
+import { getPositionOnCanvas } from "@/utils"
 
 export interface StraightPathEdgeData {
   pathMiddlePosition: IPoint
@@ -58,8 +63,6 @@ type StraightEndpointDragCommit = {
   sourceEndpoint: IPoint
   targetEndpoint: IPoint
 }
-
-const FREEFORM_ENDPOINT_SNAP_RADIUS_PX = 48
 
 export const useStraightPathEdge = ({
   id,
@@ -153,9 +156,9 @@ export const useStraightPathEdge = ({
   const padding = markerPadding ?? EDGES.MARKER_PADDING
   const allNodes = getNodes()
   const sourceNode =
-    allNodes.find((node) => node.id === source) ?? getNode(source)!
+    allNodes.find((node) => node.id === source) ?? getNode(source)
   const targetNode =
-    allNodes.find((node) => node.id === target) ?? getNode(target)!
+    allNodes.find((node) => node.id === target) ?? getNode(target)
   const sourceAbsolutePosition = useMemo(() => {
     if (sourceNodePositionX != null && sourceNodePositionY != null) {
       return { x: sourceNodePositionX, y: sourceNodePositionY }
@@ -359,65 +362,7 @@ export const useStraightPathEdge = ({
     targetPoint,
   }
 
-  const getNodeRect = useCallback(
-    (node: Node) => {
-      const nodes = getNodes()
-      const currentNode = nodes.find((candidate) => candidate.id === node.id)
-      const resolvedNode = currentNode ?? node
-      const width = resolvedNode.width ?? 0
-      const height = resolvedNode.height ?? 0
-
-      if (!width || !height) return null
-
-      const position = getPositionOnCanvas(resolvedNode, nodes)
-      return { x: position.x, y: position.y, width, height }
-    },
-    [getNodes]
-  )
-
-  const findFreeformEndpointNode = useCallback(
-    (
-      flowPoint: IPoint
-    ): { node: Node; rect: NonNullable<typeof sourceRect> } | null => {
-      const nodes = getNodes()
-      let best: {
-        node: Node
-        rect: NonNullable<typeof sourceRect>
-        distance: number
-      } | null = null
-
-      for (const node of nodes) {
-        if (isParentNodeType(node.type)) continue
-
-        const rect = getNodeRect(node)
-        if (!rect) continue
-
-        const dx =
-          flowPoint.x < rect.x
-            ? rect.x - flowPoint.x
-            : flowPoint.x > rect.x + rect.width
-              ? flowPoint.x - (rect.x + rect.width)
-              : 0
-        const dy =
-          flowPoint.y < rect.y
-            ? rect.y - flowPoint.y
-            : flowPoint.y > rect.y + rect.height
-              ? flowPoint.y - (rect.y + rect.height)
-              : 0
-        const distance = Math.hypot(dx, dy)
-
-        if (
-          distance <= FREEFORM_ENDPOINT_SNAP_RADIUS_PX &&
-          (!best || distance < best.distance)
-        ) {
-          best = { node, rect, distance }
-        }
-      }
-
-      return best ? { node: best.node, rect: best.rect } : null
-    },
-    [getNodeRect, getNodes]
-  )
+  const { getNodeRect, findFreeformEndpointNode } = useFreeformEndpointNode()
 
   const handleEndpointPointerDown = useCallback(
     (event: ReactPointerEvent<SVGRectElement>, endpoint: EndpointType) => {
@@ -440,40 +385,15 @@ export const useStraightPathEdge = ({
           width: FREEFORM_ENDPOINT_SNAP_RADIUS_PX * 2,
           height: FREEFORM_ENDPOINT_SNAP_RADIUS_PX * 2,
         })
-        // Snap to the NEAREST node (distance to its box, 0 when inside), not the
-        // top-most, so tightly packed nodes grab the one under the cursor. On an
-        // exact tie — nested nodes both under the pointer — the later, top-most
-        // node wins: the innermost child, or a container where no child sits.
-        const sizedHits = intersectingNodes.filter(
-          (node) => node.width != null && node.height != null
-        )
-        let snapNode: (typeof sizedHits)[number] | null = null
-        let snapRect: ReturnType<typeof getNodeRect> = null
-        let bestDistance = Infinity
-        for (const node of sizedHits) {
+        // Snap to the nearest connectable node under the pointer (see
+        // pickNearestConnectable); fall back to the wider freeform search.
+        const candidates = intersectingNodes.flatMap((node) => {
           const rect = getNodeRect(node)
-          if (!rect) continue
-          const dx = Math.max(
-            rect.x - flowPoint.x,
-            0,
-            flowPoint.x - (rect.x + rect.width)
-          )
-          const dy = Math.max(
-            rect.y - flowPoint.y,
-            0,
-            flowPoint.y - (rect.y + rect.height)
-          )
-          const distance = Math.hypot(dx, dy)
-          if (distance <= bestDistance) {
-            bestDistance = distance
-            snapNode = node
-            snapRect = rect
-          }
-        }
+          return rect ? [{ node, type: node.type, rect }] : []
+        })
         const snapTarget =
-          snapNode && snapRect
-            ? { node: snapNode, rect: snapRect }
-            : findFreeformEndpointNode(flowPoint)
+          pickNearestConnectable(candidates, flowPoint) ??
+          findFreeformEndpointNode(flowPoint)
 
         if (!snapTarget) return null
 

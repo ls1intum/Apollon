@@ -105,10 +105,11 @@ test("the new-connection ghost is hidden near the source, then appears after dra
 
   // Dragged well away over empty canvas: ghost must now be visible.
   await page.mouse.move(start.x + 120, start.y, { steps: 8 })
-  expect(
-    (await ghost(page)).visible,
-    "ghost must appear once dragged away from the source"
-  ).toBe(true)
+  await expect
+    .poll(async () => (await ghost(page)).visible, {
+      message: "ghost must appear once dragged away from the source",
+    })
+    .toBe(true)
 
   await page.mouse.up()
 })
@@ -127,13 +128,15 @@ test("the ghost snaps its end onto the target node's border while hovering it", 
   // Aim deep into B's body from the left — the snap should put the end on B's
   // LEFT border (facing the source), not float at the cursor inside the body.
   await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2, { steps: 10 })
+  await expect
+    .poll(async () => (await ghost(page)).visible, {
+      message: "ghost must be visible over the target",
+    })
+    .toBe(true)
   const g = await ghost(page)
   await page.mouse.up()
 
-  expect(
-    g.visible && g.end,
-    "ghost must be visible over the target"
-  ).toBeTruthy()
+  expect(g.end, "ghost end must resolve over the target").toBeTruthy()
   expect(
     distToBorder(b, g.end!),
     "ghost end must snap onto B's border, not float at the cursor"
@@ -154,12 +157,13 @@ test("the new-connection ghost previews exactly where the edge attaches (preview
   await page.mouse.move(start.x, start.y)
   await page.mouse.down()
   await page.mouse.move(b.x + 10, b.y + b.height / 3, { steps: 12 }) // inside B
-  await page.waitForTimeout(60)
+  await expect
+    .poll(async () => (await ghost(page)).visible, {
+      message: "ghost must be visible over the target",
+    })
+    .toBe(true)
   const g = await ghost(page)
-  expect(
-    g.visible && g.end,
-    "ghost must be visible over the target"
-  ).toBeTruthy()
+  expect(g.end, "ghost end must resolve over the target").toBeTruthy()
 
   await page.mouse.up()
   await page.waitForTimeout(150)
