@@ -154,9 +154,9 @@ export const useStraightPathEdge = ({
   const padding = markerPadding ?? EDGES.MARKER_PADDING
   const allNodes = getNodes()
   const sourceNode =
-    allNodes.find((node) => node.id === source) ?? getNode(source)!
+    allNodes.find((node) => node.id === source) ?? getNode(source)
   const targetNode =
-    allNodes.find((node) => node.id === target) ?? getNode(target)!
+    allNodes.find((node) => node.id === target) ?? getNode(target)
   const sourceAbsolutePosition = useMemo(() => {
     if (sourceNodePositionX != null && sourceNodePositionY != null) {
       return { x: sourceNodePositionX, y: sourceNodePositionY }

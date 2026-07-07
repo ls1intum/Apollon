@@ -459,33 +459,6 @@ export function getFreeformAnchorPoint(
   }
 }
 
-export function getNormalizedHandleOffset(
-  axisLength: number,
-  ratio: number
-): number {
-  if (!Number.isFinite(axisLength) || axisLength <= 0) return 0
-
-  // Keep exact boundaries exact when callers explicitly ask for them.
-  if (ratio <= 0) return 0
-  if (ratio >= 1) return axisLength
-
-  const raw = axisLength * ratio
-  const snapped = Math.round(raw / HANDLE_SNAP_STEP_PX) * HANDLE_SNAP_STEP_PX
-  return clamp(snapped, 0, axisLength)
-}
-
-export function getNormalizedHandleOffsetPercent(
-  axisLength: number,
-  ratio: number
-): string {
-  if (!Number.isFinite(axisLength) || axisLength <= 0) {
-    return `${ratio * 100}%`
-  }
-
-  const normalizedOffset = getNormalizedHandleOffset(axisLength, ratio)
-  return `${(normalizedOffset / axisLength) * 100}%`
-}
-
 // Visible half-circle arc-dragger length along the side it sits on. Two
 // adjacent visible arcs must have centers separated by at least this much
 // to avoid overlapping each other.

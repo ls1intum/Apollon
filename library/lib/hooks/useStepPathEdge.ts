@@ -179,12 +179,10 @@ export const useStepPathEdge = ({
   } | null>(null)
 
   const { customPoints, setCustomPoints } = useEdgeState(data?.points)
-  const freeformAnchorsEnabled = true
   const sourceAnchor = data?.sourceAnchor
   const targetAnchor = data?.targetAnchor
   const shouldSubscribeToNodeGeometry =
-    freeformAnchorsEnabled &&
-    (isFreeformEdgeAnchor(sourceAnchor) || isFreeformEdgeAnchor(targetAnchor))
+    isFreeformEdgeAnchor(sourceAnchor) || isFreeformEdgeAnchor(targetAnchor)
   const {
     setEdges,
     sourceNodePositionX,
@@ -248,9 +246,9 @@ export const useStepPathEdge = ({
   const padding = markerPadding ?? EDGES.MARKER_PADDING
   const allNodes = getNodes()
   const sourceNode =
-    allNodes.find((node) => node.id === source) ?? getNode(source)!
+    allNodes.find((node) => node.id === source) ?? getNode(source)
   const targetNode =
-    allNodes.find((node) => node.id === target) ?? getNode(target)!
+    allNodes.find((node) => node.id === target) ?? getNode(target)
 
   const sourceAbsolutePosition = useMemo(() => {
     if (sourceNodePositionX != null && sourceNodePositionY != null) {
@@ -320,17 +318,17 @@ export const useStepPathEdge = ({
   )
   const resolvedSourceAnchor = useMemo(
     () =>
-      freeformAnchorsEnabled && sourceRect && isFreeformEdgeAnchor(sourceAnchor)
+      sourceRect && isFreeformEdgeAnchor(sourceAnchor)
         ? getEdgeAnchorPoint(sourceNode?.type, sourceRect, sourceAnchor)
         : null,
-    [freeformAnchorsEnabled, sourceAnchor, sourceRect, sourceNode?.type]
+    [sourceAnchor, sourceRect, sourceNode?.type]
   )
   const resolvedTargetAnchor = useMemo(
     () =>
-      freeformAnchorsEnabled && targetRect && isFreeformEdgeAnchor(targetAnchor)
+      targetRect && isFreeformEdgeAnchor(targetAnchor)
         ? getEdgeAnchorPoint(targetNode?.type, targetRect, targetAnchor)
         : null,
-    [freeformAnchorsEnabled, targetAnchor, targetRect, targetNode?.type]
+    [targetAnchor, targetRect, targetNode?.type]
   )
 
   const sourceX = resolvedSourceAnchor?.point.x ?? reactFlowSourceX
@@ -383,14 +381,14 @@ export const useStepPathEdge = ({
     const straightPathPoints = tryFindStraightPath(
       {
         position: { x: sourceAbsolutePosition.x, y: sourceAbsolutePosition.y },
-        width: sourceRect?.width ?? sourceNode.width ?? 100,
-        height: sourceRect?.height ?? sourceNode.height ?? 160,
+        width: sourceRect?.width ?? sourceNode?.width ?? 100,
+        height: sourceRect?.height ?? sourceNode?.height ?? 160,
         direction: sourcePosition,
       },
       {
         position: { x: targetAbsolutePosition.x, y: targetAbsolutePosition.y },
-        width: targetRect?.width ?? targetNode.width ?? 100,
-        height: targetRect?.height ?? targetNode.height ?? 160,
+        width: targetRect?.width ?? targetNode?.width ?? 100,
+        height: targetRect?.height ?? targetNode?.height ?? 160,
         direction: targetPosition,
       },
       padding,
@@ -449,10 +447,9 @@ export const useStepPathEdge = ({
 
   const hasStoredManualPoints = Boolean(data?.points && data.points.length > 0)
   const hasLocalManualPoints = customPoints.length > 0
-  const hasManualPoints =
-    hasStoredManualPoints || (!freeformAnchorsEnabled && hasLocalManualPoints)
+  const hasManualPoints = hasStoredManualPoints
   const shouldPreferComputedPath =
-    freeformAnchorsEnabled && computedPoints.length === 2 && !hasManualPoints
+    computedPoints.length === 2 && !hasManualPoints
 
   const activePoints = useMemo(() => {
     if (shouldPreferComputedPath) {
@@ -463,10 +460,7 @@ export const useStepPathEdge = ({
     if (data?.points && data.points.length > 0) {
       points = data.points
     } else {
-      points =
-        !freeformAnchorsEnabled && customPoints.length
-          ? customPoints
-          : computedPoints
+      points = computedPoints
     }
 
     if (hasManualPoints && points.length >= 2) {
@@ -487,10 +481,8 @@ export const useStepPathEdge = ({
 
     return points
   }, [
-    customPoints,
     computedPoints,
     data?.points,
-    freeformAnchorsEnabled,
     hasManualPoints,
     shouldPreferComputedPath,
     adjustedSourceCoordinates.sourceX,
@@ -970,8 +962,6 @@ export const useStepPathEdge = ({
 
   const handleEndpointPointerDown = useCallback(
     (event: React.PointerEvent<SVGRectElement>, endpoint: EndpointType) => {
-      if (!freeformAnchorsEnabled) return
-
       event.preventDefault()
       event.stopPropagation()
       endpointDragCommitRef.current = null
@@ -1230,7 +1220,6 @@ export const useStepPathEdge = ({
       adjustedSourceCoordinates.sourceY,
       adjustedTargetCoordinates.targetX,
       adjustedTargetCoordinates.targetY,
-      freeformAnchorsEnabled,
       findFreeformEndpointNode,
       getIntersectingNodes,
       getNodeRect,
@@ -1286,9 +1275,7 @@ export const useStepPathEdge = ({
     markerStart,
     strokeDashArray,
     handlePointerDown,
-    handleEndpointPointerDown: freeformAnchorsEnabled
-      ? handleEndpointPointerDown
-      : undefined,
+    handleEndpointPointerDown,
     sourcePoint,
     targetPoint,
     toolbarPosition,
