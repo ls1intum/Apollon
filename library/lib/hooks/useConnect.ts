@@ -45,8 +45,13 @@ const withEndpointAnchor = (
 // HandleId enum's declaration order — the single source of truth — so adding or
 // renaming a handle can't silently desync this from the real handles. Each id's
 // first path segment names its side; slots increment per side in enum order
-// (top-left … top-right, then right-top …).
-const handleSlotBySide: Record<string, Record<string, number>> = (() => {
+// (top-left … top-right, then right-top …). Built lazily on first use, not at
+// module load: HandleId is defined in the node-wrapper module this hook is in an
+// import cycle with, so it isn't initialised yet while this module's top-level
+// code runs (the sibling path hooks likewise only read HandleId at call time).
+let handleSlotBySideCache: Record<string, Record<string, number>> | null = null
+const handleSlotBySide = (): Record<string, Record<string, number>> => {
+  if (handleSlotBySideCache) return handleSlotBySideCache
   const bySide: Record<string, Record<string, number>> = {}
   const nextSlot: Record<string, number> = {}
   for (const handleId of Object.values(HandleId)) {
@@ -55,15 +60,16 @@ const handleSlotBySide: Record<string, Record<string, number>> = (() => {
     nextSlot[side] ??= 0
     bySide[side][handleId] = nextSlot[side]++
   }
+  handleSlotBySideCache = bySide
   return bySide
-})()
+}
 
 const getHandleSideAndSlot = (
   handleId?: string | null
 ): { side: string; slot: number } | null => {
   if (!handleId) return null
 
-  for (const [side, slots] of Object.entries(handleSlotBySide)) {
+  for (const [side, slots] of Object.entries(handleSlotBySide())) {
     const slot = slots[handleId]
     if (slot != null) return { side, slot }
   }
