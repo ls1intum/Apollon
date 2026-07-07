@@ -59,9 +59,12 @@ export const PetriNetEdge = ({
     strokeDashArray,
     sourcePoint,
     targetPoint,
+    sourcePosition: renderSourcePosition,
+    targetPosition: renderTargetPosition,
     isDiagramModifiable,
     isReconnecting,
     canEditEndpoint,
+    handleEndpointPointerDown,
   } = useStraightPathEdge({
     id,
     type,
@@ -75,6 +78,7 @@ export const PetriNetEdge = ({
     targetPosition,
     sourceHandleId,
     targetHandleId,
+    data,
   })
 
   const { strokeColor, textColor } = getCustomColorsFromDataForEdge(data)
@@ -118,10 +122,12 @@ export const PetriNetEdge = ({
             <EdgeEndpointMarkers
               sourcePoint={sourcePoint}
               targetPoint={targetPoint}
-              sourcePosition={sourcePosition}
-              targetPosition={targetPosition}
+              sourcePosition={renderSourcePosition}
+              targetPosition={renderTargetPosition}
               isDiagramModifiable={isDiagramModifiable}
               canEditEndpoint={canEditEndpoint}
+              onEndpointPointerDown={handleEndpointPointerDown}
+              straight
             />
           )}
         </g>

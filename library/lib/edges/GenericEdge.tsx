@@ -22,7 +22,7 @@ import { CANVAS, EDGES } from "@/constants"
 // Edge handles live inside the zoomed React Flow viewport. We want them to
 // keep a usable MINIMUM on-screen size when zoomed out (so they never shrink to
 // a few px), but to GROW with the edge when zoomed in (so they stay in
-// proportion to the now-thick edge instead of looking like a tiny dot on it).
+// proportion to the thick edge instead of looking like a tiny dot on it).
 //
 //   scale = 1 / min(zoom, 1)   (zoom floored to the canvas minimum)
 //     zoom <= 1  → 1/zoom  → constant on-screen size (counter-scaled)
@@ -39,6 +39,10 @@ const useHandleScreenScale = (): number =>
   getHandleScreenScale(useStore((state) => state.transform[2]))
 
 export type BaseEdgeProps = ExtendedEdgeProps
+const FREEFORM_ENDPOINT_HIT_TARGET_SIZE = 44
+const FREEFORM_ENDPOINT_GRIP_LONG_AXIS = 18
+const FREEFORM_ENDPOINT_GRIP_SHORT_AXIS = 8
+const FREEFORM_ENDPOINT_GRIP_RADIUS = 4
 
 export const useEdgeState = (initialPoints?: IPoint[]) => {
   const [customPoints, setCustomPoints] = useState<IPoint[]>([])
@@ -72,14 +76,25 @@ const getEndpointDirection = (side?: EndpointSide): IPoint => {
   }
 }
 
+const normalizeDir = (v: IPoint): IPoint => {
+  const len = Math.hypot(v.x, v.y)
+  return len === 0 ? { x: 0, y: 0 } : { x: v.x / len, y: v.y / len }
+}
+
 export const getEndpointHitTargetRect = (
   point: IPoint,
   side?: EndpointSide,
-  screenScale = 1
+  screenScale = 1,
+  hitTargetSize: number = EDGES.ENDPOINT_HIT_TARGET_SIZE,
+  // Straight (direct) edges leave the node at an angle; pass the real outward
+  // edge direction so the target follows the line instead of an orthogonal side.
+  outwardDir?: IPoint
 ) => {
-  const hitSize = EDGES.ENDPOINT_HIT_TARGET_SIZE * screenScale
+  const hitSize = hitTargetSize * screenScale
   const hitOffset = hitSize / 2
-  const direction = getEndpointDirection(side)
+  const direction = outwardDir
+    ? normalizeDir(outwardDir)
+    : getEndpointDirection(side)
 
   return {
     x: point.x + direction.x * hitOffset - hitOffset,
@@ -90,6 +105,59 @@ export const getEndpointHitTargetRect = (
   }
 }
 
+const getEndpointGripRect = (
+  point: IPoint,
+  side?: EndpointSide,
+  screenScale = 1,
+  outwardDir?: IPoint
+) => {
+  // Anchor the grip to the endpoint (+ small clearance for the marker), not the
+  // centre of the wide hit-target — otherwise it floats ~22px off the tip when
+  // zoomed out. The hit-target stays wide for grabbing.
+  const radius = FREEFORM_ENDPOINT_GRIP_RADIUS * screenScale
+  const long = FREEFORM_ENDPOINT_GRIP_LONG_AXIS * screenScale
+  const short = FREEFORM_ENDPOINT_GRIP_SHORT_AXIS * screenScale
+
+  if (outwardDir) {
+    // Straight edge: a bar whose long axis runs ALONG the edge, offset outward
+    // along it and rotated to its angle — so the grip tracks the line, not an
+    // orthogonal N/E/S/W side.
+    const dir = normalizeDir(outwardDir)
+    const clearance = long / 2 + radius
+    const cx = point.x + dir.x * clearance
+    const cy = point.y + dir.y * clearance
+    return {
+      x: cx - long / 2,
+      y: cy - short / 2,
+      width: long,
+      height: short,
+      radius,
+      rotationDeg: (Math.atan2(dir.y, dir.x) * 180) / Math.PI,
+      centerX: cx,
+      centerY: cy,
+    }
+  }
+
+  // Step edge: orthogonal grip aligned to the endpoint's side.
+  const isHorizontalGrip = side === Position.Left || side === Position.Right
+  const width = isHorizontalGrip ? long : short
+  const height = isHorizontalGrip ? short : long
+  const dir = getEndpointDirection(side)
+  const clearance = (isHorizontalGrip ? width : height) / 2 + radius
+  const cx = point.x + dir.x * clearance
+  const cy = point.y + dir.y * clearance
+  return {
+    x: cx - width / 2,
+    y: cy - height / 2,
+    width,
+    height,
+    radius,
+    rotationDeg: 0,
+    centerX: cx,
+    centerY: cy,
+  }
+}
+
 export const EdgeEndpointMarkers = ({
   sourcePoint,
   targetPoint,
@@ -97,6 +165,8 @@ export const EdgeEndpointMarkers = ({
   targetPosition,
   isDiagramModifiable,
   canEditEndpoint = true,
+  onEndpointPointerDown,
+  straight = false,
 }: {
   sourcePoint: IPoint
   targetPoint: IPoint
@@ -104,6 +174,13 @@ export const EdgeEndpointMarkers = ({
   targetPosition?: EndpointSide
   isDiagramModifiable: boolean
   canEditEndpoint?: boolean
+  onEndpointPointerDown?: (
+    event: ReactPointerEvent<SVGRectElement>,
+    endpoint: "source" | "target"
+  ) => void
+  // Direct/straight edges: orient the grip + hit-target along the actual edge
+  // angle instead of the endpoint's orthogonal N/E/S/W side.
+  straight?: boolean
 }) => {
   const sourceHandleRef = useRef<SVGRectElement | null>(null)
   const screenScale = useHandleScreenScale()
@@ -111,9 +188,9 @@ export const EdgeEndpointMarkers = ({
   useEffect(() => {
     if (!isDiagramModifiable) return
 
-    // NOTE: `.react-flow__edgeupdater*` are React Flow v12 internal class names.
-    // We deliberately defer reconnection to RF's native updater while our hit
-    // target controls UX; pin to RF v12 (revisit on a major React Flow bump).
+    // `.react-flow__edgeupdater*` are React Flow v12 internal class names.
+    // Reconnection defers to RF's native updater while the hit target controls
+    // UX; pinned to RF v12 (revisit on a major React Flow bump).
     const edgeGroup = sourceHandleRef.current?.closest(".react-flow__edge")
     const nativeUpdaters = Array.from(
       edgeGroup?.querySelectorAll<SVGElement>(".react-flow__edgeupdater") ?? []
@@ -153,8 +230,8 @@ export const EdgeEndpointMarkers = ({
     event.stopPropagation()
     const eventWindow = event.currentTarget.ownerDocument.defaultView ?? window
 
-    // Deliberately hand off to React Flow's native reconnect updater so
-    // reconnection stays owned by React Flow while our hit target controls UX.
+    // Hand off to React Flow's native reconnect updater so reconnection stays
+    // owned by React Flow while the hit target controls UX.
     nativeUpdater.dispatchEvent(
       new eventWindow.MouseEvent("mousedown", {
         bubbles: true,
@@ -172,15 +249,30 @@ export const EdgeEndpointMarkers = ({
       })
     )
   }
+  // For a straight edge the grip sits on the line, offset from its endpoint
+  // TOWARD the other endpoint (so it clears the marker on the node side) and
+  // rotated to the edge angle — the same "along the edge, away from the node"
+  // placement the orthogonal side gives a step edge. Step edges pass no
+  // direction and fall back to the side.
+  const sourceOutward = straight
+    ? { x: targetPoint.x - sourcePoint.x, y: targetPoint.y - sourcePoint.y }
+    : undefined
+  const targetOutward = straight
+    ? { x: sourcePoint.x - targetPoint.x, y: sourcePoint.y - targetPoint.y }
+    : undefined
   const sourceHitTarget = getEndpointHitTargetRect(
     sourcePoint,
     sourcePosition,
-    screenScale
+    screenScale,
+    onEndpointPointerDown ? FREEFORM_ENDPOINT_HIT_TARGET_SIZE : undefined,
+    sourceOutward
   )
   const targetHitTarget = getEndpointHitTargetRect(
     targetPoint,
     targetPosition,
-    screenScale
+    screenScale,
+    onEndpointPointerDown ? FREEFORM_ENDPOINT_HIT_TARGET_SIZE : undefined,
+    targetOutward
   )
   const className = [
     "edge-endpoint-handle",
@@ -188,9 +280,48 @@ export const EdgeEndpointMarkers = ({
   ]
     .filter(Boolean)
     .join(" ")
+  const showEndpointGrips = Boolean(onEndpointPointerDown)
+  const sourceGrip = getEndpointGripRect(
+    sourcePoint,
+    sourcePosition,
+    screenScale,
+    sourceOutward
+  )
+  const targetGrip = getEndpointGripRect(
+    targetPoint,
+    targetPosition,
+    screenScale,
+    targetOutward
+  )
 
   return (
     <>
+      {showEndpointGrips && (
+        <>
+          <rect
+            className="edge-circle edge-endpoint-grip edge-endpoint-grip--source"
+            x={sourceGrip.x}
+            y={sourceGrip.y}
+            width={sourceGrip.width}
+            height={sourceGrip.height}
+            rx={sourceGrip.radius}
+            ry={sourceGrip.radius}
+            transform={`rotate(${sourceGrip.rotationDeg} ${sourceGrip.centerX} ${sourceGrip.centerY})`}
+            pointerEvents="none"
+          />
+          <rect
+            className="edge-circle edge-endpoint-grip edge-endpoint-grip--target"
+            x={targetGrip.x}
+            y={targetGrip.y}
+            width={targetGrip.width}
+            height={targetGrip.height}
+            rx={targetGrip.radius}
+            ry={targetGrip.radius}
+            transform={`rotate(${targetGrip.rotationDeg} ${targetGrip.centerX} ${targetGrip.centerY})`}
+            pointerEvents="none"
+          />
+        </>
+      )}
       <rect
         ref={sourceHandleRef}
         className={`${className} edge-endpoint-handle--source`}
@@ -201,8 +332,13 @@ export const EdgeEndpointMarkers = ({
         rx={sourceHitTarget.radius}
         ry={sourceHitTarget.radius}
         pointerEvents={canEditEndpoint ? "all" : "none"}
+        onPointerDown={
+          canEditEndpoint && onEndpointPointerDown
+            ? (event) => onEndpointPointerDown(event, "source")
+            : undefined
+        }
         onMouseDown={
-          canEditEndpoint
+          canEditEndpoint && !onEndpointPointerDown
             ? (event) => forwardToNativeReconnect(event, "source")
             : undefined
         }
@@ -216,8 +352,13 @@ export const EdgeEndpointMarkers = ({
         rx={targetHitTarget.radius}
         ry={targetHitTarget.radius}
         pointerEvents={canEditEndpoint ? "all" : "none"}
+        onPointerDown={
+          canEditEndpoint && onEndpointPointerDown
+            ? (event) => onEndpointPointerDown(event, "target")
+            : undefined
+        }
         onMouseDown={
-          canEditEndpoint
+          canEditEndpoint && !onEndpointPointerDown
             ? (event) => forwardToNativeReconnect(event, "target")
             : undefined
         }
@@ -292,6 +433,7 @@ export const StepEdgeBody = ({
   targetPosition,
   isDiagramModifiable,
   canEditEndpoint,
+  handleEndpointPointerDown,
   allowMidpointDragging,
   bendHandles,
   handlePointerDown,
@@ -316,6 +458,10 @@ export const StepEdgeBody = ({
   targetPosition?: Position
   isDiagramModifiable: boolean
   canEditEndpoint: boolean
+  handleEndpointPointerDown?: (
+    event: ReactPointerEvent<SVGRectElement>,
+    endpoint: "source" | "target"
+  ) => void
   allowMidpointDragging: boolean
   bendHandles: BendHandle[]
   handlePointerDown: (
@@ -366,6 +512,7 @@ export const StepEdgeBody = ({
         targetPosition={targetPosition}
         isDiagramModifiable={isDiagramModifiable}
         canEditEndpoint={canEditEndpoint}
+        onEndpointPointerDown={handleEndpointPointerDown}
       />
 
       {isDiagramModifiable &&

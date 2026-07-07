@@ -652,9 +652,12 @@
   opacity: 0.4;
   box-sizing: border-box;
 
-  /* Off by default; only grabbable while the node is hovered (or in click-to-
-     connect guidance mode) — see the hit-area note near the hover rules below. */
-  pointer-events: none;
+  /* Grabbable on its own hit area, not gated behind the node body: the arc
+     protrudes past the node box, so it must be reachable when approached from
+     outside. Hovering the armed arc triggers the node :hover that fades it in.
+     Disarmed for selected-not-hovered nodes and in guidance mode (see the
+     hit-area note near the hover rules). */
+  pointer-events: all;
   cursor: crosshair;
 
   /* --arc-scale is set by DefaultNodeWrapper to 1/zoom so the indicator keeps
@@ -714,13 +717,14 @@
   transition: opacity 120ms ease;
 }
 
-/* Hit-area fix (same idea as the #791 node-toolbar fix). A node's resize controls
-   and connection arcs PROTRUDE past its box, and a selected node is lifted above
-   its neighbours (`elevateNodesOnSelect`), so arming these affordances just because
-   the node is selected makes them swallow clicks meant for an overlapping node
-   beneath them. On a fine pointer we arm them on :hover instead — every gesture
-   that uses them starts by hovering — so a selected-not-hovered node lets clicks
-   fall through. Touch has no :hover; see the coarse-pointer fallback below. */
+/* A node's resize controls protrude past its box, and a selected node is lifted
+   above its neighbours (`elevateNodesOnSelect`), so arming them on selection
+   alone would cover clicks meant for an overlapping node beneath. Arm them on
+   :hover instead — every gesture that uses them starts by hovering — so a
+   selected-not-hovered node lets clicks fall through. Touch has no :hover; see
+   the coarse-pointer fallback below. (Connection arcs face the same overlap but
+   stay armed on their own hit area, disarmed only for a selected-not-hovered
+   node — see the arc rules below.) */
 .react-flow__node:hover .react-flow__resize-control {
   pointer-events: all;
 }
@@ -744,15 +748,14 @@
   pointer-events: all;
 }
 
-/* The arc ::before is armed on hover too, but scoped OUT of guidance mode: its
-   selector would otherwise out-specify the guidance "arcs off" rule below and
-   re-arm an invisible (opacity:0) arc, swallowing clicks over neighbours — the
-   very bug this fix removes. Guidance drives connections from the circle handle,
-   not the arc, so the arc stays inert there. */
-.apollon-editor:not(.apollon-editor--connection-guidance)
-  .react-flow__node:hover
+/* Arcs are armed on their own hit area (see the base rule above). A selected
+   node is lifted above its neighbours (elevateNodesOnSelect), so its protruding
+   arcs, if armed, would cover clicks meant for an overlapping node beneath it.
+   Disarm them while the node is selected but not hovered; hovering re-arms them,
+   so an arc on the node you're pointing at stays grabbable. */
+.react-flow__node.selected:not(:hover)
   .react-flow__handle.apollon-arc-handle::before {
-  pointer-events: all;
+  pointer-events: none;
 }
 
 .react-flow__node:hover .react-flow__handle {
@@ -772,13 +775,13 @@
   pointer-events: none;
 }
 
-/* Coarse-pointer fallback for the hit-area fix above. Touch devices never fire
-   :hover, so the hover-gated rules would leave a selected node's affordances
+/* Coarse-pointer fallback for the hover-gated rules above. Touch devices never
+   fire :hover, so those rules would leave a selected node's affordances
    ungrabbable — you could not start a connection or resize with a finger. Arm
-   them on selection instead, matching pre-fix behaviour. (A coarse pointer can't
-   hover to disambiguate an overlap anyway, so it keeps the swallow the fine-pointer
-   path removes.) The arc ::before is excluded in guidance mode so its hidden arcs
-   stay inert while the circle handles drive the connection. */
+   them on selection instead. (A coarse pointer can't hover to disambiguate an
+   overlap anyway, so the overlap trade-off doesn't apply.) The arc ::before is
+   excluded in guidance mode so its hidden arcs stay inert while the circle
+   handles drive the connection. */
 @media (hover: none), (pointer: coarse) {
   .react-flow__node.selected .react-flow__handle.connectionindicator,
   .react-flow__node.selected .react-flow__resize-control,
@@ -840,6 +843,18 @@
   vector-effect: non-scaling-stroke;
 }
 
+.edge-endpoint-grip {
+  opacity: 0;
+  fill: var(--apollon-background, #fff);
+  stroke: var(--apollon-primary, #3e8acc);
+  stroke-width: 2px;
+  transition:
+    fill 120ms ease,
+    opacity 120ms ease,
+    stroke 120ms ease;
+  vector-effect: non-scaling-stroke;
+}
+
 .edge-endpoint-handle {
   fill: transparent;
   stroke: transparent;
@@ -856,6 +871,19 @@
 .react-flow__edge.selected .edge-bend-handle {
   opacity: 1;
   fill: var(--apollon-primary, #3e8acc);
+}
+
+.react-flow__edge:hover .edge-endpoint-grip,
+.react-flow__edge.selected .edge-endpoint-grip {
+  opacity: 1;
+}
+
+.react-flow__edge.selected .edge-endpoint-grip {
+  fill: color-mix(
+    in srgb,
+    var(--apollon-primary, #3e8acc) 18%,
+    var(--apollon-background, #fff)
+  );
 }
 
 .react-flow__edge:hover .edge-bend-handle:hover,

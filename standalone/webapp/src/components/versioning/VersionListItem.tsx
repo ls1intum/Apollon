@@ -14,6 +14,7 @@ import {
   type CSSProperties,
   type FC,
   type KeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
   type ReactNode,
 } from "react"
 import { Link } from "@tanstack/react-router"
@@ -482,7 +483,7 @@ export const VersionListItem: FC<ContainerProps> = ({
         [PREVIEW_VERSION_PARAM]: props.version.id,
       })}
       aria-label={accessibleName}
-      onClick={(e) => {
+      onClick={(e: ReactMouseEvent<HTMLAnchorElement>) => {
         // Let the browser handle modified clicks (open in a new tab/window).
         if (e.metaKey || e.ctrlKey || e.shiftKey) return
         e.preventDefault()
