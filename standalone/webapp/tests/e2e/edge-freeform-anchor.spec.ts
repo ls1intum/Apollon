@@ -49,7 +49,8 @@ function edgeById(page: Page, id: string): Locator {
 async function selectEdge(page: Page, id: string): Promise<Locator> {
   const edge = edgeById(page, id)
   await edge.locator(".edge-overlay, path").first().click({ force: true })
-  await page.waitForTimeout(150)
+  // Selection renders the endpoint handles; wait for that rather than sleeping.
+  await expect(edge.locator(".edge-endpoint-handle--target")).toBeVisible()
   return edge
 }
 
@@ -110,7 +111,6 @@ async function dragLocatorBy(
   await page.mouse.down()
   await page.mouse.move(x + dx, y + dy, { steps: 12 })
   await page.mouse.up()
-  await page.waitForTimeout(350)
 }
 
 async function expectFreeformTargetFollowsMovedNode({
@@ -152,7 +152,9 @@ async function expectFreeformTargetFollowsMovedNode({
     { steps: 12 }
   )
   await page.mouse.up()
-  await page.waitForTimeout(400)
+  // The freeform endpoint drag persists a {side, ratio} anchor; wait for that
+  // commit rather than sleeping, then capture the pre-move baseline.
+  await expect.poll(() => targetAnchorOf(page, edgeId)).not.toBeNull()
 
   const anchorBefore = await targetAnchorOf(page, edgeId)
   const nodeBefore = await centerOf(targetNode)
@@ -174,29 +176,36 @@ async function expectFreeformTargetFollowsMovedNode({
     ? page.locator(`.react-flow__node[data-id="${parentId}"]`)
     : targetNode
   await dragLocatorBy(page, nodeToMove, 90, 45)
-  await page.waitForTimeout(500) // let the moved node and its edge re-render settle
 
-  const nodeAfter = await centerOf(targetNode)
-  const endpointAfter = await centerOf(targetHandle)
-  const anchorAfter = await targetAnchorOf(page, edgeId)
-  const nodeDelta = {
-    x: nodeAfter.x - nodeBefore.x,
-    y: nodeAfter.y - nodeBefore.y,
-  }
-  const endpointDelta = {
-    x: endpointAfter.x - endpointBefore.x,
-    y: endpointAfter.y - endpointBefore.y,
-  }
-
-  // The move must actually displace the node, or the follow check is vacuous.
-  expect(Math.hypot(nodeDelta.x, nodeDelta.y)).toBeGreaterThan(20)
-  // The endpoint travels with the node. A few px of slack absorbs a straight
+  // Retry until the node has actually moved (>20px, else the check is vacuous)
+  // AND the endpoint has travelled with it. A few px of slack absorbs a straight
   // edge's grip rotating to the new angle (which nudges the handle's axis-aligned
-  // bbox centre); a freeform endpoint's stored {side, ratio} is exact, so assert
-  // that too when the endpoint carries one.
-  expect(Math.abs(endpointDelta.x - nodeDelta.x)).toBeLessThan(12)
-  expect(Math.abs(endpointDelta.y - nodeDelta.y)).toBeLessThan(12)
-  if (anchorBefore !== null) expect(anchorAfter).toEqual(anchorBefore)
+  // bbox centre); polling waits out the edge re-render instead of a fixed sleep.
+  await expect
+    .poll(
+      async () => {
+        const nodeAfter = await centerOf(targetNode)
+        const endpointAfter = await centerOf(targetHandle)
+        const nodeMoved = Math.hypot(
+          nodeAfter.x - nodeBefore.x,
+          nodeAfter.y - nodeBefore.y
+        )
+        const followX = Math.abs(
+          endpointAfter.x - endpointBefore.x - (nodeAfter.x - nodeBefore.x)
+        )
+        const followY = Math.abs(
+          endpointAfter.y - endpointBefore.y - (nodeAfter.y - nodeBefore.y)
+        )
+        return nodeMoved > 20 && followX < 12 && followY < 12
+      },
+      { message: "endpoint must follow the moved node" }
+    )
+    .toBe(true)
+
+  // A pure move leaves the exact {side, ratio} anchor untouched.
+  if (anchorBefore !== null) {
+    expect(await targetAnchorOf(page, edgeId)).toEqual(anchorBefore)
+  }
 }
 
 async function expectEndpointCanRetargetToNode({
