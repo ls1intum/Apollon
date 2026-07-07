@@ -172,7 +172,8 @@ test("an edge endpoint can be reconnected onto a container node (e.g. an Activit
   await page.waitForTimeout(250)
 
   const after = await targetEnd()
-  expect(before && after).toBeTruthy()
+  expect(before, "endpoint existed before reconnect").toBeTruthy()
+  expect(after, "endpoint exists after reconnect").toBeTruthy()
   // The endpoint moved and now sits on the container's border.
   expect(
     Math.hypot(after!.x - before!.x, after!.y - before!.y)
