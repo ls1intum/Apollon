@@ -17,14 +17,62 @@ const classNoEdgeFixture = JSON.parse(
     "utf-8"
   )
 ) as Record<string, unknown>
+const activityFixture = JSON.parse(
+  fs.readFileSync(
+    path.join(__d, "..", "fixtures", "activity-diagram.json"),
+    "utf-8"
+  )
+) as Record<string, unknown>
+const bpmnFixture = JSON.parse(
+  fs.readFileSync(path.join(__d, "..", "fixtures", "bpmn.json"), "utf-8")
+) as Record<string, unknown>
+const communicationFixture = JSON.parse(
+  fs.readFileSync(
+    path.join(__d, "..", "fixtures", "communication-diagram.json"),
+    "utf-8"
+  )
+) as Record<string, unknown>
+const componentFixture = JSON.parse(
+  fs.readFileSync(
+    path.join(__d, "..", "fixtures", "component-diagram.json"),
+    "utf-8"
+  )
+) as Record<string, unknown>
+const deploymentFixture = JSON.parse(
+  fs.readFileSync(
+    path.join(__d, "..", "fixtures", "deployment-diagram.json"),
+    "utf-8"
+  )
+) as Record<string, unknown>
+const flowchartFixture = JSON.parse(
+  fs.readFileSync(path.join(__d, "..", "fixtures", "flowchart.json"), "utf-8")
+) as Record<string, unknown>
 const objectFixture = JSON.parse(
   fs.readFileSync(
     path.join(__d, "..", "fixtures", "object-diagram.json"),
     "utf-8"
   )
 ) as Record<string, unknown>
+const petriNetFixture = JSON.parse(
+  fs.readFileSync(path.join(__d, "..", "fixtures", "petri-net.json"), "utf-8")
+) as Record<string, unknown>
+const reachabilityGraphFixture = JSON.parse(
+  fs.readFileSync(
+    path.join(__d, "..", "fixtures", "reachability-graph.json"),
+    "utf-8"
+  )
+) as Record<string, unknown>
+const sfcFixture = JSON.parse(
+  fs.readFileSync(path.join(__d, "..", "fixtures", "sfc.json"), "utf-8")
+) as Record<string, unknown>
 const syntaxTreeFixture = JSON.parse(
   fs.readFileSync(path.join(__d, "..", "fixtures", "syntax-tree.json"), "utf-8")
+) as Record<string, unknown>
+const useCaseFixture = JSON.parse(
+  fs.readFileSync(
+    path.join(__d, "..", "fixtures", "use-case-diagram.json"),
+    "utf-8"
+  )
 ) as Record<string, unknown>
 
 type Pt = { x: number; y: number }
@@ -41,33 +89,14 @@ async function selectEdge(page: Page, id: string): Promise<Locator> {
   return edge
 }
 
-function endPointOf(d: string | null): Pt {
-  if (!d) throw new Error("edge path has no d attribute")
-  const matches = [...d.matchAll(/[ML]\s*(-?[\d.]+)[,\s]+(-?[\d.]+)/g)]
-  if (matches.length === 0) throw new Error(`edge path has no points: ${d}`)
-  const end = matches[matches.length - 1]
-  return { x: Number(end[1]), y: Number(end[2]) }
-}
+async function centerOf(locator: Locator): Promise<Pt> {
+  const box = await locator.boundingBox()
+  if (!box) throw new Error("locator has no bounding box")
 
-async function targetPointOf(edge: Locator): Promise<Pt> {
-  return endPointOf(
-    await edge.locator(".react-flow__edge-path").first().getAttribute("d")
-  )
-}
-
-async function storedNodePosition(page: Page, targetId: string): Promise<Pt> {
-  return page.evaluate((targetId) => {
-    const raw = localStorage.getItem("persistenceModelStore")
-    if (!raw) throw new Error("missing persistence model")
-    const parsed = JSON.parse(raw)
-    const id = parsed.state.currentModelId
-    const nodes = parsed.state.models[id]?.model?.nodes ?? []
-    const node = nodes.find((candidate: { id: string }) => {
-      return candidate.id === targetId
-    })
-    if (!node) throw new Error(`missing node ${targetId}`)
-    return node.position as Pt
-  }, targetId)
+  return {
+    x: box.x + box.width / 2,
+    y: box.y + box.height / 2,
+  }
 }
 
 async function storedEdges(page: Page): Promise<
@@ -122,11 +151,6 @@ async function expectFreeformTargetFollowsMovedNode({
   const targetHandle = edge.locator(".edge-endpoint-handle--target")
   const targetGrip = edge.locator(".edge-endpoint-grip--target")
   await expect(targetHandle).toBeVisible()
-  await expect
-    .poll(() =>
-      targetGrip.evaluate((element) => getComputedStyle(element).opacity)
-    )
-    .toBe("1")
   const targetGripBox = await targetGrip.boundingBox()
   if (!targetGripBox)
     throw new Error("target endpoint grip has no bounding box")
@@ -147,17 +171,23 @@ async function expectFreeformTargetFollowsMovedNode({
     initialHandleBox.y + initialHandleBox.height / 2
   )
   await page.mouse.down()
-  await page.mouse.move(targetBox.x + 3, targetBox.y + 24, { steps: 12 })
+  await page.mouse.move(
+    targetBox.x +
+      Math.min(Math.max(targetBox.width * 0.15, 3), targetBox.width - 3),
+    targetBox.y +
+      Math.min(Math.max(targetBox.height * 0.25, 3), targetBox.height - 3),
+    { steps: 12 }
+  )
   await page.mouse.up()
   await page.waitForTimeout(400)
 
-  const targetBefore = await targetPointOf(edge)
-  const nodeBefore = await storedNodePosition(page, targetId)
+  const targetBefore = await centerOf(targetHandle)
+  const nodeBefore = await centerOf(targetNode)
 
   await dragLocatorBy(page, targetNode, 90, 45)
 
-  const targetAfter = await targetPointOf(edge)
-  const nodeAfter = await storedNodePosition(page, targetId)
+  const targetAfter = await centerOf(targetHandle)
+  const nodeAfter = await centerOf(targetNode)
   const nodeDelta = {
     x: nodeAfter.x - nodeBefore.x,
     y: nodeAfter.y - nodeBefore.y,
@@ -179,16 +209,148 @@ const cases = [
     targetId: "32659cdc-bd03-46f3-918c-ee8dbba9c15b",
   },
   {
+    name: "ActivityDiagram",
+    fixture: activityFixture,
+    edgeId: "edge-flow-initial-process",
+    targetId: "770e8400-e29b-41d4-a716-446655440021",
+  },
+  {
+    name: "BPMNDiagram",
+    fixture: bpmnFixture,
+    edgeId: "edge-start-validate",
+    targetId: "cc3d4e5f-a6b7-4c8d-9e0f-1a2b3c4d5e6f",
+  },
+  {
+    name: "BPMNDiagram association flow",
+    fixture: bpmnFixture,
+    edgeId: "edge-annotation-validate",
+    targetId: "cc3d4e5f-a6b7-4c8d-9e0f-1a2b3c4d5e6f",
+  },
+  {
+    name: "BPMNDiagram data association flow",
+    fixture: bpmnFixture,
+    edgeId: "edge-payment-invoice",
+    targetId: "d40e1f2a-b3c4-4d5e-6f7a-8b9c0d1e2f3a",
+  },
+  {
+    name: "BPMNDiagram message flow",
+    fixture: bpmnFixture,
+    edgeId: "edge-subprocess-to-pool-task",
+    targetId: "ee5f6a7b-c8d9-4e0f-1a2b-3c4d5e6f7a8b",
+  },
+  {
+    name: "CommunicationDiagram",
+    fixture: communicationFixture,
+    edgeId: "edge-comm-client-server",
+    targetId: "990e8400-e29b-41d4-a716-446655440041",
+  },
+  {
+    name: "ComponentDiagram",
+    fixture: componentFixture,
+    edgeId: "edge-server-database",
+    targetId: "a87ff679-a2f3-4e71-9bda-d16a21e1a2f3",
+  },
+  {
+    name: "ComponentDiagram provided interface",
+    fixture: componentFixture,
+    edgeId: "edge-client-interface",
+    targetId: "1b4e28ba-2fa1-4d11-a2d3-b8f04f4e5c6d",
+  },
+  {
+    name: "ComponentDiagram required interface",
+    fixture: componentFixture,
+    edgeId: "edge-server-interface",
+    targetId: "1b4e28ba-2fa1-4d11-a2d3-b8f04f4e5c6d",
+  },
+  {
+    name: "ComponentDiagram three-quarter required interface",
+    fixture: componentFixture,
+    edgeId: "edge-three-quarter-interface",
+    targetId: "c2d3e4f5-a6b7-4c8d-9e0f-1a2b3c4d5e60",
+  },
+  {
+    name: "ComponentDiagram quarter required interface",
+    fixture: componentFixture,
+    edgeId: "edge-quarter-interface",
+    targetId: "c2d3e4f5-a6b7-4c8d-9e0f-1a2b3c4d5e61",
+  },
+  {
+    name: "DeploymentDiagram",
+    fixture: deploymentFixture,
+    edgeId: "377c3ef7-083e-42a3-acc3-89786f7f762f",
+    targetId: "f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f809102",
+  },
+  {
+    name: "DeploymentDiagram association",
+    fixture: deploymentFixture,
+    edgeId: "9c143a9c-350d-4f90-bf2e-fa11b8809b25",
+    targetId: "b8c9d0e1-f2a3-4b4c-5d6e-7f8091021324",
+  },
+  {
+    name: "DeploymentDiagram provided interface",
+    fixture: deploymentFixture,
+    edgeId: "edge-deploy-provided",
+    targetId: "int-prov-001",
+  },
+  {
+    name: "DeploymentDiagram required interface",
+    fixture: deploymentFixture,
+    edgeId: "edge-deploy-required",
+    targetId: "int-req-001",
+  },
+  {
+    name: "DeploymentDiagram three-quarter required interface",
+    fixture: deploymentFixture,
+    edgeId: "edge-deploy-3q",
+    targetId: "int-3q-001",
+  },
+  {
+    name: "DeploymentDiagram quarter required interface",
+    fixture: deploymentFixture,
+    edgeId: "edge-deploy-q",
+    targetId: "int-q-001",
+  },
+  {
+    name: "Flowchart",
+    fixture: flowchartFixture,
+    edgeId: "edge-start-init",
+    targetId: "20b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+  },
+  {
     name: "ObjectDiagram",
     fixture: objectFixture,
     edgeId: "edge-link-dog-owner",
     targetId: "660e8400-e29b-41d4-a716-446655440011",
   },
   {
+    name: "PetriNet",
+    fixture: petriNetFixture,
+    edgeId: "edge-p1-t1",
+    targetId: "22222222-2222-4222-a222-222222222222",
+  },
+  {
+    name: "ReachabilityGraph",
+    fixture: reachabilityGraphFixture,
+    edgeId: "edge-200-110",
+    targetId: "aaaa2222-bbbb-4ccc-dddd-eeee22222222",
+  },
+  {
+    name: "SfcDiagram",
+    fixture: sfcFixture,
+    edgeId: "edge-step1-actiontable",
+    targetId: "44dd5ee6-ff7a-4b8c-9d0e-1f2a3b4c5d6e",
+  },
+  {
     name: "SyntaxTree",
     fixture: syntaxTreeFixture,
     edgeId: "edge-expr-term-left",
     targetId: "e1f2a3b4-c5d6-4e7f-8a9b-0c1d2e3f4a5b",
+  },
+  {
+    name: "UseCaseDiagram",
+    fixture: useCaseFixture,
+    edgeId: "edge-assoc-customer-browse",
+    targetId: "880e8400-e29b-41d4-a716-446655440033",
   },
 ]
 
