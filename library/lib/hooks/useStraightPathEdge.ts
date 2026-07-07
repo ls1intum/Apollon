@@ -159,31 +159,35 @@ export const useStraightPathEdge = ({
     allNodes.find((node) => node.id === source) ?? getNode(source)
   const targetNode =
     allNodes.find((node) => node.id === target) ?? getNode(target)
+  // Prefer the displayed React Flow node so a peer's live drag/resize overlay
+  // (applied to the nodes prop before it is persisted) keeps anchored endpoints
+  // attached during the movement; the subscribed store geometry is only a
+  // fallback (and the subscription that re-renders on the settled write).
   const sourceAbsolutePosition = useMemo(() => {
+    if (sourceNode) return getPositionOnCanvas(sourceNode, allNodes)
     if (sourceNodePositionX != null && sourceNodePositionY != null) {
       return { x: sourceNodePositionX, y: sourceNodePositionY }
     }
-    if (!sourceNode) return { x: sourceX, y: sourceY }
-    return getPositionOnCanvas(sourceNode, allNodes)
+    return { x: sourceX, y: sourceY }
   }, [
-    sourceNodePositionX,
-    sourceNodePositionY,
     sourceNode,
     allNodes,
+    sourceNodePositionX,
+    sourceNodePositionY,
     sourceX,
     sourceY,
   ])
   const targetAbsolutePosition = useMemo(() => {
+    if (targetNode) return getPositionOnCanvas(targetNode, allNodes)
     if (targetNodePositionX != null && targetNodePositionY != null) {
       return { x: targetNodePositionX, y: targetNodePositionY }
     }
-    if (!targetNode) return { x: targetX, y: targetY }
-    return getPositionOnCanvas(targetNode, allNodes)
+    return { x: targetX, y: targetY }
   }, [
-    targetNodePositionX,
-    targetNodePositionY,
     targetNode,
     allNodes,
+    targetNodePositionX,
+    targetNodePositionY,
     targetX,
     targetY,
   ])
@@ -193,8 +197,8 @@ export const useStraightPathEdge = ({
         ? {
             x: sourceAbsolutePosition.x,
             y: sourceAbsolutePosition.y,
-            width: sourceNodeWidth ?? sourceNode.width ?? 0,
-            height: sourceNodeHeight ?? sourceNode.height ?? 0,
+            width: sourceNode.width ?? sourceNodeWidth ?? 0,
+            height: sourceNode.height ?? sourceNodeHeight ?? 0,
           }
         : null,
     [
@@ -211,8 +215,8 @@ export const useStraightPathEdge = ({
         ? {
             x: targetAbsolutePosition.x,
             y: targetAbsolutePosition.y,
-            width: targetNodeWidth ?? targetNode.width ?? 0,
-            height: targetNodeHeight ?? targetNode.height ?? 0,
+            width: targetNode.width ?? targetNodeWidth ?? 0,
+            height: targetNode.height ?? targetNodeHeight ?? 0,
           }
         : null,
     [
