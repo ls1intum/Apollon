@@ -1005,19 +1005,44 @@ export const useStepPathEdge = ({
           width: FREEFORM_ENDPOINT_SNAP_RADIUS_PX * 2,
           height: FREEFORM_ENDPOINT_SNAP_RADIUS_PX * 2,
         })
-        // Prefer the top-most CHILD under the pointer, but fall back to a
-        // container (parent) when nothing else is there — so an edge endpoint can
-        // still be reconnected onto an activity/package/pool/subsystem itself.
+        // Snap to the NEAREST node under the pointer (distance to its box, 0 when
+        // inside), not the top-most — so with nodes close together the endpoint
+        // grabs the one it is actually over, not a neighbour its box merely
+        // grazed. Prefer a child; fall back to a container (parent) when that is
+        // the only thing there, so an endpoint can still land on an
+        // activity/package/pool/subsystem itself.
         const sizedHits = intersectingNodes.filter(
           (node) => node.width != null && node.height != null
         )
-        const directHitNode =
-          sizedHits.findLast((node) => !isParentNodeType(node.type)) ??
-          sizedHits[sizedHits.length - 1]
-        const directHitRect = directHitNode ? getNodeRect(directHitNode) : null
+        let snapNode: (typeof sizedHits)[number] | null = null
+        let snapRect: ReturnType<typeof getNodeRect> = null
+        let bestDistance = Infinity
+        const nonParent = sizedHits.filter(
+          (node) => !isParentNodeType(node.type)
+        )
+        for (const node of nonParent.length > 0 ? nonParent : sizedHits) {
+          const rect = getNodeRect(node)
+          if (!rect) continue
+          const dx = Math.max(
+            rect.x - flowPoint.x,
+            0,
+            flowPoint.x - (rect.x + rect.width)
+          )
+          const dy = Math.max(
+            rect.y - flowPoint.y,
+            0,
+            flowPoint.y - (rect.y + rect.height)
+          )
+          const distance = Math.hypot(dx, dy)
+          if (distance <= bestDistance) {
+            bestDistance = distance
+            snapNode = node
+            snapRect = rect
+          }
+        }
         const snapTarget =
-          directHitNode && directHitRect
-            ? { node: directHitNode, rect: directHitRect }
+          snapNode && snapRect
+            ? { node: snapNode, rect: snapRect }
             : findFreeformEndpointNode(flowPoint)
 
         if (!snapTarget) return null

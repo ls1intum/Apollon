@@ -472,3 +472,59 @@ test("a use-case oval connection lands at the aimed angle, including diagonals (
     ).toBeLessThan(8)
   }
 })
+
+test("reconnecting between close nodes snaps to the nearest, not the top-most", async ({
+  page,
+}) => {
+  // Regression: the drop resolver picked the top-most intersecting node, so with
+  // two nodes close together an endpoint dragged over one could grab its
+  // neighbour just because the neighbour was on top. It must pick the nearest.
+  const base = readFixture("two-class-fresh-edge.json")
+  const B = "32659cdc-bd03-46f3-918c-ee8dbba9c15b" // the edge's target node
+  const C = "cccc0000-0000-0000-0000-000000000003"
+  const cNode = JSON.parse(JSON.stringify(base.nodes[0]))
+  cNode.id = C
+  cNode.position = { x: 785, y: 370 } // B spans 640–800, C spans 785–945 (C on top)
+  cNode.measured = { width: 160, height: 100 }
+  cNode.data.name = "C"
+  const fixture = { ...base, nodes: [...base.nodes, cNode] }
+  const EDGE = base.edges[0].id
+
+  await openFixtureInLocalEditor(page, fixture)
+  await waitForCanvasReady(page)
+  const b = await nodeBox(page, B)
+  const c = await nodeBox(page, C)
+  const pb = await page
+    .locator(`.react-flow__edge[data-id="${EDGE}"] path.react-flow__edge-path`)
+    .boundingBox()
+  await page.mouse.click(pb!.x + pb!.width / 2, pb!.y + pb!.height / 2)
+  await page.waitForTimeout(200)
+  const handle = await page
+    .locator(
+      `.react-flow__edge[data-id="${EDGE}"] .edge-endpoint-handle--target`
+    )
+    .boundingBox()
+  // Drag the endpoint INSIDE B, just left of C's left edge — nearest is B.
+  await page.mouse.move(
+    handle!.x + handle!.width / 2,
+    handle!.y + handle!.height / 2
+  )
+  await page.mouse.down()
+  await page.mouse.move(c.x - 6, b.y + b.height / 2, { steps: 16 })
+  await page.mouse.up()
+  await page.waitForTimeout(200)
+
+  const target = await page.evaluate((eid) => {
+    const raw = localStorage.getItem("persistenceModelStore")
+    if (!raw) return null
+    const p = JSON.parse(raw)
+    const id = p.state.currentModelId
+    return (p.state.models[id]?.model?.edges || []).find(
+      (x: { id: string }) => x.id === eid
+    )?.target
+  }, EDGE)
+  expect(
+    target,
+    "endpoint must snap to the nearer node B, not the top-most C"
+  ).toBe(B)
+})
