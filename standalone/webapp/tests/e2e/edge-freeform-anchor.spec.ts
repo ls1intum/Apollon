@@ -248,7 +248,15 @@ async function expectEndpointCanRetargetToNode({
     { steps: 12 }
   )
   await page.mouse.up()
-  await page.waitForTimeout(400)
+
+  // Poll the persisted edge until the retarget commits, rather than sleeping and
+  // reading a one-shot snapshot that could race the commit.
+  await expect
+    .poll(
+      async () =>
+        (await storedEdges(page)).find((edge) => edge.id === edgeId)?.target
+    )
+    .toBe(targetId)
 
   const edgeState = (await storedEdges(page)).find((edge) => edge.id === edgeId)
   expect(edgeState).toMatchObject({ target: targetId, targetHandle })
@@ -362,10 +370,10 @@ test("a new same-node edge can connect different handles", async ({ page }) => {
     steps: 12,
   })
   await page.mouse.up()
-  await page.waitForTimeout(400)
+
+  await expect.poll(async () => (await storedEdges(page)).length).toBe(1)
 
   const edges = await storedEdges(page)
-  expect(edges).toHaveLength(1)
   expect(edges[0]).toMatchObject({
     source: CLASS_SOURCE,
     target: CLASS_SOURCE,
