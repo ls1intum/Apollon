@@ -17,6 +17,7 @@ import {
   type FreeformEdgeAnchor,
 } from "@/utils/edgeUtils"
 import {
+  getConnectionMode,
   getEdgeAnchorFromPoint,
   getEdgeAnchorPoint,
 } from "@/utils/connectionModes"
@@ -451,6 +452,9 @@ export const useStraightPathEdge = ({
         let snapRect: ReturnType<typeof getNodeRect> = null
         let bestDistance = Infinity
         for (const node of sizedHits) {
+          // Skip non-connectable nodes (legends, annotations, swimlanes) so a
+          // nearer one can't shadow a valid target and abort the drag.
+          if (getConnectionMode(node.type) === "none") continue
           const rect = getNodeRect(node)
           if (!rect) continue
           const dx = Math.max(

@@ -165,26 +165,11 @@ async function expectFreeformTargetFollowsMovedNode({
 
   const edge = await selectEdge(page, edgeId)
   const targetHandle = edge.locator(".edge-endpoint-handle--target")
-  const targetGrip = edge.locator(".edge-endpoint-grip--target")
   await expect(targetHandle).toBeVisible()
-  // Wait for the grip to lay out before dragging. boundingBox is opacity-
-  // independent, so it also covers edges whose grip only fades in on hover, and
-  // it settles the edge geometry first.
-  const gripBox = await targetGrip.boundingBox()
-  if (!gripBox) throw new Error("target endpoint grip has no bounding box")
-  // The visible grip is a small elongated pill, well under the hit target.
-  // Assert on its intrinsic size (width/height attributes), not its on-screen
-  // bounding box — on a straight (direct) edge the grip is rotated to the edge
-  // angle, which enlarges the axis-aligned bounding box.
-  const gripW = Number(await targetGrip.getAttribute("width"))
-  const gripH = Number(await targetGrip.getAttribute("height"))
+  // Reading the handle box waits for the endpoint to lay out, settling the edge
+  // geometry before the drag. (Grip size/shape is covered by the marker tests.)
   const initialHandleBox = await targetHandle.boundingBox()
   if (!initialHandleBox) throw new Error("target endpoint has no bounding box")
-  const handleW = Number(await targetHandle.getAttribute("width"))
-  const handleH = Number(await targetHandle.getAttribute("height"))
-  expect(gripW).toBeLessThan(handleW / 2)
-  expect(gripH).toBeLessThan(handleH / 2)
-  expect(Math.max(gripW, gripH)).toBeGreaterThan(Math.min(gripW, gripH))
 
   const targetNode = page.locator(`.react-flow__node[data-id="${targetId}"]`)
   const targetBox = await targetNode.boundingBox()

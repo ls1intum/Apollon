@@ -93,10 +93,7 @@ const projectOntoEllipse = (
 }
 
 /** The four side-midpoint connection points of a node, keyed by side. */
-export function getFourCenterPoints(
-  _nodeType: string | undefined,
-  rect: Rect
-): Record<Position, XYPosition> {
+function getFourCenterPoints(rect: Rect): Record<Position, XYPosition> {
   const c = centerOf(rect)
   return {
     [Position.Top]: { x: c.x, y: rect.y },
@@ -227,7 +224,7 @@ export function getEdgeAnchorPoint(
 ): { point: XYPosition; position: Position } {
   switch (getConnectionMode(nodeType)) {
     case "four-center": {
-      const pts = getFourCenterPoints(nodeType, rect)
+      const pts = getFourCenterPoints(rect)
       return { point: pts[anchor.side], position: anchor.side }
     }
     case "ellipse":
