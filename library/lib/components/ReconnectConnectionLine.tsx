@@ -7,7 +7,7 @@ import {
   Position,
   type XYPosition,
 } from "@xyflow/react"
-import { EDGES } from "@/constants"
+import { CANVAS, EDGES } from "@/constants"
 import { pointsToSvgPath } from "@/edges/Connection"
 import { useDiagramStore, useMetadataStore } from "@/store/context"
 import { useFreeformDropTarget } from "@/hooks/useFreeformDropTarget"
@@ -135,8 +135,12 @@ export const ReconnectConnectionLine = ({
       reconnectPreviewBasePoints.length < 2
     ) {
       // NEW connection — hidden until dragged clear of the source, or already
-      // hovering a node (see GHOST_MIN_DRAG_DISTANCE_PX).
-      const pointer: XYPosition = { x: toX, y: toY }
+      // hovering a node (see GHOST_MIN_DRAG_DISTANCE_PX). Snap the pointer to the
+      // grid so the preview lands on the same grid-snapped point the commit will
+      // (useConnect resolves the drop through the editor's grid snapping too).
+      const snap = (v: number) =>
+        Math.round(v / CANVAS.SNAP_TO_GRID_PX) * CANVAS.SNAP_TO_GRID_PX
+      const pointer: XYPosition = { x: snap(toX), y: snap(toY) }
       const snapped = snapToNodeUnder(pointer)
       const draggedFar =
         Math.hypot(toX - fromX, toY - fromY) >= GHOST_MIN_DRAG_DISTANCE_PX
