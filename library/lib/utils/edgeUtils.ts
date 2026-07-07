@@ -422,32 +422,32 @@ export function getFreeformAnchorPoint(
   const ratio = clamp(anchor.ratio, 0, 1)
 
   switch (anchor.side) {
-    case "top": {
+    case Position.Top: {
       const offset = Math.round(rect.width * ratio)
       return {
         point: { x: rect.x + offset, y: rect.y },
-        position: "top" as Position,
+        position: Position.Top,
       }
     }
-    case "right": {
+    case Position.Right: {
       const offset = Math.round(rect.height * ratio)
       return {
         point: { x: rect.x + rect.width, y: rect.y + offset },
-        position: "right" as Position,
+        position: Position.Right,
       }
     }
-    case "bottom": {
+    case Position.Bottom: {
       const offset = Math.round(rect.width * ratio)
       return {
         point: { x: rect.x + offset, y: rect.y + rect.height },
-        position: "bottom" as Position,
+        position: Position.Bottom,
       }
     }
-    case "left": {
+    case Position.Left: {
       const offset = Math.round(rect.height * ratio)
       return {
         point: { x: rect.x, y: rect.y + offset },
-        position: "left" as Position,
+        position: Position.Left,
       }
     }
     default: {
