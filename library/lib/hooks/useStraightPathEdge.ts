@@ -440,21 +440,17 @@ export const useStraightPathEdge = ({
           width: FREEFORM_ENDPOINT_SNAP_RADIUS_PX * 2,
           height: FREEFORM_ENDPOINT_SNAP_RADIUS_PX * 2,
         })
-        // Snap to the nearest node under the pointer (distance to its box, 0
-        // when inside), not the top-most, so tightly packed nodes grab the one
-        // actually under the cursor. Prefer a child; fall back to a container
-        // (parent) only when it is the sole hit, so an endpoint can still land
-        // on an activity/package/pool/subsystem itself.
+        // Snap to the NEAREST node (distance to its box, 0 when inside), not the
+        // top-most, so tightly packed nodes grab the one under the cursor. On an
+        // exact tie — nested nodes both under the pointer — the later, top-most
+        // node wins: the innermost child, or a container where no child sits.
         const sizedHits = intersectingNodes.filter(
           (node) => node.width != null && node.height != null
         )
         let snapNode: (typeof sizedHits)[number] | null = null
         let snapRect: ReturnType<typeof getNodeRect> = null
         let bestDistance = Infinity
-        const nonParent = sizedHits.filter(
-          (node) => !isParentNodeType(node.type)
-        )
-        for (const node of nonParent.length > 0 ? nonParent : sizedHits) {
+        for (const node of sizedHits) {
           const rect = getNodeRect(node)
           if (!rect) continue
           const dx = Math.max(

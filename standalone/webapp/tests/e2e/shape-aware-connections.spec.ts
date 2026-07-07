@@ -617,8 +617,9 @@ test("a selected node's protruding arc does not swallow clicks meant for an over
 })
 
 test("a BPMN annotation is not a connection target", async ({ page }) => {
-  // bpmnAnnotation is mode "none" and renders no handles, so neither the freeform
-  // drop path nor React Flow's native valid-handle path can attach an edge to it.
+  // bpmnAnnotation is mode "none" and its handles are not connectable ENDS, so
+  // neither the freeform drop path nor React Flow's native valid-handle path can
+  // attach an edge to it — while an association SOURCED at it still renders.
   const SOURCE = "cc3d4e5f-a6b7-4c8d-9e0f-1a2b3c4d5e6f" // a task
   const ANNOTATION = "c39d0e1f-a2b3-4c4d-5e6f-7a8b9c0d1e2f"
   await openFixtureInLocalEditor(page, readFixture("bpmn.json"))
@@ -632,13 +633,11 @@ test("a BPMN annotation is not a connection target", async ({ page }) => {
       return (p.state.models[id]?.model?.edges || []).length
     })
 
-  // The annotation renders no handles to hover; confirm it directly.
-  expect(
-    await page
-      .locator(`.react-flow__node[data-id="${ANNOTATION}"] .react-flow__handle`)
-      .count(),
-    "annotation renders no connection handles"
-  ).toBe(0)
+  // An existing association anchored to the annotation's handle still renders
+  // (the handles are kept, only their connectable-end is off).
+  await expect(
+    page.locator(`.react-flow__edge[data-id="edge-annotation-validate"]`)
+  ).toBeAttached()
 
   const before = await edgeCount()
   const src = await nodeBox(page, SOURCE)

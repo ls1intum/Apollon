@@ -28,7 +28,7 @@ export function BPMNAnnotation({
       width={width}
       height={height}
       elementId={id}
-      hiddenHandles={true}
+      isConnectableEnd={false}
     >
       <NodeToolbar elementId={id} />
 
