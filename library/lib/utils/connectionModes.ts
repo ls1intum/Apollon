@@ -31,6 +31,7 @@ const MODE_OVERRIDES: Record<string, ConnectionMode> = {
   // Not connectable — legends / annotations / partition containers.
   colorDescription: "none",
   titleAndDesctiption: "none",
+  bpmnAnnotation: "none",
   activitySwimlane: "none",
   // The one true oval — full handles, so connect anywhere along the curve.
   useCase: "ellipse",

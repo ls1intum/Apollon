@@ -31,6 +31,7 @@ describe("getConnectionMode", () => {
     expect(getConnectionMode("componentInterface")).toBe("four-center")
     expect(getConnectionMode("deploymentInterface")).toBe("four-center")
     expect(getConnectionMode("activitySwimlane")).toBe("none")
+    expect(getConnectionMode("bpmnAnnotation")).toBe("none")
   })
 
   it("gives every FOUR_WAY-handle node exactly four points (mode matches handles)", () => {
@@ -141,5 +142,6 @@ describe("none mode", () => {
     expect(getEdgeAnchorFromPoint("activitySwimlane", at, rect)).toBeNull()
     expect(getEdgeAnchorFromPoint("colorDescription", at, rect)).toBeNull()
     expect(getEdgeAnchorFromPoint("titleAndDesctiption", at, rect)).toBeNull()
+    expect(getEdgeAnchorFromPoint("bpmnAnnotation", at, rect)).toBeNull()
   })
 })

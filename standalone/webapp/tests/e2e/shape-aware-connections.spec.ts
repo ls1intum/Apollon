@@ -615,3 +615,45 @@ test("a selected node's protruding arc does not swallow clicks meant for an over
   )
   expect(selected, "click must fall through to the neighbour B").toBe(B)
 })
+
+test("a BPMN annotation is not a connection target", async ({ page }) => {
+  // bpmnAnnotation is mode "none" and renders no handles, so neither the freeform
+  // drop path nor React Flow's native valid-handle path can attach an edge to it.
+  const SOURCE = "cc3d4e5f-a6b7-4c8d-9e0f-1a2b3c4d5e6f" // a task
+  const ANNOTATION = "c39d0e1f-a2b3-4c4d-5e6f-7a8b9c0d1e2f"
+  await openFixtureInLocalEditor(page, readFixture("bpmn.json"))
+  await waitForCanvasReady(page)
+  const edgeCount = () =>
+    page.evaluate(() => {
+      const raw = localStorage.getItem("persistenceModelStore")
+      if (!raw) return 0
+      const p = JSON.parse(raw)
+      const id = p.state.currentModelId
+      return (p.state.models[id]?.model?.edges || []).length
+    })
+
+  // The annotation renders no handles to hover; confirm it directly.
+  expect(
+    await page
+      .locator(`.react-flow__node[data-id="${ANNOTATION}"] .react-flow__handle`)
+      .count(),
+    "annotation renders no connection handles"
+  ).toBe(0)
+
+  const before = await edgeCount()
+  const src = await nodeBox(page, SOURCE)
+  const ann = await nodeBox(page, ANNOTATION)
+  // Grab the source task's bottom arc and drag onto the annotation's centre.
+  await page.mouse.move(src.x + src.width / 2, src.y + src.height + 6)
+  await page.waitForTimeout(120)
+  await page.mouse.down()
+  await page.mouse.move(ann.x + ann.width / 2, ann.y + ann.height / 2, {
+    steps: 16,
+  })
+  await page.waitForTimeout(60)
+  await page.mouse.up()
+  await page.waitForTimeout(200)
+  expect(await edgeCount(), "no edge attaches to a BPMN annotation").toBe(
+    before
+  )
+})
