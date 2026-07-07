@@ -4,7 +4,6 @@ import {
   Position,
   useStore,
   useReactFlow,
-  type Node,
 } from "@xyflow/react"
 import { EDGES } from "@/constants"
 import {
@@ -39,11 +38,14 @@ import {
   type FreeformEdgeAnchor,
 } from "@/utils/edgeUtils"
 import {
-  distanceToRect,
   getEdgeAnchorFromPoint,
   getEdgeAnchorPoint,
   pickNearestConnectable,
 } from "@/utils/connectionModes"
+import {
+  FREEFORM_ENDPOINT_SNAP_RADIUS_PX,
+  useFreeformEndpointNode,
+} from "./useFreeformEndpointNode"
 import {
   type BendHandle,
   applyInnerSegmentBend,
@@ -122,8 +124,6 @@ type EndpointDragCommit = {
   targetRect: Rect
   directPoints: IPoint[] | null
 }
-
-const FREEFORM_ENDPOINT_SNAP_RADIUS_PX = 48
 
 const arePointsEqual = (a: IPoint[], b: IPoint[]): boolean =>
   a.length === b.length &&
@@ -907,47 +907,7 @@ export const useStepPathEdge = ({
     ]
   )
 
-  const getNodeRect = useCallback(
-    (node: Node): Rect | null => {
-      const nodes = getNodes()
-      const currentNode = nodes.find((candidate) => candidate.id === node.id)
-      const resolvedNode = currentNode ?? node
-      const width = resolvedNode.width ?? 0
-      const height = resolvedNode.height ?? 0
-
-      if (!width || !height) return null
-
-      const position = getPositionOnCanvas(resolvedNode, nodes)
-      return { x: position.x, y: position.y, width, height }
-    },
-    [getNodes]
-  )
-
-  const findFreeformEndpointNode = useCallback(
-    (flowPoint: IPoint): { node: Node; rect: Rect } | null => {
-      const nodes = getNodes()
-      let best: { node: Node; rect: Rect; distance: number } | null = null
-
-      for (const node of nodes) {
-        if (isParentNodeType(node.type)) continue
-
-        const rect = getNodeRect(node)
-        if (!rect) continue
-
-        const distance = distanceToRect(flowPoint, rect)
-
-        if (
-          distance <= FREEFORM_ENDPOINT_SNAP_RADIUS_PX &&
-          (!best || distance < best.distance)
-        ) {
-          best = { node, rect, distance }
-        }
-      }
-
-      return best ? { node: best.node, rect: best.rect } : null
-    },
-    [getNodeRect, getNodes]
-  )
+  const { getNodeRect, findFreeformEndpointNode } = useFreeformEndpointNode()
 
   const handleEndpointPointerDown = useCallback(
     (event: React.PointerEvent<SVGRectElement>, endpoint: EndpointType) => {
