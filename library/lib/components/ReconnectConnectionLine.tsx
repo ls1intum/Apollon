@@ -5,6 +5,7 @@ import {
   getSmoothStepPath,
   getStraightPath,
   Position,
+  useStore,
   type XYPosition,
 } from "@xyflow/react"
 import { EDGES } from "@/constants"
@@ -29,7 +30,10 @@ import {
 const GHOST_MIN_DRAG_DISTANCE_PX = 40
 const GHOST_STROKE_WIDTH = 2
 const GHOST_DASH = "6 5"
-const GHOST_SNAP_CIRCLE_RADIUS = 5
+// Matches the arc-handle indicator: a ~14px, semi-transparent primary blob that
+// stays a constant on-screen size (counter-scaled by 1/zoom, like --arc-scale).
+const GHOST_SNAP_CIRCLE_RADIUS = 7
+const GHOST_SNAP_CIRCLE_OPACITY = 0.4
 
 const getFallbackConnectionPath = (
   connectionLineType: ConnectionLineType,
@@ -94,6 +98,8 @@ export const ReconnectConnectionLine = ({
         : undefined
     )
   )
+
+  const zoom = useStore((state) => state.transform[2])
 
   // Resolve the drop target the SAME way the connection commit does, so the
   // preview snaps exactly where the edge will attach on release.
@@ -252,10 +258,9 @@ export const ReconnectConnectionLine = ({
           className="apollon-connection-snap-circle"
           cx={path.snapPoint.x}
           cy={path.snapPoint.y}
-          r={GHOST_SNAP_CIRCLE_RADIUS}
-          fill="var(--apollon-background, #fff)"
-          stroke={stroke}
-          strokeWidth={GHOST_STROKE_WIDTH}
+          r={GHOST_SNAP_CIRCLE_RADIUS / (zoom || 1)}
+          fill="var(--apollon-primary, #3e8acc)"
+          fillOpacity={GHOST_SNAP_CIRCLE_OPACITY}
         />
       )}
     </>
