@@ -39,9 +39,9 @@ import {
   type FreeformEdgeAnchor,
 } from "@/utils/edgeUtils"
 import {
-  getConnectionMode,
   getEdgeAnchorFromPoint,
   getEdgeAnchorPoint,
+  pickNearestConnectable,
 } from "@/utils/connectionModes"
 import {
   type BendHandle,
@@ -1003,43 +1003,15 @@ export const useStepPathEdge = ({
           width: FREEFORM_ENDPOINT_SNAP_RADIUS_PX * 2,
           height: FREEFORM_ENDPOINT_SNAP_RADIUS_PX * 2,
         })
-        // Snap to the NEAREST node (distance to its box, 0 when inside), not the
-        // top-most, so tightly packed nodes grab the one under the cursor. On an
-        // exact tie — nested nodes both under the pointer — the later, top-most
-        // node wins: the innermost child, or a container where no child sits.
-        const sizedHits = intersectingNodes.filter(
-          (node) => node.width != null && node.height != null
-        )
-        let snapNode: (typeof sizedHits)[number] | null = null
-        let snapRect: ReturnType<typeof getNodeRect> = null
-        let bestDistance = Infinity
-        for (const node of sizedHits) {
-          // Skip non-connectable nodes (legends, annotations, swimlanes) so a
-          // nearer one can't shadow a valid target and abort the drag.
-          if (getConnectionMode(node.type) === "none") continue
+        // Snap to the nearest connectable node under the pointer (see
+        // pickNearestConnectable); fall back to the wider freeform search.
+        const candidates = intersectingNodes.flatMap((node) => {
           const rect = getNodeRect(node)
-          if (!rect) continue
-          const dx = Math.max(
-            rect.x - flowPoint.x,
-            0,
-            flowPoint.x - (rect.x + rect.width)
-          )
-          const dy = Math.max(
-            rect.y - flowPoint.y,
-            0,
-            flowPoint.y - (rect.y + rect.height)
-          )
-          const distance = Math.hypot(dx, dy)
-          if (distance <= bestDistance) {
-            bestDistance = distance
-            snapNode = node
-            snapRect = rect
-          }
-        }
+          return rect ? [{ node, type: node.type, rect }] : []
+        })
         const snapTarget =
-          snapNode && snapRect
-            ? { node: snapNode, rect: snapRect }
-            : findFreeformEndpointNode(flowPoint)
+          pickNearestConnectable(candidates, flowPoint) ??
+          findFreeformEndpointNode(flowPoint)
 
         if (!snapTarget) return null
 

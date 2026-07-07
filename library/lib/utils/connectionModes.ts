@@ -59,6 +59,37 @@ export function getConnectionMode(nodeType?: string): ConnectionMode {
   return (nodeType ? MODE_OVERRIDES[nodeType] : undefined) ?? "freeform-rect"
 }
 
+/** Distance from a point to a rectangle (0 when the point is inside it). */
+export function distanceToRect(point: XYPosition, rect: Rect): number {
+  const dx = Math.max(rect.x - point.x, 0, point.x - (rect.x + rect.width))
+  const dy = Math.max(rect.y - point.y, 0, point.y - (rect.y + rect.height))
+  return Math.hypot(dx, dy)
+}
+
+/**
+ * The connection candidate NEAREST `point` (distance to its box, 0 when inside),
+ * skipping non-connectable (`mode: "none"`) nodes. On an exact distance tie the
+ * later, top-most candidate wins — so a child beats the container it nests in,
+ * while a container stays reachable where the pointer is over it but no child is.
+ * Shared by the new-connection drop resolver and both edge-endpoint drag hooks.
+ */
+export function pickNearestConnectable<T>(
+  candidates: ReadonlyArray<{ node: T; type?: string; rect: Rect }>,
+  point: XYPosition
+): { node: T; rect: Rect } | null {
+  let best: { node: T; rect: Rect } | null = null
+  let bestDistance = Infinity
+  for (const candidate of candidates) {
+    if (getConnectionMode(candidate.type) === "none") continue
+    const distance = distanceToRect(point, candidate.rect)
+    if (distance <= bestDistance) {
+      bestDistance = distance
+      best = { node: candidate.node, rect: candidate.rect }
+    }
+  }
+  return best
+}
+
 const centerOf = (rect: Rect): XYPosition => ({
   x: rect.x + rect.width / 2,
   y: rect.y + rect.height / 2,
