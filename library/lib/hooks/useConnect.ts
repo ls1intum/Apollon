@@ -15,6 +15,7 @@ import {
   type FreeformEdgeAnchor,
 } from "@/utils"
 import { getEdgeAnchorFromPoint } from "@/utils/connectionModes"
+import { HandleId } from "@/nodes/wrappers"
 import { useDiagramStore, useMetadataStore } from "@/store/context"
 import { useFreeformDropTarget } from "./useFreeformDropTarget"
 import { useShallow } from "zustand/shallow"
@@ -40,52 +41,22 @@ const withEndpointAnchor = (
   return nextData
 }
 
-const handleSlotBySide: Record<string, Record<string, number>> = {
-  top: {
-    "top-left": 0,
-    "top-between-left-mid-left": 1,
-    "top-mid-left": 2,
-    "top-between-mid-left-center": 3,
-    top: 4,
-    "top-between-center-mid-right": 5,
-    "top-mid-right": 6,
-    "top-between-mid-right-right": 7,
-    "top-right": 8,
-  },
-  right: {
-    "right-top": 0,
-    "right-between-top-mid-top": 1,
-    "right-mid-top": 2,
-    "right-between-mid-top-center": 3,
-    right: 4,
-    "right-between-center-mid-bottom": 5,
-    "right-mid-bottom": 6,
-    "right-between-mid-bottom-bottom": 7,
-    "right-bottom": 8,
-  },
-  bottom: {
-    "bottom-right": 0,
-    "bottom-between-right-mid-right": 1,
-    "bottom-mid-right": 2,
-    "bottom-between-mid-right-center": 3,
-    bottom: 4,
-    "bottom-between-center-mid-left": 5,
-    "bottom-mid-left": 6,
-    "bottom-between-mid-left-left": 7,
-    "bottom-left": 8,
-  },
-  left: {
-    "left-bottom": 0,
-    "left-between-bottom-mid-bottom": 1,
-    "left-mid-bottom": 2,
-    "left-between-mid-bottom-center": 3,
-    left: 4,
-    "left-between-center-mid-top": 5,
-    "left-mid-top": 6,
-    "left-between-mid-top-top": 7,
-    "left-top": 8,
-  },
-}
+// Slot (0-8) of every connection handle within its side, derived from the
+// HandleId enum's declaration order — the single source of truth — so adding or
+// renaming a handle can't silently desync this from the real handles. Each id's
+// first path segment names its side; slots increment per side in enum order
+// (top-left … top-right, then right-top …).
+const handleSlotBySide: Record<string, Record<string, number>> = (() => {
+  const bySide: Record<string, Record<string, number>> = {}
+  const nextSlot: Record<string, number> = {}
+  for (const handleId of Object.values(HandleId)) {
+    const side = handleId.split("-")[0]
+    bySide[side] ??= {}
+    nextSlot[side] ??= 0
+    bySide[side][handleId] = nextSlot[side]++
+  }
+  return bySide
+})()
 
 const getHandleSideAndSlot = (
   handleId?: string | null
