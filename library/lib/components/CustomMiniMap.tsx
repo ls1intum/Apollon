@@ -92,6 +92,8 @@ export interface CustomMiniMapProps {
   pannable?: boolean
   /** Scroll over the minimap to zoom the diagram. Default `true`. */
   zoomable?: boolean
+  /** Render inside Apollon's overlay grid instead of a React Flow Panel slot. */
+  managed?: boolean
 }
 
 // The collapse affordance points toward the corner the minimap tucks into, so it
@@ -117,6 +119,7 @@ export const CustomMiniMap = ({
   position = "bottom-right",
   pannable = true,
   zoomable = true,
+  managed = false,
 }: CustomMiniMapProps = {}) => {
   const [minimapCollapsed, setMinimapCollapsed] = useState(true)
   const t = useLabels()
@@ -125,19 +128,29 @@ export const CustomMiniMap = ({
   const tooNarrowToExpand =
     canvasWidth > 0 && canvasWidth < MINIMAP_EXPAND_MIN_WIDTH
 
+  const panelPositionClasses = position.replace("-", " ")
+
   if (minimapCollapsed || tooNarrowToExpand) {
-    return (
-      <Panel position={position}>
-        <button
-          type="button"
-          className="apollon-chrome-iconbtn"
-          aria-label={t.showMinimap}
-          title={t.showMinimapHint}
-          onClick={() => setMinimapCollapsed(false)}
-        >
-          <Map width={18} height={18} aria-hidden="true" />
-        </button>
-      </Panel>
+    const content = (
+      <button
+        type="button"
+        className="apollon-chrome-iconbtn"
+        aria-label={t.showMinimap}
+        title={t.showMinimapHint}
+        onClick={() => setMinimapCollapsed(false)}
+      >
+        <Map width={18} height={18} aria-hidden="true" />
+      </button>
+    )
+
+    return managed ? (
+      <div
+        className={`react-flow__panel ${panelPositionClasses} apollon-mm-panel`}
+      >
+        {content}
+      </div>
+    ) : (
+      <Panel position={position}>{content}</Panel>
     )
   }
 
@@ -147,29 +160,43 @@ export const CustomMiniMap = ({
   // toggling reads as one control and the cursor never moves. Rendering the
   // MiniMap normally (not nested) keeps its sizing intact; a tight offsetScale
   // avoids a fat empty margin around the diagram.
-  return (
+  const map = (
+    <MiniMap
+      zoomable={zoomable}
+      pannable={pannable}
+      position={position}
+      ariaLabel={t.miniMap}
+      nodeComponent={MiniMapNode}
+      offsetScale={6}
+      bgColor="transparent"
+      className={`apollon-minimap${managed ? " apollon-mm" : ""}`}
+    />
+  )
+  const collapse = (
+    <button
+      type="button"
+      className="apollon-chrome-iconbtn"
+      aria-label={t.hideMinimap}
+      title={t.hideMinimap}
+      onClick={() => setMinimapCollapsed(true)}
+    >
+      <CollapseArrow width={18} height={18} aria-hidden="true" />
+    </button>
+  )
+
+  return managed ? (
+    <div className="apollon-mm-shell">
+      {map}
+      <div
+        className={`react-flow__panel ${panelPositionClasses} apollon-mm-panel apollon-mm-collapse`}
+      >
+        {collapse}
+      </div>
+    </div>
+  ) : (
     <>
-      <MiniMap
-        zoomable={zoomable}
-        pannable={pannable}
-        position={position}
-        ariaLabel={t.miniMap}
-        nodeComponent={MiniMapNode}
-        offsetScale={6}
-        bgColor="transparent"
-        className="apollon-minimap"
-      />
-      <Panel position={position}>
-        <button
-          type="button"
-          className="apollon-chrome-iconbtn"
-          aria-label={t.hideMinimap}
-          title={t.hideMinimap}
-          onClick={() => setMinimapCollapsed(true)}
-        >
-          <CollapseArrow width={18} height={18} aria-hidden="true" />
-        </button>
-      </Panel>
+      {map}
+      <Panel position={position}>{collapse}</Panel>
     </>
   )
 }

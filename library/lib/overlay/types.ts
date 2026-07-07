@@ -96,9 +96,9 @@ export interface OverlayControlOptions {
   groupLabel?: string
   /** Hide without unregistering (reserves no inset while hidden). Default true. */
   visible?: boolean
-  /** The control positions itself (e.g. the React-Flow-native minimap renders its
-   *  own `<Panel position>`), so the engine renders `render()` bare instead of
-   *  wrapping it in a region slot. Reserves nothing. Default false. */
+  /** The control positions itself (e.g. a React Flow `NodeToolbar`), so the
+   *  engine renders `render()` bare instead of wrapping it in a region slot.
+   *  Reserves nothing. Default false. */
   selfPositioned?: boolean
   /** Extra class on the control's wrapper element. */
   className?: string

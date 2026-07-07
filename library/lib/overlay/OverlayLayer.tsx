@@ -27,15 +27,21 @@ const BAND_REGIONS: OverlayRegion[] = [
 
 // Every region — bands and the six corners — is a cell of the one
 // `.apollon-overlay-grid` frame (see app.css): the header/footer own the top/bottom
-// rows, the corner rows sit between them and the canvas, and the rails own the
-// middle-row side columns, so no region can overlap another. `justifySelf`/
+// rows, the rails span the side tracks between those bands, and the corner slots
+// float over the side/center tracks without reserving rail height. `justifySelf`/
 // `alignSelf` pin each cell's content to its edge of the grid area.
-type Placement = Pick<CSSProperties, "gridArea" | "justifySelf" | "alignSelf">
+type Placement = Pick<
+  CSSProperties,
+  "gridArea" | "gridColumn" | "gridRow" | "justifySelf" | "alignSelf"
+>
 const REGION_PLACEMENT: Partial<Record<OverlayRegion, Placement>> = {
   header: { gridArea: "header" },
   footer: { gridArea: "footer" },
-  "left-rail": { gridArea: "leftrail", justifySelf: "start" },
-  "right-rail": { gridArea: "rightrail", justifySelf: "end" },
+  // Rails span the adjacent corner rows. Corner controls still float over the
+  // same side track, so a short rail leaves bottom/top corners flush instead of
+  // reserving an empty row that resizes the palette.
+  "left-rail": { gridColumn: 1, gridRow: "2 / 5", justifySelf: "start" },
+  "right-rail": { gridColumn: 3, gridRow: "2 / 5", justifySelf: "end" },
   "top-left": { gridArea: "topleft", justifySelf: "start", alignSelf: "start" },
   "top-center": {
     gridArea: "topcenter",
@@ -297,8 +303,9 @@ export function OverlayLayer() {
     [scheduleMeasure]
   )
 
-  // Self-positioning controls (the React-Flow-native minimap) render their own
-  // `<Panel position>`, so they are rendered bare — never wrapped in a region slot.
+  // Self-positioning controls (for example selection toolbars that delegate
+  // placement to React Flow) render themselves bare — never wrapped in a region
+  // slot.
   const selfPositioned = useMemo(
     () => visibleControls.filter((c) => c.selfPositioned),
     [visibleControls]

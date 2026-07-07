@@ -214,6 +214,12 @@ function ActionBar({ children }: { children: ReactNode }) {
   )
 }
 
+/** A floating bottom-corner action island: reserves camera room without turning the
+ * whole footer row into occupied chrome. */
+function CornerActionBar({ children }: { children: ReactNode }) {
+  return <div style={{ ...glass, gap: 6 }}>{children}</div>
+}
+
 function Btn({
   children,
   variant = "ghost",
@@ -331,9 +337,9 @@ export const StudentModeling: Story = {
  * **Tutor assessment** — the built-in `<Apollon.Palette/>` is composed but
  * self-hides in `Assessment` mode (nothing to drag), so the tutor gets a clean
  * grading surface for free. A header carries the title + live score chip, a right
- * rail shows grading instructions, and a full-width **footer** band holds
- * Save / Override / Cancel / Assess-next — reserving bottom space so the diagram
- * and the zoom cluster sit clear above it.
+ * rail shows grading instructions, and a bottom-right action island holds
+ * Save / Override / Cancel / Assess-next — reserving camera room without lifting
+ * unrelated bottom-left chrome.
  */
 export const TutorAssessment: Story = {
   render: () => (
@@ -360,13 +366,17 @@ export const TutorAssessment: Story = {
         </RailPanel>
       </ApollonControl>
 
-      <ApollonControl id="host:actions" region="footer">
-        <ActionBar>
+      <ApollonControl
+        id="host:actions"
+        region="bottom-right"
+        inset={{ bottom: "auto" }}
+      >
+        <CornerActionBar>
           <Btn>Cancel</Btn>
           <Btn>Override</Btn>
           <Btn variant="primary">Save &amp; submit</Btn>
           <Btn variant="primary">Assess next →</Btn>
-        </ActionBar>
+        </CornerActionBar>
       </ApollonControl>
 
       {/* Composed but self-hidden in Assessment mode — proves the built-in gates
@@ -381,7 +391,7 @@ export const TutorAssessment: Story = {
 /**
  * **Exam chrome** — a normal modelling canvas (the candidate draws, so the palette
  * shows) wrapped in exam host chrome: a global exam bar (timer + hand-in-early) as
- * the header, the problem statement as a right rail, and a footer submit bar.
+ * the header, the problem statement as a right rail, and a bottom-right submit island.
  * "Exam" is the host framing, not an editor mode — everything frames the canvas
  * without a single overlap.
  */
@@ -413,12 +423,15 @@ export const ExamMode: Story = {
         </RailPanel>
       </ApollonControl>
 
-      <ApollonControl id="host:submit" region="footer">
-        <ActionBar>
+      <ApollonControl
+        id="host:submit"
+        region="bottom-right"
+        inset={{ bottom: "auto" }}
+      >
+        <CornerActionBar>
           <SavedStatus />
-          <span style={{ flex: 1 }} />
           <Btn variant="primary">Submit task</Btn>
-        </ActionBar>
+        </CornerActionBar>
       </ApollonControl>
 
       <Apollon.Palette />
@@ -504,12 +517,16 @@ export const DarkMode: Story = {
           </ul>
         </RailPanel>
       </ApollonControl>
-      <ApollonControl id="host:actions" region="footer">
-        <ActionBar>
+      <ApollonControl
+        id="host:actions"
+        region="bottom-right"
+        inset={{ bottom: "auto" }}
+      >
+        <CornerActionBar>
           <Btn>Cancel</Btn>
           <Btn variant="primary">Save &amp; submit</Btn>
           <Btn variant="primary">Assess next →</Btn>
-        </ActionBar>
+        </CornerActionBar>
       </ApollonControl>
       <Apollon.Zoom region="bottom-left" />
       <Apollon.MiniMap region="bottom-right" />

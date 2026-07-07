@@ -232,7 +232,7 @@ export function Apollon(props: ApollonProps) {
         style={mergedStyle}
         data-theme={dataTheme}
       />
-      {children ?? <DefaultChildren />}
+      {children === undefined ? <DefaultChildren /> : children}
     </ApollonInstanceContext.Provider>
   )
 }

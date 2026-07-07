@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react"
+import { useCallback, useEffect, useState, type ReactNode } from "react"
 import { createPortal } from "react-dom"
 import { NodeToolbar, Position, useStore } from "@xyflow/react"
 import { useApollonEditor } from "./context"
@@ -45,6 +45,10 @@ function SelectionToolbarMount({
     return ids.join("\n")
   })
   const ids = selected ? selected.split("\n") : []
+  const stop = useCallback((event: { stopPropagation: () => void }) => {
+    event.stopPropagation()
+  }, [])
+
   return (
     <NodeToolbar
       nodeId={ids}
@@ -52,7 +56,15 @@ function SelectionToolbarMount({
       position={position}
       offset={offset}
     >
-      <RegionMount el={el} />
+      <div
+        className="nodrag nopan nowheel"
+        onPointerDownCapture={stop}
+        onMouseDownCapture={stop}
+        onTouchStartCapture={stop}
+        onWheelCapture={stop}
+      >
+        <RegionMount el={el} />
+      </div>
     </NodeToolbar>
   )
 }

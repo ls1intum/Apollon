@@ -39,7 +39,10 @@ import {
   OverlayStoreContext,
 } from "./store/context"
 import { createOverlayStore, type OverlayStore } from "./overlay/overlayStore"
-import { defaultControls } from "./chrome/builtins/controls"
+import {
+  assertBuiltInControlRegion,
+  defaultControls,
+} from "./chrome/builtins/controls"
 import { mergeLabels } from "./i18n/labels"
 import { insetAwareFitView } from "./overlay/fitView"
 import { RegionMount } from "./overlay/RegionMount"
@@ -412,6 +415,9 @@ export class ApollonEditor {
       throw new Error(
         `[ApollonEditor] updateControl: unknown region: ${patch.region}`
       )
+    if (patch.region !== undefined) {
+      assertBuiltInControlRegion(id, patch.region)
+    }
     // Pin id last so a stray `patch.id` can't fork the control under a new key.
     this.overlayStore.getState().register({ ...existing, ...patch, id })
   }

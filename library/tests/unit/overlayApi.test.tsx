@@ -191,6 +191,23 @@ describe("built-in controls (imperative descriptors)", () => {
       /unsupported region/
     )
   })
+
+  it("updateControl rejects unsupported built-in regions", () => {
+    el = document.createElement("div")
+    document.body.appendChild(el)
+    const ed = new ApollonEditor(el)
+
+    expect(() =>
+      ed.updateControl(MINIMAP_ID, { region: "header" as never })
+    ).toThrow(/unsupported region/)
+    expect(() =>
+      ed.updateControl(PALETTE_ID, { region: "bottom-right" as never })
+    ).toThrow(/unsupported region/)
+    expect(ed.getControl(MINIMAP_ID)?.region).toBe("bottom-right")
+    expect(ed.getControl(PALETTE_ID)?.region).toBe("left-rail")
+
+    ed.destroy()
+  })
 })
 
 // The <ApollonControl> facade in isolation (a fake editor, so we exercise the

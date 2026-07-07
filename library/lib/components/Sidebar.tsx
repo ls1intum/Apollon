@@ -5,7 +5,7 @@ import {
   LAYOUT,
   MOBILE_VIEW_QUERY,
 } from "@/constants"
-import { useMetadataStore } from "@/store/context"
+import { useMetadataStore, useOverlayStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { DraggableGhost } from "./DraggableGhost"
 import { ApollonMode, ApollonView } from "@/typings"
@@ -65,11 +65,12 @@ export const Sidebar = () => {
     [diagramType]
   )
 
-  // The palette is a `left-rail` overlay control: the engine sizes its band
-  // between the reserved top/bottom insets, so the grid fills exactly the room
-  // the header and bottom controls left — read straight off the band, with the
-  // canvas width as the horizontal budget. No cross-component `.react-flow__*`
-  // DOM query: the inset engine is the single authority on the available room.
+  // The palette is a rail overlay control. The rail itself stays height-stable
+  // when unrelated corner chrome moves; the palette only caps its own grid when
+  // same-side bottom chrome would otherwise overlap it in a short viewport.
+  const isRightRail = useOverlayStore(
+    (state) => state.controls["apollon:palette"]?.region === "right-rail"
+  )
   const asideRef = useRef<HTMLElement>(null)
   const [canvas, setCanvas] = useState({ w: 0, h: 0, compact: false })
 
@@ -80,15 +81,24 @@ export const Sidebar = () => {
     if (!aside || !band || !canvasEl) return
     const mobileQuery = window.matchMedia(MOBILE_VIEW_QUERY)
     const measure = () => {
-      // Height budget = the rail band (already inset between top/bottom chrome)
-      // minus the palette's own top+bottom breathing gap; width budget = the
-      // canvas the palette floats over. The gap is read from the single token
-      // source so JS and CSS never drift.
+      // Start with the rail band's stable height, then cap it at the same-side
+      // bottom corner only when that corner is occupied. That preserves palette
+      // size-invariance for unrelated chrome (e.g. bottom-right controls do not
+      // resize a left palette) while still preventing a real same-side collision
+      // with the zoom/minimap cluster on short mobile viewports.
       const gap =
         parseFloat(
           getComputedStyle(aside).getPropertyValue("--apollon-chrome-gap")
         ) || 8
-      const h = Math.max(0, band.clientHeight - 2 * gap)
+      const bandRect = band.getBoundingClientRect()
+      const bottomRegion = isRightRail ? "bottom-right" : "bottom-left"
+      const bottomControl = canvasEl.querySelector<HTMLElement>(
+        `[data-apollon-region="${bottomRegion}"] [data-apollon-control]`
+      )
+      const bottomLimit = bottomControl
+        ? bottomControl.getBoundingClientRect().top - gap
+        : bandRect.bottom - gap
+      const h = Math.max(0, bottomLimit - bandRect.top - gap)
       const w = canvasEl.getBoundingClientRect().width
       const compact = mobileQuery.matches
       setCanvas((prev) =>
@@ -101,12 +111,16 @@ export const Sidebar = () => {
     const observer = new ResizeObserver(measure)
     observer.observe(band)
     observer.observe(canvasEl)
+    for (const region of ["bottom-left", "bottom-right"]) {
+      const corner = canvasEl.querySelector(`[data-apollon-region="${region}"]`)
+      if (corner) observer.observe(corner)
+    }
     mobileQuery.addEventListener("change", measure)
     return () => {
       observer.disconnect()
       mobileQuery.removeEventListener("change", measure)
     }
-  }, [])
+  }, [isRightRail])
 
   // The color-description element is the last grid cell.
   const cellCount = paletteItems.length + 1
@@ -187,6 +201,13 @@ export const Sidebar = () => {
     )
   }
 
+  const paletteStyle: React.CSSProperties = {
+    ...(canvas.h ? { maxHeight: canvas.h } : null),
+    ...(isRightRail
+      ? { marginLeft: 0, marginRight: "var(--apollon-chrome-edge)" }
+      : null),
+  }
+
   return (
     <aside
       ref={asideRef}
@@ -195,7 +216,7 @@ export const Sidebar = () => {
       aria-label={labels.elementPalette}
       // Bounded to the rail band the engine reserved (grid math already fits
       // within it; this caps the rare overflow case to a scroll, not spill).
-      style={canvas.h ? { maxHeight: canvas.h } : undefined}
+      style={paletteStyle}
     >
       {showInteractiveSelectionView && (
         <div className="apollon-palette__view-switch">

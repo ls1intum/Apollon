@@ -77,13 +77,11 @@
 }
 
 /* The chrome frame. A CSS grid over the full-bleed canvas: the header/footer own
-   the top/bottom rows, the six corners the rows just inside them, the rails the
-   middle-row side columns, and the centre cell is the canvas hole. Placing every
-   region in a disjoint grid area is what keeps them from overlapping, with no
-   JS-measured offsets. The frame is pointer-transparent; each control opts its own
-   box back in. Device safe-area insets and the mobile-keyboard overlap are grid
-   padding, so every region clears the notch / gesture bar / soft keyboard in one
-   place. */
+   the top/bottom rows, rails span the side tracks between those bands, corner
+   slots float over the side/center tracks, and the centre cell is the canvas
+   hole. The frame is pointer-transparent; each control opts its own box back in.
+   Device safe-area insets and the mobile-keyboard overlap are grid padding, so
+   every region clears the notch / gesture bar / soft keyboard in one place. */
 .apollon-overlay-grid {
   position: absolute;
   inset: 0;
@@ -275,14 +273,11 @@
   filter: drop-shadow(0 0 4px var(--apollon-collaboration-highlight-color));
 }
 
-/* Floating element palette — a `left-rail` overlay control. The engine's rail
-   band positions it (top/bottom pinned to the reserved insets, so it always
-   clears the header and bottom controls); the palette only adds its own edge/gap
-   breathing room and paints the glass card. Its grid columns/gap and each cell's
-   size come inline from `computePaletteLayout`, sized to the band height so every
-   element stays in view without scrolling; `overflow-y` is the rare last resort.
-   No self-positioning and no cross-component DOM query: the inset engine is the
-   single authority on where it sits and how much room it has. */
+/* Floating element palette — a rail overlay control. The rail band is stable
+   across unrelated corner chrome; the palette adds its own edge/gap breathing
+   room and caps its grid when same-side bottom chrome would otherwise overlap on
+   short viewports. Its grid columns/gap and each cell's size come inline from
+   `computePaletteLayout`; `overflow-y` is the rare last resort. */
 .apollon-palette {
   box-sizing: border-box;
 
@@ -375,13 +370,10 @@
   line-height: 1.4;
 }
 
-/* The minimap is the one control React Flow positions itself (a `<Panel>`), so it
-   is offset here rather than by the grid: one edge margin in (replacing React
-   Flow's default 15px so it lines up with the grid chrome), the device safe-area
-   on each pinned side (notch / home indicator; Capacitor, viewport-fit=cover), and
-   the reserved band inset on that edge so it clears a band instead of painting
-   over it (0 when no band occupies that edge). Declared before the landscape block
-   so its extra notch nudge still wins. */
+/* React Flow panels that remain self-positioned (for example the unmanaged
+   exported CustomMiniMap) line up with Apollon's edge margin and top/bottom
+   bands. Side rails are NOT applied here: rail insets are camera reservation, not
+   generic horizontal panel offsets, and the built-in minimap is grid-managed. */
 .react-flow__panel.top {
   margin-top: calc(
     var(--apollon-chrome-edge) + var(--safe-area-inset-top, 0) +
@@ -397,15 +389,11 @@
 }
 
 .react-flow__panel.left {
-  margin-left: calc(
-    var(--apollon-chrome-edge-safe-left) + var(--apollon-inset-left, 0)
-  );
+  margin-left: var(--apollon-chrome-edge-safe-left);
 }
 
 .react-flow__panel.right {
-  margin-right: calc(
-    var(--apollon-chrome-edge-safe-right) + var(--apollon-inset-right, 0)
-  );
+  margin-right: var(--apollon-chrome-edge-safe-right);
 }
 
 /* The editor header is one fluid flex row inside the full-width `header` band:
@@ -481,14 +469,24 @@
    supplies the pane). Drop the panel padding so the map fills the rounded card
    (no fat glass gutter) and clip the svg to the card radius. */
 .react-flow__minimap.apollon-minimap {
-  padding: 0;
   overflow: hidden;
   border-radius: var(--apollon-chrome-radius-lg);
 }
 
-.react-flow__minimap.apollon-minimap .react-flow__minimap-svg {
-  display: block;
-  border-radius: inherit;
+.apollon-mm-shell {
+  position: relative;
+}
+
+.react-flow__panel.apollon-mm-panel,
+.react-flow__minimap.apollon-mm {
+  position: static;
+  margin: 0;
+}
+
+.react-flow__panel.apollon-mm-collapse {
+  position: absolute;
+  right: 0;
+  bottom: 0;
 }
 
 /* A toolbar of glass islands (the zoom cluster: view + history). The toolbar row

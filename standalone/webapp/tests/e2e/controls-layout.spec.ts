@@ -9,8 +9,8 @@ import { openFixtureInLocalEditor, waitForCanvasReady } from "../helpers/canvas"
  * geometry across many placements, plus the hide / move / re-show scenarios.
  *
  * Reserved built-in ids (stable public surface): the palette and zoom cluster
- * are slotted controls (`[data-apollon-control]`); the minimap self-positions as
- * a React-Flow-native widget (collapsed by default to a "Show minimap" toggle).
+ * are slotted controls (`[data-apollon-control]`); the minimap is also a managed
+ * control, collapsed by default to a "Show minimap" toggle.
  */
 /** The dev-only editor handle exposed on `window` for e2e driving. */
 type EditorHandle = {
@@ -49,10 +49,13 @@ const paletteEl = (page: Page): Locator =>
   page.locator(`[data-apollon-control="${PALETTE_ID}"]`)
 const zoomEl = (page: Page): Locator =>
   page.locator(`[data-apollon-control="${ZOOM_ID}"]`)
-// The minimap ships collapsed to a single "Show minimap" toggle (its own
-// self-positioned React-Flow Panel); expanding it is a separate concern.
+// The minimap ships collapsed to a single "Show minimap" toggle; expanding it
+// is a separate concern.
 const minimapEl = (page: Page): Locator =>
   page.getByRole("button", { name: "Show minimap" })
+const minimapControlEl = (page: Page): Locator =>
+  page.locator(`[data-apollon-control="${MINIMAP_ID}"]`)
+const editorEl = (page: Page): Locator => page.locator(".apollon-editor")
 
 async function box(locator: Locator): Promise<Box> {
   const b = await locator.boundingBox()
@@ -96,6 +99,32 @@ async function removeControl(page: Page, id: string) {
       .apollonEditor
     ed?.removeControl(id)
   }, id)
+}
+
+async function mountHostRegion(
+  page: Page,
+  region: string,
+  html: string
+): Promise<void> {
+  await page.evaluate(
+    ([region, html]) => {
+      const ed = (
+        window as unknown as {
+          apollonEditor?: { getRegionElement: (region: string) => HTMLElement }
+        }
+      ).apollonEditor
+      const host = ed?.getRegionElement(region)
+      if (host) host.innerHTML = html
+    },
+    [region, html] as const
+  )
+}
+
+async function cssPx(page: Page, name: string): Promise<number> {
+  return page.evaluate((name) => {
+    const el = document.querySelector(".apollon-editor") as HTMLElement
+    return parseFloat(getComputedStyle(el).getPropertyValue(name)) || 0
+  }, name)
 }
 
 /** The zoom cluster's live bounding box, polled — resolves once it exists. */
@@ -223,6 +252,38 @@ test.describe("controls layout engine", () => {
     expect((await zoomBox(page)).x).toBeGreaterThan(midX)
   })
 
+  test("placing the palette in the right rail keeps its edge breathing room", async ({
+    page,
+  }) => {
+    await updateControl(page, PALETTE_ID, { region: "right-rail" })
+
+    await expect
+      .poll(async () => (await paletteBox(page)).x)
+      .toBeGreaterThan(900)
+
+    const editor = await box(editorEl(page))
+    const palette = await box(paletteEl(page))
+    const zoom = await box(zoomEl(page))
+    const minimap = await box(minimapEl(page))
+    const margins = await paletteEl(page)
+      .locator(".apollon-palette")
+      .evaluate((el) => {
+        const style = getComputedStyle(el)
+        return {
+          left: parseFloat(style.marginLeft) || 0,
+          right: parseFloat(style.marginRight) || 0,
+        }
+      })
+
+    expect(margins.left).toBe(0)
+    expect(margins.right).toBeGreaterThan(0)
+    expect(
+      editor.x + editor.width - (palette.x + palette.width)
+    ).toBeLessThanOrEqual(32)
+    expect(overlaps(palette, zoom)).toBe(false)
+    expect(overlaps(palette, minimap)).toBe(false)
+  })
+
   test("the bottom-left zoom cluster sits flush, not shoved right by a short palette (dead-space regression)", async ({
     page,
   }) => {
@@ -246,6 +307,59 @@ test.describe("controls layout engine", () => {
     expect(overlaps(palette, zoom)).toBe(false)
   })
 
+  test("a short right rail does not push the collapsed minimap away from the right edge", async ({
+    page,
+  }) => {
+    await mountHostRegion(
+      page,
+      "right-rail",
+      `<aside data-testid="host-short-right-rail" style="box-sizing:border-box;width:300px;height:180px;margin:8px;padding:12px;background:white;border:1px solid #ddd">Problem statement</aside>`
+    )
+
+    await expect(page.getByTestId("host-short-right-rail")).toBeVisible()
+    await expect(minimapControlEl(page)).toBeVisible()
+    await expect(minimapEl(page)).toBeVisible()
+    await expect
+      .poll(() => cssPx(page, "--apollon-inset-right"))
+      .toBeGreaterThan(250)
+
+    const editor = await box(editorEl(page))
+    const rail = await box(page.getByTestId("host-short-right-rail"))
+    const minimap = await box(minimapEl(page))
+
+    expect(overlaps(rail, minimap)).toBe(false)
+    expect(
+      editor.x + editor.width - (minimap.x + minimap.width)
+    ).toBeLessThanOrEqual(32)
+  })
+
+  test("a bottom-right action island shares the bottom slot without lifting bottom-left zoom", async ({
+    page,
+  }) => {
+    const baselineZoom = await box(zoomEl(page))
+
+    await mountHostRegion(
+      page,
+      "bottom-right",
+      `<button data-testid="host-bottom-action" style="box-sizing:border-box;width:220px;height:40px;margin:0;padding:0;background:white;border:1px solid #ddd;pointer-events:auto">Save & submit</button>`
+    )
+
+    await expect(page.getByTestId("host-bottom-action")).toBeVisible()
+    await expect(minimapControlEl(page)).toBeVisible()
+    await expect(minimapEl(page)).toBeVisible()
+    await expect
+      .poll(() => cssPx(page, "--apollon-inset-bottom"))
+      .toBeGreaterThan(40)
+
+    const zoom = await box(zoomEl(page))
+    const action = await box(page.getByTestId("host-bottom-action"))
+    const minimap = await box(minimapEl(page))
+
+    expect(overlaps(action, minimap)).toBe(false)
+    expect(overlaps(zoom, action)).toBe(false)
+    expect(Math.abs(zoom.y - baselineZoom.y)).toBeLessThanOrEqual(2)
+  })
+
   test("hiding the palette removes it from the DOM; the other chrome stays", async ({
     page,
   }) => {
@@ -264,9 +378,7 @@ test.describe("controls layout engine", () => {
     await expect(minimapEl(page)).toBeVisible()
   })
 
-  test("hiding the minimap removes the self-positioned widget", async ({
-    page,
-  }) => {
+  test("hiding the minimap removes the managed widget", async ({ page }) => {
     await expect(minimapEl(page)).toBeVisible()
     await removeControl(page, MINIMAP_ID)
     await expect(minimapEl(page)).toHaveCount(0)
@@ -354,7 +466,7 @@ test.describe("controls layout engine", () => {
     ).toBeVisible()
     // Un-overridden keys fall back to English.
     await expect(page.getByRole("button", { name: "Fit view" })).toBeVisible()
-    // The minimap toggle (a self-positioned widget) re-labels too.
+    // The minimap toggle re-labels too.
     await expect(
       page.getByRole("button", { name: "Übersicht anzeigen" })
     ).toBeVisible()

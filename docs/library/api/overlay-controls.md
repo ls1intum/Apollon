@@ -186,9 +186,9 @@ import { defaultControls } from "@tumaet/apollon"
 new ApollonEditor(el, { controls: [...defaultControls(), myBanner()] })
 ```
 
-The minimap is a self-positioning React-Flow-native widget (`selfPositioned`):
-it renders its own `<Panel>` and reserves no room, so moving other chrome never
-resizes it, and it never resizes the palette.
+The minimap participates in the same corner-slot layout as other built-ins. It
+reserves no room by default, so moving unrelated chrome never resizes it, and it
+never resizes the palette.
 
 ## The host-portal escape hatch
 
@@ -337,12 +337,18 @@ control never drags the diagram.
   above host chrome). Same-lane controls sit along the band's axis and reserve the
   larger; different lanes stack and their insets **sum**. Either way the diagram
   clears the full stack.
-- **Corners never overlap bands.** The six corner regions are grid cells in
-  dedicated rows between the header/footer rows and the canvas, so a bottom-corner
-  cluster always sits above a footer band and a top-corner control below a header
-  band — structurally, not by reading a measured inset. Automatic; no offset math
-  on the host side. (The minimap is the exception: it self-positions as a React
-  Flow `<Panel>` and clears bands via inset vars rather than a grid cell.)
+- **Use `footer` only for a real bottom bar.** A `footer` control owns the full
+  bottom edge, so bottom-corner chrome (zoom, minimap, host buttons) clears it.
+  For a floating action island that only occupies the bottom-right corner, use
+  `region="bottom-right"` with `inset={{ bottom: "auto" }}` instead: the diagram
+  still reserves bottom room for the island, but unrelated bottom-left chrome
+  stays flush.
+- **Corners clear full-width bands, not empty rail columns.** Top/bottom corner
+  controls sit below a header and above a footer structurally. Side rails share
+  the side track with the corner slots, so short rails leave bottom/top corners
+  flush instead of reserving an empty column. The built-in minimap uses the same
+  corner slots, so it stacks with host controls in its region instead of applying
+  its own side offsets.
 - **Selection-anchored toolbars** — `<Apollon.SelectionToolbar>` (Figma/tldraw
   style): a screen-space, constant-size toolbar that follows the current selection.
   Distinct from `on-canvas`, which lives in diagram space and scales with zoom.

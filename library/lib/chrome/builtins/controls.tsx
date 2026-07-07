@@ -68,6 +68,14 @@ function assertBuiltInRegion(
   }
 }
 
+export function assertBuiltInControlRegion(id: string, region: string): void {
+  if (id === PALETTE_ID) {
+    assertBuiltInRegion("paletteControl", region, PALETTE_REGIONS)
+  } else if (id === MINIMAP_ID) {
+    assertBuiltInRegion("miniMapControl", region, MINIMAP_REGIONS)
+  }
+}
+
 export function paletteControl(
   options: PaletteControlOptions = {}
 ): OverlayControlInput {
@@ -114,6 +122,7 @@ function BuiltInMiniMap({
       }
       pannable={pannable}
       zoomable={zoomable}
+      managed
     />
   )
 }
@@ -129,7 +138,6 @@ export function miniMapControl({
     ...placement,
     id: MINIMAP_ID,
     region,
-    selfPositioned: true,
     render: () => <BuiltInMiniMap pannable={pannable} zoomable={zoomable} />,
   }
 }

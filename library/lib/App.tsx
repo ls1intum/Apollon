@@ -116,10 +116,10 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
 
   const isDiagramModifiable = useDiagramModifiable()
 
-  // The reserved-room rect, published as CSS custom properties so the
-  // self-positioning minimap Panel can clear the bands (the grid places every
-  // other control structurally) — and read by fitView to frame content clear of
-  // chrome.
+  // The reserved-room rect, published as CSS custom properties for fitView and
+  // unmanaged React Flow panels that still opt into top/bottom offsets.
+  // Built-in chrome is grid-managed, so side-rail insets are camera reservation
+  // rather than generic panel offsets.
   const insets = useOverlayStore((state) => state.insets)
 
   // Overlay the live positions/sizes of nodes peers are dragging (carried over
@@ -185,8 +185,8 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
             overflow: "hidden",
             backgroundColor: "var(--apollon-background, #ffffff)",
             position: "relative",
-            // The minimap Panel clears the bands off these (0 when no chrome
-            // reserves that edge).
+            // Fit-view and unmanaged top/bottom panels read these (0 when
+            // no chrome reserves that edge).
             "--apollon-inset-top": `${insets.top}px`,
             "--apollon-inset-right": `${insets.right}px`,
             "--apollon-inset-bottom": `${insets.bottom}px`,

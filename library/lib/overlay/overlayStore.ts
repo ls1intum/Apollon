@@ -125,8 +125,7 @@ export type OverlayStore = {
   controls: Record<string, OverlayControl>
   /** Measured rects per control id (written by the shared ResizeObserver). */
   measured: Record<string, Partial<Record<OverlaySide, number>>>
-  /** Reserved room per edge — the camera reservation `fitView` pads against, and
-   *  the room the self-positioning minimap Panel clears the bands by. */
+  /** Reserved room per edge — the camera reservation `fitView` pads against. */
   insets: Insets
 
   register: (control: OverlayControl) => void
