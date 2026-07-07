@@ -528,3 +528,90 @@ test("reconnecting between close nodes snaps to the nearest, not the top-most", 
     "endpoint must snap to the nearer node B, not the top-most C"
   ).toBe(B)
 })
+
+test("a connection arc is grabbable when approached directly, not only via the body", async ({
+  page,
+}) => {
+  // Regression: arcs protrude past the node box but only armed on node :hover,
+  // so approaching one from OUTSIDE (without first crossing the body) left it
+  // inert — "sometimes I can't grab the handle". Each side's arc must start a
+  // connection when the pointer goes straight to it.
+  const A = "95aac2b6-3e6b-4e6d-9201-52a498e6ea20"
+  const B = "32659cdc-bd03-46f3-918c-ee8dbba9c15b"
+  const edgeCount = () =>
+    page.evaluate(() => {
+      const raw = localStorage.getItem("persistenceModelStore")
+      if (!raw) return 0
+      const p = JSON.parse(raw)
+      const id = p.state.currentModelId
+      return (p.state.models[id]?.model?.edges || []).length
+    })
+  const sideArc = (
+    a: { x: number; y: number; width: number; height: number },
+    side: string
+  ) =>
+    ({
+      top: { x: a.x + a.width / 2, y: a.y - 6 },
+      bottom: { x: a.x + a.width / 2, y: a.y + a.height + 6 },
+      left: { x: a.x - 6, y: a.y + a.height / 2 },
+      right: { x: a.x + a.width + 6, y: a.y + a.height / 2 },
+    })[side]!
+
+  for (const side of ["top", "bottom", "left", "right"]) {
+    await openFixtureInLocalEditor(page, readFixture("two-class-no-edge.json"))
+    await waitForCanvasReady(page)
+    const a = await nodeBox(page, A)
+    const b = await nodeBox(page, B)
+    const arc = sideArc(a, side)
+    const before = await edgeCount()
+    // Go STRAIGHT to the protruding arc — no prior hover over the node body.
+    await page.mouse.move(arc.x, arc.y)
+    await page.waitForTimeout(120)
+    await page.mouse.down()
+    await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2, { steps: 14 })
+    await page.mouse.up()
+    await page.waitForTimeout(150)
+    expect(
+      await edgeCount(),
+      `${side} arc must be grabbable from outside`
+    ).toBe(before + 1)
+  }
+})
+
+test("a selected node's protruding arc does not swallow clicks meant for an overlapping neighbour", async ({
+  page,
+}) => {
+  // #791 guard: a selected node is elevated; its armed arcs must not eat clicks
+  // on a node beneath them. Approaching the neighbour from its own side (not
+  // through the selected node's body) must select the neighbour.
+  const A = "95aac2b6-3e6b-4e6d-9201-52a498e6ea20"
+  const B = "32659cdc-bd03-46f3-918c-ee8dbba9c15b"
+  const fixture = readFixture("two-class-no-edge.json")
+  fixture.nodes[0].position = { x: 400, y: 300 }
+  fixture.nodes[1].position = { x: 520, y: 300 }
+  fixture.nodes[0].measured = { width: 160, height: 100 }
+  fixture.nodes[1].measured = { width: 160, height: 100 }
+  await openFixtureInLocalEditor(page, fixture)
+  await waitForCanvasReady(page)
+  const a = await nodeBox(page, A)
+  const b = await nodeBox(page, B)
+  await page.mouse.click(a.x + 30, a.y + a.height / 2) // select A
+  await page.waitForTimeout(120)
+  await page.mouse.move(b.x + b.width + 80, b.y + b.height / 2) // clear A hover
+  await page.waitForTimeout(120)
+  // Click where A's RIGHT arc overlaps B's body, approaching from B's side.
+  const px = a.x + a.width + 7
+  const py = a.y + a.height / 2
+  await page.mouse.move(px + 60, py)
+  await page.mouse.move(px, py, { steps: 8 })
+  await page.waitForTimeout(120)
+  await page.mouse.down()
+  await page.mouse.up()
+  await page.waitForTimeout(150)
+  const selected = await page.evaluate(() =>
+    document
+      .querySelector(".react-flow__node.selected")
+      ?.getAttribute("data-id")
+  )
+  expect(selected, "click must fall through to the neighbour B").toBe(B)
+})

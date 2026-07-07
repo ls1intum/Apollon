@@ -652,9 +652,12 @@
   opacity: 0.4;
   box-sizing: border-box;
 
-  /* Off by default; only grabbable while the node is hovered (or in click-to-
-     connect guidance mode) — see the hit-area note near the hover rules below. */
-  pointer-events: none;
+  /* Grabbable on its OWN hit area (not gated behind the node body) — the arc
+     protrudes past the node box, so requiring a body :hover first made it
+     ungrabbable when approached from outside. Hovering the armed arc still
+     triggers the node :hover that fades it in. Disarmed for selected-not-hovered
+     nodes and in guidance mode (see the hit-area note near the hover rules). */
+  pointer-events: all;
   cursor: crosshair;
 
   /* --arc-scale is set by DefaultNodeWrapper to 1/zoom so the indicator keeps
@@ -744,15 +747,15 @@
   pointer-events: all;
 }
 
-/* The arc ::before is armed on hover too, but scoped OUT of guidance mode: its
-   selector would otherwise out-specify the guidance "arcs off" rule below and
-   re-arm an invisible (opacity:0) arc, swallowing clicks over neighbours — the
-   very bug this fix removes. Guidance drives connections from the circle handle,
-   not the arc, so the arc stays inert there. */
-.apollon-editor:not(.apollon-editor--connection-guidance)
-  .react-flow__node:hover
+/* Preserve the #791 fix WITHOUT re-hiding the arc from a direct approach. A
+   SELECTED node is lifted above its neighbours (elevateNodesOnSelect), so its
+   protruding arcs, if armed, would swallow clicks meant for an overlapping node
+   beneath it. Disarm them while the node is selected but NOT hovered; hovering
+   re-arms them (the arc is armed by default now — see the base rule above), so
+   you can still grab an arc on the node you're pointing at. */
+.react-flow__node.selected:not(:hover)
   .react-flow__handle.apollon-arc-handle::before {
-  pointer-events: all;
+  pointer-events: none;
 }
 
 .react-flow__node:hover .react-flow__handle {
