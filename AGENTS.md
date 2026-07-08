@@ -42,7 +42,7 @@ A pnpm + Vite monorepo (the server compiles with `tsc`, not Vite).
 - The library is consumed by the standalone app, the VS Code extension, and external embedders — don't couple its APIs to standalone-only assumptions; gate behind options.
 - The server requires `OWNER_SECRET` ≥ 32 chars in production (`openssl rand -hex 32`); local dev accepts a placeholder.
 - Never commit build output (`library/dist/`, `standalone/webapp/dist/`, …).
-- Don't hand-edit the `.changeset/*.md` entries the changelog automation will consume — create them with `pnpm changeset`.
+- Create changesets with `pnpm changeset`. You may edit the generated `.changeset/*.md` body for release-note quality; don't hand-edit `CHANGELOG.md` or invent changeset frontmatter by hand.
 - Don't put co-authored-by / agent-attribution trailers in a changeset body — it lands in `CHANGELOG.md` verbatim.
 - `CLAUDE.md` is a checked-in symlink to this file (git mode `120000`); on Windows, enable symlinks (`git config --global core.symlinks true`) or it checks out as plain text.
 

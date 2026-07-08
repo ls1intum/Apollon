@@ -1,38 +1,43 @@
 ---
 id: overlay-controls
 title: Overlay controls
-description: Floating canvas chrome in named regions — React, imperative, and host-portal facades, with an inset "make room" model.
+description: Compose built-in editor chrome and add host controls in named canvas regions, with optional reserved space for fitView.
 ---
 
 # Overlay controls
 
-Apollon renders an editor's chrome — toolbars, palettes, rails, banners — as
-**floating controls anchored in named regions** of the canvas, not as separate
-bars stacked around it. Host chrome and the editor's own overlays share one
-measured layout layer, so bands, rails, and corner controls deconflict through the
-same rules and the diagram knows how to make room for reserving chrome.
+Apollon renders editor chrome — the palette, zoom controls, minimap, and host
+buttons or rails — as **controls anchored in named canvas regions**. Built-in and
+host controls use the same placement rules, so they can be composed instead of
+being fixed around the editor.
 
-A control is positioned by **region** (where it sits) and can optionally
-**reserve space** so the diagram "makes way" for it. Reservation is measured, not
-guessed: a control that opts into an inset is measured by a shared
-`ResizeObserver`, and the reserved space feeds `fitView` padding the way MapLibre
-pads its viewport around UI. Two controls on the same side reserve the **larger**,
-not the total — except across different band **lanes**, which stack and sum (see
-below).
+Most hosts start with one of these tasks:
 
-There are three facades over the same engine. Pick by how your host renders:
+- **Keep the defaults and add one React button:** render `<ApollonDefaultControls />`
+  plus an `<ApollonControl>` child.
+- **Show only selected built-ins:** list `<Apollon.Zoom />`, `<Apollon.MiniMap />`,
+  and/or `<Apollon.Palette />` as `<Apollon>` children.
+- **Mount host-owned UI with its own context:** use `getRegionElement()` and render
+  into it from your host root.
 
-- a **React host** inside the editor tree → [`<ApollonControl>`](#the-react-way-apolloncontrol)
-- a **one-off imperative widget** → [`editor.addControl(...)`](#the-imperative-way-addcontrol)
+A control chooses a **region** and can optionally **reserve space**. Reserved space
+is measured in pixels and used by `editor.fitView()` so diagram content is not
+framed underneath chrome. Controls on the same side usually reserve the larger of
+their sizes; controls in different band `lane`s stack and reserve the sum.
+
+There are three API styles over the same registry. Pick by how your host renders:
+
+- a **React host** inside the editor tree → [`<ApollonControl>`](#react-apolloncontrol)
+- a **one-off imperative widget** → [`editor.addControl(...)`](#imperative-addcontrol)
 - a **non-React host**, or one needing its **own React root / context** (theme, router) → [`getRegionElement` + `createPortal`](#the-host-portal-escape-hatch)
 
 ## Regions
 
 Every control names one `OverlayRegion`. The six corner regions and the `header` /
 `footer` / `left-rail` / `right-rail` bands are screen-space cells of a single CSS
-grid laid over the canvas. The grid deconflicts built-in bands and corner slots
-under the documented sizing rules; oversized host chrome should be made
-responsive or scrollable by the host. `on-canvas` is viewport-transformed and
+grid laid over the canvas. The grid keeps normal-sized bands and corner regions
+from overlapping; oversized host chrome should be made responsive or scrollable
+by the host. `on-canvas` is viewport-transformed and
 pans + zooms with the diagram.
 
 | Region          | Where it sits                                                           |
@@ -54,9 +59,9 @@ bar, and the rails sit between them so they never tuck under a full-width band.
 Within one region, controls are ordered by
 [`order`](#overlaycontroloptions) (lower renders toward the region's anchor edge).
 
-## The React way: `<ApollonControl>`
+## React: `<ApollonControl>`
 
-The declarative facade. Mount it anywhere inside the `<Apollon>` tree; its
+The declarative API. Mount it anywhere inside the `<Apollon>` tree; its
 `children` are portaled into the chosen region **inside the canvas** while React
 keeps owning their reconciliation and context. Children changes never touch the
 overlay store — only real option changes (region, inset, order, …) push an
@@ -92,13 +97,13 @@ composition; include `<ApollonDefaultControls />` (or the individual
 `<Apollon.Palette />`, `<Apollon.Zoom />`, `<Apollon.MiniMap />`) when a custom
 child should keep the default chrome visible.
 
-## The imperative way: `addControl`
+## Imperative: `addControl`
 
 When you hold an `ApollonEditor` instance and want to register a one-off widget,
 call `addControl`. It takes the options plus a `render: () => ReactNode` and
 **returns a disposer** — call it to remove the control.
 
-```ts no-check
+```tsx no-check
 const dispose = editor.addControl({
   id: "my-app:banner",
   region: "top-center",
@@ -126,7 +131,7 @@ editor.removeControl("my-app:banner")
 // Has this id been registered?
 editor.hasControl("my-app:banner") // boolean
 
-// Read a registered control's current options (undefined if absent).
+// Read an immutable options snapshot (undefined if absent; render is omitted).
 editor.getControl("my-app:banner")?.region
 ```
 
@@ -136,6 +141,19 @@ The editor's own chrome — the element **palette**, the **minimap**, and the
 **zoom / history** cluster — are ordinary records in this same registry under
 reserved ids (`PALETTE_ID`, `ZOOM_ID`, `MINIMAP_ID`). You compose them the same
 two ways.
+
+Built-in renderers support these regions:
+
+| Built-in       | Supported regions                                                                     |
+| -------------- | ------------------------------------------------------------------------------------- |
+| Palette        | `left-rail`, `right-rail`                                                             |
+| Zoom / history | any `OverlayRegion`                                                                   |
+| MiniMap        | `top-left`, `top-center`, `top-right`, `bottom-left`, `bottom-center`, `bottom-right` |
+
+Moving `PALETTE_ID` or `MINIMAP_ID` with `updateControl()` keeps those renderer
+limits and throws for unsupported regions. If you replace a built-in by supplying
+your own `render` at its reserved id, it becomes a normal custom control and can
+use any valid region.
 
 **React — as `<Apollon>` children.** Presence renders, omission hides, typed
 props reconfigure. Passing _any_ children makes the composition explicit, so you
@@ -168,9 +186,9 @@ an explicit replacement; after that, the control follows the normal
 `OverlayRegion` rules instead of the built-in renderer's placement limits.
 
 ```tsx no-check
-import { useControl, ZOOM_ID } from "@tumaet/apollon"
+import { useControl, ZOOM_ID, type OverlayRegion } from "@tumaet/apollon"
 
-function BrandedZoom({ region = "bottom-left" }) {
+function BrandedZoom({ region = "bottom-left" }: { region?: OverlayRegion }) {
   useControl(
     () => ({ id: ZOOM_ID, region, render: () => <MyZoom /> }),
     [region]
@@ -184,8 +202,13 @@ function BrandedZoom({ region = "bottom-left" }) {
 `controls` for the defaults, pass `[]` for a bare canvas, or a subset to show
 only those:
 
-```ts no-check
-import { zoomControl, paletteControl } from "@tumaet/apollon"
+```tsx no-check
+import {
+  ApollonEditor,
+  ZOOM_ID,
+  paletteControl,
+  zoomControl,
+} from "@tumaet/apollon"
 
 new ApollonEditor(el, {
   controls: [paletteControl(), zoomControl({ history: false })],
@@ -198,13 +221,19 @@ editor.removeControl(ZOOM_ID) // hide
 
 To keep every default **and** add your own, spread `defaultControls()`:
 
-```ts no-check
-import { defaultControls } from "@tumaet/apollon"
+```tsx no-check
+import { ApollonEditor, defaultControls } from "@tumaet/apollon"
+
+const myBanner = () => ({
+  id: "my-app:banner",
+  region: "top-center",
+  render: () => <ReadOnlyBanner />,
+})
 
 new ApollonEditor(el, { controls: [...defaultControls(), myBanner()] })
 ```
 
-The minimap participates in the same corner-slot layout as other built-ins. It
+The minimap participates in the same corner-region layout as other built-ins. It
 reserves no room by default, so moving unrelated chrome never resizes it, and it
 never resizes the palette.
 
@@ -216,33 +245,44 @@ stable DOM node anchored in a region and render into it yourself with
 `createPortal`.
 
 ```tsx no-check
+import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
 
-// A stable node whose lifetime is the editor instance, not your subtree.
-const target = editor.getRegionElement("right-rail")
+function HostRail({ editor }) {
+  const [target, setTarget] = useState<HTMLElement | null>(null)
 
-function HostRail() {
-  // Rendered from the HOST React root → keeps host theme/router context.
+  useEffect(() => {
+    const node = editor.getRegionElement("right-rail")
+    setTarget(node)
+    return () => editor.releaseRegionElement("right-rail")
+  }, [editor])
+
+  if (!target) return null
+
+  // Rendered from the HOST React root → keeps host theme/router/i18n context.
+  // The wrapper opts interactive content back into pointer events and prevents
+  // canvas pan/drag/wheel from starting underneath the rail.
   return createPortal(
-    <ThemeProvider theme={hostTheme}>
-      <VersionHistory />
-    </ThemeProvider>,
+    <div className="nopan nodrag nowheel" style={{ pointerEvents: "auto" }}>
+      <ThemeProvider theme={hostTheme}>
+        <VersionHistory />
+      </ThemeProvider>
+    </div>,
     target
   )
 }
-
-// When done with the rail:
-editor.releaseRegionElement("right-rail")
 ```
 
 `getRegionElement` registers a host control under the reserved id
 `apollon:host:<region>` with `inset: "auto"`, so the diagram makes room for
-whatever you mount. It is idempotent per region: calling it again returns the
-same node without re-registering (so it never clobbers host-applied options).
-`releaseRegionElement` unregisters that control and drops the node, so a later
-re-acquire starts clean.
+whatever you mount. The host mount is pointer-transparent by default so empty
+space in a full-width header/footer or rail does not block canvas panning; set
+`pointer-events: auto` on your mounted root (and use `nopan nodrag nowheel` for
+interactive UI) where controls should handle input. Calling `getRegionElement`
+again returns the same node without re-registering. `releaseRegionElement`
+unregisters the control and drops the node, so a later acquire starts clean.
 
-### Choosing a facade
+### Choosing an API style
 
 | You have…                                                   | Use                                 |
 | ----------------------------------------------------------- | ----------------------------------- |
@@ -264,7 +304,7 @@ fed into `fitView` padding.
 | `"auto"`                    | string literal                                   | Auto-measure the control on the region's dominant axis. |
 | `{ top: 48, left: "auto" }` | `Partial<Record<OverlaySide, number \| "auto">>` | Mix explicit pixels with per-side `"auto"`.             |
 
-```ts no-check
+```tsx no-check
 editor.addControl({
   id: "my-app:header",
   region: "header",
@@ -275,8 +315,8 @@ editor.addControl({
 
 Two controls reserving on the same side (or the same band lane) clear the
 **larger**, not the total; controls in different band lanes stack and their
-reservations **sum**. The store derives a single content-inset rect from all
-measurements and is the only inset authority.
+reservations **sum**. `fitView()` reads the combined measured inset for each
+side.
 
 `fitView` consumes those insets:
 
@@ -290,15 +330,14 @@ editor.fitView() // respectInsets defaults to true
 | `padding`       | `number \| Partial<Record<OverlaySide, number>>` | —       | Extra padding. A per-side object overrides the default 16px gutter on those sides. |
 | `duration`      | `number`                                         | `200`   | Fit animation duration in ms.                                                      |
 
-With no reserved chrome and a scalar (or absent) `padding`, `fitView` uses the
-original fraction-based fit (`0.15`), so embedders without overlays stay
-byte-identical. When insets exist, each side is padded by `inset + gutter` (gutter
-defaults to 16px, or your per-side `padding` override). The fit is capped at
-`maxZoom: 1.0`.
+With no reserved chrome and a scalar (or absent) `padding`, `fitView` keeps the
+existing fraction-based padding behavior (`0.15`). When insets exist, each side
+is padded by `inset + gutter` (gutter defaults to 16px, or your per-side
+`padding` override). The fit is capped at `maxZoom: 1.0`.
 
 ## `OverlayControlOptions`
 
-The shared option set across all three facades.
+The shared option set across all three API styles.
 
 | Field         | Type                | Default | Effect                                                                                                                                                                                       |
 | ------------- | ------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -329,6 +368,9 @@ control never drags the diagram.
   (React StrictMode double-invokes effects; the replace makes that a no-op).
   Namespace your ids (e.g. `"my-app:export"`) to avoid colliding with the
   editor's own controls.
+- **Built-in moves keep built-in limits.** Updating `PALETTE_ID` or `MINIMAP_ID`
+  without replacing `render` still validates the built-in renderer's supported
+  regions. Replace the renderer to use those ids as fully custom controls.
 - **`id` is immutable in `updateControl`.** Pass it as the first argument; any
   `id` inside the patch is ignored, so a stray `patch.id` can't fork the control
   under a new key.
@@ -341,10 +383,10 @@ control never drags the diagram.
 
 ## Patterns & boundaries
 
-- **Bands reserve by default; slots don't.** A control in `header` / `footer` /
-  `left-rail` / `right-rail` reserves its measured cross-size with no `inset` set;
-  a corner slot floats and reserves nothing. Only pass `inset` to opt a **slot**
-  into reserving room. On a band, `inset: "auto"` is redundant (it already
+- **Bands reserve by default; corner regions don't.** A control in `header` /
+  `footer` / `left-rail` / `right-rail` reserves its measured cross-size with no
+  `inset` set; a corner region floats and reserves nothing. Only pass `inset` to
+  opt a corner control into reserving room. On a band, `inset: "auto"` is redundant (it already
   measures); an explicit `inset` just sets that control's own lane contribution
   instead of measuring it — it still stacks with the other lanes.
 - **Stack multiple bars on one edge two ways.** Compose them in one control (a flex
@@ -363,57 +405,80 @@ control never drags the diagram.
   stays flush.
 - **Corners clear full-width bands and same-side rails.** Top/bottom corner
   controls sit below a header and above a footer structurally. Side rails share
-  the side track with the corner slots and are padded by the measured same-side
+  the side track with the corner regions and are padded by the measured same-side
   corner extent, so short rails leave corners flush while tall rails avoid covering
-  them. The built-in minimap uses the same corner slots, so it stacks with host
+  them. The built-in minimap uses the same corner regions, so it stacks with host
   controls in its region instead of applying its own side offsets.
-- **Selection-anchored controls** — `<Apollon.SelectionToolbar>` renders a
-  screen-space, constant-size control group that follows the current selection.
-  It defaults to `role="group"`; pass `role="toolbar"` only when your children
-  implement toolbar keyboard behavior. Distinct from `on-canvas`, which lives in
-  diagram space and scales with zoom.
 - **i18n.** Editor UI strings exposed in `ApollonLabels` are
   host-overridable via `labels` (see [i18n](#i18n) below); pass a partial map in
   your language.
-- **Resizable rails work.** A host that makes its rail content drag-resizable gets
-  live inset tracking — the shared `ResizeObserver` re-measures and the diagram
-  re-fits as the width changes.
+- **Resizable rails are re-measured live.** The built-in Fit button and
+  `editor.fitView()` use the current rail size. If you want the viewport to
+  reframe continuously while a host rail is dragged, debounce your own
+  `editor.fitView()` call.
 - **Keyboard-aware footer.** The `footer` band and bottom chrome ride above the
   mobile soft keyboard, so an action bar stays reachable while an input has focus.
 - **Modals stay in your tree.** There is no scrim/overlay region; render dialogs,
   confirms and toasts in your own React tree (or your host modal system), not as
   controls. The controls API is for chrome anchored to the canvas edges/corners.
 
+## Selection toolbar
+
+`<Apollon.SelectionToolbar>` renders a screen-space, constant-size toolbar that
+follows the current node selection. It reserves no canvas room and only appears
+when React Flow has a selection anchor.
+
+```tsx no-check
+import { Apollon } from "@tumaet/apollon"
+
+function SelectionActions() {
+  return (
+    <Apollon.SelectionToolbar ariaLabel="Selection actions" position="top">
+      <button type="button">Delete</button>
+    </Apollon.SelectionToolbar>
+  )
+}
+```
+
+It defaults to `role="group"`; pass `role="toolbar"` only when your children
+implement toolbar keyboard behavior such as roving focus. Use this for actions
+attached to the selected node(s). Use `on-canvas` instead for content that lives
+in diagram coordinates and scales with zoom.
+
 ## i18n
 
 The editor UI strings exposed in the typed `ApollonLabels` dictionary ship with
-English defaults. The surface includes the built-in palette / zoom / minimap
+English defaults. Public names follow React Flow's `MiniMap` casing for the
+component and factory (`<Apollon.MiniMap />`, `miniMapControl()`), while label
+keys use the exact exported `ApollonLabels` names (`miniMap`, `showMinimap`,
+`hideMinimap`, ...). The surface includes the built-in palette / zoom / minimap
 tooltips and aria-labels, plus the edit/assessment popover copy. Override any
 subset:
 
 ```tsx
-import { Apollon } from "@tumaet/apollon"
+import { Apollon, type ApollonLabels } from "@tumaet/apollon"
+
+const labels = {
+  zoomIn: "Vergrößern",
+  zoomOut: "Verkleinern",
+  showMinimap: "Übersicht anzeigen",
+  zoomReadout: (percent) => `Zoom bei ${percent} %`,
+} satisfies Partial<ApollonLabels>
 
 export function LocalizedEditor() {
-  return (
-    <Apollon
-      labels={{
-        zoomIn: "Vergrößern",
-        zoomOut: "Verkleinern",
-        showMinimap: "Übersicht anzeigen",
-        zoomReadout: (percent: number) => `Zoom bei ${percent} %`,
-      }}
-    />
-  )
+  return <Apollon labels={labels} />
 }
 ```
 
 Imperative: `new ApollonEditor(el, { labels })` or `editor.setLabels(labels)`.
 Both merge over the English defaults per key (omitted keys stay English) and are
-**reactive** — switching language re-renders the chrome without a remount. Read
-the active set inside custom chrome with `useLabels()`. The few strings that
-interpolate a value (e.g. the zoom readout) are functions so a translation keeps
-control of word order.
+**reactive** — switching language re-renders editor-owned UI without a remount.
+Use the exported `ApollonLabels` type and `DEFAULT_LABELS` object to inspect the
+full key set. `useLabels()` is for controls rendered inside the editor's React
+Flow tree, such as descriptor `render` callbacks or `useControl` replacements;
+for `<ApollonControl>` children and `getRegionElement` portals, pass translated
+strings from your host context. The few strings that interpolate a value (e.g.
+the zoom readout) are functions so a translation keeps control of word order.
 
 The library ships English only and bundles no locale files: the host owns the
 translation table and any locale plumbing (which language to load, RTL direction,
