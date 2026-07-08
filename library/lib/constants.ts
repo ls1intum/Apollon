@@ -219,6 +219,14 @@ export const INTERFACE = Object.freeze({
 // (used a few lines below for BPMN message markers).
 export const MARKER_BASE_SIZE = 18
 const BPMN_MARKER_SIZE = 11
+// Aggregation/composition diamonds run longer than the other class markers so
+// they carry at least the inheritance triangle's visual weight, as in draw.io
+// (24-long diamond vs 16-long triangle) and Mermaid (equal areas). Capped at 24
+// because 24 * RHOMBUS_HEIGHT_FACTOR stays under the triangle's height, so the
+// diamond never overhangs a node border further than the triangle does.
+const RHOMBUS_MARKER_SIZE = 24
+// 1/phi, inside the 0.588-0.706 thickness band those tools use.
+const RHOMBUS_HEIGHT_FACTOR = 0.618
 
 export const EDGES = Object.freeze({
   /** Negative padding extends target point to node boundary (React Flow handles are offset 3px) */
@@ -324,20 +332,20 @@ export interface MarkerConfig {
 const INTERFACE_SOCKET_SIZE = INTERFACE_RADIUS // Must equal INTERFACE.SIZE / 2
 
 export const MARKER_CONFIGS = Object.freeze({
-  // Class diagram markers - golden ratio inspired proportions
+  // Class diagram markers
   "black-rhombus": {
     type: "rhombus",
     filled: true,
-    size: MARKER_BASE_SIZE,
+    size: RHOMBUS_MARKER_SIZE,
     widthFactor: 1.0,
-    heightFactor: 0.618,
+    heightFactor: RHOMBUS_HEIGHT_FACTOR,
   },
   "white-rhombus": {
     type: "rhombus",
     filled: false,
-    size: MARKER_BASE_SIZE,
+    size: RHOMBUS_MARKER_SIZE,
     widthFactor: 1.0,
-    heightFactor: 0.618,
+    heightFactor: RHOMBUS_HEIGHT_FACTOR,
   },
   "white-triangle": {
     type: "triangle",
