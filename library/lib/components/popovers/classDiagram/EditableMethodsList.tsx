@@ -2,6 +2,7 @@ import React, { useState, KeyboardEvent, ChangeEvent } from "react"
 import { GripVertical, Italic, Plus, Trash2 } from "lucide-react"
 import { IconButton, TextField, Typography } from "@/components/ui"
 import { NodeStyleEditor } from "@/components/styleEditor"
+import { useLabels } from "@/i18n/useLabels"
 import { generateUUID } from "@/utils"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
@@ -43,6 +44,7 @@ const SortableMethodRow: React.FC<SortableMethodRowProps> = ({
   onToggleAbstract,
   onDelete,
 }) => {
+  const t = useLabels()
   const {
     attributes,
     listeners,
@@ -76,7 +78,7 @@ const SortableMethodRow: React.FC<SortableMethodRowProps> = ({
         // dnd-kit's `attributes` set `role="button"` + `aria-roledescription`
         // but no name; the grip icon is aria-hidden, so name the handle
         // explicitly (axe: aria-command-name).
-        aria-label="Reorder method"
+        aria-label={t.reorderMethod}
         className="apollon-drag-handle"
         style={{
           display: "flex",
@@ -90,7 +92,7 @@ const SortableMethodRow: React.FC<SortableMethodRowProps> = ({
       <NodeStyleEditor
         noStrokeUpdate
         nodeData={item}
-        colorEditorLabel="method"
+        colorEditorLabel={t.methodWord}
         handleDataFieldUpdate={(key, value) =>
           onMethodChange(item.id, key, value)
         }
@@ -99,10 +101,10 @@ const SortableMethodRow: React.FC<SortableMethodRowProps> = ({
             key={`abstract_${item.id}`}
             ariaLabel={
               item.isAbstract
-                ? "Unmark method as abstract"
-                : "Mark method as abstract"
+                ? t.unmarkMethodAsAbstract
+                : t.markMethodAsAbstract
             }
-            tooltip="Abstract method (italic)"
+            tooltip={t.abstractMethod}
             aria-pressed={!!item.isAbstract}
             data-state={item.isAbstract ? "on" : "off"}
             className="apollon-abstract-toggle"
@@ -112,8 +114,8 @@ const SortableMethodRow: React.FC<SortableMethodRowProps> = ({
           </IconButton>,
           <IconButton
             key={`delete_${item.id}`}
-            ariaLabel="Delete method"
-            tooltip="Delete method"
+            ariaLabel={t.deleteMethod}
+            tooltip={t.deleteMethod}
             onClick={() => onDelete(item.id)}
           >
             <Trash2 width={16} height={16} aria-hidden="true" />
@@ -125,6 +127,7 @@ const SortableMethodRow: React.FC<SortableMethodRowProps> = ({
 }
 
 export const EditableMethodsList: React.FC<Props> = ({ nodeId }) => {
+  const t = useLabels()
   const { nodes, setNodes } = useDiagramStore(
     useShallow((state) => ({ setNodes: state.setNodes, nodes: state.nodes }))
   )
@@ -218,7 +221,7 @@ export const EditableMethodsList: React.FC<Props> = ({ nodeId }) => {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
       <Typography variant="subtitle2" style={{ fontWeight: 600 }}>
-        Methods
+        {t.methods}
       </Typography>
 
       <DndContext
@@ -246,8 +249,8 @@ export const EditableMethodsList: React.FC<Props> = ({ nodeId }) => {
       <div className="apollon-add-row">
         <TextField
           fullWidth
-          aria-label="New method"
-          placeholder="Add method"
+          aria-label={t.newMethod}
+          placeholder={t.addMethod}
           value={newItem}
           onChange={(e: ChangeEvent<HTMLInputElement>) =>
             setNewItem(e.target.value)
@@ -259,8 +262,8 @@ export const EditableMethodsList: React.FC<Props> = ({ nodeId }) => {
           onKeyDown={handleKeyDown}
         />
         <IconButton
-          ariaLabel="Add method"
-          tooltip="Add method"
+          ariaLabel={t.addMethod}
+          tooltip={t.addMethod}
           onClick={handleAddItem}
         >
           <Plus width={16} height={16} aria-hidden="true" />

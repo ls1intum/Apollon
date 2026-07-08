@@ -5,11 +5,13 @@ import { CustomEdgeProps } from "@/edges/EdgeProps"
 import { ArrowLeftRight } from "lucide-react"
 import { useEdgePopOver, useReactiveEdge } from "@/hooks"
 import { PopoverProps } from "../types"
+import { useLabels } from "@/i18n/useLabels"
 import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 
 export const ReachabilityGraphEdgeEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
+  const t = useLabels()
   const { updateEdgeData } = useReactFlow()
   const edge = useReactiveEdge(elementId)
 
@@ -22,19 +24,19 @@ export const ReachabilityGraphEdgeEditPopover: React.FC<PopoverProps> = ({
   const edgeData = edge.data as CustomEdgeProps | undefined
 
   return (
-    <PopoverLayout title="Edge">
+    <PopoverLayout title={t.edge}>
       <EdgeStyleEditor
         edgeData={edgeData}
         handleDataFieldUpdate={(key, value) =>
           updateEdgeData(elementId, { ...edge.data, [key]: value })
         }
-        label="Style"
+        label={t.style}
         sideElements={[
           handleSwap && (
             <IconButton
               key="swap-source-target"
-              ariaLabel="Swap source and target"
-              tooltip="Swap source and target"
+              ariaLabel={t.swapSourceTarget}
+              tooltip={t.swapSourceTarget}
               onClick={handleSwap}
             >
               <ArrowLeftRight width={16} height={16} aria-hidden="true" />
@@ -43,11 +45,11 @@ export const ReachabilityGraphEdgeEditPopover: React.FC<PopoverProps> = ({
         ]}
       />
 
-      <PopoverSection title="Label" divider>
+      <PopoverSection title={t.label} divider>
         <TextField
           value={edgeData?.label ?? ""}
           onChange={(e) => handleLabelChange(e.target.value)}
-          placeholder="Label"
+          placeholder={t.label}
           fullWidth
         />
       </PopoverSection>

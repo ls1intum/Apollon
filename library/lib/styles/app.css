@@ -10,17 +10,17 @@
    and `@import`, or those assets leak into that chunk. The Inter font ships
    separately (lib/styles/fonts.css + lib/utils/exportFonts.ts). */
 
-/* Safe-area floor. Consumers below read `var(--safe-area-inset-*, 0px)`; this
+/* Safe-area floor. Consumers below read `var(--safe-area-inset-*, 0)`; this
    maps them to the UA insets so they work in any browser/embedded webview
    (Artemis, vscode) with `viewport-fit=cover`. The standalone webapp may
    override these at runtime via the Capacitor safe-area plugin (inline style
    on documentElement wins); off-native and everywhere else, env() is the
-   source of truth and resolves to 0px when there is no inset. */
+   source of truth and resolves to 0 when there is no inset. */
 :root {
-  --safe-area-inset-top: env(safe-area-inset-top, 0px);
-  --safe-area-inset-right: env(safe-area-inset-right, 0px);
-  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
-  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+  --safe-area-inset-top: env(safe-area-inset-top, 0);
+  --safe-area-inset-right: env(safe-area-inset-right, 0);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0);
+  --safe-area-inset-left: env(safe-area-inset-left, 0);
 }
 
 /* The shared chrome token system (--apollon-chrome-*: glass, the surface/border/
@@ -72,9 +72,35 @@
 }
 
 /* Overlay chrome regions sit above canvas content + collaboration overlays. */
-.apollon-overlay-panel,
-.apollon-overlay-band {
+.apollon-overlay-grid {
   z-index: var(--apollon-z-chrome);
+}
+
+/* The chrome frame. A CSS grid over the full-bleed canvas: the header/footer own
+   the top/bottom rows, rails span the side tracks between those bands, corner
+   slots float over the side/center tracks, and the centre cell is the canvas
+   hole. The frame is pointer-transparent; each control opts its own box back in.
+   Device safe-area insets and the mobile-keyboard overlap are grid padding, so
+   every region clears the notch / gesture bar / soft keyboard in one place. */
+.apollon-overlay-grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: fit-content(45%) minmax(0, 1fr) fit-content(45%);
+  grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    "header   header    header"
+    "topleft  topcenter topright"
+    "leftrail center    rightrail"
+    "botleft  botcenter botright"
+    "footer   footer    footer";
+  pointer-events: none;
+  padding-top: var(--safe-area-inset-top, 0);
+  padding-left: var(--safe-area-inset-left, 0);
+  padding-right: var(--safe-area-inset-right, 0);
+  padding-bottom: calc(
+    var(--safe-area-inset-bottom, 0) + var(--apollon-keyboard-inset, 0)
+  );
 }
 
 /* Positioning context + clip region for the absolutely-positioned
@@ -89,13 +115,11 @@
   overflow: hidden;
 }
 
+/* Presence avatars register as a top-right overlay control, so the grid places
+   and deconflicts them; this is the inner layout of the bar within its cell. */
 .apollon-collaboration-presence-bar {
-  position: absolute;
-  top: calc(10px + var(--apollon-inset-top, 0px));
-  right: calc(10px + var(--apollon-inset-right, 0px));
   display: flex;
   align-items: center;
-  z-index: 10002;
   pointer-events: auto;
 }
 
@@ -248,54 +272,22 @@
   stroke-width: 4.5px !important;
   filter: drop-shadow(0 0 4px var(--apollon-collaboration-highlight-color));
 }
-/* Floating element palette — an overlay on the canvas for every viewport
-   (there is no docked variant). Its grid columns/gap and each cell's size are
-   set inline from `computePaletteLayout`, so it fits every element in view
-   without scrolling; `overflow-y` is only the rare last resort. */
+
+/* Floating element palette — a rail overlay control. The rail band is stable
+   across unrelated corner chrome; the palette adds its own edge/gap breathing
+   room and caps its grid when same-side bottom chrome would otherwise overlap on
+   short viewports. Its grid columns/gap and each cell's size come inline from
+   `computePaletteLayout`; `overflow-y` is the rare last resort. */
 .apollon-palette {
   box-sizing: border-box;
-  position: absolute;
 
-  /* --apollon-inset-top measures the (uniform-height) top islands + their edge
-     margin; adding the safe-area top (the islands drop by it too) lands the
-     palette an even --apollon-chrome-gap below every island, notch and all.
-     The fallback equals what the ResizeObserver will write for a top island
-     (offsetHeight == island-h, plus the corner Panel's edge margin re-added in
-     OverlayLayer.flushMeasure) — so before the first measurement lands the
-     palette already sits clear of the brand, and the real var arrives
-     byte-identical with no slide. (The race this kills: the var is published
-     only once an inset is non-zero, so a 0px fallback let the palette start
-     over the brand for the frames before measurement.) */
-  top: calc(
-    var(--safe-area-inset-top, 0px) + var(--apollon-chrome-gap) +
-      var(
-        --apollon-inset-top,
-        calc(var(--apollon-chrome-edge) + var(--apollon-chrome-island-h))
-      )
-  );
-  left: calc(
-    var(--apollon-chrome-edge-safe-left) + var(--apollon-inset-left, 0px)
-  );
+  /* One gap in from the band's top/bottom edges (which already sit clear of the
+     header and bottom controls via the reserved insets) and one edge in from the
+     safe-area-adjusted left the band pins to. */
+  margin-top: var(--apollon-chrome-gap);
+  margin-bottom: var(--apollon-chrome-gap);
+  margin-left: var(--apollon-chrome-edge);
 
-  /* Above React Flow's interactive canvas content (renderer, edges 9999,
-     nodes 9998) so taps/drags always land on the palette and a node placed
-     under it can't cover it. Contained by the editor's own stacking context
-     (`.apollon-editor { isolation: isolate }`), so it stays below host-app
-     chrome. The body-portaled drag ghost renders above it regardless. */
-  z-index: 10000;
-
-  /* Fill the space between the palette's own top offset and the bottom controls:
-     subtract the top offset (safe-top + gap + inset-top) and the bottom controls
-     footprint (edge + island-h + gap + inset-bottom + safe-bottom). */
-  max-height: calc(
-    100% - var(--safe-area-inset-top, 0px) - var(--apollon-chrome-gap) -
-      var(
-        --apollon-inset-top,
-        calc(var(--apollon-chrome-edge) + var(--apollon-chrome-island-h))
-      ) -
-      var(--apollon-chrome-edge-safe-bottom) - var(--apollon-chrome-island-h) -
-      var(--apollon-chrome-gap) - var(--apollon-inset-bottom, 0px)
-  );
   display: flex;
   flex-direction: column;
   gap: var(--apollon-chrome-gap);
@@ -378,31 +370,29 @@
   line-height: 1.4;
 }
 
-/* One edge margin for every floating corner cluster (islands, controls,
-   minimap, host panels) — replaces React Flow's default 15px so they line up
-   with the palette at exactly --apollon-chrome-edge from the canvas edge, PLUS
-   the device safe-area inset on each pinned side so chrome never tucks under a
-   notch / home indicator / rounded corner (Capacitor, viewport-fit=cover).
-   Declared before the landscape block so its extra notch nudge still wins. */
-.react-flow__panel.top.left,
-.react-flow__panel.top.right {
+/* React Flow panels that remain self-positioned (for example the unmanaged
+   exported CustomMiniMap) line up with Apollon's edge margin and top/bottom
+   bands. Side rails are NOT applied here: rail insets are camera reservation, not
+   generic horizontal panel offsets, and the built-in minimap is grid-managed. */
+.react-flow__panel.top {
   margin-top: calc(
-    var(--apollon-chrome-edge) + var(--safe-area-inset-top, 0px)
+    var(--apollon-chrome-edge) + var(--safe-area-inset-top, 0) +
+      var(--apollon-inset-top, 0)
   );
 }
 
-.react-flow__panel.bottom.left,
-.react-flow__panel.bottom.right {
-  margin-bottom: var(--apollon-chrome-edge-safe-bottom);
+.react-flow__panel.bottom {
+  margin-bottom: calc(
+    var(--apollon-chrome-edge-safe-bottom) + var(--apollon-keyboard-inset, 0) +
+      var(--apollon-inset-bottom, 0)
+  );
 }
 
-.react-flow__panel.top.left,
-.react-flow__panel.bottom.left {
+.react-flow__panel.left {
   margin-left: var(--apollon-chrome-edge-safe-left);
 }
 
-.react-flow__panel.top.right,
-.react-flow__panel.bottom.right {
+.react-flow__panel.right {
   margin-right: var(--apollon-chrome-edge-safe-right);
 }
 
@@ -479,22 +469,42 @@
    supplies the pane). Drop the panel padding so the map fills the rounded card
    (no fat glass gutter) and clip the svg to the card radius. */
 .react-flow__minimap.apollon-minimap {
-  padding: 0;
   overflow: hidden;
   border-radius: var(--apollon-chrome-radius-lg);
 }
 
-.react-flow__minimap.apollon-minimap .react-flow__minimap-svg {
-  display: block;
-  border-radius: inherit;
+.apollon-mm-shell {
+  position: relative;
 }
 
-/* Hairline separating action families within one cluster (view vs history). */
-.apollon-chrome-cluster-divider {
-  align-self: stretch;
-  width: 1px;
-  margin: 4px 2px;
-  background: var(--apollon-chrome-border);
+.react-flow__panel.apollon-mm-panel,
+.react-flow__minimap.apollon-mm {
+  position: static;
+  margin: 0;
+}
+
+/* A toolbar of glass islands (the zoom cluster: view + history). The toolbar row
+   itself is a transparent layout track; each `.apollon-chrome-cluster` inside is a
+   glass island — the overlay panel wrapper is pass-through, so the island paints
+   the pane (mirroring the palette/header islands). */
+.apollon-chrome-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--apollon-chrome-gap);
+}
+
+.apollon-chrome-cluster {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: var(--apollon-chrome-pad);
+  background-color: var(--apollon-chrome-glass);
+  -webkit-backdrop-filter: var(--apollon-chrome-glass-blur);
+  backdrop-filter: var(--apollon-chrome-glass-blur);
+  border: 1px solid var(--apollon-chrome-border);
+  box-shadow:
+    var(--apollon-chrome-shadow-floating), var(--apollon-chrome-inset-hairline);
+  border-radius: var(--apollon-chrome-radius-lg);
 }
 
 /* React Flow's built-in zoom/fit buttons adopt the same borderless idiom. */
@@ -560,12 +570,14 @@
   background-color: var(--apollon-chrome-glass-solid);
 }
 
-/* The overlay-band regions (header / side rails) AND the overlay corner Panels
+/* The overlay-band regions (header / side rails) AND the overlay corner cells
    are pass-through containers — the portaled chrome (a header island, the
    version rail) paints its own glass surface, so the region wrapper must not
    double up a pane/shadow/blur of its own. */
 .apollon-overlay-band,
-.apollon-overlay-panel {
+.apollon-overlay-corner {
+  min-width: 0;
+  max-width: 100%;
   background-color: transparent;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
@@ -575,9 +587,10 @@
   padding: 0;
 }
 
-/* Corner overlay panels (header islands, host controls) float 10px from the
-   edge, matching the palette and zoom/minimap controls. */
-.apollon-overlay-panel {
+/* Corner clusters (zoom, minimap toggle, host buttons) float one edge margin in
+   from the container edge, matching the palette's gap. The grid pins each corner
+   cell flush to its edge (safe-area padding only), so the gap is this margin. */
+.apollon-overlay-corner {
   margin: var(--apollon-chrome-edge);
 }
 

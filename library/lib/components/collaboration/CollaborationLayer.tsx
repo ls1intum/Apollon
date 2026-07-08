@@ -7,9 +7,12 @@ import {
   useState,
   type CSSProperties,
 } from "react"
+import { createPortal } from "react-dom"
 import { useOnViewportChange, useReactFlow, useViewport } from "@xyflow/react"
 import { useShallow } from "zustand/shallow"
 import { useDiagramStore } from "@/store"
+import { useOverlayStore } from "@/store/context"
+import { RegionMount } from "@/overlay/RegionMount"
 import {
   CollaborationCursor,
   CollaborationState,
@@ -122,6 +125,11 @@ function CollaboratorPresenceBar({
 }) {
   const [collaborators, setCollaborators] = useState<CollaboratorInfo[]>([])
   const [followerCount, setFollowerCount] = useState(0)
+  const register = useOverlayStore((s) => s.register)
+  const unregister = useOverlayStore((s) => s.unregister)
+  const [host] = useState<HTMLDivElement | null>(() =>
+    typeof document !== "undefined" ? document.createElement("div") : null
+  )
 
   useEffect(() => {
     if (!active) {
@@ -160,11 +168,28 @@ function CollaboratorPresenceBar({
   }, [active, showFollow, awareness])
 
   const remoteCount = collaborators.filter((c) => !c.isLocal).length
-  if (!active || remoteCount === 0) return null
+  const shouldShow = active && remoteCount > 0
+
+  // Registered as a top-right overlay control (not a hand-positioned absolute
+  // div), so the engine places it — clearing header / right-rail bands via the
+  // inset-aware corner slot — and deconflicts it with host chrome in that corner.
+  useEffect(() => {
+    if (!host || !shouldShow) return
+    register({
+      id: "apollon:presence",
+      region: "top-right",
+      // Sort before host-composed top-right chrome (lower renders first).
+      order: -100,
+      render: () => <RegionMount el={host} />,
+    })
+    return () => unregister("apollon:presence")
+  }, [host, shouldShow, register, unregister])
+
+  if (!shouldShow || !host) return null
 
   const localClientId = awareness.getLocalAwarenessClientId()
 
-  return (
+  return createPortal(
     <div className="apollon-collaboration-presence-bar">
       {collaborators.map((c, i) => {
         const followTargetId =
@@ -236,7 +261,8 @@ function CollaboratorPresenceBar({
           </Tooltip>
         )
       })}
-    </div>
+    </div>,
+    host
   )
 }
 

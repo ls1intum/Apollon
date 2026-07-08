@@ -10,6 +10,7 @@ import {
 import { ApollonEditor } from "@/apollon-editor"
 import type {
   ApollonCollaborationOptions,
+  ApollonLabels,
   ApollonMode,
   ApollonOptions,
   ApollonView,
@@ -17,6 +18,8 @@ import type {
   UMLModel,
 } from "@/typings"
 import { ApollonInstanceContext } from "./context"
+import { ApollonPalette, ApollonZoom, ApollonMiniMap } from "./builtins"
+import { ApollonSelectionToolbar } from "./ApollonSelectionToolbar"
 
 /**
  * Props for the {@link Apollon} React component.
@@ -64,6 +67,8 @@ export interface ApollonProps {
   view?: ApollonView
   mode?: ApollonMode
   scrollLock?: boolean
+  /** Override the editor's own strings for i18n. See {@link ApollonEditor.setLabels}. */
+  labels?: Partial<ApollonLabels>
   /** Local-only preview overlay. See {@link ApollonEditor.setPreviewMode}. */
   previewMode?: boolean
   /**
@@ -110,6 +115,7 @@ export function Apollon(props: ApollonProps) {
     view,
     mode,
     scrollLock,
+    labels,
     previewMode,
     model,
 
@@ -130,6 +136,12 @@ export function Apollon(props: ApollonProps) {
     collaborationEnabled,
     collaboration,
     debug,
+    labels,
+    // React always owns the chrome: the editor registers nothing, and `<Apollon>`
+    // renders the default `<Apollon.*>` as fallback children when the consumer
+    // composes none. That keeps composing-ness reactive — a control appearing or
+    // disappearing is a normal mount/unmount — with a single owner per reserved id.
+    controls: [],
   })
 
   // Commit-time write — StrictMode-safe latest-closure ref.
@@ -157,9 +169,6 @@ export function Apollon(props: ApollonProps) {
     const userCleanup = onMountRef.current?.(instance)
 
     return () => {
-      // Order: user cleanup → destroy → null ref. A destroyed instance
-      // briefly visible through the ref is more honest than a still-running
-      // editor that a sibling layout effect could touch.
       if (typeof userCleanup === "function") userCleanup()
       instance.destroy()
 
@@ -185,6 +194,10 @@ export function Apollon(props: ApollonProps) {
   useEffect(() => {
     if (editor && scrollLock !== undefined) editor.setScrollLock(scrollLock)
   }, [editor, scrollLock])
+
+  useEffect(() => {
+    if (editor && labels !== undefined) editor.setLabels(labels)
+  }, [editor, labels])
 
   useEffect(() => {
     if (editor && previewMode !== undefined) editor.setPreviewMode(previewMode)
@@ -219,7 +232,31 @@ export function Apollon(props: ApollonProps) {
         style={mergedStyle}
         data-theme={dataTheme}
       />
-      {children}
+      {children === undefined ? <ApollonDefaultControls /> : children}
     </ApollonInstanceContext.Provider>
   )
 }
+
+/** The editor's default chrome. Render it explicitly when adding host children
+ *  that should keep palette + zoom + minimap visible. */
+export function ApollonDefaultControls() {
+  return (
+    <>
+      <ApollonPalette />
+      <ApollonZoom />
+      <ApollonMiniMap />
+    </>
+  )
+}
+
+/**
+ * Compound built-in chrome, so consumers compose `<Apollon.Palette/>`,
+ * `<Apollon.Zoom/>`, `<Apollon.MiniMap/>` as children — presence renders, omission
+ * hides, typed props reconfigure. Custom controls / replacements use the bare
+ * `<ApollonControl>` (or `useControl`) at a reserved id. Also exported by name.
+ */
+Apollon.Palette = ApollonPalette
+Apollon.Zoom = ApollonZoom
+Apollon.MiniMap = ApollonMiniMap
+Apollon.SelectionToolbar = ApollonSelectionToolbar
+Apollon.DefaultControls = ApollonDefaultControls

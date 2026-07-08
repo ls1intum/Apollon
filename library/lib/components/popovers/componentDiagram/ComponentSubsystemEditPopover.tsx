@@ -4,10 +4,12 @@ import { PopoverProps } from "../types"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import { HeaderSwitchElement } from "@/components/styleEditor"
+import { useLabels } from "@/i18n/useLabels"
 import { PopoverSection } from "../PopoverLayout"
 export const ComponentSubsystemEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }: PopoverProps) => {
+  const t = useLabels()
   const { nodes, setNodes } = useDiagramStore(
     useShallow((state) => ({
       nodes: state.nodes,
@@ -43,12 +45,12 @@ export const ComponentSubsystemEditPopover: React.FC<PopoverProps> = ({
   // The «subsystem» stereotype toggle gets its own row below the style editor,
   // not crammed beside the paint roller on the name row.
   return (
-    <DefaultNodeEditPopover elementId={elementId} placeholder="Subsystem name">
-      <PopoverSection title="Stereotype" divider>
+    <DefaultNodeEditPopover elementId={elementId} placeholder={t.subsystemName}>
+      <PopoverSection title={t.stereotype} divider>
         <HeaderSwitchElement
           onClick={switchHeaderShown}
           isComponentHeaderShown={nodeData.isComponentSubsystemHeaderShown}
-          stereotypeLabel="subsystem"
+          stereotypeLabel={t.subsystemWord}
         />
       </PopoverSection>
     </DefaultNodeEditPopover>

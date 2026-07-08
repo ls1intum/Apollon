@@ -5,10 +5,10 @@ import {
   LAYOUT,
   MOBILE_VIEW_QUERY,
 } from "@/constants"
-import { useMetadataStore } from "@/store/context"
+import { useMetadataStore, useOverlayStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { DraggableGhost } from "./DraggableGhost"
-import { ApollonView } from "@/typings"
+import { ApollonMode, ApollonView } from "@/typings"
 import {
   COMPACT_PALETTE,
   PALETTE,
@@ -37,16 +37,26 @@ const previewExtraHeight = (type: string) =>
 // Rough height of the Model/Select view switch when shown — used as the
 // non-grid budget so the grid still fits under it without scrolling.
 const VIEW_SWITCH_HEIGHT = 64
+const PALETTE_LAYOUT_SLACK = 4
 
 export const Sidebar = () => {
-  const { diagramType, view, setView, availableViews } = useMetadataStore(
-    useShallow((state) => ({
-      diagramType: state.diagramType,
-      view: state.view,
-      setView: state.setView,
-      availableViews: state.availableViews,
-    }))
-  )
+  const { diagramType, view, setView, availableViews, mode, readonly, labels } =
+    useMetadataStore(
+      useShallow((state) => ({
+        diagramType: state.diagramType,
+        view: state.view,
+        setView: state.setView,
+        availableViews: state.availableViews,
+        mode: state.mode,
+        readonly: state.readonly,
+        labels: state.labels,
+      }))
+    )
+  // The palette only makes sense while modelling an editable diagram. Gating here
+  // (not in the caller) keeps every registration path identical — the default
+  // chrome, `<Apollon.Palette/>`, and the vanilla `paletteControl()` all hide it
+  // outside modelling, and the empty left-rail band then reserves no room.
+  const showPalette = mode === ApollonMode.Modelling && !readonly
   const showInteractiveSelectionView =
     availableViews.includes(ApollonView.Highlight) ||
     view === ApollonView.Highlight
@@ -56,36 +66,43 @@ export const Sidebar = () => {
     [diagramType]
   )
 
-  // Measure the canvas the palette floats over (its positioned ancestor) so the
-  // grid can size itself to the available room.
+  // The palette is a rail overlay control. Generic rail/corner clearance lives in
+  // OverlayLayer; the palette only reads the rail's current content box to size
+  // its internal grid.
+  const isRightRail = useOverlayStore(
+    (state) => state.controls["apollon:palette"]?.region === "right-rail"
+  )
   const asideRef = useRef<HTMLElement>(null)
   const [canvas, setCanvas] = useState({ w: 0, h: 0, compact: false })
 
   useLayoutEffect(() => {
     const aside = asideRef.current
-    const parent = aside?.offsetParent as HTMLElement | null
-    if (!aside || !parent) return
+    const band = aside?.closest(".apollon-overlay-band") as HTMLElement | null
+    const canvasEl = aside?.closest(".apollon-canvas") as HTMLElement | null
+    if (!aside || !band || !canvasEl) return
     const mobileQuery = window.matchMedia(MOBILE_VIEW_QUERY)
     const measure = () => {
-      const rect = parent.getBoundingClientRect()
-      // Size the grid to the palette's ACTUAL available height — the gap between
-      // its own top and the bottom controls — not the full canvas height. The
-      // palette is CSS-capped to that band (max-height), so using the canvas
-      // height over-counts by the top/bottom chrome and overflows on short
-      // viewports. Measuring real elements keeps this in sync with the CSS
-      // without duplicating the max-height formula in JS.
-      const asideTop = aside.getBoundingClientRect().top
-      const controls = parent.querySelector(".react-flow__controls")
-      const GAP = 8 // --apollon-chrome-gap: palette clears the controls by one
-      const bottomLimit = controls
-        ? controls.getBoundingClientRect().top - GAP
-        : rect.bottom - (asideTop - rect.top) // symmetric fallback
-      const h = Math.max(0, bottomLimit - asideTop)
-      setCanvas({ w: rect.width, h, compact: mobileQuery.matches })
+      const gap =
+        parseFloat(
+          getComputedStyle(aside).getPropertyValue("--apollon-chrome-gap")
+        ) || 8
+      const bandStyle = getComputedStyle(band)
+      const verticalPadding =
+        (parseFloat(bandStyle.paddingTop) || 0) +
+        (parseFloat(bandStyle.paddingBottom) || 0)
+      const h = Math.max(0, band.clientHeight - verticalPadding - 2 * gap)
+      const w = canvasEl.getBoundingClientRect().width
+      const compact = mobileQuery.matches
+      setCanvas((prev) =>
+        prev.w === w && prev.h === h && prev.compact === compact
+          ? prev
+          : { w, h, compact }
+      )
     }
     measure()
     const observer = new ResizeObserver(measure)
-    observer.observe(parent)
+    observer.observe(band)
+    observer.observe(canvasEl)
     mobileQuery.addEventListener("change", measure)
     return () => {
       observer.disconnect()
@@ -101,7 +118,7 @@ export const Sidebar = () => {
       computePaletteLayout(
         cellCount,
         canvas.w,
-        canvas.h,
+        Math.max(0, canvas.h - PALETTE_LAYOUT_SLACK),
         chromeHeight,
         canvas.compact
       ),
@@ -129,7 +146,7 @@ export const Sidebar = () => {
     )
   }, [paletteItems, layout.cellW, layout.cellH, canvas.compact])
 
-  if (paletteItems.length === 0) {
+  if (!showPalette || paletteItems.length === 0) {
     return null
   }
 
@@ -172,11 +189,22 @@ export const Sidebar = () => {
     )
   }
 
+  const paletteStyle: React.CSSProperties = {
+    ...(canvas.h ? { maxHeight: canvas.h } : null),
+    ...(isRightRail
+      ? { marginLeft: 0, marginRight: "var(--apollon-chrome-edge)" }
+      : null),
+  }
+
   return (
     <aside
       ref={asideRef}
       className="apollon-palette"
       data-testid="apollon-palette"
+      aria-label={labels.elementPalette}
+      // Bounded to the rail band the engine reserved (grid math already fits
+      // within it; this caps the rare overflow case to a scroll, not spill).
+      style={paletteStyle}
     >
       {showInteractiveSelectionView && (
         <div className="apollon-palette__view-switch">
@@ -189,7 +217,7 @@ export const Sidebar = () => {
                 : "apollon-palette__view-button"
             }
           >
-            Model
+            {labels.paletteModelView}
           </button>
           <button
             type="button"
@@ -200,14 +228,14 @@ export const Sidebar = () => {
                 : "apollon-palette__view-button"
             }
           >
-            Select Elements
+            {labels.paletteSelectElementsView}
           </button>
         </div>
       )}
 
       {view === ApollonView.Highlight && (
         <div className="apollon-palette__hint">
-          Click nodes or relationships to toggle whether they are interactive.
+          {labels.paletteHighlightHint}
         </div>
       )}
 

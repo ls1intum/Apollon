@@ -9,11 +9,13 @@ import { SfcActionTableProps, SfcActionRow } from "@/types"
 import { PopoverProps } from "../types"
 import { LAYOUT } from "@/constants"
 import { useReactFlow } from "@xyflow/react"
+import { useLabels } from "@/i18n/useLabels"
 import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 
 export const SfcActionTableEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
+  const t = useLabels()
   const { updateNodeData } = useReactFlow()
   const { nodes, setNodes } = useDiagramStore(
     useShallow((state) => ({ setNodes: state.setNodes, nodes: state.nodes }))
@@ -130,13 +132,13 @@ export const SfcActionTableEditPopover: React.FC<PopoverProps> = ({
   }
 
   return (
-    <PopoverLayout title="Action Table">
+    <PopoverLayout title={t.actionTable}>
       <NodeStyleEditor
         nodeData={nodeData}
         handleDataFieldUpdate={handleDataFieldUpdate}
         showNameInputChange={false}
       />
-      <PopoverSection title="Actions" divider>
+      <PopoverSection title={t.actions} divider>
         {actionRows.map((row) => (
           <div
             key={row.id}
@@ -154,8 +156,8 @@ export const SfcActionTableEditPopover: React.FC<PopoverProps> = ({
               sideElements={[
                 <IconButton
                   key={`${row.id}-delete`}
-                  ariaLabel="Delete action row"
-                  tooltip="Delete action row"
+                  ariaLabel={t.deleteActionRow}
+                  tooltip={t.deleteActionRow}
                   onClick={() => handleRowDelete(row.id)}
                 >
                   <Trash2 width={16} height={16} aria-hidden="true" />
@@ -165,7 +167,7 @@ export const SfcActionTableEditPopover: React.FC<PopoverProps> = ({
                 <TextField
                   key={`${row.id}-identifier`}
                   value={row.identifier}
-                  placeholder="ID"
+                  placeholder={t.id}
                   onChange={(e: ChangeEvent<HTMLInputElement>) =>
                     handleRowChange(row.id, "identifier", e.target.value)
                   }
@@ -174,7 +176,7 @@ export const SfcActionTableEditPopover: React.FC<PopoverProps> = ({
                   }}
                 />,
               ]}
-              inputPlaceholder="Action name"
+              inputPlaceholder={t.actionName}
             />
           </div>
         ))}
@@ -187,7 +189,7 @@ export const SfcActionTableEditPopover: React.FC<PopoverProps> = ({
           }}
         >
           <TextField
-            placeholder="ID"
+            placeholder={t.id}
             value={newIdentifier}
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
               setNewIdentifier(e.target.value)
@@ -208,7 +210,7 @@ export const SfcActionTableEditPopover: React.FC<PopoverProps> = ({
           />
           <TextField
             fullWidth
-            placeholder="Action name"
+            placeholder={t.actionName}
             value={newName}
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
               setNewName(e.target.value)
@@ -225,8 +227,8 @@ export const SfcActionTableEditPopover: React.FC<PopoverProps> = ({
             data-new="true"
           />
           <IconButton
-            ariaLabel="Add action row"
-            tooltip="Add action row"
+            ariaLabel={t.addActionRow}
+            tooltip={t.addActionRow}
             onClick={handleAddRow}
           >
             <Plus width={16} height={16} aria-hidden="true" />

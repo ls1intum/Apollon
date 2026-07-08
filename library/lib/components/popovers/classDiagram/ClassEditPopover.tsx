@@ -7,6 +7,7 @@ import { EditableAttributeList } from "./EditableAttributesList"
 import { EditableMethodsList } from "./EditableMethodsList"
 import { ClassTypeSelect, type ClassKind } from "./ClassTypeSelect"
 import { PopoverProps } from "../types"
+import { useLabels } from "@/i18n/useLabels"
 import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 
 // A kind maps to both fields at once. Writing both on every change keeps them
@@ -34,6 +35,7 @@ const kindOf = (data: ClassNodeProps): ClassKind => {
 }
 
 export const ClassEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
+  const t = useLabels()
   const { nodes, setNodes } = useDiagramStore(
     useShallow((state) => ({
       nodes: state.nodes,
@@ -94,10 +96,10 @@ export const ClassEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
   }
 
   return (
-    <PopoverLayout title="Class">
+    <PopoverLayout title={t.class}>
       <NodeStyleEditor
         nodeData={nodeData}
-        colorEditorLabel="class"
+        colorEditorLabel={t.classWord}
         handleDataFieldUpdate={handleDataFieldUpdate}
       />
       <PopoverSection divider>

@@ -3,6 +3,7 @@ import { PaintRoller } from "lucide-react"
 import { DividerLine, IconButton, Typography } from "@/components/ui"
 import { EditorColorPicker } from "./ColorButtons"
 import { useColorEditorDisclosure } from "./ColorEditorGroup"
+import { useLabels } from "@/i18n/useLabels"
 
 /**
  * One color row inside the panel: a label and the swatch picker for that field.
@@ -38,12 +39,14 @@ export function StyleEditorPanel<K extends string>({
   fields,
   getColor,
   onColorChange,
-  colorEditorActionLabel = "Edit colors",
+  colorEditorActionLabel,
   children,
   sideElements = [],
   headerVariant = "node",
 }: StyleEditorPanelProps<K>) {
+  const t = useLabels()
   const { open: paintOpen, setOpen: setPaintOpen } = useColorEditorDisclosure()
+  const paintToggleLabel = colorEditorActionLabel ?? t.editColors
 
   return (
     <div data-slot="style-editor" className="apollon-style-editor">
@@ -58,8 +61,8 @@ export function StyleEditorPanel<K extends string>({
           className="apollon-style-editor__header-actions"
         >
           <IconButton
-            ariaLabel={colorEditorActionLabel}
-            tooltip={colorEditorActionLabel}
+            ariaLabel={paintToggleLabel}
+            tooltip={paintToggleLabel}
             aria-expanded={paintOpen}
             onClick={() => setPaintOpen(!paintOpen)}
           >
@@ -86,7 +89,7 @@ export function StyleEditorPanel<K extends string>({
               >
                 <Typography>{label}</Typography>
                 <EditorColorPicker
-                  label={`${label} picker`}
+                  label={t.colorPicker(label)}
                   selectedColor={getColor(key) ?? ""}
                   onSelect={(color) => onColorChange(key, color)}
                   onReset={() => onColorChange(key, "")}

@@ -74,14 +74,22 @@
   },
   "size-limit": [
     {
-      "name": "main entry (all deps external)",
+      "name": "main entry (published JS, deps externalized)",
       "path": "dist/index.js",
-      "limit": "85 kB"
+      "limit": "85 kB",
+      "disablePlugins": [
+        "@size-limit/webpack",
+        "@size-limit/time"
+      ]
     },
     {
-      "name": "/export lazy chunk (renderers external; Inter ttf inlined)",
+      "name": "/export lazy chunk (published JS, renderers externalized)",
       "path": "dist/export.js",
-      "limit": "700 kB"
+      "limit": "700 kB",
+      "disablePlugins": [
+        "@size-limit/webpack",
+        "@size-limit/time"
+      ]
     }
   ],
   "peerDependencies": {

@@ -7,20 +7,22 @@ import { useState, useEffect } from "react"
 import { generateUUID } from "@/utils"
 import { IconButton, TextField } from "@/components/ui"
 import { EdgeStyleEditor } from "@/components/styleEditor"
+import { useLabels } from "@/i18n/useLabels"
 import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 import { log } from "../../../logger"
 
 export const CommunicationDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
+  const t = useLabels()
   const { setEdges, updateEdgeData } = useReactFlow()
   const edge = useReactiveEdge(elementId)
   const [messages, setMessages] = useState<MessageData[]>([])
   const [newLabelInput, setNewLabelInput] = useState("")
   const [duplicateError, setDuplicateError] = useState(false)
 
-  const sourceName = useReactiveNodeName(edge?.source, "Source")
-  const targetName = useReactiveNodeName(edge?.target, "Target")
+  const sourceName = useReactiveNodeName(edge?.source, t.source)
+  const targetName = useReactiveNodeName(edge?.target, t.target)
 
   useEffect(() => {
     if (edge?.data) {
@@ -124,7 +126,7 @@ export const CommunicationDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
   const getMessageLabel = (message: MessageData, index: number) => {
     const trimmedText = message.text.trim()
 
-    return trimmedText || `message ${index + 1}`
+    return trimmedText || t.messageFallbackLabel(index + 1)
   }
 
   if (!edge) {
@@ -133,16 +135,16 @@ export const CommunicationDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
   const edgeData = edge.data as CustomEdgeProps | undefined
 
   return (
-    <PopoverLayout title="Edge">
+    <PopoverLayout title={t.edge}>
       <EdgeStyleEditor
         edgeData={edgeData}
         handleDataFieldUpdate={(key, value) =>
           updateEdgeData(elementId, { ...edge.data, [key]: value })
         }
-        label="Style"
+        label={t.style}
       />
 
-      <PopoverSection title="Messages" divider>
+      <PopoverSection title={t.messages} divider>
         {messages.map((message, index) => {
           const isDuplicateText = messages.some(
             (msg, i) =>
@@ -163,8 +165,8 @@ export const CommunicationDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
             >
               {/* Direction Toggle Button */}
               <IconButton
-                ariaLabel={`Switch direction for ${messageLabel}: ${directionText}`}
-                tooltip={`Switch direction: ${directionText}`}
+                ariaLabel={t.switchDirectionFor(messageLabel, directionText)}
+                tooltip={t.switchDirection(directionText)}
                 onClick={() => handleMessageDirectionToggle(index)}
               >
                 {message.direction === "target" ? (
@@ -179,15 +181,15 @@ export const CommunicationDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
                 value={message.text}
                 onChange={(e) => handleMessageTextUpdate(index, e.target.value)}
                 fullWidth
-                placeholder={`Message ${index + 1}`}
+                placeholder={t.messagePlaceholder(index + 1)}
                 error={isDuplicateText}
-                helperText={isDuplicateText ? "Duplicate message" : ""}
+                helperText={isDuplicateText ? t.duplicateMessage : ""}
               />
 
               {/* Delete Button */}
               <IconButton
-                ariaLabel={`Delete ${messageLabel}`}
-                tooltip={`Delete ${messageLabel}`}
+                ariaLabel={t.deleteMessage(messageLabel)}
+                tooltip={t.deleteMessage(messageLabel)}
                 onClick={() => handleDeleteMessage(index)}
               >
                 <Trash2 width={16} height={16} aria-hidden="true" />
@@ -203,13 +205,13 @@ export const CommunicationDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
             onChange={(e) => handleInputChange(e.target.value)}
             onKeyDown={handleKeyDown}
             fullWidth
-            placeholder="Message"
+            placeholder={t.message}
             error={duplicateError}
-            helperText={duplicateError ? "This message already exists" : ""}
+            helperText={duplicateError ? t.messageExists : ""}
           />
           <IconButton
-            ariaLabel="Add message"
-            tooltip="Add message"
+            ariaLabel={t.addMessage}
+            tooltip={t.addMessage}
             onClick={handleAddMessage}
           >
             <Plus width={16} height={16} aria-hidden="true" />

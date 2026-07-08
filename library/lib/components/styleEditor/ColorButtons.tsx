@@ -9,6 +9,7 @@ import {
   SWATCH_NAMES,
 } from "@tumaet/ui/lib/color-swatch-tokens"
 import { resolveApollonThemeVars } from "@/components/ui/portalTheme"
+import { useLabels } from "@/i18n/useLabels"
 
 // Embed-safe editor color-picker. Mirrors the @tumaet/ui color-picker STRUCTURE
 // — a swatch trigger that opens a Popover holding a swatch grid plus a native
@@ -46,8 +47,10 @@ export const EditorColorPicker: React.FC<EditorColorPickerProps> = ({
   selectedColor = "",
   onSelect,
   onReset,
-  label = "Pick a color",
+  label,
 }) => {
+  const t = useLabels()
+  const pickerLabel = label ?? t.pickColor
   // The popup portals to <body>, escaping the `.apollon-editor` subtree that
   // scopes `--apollon-*` (incl. the swatch palette); copy the resolved theme
   // onto it at open time so a dark or custom embed theme carries into the picker.
@@ -78,7 +81,7 @@ export const EditorColorPicker: React.FC<EditorColorPickerProps> = ({
         ref={triggerRef}
         data-slot="color-picker-trigger"
         className="apollon-color-swatch"
-        aria-label={label}
+        aria-label={pickerLabel}
         style={
           {
             "--swatch-color": selectedColor || "transparent",
@@ -95,7 +98,7 @@ export const EditorColorPicker: React.FC<EditorColorPickerProps> = ({
             <ToggleGroup
               data-slot="color-picker-grid"
               className="apollon-color-picker__grid"
-              aria-label={label}
+              aria-label={pickerLabel}
               value={selectedColor ? [selectedColor] : []}
               onValueChange={handleGroupChange}
             >
@@ -131,10 +134,10 @@ export const EditorColorPicker: React.FC<EditorColorPickerProps> = ({
               data-slot="color-picker-custom"
               className="apollon-color-picker__custom"
             >
-              Custom
+              {t.custom}
               <input
                 type="color"
-                aria-label="Custom color"
+                aria-label={t.customColor}
                 data-custom-active={isCustom || undefined}
                 value={isCustom ? selectedColor : NATIVE_COLOR_INPUT_FALLBACK}
                 onChange={(event) => onSelect(event.target.value)}
@@ -148,7 +151,7 @@ export const EditorColorPicker: React.FC<EditorColorPickerProps> = ({
                 className="apollon-color-picker__reset"
                 onClick={onReset}
               >
-                Reset
+                {t.reset}
               </Button>
             )}
           </Popover.Popup>

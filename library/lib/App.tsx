@@ -8,10 +8,7 @@ import {
 import { type MouseEvent as ReactMouseEvent, useCallback } from "react"
 import {
   CustomBackground,
-  CustomControls,
-  CustomMiniMap,
   ReconnectConnectionLine,
-  Sidebar,
   AssessmentSelectionDebug,
   ScrollOverlay,
   AlignmentGuides,
@@ -52,7 +49,6 @@ import {
   useRemoteDraggingNodes,
   applyDraggingOverlay,
 } from "./hooks/useRemoteDraggingNodes"
-import { ApollonMode } from "./typings"
 import {
   getConnectionLineType,
   resolveReconnectPreviewBasePoints,
@@ -99,7 +95,6 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
     )
 
   const {
-    mode,
     diagramType,
     readonly,
     scrollLock,
@@ -109,7 +104,6 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
     stopReconnectPreview,
   } = useMetadataStore(
     useShallow((state) => ({
-      mode: state.mode,
       diagramType: state.diagramType,
       readonly: state.readonly,
       scrollLock: state.scrollLock,
@@ -122,9 +116,10 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
 
   const isDiagramModifiable = useDiagramModifiable()
 
-  // Publish the reserved overlay insets as CSS custom properties so the editor's
-  // own overlays (palette, presence bar, controls, minimap) slide to make room
-  // for host chrome instead of overlapping it.
+  // The reserved-room rect, published as CSS custom properties for fitView and
+  // unmanaged React Flow panels that still opt into top/bottom offsets.
+  // Built-in chrome is grid-managed, so side-rail insets are camera reservation
+  // rather than generic panel offsets.
   const insets = useOverlayStore((state) => state.insets)
 
   // Overlay the live positions/sizes of nodes peers are dragging (carried over
@@ -190,21 +185,15 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
             overflow: "hidden",
             backgroundColor: "var(--apollon-background, #ffffff)",
             position: "relative",
-            // Only emit the inset custom properties when chrome actually reserves
-            // room, so an editor with no overlays keeps the exact original style
-            // attribute (byte-identical DOM for embedders like Artemis).
-            ...(insets.top || insets.right || insets.bottom || insets.left
-              ? {
-                  "--apollon-inset-top": `${insets.top}px`,
-                  "--apollon-inset-right": `${insets.right}px`,
-                  "--apollon-inset-bottom": `${insets.bottom}px`,
-                  "--apollon-inset-left": `${insets.left}px`,
-                }
-              : {}),
+            // Fit-view and unmanaged top/bottom panels read these (0 when
+            // no chrome reserves that edge).
+            "--apollon-inset-top": `${insets.top}px`,
+            "--apollon-inset-right": `${insets.right}px`,
+            "--apollon-inset-bottom": `${insets.bottom}px`,
+            "--apollon-inset-left": `${insets.left}px`,
           } as CSSProperties
         }
       >
-        {mode === ApollonMode.Modelling && !readonly && <Sidebar />}
         <div className="apollon-canvas">
           <ReactFlow
             id={`react-flow-library-${diagramId}`}
@@ -268,11 +257,11 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
             deleteKeyCode={["Backspace", "Delete"]}
           >
             <CustomBackground />
-            <CustomMiniMap />
-            <CustomControls />
             <AlignmentGuides />
             <AssessmentSelectionDebug />
-            {/* Host-injected canvas chrome (header, rails, controls). */}
+            {/* Renders every registered control (built-in + host-injected) into
+                its region: header, rails, corners, on-canvas. The chrome itself is
+                registered at construction (imperative) or by the React wrapper. */}
             <OverlayLayer />
           </ReactFlow>
           <ScrollOverlay />

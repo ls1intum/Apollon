@@ -10,7 +10,24 @@ export type {
   InsetContribution,
   OverlayControlOptions,
   OverlayControlInput,
+  OverlayControlSnapshot,
 } from "./overlay/types"
+// Built-in chrome descriptor factories — the framework-agnostic source of truth
+// for the palette, zoom cluster, and minimap. Pass the results to
+// `ApollonOptions.controls` (or omit for the defaults); the React compound
+// components below wrap the same factories.
+export {
+  paletteControl,
+  zoomControl,
+  miniMapControl,
+  defaultControls,
+  PALETTE_ID,
+  ZOOM_ID,
+  MINIMAP_ID,
+  type PaletteControlOptions,
+  type ZoomControlOptions,
+  type MiniMapControlOptions,
+} from "./chrome/builtins/controls"
 export {
   // Artemis-facing assessment helpers (host consumes these directly).
   getAssessmentNameForArtemis,
@@ -31,6 +48,11 @@ export { FONT_FAMILY } from "./fontStack"
 // supported surface. Public helpers are cherry-picked by name above.
 export { log, setLogLevel, setLogger } from "./logger"
 export type { LogLevel } from "./logger"
+// i18n: the editor's own strings and their English defaults. A host overrides any
+// subset via `ApollonOptions.labels` / `<Apollon labels>` / `editor.setLabels`;
+// `useLabels` reads the active set inside custom chrome.
+export { DEFAULT_LABELS, type ApollonLabels } from "./i18n/labels"
+export { useLabels } from "./i18n/useLabels"
 // Public theming API. The helper is bundled from @tumaet/ui into dist, so
 // external consumers don't take a dependency on the private workspace package.
 export { createApollonTheme, type ApollonTheme } from "@tumaet/ui/theme"
@@ -41,7 +63,11 @@ export { createApollonTheme, type ApollonTheme } from "@tumaet/ui/theme"
 // side-effect-free except CSS). The `index` chunk carries a `"use client"`
 // banner (vite.config.ts) for Next.js App Router — note it marks the whole
 // entry client-only.
-export { Apollon, type ApollonProps } from "./components/react/Apollon"
+export {
+  Apollon,
+  ApollonDefaultControls,
+  type ApollonProps,
+} from "./components/react/Apollon"
 export {
   ApollonProvider,
   useApollonEditor,
@@ -54,3 +80,17 @@ export {
   ApollonControl,
   type ApollonControlProps,
 } from "./components/react/ApollonControl"
+// Compound built-in chrome + the `useControl` primitive. Compose them as
+// `<Apollon>` children — presence renders, omission hides, typed props
+// reconfigure — or drop to the vanilla factories above.
+export {
+  useControl,
+  ApollonPalette,
+  ApollonZoom,
+  ApollonMiniMap,
+} from "./components/react/builtins"
+// Selection-anchored toolbar (screen-space, follows the selection, non-scaling).
+export {
+  ApollonSelectionToolbar,
+  type ApollonSelectionToolbarProps,
+} from "./components/react/ApollonSelectionToolbar"

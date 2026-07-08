@@ -1,5 +1,6 @@
 import React from "react"
 import { Check, TriangleAlert, X } from "lucide-react"
+import { useLabels } from "@/i18n/useLabels"
 
 /**
  * The assessment score as a tone-coded pill: a leading status icon plus the
@@ -32,10 +33,11 @@ const iconFor: Record<AssessmentTone, typeof Check> = {
 }
 
 export const AssessmentScore: React.FC<{ score?: number }> = ({ score }) => {
+  const t = useLabels()
   const tone = toneFor(score)
   const Icon = iconFor[tone]
   const label =
-    score === undefined ? "Not graded" : score > 0 ? `+${score}` : `${score}`
+    score === undefined ? t.notGraded : score > 0 ? `+${score}` : `${score}`
 
   return (
     <span data-slot="assessment-score" data-tone={tone}>
