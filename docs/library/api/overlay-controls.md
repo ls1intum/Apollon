@@ -9,8 +9,8 @@ description: Floating canvas chrome in named regions — React, imperative, and 
 Apollon renders an editor's chrome — toolbars, palettes, rails, banners — as
 **floating controls anchored in named regions** of the canvas, not as separate
 bars stacked around it. Host chrome and the editor's own overlays share one
-collision-free layer, so they never overlap and the diagram knows how to make
-room for them.
+measured layout layer, so bands, rails, and corner controls deconflict through the
+same rules and the diagram knows how to make room for reserving chrome.
 
 A control is positioned by **region** (where it sits) and can optionally
 **reserve space** so the diagram "makes way" for it. Reservation is measured, not
@@ -61,11 +61,17 @@ overlay store — only real option changes (region, inset, order, …) push an
 update.
 
 ```tsx no-check
-import { Apollon, ApollonControl, UMLDiagramType } from "@tumaet/apollon"
+import {
+  Apollon,
+  ApollonControl,
+  ApollonDefaultControls,
+  UMLDiagramType,
+} from "@tumaet/apollon"
 
 function Editor() {
   return (
     <Apollon defaultType={UMLDiagramType.ClassDiagram}>
+      <ApollonDefaultControls />
       <ApollonControl id="my-app:export" region="top-right" groupLabel="Export">
         <button type="button" onClick={exportDiagram}>
           Export
@@ -79,7 +85,10 @@ function Editor() {
 `ApollonControlProps` is [`OverlayControlOptions`](#overlaycontroloptions) plus
 `children: ReactNode`. The component renders `null` in the host tree; the visible
 output is the portaled `children`. The `id` must be stable — changing it
-re-registers a fresh control.
+re-registers a fresh control. Supplying children to `<Apollon>` means you own the
+composition; include `<ApollonDefaultControls />` (or the individual
+`<Apollon.Palette />`, `<Apollon.Zoom />`, `<Apollon.MiniMap />`) when a custom
+child should keep the default chrome visible.
 
 ## The imperative way: `addControl`
 
@@ -127,8 +136,10 @@ reserved ids (`PALETTE_ID`, `ZOOM_ID`, `MINIMAP_ID`). You compose them the same
 two ways.
 
 **React — as `<Apollon>` children.** Presence renders, omission hides, typed
-props reconfigure. Passing _any_ children opts out of the defaults, so you list
-exactly the chrome you want (an empty composition is a bare canvas).
+props reconfigure. Passing _any_ children makes the composition explicit, so you
+list exactly the chrome you want. Use `<ApollonDefaultControls />` to keep the
+standard palette + zoom + minimap next to custom children; pass `null` or an empty
+fragment for a bare canvas.
 
 ```tsx no-check
 import { Apollon, UMLDiagramType } from "@tumaet/apollon"
@@ -343,12 +354,12 @@ control never drags the diagram.
   `region="bottom-right"` with `inset={{ bottom: "auto" }}` instead: the diagram
   still reserves bottom room for the island, but unrelated bottom-left chrome
   stays flush.
-- **Corners clear full-width bands, not empty rail columns.** Top/bottom corner
+- **Corners clear full-width bands and same-side rails.** Top/bottom corner
   controls sit below a header and above a footer structurally. Side rails share
-  the side track with the corner slots, so short rails leave bottom/top corners
-  flush instead of reserving an empty column. The built-in minimap uses the same
-  corner slots, so it stacks with host controls in its region instead of applying
-  its own side offsets.
+  the side track with the corner slots and are padded by the measured same-side
+  corner extent, so short rails leave corners flush while tall rails avoid covering
+  them. The built-in minimap uses the same corner slots, so it stacks with host
+  controls in its region instead of applying its own side offsets.
 - **Selection-anchored toolbars** — `<Apollon.SelectionToolbar>` (Figma/tldraw
   style): a screen-space, constant-size toolbar that follows the current selection.
   Distinct from `on-canvas`, which lives in diagram space and scales with zoom.

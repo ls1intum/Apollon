@@ -6,7 +6,6 @@ import { GiveFeedbackAssessmentBox } from "../GiveFeedbackAssessmentBox"
 import { Button } from "@tumaet/ui/components/button"
 import { useGoToNextAssessment } from "@/hooks"
 import { useLabels } from "@/i18n/useLabels"
-import { nodeTypeLabel } from "@/utils/nodeUtils"
 import { PopoverLayout } from "../PopoverLayout"
 
 export const CommunicationObjectNameGiveFeedbackPopover = ({
@@ -27,7 +26,7 @@ export const CommunicationObjectNameGiveFeedbackPopover = ({
         elementId={elementId}
         name={nodeData.name}
         elementType="node"
-        typeLabel={nodeTypeLabel(node.type)}
+        typeLabel={t.nodeTypeLabel(node.type)}
       />
       {nodeData.attributes.map((attr) => (
         <GiveFeedbackAssessmentBox

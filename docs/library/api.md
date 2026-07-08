@@ -43,8 +43,10 @@ import "@tumaet/apollon/style.css"
 Container, lifecycle, and two layers of editor options.
 
 **Container.** `className`, `style` (needs an explicit non-zero height), and
-`children` rendered alongside the canvas inside the editor's context
-provider.
+`children` rendered inside the editor's context provider. Omitting `children`
+renders the default palette, zoom, and minimap; passing children makes the chrome
+composition explicit, so include `<ApollonDefaultControls />` when custom children
+should keep the default controls.
 
 **Theming.** `theme` (a `--apollon-*` token object, typically from
 `createApollonTheme(...)`) and `dataTheme` (`"light" | "dark"`) are spread onto

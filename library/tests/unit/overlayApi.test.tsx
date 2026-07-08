@@ -208,6 +208,23 @@ describe("built-in controls (imperative descriptors)", () => {
 
     ed.destroy()
   })
+
+  it("a custom replacement at a reserved id moves like a normal control", () => {
+    el = document.createElement("div")
+    document.body.appendChild(el)
+    const ed = new ApollonEditor(el)
+
+    ed.updateControl(PALETTE_ID, {
+      region: "header",
+      render: () => <button type="button">Replace palette</button>,
+    })
+    expect(ed.getControl(PALETTE_ID)?.region).toBe("header")
+
+    ed.updateControl(PALETTE_ID, { region: "bottom-right" })
+    expect(ed.getControl(PALETTE_ID)?.region).toBe("bottom-right")
+
+    ed.destroy()
+  })
 })
 
 // The <ApollonControl> facade in isolation (a fake editor, so we exercise the
@@ -418,24 +435,37 @@ describe("OverlayLayer band rendering (rendered lane stacking)", () => {
 })
 
 // `useKeyboardInset` (inside OverlayLayer) mirrors the visual viewport's bottom
-// overlap (a mobile soft keyboard) into `--apollon-keyboard-inset` on the document
-// root. The var is SHARED by every editor on the page, so it is ref-counted: one
-// editor unmounting must not wipe it out from under the others. Exercised through
-// OverlayLayer since the hook is internal.
+// overlap (a mobile soft keyboard) into `--apollon-keyboard-inset` on the editor
+// that actually intersects it. Exercised through OverlayLayer since the hook is
+// internal.
 describe("useKeyboardInset (OverlayLayer)", () => {
   afterEach(cleanup)
 
-  function renderLayer() {
+  function renderLayer(bottom: number) {
     const store = createOverlayStore()
-    return render(
+    const result = render(
       <OverlayStoreContext.Provider value={store}>
         <OverlayLayer />
       </OverlayStoreContext.Provider>
     )
+    const grid = result.container.querySelector(
+      ".apollon-overlay-grid"
+    ) as HTMLElement
+    vi.spyOn(grid, "getBoundingClientRect").mockReturnValue({
+      x: 0,
+      y: 0,
+      top: 0,
+      left: 0,
+      right: 800,
+      bottom,
+      width: 800,
+      height: bottom,
+      toJSON: () => {},
+    })
+    return { ...result, grid }
   }
 
-  it("publishes the viewport overlap and removes the var only when the last writer unmounts", () => {
-    const root = document.documentElement
+  it("publishes only the editor-scoped viewport overlap", () => {
     const listeners: Record<string, Set<() => void>> = {}
     const vv = {
       height: 668,
@@ -458,36 +488,38 @@ describe("useKeyboardInset (OverlayLayer)", () => {
     })
 
     try {
-      // First editor mounts → overlap = innerHeight − vv.height − offsetTop.
-      const first = renderLayer()
-      expect(root.style.getPropertyValue("--apollon-keyboard-inset")).toBe(
-        "100px"
-      )
+      const upperEditor = renderLayer(300)
+      const lowerEditor = renderLayer(768)
+      act(() => {
+        listeners.resize?.forEach((cb) => cb())
+      })
+      expect(
+        upperEditor.grid.style.getPropertyValue("--apollon-keyboard-inset")
+      ).toBe("0px")
+      expect(
+        lowerEditor.grid.style.getPropertyValue("--apollon-keyboard-inset")
+      ).toBe("100px")
 
       // A soft keyboard opens: the visual viewport shrinks, a resize re-measures.
       act(() => {
         vv.height = 468
         listeners.resize?.forEach((cb) => cb())
       })
-      expect(root.style.getPropertyValue("--apollon-keyboard-inset")).toBe(
-        "300px"
-      )
+      expect(
+        upperEditor.grid.style.getPropertyValue("--apollon-keyboard-inset")
+      ).toBe("0px")
+      expect(
+        lowerEditor.grid.style.getPropertyValue("--apollon-keyboard-inset")
+      ).toBe("300px")
 
-      // A second editor mounts (shares the one document-root var).
-      const second = renderLayer()
-      expect(root.style.getPropertyValue("--apollon-keyboard-inset")).toBe(
-        "300px"
-      )
-
-      // Unmounting ONE editor must not clear the shared var while another writes it.
-      first.unmount()
-      expect(root.style.getPropertyValue("--apollon-keyboard-inset")).toBe(
-        "300px"
-      )
-
-      // Only the LAST writer unmounting removes the var.
-      second.unmount()
-      expect(root.style.getPropertyValue("--apollon-keyboard-inset")).toBe("")
+      lowerEditor.unmount()
+      expect(
+        lowerEditor.grid.style.getPropertyValue("--apollon-keyboard-inset")
+      ).toBe("")
+      upperEditor.unmount()
+      expect(
+        upperEditor.grid.style.getPropertyValue("--apollon-keyboard-inset")
+      ).toBe("")
     } finally {
       if (origInner) Object.defineProperty(window, "innerHeight", origInner)
       // @ts-expect-error clear the stubbed property (jsdom has none by default)

@@ -68,10 +68,45 @@ function assertBuiltInRegion(
   }
 }
 
-export function assertBuiltInControlRegion(id: string, region: string): void {
-  if (id === PALETTE_ID) {
+const BUILT_IN_CONTROL_KIND = Symbol("apollon-built-in-control")
+type BuiltInControlKind = "palette" | "minimap"
+type BuiltInControlInput = OverlayControlInput & {
+  [BUILT_IN_CONTROL_KIND]?: BuiltInControlKind
+}
+
+function markBuiltIn<T extends OverlayControlInput>(
+  control: T,
+  kind: BuiltInControlKind
+): T {
+  Object.defineProperty(control, BUILT_IN_CONTROL_KIND, {
+    value: kind,
+    enumerable: false,
+  })
+  return control
+}
+
+function builtInKind(
+  control: OverlayControlInput
+): BuiltInControlKind | undefined {
+  return (control as BuiltInControlInput)[BUILT_IN_CONTROL_KIND]
+}
+
+export function preserveBuiltInControlKind(
+  from: OverlayControlInput,
+  to: OverlayControlInput
+): OverlayControlInput {
+  const kind = builtInKind(from)
+  return kind ? markBuiltIn(to, kind) : to
+}
+
+export function assertBuiltInControlRegion(
+  control: OverlayControlInput,
+  region: string
+): void {
+  const kind = builtInKind(control)
+  if (kind === "palette") {
     assertBuiltInRegion("paletteControl", region, PALETTE_REGIONS)
-  } else if (id === MINIMAP_ID) {
+  } else if (kind === "minimap") {
     assertBuiltInRegion("miniMapControl", region, MINIMAP_REGIONS)
   }
 }
@@ -81,12 +116,15 @@ export function paletteControl(
 ): OverlayControlInput {
   const region = options.region ?? "left-rail"
   assertBuiltInRegion("paletteControl", region, PALETTE_REGIONS)
-  return {
-    ...options,
-    id: PALETTE_ID,
-    region,
-    render: () => <Sidebar />,
-  }
+  return markBuiltIn(
+    {
+      ...options,
+      id: PALETTE_ID,
+      region,
+      render: () => <Sidebar />,
+    },
+    "palette"
+  )
 }
 
 export function zoomControl({
@@ -134,12 +172,15 @@ export function miniMapControl({
   ...placement
 }: MiniMapControlOptions = {}): OverlayControlInput {
   assertBuiltInRegion("miniMapControl", region, MINIMAP_REGIONS)
-  return {
-    ...placement,
-    id: MINIMAP_ID,
-    region,
-    render: () => <BuiltInMiniMap pannable={pannable} zoomable={zoomable} />,
-  }
+  return markBuiltIn(
+    {
+      ...placement,
+      id: MINIMAP_ID,
+      region,
+      render: () => <BuiltInMiniMap pannable={pannable} zoomable={zoomable} />,
+    },
+    "minimap"
+  )
 }
 
 /** The editor's default chrome — palette, zoom/history cluster, minimap. */

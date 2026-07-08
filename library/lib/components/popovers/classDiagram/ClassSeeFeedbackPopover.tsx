@@ -5,7 +5,6 @@ import { PopoverProps } from "../types"
 import { SeeFeedbackAssessmentBox } from "../SeeFeedbackAssessmentBox"
 import { useGoToNextAssessment } from "@/hooks"
 import { useLabels } from "@/i18n/useLabels"
-import { nodeTypeLabel } from "@/utils/nodeUtils"
 import { Button } from "@tumaet/ui/components/button"
 import { PopoverLayout } from "../PopoverLayout"
 
@@ -25,7 +24,7 @@ export const ClassSeeFeedbackPopover = ({ elementId }: PopoverProps) => {
         elementId={elementId}
         name={nodeData.name}
         type={node.type ?? ""}
-        typeLabel={nodeTypeLabel(node.type)}
+        typeLabel={t.nodeTypeLabel(node.type)}
       />
 
       {nodeData.attributes.map((attr) => (

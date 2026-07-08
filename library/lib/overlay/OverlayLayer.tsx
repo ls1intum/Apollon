@@ -8,6 +8,7 @@ import {
   useRef,
   type CSSProperties,
   type ReactNode,
+  type RefObject,
 } from "react"
 import { useOverlayStore } from "../store/context"
 import {
@@ -101,40 +102,33 @@ function groupByLane(controls: OverlayControl[]): [number, OverlayControl[]][] {
   return [...byLane.entries()].sort((a, b) => a[0] - b[0])
 }
 
-/**
- * Publishes the on-screen keyboard's overlap (mobile soft keyboard, or any bottom
- * obstruction the visual viewport reports) as `--apollon-keyboard-inset` on the
- * document root. A `bottom: 0` footer band sits at the LAYOUT-viewport bottom,
- * which the keyboard covers; adding this inset lifts the footer (and the rails'
- * bottom) to the VISUAL-viewport bottom so an action bar stays reachable while a
- * label editor has focus. No-op (0) on desktop / where `visualViewport` is absent.
- */
-// The keyboard var lives on the document root (one on-screen keyboard, shared by
-// every editor). Ref-count writers so unmounting ONE editor doesn't wipe the var
-// out from under the others until they'd next re-measure on a viewport event.
-let keyboardInsetWriters = 0
-function useKeyboardInset(): void {
+function useKeyboardInset(gridRef: RefObject<HTMLDivElement | null>): void {
   useEffect(() => {
     const vv = window.visualViewport
     if (!vv) return
-    const root = document.documentElement
+    let host: HTMLElement | null = null
     const update = () => {
-      const overlap = Math.max(0, window.innerHeight - vv.height - vv.offsetTop)
-      root.style.setProperty("--apollon-keyboard-inset", `${overlap}px`)
+      const grid = gridRef.current
+      host = (grid?.closest(".apollon-canvas") as HTMLElement | null) ?? grid
+      if (!host) return
+      const keyboardTop = vv.offsetTop + vv.height
+      const overlap = Math.max(
+        0,
+        host.getBoundingClientRect().bottom - keyboardTop
+      )
+      host.style.setProperty("--apollon-keyboard-inset", `${overlap}px`)
     }
     update()
-    keyboardInsetWriters += 1
     vv.addEventListener("resize", update)
     vv.addEventListener("scroll", update)
+    window.addEventListener("resize", update)
     return () => {
       vv.removeEventListener("resize", update)
       vv.removeEventListener("scroll", update)
-      keyboardInsetWriters -= 1
-      if (keyboardInsetWriters === 0) {
-        root.style.removeProperty("--apollon-keyboard-inset")
-      }
+      window.removeEventListener("resize", update)
+      host?.style.removeProperty("--apollon-keyboard-inset")
     }
-  }, [])
+  }, [gridRef])
 }
 
 interface ControlSlotProps {
@@ -208,7 +202,8 @@ function ControlSlot({ control, registerMeasure }: ControlSlotProps) {
 export function OverlayLayer() {
   const controls = useOverlayStore((s) => s.controls)
   const setMeasured = useOverlayStore((s) => s.setMeasured)
-  useKeyboardInset()
+  const gridRef = useRef<HTMLDivElement>(null)
+  useKeyboardInset(gridRef)
 
   const visibleControls = useMemo(
     () =>
@@ -225,6 +220,7 @@ export function OverlayLayer() {
   // setMeasured through refs, so registering a new control never tears the
   // observer down (which would drop existing measurements).
   const elByIdRef = useRef(new Map<string, HTMLElement>())
+  const elByRegionRef = useRef(new Map<OverlayRegion, HTMLElement>())
   const rafRef = useRef<number | null>(null)
   const observerRef = useRef<ResizeObserver | null>(null)
   const controlsRef = useRef(controls)
@@ -258,6 +254,38 @@ export function OverlayLayer() {
           ) || 0
       setMeasuredRef.current(id, { [side]: raw + edge })
     }
+
+    const grid = gridRef.current
+    if (grid) {
+      const clear = (region: OverlayRegion) => {
+        const el = elByRegionRef.current.get(region)
+        if (!el) return 0
+        const rect = el.getBoundingClientRect()
+        if (rect.height === 0) return 0
+        const styles = getComputedStyle(el)
+        const edge =
+          parseFloat(styles.getPropertyValue("--apollon-chrome-edge")) || 0
+        const gap =
+          parseFloat(styles.getPropertyValue("--apollon-chrome-gap")) || 0
+        return Math.ceil(rect.height + edge + gap)
+      }
+      grid.style.setProperty(
+        "--apollon-left-rail-top-clearance",
+        `${clear("top-left")}px`
+      )
+      grid.style.setProperty(
+        "--apollon-left-rail-bottom-clearance",
+        `${clear("bottom-left")}px`
+      )
+      grid.style.setProperty(
+        "--apollon-right-rail-top-clearance",
+        `${clear("top-right")}px`
+      )
+      grid.style.setProperty(
+        "--apollon-right-rail-bottom-clearance",
+        `${clear("bottom-right")}px`
+      )
+    }
   }, [])
 
   const scheduleMeasure = useCallback(() => {
@@ -269,6 +297,7 @@ export function OverlayLayer() {
     const observer = new ResizeObserver(() => scheduleMeasure())
     observerRef.current = observer
     for (const el of elByIdRef.current.values()) observer.observe(el)
+    for (const el of elByRegionRef.current.values()) observer.observe(el)
     scheduleMeasure()
     return () => {
       observer.disconnect()
@@ -303,6 +332,23 @@ export function OverlayLayer() {
     [scheduleMeasure]
   )
 
+  const registerRegion = useCallback(
+    (region: OverlayRegion, el: HTMLElement | null) => {
+      const observer = observerRef.current
+      const prev = elByRegionRef.current.get(region)
+      if (prev && prev !== el) {
+        observer?.unobserve(prev)
+        elByRegionRef.current.delete(region)
+      }
+      if (el) {
+        elByRegionRef.current.set(region, el)
+        observer?.observe(el)
+      }
+      scheduleMeasure()
+    },
+    [scheduleMeasure]
+  )
+
   // Self-positioning controls (for example selection toolbars that delegate
   // placement to React Flow) render themselves bare — never wrapped in a region
   // slot.
@@ -326,19 +372,37 @@ export function OverlayLayer() {
 
   return (
     <>
-      <div className="apollon-overlay-grid">
+      <div ref={gridRef} className="apollon-overlay-grid">
         {BAND_REGIONS.filter((r) => byRegion.has(r)).map((region) => {
           const horizontal = region === "header" || region === "footer"
           return (
             <div
+              ref={(el) => registerRegion(region, el)}
               key={region}
               data-apollon-region={region}
               className="apollon-overlay-band"
               style={{
+                boxSizing: "border-box",
                 display: "flex",
+                maxHeight: "100%",
                 pointerEvents: "none",
                 ...REGION_PLACEMENT[region],
                 flexDirection: LANE_STACK_DIRECTION[region],
+                ...(region === "left-rail"
+                  ? {
+                      paddingTop: "var(--apollon-left-rail-top-clearance, 0px)",
+                      paddingBottom:
+                        "var(--apollon-left-rail-bottom-clearance, 0px)",
+                    }
+                  : null),
+                ...(region === "right-rail"
+                  ? {
+                      paddingTop:
+                        "var(--apollon-right-rail-top-clearance, 0px)",
+                      paddingBottom:
+                        "var(--apollon-right-rail-bottom-clearance, 0px)",
+                    }
+                  : null),
               }}
             >
               {groupByLane(byRegion.get(region)!).map(
@@ -373,6 +437,7 @@ export function OverlayLayer() {
 
         {CORNER_REGIONS.filter((r) => byRegion.has(r)).map((region) => (
           <div
+            ref={(el) => registerRegion(region, el)}
             key={region}
             data-apollon-region={region}
             className="apollon-overlay-corner"

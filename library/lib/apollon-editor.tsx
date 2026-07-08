@@ -41,6 +41,7 @@ import {
 import { createOverlayStore, type OverlayStore } from "./overlay/overlayStore"
 import {
   assertBuiltInControlRegion,
+  preserveBuiltInControlKind,
   defaultControls,
 } from "./chrome/builtins/controls"
 import { mergeLabels } from "./i18n/labels"
@@ -415,11 +416,16 @@ export class ApollonEditor {
       throw new Error(
         `[ApollonEditor] updateControl: unknown region: ${patch.region}`
       )
-    if (patch.region !== undefined) {
-      assertBuiltInControlRegion(id, patch.region)
-    }
     // Pin id last so a stray `patch.id` can't fork the control under a new key.
-    this.overlayStore.getState().register({ ...existing, ...patch, id })
+    const next = { ...existing, ...patch, id }
+    // Built-in descriptors carry a private renderer-kind marker so their own
+    // runtime updates stay within the regions their renderers support. Replacing
+    // the renderer intentionally drops that marker: a host control at PALETTE_ID /
+    // MINIMAP_ID is a normal control and can move to any valid region.
+    if (patch.render === undefined) preserveBuiltInControlKind(existing, next)
+    if (patch.region !== undefined)
+      assertBuiltInControlRegion(next, patch.region)
+    this.overlayStore.getState().register(next)
   }
 
   /**

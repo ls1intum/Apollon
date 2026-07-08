@@ -57,6 +57,8 @@ export interface ApollonLabels {
   node: string
   attribute: string
   method: string
+  /** Visible title for a concrete node type identifier. */
+  nodeTypeLabel: (nodeType?: string) => string
 
   // BPMN
   startEvent: string
@@ -239,6 +241,32 @@ export interface ApollonLabels {
   nodeWord: string
 }
 
+const NODE_TYPE_DIAGRAM_PREFIXES = [
+  "petriNet",
+  "flowchart",
+  "activity",
+  "useCase",
+  "component",
+  "deployment",
+  "communication",
+  "bpmn",
+  "sfc",
+]
+
+function defaultNodeTypeLabel(nodeType?: string): string {
+  if (!nodeType) return "Element"
+
+  const prefix = NODE_TYPE_DIAGRAM_PREFIXES.find(
+    (p) => nodeType.startsWith(p) && nodeType.length > p.length
+  )
+  const base = prefix ? nodeType.slice(prefix.length) : nodeType
+
+  return base
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/^./, (c) => c.toUpperCase())
+    .trim()
+}
+
 /** The shipped English strings — the fallback for any key a host doesn't override. */
 export const DEFAULT_LABELS: ApollonLabels = Object.freeze<ApollonLabels>({
   zoomToolbar: "Zoom and history controls",
@@ -282,6 +310,7 @@ export const DEFAULT_LABELS: ApollonLabels = Object.freeze<ApollonLabels>({
   node: "Node",
   attribute: "Attribute",
   method: "Method",
+  nodeTypeLabel: defaultNodeTypeLabel,
   startEvent: "Start Event",
   intermediateEvent: "Intermediate Event",
   gateway: "Gateway",

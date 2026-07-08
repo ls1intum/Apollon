@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useMemo, useState, type CSSProperties } from "react"
 import {
   MiniMap,
   MiniMapNodeProps,
@@ -129,6 +129,17 @@ export const CustomMiniMap = ({
     canvasWidth > 0 && canvasWidth < MINIMAP_EXPAND_MIN_WIDTH
 
   const panelPositionClasses = position.replace("-", " ")
+  const managedCollapseStyle = useMemo<CSSProperties>(() => {
+    const [vertical, horizontal] = position.split("-") as [
+      "top" | "bottom",
+      "left" | "center" | "right",
+    ]
+    return {
+      position: "absolute",
+      [vertical]: 0,
+      ...(horizontal === "left" ? { left: 0 } : { right: 0 }),
+    }
+  }, [position])
 
   if (minimapCollapsed || tooNarrowToExpand) {
     const content = (
@@ -189,6 +200,7 @@ export const CustomMiniMap = ({
       {map}
       <div
         className={`react-flow__panel ${panelPositionClasses} apollon-mm-panel apollon-mm-collapse`}
+        style={managedCollapseStyle}
       >
         {collapse}
       </div>

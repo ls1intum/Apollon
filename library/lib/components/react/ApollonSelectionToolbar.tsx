@@ -21,6 +21,10 @@ export type ApollonSelectionToolbarProps = {
   offset?: number
   /** Stable control id. Default `"apollon:selection-toolbar"`. */
   id?: string
+  /** Accessible name when the wrapper owns toolbar semantics. */
+  ariaLabel?: string
+  /** Wrapper landmark for the host controls. Pass `undefined` if children provide their own semantics. */
+  role?: "toolbar" | "group"
 }
 
 /** Renders inside React Flow context (via the overlay), so it can read the live
@@ -30,10 +34,14 @@ function SelectionToolbarMount({
   el,
   position,
   offset,
+  ariaLabel,
+  role,
 }: {
   el: HTMLElement
   position: Position
   offset: number
+  ariaLabel?: string
+  role?: "toolbar" | "group"
 }) {
   // Selected node ids joined into a stable string so the selector doesn't churn
   // identity (returning a fresh array every store tick would). Newline-separated
@@ -58,10 +66,12 @@ function SelectionToolbarMount({
     >
       <div
         className="nodrag nopan nowheel"
-        onPointerDownCapture={stop}
-        onMouseDownCapture={stop}
-        onTouchStartCapture={stop}
-        onWheelCapture={stop}
+        role={role}
+        aria-label={ariaLabel}
+        onPointerDown={stop}
+        onMouseDown={stop}
+        onTouchStart={stop}
+        onWheel={stop}
       >
         <RegionMount el={el} />
       </div>
@@ -81,7 +91,10 @@ function SelectionToolbarMount({
  *
  * ```tsx
  * <Apollon>
- *   <Apollon.SelectionToolbar position="top">
+ *   <Apollon.Palette />
+ *   <Apollon.Zoom />
+ *   <Apollon.MiniMap />
+ *   <Apollon.SelectionToolbar position="top" ariaLabel="Selection actions">
  *     <button onClick={onDelete}>Delete</button>
  *     <button onClick={onDuplicate}>Duplicate</button>
  *   </Apollon.SelectionToolbar>
@@ -93,6 +106,8 @@ export function ApollonSelectionToolbar({
   position = "top",
   offset = 8,
   id = "apollon:selection-toolbar",
+  ariaLabel = "Selection actions",
+  role = "toolbar",
 }: ApollonSelectionToolbarProps): ReactNode {
   const editor = useApollonEditor()
   const [host] = useState<HTMLDivElement | null>(() =>
@@ -114,10 +129,12 @@ export function ApollonSelectionToolbar({
           el={host}
           position={rfPosition}
           offset={offset}
+          ariaLabel={ariaLabel}
+          role={role}
         />
       ),
     })
-  }, [editor, host, id, rfPosition, offset])
+  }, [editor, host, id, rfPosition, offset, ariaLabel, role])
 
   return host ? createPortal(children, host) : null
 }

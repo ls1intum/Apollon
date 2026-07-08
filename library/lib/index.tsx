@@ -62,7 +62,11 @@ export { createApollonTheme, type ApollonTheme } from "@tumaet/ui/theme"
 // side-effect-free except CSS). The `index` chunk carries a `"use client"`
 // banner (vite.config.ts) for Next.js App Router — note it marks the whole
 // entry client-only.
-export { Apollon, type ApollonProps } from "./components/react/Apollon"
+export {
+  Apollon,
+  ApollonDefaultControls,
+  type ApollonProps,
+} from "./components/react/Apollon"
 export {
   ApollonProvider,
   useApollonEditor,

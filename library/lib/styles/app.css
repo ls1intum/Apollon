@@ -483,12 +483,6 @@
   margin: 0;
 }
 
-.react-flow__panel.apollon-mm-collapse {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-}
-
 /* A toolbar of glass islands (the zoom cluster: view + history). The toolbar row
    itself is a transparent layout track; each `.apollon-chrome-cluster` inside is a
    glass island — the overlay panel wrapper is pass-through, so the island paints

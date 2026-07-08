@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, type KeyboardEvent } from "react"
+import { useCallback, useLayoutEffect, useRef, type KeyboardEvent } from "react"
 
 /** Enabled, focusable buttons in DOM (left→right) order. */
 function focusableButtons(el: HTMLElement): HTMLButtonElement[] {
@@ -30,7 +30,7 @@ function syncTabStops(el: HTMLElement) {
 export function useRovingToolbar<T extends HTMLElement = HTMLDivElement>() {
   const ref = useRef<T>(null)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = ref.current
     if (!el) return
     syncTabStops(el)

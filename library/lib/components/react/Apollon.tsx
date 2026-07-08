@@ -232,15 +232,14 @@ export function Apollon(props: ApollonProps) {
         style={mergedStyle}
         data-theme={dataTheme}
       />
-      {children === undefined ? <DefaultChildren /> : children}
+      {children === undefined ? <ApollonDefaultControls /> : children}
     </ApollonInstanceContext.Provider>
   )
 }
 
-/** The editor's default chrome, composed for the no-children case. Rendering
- *  these (vs. the consumer's own children) is what "omitting children keeps the
- *  defaults" means — and each is a normal, reactively-mounted control. */
-function DefaultChildren() {
+/** The editor's default chrome. Render it explicitly when adding host children
+ *  that should keep palette + zoom + minimap visible. */
+export function ApollonDefaultControls() {
   return (
     <>
       <ApollonPalette />
@@ -260,3 +259,4 @@ Apollon.Palette = ApollonPalette
 Apollon.Zoom = ApollonZoom
 Apollon.MiniMap = ApollonMiniMap
 Apollon.SelectionToolbar = ApollonSelectionToolbar
+Apollon.DefaultControls = ApollonDefaultControls
