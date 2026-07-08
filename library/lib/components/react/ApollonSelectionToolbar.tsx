@@ -3,6 +3,8 @@ import { createPortal } from "react-dom"
 import { NodeToolbar, Position, useStore } from "@xyflow/react"
 import { useApollonEditor } from "./context"
 import { RegionMount } from "@/overlay/RegionMount"
+import { useLabels } from "@/i18n/useLabels"
+import type { OverlayControl } from "@/overlay/types"
 
 const POSITION: Record<string, Position> = {
   top: Position.Top,
@@ -21,9 +23,9 @@ export type ApollonSelectionToolbarProps = {
   offset?: number
   /** Stable control id. Default `"apollon:selection-toolbar"`. */
   id?: string
-  /** Accessible name when the wrapper owns toolbar semantics. */
+  /** Accessible name for the wrapper. */
   ariaLabel?: string
-  /** Wrapper landmark for the host controls. Pass `undefined` if children provide their own semantics. */
+  /** Wrapper landmark for the host controls. Use `"toolbar"` only when children implement toolbar keyboard behavior. */
   role?: "toolbar" | "group"
 }
 
@@ -43,6 +45,7 @@ function SelectionToolbarMount({
   ariaLabel?: string
   role?: "toolbar" | "group"
 }) {
+  const t = useLabels()
   // Selected node ids joined into a stable string so the selector doesn't churn
   // identity (returning a fresh array every store tick would). Newline-separated
   // because it can't appear in a node id, so the round-trip can't fracture.
@@ -67,11 +70,12 @@ function SelectionToolbarMount({
       <div
         className="nodrag nopan nowheel"
         role={role}
-        aria-label={ariaLabel}
+        aria-label={ariaLabel ?? t.selectionActions}
         onPointerDown={stop}
         onMouseDown={stop}
         onTouchStart={stop}
         onWheel={stop}
+        onKeyDown={stop}
       >
         <RegionMount el={el} />
       </div>
@@ -80,11 +84,10 @@ function SelectionToolbarMount({
 }
 
 /**
- * A selection-anchored toolbar — the Figma/tldraw pattern: your controls float
- * just above (or beside) the current selection, follow it as it moves, and stay a
- * constant on-screen size at any zoom. Unlike `on-canvas` chrome (which lives in
- * diagram space and scales), this is screen-space and only appears while
- * something is selected.
+ * A selection-anchored control group: your controls float just above (or beside)
+ * the current selection, follow it as it moves, and stay a constant on-screen
+ * size at any zoom. Unlike `on-canvas` chrome (which lives in diagram space and
+ * scales), this is screen-space and only appears while something is selected.
  *
  * Compose it as a child of `<Apollon>`. It reserves no room (floats over the
  * canvas) and needs no positioning props beyond the anchor side.
@@ -106,8 +109,8 @@ export function ApollonSelectionToolbar({
   position = "top",
   offset = 8,
   id = "apollon:selection-toolbar",
-  ariaLabel = "Selection actions",
-  role = "toolbar",
+  ariaLabel,
+  role = "group",
 }: ApollonSelectionToolbarProps): ReactNode {
   const editor = useApollonEditor()
   const [host] = useState<HTMLDivElement | null>(() =>
@@ -117,11 +120,8 @@ export function ApollonSelectionToolbar({
 
   useEffect(() => {
     if (!editor || !host) return
-    return editor.addControl({
+    const control: OverlayControl = {
       id,
-      // Selection-anchored: NodeToolbar positions it, so it self-positions and
-      // reserves nothing. Region is a semantic tag only (ignored while
-      // self-positioned), matching the canvas-space intent.
       region: "on-canvas",
       selfPositioned: true,
       render: () => (
@@ -133,7 +133,8 @@ export function ApollonSelectionToolbar({
           role={role}
         />
       ),
-    })
+    }
+    return editor.addControl(control)
   }, [editor, host, id, rfPosition, offset, ariaLabel, role])
 
   return host ? createPortal(children, host) : null

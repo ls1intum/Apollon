@@ -30,8 +30,10 @@ There are three facades over the same engine. Pick by how your host renders:
 
 Every control names one `OverlayRegion`. The six corner regions and the `header` /
 `footer` / `left-rail` / `right-rail` bands are screen-space cells of a single CSS
-grid laid over the canvas, so they can't overlap one another. `on-canvas` is
-viewport-transformed and pans + zooms with the diagram.
+grid laid over the canvas. The grid deconflicts built-in bands and corner slots
+under the documented sizing rules; oversized host chrome should be made
+responsive or scrollable by the host. `on-canvas` is viewport-transformed and
+pans + zooms with the diagram.
 
 | Region          | Where it sits                                                           |
 | --------------- | ----------------------------------------------------------------------- |
@@ -124,7 +126,7 @@ editor.removeControl("my-app:banner")
 // Has this id been registered?
 editor.hasControl("my-app:banner") // boolean
 
-// Read a registered control's current options + renderer (undefined if absent).
+// Read a registered control's current options (undefined if absent).
 editor.getControl("my-app:banner")?.region
 ```
 
@@ -139,7 +141,10 @@ two ways.
 props reconfigure. Passing _any_ children makes the composition explicit, so you
 list exactly the chrome you want. Use `<ApollonDefaultControls />` to keep the
 standard palette + zoom + minimap next to custom children; pass `null` or an empty
-fragment for a bare canvas.
+fragment for a bare canvas. A conditional child expression still counts as
+children in React, even when it currently renders `false`; use
+`<ApollonDefaultControls />` when defaults must stay visible next to conditional
+custom chrome.
 
 ```tsx no-check
 import { Apollon, UMLDiagramType } from "@tumaet/apollon"
@@ -158,7 +163,9 @@ function Editor() {
 
 Replace a built-in by rendering your own control at its reserved id with
 `useControl` — because its `render` runs inside React Flow, a replacement can
-drive the viewport (`useReactFlow`):
+drive the viewport (`useReactFlow`). Supplying a new renderer at a reserved id is
+an explicit replacement; after that, the control follows the normal
+`OverlayRegion` rules instead of the built-in renderer's placement limits.
 
 ```tsx no-check
 import { useControl, ZOOM_ID } from "@tumaet/apollon"
@@ -360,9 +367,11 @@ control never drags the diagram.
   corner extent, so short rails leave corners flush while tall rails avoid covering
   them. The built-in minimap uses the same corner slots, so it stacks with host
   controls in its region instead of applying its own side offsets.
-- **Selection-anchored toolbars** — `<Apollon.SelectionToolbar>` (Figma/tldraw
-  style): a screen-space, constant-size toolbar that follows the current selection.
-  Distinct from `on-canvas`, which lives in diagram space and scales with zoom.
+- **Selection-anchored controls** — `<Apollon.SelectionToolbar>` renders a
+  screen-space, constant-size control group that follows the current selection.
+  It defaults to `role="group"`; pass `role="toolbar"` only when your children
+  implement toolbar keyboard behavior. Distinct from `on-canvas`, which lives in
+  diagram space and scales with zoom.
 - **i18n.** Editor UI strings exposed in `ApollonLabels` are
   host-overridable via `labels` (see [i18n](#i18n) below); pass a partial map in
   your language.
@@ -377,9 +386,10 @@ control never drags the diagram.
 
 ## i18n
 
-The editor UI strings exposed in the typed `ApollonLabels` dictionary — including
-the built-in palette / zoom / minimap tooltips and aria-labels, plus the
-edit/assessment popover copy — ship with English defaults. Override any subset:
+The editor UI strings exposed in the typed `ApollonLabels` dictionary ship with
+English defaults. The surface includes the built-in palette / zoom / minimap
+tooltips and aria-labels, plus the edit/assessment popover copy. Override any
+subset:
 
 ```tsx
 import { Apollon } from "@tumaet/apollon"

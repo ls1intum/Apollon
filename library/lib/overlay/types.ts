@@ -96,19 +96,20 @@ export interface OverlayControlOptions {
   groupLabel?: string
   /** Hide without unregistering (reserves no inset while hidden). Default true. */
   visible?: boolean
-  /** The control positions itself (e.g. a React Flow `NodeToolbar`), so the
-   *  engine renders `render()` bare instead of wrapping it in a region slot.
-   *  Reserves nothing. Default false. */
-  selfPositioned?: boolean
   /** Extra class on the control's wrapper element. */
   className?: string
   /** Inline styles merged onto the control's wrapper element. */
   style?: CSSProperties
 }
 
+type InternalOverlayControlOptions = OverlayControlOptions & {
+  /** Internal escape hatch for React Flow primitives that position themselves. */
+  selfPositioned?: boolean
+}
+
 /** A control as stored in the registry: options plus the renderer.
  *  @internal Use {@link OverlayControlInput} as the public registration type. */
-export interface OverlayControl extends OverlayControlOptions {
+export interface OverlayControl extends InternalOverlayControlOptions {
   render: () => ReactNode
 }
 
@@ -116,3 +117,6 @@ export interface OverlayControl extends OverlayControlOptions {
 export type OverlayControlInput = OverlayControlOptions & {
   render: () => ReactNode
 }
+
+/** Immutable public view of a registered control. Renderer internals are omitted. */
+export type OverlayControlSnapshot = Readonly<OverlayControlOptions>

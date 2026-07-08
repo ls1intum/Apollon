@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useId, useRef, useState } from "react"
 import { Popover } from "@base-ui/react/popover"
 import { ChevronDown } from "lucide-react"
 import { resolveApollonThemeVars } from "./portalTheme"
+import { useLabels } from "@/i18n/useLabels"
 
 export interface SelectOption {
   value: string
@@ -32,12 +33,13 @@ export const Select: React.FC<SelectProps> = ({
   onChange,
   options,
   label,
-  placeholder = "Select…",
+  placeholder,
   fullWidth = true,
   disabled,
   id,
   "aria-label": ariaLabel,
 }) => {
+  const t = useLabels()
   const generatedId = useId()
   const triggerId = id ?? generatedId
   const listboxId = `${triggerId}-listbox`
@@ -176,7 +178,7 @@ export const Select: React.FC<SelectProps> = ({
                   (selected.renderValue?.() ?? selected.label)
                 ) : (
                   <span className="apollon-select-placeholder">
-                    {placeholder}
+                    {placeholder ?? t.selectPlaceholder}
                   </span>
                 )}
               </span>

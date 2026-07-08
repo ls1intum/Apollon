@@ -72,15 +72,15 @@ afterwards. Re-key the component to apply them to a new editor.
 changes; no rebuild. Passing `undefined` for any reactive prop leaves the
 live value untouched (no reset). Re-key the component to fully reset.
 
-| Prop          | Type            | Maps to                                     |
-| ------------- | --------------- | ------------------------------------------- |
-| `readonly`    | `boolean`       | `editor.setReadonly(value)`                 |
-| `view`        | `ApollonView`   | `editor.view = value`                       |
-| `mode`        | `ApollonMode`   | `editor.setMode(value)`                     |
-| `scrollLock`  | `boolean`       | `editor.setScrollLock(value)`               |
-| `labels`      | `ApollonLabels` | `editor.setLabels(value)`                   |
-| `previewMode` | `boolean`       | `editor.setPreviewMode(value)`              |
-| `model`       | `UMLModel`      | `editor.model = value` — controlled overlay |
+| Prop          | Type                     | Maps to                                     |
+| ------------- | ------------------------ | ------------------------------------------- |
+| `readonly`    | `boolean`                | `editor.setReadonly(value)`                 |
+| `view`        | `ApollonView`            | `editor.view = value`                       |
+| `mode`        | `ApollonMode`            | `editor.setMode(value)`                     |
+| `scrollLock`  | `boolean`                | `editor.setScrollLock(value)`               |
+| `labels`      | `Partial<ApollonLabels>` | `editor.setLabels(value)`                   |
+| `previewMode` | `boolean`                | `editor.setPreviewMode(value)`              |
+| `model`       | `UMLModel`               | `editor.model = value` — controlled overlay |
 
 **Lifecycle.**
 
@@ -177,19 +177,19 @@ Every field is optional.
 
 ### Canvas overlays / controls
 
-Inject floating chrome (toolbars, banners, rails) that shares the editor's
-collision-free, inset-aware layout. See [Overlay controls](/library/api/overlay-controls)
-for regions, the `<ApollonControl>` React component, and the "make room" model.
+Inject floating chrome (toolbars, banners, rails) into the editor's measured,
+inset-aware layout. See [Overlay controls](/library/api/overlay-controls) for
+regions, the `<ApollonControl>` React component, and the "make room" model.
 
-| Member                         | Type                                             | Purpose                                                                             |
-| ------------------------------ | ------------------------------------------------ | ----------------------------------------------------------------------------------- |
-| `addControl(control)`          | `(OverlayControlInput) => () => void`            | Register a floating control; returns a disposer. Throws on a bad region / empty id. |
-| `updateControl(id, patch)`     | `(string, Partial<OverlayControlInput>) => void` | Patch a control's options/renderer (no-op if absent; `id` is immutable).            |
-| `removeControl(id)`            | `(string) => void`                               | Unregister a control by id (no-op if absent); the imperative hide for a built-in.   |
-| `hasControl(id)`               | `(string) => boolean`                            | Whether a control with this id is registered.                                       |
-| `getControl(id)`               | `(string) => OverlayControlInput \| undefined`   | Read a registered control's current options + renderer (undefined if absent).       |
-| `getRegionElement(region)`     | `(OverlayRegion) => HTMLElement`                 | Stable node to `createPortal` host chrome into (keeps host React context).          |
-| `releaseRegionElement(region)` | `(OverlayRegion) => void`                        | Release a region acquired via `getRegionElement`.                                   |
+| Member                         | Type                                              | Purpose                                                                             |
+| ------------------------------ | ------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `addControl(control)`          | `(OverlayControlInput) => () => void`             | Register a floating control; returns a disposer. Throws on a bad region / empty id. |
+| `updateControl(id, patch)`     | `(string, Partial<OverlayControlInput>) => void`  | Patch a control's options/renderer (no-op if absent; `id` is immutable).            |
+| `removeControl(id)`            | `(string) => void`                                | Unregister a control by id (no-op if absent); the imperative hide for a built-in.   |
+| `hasControl(id)`               | `(string) => boolean`                             | Whether a control with this id is registered.                                       |
+| `getControl(id)`               | `(string) => OverlayControlSnapshot \| undefined` | Read a registered control's current options (undefined if absent).                  |
+| `getRegionElement(region)`     | `(OverlayRegion) => HTMLElement`                  | Stable node to `createPortal` host chrome into (keeps host React context).          |
+| `releaseRegionElement(region)` | `(OverlayRegion) => void`                         | Release a region acquired via `getRegionElement`.                                   |
 
 ### Assessment
 

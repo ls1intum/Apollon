@@ -23,7 +23,6 @@ function serializeOptions(o: OverlayControlOptions): string {
     groupLabel: o.groupLabel ?? null,
     inset: o.inset ?? null,
     visible: o.visible ?? null,
-    selfPositioned: o.selfPositioned ?? null,
     className: o.className ?? null,
     style: o.style ?? null,
   })

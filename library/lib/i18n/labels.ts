@@ -27,6 +27,7 @@ export interface ApollonLabels {
   showMinimapHint: string
   hideMinimap: string
 
+  selectionActions: string
   elementPalette: string
   paletteModelView: string
   paletteSelectElementsView: string
@@ -42,6 +43,7 @@ export interface ApollonLabels {
   source: string
   target: string
   style: string
+  selectPlaceholder: string
 
   // Assessment feedback
   addComment: string
@@ -160,6 +162,7 @@ export interface ApollonLabels {
   deleteLane: string
   addLane: string
   laneName: string
+  defaultLaneName: (index: number) => string
   orientation: string
   orientationVertical: string
   orientationHorizontal: string
@@ -283,6 +286,7 @@ export const DEFAULT_LABELS: ApollonLabels = Object.freeze<ApollonLabels>({
   showMinimap: "Show minimap",
   showMinimapHint: "Show minimap (overview)",
   hideMinimap: "Hide minimap",
+  selectionActions: "Selection actions",
   elementPalette: "Element palette",
   paletteModelView: "Model",
   paletteSelectElementsView: "Select Elements",
@@ -297,6 +301,7 @@ export const DEFAULT_LABELS: ApollonLabels = Object.freeze<ApollonLabels>({
   source: "Source",
   target: "Target",
   style: "Style",
+  selectPlaceholder: "Select…",
   addComment: "Add a comment…",
   points: "Points",
   negativePointsAllowed: "Negative points are allowed.",
@@ -399,6 +404,7 @@ export const DEFAULT_LABELS: ApollonLabels = Object.freeze<ApollonLabels>({
   deleteLane: "Delete lane",
   addLane: "Add lane",
   laneName: "Lane name",
+  defaultLaneName: (index) => `Lane ${index}`,
   orientation: "Orientation",
   orientationVertical: "Vertical (columns)",
   orientationHorizontal: "Horizontal (rows)",

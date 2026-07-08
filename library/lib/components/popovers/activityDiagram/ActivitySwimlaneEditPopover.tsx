@@ -196,11 +196,14 @@ export const ActivitySwimlaneEditPopover: React.FC<PopoverProps> = ({
   }
 
   const handleAddLane = () => {
-    // Name the new lane one past the highest existing "Lane N" so deleting a
-    // middle lane and re-adding doesn't reuse a name that's still in use.
+    // Name the new lane one past the highest existing default lane name so
+    // deleting a middle lane and re-adding doesn't reuse a visible name.
+    const defaultLanePrefix = t.defaultLaneName(0).replace(/\d+$/, "")
     const numbers = lanes
-      .map((lane) => /^Lane (\d+)$/.exec(lane.name)?.[1])
-      .filter((n): n is string => n != null)
+      .map((lane) => lane.name.match(/\d+$/)?.[0])
+      .filter((n, i): n is string =>
+        n != null ? lanes[i].name.startsWith(defaultLanePrefix) : false
+      )
       .map(Number)
     const nextNumber = numbers.length
       ? Math.max(...numbers) + 1
@@ -211,7 +214,11 @@ export const ActivitySwimlaneEditPopover: React.FC<PopoverProps> = ({
     setLanes(
       [
         ...materializeLaneSizes(lanes, primaryExtent),
-        { id: generateUUID(), name: `Lane ${nextNumber}`, size: average },
+        {
+          id: generateUUID(),
+          name: t.defaultLaneName(nextNumber),
+          size: average,
+        },
       ],
       primaryExtent + average
     )

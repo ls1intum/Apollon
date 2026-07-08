@@ -12,7 +12,7 @@ import {
 import { createOverlayStore } from "@/overlay/overlayStore"
 import { OverlayLayer } from "@/overlay/OverlayLayer"
 import { OverlayStoreContext } from "@/store/context"
-import type { OverlayControlInput } from "@/overlay/types"
+import type { OverlayControl, OverlayControlInput } from "@/overlay/types"
 import {
   MINIMAP_ID,
   PALETTE_ID,
@@ -563,7 +563,7 @@ describe("<Apollon.SelectionToolbar>", () => {
 
     expect(editor.hasControl("apollon:selection-toolbar")).toBe(true)
     expect(editor.addControl).toHaveBeenCalledTimes(1)
-    const descriptor = editor.addControl.mock.calls[0][0]
+    const descriptor = editor.addControl.mock.calls[0][0] as OverlayControl
     expect(descriptor.id).toBe("apollon:selection-toolbar")
     expect(descriptor.region).toBe("on-canvas")
     expect(descriptor.selfPositioned).toBe(true)

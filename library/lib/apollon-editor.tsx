@@ -49,6 +49,7 @@ import { insetAwareFitView } from "./overlay/fitView"
 import { RegionMount } from "./overlay/RegionMount"
 import {
   type OverlayControlInput,
+  type OverlayControlSnapshot,
   type OverlayRegion,
   type OverlaySide,
   OVERLAY_REGIONS,
@@ -371,7 +372,7 @@ export class ApollonEditor {
 
   // ---- Canvas overlay / control API -------------------------------------
   // A library-owned overlay engine: host chrome (header, rails, banners) and the
-  // editor's own overlays share one collision-free, inset-aware layout. Controls
+  // editor's own overlays share one measured, inset-aware layout. Controls
   // render INSIDE the React Flow context. `getRegionElement` is the escape hatch
   // for hosts that need their OWN React context (theme, router) via createPortal.
 
@@ -449,12 +450,25 @@ export class ApollonEditor {
 
   /**
    * @param id - A control id.
-   * @returns The registered control (options + `render`), or `undefined` if absent
-   *   — e.g. to read a built-in's current `region` after `updateControl`.
+   * @returns The registered control options, or `undefined` if absent — e.g. to
+   *   read a built-in's current `region` after `updateControl`. The renderer is
+   *   intentionally omitted; replace a renderer explicitly with `updateControl`.
    */
-  public getControl(id: string): OverlayControlInput | undefined {
+  public getControl(id: string): OverlayControlSnapshot | undefined {
     const control = this.overlayStore.getState().controls[id]
-    return control ? Object.freeze({ ...control }) : undefined
+    if (!control) return undefined
+    return Object.freeze({
+      id: control.id,
+      region: control.region,
+      inset: control.inset,
+      order: control.order,
+      lane: control.lane,
+      interactive: control.interactive,
+      groupLabel: control.groupLabel,
+      visible: control.visible,
+      className: control.className,
+      style: control.style,
+    })
   }
 
   /**

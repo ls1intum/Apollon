@@ -10,6 +10,7 @@ export type {
   InsetContribution,
   OverlayControlOptions,
   OverlayControlInput,
+  OverlayControlSnapshot,
 } from "./overlay/types"
 // Built-in chrome descriptor factories — the framework-agnostic source of truth
 // for the palette, zoom cluster, and minimap. Pass the results to

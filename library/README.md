@@ -23,7 +23,7 @@ Apollon is the modeling editor behind [Artemis](https://artemis.tum.de/), TUM's 
 - **Framework-agnostic**: one imperative API for Angular, Vue, Svelte, and vanilla JS, plus a React component, hooks, and provider.
 - **Real-time collaboration**: opt-in multi-user editing over [Yjs](https://yjs.dev/), with any transport you like (WebSocket, WebRTC, BroadcastChannel).
 - **Export**: SVG and JSON are built in. Generate PNG and PDF from the SVG (see [Export](#export)).
-- **Canvas overlays**: inject your own toolbars, banners, and rails into the editor canvas, collision-free with built-in chrome — `<ApollonControl>` (React) or `addControl` / `getRegionElement` (any framework). See [Overlay controls](https://ls1intum.github.io/Apollon/library/api/overlay-controls).
+- **Canvas overlays**: inject your own responsive toolbars, banners, and rails into the editor canvas on the same measured layout layer as the built-in chrome — `<ApollonControl>` (React) or `addControl` / `getRegionElement` (any framework). See [Overlay controls](https://ls1intum.github.io/Apollon/library/api/overlay-controls).
 - **Internationalization**: override the editor UI strings exposed in `ApollonLabels` (tooltips, aria-labels, edit/assessment popovers) via `labels` / `setLabels` / `useLabels`. See [i18n](https://ls1intum.github.io/Apollon/library/api/overlay-controls#i18n).
 - **Assessment mode**: attach scores and feedback to elements. This is the grading workflow Artemis uses.
 - **TypeScript**: type definitions are included.

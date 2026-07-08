@@ -11,7 +11,7 @@ import { ZoomControls } from "./ZoomControls"
 /**
  * Framework-agnostic factories for the editor's built-in chrome. Each returns an
  * {@link OverlayControlInput} descriptor under a reserved id, so the built-ins are
- * the SAME registry records host controls use — registered via `editor.addControl`
+ * the same registry records host controls use — registered via `editor.addControl`
  * (vanilla / imperative) or the `<Apollon.Palette|Zoom|MiniMap>` compound
  * components (React). Placement/appearance overrides ride the shared
  * {@link OverlayControlOptions} vocabulary; the reserved id and default `render`
@@ -22,7 +22,7 @@ export const ZOOM_ID = "apollon:zoom"
 export const MINIMAP_ID = "apollon:minimap"
 
 type BuiltInPlacement<Region extends OverlayControlOptions["region"]> = Partial<
-  Omit<OverlayControlOptions, "id" | "region" | "selfPositioned">
+  Omit<OverlayControlOptions, "id" | "region">
 > & {
   region?: Region
 }

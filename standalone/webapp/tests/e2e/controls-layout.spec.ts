@@ -333,6 +333,56 @@ test.describe("controls layout engine", () => {
     ).toBeLessThanOrEqual(32)
   })
 
+  test("wide immersive rails do not make the overlay grid overflow on phone widths", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await mountHostRegion(
+      page,
+      "right-rail",
+      `<aside data-testid="host-wide-right-rail" style="box-sizing:border-box;width:535px;height:220px;margin:8px;padding:12px;background:white;border:1px solid #ddd;overflow:auto">Problem statement</aside>`
+    )
+
+    await expect(page.getByTestId("host-wide-right-rail")).toBeVisible()
+    await expect(minimapControlEl(page)).toBeVisible()
+    await expect(minimapEl(page)).toBeVisible()
+
+    await expect
+      .poll(() =>
+        page.locator(".apollon-overlay-grid").evaluate((el) => {
+          const grid = el as HTMLElement
+          return grid.scrollWidth - grid.clientWidth
+        })
+      )
+      .toBeLessThanOrEqual(1)
+
+    const editor = await box(editorEl(page))
+    const controls = await page
+      .locator("[data-apollon-control]")
+      .evaluateAll((els) =>
+        els.map((el) => {
+          const rect = el.getBoundingClientRect()
+          return {
+            x: rect.x,
+            y: rect.y,
+            width: rect.width,
+            height: rect.height,
+          }
+        })
+      )
+
+    for (const control of controls) {
+      expect(control.x).toBeGreaterThanOrEqual(editor.x - 1)
+      expect(control.y).toBeGreaterThanOrEqual(editor.y - 1)
+      expect(control.x + control.width).toBeLessThanOrEqual(
+        editor.x + editor.width + 1
+      )
+      expect(control.y + control.height).toBeLessThanOrEqual(
+        editor.y + editor.height + 1
+      )
+    }
+  })
+
   test("a bottom-right action island shares the bottom slot without lifting bottom-left zoom", async ({
     page,
   }) => {
@@ -358,6 +408,37 @@ test.describe("controls layout engine", () => {
     expect(overlaps(action, minimap)).toBe(false)
     expect(overlaps(zoom, action)).toBe(false)
     expect(Math.abs(zoom.y - baselineZoom.y)).toBeLessThanOrEqual(2)
+  })
+
+  test("expanded minimap does not inflate a bottom-right action island inset", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 720 })
+    await minimapEl(page).click()
+    await expect(
+      page.getByRole("button", { name: "Hide minimap" })
+    ).toBeVisible()
+    await expect(
+      page.locator(".react-flow__minimap.apollon-minimap")
+    ).toBeVisible()
+
+    await mountHostRegion(
+      page,
+      "bottom-right",
+      `<button data-testid="host-bottom-action" style="box-sizing:border-box;width:220px;height:40px;margin:0;padding:0;background:white;border:1px solid #ddd;pointer-events:auto">Save & submit</button>`
+    )
+
+    await expect(page.getByTestId("host-bottom-action")).toBeVisible()
+
+    const action = await box(page.getByTestId("host-bottom-action"))
+    const hostWrapper = await box(
+      page.locator(`[data-apollon-control="apollon:host:bottom-right"]`)
+    )
+
+    expect(hostWrapper.height).toBeLessThanOrEqual(action.height + 2)
+    await expect
+      .poll(() => cssPx(page, "--apollon-inset-bottom"))
+      .toBeLessThan(80)
   })
 
   test("hiding the palette removes it from the DOM; the other chrome stays", async ({

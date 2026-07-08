@@ -67,6 +67,17 @@ const REGION_PLACEMENT: Partial<Record<OverlayRegion, Placement>> = {
   },
 }
 
+const CORNER_ALIGN_ITEMS: Partial<
+  Record<OverlayRegion, CSSProperties["alignItems"]>
+> = {
+  "top-left": "flex-start",
+  "top-center": "flex-start",
+  "top-right": "flex-start",
+  "bottom-left": "flex-end",
+  "bottom-center": "flex-end",
+  "bottom-right": "flex-end",
+}
+
 /**
  * A band stacks its LANES across its cross-axis; lane 0 sits against the anchor
  * edge (top for `header`, bottom for `footer`, outer edge for the rails), higher
@@ -169,6 +180,8 @@ function ControlSlot({ control, registerMeasure }: ControlSlotProps) {
   // its right-aligned controls drift inward. Side rails already size correctly
   // along their axis.
   const fillRow = control.region === "header" || control.region === "footer"
+  const sideRail =
+    control.region === "left-rail" || control.region === "right-rail"
 
   return (
     <div
@@ -182,6 +195,9 @@ function ControlSlot({ control, registerMeasure }: ControlSlotProps) {
       style={{
         pointerEvents: interactive ? "auto" : "none",
         ...(fillRow ? { flex: "1 1 auto", minWidth: 0 } : null),
+        ...(sideRail
+          ? { minWidth: 0, maxWidth: "100%", overflow: "auto" }
+          : null),
         ...control.style,
       }}
       onPointerDown={interactive ? stop : undefined}
@@ -418,7 +434,9 @@ export function OverlayLayer() {
                       // Fill the band's main axis so `fillRow` controls stretch edge
                       // to edge; the cross-axis stays content-sized (the reserved
                       // inset).
-                      ...(horizontal ? { width: "100%" } : { height: "100%" }),
+                      ...(horizontal
+                        ? { width: "100%" }
+                        : { height: "100%", maxWidth: "100%" }),
                     }}
                   >
                     {laneControls.map((c) => (
@@ -444,6 +462,7 @@ export function OverlayLayer() {
             style={{
               display: "flex",
               gap: "var(--apollon-chrome-gap)",
+              alignItems: CORNER_ALIGN_ITEMS[region],
               pointerEvents: "none",
               ...REGION_PLACEMENT[region],
             }}
