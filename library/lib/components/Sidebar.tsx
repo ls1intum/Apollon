@@ -37,6 +37,7 @@ const previewExtraHeight = (type: string) =>
 // Rough height of the Model/Select view switch when shown — used as the
 // non-grid budget so the grid still fits under it without scrolling.
 const VIEW_SWITCH_HEIGHT = 64
+const PALETTE_LAYOUT_SLACK = 4
 
 export const Sidebar = () => {
   const { diagramType, view, setView, availableViews, mode, readonly, labels } =
@@ -117,7 +118,7 @@ export const Sidebar = () => {
       computePaletteLayout(
         cellCount,
         canvas.w,
-        canvas.h,
+        Math.max(0, canvas.h - PALETTE_LAYOUT_SLACK),
         chromeHeight,
         canvas.compact
       ),
