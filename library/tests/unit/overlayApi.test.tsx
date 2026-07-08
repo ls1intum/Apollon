@@ -12,7 +12,11 @@ import {
 import { createOverlayStore } from "@/overlay/overlayStore"
 import { OverlayLayer } from "@/overlay/OverlayLayer"
 import { OverlayStoreContext } from "@/store/context"
-import type { OverlayControl, OverlayControlInput } from "@/overlay/types"
+import type {
+  OverlayControl,
+  OverlayControlInput,
+  OverlayControlSnapshot,
+} from "@/overlay/types"
 import {
   MINIMAP_ID,
   PALETTE_ID,
@@ -60,14 +64,30 @@ describe("ApollonEditor overlay/control API", () => {
   })
 
   it("getControl returns an immutable snapshot instead of the store object", () => {
-    editor.addControl({ id: "ctrl", region: "top-left", render: () => null })
+    editor.addControl({
+      id: "ctrl",
+      region: "top-left",
+      inset: { left: 24 },
+      style: { width: 120 },
+      render: () => null,
+    })
     const control = editor.getControl("ctrl")
     expect(control).toBeDefined()
     expect(Object.isFrozen(control)).toBe(true)
+    expect(Object.isFrozen(control?.inset)).toBe(true)
+    expect(Object.isFrozen(control?.style)).toBe(true)
     expect(() => {
-      ;(control as OverlayControlInput).region = "top-right"
+      ;(control as OverlayControlSnapshot).region = "top-right"
+    }).toThrow()
+    expect(() => {
+      ;(control!.inset as { left: number }).left = 99
+    }).toThrow()
+    expect(() => {
+      ;(control!.style as { width: number }).width = 240
     }).toThrow()
     expect(editor.getControl("ctrl")?.region).toBe("top-left")
+    expect(editor.getControl("ctrl")?.inset).toEqual({ left: 24 })
+    expect(editor.getControl("ctrl")?.style).toEqual({ width: 120 })
   })
 
   it("updateControl patches a registered control; missing id is a no-op", () => {

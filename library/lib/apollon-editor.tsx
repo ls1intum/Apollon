@@ -1,4 +1,5 @@
 import ReactDOM from "react-dom/client"
+import type { CSSProperties } from "react"
 // Must be imported FIRST (before ./utils, the stores and overlay modules) so the
 // editor render tree — and the node/edge component registries it pulls in —
 // evaluates ahead of any utility/store/overlay module. Relocating it (e.g.
@@ -48,6 +49,7 @@ import { mergeLabels } from "./i18n/labels"
 import { insetAwareFitView } from "./overlay/fitView"
 import { RegionMount } from "./overlay/RegionMount"
 import {
+  type InsetContribution,
   type OverlayControlInput,
   type OverlayControlSnapshot,
   type OverlayRegion,
@@ -88,6 +90,19 @@ const disabledCollaboration = {
   showCursors: false,
   showSelectionHighlights: false,
   showFollow: false,
+}
+
+function cloneInsetSnapshot(
+  inset: InsetContribution | undefined
+): InsetContribution | undefined {
+  if (inset === undefined || inset === "auto") return inset
+  return Object.freeze({ ...inset })
+}
+
+function cloneStyleSnapshot(
+  style: CSSProperties | undefined
+): CSSProperties | undefined {
+  return style ? Object.freeze({ ...style }) : undefined
 }
 
 const noopCollaborationAwareness = {
@@ -460,14 +475,14 @@ export class ApollonEditor {
     return Object.freeze({
       id: control.id,
       region: control.region,
-      inset: control.inset,
+      inset: cloneInsetSnapshot(control.inset),
       order: control.order,
       lane: control.lane,
       interactive: control.interactive,
       groupLabel: control.groupLabel,
       visible: control.visible,
       className: control.className,
-      style: control.style,
+      style: cloneStyleSnapshot(control.style),
     })
   }
 
