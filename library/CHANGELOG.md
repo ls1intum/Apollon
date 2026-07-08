@@ -1,5 +1,48 @@
 # @tumaet/apollon
 
+## 5.1.0
+
+### Minor Changes
+
+- [#799](https://github.com/ls1intum/Apollon/pull/799) [`8905b71`](https://github.com/ls1intum/Apollon/commit/8905b714f4815e5ade163e9144b424b97f13859c) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Fix UML class-diagram notation and let methods be marked abstract.
+
+  - **Abstract is now UML-correct.** An abstract class shows an _italic_ name instead of the invalid `«Abstract»` keyword — UML has no `«abstract»` keyword; abstractness is a property, not a stereotype (UML 2.5.1 §9.2.4). The italic is a real shipped Inter italic face, so it renders the same in the editor and in PNG, PDF, and PowerPoint exports — no more `{abstract}` text fallback for a slant that used to vanish on export.
+  - **Metaclass keywords are lowercase.** Interfaces and enumerations render `«interface»` / `«enumeration»` — the exact UML keyword spelling (2.5.1 Table C.1) — instead of the capitalized forms.
+  - **New: abstract methods.** Mark any method abstract from the class editor (a per-method toggle) to render its signature in italics. Attributes are deliberately not offered the control: UML attributes cannot be abstract. Closes [#105](https://github.com/ls1intum/Apollon/issues/105).
+  - **A single "Class type" picker.** The class editor now sets the classifier with one dropdown — `Class`, `Abstract Class`, `Interface`, `Enumeration` — mirroring the four palette tiles and the other node/edge "type" selects, with a notation preview on each option. It replaces a checkbox-plus-toggle pair that could produce invalid states (an italic `«interface»`, or an abstract enumeration); those states are now unrepresentable, and any earlier diagram carrying one self-heals on load.
+
+  Diagrams saved earlier migrate automatically on load — a class stored with the old `"Abstract"` stereotype becomes `isAbstract`, `"Interface"` / `"Enumeration"` are lowercased to their keyword spelling, and a stray abstract modifier on a keyword is dropped.
+
+- [#800](https://github.com/ls1intum/Apollon/pull/800) [`930b10c`](https://github.com/ls1intum/Apollon/commit/930b10c2fbf3e7c4b5c8b5afe5b430c44700dbf7) Thanks [@tamang29](https://github.com/tamang29)! - Place and reconnect edge endpoints anywhere along a node's border, snapping to the grid, with a drag handle for moving an endpoint. Endpoints attach to each node's real shape rather than its bounding box and match the handles a node shows: use-case ovals connect along their curve, the flowchart input/output parallelogram along its slanted outline, and round or diamond nodes — activity start/end, BPMN events and gateways, flowchart decisions, petri places, and component/deployment interfaces — at their four N/E/S/W points. Legends, annotations, and swimlanes are not connection targets, and endpoints can be reconnected onto container nodes (activity, package, pool, subsystem). Drawing a connection shows a dashed preview that lands exactly where the edge will attach, dragging an endpoint across empty canvas follows the cursor instead of snapping back, connection arcs respond as soon as you reach them, and a connection attaches to the nearest node when several sit close together.
+
+- [#795](https://github.com/ls1intum/Apollon/pull/795) [`cba2d71`](https://github.com/ls1intum/Apollon/commit/cba2d7113457a8df4e3337a72d1574b79a33690c) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Reshape and fix the editor theming API.
+
+  **New: `primaryForeground`.** `ApollonTheme.primaryForeground` (CSS var `--apollon-primary-foreground`) sets the ink drawn on `primary` — accent buttons, the active tool — and defaults to white. Set it to a dark value when your `primary` is light, so on-accent text stays legible instead of white-on-light.
+
+  **Fixed: scoped theming now covers the whole editor.** With a scoped `dataTheme="dark"` (or an inline `theme` override on the mount node), the in-canvas glass chrome and many surfaces previously stayed frozen in light mode — `surface` / `border` / `secondary` / `danger` / `grid` / swatches / assessment / collaboration colors, plus every popup that portals out of the editor (menus, selects, tooltips, and the element color picker). They now re-resolve against the scoped mount, so an editor themed dark on a light page is fully dark. Document-root dark (`data-theme` on `<html>`) was already correct and is unchanged.
+
+  **Reshaped the typed API.** `primaryContrast` → `foreground` (CSS var `--apollon-primary-contrast` → `--apollon-foreground`) and the danger CSS var `--apollon-alert-danger-color` → `--apollon-danger`; `foreground` is the page ink drawn on `background`, so the old name misled. Eleven never-painted Bootstrap-era fields (`backgroundInverse`, `warning` / `warningBackground` / `warningBorder`, `dangerBackground` / `dangerBorder`, `switchBoxBorderColor`, `listGroupColor`, `btnOutlineSecondaryColor`, `modalBottomBorder`, `surfaceHover`) were removed — the Base UI editor never painted them. The typed API is new and has no external consumers, so these ship as a minor rather than a major: un-themed embeds are unaffected, and a typed embed gets a compile error on any renamed/removed key. Theme `primary` + `background` + `foreground` and the chrome derives the rest (add `primaryForeground` if `primary` is light); see `THEMING.md`.
+
+- [#798](https://github.com/ls1intum/Apollon/pull/798) [`9c4782c`](https://github.com/ls1intum/Apollon/commit/9c4782c639d051100440f1141bde877ae8d4928a) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Embedding apps can now compose Apollon's built-in editor controls instead of accepting fixed chrome. Use `<Apollon.Palette />`, `<Apollon.Zoom />`, `<Apollon.MiniMap />`, or `<ApollonDefaultControls />` as `<Apollon>` children to keep, move, configure, hide, or replace the palette, zoom/history controls, and minimap.
+
+  Imperative hosts can configure the same controls with `paletteControl()`, `zoomControl()`, `miniMapControl()`, and `defaultControls()`. Omitting `controls` keeps the default chrome, passing `[]` renders a bare canvas, and `addControl` / `updateControl` / `removeControl` manage custom or built-in controls at runtime.
+
+  Localize the editor’s own tooltips, aria labels, and edit/assessment popovers through `labels`, `editor.setLabels(...)`, and `useLabels()`. Built-in and custom controls now stay clear of each other and keep diagram content visible across responsive layouts.
+
+### Patch Changes
+
+- [#805](https://github.com/ls1intum/Apollon/pull/805) [`e108b79`](https://github.com/ls1intum/Apollon/commit/e108b79955d159104db6809077ca4d7255ae1a20) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Aggregation and composition diamonds in class diagrams are now large enough to read at a glance. They were drawn with only about 70% of the ink of the inheritance triangle next to them, so the filled/hollow distinction was easy to miss at normal zoom. The diamond now carries at least the triangle's visual weight — matching how draw.io and Mermaid proportion the two — while staying no taller, so it never overhangs a class box further than the triangle already did.
+
+- [#789](https://github.com/ls1intum/Apollon/pull/789) [`43d2739`](https://github.com/ls1intum/Apollon/commit/43d2739873d1ed9e65a72ef14caf5e3f2a0e1833) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Dragging the first element from the palette onto an empty canvas no longer jumps the view — the element now lands where you drop it.
+
+- [#801](https://github.com/ls1intum/Apollon/pull/801) [`0ac2478`](https://github.com/ls1intum/Apollon/commit/0ac2478749e3deef74f3ddadbae6dc87191c56a2) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Clicking empty canvas near an edge no longer selects that edge: the edge's edit/delete toolbar was anchored to an invisible box offset from the line that captured clicks. An edge is now selected only by clicking its actual line.
+
+- [#801](https://github.com/ls1intum/Apollon/pull/801) [`0ac2478`](https://github.com/ls1intum/Apollon/commit/0ac2478749e3deef74f3ddadbae6dc87191c56a2) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Selecting a node no longer blocks clicks on a node overlapping it: the selected node's connection points and resize handles stick out past its edges, and they used to swallow clicks meant for the node beneath. They now only capture while you hover the node (which is how you reach for them anyway), so an overlapping node stays selectable everywhere it's visible.
+
+- [#791](https://github.com/ls1intum/Apollon/pull/791) [`474029e`](https://github.com/ls1intum/Apollon/commit/474029ea8c2fbc39b73fd86b2f6e91e5bef9ceee) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - The edit/delete toolbar on a selected node no longer blocks clicks on a node behind it — its empty area now lets clicks through, and only the icons themselves stay clickable.
+
+- [#781](https://github.com/ls1intum/Apollon/pull/781) [`882b88c`](https://github.com/ls1intum/Apollon/commit/882b88cf517f2caaeb2e189d7df7a7b3282a1bf6) Thanks [@tamang29](https://github.com/tamang29)! - See more of the canvas on mobile with a compact element palette in both portrait and landscape.
+
 ## 5.0.1
 
 ### Patch Changes
