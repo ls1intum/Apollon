@@ -148,7 +148,7 @@ jobs:
         # `docs/` imports `@tumaet/apollon` for the live embed, so its
         # `tsc --noEmit` resolves through the library's exports map and
         # needs `library/dist/` to exist — keep this step after build.
-        run: pnpm --filter @tumaet/apollon-docs run typecheck
+        run: pnpm --filter @tumaet/docs run typecheck
 
       - name: Typecheck doc code examples
         # Compiles the ```ts / ```tsx examples in library/README.md,

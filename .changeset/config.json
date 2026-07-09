@@ -8,5 +8,5 @@
   ],
   "updateInternalDependencies": "patch",
   "privatePackages": { "version": true, "tag": false },
-  "ignore": ["@tumaet/apollon-docs", "apollon-vscode-webview"]
+  "ignore": ["@tumaet/docs", "@tumaet/vscode-webview"]
 }
