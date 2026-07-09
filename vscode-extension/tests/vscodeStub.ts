@@ -127,6 +127,8 @@ export const onDidChangeConfiguration = new Emitter<{
 export const state = {
   /** Set false to exercise the untrusted-workspace paths. */
   isTrusted: true,
+  /** VS Code dirties a document for any applied edit, even a no-op one. */
+  appliedEdits: 0,
   config: new Map<string, unknown>(),
   writtenFiles: [] as { path: string; bytes: Uint8Array }[],
   warnings: [] as string[],
@@ -136,6 +138,7 @@ export const state = {
 
 export const resetState = (): void => {
   state.isTrusted = true
+  state.appliedEdits = 0
   state.config = new Map()
   state.writtenFiles = []
   state.warnings = []
@@ -156,10 +159,11 @@ export const workspace = {
       return Promise.resolve()
     },
   }),
-  // Note: VS Code applies a WorkspaceEdit to files that are NOT open — that is
-  // how a cross-file refactor works — so a closed document is edited here too.
+  // VS Code applies a WorkspaceEdit to files that are NOT open — that is how a
+  // cross-file refactor works — so a closed document is edited here too.
   // Refusing it would hide the provider's own `isClosed` guard.
   applyEdit: (edit: WorkspaceEdit): Promise<boolean> => {
+    state.appliedEdits += 1
     for (const [uri, edits] of edit.entries) {
       const document = openDocuments.get(uri)
       if (!document) return Promise.resolve(false)

@@ -5,13 +5,13 @@
   "publisher": "tumaet",
   "license": "MIT",
   "version": "1.0.0",
+  "icon": "media/icon.png",
   "engines": {
     "vscode": "^1.86.0"
   },
   "categories": [
     "Visualization",
-    "Programming Languages",
-    "Other"
+    "Programming Languages"
   ],
   "keywords": [
     "uml",
@@ -35,7 +35,7 @@
   "contributes": {
     "customEditors": [
       {
-        "viewType": "apollon.diagram",
+        "viewType": "apollon.diagramEditor",
         "displayName": "Apollon Diagram",
         "selector": [
           {
@@ -141,7 +141,13 @@
             "svg",
             "png"
           ],
+          "enumDescriptions": [
+            "Never write a sibling image.",
+            "Write a sibling .svg on every save.",
+            "Write a sibling .png on every save."
+          ],
           "default": "off",
+          "scope": "resource",
           "markdownDescription": "Write a sibling image (`diagram.svg` / `diagram.png`) next to a `.apollon` file whenever it is saved. Requires a trusted workspace."
         }
       }

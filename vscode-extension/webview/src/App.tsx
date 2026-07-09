@@ -6,14 +6,14 @@ import {
   type ApollonEditor,
   type UMLModel,
 } from "@tumaet/apollon"
-import { diagramTypeEntries } from "../../src/diagramTypes"
+import { diagramTypeEntries } from "../../src/shared/diagramTypes"
 import type {
   AutoExport,
   DocumentModel,
   ExportFormat,
   HostMessage,
   WebviewMessage,
-} from "../../src/protocol"
+} from "../../src/shared/protocol"
 import { vscode } from "./main"
 import { renderSvgToPngBase64 } from "./svgToPng"
 import { useVsCodeTheme } from "./theme"
@@ -134,11 +134,11 @@ function App() {
   const [status, setStatus] = useState<ExportStatus>("idle")
 
   /**
-   * The model as last exchanged with the host. Setting `model` makes the editor
+   * The model as last synced with the host. Setting `model` makes the editor
    * re-emit it through `subscribeToModelChange`; posting that back would loop
    * the document write straight into another external update.
    */
-  const exchanged = useRef("")
+  const lastSyncedJson = useRef("")
 
   /**
    * Mount the canvas on the first model, then keep it — later models arrive as
@@ -146,7 +146,7 @@ function App() {
    * emptied out from under us (an undone scaffold) falls back to the picker.
    */
   const applyModel = useCallback((model: DocumentModel) => {
-    exchanged.current = JSON.stringify(model)
+    lastSyncedJson.current = JSON.stringify(model)
     if (model === null) {
       setExternal(undefined)
       setView({ kind: "empty" })
@@ -191,7 +191,7 @@ function App() {
         case "invalid":
           setView({ kind: "invalid", reason: data.reason })
           break
-        case "config":
+        case "autoExportChanged":
           setAutoExport(data.autoExport)
           break
         case "externalUpdate":
@@ -200,6 +200,10 @@ function App() {
         case "export":
           void runExport(data.format, data.requestId)
           break
+        default:
+          // Every `HostMessage` variant is handled above; adding one without a
+          // case here is a compile error rather than a silent no-op.
+          data satisfies never
       }
     }
     window.addEventListener("message", onMessage)
@@ -239,10 +243,10 @@ function App() {
       onMount={(editor) => {
         const id = editor.subscribeToModelChange((next) => {
           const json = JSON.stringify(next)
-          if (json === exchanged.current) {
+          if (json === lastSyncedJson.current) {
             return
           }
-          exchanged.current = json
+          lastSyncedJson.current = json
           post({ type: "modelChanged", model: next })
         })
         return () => editor.unsubscribe(id)

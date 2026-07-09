@@ -18,7 +18,7 @@ export type HostMessage =
   | { type: "init"; model: DocumentModel; autoExport: AutoExport }
   /** Non-empty, but not a diagram. The canvas offers to reopen it as text. */
   | { type: "invalid"; reason: string }
-  | { type: "config"; autoExport: AutoExport }
+  | { type: "autoExportChanged"; autoExport: AutoExport }
   /** The document changed underneath us (git, a split JSON editor, revert). */
   | { type: "externalUpdate"; model: DocumentModel }
   | { type: "export"; format: ExportFormat; requestId: number }

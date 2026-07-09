@@ -110,7 +110,7 @@ export function scaffoldModel(type: UMLDiagramType, title: string): UMLModel {
 }
 
 /** {@link scaffoldModel} as the bytes of a new `.apollon` file. */
-export function scaffold(type: UMLDiagramType, title: string): string {
+export function scaffoldDocument(type: UMLDiagramType, title: string): string {
   return `${JSON.stringify(scaffoldModel(type, title), null, 2)}\n`
 }
 
@@ -127,4 +127,9 @@ export function detectFormatting(text: string): FormattingOptions {
 /** Sibling image path for a diagram — `diagram.apollon` → `diagram.svg`. */
 export function exportTargetPath(path: string, extension: string): string {
   return `${path.replace(/\.[^./\\]*$/, "")}.${extension}`
+}
+
+/** The diagram a path names — `…/orders.apollon` → `orders`. */
+export function diagramTitle(path: string): string {
+  return (path.split("/").pop() ?? "").replace(/\.apollon$/i, "")
 }

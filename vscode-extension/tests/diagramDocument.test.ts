@@ -4,11 +4,12 @@ import {
   applyTextRangeEdits,
   DiagramParseError,
   detectFormatting,
+  diagramTitle,
   exportTargetPath,
   modelEdits,
   parseModel,
   readDocument,
-  scaffold,
+  scaffoldDocument,
   scaffoldModel,
 } from "../src/diagramDocument"
 
@@ -147,9 +148,9 @@ describe("modelEdits", () => {
   })
 })
 
-describe("scaffold", () => {
+describe("scaffoldDocument", () => {
   it("produces a document that parses back to the requested type", () => {
-    const parsed = parseModel(scaffold("PetriNet", "My net"))
+    const parsed = parseModel(scaffoldDocument("PetriNet", "My net"))
     expect(parsed.type).toBe("PetriNet")
     expect(parsed.title).toBe("My net")
     expect(parsed.nodes).toEqual([])
@@ -179,6 +180,20 @@ describe("detectFormatting", () => {
 
   it("detects CRLF line endings", () => {
     expect(detectFormatting('{\r\n  "a": 1\r\n}').eol).toBe("\r\n")
+  })
+})
+
+describe("diagramTitle", () => {
+  it("drops the directory and the extension", () => {
+    expect(diagramTitle("/w/orders.apollon")).toBe("orders")
+  })
+
+  it("is case-insensitive about the extension", () => {
+    expect(diagramTitle("/w/Orders.APOLLON")).toBe("Orders")
+  })
+
+  it("leaves a name that is not a diagram alone", () => {
+    expect(diagramTitle("/w/notes.txt")).toBe("notes.txt")
   })
 })
 

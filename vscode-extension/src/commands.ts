@@ -1,9 +1,9 @@
 import * as vscode from "vscode"
 import type { UMLDiagramType } from "@tumaet/apollon"
 import { ApollonEditorProvider } from "./apollonEditorProvider"
-import { scaffold } from "./diagramDocument"
-import { diagramTypeEntries } from "./diagramTypes"
-import type { ExportFormat } from "./protocol"
+import { diagramTitle, scaffoldDocument } from "./diagramDocument"
+import { diagramTypeEntries } from "./shared/diagramTypes"
+import type { ExportFormat } from "./shared/protocol"
 
 type DiagramTypePick = vscode.QuickPickItem & { type: UMLDiagramType }
 
@@ -37,12 +37,7 @@ export async function newDiagram(): Promise<void> {
     return
   }
 
-  const title =
-    target.path
-      .split("/")
-      .pop()
-      ?.replace(/\.apollon$/i, "") ?? ""
-  const contents = scaffold(picked.type, title)
+  const contents = scaffoldDocument(picked.type, diagramTitle(target.path))
   await vscode.workspace.fs.writeFile(target, Buffer.from(contents, "utf8"))
   await vscode.commands.executeCommand(
     "vscode.openWith",
@@ -55,13 +50,16 @@ export async function newDiagram(): Promise<void> {
 export async function exportDiagram(
   provider: ApollonEditorProvider
 ): Promise<void> {
-  const formats: ExportFormat[] = ["svg", "png"]
-  const format = (await vscode.window.showQuickPick(formats, {
+  const formats: (vscode.QuickPickItem & { format: ExportFormat })[] = [
+    { label: "SVG", description: "Vector, scales without loss", format: "svg" },
+    { label: "PNG", description: "Bitmap, pastes anywhere", format: "png" },
+  ]
+  const picked = await vscode.window.showQuickPick(formats, {
     title: "Export diagram",
     placeHolder: "Choose an image format",
-  })) as ExportFormat | undefined
-  if (!format) {
+  })
+  if (!picked) {
     return
   }
-  await provider.exportActiveDiagram(format)
+  await provider.exportActiveDiagram(picked.format)
 }

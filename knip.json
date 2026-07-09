@@ -39,7 +39,8 @@
       "entry": ["src/workers/*.{ts,mjs}"]
     },
     "vscode-extension": {
-      "ignoreBinaries": ["vsce"]
+      "ignoreBinaries": ["vsce"],
+      "ignoreDependencies": ["@types/vscode"]
     },
     "vscode-extension/webview": {
       "entry": ["src/main.tsx"]

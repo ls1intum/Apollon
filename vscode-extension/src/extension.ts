@@ -18,7 +18,7 @@ export function activate(context: vscode.ExtensionContext) {
         // would make the editor feel broken.
         webviewOptions: { retainContextWhenHidden: true },
         // Two live canvases on one document would sync only through the text
-        // round-trip. Revisit if there is ever a reason to want it.
+        // round-trip.
         supportsMultipleEditorsPerDocument: false,
       }
     ),
