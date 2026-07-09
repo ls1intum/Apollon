@@ -1,5 +1,25 @@
 # @tumaet/apollon
 
+## 5.1.1
+
+### Patch Changes
+
+- [#806](https://github.com/ls1intum/Apollon/pull/806) [`ecad49e`](https://github.com/ls1intum/Apollon/commit/ecad49ea7c88e0e4c90994bab37d9d80efef2712) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Fixes diagram content being framed behind the notch, Dynamic Island, or home indicator on a phone. Fitting the view now keeps every node clear of the device's safe area on all four edges, whether or not any editor chrome sits there.
+
+  The zoom cluster now also honours the reduced-transparency and increased-contrast system settings, and floating chrome uses a lighter backdrop blur on touch devices, where the blur cost the most and showed the least.
+
+- [#806](https://github.com/ls1intum/Apollon/pull/806) [`ecad49e`](https://github.com/ls1intum/Apollon/commit/ecad49ea7c88e0e4c90994bab37d9d80efef2712) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Keep the palette drag ghost themed when the editor is themed by its own mount node. The ghost portals to `document.body` to track the cursor in viewport coordinates, which put it outside the subtree that scopes the editor's tokens — so `<Apollon dataTheme="dark">` dragged a light-on-white shape across a dark canvas. It now carries the theme it was grabbed under, whether that came from `dataTheme`, from a `theme` override, or from a host stylesheet. Hosts that theme the document root were never affected.
+
+- [#806](https://github.com/ls1intum/Apollon/pull/806) [`ecad49e`](https://github.com/ls1intum/Apollon/commit/ecad49ea7c88e0e4c90994bab37d9d80efef2712) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Fix reachability-graph and syntax-tree popover titles repeating the diagram name. Selecting a marking said "Reachability Graph Marking" and a nonterminal said "Syntax Tree Nonterminal", where every other diagram shows the bare element name.
+
+- [#806](https://github.com/ls1intum/Apollon/pull/806) [`ecad49e`](https://github.com/ls1intum/Apollon/commit/ecad49ea7c88e0e4c90994bab37d9d80efef2712) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Fix form controls and portaled popups ignoring a scoped theme.
+
+  Three separate causes, all of which only showed up when `data-theme` sits on the editor's own mount node rather than the document root:
+
+  - The `--home-*` aliases the shared input/select/button primitives paint from were declared only on `:root`, so they resolved against the document's light base and merely inherited the computed value. A dark embed drew light input borders and light placeholder ink. They are now re-declared on `.apollon-editor`, like the chrome ramp.
+  - Text fields inherited nothing and fell through to the UA's `color: fieldtext`, a system color keyed to `color-scheme` — i.e. the OS appearance, not the editor's theme. A light editor on a dark desktop rendered white text in its inputs. `[data-slot="input"]` and `[data-slot="textarea"]` now reset `color` to `inherit`.
+  - Body-portaled popups copy resolved token values, but never recomputed them, so a theme switch left an open menu — and every later one anchored to the same element — painting the old palette. They now subscribe to theme changes.
+
 ## 5.1.0
 
 ### Minor Changes
