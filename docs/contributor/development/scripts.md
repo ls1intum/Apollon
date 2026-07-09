@@ -147,9 +147,9 @@ Mobile shell scaffolding for the webapp. Run these once per platform; see
 ## Release and packaging
 
 Releases run on GitHub Actions — there are no local publish scripts. Cut a
-library/standalone release by merging the **Version Packages** PR that
-`release.yml` opens from the accumulated changesets; the VS Code extension uses
-the **Version Bump (VS Code extension)** workflow. See
+release by merging the **Version Packages** PR that `release.yml` opens from the
+accumulated changesets; the library, the standalone images and the VS Code
+extension advance together. See
 [npm publishing](/contributor/deployment/npm-publishing).
 `pnpm package:vscode` builds a local `.vsix` for the VS Code extension.
 

@@ -3,8 +3,10 @@
   "changelog": ["@changesets/changelog-github", { "repo": "ls1intum/Apollon" }],
   "access": "public",
   "baseBranch": "main",
-  "fixed": [["@tumaet/webapp", "@tumaet/server"]],
+  "fixed": [
+    ["@tumaet/apollon", "@tumaet/webapp", "@tumaet/server", "apollon-vscode"]
+  ],
   "updateInternalDependencies": "patch",
   "privatePackages": { "version": true, "tag": false },
-  "ignore": ["@tumaet/apollon-docs", "apollon-vscode", "apollon-vscode-webview"]
+  "ignore": ["@tumaet/apollon-docs", "apollon-vscode-webview"]
 }
