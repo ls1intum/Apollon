@@ -28,7 +28,7 @@ Apollon/
 │       ├── tests/            # Playwright e2e + visual regression
 │       ├── Dockerfile
 │       └── package.json
-├── vscode-extension/         # apollon-vscode — VS Code extension
+├── vscode-extension/         # apollon-extension — VS Code extension
 │   ├── src/                  # extension host (custom text editor, tree view, commands)
 │   └── webview/              # @tumaet/vscode-webview — diagram canvas (Vite)
 ├── docker/                   # Compose files for local + production
@@ -45,16 +45,18 @@ Apollon/
 
 ## Workspaces
 
-| Workspace                   | Name                     | Published as                                                                                      |
-| --------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------- |
-| `library/`                  | `@tumaet/apollon`        | [npm](https://www.npmjs.com/package/@tumaet/apollon)                                              |
-| `packages/ui/`              | `@tumaet/ui`             | internal design system (consumed by the webapp; not published)                                    |
-| `standalone/webapp/`        | `@tumaet/webapp`         | `ghcr.io/ls1intum/apollon/webapp`                                                                 |
-| `standalone/server/`        | `@tumaet/server`         | `ghcr.io/ls1intum/apollon/server`                                                                 |
-| `vscode-extension/`         | `apollon-vscode`         | [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=aet-tum.apollon-vscode) |
-| `vscode-extension/webview/` | `@tumaet/vscode-webview` | bundled into the extension VSIX                                                                   |
-| `docs/`                     | `@tumaet/docs`           | published as the Docusaurus site at <https://ls1intum.github.io/Apollon/>                         |
+| Workspace                   | Name                     | Published as                                                                                         |
+| --------------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------- |
+| `library/`                  | `@tumaet/apollon`        | [npm](https://www.npmjs.com/package/@tumaet/apollon)                                                 |
+| `packages/ui/`              | `@tumaet/ui`             | internal design system (consumed by the webapp; not published)                                       |
+| `standalone/webapp/`        | `@tumaet/webapp`         | `ghcr.io/ls1intum/apollon/webapp`                                                                    |
+| `standalone/server/`        | `@tumaet/server`         | `ghcr.io/ls1intum/apollon/server`                                                                    |
+| `vscode-extension/`         | `apollon-extension`      | [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=aet-tum.apollon-extension) |
+| `vscode-extension/webview/` | `@tumaet/vscode-webview` | bundled into the extension VSIX                                                                      |
+| `docs/`                     | `@tumaet/docs`           | published as the Docusaurus site at <https://ls1intum.github.io/Apollon/>                            |
 
-The scope carries the organization and the name carries the role, so `@tumaet/apollon` is the product and every other workspace is named for the job it does. `apollon-vscode` is the sole exception: the VS Code Marketplace requires an extension name to match `[a-z0-9][a-z0-9-]*`, so `vsce` rejects a scope outright.
+The scope carries the organization and the name carries the role, so `@tumaet/apollon` is the product and every other workspace is named for the job it does. `apollon-extension` is the sole exception: the VS Code Marketplace requires an extension name to match `[a-z0-9][a-z0-9-]*`, so `vsce` rejects a scope outright.
 
-Its Marketplace identity is `publisher.name` — `aet-tum.apollon-vscode`, where `aet-tum` is the organization's publisher, alongside `aet-tum.iris-thaumantias`. `publisher` and `name` in `vscode-extension/package.json` are the only source for that identity: the release workflow reads both to decide which listing to query, which tag to cut, and what to print in the release notes. Changing either points the release at a different listing, and installed clients follow the identity, not the repository — a new identity reaches nobody who already has the extension.
+Its Marketplace identity is `publisher.name` — `aet-tum.apollon-extension`, where `aet-tum` is the organization's publisher, alongside `aet-tum.iris-thaumantias`. `publisher` and `name` in `vscode-extension/package.json` are the only source for that identity: the release workflow reads both to decide which listing to query, which tag to cut, and what to print in the release notes. Changing either points the release at a different listing, and installed clients follow the identity, not the repository — a new identity reaches nobody who already has the extension.
+
+The name reads oddly for a package whose directory is `vscode-extension/`, and it cannot be improved. The Marketplace reserves an extension name across **all** publishers, and `apollon-vscode` is held by `tumaet.apollon-vscode` — an abandoned listing from `ls1intum/apollon-vscode`, the archived repository this workspace replaced. Publishing a new extension under that name fails with `The extension 'apollon-vscode' already exists in the Marketplace`. `aet-tum.apollon-extension` is the listing this project already owns, so releases update it in place and the installs it carries keep receiving them.

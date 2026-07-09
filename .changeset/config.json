@@ -4,7 +4,7 @@
   "access": "public",
   "baseBranch": "main",
   "fixed": [
-    ["@tumaet/apollon", "@tumaet/webapp", "@tumaet/server", "apollon-vscode"]
+    ["@tumaet/apollon", "@tumaet/webapp", "@tumaet/server", "apollon-extension"]
   ],
   "updateInternalDependencies": "patch",
   "privatePackages": { "version": true, "tag": false },

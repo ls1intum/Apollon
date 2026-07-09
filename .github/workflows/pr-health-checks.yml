@@ -196,13 +196,13 @@ jobs:
         run: pnpm run build:lib
 
       - name: Typecheck extension host + webview
-        run: pnpm --filter apollon-vscode run typecheck
+        run: pnpm --filter apollon-extension run typecheck
 
       - name: Run extension unit tests
-        run: pnpm --filter apollon-vscode run test
+        run: pnpm --filter apollon-extension run test
 
       - name: Build extension host + webview
-        run: pnpm --filter apollon-vscode run build:all
+        run: pnpm --filter apollon-extension run build:all
 
   # Root `pnpm run test` covers only the library. The server's vitest suite
   # (incl. the PDF-conversion regression test) spawns the compiled worker and

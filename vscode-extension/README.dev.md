@@ -6,7 +6,7 @@ Build, run, and release notes for the [Apollon VS Code extension](./README.md). 
 
 Two pnpm workspaces:
 
-- [`src/`](./src) — `apollon-vscode`, the extension host (Vite library mode, CJS output). Registers a `CustomTextEditorProvider` for `*.apollon`, a native tree view of the workspace's diagrams, and the `Apollon: …` commands. It reaches the filesystem only through `vscode.workspace.fs`, so it works in virtual and remote workspaces. It is not a [web extension](https://code.visualstudio.com/api/extension-guides/web-extensions): there is no `browser` entry point.
+- [`src/`](./src) — `apollon-extension`, the extension host (Vite library mode, CJS output). Registers a `CustomTextEditorProvider` for `*.apollon`, a native tree view of the workspace's diagrams, and the `Apollon: …` commands. It reaches the filesystem only through `vscode.workspace.fs`, so it works in virtual and remote workspaces. It is not a [web extension](https://code.visualstudio.com/api/extension-guides/web-extensions): there is no `browser` entry point.
 - [`webview/`](./webview) — `@tumaet/vscode-webview`, the canvas that hosts the `@tumaet/apollon` editor (Vite).
 
 [`src/shared/protocol.ts`](./src/shared/protocol.ts) is the single typed contract between the two, and the class doc on [`ApollonEditorProvider`](./src/apollonEditorProvider.ts) explains how document and canvas stay in sync.
@@ -23,7 +23,7 @@ pnpm install
 
 ```sh
 pnpm --filter @tumaet/vscode-webview start  # webview
-pnpm --filter apollon-vscode watch          # extension host
+pnpm --filter apollon-extension watch          # extension host
 ```
 
 Then press <kbd>F5</kbd> in VS Code (or <kbd>Cmd/Ctrl+Shift+P</kbd> → **Debug: Start Debugging**) to launch an Extension Development Host window. Pressing <kbd>F5</kbd> without the watchers running builds both once.
@@ -31,9 +31,9 @@ Then press <kbd>F5</kbd> in VS Code (or <kbd>Cmd/Ctrl+Shift+P</kbd> → **Debug:
 ## Checks
 
 ```sh
-pnpm --filter apollon-vscode typecheck
-pnpm --filter apollon-vscode test     # host-side unit tests
-pnpm --filter apollon-vscode lint
+pnpm --filter apollon-extension typecheck
+pnpm --filter apollon-extension test     # host-side unit tests
+pnpm --filter apollon-extension lint
 ```
 
 ## Release
