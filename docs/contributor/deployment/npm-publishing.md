@@ -8,11 +8,11 @@ description: How the three independently versioned Apollon artifacts ship — np
 
 Three independently versioned artifacts, each with its own release workflow:
 
-| Artifact                                            | Version source                            | Tag                     | Workflow                       |
-| --------------------------------------------------- | ----------------------------------------- | ----------------------- | ------------------------------ |
-| `@tumaet/apollon` (npm)                             | `library/package.json`                    | `@tumaet/apollon@X.Y.Z` | `release-library.yml`          |
-| Standalone Docker images                            | `standalone/{webapp,server}/package.json` | `vX.Y.Z`                | `release-standalone.yml`       |
-| `tumaet.apollon-vscode` (VS Marketplace + Open VSX) | `vscode-extension/package.json`           | `apollon-vscode@X.Y.Z`  | `release-vscode-extension.yml` |
+| Artifact                                             | Version source                            | Tag                     | Workflow                       |
+| ---------------------------------------------------- | ----------------------------------------- | ----------------------- | ------------------------------ |
+| `@tumaet/apollon` (npm)                              | `library/package.json`                    | `@tumaet/apollon@X.Y.Z` | `release-library.yml`          |
+| Standalone Docker images                             | `standalone/{webapp,server}/package.json` | `vX.Y.Z`                | `release-standalone.yml`       |
+| `aet-tum.apollon-vscode` (VS Marketplace + Open VSX) | `vscode-extension/package.json`           | `apollon-vscode@X.Y.Z`  | `release-vscode-extension.yml` |
 
 Standalone starts at `4.2.18` (the library version at the time of the release-pipeline switchover). Future `vX.Y.Z` tags advance from there and do not collide with legacy tags.
 
@@ -36,7 +36,7 @@ The GitHub Release body for each track is built from that `CHANGELOG.md` section
 2. On merge:
    - `release-library.yml` fires when `library/package.json` changes: builds with pnpm, packs the tarball with `pnpm pack`, publishes with `npm publish` for OIDC trusted publishing + provenance (pnpm does not yet support OIDC trusted publishing natively — tracked in [pnpm#9812](https://github.com/pnpm/pnpm/issues/9812)). Tags `@tumaet/apollon@X.Y.Z` → GitHub Release. Skipped if the version is already on npm.
    - `release-standalone.yml` fires after the push-to-main Docker build succeeds: retag `sha-<commit>` → `X.Y.Z` → cosign-sign → tag `vX.Y.Z` → GitHub Release. Staging is already running the same digest under the `sha-<commit>` tag from the push-to-main deploy, so no second deploy is needed. Skipped if a release for that version already exists.
-   - `release-vscode-extension.yml` fires when `vscode-extension/package.json` changes: builds the library + extension, packages the VSIX, attests it via sigstore (`actions/attest-build-provenance`), then publishes to both VS Marketplace (`vsce`) and Open VSX (`ovsx`) gated on the `vscode-marketplace` environment. Tags `apollon-vscode@X.Y.Z` → GitHub Release with the VSIX attached.
+   - `release-vscode-extension.yml` fires when the `version` in `vscode-extension/package.json` changes: builds the library + extension, packages the VSIX, attests it via sigstore (`actions/attest-build-provenance`), then publishes to the VS Marketplace (`vsce`) and, when `OVSX_PAT` is set, to Open VSX (`ovsx`) — both gated on the `vscode-marketplace` environment. Tags `apollon-vscode@X.Y.Z` → GitHub Release with the VSIX attached. Any other edit to the manifest, including the `publisher` and `name` that decide the Marketplace identity, is picked up by the next release rather than triggering one; publish it with a `workflow_dispatch`.
 3. Promote standalone to production: Actions → **Deploy to Production** → `image-tag: X.Y.Z`.
 
 ## Verify a Docker image signature
@@ -57,13 +57,15 @@ cosign verify \
 
 ### VS Marketplace + Open VSX (vscode-extension)
 
-- **Azure DevOps PAT**: create at `https://dev.azure.com/<your-org>/_usersSettings/tokens` with scope `Marketplace → Manage`, organization "All accessible organizations". Max lifetime is 1 year — calendar a rotation reminder.
-- **Open VSX PAT**: create at `https://open-vsx.org/user-settings/tokens`. The namespace `tumaet` must exist on Open VSX first — if it doesn't, run `ovsx create-namespace tumaet -p <PAT>` once locally (or have any namespace member do it). Verify at `https://open-vsx.org/namespace/tumaet`.
+The extension publishes as `aet-tum.apollon-vscode`, from the `publisher` and `name` fields of `vscode-extension/package.json`. `aet-tum` is the organization's publisher — the one that also owns `aet-tum.iris-thaumantias`.
+
+- **Azure DevOps PAT** (required): create at `https://dev.azure.com/<your-org>/_usersSettings/tokens` with scope `Marketplace → Manage`, organization "All accessible organizations". Max lifetime is 1 year — calendar a rotation reminder. The PAT's account must be a member of the `aet-tum` publisher: a token that is valid but not a member fails with `Access Denied … needs the following permission(s) on the resource /aet-tum/apollon-vscode`. Check with `vsce verify-pat aet-tum`; the release workflow runs the same command before it uploads anything.
+- **Open VSX PAT** (optional): create at `https://open-vsx.org/user-settings/tokens`. When `OVSX_PAT` is unset the release skips Open VSX and publishes to the Marketplace alone; the workflow logs a notice and stays green. The namespace `aet-tum` must exist on Open VSX — verify at `https://open-vsx.org/namespace/aet-tum`, and if it is missing run `ovsx create-namespace aet-tum -p <PAT>` once locally.
 - **GitHub Environment `vscode-marketplace`**:
   - Settings → Environments → New environment → name `vscode-marketplace`.
   - Deployment branches and tags → "Selected branches and tags" → add `main`.
   - Required reviewers → add the release maintainer; turn on "Prevent self-review" if a second maintainer is available.
   - Environment secrets:
     - `VSCE_PAT` = Azure DevOps PAT (above).
-    - `OVSX_PAT` = Open VSX PAT (above).
+    - `OVSX_PAT` = Open VSX PAT (above), if Open VSX is wanted.
   - Delete any pre-existing repo-level `VSCE_PAT` / `OVSX_PAT` after the environment-scoped ones are in place — repo secrets bypass the environment's deployment-branch and reviewer gates.

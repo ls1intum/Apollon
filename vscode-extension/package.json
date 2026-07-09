@@ -2,7 +2,7 @@
   "name": "apollon-vscode",
   "displayName": "Apollon",
   "description": "Embeddable UML modeling editor for VS Code. Create, edit, and export UML diagrams (class, component, activity, BPMN, and more) directly inside your editor.",
-  "publisher": "tumaet",
+  "publisher": "aet-tum",
   "license": "MIT",
   "version": "5.1.1",
   "icon": "media/icon.png",

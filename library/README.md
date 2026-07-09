@@ -266,7 +266,7 @@ The server-side wire protocol is exposed through the `@tumaet/apollon/internals`
 
 - Source and issues: <https://github.com/ls1intum/Apollon>
 - Live editor: <https://apollon.aet.cit.tum.de>
-- The standalone web editor, collaboration server, and [VS Code extension](https://marketplace.visualstudio.com/items?itemName=tumaet.apollon-vscode) live in the same monorepo.
+- The standalone web editor, collaboration server, and [VS Code extension](https://marketplace.visualstudio.com/items?itemName=aet-tum.apollon-vscode) live in the same monorepo.
 
 ## License
 
