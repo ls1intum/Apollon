@@ -21,9 +21,9 @@ export default [
       "no-throw-literal": "warn",
     },
   },
-  // Webviews (browser, React)
+  // Webview (browser, React)
   {
-    files: ["editor/src/**/*.{ts,tsx}", "menu/src/**/*.{ts,tsx}"],
+    files: ["webview/src/**/*.{ts,tsx}"],
     languageOptions: { globals: { ...globals.browser } },
     plugins: { "react-hooks": reactHooks },
     rules: {

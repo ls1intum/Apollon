@@ -1,0 +1,203 @@
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* The canvas sizes itself from its parent — a `flex: 1` child of a block parent
+   computes to zero height and the diagram renders invisible. */
+#root {
+  display: flex;
+}
+
+/* Tell the UA which appearance this document has, so the native bits it paints
+   for us — caret, autofill, scrollbars, system colors — follow the VS Code
+   theme instead of the desktop's. Without this the editor's own
+   `color-scheme: light dark` defers to the OS, which is a different question
+   from "what theme is VS Code running". Light HC carries both classes, so it
+   must come last to win. */
+body.vscode-dark,
+body.vscode-high-contrast {
+  color-scheme: dark;
+}
+
+body.vscode-light,
+body.vscode-high-contrast-light {
+  color-scheme: light;
+}
+
+/* `dataTheme` puts `data-theme` on the mount node, so the library's dark deltas
+   resolve for a scoped embed. On top of that, bind the tokens VS Code has an
+   opinion about to its own live variables: `var()` re-resolves the moment the
+   user switches theme, with no observer and no re-render.
+   `#root .apollon-vscode-editor` is (1,1,0) and outranks the library's own
+   `[data-theme="dark"]` block (0,1,0), so these win in both themes.
+
+   Only chrome is bound. The functional palette — grid, alignment guides, node
+   fills, collaboration cursors, assessment pills, swatches — stays the library's
+   own, because those encode diagram meaning, not editor surface. */
+#root .apollon-vscode-editor {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+
+  /* The canvas, and the ink the whole chrome ramp is color-mixed from. */
+  --apollon-background: var(--vscode-editor-background, #fff);
+  --apollon-foreground: var(--vscode-editor-foreground, #212529);
+  --apollon-secondary: var(
+    --vscode-descriptionForeground,
+    var(--vscode-editor-foreground, #6c757d)
+  );
+
+  /* The accent, drawn as a fill and as a focus ring. `--vscode-focusBorder` is
+     translucent in most themes and `--vscode-button-background` is pure black in
+     high-contrast dark; `textLink.foreground` is the one accent VS Code
+     guarantees to be opaque and legible against the editor background. */
+  --apollon-primary: var(
+    --vscode-textLink-foreground,
+    var(--vscode-focusBorder, #3e8acc)
+  );
+
+  /* Raised and sunken surfaces: popovers, menus, selects, the color picker.
+     A VS Code widget is only barely lighter than the editor — it separates by
+     its border and shadow, not by its fill, so those must come from the widget
+     tokens too or the popover reads as a flat patch of canvas. */
+  --apollon-surface: var(
+    --vscode-editorWidget-background,
+    var(--vscode-editor-background, #fff)
+  );
+  --apollon-surface-sunken: var(
+    --vscode-input-background,
+    var(--vscode-editor-background, #f8f9fa)
+  );
+
+  /* `--vscode-contrastBorder` is defined ONLY in the high-contrast themes, where
+     VS Code requires a visible edge on every element. Elsewhere it is absent and
+     the chain falls through. */
+  --apollon-border: var(
+    --vscode-contrastBorder,
+    var(--vscode-editorWidget-border, var(--vscode-panel-border, #ced4da))
+  );
+  --apollon-border-subtle: var(
+    --vscode-contrastBorder,
+    var(--vscode-panel-border, #e9ecef)
+  );
+
+  --apollon-danger: var(--vscode-errorForeground, #d33);
+  --apollon-shadow: 0 4px 12px var(--vscode-widget-shadow, rgb(0 0 0 / 20%));
+
+  background-color: var(--apollon-background);
+}
+
+/* High contrast washes the chrome out otherwise: the glass borders are
+   color-mixed from foreground+background, which on pure black computes to
+   near-black. Both HC kinds carry `vscode-high-contrast` on <body> (the light
+   one adds `vscode-high-contrast-light` alongside it), so one selector covers
+   both. It must target `.apollon-editor`, not the mount node: the chrome ramp
+   re-declares `--apollon-chrome-*` there, and a local declaration beats an
+   inherited value whatever the mount node's specificity. */
+.vscode-high-contrast .apollon-editor {
+  --apollon-chrome-border: var(--vscode-contrastBorder);
+  --apollon-chrome-border-strong: var(--vscode-contrastBorder);
+}
+
+/* The auto-export indicator, in the editor's own floating-glass chrome language
+   so it reads as part of the canvas rather than bolted on. */
+.apollon-vscode-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  border: none;
+  color: var(--apollon-chrome-text);
+  font-family: var(--vscode-font-family);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.apollon-vscode-status:focus-visible {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: 2px;
+}
+
+.apollon-vscode-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background-color: currentcolor;
+  transition: background-color 150ms;
+}
+
+/* Shown instead of the canvas when the document holds no diagram — an empty
+   file waiting for a type, or one Apollon cannot read. Styled from VS Code's
+   own tokens, since the editor (and its `--apollon-*` scope) is not mounted. */
+.apollon-vscode-notice {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding: 32px;
+  overflow-y: auto;
+  text-align: center;
+  color: var(--vscode-foreground);
+  background-color: var(--vscode-editor-background);
+  font-family: var(--vscode-font-family);
+}
+
+.apollon-vscode-notice h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.apollon-vscode-notice p {
+  max-width: 52ch;
+  margin: 0;
+  color: var(--vscode-descriptionForeground);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.apollon-vscode-notice-hint {
+  font-style: italic;
+}
+
+.apollon-vscode-choices {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  max-width: 640px;
+  margin: 8px 0;
+}
+
+.apollon-vscode-choices button {
+  padding: 6px 14px;
+  border: 1px solid var(--vscode-button-border, transparent);
+  border-radius: 2px;
+  color: var(--vscode-button-secondaryForeground);
+  background-color: var(--vscode-button-secondaryBackground);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.apollon-vscode-choices button:hover {
+  background-color: var(--vscode-button-secondaryHoverBackground);
+}
+
+.apollon-vscode-choices button:focus-visible {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: 2px;
+}

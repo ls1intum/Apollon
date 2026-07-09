@@ -1,5 +1,5 @@
 {
-  "name": "apollon-vscode-menu",
+  "name": "apollon-vscode-webview",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -10,22 +10,17 @@
   "dependencies": {
     "@tumaet/apollon": "workspace:*",
     "@types/vscode-webview": "catalog:",
+    "@xyflow/react": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "zustand": "catalog:"
+    "yjs": "catalog:"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "catalog:",
-    "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "babel-plugin-react-compiler": "catalog:",
-    "tailwindcss": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:"
-  },
-  "engines": {
-    "node": ">=24.15.0"
   }
 }

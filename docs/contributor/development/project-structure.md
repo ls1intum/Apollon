@@ -29,8 +29,8 @@ Apollon/
 │       ├── Dockerfile
 │       └── package.json
 ├── vscode-extension/         # apollon-vscode — VS Code extension
-│   ├── editor/               # apollon-vscode-editor — diagram webview (Vite)
-│   └── menu/                 # apollon-vscode-menu — diagram-picker webview (Vite)
+│   ├── src/                  # extension host (custom text editor, tree view, commands)
+│   └── webview/              # apollon-vscode-webview — diagram canvas (Vite)
 ├── docker/                   # Compose files for local + production
 ├── docs/                     # Documentation sources (this directory)
 ├── scripts/                  # dev.mjs and other monorepo helpers
@@ -45,13 +45,12 @@ Apollon/
 
 ## Workspaces
 
-| Workspace                  | Name                    | Published as                                                                                     |
-| -------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------ |
-| `library/`                 | `@tumaet/apollon`       | [npm](https://www.npmjs.com/package/@tumaet/apollon)                                             |
-| `packages/ui/`             | `@tumaet/ui`            | internal design system (consumed by the webapp; not published)                                   |
-| `standalone/webapp/`       | `@tumaet/webapp`        | `ghcr.io/ls1intum/apollon/webapp`                                                                |
-| `standalone/server/`       | `@tumaet/server`        | `ghcr.io/ls1intum/apollon/server`                                                                |
-| `vscode-extension/`        | `apollon-vscode`        | [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=tumaet.apollon-vscode) |
-| `vscode-extension/menu/`   | `apollon-vscode-menu`   | bundled into the extension VSIX                                                                  |
-| `vscode-extension/editor/` | `apollon-vscode-editor` | bundled into the extension VSIX                                                                  |
-| `docs/`                    | `@tumaet/apollon-docs`  | published as the Docusaurus site at <https://ls1intum.github.io/Apollon/>                        |
+| Workspace                   | Name                     | Published as                                                                                     |
+| --------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------ |
+| `library/`                  | `@tumaet/apollon`        | [npm](https://www.npmjs.com/package/@tumaet/apollon)                                             |
+| `packages/ui/`              | `@tumaet/ui`             | internal design system (consumed by the webapp; not published)                                   |
+| `standalone/webapp/`        | `@tumaet/webapp`         | `ghcr.io/ls1intum/apollon/webapp`                                                                |
+| `standalone/server/`        | `@tumaet/server`         | `ghcr.io/ls1intum/apollon/server`                                                                |
+| `vscode-extension/`         | `apollon-vscode`         | [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=tumaet.apollon-vscode) |
+| `vscode-extension/webview/` | `apollon-vscode-webview` | bundled into the extension VSIX                                                                  |
+| `docs/`                     | `@tumaet/apollon-docs`   | published as the Docusaurus site at <https://ls1intum.github.io/Apollon/>                        |
