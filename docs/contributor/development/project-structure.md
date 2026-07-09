@@ -30,7 +30,7 @@ Apollon/
 │       └── package.json
 ├── vscode-extension/         # apollon-vscode — VS Code extension
 │   ├── src/                  # extension host (custom text editor, tree view, commands)
-│   └── webview/              # apollon-vscode-webview — diagram canvas (Vite)
+│   └── webview/              # @tumaet/vscode-webview — diagram canvas (Vite)
 ├── docker/                   # Compose files for local + production
 ├── docs/                     # Documentation sources (this directory)
 ├── scripts/                  # dev.mjs and other monorepo helpers
@@ -52,5 +52,7 @@ Apollon/
 | `standalone/webapp/`        | `@tumaet/webapp`         | `ghcr.io/ls1intum/apollon/webapp`                                                                |
 | `standalone/server/`        | `@tumaet/server`         | `ghcr.io/ls1intum/apollon/server`                                                                |
 | `vscode-extension/`         | `apollon-vscode`         | [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=tumaet.apollon-vscode) |
-| `vscode-extension/webview/` | `apollon-vscode-webview` | bundled into the extension VSIX                                                                  |
-| `docs/`                     | `@tumaet/apollon-docs`   | published as the Docusaurus site at <https://ls1intum.github.io/Apollon/>                        |
+| `vscode-extension/webview/` | `@tumaet/vscode-webview` | bundled into the extension VSIX                                                                  |
+| `docs/`                     | `@tumaet/docs`           | published as the Docusaurus site at <https://ls1intum.github.io/Apollon/>                        |
+
+The scope carries the organization and the name carries the role, so `@tumaet/apollon` is the product and every other workspace is named for the job it does. `apollon-vscode` is the sole exception: the VS Code Marketplace requires an extension name to match `[a-z0-9][a-z0-9-]*`, so `vsce` rejects a scope outright. Its Marketplace identity, `tumaet.apollon-vscode`, is the same name spelled the way the Marketplace spells scopes — and it is fixed for good, because the identity is what installed clients follow for updates.

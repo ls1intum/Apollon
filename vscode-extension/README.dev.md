@@ -7,7 +7,7 @@ Build, run, and release notes for the [Apollon VS Code extension](./README.md). 
 Two pnpm workspaces:
 
 - [`src/`](./src) — `apollon-vscode`, the extension host (Vite library mode, CJS output). Registers a `CustomTextEditorProvider` for `*.apollon`, a native tree view of the workspace's diagrams, and the `Apollon: …` commands. It reaches the filesystem only through `vscode.workspace.fs`, so it works in virtual and remote workspaces. It is not a [web extension](https://code.visualstudio.com/api/extension-guides/web-extensions): there is no `browser` entry point.
-- [`webview/`](./webview) — `apollon-vscode-webview`, the canvas that hosts the `@tumaet/apollon` editor (Vite).
+- [`webview/`](./webview) — `@tumaet/vscode-webview`, the canvas that hosts the `@tumaet/apollon` editor (Vite).
 
 [`src/shared/protocol.ts`](./src/shared/protocol.ts) is the single typed contract between the two, and the class doc on [`ApollonEditorProvider`](./src/apollonEditorProvider.ts) explains how document and canvas stay in sync.
 
@@ -22,7 +22,7 @@ pnpm install
 ## Run locally
 
 ```sh
-pnpm --filter apollon-vscode-webview start  # webview
+pnpm --filter @tumaet/vscode-webview start  # webview
 pnpm --filter apollon-vscode watch          # extension host
 ```
 

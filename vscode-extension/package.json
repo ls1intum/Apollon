@@ -163,8 +163,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p webview/tsconfig.json --noEmit",
     "test": "vitest run",
     "package:vsix": "vsce package --no-dependencies",
-    "start:webview": "pnpm --filter apollon-vscode-webview run start",
-    "build:webview": "pnpm --filter apollon-vscode-webview run build",
+    "start:webview": "pnpm --filter @tumaet/vscode-webview run start",
+    "build:webview": "pnpm --filter @tumaet/vscode-webview run build",
     "build:all": "pnpm run build && pnpm run build:webview"
   },
   "devDependencies": {

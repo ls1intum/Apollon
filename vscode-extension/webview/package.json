@@ -1,5 +1,5 @@
 {
-  "name": "apollon-vscode-webview",
+  "name": "@tumaet/vscode-webview",
   "version": "1.0.0",
   "private": true,
   "type": "module",
