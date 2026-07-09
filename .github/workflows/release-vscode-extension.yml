@@ -33,16 +33,39 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           ref: ${{ github.sha }}
+          # The parent commit too, to read the version this push replaced.
+          fetch-depth: 2
 
       - id: v
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
+          set -euo pipefail
           VERSION=$(node -p "require('./vscode-extension/package.json').version")
           if [[ "$VERSION" == *-* || "$VERSION" == *+* ]]; then
             echo "::error::vscode-extension version $VERSION is not strict SemVer MAJOR.MINOR.PATCH."
             exit 1
           fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+          # A release is a version change, and nothing else. This workflow wakes
+          # on any edit to the manifest, which also carries the icon, the
+          # commands and the settings schema — so an unrelated edit would
+          # otherwise ship whatever version happened to be sitting there.
+          # Publishing a version the manifest already held is `workflow_dispatch`,
+          # chosen deliberately.
+          if [ "$EVENT_NAME" = "push" ]; then
+            BEFORE=$(git show "${GITHUB_SHA}^:vscode-extension/package.json" 2>/dev/null \
+              | node -p "JSON.parse(require('fs').readFileSync(0, 'utf8')).version" 2>/dev/null || echo "")
+            if [ "$BEFORE" = "$VERSION" ]; then
+              echo "::notice::vscode-extension stays at $VERSION — the manifest changed, the version did not. Nothing to release."
+              echo "publish=false" >> "$GITHUB_OUTPUT"
+              echo "release=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+
           MKT=$(curl -s -X POST https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery \
             -H "Content-Type: application/json" -H "Accept: application/json;api-version=7.2-preview.1" \
             -d '{"filters":[{"criteria":[{"filterType":7,"value":"tumaet.apollon-vscode"}]}],"flags":914}' \
@@ -58,7 +81,6 @@ jobs:
           else
             echo "release=true" >> "$GITHUB_OUTPUT"
           fi
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
   build:
     name: Build VSIX
@@ -135,6 +157,15 @@ jobs:
     permissions:
       contents: read
     steps:
+      # `.nvmrc` is the one source for the Node version, and this job has no
+      # working tree to read it from. `checkout` cleans the directory, so it has
+      # to precede the artifact download rather than follow it.
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ github.sha }}
+          sparse-checkout: .nvmrc
+          sparse-checkout-cone-mode: false
+
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
           name: vsix
@@ -204,7 +235,13 @@ jobs:
             git tag "$TAG" "$GITHUB_SHA"
             git push origin "refs/tags/$TAG"
           fi
-          VSIX=$(ls *.vsix | head -n1)
+          shopt -s nullglob
+          files=( ./*.vsix )
+          if [[ ${#files[@]} -ne 1 ]]; then
+            echo "::error::Expected exactly 1 VSIX to attach, found ${#files[@]}: ${files[*]}"
+            exit 1
+          fi
+          VSIX="${files[0]}"
           gh release create "$TAG" \
             --title "$TAG" \
             --target "$GITHUB_SHA" \
