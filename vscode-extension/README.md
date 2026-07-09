@@ -13,7 +13,7 @@ Model UML diagrams directly in Visual Studio Code using the [Apollon](https://gi
 2. Open any `.apollon` file to edit it on the canvas. It behaves like any other editor: <kbd>Cmd/Ctrl+S</kbd> saves, the tab shows unsaved changes, and <kbd>Cmd/Ctrl+Z</kbd> undoes.
 3. To read or diff the raw JSON, use **Reopen Editor With… → Text Editor**.
 
-Supported diagram types match the [`@tumaet/apollon`](https://www.npmjs.com/package/@tumaet/apollon) library: class, object, activity, use case, communication, component, deployment, Petri net, reachability graph, syntax tree, flowchart, BPMN, and SFC.
+Supported diagram types match the [`@tumaet/apollon`](https://www.npmjs.com/package/@tumaet/apollon) library: class, object, activity, use case, communication, component, deployment, Petri net, reachability graph, syntax tree, flowchart, BPMN, and sequential function chart.
 
 ## Export
 
@@ -27,4 +27,4 @@ Run **Apollon: Export Diagram as Image** to write a sibling `.svg` or `.png` nex
 
 ## License
 
-MIT — see the monorepo [LICENSE](../LICENSE).
+MIT — see [LICENSE](./LICENSE.txt).
