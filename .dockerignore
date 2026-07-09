@@ -32,12 +32,7 @@ dist/
 standalone/webapp/android
 standalone/webapp/ios
 
-# Keep the vscode-extension package.json files (pnpm install reads them
-# as workspace manifests), but drop the source.
-vscode-extension/src
-vscode-extension/webview/src
-vscode-extension/webview/dist
-vscode-extension/dist
+vscode-extension/
 
 scripts/
 .changeset/
