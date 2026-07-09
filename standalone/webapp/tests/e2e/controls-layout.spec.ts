@@ -17,7 +17,12 @@ type EditorHandle = {
   updateControl: (id: string, patch: Record<string, unknown>) => void
   removeControl: (id: string) => void
   setLabels: (labels: Record<string, string>) => void
+  fitView: (options?: Record<string, unknown>) => void
 }
+
+/** Simulate device safe-area insets. Headless browsers report `env()` as 0, so
+ *  this seam (see `src/index.tsx`) is the only way to exercise a notch. */
+type SafeAreaSim = (value: number[] | number | null) => void
 
 const PALETTE_ID = "apollon:palette"
 const ZOOM_ID = "apollon:zoom"
@@ -143,6 +148,61 @@ const CORNERS = [
   "bottom-center",
   "bottom-right",
 ] as const
+
+/** [top, right, bottom, left] — roughly an iPhone in portrait. */
+const NOTCH = [47, 0, 34, 0] as const
+
+/**
+ * Two nodes spanning 1000×800, which at a 1280×720 viewport makes the fit
+ * height-bound and padding-limited: the content's top and bottom edges land
+ * exactly on the reserved padding, so a missing inset shows up as overlap.
+ *
+ * The span is deliberate. A single small node fits at `maxZoom: 1.0` and sits
+ * centered with slack on every side, passing whatever the padding is; a much
+ * larger span clamps at `minZoom` (0.4) and overflows regardless of padding.
+ * Only in between does the assertion actually measure the padding.
+ */
+const SPREAD_MODEL = {
+  ...MODEL,
+  id: "controls-layout-spread",
+  title: "controls layout spread",
+  nodes: [
+    { ...MODEL.nodes[0], position: { x: 0, y: 0 } },
+    {
+      ...MODEL.nodes[0],
+      id: "n2-0000-0000-0000-000000000002",
+      position: { x: 800, y: 690 },
+      data: { name: "Omega", attributes: [], methods: [] },
+    },
+  ],
+}
+
+async function simulateSafeArea(page: Page, insets: number[]): Promise<void> {
+  await page.evaluate((insets) => {
+    ;(
+      window as unknown as { __apollonSafeArea?: SafeAreaSim }
+    ).__apollonSafeArea?.(insets)
+  }, insets)
+  // The grid's padding IS the safe area, and it is what `fitView` reads.
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const grid = document.querySelector(".apollon-overlay-grid")
+        return grid ? getComputedStyle(grid).paddingTop : ""
+      })
+    )
+    .toBe(`${insets[0]}px`)
+}
+
+async function fitView(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    ;(
+      window as unknown as { apollonEditor?: EditorHandle }
+    ).apollonEditor?.fitView({ duration: 0 })
+  })
+  // fitView retries across animation frames until every node is measured.
+  await page.waitForTimeout(300)
+}
 
 test.describe("controls layout engine", () => {
   test.beforeEach(async ({ page }) => {
@@ -624,5 +684,58 @@ test.describe("controls layout engine", () => {
     await expect(popover.getByText("Attributes", { exact: true })).toHaveCount(
       0
     )
+  })
+})
+
+/**
+ * The device safe area (notch, Dynamic Island, home indicator) is a hardware
+ * constraint, not chrome: `fitView` must clear it on every edge, including edges
+ * where the only chrome floats and reserves nothing. Headless browsers report
+ * `env(safe-area-inset-*)` as 0, so the insets come from the `__apollonSafeArea`
+ * seam — the same one the app uses to preview a notch in a desktop browser.
+ */
+test.describe("fitView and the device safe area", () => {
+  test.beforeEach(async ({ page }) => {
+    await openFixtureInLocalEditor(page, SPREAD_MODEL)
+    await waitForCanvasReady(page)
+    await expect(zoomEl(page)).toBeVisible()
+  })
+
+  test("frames every node below the notch and above the home indicator", async ({
+    page,
+  }) => {
+    await simulateSafeArea(page, [...NOTCH])
+    await fitView(page)
+
+    const editor = await box(editorEl(page))
+    const nodes = page.locator(".react-flow__node")
+    for (const node of await nodes.all()) {
+      const b = await box(node)
+      expect(b.y).toBeGreaterThanOrEqual(editor.y + NOTCH[0])
+      expect(b.y + b.height).toBeLessThanOrEqual(
+        editor.y + editor.height - NOTCH[2]
+      )
+    }
+  })
+
+  test("clears the safe area on an edge whose only chrome floats", async ({
+    page,
+  }) => {
+    // With the palette gone, the bottom edge carries just the zoom cluster — a
+    // corner slot, which reserves nothing. The home indicator still occludes it.
+    await removeControl(page, PALETTE_ID)
+    await simulateSafeArea(page, [0, 0, 34, 0])
+    await fitView(page)
+
+    const editor = await box(editorEl(page))
+    const lowest = Math.max(
+      ...(await Promise.all(
+        (await page.locator(".react-flow__node").all()).map(async (node) => {
+          const b = await box(node)
+          return b.y + b.height
+        })
+      ))
+    )
+    expect(lowest).toBeLessThanOrEqual(editor.y + editor.height - 34)
   })
 })

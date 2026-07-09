@@ -99,7 +99,7 @@ export const HomePage = () => {
       // Account for the floating New-diagram FAB on phones (pb-24) so the last
       // gallery row clears it; less bottom room is needed on md+ where the FAB
       // is hidden. Also pad past the bottom safe-area inset on notched devices.
-      mainClassName="pb-[max(6rem,calc(env(safe-area-inset-bottom,0px)+2.5rem))] md:pb-[max(2.5rem,env(safe-area-inset-bottom,0px))]"
+      mainClassName="pb-[max(6rem,calc(var(--safe-area-inset-bottom,0px)+2.5rem))] md:pb-[max(2.5rem,var(--safe-area-inset-bottom,0px))]"
       header={
         <HomeHeaderRow
           chrome={chrome}

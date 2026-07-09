@@ -1,15 +1,17 @@
 PODS:
-  - Capacitor (8.3.0):
+  - Capacitor (8.4.1):
     - CapacitorCordova
   - CapacitorClipboard (8.0.1):
     - Capacitor
-  - CapacitorCordova (8.3.0)
+  - CapacitorCordova (8.4.1)
   - CapacitorFilesystem (8.1.2):
     - Capacitor
     - IONFilesystemLib (~> 1.1.1)
   - CapacitorFileTransfer (2.0.4):
     - Capacitor
     - IONFileTransferLib (~> 1.0.2)
+  - CapacitorKeyboard (8.0.5):
+    - Capacitor
   - CapacitorShare (8.0.1):
     - Capacitor
   - CapacitorSplashScreen (8.0.1):
@@ -20,14 +22,15 @@ PODS:
   - IONFileTransferLib (1.0.3)
 
 DEPENDENCIES:
-  - "Capacitor (from `../../../../node_modules/.pnpm/@capacitor+ios@8.3.0_@capacitor+core@8.3.0/node_modules/@capacitor/ios`)"
-  - "CapacitorClipboard (from `../../../../node_modules/.pnpm/@capacitor+clipboard@8.0.1_@capacitor+core@8.3.0/node_modules/@capacitor/clipboard`)"
-  - "CapacitorCordova (from `../../../../node_modules/.pnpm/@capacitor+ios@8.3.0_@capacitor+core@8.3.0/node_modules/@capacitor/ios`)"
-  - "CapacitorFilesystem (from `../../../../node_modules/.pnpm/@capacitor+filesystem@8.1.2_@capacitor+core@8.3.0/node_modules/@capacitor/filesystem`)"
-  - "CapacitorFileTransfer (from `../../../../node_modules/.pnpm/@capacitor+file-transfer@2.0.4_@capacitor+core@8.3.0/node_modules/@capacitor/file-transfer`)"
-  - "CapacitorShare (from `../../../../node_modules/.pnpm/@capacitor+share@8.0.1_@capacitor+core@8.3.0/node_modules/@capacitor/share`)"
-  - "CapacitorSplashScreen (from `../../../../node_modules/.pnpm/@capacitor+splash-screen@8.0.1_@capacitor+core@8.3.0/node_modules/@capacitor/splash-screen`)"
-  - "CapacitorStatusBar (from `../../../../node_modules/.pnpm/@capacitor+status-bar@8.0.2_@capacitor+core@8.3.0/node_modules/@capacitor/status-bar`)"
+  - "Capacitor (from `../../../../node_modules/.pnpm/@capacitor+ios@8.4.1_@capacitor+core@8.4.1/node_modules/@capacitor/ios`)"
+  - "CapacitorClipboard (from `../../../../node_modules/.pnpm/@capacitor+clipboard@8.0.1_@capacitor+core@8.4.1/node_modules/@capacitor/clipboard`)"
+  - "CapacitorCordova (from `../../../../node_modules/.pnpm/@capacitor+ios@8.4.1_@capacitor+core@8.4.1/node_modules/@capacitor/ios`)"
+  - "CapacitorFilesystem (from `../../../../node_modules/.pnpm/@capacitor+filesystem@8.1.2_@capacitor+core@8.4.1/node_modules/@capacitor/filesystem`)"
+  - "CapacitorFileTransfer (from `../../../../node_modules/.pnpm/@capacitor+file-transfer@2.0.4_@capacitor+core@8.4.1/node_modules/@capacitor/file-transfer`)"
+  - "CapacitorKeyboard (from `../../../../node_modules/.pnpm/@capacitor+keyboard@8.0.5_@capacitor+core@8.4.1/node_modules/@capacitor/keyboard`)"
+  - "CapacitorShare (from `../../../../node_modules/.pnpm/@capacitor+share@8.0.1_@capacitor+core@8.4.1/node_modules/@capacitor/share`)"
+  - "CapacitorSplashScreen (from `../../../../node_modules/.pnpm/@capacitor+splash-screen@8.0.1_@capacitor+core@8.4.1/node_modules/@capacitor/splash-screen`)"
+  - "CapacitorStatusBar (from `../../../../node_modules/.pnpm/@capacitor+status-bar@8.0.2_@capacitor+core@8.4.1/node_modules/@capacitor/status-bar`)"
 
 SPEC REPOS:
   trunk:
@@ -36,34 +39,37 @@ SPEC REPOS:
 
 EXTERNAL SOURCES:
   Capacitor:
-    :path: "../../../../node_modules/.pnpm/@capacitor+ios@8.3.0_@capacitor+core@8.3.0/node_modules/@capacitor/ios"
+    :path: "../../../../node_modules/.pnpm/@capacitor+ios@8.4.1_@capacitor+core@8.4.1/node_modules/@capacitor/ios"
   CapacitorClipboard:
-    :path: "../../../../node_modules/.pnpm/@capacitor+clipboard@8.0.1_@capacitor+core@8.3.0/node_modules/@capacitor/clipboard"
+    :path: "../../../../node_modules/.pnpm/@capacitor+clipboard@8.0.1_@capacitor+core@8.4.1/node_modules/@capacitor/clipboard"
   CapacitorCordova:
-    :path: "../../../../node_modules/.pnpm/@capacitor+ios@8.3.0_@capacitor+core@8.3.0/node_modules/@capacitor/ios"
+    :path: "../../../../node_modules/.pnpm/@capacitor+ios@8.4.1_@capacitor+core@8.4.1/node_modules/@capacitor/ios"
   CapacitorFilesystem:
-    :path: "../../../../node_modules/.pnpm/@capacitor+filesystem@8.1.2_@capacitor+core@8.3.0/node_modules/@capacitor/filesystem"
+    :path: "../../../../node_modules/.pnpm/@capacitor+filesystem@8.1.2_@capacitor+core@8.4.1/node_modules/@capacitor/filesystem"
   CapacitorFileTransfer:
-    :path: "../../../../node_modules/.pnpm/@capacitor+file-transfer@2.0.4_@capacitor+core@8.3.0/node_modules/@capacitor/file-transfer"
+    :path: "../../../../node_modules/.pnpm/@capacitor+file-transfer@2.0.4_@capacitor+core@8.4.1/node_modules/@capacitor/file-transfer"
+  CapacitorKeyboard:
+    :path: "../../../../node_modules/.pnpm/@capacitor+keyboard@8.0.5_@capacitor+core@8.4.1/node_modules/@capacitor/keyboard"
   CapacitorShare:
-    :path: "../../../../node_modules/.pnpm/@capacitor+share@8.0.1_@capacitor+core@8.3.0/node_modules/@capacitor/share"
+    :path: "../../../../node_modules/.pnpm/@capacitor+share@8.0.1_@capacitor+core@8.4.1/node_modules/@capacitor/share"
   CapacitorSplashScreen:
-    :path: "../../../../node_modules/.pnpm/@capacitor+splash-screen@8.0.1_@capacitor+core@8.3.0/node_modules/@capacitor/splash-screen"
+    :path: "../../../../node_modules/.pnpm/@capacitor+splash-screen@8.0.1_@capacitor+core@8.4.1/node_modules/@capacitor/splash-screen"
   CapacitorStatusBar:
-    :path: "../../../../node_modules/.pnpm/@capacitor+status-bar@8.0.2_@capacitor+core@8.3.0/node_modules/@capacitor/status-bar"
+    :path: "../../../../node_modules/.pnpm/@capacitor+status-bar@8.0.2_@capacitor+core@8.4.1/node_modules/@capacitor/status-bar"
 
 SPEC CHECKSUMS:
-  Capacitor: 22e541237135648c9aa736232bb4d2eec35fddcb
+  Capacitor: 35242afe195b1e53c58ca1b827d1b444c5e6602b
   CapacitorClipboard: c75fdaa6e622111119f35e7914ecfc67b05efecb
-  CapacitorCordova: 2e1e2bb93b2f365309dc4ff18b72b9a69a7814a9
+  CapacitorCordova: eebe6bcf807b1b06f3f48237650f96bbcd0eef09
   CapacitorFilesystem: 2db285a1ac6e475cc27cae2e1bea999000f9e2be
   CapacitorFileTransfer: 445b9dc69ea5a5e0e708e011a4848e63c471abee
+  CapacitorKeyboard: b6b0744890cdb1d9a96e2cafcc9253fdcc55de3b
   CapacitorShare: 0c58305114538568059bfc07111f22dcb9cb2a82
   CapacitorSplashScreen: 4b46c72298db552b3c57ce021ef028b6dc7f1fa7
   CapacitorStatusBar: 01d5763b4ed720de5ce2edbc938de6a98f4c8f32
   IONFilesystemLib: 21a63377696b2d8fab5632ecfb7d2ac67bddb68a
   IONFileTransferLib: addbbf50405c163dcd74a7b1bd8c6f9302342be2
 
-PODFILE CHECKSUM: b63f0bc5fd48fea81ea054862cb08b3bdc19f84a
+PODFILE CHECKSUM: de0a877902ce87328492a048160c869d1f6a7a35
 
 COCOAPODS: 1.16.2

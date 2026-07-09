@@ -15,6 +15,23 @@
 :root {
   color-scheme: light dark;
 
+  /* ── Layer 0: device safe area ─────────────────────────────────────────── */
+
+  /* The SINGLE declaration of the safe-area insets — every consumer (the editor's
+     overlay grid, the home chrome, the modal frame) reads
+     `var(--safe-area-inset-*, 0px)`. `env()` is the source of truth wherever the
+     UA reports it (any browser with `viewport-fit=cover`, and iOS WKWebView).
+     A native shell that must inject its own values — Capacitor's System Bars on
+     Android, whose WebView under-reports `env()` — sets these as an INLINE style
+     on `documentElement`, which beats this rule. The webapp's `__apollonSafeArea`
+     dev simulator uses the same seam. Fallbacks are `0px`, never a unitless `0`:
+     these feed `max()`/`calc()`, where a unitless zero is a <number> and would
+     invalidate the whole expression. */
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+
   /* ── Layer 1: primitives (light) ───────────────────────────────────────── */
 
   /* Brand / neutral palette */
@@ -721,5 +738,10 @@
 @media (pointer: coarse) {
   :root {
     --apollon-chrome-pad: 4px;
+
+    /* A 20px blur under a full-height rail is re-rasterized on every pan frame,
+       which is the dominant chrome cost on a phone GPU — and the effect is least
+       visible at phone sizes. Halve the radius and drop the saturate pass. */
+    --apollon-chrome-glass-blur: blur(10px);
   }
 }

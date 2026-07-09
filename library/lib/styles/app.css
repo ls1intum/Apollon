@@ -10,19 +10,6 @@
    and `@import`, or those assets leak into that chunk. The Inter font ships
    separately (lib/styles/fonts.css + lib/utils/exportFonts.ts). */
 
-/* Safe-area floor. Consumers below read `var(--safe-area-inset-*, 0)`; this
-   maps them to the UA insets so they work in any browser/embedded webview
-   (Artemis, vscode) with `viewport-fit=cover`. The standalone webapp may
-   override these at runtime via the Capacitor safe-area plugin (inline style
-   on documentElement wins); off-native and everywhere else, env() is the
-   source of truth and resolves to 0 when there is no inset. */
-:root {
-  --safe-area-inset-top: env(safe-area-inset-top, 0);
-  --safe-area-inset-right: env(safe-area-inset-right, 0);
-  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0);
-  --safe-area-inset-left: env(safe-area-inset-left, 0);
-}
-
 /* The shared chrome token system (--apollon-chrome-*: glass, the surface/border/
    text ramp, the btn/pad/island dimensional system, motion) is the SINGLE source
    and lives in @tumaet/ui tokens.css — loaded into the editor via the
@@ -95,11 +82,11 @@
     "botleft  botcenter botright"
     "footer   footer    footer";
   pointer-events: none;
-  padding-top: var(--safe-area-inset-top, 0);
-  padding-left: var(--safe-area-inset-left, 0);
-  padding-right: var(--safe-area-inset-right, 0);
+  padding-top: var(--safe-area-inset-top, 0px);
+  padding-left: var(--safe-area-inset-left, 0px);
+  padding-right: var(--safe-area-inset-right, 0px);
   padding-bottom: calc(
-    var(--safe-area-inset-bottom, 0) + var(--apollon-keyboard-inset, 0)
+    var(--safe-area-inset-bottom, 0px) + var(--apollon-keyboard-inset, 0px)
   );
 }
 
@@ -376,15 +363,15 @@
    generic horizontal panel offsets, and the built-in minimap is grid-managed. */
 .react-flow__panel.top {
   margin-top: calc(
-    var(--apollon-chrome-edge) + var(--safe-area-inset-top, 0) +
-      var(--apollon-inset-top, 0)
+    var(--apollon-chrome-edge) + var(--safe-area-inset-top, 0px) +
+      var(--apollon-inset-top, 0px)
   );
 }
 
 .react-flow__panel.bottom {
   margin-bottom: calc(
-    var(--apollon-chrome-edge-safe-bottom) + var(--apollon-keyboard-inset, 0) +
-      var(--apollon-inset-bottom, 0)
+    var(--apollon-chrome-edge-safe-bottom) +
+      var(--apollon-keyboard-inset, 0px) + var(--apollon-inset-bottom, 0px)
   );
 }
 
@@ -493,18 +480,14 @@
   gap: var(--apollon-chrome-gap);
 }
 
+/* Layout only — the surface comes from `.apollon-glass`, which the cluster also
+   carries. Re-declaring the glass here would fork it from the shared rule and
+   silently skip its reduced-transparency / increased-contrast fallbacks. */
 .apollon-chrome-cluster {
   display: flex;
   align-items: center;
   gap: 2px;
   padding: var(--apollon-chrome-pad);
-  background-color: var(--apollon-chrome-glass);
-  -webkit-backdrop-filter: var(--apollon-chrome-glass-blur);
-  backdrop-filter: var(--apollon-chrome-glass-blur);
-  border: 1px solid var(--apollon-chrome-border);
-  box-shadow:
-    var(--apollon-chrome-shadow-floating), var(--apollon-chrome-inset-hairline);
-  border-radius: var(--apollon-chrome-radius-lg);
 }
 
 /* React Flow's built-in zoom/fit buttons adopt the same borderless idiom. */

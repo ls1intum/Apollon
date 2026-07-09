@@ -330,10 +330,18 @@ editor.fitView() // respectInsets defaults to true
 | `padding`       | `number \| Partial<Record<OverlaySide, number>>` | —       | Extra padding. A per-side object overrides the default 16px gutter on those sides. |
 | `duration`      | `number`                                         | `200`   | Fit animation duration in ms.                                                      |
 
-With no reserved chrome and a scalar (or absent) `padding`, `fitView` keeps the
-existing fraction-based padding behavior (`0.15`). When insets exist, each side
-is padded by `inset + gutter` (gutter defaults to 16px, or your per-side
-`padding` override). The fit is capped at `maxZoom: 1.0`.
+With no reserved chrome, no device safe area and a scalar (or absent) `padding`,
+`fitView` keeps the existing fraction-based padding behavior (`0.15`). Otherwise
+each side is padded by `safe area + inset + gutter` (gutter defaults to 16px, or
+your per-side `padding` override). The fit is capped at `maxZoom: 1.0`.
+
+The **device safe area** — the notch, Dynamic Island, home indicator, and the
+mobile soft keyboard — is always cleared, even when `respectInsets` is `false`
+and even on an edge where no control reserves anything. It is a hardware
+constraint rather than chrome, so neither `respectInsets` nor a per-side
+`padding` override can opt out of it: `padding` replaces the gutter, not the safe
+area. Chrome reservations are measured from each control's own box, which begins
+_inside_ the safe area, so the two never double-count.
 
 ## `OverlayControlOptions`
 
