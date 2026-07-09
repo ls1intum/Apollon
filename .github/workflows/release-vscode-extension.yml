@@ -27,6 +27,9 @@ jobs:
       contents: read
     outputs:
       version: ${{ steps.v.outputs.version }}
+      publisher: ${{ steps.v.outputs.publisher }}
+      name: ${{ steps.v.outputs.name }}
+      extension-id: ${{ steps.v.outputs.extension-id }}
       publish: ${{ steps.v.outputs.publish }}
       release: ${{ steps.v.outputs.release }}
     steps:
@@ -49,6 +52,18 @@ jobs:
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
+          # The manifest is the only source for the Marketplace identity: `vsce`
+          # and `ovsx` derive what they publish from `publisher` and `name`, so
+          # anything this workflow states about the extension has to be read from
+          # there too. A second copy here would decide which listing gets queried
+          # while the manifest decided which listing gets written.
+          PUBLISHER=$(node -p "require('./vscode-extension/package.json').publisher")
+          NAME=$(node -p "require('./vscode-extension/package.json').name")
+          EXT_ID="${PUBLISHER}.${NAME}"
+          echo "publisher=$PUBLISHER" >> "$GITHUB_OUTPUT"
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          echo "extension-id=$EXT_ID" >> "$GITHUB_OUTPUT"
+
           # A release is a version change, and nothing else. This workflow wakes
           # on any edit to the manifest, which also carries the icon, the
           # commands and the settings schema — so an unrelated edit would
@@ -68,14 +83,14 @@ jobs:
 
           MKT=$(curl -s -X POST https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery \
             -H "Content-Type: application/json" -H "Accept: application/json;api-version=7.2-preview.1" \
-            -d '{"filters":[{"criteria":[{"filterType":7,"value":"tumaet.apollon-vscode"}]}],"flags":914}' \
+            -d "$(jq -nc --arg id "$EXT_ID" '{filters:[{criteria:[{filterType:7,value:$id}]}],flags:914}')" \
             | jq -r '.results[0].extensions[0].versions[]?.version' | grep -Fx "$VERSION" || true)
           if [ -n "$MKT" ]; then
             echo "publish=false" >> "$GITHUB_OUTPUT"
           else
             echo "publish=true" >> "$GITHUB_OUTPUT"
           fi
-          TAG="apollon-vscode@${VERSION}"
+          TAG="${NAME}@${VERSION}"
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             echo "release=false" >> "$GITHUB_OUTPUT"
           else
@@ -156,6 +171,8 @@ jobs:
     environment: vscode-marketplace
     permissions:
       contents: read
+    outputs:
+      ovsx: ${{ steps.ovsx.outputs.configured }}
     steps:
       # `.nvmrc` is the one source for the Node version, and this job has no
       # working tree to read it from. `checkout` cleans the directory, so it has
@@ -181,13 +198,39 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/cli" --ignore-scripts @vscode/vsce@3.9.1 ovsx@0.10.12
           echo "$RUNNER_TEMP/cli/node_modules/.bin" >> "$GITHUB_PATH"
 
+      - name: Verify the Marketplace PAT can write this publisher
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+          PUBLISHER: ${{ needs.check.outputs.publisher }}
+        # `vsce publish` surfaces a missing publisher grant only after uploading,
+        # so ask first. The manifest names the publisher; the PAT must be a member
+        # of it with Marketplace *Manage* scope, or nothing else in this job works.
+        run: vsce verify-pat "$PUBLISHER"
+
       - name: Publish to VS Marketplace
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
           VSIX_FILE: ${{ needs.build.outputs.vsix-name }}
         run: vsce publish --skip-duplicate --no-dependencies --packagePath "$VSIX_FILE"
 
+      # Open VSX is optional: the Marketplace is the release channel of record.
+      # Without a token, say so and move on rather than failing a release that
+      # already reached the Marketplace.
+      - name: Check for an Open VSX token
+        id: ovsx
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+        run: |
+          set -euo pipefail
+          if [ -n "${OVSX_PAT:-}" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::OVSX_PAT is not set — skipping Open VSX. The VS Marketplace release is unaffected."
+          fi
+
       - name: Publish to Open VSX
+        if: steps.ovsx.outputs.configured == 'true'
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
           VSIX_FILE: ${{ needs.build.outputs.vsix-name }}
@@ -229,9 +272,13 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ needs.check.outputs.version }}
+          PUBLISHER: ${{ needs.check.outputs.publisher }}
+          NAME: ${{ needs.check.outputs.name }}
+          EXT_ID: ${{ needs.check.outputs.extension-id }}
+          OVSX: ${{ needs.publish.outputs.ovsx }}
         run: |
           set -euo pipefail
-          TAG="apollon-vscode@${VERSION}"
+          TAG="${NAME}@${VERSION}"
           if ! git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -252,16 +299,25 @@ jobs:
           # --generate-notes only when there is no changelog section for this
           # version (e.g. a release that carried no changeset).
           CHANGELOG=$(node scripts/extract-changelog.mjs "$VERSION" vscode-extension)
+
+          # Name the registries this release actually reached. Open VSX is
+          # skipped when no token is configured, and a release body that claims
+          # a publish that never happened is worse than one that omits it.
+          REGISTRIES="the [VS Marketplace](https://marketplace.visualstudio.com/items?itemName=${EXT_ID})"
+          if [ "${OVSX:-}" = "true" ]; then
+            REGISTRIES="${REGISTRIES} and [Open VSX](https://open-vsx.org/extension/${PUBLISHER}/${NAME})"
+          fi
+
           {
             if [ -n "$CHANGELOG" ]; then printf '%s\n\n' "$CHANGELOG"; fi
             cat <<EOF
           Install:
 
           \`\`\`sh
-          code --install-extension tumaet.apollon-vscode
+          code --install-extension ${EXT_ID}
           \`\`\`
 
-          Published to [VS Marketplace](https://marketplace.visualstudio.com/items?itemName=tumaet.apollon-vscode) and [Open VSX](https://open-vsx.org/extension/tumaet/apollon-vscode). VSIX attached for sideloading.
+          Published to ${REGISTRIES}. VSIX attached for sideloading.
           EOF
           } > release-notes.md
 
