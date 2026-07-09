@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useId, useRef, useState } from "react"
 import { Popover } from "@base-ui/react/popover"
 import { ChevronDown } from "lucide-react"
-import { resolveApollonThemeVars } from "./portalTheme"
+import { usePortalThemeVars } from "./portalTheme"
 import { useLabels } from "@/i18n/useLabels"
 
 export interface SelectOption {
@@ -52,16 +52,13 @@ export const Select: React.FC<SelectProps> = ({
     )
   )
   const optionRefs = useRef<Array<HTMLButtonElement | null>>([])
-  const triggerRef = useRef<HTMLButtonElement | null>(null)
+  const [trigger, setTrigger] = useState<HTMLButtonElement | null>(null)
   const typeahead = useRef<{ query: string; at: number }>({ query: "", at: 0 })
 
   // The listbox portals to <body>, escaping the `.apollon-editor` subtree that
-  // scopes `--apollon-*`; copy the resolved theme onto the popup so a dark or
-  // custom embed theme carries into the open menu. Resolved at open time (off
-  // the trigger), so a body portal still paints with the editor's theme.
-  const [portalThemeVars, setPortalThemeVars] = useState<React.CSSProperties>(
-    {}
-  )
+  // scopes `--apollon-*`; carry the resolved theme onto the popup so a dark or
+  // custom embed theme paints the open menu.
+  const portalThemeVars = usePortalThemeVars(trigger)
 
   const selected = options.find((o) => o.value === value)
 
@@ -151,18 +148,11 @@ export const Select: React.FC<SelectProps> = ({
           {label}
         </label>
       )}
-      <Popover.Root
-        open={open}
-        onOpenChange={(next: boolean) => {
-          if (next)
-            setPortalThemeVars(resolveApollonThemeVars(triggerRef.current))
-          setOpen(next)
-        }}
-      >
+      <Popover.Root open={open} onOpenChange={setOpen}>
         <Popover.Trigger
           render={
             <button
-              ref={triggerRef}
+              ref={setTrigger}
               type="button"
               id={triggerId}
               role="combobox"

@@ -24,6 +24,7 @@ export function ZoomControls({ history = true }: ZoomControlsProps) {
   const t = useLabels()
   const zoomLevelPercent = Math.round(useStore((s) => s.transform[2]) * 100)
   const insets = useOverlayStore((s) => s.insets)
+  const safeArea = useOverlayStore((s) => s.safeArea)
 
   const { canUndo, canRedo, undo, redo, undoManagerExist } = useDiagramStore(
     useShallow((state) => ({
@@ -47,7 +48,7 @@ export function ZoomControls({ history = true }: ZoomControlsProps) {
       aria-label={t.zoomToolbar}
       aria-orientation="horizontal"
     >
-      <div className="apollon-chrome-cluster">
+      <div className="apollon-glass apollon-chrome-cluster">
         <Tooltip title={t.zoomOut}>
           <button
             type="button"
@@ -83,7 +84,7 @@ export function ZoomControls({ history = true }: ZoomControlsProps) {
           <button
             type="button"
             className="apollon-chrome-iconbtn"
-            onClick={() => insetAwareFitView(rf, insets)}
+            onClick={() => insetAwareFitView(rf, insets, safeArea)}
             aria-label={t.fitView}
           >
             <Maximize width={18} height={18} aria-hidden="true" />
@@ -92,7 +93,7 @@ export function ZoomControls({ history = true }: ZoomControlsProps) {
       </div>
 
       {history && undoManagerExist && (
-        <div className="apollon-chrome-cluster">
+        <div className="apollon-glass apollon-chrome-cluster">
           <Tooltip title={t.undoHint}>
             <span>
               <button

@@ -35,10 +35,8 @@ standalone/webapp/ios
 # Keep the vscode-extension package.json files (pnpm install reads them
 # as workspace manifests), but drop the source.
 vscode-extension/src
-vscode-extension/menu/src
-vscode-extension/editor/src
-vscode-extension/menu/dist
-vscode-extension/editor/dist
+vscode-extension/webview/src
+vscode-extension/webview/dist
 vscode-extension/dist
 
 scripts/

@@ -11,6 +11,7 @@ import {
   type RefObject,
 } from "react"
 import { useOverlayStore } from "../store/context"
+import { readSafeArea } from "./fitView"
 import {
   CORNER_REGIONS,
   REGION_EDGE,
@@ -218,6 +219,7 @@ function ControlSlot({ control, registerMeasure }: ControlSlotProps) {
 export function OverlayLayer() {
   const controls = useOverlayStore((s) => s.controls)
   const setMeasured = useOverlayStore((s) => s.setMeasured)
+  const setSafeArea = useOverlayStore((s) => s.setSafeArea)
   const gridRef = useRef<HTMLDivElement>(null)
   useKeyboardInset(gridRef)
 
@@ -241,12 +243,14 @@ export function OverlayLayer() {
   const observerRef = useRef<ResizeObserver | null>(null)
   const controlsRef = useRef(controls)
   const setMeasuredRef = useRef(setMeasured)
+  const setSafeAreaRef = useRef(setSafeArea)
   // Sync in the layout phase (before the synchronous measure below reads them),
   // not a passive effect, so flushMeasure never sees a stale control set.
   useLayoutEffect(() => {
     controlsRef.current = controls
     setMeasuredRef.current = setMeasured
-  }, [controls, setMeasured])
+    setSafeAreaRef.current = setSafeArea
+  }, [controls, setMeasured, setSafeArea])
 
   const flushMeasure = useCallback(() => {
     rafRef.current = null
@@ -273,6 +277,7 @@ export function OverlayLayer() {
 
     const grid = gridRef.current
     if (grid) {
+      setSafeAreaRef.current(readSafeArea(grid))
       const clear = (region: OverlayRegion) => {
         const el = elByRegionRef.current.get(region)
         if (!el) return 0
@@ -314,6 +319,10 @@ export function OverlayLayer() {
     observerRef.current = observer
     for (const el of elByIdRef.current.values()) observer.observe(el)
     for (const el of elByRegionRef.current.values()) observer.observe(el)
+    // The grid's content box shrinks when the safe-area padding or the keyboard
+    // inset changes (rotation, notch, soft keyboard), so observing it re-reads
+    // the safe area on exactly those events.
+    if (gridRef.current) observer.observe(gridRef.current)
     scheduleMeasure()
     return () => {
       observer.disconnect()

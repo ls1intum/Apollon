@@ -8,7 +8,7 @@ import {
   NATIVE_COLOR_INPUT_FALLBACK,
   SWATCH_NAMES,
 } from "@tumaet/ui/lib/color-swatch-tokens"
-import { resolveApollonThemeVars } from "@/components/ui/portalTheme"
+import { usePortalThemeVars } from "@/components/ui/portalTheme"
 import { useLabels } from "@/i18n/useLabels"
 
 // Embed-safe editor color-picker. Mirrors the @tumaet/ui color-picker STRUCTURE
@@ -52,11 +52,10 @@ export const EditorColorPicker: React.FC<EditorColorPickerProps> = ({
   const t = useLabels()
   const pickerLabel = label ?? t.pickColor
   // The popup portals to <body>, escaping the `.apollon-editor` subtree that
-  // scopes `--apollon-*` (incl. the swatch palette); copy the resolved theme
-  // onto it at open time so a dark or custom embed theme carries into the picker.
-  const triggerRef = React.useRef<HTMLButtonElement | null>(null)
-  const [portalThemeVars, setPortalThemeVars] =
-    React.useState<React.CSSProperties>({})
+  // scopes `--apollon-*` (incl. the swatch palette); carry the resolved theme
+  // onto it so a dark or custom embed theme paints the picker.
+  const [trigger, setTrigger] = React.useState<HTMLElement | null>(null)
+  const portalThemeVars = usePortalThemeVars(trigger)
 
   const isCustom =
     selectedColor !== "" &&
@@ -71,14 +70,9 @@ export const EditorColorPicker: React.FC<EditorColorPickerProps> = ({
   }
 
   return (
-    <Popover.Root
-      onOpenChange={(open: boolean) => {
-        if (open)
-          setPortalThemeVars(resolveApollonThemeVars(triggerRef.current))
-      }}
-    >
+    <Popover.Root>
       <Popover.Trigger
-        ref={triggerRef}
+        ref={setTrigger}
         data-slot="color-picker-trigger"
         className="apollon-color-swatch"
         aria-label={pickerLabel}

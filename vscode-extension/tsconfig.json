@@ -1,16 +1,17 @@
 {
   "compilerOptions": {
-    "module": "Node16",
+    // The host bundle is emitted as CJS by Vite, but resolution is the bundler's,
+    // so `@tumaet/apollon`'s ESM type entry resolves for the type-only imports.
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "target": "ES2022",
     "lib": ["ES2022"],
-    "sourceMap": true,
-    "rootDir": "src",
+    "types": ["node"],
     "strict": true,
     "noEmit": true,
-    "moduleResolution": "Node16",
     "esModuleInterop": true,
     "skipLibCheck": true
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["menu", "editor", "node_modules", "dist"]
+  "include": ["src/**/*.ts", "tests/**/*.ts"],
+  "exclude": ["webview", "node_modules", "dist"]
 }

@@ -127,16 +127,25 @@ export type OverlayStore = {
   measured: Record<string, Partial<Record<OverlaySide, number>>>
   /** Reserved room per edge — the camera reservation `fitView` pads against. */
   insets: Insets
+  /**
+   * Room the device takes on each edge (notch, home indicator) plus the soft
+   * keyboard, read off the overlay grid's padding. Disjoint from `insets`:
+   * chrome is measured from its own box, which starts inside this. `fitView`
+   * clears both.
+   */
+  safeArea: Insets
 
   register: (control: OverlayControl) => void
   unregister: (id: string) => void
   setMeasured: (id: string, rect: Partial<Record<OverlaySide, number>>) => void
+  setSafeArea: (safeArea: Insets) => void
 }
 
 const initialState = {
   controls: {} as Record<string, OverlayControl>,
   measured: {} as Record<string, Partial<Record<OverlaySide, number>>>,
   insets: ZERO_INSETS,
+  safeArea: ZERO_INSETS,
 }
 
 export const createOverlayStore = (): UseBoundStore<StoreApi<OverlayStore>> =>
@@ -191,6 +200,13 @@ export const createOverlayStore = (): UseBoundStore<StoreApi<OverlayStore>> =>
             },
             undefined,
             "setMeasured"
+          ),
+
+        setSafeArea: (safeArea) =>
+          set(
+            (s) => (insetsEqual(s.safeArea, safeArea) ? s : { safeArea }),
+            undefined,
+            "setSafeArea"
           ),
       }),
       { name: "OverlayStore", enabled: import.meta.env?.DEV ?? false }

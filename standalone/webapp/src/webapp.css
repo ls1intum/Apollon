@@ -30,17 +30,6 @@
    stays a clean DAG: --apollon-* never depends back on the --home-* layer. */
 :root {
   --apollon-primary: var(--primitive-accent-base);
-
-  /* Safe-area floor: map the UA insets onto the custom properties the mobile
-     layout reads as `var(--safe-area-inset-*, 0px)`. With `viewport-fit=cover`
-     (set in index.html) this works in any browser; on native the Capacitor
-     safe-area plugin overrides these via an inline style on documentElement.
-     The full home/apollon token palette (light + dark) is owned by @tumaet/ui
-     (tokens.css), imported above — only app-chrome lives here. */
-  --safe-area-inset-top: env(safe-area-inset-top, 0px);
-  --safe-area-inset-right: env(safe-area-inset-right, 0px);
-  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
-  --safe-area-inset-left: env(safe-area-inset-left, 0px);
 }
 
 @keyframes diagram-highlight-pulse {

@@ -1,0 +1,27 @@
+{
+  "name": "apollon-vscode-webview",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "vite build --watch --mode development",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@resvg/resvg-wasm": "catalog:",
+    "@tumaet/apollon": "workspace:*",
+    "@types/vscode-webview": "catalog:",
+    "@xyflow/react": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "yjs": "catalog:"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "babel-plugin-react-compiler": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:"
+  }
+}

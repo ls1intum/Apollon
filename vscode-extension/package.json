@@ -3,33 +3,108 @@
   "displayName": "Apollon",
   "description": "Embeddable UML modeling editor for VS Code. Create, edit, and export UML diagrams (class, component, activity, BPMN, and more) directly inside your editor.",
   "publisher": "tumaet",
+  "license": "MIT",
   "version": "1.0.0",
+  "icon": "media/icon.png",
   "engines": {
-    "vscode": "^1.86.0",
-    "node": ">=24.15.0"
+    "vscode": "^1.86.0"
   },
   "categories": [
-    "Other"
+    "Visualization",
+    "Programming Languages"
+  ],
+  "keywords": [
+    "uml",
+    "diagram",
+    "class diagram",
+    "bpmn",
+    "modeling"
   ],
   "vsce": {
     "dependencies": false
   },
+  "capabilities": {
+    "virtualWorkspaces": true,
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "Diagrams render and edit normally. Writing sibling image exports is disabled until you trust the workspace."
+    }
+  },
   "activationEvents": [],
   "main": "./dist/extension.js",
   "contributes": {
+    "customEditors": [
+      {
+        "viewType": "apollon.diagramEditor",
+        "displayName": "Apollon Diagram",
+        "selector": [
+          {
+            "filenamePattern": "*.apollon"
+          }
+        ],
+        "priority": "default"
+      }
+    ],
+    "languages": [
+      {
+        "id": "apollon",
+        "aliases": [
+          "Apollon Diagram"
+        ],
+        "extensions": [
+          ".apollon"
+        ],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./media/apollon-type.svg",
+          "dark": "./media/apollon-type.svg"
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "apollon",
+        "scopeName": "source.apollon",
+        "path": "./syntaxes/apollon.tmLanguage.json"
+      }
+    ],
     "commands": [
       {
-        "command": "apollonEditor.openDiagram",
-        "title": "Open Diagram",
-        "icon": "$(open-preview)"
+        "command": "apollon.newDiagram",
+        "title": "New Diagram",
+        "category": "Apollon",
+        "icon": "$(add)"
+      },
+      {
+        "command": "apollon.exportDiagram",
+        "title": "Export Diagram as Image",
+        "category": "Apollon",
+        "icon": "$(export)"
+      },
+      {
+        "command": "apollon.refreshDiagrams",
+        "title": "Refresh Diagrams",
+        "category": "Apollon",
+        "icon": "$(refresh)"
       }
     ],
     "menus": {
-      "editor/title": [
+      "view/title": [
         {
-          "command": "apollonEditor.openDiagram",
-          "when": "resourceExtname == .apollon",
-          "group": "navigation"
+          "command": "apollon.newDiagram",
+          "when": "view == apollon.diagrams",
+          "group": "navigation@1"
+        },
+        {
+          "command": "apollon.refreshDiagrams",
+          "when": "view == apollon.diagrams",
+          "group": "navigation@2"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "apollon.refreshDiagrams",
+          "when": "false"
         }
       ]
     },
@@ -45,11 +120,37 @@
     "views": {
       "apollon": [
         {
-          "type": "webview",
-          "id": "menu",
-          "name": ""
+          "id": "apollon.diagrams",
+          "name": "Diagrams"
         }
       ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "apollon.diagrams",
+        "contents": "No diagrams in this workspace yet.\n[New Diagram](command:apollon.newDiagram)"
+      }
+    ],
+    "configuration": {
+      "title": "Apollon",
+      "properties": {
+        "apollon.autoExport": {
+          "type": "string",
+          "enum": [
+            "off",
+            "svg",
+            "png"
+          ],
+          "enumDescriptions": [
+            "Never write a sibling image.",
+            "Write a sibling .svg on every save.",
+            "Write a sibling .png on every save."
+          ],
+          "default": "off",
+          "scope": "resource",
+          "markdownDescription": "Write a sibling image (`diagram.svg` / `diagram.png`) next to a `.apollon` file whenever it is saved. Requires a trusted workspace."
+        }
+      }
     }
   },
   "scripts": {
@@ -57,30 +158,30 @@
     "compile": "vite build",
     "watch": "vite build --watch",
     "build": "NODE_ENV=production vite build",
-    "lint": "eslint src editor/src menu/src",
-    "lint:fix": "eslint --fix src editor/src menu/src",
+    "lint": "eslint src webview/src",
+    "lint:fix": "eslint --fix src webview/src",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p webview/tsconfig.json --noEmit",
+    "test": "vitest run",
     "package:vsix": "vsce package --no-dependencies",
-    "start:menu": "pnpm --filter apollon-vscode-menu run start",
-    "start:editor": "pnpm --filter apollon-vscode-editor run start",
-    "build:webviews": "pnpm --filter apollon-vscode-menu run build && pnpm --filter apollon-vscode-editor run build",
-    "build:all": "pnpm run build && pnpm run build:webviews"
+    "start:webview": "pnpm --filter apollon-vscode-webview run start",
+    "build:webview": "pnpm --filter apollon-vscode-webview run build",
+    "build:all": "pnpm run build && pnpm run build:webview"
   },
   "devDependencies": {
     "@eslint/js": "catalog:",
-    "@tailwindcss/vite": "catalog:",
     "@types/node": "catalog:",
     "@types/vscode": "~1.86.0",
-    "@vitejs/plugin-react": "catalog:",
-    "babel-plugin-react-compiler": "catalog:",
     "eslint": "catalog:",
     "eslint-plugin-react-hooks": "catalog:",
     "globals": "catalog:",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:",
-    "vite": "catalog:"
+    "vite": "catalog:",
+    "vitest": "catalog:"
   },
   "dependencies": {
-    "@tumaet/apollon": "workspace:*"
+    "@tumaet/apollon": "workspace:*",
+    "jsonc-parser": "^3.3.1"
   },
   "bugs": {
     "url": "https://github.com/ls1intum/Apollon/issues"

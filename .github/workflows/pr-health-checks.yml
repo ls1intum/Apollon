@@ -20,6 +20,7 @@ jobs:
     outputs:
       code: ${{ steps.filter.outputs.code }}
       library: ${{ steps.filter.outputs.library }}
+      vscode: ${{ steps.filter.outputs.vscode }}
       should-skip: ${{ steps.skip-check.outputs.should_skip }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -49,6 +50,15 @@ jobs:
               - '.github/workflows/pr-health-checks.yml'
               - '.github/actions/**'
             library:
+              - 'library/**'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - '.github/workflows/pr-health-checks.yml'
+              - '.github/actions/**'
+            vscode:
+              # The extension bundles the library and typechecks against its
+              # emitted declarations, so a library change can break it.
+              - 'vscode-extension/**'
               - 'library/**'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -165,6 +175,34 @@ jobs:
         # suite here too (it resolves @tumaet/apollon through the dist built
         # above) so webapp logic like the autosaver is actually gated.
         run: pnpm --filter @tumaet/webapp run test
+
+  # `pnpm run lint` reaches the extension, but nothing else did: its typecheck,
+  # its unit tests and its two Vite bundles (host + webview) were unverified on
+  # every PR. Its own job because it needs `library/dist` — the webview imports
+  # `@tumaet/apollon` and the host typechecks against its declarations.
+  vscode-extension-checks:
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.should-skip != 'true' && needs.detect-changes.outputs.vscode == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Setup pnpm + Node + install
+        uses: ./.github/actions/setup
+
+      - name: Build library
+        run: pnpm run build:lib
+
+      - name: Typecheck extension host + webview
+        run: pnpm --filter apollon-vscode run typecheck
+
+      - name: Run extension unit tests
+        run: pnpm --filter apollon-vscode run test
+
+      - name: Build extension host + webview
+        run: pnpm --filter apollon-vscode run build:all
 
   # Root `pnpm run test` covers only the library. The server's vitest suite
   # (incl. the PDF-conversion regression test) spawns the compiled worker and
@@ -453,6 +491,7 @@ jobs:
         version-sync-check,
         no-mui-emotion,
         lint-and-format-check,
+        vscode-extension-checks,
         server-tests,
         library-node22-compat,
         e2e-tests,

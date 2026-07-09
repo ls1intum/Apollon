@@ -340,7 +340,8 @@ export class ApollonEditor {
    *   that adds to a 16px gutter. A per-side object forces the inset-aware path.
    * @param options.duration - Animation duration in ms (default `200`).
    * @param options.respectInsets - Pad the fit by reserved overlay insets
-   *   (header, rails, …). Default `true`.
+   *   (header, rails, …). Default `true`. The device safe area (notch, home
+   *   indicator) is always cleared — it is a hardware constraint, not chrome.
    */
   public fitView(options?: {
     padding?: number | Partial<Record<OverlaySide, number>>
@@ -372,10 +373,12 @@ export class ApollonEditor {
             (n.measured?.height ?? n.height ?? 0) > 0
         )
       if (allMeasured || attempts >= maxAttempts) {
-        const insets = respectInsets
-          ? this.overlayStore.getState().insets
-          : ZERO_INSETS
-        insetAwareFitView(rf, insets, { padding: explicit, duration })
+        const overlay = this.overlayStore.getState()
+        const insets = respectInsets ? overlay.insets : ZERO_INSETS
+        insetAwareFitView(rf, insets, overlay.safeArea, {
+          padding: explicit,
+          duration,
+        })
         return
       }
       // Nodes aren't measured yet — re-queue so the fit lands once React Flow
