@@ -23,8 +23,7 @@ COPY packages/ui/package.json ./packages/ui/
 COPY standalone/webapp/package.json ./standalone/webapp/
 COPY standalone/server/package.json ./standalone/server/
 COPY vscode-extension/package.json ./vscode-extension/
-COPY vscode-extension/menu/package.json ./vscode-extension/menu/
-COPY vscode-extension/editor/package.json ./vscode-extension/editor/
+COPY vscode-extension/webview/package.json ./vscode-extension/webview/
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile
