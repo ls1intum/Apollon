@@ -38,7 +38,7 @@ pnpm --filter apollon-vscode lint
 
 ## Release
 
-Bumps and publishes go through the `Version Bump (VS Code extension)` → `Release VS Code Extension` workflows. See [`docs/contributor/deployment/npm-publishing.md`](../docs/contributor/deployment/npm-publishing.md) for the full pipeline.
+The extension shares Apollon's version. Changesets bumps it with the library and the standalone apps, and merging the **Version Packages** PR is what publishes it — `Release VS Code Extension` fires on the version change. Record user-visible work with `pnpm changeset` like anywhere else in the repo. See [`docs/contributor/deployment/npm-publishing.md`](../docs/contributor/deployment/npm-publishing.md) for the full pipeline.
 
 `vsce` is not a workspace dependency. The release workflow installs it into a
 temporary prefix with `--ignore-scripts`, keeping its credential store (a native

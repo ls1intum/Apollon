@@ -16,7 +16,11 @@ Three independently versioned artifacts, each with its own release workflow:
 
 Standalone starts at `4.2.18` (the library version at the time of the release-pipeline switchover). Future `vX.Y.Z` tags advance from there and do not collide with legacy tags.
 
-The library and standalone tracks are versioned by [Changesets](https://github.com/changesets/changesets); the VS Code extension is bumped manually (it is excluded in `.changeset/config.json#ignore`). All three publish workflows trigger automatically when their version changes on `main`. There is **one** manual step per release: merge the version PR.
+All three tracks are versioned by [Changesets](https://github.com/changesets/changesets), and all three share one number: `@tumaet/apollon`, the standalone pair and `apollon-vscode` sit in a single `fixed` group (`.changeset/config.json`), so a release advances them together. The publish workflows trigger automatically when their version changes on `main`. There is **one** manual step per release: merge the version PR.
+
+The cost of that group is worth naming: a changeset touching only the extension still bumps and republishes the library and the standalone images at the new version, with identical content. A `linked` group would avoid that at the price of the numbers drifting apart. One product number was the deliberate trade.
+
+`apollon-vscode` ships to the VS Marketplace, never to npm. Nothing publishes it there today — `release.yml` runs Changesets in version-only mode — and a `publish` input must never be added to it.
 
 The per-PR side is Changesets: authors run `pnpm changeset` on every user-visible PR to record a changelog entry with its bump type (see [Release notes](/contributor/development/release-notes)). On every push to `main`, `release.yml` runs [`changesets/action`](https://github.com/changesets/action) in **version-only** mode (no `publish` input — the bespoke `release-*.yml` workflows own publishing) and opens or updates a single **Version Packages** PR. That PR runs `pnpm changeset:version`, which:
 
@@ -28,7 +32,7 @@ The GitHub Release body for each track is built from that `CHANGELOG.md` section
 
 ## Cut a release
 
-1. Let the **Version Packages** PR (titled `chore: version packages`, opened by `release.yml`) accumulate as changesets land, then **merge it** when you want to cut a release. The library and the paired standalone packages bump together; merging is the only manual step. _The VS Code extension is separate: Actions → **Version Bump (VS Code extension)** → pick a bump type, then merge the PR it opens._
+1. Let the **Version Packages** PR (titled `chore: version packages`, opened by `release.yml`) accumulate as changesets land, then **merge it** when you want to cut a release. The library, the paired standalone packages and the VS Code extension bump together; merging is the only manual step.
 2. On merge:
    - `release-library.yml` fires when `library/package.json` changes: builds with pnpm, packs the tarball with `pnpm pack`, publishes with `npm publish` for OIDC trusted publishing + provenance (pnpm does not yet support OIDC trusted publishing natively — tracked in [pnpm#9812](https://github.com/pnpm/pnpm/issues/9812)). Tags `@tumaet/apollon@X.Y.Z` → GitHub Release. Skipped if the version is already on npm.
    - `release-standalone.yml` fires after the push-to-main Docker build succeeds: retag `sha-<commit>` → `X.Y.Z` → cosign-sign → tag `vX.Y.Z` → GitHub Release. Staging is already running the same digest under the `sha-<commit>` tag from the push-to-main deploy, so no second deploy is needed. Skipped if a release for that version already exists.
