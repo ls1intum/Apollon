@@ -65,6 +65,20 @@ export const APOLLON_PORTAL_THEME_VARS = [
   "--panel-shadow",
   "--text",
   "--popover-divider",
+  // The shared @tumaet/ui primitives (input, select, button, tooltip) paint from
+  // these aliases rather than from `--apollon-*`. They are re-declared on
+  // `.apollon-editor` (see tokens.css) so they track a scoped theme; a popup
+  // portaled to <body> leaves that subtree, so it has to carry them along or its
+  // input borders and placeholder ink stay at the document's light values.
+  "--home-surface-sunken",
+  "--home-surface-raised",
+  "--home-border-default",
+  "--home-text-secondary",
+  "--home-text-muted",
+  "--home-accent-contrast",
+  "--home-shadow-overlay",
+  "--home-radius-md",
+  "--home-radius-lg",
 ] as const
 
 /**
@@ -86,4 +100,85 @@ export function resolveApollonThemeVars(
     if (value) resolved[variable] = value
   }
   return resolved as React.CSSProperties
+}
+
+/**
+ * Popups copy *resolved values*, so they must re-copy them whenever anything
+ * that changes what the tokens resolve to changes. Without that, a theme switch
+ * leaves an open menu — and every later one anchored to the same element —
+ * painting the palette it first resolved under.
+ *
+ * One observer serves every popup: an editor keeps dozens of tooltips mounted.
+ */
+let themeVersion = 0
+const themeListeners = new Set<() => void>()
+let stopObservingTheme: (() => void) | undefined
+
+const bumpThemeVersion = () => {
+  themeVersion += 1
+  for (const listener of themeListeners) listener()
+}
+
+function observeTheme(): () => void {
+  const observer = new MutationObserver(bumpThemeVersion)
+
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["data-theme", "class", "style"],
+  })
+  // `class` only: a palette drag writes `body.style.overflow`, which must not
+  // repaint every popup. VS Code marks its theme kind with a class on <body>.
+  observer.observe(document.body, {
+    attributes: true,
+    attributeFilter: ["class"],
+  })
+  // A scoped mount lives anywhere in the tree and may appear after the first
+  // popup subscribes, so watch the whole document for `data-theme` flips.
+  observer.observe(document, {
+    subtree: true,
+    attributes: true,
+    attributeFilter: ["data-theme"],
+  })
+  // A host may swap the <style> that declares its variables rather than touch
+  // any attribute — VS Code re-injects its `--vscode-*` block on every switch.
+  observer.observe(document.head, { childList: true })
+
+  const media = window.matchMedia?.("(prefers-color-scheme: dark)")
+  media?.addEventListener("change", bumpThemeVersion)
+
+  return () => {
+    observer.disconnect()
+    media?.removeEventListener("change", bumpThemeVersion)
+  }
+}
+
+const subscribeToTheme = (listener: () => void): (() => void) => {
+  themeListeners.add(listener)
+  stopObservingTheme ??= observeTheme()
+  return () => {
+    themeListeners.delete(listener)
+    if (themeListeners.size === 0) {
+      stopObservingTheme?.()
+      stopObservingTheme = undefined
+    }
+  }
+}
+
+const getThemeVersion = () => themeVersion
+
+/** A counter that changes whenever `--apollon-*` may resolve to new values. */
+const useApollonThemeVersion = (): number =>
+  React.useSyncExternalStore(subscribeToTheme, getThemeVersion, getThemeVersion)
+
+/**
+ * The {@link resolveApollonThemeVars} of `anchor`, kept current as the theme
+ * changes — spread onto a portaled popup. Hold the anchor in state (a callback
+ * `ref`) rather than a `useRef`, so the popup resolves its tokens on the render
+ * that attaches the trigger instead of a frame later.
+ */
+export function usePortalThemeVars(
+  anchor: Element | null | undefined
+): React.CSSProperties {
+  const version = useApollonThemeVersion()
+  return React.useMemo(() => resolveApollonThemeVars(anchor), [anchor, version])
 }

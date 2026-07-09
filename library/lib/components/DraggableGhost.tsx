@@ -11,6 +11,7 @@ import {
 } from "@/utils"
 import { canDropIntoParent } from "@/utils/bpmnConstraints"
 import { useDiagramStore } from "@/store/context"
+import { resolveApollonThemeVars } from "@/components/ui/portalTheme"
 import { useShallow } from "zustand/shallow"
 import { log } from "../logger"
 
@@ -42,6 +43,12 @@ const enableScroll = () => {
    DraggableGhost Component
    Wraps a child element with drag & drop behavior and drop logic.
    ======================================================================== */
+/** The palette's painted theme, carried onto the `<body>`-portaled ghost. */
+interface GhostTheme {
+  vars: React.CSSProperties
+  dataTheme?: string
+}
+
 interface DraggableGhostProps {
   children: React.ReactNode
   dropElementConfig: DropElementConfig
@@ -72,26 +79,24 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
   // Local state to track drag status, ghost position, and pointer offsets.
   const [isDragging, setIsDragging] = useState(false)
   const [ghostPosition, setGhostPosition] = useState({ x: 0, y: 0 })
-  // Cursor offset within the PREVIEW shape — converted (via previewScale) into the
-  // dropped node's placement so the grabbed point of the shape stays under the
-  // cursor on drop.
+  // Cursor offset within the PREVIEW shape — scaled into the dropped node's
+  // placement so the grabbed point stays under the cursor on drop.
   const [clickOffset, setClickOffset] = useState({ x: 0, y: 0 })
-  // Cursor offset within the ENTRY (the element actually rendered in the ghost) —
-  // positions the ghost. It differs from clickOffset because the entry flex-centres
-  // the preview in its cell; positioning the ghost by the preview offset would
-  // re-apply that centring and make the shape visibly jump away from the cursor on
-  // grab. Tracked separately so the ghost stays pixel-aligned AND the drop lands true.
+  // Cursor offset within the ENTRY, which is what the ghost renders. Differs from
+  // clickOffset because the entry flex-centres its preview; positioning the ghost
+  // by the preview offset would re-apply that centring and make the shape jump.
   const [ghostOffset, setGhostOffset] = useState({ x: 0, y: 0 })
-  // Visual scale applied to the ghost so it matches the size the node will have on
-  // the canvas at the current zoom (WYSIWYG). The palette preview is rendered at
-  // `previewScale`; a dropped node renders at `zoom`, so scaling by `zoom /
-  // previewScale` makes the dragged shape the same on-screen size as the drop —
-  // captured on grab (zoom can't change mid palette-drag). Scaled per-axis because
-  // some elements drop at a different size than they preview (e.g. a swimlane
-  // previews 160×100 but drops 400×240); the drop/preview ratio folds in so the
-  // ghost is as wide/tall as the node will actually be. Ratio is 1 (no change) for
-  // the common case where drop size == preview size.
+  // `zoom / previewScale`, folded per-axis with the drop/preview size ratio, so
+  // the ghost is exactly as large on screen as the node it will become. Captured
+  // on grab; zoom cannot change mid palette-drag.
   const [ghostScale, setGhostScale] = useState({ x: 1, y: 1 })
+  // The theme the palette entry was painted under, captured on grab. The ghost
+  // portals to `document.body`, leaving the subtree that scopes `--apollon-*`.
+  // Both halves are needed: the resolved token VALUES cover a mount themed by
+  // inline custom properties or by a host stylesheet (VS Code), and `data-theme`
+  // re-matches the attribute selectors in the editor's own CSS. A drag is
+  // transient, so a one-shot capture is enough — no observer.
+  const [ghostTheme, setGhostTheme] = useState<GhostTheme>({ vars: {} })
 
   /* ----------------------------------------------------------------------
      onDrop: Handles the pointer up event by calculating the drop position,
@@ -262,6 +267,14 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
     event.preventDefault()
     disableScroll()
 
+    setGhostTheme({
+      vars: resolveApollonThemeVars(event.currentTarget),
+      dataTheme:
+        event.currentTarget
+          .closest("[data-theme]")
+          ?.getAttribute("data-theme") ?? undefined,
+    })
+
     // Drop offset: cursor relative to the PREVIEW shape's top-left.
     const previewElement = event.currentTarget.querySelector<HTMLElement>(
       "[data-draggable-preview]"
@@ -368,7 +381,9 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
   // below the fold. `fixed` resolves against the viewport, matching clientX/Y.
   const ghostElement = (
     <div
+      data-theme={ghostTheme.dataTheme}
       style={{
+        ...ghostTheme.vars,
         position: "fixed",
         left: `${ghostPosition.x}px`,
         top: `${ghostPosition.y}px`,

@@ -539,6 +539,25 @@
   );
 }
 
+/* The `--home-*` aliases the shared @tumaet/ui primitives (input, select, button,
+   tooltip) paint from, re-declared for the same reason as the chrome ramp above:
+   at `:root` they freeze to the document's light base, so a dark-embedded editor
+   draws light input borders and light placeholder ink. Aliases only — see the
+   note above on why the overridable base tokens cannot live here. Keep in lockstep
+   with what components.css consumes; `APOLLON_PORTAL_THEME_VARS` carries the same
+   set to body-portaled popups, which live outside this subtree. */
+.apollon-editor {
+  --home-surface-sunken: var(--apollon-surface-sunken);
+  --home-surface-raised: var(--apollon-surface);
+  --home-border-default: var(--apollon-border);
+  --home-text-secondary: var(--primitive-text-secondary);
+  --home-text-muted: var(--primitive-text-muted);
+  --home-accent-contrast: var(--primitive-accent-contrast);
+  --home-shadow-overlay: var(--primitive-shadow-overlay);
+  --home-radius-md: var(--apollon-radius-md);
+  --home-radius-lg: var(--apollon-radius-lg);
+}
+
 /* `:root[data-theme="dark"]` themes the webapp (attribute on the document root);
    the bare `[data-theme="dark"]` themes a SCOPED mount — the published editor sets
    `data-theme` on its own container, not the document root, so `<Apollon
