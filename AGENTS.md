@@ -16,7 +16,7 @@ A pnpm + Vite monorepo (the server compiles with `tsc`, not Vite).
 - **`library/`** — `@tumaet/apollon`, the embeddable React editor, published to npm. Native HTML + Base UI primitives (`@base-ui/react`) styled via `--apollon-*` CSS variables; `lucide-react` icons; Yjs collaboration — the live-cursor/presence layer lives here ([`collaboration.md`](docs/library/api/collaboration.md)).
 - **`standalone/webapp/`** — `@tumaet/webapp` (private). React + Vite + Tailwind; Capacitor for iOS/Android.
 - **`standalone/server/`** — `@tumaet/server` (private). Express + Redis Stack (RedisJSON diagram storage + version history).
-- **`vscode-extension/`** — `apollon-vscode`, the extension host, with a nested `webview/` sub-package (`@tumaet/vscode-webview`). Unscoped because the VS Code Marketplace forbids a scope in an extension name.
+- **`vscode-extension/`** — `apollon-extension`, the extension host, with a nested `webview/` sub-package (`@tumaet/vscode-webview`). Unscoped because the VS Code Marketplace forbids a scope in an extension name.
 - **`docs/`** — `@tumaet/docs` (private), the Docusaurus site (`user/` · `library/` · `contributor/`).
 - **`ops/`** — runbooks and legal/DSMS material; not part of any release.
 

@@ -4,8 +4,8 @@ Model UML diagrams directly in Visual Studio Code using the [Apollon](https://gi
 
 ## Install
 
-- **Marketplace:** search for _Apollon_ in the Extensions view, or install `aet-tum.apollon-vscode` from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=aet-tum.apollon-vscode).
-- **CLI:** `code --install-extension aet-tum.apollon-vscode`
+- **Marketplace:** search for _Apollon_ in the Extensions view, or install `aet-tum.apollon-extension` from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=aet-tum.apollon-extension).
+- **CLI:** `code --install-extension aet-tum.apollon-extension`
 
 ## Use
 

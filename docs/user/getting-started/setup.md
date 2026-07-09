@@ -15,7 +15,7 @@ Open <https://apollon.aet.cit.tum.de> in a browser. No install, no account. Diag
 
 ## VS Code extension
 
-Install **Apollon** from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=aet-tum.apollon-vscode) (or [Open VSX](https://open-vsx.org/extension/aet-tum/apollon-vscode)). Diagrams live next to your code as `.apollon` files.
+Install **Apollon** from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=aet-tum.apollon-extension) (or [Open VSX](https://open-vsx.org/extension/aet-tum/apollon-extension)). Diagrams live next to your code as `.apollon` files.
 
 ## Self-host
 

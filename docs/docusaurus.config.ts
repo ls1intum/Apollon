@@ -218,7 +218,7 @@ const config: Config = {
             },
             {
               label: "VS Code Extension",
-              href: "https://marketplace.visualstudio.com/items?itemName=aet-tum.apollon-vscode",
+              href: "https://marketplace.visualstudio.com/items?itemName=aet-tum.apollon-extension",
             },
             {
               label: "Release Notes",

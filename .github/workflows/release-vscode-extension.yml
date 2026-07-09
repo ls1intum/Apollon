@@ -124,7 +124,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - run: pnpm --filter @tumaet/apollon run build
-      - run: pnpm --filter apollon-vscode run build:all
+      - run: pnpm --filter apollon-extension run build:all
 
       - name: Install vsce (sandboxed)
         run: |

@@ -1,4 +1,4 @@
-# apollon-vscode
+# apollon-extension
 
 ## 5.1.1
 
