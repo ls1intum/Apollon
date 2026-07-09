@@ -244,8 +244,13 @@ export interface ApollonLabels {
   nodeWord: string
 }
 
+// Camel-case diagram prefixes stripped from a node type before humanising, so a
+// popover title reads as the bare element name ("petriNetTransition" ->
+// "Transition") and matches the hand-written titles on type-specific popovers.
 const NODE_TYPE_DIAGRAM_PREFIXES = [
   "petriNet",
+  "reachabilityGraph",
+  "syntaxTree",
   "flowchart",
   "activity",
   "useCase",
