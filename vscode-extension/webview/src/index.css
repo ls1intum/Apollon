@@ -88,7 +88,6 @@ body.vscode-high-contrast-light {
     --vscode-contrastBorder,
     var(--vscode-panel-border, #e9ecef)
   );
-
   --apollon-danger: var(--vscode-errorForeground, #d33);
   --apollon-shadow: 0 4px 12px var(--vscode-widget-shadow, rgb(0 0 0 / 20%));
 

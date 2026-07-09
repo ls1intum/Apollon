@@ -147,10 +147,15 @@ export class ApollonEditorProvider implements vscode.CustomTextEditorProvider {
       }
     }
 
-    const scheduleCommit = () => {
+    const cancelCommit = () => {
       if (timer) {
         clearTimeout(timer)
       }
+      timer = undefined
+    }
+
+    const scheduleCommit = () => {
+      cancelCommit()
       timer = setTimeout(() => void commit(), COMMIT_DEBOUNCE_MS)
     }
 
@@ -177,20 +182,19 @@ export class ApollonEditorProvider implements vscode.CustomTextEditorProvider {
           return
         }
         committed = text
+        // Any external write supersedes whatever the canvas has not committed
+        // yet, and this must happen before the validity check below: a document
+        // that is only transiently invalid (mid-typing in a split JSON editor)
+        // would otherwise leave the debounce armed to overwrite what was typed.
+        pending = undefined
+        cancelCommit()
         const state = readDocument(text)
         if (state.kind === "invalid") {
-          // A transiently invalid document (mid-typing in a split JSON editor)
-          // is not worth interrupting the canvas for.
+          // Not worth interrupting the canvas for — the next keystroke that
+          // makes the document parse again will mirror it back.
           return
         }
         const model = state.kind === "empty" ? null : state.model
-        // An external write supersedes whatever the canvas has not committed
-        // yet; keeping `pending` would silently undo the incoming change.
-        pending = undefined
-        if (timer) {
-          clearTimeout(timer)
-          timer = undefined
-        }
         post({ type: "externalUpdate", model })
       }),
 
@@ -199,10 +203,7 @@ export class ApollonEditorProvider implements vscode.CustomTextEditorProvider {
         if (event.document.uri.toString() !== document.uri.toString()) {
           return
         }
-        if (timer) {
-          clearTimeout(timer)
-        }
-        timer = undefined
+        cancelCommit()
         const update = takePending()
         if (!update) {
           return
@@ -244,8 +245,15 @@ export class ApollonEditorProvider implements vscode.CustomTextEditorProvider {
     panel.webview.html = renderWebviewHtml(panel.webview, this.extensionUri)
 
     panel.onDidDispose(() => {
-      if (timer) {
-        clearTimeout(timer)
+      cancelCommit()
+      // A tab can close inside the debounce window with the last canvas edit
+      // still only in memory. Write it now, while the document is alive: the
+      // edit lands, the document goes dirty, and VS Code's close / hot-exit
+      // handles it. Dropping the timer instead loses the edit silently, with no
+      // save prompt. A document already gone (closed without saving) can't be
+      // written to, and resurrecting it would undo that choice.
+      if (pending && !document.isClosed) {
+        void commit()
       }
       this.cancelExports(panel.webview)
       if (this.active?.webview === panel.webview) {
@@ -381,9 +389,6 @@ export class ApollonEditorProvider implements vscode.CustomTextEditorProvider {
     if (format === "off") {
       return
     }
-    if (!vscode.workspace.isTrusted) {
-      return
-    }
     // An untitled or virtual document has no sibling to write next to.
     if (!isOnDisk(document.uri)) {
       return
@@ -397,6 +402,17 @@ export class ApollonEditorProvider implements vscode.CustomTextEditorProvider {
     format: ExportFormat,
     options: { silent: boolean }
   ): Promise<void> {
+    // Both entry points come through here, so the trust promise the manifest
+    // makes — "writing sibling image exports is disabled until you trust the
+    // workspace" — is kept on the manual command too, not just auto-export.
+    if (!vscode.workspace.isTrusted) {
+      if (!options.silent) {
+        void vscode.window.showWarningMessage(
+          "Trust this workspace to export diagram images."
+        )
+      }
+      return
+    }
     const name = `${uri.path
       .split("/")
       .pop()

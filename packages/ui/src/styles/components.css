@@ -190,6 +190,7 @@
 
   /* ── Input (data-slot="input") ────────────────────────────────────────── */
   /* h-9 (36px) matches the default button height for aligned form rows. */
+
   /* `text-inherit` is load-bearing, not cosmetic: the UA stylesheet declares
      `color: fieldtext` ON the control, which beats an inherited value. That
      system color follows `color-scheme` — i.e. the OS appearance — not our
