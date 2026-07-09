@@ -8,6 +8,7 @@
     "build": "vite build"
   },
   "dependencies": {
+    "@resvg/resvg-wasm": "catalog:",
     "@tumaet/apollon": "workspace:*",
     "@types/vscode-webview": "catalog:",
     "@xyflow/react": "catalog:",

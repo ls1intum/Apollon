@@ -832,6 +832,9 @@ importers:
 
   vscode-extension/webview:
     dependencies:
+      '@resvg/resvg-wasm':
+        specifier: 'catalog:'
+        version: 2.6.2
       '@tumaet/apollon':
         specifier: workspace:*
         version: link:../../library

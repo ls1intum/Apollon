@@ -1,8 +1,5 @@
 import type { SVG } from "@tumaet/apollon"
 
-/** Oversample so the exported bitmap holds up when zoomed. */
-const SCALE = 1.5
-
 /** Base64-encode bytes without blowing the call stack on a large image. */
 function toBase64(bytes: Uint8Array): string {
   let binary = ""
@@ -12,44 +9,32 @@ function toBase64(bytes: Uint8Array): string {
   return btoa(binary)
 }
 
-/** Rasterize a rendered SVG to base64 PNG bytes for the host to write to disk. */
+/**
+ * Rasterize a rendered SVG to base64 PNG bytes for the host to write to disk.
+ *
+ * Rasterisation goes through the library's resvg (wasm) renderer, not an
+ * `<img>` → `<canvas>` → `toBlob` pipeline: past the browser's canvas-area cap
+ * (~16 MP on WebKit, ~268 MP on Chrome) `toBlob` yields `null` with no
+ * exception, so a large diagram exports as a 0-byte file. resvg renders into its
+ * own wasm buffer, where that cap does not exist.
+ *
+ * The renderer and its wasm binary are `import()`-ed on first export so they
+ * stay out of the canvas's startup path. Vite resolves the wasm to a webview
+ * asset URL; instantiating it needs `wasm-unsafe-eval` and fetching it needs
+ * `connect-src` — see the CSP in `webviewHtml.ts`. `pngRenderer.ts` says why the
+ * renderer is not imported from `@tumaet/apollon/export` directly.
+ */
 export async function renderSvgToPngBase64(rendered: SVG): Promise<string> {
-  const { width, height } = rendered.clip
-  const blob = new Blob([rendered.svg], { type: "image/svg+xml" })
-  const blobUrl = URL.createObjectURL(blob)
+  const [{ svgToPng }, { default: wasmUrl }] = await Promise.all([
+    import("./pngRenderer"),
+    import("@resvg/resvg-wasm/index_bg.wasm?url"),
+  ])
 
-  try {
-    const image = new Image()
-    image.width = width
-    image.height = height
-    await new Promise<void>((resolve, reject) => {
-      image.onload = () => resolve()
-      image.onerror = () => reject(new Error("the diagram SVG failed to load"))
-      image.src = blobUrl
-    })
-
-    const canvas = document.createElement("canvas")
-    canvas.width = width * SCALE
-    canvas.height = height * SCALE
-    const context = canvas.getContext("2d")
-    if (!context) {
-      throw new Error("no 2D canvas context")
-    }
-    // PNG supports transparency, but a diagram on a transparent background is
-    // unreadable in most viewers.
-    context.fillStyle = "white"
-    context.fillRect(0, 0, canvas.width, canvas.height)
-    context.scale(SCALE, SCALE)
-    context.drawImage(image, 0, 0)
-
-    const png = await new Promise<Blob | null>((resolve) =>
-      canvas.toBlob(resolve, "image/png")
-    )
-    if (!png) {
-      throw new Error("the diagram is too large to rasterize")
-    }
-    return toBase64(new Uint8Array(await png.arrayBuffer()))
-  } finally {
-    URL.revokeObjectURL(blobUrl)
-  }
+  // PNG supports transparency, but a diagram on a transparent background is
+  // unreadable in most viewers.
+  const { blob } = await svgToPng(rendered.svg, rendered.clip, {
+    background: "#ffffff",
+    wasmInput: fetch(wasmUrl),
+  })
+  return toBase64(new Uint8Array(await blob.arrayBuffer()))
 }

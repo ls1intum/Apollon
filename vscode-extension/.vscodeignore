@@ -19,9 +19,9 @@ README.dev.md
 # for the Extension Development Host. .vsix consumers don't need them.
 **/*.js.map
 
-# node_modules — `vsce package --no-dependencies` already skips them, but
-# belt-and-suspenders in case the flag is dropped.
-node_modules/**
+# node_modules — `vsce package --no-dependencies` already skips the root tree,
+# but not one nested in a subdirectory, and an unanchored pattern matches both.
+**/node_modules/**
 
 # The webview workspace: ship its build output only.
 webview/**

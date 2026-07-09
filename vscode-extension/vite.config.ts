@@ -3,17 +3,13 @@ import { builtinModules } from "node:module"
 
 // Library-mode build for the VS Code extension host bundle.
 //
-// - format: "cjs" — VS Code 1.86+ still requires CJS extension entries
-//   (microsoft/vscode#130367, extensions explicitly opted out of the 1.94
-//   ESM migration).
-// - target: "node20" — VS Code 1.95+ ships Node 20.18 in the host.
-// - external: `vscode` (host-provided) + every Node builtin with and
-//   without the `node:` prefix. Anything else gets bundled.
-// - sourcemap: separate `.map` file; .vscodeignore strips src/ from the
-//   VSIX so the map references stay private to local debug.
-// - inlineDynamicImports defaults to true in single-entry lib mode, so
-//   no chunking — matches the LimitChunkCountPlugin guarantee webpack
-//   provided.
+// - format "cjs": extension entries opted out of the VS Code 1.94 ESM
+//   migration and are still loaded as CommonJS (microsoft/vscode#130367).
+// - target "node20": the version of Node the extension host runs.
+// - `vscode` is provided by the host, and Node builtins by the runtime.
+//   Everything else is bundled, so the VSIX ships no `node_modules`.
+// - Sourcemaps are emitted for the local Extension Development Host and
+//   stripped from the VSIX by `.vscodeignore`.
 const isProd = process.env.NODE_ENV === "production"
 
 const nodeBuiltins = new Set([
@@ -36,10 +32,6 @@ export default defineConfig({
     },
     rollupOptions: {
       external: (id) => id === "vscode" || nodeBuiltins.has(id),
-      output: {
-        exports: "named",
-        interop: "auto",
-      },
     },
     commonjsOptions: {
       transformMixedEsModules: true,

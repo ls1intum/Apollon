@@ -15,13 +15,19 @@ export function renderWebviewHtml(
 
   const csp = [
     `default-src 'none'`,
-    // `blob:` is required for PNG export: the SVG→PNG converter loads the
-    // rendered SVG into an <img> via URL.createObjectURL before drawing it to a
-    // canvas. `data:` covers images inlined in the SVG.
-    `img-src ${webview.cspSource} https: data: blob:`,
-    `script-src 'nonce-${scriptNonce}'`,
+    // `data:` covers images inlined in the diagram's SVG.
+    `img-src ${webview.cspSource} https: data:`,
+    // The nonce covers the entry module; `cspSource` covers the chunks it
+    // `import()`s (a nonce does not propagate to imported modules), and it only
+    // ever resolves to this extension's own `localResourceRoots`.
+    // `wasm-unsafe-eval` instantiates the resvg module the PNG export renders
+    // with. It permits WebAssembly compilation only, not `eval`.
+    `script-src 'nonce-${scriptNonce}' ${webview.cspSource} 'wasm-unsafe-eval'`,
+    // The PNG export fetches the resvg binary (a webview asset) and the
+    // library's `data:`-embedded fonts.
+    `connect-src ${webview.cspSource} data:`,
     // React Flow writes inline `style` attributes on nodes and edges at runtime,
-    // which a nonce-based CSP cannot cover. Keep until that stops being true.
+    // which a nonce-based CSP cannot cover.
     `style-src ${webview.cspSource} 'unsafe-inline'`,
     // The editor's stylesheet embeds its webfonts as `data:` URIs.
     `font-src ${webview.cspSource} data:`,
