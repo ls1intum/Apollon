@@ -180,5 +180,11 @@ export function usePortalThemeVars(
   anchor: Element | null | undefined
 ): React.CSSProperties {
   const version = useApollonThemeVersion()
-  return React.useMemo(() => resolveApollonThemeVars(anchor), [anchor, version])
+  return React.useMemo(() => {
+    // The tokens live in the DOM, not in this closure, so `version` is what
+    // tells the memo they may have changed. Read it, or the linter and the
+    // React Compiler both conclude it is not a dependency.
+    void version
+    return resolveApollonThemeVars(anchor)
+  }, [anchor, version])
 }

@@ -53,17 +53,12 @@ const grab = (mount: { dataTheme?: string; style?: CSSProperties } = {}) => {
 }
 
 describe("palette drag ghost theming", () => {
-  // The dark token deltas are scoped to the `[data-theme]` subtree. The ghost
-  // leaves it for `document.body`, so it has to re-declare the attribute or it
-  // paints with the light `:root` values while the editor is dark.
-  it("carries a scoped dark theme onto the portaled ghost", () => {
-    grab({ dataTheme: "dark" })
-    expect(renderedGhost()?.getAttribute("data-theme")).toBe("dark")
-  })
-
-  it("carries a scoped light theme just the same", () => {
-    grab({ dataTheme: "light" })
-    expect(renderedGhost()?.getAttribute("data-theme")).toBe("light")
+  // The token deltas are scoped to the `[data-theme]` subtree. The ghost leaves
+  // it for `document.body`, so it has to re-declare the attribute — the value it
+  // was grabbed under, not a hard-coded one.
+  it.each(["dark", "light"])("carries a scoped %s theme", (dataTheme) => {
+    grab({ dataTheme })
+    expect(renderedGhost()?.getAttribute("data-theme")).toBe(dataTheme)
   })
 
   // `data-theme` alone is not enough: a mount themed by inline custom properties

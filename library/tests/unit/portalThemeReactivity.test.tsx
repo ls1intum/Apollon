@@ -12,7 +12,6 @@ function Probe({
   onRender?: () => void
 }) {
   const vars = usePortalThemeVars(anchor) as Record<string, string>
-  // No dependency array: runs after every render.
   useEffect(() => {
     onRender?.()
   })
