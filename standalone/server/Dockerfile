@@ -23,12 +23,17 @@ COPY library/package.json ./library/
 # `pnpm deploy` to walk the library's dependency tree.
 COPY packages/ui/package.json ./packages/ui/
 COPY standalone/server/package.json ./standalone/server/
-COPY standalone/webapp/package.json ./standalone/webapp/
-COPY vscode-extension/package.json ./vscode-extension/
-COPY vscode-extension/webview/package.json ./vscode-extension/webview/
 
+# `<pkg>...` selects the server plus the workspaces it depends on, so the only
+# manifests this stage needs are the ones copied above.
+#
+# `--ignore-scripts` keeps the stage hermetic. The dependency lifecycle scripts
+# reachable from here either download a binary over the network or compile C++
+# against a toolchain this slim image deliberately omits; nothing the server is
+# built from, or runs on, needs either. `pnpm deploy` below still builds any
+# production dependency that genuinely requires it.
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install --frozen-lockfile
+    pnpm install --frozen-lockfile --ignore-scripts --filter @tumaet/server...
 
 COPY library ./library
 COPY packages/ui ./packages/ui

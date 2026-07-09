@@ -16,17 +16,23 @@ WORKDIR /app
 
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json .npmrc ./
 COPY library/package.json ./library/
-# The library now depends on the @tumaet/ui workspace package; without it the
-# pnpm install can't link it and `pnpm --filter @tumaet/ui run build:*` no-ops,
-# so the library's tsc -b fails to resolve @tumaet/ui/components/*.
+# The library depends on the @tumaet/ui workspace package; without its manifest
+# pnpm can't link it and `pnpm --filter @tumaet/ui run build:*` no-ops, so the
+# library's tsc -b fails to resolve @tumaet/ui/components/*.
 COPY packages/ui/package.json ./packages/ui/
 COPY standalone/webapp/package.json ./standalone/webapp/
-COPY standalone/server/package.json ./standalone/server/
-COPY vscode-extension/package.json ./vscode-extension/
-COPY vscode-extension/webview/package.json ./vscode-extension/webview/
 
+# `<pkg>...` selects the webapp plus the workspaces it depends on, so the only
+# manifests this stage needs are the ones copied above.
+#
+# `--ignore-scripts` keeps the stage hermetic. Every dependency lifecycle script
+# reachable from here either downloads a binary over the network (sharp, pulled
+# in by @capacitor/assets for mobile icon generation) or compiles C++ against a
+# toolchain this slim image deliberately omits (cpu-features). Nothing the
+# webapp bundle is built from needs either, and a script that reaches the
+# network turns an image build into a coin flip on GitHub Releases being up.
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install --frozen-lockfile
+    pnpm install --frozen-lockfile --ignore-scripts --filter @tumaet/webapp...
 
 COPY library ./library
 COPY packages/ui ./packages/ui
