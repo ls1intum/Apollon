@@ -135,9 +135,14 @@ jobs:
       - name: Package VSIX
         id: pack
         working-directory: vscode-extension
+        # Through `package:vsix`, so the README base URLs are declared once. vsce
+        # ignores `repository.directory` (microsoft/vscode-vsce#980) and resolves
+        # a relative README link against the repository root, which for an
+        # extension in a subdirectory is one level too high — and it does so
+        # silently, shipping a 404 with no warning.
         run: |
           set -euo pipefail
-          vsce package --no-dependencies
+          pnpm run package:vsix
           shopt -s nullglob
           files=( *.vsix )
           if [[ ${#files[@]} -ne 1 ]]; then

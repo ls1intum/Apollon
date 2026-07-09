@@ -1,6 +1,6 @@
 {
   "name": "apollon-extension",
-  "displayName": "Apollon",
+  "displayName": "Apollon - TUM",
   "description": "Embeddable UML modeling editor for VS Code. Create, edit, and export UML diagrams (class, component, activity, BPMN, and more) directly inside your editor.",
   "publisher": "aet-tum",
   "license": "MIT",
@@ -162,7 +162,7 @@
     "lint:fix": "eslint --fix src webview/src",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p webview/tsconfig.json --noEmit",
     "test": "vitest run",
-    "package:vsix": "vsce package --no-dependencies",
+    "package:vsix": "vsce package --no-dependencies --baseContentUrl https://github.com/ls1intum/Apollon/blob/main/vscode-extension --baseImagesUrl https://raw.githubusercontent.com/ls1intum/Apollon/main/vscode-extension",
     "start:webview": "pnpm --filter @tumaet/vscode-webview run start",
     "build:webview": "pnpm --filter @tumaet/vscode-webview run build",
     "build:all": "pnpm run build && pnpm run build:webview"
