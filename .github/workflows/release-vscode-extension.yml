@@ -216,6 +216,9 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           ref: ${{ github.sha }}
+          # Full history so extract-changelog.mjs can resolve each changelog
+          # entry's commit type (feat/fix/...) to group the release notes.
+          fetch-depth: 0
 
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
@@ -242,18 +245,34 @@ jobs:
             exit 1
           fi
           VSIX="${files[0]}"
+
+          # Body = the Changesets-owned CHANGELOG section (curated per-PR voice),
+          # regrouped by category (Features/Bug Fixes/...) from each entry's
+          # commit type, plus an install footer. Fall back to GitHub's
+          # --generate-notes only when there is no changelog section for this
+          # version (e.g. a release that carried no changeset).
+          CHANGELOG=$(node scripts/extract-changelog.mjs "$VERSION" vscode-extension)
+          {
+            if [ -n "$CHANGELOG" ]; then printf '%s\n\n' "$CHANGELOG"; fi
+            cat <<EOF
+          Install:
+
+          \`\`\`sh
+          code --install-extension tumaet.apollon-vscode
+          \`\`\`
+
+          Published to [VS Marketplace](https://marketplace.visualstudio.com/items?itemName=tumaet.apollon-vscode) and [Open VSX](https://open-vsx.org/extension/tumaet/apollon-vscode). VSIX attached for sideloading.
+          EOF
+          } > release-notes.md
+
+          GENERATE=()
+          [ -z "$CHANGELOG" ] && GENERATE=(--generate-notes)
+
           gh release create "$TAG" \
             --title "$TAG" \
             --target "$GITHUB_SHA" \
             --verify-tag \
             --latest=false \
-            --generate-notes \
-            --notes "VS Code extension \`tumaet.apollon-vscode@${VERSION}\`.
-
-          Install:
-          \`\`\`
-          code --install-extension tumaet.apollon-vscode
-          \`\`\`
-
-          Published to [VS Marketplace](https://marketplace.visualstudio.com/items?itemName=tumaet.apollon-vscode) and [Open VSX](https://open-vsx.org/extension/tumaet/apollon-vscode). VSIX attached for sideloading." \
+            "${GENERATE[@]}" \
+            --notes-file release-notes.md \
             "$VSIX"

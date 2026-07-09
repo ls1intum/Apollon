@@ -8,7 +8,7 @@ description: How to write the changeset that becomes a changelog entry — voice
 
 User-facing release notes come from [Changesets](https://github.com/changesets/changesets). One changeset per user-visible PR; its summary becomes the changelog entry verbatim.
 
-Three release lines carry changesets: `@tumaet/apollon` on npm, and `@tumaet/webapp` + `@tumaet/server` as paired `ghcr.io` Docker images. The VS Code extension, the docs site, and the webview sub-packages are excluded in `.changeset/config.json#ignore` — they have their own (or no) release flow, and without the exclusion a routine library bump would version them too, since every package depends on `@tumaet/apollon` via `workspace:*`.
+Four release lines carry changesets: `@tumaet/apollon` on npm, `@tumaet/webapp` + `@tumaet/server` as paired `ghcr.io` Docker images, and `apollon-vscode` on the VS Marketplace. All four share one version — they sit in a single `fixed` group in `.changeset/config.json`, so a release advances them together. The docs site and the extension's webview sub-package are excluded in `#ignore`: they have no release flow of their own, and without the exclusion a routine library bump would version them too, since every package depends on `@tumaet/apollon` via `workspace:*`.
 
 :::note
 The pipeline that consumes changesets is live: `release.yml` opens a **Version Packages** PR that runs `changeset version` → regenerates `CHANGELOG.md` → triggers the release on merge. Write the changeset and the rest is automatic — don't hand-edit `CHANGELOG.md`. See [Releases](/contributor/deployment/npm-publishing).
@@ -16,9 +16,9 @@ The pipeline that consumes changesets is live: `release.yml` opens a **Version P
 
 ## When do you need one?
 
-Add a changeset whenever a **user, embedder, or operator would notice** a change to `@tumaet/apollon`, `@tumaet/webapp`, or `@tumaet/server` — a new feature, a bug fix, a changed API, or a new deployment step.
+Add a changeset whenever a **user, embedder, or operator would notice** a change to `@tumaet/apollon`, `@tumaet/webapp`, `@tumaet/server`, or `apollon-vscode` — a new feature, a bug fix, a changed API, or a new deployment step. A VS Code-only change needs one too: it is what gives the extension its version bump and its Marketplace release notes.
 
-Skip it when nothing downstream is affected: docs, CI, tests, refactors, and formatting — plus anything touching only the VS Code extension or the docs site (both excluded above). When unsure, add one; an extra changelog line beats a silent gap. The advisory **Verify changesets** check on each PR reminds you.
+Skip it when nothing downstream is affected: docs, CI, tests, refactors, and formatting — plus anything touching only the docs site (excluded above). When unsure, add one; an extra changelog line beats a silent gap. The advisory **Verify changesets** check on each PR reminds you.
 
 ## What you write per PR
 
