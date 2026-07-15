@@ -79,6 +79,9 @@ catalogs:
     '@xyflow/react':
       specifier: 12.11.1
       version: 12.11.1
+    '@xyflow/system':
+      specifier: 0.0.78
+      version: 0.0.78
     babel-plugin-react-compiler:
       specifier: 1.0.0
       version: 1.0.0
@@ -329,6 +332,9 @@ importers:
       '@xyflow/react':
         specifier: 'catalog:'
         version: 12.11.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      '@xyflow/system':
+        specifier: 'catalog:'
+        version: 0.0.78
       ajv:
         specifier: 8.20.0
         version: 8.20.0
@@ -647,6 +653,9 @@ importers:
       '@xyflow/react':
         specifier: 'catalog:'
         version: 12.11.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      '@xyflow/system':
+        specifier: 'catalog:'
+        version: 0.0.78
       clsx:
         specifier: 'catalog:'
         version: 2.1.1

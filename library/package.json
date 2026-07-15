@@ -94,6 +94,7 @@
   ],
   "peerDependencies": {
     "@xyflow/react": "^12.9.0",
+    "@xyflow/system": ">=0.0.78",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "y-protocols": "^1.0.6",
@@ -127,6 +128,7 @@
     "@vitejs/plugin-react": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "@xyflow/react": "catalog:",
+    "@xyflow/system": "catalog:",
     "ajv": "8.20.0",
     "babel-plugin-react-compiler": "catalog:",
     "eslint": "catalog:",

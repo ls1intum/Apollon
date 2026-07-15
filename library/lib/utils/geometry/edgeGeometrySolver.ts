@@ -1,0 +1,385 @@
+import {
+  Position,
+  type Edge,
+  type Node,
+  type InternalNode,
+} from "@xyflow/react"
+import { getEdgePosition, ConnectionMode } from "@xyflow/system"
+import { EDGES } from "@/constants"
+import type { IPoint } from "@/edges/Connection"
+import { getPositionOnCanvas } from "@/utils/nodeUtils"
+import {
+  adjustSourceCoordinates,
+  adjustTargetCoordinates,
+  getEdgeMarkerStyles,
+  preserveOrthogonalEdgePoints,
+  isFreeformEdgeAnchor,
+  type FreeformEdgeAnchor,
+  type ObstacleRect,
+} from "@/utils/edgeUtils"
+import { getEdgeAnchorPoint } from "@/utils/connectionModes"
+import {
+  getEdgeObstacles,
+  getContainerBorderPolylines,
+} from "@/utils/geometry/obstacles"
+import { routeStepEdge } from "@/utils/geometry/edgeRoute"
+
+/**
+ * The world, resolved for one edge, in the exact form the per-edge hook
+ * (`useStepPathEdge`) computes it — but from the React Flow store instead of
+ * per-edge props, so ALL edges can be solved in one pass.
+ *
+ * The base endpoint comes from React Flow's own `getEdgePosition` on the same
+ * `nodeLookup` the framework uses (see `EdgeWrapper`), so it is byte-for-byte
+ * the `sourceX/Y` an edge receives as a prop. Everything layered on top —
+ * absolute position, node rect, freeform-anchor override, rounding, connection
+ * padding — mirrors `useStepPathEdge.ts` line-for-line, and deliberately uses
+ * `getPositionOnCanvas(node, nodes)` (NOT `internals.positionAbsolute`) so the
+ * freeform rect and straight-path shape match the hook for nested nodes too.
+ */
+export type ResolvedEdgeEndpoints = {
+  adjustedSource: IPoint
+  adjustedTarget: IPoint
+  sourcePosition: Position
+  targetPosition: Position
+  rounded: {
+    sourceX: number
+    sourceY: number
+    targetX: number
+    targetY: number
+  }
+  sourceAbsolutePosition: IPoint
+  targetAbsolutePosition: IPoint
+  sourceSize: { width: number; height: number }
+  targetSize: { width: number; height: number }
+  padding: number
+  enableStraightPath: boolean
+}
+
+const nodeWidth = (node: Node): number | undefined =>
+  node.width ?? node.measured?.width
+const nodeHeight = (node: Node): number | undefined =>
+  node.height ?? node.measured?.height
+
+/**
+ * Resolve one edge's endpoints exactly as `useStepPathEdge` would, or `null`
+ * when the base position is unknowable (a node not yet measured) — in which
+ * case the caller must hold the previous route rather than paint a guess.
+ */
+export function resolveEdgeEndpoints(
+  edge: Edge,
+  nodes: readonly Node[],
+  nodeLookup: Map<string, InternalNode>,
+  connectionMode: ConnectionMode,
+  enableStraightPath: boolean
+): ResolvedEdgeEndpoints | null {
+  const sourceInternal = nodeLookup.get(edge.source)
+  const targetInternal = nodeLookup.get(edge.target)
+  if (!sourceInternal || !targetInternal) return null
+
+  const base = getEdgePosition({
+    id: edge.id,
+    sourceNode: sourceInternal,
+    targetNode: targetInternal,
+    sourceHandle: edge.sourceHandle ?? null,
+    targetHandle: edge.targetHandle ?? null,
+    connectionMode,
+  })
+  if (!base) return null
+
+  const sourceNode = nodes.find((n) => n.id === edge.source)
+  const targetNode = nodes.find((n) => n.id === edge.target)
+
+  const sourceAbsolutePosition = sourceNode
+    ? getPositionOnCanvas(sourceNode, nodes)
+    : { x: base.sourceX, y: base.sourceY }
+  const targetAbsolutePosition = targetNode
+    ? getPositionOnCanvas(targetNode, nodes)
+    : { x: base.targetX, y: base.targetY }
+
+  const sourceRect = sourceNode
+    ? {
+        x: sourceAbsolutePosition.x,
+        y: sourceAbsolutePosition.y,
+        width: nodeWidth(sourceNode) ?? 0,
+        height: nodeHeight(sourceNode) ?? 0,
+      }
+    : null
+  const targetRect = targetNode
+    ? {
+        x: targetAbsolutePosition.x,
+        y: targetAbsolutePosition.y,
+        width: nodeWidth(targetNode) ?? 0,
+        height: nodeHeight(targetNode) ?? 0,
+      }
+    : null
+
+  const sourceAnchor = edge.data?.sourceAnchor as FreeformEdgeAnchor | undefined
+  const targetAnchor = edge.data?.targetAnchor as FreeformEdgeAnchor | undefined
+  const resolvedSourceAnchor =
+    sourceRect && isFreeformEdgeAnchor(sourceAnchor)
+      ? getEdgeAnchorPoint(sourceNode?.type, sourceRect, sourceAnchor)
+      : null
+  const resolvedTargetAnchor =
+    targetRect && isFreeformEdgeAnchor(targetAnchor)
+      ? getEdgeAnchorPoint(targetNode?.type, targetRect, targetAnchor)
+      : null
+
+  const { markerPadding } = getEdgeMarkerStyles(edge.type ?? "")
+  const padding = markerPadding ?? EDGES.MARKER_PADDING
+
+  const sourceX = resolvedSourceAnchor?.point.x ?? base.sourceX
+  const sourceY = resolvedSourceAnchor?.point.y ?? base.sourceY
+  const targetX = resolvedTargetAnchor?.point.x ?? base.targetX
+  const targetY = resolvedTargetAnchor?.point.y ?? base.targetY
+  const sourcePosition = resolvedSourceAnchor?.position ?? base.sourcePosition
+  const targetPosition = resolvedTargetAnchor?.position ?? base.targetPosition
+  const sourceConnectionPointPadding = resolvedSourceAnchor
+    ? 0
+    : EDGES.SOURCE_CONNECTION_POINT_PADDING
+  const targetConnectionPointPadding = resolvedTargetAnchor ? 0 : padding
+
+  const roundedSourceX = Math.round(sourceX)
+  const roundedSourceY = Math.round(sourceY)
+  const roundedTargetX = Math.round(targetX)
+  const roundedTargetY = Math.round(targetY)
+
+  const adjustedTarget = adjustTargetCoordinates(
+    roundedTargetX,
+    roundedTargetY,
+    targetPosition,
+    targetConnectionPointPadding
+  )
+  const adjustedSource = adjustSourceCoordinates(
+    roundedSourceX,
+    roundedSourceY,
+    sourcePosition,
+    sourceConnectionPointPadding
+  )
+
+  return {
+    adjustedSource: { x: adjustedSource.sourceX, y: adjustedSource.sourceY },
+    adjustedTarget: { x: adjustedTarget.targetX, y: adjustedTarget.targetY },
+    sourcePosition,
+    targetPosition,
+    rounded: {
+      sourceX: roundedSourceX,
+      sourceY: roundedSourceY,
+      targetX: roundedTargetX,
+      targetY: roundedTargetY,
+    },
+    sourceAbsolutePosition,
+    targetAbsolutePosition,
+    sourceSize: {
+      width: sourceRect?.width ?? nodeWidth(sourceNode!) ?? 100,
+      height: sourceRect?.height ?? nodeHeight(sourceNode!) ?? 160,
+    },
+    targetSize: {
+      width: targetRect?.width ?? nodeWidth(targetNode!) ?? 100,
+      height: targetRect?.height ?? nodeHeight(targetNode!) ?? 160,
+    },
+    padding,
+    enableStraightPath,
+  }
+}
+
+/** Merge a computed route with any stored manual bend points, exactly as
+ * `useStepPathEdge`'s `activePoints` memo does. */
+export function mergeManualPoints(
+  edge: Edge,
+  computedPoints: IPoint[],
+  endpoints: ResolvedEdgeEndpoints
+): IPoint[] {
+  const storedPoints = edge.data?.points as IPoint[] | undefined
+  const hasManualPoints = Boolean(storedPoints && storedPoints.length > 0)
+  const shouldPreferComputedPath =
+    computedPoints.length === 2 && !hasManualPoints
+  if (shouldPreferComputedPath) return computedPoints
+
+  const points =
+    storedPoints && storedPoints.length > 0 ? storedPoints : computedPoints
+
+  if (hasManualPoints && points.length >= 2) {
+    return preserveOrthogonalEdgePoints(
+      points,
+      endpoints.adjustedSource,
+      endpoints.adjustedTarget,
+      endpoints.sourcePosition,
+      endpoints.targetPosition
+    )
+  }
+  return points
+}
+
+/**
+ * Whether `other` is a TRUE sibling of `self`: leaves the very same connection
+ * point, so it cannot help but share geometry. Ported verbatim from
+ * `useEdgeRoutingContext.ts` so the neighbour set is identical.
+ */
+function isSibling(self: Edge, other: Edge): boolean {
+  const sharedNodes = [other.source, other.target].filter((n) =>
+    [self.source, self.target].includes(n)
+  ).length
+  if (sharedNodes !== 1) return false
+  const ends = [
+    [self.source, self.sourceHandle],
+    [self.target, self.targetHandle],
+  ] as const
+  const otherEnds = [
+    [other.source, other.sourceHandle],
+    [other.target, other.targetHandle],
+  ] as const
+  return ends.some(([node, handle]) =>
+    otherEnds.some(
+      ([otherNode, otherHandle]) => node === otherNode && handle === otherHandle
+    )
+  )
+}
+
+/** Gather the polylines this edge must not be drawn on top of — lower-id
+ * neighbours' finished routes plus container borders — exactly as
+ * `useEdgeRoutingContext`'s `neighborEdges` memo does. */
+function collectNeighbors(
+  edge: Edge,
+  endpoints: ResolvedEdgeEndpoints,
+  nodes: readonly Node[],
+  edgeById: Map<string, Edge>,
+  routeById: Record<string, IPoint[]>
+): IPoint[][] {
+  const borders = getContainerBorderPolylines(nodes, edge.source, edge.target)
+
+  const { x: sx } = endpoints.adjustedSource
+  const { y: sy } = endpoints.adjustedSource
+  const { x: tx } = endpoints.adjustedTarget
+  const { y: ty } = endpoints.adjustedTarget
+  const pad = EDGES.STUB_LENGTH * 6
+  const minX = Math.min(sx, tx) - pad
+  const maxX = Math.max(sx, tx) + pad
+  const minY = Math.min(sy, ty) - pad
+  const maxY = Math.max(sy, ty) + pad
+
+  const neighbors: IPoint[][] = []
+  for (const [otherId, polyline] of Object.entries(routeById)) {
+    if (otherId === edge.id || polyline.length < 2) continue
+    if (otherId >= edge.id) continue
+    const other = edgeById.get(otherId)
+    if (other && isSibling(edge, other)) continue
+    const inRange = polyline.some(
+      (p) => p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY
+    )
+    if (inRange) neighbors.push(polyline)
+  }
+  neighbors.push(...borders)
+  return neighbors
+}
+
+export type LiveEdgeOverride = {
+  edgeId: string
+  points: IPoint[]
+}
+
+export type SolverInput = {
+  nodes: readonly Node[]
+  nodeLookup: Map<string, InternalNode>
+  connectionMode: ConnectionMode
+  edges: readonly Edge[]
+  /** Step-edge types that attempt a straight shot first (enableStraightPath). */
+  straightPathTypes: ReadonlySet<string>
+  /** Types rendered as a plain two-point line (the straight-path hook). */
+  straightHookTypes: ReadonlySet<string>
+  /** An in-progress interactive preview whose polyline every edge sees. */
+  liveOverride?: LiveEdgeOverride | null
+  /** Previous routes, held for edges whose endpoints are momentarily unknown. */
+  previous?: Record<string, IPoint[]>
+}
+
+/**
+ * Route EVERY edge in one synchronous pass. Because an edge yields only to
+ * LOWER-id neighbours (a strict DAG, see `useEdgeRoutingContext.ts`), a single
+ * walk in ascending id order visits each edge after all the neighbours it can
+ * depend on are final — so this reproduces the multi-frame publish→re-route
+ * cascade's fixed point exactly, as local variables, with no re-renders.
+ */
+export function computeAllEdgeGeometry(input: SolverInput): {
+  routeById: Record<string, IPoint[]>
+} {
+  const {
+    nodes,
+    nodeLookup,
+    connectionMode,
+    edges,
+    straightPathTypes,
+    straightHookTypes,
+    liveOverride,
+    previous,
+  } = input
+
+  const edgeById = new Map(edges.map((e) => [e.id, e]))
+  const ordered = [...edges].sort((a, b) =>
+    a.id < b.id ? -1 : a.id > b.id ? 1 : 0
+  )
+  const routeById: Record<string, IPoint[]> = {}
+
+  for (const edge of ordered) {
+    if (liveOverride && liveOverride.edgeId === edge.id) {
+      routeById[edge.id] = liveOverride.points
+      continue
+    }
+
+    const endpoints = resolveEdgeEndpoints(
+      edge,
+      nodes,
+      nodeLookup,
+      connectionMode,
+      straightPathTypes.has(edge.type ?? "")
+    )
+    if (!endpoints) {
+      // Node not measured yet — hold the previous route, never paint a guess.
+      if (previous?.[edge.id]) routeById[edge.id] = previous[edge.id]
+      continue
+    }
+
+    // Straight-hook edges (use-case, syntax-tree, petri-net) are a plain line
+    // between the adjusted endpoints — no obstacle or neighbour routing — but
+    // their polyline still enters the map so step edges route around them.
+    if (straightHookTypes.has(edge.type ?? "")) {
+      routeById[edge.id] = [endpoints.adjustedSource, endpoints.adjustedTarget]
+      continue
+    }
+
+    const obstacles: ObstacleRect[] = getEdgeObstacles(
+      nodes,
+      edge.source,
+      edge.target,
+      endpoints.adjustedSource,
+      endpoints.adjustedTarget
+    )
+    const neighborEdges = collectNeighbors(
+      edge,
+      endpoints,
+      nodes,
+      edgeById,
+      routeById
+    )
+
+    const computed = routeStepEdge({
+      enableStraightPath: endpoints.enableStraightPath,
+      adjustedSource: endpoints.adjustedSource,
+      adjustedTarget: endpoints.adjustedTarget,
+      sourcePosition: endpoints.sourcePosition,
+      targetPosition: endpoints.targetPosition,
+      padding: endpoints.padding,
+      rounded: endpoints.rounded,
+      sourceAbsolutePosition: endpoints.sourceAbsolutePosition,
+      targetAbsolutePosition: endpoints.targetAbsolutePosition,
+      sourceSize: endpoints.sourceSize,
+      targetSize: endpoints.targetSize,
+      obstacles,
+      neighborEdges,
+    })
+
+    routeById[edge.id] = mergeManualPoints(edge, computed, endpoints)
+  }
+
+  return { routeById }
+}
