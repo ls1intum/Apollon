@@ -1,4 +1,11 @@
-import { useCallback, useMemo, useEffect, useRef, useState } from "react"
+import {
+  useCallback,
+  useMemo,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react"
 import { Position, useReactFlow, useStore, type Node } from "@xyflow/react"
 import { EDGES } from "@/constants"
 import {
@@ -158,6 +165,9 @@ export const useStepPathEdge = ({
   // here. The per-edge A* search and geometry publish below are then skipped.
   const isCentralRouting = useMetadataStore(
     (state) => state.edgeRouting === "central"
+  )
+  const setLiveEdgeOverride = useMetadataStore(
+    (state) => state.setLiveEdgeOverride
   )
   const centralRoute = useEdgeGeometryStore((state) => state.geometryById[id])
   const { getIntersectingNodes, getNode, screenToFlowPosition } = useReactFlow()
@@ -633,6 +643,18 @@ export const useStepPathEdge = ({
   // read others' geometry to bridge over them.
   usePublishEdgeGeometry(id, renderPoints, !isCentralRouting)
   const lineJumps = useEdgeLineJumps(id, renderPoints, !isReconnecting)
+
+  // Central mode's analog of the per-edge publish above: while THIS edge is being
+  // bend/endpoint-dragged (`dragPreviewPoints` set), hand the live preview to the
+  // solver so every OTHER edge routes around it in real time. A layout effect, so
+  // the override lands before paint (matching the per-edge layout publish), and a
+  // cleanup that clears it the instant the drag ends or the edge unmounts. Only
+  // the dragged edge has non-null `dragPreviewPoints`, so only it ever publishes.
+  useLayoutEffect(() => {
+    if (!isCentralRouting || dragPreviewPoints === null) return
+    setLiveEdgeOverride({ edgeId: id, points: dragPreviewPoints })
+    return () => setLiveEdgeOverride(null)
+  }, [isCentralRouting, dragPreviewPoints, id, setLiveEdgeOverride])
 
   const currentPath = useMemo(
     () => buildEdgePath(renderPoints, lineJumps),

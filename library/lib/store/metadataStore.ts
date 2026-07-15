@@ -17,6 +17,17 @@ import { DEFAULT_LABELS, type ApollonLabels } from "@/i18n/labels"
  */
 export type EdgeRoutingMode = "central" | "per-edge"
 
+/**
+ * An edge whose route is being dragged (bend or endpoint) right now, published
+ * so the central solver can route every OTHER edge around the live preview —
+ * the `central`-mode equivalent of the per-edge path publishing its in-progress
+ * `renderPoints` into the geometry store. `null` whenever nothing is dragging.
+ */
+export type LiveEdgeOverride = {
+  edgeId: string
+  points: IPoint[]
+}
+
 export type MetadataStore = {
   diagramTitle: string
   diagramType: UMLDiagramType
@@ -36,6 +47,7 @@ export type MetadataStore = {
   reconnectPreviewEdgeId: string | null
   reconnectPreviewHandleType: "source" | "target" | null
   reconnectPreviewBasePoints: IPoint[]
+  liveEdgeOverride: LiveEdgeOverride | null
   setMode: (mode: ApollonMode) => void
   setView: (view: ApollonView) => void
   setAvailableViews: (availableViews: ApollonView[]) => void
@@ -55,6 +67,7 @@ export type MetadataStore = {
     basePoints: IPoint[]
   ) => void
   stopReconnectPreview: () => void
+  setLiveEdgeOverride: (override: LiveEdgeOverride | null) => void
   updateDiagramTitle: (diagramTitle: string) => void
   updateDiagramType: (diagramType: UMLDiagramType) => void
   updateMetaData: (diagramTitle: string, diagramType: UMLDiagramType) => void
@@ -81,6 +94,7 @@ type InitialMetadataState = {
   reconnectPreviewEdgeId: string | null
   reconnectPreviewHandleType: "source" | "target" | null
   reconnectPreviewBasePoints: IPoint[]
+  liveEdgeOverride: LiveEdgeOverride | null
 }
 const initialMetadataState: InitialMetadataState = {
   // Empty by default — an untitled diagram stays untitled (hosts render their own
@@ -102,6 +116,7 @@ const initialMetadataState: InitialMetadataState = {
   reconnectPreviewEdgeId: null,
   reconnectPreviewHandleType: null,
   reconnectPreviewBasePoints: [],
+  liveEdgeOverride: null,
 }
 
 export const createMetadataStore = (
@@ -261,6 +276,10 @@ export const createMetadataStore = (
             undefined,
             "stopReconnectPreview"
           )
+        },
+
+        setLiveEdgeOverride: (override) => {
+          set({ liveEdgeOverride: override }, undefined, "setLiveEdgeOverride")
         },
 
         setDebug: (debug) => {

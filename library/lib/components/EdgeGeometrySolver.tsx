@@ -36,6 +36,10 @@ export const EdgeGeometrySolver = () => {
   const connectionMode = useStore((s) => s.connectionMode)
   const edges = useDiagramStore((s) => s.edges)
   const setAllGeometry = useEdgeGeometryStore((s) => s.setAllGeometry)
+  // The edge being bend/endpoint-dragged right now, if any: fed to the solver so
+  // every OTHER edge routes around the live preview, exactly as the per-edge path
+  // achieves by publishing its in-progress `renderPoints` into the geometry store.
+  const liveEdgeOverride = useMetadataStore((s) => s.liveEdgeOverride)
 
   // React Flow mutates `nodeLookup` IN PLACE and does not change the `nodes`
   // reference on measurement, so a memo keyed on those refs would keep a stale
@@ -90,12 +94,20 @@ export const EdgeGeometrySolver = () => {
       edges,
       straightPathTypes: STRAIGHT_PATH_STEP_EDGE_TYPES,
       straightHookTypes: STRAIGHT_HOOK_EDGE_TYPES,
+      liveOverride: liveEdgeOverride,
     })
     setAllGeometry(routeById)
     // `nodeGeometryKey` is the change trigger; `nodes`/`nodeLookup` are refs RF
     // mutates in place, so they never signal measurement on their own.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [edgeRouting, nodeGeometryKey, connectionMode, edges, setAllGeometry])
+  }, [
+    edgeRouting,
+    nodeGeometryKey,
+    connectionMode,
+    edges,
+    liveEdgeOverride,
+    setAllGeometry,
+  ])
 
   return null
 }
