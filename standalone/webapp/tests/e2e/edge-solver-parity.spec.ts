@@ -69,9 +69,14 @@ for (const file of DIAGRAMS) {
   test(`central solver matches per-edge routing for ${file}`, async ({
     page,
   }) => {
+    // Force per-edge routing so `geometryById` is populated by the ACTUAL
+    // per-edge cascade, not the solver: central is now the default, and letting
+    // the probe run there would compare the solver against its own committed
+    // output — a tautology. Pinning per-edge keeps this a real oracle.
     await openFixtureInLocalEditor(
       page,
-      model as unknown as Record<string, unknown>
+      model as unknown as Record<string, unknown>,
+      { edgeRouting: "per-edge" }
     )
     await waitForCanvasReady(page)
 

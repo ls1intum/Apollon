@@ -9,11 +9,11 @@ import { IPoint } from "@/edges/Connection"
 import { DEFAULT_LABELS, type ApollonLabels } from "@/i18n/labels"
 
 /**
- * Which edge-routing engine drives the canvas. `per-edge` (default) is the
- * original: each edge routes itself and publishes into a shared store, settling
- * over a few frames. `central` runs one synchronous solver over all edges. A
- * transitional kill switch while `central` rolls out; the two are proven
- * byte-identical by the parity gate.
+ * Which edge-routing engine drives the canvas. `central` (default) runs one
+ * synchronous solver over all edges in a single pre-paint pass. `per-edge` is
+ * the original cascade — each edge routes itself and publishes into a shared
+ * store, settling over a few frames — kept as a kill switch; the two are proven
+ * byte-identical by the parity gate across every diagram type.
  */
 export type EdgeRoutingMode = "central" | "per-edge"
 
@@ -105,7 +105,7 @@ const initialMetadataState: InitialMetadataState = {
   view: ApollonView.Modelling,
   availableViews: [ApollonView.Modelling],
   readonly: false,
-  edgeRouting: "per-edge",
+  edgeRouting: "central",
   debug: false,
   scrollLock: false,
   labels: DEFAULT_LABELS,

@@ -151,9 +151,10 @@ export type ApollonOptions = {
   availableViews?: ApollonView[]
   readonly?: boolean
   /**
-   * Which edge-routing engine to use. `central` runs one synchronous solver over
-   * all edges; `per-edge` (default) is the original self-routing cascade. A
-   * transitional kill switch while `central` rolls out.
+   * Which edge-routing engine to use. `central` (default) runs one synchronous
+   * solver over all edges in a single pre-paint pass; `per-edge` is the original
+   * self-routing cascade, kept as a kill switch. The two are proven
+   * byte-identical by the parity gate.
    */
   edgeRouting?: "central" | "per-edge"
   enablePopups?: boolean
