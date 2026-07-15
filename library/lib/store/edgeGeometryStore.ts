@@ -16,6 +16,14 @@ export type EdgeGeometryStore = {
   geometryById: Record<string, IPoint[]>
   publishEdgeGeometry: (id: string, points: IPoint[]) => void
   removeEdgeGeometry: (id: string) => void
+  /**
+   * Replace the WHOLE map in one write — the central edge-geometry solver's
+   * single-pass output. Reuses each edge's previous `IPoint[]` reference when its
+   * content is unchanged, so a selector reading one edge's route (with content
+   * equality) only re-renders the edges the solve actually moved. Used instead of
+   * per-edge `publishEdgeGeometry` when routing is centralised.
+   */
+  setAllGeometry: (routeById: Record<string, IPoint[]>) => void
 }
 
 const samePoints = (a: IPoint[], b: IPoint[]): boolean =>
@@ -85,6 +93,25 @@ export const createEdgeGeometryStore = (): UseBoundStore<
             undefined,
             "publishEdgeGeometry"
           )
+        },
+
+        setAllGeometry: (routeById) => {
+          const previous = get().geometryById
+          const prevIds = Object.keys(previous)
+          const nextIds = Object.keys(routeById)
+          let changed = prevIds.length !== nextIds.length
+          const next: Record<string, IPoint[]> = {}
+          for (const id of nextIds) {
+            const prior = previous[id]
+            if (prior && samePoints(prior, routeById[id])) {
+              next[id] = prior // reuse reference so unchanged edges don't re-render
+            } else {
+              next[id] = routeById[id]
+              changed = true
+            }
+          }
+          if (!changed) return
+          set({ geometryById: next }, undefined, "setAllGeometry")
         },
 
         removeEdgeGeometry: (id) => {

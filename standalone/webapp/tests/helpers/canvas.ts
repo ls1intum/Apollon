@@ -90,8 +90,10 @@ export async function injectFixtureIntoLocalStorage(
  */
 export async function openFixtureInLocalEditor(
   page: Page,
-  fixture: Record<string, unknown>
+  fixture: Record<string, unknown>,
+  opts?: { edgeRouting?: "central" | "per-edge" }
 ) {
   await injectFixtureIntoLocalStorage(page, fixture)
-  await page.goto(`/local/${fixture.id as string}`)
+  const query = opts?.edgeRouting ? `?edgeRouting=${opts.edgeRouting}` : ""
+  await page.goto(`/local/${fixture.id as string}${query}`)
 }

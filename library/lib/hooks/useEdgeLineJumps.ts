@@ -30,20 +30,24 @@ import {
  */
 export function usePublishEdgeGeometry(
   id: string | undefined,
-  points: IPoint[]
+  points: IPoint[],
+  enabled = true
 ): void {
   const publish = useEdgeGeometryStore((state) => state.publishEdgeGeometry)
   const remove = useEdgeGeometryStore((state) => state.removeEdgeGeometry)
 
   useLayoutEffect(() => {
-    if (id) publish(id, points)
-  }, [id, points, publish])
+    if (id && enabled) publish(id, points)
+  }, [id, points, publish, enabled])
 
   useEffect(() => {
+    // When publishing is disabled (central routing owns the geometry map), this
+    // edge never wrote an entry, so there is nothing to clean up on unmount.
+    if (!enabled) return
     return () => {
       if (id) remove(id)
     }
-  }, [id, remove])
+  }, [id, remove, enabled])
 }
 
 /**

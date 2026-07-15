@@ -80,6 +80,11 @@ export const useStraightPathEdge = ({
   const isReconnecting = useMetadataStore(
     (state) => state.reconnectPreviewEdgeId === id
   )
+  // In central routing the solver owns the geometry map; this edge must not also
+  // publish (its two-point line is identical to the solver's route for it).
+  const isCentralRouting = useMetadataStore(
+    (state) => state.edgeRouting === "central"
+  )
   const { getIntersectingNodes, getNode, getNodes, screenToFlowPosition } =
     useReactFlow()
   const [dragPreviewPoints, setDragPreviewPoints] = useState<IPoint[] | null>(
@@ -296,7 +301,7 @@ export const useStraightPathEdge = ({
     dragPreviewPositions?.targetPosition ?? resolvedTargetPosition
 
   // Publish this edge's real geometry so other edges bridge over it accurately.
-  usePublishEdgeGeometry(id, renderPoints)
+  usePublishEdgeGeometry(id, renderPoints, !isCentralRouting)
 
   // UseCase include/extend edges are dashed connectors that never read as
   // crossings to disambiguate, so they opt out of bridging.

@@ -119,6 +119,9 @@ const arePointsEqual = (a: IPoint[], b: IPoint[]): boolean =>
   a.length === b.length &&
   a.every((point, index) => point.x === b[index].x && point.y === b[index].y)
 
+// Stable empty route for central mode, where this edge does not route itself.
+const EMPTY_ROUTE: IPoint[] = []
+
 export const useStepPathEdge = ({
   id,
   type,
@@ -150,6 +153,13 @@ export const useStepPathEdge = ({
   const isReconnecting = useMetadataStore(
     (state) => state.reconnectPreviewEdgeId === id
   )
+  // When routing is centralised, this edge's route is computed by the single
+  // EdgeGeometrySolver and read back from the shared store instead of routed
+  // here. The per-edge A* search and geometry publish below are then skipped.
+  const isCentralRouting = useMetadataStore(
+    (state) => state.edgeRouting === "central"
+  )
+  const centralRoute = useEdgeGeometryStore((state) => state.geometryById[id])
   const { getIntersectingNodes, getNode, screenToFlowPosition } = useReactFlow()
 
   const [draggingHandle, setDraggingHandle] = useState<BendHandle | null>(null)
@@ -391,43 +401,46 @@ export const useStepPathEdge = ({
   // The auto routes, the ones people actually look at, went through none of it.
   const computedPoints = useMemo(
     () =>
-      routeStepEdge({
-        enableStraightPath,
-        adjustedSource: {
-          x: adjustedSourceCoordinates.sourceX,
-          y: adjustedSourceCoordinates.sourceY,
-        },
-        adjustedTarget: {
-          x: adjustedTargetCoordinates.targetX,
-          y: adjustedTargetCoordinates.targetY,
-        },
-        sourcePosition,
-        targetPosition,
-        padding,
-        rounded: {
-          sourceX: roundedSourceX,
-          sourceY: roundedSourceY,
-          targetX: roundedTargetX,
-          targetY: roundedTargetY,
-        },
-        sourceAbsolutePosition,
-        targetAbsolutePosition,
-        sourceSize: {
-          width: sourceRect?.width ?? sourceNode?.width ?? 100,
-          height: sourceRect?.height ?? sourceNode?.height ?? 160,
-        },
-        targetSize: {
-          width: targetRect?.width ?? targetNode?.width ?? 100,
-          height: targetRect?.height ?? targetNode?.height ?? 160,
-        },
-        obstacles: routeObstacles,
-        neighborEdges: routingNeighborEdges,
-      }),
+      isCentralRouting
+        ? EMPTY_ROUTE
+        : routeStepEdge({
+            enableStraightPath,
+            adjustedSource: {
+              x: adjustedSourceCoordinates.sourceX,
+              y: adjustedSourceCoordinates.sourceY,
+            },
+            adjustedTarget: {
+              x: adjustedTargetCoordinates.targetX,
+              y: adjustedTargetCoordinates.targetY,
+            },
+            sourcePosition,
+            targetPosition,
+            padding,
+            rounded: {
+              sourceX: roundedSourceX,
+              sourceY: roundedSourceY,
+              targetX: roundedTargetX,
+              targetY: roundedTargetY,
+            },
+            sourceAbsolutePosition,
+            targetAbsolutePosition,
+            sourceSize: {
+              width: sourceRect?.width ?? sourceNode?.width ?? 100,
+              height: sourceRect?.height ?? sourceNode?.height ?? 160,
+            },
+            targetSize: {
+              width: targetRect?.width ?? targetNode?.width ?? 100,
+              height: targetRect?.height ?? targetNode?.height ?? 160,
+            },
+            obstacles: routeObstacles,
+            neighborEdges: routingNeighborEdges,
+          }),
     // `routeObstacles` and `routingNeighborEdges` are stabilised by content in
     // useEdgeRoutingContext, so this memo re-runs the search only when the world
     // around the edge (or its own endpoints) actually changed — no digest string,
     // and honest deps the React Compiler can preserve.
     [
+      isCentralRouting,
       enableStraightPath,
       adjustedSourceCoordinates.sourceX,
       adjustedSourceCoordinates.sourceY,
@@ -458,10 +471,38 @@ export const useStepPathEdge = ({
   const hasStoredManualPoints = Boolean(data?.points && data.points.length > 0)
   const hasLocalManualPoints = customPoints.length > 0
   const hasManualPoints = hasStoredManualPoints
+  // In central mode the solver already merged manual points, so the route it
+  // hands back IS the active geometry; a 2-point route still means "clean auto
+  // route" for the persistence effect below.
+  const effectiveRoute = isCentralRouting ? centralRoute : computedPoints
   const shouldPreferComputedPath =
-    computedPoints.length === 2 && !hasManualPoints
+    (effectiveRoute?.length ?? 0) === 2 && !hasManualPoints
+
+  const centralFallback = useMemo<IPoint[]>(
+    () => [
+      {
+        x: adjustedSourceCoordinates.sourceX,
+        y: adjustedSourceCoordinates.sourceY,
+      },
+      {
+        x: adjustedTargetCoordinates.targetX,
+        y: adjustedTargetCoordinates.targetY,
+      },
+    ],
+    [
+      adjustedSourceCoordinates.sourceX,
+      adjustedSourceCoordinates.sourceY,
+      adjustedTargetCoordinates.targetX,
+      adjustedTargetCoordinates.targetY,
+    ]
+  )
 
   const activePoints = useMemo(() => {
+    // Central mode: the solver's route (already manual-merged) is the active
+    // geometry. Before the first solve lands, fall back to a straight endpoint
+    // line — never painted, since the solver commits in a pre-paint layout effect.
+    if (isCentralRouting) return centralRoute ?? centralFallback
+
     if (shouldPreferComputedPath) {
       return computedPoints
     }
@@ -491,8 +532,11 @@ export const useStepPathEdge = ({
 
     return points
   }, [
+    isCentralRouting,
+    centralRoute,
+    centralFallback,
     computedPoints,
-    data?.points,
+    data,
     hasManualPoints,
     shouldPreferComputedPath,
     adjustedSourceCoordinates.sourceX,
@@ -587,7 +631,7 @@ export const useStepPathEdge = ({
   // reconnecting, where the preview is drawn separately by ReconnectConnectionLine.
   // Publish this edge's real geometry so other edges bridge over it accurately;
   // read others' geometry to bridge over them.
-  usePublishEdgeGeometry(id, renderPoints)
+  usePublishEdgeGeometry(id, renderPoints, !isCentralRouting)
   const lineJumps = useEdgeLineJumps(id, renderPoints, !isReconnecting)
 
   const currentPath = useMemo(

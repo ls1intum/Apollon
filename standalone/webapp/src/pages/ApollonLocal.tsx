@@ -143,8 +143,16 @@ export const ApollonLocal: FC = () => {
     isThumbnailExportCanceledRef.current = false
     setCurrentModelId(diagram.id)
 
+    // Opt into the central edge-routing engine via `?edgeRouting=central`
+    // (used by the solver parity / routing e2e suites; per-edge otherwise).
+    const edgeRoutingParam = new URLSearchParams(window.location.search).get(
+      "edgeRouting"
+    )
     const instance = new ApollonEditor(containerRef.current, {
       model: diagram.model,
+      ...(edgeRoutingParam === "central" || edgeRoutingParam === "per-edge"
+        ? { edgeRouting: edgeRoutingParam }
+        : {}),
     })
 
     const subId = instance.subscribeToModelChange((model) => {

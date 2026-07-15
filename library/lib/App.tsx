@@ -64,6 +64,7 @@ import {
   EdgeSolverParityProbe,
   EDGE_SOLVER_PARITY_ENABLED,
 } from "@/components/EdgeSolverParityProbe"
+import { EdgeGeometrySolver } from "@/components/EdgeGeometrySolver"
 
 interface AppProps {
   onReactFlowInit: (instance: ReactFlowInstance) => void
@@ -263,6 +264,7 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
             <CustomBackground />
             <AlignmentGuides />
             <AssessmentSelectionDebug />
+            <EdgeGeometrySolver />
             {EDGE_SOLVER_PARITY_ENABLED && <EdgeSolverParityProbe />}
             {/* Renders every registered control (built-in + host-injected) into
                 its region: header, rails, corners, on-canvas. The chrome itself is

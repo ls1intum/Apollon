@@ -8,6 +8,15 @@ import { ApollonMode, ApollonView } from "@/typings"
 import { IPoint } from "@/edges/Connection"
 import { DEFAULT_LABELS, type ApollonLabels } from "@/i18n/labels"
 
+/**
+ * Which edge-routing engine drives the canvas. `per-edge` (default) is the
+ * original: each edge routes itself and publishes into a shared store, settling
+ * over a few frames. `central` runs one synchronous solver over all edges. A
+ * transitional kill switch while `central` rolls out; the two are proven
+ * byte-identical by the parity gate.
+ */
+export type EdgeRoutingMode = "central" | "per-edge"
+
 export type MetadataStore = {
   diagramTitle: string
   diagramType: UMLDiagramType
@@ -15,6 +24,7 @@ export type MetadataStore = {
   view: ApollonView
   availableViews: ApollonView[]
   readonly: boolean
+  edgeRouting: EdgeRoutingMode
   debug: boolean
   scrollLock: boolean
   /** User-facing strings for the editor's own chrome; host-overridable for i18n. */
@@ -30,6 +40,7 @@ export type MetadataStore = {
   setView: (view: ApollonView) => void
   setAvailableViews: (availableViews: ApollonView[]) => void
   setReadonly: (readonly: boolean) => void
+  setEdgeRouting: (edgeRouting: EdgeRoutingMode) => void
   setScrollLock: (scrollLock: boolean) => void
   setLabels: (labels: ApollonLabels) => void
   setScrollEnabled: (scrollEnabled: boolean) => void
@@ -59,6 +70,7 @@ type InitialMetadataState = {
   view: ApollonView
   availableViews: ApollonView[]
   readonly: boolean
+  edgeRouting: EdgeRoutingMode
   debug: boolean
   scrollLock: boolean
   labels: ApollonLabels
@@ -79,6 +91,7 @@ const initialMetadataState: InitialMetadataState = {
   view: ApollonView.Modelling,
   availableViews: [ApollonView.Modelling],
   readonly: false,
+  edgeRouting: "per-edge",
   debug: false,
   scrollLock: false,
   labels: DEFAULT_LABELS,
@@ -167,6 +180,10 @@ export const createMetadataStore = (
 
         setReadonly: (readonly) => {
           set({ readonly }, undefined, "setReadonly")
+        },
+
+        setEdgeRouting: (edgeRouting) => {
+          set({ edgeRouting }, undefined, "setEdgeRouting")
         },
 
         setScrollLock: (scrollLock: boolean) => {
