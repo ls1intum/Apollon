@@ -60,10 +60,6 @@ import {
   type CollaborationLayerOptions,
 } from "@/components/collaboration/CollaborationLayer"
 import { TooltipProvider } from "@/components/ui"
-import {
-  EdgeSolverParityProbe,
-  EDGE_SOLVER_PARITY_ENABLED,
-} from "@/components/EdgeSolverParityProbe"
 import { EdgeGeometrySolver } from "@/components/EdgeGeometrySolver"
 
 interface AppProps {
@@ -265,7 +261,6 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
             <AlignmentGuides />
             <AssessmentSelectionDebug />
             <EdgeGeometrySolver />
-            {EDGE_SOLVER_PARITY_ENABLED && <EdgeSolverParityProbe />}
             {/* Renders every registered control (built-in + host-injected) into
                 its region: header, rails, corners, on-canvas. The chrome itself is
                 registered at construction (imperative) or by the React wrapper. */}
