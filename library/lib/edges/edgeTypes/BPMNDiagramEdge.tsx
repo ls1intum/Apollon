@@ -85,7 +85,6 @@ export const BPMNDiagramEdge = ({
     targetHandleId,
     data,
     allowMidpointDragging,
-    enableStraightPath: false,
   })
 
   const { strokeColor, textColor } = getCustomColorsFromDataForEdge(data)

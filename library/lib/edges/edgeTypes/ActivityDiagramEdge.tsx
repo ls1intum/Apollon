@@ -77,7 +77,6 @@ export const ActivityDiagramEdge = ({
     targetHandleId,
     data,
     allowMidpointDragging,
-    enableStraightPath: false,
   })
 
   const { strokeColor, textColor } = getCustomColorsFromDataForEdge(data)

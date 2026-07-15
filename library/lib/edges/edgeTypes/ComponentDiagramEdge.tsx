@@ -102,7 +102,6 @@ export const ComponentDiagramEdge = ({
     targetHandleId,
     data,
     allowMidpointDragging,
-    enableStraightPath: false,
   })
 
   const { strokeColor } = getCustomColorsFromDataForEdge(data)

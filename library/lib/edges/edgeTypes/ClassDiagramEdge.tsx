@@ -39,10 +39,6 @@ export const ClassDiagramEdge = ({
 
   const allowMidpointDragging =
     "allowMidpointDragging" in config ? config.allowMidpointDragging : true
-  const enableStraightPath =
-    "enableStraightPath" in config
-      ? (config.enableStraightPath as boolean)
-      : true
 
   const { assessments } = useDiagramStore(
     useShallow((state) => ({
@@ -90,7 +86,6 @@ export const ClassDiagramEdge = ({
     targetHandleId,
     data,
     allowMidpointDragging,
-    enableStraightPath,
   })
 
   const { strokeColor, textColor } = getCustomColorsFromDataForEdge(data)

@@ -55,7 +55,6 @@ export const SfcDiagramEdge = ({
   const { handleDelete } = useToolbar({ id })
 
   const allowMidpointDragging = true
-  const enableStraightPath = true
 
   const { assessments } = useDiagramStore(
     useShallow((state) => ({
@@ -103,7 +102,6 @@ export const SfcDiagramEdge = ({
     targetHandleId,
     data,
     allowMidpointDragging,
-    enableStraightPath,
   })
 
   const { isNegated, displayName, showBar } = getParsedEdgeData(data)

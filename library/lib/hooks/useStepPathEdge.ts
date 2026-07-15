@@ -77,12 +77,6 @@ interface UseStepPathEdgeProps {
     targetAnchor?: FreeformEdgeAnchor
   }
   allowMidpointDragging?: boolean
-  /**
-   * @deprecated No longer read here — the central solver derives whether an edge
-   * attempts a straight shot from its type (see STRAIGHT_PATH_STEP_EDGE_TYPES).
-   * Still accepted so the many edge components that pass it keep compiling.
-   */
-  enableStraightPath?: boolean
 }
 
 export interface StepPathEdgeData {

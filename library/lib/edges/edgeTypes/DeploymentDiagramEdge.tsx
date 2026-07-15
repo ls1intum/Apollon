@@ -105,7 +105,6 @@ export const DeploymentDiagramEdge = ({
     targetHandleId,
     data,
     allowMidpointDragging,
-    enableStraightPath: true,
   })
 
   const { strokeColor, textColor } = getCustomColorsFromDataForEdge(data)
