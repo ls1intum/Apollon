@@ -31,11 +31,7 @@ import { IPoint } from "../edges/Connection"
 import { BaseEdgeProps } from "../edges/GenericEdge"
 import { computeToolbarPosition } from "@/utils/geometry/bendHandles"
 import { getMidSegment } from "@/utils/geometry/edgeLabelLayout"
-import {
-  useEdgeLineJumps,
-  usePublishEdgeGeometry,
-  buildEdgePath,
-} from "./useEdgeLineJumps"
+import { useEdgeLineJumps, buildEdgePath } from "./useEdgeLineJumps"
 import { useDiagramStore, useMetadataStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { getPositionOnCanvas } from "@/utils"
@@ -79,11 +75,6 @@ export const useStraightPathEdge = ({
   const isDiagramModifiable = useDiagramModifiable()
   const isReconnecting = useMetadataStore(
     (state) => state.reconnectPreviewEdgeId === id
-  )
-  // In central routing the solver owns the geometry map; this edge must not also
-  // publish (its two-point line is identical to the solver's route for it).
-  const isCentralRouting = useMetadataStore(
-    (state) => state.edgeRouting === "central"
   )
   const { getIntersectingNodes, getNode, getNodes, screenToFlowPosition } =
     useReactFlow()
@@ -299,9 +290,6 @@ export const useStraightPathEdge = ({
     dragPreviewPositions?.sourcePosition ?? resolvedSourcePosition
   const renderTargetPosition =
     dragPreviewPositions?.targetPosition ?? resolvedTargetPosition
-
-  // Publish this edge's real geometry so other edges bridge over it accurately.
-  usePublishEdgeGeometry(id, renderPoints, !isCentralRouting)
 
   // UseCase include/extend edges are dashed connectors that never read as
   // crossings to disambiguate, so they opt out of bridging.
