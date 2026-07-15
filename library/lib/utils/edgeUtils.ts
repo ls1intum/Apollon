@@ -1,6 +1,7 @@
 import { CANVAS, EDGES, INTERFACE } from "@/constants"
 import { IPoint, pointsToSvgPath } from "@/edges/Connection"
 import { DiagramEdgeType, UMLDiagramType } from "@/typings"
+import type { ObstacleRect } from "@/utils/geometry/obstacles"
 import {
   routeAroundObstacles,
   routeConflictsWithNeighborEdges,
@@ -1740,40 +1741,6 @@ export const getEffectiveStubLength = (
   )
 }
 
-/**
- * A node body the router should try not to route through, in absolute flow
- * space and already inflated by its clearance.
- *
- * `soft` marks a container (a package, a BPMN pool, a swimlane). Containers are
- * backgrounds that edges legitimately live inside — a diagram whose nodes all
- * sit in one pool would be unroutable if the pool were solid — so a soft
- * obstacle is one the router prefers to avoid, never one it refuses to cross.
- */
-export type ObstacleRect = {
-  id: string
-  x: number
-  y: number
-  width: number
-  height: number
-  soft: boolean
-}
-
-/** Room an edge WANTS beside any node body it travels past — see
- * `EDGES.NODE_CLEARANCE_PX`. Priced by the router, never enforced as geometry.
- *
- * Functions, not constants: `@/constants` reaches back into this module through
- * the component barrel, so anything evaluated at module-init time here reads it
- * before it exists. Every other use of CANVAS/EDGES in this file is inside a
- * function body for the same reason. */
-export const getNodeClearancePx = (): number => EDGES.NODE_CLEARANCE_PX
-
-/** Room an edge must not go below without the search having chosen to. */
-export const getMinNodeClearancePx = (): number => EDGES.MIN_NODE_CLEARANCE_PX
-
-/** The canvas grid, for leaf geometry modules that must not import the
- * constants barrel (it cycles back through here). */
-export const getGridPx = (): number => CANVAS.SNAP_TO_GRID_PX
-
 const toCanvasGrid = (value: number): number =>
   Math.round(value / CANVAS.SNAP_TO_GRID_PX) * CANVAS.SNAP_TO_GRID_PX
 
@@ -2360,8 +2327,8 @@ export const routeOrthogonalPath = (
     !routeRunsTooCloseToBody(
       cheapRoute,
       hardObstacles,
-      getNodeClearancePx(),
-      getMinNodeClearancePx(),
+      EDGES.NODE_CLEARANCE_PX,
+      EDGES.MIN_NODE_CLEARANCE_PX,
       CANVAS.SNAP_TO_GRID_PX,
       // The stubs are not the router's to fix — every route out of this handle runs
       // on the same line — so holding the cheap route to a standard no route can

@@ -1,8 +1,25 @@
 import type { Node } from "@xyflow/react"
 import { EDGES } from "@/constants"
-import { type ObstacleRect } from "@/utils/edgeUtils"
 import { getPositionOnCanvas, isParentNodeType } from "@/utils/nodeUtils"
 import type { IPoint } from "@/edges/Connection"
+
+/**
+ * A node body the router should try not to route through, in absolute flow
+ * space and already inflated by its clearance.
+ *
+ * `soft` marks a container (a package, a BPMN pool, a swimlane). Containers are
+ * backgrounds that edges legitimately live inside — a diagram whose nodes all
+ * sit in one pool would be unroutable if the pool were solid — so a soft
+ * obstacle is one the router prefers to avoid, never one it refuses to cross.
+ */
+export type ObstacleRect = {
+  id: string
+  x: number
+  y: number
+  width: number
+  height: number
+  soft: boolean
+}
 
 const contains = (rect: ObstacleRect, point: IPoint): boolean =>
   point.x >= rect.x &&

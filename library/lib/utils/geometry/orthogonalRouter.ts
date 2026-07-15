@@ -1,12 +1,8 @@
 import { Position } from "@xyflow/react"
+import { CANVAS, EDGES } from "@/constants"
 import type { IPoint } from "@/edges/Connection"
 import { recordRouterSearch } from "@/sync/perfCounters"
-import {
-  getGridPx,
-  getMinNodeClearancePx,
-  getNodeClearancePx,
-  type ObstacleRect,
-} from "@/utils/edgeUtils"
+import type { ObstacleRect } from "@/utils/geometry/obstacles"
 
 /**
  * A pure, synchronous orthogonal connector router: A* over a sparse orthogonal
@@ -181,7 +177,7 @@ const clearanceAlongside = (
   // node, and one it clips the corner of by a pixel it is not running alongside at
   // all. Without this, a stub that grazes the corner of a node's span condemns an
   // otherwise perfect route to a full search.
-  const minOverlap = 2 * getGridPx()
+  const minOverlap = 2 * CANVAS.SNAP_TO_GRID_PX
 
   let lower = Infinity
   let upper = Infinity
@@ -541,7 +537,7 @@ export const routeConflictsWithNeighborEdges = (
 ): boolean => {
   const neighbors = toSegments(neighborEdges)
   if (neighbors.length === 0) return false
-  const crowding = PARALLEL_CROWDING_CLEARANCE_CELLS * getGridPx()
+  const crowding = PARALLEL_CROWDING_CLEARANCE_CELLS * CANVAS.SNAP_TO_GRID_PX
 
   for (let i = 0; i < points.length - 1; i++) {
     const seg: Segment = {
@@ -710,9 +706,9 @@ export const routeAroundObstacles = (
   targetStubLength: number,
   neighborEdges: readonly IPoint[][] = []
 ): IPoint[] | null => {
-  const grid = getGridPx()
-  const idealClearance = getNodeClearancePx()
-  const minClearance = getMinNodeClearancePx()
+  const grid = CANVAS.SNAP_TO_GRID_PX
+  const idealClearance = EDGES.NODE_CLEARANCE_PX
+  const minClearance = EDGES.MIN_NODE_CLEARANCE_PX
   const bendPenalty = BEND_PENALTY_IN_CELLS * grid
   const crowdingClearance = PARALLEL_CROWDING_CLEARANCE_CELLS * grid
   // Cost per pixel travelled, per whole grid cell short of the clearance the run

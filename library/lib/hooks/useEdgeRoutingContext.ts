@@ -3,7 +3,7 @@ import type { Node } from "@xyflow/react"
 import { EDGES } from "@/constants"
 import type { IPoint } from "@/edges/Connection"
 import { useDiagramStore, useEdgeGeometryStore } from "@/store/context"
-import type { ObstacleRect } from "@/utils/edgeUtils"
+import type { ObstacleRect } from "@/utils/geometry/obstacles"
 import {
   getEdgeObstacles,
   getContainerBorderPolylines,

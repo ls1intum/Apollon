@@ -4,9 +4,9 @@ import {
   routeOrthogonalPath,
   routeCrossesHardObstacle,
   removeDuplicatePoints,
-  type ObstacleRect,
 } from "@/utils/edgeUtils"
 import { routeConflictsWithNeighborEdges } from "@/utils/geometry/orthogonalRouter"
+import type { ObstacleRect } from "@/utils/geometry/obstacles"
 
 /**
  * Everything the router needs to turn one edge's resolved endpoints and its

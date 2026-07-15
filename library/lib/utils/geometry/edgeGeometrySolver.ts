@@ -15,12 +15,12 @@ import {
   preserveOrthogonalEdgePoints,
   isFreeformEdgeAnchor,
   type FreeformEdgeAnchor,
-  type ObstacleRect,
 } from "@/utils/edgeUtils"
 import { getEdgeAnchorPoint } from "@/utils/connectionModes"
 import {
   getEdgeObstacles,
   getContainerBorderPolylines,
+  type ObstacleRect,
 } from "@/utils/geometry/obstacles"
 import { routeStepEdge } from "@/utils/geometry/edgeRoute"
 

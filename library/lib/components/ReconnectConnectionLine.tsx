@@ -18,8 +18,8 @@ import {
   getEdgeMarkerStyles,
   preserveOrthogonalEdgePoints,
   routeOrthogonalPath,
-  type ObstacleRect,
 } from "@/utils/edgeUtils"
+import type { ObstacleRect } from "@/utils/geometry/obstacles"
 import {
   getConnectionMode,
   getEdgeAnchorFromPoint,
