@@ -1,4 +1,4 @@
-import { EDGES, INTERFACE } from "@/constants"
+import { CANVAS, EDGES, INTERFACE } from "@/constants"
 import type { UMLDiagramType } from "@/types/DiagramType"
 import {
   adjustSourceCoordinates,
@@ -31,6 +31,7 @@ import {
   simplifyPoints,
   simplifySvgPath,
   stubsWouldOverlap,
+  getEffectiveStubLength,
 } from "@/utils/edgeUtils"
 import { ConnectionLineType, Position } from "@xyflow/react"
 import { describe, expect, it } from "vitest"
@@ -1079,7 +1080,9 @@ describe("preserveOrthogonalEdgePoints", () => {
     expectOrthogonalSegments(result)
   })
 
-  it("routes around stub collisions without shortening 30px stubs", () => {
+  it("draws a straight line between facing endpoints on a shared lane, however close", () => {
+    // Collinear stubs cannot fold back on each other, so proximity is irrelevant
+    // here — detouring two nodes that a straight line already connects is noise.
     const result = normalizeOrthogonalEdgePoints(
       [
         { x: 0, y: 200 },
@@ -1097,16 +1100,14 @@ describe("preserveOrthogonalEdgePoints", () => {
 
     expect(result).toEqual([
       { x: 0, y: 200 },
-      { x: 30, y: 200 },
-      { x: 30, y: 170 },
-      { x: 20, y: 170 },
-      { x: 20, y: 200 },
       { x: 50, y: 200 },
     ])
     expectOrthogonalSegments(result)
   })
 
-  it("prefers a Z-shape fallback for horizontal stub collisions when endpoints are vertically separated", () => {
+  it("shrinks both stubs to share the gap for a horizontal near-miss instead of doubling back", () => {
+    // 50px between facing endpoints: too tight for two 30px stubs, but a 25px
+    // stub on each side turns cleanly in the middle.
     const result = preserveOrthogonalEdgePoints(
       [
         { x: 0, y: 0 },
@@ -1124,10 +1125,8 @@ describe("preserveOrthogonalEdgePoints", () => {
 
     expect(result).toEqual([
       { x: 0, y: 0 },
-      { x: 30, y: 0 },
-      { x: 30, y: 150 },
-      { x: 20, y: 150 },
-      { x: 20, y: 300 },
+      { x: 25, y: 0 },
+      { x: 25, y: 300 },
       { x: 50, y: 300 },
     ])
     expectOrthogonalSegments(result)
@@ -1149,16 +1148,18 @@ describe("preserveOrthogonalEdgePoints", () => {
       Position.Left
     )
 
+    // One spine, and it lands on the 5px canvas grid — the same line a dragged
+    // bend would snap to (the exact half-gap, 27, would sit half a cell off).
     expect(result).toEqual([
       { x: 0, y: 0 },
-      { x: 27, y: 0 },
-      { x: 27, y: 300 },
+      { x: 25, y: 0 },
+      { x: 25, y: 300 },
       { x: 54, y: 300 },
     ])
     expectOrthogonalSegments(result)
   })
 
-  it("prefers a Z-shape fallback for vertical stub collisions when endpoints are horizontally separated", () => {
+  it("shrinks both stubs to share the gap for a vertical near-miss instead of doubling back", () => {
     const result = preserveOrthogonalEdgePoints(
       [
         { x: 300, y: 0 },
@@ -1176,11 +1177,52 @@ describe("preserveOrthogonalEdgePoints", () => {
 
     expect(result).toEqual([
       { x: 300, y: 0 },
-      { x: 300, y: 30 },
-      { x: 150, y: 30 },
-      { x: 150, y: 20 },
-      { x: 0, y: 20 },
+      { x: 300, y: 25 },
+      { x: 0, y: 25 },
       { x: 0, y: 50 },
+    ])
+    expectOrthogonalSegments(result)
+  })
+
+  it("routes cleanly right down to two minimum stubs meeting on one lane", () => {
+    // The tightest clean route there is: a 20px gap spends 10px of stub per side
+    // and both turn on the same lane. Anything looser must not detour either.
+    const result = normalizeOrthogonalEdgePoints(
+      [],
+      { x: 0, y: 0 },
+      { x: 2 * EDGES.MIN_STUB_LENGTH, y: 300 },
+      Position.Right,
+      Position.Left
+    )
+
+    expect(result).toEqual([
+      { x: 0, y: 0 },
+      { x: EDGES.MIN_STUB_LENGTH, y: 0 },
+      { x: EDGES.MIN_STUB_LENGTH, y: 300 },
+      { x: 2 * EDGES.MIN_STUB_LENGTH, y: 300 },
+    ])
+    expectOrthogonalSegments(result)
+  })
+
+  it("detours only once the stubs would genuinely cross", () => {
+    // Below 2 * MIN_STUB_LENGTH the two stubs overlap: there is no lane either
+    // can turn on, so the edge routes around instead of folding back. That is a
+    // single grid step of gap — the nodes are all but touching.
+    const result = normalizeOrthogonalEdgePoints(
+      [],
+      { x: 0, y: 0 },
+      { x: CANVAS.SNAP_TO_GRID_PX, y: 300 },
+      Position.Right,
+      Position.Left
+    )
+
+    expect(result).toEqual([
+      { x: 0, y: 0 },
+      { x: 30, y: 0 },
+      { x: 30, y: 150 },
+      { x: -25, y: 150 },
+      { x: -25, y: 300 },
+      { x: 5, y: 300 },
     ])
     expectOrthogonalSegments(result)
   })
@@ -1203,8 +1245,8 @@ describe("preserveOrthogonalEdgePoints", () => {
 
     expect(result).toEqual([
       { x: 300, y: 0 },
-      { x: 300, y: 27 },
-      { x: 0, y: 27 },
+      { x: 300, y: 25 },
+      { x: 0, y: 25 },
       { x: 0, y: 54 },
     ])
     expectOrthogonalSegments(result)
@@ -1300,13 +1342,36 @@ describe("preserveOrthogonalEdgePoints", () => {
     expectOrthogonalSegments(result)
   })
 
-  it("rejects release when the target stub would shrink below 30px", () => {
+  it("accepts a bend dragged right in to the node, down to the minimum stub", () => {
+    // STUB_LENGTH is what the router reaches for, not a cage: pulling this lane
+    // to 10px off the target is a legitimate tight layout and must stick.
     const releasedPoints = [
       { x: 0, y: 200 },
       { x: 30, y: 200 },
       { x: 30, y: 150 },
       { x: 190, y: 150 },
       { x: 190, y: 200 },
+      { x: 200, y: 200 },
+    ]
+
+    expect(
+      isInvalidOrthogonalEdgeRelease(
+        releasedPoints,
+        { x: 0, y: 200 },
+        { x: 200, y: 200 },
+        Position.Right,
+        Position.Left
+      )
+    ).toBe(false)
+  })
+
+  it("rejects release when a terminal stub drops under the minimum", () => {
+    const releasedPoints = [
+      { x: 0, y: 200 },
+      { x: 30, y: 200 },
+      { x: 30, y: 150 },
+      { x: 198, y: 150 },
+      { x: 198, y: 200 },
       { x: 200, y: 200 },
     ]
 
@@ -1330,12 +1395,13 @@ describe("preserveOrthogonalEdgePoints", () => {
       { x: 170, y: 200 },
       { x: 200, y: 200 },
     ]
+    // 2px of stub left: under the floor, so this one does snap back.
     const releasedPoints = [
       { x: 0, y: 200 },
       { x: 30, y: 200 },
       { x: 30, y: 150 },
-      { x: 190, y: 150 },
-      { x: 190, y: 200 },
+      { x: 198, y: 150 },
+      { x: 198, y: 200 },
       { x: 200, y: 200 },
     ]
 
@@ -1350,6 +1416,64 @@ describe("preserveOrthogonalEdgePoints", () => {
 
     expect(result).toEqual(lastValidPoints)
     expectOrthogonalSegments(result)
+  })
+
+  it("lets a router stub squeezed by a node drag grow back as the node parts", () => {
+    // Dragging a node in shrinks the stub to fit; dragging it back out must
+    // restore it. Otherwise one close pass would leave the edge cramped forever.
+    const source = { x: 0, y: 0 }
+    const squeezed = [
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+      { x: 10, y: 120 },
+      { x: 20, y: 120 },
+    ]
+
+    const target = { x: 90, y: 120 }
+    const roomyAgain = preserveOrthogonalEdgePoints(
+      squeezed,
+      source,
+      target,
+      Position.Right,
+      Position.Left
+    )
+
+    // 10px was exactly the stub the router drew for the old 20px gap, so it is
+    // the router's, and it lands back on the route the router draws for the gap
+    // the nodes have NOW — not pinned at the squeezed 10px, and not at some third
+    // length either. Re-routing an untouched edge reproduces the router exactly,
+    // which is what stops it drifting a little further on every node drag.
+    expect(roomyAgain).toEqual(
+      normalizeOrthogonalEdgePoints(
+        [],
+        source,
+        target,
+        Position.Right,
+        Position.Left
+      )
+    )
+    expect(roomyAgain[1].x).toBeGreaterThan(EDGES.MIN_STUB_LENGTH)
+  })
+
+  it("keeps a stub the user pulled in to the node across a re-render", () => {
+    // The re-pin that keeps stubs locked to their node must not quietly restore
+    // the preferred 30px length — that is what made a tightened bend spring back.
+    const tightened = [
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+      { x: 10, y: 120 },
+      { x: 200, y: 120 },
+    ]
+
+    const result = preserveOrthogonalEdgePoints(
+      tightened,
+      { x: 0, y: 0 },
+      { x: 200, y: 120 },
+      Position.Right,
+      Position.Left
+    )
+
+    expect(result).toEqual(tightened)
   })
 
   // Dragging a U's arm so the two parallel arms meet or cross is a deliberate
@@ -1412,7 +1536,7 @@ describe("preserveOrthogonalEdgePoints", () => {
   it("detects mirrored horizontal and vertical stub collisions", () => {
     expect(
       stubsWouldOverlap(
-        { x: 100, y: 0 },
+        { x: 100, y: 20 },
         { x: 50, y: 0 },
         Position.Left,
         Position.Right,
@@ -1421,7 +1545,7 @@ describe("preserveOrthogonalEdgePoints", () => {
     ).toBe(true)
     expect(
       stubsWouldOverlap(
-        { x: 0, y: 100 },
+        { x: 20, y: 100 },
         { x: 0, y: 50 },
         Position.Top,
         Position.Bottom,
@@ -1430,10 +1554,265 @@ describe("preserveOrthogonalEdgePoints", () => {
     ).toBe(true)
     expect(
       stubsWouldOverlap(
-        { x: 100, y: 0 },
+        { x: 100, y: 20 },
         { x: 0, y: 0 },
         Position.Left,
         Position.Right,
+        30
+      )
+    ).toBe(false)
+  })
+
+  // These three sweep the whole configuration space rather than a hand-picked
+  // case, because every routing bug found so far has been a *specific alignment*
+  // nobody thought to try — a lane landing on an endpoint's own line, a stub lane
+  // colliding with the target's column. Point cases cannot cover that; a sweep
+  // can. All three run over 16 source/target position pairs.
+  const POSITIONS = [
+    Position.Right,
+    Position.Left,
+    Position.Top,
+    Position.Bottom,
+  ]
+  const sweepRoutes = (
+    visit: (
+      route: IPoint[],
+      source: IPoint,
+      target: IPoint,
+      sourcePosition: Position,
+      targetPosition: Position
+    ) => string | null
+  ): string[] => {
+    const failures: string[] = []
+    for (const sourcePosition of POSITIONS) {
+      for (const targetPosition of POSITIONS) {
+        for (let dx = -160; dx <= 160; dx += 5) {
+          for (let dy = -160; dy <= 160; dy += 5) {
+            if (dx === 0 && dy === 0) continue
+            const source = { x: 0, y: 0 }
+            const target = { x: dx, y: dy }
+            const route = normalizeOrthogonalEdgePoints(
+              [],
+              source,
+              target,
+              sourcePosition,
+              targetPosition
+            )
+            const failure = visit(
+              route,
+              source,
+              target,
+              sourcePosition,
+              targetPosition
+            )
+            if (failure) {
+              failures.push(
+                `${sourcePosition}->${targetPosition} d=(${dx},${dy}): ${failure}`
+              )
+            }
+          }
+        }
+      }
+    }
+    return failures
+  }
+
+  // A property test that routes hundreds of layouts through the full search. It
+  // finishes in about a second and a half on its own; the default 5s budget leaves
+  // it nothing to spare when the suite runs it alongside everything else, and a
+  // test that fails on a busy machine and passes on a quiet one teaches people to
+  // re-run rather than to look.
+  it(
+    "never routes an edge that its own validator would reject",
+    { timeout: 30_000 },
+    () => {
+      // A route the editor cannot accept is a route the user cannot bend: the first
+      // drag is judged invalid and snaps straight back. The router must never emit
+      // one. (This caught a route that overshot its target and returned along the
+      // same line, leaving the target stub pointing backwards.)
+      const failures = sweepRoutes((route, s, t, sp, tp) =>
+        isInvalidOrthogonalEdgeRelease(route, s, t, sp, tp)
+          ? route.map((p) => `${p.x},${p.y}`).join(" ")
+          : null
+      )
+
+      expect(failures.slice(0, 5)).toEqual([])
+    }
+  )
+
+  it("never doubles a route back along a line it has already drawn", () => {
+    // Retracing reads as an edge drawn on top of itself, and it is what happens
+    // when a lane gets snapped onto an endpoint's own coordinate.
+    const failures = sweepRoutes((route) => {
+      for (let i = 1; i < route.length - 1; i++) {
+        const previous = route[i - 1]
+        const current = route[i]
+        const next = route[i + 1]
+        const reversesX =
+          previous.y === current.y &&
+          current.y === next.y &&
+          (current.x - previous.x) * (next.x - current.x) < 0
+        const reversesY =
+          previous.x === current.x &&
+          current.x === next.x &&
+          (current.y - previous.y) * (next.y - current.y) < 0
+        if (reversesX || reversesY) {
+          return route.map((p) => `${p.x},${p.y}`).join(" ")
+        }
+      }
+      return null
+    })
+
+    expect(failures.slice(0, 5)).toEqual([])
+  })
+
+  it("re-routes an untouched edge to exactly where it already is", () => {
+    // preserve() runs on every render and every node drag. If it does not return
+    // the router's own route unchanged, an edge nobody touched creeps a little
+    // further on each drag — the geometry equivalent of a rounding leak.
+    const failures = sweepRoutes((route, s, t, sp, tp) => {
+      const again = preserveOrthogonalEdgePoints(route, s, t, sp, tp)
+      const before = route.map((p) => `${p.x},${p.y}`).join(" ")
+      const after = again.map((p) => `${p.x},${p.y}`).join(" ")
+      return before === after ? null : `${before}  =>  ${after}`
+    })
+
+    expect(failures.slice(0, 5)).toEqual([])
+  })
+
+  it("keeps a lane clear of a stub it runs alongside as a node is dragged past", () => {
+    // Reported from a real diagram: an edge leaving a class's right side and
+    // looping over the top into another class's top handle. Dragging the target
+    // class down brings its stub lane onto the SOURCE handle's own line, and the
+    // router used to shove the lane aside by a single grid cell — leaving the
+    // return run 5px above the stub it had just drawn, with a sliver between the
+    // two. It has to keep real clearance, and stay on the side it was already on
+    // rather than flipping under the source (and through the node it went around).
+    const source = { x: 525, y: 335 }
+    const stored = [
+      { x: 525, y: 335 },
+      { x: 555, y: 335 },
+      { x: 555, y: 295 },
+      { x: 270, y: 295 },
+      { x: 270, y: 325 },
+    ]
+
+    for (let dragged = 0; dragged <= 120; dragged += 5) {
+      const target = { x: 270, y: 325 + dragged }
+      const route = preserveOrthogonalEdgePoints(
+        stored,
+        source,
+        target,
+        Position.Right,
+        Position.Top
+      )
+
+      const bridge = route[route.length - 3]
+      const clearance = Math.abs(bridge.y - source.y)
+      expect(
+        clearance,
+        `dragged ${dragged}px: bridge at y=${bridge.y}`
+      ).toBeGreaterThanOrEqual(EDGES.STUB_LENGTH)
+      // And it stays above the source's line, where it started — never flipping
+      // under it, which would swing the edge through the source node's body.
+      expect(bridge.y, `dragged ${dragged}px`).toBeLessThan(source.y)
+    }
+  })
+
+  it("survives two anchors landing exactly on top of each other", () => {
+    // A node dropped onto another used to dedupe the route down to a single point,
+    // and everything downstream reads a source AND a target off it.
+    const point = { x: 100, y: 30 }
+
+    expect(
+      normalizeOrthogonalEdgePoints(
+        [],
+        point,
+        { ...point },
+        Position.Right,
+        Position.Left
+      )
+    ).toHaveLength(2)
+    expect(() =>
+      preserveOrthogonalEdgePoints(
+        [{ ...point }],
+        point,
+        { ...point },
+        Position.Right,
+        Position.Left
+      )
+    ).not.toThrow()
+  })
+
+  it("puts every router-placed bend on the canvas grid", () => {
+    // Node borders are grid-snapped, so every corner the router places must land
+    // on the grid too — otherwise the first drag of that bend jumps to it.
+    const gaps = [20, 25, 30, 35, 45, 55, 65, 100, 137]
+    const perpendicularOffsets = [60, 63, 145]
+
+    for (const gap of gaps) {
+      for (const perpendicular of perpendicularOffsets) {
+        const source = { x: 0, y: 0 }
+        const target = { x: gap, y: perpendicular }
+        const result = normalizeOrthogonalEdgePoints(
+          [],
+          source,
+          target,
+          Position.Right,
+          Position.Left
+        )
+
+        // The corners carry their endpoint's own perpendicular coordinate (they
+        // sit on the handle), so only the lane coordinate is the router's to
+        // place: x here, since the endpoints face along x.
+        const laneXs = result.slice(1, -1).map((point) => point.x)
+        for (const laneX of laneXs) {
+          expect(
+            laneX % CANVAS.SNAP_TO_GRID_PX,
+            `gap ${gap}, lane x ${laneX}`
+          ).toBe(0)
+        }
+      }
+    }
+  })
+
+  it("spends half the gap on each stub once a full stub no longer fits", () => {
+    const stubFor = (gap: number) =>
+      getEffectiveStubLength(
+        { x: 0, y: 0 },
+        { x: gap, y: 100 },
+        Position.Right,
+        Position.Left
+      )
+
+    // Roomy: both stubs get the full length.
+    expect(stubFor(200)).toBe(EDGES.STUB_LENGTH)
+    expect(stubFor(2 * EDGES.STUB_LENGTH)).toBe(EDGES.STUB_LENGTH)
+    // Tight: each side takes half the gap, so the corners still meet.
+    expect(stubFor(50)).toBe(25)
+    expect(stubFor(40)).toBe(20)
+    // Never below the floor — beyond it the edge detours instead.
+    expect(stubFor(10)).toBe(EDGES.MIN_STUB_LENGTH)
+  })
+
+  it("never reports an overlap for facing endpoints on a shared lane", () => {
+    // The straight line between them has no arms that could collapse, so no
+    // amount of proximity forces a detour.
+    expect(
+      stubsWouldOverlap(
+        { x: 100, y: 0 },
+        { x: 50, y: 0 },
+        Position.Left,
+        Position.Right,
+        30
+      )
+    ).toBe(false)
+    expect(
+      stubsWouldOverlap(
+        { x: 0, y: 100 },
+        { x: 0, y: 50 },
+        Position.Top,
+        Position.Bottom,
         30
       )
     ).toBe(false)

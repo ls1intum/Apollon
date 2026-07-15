@@ -1,10 +1,5 @@
 import { useCallback, useMemo, useEffect, useRef, useState } from "react"
-import {
-  getSmoothStepPath,
-  Position,
-  useStore,
-  useReactFlow,
-} from "@xyflow/react"
+import { Position, useReactFlow, useStore, type Node } from "@xyflow/react"
 import { EDGES } from "@/constants"
 import {
   adjustSourceCoordinates,
@@ -12,24 +7,23 @@ import {
   getPositionOnCanvas,
   isParentNodeType,
 } from "@/utils"
-import {
-  IPoint,
-  pointsToSvgPath,
-  tryFindStraightPath,
-} from "../edges/Connection"
+import { IPoint, tryFindStraightPath } from "../edges/Connection"
 import {
   useDiagramStore,
   useMetadataStore,
   useEdgeGeometryStore,
 } from "@/store/context"
 import { useShallow } from "zustand/shallow"
+import { routeConflictsWithNeighborEdges } from "@/utils/geometry/orthogonalRouter"
+import { useEdgeRoutingContext } from "./useEdgeRoutingContext"
 import {
   getEdgeMarkerStyles,
-  simplifySvgPath,
+  routeOrthogonalPath,
   removeDuplicatePoints,
-  parseSvgPath,
   getMarkerSegmentPath,
   preserveOrthogonalEdgePoints,
+  getBendLaneBounds,
+  routeCrossesHardObstacle,
   normalizeOrthogonalEdgePoints,
   resolveOrthogonalEdgeReleasePoints,
   isInvalidOrthogonalEdgeRelease,
@@ -52,7 +46,6 @@ import {
   applyTerminalSegmentBend,
   getBendableSegments,
   computeToolbarPosition,
-  isLengthEditableAtZoom,
 } from "@/utils/geometry/bendHandles"
 import {
   getMidSegment,
@@ -157,12 +150,10 @@ export const useStepPathEdge = ({
   const endpointDragCommitRef = useRef<EndpointDragCommit | null>(null)
 
   const isDiagramModifiable = useDiagramModifiable()
-  const zoom = useStore((state) => state.transform[2])
   const isReconnecting = useMetadataStore(
     (state) => state.reconnectPreviewEdgeId === id
   )
-  const { getIntersectingNodes, getNode, getNodes, screenToFlowPosition } =
-    useReactFlow()
+  const { getIntersectingNodes, getNode, screenToFlowPosition } = useReactFlow()
 
   const [draggingHandle, setDraggingHandle] = useState<BendHandle | null>(null)
   // While a bend handle is being dragged we render from this live geometry
@@ -245,7 +236,17 @@ export const useStepPathEdge = ({
     offset = 0,
   } = getEdgeMarkerStyles(type)
   const padding = markerPadding ?? EDGES.MARKER_PADDING
-  const allNodes = getNodes()
+  // The store's array, NOT `getNodes()`. React Flow's `getNodes()` is
+  // `store.getState().nodes.map((n) => ({ ...n }))` — a fresh array of freshly
+  // cloned nodes on every call — so an edge that read it got a new `allNodes`
+  // identity on every render, forever, and every memo below keyed on it (the
+  // obstacles, the neighbours, the endpoint positions) was dead on arrival: they
+  // recomputed on every render of every edge, including renders that changed
+  // nothing about the geometry (a selection, a hover, a label edit).
+  //
+  // Subscribing to the store's own array gives a reference that changes only when
+  // the nodes actually change, which is what the memos were written to assume.
+  const allNodes = useStore((state) => state.nodes) as Node[]
   const sourceNode =
     allNodes.find((node) => node.id === source) ?? getNode(source)
   const targetNode =
@@ -368,87 +369,124 @@ export const useStepPathEdge = ({
     sourcePosition,
     sourceConnectionPointPadding
   )
-  const basePath = useMemo(() => {
-    if (!enableStraightPath) {
-      const [edgePath] = getSmoothStepPath({
-        sourceX: adjustedSourceCoordinates.sourceX,
-        sourceY: adjustedSourceCoordinates.sourceY,
-        sourcePosition,
-        targetX: adjustedTargetCoordinates.targetX,
-        targetY: adjustedTargetCoordinates.targetY,
-        targetPosition,
-        borderRadius: EDGES.STEP_BORDER_RADIUS,
-        offset: 30,
-      })
-      return edgePath
+  // What this edge must not run through, and what it must not be drawn on top
+  // of. Shared with the drag preview so the line you drag is the line you get.
+  const { obstacles: routeObstacles, neighborEdges: routingNeighborEdges } =
+    useEdgeRoutingContext({
+      selfId: id,
+      nodes: allNodes,
+      sourceId: source,
+      targetId: target,
+      sourcePoint: {
+        x: adjustedSourceCoordinates.sourceX,
+        y: adjustedSourceCoordinates.sourceY,
+      },
+      targetPoint: {
+        x: adjustedTargetCoordinates.targetX,
+        y: adjustedTargetCoordinates.targetY,
+      },
+    })
+
+  // The DEFAULT route for an edge nobody has edited. This used to be raw
+  // getSmoothStepPath with a hardcoded 30px offset, which meant every fix made
+  // to the router — grid alignment, stub clearance, not drawing over itself, and
+  // now routing around nodes — applied only to edges the user had already bent.
+  // The auto routes, the ones people actually look at, went through none of it.
+  const computedPoints = useMemo(() => {
+    const routeSource = {
+      x: adjustedSourceCoordinates.sourceX,
+      y: adjustedSourceCoordinates.sourceY,
+    }
+    const routeTarget = {
+      x: adjustedTargetCoordinates.targetX,
+      y: adjustedTargetCoordinates.targetY,
     }
 
-    const straightPathPoints = tryFindStraightPath(
-      {
-        position: { x: sourceAbsolutePosition.x, y: sourceAbsolutePosition.y },
-        width: sourceRect?.width ?? sourceNode?.width ?? 100,
-        height: sourceRect?.height ?? sourceNode?.height ?? 160,
-        direction: sourcePosition,
-      },
-      {
-        position: { x: targetAbsolutePosition.x, y: targetAbsolutePosition.y },
-        width: targetRect?.width ?? targetNode?.width ?? 100,
-        height: targetRect?.height ?? targetNode?.height ?? 160,
-        direction: targetPosition,
-      },
-      padding,
-      {
-        sourceX: roundedSourceX,
-        sourceY: roundedSourceY,
-        targetX: roundedTargetX,
-        targetY: roundedTargetY,
+    if (enableStraightPath) {
+      const straightPathPoints = tryFindStraightPath(
+        {
+          position: {
+            x: sourceAbsolutePosition.x,
+            y: sourceAbsolutePosition.y,
+          },
+          width: sourceRect?.width ?? sourceNode?.width ?? 100,
+          height: sourceRect?.height ?? sourceNode?.height ?? 160,
+          direction: sourcePosition,
+        },
+        {
+          position: {
+            x: targetAbsolutePosition.x,
+            y: targetAbsolutePosition.y,
+          },
+          width: targetRect?.width ?? targetNode?.width ?? 100,
+          height: targetRect?.height ?? targetNode?.height ?? 160,
+          direction: targetPosition,
+        },
+        padding,
+        {
+          sourceX: roundedSourceX,
+          sourceY: roundedSourceY,
+          targetX: roundedTargetX,
+          targetY: roundedTargetY,
+        }
+      )
+      // A straight shot is only allowed when it runs clear of every solid node
+      // AND is not drawn on top of / across a neighbouring edge. Two aligned
+      // classes with a third dragged between them still need the orthogonal
+      // router to step around it; two associations between the same pair need it
+      // to spread them onto separate lanes.
+      if (
+        straightPathPoints !== null &&
+        !routeCrossesHardObstacle(straightPathPoints, routeObstacles) &&
+        !routeConflictsWithNeighborEdges(
+          straightPathPoints,
+          routingNeighborEdges
+        )
+      ) {
+        return removeDuplicatePoints(straightPathPoints)
       }
-    )
-
-    if (straightPathPoints !== null) {
-      return pointsToSvgPath(straightPathPoints)
-    } else {
-      const [edgePath] = getSmoothStepPath({
-        sourceX: adjustedSourceCoordinates.sourceX,
-        sourceY: adjustedSourceCoordinates.sourceY,
-        sourcePosition,
-        targetX: adjustedTargetCoordinates.targetX,
-        targetY: adjustedTargetCoordinates.targetY,
-        targetPosition,
-        borderRadius: EDGES.STEP_BORDER_RADIUS,
-        offset: 30,
-      })
-      return edgePath
     }
+
+    return routeOrthogonalPath(
+      routeSource,
+      routeTarget,
+      sourcePosition,
+      targetPosition,
+      routeObstacles,
+      routingNeighborEdges
+    )
+    // `routeObstacles` and `routingNeighborEdges` are stabilised by content in
+    // useEdgeRoutingContext, so this memo re-runs the search only when the world
+    // around the edge (or its own endpoints) actually changed — no digest string,
+    // and honest deps the React Compiler can preserve.
   }, [
     enableStraightPath,
-    sourceAbsolutePosition,
-    targetAbsolutePosition,
-    sourceNode,
-    sourceRect?.width,
-    sourceRect?.height,
-    targetNode,
-    targetRect?.width,
-    targetRect?.height,
-    sourcePosition,
-    targetPosition,
-    roundedSourceX,
-    roundedSourceY,
-    roundedTargetX,
-    roundedTargetY,
     adjustedSourceCoordinates.sourceX,
     adjustedSourceCoordinates.sourceY,
     adjustedTargetCoordinates.targetX,
     adjustedTargetCoordinates.targetY,
+    sourcePosition,
+    targetPosition,
     padding,
+    roundedSourceX,
+    roundedSourceY,
+    roundedTargetX,
+    roundedTargetY,
+    sourceAbsolutePosition.x,
+    sourceAbsolutePosition.y,
+    targetAbsolutePosition.x,
+    targetAbsolutePosition.y,
+    sourceRect?.width,
+    sourceRect?.height,
+    sourceNode?.width,
+    sourceNode?.height,
+    targetRect?.width,
+    targetRect?.height,
+    targetNode?.width,
+    targetNode?.height,
+    routeObstacles,
+    routingNeighborEdges,
   ])
-
-  const computedPoints = useMemo(() => {
-    const simplifiedPath = simplifySvgPath(basePath)
-    const parsed = parseSvgPath(simplifiedPath)
-    const result = removeDuplicatePoints(parsed)
-    return result
-  }, [basePath])
 
   const hasStoredManualPoints = Boolean(data?.points && data.points.length > 0)
   const hasLocalManualPoints = customPoints.length > 0
@@ -599,68 +637,30 @@ export const useStepPathEdge = ({
     return `${currentPath} ${markerSegmentPath}`
   }, [currentPath, markerSegmentPath])
 
-  // A segment needs room for the handle (which grows with zoom past 1x) plus
-  // corner clearance on both sides. Using the handle's actual on-screen size
-  // keeps a grown handle from overflowing a short segment when zoomed in.
-  const minSegmentScreenLength =
-    EDGES.BEND_HANDLE_SCREEN_LENGTH_PX * Math.max(1, zoom) +
-    2 * EDGES.BEND_HANDLE_CORNER_CLEARANCE_PX
-
   const bendHandles = useMemo(() => {
     if (!allowMidpointDragging) return []
     return getBendableSegments(
       renderPoints,
       renderSourcePosition,
       renderTargetPosition,
-      EDGES.BEND_HANDLE_SAFE_AREA_PX,
-      minSegmentScreenLength,
-      zoom
+      EDGES.BEND_HANDLE_SAFE_AREA_PX
     )
   }, [
     renderPoints,
     allowMidpointDragging,
     renderSourcePosition,
     renderTargetPosition,
-    minSegmentScreenLength,
-    zoom,
   ])
 
-  const canEditEndpoint = useMemo(() => {
-    // Decided from the COMMITTED points, never the live drag preview, so an
-    // endpoint's editability can't flicker mid-bend (the preview can transiently
-    // drop below the handle threshold).
-    // Never strand an edge: if it is too short to offer a bend handle, the
-    // endpoints must stay draggable so the user can always reshape it by
-    // reconnecting.
-    const committedBendableCount = allowMidpointDragging
-      ? getBendableSegments(
-          activePoints,
-          sourcePosition,
-          targetPosition,
-          EDGES.BEND_HANDLE_SAFE_AREA_PX,
-          minSegmentScreenLength,
-          zoom
-        ).length
-      : 0
-    if (committedBendableCount === 0) return true
-
-    const canvasLength = activePoints.reduce((length, point, index) => {
-      if (index === 0) return length
-      const previous = activePoints[index - 1]
-      return (
-        length + Math.abs(point.x - previous.x) + Math.abs(point.y - previous.y)
-      )
-    }, 0)
-
-    return isLengthEditableAtZoom(canvasLength, EDGES.BEND_MIN_LENGTH, zoom)
-  }, [
-    activePoints,
-    allowMidpointDragging,
-    sourcePosition,
-    targetPosition,
-    minSegmentScreenLength,
-    zoom,
-  ])
+  // Endpoints are ALWAYS draggable. They used to switch off on any edge shorter
+  // than 100px, which produced a capability cliff nobody could explain from the
+  // canvas: a short edge could be bent but not reconnected, and a short STRAIGHT
+  // edge — no bend handles by nature — could not be edited at all. The rule was
+  // really guarding against the two endpoint hit targets overlapping each other,
+  // and that is now handled geometrically: each endpoint owns half the run
+  // between them (see getEndpointRun), so they cannot steal each other's clicks
+  // however close the nodes get.
+  const canEditEndpoint = true
 
   // The mid-segment midpoint + orientation, derived synchronously and purely
   // from the polyline (no DOM measurement). Computed from renderPoints (pre
@@ -784,6 +784,19 @@ export const useStepPathEdge = ({
         y: adjustedTargetCoordinates.targetY,
       }
 
+      // The one degree of freedom this drag has, and how far it may travel. The
+      // lane is clamped to this on every move, so the released geometry is legal
+      // by construction and nothing has to be vetoed (and snapped back) later.
+      const laneBounds = getBendLaneBounds(
+        dragBaseline,
+        handle.segmentIndex,
+        handle.orientation,
+        dragSourcePoint,
+        dragTargetPoint,
+        sourcePosition,
+        targetPosition
+      )
+
       const handlePointerMove = (e: PointerEvent) => {
         const activeHandle = draggingHandleRef.current
         if (!activeHandle) return
@@ -797,13 +810,18 @@ export const useStepPathEdge = ({
         const rawY = flowPos.y - dragOffsetRef.current.y
 
         const grid = EDGES.BEND_SNAP_GRID_PX
-        const snappedX = Math.round(rawX / grid) * grid
-        const snappedY = Math.round(rawY / grid) * grid
+        // Snap to the grid first, then clamp into the legal interval: the lane
+        // tracks the cursor and comes to rest against the wall.
+        const toLane = (value: number): number =>
+          Math.min(
+            Math.max(Math.round(value / grid) * grid, laneBounds.min),
+            laneBounds.max
+          )
 
         const delta: IPoint =
           activeHandle.orientation === "H"
-            ? { x: 0, y: snappedY - activeHandle.position.y }
-            : { x: snappedX - activeHandle.position.x, y: 0 }
+            ? { x: 0, y: toLane(rawY) - activeHandle.position.y }
+            : { x: toLane(rawX) - activeHandle.position.x, y: 0 }
 
         const basePoints = dragPointsRef.current
         const newPoints =
@@ -1178,6 +1196,7 @@ export const useStepPathEdge = ({
       getNodeRect,
       hasManualPoints,
       id,
+      padding,
       screenToFlowPosition,
       setCustomPoints,
       setEdges,

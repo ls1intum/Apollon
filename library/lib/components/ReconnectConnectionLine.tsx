@@ -2,13 +2,13 @@ import { useMemo } from "react"
 import {
   ConnectionLineComponentProps,
   ConnectionLineType,
-  getSmoothStepPath,
   getStraightPath,
   Position,
   type XYPosition,
 } from "@xyflow/react"
 import { CANVAS, EDGES } from "@/constants"
-import { pointsToSvgPath } from "@/edges/Connection"
+import { pointsToSvgPath, type IPoint } from "@/edges/Connection"
+import { useEdgeRoutingContext } from "@/hooks/useEdgeRoutingContext"
 import { useDiagramStore, useMetadataStore } from "@/store/context"
 import { useFreeformDropTarget } from "@/hooks/useFreeformDropTarget"
 import { useShallow } from "zustand/shallow"
@@ -17,6 +17,8 @@ import {
   adjustTargetCoordinates,
   getEdgeMarkerStyles,
   preserveOrthogonalEdgePoints,
+  routeOrthogonalPath,
+  type ObstacleRect,
 } from "@/utils/edgeUtils"
 import {
   getConnectionMode,
@@ -33,37 +35,46 @@ const GHOST_DASH = "6 5"
 // ~10px primary dot marking the connection point.
 const GHOST_SNAP_CIRCLE_RADIUS = 5
 
-const getFallbackConnectionPath = (
+/**
+ * The ghost's path for a connection being drawn.
+ *
+ * This routes through exactly the same function the committed edge does, with
+ * the same obstacles and the same neighbouring edges. It used to be a raw
+ * `getSmoothStepPath` with a hard-coded 30px offset — which meant the preview
+ * knew nothing about the nodes in its way, the margins it should keep, or the
+ * edges it should not cross. You dragged one line and got a different one, and
+ * the difference grew with every improvement made to the real router. A preview
+ * that lies about the result is worse than no preview at all.
+ */
+const getConnectionPreviewPath = (
   connectionLineType: ConnectionLineType,
-  fromX: number,
-  fromY: number,
-  toX: number,
-  toY: number,
+  from: IPoint,
+  to: IPoint,
   fromPosition: Position,
-  toPosition: Position
+  toPosition: Position,
+  obstacles: readonly ObstacleRect[],
+  neighborEdges: readonly IPoint[][]
 ): string => {
   if (connectionLineType === ConnectionLineType.Straight) {
     const [path] = getStraightPath({
-      sourceX: fromX,
-      sourceY: fromY,
-      targetX: toX,
-      targetY: toY,
+      sourceX: from.x,
+      sourceY: from.y,
+      targetX: to.x,
+      targetY: to.y,
     })
     return path
   }
 
-  const [path] = getSmoothStepPath({
-    sourceX: fromX,
-    sourceY: fromY,
-    sourcePosition: fromPosition,
-    targetX: toX,
-    targetY: toY,
-    targetPosition: toPosition,
-    borderRadius: EDGES.STEP_BORDER_RADIUS,
-    offset: 30,
-  })
-
-  return path
+  return pointsToSvgPath(
+    routeOrthogonalPath(
+      from,
+      to,
+      fromPosition,
+      toPosition,
+      obstacles,
+      neighborEdges
+    )
+  )
 }
 
 export const ReconnectConnectionLine = ({
@@ -100,66 +111,88 @@ export const ReconnectConnectionLine = ({
   // Resolve the drop target the same way the connection commit does, so the
   // preview snaps exactly where the edge attaches on release.
   const resolveDropTarget = useFreeformDropTarget()
+  const allNodes = useDiagramStore((state) => state.nodes)
+
+  // Where a NEW connection currently starts and ends. Resolved before the route
+  // is computed, because the router has to be told what the world looks like
+  // around those two points — and a hook cannot be called from inside the memo
+  // that used to do all of this at once.
+  const newConnection = useMemo(() => {
+    const snap = (v: number) =>
+      Math.round(v / CANVAS.SNAP_TO_GRID_PX) * CANVAS.SNAP_TO_GRID_PX
+    const pointer: XYPosition = { x: snap(toX), y: snap(toY) }
+
+    const target = resolveDropTarget(pointer, fromNode?.id)
+    // The resolver falls back to the source node when nothing else is under the
+    // pointer (a drop on your own body becomes a self-loop); the ghost never
+    // previews that, so a drag near the source stays gated.
+    const hit = target && target.id !== fromNode?.id ? target : null
+    const anchor = hit
+      ? getEdgeAnchorFromPoint(hit.type, pointer, hit.rect)
+      : null
+
+    const snapped =
+      hit && anchor
+        ? {
+            ...getEdgeAnchorPoint(hit.type, hit.rect, anchor),
+            // Only the oval attaches purely via the freeform path (no native
+            // handle circles); other shapes get React Flow's own handle
+            // highlights, so a second circle here could drift from a
+            // handle-snapped drop.
+            showSnapCircle: getConnectionMode(hit.type) === "ellipse",
+            id: hit.id,
+          }
+        : null
+
+    const draggedFar =
+      Math.hypot(toX - fromX, toY - fromY) >= GHOST_MIN_DRAG_DISTANCE_PX
+
+    return {
+      from: { x: fromX, y: fromY },
+      to: snapped ? snapped.point : pointer,
+      toPosition: snapped ? snapped.position : toPosition,
+      targetId: snapped?.id,
+      snapPoint: snapped?.showSnapCircle ? snapped.point : null,
+      visible: draggedFar || snapped !== null,
+    }
+  }, [resolveDropTarget, fromNode?.id, fromX, fromY, toX, toY, toPosition])
+
+  // The SAME world the committed edge is routed against: the nodes it must not
+  // plough through, its own margins, the container frames it must not trace, and
+  // the edges it must not be drawn on top of. A new connection has no id yet, so
+  // it yields to every edge already on the canvas.
+  const { obstacles, neighborEdges } = useEdgeRoutingContext({
+    selfId: undefined,
+    nodes: allNodes,
+    sourceId: fromNode?.id ?? "",
+    targetId: newConnection.targetId ?? "",
+    sourcePoint: newConnection.from,
+    targetPoint: newConnection.to,
+  })
 
   const path = useMemo(() => {
-    // Snap a pointer to the freeform border point of the node it would attach
-    // to; null over empty canvas or only the source node.
-    const snapToNodeUnder = (
-      pointer: XYPosition
-    ): {
-      point: XYPosition
-      position: Position
-      showSnapCircle: boolean
-    } | null => {
-      const target = resolveDropTarget(pointer, fromNode?.id)
-      // The resolver falls back to the source node when nothing else is under
-      // the pointer (a drop on your own body becomes a self-loop); the ghost
-      // never previews that, so a drag near the source stays gated.
-      if (!target || target.id === fromNode?.id) return null
-      // Shape-aware and shared with the commit, so the preview lands on the
-      // node's real shape (oval curve, diamond vertex, interface centre, …).
-      const anchor = getEdgeAnchorFromPoint(target.type, pointer, target.rect)
-      if (!anchor) return null // node is not a connection target (mode "none")
-      return {
-        ...getEdgeAnchorPoint(target.type, target.rect, anchor),
-        // Only the oval attaches purely via the freeform path (no native handle
-        // circles); other shapes get React Flow's own handle highlights, so a
-        // second circle here could drift from a handle-snapped drop.
-        showSnapCircle: getConnectionMode(target.type) === "ellipse",
-      }
-    }
-
     if (
       !previewEdge ||
       !reconnectPreviewHandleType ||
       reconnectPreviewBasePoints.length < 2
     ) {
       // New connection — hidden until dragged clear of the source, or already
-      // hovering a node (see GHOST_MIN_DRAG_DISTANCE_PX). Grid-snap the pointer
-      // so the preview lands on the same point the commit does (useConnect
-      // resolves the drop through the editor's grid snapping too).
-      const snap = (v: number) =>
-        Math.round(v / CANVAS.SNAP_TO_GRID_PX) * CANVAS.SNAP_TO_GRID_PX
-      const pointer: XYPosition = { x: snap(toX), y: snap(toY) }
-      const snapped = snapToNodeUnder(pointer)
-      const draggedFar =
-        Math.hypot(toX - fromX, toY - fromY) >= GHOST_MIN_DRAG_DISTANCE_PX
-      if (!draggedFar && !snapped) return { d: "", snapPoint: null }
+      // hovering a node (see GHOST_MIN_DRAG_DISTANCE_PX).
+      if (!newConnection.visible) return { d: "", snapPoint: null }
 
-      const end = snapped ?? { point: pointer, position: toPosition }
       return {
-        d: getFallbackConnectionPath(
+        d: getConnectionPreviewPath(
           connectionLineType,
-          fromX,
-          fromY,
-          end.point.x,
-          end.point.y,
+          newConnection.from,
+          newConnection.to,
           fromPosition,
-          end.position
+          newConnection.toPosition,
+          obstacles,
+          neighborEdges
         ),
         // Snap circle marks the live attach point: the edge connects
         // continuously at any angle on the curve, not just at fixed handles.
-        snapPoint: snapped?.showSnapCircle ? snapped.point : null,
+        snapPoint: newConnection.snapPoint,
       }
     }
 
@@ -209,17 +242,18 @@ export const ReconnectConnectionLine = ({
     return { d: pointsToSvgPath(reconnectPreviewPoints), snapPoint: null }
   }, [
     connectionLineType,
-    fromNode,
     fromPosition,
     fromX,
     fromY,
     previewEdge,
     reconnectPreviewBasePoints,
     reconnectPreviewHandleType,
-    resolveDropTarget,
     toPosition,
     toX,
     toY,
+    newConnection,
+    obstacles,
+    neighborEdges,
   ])
 
   const edgeStrokeColor =

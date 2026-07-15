@@ -131,6 +131,7 @@
     "babel-plugin-react-compiler": "catalog:",
     "eslint": "catalog:",
     "eslint-plugin-react-hooks": "catalog:",
+    "fast-check": "catalog:",
     "globals": "catalog:",
     "jsdom": "catalog:",
     "react": "catalog:",

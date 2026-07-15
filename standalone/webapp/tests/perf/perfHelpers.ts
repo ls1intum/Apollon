@@ -14,6 +14,10 @@ export type PerfSnapshot = {
   encodedDocBytes: number
   nodesMapSize: number
   storeNodeWrites: number
+  edgeSearches: number
+  edgeSearchExpansions: number
+  edgeSearchesMaxExpansions: number
+  edgeSearchesAbandoned: number
 }
 
 export function loadFixture(name: string): Record<string, unknown> {

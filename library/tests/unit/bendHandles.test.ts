@@ -6,7 +6,6 @@ import {
   getBendHandlePosition,
   getBendableSegments,
   getSegmentKind,
-  isLengthEditableAtZoom,
 } from "@/utils/geometry/bendHandles"
 import { EDGES } from "@/constants"
 
@@ -23,7 +22,7 @@ describe("bend handle utilities", () => {
     expect(getSegmentKind(1, 4)).toBe("inner")
   })
 
-  it("offers a bend handle on a segment with enough on-screen room", () => {
+  it("offers a bend handle on a segment with room", () => {
     const points = [
       { x: 0, y: 0 },
       { x: 200, y: 0 },
@@ -33,8 +32,7 @@ describe("bend handle utilities", () => {
       points,
       Position.Right,
       Position.Left,
-      stubLength,
-      100
+      stubLength
     )
 
     expect(handles).toHaveLength(1)
@@ -44,117 +42,106 @@ describe("bend handle utilities", () => {
     expect(handles[0].position).toEqual({ x: 100, y: 0 })
   })
 
-  it("treats the minimum edit length as zoom-aware screen length", () => {
-    expect(isLengthEditableAtZoom(90, 100, 1)).toBe(false)
-    expect(isLengthEditableAtZoom(90, 100, 2)).toBe(true)
-    expect(isLengthEditableAtZoom(100, 100, 1)).toBe(true)
-  })
-
-  it("reveals a bend handle on a short segment once zoom gives it enough on-screen length", () => {
-    // 40px bendable segment (no safe area here): below the 54px on-screen
-    // budget at 1x, above it at 2x. Availability is judged on the *on-screen*
-    // length, so zooming in reveals handles and never hides them.
-    const points = [
+  it("gives EVERY segment a handle, however short", () => {
+    // Handles used to be deleted when a fixed-size 34px pill would not fit,
+    // which left short edges with nothing to grab — and, since a terminal
+    // segment also gives up 25px of safe area, made the default 30px stub
+    // unbendable at ANY zoom (25 + 34 > 30 is arithmetic, not a threshold).
+    // Availability is no longer a function of length: the renderer shrinks the
+    // handle, and the drag is kept legal by the lane clamp instead.
+    const shortSegment = [
       { x: 0, y: 0 },
-      { x: 40, y: 0 },
+      { x: 12, y: 0 },
     ]
-    const minScreen = 54
-
     expect(
       getBendableSegments(
-        points,
+        shortSegment,
         Position.Right,
         Position.Left,
-        0,
-        minScreen,
-        1
-      )
-    ).toHaveLength(0)
-    expect(
-      getBendableSegments(
-        points,
-        Position.Right,
-        Position.Left,
-        0,
-        minScreen,
-        2
+        EDGES.BEND_HANDLE_SAFE_AREA_PX
       )
     ).toHaveLength(1)
-  })
 
-  it("uses the documented on-screen budget at the exact boundary", () => {
-    // The budget is the handle's long axis plus clearance on both sides.
-    const budget =
-      EDGES.BEND_HANDLE_SCREEN_LENGTH_PX +
-      2 * EDGES.BEND_HANDLE_CORNER_CLEARANCE_PX
-    expect(EDGES.BEND_HANDLE_MIN_SEGMENT_SCREEN_PX).toBe(budget)
-    expect(budget).toBe(54)
-
-    const seg = (len: number) => [
+    // A default-length stub, the case that was impossible before.
+    const stub = [
       { x: 0, y: 0 },
-      { x: len, y: 0 },
+      { x: EDGES.STUB_LENGTH, y: 0 },
     ]
-    // With no safe area, exactly at the budget (54px on screen at 1x) a handle
-    // is offered; one pixel short, it is not.
+    const [stubHandle] = getBendableSegments(
+      stub,
+      Position.Right,
+      Position.Left,
+      EDGES.BEND_HANDLE_SAFE_AREA_PX
+    )
+    expect(stubHandle).toBeDefined()
+    expect(stubHandle.position).toEqual({ x: EDGES.STUB_LENGTH / 2, y: 0 })
+
+    // Every segment of a multi-bend route gets one, none skipped.
+    const route = [
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+      { x: 10, y: 8 },
+      { x: 300, y: 8 },
+      { x: 300, y: 20 },
+    ]
     expect(
       getBendableSegments(
-        seg(budget),
+        route,
         Position.Right,
         Position.Left,
-        0,
-        budget,
-        1
+        EDGES.BEND_HANDLE_SAFE_AREA_PX
       )
-    ).toHaveLength(1)
-    expect(
-      getBendableSegments(
-        seg(budget - 1),
-        Position.Right,
-        Position.Left,
-        0,
-        budget,
-        1
-      )
-    ).toHaveLength(0)
+    ).toHaveLength(4)
   })
 
-  it("keeps bend handles out of the node safe area and places them past it", () => {
-    const safeArea = EDGES.BEND_HANDLE_SAFE_AREA_PX // 25
-    // A source-terminal segment from the node (x=0) to the first bend (x=200).
+  it("reports the room each handle has, so the renderer can size it", () => {
     const points = [
       { x: 0, y: 0 },
       { x: 200, y: 0 },
     ]
-    // Single segment = both terminals, so both ends lose the safe area:
+    const safeArea = EDGES.BEND_HANDLE_SAFE_AREA_PX
+
+    const [roomy] = getBendableSegments(
+      points,
+      Position.Right,
+      Position.Left,
+      safeArea
+    )
+    // One segment is both terminals, so it gives up the safe area at both ends.
+    expect(roomy.bendableLength).toBe(200 - 2 * safeArea)
+
+    // A segment with no room to spare reports its own length instead of a
+    // negative one, and the handle sits at its plain midpoint.
+    const tight = [
+      { x: 0, y: 0 },
+      { x: 20, y: 0 },
+    ]
+    const [cramped] = getBendableSegments(
+      tight,
+      Position.Right,
+      Position.Left,
+      safeArea
+    )
+    expect(cramped.bendableLength).toBe(20)
+    expect(cramped.position).toEqual({ x: 10, y: 0 })
+  })
+
+  it("keeps a handle past the node safe area when the segment has room for it", () => {
+    const safeArea = EDGES.BEND_HANDLE_SAFE_AREA_PX
+    const points = [
+      { x: 0, y: 0 },
+      { x: 200, y: 0 },
+    ]
     // bendable = 200 - 2*25 = 150; handle centred over [25, 175] → x = 100.
     const [handle] = getBendableSegments(
       points,
       Position.Right,
       Position.Left,
-      safeArea,
-      54,
-      1
+      safeArea
     )
-    expect(handle).toBeDefined()
     expect(handle.position.x).toBeGreaterThanOrEqual(safeArea)
     expect(handle.position.x).toBeLessThanOrEqual(200 - safeArea)
     expect(handle.position).toEqual({ x: 100, y: 0 })
-
-    // A segment that is entirely safe area (<= 2*safeArea) offers no handle.
-    const allSafe = [
-      { x: 0, y: 0 },
-      { x: 2 * safeArea, y: 0 },
-    ]
-    expect(
-      getBendableSegments(
-        allSafe,
-        Position.Right,
-        Position.Left,
-        safeArea,
-        54,
-        10
-      )
-    ).toHaveLength(0)
   })
 
   it("positions a target terminal handle using the stub exit", () => {

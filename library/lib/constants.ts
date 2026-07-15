@@ -243,19 +243,47 @@ export const EDGES = Object.freeze({
   EDGE_LINE_JUMP_WIDTH: 16,
   /** Stub length locked to node, matches getSmoothStepPath offset */
   STUB_LENGTH: 30,
-  /** Minimum total edge length (screen px) for the endpoint reconnect handles
-   * to be active. Short edges fall back to always-editable (see
-   * useStepPathEdge), so this only gates medium/long edges. */
-  BEND_MIN_LENGTH: 100,
-  /** Bend handle long-axis size, in screen px (the minimum kept across zoom). */
+  /** How much clear space an edge WANTS on either side of a run that travels
+   * past a node — its own endpoint or a stranger, the rule does not care. Five
+   * grid cells: roughly the stub length, so the approach and the stub read as
+   * one clean run.
+   *
+   * This is a want, not a wall. It is priced (see the router's proximity term),
+   * so an edge keeps its breathing room wherever there is room to keep, and
+   * gives it up — rather than circling the diagram — when two nodes sit closer
+   * together than twice this. And because the price falls off smoothly with
+   * distance, the cheapest lane through a gap too narrow for the full margin is
+   * the one down the MIDDLE of it: balance falls out of the same term, instead
+   * of being a separate tiebreak bolted on beside it. */
+  NODE_CLEARANCE_PX: 5 * CANVAS.SNAP_TO_GRID_PX,
+  /** The closest a route may pass a node body before the legacy step route is
+   * considered unfit and the search takes over. Two grid cells: an edge drawn
+   * within 10px of a border reads as welded to it — and drawn AT 0px, which is
+   * what a plain step route does whenever its lane lands on a node's edge, it
+   * reads as a mistake. Anything roomier than this is left exactly as it was. */
+  MIN_NODE_CLEARANCE_PX: 2 * CANVAS.SNAP_TO_GRID_PX,
+  /** Smallest stub the router keeps when two facing connection points sit too
+   * close to fit STUB_LENGTH on both sides. Below 2 * MIN_STUB_LENGTH of gap
+   * the two stubs cross and the edge has to take the detour route, so this sets
+   * the minimum node distance before an edge loops: one grid cell of stub per
+   * side, so nodes may sit a single 10px step apart and still route cleanly.
+   * The grid is the real floor here — keep it at SNAP_TO_GRID_PX. */
+  MIN_STUB_LENGTH: CANVAS.SNAP_TO_GRID_PX,
+  /** Bend handle long-axis size, in screen px — the size a handle reaches when
+   * its segment has room. A shorter segment gets a SHORTER handle, never no
+   * handle: availability is not a function of length any more. */
   BEND_HANDLE_SCREEN_LENGTH_PX: 34,
+  /** Smallest a bend handle may shrink to, in screen px. Below this a handle
+   * stops being a touch target, so it stays this big and simply overlaps its
+   * segment's ends a little. */
+  BEND_HANDLE_MIN_SCREEN_LENGTH_PX: 14,
+  /** Smallest an endpoint hit target may shrink to on a very short edge. Each
+   * endpoint owns half the run between them, but half of nothing is nothing —
+   * two small targets are still two targets, a zero-sized one is not. */
+  MIN_ENDPOINT_HIT_TARGET_PX: 12,
   /** Minimum clearance, in screen px, between a bend handle and the segment's
    * corners — how close a handle is allowed to sit to a corner. */
   BEND_HANDLE_CORNER_CLEARANCE_PX: 10,
-  /** A segment shows a bend handle once its ON-SCREEN length can host the
-   * handle with corner clearance on both sides: 34 + 2*10 = 54px. Screen-based
-   * so zooming in reveals handles on shorter segments (and never hides them). */
-  BEND_HANDLE_MIN_SEGMENT_SCREEN_PX: 34 + 2 * 10,
   /** "Safe area" next to a node, in flow px: a bend handle is never placed
    * within this distance of a node connection point, and that part of a
    * terminal segment is excluded when deciding whether a handle fits. Keeps

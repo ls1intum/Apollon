@@ -5,7 +5,7 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react"
-import { Position, useReactFlow, useStore } from "@xyflow/react"
+import { Position, useReactFlow } from "@xyflow/react"
 import {
   calculateOverlayPath,
   calculateStraightPath,
@@ -29,10 +29,7 @@ import { EDGES } from "@/constants"
 import { useDiagramModifiable } from "./useDiagramModifiable"
 import { IPoint } from "../edges/Connection"
 import { BaseEdgeProps } from "../edges/GenericEdge"
-import {
-  computeToolbarPosition,
-  isLengthEditableAtZoom,
-} from "@/utils/geometry/bendHandles"
+import { computeToolbarPosition } from "@/utils/geometry/bendHandles"
 import { getMidSegment } from "@/utils/geometry/edgeLabelLayout"
 import {
   useEdgeLineJumps,
@@ -80,7 +77,6 @@ export const useStraightPathEdge = ({
   const pathRef = useRef<SVGPathElement | null>(null)
   const endpointDragCommitRef = useRef<StraightEndpointDragCommit | null>(null)
   const isDiagramModifiable = useDiagramModifiable()
-  const zoom = useStore((state) => state.transform[2])
   const isReconnecting = useMetadataStore(
     (state) => state.reconnectPreviewEdgeId === id
   )
@@ -344,15 +340,10 @@ export const useStraightPathEdge = ({
   }, [renderPoints, type, currentPath, lineJumps])
 
   const [sourcePoint, targetPoint] = renderPoints
-  const canvasLength = Math.hypot(
-    targetPoint.x - sourcePoint.x,
-    targetPoint.y - sourcePoint.y
-  )
-  const canEditEndpoint = isLengthEditableAtZoom(
-    canvasLength,
-    EDGES.BEND_MIN_LENGTH,
-    zoom
-  )
+  // Always. A straight edge has no bend handles by nature, so gating its
+  // endpoints on a minimum length left short ones with no editable affordance
+  // whatsoever — not bendable, not reconnectable, just stuck.
+  const canEditEndpoint = true
   const toolbarPosition = computeToolbarPosition(
     pathMiddlePosition,
     isMiddlePathHorizontal

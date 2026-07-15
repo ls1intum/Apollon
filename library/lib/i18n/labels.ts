@@ -194,6 +194,7 @@ export interface ApollonLabels {
   roleLabel: (name: string) => string
   deleteEdge: string
   editEdge: string
+  resetEdgeRouting: string
 
   // Edge type option labels
   deploymentAssociation: string
@@ -433,6 +434,7 @@ export const DEFAULT_LABELS: ApollonLabels = Object.freeze<ApollonLabels>({
   roleLabel: (name) => `${name} Role`,
   deleteEdge: "Delete edge",
   editEdge: "Edit edge",
+  resetEdgeRouting: "Reset routing",
   deploymentAssociation: "Deployment Association",
   deploymentDependency: "Deployment Dependency",
   providedInterface: "Provided Interface",

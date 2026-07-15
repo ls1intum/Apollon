@@ -1,4 +1,4 @@
-import { Pencil, Trash2 } from "lucide-react"
+import { Pencil, Trash2, Waypoints } from "lucide-react"
 import { ZINDEX } from "@/constants"
 import { IPoint } from "@/edges"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
@@ -14,6 +14,11 @@ interface CustomEdgeToolbarProps {
   scaleAnchor: IPoint
   onEditClick: (event: React.MouseEvent<HTMLElement>) => void
   onDeleteClick: (event: React.MouseEvent<HTMLElement>) => void
+  /** Hand back to the router. Only offered when there is something to hand back:
+   * an auto-routed edge is already where the router wants it. Its presence is
+   * also the honest signal that this edge is no longer auto-routed. */
+  onResetRoutingClick?: (event: React.MouseEvent<HTMLElement>) => void
+  canResetRouting?: boolean
   anchorRef: React.Ref<SVGForeignObjectElement>
 }
 
@@ -23,6 +28,8 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
   scaleAnchor,
   onEditClick,
   onDeleteClick,
+  onResetRoutingClick,
+  canResetRouting = false,
   anchorRef,
 }) => {
   const t = useLabels()
@@ -55,6 +62,13 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
   // size and position.
   const SHADOW_MARGIN = 8
 
+  // The box has to be sized to what it actually holds: a foreignObject clips its
+  // content, so a hard-coded height silently slices the last button off the
+  // moment one is added. 16px per button, 8px gap, 8px padding either side.
+  const showResetRouting = Boolean(canResetRouting && onResetRoutingClick)
+  const buttonCount = showResetRouting ? 3 : 2
+  const toolbarHeight = 16 + buttonCount * 16 + (buttonCount - 1) * 8
+
   return (
     <g
       transform={`translate(${scaleAnchor.x} ${scaleAnchor.y}) scale(${inverseZoom}) translate(${-scaleAnchor.x} ${-scaleAnchor.y})`}
@@ -62,7 +76,7 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
       <foreignObject
         ref={anchorRef}
         width={32 + SHADOW_MARGIN * 2}
-        height={56 + SHADOW_MARGIN * 2}
+        height={toolbarHeight + SHADOW_MARGIN * 2}
         x={toolbarPosition.x + 20 - SHADOW_MARGIN}
         y={toolbarPosition.y + 20 - SHADOW_MARGIN}
         overflow="visible"
@@ -147,6 +161,34 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
             >
               <Pencil style={{ width: 16, height: 16 }} aria-hidden="true" />
             </button>
+            {showResetRouting && (
+              <button
+                type="button"
+                aria-label={t.resetEdgeRouting}
+                style={{
+                  width: "16px",
+                  height: "16px",
+                  padding: 0,
+                  border: "none",
+                  backgroundColor: "var(--apollon-background, white)",
+                  color: "var(--apollon-foreground, #000000)",
+                  borderRadius: "var(--apollon-radius-sm, 4px)",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  cursor: "pointer",
+                }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onResetRoutingClick?.(e)
+                }}
+              >
+                <Waypoints
+                  style={{ width: 16, height: 16 }}
+                  aria-hidden="true"
+                />
+              </button>
+            )}
           </div>
         )}
       </foreignObject>

@@ -64,6 +64,8 @@ catalog:
   clsx: "2.1.1"
   eslint: "10.6.0"
   eslint-plugin-react-hooks: "7.1.1"
+  # Property-based testing (routing invariants). Zero runtime deps.
+  fast-check: "4.4.0"
   globals: "17.7.0"
   jsdom: "29.1.1"
   jspdf: "4.2.1"

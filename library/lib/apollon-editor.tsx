@@ -1081,6 +1081,10 @@ export class ApollonEditor {
         encodedDocBytes: number
         nodesMapSize: number
         storeNodeWrites: number
+        edgeSearches: number
+        edgeSearchExpansions: number
+        edgeSearchesMaxExpansions: number
+        edgeSearchesAbandoned: number
       }
     | undefined {
     if (!import.meta.env.DEV && import.meta.env.VITE_E2E !== "true")
@@ -1092,6 +1096,10 @@ export class ApollonEditor {
       encodedDocBytes: Y.encodeStateAsUpdate(this.ydoc).byteLength,
       nodesMapSize: getNodesMap(this.ydoc).size,
       storeNodeWrites: counters?.storeNodeWrites ?? 0,
+      edgeSearches: counters?.routerSearches ?? 0,
+      edgeSearchExpansions: counters?.routerExpansions ?? 0,
+      edgeSearchesMaxExpansions: counters?.routerMaxExpansions ?? 0,
+      edgeSearchesAbandoned: counters?.routerAbandoned ?? 0,
     }
   }
 

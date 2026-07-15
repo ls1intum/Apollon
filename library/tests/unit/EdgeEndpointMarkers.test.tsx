@@ -11,12 +11,16 @@ const renderEndpointMarkers = ({
   isDiagramModifiable = true,
   canEditEndpoint = true,
   onEndpointPointerDown,
+  sourcePoint = { x: 10, y: 20 },
+  targetPoint = { x: 110, y: 120 },
 }: {
   isDiagramModifiable?: boolean
   canEditEndpoint?: boolean
   onEndpointPointerDown?: ComponentProps<
     typeof EdgeEndpointMarkers
   >["onEndpointPointerDown"]
+  sourcePoint?: { x: number; y: number }
+  targetPoint?: { x: number; y: number }
 } = {}) =>
   render(
     <ReactFlowProvider>
@@ -25,8 +29,8 @@ const renderEndpointMarkers = ({
           <circle className="react-flow__edgeupdater react-flow__edgeupdater-source" />
           <circle className="react-flow__edgeupdater react-flow__edgeupdater-target" />
           <EdgeEndpointMarkers
-            sourcePoint={{ x: 10, y: 20 }}
-            targetPoint={{ x: 110, y: 120 }}
+            sourcePoint={sourcePoint}
+            targetPoint={targetPoint}
             sourcePosition={Position.Right}
             targetPosition={Position.Left}
             isDiagramModifiable={isDiagramModifiable}
@@ -68,6 +72,39 @@ describe("EdgeEndpointMarkers", () => {
     expect(sourceHandle).toHaveAttribute("y", "8")
     expect(targetHandle).toHaveAttribute("x", "86")
     expect(targetHandle).toHaveAttribute("y", "108")
+  })
+
+  it("splits a short edge between the two hit targets instead of overlapping them", () => {
+    // A 30px edge cannot host two full 24px targets: at full size they would
+    // cover each other, and a click near one end could grab the far endpoint.
+    const { container } = renderEndpointMarkers({
+      sourcePoint: { x: 0, y: 0 },
+      targetPoint: { x: 30, y: 0 },
+    })
+    const sourceHandle = container.querySelector(
+      ".edge-endpoint-handle--source"
+    )
+    const targetHandle = container.querySelector(
+      ".edge-endpoint-handle--target"
+    )
+
+    // Each end owns its half of the run: 0..15 and 15..30, meeting at the middle.
+    expect(sourceHandle).toHaveAttribute("width", "15")
+    expect(sourceHandle).toHaveAttribute("x", "0")
+    expect(targetHandle).toHaveAttribute("width", "15")
+    expect(targetHandle).toHaveAttribute("x", "15")
+  })
+
+  it("keeps full-size hit targets when the endpoints face away from each other", () => {
+    // Endpoints that grow apart never collide, so proximity must not shrink them.
+    const { container } = renderEndpointMarkers({
+      sourcePoint: { x: 30, y: 0 },
+      targetPoint: { x: 0, y: 0 },
+    })
+
+    expect(
+      container.querySelector(".edge-endpoint-handle--source")
+    ).toHaveAttribute("width", String(EDGES.ENDPOINT_HIT_TARGET_SIZE))
   })
 
   it("keeps short-edge targets inert when the edge is below the edit threshold", () => {

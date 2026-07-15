@@ -15,17 +15,41 @@ import { fileURLToPath } from "node:url"
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const distDir = join(__dirname, "..", "library", "dist")
 
-// The `__perf` class method survives as an empty stub (a class method cannot
-// be conditionally declared), but its DEV-gated body must dead-code-eliminate
-// to nothing. We assert the empty body separately below; here we forbid the
-// instrumentation symbols — the load-bearing leak indicators. (The whole
-// perf-counter module is DEV-gated and DCE'd, so its mutable state object never
-// reaches a prod chunk; these symbols are what would prove it did.)
+// The `__perf` class method survives as an empty stub (a class method cannot be
+// conditionally declared), but its DEV-gated body must dead-code-eliminate to
+// nothing. We assert the empty body separately below; here we forbid the
+// instrumentation symbols — the load-bearing leak indicators.
+//
+// DERIVED from the perf-counter module, not hardcoded. A hardcoded list only
+// guards the counters that already existed when it was written: a new counter
+// added later ships to production and the check still passes green, which is what
+// happened to the router's search counters. Reading the exports means the next one
+// is covered by default, and a counter that is deliberately public has to be
+// deliberately removed from this module to become so.
+const perfModule = join(
+  __dirname,
+  "..",
+  "library",
+  "lib",
+  "sync",
+  "perfCounters.ts"
+)
+const perfSource = readFileSync(perfModule, "utf8")
 const FORBIDDEN_SYMBOLS = [
-  "getPerfCounters",
-  "recordStoreNodeWrite",
-  "storeNodeWrites",
+  // Exported bindings: `export const foo` / `export function foo`.
+  ...[...perfSource.matchAll(/export\s+(?:const|function)\s+(\w+)/g)].map(
+    (m) => m[1]
+  ),
+  // The counter fields themselves: the keys of the PerfCounters type.
+  ...[...perfSource.matchAll(/^\s{2}(\w+):\s*number$/gm)].map((m) => m[1]),
 ]
+
+if (FORBIDDEN_SYMBOLS.length === 0) {
+  console.error(
+    "[check-no-perf-hooks] derived no symbols from perfCounters.ts — the check would pass vacuously."
+  )
+  process.exit(1)
+}
 
 const collectFiles = (dir) => {
   const out = []
@@ -56,8 +80,14 @@ try {
 const PERF_METHOD = /__perf\(\)\s*\{([^}]*)\}/g
 
 const offenders = []
+// Comments are not code: the bundler emits `//#region lib/sync/perfCounters.ts`
+// banners naming the very module we are checking for, and matching those would
+// fail the build on a symbol that is not there. Strip them before scanning.
+const stripComments = (source) =>
+  source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "")
+
 for (const file of distFiles) {
-  const contents = readFileSync(file, "utf8")
+  const contents = stripComments(readFileSync(file, "utf8"))
   for (const symbol of FORBIDDEN_SYMBOLS) {
     if (contents.includes(symbol)) {
       offenders.push(`${file}: ${symbol}`)
