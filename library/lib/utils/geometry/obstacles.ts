@@ -87,28 +87,6 @@ export const getContainerBorderPolylines = (
 }
 
 /**
- * The nodes an edge from `sourceId` to `targetId` should route around.
- *
- * Solid means the node and nothing but the node: every leaf body is handed over
- * exactly, with no inflated ring and no margin rectangles. Clearance is not
- * geometry here — the router prices it (see `CLEARANCE_COST_PER_PX_AT_FULL_DEFICIT`
- * in `orthogonalRouter`), because a rectangle can say "in" or "out" and the
- * question is "how close".
- *
- * Nesting decides WHICH nodes are solid, and each rule is load-bearing:
- *
- * - Every ANCESTOR of either endpoint is skipped: an edge between two classes
- *   inside a package must live inside that package. One rule covers packages,
- *   pools, swimlanes, subsystems and deployment nodes at any depth.
- * - Every DESCENDANT of either endpoint is skipped: an edge anchored on a
- *   container's border leaves outward, and its own children can never
- *   legitimately be in the way.
- * - An endpoint that ENCLOSES the other endpoint is not made solid: the route has
- *   to be free to reach inside it.
- * - Anything already sitting on top of an endpoint is skipped: an overlapping node
- *   makes the problem unsolvable, and an unsolvable problem churns.
- */
-/**
  * The nodes indexed for one render frame: id → node, and id → its absolute body
  * and ancestor set. The body geometry and ancestry of a node depend only on the
  * node set, not on which edge is being routed — so they are the same for every
@@ -162,6 +140,28 @@ const indexNodes = (nodes: readonly Node[]): NodeIndex => {
   return frameIndex
 }
 
+/**
+ * The nodes an edge from `sourceId` to `targetId` should route around.
+ *
+ * Solid means the node and nothing but the node: every leaf body is handed over
+ * exactly, with no inflated ring and no margin rectangles. Clearance is not
+ * geometry here — the router prices it (see `CLEARANCE_COST_PER_PX_AT_FULL_DEFICIT`
+ * in `orthogonalRouter`), because a rectangle can say "in" or "out" and the
+ * question is "how close".
+ *
+ * Nesting decides WHICH nodes are solid, and each rule is load-bearing:
+ *
+ * - Every ANCESTOR of either endpoint is skipped: an edge between two classes
+ *   inside a package must live inside that package. One rule covers packages,
+ *   pools, swimlanes, subsystems and deployment nodes at any depth.
+ * - Every DESCENDANT of either endpoint is skipped: an edge anchored on a
+ *   container's border leaves outward, and its own children can never
+ *   legitimately be in the way.
+ * - An endpoint that ENCLOSES the other endpoint is not made solid: the route has
+ *   to be free to reach inside it.
+ * - Anything already sitting on top of an endpoint is skipped: an overlapping node
+ *   makes the problem unsolvable, and an unsolvable problem churns.
+ */
 export const getEdgeObstacles = (
   nodes: readonly Node[],
   sourceId: string,

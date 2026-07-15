@@ -28,12 +28,7 @@ describe("bend handle utilities", () => {
       { x: 200, y: 0 },
     ]
 
-    const handles = getBendableSegments(
-      points,
-      Position.Right,
-      Position.Left,
-      stubLength
-    )
+    const handles = getBendableSegments(points, stubLength)
 
     expect(handles).toHaveLength(1)
     expect(handles[0].segmentIndex).toBe(0)
@@ -54,12 +49,7 @@ describe("bend handle utilities", () => {
       { x: 12, y: 0 },
     ]
     expect(
-      getBendableSegments(
-        shortSegment,
-        Position.Right,
-        Position.Left,
-        EDGES.BEND_HANDLE_SAFE_AREA_PX
-      )
+      getBendableSegments(shortSegment, EDGES.BEND_HANDLE_SAFE_AREA_PX)
     ).toHaveLength(1)
 
     // A default-length stub, the case that was impossible before.
@@ -69,8 +59,6 @@ describe("bend handle utilities", () => {
     ]
     const [stubHandle] = getBendableSegments(
       stub,
-      Position.Right,
-      Position.Left,
       EDGES.BEND_HANDLE_SAFE_AREA_PX
     )
     expect(stubHandle).toBeDefined()
@@ -85,12 +73,7 @@ describe("bend handle utilities", () => {
       { x: 300, y: 20 },
     ]
     expect(
-      getBendableSegments(
-        route,
-        Position.Right,
-        Position.Left,
-        EDGES.BEND_HANDLE_SAFE_AREA_PX
-      )
+      getBendableSegments(route, EDGES.BEND_HANDLE_SAFE_AREA_PX)
     ).toHaveLength(4)
   })
 
@@ -101,12 +84,7 @@ describe("bend handle utilities", () => {
     ]
     const safeArea = EDGES.BEND_HANDLE_SAFE_AREA_PX
 
-    const [roomy] = getBendableSegments(
-      points,
-      Position.Right,
-      Position.Left,
-      safeArea
-    )
+    const [roomy] = getBendableSegments(points, safeArea)
     // One segment is both terminals, so it gives up the safe area at both ends.
     expect(roomy.bendableLength).toBe(200 - 2 * safeArea)
 
@@ -116,12 +94,7 @@ describe("bend handle utilities", () => {
       { x: 0, y: 0 },
       { x: 20, y: 0 },
     ]
-    const [cramped] = getBendableSegments(
-      tight,
-      Position.Right,
-      Position.Left,
-      safeArea
-    )
+    const [cramped] = getBendableSegments(tight, safeArea)
     expect(cramped.bendableLength).toBe(20)
     expect(cramped.position).toEqual({ x: 10, y: 0 })
   })
@@ -133,12 +106,7 @@ describe("bend handle utilities", () => {
       { x: 200, y: 0 },
     ]
     // bendable = 200 - 2*25 = 150; handle centred over [25, 175] → x = 100.
-    const [handle] = getBendableSegments(
-      points,
-      Position.Right,
-      Position.Left,
-      safeArea
-    )
+    const [handle] = getBendableSegments(points, safeArea)
     expect(handle.position.x).toBeGreaterThanOrEqual(safeArea)
     expect(handle.position.x).toBeLessThanOrEqual(200 - safeArea)
     expect(handle.position).toEqual({ x: 100, y: 0 })

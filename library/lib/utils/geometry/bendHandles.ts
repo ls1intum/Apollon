@@ -58,14 +58,6 @@ export function getSegmentKind(
   return "inner"
 }
 
-/**
- * Whether a flow-space length is long enough to host an interactive handle,
- * judged by its ON-SCREEN size. Screen-based so the rule matches what the user
- * sees: zooming in always reveals more handles (a short segment becomes
- * editable once it is `minScreenLength` px long on screen) and never hides
- * them. `minScreenLength` is a screen-px budget (handle size + clearance).
- */
-
 export function getStubExit(
   nodePoint: IPoint,
   position: Position,
@@ -122,8 +114,6 @@ export function getBendHandlePosition(
  */
 export function getBendableSegments(
   points: IPoint[],
-  _sourcePosition: Position,
-  _targetPosition: Position,
   safeAreaPx: number
 ): BendHandle[] {
   const collapsed = collapseCollinearPoints(points)

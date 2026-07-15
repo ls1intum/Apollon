@@ -176,7 +176,7 @@ function resolveEdgeEndpoints(
 }
 
 /** Merge a computed route with any stored manual bend points. */
-export function mergeManualPoints(
+function mergeManualPoints(
   edge: Edge,
   computedPoints: IPoint[],
   endpoints: ResolvedEdgeEndpoints

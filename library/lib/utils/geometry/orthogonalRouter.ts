@@ -1215,7 +1215,7 @@ export const routeAroundObstacles = (
       }
       raw.reverse()
       recordRouterSearch(expansions, false)
-      return simplifyColinear(raw)
+      return simplifyCollinear(raw)
     }
 
     const g = gScore[current]
@@ -1288,7 +1288,7 @@ export const routeAroundObstacles = (
  * (both neighbours to one side) is an apex, not a pass-through, and removing it
  * would collapse the turn into a retrace; it is kept.
  */
-const simplifyColinear = (points: IPoint[]): IPoint[] => {
+const simplifyCollinear = (points: IPoint[]): IPoint[] => {
   if (points.length < 3) return points
   const result: IPoint[] = [points[0]]
   for (let i = 1; i < points.length - 1; i++) {

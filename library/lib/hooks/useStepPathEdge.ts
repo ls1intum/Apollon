@@ -516,18 +516,8 @@ export const useStepPathEdge = ({
 
   const bendHandles = useMemo(() => {
     if (!allowMidpointDragging) return []
-    return getBendableSegments(
-      renderPoints,
-      renderSourcePosition,
-      renderTargetPosition,
-      EDGES.BEND_HANDLE_SAFE_AREA_PX
-    )
-  }, [
-    renderPoints,
-    allowMidpointDragging,
-    renderSourcePosition,
-    renderTargetPosition,
-  ])
+    return getBendableSegments(renderPoints, EDGES.BEND_HANDLE_SAFE_AREA_PX)
+  }, [renderPoints, allowMidpointDragging])
 
   // Endpoints are ALWAYS draggable. They used to switch off on any edge shorter
   // than 100px, which produced a capability cliff nobody could explain from the
