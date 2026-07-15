@@ -21,8 +21,6 @@ import {
   useEdgeGeometryStore,
 } from "@/store/context"
 import { useShallow } from "zustand/shallow"
-import { useEdgeRoutingContext } from "./useEdgeRoutingContext"
-import { routeStepEdge } from "@/utils/geometry/edgeRoute"
 import {
   getEdgeMarkerStyles,
   getMarkerSegmentPath,
@@ -79,6 +77,11 @@ interface UseStepPathEdgeProps {
     targetAnchor?: FreeformEdgeAnchor
   }
   allowMidpointDragging?: boolean
+  /**
+   * @deprecated No longer read here — the central solver derives whether an edge
+   * attempts a straight shot from its type (see STRAIGHT_PATH_STEP_EDGE_TYPES).
+   * Still accepted so the many edge components that pass it keep compiling.
+   */
   enableStraightPath?: boolean
 }
 
@@ -122,9 +125,6 @@ const arePointsEqual = (a: IPoint[], b: IPoint[]): boolean =>
   a.length === b.length &&
   a.every((point, index) => point.x === b[index].x && point.y === b[index].y)
 
-// Stable empty route for central mode, where this edge does not route itself.
-const EMPTY_ROUTE: IPoint[] = []
-
 export const useStepPathEdge = ({
   id,
   type,
@@ -138,7 +138,6 @@ export const useStepPathEdge = ({
   targetPosition: reactFlowTargetPosition,
   data,
   allowMidpointDragging = true,
-  enableStraightPath = false,
 }: UseStepPathEdgeProps) => {
   const draggingHandleRef = useRef<BendHandle | null>(null)
   const dragOffsetRef = useRef<IPoint>({ x: 0, y: 0 })
@@ -382,107 +381,14 @@ export const useStepPathEdge = ({
     sourcePosition,
     sourceConnectionPointPadding
   )
-  // What this edge must not run through, and what it must not be drawn on top
-  // of. Shared with the drag preview so the line you drag is the line you get.
-  const { obstacles: routeObstacles, neighborEdges: routingNeighborEdges } =
-    useEdgeRoutingContext({
-      selfId: id,
-      nodes: allNodes,
-      sourceId: source,
-      targetId: target,
-      sourcePoint: {
-        x: adjustedSourceCoordinates.sourceX,
-        y: adjustedSourceCoordinates.sourceY,
-      },
-      targetPoint: {
-        x: adjustedTargetCoordinates.targetX,
-        y: adjustedTargetCoordinates.targetY,
-      },
-    })
-
-  // The DEFAULT route for an edge nobody has edited. This used to be raw
-  // getSmoothStepPath with a hardcoded 30px offset, which meant every fix made
-  // to the router — grid alignment, stub clearance, not drawing over itself, and
-  // now routing around nodes — applied only to edges the user had already bent.
-  // The auto routes, the ones people actually look at, went through none of it.
-  const computedPoints = useMemo(
-    () =>
-      isCentralRouting
-        ? EMPTY_ROUTE
-        : routeStepEdge({
-            enableStraightPath,
-            adjustedSource: {
-              x: adjustedSourceCoordinates.sourceX,
-              y: adjustedSourceCoordinates.sourceY,
-            },
-            adjustedTarget: {
-              x: adjustedTargetCoordinates.targetX,
-              y: adjustedTargetCoordinates.targetY,
-            },
-            sourcePosition,
-            targetPosition,
-            padding,
-            rounded: {
-              sourceX: roundedSourceX,
-              sourceY: roundedSourceY,
-              targetX: roundedTargetX,
-              targetY: roundedTargetY,
-            },
-            sourceAbsolutePosition,
-            targetAbsolutePosition,
-            sourceSize: {
-              width: sourceRect?.width ?? sourceNode?.width ?? 100,
-              height: sourceRect?.height ?? sourceNode?.height ?? 160,
-            },
-            targetSize: {
-              width: targetRect?.width ?? targetNode?.width ?? 100,
-              height: targetRect?.height ?? targetNode?.height ?? 160,
-            },
-            obstacles: routeObstacles,
-            neighborEdges: routingNeighborEdges,
-          }),
-    // `routeObstacles` and `routingNeighborEdges` are stabilised by content in
-    // useEdgeRoutingContext, so this memo re-runs the search only when the world
-    // around the edge (or its own endpoints) actually changed — no digest string,
-    // and honest deps the React Compiler can preserve.
-    [
-      isCentralRouting,
-      enableStraightPath,
-      adjustedSourceCoordinates.sourceX,
-      adjustedSourceCoordinates.sourceY,
-      adjustedTargetCoordinates.targetX,
-      adjustedTargetCoordinates.targetY,
-      sourcePosition,
-      targetPosition,
-      padding,
-      roundedSourceX,
-      roundedSourceY,
-      roundedTargetX,
-      roundedTargetY,
-      sourceAbsolutePosition,
-      targetAbsolutePosition,
-      sourceRect?.width,
-      sourceRect?.height,
-      sourceNode?.width,
-      sourceNode?.height,
-      targetRect?.width,
-      targetRect?.height,
-      targetNode?.width,
-      targetNode?.height,
-      routeObstacles,
-      routingNeighborEdges,
-    ]
-  )
-
   const hasStoredManualPoints = Boolean(data?.points && data.points.length > 0)
   const hasLocalManualPoints = customPoints.length > 0
   const hasManualPoints = hasStoredManualPoints
-  // In central mode the solver already merged manual points, so the route it
-  // hands back IS the active geometry; a 2-point route still means "clean auto
-  // route" for the persistence effect below.
-  const effectiveRoute = isCentralRouting ? centralRoute : computedPoints
+  // The central solver already merged this edge's manual points, so the route it
+  // hands back IS the active geometry; a 2-point route means "clean auto route"
+  // (nothing to persist), which the effect below acts on.
   const shouldPreferComputedPath =
-    (effectiveRoute?.length ?? 0) === 2 && !hasManualPoints
+    (centralRoute?.length ?? 0) === 2 && !hasManualPoints
 
   const centralFallback = useMemo<IPoint[]>(
     () => [
@@ -503,55 +409,10 @@ export const useStepPathEdge = ({
     ]
   )
 
-  const activePoints = useMemo(() => {
-    // Central mode: the solver's route (already manual-merged) is the active
-    // geometry. Before the first solve lands, fall back to a straight endpoint
-    // line — never painted, since the solver commits in a pre-paint layout effect.
-    if (isCentralRouting) return centralRoute ?? centralFallback
-
-    if (shouldPreferComputedPath) {
-      return computedPoints
-    }
-
-    let points: IPoint[]
-    if (data?.points && data.points.length > 0) {
-      points = data.points
-    } else {
-      points = computedPoints
-    }
-
-    if (hasManualPoints && points.length >= 2) {
-      return preserveOrthogonalEdgePoints(
-        points,
-        {
-          x: adjustedSourceCoordinates.sourceX,
-          y: adjustedSourceCoordinates.sourceY,
-        },
-        {
-          x: adjustedTargetCoordinates.targetX,
-          y: adjustedTargetCoordinates.targetY,
-        },
-        sourcePosition,
-        targetPosition
-      )
-    }
-
-    return points
-  }, [
-    isCentralRouting,
-    centralRoute,
-    centralFallback,
-    computedPoints,
-    data,
-    hasManualPoints,
-    shouldPreferComputedPath,
-    adjustedSourceCoordinates.sourceX,
-    adjustedSourceCoordinates.sourceY,
-    adjustedTargetCoordinates.targetX,
-    adjustedTargetCoordinates.targetY,
-    sourcePosition,
-    targetPosition,
-  ])
+  // The solver's route (already manual-merged) is the active geometry. Before
+  // the first solve lands, fall back to a straight endpoint line — never
+  // painted, since the solver commits in a pre-paint layout effect.
+  const activePoints = centralRoute ?? centralFallback
 
   useEffect(() => {
     if (shouldPreferComputedPath) {
