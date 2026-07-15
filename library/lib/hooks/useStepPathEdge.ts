@@ -14,16 +14,13 @@ import {
   useEdgeGeometryStore,
 } from "@/store/context"
 import { useShallow } from "zustand/shallow"
-import { routeConflictsWithNeighborEdges } from "@/utils/geometry/orthogonalRouter"
 import { useEdgeRoutingContext } from "./useEdgeRoutingContext"
+import { routeStepEdge } from "@/utils/geometry/edgeRoute"
 import {
   getEdgeMarkerStyles,
-  routeOrthogonalPath,
-  removeDuplicatePoints,
   getMarkerSegmentPath,
   preserveOrthogonalEdgePoints,
   getBendLaneBounds,
-  routeCrossesHardObstacle,
   normalizeOrthogonalEdgePoints,
   resolveOrthogonalEdgeReleasePoints,
   isInvalidOrthogonalEdgeRelease,
@@ -392,101 +389,71 @@ export const useStepPathEdge = ({
   // to the router — grid alignment, stub clearance, not drawing over itself, and
   // now routing around nodes — applied only to edges the user had already bent.
   // The auto routes, the ones people actually look at, went through none of it.
-  const computedPoints = useMemo(() => {
-    const routeSource = {
-      x: adjustedSourceCoordinates.sourceX,
-      y: adjustedSourceCoordinates.sourceY,
-    }
-    const routeTarget = {
-      x: adjustedTargetCoordinates.targetX,
-      y: adjustedTargetCoordinates.targetY,
-    }
-
-    if (enableStraightPath) {
-      const straightPathPoints = tryFindStraightPath(
-        {
-          position: {
-            x: sourceAbsolutePosition.x,
-            y: sourceAbsolutePosition.y,
-          },
-          width: sourceRect?.width ?? sourceNode?.width ?? 100,
-          height: sourceRect?.height ?? sourceNode?.height ?? 160,
-          direction: sourcePosition,
+  const computedPoints = useMemo(
+    () =>
+      routeStepEdge({
+        enableStraightPath,
+        adjustedSource: {
+          x: adjustedSourceCoordinates.sourceX,
+          y: adjustedSourceCoordinates.sourceY,
         },
-        {
-          position: {
-            x: targetAbsolutePosition.x,
-            y: targetAbsolutePosition.y,
-          },
-          width: targetRect?.width ?? targetNode?.width ?? 100,
-          height: targetRect?.height ?? targetNode?.height ?? 160,
-          direction: targetPosition,
+        adjustedTarget: {
+          x: adjustedTargetCoordinates.targetX,
+          y: adjustedTargetCoordinates.targetY,
         },
+        sourcePosition,
+        targetPosition,
         padding,
-        {
+        rounded: {
           sourceX: roundedSourceX,
           sourceY: roundedSourceY,
           targetX: roundedTargetX,
           targetY: roundedTargetY,
-        }
-      )
-      // A straight shot is only allowed when it runs clear of every solid node
-      // AND is not drawn on top of / across a neighbouring edge. Two aligned
-      // classes with a third dragged between them still need the orthogonal
-      // router to step around it; two associations between the same pair need it
-      // to spread them onto separate lanes.
-      if (
-        straightPathPoints !== null &&
-        !routeCrossesHardObstacle(straightPathPoints, routeObstacles) &&
-        !routeConflictsWithNeighborEdges(
-          straightPathPoints,
-          routingNeighborEdges
-        )
-      ) {
-        return removeDuplicatePoints(straightPathPoints)
-      }
-    }
-
-    return routeOrthogonalPath(
-      routeSource,
-      routeTarget,
-      sourcePosition,
-      targetPosition,
-      routeObstacles,
-      routingNeighborEdges
-    )
+        },
+        sourceAbsolutePosition,
+        targetAbsolutePosition,
+        sourceSize: {
+          width: sourceRect?.width ?? sourceNode?.width ?? 100,
+          height: sourceRect?.height ?? sourceNode?.height ?? 160,
+        },
+        targetSize: {
+          width: targetRect?.width ?? targetNode?.width ?? 100,
+          height: targetRect?.height ?? targetNode?.height ?? 160,
+        },
+        obstacles: routeObstacles,
+        neighborEdges: routingNeighborEdges,
+      }),
     // `routeObstacles` and `routingNeighborEdges` are stabilised by content in
     // useEdgeRoutingContext, so this memo re-runs the search only when the world
     // around the edge (or its own endpoints) actually changed — no digest string,
     // and honest deps the React Compiler can preserve.
-  }, [
-    enableStraightPath,
-    adjustedSourceCoordinates.sourceX,
-    adjustedSourceCoordinates.sourceY,
-    adjustedTargetCoordinates.targetX,
-    adjustedTargetCoordinates.targetY,
-    sourcePosition,
-    targetPosition,
-    padding,
-    roundedSourceX,
-    roundedSourceY,
-    roundedTargetX,
-    roundedTargetY,
-    sourceAbsolutePosition.x,
-    sourceAbsolutePosition.y,
-    targetAbsolutePosition.x,
-    targetAbsolutePosition.y,
-    sourceRect?.width,
-    sourceRect?.height,
-    sourceNode?.width,
-    sourceNode?.height,
-    targetRect?.width,
-    targetRect?.height,
-    targetNode?.width,
-    targetNode?.height,
-    routeObstacles,
-    routingNeighborEdges,
-  ])
+    [
+      enableStraightPath,
+      adjustedSourceCoordinates.sourceX,
+      adjustedSourceCoordinates.sourceY,
+      adjustedTargetCoordinates.targetX,
+      adjustedTargetCoordinates.targetY,
+      sourcePosition,
+      targetPosition,
+      padding,
+      roundedSourceX,
+      roundedSourceY,
+      roundedTargetX,
+      roundedTargetY,
+      sourceAbsolutePosition,
+      targetAbsolutePosition,
+      sourceRect?.width,
+      sourceRect?.height,
+      sourceNode?.width,
+      sourceNode?.height,
+      targetRect?.width,
+      targetRect?.height,
+      targetNode?.width,
+      targetNode?.height,
+      routeObstacles,
+      routingNeighborEdges,
+    ]
+  )
 
   const hasStoredManualPoints = Boolean(data?.points && data.points.length > 0)
   const hasLocalManualPoints = customPoints.length > 0
