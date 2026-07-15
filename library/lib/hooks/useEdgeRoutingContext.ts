@@ -48,12 +48,13 @@ const polylinesEqual = (a: IPoint[][], b: IPoint[][]): boolean => {
  * Everything the router needs to know about the world around one edge: what it
  * must not run through, and what it must not be drawn on top of.
  *
- * This exists as ONE hook because the committed edge and the drag preview must
- * be routed from the same inputs. When the preview assembled its own (or, as it
- * did, skipped the router altogether and drew a plain smooth-step curve), the
- * line you dragged was simply not the line you got on release — it ignored every
- * node in the way, every margin, and every other edge. A preview that lies about
- * the result is worse than no preview.
+ * Committed edges are routed by the central solver (see computeAllEdgeGeometry);
+ * this hook now serves the live reconnect preview (ReconnectConnectionLine),
+ * feeding it the SAME obstacles and neighbour polylines the solver sees — the
+ * neighbour set is read from the solver-populated geometry registry — so the
+ * line you drag matches the route you get on release. A preview that skipped the
+ * router and drew a plain smooth-step curve ignored every node, margin and edge
+ * in the way; a preview that lies about the result is worse than no preview.
  *
  * `selfId` is the edge being routed, or `undefined` for a connection that does
  * not exist yet. It controls which neighbours this edge yields to:

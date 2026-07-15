@@ -9,19 +9,9 @@ import { IPoint } from "@/edges/Connection"
 import { DEFAULT_LABELS, type ApollonLabels } from "@/i18n/labels"
 
 /**
- * Which edge-routing engine drives the canvas. `central` (default) runs one
- * synchronous solver over all edges in a single pre-paint pass. `per-edge` is
- * the original cascade — each edge routes itself and publishes into a shared
- * store, settling over a few frames — kept as a kill switch; the two are proven
- * byte-identical by the parity gate across every diagram type.
- */
-export type EdgeRoutingMode = "central" | "per-edge"
-
-/**
  * An edge whose route is being dragged (bend or endpoint) right now, published
- * so the central solver can route every OTHER edge around the live preview —
- * the `central`-mode equivalent of the per-edge path publishing its in-progress
- * `renderPoints` into the geometry store. `null` whenever nothing is dragging.
+ * so the central solver can route every OTHER edge around the live preview.
+ * `null` whenever nothing is dragging.
  */
 export type LiveEdgeOverride = {
   edgeId: string
@@ -35,7 +25,6 @@ export type MetadataStore = {
   view: ApollonView
   availableViews: ApollonView[]
   readonly: boolean
-  edgeRouting: EdgeRoutingMode
   debug: boolean
   scrollLock: boolean
   /** User-facing strings for the editor's own chrome; host-overridable for i18n. */
@@ -52,7 +41,6 @@ export type MetadataStore = {
   setView: (view: ApollonView) => void
   setAvailableViews: (availableViews: ApollonView[]) => void
   setReadonly: (readonly: boolean) => void
-  setEdgeRouting: (edgeRouting: EdgeRoutingMode) => void
   setScrollLock: (scrollLock: boolean) => void
   setLabels: (labels: ApollonLabels) => void
   setScrollEnabled: (scrollEnabled: boolean) => void
@@ -83,7 +71,6 @@ type InitialMetadataState = {
   view: ApollonView
   availableViews: ApollonView[]
   readonly: boolean
-  edgeRouting: EdgeRoutingMode
   debug: boolean
   scrollLock: boolean
   labels: ApollonLabels
@@ -105,7 +92,6 @@ const initialMetadataState: InitialMetadataState = {
   view: ApollonView.Modelling,
   availableViews: [ApollonView.Modelling],
   readonly: false,
-  edgeRouting: "central",
   debug: false,
   scrollLock: false,
   labels: DEFAULT_LABELS,
@@ -195,10 +181,6 @@ export const createMetadataStore = (
 
         setReadonly: (readonly) => {
           set({ readonly }, undefined, "setReadonly")
-        },
-
-        setEdgeRouting: (edgeRouting) => {
-          set({ edgeRouting }, undefined, "setEdgeRouting")
         },
 
         setScrollLock: (scrollLock: boolean) => {

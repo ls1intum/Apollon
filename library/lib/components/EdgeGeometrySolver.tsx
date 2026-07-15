@@ -13,22 +13,19 @@ import {
 } from "@/edges/edgeRoutingBehavior"
 
 /**
- * The central edge-geometry engine. When `edgeRouting === "central"` it routes
- * EVERY edge in one synchronous pass and commits the whole map to the shared
- * geometry store, replacing the per-edge publish→re-route cascade.
+ * The central edge-geometry engine: it routes EVERY edge in one synchronous
+ * pass and commits the whole map to the shared geometry store, which the edge
+ * components read back as their route.
  *
  * The commit runs in a LAYOUT effect, not a passive one, and that timing is the
  * whole point: it lands before the browser paints, so React re-renders the edges
  * whose route changed and paint shows the converged layout for the current node
- * positions — single frame, no settling. But unlike the old cascade this is ONE
- * pre-paint pass over local variables, not N layers of cross-component
- * re-renders: the ascending-id DAG walk resolves the fixed point in the pure
- * solver (see computeAllEdgeGeometry), so there is nothing left to ripple.
- *
- * A no-op when routing is per-edge, so it is safe to mount unconditionally.
+ * positions — single frame, no settling. It is ONE pre-paint pass over local
+ * variables, not N layers of cross-component re-renders: the ascending-id DAG
+ * walk resolves the fixed point in the pure solver (see computeAllEdgeGeometry),
+ * so there is nothing left to ripple.
  */
 export const EdgeGeometrySolver = () => {
-  const edgeRouting = useMetadataStore((s) => s.edgeRouting)
   const nodes = useStore((s) => s.nodes)
   const nodeLookup = useStore(
     (s) => s.nodeLookup as unknown as Map<string, InternalNode>
@@ -37,8 +34,7 @@ export const EdgeGeometrySolver = () => {
   const edges = useDiagramStore((s) => s.edges)
   const setAllGeometry = useEdgeGeometryStore((s) => s.setAllGeometry)
   // The edge being bend/endpoint-dragged right now, if any: fed to the solver so
-  // every OTHER edge routes around the live preview, exactly as the per-edge path
-  // achieves by publishing its in-progress `renderPoints` into the geometry store.
+  // every OTHER edge routes around the live preview.
   const liveEdgeOverride = useMetadataStore((s) => s.liveEdgeOverride)
 
   // React Flow mutates `nodeLookup` IN PLACE and does not change the `nodes`
@@ -86,7 +82,6 @@ export const EdgeGeometrySolver = () => {
   // precisely when any node's geometry moves — recomputes exactly when routes
   // can change, reading the current in-place-mutated `nodeLookup`.
   useLayoutEffect(() => {
-    if (edgeRouting !== "central") return
     const { routeById } = computeAllEdgeGeometry({
       nodes,
       nodeLookup,
@@ -100,14 +95,7 @@ export const EdgeGeometrySolver = () => {
     // `nodeGeometryKey` is the change trigger; `nodes`/`nodeLookup` are refs RF
     // mutates in place, so they never signal measurement on their own.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    edgeRouting,
-    nodeGeometryKey,
-    connectionMode,
-    edges,
-    liveEdgeOverride,
-    setAllGeometry,
-  ])
+  }, [nodeGeometryKey, connectionMode, edges, liveEdgeOverride, setAllGeometry])
 
   return null
 }

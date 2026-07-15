@@ -155,15 +155,11 @@ export const useStepPathEdge = ({
   const isReconnecting = useMetadataStore(
     (state) => state.reconnectPreviewEdgeId === id
   )
-  // When routing is centralised, this edge's route is computed by the single
-  // EdgeGeometrySolver and read back from the shared store instead of routed
-  // here. The per-edge A* search and geometry publish below are then skipped.
-  const isCentralRouting = useMetadataStore(
-    (state) => state.edgeRouting === "central"
-  )
   const setLiveEdgeOverride = useMetadataStore(
     (state) => state.setLiveEdgeOverride
   )
+  // This edge's route is computed by the single EdgeGeometrySolver and read back
+  // from the shared store instead of routed here.
   const centralRoute = useEdgeGeometryStore((state) => state.geometryById[id])
   const { getIntersectingNodes, getNode, screenToFlowPosition } = useReactFlow()
 
@@ -499,17 +495,16 @@ export const useStepPathEdge = ({
   // Other edges' geometry is read from the shared registry the solver populates.
   const lineJumps = useEdgeLineJumps(id, renderPoints, !isReconnecting)
 
-  // Central mode's analog of the per-edge publish above: while THIS edge is being
-  // bend/endpoint-dragged (`dragPreviewPoints` set), hand the live preview to the
-  // solver so every OTHER edge routes around it in real time. A layout effect, so
-  // the override lands before paint (matching the per-edge layout publish), and a
+  // While THIS edge is being bend/endpoint-dragged (`dragPreviewPoints` set),
+  // hand the live preview to the solver so every OTHER edge routes around it in
+  // real time. A layout effect, so the override lands before paint, with a
   // cleanup that clears it the instant the drag ends or the edge unmounts. Only
   // the dragged edge has non-null `dragPreviewPoints`, so only it ever publishes.
   useLayoutEffect(() => {
-    if (!isCentralRouting || dragPreviewPoints === null) return
+    if (dragPreviewPoints === null) return
     setLiveEdgeOverride({ edgeId: id, points: dragPreviewPoints })
     return () => setLiveEdgeOverride(null)
-  }, [isCentralRouting, dragPreviewPoints, id, setLiveEdgeOverride])
+  }, [dragPreviewPoints, id, setLiveEdgeOverride])
 
   const currentPath = useMemo(
     () => buildEdgePath(renderPoints, lineJumps),

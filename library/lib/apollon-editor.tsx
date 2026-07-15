@@ -202,9 +202,6 @@ export class ApollonEditor {
     if (options?.mode) {
       this.metadataStore.getState().setMode(options.mode)
     }
-    if (options?.edgeRouting) {
-      this.metadataStore.getState().setEdgeRouting(options.edgeRouting)
-    }
     if (options?.view) {
       this.metadataStore.getState().setView(options.view)
     }
