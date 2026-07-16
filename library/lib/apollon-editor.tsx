@@ -1085,6 +1085,9 @@ export class ApollonEditor {
         edgeSearchExpansions: number
         edgeSearchesMaxExpansions: number
         edgeSearchesAbandoned: number
+        solveMs: number
+        solveMaxMs: number
+        solveCount: number
       }
     | undefined {
     if (!import.meta.env.DEV && import.meta.env.VITE_E2E !== "true")
@@ -1100,6 +1103,9 @@ export class ApollonEditor {
       edgeSearchExpansions: counters?.routerExpansions ?? 0,
       edgeSearchesMaxExpansions: counters?.routerMaxExpansions ?? 0,
       edgeSearchesAbandoned: counters?.routerAbandoned ?? 0,
+      solveMs: counters?.solveMs ?? 0,
+      solveMaxMs: counters?.solveMaxMs ?? 0,
+      solveCount: counters?.solveCount ?? 0,
     }
   }
 

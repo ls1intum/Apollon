@@ -18,6 +18,14 @@ export type PerfCounters = {
   routerMaxExpansions: number
   /** Searches that hit their work budget and fell back to a plain step route. */
   routerAbandoned: number
+  /** Wall-clock spent in `computeAllEdgeGeometry` (the whole-canvas solve that
+   * runs in the layout effect on each drag frame). Total across all solves and
+   * the single worst solve — the worst is the frame that drops. Machine-specific,
+   * so it informs local benchmarking, not a cross-machine CI budget (that is what
+   * the expansion counters above are for). */
+  solveMs: number
+  solveMaxMs: number
+  solveCount: number
 }
 
 export const perfCounters: PerfCounters =
@@ -28,6 +36,9 @@ export const perfCounters: PerfCounters =
         routerExpansions: 0,
         routerMaxExpansions: 0,
         routerAbandoned: 0,
+        solveMs: 0,
+        solveMaxMs: 0,
+        solveCount: 0,
       }
     : (undefined as unknown as PerfCounters)
 
@@ -39,6 +50,15 @@ export const getPerfCounters = (): PerfCounters | undefined =>
 export const recordStoreNodeWrite = () => {
   if (import.meta.env.DEV || import.meta.env.VITE_E2E === "true")
     perfCounters.storeNodeWrites++
+}
+
+/** One whole-canvas solve, in milliseconds. Positive guard so it DCEs in prod. */
+export const recordSolve = (ms: number): void => {
+  if (import.meta.env.DEV || import.meta.env.VITE_E2E === "true") {
+    perfCounters.solveMs += ms
+    perfCounters.solveCount++
+    if (ms > perfCounters.solveMaxMs) perfCounters.solveMaxMs = ms
+  }
 }
 
 /** One completed search. Recorded ONCE, at whichever way the search exits, so an

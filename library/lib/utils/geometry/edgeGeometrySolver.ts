@@ -277,6 +277,47 @@ export type SolverInput = {
   liveOverride?: LiveEdgeOverride | null
   /** Previous routes, held for edges whose endpoints are momentarily unknown. */
   previous?: Record<string, IPoint[]>
+  /**
+   * Cross-frame memo of each edge's routed (pre-manual-merge) polyline, keyed on
+   * a signature of EVERY input `routeStepEdge` consumes. `routeStepEdge` is pure,
+   * so an unchanged signature means an unchanged route — the search is skipped and
+   * the cached polyline reused. Owned by the caller (a ref) and mutated in place.
+   * Dragging one node leaves every distant edge's signature untouched, so only the
+   * edges the move can actually have shifted re-search.
+   */
+  solveCache?: Map<string, { sig: string; computed: IPoint[] }>
+}
+
+/** Lossless digest of every input `routeStepEdge` reads. Geometry only (obstacle
+ * ids don't affect the route); NOT `edge.data.points`, which `mergeManualPoints`
+ * layers on AFTER and is applied fresh every frame. */
+function routeSignature(
+  enableStraightPath: boolean,
+  endpoints: ResolvedEdgeEndpoints,
+  obstacles: readonly ObstacleRect[],
+  neighborEdges: readonly IPoint[][]
+): string {
+  const e = endpoints
+  const r = e.rounded
+  const parts: string[] = [
+    enableStraightPath ? "1" : "0",
+    `${e.adjustedSource.x},${e.adjustedSource.y},${e.adjustedTarget.x},${e.adjustedTarget.y}`,
+    `${e.sourcePosition},${e.targetPosition},${e.padding}`,
+    `${r.sourceX},${r.sourceY},${r.targetX},${r.targetY}`,
+    `${e.sourceAbsolutePosition.x},${e.sourceAbsolutePosition.y},${e.targetAbsolutePosition.x},${e.targetAbsolutePosition.y}`,
+    `${e.sourceSize.width},${e.sourceSize.height},${e.targetSize.width},${e.targetSize.height}`,
+  ]
+  let o = "O"
+  for (const b of obstacles)
+    o += `;${b.x},${b.y},${b.width},${b.height},${b.soft ? 1 : 0}`
+  parts.push(o)
+  let n = "N"
+  for (const pl of neighborEdges) {
+    n += ";"
+    for (const p of pl) n += `${p.x},${p.y} `
+  }
+  parts.push(n)
+  return parts.join("|")
 }
 
 /**
@@ -296,6 +337,7 @@ export function computeAllEdgeGeometry(input: SolverInput): {
     straightHookTypes,
     liveOverride,
     previous,
+    solveCache,
   } = input
 
   const edgeById = new Map(edges.map((e) => [e.id, e]))
@@ -347,23 +389,41 @@ export function computeAllEdgeGeometry(input: SolverInput): {
       routeById
     )
 
-    const computed = routeStepEdge({
-      enableStraightPath: straightPathTypes.has(edge.type ?? ""),
-      adjustedSource: endpoints.adjustedSource,
-      adjustedTarget: endpoints.adjustedTarget,
-      sourcePosition: endpoints.sourcePosition,
-      targetPosition: endpoints.targetPosition,
-      padding: endpoints.padding,
-      rounded: endpoints.rounded,
-      sourceAbsolutePosition: endpoints.sourceAbsolutePosition,
-      targetAbsolutePosition: endpoints.targetAbsolutePosition,
-      sourceSize: endpoints.sourceSize,
-      targetSize: endpoints.targetSize,
-      obstacles,
-      neighborEdges,
-    })
+    const enableStraightPath = straightPathTypes.has(edge.type ?? "")
+    const sig = solveCache
+      ? routeSignature(enableStraightPath, endpoints, obstacles, neighborEdges)
+      : ""
+    const cached = solveCache?.get(edge.id)
+    let computed: IPoint[]
+    if (cached && cached.sig === sig) {
+      computed = cached.computed
+    } else {
+      computed = routeStepEdge({
+        enableStraightPath,
+        adjustedSource: endpoints.adjustedSource,
+        adjustedTarget: endpoints.adjustedTarget,
+        sourcePosition: endpoints.sourcePosition,
+        targetPosition: endpoints.targetPosition,
+        padding: endpoints.padding,
+        rounded: endpoints.rounded,
+        sourceAbsolutePosition: endpoints.sourceAbsolutePosition,
+        targetAbsolutePosition: endpoints.targetAbsolutePosition,
+        sourceSize: endpoints.sourceSize,
+        targetSize: endpoints.targetSize,
+        obstacles,
+        neighborEdges,
+      })
+      solveCache?.set(edge.id, { sig, computed })
+    }
 
     routeById[edge.id] = mergeManualPoints(edge, computed, endpoints)
+  }
+
+  // Drop cache entries for edges that no longer exist, so a deleted edge's route
+  // cannot be resurrected and the cache tracks the live edge set.
+  if (solveCache && solveCache.size > edgeById.size) {
+    for (const id of solveCache.keys())
+      if (!edgeById.has(id)) solveCache.delete(id)
   }
 
   return { routeById }

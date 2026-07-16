@@ -187,4 +187,77 @@ describe("computeAllEdgeGeometry", () => {
     })
     expect(routeById["e1"]).toEqual(override)
   })
+
+  it("a cached solve is byte-identical to an uncached one, across frames", () => {
+    const a = makeNode("a", 0, 0)
+    const b = makeNode("b", 600, 0)
+    const c = makeNode("c", 300, 0) // between a and b -> forces a real search
+    const d = makeNode("d", 0, 300)
+    const nodeLookup = new Map<string, any>([
+      ["a", a.internal],
+      ["b", b.internal],
+      ["c", c.internal],
+      ["d", d.internal],
+    ])
+    const edges: Edge[] = [
+      { id: "e1", source: "a", target: "b", type: "ClassUnidirectional" },
+      { id: "e2", source: "a", target: "d", type: "ClassUnidirectional" },
+      { id: "e3", source: "c", target: "d", type: "ClassUnidirectional" },
+    ]
+    const base = {
+      nodes: [a.node, b.node, c.node, d.node],
+      nodeLookup,
+      connectionMode: ConnectionMode.Loose,
+      edges,
+      straightPathTypes: STRAIGHT_PATH_STEP_EDGE_TYPES,
+      straightHookTypes: STRAIGHT_HOOK_EDGE_TYPES,
+    }
+
+    const noCache = computeAllEdgeGeometry(base).routeById
+    const cache = new Map<string, { sig: string; computed: unknown }>()
+    // First cached solve populates; the second is all cache hits.
+    const warm = computeAllEdgeGeometry({
+      ...base,
+      solveCache: cache,
+    }).routeById
+    const hot = computeAllEdgeGeometry({ ...base, solveCache: cache }).routeById
+    expect(warm).toEqual(noCache)
+    expect(hot).toEqual(noCache)
+  })
+
+  it("invalidates only the edges a moved node changed", () => {
+    const build = (bx: number) => {
+      const a = makeNode("a", 0, 0)
+      const b = makeNode("b", bx, 0)
+      const c = makeNode("c", 300, 0)
+      const d = makeNode("d", 0, 300)
+      return {
+        nodes: [a.node, b.node, c.node, d.node],
+        nodeLookup: new Map<string, any>([
+          ["a", a.internal],
+          ["b", b.internal],
+          ["c", c.internal],
+          ["d", d.internal],
+        ]),
+        connectionMode: ConnectionMode.Loose,
+        edges: [
+          { id: "e1", source: "a", target: "b", type: "ClassUnidirectional" },
+          { id: "e2", source: "a", target: "d", type: "ClassUnidirectional" },
+        ] as Edge[],
+        straightPathTypes: STRAIGHT_PATH_STEP_EDGE_TYPES,
+        straightHookTypes: STRAIGHT_HOOK_EDGE_TYPES,
+      }
+    }
+    const cache = new Map<string, { sig: string; computed: unknown }>()
+    computeAllEdgeGeometry({ ...build(600), solveCache: cache }) // frame 1
+    // Frame 2 with b moved: the cached continuation must equal a fresh no-cache
+    // solve of the moved layout (proves stale routes are never served).
+    const moved = build(800)
+    const cachedAfterMove = computeAllEdgeGeometry({
+      ...moved,
+      solveCache: cache,
+    }).routeById
+    const freshAfterMove = computeAllEdgeGeometry(moved).routeById
+    expect(cachedAfterMove).toEqual(freshAfterMove)
+  })
 })

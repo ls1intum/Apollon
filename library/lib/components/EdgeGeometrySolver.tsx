@@ -1,5 +1,6 @@
-import { use, useLayoutEffect } from "react"
+import { use, useLayoutEffect, useRef } from "react"
 import { useStore, type InternalNode } from "@xyflow/react"
+import type { IPoint } from "@/edges/Connection"
 import { useShallow } from "zustand/shallow"
 import {
   EdgeGeometryStoreContext,
@@ -8,6 +9,7 @@ import {
   useMetadataStore,
 } from "@/store/context"
 import { computeAllEdgeGeometry } from "@/utils/geometry/edgeGeometrySolver"
+import { recordSolve } from "@/sync/perfCounters"
 import {
   STRAIGHT_HOOK_EDGE_TYPES,
   STRAIGHT_PATH_STEP_EDGE_TYPES,
@@ -36,6 +38,13 @@ export const EdgeGeometrySolver = () => {
   // The edge being bend/endpoint-dragged right now, if any: fed to the solver so
   // higher-id edges dodge the live preview.
   const liveEdgeOverride = useMetadataStore((s) => s.liveEdgeOverride)
+
+  // Cross-frame memo of each edge's routed polyline, keyed on a signature of the
+  // router's inputs, so an edge whose inputs did not change skips the search. A
+  // ref (not state) — it is a cache, never a render trigger.
+  const solveCacheRef = useRef<
+    Map<string, { sig: string; computed: IPoint[] }>
+  >(new Map())
 
   // RF mutates `nodeLookup` in place and keeps the `nodes` ref stable across
   // measurement, so keying the solve on those refs would freeze a stale result.
@@ -74,6 +83,10 @@ export const EdgeGeometrySolver = () => {
   // precisely when any node's geometry moves — recomputes exactly when routes
   // can change, reading the current in-place-mutated `nodeLookup`.
   useLayoutEffect(() => {
+    const startedAt =
+      import.meta.env.DEV || import.meta.env.VITE_E2E === "true"
+        ? performance.now()
+        : 0
     const { routeById } = computeAllEdgeGeometry({
       nodes,
       nodeLookup,
@@ -83,7 +96,10 @@ export const EdgeGeometrySolver = () => {
       straightHookTypes: STRAIGHT_HOOK_EDGE_TYPES,
       liveOverride: liveEdgeOverride,
       previous: geometryStore?.getState().geometryById,
+      solveCache: solveCacheRef.current,
     })
+    if (import.meta.env.DEV || import.meta.env.VITE_E2E === "true")
+      recordSolve(performance.now() - startedAt)
     setAllGeometry(routeById)
     // `nodeGeometryKey` is the change trigger; `nodes`/`nodeLookup` are refs RF
     // mutates in place, so they never signal measurement on their own.
