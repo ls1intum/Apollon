@@ -2,11 +2,7 @@ import { Position, type Rect } from "@xyflow/react"
 import { CANVAS, EDGES } from "@/constants"
 import type { IPoint } from "@/edges/Connection"
 import { getConnectionMode, getEdgeAnchorPoint } from "@/utils/connectionModes"
-import {
-  getEffectiveStubLength,
-  type FreeformEdgeAnchor,
-} from "@/utils/edgeUtils"
-import { routeAroundObstaclesToTargets } from "@/utils/geometry/orthogonalRouter"
+import { type FreeformEdgeAnchor } from "@/utils/edgeUtils"
 import { routeStepEdge } from "@/utils/geometry/edgeRoute"
 import type { ObstacleRect } from "@/utils/geometry/obstacles"
 import type { ResolvedEdgeEndpoints } from "@/utils/geometry/edgeGeometrySolver"
@@ -54,6 +50,10 @@ const NO_NEIGHBORS: readonly IPoint[][] = []
  * it". Tuned so an edge straightens onto a moderately offset partner but bends
  * back to a centred anchor rather than crawl into a corner. */
 const BEND_COST_GU = 12
+/** What one grid cell of "hug" — an ideal-route point run inside the endpoint
+ * clearance — costs. Far above a bend so avoiding a graze always wins over saving
+ * a corner; a hug is a defect, not a trade-off. */
+const HUG_COST_GU = 50
 /** Parallel edges between the same node pair fan out along the side by this much
  * per lane, so an optimiser that would otherwise hand them all the same best
  * anchor spreads them into visibly separate lines. */
@@ -258,6 +258,50 @@ const offCenterPx = (choice: AnchorChoice, rect: Rect): number => {
   return Math.abs(choice.anchor.ratio - 0.5) * axisLength
 }
 
+/** Distance between an axis-aligned segment and a rect (0 if they touch/overlap).
+ * Both are boxes — the segment a degenerate one — so this is the gap between two
+ * rectangles. */
+const segToRectDist = (a: IPoint, b: IPoint, r: Rect): number => {
+  const dx = Math.max(
+    0,
+    Math.min(a.x, b.x) - (r.x + r.width),
+    r.x - Math.max(a.x, b.x)
+  )
+  const dy = Math.max(
+    0,
+    Math.min(a.y, b.y) - (r.y + r.height),
+    r.y - Math.max(a.y, b.y)
+  )
+  return Math.hypot(dx, dy)
+}
+
+/** How far inside the endpoint clearance the IDEAL route runs alongside its own
+ * source or target node — a route that has to wrap tight around an endpoint
+ * grazes its side, which the committed route then renders as an edge drawn on the
+ * node. Measured per SEGMENT (a run parallel to a node's edge grazes it along its
+ * whole length while its endpoints stay clear, so a vertex check would miss it),
+ * skipping the stub that legitimately leaves the source and the one that arrives
+ * at the target. Obstacle-free like the rest of the score: the only nodes it must
+ * clear are its OWN two, known without any search. */
+const hugPenaltyPx = (
+  route: readonly IPoint[],
+  sourceRect: Rect,
+  targetRect: Rect
+): number => {
+  let total = 0
+  const lastSeg = route.length - 2
+  for (let i = 0; i <= lastSeg; i++) {
+    const a = route[i]
+    const b = route[i + 1]
+    const toSource = i === 0 ? Infinity : segToRectDist(a, b, sourceRect)
+    const toTarget = i === lastSeg ? Infinity : segToRectDist(a, b, targetRect)
+    const clearance = Math.min(toSource, toTarget)
+    if (clearance < EDGES.MIN_NODE_CLEARANCE_PX)
+      total += EDGES.MIN_NODE_CLEARANCE_PX - clearance
+  }
+  return total
+}
+
 /**
  * The memoryless ranking key for one candidate, scored on its IDEAL (obstacle-
  * free) route. NOT strictly lexicographic on bends: the primary term is a WEIGHED
@@ -285,7 +329,10 @@ const scoreKey = (
   const offCenter = Math.round(
     (offCenterPx(source, sourceRect) + offCenterPx(target, targetRect)) / GRID
   )
-  const weightedCost = bends * BEND_COST_GU + offCenter
+  // A hug is a defect, not a preference: weight it far above any bend so a
+  // clear-but-more-bent attachment always beats one that grazes its own node.
+  const hug = Math.round(hugPenaltyPx(route, sourceRect, targetRect) / GRID)
+  const weightedCost = bends * BEND_COST_GU + offCenter + hug * HUG_COST_GU
   const length = Math.round(routeLength(route) / GRID)
   return [
     weightedCost,
@@ -330,45 +377,23 @@ const toRouteParams = (
 
 /**
  * Route ONE fixed endpoint pair for real — the single primitive that produces a
- * committed auto route. Used both for the winning candidate in `selectEdgeAnchors`
- * and for the solver's cheap fixed-anchor re-route when only a neighbour moved,
- * so preview, commit, and cache re-route can never draw the pair differently.
- * Mirrors the candidate branch exactly: multi-target A* (here a single target),
- * with the straight-capable 2-point shot preferred only when it stays straight.
+ * committed auto route. Used for the winning candidate in `selectEdgeAnchors` and
+ * for the solver's cheap fixed-anchor re-route when an obstacle or neighbour
+ * moved, so preview, commit, and cache re-route can never draw the pair
+ * differently. This is the SAME `routeStepEdge` a hand-anchored or straight-hook
+ * edge routes through — smooth-step when the run is clear, A* only when it must
+ * detour — so an auto edge is never drawn by a different, worse-cornered path
+ * than an otherwise identical fixed one.
  */
 export const routeChosenAnchors = (
   endpoints: ResolvedEdgeEndpoints,
   obstacles: readonly ObstacleRect[],
   neighborEdges: readonly IPoint[][],
   enableStraightPath: boolean
-): IPoint[] | null => {
-  const picked = routeAroundObstaclesToTargets(
-    endpoints.adjustedSource,
-    endpoints.sourcePosition,
-    EDGES.STUB_LENGTH,
-    [
-      {
-        point: endpoints.adjustedTarget,
-        position: endpoints.targetPosition,
-        stubLength: getEffectiveStubLength(
-          endpoints.adjustedSource,
-          endpoints.adjustedTarget,
-          endpoints.sourcePosition,
-          endpoints.targetPosition
-        ),
-      },
-    ],
-    obstacles,
-    neighborEdges
+): IPoint[] =>
+  routeStepEdge(
+    toRouteParams(endpoints, obstacles, neighborEdges, enableStraightPath)
   )
-  if (!picked) return null
-  const stepRoute = enableStraightPath
-    ? routeStepEdge(
-        toRouteParams(endpoints, obstacles, neighborEdges, enableStraightPath)
-      )
-    : null
-  return stepRoute && stepRoute.length === 2 ? stepRoute : picked.route
-}
 
 /** Resolve one endpoint pair (source anchor + target anchor) to router-ready
  * endpoints via the injected resolver. `undefined` for an end means "custom —
