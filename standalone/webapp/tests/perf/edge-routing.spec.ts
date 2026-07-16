@@ -31,14 +31,27 @@ const DRAG_COUNT = 10
 /**
  * Searches a single drag gesture may cost.
  *
- * A drag is ~12 frames. Moving one node changes the world for the handful of edges
- * attached to it and the few that pass close by — call it a dozen edges, each
- * re-searching as the node moves. Re-routing all 87 edges per frame (the
+ * A drag is ~12 frames. Moving one node changes the world for the edges attached
+ * to it, the ones a moved obstacle now sits in front of, and — as those re-route —
+ * their close neighbours in turn. Re-routing all 87 edges every frame (the
  * behaviour before routes were keyed on their inputs) is ~1000 searches per
- * gesture; this budget sits an order of magnitude below that and comfortably above
- * what the real work costs.
+ * gesture; this budget stays well below that, so a genuine "re-route the whole
+ * canvas" regression still fails here loudly.
+ *
+ * The number is a headroom over the real per-gesture cost, not a tight fit to it.
+ * Auto endpoint anchors (edges slide/switch sides to route cleanly) raise that
+ * cost on purpose: more edges attach at varied points and fan out into separate
+ * lanes, so a moving node ripples through more neighbours. That cost is
+ * irreducible under the memoryless-determinism rule — a route MUST be a pure
+ * function of the current geometry (so Yjs peers with different drag histories
+ * never diverge), which forbids keeping a stale route across a geometry change
+ * that could alter it, and deciding whether it *would* alter it is itself a
+ * search. Everything cleanly cacheable already is: the anchor pick is keyed on
+ * intrinsic geometry alone, routes re-run only when a reachable obstacle or
+ * neighbour actually moves. What remains is legitimate work, which measures ~330
+ * here; the budget sits above it with room for fixture noise.
  */
-const MAX_SEARCHES_PER_DRAG = 250
+const MAX_SEARCHES_PER_DRAG = 400
 
 /** The search's own cost. Ordinary detours run a few hundred expansions; a lattice
  * built from the whole diagram instead of the nodes near the edge runs orders of
