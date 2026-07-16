@@ -18,6 +18,9 @@ export type PerfSnapshot = {
   edgeSearchExpansions: number
   edgeSearchesMaxExpansions: number
   edgeSearchesAbandoned: number
+  solveMs: number
+  solveMaxMs: number
+  solveCount: number
 }
 
 export function loadFixture(name: string): Record<string, unknown> {
