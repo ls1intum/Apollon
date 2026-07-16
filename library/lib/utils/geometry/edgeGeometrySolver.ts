@@ -3,6 +3,7 @@ import {
   type Edge,
   type Node,
   type InternalNode,
+  type Rect,
 } from "@xyflow/react"
 import { getEdgePosition, ConnectionMode } from "@xyflow/system"
 import { EDGES } from "@/constants"
@@ -23,6 +24,7 @@ import {
   type ObstacleRect,
 } from "@/utils/geometry/obstacles"
 import { routeStepEdge } from "@/utils/geometry/edgeRoute"
+import { selectEdgeAnchors } from "@/utils/geometry/edgeAnchoring"
 
 /**
  * One edge's endpoints, resolved from the React Flow store so all edges can be
@@ -61,7 +63,14 @@ function resolveEdgeEndpoints(
   nodes: readonly Node[],
   nodeById: Map<string, Node>,
   nodeLookup: Map<string, InternalNode>,
-  connectionMode: ConnectionMode
+  connectionMode: ConnectionMode,
+  /** Anchors to use INSTEAD of the edge's own — how the auto-anchor selector asks
+   * "what would this edge look like anchored here". Absent ends fall back to the
+   * edge's stored (custom) anchor, then to React Flow's default point. */
+  overrideAnchors?: {
+    sourceAnchor?: FreeformEdgeAnchor
+    targetAnchor?: FreeformEdgeAnchor
+  }
 ): ResolvedEdgeEndpoints | null {
   const sourceInternal = nodeLookup.get(edge.source)
   const targetInternal = nodeLookup.get(edge.target)
@@ -104,8 +113,12 @@ function resolveEdgeEndpoints(
       }
     : null
 
-  const sourceAnchor = edge.data?.sourceAnchor as FreeformEdgeAnchor | undefined
-  const targetAnchor = edge.data?.targetAnchor as FreeformEdgeAnchor | undefined
+  const sourceAnchor =
+    overrideAnchors?.sourceAnchor ??
+    (edge.data?.sourceAnchor as FreeformEdgeAnchor | undefined)
+  const targetAnchor =
+    overrideAnchors?.targetAnchor ??
+    (edge.data?.targetAnchor as FreeformEdgeAnchor | undefined)
   const resolvedSourceAnchor =
     sourceRect && isFreeformEdgeAnchor(sourceAnchor)
       ? getEdgeAnchorPoint(sourceNode?.type, sourceRect, sourceAnchor)
@@ -339,7 +352,17 @@ export type SolverInput = {
    * Dragging one node leaves every distant edge's signature untouched, so only the
    * edges the move can actually have shifted re-search.
    */
-  solveCache?: Map<string, { sig: string; computed: IPoint[] }>
+  solveCache?: Map<string, EdgeSolveCacheEntry>
+}
+
+/** One edge's cached solve. For an auto-anchored edge the CHOSEN anchors ride
+ * along, so a cache hit can re-resolve the endpoints that `mergeManualPoints`
+ * needs (manual bends are re-applied every frame) without re-running the search. */
+export type EdgeSolveCacheEntry = {
+  sig: string
+  computed: IPoint[]
+  sourceAnchor?: FreeformEdgeAnchor
+  targetAnchor?: FreeformEdgeAnchor
 }
 
 /** Lossless digest of every input `routeStepEdge` reads. Geometry only (obstacle
@@ -361,17 +384,121 @@ function routeSignature(
     `${e.sourceAbsolutePosition.x},${e.sourceAbsolutePosition.y},${e.targetAbsolutePosition.x},${e.targetAbsolutePosition.y}`,
     `${e.sourceSize.width},${e.sourceSize.height},${e.targetSize.width},${e.targetSize.height}`,
   ]
+  parts.push(serializeObstacles(obstacles), serializeNeighbors(neighborEdges))
+  return parts.join("|")
+}
+
+const serializeObstacles = (obstacles: readonly ObstacleRect[]): string => {
   let o = "O"
   for (const b of obstacles)
     o += `;${b.x},${b.y},${b.width},${b.height},${b.soft ? 1 : 0}`
-  parts.push(o)
+  return o
+}
+
+const serializeNeighbors = (neighborEdges: readonly IPoint[][]): string => {
   let n = "N"
   for (const pl of neighborEdges) {
     n += ";"
     for (const p of pl) n += `${p.x},${p.y} `
   }
-  parts.push(n)
-  return parts.join("|")
+  return n
+}
+
+/** The router's input for one resolved endpoint pair. Shared by the fixed-edge
+ * path and the auto-anchor fallback so both route through the same primitive. */
+function routeStepParams(
+  endpoints: ResolvedEdgeEndpoints,
+  obstacles: readonly ObstacleRect[],
+  neighborEdges: readonly IPoint[][],
+  enableStraightPath: boolean
+) {
+  return {
+    enableStraightPath,
+    adjustedSource: endpoints.adjustedSource,
+    adjustedTarget: endpoints.adjustedTarget,
+    sourcePosition: endpoints.sourcePosition,
+    targetPosition: endpoints.targetPosition,
+    padding: endpoints.padding,
+    rounded: endpoints.rounded,
+    sourceAbsolutePosition: endpoints.sourceAbsolutePosition,
+    targetAbsolutePosition: endpoints.targetAbsolutePosition,
+    sourceSize: endpoints.sourceSize,
+    targetSize: endpoints.targetSize,
+    obstacles,
+    neighborEdges,
+  }
+}
+
+/**
+ * Digest of everything the anchor SELECTION depends on: the two node rects, node
+ * types, any custom (pinned) anchors, the obstacle and neighbour sets, whether
+ * the edge may go straight, and the sibling lane. Unchanged ⇒ the memoryless
+ * selector returns the same anchors, so the cached route (and its anchors) is
+ * reused without re-searching. Node RECTS, not the base endpoints: the selection
+ * is a function of the rectangles, and the base point React Flow would have
+ * picked is irrelevant once the selector overrides it.
+ */
+function autoAnchorSignature(
+  endpoints: ResolvedEdgeEndpoints,
+  sourceType: string | undefined,
+  targetType: string | undefined,
+  sourceCustom: FreeformEdgeAnchor | undefined,
+  targetCustom: FreeformEdgeAnchor | undefined,
+  obstacles: readonly ObstacleRect[],
+  neighborEdges: readonly IPoint[][],
+  enableStraightPath: boolean,
+  lane: { index: number; count: number }
+): string {
+  const e = endpoints
+  const anchor = (a: FreeformEdgeAnchor | undefined) =>
+    a ? `${a.side},${a.ratio}` : "-"
+  return [
+    enableStraightPath ? "1" : "0",
+    `${sourceType ?? ""},${targetType ?? ""}`,
+    `${e.sourceAbsolutePosition.x},${e.sourceAbsolutePosition.y},${e.sourceSize.width},${e.sourceSize.height}`,
+    `${e.targetAbsolutePosition.x},${e.targetAbsolutePosition.y},${e.targetSize.width},${e.targetSize.height}`,
+    `${anchor(sourceCustom)};${anchor(targetCustom)}`,
+    `${lane.index}/${lane.count}`,
+    serializeObstacles(obstacles),
+    serializeNeighbors(neighborEdges),
+  ].join("|")
+}
+
+const rectFromEndpoint = (
+  absolutePosition: IPoint,
+  size: { width: number; height: number }
+): Rect => ({
+  x: absolutePosition.x,
+  y: absolutePosition.y,
+  width: size.width,
+  height: size.height,
+})
+
+const asFreeformAnchor = (value: unknown): FreeformEdgeAnchor | undefined =>
+  isFreeformEdgeAnchor(value) ? value : undefined
+
+/**
+ * Rank each edge within its PARALLEL SET (edges sharing an unordered node pair),
+ * by ascending id so the fan-out is deterministic and independent of routing
+ * order. A lone edge is index 0 of a set of 1 (no lane offset).
+ */
+function computeParallelInfo(
+  ordered: readonly Edge[]
+): Map<string, { index: number; count: number }> {
+  const groups = new Map<string, Edge[]>()
+  for (const e of ordered) {
+    const key =
+      e.source < e.target
+        ? `${e.source}|${e.target}`
+        : `${e.target}|${e.source}`
+    const group = groups.get(key)
+    if (group) group.push(e)
+    else groups.set(key, [e])
+  }
+  const info = new Map<string, { index: number; count: number }>()
+  for (const group of groups.values())
+    group.forEach((e, index) => info.set(e.id, { index, count: group.length }))
+  return info
 }
 
 /**
@@ -403,6 +530,7 @@ export function computeAllEdgeGeometry(input: SolverInput): {
   // Spatial index of finished routes, grown as the walk proceeds so each edge
   // finds its lower-id neighbours without rescanning the whole route map.
   const neighborGrid: NeighborGrid = new Map()
+  const parallelInfo = computeParallelInfo(ordered)
 
   for (const edge of ordered) {
     if (liveOverride && liveOverride.edgeId === edge.id) {
@@ -454,33 +582,128 @@ export function computeAllEdgeGeometry(input: SolverInput): {
     )
 
     const enableStraightPath = straightPathTypes.has(edge.type ?? "")
-    const sig = solveCache
-      ? routeSignature(enableStraightPath, endpoints, obstacles, neighborEdges)
-      : ""
-    const cached = solveCache?.get(edge.id)
+    const sourceCustom = asFreeformAnchor(edge.data?.sourceAnchor)
+    const targetCustom = asFreeformAnchor(edge.data?.targetAnchor)
+    // Auto-anchored unless BOTH ends are user-pinned, or it is a self-loop (which
+    // the anchor search has nothing to optimise — both ends sit on one node).
+    const isAuto =
+      edge.source !== edge.target && !(sourceCustom && targetCustom)
+
+    // The endpoints the route is actually drawn between — the auto path replaces
+    // them with the chosen anchors' resolution.
+    let endpointsUsed = endpoints
     let computed: IPoint[]
-    if (cached && cached.sig === sig) {
-      computed = cached.computed
+
+    if (isAuto) {
+      const lane = parallelInfo.get(edge.id) ?? { index: 0, count: 1 }
+      const sourceType = nodeById.get(edge.source)?.type
+      const targetType = nodeById.get(edge.target)?.type
+      const sig = solveCache
+        ? autoAnchorSignature(
+            endpoints,
+            sourceType,
+            targetType,
+            sourceCustom,
+            targetCustom,
+            obstacles,
+            neighborEdges,
+            enableStraightPath,
+            lane
+          )
+        : ""
+      const cached = solveCache?.get(edge.id)
+      if (cached && cached.sig === sig) {
+        // Reuse the chosen anchors and route; only re-resolve endpoints so fresh
+        // manual bends can be re-merged (they are not part of the signature).
+        endpointsUsed =
+          resolveEdgeEndpoints(
+            edge,
+            nodes,
+            nodeById,
+            nodeLookup,
+            connectionMode,
+            {
+              sourceAnchor: cached.sourceAnchor,
+              targetAnchor: cached.targetAnchor,
+            }
+          ) ?? endpoints
+        computed = cached.computed
+      } else {
+        const selected = selectEdgeAnchors({
+          sourceRect: rectFromEndpoint(
+            endpoints.sourceAbsolutePosition,
+            endpoints.sourceSize
+          ),
+          targetRect: rectFromEndpoint(
+            endpoints.targetAbsolutePosition,
+            endpoints.targetSize
+          ),
+          sourceType,
+          targetType,
+          sourceCustom,
+          targetCustom,
+          resolve: (overrides) =>
+            resolveEdgeEndpoints(
+              edge,
+              nodes,
+              nodeById,
+              nodeLookup,
+              connectionMode,
+              overrides
+            ),
+          obstacles,
+          neighborEdges,
+          enableStraightPath,
+          laneIndex: lane.index,
+          laneCount: lane.count,
+        })
+        if (selected) {
+          endpointsUsed = selected.endpoints
+          computed = selected.route
+          solveCache?.set(edge.id, {
+            sig,
+            computed,
+            sourceAnchor: selected.sourceAnchor,
+            targetAnchor: selected.targetAnchor,
+          })
+        } else {
+          // No candidate routed — fall back to the plain endpoints (uncached).
+          computed = routeStepEdge(
+            routeStepParams(
+              endpoints,
+              obstacles,
+              neighborEdges,
+              enableStraightPath
+            )
+          )
+        }
+      }
     } else {
-      computed = routeStepEdge({
-        enableStraightPath,
-        adjustedSource: endpoints.adjustedSource,
-        adjustedTarget: endpoints.adjustedTarget,
-        sourcePosition: endpoints.sourcePosition,
-        targetPosition: endpoints.targetPosition,
-        padding: endpoints.padding,
-        rounded: endpoints.rounded,
-        sourceAbsolutePosition: endpoints.sourceAbsolutePosition,
-        targetAbsolutePosition: endpoints.targetAbsolutePosition,
-        sourceSize: endpoints.sourceSize,
-        targetSize: endpoints.targetSize,
-        obstacles,
-        neighborEdges,
-      })
-      solveCache?.set(edge.id, { sig, computed })
+      const sig = solveCache
+        ? routeSignature(
+            enableStraightPath,
+            endpoints,
+            obstacles,
+            neighborEdges
+          )
+        : ""
+      const cached = solveCache?.get(edge.id)
+      if (cached && cached.sig === sig) {
+        computed = cached.computed
+      } else {
+        computed = routeStepEdge(
+          routeStepParams(
+            endpoints,
+            obstacles,
+            neighborEdges,
+            enableStraightPath
+          )
+        )
+        solveCache?.set(edge.id, { sig, computed })
+      }
     }
 
-    routeById[edge.id] = mergeManualPoints(edge, computed, endpoints)
+    routeById[edge.id] = mergeManualPoints(edge, computed, endpointsUsed)
     indexRoutePolyline(neighborGrid, edge.id, routeById[edge.id])
   }
 

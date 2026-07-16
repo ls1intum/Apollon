@@ -119,6 +119,18 @@ const arePointsEqual = (a: IPoint[], b: IPoint[]): boolean =>
   a.length === b.length &&
   a.every((point, index) => point.x === b[index].x && point.y === b[index].y)
 
+/** The node side an endpoint sits on, read off the route: `from` is the endpoint,
+ * `toward` the next point along. The first step leaves the source along its side,
+ * so the direction from the source to its neighbour IS that side; at the target,
+ * pass the points in reverse (endpoint, then inward neighbour). */
+const sideFromSegment = (from: IPoint, toward: IPoint): Position => {
+  const dx = toward.x - from.x
+  const dy = toward.y - from.y
+  if (Math.abs(dx) >= Math.abs(dy))
+    return dx >= 0 ? Position.Right : Position.Left
+  return dy >= 0 ? Position.Bottom : Position.Top
+}
+
 export const useStepPathEdge = ({
   id,
   type,
@@ -333,9 +345,9 @@ export const useStepPathEdge = ({
   const sourceY = resolvedSourceAnchor?.point.y ?? reactFlowSourceY
   const targetX = resolvedTargetAnchor?.point.x ?? reactFlowTargetX
   const targetY = resolvedTargetAnchor?.point.y ?? reactFlowTargetY
-  const sourcePosition =
+  const baseSourcePosition =
     resolvedSourceAnchor?.position ?? reactFlowSourcePosition
-  const targetPosition =
+  const baseTargetPosition =
     resolvedTargetAnchor?.position ?? reactFlowTargetPosition
   const sourceConnectionPointPadding = resolvedSourceAnchor
     ? 0
@@ -349,18 +361,47 @@ export const useStepPathEdge = ({
   const roundedTargetX = Math.round(targetX)
   const roundedTargetY = Math.round(targetY)
 
-  const adjustedTargetCoordinates = adjustTargetCoordinates(
+  const baseAdjustedTarget = adjustTargetCoordinates(
     roundedTargetX,
     roundedTargetY,
-    targetPosition,
+    baseTargetPosition,
     targetConnectionPointPadding
   )
-  const adjustedSourceCoordinates = adjustSourceCoordinates(
+  const baseAdjustedSource = adjustSourceCoordinates(
     roundedSourceX,
     roundedSourceY,
-    sourcePosition,
+    baseSourcePosition,
     sourceConnectionPointPadding
   )
+
+  // The solver's committed route is the single source of truth for where this
+  // edge attaches: its first/last points ARE the adjusted anchors the auto-router
+  // chose, and its first/last segment directions ARE the sides. The handles, drag
+  // baseline and reconnection all read them from here. Re-deriving the anchor
+  // independently (as this hook once did) would let the interaction layer act on
+  // endpoints the user cannot see the moment the auto-router moves them — a bend
+  // dragged against a stale baseline is silently discarded. The `base*` values
+  // above are only the pre-first-solve fallback.
+  const routeEndpoints =
+    centralRoute && centralRoute.length >= 2 ? centralRoute : null
+  const sourcePosition = routeEndpoints
+    ? sideFromSegment(routeEndpoints[0], routeEndpoints[1])
+    : baseSourcePosition
+  const targetPosition = routeEndpoints
+    ? sideFromSegment(
+        routeEndpoints[routeEndpoints.length - 1],
+        routeEndpoints[routeEndpoints.length - 2]
+      )
+    : baseTargetPosition
+  const adjustedSourceCoordinates = routeEndpoints
+    ? { sourceX: routeEndpoints[0].x, sourceY: routeEndpoints[0].y }
+    : baseAdjustedSource
+  const adjustedTargetCoordinates = routeEndpoints
+    ? {
+        targetX: routeEndpoints[routeEndpoints.length - 1].x,
+        targetY: routeEndpoints[routeEndpoints.length - 1].y,
+      }
+    : baseAdjustedTarget
   const hasStoredManualPoints = Boolean(data?.points && data.points.length > 0)
   const hasLocalManualPoints = customPoints.length > 0
   const hasManualPoints = hasStoredManualPoints
