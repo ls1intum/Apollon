@@ -70,6 +70,29 @@ const centerOf = (r: Rect): IPoint => ({
 const isVerticalSide = (side: Position): boolean =>
   side === Position.Left || side === Position.Right
 
+const OPPOSITE_SIDE: Record<Position, Position> = {
+  [Position.Top]: Position.Bottom,
+  [Position.Bottom]: Position.Top,
+  [Position.Left]: Position.Right,
+  [Position.Right]: Position.Left,
+}
+
+/** The side of `rect` that faces `toward` — the one a bend-free run would leave
+ * from. Whichever axis the partner is more strongly displaced along wins. */
+const facingSide = (rect: Rect, toward: IPoint): Position => {
+  const c = centerOf(rect)
+  const dx = toward.x - c.x
+  const dy = toward.y - c.y
+  return Math.abs(dx) / (rect.width / 2 || 1) >=
+    Math.abs(dy) / (rect.height / 2 || 1)
+    ? dx >= 0
+      ? Position.Right
+      : Position.Left
+    : dy >= 0
+      ? Position.Bottom
+      : Position.Top
+}
+
 /** One concrete anchor choice: the stored `{side, ratio}`, its shape-projected
  * pixel, and the side the router must exit/enter along. */
 type AnchorChoice = {
@@ -84,18 +107,7 @@ type AnchorChoice = {
  * is dropped — it can only ever add a U-turn's worth of bends.
  */
 const candidateSides = (rect: Rect, toward: IPoint): Position[] => {
-  const c = centerOf(rect)
-  const dx = toward.x - c.x
-  const dy = toward.y - c.y
-  const primary =
-    Math.abs(dx) / (rect.width / 2 || 1) >=
-    Math.abs(dy) / (rect.height / 2 || 1)
-      ? dx >= 0
-        ? Position.Right
-        : Position.Left
-      : dy >= 0
-        ? Position.Bottom
-        : Position.Top
+  const primary = facingSide(rect, toward)
   const perpendicular = isVerticalSide(primary)
     ? [Position.Top, Position.Bottom]
     : [Position.Left, Position.Right]
@@ -162,6 +174,70 @@ const generateCandidates = (
     choices.push(toAnchorChoice(nodeType, rect, { side, ratio }))
   }
   return choices
+}
+
+/**
+ * The candidate pair that connects the two facing sides with a STRAIGHT run: both
+ * anchors placed on one line through where the nodes overlap perpendicular to the
+ * facing axis, so the edge needs no bend at all. `generateCandidates` aims each
+ * anchor at its partner's centre independently, which for offset-but-overlapping
+ * nodes lands them on different lines and forces a Z — this recovers the straight
+ * option the weighed cost then prefers.
+ *
+ * Returns null when the nodes do not face each other on one axis, do not overlap
+ * enough to fit both corner margins, or use a fixed-centre connection mode (which
+ * cannot slide an anchor). The lane offset shifts the shared line, so parallel
+ * siblings still fan into separate lines rather than all going straight onto each
+ * other.
+ */
+const straightAlignedPair = (
+  sourceRect: Rect,
+  targetRect: Rect,
+  sourceType: string | undefined,
+  targetType: string | undefined,
+  laneOffset: number
+): { source: AnchorChoice; target: AnchorChoice } | null => {
+  if (
+    getConnectionMode(sourceType) === "four-center" ||
+    getConnectionMode(targetType) === "four-center"
+  )
+    return null
+  const sSide = facingSide(sourceRect, centerOf(targetRect))
+  const tSide = facingSide(targetRect, centerOf(sourceRect))
+  // The two anchors can share one line only if their sides directly oppose on the
+  // same axis (Right↔Left or Bottom↔Top).
+  if (OPPOSITE_SIDE[sSide] !== tSide) return null
+
+  const vertical = isVerticalSide(sSide) // left/right sides ⇒ a straight run shares Y
+  const sLo = vertical ? sourceRect.y : sourceRect.x
+  const sHi = vertical
+    ? sourceRect.y + sourceRect.height
+    : sourceRect.x + sourceRect.width
+  const tLo = vertical ? targetRect.y : targetRect.x
+  const tHi = vertical
+    ? targetRect.y + targetRect.height
+    : targetRect.x + targetRect.width
+  const sAxis = vertical ? sourceRect.height : sourceRect.width
+  const tAxis = vertical ? targetRect.height : targetRect.width
+  const margin = Math.min(2 * GRID, Math.min(sAxis, tAxis) * 0.3)
+  const lo = Math.max(sLo, tLo) + margin
+  const hi = Math.min(sHi, tHi) - margin
+  if (lo > hi) return null // overlap too small to seat both anchors clear of corners
+
+  const midpointOfCenters = ((sLo + sHi) / 2 + (tLo + tHi) / 2) / 2
+  const snapped =
+    Math.round(clamp(midpointOfCenters + laneOffset, lo, hi) / GRID) * GRID
+  const v = clamp(snapped, lo, hi)
+  return {
+    source: toAnchorChoice(sourceType, sourceRect, {
+      side: sSide,
+      ratio: (v - sLo) / sAxis,
+    }),
+    target: toAnchorChoice(targetType, targetRect, {
+      side: tSide,
+      ratio: (v - tLo) / tAxis,
+    }),
+  }
 }
 
 const routeLength = (route: readonly IPoint[]): number => {
@@ -354,6 +430,24 @@ export const selectEdgeAnchors = (
         centerOf(input.sourceRect),
         lane
       )
+
+  // When both ends are free, add the straight-aligned pair — anchors on one line
+  // through the nodes' overlap. Per-side candidates aim at the partner's centre
+  // and so miss a straight run for offset nodes; this recovers it, and the weighed
+  // cost keeps it only while its off-centre stays cheaper than the bend it saves.
+  if (!input.sourceCustom && !input.targetCustom) {
+    const straight = straightAlignedPair(
+      input.sourceRect,
+      input.targetRect,
+      input.sourceType,
+      input.targetType,
+      lane
+    )
+    if (straight) {
+      sourceOptions.push(straight.source)
+      targetOptions.push(straight.target)
+    }
+  }
 
   let best: {
     endpoints: ResolvedEdgeEndpoints
