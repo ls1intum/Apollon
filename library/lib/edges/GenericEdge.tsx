@@ -118,10 +118,9 @@ export const getEndpointHitTargetRect = (
   const direction = outwardDir
     ? normalizeDir(outwardDir)
     : getEndpointDirection(side)
-  // Keep the square inside this endpoint's half so the two hit targets meet at
-  // the midpoint instead of overlapping — whichever end you aim at, you get.
-  // Floored: half of a very short edge is nearly nothing, and two small targets
-  // are still two targets while a zero-sized one is not reachable at all.
+  // Keep the square inside this endpoint's half so the two hit targets meet at the
+  // midpoint instead of overlapping. Floored so a very short edge still gets two
+  // reachable targets rather than zero-sized ones.
   const hitSize = Math.max(
     Math.min(hitTargetSize * screenScale, run),
     EDGES.MIN_ENDPOINT_HIT_TARGET_PX * screenScale
@@ -644,17 +643,15 @@ export const CommonEdgeElements = ({
   // element without reading a ref's `.current` during render.
   const [anchorEl, anchorRef] = usePopoverAnchor<SVGForeignObjectElement>()
 
-  // Whether this edge has been routed by hand. Stored points ARE the manual
-  // state — an auto-routed edge simply has none — so this needs no new field and
-  // no migration: it reads the model exactly as the router already does.
+  // Whether this edge was routed by hand: stored points ARE the manual state (an
+  // auto-routed edge has none), so no separate field is needed.
   const setEdges = useDiagramStore((state) => state.setEdges)
   const hasManualRoute = useDiagramStore((state) => {
     const points = state.edges.find((edge) => edge.id === id)?.data?.points
     return Array.isArray(points) && points.length > 0
   })
 
-  // Hand the edge back to the router. Clearing the points is not a shortcut for
-  // "reset" — it IS the auto state, which is why this is the whole of it.
+  // Hand the edge back to the router: clearing the points IS the auto state.
   const handleResetRouting = useCallback(() => {
     setEdges((edges) =>
       edges.map((edge) =>

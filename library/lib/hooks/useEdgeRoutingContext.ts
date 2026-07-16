@@ -46,25 +46,18 @@ const polylinesEqual = (a: IPoint[][], b: IPoint[][]): boolean => {
 
 /**
  * Everything the router needs to know about the world around one edge: what it
- * must not run through, and what it must not be drawn on top of.
+ * must not run through, and what it must not be drawn on top of. Committed edges
+ * are routed by the central solver; this hook serves the live reconnect preview
+ * (ReconnectConnectionLine) the SAME obstacles and neighbour polylines (read from
+ * the solver-populated geometry registry) so the drag matches the route on release.
  *
- * Committed edges are routed by the central solver (see computeAllEdgeGeometry);
- * this hook now serves the live reconnect preview (ReconnectConnectionLine),
- * feeding it the SAME obstacles and neighbour polylines the solver sees — the
- * neighbour set is read from the solver-populated geometry registry — so the
- * line you drag matches the route you get on release. A preview that skipped the
- * router and drew a plain smooth-step curve ignored every node, margin and edge
- * in the way; a preview that lies about the result is worse than no preview.
- *
- * `selfId` is the edge being routed, or `undefined` for a connection that does
- * not exist yet. It controls which neighbours this edge yields to:
+ * `selfId` is the edge being routed, or `undefined` for a connection that does not
+ * exist yet. It controls which neighbours this edge yields to:
  *
  *  - An existing edge yields only to LOWER-id neighbours. That total order turns
- *    "who routes around whom" into a DAG — the lowest-id edge never moves and the
- *    rest settle around it — so two crossing edges cannot spend forever dodging
- *    each other.
- *  - A brand-new edge has no id yet and is, by construction, the newcomer: it
- *    yields to everything already on the canvas.
+ *    "who routes around whom" into a DAG (lowest id never moves, the rest settle
+ *    around it) so two crossing edges cannot spend forever dodging each other.
+ *  - A brand-new edge has no id yet and is the newcomer: it yields to everything.
  */
 export const useEdgeRoutingContext = ({
   selfId,
@@ -90,24 +83,11 @@ export const useEdgeRoutingContext = ({
   const { x: tx, y: ty } = targetPoint
 
   /**
-   * Whether `otherId` is a TRUE sibling of this edge: one that leaves the very
-   * same connection point, and so cannot help but share geometry with us.
-   *
-   * Four interfaces hanging off one component all leave the same handle. Their
-   * lines are coincident at that point by construction, and running them down a
-   * common bus before they split is not a defect — it is how the diagram is meant
-   * to look. Price that as an overlap and each sibling spends the search fleeing
-   * the others, which is how a tidy fan becomes spaghetti.
-   *
-   * But sharing a NODE is not sharing a POINT, and that distinction is the whole
-   * rule. Two edges attached to different handles of the same class start in
-   * different places and have no excuse to be drawn on top of one another — yet a
-   * node-level test waves them through, and they overlap. So the test is the
-   * connection point: same node AND same handle.
-   *
-   * Edges between the SAME PAIR are never exempt, however they attach: they run
-   * coincident along their whole length, one hides the other, and an aggregation
-   * drawn over an association is a semantic misread, not merely an ugly one.
+   * Whether `otherId` is a TRUE sibling: leaves the very same connection point
+   * (same node AND same handle), so it is coincident with us by construction and
+   * may share a bus rather than being priced as an overlap to flee. Sharing a NODE
+   * is not enough — different handles start apart and must not overlap. Edges
+   * between the SAME PAIR are never exempt: they run coincident end to end.
    */
   const isSibling = useMemo(() => {
     const byId = new Map(edges.map((edge) => [edge.id, edge]))
@@ -194,26 +174,10 @@ export const useEdgeRoutingContext = ({
     isSibling,
   ])
 
-  // Hand back the SAME arrays until their CONTENTS change, not their identity.
-  //
-  // Routing is a graph search, and it should be rare: an edge's route depends on
-  // its endpoints, the nodes near it and the edges it must not cross, so when none
-  // of those changed neither did the answer. But the arrays above are rebuilt every
-  // render, so their identity churns constantly — the dragged node moves, `nodes`
-  // gets a new reference, and every edge recomputes `obstacles` into a fresh array
-  // even where the obstacle SET around it is unchanged. Feeding those churning
-  // arrays straight into the routing memo would re-run the search for every edge on
-  // every frame of any drag.
-  //
-  // So we stabilise by CONTENT: `useStableValue` keeps the previous array reference
-  // while the new one is content-equal, so downstream identity changes only for the
-  // edges a change can actually have moved. This used to be a `useMemo` keyed on a
-  // string digest with a suppressed `exhaustive-deps` — but under the React Compiler
-  // a memo whose declared deps do not match what it returns deopts the WHOLE hook
-  // (the compiler cannot prove it is preserved, so it optimises none of it). A
-  // ref-compare hook has no deps array to reject, keeps this hook optimizable, and
-  // is cheaper than allocating a digest string every render. The perf suite
-  // (`edge-routing.spec.ts`) holds the line at the compiled artifact.
+  // Stabilise by CONTENT: `nodes` gets a fresh reference every drag frame, so the
+  // arrays above churn identity even when the obstacle/neighbour SET is unchanged.
+  // `useStableValue` keeps the previous reference while content is equal, so the
+  // downstream routing search only re-runs for edges a change can actually move.
   const stableObstacles = useStableValue(obstacles, obstaclesEqual)
   const stableNeighbors = useStableValue(neighborEdges, polylinesEqual)
 

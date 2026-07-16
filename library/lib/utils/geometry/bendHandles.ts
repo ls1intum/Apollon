@@ -26,9 +26,8 @@ export interface BendHandle {
   position: IPoint
   orientation: "H" | "V"
   kind: SegmentKind
-  /** Flow-space room this handle has to sit in along its segment. The renderer
-   * sizes the handle from this instead of the handle being deleted when a fixed
-   * size would not fit — a small nub is grabbable, an absent handle is not. */
+  /** Flow-space room this handle has along its segment; the renderer sizes the
+   * handle from this rather than deleting it when a fixed size would not fit. */
   bendableLength: number
 }
 
@@ -93,24 +92,13 @@ export function getBendHandlePosition(
 }
 
 /**
- * A bend handle for EVERY segment. No segment is ever too short to get one.
+ * A bend handle for EVERY segment; no segment is too short to get one. The
+ * renderer shrinks a handle to fit, so zoom changes a handle's SIZE, not its
+ * EXISTENCE.
  *
- * This used to delete any handle whose segment could not host a full-size 34px
- * pill, which had two consequences nobody intended: a short edge had nothing to
- * grab at all, and — because a terminal segment also gives up 25px of "safe
- * area" — the default 30px stub could never host a handle at ANY zoom level.
- * That is not a threshold you can zoom past, it is arithmetic: 25 + 34 > 30. The
- * corner of a tight edge was simply frozen forever.
- *
- * The rule those vetoes were really enforcing — a drag must not invert a stub —
- * is now enforced where it belongs, on the drag itself (`getBendLaneBounds`
- * clamps the lane). So availability stops being a question of geometry: every
- * segment gets a handle, the renderer shrinks it to fit, and zoom changes a
- * handle's SIZE rather than its EXISTENCE.
- *
- * The safe area survives only as a placement bias — the handle sits past it when
- * there is room, so it lands on a slice that is comfortable to drag rather than
- * hugging the node.
+ * The stub-inversion rule is enforced on the drag itself (`getBendLaneBounds`
+ * clamps the lane), not by withholding handles. The safe area survives only as a
+ * placement bias — the handle sits past it when there is room.
  */
 export function getBendableSegments(
   points: IPoint[],
@@ -127,9 +115,8 @@ export function getBendableSegments(
     const rawLength = Math.abs(end.x - start.x) + Math.abs(end.y - start.y)
     if (rawLength <= 0) continue
 
-    // The safe area next to a node biases WHERE the handle sits, but it can no
-    // longer take the handle away: a segment with no room to spare simply puts
-    // its handle at its own midpoint.
+    // A segment with no room past the safe area puts its handle at its own
+    // midpoint.
     const safeStart = i === 0 ? safeAreaPx : 0
     const safeEnd = i === lastSegment ? safeAreaPx : 0
     const bendableLength = rawLength - safeStart - safeEnd

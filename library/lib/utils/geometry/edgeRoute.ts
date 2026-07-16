@@ -9,17 +9,11 @@ import { routeConflictsWithNeighborEdges } from "@/utils/geometry/orthogonalRout
 import type { ObstacleRect } from "@/utils/geometry/obstacles"
 
 /**
- * Everything the router needs to turn one edge's resolved endpoints and its
- * surrounding world into a polyline — the DEFAULT route for an edge nobody has
- * hand-edited. Pure and side-effect free: same inputs, same output, no React,
- * no store. This is the single routing primitive shared by the per-edge hook
- * (`useStepPathEdge`) and the central solver, so the drag preview and the
- * committed edge can never diverge — they run this exact function.
- *
- * `sourceSize`/`targetSize` are the node dimensions the straight-path attempt
- * needs, with the hook's historical fallbacks (`?? 100` width, `?? 160` height)
- * already applied by the caller, so the behaviour is identical to the inline
- * version this replaced.
+ * Everything the router needs to turn one edge's resolved endpoints into a
+ * polyline — the DEFAULT route for an edge nobody has hand-edited. Pure and
+ * side-effect free. This is the single routing primitive shared by the per-edge
+ * hook (`useStepPathEdge`) and the central solver, so the drag preview and the
+ * committed edge can never diverge.
  */
 export type StepEdgeRouteParams = {
   enableStraightPath: boolean

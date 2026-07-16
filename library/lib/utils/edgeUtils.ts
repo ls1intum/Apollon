@@ -931,7 +931,6 @@ export function findClosestHandle({
   // (e.g. the UseCase ellipse) render only the named IDs. Selecting a between
   // slot on a drop/reconnect could persist a handle the target node does not
   // render, and React Flow would drop the edge with a missing-handle error.
-  // Named handles are the visible drag targets and are rendered by every node.
   const points = getCanonicalHandlePoints(rect, useFourHandles).filter(
     (candidate) => !candidate.label.includes("-between-")
   )
@@ -1239,7 +1238,7 @@ export function buildPathWithLineJumps(
  *    flips when an edge is selected (React Flow's `elevateEdgesOnSelect`) or
  *    reordered — unlike a render-order rule.
  * Diagonal segments yield no axis-aligned segments, so they neither hop nor are
- * hopped (line jumps are orthogonal-only, matching mxGraph/ELK/yFiles).
+ * hopped (line jumps are orthogonal-only).
  *
  * @param geometryMap each OTHER edge's actual rendered polyline, keyed by id
  *   (from the edge-geometry registry)
@@ -1746,12 +1745,7 @@ const toCanvasGrid = (value: number): number =>
 
 /**
  * Whether a lane may sit at `lane` without wrecking the geometry at `point`.
- *
- * Two different things can go wrong, one per axis, and BOTH must be checked —
- * an earlier version only guarded the stub's own travel axis, which let a lane
- * on the other axis snap straight onto the endpoint's coordinate and erase the
- * turn at the end of the stub. The route then retraced its own stub and cut back
- * through the node body.
+ * BOTH axes must be checked:
  *
  * - A lane running ALONG the stub's travel axis fixes the stub's length, so it
  *   must stay at least `stubLength` beyond the connection point.
@@ -1831,10 +1825,9 @@ const snapRouteLanesToGrid = (
     const candidates = [nearest, nearest - grid, nearest + grid].sort(
       (a, b) => Math.abs(a - lane) - Math.abs(b - lane)
     )
-    // Every lane is checked against BOTH endpoints. The stub-length half of the
-    // check only bites on lanes next to a stub, but the collapsed-corner half
-    // applies anywhere on the path — that is exactly the case interior lanes
-    // used to skip.
+    // Every lane is checked against BOTH endpoints: the stub-length half only
+    // bites on lanes next to a stub, but the collapsed-corner half applies
+    // anywhere on the path.
     const fits = (candidate: number): boolean =>
       (i !== 1 ||
         laneClearsEndpoint(
@@ -1882,16 +1875,12 @@ const laneKeepsCorner = (
 }
 
 /**
- * A route the editor can actually live with: axis-aligned, leaving and entering
- * its nodes the way the handles point, and never doubling back along a line it
- * has already drawn.
- *
- * The last of those is the one that bites. getSmoothStepPath happily emits a
- * route that overshoots the target and comes back along the same line when the
- * source's stub lane happens to land on the target's approach lane — it looks
- * like the edge is drawn on top of itself, and once the collinear points are
- * simplified away the target's stub is left pointing backwards, which makes the
- * edge fail validation and become un-bendable.
+ * A route the editor can accept: axis-aligned, leaving and entering its nodes
+ * the way the handles point, and never doubling back along a line it has already
+ * drawn. The last matters most: getSmoothStepPath can emit a route that
+ * overshoots the target and returns along the same line when the source's stub
+ * lane lands on the target's approach lane; once the collinear points simplify
+ * away, the target's stub points backwards and the edge fails validation.
  */
 const isRoutableOrthogonalPath = (
   points: IPoint[],
@@ -1920,19 +1909,11 @@ const isRoutableOrthogonalPath = (
   )
 
 /**
- * Pushes any lane that runs ALONGSIDE an endpoint's stub away from it.
- *
- * A lane parallel to a stub, a hair away from it and overlapping it, is the
- * shape users read as broken: the edge leaves the node, and the return run comes
- * back a grid step above the line it just drew, with a sliver trapped between
- * them. Snapping a lane to the nearest legal grid line is what produces it — the
- * nearest legal line is one cell away, and one cell is not clearance, it is a
- * sliver.
- *
- * So a parallel-and-overlapping lane must keep a stub's worth of room. It is
- * pushed to whichever side it is ALREADY on (from `previousLanes` when a stored
- * route says where it used to be), so that a node being dragged past this point
- * does not flip the edge from routing over the top to routing underneath.
+ * Pushes any lane that runs ALONGSIDE and overlaps an endpoint's stub away from
+ * it: a lane only a grid cell from a parallel stub leaves a sliver users read as
+ * broken, so it must keep a stub's worth of clearance. It is pushed to whichever
+ * side it is ALREADY on (from `previousLanes`) so a node dragged past this point
+ * does not flip the edge from routing over the top to underneath.
  */
 const pushLanesClearOfStubs = (
   points: IPoint[],
@@ -2284,9 +2265,8 @@ export const routeOrthogonalPath = (
   // the contract that makes this router deterministic.
   const candidates: IPoint[][] = offsets.map(routeWithStub)
 
-  // The cheap route: the first structurally valid stub-and-lane candidate. This
-  // is what every edge has always drawn, and what it should keep drawing unless
-  // it genuinely runs through something.
+  // The cheap route: the first structurally valid stub-and-lane candidate, kept
+  // unless it genuinely runs through something.
   const cheapRoute = candidates.find((points) =>
     isRoutableOrthogonalPath(
       points,
@@ -2297,27 +2277,18 @@ export const routeOrthogonalPath = (
     )
   )
 
-  // When is the cheap route good enough to keep? It has always been "when it does
-  // not cut through anything solid", and that bar is too low in one specific,
-  // very visible way: a segment running exactly ALONG a node's border does not
-  // cross it. So the step route was kept, and the edge was drawn on the node.
-  //
-  // Three conditions now, and every edge that meets all three keeps the exact
-  // route it has always had — which is the overwhelming majority of them, and why
-  // existing diagrams do not silently reshape:
+  // Keep the cheap route only when it meets all three conditions below; fail any
+  // one and the search takes over under a cost model that can weigh them against
+  // each other. Crossing nothing solid is not enough on its own: a segment
+  // running exactly ALONG a node's border does not "cross" it but still looks
+  // drawn on the node.
   //
   //  1. It crosses nothing SOLID. Soft obstacles (packages, pools) are meant to
   //     be crossed when going around would force a horseshoe; the endpoint bodies
-  //     are solid, which is what stops an edge cutting back across its own source.
-  //  2. It keeps the clearance the ROUTER would have kept: 25px beside any body,
-  //     or the middle of the channel where 25px will not fit. Not "through" —
-  //     BESIDE. A step route that merely fails to enter a node can still be drawn
-  //     along its border, and that is the single most common way an auto-routed
-  //     diagram looks broken.
+  //     are solid, which stops an edge cutting back across its own source.
+  //  2. It keeps the clearance the ROUTER would have kept: 25px BESIDE any body,
+  //     or the middle of the channel where 25px will not fit.
   //  3. It is not drawn on top of, or cramped against, a neighbouring edge.
-  //
-  // Fail any one of them and the search takes over, under a cost model that can
-  // actually weigh the three against each other.
   const hardObstacles = obstacles.filter((o) => !o.soft)
   const cheapClearOfHard =
     cheapRoute !== undefined &&
@@ -2409,8 +2380,7 @@ export const routeOrthogonalPath = (
     )
   }
 
-  // Always last, and always structurally sound: the router scores, it never
-  // fails. Something is always returned.
+  // Always last, and always structurally sound, so something is always returned.
   candidates.push(
     getStubCollisionFallbackPoints(
       sourcePoint,
@@ -2895,19 +2865,16 @@ const sanitizeReleasedPoints = (
 /**
  * Whether a released path is structurally broken and cannot be stored.
  *
- * This asks about the GEOMETRY THE USER DREW, and nothing else. It deliberately
- * does NOT ask whether the two nodes sit close together (`stubsWouldOverlap`
- * takes only the endpoints, so on a tight layout it was true before the drag
- * even began — which made every release revert and left the edge permanently
- * un-bendable), nor whether two arms ended up near each other, which is a matter
- * of taste and is non-local: a tight pair at one end of the path must not veto a
- * drag at the other.
+ * This asks only about the GEOMETRY THE USER DREW. It deliberately does NOT
+ * check whether the two nodes sit close together (`stubsWouldOverlap` reads only
+ * the endpoints, so it can be true before the drag begins and revert every
+ * release), nor whether two arms ended up near each other (non-local: a tight
+ * pair at one end must not veto a drag at the other).
  *
- * What is left are the two real invariants — a path needs two points, and every
- * segment must be axis-aligned — plus a stub that still leaves the node. Bend
- * drags are clamped to legal lanes up front (see `getBendLaneBounds`), so in
- * practice this should never fire on a drag; it guards the paths that arrive
- * from elsewhere (imports, reconnects, a peer's edit).
+ * The real invariants: a path needs two points, every segment must be
+ * axis-aligned, and a stub must still leave the node. Bend drags are clamped to
+ * legal lanes up front (see `getBendLaneBounds`), so this should rarely fire on
+ * a drag; it guards paths arriving from elsewhere (imports, reconnects, peer edits).
  */
 export function isInvalidOrthogonalEdgeRelease(
   points: IPoint[],
@@ -3171,12 +3138,12 @@ export function preserveOrthogonalEdgePoints(
   // `points` still carries the endpoints from before the node moved, so we can
   // re-route the OLD geometry and measure the stubs the router would have drawn
   // then. A stub matching one of those is the router's; anything else is a length
-  // the user dragged. The two must behave differently as the node moves.
+  // the user dragged, and the two must behave differently as the node moves.
   //
   // Measure them, do not predict them: a Z's terminal segment runs to the centre
-  // lane (half the gap), which is nothing like the smooth-step offset the router
-  // was handed. Comparing against the offset mistook the router's own stubs for
-  // the user's, and the route shifted a grid cell on every single node drag.
+  // lane (half the gap), nothing like the smooth-step offset the router was
+  // handed, so comparing against the offset mistakes the router's stubs for the
+  // user's.
   const previousSafePoints =
     points.length >= 2
       ? routeOrthogonalPath(
@@ -3357,12 +3324,10 @@ export function preserveOrthogonalEdgePoints(
     laneValues[1] = safeLaneValues[1]
   }
 
-  // A Z-shaped route has ONE lane, and it serves both stubs. Re-pinning it to
-  // the target would silently overwrite what the source just pinned, landing the
-  // lane somewhere neither end asked for — and, because the router picks the lane
-  // from the source side, that made re-routing an untouched edge shift by a grid
-  // cell on every node drag. The source's claim wins; the joint clamp above has
-  // already guaranteed the target keeps its own minimum.
+  // A Z-shaped route has ONE lane serving both stubs. Re-pinning it to the target
+  // would overwrite what the source just pinned, landing the lane somewhere
+  // neither end asked for. The source's claim wins; the joint clamp above already
+  // guarantees the target keeps its own minimum.
   const targetOwnsItsOwnLane = targetLaneIndex !== 1 || !sourceStubIsLocked
   if (targetOwnsItsOwnLane && targetStubIsLocked) {
     laneValues[targetLaneIndex] = getStubExitCoord(

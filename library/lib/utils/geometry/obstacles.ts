@@ -5,12 +5,12 @@ import type { IPoint } from "@/edges/Connection"
 
 /**
  * A node body the router should try not to route through, in absolute flow
- * space and already inflated by its clearance.
+ * space.
  *
- * `soft` marks a container (a package, a BPMN pool, a swimlane). Containers are
- * backgrounds that edges legitimately live inside — a diagram whose nodes all
- * sit in one pool would be unroutable if the pool were solid — so a soft
- * obstacle is one the router prefers to avoid, never one it refuses to cross.
+ * `soft` marks a container (package, BPMN pool, swimlane) that edges legitimately
+ * live inside — a diagram whose nodes all sit in one pool would be unroutable if
+ * the pool were solid — so the router prefers to avoid it but may cross it; a
+ * solid obstacle it refuses to cross.
  */
 export type ObstacleRect = {
   id: string
@@ -46,22 +46,18 @@ const nodeSize = (node: Node): { width: number; height: number } => ({
 /**
  * The borders of the containers this edge lives inside, as closed polylines.
  *
- * An edge from a class inside a package has to CROSS that package to get out, so
- * the package can never be an obstacle — but it must not be allowed to run ALONG
- * the package's border either, which is the shape that reads as an edge welded to
- * the frame. Crossing a line and lying on top of it are already two different
- * things to the router (it prices them apart for edges), so a container border is
- * handed over as one more line not to lie on. Crossing it stays cheap; tracing it
- * does not.
+ * An edge from a class inside a package must CROSS that package to get out, so the
+ * package can never be an obstacle — but it must not run ALONG the border either.
+ * The border is handed over as one more line not to lie on: crossing it stays
+ * cheap, tracing it does not.
  */
 export const getContainerBorderPolylines = (
   nodes: readonly Node[],
   sourceId: string,
   targetId: string
 ): IPoint[][] => {
-  // Reuses the frame index — its `byId` and every container's absolute body are
-  // already computed once for the whole frame (see `indexNodes`), so this adds no
-  // per-edge O(nodes) scan.
+  // Reuses the frame index (see `indexNodes`), so this adds no per-edge O(nodes)
+  // scan.
   const { byId, entries } = indexNodes(nodes)
   const containers = new Set<string>()
   for (const endpoint of [sourceId, targetId]) {
@@ -88,20 +84,17 @@ export const getContainerBorderPolylines = (
 
 /**
  * The nodes indexed for one render frame: id → node, and id → its absolute body
- * and ancestor set. The body geometry and ancestry of a node depend only on the
- * node set, not on which edge is being routed — so they are the same for every
- * edge in a frame and computing them per edge is O(edges × nodes) of pure waste.
+ * and ancestor set. Body geometry and ancestry depend only on the node set, not on
+ * which edge is routed, so computing them per edge is O(edges × nodes) of waste.
  *
  * A frame's edges all read the SAME `nodes` array (one store snapshot), so a
- * one-entry cache keyed on that array's identity computes the index once and every
- * subsequent edge in the frame reads it. This is correct only because the store
- * replaces `nodes` on every change rather than mutating it in place — a new frame
- * is a new array, and an unchanged frame is the same array. Mutating a node's
- * position while keeping the array reference would read a stale body; nothing in
- * the app does that, and it is the same immutability the React reconciler assumes.
+ * one-entry cache keyed on that array's identity computes the index once. This is
+ * correct ONLY because the store replaces `nodes` on every change rather than
+ * mutating it in place — a new frame is a new array, an unchanged frame is the same
+ * array. Mutating a node's position while keeping the array reference would read a
+ * stale body.
  *
- * The bodies handed out are SHARED, read-only. The router and the callers read
- * their coordinates and never write them; the one place a body is altered (an
+ * The bodies handed out are SHARED, read-only; the one place a body is altered (an
  * endpoint's soft→solid) takes a copy.
  */
 type NodeEntry = { body: ObstacleRect; ancestors: Set<string> }
@@ -127,8 +120,8 @@ const indexNodes = (nodes: readonly Node[]): NodeIndex => {
         y,
         width,
         height,
-        // A container is not quite a wall: an edge may cut through a package it is
-        // not part of when going around would mean circling the diagram.
+        // A container is soft: an edge may cut through a package it is not part of
+        // when going around would mean circling the diagram.
         soft: isParentNodeType(node.type),
       },
       ancestors: getAncestorIds(node, byId),
@@ -144,23 +137,18 @@ const indexNodes = (nodes: readonly Node[]): NodeIndex => {
  * The nodes an edge from `sourceId` to `targetId` should route around.
  *
  * Solid means the node and nothing but the node: every leaf body is handed over
- * exactly, with no inflated ring and no margin rectangles. Clearance is not
- * geometry here — the router prices it (see `CLEARANCE_COST_PER_PX_AT_FULL_DEFICIT`
- * in `orthogonalRouter`), because a rectangle can say "in" or "out" and the
- * question is "how close".
+ * exactly, with no inflated ring. Clearance is not geometry here — the router
+ * prices it (see `CLEARANCE_COST_PER_PX_AT_FULL_DEFICIT` in `orthogonalRouter`).
  *
  * Nesting decides WHICH nodes are solid, and each rule is load-bearing:
- *
- * - Every ANCESTOR of either endpoint is skipped: an edge between two classes
- *   inside a package must live inside that package. One rule covers packages,
- *   pools, swimlanes, subsystems and deployment nodes at any depth.
- * - Every DESCENDANT of either endpoint is skipped: an edge anchored on a
- *   container's border leaves outward, and its own children can never
- *   legitimately be in the way.
- * - An endpoint that ENCLOSES the other endpoint is not made solid: the route has
- *   to be free to reach inside it.
- * - Anything already sitting on top of an endpoint is skipped: an overlapping node
- *   makes the problem unsolvable, and an unsolvable problem churns.
+ * - Every ANCESTOR of either endpoint is skipped: the edge lives inside it (covers
+ *   packages, pools, swimlanes, subsystems, deployment nodes at any depth).
+ * - Every DESCENDANT of either endpoint is skipped: a child can never legitimately
+ *   be in the way of an edge anchored on its container's border.
+ * - An endpoint that ENCLOSES the other is not made solid: the route must reach
+ *   inside it.
+ * - Anything already overlapping an endpoint is skipped: it makes the problem
+ *   unsolvable.
  */
 export const getEdgeObstacles = (
   nodes: readonly Node[],
@@ -181,14 +169,11 @@ export const getEdgeObstacles = (
 
   const obstacles: ObstacleRect[] = []
 
-  // The endpoints' own bodies are solid too. The edge attaches at a point ON the
-  // border and its stub leaves perpendicular, so a segment that merely terminates
-  // there does not enter the body — the connection still gets through, while the
-  // route is forbidden from cutting back across the node it just left. (Skipping
-  // the endpoints is what once let a route overlap its own source or target.)
-  //
-  // An endpoint that encloses the other endpoint is the exception: the route has
-  // to be free to reach inside it.
+  // The endpoints' own bodies are solid too: the edge attaches at a point ON the
+  // border and its stub leaves perpendicular, so a terminating segment does not
+  // enter the body, while the route is forbidden from cutting back across the node
+  // it just left. Exception: an endpoint that encloses the other, which the route
+  // must be free to reach inside.
   for (const [id, otherPoint] of [
     [sourceId, targetPoint],
     [targetId, sourcePoint],
@@ -206,38 +191,31 @@ export const getEdgeObstacles = (
     // A descendant of either endpoint: its ancestry runs through the endpoint.
     if (entry.ancestors.has(sourceId) || entry.ancestors.has(targetId)) continue
 
-    // A node already sitting on top of a connection point cannot be routed
-    // around — only churned against.
+    // A node already sitting on top of a connection point cannot be routed around.
     if (contains(entry.body, sourcePoint) || contains(entry.body, targetPoint))
       continue
 
     candidates.push(entry.body)
   }
 
-  // Only the nodes NEAR this edge are its obstacles.
+  // Only the nodes NEAR this edge are its obstacles. The router's search is
+  // quadratic in obstacle count, so handing it every node makes routing ONE edge
+  // scale with the whole diagram — per edge, per frame of a drag.
   //
-  // The router turns its obstacles into a lattice of turning lines and the search is
-  // quadratic in those, so handing it every node makes the cost of routing ONE edge
-  // grow with the size of the whole diagram — per edge, per frame of a drag. A router
-  // too slow to run is one that gets skipped, and that is how edges end up drawn
-  // through the nodes it exists to avoid.
-  //
-  // A route around a node stays within reach of its own endpoints, so nodes far from
-  // both cannot be in its way. "Far" is not guessed: the window GROWS to swallow what
-  // it catches, because a node the edge must detour around is itself part of the
-  // region the edge travels through, and may push it into the node beyond.
+  // A route stays within reach of its own endpoints, so nodes far from both cannot
+  // be in its way. The window GROWS to swallow what it catches: a node the edge must
+  // detour around is itself part of the region the edge travels, and may push it
+  // into the node beyond.
   const pad = 2 * EDGES.STUB_LENGTH + EDGES.NODE_CLEARANCE_PX
   let left = Math.min(sourcePoint.x, targetPoint.x) - pad
   let right = Math.max(sourcePoint.x, targetPoint.x) + pad
   let top = Math.min(sourcePoint.y, targetPoint.y) - pad
   let bottom = Math.max(sourcePoint.y, targetPoint.y) + pad
 
-  // The window admits a node whose body comes within `pad` of it, then stretches
-  // to cover that body — the body only, NOT another pad's worth. Stretching by a
-  // full pad each time would walk the window across a dense diagram one node at a
-  // time and admit the lot, which is the cost this exists to avoid. Two passes:
-  // the blockers in the way, and the nodes those blockers would push a detour
-  // into. Nothing beyond that can reach this edge.
+  // Admit a node whose body comes within `pad`, then stretch to cover that body —
+  // the body ONLY, not another pad's worth (stretching by a full pad each time would
+  // walk across a dense diagram and admit everything). Two passes: the blockers in
+  // the way, and the nodes those blockers would push a detour into.
   const included = new Set<ObstacleRect>()
   for (let pass = 0; pass < 2; pass++) {
     const admitted: ObstacleRect[] = []

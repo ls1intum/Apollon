@@ -333,9 +333,8 @@ export const useStraightPathEdge = ({
   }, [renderPoints, type, currentPath, lineJumps])
 
   const [sourcePoint, targetPoint] = renderPoints
-  // Always. A straight edge has no bend handles by nature, so gating its
-  // endpoints on a minimum length left short ones with no editable affordance
-  // whatsoever — not bendable, not reconnectable, just stuck.
+  // Always: a straight edge has no bend handles, so a minimum-length gate would
+  // leave short ones with no editable affordance at all.
   const canEditEndpoint = true
   const toolbarPosition = computeToolbarPosition(
     pathMiddlePosition,

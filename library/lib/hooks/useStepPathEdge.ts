@@ -158,12 +158,9 @@ export const useStepPathEdge = ({
   const { getIntersectingNodes, getNode, screenToFlowPosition } = useReactFlow()
 
   const [draggingHandle, setDraggingHandle] = useState<BendHandle | null>(null)
-  // While a bend handle is being dragged we render from this live geometry
-  // instead of the committed `activePoints`. Driving the drag through state
-  // (rather than mutating the SVG `d` directly) keeps the path AND everything
-  // derived from it — the bend handle, the toolbar, edge labels, and per-type
-  // decorators like the SFC transition bar — in sync on every move, so they
-  // follow the drag in real time instead of jumping only on release.
+  // Live drag geometry, rendered instead of the committed `activePoints`. Driving
+  // the drag through state (not by mutating the SVG `d`) keeps everything derived
+  // from the path — handle, toolbar, labels, per-type decorators — in sync per move.
   const [dragPreviewPoints, setDragPreviewPoints] = useState<IPoint[] | null>(
     null
   )
@@ -238,16 +235,9 @@ export const useStepPathEdge = ({
     offset = 0,
   } = getEdgeMarkerStyles(type)
   const padding = markerPadding ?? EDGES.MARKER_PADDING
-  // The store's array, NOT `getNodes()`. React Flow's `getNodes()` is
-  // `store.getState().nodes.map((n) => ({ ...n }))` — a fresh array of freshly
-  // cloned nodes on every call — so an edge that read it got a new `allNodes`
-  // identity on every render, forever, and every memo below keyed on it (the
-  // obstacles, the neighbours, the endpoint positions) was dead on arrival: they
-  // recomputed on every render of every edge, including renders that changed
-  // nothing about the geometry (a selection, a hover, a label edit).
-  //
-  // Subscribing to the store's own array gives a reference that changes only when
-  // the nodes actually change, which is what the memos were written to assume.
+  // The store's array, NOT `getNodes()`: the latter clones into a fresh array on
+  // every call, giving `allNodes` a new identity every render and defeating every
+  // memo below keyed on it. The subscribed array changes only when nodes do.
   const allNodes = useStore((state) => state.nodes) as Node[]
   const sourceNode =
     allNodes.find((node) => node.id === source) ?? getNode(source)
@@ -519,14 +509,9 @@ export const useStepPathEdge = ({
     return getBendableSegments(renderPoints, EDGES.BEND_HANDLE_SAFE_AREA_PX)
   }, [renderPoints, allowMidpointDragging])
 
-  // Endpoints are ALWAYS draggable. They used to switch off on any edge shorter
-  // than 100px, which produced a capability cliff nobody could explain from the
-  // canvas: a short edge could be bent but not reconnected, and a short STRAIGHT
-  // edge — no bend handles by nature — could not be edited at all. The rule was
-  // really guarding against the two endpoint hit targets overlapping each other,
-  // and that is now handled geometrically: each endpoint owns half the run
-  // between them (see getEndpointRun), so they cannot steal each other's clicks
-  // however close the nodes get.
+  // Endpoints are ALWAYS draggable. Overlap of the two hit targets on a short edge
+  // is handled geometrically instead (each owns half the run between them, see
+  // getEndpointRun), so no minimum-length gate is needed.
   const canEditEndpoint = true
 
   // The mid-segment midpoint + orientation, derived synchronously and purely

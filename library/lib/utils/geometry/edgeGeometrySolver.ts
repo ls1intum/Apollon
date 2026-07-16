@@ -25,12 +25,9 @@ import {
 import { routeStepEdge } from "@/utils/geometry/edgeRoute"
 
 /**
- * One edge's endpoints, resolved from the React Flow store instead of per-edge
- * props so all edges can be solved in one pass. The base comes from RF's own
- * `getEdgePosition`; absolute position, node rect, freeform-anchor override,
- * rounding and connection padding are layered on top. Uses
- * `getPositionOnCanvas` (not `internals.positionAbsolute`) so the freeform rect
- * matches nested nodes.
+ * One edge's endpoints, resolved from the React Flow store so all edges can be
+ * solved in one pass. Uses `getPositionOnCanvas` (not
+ * `internals.positionAbsolute`) so the freeform rect matches nested nodes.
  */
 export type ResolvedEdgeEndpoints = {
   adjustedSource: IPoint
@@ -202,10 +199,8 @@ function mergeManualPoints(
   return points
 }
 
-/**
- * Whether `other` is a TRUE sibling of `self`: leaves the very same connection
- * point, so it cannot help but share geometry.
- */
+/** Whether `other` is a TRUE sibling of `self`: leaves the very same
+ * connection point, so it shares geometry. */
 function isSibling(self: Edge, other: Edge): boolean {
   const sharedNodes = [other.source, other.target].filter((n) =>
     [self.source, self.target].includes(n)
