@@ -297,6 +297,38 @@ describe("computeAllEdgeGeometry — auto anchor optimization", () => {
     expect(exitSide(routeById["e1"])).toBe("R")
   })
 
+  it("straightens an offset-but-overlapping pair by sliding both anchors", () => {
+    // b is to the right of a and shifted down by less than a node height, so the
+    // sides still overlap in y. Aiming each anchor at the partner's centre would
+    // land them on different lines and force a Z; the straight-aligned pair slides
+    // both onto one line for a bend-free edge.
+    const a = makeNode("a", 0, 0, 160, 100)
+    const b = makeNode("b", 420, 50, 160, 100)
+    const { routeById } = computeAllEdgeGeometry(
+      base(
+        [a, b],
+        [{ id: "e1", source: "a", target: "b", type: "ClassUnidirectional" }]
+      )
+    )
+    expect(routeById["e1"].length).toBe(2) // straight: no interior bend
+    expect(routeById["e1"][0].y).toBe(routeById["e1"][1].y) // one shared line
+  })
+
+  it("keeps a single bend when the nodes do not overlap (straight impossible)", () => {
+    // b is shifted down by MORE than a node height: the sides no longer overlap,
+    // so no straight run exists and the edge must bend — but only once.
+    const a = makeNode("a", 0, 0, 160, 100)
+    const b = makeNode("b", 420, 200, 160, 100)
+    const { routeById } = computeAllEdgeGeometry(
+      base(
+        [a, b],
+        [{ id: "e1", source: "a", target: "b", type: "ClassUnidirectional" }]
+      )
+    )
+    expect(routeById["e1"].length).toBeLessThanOrEqual(3) // at most one bend
+    expect(routeById["e1"].length).toBeGreaterThan(2) // but not straight
+  })
+
   it("respects a custom source anchor and never re-chooses it", () => {
     // A pinned TOP anchor must be honoured even though the facing side is right.
     const a = makeNode("a", 0, 0)
