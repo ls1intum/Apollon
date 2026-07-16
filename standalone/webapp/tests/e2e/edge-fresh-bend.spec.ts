@@ -202,7 +202,12 @@ test.describe("Fresh-edge first bend — drawn edge", () => {
   }) => {
     const edge = await drawStraightEdge(page)
     const seen: string[] = []
-    for (const dy of [-40, -30, 30]) {
+    // Each drag RESHAPES the bend (all pull the same way, by different amounts).
+    // We deliberately do not drag a bend flat here: once the edge is bent,
+    // `.first()` is the source-TERMINAL handle, and pulling it back across the
+    // straight line legitimately returns a shallow edge to its auto-route
+    // (data.points = []) — a separate gesture, not a snap-back to regress.
+    for (const dy of [-40, -30, -50]) {
       await dragFirstHandle(page, edge, dy)
       const points = await persistedPoints(page)
       expect(
