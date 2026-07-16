@@ -70,48 +70,36 @@ function resolveEdgeEndpoints(
   overrideAnchors?: {
     sourceAnchor?: FreeformEdgeAnchor
     targetAnchor?: FreeformEdgeAnchor
-  }
+  },
+  /** Skip React Flow's `getEdgePosition` — pure waste when BOTH ends resolve to an
+   * anchor, which every auto-selection candidate and every cache-hit re-resolve
+   * does. Safe only once a plain resolve has confirmed the nodes are measured;
+   * this is the single hottest call in the solve, run for every candidate. */
+  skipBase?: boolean
 ): ResolvedEdgeEndpoints | null {
   const sourceInternal = nodeLookup.get(edge.source)
   const targetInternal = nodeLookup.get(edge.target)
   if (!sourceInternal || !targetInternal) return null
 
-  const base = getEdgePosition({
-    id: edge.id,
-    sourceNode: sourceInternal,
-    targetNode: targetInternal,
-    sourceHandle: edge.sourceHandle ?? null,
-    targetHandle: edge.targetHandle ?? null,
-    connectionMode,
-  })
-  if (!base) return null
-
   const sourceNode = nodeById.get(edge.source)
   const targetNode = nodeById.get(edge.target)
 
-  const sourceAbsolutePosition = sourceNode
-    ? getPositionOnCanvas(sourceNode, nodes)
-    : { x: base.sourceX, y: base.sourceY }
-  const targetAbsolutePosition = targetNode
-    ? getPositionOnCanvas(targetNode, nodes)
-    : { x: base.targetX, y: base.targetY }
-
-  const sourceRect = sourceNode
-    ? {
-        x: sourceAbsolutePosition.x,
-        y: sourceAbsolutePosition.y,
-        width: nodeWidth(sourceNode) ?? 0,
-        height: nodeHeight(sourceNode) ?? 0,
-      }
-    : null
-  const targetRect = targetNode
-    ? {
-        x: targetAbsolutePosition.x,
-        y: targetAbsolutePosition.y,
-        width: nodeWidth(targetNode) ?? 0,
-        height: nodeHeight(targetNode) ?? 0,
-      }
-    : null
+  const sourceRect =
+    sourceNode && (nodeWidth(sourceNode) ?? 0) > 0
+      ? {
+          ...getPositionOnCanvas(sourceNode, nodes),
+          width: nodeWidth(sourceNode)!,
+          height: nodeHeight(sourceNode) ?? 0,
+        }
+      : null
+  const targetRect =
+    targetNode && (nodeWidth(targetNode) ?? 0) > 0
+      ? {
+          ...getPositionOnCanvas(targetNode, nodes),
+          width: nodeWidth(targetNode)!,
+          height: nodeHeight(targetNode) ?? 0,
+        }
+      : null
 
   const sourceAnchor =
     overrideAnchors?.sourceAnchor ??
@@ -128,15 +116,37 @@ function resolveEdgeEndpoints(
       ? getEdgeAnchorPoint(targetNode?.type, targetRect, targetAnchor)
       : null
 
+  // The base point is needed only where an anchor did not resolve. When the
+  // caller guarantees both ends are anchored, computing it is pure waste.
+  const base =
+    skipBase && resolvedSourceAnchor && resolvedTargetAnchor
+      ? null
+      : getEdgePosition({
+          id: edge.id,
+          sourceNode: sourceInternal,
+          targetNode: targetInternal,
+          sourceHandle: edge.sourceHandle ?? null,
+          targetHandle: edge.targetHandle ?? null,
+          connectionMode,
+        })
+  if (!base && !(resolvedSourceAnchor && resolvedTargetAnchor)) return null
+
+  const sourceAbsolutePosition = sourceRect
+    ? { x: sourceRect.x, y: sourceRect.y }
+    : { x: base!.sourceX, y: base!.sourceY }
+  const targetAbsolutePosition = targetRect
+    ? { x: targetRect.x, y: targetRect.y }
+    : { x: base!.targetX, y: base!.targetY }
+
   const { markerPadding } = getEdgeMarkerStyles(edge.type ?? "")
   const padding = markerPadding ?? EDGES.MARKER_PADDING
 
-  const sourceX = resolvedSourceAnchor?.point.x ?? base.sourceX
-  const sourceY = resolvedSourceAnchor?.point.y ?? base.sourceY
-  const targetX = resolvedTargetAnchor?.point.x ?? base.targetX
-  const targetY = resolvedTargetAnchor?.point.y ?? base.targetY
-  const sourcePosition = resolvedSourceAnchor?.position ?? base.sourcePosition
-  const targetPosition = resolvedTargetAnchor?.position ?? base.targetPosition
+  const sourceX = resolvedSourceAnchor?.point.x ?? base!.sourceX
+  const sourceY = resolvedSourceAnchor?.point.y ?? base!.sourceY
+  const targetX = resolvedTargetAnchor?.point.x ?? base!.targetX
+  const targetY = resolvedTargetAnchor?.point.y ?? base!.targetY
+  const sourcePosition = resolvedSourceAnchor?.position ?? base!.sourcePosition
+  const targetPosition = resolvedTargetAnchor?.position ?? base!.targetPosition
   const sourceConnectionPointPadding = resolvedSourceAnchor
     ? 0
     : EDGES.SOURCE_CONNECTION_POINT_PADDING
@@ -625,7 +635,8 @@ export function computeAllEdgeGeometry(input: SolverInput): {
             {
               sourceAnchor: cached.sourceAnchor,
               targetAnchor: cached.targetAnchor,
-            }
+            },
+            true
           ) ?? endpoints
         computed = cached.computed
       } else {
@@ -649,7 +660,8 @@ export function computeAllEdgeGeometry(input: SolverInput): {
               nodeById,
               nodeLookup,
               connectionMode,
-              overrides
+              overrides,
+              true
             ),
           obstacles,
           neighborEdges,
