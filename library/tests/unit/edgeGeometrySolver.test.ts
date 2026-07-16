@@ -134,7 +134,7 @@ describe("computeAllEdgeGeometry", () => {
     expect(routeById["e1"]).toHaveLength(2)
   })
 
-  it("routes every edge in ascending-id order (lower-id neighbours are final first)", () => {
+  it("routes all edges when their ids arrive out of order", () => {
     const a = makeNode("a", 0, 0)
     const b = makeNode("b", 300, 0)
     const c = makeNode("c", 0, 200)
