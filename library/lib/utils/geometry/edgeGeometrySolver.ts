@@ -24,7 +24,11 @@ import {
   type ObstacleRect,
 } from "@/utils/geometry/obstacles"
 import { routeStepEdge } from "@/utils/geometry/edgeRoute"
-import { selectEdgeAnchors } from "@/utils/geometry/edgeAnchoring"
+import { neighborsWithinReach } from "@/utils/geometry/orthogonalRouter"
+import {
+  routeChosenAnchors,
+  selectEdgeAnchors,
+} from "@/utils/geometry/edgeAnchoring"
 
 /**
  * One edge's endpoints, resolved from the React Flow store so all edges can be
@@ -365,11 +369,17 @@ export type SolverInput = {
   solveCache?: Map<string, EdgeSolveCacheEntry>
 }
 
-/** One edge's cached solve. For an auto-anchored edge the CHOSEN anchors ride
- * along, so a cache hit can re-resolve the endpoints that `mergeManualPoints`
- * needs (manual bends are re-applied every frame) without re-running the search. */
+/** One edge's cached solve, split into two keys. `sig` (the ANCHOR key) covers
+ * everything the anchor PICK depends on — rects, types, customs, lane — so a hit
+ * means the CHOSEN anchors still stand and ride along, letting a hit re-resolve
+ * the endpoints `mergeManualPoints` needs without re-selecting. `routeSig` covers
+ * what only the ROUTE depends on once anchors are fixed: the obstacle and
+ * neighbour sets. Anchor hit + route miss ⇒ one cheap fixed-anchor re-route
+ * instead of a full multi-candidate re-search, which is what stops a one-node
+ * drag from cascading an anchor re-search across the whole graph. */
 export type EdgeSolveCacheEntry = {
   sig: string
+  routeSig: string
   computed: IPoint[]
   sourceAnchor?: FreeformEdgeAnchor
   targetAnchor?: FreeformEdgeAnchor
@@ -414,6 +424,30 @@ const serializeNeighbors = (neighborEdges: readonly IPoint[][]): string => {
   return n
 }
 
+/**
+ * The ROUTE key for an auto edge with fixed anchors: the obstacles plus only the
+ * neighbour segments the route can actually reach (`neighborsWithinReach`, the
+ * router's own corridor). A neighbour bending OUTSIDE this edge's corridor cannot
+ * change its route, so it must not invalidate the key — that is what keeps a
+ * one-node drag from cascading a re-route across the whole graph. Computed from
+ * the CHOSEN-anchor endpoints, so the corridor matches the route the router runs.
+ */
+const routeInputSignature = (
+  endpoints: ResolvedEdgeEndpoints,
+  obstacles: readonly ObstacleRect[],
+  neighborEdges: readonly IPoint[][]
+): string => {
+  const reach = neighborsWithinReach(
+    endpoints.adjustedSource,
+    [endpoints.adjustedTarget],
+    obstacles,
+    neighborEdges
+  )
+  let n = "R"
+  for (const s of reach) n += `;${s.x1},${s.y1},${s.x2},${s.y2}`
+  return `${serializeObstacles(obstacles)}|${n}`
+}
+
 /** The router's input for one resolved endpoint pair. Shared by the fixed-edge
  * path and the auto-anchor fallback so both route through the same primitive. */
 function routeStepParams(
@@ -441,12 +475,20 @@ function routeStepParams(
 
 /**
  * Digest of everything the anchor SELECTION depends on: the two node rects, node
- * types, any custom (pinned) anchors, the obstacle and neighbour sets, whether
- * the edge may go straight, and the sibling lane. Unchanged ⇒ the memoryless
- * selector returns the same anchors, so the cached route (and its anchors) is
- * reused without re-searching. Node RECTS, not the base endpoints: the selection
- * is a function of the rectangles, and the base point React Flow would have
- * picked is irrelevant once the selector overrides it.
+ * types, any custom (pinned) anchors, whether the edge may go straight, and the
+ * sibling lane. Unchanged ⇒ the memoryless selector returns the same anchors, so
+ * the cached anchors (and, if the route set also held, the route) are reused
+ * without re-selecting.
+ *
+ * Note what is ABSENT: obstacles and neighbours. Anchor selection scores the
+ * IDEAL geometry between the two nodes (see `edgeAnchoring.scoreKey`) — it is
+ * blind to what the router must detour around — so its key is purely intrinsic:
+ * only the two nodes moving (or being retyped/pinned) re-picks the anchor. An
+ * obstacle or neighbour moving elsewhere invalidates `routeSig` instead, which
+ * gates only the cheap fixed-anchor re-route — exactly what stops a one-node
+ * drag from re-searching the whole graph. Node RECTS, not the base endpoints:
+ * selection is a function of the rectangles, and the base point React Flow would
+ * have picked is irrelevant once the selector overrides it.
  */
 function autoAnchorSignature(
   endpoints: ResolvedEdgeEndpoints,
@@ -454,8 +496,6 @@ function autoAnchorSignature(
   targetType: string | undefined,
   sourceCustom: FreeformEdgeAnchor | undefined,
   targetCustom: FreeformEdgeAnchor | undefined,
-  obstacles: readonly ObstacleRect[],
-  neighborEdges: readonly IPoint[][],
   enableStraightPath: boolean,
   lane: { index: number; count: number }
 ): string {
@@ -469,8 +509,6 @@ function autoAnchorSignature(
     `${e.targetAbsolutePosition.x},${e.targetAbsolutePosition.y},${e.targetSize.width},${e.targetSize.height}`,
     `${anchor(sourceCustom)};${anchor(targetCustom)}`,
     `${lane.index}/${lane.count}`,
-    serializeObstacles(obstacles),
-    serializeNeighbors(neighborEdges),
   ].join("|")
 }
 
@@ -615,16 +653,14 @@ export function computeAllEdgeGeometry(input: SolverInput): {
             targetType,
             sourceCustom,
             targetCustom,
-            obstacles,
-            neighborEdges,
             enableStraightPath,
             lane
           )
         : ""
       const cached = solveCache?.get(edge.id)
       if (cached && cached.sig === sig) {
-        // Reuse the chosen anchors and route; only re-resolve endpoints so fresh
-        // manual bends can be re-merged (they are not part of the signature).
+        // Anchor pick still stands. Re-resolve endpoints so fresh manual bends
+        // can be re-merged (they are not part of the signature).
         endpointsUsed =
           resolveEdgeEndpoints(
             edge,
@@ -638,7 +674,27 @@ export function computeAllEdgeGeometry(input: SolverInput): {
             },
             true
           ) ?? endpoints
-        computed = cached.computed
+        // The route key is built from the CHOSEN-anchor endpoints, so its reach
+        // corridor matches the route the router would run.
+        const routeSig = solveCache
+          ? routeInputSignature(endpointsUsed, obstacles, neighborEdges)
+          : ""
+        if (cached.routeSig === routeSig) {
+          // Obstacles and reachable neighbours held too — reuse verbatim.
+          computed = cached.computed
+        } else {
+          // Only an obstacle or reachable neighbour moved: re-route the SAME
+          // anchors (one search), not a full re-pick. Falls back to the cached
+          // route if the re-route somehow fails to keep a route on screen.
+          computed =
+            routeChosenAnchors(
+              endpointsUsed,
+              obstacles,
+              neighborEdges,
+              enableStraightPath
+            ) ?? cached.computed
+          solveCache?.set(edge.id, { ...cached, routeSig, computed })
+        }
       } else {
         const selected = selectEdgeAnchors({
           sourceRect: rectFromEndpoint(
@@ -674,6 +730,13 @@ export function computeAllEdgeGeometry(input: SolverInput): {
           computed = selected.route
           solveCache?.set(edge.id, {
             sig,
+            routeSig: solveCache
+              ? routeInputSignature(
+                  selected.endpoints,
+                  obstacles,
+                  neighborEdges
+                )
+              : "",
             computed,
             sourceAnchor: selected.sourceAnchor,
             targetAnchor: selected.targetAnchor,
@@ -711,7 +774,10 @@ export function computeAllEdgeGeometry(input: SolverInput): {
             enableStraightPath
           )
         )
-        solveCache?.set(edge.id, { sig, computed })
+        // Non-auto edges key on one combined `routeSignature` (which already
+        // folds in obstacles and neighbours), so the split's `routeSig` is
+        // unused here.
+        solveCache?.set(edge.id, { sig, routeSig: "", computed })
       }
     }
 

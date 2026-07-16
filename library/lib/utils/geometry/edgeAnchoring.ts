@@ -6,11 +6,7 @@ import {
   getEffectiveStubLength,
   type FreeformEdgeAnchor,
 } from "@/utils/edgeUtils"
-import {
-  routeAroundObstaclesToTargets,
-  routeConflictsWithNeighborEdges,
-  type RouteTarget,
-} from "@/utils/geometry/orthogonalRouter"
+import { routeAroundObstaclesToTargets } from "@/utils/geometry/orthogonalRouter"
 import { routeStepEdge } from "@/utils/geometry/edgeRoute"
 import type { ObstacleRect } from "@/utils/geometry/obstacles"
 import type { ResolvedEdgeEndpoints } from "@/utils/geometry/edgeGeometrySolver"
@@ -42,6 +38,22 @@ const SIDE_ORDER: Record<Position, number> = {
 }
 
 const GRID = CANVAS.SNAP_TO_GRID_PX
+/** Anchor SELECTION scores the IDEAL geometry between the two nodes — obstacle-
+ * and neighbour-free — so the pick reflects the clean shape an edge WANTS, not a
+ * detour the router will add around whatever happens to be in the way. Those live
+ * only in the final commit route. (Also: with no obstacles the step router never
+ * searches, so scoring every candidate this way is free.) */
+const NO_OBSTACLES: readonly ObstacleRect[] = []
+const NO_NEIGHBORS: readonly IPoint[][] = []
+
+/** What one bend (step) costs, in the same grid units as the off-centre and
+ * length terms it is weighed against. Anchors are chosen to MINIMISE
+ * `bends·BEND_COST_GU + offCentre + length`, so a straight edge is preferred
+ * whenever going straight does not push its anchors more than ~this far off the
+ * side's centre — "straight where possible, unless the off-centre cost outweighs
+ * it". Tuned so an edge straightens onto a moderately offset partner but bends
+ * back to a centred anchor rather than crawl into a corner. */
+const BEND_COST_GU = 12
 /** Parallel edges between the same node pair fan out along the side by this much
  * per lane, so an optimiser that would otherwise hand them all the same best
  * anchor spreads them into visibly separate lines. */
@@ -161,33 +173,47 @@ const routeLength = (route: readonly IPoint[]): number => {
   return total
 }
 
+/** How far an anchor sits from the middle of its side, in pixels — the "off-
+ * centre" cost. A corner attachment is ugly and a centred one is legible, so this
+ * is weighed directly against bends: sliding an anchor off centre to go straight
+ * is only worth it while the slide stays small. */
+const offCenterPx = (choice: AnchorChoice, rect: Rect): number => {
+  const axisLength = isVerticalSide(choice.position) ? rect.height : rect.width
+  return Math.abs(choice.anchor.ratio - 0.5) * axisLength
+}
+
 /**
- * The strict, memoryless ranking key for one routed candidate. Compared
- * lexicographically; every field is an integer or a fixed enum, so the order is
- * TOTAL — two candidates are never left tied, which is what keeps the pick
- * deterministic (and identical across Yjs peers).
+ * The memoryless ranking key for one candidate, scored on its IDEAL (obstacle-
+ * free) route. NOT strictly lexicographic on bends: the primary term is a WEIGHED
+ * cost — `bends·BEND_COST_GU + offCentre` — so a straight edge (no bends) is
+ * preferred only while going straight does not drag its anchors too far off the
+ * side's centre; past that the centred one-bend attachment wins. Length breaks
+ * ties, then side/ratio enums make the order TOTAL, so two candidates are never
+ * left equal — which is what keeps the pick deterministic and identical across
+ * Yjs peers.
+ *
+ * Scored obstacle- and neighbour-blind on purpose: attachment is a function of
+ * the two nodes' clean geometry, not of what the router must detour around. That
+ * also lets the choice be cached against a stable, intrinsic key — a neighbour or
+ * obstacle moving elsewhere re-routes without re-picking the anchor, which is
+ * what stops a one-node drag from re-searching the whole graph.
  */
 const scoreKey = (
   route: readonly IPoint[],
   source: AnchorChoice,
   target: AnchorChoice,
-  neighborEdges: readonly IPoint[][]
+  sourceRect: Rect,
+  targetRect: Rect
 ): number[] => {
-  const conflict = routeConflictsWithNeighborEdges(route, neighborEdges) ? 1 : 0
   const bends = Math.max(0, route.length - 2)
-  const length = Math.round(routeLength(route) / GRID)
-  // Prefer anchors near the middle of their side: symmetric, legible, and a
-  // stable place to sit when several offsets tie on bends and length.
-  const centeredness = Math.round(
-    (Math.abs(source.anchor.ratio - 0.5) +
-      Math.abs(target.anchor.ratio - 0.5)) *
-      1000
+  const offCenter = Math.round(
+    (offCenterPx(source, sourceRect) + offCenterPx(target, targetRect)) / GRID
   )
+  const weightedCost = bends * BEND_COST_GU + offCenter
+  const length = Math.round(routeLength(route) / GRID)
   return [
-    conflict,
-    bends,
+    weightedCost,
     length,
-    centeredness,
     SIDE_ORDER[source.position],
     SIDE_ORDER[target.position],
     Math.round(source.anchor.ratio * 1000),
@@ -225,6 +251,48 @@ const toRouteParams = (
   obstacles,
   neighborEdges,
 })
+
+/**
+ * Route ONE fixed endpoint pair for real — the single primitive that produces a
+ * committed auto route. Used both for the winning candidate in `selectEdgeAnchors`
+ * and for the solver's cheap fixed-anchor re-route when only a neighbour moved,
+ * so preview, commit, and cache re-route can never draw the pair differently.
+ * Mirrors the candidate branch exactly: multi-target A* (here a single target),
+ * with the straight-capable 2-point shot preferred only when it stays straight.
+ */
+export const routeChosenAnchors = (
+  endpoints: ResolvedEdgeEndpoints,
+  obstacles: readonly ObstacleRect[],
+  neighborEdges: readonly IPoint[][],
+  enableStraightPath: boolean
+): IPoint[] | null => {
+  const picked = routeAroundObstaclesToTargets(
+    endpoints.adjustedSource,
+    endpoints.sourcePosition,
+    EDGES.STUB_LENGTH,
+    [
+      {
+        point: endpoints.adjustedTarget,
+        position: endpoints.targetPosition,
+        stubLength: getEffectiveStubLength(
+          endpoints.adjustedSource,
+          endpoints.adjustedTarget,
+          endpoints.sourcePosition,
+          endpoints.targetPosition
+        ),
+      },
+    ],
+    obstacles,
+    neighborEdges
+  )
+  if (!picked) return null
+  const stepRoute = enableStraightPath
+    ? routeStepEdge(
+        toRouteParams(endpoints, obstacles, neighborEdges, enableStraightPath)
+      )
+    : null
+  return stepRoute && stepRoute.length === 2 ? stepRoute : picked.route
+}
 
 /** Resolve one endpoint pair (source anchor + target anchor) to router-ready
  * endpoints via the injected resolver. `undefined` for an end means "custom —
@@ -287,87 +355,60 @@ export const selectEdgeAnchors = (
         lane
       )
 
-  let best: { result: AutoAnchorResult; key: number[] } | null = null
+  let best: {
+    endpoints: ResolvedEdgeEndpoints
+    idealRoute: IPoint[]
+    source: AnchorChoice
+    target: AnchorChoice
+    key: number[]
+  } | null = null
 
+  // Score every (source, target) pair on its IDEAL route — obstacle- and
+  // neighbour-free, so free of any A* search. This is where the weighed cost
+  // trades bends against off-centre; the winner alone pays for a real route.
   for (const source of sourceOptions) {
-    // Resolve every target option against this source. Target-side geometry is
-    // independent of the source anchor, but the resolver returns both ends at
-    // once, so one call per target is the simplest correct thing.
-    const entries: {
-      option: AnchorChoice
-      endpoints: ResolvedEdgeEndpoints
-      routeTarget: RouteTarget
-    }[] = []
     for (const target of targetOptions) {
       const endpoints = input.resolve({
         sourceAnchor: input.sourceCustom ? undefined : source.anchor,
         targetAnchor: input.targetCustom ? undefined : target.anchor,
       })
       if (!endpoints) continue
-      entries.push({
-        option: target,
-        endpoints,
-        routeTarget: {
-          point: endpoints.adjustedTarget,
-          position: endpoints.targetPosition,
-          stubLength: getEffectiveStubLength(
-            endpoints.adjustedSource,
-            endpoints.adjustedTarget,
-            endpoints.sourcePosition,
-            endpoints.targetPosition
-          ),
-        },
-      })
-    }
-    if (entries.length === 0) continue
-
-    // One multi-target search picks the cheapest target for this source; the
-    // committed route is then produced by the shared `routeStepEdge`, so auto
-    // and custom edges are drawn by the same primitive (and straight-capable
-    // edge types can still go straight).
-    const srcEndpoints = entries[0].endpoints
-    const picked = routeAroundObstaclesToTargets(
-      srcEndpoints.adjustedSource,
-      srcEndpoints.sourcePosition,
-      EDGES.STUB_LENGTH,
-      entries.map((e) => e.routeTarget),
-      input.obstacles,
-      input.neighborEdges
-    )
-    if (!picked) continue
-
-    const chosen = entries[picked.targetIndex]
-    // Commit the multi-target search's own route so selection and commit can
-    // never disagree (scoring a routeStepEdge redraw would let the search pick a
-    // target the redraw then renders with more bends). Straight-capable edge
-    // types still get their diagonal from routeStepEdge when it stays clear.
-    const stepRoute = input.enableStraightPath
-      ? routeStepEdge(
-          toRouteParams(
-            chosen.endpoints,
-            input.obstacles,
-            input.neighborEdges,
-            input.enableStraightPath
-          )
+      const idealRoute = routeStepEdge(
+        toRouteParams(
+          endpoints,
+          NO_OBSTACLES,
+          NO_NEIGHBORS,
+          input.enableStraightPath
         )
-      : null
-    // Take the straight-capable route ONLY when it is actually straight (a
-    // 2-point, zero-bend shot); its orthogonal smooth-step fallback can bend more
-    // than the multi-target A* route, which is otherwise the cleaner choice.
-    const route = stepRoute && stepRoute.length === 2 ? stepRoute : picked.route
-    const key = scoreKey(route, source, chosen.option, input.neighborEdges)
-    if (!best || lexLess(key, best.key)) {
-      best = {
-        key,
-        result: {
-          endpoints: chosen.endpoints,
-          route,
-          sourceAnchor: input.sourceCustom ? undefined : source.anchor,
-          targetAnchor: input.targetCustom ? undefined : chosen.option.anchor,
-        },
+      )
+      const key = scoreKey(
+        idealRoute,
+        source,
+        target,
+        input.sourceRect,
+        input.targetRect
+      )
+      if (!best || lexLess(key, best.key)) {
+        best = { endpoints, idealRoute, source, target, key }
       }
     }
   }
 
-  return best ? best.result : null
+  if (!best) return null
+  const sourceAnchor = input.sourceCustom ? undefined : best.source.anchor
+  const targetAnchor = input.targetCustom ? undefined : best.target.anchor
+  // Route the winning anchors for real — obstacle- AND neighbour-aware. With
+  // nothing to avoid the ideal route already IS that route, so skip the search.
+  // This is the committed route; the solver reuses it and, when an obstacle or
+  // neighbour later moves, reproduces it via the same `routeChosenAnchors`.
+  const route =
+    input.obstacles.length === 0 && input.neighborEdges.length === 0
+      ? best.idealRoute
+      : (routeChosenAnchors(
+          best.endpoints,
+          input.obstacles,
+          input.neighborEdges,
+          input.enableStraightPath
+        ) ?? best.idealRoute)
+  return { endpoints: best.endpoints, route, sourceAnchor, targetAnchor }
 }

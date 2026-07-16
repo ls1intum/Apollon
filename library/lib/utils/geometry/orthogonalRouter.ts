@@ -257,6 +257,40 @@ const toSegments = (polylines: readonly IPoint[][]): Segment[] => {
   return segs
 }
 
+/** One segment of a neighbouring edge, in the reach box of some route. */
+export type NeighborSegment = Segment
+
+/**
+ * The neighbour segments a route between these endpoints can actually reach:
+ * those overlapping the box its endpoints and obstacles span, grown by the
+ * routing margin. A neighbour outside it can be neither crossed nor lain on — so
+ * it neither shapes the route NOR should invalidate the route's cache key. The
+ * router prunes its lattice with this; the solver keys routes on it, so a
+ * neighbour bending outside this edge's corridor no longer forces it to re-route.
+ */
+export const neighborsWithinReach = (
+  sourcePoint: IPoint,
+  targetPoints: readonly IPoint[],
+  obstacles: readonly ObstacleRect[],
+  neighborEdges: readonly IPoint[][]
+): NeighborSegment[] => {
+  const reach = 4 * CANVAS.SNAP_TO_GRID_PX + EDGES.NODE_CLEARANCE_PX
+  const xs = [sourcePoint.x, ...targetPoints.map((p) => p.x)]
+  const ys = [sourcePoint.y, ...targetPoints.map((p) => p.y)]
+  const left = Math.min(...xs, ...obstacles.map((o) => o.x)) - reach
+  const right = Math.max(...xs, ...obstacles.map((o) => o.x + o.width)) + reach
+  const top = Math.min(...ys, ...obstacles.map((o) => o.y)) - reach
+  const bottom =
+    Math.max(...ys, ...obstacles.map((o) => o.y + o.height)) + reach
+  return toSegments(neighborEdges).filter(
+    (s) =>
+      Math.min(s.x1, s.x2) <= right &&
+      Math.max(s.x1, s.x2) >= left &&
+      Math.min(s.y1, s.y2) <= bottom &&
+      Math.max(s.y1, s.y2) >= top
+  )
+}
+
 const sign = (n: number): number => (n > 0 ? 1 : n < 0 ? -1 : 0)
 
 const orient = (
@@ -697,39 +731,16 @@ export const routeAroundObstaclesToTargets = (
   const hard = obstacles.filter((o) => !o.soft)
   const soft = obstacles.filter((o) => o.soft)
 
-  // Only the neighbouring edges this route can reach. A route lives inside the box
-  // its endpoints and obstacles span (where its turning lines come from), so an
-  // edge outside it can be neither crossed nor lain on, and every lane derived from
-  // one costs cells quadratically for nothing. Callers over-supply "nearby"
-  // because they cannot know the corridor before it is built; here it is known.
-  const reach = 4 * grid + idealClearance
-  const targetXsAll = targetInfos.map((t) => t.point.x)
-  const targetYsAll = targetInfos.map((t) => t.point.y)
-  const routeLeft =
-    Math.min(sourcePoint.x, ...targetXsAll, ...obstacles.map((o) => o.x)) -
-    reach
-  const routeRight =
-    Math.max(
-      sourcePoint.x,
-      ...targetXsAll,
-      ...obstacles.map((o) => o.x + o.width)
-    ) + reach
-  const routeTop =
-    Math.min(sourcePoint.y, ...targetYsAll, ...obstacles.map((o) => o.y)) -
-    reach
-  const routeBottom =
-    Math.max(
-      sourcePoint.y,
-      ...targetYsAll,
-      ...obstacles.map((o) => o.y + o.height)
-    ) + reach
-
-  const neighborSegments = toSegments(neighborEdges).filter(
-    (s) =>
-      Math.min(s.x1, s.x2) <= routeRight &&
-      Math.max(s.x1, s.x2) >= routeLeft &&
-      Math.min(s.y1, s.y2) <= routeBottom &&
-      Math.max(s.y1, s.y2) >= routeTop
+  // Only the neighbouring edges this route can reach: an edge outside the box its
+  // endpoints and obstacles span can be neither crossed nor lain on, and every
+  // lane derived from one costs cells quadratically for nothing. Callers
+  // over-supply "nearby" because they cannot know the corridor before it is
+  // built; `neighborsWithinReach` is the box, shared with the solver's route key.
+  const neighborSegments = neighborsWithinReach(
+    sourcePoint,
+    targetInfos.map((t) => t.point),
+    obstacles,
+    neighborEdges
   )
   const neighborIndex = indexNeighbors(neighborSegments)
 

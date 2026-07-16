@@ -1,6 +1,5 @@
 import { use, useLayoutEffect, useRef } from "react"
 import { useStore, type InternalNode } from "@xyflow/react"
-import type { IPoint } from "@/edges/Connection"
 import { useShallow } from "zustand/shallow"
 import {
   EdgeGeometryStoreContext,
@@ -8,7 +7,10 @@ import {
   useEdgeGeometryStore,
   useMetadataStore,
 } from "@/store/context"
-import { computeAllEdgeGeometry } from "@/utils/geometry/edgeGeometrySolver"
+import {
+  computeAllEdgeGeometry,
+  type EdgeSolveCacheEntry,
+} from "@/utils/geometry/edgeGeometrySolver"
 import { recordSolve } from "@/sync/perfCounters"
 import {
   STRAIGHT_HOOK_EDGE_TYPES,
@@ -42,9 +44,7 @@ export const EdgeGeometrySolver = () => {
   // Cross-frame memo of each edge's routed polyline, keyed on a signature of the
   // router's inputs, so an edge whose inputs did not change skips the search. A
   // ref (not state) — it is a cache, never a render trigger.
-  const solveCacheRef = useRef<
-    Map<string, { sig: string; computed: IPoint[] }>
-  >(new Map())
+  const solveCacheRef = useRef<Map<string, EdgeSolveCacheEntry>>(new Map())
 
   // RF mutates `nodeLookup` in place and keeps the `nodes` ref stable across
   // measurement, so keying the solve on those refs would freeze a stale result.
