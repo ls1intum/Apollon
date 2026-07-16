@@ -221,6 +221,41 @@ function isSibling(self: Edge, other: Edge): boolean {
   )
 }
 
+/**
+ * A grid bucketing each already-routed edge's polyline VERTICES by cell, so an
+ * edge finds its nearby neighbours without scanning every routed edge (the walk
+ * is ascending-id, so a full scan is O(edges) per edge → O(edges²) per frame).
+ * The cell only has to be a spatial hint: the caller re-checks each candidate
+ * against the exact box, so the result is identical to a full scan.
+ */
+type NeighborGrid = Map<string, string[]>
+const NEIGHBOR_CELL_PX = 256
+const cellKey = (cx: number, cy: number): string => `${cx},${cy}`
+
+/** Bucket `edgeId` under every cell its polyline has a vertex in. */
+function indexRoutePolyline(
+  grid: NeighborGrid,
+  edgeId: string,
+  polyline: readonly IPoint[]
+): void {
+  let lastKey: string | null = null
+  for (const p of polyline) {
+    const key = cellKey(
+      Math.floor(p.x / NEIGHBOR_CELL_PX),
+      Math.floor(p.y / NEIGHBOR_CELL_PX)
+    )
+    // Consecutive vertices usually share a cell; the query dedups the rest.
+    if (key === lastKey) continue
+    lastKey = key
+    const bucket = grid.get(key)
+    if (bucket) {
+      if (bucket[bucket.length - 1] !== edgeId) bucket.push(edgeId)
+    } else {
+      grid.set(key, [edgeId])
+    }
+  }
+}
+
 /** Gather the polylines this edge must not be drawn on top of — lower-id
  * neighbours' finished routes plus container borders. */
 function collectNeighbors(
@@ -228,7 +263,8 @@ function collectNeighbors(
   endpoints: ResolvedEdgeEndpoints,
   nodes: readonly Node[],
   edgeById: Map<string, Edge>,
-  routeById: Record<string, IPoint[]>
+  routeById: Record<string, IPoint[]>,
+  grid: NeighborGrid
 ): IPoint[][] {
   const borders = getContainerBorderPolylines(nodes, edge.source, edge.target)
 
@@ -242,11 +278,29 @@ function collectNeighbors(
   const minY = Math.min(sy, ty) - pad
   const maxY = Math.max(sy, ty) + pad
 
-  // `routeById` holds only already-routed lower-id edges at this edge's turn
-  // (ascending-id walk), so there is no higher-id neighbour to filter out.
+  // Candidate lower-id edges: those with a vertex in a cell overlapping the box.
+  // A vertex inside the box lands in a cell inside this range, so no neighbour is
+  // missed; the precise test below drops the cell's out-of-box extras.
+  const candidateIds = new Set<string>()
+  const cx0 = Math.floor(minX / NEIGHBOR_CELL_PX)
+  const cx1 = Math.floor(maxX / NEIGHBOR_CELL_PX)
+  const cy0 = Math.floor(minY / NEIGHBOR_CELL_PX)
+  const cy1 = Math.floor(maxY / NEIGHBOR_CELL_PX)
+  for (let cx = cx0; cx <= cx1; cx++) {
+    for (let cy = cy0; cy <= cy1; cy++) {
+      const bucket = grid.get(cellKey(cx, cy))
+      if (bucket) for (const id of bucket) candidateIds.add(id)
+    }
+  }
+
+  // Ascending-id order, matching the previous full-map scan (routeById is built
+  // ascending), so neighbour order — and thus the routed result — is unchanged.
+  const ordered = [...candidateIds].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
+
   const neighbors: IPoint[][] = []
-  for (const [otherId, polyline] of Object.entries(routeById)) {
-    if (polyline.length < 2) continue
+  for (const otherId of ordered) {
+    const polyline = routeById[otherId]
+    if (!polyline || polyline.length < 2) continue
     const other = edgeById.get(otherId)
     if (other && isSibling(edge, other)) continue
     const inRange = polyline.some(
@@ -346,10 +400,14 @@ export function computeAllEdgeGeometry(input: SolverInput): {
     a.id < b.id ? -1 : a.id > b.id ? 1 : 0
   )
   const routeById: Record<string, IPoint[]> = {}
+  // Spatial index of finished routes, grown as the walk proceeds so each edge
+  // finds its lower-id neighbours without rescanning the whole route map.
+  const neighborGrid: NeighborGrid = new Map()
 
   for (const edge of ordered) {
     if (liveOverride && liveOverride.edgeId === edge.id) {
       routeById[edge.id] = liveOverride.points
+      indexRoutePolyline(neighborGrid, edge.id, liveOverride.points)
       continue
     }
 
@@ -362,7 +420,10 @@ export function computeAllEdgeGeometry(input: SolverInput): {
     )
     if (!endpoints) {
       // Node not measured yet — hold the previous route, never paint a guess.
-      if (previous?.[edge.id]) routeById[edge.id] = previous[edge.id]
+      if (previous?.[edge.id]) {
+        routeById[edge.id] = previous[edge.id]
+        indexRoutePolyline(neighborGrid, edge.id, previous[edge.id])
+      }
       continue
     }
 
@@ -370,7 +431,9 @@ export function computeAllEdgeGeometry(input: SolverInput): {
     // between the adjusted endpoints — no obstacle or neighbour routing — but
     // their polyline still enters the map so step edges route around them.
     if (straightHookTypes.has(edge.type ?? "")) {
-      routeById[edge.id] = [endpoints.adjustedSource, endpoints.adjustedTarget]
+      const line = [endpoints.adjustedSource, endpoints.adjustedTarget]
+      routeById[edge.id] = line
+      indexRoutePolyline(neighborGrid, edge.id, line)
       continue
     }
 
@@ -386,7 +449,8 @@ export function computeAllEdgeGeometry(input: SolverInput): {
       endpoints,
       nodes,
       edgeById,
-      routeById
+      routeById,
+      neighborGrid
     )
 
     const enableStraightPath = straightPathTypes.has(edge.type ?? "")
@@ -417,6 +481,7 @@ export function computeAllEdgeGeometry(input: SolverInput): {
     }
 
     routeById[edge.id] = mergeManualPoints(edge, computed, endpoints)
+    indexRoutePolyline(neighborGrid, edge.id, routeById[edge.id])
   }
 
   // Drop cache entries for edges that no longer exist, so a deleted edge's route
