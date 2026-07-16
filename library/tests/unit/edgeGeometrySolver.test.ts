@@ -261,3 +261,128 @@ describe("computeAllEdgeGeometry", () => {
     expect(cachedAfterMove).toEqual(freshAfterMove)
   })
 })
+
+/** The side an edge leaves a node on, read off the route's first segment. */
+const exitSide = (route: { x: number; y: number }[]): string => {
+  const [a, b] = route
+  if (Math.abs(b.x - a.x) >= Math.abs(b.y - a.y)) return b.x >= a.x ? "R" : "L"
+  return b.y >= a.y ? "D" : "U"
+}
+
+describe("computeAllEdgeGeometry — auto anchor optimization", () => {
+  const base = (nodes: { node: Node; internal: unknown }[], edges: Edge[]) => ({
+    nodes: nodes.map((n) => n.node),
+    nodeLookup: new Map(nodes.map((n) => [n.node.id, n.internal])) as Map<
+      string,
+      any
+    >,
+    connectionMode: ConnectionMode.Loose,
+    edges,
+    straightPathTypes: STRAIGHT_PATH_STEP_EDGE_TYPES,
+    straightHookTypes: STRAIGHT_HOOK_EDGE_TYPES,
+  })
+
+  it("routes a plainly-facing edge with no bends by aligning the anchors", () => {
+    // b sits straight to the right of a; the optimiser should align both anchors
+    // to a common y and draw a straight line (zero interior points).
+    const a = makeNode("a", 0, 0)
+    const b = makeNode("b", 300, 0)
+    const { routeById } = computeAllEdgeGeometry(
+      base(
+        [a, b],
+        [{ id: "e1", source: "a", target: "b", type: "ClassUnidirectional" }]
+      )
+    )
+    expect(routeById["e1"].length).toBe(2)
+    expect(exitSide(routeById["e1"])).toBe("R")
+  })
+
+  it("respects a custom source anchor and never re-chooses it", () => {
+    // A pinned TOP anchor must be honoured even though the facing side is right.
+    const a = makeNode("a", 0, 0)
+    const b = makeNode("b", 300, 0)
+    const edges: Edge[] = [
+      {
+        id: "e1",
+        source: "a",
+        target: "b",
+        type: "ClassUnidirectional",
+        data: { sourceAnchor: { side: Position.Top, ratio: 0.5 } },
+      },
+    ]
+    const { routeById } = computeAllEdgeGeometry(base([a, b], edges))
+    expect(exitSide(routeById["e1"])).toBe("U")
+  })
+
+  it("fans two parallel edges onto distinct routes (no sibling collapse)", () => {
+    const a = makeNode("a", 0, 0)
+    const b = makeNode("b", 300, 0)
+    const { routeById } = computeAllEdgeGeometry(
+      base(
+        [a, b],
+        [
+          { id: "e1", source: "a", target: "b", type: "ClassUnidirectional" },
+          { id: "e2", source: "a", target: "b", type: "ClassUnidirectional" },
+        ]
+      )
+    )
+    expect(routeById["e1"]).not.toEqual(routeById["e2"])
+  })
+
+  it("is byte-identical regardless of the edge input order", () => {
+    const a = makeNode("a", 0, 0)
+    const b = makeNode("b", 340, 120)
+    const c = makeNode("c", 40, 260)
+    const forward: Edge[] = [
+      { id: "e1", source: "a", target: "b", type: "ClassUnidirectional" },
+      { id: "e2", source: "a", target: "c", type: "ClassUnidirectional" },
+      { id: "e3", source: "c", target: "b", type: "ClassUnidirectional" },
+    ]
+    const shuffled = [forward[2], forward[0], forward[1]]
+    const one = computeAllEdgeGeometry(base([a, b, c], forward)).routeById
+    const two = computeAllEdgeGeometry(base([a, b, c], shuffled)).routeById
+    expect(two).toEqual(one)
+  })
+
+  it("does not oscillate in wide bands while sweeping a node past it", () => {
+    // Sweep b's y from far above a to far below while it stays to the right. The
+    // exit side should progress U → R → D (roughly) with only isolated one-step
+    // blips where a node edge momentarily aligns — NOT the wide, repeated bands a
+    // regression in the memoryless chooser would produce. Every route stays clean
+    // (≤ 2 bends), and the collapsed run count stays small.
+    const runs: string[] = []
+    for (let y = -260; y <= 260; y += 5) {
+      const a = makeNode("a", 0, 0)
+      const b = makeNode("b", 300, y)
+      const route = computeAllEdgeGeometry(
+        base(
+          [a, b],
+          [{ id: "e1", source: "a", target: "b", type: "ClassUnidirectional" }]
+        )
+      ).routeById["e1"]
+      expect(route.length - 2).toBeLessThanOrEqual(2) // ≤ 2 bends, always clean
+      const side = exitSide(route)
+      if (runs[runs.length - 1] !== side) runs.push(side)
+    }
+    // A clean sweep is ≤ 3 genuine transitions; wide oscillation would blow past.
+    expect(runs.length).toBeLessThanOrEqual(4)
+  })
+
+  it("is deterministic: an identical layout re-solves byte-for-byte", () => {
+    const layout = () => {
+      const a = makeNode("a", 0, 0)
+      const b = makeNode("b", 260, 140)
+      const c = makeNode("c", 300, -40)
+      return base(
+        [a, b, c],
+        [
+          { id: "e1", source: "a", target: "b", type: "ClassUnidirectional" },
+          { id: "e2", source: "a", target: "c", type: "ClassUnidirectional" },
+        ]
+      )
+    }
+    expect(computeAllEdgeGeometry(layout()).routeById).toEqual(
+      computeAllEdgeGeometry(layout()).routeById
+    )
+  })
+})

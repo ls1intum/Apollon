@@ -337,14 +337,24 @@ export const selectEdgeAnchors = (
     if (!picked) continue
 
     const chosen = entries[picked.targetIndex]
-    const route = routeStepEdge(
-      toRouteParams(
-        chosen.endpoints,
-        input.obstacles,
-        input.neighborEdges,
-        input.enableStraightPath
-      )
-    )
+    // Commit the multi-target search's own route so selection and commit can
+    // never disagree (scoring a routeStepEdge redraw would let the search pick a
+    // target the redraw then renders with more bends). Straight-capable edge
+    // types still get their diagonal from routeStepEdge when it stays clear.
+    const stepRoute = input.enableStraightPath
+      ? routeStepEdge(
+          toRouteParams(
+            chosen.endpoints,
+            input.obstacles,
+            input.neighborEdges,
+            input.enableStraightPath
+          )
+        )
+      : null
+    // Take the straight-capable route ONLY when it is actually straight (a
+    // 2-point, zero-bend shot); its orthogonal smooth-step fallback can bend more
+    // than the multi-target A* route, which is otherwise the cleaner choice.
+    const route = stepRoute && stepRoute.length === 2 ? stepRoute : picked.route
     const key = scoreKey(route, source, chosen.option, input.neighborEdges)
     if (!best || lexLess(key, best.key)) {
       best = {
