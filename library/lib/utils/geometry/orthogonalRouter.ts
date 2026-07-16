@@ -629,29 +629,40 @@ class MinHeap {
   }
 }
 
+/** One candidate landing point for a search: where a route may end, which side
+ * it enters along, and the stub it prefers before its final turn. */
+export type RouteTarget = {
+  point: IPoint
+  position: Position
+  stubLength: number
+}
+
 /**
- * The obstacle-avoiding orthogonal route between two connection points, or `null`
- * when none exists (walled off by hard obstacles) so the caller can fall back.
+ * The obstacle-avoiding orthogonal route from the source to the CHEAPEST of one or
+ * more candidate targets, or `null` when none is reachable (walled off by hard
+ * obstacles) so the caller can fall back. With a single target this is the classic
+ * point-to-point route; with several, one A* pass picks the target endpoint that
+ * yields the best path — the endpoint-anchor selection the auto-router needs — and
+ * `targetIndex` reports which candidate won so the caller can adopt its anchor.
  *
- * The two endpoints are terminal nodes: the route may leave the source only along
- * its declared side, may enter the target only along its declared side, and may
- * never pass *through* either node body. The mandatory stubs are part of the
- * searched path, so A* costs them in and a route can never spike out to the target
- * and retrace its approach; a genuine detour that costs more length beats it.
+ * The endpoints are terminal nodes: the route may leave the source only along its
+ * declared side, may enter a target only along that target's declared side, and may
+ * never pass *through* a node body. The mandatory stubs are part of the searched
+ * path, so A* costs them in and a route can never spike out to a target and retrace
+ * its approach; a genuine detour that costs more length beats it.
  *
- * `sourceStubLength` / `targetStubLength` seed a turning lane at stub distance for
- * room before the first turn; they are lanes to prefer, not hard minimums.
+ * `sourceStubLength` / each target's `stubLength` seed a turning lane at stub
+ * distance for room before a turn; they are lanes to prefer, not hard minimums.
  */
-export const routeAroundObstacles = (
+export const routeAroundObstaclesToTargets = (
   sourcePoint: IPoint,
-  targetPoint: IPoint,
   sourcePosition: Position,
-  targetPosition: Position,
-  obstacles: readonly ObstacleRect[],
   sourceStubLength: number,
-  targetStubLength: number,
+  targets: readonly RouteTarget[],
+  obstacles: readonly ObstacleRect[],
   neighborEdges: readonly IPoint[][] = []
-): IPoint[] | null => {
+): { route: IPoint[]; targetIndex: number } | null => {
+  if (targets.length === 0) return null
   const grid = CANVAS.SNAP_TO_GRID_PX
   const idealClearance = EDGES.NODE_CLEARANCE_PX
   const minClearance = EDGES.MIN_NODE_CLEARANCE_PX
@@ -664,17 +675,24 @@ export const routeAroundObstacles = (
     CLEARANCE_COST_PER_PX_AT_FULL_DEFICIT / (idealClearance / grid)
 
   const sourceHeading = headingOf(sourcePosition)
-  const targetHeading = headingOf(targetPosition)
-  // Heading to arrive at the target: into the node, opposite the entry side.
-  const requiredArrival = opposite(targetHeading)
-
   const sourceExit = advance(sourcePoint, sourceHeading, sourceStubLength)
-  const targetExit = advance(targetPoint, targetHeading, targetStubLength)
-  // A turn lane one grid cell out from each endpoint, guaranteeing somewhere to
-  // turn even when the endpoints are a single cell apart and the stub would
-  // overshoot onto the (blocked) partner node and strand the search.
+  // A turn lane one grid cell out from the source, guaranteeing somewhere to turn
+  // even when the endpoints are a single cell apart and the stub would overshoot
+  // onto the (blocked) partner node and strand the search.
   const sourceMinExit = advance(sourcePoint, sourceHeading, grid)
-  const targetMinExit = advance(targetPoint, targetHeading, grid)
+
+  // Per-target terminal geometry: the entry heading, the arrival heading (into the
+  // body, opposite the entry side), and the stub / min-turn exits that seed room
+  // before the final approach — one set per candidate landing point.
+  const targetInfos = targets.map((t) => {
+    const heading = headingOf(t.position)
+    return {
+      point: t.point,
+      requiredArrival: opposite(heading),
+      exit: advance(t.point, heading, t.stubLength),
+      minExit: advance(t.point, heading, grid),
+    }
+  })
 
   const hard = obstacles.filter((o) => !o.soft)
   const soft = obstacles.filter((o) => o.soft)
@@ -685,20 +703,24 @@ export const routeAroundObstacles = (
   // one costs cells quadratically for nothing. Callers over-supply "nearby"
   // because they cannot know the corridor before it is built; here it is known.
   const reach = 4 * grid + idealClearance
+  const targetXsAll = targetInfos.map((t) => t.point.x)
+  const targetYsAll = targetInfos.map((t) => t.point.y)
   const routeLeft =
-    Math.min(sourcePoint.x, targetPoint.x, ...obstacles.map((o) => o.x)) - reach
+    Math.min(sourcePoint.x, ...targetXsAll, ...obstacles.map((o) => o.x)) -
+    reach
   const routeRight =
     Math.max(
       sourcePoint.x,
-      targetPoint.x,
+      ...targetXsAll,
       ...obstacles.map((o) => o.x + o.width)
     ) + reach
   const routeTop =
-    Math.min(sourcePoint.y, targetPoint.y, ...obstacles.map((o) => o.y)) - reach
+    Math.min(sourcePoint.y, ...targetYsAll, ...obstacles.map((o) => o.y)) -
+    reach
   const routeBottom =
     Math.max(
       sourcePoint.y,
-      targetPoint.y,
+      ...targetYsAll,
       ...obstacles.map((o) => o.y + o.height)
     ) + reach
 
@@ -718,35 +740,29 @@ export const routeAroundObstacles = (
   const margin = 4 * grid
   const spanXs = [
     sourcePoint.x,
-    targetPoint.x,
     sourceExit.x,
-    targetExit.x,
+    ...targetInfos.flatMap((t) => [t.point.x, t.exit.x]),
     ...obstacles.flatMap((o) => [o.x, o.x + o.width]),
   ]
   const spanYs = [
     sourcePoint.y,
-    targetPoint.y,
     sourceExit.y,
-    targetExit.y,
+    ...targetInfos.flatMap((t) => [t.point.y, t.exit.y]),
     ...obstacles.flatMap((o) => [o.y, o.y + o.height]),
   ]
   const exactXs = [
     sourcePoint.x,
-    targetPoint.x,
     sourceExit.x,
-    targetExit.x,
     sourceMinExit.x,
-    targetMinExit.x,
+    ...targetInfos.flatMap((t) => [t.point.x, t.exit.x, t.minExit.x]),
     Math.min(...spanXs) - margin,
     Math.max(...spanXs) + margin,
   ]
   const exactYs = [
     sourcePoint.y,
-    targetPoint.y,
     sourceExit.y,
-    targetExit.y,
     sourceMinExit.y,
-    targetMinExit.y,
+    ...targetInfos.flatMap((t) => [t.point.y, t.exit.y, t.minExit.y]),
     Math.min(...spanYs) - margin,
     Math.max(...spanYs) + margin,
   ]
@@ -878,11 +894,32 @@ export const routeAroundObstacles = (
 
   const sourceXi = xIndex.get(sourcePoint.x)!
   const sourceYi = yIndex.get(sourcePoint.y)!
-  const targetXi = xIndex.get(targetPoint.x)!
-  const targetYi = yIndex.get(targetPoint.y)!
 
-  const heuristic = (xi: number, yi: number): number =>
-    Math.abs(xs[xi] - targetPoint.x) + Math.abs(ys[yi] - targetPoint.y)
+  // Each target's lattice cell, its arrival heading, and its index. Keyed by
+  // packed cell so the goal test is an O(1) lookup. If two candidates collapse to
+  // one cell the earlier (lower-index) one wins — the search is unchanged and the
+  // pick stays deterministic.
+  const targetCells = new Map<
+    number,
+    { index: number; requiredArrival: Heading }
+  >()
+  targetInfos.forEach((t, index) => {
+    const cell = xIndex.get(t.point.x)! * stride + yIndex.get(t.point.y)!
+    if (!targetCells.has(cell))
+      targetCells.set(cell, { index, requiredArrival: t.requiredArrival })
+  })
+
+  // Admissible AND consistent: the min of consistent Manhattan heuristics is
+  // consistent, so the closed-state skip below stays sound with several targets.
+  const targetPoints = targetInfos.map((t) => t.point)
+  const heuristic = (xi: number, yi: number): number => {
+    let best = Infinity
+    for (const p of targetPoints) {
+      const d = Math.abs(xs[xi] - p.x) + Math.abs(ys[yi] - p.y)
+      if (d < best) best = d
+    }
+    return best
+  }
 
   // The price of one step, computed ONCE per (cell, direction) and memoized. A
   // step's cost depends only on the two points it joins, never on how the search
@@ -1074,7 +1111,7 @@ export const routeAroundObstacles = (
   }
 
   const isTarget = (xi: number, yi: number): boolean =>
-    xi === targetXi && yi === targetYi
+    targetCells.has(xi * stride + yi)
   const isSource = (xi: number, yi: number): boolean =>
     xi === sourceXi && yi === sourceYi
 
@@ -1118,7 +1155,10 @@ export const routeAroundObstacles = (
       }
       raw.reverse()
       recordRouterSearch(expansions, false)
-      return simplifyCollinear(raw)
+      return {
+        route: simplifyCollinear(raw),
+        targetIndex: targetCells.get(xi * stride + yi)!.index,
+      }
     }
 
     const g = gScore[current]
@@ -1139,7 +1179,8 @@ export const routeAroundObstacles = (
       // target only along its declared side. This forbids tunnelling through the
       // route's own node bodies.
       if (isSource(nxi, nyi)) continue
-      if (isTarget(nxi, nyi) && nh !== requiredArrival) continue
+      const targetHere = targetCells.get(nxi * stride + nyi)
+      if (targetHere && nh !== targetHere.requiredArrival) continue
 
       const step = priceStep(xi, yi, nxi, nyi, nh)
       if (step === BLOCKED) continue
@@ -1180,6 +1221,39 @@ export const routeAroundObstacles = (
   // Walled off by hard obstacles: no route exists.
   recordRouterSearch(expansions, false)
   return null
+}
+
+/**
+ * Point-to-point orthogonal route (the classic single-target case), kept as the
+ * shared primitive for every caller that already knows both endpoints. A thin
+ * shim over {@link routeAroundObstaclesToTargets} with one target, so the two can
+ * never diverge.
+ */
+export const routeAroundObstacles = (
+  sourcePoint: IPoint,
+  targetPoint: IPoint,
+  sourcePosition: Position,
+  targetPosition: Position,
+  obstacles: readonly ObstacleRect[],
+  sourceStubLength: number,
+  targetStubLength: number,
+  neighborEdges: readonly IPoint[][] = []
+): IPoint[] | null => {
+  const result = routeAroundObstaclesToTargets(
+    sourcePoint,
+    sourcePosition,
+    sourceStubLength,
+    [
+      {
+        point: targetPoint,
+        position: targetPosition,
+        stubLength: targetStubLength,
+      },
+    ],
+    obstacles,
+    neighborEdges
+  )
+  return result ? result.route : null
 }
 
 /**
