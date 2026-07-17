@@ -19,7 +19,10 @@ type TaggableData = { tags?: unknown; [key: string]: unknown }
  * preserved). Idempotent. Takes `unknown` because models arrive from hosts as
  * untrusted JSON, so a `tags` entry may be any shape.
  */
-export function normalizeTags(raw: unknown): string[] {
+export function normalizeTags(
+  raw: unknown,
+  maxCount = MAX_TAGS_PER_ELEMENT
+): string[] {
   if (!Array.isArray(raw)) return []
   const seen = new Set<string>()
   const result: string[] = []
@@ -32,7 +35,7 @@ export function normalizeTags(raw: unknown): string[] {
     if (seen.has(tag)) continue
     seen.add(tag)
     result.push(tag)
-    if (result.length >= MAX_TAGS_PER_ELEMENT) break
+    if (result.length >= maxCount) break
   }
   return result
 }
@@ -105,7 +108,9 @@ export const DISABLED_TAG_CONFIG: TagConfig = {
 export function resolveTagConfig(input?: boolean | TagOptions): TagConfig {
   if (!input) return DISABLED_TAG_CONFIG
   if (input === true) return { enabled: true, available: [], allowCreate: true }
-  const available = normalizeTags(input.available ?? [])
+  // The 50-tag cap bounds one element's tags, not the offered vocabulary — a
+  // host may legitimately expose one tag per test case, well past 50.
+  const available = normalizeTags(input.available ?? [], Infinity)
   return {
     enabled: true,
     available,

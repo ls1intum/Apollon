@@ -87,13 +87,27 @@ export const Authoring: Story = {
       canvas.getByRole("button", { name: "Remove tag testAttributes[Animal]" })
     ).toBeVisible()
 
-    // Open the attribute's tag picker and add a tag off the vocabulary.
-    // The popover portals to <body>, so query it through `screen`, not `canvas`.
+    // Open the attribute's tag picker. The popover portals to <body>, so query
+    // it through `screen`, not `canvas`.
     await userEvent.click(
       canvas.getByRole("button", { name: "Tags for attribute" })
     )
-    const addField = await screen.findByLabelText("New tag")
-    await userEvent.type(addField, "testName{Enter}")
+
+    // Vocabulary options are keyboard-operable: focus one and toggle with Enter.
+    const option = await screen.findByRole("button", {
+      name: "testMethods[Animal]",
+    })
+    option.focus()
+    await userEvent.keyboard("{Enter}")
+    await expect(
+      canvas.getByRole("button", { name: "Remove tag testMethods[Animal]" })
+    ).toBeVisible()
+
+    // And a new tag can be added through the field below the list.
+    await userEvent.type(
+      await screen.findByLabelText("New tag"),
+      "testName{Enter}"
+    )
     await expect(
       canvas.getByRole("button", { name: "Remove tag testName" })
     ).toBeVisible()

@@ -185,6 +185,18 @@ describe("resolveTagConfig", () => {
     })
   })
 
+  it("does not cap the vocabulary at the per-element tag limit", () => {
+    // The 50-tag cap bounds one element's tags, not the offered vocabulary — a
+    // host may expose one tag per test case, well past 50.
+    const many = Array.from(
+      { length: MAX_TAGS_PER_ELEMENT + 25 },
+      (_, i) => `test${i}`
+    )
+    expect(resolveTagConfig({ available: many }).available).toHaveLength(
+      MAX_TAGS_PER_ELEMENT + 25
+    )
+  })
+
   it("respects an explicit allowCreate over the default", () => {
     expect(resolveTagConfig({ available: ["a"], allowCreate: true })).toEqual({
       enabled: true,

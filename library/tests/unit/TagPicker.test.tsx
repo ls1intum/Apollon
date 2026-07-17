@@ -71,20 +71,23 @@ describe("TagPicker free-form (tags: true)", () => {
 describe("TagPicker with a host vocabulary", () => {
   const available = ["testAttributes[Animal]", "testMethods[Animal]"]
 
-  it("lists the whole vocabulary as a checklist, no search box", () => {
+  it("lists the whole vocabulary as focusable buttons, no search box", () => {
     renderPicker([], { available })
     openPopover()
+    // Options are native buttons (keyboard-operable), not click-only list items.
     expect(
-      within(screen.getByRole("listbox")).getAllByRole("option")
+      within(screen.getByRole("group")).getAllByRole("button")
     ).toHaveLength(2)
-    // Pick-only: no add field, no filter.
-    expect(screen.queryByLabelText("Add tag")).not.toBeInTheDocument()
+    // Pick-only: no add field.
+    expect(screen.queryByLabelText("New tag")).not.toBeInTheDocument()
   })
 
   it("toggles a vocabulary choice on", () => {
     const onChange = renderPicker([], { available })
     openPopover()
-    fireEvent.click(screen.getByText("testAttributes[Animal]"))
+    fireEvent.click(
+      screen.getByRole("button", { name: "testAttributes[Animal]" })
+    )
     expect(onChange).toHaveBeenCalledWith(["testAttributes[Animal]"])
   })
 
@@ -104,10 +107,11 @@ describe("TagPicker with a host vocabulary", () => {
     expect(
       screen.getByRole("button", { name: "Remove tag legacyTag" })
     ).toBeInTheDocument()
-    // …and the option shows inside it, checked.
+    // …and the option shows inside it, pressed.
     openPopover()
-    expect(
-      within(screen.getByRole("listbox")).getByText("legacyTag")
-    ).toBeInTheDocument()
+    const option = within(screen.getByRole("group")).getByRole("button", {
+      name: "legacyTag",
+    })
+    expect(option).toHaveAttribute("aria-pressed", "true")
   })
 })

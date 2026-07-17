@@ -1373,14 +1373,26 @@ svg.react-flow__connectionline {
   display: flex;
   align-items: center;
   gap: 6px;
+  width: 100%;
+  margin: 0;
   padding: 6px 8px;
+  font: inherit;
   font-size: 0.8125rem;
+  text-align: left;
+  color: inherit;
+  background: transparent;
+  border: 0;
   border-radius: var(--apollon-radius-sm, 4px);
   cursor: pointer;
 }
 
 .apollon-tag-picker__option:hover {
   background-color: var(--apollon-hover-neutral, rgba(0, 0, 0, 0.05));
+}
+
+.apollon-tag-picker__option:focus-visible {
+  outline: 2px solid var(--apollon-primary, #3e8acc);
+  outline-offset: -2px;
 }
 
 .apollon-tag-picker__option > span {

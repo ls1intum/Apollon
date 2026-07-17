@@ -112,19 +112,19 @@ export const TagPicker: React.FC<TagControlProps> = ({
             style={portalThemeVars}
           >
             {options.length > 0 && (
-              <ul
+              <div
                 data-slot="tag-picker-list"
                 className="apollon-tag-picker__list"
-                role="listbox"
+                role="group"
                 aria-label={t.editTagsFor(subject)}
               >
                 {options.map((tag) => {
                   const selected = tags.includes(tag)
                   return (
-                    <li
+                    <button
                       key={tag}
-                      role="option"
-                      aria-selected={selected}
+                      type="button"
+                      aria-pressed={selected}
                       data-slot="tag-picker-option"
                       className="apollon-tag-picker__option"
                       onClick={() => toggle(tag)}
@@ -137,10 +137,10 @@ export const TagPicker: React.FC<TagControlProps> = ({
                         aria-hidden="true"
                       />
                       <span>{tag}</span>
-                    </li>
+                    </button>
                   )
                 })}
-              </ul>
+              </div>
             )}
 
             {options.length === 0 && !allowCreate && (
