@@ -7,6 +7,7 @@ import {
   type FC,
 } from "react"
 import { getRouteApi, useRouter } from "@tanstack/react-router"
+import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "react-toastify"
 import { ApollonEditor, importDiagram, type UMLModel } from "@tumaet/apollon"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
@@ -14,16 +15,14 @@ import { useEditorContext, useModalContext } from "@/contexts"
 import { useElementWidth } from "@/hooks/useElementWidth"
 import { useVersionShortcut } from "@/hooks/useVersionShortcut"
 import { useVersionPreviewUrlSync } from "@/hooks/useVersionPreviewUrlSync"
+import { selectScopedPreview, useVersionStore } from "@/stores/useVersionStore"
 import {
-  selectScopedPreview,
-  selectVersions,
-  useVersionStore,
-} from "@/stores/useVersionStore"
-import {
-  setVersionRepository,
-  LocalVersionRepository,
-  getVersionRepository,
-} from "@/services/versionRepository"
+  fetchVersionBody,
+  useBoundRepository,
+  useVersionsQuery,
+} from "@/queries/versionQueries"
+import { useRestoreVersionMutation } from "@/queries/versionMutations"
+import type { PendingVersion } from "@/types"
 import {
   VersionDrawer,
   VersionPreviewBanner,
@@ -39,6 +38,9 @@ import { installPerfHooks } from "@/utils/perfHooks"
 import { ErrorPage } from "./ErrorPage"
 
 const THUMBNAIL_DEBOUNCE_MS = 2000
+
+/** Stable empty list while the version query has no data yet. */
+const EMPTY_VERSIONS: readonly PendingVersion[] = Object.freeze([])
 
 // Route-bound API for typed params (avoids importing the route file, which
 // would create a cycle: the route file imports this page).
@@ -117,16 +119,20 @@ export const ApollonLocal: FC = () => {
   }, [diagramId])
 
   const preview = useVersionStore((s) => selectScopedPreview(s, diagramId))
-  const fetchVersions = useVersionStore((s) => s.fetchVersions)
+  const queryClient = useQueryClient()
+  const repo = useBoundRepository()
   const { openPreview, closePreview } = useVersionPreviewUrlSync(
     diagramId,
     previewFromUrl,
     Boolean(editor)
   )
-  // selectVersions returns a frozen empty-array singleton when the key
-  // is absent — never construct a fresh `[]` here, or `useSyncExternalStore`
-  // will warn "getSnapshot should be cached" and the regression test fails.
-  const versions = useVersionStore((s) => selectVersions(s, diagramId ?? ""))
+  // Version history via the query cache (the local route's `beforeLoad` bound
+  // `LocalVersionRepository` before this render). Subscribing here keeps the
+  // list warm for the confirm-restore dialog and the restored-snackbar label
+  // even when the drawer has never been opened.
+  const versionsQuery = useVersionsQuery(diagramId)
+  const versions = versionsQuery.data?.versions ?? EMPTY_VERSIONS
+  const restoreMutation = useRestoreVersionMutation(diagramId)
 
   useVersionShortcut(diagramId ?? undefined)
 
@@ -136,10 +142,6 @@ export const ApollonLocal: FC = () => {
   // -------- Editor lifecycle --------------------------------------------
   useEffect(() => {
     if (!containerRef.current || !diagram) return
-    // Bind the local repository before this effect's `fetchVersions` runs.
-    // This is the only fetch path, so ordering is guaranteed within the
-    // effect — no render-time mutation.
-    setVersionRepository(LocalVersionRepository)
     isThumbnailExportCanceledRef.current = false
     setCurrentModelId(diagram.id)
 
@@ -188,7 +190,6 @@ export const ApollonLocal: FC = () => {
     })
 
     setEditor(instance)
-    void fetchVersions(diagram.id)
 
     // E2E seam. Exposes the imperative editor so Playwright can drive API
     // surfaces that have no UI affordance, e.g. `setElementHighlights`. Gated on
@@ -237,7 +238,6 @@ export const ApollonLocal: FC = () => {
     setEditor,
     setThumbnail,
     updateModel,
-    fetchVersions,
   ])
 
   // -------- Preview overlay ---------------------------------------------
@@ -289,17 +289,17 @@ export const ApollonLocal: FC = () => {
       if (!diagramId) {
         throw new Error("No current diagram id")
       }
-      return getVersionRepository().getBody(diagramId, versionId)
+      return fetchVersionBody(queryClient, repo, diagramId, versionId)
     },
-    [preview, diagramId]
+    [preview, diagramId, queryClient, repo]
   )
 
   /**
    * Apply restore: write the auto-snapshot row, then overlay the editor.
-   * `restoreVersion` (the store action) calls `fetchVersions` internally,
-   * so the page does NOT refetch again. The editor's
-   * `subscribeToModelChange` propagates the new model to the persistence
-   * store, so we don't `updateModel` explicitly either.
+   * The restore mutation invalidates the version list on success, so the
+   * page does NOT refetch again. The editor's `subscribeToModelChange`
+   * propagates the new model to the persistence store, so we don't
+   * `updateModel` explicitly either.
    */
   const performRestore = useCallback(
     async (versionId: string) => {
@@ -312,9 +312,10 @@ export const ApollonLocal: FC = () => {
         // as the "Before restoring …" undo snapshot, not the previewed version.
         if (preview) editor.setPreviewMode(false)
         const liveBody = editor.model
-        await useVersionStore
-          .getState()
-          .restoreVersion(diagramId, versionId, liveBody)
+        await restoreMutation.mutateAsync({
+          versionId,
+          currentBody: liveBody,
+        })
         // Imperative editor API (accessor setter), applied in a callback.
         // eslint-disable-next-line react-hooks/immutability
         editor.model = importDiagram(body) as UMLModel
@@ -332,7 +333,16 @@ export const ApollonLocal: FC = () => {
         toast.error(t.restoreFailed)
       }
     },
-    [editor, diagramId, versions, preview, resolveBody, closePreview]
+    [
+      editor,
+      diagramId,
+      versions,
+      preview,
+      resolveBody,
+      closePreview,
+      // Stable identity, unlike the mutation object (see ApollonShared).
+      restoreMutation.mutateAsync,
+    ]
   )
 
   /**

@@ -28,4 +28,9 @@ export function getVersionRepository(): VersionRepository {
 
 export { LocalVersionRepository, RemoteVersionRepository }
 export { subscribeToLocalVersionEvents } from "./LocalVersionRepository"
-export type { VersionRepository } from "./types"
+export type {
+  VersionRepository,
+  ListVersionsResponse,
+  CreateVersionResult,
+  RestoreVersionResult,
+} from "./types"

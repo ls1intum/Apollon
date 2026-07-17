@@ -17,7 +17,14 @@
  * that still read `useVersionStore`.
  */
 import type { UMLModel } from "@tumaet/apollon"
-import { useVersionStore, type PendingVersion } from "@/stores/useVersionStore"
+import { useVersionStore } from "@/stores/useVersionStore"
+import {
+  RemoteVersionRepository,
+  setVersionRepository,
+  type VersionRepository,
+} from "@/services/versionRepository"
+import type { Diagram, PendingVersion } from "@/types"
+import { storybookQueryClient } from "./queryClient"
 
 export type { PendingVersion }
 
@@ -134,33 +141,74 @@ export const EMPTY_BODY: UMLModel = {
   edges: [],
 } as unknown as UMLModel
 
-/** Clear every per-diagram slice of the version store. Use in meta `beforeEach`. */
+/**
+ * In-memory `VersionRepository` stub. Stories bind it through the same port
+ * the app uses (`setVersionRepository`), so `useVersionsQuery` & the mutation
+ * hooks work naturally — no cache forging, no network. Override individual
+ * methods (e.g. a `fn()` spy on `delete`) per story.
+ */
+export function makeStoryRepository(
+  versions: PendingVersion[] = [],
+  {
+    total = versions.filter((v) => !v.pending).length,
+    overrides = {},
+  }: { total?: number; overrides?: Partial<VersionRepository> } = {}
+): VersionRepository {
+  const committed = versions.filter((v) => !v.pending)
+  return {
+    kind: "remote",
+    cap: 50,
+    list: async () => ({ versions: committed, nextCursor: undefined, total }),
+    getBody: async () => EMPTY_BODY as Diagram,
+    create: async (_diagramId, body, opts) =>
+      makeVersion({
+        id: "created-in-story",
+        name: opts.name ?? "",
+        description: opts.description ?? "",
+        librarySchemaVersion: body.version,
+      }),
+    restore: async () => ({
+      updatedAt: "2026-06-16T10:00:00.000Z",
+      autoSnapshotVersionId: "auto-snapshot-story",
+      headRev: 1,
+    }),
+    editInfo: async (_diagramId, versionId, patch) =>
+      makeVersion({ id: versionId, ...patch }),
+    delete: async () => {},
+    permalink: (diagramId, versionId) =>
+      RemoteVersionRepository.permalink(diagramId, versionId),
+    ...overrides,
+  }
+}
+
+/**
+ * Reset the version store's client state AND the story query cache. Use in
+ * meta `beforeEach`.
+ */
 export function resetVersionStore(): void {
   useVersionStore.setState({
-    versions: {},
-    totals: {},
-    nextCursor: {},
-    loading: {},
-    error: {},
     preview: null,
     drawerOpenByDiagram: {},
     undoRestore: null,
     pendingRestoreFromId: null,
   })
+  storybookQueryClient.clear()
+  setVersionRepository(makeStoryRepository([]))
 }
 
-/** Seed a list of versions (and optional total) for a diagram. */
+/**
+ * Serve a version list (and optional total) to every consumer by binding an
+ * in-memory repository; the components' own queries fetch it on mount.
+ */
 export function seedVersions(
   versions: PendingVersion[],
   {
-    diagramId = SAMPLE_DIAGRAM_ID,
-    total = versions.filter((v) => !v.pending).length,
-  }: { diagramId?: string; total?: number } = {}
+    total,
+    overrides,
+  }: { total?: number; overrides?: Partial<VersionRepository> } = {}
 ): void {
-  useVersionStore.setState((s) => ({
-    versions: { ...s.versions, [diagramId]: versions },
-    totals: { ...s.totals, [diagramId]: total },
-  }))
+  setVersionRepository(makeStoryRepository(versions, { total, overrides }))
+  storybookQueryClient.clear()
 }
 
 /** Open the inline version sidebar for a diagram. */

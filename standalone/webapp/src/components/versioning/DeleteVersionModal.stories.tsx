@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { expect, fn, userEvent, within } from "storybook/test"
-import { useVersionStore } from "@/stores/useVersionStore"
 import { withModalFrame } from "../../stories/_support/webapp"
 import {
   SAMPLE_DIAGRAM_ID,
@@ -88,23 +87,22 @@ export const ShowsVersionLabel: Story = {
   },
 }
 
-/** Clicking Delete invokes the store's `deleteVersion` for the target. */
+// Repository-level spy: the modal's delete mutation goes through the bound
+// `VersionRepository`, so stories assert at the same seam the app uses.
+let deleteSpy = fn(async () => {})
+
+/** Clicking Delete invokes the repository's `delete` for the target. */
 export const ConfirmDeletes: Story = {
   tags: ["test", "!autodocs", "!dev"],
   beforeEach: () => {
     resetVersionStore()
-    seedVersions([target])
-    // Swap in a spy so the play test can assert the delete fired without a backend.
-    useVersionStore.setState({ deleteVersion: fn(async () => {}) })
+    deleteSpy = fn(async () => {})
+    seedVersions([target], { overrides: { delete: deleteSpy } })
   },
   play: async () => {
     const canvas = within(document.body)
-    const deleteVersion = useVersionStore.getState().deleteVersion
     await userEvent.click(canvas.getByRole("button", { name: /^delete$/i }))
-    await expect(deleteVersion).toHaveBeenCalledWith(
-      SAMPLE_DIAGRAM_ID,
-      VERSION_ID
-    )
+    await expect(deleteSpy).toHaveBeenCalledWith(SAMPLE_DIAGRAM_ID, VERSION_ID)
   },
 }
 
@@ -113,13 +111,12 @@ export const CancelKeepsVersion: Story = {
   tags: ["test", "!autodocs", "!dev"],
   beforeEach: () => {
     resetVersionStore()
-    seedVersions([target])
-    useVersionStore.setState({ deleteVersion: fn(async () => {}) })
+    deleteSpy = fn(async () => {})
+    seedVersions([target], { overrides: { delete: deleteSpy } })
   },
   play: async () => {
     const canvas = within(document.body)
-    const deleteVersion = useVersionStore.getState().deleteVersion
     await userEvent.click(canvas.getByRole("button", { name: /cancel/i }))
-    await expect(deleteVersion).not.toHaveBeenCalled()
+    await expect(deleteSpy).not.toHaveBeenCalled()
   },
 }

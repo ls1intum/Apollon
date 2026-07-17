@@ -3,6 +3,7 @@ import { toast } from "react-toastify"
 import { log } from "@/logger"
 import { useEditorContext } from "@/contexts"
 import { useVersionStore } from "@/stores/useVersionStore"
+import { useUndoRestoreMutation } from "@/queries/versionMutations"
 import { versioningStrings as t } from "./strings"
 
 const UNDO_RESTORE_TOAST_ID = "undo-restore"
@@ -20,15 +21,34 @@ const UndoRestoreToastBody: FC<{ restoredVersionName: string }> = ({
   restoredVersionName,
 }) => {
   const undo = useVersionStore((s) => s.undoRestore)
-  const triggerUndoRestore = useVersionStore((s) => s.triggerUndoRestore)
+  const dismiss = useVersionStore((s) => s.dismissUndoRestore)
+  const undoRestore = useUndoRestoreMutation()
   const { editor } = useEditorContext()
   const [submitting, setSubmitting] = useState(false)
 
   const onUndo = async () => {
     if (!editor || submitting || !undo) return
+    // Refuse past the undo window. The snackbar should auto-dismiss before
+    // this point, but guard defensively so a stale re-render can't restore
+    // to a 10+ second old snapshot.
+    if (Date.now() > undo.expiresAt) {
+      dismiss()
+      return
+    }
+    // Capture the canvas BEFORE leaving preview so the undo's own pre-restore
+    // auto-snapshot records what the user is looking at right now; then exit
+    // any active preview — restoring while previewing would leave the store
+    // claiming a preview the canvas no longer shows.
+    const currentBody = editor.model
+    const store = useVersionStore.getState()
+    if (store.preview !== null) store.exitPreview()
     setSubmitting(true)
     try {
-      await triggerUndoRestore(undo.diagramId, editor.model)
+      await undoRestore.mutateAsync({
+        diagramId: undo.diagramId,
+        autoSnapshotVersionId: undo.autoSnapshotVersionId,
+        currentBody,
+      })
       toast.dismiss(UNDO_RESTORE_TOAST_ID)
     } catch (err) {
       log.error("Undo restore failed", err)

@@ -7,7 +7,7 @@ import {
   AlertDialogFooter,
 } from "@tumaet/ui/components/alert-dialog"
 import { useModalContext } from "@/contexts"
-import type { PendingVersion } from "@/stores/useVersionStore"
+import type { PendingVersion } from "@/types"
 import { log } from "@/logger"
 import { versioningStrings as t } from "./strings"
 

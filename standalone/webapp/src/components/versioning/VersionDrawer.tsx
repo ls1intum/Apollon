@@ -22,16 +22,22 @@ import {
 } from "react"
 import { createPortal } from "react-dom"
 import { toast } from "react-toastify"
+import { useQueryClient } from "@tanstack/react-query"
 import { useEditorContext, useModalContext } from "@/contexts"
 import { useMediaQuery } from "@/hooks"
 import { useRegionHost } from "@/hooks/useRegionHost"
+import { selectScopedPreview, useVersionStore } from "@/stores/useVersionStore"
 import {
-  selectScopedPreview,
-  selectVersions,
-  useVersionStore,
-} from "@/stores/useVersionStore"
+  fetchVersionBody,
+  useBoundRepository,
+  useVersionsQuery,
+} from "@/queries/versionQueries"
+import {
+  useCreateVersionMutation,
+  useRestoreVersionMutation,
+} from "@/queries/versionMutations"
 import { ApiError } from "@/services/DiagramApiClient"
-import { getVersionRepository } from "@/services/versionRepository"
+import type { PendingVersion } from "@/types"
 import { NARROW_VIEW_QUERY } from "@/constants"
 import {
   MAX_DESCRIPTION_LENGTH,
@@ -48,6 +54,9 @@ import { groupUnnamedRuns } from "./utils"
 
 /** Panel width on desktop. Narrow enough to keep the canvas usable. */
 const SIDEBAR_WIDTH = 320
+
+/** Stable empty list while the version query has no data yet. */
+const EMPTY_VERSIONS: readonly PendingVersion[] = Object.freeze([])
 
 interface Props {
   diagramId: string
@@ -82,25 +91,71 @@ export const VersionSidebarBody: FC<Props> = ({
   onConfirmedRestore,
   onPreview,
 }) => {
-  const repo = getVersionRepository()
+  const repo = useBoundRepository()
   const isLocal = repo.kind === "local"
   const MAX_VERSIONS = repo.cap
-  const versions = useVersionStore((s) => selectVersions(s, diagramId))
-  const total = useVersionStore((s) => s.totals[diagramId])
-  const nextCursor = useVersionStore((s) => s.nextCursor[diagramId])
-  const loading = useVersionStore((s) => s.loading[diagramId] ?? false)
-  const errorCode = useVersionStore((s) => s.error[diagramId] ?? null)
-  const loadMoreVersions = useVersionStore((s) => s.loadMoreVersions)
-  const createVersion = useVersionStore((s) => s.createVersion)
+  const queryClient = useQueryClient()
+  const versionsQuery = useVersionsQuery(diagramId)
+  const serverVersions = versionsQuery.data?.versions ?? EMPTY_VERSIONS
+  const total = versionsQuery.data?.total
+  const errorCode =
+    versionsQuery.error instanceof ApiError
+      ? versionsQuery.error.code
+      : versionsQuery.isError
+        ? "INTERNAL"
+        : null
+  const createMutation = useCreateVersionMutation(diagramId)
+  const restoreMutation = useRestoreVersionMutation(diagramId)
   const enterPreview = useVersionStore((s) => s.enterPreview)
-  const restoreVersion = useVersionStore((s) => s.restoreVersion)
   const previewState = useVersionStore((s) => selectScopedPreview(s, diagramId))
+
+  // The composer's in-flight / failed save, rendered straight from mutation
+  // state instead of forging an optimistic row into the query cache — no
+  // temp-id reconciliation and no clobber race with a concurrent refetch.
+  //
+  // Deriving it from `isPending` alone is only safe because the create
+  // mutation's `onSettled` returns its invalidation promise: the mutation
+  // stays pending until the refreshed list has landed, so this row hands over
+  // to the real one with no gap. A row derived from `isSuccess` instead would
+  // be sticky mutation state and could re-appear later (e.g. after the real
+  // row is deleted), resurrecting a version that no longer exists.
+  const pendingRow = useMemo<PendingVersion | null>(() => {
+    const vars = createMutation.variables
+    if (!vars || (!createMutation.isPending && !createMutation.isError)) {
+      return null
+    }
+    return {
+      id: "pending-create",
+      diagramId,
+      name: vars.name ?? "",
+      description: vars.description ?? "",
+      createdAt: new Date(createMutation.submittedAt).toISOString(),
+      kind: "user",
+      librarySchemaVersion: vars.body.version,
+      ...(createMutation.isPending
+        ? { pending: true as const }
+        : { failed: true }),
+    }
+  }, [
+    createMutation.variables,
+    createMutation.isPending,
+    createMutation.isError,
+    createMutation.submittedAt,
+    diagramId,
+  ])
+  const versions = useMemo<readonly PendingVersion[]>(
+    () => (pendingRow ? [pendingRow, ...serverVersions] : serverVersions),
+    [pendingRow, serverVersions]
+  )
 
   const { editor } = useEditorContext()
   const { openModal } = useModalContext()
 
   const [draft, setDraft] = useState("")
-  const [submitting, setSubmitting] = useState(false)
+  // The composer is busy for as long as the create mutation is pending —
+  // which, thanks to its awaited settle-time invalidation, spans the save AND
+  // the list refresh. No separate boolean to keep in sync.
+  const submitting = createMutation.isPending
   const composerRef = useRef<HTMLTextAreaElement | null>(null)
   // Subscribe to model changes so the empty-diagram check (drives Save
   // disable) reacts as the user adds the first node.
@@ -123,12 +178,11 @@ export const VersionSidebarBody: FC<Props> = ({
    */
   const lastLocalSaveIdRef = useRef<string | null>(null)
 
-  // No fetch-on-mount here: the editor page (ApollonLocal / ApollonShared)
-  // binds the repository and fetches in one effect, and the bootstrap keeps the
-  // list fresh (cross-tab + visibility refetch, collab control events). A fetch
-  // here would race the page's repository binding on a reload with the drawer
-  // already open — it would run against the default adapter (child effects flush
-  // before the parent page effect).
+  // `useVersionsQuery` fetches on mount: the editor route's `beforeLoad`
+  // binds the repository BEFORE anything renders, so there is no
+  // child-effect-vs-page-effect binding race anymore. Freshness comes from
+  // the query itself (focus refetch) plus the two realtime bridges (WS
+  // control events, cross-tab BroadcastChannel).
 
   // Filter: when off, hide every unnamed row entirely (matches Figma's "Show
   // autosave versions" toggle). Default ON so users see their full history
@@ -175,9 +229,14 @@ export const VersionSidebarBody: FC<Props> = ({
     }
     // Slow path: fetch the actual version body so the baseline is the
     // canonical snapshot (server in collab mode, IDB in local mode), not
-    // the potentially-dirty editor state.
-    getVersionRepository()
-      .getBody(latestSavedVersion.diagramId, latestSavedVersion.id)
+    // the potentially-dirty editor state. Goes through the query cache, so
+    // a body the thumbnail already loaded costs nothing.
+    fetchVersionBody(
+      queryClient,
+      repo,
+      latestSavedVersion.diagramId,
+      latestSavedVersion.id
+    )
       .then((body) => {
         setSavedFingerprint(structuralFingerprint(body))
       })
@@ -188,7 +247,7 @@ export const VersionSidebarBody: FC<Props> = ({
         setSavedFingerprint(null)
         setHasChanges(true)
       })
-  }, [editor, latestSavedVersion?.id])
+  }, [editor, latestSavedVersion?.id, queryClient, repo])
 
   useEffect(() => {
     if (!editor) return
@@ -223,14 +282,13 @@ export const VersionSidebarBody: FC<Props> = ({
   const canSave =
     Boolean(editor) && hasChanges && previewState === null && !isEmptyDiagram
 
-  const handleCreate = async () => {
+  const handleCreate = () => {
     if (!editor || submitting || !canSave) return
     // Request persistent storage from inside the click handler — running
     // it after the await chain below would leave the user-gesture window
     // (Firefox would silently deny). No-op for adapters that don't
     // implement the optional method.
     void repo.requestPersistence?.()
-    setSubmitting(true)
     const description = draft.trim()
     // `name` is an internal label — the description's first line (truncated) —
     // used in restored-from snackbars and the kebab "Restored from …" copy.
@@ -239,32 +297,34 @@ export const VersionSidebarBody: FC<Props> = ({
     const name = description
       ? description.split("\n")[0]!.slice(0, MAX_NAME_LENGTH)
       : ""
-    try {
-      const summary = await createVersion(diagramId, editor.model, {
-        name,
-        description: description || undefined,
-      })
-      // Record the id before React re-renders so the baseline effect
-      // (latestSavedVersion?.id dep) sees it synchronously and takes the
-      // fast path (editor.model fingerprint) instead of fetching the body.
-      lastLocalSaveIdRef.current = summary.id
-      onVersionSaved?.(summary.headRev)
-      setDraft("")
-    } catch (err) {
-      if (err instanceof ApiError) {
-        // BODY_TOO_LARGE is the same code for the server's 5MB limit and
-        // the local IDB quota. The repository tailors `err.message` to
-        // its actual constraint — surface that directly so a local-mode
-        // user isn't told to "split into smaller diagrams" when the
-        // problem is whole-origin storage pressure.
-        if (err.code === "BODY_TOO_LARGE") toast.error(err.message)
-        else toast.error(t.failureToCreate)
-      } else {
-        toast.error(t.failureToCreate)
+    // Call-site callbacks (not mutation options) on purpose: these are this
+    // drawer's local UI only, and they must run BEFORE the option-level
+    // `onSettled` awaits the list refetch — `lastLocalSaveIdRef` has to be set
+    // while the fresh row is still landing, or the baseline effect takes the
+    // slow path and re-fetches a body it already has on canvas.
+    createMutation.mutate(
+      { body: editor.model, name, description: description || undefined },
+      {
+        onSuccess: (summary) => {
+          lastLocalSaveIdRef.current = summary.id
+          onVersionSaved?.(summary.headRev)
+          setDraft("")
+        },
+        onError: (err) => {
+          if (err instanceof ApiError) {
+            // BODY_TOO_LARGE is the same code for the server's 5MB limit and
+            // the local IDB quota. The repository tailors `err.message` to
+            // its actual constraint — surface that directly so a local-mode
+            // user isn't told to "split into smaller diagrams" when the
+            // problem is whole-origin storage pressure.
+            if (err.code === "BODY_TOO_LARGE") toast.error(err.message)
+            else toast.error(t.failureToCreate)
+          } else {
+            toast.error(t.failureToCreate)
+          }
+        },
       }
-    } finally {
-      setSubmitting(false)
-    }
+    )
   }
 
   const handlePreview = useCallback(
@@ -277,12 +337,18 @@ export const VersionSidebarBody: FC<Props> = ({
         return
       }
       try {
-        await enterPreview(diagramId, versionId)
+        const body = await fetchVersionBody(
+          queryClient,
+          repo,
+          diagramId,
+          versionId
+        )
+        enterPreview(diagramId, versionId, body)
       } catch {
         toast.error(t.previewFailed)
       }
     },
-    [editor, onPreview, enterPreview, diagramId]
+    [editor, onPreview, enterPreview, diagramId, queryClient, repo]
   )
 
   const handleRestore = useCallback(
@@ -299,17 +365,16 @@ export const VersionSidebarBody: FC<Props> = ({
         return
       }
       try {
-        const { headRev } = await restoreVersion(
-          diagramId,
+        const { headRev } = await restoreMutation.mutateAsync({
           versionId,
-          editor.model
-        )
+          currentBody: editor.model,
+        })
         onVersionSaved?.(headRev)
       } catch {
         toast.error(t.restoreFailed)
       }
     },
-    [editor, restoreVersion, diagramId, onVersionSaved, onConfirmedRestore]
+    [editor, restoreMutation.mutateAsync, onVersionSaved, onConfirmedRestore]
   )
 
   const handleDelete = useCallback(
@@ -496,7 +561,7 @@ export const VersionSidebarBody: FC<Props> = ({
               {t.failureRedis}
             </p>
           </div>
-        ) : loading && versions.length === 0 ? (
+        ) : versionsQuery.isPending && versions.length === 0 ? (
           <ul className="m-0 list-none p-0">
             {[0, 1, 2].map((i) => (
               <li key={i} className="flex list-none gap-3 p-4">
@@ -597,14 +662,22 @@ export const VersionSidebarBody: FC<Props> = ({
                 />
               )
             )}
-            {nextCursor && (
+            {versionsQuery.hasNextPage && (
               <li className="list-none px-4 py-3 text-center">
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={() => loadMoreVersions(diagramId)}
-                  disabled={loading}
+                  onClick={() => {
+                    // `throwOnError` is required: without it fetchNextPage
+                    // resolves even on failure and the catch never runs.
+                    versionsQuery
+                      .fetchNextPage({ throwOnError: true })
+                      .catch(() => {
+                        toast.error("Failed to load more versions.")
+                      })
+                  }}
+                  disabled={versionsQuery.isFetchingNextPage}
                   className="hover:[background:var(--row-hover-bg)]"
                   style={
                     {

@@ -1,7 +1,9 @@
 import { useCallback, useEffect } from "react"
 import { useNavigate } from "@tanstack/react-router"
+import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "react-toastify"
 import { useVersionStore } from "@/stores/useVersionStore"
+import { fetchVersionBody, useBoundRepository } from "@/queries/versionQueries"
 import { versioningStrings as t } from "@/components/versioning/strings"
 import { log } from "@/logger"
 
@@ -54,6 +56,8 @@ export function useVersionPreviewUrlSync(
   ready: boolean = true
 ) {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const repo = useBoundRepository()
   const enterPreview = useVersionStore((s) => s.enterPreview)
   const exitPreview = useVersionStore((s) => s.exitPreview)
   const previewVersionId = useVersionStore((s) => s.preview?.versionId ?? null)
@@ -70,19 +74,26 @@ export function useVersionPreviewUrlSync(
       // Entering needs the repository bound (gated on `ready`); if it isn't yet,
       // this effect re-runs when `ready` flips.
       if (ready && previewVersionId !== previewFromUrl) {
-        void enterPreview(diagramId, previewFromUrl).catch((err) => {
-          log.warn(
-            "Previewed version unavailable",
-            err instanceof Error ? err.message : String(err)
-          )
-          toast.error(t.previewUnavailable)
-          // Strip the dangling param so reload/Back land on the live canvas.
-          void navigate({
-            to: ".",
-            search: (prev) => ({ ...prev, [PREVIEW_VERSION_PARAM]: undefined }),
-            replace: true,
+        // Body comes through the shared query cache (dedups with thumbnails
+        // and dirty-check baselines); the store setter itself is synchronous.
+        void fetchVersionBody(queryClient, repo, diagramId, previewFromUrl)
+          .then((body) => enterPreview(diagramId, previewFromUrl, body))
+          .catch((err) => {
+            log.warn(
+              "Previewed version unavailable",
+              err instanceof Error ? err.message : String(err)
+            )
+            toast.error(t.previewUnavailable)
+            // Strip the dangling param so reload/Back land on the live canvas.
+            void navigate({
+              to: ".",
+              search: (prev) => ({
+                ...prev,
+                [PREVIEW_VERSION_PARAM]: undefined,
+              }),
+              replace: true,
+            })
           })
-        })
       }
     } else if (previewVersionId !== null) {
       // No version in the URL but the store is previewing — clear it. Clearing
@@ -97,6 +108,8 @@ export function useVersionPreviewUrlSync(
     enterPreview,
     exitPreview,
     navigate,
+    queryClient,
+    repo,
   ])
 
   const openPreview = useCallback(

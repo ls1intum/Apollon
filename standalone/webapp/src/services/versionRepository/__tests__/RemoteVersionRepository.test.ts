@@ -86,7 +86,7 @@ describe("RemoteVersionRepository", () => {
       "https://x/d/v"
     )
 
-    expect(getBody).toHaveBeenCalledWith(DIAGRAM_ID, VERSION_ID)
+    expect(getBody).toHaveBeenCalledWith(DIAGRAM_ID, VERSION_ID, undefined)
     expect(restore).toHaveBeenCalledWith(DIAGRAM_ID, VERSION_ID, {
       currentBody: fakeBody,
     })

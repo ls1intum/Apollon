@@ -1,20 +1,27 @@
+import type { QueryClient } from "@tanstack/react-query"
 import { useVersionStore } from "./useVersionStore"
 import { usePersistenceModelStore } from "./usePersistenceModelStore"
 import {
   LocalVersionRepository,
   subscribeToLocalVersionEvents,
 } from "@/services/versionRepository"
+import { queryClient as appQueryClient } from "@/queryClient"
+import { versionKeys } from "@/queries/keys"
+import { getCachedVersions } from "@/queries/versionQueries"
 import { log } from "@/logger"
 
 /**
- * Single side-effect install for the version store. Wires:
+ * Single side-effect install for the versioning feature. Wires:
  *
  *   1. Cascade-delete: when `usePersistenceModelStore.deleteModel(id)`
  *      removes a local diagram, purge its IDB version trail too.
- *   2. Cross-tab consistency: BroadcastChannel from any tab triggers a
- *      refetch in every other tab's open drawer.
- *   3. Visibility refetch: returning to the tab after a long pause
- *      reconciles drawers that BroadcastChannel can't reach (sleeping).
+ *   2. Cross-tab consistency: a BroadcastChannel message from any tab
+ *      invalidates that diagram's local version-list query, so every other
+ *      tab's mounted drawer/banner refetches.
+ *
+ * (The old visibilitychange refetch loop is gone: the version-list query
+ * itself sets `refetchOnWindowFocus: true` with `staleTime: 0`, which covers
+ * exactly the mounted-consumer set the loop used to iterate.)
  *
  * Idempotent under StrictMode/HMR — the disposers from a prior install
  * are torn down before a new install runs, so listeners never double up.
@@ -22,7 +29,9 @@ import { log } from "@/logger"
 
 let dispose: (() => void) | null = null
 
-export function ensureVersionStoreBootstrapped(): void {
+export function ensureVersionStoreBootstrapped(
+  queryClient: QueryClient = appQueryClient
+): void {
   if (dispose) return
 
   // 1. Cascade delete — narrow the subscription to `models` so unrelated
@@ -51,21 +60,26 @@ export function ensureVersionStoreBootstrapped(): void {
     }
   )
 
-  // 2. Cross-tab invalidations. After refetch, if a previewed version
-  //    was deleted by the other tab, exit preview defensively so the
+  // 2. Cross-tab invalidations. After the refetch settles, if the previewed
+  //    version was deleted by the other tab, exit preview defensively so the
   //    canvas doesn't show a row that no longer exists.
   const unsubscribeBroadcast = subscribeToLocalVersionEvents((msg) => {
-    const store = useVersionStore.getState()
-    void store
-      .fetchVersions(msg.diagramId)
+    void queryClient
+      .invalidateQueries({
+        queryKey: versionKeys.list("local", msg.diagramId),
+        // Also refetch a currently-unobserved list: the preview-alive check
+        // below must see the reconciled list even when no drawer is mounted.
+        refetchType: "all",
+      })
       .then(() => {
-        const after = useVersionStore.getState()
-        const previewing = after.preview
+        const store = useVersionStore.getState()
+        const previewing = store.preview
         if (!previewing || previewing.diagramId !== msg.diagramId) return
-        const stillThere = (after.versions[msg.diagramId] ?? []).some(
-          (v) => v.id === previewing.versionId
-        )
-        if (!stillThere) after.exitPreview()
+        const versions = getCachedVersions(queryClient, "local", msg.diagramId)
+        // Only act on a loaded list — an empty cache proves nothing.
+        if (versions && !versions.some((v) => v.id === previewing.versionId)) {
+          store.exitPreview()
+        }
       })
       .catch((err: unknown) =>
         log.warn(
@@ -75,35 +89,9 @@ export function ensureVersionStoreBootstrapped(): void {
       )
   })
 
-  // 3. Visibility-aware refetch.
-  let unsubscribeVisibility: (() => void) | null = null
-  if (typeof document !== "undefined") {
-    const onVisibility = () => {
-      if (document.visibilityState !== "visible") return
-      const state = useVersionStore.getState()
-      for (const [diagramId, open] of Object.entries(
-        state.drawerOpenByDiagram
-      )) {
-        if (!open) continue
-        void state
-          .fetchVersions(diagramId)
-          .catch((err: unknown) =>
-            log.warn(
-              "Visibility refetch failed",
-              err instanceof Error ? err.message : String(err)
-            )
-          )
-      }
-    }
-    document.addEventListener("visibilitychange", onVisibility)
-    unsubscribeVisibility = () =>
-      document.removeEventListener("visibilitychange", onVisibility)
-  }
-
   dispose = () => {
     unsubscribeModels()
     unsubscribeBroadcast()
-    unsubscribeVisibility?.()
   }
 }
 

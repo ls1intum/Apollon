@@ -1,0 +1,280 @@
+import { afterEach, describe, expect, it, vi } from "vitest"
+import { renderHook, waitFor } from "@testing-library/react"
+import type { ReactNode } from "react"
+import { QueryClientProvider } from "@tanstack/react-query"
+import { toast } from "react-toastify"
+import {
+  setVersionRepository,
+  RemoteVersionRepository,
+  type VersionRepository,
+} from "@/services/versionRepository"
+import { useVersionStore } from "@/stores/useVersionStore"
+import type { UMLModel } from "@tumaet/apollon"
+import type { VersionSummary } from "@/types"
+import { createTestQueryClient } from "@/test/queryTestUtils"
+import { versionKeys } from "./keys"
+import type { VersionListData } from "./versionQueries"
+import {
+  useCreateVersionMutation,
+  useDeleteVersionMutation,
+  useEditVersionInfoMutation,
+  useRestoreVersionMutation,
+} from "./versionMutations"
+
+const DIAGRAM_ID = "d1"
+const LIST_KEY = versionKeys.list("remote", DIAGRAM_ID)
+const fakeBody = { nodes: [], edges: [] } as unknown as UMLModel
+
+function summary(id: string, overrides: Partial<VersionSummary> = {}) {
+  return {
+    id,
+    diagramId: DIAGRAM_ID,
+    name: id,
+    description: "",
+    createdAt: "2026-04-29T12:00:00Z",
+    kind: "user" as const,
+    librarySchemaVersion: "4.0.0",
+    ...overrides,
+  }
+}
+
+function seed(versions: VersionSummary[]): VersionListData {
+  return {
+    pages: [{ versions, nextCursor: undefined, total: versions.length }],
+    pageParams: [undefined],
+  }
+}
+
+function stubRepository(
+  overrides: Partial<VersionRepository>
+): VersionRepository {
+  return {
+    kind: "remote",
+    cap: 50,
+    list: vi.fn(async () => ({ versions: [], total: 0 })),
+    getBody: vi.fn(),
+    create: vi.fn(),
+    restore: vi.fn(),
+    editInfo: vi.fn(),
+    delete: vi.fn(),
+    permalink: () => null,
+    ...overrides,
+  } as VersionRepository
+}
+
+function setup(repoOverrides: Partial<VersionRepository>) {
+  setVersionRepository(stubRepository(repoOverrides))
+  const client = createTestQueryClient()
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={client}>{children}</QueryClientProvider>
+  )
+  return { client, wrapper }
+}
+
+function cachedRows(client: ReturnType<typeof createTestQueryClient>) {
+  return client
+    .getQueryData<VersionListData>(LIST_KEY)!
+    .pages.flatMap((p) => p.versions)
+}
+
+afterEach(() => {
+  setVersionRepository(RemoteVersionRepository)
+  useVersionStore.setState({
+    preview: null,
+    undoRestore: null,
+    pendingRestoreFromId: null,
+  })
+  vi.restoreAllMocks()
+})
+
+describe("useEditVersionInfoMutation", () => {
+  it("patches optimistically and keeps the server row on success", async () => {
+    const editInfo = vi
+      .fn()
+      .mockResolvedValue(summary("v1", { description: "server-desc" }))
+    const { client, wrapper } = setup({ editInfo })
+    client.setQueryData(LIST_KEY, seed([summary("v1"), summary("v2")]))
+
+    const { result } = renderHook(
+      () => useEditVersionInfoMutation(DIAGRAM_ID),
+      { wrapper }
+    )
+    await result.current.mutateAsync({
+      versionId: "v1",
+      patch: { description: "server-desc" },
+    })
+    expect(cachedRows(client).find((v) => v.id === "v1")!.description).toBe(
+      "server-desc"
+    )
+  })
+
+  it("rolls back the optimistic patch when the PATCH fails", async () => {
+    const editInfo = vi.fn().mockRejectedValue(new Error("forbidden"))
+    const { client, wrapper } = setup({ editInfo })
+    client.setQueryData(
+      LIST_KEY,
+      seed([summary("v1", { name: "before", description: "before-desc" })])
+    )
+
+    const { result } = renderHook(
+      () => useEditVersionInfoMutation(DIAGRAM_ID),
+      { wrapper }
+    )
+    await expect(
+      result.current.mutateAsync({
+        versionId: "v1",
+        patch: { name: "after", description: "after-desc" },
+      })
+    ).rejects.toThrow(/forbidden/)
+
+    const row = cachedRows(client).find((v) => v.id === "v1")!
+    expect(row.name).toBe("before")
+    expect(row.description).toBe("before-desc")
+  })
+})
+
+describe("useDeleteVersionMutation", () => {
+  it("removes the row optimistically and reinstates it when the DELETE fails", async () => {
+    const del = vi.fn().mockRejectedValue(new Error("conflict"))
+    const { client, wrapper } = setup({ delete: del })
+    client.setQueryData(
+      LIST_KEY,
+      seed([summary("a"), summary("b"), summary("c")])
+    )
+
+    const { result } = renderHook(() => useDeleteVersionMutation(DIAGRAM_ID), {
+      wrapper,
+    })
+    await expect(
+      result.current.mutateAsync({ versionId: "b" })
+    ).rejects.toThrow(/conflict/)
+
+    expect(cachedRows(client).map((v) => v.id)).toEqual(["a", "b", "c"])
+  })
+
+  it("drops the cached body of a successfully deleted version", async () => {
+    const del = vi.fn().mockResolvedValue(undefined)
+    const { client, wrapper } = setup({ delete: del })
+    client.setQueryData(LIST_KEY, seed([summary("a")]))
+    client.setQueryData(versionKeys.body("remote", DIAGRAM_ID, "a"), fakeBody)
+
+    const { result } = renderHook(() => useDeleteVersionMutation(DIAGRAM_ID), {
+      wrapper,
+    })
+    await result.current.mutateAsync({ versionId: "a" })
+
+    expect(cachedRows(client)).toEqual([])
+    expect(
+      client.getQueryData(versionKeys.body("remote", DIAGRAM_ID, "a"))
+    ).toBeUndefined()
+  })
+})
+
+describe("useRestoreVersionMutation", () => {
+  it("raises pendingRestoreFromId BEFORE the request settles (WS self-detection window)", async () => {
+    let resolveRestore!: (v: {
+      updatedAt: string
+      autoSnapshotVersionId: string
+      headRev?: number
+    }) => void
+    const restore = vi.fn(
+      () =>
+        new Promise<{
+          updatedAt: string
+          autoSnapshotVersionId: string
+          headRev?: number
+        }>((resolve) => {
+          resolveRestore = resolve
+        })
+    )
+    const { client, wrapper } = setup({ restore })
+    client.setQueryData(
+      LIST_KEY,
+      seed([summary("v42", { description: "Milestone" })])
+    )
+
+    const { result } = renderHook(() => useRestoreVersionMutation(DIAGRAM_ID), {
+      wrapper,
+    })
+    const pending = result.current.mutateAsync({
+      versionId: "v42",
+      currentBody: fakeBody,
+    })
+
+    // The flag is up while the request is in flight — this is the window in
+    // which the WS VERSION_RESTORED event must be classified as self-caused.
+    await waitFor(() =>
+      expect(useVersionStore.getState().pendingRestoreFromId).toBe("v42")
+    )
+
+    resolveRestore({
+      updatedAt: "2026-05-08T12:00:00Z",
+      autoSnapshotVersionId: "auto-1",
+      headRev: 7,
+    })
+    await pending
+
+    const state = useVersionStore.getState()
+    expect(state.pendingRestoreFromId).toBeNull()
+    expect(state.undoRestore).toMatchObject({
+      diagramId: DIAGRAM_ID,
+      autoSnapshotVersionId: "auto-1",
+      restoredFromVersionId: "v42",
+      // Resolved from the cached list (description wins).
+      restoredVersionName: "Milestone",
+    })
+  })
+
+  it("clears the pending flag when the restore fails", async () => {
+    const restore = vi.fn().mockRejectedValue(new Error("boom"))
+    const { wrapper } = setup({ restore })
+
+    const { result } = renderHook(() => useRestoreVersionMutation(DIAGRAM_ID), {
+      wrapper,
+    })
+    await expect(
+      result.current.mutateAsync({ versionId: "v1", currentBody: fakeBody })
+    ).rejects.toThrow(/boom/)
+    expect(useVersionStore.getState().pendingRestoreFromId).toBeNull()
+    expect(useVersionStore.getState().undoRestore).toBeNull()
+  })
+})
+
+describe("useCreateVersionMutation", () => {
+  it("surfaces named evictions with the backend's cap and invalidates the list", async () => {
+    const create = vi.fn().mockResolvedValue({
+      ...summary("new-version"),
+      evictedVersionIds: ["old-1"],
+      evictedKinds: ["named"],
+      cap: 30,
+    })
+    const { client, wrapper } = setup({ create })
+    const warning = vi.spyOn(toast, "warning")
+    const invalidate = vi.spyOn(client, "invalidateQueries")
+
+    const { result } = renderHook(() => useCreateVersionMutation(DIAGRAM_ID), {
+      wrapper,
+    })
+    await result.current.mutateAsync({ body: fakeBody, name: "n" })
+
+    expect(warning).toHaveBeenCalledWith(
+      expect.stringContaining("30-version cap"),
+      expect.anything()
+    )
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: LIST_KEY })
+  })
+
+  it("invalidates on failure too, so a half-committed create reconciles", async () => {
+    const create = vi.fn().mockRejectedValue(new Error("network"))
+    const { client, wrapper } = setup({ create })
+    const invalidate = vi.spyOn(client, "invalidateQueries")
+
+    const { result } = renderHook(() => useCreateVersionMutation(DIAGRAM_ID), {
+      wrapper,
+    })
+    await expect(
+      result.current.mutateAsync({ body: fakeBody })
+    ).rejects.toThrow(/network/)
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: LIST_KEY })
+  })
+})

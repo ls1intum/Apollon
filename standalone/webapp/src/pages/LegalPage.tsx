@@ -2,8 +2,8 @@ import {
   type AnchorHTMLAttributes,
   type ImgHTMLAttributes,
   useEffect,
-  useState,
 } from "react"
+import { useQuery } from "@tanstack/react-query"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { Alert, AlertDescription } from "@tumaet/ui/components/alert"
@@ -14,7 +14,6 @@ import {
   isSafeLegalHref,
   isSafeLegalImageSrc,
   type LegalPageId,
-  type ResolvedLegalContent,
   resolveLegalContent,
 } from "@/lib/legal"
 
@@ -70,42 +69,34 @@ export function LegalPage({
   resolver = resolveLegalContent,
   profileOverride,
 }: LegalPageProps) {
-  const [resolved, setResolved] = useState<ResolvedLegalContent | null>(null)
-  const [error, setError] = useState<Error | null>(null)
-
   const profile = profileOverride ?? environment.legal.profile
 
+  // Legal content is static per (page, profile); TanStack Query supplies the
+  // per-key loading isolation and unmount cancellation the old hand-rolled
+  // AbortController provided. `retry: false` — the resolver has its own
+  // fallback chain, a failure here is terminal for this render.
+  // `resolver` is deliberately absent from the key: (page, profile) fully
+  // identifies the content, and production always passes the real resolver.
+  // The stub-injecting stories/tests isolate themselves with their own (or a
+  // per-story-cleared) QueryClient rather than by widening the key with an
+  // unserialisable function.
+  // eslint-disable-next-line @tanstack/query/exhaustive-deps
+  const { data: resolved, error } = useQuery({
+    queryKey: ["legal", page, profile],
+    queryFn: ({ signal }) => resolver(page, { signal, profile }),
+    staleTime: Infinity,
+    retry: false,
+  })
+
   useEffect(() => {
-    const controller = new AbortController()
-    // Clear stale content synchronously when the page/profile changes so the
-    // loading state shows immediately before the resolver resolves.
-    setError(null)
-    setResolved(null)
-    resolver(page, { signal: controller.signal, profile })
-      .then((next) => {
-        if (controller.signal.aborted) return
-        setResolved(next)
-        if (next.source === "disclaimer") {
-          // Shipping the disclaimer in production violates § 5 DDG and Art. 13
-          // GDPR. The on-page banner alone is not enough because operators
-          // rarely open the page themselves.
-          console.warn(
-            `[legal] Disclaimer fallback served for page=${page}. Configure LEGAL_PROFILE or mount /legal-overrides/. See docs/admin/legal-pages.`
-          )
-        }
-      })
-      .catch((err: unknown) => {
-        if (
-          controller.signal.aborted ||
-          (err instanceof DOMException && err.name === "AbortError")
-        )
-          return
-        setError(
-          err instanceof Error ? err : new Error("Failed to load legal content")
-        )
-      })
-    return () => controller.abort()
-  }, [page, profile, resolver])
+    if (resolved?.source !== "disclaimer") return
+    // Shipping the disclaimer in production violates § 5 DDG and Art. 13
+    // GDPR. The on-page banner alone is not enough because operators
+    // rarely open the page themselves.
+    console.warn(
+      `[legal] Disclaimer fallback served for page=${page}. Configure LEGAL_PROFILE or mount /legal-overrides/. See docs/admin/legal-pages.`
+    )
+  }, [resolved, page])
 
   return (
     <PageShell

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import type { PendingVersion } from "@/stores/useVersionStore"
+import type { PendingVersion } from "@/types"
 import { structuralFingerprint, isNamedVersion } from "@/lib/version/predicates"
 import { groupUnnamedRuns } from "./utils"
 import { versioningStrings as t } from "./strings"

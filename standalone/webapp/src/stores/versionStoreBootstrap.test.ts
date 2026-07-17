@@ -1,6 +1,7 @@
 import "fake-indexeddb/auto"
 import { IDBFactory as FDBFactory } from "fake-indexeddb"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import type { QueryClient } from "@tanstack/react-query"
 import {
   ensureVersionStoreBootstrapped,
   __teardownVersionStoreBootstrapForTests,
@@ -13,25 +14,25 @@ import {
   RemoteVersionRepository,
 } from "@/services/versionRepository"
 import { __resetDbForTests } from "@/services/versionRepository/idb"
+import { versionListQueryOptions } from "@/queries/versionQueries"
+import { createTestQueryClient } from "@/test/queryTestUtils"
 
 const DIAGRAM_ID = "boot-test-diagram"
+
+let queryClient: QueryClient
 
 beforeEach(async () => {
   Object.assign(globalThis, { indexedDB: new FDBFactory() })
   __resetDbForTests()
   __teardownVersionStoreBootstrapForTests()
   setVersionRepository(LocalVersionRepository)
+  queryClient = createTestQueryClient()
   // Reset version-store + persistence-store to a known state.
   useVersionStore.setState({
     drawerOpenByDiagram: {},
-    versions: {},
-    nextCursor: {},
-    totals: {},
     preview: null,
     undoRestore: null,
     pendingRestoreFromId: null,
-    loading: {},
-    error: {},
   })
 })
 
@@ -70,20 +71,23 @@ describe("versionStoreBootstrap", () => {
       { name: "v1" }
     )
 
-    // Now delete it — but stage the version-store to look like it's
-    // previewing the row, then drive the broadcast from a SIBLING channel
-    // object (BroadcastChannel doesn't echo to the same channel that
-    // posted, so the module's singleton would otherwise miss it).
+    // Load the version list into the query cache (as a mounted drawer would),
+    // then stage the store to look like it's previewing the row, and drive the
+    // broadcast from a SIBLING channel object (BroadcastChannel doesn't echo
+    // to the same channel that posted, so the module's singleton would
+    // otherwise miss it).
+    await queryClient.prefetchInfiniteQuery(
+      versionListQueryOptions(LocalVersionRepository, DIAGRAM_ID)
+    )
     useVersionStore.setState({
       drawerOpenByDiagram: { [DIAGRAM_ID]: true },
-      versions: { [DIAGRAM_ID]: [created] },
       preview: {
         diagramId: DIAGRAM_ID,
         versionId: created.id,
         body: { id: DIAGRAM_ID } as never,
       },
     })
-    ensureVersionStoreBootstrapped()
+    ensureVersionStoreBootstrapped(queryClient)
 
     // Delete the body in IDB (so the post-broadcast refetch finds the row gone).
     await LocalVersionRepository.delete(DIAGRAM_ID, created.id)
@@ -148,7 +152,7 @@ describe("versionStoreBootstrap", () => {
       { name: "v1" }
     )
 
-    ensureVersionStoreBootstrapped()
+    ensureVersionStoreBootstrapped(queryClient)
 
     expect((await LocalVersionRepository.list(DIAGRAM_ID)).total).toBe(1)
 
@@ -168,7 +172,7 @@ describe("versionStoreBootstrap", () => {
         body: { id: DIAGRAM_ID } as never,
       },
     })
-    ensureVersionStoreBootstrapped()
+    ensureVersionStoreBootstrapped(queryClient)
     const preview = useVersionStore.getState().preview
 
     const peer = new BroadcastChannel("apollon-versions")

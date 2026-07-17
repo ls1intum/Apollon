@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { act, cleanup, screen, waitFor } from "@testing-library/react"
+import { QueryClientProvider } from "@tanstack/react-query"
 import { renderWithRouter } from "@/test/renderWithRouter"
+import { createTestQueryClient } from "@/test/queryTestUtils"
 import { toast } from "react-toastify"
 import { ApollonShared } from "./ApollonShared"
 import { EditorProvider, ModalProvider } from "@/contexts"
@@ -213,15 +215,23 @@ function mountAt(initialEntry: string) {
   // The page reads getRouteApi("/shared/$diagramId"), so it must mount under
   // that template; "/" is included so its navigate({ to: "/" }) fallback
   // resolves. Drive in-test route changes with the returned `history.push`.
-  return renderWithRouter(<ApollonShared />, {
-    initialEntry,
-    routePaths: ["/shared/$diagramId", "/"],
-    wrapper: (children) => (
-      <EditorProvider>
-        <ModalProvider>{children}</ModalProvider>
-      </EditorProvider>
-    ),
-  })
+  // A fresh QueryClient per mount isolates the seed cache across tests the
+  // same way gcTime: 0 isolates it across page visits in production.
+  const queryClient = createTestQueryClient()
+  return {
+    ...renderWithRouter(<ApollonShared />, {
+      initialEntry,
+      routePaths: ["/shared/$diagramId", "/"],
+      wrapper: (children) => (
+        <QueryClientProvider client={queryClient}>
+          <EditorProvider>
+            <ModalProvider>{children}</ModalProvider>
+          </EditorProvider>
+        </QueryClientProvider>
+      ),
+    }),
+    queryClient,
+  }
 }
 
 async function resolveFetch(model: object = { nodes: [], edges: [] }) {
@@ -318,6 +328,9 @@ describe("ApollonShared — loading-state regression", () => {
     const rendered = mountAt("/shared/abc?view=COLLABORATE")
     await resolveFetch({ id: "abc", nodes: [], edges: [] })
 
+    // The editor is constructed from the effect that observes the seed
+    // query's data, so it lands a tick after the fetch resolves.
+    await waitFor(() => expect(editorHoisted.instance).not.toBeNull())
     const instance = editorHoisted.instance as InstanceType<
       typeof FakeApollonEditor
     >
