@@ -15,7 +15,17 @@ vi.mock("@xyflow/react", () => ({
 
 vi.mock("@/store/context", () => ({
   useDiagramStore: (select: (state: unknown) => unknown) =>
-    select({ diagramId: "diagram", nodes: [], setNodes: () => {} }),
+    select({
+      diagramId: "diagram",
+      nodes: [],
+      setNodes: () => {},
+      selectedElementIds: [],
+      setSelectedElementsId: () => {},
+    }),
+  useMetadataStore: (select: (state: unknown) => unknown) =>
+    select({
+      labels: { addElement: "Add element", nodeTypeLabel: (t: string) => t },
+    }),
 }))
 
 import { DraggableGhost } from "@/components/DraggableGhost"
