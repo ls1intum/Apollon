@@ -16,7 +16,7 @@ import { ClassEditPopover } from "@tumaet/apollon/components/popovers/classDiagr
 // `setElementHighlights` overlay. The driving case is Artemis recoloring a
 // sample solution's attributes/methods from each programming-test result.
 //
-// Two halves, one story each: AUTHORING — the tag combobox, driven through the
+// Two halves, one story each: AUTHORING — the tag picker, driven through the
 // real store by an asserting `play` — and COLORING, the full editor end to end.
 //
 // Tag authoring is opt-in: nothing shows until a host sets the `tags` option.
@@ -41,8 +41,8 @@ const TAG_VOCABULARY = [
  * Tag authoring in the class popover, opted in with a host `tags` option that
  * supplies a vocabulary and allows creating new tags. Each taggable row (the
  * class and every attribute/method) shows its tags as removable chips followed
- * by a tag button; the button opens a combobox to search the vocabulary, toggle
- * a tag, or create one. Every write is trimmed and de-duplicated.
+ * by a tag button; the button opens a list to pick from the vocabulary or add a
+ * new tag. Every write is trimmed and de-duplicated.
  */
 export const Authoring: Story = {
   name: "Authoring: Tag a Class Member",
@@ -87,14 +87,13 @@ export const Authoring: Story = {
       canvas.getByRole("button", { name: "Remove tag testAttributes[Animal]" })
     ).toBeVisible()
 
-    // Open the attribute's tag combobox and create a tag off the vocabulary.
+    // Open the attribute's tag picker and add a tag off the vocabulary.
     // The popover portals to <body>, so query it through `screen`, not `canvas`.
     await userEvent.click(
       canvas.getByRole("button", { name: "Tags for attribute" })
     )
-    const search = await screen.findByLabelText("Search tags")
-    await userEvent.type(search, "testName")
-    await userEvent.click(await screen.findByText('Create "testName"'))
+    const addField = await screen.findByLabelText("New tag")
+    await userEvent.type(addField, "testName{Enter}")
     await expect(
       canvas.getByRole("button", { name: "Remove tag testName" })
     ).toBeVisible()

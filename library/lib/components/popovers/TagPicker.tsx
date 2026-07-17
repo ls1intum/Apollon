@@ -53,10 +53,10 @@ export const TagChips: React.FC<Pick<TagControlProps, "tags" | "onChange">> = ({
 
 /**
  * Tag button that sits with the other row actions (next to the color picker). It
- * opens a combobox popover to search the host vocabulary, toggle a tag, or
- * create one when allowed. Renders nothing until a host enables tagging via the
- * `tags` option — so tagging is opt-in and its vocabulary host-driven. The
- * element's current tags render as chips via {@link TagChips}.
+ * opens a popover listing the host vocabulary as a checklist, plus an add-a-tag
+ * field when `allowCreate` is set. Renders nothing until a host enables tagging
+ * via the `tags` option — so tagging is opt-in and its vocabulary host-driven.
+ * The element's current tags render as chips via {@link TagChips}.
  */
 export const TagPicker: React.FC<TagControlProps> = ({
   tags,
@@ -65,7 +65,7 @@ export const TagPicker: React.FC<TagControlProps> = ({
 }) => {
   const t = useLabels()
   const { enabled, available, allowCreate } = useTagConfig()
-  const [query, setQuery] = useState("")
+  const [draft, setDraft] = useState("")
   const [trigger, setTrigger] = useState<HTMLElement | null>(null)
   const portalThemeVars = usePortalThemeVars(trigger)
 
@@ -77,30 +77,25 @@ export const TagPicker: React.FC<TagControlProps> = ({
       ? commit(tags.filter((existing) => existing !== tag))
       : commit([...tags, tag])
 
-  // Offer the vocabulary plus any tag already on the element (host-set or from an
-  // earlier free-form session), so nothing the element carries is hidden.
+  // The vocabulary plus any tag already on the element (host-set or created
+  // earlier), so nothing the element carries is hidden. Shown as a plain
+  // checklist — small vocabularies don't need a search box.
   const options = [...new Set([...available, ...tags])]
-  const trimmed = query.trim()
-  const filtered = options.filter((tag) =>
-    tag.toLowerCase().includes(trimmed.toLowerCase())
-  )
-  const canCreate = allowCreate && trimmed !== "" && !options.includes(trimmed)
 
-  const createFromQuery = () => {
-    if (!canCreate) return
-    commit([...tags, trimmed])
-    setQuery("")
+  const addFromDraft = () => {
+    const value = draft.trim()
+    if (value !== "") commit([...tags, value])
+    setDraft("")
   }
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key !== "Enter") return
     event.preventDefault()
-    if (canCreate) createFromQuery()
-    else if (filtered.length > 0) toggle(filtered[0])
+    addFromDraft()
   }
 
   return (
-    <Popover.Root onOpenChange={(open) => !open && setQuery("")}>
+    <Popover.Root onOpenChange={(open) => !open && setDraft("")}>
       <Popover.Trigger
         ref={setTrigger}
         data-slot="icon-button"
@@ -116,66 +111,67 @@ export const TagPicker: React.FC<TagControlProps> = ({
             aria-label={t.editTagsFor(subject)}
             style={portalThemeVars}
           >
-            <input
-              data-slot="tag-picker-search"
-              className="apollon-tag-picker__search"
-              aria-label={t.tagSearch}
-              placeholder={t.tagSearch}
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              onKeyDown={handleKeyDown}
-            />
-            <ul
-              data-slot="tag-picker-list"
-              className="apollon-tag-picker__list"
-              role="listbox"
-              aria-label={t.editTagsFor(subject)}
-            >
-              {filtered.map((tag) => {
-                const selected = tags.includes(tag)
-                return (
-                  <li
-                    key={tag}
-                    role="option"
-                    aria-selected={selected}
-                    data-slot="tag-picker-option"
-                    className="apollon-tag-picker__option"
-                    onClick={() => toggle(tag)}
-                  >
-                    <Check
-                      className="apollon-tag-picker__check"
-                      data-selected={selected || undefined}
-                      width={14}
-                      height={14}
-                      aria-hidden="true"
-                    />
-                    <span>{tag}</span>
-                  </li>
-                )
-              })}
+            {options.length > 0 && (
+              <ul
+                data-slot="tag-picker-list"
+                className="apollon-tag-picker__list"
+                role="listbox"
+                aria-label={t.editTagsFor(subject)}
+              >
+                {options.map((tag) => {
+                  const selected = tags.includes(tag)
+                  return (
+                    <li
+                      key={tag}
+                      role="option"
+                      aria-selected={selected}
+                      data-slot="tag-picker-option"
+                      className="apollon-tag-picker__option"
+                      onClick={() => toggle(tag)}
+                    >
+                      <Check
+                        className="apollon-tag-picker__check"
+                        data-selected={selected || undefined}
+                        width={14}
+                        height={14}
+                        aria-hidden="true"
+                      />
+                      <span>{tag}</span>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
 
-              {canCreate && (
-                <li
-                  role="option"
-                  aria-selected={false}
-                  data-slot="tag-picker-create"
-                  className="apollon-tag-picker__option apollon-tag-picker__create"
-                  onClick={createFromQuery}
-                >
-                  <Plus width={14} height={14} aria-hidden="true" />
-                  <span>{t.createTag(trimmed)}</span>
-                </li>
-              )}
+            {options.length === 0 && !allowCreate && (
+              <div
+                data-slot="tag-picker-empty"
+                className="apollon-tag-picker__empty"
+              >
+                {t.noTags}
+              </div>
+            )}
 
-              {filtered.length === 0 && !canCreate && (
-                <li
-                  data-slot="tag-picker-empty"
-                  className="apollon-tag-picker__empty"
+            {allowCreate && (
+              <div className="apollon-tag-picker__add">
+                <input
+                  data-slot="tag-picker-add"
+                  className="apollon-tag-picker__input"
+                  aria-label={t.newTag}
+                  placeholder={t.addTag}
+                  value={draft}
+                  onChange={(event) => setDraft(event.target.value)}
+                  onKeyDown={handleKeyDown}
+                />
+                <IconButton
+                  ariaLabel={t.addTag}
+                  tooltip={t.addTag}
+                  onClick={addFromDraft}
                 >
-                  {t.noTags}
-                </li>
-              )}
-            </ul>
+                  <Plus width={16} height={16} aria-hidden="true" />
+                </IconButton>
+              </div>
+            )}
           </Popover.Popup>
         </Popover.Positioner>
       </Popover.Portal>

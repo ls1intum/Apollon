@@ -51,13 +51,13 @@ describe("TagPicker gating", () => {
 })
 
 describe("TagPicker free-form (tags: true)", () => {
-  it("creates a tag typed into the search field", () => {
+  it("adds a tag typed into the add field", () => {
     const onChange = renderPicker([], true)
     openPopover()
-    fireEvent.change(screen.getByLabelText("Search tags"), {
+    fireEvent.change(screen.getByLabelText("New tag"), {
       target: { value: "testA" },
     })
-    fireEvent.click(screen.getByText('Create "testA"'))
+    fireEvent.keyDown(screen.getByLabelText("New tag"), { key: "Enter" })
     expect(onChange).toHaveBeenCalledWith(["testA"])
   })
 
@@ -71,43 +71,30 @@ describe("TagPicker free-form (tags: true)", () => {
 describe("TagPicker with a host vocabulary", () => {
   const available = ["testAttributes[Animal]", "testMethods[Animal]"]
 
-  it("offers the vocabulary and toggles a choice on", () => {
+  it("lists the whole vocabulary as a checklist, no search box", () => {
+    renderPicker([], { available })
+    openPopover()
+    expect(
+      within(screen.getByRole("listbox")).getAllByRole("option")
+    ).toHaveLength(2)
+    // Pick-only: no add field, no filter.
+    expect(screen.queryByLabelText("Add tag")).not.toBeInTheDocument()
+  })
+
+  it("toggles a vocabulary choice on", () => {
     const onChange = renderPicker([], { available })
     openPopover()
-    const list = screen.getByRole("listbox")
-    expect(within(list).getAllByRole("option")).toHaveLength(2)
-    fireEvent.click(within(list).getByText("testAttributes[Animal]"))
+    fireEvent.click(screen.getByText("testAttributes[Animal]"))
     expect(onChange).toHaveBeenCalledWith(["testAttributes[Animal]"])
   })
 
-  it("filters the list by the search query", () => {
-    renderPicker([], { available })
-    openPopover()
-    fireEvent.change(screen.getByLabelText("Search tags"), {
-      target: { value: "Methods" },
-    })
-    const options = within(screen.getByRole("listbox")).getAllByRole("option")
-    expect(options).toHaveLength(1)
-    expect(options[0]).toHaveTextContent("testMethods[Animal]")
-  })
-
-  it("cannot create off-vocabulary tags by default", () => {
-    renderPicker([], { available })
-    openPopover()
-    fireEvent.change(screen.getByLabelText("Search tags"), {
-      target: { value: "brandNew" },
-    })
-    expect(screen.queryByText('Create "brandNew"')).not.toBeInTheDocument()
-    expect(screen.getByText("No tags")).toBeInTheDocument()
-  })
-
-  it("allows creating off-vocabulary tags when allowCreate is set", () => {
+  it("offers an add field only when allowCreate is set", () => {
     const onChange = renderPicker([], { available, allowCreate: true })
     openPopover()
-    fireEvent.change(screen.getByLabelText("Search tags"), {
+    fireEvent.change(screen.getByLabelText("New tag"), {
       target: { value: "brandNew" },
     })
-    fireEvent.click(screen.getByText('Create "brandNew"'))
+    fireEvent.click(screen.getByRole("button", { name: "Add tag" }))
     expect(onChange).toHaveBeenCalledWith(["brandNew"])
   })
 
@@ -117,7 +104,7 @@ describe("TagPicker with a host vocabulary", () => {
     expect(
       screen.getByRole("button", { name: "Remove tag legacyTag" })
     ).toBeInTheDocument()
-    // …and the option is selectable inside it.
+    // …and the option shows inside it, checked.
     openPopover()
     expect(
       within(screen.getByRole("listbox")).getByText("legacyTag")

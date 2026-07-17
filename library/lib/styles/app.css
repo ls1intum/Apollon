@@ -1260,8 +1260,8 @@ svg.react-flow__connectionline {
   min-width: 0;
 }
 
-/* Tag control: the element's tags as removable chips, then a tag button that
-   opens the combobox. Sits on its own compact line under the element's row. */
+/* Tag control: the element's tags as removable chips. Sits on its own compact
+   line under the element's row, shown only once the element has a tag. */
 [data-slot="tag-field"] {
   display: flex;
   flex-wrap: wrap;
@@ -1287,8 +1287,8 @@ svg.react-flow__connectionline {
   white-space: nowrap;
 }
 
-/* Tag combobox (Base UI Popover portaled to <body>) — search + option list,
-   the shadcn combobox pattern rendered Tailwind-free via --apollon-* tokens. */
+/* Tag picker (Base UI Popover portaled to <body>) — a checklist of the host
+   vocabulary plus an optional add-a-tag field, Tailwind-free via --apollon-*. */
 .apollon-tag-picker__popup {
   box-sizing: border-box;
   display: flex;
@@ -1305,9 +1305,16 @@ svg.react-flow__connectionline {
   z-index: 10003;
 }
 
-.apollon-tag-picker__search {
+.apollon-tag-picker__add {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.apollon-tag-picker__input {
   box-sizing: border-box;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   padding: 6px 8px;
   font-size: 0.8125rem;
   color: var(--apollon-foreground, #000);
@@ -1316,7 +1323,7 @@ svg.react-flow__connectionline {
   border-radius: var(--apollon-radius-md, 6px);
 }
 
-.apollon-tag-picker__search:focus-visible {
+.apollon-tag-picker__input:focus-visible {
   outline: 2px solid var(--apollon-primary, #3e8acc);
   outline-offset: 1px;
 }
@@ -1361,10 +1368,6 @@ svg.react-flow__connectionline {
 
 .apollon-tag-picker__check[data-selected] {
   opacity: 1;
-  color: var(--apollon-primary, #3e8acc);
-}
-
-.apollon-tag-picker__create {
   color: var(--apollon-primary, #3e8acc);
 }
 
