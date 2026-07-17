@@ -705,6 +705,26 @@
   z-index: 20;
 }
 
+/* NodeResizer renders its controls before the node's own content in the DOM, so
+   without a z-index the 1px edge lines paint *behind* a filled node (a swimlane,
+   pool, package…) and can't be seen or grabbed — only the corners, lifted by the
+   rule above, stayed reachable. Lift the lines over the content but below the
+   corner handles (20) and the connection arcs (10, so an arc still wins at its
+   slot and the line fills the gaps between). */
+.react-flow__resize-control.line {
+  z-index: 9;
+}
+
+/* React Flow draws the edge lines 1px wide, a hair-thin grab target. Widen the
+   hit area without moving the visible border, the same way the connection arcs
+   get a usable target. Kept small (and hover-gated, via the base rule below)
+   because it overhangs the node edge onto whatever sits beneath. */
+.apollon-resize-line::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+}
+
 /* A content-sized node keeps its corner handles (NodeResizer constrains each to
    the node's free axis with `resizeDirection`), but React Flow hard-codes a
    diagonal nwse/nesw cursor on every corner. Relabel it to the free axis's

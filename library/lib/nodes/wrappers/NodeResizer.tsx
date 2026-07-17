@@ -13,6 +13,10 @@ import {
 // React Flow's corner handles default to 5x5; every Apollon node wants 8x8.
 const HANDLE_STYLE = { width: 8, height: 8 }
 
+// Marks every edge line so app.css can lift it over node content and widen its
+// 1px grab area.
+const LINE_CLASS = "apollon-resize-line"
+
 const CORNERS = [
   "top-left",
   "top-right",
@@ -63,7 +67,13 @@ export function NodeResizer(props: NodeResizerProps) {
   const heightLocked = isAxisLocked(minHeight, maxHeight)
 
   if (!widthLocked && !heightLocked) {
-    return <ReactFlowNodeResizer handleStyle={HANDLE_STYLE} {...props} />
+    return (
+      <ReactFlowNodeResizer
+        {...props}
+        handleStyle={handleStyle ?? HANDLE_STYLE}
+        lineClassName={[LINE_CLASS, lineClassName].filter(Boolean).join(" ")}
+      />
+    )
   }
 
   // Both axes pinned: nothing to resize.
@@ -87,7 +97,7 @@ export function NodeResizer(props: NodeResizerProps) {
           position={position}
           variant={ResizeControlVariant.Line}
           style={lineStyle}
-          className={lineClassName}
+          className={[LINE_CLASS, lineClassName].filter(Boolean).join(" ")}
           {...shared}
         />
       ))}

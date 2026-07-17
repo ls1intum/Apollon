@@ -57,6 +57,25 @@ describe("<NodeResizer>", () => {
     )
   })
 
+  // The line class carries the z-index lift + widened hit area (app.css) that
+  // keeps edge lines reachable over a filled node's content; every edge line
+  // needs it, on the free path and the locked path alike.
+  it("marks every edge line with the hit-area class", () => {
+    const free = renderResizer({ minWidth: 50, minHeight: 50 })
+    expect(
+      free.container.querySelectorAll(".line.apollon-resize-line")
+    ).toHaveLength(4)
+
+    const locked = renderResizer({
+      minWidth: 100,
+      minHeight: 60,
+      maxHeight: 60,
+    })
+    expect(
+      locked.container.querySelectorAll(".line.apollon-resize-line")
+    ).toHaveLength(2)
+  })
+
   // Height pinned: keep the corners, drop the top/bottom lines that promise a
   // vertical resize (issue #629).
   it("keeps corners but only the side lines when height is locked", () => {
