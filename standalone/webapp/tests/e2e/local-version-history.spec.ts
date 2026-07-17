@@ -188,6 +188,22 @@ test.describe("Local version history (#670, /local/:id routing)", () => {
     ).toBeVisible()
   })
 
+  test("Alt+Shift+H toggles the version-history drawer", async ({ page }) => {
+    await seedLocalDiagram(page)
+    await openLocalEditor(page)
+    // The drawer's persisted open-state may carry over, so normalise to closed.
+    if (await drawer(page).isVisible()) {
+      await page.keyboard.press("Alt+Shift+KeyH")
+      await expect(drawer(page)).toBeHidden()
+    }
+
+    await page.keyboard.press("Alt+Shift+KeyH")
+    await expect(drawer(page)).toBeVisible()
+
+    await page.keyboard.press("Alt+Shift+KeyH")
+    await expect(drawer(page)).toBeHidden()
+  })
+
   test("Ctrl/Cmd+Shift+S saves a version without touching the composer", async ({
     page,
   }) => {

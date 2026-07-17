@@ -187,8 +187,8 @@ const gestures = (caps: Keycaps): Partial<Record<GroupTitle, Shortcut[]>> => ({
     { combos: [[caps.shift, "Drag"]], label: "Box-select an area" },
   ],
   View: [
-    { combos: [["Drag"]], label: "Pan the canvas" },
-    { combos: [["Scroll"]], label: "Zoom in / out" },
+    { combos: [["Scroll"], ["Drag"]], label: "Pan the canvas" },
+    { combos: [[caps.mod, "Scroll"]], label: "Zoom in / out" },
   ],
 })
 

@@ -1,113 +1,305 @@
 import { test, expect, type Page } from "@playwright/test"
-import { waitForCanvasReady, openFixtureInLocalEditor } from "../helpers/canvas"
+import { openFixtureInLocalEditor, waitForCanvasReady } from "../helpers/canvas"
 
 /**
- * The keyboard shortcuts, end to end. Undo/redo and Delete are covered by the
- * other editor specs; these are the paths this feature added.
+ * Every shortcut and gesture the "How to use this editor?" sheet advertises,
+ * proven end to end so the sheet can't lie. Undo/redo, Delete and the arrow
+ * keys are React Flow's; the rest run through `APOLLON_SHORTCUTS`. The version
+ * shortcuts (Ctrl/Cmd+Shift+S, Alt+Shift+H) live in local-version-history.spec.
  *
- * A hand-built fixture keeps the counts deterministic: two leaf classes (no
- * attribute/method child nodes, so one `.react-flow__node` each) joined by an
- * edge, placed far enough apart that the diagram overflows the viewport at
- * 100% — otherwise a broken zoom-to-fit is indistinguishable from reset-zoom.
+ * Two fixtures: COMPACT fits at 100% so its nodes are full-size and clickable;
+ * SPREAD overflows the viewport so a real zoom-to-fit reads below 100% (on a
+ * fitting diagram it would be indistinguishable from reset-zoom).
  */
-const TWO_CLASSES = {
-  id: "e2e-keyboard-shortcuts",
-  type: "ClassDiagram",
+
+const cls = (id: string, name: string, x: number, y: number) => ({
+  id,
+  type: "class",
+  width: 200,
+  height: 110,
+  position: { x, y },
+  measured: { width: 200, height: 110 },
+  data: {
+    name,
+    attributes: [{ id: `${id}-a`, name: "x: int" }],
+    methods: [{ id: `${id}-m`, name: "foo()" }],
+  },
+})
+
+const COMPACT = {
+  id: "e2e-shortcuts-compact",
   version: "4.0.0",
-  title: "Keyboard shortcuts",
-  assessments: {},
-  nodes: [
-    {
-      id: "class-a-0000-0000-0000-000000000001",
-      type: "class",
-      width: 200,
-      height: 100,
-      position: { x: 400, y: 300 },
-      measured: { width: 200, height: 100 },
-      data: { name: "Alpha", attributes: [], methods: [] },
-    },
-    {
-      id: "class-b-0000-0000-0000-000000000002",
-      type: "class",
-      width: 200,
-      height: 100,
-      position: { x: 2200, y: 1400 },
-      measured: { width: 200, height: 100 },
-      data: { name: "Beta", attributes: [], methods: [] },
-    },
-  ],
+  title: "Shortcuts",
+  type: "ClassDiagram",
+  nodes: [cls("node-a", "Alpha", 0, 0), cls("node-b", "Beta", 300, 0)],
   edges: [
     {
-      id: "edge-1-0000-0000-0000-000000000003",
+      id: "edge-1",
       type: "class",
-      source: "class-a-0000-0000-0000-000000000001",
-      target: "class-b-0000-0000-0000-000000000002",
+      source: "node-a",
+      target: "node-b",
       data: {},
     },
   ],
+  assessments: {},
+}
+
+const SPREAD = {
+  ...COMPACT,
+  id: "e2e-shortcuts-spread",
+  nodes: [cls("node-a", "Alpha", 0, 0), cls("node-b", "Beta", 1600, 950)],
+  edges: [],
 }
 
 const nodes = (page: Page) => page.locator(".react-flow__node")
 const selectedNodes = (page: Page) => page.locator(".react-flow__node.selected")
 const edges = (page: Page) => page.locator(".react-flow__edge")
+const node = (page: Page, name: string) =>
+  page.locator(".react-flow__node", { hasText: name })
 const zoomReadout = (page: Page) =>
   page.locator(".apollon-chrome-iconbtn--readout")
+const viewport = (page: Page) => page.locator(".react-flow__viewport")
 
-test.describe("Keyboard shortcuts", () => {
-  test.beforeEach(async ({ page }) => {
-    await openFixtureInLocalEditor(page, TWO_CLASSES)
-    await waitForCanvasReady(page)
-  })
+const openWith = async (page: Page, fixture: Record<string, unknown>) => {
+  await openFixtureInLocalEditor(page, fixture)
+  await waitForCanvasReady(page)
+}
 
-  test("Ctrl+A selects everything, Ctrl+D duplicates it with its edges", async ({
-    page,
-  }) => {
-    // Selecting with the keyboard sidesteps the flaky node click — React Flow
-    // keeps the canvas subtly animating, so Playwright never sees a node
-    // "stable" enough to click.
+/** Center of a node in screen coordinates. */
+const nodeCenter = async (page: Page, name: string) => {
+  const box = (await node(page, name).boundingBox())!
+  return { x: box.x + box.width / 2, y: box.y + box.height / 2 }
+}
+
+/** The viewport transform once it stops changing (fit/zoom animate). */
+const settledTransform = async (page: Page) => {
+  let last = ""
+  await expect
+    .poll(async () => {
+      const now = (await viewport(page).getAttribute("style")) ?? ""
+      const stable = now === last
+      last = now
+      return stable
+    })
+    .toBe(true)
+  return last
+}
+
+// Copy/paste go through navigator.clipboard, which needs permission + a secure
+// context; localhost qualifies as secure.
+test.use({ permissions: ["clipboard-read", "clipboard-write"] })
+
+test.describe("Selection", () => {
+  test("Ctrl+A selects everything, Escape clears", async ({ page }) => {
+    await openWith(page, COMPACT)
     await page.keyboard.press("ControlOrMeta+KeyA")
     await expect(selectedNodes(page)).toHaveCount(2)
-
-    await page.keyboard.press("ControlOrMeta+KeyD")
-
-    // Both classes are copied, the association between them comes along (the
-    // bug this fixes dropped it), and the copies carry the selection.
-    await expect(nodes(page)).toHaveCount(4)
-    await expect(edges(page)).toHaveCount(2)
-    await expect(selectedNodes(page)).toHaveCount(2)
-  })
-
-  test("Escape clears the selection", async ({ page }) => {
-    await page.keyboard.press("ControlOrMeta+KeyA")
-    await expect(selectedNodes(page)).toHaveCount(2)
-
     await page.keyboard.press("Escape")
     await expect(selectedNodes(page)).toHaveCount(0)
   })
 
-  test("zoom shortcuts drive the viewport", async ({ page }) => {
+  test("Shift+Click adds an element, then removes it", async ({ page }) => {
+    await openWith(page, COMPACT)
+    await node(page, "Alpha").click()
+    await expect(selectedNodes(page)).toHaveCount(1)
+
+    await node(page, "Beta").click({ modifiers: ["Shift"] })
+    await expect(selectedNodes(page)).toHaveCount(2)
+
+    await node(page, "Beta").click({ modifiers: ["Shift"] })
+    await expect(selectedNodes(page)).toHaveCount(1)
+    await expect(node(page, "Alpha")).toHaveClass(/selected/)
+  })
+
+  test("Shift+Drag box-selects an area", async ({ page }) => {
+    await openWith(page, COMPACT)
+    const a = (await node(page, "Alpha").boundingBox())!
+    const b = (await node(page, "Beta").boundingBox())!
+
+    await page.keyboard.down("Shift")
+    await page.mouse.move(Math.min(a.x, b.x) - 25, Math.min(a.y, b.y) - 25)
+    await page.mouse.down()
+    await page.mouse.move(
+      Math.max(a.x + a.width, b.x + b.width) + 25,
+      Math.max(a.y + a.height, b.y + b.height) + 25,
+      { steps: 8 }
+    )
+    await page.mouse.up()
+    await page.keyboard.up("Shift")
+
+    await expect(selectedNodes(page)).toHaveCount(2)
+  })
+})
+
+test.describe("Editing", () => {
+  test("Delete removes the selection", async ({ page }) => {
+    await openWith(page, COMPACT)
+    await node(page, "Alpha").click()
+    await expect(selectedNodes(page)).toHaveCount(1)
+
+    await page.keyboard.press("Delete")
+    await expect(nodes(page)).toHaveCount(1)
+    await expect(node(page, "Alpha")).toHaveCount(0)
+  })
+
+  test("Ctrl+C then Ctrl+V pastes a copy", async ({ page }) => {
+    await openWith(page, COMPACT)
+    await node(page, "Alpha").click()
+    await expect(selectedNodes(page)).toHaveCount(1)
+
+    await page.keyboard.press("ControlOrMeta+KeyC")
+    await page.keyboard.press("ControlOrMeta+KeyV")
+
+    await expect(nodes(page)).toHaveCount(3)
+    // The paste lands selected so it can be moved straight away.
+    await expect(selectedNodes(page)).toHaveCount(1)
+  })
+
+  test("Ctrl+X cuts, Ctrl+V pastes it back", async ({ page }) => {
+    await openWith(page, COMPACT)
+    await node(page, "Alpha").click()
+
+    await page.keyboard.press("ControlOrMeta+KeyX")
+    await expect(nodes(page)).toHaveCount(1)
+
+    await page.keyboard.press("ControlOrMeta+KeyV")
+    await expect(nodes(page)).toHaveCount(2)
+  })
+
+  test("Ctrl+D duplicates the selection with its edges", async ({ page }) => {
+    await openWith(page, COMPACT)
+    await page.keyboard.press("ControlOrMeta+KeyA")
+    await expect(selectedNodes(page)).toHaveCount(2)
+
+    await page.keyboard.press("ControlOrMeta+KeyD")
+    await expect(nodes(page)).toHaveCount(4)
+    // The association between the two classes is carried onto the copies.
+    await expect(edges(page)).toHaveCount(2)
+    await expect(selectedNodes(page)).toHaveCount(2)
+  })
+
+  test("arrow keys nudge the selection", async ({ page }) => {
+    await openWith(page, COMPACT)
+    await node(page, "Alpha").click()
+    const before = await nodeCenter(page, "Alpha")
+
+    await page.keyboard.press("ArrowRight")
+    await page.keyboard.press("ArrowRight")
+    await page.keyboard.press("ArrowRight")
+
+    const after = await nodeCenter(page, "Alpha")
+    expect(after.x).toBeGreaterThan(before.x)
+  })
+})
+
+test.describe("History", () => {
+  test("Ctrl+Z undoes, Ctrl+Shift+Z redoes", async ({ page }) => {
+    await openWith(page, COMPACT)
+    await node(page, "Alpha").click()
+    await page.keyboard.press("Delete")
+    await expect(nodes(page)).toHaveCount(1)
+
+    await page.keyboard.press("ControlOrMeta+KeyZ")
+    await expect(nodes(page)).toHaveCount(2)
+
+    await page.keyboard.press("ControlOrMeta+Shift+KeyZ")
+    await expect(nodes(page)).toHaveCount(1)
+  })
+})
+
+test.describe("View", () => {
+  test("zoom in / out / reset", async ({ page }) => {
+    await openWith(page, COMPACT)
     await expect(zoomReadout(page)).toHaveText("100%")
 
-    // React Flow steps zoom by 1/1.2, so one step out of 100% lands on 83%.
+    // React Flow steps zoom by 1/1.2, so one step lands on 83%.
     await page.keyboard.press("ControlOrMeta+Minus")
     await expect(zoomReadout(page)).toHaveText("83%")
 
     await page.keyboard.press("ControlOrMeta+Equal")
     await expect(zoomReadout(page)).toHaveText("100%")
 
-    // This diagram overflows the viewport at 100%, so a fit that silently fell
-    // through to reset-zoom would leave the readout at 100%.
-    await page.keyboard.press("ControlOrMeta+Shift+Digit1")
-    await expect(zoomReadout(page)).not.toHaveText("100%")
-
+    await page.keyboard.press("ControlOrMeta+Minus")
     await page.keyboard.press("ControlOrMeta+Digit0")
     await expect(zoomReadout(page)).toHaveText("100%")
   })
 
+  test("zoom to fit frames the whole diagram", async ({ page }) => {
+    await openWith(page, SPREAD)
+    // SPREAD overflows at 100%, so a real fit reads below it — a fit that fell
+    // through to reset-zoom would stay at 100%.
+    await page.keyboard.press("ControlOrMeta+Shift+Digit1")
+    await expect(zoomReadout(page)).not.toHaveText("100%")
+  })
+
+  test("zoom to selection frames just the selection", async ({ page }) => {
+    // Framing Alpha and framing Beta must land on different viewports —
+    // proving the shortcut reframes on the SELECTION, not the whole diagram.
+    await openWith(page, COMPACT)
+
+    await node(page, "Alpha").click()
+    await page.keyboard.press("ControlOrMeta+Shift+Digit2")
+    const framedAlpha = await settledTransform(page)
+
+    await node(page, "Beta").click()
+    await page.keyboard.press("ControlOrMeta+Shift+Digit2")
+    const framedBeta = await settledTransform(page)
+
+    expect(framedBeta).not.toBe(framedAlpha)
+  })
+
+  test("dragging the pane pans the canvas", async ({ page }) => {
+    await openWith(page, COMPACT)
+    const before = await viewport(page).getAttribute("style")
+
+    // A left-drag on empty canvas pans (panOnDrag). Start clear of the nodes.
+    await page.mouse.move(600, 500)
+    await page.mouse.down()
+    await page.mouse.move(750, 620, { steps: 8 })
+    await page.mouse.up()
+
+    await expect
+      .poll(() => viewport(page).getAttribute("style"))
+      .not.toBe(before)
+  })
+
+  test("plain scroll pans, Ctrl/Cmd+scroll zooms", async ({ page }) => {
+    await openWith(page, COMPACT)
+    await page.mouse.move(640, 400)
+
+    // Plain wheel pans (panOnScroll) — the readout stays put, the viewport moves.
+    const before = await viewport(page).getAttribute("style")
+    await page.mouse.wheel(0, 300)
+    await expect(zoomReadout(page)).toHaveText("100%")
+    await expect
+      .poll(() => viewport(page).getAttribute("style"))
+      .not.toBe(before)
+
+    // Holding Ctrl/Cmd turns the wheel into zoom.
+    await page.keyboard.down("Control")
+    await page.mouse.wheel(0, -300)
+    await page.keyboard.up("Control")
+    await expect(zoomReadout(page)).not.toHaveText("100%")
+  })
+})
+
+test.describe("File", () => {
   test("Ctrl+S downloads the diagram as JSON", async ({ page }) => {
-    const downloadPromise = page.waitForEvent("download")
+    await openWith(page, COMPACT)
+    const download = page.waitForEvent("download")
     await page.keyboard.press("ControlOrMeta+KeyS")
-    const download = await downloadPromise
-    expect(download.suggestedFilename()).toMatch(/\.json$/)
+    expect((await download).suggestedFilename()).toMatch(/\.json$/)
+  })
+})
+
+test.describe("Guards", () => {
+  test("shortcuts stay out of a text field", async ({ page }) => {
+    await openWith(page, COMPACT)
+    // Type into the diagram-title field, then press the select-all combo: the
+    // field must keep it, so the canvas is NOT select-all'd. This is the sheet's
+    // "ignored while editing text in a field" promise.
+    await page.getByLabel("Diagram title").click()
+    await page.keyboard.press("ControlOrMeta+KeyA")
+    await expect(selectedNodes(page)).toHaveCount(0)
   })
 })
