@@ -232,7 +232,7 @@ function mountAt(initialEntry: string) {
         <EditorProvider>
           <ModalProvider>{children}</ModalProvider>
         </EditorProvider>
-      ).element,
+      ),
   })
 }
 

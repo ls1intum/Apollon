@@ -11,10 +11,10 @@ import { ChromeSubHeader } from "@/components/navbar/ChromeSubHeader"
 import { PageShell } from "@/components/PageShell"
 import { environment } from "@/environment"
 import {
+  getLegalResolver,
   isSafeLegalHref,
   isSafeLegalImageSrc,
   type LegalPageId,
-  resolveLegalContent,
 } from "@/lib/legal"
 
 const DISCLAIMER_BANNER =
@@ -57,33 +57,18 @@ const MARKDOWN_COMPONENTS = { a: SafeAnchor, img: SafeImage }
 export interface LegalPageProps {
   page: LegalPageId
   title: string
-  /** Injected for tests. Production callers pass nothing. */
-  resolver?: typeof resolveLegalContent
   /** Profile override for tests. Production reads environment.legal.profile. */
   profileOverride?: string
 }
 
-export function LegalPage({
-  page,
-  title,
-  resolver = resolveLegalContent,
-  profileOverride,
-}: LegalPageProps) {
+export function LegalPage({ page, title, profileOverride }: LegalPageProps) {
   const profile = profileOverride ?? environment.legal.profile
 
-  // Legal content is static per (page, profile); TanStack Query supplies the
-  // per-key loading isolation and unmount cancellation the old hand-rolled
-  // AbortController provided. `retry: false` — the resolver has its own
-  // fallback chain, a failure here is terminal for this render.
-  // `resolver` is deliberately absent from the key: (page, profile) fully
-  // identifies the content, and production always passes the real resolver.
-  // The stub-injecting stories/tests isolate themselves with their own (or a
-  // per-story-cleared) QueryClient rather than by widening the key with an
-  // unserialisable function.
-  // eslint-disable-next-line @tanstack/query/exhaustive-deps
+  // `retry: false` — the resolver already walks its own candidate chain
+  // (override → profile → disclaimer), so a rejection here is terminal.
   const { data: resolved, error } = useQuery({
     queryKey: ["legal", page, profile],
-    queryFn: ({ signal }) => resolver(page, { signal, profile }),
+    queryFn: ({ signal }) => getLegalResolver()(page, { signal, profile }),
     staleTime: Infinity,
     retry: false,
   })

@@ -1,19 +1,22 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { expect, within } from "storybook/test"
-import type { ResolvedLegalContent } from "@/lib/legal"
+import {
+  setLegalResolver,
+  type LegalResolver,
+  type ResolvedLegalContent,
+} from "@/lib/legal"
 import { LEGAL_PAGE_TITLES } from "@/lib/legal"
 import { LegalPage } from "./LegalPage"
 
 /**
- * The legal content page (`/imprint`, `/privacy`). It resolves Markdown through
- * an injectable `resolver` (override → profile → disclaimer fallback) and
- * renders it via sanitized react-markdown. Production callers pass no resolver;
- * these stories inject a stub so no network or on-disk profile is needed.
+ * The legal content page (`/imprint`, `/privacy`). It resolves Markdown
+ * (override → profile → disclaimer fallback) and renders it via sanitized
+ * react-markdown. These stories bind a stub resolver so no network or on-disk
+ * profile is needed.
  *
- * `ImprintPage` / `PrivacyPage` are thin wrappers that call `LegalPage` with a
- * fixed `page` + title and no resolver — they aren't storyable without a
- * configured backend profile, so the resolver-injected variants below stand in
- * for both.
+ * `ImprintPage` / `PrivacyPage` are thin wrappers over `LegalPage` with a
+ * fixed page + title; they aren't storyable without a configured backend
+ * profile, so the variants below stand in for both.
  */
 
 const IMPRINT_MARKDOWN = `## Operator
@@ -50,13 +53,12 @@ const makeResolver =
   (
     markdown: string,
     source: ResolvedLegalContent["source"] = "profile"
-  ): typeof import("@/lib/legal").resolveLegalContent =>
+  ): LegalResolver =>
   async () => ({ markdown, source, profile: "storybook" })
 
-const failingResolver: typeof import("@/lib/legal").resolveLegalContent =
-  async () => {
-    throw new Error("Unable to load legal content.")
-  }
+const failingResolver: LegalResolver = async () => {
+  throw new Error("Unable to load legal content.")
+}
 
 const meta = {
   title: "Webapp/Pages/LegalPage",
@@ -75,9 +77,7 @@ type Story = StoryObj<typeof meta>
 
 /** Imprint page rendered from stubbed profile Markdown. */
 export const Imprint: Story = {
-  args: {
-    resolver: makeResolver(IMPRINT_MARKDOWN),
-  },
+  beforeEach: () => setLegalResolver(makeResolver(IMPRINT_MARKDOWN)),
 }
 
 /** Privacy page rendered from stubbed profile Markdown. */
@@ -85,8 +85,8 @@ export const Privacy: Story = {
   args: {
     page: "privacy",
     title: LEGAL_PAGE_TITLES.privacy,
-    resolver: makeResolver(PRIVACY_MARKDOWN),
   },
+  beforeEach: () => setLegalResolver(makeResolver(PRIVACY_MARKDOWN)),
 }
 
 /**
@@ -94,12 +94,13 @@ export const Privacy: Story = {
  * returns placeholder content and the page shows the warning banner.
  */
 export const DisclaimerFallback: Story = {
-  args: {
-    resolver: makeResolver(
-      "This is placeholder legal content for an unconfigured deployment.",
-      "disclaimer"
+  beforeEach: () =>
+    setLegalResolver(
+      makeResolver(
+        "This is placeholder legal content for an unconfigured deployment.",
+        "disclaimer"
+      )
     ),
-  },
   tags: ["test", "!autodocs", "!dev"],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -117,9 +118,7 @@ export const DisclaimerFallback: Story = {
 
 /** Error state: the resolver rejects and the page shows the error alert. */
 export const ErrorState: Story = {
-  args: {
-    resolver: failingResolver,
-  },
+  beforeEach: () => setLegalResolver(failingResolver),
   tags: ["test", "!autodocs", "!dev"],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -134,9 +133,7 @@ export const ErrorState: Story = {
 
 /** Verifies the stubbed Markdown reaches the rendered article. */
 export const RendersContent: Story = {
-  args: {
-    resolver: makeResolver(IMPRINT_MARKDOWN),
-  },
+  beforeEach: () => setLegalResolver(makeResolver(IMPRINT_MARKDOWN)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
     // Scope to the `<main>` content region: PageShell renders the legal prose in

@@ -293,8 +293,6 @@ export const ApollonShared: React.FC = () => {
         autosaver.schedule()
       })
 
-      // Warm the version list so the drawer/banner open onto data and
-      // restore-snackbar labels resolve without a round-trip.
       void prefetchVersions(queryClient, kind, diagramId)
     } catch (err) {
       log.error("Failed to initialize diagram", err)

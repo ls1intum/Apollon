@@ -4,10 +4,7 @@ import { render } from "@testing-library/react"
 import { VersionRepositoryProvider } from "@/contexts/VersionRepositoryContext"
 import type { RepositoryKind } from "@/services/versionRepository"
 
-/**
- * Per-test QueryClient: no retries (a failing queryFn should fail the test
- * immediately, not after backoff) and no gc timers to fight fake timers.
- */
+/** Per-test QueryClient: no retries, so a failing queryFn fails the test now. */
 export function createTestQueryClient(): QueryClient {
   return new QueryClient({
     defaultOptions: {
@@ -21,34 +18,23 @@ export function createTestQueryClient(): QueryClient {
   })
 }
 
-interface WithQueryOptions {
-  queryClient?: QueryClient
-  /**
-   * Backend the versioning UI under test talks to. Mirrors what the editor
-   * routes provide in production; omit for non-versioning components.
-   */
-  repositoryKind?: RepositoryKind
-}
-
-/** Wrap UI in a fresh (or provided) query client + repository kind. */
+/**
+ * Wrap UI in a fresh query client + the versioning backend kind the editor
+ * routes supply in production. `kind` defaults to "remote"; pass "local" for
+ * the IndexedDB path.
+ */
 export function wrapWithQueryClient(
   ui: ReactNode,
-  opts: WithQueryOptions = {}
-): { element: ReactElement; queryClient: QueryClient } {
-  const queryClient = opts.queryClient ?? createTestQueryClient()
-  const kind = opts.repositoryKind ?? "remote"
-  return {
-    element: (
-      <QueryClientProvider client={queryClient}>
-        <VersionRepositoryProvider kind={kind}>{ui}</VersionRepositoryProvider>
-      </QueryClientProvider>
-    ),
-    queryClient,
-  }
+  kind: RepositoryKind = "remote"
+): ReactElement {
+  return (
+    <QueryClientProvider client={createTestQueryClient()}>
+      <VersionRepositoryProvider kind={kind}>{ui}</VersionRepositoryProvider>
+    </QueryClientProvider>
+  )
 }
 
-/** `render` with an isolated QueryClient; returns the client for assertions. */
-export function renderWithQuery(ui: ReactElement, opts: WithQueryOptions = {}) {
-  const { element, queryClient } = wrapWithQueryClient(ui, opts)
-  return { ...render(element), queryClient }
+/** `render` under a fresh query client + repository kind. */
+export function renderWithQuery(ui: ReactElement, kind?: RepositoryKind) {
+  return render(wrapWithQueryClient(ui, kind))
 }

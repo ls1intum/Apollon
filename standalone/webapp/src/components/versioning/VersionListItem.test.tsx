@@ -50,7 +50,7 @@ function renderRow(
       {
         initialEntry: "/local/d1",
         routePaths: ["/local/$id"],
-        wrapper: (children) => wrapWithQueryClient(children).element,
+        wrapper: (children) => wrapWithQueryClient(children),
       }
     ),
   }

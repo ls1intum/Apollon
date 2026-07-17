@@ -72,7 +72,6 @@ export function useVersionPreviewUrlSync(
     if (!diagramId) return
     if (previewFromUrl) {
       if (ready && previewVersionId !== previewFromUrl) {
-        // Shared cache: dedups with the thumbnail + dirty-check baseline reads.
         void fetchVersionBody(queryClient, kind, diagramId, previewFromUrl)
           .then((body) => enterPreview(diagramId, previewFromUrl, body))
           .catch((err) => {

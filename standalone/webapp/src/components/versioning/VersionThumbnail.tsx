@@ -9,11 +9,9 @@ import { log } from "@/logger"
 /**
  * Per-version SVG thumbnail. The body JSON is fetched lazily when the row
  * enters the viewport: an `IntersectionObserver` flips the body query's
- * `enabled` gate, so off-screen rows never start a request and TanStack Query
- * owns caching/deduplication (the same cached body also serves preview entry
- * and the drawer's dirty-check baseline). Rendering happens client-side via
- * `ApollonEditor.exportModelAsSvg`; the result is data-URL'd and stamped into
- * an `<img>` so the browser handles `object-fit: contain` framing for free.
+ * `enabled` gate, so off-screen rows never start a request. Rendering happens
+ * client-side via `ApollonEditor.exportModelAsSvg`; the result is data-URL'd
+ * and stamped into an `<img>` so the browser frames it with `object-fit`.
  *
  * Concurrency note: `exportModelAsSvg` mounts a temporary 4000x4000 div
  * during rendering, so we serialize via a tiny module-level queue to avoid

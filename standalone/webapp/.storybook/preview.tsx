@@ -226,8 +226,7 @@ const preview: Preview = {
     // the query hooks (versioning UI, share flow, legal pages). The shared
     // client lives in _support/queryClient so beforeEach hooks can reset it.
     // Query cache + the version backend the story's UI talks to (the editor
-    // routes supply the latter in production). Stories needing the local
-    // backend wrap themselves.
+    // routes supply the latter in production).
     (Story) => (
       <QueryClientProvider client={storybookQueryClient}>
         <VersionRepositoryProvider kind="remote">

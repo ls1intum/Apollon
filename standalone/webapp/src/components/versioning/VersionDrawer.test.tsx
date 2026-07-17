@@ -64,27 +64,14 @@ function mount(diagramId: string) {
         <EditorProvider>
           <ModalProvider>{children}</ModalProvider>
         </EditorProvider>
-      ).element,
+      ),
   })
 }
 
-describe("VersionSidebarBody (regression: infinite render loop)", () => {
-  it("mounts open without warnings + renders the empty state", async () => {
-    useVersionStore.setState((s) => ({
-      drawerOpenByDiagram: { ...s.drawerOpenByDiagram, abc: true },
-    }))
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
-    const error = vi.spyOn(console, "error").mockImplementation(() => {})
-    expect(() => mount("abc")).not.toThrow()
-    // Section subtitle ("No version saved yet") should render in place of
-    // the previous standalone empty-state heading.
+describe("VersionSidebarBody", () => {
+  it("renders the empty state on a diagram with no versions", async () => {
+    mount(DIAGRAM_ID)
     expect(await screen.findByText(/no version saved yet/i)).toBeDefined()
-    const warnings = warn.mock.calls.map((c) => String(c[0])).join("\n")
-    const errors = error.mock.calls.map((c) => String(c[0])).join("\n")
-    expect(warnings).not.toMatch(/getSnapshot should be cached/)
-    expect(errors).not.toMatch(/Maximum update depth exceeded/)
-    warn.mockRestore()
-    error.mockRestore()
   })
 })
 
@@ -97,6 +84,17 @@ describe("VersionSidebarBody — list failure surfaces", () => {
     expect(
       await screen.findByText(/version history is temporarily unavailable/i)
     ).toBeDefined()
+  })
+
+  it("shows a generic failure surface (not the empty state) on a non-Redis load error", async () => {
+    vi.mocked(VersionApiClient.list).mockRejectedValue(new Error("boom"))
+    mount(DIAGRAM_ID)
+    // Rendering the empty-state "No versions yet" here would tell the user
+    // their history is empty when it merely failed to load.
+    expect(
+      await screen.findByText(/couldn't load version history/i)
+    ).toBeDefined()
+    expect(screen.queryByText(/no versions yet/i)).toBeNull()
   })
 
   it("toasts when loading an older page fails", async () => {

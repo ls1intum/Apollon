@@ -19,6 +19,7 @@ import {
   type VersionRepository,
 } from "@/services/versionRepository"
 import type { Diagram, PendingVersion } from "@/types"
+import { MAX_VERSIONS_PER_DIAGRAM } from "@/constants"
 import { storybookQueryClient } from "./queryClient"
 
 export type { PendingVersion }
@@ -141,7 +142,7 @@ export const EMPTY_BODY: UMLModel = {
  * stories' queries resolve it. Override individual methods (e.g. a `fn()` spy
  * on `delete`) per story.
  */
-export function makeStoryRepository(
+function makeStoryRepository(
   versions: PendingVersion[] = [],
   {
     total = versions.filter((v) => !v.pending).length,
@@ -151,7 +152,7 @@ export function makeStoryRepository(
   const committed = versions.filter((v) => !v.pending)
   return {
     kind: "remote",
-    cap: 50,
+    cap: MAX_VERSIONS_PER_DIAGRAM,
     list: async () => ({ versions: committed, nextCursor: undefined, total }),
     getBody: async () => EMPTY_BODY as Diagram,
     create: async (_diagramId, body, opts) =>
@@ -175,11 +176,7 @@ export function makeStoryRepository(
   }
 }
 
-// Stories run in their own process and never need the real REST adapter, so
-// each seed replaces the previous stub rather than restoring it.
-let restoreRepository: () => void = () => {}
-
-/** Reset the client store, the query cache and the bound stub repository. */
+/** Reset the client store and bind an empty stub repository. */
 export function resetVersionStore(): void {
   useVersionStore.setState({
     preview: null,
@@ -187,7 +184,6 @@ export function resetVersionStore(): void {
     undoRestore: null,
     pendingRestoreFromId: null,
   })
-  storybookQueryClient.clear()
   seedVersions([])
 }
 
@@ -199,8 +195,8 @@ export function seedVersions(
     overrides,
   }: { total?: number; overrides?: Partial<VersionRepository> } = {}
 ): void {
-  restoreRepository()
-  restoreRepository = setVersionRepository(
+  // Stories never need the real REST adapter back; the next seed overwrites.
+  setVersionRepository(
     "remote",
     makeStoryRepository(versions, { total, overrides })
   )

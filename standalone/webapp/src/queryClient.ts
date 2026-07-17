@@ -17,8 +17,7 @@ import { log } from "@/logger"
  *   Transport/5xx failures retry twice.
  */
 export const queryClient = new QueryClient({
-  // Once per failed request, not once per observer: a query two components
-  // read would otherwise log twice. Surfaces still render their own copy.
+  // Cache-level, not observer-level: a query two components read would log twice.
   queryCache: new QueryCache({
     onError: (error, query) =>
       log.warn(

@@ -2,9 +2,8 @@ import type { VersionSummary } from "@/types"
 import type { VersionListData } from "./versionQueries"
 
 /**
- * Pure transforms over the cached infinite version list. Used by both the
- * mutation hooks (optimistic patches) and the realtime bridges (WS control
- * events, local BroadcastChannel). They never touch page cursors, so
+ * Pure transforms over the cached infinite list, used by the mutation hooks
+ * and the WS control-event bridge. They never touch page cursors, so
  * pagination chains stay intact.
  */
 

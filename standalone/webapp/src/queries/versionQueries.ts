@@ -25,9 +25,10 @@ export type VersionListData = InfiniteData<
  * Version history, cursor-paginated ("Load older" appends a page).
  *
  * `staleTime: 0` + `refetchOnWindowFocus` reconciles the list whenever the
- * user returns to the tab, which is the only catch-up path while the control
- * channel is down. A closed drawer costs nothing: an unmounted query has no
- * observer to refetch for.
+ * user returns to the tab — the only catch-up path while the control channel
+ * is down. Every mounted observer refetches on focus, and v5 refetches all
+ * loaded pages, so a page that keeps this mounted (see `ApollonLocal`) pays
+ * on every focus even with the drawer shut.
  */
 export function versionListQueryOptions(
   kind: RepositoryKind,
@@ -50,7 +51,7 @@ export function versionListQueryOptions(
 
 interface FlatVersionList {
   versions: PendingVersion[]
-  /** Server-reported total across all pages (freshest page wins). */
+  /** Total from the last-fetched page; all pages refetch together, so they agree. */
   total: number
 }
 

@@ -111,9 +111,7 @@ export const VersionSidebarBody: FC<Props> = ({
   const enterPreview = useVersionStore((s) => s.enterPreview)
   const previewState = useVersionStore((s) => selectScopedPreview(s, diagramId))
 
-  // In-flight / failed save, derived from mutation state rather than written
-  // into the cache. Safe to key on `isPending` only because the create
-  // mutation awaits its invalidation (see `useCreateVersionMutation`).
+  // In-flight / failed save, from mutation state — see `useCreateVersionMutation`.
   const pendingRow = useMemo<PendingVersion | null>(() => {
     const vars = createMutation.variables
     if (!vars || (!createMutation.isPending && !createMutation.isError)) {
@@ -214,10 +212,8 @@ export const VersionSidebarBody: FC<Props> = ({
       setHasChanges(false)
       return
     }
-    // Slow path: fetch the actual version body so the baseline is the
-    // canonical snapshot (server in collab mode, IDB in local mode), not
-    // the potentially-dirty editor state. Goes through the query cache, so
-    // a body the thumbnail already loaded costs nothing.
+    // Slow path: fetch the canonical snapshot (server in collab, IDB locally)
+    // so the baseline isn't the potentially-dirty editor state.
     fetchVersionBody(
       queryClient,
       kind,
@@ -536,13 +532,15 @@ export const VersionSidebarBody: FC<Props> = ({
       />
 
       <div className="flex-1 overflow-auto">
-        {errorCode === "REDIS_UNAVAILABLE" ? (
+        {loadFailed ? (
           <div className="p-4">
             <p
               className="text-sm"
               style={{ color: "var(--apollon-alert-warning-yellow)" }}
             >
-              {t.failureRedis}
+              {errorCode === "REDIS_UNAVAILABLE"
+                ? t.failureRedis
+                : t.failureToLoad}
             </p>
           </div>
         ) : versionsQuery.isPending && versions.length === 0 ? (

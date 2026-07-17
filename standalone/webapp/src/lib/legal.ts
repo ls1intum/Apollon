@@ -79,6 +79,11 @@ async function tryFetch(
   return body
 }
 
+export type LegalResolver = (
+  page: LegalPageId,
+  options: { signal?: AbortSignal; profile?: string }
+) => Promise<ResolvedLegalContent>
+
 export async function resolveLegalContent(
   page: LegalPageId,
   options: { signal?: AbortSignal; profile?: string } = {}
@@ -93,4 +98,26 @@ export async function resolveLegalContent(
     }
   }
   throw new Error(`Unable to resolve legal content for page=${page}`)
+}
+
+let activeResolver: LegalResolver = resolveLegalContent
+
+export function getLegalResolver(): LegalResolver {
+  return activeResolver
+}
+
+/**
+ * Swap the resolver for a stub. Tests and stories only — production always
+ * resolves over the network. Returns the restore function.
+ *
+ * A module seam rather than a prop: the resolver decides what the content IS,
+ * so a prop would have to be part of the page's query key to be honest, and a
+ * function cannot be serialised into one.
+ */
+export function setLegalResolver(next: LegalResolver): () => void {
+  const previous = activeResolver
+  activeResolver = next
+  return () => {
+    activeResolver = previous
+  }
 }

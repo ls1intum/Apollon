@@ -47,7 +47,7 @@ describe("URL-driven preview exit", () => {
       {
         initialEntry: `/local/${DIAGRAM_ID}?version=${VERSION_ID}`,
         routePaths: ["/local/$id"],
-        wrapper: (children) => wrapWithQueryClient(children).element,
+        wrapper: (children) => wrapWithQueryClient(children),
       }
     )
 
@@ -85,7 +85,7 @@ describe("URL-driven preview exit", () => {
       {
         initialEntry: `/local/${DIAGRAM_ID}?version=${VERSION_ID}`,
         routePaths: ["/local/$id"],
-        wrapper: (children) => wrapWithQueryClient(children).element,
+        wrapper: (children) => wrapWithQueryClient(children),
       }
     )
 

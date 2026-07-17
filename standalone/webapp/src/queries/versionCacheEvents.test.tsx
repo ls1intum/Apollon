@@ -5,6 +5,8 @@ import { QueryClientProvider } from "@tanstack/react-query"
 import type { ControlEvent, VersionSummary } from "@/types"
 import { stubVersionRepository } from "@/test/versionRepositoryStub"
 import { createTestQueryClient } from "@/test/queryTestUtils"
+import { useVersionStore } from "@/stores/useVersionStore"
+import type { UMLModel } from "@tumaet/apollon"
 import { log } from "@/logger"
 import { versionKeys } from "./keys"
 import { useVersionsQuery } from "./versionQueries"
@@ -61,6 +63,7 @@ const rowIds = (view: ReturnType<typeof setup>["view"]) =>
 afterEach(() => {
   restoreRepository()
   restoreRepository = () => {}
+  useVersionStore.setState({ preview: null })
   vi.restoreAllMocks()
 })
 
@@ -118,6 +121,39 @@ describe("applyControlEventToCache", () => {
     expect(
       client.getQueryData(versionKeys.body("remote", DIAGRAM_ID, "a"))
     ).toBeUndefined()
+  })
+
+  it("exits preview when the peer deleted the version being previewed", async () => {
+    const { client, view } = setup([summary("a")])
+    await waitFor(() => expect(rowIds(view)).toEqual(["a"]))
+    useVersionStore.getState().enterPreview(DIAGRAM_ID, "a", {
+      nodes: [],
+      edges: [],
+    } as unknown as UMLModel)
+
+    applyControlEventToCache(client, DIAGRAM_ID, {
+      type: "VERSION_DELETED",
+      versionId: "a",
+    })
+
+    // Otherwise the canvas keeps rendering a snapshot that no longer exists.
+    expect(useVersionStore.getState().preview).toBeNull()
+  })
+
+  it("leaves an unrelated preview alone on delete", async () => {
+    const { client, view } = setup([summary("a"), summary("b")])
+    await waitFor(() => expect(rowIds(view)).toEqual(["a", "b"]))
+    useVersionStore.getState().enterPreview(DIAGRAM_ID, "b", {
+      nodes: [],
+      edges: [],
+    } as unknown as UMLModel)
+
+    applyControlEventToCache(client, DIAGRAM_ID, {
+      type: "VERSION_DELETED",
+      versionId: "a",
+    })
+
+    expect(useVersionStore.getState().preview?.versionId).toBe("b")
   })
 
   it("relabels a version a peer renamed", async () => {

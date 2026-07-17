@@ -1,5 +1,6 @@
 import type { QueryClient } from "@tanstack/react-query"
 import type { ControlEvent } from "@/types"
+import { useVersionStore } from "@/stores/useVersionStore"
 import { log } from "@/logger"
 import { versionKeys } from "./keys"
 import type { VersionListData } from "./versionQueries"
@@ -10,14 +11,10 @@ import {
 } from "./versionListCache"
 
 /**
- * WS control events → query-cache reconciliation (remote mode only — the WS
- * only exists on `/shared`). This is the ONLY place peer version activity
- * touches the cache; the page keeps its own `VERSION_RESTORED` branch for the
- * editor-model refetch because that needs the live editor instance.
- *
- * Never call this from a Yjs subscription: control events are Apollon's
- * narrow, explicitly-published channel. Coupling cache writes to Yjs op
- * streams would tie two independent batching/scheduling systems together.
+ * WS control events → query-cache reconciliation (remote mode only). This is
+ * the only place peer version activity touches the cache; the page keeps its
+ * own `VERSION_RESTORED` branch for the editor-model refetch, which needs the
+ * live editor instance.
  */
 export function applyControlEventToCache(
   queryClient: QueryClient,
@@ -36,14 +33,25 @@ export function applyControlEventToCache(
       void queryClient.invalidateQueries({ queryKey: listKey })
       return
     }
-    case "VERSION_DELETED":
+    case "VERSION_DELETED": {
       queryClient.setQueryData<VersionListData>(listKey, (data) =>
         removeVersionFromList(data, event.versionId)
       )
       queryClient.removeQueries({
         queryKey: versionKeys.body("remote", diagramId, event.versionId),
       })
+      // If a peer deleted the version this client is previewing, leave preview
+      // — otherwise the canvas keeps rendering a snapshot that no longer
+      // exists. (The local BroadcastChannel path does the same.)
+      const store = useVersionStore.getState()
+      if (
+        store.preview?.diagramId === diagramId &&
+        store.preview.versionId === event.versionId
+      ) {
+        store.exitPreview()
+      }
       return
+    }
     case "VERSION_RENAMED":
       queryClient.setQueryData<VersionListData>(listKey, (data) =>
         patchVersionInList(data, event.versionId, {
@@ -57,8 +65,8 @@ export function applyControlEventToCache(
       void queryClient.invalidateQueries({ queryKey: listKey })
       return
     case "DIAGRAM_DELETED":
-      // The page-level handler owns routing on diagram delete; cached entries
-      // are dropped by gcTime once every consumer unmounts.
+      // Not handled here — no client currently routes on diagram delete;
+      // cached entries drop by gcTime once every consumer unmounts.
       return
     default:
       // Unknown event from a newer server during staggered rollout — log and

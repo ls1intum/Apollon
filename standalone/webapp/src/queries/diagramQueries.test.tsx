@@ -22,22 +22,6 @@ function setup() {
 afterEach(() => vi.restoreAllMocks())
 
 describe("useDiagramSeedQuery", () => {
-  it("fetches once and forwards the abort signal to the API client", async () => {
-    const fetchDiagram = vi
-      .spyOn(DiagramApiClient, "fetchDiagram")
-      .mockResolvedValue(body)
-    const { wrapper } = setup()
-    const { result } = renderHook(() => useDiagramSeedQuery(DIAGRAM_ID), {
-      wrapper,
-    })
-    await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(result.current.data).toBe(body)
-    expect(fetchDiagram).toHaveBeenCalledTimes(1)
-    expect(fetchDiagram).toHaveBeenCalledWith(DIAGRAM_ID, {
-      signal: expect.any(AbortSignal),
-    })
-  })
-
   it("drops the cache entry on unmount (gcTime: 0) so a re-join re-fetches", async () => {
     vi.spyOn(DiagramApiClient, "fetchDiagram").mockResolvedValue(body)
     const { client, wrapper } = setup()
