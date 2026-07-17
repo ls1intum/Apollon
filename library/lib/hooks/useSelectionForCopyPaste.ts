@@ -1,17 +1,15 @@
 import { useCallback } from "react"
 import { useDiagramStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
-import { generateUUID, sortNodesTopologically } from "@/utils"
-import type { Node } from "@xyflow/react"
+import { sortNodesTopologically } from "@/utils"
 import { log } from "../logger"
 import {
   ClipboardData,
   createClipboardData,
-  createNewNodeDataWithNewIds,
   getAllNodesToInclude,
   getEdgesToRemove,
+  materializeClipboardData,
 } from "@/utils/copyPasteUtils"
-import { CANVAS } from "@/constants"
 
 export const useSelectionForCopyPaste = () => {
   const {
@@ -74,6 +72,42 @@ export const useSelectionForCopyPaste = () => {
     return false
   }, [selectedElementIds, nodes, edges])
 
+  /**
+   * Materialize clipboard data with fresh ids and an offset, insert it, and
+   * move the selection onto the inserted elements. Shared tail of paste and
+   * duplicate.
+   */
+  const insertClipboardData = useCallback(
+    (clipboardData: ClipboardData, offsetMultiplier: number) => {
+      const materialized = materializeClipboardData(
+        clipboardData,
+        offsetMultiplier
+      )
+
+      const updatedExistingNodes = nodes.map((node) => ({
+        ...node,
+        selected: false,
+      }))
+
+      const updatedExistingEdges = edges.map((edge) => ({
+        ...edge,
+        selected: false,
+      }))
+
+      const allUpdatedNodes = sortNodesTopologically([
+        ...updatedExistingNodes,
+        ...materialized.nodes,
+      ])
+      const allUpdatedEdges = [...updatedExistingEdges, ...materialized.edges]
+
+      setNodes(allUpdatedNodes)
+      setEdges(allUpdatedEdges)
+
+      setSelectedElementsId(materialized.newElementIds)
+    },
+    [nodes, edges, setNodes, setEdges, setSelectedElementsId]
+  )
+
   const pasteElements = useCallback(
     async (pasteCount: number = 1) => {
       try {
@@ -94,115 +128,7 @@ export const useSelectionForCopyPaste = () => {
           return false
         }
 
-        const nodeIdMap = new Map<string, string>()
-        const newElementIds: string[] = []
-        const progressiveOffset = CANVAS.PASTE_OFFSET_PX * pasteCount
-
-        clipboardData.nodes.forEach((node) => {
-          const newId = generateUUID()
-          nodeIdMap.set(node.id, newId)
-          newElementIds.push(newId)
-        })
-
-        const sortedNodes = sortNodesTopologically(clipboardData.nodes)
-        const nodePositions = new Map<string, { x: number; y: number }>()
-
-        const pastedNodes = sortedNodes.map((node: Node) => {
-          const newId = nodeIdMap.get(node.id)!
-
-          const newNodeData = createNewNodeDataWithNewIds(node.data)
-
-          if (node.parentId && nodeIdMap.has(node.parentId)) {
-            const newParentId = nodeIdMap.get(node.parentId)!
-            const relation = clipboardData.parentChildRelations?.find(
-              (r) => r.childId === node.id && r.parentId === node.parentId
-            )
-
-            if (relation) {
-              const parentNewPosition = nodePositions.get(node.parentId)
-
-              if (parentNewPosition) {
-                const newPosition = {
-                  x: node.position.x + CANVAS.PASTE_OFFSET_PX,
-                  y: node.position.y + CANVAS.PASTE_OFFSET_PX,
-                }
-
-                nodePositions.set(node.id, newPosition)
-
-                return {
-                  ...node,
-                  id: newId,
-                  parentId: newParentId,
-                  position: newPosition,
-                  selected: true,
-                  data: newNodeData,
-                }
-              }
-            }
-          }
-
-          const newPosition = {
-            x: node.position.x + progressiveOffset,
-            y: node.position.y + progressiveOffset,
-          }
-
-          nodePositions.set(node.id, newPosition)
-
-          return {
-            ...node,
-            id: newId,
-            position: newPosition,
-            selected: true,
-            data: newNodeData,
-          }
-        })
-
-        const pastedEdges = clipboardData.edges
-          .filter((edge) => {
-            return nodeIdMap.has(edge.source) && nodeIdMap.has(edge.target)
-          })
-
-          .map((edge) => {
-            const newId = generateUUID()
-            newElementIds.push(newId)
-            return {
-              ...edge,
-              id: newId,
-              source: nodeIdMap.get(edge.source)!,
-              target: nodeIdMap.get(edge.target)!,
-              selected: true,
-              data: {
-                ...edge.data,
-                points: Array.isArray(edge.data?.points)
-                  ? edge.data.points.map((point) => ({
-                      x: point.x + progressiveOffset,
-                      y: point.y + progressiveOffset,
-                    }))
-                  : undefined,
-              },
-            }
-          })
-
-        const updatedExistingNodes = nodes.map((node) => ({
-          ...node,
-          selected: false,
-        }))
-
-        const updatedExistingEdges = edges.map((edge) => ({
-          ...edge,
-          selected: false,
-        }))
-
-        const allUpdatedNodes = sortNodesTopologically([
-          ...updatedExistingNodes,
-          ...pastedNodes,
-        ])
-        const allUpdatedEdges = [...updatedExistingEdges, ...pastedEdges]
-
-        setNodes(allUpdatedNodes)
-        setEdges(allUpdatedEdges)
-
-        setSelectedElementsId(newElementIds)
+        insertClipboardData(clipboardData, pasteCount)
 
         return true
       } catch (error) {
@@ -210,8 +136,23 @@ export const useSelectionForCopyPaste = () => {
         return false
       }
     },
-    [nodes, edges, setNodes, setEdges, setSelectedElementsId]
+    [insertClipboardData]
   )
+
+  /**
+   * Clone the current selection beside itself — no clipboard involved, so it
+   * works in non-secure contexts and never clobbers what the user has copied.
+   */
+  const duplicateSelectedElements = useCallback(() => {
+    if (selectedElementIds.length === 0) {
+      return false
+    }
+
+    const clipboardData = createClipboardData(selectedElementIds, nodes, edges)
+    insertClipboardData(clipboardData, 1)
+
+    return true
+  }, [selectedElementIds, nodes, edges, insertClipboardData])
 
   const cutSelectedElements = useCallback(async () => {
     if (selectedElementIds.length === 0) {
@@ -259,46 +200,13 @@ export const useSelectionForCopyPaste = () => {
     setSelectedElementsId,
   ])
 
-  const deleteSelectedElements = useCallback(() => {
-    if (selectedElementIds.length === 0) {
-      return false
-    }
-
-    const allNodesToDelete = getAllNodesToInclude(selectedElementIds, nodes)
-    const expandedNodeIds = allNodesToDelete.map((node) => node.id)
-    const edgeIdsToRemove = getEdgesToRemove(
-      selectedElementIds,
-      expandedNodeIds,
-      edges
-    )
-
-    const remainingNodes = nodes.filter(
-      (node) => !expandedNodeIds.includes(node.id)
-    )
-    const remainingEdges = edges.filter((edge) => !edgeIdsToRemove.has(edge.id))
-
-    setNodes(remainingNodes)
-    setEdges(remainingEdges)
-    setSelectedElementsId([])
-
-    return true
-  }, [
-    selectedElementIds,
-    nodes,
-    edges,
-    setNodes,
-    setEdges,
-    setSelectedElementsId,
-  ])
-
   return {
-    selectedElementIds,
     hasSelectedElements,
     selectAll,
     clearSelection,
     copySelectedElements,
     pasteElements,
+    duplicateSelectedElements,
     cutSelectedElements,
-    deleteSelectedElements,
   }
 }

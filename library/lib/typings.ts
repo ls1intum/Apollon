@@ -153,6 +153,11 @@ export type ApollonOptions = {
   availableViews?: ApollonView[]
   readonly?: boolean
   enablePopups?: boolean
+  /**
+   * Answer the editor's keyboard shortcuts (see `APOLLON_SHORTCUTS`). Set
+   * `false` where the host binds those keys itself. Default `true`.
+   */
+  keyboardShortcuts?: boolean
   model?: UMLModel
   locale?: Locale
   debug?: boolean

@@ -234,6 +234,11 @@ export class ApollonEditor {
     if (options?.scrollLock !== undefined) {
       this.metadataStore.getState().setScrollLock(options.scrollLock)
     }
+    if (options?.keyboardShortcuts !== undefined) {
+      this.metadataStore
+        .getState()
+        .setKeyboardShortcuts(options.keyboardShortcuts)
+    }
     if (options?.labels !== undefined) {
       this.metadataStore.getState().setLabels(mergeLabels(options.labels))
     }

@@ -14,6 +14,7 @@ import {
   useOverlayStore,
 } from "@/store/context"
 import { insetAwareFitView } from "@/overlay/fitView"
+import { ariaKeyshortcuts } from "@/keyboard"
 import { Tooltip } from "@/components/ui"
 import { useLabels } from "@/i18n/useLabels"
 import { useRovingToolbar } from "../useRovingToolbar"
@@ -72,6 +73,7 @@ export function ZoomControls({ history = true }: ZoomControlsProps) {
             type="button"
             className="apollon-chrome-iconbtn"
             onClick={() => rf.zoomOut()}
+            aria-keyshortcuts={ariaKeyshortcuts("zoom-out")}
             aria-label={t.zoomOut}
           >
             <ZoomOut width={18} height={18} aria-hidden="true" />
@@ -83,6 +85,7 @@ export function ZoomControls({ history = true }: ZoomControlsProps) {
             type="button"
             className="apollon-chrome-iconbtn apollon-chrome-iconbtn--readout"
             onClick={() => rf.zoomTo(1)}
+            aria-keyshortcuts={ariaKeyshortcuts("reset-zoom")}
             aria-label={t.zoomReadout(zoomLevelPercent)}
           >
             {zoomLevelPercent}%
@@ -93,6 +96,7 @@ export function ZoomControls({ history = true }: ZoomControlsProps) {
             type="button"
             className="apollon-chrome-iconbtn"
             onClick={() => rf.zoomIn()}
+            aria-keyshortcuts={ariaKeyshortcuts("zoom-in")}
             aria-label={t.zoomIn}
           >
             <ZoomIn width={18} height={18} aria-hidden="true" />
@@ -103,6 +107,7 @@ export function ZoomControls({ history = true }: ZoomControlsProps) {
             type="button"
             className="apollon-chrome-iconbtn"
             onClick={() => insetAwareFitView(rf, insets, safeArea)}
+            aria-keyshortcuts={ariaKeyshortcuts("fit-view")}
             aria-label={t.fitView}
           >
             <Maximize width={18} height={18} aria-hidden="true" />
@@ -129,6 +134,7 @@ export function ZoomControls({ history = true }: ZoomControlsProps) {
                 type="button"
                 className="apollon-chrome-iconbtn"
                 onClick={undo}
+                aria-keyshortcuts={ariaKeyshortcuts("undo")}
                 disabled={!canUndo}
                 aria-label={t.undo}
               >
@@ -142,6 +148,7 @@ export function ZoomControls({ history = true }: ZoomControlsProps) {
                 type="button"
                 className="apollon-chrome-iconbtn"
                 onClick={redo}
+                aria-keyshortcuts={ariaKeyshortcuts("redo")}
                 disabled={!canRedo}
                 aria-label={t.redo}
               >
