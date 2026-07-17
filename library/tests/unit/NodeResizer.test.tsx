@@ -15,12 +15,18 @@ const renderResizer = (props: Parameters<typeof NodeResizer>[0]) =>
 // no keyboard path — so a position/variant class is the only handle on them, and
 // it is the same published class React Flow's own stylesheet keys the resize
 // cursor off. (It also means dropping a control costs assistive tech nothing:
-// there was never anything there to reach.)
+// there was never anything there to reach.) `apollon-*` marker classes are
+// dropped here so the set reads as pure geometry; a dedicated test covers them.
 const controlClasses = (container: HTMLElement): string[] =>
   [...container.querySelectorAll(".react-flow__resize-control")]
     .map((el) =>
       [...el.classList]
-        .filter((c) => c !== "react-flow__resize-control" && c !== "nodrag")
+        .filter(
+          (c) =>
+            c !== "react-flow__resize-control" &&
+            c !== "nodrag" &&
+            !c.startsWith("apollon-")
+        )
         .join(".")
     )
     .sort()
@@ -51,9 +57,9 @@ describe("<NodeResizer>", () => {
     )
   })
 
-  // `apollon-resize-line` widens the hit area: with no corner handles these
-  // lines are the only grab target, and React Flow draws them 1px wide.
-  it("renders only the left/right lines when height is locked (issue #629)", () => {
+  // Height pinned: keep the corners, drop the top/bottom lines that promise a
+  // vertical resize (issue #629).
+  it("keeps corners but only the side lines when height is locked", () => {
     const { container } = renderResizer({
       minWidth: 100,
       minHeight: 60,
@@ -61,12 +67,31 @@ describe("<NodeResizer>", () => {
     })
 
     expect(controlClasses(container)).toEqual([
-      "left.line.apollon-resize-line",
-      "right.line.apollon-resize-line",
+      "bottom.left.handle",
+      "bottom.right.handle",
+      "left.line",
+      "right.line",
+      "top.left.handle",
+      "top.right.handle",
     ])
   })
 
-  it("renders only the top/bottom lines when width is locked", () => {
+  it("labels a locked node's corners with the free axis's cursor", () => {
+    const { container } = renderResizer({
+      minWidth: 100,
+      minHeight: 60,
+      maxHeight: 60,
+    })
+
+    // Only width can move, so the corners get the horizontal-cursor marker (and
+    // never the vertical one).
+    expect(
+      container.querySelectorAll(".apollon-resize-corner--x")
+    ).toHaveLength(4)
+    expect(container.querySelector(".apollon-resize-corner--y")).toBeNull()
+  })
+
+  it("keeps corners but only the top/bottom lines when width is locked", () => {
     const { container } = renderResizer({
       minWidth: 20,
       maxWidth: 20,
@@ -74,9 +99,16 @@ describe("<NodeResizer>", () => {
     })
 
     expect(controlClasses(container)).toEqual([
-      "bottom.line.apollon-resize-line",
-      "top.line.apollon-resize-line",
+      "bottom.left.handle",
+      "bottom.line",
+      "bottom.right.handle",
+      "top.left.handle",
+      "top.line",
+      "top.right.handle",
     ])
+    expect(
+      container.querySelectorAll(".apollon-resize-corner--y")
+    ).toHaveLength(4)
   })
 
   it("renders nothing when both axes are locked", () => {

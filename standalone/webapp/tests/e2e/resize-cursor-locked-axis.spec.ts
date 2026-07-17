@@ -57,18 +57,19 @@ const resizeCursorsIn = (page: Page, name: string) =>
       .filter((cursor) => cursor.includes("resize"))
   }, name)
 
-test("a class exposes no resize cursor, because its height is content-sized", async ({
+test("a class only ever exposes a horizontal resize cursor", async ({
   page,
 }) => {
   await openFixtureInLocalEditor(page, MODEL as Record<string, unknown>)
   await waitForCanvasReady(page)
 
-  // Only width can change, so `ew-resize` on the side borders is honest; any
-  // `ns-resize` is the false affordance from issue #629.
-  expect(await resizeCursorsIn(page, "Locked")).toEqual([
-    "ew-resize",
-    "ew-resize",
-  ])
+  const cursors = await resizeCursorsIn(page, "Locked")
+
+  // Its height is content-sized, so only width can change: the side lines and
+  // the four corners all read `ew-resize`. A vertical (`ns-`) or diagonal
+  // (`nwse-`/`nesw-`) cursor anywhere is the false affordance from issue #629.
+  expect(cursors).toContain("ew-resize")
+  expect(cursors.every((cursor) => cursor === "ew-resize")).toBe(true)
 })
 
 test("a package still exposes resize cursors on every border", async ({

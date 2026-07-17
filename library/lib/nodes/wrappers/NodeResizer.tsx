@@ -13,6 +13,13 @@ import {
 // React Flow's corner handles default to 5x5; every Apollon node wants 8x8.
 const HANDLE_STYLE = { width: 8, height: 8 }
 
+const CORNERS = [
+  "top-left",
+  "top-right",
+  "bottom-left",
+  "bottom-right",
+] as const
+
 // A node pins a content-sized dimension by bounding it from both sides — a
 // Class's height is driven by its attribute/method rows. Bounds that cross leave
 // no range to drag either, so they count as pinned; a side left unbounded never
@@ -22,14 +29,17 @@ const isAxisLocked = (min?: number, max?: number): boolean =>
 
 /**
  * React Flow's `<NodeResizer>` always renders four edge lines and four corner
- * handles, so a pinned axis still shows a resize cursor and accepts a drag that
- * does nothing. Rendering only the controls that can move is the fix; the cursor
- * is a signifier, and repainting it would leave the dead control behind.
+ * handles, and its stylesheet paints each with a resize cursor. On a node with a
+ * pinned axis, the two edge lines of that axis promise a resize that can't
+ * happen (issue #629), and every corner shows a diagonal cursor even though only
+ * one axis can move.
  *
- * `resizeDirection` is not an alternative: it sits on `NodeResizeControl`, and
- * `ResizeControlLineProps` omits it outright. It constrains a corner's drag
- * while leaving the diagonal cursor that lies about it, so corners go rather
- * than get constrained.
+ * So on a pinned axis this drops that axis's two edge lines and keeps the
+ * corners — the familiar, chunky grab target — but constrains each corner to the
+ * free axis with `resizeDirection` and relabels its cursor (`apollon-resize-
+ * corner--*` in app.css) to that axis. The result: a content-sized node still
+ * looks and works resizable on the axis it can change, and no cursor anywhere
+ * points a direction the drag won't go.
  */
 export function NodeResizer(props: NodeResizerProps) {
   const {
@@ -38,16 +48,11 @@ export function NodeResizer(props: NodeResizerProps) {
     minHeight,
     maxWidth,
     maxHeight,
-    nodeId,
-    color,
-    keepAspectRatio,
-    autoScale,
-    shouldResize,
-    onResizeStart,
-    onResize,
-    onResizeEnd,
+    handleStyle,
+    handleClassName: _handleClassName,
     lineStyle,
     lineClassName,
+    ...resizeParams
   } = props
 
   // `isVisible` exists only on NodeResizerProps — NodeResizeControl has no such
@@ -61,39 +66,40 @@ export function NodeResizer(props: NodeResizerProps) {
     return <ReactFlowNodeResizer handleStyle={HANDLE_STYLE} {...props} />
   }
 
-  // Without this, a fully pinned node reads as height-locked below and gets the
-  // side controls it equally can't honour.
+  // Both axes pinned: nothing to resize.
   if (widthLocked && heightLocked) return null
 
-  const positions = heightLocked
+  const shared = { minWidth, minHeight, maxWidth, maxHeight, ...resizeParams }
+  const lines = heightLocked
     ? (["left", "right"] as const)
     : (["top", "bottom"] as const)
+  // The axis that can still move, for both React Flow's constraint and the cursor.
+  const freeAxis = heightLocked ? "horizontal" : "vertical"
+  const cornerClass = heightLocked
+    ? "apollon-resize-corner--x"
+    : "apollon-resize-corner--y"
 
-  // `keepAspectRatio` is the one prop that cannot mean anything here — it would
-  // ask the pinned axis to follow the free one. No node passes it.
   return (
     <>
-      {positions.map((position) => (
+      {lines.map((position) => (
         <NodeResizeControl
           key={position}
           position={position}
           variant={ResizeControlVariant.Line}
-          nodeId={nodeId}
-          color={color}
-          minWidth={minWidth}
-          minHeight={minHeight}
-          maxWidth={maxWidth}
-          maxHeight={maxHeight}
-          keepAspectRatio={keepAspectRatio}
-          autoScale={autoScale}
-          shouldResize={shouldResize}
-          onResizeStart={onResizeStart}
-          onResize={onResize}
-          onResizeEnd={onResizeEnd}
           style={lineStyle}
-          className={["apollon-resize-line", lineClassName]
-            .filter(Boolean)
-            .join(" ")}
+          className={lineClassName}
+          {...shared}
+        />
+      ))}
+      {CORNERS.map((position) => (
+        <NodeResizeControl
+          key={position}
+          position={position}
+          variant={ResizeControlVariant.Handle}
+          resizeDirection={freeAxis}
+          className={cornerClass}
+          style={{ ...HANDLE_STYLE, ...handleStyle }}
+          {...shared}
         />
       ))}
     </>
