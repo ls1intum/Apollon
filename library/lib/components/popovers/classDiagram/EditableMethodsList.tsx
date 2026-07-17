@@ -1,5 +1,5 @@
 import React, { useState, KeyboardEvent, ChangeEvent } from "react"
-import { GripVertical, Italic, Plus, Tags, Trash2 } from "lucide-react"
+import { GripVertical, Italic, Plus, Trash2 } from "lucide-react"
 import { IconButton, TextField, Typography } from "@/components/ui"
 import { NodeStyleEditor } from "@/components/styleEditor"
 import { useLabels } from "@/i18n/useLabels"
@@ -7,7 +7,7 @@ import { generateUUID, withTags } from "@/utils"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import { ClassNodeElement, ClassNodeProps } from "@/types"
-import { TagEditor } from "../TagEditor"
+import { TagPicker } from "../TagPicker"
 import {
   DndContext,
   closestCenter,
@@ -48,7 +48,6 @@ const SortableMethodRow: React.FC<SortableMethodRowProps> = ({
   onDelete,
 }) => {
   const t = useLabels()
-  const [showTags, setShowTags] = useState(false)
   const {
     attributes,
     listeners,
@@ -119,15 +118,6 @@ const SortableMethodRow: React.FC<SortableMethodRowProps> = ({
               <Italic width={16} height={16} aria-hidden="true" />
             </IconButton>,
             <IconButton
-              key={`tags_${item.id}`}
-              ariaLabel={t.toggleTagsFor(t.methodWord)}
-              tooltip={t.tags}
-              aria-expanded={showTags}
-              onClick={() => setShowTags((open) => !open)}
-            >
-              <Tags width={16} height={16} aria-hidden="true" />
-            </IconButton>,
-            <IconButton
               key={`delete_${item.id}`}
               ariaLabel={t.deleteMethod}
               tooltip={t.deleteMethod}
@@ -139,13 +129,11 @@ const SortableMethodRow: React.FC<SortableMethodRowProps> = ({
         />
       </div>
 
-      {showTags && (
-        <TagEditor
-          tags={item.tags ?? []}
-          onChange={(tags) => onTagsChange(item.id, tags)}
-          subject={t.methodWord}
-        />
-      )}
+      <TagPicker
+        tags={item.tags ?? []}
+        onChange={(tags) => onTagsChange(item.id, tags)}
+        subject={t.methodWord}
+      />
     </div>
   )
 }

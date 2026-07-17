@@ -14,6 +14,7 @@ import type {
   ApollonMode,
   ApollonOptions,
   ApollonView,
+  TagOptions,
   UMLDiagramType,
   UMLModel,
 } from "@/typings"
@@ -69,6 +70,8 @@ export interface ApollonProps {
   scrollLock?: boolean
   /** Override the editor's own strings for i18n. See {@link ApollonEditor.setLabels}. */
   labels?: Partial<ApollonLabels>
+  /** Enable + configure element-tag authoring. See {@link ApollonEditor.setTags}. */
+  tags?: boolean | TagOptions
   /** Local-only preview overlay. See {@link ApollonEditor.setPreviewMode}. */
   previewMode?: boolean
   /**
@@ -116,6 +119,7 @@ export function Apollon(props: ApollonProps) {
     mode,
     scrollLock,
     labels,
+    tags,
     previewMode,
     model,
 
@@ -137,6 +141,7 @@ export function Apollon(props: ApollonProps) {
     collaboration,
     debug,
     labels,
+    tags,
     // React always owns the chrome: the editor registers nothing, and `<Apollon>`
     // renders the default `<Apollon.*>` as fallback children when the consumer
     // composes none. That keeps composing-ness reactive — a control appearing or
@@ -198,6 +203,9 @@ export function Apollon(props: ApollonProps) {
   useEffect(() => {
     if (editor && labels !== undefined) editor.setLabels(labels)
   }, [editor, labels])
+  useEffect(() => {
+    if (editor && tags !== undefined) editor.setTags(tags)
+  }, [editor, tags])
 
   useEffect(() => {
     if (editor && previewMode !== undefined) editor.setPreviewMode(previewMode)

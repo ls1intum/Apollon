@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
-import { expect, userEvent, within } from "storybook/test"
+import { expect, screen, userEvent, within } from "storybook/test"
 import type { ApollonEditor, UMLModel } from "@tumaet/apollon"
 import {
   editorStoryMeta,
@@ -16,8 +16,11 @@ import { ClassEditPopover } from "@tumaet/apollon/components/popovers/classDiagr
 // `setElementHighlights` overlay. The driving case is Artemis recoloring a
 // sample solution's attributes/methods from each programming-test result.
 //
-// Two halves, one story each: AUTHORING — the popover, driven through the real
-// store by an asserting `play` — and COLORING, the full editor end to end.
+// Two halves, one story each: AUTHORING — the tag combobox, driven through the
+// real store by an asserting `play` — and COLORING, the full editor end to end.
+//
+// Tag authoring is opt-in: nothing shows until a host sets the `tags` option.
+// The harness seeds that config the same way the constructor would.
 
 const meta = {
   title: "Editor/Element Tags",
@@ -27,13 +30,19 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
+const TAG_VOCABULARY = [
+  "testAttributes[Animal]",
+  "testMethods[Animal]",
+  "structure",
+]
+
 // ── Authoring ────────────────────────────────────────────────────────────────
 /**
- * Tag authoring in the class popover. The class's own tags are always visible as
- * removable chips; a member's tags sit behind a per-row disclosure so the
- * attribute/method list stays compact. Typing accepts a comma-separated list, so
- * an instructor can paste several test-case ids at once — every write is trimmed
- * and de-duplicated before it reaches the model.
+ * Tag authoring in the class popover, opted in with a host `tags` option that
+ * supplies a vocabulary and allows creating new tags. Each taggable row (the
+ * class and every attribute/method) shows its tags as removable chips followed
+ * by a tag button; the button opens a combobox to search the vocabulary, toggle
+ * a tag, or create one. Every write is trimmed and de-duplicated.
  */
 export const Authoring: Story = {
   name: "Authoring: Tag a Class Member",
@@ -42,11 +51,16 @@ export const Authoring: Story = {
   render: () => (
     <SeededPopoverHarness
       diagramType="ClassDiagram"
-      seed={(diagram) =>
+      seed={(diagram, metadata) => {
+        metadata.getState().setTagConfig({
+          enabled: true,
+          available: TAG_VOCABULARY,
+          allowCreate: true,
+        })
         diagram.getState().addNode(
           makeNode("class-1", "class", {
             name: "Animal",
-            tags: ["design"],
+            tags: ["structure"],
             attributes: [
               {
                 id: "a1",
@@ -57,7 +71,7 @@ export const Authoring: Story = {
             methods: [{ id: "m1", name: "+ run()" }],
           })
         )
-      }
+      }}
     >
       <ClassEditPopover elementId="class-1" />
     </SeededPopoverHarness>
@@ -65,30 +79,24 @@ export const Authoring: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    // The class's own tag renders as a removable chip, no disclosure needed.
+    // Existing tags show inline as removable chips — the class and the attribute.
     await expect(
-      canvas.getByRole("button", { name: "Remove tag design" })
+      canvas.getByRole("button", { name: "Remove tag structure" })
     ).toBeVisible()
-
-    // A member's tags are collapsed until its row toggle is opened.
-    const toggle = canvas.getByRole("button", { name: "Tags for attribute" })
-    await expect(toggle).toHaveAttribute("aria-expanded", "false")
-    await userEvent.click(toggle)
-    await expect(toggle).toHaveAttribute("aria-expanded", "true")
     await expect(
       canvas.getByRole("button", { name: "Remove tag testAttributes[Animal]" })
     ).toBeVisible()
 
-    // One comma-separated entry adds several tags, through the real store.
-    await userEvent.type(
-      canvas.getByLabelText("New tag for attribute"),
-      "testName, testType{Enter}"
+    // Open the attribute's tag combobox and create a tag off the vocabulary.
+    // The popover portals to <body>, so query it through `screen`, not `canvas`.
+    await userEvent.click(
+      canvas.getByRole("button", { name: "Tags for attribute" })
     )
+    const search = await screen.findByLabelText("Search tags")
+    await userEvent.type(search, "testName")
+    await userEvent.click(await screen.findByText('Create "testName"'))
     await expect(
       canvas.getByRole("button", { name: "Remove tag testName" })
-    ).toBeVisible()
-    await expect(
-      canvas.getByRole("button", { name: "Remove tag testType" })
     ).toBeVisible()
   },
 }

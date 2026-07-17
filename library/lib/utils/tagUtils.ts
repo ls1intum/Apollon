@@ -78,6 +78,75 @@ export function withTags<T extends object>(data: T, tags: string[]): T {
   return next
 }
 
+/** Host-facing tag options: `true` for free-form, or a configured object. */
+export type TagOptions = {
+  /** Tags offered in the picker. */
+  available?: string[]
+  /** Whether a user may create tags beyond `available`. Defaults to `true`
+   *  when no vocabulary is given, `false` when one is. */
+  allowCreate?: boolean
+}
+
+/** The resolved, always-complete tag configuration the editor stores. */
+export type TagConfig = {
+  enabled: boolean
+  available: string[]
+  allowCreate: boolean
+}
+
+/** Tagging is off until a host opts in. */
+export const DISABLED_TAG_CONFIG: TagConfig = {
+  enabled: false,
+  available: [],
+  allowCreate: false,
+}
+
+/** Normalize the `tags` option (absent / boolean / object) to a `TagConfig`. */
+export function resolveTagConfig(input?: boolean | TagOptions): TagConfig {
+  if (!input) return DISABLED_TAG_CONFIG
+  if (input === true) return { enabled: true, available: [], allowCreate: true }
+  const available = normalizeTags(input.available ?? [])
+  return {
+    enabled: true,
+    available,
+    allowCreate: input.allowCreate ?? available.length === 0,
+  }
+}
+
+/**
+ * Immutable update setting `tags` on the element with `id` (a node or any of its
+ * taggable members), for imperative host use. Returns the same array reference
+ * when nothing matched, so a caller can skip a redundant write.
+ */
+export function applyElementTags<T extends { id: string; data: object }>(
+  nodes: readonly T[],
+  id: string,
+  tags: string[]
+): T[] {
+  let changed = false
+  const next = nodes.map((node) => {
+    if (node.id === id) {
+      changed = true
+      return { ...node, data: withTags(node.data, tags) }
+    }
+    let memberChanged = false
+    const data: Record<string, unknown> = { ...node.data }
+    for (const [key, value] of Object.entries(data)) {
+      if (key === "tags" || !Array.isArray(value)) continue
+      const members = value as { id?: string }[]
+      if (!members.some((item) => item?.id === id)) continue
+      data[key] = members.map((item) =>
+        item?.id === id ? withTags(item, tags) : item
+      )
+      memberChanged = true
+    }
+    if (!memberChanged) return node
+    changed = true
+    return { ...node, data } as T
+  })
+  return changed ? next : (nodes as T[])
+}
+
 /**
  * Ids of every element carrying `tag`. The query is canonicalized exactly like
  * stored tags, so a host always matches with the string it wrote.

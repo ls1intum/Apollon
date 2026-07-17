@@ -15,6 +15,8 @@ import {
   getSVG,
   getRenderedDiagramBounds,
   getElementIdsByTag,
+  resolveTagConfig,
+  applyElementTags,
 } from "./utils"
 // Internal (not re-exported through the public `./utils` barrel): brings any
 // incoming model onto the current schema (e.g. legacy class stereotypes) at
@@ -234,6 +236,9 @@ export class ApollonEditor {
     }
     if (options?.labels !== undefined) {
       this.metadataStore.getState().setLabels(mergeLabels(options.labels))
+    }
+    if (options?.tags !== undefined) {
+      this.metadataStore.getState().setTagConfig(resolveTagConfig(options.tags))
     }
     // Register the chrome: the given descriptors (even `[]`, an explicit bare
     // canvas), or the palette + zoom + minimap defaults when omitted. The React
@@ -937,6 +942,29 @@ export class ApollonEditor {
    */
   public setLabels(labels: Partial<Apollon.ApollonLabels>): void {
     this.metadataStore.getState().setLabels(mergeLabels(labels))
+  }
+
+  /**
+   * Turn element-tag authoring on or off, and configure it. `true` enables
+   * free-form tagging; an object supplies a fixed `available` vocabulary and/or
+   * toggles `allowCreate`; `false`/`undefined` disables the authoring UI.
+   * Reactive. Tags already on the model stay queryable either way — this gates
+   * only the UI.
+   * @param options - `true`, a {@link TagOptions} object, or falsy to disable.
+   */
+  public setTags(options?: boolean | Apollon.TagOptions): void {
+    this.metadataStore.getState().setTagConfig(resolveTagConfig(options))
+  }
+
+  /**
+   * Set the tags on one element (a node, or a class attribute/method) by id, for
+   * hosts that assign tags programmatically instead of through the editor UI.
+   * Replaces the element's tag list; pass `[]` to clear. Unknown ids are ignored.
+   */
+  public setElementTags(elementId: string, tags: string[]): void {
+    const { nodes, setNodes } = this.diagramStore.getState()
+    const next = applyElementTags(nodes, elementId, tags)
+    if (next !== nodes) setNodes(next)
   }
 
   /**

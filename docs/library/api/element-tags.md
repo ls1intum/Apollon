@@ -15,18 +15,48 @@ covers, then color that group by the test's result.
 Unlike an element's `id`, a tag is authored, many-to-many, and survives
 copy/paste.
 
-## Authoring tags
-
 Tags live on a node's `data` and on each class **attribute** and **method** — any
-element data with a `tags?: string[]` field. In the editor, the class popover has
-a **Tags** field, and each attribute/method row has a tag toggle.
+element data with a `tags?: string[]` field. They are trimmed and de-duplicated;
+a tag longer than 200 characters, containing control characters, or past the 50th
+on one element is **dropped silently** — keep them short and printable. An empty
+list is omitted from the saved model. Edges do not carry tags.
 
-Tags are trimmed and de-duplicated. A tag longer than 200 characters, containing
-control characters, or past the 50th on one element is **dropped silently** — keep
-them short and printable. An empty list is omitted from the saved model. Edges do
-not carry tags.
+## Enabling tag authoring
 
-Set them programmatically through the model like any other field:
+Tag authoring is **off by default** — turn it on with the `tags` option. `true`
+allows free-form tagging; an object restricts it:
+
+```ts no-check
+// Free-form: the user types any tag.
+new ApollonEditor(container, { tags: true })
+
+// Fixed vocabulary, pick-only (a user can only choose from `available`).
+new ApollonEditor(container, { tags: { available: ["testName", "testType"] } })
+
+// Vocabulary plus the freedom to create new tags.
+new ApollonEditor(container, {
+  tags: { available: ["testName"], allowCreate: true },
+})
+```
+
+`allowCreate` defaults to `false` when you pass a vocabulary and `true` otherwise.
+The option is reactive (`<Apollon tags={…}>` / `editor.setTags(…)`). When enabled,
+each taggable row shows its tags as removable chips followed by a tag button that
+opens a combobox to search the vocabulary, toggle a tag, or create one.
+
+Tags a host puts on the model always load and stay queryable **regardless of this
+option** — it gates only the authoring UI.
+
+## Setting tags programmatically
+
+A host can assign tags without the UI. For one element, use `setElementTags`
+(replaces its tag list; `[]` clears it):
+
+```ts no-check
+editor.setElementTags("attribute-id", ["testAttributes[Context]"])
+```
+
+Or set them in bulk through the model like any other field:
 
 ```ts no-check
 const model = editor.model

@@ -7,6 +7,7 @@ import { UMLDiagramType } from "@/types"
 import { ApollonMode, ApollonView } from "@/typings"
 import { IPoint } from "@/edges/Connection"
 import { DEFAULT_LABELS, type ApollonLabels } from "@/i18n/labels"
+import { DISABLED_TAG_CONFIG, type TagConfig } from "@/utils/tagUtils"
 
 export type MetadataStore = {
   diagramTitle: string
@@ -19,6 +20,8 @@ export type MetadataStore = {
   scrollLock: boolean
   /** User-facing strings for the editor's own chrome; host-overridable for i18n. */
   labels: ApollonLabels
+  /** Element-tag authoring config; disabled until a host opts in. */
+  tagConfig: TagConfig
   scrollEnabled: boolean
   connectionGuidanceActive: boolean
   connectionGuidanceSourceNodeId: string | null
@@ -32,6 +35,7 @@ export type MetadataStore = {
   setReadonly: (readonly: boolean) => void
   setScrollLock: (scrollLock: boolean) => void
   setLabels: (labels: ApollonLabels) => void
+  setTagConfig: (tagConfig: TagConfig) => void
   setScrollEnabled: (scrollEnabled: boolean) => void
   startConnectionGuidance: (
     sourceNodeId: string | null,
@@ -62,6 +66,7 @@ type InitialMetadataState = {
   debug: boolean
   scrollLock: boolean
   labels: ApollonLabels
+  tagConfig: TagConfig
   scrollEnabled: boolean
   connectionGuidanceActive: boolean
   connectionGuidanceSourceNodeId: string | null
@@ -82,6 +87,7 @@ const initialMetadataState: InitialMetadataState = {
   debug: false,
   scrollLock: false,
   labels: DEFAULT_LABELS,
+  tagConfig: DISABLED_TAG_CONFIG,
   scrollEnabled: false,
   connectionGuidanceActive: false,
   connectionGuidanceSourceNodeId: null,
@@ -189,6 +195,24 @@ export const createMetadataStore = (
             },
             undefined,
             "setLabels"
+          )
+        },
+
+        setTagConfig: (tagConfig) => {
+          // Skip the write when value-equal — a host passing an inline
+          // `tags={{…}}` literal produces a fresh object every render.
+          set(
+            (s) => {
+              const cur = s.tagConfig
+              const same =
+                cur.enabled === tagConfig.enabled &&
+                cur.allowCreate === tagConfig.allowCreate &&
+                cur.available.length === tagConfig.available.length &&
+                cur.available.every((v, i) => v === tagConfig.available[i])
+              return same ? s : { tagConfig }
+            },
+            undefined,
+            "setTagConfig"
           )
         },
 

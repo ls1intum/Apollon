@@ -1,5 +1,5 @@
 import React, { useState, KeyboardEvent, ChangeEvent } from "react"
-import { GripVertical, Plus, Tags, Trash2 } from "lucide-react"
+import { GripVertical, Plus, Trash2 } from "lucide-react"
 import { IconButton, TextField, Typography } from "@/components/ui"
 import { NodeStyleEditor } from "@/components/styleEditor"
 import { useLabels } from "@/i18n/useLabels"
@@ -7,7 +7,7 @@ import { generateUUID, withTags } from "@/utils"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import { ClassNodeElement, ClassNodeProps } from "@/types"
-import { TagEditor } from "../TagEditor"
+import { TagPicker } from "../TagPicker"
 import {
   DndContext,
   closestCenter,
@@ -47,7 +47,6 @@ const SortableAttributeRow: React.FC<SortableAttributeRowProps> = ({
   onDelete,
 }) => {
   const t = useLabels()
-  const [showTags, setShowTags] = useState(false)
   const {
     attributes,
     listeners,
@@ -103,15 +102,6 @@ const SortableAttributeRow: React.FC<SortableAttributeRowProps> = ({
           }
           sideElements={[
             <IconButton
-              key={`tags_${item.id}`}
-              ariaLabel={t.toggleTagsFor(t.attributeWord)}
-              tooltip={t.tags}
-              aria-expanded={showTags}
-              onClick={() => setShowTags((open) => !open)}
-            >
-              <Tags width={16} height={16} aria-hidden="true" />
-            </IconButton>,
-            <IconButton
               key={`delete_${item.id}`}
               ariaLabel={t.deleteAttribute}
               tooltip={t.deleteAttribute}
@@ -123,13 +113,11 @@ const SortableAttributeRow: React.FC<SortableAttributeRowProps> = ({
         />
       </div>
 
-      {showTags && (
-        <TagEditor
-          tags={item.tags ?? []}
-          onChange={(tags) => onTagsChange(item.id, tags)}
-          subject={t.attributeWord}
-        />
-      )}
+      <TagPicker
+        tags={item.tags ?? []}
+        onChange={(tags) => onTagsChange(item.id, tags)}
+        subject={t.attributeWord}
+      />
     </div>
   )
 }

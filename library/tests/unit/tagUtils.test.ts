@@ -3,6 +3,9 @@ import {
   normalizeTags,
   getElementIdsByTag,
   withTags,
+  resolveTagConfig,
+  applyElementTags,
+  DISABLED_TAG_CONFIG,
   MAX_TAG_LENGTH,
   MAX_TAGS_PER_ELEMENT,
 } from "@/utils/tagUtils"
@@ -157,5 +160,76 @@ describe("getElementIdsByTag", () => {
       }),
     ]
     expect(getElementIdsByTag(sfc, "oracle")).toEqual(["row1"])
+  })
+})
+
+describe("resolveTagConfig", () => {
+  it("is disabled when the option is absent or falsy", () => {
+    expect(resolveTagConfig(undefined)).toBe(DISABLED_TAG_CONFIG)
+    expect(resolveTagConfig(false)).toBe(DISABLED_TAG_CONFIG)
+  })
+
+  it("enables free-form tagging for `true`", () => {
+    expect(resolveTagConfig(true)).toEqual({
+      enabled: true,
+      available: [],
+      allowCreate: true,
+    })
+  })
+
+  it("normalizes the vocabulary and disallows creation by default", () => {
+    expect(resolveTagConfig({ available: ["  a ", "a", "b"] })).toEqual({
+      enabled: true,
+      available: ["a", "b"],
+      allowCreate: false,
+    })
+  })
+
+  it("respects an explicit allowCreate over the default", () => {
+    expect(resolveTagConfig({ available: ["a"], allowCreate: true })).toEqual({
+      enabled: true,
+      available: ["a"],
+      allowCreate: true,
+    })
+    // No vocabulary but creation off: a manage-existing-only mode.
+    expect(resolveTagConfig({ allowCreate: false })).toEqual({
+      enabled: true,
+      available: [],
+      allowCreate: false,
+    })
+  })
+})
+
+describe("applyElementTags", () => {
+  const nodes = [
+    node("class1", {
+      name: "C",
+      tags: ["old"],
+      attributes: [{ id: "a1", name: "x" }],
+      methods: [{ id: "m1", name: "y()", tags: ["stale"] }],
+    }),
+  ] as ApollonNode[]
+
+  it("sets tags on a node by id", () => {
+    const next = applyElementTags(nodes, "class1", ["fresh"])
+    expect((next[0].data as { tags?: string[] }).tags).toEqual(["fresh"])
+  })
+
+  it("sets tags on a nested member by id", () => {
+    const next = applyElementTags(nodes, "a1", ["  T  ", "T"])
+    const attr = (next[0].data as { attributes: { tags?: string[] }[] })
+      .attributes[0]
+    expect(attr.tags).toEqual(["T"])
+  })
+
+  it("clears a member's tags with an empty list (omitting the key)", () => {
+    const next = applyElementTags(nodes, "m1", [])
+    const method = (next[0].data as { methods: Record<string, unknown>[] })
+      .methods[0]
+    expect("tags" in method).toBe(false)
+  })
+
+  it("returns the same array reference when nothing matched", () => {
+    expect(applyElementTags(nodes, "missing", ["x"])).toBe(nodes)
   })
 })

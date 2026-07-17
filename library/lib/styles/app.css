@@ -1260,11 +1260,12 @@ svg.react-flow__connectionline {
   min-width: 0;
 }
 
-/* Tag chips: a removable pill per tag; the label truncates so one long tag
-   can't push the remove button out of the popover. */
-[data-slot="tag-chip-list"] {
+/* Tag control: the element's tags as removable chips, then a tag button that
+   opens the combobox. Sits on its own compact line under the element's row. */
+[data-slot="tag-field"] {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 4px;
 }
 
@@ -1284,6 +1285,93 @@ svg.react-flow__connectionline {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Tag combobox (Base UI Popover portaled to <body>) — search + option list,
+   the shadcn combobox pattern rendered Tailwind-free via --apollon-* tokens. */
+.apollon-tag-picker__popup {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 220px;
+  max-width: 90vw;
+  padding: 8px;
+  background-color: var(--apollon-surface, #fff);
+  color: var(--apollon-foreground, #000);
+  border: 1px solid var(--apollon-border, #cdd5df);
+  border-radius: var(--apollon-radius-lg, 8px);
+  box-shadow: var(--apollon-shadow, 0 4px 12px rgba(0, 0, 0, 0.18));
+  z-index: 10003;
+}
+
+.apollon-tag-picker__search {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 0.8125rem;
+  color: var(--apollon-foreground, #000);
+  background-color: var(--apollon-background, #fff);
+  border: 1px solid var(--apollon-border, #cdd5df);
+  border-radius: var(--apollon-radius-md, 6px);
+}
+
+.apollon-tag-picker__search:focus-visible {
+  outline: 2px solid var(--apollon-primary, #3e8acc);
+  outline-offset: 1px;
+}
+
+.apollon-tag-picker__list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-height: 220px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.apollon-tag-picker__option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  font-size: 0.8125rem;
+  border-radius: var(--apollon-radius-sm, 4px);
+  cursor: pointer;
+}
+
+.apollon-tag-picker__option:hover {
+  background-color: var(--apollon-hover-neutral, rgba(0, 0, 0, 0.05));
+}
+
+.apollon-tag-picker__option > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The check occupies its slot always, so labels stay aligned; it's invisible
+   until the option is selected. */
+.apollon-tag-picker__check {
+  flex-shrink: 0;
+  opacity: 0;
+}
+
+.apollon-tag-picker__check[data-selected] {
+  opacity: 1;
+  color: var(--apollon-primary, #3e8acc);
+}
+
+.apollon-tag-picker__create {
+  color: var(--apollon-primary, #3e8acc);
+}
+
+.apollon-tag-picker__empty {
+  padding: 6px 8px;
+  font-size: 0.8125rem;
+  color: var(--apollon-secondary, #6c757d);
 }
 
 /* Drag handle (DnD rows) */
@@ -1572,21 +1660,27 @@ svg.react-flow__connectionline {
   margin-left: 0;
 }
 
-.apollon-style-editor__panel {
+/* Color panel — a Base UI Popover portaled to <body>, so it carries the same
+   surface/elevation as the swatch picker. */
+.apollon-style-editor__popup {
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  margin-top: 10px;
-  margin-bottom: 10px;
+  min-width: 200px;
   background-color: var(--apollon-surface, #fff);
-  border: 1px solid var(--apollon-border-subtle, #e3e8ef);
-  border-radius: var(--apollon-radius-md, 6px);
+  color: var(--apollon-foreground, #000);
+  border: 1px solid var(--apollon-border, #cdd5df);
+  border-radius: var(--apollon-radius-lg, 8px);
+  box-shadow: var(--apollon-shadow, 0 4px 12px rgba(0, 0, 0, 0.18));
+  z-index: 10003;
 }
 
 .apollon-style-editor__row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px;
+  gap: 12px;
+  padding: 10px 14px;
 }
 
 /* Stereotype show/hide toggle: the standalone `«keyword»` chip on
