@@ -9,23 +9,14 @@ import type { Diagram } from "@/types"
 import { diagramKeys } from "./keys"
 
 /**
- * Yjs ↔ Query contract for the shared-editor diagram body
- * ========================================================
- * The seed query is a ONE-SHOT loader: its first successful response is what
- * `new ApollonEditor({ model })` mounts with. From that moment on, the Yjs
- * document (via `WebSocketManager`) is the source of truth for the canvas —
- * the cache entry must never be refreshed behind the editor's back.
+ * One-shot editor seed: the first response is what `new ApollonEditor({ model })`
+ * mounts with, and Yjs owns the canvas from then on.
  *
- * - `staleTime: Infinity` — never refetched while the page is mounted; a
- *   `refetchInterval`/focus refetch here would clobber live collab state.
- * - `gcTime: 0` — dropped the moment the page unmounts, so re-joining the
- *   same room always re-fetches (peers may have committed new state). One
- *   extra GET on remount is cheap; seeding a stale body is a correctness bug.
+ * - `staleTime: Infinity` — a background refetch would clobber live collab state.
+ * - `gcTime: 0` — re-joining a room re-fetches. One extra GET is cheaper than
+ *   seeding the editor with a body peers have already moved past.
  *
- * The only legitimate post-mount body fetches are the two imperative HEAD
- * reads (peer VERSION_RESTORED, preview-exit after a restore). Those go
- * through {@link diagramHeadQueryOptions} — a separate cache key — so they can
- * never change the seed's `data` identity and remount the editor stack.
+ * Post-mount HEAD reads belong on {@link diagramHeadQueryOptions}, never here.
  */
 export function diagramSeedQueryOptions(diagramId: string) {
   return queryOptions({
@@ -34,8 +25,8 @@ export function diagramSeedQueryOptions(diagramId: string) {
       DiagramApiClient.fetchDiagram(diagramId, { signal }),
     staleTime: Infinity,
     gcTime: 0,
-    // A failed seed redirects the user home; retry once for transient network
-    // flakes but don't sit on the loading overlay through a full backoff run.
+    // A failed seed redirects home; don't sit on the overlay through a full
+    // backoff run, but absorb one transient blip.
     retry: 1,
   })
 }
@@ -53,15 +44,14 @@ export function useDiagramSeedQuery(
 export type HeadFetchReason = "peer-restore" | "preview-exit"
 
 /**
- * Latest-HEAD fetch for imperative `editor.model = …` assignments. Always hits
- * the network (`staleTime: 0`) and never lingers (`gcTime: 0`).
+ * Latest HEAD, for imperative `editor.model = …` assignments. Separate from the
+ * seed: writing a fresh body into the seed entry would change its `data`
+ * identity and rebuild the editor + WebSocket + autosaver from the page's
+ * mount effect.
  *
- * `reason` is part of the key so each caller owns its own cancellation scope:
- * `cancelQueries` matches by key, so sharing one would let one caller's
- * cleanup abort the other's in-flight fetch. Cancel with
- * `queryClient.cancelQueries({ queryKey: diagramKeys.head(id, reason) })` —
- * callers must swallow the resulting {@link CancelledError} via
- * {@link isQueryCancellation}.
+ * `reason` is in the key because `cancelQueries` matches by key, and each
+ * caller's cleanup must only abort its own request. Callers swallow the
+ * resulting {@link CancelledError} via {@link isQueryCancellation}.
  */
 export function diagramHeadQueryOptions(
   diagramId: string,

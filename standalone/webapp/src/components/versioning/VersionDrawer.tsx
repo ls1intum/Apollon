@@ -27,16 +27,14 @@ import { useEditorContext, useModalContext } from "@/contexts"
 import { useMediaQuery } from "@/hooks"
 import { useRegionHost } from "@/hooks/useRegionHost"
 import { selectScopedPreview, useVersionStore } from "@/stores/useVersionStore"
-import {
-  fetchVersionBody,
-  useBoundRepository,
-  useVersionsQuery,
-} from "@/queries/versionQueries"
+import { fetchVersionBody, useVersionsQuery } from "@/queries/versionQueries"
 import {
   useCreateVersionMutation,
   useRestoreVersionMutation,
 } from "@/queries/versionMutations"
 import { ApiError } from "@/services/DiagramApiClient"
+import { getVersionRepository } from "@/services/versionRepository"
+import { useVersionRepositoryKind } from "@/contexts/VersionRepositoryContext"
 import type { PendingVersion } from "@/types"
 import { NARROW_VIEW_QUERY } from "@/constants"
 import {
@@ -91,11 +89,12 @@ export const VersionSidebarBody: FC<Props> = ({
   onConfirmedRestore,
   onPreview,
 }) => {
-  const repo = useBoundRepository()
+  const kind = useVersionRepositoryKind()
+  const repo = getVersionRepository(kind)
   const isLocal = repo.kind === "local"
   const MAX_VERSIONS = repo.cap
   const queryClient = useQueryClient()
-  const versionsQuery = useVersionsQuery(diagramId)
+  const versionsQuery = useVersionsQuery(kind, diagramId)
   const serverVersions = versionsQuery.data?.versions ?? EMPTY_VERSIONS
   const total = versionsQuery.data?.total
   const errorCode =
@@ -104,21 +103,14 @@ export const VersionSidebarBody: FC<Props> = ({
       : versionsQuery.isError
         ? "INTERNAL"
         : null
-  const createMutation = useCreateVersionMutation(diagramId)
-  const restoreMutation = useRestoreVersionMutation(diagramId)
+  const createMutation = useCreateVersionMutation(kind, diagramId)
+  const restoreMutation = useRestoreVersionMutation(kind, diagramId)
   const enterPreview = useVersionStore((s) => s.enterPreview)
   const previewState = useVersionStore((s) => selectScopedPreview(s, diagramId))
 
-  // The composer's in-flight / failed save, rendered straight from mutation
-  // state instead of forging an optimistic row into the query cache — no
-  // temp-id reconciliation and no clobber race with a concurrent refetch.
-  //
-  // Deriving it from `isPending` alone is only safe because the create
-  // mutation's `onSettled` returns its invalidation promise: the mutation
-  // stays pending until the refreshed list has landed, so this row hands over
-  // to the real one with no gap. A row derived from `isSuccess` instead would
-  // be sticky mutation state and could re-appear later (e.g. after the real
-  // row is deleted), resurrecting a version that no longer exists.
+  // In-flight / failed save, derived from mutation state rather than written
+  // into the cache. Safe to key on `isPending` only because the create
+  // mutation awaits its invalidation (see `useCreateVersionMutation`).
   const pendingRow = useMemo<PendingVersion | null>(() => {
     const vars = createMutation.variables
     if (!vars || (!createMutation.isPending && !createMutation.isError)) {
@@ -152,9 +144,7 @@ export const VersionSidebarBody: FC<Props> = ({
   const { openModal } = useModalContext()
 
   const [draft, setDraft] = useState("")
-  // The composer is busy for as long as the create mutation is pending —
-  // which, thanks to its awaited settle-time invalidation, spans the save AND
-  // the list refresh. No separate boolean to keep in sync.
+  // Spans the save AND the list refresh — see `useCreateVersionMutation`.
   const submitting = createMutation.isPending
   const composerRef = useRef<HTMLTextAreaElement | null>(null)
   // Subscribe to model changes so the empty-diagram check (drives Save
@@ -177,12 +167,6 @@ export const VersionSidebarBody: FC<Props> = ({
    * instead of fetching the version body from the server.
    */
   const lastLocalSaveIdRef = useRef<string | null>(null)
-
-  // `useVersionsQuery` fetches on mount: the editor route's `beforeLoad`
-  // binds the repository BEFORE anything renders, so there is no
-  // child-effect-vs-page-effect binding race anymore. Freshness comes from
-  // the query itself (focus refetch) plus the two realtime bridges (WS
-  // control events, cross-tab BroadcastChannel).
 
   // Filter: when off, hide every unnamed row entirely (matches Figma's "Show
   // autosave versions" toggle). Default ON so users see their full history
@@ -233,7 +217,7 @@ export const VersionSidebarBody: FC<Props> = ({
     // a body the thumbnail already loaded costs nothing.
     fetchVersionBody(
       queryClient,
-      repo,
+      kind,
       latestSavedVersion.diagramId,
       latestSavedVersion.id
     )
@@ -247,7 +231,7 @@ export const VersionSidebarBody: FC<Props> = ({
         setSavedFingerprint(null)
         setHasChanges(true)
       })
-  }, [editor, latestSavedVersion?.id, queryClient, repo])
+  }, [editor, latestSavedVersion?.id, queryClient, kind])
 
   useEffect(() => {
     if (!editor) return
@@ -277,8 +261,7 @@ export const VersionSidebarBody: FC<Props> = ({
   // While previewing, `editor.model` reflects the previewed snapshot — saving
   // it would just duplicate that version (or produce a misleading "new"
   // version of old content). Block Save in that mode regardless of diff.
-  // Also block on empty diagrams (server skips them too — avoids the
-  // phantom-v1 confusion described in `services/autoVersion.ts:87`).
+  // Also block on empty diagrams (the server skips them too).
   const canSave =
     Boolean(editor) && hasChanges && previewState === null && !isEmptyDiagram
 
@@ -297,11 +280,9 @@ export const VersionSidebarBody: FC<Props> = ({
     const name = description
       ? description.split("\n")[0]!.slice(0, MAX_NAME_LENGTH)
       : ""
-    // Call-site callbacks (not mutation options) on purpose: these are this
-    // drawer's local UI only, and they must run BEFORE the option-level
-    // `onSettled` awaits the list refetch — `lastLocalSaveIdRef` has to be set
-    // while the fresh row is still landing, or the baseline effect takes the
-    // slow path and re-fetches a body it already has on canvas.
+    // Call-site callbacks run before the option-level `onSettled` awaits the
+    // refetch, so `lastLocalSaveIdRef` is set while the fresh row is still
+    // landing — otherwise the baseline effect re-fetches a body we have.
     createMutation.mutate(
       { body: editor.model, name, description: description || undefined },
       {
@@ -339,7 +320,7 @@ export const VersionSidebarBody: FC<Props> = ({
       try {
         const body = await fetchVersionBody(
           queryClient,
-          repo,
+          kind,
           diagramId,
           versionId
         )
@@ -348,7 +329,7 @@ export const VersionSidebarBody: FC<Props> = ({
         toast.error(t.previewFailed)
       }
     },
-    [editor, onPreview, enterPreview, diagramId, queryClient, repo]
+    [editor, onPreview, enterPreview, diagramId, queryClient, kind]
   )
 
   const handleRestore = useCallback(
@@ -382,9 +363,9 @@ export const VersionSidebarBody: FC<Props> = ({
       // Resolve the target here (we already hold the list) and pass it down so
       // the modal doesn't re-read the store for data we have.
       const version = versions.find((v) => v.id === versionId) ?? null
-      openModal("DELETE_VERSION", { diagramId, versionId, version })
+      openModal("DELETE_VERSION", { diagramId, versionId, version, kind })
     },
-    [openModal, diagramId, versions]
+    [openModal, diagramId, versions, kind]
   )
 
   const totalDisplay = total ?? versions.filter((v) => !v.pending).length
@@ -669,8 +650,7 @@ export const VersionSidebarBody: FC<Props> = ({
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    // `throwOnError` is required: without it fetchNextPage
-                    // resolves even on failure and the catch never runs.
+                    // Without `throwOnError` this promise never rejects.
                     versionsQuery
                       .fetchNextPage({ throwOnError: true })
                       .catch(() => {

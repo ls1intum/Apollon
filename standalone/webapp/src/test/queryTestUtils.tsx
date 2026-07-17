@@ -1,6 +1,8 @@
 import type { ReactElement, ReactNode } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { render } from "@testing-library/react"
+import { VersionRepositoryProvider } from "@/contexts/VersionRepositoryContext"
+import type { RepositoryKind } from "@/services/versionRepository"
 
 /**
  * Per-test QueryClient: no retries (a failing queryFn should fail the test
@@ -23,6 +25,11 @@ export function createTestQueryClient(): QueryClient {
 
 interface WithQueryOptions {
   queryClient?: QueryClient
+  /**
+   * Backend the versioning UI under test talks to. Mirrors what the editor
+   * routes provide in production; omit for non-versioning components.
+   */
+  repositoryKind?: RepositoryKind
 }
 
 /** Wrap arbitrary UI in a fresh (or provided) QueryClientProvider. */
@@ -31,9 +38,12 @@ export function wrapWithQueryClient(
   opts: WithQueryOptions = {}
 ): { element: ReactElement; queryClient: QueryClient } {
   const queryClient = opts.queryClient ?? createTestQueryClient()
+  const kind = opts.repositoryKind ?? "remote"
   return {
     element: (
-      <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <VersionRepositoryProvider kind={kind}>{ui}</VersionRepositoryProvider>
+      </QueryClientProvider>
     ),
     queryClient,
   }

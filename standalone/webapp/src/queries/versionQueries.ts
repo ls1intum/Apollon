@@ -1,4 +1,3 @@
-import { useState } from "react"
 import {
   infiniteQueryOptions,
   queryOptions,
@@ -10,10 +9,10 @@ import {
 import {
   getVersionRepository,
   type ListVersionsResponse,
-  type VersionRepository,
+  type RepositoryKind,
 } from "@/services/versionRepository"
 import type { Diagram, PendingVersion } from "@/types"
-import { versionKeys, type RepositoryKind } from "./keys"
+import { versionKeys } from "./keys"
 
 export const VERSIONS_PAGE_SIZE = 25
 
@@ -23,28 +22,21 @@ export type VersionListData = InfiniteData<
 >
 
 /**
- * Version history list, cursor-paginated ("Load older" appends a page).
+ * Version history, cursor-paginated ("Load older" appends a page).
  *
- * - `staleTime: 0` + `refetchOnWindowFocus: true`: the list must reconcile
- *   whenever the user returns to the tab — this replaces the old
- *   `versionStoreBootstrap` visibilitychange handler. Because a query only
- *   refetches while a consumer is mounted, a closed drawer costs nothing
- *   (parity with the old "only refetch open drawers" loop).
- * - The repository adapter is captured at options-build time (bound by the
- *   editor route's `beforeLoad`), so the key's `kind` and the `queryFn`'s
- *   backend can never disagree.
+ * `staleTime: 0` + `refetchOnWindowFocus` reconciles the list whenever the
+ * user returns to the tab, which is the only catch-up path while the control
+ * channel is down. A closed drawer costs nothing: an unmounted query has no
+ * observer to refetch for.
  */
 export function versionListQueryOptions(
-  repo: VersionRepository,
+  kind: RepositoryKind,
   diagramId: string
 ) {
-  // `repo` IS represented in the key — `versionKeys.list` embeds
-  // `repo.kind`, and the adapter registry holds one instance per kind.
-  // eslint-disable-next-line @tanstack/query/exhaustive-deps
   return infiniteQueryOptions({
-    queryKey: versionKeys.list(repo.kind, diagramId),
+    queryKey: versionKeys.list(kind, diagramId),
     queryFn: ({ pageParam, signal }) =>
-      repo.list(diagramId, {
+      getVersionRepository(kind).list(diagramId, {
         limit: VERSIONS_PAGE_SIZE,
         before: pageParam,
         signal,
@@ -62,103 +54,77 @@ interface FlatVersionList {
   total: number
 }
 
-// Module-level so the select identity is stable and TanStack memoises the
-// derived value per structural-shared `data` instead of per render.
+// Module-level so TanStack memoises the derived value per `data` rather than
+// recomputing it on every render.
 const selectFlatVersionList = (data: VersionListData): FlatVersionList => ({
   versions: data.pages.flatMap((page) => page.versions),
   total: data.pages[data.pages.length - 1]?.total ?? 0,
 })
 
-/**
- * Snapshot the bound repository adapter for this component's lifetime.
- *
- * The registry is a module global that the editor routes rebind in
- * `beforeLoad` — which runs while the OUTGOING page is still mounted. Reading
- * it on every render would let a `/local/:id → /shared/:id` navigation re-key
- * the outgoing page's queries onto the incoming adapter (a local id fetched
- * over REST). A mount-time snapshot pins each mounted consumer to the adapter
- * it was rendered under, and keeps render pure.
- */
-export function useBoundRepository(): VersionRepository {
-  const [repo] = useState(getVersionRepository)
-  return repo
-}
-
 /** Flattened version list for UI consumers (drawer, preview banner, pages). */
-export function useVersionsQuery(diagramId: string) {
-  const repo = useBoundRepository()
+export function useVersionsQuery(kind: RepositoryKind, diagramId: string) {
   return useInfiniteQuery({
-    ...versionListQueryOptions(repo, diagramId),
+    ...versionListQueryOptions(kind, diagramId),
     select: selectFlatVersionList,
   })
 }
 
 /**
- * Immutable version body. `staleTime: Infinity` — a snapshot never changes, so
- * one fetch serves thumbnails, preview entry, and the drawer's dirty-check
- * baseline alike (they all share this key).
+ * A snapshot body never changes, so one fetch serves thumbnails, preview
+ * entry, and the drawer's dirty-check baseline alike.
  */
 export function versionBodyQueryOptions(
-  repo: VersionRepository,
+  kind: RepositoryKind,
   diagramId: string,
   versionId: string
 ) {
-  // `repo` IS represented in the key — `versionKeys.body` embeds
-  // `repo.kind`, and the adapter registry holds one instance per kind.
-  // eslint-disable-next-line @tanstack/query/exhaustive-deps
   return queryOptions({
-    queryKey: versionKeys.body(repo.kind, diagramId, versionId),
+    queryKey: versionKeys.body(kind, diagramId, versionId),
     queryFn: ({ signal }): Promise<Diagram> =>
-      repo.getBody(diagramId, versionId, { signal }),
+      getVersionRepository(kind).getBody(diagramId, versionId, { signal }),
     staleTime: Infinity,
   })
 }
 
 /**
- * Lazily fetched version body. `enabled` is the visibility/interest gate —
- * e.g. the thumbnail's IntersectionObserver — replacing hand-rolled
- * `cancelled` flags: an off-screen row simply never starts the request.
+ * Lazily fetched version body. `enabled` is the caller's interest gate — e.g.
+ * the thumbnail's IntersectionObserver — so an off-screen row never requests.
  */
 export function useVersionBodyQuery(
+  kind: RepositoryKind,
   diagramId: string,
   versionId: string,
   opts: { enabled?: boolean } = {}
 ) {
-  const repo = useBoundRepository()
   return useQuery({
-    ...versionBodyQueryOptions(repo, diagramId, versionId),
+    ...versionBodyQueryOptions(kind, diagramId, versionId),
     enabled: opts.enabled ?? true,
   })
 }
 
-/**
- * Imperative body read through the shared cache (preview entry, dirty-check
- * baselines). Takes the adapter explicitly — callers hold the one their UI is
- * bound to (see {@link useBoundRepository}), so an in-flight navigation can't
- * redirect the read to the other backend.
- */
+/** Imperative body read through the shared cache (preview entry, baselines). */
 export function fetchVersionBody(
   queryClient: QueryClient,
-  repo: VersionRepository,
+  kind: RepositoryKind,
   diagramId: string,
   versionId: string
 ): Promise<Diagram> {
   return queryClient.fetchQuery(
-    versionBodyQueryOptions(repo, diagramId, versionId)
+    versionBodyQueryOptions(kind, diagramId, versionId)
   )
 }
 
 /**
- * Warm the version list from the editor pages so the drawer/banner open onto
- * data instead of a skeleton, and post-restore snackbar labels resolve.
+ * Warm the version list from the editor pages so the drawer and banner open
+ * onto data, and post-restore snackbar labels resolve without a round-trip.
  */
 export function prefetchVersions(
   queryClient: QueryClient,
-  repo: VersionRepository,
+  kind: RepositoryKind,
   diagramId: string
 ): Promise<void> {
   return queryClient.prefetchInfiniteQuery(
-    versionListQueryOptions(repo, diagramId)
+    versionListQueryOptions(kind, diagramId)
   )
 }
 

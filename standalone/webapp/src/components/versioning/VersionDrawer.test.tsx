@@ -6,9 +6,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { cleanup, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { QueryClientProvider } from "@tanstack/react-query"
 import { renderWithRouter } from "@/test/renderWithRouter"
-import { createTestQueryClient } from "@/test/queryTestUtils"
+import { wrapWithQueryClient } from "@/test/queryTestUtils"
 import { ModalProvider, EditorProvider } from "@/contexts"
 import { VersionSidebarBody } from "./VersionDrawer"
 import { useVersionStore } from "@/stores/useVersionStore"
@@ -59,15 +58,13 @@ afterEach(() => {
 // mobile drawer; testing it directly exercises the version list wiring without
 // the editor-portal plumbing (VersionRail needs a live editor to portal into).
 function mount(diagramId: string) {
-  const queryClient = createTestQueryClient()
   return renderWithRouter(<VersionSidebarBody diagramId={diagramId} />, {
-    wrapper: (children) => (
-      <QueryClientProvider client={queryClient}>
+    wrapper: (children) =>
+      wrapWithQueryClient(
         <EditorProvider>
           <ModalProvider>{children}</ModalProvider>
         </EditorProvider>
-      </QueryClientProvider>
-    ),
+      ).element,
   })
 }
 

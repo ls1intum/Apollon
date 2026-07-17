@@ -5,7 +5,6 @@ import { QueryClientProvider } from "@tanstack/react-query"
 import { toast } from "react-toastify"
 import {
   setVersionRepository,
-  RemoteVersionRepository,
   type VersionRepository,
 } from "@/services/versionRepository"
 import { useVersionStore } from "@/stores/useVersionStore"
@@ -13,7 +12,7 @@ import type { UMLModel } from "@tumaet/apollon"
 import type { VersionSummary } from "@/types"
 import { createTestQueryClient } from "@/test/queryTestUtils"
 import { versionKeys } from "./keys"
-import type { VersionListData } from "./versionQueries"
+import { useVersionsQuery, type VersionListData } from "./versionQueries"
 import {
   useCreateVersionMutation,
   useDeleteVersionMutation,
@@ -62,8 +61,13 @@ function stubRepository(
   } as VersionRepository
 }
 
+let restoreRepository: () => void = () => {}
+
 function setup(repoOverrides: Partial<VersionRepository>) {
-  setVersionRepository(stubRepository(repoOverrides))
+  restoreRepository = setVersionRepository(
+    "remote",
+    stubRepository(repoOverrides)
+  )
   const client = createTestQueryClient()
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={client}>{children}</QueryClientProvider>
@@ -78,7 +82,8 @@ function cachedRows(client: ReturnType<typeof createTestQueryClient>) {
 }
 
 afterEach(() => {
-  setVersionRepository(RemoteVersionRepository)
+  restoreRepository()
+  restoreRepository = () => {}
   useVersionStore.setState({
     preview: null,
     undoRestore: null,
@@ -88,21 +93,33 @@ afterEach(() => {
 })
 
 describe("useEditVersionInfoMutation", () => {
-  it("patches optimistically and keeps the server row on success", async () => {
-    const editInfo = vi
-      .fn()
-      .mockResolvedValue(summary("v1", { description: "server-desc" }))
+  it("shows the new description before the server confirms it", async () => {
+    let resolveEdit!: (v: VersionSummary) => void
+    const editInfo = vi.fn(
+      () => new Promise<VersionSummary>((resolve) => (resolveEdit = resolve))
+    )
     const { client, wrapper } = setup({ editInfo })
     client.setQueryData(LIST_KEY, seed([summary("v1"), summary("v2")]))
 
     const { result } = renderHook(
-      () => useEditVersionInfoMutation(DIAGRAM_ID),
+      () => useEditVersionInfoMutation("remote", DIAGRAM_ID),
       { wrapper }
     )
-    await result.current.mutateAsync({
+    const pending = result.current.mutateAsync({
       versionId: "v1",
-      patch: { description: "server-desc" },
+      patch: { description: "optimistic" },
     })
+
+    // Mid-flight: the row already reads back the user's text.
+    await waitFor(() =>
+      expect(cachedRows(client).find((v) => v.id === "v1")!.description).toBe(
+        "optimistic"
+      )
+    )
+    expect(cachedRows(client).find((v) => v.id === "v2")!.description).toBe("")
+
+    resolveEdit(summary("v1", { description: "server-desc" }))
+    await pending
     expect(cachedRows(client).find((v) => v.id === "v1")!.description).toBe(
       "server-desc"
     )
@@ -117,7 +134,7 @@ describe("useEditVersionInfoMutation", () => {
     )
 
     const { result } = renderHook(
-      () => useEditVersionInfoMutation(DIAGRAM_ID),
+      () => useEditVersionInfoMutation("remote", DIAGRAM_ID),
       { wrapper }
     )
     await expect(
@@ -142,9 +159,12 @@ describe("useDeleteVersionMutation", () => {
       seed([summary("a"), summary("b"), summary("c")])
     )
 
-    const { result } = renderHook(() => useDeleteVersionMutation(DIAGRAM_ID), {
-      wrapper,
-    })
+    const { result } = renderHook(
+      () => useDeleteVersionMutation("remote", DIAGRAM_ID),
+      {
+        wrapper,
+      }
+    )
     await expect(
       result.current.mutateAsync({ versionId: "b" })
     ).rejects.toThrow(/conflict/)
@@ -158,9 +178,12 @@ describe("useDeleteVersionMutation", () => {
     client.setQueryData(LIST_KEY, seed([summary("a")]))
     client.setQueryData(versionKeys.body("remote", DIAGRAM_ID, "a"), fakeBody)
 
-    const { result } = renderHook(() => useDeleteVersionMutation(DIAGRAM_ID), {
-      wrapper,
-    })
+    const { result } = renderHook(
+      () => useDeleteVersionMutation("remote", DIAGRAM_ID),
+      {
+        wrapper,
+      }
+    )
     await result.current.mutateAsync({ versionId: "a" })
 
     expect(cachedRows(client)).toEqual([])
@@ -193,9 +216,12 @@ describe("useRestoreVersionMutation", () => {
       seed([summary("v42", { description: "Milestone" })])
     )
 
-    const { result } = renderHook(() => useRestoreVersionMutation(DIAGRAM_ID), {
-      wrapper,
-    })
+    const { result } = renderHook(
+      () => useRestoreVersionMutation("remote", DIAGRAM_ID),
+      {
+        wrapper,
+      }
+    )
     const pending = result.current.mutateAsync({
       versionId: "v42",
       currentBody: fakeBody,
@@ -229,9 +255,12 @@ describe("useRestoreVersionMutation", () => {
     const restore = vi.fn().mockRejectedValue(new Error("boom"))
     const { wrapper } = setup({ restore })
 
-    const { result } = renderHook(() => useRestoreVersionMutation(DIAGRAM_ID), {
-      wrapper,
-    })
+    const { result } = renderHook(
+      () => useRestoreVersionMutation("remote", DIAGRAM_ID),
+      {
+        wrapper,
+      }
+    )
     await expect(
       result.current.mutateAsync({ versionId: "v1", currentBody: fakeBody })
     ).rejects.toThrow(/boom/)
@@ -248,33 +277,95 @@ describe("useCreateVersionMutation", () => {
       evictedKinds: ["named"],
       cap: 30,
     })
-    const { client, wrapper } = setup({ create })
+    const { wrapper } = setup({ create })
     const warning = vi.spyOn(toast, "warning")
-    const invalidate = vi.spyOn(client, "invalidateQueries")
 
-    const { result } = renderHook(() => useCreateVersionMutation(DIAGRAM_ID), {
-      wrapper,
-    })
+    const { result } = renderHook(
+      () => useCreateVersionMutation("remote", DIAGRAM_ID),
+      { wrapper }
+    )
     await result.current.mutateAsync({ body: fakeBody, name: "n" })
 
     expect(warning).toHaveBeenCalledWith(
       expect.stringContaining("30-version cap"),
       expect.anything()
     )
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: LIST_KEY })
   })
 
-  it("invalidates on failure too, so a half-committed create reconciles", async () => {
-    const create = vi.fn().mockRejectedValue(new Error("network"))
-    const { client, wrapper } = setup({ create })
-    const invalidate = vi.spyOn(client, "invalidateQueries")
-
-    const { result } = renderHook(() => useCreateVersionMutation(DIAGRAM_ID), {
-      wrapper,
+  it("reports an autosave-only eviction as information, not data loss", async () => {
+    const create = vi.fn().mockResolvedValue({
+      ...summary("new-version"),
+      evictedVersionIds: ["old-1"],
+      evictedKinds: ["unnamed"],
+      cap: 30,
     })
+    const { wrapper } = setup({ create })
+    const info = vi.spyOn(toast, "info")
+    const warning = vi.spyOn(toast, "warning")
+
+    const { result } = renderHook(
+      () => useCreateVersionMutation("remote", DIAGRAM_ID),
+      { wrapper }
+    )
+    await result.current.mutateAsync({ body: fakeBody })
+
+    expect(info).toHaveBeenCalledWith(
+      expect.stringContaining("older autosave was removed"),
+      expect.anything()
+    )
+    expect(warning).not.toHaveBeenCalled()
+  })
+
+  it("re-reads the list even when the create fails, so a half-commit reconciles", async () => {
+    const create = vi.fn().mockRejectedValue(new Error("network"))
+    const list = vi.fn(async () => ({ versions: [summary("a")], total: 1 }))
+    const { client, wrapper } = setup({ create, list })
+    // An observed list is what a refetch acts on.
+    renderHook(() => useVersionsQuery("remote", DIAGRAM_ID), { wrapper })
+    await waitFor(() => expect(list).toHaveBeenCalledTimes(1))
+
+    const { result } = renderHook(
+      () => useCreateVersionMutation("remote", DIAGRAM_ID),
+      { wrapper }
+    )
     await expect(
       result.current.mutateAsync({ body: fakeBody })
     ).rejects.toThrow(/network/)
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: LIST_KEY })
+
+    await waitFor(() => expect(list).toHaveBeenCalledTimes(2))
+    expect(client).toBeDefined()
+  })
+
+  it("stays pending until the refreshed list has landed", async () => {
+    // The drawer derives its optimistic row from `isPending` alone, which is
+    // only gapless because `onSettled` RETURNS the invalidation promise.
+    let resolveList!: (v: { versions: VersionSummary[]; total: number }) => void
+    const list = vi
+      .fn()
+      .mockResolvedValueOnce({ versions: [], total: 0 })
+      .mockImplementationOnce(
+        () =>
+          new Promise<{ versions: VersionSummary[]; total: number }>(
+            (resolve) => (resolveList = resolve)
+          )
+      )
+    const create = vi.fn().mockResolvedValue(summary("new-version"))
+    const { wrapper } = setup({ create, list })
+    renderHook(() => useVersionsQuery("remote", DIAGRAM_ID), { wrapper })
+    await waitFor(() => expect(list).toHaveBeenCalledTimes(1))
+
+    const { result } = renderHook(
+      () => useCreateVersionMutation("remote", DIAGRAM_ID),
+      { wrapper }
+    )
+    result.current.mutate({ body: fakeBody })
+
+    // POST resolved, refetch still in flight → still pending.
+    await waitFor(() => expect(list).toHaveBeenCalledTimes(2))
+    expect(create).toHaveBeenCalledTimes(1)
+    expect(result.current.isPending).toBe(true)
+
+    resolveList({ versions: [summary("new-version")], total: 1 })
+    await waitFor(() => expect(result.current.isPending).toBe(false))
   })
 })

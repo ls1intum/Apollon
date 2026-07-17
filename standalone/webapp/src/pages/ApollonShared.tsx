@@ -25,7 +25,7 @@ import {
   useDiagramSeedQuery,
 } from "@/queries/diagramQueries"
 import { diagramKeys } from "@/queries/keys"
-import { prefetchVersions, useBoundRepository } from "@/queries/versionQueries"
+import { prefetchVersions } from "@/queries/versionQueries"
 import { useRestoreVersionMutation } from "@/queries/versionMutations"
 import { applyControlEventToCache } from "@/queries/versionCacheEvents"
 import { useDocumentTitle } from "@/hooks/useDocumentTitle"
@@ -60,7 +60,6 @@ export const ApollonShared: React.FC = () => {
   const { view: viewType, version: previewFromUrl } = route.useSearch()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const repo = useBoundRepository()
   const { setEditor, editor } = useEditorContext()
   const { openModal } = useModalContext()
   const [diagramTitle, setDiagramTitle] = useState<string | null>(null)
@@ -105,8 +104,9 @@ export const ApollonShared: React.FC = () => {
     useState(readStoredCollabUser)
 
   const preview = useVersionStore((s) => selectScopedPreview(s, diagramId))
-  const restoreMutation = useRestoreVersionMutation(diagramId)
+  const restoreMutation = useRestoreVersionMutation("remote", diagramId)
   const { openPreview, closePreview } = useVersionPreviewUrlSync(
+    "remote",
     diagramId,
     previewFromUrl,
     Boolean(editor)
@@ -123,8 +123,7 @@ export const ApollonShared: React.FC = () => {
   // The component instance survives diagramId / viewType changes (same
   // `/:diagramId` route), so per-diagram refs must be reset explicitly per
   // route lifecycle. Declared FIRST so it runs before the prompt and mount
-  // effects below whenever the route identity changes. (Per-diagram *fetch*
-  // isolation needs no reset anymore — the seed query is keyed by diagramId.)
+  // effects below.
   useEffect(() => {
     const nextLifecycleKey = `${diagramId ?? ""}:${viewType ?? ""}`
     if (lifecycleKeyRef.current === nextLifecycleKey) return
@@ -144,11 +143,9 @@ export const ApollonShared: React.FC = () => {
   const isCollaborationView = viewType === DiagramView.COLLABORATE
   const needsCollabName = isCollaborationView && !collaborationUser
 
-  // Collaboration-name prompt, extracted from the fetch path so the seed query
-  // can simply stay disabled until the user is known. A name already in
-  // sessionStorage was picked up by this component's lazy state initialiser,
-  // so reaching here means there is none — prompt for it, once per diagram
-  // (hasPromptedRef resets with the lifecycle key above).
+  // A stored name was already picked up by the lazy state initialiser, so
+  // reaching here means there is none. Prompt once per diagram — the seed
+  // query stays disabled until a name exists.
   useEffect(() => {
     if (!viewType || !needsCollabName || hasPromptedRef.current) return
     hasPromptedRef.current = true
@@ -296,10 +293,7 @@ export const ApollonShared: React.FC = () => {
 
       // Warm the version list so the drawer/banner open onto data and
       // restore-snackbar labels resolve without a round-trip.
-      void prefetchVersions(queryClient, repo, diagramId)
-      // Preview from `?version=` is handled by the dedicated URL ↔
-      // preview-state sync effect below; this effect just initialises
-      // the editor and connection.
+      void prefetchVersions(queryClient, "remote", diagramId)
     } catch (err) {
       log.error("Failed to initialize diagram", err)
       toast.error("Failed to initialize diagram")
@@ -307,8 +301,7 @@ export const ApollonShared: React.FC = () => {
     }
 
     return () => {
-      // Stop every in-flight imperative HEAD fetch from applying to a
-      // torn-down editor (consumers swallow the resulting CancelledError).
+      // Don't let an in-flight HEAD read apply to a torn-down editor.
       void queryClient.cancelQueries({ queryKey: diagramKeys.heads(diagramId) })
       setEditor(undefined)
       wsManagerRef.current?.cleanup()
@@ -346,13 +339,9 @@ export const ApollonShared: React.FC = () => {
     isCollaborationView,
     navigate,
     queryClient,
-    repo,
     setEditor,
     viewType,
   ])
-
-  // URL↔preview sync (deep-link open, history nav, drawer click) is handled by
-  // useVersionPreviewUrlSync above — the same hook the local editor uses.
 
   const baseReadonly = viewType === DiagramView.SEE_FEEDBACK
 
@@ -428,19 +417,16 @@ export const ApollonShared: React.FC = () => {
       }
     }
     return () => {
-      // Abort a still-running post-restore reload when the preview state moves
-      // on, so a late `editor.model = head` can't clobber the next preview.
-      // Scoped to the "preview-exit" key ONLY: the WebSocket handler's
-      // peer-restore refresh is a separate key and must survive this.
+      // A late `editor.model = head` would clobber the next preview. Scoped to
+      // this reason only — the WS peer-restore read must survive.
       void queryClient.cancelQueries({
         queryKey: diagramKeys.head(diagramId, "preview-exit"),
       })
     }
   }, [preview, editor, diagramId, baseReadonly, queryClient])
 
-  // Memoised because `handleRestore`'s useCallback lists it as a dep —
-  // without stable identity the restore handler gets a fresh closure every
-  // render and the banner's `onRestore` prop churns.
+  // Stable identity: `handleRestore` deps on it, and the banner's `onRestore`
+  // prop would churn every render otherwise.
   const handleVersionSaved = useCallback((headRev?: number) => {
     autosaverRef.current?.setHeadRev(headRev)
     diagramIsUpdated.current = false
@@ -482,8 +468,7 @@ export const ApollonShared: React.FC = () => {
       diagramId,
       editor,
       handleVersionSaved,
-      // `mutateAsync` is referentially stable; the mutation OBJECT is a new
-      // identity every render and would churn every consumer's onRestore prop.
+      // `mutateAsync` is stable; the mutation object is not.
       restoreMutation.mutateAsync,
       closePreview,
     ]

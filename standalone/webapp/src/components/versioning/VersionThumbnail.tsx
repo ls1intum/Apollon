@@ -3,6 +3,7 @@ import { HistoryIcon, BookmarkIcon } from "lucide-react"
 import { useEffect, useRef, useState, type FC } from "react"
 import { ApollonEditor, importDiagram, type UMLModel } from "@tumaet/apollon"
 import { useVersionBodyQuery } from "@/queries/versionQueries"
+import { useVersionRepositoryKind } from "@/contexts/VersionRepositoryContext"
 import { log } from "@/logger"
 
 /**
@@ -86,7 +87,8 @@ export const VersionThumbnail: FC<Props> = ({
     return () => observer.disconnect()
   }, [src])
 
-  const bodyQuery = useVersionBodyQuery(diagramId, versionId, {
+  const kind = useVersionRepositoryKind()
+  const bodyQuery = useVersionBodyQuery(kind, diagramId, versionId, {
     enabled: isVisible && !src && !renderFailed,
   })
 

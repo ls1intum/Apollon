@@ -16,11 +16,7 @@ import { useElementWidth } from "@/hooks/useElementWidth"
 import { useVersionShortcut } from "@/hooks/useVersionShortcut"
 import { useVersionPreviewUrlSync } from "@/hooks/useVersionPreviewUrlSync"
 import { selectScopedPreview, useVersionStore } from "@/stores/useVersionStore"
-import {
-  fetchVersionBody,
-  useBoundRepository,
-  useVersionsQuery,
-} from "@/queries/versionQueries"
+import { fetchVersionBody, useVersionsQuery } from "@/queries/versionQueries"
 import { useRestoreVersionMutation } from "@/queries/versionMutations"
 import type { PendingVersion } from "@/types"
 import {
@@ -120,19 +116,17 @@ export const ApollonLocal: FC = () => {
 
   const preview = useVersionStore((s) => selectScopedPreview(s, diagramId))
   const queryClient = useQueryClient()
-  const repo = useBoundRepository()
   const { openPreview, closePreview } = useVersionPreviewUrlSync(
+    "local",
     diagramId,
     previewFromUrl,
     Boolean(editor)
   )
-  // Version history via the query cache (the local route's `beforeLoad` bound
-  // `LocalVersionRepository` before this render). Subscribing here keeps the
-  // list warm for the confirm-restore dialog and the restored-snackbar label
-  // even when the drawer has never been opened.
-  const versionsQuery = useVersionsQuery(diagramId)
+  // Subscribed at page level so the confirm-restore dialog and the restored
+  // snackbar have their labels even when the drawer was never opened.
+  const versionsQuery = useVersionsQuery("local", diagramId)
   const versions = versionsQuery.data?.versions ?? EMPTY_VERSIONS
-  const restoreMutation = useRestoreVersionMutation(diagramId)
+  const restoreMutation = useRestoreVersionMutation("local", diagramId)
 
   useVersionShortcut(diagramId ?? undefined)
 
@@ -289,9 +283,9 @@ export const ApollonLocal: FC = () => {
       if (!diagramId) {
         throw new Error("No current diagram id")
       }
-      return fetchVersionBody(queryClient, repo, diagramId, versionId)
+      return fetchVersionBody(queryClient, "local", diagramId, versionId)
     },
-    [preview, diagramId, queryClient, repo]
+    [preview, diagramId, queryClient]
   )
 
   /**

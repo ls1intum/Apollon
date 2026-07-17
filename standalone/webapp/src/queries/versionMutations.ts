@@ -1,16 +1,16 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "react-toastify"
 import type { UMLModel } from "@tumaet/apollon"
-import type { CreateVersionResult } from "@/services/versionRepository"
+import {
+  getVersionRepository,
+  type CreateVersionResult,
+  type RepositoryKind,
+} from "@/services/versionRepository"
 import { useVersionStore } from "@/stores/useVersionStore"
 import { MAX_VERSIONS_PER_DIAGRAM } from "@/constants"
 import type { VersionSummary } from "@/types"
 import { versionKeys } from "./keys"
-import {
-  getCachedVersions,
-  useBoundRepository,
-  type VersionListData,
-} from "./versionQueries"
+import { getCachedVersions, type VersionListData } from "./versionQueries"
 import {
   patchVersionInList,
   removeVersionFromList,
@@ -18,14 +18,10 @@ import {
 } from "./versionListCache"
 
 /**
- * Version-history write operations. Every hook keeps its cache/store side
- * effects on the MUTATION OPTIONS (not `mutate()` call sites): option-level
- * callbacks still run when the calling component unmounts mid-flight, so
- * invalidations and the restore bookkeeping flags can never leak
- * (https://tanstack.com/query/v5/docs/framework/react/guides/mutations).
- *
- * Call sites own only their local UX (toasts for their own failure copy,
- * closing dialogs) via `mutateAsync` try/catch.
+ * Version-history writes. Cache and store side effects live on the mutation
+ * options, never on `mutate()` call sites: call-site callbacks are skipped if
+ * the caller unmounts mid-flight, which would leak the restore flags and skip
+ * invalidations. Call sites own only their own UX (failure copy, dialogs).
  */
 
 /** Collaborator display name attached to server-side version events. */
@@ -69,19 +65,22 @@ export interface CreateVersionVariables {
 }
 
 /**
- * Create a snapshot. No cache forgery: the drawer renders the in-flight /
- * failed row straight from this mutation's state (`variables` + status), and
- * the settle-time invalidation brings in the authoritative list — including
- * any rows the server evicted to fit the cap.
+ * Create a snapshot. The drawer renders the in-flight row from this
+ * mutation's state, so nothing optimistic is written to the cache; the
+ * settle-time invalidation brings in the authoritative list, including rows
+ * the server evicted to fit the cap.
  *
- * `onSettled` RETURNS the invalidation promise, so the mutation stays
- * `isPending` until the refreshed list has landed. That is what lets the
- * optimistic row be derived from `isPending` alone: it stays up until the
- * real row exists, with no gap and no stand-in row to expire.
+ * `onSettled` RETURNS the invalidation promise, keeping the mutation pending
+ * until the refreshed list lands. The drawer's row derives from `isPending`
+ * and depends on that: `void`-ing this would flash a gap where the row is
+ * neither optimistic nor real.
  */
-export function useCreateVersionMutation(diagramId: string) {
+export function useCreateVersionMutation(
+  kind: RepositoryKind,
+  diagramId: string
+) {
   const queryClient = useQueryClient()
-  const repo = useBoundRepository()
+  const repo = getVersionRepository(kind)
   return useMutation({
     mutationFn: ({ body, name, description }: CreateVersionVariables) =>
       repo.create(diagramId, body, {
@@ -94,7 +93,7 @@ export function useCreateVersionMutation(diagramId: string) {
     },
     onSettled: () =>
       queryClient.invalidateQueries({
-        queryKey: versionKeys.list(repo.kind, diagramId),
+        queryKey: versionKeys.list(kind, diagramId),
       }),
   })
 }
@@ -105,10 +104,13 @@ export interface EditVersionInfoVariables {
 }
 
 /** Rename/describe a version. Optimistic patch, rollback on error. */
-export function useEditVersionInfoMutation(diagramId: string) {
+export function useEditVersionInfoMutation(
+  kind: RepositoryKind,
+  diagramId: string
+) {
   const queryClient = useQueryClient()
-  const repo = useBoundRepository()
-  const listKey = versionKeys.list(repo.kind, diagramId)
+  const repo = getVersionRepository(kind)
+  const listKey = versionKeys.list(kind, diagramId)
   return useMutation({
     mutationFn: ({ versionId, patch }: EditVersionInfoVariables) =>
       repo.editInfo(diagramId, versionId, patch),
@@ -137,10 +139,13 @@ export function useEditVersionInfoMutation(diagramId: string) {
 }
 
 /** Delete a version. Optimistic removal, reinstated wholesale on error. */
-export function useDeleteVersionMutation(diagramId: string) {
+export function useDeleteVersionMutation(
+  kind: RepositoryKind,
+  diagramId: string
+) {
   const queryClient = useQueryClient()
-  const repo = useBoundRepository()
-  const listKey = versionKeys.list(repo.kind, diagramId)
+  const repo = getVersionRepository(kind)
+  const listKey = versionKeys.list(kind, diagramId)
   return useMutation({
     mutationFn: ({ versionId }: { versionId: string }) =>
       repo.delete(diagramId, versionId),
@@ -155,7 +160,7 @@ export function useDeleteVersionMutation(diagramId: string) {
     onSuccess: (_res, { versionId }) => {
       // Immutable body of a deleted row can never be shown again.
       queryClient.removeQueries({
-        queryKey: versionKeys.body(repo.kind, diagramId, versionId),
+        queryKey: versionKeys.body(kind, diagramId, versionId),
       })
     },
     onError: (_err, _vars, context) => {
@@ -179,14 +184,16 @@ export interface RestoreVersionVariables {
 }
 
 /**
- * Restore a version to HEAD. `onMutate` raises the store's
- * `pendingRestoreFromId` BEFORE the request leaves, preserving the
- * self-detection window for the WS `VERSION_RESTORED` event (which typically
- * beats the HTTP response back to this client).
+ * Restore a version to HEAD. `onMutate` raises `pendingRestoreFromId` before
+ * the request leaves: the WS `VERSION_RESTORED` event typically beats the HTTP
+ * response back, and must be recognised as self-caused.
  */
-export function useRestoreVersionMutation(diagramId: string) {
+export function useRestoreVersionMutation(
+  kind: RepositoryKind,
+  diagramId: string
+) {
   const queryClient = useQueryClient()
-  const repo = useBoundRepository()
+  const repo = getVersionRepository(kind)
   return useMutation({
     mutationFn: ({ versionId, currentBody }: RestoreVersionVariables) =>
       repo.restore(diagramId, versionId, {
@@ -197,11 +204,9 @@ export function useRestoreVersionMutation(diagramId: string) {
       useVersionStore.getState().beginRestore(versionId)
     },
     onSuccess: ({ autoSnapshotVersionId }, { versionId }) => {
-      const restored = getCachedVersions(
-        queryClient,
-        repo.kind,
-        diagramId
-      )?.find((v) => v.id === versionId)
+      const restored = getCachedVersions(queryClient, kind, diagramId)?.find(
+        (v) => v.id === versionId
+      )
       useVersionStore.getState().completeRestore({
         diagramId,
         autoSnapshotVersionId,
@@ -214,7 +219,7 @@ export function useRestoreVersionMutation(diagramId: string) {
             : versionId.slice(0, 8)),
       })
       void queryClient.invalidateQueries({
-        queryKey: versionKeys.list(repo.kind, diagramId),
+        queryKey: versionKeys.list(kind, diagramId),
       })
     },
     onError: () => {
@@ -235,9 +240,9 @@ export interface UndoRestoreVariables {
  * (UndoRestoreToast) guards the undo window and exits preview first; this
  * hook owns the flag lifecycle and cache reconciliation.
  */
-export function useUndoRestoreMutation() {
+export function useUndoRestoreMutation(kind: RepositoryKind) {
   const queryClient = useQueryClient()
-  const repo = useBoundRepository()
+  const repo = getVersionRepository(kind)
   return useMutation({
     mutationFn: ({
       diagramId,
@@ -256,7 +261,7 @@ export function useUndoRestoreMutation() {
       store.cancelRestore()
       store.dismissUndoRestore()
       void queryClient.invalidateQueries({
-        queryKey: versionKeys.list(repo.kind, diagramId),
+        queryKey: versionKeys.list(kind, diagramId),
       })
     },
     onError: () => {

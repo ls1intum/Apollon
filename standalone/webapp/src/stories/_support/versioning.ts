@@ -193,7 +193,7 @@ export function resetVersionStore(): void {
     pendingRestoreFromId: null,
   })
   storybookQueryClient.clear()
-  setVersionRepository(makeStoryRepository([]))
+  setVersionRepository("remote", makeStoryRepository([]))
 }
 
 /**
@@ -207,7 +207,10 @@ export function seedVersions(
     overrides,
   }: { total?: number; overrides?: Partial<VersionRepository> } = {}
 ): void {
-  setVersionRepository(makeStoryRepository(versions, { total, overrides }))
+  setVersionRepository(
+    "remote",
+    makeStoryRepository(versions, { total, overrides })
+  )
   storybookQueryClient.clear()
 }
 

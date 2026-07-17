@@ -9,6 +9,7 @@ import {
 import { useModalContext } from "@/contexts"
 import { selectScopedPreview, useVersionStore } from "@/stores/useVersionStore"
 import type { PendingVersion } from "@/types"
+import type { RepositoryKind } from "@/services/versionRepository"
 import { useDeleteVersionMutation } from "@/queries/versionMutations"
 import { useClosePreview } from "@/hooks/useVersionPreviewUrlSync"
 import { log } from "@/logger"
@@ -23,15 +24,22 @@ interface DeleteVersionModalProps {
    * warning copy. `null` falls back to the generic body.
    */
   version: PendingVersion | null
+  /**
+   * Which backend the version lives in. A prop, not context: modals mount
+   * under `ModalProvider` at the app root, outside the editor page's
+   * `VersionRepositoryProvider`.
+   */
+  kind: RepositoryKind
 }
 
 export const DeleteVersionModal = ({
   diagramId,
   versionId,
   version,
+  kind,
 }: DeleteVersionModalProps) => {
   const { closeModal } = useModalContext()
-  const deleteVersion = useDeleteVersionMutation(diagramId)
+  const deleteVersion = useDeleteVersionMutation(kind, diagramId)
   // Clearing `?version=` before delete stops the URL sync re-entering the
   // deleted version and flashing a spurious "unavailable" toast.
   const closePreview = useClosePreview()

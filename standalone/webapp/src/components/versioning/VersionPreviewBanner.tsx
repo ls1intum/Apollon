@@ -3,6 +3,7 @@ import { useState, type CSSProperties, type FC } from "react"
 import { cn } from "@tumaet/ui/lib/utils"
 import { selectScopedPreview, useVersionStore } from "@/stores/useVersionStore"
 import { useVersionsQuery } from "@/queries/versionQueries"
+import { useVersionRepositoryKind } from "@/contexts/VersionRepositoryContext"
 import { versioningStrings as t } from "./strings"
 import { relativeTime } from "./relativeTime"
 
@@ -197,7 +198,8 @@ export const VersionPreviewBanner: FC<ContainerProps> = ({
   className,
 }) => {
   const preview = useVersionStore((s) => selectScopedPreview(s, diagramId))
-  const { data } = useVersionsQuery(diagramId)
+  const kind = useVersionRepositoryKind()
+  const { data } = useVersionsQuery(kind, diagramId)
   if (!preview) return null
 
   const summary = data?.versions.find((v) => v.id === preview.versionId)

@@ -2,28 +2,39 @@ import { LocalVersionRepository } from "./LocalVersionRepository"
 import { RemoteVersionRepository } from "./RemoteVersionRepository"
 import type { VersionRepository } from "./types"
 
+export type RepositoryKind = VersionRepository["kind"]
+
 /**
- * Module-level holder for the active repository. It must be a module global
- * (not React context) because `useVersionStore`'s async actions read it
- * outside the React tree. Each editor page binds it from its mount effect —
- * before that effect's `fetchVersions` — so the read happens after the write.
- * React Router renders `ApollonLocal` and `ApollonShared` mutually
- * exclusively, so there is no concurrent mount race; the assignment is
- * idempotent under StrictMode/HMR.
- *
- * Default = `RemoteVersionRepository`: if a consumer reaches the store before
- * any page effect has run (e.g. a deep-link to `/shared/:id?version=…`), the
- * safe collab default keeps the call from blowing up.
+ * Adapter registry, keyed by backend kind. `kind` is a static property of the
+ * editor route (`/local/*` is IndexedDB, `/shared/*` is REST), so consumers
+ * read it from `VersionRepositoryProvider` and resolve the adapter here. That
+ * keeps the kind — and therefore the version query keys — a pure function of
+ * where the UI is mounted, with no ambient state to race a navigation.
  */
-
-let active: VersionRepository = RemoteVersionRepository
-
-export function setVersionRepository(next: VersionRepository): void {
-  active = next
+const adapters: Record<RepositoryKind, VersionRepository> = {
+  local: LocalVersionRepository,
+  remote: RemoteVersionRepository,
 }
 
-export function getVersionRepository(): VersionRepository {
-  return active
+export function getVersionRepository(kind: RepositoryKind): VersionRepository {
+  return adapters[kind]
+}
+
+/**
+ * Swap an adapter for a stub. Tests and stories only — production resolves the
+ * two real adapters above. Callers must restore the original afterwards, and
+ * must isolate the query cache (a stub shares the real adapter's `kind`, so it
+ * shares its query keys).
+ */
+export function setVersionRepository(
+  kind: RepositoryKind,
+  repository: VersionRepository
+): () => void {
+  const previous = adapters[kind]
+  adapters[kind] = repository
+  return () => {
+    adapters[kind] = previous
+  }
 }
 
 export { LocalVersionRepository, RemoteVersionRepository }

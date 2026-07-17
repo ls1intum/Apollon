@@ -11,9 +11,8 @@ import {
   AlertDialog,
   AlertDialogContent,
 } from "@tumaet/ui/components/alert-dialog"
-import { QueryClientProvider } from "@tanstack/react-query"
 import { renderWithRouter } from "@/test/renderWithRouter"
-import { createTestQueryClient } from "@/test/queryTestUtils"
+import { wrapWithQueryClient } from "@/test/queryTestUtils"
 import { ModalProvider } from "@/contexts"
 import { CurrentVersionRow } from "./CurrentVersionRow"
 import { DeleteVersionModal } from "./DeleteVersionModal"
@@ -39,7 +38,6 @@ afterEach(() => {
 
 describe("URL-driven preview exit", () => {
   it("'Return to current' strips ?version= from the URL", async () => {
-    const queryClient = createTestQueryClient()
     const { router } = renderWithRouter(
       <CurrentVersionRow
         diagramId={DIAGRAM_ID}
@@ -49,11 +47,7 @@ describe("URL-driven preview exit", () => {
       {
         initialEntry: `/local/${DIAGRAM_ID}?version=${VERSION_ID}`,
         routePaths: ["/local/$id"],
-        wrapper: (children) => (
-          <QueryClientProvider client={queryClient}>
-            {children}
-          </QueryClientProvider>
-        ),
+        wrapper: (children) => wrapWithQueryClient(children).element,
       }
     )
 
@@ -64,13 +58,12 @@ describe("URL-driven preview exit", () => {
     expect(router.state.location.search).not.toHaveProperty("version")
   })
 
-  it("deleting the previewed version strips ?version= before deleting", async () => {
+  it("deleting the previewed version also strips ?version=", async () => {
     // The modal's delete mutation flows through the bound repository (the
     // default RemoteVersionRepository delegates to VersionApiClient).
     const deleteSpy = vi
       .spyOn(VersionApiClient, "delete")
       .mockResolvedValue(undefined)
-    const queryClient = createTestQueryClient()
 
     const { router } = renderWithRouter(
       // DeleteVersionModal renders only the AlertDialog *body* (footer, cancel,
@@ -84,6 +77,7 @@ describe("URL-driven preview exit", () => {
               diagramId={DIAGRAM_ID}
               versionId={VERSION_ID}
               version={null}
+              kind="remote"
             />
           </AlertDialogContent>
         </AlertDialog>
@@ -91,11 +85,7 @@ describe("URL-driven preview exit", () => {
       {
         initialEntry: `/local/${DIAGRAM_ID}?version=${VERSION_ID}`,
         routePaths: ["/local/$id"],
-        wrapper: (children) => (
-          <QueryClientProvider client={queryClient}>
-            {children}
-          </QueryClientProvider>
-        ),
+        wrapper: (children) => wrapWithQueryClient(children).element,
       }
     )
 

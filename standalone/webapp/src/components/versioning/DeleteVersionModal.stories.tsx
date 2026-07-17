@@ -37,11 +37,13 @@ const meta = {
     diagramId: SAMPLE_DIAGRAM_ID,
     versionId: VERSION_ID,
     version: target,
+    kind: "remote",
   },
   argTypes: {
     diagramId: { control: false, table: { category: "Data" } },
     versionId: { control: false, table: { category: "Data" } },
     version: { control: false, table: { category: "Data" } },
+    kind: { control: false, table: { category: "Data" } },
   },
   beforeEach: () => {
     resetVersionStore()

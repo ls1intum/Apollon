@@ -4,6 +4,7 @@ import { log } from "@/logger"
 import { useEditorContext } from "@/contexts"
 import { useVersionStore } from "@/stores/useVersionStore"
 import { useUndoRestoreMutation } from "@/queries/versionMutations"
+import { useVersionRepositoryKind } from "@/contexts/VersionRepositoryContext"
 import { versioningStrings as t } from "./strings"
 
 const UNDO_RESTORE_TOAST_ID = "undo-restore"
@@ -22,7 +23,7 @@ const UndoRestoreToastBody: FC<{ restoredVersionName: string }> = ({
 }) => {
   const undo = useVersionStore((s) => s.undoRestore)
   const dismiss = useVersionStore((s) => s.dismissUndoRestore)
-  const undoRestore = useUndoRestoreMutation()
+  const undoRestore = useUndoRestoreMutation(useVersionRepositoryKind())
   const { editor } = useEditorContext()
   const [submitting, setSubmitting] = useState(false)
 

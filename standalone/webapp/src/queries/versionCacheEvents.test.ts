@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest"
 import type { ControlEvent, VersionSummary } from "@/types"
 import { createTestQueryClient } from "@/test/queryTestUtils"
+import { log } from "@/logger"
 import { versionKeys } from "./keys"
 import type { VersionListData } from "./versionQueries"
 import { applyControlEventToCache } from "./versionCacheEvents"
@@ -107,27 +108,19 @@ describe("applyControlEventToCache", () => {
     expect(invalidate).toHaveBeenCalledWith({ queryKey: LIST_KEY })
   })
 
-  it("unknown control event types are no-ops (forward-compat)", () => {
+  it("logs and ignores an event type from a newer server (staggered rollout)", () => {
     const client = createTestQueryClient()
     client.setQueryData(LIST_KEY, seed([summary("a")]))
-    const unknown = {
-      type: "VERSION_FROM_THE_FUTURE",
-      something: "else",
-    } as unknown as ControlEvent
-    expect(() =>
-      applyControlEventToCache(client, DIAGRAM_ID, unknown)
-    ).not.toThrow()
-    expect(cachedIds(client)).toEqual(["a"])
-  })
+    const warn = vi.spyOn(log, "warn").mockImplementation(() => {})
 
-  it("events against an empty cache are safe no-ops", () => {
-    const client = createTestQueryClient()
-    expect(() =>
-      applyControlEventToCache(client, DIAGRAM_ID, {
-        type: "VERSION_DELETED",
-        versionId: "ghost",
-      })
-    ).not.toThrow()
-    expect(client.getQueryData(LIST_KEY)).toBeUndefined()
+    applyControlEventToCache(client, DIAGRAM_ID, {
+      type: "VERSION_FROM_THE_FUTURE",
+    } as unknown as ControlEvent)
+
+    expect(warn).toHaveBeenCalledWith(
+      expect.anything(),
+      "VERSION_FROM_THE_FUTURE"
+    )
+    expect(cachedIds(client)).toEqual(["a"])
   })
 })

@@ -3,7 +3,8 @@ import { useNavigate } from "@tanstack/react-router"
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "react-toastify"
 import { useVersionStore } from "@/stores/useVersionStore"
-import { fetchVersionBody, useBoundRepository } from "@/queries/versionQueries"
+import { fetchVersionBody } from "@/queries/versionQueries"
+import type { RepositoryKind } from "@/services/versionRepository"
 import { versioningStrings as t } from "@/components/versioning/strings"
 import { log } from "@/logger"
 
@@ -46,18 +47,17 @@ export function useClosePreview() {
  *
  * `previewFromUrl` is the page's typed `?version=` read — each editor route
  * owns its own, so passing it in keeps this hook route-agnostic. `ready` MUST
- * be false until the page has bound the active `VersionRepository` (pass
- * `Boolean(editor)`), or a deep-link / reload carrying `?version=` would
- * `enterPreview` against the wrong adapter.
+ * be false until the editor exists (pass `Boolean(editor)`), since entering
+ * preview overlays a model onto it.
  */
 export function useVersionPreviewUrlSync(
+  kind: RepositoryKind,
   diagramId: string | undefined,
   previewFromUrl: string | undefined,
   ready: boolean = true
 ) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const repo = useBoundRepository()
   const enterPreview = useVersionStore((s) => s.enterPreview)
   const exitPreview = useVersionStore((s) => s.exitPreview)
   const previewVersionId = useVersionStore((s) => s.preview?.versionId ?? null)
@@ -71,12 +71,9 @@ export function useVersionPreviewUrlSync(
   useEffect(() => {
     if (!diagramId) return
     if (previewFromUrl) {
-      // Entering needs the repository bound (gated on `ready`); if it isn't yet,
-      // this effect re-runs when `ready` flips.
       if (ready && previewVersionId !== previewFromUrl) {
-        // Body comes through the shared query cache (dedups with thumbnails
-        // and dirty-check baselines); the store setter itself is synchronous.
-        void fetchVersionBody(queryClient, repo, diagramId, previewFromUrl)
+        // Shared cache: dedups with the thumbnail + dirty-check baseline reads.
+        void fetchVersionBody(queryClient, kind, diagramId, previewFromUrl)
           .then((body) => enterPreview(diagramId, previewFromUrl, body))
           .catch((err) => {
             log.warn(
@@ -96,8 +93,8 @@ export function useVersionPreviewUrlSync(
           })
       }
     } else if (previewVersionId !== null) {
-      // No version in the URL but the store is previewing — clear it. Clearing
-      // doesn't need the editor/repo, so it runs even before `ready`.
+      // No version in the URL but the store is previewing — clear it. Doesn't
+      // need the editor, so it runs even before `ready`.
       exitPreview()
     }
   }, [
@@ -109,7 +106,7 @@ export function useVersionPreviewUrlSync(
     exitPreview,
     navigate,
     queryClient,
-    repo,
+    kind,
   ])
 
   const openPreview = useCallback(

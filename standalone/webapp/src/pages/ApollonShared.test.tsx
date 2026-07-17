@@ -1,14 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { act, cleanup, screen, waitFor } from "@testing-library/react"
-import { QueryClientProvider } from "@tanstack/react-query"
 import { renderWithRouter } from "@/test/renderWithRouter"
-import { createTestQueryClient } from "@/test/queryTestUtils"
+import { wrapWithQueryClient } from "@/test/queryTestUtils"
 import { toast } from "react-toastify"
 import { ApollonShared } from "./ApollonShared"
 import { EditorProvider, ModalProvider } from "@/contexts"
 import { DiagramApiClient } from "@/services/DiagramApiClient"
 
 const addSharedDiagramEntryMock = vi.fn()
+
+// Holds the page's control-event listener so tests can dispatch a real
+// VERSION_RESTORED the way the server would.
+const wsHoisted = vi.hoisted(() => ({
+  control: null as ((event: unknown) => void) | null,
+}))
 
 // Holds the most recently mounted fake editor so a test can drive it directly.
 const editorHoisted = vi.hoisted(() => ({
@@ -111,8 +116,11 @@ vi.mock("@/services/WebSocketManager", () => ({
   WebSocketManager: class {
     constructor() {}
     startConnection() {}
-    onControl() {
-      return () => {}
+    onControl(listener: (event: unknown) => void) {
+      wsHoisted.control = listener
+      return () => {
+        wsHoisted.control = null
+      }
     }
     cleanup() {}
   },
@@ -159,12 +167,13 @@ vi.mock("@/services/DiagramApiClient", () => ({
 const versionHoisted = vi.hoisted(() => {
   const state = {
     preview: null as { versionId: string; body: object } | null,
-    pendingRestoreFromId: null,
-    undoRestore: null,
+    pendingRestoreFromId: null as string | null,
+    undoRestore: null as { restoredFromVersionId: string } | null,
     exitPreview: vi.fn(),
-    restoreVersion: vi.fn(),
-    applyControlEvent: vi.fn(),
-    fetchVersions: vi.fn(),
+    enterPreview: vi.fn(),
+    beginRestore: vi.fn(),
+    completeRestore: vi.fn(),
+    cancelRestore: vi.fn(),
   }
   return { state }
 })
@@ -215,23 +224,16 @@ function mountAt(initialEntry: string) {
   // The page reads getRouteApi("/shared/$diagramId"), so it must mount under
   // that template; "/" is included so its navigate({ to: "/" }) fallback
   // resolves. Drive in-test route changes with the returned `history.push`.
-  // A fresh QueryClient per mount isolates the seed cache across tests the
-  // same way gcTime: 0 isolates it across page visits in production.
-  const queryClient = createTestQueryClient()
-  return {
-    ...renderWithRouter(<ApollonShared />, {
-      initialEntry,
-      routePaths: ["/shared/$diagramId", "/"],
-      wrapper: (children) => (
-        <QueryClientProvider client={queryClient}>
-          <EditorProvider>
-            <ModalProvider>{children}</ModalProvider>
-          </EditorProvider>
-        </QueryClientProvider>
-      ),
-    }),
-    queryClient,
-  }
+  return renderWithRouter(<ApollonShared />, {
+    initialEntry,
+    routePaths: ["/shared/$diagramId", "/"],
+    wrapper: (children) =>
+      wrapWithQueryClient(
+        <EditorProvider>
+          <ModalProvider>{children}</ModalProvider>
+        </EditorProvider>
+      ).element,
+  })
 }
 
 async function resolveFetch(model: object = { nodes: [], edges: [] }) {
@@ -248,7 +250,10 @@ beforeEach(() => {
   addSharedDiagramEntryMock.mockReset()
   fetchHoisted.state.pending = null
   editorHoisted.instance = null
+  wsHoisted.control = null
   versionHoisted.state.preview = null
+  versionHoisted.state.pendingRestoreFromId = null
+  versionHoisted.state.undoRestore = null
   versionHoisted.state.exitPreview.mockImplementation(() => {
     versionHoisted.state.preview = null
   })
@@ -362,6 +367,58 @@ describe("ApollonShared — loading-state regression", () => {
     expect(previewSpy).toHaveBeenCalledWith(false)
     expect(versionHoisted.state.exitPreview).toHaveBeenCalled()
     expect(sendUpdate.mock.calls[0][1]).toEqual(liveModel)
+  })
+
+  it("refreshes the canvas and toasts when a COLLABORATOR restores a version", async () => {
+    const infoToast = vi.spyOn(toast, "info")
+    const fetchDiagram = vi.mocked(DiagramApiClient.fetchDiagram)
+    mountAt("/shared/abc?view=COLLABORATE")
+    await resolveFetch({ id: "abc", nodes: [], edges: [] })
+    await waitFor(() => expect(wsHoisted.control).not.toBeNull())
+    fetchDiagram.mockClear()
+
+    await act(async () => {
+      wsHoisted.control!({
+        type: "VERSION_RESTORED",
+        headRev: 2,
+        updatedAt: "",
+        autoSnapshotVersionId: "auto-1",
+        restoredFromVersionId: "not-ours",
+        actor: "Ada",
+      })
+    })
+
+    await waitFor(() => expect(fetchDiagram).toHaveBeenCalledTimes(1))
+    expect(infoToast).toHaveBeenCalledWith(
+      expect.stringContaining("Ada"),
+      expect.anything()
+    )
+  })
+
+  it("ignores the VERSION_RESTORED echo of the restore THIS client just sent", async () => {
+    const infoToast = vi.spyOn(toast, "info")
+    const fetchDiagram = vi.mocked(DiagramApiClient.fetchDiagram)
+    mountAt("/shared/abc?view=COLLABORATE")
+    await resolveFetch({ id: "abc", nodes: [], edges: [] })
+    await waitFor(() => expect(wsHoisted.control).not.toBeNull())
+    fetchDiagram.mockClear()
+
+    // The restore mutation raises this flag before its request leaves; the WS
+    // echo typically beats the HTTP response back.
+    versionHoisted.state.pendingRestoreFromId = "v42"
+    await act(async () => {
+      wsHoisted.control!({
+        type: "VERSION_RESTORED",
+        headRev: 2,
+        updatedAt: "",
+        autoSnapshotVersionId: "auto-1",
+        restoredFromVersionId: "v42",
+        actor: "Ada",
+      })
+    })
+
+    expect(fetchDiagram).not.toHaveBeenCalled()
+    expect(infoToast).not.toHaveBeenCalled()
   })
 
   it("re-opens the collab-name prompt for each new un-named diagram", async () => {

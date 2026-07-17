@@ -6,9 +6,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { cleanup, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { QueryClientProvider } from "@tanstack/react-query"
 import { renderWithRouter } from "@/test/renderWithRouter"
-import { createTestQueryClient } from "@/test/queryTestUtils"
+import { wrapWithQueryClient } from "@/test/queryTestUtils"
 import { VersionListItem } from "./VersionListItem"
 import type { PendingVersion } from "@/types"
 
@@ -47,11 +46,7 @@ function renderRow(
       {
         initialEntry: "/local/d1",
         routePaths: ["/local/$id"],
-        wrapper: (children) => (
-          <QueryClientProvider client={createTestQueryClient()}>
-            {children}
-          </QueryClientProvider>
-        ),
+        wrapper: (children) => wrapWithQueryClient(children).element,
       }
     ),
   }

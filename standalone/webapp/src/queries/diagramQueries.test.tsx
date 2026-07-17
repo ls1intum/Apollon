@@ -38,21 +38,6 @@ describe("useDiagramSeedQuery", () => {
     })
   })
 
-  it("does not fetch while disabled (collab-name gate)", async () => {
-    const fetchDiagram = vi
-      .spyOn(DiagramApiClient, "fetchDiagram")
-      .mockResolvedValue(body)
-    const { wrapper } = setup()
-    const { result } = renderHook(
-      () => useDiagramSeedQuery(DIAGRAM_ID, { enabled: false }),
-      { wrapper }
-    )
-    await new Promise((r) => setTimeout(r, 10))
-    expect(fetchDiagram).not.toHaveBeenCalled()
-    // Disabled ⇒ still pending, which is what keeps the loading overlay up.
-    expect(result.current.isPending).toBe(true)
-  })
-
   it("drops the cache entry on unmount (gcTime: 0) so a re-join re-fetches", async () => {
     vi.spyOn(DiagramApiClient, "fetchDiagram").mockResolvedValue(body)
     const { client, wrapper } = setup()
