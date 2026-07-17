@@ -1,7 +1,7 @@
 import { Skeleton } from "@tumaet/ui/components/skeleton"
 import { HistoryIcon, BookmarkIcon } from "lucide-react"
 import { useEffect, useRef, useState, type FC } from "react"
-import { ApollonEditor, importDiagram, type UMLModel } from "@tumaet/apollon"
+import { ApollonEditor, importDiagram } from "@tumaet/apollon"
 import { useVersionBodyQuery } from "@/queries/versionQueries"
 import { useVersionRepositoryKind } from "@/contexts/VersionRepositoryContext"
 import { log } from "@/logger"
@@ -97,11 +97,9 @@ export const VersionThumbnail: FC<Props> = ({
     const body = bodyQuery.data
     if (!body || src || renderFailed) return
     enqueueRender(() => {
-      // `Diagram` (server wire form) is `UMLModel & {...}`; route through
-      // `importDiagram` so older-schema snapshots forward-convert to whatever
-      // the current library understands before rendering. Inside the queue so
-      // a schema failure flows into the same async error path as the export.
-      const model = importDiagram(body) as UMLModel
+      // `importDiagram` forward-converts older-schema snapshots. Inside the
+      // queue so a schema failure shares the export's async error path.
+      const model = importDiagram(body)
       return ApollonEditor.exportModelAsSvg(model, { svgMode: "compat" })
     })
       .then((result) => {
