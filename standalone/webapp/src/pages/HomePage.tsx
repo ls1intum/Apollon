@@ -1,10 +1,10 @@
 import React, { lazy, Suspense, useEffect, useMemo, useRef } from "react"
-import { useNavigate, useLocation } from "@tanstack/react-router"
-import { importDiagram, type UMLDiagramType } from "@tumaet/apollon"
-import { toast } from "react-toastify"
-import { log } from "@/logger"
+import { useLocation } from "@tanstack/react-router"
+import { type UMLDiagramType } from "@tumaet/apollon"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { useModalContext } from "@/contexts"
+import { DiagramFileDropzone } from "@/components/DiagramFileDropzone"
+import { useImportDiagramFile } from "@/hooks/useImportDiagramFile"
 import { DiagramGallerySkeleton } from "@/components/home/DiagramGallerySkeleton"
 import { HomeHeaderRow } from "@/components/home/HomeHeaderRow"
 import { HomeNewFab } from "@/components/home/HomeNewFab"
@@ -23,7 +23,6 @@ const DiagramGallery = lazy(() =>
 
 export const HomePage = () => {
   useDocumentTitle("Your diagrams")
-  const navigate = useNavigate()
   const location = useLocation()
   const highlightSharedDiagramId =
     readHighlightSharedDiagramId(location.state) ?? null
@@ -32,6 +31,7 @@ export const HomePage = () => {
     (state) => state.setCurrentModelId
   )
   const jsonImportRef = useRef<HTMLInputElement>(null)
+  const importFile = useImportDiagramFile()
 
   // The single source of truth for the band's search / favorites / source /
   // type / sort controls. Passed to BOTH the band and the gallery so they share
@@ -44,27 +44,7 @@ export const HomePage = () => {
 
   const handleJsonImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = (ev) => {
-      try {
-        const json = JSON.parse(ev.target?.result as string)
-        const processedModel = importDiagram(json)
-        if (!processedModel?.id) {
-          throw new Error("Imported diagram has no id")
-        }
-        usePersistenceModelStore.getState().createModel(processedModel)
-        navigate({
-          to: "/local/$id",
-          params: { id: processedModel.id },
-          replace: true,
-        })
-      } catch (error) {
-        log.error("Invalid JSON file", error as Error)
-        toast.error("Failed to import diagram — invalid JSON file.")
-      }
-    }
-    reader.readAsText(file)
+    if (file) void importFile(file)
     e.target.value = ""
   }
 
@@ -95,46 +75,48 @@ export const HomePage = () => {
   )
 
   return (
-    <PageShell
-      // Account for the floating New-diagram FAB on phones (pb-24) so the last
-      // gallery row clears it; less bottom room is needed on md+ where the FAB
-      // is hidden. Also pad past the bottom safe-area inset on notched devices.
-      mainClassName="pb-[max(6rem,calc(var(--safe-area-inset-bottom,0px)+2.5rem))] md:pb-[max(2.5rem,var(--safe-area-inset-bottom,0px))]"
-      header={
-        <HomeHeaderRow
-          chrome={chrome}
-          count={count}
-          typeOptions={typeOptions}
-          onNewDiagram={openNewDiagram}
-          onImportJson={triggerJsonImport}
-        />
-      }
-    >
-      {/* Off-screen file input the Import button triggers programmatically. */}
-      <input
-        ref={jsonImportRef}
-        type="file"
-        accept=".json,application/json"
-        className="sr-only"
-        onChange={handleJsonImport}
-        aria-hidden="true"
-        tabIndex={-1}
-      />
-
-      {/* Sets the gap between the header band and the first gallery row, which
-          live in separate shell wrappers. */}
-      <div className="mt-4">
-        <Suspense fallback={<DiagramGallerySkeleton />}>
-          <DiagramGallery
+    <DiagramFileDropzone className="h-full min-h-0">
+      <PageShell
+        // Account for the floating New-diagram FAB on phones (pb-24) so the last
+        // gallery row clears it; less bottom room is needed on md+ where the FAB
+        // is hidden. Also pad past the bottom safe-area inset on notched devices.
+        mainClassName="pb-[max(6rem,calc(var(--safe-area-inset-bottom,0px)+2.5rem))] md:pb-[max(2.5rem,var(--safe-area-inset-bottom,0px))]"
+        header={
+          <HomeHeaderRow
             chrome={chrome}
-            highlightSharedDiagramId={highlightSharedDiagramId}
-            onCountChange={setCount}
-            onTypeOptionsChange={setPresentTypes}
+            count={count}
+            typeOptions={typeOptions}
+            onNewDiagram={openNewDiagram}
+            onImportJson={triggerJsonImport}
           />
-        </Suspense>
-      </div>
+        }
+      >
+        {/* Off-screen file input the Import button triggers programmatically. */}
+        <input
+          ref={jsonImportRef}
+          type="file"
+          accept=".json,application/json"
+          className="sr-only"
+          onChange={handleJsonImport}
+          aria-hidden="true"
+          tabIndex={-1}
+        />
 
-      <HomeNewFab onNewDiagram={openNewDiagram} />
-    </PageShell>
+        {/* Sets the gap between the header band and the first gallery row, which
+          live in separate shell wrappers. */}
+        <div className="mt-4">
+          <Suspense fallback={<DiagramGallerySkeleton />}>
+            <DiagramGallery
+              chrome={chrome}
+              highlightSharedDiagramId={highlightSharedDiagramId}
+              onCountChange={setCount}
+              onTypeOptionsChange={setPresentTypes}
+            />
+          </Suspense>
+        </div>
+
+        <HomeNewFab onNewDiagram={openNewDiagram} />
+      </PageShell>
+    </DiagramFileDropzone>
   )
 }
