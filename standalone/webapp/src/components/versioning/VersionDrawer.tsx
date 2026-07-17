@@ -152,10 +152,18 @@ export const VersionSidebarBody: FC<Props> = ({
   const latestSavedVersion = versions.find((v) => !v.pending && !v.failed)
   const [savedFingerprint, setSavedFingerprint] = useState<string | null>(null)
   const [hasChanges, setHasChanges] = useState(true)
-  // Whether the dirty-check baseline has settled (loaded, or there's nothing to
-  // load). The save shortcut waits for this so it can't snapshot a no-op version
-  // in the window before the last version's fingerprint arrives.
-  const [baselineResolved, setBaselineResolved] = useState(false)
+  // The version id the fingerprint baseline is currently resolved for:
+  //   `undefined` — never resolved · `null` — resolved for "no version yet".
+  // The save shortcut compares this to the current latest version rather than
+  // reading a boolean that lags a render: on the frame the version list first
+  // arrives, a boolean would still read the earlier empty branch's `true` while
+  // the re-fetch is only queued, letting the shortcut snapshot with a stale
+  // fingerprint. An id mismatch closes that window with no stale state.
+  const [baselineVersionId, setBaselineVersionId] = useState<
+    string | null | undefined
+  >(undefined)
+  const baselineResolved =
+    baselineVersionId === (latestSavedVersion?.id ?? null)
 
   // Re-baseline the fingerprint on every new latest-saved version. Two cases:
   //  1. Local save (handleCreate just ran): `lastLocalSaveIdRef.current` matches
@@ -169,22 +177,23 @@ export const VersionSidebarBody: FC<Props> = ({
     if (!latestSavedVersion) {
       setSavedFingerprint(null)
       setHasChanges(true)
-      setBaselineResolved(true)
+      setBaselineVersionId(null)
       return
     }
     if (lastLocalSaveIdRef.current === latestSavedVersion.id) {
       // Fast path: we just saved this version locally — editor model is authoritative.
       setSavedFingerprint(structuralFingerprint(editor.model))
       setHasChanges(false)
-      setBaselineResolved(true)
+      setBaselineVersionId(latestSavedVersion.id)
       return
     }
     // Slow path: fetch the actual version body so the baseline is the
-    // canonical snapshot (server in collab mode, IDB in local mode), not
-    // the potentially-dirty editor state.
-    setBaselineResolved(false)
+    // canonical snapshot (server in collab mode, IDB in local mode), not the
+    // potentially-dirty editor state. Until it resolves, `baselineVersionId`
+    // still names the previous baseline, so `baselineResolved` is false.
+    const resolvingVersionId = latestSavedVersion.id
     getVersionRepository()
-      .getBody(latestSavedVersion.diagramId, latestSavedVersion.id)
+      .getBody(latestSavedVersion.diagramId, resolvingVersionId)
       .then((body) => {
         setSavedFingerprint(structuralFingerprint(body))
       })
@@ -195,7 +204,7 @@ export const VersionSidebarBody: FC<Props> = ({
         setSavedFingerprint(null)
         setHasChanges(true)
       })
-      .finally(() => setBaselineResolved(true))
+      .finally(() => setBaselineVersionId(resolvingVersionId))
   }, [editor, latestSavedVersion?.id])
 
   useEffect(() => {
