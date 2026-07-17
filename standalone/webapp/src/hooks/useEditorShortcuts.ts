@@ -62,6 +62,7 @@ export const createEditorShortcutHandler =
 export function useEditorShortcuts(diagramId: string | undefined) {
   const openDrawer = useVersionStore((s) => s.openDrawer)
   const closeDrawer = useVersionStore((s) => s.closeDrawer)
+  const requestSave = useVersionStore((s) => s.requestSave)
   const exportAsJSON = useExportAsJSON()
 
   // `useExportAsJSON` returns a fresh closure every render; the listener reads
@@ -86,7 +87,9 @@ export function useEditorShortcuts(diagramId: string | undefined) {
             log.error("save shortcut export failed", err as Error)
           })
       },
-      "save-version": () => openDrawer(diagramId),
+      // Opens the panel and asks it to save — the panel owns the editor model
+      // and the dirty-check, so it saves only when there's something new.
+      "save-version": () => requestSave(diagramId),
       "toggle-version-history": () => {
         const open = useVersionStore.getState().drawerOpenByDiagram[diagramId]
         if (open) closeDrawer(diagramId)
@@ -95,5 +98,5 @@ export function useEditorShortcuts(diagramId: string | undefined) {
     })
     window.addEventListener("keydown", onKeyDown)
     return () => window.removeEventListener("keydown", onKeyDown)
-  }, [diagramId, openDrawer, closeDrawer])
+  }, [diagramId, openDrawer, closeDrawer, requestSave])
 }

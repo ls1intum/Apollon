@@ -9,6 +9,7 @@ import {
 } from "vitest"
 import { renderHook } from "@testing-library/react"
 import { EditorContext } from "@/contexts"
+import { useVersionStore } from "@/stores/useVersionStore"
 import {
   createEditorShortcutHandler,
   useEditorShortcuts,
@@ -159,5 +160,22 @@ describe("useEditorShortcuts", () => {
 
     press({ key: "s", code: "KeyS", ctrlKey: true })
     expect(exportAsJSON).not.toHaveBeenCalled()
+  })
+
+  it("Mod+Shift+S opens the version panel and asks it to save", () => {
+    useVersionStore.setState({
+      drawerOpenByDiagram: {},
+      saveRequestByDiagram: {},
+    })
+    renderHook(() => useEditorShortcuts("diagram-1"), { wrapper })
+
+    press({ key: "s", code: "KeyS", ctrlKey: true, shiftKey: true })
+
+    // The panel — not the shortcut — owns the editor and the save; the shortcut
+    // just opens it and bumps the request the panel acts on.
+    expect(useVersionStore.getState().drawerOpenByDiagram["diagram-1"]).toBe(
+      true
+    )
+    expect(useVersionStore.getState().saveRequestByDiagram["diagram-1"]).toBe(1)
   })
 })

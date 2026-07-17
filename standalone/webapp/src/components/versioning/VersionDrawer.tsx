@@ -152,6 +152,10 @@ export const VersionSidebarBody: FC<Props> = ({
   const latestSavedVersion = versions.find((v) => !v.pending && !v.failed)
   const [savedFingerprint, setSavedFingerprint] = useState<string | null>(null)
   const [hasChanges, setHasChanges] = useState(true)
+  // Whether the dirty-check baseline has settled (loaded, or there's nothing to
+  // load). The save shortcut waits for this so it can't snapshot a no-op version
+  // in the window before the last version's fingerprint arrives.
+  const [baselineResolved, setBaselineResolved] = useState(false)
 
   // Re-baseline the fingerprint on every new latest-saved version. Two cases:
   //  1. Local save (handleCreate just ran): `lastLocalSaveIdRef.current` matches
@@ -165,17 +169,20 @@ export const VersionSidebarBody: FC<Props> = ({
     if (!latestSavedVersion) {
       setSavedFingerprint(null)
       setHasChanges(true)
+      setBaselineResolved(true)
       return
     }
     if (lastLocalSaveIdRef.current === latestSavedVersion.id) {
       // Fast path: we just saved this version locally — editor model is authoritative.
       setSavedFingerprint(structuralFingerprint(editor.model))
       setHasChanges(false)
+      setBaselineResolved(true)
       return
     }
     // Slow path: fetch the actual version body so the baseline is the
     // canonical snapshot (server in collab mode, IDB in local mode), not
     // the potentially-dirty editor state.
+    setBaselineResolved(false)
     getVersionRepository()
       .getBody(latestSavedVersion.diagramId, latestSavedVersion.id)
       .then((body) => {
@@ -188,6 +195,7 @@ export const VersionSidebarBody: FC<Props> = ({
         setSavedFingerprint(null)
         setHasChanges(true)
       })
+      .finally(() => setBaselineResolved(true))
   }, [editor, latestSavedVersion?.id])
 
   useEffect(() => {
@@ -266,6 +274,44 @@ export const VersionSidebarBody: FC<Props> = ({
       setSubmitting(false)
     }
   }
+
+  // The "save a version" shortcut (Ctrl/Cmd+Shift+S) can't reach the editor
+  // model or the guards, so it bumps a per-diagram nonce and this panel — which
+  // owns both — runs the same save the Save button does. Waiting for
+  // `baselineResolved` keeps a keystroke on an unchanged diagram from writing a
+  // duplicate version before the dirty-check settles.
+  const saveRequest = useVersionStore(
+    (s) => s.saveRequestByDiagram[diagramId] ?? 0
+  )
+  const clearSaveRequest = useVersionStore((s) => s.clearSaveRequest)
+  const handledSaveRequestRef = useRef(0)
+  // A ref, refreshed each render, so the trigger effect can depend only on the
+  // request and readiness rather than on every guard value it reads.
+  const runSaveRequestRef = useRef<() => void>(() => {})
+  useEffect(() => {
+    runSaveRequestRef.current = () => {
+      if (canSave) {
+        void handleCreate()
+      } else if (editor && !isEmptyDiagram && previewState === null) {
+        // Content, but identical to the last version — nothing to snapshot.
+        toast.info(t.noChangesToSave)
+      }
+      // Empty diagram or previewing: the open panel (its empty-state CTA or
+      // preview banner) is feedback enough.
+    }
+  })
+
+  useEffect(() => {
+    if (saveRequest === 0) {
+      handledSaveRequestRef.current = 0
+      return
+    }
+    if (saveRequest <= handledSaveRequestRef.current || !baselineResolved)
+      return
+    handledSaveRequestRef.current = saveRequest
+    clearSaveRequest(diagramId)
+    runSaveRequestRef.current()
+  }, [saveRequest, baselineResolved, diagramId, clearSaveRequest])
 
   const handlePreview = useCallback(
     async (versionId: string) => {

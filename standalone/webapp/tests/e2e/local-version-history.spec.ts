@@ -188,6 +188,25 @@ test.describe("Local version history (#670, /local/:id routing)", () => {
     ).toBeVisible()
   })
 
+  test("Ctrl/Cmd+Shift+S saves a version without touching the composer", async ({
+    page,
+  }) => {
+    await seedLocalDiagram(page)
+    await openLocalEditor(page)
+
+    // The shortcut opens the panel and commits the version itself — no drawer
+    // click, no composer.
+    await page.keyboard.press("ControlOrMeta+Shift+KeyS")
+
+    await expect(drawer(page)).toBeVisible()
+    await expect(
+      page.getByRole("button", { name: /Version actions/i })
+    ).toBeVisible()
+    await expect(
+      page.getByRole("button", { name: /Save first version/i })
+    ).toHaveCount(0)
+  })
+
   test("save commits a row that survives reload", async ({ page }) => {
     await seedLocalDiagram(page)
     await openLocalEditor(page)
