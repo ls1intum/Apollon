@@ -23,7 +23,7 @@ import { log } from "@/logger"
 // Module-level cache for the RENDERED SVG (not the body — that's the query
 // cache's job): snapshots are immutable, so a permanent in-memory data URL is
 // correct. Cleared on full reload.
-const cache = new Map<string, string>() // key = `${diagramId}/${versionId}`
+const cache = new Map<string, string>() // key = `${kind}/${diagramId}/${versionId}`
 
 // Single-flight render queue. Prevents overlapping `exportModelAsSvg`
 // calls from racing on the shared temp DOM container.
@@ -59,8 +59,9 @@ export const VersionThumbnail: FC<Props> = ({
   size = "banner",
   isAuto = false,
 }) => {
+  const kind = useVersionRepositoryKind()
   const compact = size === "compact"
-  const cacheKey = `${diagramId}/${versionId}`
+  const cacheKey = `${kind}/${diagramId}/${versionId}`
   const [src, setSrc] = useState<string | null>(cache.get(cacheKey) ?? null)
   const [renderFailed, setRenderFailed] = useState(false)
   const [isVisible, setIsVisible] = useState(false)
@@ -85,7 +86,6 @@ export const VersionThumbnail: FC<Props> = ({
     return () => observer.disconnect()
   }, [src])
 
-  const kind = useVersionRepositoryKind()
   const bodyQuery = useVersionBodyQuery(kind, diagramId, versionId, {
     enabled: isVisible && !src && !renderFailed,
   })
