@@ -258,17 +258,6 @@ beforeEach(() => {
     versionHoisted.state.preview = null
   })
   sessionStorage.setItem("apollon-collab-name", "tester")
-  // jsdom lacks ResizeObserver; the version-preview column uses it.
-  if (typeof globalThis.ResizeObserver === "undefined") {
-    class NoopResizeObserver {
-      observe() {}
-      unobserve() {}
-      disconnect() {}
-    }
-    ;(
-      globalThis as unknown as { ResizeObserver: typeof NoopResizeObserver }
-    ).ResizeObserver = NoopResizeObserver
-  }
 })
 
 afterEach(() => {

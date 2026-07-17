@@ -1,5 +1,6 @@
-import { QueryClient } from "@tanstack/react-query"
+import { QueryCache, QueryClient } from "@tanstack/react-query"
 import { ApiError } from "@/services/DiagramApiClient"
+import { log } from "@/logger"
 
 /**
  * App-wide QueryClient. TanStack Query owns request/response server state
@@ -14,13 +15,18 @@ import { ApiError } from "@/services/DiagramApiClient"
  *   would fight the Yjs document. The versions list opts back in per-query.
  * - 4xx responses are contract errors, not transport hiccups — never retried.
  *   Transport/5xx failures retry twice.
- *
- * Non-hook code should not import this singleton directly — use
- * `useQueryClient()` (components/hooks) or accept a `QueryClient` parameter
- * (plain functions) so tests can substitute an isolated client. The only
- * intended consumers are `AppProviders` and module-level bootstrap defaults.
  */
 export const queryClient = new QueryClient({
+  // Once per failed request, not once per observer: a query two components
+  // read would otherwise log twice. Surfaces still render their own copy.
+  queryCache: new QueryCache({
+    onError: (error, query) =>
+      log.warn(
+        "Query failed",
+        JSON.stringify(query.queryKey),
+        error instanceof Error ? error.message : String(error)
+      ),
+  }),
   defaultOptions: {
     queries: {
       staleTime: 30_000,

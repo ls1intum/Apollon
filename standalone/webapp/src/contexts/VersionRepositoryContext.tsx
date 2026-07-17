@@ -5,13 +5,14 @@ const VersionRepositoryContext = createContext<RepositoryKind | null>(null)
 
 /**
  * Declares which version-history backend the subtree talks to. Each editor
- * page provides its own constant (`/local/*` → local, `/shared/*` → remote),
+ * route provides its own constant (`/local/*` → local, `/shared/*` → remote),
  * so the kind can never disagree with the route or change under a mounted
  * consumer mid-navigation.
  *
- * Surfaces rendered outside the page's subtree — modals, which mount under
- * `ModalProvider` at the app root — take the kind as a prop from whoever
- * opened them instead.
+ * Two surfaces render OUTSIDE the routed subtree and so cannot read this:
+ * modals (`ModalProvider`) and toast bodies (`ToastContainer`), both mounted
+ * at the app root. They take the kind as a prop from whoever opened them —
+ * see `DeleteVersionModal` and `UndoRestoreToast`.
  */
 export const VersionRepositoryProvider = ({
   kind,

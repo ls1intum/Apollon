@@ -3,18 +3,22 @@
  * cmd/ctrl/middle-click opens the preview in a new tab (like gallery cards),
  * while plain left-click stays in-SPA via onPreview.
  */
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { cleanup, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { renderWithRouter } from "@/test/renderWithRouter"
 import { wrapWithQueryClient } from "@/test/queryTestUtils"
 import { VersionListItem } from "./VersionListItem"
+import { stubVersionRepository } from "@/test/versionRepositoryStub"
 import type { PendingVersion } from "@/types"
 
+let restoreRepository: () => void = () => {}
+
+beforeEach(() => {
+  restoreRepository = stubVersionRepository("remote")
+})
+
 vi.mock("./VersionThumbnail", () => ({ VersionThumbnail: () => null }))
-vi.mock("@/services/versionRepository", () => ({
-  getVersionRepository: () => ({ permalink: () => null }),
-}))
 
 const version = {
   id: "v1",
@@ -52,7 +56,10 @@ function renderRow(
   }
 }
 
-afterEach(cleanup)
+afterEach(() => {
+  restoreRepository()
+  cleanup()
+})
 
 describe("VersionListItem row navigation", () => {
   it("renders the row body as an anchor to ?version=<id>", async () => {

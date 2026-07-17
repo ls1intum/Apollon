@@ -3,10 +3,8 @@ import { renderHook, waitFor } from "@testing-library/react"
 import type { ReactNode } from "react"
 import { QueryClientProvider } from "@tanstack/react-query"
 import { toast } from "react-toastify"
-import {
-  setVersionRepository,
-  type VersionRepository,
-} from "@/services/versionRepository"
+import type { VersionRepository } from "@/services/versionRepository"
+import { stubVersionRepository } from "@/test/versionRepositoryStub"
 import { useVersionStore } from "@/stores/useVersionStore"
 import type { UMLModel } from "@tumaet/apollon"
 import type { VersionSummary } from "@/types"
@@ -44,30 +42,10 @@ function seed(versions: VersionSummary[]): VersionListData {
   }
 }
 
-function stubRepository(
-  overrides: Partial<VersionRepository>
-): VersionRepository {
-  return {
-    kind: "remote",
-    cap: 50,
-    list: vi.fn(async () => ({ versions: [], total: 0 })),
-    getBody: vi.fn(),
-    create: vi.fn(),
-    restore: vi.fn(),
-    editInfo: vi.fn(),
-    delete: vi.fn(),
-    permalink: () => null,
-    ...overrides,
-  } as VersionRepository
-}
-
 let restoreRepository: () => void = () => {}
 
 function setup(repoOverrides: Partial<VersionRepository>) {
-  restoreRepository = setVersionRepository(
-    "remote",
-    stubRepository(repoOverrides)
-  )
+  restoreRepository = stubVersionRepository("remote", repoOverrides)
   const client = createTestQueryClient()
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={client}>{children}</QueryClientProvider>
@@ -123,6 +101,62 @@ describe("useEditVersionInfoMutation", () => {
     expect(cachedRows(client).find((v) => v.id === "v1")!.description).toBe(
       "server-desc"
     )
+  })
+
+  it("survives a list refetch that was already in flight", async () => {
+    // `onMutate` must cancel in-flight reads first: a refetch that started
+    // before the edit resolves with pre-edit rows and would otherwise land on
+    // top of the optimistic patch, reverting the row under the user.
+    let resolveStaleRefetch!: (v: {
+      versions: VersionSummary[]
+      total: number
+    }) => void
+    const list = vi
+      .fn()
+      .mockResolvedValueOnce({ versions: [summary("v1")], total: 1 })
+      .mockImplementationOnce(
+        () =>
+          new Promise<{ versions: VersionSummary[]; total: number }>(
+            (resolve) => (resolveStaleRefetch = resolve)
+          )
+      )
+      // The settle-time invalidation reads the committed row.
+      .mockResolvedValue({
+        versions: [summary("v1", { description: "optimistic" })],
+        total: 1,
+      })
+    const editInfo = vi
+      .fn()
+      .mockResolvedValue(summary("v1", { description: "optimistic" }))
+    const { client, wrapper } = setup({ editInfo, list })
+
+    const view = renderHook(() => useVersionsQuery("remote", DIAGRAM_ID), {
+      wrapper,
+    })
+    await waitFor(() => expect(view.result.current.isSuccess).toBe(true))
+
+    // A refetch is in flight (focus, or a peer's control event)…
+    void client.invalidateQueries({ queryKey: LIST_KEY })
+    await waitFor(() => expect(list).toHaveBeenCalledTimes(2))
+
+    // …when the user edits the description.
+    const { result } = renderHook(
+      () => useEditVersionInfoMutation("remote", DIAGRAM_ID),
+      { wrapper }
+    )
+    const pending = result.current.mutateAsync({
+      versionId: "v1",
+      patch: { description: "optimistic" },
+    })
+    const shownDescription = () =>
+      view.result.current.data?.versions.find((v) => v.id === "v1")?.description
+    await waitFor(() => expect(shownDescription()).toBe("optimistic"))
+
+    // The stale read lands late and must be discarded, not applied.
+    resolveStaleRefetch({ versions: [summary("v1")], total: 1 })
+    await pending
+
+    expect(shownDescription()).toBe("optimistic")
   })
 
   it("rolls back the optimistic patch when the PATCH fails", async () => {
@@ -319,7 +353,7 @@ describe("useCreateVersionMutation", () => {
   it("re-reads the list even when the create fails, so a half-commit reconciles", async () => {
     const create = vi.fn().mockRejectedValue(new Error("network"))
     const list = vi.fn(async () => ({ versions: [summary("a")], total: 1 }))
-    const { client, wrapper } = setup({ create, list })
+    const { wrapper } = setup({ create, list })
     // An observed list is what a refetch acts on.
     renderHook(() => useVersionsQuery("remote", DIAGRAM_ID), { wrapper })
     await waitFor(() => expect(list).toHaveBeenCalledTimes(1))
@@ -333,7 +367,6 @@ describe("useCreateVersionMutation", () => {
     ).rejects.toThrow(/network/)
 
     await waitFor(() => expect(list).toHaveBeenCalledTimes(2))
-    expect(client).toBeDefined()
   })
 
   it("stays pending until the refreshed list has landed", async () => {

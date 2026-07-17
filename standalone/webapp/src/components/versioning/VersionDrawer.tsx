@@ -91,18 +91,21 @@ export const VersionSidebarBody: FC<Props> = ({
 }) => {
   const kind = useVersionRepositoryKind()
   const repo = getVersionRepository(kind)
-  const isLocal = repo.kind === "local"
+  const isLocal = kind === "local"
   const MAX_VERSIONS = repo.cap
   const queryClient = useQueryClient()
   const versionsQuery = useVersionsQuery(kind, diagramId)
   const serverVersions = versionsQuery.data?.versions ?? EMPTY_VERSIONS
   const total = versionsQuery.data?.total
-  const errorCode =
-    versionsQuery.error instanceof ApiError
+  // Only an initial-load failure replaces the list with an error surface. A
+  // background refetch (focus, control event) that fails leaves the rows the
+  // user already has on screen — `isError` alone would wipe them.
+  const loadFailed = versionsQuery.isError && serverVersions.length === 0
+  const errorCode = !loadFailed
+    ? null
+    : versionsQuery.error instanceof ApiError
       ? versionsQuery.error.code
-      : versionsQuery.isError
-        ? "INTERNAL"
-        : null
+      : "INTERNAL"
   const createMutation = useCreateVersionMutation(kind, diagramId)
   const restoreMutation = useRestoreVersionMutation(kind, diagramId)
   const enterPreview = useVersionStore((s) => s.enterPreview)

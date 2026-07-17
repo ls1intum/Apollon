@@ -1,20 +1,15 @@
 /* Shared fixtures + builders for the versioning component stories.
  *
- * The versioning stories (VersionDrawer / VersionListItem / AutoGroupRow /
- * CurrentVersionRow / VersionPreviewBanner / DeleteVersionModal) all re-declared
- * the same `PendingVersion` literals and the same `useVersionStore.setState`
- * seeding boilerplate. This module is the single source of those shapes:
- *
  *  - `makeVersion` / `makeAutoVersion` / `makePendingVersion` build one
  *    `PendingVersion` with sensible defaults; override any field per story.
  *  - `SAMPLE_VERSIONS` is a ready-made populated history (named + auto + named).
  *  - `makeAutoGroup` builds the `AutoGroupRow` group shape (a run of auto-saves).
- *  - `seedVersions` / `seedPreview` / `openDrawer` / `resetVersionStore` wrap the
- *    `useVersionStore` mutations the container stories use in `beforeEach`.
+ *  - `seedVersions` binds an in-memory `VersionRepository` — the same port the
+ *    app uses — so a story's components fetch through their real queries.
+ *  - `seedPreview` / `openDrawer` / `resetVersionStore` drive the client store.
  *
- * View stories should NOT need these store helpers — they drive everything via
- * `args`. The seed helpers exist only for the thin-container integration stories
- * that still read `useVersionStore`.
+ * View stories need none of this: they drive everything via `args`. The seed
+ * helpers exist for the thin-container stories that fetch and read state.
  */
 import type { UMLModel } from "@tumaet/apollon"
 import { useVersionStore } from "@/stores/useVersionStore"
@@ -142,10 +137,9 @@ export const EMPTY_BODY: UMLModel = {
 } as unknown as UMLModel
 
 /**
- * In-memory `VersionRepository` stub. Stories bind it through the same port
- * the app uses (`setVersionRepository`), so `useVersionsQuery` & the mutation
- * hooks work naturally — no cache forging, no network. Override individual
- * methods (e.g. a `fn()` spy on `delete`) per story.
+ * In-memory `VersionRepository` stub, bound under the "remote" kind so the
+ * stories' queries resolve it. Override individual methods (e.g. a `fn()` spy
+ * on `delete`) per story.
  */
 export function makeStoryRepository(
   versions: PendingVersion[] = [],
@@ -181,10 +175,11 @@ export function makeStoryRepository(
   }
 }
 
-/**
- * Reset the version store's client state AND the story query cache. Use in
- * meta `beforeEach`.
- */
+// Stories run in their own process and never need the real REST adapter, so
+// each seed replaces the previous stub rather than restoring it.
+let restoreRepository: () => void = () => {}
+
+/** Reset the client store, the query cache and the bound stub repository. */
 export function resetVersionStore(): void {
   useVersionStore.setState({
     preview: null,
@@ -193,13 +188,10 @@ export function resetVersionStore(): void {
     pendingRestoreFromId: null,
   })
   storybookQueryClient.clear()
-  setVersionRepository("remote", makeStoryRepository([]))
+  seedVersions([])
 }
 
-/**
- * Serve a version list (and optional total) to every consumer by binding an
- * in-memory repository; the components' own queries fetch it on mount.
- */
+/** Serve a version list to every consumer; their queries fetch it on mount. */
 export function seedVersions(
   versions: PendingVersion[],
   {
@@ -207,7 +199,8 @@ export function seedVersions(
     overrides,
   }: { total?: number; overrides?: Partial<VersionRepository> } = {}
 ): void {
-  setVersionRepository(
+  restoreRepository()
+  restoreRepository = setVersionRepository(
     "remote",
     makeStoryRepository(versions, { total, overrides })
   )

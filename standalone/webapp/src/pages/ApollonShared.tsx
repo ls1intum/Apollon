@@ -26,6 +26,7 @@ import {
 } from "@/queries/diagramQueries"
 import { diagramKeys } from "@/queries/keys"
 import { prefetchVersions } from "@/queries/versionQueries"
+import { useVersionRepositoryKind } from "@/contexts/VersionRepositoryContext"
 import { useRestoreVersionMutation } from "@/queries/versionMutations"
 import { applyControlEventToCache } from "@/queries/versionCacheEvents"
 import { useDocumentTitle } from "@/hooks/useDocumentTitle"
@@ -60,6 +61,7 @@ export const ApollonShared: React.FC = () => {
   const { view: viewType, version: previewFromUrl } = route.useSearch()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const kind = useVersionRepositoryKind()
   const { setEditor, editor } = useEditorContext()
   const { openModal } = useModalContext()
   const [diagramTitle, setDiagramTitle] = useState<string | null>(null)
@@ -104,9 +106,9 @@ export const ApollonShared: React.FC = () => {
     useState(readStoredCollabUser)
 
   const preview = useVersionStore((s) => selectScopedPreview(s, diagramId))
-  const restoreMutation = useRestoreVersionMutation("remote", diagramId)
+  const restoreMutation = useRestoreVersionMutation(kind, diagramId)
   const { openPreview, closePreview } = useVersionPreviewUrlSync(
-    "remote",
+    kind,
     diagramId,
     previewFromUrl,
     Boolean(editor)
@@ -293,7 +295,7 @@ export const ApollonShared: React.FC = () => {
 
       // Warm the version list so the drawer/banner open onto data and
       // restore-snackbar labels resolve without a round-trip.
-      void prefetchVersions(queryClient, "remote", diagramId)
+      void prefetchVersions(queryClient, kind, diagramId)
     } catch (err) {
       log.error("Failed to initialize diagram", err)
       toast.error("Failed to initialize diagram")
@@ -337,6 +339,7 @@ export const ApollonShared: React.FC = () => {
     diagram,
     diagramId,
     isCollaborationView,
+    kind,
     navigate,
     queryClient,
     setEditor,

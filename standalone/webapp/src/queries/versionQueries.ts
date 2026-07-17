@@ -14,7 +14,7 @@ import {
 import type { Diagram, PendingVersion } from "@/types"
 import { versionKeys } from "./keys"
 
-export const VERSIONS_PAGE_SIZE = 25
+const VERSIONS_PAGE_SIZE = 25
 
 export type VersionListData = InfiniteData<
   ListVersionsResponse,

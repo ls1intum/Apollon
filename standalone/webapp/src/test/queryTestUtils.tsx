@@ -6,8 +6,7 @@ import type { RepositoryKind } from "@/services/versionRepository"
 
 /**
  * Per-test QueryClient: no retries (a failing queryFn should fail the test
- * immediately, not after backoff), infinite gcTime (v5 garbage collection
- * uses timers that fight fake-timer tests), and no focus refetching.
+ * immediately, not after backoff) and no gc timers to fight fake timers.
  */
 export function createTestQueryClient(): QueryClient {
   return new QueryClient({
@@ -15,7 +14,6 @@ export function createTestQueryClient(): QueryClient {
       queries: {
         retry: false,
         gcTime: Infinity,
-        staleTime: 0,
         refetchOnWindowFocus: false,
       },
       mutations: { retry: false },
@@ -32,7 +30,7 @@ interface WithQueryOptions {
   repositoryKind?: RepositoryKind
 }
 
-/** Wrap arbitrary UI in a fresh (or provided) QueryClientProvider. */
+/** Wrap UI in a fresh (or provided) query client + repository kind. */
 export function wrapWithQueryClient(
   ui: ReactNode,
   opts: WithQueryOptions = {}

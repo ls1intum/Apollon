@@ -54,7 +54,7 @@ export function useVersionPreviewUrlSync(
   kind: RepositoryKind,
   diagramId: string | undefined,
   previewFromUrl: string | undefined,
-  ready: boolean = true
+  ready: boolean
 ) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()

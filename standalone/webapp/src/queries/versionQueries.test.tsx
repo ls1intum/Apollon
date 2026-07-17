@@ -2,10 +2,8 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import { renderHook, waitFor } from "@testing-library/react"
 import type { ReactNode } from "react"
 import { QueryClientProvider } from "@tanstack/react-query"
-import {
-  setVersionRepository,
-  type VersionRepository,
-} from "@/services/versionRepository"
+import type { VersionRepository } from "@/services/versionRepository"
+import { stubVersionRepository } from "@/test/versionRepositoryStub"
 import type { Diagram, VersionSummary } from "@/types"
 import { createTestQueryClient } from "@/test/queryTestUtils"
 import { useVersionBodyQuery, useVersionsQuery } from "./versionQueries"
@@ -25,25 +23,6 @@ function summary(id: string, overrides: Partial<VersionSummary> = {}) {
   }
 }
 
-function stubRepository(
-  overrides: Partial<VersionRepository>
-): VersionRepository {
-  return {
-    kind: "remote",
-    cap: 50,
-    list: vi.fn(async () => ({ versions: [], total: 0 })),
-    getBody: vi.fn(
-      async () => ({ nodes: [], edges: [] }) as unknown as Diagram
-    ),
-    create: vi.fn(),
-    restore: vi.fn(),
-    editInfo: vi.fn(),
-    delete: vi.fn(),
-    permalink: () => null,
-    ...overrides,
-  } as VersionRepository
-}
-
 function wrapperFor(client = createTestQueryClient()) {
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={client}>{children}</QueryClientProvider>
@@ -56,7 +35,7 @@ let restoreRemote: () => void = () => {}
 let restoreLocal: () => void = () => {}
 
 function useStubRepository(overrides: Partial<VersionRepository>) {
-  restoreRepository = setVersionRepository("remote", stubRepository(overrides))
+  restoreRepository = stubVersionRepository("remote", overrides)
 }
 
 afterEach(() => {
@@ -125,14 +104,8 @@ describe("versionListQueryOptions", () => {
       versions: [summary("l1")],
       total: 1,
     }))
-    restoreRemote = setVersionRepository(
-      "remote",
-      stubRepository({ list: remoteList })
-    )
-    restoreLocal = setVersionRepository(
-      "local",
-      stubRepository({ list: localList, kind: "local" })
-    )
+    restoreRemote = stubVersionRepository("remote", { list: remoteList })
+    restoreLocal = stubVersionRepository("local", { list: localList })
 
     const { wrapper } = wrapperFor()
     const remote = renderHook(() => useVersionsQuery("remote", DIAGRAM_ID), {

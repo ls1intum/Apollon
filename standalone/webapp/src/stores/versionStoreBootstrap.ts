@@ -2,7 +2,7 @@ import type { QueryClient } from "@tanstack/react-query"
 import { useVersionStore } from "./useVersionStore"
 import { usePersistenceModelStore } from "./usePersistenceModelStore"
 import {
-  LocalVersionRepository,
+  getVersionRepository,
   subscribeToLocalVersionEvents,
 } from "@/services/versionRepository"
 import { queryClient as appQueryClient } from "@/queryClient"
@@ -48,12 +48,14 @@ export function ensureVersionStoreBootstrapped(
           // A deleted persistence-store model is always a LOCAL diagram, so its
           // versions live in IndexedDB; the remote adapter has no purgeDiagram
           // and would orphan them.
-          LocalVersionRepository.purgeDiagram(id).catch((err: unknown) =>
-            log.warn(
-              "purgeDiagram failed",
-              err instanceof Error ? err.message : String(err)
+          getVersionRepository("local")
+            .purgeDiagram?.(id)
+            .catch((err: unknown) =>
+              log.warn(
+                "purgeDiagram failed",
+                err instanceof Error ? err.message : String(err)
+              )
             )
-          )
         }
       }
       prevModelIds = next

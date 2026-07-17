@@ -17,6 +17,7 @@ import { useVersionShortcut } from "@/hooks/useVersionShortcut"
 import { useVersionPreviewUrlSync } from "@/hooks/useVersionPreviewUrlSync"
 import { selectScopedPreview, useVersionStore } from "@/stores/useVersionStore"
 import { fetchVersionBody, useVersionsQuery } from "@/queries/versionQueries"
+import { useVersionRepositoryKind } from "@/contexts/VersionRepositoryContext"
 import { useRestoreVersionMutation } from "@/queries/versionMutations"
 import type { PendingVersion } from "@/types"
 import {
@@ -44,7 +45,7 @@ const route = getRouteApi("/local/$id")
 
 /**
  * Standalone-mode local editor page (`/local/:id`). Mounts the versioning UI
- * against `LocalVersionRepository` and keys version history off the
+ * against the local (IndexedDB) backend and keys version history off the
  * `/local/:id` path param (mirrored into `usePersistenceModelStore.currentModelId`
  * via `setCurrentModelId`). No WebSocket, no autosave loop. Restore writes a
  * permanent "Before restoring …" auto-row instead of a 10s snackbar.
@@ -116,17 +117,18 @@ export const ApollonLocal: FC = () => {
 
   const preview = useVersionStore((s) => selectScopedPreview(s, diagramId))
   const queryClient = useQueryClient()
+  const kind = useVersionRepositoryKind()
   const { openPreview, closePreview } = useVersionPreviewUrlSync(
-    "local",
+    kind,
     diagramId,
     previewFromUrl,
     Boolean(editor)
   )
   // Subscribed at page level so the confirm-restore dialog and the restored
   // snackbar have their labels even when the drawer was never opened.
-  const versionsQuery = useVersionsQuery("local", diagramId)
+  const versionsQuery = useVersionsQuery(kind, diagramId)
   const versions = versionsQuery.data?.versions ?? EMPTY_VERSIONS
-  const restoreMutation = useRestoreVersionMutation("local", diagramId)
+  const restoreMutation = useRestoreVersionMutation(kind, diagramId)
 
   useVersionShortcut(diagramId ?? undefined)
 
@@ -283,9 +285,9 @@ export const ApollonLocal: FC = () => {
       if (!diagramId) {
         throw new Error("No current diagram id")
       }
-      return fetchVersionBody(queryClient, "local", diagramId, versionId)
+      return fetchVersionBody(queryClient, kind, diagramId, versionId)
     },
-    [preview, diagramId, queryClient]
+    [preview, diagramId, queryClient, kind]
   )
 
   /**
