@@ -18,6 +18,7 @@ import {
   V3Messages,
 } from "./v3Typings"
 import { log } from "../logger"
+import { applyTags, taggableElements } from "./tagUtils"
 import { INTERFACE } from "../constants"
 
 import {
@@ -953,12 +954,23 @@ export function normalizeClassStereotypes(model: UMLModel): UMLModel {
 }
 
 /**
+ * Canonicalize host-defined tags on every taggable element. Mutates in place
+ * (the other normalization passes do too) and is idempotent.
+ */
+export function normalizeElementTags(model: UMLModel): UMLModel {
+  for (const { data } of taggableElements(model.nodes)) {
+    if ("tags" in data) applyTags(data, data.tags)
+  }
+  return model
+}
+
+/**
  * The single normalization pass every incoming model must pass through, whatever
  * its origin. Keep it idempotent and version-agnostic so already-saved `4.0.0`
  * files are repaired on load rather than gated behind a version check.
  */
 export function normalizeModel(model: UMLModel): UMLModel {
-  return normalizeClassStereotypes(model)
+  return normalizeElementTags(normalizeClassStereotypes(model))
 }
 
 /**

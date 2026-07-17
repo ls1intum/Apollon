@@ -14,6 +14,7 @@ import {
   filterRenderedElements,
   getSVG,
   getRenderedDiagramBounds,
+  getElementIdsByTag,
 } from "./utils"
 // Internal (not re-exported through the public `./utils` barrel): brings any
 // incoming model onto the current schema (e.g. legacy class stereotypes) at
@@ -1050,6 +1051,26 @@ export class ApollonEditor {
   /** Returns a copy of the current highlight record (id -> CSS color). */
   public getElementHighlights(): Record<string, string> {
     return { ...this.assessmentSelectionStore.getState().highlightedElements }
+  }
+
+  /**
+   * Ids of every element carrying the given host-defined tag — a node, or one
+   * of its members (a class attribute or method, an SFC action row). See the
+   * `tags` field on element data. Matching is
+   * exact and case-sensitive, apart from surrounding whitespace, which is
+   * trimmed from both the query and stored tags; an unknown or blank tag yields
+   * an empty array. Returns a snapshot in document order — re-query after a
+   * model change.
+   *
+   * Pair it with {@link ApollonEditor.setElementHighlights} to color a whole
+   * group by a host-computed status without touching the saved model.
+   *
+   * @example
+   * const ids = editor.getElementIdsByTag("testAttributes[Context]")
+   * editor.setElementHighlights(Object.fromEntries(ids.map((id) => [id, "red"])))
+   */
+  public getElementIdsByTag(tag: string): string[] {
+    return getElementIdsByTag(this.diagramStore.getState().nodes, tag)
   }
 
   public getSelectedElements(): string[] {

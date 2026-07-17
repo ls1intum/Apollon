@@ -143,6 +143,18 @@ export interface ApollonLabels {
   unmarkMethodAsAbstract: string
   abstractMethod: string
 
+  // Element tags (host-defined grouping labels)
+  tags: string
+  addTag: string
+  /** Accessible name of the tag input, scoped to its subject noun. */
+  newTagFor: (subject: string) => string
+  /** Accessible name of the add-tag button, scoped to its subject noun. */
+  addTagFor: (subject: string) => string
+  /** Accessible name of the disclosure that reveals a member's tag editor. */
+  toggleTagsFor: (subject: string) => string
+  /** Accessible name of a chip's remove button (interpolates the tag). */
+  removeTag: (tag: string) => string
+
   // Communication diagram
   messages: string
   message: string
@@ -392,6 +404,12 @@ export const DEFAULT_LABELS: ApollonLabels = Object.freeze<ApollonLabels>({
   markMethodAsAbstract: "Mark method as abstract",
   unmarkMethodAsAbstract: "Unmark method as abstract",
   abstractMethod: "Abstract method (italic)",
+  tags: "Tags",
+  addTag: "Add tag",
+  newTagFor: (subject) => `New tag for ${subject}`,
+  addTagFor: (subject) => `Add tag for ${subject}`,
+  toggleTagsFor: (subject) => `Tags for ${subject}`,
+  removeTag: (tag) => `Remove tag ${tag}`,
   messages: "Messages",
   message: "Message",
   addMessage: "Add message",

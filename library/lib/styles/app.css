@@ -1260,6 +1260,32 @@ svg.react-flow__connectionline {
   min-width: 0;
 }
 
+/* Tag chips: a removable pill per tag; the label truncates so one long tag
+   can't push the remove button out of the popover. */
+[data-slot="tag-chip-list"] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+[data-slot="tag-chip"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  max-width: 100%;
+  padding-left: 8px;
+  border: 1px solid var(--popover-divider);
+  border-radius: var(--apollon-radius-sm, 4px);
+  font-size: 12px;
+  line-height: 22px;
+}
+
+[data-slot="tag-chip"] > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Drag handle (DnD rows) */
 .apollon-drag-handle {
   cursor: grab;

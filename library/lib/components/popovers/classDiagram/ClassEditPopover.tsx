@@ -2,6 +2,7 @@ import { NodeStyleEditor } from "@/components"
 import { useDiagramStore } from "@/store"
 import { ClassNodeProps, ClassStereotype } from "@/types"
 import { LAYOUT } from "@/constants"
+import { withTags } from "@/utils"
 import { useShallow } from "zustand/shallow"
 import { EditableAttributeList } from "./EditableAttributesList"
 import { EditableMethodsList } from "./EditableMethodsList"
@@ -9,6 +10,7 @@ import { ClassTypeSelect, type ClassKind } from "./ClassTypeSelect"
 import { PopoverProps } from "../types"
 import { useLabels } from "@/i18n/useLabels"
 import { PopoverLayout, PopoverSection } from "../PopoverLayout"
+import { TagEditor } from "../TagEditor"
 
 // A kind maps to both fields at once. Writing both on every change keeps them
 // consistent: a plain class can't keep a stale `isAbstract`, and a keyword can't
@@ -68,6 +70,16 @@ export const ClassEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
     )
   }
 
+  const handleTagsUpdate = (tags: string[]) => {
+    setNodes((nodes) =>
+      nodes.map((node) =>
+        node.id === elementId
+          ? { ...node, data: withTags(node.data, tags) }
+          : node
+      )
+    )
+  }
+
   const setKind = (next: ClassKind) => {
     const mapped = KIND_TO_DATA[next]
     // A keyword adds a header line; the abstract modifier (italics) does not.
@@ -110,6 +122,13 @@ export const ClassEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
       </PopoverSection>
       <PopoverSection divider>
         <EditableMethodsList nodeId={elementId} />
+      </PopoverSection>
+      <PopoverSection divider>
+        <TagEditor
+          tags={nodeData.tags ?? []}
+          onChange={handleTagsUpdate}
+          subject={t.classWord}
+        />
       </PopoverSection>
     </PopoverLayout>
   )
