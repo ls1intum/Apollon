@@ -10,7 +10,7 @@ import { ClassTypeSelect, type ClassKind } from "./ClassTypeSelect"
 import { PopoverProps } from "../types"
 import { useLabels } from "@/i18n/useLabels"
 import { PopoverLayout, PopoverSection } from "../PopoverLayout"
-import { TagPicker } from "../TagPicker"
+import { TagChips, TagPicker } from "../TagPicker"
 
 // A kind maps to both fields at once. Writing both on every change keeps them
 // consistent: a plain class can't keep a stale `isAbstract`, and a keyword can't
@@ -113,12 +113,16 @@ export const ClassEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
         nodeData={nodeData}
         colorEditorLabel={t.classWord}
         handleDataFieldUpdate={handleDataFieldUpdate}
+        sideElements={[
+          <TagPicker
+            key="class-tags"
+            tags={nodeData.tags ?? []}
+            onChange={handleTagsUpdate}
+            subject={t.classWord}
+          />,
+        ]}
       />
-      <TagPicker
-        tags={nodeData.tags ?? []}
-        onChange={handleTagsUpdate}
-        subject={t.classWord}
-      />
+      <TagChips tags={nodeData.tags ?? []} onChange={handleTagsUpdate} />
       <PopoverSection divider>
         <ClassTypeSelect value={currentKind} onChange={setKind} />
       </PopoverSection>

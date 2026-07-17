@@ -41,8 +41,9 @@ new ApollonEditor(container, {
 
 `allowCreate` defaults to `false` when you pass a vocabulary and `true` otherwise.
 The option is reactive (`<Apollon tags={…}>` / `editor.setTags(…)`). When enabled,
-each taggable row shows its tags as removable chips followed by a tag button that
-opens a combobox to search the vocabulary, toggle a tag, or create one.
+each taggable row gets a tag button next to its color control; it opens a combobox
+to search the vocabulary, toggle a tag, or create one. An element's tags show as
+removable chips under its row, and only once it has any.
 
 Tags a host puts on the model always load and stay queryable **regardless of this
 option** — it gates only the authoring UI.

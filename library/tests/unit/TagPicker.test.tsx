@@ -1,12 +1,13 @@
 import { describe, it, expect, vi } from "vitest"
 import { render, screen, fireEvent, within } from "@testing-library/react"
 import * as Y from "yjs"
-import { TagPicker } from "@/components/popovers/TagPicker"
+import { TagChips, TagPicker } from "@/components/popovers/TagPicker"
 import { createMetadataStore } from "@/store/metadataStore"
 import { MetadataStoreContext } from "@/store/context"
 import { resolveTagConfig, type TagOptions } from "@/utils/tagUtils"
 
-// TagPicker reads labels + tag config from the metadata store.
+// The row pairs the chips (TagChips) with the button (TagPicker); render both so
+// a test can assert on either, as the popovers do.
 const renderPicker = (
   tags: string[],
   options: boolean | TagOptions | undefined
@@ -16,6 +17,7 @@ const renderPicker = (
   store.getState().setTagConfig(resolveTagConfig(options))
   render(
     <MetadataStoreContext.Provider value={store}>
+      <TagChips tags={tags} onChange={onChange} />
       <TagPicker tags={tags} onChange={onChange} subject="attribute" />
     </MetadataStoreContext.Provider>
   )

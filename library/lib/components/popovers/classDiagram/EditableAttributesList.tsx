@@ -7,7 +7,7 @@ import { generateUUID, withTags } from "@/utils"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import { ClassNodeElement, ClassNodeProps } from "@/types"
-import { TagPicker } from "../TagPicker"
+import { TagChips, TagPicker } from "../TagPicker"
 import {
   DndContext,
   closestCenter,
@@ -101,6 +101,12 @@ const SortableAttributeRow: React.FC<SortableAttributeRowProps> = ({
             onAttributeChange(item.id, key, value)
           }
           sideElements={[
+            <TagPicker
+              key={`tags_${item.id}`}
+              tags={item.tags ?? []}
+              onChange={(tags) => onTagsChange(item.id, tags)}
+              subject={t.attributeWord}
+            />,
             <IconButton
               key={`delete_${item.id}`}
               ariaLabel={t.deleteAttribute}
@@ -113,10 +119,9 @@ const SortableAttributeRow: React.FC<SortableAttributeRowProps> = ({
         />
       </div>
 
-      <TagPicker
+      <TagChips
         tags={item.tags ?? []}
         onChange={(tags) => onTagsChange(item.id, tags)}
-        subject={t.attributeWord}
       />
     </div>
   )

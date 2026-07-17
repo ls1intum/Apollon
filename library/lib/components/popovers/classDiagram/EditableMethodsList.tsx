@@ -7,7 +7,7 @@ import { generateUUID, withTags } from "@/utils"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import { ClassNodeElement, ClassNodeProps } from "@/types"
-import { TagPicker } from "../TagPicker"
+import { TagChips, TagPicker } from "../TagPicker"
 import {
   DndContext,
   closestCenter,
@@ -117,6 +117,12 @@ const SortableMethodRow: React.FC<SortableMethodRowProps> = ({
             >
               <Italic width={16} height={16} aria-hidden="true" />
             </IconButton>,
+            <TagPicker
+              key={`tags_${item.id}`}
+              tags={item.tags ?? []}
+              onChange={(tags) => onTagsChange(item.id, tags)}
+              subject={t.methodWord}
+            />,
             <IconButton
               key={`delete_${item.id}`}
               ariaLabel={t.deleteMethod}
@@ -129,10 +135,9 @@ const SortableMethodRow: React.FC<SortableMethodRowProps> = ({
         />
       </div>
 
-      <TagPicker
+      <TagChips
         tags={item.tags ?? []}
         onChange={(tags) => onTagsChange(item.id, tags)}
-        subject={t.methodWord}
       />
     </div>
   )
