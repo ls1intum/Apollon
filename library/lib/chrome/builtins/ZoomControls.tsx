@@ -1,7 +1,18 @@
 import { useReactFlow, useStore } from "@xyflow/react"
 import { useShallow } from "zustand/shallow"
-import { Maximize, Redo2, Undo2, ZoomIn, ZoomOut } from "lucide-react"
-import { useDiagramStore, useOverlayStore } from "@/store/context"
+import {
+  Maximize,
+  Redo2,
+  SquareMousePointer,
+  Undo2,
+  ZoomIn,
+  ZoomOut,
+} from "lucide-react"
+import {
+  useDiagramStore,
+  useMetadataStore,
+  useOverlayStore,
+} from "@/store/context"
 import { insetAwareFitView } from "@/overlay/fitView"
 import { Tooltip } from "@/components/ui"
 import { useLabels } from "@/i18n/useLabels"
@@ -13,8 +24,8 @@ export interface ZoomControlsProps {
 }
 
 /**
- * The zoom / history cluster: a [zoom-out][%-reset][zoom-in][fit] island and a
- * separate [undo][redo] history island. The fit button reserves the current insets
+ * The canvas cluster: a [zoom-out][%-reset][zoom-in][fit][multi-select] island and
+ * a separate [undo][redo] history island. The fit button reserves the current insets
  * so content frames clear of the chrome. `history: false` drops the history island.
  * One `role="toolbar"` spans both islands so a single Tab stop + arrows rove every
  * button (roving-tabindex, APG-valid at ≥3 controls).
@@ -33,6 +44,13 @@ export function ZoomControls({ history = true }: ZoomControlsProps) {
       undo: state.undo,
       redo: state.redo,
       undoManagerExist: state.undoManager !== null,
+    }))
+  )
+
+  const { multiSelectionMode, setMultiSelectionMode } = useMetadataStore(
+    useShallow((state) => ({
+      multiSelectionMode: state.multiSelectionMode,
+      setMultiSelectionMode: state.setMultiSelectionMode,
     }))
   )
 
@@ -88,6 +106,17 @@ export function ZoomControls({ history = true }: ZoomControlsProps) {
             aria-label={t.fitView}
           >
             <Maximize width={18} height={18} aria-hidden="true" />
+          </button>
+        </Tooltip>
+        <Tooltip title={t.multiSelectionHint}>
+          <button
+            type="button"
+            className="apollon-chrome-iconbtn apollon-chrome-iconbtn--toggle"
+            onClick={() => setMultiSelectionMode(!multiSelectionMode)}
+            aria-label={t.multiSelection}
+            aria-pressed={multiSelectionMode}
+          >
+            <SquareMousePointer width={18} height={18} aria-hidden="true" />
           </button>
         </Tooltip>
       </div>
