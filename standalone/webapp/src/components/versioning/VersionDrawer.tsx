@@ -277,11 +277,18 @@ export const VersionSidebarBody: FC<Props> = ({
 
   // The "save a version" shortcut (Ctrl/Cmd+Shift+S) can't reach the editor
   // model or the guards, so it bumps a per-diagram nonce and this panel — which
-  // owns both — runs the same save the Save button does. Waiting for
-  // `baselineResolved` keeps a keystroke on an unchanged diagram from writing a
-  // duplicate version before the dirty-check settles.
+  // owns both — runs the same save the Save button does. Waiting for both the
+  // initial list load and `baselineResolved` keeps a keystroke from writing a
+  // duplicate before we know whether a version already exists: the page fires
+  // `fetchVersions` without awaiting it, so the list is briefly empty on mount,
+  // and an empty list must not be mistaken for "no history yet".
   const saveRequest = useVersionStore(
     (s) => s.saveRequestByDiagram[diagramId] ?? 0
+  )
+  // `versions[id]` is undefined until the first fetch resolves; an error also
+  // ends the load (and there the Save button is optimistic, so match it).
+  const initialListLoaded = useVersionStore(
+    (s) => s.versions[diagramId] !== undefined || s.error[diagramId] != null
   )
   const clearSaveRequest = useVersionStore((s) => s.clearSaveRequest)
   const handledSaveRequestRef = useRef(0)
@@ -306,12 +313,23 @@ export const VersionSidebarBody: FC<Props> = ({
       handledSaveRequestRef.current = 0
       return
     }
-    if (saveRequest <= handledSaveRequestRef.current || !baselineResolved)
+    if (
+      saveRequest <= handledSaveRequestRef.current ||
+      !initialListLoaded ||
+      !baselineResolved
+    ) {
       return
+    }
     handledSaveRequestRef.current = saveRequest
     clearSaveRequest(diagramId)
     runSaveRequestRef.current()
-  }, [saveRequest, baselineResolved, diagramId, clearSaveRequest])
+  }, [
+    saveRequest,
+    initialListLoaded,
+    baselineResolved,
+    diagramId,
+    clearSaveRequest,
+  ])
 
   const handlePreview = useCallback(
     async (versionId: string) => {

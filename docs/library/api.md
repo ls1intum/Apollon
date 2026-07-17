@@ -72,16 +72,17 @@ afterwards. Re-key the component to apply them to a new editor.
 changes; no rebuild. Passing `undefined` for any reactive prop leaves the
 live value untouched (no reset). Re-key the component to fully reset.
 
-| Prop          | Type                     | Maps to                                     |
-| ------------- | ------------------------ | ------------------------------------------- |
-| `readonly`    | `boolean`                | `editor.setReadonly(value)`                 |
-| `view`        | `ApollonView`            | `editor.view = value`                       |
-| `mode`        | `ApollonMode`            | `editor.setMode(value)`                     |
-| `scrollLock`  | `boolean`                | `editor.setScrollLock(value)`               |
-| `labels`      | `Partial<ApollonLabels>` | `editor.setLabels(value)`                   |
-| `tags`        | `boolean \| TagOptions`  | `editor.setTags(value)`                     |
-| `previewMode` | `boolean`                | `editor.setPreviewMode(value)`              |
-| `model`       | `UMLModel`               | `editor.model = value` — controlled overlay |
+| Prop                | Type                     | Maps to                                     |
+| ------------------- | ------------------------ | ------------------------------------------- |
+| `readonly`          | `boolean`                | `editor.setReadonly(value)`                 |
+| `view`              | `ApollonView`            | `editor.view = value`                       |
+| `mode`              | `ApollonMode`            | `editor.setMode(value)`                     |
+| `scrollLock`        | `boolean`                | `editor.setScrollLock(value)`               |
+| `keyboardShortcuts` | `boolean`                | `editor.setKeyboardShortcuts(value)`        |
+| `labels`            | `Partial<ApollonLabels>` | `editor.setLabels(value)`                   |
+| `tags`              | `boolean \| TagOptions`  | `editor.setTags(value)`                     |
+| `previewMode`       | `boolean`                | `editor.setPreviewMode(value)`              |
+| `model`             | `UMLModel`               | `editor.model = value` — controlled overlay |
 
 **Lifecycle.**
 

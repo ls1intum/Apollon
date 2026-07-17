@@ -32,7 +32,8 @@ export const isNativePlatform = (): boolean => Capacitor.isNativePlatform()
 /**
  * Whether to render shortcuts with macOS key symbols. Display-only — no handler
  * branches on it (they take Ctrl or Cmd either way), so a wrong guess costs a
- * glyph, not a shortcut. iPadOS 13+ reports a desktop `Macintosh` UA, which is
- * what we want here: an iPad with a keyboard has a ⌘ key.
+ * glyph, not a shortcut. Every Apple device has a ⌘ key with a keyboard:
+ * `isIOS()` covers iPhone and both iPad user agents (legacy `iPad` and the
+ * iPadOS 13+ desktop `Macintosh`+coarse-pointer form), and `mac` covers Macs.
  */
-export const isMacLike = (): boolean => test(/mac|iphone|ipod/i)
+export const isMacLike = (): boolean => isIOS() || test(/mac/i)

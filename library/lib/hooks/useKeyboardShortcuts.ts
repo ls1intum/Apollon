@@ -21,6 +21,8 @@ import { handleShortcutKeydown, type KeyboardShortcutDeps } from "@/keyboard"
  */
 export const useKeyboardShortcuts = () => {
   const pasteCountRef = useRef(0)
+  // Serializes a burst of pastes so their copies cascade in order.
+  const pasteChainRef = useRef<Promise<unknown>>(Promise.resolve())
 
   const { undo, redo } = useDiagramStore(
     useShallow((state) => ({ undo: state.undo, redo: state.redo }))
@@ -65,13 +67,18 @@ export const useKeyboardShortcuts = () => {
         pasteCountRef.current = 0
         void cutSelectedElements()
       },
-      // Each paste of the same clipboard steps further from the original; a
-      // paste that found nothing to insert doesn't consume a step.
+      // Reserve the next cascade slot synchronously, then serialize: two quick
+      // presses take steps N and N+1 (not both N), and each paste runs after the
+      // previous so the copies land in order. `insertClipboardData` reads live
+      // store state, so a later paste builds on the earlier one either way — the
+      // chain just keeps the offsets ordered. A failed paste leaves its slot
+      // unused (a harmless gap the next copy resets).
       paste: () => {
-        const step = pasteCountRef.current + 1
-        void pasteElements(step).then((pasted) => {
-          if (pasted) pasteCountRef.current = step
-        })
+        pasteCountRef.current += 1
+        const step = pasteCountRef.current
+        pasteChainRef.current = pasteChainRef.current
+          .then(() => pasteElements(step))
+          .catch(() => {})
       },
       // Duplicating a just-pasted element lands it on the next paste's slot, so
       // consume that step rather than stack the two. Always claims the key:

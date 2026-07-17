@@ -3,6 +3,7 @@ import {
   APOLLON_SHORTCUTS,
   ariaKeyshortcuts,
   handleShortcutKeydown,
+  isElementInOverlay,
   matchesShortcutCombo,
   type KeyboardShortcutDeps,
 } from "@/keyboard"
@@ -259,5 +260,46 @@ describe("ariaKeyshortcuts", () => {
       "Control+= Meta+= Control+Plus Meta+Plus Control+Shift+Plus Meta+Shift+Plus"
     )
     expect(ariaKeyshortcuts("fit-view")).toBe("Control+Shift+1 Meta+Shift+1")
+  })
+})
+
+describe("isElementInOverlay", () => {
+  afterEach(() => {
+    document.body.innerHTML = ""
+  })
+
+  const mount = (html: string) => {
+    document.body.innerHTML = html
+    return document.body
+  }
+
+  it("is true for an element inside a dialog or menu over the canvas", () => {
+    for (const role of [
+      "dialog",
+      "alertdialog",
+      "menu",
+      "listbox",
+      "combobox",
+    ]) {
+      const body = mount(`<div role="${role}"><button id="t"></button></div>`)
+      expect(isElementInOverlay(body.querySelector("#t"))).toBe(true)
+    }
+  })
+
+  it("is false for a plain canvas element and for null", () => {
+    const body = mount(
+      '<div class="apollon-editor"><div id="node"></div></div>'
+    )
+    expect(isElementInOverlay(body.querySelector("#node"))).toBe(false)
+    expect(isElementInOverlay(null)).toBe(false)
+  })
+
+  it("is false when the overlay CONTAINS the editor (a host's own modal)", () => {
+    // The editor embedded in a host dialog must stay usable — that dialog is the
+    // host's chrome, not an overlay over the canvas.
+    const body = mount(
+      '<div role="dialog"><div class="apollon-editor"><div id="node"></div></div></div>'
+    )
+    expect(isElementInOverlay(body.querySelector("#node"))).toBe(false)
   })
 })

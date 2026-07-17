@@ -940,6 +940,14 @@ export class ApollonEditor {
   }
 
   /**
+   * Live-toggle whether the editor answers its keyboard shortcuts (see
+   * `APOLLON_SHORTCUTS`), React Flow's delete and arrow-key moving included.
+   */
+  public setKeyboardShortcuts(keyboardShortcuts: boolean): void {
+    this.metadataStore.getState().setKeyboardShortcuts(keyboardShortcuts)
+  }
+
+  /**
    * Replace the editor's user-facing strings (i18n). Merged over the English
    * defaults, so a partial map only changes the keys it provides. Reactive — the
    * chrome re-renders, so a host can switch language without remounting.

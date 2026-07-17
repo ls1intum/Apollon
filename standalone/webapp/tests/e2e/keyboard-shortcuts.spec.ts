@@ -155,6 +155,22 @@ test.describe("Editing", () => {
     await expect(selectedNodes(page)).toHaveCount(1)
   })
 
+  test("two rapid pastes cascade instead of overwriting each other", async ({
+    page,
+  }) => {
+    await openWith(page, COMPACT)
+    await node(page, "Alpha").click()
+    await page.keyboard.press("ControlOrMeta+KeyC")
+
+    // Two distinct presses (not a held-key repeat): the second fires while the
+    // first's async clipboard read is still in flight. Each must build on the
+    // previous — 2 copies, not 1 overwriting the other.
+    await page.keyboard.press("ControlOrMeta+KeyV")
+    await page.keyboard.press("ControlOrMeta+KeyV")
+
+    await expect(nodes(page)).toHaveCount(4)
+  })
+
   test("Ctrl+X cuts, Ctrl+V pastes it back", async ({ page }) => {
     await openWith(page, COMPACT)
     await node(page, "Alpha").click()

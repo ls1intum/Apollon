@@ -1,5 +1,5 @@
 import { useCallback } from "react"
-import { useDiagramStore } from "@/store/context"
+import { useDiagramStore, useDiagramStoreApi } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { sortNodesTopologically } from "@/utils"
 import { log } from "../logger"
@@ -29,6 +29,9 @@ export const useSelectionForCopyPaste = () => {
       setEdges: state.setEdges,
     }))
   )
+  // Read live state where a mutation must build on the previous one within a
+  // single tick (rapid paste/duplicate), before React has re-rendered.
+  const storeApi = useDiagramStoreApi()
 
   const hasSelectedElements = useCallback(() => {
     return selectedElementIds.length > 0
@@ -84,12 +87,16 @@ export const useSelectionForCopyPaste = () => {
         offsetMultiplier
       )
 
-      const updatedExistingNodes = nodes.map((node) => ({
+      // Live state, not the render closure: a second paste in the same tick must
+      // append to the first paste's result, not to the pre-paste diagram.
+      const { nodes: currentNodes, edges: currentEdges } = storeApi.getState()
+
+      const updatedExistingNodes = currentNodes.map((node) => ({
         ...node,
         selected: false,
       }))
 
-      const updatedExistingEdges = edges.map((edge) => ({
+      const updatedExistingEdges = currentEdges.map((edge) => ({
         ...edge,
         selected: false,
       }))
@@ -105,7 +112,7 @@ export const useSelectionForCopyPaste = () => {
 
       setSelectedElementsId(materialized.newElementIds)
     },
-    [nodes, edges, setNodes, setEdges, setSelectedElementsId]
+    [storeApi, setNodes, setEdges, setSelectedElementsId]
   )
 
   const pasteElements = useCallback(
@@ -144,15 +151,26 @@ export const useSelectionForCopyPaste = () => {
    * works in non-secure contexts and never clobbers what the user has copied.
    */
   const duplicateSelectedElements = useCallback(() => {
-    if (selectedElementIds.length === 0) {
+    // Live state so a second duplicate in the same tick clones the first's
+    // result — and inserts against it — rather than the pre-duplicate diagram.
+    const {
+      nodes: currentNodes,
+      edges: currentEdges,
+      selectedElementIds: currentSelection,
+    } = storeApi.getState()
+    if (currentSelection.length === 0) {
       return false
     }
 
-    const clipboardData = createClipboardData(selectedElementIds, nodes, edges)
+    const clipboardData = createClipboardData(
+      currentSelection,
+      currentNodes,
+      currentEdges
+    )
     insertClipboardData(clipboardData, 1)
 
     return true
-  }, [selectedElementIds, nodes, edges, insertClipboardData])
+  }, [storeApi, insertClipboardData])
 
   const cutSelectedElements = useCallback(async () => {
     if (selectedElementIds.length === 0) {

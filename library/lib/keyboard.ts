@@ -231,17 +231,22 @@ const OVERLAY_ROLES =
   '[role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"], [role="combobox"]'
 
 /**
- * Whether the event comes from a widget that owns its own key handling while
- * open — a dialog, a menu, a select. An overlay that *contains* an editor is a
+ * Whether an element sits inside a widget that owns its own key handling while
+ * open — a dialog, a menu, a select. An overlay that *contains* the editor is a
  * host mounting the canvas inside its own dialog, which owns nothing; only an
- * overlay over the canvas counts. Exported alongside `isTypingTarget` so a
- * host's shortcuts can stand down on the same surfaces the editor's do.
+ * overlay ON TOP of the canvas counts. Exported so React Flow's own keys
+ * (delete, arrows) can stand down on the same surfaces the editor's do.
  */
+export function isElementInOverlay(element: Element | null): boolean {
+  if (element?.nodeType !== 1) return false
+  const overlay = element.closest(OVERLAY_ROLES)
+  return !!overlay && !overlay.querySelector(".apollon-editor")
+}
+
+/** As {@link isElementInOverlay}, for the surface a key event came from. */
 export function isInsideOverlay(event: KeyboardEvent): boolean {
   const target = (event.composedPath?.()[0] ?? event.target) as Element | null
-  if (target?.nodeType !== 1) return false
-  const overlay = target.closest(OVERLAY_ROLES)
-  return !!overlay && !overlay.querySelector(".apollon-editor")
+  return isElementInOverlay(target)
 }
 
 /** Auto-repeat is an accelerator for these; every other shortcut fires once per press. */

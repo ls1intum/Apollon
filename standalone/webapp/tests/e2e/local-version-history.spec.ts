@@ -223,6 +223,33 @@ test.describe("Local version history (#670, /local/:id routing)", () => {
     ).toHaveCount(0)
   })
 
+  test("Ctrl/Cmd+Shift+S right after reload doesn't duplicate an unchanged version", async ({
+    page,
+  }) => {
+    // The page fetches the version list without awaiting it, so just after a
+    // reload the list is briefly empty. Pressing the shortcut then must wait
+    // for the real list before deciding — otherwise an empty list reads as "no
+    // history" and it writes a second, identical version.
+    await seedLocalDiagram(page)
+    await openLocalEditor(page)
+    await page.keyboard.press("ControlOrMeta+Shift+KeyS")
+    await expect(
+      page.getByRole("button", { name: /Version actions/i })
+    ).toHaveCount(1)
+    await waitForVersionsPersisted(page)
+
+    await page.reload()
+    await waitForCanvasReady(page)
+    // Fire before the re-fetch can settle; the diagram is unchanged.
+    await page.keyboard.press("ControlOrMeta+Shift+KeyS")
+
+    // Still exactly one version — the unchanged diagram wrote nothing new.
+    await expect(
+      page.getByRole("button", { name: /Version actions/i })
+    ).toHaveCount(1)
+    await expect(page.getByText(/No changes to save/i)).toBeVisible()
+  })
+
   test("save commits a row that survives reload", async ({ page }) => {
     await seedLocalDiagram(page)
     await openLocalEditor(page)
