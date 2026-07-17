@@ -39,6 +39,19 @@ const OVERLAP_MODEL = {
   ],
 }
 
+// Same overlap, but packages: a class's height is content-driven, so it renders
+// no corner resize handles at all. Only a node that is resizable on both axes
+// has a corner that can overhang onto its neighbour.
+const OVERLAP_MODEL_RESIZABLE = {
+  ...OVERLAP_MODEL,
+  id: "e2e-affordance-blocking-resizable",
+  nodes: OVERLAP_MODEL.nodes.map((n) => ({
+    ...n,
+    type: "package",
+    data: { name: n.data.name },
+  })),
+}
+
 const CONNECT_MODEL = {
   id: "e2e-affordance-connect",
   type: "ClassDiagram",
@@ -106,7 +119,10 @@ test("a selected node's connection handles don't block an overlapping node", asy
 test("a selected node's resize handle doesn't block an overlapping node", async ({
   page,
 }) => {
-  await openFixtureInLocalEditor(page, OVERLAP_MODEL as Record<string, unknown>)
+  await openFixtureInLocalEditor(
+    page,
+    OVERLAP_MODEL_RESIZABLE as Record<string, unknown>
+  )
   await waitForCanvasReady(page)
 
   const alpha = node(page, "Alpha")
