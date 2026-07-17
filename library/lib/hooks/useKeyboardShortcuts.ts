@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react"
-import { useDiagramStore } from "@/store/context"
+import { useDiagramStore, useMetadataStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { useSelectionForCopyPaste } from "./useSelectionForCopyPaste"
 import { useDiagramModifiable } from "./useDiagramModifiable"
@@ -15,6 +15,9 @@ export const useKeyboardShortcuts = () => {
       canRedo: state.canRedo,
       undoManager: state.undoManager,
     }))
+  )
+  const setMultiSelectionMode = useMetadataStore(
+    (state) => state.setMultiSelectionMode
   )
   const isDiagramModifiable = useDiagramModifiable()
   const {
@@ -42,6 +45,7 @@ export const useKeyboardShortcuts = () => {
 
       if (event.key === "Escape") {
         event.preventDefault()
+        setMultiSelectionMode(false)
         clearSelection()
         return
       }
@@ -142,5 +146,6 @@ export const useKeyboardShortcuts = () => {
     copySelectedElements,
     cutSelectedElements, // Add this to dependencies
     pasteElements,
+    setMultiSelectionMode,
   ])
 }

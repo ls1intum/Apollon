@@ -5,7 +5,7 @@
  * control of word order.
  */
 export interface ApollonLabels {
-  // Zoom / history cluster
+  // Zoom / history / multi-select cluster
   zoomToolbar: string
   zoomIn: string
   zoomOut: string
@@ -19,6 +19,8 @@ export interface ApollonLabels {
   undoHint: string
   redo: string
   redoHint: string
+  multiSelection: string
+  multiSelectionHint: string
 
   // Minimap
   miniMap: string
@@ -289,7 +291,7 @@ function defaultNodeTypeLabel(nodeType?: string): string {
 
 /** The shipped English strings — the fallback for any key a host doesn't override. */
 export const DEFAULT_LABELS: ApollonLabels = Object.freeze<ApollonLabels>({
-  zoomToolbar: "Zoom and history controls",
+  zoomToolbar: "Zoom, history and selection controls",
   zoomIn: "Zoom in",
   zoomOut: "Zoom out",
   fitView: "Fit view",
@@ -299,6 +301,8 @@ export const DEFAULT_LABELS: ApollonLabels = Object.freeze<ApollonLabels>({
   undoHint: "Undo (Ctrl+Z)",
   redo: "Redo",
   redoHint: "Redo (Ctrl+Y or Ctrl+Shift+Z)",
+  multiSelection: "Select multiple elements",
+  multiSelectionHint: "Select multiple: click elements to add or remove",
   miniMap: "Mini map",
   showMinimap: "Show minimap",
   showMinimapHint: "Show minimap (overview)",

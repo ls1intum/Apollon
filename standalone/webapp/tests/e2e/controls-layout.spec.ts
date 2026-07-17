@@ -547,7 +547,7 @@ test.describe("controls layout engine", () => {
   }) => {
     await updateControl(page, ZOOM_ID, { region: "top-center" })
     const toolbar = page.getByRole("toolbar", {
-      name: "Zoom and history controls",
+      name: "Zoom, history and selection controls",
     })
     await expect(toolbar).toBeVisible()
     await expect(toolbar.locator("button[tabindex='0']")).toHaveCount(1)

@@ -18,6 +18,8 @@ export type MetadataStore = {
   readonly: boolean
   debug: boolean
   scrollLock: boolean
+  /** Tool toggle: clicks/taps add or remove elements — the touch path to a multi-selection. */
+  multiSelectionMode: boolean
   /** User-facing strings for the editor's own chrome; host-overridable for i18n. */
   labels: ApollonLabels
   /** Element-tag authoring config; disabled until a host opts in. */
@@ -34,6 +36,7 @@ export type MetadataStore = {
   setAvailableViews: (availableViews: ApollonView[]) => void
   setReadonly: (readonly: boolean) => void
   setScrollLock: (scrollLock: boolean) => void
+  setMultiSelectionMode: (multiSelectionMode: boolean) => void
   setLabels: (labels: ApollonLabels) => void
   setTagConfig: (tagConfig: TagConfig) => void
   setScrollEnabled: (scrollEnabled: boolean) => void
@@ -65,6 +68,7 @@ type InitialMetadataState = {
   readonly: boolean
   debug: boolean
   scrollLock: boolean
+  multiSelectionMode: boolean
   labels: ApollonLabels
   tagConfig: TagConfig
   scrollEnabled: boolean
@@ -86,6 +90,7 @@ const initialMetadataState: InitialMetadataState = {
   readonly: false,
   debug: false,
   scrollLock: false,
+  multiSelectionMode: false,
   labels: DEFAULT_LABELS,
   tagConfig: DISABLED_TAG_CONFIG,
   scrollEnabled: false,
@@ -177,6 +182,10 @@ export const createMetadataStore = (
 
         setScrollLock: (scrollLock: boolean) => {
           set({ scrollLock }, undefined, "setScrollLock")
+        },
+
+        setMultiSelectionMode: (multiSelectionMode: boolean) => {
+          set({ multiSelectionMode }, undefined, "setMultiSelectionMode")
         },
 
         setLabels: (labels) => {
