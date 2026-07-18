@@ -41,10 +41,14 @@ Apollon is the modeling editor behind [Artemis](https://artemis.tum.de/), TUM's 
 ## Install
 
 ```sh
-npm install @tumaet/apollon \
-  react react-dom \
-  @xyflow/react \
-  yjs y-protocols
+npm install @tumaet/apollon
+```
+
+npm 7+, pnpm 8+, and Bun resolve the required peer dependencies automatically.
+Yarn never installs peers — list them explicitly there:
+
+```sh
+npm install @tumaet/apollon react react-dom @xyflow/react yjs y-protocols
 ```
 
 ```ts
@@ -54,7 +58,7 @@ import "@tumaet/apollon/style.css"
 
 Apollon ships **one** build with every runtime dependency left external — the React family (`react`, `react-dom`, `@xyflow/react`), the CRDT singletons (`yjs`, `y-protocols`), and Apollon's own UI deps (`@base-ui/react`, `lucide-react`, `@dnd-kit`, `zustand`, `@chenglou/pretext`), which arrive transitively when you install the package. Your bundler resolves and de-duplicates each one against your app's `node_modules`, and your bundle analyzer / SBOM tooling sees them as the real packages they are — never a copy inlined invisibly into one chunk. This works from any framework with a bundler (Angular, Vue, Svelte, React).
 
-These are the peers you install explicitly:
+The required peers, and what each powers:
 
 | Peer            | Range     | Powers                                                |
 | --------------- | --------- | ----------------------------------------------------- |
@@ -64,7 +68,7 @@ These are the peers you install explicitly:
 | `yjs`           | `^13.6.0` | the document model, undo/redo, and live collaboration |
 | `y-protocols`   | `^1.0.6`  | collaboration sync/awareness                          |
 
-Most package managers install missing peers automatically; the explicit command above is listed for clarity. Keeping these external means a host that already uses React or Yjs shares a single instance with the editor instead of loading a private, possibly mismatched copy — no duplicate payload, and no "Invalid hook call" or cross-instance-document errors.
+Keeping these external means a host that already uses React or Yjs shares a single instance with the editor instead of loading a private, possibly mismatched copy — no duplicate payload, and no "Invalid hook call" or cross-instance-document errors.
 
 ### Non-React hosts (Angular, Vue, Svelte, vanilla)
 
@@ -234,7 +238,7 @@ Any Yjs-compatible transport works: `y-websocket`, `y-webrtc`, BroadcastChannel,
 - **SVG**: `await editor.exportAsSVG(options)` resolves to `{ svg, clip }`. `svgMode: "web"` (the default) keeps CSS variables for theme-adaptive output; `"compat"` inlines them for PDF and Inkscape.
 - **JSON**: `editor.model` returns the `UMLModel`, and assigning it back is round-trip safe. Use `importDiagram(json)` to normalize older v2/v3 models first.
 - **Headless**: `ApollonEditor.exportModelAsSvg(model, options)` renders a model without a mounted editor.
-- **PNG / PDF**: not built in, but the library ships `svgToPng` / `svgToPdf` renderers under [`@tumaet/apollon/export`](https://ls1intum.github.io/Apollon/library/api/export) (PNG via `@resvg/resvg-wasm`, PDF via `svg2pdf.js` + `jspdf`, installed as optional peers). The standalone server in this repo renders server-side instead, with `@napi-rs/canvas` (PNG) and `pdfmake` (PDF).
+- **PNG / PDF**: not built in, but the library ships `svgToPng` / `svgToPdf` renderers under [`@tumaet/apollon/export`](https://ls1intum.github.io/Apollon/library/api/export) (PNG via `@resvg/resvg-wasm`, PDF via `svg2pdf.js` + `jspdf` — optional dependencies that install automatically with the package). The standalone server in this repo renders server-side instead, with `@napi-rs/canvas` (PNG) and `pdfmake` (PDF).
 
 See [Export](https://ls1intum.github.io/Apollon/library/api/export) for the full `ExportOptions`.
 
