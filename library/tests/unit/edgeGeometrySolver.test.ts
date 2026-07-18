@@ -880,4 +880,210 @@ describe("computeAllEdgeGeometry — auto anchor optimization", () => {
     ).toBe(false)
     expect(routesCross(rC, rB), "the fork crosses").toBe(false)
   })
+  // ── PINNED (user-anchored) edges ────────────────────────────────────────────
+  // Pinning is where the router historically broke: an anchor could be silently
+  // ignored, a partially-pinned edge would step instead of running straight, and a
+  // bidirectional pair could be mirrored into a crossing the router then looped
+  // around. These sweep the pin space and assert the invariants that must always
+  // hold, whatever the geometry.
+
+  const SIDE_LIST = [
+    Position.Top,
+    Position.Right,
+    Position.Bottom,
+    Position.Left,
+  ]
+
+  /** Where a `{side, ratio}` pin must land on a node rect. */
+  const pinPoint = (
+    r: { x: number; y: number; w: number; h: number },
+    side: Position,
+    ratio: number
+  ) => {
+    switch (side) {
+      case Position.Top:
+        return { x: r.x + r.w * ratio, y: r.y }
+      case Position.Bottom:
+        return { x: r.x + r.w * ratio, y: r.y + r.h }
+      case Position.Left:
+        return { x: r.x, y: r.y + r.h * ratio }
+      default:
+        return { x: r.x + r.w, y: r.y + r.h * ratio }
+    }
+  }
+
+  it("honours every pinned anchor exactly, across the pin space", () => {
+    let checked = 0
+    const violations: string[] = []
+    for (const [bx, by] of [
+      [400, -300],
+      [400, 0],
+      [400, 300],
+      [-400, -300],
+      [0, -350],
+      [0, 350],
+      [250, 120],
+    ])
+      for (const pinSide of SIDE_LIST)
+        for (const pinRatio of [0.1, 0.35, 0.5, 0.75, 0.9])
+          for (const tgtSide of SIDE_LIST) {
+            const A = makeNode("aaa", 0, 0, 160, 100)
+            const B = makeNode("bbb", bx, by, 160, 100)
+            const C = makeNode("ccc", -350, 250, 160, 100)
+            const { routeById } = computeAllEdgeGeometry(
+              base([A, B, C], [
+                {
+                  id: "e1",
+                  source: "aaa",
+                  target: "bbb",
+                  type: "ClassUnidirectional",
+                  data: {
+                    sourceAnchor: { side: pinSide, ratio: pinRatio },
+                    targetAnchor: { side: tgtSide, ratio: 0.5 },
+                  },
+                },
+                {
+                  id: "e2",
+                  source: "aaa",
+                  target: "ccc",
+                  type: "ClassUnidirectional",
+                },
+                {
+                  id: "e3",
+                  source: "bbb",
+                  target: "ccc",
+                  type: "ClassUnidirectional",
+                },
+              ] as Edge[])
+            )
+            checked++
+            const r = routeById["e1"]
+            if (!r) {
+              violations.push(`missing route pin=${pinSide}/${pinRatio}`)
+              continue
+            }
+            const want = pinPoint(
+              { x: 0, y: 0, w: 160, h: 100 },
+              pinSide,
+              pinRatio
+            )
+            const dSrc = Math.abs(r[0].x - want.x) + Math.abs(r[0].y - want.y)
+            // The stub padding shifts the drawn end a few px along its normal.
+            if (dSrc > 12)
+              violations.push(
+                `source off by ${Math.round(dSrc)} pin=${pinSide}/${pinRatio}`
+              )
+            const wantT = pinPoint(
+              { x: bx, y: by, w: 160, h: 100 },
+              tgtSide,
+              0.5
+            )
+            const last = r[r.length - 1]
+            const dTgt = Math.abs(last.x - wantT.x) + Math.abs(last.y - wantT.y)
+            if (dTgt > 12)
+              violations.push(
+                `target off by ${Math.round(dTgt)} pin=${pinSide}/${pinRatio} tgt=${tgtSide}`
+              )
+          }
+    expect(checked).toBeGreaterThan(500)
+    expect(violations.slice(0, 5)).toEqual([])
+  })
+
+  it("never doubles a pinned edge back over itself", () => {
+    // A route that reverses along the axis it just travelled reads as a broken,
+    // looping edge — the defect a mis-mirrored bidirectional pair used to produce.
+    const retraces: string[] = []
+    for (const [bx, by] of [
+      [400, -300],
+      [400, 0],
+      [-400, -300],
+      [0, 350],
+      [250, 120],
+    ])
+      for (const pinSide of SIDE_LIST)
+        for (const pinRatio of [0.1, 0.5, 0.9]) {
+          const A = makeNode("aaa", 0, 0, 160, 100)
+          const B = makeNode("bbb", bx, by, 160, 100)
+          const { routeById } = computeAllEdgeGeometry(
+            base([A, B], [
+              {
+                id: "e1",
+                source: "aaa",
+                target: "bbb",
+                type: "ClassUnidirectional",
+                data: {
+                  sourceAnchor: { side: pinSide, ratio: pinRatio },
+                },
+              },
+              {
+                id: "e2",
+                source: "bbb",
+                target: "aaa",
+                type: "ClassUnidirectional",
+              },
+            ] as Edge[])
+          )
+          for (const id of ["e1", "e2"]) {
+            const r = routeById[id]
+            if (!r) continue
+            for (let i = 1; i < r.length - 1; i++) {
+              const dx1 = r[i].x - r[i - 1].x
+              const dy1 = r[i].y - r[i - 1].y
+              const dx2 = r[i + 1].x - r[i].x
+              const dy2 = r[i + 1].y - r[i].y
+              if (
+                (dx1 * dx2 < 0 && dy1 === 0 && dy2 === 0) ||
+                (dy1 * dy2 < 0 && dx1 === 0 && dx2 === 0)
+              )
+                retraces.push(`${id} pin=${pinSide}/${pinRatio} b=${bx},${by}`)
+            }
+          }
+        }
+    expect(retraces.slice(0, 5)).toEqual([])
+  })
+
+  it("keeps a bidirectional pair nested, not looped", () => {
+    // diagram (61): A<->B. An arbitrary mirror crossed the two edges and the router
+    // drew a box around the crossing. They must nest as two clean parallel Ls.
+    const C = makeNode("fb7331", 70, 245, 160, 100)
+    const B = makeNode("cd6dc2", 380, 375, 160, 100)
+    const A = makeNode("49e8e1", 210, 485, 160, 100)
+    const { routeById } = computeAllEdgeGeometry(
+      base(
+        [C, B, A],
+        [
+          {
+            id: "8a7f38",
+            source: "49e8e1",
+            target: "cd6dc2",
+            type: "ClassUnidirectional",
+          },
+          {
+            id: "b35058",
+            source: "49e8e1",
+            target: "fb7331",
+            type: "ClassUnidirectional",
+          },
+          {
+            id: "e16295",
+            source: "cd6dc2",
+            target: "fb7331",
+            type: "ClassUnidirectional",
+          },
+          {
+            id: "0609cc",
+            source: "cd6dc2",
+            target: "49e8e1",
+            type: "ClassUnidirectional",
+          },
+        ]
+      )
+    )
+    const ab = routeById["8a7f38"]
+    const ba = routeById["0609cc"]
+    expect(routesCross(ab, ba), "the A<->B pair crosses").toBe(false)
+    // Each is a clean single-corner L, not a detour around a crossing.
+    expect(ab.length).toBeLessThanOrEqual(3)
+    expect(ba.length).toBeLessThanOrEqual(3)
+  })
 })
