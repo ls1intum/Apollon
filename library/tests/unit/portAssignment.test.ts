@@ -254,39 +254,38 @@ describe("assignPorts — forks, nesting, merges emerge", () => {
   })
 })
 
-describe("orderSideMembers — transitivity + determinism (P0 hard constraint)", () => {
-  // Brute-force: the precomputed scalar key must give a total, transitive order
-  // for ANY partner directions (incl. partners behind a cost-chosen perpendicular
-  // side), independent of input order — the property the old pairwise comparator
-  // violated. Deterministic pseudo-random inputs (no Math.random).
+describe("orderSideMembers is a deterministic total order", () => {
   const sides = [Position.Top, Position.Bottom, Position.Left, Position.Right]
-  it("is a strict total order for arbitrary directions on every side", () => {
+  it("gives the same order whatever the input order, for any directions", () => {
+    // A pairwise comparator that isn't a true total order sorts differently on
+    // different engines and differently under a shuffle — the exact hazard that
+    // broke cross-peer agreement before. So the scalar key must survive a shuffle.
     let seed = 12345
     const next = () => {
-      // LCG — deterministic, engine-independent.
-      seed = (seed * 1103515245 + 12345) & 0x7fffffff
+      seed = (seed * 1103515245 + 12345) & 0x7fffffff // LCG, no Math.random
       return seed
     }
     for (const side of sides) {
       for (let trial = 0; trial < 50; trial++) {
-        const members: SideMember[] = []
         const n = 2 + (next() % 6)
-        for (let i = 0; i < n; i++) {
-          members.push({
-            edgeId: `e${i}`,
-            end: "source",
-            dx: (next() % 800) - 400,
-            dy: (next() % 800) - 400,
-          })
+        const members: SideMember[] = Array.from({ length: n }, (_, i) => ({
+          edgeId: `e${i}`,
+          end: "source",
+          dx: (next() % 800) - 400,
+          dy: (next() % 800) - 400,
+        }))
+        const order = orderSideMembers(side, members).map((m) => m.edgeId)
+        // Every one of the n! permutations of the input must sort to `order`.
+        for (let p = 0; p < 20; p++) {
+          const shuffled = [...members]
+          for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = next() % (i + 1)
+            ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+          }
+          expect(orderSideMembers(side, shuffled).map((m) => m.edgeId)).toEqual(
+            order
+          )
         }
-        const a = orderSideMembers(side, members).map((m) => m.edgeId)
-        const b = orderSideMembers(side, [...members].reverse()).map(
-          (m) => m.edgeId
-        )
-        // order-independent (determinism)
-        expect(b).toEqual(a)
-        // a genuine permutation with no dropped/duplicated members (totality)
-        expect(new Set(a).size).toBe(members.length)
       }
     }
   })

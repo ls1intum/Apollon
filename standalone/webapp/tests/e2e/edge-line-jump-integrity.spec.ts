@@ -135,18 +135,26 @@ test.describe("Line-jump geometry integrity", () => {
   // Each fixture must satisfy both invariants. deployment / use-case use
   // straight-path / diagonal edges — they must produce NO floating bridges
   // (the exact regression where re-derived geometry hallucinated crossings).
-  for (const fixture of [
-    "line-jump-cross.json",
-    "line-jump-complex.json",
-    "deployment-diagram.json",
-    "use-case-diagram.json",
-    "class-diagram.json",
+  // `mustCross` fixtures are designed to contain crossings — if one stops producing
+  // any, the two `[]` assertions below pass vacuously, so we require the crossings to
+  // exist. The others exercise the no-false-bridge path and legitimately have none.
+  for (const { fixture, mustCross } of [
+    { fixture: "line-jump-cross.json", mustCross: true },
+    { fixture: "line-jump-complex.json", mustCross: true },
+    { fixture: "deployment-diagram.json", mustCross: false },
+    { fixture: "use-case-diagram.json", mustCross: false },
+    { fixture: "class-diagram.json", mustCross: false },
   ]) {
     test(`${fixture}: every bridge sits on a real crossing`, async ({
       page,
     }) => {
       await loadFixture(page, fixture)
       const r = await checkIntegrity(page)
+      if (mustCross)
+        expect(
+          r.crossings.length,
+          "fixture no longer produces crossings — the checks below would pass vacuously"
+        ).toBeGreaterThan(0)
       expect(r.floating, "bridges floating off any crossing").toEqual([])
       expect(r.unmarked, "real crossings with no bridge").toEqual([])
     })

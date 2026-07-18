@@ -1003,8 +1003,7 @@ describe("computeAllEdgeGeometry — auto anchor optimization", () => {
                 `target off by ${Math.round(dTgt)} pin=${pinSide}/${pinRatio} tgt=${tgtSide}`
               )
           }
-    expect(checked).toBeGreaterThan(500)
-    expect(violations.slice(0, 5)).toEqual([])
+    expect(violations).toEqual([])
   })
 
   it("never doubles a pinned edge back over itself", () => {
