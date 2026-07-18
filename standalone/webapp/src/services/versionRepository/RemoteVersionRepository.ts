@@ -22,8 +22,12 @@ export const RemoteVersionRepository = {
   async create(diagramId, body, opts): Promise<CreateVersionResult> {
     return VersionApiClient.create(diagramId, body, opts)
   },
-  getBody(diagramId, versionId) {
-    return VersionApiClient.getBody(diagramId, versionId)
+  getBody(
+    diagramId: string,
+    versionId: string,
+    opts?: { signal?: AbortSignal }
+  ) {
+    return VersionApiClient.getBody(diagramId, versionId, opts)
   },
   async restore(diagramId, versionId, opts): Promise<RestoreVersionResult> {
     return VersionApiClient.restore(diagramId, versionId, opts)

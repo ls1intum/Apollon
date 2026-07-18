@@ -1,10 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { useEditorContext, useModalContext } from "@/contexts"
 import {
-  setVersionRepository,
-  RemoteVersionRepository,
-} from "@/services/versionRepository"
-import {
   ApollonEditor,
   ApollonMode,
   collabColorFromName,
@@ -14,15 +10,21 @@ import {
   type UMLModel,
 } from "@tumaet/apollon"
 import { getRouteApi, useNavigate } from "@tanstack/react-router"
+import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "react-toastify"
 import { DiagramView } from "@/types"
 import { WebSocketManager } from "@/services/WebSocketManager"
-import { DiagramApiClient } from "@/services/DiagramApiClient"
 import {
   createDiagramAutosaver,
   type DiagramAutosaver,
 } from "@/services/createDiagramAutosaver"
 import { selectScopedPreview, useVersionStore } from "@/stores/useVersionStore"
+import { useDiagramSeed } from "@/hooks/useDiagramSeed"
+import { DiagramApiClient } from "@/services/DiagramApiClient"
+import { prefetchVersions } from "@/queries/versionQueries"
+import { useVersionRepositoryKind } from "@/contexts/VersionRepositoryContext"
+import { useRestoreVersionMutation } from "@/queries/versionMutations"
+import { applyControlEventToCache } from "@/queries/versionCacheEvents"
 import { useDocumentTitle } from "@/hooks/useDocumentTitle"
 import {
   UndoRestoreToast,
@@ -43,13 +45,26 @@ import { addSharedDiagramEntry } from "@/utils/sharedDiagramStorage"
 // which would create a cycle: the route file imports this page).
 const route = getRouteApi("/shared/$diagramId")
 
+/** True for a fetch rejected by its own `AbortController`. */
+function isAbort(err: unknown): boolean {
+  return err instanceof DOMException && err.name === "AbortError"
+}
+
+function readStoredCollabUser(): { name: string; color: string } | null {
+  const storedName = sessionStorage.getItem("apollon-collab-name")
+  return storedName
+    ? { name: storedName, color: collabColorFromName(storedName) }
+    : null
+}
+
 export const ApollonShared: React.FC = () => {
   const { diagramId } = route.useParams()
   const { view: viewType, version: previewFromUrl } = route.useSearch()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const kind = useVersionRepositoryKind()
   const { setEditor, editor } = useEditorContext()
   const { openModal } = useModalContext()
-  const [isLoading, setIsLoading] = useState(true)
   const [diagramTitle, setDiagramTitle] = useState<string | null>(null)
   useDocumentTitle(diagramTitle)
 
@@ -88,20 +103,17 @@ export const ApollonShared: React.FC = () => {
   // re-fingerprinting on every render. False = restoring would be a no-op
   // (e.g. the latest saved version with no unsaved local changes).
   const [canRestoreFromPreview, setCanRestoreFromPreview] = useState(false)
-  const [collaborationUser, setCollaborationUser] = useState<{
-    name: string
-    color: string
-  } | null>(null)
+  const [collaborationUser, setCollaborationUser] =
+    useState(readStoredCollabUser)
 
   const preview = useVersionStore((s) => selectScopedPreview(s, diagramId))
-  const restoreVersion = useVersionStore((s) => s.restoreVersion)
+  const restoreMutation = useRestoreVersionMutation(kind, diagramId)
   const { openPreview, closePreview } = useVersionPreviewUrlSync(
+    kind,
     diagramId,
     previewFromUrl,
     Boolean(editor)
   )
-  const applyControlEvent = useVersionStore((s) => s.applyControlEvent)
-  const fetchVersions = useVersionStore((s) => s.fetchVersions)
 
   useEditorShortcuts(diagramId)
 
@@ -111,194 +123,219 @@ export const ApollonShared: React.FC = () => {
     isDirty: () => diagramIsUpdated.current,
   })
 
+  // The component instance survives diagramId / viewType changes (same
+  // `/:diagramId` route), so per-diagram refs must be reset explicitly per
+  // route lifecycle. Declared FIRST so it runs before the prompt and mount
+  // effects below.
   useEffect(() => {
-    // Bind the remote repository before this effect fetches versions. Set in
-    // the effect, not render, so render stays pure; ordering before the fetch
-    // below is guaranteed.
-    setVersionRepository(RemoteVersionRepository)
     const nextLifecycleKey = `${diagramId ?? ""}:${viewType ?? ""}`
+    if (lifecycleKeyRef.current === nextLifecycleKey) return
+    lifecycleKeyRef.current = nextLifecycleKey
+    diagramIsUpdated.current = false
+    restoredDuringPreviewRef.current = false
+    hasPromptedRef.current = false
+  }, [diagramId, viewType])
 
-    // The component instance survives diagramId / viewType / user
-    // changes (same `/:diagramId` route), so state and refs must be
-    // reset explicitly per route lifecycle, not on every rerender.
-    if (lifecycleKeyRef.current !== nextLifecycleKey) {
-      lifecycleKeyRef.current = nextLifecycleKey
-      setIsLoading(true)
-      diagramIsUpdated.current = false
-      restoredDuringPreviewRef.current = false
-      hasPromptedRef.current = false
-    }
+  // validateSearch has already coerced an unknown ?view to undefined.
+  useEffect(() => {
+    if (viewType) return
+    toast.error("Invalid view type")
+    navigate({ to: "/" })
+  }, [viewType, navigate])
 
-    const abort = new AbortController()
+  const isCollaborationView = viewType === DiagramView.COLLABORATE
+  const needsCollabName = isCollaborationView && !collaborationUser
+
+  // A stored name was already picked up by the lazy state initialiser, so
+  // reaching here means there is none. Prompt once per diagram — the seed
+  // query stays disabled until a name exists.
+  useEffect(() => {
+    if (!viewType || !needsCollabName || hasPromptedRef.current) return
+    hasPromptedRef.current = true
+    openModal("COLLABORATE_NAME", {
+      initialName: randomCollabName(),
+      onConfirm: (name: string) => {
+        sessionStorage.setItem("apollon-collab-name", name)
+        setCollaborationUser({ name, color: collabColorFromName(name) })
+      },
+      onClose: () => {
+        navigate({ to: "/", replace: true })
+      },
+    })
+  }, [viewType, needsCollabName, diagramId, openModal, navigate])
+
+  // One-shot editor seed; while its preconditions are unmet (missing view,
+  // unresolved collaboration name) it stays pending, which keeps the overlay up.
+  const {
+    diagram,
+    error: seedError,
+    isPending: seedPending,
+  } = useDiagramSeed(
+    diagramId,
+    Boolean(diagramId) && Boolean(viewType) && !needsCollabName
+  )
+
+  // Seed failure = nothing to edit. Aborted loads never land here.
+  useEffect(() => {
+    if (!seedError) return
+    log.error("Failed to initialize diagram", seedError)
+    toast.error("Failed to initialize diagram")
+    navigate({ to: "/" })
+  }, [seedError, navigate])
+
+  // Editor + connection lifecycle. Runs when the seed body arrives and tears
+  // down on route identity change/unmount. The seed's `data` identity is
+  // stable for the whole mount (staleTime Infinity; imperative HEAD refetches
+  // use a separate cache key), so this effect can safely depend on it without
+  // ever rebuilding the editor mid-session.
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container || !diagramId || !viewType || !diagram) return
+    if (isCollaborationView && !collaborationUser) return
+
     let instance: ApollonEditor | null = null
     let modelChangeSubscriptionId: number | null = null
+    // Owned by this effect: a peer's VERSION_RESTORED refresh must not outlive
+    // the editor it would assign to.
+    const peerRefreshAbort = new AbortController()
 
-    const initialize = async () => {
-      const container = containerRef.current
-      if (!container || !diagramId) return
+    try {
+      log.debug("Initializing Apollon editor with view type:", viewType)
+      addSharedDiagramEntry(diagramId, { lastSharedView: viewType })
+      log.debug("Fetched diagram", {
+        diagramId,
+        nodeCount: diagram.nodes?.length ?? 0,
+        edgeCount: diagram.edges?.length ?? 0,
+      })
 
-      try {
-        // validateSearch has already coerced an unknown ?view to undefined.
-        if (!viewType) {
-          toast.error("Invalid view type")
-          navigate({ to: "/" })
-          return
-        }
-        log.debug("Initializing Apollon editor with view type:", viewType)
-
-        const isCollaborationView = viewType === DiagramView.COLLABORATE
-        if (isCollaborationView && !collaborationUser) {
-          const storedName = sessionStorage.getItem("apollon-collab-name")
-          if (storedName) {
-            setCollaborationUser({
-              name: storedName,
-              color: collabColorFromName(storedName),
-            })
-          } else if (!hasPromptedRef.current) {
-            hasPromptedRef.current = true
-            openModal("COLLABORATE_NAME", {
-              initialName: randomCollabName(),
-              onConfirm: (name: string) => {
-                sessionStorage.setItem("apollon-collab-name", name)
-                setCollaborationUser({
-                  name,
-                  color: collabColorFromName(name),
-                })
-              },
-              onClose: () => {
-                navigate({ to: "/", replace: true })
-              },
-            })
-          }
-          return
-        }
-
-        const diagram = await DiagramApiClient.fetchDiagram(diagramId, {
-          signal: abort.signal,
-        })
-        if (abort.signal.aborted) return
-        addSharedDiagramEntry(diagramId, { lastSharedView: viewType })
-        log.debug("Fetched diagram", {
-          diagramId,
-          nodeCount: diagram.nodes?.length ?? 0,
-          edgeCount: diagram.edges?.length ?? 0,
-        })
-
-        const editorOptions: ApollonOptions = {
-          model: diagram,
-          collaborationEnabled: true,
-          collaboration:
-            isCollaborationView && collaborationUser
-              ? {
-                  enabled: true,
-                  user: collaborationUser,
-                  showPresence: true,
-                  showCursors: true,
-                  showSelectionHighlights: true,
-                  showFollow: true,
-                }
-              : undefined,
-        }
-
-        if (viewType === DiagramView.GIVE_FEEDBACK) {
-          editorOptions.mode = ApollonMode.Assessment
-          editorOptions.readonly = false
-        } else if (viewType === DiagramView.SEE_FEEDBACK) {
-          editorOptions.mode = ApollonMode.Assessment
-          editorOptions.readonly = true
-        } else {
-          editorOptions.mode = ApollonMode.Modelling
-          editorOptions.readonly = false
-        }
-
-        instance = new ApollonEditor(container, editorOptions)
-        editorRef.current = instance
-        setEditor(instance)
-        setIsLoading(false)
-
-        if (
-          [
-            DiagramView.COLLABORATE,
-            DiagramView.GIVE_FEEDBACK,
-            DiagramView.SEE_FEEDBACK,
-          ].includes(viewType)
-        ) {
-          wsManagerRef.current = new WebSocketManager(diagramId, instance, () =>
-            toast.error("WebSocket error")
-          )
-          wsManagerRef.current.startConnection()
-          wsManagerRef.current.onControl((event) => {
-            applyControlEvent(diagramId, event)
-            if (event.type === "VERSION_RESTORED") {
-              const state = useVersionStore.getState()
-              const isLocalRestore =
-                state.pendingRestoreFromId === event.restoredFromVersionId ||
-                state.undoRestore?.restoredFromVersionId ===
-                  event.restoredFromVersionId
-              if (!isLocalRestore) {
-                const actor = event.actor || "A collaborator"
-                DiagramApiClient.fetchDiagram(diagramId, {
-                  signal: abort.signal,
-                })
-                  .then((next) => {
-                    if (instance) instance.model = next
-                  })
-                  .catch((err) => {
-                    if (
-                      err instanceof DOMException &&
-                      err.name === "AbortError"
-                    )
-                      return
-                    toast.error(
-                      `${actor} restored a version but we couldn't refresh.`,
-                      { toastId: "version-restored-refetch-failed" }
-                    )
-                  })
-                toast.info(t.collaboratorRestoredTitle(actor), {
-                  toastId: "version-restored-by-collaborator",
-                  autoClose: 4000,
-                })
+      const editorOptions: ApollonOptions = {
+        model: diagram,
+        collaborationEnabled: true,
+        collaboration:
+          isCollaborationView && collaborationUser
+            ? {
+                enabled: true,
+                user: collaborationUser,
+                showPresence: true,
+                showCursors: true,
+                showSelectionHighlights: true,
+                showFollow: true,
               }
-            }
-          })
-        }
-
-        const editorInstance = instance
-        const autosaver = createDiagramAutosaver({
-          diagramId,
-          getModel: () => editorInstance.model,
-          isPaused: () =>
-            selectScopedPreview(useVersionStore.getState(), diagramId) !== null,
-          collaboration: isCollaborationView,
-          onSaved: () => {
-            diagramIsUpdated.current = false
-          },
-          onError: () => toast.error("Failed to sync changes"),
-        })
-        autosaverRef.current = autosaver
-
-        modelChangeSubscriptionId = instance.subscribeToModelChange(() => {
-          if (selectScopedPreview(useVersionStore.getState(), diagramId)) return
-          diagramIsUpdated.current = true
-          autosaver.schedule()
-        })
-
-        void fetchVersions(diagramId)
-        // Preview from `?version=` is handled by the dedicated URL ↔
-        // preview-state sync effect below; this effect just initialises
-        // the editor and connection.
-      } catch (err) {
-        if (err instanceof DOMException && err.name === "AbortError") return
-        log.error("Failed to initialize diagram", err)
-        toast.error("Failed to initialize diagram")
-        navigate({ to: "/" })
+            : undefined,
       }
+
+      if (viewType === DiagramView.GIVE_FEEDBACK) {
+        editorOptions.mode = ApollonMode.Assessment
+        editorOptions.readonly = false
+      } else if (viewType === DiagramView.SEE_FEEDBACK) {
+        editorOptions.mode = ApollonMode.Assessment
+        editorOptions.readonly = true
+      } else {
+        editorOptions.mode = ApollonMode.Modelling
+        editorOptions.readonly = false
+      }
+
+      instance = new ApollonEditor(container, editorOptions)
+      editorRef.current = instance
+      setEditor(instance)
+
+      if (
+        [
+          DiagramView.COLLABORATE,
+          DiagramView.GIVE_FEEDBACK,
+          DiagramView.SEE_FEEDBACK,
+        ].includes(viewType)
+      ) {
+        wsManagerRef.current = new WebSocketManager(diagramId, instance, () =>
+          toast.error("WebSocket error")
+        )
+        wsManagerRef.current.startConnection()
+        wsManagerRef.current.onControl((event) => {
+          applyControlEventToCache(queryClient, diagramId, event)
+          if (event.type === "VERSION_DELETED") {
+            // Clearing `?version=` is what actually leaves preview — the URL
+            // is the source of truth, so dropping only the store state would
+            // be undone by the sync effect and bounce the user back into a
+            // snapshot the server no longer has.
+            const previewing = selectScopedPreview(
+              useVersionStore.getState(),
+              diagramId
+            )
+            if (previewing?.versionId === event.versionId) closePreview()
+          }
+          if (event.type === "VERSION_RESTORED") {
+            const state = useVersionStore.getState()
+            const isLocalRestore =
+              state.pendingRestoreFromId === event.restoredFromVersionId ||
+              state.undoRestore?.restoredFromVersionId ===
+                event.restoredFromVersionId
+            if (!isLocalRestore) {
+              const actor = event.actor || "A collaborator"
+              DiagramApiClient.fetchDiagram(diagramId, {
+                signal: peerRefreshAbort.signal,
+              })
+                .then((next) => {
+                  if (!instance) return
+                  // Not while previewing: `editor.model` is the read-only
+                  // overlay, so this would swap the snapshot out from under
+                  // the user and be discarded on exit anyway. Exiting preview
+                  // resyncs from Yjs, which has the restore already.
+                  if (
+                    selectScopedPreview(
+                      useVersionStore.getState(),
+                      diagramId
+                    ) !== null
+                  ) {
+                    return
+                  }
+                  instance.model = next
+                })
+                .catch((err) => {
+                  if (isAbort(err)) return
+                  toast.error(
+                    `${actor} restored a version but we couldn't refresh.`,
+                    { toastId: "version-restored-refetch-failed" }
+                  )
+                })
+              toast.info(t.collaboratorRestoredTitle(actor), {
+                toastId: "version-restored-by-collaborator",
+                autoClose: 4000,
+              })
+            }
+          }
+        })
+      }
+
+      const editorInstance = instance
+      const autosaver = createDiagramAutosaver({
+        diagramId,
+        getModel: () => editorInstance.model,
+        isPaused: () =>
+          selectScopedPreview(useVersionStore.getState(), diagramId) !== null,
+        collaboration: isCollaborationView,
+        onSaved: () => {
+          diagramIsUpdated.current = false
+        },
+        onError: () => toast.error("Failed to sync changes"),
+      })
+      autosaverRef.current = autosaver
+
+      modelChangeSubscriptionId = instance.subscribeToModelChange(() => {
+        if (selectScopedPreview(useVersionStore.getState(), diagramId)) return
+        diagramIsUpdated.current = true
+        autosaver.schedule()
+      })
+
+      void prefetchVersions(queryClient, kind, diagramId)
+    } catch (err) {
+      log.error("Failed to initialize diagram", err)
+      toast.error("Failed to initialize diagram")
+      navigate({ to: "/" })
     }
 
-    void initialize()
-
     return () => {
-      abort.abort()
+      // Don't let an in-flight peer-restore refresh apply to a torn-down editor.
+      peerRefreshAbort.abort()
       setEditor(undefined)
       wsManagerRef.current?.cleanup()
       // If a version preview is still open at teardown, the editor's local
@@ -329,18 +366,17 @@ export const ApollonShared: React.FC = () => {
       editorRef.current = null
     }
   }, [
-    applyControlEvent,
+    closePreview,
     collaborationUser,
+    diagram,
     diagramId,
-    fetchVersions,
+    isCollaborationView,
+    kind,
     navigate,
-    openModal,
+    queryClient,
     setEditor,
     viewType,
   ])
-
-  // URL↔preview sync (deep-link open, history nav, drawer click) is handled by
-  // useVersionPreviewUrlSync above — the same hook the local editor uses.
 
   const baseReadonly = viewType === DiagramView.SEE_FEEDBACK
 
@@ -403,7 +439,7 @@ export const ApollonShared: React.FC = () => {
             editor.fitView()
           })
           .catch((err) => {
-            if (err instanceof DOMException && err.name === "AbortError") return
+            if (isAbort(err)) return
             log.error("Failed to reload diagram after restore", err)
             toast.error(t.failureSchemaUnsupported)
           })
@@ -416,12 +452,14 @@ export const ApollonShared: React.FC = () => {
         editor.fitView()
       }
     }
+    // A late `editor.model = head` would clobber the next preview. This
+    // controller is this effect's alone, so aborting it cannot touch the
+    // WebSocket handler's peer-restore refresh.
     return () => abort.abort()
-  }, [preview, editor, diagramId, baseReadonly])
+  }, [preview, editor, diagramId, baseReadonly, queryClient])
 
-  // Memoised because `handleRestore`'s useCallback lists it as a dep —
-  // without stable identity the restore handler gets a fresh closure every
-  // render and the banner's `onRestore` prop churns.
+  // Stable identity: `handleRestore` deps on it, and the banner's `onRestore`
+  // prop would churn every render otherwise.
   const handleVersionSaved = useCallback((headRev?: number) => {
     autosaverRef.current?.setHeadRev(headRev)
     diagramIsUpdated.current = false
@@ -447,7 +485,10 @@ export const ApollonShared: React.FC = () => {
       }
       const liveBody = editor.model
       try {
-        const { headRev } = await restoreVersion(diagramId, versionId, liveBody)
+        const { headRev } = await restoreMutation.mutateAsync({
+          versionId,
+          currentBody: liveBody,
+        })
         handleVersionSaved(headRev)
         // Strip `?version=` so the URL sync doesn't re-enter the restored version.
         if (previewing) closePreview()
@@ -456,8 +497,17 @@ export const ApollonShared: React.FC = () => {
         toast.error(t.restoreFailed)
       }
     },
-    [diagramId, editor, handleVersionSaved, restoreVersion, closePreview]
+    [
+      diagramId,
+      editor,
+      handleVersionSaved,
+      // `mutateAsync` is stable; the mutation object is not.
+      restoreMutation.mutateAsync,
+      closePreview,
+    ]
   )
+
+  const isLoading = seedPending || !editor
 
   return (
     <div className="h-full flex flex-col">
