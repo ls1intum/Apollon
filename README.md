@@ -6,7 +6,7 @@
 [![npm downloads](https://img.shields.io/npm/dm/@tumaet/apollon)](https://www.npmjs.com/package/@tumaet/apollon)
 [![npm license](https://img.shields.io/npm/l/@tumaet/apollon)](./LICENSE)
 
-**Open-source UML modeling editor for the web.** Draw 13 UML and modeling diagram types (class, component, activity, BPMN, SFC, and more) in the browser, collaborate in real time, and export to SVG, PNG, PDF, or JSON.
+**Open-source UML modeling editor for the web.** Draw 13 UML and modeling diagram types (class, component, activity, BPMN, SFC, and more) in the browser, collaborate in real time, and export to SVG, PNG, PDF, PPTX, or JSON.
 
 [**▶ Try the live demo**](https://apollon.aet.cit.tum.de) · [Documentation](https://ls1intum.github.io/Apollon/) · [npm package](https://www.npmjs.com/package/@tumaet/apollon) · [VS Code extension](https://marketplace.visualstudio.com/items?itemName=aet-tum.apollon-extension)
 

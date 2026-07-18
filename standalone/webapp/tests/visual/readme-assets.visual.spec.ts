@@ -88,11 +88,15 @@ test.describe("Social preview card", () => {
   test.use({ viewport: { width: 1280, height: 640 }, deviceScaleFactor: 1 })
 
   test("social-card", async ({ page }) => {
-    // 1. Capture the light editor at the card's own aspect ratio; the card
-    //    embeds it as a framed window on the right. Light matches the editor's
-    //    default look and reads brighter in link unfurls.
+    // 1. Capture the light editor for the framed window on the right. Light
+    //    matches the editor's default look and reads brighter in link unfurls.
+    //    Capture at exactly 2× the size the card displays it (760px wide), so
+    //    the browser downscales by an integer factor — a fractional factor
+    //    resamples the diagram's 1px lines into visibly broken/stepped runs.
+    await page.setViewportSize({ width: 1520, height: 760 })
     await openHero(page, "light")
     const editorShot = (await page.screenshot()).toString("base64")
+    await page.setViewportSize({ width: 1280, height: 640 })
 
     // 2. Compose the card in-page. Fonts and the logo are inlined as data URIs
     //    from files bundled in the repo, so the card renders identically on
@@ -185,7 +189,7 @@ test.describe("Social preview card", () => {
       <div class="name">Apollon</div>
     </div>
     <div class="tagline"><b>Open-source UML modeling</b> for the web — draw, collaborate in real&nbsp;time, and embed the editor anywhere.</div>
-    <div class="facts">13 diagram types&ensp;·&ensp;real-time collaboration&ensp;·&ensp;SVG / PNG / PDF export</div>
+    <div class="facts">13 diagram types&ensp;·&ensp;real-time collaboration&ensp;·&ensp;SVG / PNG / PDF / PPTX export</div>
   </div>
   <div class="right">
     <div class="titlebar">
