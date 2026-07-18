@@ -6,7 +6,24 @@ Part of the Apollon monorepo — run it from the repo root with `pnpm dev`, not 
 
 ## Stack
 
-React 19, TypeScript, Vite, the shadcn-style [`@tumaet/ui`](../../packages/ui) design system (Base UI primitives + Tailwind v4), Storybook, Vitest, Playwright (visual + e2e).
+React 19, TypeScript, Vite, the shadcn-style [`@tumaet/ui`](../../packages/ui) design system (Base UI primitives + Tailwind v4), [TanStack Query](https://tanstack.com/query) for server state, Storybook, Vitest, Playwright (visual + e2e).
+
+## Debugging server state
+
+HTTP data (diagram loads, version history, version snapshots) goes through
+TanStack Query — see [`src/queries`](src/queries) and the boundary note in
+[`src/queryClient.ts`](src/queryClient.ts).
+
+The Query Devtools are **off by default**: their floating button sits
+bottom-right, on top of the editor's minimap, and every other corner is taken
+by the editor's own chrome. Enable them per browser from the console, then
+reload:
+
+```js
+localStorage.setItem("apollon:query-devtools", "1")
+```
+
+They are stripped from production builds regardless.
 
 ## Scripts
 
