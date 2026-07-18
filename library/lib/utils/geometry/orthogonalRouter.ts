@@ -576,6 +576,65 @@ export const routeConflictsWithNeighborEdges = (
   return false
 }
 
+/** The along-axis overlap length of two PARALLEL segments (0 if not parallel or no
+ * overlap). Used to weigh a collinear/near-parallel conflict by how MUCH they share. */
+const parallelOverlapLen = (a: Segment, b: Segment): number => {
+  if (a.y1 === a.y2 && b.y1 === b.y2)
+    return Math.max(
+      0,
+      Math.min(Math.max(a.x1, a.x2), Math.max(b.x1, b.x2)) -
+        Math.max(Math.min(a.x1, a.x2), Math.min(b.x1, b.x2))
+    )
+  if (a.x1 === a.x2 && b.x1 === b.x2)
+    return Math.max(
+      0,
+      Math.min(Math.max(a.y1, a.y2), Math.max(b.y1, b.y2)) -
+        Math.max(Math.min(a.y1, a.y2), Math.min(b.y1, b.y2))
+    )
+  return 0
+}
+
+/**
+ * The CROSS-EDGE cost of a candidate route against already-committed neighbour edges,
+ * for the unified anchor cost — integer-exact (the router's `orient` cross-product and
+ * interval overlap; no float on the decision path):
+ *   - `crossings`: the number of true perpendicular crossings.
+ *   - `proximityPx`: total px of run drawn ON or too close to a neighbour, weighted by
+ *     closeness (a collinear overlap at gap 0 counts full; it fades to 0 at the crowding
+ *     clearance). This is what pushes two edges off a shared stub and prices a smudge.
+ * Parallel runs at or beyond the crowding clearance (e.g. nested siblings a lane apart)
+ * cost nothing.
+ */
+export const routeConflictScore = (
+  points: readonly IPoint[],
+  neighborEdges: readonly IPoint[][]
+): { crossings: number; proximityPx: number } => {
+  const neighbors = toSegments(neighborEdges)
+  let crossings = 0
+  let proximityPx = 0
+  if (neighbors.length === 0) return { crossings, proximityPx }
+  const crowding = PARALLEL_CROWDING_CLEARANCE_CELLS * CANVAS.SNAP_TO_GRID_PX
+  for (let i = 0; i < points.length - 1; i++) {
+    const seg: Segment = {
+      x1: points[i].x,
+      y1: points[i].y,
+      x2: points[i + 1].x,
+      y2: points[i + 1].y,
+    }
+    for (const n of neighbors) {
+      const gap = parallelGap(seg, n)
+      if (gap !== null) {
+        if (gap < crowding)
+          proximityPx +=
+            (parallelOverlapLen(seg, n) * (crowding - gap)) / crowding
+      } else if (segmentsCross(seg, n)) {
+        crossings++
+      }
+    }
+  }
+  return { crossings, proximityPx: Math.round(proximityPx) }
+}
+
 /** Candidate turning lines along one axis, deduplicated and sorted ascending. */
 const collectLines = (
   exact: readonly number[],
