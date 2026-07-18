@@ -4,6 +4,7 @@ import type { IPoint } from "@/edges/Connection"
 import { getConnectionMode, getEdgeAnchorPoint } from "@/utils/connectionModes"
 import { type FreeformEdgeAnchor } from "@/utils/edgeUtils"
 import { routeStepEdge } from "@/utils/geometry/edgeRoute"
+import { routeConflictScore } from "@/utils/geometry/orthogonalRouter"
 import type { ObstacleRect } from "@/utils/geometry/obstacles"
 import type { ResolvedEdgeEndpoints } from "@/utils/geometry/edgeGeometrySolver"
 
@@ -64,6 +65,16 @@ const HUG_COST_GU = 50
  * and graduated (see `thirdPartyGrazePx`) so it also breaks a cost-tie toward the
  * side whose route drops cleanly away from a nearby node. */
 const THIRD_PARTY_GRAZE_COST_GU = 50
+/** What one CROSSING of an already-committed edge costs, in bend-units — ~3 bends,
+ * the evidence rate (yFiles 5:1, libavoid 4:1; kept moderate because every crossing
+ * here is a 90° one, the least harmful). Scored on the ideal route against the
+ * lower-id edges already placed, so an edge prefers a side/lane that does not cross
+ * its neighbours — crossing avoidance and bundle NESTING emerge from this term. */
+const EDGE_CROSS_COST_GU = 36
+/** What one grid cell of running ON or too-close-alongside a committed edge costs.
+ * Above a bend so a shared/smudged run always loses to a clean detour; this is what
+ * pushes two edges off a shared stub (no fork-collapse) and spaces a crowded side. */
+const EDGE_OVERLAP_COST_GU = 40
 const clamp = (v: number, lo: number, hi: number): number =>
   Math.max(lo, Math.min(hi, v))
 
@@ -364,7 +375,13 @@ const scoreKey = (
   targetFacing: Position | null,
   /** Node bodies that are NEITHER endpoint, so a candidate whose ideal route grazes
    * a bystander loses to one that clears it. Empty ⇒ no third-party term. */
-  thirdParty: readonly Rect[]
+  thirdParty: readonly Rect[],
+  /** The polylines of already-committed (lower-id) edges, so a candidate that CROSSES
+   * or runs ON a neighbour is priced against one that does not. Empty ⇒ no cross-edge
+   * term (first edge, or a diagram with none placed yet). This is the unified cost's
+   * cross-edge coupling: crossing avoidance, bundle nesting and no-fork-collapse all
+   * emerge from it, in id order. */
+  committed: readonly IPoint[][]
 ): number[] => {
   const bends = Math.max(0, route.length - 2)
   // Off-centre is measured from the side CENTRE. Multi-edge spacing is handled up
@@ -390,11 +407,22 @@ const scoreKey = (
   // the anchors stop sliding off-centre just to keep a grazing straight line.
   const graze =
     bends === 0 ? Math.round(thirdPartyGrazePx(route, thirdParty) / GRID) : 0
+  // Cross-edge coupling against the committed lower-id routes: a candidate that
+  // crosses or runs on a neighbour costs more, so the winner avoids them where it
+  // cheaply can (id-order greedy, the libavoid/yFiles model).
+  const conflict =
+    committed.length === 0
+      ? { crossings: 0, proximityPx: 0 }
+      : routeConflictScore(route, committed)
+  const crossCost =
+    conflict.crossings * EDGE_CROSS_COST_GU +
+    Math.round((conflict.proximityPx / GRID) * EDGE_OVERLAP_COST_GU)
   const weightedCost =
     bends * BEND_COST_GU +
     offCenter +
     hug * HUG_COST_GU +
-    graze * THIRD_PARTY_GRAZE_COST_GU
+    graze * THIRD_PARTY_GRAZE_COST_GU +
+    crossCost
   const length = Math.round(routeLength(route) / GRID)
   return [
     weightedCost,
@@ -609,7 +637,8 @@ export const selectEdgeAnchors = (
         input.targetRect,
         sourceFacing,
         targetFacing,
-        thirdParty
+        thirdParty,
+        input.neighborEdges
       )
       if (!best || lexLess(key, best.key)) {
         best = { endpoints, idealRoute, source, target, key }
