@@ -7,6 +7,15 @@ import { routeStepEdge } from "@/utils/geometry/edgeRoute"
 import { routeConflictScore } from "@/utils/geometry/orthogonalRouter"
 import type { ObstacleRect } from "@/utils/geometry/obstacles"
 import type { ResolvedEdgeEndpoints } from "@/utils/geometry/edgeGeometrySolver"
+import {
+  OPPOSITE_SIDE,
+  OUTWARD_NORMAL,
+  SIDE_ORDER,
+  centerOf,
+  facingSide,
+  isVerticalSide,
+  sideAxisLength,
+} from "@/utils/geometry/rectSides"
 
 /**
  * Endpoint-anchor selection: instead of pinning an edge to whatever side React
@@ -22,16 +31,6 @@ import type { ResolvedEdgeEndpoints } from "@/utils/geometry/edgeGeometrySolver"
  * the same winner. Note that is determinism, not stability: it guarantees every peer
  * agrees, not that the anchor moves smoothly under a drag.
  */
-
-/** Final, geometry-blind tie-break: an integer per side, so the order is stable across
- * peers. Fully-tied keys are possible (duplicate candidates); first-seen then wins,
- * which is deterministic because candidate order is. */
-const SIDE_ORDER: Record<Position, number> = {
-  [Position.Top]: 0,
-  [Position.Right]: 1,
-  [Position.Bottom]: 2,
-  [Position.Left]: 3,
-}
 
 const GRID = CANVAS.SNAP_TO_GRID_PX
 /** Anchor SELECTION scores the IDEAL geometry between the two nodes — obstacle-
@@ -83,37 +82,6 @@ const EDGE_OVERLAP_COST_GU = 40
 const clamp = (v: number, lo: number, hi: number): number =>
   Math.max(lo, Math.min(hi, v))
 
-const centerOf = (r: Rect): IPoint => ({
-  x: r.x + r.width / 2,
-  y: r.y + r.height / 2,
-})
-
-const isVerticalSide = (side: Position): boolean =>
-  side === Position.Left || side === Position.Right
-
-const OPPOSITE_SIDE: Record<Position, Position> = {
-  [Position.Top]: Position.Bottom,
-  [Position.Bottom]: Position.Top,
-  [Position.Left]: Position.Right,
-  [Position.Right]: Position.Left,
-}
-
-/** The side of `rect` that faces `toward` — the one a bend-free run would leave
- * from. Whichever axis the partner is more strongly displaced along wins. */
-const facingSide = (rect: Rect, toward: IPoint): Position => {
-  const c = centerOf(rect)
-  const dx = toward.x - c.x
-  const dy = toward.y - c.y
-  return Math.abs(dx) / (rect.width / 2 || 1) >=
-    Math.abs(dy) / (rect.height / 2 || 1)
-    ? dx >= 0
-      ? Position.Right
-      : Position.Left
-    : dy >= 0
-      ? Position.Bottom
-      : Position.Top
-}
-
 /** One concrete anchor choice: the stored `{side, ratio}`, its shape-projected
  * pixel, and the side the router must exit/enter along. */
 type AnchorChoice = {
@@ -134,9 +102,6 @@ const candidateSides = (rect: Rect, toward: IPoint): Position[] => {
     : [Position.Left, Position.Right]
   return [primary, ...perpendicular]
 }
-
-const axisLengthOf = (side: Position, rect: Rect): number =>
-  isVerticalSide(side) ? rect.height : rect.width
 
 /** Snap a target offset ALONG a side (px from the side's low corner) to a grid-
  * aligned ratio, kept at least `margin` from either corner — a corner anchor
@@ -160,7 +125,7 @@ const ratioAt = (alongTargetPx: number, axisLength: number): number => {
 const alignedRatio = (side: Position, rect: Rect, toward: IPoint): number =>
   ratioAt(
     isVerticalSide(side) ? toward.y - rect.y : toward.x - rect.x,
-    axisLengthOf(side, rect)
+    sideAxisLength(side, rect)
   )
 
 const toAnchorChoice = (
@@ -201,7 +166,7 @@ const generateCandidates = (
     pushRatio(side, alignedRatio(side, rect, toward))
     pushRatio(
       side,
-      ratioAt(axisLengthOf(side, rect) / 2, axisLengthOf(side, rect))
+      ratioAt(sideAxisLength(side, rect) / 2, sideAxisLength(side, rect))
     )
   }
   return choices
@@ -272,7 +237,7 @@ const alignedToPinned = (
   if (getConnectionMode(freeType) === "four-center") return null
   const freeSide = OPPOSITE_SIDE[pinnedSide]
   const vertical = isVerticalSide(freeSide) // left/right ⇒ the straight run shares Y
-  const axisLen = axisLengthOf(freeSide, freeRect)
+  const axisLen = sideAxisLength(freeSide, freeRect)
   if (axisLen <= 0) return null
   const lo = vertical ? freeRect.y : freeRect.x
   const coord = vertical ? pinnedPoint.y : pinnedPoint.x
@@ -408,13 +373,6 @@ const offFacingCount = (
   (targetFacing !== null && target.position !== targetFacing ? 1 : 0)
 
 /** The outward unit normal of a node side. */
-const OUTWARD_NORMAL: Record<Position, IPoint> = {
-  [Position.Top]: { x: 0, y: -1 },
-  [Position.Bottom]: { x: 0, y: 1 },
-  [Position.Left]: { x: -1, y: 0 },
-  [Position.Right]: { x: 1, y: 0 },
-}
-
 /** How squarely `side` of `from` points at `to`: the side's outward normal dotted with
  * the RAW centre-to-centre direction. Higher = the side faces the partner more
  * directly. Unnormalised on purpose — |d| is shared by an edge's candidates, so

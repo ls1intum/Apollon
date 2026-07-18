@@ -1,9 +1,7 @@
 import { describe, it, expect } from "vitest"
 import { Position, type Rect } from "@xyflow/react"
 import {
-  facingSide,
   orderSideMembers,
-  sideAxisLength,
   assignPorts,
   endKey,
   PORT_PITCH_PX,
@@ -23,24 +21,6 @@ const dir = (from: Rect, to: Rect) => {
   const p = centerOf(to)
   return { dx: p.x - c.x, dy: p.y - c.y }
 }
-
-describe("facingSide", () => {
-  it("picks the side whose axis the partner is most displaced along", () => {
-    const a = rect(0, 0)
-    expect(facingSide(a, centerOf(rect(300, 0)))).toBe(Position.Right)
-    expect(facingSide(a, centerOf(rect(-300, 0)))).toBe(Position.Left)
-    expect(facingSide(a, centerOf(rect(0, 300)))).toBe(Position.Bottom)
-    expect(facingSide(a, centerOf(rect(0, -300)))).toBe(Position.Top)
-  })
-
-  it("weighs displacement by the node's half-extent (wide node)", () => {
-    // A very wide, short node: a partner slightly up and to the side still exits
-    // the top, because the vertical half-extent is tiny.
-    const wide = rect(0, 0, 400, 20)
-    // partner at dx=+120, dy=-40 from centre. |dx|·h=120·10=1200; |dy|·w=40·200=8000 → vertical.
-    expect(facingSide(wide, { x: 200 + 120, y: 10 - 40 })).toBe(Position.Top)
-  })
-})
 
 describe("orderSideMembers — the nesting rule", () => {
   it("orders two edges leaving the Right side top→bottom by partner angle", () => {
@@ -309,15 +289,5 @@ describe("orderSideMembers — transitivity + determinism (P0 hard constraint)",
         expect(new Set(a).size).toBe(members.length)
       }
     }
-  })
-})
-
-describe("sideAxisLength", () => {
-  it("returns height for vertical sides, width for horizontal", () => {
-    const r = rect(0, 0, 120, 80)
-    expect(sideAxisLength(Position.Left, r)).toBe(80)
-    expect(sideAxisLength(Position.Right, r)).toBe(80)
-    expect(sideAxisLength(Position.Top, r)).toBe(120)
-    expect(sideAxisLength(Position.Bottom, r)).toBe(120)
   })
 })

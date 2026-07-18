@@ -1,6 +1,15 @@
 import { Position, type Rect } from "@xyflow/react"
-import { CANVAS, EDGES } from "@/constants"
+import { CANVAS } from "@/constants"
 import type { IPoint } from "@/edges/Connection"
+import {
+  ALL_SIDES,
+  OUTWARD_NORMAL,
+  SIDE_ORDER,
+  centerOf,
+  isVerticalSide,
+  rangeOverlapLen,
+  sideAxisLength,
+} from "@/utils/geometry/rectSides"
 
 /**
  * Geometric PORT ASSIGNMENT — the deterministic pre-routing stage that decides,
@@ -39,58 +48,8 @@ const MAX_PORT_GAP_PX = 8 * GRID
  * makes the first segment graze the node it just left. */
 const CORNER_CLEARANCE_PX = 2 * GRID
 
-const isVerticalSide = (side: Position): boolean =>
-  side === Position.Left || side === Position.Right
-
-const centerOf = (r: Rect): IPoint => ({
-  x: r.x + r.width / 2,
-  y: r.y + r.height / 2,
-})
-
 const clamp = (v: number, lo: number, hi: number): number =>
   Math.max(lo, Math.min(hi, v))
-
-/**
- * The side of `rect` that faces `toward` — the one a bend-free run would leave
- * from. Whichever axis the partner is more strongly displaced along (relative to
- * the node's half-extent) wins. Integer-exact: `|dx|·h` vs `|dy|·w`, no division.
- */
-export const facingSide = (rect: Rect, toward: IPoint): Position => {
-  const c = centerOf(rect)
-  const dx = toward.x - c.x
-  const dy = toward.y - c.y
-  const halfW = rect.width / 2 || 1
-  const halfH = rect.height / 2 || 1
-  // |dx|/halfW >= |dy|/halfH  ⇔  |dx|·halfH >= |dy|·halfW
-  return Math.abs(dx) * halfH >= Math.abs(dy) * halfW
-    ? dx >= 0
-      ? Position.Right
-      : Position.Left
-    : dy >= 0
-      ? Position.Bottom
-      : Position.Top
-}
-
-const OUTWARD_NORMAL: Record<Position, IPoint> = {
-  [Position.Top]: { x: 0, y: -1 },
-  [Position.Bottom]: { x: 0, y: 1 },
-  [Position.Left]: { x: -1, y: 0 },
-  [Position.Right]: { x: 1, y: 0 },
-}
-
-const SIDE_ORDER: Record<Position, number> = {
-  [Position.Top]: 0,
-  [Position.Right]: 1,
-  [Position.Bottom]: 2,
-  [Position.Left]: 3,
-}
-
-const rangeOverlapLen = (
-  aLo: number,
-  aHi: number,
-  bLo: number,
-  bHi: number
-): number => Math.max(0, Math.min(aHi, bHi) - Math.max(aLo, bLo))
 
 /** How much perpendicular-axis overlap a STRAIGHT shot needs to be real rather than a
  * corner-jammed step. A few px of overlap technically lets a straight line touch both
@@ -129,8 +88,6 @@ const bendsForSide = (side: Position, rect: Rect, partner: Rect): number => {
   if (along <= 0) return 3
   return overlapsEnoughForStraight(isVerticalSide(side), rect, partner) ? 0 : 1
 }
-
-const SIDES = [Position.Top, Position.Right, Position.Bottom, Position.Left]
 
 /**
  * The number of CORNERS an edge takes when it leaves side `sU` of U and enters side
@@ -299,8 +256,8 @@ export const assignSides = (
   }
 
   const hasStraight = (e: SideEdge): boolean =>
-    SIDES.some((sU) =>
-      SIDES.some(
+    ALL_SIDES.some((sU) =>
+      ALL_SIDES.some(
         (sV) => combinedBends(sU, sV, e.sourceRect, e.targetRect) === 0
       )
     )
@@ -361,8 +318,8 @@ export const assignSides = (
     if (e.sourceBand && e.targetBand) {
       let best: { sU: Position; sV: Position } | null = null
       let bestKey: number[] | null = null
-      for (const sU of SIDES)
-        for (const sV of SIDES) {
+      for (const sU of ALL_SIDES)
+        for (const sV of ALL_SIDES) {
           const route = approxRoute(sU, sV, U, V)
           const key = [
             // A route driven through another node is the worst thing side assignment
@@ -407,13 +364,13 @@ export const assignSides = (
       const aim = e.sourceBand ? aimU : aimV
       let best: Position | null = null
       let bestKey: number[] | null = null
-      for (const s of SIDES) {
+      for (const s of ALL_SIDES) {
         // Only the BENDS are evaluated over the other end here: that end is still free
         // (the per-edge cost path picks it, obstacle-aware, later), so a node-crossing
         // count taken from a guessed partner side would be misleading — the real route
         // is not committed to it.
         let minB = Infinity
-        for (const o of SIDES) {
+        for (const o of ALL_SIDES) {
           const b = e.sourceBand
             ? combinedBends(s, o, U, V)
             : combinedBends(o, s, U, V)
@@ -524,10 +481,6 @@ export const orderSideMembers = (
   )
   return keyed.map((x) => x.m)
 }
-
-/** The axis length (px) of a side of `rect`. */
-export const sideAxisLength = (side: Position, rect: Rect): number =>
-  isVerticalSide(side) ? rect.height : rect.width
 
 /**
  * One free edge-end that needs a port: which edge/end it is, the node it lands
@@ -855,7 +808,3 @@ export const assignPorts = (
   }
   return result
 }
-
-// Re-exported so callers share one clearance source with the router.
-export { CORNER_CLEARANCE_PX }
-export const _internal = { isVerticalSide, centerOf, EDGES }

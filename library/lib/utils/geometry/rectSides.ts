@@ -1,0 +1,89 @@
+import { Position, type Rect } from "@xyflow/react"
+import type { IPoint } from "@/edges/Connection"
+
+/**
+ * The shared vocabulary for talking about a node rectangle's four sides: which way
+ * a side faces, how long it is, and which side faces a given point.
+ *
+ * Anchor selection, port assignment and the solver all reason about sides, and each
+ * had grown its own copy of these. Two copies of `facingSide` had even drifted apart
+ * — one dividing by the half-extents, the other cross-multiplying — so they could
+ * disagree at a boundary and pick different sides for the same geometry, which
+ * quietly breaks the promise that every peer derives identical anchors.
+ */
+
+/** The outward unit normal of a side. */
+export const OUTWARD_NORMAL: Record<Position, IPoint> = {
+  [Position.Top]: { x: 0, y: -1 },
+  [Position.Bottom]: { x: 0, y: 1 },
+  [Position.Left]: { x: -1, y: 0 },
+  [Position.Right]: { x: 1, y: 0 },
+}
+
+export const OPPOSITE_SIDE: Record<Position, Position> = {
+  [Position.Top]: Position.Bottom,
+  [Position.Bottom]: Position.Top,
+  [Position.Left]: Position.Right,
+  [Position.Right]: Position.Left,
+}
+
+/** Total order over sides, so a geometry-blind tie-break is still the same on every
+ * peer. */
+export const SIDE_ORDER: Record<Position, number> = {
+  [Position.Top]: 0,
+  [Position.Right]: 1,
+  [Position.Bottom]: 2,
+  [Position.Left]: 3,
+}
+
+export const ALL_SIDES: readonly Position[] = [
+  Position.Top,
+  Position.Right,
+  Position.Bottom,
+  Position.Left,
+]
+
+/** Left/Right run along the node's height; Top/Bottom along its width. */
+export const isVerticalSide = (side: Position): boolean =>
+  side === Position.Left || side === Position.Right
+
+export const centerOf = (r: Rect): IPoint => ({
+  x: r.x + r.width / 2,
+  y: r.y + r.height / 2,
+})
+
+/** The length of a side: the extent a port can slide along. */
+export const sideAxisLength = (side: Position, rect: Rect): number =>
+  isVerticalSide(side) ? rect.height : rect.width
+
+/**
+ * The side of `rect` that faces `toward` — the one a bend-free run would leave from.
+ * Whichever axis the point is more strongly displaced along, measured relative to the
+ * node's half-extent so a wide-short node is not biased toward its long sides.
+ *
+ * Cross-multiplied rather than divided: on integer-ish coordinates the products are
+ * exact where the quotients are not, so the comparison cannot land differently on
+ * different engines.
+ */
+export const facingSide = (rect: Rect, toward: IPoint): Position => {
+  const c = centerOf(rect)
+  const dx = toward.x - c.x
+  const dy = toward.y - c.y
+  const halfW = rect.width / 2 || 1
+  const halfH = rect.height / 2 || 1
+  return Math.abs(dx) * halfH >= Math.abs(dy) * halfW
+    ? dx >= 0
+      ? Position.Right
+      : Position.Left
+    : dy >= 0
+      ? Position.Bottom
+      : Position.Top
+}
+
+/** How much two intervals overlap (0 when they do not). */
+export const rangeOverlapLen = (
+  aLo: number,
+  aHi: number,
+  bLo: number,
+  bHi: number
+): number => Math.max(0, Math.min(aHi, bHi) - Math.max(aLo, bLo))

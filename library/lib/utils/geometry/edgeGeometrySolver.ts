@@ -36,6 +36,7 @@ import {
   type EndRef,
   type SideEdge,
 } from "@/utils/geometry/portAssignment"
+import { centerOf } from "@/utils/geometry/rectSides"
 
 /**
  * One edge's endpoints, resolved from the React Flow store so all edges can be
@@ -554,11 +555,6 @@ function nodeRect(
   }
 }
 
-const centerOfRect = (r: Rect): IPoint => ({
-  x: r.x + r.width / 2,
-  y: r.y + r.height / 2,
-})
-
 /** The free edge-ends of MULTI-EDGE nodes (a node carrying more than one free end),
  * each tagged with its GEOMETRIC facing side (the sector its partner sits in — so a
  * fork splits across sides by direction), its rect, its partner's centre (the angular
@@ -643,7 +639,7 @@ function collectPortEnds(
         nodeId: edge.source,
         rect: sourceRect,
         side: sourceSide,
-        partnerCenter: centerOfRect(targetRect),
+        partnerCenter: centerOf(targetRect),
         partnerNodeId: edge.target,
         partnerRect: targetRect,
         partnerSide: targetSide,
@@ -656,7 +652,7 @@ function collectPortEnds(
         nodeId: edge.target,
         rect: targetRect,
         side: targetSide,
-        partnerCenter: centerOfRect(sourceRect),
+        partnerCenter: centerOf(sourceRect),
         partnerNodeId: edge.source,
         partnerRect: sourceRect,
         partnerSide: sourceSide,
