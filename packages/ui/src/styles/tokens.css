@@ -12,9 +12,20 @@
    Static CSS = correct first paint, no runtime <style> injection.
    ────────────────────────────────────────────────────────────────────────── */
 
-:root {
-  color-scheme: light dark;
+/* color-scheme is deliberately NOT set on bare :root. This stylesheet ships
+   inside @tumaet/apollon/style.css, so a `:root { color-scheme: light dark }`
+   would mutate every HOST page that imports the editor CSS: a host that leaves
+   html/body transparent (Docusaurus does) then gets a browser-picked DARK
+   canvas behind its light-themed text for dark-preference visitors. Instead,
+   scope it: the editor mount (and any [data-theme] subtree) declares its own
+   scheme so native controls/scrollbars adapt, and the webapp sets the
+   document-root color-scheme at runtime (useThemeStore.applyThemeToDocument). */
+.apollon-editor,
+[data-theme="light"] {
+  color-scheme: light;
+}
 
+:root {
   /* ── Layer 0: device safe area ─────────────────────────────────────────── */
 
   /* The SINGLE declaration of the safe-area insets — every consumer (the editor's
