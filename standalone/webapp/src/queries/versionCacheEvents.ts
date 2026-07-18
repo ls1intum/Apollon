@@ -1,6 +1,5 @@
 import type { QueryClient } from "@tanstack/react-query"
 import type { ControlEvent } from "@/types"
-import { useVersionStore } from "@/stores/useVersionStore"
 import { log } from "@/logger"
 import { versionKeys } from "./keys"
 import type { VersionListData } from "./versionQueries"
@@ -40,16 +39,9 @@ export function applyControlEventToCache(
       queryClient.removeQueries({
         queryKey: versionKeys.body("remote", diagramId, event.versionId),
       })
-      // If a peer deleted the version this client is previewing, leave preview
-      // — otherwise the canvas keeps rendering a snapshot that no longer
-      // exists. (The local BroadcastChannel path does the same.)
-      const store = useVersionStore.getState()
-      if (
-        store.preview?.diagramId === diagramId &&
-        store.preview.versionId === event.versionId
-      ) {
-        store.exitPreview()
-      }
+      // Leaving a preview of the deleted version is the page's job, not the
+      // cache's: `?version=` is the source of truth, so clearing the store
+      // alone would just be undone by the URL sync.
       return
     }
     case "VERSION_RENAMED":

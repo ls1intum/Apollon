@@ -19,12 +19,8 @@ import {
   type DiagramAutosaver,
 } from "@/services/createDiagramAutosaver"
 import { selectScopedPreview, useVersionStore } from "@/stores/useVersionStore"
-import {
-  fetchFreshDiagram,
-  isQueryCancellation,
-  useDiagramSeedQuery,
-} from "@/queries/diagramQueries"
-import { diagramKeys } from "@/queries/keys"
+import { useDiagramSeed } from "@/hooks/useDiagramSeed"
+import { DiagramApiClient } from "@/services/DiagramApiClient"
 import { prefetchVersions } from "@/queries/versionQueries"
 import { useVersionRepositoryKind } from "@/contexts/VersionRepositoryContext"
 import { useRestoreVersionMutation } from "@/queries/versionMutations"
@@ -48,6 +44,11 @@ import { addSharedDiagramEntry } from "@/utils/sharedDiagramStorage"
 // Route-bound API for typed params + search (avoids importing the route file,
 // which would create a cycle: the route file imports this page).
 const route = getRouteApi("/shared/$diagramId")
+
+/** True for a fetch rejected by its own `AbortController`. */
+function isAbort(err: unknown): boolean {
+  return err instanceof DOMException && err.name === "AbortError"
+}
 
 function readStoredCollabUser(): { name: string; color: string } | null {
   const storedName = sessionStorage.getItem("apollon-collab-name")
@@ -163,21 +164,24 @@ export const ApollonShared: React.FC = () => {
     })
   }, [viewType, needsCollabName, diagramId, openModal, navigate])
 
-  // One-shot editor seed; while disabled (missing view / unresolved collab
-  // name) the query reports `isPending`, which keeps the overlay up.
-  const diagramQuery = useDiagramSeedQuery(diagramId, {
-    enabled: Boolean(diagramId) && Boolean(viewType) && !needsCollabName,
-  })
-  const diagram = diagramQuery.data
+  // One-shot editor seed; while its preconditions are unmet (missing view,
+  // unresolved collaboration name) it stays pending, which keeps the overlay up.
+  const {
+    diagram,
+    error: seedError,
+    isPending: seedPending,
+  } = useDiagramSeed(
+    diagramId,
+    Boolean(diagramId) && Boolean(viewType) && !needsCollabName
+  )
 
-  // Seed failure = nothing to edit. Cancellation never lands here — an
-  // unmounted/reset query doesn't transition to error.
+  // Seed failure = nothing to edit. Aborted loads never land here.
   useEffect(() => {
-    if (!diagramQuery.isError) return
-    log.error("Failed to initialize diagram", diagramQuery.error)
+    if (!seedError) return
+    log.error("Failed to initialize diagram", seedError)
     toast.error("Failed to initialize diagram")
     navigate({ to: "/" })
-  }, [diagramQuery.isError, diagramQuery.error, navigate])
+  }, [seedError, navigate])
 
   // Editor + connection lifecycle. Runs when the seed body arrives and tears
   // down on route identity change/unmount. The seed's `data` identity is
@@ -191,6 +195,9 @@ export const ApollonShared: React.FC = () => {
 
     let instance: ApollonEditor | null = null
     let modelChangeSubscriptionId: number | null = null
+    // Owned by this effect: a peer's VERSION_RESTORED refresh must not outlive
+    // the editor it would assign to.
+    const peerRefreshAbort = new AbortController()
 
     try {
       log.debug("Initializing Apollon editor with view type:", viewType)
@@ -245,6 +252,17 @@ export const ApollonShared: React.FC = () => {
         wsManagerRef.current.startConnection()
         wsManagerRef.current.onControl((event) => {
           applyControlEventToCache(queryClient, diagramId, event)
+          if (event.type === "VERSION_DELETED") {
+            // Clearing `?version=` is what actually leaves preview — the URL
+            // is the source of truth, so dropping only the store state would
+            // be undone by the sync effect and bounce the user back into a
+            // snapshot the server no longer has.
+            const previewing = selectScopedPreview(
+              useVersionStore.getState(),
+              diagramId
+            )
+            if (previewing?.versionId === event.versionId) closePreview()
+          }
           if (event.type === "VERSION_RESTORED") {
             const state = useVersionStore.getState()
             const isLocalRestore =
@@ -253,12 +271,27 @@ export const ApollonShared: React.FC = () => {
                 event.restoredFromVersionId
             if (!isLocalRestore) {
               const actor = event.actor || "A collaborator"
-              fetchFreshDiagram(queryClient, diagramId, "peer-restore")
+              DiagramApiClient.fetchDiagram(diagramId, {
+                signal: peerRefreshAbort.signal,
+              })
                 .then((next) => {
-                  if (instance) instance.model = next
+                  if (!instance) return
+                  // Not while previewing: `editor.model` is the read-only
+                  // overlay, so this would swap the snapshot out from under
+                  // the user and be discarded on exit anyway. Exiting preview
+                  // resyncs from Yjs, which has the restore already.
+                  if (
+                    selectScopedPreview(
+                      useVersionStore.getState(),
+                      diagramId
+                    ) !== null
+                  ) {
+                    return
+                  }
+                  instance.model = next
                 })
                 .catch((err) => {
-                  if (isQueryCancellation(err)) return
+                  if (isAbort(err)) return
                   toast.error(
                     `${actor} restored a version but we couldn't refresh.`,
                     { toastId: "version-restored-refetch-failed" }
@@ -301,8 +334,8 @@ export const ApollonShared: React.FC = () => {
     }
 
     return () => {
-      // Don't let an in-flight HEAD read apply to a torn-down editor.
-      void queryClient.cancelQueries({ queryKey: diagramKeys.heads(diagramId) })
+      // Don't let an in-flight peer-restore refresh apply to a torn-down editor.
+      peerRefreshAbort.abort()
       setEditor(undefined)
       wsManagerRef.current?.cleanup()
       // If a version preview is still open at teardown, the editor's local
@@ -333,6 +366,7 @@ export const ApollonShared: React.FC = () => {
       editorRef.current = null
     }
   }, [
+    closePreview,
     collaborationUser,
     diagram,
     diagramId,
@@ -352,6 +386,7 @@ export const ApollonShared: React.FC = () => {
   // eslint-disable-next-line react-hooks/immutability
   useEffect(() => {
     if (!editor) return
+    const abort = new AbortController()
     if (preview) {
       // First preview entry of this session — capture the user's
       // pre-preview canvas fingerprint so V1→V2→V3 hops keep comparing
@@ -398,13 +433,13 @@ export const ApollonShared: React.FC = () => {
         // hit Yjs and broadcast to peers.
         restoredDuringPreviewRef.current = false
         editor.setPreviewMode(false)
-        fetchFreshDiagram(queryClient, diagramId, "preview-exit")
+        DiagramApiClient.fetchDiagram(diagramId, { signal: abort.signal })
           .then((head) => {
             editor.model = importDiagram(head) as UMLModel
             editor.fitView()
           })
           .catch((err) => {
-            if (isQueryCancellation(err)) return
+            if (isAbort(err)) return
             log.error("Failed to reload diagram after restore", err)
             toast.error(t.failureSchemaUnsupported)
           })
@@ -417,13 +452,10 @@ export const ApollonShared: React.FC = () => {
         editor.fitView()
       }
     }
-    return () => {
-      // A late `editor.model = head` would clobber the next preview. Scoped to
-      // this reason only — the WS peer-restore read must survive.
-      void queryClient.cancelQueries({
-        queryKey: diagramKeys.head(diagramId, "preview-exit"),
-      })
-    }
+    // A late `editor.model = head` would clobber the next preview. This
+    // controller is this effect's alone, so aborting it cannot touch the
+    // WebSocket handler's peer-restore refresh.
+    return () => abort.abort()
   }, [preview, editor, diagramId, baseReadonly, queryClient])
 
   // Stable identity: `handleRestore` deps on it, and the banner's `onRestore`
@@ -475,7 +507,7 @@ export const ApollonShared: React.FC = () => {
     ]
   )
 
-  const isLoading = diagramQuery.isPending || !editor
+  const isLoading = seedPending || !editor
 
   return (
     <div className="h-full flex flex-col">

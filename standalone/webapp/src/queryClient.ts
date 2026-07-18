@@ -8,7 +8,7 @@ import { log } from "@/logger"
  * live collaborative document — Yjs over `WebSocketManager` is the source of
  * truth for the mounted editor. Keep that boundary: never mirror Yjs state
  * into the query cache, and never drive editor content from a background
- * refetch (see `queries/diagramQueries.ts` for the seed contract).
+ * refetch. The editor seed is not a query at all — see `hooks/useDiagramSeed`.
  *
  * - `refetchOnWindowFocus` is off globally: the WS control channel already
  *   pushes version/diagram changes, and a focus refetch of the diagram seed
