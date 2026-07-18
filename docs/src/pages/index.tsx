@@ -100,9 +100,9 @@ function Hero() {
           browser.
         </h1>
         <p className={styles.heroSubtitle}>
-          An open-source UML modeling editor. 13 diagram types, SVG/PNG/PDF/JSON
-          export, real-time collaboration. Use it in the browser, in VS Code, or
-          as an npm library.
+          An open-source UML modeling editor. 13 diagram types,
+          SVG/PNG/PDF/PPTX/JSON export, real-time collaboration. Use it in the
+          browser, in VS Code, or as an npm library.
         </p>
         <div className={styles.buttons}>
           <Link className="button button--primary button--lg" href={HOSTED_URL}>
@@ -286,7 +286,7 @@ const FEATURES = [
   {
     kicker: "Output",
     title: "Export anywhere",
-    body: "SVG, PNG, PDF, and JSON — from a mounted editor or a headless model. Round-trips through JSON without loss.",
+    body: "SVG, PNG, PDF, and JSON — from a mounted editor or a headless model; the web app adds PPTX slides. Round-trips through JSON without loss.",
   },
   {
     kicker: "Collaboration",
