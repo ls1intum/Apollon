@@ -1,5 +1,6 @@
 import { IPoint } from "@/edges/Connection"
 import { EDGES } from "@/constants"
+import { clamp, lexLess } from "@/utils/geometry/scalar"
 import { collapseCollinearPoints, getSegmentOrientation } from "./bendHandles"
 import { getAxisAlignedSegments } from "@/utils/edgeUtils"
 
@@ -333,9 +334,6 @@ const LABEL_CLEARANCE = 5
 /** Cap on along-arm sample points per arm, to bound candidate count. */
 const MAX_ARM_SAMPLES = 20
 
-const clampToRange = (value: number, lo: number, hi: number): number =>
-  Math.max(lo, Math.min(hi, value))
-
 const distance = (a: IPoint, b: IPoint): number =>
   Math.hypot(a.x - b.x, a.y - b.y)
 
@@ -347,13 +345,6 @@ const inflate = (r: Rect, m: number): Rect => ({
 })
 
 /** Lexicographic "<" over equal-length numeric cost tuples. */
-const lexLess = (a: readonly number[], b: readonly number[]): boolean => {
-  for (let i = 0; i < a.length; i++) {
-    if (a[i] !== b[i]) return a[i] < b[i]
-  }
-  return false
-}
-
 /**
  * Places the relationship/stereotype middle label so it overlaps nothing it can
  * avoid. The label is hosted on whichever arm of the edge — and on whichever
@@ -404,7 +395,7 @@ export function computeMiddleLabelLayout(input: MiddleLabelInput): PlacedLabel {
     // clear window instead of being taken/rejected at a single point.
     const coords = new Set<number>()
     if (lo <= hi) {
-      coords.add(clampToRange(target, lo, hi))
+      coords.add(clamp(target, lo, hi))
       coords.add(lo)
       coords.add(hi)
       const span = hi - lo

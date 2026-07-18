@@ -1,5 +1,6 @@
 import { Position, type Rect } from "@xyflow/react"
 import { CANVAS } from "@/constants"
+import { clamp, lexLess } from "@/utils/geometry/scalar"
 import type { IPoint } from "@/edges/Connection"
 import {
   ALL_SIDES,
@@ -41,9 +42,6 @@ const MAX_PORT_GAP_PX = 8 * GRID
 /** Minimum gap kept between the outermost port and a corner — a corner anchor
  * makes the first segment graze the node it just left. */
 const CORNER_CLEARANCE_PX = 2 * GRID
-
-const clamp = (v: number, lo: number, hi: number): number =>
-  Math.max(lo, Math.min(hi, v))
 
 /**
  * The number of CORNERS an edge would take to leave `side` of `rect` toward
@@ -109,11 +107,6 @@ const combinedBends = (
  * for equal keys violates the comparator contract and makes the result engine-defined
  * (V8 and SpiderMonkey differ), which would break cross-peer agreement. */
 const cmpStr = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0)
-
-const lexLess = (a: readonly number[], b: readonly number[]): boolean => {
-  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] < b[i]
-  return false
-}
 
 /** The midpoint of a side of `rect`. */
 const sideMidpoint = (side: Position, rect: Rect): IPoint => {

@@ -4,6 +4,7 @@ import type { IPoint } from "@/edges/Connection"
 import { getConnectionMode, getEdgeAnchorPoint } from "@/utils/connectionModes"
 import { type FreeformEdgeAnchor } from "@/utils/edgeUtils"
 import { routeStepEdge } from "@/utils/geometry/edgeRoute"
+import { clamp, lexLess } from "@/utils/geometry/scalar"
 import { routeConflictScore } from "@/utils/geometry/orthogonalRouter"
 import type { ObstacleRect } from "@/utils/geometry/obstacles"
 import type { ResolvedEdgeEndpoints } from "@/utils/geometry/edgeGeometrySolver"
@@ -81,9 +82,6 @@ const EDGE_CROSS_COST_GU = 36
  * Above a bend so a shared/smudged run always loses to a clean detour; this is what
  * pushes two edges off a shared stub (no fork-collapse) and spaces a crowded side. */
 const EDGE_OVERLAP_COST_GU = 40
-const clamp = (v: number, lo: number, hi: number): number =>
-  Math.max(lo, Math.min(hi, v))
-
 /** One concrete anchor choice: the stored `{side, ratio}`, its shape-projected
  * pixel, and the side the router must exit/enter along. */
 type AnchorChoice = {
@@ -498,13 +496,6 @@ const scoreKey = (
     Math.round(source.anchor.ratio * 1000),
     Math.round(target.anchor.ratio * 1000),
   ]
-}
-
-const lexLess = (a: readonly number[], b: readonly number[]): boolean => {
-  for (let i = 0; i < a.length; i++) {
-    if (a[i] !== b[i]) return a[i] < b[i]
-  }
-  return false
 }
 
 /** Turn a resolved-endpoint pair into the router's input, mirroring the solver's

@@ -2,6 +2,7 @@ import { CANVAS, EDGES, INTERFACE } from "@/constants"
 import { IPoint, pointsToSvgPath } from "@/edges/Connection"
 import { DiagramEdgeType, UMLDiagramType } from "@/typings"
 import type { ObstacleRect } from "@/utils/geometry/obstacles"
+import { clamp } from "@/utils/geometry/scalar"
 import {
   routeAroundObstacles,
   routeConflictsWithNeighborEdges,
@@ -336,9 +337,6 @@ const sideToHandleId: Record<Position, "top" | "right" | "bottom" | "left"> = {
 const HANDLE_SNAP_STEP_PX = 5
 const HANDLE_RATIO_START = 0.2
 const HANDLE_RATIO_END = 0.8
-
-const clamp = (value: number, min: number, max: number): number =>
-  Math.max(min, Math.min(max, value))
 
 export function isFreeformEdgeAnchor(
   anchor: unknown
