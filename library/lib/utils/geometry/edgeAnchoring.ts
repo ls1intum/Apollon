@@ -15,6 +15,8 @@ import {
   facingSide,
   isVerticalSide,
   sideAxisLength,
+  canRunStraight,
+  cornerMargin,
 } from "@/utils/geometry/rectSides"
 
 /**
@@ -200,10 +202,10 @@ const straightAlignedPair = (
     : targetRect.x + targetRect.width
   const sAxis = vertical ? sourceRect.height : sourceRect.width
   const tAxis = vertical ? targetRect.height : targetRect.width
-  const margin = Math.min(2 * GRID, Math.min(sAxis, tAxis) * 0.3)
+  if (!canRunStraight(vertical, sourceRect, targetRect)) return null
+  const margin = cornerMargin(sAxis, tAxis)
   const lo = Math.max(sLo, tLo) + margin
   const hi = Math.min(sHi, tHi) - margin
-  if (lo > hi) return null // overlap too small to seat both anchors clear of corners
 
   const midpointOfCenters = ((sLo + sHi) / 2 + (tLo + tHi) / 2) / 2
   const snapped = Math.round(clamp(midpointOfCenters, lo, hi) / GRID) * GRID
@@ -263,9 +265,17 @@ const routeLength = (route: readonly IPoint[]): number => {
   return total
 }
 
-/** Distance between an axis-aligned segment and a rect (0 if they touch/overlap).
- * Both are boxes — the segment a degenerate one — so this is the gap between two
- * rectangles. */
+/** Gap between an axis-aligned segment and a rect (0 if they touch/overlap), as a
+ * MANHATTAN distance. Both are boxes — the segment a degenerate one.
+ *
+ * Manhattan, not Euclidean, because this feeds `weightedCost`: `Math.hypot` is
+ * implementation-APPROXIMATED by ECMA-262, so two engines may return values differing
+ * in the last bits, and the `Math.round(total / GRID)` downstream turns that into a
+ * whole-unit difference whenever the sum lands near a .5 boundary — which flips the
+ * chosen anchor. Every term here is a correctly-rounded add/subtract, so the result is
+ * bit-identical everywhere. The two agree exactly for axis-aligned separations (one of
+ * dx/dy is 0); they differ only diagonally, where either is a fine clearance measure.
+ */
 const segToRectDist = (a: IPoint, b: IPoint, r: Rect): number => {
   const dx = Math.max(
     0,
@@ -277,7 +287,7 @@ const segToRectDist = (a: IPoint, b: IPoint, r: Rect): number => {
     Math.min(a.y, b.y) - (r.y + r.height),
     r.y - Math.max(a.y, b.y)
   )
-  return Math.hypot(dx, dy)
+  return dx + dy
 }
 
 /** How far the ideal route runs inside its OWN endpoints' clearance — a route that
@@ -372,14 +382,12 @@ const offFacingCount = (
   (sourceFacing !== null && source.position !== sourceFacing ? 1 : 0) +
   (targetFacing !== null && target.position !== targetFacing ? 1 : 0)
 
-/** The outward unit normal of a node side. */
 /** How squarely `side` of `from` points at `to`: the side's outward normal dotted with
- * the RAW centre-to-centre direction. Higher = the side faces the partner more
- * directly. Unnormalised on purpose — |d| is shared by an edge's candidates, so
- * dividing is order-preserving and would only add a `hypot` (implementation-defined
- * across JS engines) to a comparison every peer must agree on; axis-aligned normals ⇒
- * ±dx/±dy, exact in doubles. Raw, NOT `facingSide`, which divides by the node's
- * half-extent and so can name a side the pair is less displaced along. */
+ * the RAW centre-to-centre direction. Unnormalised on purpose — |d| is shared by an
+ * edge's candidates, so dividing is order-preserving and would only add a `hypot`
+ * (implementation-defined across engines) to a comparison every peer must agree on.
+ * Raw, unlike `facingSide`, which weighs by the node's half-extent and so can name a
+ * side the pair is less displaced along. */
 const sideAim = (side: Position, from: Rect, to: Rect): number => {
   const a = centerOf(from)
   const b = centerOf(to)

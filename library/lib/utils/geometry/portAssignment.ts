@@ -7,8 +7,9 @@ import {
   SIDE_ORDER,
   centerOf,
   isVerticalSide,
-  rangeOverlapLen,
   sideAxisLength,
+  canRunStraight,
+  cornerMargin,
 } from "@/utils/geometry/rectSides"
 
 /**
@@ -51,24 +52,6 @@ const CORNER_CLEARANCE_PX = 2 * GRID
 const clamp = (v: number, lo: number, hi: number): number =>
   Math.max(lo, Math.min(hi, v))
 
-/** How much perpendicular-axis overlap a STRAIGHT shot needs to be real rather than a
- * corner-jammed step. A few px of overlap technically lets a straight line touch both
- * nodes, but the port lands within a corner and the router draws a 2-corner Z (the
- * "step") — which must cost MORE than switching one end to a clean 1-corner L. So a
- * straight only counts as 0 bends once the overlap clears this; below it, a diagonal L
- * wins. (d55's 20px overlap stays straight; d60's 5px becomes an L.) */
-const MIN_STRAIGHT_OVERLAP_PX = 3 * GRID
-
-const overlapsEnoughForStraight = (
-  vertical: boolean,
-  a: Rect,
-  b: Rect
-): boolean =>
-  (vertical
-    ? rangeOverlapLen(a.y, a.y + a.height, b.y, b.y + b.height)
-    : rangeOverlapLen(a.x, a.x + a.width, b.x, b.x + b.width)) >=
-  MIN_STRAIGHT_OVERLAP_PX
-
 /**
  * The number of CORNERS an edge would take to leave `side` of `rect` toward
  * `partner` — the obstacle-free bend count from Wybrow et al. (GD'09), reduced to
@@ -86,7 +69,7 @@ const bendsForSide = (side: Position, rect: Rect, partner: Rect): number => {
   const n = OUTWARD_NORMAL[side]
   const along = n.x * (p.x - c.x) + n.y * (p.y - c.y)
   if (along <= 0) return 3
-  return overlapsEnoughForStraight(isVerticalSide(side), rect, partner) ? 0 : 1
+  return canRunStraight(isVerticalSide(side), rect, partner) ? 0 : 1
 }
 
 /**
@@ -123,10 +106,15 @@ const combinedBends = (
     // Opposing sides: a straight shot (0) only when the overlap is enough to seat the
     // port clear of the corners; a tight overlap draws a 2-corner Z (a "step"), so it
     // ties the same as an offset pair and loses to a 1-corner perpendicular L.
-    return overlapsEnoughForStraight(isVerticalSide(sU), U, V) ? 0 : 2
+    return canRunStraight(isVerticalSide(sU), U, V) ? 0 : 2
   if (nU.x === nV.x && nU.y === nV.y) return 2
   return 1 // perpendicular
 }
+
+/** Compare two strings to a TOTAL order — 0 when equal. Returning a non-zero value
+ * for equal keys violates the comparator contract and makes the result engine-defined
+ * (V8 and SpiderMonkey differ), which would break cross-peer agreement. */
+const cmpStr = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0)
 
 const lexLess = (a: readonly number[], b: readonly number[]): boolean => {
   for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] < b[i]
@@ -571,17 +559,10 @@ const sharedStraightBand = (
   const pAxis = tangentialX ? partner.width : partner.height
   const overlapLo = Math.max(myLo, pLo)
   const overlapHi = Math.min(myLo + myAxis, pLo + pAxis)
-  // Match `bendsForSide`/`combinedBends`: a straight lane needs REAL overlap, not a few
-  // px that would corner-jam into a step. Below the threshold there is no straight lane
-  // (assignSides won't have chosen this side pair anyway).
-  if (overlapHi - overlapLo < MIN_STRAIGHT_OVERLAP_PX) return null
-  // Keep the band clear of the corners, but never past the overlap centre: a thin
-  // overlap still yields a (single-point) straight lane rather than losing straightness.
-  const margin = Math.min(
-    CORNER_CLEARANCE_PX,
-    Math.min(myAxis, pAxis) * 0.3,
-    (overlapHi - overlapLo) / 2
-  )
+  // The same rule the bend counter uses, so a side pair chosen for a straight run
+  // always finds a lane here.
+  if (!canRunStraight(!tangentialX, rect, partner)) return null
+  const margin = cornerMargin(myAxis, pAxis)
   return { lo: overlapLo + margin, hi: overlapHi - margin, myLo, myAxis }
 }
 
@@ -657,6 +638,14 @@ export const assignPorts = (
     }
 
     const axis = sideAxisLength(side, rect)
+    // A node that has not been measured yet has a zero-length side. Dividing by it
+    // below would emit NaN ratios, which become NaN endpoint coordinates and leave the
+    // router searching for a goal cell keyed on NaN until it exhausts its budget.
+    if (axis <= 0) {
+      for (const e of group)
+        result.set(endKey(e.edgeId, e.end), { side, ratio: 0.5 })
+      continue
+    }
     const tangentialX = !isVerticalSide(side)
     const myLo = tangentialX ? rect.x : rect.y
     const margin = Math.min(CORNER_CLEARANCE_PX, axis * 0.3)
@@ -701,7 +690,7 @@ export const assignPorts = (
     // shared band's ALIGNED coordinate, so this port and the partner's port land on the
     // same absolute coordinate and the edge is a straight line — straightness is decided
     // before spacing, and holds even when the side carries edges to other partners.
-    const lMembers: { e: EndRef; rot: number }[] = []
+    const lMembers: { e: EndRef; rot: number; rank: number }[] = []
     for (const [partnerId, members] of byPartner) {
       const band = sharedStraightBand(side, rect, members[0].partnerRect)
       if (band) {
@@ -740,11 +729,14 @@ export const assignPorts = (
       )
         ordered = [...ordered].reverse()
       const byKey = new Map(members.map((e) => [endKey(e.edgeId, e.end), e]))
-      // Keep this partner-block's internal order by nudging the rot key per rank; the
-      // blocks themselves are then interleaved by their true angular key below.
+      // Rank within this partner-block is carried as its own field. Folding it into
+      // `rot` as a small float nudge would perturb the real angular key by far more
+      // than a tie-break needs — `rot` spans (-2, 2), so another partner's true key can
+      // fall inside the synthetic window and get spliced into the middle of the block,
+      // producing the very crossing the ordering exists to prevent.
       ordered.forEach((m, i) => {
         const e = byKey.get(endKey(m.edgeId, m.end))!
-        lMembers.push({ e, rot: rotOf(e) + i * 1e-6 })
+        lMembers.push({ e, rot: rotOf(e), rank: i })
       })
     }
 
@@ -755,8 +747,12 @@ export const assignPorts = (
     // an even spread in rotation order does not already give. This is the cited rule —
     // "the order along a side is the circular order of the segments; then distribute the
     // ports evenly" (Hegemann-Wolff) — and it makes corner-jam structurally impossible.
-    lMembers.sort((a, b) =>
-      a.rot !== b.rot ? a.rot - b.rot : a.e.edgeId < b.e.edgeId ? -1 : 1
+    lMembers.sort(
+      (a, b) =>
+        a.rot - b.rot ||
+        a.rank - b.rank ||
+        cmpStr(a.e.edgeId, b.e.edgeId) ||
+        cmpStr(a.e.end, b.e.end)
     )
     const lCoords = spreadCoords(
       myLo + margin,
@@ -775,16 +771,16 @@ export const assignPorts = (
     })
 
     // One deterministic min-gap pass over all ports on the side, in coordinate order.
-    // Fixed (straight) lanes hold their coordinate unless genuinely crowded; the pass
-    // only pushes to keep a minimum separation and clears the corners.
-    seats.sort((a, b) =>
-      a.coord !== b.coord
-        ? a.coord - b.coord
-        : a.rot !== b.rot
-          ? a.rot - b.rot
-          : a.edgeId < b.edgeId
-            ? -1
-            : 1
+    // A FIXED seat is a straight lane: its coordinate was derived symmetrically from
+    // both nodes so the edge's two ends agree, and moving it here would move only THIS
+    // end (the other node hosts different neighbours) and bend the edge. So fixed seats
+    // hold and the free seats around them absorb the spacing.
+    seats.sort(
+      (a, b) =>
+        a.coord - b.coord ||
+        a.rot - b.rot ||
+        cmpStr(a.edgeId, b.edgeId) ||
+        cmpStr(a.end, b.end)
     )
     const lo = myLo + margin
     const hi = myLo + axis - margin
@@ -792,9 +788,18 @@ export const assignPorts = (
       seats.length > 1 ? Math.min(pitchPx, (hi - lo) / (seats.length - 1)) : 0
     const pos = seats.map((s) => clamp(s.coord, lo, hi))
     for (let i = 1; i < pos.length; i++)
-      if (pos[i] < pos[i - 1] + gap) pos[i] = pos[i - 1] + gap
-    if (pos.length && pos[pos.length - 1] > hi) {
-      pos[pos.length - 1] = hi
+      if (!seats[i].fixed && pos[i] < pos[i - 1] + gap)
+        pos[i] = pos[i - 1] + gap
+    for (let i = pos.length - 2; i >= 0; i--)
+      if (!seats[i].fixed && pos[i] > pos[i + 1] - gap)
+        pos[i] = pos[i + 1] - gap
+    // If the fixed lanes are themselves packed tighter than the gap — several parallel
+    // siblings sharing one narrow band — holding them would draw them as a single
+    // smudged line. Legibility wins over straightness there, so relax everything.
+    const stillCrowded = pos.some((p, i) => i > 0 && p < pos[i - 1] + gap)
+    if (stillCrowded) {
+      for (let i = 1; i < pos.length; i++)
+        if (pos[i] < pos[i - 1] + gap) pos[i] = pos[i - 1] + gap
       for (let i = pos.length - 2; i >= 0; i--)
         if (pos[i] > pos[i + 1] - gap) pos[i] = pos[i + 1] - gap
     }

@@ -1,4 +1,5 @@
 import { Position, type Rect } from "@xyflow/react"
+import { CANVAS } from "@/constants"
 import type { IPoint } from "@/edges/Connection"
 
 /**
@@ -87,3 +88,34 @@ export const rangeOverlapLen = (
   bLo: number,
   bHi: number
 ): number => Math.max(0, Math.min(aHi, bHi) - Math.max(aLo, bLo))
+
+/**
+ * How far a port must stay from the corners of a side. A port in the corner makes the
+ * segment leaving it graze the node it just left, so both ends of a straight run need
+ * this much room. Shrinks on a small node, which has no room to give.
+ */
+export const cornerMargin = (axisA: number, axisB: number): number =>
+  Math.min(2 * CANVAS.SNAP_TO_GRID_PX, Math.min(axisA, axisB) * 0.3)
+
+/**
+ * Whether two nodes can be joined by a STRAIGHT run on the given axis: their extents
+ * must overlap by enough to seat a port on each, clear of all four corners.
+ *
+ * One rule, one home. Port assignment used a flat 15px while anchor selection required
+ * room for both margins, so between 15px and 20px of overlap the solver would place
+ * ports for a straight run that anchor selection then never offered as a candidate —
+ * the edge came out stepped. Same failure mode as the two `facingSide` copies, one
+ * level up: a duplicate that reads differently rather than looking identical.
+ */
+export const canRunStraight = (
+  alongVerticalSides: boolean,
+  a: Rect,
+  b: Rect
+): boolean => {
+  const overlap = alongVerticalSides
+    ? rangeOverlapLen(a.y, a.y + a.height, b.y, b.y + b.height)
+    : rangeOverlapLen(a.x, a.x + a.width, b.x, b.x + b.width)
+  const axisA = alongVerticalSides ? a.height : a.width
+  const axisB = alongVerticalSides ? b.height : b.width
+  return overlap >= 2 * cornerMargin(axisA, axisB)
+}

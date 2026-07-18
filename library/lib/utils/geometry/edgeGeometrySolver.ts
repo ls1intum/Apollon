@@ -487,14 +487,17 @@ function routeStepParams(
  * lane, and the BYSTANDER bodies its ideal route is scored against (so a third node
  * moving into/out of the way re-picks the anchor).
  *
- * Note what is still ABSENT: neighbours, and obstacles BEYOND the reach-windowed
- * bystanders. Anchor selection scores the IDEAL geometry between the two nodes plus
- * a graze penalty against nearby bystanders (see `edgeAnchoring.scoreKey`) — it is
- * blind to what the router must A*-detour around — so a neighbour moving elsewhere
- * invalidates `routeSig` instead, gating only the cheap fixed-anchor re-route. The
- * bystander digest is bounded by `getEdgeObstacles`' window, so a far node still
- * touches nothing here. Node RECTS, not the base endpoints: selection is a function
- * of the rectangles, and the base React Flow would have picked is overridden.
+ * NEIGHBOURS ARE PART OF THIS KEY. `scoreKey` prices a candidate's crossings and
+ * near-parallel runs against the already-committed routes, at up to three bends per
+ * crossing, so the chosen anchor genuinely depends on them. Leaving them out let an
+ * edge keep an anchor that was picked against neighbours which have since moved: the
+ * cached diagram and a freshly-loaded one then differ, and so do two Yjs peers with
+ * different drag histories — the anchors stop being a pure function of the current
+ * geometry. Both digests are bounded by the same reach window the router uses, so a
+ * far-away edge still touches nothing here.
+ *
+ * Node RECTS, not the base endpoints: selection is a function of the rectangles, and
+ * the base React Flow would have picked is overridden.
  */
 function autoAnchorSignature(
   endpoints: ResolvedEdgeEndpoints,
@@ -503,7 +506,8 @@ function autoAnchorSignature(
   sourceCustom: FreeformEdgeAnchor | undefined,
   targetCustom: FreeformEdgeAnchor | undefined,
   enableStraightPath: boolean,
-  thirdPartyObstacles: readonly ObstacleRect[]
+  thirdPartyObstacles: readonly ObstacleRect[],
+  neighborEdges: readonly IPoint[][]
 ): string {
   const e = endpoints
   const anchor = (a: FreeformEdgeAnchor | undefined) =>
@@ -520,6 +524,8 @@ function autoAnchorSignature(
     // Bystanders the graze penalty scores against — a third node sliding into the
     // ideal lane must re-pick, or the anchor stays on a now-grazing straight shot.
     serializeObstacles(thirdPartyObstacles),
+    // Committed neighbours the crossing/proximity terms score against.
+    serializeNeighbors(neighborEdges),
   ].join("|")
 }
 
@@ -801,7 +807,8 @@ export function computeAllEdgeGeometry(input: SolverInput): {
             effSourceCustom,
             effTargetCustom,
             enableStraightPath,
-            thirdPartyObstacles
+            thirdPartyObstacles,
+            neighborEdges
           )
         : ""
       const cached = solveCache?.get(edge.id)
