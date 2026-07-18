@@ -169,6 +169,75 @@ const lexLess = (a: readonly number[], b: readonly number[]): boolean => {
   return false
 }
 
+/** The midpoint of a side of `rect`. */
+const sideMidpoint = (side: Position, rect: Rect): IPoint => {
+  switch (side) {
+    case Position.Top:
+      return { x: rect.x + rect.width / 2, y: rect.y }
+    case Position.Bottom:
+      return { x: rect.x + rect.width / 2, y: rect.y + rect.height }
+    case Position.Left:
+      return { x: rect.x, y: rect.y + rect.height / 2 }
+    default:
+      return { x: rect.x + rect.width, y: rect.y + rect.height / 2 }
+  }
+}
+
+/**
+ * The APPROXIMATE orthogonal polyline a side pair would produce, drawn between the two
+ * side midpoints. Used only to compare candidates against each other for CROSSINGS at
+ * side-assignment time — positions are not chosen yet, so this is deliberately the
+ * shape, not the final route.
+ */
+const approxRoute = (
+  sU: Position,
+  sV: Position,
+  U: Rect,
+  V: Rect
+): IPoint[] => {
+  const a = sideMidpoint(sU, U)
+  const b = sideMidpoint(sV, V)
+  const uVert = isVerticalSide(sU) // left/right ⇒ leaves horizontally
+  const vVert = isVerticalSide(sV)
+  if (uVert !== vVert)
+    // Perpendicular: one corner, on the axis each end leaves along.
+    return uVert ? [a, { x: b.x, y: a.y }, b] : [a, { x: a.x, y: b.y }, b]
+  if (uVert) {
+    // Both horizontal-leaving: straight when the ys match, else a Z through the middle.
+    if (a.y === b.y) return [a, b]
+    const midX = (a.x + b.x) / 2
+    return [a, { x: midX, y: a.y }, { x: midX, y: b.y }, b]
+  }
+  if (a.x === b.x) return [a, b]
+  const midY = (a.y + b.y) / 2
+  return [a, { x: a.x, y: midY }, { x: b.x, y: midY }, b]
+}
+
+/** Crossings between two orthogonal polylines — an exact integer H×V test (no float
+ * on the decision path). Endpoints touching do not count. */
+const countCrossings = (p: readonly IPoint[], q: readonly IPoint[]): number => {
+  let n = 0
+  for (let i = 0; i < p.length - 1; i++) {
+    const a1 = p[i]
+    const a2 = p[i + 1]
+    const aH = a1.y === a2.y
+    for (let j = 0; j < q.length - 1; j++) {
+      const b1 = q[j]
+      const b2 = q[j + 1]
+      const bH = b1.y === b2.y
+      if (aH === bH) continue // parallel: an overlap is not a crossing
+      const h = aH ? { a: a1, b: a2 } : { a: b1, b: b2 }
+      const v = aH ? { a: b1, b: b2 } : { a: a1, b: a2 }
+      const hy = h.a.y
+      const vx = v.a.x
+      const between = (m: number, lo: number, hi: number) =>
+        m > Math.min(lo, hi) && m < Math.max(lo, hi)
+      if (between(vx, h.a.x, h.b.x) && between(hy, v.a.y, v.b.y)) n++
+    }
+  }
+  return n
+}
+
 /** One edge whose free ends need a side. `sourceBand`/`targetBand` mark the ends
  * that are FREE and on a MULTI-EDGE node (the ones this stage assigns); a custom,
  * lone, or single-edge-node end is left false and keeps the cost path. */
@@ -230,6 +299,17 @@ export const assignSides = (
     return a.edgeId < b.edgeId ? -1 : a.edgeId > b.edgeId ? 1 : 0
   })
 
+  // Approximate shapes of the edges already assigned, so a later edge can prefer a side
+  // pair that does NOT cross them. Edges that SHARE a node are included: they converge
+  // at that node (which costs nothing — the strict `between` test ignores touching
+  // endpoints) but can still genuinely cross out in the open, which is d59's defect.
+  const placed: IPoint[][] = []
+  const crossingsAgainstPlaced = (route: IPoint[]): number => {
+    let n = 0
+    for (const p of placed) n += countCrossings(route, p)
+    return n
+  }
+
   const result = new Map<string, Position>()
   for (const e of ordered) {
     const { sourceRect: U, targetRect: V } = e
@@ -252,6 +332,10 @@ export const assignSides = (
             // breaks a genuine aim TIE — e.g. a diagonal L reachable two ways equally,
             // where the pair avoiding a side a DIFFERENT-partner edge already took wins.
             -(aimU(sU) + aimV(sV)),
+            // Among equally-aimed pairs, prefer one that does NOT cross an edge already
+            // assigned. This outranks occupancy: an emptier side is worth less than an
+            // untangled picture (d59 chose the free side and crossed its neighbour).
+            crossingsAgainstPlaced(approxRoute(sU, sV, U, V)),
             occOthers(e.sourceNodeId, sU, e.targetNodeId) +
               occOthers(e.targetNodeId, sV, e.sourceNodeId),
             // When an L can bend two ways at equal aim + occupancy (a diagonal pair
@@ -271,6 +355,7 @@ export const assignSides = (
       result.set(endKey(e.edgeId, "target"), best!.sV)
       occAdd(e.sourceNodeId, best!.sU, e.targetNodeId)
       occAdd(e.targetNodeId, best!.sV, e.sourceNodeId)
+      placed.push(approxRoute(best!.sU, best!.sV, U, V))
     } else if (e.sourceBand || e.targetBand) {
       // One band end: pick its side to minimise the best achievable corners over the
       // other (cost-path) end, with the same occupancy + aim tie-break.
@@ -598,8 +683,21 @@ export const assignPorts = (
       end: "source" | "target"
       coord: number
       fixed: boolean
+      /** The angular rotation key of this end's partner direction — the NON-CROSSING
+       * order along the side (libavoid Thm 3). Breaks a desired-coordinate tie, so two
+       * edges wanting the same spot are separated in the order that does not tangle
+       * them, rather than by an arbitrary id. */
+      rot: number
     }
     const seats: Seat[] = []
+    const rotOf = (e: EndRef): number => {
+      const c = centerOf(e.rect)
+      return alongSideKey(
+        side,
+        e.partnerCenter.x - c.x,
+        e.partnerCenter.y - c.y
+      )
+    }
     const byPartner = new Map<string, EndRef[]>()
     for (const e of group) {
       const g = byPartner.get(e.partnerNodeId)
@@ -621,6 +719,7 @@ export const assignPorts = (
             end: e.end,
             coord: coords[i],
             fixed: true,
+            rot: rotOf(e),
           })
         )
       } else {
@@ -659,7 +758,13 @@ export const assignPorts = (
             aimBias *
               (clamp(aim, myLo + margin, myLo + axis - margin) - centre) +
             laneOffset
-          seats.push({ edgeId: e.edgeId, end: e.end, coord, fixed: false })
+          seats.push({
+            edgeId: e.edgeId,
+            end: e.end,
+            coord,
+            fixed: false,
+            rot: rotOf(e),
+          })
         })
       }
     }
@@ -668,7 +773,13 @@ export const assignPorts = (
     // Fixed (straight) lanes hold their coordinate unless genuinely crowded; the pass
     // only pushes to keep a minimum separation and clears the corners.
     seats.sort((a, b) =>
-      a.coord !== b.coord ? a.coord - b.coord : a.edgeId < b.edgeId ? -1 : 1
+      a.coord !== b.coord
+        ? a.coord - b.coord
+        : a.rot !== b.rot
+          ? a.rot - b.rot
+          : a.edgeId < b.edgeId
+            ? -1
+            : 1
     )
     const lo = myLo + margin
     const hi = myLo + axis - margin

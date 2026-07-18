@@ -253,10 +253,10 @@ const CASES: {
   },
   {
     file: "routing-case-59.json",
-    maxCorners: 9,
-    maxCrossings: 1,
+    maxCorners: 4,
+    maxCrossings: 0,
     maxStraightBroken: 0,
-    maxOffMax: 0.2,
+    maxOffMax: 0.8,
   },
   {
     file: "routing-case-60.json",
