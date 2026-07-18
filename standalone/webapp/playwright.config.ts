@@ -1,5 +1,9 @@
 import { defineConfig, devices } from "@playwright/test"
 
+/** Specs that measure and print rather than assert. They cannot fail, so they are
+ * not worth CI time; `BENCH=1` opts them back in. */
+const BENCHMARK_SPECS = ["**/drag-lag-benchmark.spec.ts"]
+
 export default defineConfig({
   testDir: "./tests",
   fullyParallel: true,
@@ -88,6 +92,10 @@ export default defineConfig({
             // setup as the chromium `perf` project.
             name: "perf-firefox",
             testDir: "./tests/perf",
+            // The drag-lag benchmark asserts nothing (see its header), so running it
+            // in CI spends two minutes per PR on output that cannot fail. Opt in with
+            // BENCH=1 when you actually want to profile.
+            testIgnore: process.env.BENCH ? [] : BENCHMARK_SPECS,
             fullyParallel: false,
             // Serial measurement (CPU isolation): pin workers:1 so the budget
             // never runs parallel under the global workers setting.
@@ -107,6 +115,8 @@ export default defineConfig({
       // so a flaky pass can't mask a real regression.
       name: "perf",
       testDir: "./tests/perf",
+      // Excluded by default for the same reason as perf-firefox; BENCH=1 opts in.
+      testIgnore: process.env.BENCH ? [] : BENCHMARK_SPECS,
       fullyParallel: false,
       // Serial measurement (CPU isolation): pin workers:1 so the budget never
       // runs parallel under the global workers setting.
