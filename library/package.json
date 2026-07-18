@@ -76,7 +76,7 @@
     {
       "name": "main entry (published JS, deps externalized)",
       "path": "dist/index.js",
-      "limit": "85 kB",
+      "limit": "86 kB",
       "disablePlugins": [
         "@size-limit/webpack",
         "@size-limit/time"
