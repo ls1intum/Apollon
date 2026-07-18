@@ -11,6 +11,12 @@
 
 [**▶ Live demo**](https://apollon.aet.cit.tum.de) · [Docs](https://ls1intum.github.io/Apollon/library/) · [API reference](https://ls1intum.github.io/Apollon/library/api) · [Examples](https://ls1intum.github.io/Apollon/library/embedding/react) · [GitHub](https://github.com/ls1intum/Apollon)
 
+<!-- Absolute URL on purpose: this README is rendered on npmjs.com, where
+     repo-relative image paths do not resolve. The PNG is generated from the
+     live editor by the readme-assets Playwright project. -->
+
+[![The Apollon editor showing a UML class diagram, with the element palette on the left](https://raw.githubusercontent.com/ls1intum/Apollon/main/docs/static/img/apollon-editor-light.png)](https://apollon.aet.cit.tum.de)
+
 </div>
 
 ---

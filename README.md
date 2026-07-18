@@ -1,9 +1,33 @@
+<div align="center">
+
 # Apollon
 
 [![npm version](https://img.shields.io/npm/v/@tumaet/apollon)](https://www.npmjs.com/package/@tumaet/apollon)
+[![npm downloads](https://img.shields.io/npm/dm/@tumaet/apollon)](https://www.npmjs.com/package/@tumaet/apollon)
 [![npm license](https://img.shields.io/npm/l/@tumaet/apollon)](./LICENSE)
 
-Apollon is an open-source UML modeling editor for the web. Draw 13 UML and modeling diagram types (class, component, activity, BPMN, SFC, and more) in the browser, collaborate in real time, and export to SVG, PNG, PDF, or JSON.
+**Open-source UML modeling editor for the web.** Draw 13 UML and modeling diagram types (class, component, activity, BPMN, SFC, and more) in the browser, collaborate in real time, and export to SVG, PNG, PDF, or JSON.
+
+[**▶ Try the live demo**](https://apollon.aet.cit.tum.de) · [Documentation](https://ls1intum.github.io/Apollon/) · [npm package](https://www.npmjs.com/package/@tumaet/apollon) · [VS Code extension](https://marketplace.visualstudio.com/items?itemName=aet-tum.apollon-extension)
+
+<a href="https://apollon.aet.cit.tum.de">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/static/img/apollon-editor-dark.png" />
+    <img src="docs/static/img/apollon-editor-light.png" alt="The Apollon editor showing a UML class diagram, with the element palette on the left and the app chrome on top" />
+  </picture>
+</a>
+
+</div>
+
+## Why Apollon
+
+- **Made for learning and teaching.** Apollon powers the UML modeling exercises and grading workflows in [Artemis](https://artemis.tum.de/), TUM's interactive learning platform, and holds up in large university courses — but it is a general-purpose editor that works just as well outside the classroom.
+- **Embeddable first.** The editor is an npm library with an imperative API (plus a React component); the standalone web app and the VS Code extension in this repo are built on top of it. If you need diagramming inside your own product, you embed the exact editor you see in the demo.
+- **Framework-agnostic.** One API works from Angular, Vue, Svelte, vanilla JS, or React.
+- **Real-time collaboration built in.** Opt-in multi-user editing over [Yjs](https://yjs.dev/), with any transport you like.
+- **MIT-licensed and self-hostable.** No account, no cloud dependency — run the whole stack yourself.
+
+## What's in this repo
 
 This monorepo contains every piece of the Apollon platform:
 

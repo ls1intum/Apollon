@@ -41,6 +41,22 @@ cd standalone/webapp
 pnpm exec playwright test tests/visual/svg-export --update-snapshots
 ```
 
+## Generated UI assets
+
+Two Playwright projects double as asset generators — their baselines **are** the shipped files, so the images can never drift from the real editor:
+
+- `howto-assets` writes the "How this editor works" modal images to `standalone/webapp/assets/images/`.
+- `readme-assets` writes the README hero screenshots (`apollon-editor-light.png`, `apollon-editor-dark.png`) and the 1280×640 social preview card (`apollon-social-card.png`) to `docs/static/img/`. These are referenced by `README.md`, `library/README.md` (the npm page), and `themeConfig.image` in `docs/docusaurus.config.ts`.
+
+Both regenerate through the same baseline-refresh flows above, or individually:
+
+```sh
+cd standalone/webapp
+pnpm exec playwright test --project readme-assets --update-snapshots
+```
+
+One manual step remains: GitHub has no API for the repository social preview, so after `apollon-social-card.png` changes, a maintainer re-uploads it under **Settings → General → Social preview**.
+
 ## Triage
 
 If `visual-regression-tests` fails on a PR, download the `playwright-report-visual` artifact from the run, open `playwright-report/index.html` locally, and inspect the actual-vs-expected diff before deciding whether to refresh the baseline (intentional UI change — see above) or fix the regression (unintended).
