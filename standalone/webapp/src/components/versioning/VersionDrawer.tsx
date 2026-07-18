@@ -94,7 +94,10 @@ export const VersionSidebarBody: FC<Props> = ({
   const isLocal = kind === "local"
   const MAX_VERSIONS = repo.cap
   const queryClient = useQueryClient()
-  const versionsQuery = useVersionsQuery(kind, diagramId)
+  const versionsQuery = useVersionsQuery(kind, diagramId, {
+    // This body is mounted only while the panel is open.
+    refetchOnFocus: true,
+  })
   const serverVersions = versionsQuery.data?.versions ?? EMPTY_VERSIONS
   const total = versionsQuery.data?.total
   // Only an initial-load failure replaces the list with an error surface. A

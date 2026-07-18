@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { renderHook, waitFor } from "@testing-library/react"
 import type { ReactNode } from "react"
-import { QueryClientProvider } from "@tanstack/react-query"
+import { QueryClientProvider, focusManager } from "@tanstack/react-query"
 import type { VersionRepository } from "@/services/versionRepository"
 import { stubVersionRepository } from "@/test/versionRepositoryStub"
 import type { Diagram, VersionSummary } from "@/types"
@@ -126,6 +126,54 @@ describe("versionListQueryOptions", () => {
     expect(local.result.current.data!.versions.map((v) => v.id)).toEqual(["l1"])
     expect(remoteList).toHaveBeenCalledTimes(1)
     expect(localList).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe("useVersionsQuery — focus refetching", () => {
+  // The pre-Query code refetched on `visibilitychange` and iterated ONLY open
+  // drawers (`if (!open) continue`). Focus refetching is opt-in here for the
+  // same reason: a user who never opens the panel must not pay a request every
+  // time they alt-tab back to the editor.
+  const refocus = async () => {
+    focusManager.setFocused(false)
+    focusManager.setFocused(true)
+    await new Promise((r) => setTimeout(r, 10))
+  }
+
+  afterEach(() => focusManager.setFocused(undefined))
+
+  it("does not refetch on window focus for an incidental subscriber", async () => {
+    const list = vi.fn(async () => ({ versions: [summary("v1")], total: 1 }))
+    useStubRepository({ list })
+
+    const { wrapper } = wrapperFor()
+    const { result } = renderHook(
+      () => useVersionsQuery("remote", DIAGRAM_ID),
+      {
+        wrapper,
+      }
+    )
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(list).toHaveBeenCalledTimes(1)
+
+    await refocus()
+    expect(list).toHaveBeenCalledTimes(1)
+  })
+
+  it("refetches on window focus for the open panel", async () => {
+    const list = vi.fn(async () => ({ versions: [summary("v1")], total: 1 }))
+    useStubRepository({ list })
+
+    const { wrapper } = wrapperFor()
+    const { result } = renderHook(
+      () => useVersionsQuery("remote", DIAGRAM_ID, { refetchOnFocus: true }),
+      { wrapper }
+    )
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(list).toHaveBeenCalledTimes(1)
+
+    await refocus()
+    await waitFor(() => expect(list).toHaveBeenCalledTimes(2))
   })
 })
 

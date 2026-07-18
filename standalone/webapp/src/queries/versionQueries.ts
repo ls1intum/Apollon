@@ -24,11 +24,12 @@ export type VersionListData = InfiniteData<
 /**
  * Version history, cursor-paginated ("Load older" appends a page).
  *
- * `staleTime: 0` + `refetchOnWindowFocus` reconciles the list whenever the
- * user returns to the tab — the only catch-up path while the control channel
- * is down. Every mounted observer refetches on focus, and v5 refetches all
- * loaded pages, so a page that keeps this mounted (see `ApollonLocal`) pays
- * on every focus even with the drawer shut.
+ * Focus refetching is OFF here and opted into by the open panel alone (see
+ * {@link useVersionsQuery}). The realtime bridges — WS control events for the
+ * collab backend, BroadcastChannel for the local one — are the reconciliation
+ * path; a tab-focus refetch is only a safety net for events missed while the
+ * socket was down, and it is worth paying for exactly when the user is looking
+ * at the list.
  */
 export function versionListQueryOptions(
   kind: RepositoryKind,
@@ -45,7 +46,7 @@ export function versionListQueryOptions(
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     staleTime: 0,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
   })
 }
 
@@ -62,10 +63,23 @@ const selectFlatVersionList = (data: VersionListData): FlatVersionList => ({
   total: data.pages[data.pages.length - 1]?.total ?? 0,
 })
 
-/** Flattened version list for UI consumers (drawer, preview banner, pages). */
-export function useVersionsQuery(kind: RepositoryKind, diagramId: string) {
+/**
+ * Flattened version list for UI consumers (drawer, preview banner, pages).
+ *
+ * `refetchOnFocus` should be true only for the panel that actually displays
+ * the list, which is mounted only while it is open. Pages that subscribe for
+ * incidental reads (a restore label) leave it off, so a user who never opens
+ * the panel costs nothing on tab focus — the same bargain the pre-Query code
+ * struck by iterating only open drawers on `visibilitychange`.
+ */
+export function useVersionsQuery(
+  kind: RepositoryKind,
+  diagramId: string,
+  opts: { refetchOnFocus?: boolean } = {}
+) {
   return useInfiniteQuery({
     ...versionListQueryOptions(kind, diagramId),
+    refetchOnWindowFocus: opts.refetchOnFocus ?? false,
     select: selectFlatVersionList,
   })
 }
