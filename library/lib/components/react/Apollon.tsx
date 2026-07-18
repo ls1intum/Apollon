@@ -14,6 +14,7 @@ import type {
   ApollonMode,
   ApollonOptions,
   ApollonView,
+  TagOptions,
   UMLDiagramType,
   UMLModel,
 } from "@/typings"
@@ -67,8 +68,16 @@ export interface ApollonProps {
   view?: ApollonView
   mode?: ApollonMode
   scrollLock?: boolean
+  /**
+   * Answer the editor's keyboard shortcuts (see `APOLLON_SHORTCUTS`), including
+   * React Flow's delete and arrow-key moving. Set `false` where the host binds
+   * those keys itself, or mounts more than one editor. Default `true`.
+   */
+  keyboardShortcuts?: boolean
   /** Override the editor's own strings for i18n. See {@link ApollonEditor.setLabels}. */
   labels?: Partial<ApollonLabels>
+  /** Enable + configure element-tag authoring. See {@link ApollonEditor.setTags}. */
+  tags?: boolean | TagOptions
   /** Local-only preview overlay. See {@link ApollonEditor.setPreviewMode}. */
   previewMode?: boolean
   /**
@@ -115,7 +124,9 @@ export function Apollon(props: ApollonProps) {
     view,
     mode,
     scrollLock,
+    keyboardShortcuts,
     labels,
+    tags,
     previewMode,
     model,
 
@@ -137,6 +148,7 @@ export function Apollon(props: ApollonProps) {
     collaboration,
     debug,
     labels,
+    tags,
     // React always owns the chrome: the editor registers nothing, and `<Apollon>`
     // renders the default `<Apollon.*>` as fallback children when the consumer
     // composes none. That keeps composing-ness reactive — a control appearing or
@@ -196,8 +208,17 @@ export function Apollon(props: ApollonProps) {
   }, [editor, scrollLock])
 
   useEffect(() => {
+    if (editor && keyboardShortcuts !== undefined) {
+      editor.setKeyboardShortcuts(keyboardShortcuts)
+    }
+  }, [editor, keyboardShortcuts])
+
+  useEffect(() => {
     if (editor && labels !== undefined) editor.setLabels(labels)
   }, [editor, labels])
+  useEffect(() => {
+    if (editor && tags !== undefined) editor.setTags(tags)
+  }, [editor, tags])
 
   useEffect(() => {
     if (editor && previewMode !== undefined) editor.setPreviewMode(previewMode)

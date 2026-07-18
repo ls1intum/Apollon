@@ -1,19 +1,11 @@
-import React, { useCallback, useEffect, useRef, useState } from "react"
-import { CANVAS, DROPS, DropElementConfig, ZINDEX } from "@/constants"
-import { DropNodeData } from "@/types"
+import React, { useEffect, useRef, useState } from "react"
+import { DROPS, DropElementConfig, ZINDEX } from "@/constants"
 import { createPortal } from "react-dom"
-import { useReactFlow, type Node } from "@xyflow/react"
-import {
-  generateUUID,
-  getPositionOnCanvas,
-  isParentNodeType,
-  resizeAllParents,
-} from "@/utils"
-import { canDropIntoParent } from "@/utils/bpmnConstraints"
-import { useDiagramStore } from "@/store/context"
+import { useReactFlow, type XYPosition } from "@xyflow/react"
+import { useMetadataStore } from "@/store/context"
 import { resolveApollonThemeVars } from "@/components/ui/portalTheme"
 import { useShallow } from "zustand/shallow"
-import { log } from "../logger"
+import { usePalettePlacement } from "@/hooks/usePalettePlacement"
 
 /* ========================================================================
    Page-scroll lock during a palette drag.
@@ -39,10 +31,6 @@ const enableScroll = () => {
   document.body.style.touchAction = savedBodyTouchAction
 }
 
-/* ========================================================================
-   DraggableGhost Component
-   Wraps a child element with drag & drop behavior and drop logic.
-   ======================================================================== */
 /** The palette's painted theme, carried onto the `<body>`-portaled ghost. */
 interface GhostTheme {
   vars: React.CSSProperties
@@ -64,27 +52,23 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
   dropElementConfig,
   previewScale = DROPS.SIDEBAR_PREVIEW_SCALE,
 }) => {
-  const nodeSnapStepPx = CANVAS.SNAP_TO_GRID_PX
-  const diagramId = useDiagramStore(useShallow((state) => state.diagramId))
-  // Hooks from react-flow and zustand store for node management
-  const { screenToFlowPosition, getIntersectingNodes, getViewport } =
-    useReactFlow()
-  const { nodes, setNodes } = useDiagramStore(
+  const { getViewport } = useReactFlow()
+  const { dropAtPointer, placeAtViewportCenter } = usePalettePlacement(
+    dropElementConfig,
+    previewScale
+  )
+  const { addElementLabel, nodeTypeLabel } = useMetadataStore(
     useShallow((state) => ({
-      nodes: state.nodes,
-      setNodes: state.setNodes,
+      addElementLabel: state.labels.addElement,
+      nodeTypeLabel: state.labels.nodeTypeLabel,
     }))
   )
 
-  // Local state to track drag status, ghost position, and pointer offsets.
   const [isDragging, setIsDragging] = useState(false)
   const [ghostPosition, setGhostPosition] = useState({ x: 0, y: 0 })
-  // Cursor offset within the PREVIEW shape — scaled into the dropped node's
-  // placement so the grabbed point stays under the cursor on drop.
-  const [clickOffset, setClickOffset] = useState({ x: 0, y: 0 })
   // Cursor offset within the ENTRY, which is what the ghost renders. Differs from
-  // clickOffset because the entry flex-centres its preview; positioning the ghost
-  // by the preview offset would re-apply that centring and make the shape jump.
+  // the preview offset because the entry flex-centres its preview; positioning
+  // the ghost by the preview offset would re-apply that centring and jump.
   const [ghostOffset, setGhostOffset] = useState({ x: 0, y: 0 })
   // `zoom / previewScale`, folded per-axis with the drop/preview size ratio, so
   // the ghost is exactly as large on screen as the node it will become. Captured
@@ -98,174 +82,25 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
   // transient, so a one-shot capture is enough — no observer.
   const [ghostTheme, setGhostTheme] = useState<GhostTheme>({ vars: {} })
 
-  /* ----------------------------------------------------------------------
-     onDrop: Handles the pointer up event by calculating the drop position,
-     checking boundaries, and creating/updating the new node.
-     ---------------------------------------------------------------------- */
-  const onDrop = useCallback(
-    (event: PointerEvent) => {
-      event.preventDefault()
+  // Gesture bookkeeping. Refs, not state: read by the document listeners and the
+  // click handler without re-rendering or re-binding.
+  const startRef = useRef<XYPosition | null>(null)
+  const maxTravelRef = useRef(0)
+  const pointerTypeRef = useRef<string>("mouse")
+  // Cursor offset within the PREVIEW shape, backed out on drop so the grabbed
+  // point stays under the pointer.
+  const clickOffsetRef = useRef<XYPosition>({ x: 0, y: 0 })
+  // True once a press has turned into a drag, so the trailing click is ignored.
+  const draggedRef = useRef(false)
 
-      const canvas = document.getElementById(`react-flow-library-${diagramId}`)
-      if (!canvas) {
-        log.warn("Canvas element not found")
-        return
-      }
-
-      // Convert drop position from screen to flow coordinates (with grid snapping)
-      const dropPosition = screenToFlowPosition(
-        { x: event.clientX, y: event.clientY },
-        { snapToGrid: true }
-      )
-
-      // Check if the drop occurred outside the canvas bounds
-      const canvasBounding = canvas.getBoundingClientRect()
-      const isOutsideCanvas =
-        event.clientX < canvasBounding.left ||
-        event.clientY < canvasBounding.top ||
-        event.clientX > canvasBounding.right ||
-        event.clientY > canvasBounding.bottom
-
-      if (isOutsideCanvas) {
-        return
-      }
-
-      // Deep clone defaultData to avoid mutating the original config
-      const defaultData = structuredClone(dropElementConfig.defaultData ?? {})
-
-      // Assign new IDs to methods and attributes
-      if (defaultData.methods) {
-        defaultData.methods = (defaultData.methods as Array<object>).map(
-          (method) => ({
-            ...method,
-            id: generateUUID(),
-          })
-        )
-      }
-      if (defaultData.attributes) {
-        defaultData.attributes = (defaultData.attributes as Array<object>).map(
-          (attribute) => ({
-            ...attribute,
-            id: generateUUID(),
-          })
-        )
-      }
-      if (defaultData.lanes) {
-        defaultData.lanes = (defaultData.lanes as Array<object>).map(
-          (lane) => ({
-            ...lane,
-            id: generateUUID(),
-          })
-        )
-      }
-
-      // Drop size may differ from the sidebar preview size (e.g. a swimlane
-      // previews 160×100 but drops 400×240). The drop/preview ratio maps the
-      // grabbed point's fraction of the preview onto the DROP dimensions, so the
-      // cursor stays over the same relative point of the (larger) dropped node.
-      // Ratio is 1 when drop size == preview size, leaving normal elements
-      // unchanged.
-      const ratioX =
-        (dropElementConfig.dropWidth ?? dropElementConfig.width) /
-        dropElementConfig.width
-      const ratioY =
-        (dropElementConfig.dropHeight ?? dropElementConfig.height) /
-        dropElementConfig.height
-
-      // Prepare the drop data including offset adjustments
-      const dropData: DropNodeData = {
-        type: dropElementConfig.type,
-        data: defaultData,
-        offsetX: (clickOffset.x / previewScale) * ratioX,
-        offsetY: (clickOffset.y / previewScale) * ratioY,
-      }
-
-      // Find potential parent node by checking intersections with a potential Parent node type
-      const intersectingNodes = getIntersectingNodes({
-        x: dropPosition.x,
-        y: dropPosition.y,
-        width: CANVAS.MOUSE_UP_OFFSET_PX,
-        height: CANVAS.MOUSE_UP_OFFSET_PX,
-      }).filter((node) => {
-        return (
-          isParentNodeType(node.type) &&
-          node.type &&
-          canDropIntoParent(dropElementConfig.type, node.type)
-        )
-      })
-
-      const parentNode = intersectingNodes[intersectingNodes.length - 1]
-      const parentId = parentNode ? parentNode.id : undefined
-
-      // Adjust node position based on pointer offset
-      const position = screenToFlowPosition({
-        x: event.clientX,
-        y: event.clientY,
-      })
-
-      // Snap position to grid (same drop/preview ratio as the offsets above)
-      position.x -=
-        Math.floor(((clickOffset.x / previewScale) * ratioX) / nodeSnapStepPx) *
-        nodeSnapStepPx
-      position.y -=
-        Math.floor(((clickOffset.y / previewScale) * ratioY) / nodeSnapStepPx) *
-        nodeSnapStepPx
-
-      if (parentId) {
-        const parentPositionOnCanvas = getPositionOnCanvas(parentNode, nodes)
-        position.x -= parentPositionOnCanvas.x
-        position.y -= parentPositionOnCanvas.y
-      }
-
-      // Create the new node with a unique ID and calculated position. The drop
-      // size may differ from the sidebar preview size (e.g. a swimlane previews
-      // small but drops large).
-      const dropWidth = dropElementConfig.dropWidth ?? dropElementConfig.width
-      const dropHeight =
-        dropElementConfig.dropHeight ?? dropElementConfig.height
-      const newNode: Node = {
-        id: generateUUID(),
-        width: dropWidth,
-        height: dropHeight,
-        type: dropData.type,
-        position: { ...position },
-        data: { ...defaultData, ...dropData.data },
-        parentId: parentId,
-        measured: {
-          width: dropWidth,
-          height: dropHeight,
-        },
-        selected: false,
-      }
-
-      // Update nodes and resize parent nodes if necessary
-      const updatedNodes = structuredClone([...nodes, newNode])
-      if (parentId) {
-        resizeAllParents(newNode, updatedNodes)
-      }
-
-      setNodes(updatedNodes)
-    },
-    [
-      screenToFlowPosition,
-      setNodes,
-      getIntersectingNodes,
-      nodes,
-      clickOffset.x,
-      clickOffset.y,
-      dropElementConfig,
-      nodeSnapStepPx,
-      previewScale,
-    ]
-  )
-
-  /* ----------------------------------------------------------------------
-     Pointer Event Handlers
-     ---------------------------------------------------------------------- */
-  // Initiate drag: disable scrolling and record click offset
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     event.preventDefault()
     disableScroll()
+
+    startRef.current = { x: event.clientX, y: event.clientY }
+    maxTravelRef.current = 0
+    draggedRef.current = false
+    pointerTypeRef.current = event.pointerType
 
     setGhostTheme({
       vars: resolveApollonThemeVars(event.currentTarget),
@@ -275,22 +110,20 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
           ?.getAttribute("data-theme") ?? undefined,
     })
 
-    // Drop offset: cursor relative to the PREVIEW shape's top-left.
     const previewElement = event.currentTarget.querySelector<HTMLElement>(
       "[data-draggable-preview]"
     )
     const previewRect = (
       previewElement ?? event.currentTarget
     ).getBoundingClientRect()
-    setClickOffset({
+    clickOffsetRef.current = {
       x: event.clientX - previewRect.left,
       y: event.clientY - previewRect.top,
-    })
+    }
 
-    // Ghost offset: cursor relative to the ENTRY's top-left (the entry is the
-    // child rendered inside the ghost portal). Positioning the ghost by this
-    // keeps the entry — and therefore its flex-centred preview — exactly where it
-    // sat in the palette, so the shape never jumps out from under the cursor.
+    // Ghost offset: cursor relative to the ENTRY's top-left, so the entry — and
+    // its flex-centred preview — stays exactly where it sat in the palette and
+    // never jumps out from under the cursor.
     const entry = (event.currentTarget.firstElementChild ??
       event.currentTarget) as HTMLElement
     const entryRect = entry.getBoundingClientRect()
@@ -299,10 +132,9 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
     setGhostOffset({ x: ghostX, y: ghostY })
     setGhostPosition({ x: event.clientX - ghostX, y: event.clientY - ghostY })
 
-    // Scale the ghost to the on-screen size the node will have at this zoom.
-    // Per-axis: fold in the drop/preview ratio so an element that drops larger
-    // than it previews (e.g. a swimlane: 160×100 preview → 400×240 drop) renders
-    // its ghost at the true dropped size. Ratio is 1 for normal elements.
+    // Scale the ghost to the on-screen size the node will have at this zoom,
+    // folding in the drop/preview ratio so an element that drops larger than it
+    // previews (a swimlane: 160×100 → 400×240) renders at its true dropped size.
     const zoom = getViewport().zoom
     const ratioX =
       (dropElementConfig.dropWidth ?? dropElementConfig.width) /
@@ -318,17 +150,22 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
     setIsDragging(true)
   }
 
-  // Update ghost position during dragging — keep the entry pinned to the cursor
-  // by the same ghost offset captured on grab.
   const handlePointerMove = (event: PointerEvent) => {
     if (!isDragging) return
+    if (startRef.current) {
+      const travelled = Math.hypot(
+        event.clientX - startRef.current.x,
+        event.clientY - startRef.current.y
+      )
+      if (travelled > maxTravelRef.current) maxTravelRef.current = travelled
+    }
     setGhostPosition({
       x: event.clientX - ghostOffset.x,
       y: event.clientY - ghostOffset.y,
     })
   }
 
-  // Shared teardown for both a completed drop and an interrupted drag
+  // Shared teardown for a completed gesture or an interrupted one
   // (pointercancel: gesture taken over by the OS, multi-touch, etc.).
   const resetDrag = () => {
     enableScroll()
@@ -336,31 +173,50 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
     setGhostPosition({ x: 0, y: 0 })
   }
 
-  // Keep the latest `onDrop` reachable from the document listeners without
-  // re-binding them: `onDrop` is a useCallback that changes whenever `nodes`
-  // changes, which on a busy canvas is constantly. Reading it through a ref
-  // lets the listeners bind once per drag (deps below), not once per render.
-  const onDropRef = useRef(onDrop)
+  // `dropAtPointer` changes whenever `nodes` changes (constant on a busy
+  // canvas). Reading it through a ref lets the document listeners bind once per
+  // drag, not once per render.
+  const dropRef = useRef(dropAtPointer)
   useEffect(() => {
-    onDropRef.current = onDrop
-  }, [onDrop])
+    dropRef.current = dropAtPointer
+  }, [dropAtPointer])
 
-  // End dragging: re-enable scrolling, reset state, and trigger drop logic
+  // A drag that actually placed a node emits no click on this cell, so also
+  // clear the guard on the next task — otherwise a later AT/synthetic click
+  // (which arrives with no preceding pointerdown to reset it) would be swallowed.
+  const suppressTrailingClick = () => {
+    draggedRef.current = true
+    window.setTimeout(() => {
+      draggedRef.current = false
+    }, 0)
+  }
+
+  // End the gesture. Classified over the WHOLE press, not just its endpoints, so
+  // an out-and-back drag can't read as a tap; the touch threshold is looser
+  // because finger-roll on an intended tap exceeds a mouse-tight one. The guard
+  // keys on the OUTCOME: only a drag that actually dropped suppresses the
+  // trailing click. A drag released off-canvas placed nothing, so its click
+  // still falls through to place at the centre (the tap the user meant).
   const handlePointerUp = (event: PointerEvent) => {
     resetDrag()
-    onDropRef.current(event)
+    const slop =
+      pointerTypeRef.current === "touch"
+        ? DROPS.TAP_SLOP_TOUCH_PX
+        : DROPS.TAP_SLOP_MOUSE_PX
+    const placed =
+      maxTravelRef.current >= slop &&
+      dropRef.current(event, clickOffsetRef.current)
+    if (placed) suppressTrailingClick()
+    else draggedRef.current = false
   }
 
   const handlePointerCancel = () => {
+    suppressTrailingClick() // ignore any stray click; nothing was placed
     resetDrag()
   }
 
-  /* ----------------------------------------------------------------------
-     Attach global pointer event listeners when dragging
-     ---------------------------------------------------------------------- */
   useEffect(() => {
     if (!isDragging) return
-
     document.addEventListener("pointermove", handlePointerMove)
     document.addEventListener("pointerup", handlePointerUp)
     document.addEventListener("pointercancel", handlePointerCancel)
@@ -371,14 +227,29 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
     }
   }, [isDragging, ghostOffset])
 
-  /* ----------------------------------------------------------------------
-     Render the ghost element via a portal when dragging
-     ---------------------------------------------------------------------- */
-  // `fixed`, not `absolute`: the ghost is portaled into document.body and
-  // positioned with viewport coordinates (clientX/clientY). `absolute` would
-  // resolve against the document, so any page scroll offset would shift the
-  // ghost away from the cursor — visible whenever the editor is embedded
-  // below the fold. `fixed` resolves against the viewport, matching clientX/Y.
+  // A press that became a drag also fires a click on release — ignore it, the
+  // drop already happened. A real tap (and keyboard / AT activation of the
+  // button role) places the element at the viewport centre.
+  const handleClick = () => {
+    if (draggedRef.current) {
+      draggedRef.current = false
+      return
+    }
+    placeAtViewportCenter()
+  }
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.repeat) return // native buttons don't activate on auto-repeat
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault()
+      placeAtViewportCenter()
+    }
+  }
+
+  // `fixed`, not `absolute`: the ghost portals into document.body and is
+  // positioned with viewport coordinates (clientX/clientY). `absolute` resolves
+  // against the document, so any page scroll would shift the ghost off the
+  // cursor when the editor is embedded below the fold; `fixed` matches clientX/Y.
   const ghostElement = (
     <div
       data-theme={ghostTheme.dataTheme}
@@ -390,9 +261,8 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
         pointerEvents: "none",
         zIndex: ZINDEX.DRAGGABLE_ELEMENT,
         opacity: 0.8,
-        // Scale to the drop's on-screen size, pivoting on the grabbed point
-        // (ghostOffset, measured from the entry's top-left) so the scale never
-        // shifts the shape out from under the cursor.
+        // Pivot the scale on the grabbed point so it never shifts the shape out
+        // from under the cursor.
         transform: `scale(${ghostScale.x}, ${ghostScale.y})`,
         transformOrigin: `${ghostOffset.x}px ${ghostOffset.y}px`,
       }}
@@ -401,13 +271,23 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
     </div>
   )
 
+  const elementName =
+    typeof dropElementConfig.defaultData?.name === "string" &&
+    dropElementConfig.defaultData.name
+      ? (dropElementConfig.defaultData.name as string)
+      : nodeTypeLabel(dropElementConfig.type)
+
   return (
     <>
       <div
+        className="apollon-palette__cell"
+        role="button"
+        tabIndex={0}
+        aria-label={`${addElementLabel}: ${elementName}`}
         onPointerDown={handlePointerDown}
-        style={{
-          touchAction: "none",
-        }}
+        onClick={handleClick}
+        onKeyDown={handleKeyDown}
+        style={{ touchAction: "none" }}
       >
         {children}
       </div>

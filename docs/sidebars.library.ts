@@ -26,6 +26,7 @@ const sidebars: SidebarsConfig = {
       items: [
         "api/overlay-controls",
         "api/assessment",
+        "api/element-tags",
         "api/collaboration",
         "api/export",
         "api/headless-rendering",

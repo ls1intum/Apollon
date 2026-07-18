@@ -1,7 +1,7 @@
-import { NodeProps, NodeResizer, useStore, type Node } from "@xyflow/react"
+import { NodeProps, useStore, type Node } from "@xyflow/react"
 import { useRef } from "react"
 import { usePopoverAnchor } from "@/hooks/usePopoverAnchor"
-import { DefaultNodeWrapper } from "../wrappers"
+import { DefaultNodeWrapper, NodeResizer } from "../wrappers"
 import { useHandleOnResize } from "@/hooks"
 import { ActivitySwimlaneProps } from "@/types"
 import { useDiagramStore } from "@/store"
@@ -158,7 +158,6 @@ export function ActivitySwimlane({
         onResize={onResize}
         minHeight={120}
         minWidth={120}
-        handleStyle={{ width: 8, height: 8 }}
       />
       <div ref={anchorRef} style={{ position: "relative", width, height }}>
         <ActivitySwimlaneSVG

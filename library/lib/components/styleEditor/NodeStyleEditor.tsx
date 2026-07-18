@@ -4,9 +4,15 @@ import { ColorField, StyleEditorPanel } from "./StyleEditorPanel"
 import { DefaultNodeProps } from "@/types"
 import { useLabels } from "@/i18n/useLabels"
 
+// The string-valued DefaultNodeProps fields this editor writes. Excludes
+// `tags` (a string[]), so neither a swatch value nor the name input can be
+// typed into it.
+type ColorKey = "fillColor" | "strokeColor" | "textColor"
+type EditableKey = ColorKey | "name"
+
 interface NodeStyleEditorProps {
   nodeData: DefaultNodeProps
-  handleDataFieldUpdate: (key: keyof DefaultNodeProps, value: string) => void
+  handleDataFieldUpdate: (key: EditableKey, value: string) => void
   preElements?: React.ReactNode[]
   sideElements?: React.ReactNode[]
   colorEditorLabel?: string
@@ -36,7 +42,7 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
 }) => {
   const t = useLabels()
   // Three small literals; re-computed on every render is cheaper than memoizing.
-  const colorFields: ColorField<keyof DefaultNodeProps>[] = noStrokeUpdate
+  const colorFields: ColorField<ColorKey>[] = noStrokeUpdate
     ? [
         { key: "fillColor", label: t.fillColor },
         { key: "textColor", label: t.textColor },

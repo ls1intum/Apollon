@@ -26,3 +26,14 @@ export const isIOS = (): boolean => test(/iPhone|iPod/i) || isIpad()
 export const isAndroid = (): boolean => test(/android|sink/i)
 
 export const isNativePlatform = (): boolean => Capacitor.isNativePlatform()
+
+// --- Apollon's own, not vendored from Ionic ---
+
+/**
+ * Whether to render shortcuts with macOS key symbols. Display-only — no handler
+ * branches on it (they take Ctrl or Cmd either way), so a wrong guess costs a
+ * glyph, not a shortcut. Every Apple device has a ⌘ key with a keyboard:
+ * `isIOS()` covers iPhone and both iPad user agents (legacy `iPad` and the
+ * iPadOS 13+ desktop `Macintosh`+coarse-pointer form), and `mac` covers Macs.
+ */
+export const isMacLike = (): boolean => isIOS() || test(/mac/i)

@@ -20,9 +20,22 @@ const meta = {
     withModalFrame({ title: "How to use this editor?", variant: "plain" }),
   ],
   args: {
+    variant: "editor",
+    // Pinned so the sheet renders the same caps on every machine and in CI.
+    isMac: false,
     onClose: fn(),
   },
   argTypes: {
+    isMac: {
+      table: { category: "Content" },
+      description:
+        "Render macOS key symbols (⌘⇧⌥⌫, no + separators). Defaults to the device.",
+    },
+    variant: {
+      table: { category: "Content" },
+      description:
+        "Which surface opened this. The home page has no File shortcuts, so its sheet omits that group.",
+    },
     onClose: {
       table: { category: "Events" },
       description: "Called when the user clicks the Close button.",
@@ -61,5 +74,32 @@ export const Shortcuts: Story = {
     // The grouped grid renders its section headers and labels.
     await expect(await screen.findByText("Selection")).toBeVisible()
     await expect(await screen.findByText("Redo")).toBeVisible()
+    await expect(await screen.findByText("Save as JSON")).toBeVisible()
+  },
+}
+
+/** The same sheet with macOS caps: ⌘⇧⌥⌫, Apple's modifier order, no "+". */
+export const ShortcutsOnMac: Story = {
+  args: { isMac: true },
+  play: async () => {
+    const screen = within(document.body)
+    await userEvent.click(await screen.findByRole("tab", { name: "Shortcuts" }))
+    expect((await screen.findAllByText("⌘")).length).toBeGreaterThan(0)
+    await expect(await screen.findByText("⌫")).toBeVisible()
+    await expect(screen.queryByText("Ctrl")).toBeNull()
+  },
+}
+
+/**
+ * The same sheet from the home page, where the File shortcuts aren't mounted —
+ * so it must not promise them.
+ */
+export const ShortcutsOnHome: Story = {
+  args: { variant: "home" },
+  play: async () => {
+    const screen = within(document.body)
+    await userEvent.click(await screen.findByRole("tab", { name: "Shortcuts" }))
+    await expect(await screen.findByText("Redo")).toBeVisible()
+    await expect(screen.queryByText("Save as JSON")).toBeNull()
   },
 }

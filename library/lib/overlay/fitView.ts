@@ -33,16 +33,19 @@ export function insetAwareFitView(
     padding?: number | Partial<Record<OverlaySide, number>>
     duration?: number
     maxZoom?: number
+    /** Frame only these nodes (zoom-to-selection) instead of the whole diagram. */
+    nodes?: Array<{ id: string }>
   }
 ): void {
   const maxZoom = options?.maxZoom ?? 1.0
   const duration = options?.duration
+  const nodes = options?.nodes
   const padding = options?.padding
   const override = typeof padding === "object" ? padding : undefined
   const fraction = typeof padding === "number" ? padding : 0.15
 
   if (!anySide(insets) && !anySide(safeArea) && !override) {
-    rf.fitView({ padding: fraction, duration, maxZoom })
+    rf.fitView({ padding: fraction, duration, maxZoom, nodes })
     return
   }
 
@@ -58,6 +61,7 @@ export function insetAwareFitView(
     },
     duration,
     maxZoom,
+    nodes,
   })
 }
 

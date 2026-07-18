@@ -33,6 +33,12 @@ interface UndoRestoreState {
 interface State {
   // Per-diagram persisted UI state.
   drawerOpenByDiagram: Record<DiagramId, boolean>
+  /**
+   * A per-diagram nonce the "save a version" shortcut bumps. The mounted
+   * version panel watches it and runs its own save path once, reusing every
+   * guard (dirty-check, empty/preview blocks) — the shortcut owns no editor.
+   */
+  saveRequestByDiagram: Record<DiagramId, number>
   // Per-diagram in-memory state (refetched on reload).
   versions: Record<DiagramId, PendingVersion[]>
   nextCursor: Record<DiagramId, string | undefined>
@@ -57,6 +63,10 @@ interface Actions {
   // ---- Drawer -----------------------------------------------------------
   openDrawer: (diagramId: DiagramId) => void
   closeDrawer: (diagramId: DiagramId) => void
+  /** Open the panel and ask it to save a version now. */
+  requestSave: (diagramId: DiagramId) => void
+  /** Mark the pending save request handled. */
+  clearSaveRequest: (diagramId: DiagramId) => void
 
   // ---- Versions ---------------------------------------------------------
   fetchVersions: (diagramId: DiagramId) => Promise<void>
@@ -129,6 +139,7 @@ export const useVersionStore = create<VersionStore>()(
     persist(
       (set, get) => ({
         drawerOpenByDiagram: {},
+        saveRequestByDiagram: {},
         versions: {},
         nextCursor: {},
         totals: {},
@@ -151,6 +162,24 @@ export const useVersionStore = create<VersionStore>()(
             drawerOpenByDiagram: {
               ...s.drawerOpenByDiagram,
               [diagramId]: false,
+            },
+          })),
+        requestSave: (diagramId) =>
+          set((s) => ({
+            drawerOpenByDiagram: {
+              ...s.drawerOpenByDiagram,
+              [diagramId]: true,
+            },
+            saveRequestByDiagram: {
+              ...s.saveRequestByDiagram,
+              [diagramId]: (s.saveRequestByDiagram[diagramId] ?? 0) + 1,
+            },
+          })),
+        clearSaveRequest: (diagramId) =>
+          set((s) => ({
+            saveRequestByDiagram: {
+              ...s.saveRequestByDiagram,
+              [diagramId]: 0,
             },
           })),
         // ---- Versions --------------------------------------------------------

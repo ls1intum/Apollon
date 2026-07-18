@@ -12,7 +12,7 @@ import { ApollonEditor, importDiagram, type UMLModel } from "@tumaet/apollon"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { useEditorContext, useModalContext } from "@/contexts"
 import { useElementWidth } from "@/hooks/useElementWidth"
-import { useVersionShortcut } from "@/hooks/useVersionShortcut"
+import { useEditorShortcuts } from "@/hooks/useEditorShortcuts"
 import { useVersionPreviewUrlSync } from "@/hooks/useVersionPreviewUrlSync"
 import {
   selectScopedPreview,
@@ -128,7 +128,7 @@ export const ApollonLocal: FC = () => {
   // will warn "getSnapshot should be cached" and the regression test fails.
   const versions = useVersionStore((s) => selectVersions(s, diagramId ?? ""))
 
-  useVersionShortcut(diagramId ?? undefined)
+  useEditorShortcuts(diagramId ?? undefined)
 
   const prePreviewFingerprintRef = useRef<string | null>(null)
   const [canRestoreFromPreview, setCanRestoreFromPreview] = useState(false)

@@ -5,7 +5,7 @@
  * control of word order.
  */
 export interface ApollonLabels {
-  // Zoom / history cluster
+  // Zoom / history / multi-select cluster
   zoomToolbar: string
   zoomIn: string
   zoomOut: string
@@ -19,6 +19,8 @@ export interface ApollonLabels {
   undoHint: string
   redo: string
   redoHint: string
+  multiSelection: string
+  multiSelectionHint: string
 
   // Minimap
   miniMap: string
@@ -29,6 +31,7 @@ export interface ApollonLabels {
 
   selectionActions: string
   elementPalette: string
+  addElement: string
   paletteModelView: string
   paletteSelectElementsView: string
   paletteHighlightHint: string
@@ -142,6 +145,18 @@ export interface ApollonLabels {
   markMethodAsAbstract: string
   unmarkMethodAsAbstract: string
   abstractMethod: string
+
+  // Element tags (host-defined grouping labels)
+  /** Accessible name of the tag button, scoped to its subject noun. */
+  editTagsFor: (subject: string) => string
+  /** Accessible name of the add-a-tag field. */
+  newTag: string
+  /** Placeholder of the add field + accessible name of its add button. */
+  addTag: string
+  /** Shown when there are no tags to pick and none can be created. */
+  noTags: string
+  /** Accessible name of a chip's remove button (interpolates the tag). */
+  removeTag: (tag: string) => string
 
   // Communication diagram
   messages: string
@@ -278,7 +293,7 @@ function defaultNodeTypeLabel(nodeType?: string): string {
 
 /** The shipped English strings — the fallback for any key a host doesn't override. */
 export const DEFAULT_LABELS: ApollonLabels = Object.freeze<ApollonLabels>({
-  zoomToolbar: "Zoom and history controls",
+  zoomToolbar: "Zoom, history and selection controls",
   zoomIn: "Zoom in",
   zoomOut: "Zoom out",
   fitView: "Fit view",
@@ -288,12 +303,15 @@ export const DEFAULT_LABELS: ApollonLabels = Object.freeze<ApollonLabels>({
   undoHint: "Undo (Ctrl+Z)",
   redo: "Redo",
   redoHint: "Redo (Ctrl+Y or Ctrl+Shift+Z)",
+  multiSelection: "Select multiple elements",
+  multiSelectionHint: "Select multiple: click elements to add or remove",
   miniMap: "Mini map",
   showMinimap: "Show minimap",
   showMinimapHint: "Show minimap (overview)",
   hideMinimap: "Hide minimap",
   selectionActions: "Selection actions",
   elementPalette: "Element palette",
+  addElement: "Add element",
   paletteModelView: "Model",
   paletteSelectElementsView: "Select Elements",
   paletteHighlightHint:
@@ -393,6 +411,11 @@ export const DEFAULT_LABELS: ApollonLabels = Object.freeze<ApollonLabels>({
   markMethodAsAbstract: "Mark method as abstract",
   unmarkMethodAsAbstract: "Unmark method as abstract",
   abstractMethod: "Abstract method (italic)",
+  editTagsFor: (subject) => `Tags for ${subject}`,
+  newTag: "New tag",
+  addTag: "Add tag",
+  noTags: "No tags",
+  removeTag: (tag) => `Remove tag ${tag}`,
   messages: "Messages",
   message: "Message",
   addMessage: "Add message",

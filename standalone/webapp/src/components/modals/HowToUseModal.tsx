@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import { APOLLON_SHORTCUTS, type ApollonShortcutId } from "@tumaet/apollon"
 import { Button } from "@tumaet/ui/components/button"
 import { DialogFooter } from "@tumaet/ui/components/dialog"
 import {
@@ -8,27 +9,25 @@ import {
   TabsTrigger,
 } from "@tumaet/ui/components/tabs"
 import { Separator } from "@tumaet/ui/components/separator"
+import type { HelpMenuVariant } from "@/components/home/HomeHelpMenu"
+import {
+  EDITOR_SHORTCUTS,
+  type EditorShortcutId,
+} from "@/hooks/useEditorShortcuts"
+import { formatCombo, keycaps, type Keycaps } from "@/utils/shortcutCaps"
 import NodeCreation from "assets/images/how-to-use-node-creation.png"
 import EdgeCreation from "assets/images/how-to-use-edge-creation.png"
 import NodeEdit from "assets/images/how-to-use-node-edit.png"
 import NodeMove from "assets/images/how-to-use-node-move.png"
 
 type HowToUseModalProps = {
+  /** Which surface opened this — the home page has no File shortcuts. */
+  variant: HelpMenuVariant
+  /** Render macOS key symbols. Defaults to the device; a story can force either. */
+  isMac?: boolean
   /** Called when the user dismisses the walkthrough via the Close button. */
   onClose: () => void
 }
-
-/**
- * Display-only platform detection: macOS surfaces the Command symbol, every
- * other platform surfaces "Ctrl". This never feeds the actual shortcut handler
- * (see library `useKeyboardShortcuts`, which keys off `ctrlKey || metaKey`); it
- * only picks the glyph we render in the cheat sheet.
- */
-const isMac =
-  typeof navigator !== "undefined" &&
-  /mac|iphone|ipad|ipod/i.test(navigator.platform || navigator.userAgent)
-
-const MOD = isMac ? "⌘" : "Ctrl"
 
 /**
  * A single, shared key-cap. Used both inline inside the walkthrough prose and
@@ -40,12 +39,17 @@ const Kbd = ({ children }: { children: ReactNode }) => (
   </kbd>
 )
 
-/** Render a list of keys/gestures as caps joined by "+". */
-const Keys = ({ keys }: { keys: string[] }) => (
+/**
+ * A list of keys/gestures as caps, joined by "+" — except on macOS, which
+ * prints its modifier symbols directly adjacent (⇧⌘Z).
+ */
+const Keys = ({ keys, caps }: { keys: string[]; caps: Keycaps }) => (
   <span className="inline-flex flex-wrap items-center gap-1">
     {keys.map((key, index) => (
       <span key={key} className="inline-flex items-center gap-1">
-        {index > 0 && <span className="text-muted-foreground">+</span>}
+        {index > 0 && !caps.isMac && (
+          <span className="text-muted-foreground">+</span>
+        )}
         <Kbd>{key}</Kbd>
       </span>
     ))}
@@ -62,7 +66,7 @@ type Step = {
 
 // The screenshots are regenerated from the current editor and guarded by the
 // `howto-assets` Playwright project — see tests/visual/how-to-use.visual.spec.ts.
-const STEPS: Step[] = [
+const steps = (caps: Keycaps): Step[] => [
   {
     title: "Add Node",
     description:
@@ -88,8 +92,7 @@ const STEPS: Step[] = [
     title: "Delete Class",
     description: (
       <>
-        Select it with a single click and press <Kbd>Delete</Kbd> or{" "}
-        <Kbd>Backspace</Kbd>.
+        Select it with a single click and press <Kbd>{caps.delete}</Kbd>.
       </>
     ),
   },
@@ -104,8 +107,16 @@ const STEPS: Step[] = [
     title: "Undo & Redo",
     description: (
       <>
-        Press <Kbd>{MOD}</Kbd>+<Kbd>Z</Kbd> to undo and <Kbd>{MOD}</Kbd>+
-        <Kbd>Y</Kbd> to redo your changes.
+        Press <Keys keys={[caps.mod, "Z"]} caps={caps} /> to undo and{" "}
+        <Keys
+          keys={
+            caps.isMac
+              ? [caps.shift, caps.mod, "Z"]
+              : [caps.mod, caps.shift, "Z"]
+          }
+          caps={caps}
+        />{" "}
+        to redo your changes.
       </>
     ),
   },
@@ -122,53 +133,111 @@ type ShortcutGroup = {
   shortcuts: Shortcut[]
 }
 
-// Sourced from library `useKeyboardShortcuts` (keyboard) plus the React Flow
-// canvas gestures wired up in `App.tsx` (pointer). Keep this in sync with both.
-const SHORTCUT_GROUPS: ShortcutGroup[] = [
-  {
-    title: "Selection",
-    shortcuts: [
-      { combos: [[MOD, "A"]], label: "Select all" },
-      { combos: [["Esc"]], label: "Clear selection" },
-      { combos: [["Shift", "Click"]], label: "Add / remove from selection" },
-      { combos: [["Shift", "Drag"]], label: "Box-select an area" },
-    ],
-  },
-  {
-    title: "Editing",
-    shortcuts: [
-      { combos: [["Delete"], ["Backspace"]], label: "Delete selection" },
-      { combos: [[MOD, "C"]], label: "Copy" },
-      { combos: [[MOD, "X"]], label: "Cut" },
-      { combos: [[MOD, "V"]], label: "Paste" },
-      { combos: [["←"], ["↑"], ["→"], ["↓"]], label: "Nudge selection" },
-    ],
-  },
-  {
-    title: "History",
-    shortcuts: [
-      { combos: [[MOD, "Z"]], label: "Undo" },
-      {
-        combos: [
-          [MOD, "Shift", "Z"],
-          [MOD, "Y"],
-        ],
-        label: "Redo",
-      },
-    ],
-  },
-  {
-    title: "View",
-    shortcuts: [
-      { combos: [["Drag"]], label: "Pan the canvas" },
-      { combos: [["Scroll"]], label: "Zoom in / out" },
-    ],
-  },
-]
+type GroupTitle = "Selection" | "Editing" | "History" | "View" | "File"
 
-const Walkthrough = () => (
+/**
+ * How each library shortcut reads here. The `Record` is exhaustive over
+ * `ApollonShortcutId`, so a shortcut added to the library fails this file's
+ * build until the sheet covers it. `displayCombos` overrides the derived caps
+ * where a set of keys reads better than one (arrows) or the platform prints its
+ * own (⌫).
+ */
+const libraryShortcuts = (
+  caps: Keycaps
+): Record<
+  ApollonShortcutId,
+  { label: string; group: GroupTitle; displayCombos?: string[][] }
+> => ({
+  "select-all": { label: "Select all", group: "Selection" },
+  "clear-selection": { label: "Clear selection", group: "Selection" },
+  delete: {
+    label: "Delete selection",
+    group: "Editing",
+    displayCombos: [[caps.delete]],
+  },
+  copy: { label: "Copy", group: "Editing" },
+  cut: { label: "Cut", group: "Editing" },
+  paste: { label: "Paste", group: "Editing" },
+  duplicate: { label: "Duplicate", group: "Editing" },
+  "move-selection": {
+    label: "Nudge selection",
+    group: "Editing",
+    displayCombos: [["←"], ["↑"], ["→"], ["↓"]],
+  },
+  undo: { label: "Undo", group: "History" },
+  redo: { label: "Redo", group: "History" },
+  "zoom-in": { label: "Zoom in", group: "View" },
+  "zoom-out": { label: "Zoom out", group: "View" },
+  "reset-zoom": { label: "Zoom to 100%", group: "View" },
+  "fit-view": { label: "Zoom to fit", group: "View" },
+  "zoom-to-selection": { label: "Zoom to selection", group: "View" },
+})
+
+/** Same contract for the webapp's own shortcuts (`EDITOR_SHORTCUTS`). */
+const EDITOR_SHORTCUT_LABELS: Record<EditorShortcutId, string> = {
+  "save-as-json": "Save as JSON",
+  "save-version": "Save a version",
+  "toggle-version-history": "Toggle version history",
+}
+
+/** Pointer gestures — React Flow props in the library's `App.tsx`, not a registry. */
+const gestures = (caps: Keycaps): Partial<Record<GroupTitle, Shortcut[]>> => ({
+  Selection: [
+    { combos: [[caps.shift, "Click"]], label: "Add / remove from selection" },
+    { combos: [[caps.shift, "Drag"]], label: "Box-select an area" },
+  ],
+  View: [
+    { combos: [["Scroll"], ["Drag"]], label: "Pan the canvas" },
+    { combos: [[caps.mod, "Scroll"]], label: "Zoom in / out" },
+  ],
+})
+
+const CANVAS_GROUPS: GroupTitle[] = ["Selection", "Editing", "History", "View"]
+
+/**
+ * The sheet: the library's canvas shortcuts and the webapp's File ones, both
+ * read off the lists their handlers run, plus the pointer gestures that live in
+ * no list. The File group only shows where `useEditorShortcuts` is mounted.
+ */
+const shortcutGroups = (
+  caps: Keycaps,
+  variant: HelpMenuVariant
+): ShortcutGroup[] => {
+  const library = libraryShortcuts(caps)
+  const canvasGestures = gestures(caps)
+
+  const canvas = CANVAS_GROUPS.map((title) => ({
+    title,
+    shortcuts: [
+      ...APOLLON_SHORTCUTS.filter(
+        (shortcut) => library[shortcut.id].group === title
+      ).map(({ id, combos }) => ({
+        label: library[id].label,
+        // The primary combo only — aliases (Mod+Y redo, layout variants) work
+        // but would double the sheet.
+        combos: library[id].displayCombos ?? [formatCombo(combos[0], caps)],
+      })),
+      ...(canvasGestures[title] ?? []),
+    ],
+  }))
+
+  if (variant !== "editor") return canvas
+
+  return [
+    ...canvas,
+    {
+      title: "File",
+      shortcuts: EDITOR_SHORTCUTS.map(({ id, combo }) => ({
+        label: EDITOR_SHORTCUT_LABELS[id],
+        combos: [formatCombo(combo, caps)],
+      })),
+    },
+  ]
+}
+
+const Walkthrough = ({ caps }: { caps: Keycaps }) => (
   <ol className="flex flex-col gap-8">
-    {STEPS.map((step) => (
+    {steps(caps).map((step) => (
       <li key={step.title} className="flex flex-col gap-2">
         {/* h3: the modal's DialogTitle is the h2, so the step titles are the
             next level. Visual size is set by classes, not the tag. */}
@@ -187,9 +256,15 @@ const Walkthrough = () => (
   </ol>
 )
 
-const Shortcuts = () => (
+const Shortcuts = ({
+  groups,
+  caps,
+}: {
+  groups: ShortcutGroup[]
+  caps: Keycaps
+}) => (
   <div className="flex flex-col gap-5">
-    {SHORTCUT_GROUPS.map((group, groupIndex) => (
+    {groups.map((group, groupIndex) => (
       <div key={group.title} className="flex flex-col gap-3">
         {groupIndex > 0 && <Separator />}
         {/* A group LABEL for the shortcut grid below, not a document heading —
@@ -211,7 +286,7 @@ const Shortcuts = () => (
                     {comboIndex > 0 && (
                       <span className="text-xs text-muted-foreground">or</span>
                     )}
-                    <Keys keys={combo} />
+                    <Keys keys={combo} caps={caps} />
                   </span>
                 ))}
               </dd>
@@ -221,12 +296,19 @@ const Shortcuts = () => (
       </div>
     ))}
     <p className="text-xs text-muted-foreground">
-      Shortcuts are ignored while editing text in a field.
+      Shortcuts are ignored while editing text in a field — except saving as
+      JSON, which always works.
     </p>
   </div>
 )
 
-export const HowToUseModal = ({ onClose }: HowToUseModalProps) => {
+export const HowToUseModal = ({
+  variant,
+  isMac,
+  onClose,
+}: HowToUseModalProps) => {
+  const caps = keycaps(isMac)
+
   return (
     <div className="flex flex-col gap-6 text-foreground">
       <Tabs defaultValue="walkthrough" className="gap-6">
@@ -235,10 +317,10 @@ export const HowToUseModal = ({ onClose }: HowToUseModalProps) => {
           <TabsTrigger value="shortcuts">Shortcuts</TabsTrigger>
         </TabsList>
         <TabsContent value="walkthrough">
-          <Walkthrough />
+          <Walkthrough caps={caps} />
         </TabsContent>
         <TabsContent value="shortcuts">
-          <Shortcuts />
+          <Shortcuts groups={shortcutGroups(caps, variant)} caps={caps} />
         </TabsContent>
       </Tabs>
       <DialogFooter>

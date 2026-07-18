@@ -301,6 +301,12 @@
 }
 
 /* width/height come inline from the computed cell size. */
+.apollon-palette__cell:focus-visible {
+  outline: 2px solid var(--apollon-primary, #3e8acc);
+  outline-offset: 2px;
+  border-radius: var(--apollon-chrome-radius-sm);
+}
+
 .apollon-palette__entry {
   display: flex;
   align-items: center;
@@ -453,6 +459,36 @@
    home band can reuse it with no editor mounted. The editor loads components.css
    too (App.tsx), so editor chrome still gets it; it references only chrome tokens
    so the rendered control is identical wherever the class is defined. */
+
+/* Opt-in `--toggle` peer: an unqualified `[aria-pressed="true"]` here would paint
+   every future editor chrome toggle, and the home band's pills (components.css)
+   already paint their own on-state. The hover/active peers exist because the base
+   button's own state rules would otherwise overwrite the pressed fill. */
+.apollon-chrome-iconbtn--toggle[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--apollon-chrome-accent) 18%, transparent);
+  color: var(--apollon-chrome-accent);
+}
+
+.apollon-chrome-iconbtn--toggle[aria-pressed="true"]:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--apollon-chrome-accent) 26%, transparent);
+}
+
+.apollon-chrome-iconbtn--toggle[aria-pressed="true"]:active:not(:disabled) {
+  background: color-mix(in srgb, var(--apollon-chrome-accent) 34%, transparent);
+}
+
+/* Forced colours drop the accent fill, which is this toggle's ONLY signal that a
+   mode is armed — repaint it with the system pair so the mode stays visible. The
+   hover/active peers are re-listed because their higher specificity would
+   otherwise restore the (now-invisible) accent fill. */
+@media (forced-colors: active) {
+  .apollon-chrome-iconbtn--toggle[aria-pressed="true"],
+  .apollon-chrome-iconbtn--toggle[aria-pressed="true"]:hover:not(:disabled),
+  .apollon-chrome-iconbtn--toggle[aria-pressed="true"]:active:not(:disabled) {
+    background: Highlight;
+    color: HighlightText;
+  }
+}
 
 /* Expanded minimap = its own glass card (the .react-flow__panel glass rule
    supplies the pane). Drop the panel padding so the map fills the rounded card
@@ -701,12 +737,42 @@
   border-radius: var(--arc-radius) 0 0 var(--arc-radius);
 }
 
-.react-flow__resize-control line {
+.react-flow__resize-control.handle {
+  z-index: 20;
+}
+
+/* NodeResizer renders its controls before the node's own content in the DOM, so
+   without a z-index the 1px edge lines paint *behind* a filled node (a swimlane,
+   pool, package…) and can't be seen or grabbed — only the corners, lifted by the
+   rule above, stayed reachable. Lift the lines over the content but below the
+   corner handles (20) and the connection arcs (10, so an arc still wins at its
+   slot and the line fills the gaps between). */
+.react-flow__resize-control.line {
   z-index: 9;
 }
 
-.react-flow__resize-control.handle {
-  z-index: 20;
+/* React Flow draws the edge lines 1px wide, a hair-thin grab target. Widen the
+   hit area without moving the visible border, the same way the connection arcs
+   get a usable target. Kept small (and hover-gated, via the base rule below)
+   because it overhangs the node edge onto whatever sits beneath. */
+.apollon-resize-line::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+}
+
+/* A content-sized node keeps its corner handles (NodeResizer constrains each to
+   the node's free axis with `resizeDirection`), but React Flow hard-codes a
+   diagonal nwse/nesw cursor on every corner. Relabel it to the free axis's
+   cursor so the pointer tells the truth about which way a drag will go. The
+   fourth class (`nodrag`, present on every control) outranks React Flow's
+   three-class corner rules regardless of stylesheet order. */
+.react-flow__resize-control.nodrag.handle.apollon-resize-corner--x {
+  cursor: ew-resize;
+}
+
+.react-flow__resize-control.nodrag.handle.apollon-resize-corner--y {
+  cursor: ns-resize;
 }
 
 .react-flow__resize-control {
@@ -1012,22 +1078,6 @@ svg.react-flow__connectionline {
   user-select: none;
 }
 
-.horizontally-not-resizable .react-flow__resize-control.top.line:hover {
-  cursor: grab;
-}
-
-.horizontally-not-resizable .react-flow__resize-control.bottom.line:hover {
-  cursor: grab;
-}
-
-.vertically-not-resizable .react-flow__resize-control.right.line:hover {
-  cursor: grab;
-}
-
-.vertically-not-resizable .react-flow__resize-control.left.line:hover {
-  cursor: grab;
-}
-
 /* Native UI primitives, tokened via `--apollon-*`. Base UI portals to
    `document.body`, so these are global, not scoped under `.apollon-editor`;
    theme vars are forwarded by `GenericPopover`. */
@@ -1281,6 +1331,135 @@ svg.react-flow__connectionline {
 .apollon-add-row > :first-child {
   flex: 1;
   min-width: 0;
+}
+
+/* Tag control: the element's tags as removable chips. Sits on its own compact
+   line under the element's row, shown only once the element has a tag. */
+[data-slot="tag-field"] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+[data-slot="tag-chip"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  max-width: 100%;
+  padding-left: 8px;
+  border: 1px solid var(--popover-divider);
+  border-radius: var(--apollon-radius-sm, 4px);
+  font-size: 12px;
+  line-height: 22px;
+}
+
+[data-slot="tag-chip"] > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Tag picker (Base UI Popover portaled to <body>) — a checklist of the host
+   vocabulary plus an optional add-a-tag field, Tailwind-free via --apollon-*. */
+.apollon-tag-picker__popup {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 220px;
+  max-width: 90vw;
+  padding: 8px;
+  background-color: var(--apollon-surface, #fff);
+  color: var(--apollon-foreground, #000);
+  border: 1px solid var(--apollon-border, #cdd5df);
+  border-radius: var(--apollon-radius-lg, 8px);
+  box-shadow: var(--apollon-shadow, 0 4px 12px rgba(0, 0, 0, 0.18));
+  z-index: 10003;
+}
+
+.apollon-tag-picker__add {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.apollon-tag-picker__input {
+  box-sizing: border-box;
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px;
+  font-size: 0.8125rem;
+  color: var(--apollon-foreground, #000);
+  background-color: var(--apollon-background, #fff);
+  border: 1px solid var(--apollon-border, #cdd5df);
+  border-radius: var(--apollon-radius-md, 6px);
+}
+
+.apollon-tag-picker__input:focus-visible {
+  outline: 2px solid var(--apollon-primary, #3e8acc);
+  outline-offset: 1px;
+}
+
+.apollon-tag-picker__list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-height: 220px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.apollon-tag-picker__option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  margin: 0;
+  padding: 6px 8px;
+  font: inherit;
+  font-size: 0.8125rem;
+  text-align: left;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: var(--apollon-radius-sm, 4px);
+  cursor: pointer;
+}
+
+.apollon-tag-picker__option:hover {
+  background-color: var(--apollon-hover-neutral, rgba(0, 0, 0, 0.05));
+}
+
+.apollon-tag-picker__option:focus-visible {
+  outline: 2px solid var(--apollon-primary, #3e8acc);
+  outline-offset: -2px;
+}
+
+.apollon-tag-picker__option > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The check occupies its slot always, so labels stay aligned; it's invisible
+   until the option is selected. */
+.apollon-tag-picker__check {
+  flex-shrink: 0;
+  opacity: 0;
+}
+
+.apollon-tag-picker__check[data-selected] {
+  opacity: 1;
+  color: var(--apollon-primary, #3e8acc);
+}
+
+.apollon-tag-picker__empty {
+  padding: 6px 8px;
+  font-size: 0.8125rem;
+  color: var(--apollon-secondary, #6c757d);
 }
 
 /* Drag handle (DnD rows) */
@@ -1569,21 +1748,27 @@ svg.react-flow__connectionline {
   margin-left: 0;
 }
 
-.apollon-style-editor__panel {
+/* Color panel — a Base UI Popover portaled to <body>, so it carries the same
+   surface/elevation as the swatch picker. */
+.apollon-style-editor__popup {
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  margin-top: 10px;
-  margin-bottom: 10px;
+  min-width: 200px;
   background-color: var(--apollon-surface, #fff);
-  border: 1px solid var(--apollon-border-subtle, #e3e8ef);
-  border-radius: var(--apollon-radius-md, 6px);
+  color: var(--apollon-foreground, #000);
+  border: 1px solid var(--apollon-border, #cdd5df);
+  border-radius: var(--apollon-radius-lg, 8px);
+  box-shadow: var(--apollon-shadow, 0 4px 12px rgba(0, 0, 0, 0.18));
+  z-index: 10003;
 }
 
 .apollon-style-editor__row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px;
+  gap: 12px;
+  padding: 10px 14px;
 }
 
 /* Stereotype show/hide toggle: the standalone `«keyword»` chip on

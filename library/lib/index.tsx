@@ -53,6 +53,16 @@ export type { LogLevel } from "./logger"
 // `useLabels` reads the active set inside custom chrome.
 export { DEFAULT_LABELS, type ApollonLabels } from "./i18n/labels"
 export { useLabels } from "./i18n/useLabels"
+export {
+  APOLLON_SHORTCUTS,
+  matchesShortcutCombo,
+  shortcutKeyName,
+  isTypingTarget,
+  isInsideOverlay,
+  type ApollonShortcut,
+  type ApollonShortcutCombo,
+  type ApollonShortcutId,
+} from "./keyboard"
 // Public theming API. The helper is bundled from @tumaet/ui into dist, so
 // external consumers don't take a dependency on the private workspace package.
 export { createApollonTheme, type ApollonTheme } from "@tumaet/ui/theme"

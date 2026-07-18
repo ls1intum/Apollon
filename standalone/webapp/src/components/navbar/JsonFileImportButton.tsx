@@ -1,9 +1,6 @@
-import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { DropdownMenuItem } from "@tumaet/ui/components/dropdown-menu"
 import React, { useRef } from "react"
-import { useNavigate } from "@tanstack/react-router"
-import { importDiagram } from "@tumaet/apollon"
-import { log } from "@/logger"
+import { useImportDiagramFile } from "@/hooks/useImportDiagramFile"
 
 /** Props for the pure {@link JsonFileImportButtonView}. */
 interface JsonFileImportButtonViewProps {
@@ -57,34 +54,17 @@ export function JsonFileImportButtonView({
 }
 
 /**
- * Container: reads the chosen JSON file, imports it into a persisted model, and
- * navigates to the new local diagram. Wires {@link JsonFileImportButtonView}.
+ * Container: imports the chosen JSON file as a new local diagram and opens it.
+ * Wires {@link JsonFileImportButtonView} to the shared import path.
  */
 export const JsonFileImportButton: React.FC<{ close: () => void }> = ({
   close,
 }) => {
-  const createModel = usePersistenceModelStore((state) => state.createModel)
-  const navigate = useNavigate()
-
-  const handleFile = (file: File) => {
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      try {
-        const json = JSON.parse(e.target?.result as string)
-
-        const processedModel = importDiagram(json)
-        createModel(processedModel)
-        navigate({
-          to: "/local/$id",
-          params: { id: processedModel.id },
-          replace: true,
-        })
-      } catch (error) {
-        log.error("Invalid JSON file", error as Error)
-      }
-    }
-    reader.readAsText(file)
-  }
-
-  return <JsonFileImportButtonView onFile={handleFile} onClose={close} />
+  const importFile = useImportDiagramFile()
+  return (
+    <JsonFileImportButtonView
+      onFile={(file) => void importFile(file)}
+      onClose={close}
+    />
+  )
 }

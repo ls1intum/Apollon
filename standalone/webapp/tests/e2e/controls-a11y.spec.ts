@@ -42,7 +42,7 @@ test.describe("built-in controls accessibility", () => {
     page,
   }) => {
     const toolbar = page.getByRole("toolbar", {
-      name: "Zoom and history controls",
+      name: "Zoom, history and selection controls",
     })
     await expect(toolbar).toBeVisible()
 
@@ -54,8 +54,9 @@ test.describe("built-in controls accessibility", () => {
     await tabbable.focus()
     expect(await activeLabel(page)).toBe("Zoom out")
 
-    // ArrowRight roves across BOTH glass islands (view [−][%][+][fit] then
-    // history), staying a single tab stop — the toolbar spans both islands.
+    // ArrowRight roves across BOTH glass islands (view [−][%][+][fit][multi-
+    // select] then history), staying a single tab stop — the toolbar spans
+    // both islands.
     await page.keyboard.press("ArrowRight")
     expect(await activeLabel(page)).toBe("Zoom is 100%, reset to 100%")
     await expect(toolbar.locator("button[tabindex='0']")).toHaveCount(1)
@@ -63,13 +64,13 @@ test.describe("built-in controls accessibility", () => {
     // End jumps to the last ENABLED control (roving skips disabled buttons). With
     // a freshly-loaded diagram the history island is either absent (no undo
     // manager) or its undo/redo start disabled, so the last reachable control is
-    // the fit-view button; if an enabled redo is present it is "Redo". Assert the
-    // concrete last DOM control — not merely "not the first".
+    // the multi-select toggle; if an enabled redo is present it is "Redo". Assert
+    // the concrete last DOM control — not merely "not the first".
     const expectedLast = await toolbar
       .locator("button:enabled")
       .last()
       .getAttribute("aria-label")
-    expect(["Fit view", "Redo"]).toContain(expectedLast)
+    expect(["Select multiple elements", "Redo"]).toContain(expectedLast)
     await page.keyboard.press("End")
     expect(await activeLabel(page)).toBe(expectedLast)
 
