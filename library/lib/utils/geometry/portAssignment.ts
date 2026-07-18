@@ -28,6 +28,13 @@ const GRID = CANVAS.SNAP_TO_GRID_PX
  * `portPort` default is 10, yFiles' border-gap ratio 0.5, Hegemann–Wolff 18). */
 export const PORT_PITCH_PX = 3 * GRID
 
+/** The widest gap an even spread will open between neighbouring ports. Ports are
+ * distributed evenly across the side (ELK's DISTRIBUTED alignment) so the stretches
+ * between and around them read as deliberate, but a very wide side would otherwise
+ * fling two ports far apart — which buys nothing and pushes each toward a corner,
+ * where the route can pick up an extra bend. Caps the spread at a legible spacing. */
+const MAX_PORT_GAP_PX = 6 * GRID
+
 /** Minimum gap kept between the outermost port and a corner — a corner anchor
  * makes the first segment graze the node it just left. */
 const CORNER_CLEARANCE_PX = 2 * GRID
@@ -584,17 +591,31 @@ const sharedStraightBand = (
   return { lo: overlapLo + margin, hi: overlapHi - margin, myLo, myAxis }
 }
 
-/** K evenly-spaced coordinates in `[lo, hi]`, centred, at most `pitch` apart. */
+/**
+ * K coordinates spread EVENLY across `[lo, hi]` — the same gap between neighbouring
+ * ports AND between the outermost ports and the ends, i.e. port `i` at
+ * `lo + span·(i+1)/(K+1)`. Two ports therefore split the side into three equal
+ * stretches rather than huddling a fixed pitch apart around the centre.
+ *
+ * This is ELK's `DISTRIBUTED` port alignment ("evenly distributed, with the same
+ * amount of space between and around them") — its default, and what reads as
+ * deliberate rather than accidental. The spread is symmetric about the centre, so it
+ * keeps the anti-corner-jam property of a centred band.
+ *
+ * `minGap` only kicks in when the side is too crowded for an even spread to stay
+ * legible: below it the ports compress to that gap around the centre instead, so a
+ * busy side degrades gracefully rather than smearing into one line.
+ */
 const spreadCoords = (
   lo: number,
   hi: number,
   count: number,
-  pitch: number
+  minGap: number
 ): number[] => {
   if (count <= 0) return []
   const centre = (lo + hi) / 2
   if (count === 1) return [centre]
-  const gap = Math.min(pitch, (hi - lo) / (count - 1))
+  const gap = clamp((hi - lo) / (count + 1), minGap, MAX_PORT_GAP_PX)
   return Array.from(
     { length: count },
     (_, i) => centre + ((2 * i - (count - 1)) * gap) / 2
@@ -743,13 +764,17 @@ export const assignPorts = (
     lMembers.sort((a, b) =>
       a.rot !== b.rot ? a.rot - b.rot : a.e.edgeId < b.e.edgeId ? -1 : 1
     )
-    const centre = myLo + axis / 2
-    const nL = lMembers.length
+    const lCoords = spreadCoords(
+      myLo + margin,
+      myLo + axis - margin,
+      lMembers.length,
+      pitchPx
+    )
     lMembers.forEach(({ e, rot }, i) => {
       seats.push({
         edgeId: e.edgeId,
         end: e.end,
-        coord: centre + (i - (nL - 1) / 2) * pitchPx,
+        coord: lCoords[i],
         fixed: false,
         rot,
       })

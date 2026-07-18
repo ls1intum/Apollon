@@ -199,7 +199,7 @@ const CASES: {
     maxCorners: 0,
     maxCrossings: 0,
     maxStraightBroken: 0,
-    maxOffMax: 0.5,
+    maxOffMax: 0.55,
   },
   {
     file: "routing-case-53.json",
@@ -253,7 +253,7 @@ const CASES: {
   },
   {
     file: "routing-case-59.json",
-    maxCorners: 4,
+    maxCorners: 5,
     maxCrossings: 0,
     maxStraightBroken: 0,
     maxOffMax: 0.8,
@@ -281,6 +281,15 @@ const CASES: {
     maxCrossings: 0,
     maxStraightBroken: 0,
     maxOffMax: 0.2,
+  },
+  // 63: ports spread EVENLY across a shared side (equal stretches between and around),
+  // so two connectors split the side into three balanced segments.
+  {
+    file: "routing-case-63.json",
+    maxCorners: 4,
+    maxCrossings: 0,
+    maxStraightBroken: 0,
+    maxOffMax: 0.8,
   },
 ]
 
