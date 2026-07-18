@@ -113,10 +113,7 @@ function Hero() {
           </Link>
         </div>
         <div className={styles.install}>
-          <CodeBlock language="bash">
-            npm install @tumaet/apollon react react-dom @xyflow/react yjs
-            y-protocols
-          </CodeBlock>
+          <CodeBlock language="bash">npm install @tumaet/apollon</CodeBlock>
         </div>
       </div>
     </header>

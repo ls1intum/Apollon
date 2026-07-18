@@ -54,7 +54,7 @@ versioned and reviewed like any other source.
 you need UML modeling inside an existing application.
 
 ```sh
-npm install @tumaet/apollon react react-dom @xyflow/react yjs y-protocols
+npm install @tumaet/apollon
 ```
 
 | You want to...                                  | Use this           |
