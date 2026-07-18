@@ -222,6 +222,15 @@ const CASES: {
     maxStraightBroken: 0,
     maxOffMax: 0.85,
   },
+  // 56: an auto edge (B->C) next to a FULLY-PINNED edge (B->A). B->C must stay
+  // straight despite its neighbour being hand-anchored — the partially-pinned case.
+  {
+    file: "routing-case-56.json",
+    maxCorners: 3,
+    maxCrossings: 0,
+    maxStraightBroken: 0,
+    maxOffMax: 0.85,
+  },
 ]
 
 for (const c of CASES) {
