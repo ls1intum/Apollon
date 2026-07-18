@@ -51,6 +51,7 @@ export const versioningStrings = {
   undoRestore: "Undo restore",
   collaboratorRestoredTitle: (actor: string) =>
     `${actor} restored an earlier version. Your view was updated.`,
+  noChangesToSave: "No changes to save since the last version.",
   failureToCreate: "Couldn't save version. Try again.",
   failureToEdit: "Couldn't update description. Try again.",
   failureRedis:

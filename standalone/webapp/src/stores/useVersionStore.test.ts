@@ -37,6 +37,7 @@ function summary(
 function reset() {
   useVersionStore.setState({
     drawerOpenByDiagram: {},
+    saveRequestByDiagram: {},
     versions: {},
     nextCursor: {},
     totals: {},
@@ -127,6 +128,25 @@ describe("useVersionStore.drawer", () => {
     expect(useVersionStore.getState().drawerOpenByDiagram["d2"]).toBeUndefined()
     useVersionStore.getState().closeDrawer("d1")
     expect(useVersionStore.getState().drawerOpenByDiagram["d1"]).toBe(false)
+  })
+
+  it("requestSave opens the drawer and bumps the per-diagram nonce", () => {
+    // The nonce must advance on each press so the mounted panel can tell one
+    // save request from the next; clearSaveRequest consumes it.
+    const { requestSave, clearSaveRequest } = useVersionStore.getState()
+
+    requestSave("d1")
+    expect(useVersionStore.getState().drawerOpenByDiagram["d1"]).toBe(true)
+    expect(useVersionStore.getState().saveRequestByDiagram["d1"]).toBe(1)
+
+    requestSave("d1")
+    expect(useVersionStore.getState().saveRequestByDiagram["d1"]).toBe(2)
+    expect(
+      useVersionStore.getState().saveRequestByDiagram["d2"]
+    ).toBeUndefined()
+
+    clearSaveRequest("d1")
+    expect(useVersionStore.getState().saveRequestByDiagram["d1"]).toBe(0)
   })
 })
 

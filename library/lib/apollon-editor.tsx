@@ -234,6 +234,11 @@ export class ApollonEditor {
     if (options?.scrollLock !== undefined) {
       this.metadataStore.getState().setScrollLock(options.scrollLock)
     }
+    if (options?.keyboardShortcuts !== undefined) {
+      this.metadataStore
+        .getState()
+        .setKeyboardShortcuts(options.keyboardShortcuts)
+    }
     if (options?.labels !== undefined) {
       this.metadataStore.getState().setLabels(mergeLabels(options.labels))
     }
@@ -932,6 +937,14 @@ export class ApollonEditor {
   /** Live-toggle whether the canvas captures page scroll. */
   public setScrollLock(scrollLock: boolean): void {
     this.metadataStore.getState().setScrollLock(scrollLock)
+  }
+
+  /**
+   * Live-toggle whether the editor answers its keyboard shortcuts (see
+   * `APOLLON_SHORTCUTS`), React Flow's delete and arrow-key moving included.
+   */
+  public setKeyboardShortcuts(keyboardShortcuts: boolean): void {
+    this.metadataStore.getState().setKeyboardShortcuts(keyboardShortcuts)
   }
 
   /**

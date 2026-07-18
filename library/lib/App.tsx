@@ -100,6 +100,7 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
     readonly,
     scrollLock,
     scrollEnabled,
+    keyboardShortcuts,
     connectionGuidanceActive,
     startReconnectPreview,
     stopReconnectPreview,
@@ -109,6 +110,7 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
       readonly: state.readonly,
       scrollLock: state.scrollLock,
       scrollEnabled: state.scrollEnabled,
+      keyboardShortcuts: state.keyboardShortcuts,
       connectionGuidanceActive: state.connectionGuidanceActive,
       startReconnectPreview: state.startReconnectPreview,
       stopReconnectPreview: state.stopReconnectPreview,
@@ -264,8 +266,14 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
             selectionOnDrag={multiSelectionMode}
             panOnDrag={multiSelectionMode ? [1, 2] : true}
             // Delete the current selection with either key (Backspace on macOS,
-            // Delete on full keyboards).
-            deleteKeyCode={["Backspace", "Delete"]}
+            // Delete on full keyboards) — but hand these keys back with the
+            // editor's other shortcuts when a host opts out via
+            // `keyboardShortcuts: false`. `onBeforeDelete` additionally blocks a
+            // delete whose focus is inside an overlay over the canvas.
+            deleteKeyCode={keyboardShortcuts ? ["Backspace", "Delete"] : []}
+            // Arrow-key node nudging + Enter/Escape selection a11y are React
+            // Flow's; disable them together with the rest when shortcuts are off.
+            disableKeyboardA11y={!keyboardShortcuts}
           >
             <CustomBackground />
             <AlignmentGuides />

@@ -68,6 +68,12 @@ export interface ApollonProps {
   view?: ApollonView
   mode?: ApollonMode
   scrollLock?: boolean
+  /**
+   * Answer the editor's keyboard shortcuts (see `APOLLON_SHORTCUTS`), including
+   * React Flow's delete and arrow-key moving. Set `false` where the host binds
+   * those keys itself, or mounts more than one editor. Default `true`.
+   */
+  keyboardShortcuts?: boolean
   /** Override the editor's own strings for i18n. See {@link ApollonEditor.setLabels}. */
   labels?: Partial<ApollonLabels>
   /** Enable + configure element-tag authoring. See {@link ApollonEditor.setTags}. */
@@ -118,6 +124,7 @@ export function Apollon(props: ApollonProps) {
     view,
     mode,
     scrollLock,
+    keyboardShortcuts,
     labels,
     tags,
     previewMode,
@@ -199,6 +206,12 @@ export function Apollon(props: ApollonProps) {
   useEffect(() => {
     if (editor && scrollLock !== undefined) editor.setScrollLock(scrollLock)
   }, [editor, scrollLock])
+
+  useEffect(() => {
+    if (editor && keyboardShortcuts !== undefined) {
+      editor.setKeyboardShortcuts(keyboardShortcuts)
+    }
+  }, [editor, keyboardShortcuts])
 
   useEffect(() => {
     if (editor && labels !== undefined) editor.setLabels(labels)

@@ -20,6 +20,8 @@ export type MetadataStore = {
   scrollLock: boolean
   /** Tool toggle: clicks/taps add or remove elements — the touch path to a multi-selection. */
   multiSelectionMode: boolean
+  /** Whether the editor answers `APOLLON_SHORTCUTS` at all. */
+  keyboardShortcuts: boolean
   /** User-facing strings for the editor's own chrome; host-overridable for i18n. */
   labels: ApollonLabels
   /** Element-tag authoring config; disabled until a host opts in. */
@@ -37,6 +39,7 @@ export type MetadataStore = {
   setReadonly: (readonly: boolean) => void
   setScrollLock: (scrollLock: boolean) => void
   setMultiSelectionMode: (multiSelectionMode: boolean) => void
+  setKeyboardShortcuts: (keyboardShortcuts: boolean) => void
   setLabels: (labels: ApollonLabels) => void
   setTagConfig: (tagConfig: TagConfig) => void
   setScrollEnabled: (scrollEnabled: boolean) => void
@@ -69,6 +72,7 @@ type InitialMetadataState = {
   debug: boolean
   scrollLock: boolean
   multiSelectionMode: boolean
+  keyboardShortcuts: boolean
   labels: ApollonLabels
   tagConfig: TagConfig
   scrollEnabled: boolean
@@ -91,6 +95,7 @@ const initialMetadataState: InitialMetadataState = {
   debug: false,
   scrollLock: false,
   multiSelectionMode: false,
+  keyboardShortcuts: true,
   labels: DEFAULT_LABELS,
   tagConfig: DISABLED_TAG_CONFIG,
   scrollEnabled: false,
@@ -186,6 +191,9 @@ export const createMetadataStore = (
 
         setMultiSelectionMode: (multiSelectionMode: boolean) => {
           set({ multiSelectionMode }, undefined, "setMultiSelectionMode")
+        },
+        setKeyboardShortcuts: (keyboardShortcuts: boolean) => {
+          set({ keyboardShortcuts }, undefined, "setKeyboardShortcuts")
         },
 
         setLabels: (labels) => {

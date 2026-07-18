@@ -72,16 +72,17 @@ afterwards. Re-key the component to apply them to a new editor.
 changes; no rebuild. Passing `undefined` for any reactive prop leaves the
 live value untouched (no reset). Re-key the component to fully reset.
 
-| Prop          | Type                     | Maps to                                     |
-| ------------- | ------------------------ | ------------------------------------------- |
-| `readonly`    | `boolean`                | `editor.setReadonly(value)`                 |
-| `view`        | `ApollonView`            | `editor.view = value`                       |
-| `mode`        | `ApollonMode`            | `editor.setMode(value)`                     |
-| `scrollLock`  | `boolean`                | `editor.setScrollLock(value)`               |
-| `labels`      | `Partial<ApollonLabels>` | `editor.setLabels(value)`                   |
-| `tags`        | `boolean \| TagOptions`  | `editor.setTags(value)`                     |
-| `previewMode` | `boolean`                | `editor.setPreviewMode(value)`              |
-| `model`       | `UMLModel`               | `editor.model = value` — controlled overlay |
+| Prop                | Type                     | Maps to                                     |
+| ------------------- | ------------------------ | ------------------------------------------- |
+| `readonly`          | `boolean`                | `editor.setReadonly(value)`                 |
+| `view`              | `ApollonView`            | `editor.view = value`                       |
+| `mode`              | `ApollonMode`            | `editor.setMode(value)`                     |
+| `scrollLock`        | `boolean`                | `editor.setScrollLock(value)`               |
+| `keyboardShortcuts` | `boolean`                | `editor.setKeyboardShortcuts(value)`        |
+| `labels`            | `Partial<ApollonLabels>` | `editor.setLabels(value)`                   |
+| `tags`              | `boolean \| TagOptions`  | `editor.setTags(value)`                     |
+| `previewMode`       | `boolean`                | `editor.setPreviewMode(value)`              |
+| `model`             | `UMLModel`               | `editor.model = value` — controlled overlay |
 
 **Lifecycle.**
 
@@ -261,6 +262,68 @@ These members are only meaningful with `collaborationEnabled: true`. See
 [Export](/library/api/export) for `ExportOptions` and the PNG/PDF pipeline, or
 the [Conversion API](/library/api/conversion-api) to convert models to
 SVG/PNG/PDF over HTTP via the standalone server.
+
+## Keyboard shortcuts
+
+`Mod` is Ctrl on Windows/Linux and Cmd on macOS; combos marked _view_ work on
+read-only diagrams too. Nothing fires while the user is typing in a field or
+while a dialog or menu is open.
+
+| Combo                          | Action                                   |
+| ------------------------------ | ---------------------------------------- |
+| `Mod+A` / `Esc`                | Select all / clear selection (_view_)    |
+| `Delete` / `Backspace`         | Delete selection                         |
+| `Mod+C` / `Mod+X` / `Mod+V`    | Copy (_view_) / cut / paste              |
+| `Mod+D`                        | Duplicate the selection beside itself    |
+| Arrow keys                     | Nudge selection                          |
+| `Mod+Z`, `Mod+Shift+Z`/`Mod+Y` | Undo, redo                               |
+| `Mod+=` / `Mod+-`              | Zoom in / out (_view_)                   |
+| `Mod+0`                        | Reset zoom to 100% (_view_)              |
+| `Mod+Shift+1` / `Mod+Shift+2`  | Zoom to fit / zoom to selection (_view_) |
+
+Figma and Excalidraw put the last two on `Shift+1`/`Shift+2`, but a shortcut
+whose keys produce a printable character fails
+[WCAG 2.1.4](https://www.w3.org/WAI/WCAG21/Understanding/character-key-shortcuts)
+unless it can be turned off, remapped, or scoped to focus.
+
+Pass `keyboardShortcuts: false` to keep the editor's hands off every key above —
+for a host that binds them itself, or that mounts more than one editor (they
+listen on `document`, so two would both answer).
+
+`APOLLON_SHORTCUTS` is the list the editor runs, so a host can render a sheet
+that tracks it, or check it before binding a key of its own. Each entry's
+**first** combo is the primary one — a sheet should render only that; the rest
+are aliases (`Mod+Y` redo, layout variants of `Mod+=`). Entries flagged
+`canvasHandled` are React Flow's, not the editor's own handler. `shortcutKeyName`
+turns a combo into the key it names, so a sheet renders "1" rather than the
+`Digit1` code that combo matches on.
+
+`matchesShortcutCombo`, `isTypingTarget` and `isInsideOverlay` are the
+primitives that handler matches and stands down with, exported so a host's own
+keys behave like the editor's:
+
+```ts
+import {
+  isInsideOverlay,
+  isTypingTarget,
+  matchesShortcutCombo,
+  type ApollonShortcutCombo,
+} from "@tumaet/apollon"
+
+const rename: ApollonShortcutCombo = { key: "r", mod: true }
+
+document.addEventListener("keydown", (event) => {
+  if (event.isComposing || isTypingTarget(event) || isInsideOverlay(event)) {
+    return
+  }
+  if (!matchesShortcutCombo(event, rename)) return
+  event.preventDefault()
+})
+```
+
+A combo matching on `key` follows what the user's layout prints and is compared
+case-insensitively; use `code` for digits, whose character moves between layouts
+and under Shift.
 
 ## Diagram types
 
