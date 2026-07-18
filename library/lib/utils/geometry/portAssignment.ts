@@ -481,56 +481,6 @@ export const orderSideMembers = (
 export const sideAxisLength = (side: Position, rect: Rect): number =>
   isVerticalSide(side) ? rect.height : rect.width
 
-/** How far an anchor is pulled from the side CENTRE toward its own partner (0 =
- * fully centred, 1 = fully aimed). A small bias: centred enough that a merge's
- * anchors stay near the middle (the user's "not so far to the edge"), aimed enough
- * that a same-direction fork's arms separate in target order so the router can nest
- * them. The evidence's "centre unless it costs" — here the cost is a fork crossing. */
-const AIM_BIAS = 0.6
-
-/**
- * Seat K ordered ports along a side: start from each port's target-AIMED position
- * pulled `AIM_BIAS` of the way back to the side centre, then enforce a minimum gap
- * between neighbours (so they never coincide or read as one line) and keep the whole
- * band clear of the corners. `orderedAimsPx` are the aimed offsets (px from the low
- * corner) in along-side order; the result is the ratio for each, in the same order.
- *
- * Deterministic and total: a forward min-gap pass then a backward one, both integer-
- * free but order-preserving, so the ports stay in the given order and inside the
- * margins. Aimed-but-centred means a merge stays near the middle while a bundled fork
- * still fans wide enough to nest.
- */
-export const packAlongSide = (
-  orderedAimsPx: readonly number[],
-  axisLength: number,
-  minGapPx: number,
-  cornerClearancePx: number = CORNER_CLEARANCE_PX
-): number[] => {
-  const n = orderedAimsPx.length
-  if (n === 0) return []
-  if (axisLength <= 0) return new Array(n).fill(0.5)
-  const margin = Math.min(cornerClearancePx, axisLength * 0.3)
-  const lo = margin
-  const hi = axisLength - margin
-  const centre = axisLength / 2
-  // Aim, pulled back toward the centre, clamped inside the margins.
-  const pos = orderedAimsPx.map((aim) =>
-    clamp(centre + AIM_BIAS * (clamp(aim, lo, hi) - centre), lo, hi)
-  )
-  // The gap that actually fits (compress when the side is short for K ports).
-  const gap = n > 1 ? Math.min(minGapPx, (hi - lo) / (n - 1)) : 0
-  // Forward: push each up to at least prev + gap.
-  for (let i = 1; i < n; i++)
-    if (pos[i] < pos[i - 1] + gap) pos[i] = pos[i - 1] + gap
-  // Backward: if the last overran `hi`, pull the tail back down, preserving the gap.
-  if (pos[n - 1] > hi) {
-    pos[n - 1] = hi
-    for (let i = n - 2; i >= 0; i--)
-      if (pos[i] > pos[i + 1] - gap) pos[i] = pos[i + 1] - gap
-  }
-  return pos.map((p) => clamp(p, lo, hi) / axisLength)
-}
-
 /**
  * One free edge-end that needs a port: which edge/end it is, the node it lands
  * on and that node's rect, the SIDE it was assigned (by the caller — from the
@@ -548,12 +498,40 @@ export type EndRef = {
    * band so each is a straight line, not a stepped one. */
   partnerNodeId: string
   partnerRect: Rect
+  /** The side the OTHER end of this edge attaches to, when that end is also assigned
+   * here. A same-partner bundle that turns a corner only nests when the two ends run in
+   * the right relative order, and which order that is depends on both sides (see
+   * `bundleNeedsMirror`). Absent ⇒ the partner end is on the cost path; no mirror. */
+  partnerSide?: Position
   /** A FOUR-CENTRE node (activity/BPMN/flowchart-decision/petri) can only attach at
    * the side MIDPOINT, so its port is always ratio 0.5 — the band does not apply and
    * several edges on one such side collapse (the cost side-pass distributes them
    * across sides instead). Freeform nodes (class, component, …) leave this false. */
   fourCenter?: boolean
 }
+
+/** +1 when this side's display order (Top/Bottom left→right, Left/Right top→bottom)
+ * runs the same way as a CLOCKWISE walk of the rectangle, −1 when it runs against it.
+ * Clockwise is Top l→r, Right t→b, Bottom r→l, Left b→t. */
+const clockwiseSign = (side: Position): number =>
+  side === Position.Top || side === Position.Right ? 1 : -1
+
+/**
+ * Whether a same-partner BUNDLE must run in OPPOSITE along-side order at its two ends
+ * to stay nested (rather than twisting into crossings).
+ *
+ * Think of the two nodes as meshing gears: a ribbon of parallel edges keeps its strands
+ * nested when the two attachment sides are traversed in OPPOSITE rotational senses. So
+ * when both sides' display orders agree with the clockwise walk (or both disagree), the
+ * ends must be mirrored; when one agrees and the other does not, the display orders
+ * already oppose and the SAME order nests.
+ *
+ * This replaces an arbitrary "reverse at the higher-id node", which mirrored a bundle
+ * that should not have been — the two edges then crossed and the router drew a loop
+ * around the crossing (d61's A↔B pair).
+ */
+const bundleNeedsMirror = (side: Position, partnerSide: Position): boolean =>
+  clockwiseSign(side) === clockwiseSign(partnerSide)
 
 /** The port chosen for one end: its side (unchanged from the input) and the
  * along-side ratio from the centred band. */
@@ -704,11 +682,14 @@ export const assignPorts = (
       if (g) g.push(e)
       else byPartner.set(e.partnerNodeId, [e])
     }
+    // STRAIGHT-eligible members (the partner's opposing side overlaps enough) keep the
+    // shared band's ALIGNED coordinate, so this port and the partner's port land on the
+    // same absolute coordinate and the edge is a straight line — straightness is decided
+    // before spacing, and holds even when the side carries edges to other partners.
+    const lMembers: { e: EndRef; rot: number }[] = []
     for (const [partnerId, members] of byPartner) {
       const band = sharedStraightBand(side, rect, members[0].partnerRect)
       if (band) {
-        // Straight lane(s). Multiple SAME-partner siblings nest across the band; a lone
-        // straight edge takes its centre. (No corner turn ⇒ no mirror needed.)
         const ordered = [...members].sort((a, b) =>
           a.edgeId < b.edgeId ? -1 : a.edgeId > b.edgeId ? 1 : 0
         )
@@ -722,52 +703,57 @@ export const assignPorts = (
             rot: rotOf(e),
           })
         )
-      } else {
-        // L member(s) to this partner. A same-partner perpendicular BUNDLE mirrors its
-        // order at the higher-id node so it nests; then each aims at its partner, pulled
-        // toward the side centre.
-        const sm: SideMember[] = members.map((e) => ({
-          edgeId: e.edgeId,
-          end: e.end,
-          dx: e.partnerCenter.x - centerOf(e.rect).x,
-          dy: e.partnerCenter.y - centerOf(e.rect).y,
-        }))
-        let ordered = orderSideMembers(side, sm)
-        if (members.length > 1 && nodeId > partnerId)
-          ordered = [...ordered].reverse()
-        const byKey = new Map(members.map((e) => [endKey(e.edgeId, e.end), e]))
-        const centre = myLo + axis / 2
-        const n = ordered.length
-        // Aiming only earns its keep when it ORDERS edges heading to DIFFERENT partners
-        // along the side. When every edge on this side goes to the SAME partner (a lone
-        // arm, or a bundle spread by `laneOffset` below), aiming orders nothing — it just
-        // drags the whole group off centre when the partner sits far to one side. So the
-        // group is CENTRED unless the side actually carries several distinct partners.
-        // An L's along-side position never changes its corner count, so centre is
-        // strictly the better default.
-        const aimBias = byPartner.size > 1 ? AIM_BIAS : 0
-        ordered.forEach((m, i) => {
-          const e = byKey.get(endKey(m.edgeId, m.end))!
-          const aim = tangentialX ? e.partnerCenter.x : e.partnerCenter.y
-          // Same-partner siblings all aim at one point; spread them (in the mirror
-          // order) so the corner-turning bundle nests, and so the global sort below
-          // keeps that order rather than collapsing them to one coordinate.
-          const laneOffset = n > 1 ? (i - (n - 1) / 2) * pitchPx : 0
-          const coord =
-            centre +
-            aimBias *
-              (clamp(aim, myLo + margin, myLo + axis - margin) - centre) +
-            laneOffset
-          seats.push({
-            edgeId: e.edgeId,
-            end: e.end,
-            coord,
-            fixed: false,
-            rot: rotOf(e),
-          })
-        })
+        continue
       }
+      // L member(s) to this partner. A same-partner BUNDLE turning a corner nests only
+      // when its two ends run in the right relative order — decided geometrically from
+      // the two sides (see `bundleNeedsMirror`), applied at ONE end (the higher-id node)
+      // so the two ends agree deterministically.
+      const sm: SideMember[] = members.map((e) => ({
+        edgeId: e.edgeId,
+        end: e.end,
+        dx: e.partnerCenter.x - centerOf(e.rect).x,
+        dy: e.partnerCenter.y - centerOf(e.rect).y,
+      }))
+      let ordered = orderSideMembers(side, sm)
+      const partnerSide = members[0].partnerSide
+      if (
+        members.length > 1 &&
+        nodeId > partnerId &&
+        partnerSide !== undefined &&
+        bundleNeedsMirror(side, partnerSide)
+      )
+        ordered = [...ordered].reverse()
+      const byKey = new Map(members.map((e) => [endKey(e.edgeId, e.end), e]))
+      // Keep this partner-block's internal order by nudging the rot key per rank; the
+      // blocks themselves are then interleaved by their true angular key below.
+      ordered.forEach((m, i) => {
+        const e = byKey.get(endKey(m.edgeId, m.end))!
+        lMembers.push({ e, rot: rotOf(e) + i * 1e-6 })
+      })
     }
+
+    // The L ports sit in ONE CENTRED BAND, ordered by the angular rotation of their
+    // partners. The partner direction decides the ORDER, never the absolute position:
+    // aiming the position at the partner drags the whole band toward a corner whenever
+    // the partners happen to lie to one side (d57/d58/d62), while contributing nothing
+    // an even spread in rotation order does not already give. This is the cited rule —
+    // "the order along a side is the circular order of the segments; then distribute the
+    // ports evenly" (Hegemann-Wolff) — and it makes corner-jam structurally impossible.
+    lMembers.sort((a, b) =>
+      a.rot !== b.rot ? a.rot - b.rot : a.e.edgeId < b.e.edgeId ? -1 : 1
+    )
+    const centre = myLo + axis / 2
+    const nL = lMembers.length
+    lMembers.forEach(({ e, rot }, i) => {
+      seats.push({
+        edgeId: e.edgeId,
+        end: e.end,
+        coord: centre + (i - (nL - 1) / 2) * pitchPx,
+        fixed: false,
+        rot,
+      })
+    })
 
     // One deterministic min-gap pass over all ports on the side, in coordinate order.
     // Fixed (straight) lanes hold their coordinate unless genuinely crowded; the pass

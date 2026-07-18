@@ -639,6 +639,7 @@ function collectPortEnds(
         partnerCenter: centerOfRect(targetRect),
         partnerNodeId: edge.target,
         partnerRect: targetRect,
+        partnerSide: targetSide,
         fourCenter: four(edge.source),
       })
     if (targetSide !== undefined)
@@ -651,6 +652,7 @@ function collectPortEnds(
         partnerCenter: centerOfRect(sourceRect),
         partnerNodeId: edge.source,
         partnerRect: sourceRect,
+        partnerSide: sourceSide,
         fourCenter: four(edge.target),
       })
   }

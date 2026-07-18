@@ -3,7 +3,6 @@ import { Position, type Rect } from "@xyflow/react"
 import {
   facingSide,
   orderSideMembers,
-  packAlongSide,
   sideAxisLength,
   assignPorts,
   endKey,
@@ -104,58 +103,6 @@ describe("orderSideMembers — the nesting rule", () => {
   })
 })
 
-describe("packAlongSide — aimed-but-centred, ordered, never at corners", () => {
-  const centre = (axis: number) => axis / 2
-
-  it("keeps evenly-aimed ports near centre, NOT jammed to the corners", () => {
-    // Two ports both aimed at the side centre: they land a min gap apart, near the
-    // middle — the user's complaint (anchors flung to the edge) must not recur.
-    const axis = 200
-    const ratios = packAlongSide(
-      [centre(axis), centre(axis)],
-      axis,
-      PORT_PITCH_PX
-    )
-    for (const r of ratios) {
-      expect(r).toBeGreaterThan(0.3)
-      expect(r).toBeLessThan(0.7)
-    }
-  })
-
-  it("preserves the given order and a minimum gap", () => {
-    const axis = 200
-    const ratios = packAlongSide([40, 60, 80], axis, PORT_PITCH_PX)
-    expect(ratios[0]).toBeLessThan(ratios[1])
-    expect(ratios[1]).toBeLessThan(ratios[2])
-    const gapPx = Math.min(PORT_PITCH_PX, axis - 2 * Math.min(10, axis * 0.3))
-    // consecutive ports are at least ~the fitted gap apart (allow float slack)
-    expect((ratios[1] - ratios[0]) * axis).toBeGreaterThanOrEqual(
-      Math.min(PORT_PITCH_PX, gapPx) - 1e-6
-    )
-  })
-
-  it("never places a port in the corner margin, even when crowded", () => {
-    const axis = 60
-    const aims = [0, 12, 24, 36, 48, 60] // spanning corner to corner
-    const ratios = packAlongSide(aims, axis, PORT_PITCH_PX)
-    const marginRatio = Math.min(2 * 5, axis * 0.3) / axis
-    for (const r of ratios) {
-      expect(r).toBeGreaterThanOrEqual(marginRatio - 1e-9)
-      expect(r).toBeLessThanOrEqual(1 - marginRatio + 1e-9)
-    }
-  })
-
-  it("aims a displaced set toward its targets while holding the min gap", () => {
-    // Two ports both aimed high (small offsets) still separate by the gap and sit in
-    // the aimed half, not centred.
-    const axis = 200
-    const ratios = packAlongSide([30, 45], axis, PORT_PITCH_PX)
-    expect(ratios[0]).toBeLessThan(0.5)
-    expect(ratios[1]).toBeLessThan(0.5)
-    expect(ratios[1]).toBeGreaterThan(ratios[0])
-  })
-})
-
 describe("assignPorts — forks, nesting, merges emerge", () => {
   const centerOfR = (r: Rect) => ({
     x: r.x + r.width / 2,
@@ -178,6 +125,28 @@ describe("assignPorts — forks, nesting, merges emerge", () => {
     // edges (not parallel siblings) unless a test overrides partnerNodeId.
     partnerNodeId: `p:${partner.x},${partner.y}`,
     partnerRect: partner,
+  })
+
+  it("keeps the band CENTRED even when every partner lies to one side", () => {
+    // d62: both partners sit far to one side, so an aimed position would drag the whole
+    // band toward that corner. Partner direction must decide ORDER only — the band stays
+    // centred, which makes corner-jam structurally impossible.
+    const a = rect(0, 0, 160, 100) // Top side spans x 0..160, centre 80
+    const farRight1 = rect(400, -300)
+    const farRight2 = rect(600, -280)
+    const ends: EndRef[] = [
+      { ...end("e1", "source", a, Position.Top, farRight1), nodeId: "A" },
+      { ...end("e2", "source", a, Position.Top, farRight2), nodeId: "A" },
+    ]
+    const ports = assignPorts(ends)
+    const rs = [...ports.values()].map((p) => p.ratio).sort((x, y) => x - y)
+    expect(rs).toHaveLength(2)
+    // Symmetric about the side centre, not pulled toward the right corner.
+    expect(rs[0] + rs[1]).toBeCloseTo(1.0, 5)
+    for (const r of rs) {
+      expect(r).toBeGreaterThan(0.35)
+      expect(r).toBeLessThan(0.65)
+    }
   })
 
   it("two same-side edges get distinct, symmetric, centred ports (nesting)", () => {

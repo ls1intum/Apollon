@@ -265,6 +265,23 @@ const CASES: {
     maxStraightBroken: 0,
     maxOffMax: 0.2,
   },
+  // 61: a bidirectional A<->B pair. The bundle must NEST (two parallel Ls); an
+  // arbitrary mirror made them cross and the router drew a loop around the crossing.
+  // 62: every partner lies to one side of ClassA — the band must stay CENTRED.
+  {
+    file: "routing-case-61.json",
+    maxCorners: 4,
+    maxCrossings: 0,
+    maxStraightBroken: 0,
+    maxOffMax: 0.9,
+  },
+  {
+    file: "routing-case-62.json",
+    maxCorners: 4,
+    maxCrossings: 0,
+    maxStraightBroken: 0,
+    maxOffMax: 0.2,
+  },
 ]
 
 for (const c of CASES) {
