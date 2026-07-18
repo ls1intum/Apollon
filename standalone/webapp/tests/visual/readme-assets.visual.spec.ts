@@ -67,17 +67,93 @@ async function openHero(page: Page, theme: "light" | "dark") {
   await page.waitForTimeout(300)
 }
 
+/**
+ * Wrap a captured editor screenshot in a browser-window frame — rounded
+ * corners, titlebar with traffic lights, border, and a soft drop shadow over a
+ * transparent background — mirroring the social card's window styling. The
+ * transparent margins make the hero sit nicely on both GitHub's light and dark
+ * README backgrounds.
+ */
+async function frameEditorShot(
+  page: Page,
+  theme: "light" | "dark",
+  editorShotB64: string
+) {
+  const margin = 56
+  const titlebar = 44
+  const width = 1440
+  const height = 810
+  await page.setViewportSize({
+    width: width + 2 * margin,
+    height: height + titlebar + 2 * margin,
+  })
+  const c =
+    theme === "dark"
+      ? { bar: "#161b22", border: "#30363d", shadow: "rgba(0, 0, 0, 0.55)" }
+      : { bar: "#f6f8fa", border: "#d0d7de", shadow: "rgba(31, 35, 40, 0.28)" }
+  await page.setContent(`<!doctype html>
+<html>
+<head>
+<style>
+  * { margin: 0; box-sizing: border-box; }
+  html, body { background: transparent; overflow: hidden; }
+  .window {
+    margin: ${margin}px;
+    width: ${width}px;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid ${c.border};
+    box-shadow: 0 28px 80px ${c.shadow};
+  }
+  .titlebar {
+    height: ${titlebar}px;
+    background: ${c.bar};
+    border-bottom: 1px solid ${c.border};
+    display: flex;
+    align-items: center;
+    padding-left: 18px;
+    gap: 9px;
+  }
+  .titlebar span { width: 13px; height: 13px; border-radius: 50%; }
+  .window img { display: block; width: ${width}px; }
+</style>
+</head>
+<body>
+  <div class="window">
+    <div class="titlebar">
+      <span style="background:#f85149"></span>
+      <span style="background:#d29922"></span>
+      <span style="background:#3fb950"></span>
+    </div>
+    <img src="data:image/png;base64,${editorShotB64}" alt="" />
+  </div>
+</body>
+</html>`)
+  await page.waitForTimeout(300)
+}
+
 test.describe("README hero screenshots", () => {
   // The full app — chrome, palette, and canvas — IS the shop window here, so
-  // capture the whole viewport rather than the editor-area clip.
+  // capture the whole viewport, then present it in a window frame. The embed
+  // shows the 2×-captured screenshot at its CSS capture size (1440px) in the
+  // same deviceScaleFactor-2 context, so source pixels map 1:1 — no fractional
+  // resampling of the diagram's hairlines.
   test("editor-light", async ({ page }) => {
     await openHero(page, "light")
-    await expect(page).toHaveScreenshot("apollon-editor-light.png")
+    const shot = (await page.screenshot()).toString("base64")
+    await frameEditorShot(page, "light", shot)
+    await expect(page).toHaveScreenshot("apollon-editor-light.png", {
+      omitBackground: true,
+    })
   })
 
   test("editor-dark", async ({ page }) => {
     await openHero(page, "dark")
-    await expect(page).toHaveScreenshot("apollon-editor-dark.png")
+    const shot = (await page.screenshot()).toString("base64")
+    await frameEditorShot(page, "dark", shot)
+    await expect(page).toHaveScreenshot("apollon-editor-dark.png", {
+      omitBackground: true,
+    })
   })
 })
 
