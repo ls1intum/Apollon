@@ -87,12 +87,13 @@ export const getContainerBorderPolylines = (
  * and ancestor set. Body geometry and ancestry depend only on the node set, not on
  * which edge is routed, so computing them per edge is O(edges × nodes) of waste.
  *
- * A frame's edges all read the SAME `nodes` array (one store snapshot), so a
- * one-entry cache keyed on that array's identity computes the index once. This is
- * correct ONLY because the store replaces `nodes` on every change rather than
- * mutating it in place — a new frame is a new array, an unchanged frame is the same
- * array. Mutating a node's position while keeping the array reference would read a
- * stale body.
+ * A frame's edges all read the same `nodes` array, so a one-entry cache computes the
+ * index once instead of per edge. It is keyed on a fingerprint of the geometry the
+ * index actually reads, NOT on the array's identity: React Flow mutates node objects
+ * in place and keeps the array reference stable while measuring — which is why the
+ * solver upstream keys its own effect on a content signature too. Identity alone let a
+ * node that was unmeasured on the first pass (and so skipped as an obstacle entirely)
+ * stay missing after it measured, and every edge routed straight through it.
  *
  * The bodies handed out are SHARED, read-only; the one place a body is altered (an
  * endpoint's soft→solid) takes a copy.
@@ -100,11 +101,31 @@ export const getContainerBorderPolylines = (
 type NodeEntry = { body: ObstacleRect; ancestors: Set<string> }
 type NodeIndex = { byId: Map<string, Node>; entries: Map<string, NodeEntry> }
 
-let frameNodes: readonly Node[] | null = null
+/** Cheap digest of everything `indexNodes` reads: the node set, and each node's
+ * position, measured size and hidden/parent state. Arithmetic only — no allocation —
+ * because this runs once per edge. */
+const geometryFingerprint = (nodes: readonly Node[]): number => {
+  let h = nodes.length
+  for (const node of nodes) {
+    const { width, height } = nodeSize(node)
+    h =
+      (Math.imul(h, 31) +
+        (node.position.x | 0) * 7 +
+        (node.position.y | 0) * 13 +
+        (width ?? 0) * 17 +
+        (height ?? 0) * 19 +
+        (node.hidden ? 1 : 0)) |
+      0
+  }
+  return h
+}
+
+let frameKey: number | null = null
 let frameIndex: NodeIndex | null = null
 
 const indexNodes = (nodes: readonly Node[]): NodeIndex => {
-  if (nodes === frameNodes && frameIndex) return frameIndex
+  const key = geometryFingerprint(nodes)
+  if (key === frameKey && frameIndex) return frameIndex
 
   const byId = new Map(nodes.map((node) => [node.id, node]))
   const entries = new Map<string, NodeEntry>()
@@ -128,7 +149,7 @@ const indexNodes = (nodes: readonly Node[]): NodeIndex => {
     })
   }
 
-  frameNodes = nodes
+  frameKey = key
   frameIndex = { byId, entries }
   return frameIndex
 }
