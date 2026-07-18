@@ -12,6 +12,7 @@ import { waitForCanvasReady, openFixtureInLocalEditor } from "../helpers/canvas"
  * files referenced by:
  *
  *   - README.md + library/README.md   (apollon-editor-{light,dark}.png hero)
+ *   - README.md header                (apollon-lockup-*.png, apollon-btn-*.png)
  *   - docs/docusaurus.config.ts       (apollon-social-card.png, themeConfig.image)
  *   - the GitHub repo Settings → Social preview upload (apollon-social-card.png)
  *
@@ -146,6 +147,7 @@ test.describe("README hero screenshots", () => {
     await frameEditorShot(page, "light", shot)
     await expect(page).toHaveScreenshot("apollon-editor-light.png", {
       omitBackground: true,
+      scale: "device",
     })
   })
 
@@ -155,8 +157,120 @@ test.describe("README hero screenshots", () => {
     await frameEditorShot(page, "dark", shot)
     await expect(page).toHaveScreenshot("apollon-editor-dark.png", {
       omitBackground: true,
+      scale: "device",
     })
   })
+})
+
+test.describe("README header widgets", () => {
+  // Brand lockup + call-to-action buttons for the README header, generated per
+  // GitHub color scheme and swapped with <picture> in the README. Rendered on
+  // a transparent background and captured as element screenshots (each widget
+  // wrapped in a small transparent pad so its soft shadow isn't clipped).
+  // Colors come from the webapp's design tokens: --primitive-accent-base is
+  // #0f3a66 (light) / #236ebe (dark); neutrals mirror the window frame.
+  for (const theme of ["light", "dark"] as const) {
+    test(`widgets-${theme}`, async ({ page }) => {
+      const c =
+        theme === "dark"
+          ? {
+              accent: "#236ebe",
+              text: "#e8eaed",
+              subtleBg: "#161b22",
+              border: "#30363d",
+              shadow: "rgba(0, 0, 0, 0.4)",
+            }
+          : {
+              accent: "#0f3a66",
+              text: "#1f2328",
+              subtleBg: "#f6f8fa",
+              border: "#d0d7de",
+              shadow: "rgba(31, 35, 40, 0.16)",
+            }
+      const font = (file: string) =>
+        fs.readFileSync(path.join(fontsDir, file)).toString("base64")
+      const logo = fs
+        .readFileSync(path.join(repoRoot, "assets", "icon-only.png"))
+        .toString("base64")
+
+      // The play glyph is an inline SVG: Inter has no U+25B6, and a missing
+      // glyph would render as a tofu box.
+      const play = (color: string) =>
+        `<svg width="15" height="15" viewBox="0 0 16 16" fill="${color}" xmlns="http://www.w3.org/2000/svg"><path d="M4 2.5v11a.7.7 0 0 0 1.06.6l9-5.5a.7.7 0 0 0 0-1.2l-9-5.5A.7.7 0 0 0 4 2.5Z"/></svg>`
+
+      await page.setContent(`<!doctype html>
+<html>
+<head>
+<style>
+  @font-face {
+    font-family: "Inter";
+    font-weight: 400;
+    src: url(data:font/ttf;base64,${font("Inter-Regular.ttf")}) format("truetype");
+  }
+  @font-face {
+    font-family: "Inter";
+    font-weight: 700;
+    src: url(data:font/ttf;base64,${font("Inter-Bold.ttf")}) format("truetype");
+  }
+  * { margin: 0; box-sizing: border-box; }
+  html, body { background: transparent; font-family: "Inter", sans-serif; }
+  body { display: flex; flex-direction: column; align-items: flex-start; gap: 24px; padding: 24px; }
+  .pad { display: inline-block; padding: 10px; }
+  .lockup { display: flex; align-items: center; gap: 18px; }
+  .lockup img { width: 64px; height: 64px; border-radius: 15px; }
+  .lockup .name {
+    font-size: 50px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: ${c.text};
+  }
+  .btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 44px;
+    padding: 0 24px;
+    border-radius: 10px;
+    font-size: 17px;
+    font-weight: 700;
+    box-shadow: 0 2px 8px ${c.shadow};
+  }
+  .btn.primary { background: ${c.accent}; color: #ffffff; }
+  .btn.secondary {
+    background: ${c.subtleBg};
+    color: ${c.text};
+    border: 1px solid ${c.border};
+  }
+</style>
+</head>
+<body>
+  <div class="pad" id="lockup">
+    <div class="lockup">
+      <img src="data:image/png;base64,${logo}" alt="" />
+      <div class="name">Apollon</div>
+    </div>
+  </div>
+  <div class="pad" id="btn-demo">
+    <div class="btn primary">${play("#ffffff")}<span>Try the live demo</span></div>
+  </div>
+  <div class="pad" id="btn-docs">
+    <div class="btn secondary"><span>Documentation</span></div>
+  </div>
+</body>
+</html>`)
+      await page.evaluate(() => document.fonts.ready)
+      await page.waitForTimeout(300)
+
+      for (const id of ["lockup", "btn-demo", "btn-docs"]) {
+        await expect(page.locator(`#${id}`)).toHaveScreenshot(
+          `apollon-${id}-${theme}.png`,
+          // scale "device" keeps the 2x pixels; the README displays at half
+          // size via width/height attributes so the widgets stay retina-crisp.
+          { omitBackground: true, scale: "device" }
+        )
+      }
+    })
+  }
 })
 
 test.describe("Social preview card", () => {

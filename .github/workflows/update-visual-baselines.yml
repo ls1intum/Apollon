@@ -68,8 +68,7 @@ jobs:
           # *-snapshots dirs, so stage them explicitly.
           git add 'standalone/webapp/tests/**/*-snapshots/*.png' \
             'standalone/webapp/assets/images/how-to-use-*.png' \
-            'docs/static/img/apollon-editor-*.png' \
-            'docs/static/img/apollon-social-card.png'
+            'docs/static/img/apollon-*.png'
           if git diff --cached --quiet; then
             echo "Baselines already match — nothing to commit." >> "$GITHUB_STEP_SUMMARY"
             exit 0

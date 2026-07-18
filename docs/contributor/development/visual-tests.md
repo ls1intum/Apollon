@@ -46,7 +46,7 @@ pnpm exec playwright test tests/visual/svg-export --update-snapshots
 Two Playwright projects double as asset generators — their baselines **are** the shipped files, so the images can never drift from the real editor:
 
 - `howto-assets` writes the "How this editor works" modal images to `standalone/webapp/assets/images/`.
-- `readme-assets` writes the README hero screenshots (`apollon-editor-light.png`, `apollon-editor-dark.png`) and the 1280×640 social preview card (`apollon-social-card.png`) to `docs/static/img/`. These are referenced by `README.md`, `library/README.md` (the npm page), and `themeConfig.image` in `docs/docusaurus.config.ts`.
+- `readme-assets` writes the README hero screenshots (`apollon-editor-light.png`, `apollon-editor-dark.png`), the README header widgets (`apollon-lockup-*.png`, `apollon-btn-*.png` — brand lockup and call-to-action buttons, per color scheme), and the 1280×640 social preview card (`apollon-social-card.png`) to `docs/static/img/`. These are referenced by `README.md`, `library/README.md` (the npm page), and `themeConfig.image` in `docs/docusaurus.config.ts`.
 
 Both regenerate through the same baseline-refresh flows above, or individually:
 

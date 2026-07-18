@@ -1,6 +1,9 @@
 <div align="center">
 
-# Apollon
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/static/img/apollon-lockup-dark.png" />
+  <img src="docs/static/img/apollon-lockup-light.png" alt="Apollon" height="84" />
+</picture>
 
 [![npm version](https://img.shields.io/npm/v/@tumaet/apollon)](https://www.npmjs.com/package/@tumaet/apollon)
 [![npm downloads](https://img.shields.io/npm/dm/@tumaet/apollon)](https://www.npmjs.com/package/@tumaet/apollon)
@@ -8,7 +11,16 @@
 
 **Open-source UML modeling editor for the web.** Draw 13 UML and modeling diagram types (class, component, activity, BPMN, SFC, and more) in the browser, collaborate in real time, and export to SVG, PNG, PDF, PPTX, or JSON.
 
-[**▶ Try the live demo**](https://apollon.aet.cit.tum.de) · [Documentation](https://ls1intum.github.io/Apollon/) · [npm package](https://www.npmjs.com/package/@tumaet/apollon) · [VS Code extension](https://marketplace.visualstudio.com/items?itemName=aet-tum.apollon-extension)
+<a href="https://apollon.aet.cit.tum.de"><picture>
+
+  <source media="(prefers-color-scheme: dark)" srcset="docs/static/img/apollon-btn-demo-dark.png" />
+  <img src="docs/static/img/apollon-btn-demo-light.png" alt="Try the live demo" height="64" />
+</picture></a>&nbsp;<a href="https://ls1intum.github.io/Apollon/"><picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/static/img/apollon-btn-docs-dark.png" />
+  <img src="docs/static/img/apollon-btn-docs-light.png" alt="Documentation" height="64" />
+</picture></a>
+
+[npm package](https://www.npmjs.com/package/@tumaet/apollon) · [VS Code extension](https://marketplace.visualstudio.com/items?itemName=aet-tum.apollon-extension)
 
 <a href="https://apollon.aet.cit.tum.de">
   <picture>
