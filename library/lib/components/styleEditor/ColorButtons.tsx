@@ -87,6 +87,7 @@ export const EditorColorPicker: React.FC<EditorColorPickerProps> = ({
           <Popover.Popup
             data-slot="color-picker-content"
             className="apollon-color-picker__popup"
+            aria-label={pickerLabel}
             style={portalThemeVars}
           >
             <ToggleGroup

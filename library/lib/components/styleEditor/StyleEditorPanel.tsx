@@ -1,17 +1,18 @@
-import React from "react"
+import React, { useState } from "react"
 import { PaintRoller } from "lucide-react"
-import { DividerLine, IconButton, Typography } from "@/components/ui"
+import { Popover } from "@base-ui/react/popover"
+import { DividerLine, Typography } from "@/components/ui"
 import { EditorColorPicker } from "./ColorButtons"
-import { useColorEditorDisclosure } from "./ColorEditorGroup"
+import { usePortalThemeVars } from "@/components/ui/portalTheme"
 import { useLabels } from "@/i18n/useLabels"
 
 /**
- * One color row inside the panel: a label and the swatch picker for that field.
+ * One color row inside the popover: a label and the swatch picker for that field.
  * The Node and Edge editors are otherwise ~80% identical, so the whole panel —
  * the header row (lead content + paint toggle + trailing side content) and the
- * list of color rows — lives here once. Both editors describe their fields as
- * `ColorField`s and hand over `getColor`/`onColorChange`; everything visual is
- * styled in app.css keyed on the data-slots below, not inline.
+ * color rows behind the paint toggle — lives here once. Both editors describe
+ * their fields as `ColorField`s and hand over `getColor`/`onColorChange`;
+ * everything visual is styled in app.css keyed on the data-slots below.
  */
 export interface ColorField<K extends string = string> {
   key: K
@@ -19,7 +20,7 @@ export interface ColorField<K extends string = string> {
 }
 
 interface StyleEditorPanelProps<K extends string> {
-  /** Color fields rendered as rows when the panel is open. */
+  /** Color fields rendered as rows inside the popover. */
   fields: ColorField<K>[]
   /** Current value of a field (a swatch `var(...)` or hex), or undefined. */
   getColor: (key: K) => string | undefined
@@ -45,7 +46,11 @@ export function StyleEditorPanel<K extends string>({
   headerVariant = "node",
 }: StyleEditorPanelProps<K>) {
   const t = useLabels()
-  const { open: paintOpen, setOpen: setPaintOpen } = useColorEditorDisclosure()
+  // The popup portals to <body>, escaping the `.apollon-editor` subtree that
+  // scopes `--apollon-*`; carry the resolved theme onto it (same as the swatch
+  // picker) so a dark/custom embed theme paints the panel.
+  const [trigger, setTrigger] = useState<HTMLElement | null>(null)
+  const portalThemeVars = usePortalThemeVars(trigger)
   const paintToggleLabel = colorEditorActionLabel ?? t.editColors
 
   return (
@@ -60,14 +65,48 @@ export function StyleEditorPanel<K extends string>({
           data-slot="style-editor-header-actions"
           className="apollon-style-editor__header-actions"
         >
-          <IconButton
-            ariaLabel={paintToggleLabel}
-            tooltip={paintToggleLabel}
-            aria-expanded={paintOpen}
-            onClick={() => setPaintOpen(!paintOpen)}
-          >
-            <PaintRoller width={16} height={16} aria-hidden="true" />
-          </IconButton>
+          <Popover.Root>
+            <Popover.Trigger
+              ref={setTrigger}
+              data-slot="icon-button"
+              aria-label={paintToggleLabel}
+            >
+              <PaintRoller width={16} height={16} aria-hidden="true" />
+            </Popover.Trigger>
+            <Popover.Portal>
+              <Popover.Positioner sideOffset={6} align="end">
+                <Popover.Popup
+                  data-slot="style-editor-content"
+                  className="apollon-style-editor__popup"
+                  aria-label={paintToggleLabel}
+                  style={portalThemeVars}
+                >
+                  {fields.map(({ key, label }, index) => (
+                    <React.Fragment key={key}>
+                      <div
+                        data-slot="style-editor-row"
+                        className="apollon-style-editor__row"
+                      >
+                        <Typography>{label}</Typography>
+                        <EditorColorPicker
+                          label={t.colorPicker(label)}
+                          selectedColor={getColor(key) ?? ""}
+                          onSelect={(color) => onColorChange(key, color)}
+                          onReset={() => onColorChange(key, "")}
+                        />
+                      </div>
+                      {index !== fields.length - 1 && (
+                        <DividerLine
+                          color="var(--popover-divider)"
+                          margin={0}
+                        />
+                      )}
+                    </React.Fragment>
+                  ))}
+                </Popover.Popup>
+              </Popover.Positioner>
+            </Popover.Portal>
+          </Popover.Root>
           {sideElements.map((element, index) => (
             <React.Fragment key={`side-element-${index}`}>
               {element}
@@ -75,33 +114,6 @@ export function StyleEditorPanel<K extends string>({
           ))}
         </div>
       </div>
-
-      {paintOpen && (
-        <div
-          data-slot="style-editor-panel"
-          className="apollon-style-editor__panel"
-        >
-          {fields.map(({ key, label }, index) => (
-            <React.Fragment key={key}>
-              <div
-                data-slot="style-editor-row"
-                className="apollon-style-editor__row"
-              >
-                <Typography>{label}</Typography>
-                <EditorColorPicker
-                  label={t.colorPicker(label)}
-                  selectedColor={getColor(key) ?? ""}
-                  onSelect={(color) => onColorChange(key, color)}
-                  onReset={() => onColorChange(key, "")}
-                />
-              </div>
-              {index !== fields.length - 1 && (
-                <DividerLine color="var(--popover-divider)" margin={0} />
-              )}
-            </React.Fragment>
-          ))}
-        </div>
-      )}
     </div>
   )
 }

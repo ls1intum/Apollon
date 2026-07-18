@@ -1,5 +1,6 @@
 export { generateUUID } from "@/constants"
 export * from "./layoutUtils"
+export * from "./tagUtils"
 export * from "./textUtils"
 export * from "./popoverUtils"
 export * from "./quadrantUtils"

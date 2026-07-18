@@ -3,10 +3,11 @@ import { GripVertical, Italic, Plus, Trash2 } from "lucide-react"
 import { IconButton, TextField, Typography } from "@/components/ui"
 import { NodeStyleEditor } from "@/components/styleEditor"
 import { useLabels } from "@/i18n/useLabels"
-import { generateUUID } from "@/utils"
+import { generateUUID, withTags } from "@/utils"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import { ClassNodeElement, ClassNodeProps } from "@/types"
+import { TagChips, TagPicker } from "../TagPicker"
 import {
   DndContext,
   closestCenter,
@@ -33,6 +34,7 @@ interface SortableMethodRowProps {
   id: string
   item: ClassNodeElement
   onMethodChange: (id: string, key: string, value: string) => void
+  onTagsChange: (id: string, tags: string[]) => void
   onToggleAbstract: (id: string) => void
   onDelete: (id: string) => void
 }
@@ -41,6 +43,7 @@ const SortableMethodRow: React.FC<SortableMethodRowProps> = ({
   id,
   item,
   onMethodChange,
+  onTagsChange,
   onToggleAbstract,
   onDelete,
 }) => {
@@ -64,63 +67,77 @@ const SortableMethodRow: React.FC<SortableMethodRowProps> = ({
   return (
     <div
       ref={setNodeRef}
-      style={{
-        ...style,
-        display: "flex",
-        gap: 4,
-        justifyContent: "space-between",
-        alignItems: "center",
-      }}
+      style={{ ...style, display: "flex", flexDirection: "column", gap: 4 }}
     >
       <div
-        {...attributes}
-        {...listeners}
-        // dnd-kit's `attributes` set `role="button"` + `aria-roledescription`
-        // but no name; the grip icon is aria-hidden, so name the handle
-        // explicitly (axe: aria-command-name).
-        aria-label={t.reorderMethod}
-        className="apollon-drag-handle"
         style={{
           display: "flex",
+          gap: 4,
+          justifyContent: "space-between",
           alignItems: "center",
-          flexShrink: 0,
         }}
       >
-        <GripVertical width={16} height={16} aria-hidden="true" />
+        <div
+          {...attributes}
+          {...listeners}
+          // dnd-kit's `attributes` set `role="button"` + `aria-roledescription`
+          // but no name; the grip icon is aria-hidden, so name the handle
+          // explicitly (axe: aria-command-name).
+          aria-label={t.reorderMethod}
+          className="apollon-drag-handle"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            flexShrink: 0,
+          }}
+        >
+          <GripVertical width={16} height={16} aria-hidden="true" />
+        </div>
+
+        <NodeStyleEditor
+          noStrokeUpdate
+          nodeData={item}
+          colorEditorLabel={t.methodWord}
+          handleDataFieldUpdate={(key, value) =>
+            onMethodChange(item.id, key, value)
+          }
+          sideElements={[
+            <IconButton
+              key={`abstract_${item.id}`}
+              ariaLabel={
+                item.isAbstract
+                  ? t.unmarkMethodAsAbstract
+                  : t.markMethodAsAbstract
+              }
+              tooltip={t.abstractMethod}
+              aria-pressed={!!item.isAbstract}
+              data-state={item.isAbstract ? "on" : "off"}
+              className="apollon-abstract-toggle"
+              onClick={() => onToggleAbstract(item.id)}
+            >
+              <Italic width={16} height={16} aria-hidden="true" />
+            </IconButton>,
+            <TagPicker
+              key={`tags_${item.id}`}
+              tags={item.tags ?? []}
+              onChange={(tags) => onTagsChange(item.id, tags)}
+              subject={t.methodWord}
+            />,
+            <IconButton
+              key={`delete_${item.id}`}
+              ariaLabel={t.deleteMethod}
+              tooltip={t.deleteMethod}
+              onClick={() => onDelete(item.id)}
+            >
+              <Trash2 width={16} height={16} aria-hidden="true" />
+            </IconButton>,
+          ]}
+        />
       </div>
 
-      <NodeStyleEditor
-        noStrokeUpdate
-        nodeData={item}
-        colorEditorLabel={t.methodWord}
-        handleDataFieldUpdate={(key, value) =>
-          onMethodChange(item.id, key, value)
-        }
-        sideElements={[
-          <IconButton
-            key={`abstract_${item.id}`}
-            ariaLabel={
-              item.isAbstract
-                ? t.unmarkMethodAsAbstract
-                : t.markMethodAsAbstract
-            }
-            tooltip={t.abstractMethod}
-            aria-pressed={!!item.isAbstract}
-            data-state={item.isAbstract ? "on" : "off"}
-            className="apollon-abstract-toggle"
-            onClick={() => onToggleAbstract(item.id)}
-          >
-            <Italic width={16} height={16} aria-hidden="true" />
-          </IconButton>,
-          <IconButton
-            key={`delete_${item.id}`}
-            ariaLabel={t.deleteMethod}
-            tooltip={t.deleteMethod}
-            onClick={() => onDelete(item.id)}
-          >
-            <Trash2 width={16} height={16} aria-hidden="true" />
-          </IconButton>,
-        ]}
+      <TagChips
+        tags={item.tags ?? []}
+        onChange={(tags) => onTagsChange(item.id, tags)}
       />
     </div>
   )
@@ -148,11 +165,15 @@ export const EditableMethodsList: React.FC<Props> = ({ nodeId }) => {
     )
   }
 
-  const handleMethodChange = (id: string, key: string, newName: string) => {
+  const handleMethodChange = (id: string, key: string, value: string) => {
     patchMethods(
-      methods.map((item) =>
-        item.id === id ? { ...item, [key]: newName } : item
-      )
+      methods.map((item) => (item.id === id ? { ...item, [key]: value } : item))
+    )
+  }
+
+  const handleTagsChange = (id: string, tags: string[]) => {
+    patchMethods(
+      methods.map((item) => (item.id === id ? withTags(item, tags) : item))
     )
   }
 
@@ -239,6 +260,7 @@ export const EditableMethodsList: React.FC<Props> = ({ nodeId }) => {
               id={item.id}
               item={item}
               onMethodChange={handleMethodChange}
+              onTagsChange={handleTagsChange}
               onToggleAbstract={handleToggleAbstract}
               onDelete={handleItemDelete}
             />

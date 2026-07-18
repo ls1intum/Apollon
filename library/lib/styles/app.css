@@ -1310,6 +1310,135 @@ svg.react-flow__connectionline {
   min-width: 0;
 }
 
+/* Tag control: the element's tags as removable chips. Sits on its own compact
+   line under the element's row, shown only once the element has a tag. */
+[data-slot="tag-field"] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+[data-slot="tag-chip"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  max-width: 100%;
+  padding-left: 8px;
+  border: 1px solid var(--popover-divider);
+  border-radius: var(--apollon-radius-sm, 4px);
+  font-size: 12px;
+  line-height: 22px;
+}
+
+[data-slot="tag-chip"] > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Tag picker (Base UI Popover portaled to <body>) — a checklist of the host
+   vocabulary plus an optional add-a-tag field, Tailwind-free via --apollon-*. */
+.apollon-tag-picker__popup {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 220px;
+  max-width: 90vw;
+  padding: 8px;
+  background-color: var(--apollon-surface, #fff);
+  color: var(--apollon-foreground, #000);
+  border: 1px solid var(--apollon-border, #cdd5df);
+  border-radius: var(--apollon-radius-lg, 8px);
+  box-shadow: var(--apollon-shadow, 0 4px 12px rgba(0, 0, 0, 0.18));
+  z-index: 10003;
+}
+
+.apollon-tag-picker__add {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.apollon-tag-picker__input {
+  box-sizing: border-box;
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px;
+  font-size: 0.8125rem;
+  color: var(--apollon-foreground, #000);
+  background-color: var(--apollon-background, #fff);
+  border: 1px solid var(--apollon-border, #cdd5df);
+  border-radius: var(--apollon-radius-md, 6px);
+}
+
+.apollon-tag-picker__input:focus-visible {
+  outline: 2px solid var(--apollon-primary, #3e8acc);
+  outline-offset: 1px;
+}
+
+.apollon-tag-picker__list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-height: 220px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.apollon-tag-picker__option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  margin: 0;
+  padding: 6px 8px;
+  font: inherit;
+  font-size: 0.8125rem;
+  text-align: left;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: var(--apollon-radius-sm, 4px);
+  cursor: pointer;
+}
+
+.apollon-tag-picker__option:hover {
+  background-color: var(--apollon-hover-neutral, rgba(0, 0, 0, 0.05));
+}
+
+.apollon-tag-picker__option:focus-visible {
+  outline: 2px solid var(--apollon-primary, #3e8acc);
+  outline-offset: -2px;
+}
+
+.apollon-tag-picker__option > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The check occupies its slot always, so labels stay aligned; it's invisible
+   until the option is selected. */
+.apollon-tag-picker__check {
+  flex-shrink: 0;
+  opacity: 0;
+}
+
+.apollon-tag-picker__check[data-selected] {
+  opacity: 1;
+  color: var(--apollon-primary, #3e8acc);
+}
+
+.apollon-tag-picker__empty {
+  padding: 6px 8px;
+  font-size: 0.8125rem;
+  color: var(--apollon-secondary, #6c757d);
+}
+
 /* Drag handle (DnD rows) */
 .apollon-drag-handle {
   cursor: grab;
@@ -1596,21 +1725,27 @@ svg.react-flow__connectionline {
   margin-left: 0;
 }
 
-.apollon-style-editor__panel {
+/* Color panel — a Base UI Popover portaled to <body>, so it carries the same
+   surface/elevation as the swatch picker. */
+.apollon-style-editor__popup {
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  margin-top: 10px;
-  margin-bottom: 10px;
+  min-width: 200px;
   background-color: var(--apollon-surface, #fff);
-  border: 1px solid var(--apollon-border-subtle, #e3e8ef);
-  border-radius: var(--apollon-radius-md, 6px);
+  color: var(--apollon-foreground, #000);
+  border: 1px solid var(--apollon-border, #cdd5df);
+  border-radius: var(--apollon-radius-lg, 8px);
+  box-shadow: var(--apollon-shadow, 0 4px 12px rgba(0, 0, 0, 0.18));
+  z-index: 10003;
 }
 
 .apollon-style-editor__row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px;
+  gap: 12px;
+  padding: 10px 14px;
 }
 
 /* Stereotype show/hide toggle: the standalone `«keyword»` chip on

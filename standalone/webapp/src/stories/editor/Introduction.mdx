@@ -11,8 +11,9 @@ in lockstep with the editor. The shared harness for every story below lives in
 `src/stories/_support/editor.tsx`.
 
 Each of the 13 diagram types gets its own story file (`Editor/Class Diagram`,
-`Editor/BPMN`, …) with ~10–19 stories, plus two cross-cutting files:
-`Editor/Modes` and `Editor/Playground`. The 13 canonical per-type fixtures —
+`Editor/BPMN`, …) with ~10–19 stories, plus the cross-cutting files
+`Editor/Modes`, `Editor/Element Tags`, `Editor/Controls` and
+`Editor/Playground`. The 13 canonical per-type fixtures —
 which also drive the visual-regression suite — are exported from the harness as
 `diagramFixtures` / `fixtureByType`.
 
@@ -85,6 +86,13 @@ assessment-review **selection** model (single / nested / hover), the
 **Exporting** mode (static export — selection, popovers, and editing
 affordances dropped), and the **dark** theme. These carry `play` assertions
 where the rendered state is testable.
+
+### Element tags (`Editor/Element Tags`)
+
+Host-defined grouping labels on element data. Both halves: **authoring** tags on
+a class and its members in the edit popover, and **coloring** a whole group —
+looked up with `editor.getElementIdsByTag(tag)` — by a build result through the
+ephemeral highlight overlay.
 
 ### Playground (`Editor/Playground`)
 

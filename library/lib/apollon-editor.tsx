@@ -14,6 +14,9 @@ import {
   filterRenderedElements,
   getSVG,
   getRenderedDiagramBounds,
+  getElementIdsByTag,
+  resolveTagConfig,
+  applyElementTags,
 } from "./utils"
 // Internal (not re-exported through the public `./utils` barrel): brings any
 // incoming model onto the current schema (e.g. legacy class stereotypes) at
@@ -233,6 +236,9 @@ export class ApollonEditor {
     }
     if (options?.labels !== undefined) {
       this.metadataStore.getState().setLabels(mergeLabels(options.labels))
+    }
+    if (options?.tags !== undefined) {
+      this.metadataStore.getState().setTagConfig(resolveTagConfig(options.tags))
     }
     // Register the chrome: the given descriptors (even `[]`, an explicit bare
     // canvas), or the palette + zoom + minimap defaults when omitted. The React
@@ -939,6 +945,29 @@ export class ApollonEditor {
   }
 
   /**
+   * Turn element-tag authoring on or off, and configure it. `true` enables
+   * free-form tagging; an object supplies a fixed `available` vocabulary and/or
+   * toggles `allowCreate`; `false`/`undefined` disables the authoring UI.
+   * Reactive. Tags already on the model stay queryable either way — this gates
+   * only the UI.
+   * @param options - `true`, a {@link TagOptions} object, or falsy to disable.
+   */
+  public setTags(options?: boolean | Apollon.TagOptions): void {
+    this.metadataStore.getState().setTagConfig(resolveTagConfig(options))
+  }
+
+  /**
+   * Set the tags on one element (a node, or a class attribute/method) by id, for
+   * hosts that assign tags programmatically instead of through the editor UI.
+   * Replaces the element's tag list; pass `[]` to clear. Unknown ids are ignored.
+   */
+  public setElementTags(elementId: string, tags: string[]): void {
+    const { nodes, setNodes } = this.diagramStore.getState()
+    const next = applyElementTags(nodes, elementId, tags)
+    if (next !== nodes) setNodes(next)
+  }
+
+  /**
    * Toggle preview-overlay mode. When `true`, subsequent `model = …`
    * assignments and other store mutators update the local Zustand caches
    * (so the canvas displays the overlay) WITHOUT writing to the Yjs
@@ -1050,6 +1079,26 @@ export class ApollonEditor {
   /** Returns a copy of the current highlight record (id -> CSS color). */
   public getElementHighlights(): Record<string, string> {
     return { ...this.assessmentSelectionStore.getState().highlightedElements }
+  }
+
+  /**
+   * Ids of every element carrying the given host-defined tag — a node, or one
+   * of its members (a class attribute or method, an SFC action row). See the
+   * `tags` field on element data. Matching is
+   * exact and case-sensitive, apart from surrounding whitespace, which is
+   * trimmed from both the query and stored tags; an unknown or blank tag yields
+   * an empty array. Returns a snapshot in document order — re-query after a
+   * model change.
+   *
+   * Pair it with {@link ApollonEditor.setElementHighlights} to color a whole
+   * group by a host-computed status without touching the saved model.
+   *
+   * @example
+   * const ids = editor.getElementIdsByTag("testAttributes[Context]")
+   * editor.setElementHighlights(Object.fromEntries(ids.map((id) => [id, "red"])))
+   */
+  public getElementIdsByTag(tag: string): string[] {
+    return getElementIdsByTag(this.diagramStore.getState().nodes, tag)
   }
 
   public getSelectedElements(): string[] {

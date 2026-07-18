@@ -1,6 +1,5 @@
 import React from "react"
 import { Typography } from "@/components/ui"
-import { ColorEditorGroupProvider } from "@/components/styleEditor/ColorEditorGroup"
 import { useLabels } from "@/i18n/useLabels"
 
 /**
@@ -31,29 +30,27 @@ export const PopoverLayout: React.FC<PopoverLayoutProps> = ({
   title,
   children,
 }) => (
-  <ColorEditorGroupProvider>
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: SECTION_GAP,
-        width: "100%",
-      }}
-    >
-      {title && (
-        <Typography
-          variant="subtitle2"
-          style={{
-            textTransform: "uppercase",
-            fontWeight: 600,
-          }}
-        >
-          {title}
-        </Typography>
-      )}
-      {children}
-    </div>
-  </ColorEditorGroupProvider>
+  <div
+    style={{
+      display: "flex",
+      flexDirection: "column",
+      gap: SECTION_GAP,
+      width: "100%",
+    }}
+  >
+    {title && (
+      <Typography
+        variant="subtitle2"
+        style={{
+          textTransform: "uppercase",
+          fontWeight: 600,
+        }}
+      >
+        {title}
+      </Typography>
+    )}
+    {children}
+  </div>
 )
 
 interface PopoverSectionProps {
