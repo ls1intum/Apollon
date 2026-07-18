@@ -191,20 +191,33 @@ export const VersionSidebarBody: FC<Props> = ({
     // canonical snapshot (server in collab mode, IDB in local mode), not the
     // potentially-dirty editor state. Until it resolves, `baselineVersionId`
     // still names the previous baseline, so `baselineResolved` is false.
+    //
+    // `stale` guards against out-of-order completion: if the latest version
+    // changes (a collaborator saves/restores) while this fetch is in flight,
+    // the effect re-runs and its cleanup marks this one stale, so a late
+    // resolution can't overwrite the newer baseline with an older body/id.
+    let stale = false
     const resolvingVersionId = latestSavedVersion.id
     getVersionRepository()
       .getBody(latestSavedVersion.diagramId, resolvingVersionId)
       .then((body) => {
-        setSavedFingerprint(structuralFingerprint(body))
+        if (!stale) setSavedFingerprint(structuralFingerprint(body))
       })
       .catch(() => {
         // Fallback: if the fetch fails, assume unsaved changes exist rather
         // than hiding the Save button. False-positive is safe; false-negative
         // (hiding real changes) is not.
-        setSavedFingerprint(null)
-        setHasChanges(true)
+        if (!stale) {
+          setSavedFingerprint(null)
+          setHasChanges(true)
+        }
       })
-      .finally(() => setBaselineVersionId(resolvingVersionId))
+      .finally(() => {
+        if (!stale) setBaselineVersionId(resolvingVersionId)
+      })
+    return () => {
+      stale = true
+    }
   }, [editor, latestSavedVersion?.id])
 
   useEffect(() => {

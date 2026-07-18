@@ -3,6 +3,7 @@ import { createRootRoute, Outlet, useRouterState } from "@tanstack/react-router"
 import { AppProviders } from "@/AppProviders"
 import { AppLoadingScreen } from "@/components/AppLoadingScreen"
 import { DeferredToastContainer } from "@/components/DeferredToastContainer"
+import { DiagramFileDropzone } from "@/components/DiagramFileDropzone"
 import { ErrorPage } from "@/pages/ErrorPage"
 import { ensureVersionStoreBootstrapped } from "@/stores/versionStoreBootstrap"
 
@@ -60,6 +61,8 @@ function RootLayout() {
           <Outlet />
         </div>
       </Suspense>
+      {/* Whole-window file drop → import. Mounted once, above every route. */}
+      <DiagramFileDropzone />
       <DeferredToastContainer />
     </AppProviders>
   )

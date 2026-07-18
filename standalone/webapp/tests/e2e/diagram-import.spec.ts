@@ -21,7 +21,11 @@ const diagramJson = (id: string, title: string) =>
     assessments: {},
   })
 
-/** Drop a file's text onto the first element matching `selector`. */
+/**
+ * Drop a file onto the first element matching `selector`. Returns whether the
+ * app cancelled the drag events — if it doesn't, the browser navigates to the
+ * dropped file instead of importing it, which is the bug this guards.
+ */
 async function dropFile(
   page: Page,
   selector: string,
@@ -29,16 +33,22 @@ async function dropFile(
   contents: string,
   type: string
 ) {
-  await page.locator(selector).first().waitFor({ state: "visible" })
-  await page.evaluate(
+  await page.locator(selector).first().waitFor({ state: "attached" })
+  return page.evaluate(
     ({ selector, fileName, contents, type }) => {
       const dt = new DataTransfer()
       dt.items.add(new File([contents], fileName, { type }))
       const target = document.querySelector(selector)!
       const init = { bubbles: true, cancelable: true, dataTransfer: dt }
       target.dispatchEvent(new DragEvent("dragenter", init))
-      target.dispatchEvent(new DragEvent("dragover", init))
-      target.dispatchEvent(new DragEvent("drop", init))
+      const over = new DragEvent("dragover", init)
+      target.dispatchEvent(over)
+      const drop = new DragEvent("drop", init)
+      target.dispatchEvent(drop)
+      return {
+        overPrevented: over.defaultPrevented,
+        dropPrevented: drop.defaultPrevented,
+      }
     },
     { selector, fileName, contents, type }
   )
@@ -50,13 +60,16 @@ test.describe("Drag-and-drop import", () => {
   }) => {
     await page.goto("/")
 
-    await dropFile(
+    const prevented = await dropFile(
       page,
       ".home-canvas-bg",
       "dropped.json",
       diagramJson(DROPPED_ID, "Dropped Diagram"),
       "application/json"
     )
+
+    // Both cancelled — otherwise the browser opens the raw JSON.
+    expect(prevented).toEqual({ overPrevented: true, dropPrevented: true })
 
     // Imported as a new local diagram, and opened.
     await expect(page).toHaveURL(new RegExp(`/local/${DROPPED_ID}$`))
@@ -85,6 +98,28 @@ test.describe("Drag-and-drop import", () => {
       "application/json"
     )
 
+    await expect(page).toHaveURL(new RegExp(`/local/${DROPPED_ID}$`))
+  })
+
+  test("a drop anywhere in the window imports — even outside page content", async ({
+    page,
+  }) => {
+    // The whole window is the drop surface: a wrapper around page content
+    // leaves gaps (margins, rails, portaled dialogs) where the browser would
+    // open the file instead.
+    await page.goto("/")
+    // Wait for the app to mount — the window listeners come up with it.
+    await page.locator(".home-canvas-bg").first().waitFor({ state: "visible" })
+
+    const prevented = await dropFile(
+      page,
+      "body",
+      "dropped.json",
+      diagramJson(DROPPED_ID, "Dropped Diagram"),
+      "application/json"
+    )
+
+    expect(prevented).toEqual({ overPrevented: true, dropPrevented: true })
     await expect(page).toHaveURL(new RegExp(`/local/${DROPPED_ID}$`))
   })
 

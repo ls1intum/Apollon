@@ -3,7 +3,6 @@ import { useLocation } from "@tanstack/react-router"
 import { type UMLDiagramType } from "@tumaet/apollon"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { useModalContext } from "@/contexts"
-import { DiagramFileDropzone } from "@/components/DiagramFileDropzone"
 import { useImportDiagramFile } from "@/hooks/useImportDiagramFile"
 import { DiagramGallerySkeleton } from "@/components/home/DiagramGallerySkeleton"
 import { HomeHeaderRow } from "@/components/home/HomeHeaderRow"
@@ -75,48 +74,46 @@ export const HomePage = () => {
   )
 
   return (
-    <DiagramFileDropzone className="h-full min-h-0">
-      <PageShell
-        // Account for the floating New-diagram FAB on phones (pb-24) so the last
-        // gallery row clears it; less bottom room is needed on md+ where the FAB
-        // is hidden. Also pad past the bottom safe-area inset on notched devices.
-        mainClassName="pb-[max(6rem,calc(var(--safe-area-inset-bottom,0px)+2.5rem))] md:pb-[max(2.5rem,var(--safe-area-inset-bottom,0px))]"
-        header={
-          <HomeHeaderRow
-            chrome={chrome}
-            count={count}
-            typeOptions={typeOptions}
-            onNewDiagram={openNewDiagram}
-            onImportJson={triggerJsonImport}
-          />
-        }
-      >
-        {/* Off-screen file input the Import button triggers programmatically. */}
-        <input
-          ref={jsonImportRef}
-          type="file"
-          accept=".json,application/json"
-          className="sr-only"
-          onChange={handleJsonImport}
-          aria-hidden="true"
-          tabIndex={-1}
+    <PageShell
+      // Account for the floating New-diagram FAB on phones (pb-24) so the last
+      // gallery row clears it; less bottom room is needed on md+ where the FAB
+      // is hidden. Also pad past the bottom safe-area inset on notched devices.
+      mainClassName="pb-[max(6rem,calc(var(--safe-area-inset-bottom,0px)+2.5rem))] md:pb-[max(2.5rem,var(--safe-area-inset-bottom,0px))]"
+      header={
+        <HomeHeaderRow
+          chrome={chrome}
+          count={count}
+          typeOptions={typeOptions}
+          onNewDiagram={openNewDiagram}
+          onImportJson={triggerJsonImport}
         />
+      }
+    >
+      {/* Off-screen file input the Import button triggers programmatically. */}
+      <input
+        ref={jsonImportRef}
+        type="file"
+        accept=".json,application/json"
+        className="sr-only"
+        onChange={handleJsonImport}
+        aria-hidden="true"
+        tabIndex={-1}
+      />
 
-        {/* Sets the gap between the header band and the first gallery row, which
+      {/* Sets the gap between the header band and the first gallery row, which
           live in separate shell wrappers. */}
-        <div className="mt-4">
-          <Suspense fallback={<DiagramGallerySkeleton />}>
-            <DiagramGallery
-              chrome={chrome}
-              highlightSharedDiagramId={highlightSharedDiagramId}
-              onCountChange={setCount}
-              onTypeOptionsChange={setPresentTypes}
-            />
-          </Suspense>
-        </div>
+      <div className="mt-4">
+        <Suspense fallback={<DiagramGallerySkeleton />}>
+          <DiagramGallery
+            chrome={chrome}
+            highlightSharedDiagramId={highlightSharedDiagramId}
+            onCountChange={setCount}
+            onTypeOptionsChange={setPresentTypes}
+          />
+        </Suspense>
+      </div>
 
-        <HomeNewFab onNewDiagram={openNewDiagram} />
-      </PageShell>
-    </DiagramFileDropzone>
+      <HomeNewFab onNewDiagram={openNewDiagram} />
+    </PageShell>
   )
 }

@@ -35,7 +35,6 @@ import { structuralFingerprint } from "@/lib/version/predicates"
 import { useVersionPreviewUrlSync } from "@/hooks/useVersionPreviewUrlSync"
 import { useElementWidth } from "@/hooks/useElementWidth"
 import { useFlushOnUnload } from "@/hooks/useFlushOnUnload"
-import { DiagramFileDropzone } from "@/components/DiagramFileDropzone"
 import { useEditorShortcuts } from "@/hooks/useEditorShortcuts"
 import { log } from "@/logger"
 import { addSharedDiagramEntry } from "@/utils/sharedDiagramStorage"
@@ -461,51 +460,49 @@ export const ApollonShared: React.FC = () => {
   )
 
   return (
-    <DiagramFileDropzone className="h-full">
-      <div className="h-full flex flex-col">
-        <div className="flex flex-1 min-h-0 overflow-hidden">
-          <div ref={canvasColumnRef} className="relative h-full min-w-0 flex-1">
-            {isLoading && (
-              <div className="absolute inset-0 z-[1] flex items-center justify-center">
-                Loading diagram…
-              </div>
-            )}
-            <div
-              className={`h-full w-full ${isLoading ? "invisible" : ""}`}
-              ref={containerRef}
-            />
-            {!isLoading && preview && diagramId && (
-              <div className="pointer-events-none absolute left-0 right-0 top-3 z-[5] flex justify-center px-4 [&>*]:pointer-events-auto">
-                <VersionPreviewBanner
-                  containerWidth={canvasColumnWidth}
-                  diagramId={diagramId}
-                  canRestore={canRestoreFromPreview}
-                  onExitPreview={handleExitPreview}
-                  onRestore={handleRestore}
-                />
-              </div>
-            )}
-          </div>
-          {diagramId && (
-            <VersionRail
-              diagramId={diagramId}
-              onVersionSaved={handleVersionSaved}
-              onConfirmedRestore={handleRestore}
-              onPreview={openPreview}
-            />
+    <div className="h-full flex flex-col">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+        <div ref={canvasColumnRef} className="relative h-full min-w-0 flex-1">
+          {isLoading && (
+            <div className="absolute inset-0 z-[1] flex items-center justify-center">
+              Loading diagram…
+            </div>
+          )}
+          <div
+            className={`h-full w-full ${isLoading ? "invisible" : ""}`}
+            ref={containerRef}
+          />
+          {!isLoading && preview && diagramId && (
+            <div className="pointer-events-none absolute left-0 right-0 top-3 z-[5] flex justify-center px-4 [&>*]:pointer-events-auto">
+              <VersionPreviewBanner
+                containerWidth={canvasColumnWidth}
+                diagramId={diagramId}
+                canRestore={canRestoreFromPreview}
+                onExitPreview={handleExitPreview}
+                onRestore={handleRestore}
+              />
+            </div>
           )}
         </div>
-
         {diagramId && (
-          <VersionDrawer
+          <VersionRail
             diagramId={diagramId}
             onVersionSaved={handleVersionSaved}
             onConfirmedRestore={handleRestore}
             onPreview={openPreview}
           />
         )}
-        <UndoRestoreToast />
       </div>
-    </DiagramFileDropzone>
+
+      {diagramId && (
+        <VersionDrawer
+          diagramId={diagramId}
+          onVersionSaved={handleVersionSaved}
+          onConfirmedRestore={handleRestore}
+          onPreview={openPreview}
+        />
+      )}
+      <UndoRestoreToast />
+    </div>
   )
 }

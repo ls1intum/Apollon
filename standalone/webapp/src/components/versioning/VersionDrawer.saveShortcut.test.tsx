@@ -41,6 +41,18 @@ const v1: VersionSummary = {
   librarySchemaVersion: "4.0.0",
 }
 
+const v2: VersionSummary = {
+  ...v1,
+  id: "v2",
+  createdAt: "2026-04-29T13:00:00Z",
+}
+
+/** A body that differs from the editor's model, so the diagram reads as dirty. */
+const OTHER_MODEL = {
+  ...MODEL,
+  nodes: [{ id: "other", type: "class", position: { x: 50, y: 50 }, data: {} }],
+} as unknown as UMLModel
+
 const deferred = <T,>() => {
   let resolve!: (value: T) => void
   const promise = new Promise<T>((r) => (resolve = r))
@@ -91,7 +103,7 @@ describe("VersionSidebarBody — save shortcut vs the loading window", () => {
       total: number
     }>
   >
-  let body: ReturnType<typeof deferred<Diagram>>
+  let bodies: Record<string, ReturnType<typeof deferred<Diagram>>>
   let create: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
@@ -105,13 +117,14 @@ describe("VersionSidebarBody — save shortcut vs the loading window", () => {
       }
     )
     list = deferred()
-    body = deferred()
+    bodies = { v1: deferred(), v2: deferred() }
     create = vi.fn()
     setVersionRepository({
       kind: "local",
       cap: 30,
       list: () => list.promise,
-      getBody: () => body.promise,
+      getBody: (_diagramId: string, versionId: string) =>
+        bodies[versionId]!.promise,
       create,
       permalink: () => null,
     } as unknown as VersionRepository)
@@ -140,10 +153,45 @@ describe("VersionSidebarBody — save shortcut vs the loading window", () => {
     // The body resolves to the same model the editor holds → nothing changed,
     // so the shortcut settles without writing a second, identical version.
     await act(async () => {
-      body.resolve(MODEL as unknown as Diagram)
+      bodies.v1!.resolve(MODEL as unknown as Diagram)
     })
     await waitFor(() => expect(create).not.toHaveBeenCalled())
     // And it genuinely reached a decision (didn't just stay blocked forever).
     expect(useVersionStore.getState().saveRequestByDiagram[DIAGRAM_ID]).toBe(0)
+  })
+
+  it("ignores a stale body that resolves after a newer version's", async () => {
+    mount()
+    await screen.findByRole("textbox")
+
+    act(() => {
+      void useVersionStore.getState().fetchVersions(DIAGRAM_ID)
+    })
+    await act(async () => {
+      list.resolve({ versions: [v1], total: 1 })
+    })
+
+    // A collaborator saves while v1's body fetch is still in flight.
+    act(() => {
+      useVersionStore.setState((s) => ({
+        versions: { ...s.versions, [DIAGRAM_ID]: [v2, v1] },
+      }))
+    })
+
+    // The NEWER body resolves first, then the older, stale one.
+    await act(async () => {
+      bodies.v2!.resolve(OTHER_MODEL as unknown as Diagram)
+    })
+    await act(async () => {
+      bodies.v1!.resolve(MODEL as unknown as Diagram)
+    })
+
+    // The stale resolution must not have re-pointed the baseline at v1 — a
+    // save now still completes, against v2's baseline (which differs from the
+    // editor's model, so there IS something to save).
+    act(() => {
+      useVersionStore.getState().requestSave(DIAGRAM_ID)
+    })
+    await waitFor(() => expect(create).toHaveBeenCalledOnce())
   })
 })

@@ -9,7 +9,6 @@ import {
 import { getRouteApi, useRouter } from "@tanstack/react-router"
 import { toast } from "react-toastify"
 import { ApollonEditor, importDiagram, type UMLModel } from "@tumaet/apollon"
-import { DiagramFileDropzone } from "@/components/DiagramFileDropzone"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { useEditorContext, useModalContext } from "@/contexts"
 import { useElementWidth } from "@/hooks/useElementWidth"
@@ -426,29 +425,27 @@ export const ApollonLocal: FC = () => {
   }
 
   return (
-    <DiagramFileDropzone className="h-full">
-      <div className="h-full flex flex-col">
-        <div className="flex min-h-0 flex-1 overflow-hidden">
-          <div ref={canvasColumnRef} className="relative h-full min-w-0 flex-1">
-            <div ref={containerRef} className="h-full w-full" />
-            {banner}
-          </div>
-          <VersionRail
-            diagramId={diagramId}
-            onConfirmedRestore={handleConfirmedRestore}
-            onVersionSaved={handleVersionSaved}
-            onPreview={openPreview}
-          />
+    <div className="h-full flex flex-col">
+      <div className="flex min-h-0 flex-1 overflow-hidden">
+        <div ref={canvasColumnRef} className="relative h-full min-w-0 flex-1">
+          <div ref={containerRef} className="h-full w-full" />
+          {banner}
         </div>
-        <VersionDrawer
+        <VersionRail
           diagramId={diagramId}
           onConfirmedRestore={handleConfirmedRestore}
           onVersionSaved={handleVersionSaved}
           onPreview={openPreview}
         />
-        {/* No <UndoRestoreToast /> in local mode — auto-snapshot rows
-          in the drawer are the durable replacement. */}
       </div>
-    </DiagramFileDropzone>
+      <VersionDrawer
+        diagramId={diagramId}
+        onConfirmedRestore={handleConfirmedRestore}
+        onVersionSaved={handleVersionSaved}
+        onPreview={openPreview}
+      />
+      {/* No <UndoRestoreToast /> in local mode — auto-snapshot rows
+          in the drawer are the durable replacement. */}
+    </div>
   )
 }
