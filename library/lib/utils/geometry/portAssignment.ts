@@ -627,6 +627,11 @@ export const assignPorts = (
         const byKey = new Map(members.map((e) => [endKey(e.edgeId, e.end), e]))
         const centre = myLo + axis / 2
         const n = ordered.length
+        // A LONE L arm on the whole side is CENTRED: its along-side position does not
+        // change its corner count, so the tiny length saved by aiming at a far-off
+        // partner is not worth the off-centre look (the user's point). Aiming only
+        // earns its keep when it SPREADS several edges sharing the side.
+        const aimBias = group.length > 1 ? AIM_BIAS : 0
         ordered.forEach((m, i) => {
           const e = byKey.get(endKey(m.edgeId, m.end))!
           const aim = tangentialX ? e.partnerCenter.x : e.partnerCenter.y
@@ -636,7 +641,7 @@ export const assignPorts = (
           const laneOffset = n > 1 ? (i - (n - 1) / 2) * pitchPx : 0
           const coord =
             centre +
-            AIM_BIAS *
+            aimBias *
               (clamp(aim, myLo + margin, myLo + axis - margin) - centre) +
             laneOffset
           seats.push({ edgeId: e.edgeId, end: e.end, coord, fixed: false })

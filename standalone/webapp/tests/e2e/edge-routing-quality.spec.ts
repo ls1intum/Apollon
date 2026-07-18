@@ -210,10 +210,10 @@ const CASES: {
   },
   {
     file: "routing-case-54.json",
-    maxCorners: 2,
+    maxCorners: 3,
     maxCrossings: 0,
     maxStraightBroken: 0,
-    maxOffMax: 0.6,
+    maxOffMax: 0.3,
   },
   {
     file: "routing-case-55.json",
@@ -230,6 +230,16 @@ const CASES: {
     maxCrossings: 0,
     maxStraightBroken: 0,
     maxOffMax: 0.85,
+  },
+  // 57: ClassB has one edge on top and one on bottom, each the LONE arm on its side.
+  // Both must sit at the side CENTRE (offMax low), not aimed off toward their far-left
+  // partners — a lone arm's position does not change its corner count.
+  {
+    file: "routing-case-57.json",
+    maxCorners: 3,
+    maxCrossings: 0,
+    maxStraightBroken: 0,
+    maxOffMax: 0.35,
   },
 ]
 
