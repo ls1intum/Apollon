@@ -1,14 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { act, cleanup, screen, waitFor } from "@testing-library/react"
+import { QueryClientProvider, type QueryClient } from "@tanstack/react-query"
 import type { UMLModel } from "@tumaet/apollon"
 import { renderWithRouter } from "@/test/renderWithRouter"
+import { createTestQueryClient } from "@/test/queryTestUtils"
+import { VersionRepositoryProvider } from "@/contexts/VersionRepositoryContext"
 import { EditorContext, ModalProvider } from "@/contexts"
 import { VersionSidebarBody } from "./VersionDrawer"
 import { useVersionStore } from "@/stores/useVersionStore"
-import {
-  setVersionRepository,
-  type VersionRepository,
-} from "@/services/versionRepository"
+import { stubVersionRepository } from "@/test/versionRepositoryStub"
+import type { VersionRepository } from "@/services/versionRepository"
+import { versionKeys } from "@/queries/keys"
+import type { VersionListData } from "@/queries/versionQueries"
 import type { VersionSummary, Diagram } from "@/types"
 
 /**
@@ -66,32 +69,42 @@ const fakeEditor = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 } as any
 
+/** The page shape the infinite list query caches, for the peer-save simulation. */
+const listPage = (versions: VersionSummary[]): VersionListData => ({
+  pages: [{ versions, nextCursor: undefined, total: versions.length }],
+  pageParams: [undefined],
+})
+
+let queryClient: QueryClient
+let restoreRepository: () => void = () => {}
+
 const mount = () =>
   renderWithRouter(<VersionSidebarBody diagramId={DIAGRAM_ID} />, {
     wrapper: (children) => (
-      <EditorContext
-        value={{
-          editor: fakeEditor,
-          diagramName: "",
-          setDiagramName: vi.fn(),
-          setEditor: vi.fn(),
-        }}
-      >
-        <ModalProvider>{children}</ModalProvider>
-      </EditorContext>
+      <QueryClientProvider client={queryClient}>
+        <VersionRepositoryProvider kind="local">
+          <EditorContext
+            value={{
+              editor: fakeEditor,
+              diagramName: "",
+              setDiagramName: vi.fn(),
+              setEditor: vi.fn(),
+            }}
+          >
+            <ModalProvider>{children}</ModalProvider>
+          </EditorContext>
+        </VersionRepositoryProvider>
+      </QueryClientProvider>
     ),
   })
 
 afterEach(() => {
   cleanup()
+  restoreRepository()
+  restoreRepository = () => {}
   useVersionStore.setState({
     drawerOpenByDiagram: {},
     saveRequestByDiagram: {},
-    versions: {},
-    nextCursor: {},
-    totals: {},
-    loading: {},
-    error: {},
   })
 })
 
@@ -104,30 +117,19 @@ describe("VersionSidebarBody — save shortcut vs the loading window", () => {
     }>
   >
   let bodies: Record<string, ReturnType<typeof deferred<Diagram>>>
-  let create: ReturnType<typeof vi.fn>
+  let create: VersionRepository["create"] & ReturnType<typeof vi.fn>
 
   beforeEach(() => {
-    // Version rows observe their visibility; jsdom has no IntersectionObserver.
-    vi.stubGlobal(
-      "IntersectionObserver",
-      class {
-        observe() {}
-        unobserve() {}
-        disconnect() {}
-      }
-    )
+    queryClient = createTestQueryClient()
     list = deferred()
     bodies = { v1: deferred(), v2: deferred() }
-    create = vi.fn()
-    setVersionRepository({
-      kind: "local",
-      cap: 30,
+    create = vi.fn() as typeof create
+    restoreRepository = stubVersionRepository("local", {
       list: () => list.promise,
       getBody: (_diagramId: string, versionId: string) =>
         bodies[versionId]!.promise,
       create,
-      permalink: () => null,
-    } as unknown as VersionRepository)
+    })
   })
 
   it("waits for the list AND the body before deciding, and skips an unchanged diagram", async () => {
@@ -135,10 +137,9 @@ describe("VersionSidebarBody — save shortcut vs the loading window", () => {
     // The router mounts the panel asynchronously — wait for its composer.
     await screen.findByRole("textbox")
 
-    // The page fires the list fetch (unawaited), then the user presses the
-    // shortcut while it's still loading.
+    // The panel's list query is still in flight (its promise is deferred), and
+    // the user presses the shortcut mid-load.
     act(() => {
-      void useVersionStore.getState().fetchVersions(DIAGRAM_ID)
       useVersionStore.getState().requestSave(DIAGRAM_ID)
     })
     expect(create).not.toHaveBeenCalled()
@@ -157,25 +158,28 @@ describe("VersionSidebarBody — save shortcut vs the loading window", () => {
     })
     await waitFor(() => expect(create).not.toHaveBeenCalled())
     // And it genuinely reached a decision (didn't just stay blocked forever).
-    expect(useVersionStore.getState().saveRequestByDiagram[DIAGRAM_ID]).toBe(0)
+    await waitFor(() =>
+      expect(useVersionStore.getState().saveRequestByDiagram[DIAGRAM_ID]).toBe(
+        0
+      )
+    )
   })
 
   it("ignores a stale body that resolves after a newer version's", async () => {
     mount()
     await screen.findByRole("textbox")
 
-    act(() => {
-      void useVersionStore.getState().fetchVersions(DIAGRAM_ID)
-    })
     await act(async () => {
       list.resolve({ versions: [v1], total: 1 })
     })
 
-    // A collaborator saves while v1's body fetch is still in flight.
+    // A collaborator saves while v1's body fetch is still in flight; the
+    // realtime bridge writes the newer row into the cached list.
     act(() => {
-      useVersionStore.setState((s) => ({
-        versions: { ...s.versions, [DIAGRAM_ID]: [v2, v1] },
-      }))
+      queryClient.setQueryData(
+        versionKeys.list("local", DIAGRAM_ID),
+        listPage([v2, v1])
+      )
     })
 
     // The NEWER body resolves first, then the older, stale one.

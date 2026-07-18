@@ -6,11 +6,8 @@ import {
 } from "lucide-react"
 import type { CSSProperties, FC } from "react"
 import { cn } from "@tumaet/ui/lib/utils"
-import {
-  selectScopedPreview,
-  useVersionStore,
-  type PendingVersion,
-} from "@/stores/useVersionStore"
+import { selectScopedPreview, useVersionStore } from "@/stores/useVersionStore"
+import type { PendingVersion } from "@/types"
 import { useClosePreview } from "@/hooks/useVersionPreviewUrlSync"
 import { relativeTime } from "./relativeTime"
 import {

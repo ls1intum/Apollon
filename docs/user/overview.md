@@ -8,7 +8,7 @@ slug: /
 # Overview
 
 Apollon is an open-source UML and modeling editor for the web. You draw diagrams
-in the browser, collaborate in real time, and export to SVG, PNG, PDF, or JSON.
+in the browser, collaborate in real time, and export to SVG, PNG, PDF, PPTX, or JSON.
 There is nothing to install to get started.
 
 ## What you can draw
@@ -29,8 +29,8 @@ Apollon supports 13 diagram types:
 - BPMN
 - SFC
 
-Any diagram exports to SVG, PNG, PDF, or JSON. JSON round-trips — re-import it to
-keep editing. Real-time collaboration is optional and runs over WebSockets.
+Any diagram exports to SVG, PNG, PDF, PPTX, or JSON. JSON round-trips — re-import
+it to keep editing. Real-time collaboration is optional and runs over WebSockets.
 
 ## Which way to use Apollon
 

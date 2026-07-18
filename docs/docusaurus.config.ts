@@ -141,9 +141,10 @@ const config: Config = {
   ],
 
   themeConfig: {
-    // Link-unfurl preview image. The logo works; a dedicated 1200×630 card
-    // would render better in social embeds.
-    image: "img/logo.png",
+    // Link-unfurl preview image: the 1280×640 social card generated from the
+    // live editor by the "readme-assets" Playwright project (see
+    // standalone/webapp/tests/visual/readme-assets.visual.spec.ts).
+    image: "img/apollon-social-card.png",
     colorMode: {
       respectPrefersColorScheme: true,
       disableSwitch: false,

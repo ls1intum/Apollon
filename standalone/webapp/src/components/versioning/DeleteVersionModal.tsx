@@ -7,11 +7,10 @@ import {
   AlertDialogFooter,
 } from "@tumaet/ui/components/alert-dialog"
 import { useModalContext } from "@/contexts"
-import {
-  selectScopedPreview,
-  useVersionStore,
-  type PendingVersion,
-} from "@/stores/useVersionStore"
+import { selectScopedPreview, useVersionStore } from "@/stores/useVersionStore"
+import type { PendingVersion } from "@/types"
+import type { RepositoryKind } from "@/services/versionRepository"
+import { useDeleteVersionMutation } from "@/queries/versionMutations"
 import { useClosePreview } from "@/hooks/useVersionPreviewUrlSync"
 import { log } from "@/logger"
 import { versioningStrings as t } from "./strings"
@@ -25,15 +24,22 @@ interface DeleteVersionModalProps {
    * warning copy. `null` falls back to the generic body.
    */
   version: PendingVersion | null
+  /**
+   * Which backend the version lives in. A prop, not context: modals mount
+   * under `ModalProvider` at the app root, outside the editor page's
+   * `VersionRepositoryProvider`.
+   */
+  kind: RepositoryKind
 }
 
 export const DeleteVersionModal = ({
   diagramId,
   versionId,
   version,
+  kind,
 }: DeleteVersionModalProps) => {
   const { closeModal } = useModalContext()
-  const deleteVersion = useVersionStore((s) => s.deleteVersion)
+  const deleteVersion = useDeleteVersionMutation(kind, diagramId)
   // Clearing `?version=` before delete stops the URL sync re-entering the
   // deleted version and flashing a spurious "unavailable" toast.
   const closePreview = useClosePreview()
@@ -46,7 +52,7 @@ export const DeleteVersionModal = ({
     setWorking(true)
     try {
       if (previewingThis) closePreview()
-      await deleteVersion(diagramId, versionId)
+      await deleteVersion.mutateAsync({ versionId })
       // Close only on success — a rejected delete keeps the dialog open so the
       // error toast lands in context (so the destructive action owns its own
       // close instead of the auto-dismissing AlertDialog primitive).

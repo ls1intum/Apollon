@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react"
+import { useMutation } from "@tanstack/react-query"
 import { toast } from "react-toastify"
 import type { UMLModel } from "@tumaet/apollon"
 import { DiagramView } from "@/types"
@@ -40,6 +41,10 @@ export function useShareableDiagram(
 
   const link = diagramId ? buildSharedDiagramUrl(diagramId, mode) : ""
 
+  const createDiagramMutation = useMutation({
+    mutationFn: (model: UMLModel) => DiagramApiClient.createDiagram(model),
+  })
+
   const create = async (name: string) => {
     if (!modelData) {
       toast.error("This diagram can't be shared right now.")
@@ -52,7 +57,7 @@ export function useShareableDiagram(
         trimmed && trimmed !== modelData.title
           ? { ...modelData, title: trimmed }
           : modelData
-      const { id } = await DiagramApiClient.createDiagram(model)
+      const { id } = await createDiagramMutation.mutateAsync(model)
       addSharedDiagramEntry(id)
       setDiagramId(id)
       setMode(DiagramView.COLLABORATE)

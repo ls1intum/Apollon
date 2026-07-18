@@ -45,10 +45,14 @@ export default defineConfig({
     {
       name: "chromium",
       // The perf suite has its own serial, retry-free project below; keep it
-      // out of the parallel functional run. The how-to-use spec is owned by the
-      // dedicated "howto-assets" project (different snapshotPathTemplate), so
-      // exclude it here too.
-      testIgnore: ["**/perf/**", "**/how-to-use.visual.spec.ts"],
+      // out of the parallel functional run. The how-to-use and readme-assets
+      // specs are owned by their dedicated projects (different
+      // snapshotPathTemplates), so exclude them here too.
+      testIgnore: [
+        "**/perf/**",
+        "**/how-to-use.visual.spec.ts",
+        "**/readme-assets.visual.spec.ts",
+      ],
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 1280, height: 720 },
@@ -69,6 +73,27 @@ export default defineConfig({
         viewport: { width: 1280, height: 720 },
       },
     },
+    {
+      // Generates the public-facing marketing assets — the README hero
+      // screenshots (light + dark) and the 1280×640 GitHub social preview
+      // card — straight from the live editor, same one-source-of-truth
+      // pattern as howto-assets. Its snapshotPathTemplate writes (and reads,
+      // for the regression diff) the exact PNGs README.md, library/README.md,
+      // and docs/docusaurus.config.ts reference under docs/static/img/.
+      // Regenerate with:
+      //   pnpm exec playwright test --project readme-assets --update-snapshots
+      name: "readme-assets",
+      testMatch: "**/readme-assets.visual.spec.ts",
+      snapshotPathTemplate: "{testDir}/../../../docs/static/img/{arg}{ext}",
+      use: {
+        ...devices["Desktop Chrome"],
+        // Larger viewport + 2× scale so the hero holds up at README width on
+        // high-DPI displays. The social-card test overrides both to hit
+        // GitHub's exact 1280×640 spec.
+        viewport: { width: 1440, height: 810 },
+        deviceScaleFactor: 2,
+      },
+    },
     // Firefox is where the Apollon-in-Artemis exam freeze was observed, so the
     // functional suite should run there too. It's opt-in (PLAYWRIGHT_FIREFOX=1
     // via `pnpm test:e2e:firefox`) so the default run — and CI that only
@@ -78,9 +103,13 @@ export default defineConfig({
       ? [
           {
             name: "firefox",
-            // The how-to-use assets are baselined once, in the pinned chromium
-            // "howto-assets" project; don't regenerate/diff them on firefox.
-            testIgnore: ["**/perf/**", "**/how-to-use.visual.spec.ts"],
+            // The how-to-use and readme assets are baselined once, in their
+            // pinned chromium projects; don't regenerate/diff them on firefox.
+            testIgnore: [
+              "**/perf/**",
+              "**/how-to-use.visual.spec.ts",
+              "**/readme-assets.visual.spec.ts",
+            ],
             use: {
               ...devices["Desktop Firefox"],
               viewport: { width: 1280, height: 720 },
