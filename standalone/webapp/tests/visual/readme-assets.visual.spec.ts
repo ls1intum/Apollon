@@ -79,7 +79,9 @@ async function frameEditorShot(
   theme: "light" | "dark",
   editorShotB64: string
 ) {
-  const margin = 56
+  // Margin must exceed the shadow's reach (y-offset + blur) or the shadow
+  // clips at the image edge.
+  const margin = 64
   const titlebar = 44
   const width = 1440
   const height = 810
@@ -89,8 +91,8 @@ async function frameEditorShot(
   })
   const c =
     theme === "dark"
-      ? { bar: "#161b22", border: "#30363d", shadow: "rgba(0, 0, 0, 0.55)" }
-      : { bar: "#f6f8fa", border: "#d0d7de", shadow: "rgba(31, 35, 40, 0.28)" }
+      ? { bar: "#161b22", border: "#30363d", shadow: "rgba(0, 0, 0, 0.4)" }
+      : { bar: "#f6f8fa", border: "#d0d7de", shadow: "rgba(31, 35, 40, 0.16)" }
   await page.setContent(`<!doctype html>
 <html>
 <head>
@@ -103,7 +105,7 @@ async function frameEditorShot(
     border-radius: 14px;
     overflow: hidden;
     border: 1px solid ${c.border};
-    box-shadow: 0 28px 80px ${c.shadow};
+    box-shadow: 0 16px 44px ${c.shadow};
   }
   .titlebar {
     height: ${titlebar}px;
