@@ -1,15 +1,17 @@
 import { Skeleton } from "@tumaet/ui/components/skeleton"
 import { HistoryIcon, BookmarkIcon } from "lucide-react"
 import { useEffect, useRef, useState, type FC } from "react"
-import { ApollonEditor, importDiagram, type UMLModel } from "@tumaet/apollon"
-import { getVersionRepository } from "@/services/versionRepository"
+import { ApollonEditor, importDiagram } from "@tumaet/apollon"
+import { useVersionBodyQuery } from "@/queries/versionQueries"
+import { useVersionRepositoryKind } from "@/contexts/VersionRepositoryContext"
 import { log } from "@/logger"
 
 /**
  * Per-version SVG thumbnail. The body JSON is fetched lazily when the row
- * enters the viewport (`IntersectionObserver`) and rendered client-side via
- * `ApollonEditor.exportModelAsSvg`. Result is data-URL'd and stamped into
- * an `<img>` so the browser handles `object-fit: contain` framing for free.
+ * enters the viewport: an `IntersectionObserver` flips the body query's
+ * `enabled` gate, so off-screen rows never start a request. Rendering happens
+ * client-side via `ApollonEditor.exportModelAsSvg`; the result is data-URL'd
+ * and stamped into an `<img>` so the browser frames it with `object-fit`.
  *
  * Concurrency note: `exportModelAsSvg` mounts a temporary 4000x4000 div
  * during rendering, so we serialize via a tiny module-level queue to avoid
@@ -18,9 +20,10 @@ import { log } from "@/logger"
  * us safe on long lists during fast scrolling.
  */
 
-// Module-level cache: snapshots are immutable, so a permanent in-memory
-// data URL is correct. Cleared on full reload.
-const cache = new Map<string, string>() // key = `${diagramId}/${versionId}`
+// Module-level cache for the RENDERED SVG (not the body — that's the query
+// cache's job): snapshots are immutable, so a permanent in-memory data URL is
+// correct. Cleared on full reload.
+const cache = new Map<string, string>() // key = `${kind}/${diagramId}/${versionId}`
 
 // Single-flight render queue. Prevents overlapping `exportModelAsSvg`
 // calls from racing on the shared temp DOM container.
@@ -56,56 +59,65 @@ export const VersionThumbnail: FC<Props> = ({
   size = "banner",
   isAuto = false,
 }) => {
+  const kind = useVersionRepositoryKind()
   const compact = size === "compact"
-  const cacheKey = `${diagramId}/${versionId}`
+  const cacheKey = `${kind}/${diagramId}/${versionId}`
   const [src, setSrc] = useState<string | null>(cache.get(cacheKey) ?? null)
-  const [errored, setErrored] = useState(false)
+  const [renderFailed, setRenderFailed] = useState(false)
+  const [isVisible, setIsVisible] = useState(false)
   const ref = useRef<HTMLDivElement | null>(null)
 
+  // Visibility gate: flips once when the row first scrolls near the viewport,
+  // then disconnects — a version body is immutable, so there is nothing to
+  // re-observe.
   useEffect(() => {
-    if (src || errored) return
+    if (src) return
     const node = ref.current
     if (!node) return
-    let cancelled = false
     const observer = new IntersectionObserver(
       (entries) => {
-        const first = entries[0]
-        if (!first?.isIntersecting) return
+        if (!entries[0]?.isIntersecting) return
         observer.disconnect()
-        getVersionRepository()
-          .getBody(diagramId, versionId)
-          .then((body) => {
-            if (cancelled) return null
-            // `Diagram` (server wire form) is `UMLModel & {...}`; route
-            // through `importDiagram` so older-schema snapshots forward-
-            // convert to whatever the current library understands before
-            // rendering.
-            const model = importDiagram(body) as UMLModel
-            return enqueueRender(() =>
-              ApollonEditor.exportModelAsSvg(model, { svgMode: "compat" })
-            )
-          })
-          .then((result) => {
-            if (cancelled || !result) return
-            const url = svgToDataUrl(result.svg)
-            cache.set(cacheKey, url)
-            setSrc(url)
-          })
-          .catch((err) => {
-            if (cancelled) return
-            log.error("Thumbnail render failed", err)
-            setErrored(true)
-          })
+        setIsVisible(true)
       },
       { rootMargin: "100px", threshold: 0.01 }
     )
     observer.observe(node)
-    return () => {
-      cancelled = true
-      observer.disconnect()
-    }
-  }, [diagramId, versionId, src, errored])
+    return () => observer.disconnect()
+  }, [src])
 
+  const bodyQuery = useVersionBodyQuery(kind, diagramId, versionId, {
+    enabled: isVisible && !src && !renderFailed,
+  })
+
+  // Body → SVG. The render queue serialises the expensive export; a
+  // post-unmount `setSrc` is a React no-op, and the module cache write is
+  // wanted either way, so no cancellation flag is needed.
+  useEffect(() => {
+    const body = bodyQuery.data
+    // `isVisible` gates the export too, not just the fetch: the body cache is
+    // shared with preview entry and the drawer's dirty-check baseline, so a
+    // row's body can already be cached while the row is still off-screen —
+    // rendering it then would run the expensive export for nothing.
+    if (!isVisible || !body || src || renderFailed) return
+    enqueueRender(() => {
+      // `importDiagram` forward-converts older-schema snapshots. Inside the
+      // queue so a schema failure shares the export's async error path.
+      const model = importDiagram(body)
+      return ApollonEditor.exportModelAsSvg(model, { svgMode: "compat" })
+    })
+      .then((result) => {
+        const url = svgToDataUrl(result.svg)
+        cache.set(cacheKey, url)
+        setSrc(url)
+      })
+      .catch((err) => {
+        log.error("Thumbnail render failed", err)
+        setRenderFailed(true)
+      })
+  }, [bodyQuery.data, isVisible, src, renderFailed, cacheKey])
+
+  const errored = renderFailed || bodyQuery.isError
   const KindIcon = isAuto ? HistoryIcon : BookmarkIcon
   const w = compact ? 64 : 160
   const h = compact ? 40 : 100

@@ -4,6 +4,7 @@ import pluginJs from "@eslint/js"
 import tseslint from "typescript-eslint"
 import eslintReact from "@eslint-react/eslint-plugin"
 import reactHooks from "eslint-plugin-react-hooks"
+import pluginQuery from "@tanstack/eslint-plugin-query"
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
@@ -26,6 +27,9 @@ export default [
   { languageOptions: { globals: globals.browser } },
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
+  // TanStack Query correctness rules (exhaustive query keys, stable
+  // QueryClient, no misuse of mutation results).
+  ...pluginQuery.configs["flat/recommended"],
   // recommended-typescript disables the prop-types rules TypeScript already enforces.
   eslintReact.configs["recommended-typescript"],
   {

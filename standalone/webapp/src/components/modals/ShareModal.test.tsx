@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { fireEvent, render, screen } from "@testing-library/react"
+import { fireEvent, screen } from "@testing-library/react"
+import { renderWithQuery } from "@/test/queryTestUtils"
 
 const { sharedIdRef, createMock } = vi.hoisted(() => ({
   sharedIdRef: { value: undefined as string | undefined },
@@ -46,7 +47,7 @@ beforeEach(() => {
 describe("ShareModal", () => {
   it("opens straight on the link for an already-shared diagram, with embed", () => {
     sharedIdRef.value = "shared-xyz"
-    render(<ShareModal />)
+    renderWithQuery(<ShareModal />)
 
     expect(screen.getByLabelText("Copy link")).toBeTruthy()
     expect(screen.getByText("Embed")).toBeTruthy()
@@ -56,7 +57,7 @@ describe("ShareModal", () => {
 
   it("creates the shared diagram exactly once, then shows the link", async () => {
     createMock.mockResolvedValue({ id: "new-1" })
-    render(<ShareModal />)
+    renderWithQuery(<ShareModal />)
 
     fireEvent.click(screen.getByRole("button", { name: "Create share link" }))
     // After creation the link appears and the create button is gone.

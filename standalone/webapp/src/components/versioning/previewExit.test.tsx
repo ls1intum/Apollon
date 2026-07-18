@@ -5,17 +5,19 @@
  * gone after each interaction.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { cleanup, screen } from "@testing-library/react"
+import { cleanup, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import {
   AlertDialog,
   AlertDialogContent,
 } from "@tumaet/ui/components/alert-dialog"
 import { renderWithRouter } from "@/test/renderWithRouter"
+import { wrapWithQueryClient } from "@/test/queryTestUtils"
 import { ModalProvider } from "@/contexts"
 import { CurrentVersionRow } from "./CurrentVersionRow"
 import { DeleteVersionModal } from "./DeleteVersionModal"
 import { useVersionStore } from "@/stores/useVersionStore"
+import { VersionApiClient } from "@/services/DiagramApiClient"
 import type { UMLModel } from "@tumaet/apollon"
 
 const DIAGRAM_ID = "diag-1"
@@ -24,26 +26,14 @@ const body = { nodes: [], edges: [] } as unknown as UMLModel
 
 beforeEach(() => {
   useVersionStore.setState({
-    versions: {
-      [DIAGRAM_ID]: [
-        {
-          id: VERSION_ID,
-          diagramId: DIAGRAM_ID,
-          name: "First",
-          description: "First",
-          seq: 1,
-          createdAt: new Date(0).toISOString(),
-          status: "saved",
-        },
-      ] as never,
-    },
     preview: { diagramId: DIAGRAM_ID, versionId: VERSION_ID, body },
   })
 })
 
 afterEach(() => {
   cleanup()
-  useVersionStore.setState({ versions: {}, preview: null })
+  useVersionStore.setState({ preview: null })
+  vi.restoreAllMocks()
 })
 
 describe("URL-driven preview exit", () => {
@@ -57,6 +47,7 @@ describe("URL-driven preview exit", () => {
       {
         initialEntry: `/local/${DIAGRAM_ID}?version=${VERSION_ID}`,
         routePaths: ["/local/$id"],
+        wrapper: (children) => wrapWithQueryClient(children),
       }
     )
 
@@ -67,9 +58,12 @@ describe("URL-driven preview exit", () => {
     expect(router.state.location.search).not.toHaveProperty("version")
   })
 
-  it("deleting the previewed version strips ?version= before deleting", async () => {
-    const deleteVersion = vi.fn().mockResolvedValue(undefined)
-    useVersionStore.setState({ deleteVersion })
+  it("deleting the previewed version also strips ?version=", async () => {
+    // The modal's delete mutation flows through the bound repository (the
+    // default RemoteVersionRepository delegates to VersionApiClient).
+    const deleteSpy = vi
+      .spyOn(VersionApiClient, "delete")
+      .mockResolvedValue(undefined)
 
     const { router } = renderWithRouter(
       // DeleteVersionModal renders only the AlertDialog *body* (footer, cancel,
@@ -83,6 +77,7 @@ describe("URL-driven preview exit", () => {
               diagramId={DIAGRAM_ID}
               versionId={VERSION_ID}
               version={null}
+              kind="remote"
             />
           </AlertDialogContent>
         </AlertDialog>
@@ -90,6 +85,7 @@ describe("URL-driven preview exit", () => {
       {
         initialEntry: `/local/${DIAGRAM_ID}?version=${VERSION_ID}`,
         routePaths: ["/local/$id"],
+        wrapper: (children) => wrapWithQueryClient(children),
       }
     )
 
@@ -97,7 +93,9 @@ describe("URL-driven preview exit", () => {
       await screen.findByRole("button", { name: /delete/i })
     )
 
-    expect(deleteVersion).toHaveBeenCalledWith(DIAGRAM_ID, VERSION_ID)
+    await waitFor(() =>
+      expect(deleteSpy).toHaveBeenCalledWith(DIAGRAM_ID, VERSION_ID)
+    )
     expect(router.state.location.search).not.toHaveProperty("version")
   })
 })
