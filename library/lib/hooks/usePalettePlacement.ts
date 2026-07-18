@@ -38,15 +38,23 @@ export function usePalettePlacement(
     diagramId,
     nodes,
     setNodes,
+    edges,
+    setEdges,
     selectedElementIds,
     setSelectedElementsId,
+    lastPlacedElementId,
+    setLastPlacedElementId,
   } = useDiagramStore(
     useShallow((state) => ({
       diagramId: state.diagramId,
       nodes: state.nodes,
       setNodes: state.setNodes,
+      edges: state.edges,
+      setEdges: state.setEdges,
       selectedElementIds: state.selectedElementIds,
       setSelectedElementsId: state.setSelectedElementsId,
+      lastPlacedElementId: state.lastPlacedElementId,
+      setLastPlacedElementId: state.setLastPlacedElementId,
     }))
   )
 
@@ -216,10 +224,15 @@ export function usePalettePlacement(
     const topLeft = screenToFlowPosition({ x: rect.left, y: rect.top })
     const bottomRight = screenToFlowPosition({ x: rect.right, y: rect.bottom })
 
-    // Cascade off a single selected node (an edge selection yields no anchor).
-    const selected =
-      selectedElementIds.length === 1
-        ? nodes.find((node) => node.id === selectedElementIds[0])
+    // Cascade only off the node the previous tap placed, and only while it is
+    // still the sole selection — so a run of taps steps diagonally, but a tap
+    // after selecting some unrelated element centres instead of landing beside
+    // it.
+    const anchor =
+      lastPlacedElementId !== null &&
+      selectedElementIds.length === 1 &&
+      selectedElementIds[0] === lastPlacedElementId
+        ? nodes.find((node) => node.id === lastPlacedElementId)
         : undefined
 
     const absolute = resolveTapPosition({
@@ -227,7 +240,7 @@ export function usePalettePlacement(
         { x: center.x - nodeWidth / 2, y: center.y - nodeHeight / 2 },
         snapPx
       ),
-      anchorAbsolute: selected ? getPositionOnCanvas(selected, nodes) : null,
+      anchorAbsolute: anchor ? getPositionOnCanvas(anchor, nodes) : null,
       nodeWidth,
       nodeHeight,
       visibleRect: {
@@ -247,16 +260,30 @@ export function usePalettePlacement(
     })
     commitNode(() => newNode, parentId, true)
     setSelectedElementsId([newNode.id])
+    // commitNode only clears node.selected; a previously selected edge would
+    // otherwise stay visually selected out of sync with selectedElementIds.
+    if (edges.some((edge) => edge.selected)) {
+      setEdges(
+        edges.map((edge) =>
+          edge.selected ? { ...edge, selected: false } : edge
+        )
+      )
+    }
+    setLastPlacedElementId(newNode.id)
   }, [
     getCanvas,
     dropElementConfig,
     screenToFlowPosition,
     selectedElementIds,
     nodes,
+    edges,
+    setEdges,
     snapPx,
     nestInParent,
     commitNode,
     setSelectedElementsId,
+    lastPlacedElementId,
+    setLastPlacedElementId,
   ])
 
   return { dropAtPointer, placeAtViewportCenter }

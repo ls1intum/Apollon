@@ -19,8 +19,12 @@ vi.mock("@/store/context", () => ({
       diagramId: "diagram",
       nodes: [],
       setNodes: () => {},
+      edges: [],
+      setEdges: () => {},
       selectedElementIds: [],
       setSelectedElementsId: () => {},
+      lastPlacedElementId: null,
+      setLastPlacedElementId: () => {},
     }),
   useMetadataStore: (select: (state: unknown) => unknown) =>
     select({

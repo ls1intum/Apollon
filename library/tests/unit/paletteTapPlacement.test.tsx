@@ -16,9 +16,13 @@ vi.mock("@xyflow/react", () => ({
 }))
 
 const setNodes = vi.fn()
+const setEdges = vi.fn()
 const setSelectedElementsId = vi.fn()
+const setLastPlacedElementId = vi.fn()
 let selectedElementIds: string[] = []
 let nodes: Node[] = []
+let edges: { id: string; selected?: boolean }[] = []
+let lastPlacedElementId: string | null = null
 
 vi.mock("@/store/context", () => ({
   useDiagramStore: (select: (state: unknown) => unknown) =>
@@ -26,8 +30,12 @@ vi.mock("@/store/context", () => ({
       diagramId: "diagram",
       nodes,
       setNodes,
+      edges,
+      setEdges,
       selectedElementIds,
       setSelectedElementsId,
+      lastPlacedElementId,
+      setLastPlacedElementId,
     }),
   useMetadataStore: (select: (state: unknown) => unknown) =>
     select({
@@ -60,9 +68,13 @@ let canvas: HTMLDivElement
 
 beforeEach(() => {
   setNodes.mockClear()
+  setEdges.mockClear()
   setSelectedElementsId.mockClear()
+  setLastPlacedElementId.mockClear()
   selectedElementIds = []
   nodes = []
+  edges = []
+  lastPlacedElementId = null
   canvas = document.createElement("div")
   canvas.id = "react-flow-library-diagram"
   canvas.getBoundingClientRect = () => CANVAS_RECT
@@ -104,6 +116,43 @@ describe("palette tap-to-place", () => {
     const placed = placedNodes()
     expect(placed[0].position).toEqual({ x: 320, y: 250 })
     expect(placed[0].selected).toBe(true)
+  })
+
+  it("cascades only off the last tap-placed node while it stays selected", () => {
+    nodes = [
+      { id: "n1", position: { x: 100, y: 100 }, width: 160, height: 100 },
+    ]
+    selectedElementIds = ["n1"]
+    lastPlacedElementId = "n1"
+
+    fireEvent.click(mountGhost())
+
+    // Anchor (100,100) + one 20px step, snapped.
+    const placed = placedNodes().find((node) => node.selected)!
+    expect(placed.position).toEqual({ x: 120, y: 120 })
+    expect(setLastPlacedElementId).toHaveBeenCalledWith(placed.id)
+  })
+
+  it("centres (not beside) when an unrelated node is selected, not the last placed one", () => {
+    nodes = [
+      { id: "other", position: { x: 400, y: 400 }, width: 160, height: 100 },
+    ]
+    selectedElementIds = ["other"]
+    lastPlacedElementId = null // this selection wasn't made by a palette tap
+
+    fireEvent.click(mountGhost())
+
+    const placed = placedNodes().find((node) => node.selected)!
+    expect(placed.position).toEqual({ x: 320, y: 250 })
+  })
+
+  it("clears a previously selected edge so the rendered selection stays in sync", () => {
+    edges = [{ id: "e1", selected: true }]
+    selectedElementIds = ["e1"]
+
+    fireEvent.click(mountGhost())
+
+    expect(setEdges).toHaveBeenCalledWith([{ id: "e1", selected: false }])
   })
 
   it("a drag drops at the pointer, unselected, and swallows the trailing click", () => {
