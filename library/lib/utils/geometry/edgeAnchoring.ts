@@ -250,6 +250,40 @@ const straightAlignedPair = (
   }
 }
 
+/**
+ * An anchor for the FREE end that lines up with an already-PINNED end (a user anchor
+ * OR a solver band port) so the edge can run STRAIGHT. `straightAlignedPair` handles
+ * both-free edges; this is its partially-pinned counterpart — without it, an edge with
+ * one fixed end never gets a straight candidate and steps (the "cost model ignores
+ * edges that aren't 100% auto-layouted" defect). `null` when no straight shot lands on
+ * the free node's facing side (the pinned point falls outside its extent).
+ */
+const alignedToPinned = (
+  freeType: string | undefined,
+  freeRect: Rect,
+  pinnedPoint: IPoint,
+  pinnedSide: Position
+): AnchorChoice | null => {
+  if (getConnectionMode(freeType) === "four-center") return null
+  const freeSide = OPPOSITE_SIDE[pinnedSide]
+  const vertical = isVerticalSide(freeSide) // left/right ⇒ the straight run shares Y
+  const axisLen = axisLengthOf(freeSide, freeRect)
+  if (axisLen <= 0) return null
+  const lo = vertical ? freeRect.y : freeRect.x
+  const coord = vertical ? pinnedPoint.y : pinnedPoint.x
+  const margin = Math.min(2 * GRID, axisLen * 0.3)
+  // Only when the pinned point projects onto the free side clear of its corners — else
+  // the "aligned" anchor clamps to a corner and is no longer straight.
+  if (coord < lo + margin || coord > lo + axisLen - margin) return null
+  // Match the pinned point EXACTLY (no grid snap): the pinned/band port may sit off the
+  // grid (a straight-lane centre), so snapping the free end would re-introduce the very
+  // step this candidate exists to remove.
+  return toAnchorChoice(freeType, freeRect, {
+    side: freeSide,
+    ratio: (coord - lo) / axisLen,
+  })
+}
+
 const routeLength = (route: readonly IPoint[]): number => {
   let total = 0
   for (let i = 1; i < route.length; i++) {
@@ -597,6 +631,27 @@ export const selectEdgeAnchors = (
   if (straight) {
     sourceOptions.push(straight.source)
     targetOptions.push(straight.target)
+  }
+
+  // Exactly ONE end pinned (a user anchor or a solver band port): offer the free end an
+  // anchor ALIGNED with the pinned one, so a partially-pinned edge can still be STRAIGHT
+  // instead of stepping. The weighed cost keeps it only when it is genuinely straighter.
+  if (input.sourceCustom && !input.targetCustom) {
+    const aligned = alignedToPinned(
+      input.targetType,
+      input.targetRect,
+      sourceOptions[0].point,
+      sourceOptions[0].position
+    )
+    if (aligned) targetOptions.push(aligned)
+  } else if (input.targetCustom && !input.sourceCustom) {
+    const aligned = alignedToPinned(
+      input.sourceType,
+      input.sourceRect,
+      targetOptions[0].point,
+      targetOptions[0].position
+    )
+    if (aligned) sourceOptions.push(aligned)
   }
 
   let best: {
