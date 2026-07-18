@@ -290,3 +290,42 @@ describe("orderSideMembers is a deterministic total order", () => {
     }
   })
 })
+
+describe("assignPorts is robust to degenerate geometry", () => {
+  const rectOf = (x: number, y: number, w: number, h: number): Rect => ({
+    x,
+    y,
+    width: w,
+    height: h,
+  })
+  it("returns finite ratios for a zero-height node (unmeasured), never NaN", () => {
+    // A node still awaiting measurement has a zero-length side. Two edges landing on
+    // it take the multi-edge band, whose position divides by that length — it must not
+    // divide by zero and emit NaN ratios that become NaN endpoints and trap the router.
+    const z = rectOf(300, 150, 160, 0)
+    const ends: EndRef[] = [
+      {
+        edgeId: "e1",
+        end: "target",
+        nodeId: "z",
+        rect: z,
+        side: Position.Left,
+        partnerCenter: { x: 80, y: 50 },
+        partnerNodeId: "a",
+        partnerRect: rectOf(0, 0, 160, 100),
+      },
+      {
+        edgeId: "e2",
+        end: "target",
+        nodeId: "z",
+        rect: z,
+        side: Position.Left,
+        partnerCenter: { x: 80, y: 350 },
+        partnerNodeId: "b",
+        partnerRect: rectOf(0, 300, 160, 100),
+      },
+    ]
+    for (const p of assignPorts(ends).values())
+      expect(Number.isFinite(p.ratio)).toBe(true)
+  })
+})

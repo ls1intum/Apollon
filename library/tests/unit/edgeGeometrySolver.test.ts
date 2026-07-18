@@ -1104,3 +1104,93 @@ describe("computeAllEdgeGeometry — auto anchor optimization", () => {
     expect(ba.length).toBeLessThanOrEqual(3)
   })
 })
+
+describe("cross-peer determinism", () => {
+  // The load-bearing contract: anchors are derived, never stored, so two Yjs peers
+  // and a reload must derive byte-identical geometry. Two peers see the SAME model
+  // but not necessarily in the same array order (CRDT merge, map iteration), and the
+  // solver is greedy in id order — so the output must not depend on how the nodes and
+  // edges happen to be arranged in their arrays. Ordering the WHOLE solver under a
+  // shuffle exercises the greedy walk, the caches and every sort tie-break at once —
+  // the class of regression that a single-client test cannot see.
+  const solve = (nodes: { node: Node; internal: unknown }[], edges: Edge[]) =>
+    computeAllEdgeGeometry({
+      nodes: nodes.map((n) => n.node),
+      nodeLookup: new Map(nodes.map((n) => [n.node.id, n.internal])) as Map<
+        string,
+        any
+      >,
+      connectionMode: ConnectionMode.Loose,
+      edges,
+      straightPathTypes: STRAIGHT_PATH_STEP_EDGE_TYPES,
+      straightHookTypes: STRAIGHT_HOOK_EDGE_TYPES,
+    }).routeById
+
+  const canonical = (routes: Record<string, { x: number; y: number }[]>) =>
+    Object.keys(routes)
+      .sort()
+      .map((id) => `${id}:${JSON.stringify(routes[id])}`)
+      .join("|")
+
+  it("is invariant to node and edge array order", () => {
+    // A fan, a bundle, a crossing and an offset pair — enough interaction that a
+    // non-total comparator or an order-dependent cache would diverge.
+    // A hub with eight satellites all around it, each also linked to its neighbours —
+    // so every side of the hub is contended and the greedy walk's occupancy and
+    // crossing accumulation genuinely depend on processing order. Plus parallel
+    // siblings, which tie on the along-side coordinate and rest entirely on the
+    // tie-break. If any of that leaks array order into the result, a shuffle diverges.
+    const ring = 8
+    const nodes = [makeNode("hub", 400, 400, 160, 100)]
+    for (let i = 0; i < ring; i++) {
+      const ang = (i / ring) * Math.PI * 2
+      nodes.push(
+        makeNode(
+          `s${i}`,
+          Math.round(400 + 360 * Math.cos(ang)),
+          Math.round(400 + 360 * Math.sin(ang)),
+          160,
+          100
+        )
+      )
+    }
+    const edges: Edge[] = []
+    for (let i = 0; i < ring; i++) {
+      edges.push({
+        id: `hub${i}`,
+        source: `s${i}`,
+        target: "hub",
+        type: "ClassUnidirectional",
+      })
+      edges.push({
+        id: `ring${i}`,
+        source: `s${i}`,
+        target: `s${(i + 1) % ring}`,
+        type: "ClassBidirectional",
+      })
+    }
+    edges.push(
+      { id: "par1", source: "s0", target: "hub", type: "ClassDependency" },
+      { id: "par2", source: "s0", target: "hub", type: "ClassAggregation" }
+    )
+    const expected = canonical(solve(nodes, edges))
+
+    // Deterministic shuffles (no Math.random) of both arrays must all agree.
+    let seed = 987654321
+    const next = () => {
+      seed = (seed * 1103515245 + 12345) & 0x7fffffff
+      return seed
+    }
+    const shuffled = <T>(xs: T[]): T[] => {
+      const out = [...xs]
+      for (let i = out.length - 1; i > 0; i--) {
+        const j = next() % (i + 1)
+        ;[out[i], out[j]] = [out[j], out[i]]
+      }
+      return out
+    }
+    for (let trial = 0; trial < 30; trial++) {
+      expect(canonical(solve(shuffled(nodes), shuffled(edges)))).toBe(expected)
+    }
+  })
+})
