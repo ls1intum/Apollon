@@ -679,9 +679,22 @@ export function computeAllEdgeGeometry(input: SolverInput): {
 
   const edgeById = new Map(edges.map((e) => [e.id, e]))
   const nodeById = new Map(nodes.map((n) => [n.id, n]))
-  const ordered = [...edges].sort((a, b) =>
-    a.id < b.id ? -1 : a.id > b.id ? 1 : 0
-  )
+  // FULLY-PINNED edges (both ends user-anchored) route FIRST, then the rest by id.
+  // Their geometry is fixed and authoritative, so committing them before the auto
+  // edges puts them in the neighbour set for EVERY auto edge — the cross-edge cost
+  // then makes autos aware of them regardless of id order (a higher-id pinned edge
+  // was previously invisible to the autos it should avoid). Deterministic: a total
+  // order (pinned-first, then ascending id), and pinned routes depend on nothing an
+  // auto edge produces, so this is a valid topological order for the route DAG.
+  const fullyPinned = (e: Edge): boolean =>
+    !!asFreeformAnchor(e.data?.sourceAnchor) &&
+    !!asFreeformAnchor(e.data?.targetAnchor)
+  const ordered = [...edges].sort((a, b) => {
+    const pa = fullyPinned(a) ? 0 : 1
+    const pb = fullyPinned(b) ? 0 : 1
+    if (pa !== pb) return pa - pb
+    return a.id < b.id ? -1 : a.id > b.id ? 1 : 0
+  })
   const routeById: Record<string, IPoint[]> = {}
   // Spatial index of finished routes, grown as the walk proceeds so each edge
   // finds its lower-id neighbours without rescanning the whole route map.
