@@ -104,6 +104,11 @@ export const ReconnectConnectionLine = ({
   fromPosition,
   toPosition,
 }: ConnectionLineComponentProps) => {
+  // The only thing any memo here reads off the source node is its id. Reading it once
+  // as a primitive keeps the React Compiler's inferred dependency (`fromNodeId`) in
+  // step with the ones we declare — a bare `fromNode.id` read would make it depend on
+  // the whole node object and skip optimising the memo.
+  const fromNodeId = fromNode?.id
   const {
     reconnectPreviewEdgeId,
     reconnectPreviewHandleType,
@@ -162,11 +167,11 @@ export const ReconnectConnectionLine = ({
       Math.round(v / CANVAS.SNAP_TO_GRID_PX) * CANVAS.SNAP_TO_GRID_PX
     const pointer: XYPosition = { x: snap(toX), y: snap(toY) }
 
-    const target = resolveDropTarget(pointer, fromNode?.id)
+    const target = resolveDropTarget(pointer, fromNodeId)
     // The resolver falls back to the source node when nothing else is under the
     // pointer (a drop on your own body becomes a self-loop); the ghost never
     // previews that, so a drag near the source stays gated.
-    const hit = target && target.id !== fromNode?.id ? target : null
+    const hit = target && target.id !== fromNodeId ? target : null
     const anchor = hit
       ? getEdgeAnchorFromPoint(hit.type, pointer, hit.rect)
       : null
@@ -195,7 +200,7 @@ export const ReconnectConnectionLine = ({
       snapPoint: snapped?.showSnapCircle ? snapped.point : null,
       visible: draggedFar || snapped !== null,
     }
-  }, [resolveDropTarget, fromNode?.id, fromX, fromY, toX, toY, toPosition])
+  }, [resolveDropTarget, fromNodeId, fromX, fromY, toX, toY, toPosition])
 
   // A new connection is only PREVIEWED as a solver edge when it is drawn onto a
   // real target (reconnects already have their own live override). Fully auto (no
@@ -203,18 +208,17 @@ export const ReconnectConnectionLine = ({
   // WITHIN one node does not thrash the solver.
   const isNewConnection = !previewEdge || !reconnectPreviewHandleType
   const pendingEdge = useMemo<Edge | null>(() => {
-    if (!isNewConnection || !fromNode?.id || !newConnection.targetId)
-      return null
+    if (!isNewConnection || !fromNodeId || !newConnection.targetId) return null
     return {
       id: pendingEdgeId,
-      source: fromNode.id,
+      source: fromNodeId,
       target: newConnection.targetId,
       type: previewEdgeType,
       data: { points: [] },
     }
   }, [
     isNewConnection,
-    fromNode?.id,
+    fromNodeId,
     newConnection.targetId,
     previewEdgeType,
     pendingEdgeId,
@@ -237,7 +241,7 @@ export const ReconnectConnectionLine = ({
   const { obstacles, neighborEdges } = useEdgeRoutingContext({
     selfId: undefined,
     nodes: allNodes,
-    sourceId: fromNode?.id ?? "",
+    sourceId: fromNodeId ?? "",
     targetId: newConnection.targetId ?? "",
     sourcePoint: newConnection.from,
     targetPoint: newConnection.to,
@@ -259,7 +263,7 @@ export const ReconnectConnectionLine = ({
       // one the neighbours reflowed around — same fan lane, obstacle dodges); fall
       // back to a local single-edge solve for the first frame before the solve lands,
       // then to the plain cursor-following route in empty space / unmeasured nodes.
-      if (fromNode?.id && newConnection.targetId) {
+      if (fromNodeId && newConnection.targetId) {
         if (pendingSolvedRoute && pendingSolvedRoute.length >= 2) {
           return {
             d: pointsToSvgPath(pendingSolvedRoute),
@@ -269,7 +273,7 @@ export const ReconnectConnectionLine = ({
           }
         }
         const previewRoute = computeConnectionPreviewRoute({
-          sourceId: fromNode.id,
+          sourceId: fromNodeId,
           targetId: newConnection.targetId,
           edgeType: previewEdgeType,
           enableStraightPath: previewEnableStraightPath,
@@ -349,7 +353,7 @@ export const ReconnectConnectionLine = ({
     return { d: pointsToSvgPath(reconnectPreviewPoints), snapPoint: null }
   }, [
     connectionLineType,
-    fromNode?.id,
+    fromNodeId,
     fromPosition,
     fromX,
     fromY,
