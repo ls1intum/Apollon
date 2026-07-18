@@ -399,7 +399,9 @@ const sideAim = (side: Position, from: Rect, to: Rect): number => {
  * The ranking key for one candidate, scored on its IDEAL (obstacle-free) route. The
  * head is a WEIGHED cost — bends traded against off-centre — so an edge goes straight
  * only while staying straight does not drag its anchors too far off centre. The rest
- * is a lexicographic tail of tie-breaks. All-integer, so peers compare identically.
+ * is a lexicographic tail of tie-breaks. Every term is exactly representable — the
+ * costs are integers, and `sideAim` is a centre difference — so peers compare
+ * identically.
  */
 const scoreKey = (
   route: readonly IPoint[],
@@ -719,11 +721,11 @@ export const selectEdgeAnchors = (
   const route =
     input.obstacles.length === 0 && input.neighborEdges.length === 0
       ? best.idealRoute
-      : (routeChosenAnchors(
+      : routeChosenAnchors(
           best.endpoints,
           input.obstacles,
           input.neighborEdges,
           input.enableStraightPath
-        ) ?? best.idealRoute)
+        )
   return { endpoints: best.endpoints, route, sourceAnchor, targetAnchor }
 }

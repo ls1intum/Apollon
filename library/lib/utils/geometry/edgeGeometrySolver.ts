@@ -313,9 +313,11 @@ function collectNeighbors(
   const minY = Math.min(sy, ty) - pad
   const maxY = Math.max(sy, ty) + pad
 
-  // Candidate lower-id edges: those with a vertex in a cell overlapping the box.
-  // A vertex inside the box lands in a cell inside this range, so no neighbour is
-  // missed; the precise test below drops the cell's out-of-box extras.
+  // Candidate lower-id edges: those with a VERTEX in a cell overlapping the box. The
+  // grid indexes vertices, so a long segment crossing the box with both ends outside is
+  // not caught — but the box is padded by 6 stubs, several cells, and edges are
+  // orthogonal, so a segment reaching across it has a vertex within that pad. The
+  // precise test below drops the cell's out-of-box extras.
   const candidateIds = new Set<string>()
   const cx0 = Math.floor(minX / NEIGHBOR_CELL_PX)
   const cx1 = Math.floor(maxX / NEIGHBOR_CELL_PX)
@@ -717,7 +719,7 @@ export function computeAllEdgeGeometry(input: SolverInput): {
   // assigned port PINS its end — like a user anchor — so the other end still optimises
   // against it on the cost path below. Single-edge nodes are absent and stay fully on
   // the cost path. This replaces the whole fan / lane / slot / fork-redistribute stack
-  // (see `portAssignment.ts` and `.context/edge-cost-model/`).
+  // (see `portAssignment.ts` and `./README.md`).
   const bandPorts = assignPorts(collectPortEnds(ordered, nodes, nodeById))
 
   for (const edge of ordered) {
@@ -838,15 +840,13 @@ export function computeAllEdgeGeometry(input: SolverInput): {
           computed = cached.computed
         } else {
           // Only an obstacle or reachable neighbour moved: re-route the SAME
-          // anchors (one search), not a full re-pick. Falls back to the cached
-          // route if the re-route somehow fails to keep a route on screen.
-          computed =
-            routeChosenAnchors(
-              endpointsUsed,
-              obstacles,
-              neighborEdges,
-              enableStraightPath
-            ) ?? cached.computed
+          // anchors (one search), not a full re-pick.
+          computed = routeChosenAnchors(
+            endpointsUsed,
+            obstacles,
+            neighborEdges,
+            enableStraightPath
+          )
           solveCache?.set(edge.id, { ...cached, routeSig, computed })
         }
       } else {

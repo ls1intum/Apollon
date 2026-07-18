@@ -13,22 +13,15 @@ import {
 } from "@/utils/geometry/rectSides"
 
 /**
- * Geometric PORT ASSIGNMENT — the deterministic pre-routing stage that decides,
- * for every free edge-end landing on a node side, its ORDER along that side and
- * its POSITION on it. Forks, bundles, nesting and even spacing EMERGE from one
- * rule — the angular (rotation) order of the partner directions around the node —
- * rather than from a stack of imperative passes (fans, lane offsets, slots, a
- * dir-mirror, a fork redistributor).
+ * PORT ASSIGNMENT — for every free edge-end landing on a node side, its ORDER along
+ * that side and its POSITION on it. Partner direction decides the side and the order;
+ * positions are then spread in a centred band, never aimed at the partner (aiming is
+ * what jams anchors into corners). Forks, bundles and nesting all fall out of that one
+ * rotation order. See `./README.md` for the evidence behind it.
  *
- * This is the Hegemann–Wolff / libavoid / ELK / yFiles consensus specialised to
- * our exact setting (free-floating rectangles, no layering): partner direction
- * decides SIDE and ORDER; positions are then spread in a CENTRED band, never
- * aimed at the partner (aiming is what jams anchors into corners). See
- * `.context/edge-cost-model/` for the cited evidence and design.
- *
- * Every decision is a pure function of the current geometry, integer-exact
- * (cross-products, no `atan2`/`hypot`/float on a decision path) and totally
- * ordered — so two Yjs peers and a reload all assign the identical ports.
+ * Every decision is a pure function of the current geometry and totally ordered, so two
+ * peers and a reload assign identical ports — which is why the arithmetic stays within
+ * the exactly-rounded IEEE-754 operations and never touches `atan2` or `hypot`.
  */
 
 const GRID = CANVAS.SNAP_TO_GRID_PX
@@ -61,7 +54,8 @@ const clamp = (v: number, lo: number, hi: number): number =>
  *   - the side faces the partner AND the two opposing sides' extents OVERLAP on the
  *     perpendicular axis → 0 (a straight shot: the port slides to align),
  *   - the side faces the partner but the extents do NOT overlap → 1 (a clean L).
- * Integer-exact (a dot product of integer vectors), so peers agree.
+ * A dot product of side normals with a centre difference: exactly-rounded throughout,
+ * so peers agree.
  */
 const bendsForSide = (side: Position, rect: Rect, partner: Rect): number => {
   const c = centerOf(rect)
@@ -84,7 +78,7 @@ const bendsForSide = (side: Position, rect: Rect, partner: Rect): number => {
  *     (a straight shot), else 2 (an offset Z),
  *   - both face each other and are PERPENDICULAR: 1 (a clean L),
  *   - same side: 2.
- * Integer-exact (integer dot products), deterministic.
+ * Exactly-rounded throughout, so peers agree.
  */
 const combinedBends = (
   sU: Position,
@@ -408,11 +402,8 @@ export type SideMember = {
  * DIRECTLY BEHIND the side — a direction no facing or perpendicular attachment
  * ever takes, so the seam is unreachable in practice.
  *
- * Crucially this is a PER-MEMBER scalar, not a pairwise comparator: sorting by
- * `(key, edgeId)` is transitive and total by construction on every JS engine (the
- * old pairwise cross-product with a denominator-sign guard mixed two keys and was
- * intransitive — a cross-peer determinism hazard). The single division is IEEE
- * correctly-rounded, hence identical across engines.
+ * A per-member scalar, not a pairwise comparator, so sorting by `(key, id)` is total
+ * and transitive on every engine. The single division is IEEE correctly-rounded.
  */
 export const alongSideKey = (
   side: Position,
@@ -514,10 +505,6 @@ const clockwiseSign = (side: Position): number =>
  * when both sides' display orders agree with the clockwise walk (or both disagree), the
  * ends must be mirrored; when one agrees and the other does not, the display orders
  * already oppose and the SAME order nests.
- *
- * This replaces an arbitrary "reverse at the higher-id node", which mirrored a bundle
- * that should not have been — the two edges then crossed and the router drew a loop
- * around the crossing (d61's A↔B pair).
  */
 const bundleNeedsMirror = (side: Position, partnerSide: Position): boolean =>
   clockwiseSign(side) === clockwiseSign(partnerSide)
@@ -572,10 +559,8 @@ const sharedStraightBand = (
  * `lo + span·(i+1)/(K+1)`. Two ports therefore split the side into three equal
  * stretches rather than huddling a fixed pitch apart around the centre.
  *
- * This is ELK's `DISTRIBUTED` port alignment ("evenly distributed, with the same
- * amount of space between and around them") — its default, and what reads as
- * deliberate rather than accidental. The spread is symmetric about the centre, so it
- * keeps the anti-corner-jam property of a centred band.
+ * ELK's default `DISTRIBUTED` alignment (see README). Symmetric about the centre, so
+ * it keeps the anti-corner-jam property of a centred band.
  *
  * `minGap` only kicks in when the side is too crowded for an even spread to stay
  * legible: below it the ports compress to that gap around the centre instead, so a
@@ -608,11 +593,7 @@ const spreadCoords = (
  *  - LONE on the side (a single distributed fork arm): aim it at its own partner.
  *  - FOUR-CENTRE node: the fixed side midpoint (0.5).
  *
- * This ONE function replaces the whole multi-edge rule stack — node-side fans, the
- * dir mirror, lane offsets, slots, the fork redistributor — because fork splitting
- * (geometric side), nesting (angular order) and spacing (the band) all emerge from
- * it. Pure and deterministic: a given geometry yields the identical ports on every
- * peer. Single-edge nodes are not passed here; they stay on the per-edge cost path.
+ * Single-edge nodes are not passed here; they stay on the per-edge cost path.
  */
 export const assignPorts = (
   ends: readonly EndRef[],
@@ -686,10 +667,6 @@ export const assignPorts = (
       if (g) g.push(e)
       else byPartner.set(e.partnerNodeId, [e])
     }
-    // STRAIGHT-eligible members (the partner's opposing side overlaps enough) keep the
-    // shared band's ALIGNED coordinate, so this port and the partner's port land on the
-    // same absolute coordinate and the edge is a straight line — straightness is decided
-    // before spacing, and holds even when the side carries edges to other partners.
     const lMembers: { e: EndRef; rot: number; rank: number }[] = []
     for (const [partnerId, members] of byPartner) {
       const band = sharedStraightBand(side, rect, members[0].partnerRect)
