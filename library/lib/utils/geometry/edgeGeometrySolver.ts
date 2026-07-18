@@ -29,7 +29,6 @@ import {
   routeChosenAnchors,
   selectEdgeAnchors,
 } from "@/utils/geometry/edgeAnchoring"
-import { MERGED_ARROWHEAD_EDGE_TYPES } from "@/edges/edgeRoutingBehavior"
 import {
   assignPorts,
   assignSides,
@@ -234,20 +233,6 @@ function mergeManualPoints(
   return points
 }
 
-/** Whether `self` and `other` belong to the same MERGED arrowhead — a UML
- * generalisation fan converging on one super-class. Such edges are MEANT to share
- * the trunk, so they must not be priced as conflicting neighbours: the overlap cost
- * would otherwise push each branch off the trunk it was just merged onto, undoing
- * the merge and spending corners to do it. */
-function mergesWith(self: Edge, other: Edge): boolean {
-  const type = self.type ?? ""
-  return (
-    MERGED_ARROWHEAD_EDGE_TYPES.has(type) &&
-    other.type === type &&
-    self.target === other.target
-  )
-}
-
 /** Whether `other` is a TRUE sibling of `self`: leaves the very same
  * connection point, so it shares geometry. */
 function isSibling(self: Edge, other: Edge): boolean {
@@ -351,7 +336,7 @@ function collectNeighbors(
     const polyline = routeById[otherId]
     if (!polyline || polyline.length < 2) continue
     const other = edgeById.get(otherId)
-    if (other && (isSibling(edge, other) || mergesWith(edge, other))) continue
+    if (other && isSibling(edge, other)) continue
     const inRange = polyline.some(
       (p) => p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY
     )
@@ -675,11 +660,6 @@ function collectPortEnds(
         partnerNodeId: edge.source,
         partnerRect: sourceRect,
         partnerSide: sourceSide,
-        // The UML generalisation/realisation arrowhead: several sub-classes landing on
-        // one super-class side share a single mark (see MERGED_ARROWHEAD_EDGE_TYPES).
-        mergeKey: MERGED_ARROWHEAD_EDGE_TYPES.has(edge.type ?? "")
-          ? edge.type
-          : undefined,
         fourCenter: four(edge.target),
       })
   }
