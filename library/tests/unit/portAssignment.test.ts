@@ -4,7 +4,6 @@ import {
   orderSideMembers,
   assignPorts,
   endKey,
-  PORT_PITCH_PX,
   type SideMember,
   type EndRef,
 } from "@/utils/geometry/portAssignment"

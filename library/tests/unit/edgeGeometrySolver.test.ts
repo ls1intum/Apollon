@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest"
-import { ConnectionMode, Position, type Edge, type Node } from "@xyflow/react"
+import {
+  ConnectionMode,
+  Position,
+  type Edge,
+  type InternalNode,
+  type Node,
+} from "@xyflow/react"
 import { computeAllEdgeGeometry } from "@/utils/geometry/edgeGeometrySolver"
 import {
   STRAIGHT_HOOK_EDGE_TYPES,
@@ -17,7 +23,7 @@ function makeNode(
   y: number,
   w = 100,
   h = 60
-): { node: Node; internal: any } {
+): { node: Node; internal: InternalNode } {
   const node: Node = {
     id,
     position: { x, y },
@@ -58,7 +64,7 @@ function makeNode(
       },
     },
   }
-  return { node, internal }
+  return { node, internal: internal as unknown as InternalNode }
 }
 
 const isOrthogonal = (pts: { x: number; y: number }[]): boolean =>
@@ -69,7 +75,7 @@ describe("computeAllEdgeGeometry", () => {
     const a = makeNode("a", 0, 0)
     const b = makeNode("b", 300, 0)
     const nodes = [a.node, b.node]
-    const nodeLookup = new Map<string, any>([
+    const nodeLookup = new Map<string, InternalNode>([
       ["a", a.internal],
       ["b", b.internal],
     ])
@@ -98,7 +104,7 @@ describe("computeAllEdgeGeometry", () => {
   it("holds no route for an edge whose nodes are absent from nodeLookup", () => {
     const a = makeNode("a", 0, 0)
     const nodes = [a.node]
-    const nodeLookup = new Map<string, any>([["a", a.internal]])
+    const nodeLookup = new Map<string, InternalNode>([["a", a.internal]])
     const edges: Edge[] = [
       { id: "e1", source: "a", target: "missing", type: "ClassUnidirectional" },
     ]
@@ -116,7 +122,7 @@ describe("computeAllEdgeGeometry", () => {
   it("emits a plain two-point line for a straight-hook edge type", () => {
     const a = makeNode("a", 0, 0)
     const b = makeNode("b", 300, 0)
-    const nodeLookup = new Map<string, any>([
+    const nodeLookup = new Map<string, InternalNode>([
       ["a", a.internal],
       ["b", b.internal],
     ])
@@ -139,7 +145,7 @@ describe("computeAllEdgeGeometry", () => {
     const b = makeNode("b", 300, 0)
     const c = makeNode("c", 0, 200)
     const d = makeNode("d", 300, 200)
-    const nodeLookup = new Map<string, any>([
+    const nodeLookup = new Map<string, InternalNode>([
       ["a", a.internal],
       ["b", b.internal],
       ["c", c.internal],
@@ -164,7 +170,7 @@ describe("computeAllEdgeGeometry", () => {
   it("uses a live override verbatim as the dragged edge's route", () => {
     const a = makeNode("a", 0, 0)
     const b = makeNode("b", 300, 0)
-    const nodeLookup = new Map<string, any>([
+    const nodeLookup = new Map<string, InternalNode>([
       ["a", a.internal],
       ["b", b.internal],
     ])
@@ -193,7 +199,7 @@ describe("computeAllEdgeGeometry", () => {
     const b = makeNode("b", 600, 0)
     const c = makeNode("c", 300, 0) // between a and b -> forces a real search
     const d = makeNode("d", 0, 300)
-    const nodeLookup = new Map<string, any>([
+    const nodeLookup = new Map<string, InternalNode>([
       ["a", a.internal],
       ["b", b.internal],
       ["c", c.internal],
@@ -233,7 +239,7 @@ describe("computeAllEdgeGeometry", () => {
       const d = makeNode("d", 0, 300)
       return {
         nodes: [a.node, b.node, c.node, d.node],
-        nodeLookup: new Map<string, any>([
+        nodeLookup: new Map<string, InternalNode>([
           ["a", a.internal],
           ["b", b.internal],
           ["c", c.internal],
@@ -270,11 +276,14 @@ const exitSide = (route: { x: number; y: number }[]): string => {
 }
 
 describe("computeAllEdgeGeometry — auto anchor optimization", () => {
-  const base = (nodes: { node: Node; internal: unknown }[], edges: Edge[]) => ({
+  const base = (
+    nodes: { node: Node; internal: InternalNode }[],
+    edges: Edge[]
+  ) => ({
     nodes: nodes.map((n) => n.node),
     nodeLookup: new Map(nodes.map((n) => [n.node.id, n.internal])) as Map<
       string,
-      any
+      InternalNode
     >,
     connectionMode: ConnectionMode.Loose,
     edges,
@@ -931,7 +940,6 @@ describe("computeAllEdgeGeometry — auto anchor optimization", () => {
   }
 
   it("honours every pinned anchor exactly, across the pin space", () => {
-    let checked = 0
     const violations: string[] = []
     for (const [bx, by] of [
       [400, -300],
@@ -974,7 +982,6 @@ describe("computeAllEdgeGeometry — auto anchor optimization", () => {
                 },
               ] as Edge[])
             )
-            checked++
             const r = routeById["e1"]
             if (!r) {
               violations.push(`missing route pin=${pinSide}/${pinRatio}`)
@@ -1113,12 +1120,15 @@ describe("cross-peer determinism", () => {
   // edges happen to be arranged in their arrays. Ordering the WHOLE solver under a
   // shuffle exercises the greedy walk, the caches and every sort tie-break at once —
   // the class of regression that a single-client test cannot see.
-  const solve = (nodes: { node: Node; internal: unknown }[], edges: Edge[]) =>
+  const solve = (
+    nodes: { node: Node; internal: InternalNode }[],
+    edges: Edge[]
+  ) =>
     computeAllEdgeGeometry({
       nodes: nodes.map((n) => n.node),
       nodeLookup: new Map(nodes.map((n) => [n.node.id, n.internal])) as Map<
         string,
-        any
+        InternalNode
       >,
       connectionMode: ConnectionMode.Loose,
       edges,

@@ -1640,45 +1640,57 @@ describe("preserveOrthogonalEdgePoints", () => {
     }
   )
 
-  it("never doubles a route back along a line it has already drawn", () => {
-    // Retracing reads as an edge drawn on top of itself, and it is what happens
-    // when a lane gets snapped onto an endpoint's own coordinate.
-    const failures = sweepRoutes((route) => {
-      for (let i = 1; i < route.length - 1; i++) {
-        const previous = route[i - 1]
-        const current = route[i]
-        const next = route[i + 1]
-        const reversesX =
-          previous.y === current.y &&
-          current.y === next.y &&
-          (current.x - previous.x) * (next.x - current.x) < 0
-        const reversesY =
-          previous.x === current.x &&
-          current.x === next.x &&
-          (current.y - previous.y) * (next.y - current.y) < 0
-        if (reversesX || reversesY) {
-          return route.map((p) => `${p.x},${p.y}`).join(" ")
+  // Same full-search sweep as above, so the same 30s budget: on a loaded machine the
+  // default 5s is not enough and the test flakes rather than fails.
+  it(
+    "never doubles a route back along a line it has already drawn",
+    { timeout: 30_000 },
+    () => {
+      // Retracing reads as an edge drawn on top of itself, and it is what happens
+      // when a lane gets snapped onto an endpoint's own coordinate.
+      const failures = sweepRoutes((route) => {
+        for (let i = 1; i < route.length - 1; i++) {
+          const previous = route[i - 1]
+          const current = route[i]
+          const next = route[i + 1]
+          const reversesX =
+            previous.y === current.y &&
+            current.y === next.y &&
+            (current.x - previous.x) * (next.x - current.x) < 0
+          const reversesY =
+            previous.x === current.x &&
+            current.x === next.x &&
+            (current.y - previous.y) * (next.y - current.y) < 0
+          if (reversesX || reversesY) {
+            return route.map((p) => `${p.x},${p.y}`).join(" ")
+          }
         }
-      }
-      return null
-    })
+        return null
+      })
 
-    expect(failures.slice(0, 5)).toEqual([])
-  })
+      expect(failures.slice(0, 5)).toEqual([])
+    }
+  )
 
-  it("re-routes an untouched edge to exactly where it already is", () => {
-    // preserve() runs on every render and every node drag. If it does not return
-    // the router's own route unchanged, an edge nobody touched creeps a little
-    // further on each drag — the geometry equivalent of a rounding leak.
-    const failures = sweepRoutes((route, s, t, sp, tp) => {
-      const again = preserveOrthogonalEdgePoints(route, s, t, sp, tp)
-      const before = route.map((p) => `${p.x},${p.y}`).join(" ")
-      const after = again.map((p) => `${p.x},${p.y}`).join(" ")
-      return before === after ? null : `${before}  =>  ${after}`
-    })
+  // Runs the sweep AND a full preserve() per case, so it is the heaviest of the three
+  // — the one that timed out first on a busy machine. Same 30s budget as its siblings.
+  it(
+    "re-routes an untouched edge to exactly where it already is",
+    { timeout: 30_000 },
+    () => {
+      // preserve() runs on every render and every node drag. If it does not return
+      // the router's own route unchanged, an edge nobody touched creeps a little
+      // further on each drag — the geometry equivalent of a rounding leak.
+      const failures = sweepRoutes((route, s, t, sp, tp) => {
+        const again = preserveOrthogonalEdgePoints(route, s, t, sp, tp)
+        const before = route.map((p) => `${p.x},${p.y}`).join(" ")
+        const after = again.map((p) => `${p.x},${p.y}`).join(" ")
+        return before === after ? null : `${before}  =>  ${after}`
+      })
 
-    expect(failures.slice(0, 5)).toEqual([])
-  })
+      expect(failures.slice(0, 5)).toEqual([])
+    }
+  )
 
   it("keeps a lane clear of a stub it runs alongside as a node is dragged past", () => {
     // Reported from a real diagram: an edge leaving a class's right side and

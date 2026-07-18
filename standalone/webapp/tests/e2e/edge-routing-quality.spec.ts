@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test"
+import { test, expect, type Page } from "@playwright/test"
 import * as fs from "node:fs"
 import * as path from "node:path"
 import { fileURLToPath } from "node:url"
@@ -89,7 +89,7 @@ type Metrics = {
   offMax: number
 }
 
-async function measure(page: any, model: Model): Promise<Metrics> {
+async function measure(page: Page, model: Model): Promise<Metrics> {
   const rects = await readNodeRects(page)
   const rectById = new Map(rects.map((r) => [r.id, r]))
   const paths = new Map<string, Pt[]>()
@@ -317,7 +317,6 @@ for (const c of CASES) {
     await waitForCanvasReady(page)
     await page.waitForTimeout(400)
     const m = await measure(page, model)
-    // eslint-disable-next-line no-console
     console.log(
       `QUALITY ${c.file} corners=${m.corners} crossings=${m.crossings} straightBroken=${m.straightBroken} offMax=${m.offMax.toFixed(2)}`
     )
