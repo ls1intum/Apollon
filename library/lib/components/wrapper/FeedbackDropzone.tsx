@@ -9,7 +9,6 @@ interface Props {
   elementId: string
   elementType?: string
   asElement?: "g" | "div" | "path"
-  className?: string
 }
 
 export const FeedbackDropzone: React.FC<Props> = ({
@@ -17,7 +16,6 @@ export const FeedbackDropzone: React.FC<Props> = ({
   elementId,
   elementType,
   asElement = "g",
-  className,
 }) => {
   const { mode, readonly } = useMetadataStore(
     useShallow((store) => ({
@@ -94,7 +92,6 @@ export const FeedbackDropzone: React.FC<Props> = ({
         onDragLeave={handleDragLeave}
         onDragOver={handleDragOver}
         style={hoverStyle}
-        className={className}
       >
         {children}
       </div>

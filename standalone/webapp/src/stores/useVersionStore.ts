@@ -37,6 +37,12 @@ interface UndoRestoreState {
 interface State {
   // Per-diagram persisted UI state.
   drawerOpenByDiagram: Record<DiagramId, boolean>
+  /**
+   * A per-diagram nonce the "save a version" shortcut bumps. The mounted
+   * version panel watches it and runs its own save path once, reusing every
+   * guard (dirty-check, empty/preview blocks) — the shortcut owns no editor.
+   */
+  saveRequestByDiagram: Record<DiagramId, number>
   preview: PreviewState | null
   /** When set, surfaces an "undo restore" snackbar in the UI. */
   undoRestore: UndoRestoreState | null
@@ -53,6 +59,10 @@ interface Actions {
   // ---- Drawer -----------------------------------------------------------
   openDrawer: (diagramId: DiagramId) => void
   closeDrawer: (diagramId: DiagramId) => void
+  /** Open the panel and ask it to save a version now. */
+  requestSave: (diagramId: DiagramId) => void
+  /** Mark the pending save request handled. */
+  clearSaveRequest: (diagramId: DiagramId) => void
 
   // ---- Preview ----------------------------------------------------------
   /**
@@ -91,6 +101,7 @@ export const useVersionStore = create<VersionStore>()(
     persist(
       (set) => ({
         drawerOpenByDiagram: {},
+        saveRequestByDiagram: {},
         preview: null,
         undoRestore: null,
         pendingRestoreFromId: null,
@@ -108,6 +119,24 @@ export const useVersionStore = create<VersionStore>()(
             drawerOpenByDiagram: {
               ...s.drawerOpenByDiagram,
               [diagramId]: false,
+            },
+          })),
+        requestSave: (diagramId) =>
+          set((s) => ({
+            drawerOpenByDiagram: {
+              ...s.drawerOpenByDiagram,
+              [diagramId]: true,
+            },
+            saveRequestByDiagram: {
+              ...s.saveRequestByDiagram,
+              [diagramId]: (s.saveRequestByDiagram[diagramId] ?? 0) + 1,
+            },
+          })),
+        clearSaveRequest: (diagramId) =>
+          set((s) => ({
+            saveRequestByDiagram: {
+              ...s.saveRequestByDiagram,
+              [diagramId]: 0,
             },
           })),
 

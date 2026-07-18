@@ -1,6 +1,6 @@
-import { NodeProps, NodeResizer, type Node } from "@xyflow/react"
+import { NodeProps, type Node } from "@xyflow/react"
 import { usePopoverAnchor } from "@/hooks/usePopoverAnchor"
-import { DefaultNodeWrapper } from "@/nodes/wrappers"
+import { DefaultNodeWrapper, NodeResizer } from "@/nodes/wrappers"
 import { ObjectNameSVG } from "@/components"
 import { useEffect, useMemo } from "react"
 import { ObjectNodeProps } from "@/types"
@@ -125,12 +125,7 @@ export function ObjectName({
   const finalWidth = Math.max(width ?? 0, minWidth)
 
   return (
-    <DefaultNodeWrapper
-      width={width}
-      height={height}
-      elementId={id}
-      className="horizontally-not-resizable"
-    >
+    <DefaultNodeWrapper width={width} height={height} elementId={id}>
       <NodeToolbar elementId={id} />
       <NodeResizer
         nodeId={id}
@@ -138,7 +133,6 @@ export function ObjectName({
         minWidth={minWidth}
         minHeight={minHeight}
         maxHeight={minHeight}
-        handleStyle={{ width: 8, height: 8 }}
       />
 
       <div ref={anchorRef}>

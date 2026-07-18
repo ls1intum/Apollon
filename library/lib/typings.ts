@@ -4,6 +4,8 @@ import { UMLDiagramType } from "./types/DiagramType"
 import type { OverlayControlInput } from "./overlay/types"
 import type { ApollonLabels } from "./i18n/labels"
 export type { ApollonLabels } from "./i18n/labels"
+import type { TagOptions } from "./utils/tagUtils"
+export type { TagOptions, TagConfig } from "./utils/tagUtils"
 
 export { UMLDiagramType, type DiagramNodeType, type DiagramEdgeType }
 
@@ -151,6 +153,11 @@ export type ApollonOptions = {
   availableViews?: ApollonView[]
   readonly?: boolean
   enablePopups?: boolean
+  /**
+   * Answer the editor's keyboard shortcuts (see `APOLLON_SHORTCUTS`). Set
+   * `false` where the host binds those keys itself. Default `true`.
+   */
+  keyboardShortcuts?: boolean
   model?: UMLModel
   locale?: Locale
   debug?: boolean
@@ -173,6 +180,16 @@ export type ApollonOptions = {
    * `<Apollon labels>` / `editor.setLabels`. See {@link ApollonLabels}.
    */
   labels?: Partial<ApollonLabels>
+  /**
+   * Enable element-tag authoring (off by default). `true` turns on free-form
+   * tagging; an object restricts it: `available` supplies the tags offered in
+   * the picker, and `allowCreate` controls whether a user may add tags beyond
+   * that list (defaults to `false` when `available` is given, `true` otherwise).
+   * Reactive via `<Apollon tags>` / `editor.setTags`. Tags a host puts on the
+   * model always load and stay queryable with `getElementIdsByTag` regardless of
+   * this option — it gates only the authoring UI. See {@link TagOptions}.
+   */
+  tags?: boolean | TagOptions
   /**
    * Optional `--apollon-*` CSS custom properties applied to the editor's mount
    * element. Build one with `createApollonTheme(...)`. Fully optional — an

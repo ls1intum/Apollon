@@ -443,6 +443,21 @@ export const MARKERS = Object.freeze({
 export const DROPS = Object.freeze({
   SIDEBAR_PREVIEW_SCALE: 0.8,
   DEFAULT_ELEMENT_WIDTH: 160,
+  /**
+   * Max pointer travel over a palette press for it to count as a tap
+   * (click-to-place) rather than a drag. Touch is looser: finger-roll on an
+   * intended tap routinely exceeds a mouse-tight threshold, and misreading a
+   * touch tap as a drag drops the node hidden under the palette — the exact
+   * failure this feature removes.
+   */
+  TAP_SLOP_MOUSE_PX: 8,
+  TAP_SLOP_TOUCH_PX: 16,
+  /**
+   * Diagonal offset applied to each consecutive tap-placed node so a burst of
+   * taps cascades instead of stacking — the same affordance, and the same
+   * step, as pasting repeatedly.
+   */
+  TAP_CASCADE_PX: CANVAS.PASTE_OFFSET_PX,
 } as const)
 
 export type DropElementConfig = {

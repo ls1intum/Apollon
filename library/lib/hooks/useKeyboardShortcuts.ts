@@ -1,151 +1,132 @@
 import { useEffect, useRef } from "react"
-import { useDiagramStore, useMetadataStore } from "@/store/context"
+import { useReactFlow } from "@xyflow/react"
+import {
+  useDiagramStore,
+  useMetadataStore,
+  useOverlayStore,
+} from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { useSelectionForCopyPaste } from "./useSelectionForCopyPaste"
 import { useDiagramModifiable } from "./useDiagramModifiable"
+import { insetAwareFitView } from "@/overlay/fitView"
+import { handleShortcutKeydown, type KeyboardShortcutDeps } from "@/keyboard"
 
+/**
+ * Wires `APOLLON_SHORTCUTS` to the store, the clipboard helpers and the
+ * viewport. Registered on `document`, so shortcuts work without the canvas
+ * holding focus — which assumes one editor per page; two would both react, so a
+ * host mounting several passes `keyboardShortcuts: false` to all but one.
+ * Registered once: the actions close over `nodes`/`edges`, so a dependency on
+ * them would re-register the listener on every drag frame.
+ */
 export const useKeyboardShortcuts = () => {
   const pasteCountRef = useRef(0)
+  // Serializes a burst of pastes so their copies cascade in order.
+  const pasteChainRef = useRef<Promise<unknown>>(Promise.resolve())
 
-  const { undo, redo, canUndo, canRedo, undoManager } = useDiagramStore(
-    useShallow((state) => ({
-      undo: state.undo,
-      redo: state.redo,
-      canUndo: state.canUndo,
-      canRedo: state.canRedo,
-      undoManager: state.undoManager,
-    }))
+  const { undo, redo } = useDiagramStore(
+    useShallow((state) => ({ undo: state.undo, redo: state.redo }))
   )
   const setMultiSelectionMode = useMetadataStore(
     (state) => state.setMultiSelectionMode
   )
   const isDiagramModifiable = useDiagramModifiable()
+  const enabled = useMetadataStore((state) => state.keyboardShortcuts)
+  const rf = useReactFlow()
+  const { insets, safeArea } = useOverlayStore(
+    useShallow((state) => ({ insets: state.insets, safeArea: state.safeArea }))
+  )
   const {
-    selectedElementIds,
     hasSelectedElements,
     selectAll,
     clearSelection,
     copySelectedElements,
     pasteElements,
+    duplicateSelectedElements,
     cutSelectedElements,
-    deleteSelectedElements,
   } = useSelectionForCopyPaste()
 
-  useEffect(() => {
-    const handleKeyDown = async (event: KeyboardEvent) => {
-      // Check if we're in an input field or textarea
-      const target = event.target as HTMLElement
-      if (
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.isContentEditable
-      ) {
-        return
-      }
-
-      if (event.key === "Escape") {
-        event.preventDefault()
+  const deps: KeyboardShortcutDeps = {
+    isDiagramModifiable: () => isDiagramModifiable,
+    actions: {
+      "select-all": selectAll,
+      // Escape also drops out of touch multi-select mode.
+      "clear-selection": () => {
         setMultiSelectionMode(false)
         clearSelection()
-        return
-      }
-
-      if (event.key === "Delete") {
-        if (!isDiagramModifiable) return
-        event.preventDefault()
-        if (hasSelectedElements()) {
-          deleteSelectedElements()
+      },
+      // Nothing selected means nothing to copy, so leave Mod+C/Mod+X to the
+      // browser rather than swallowing a copy of whatever text is selected.
+      copy: () => {
+        if (!hasSelectedElements()) return false
+        pasteCountRef.current = 0
+        void copySelectedElements()
+      },
+      cut: () => {
+        if (!hasSelectedElements()) return false
+        pasteCountRef.current = 0
+        void cutSelectedElements()
+      },
+      // Reserve the next cascade slot synchronously, then serialize: two quick
+      // presses take steps N and N+1 (not both N), and each paste runs after the
+      // previous so the copies land in order. `insertClipboardData` reads live
+      // store state, so a later paste builds on the earlier one either way — the
+      // chain just keeps the offsets ordered. A failed paste leaves its slot
+      // unused (a harmless gap the next copy resets).
+      paste: () => {
+        pasteCountRef.current += 1
+        const step = pasteCountRef.current
+        pasteChainRef.current = pasteChainRef.current
+          .then(() => pasteElements(step))
+          .catch(() => {})
+      },
+      // Duplicating a just-pasted element lands it on the next paste's slot, so
+      // consume that step rather than stack the two. Always claims the key:
+      // Mod+D's browser default is "add bookmark", never what's wanted here.
+      duplicate: () => {
+        if (duplicateSelectedElements()) pasteCountRef.current += 1
+      },
+      undo,
+      redo,
+      "zoom-in": () => void rf.zoomIn(),
+      "zoom-out": () => void rf.zoomOut(),
+      "reset-zoom": () => void rf.zoomTo(1),
+      "fit-view": () => insetAwareFitView(rf, insets, safeArea),
+      "zoom-to-selection": () => {
+        const framed = new Set(
+          rf
+            .getNodes()
+            .filter((node) => node.selected)
+            .map((node) => node.id)
+        )
+        for (const edge of rf.getEdges()) {
+          if (!edge.selected) continue
+          framed.add(edge.source)
+          framed.add(edge.target)
         }
-        return
-      }
+        insetAwareFitView(
+          rf,
+          insets,
+          safeArea,
+          // Nothing selected frames everything.
+          framed.size > 0
+            ? { nodes: [...framed].map((id) => ({ id })) }
+            : undefined
+        )
+      },
+    },
+  }
 
-      const isModifierPressed = event.ctrlKey || event.metaKey
+  const depsRef = useRef(deps)
+  useEffect(() => {
+    depsRef.current = deps
+  })
 
-      if (!isModifierPressed) return
-
-      if (!isDiagramModifiable) return
-
-      switch (event.key.toLowerCase()) {
-        case "z":
-          event.preventDefault()
-          if (event.shiftKey) {
-            redo()
-          } else {
-            undo()
-          }
-          break
-
-        case "y":
-          if (!event.shiftKey) {
-            event.preventDefault()
-            redo()
-          }
-          break
-
-        case "a":
-          if (!event.shiftKey && !event.altKey) {
-            event.preventDefault()
-            selectAll()
-          }
-          break
-
-        case "c":
-          if (!event.shiftKey && !event.altKey) {
-            event.preventDefault()
-            if (hasSelectedElements()) {
-              pasteCountRef.current = 0
-              copySelectedElements()
-            }
-          }
-          break
-
-        case "x":
-          if (!event.shiftKey && !event.altKey) {
-            event.preventDefault()
-            if (hasSelectedElements()) {
-              pasteCountRef.current = 0
-              cutSelectedElements()
-            }
-          }
-          break
-
-        case "v":
-          if (!event.shiftKey && !event.altKey) {
-            event.preventDefault()
-            pasteCountRef.current += 1
-            pasteElements(pasteCountRef.current)
-          }
-          break
-
-        case "d":
-          if (!event.shiftKey && !event.altKey) {
-            event.preventDefault()
-            clearSelection()
-          }
-          break
-
-        default:
-          break
-      }
-    }
-
-    document.addEventListener("keydown", handleKeyDown)
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown)
-    }
-  }, [
-    undo,
-    redo,
-    canUndo,
-    canRedo,
-    undoManager,
-    selectedElementIds,
-    hasSelectedElements,
-    selectAll,
-    clearSelection,
-    copySelectedElements,
-    cutSelectedElements, // Add this to dependencies
-    pasteElements,
-    setMultiSelectionMode,
-  ])
+  useEffect(() => {
+    if (!enabled) return
+    const onKeyDown = (event: KeyboardEvent) =>
+      handleShortcutKeydown(event, depsRef.current)
+    document.addEventListener("keydown", onKeyDown)
+    return () => document.removeEventListener("keydown", onKeyDown)
+  }, [enabled])
 }

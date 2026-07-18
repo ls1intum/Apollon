@@ -41,7 +41,7 @@ import { structuralFingerprint } from "@/lib/version/predicates"
 import { useVersionPreviewUrlSync } from "@/hooks/useVersionPreviewUrlSync"
 import { useElementWidth } from "@/hooks/useElementWidth"
 import { useFlushOnUnload } from "@/hooks/useFlushOnUnload"
-import { useVersionShortcut } from "@/hooks/useVersionShortcut"
+import { useEditorShortcuts } from "@/hooks/useEditorShortcuts"
 import { log } from "@/logger"
 import { addSharedDiagramEntry } from "@/utils/sharedDiagramStorage"
 
@@ -114,7 +114,7 @@ export const ApollonShared: React.FC = () => {
     Boolean(editor)
   )
 
-  useVersionShortcut(diagramId)
+  useEditorShortcuts(diagramId)
 
   useFlushOnUnload({
     diagramId,

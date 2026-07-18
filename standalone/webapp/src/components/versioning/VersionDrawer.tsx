@@ -191,6 +191,18 @@ export const VersionSidebarBody: FC<Props> = ({
   const latestSavedVersion = versions.find((v) => !v.pending && !v.failed)
   const [savedFingerprint, setSavedFingerprint] = useState<string | null>(null)
   const [hasChanges, setHasChanges] = useState(true)
+  // The version id the fingerprint baseline is currently resolved for:
+  //   `undefined` — never resolved · `null` — resolved for "no version yet".
+  // The save shortcut compares this to the current latest version rather than
+  // reading a boolean that lags a render: on the frame the version list first
+  // arrives, a boolean would still read the earlier empty branch's `true` while
+  // the re-fetch is only queued, letting the shortcut snapshot with a stale
+  // fingerprint. An id mismatch closes that window with no stale state.
+  const [baselineVersionId, setBaselineVersionId] = useState<
+    string | null | undefined
+  >(undefined)
+  const baselineResolved =
+    baselineVersionId === (latestSavedVersion?.id ?? null)
 
   // Re-baseline the fingerprint on every new latest-saved version. Two cases:
   //  1. Local save (handleCreate just ran): `lastLocalSaveIdRef.current` matches
@@ -204,32 +216,51 @@ export const VersionSidebarBody: FC<Props> = ({
     if (!latestSavedVersion) {
       setSavedFingerprint(null)
       setHasChanges(true)
+      setBaselineVersionId(null)
       return
     }
     if (lastLocalSaveIdRef.current === latestSavedVersion.id) {
       // Fast path: we just saved this version locally — editor model is authoritative.
       setSavedFingerprint(structuralFingerprint(editor.model))
       setHasChanges(false)
+      setBaselineVersionId(latestSavedVersion.id)
       return
     }
-    // Slow path: fetch the canonical snapshot (server in collab, IDB locally)
-    // so the baseline isn't the potentially-dirty editor state.
+    // Slow path: fetch the canonical snapshot (server in collab mode, IDB in
+    // local mode) so the baseline isn't the potentially-dirty editor state.
+    // Until it resolves, `baselineVersionId` still names the previous
+    // baseline, so `baselineResolved` is false.
+    //
+    // `stale` guards against out-of-order completion: if the latest version
+    // changes (a collaborator saves/restores) while this fetch is in flight,
+    // the effect re-runs and its cleanup marks this one stale, so a late
+    // resolution can't overwrite the newer baseline with an older body/id.
+    let stale = false
+    const resolvingVersionId = latestSavedVersion.id
     fetchVersionBody(
       queryClient,
       kind,
       latestSavedVersion.diagramId,
-      latestSavedVersion.id
+      resolvingVersionId
     )
       .then((body) => {
-        setSavedFingerprint(structuralFingerprint(body))
+        if (!stale) setSavedFingerprint(structuralFingerprint(body))
       })
       .catch(() => {
         // Fallback: if the fetch fails, assume unsaved changes exist rather
         // than hiding the Save button. False-positive is safe; false-negative
         // (hiding real changes) is not.
-        setSavedFingerprint(null)
-        setHasChanges(true)
+        if (!stale) {
+          setSavedFingerprint(null)
+          setHasChanges(true)
+        }
       })
+      .finally(() => {
+        if (!stale) setBaselineVersionId(resolvingVersionId)
+      })
+    return () => {
+      stale = true
+    }
   }, [editor, latestSavedVersion?.id, queryClient, kind])
 
   useEffect(() => {
@@ -264,8 +295,9 @@ export const VersionSidebarBody: FC<Props> = ({
   const canSave =
     Boolean(editor) && hasChanges && previewState === null && !isEmptyDiagram
 
-  const handleCreate = () => {
-    if (!editor || submitting || !canSave) return
+  const handleCreate = (saveableOverride?: boolean) => {
+    const saveable = saveableOverride ?? canSave
+    if (!editor || submitting || !saveable) return
     // Request persistent storage from inside the click handler — running
     // it after the await chain below would leave the user-gesture window
     // (Firefox would silently deny). No-op for adapters that don't
@@ -306,6 +338,70 @@ export const VersionSidebarBody: FC<Props> = ({
       }
     )
   }
+
+  // The "save a version" shortcut (Ctrl/Cmd+Shift+S) can't reach the editor
+  // model or the guards, so it bumps a per-diagram nonce and this panel — which
+  // owns both — runs the same save the Save button does. Waiting for both the
+  // initial list load and `baselineResolved` keeps a keystroke from writing a
+  // duplicate before we know whether a version already exists: the list is
+  // briefly empty while the first fetch is in flight, and an empty list must
+  // not be mistaken for "no history yet".
+  const saveRequest = useVersionStore(
+    (s) => s.saveRequestByDiagram[diagramId] ?? 0
+  )
+  // The query is pending only until the first fetch settles; an error also
+  // ends the load (and there the Save button is optimistic, so match it).
+  const initialListLoaded = !versionsQuery.isPending
+  const clearSaveRequest = useVersionStore((s) => s.clearSaveRequest)
+  const handledSaveRequestRef = useRef(0)
+  // A ref, refreshed each render, so the trigger effect can depend only on the
+  // request and readiness rather than on every guard value it reads.
+  const runSaveRequestRef = useRef<() => void>(() => {})
+  useEffect(() => {
+    runSaveRequestRef.current = () => {
+      // `hasChanges` is recomputed by its own effect, which can still be one
+      // render behind at the exact moment the baseline resolves and this
+      // request unblocks. Compare against the fingerprint directly so the
+      // shortcut can't write a duplicate in that window.
+      const dirty =
+        savedFingerprint === null ||
+        (editor !== undefined &&
+          structuralFingerprint(editor.model) !== savedFingerprint)
+      const saveable =
+        Boolean(editor) && dirty && previewState === null && !isEmptyDiagram
+      if (saveable) {
+        void handleCreate(saveable)
+      } else if (editor && !isEmptyDiagram && previewState === null) {
+        // Content, but identical to the last version — nothing to snapshot.
+        toast.info(t.noChangesToSave)
+      }
+      // Empty diagram or previewing: the open panel (its empty-state CTA or
+      // preview banner) is feedback enough.
+    }
+  })
+
+  useEffect(() => {
+    if (saveRequest === 0) {
+      handledSaveRequestRef.current = 0
+      return
+    }
+    if (
+      saveRequest <= handledSaveRequestRef.current ||
+      !initialListLoaded ||
+      !baselineResolved
+    ) {
+      return
+    }
+    handledSaveRequestRef.current = saveRequest
+    clearSaveRequest(diagramId)
+    runSaveRequestRef.current()
+  }, [
+    saveRequest,
+    initialListLoaded,
+    baselineResolved,
+    diagramId,
+    clearSaveRequest,
+  ])
 
   const handlePreview = useCallback(
     async (versionId: string) => {
@@ -446,7 +542,7 @@ export const VersionSidebarBody: FC<Props> = ({
             <Button
               type="button"
               size="sm"
-              onClick={handleCreate}
+              onClick={() => handleCreate()}
               disabled={submitting || !canSave}
               title={
                 !canSave && previewState !== null

@@ -1,10 +1,9 @@
 import React, { lazy, Suspense, useEffect, useMemo, useRef } from "react"
-import { useNavigate, useLocation } from "@tanstack/react-router"
-import { importDiagram, type UMLDiagramType } from "@tumaet/apollon"
-import { toast } from "react-toastify"
-import { log } from "@/logger"
+import { useLocation } from "@tanstack/react-router"
+import { type UMLDiagramType } from "@tumaet/apollon"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { useModalContext } from "@/contexts"
+import { useImportDiagramFile } from "@/hooks/useImportDiagramFile"
 import { DiagramGallerySkeleton } from "@/components/home/DiagramGallerySkeleton"
 import { HomeHeaderRow } from "@/components/home/HomeHeaderRow"
 import { HomeNewFab } from "@/components/home/HomeNewFab"
@@ -23,7 +22,6 @@ const DiagramGallery = lazy(() =>
 
 export const HomePage = () => {
   useDocumentTitle("Your diagrams")
-  const navigate = useNavigate()
   const location = useLocation()
   const highlightSharedDiagramId =
     readHighlightSharedDiagramId(location.state) ?? null
@@ -32,6 +30,7 @@ export const HomePage = () => {
     (state) => state.setCurrentModelId
   )
   const jsonImportRef = useRef<HTMLInputElement>(null)
+  const importFile = useImportDiagramFile()
 
   // The single source of truth for the band's search / favorites / source /
   // type / sort controls. Passed to BOTH the band and the gallery so they share
@@ -44,27 +43,7 @@ export const HomePage = () => {
 
   const handleJsonImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = (ev) => {
-      try {
-        const json = JSON.parse(ev.target?.result as string)
-        const processedModel = importDiagram(json)
-        if (!processedModel?.id) {
-          throw new Error("Imported diagram has no id")
-        }
-        usePersistenceModelStore.getState().createModel(processedModel)
-        navigate({
-          to: "/local/$id",
-          params: { id: processedModel.id },
-          replace: true,
-        })
-      } catch (error) {
-        log.error("Invalid JSON file", error as Error)
-        toast.error("Failed to import diagram — invalid JSON file.")
-      }
-    }
-    reader.readAsText(file)
+    if (file) void importFile(file)
     e.target.value = ""
   }
 

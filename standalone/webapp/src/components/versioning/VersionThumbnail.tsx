@@ -95,7 +95,11 @@ export const VersionThumbnail: FC<Props> = ({
   // wanted either way, so no cancellation flag is needed.
   useEffect(() => {
     const body = bodyQuery.data
-    if (!body || src || renderFailed) return
+    // `isVisible` gates the export too, not just the fetch: the body cache is
+    // shared with preview entry and the drawer's dirty-check baseline, so a
+    // row's body can already be cached while the row is still off-screen —
+    // rendering it then would run the expensive export for nothing.
+    if (!isVisible || !body || src || renderFailed) return
     enqueueRender(() => {
       // `importDiagram` forward-converts older-schema snapshots. Inside the
       // queue so a schema failure shares the export's async error path.
@@ -111,7 +115,7 @@ export const VersionThumbnail: FC<Props> = ({
         log.error("Thumbnail render failed", err)
         setRenderFailed(true)
       })
-  }, [bodyQuery.data, src, renderFailed, cacheKey])
+  }, [bodyQuery.data, isVisible, src, renderFailed, cacheKey])
 
   const errored = renderFailed || bodyQuery.isError
   const KindIcon = isAuto ? HistoryIcon : BookmarkIcon

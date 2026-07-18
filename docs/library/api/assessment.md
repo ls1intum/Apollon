@@ -83,6 +83,10 @@ elements that still need feedback. Use **translucent** colors so the element's
 own text stays readable. Highlights are ephemeral: they are not serialized into
 the model and not shared over collaboration. Pass `null` or an empty map to clear.
 
+To color a whole **group** of attributes/methods at once — e.g. by a build
+result — address them by tag first; see
+[Element tags & group coloring](./element-tags).
+
 ```ts
 import { ApollonEditor } from "@tumaet/apollon"
 

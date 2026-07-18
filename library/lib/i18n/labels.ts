@@ -31,6 +31,7 @@ export interface ApollonLabels {
 
   selectionActions: string
   elementPalette: string
+  addElement: string
   paletteModelView: string
   paletteSelectElementsView: string
   paletteHighlightHint: string
@@ -144,6 +145,18 @@ export interface ApollonLabels {
   markMethodAsAbstract: string
   unmarkMethodAsAbstract: string
   abstractMethod: string
+
+  // Element tags (host-defined grouping labels)
+  /** Accessible name of the tag button, scoped to its subject noun. */
+  editTagsFor: (subject: string) => string
+  /** Accessible name of the add-a-tag field. */
+  newTag: string
+  /** Placeholder of the add field + accessible name of its add button. */
+  addTag: string
+  /** Shown when there are no tags to pick and none can be created. */
+  noTags: string
+  /** Accessible name of a chip's remove button (interpolates the tag). */
+  removeTag: (tag: string) => string
 
   // Communication diagram
   messages: string
@@ -297,6 +310,7 @@ export const DEFAULT_LABELS: ApollonLabels = Object.freeze<ApollonLabels>({
   hideMinimap: "Hide minimap",
   selectionActions: "Selection actions",
   elementPalette: "Element palette",
+  addElement: "Add element",
   paletteModelView: "Model",
   paletteSelectElementsView: "Select Elements",
   paletteHighlightHint:
@@ -396,6 +410,11 @@ export const DEFAULT_LABELS: ApollonLabels = Object.freeze<ApollonLabels>({
   markMethodAsAbstract: "Mark method as abstract",
   unmarkMethodAsAbstract: "Unmark method as abstract",
   abstractMethod: "Abstract method (italic)",
+  editTagsFor: (subject) => `Tags for ${subject}`,
+  newTag: "New tag",
+  addTag: "Add tag",
+  noTags: "No tags",
+  removeTag: (tag) => `Remove tag ${tag}`,
   messages: "Messages",
   message: "Message",
   addMessage: "Add message",

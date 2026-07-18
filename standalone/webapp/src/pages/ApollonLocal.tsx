@@ -13,7 +13,7 @@ import { ApollonEditor, importDiagram, type UMLModel } from "@tumaet/apollon"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { useEditorContext, useModalContext } from "@/contexts"
 import { useElementWidth } from "@/hooks/useElementWidth"
-import { useVersionShortcut } from "@/hooks/useVersionShortcut"
+import { useEditorShortcuts } from "@/hooks/useEditorShortcuts"
 import { useVersionPreviewUrlSync } from "@/hooks/useVersionPreviewUrlSync"
 import { selectScopedPreview, useVersionStore } from "@/stores/useVersionStore"
 import { fetchVersionBody, useVersionsQuery } from "@/queries/versionQueries"
@@ -130,7 +130,7 @@ export const ApollonLocal: FC = () => {
   const versions = versionsQuery.data?.versions ?? EMPTY_VERSIONS
   const restoreMutation = useRestoreVersionMutation(kind, diagramId)
 
-  useVersionShortcut(diagramId ?? undefined)
+  useEditorShortcuts(diagramId ?? undefined)
 
   const prePreviewFingerprintRef = useRef<string | null>(null)
   const [canRestoreFromPreview, setCanRestoreFromPreview] = useState(false)
