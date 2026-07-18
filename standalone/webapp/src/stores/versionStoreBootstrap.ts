@@ -62,9 +62,13 @@ export function ensureVersionStoreBootstrapped(
     }
   )
 
-  // 2. Cross-tab invalidations. After the refetch settles, if the previewed
-  //    version was deleted by the other tab, exit preview defensively so the
-  //    canvas doesn't show a row that no longer exists.
+  // 2. Cross-tab invalidations. After the refetch settles, if the version this
+  //    tab is previewing was deleted by another tab, drop its (immutable,
+  //    `staleTime: Infinity`) body from the cache. The URL owns preview, so
+  //    clearing the store alone is undone by the URL sync — but with the body
+  //    evicted, its re-entry misses the cache, reads IndexedDB, gets a 404,
+  //    and `useVersionPreviewUrlSync`'s error path strips `?version=` for us.
+  //    That keeps this non-React singleton out of routing.
   const unsubscribeBroadcast = subscribeToLocalVersionEvents((msg) => {
     void queryClient
       .invalidateQueries({
@@ -74,13 +78,19 @@ export function ensureVersionStoreBootstrapped(
         refetchType: "all",
       })
       .then(() => {
-        const store = useVersionStore.getState()
-        const previewing = store.preview
+        const previewing = useVersionStore.getState().preview
         if (!previewing || previewing.diagramId !== msg.diagramId) return
         const versions = getCachedVersions(queryClient, "local", msg.diagramId)
         // Only act on a loaded list — an empty cache proves nothing.
         if (versions && !versions.some((v) => v.id === previewing.versionId)) {
-          store.exitPreview()
+          queryClient.removeQueries({
+            queryKey: versionKeys.body(
+              "local",
+              msg.diagramId,
+              previewing.versionId
+            ),
+          })
+          useVersionStore.getState().exitPreview()
         }
       })
       .catch((err: unknown) =>

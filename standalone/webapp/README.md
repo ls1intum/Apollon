@@ -6,13 +6,17 @@ Part of the Apollon monorepo — run it from the repo root with `pnpm dev`, not 
 
 ## Stack
 
-React 19, TypeScript, Vite, the shadcn-style [`@tumaet/ui`](../../packages/ui) design system (Base UI primitives + Tailwind v4), [TanStack Query](https://tanstack.com/query) for server state, Storybook, Vitest, Playwright (visual + e2e).
+React 19, TypeScript, Vite, the shadcn-style [`@tumaet/ui`](../../packages/ui) design system (Base UI primitives + Tailwind v4), [TanStack Query](https://tanstack.com/query) for version-history server state, Storybook, Vitest, Playwright (visual + e2e).
 
 ## Debugging server state
 
-HTTP data (diagram loads, version history, version snapshots) goes through
-TanStack Query — see [`src/queries`](src/queries) and the boundary note in
-[`src/queryClient.ts`](src/queryClient.ts).
+Version history — the list, the immutable snapshot bodies, and the
+create/rename/delete/restore mutations — goes through TanStack Query (see
+[`src/queries`](src/queries) and the boundary note in
+[`src/queryClient.ts`](src/queryClient.ts)). The editor's initial diagram
+body is deliberately NOT a query: it is a one-shot seed that Yjs owns after
+mount, so it must never be refetched or served from a cache — see
+[`src/hooks/useDiagramSeed.ts`](src/hooks/useDiagramSeed.ts).
 
 The Query Devtools are **off by default**: their floating button sits
 bottom-right, on top of the editor's minimap, and every other corner is taken

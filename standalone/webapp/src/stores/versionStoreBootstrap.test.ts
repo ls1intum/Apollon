@@ -10,7 +10,11 @@ import { useVersionStore } from "./useVersionStore"
 import { usePersistenceModelStore } from "./usePersistenceModelStore"
 import { LocalVersionRepository } from "@/services/versionRepository"
 import { __resetDbForTests } from "@/services/versionRepository/idb"
-import { versionListQueryOptions } from "@/queries/versionQueries"
+import {
+  fetchVersionBody,
+  versionListQueryOptions,
+} from "@/queries/versionQueries"
+import { versionKeys } from "@/queries/keys"
 import { createTestQueryClient } from "@/test/queryTestUtils"
 
 const DIAGRAM_ID = "boot-test-diagram"
@@ -73,6 +77,14 @@ describe("versionStoreBootstrap", () => {
     await queryClient.prefetchInfiniteQuery(
       versionListQueryOptions("local", DIAGRAM_ID)
     )
+    // Warm the body cache too — with `staleTime: Infinity` this is what a
+    // re-entering preview would serve unless the delete evicts it.
+    await fetchVersionBody(queryClient, "local", DIAGRAM_ID, created.id)
+    expect(
+      queryClient.getQueryData(
+        versionKeys.body("local", DIAGRAM_ID, created.id)
+      )
+    ).toBeDefined()
     useVersionStore.setState({
       drawerOpenByDiagram: { [DIAGRAM_ID]: true },
       preview: {
@@ -98,6 +110,19 @@ describe("versionStoreBootstrap", () => {
     await flush()
 
     expect(useVersionStore.getState().preview).toBeNull()
+
+    // The cached body must be gone, so the URL sync's re-entry misses the
+    // cache and reads IndexedDB — which now 404s, and that rejection is what
+    // strips `?version=`. If the body survived, the deleted snapshot would be
+    // served forever and the preview would never actually close.
+    expect(
+      queryClient.getQueryData(
+        versionKeys.body("local", DIAGRAM_ID, created.id)
+      )
+    ).toBeUndefined()
+    await expect(
+      fetchVersionBody(queryClient, "local", DIAGRAM_ID, created.id)
+    ).rejects.toMatchObject({ status: 404 })
   })
 
   it("cascade-purges the IDB version trail when a local diagram is deleted", async () => {
