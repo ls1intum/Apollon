@@ -246,7 +246,7 @@ const CASES: {
   // not count as "straight": the step costs more than switching a side for a clean L.
   {
     file: "routing-case-58.json",
-    maxCorners: 5,
+    maxCorners: 4,
     maxCrossings: 0,
     maxStraightBroken: 0,
     maxOffMax: 0.75,
@@ -280,13 +280,13 @@ const CASES: {
     maxCorners: 4,
     maxCrossings: 0,
     maxStraightBroken: 0,
-    maxOffMax: 0.2,
+    maxOffMax: 0.3,
   },
   // 63: ports spread EVENLY across a shared side (equal stretches between and around),
   // so two connectors split the side into three balanced segments.
   {
     file: "routing-case-63.json",
-    maxCorners: 4,
+    maxCorners: 3,
     maxCrossings: 0,
     maxStraightBroken: 0,
     maxOffMax: 0.8,

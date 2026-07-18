@@ -29,6 +29,7 @@ import {
   routeChosenAnchors,
   selectEdgeAnchors,
 } from "@/utils/geometry/edgeAnchoring"
+import { MERGED_ARROWHEAD_EDGE_TYPES } from "@/edges/edgeRoutingBehavior"
 import {
   assignPorts,
   assignSides,
@@ -653,6 +654,11 @@ function collectPortEnds(
         partnerNodeId: edge.source,
         partnerRect: sourceRect,
         partnerSide: sourceSide,
+        // The UML generalisation/realisation arrowhead: several sub-classes landing on
+        // one super-class side share a single mark (see MERGED_ARROWHEAD_EDGE_TYPES).
+        mergeKey: MERGED_ARROWHEAD_EDGE_TYPES.has(edge.type ?? "")
+          ? edge.type
+          : undefined,
         fourCenter: four(edge.target),
       })
   }

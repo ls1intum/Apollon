@@ -45,3 +45,19 @@ export const STRAIGHT_PATH_STEP_EDGE_TYPES: ReadonlySet<string> = new Set([
   "DeploymentRequiredQuarterInterface",
   "SfcDiagramEdge",
 ])
+
+/**
+ * Edge types whose ARROWHEAD end is merged when several of them land on the same
+ * node side: the classic UML generalisation tree, where sub-classes share one
+ * hollow triangle on the super-class rather than each drawing its own.
+ *
+ * This is a genuine aesthetic, not a shortcut — Purchase's UML studies rank
+ * "joined inheritance arcs" alongside crossings and bends for class-diagram
+ * comprehension. It is also the one place where OVERLAYING edges is correct: for
+ * every other type a shared port reads as a defect, which is why the merge is
+ * opt-in per type rather than a general rule.
+ */
+export const MERGED_ARROWHEAD_EDGE_TYPES: ReadonlySet<string> = new Set([
+  "ClassInheritance",
+  "ClassRealization",
+])

@@ -33,7 +33,7 @@ export const PORT_PITCH_PX = 3 * GRID
  * between and around them read as deliberate, but a very wide side would otherwise
  * fling two ports far apart — which buys nothing and pushes each toward a corner,
  * where the route can pick up an extra bend. Caps the spread at a legible spacing. */
-const MAX_PORT_GAP_PX = 6 * GRID
+const MAX_PORT_GAP_PX = 8 * GRID
 
 /** Minimum gap kept between the outermost port and a corner — a corner anchor
  * makes the first segment graze the node it just left. */
@@ -510,6 +510,12 @@ export type EndRef = {
    * the right relative order, and which order that is depends on both sides (see
    * `bundleNeedsMirror`). Absent ⇒ the partner end is on the cost path; no mirror. */
   partnerSide?: Position
+  /** Ends sharing a defined `mergeKey` on the same `(node, side)` collapse onto ONE
+   * port, so their arrowheads OVERLAY into a single mark. The caller decides what may
+   * merge (today: the UML generalisation/realisation arrowhead — see
+   * `MERGED_ARROWHEAD_EDGE_TYPES`); this module just honours it, so the geometry stays
+   * free of diagram semantics. Absent ⇒ this end never shares its port. */
+  mergeKey?: string
   /** A FOUR-CENTRE node (activity/BPMN/flowchart-decision/petri) can only attach at
    * the side MIDPOINT, so its port is always ratio 0.5 — the band does not apply and
    * several edges on one such side collapse (the cost side-pass distributes them
@@ -688,6 +694,49 @@ export const assignPorts = (
        * them, rather than by an arbitrary id. */
       rot: number
     }
+    // MERGE first: ends sharing a `mergeKey` on this side collapse to ONE unit, so a
+    // UML generalisation fan draws a single shared arrowhead instead of a spread of
+    // parallel ones. The unit is placed like any other port and its coordinate is then
+    // handed back to every member, which is what makes the marks overlay exactly.
+    const unitMembers = new Map<string, EndRef[]>()
+    for (const e of group) {
+      const key =
+        e.mergeKey === undefined
+          ? `solo:${endKey(e.edgeId, e.end)}`
+          : `merge:${e.mergeKey}`
+      const u = unitMembers.get(key)
+      if (u) u.push(e)
+      else unitMembers.set(key, [e])
+    }
+    // One representative per unit — the smallest edge id, so the choice is
+    // deterministic — carrying the fan's CENTROID as its partner direction so the
+    // merged port sits where the fan actually pulls.
+    const units: EndRef[] = []
+    const membersOfRep = new Map<string, EndRef[]>()
+    for (const members of unitMembers.values()) {
+      const ordered = [...members].sort((a, b) =>
+        a.edgeId < b.edgeId ? -1 : a.edgeId > b.edgeId ? 1 : 0
+      )
+      const rep = ordered[0]
+      if (ordered.length === 1) {
+        units.push(rep)
+        membersOfRep.set(endKey(rep.edgeId, rep.end), ordered)
+        continue
+      }
+      const cx =
+        ordered.reduce((t, m) => t + m.partnerCenter.x, 0) / ordered.length
+      const cy =
+        ordered.reduce((t, m) => t + m.partnerCenter.y, 0) / ordered.length
+      units.push({
+        ...rep,
+        partnerCenter: { x: cx, y: cy },
+        // A merged unit answers to several partners, so it is never a straight lane —
+        // give it a partner id of its own so it forms one L unit.
+        partnerNodeId: `merged:${rep.mergeKey}`,
+      })
+      membersOfRep.set(endKey(rep.edgeId, rep.end), ordered)
+    }
+
     const seats: Seat[] = []
     const rotOf = (e: EndRef): number => {
       const c = centerOf(e.rect)
@@ -698,7 +747,7 @@ export const assignPorts = (
       )
     }
     const byPartner = new Map<string, EndRef[]>()
-    for (const e of group) {
+    for (const e of units) {
       const g = byPartner.get(e.partnerNodeId)
       if (g) g.push(e)
       else byPartner.set(e.partnerNodeId, [e])
@@ -804,13 +853,14 @@ export const assignPorts = (
       for (let i = pos.length - 2; i >= 0; i--)
         if (pos[i] > pos[i + 1] - gap) pos[i] = pos[i + 1] - gap
     }
-    // ratio = (absolute coord − low corner) / axis
-    seats.forEach((s, i) =>
-      result.set(endKey(s.edgeId, s.end), {
-        side,
-        ratio: (clamp(pos[i], lo, hi) - myLo) / axis,
-      })
-    )
+    // ratio = (absolute coord − low corner) / axis. A merged unit hands its ratio to
+    // every member, so their arrowheads land on the identical point.
+    seats.forEach((s, i) => {
+      const ratio = (clamp(pos[i], lo, hi) - myLo) / axis
+      const members = membersOfRep.get(endKey(s.edgeId, s.end)) ?? []
+      for (const m of members)
+        result.set(endKey(m.edgeId, m.end), { side, ratio })
+    })
   }
   return result
 }
