@@ -1,6 +1,6 @@
-import { NodeProps, NodeResizer, type Node } from "@xyflow/react"
+import { NodeProps, type Node } from "@xyflow/react"
 import { usePopoverAnchor } from "@/hooks/usePopoverAnchor"
-import { DefaultNodeWrapper } from "../wrappers"
+import { DefaultNodeWrapper, NodeResizer } from "../wrappers"
 import { useHandleOnResize } from "@/hooks"
 import { DefaultNodeProps } from "@/types"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
@@ -31,7 +31,6 @@ export function FlowchartFunctionCall({
         onResize={onResize}
         minHeight={50}
         minWidth={50}
-        handleStyle={{ width: 8, height: 8 }}
       />
       <div ref={anchorRef}>
         <FlowchartFunctionCallNodeSVG

@@ -301,6 +301,12 @@
 }
 
 /* width/height come inline from the computed cell size. */
+.apollon-palette__cell:focus-visible {
+  outline: 2px solid var(--apollon-primary, #3e8acc);
+  outline-offset: 2px;
+  border-radius: var(--apollon-chrome-radius-sm);
+}
+
 .apollon-palette__entry {
   display: flex;
   align-items: center;
@@ -731,12 +737,42 @@
   border-radius: var(--arc-radius) 0 0 var(--arc-radius);
 }
 
-.react-flow__resize-control line {
+.react-flow__resize-control.handle {
+  z-index: 20;
+}
+
+/* NodeResizer renders its controls before the node's own content in the DOM, so
+   without a z-index the 1px edge lines paint *behind* a filled node (a swimlane,
+   pool, package…) and can't be seen or grabbed — only the corners, lifted by the
+   rule above, stayed reachable. Lift the lines over the content but below the
+   corner handles (20) and the connection arcs (10, so an arc still wins at its
+   slot and the line fills the gaps between). */
+.react-flow__resize-control.line {
   z-index: 9;
 }
 
-.react-flow__resize-control.handle {
-  z-index: 20;
+/* React Flow draws the edge lines 1px wide, a hair-thin grab target. Widen the
+   hit area without moving the visible border, the same way the connection arcs
+   get a usable target. Kept small (and hover-gated, via the base rule below)
+   because it overhangs the node edge onto whatever sits beneath. */
+.apollon-resize-line::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+}
+
+/* A content-sized node keeps its corner handles (NodeResizer constrains each to
+   the node's free axis with `resizeDirection`), but React Flow hard-codes a
+   diagonal nwse/nesw cursor on every corner. Relabel it to the free axis's
+   cursor so the pointer tells the truth about which way a drag will go. The
+   fourth class (`nodrag`, present on every control) outranks React Flow's
+   three-class corner rules regardless of stylesheet order. */
+.react-flow__resize-control.nodrag.handle.apollon-resize-corner--x {
+  cursor: ew-resize;
+}
+
+.react-flow__resize-control.nodrag.handle.apollon-resize-corner--y {
+  cursor: ns-resize;
 }
 
 .react-flow__resize-control {
@@ -1017,22 +1053,6 @@ svg.react-flow__connectionline {
   -webkit-user-select: none;
   -ms-user-select: none;
   user-select: none;
-}
-
-.horizontally-not-resizable .react-flow__resize-control.top.line:hover {
-  cursor: grab;
-}
-
-.horizontally-not-resizable .react-flow__resize-control.bottom.line:hover {
-  cursor: grab;
-}
-
-.vertically-not-resizable .react-flow__resize-control.right.line:hover {
-  cursor: grab;
-}
-
-.vertically-not-resizable .react-flow__resize-control.left.line:hover {
-  cursor: grab;
 }
 
 /* Native UI primitives, tokened via `--apollon-*`. Base UI portals to

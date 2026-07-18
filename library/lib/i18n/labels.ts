@@ -31,6 +31,7 @@ export interface ApollonLabels {
 
   selectionActions: string
   elementPalette: string
+  addElement: string
   paletteModelView: string
   paletteSelectElementsView: string
   paletteHighlightHint: string
@@ -309,6 +310,7 @@ export const DEFAULT_LABELS: ApollonLabels = Object.freeze<ApollonLabels>({
   hideMinimap: "Hide minimap",
   selectionActions: "Selection actions",
   elementPalette: "Element palette",
+  addElement: "Add element",
   paletteModelView: "Model",
   paletteSelectElementsView: "Select Elements",
   paletteHighlightHint:
