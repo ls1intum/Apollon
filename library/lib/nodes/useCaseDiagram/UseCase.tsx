@@ -1,12 +1,6 @@
-import {
-  Handle,
-  NodeProps,
-  NodeResizer,
-  Position,
-  type Node,
-} from "@xyflow/react"
+import { Handle, NodeProps, Position, type Node } from "@xyflow/react"
 import { usePopoverAnchor } from "@/hooks/usePopoverAnchor"
-import { DefaultNodeWrapper, HandleId } from "../wrappers"
+import { DefaultNodeWrapper, HandleId, NodeResizer } from "../wrappers"
 import { useHandleOnResize } from "@/hooks"
 import { DefaultNodeProps } from "@/types"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
@@ -215,7 +209,6 @@ export function UseCase({
         onResize={onResize}
         minHeight={50}
         minWidth={50}
-        handleStyle={{ width: 8, height: 8 }}
       />
       <div ref={anchorRef}>
         <UseCaseNodeSVG

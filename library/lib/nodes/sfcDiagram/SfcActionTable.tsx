@@ -1,6 +1,6 @@
-import { NodeProps, NodeResizer, type Node } from "@xyflow/react"
+import { NodeProps, type Node } from "@xyflow/react"
 import { usePopoverAnchor } from "@/hooks/usePopoverAnchor"
-import { DefaultNodeWrapper } from "../wrappers"
+import { DefaultNodeWrapper, NodeResizer } from "../wrappers"
 import { useMemo, useEffect } from "react"
 import { useDiagramStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
@@ -68,7 +68,6 @@ export function SfcActionTable({
         minWidth={120}
         minHeight={minHeight}
         maxHeight={minHeight}
-        handleStyle={{ width: 8, height: 8 }}
       />
 
       <div ref={anchorRef}>

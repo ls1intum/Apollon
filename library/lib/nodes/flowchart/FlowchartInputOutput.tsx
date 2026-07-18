@@ -1,12 +1,6 @@
-import {
-  NodeProps,
-  NodeResizer,
-  type Node,
-  Handle,
-  Position,
-} from "@xyflow/react"
+import { NodeProps, type Node, Handle, Position } from "@xyflow/react"
 import { usePopoverAnchor } from "@/hooks/usePopoverAnchor"
-import { DefaultNodeWrapper } from "../wrappers"
+import { DefaultNodeWrapper, NodeResizer } from "../wrappers"
 import { useHandleOnResize } from "@/hooks"
 import { DefaultNodeProps } from "@/types"
 import { FlowchartInputOutputNodeSVG } from "@/components"
@@ -104,7 +98,6 @@ export function FlowchartInputOutput({
         onResize={onResize}
         minHeight={50}
         minWidth={50}
-        handleStyle={{ width: 8, height: 8 }}
       />
       <div ref={anchorRef}>
         <FlowchartInputOutputNodeSVG
