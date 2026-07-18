@@ -88,9 +88,10 @@ test.describe("Social preview card", () => {
   test.use({ viewport: { width: 1280, height: 640 }, deviceScaleFactor: 1 })
 
   test("social-card", async ({ page }) => {
-    // 1. Capture the dark editor at the card's own aspect ratio; the card
-    //    embeds it as a framed window on the right.
-    await openHero(page, "dark")
+    // 1. Capture the light editor at the card's own aspect ratio; the card
+    //    embeds it as a framed window on the right. Light matches the editor's
+    //    default look and reads brighter in link unfurls.
+    await openHero(page, "light")
     const editorShot = (await page.screenshot()).toString("base64")
 
     // 2. Compose the card in-page. Fonts and the logo are inlined as data URIs
@@ -120,10 +121,10 @@ test.describe("Social preview card", () => {
   html, body { width: 1280px; height: 640px; overflow: hidden; }
   body {
     font-family: "Inter", sans-serif;
-    color: #e8eaed;
+    color: #1f2328;
     background:
-      radial-gradient(1200px 800px at 85% -20%, #1d2735 0%, transparent 60%),
-      linear-gradient(135deg, #0d1117 0%, #10151d 100%);
+      radial-gradient(1200px 800px at 85% -20%, #dbe7f5 0%, transparent 60%),
+      linear-gradient(135deg, #ffffff 0%, #f3f6fa 100%);
     position: relative;
   }
   /* Dot grid echoing the editor canvas. */
@@ -131,7 +132,7 @@ test.describe("Social preview card", () => {
     content: "";
     position: absolute;
     inset: 0;
-    background-image: radial-gradient(circle, #2a3240 1.2px, transparent 1.2px);
+    background-image: radial-gradient(circle, #c7d0da 1.2px, transparent 1.2px);
     background-size: 26px 26px;
     opacity: 0.5;
   }
@@ -150,9 +151,9 @@ test.describe("Social preview card", () => {
   .lockup { display: flex; align-items: center; gap: 20px; }
   .lockup img { width: 84px; height: 84px; border-radius: 20px; }
   .lockup .name { font-size: 64px; font-weight: 700; letter-spacing: -0.02em; }
-  .tagline { font-size: 30px; line-height: 1.35; color: #c6cbd3; }
-  .tagline b { color: #e8eaed; font-weight: 700; }
-  .facts { font-size: 21px; color: #8b949e; }
+  .tagline { font-size: 30px; line-height: 1.35; color: #424a53; }
+  .tagline b { color: #1f2328; font-weight: 700; }
+  .facts { font-size: 21px; color: #6e7781; }
   .right {
     position: absolute;
     left: 620px;
@@ -160,14 +161,14 @@ test.describe("Social preview card", () => {
     width: 760px;
     border-radius: 12px;
     overflow: hidden;
-    border: 1px solid #30363d;
-    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
+    border: 1px solid #d0d7de;
+    box-shadow: 0 24px 70px rgba(31, 35, 40, 0.2);
     z-index: 1;
   }
   .titlebar {
     height: 34px;
-    background: #161b22;
-    border-bottom: 1px solid #30363d;
+    background: #f6f8fa;
+    border-bottom: 1px solid #d0d7de;
     display: flex;
     align-items: center;
     padding-left: 14px;
