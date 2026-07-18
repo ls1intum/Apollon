@@ -53,7 +53,7 @@ export function NodeResizer(props: NodeResizerProps) {
     maxWidth,
     maxHeight,
     handleStyle,
-    handleClassName: _handleClassName,
+    handleClassName,
     lineStyle,
     lineClassName,
     ...resizeParams
@@ -107,7 +107,7 @@ export function NodeResizer(props: NodeResizerProps) {
           position={position}
           variant={ResizeControlVariant.Handle}
           resizeDirection={freeAxis}
-          className={cornerClass}
+          className={[cornerClass, handleClassName].filter(Boolean).join(" ")}
           style={{ ...HANDLE_STYLE, ...handleStyle }}
           {...shared}
         />

@@ -110,6 +110,22 @@ describe("<NodeResizer>", () => {
     expect(container.querySelector(".apollon-resize-corner--y")).toBeNull()
   })
 
+  // The locked path must honour a caller's `handleClassName` the same way the
+  // free path (which spreads it to React Flow) does — the axis marker is added
+  // alongside it, not in place of it.
+  it("forwards a caller's handleClassName to a locked node's corners", () => {
+    const { container } = renderResizer({
+      minWidth: 100,
+      minHeight: 60,
+      maxHeight: 60,
+      handleClassName: "custom-handle",
+    })
+
+    expect(
+      container.querySelectorAll(".apollon-resize-corner--x.custom-handle")
+    ).toHaveLength(4)
+  })
+
   it("keeps corners but only the top/bottom lines when width is locked", () => {
     const { container } = renderResizer({
       minWidth: 20,
