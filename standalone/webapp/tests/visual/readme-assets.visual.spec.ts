@@ -269,6 +269,20 @@ test.describe("README header widgets", () => {
           { omitBackground: true, scale: "device" }
         )
       }
+
+      // npmjs.com strips GitHub's <picture> theme swap AND width/height
+      // sizing, so the npm README (library/README.md) embeds buttons with
+      // plain markdown image syntax at natural size. Emit 1x variants of the
+      // light buttons for it (light only: the filled/outlined buttons carry
+      // their own backgrounds, so they read fine on npm's dark theme too).
+      if (theme === "light") {
+        for (const id of ["btn-demo", "btn-docs"]) {
+          await expect(page.locator(`#${id}`)).toHaveScreenshot(
+            `apollon-${id}-${theme}-1x.png`,
+            { omitBackground: true, scale: "css" }
+          )
+        }
+      }
     })
   }
 })

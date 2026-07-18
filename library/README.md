@@ -9,11 +9,15 @@
 
 **Embeddable UML modeling editor for the web.** Mounts into any DOM node and works inside Angular, Vue, Svelte, vanilla JS, or React.
 
-[**▶ Live demo**](https://apollon.aet.cit.tum.de) · [Docs](https://ls1intum.github.io/Apollon/library/) · [API reference](https://ls1intum.github.io/Apollon/library/api) · [Examples](https://ls1intum.github.io/Apollon/library/embedding/react) · [GitHub](https://github.com/ls1intum/Apollon)
+<!-- npm-safe header widgets: npmjs.com strips GitHub's <picture> theme swap
+     and width/height attributes, so these are plain markdown images at their
+     natural (1x) size, with absolute URLs (repo-relative paths do not resolve
+     on npmjs.com). All PNGs are generated from the live editor by the
+     readme-assets Playwright project. -->
 
-<!-- Absolute URL on purpose: this README is rendered on npmjs.com, where
-     repo-relative image paths do not resolve. The PNG is generated from the
-     live editor by the readme-assets Playwright project. -->
+[![Try the live demo](https://raw.githubusercontent.com/ls1intum/Apollon/main/docs/static/img/apollon-btn-demo-light-1x.png)](https://apollon.aet.cit.tum.de) [![Documentation](https://raw.githubusercontent.com/ls1intum/Apollon/main/docs/static/img/apollon-btn-docs-light-1x.png)](https://ls1intum.github.io/Apollon/library/)
+
+[API reference](https://ls1intum.github.io/Apollon/library/api) · [Examples](https://ls1intum.github.io/Apollon/library/embedding/react) · [GitHub](https://github.com/ls1intum/Apollon)
 
 [![The Apollon editor showing a UML class diagram, with the element palette on the left](https://raw.githubusercontent.com/ls1intum/Apollon/main/docs/static/img/apollon-editor-light.png)](https://apollon.aet.cit.tum.de)
 
