@@ -1,4 +1,4 @@
-import { Pencil, Trash2, Waypoints } from "lucide-react"
+import { Pencil, Trash2, RotateCcw } from "lucide-react"
 import { ZINDEX } from "@/constants"
 import { IPoint } from "@/edges"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
@@ -183,7 +183,7 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
                   onResetRoutingClick?.(e)
                 }}
               >
-                <Waypoints
+                <RotateCcw
                   style={{ width: 16, height: 16 }}
                   aria-hidden="true"
                 />

@@ -14,18 +14,17 @@ import type { ResolvedEdgeEndpoints } from "@/utils/geometry/edgeGeometrySolver"
  * avoids. A user-dragged (custom) anchor is authoritative and never re-chosen;
  * only free ends are optimised.
  *
- * The choice is MEMORYLESS — a pure function of the current geometry — on
- * purpose. A remembered "last frame's side" would make the same diagram render
- * differently on two Yjs peers (each with its own drag history) and after a
- * reload; auto anchors are derived every solve and never persisted, so they must
- * stay a function of the shared model alone. Determinism instead comes from
- * grid-quantised candidates and a strict integer/enum tie-break: at a given
- * geometry the winner is always the same, so a continuous drag crosses each
- * cost boundary once and cannot chatter.
+ * The choice is MEMORYLESS — a pure function of the current geometry — on purpose. A
+ * remembered "last frame's side" would render the same diagram differently on two Yjs
+ * peers (each with its own drag history) and after a reload. Determinism comes from
+ * grid-quantised candidates and an integer tie-break, so a given geometry always picks
+ * the same winner. Note that is determinism, not stability: it guarantees every peer
+ * agrees, not that the anchor moves smoothly under a drag.
  */
 
-/** Order sides deterministically for the final tie-break: an integer, never a
- * float, so two candidates can never be left equal. */
+/** Final, geometry-blind tie-break: an integer per side, so the order is stable across
+ * peers. Fully-tied keys are possible (duplicate candidates); first-seen then wins,
+ * which is deterministic because candidate order is. */
 const SIDE_ORDER: Record<Position, number> = {
   [Position.Top]: 0,
   [Position.Right]: 1,
@@ -42,23 +41,29 @@ const GRID = CANVAS.SNAP_TO_GRID_PX
 const NO_OBSTACLES: readonly ObstacleRect[] = []
 const NO_NEIGHBORS: readonly IPoint[][] = []
 
-/** What one bend (step) costs, in the same grid units as the off-centre and
- * length terms it is weighed against. Anchors are chosen to MINIMISE
- * `bends·BEND_COST_GU + offCentre + length`, so a straight edge is preferred
- * whenever going straight does not push its anchors more than ~this far off the
- * side's centre — "straight where possible, unless the off-centre cost outweighs
- * it". Tuned so an edge straightens onto a moderately offset partner but bends
- * back to a centred anchor rather than crawl into a corner. */
+/** What one bend costs, in the grid units the off-centre term is weighed against:
+ * `weightedCost = bends·BEND_COST_GU + offCentre + …` (length is a tie-break below
+ * it, not a traded term). Sets the crossover in `OFF_CENTRE_DIVISOR`: straight where
+ * possible, unless staying straight drags the anchors too far off centre. */
 const BEND_COST_GU = 12
+/** Divides the convex (sum-of-squares) off-centre term. Chosen so a symmetric
+ * straight edge — both anchors the same fraction off centre — costs exactly one
+ * bend at ~0.30 off centre: below that going straight is preferred, past it the
+ * centred one-bend attachment wins. Ratio-based, so this crossover is the same for
+ * a small node and a large one (the old pixel term crossed at a size-dependent
+ * ratio, bending big nodes too eagerly and small ones never). */
+const OFF_CENTRE_DIVISOR = 15_000
 /** What one grid cell of "hug" — an ideal-route point run inside the endpoint
  * clearance — costs. Far above a bend so avoiding a graze always wins over saving
  * a corner; a hug is a defect, not a trade-off. */
 const HUG_COST_GU = 50
-/** Parallel edges between the same node pair fan out along the side by this much
- * per lane, so an optimiser that would otherwise hand them all the same best
- * anchor spreads them into visibly separate lines. */
-const SIBLING_SPREAD_PX = 3 * GRID
-
+/** What one grid cell of THIRD-PARTY graze costs — an ideal-route run that grazes,
+ * crosses, or crowds a node that is NEITHER endpoint. As bad as hugging its own
+ * node: an edge drawn on top of a third node reads as broken just the same. Above a
+ * bend so a clean-but-more-bent attachment always beats one that grazes a bystander,
+ * and graduated (see `thirdPartyGrazePx`) so it also breaks a cost-tie toward the
+ * side whose route drops cleanly away from a nearby node. */
+const THIRD_PARTY_GRAZE_COST_GU = 50
 const clamp = (v: number, lo: number, hi: number): number =>
   Math.max(lo, Math.min(hi, v))
 
@@ -114,34 +119,33 @@ const candidateSides = (rect: Rect, toward: IPoint): Position[] => {
   return [primary, ...perpendicular]
 }
 
-/**
- * Where along a side to place the anchor: aligned with the partner's centre so
- * the connecting run is straight (or a single clean bend), nudged by the sibling
- * lane offset, kept clear of the corners, and snapped to the grid so a sub-grid
- * node move cannot shift it (stability).
- */
-const alignedRatio = (
-  side: Position,
-  rect: Rect,
-  toward: IPoint,
-  laneOffsetPx: number
-): number => {
-  const axisLength = isVerticalSide(side) ? rect.height : rect.width
+const axisLengthOf = (side: Position, rect: Rect): number =>
+  isVerticalSide(side) ? rect.height : rect.width
+
+/** Snap a target offset ALONG a side (px from the side's low corner) to a grid-
+ * aligned ratio, kept at least `margin` from either corner — a corner anchor
+ * forces the first segment to graze the node it just left. Grid-snapping keeps the
+ * ratio stable under a sub-grid node move (stability). */
+const ratioAt = (alongTargetPx: number, axisLength: number): number => {
   if (axisLength <= 0) return 0.5
-  const along = isVerticalSide(side) ? toward.y - rect.y : toward.x - rect.x
-  // Stay at least this far from either corner — a corner anchor forces the first
-  // segment to graze the node it just left.
   const margin = Math.min(2 * GRID, axisLength * 0.3)
-  let offset = clamp(along + laneOffsetPx, margin, axisLength - margin)
+  let offset = clamp(alongTargetPx, margin, axisLength - margin)
   offset = Math.round(offset / GRID) * GRID
-  offset = clamp(offset, margin, axisLength - margin)
-  return offset / axisLength
+  return clamp(offset, margin, axisLength - margin) / axisLength
 }
 
-/** The signed lane displacement for one edge within its parallel set, centred so
- * the fan is symmetric about the aligned anchor. Zero for a lone edge. */
-const laneOffsetPx = (laneIndex: number, laneCount: number): number =>
-  laneCount <= 1 ? 0 : (laneIndex - (laneCount - 1) / 2) * SIBLING_SPREAD_PX
+/**
+ * Where along a side to place an anchor that AIMS at the partner's centre, so the
+ * connecting run is straight (or a single clean bend). When the partner is strongly
+ * displaced perpendicular to the side this clamps against the corner margin — which
+ * is why `generateCandidates` also offers the CENTRED anchor: a displaced partner is
+ * better served by a centred attachment and one bend than by an anchor in the corner.
+ */
+const alignedRatio = (side: Position, rect: Rect, toward: IPoint): number =>
+  ratioAt(
+    isVerticalSide(side) ? toward.y - rect.y : toward.x - rect.x,
+    axisLengthOf(side, rect)
+  )
 
 const toAnchorChoice = (
   nodeType: string | undefined,
@@ -157,45 +161,41 @@ const toAnchorChoice = (
 const generateCandidates = (
   nodeType: string | undefined,
   rect: Rect,
-  toward: IPoint,
-  laneOffset: number
+  toward: IPoint
 ): AnchorChoice[] => {
   const mode = getConnectionMode(nodeType)
   const fourCenter = mode === "four-center"
   const seen = new Set<string>()
   const choices: AnchorChoice[] = []
-  for (const side of candidateSides(rect, toward)) {
-    const ratio = fourCenter
-      ? 0.5
-      : alignedRatio(side, rect, toward, laneOffset)
+  const pushRatio = (side: Position, ratio: number) => {
     const key = `${side}:${Math.round(ratio * 1000)}`
-    if (seen.has(key)) continue
+    if (seen.has(key)) return
     seen.add(key)
     choices.push(toAnchorChoice(nodeType, rect, { side, ratio }))
+  }
+  for (const side of candidateSides(rect, toward)) {
+    if (fourCenter) {
+      pushRatio(side, 0.5)
+      continue
+    }
+    // Two candidates per side: one AIMED at the partner (best when the nodes line
+    // up — a straight or single clean run) and one CENTRED (best when the partner
+    // is displaced, where aiming clamps the anchor into a corner). The cost picks
+    // between them; dedup drops the centred one when aiming already centres.
+    pushRatio(side, alignedRatio(side, rect, toward))
+    pushRatio(
+      side,
+      ratioAt(axisLengthOf(side, rect) / 2, axisLengthOf(side, rect))
+    )
   }
   return choices
 }
 
-/**
- * The candidate pair that connects the two facing sides with a STRAIGHT run: both
- * anchors placed on one line through where the nodes overlap perpendicular to the
- * facing axis, so the edge needs no bend at all. `generateCandidates` aims each
- * anchor at its partner's centre independently, which for offset-but-overlapping
- * nodes lands them on different lines and forces a Z — this recovers the straight
- * option the weighed cost then prefers.
- *
- * Returns null when the nodes do not face each other on one axis, do not overlap
- * enough to fit both corner margins, or use a fixed-centre connection mode (which
- * cannot slide an anchor). The lane offset shifts the shared line, so parallel
- * siblings still fan into separate lines rather than all going straight onto each
- * other.
- */
 const straightAlignedPair = (
   sourceRect: Rect,
   targetRect: Rect,
   sourceType: string | undefined,
-  targetType: string | undefined,
-  laneOffset: number
+  targetType: string | undefined
 ): { source: AnchorChoice; target: AnchorChoice } | null => {
   if (
     getConnectionMode(sourceType) === "four-center" ||
@@ -225,8 +225,7 @@ const straightAlignedPair = (
   if (lo > hi) return null // overlap too small to seat both anchors clear of corners
 
   const midpointOfCenters = ((sLo + sHi) / 2 + (tLo + tHi) / 2) / 2
-  const snapped =
-    Math.round(clamp(midpointOfCenters + laneOffset, lo, hi) / GRID) * GRID
+  const snapped = Math.round(clamp(midpointOfCenters, lo, hi) / GRID) * GRID
   const v = clamp(snapped, lo, hi)
   return {
     source: toAnchorChoice(sourceType, sourceRect, {
@@ -249,15 +248,6 @@ const routeLength = (route: readonly IPoint[]): number => {
   return total
 }
 
-/** How far an anchor sits from the middle of its side, in pixels — the "off-
- * centre" cost. A corner attachment is ugly and a centred one is legible, so this
- * is weighed directly against bends: sliding an anchor off centre to go straight
- * is only worth it while the slide stays small. */
-const offCenterPx = (choice: AnchorChoice, rect: Rect): number => {
-  const axisLength = isVerticalSide(choice.position) ? rect.height : rect.width
-  return Math.abs(choice.anchor.ratio - 0.5) * axisLength
-}
-
 /** Distance between an axis-aligned segment and a rect (0 if they touch/overlap).
  * Both are boxes — the segment a degenerate one — so this is the gap between two
  * rectangles. */
@@ -275,14 +265,10 @@ const segToRectDist = (a: IPoint, b: IPoint, r: Rect): number => {
   return Math.hypot(dx, dy)
 }
 
-/** How far inside the endpoint clearance the IDEAL route runs alongside its own
- * source or target node — a route that has to wrap tight around an endpoint
- * grazes its side, which the committed route then renders as an edge drawn on the
- * node. Measured per SEGMENT (a run parallel to a node's edge grazes it along its
- * whole length while its endpoints stay clear, so a vertex check would miss it),
- * skipping the stub that legitimately leaves the source and the one that arrives
- * at the target. Obstacle-free like the rest of the score: the only nodes it must
- * clear are its OWN two, known without any search. */
+/** How far the ideal route runs inside its OWN endpoints' clearance — a route that
+ * wraps tight around an endpoint renders as an edge drawn on the node. Per SEGMENT: a
+ * run parallel to a side grazes along its whole length while its vertices stay clear.
+ * The stubs are skipped; they leave/arrive legitimately. */
 const hugPenaltyPx = (
   route: readonly IPoint[],
   sourceRect: Rect,
@@ -302,41 +288,139 @@ const hugPenaltyPx = (
   return total
 }
 
+/** How close the ideal route runs to a BYSTANDER node. Graduated by distance to the
+ * router's ideal clearance, so it both rejects grazes and breaks ties toward the side
+ * that drops cleanly away. No segment is exempt — a bystander is never this edge's own
+ * node. Search-free: measured on the obstacle-blind ideal polyline. */
+const thirdPartyGrazePx = (
+  route: readonly IPoint[],
+  rects: readonly Rect[]
+): number => {
+  if (rects.length === 0) return 0
+  let total = 0
+  for (let i = 0; i < route.length - 1; i++) {
+    const a = route[i]
+    const b = route[i + 1]
+    for (const rect of rects) {
+      const dist = segToRectDist(a, b, rect)
+      if (dist < EDGES.NODE_CLEARANCE_PX)
+        total += EDGES.NODE_CLEARANCE_PX - dist
+    }
+  }
+  return total
+}
+
+/** How many of a candidate's FOUR-CENTRE ends sit on a side not facing the partner
+ * (0-2). A four-centre anchor cannot slide, so two of its edges picking the same side
+ * collapse onto one midpoint; the only cure is to send them to different sides, which
+ * this does among `weightedCost` ties. `null` for a freeform end — there the
+ * continuous off-centre cost already handles it, and this nudge must not perturb it. */
+const offFacingCount = (
+  source: AnchorChoice,
+  target: AnchorChoice,
+  sourceFacing: Position | null,
+  targetFacing: Position | null
+): number =>
+  (sourceFacing !== null && source.position !== sourceFacing ? 1 : 0) +
+  (targetFacing !== null && target.position !== targetFacing ? 1 : 0)
+
+/** The outward unit normal of a node side. */
+const OUTWARD_NORMAL: Record<Position, IPoint> = {
+  [Position.Top]: { x: 0, y: -1 },
+  [Position.Bottom]: { x: 0, y: 1 },
+  [Position.Left]: { x: -1, y: 0 },
+  [Position.Right]: { x: 1, y: 0 },
+}
+
+/** How squarely `side` of `from` points at `to`: the side's outward normal dotted with
+ * the RAW centre-to-centre direction. Higher = the side faces the partner more
+ * directly. Unnormalised on purpose — |d| is shared by an edge's candidates, so
+ * dividing is order-preserving and would only add a `hypot` (implementation-defined
+ * across JS engines) to a comparison every peer must agree on; axis-aligned normals ⇒
+ * ±dx/±dy, exact in doubles. Raw, NOT `facingSide`, which divides by the node's
+ * half-extent and so can name a side the pair is less displaced along. */
+const sideAim = (side: Position, from: Rect, to: Rect): number => {
+  const a = centerOf(from)
+  const b = centerOf(to)
+  const n = OUTWARD_NORMAL[side]
+  return n.x * (b.x - a.x) + n.y * (b.y - a.y)
+}
+
 /**
- * The memoryless ranking key for one candidate, scored on its IDEAL (obstacle-
- * free) route. NOT strictly lexicographic on bends: the primary term is a WEIGHED
- * cost — `bends·BEND_COST_GU + offCentre` — so a straight edge (no bends) is
- * preferred only while going straight does not drag its anchors too far off the
- * side's centre; past that the centred one-bend attachment wins. Length breaks
- * ties, then side/ratio enums make the order TOTAL, so two candidates are never
- * left equal — which is what keeps the pick deterministic and identical across
- * Yjs peers.
- *
- * Scored obstacle- and neighbour-blind on purpose: attachment is a function of
- * the two nodes' clean geometry, not of what the router must detour around. That
- * also lets the choice be cached against a stable, intrinsic key — a neighbour or
- * obstacle moving elsewhere re-routes without re-picking the anchor, which is
- * what stops a one-node drag from re-searching the whole graph.
+ * The ranking key for one candidate, scored on its IDEAL (obstacle-free) route. The
+ * head is a WEIGHED cost — bends traded against off-centre — so an edge goes straight
+ * only while staying straight does not drag its anchors too far off centre. The rest
+ * is a lexicographic tail of tie-breaks. All-integer, so peers compare identically.
  */
 const scoreKey = (
   route: readonly IPoint[],
   source: AnchorChoice,
   target: AnchorChoice,
   sourceRect: Rect,
-  targetRect: Rect
+  targetRect: Rect,
+  /** The side each FOUR-CENTRE end should prefer among cost-ties (its facing
+   * side); `null` for a freeform end, which takes no facing nudge. */
+  sourceFacing: Position | null,
+  targetFacing: Position | null,
+  /** Node bodies that are NEITHER endpoint, so a candidate whose ideal route grazes
+   * a bystander loses to one that clears it. Empty ⇒ no third-party term. */
+  thirdParty: readonly Rect[]
 ): number[] => {
   const bends = Math.max(0, route.length - 2)
-  const offCenter = Math.round(
-    (offCenterPx(source, sourceRect) + offCenterPx(target, targetRect)) / GRID
-  )
+  // Off-centre is measured from the side CENTRE. Multi-edge spacing is handled up
+  // front by the geometric port band (see `portAssignment.ts`), so the anchor cost
+  // no longer needs a per-sibling slot reference.
+  const ds = Math.round(1000 * Math.abs(source.anchor.ratio - 0.5))
+  const dt = Math.round(1000 * Math.abs(target.anchor.ratio - 0.5))
+  // CONVEX (sum of squares) so the cost penalises CONCENTRATION, not just level: a
+  // pair jammed as (corner, centre) costs more than a balanced (mild, mild) pair
+  // the old linear sum rated exactly equal, so the balanced attachment wins on
+  // cost rather than falling to the geometry-blind tie-break.
+  const offCenter = Math.round((ds * ds + dt * dt) / OFF_CENTRE_DIVISOR)
   // A hug is a defect, not a preference: weight it far above any bend so a
   // clear-but-more-bent attachment always beats one that grazes its own node.
   const hug = Math.round(hugPenaltyPx(route, sourceRect, targetRect) / GRID)
-  const weightedCost = bends * BEND_COST_GU + offCenter + hug * HUG_COST_GU
+  // The same, against BYSTANDER nodes — but ONLY for a STRAIGHT (0-bend) ideal. A
+  // straight lane between two aligned anchors that grazes/crosses a third node has no
+  // way to dodge it except by RETURNING to the same lane, so the committed route is
+  // an ugly there-and-back (or a graze the router can't price away): the straight
+  // attachment must lose to a bending one that clears the node. A BENDING ideal that
+  // merely crosses a node is left alone — the router detours it cleanly on one turn
+  // (penalising it would trade a good centred side for a worse one). This is also why
+  // the anchors stop sliding off-centre just to keep a grazing straight line.
+  const graze =
+    bends === 0 ? Math.round(thirdPartyGrazePx(route, thirdParty) / GRID) : 0
+  const weightedCost =
+    bends * BEND_COST_GU +
+    offCenter +
+    hug * HUG_COST_GU +
+    graze * THIRD_PARTY_GRAZE_COST_GU
   const length = Math.round(routeLength(route) / GRID)
   return [
     weightedCost,
+    // A four-centre end cannot slide, so two of its edges picking one side collapse
+    // onto the same midpoint; among cost-ties, send them to different sides instead.
+    // Zero for freeform-only pairs, which the continuous off-centre cost handles.
+    offFacingCount(source, target, sourceFacing, targetFacing),
     length,
+    // Prefer the more BALANCED pair (smaller worst end). `offCenter` rounds to an
+    // integer, so within one of its buckets this still separates a lopsided pair from
+    // an even one — which is what holds parallel siblings a full lane apart rather
+    // than letting them settle a grid step closer.
+    Math.max(ds, dt),
+    // Leave from the side that POINTS at the partner, SOURCE aim first then target.
+    // Among cost-tied 1-bend routes an edge can exit its facing side or a perpendicular
+    // one at equal price with equal length and balance; a SUMMED source+target aim ties
+    // too (one route faces well at the source, the other at the target), so the choice
+    // fell to the SIDE_ORDER enum — and TWO edges leaving one node then made the SAME
+    // arbitrary choice, piling onto one side and crossing. Ranking the SOURCE aim first
+    // breaks that tie and spreads a fork: each edge exits the side facing its own
+    // partner. Ties for same-partner siblings (identical sides), already separated
+    // above. Mirror-symmetric, exact (see `sideAim`).
+    -(
+      sideAim(source.position, sourceRect, targetRect) +
+      sideAim(target.position, targetRect, sourceRect)
+    ),
     SIDE_ORDER[source.position],
     SIDE_ORDER[target.position],
     Math.round(source.anchor.ratio * 1000),
@@ -413,11 +497,12 @@ export type AutoAnchorInput = {
   targetCustom?: FreeformEdgeAnchor
   resolve: ResolveWithAnchors
   obstacles: readonly ObstacleRect[]
+  /** Obstacles that are NEITHER endpoint node (already reach-windowed by
+   * `getEdgeObstacles`), used to price an ideal route that grazes a bystander.
+   * Empty/absent ⇒ selection stays purely obstacle-blind. */
+  thirdPartyObstacles?: readonly ObstacleRect[]
   neighborEdges: readonly IPoint[][]
   enableStraightPath: boolean
-  /** Rank of this edge within its parallel set (edges sharing the node pair). */
-  laneIndex: number
-  laneCount: number
 }
 
 export type AutoAnchorResult = {
@@ -438,40 +523,52 @@ export type AutoAnchorResult = {
 export const selectEdgeAnchors = (
   input: AutoAnchorInput
 ): AutoAnchorResult | null => {
-  const lane = laneOffsetPx(input.laneIndex, input.laneCount)
+  const thirdParty = input.thirdPartyObstacles ?? NO_OBSTACLES
+
+  // A FOUR-CENTRE end can only sit on a side-midpoint, so two of its edges that pick
+  // the same side collapse onto one point. The scorer breaks a cost-tie toward the
+  // side FACING the partner so they land on DIFFERENT sides instead; a freeform end
+  // gets `null` and keeps the continuous off-centre régime untouched. A pinned
+  // (custom) end has a single fixed candidate, so its facing preference is moot.
+  const sourceFacing =
+    !input.sourceCustom && getConnectionMode(input.sourceType) === "four-center"
+      ? facingSide(input.sourceRect, centerOf(input.targetRect))
+      : null
+  const targetFacing =
+    !input.targetCustom && getConnectionMode(input.targetType) === "four-center"
+      ? facingSide(input.targetRect, centerOf(input.sourceRect))
+      : null
   const sourceOptions = input.sourceCustom
     ? [toAnchorChoice(input.sourceType, input.sourceRect, input.sourceCustom)]
     : generateCandidates(
         input.sourceType,
         input.sourceRect,
-        centerOf(input.targetRect),
-        lane
+        centerOf(input.targetRect)
       )
   const targetOptions = input.targetCustom
     ? [toAnchorChoice(input.targetType, input.targetRect, input.targetCustom)]
     : generateCandidates(
         input.targetType,
         input.targetRect,
-        centerOf(input.sourceRect),
-        lane
+        centerOf(input.sourceRect)
       )
 
   // When both ends are free, add the straight-aligned pair — anchors on one line
   // through the nodes' overlap. Per-side candidates aim at the partner's centre
   // and so miss a straight run for offset nodes; this recovers it, and the weighed
   // cost keeps it only while its off-centre stays cheaper than the bend it saves.
-  if (!input.sourceCustom && !input.targetCustom) {
-    const straight = straightAlignedPair(
-      input.sourceRect,
-      input.targetRect,
-      input.sourceType,
-      input.targetType,
-      lane
-    )
-    if (straight) {
-      sourceOptions.push(straight.source)
-      targetOptions.push(straight.target)
-    }
+  const straight =
+    !input.sourceCustom && !input.targetCustom
+      ? straightAlignedPair(
+          input.sourceRect,
+          input.targetRect,
+          input.sourceType,
+          input.targetType
+        )
+      : null
+  if (straight) {
+    sourceOptions.push(straight.source)
+    targetOptions.push(straight.target)
   }
 
   let best: {
@@ -488,8 +585,12 @@ export const selectEdgeAnchors = (
   for (const source of sourceOptions) {
     for (const target of targetOptions) {
       const endpoints = input.resolve({
-        sourceAnchor: input.sourceCustom ? undefined : source.anchor,
-        targetAnchor: input.targetCustom ? undefined : target.anchor,
+        // Always resolve the chosen anchor explicitly. For a free end it is the
+        // candidate; for a PINNED end (a user anchor OR a solver-assigned band port)
+        // it is that fixed anchor — and a band port is NOT stored on the edge, so it
+        // must be passed here or the resolve would fall back to the default point.
+        sourceAnchor: source.anchor,
+        targetAnchor: target.anchor,
       })
       if (!endpoints) continue
       const idealRoute = routeStepEdge(
@@ -505,7 +606,10 @@ export const selectEdgeAnchors = (
         source,
         target,
         input.sourceRect,
-        input.targetRect
+        input.targetRect,
+        sourceFacing,
+        targetFacing,
+        thirdParty
       )
       if (!best || lexLess(key, best.key)) {
         best = { endpoints, idealRoute, source, target, key }

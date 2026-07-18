@@ -19,6 +19,7 @@ import { EdgeInlineMarkers } from "@/components/svgs/edges/InlineMarker"
 import type { DiagramEdgeType } from "./types"
 import { Assessment } from "@/typings"
 import type { BendHandle } from "@/utils/geometry/bendHandles"
+import { isFreeformEdgeAnchor } from "@/utils/edgeUtils"
 import { CANVAS, EDGES } from "@/constants"
 
 // Edge handles live inside the zoomed React Flow viewport. We want them to
@@ -103,6 +104,60 @@ const getEndpointRun = (
   if (towardsOther <= 0) return Number.POSITIVE_INFINITY
 
   return Math.hypot(toOther.x, toOther.y) / 2
+}
+
+/**
+ * Half the on-screen length of the bend handle `EdgeBendHandle` draws for a segment of
+ * this bendable length, expressed in FLOW units. The single source of truth shared by
+ * the handle renderer and `nearestHandleReach`: the endpoint reconnect target must stop
+ * at the handle's RENDERED near edge, and that edge is screen-scale dependent (the drawn
+ * handle is clamped to a minimum SCREEN size, so when zoomed out its flow-space half
+ * grows PAST `bendableLength / 2`). Capping against `bendableLength / 2` instead lets the
+ * drawn handle poke into the target at low zoom, and the target — drawn on top — eats it.
+ */
+const renderedBendHandleHalfLength = (
+  bendableLength: number,
+  screenScale: number
+): number => {
+  const room =
+    bendableLength - 2 * EDGES.BEND_HANDLE_CORNER_CLEARANCE_PX * screenScale
+  const longAxis = Math.min(
+    Math.max(room, EDGES.BEND_HANDLE_MIN_SCREEN_LENGTH_PX * screenScale),
+    EDGES.BEND_HANDLE_SCREEN_LENGTH_PX * screenScale
+  )
+  return longAxis / 2
+}
+
+/**
+ * How far outward the endpoint reconnect target may reach before it buries the nearest
+ * bend handle. The target is drawn ON TOP of the handles, so it must stop at the
+ * handle's RENDERED near edge — which is screen-scale dependent, hence
+ * `renderedBendHandleHalfLength` rather than the flow-space `bendableLength`. Caps
+ * against ANY handle kind: an inner handle can sit at the corner just past a short
+ * stub, and when the terminal stub is too short to bend there is no terminal handle to
+ * cap against at all. `Infinity` when nothing lies ahead of the endpoint.
+ */
+const nearestHandleReach = (
+  bendHandles: BendHandle[] | undefined,
+  endpoint: IPoint,
+  direction: IPoint,
+  screenScale: number
+): number => {
+  if (!bendHandles || bendHandles.length === 0) return Number.POSITIVE_INFINITY
+  const gap = EDGES.ENDPOINT_HANDLE_CLEARANCE_PX * screenScale
+  let reach = Number.POSITIVE_INFINITY
+  for (const handle of bendHandles) {
+    const along =
+      (handle.position.x - endpoint.x) * direction.x +
+      (handle.position.y - endpoint.y) * direction.y
+    if (along <= 0) continue // handle is beside/behind the endpoint's outward axis
+    const nearEdge =
+      along -
+      renderedBendHandleHalfLength(handle.bendableLength, screenScale) -
+      gap
+    if (nearEdge > 0) reach = Math.min(reach, nearEdge)
+  }
+  return reach
 }
 
 export const getEndpointHitTargetRect = (
@@ -209,6 +264,9 @@ export const EdgeEndpointMarkers = ({
   canEditEndpoint = true,
   onEndpointPointerDown,
   straight = false,
+  bendHandles,
+  sourcePinned = false,
+  targetPinned = false,
 }: {
   sourcePoint: IPoint
   targetPoint: IPoint
@@ -223,6 +281,14 @@ export const EdgeEndpointMarkers = ({
   // Direct/straight edges: orient the grip + hit-target along the actual edge
   // angle instead of the endpoint's orthogonal N/E/S/W side.
   straight?: boolean
+  // The edge's bend handles, so a reconnect target can cap its outward reach at
+  // this end's terminal bend handle instead of painting over it.
+  bendHandles?: BendHandle[]
+  // Whether each end is USER-PINNED (a custom anchor) rather than auto-anchored.
+  // A pinned grip is drawn filled when the edge is selected, so the user can see
+  // at a glance which ends the router still owns and which they have fixed.
+  sourcePinned?: boolean
+  targetPinned?: boolean
 }) => {
   const sourceHandleRef = useRef<SVGRectElement | null>(null)
   const screenScale = useHandleScreenScale()
@@ -302,19 +368,22 @@ export const EdgeEndpointMarkers = ({
   const targetOutward = straight
     ? { x: sourcePoint.x - targetPoint.x, y: sourcePoint.y - targetPoint.y }
     : undefined
-  const sourceRun = getEndpointRun(
-    sourcePoint,
-    targetPoint,
-    sourceOutward
-      ? normalizeDir(sourceOutward)
-      : getEndpointDirection(sourcePosition)
+  const sourceDir = sourceOutward
+    ? normalizeDir(sourceOutward)
+    : getEndpointDirection(sourcePosition)
+  const targetDir = targetOutward
+    ? normalizeDir(targetOutward)
+    : getEndpointDirection(targetPosition)
+  // The reconnect target reaches at most to the OTHER endpoint's half AND stops
+  // short of this end's own terminal bend handle — so a short centred stub can
+  // still expose a grabbable bend handle beyond the (now-shortened) target.
+  const sourceRun = Math.min(
+    getEndpointRun(sourcePoint, targetPoint, sourceDir),
+    nearestHandleReach(bendHandles, sourcePoint, sourceDir, screenScale)
   )
-  const targetRun = getEndpointRun(
-    targetPoint,
-    sourcePoint,
-    targetOutward
-      ? normalizeDir(targetOutward)
-      : getEndpointDirection(targetPosition)
+  const targetRun = Math.min(
+    getEndpointRun(targetPoint, sourcePoint, targetDir),
+    nearestHandleReach(bendHandles, targetPoint, targetDir, screenScale)
   )
   const sourceHitTarget = getEndpointHitTargetRect(
     sourcePoint,
@@ -359,7 +428,9 @@ export const EdgeEndpointMarkers = ({
       {showEndpointGrips && (
         <>
           <rect
-            className="edge-circle edge-endpoint-grip edge-endpoint-grip--source"
+            className={`edge-circle edge-endpoint-grip edge-endpoint-grip--source${
+              sourcePinned ? " edge-endpoint-grip--pinned" : ""
+            }`}
             x={sourceGrip.x}
             y={sourceGrip.y}
             width={sourceGrip.width}
@@ -370,7 +441,9 @@ export const EdgeEndpointMarkers = ({
             pointerEvents="none"
           />
           <rect
-            className="edge-circle edge-endpoint-grip edge-endpoint-grip--target"
+            className={`edge-circle edge-endpoint-grip edge-endpoint-grip--target${
+              targetPinned ? " edge-endpoint-grip--pinned" : ""
+            }`}
             x={targetGrip.x}
             y={targetGrip.y}
             width={targetGrip.width}
@@ -448,12 +521,7 @@ export const EdgeBendHandle = ({
   // fixed-size one would not fit. A short segment gets a small nub; it is still
   // grabbable, and a small nub beats nothing to grab at all. Clearance keeps it
   // off the corners so a bend never reads as belonging to the next segment.
-  const room =
-    bendableLength - 2 * EDGES.BEND_HANDLE_CORNER_CLEARANCE_PX * screenScale
-  const longAxis = Math.min(
-    Math.max(room, EDGES.BEND_HANDLE_MIN_SCREEN_LENGTH_PX * screenScale),
-    EDGES.BEND_HANDLE_SCREEN_LENGTH_PX * screenScale
-  )
+  const longAxis = 2 * renderedBendHandleHalfLength(bendableLength, screenScale)
   const shortAxis = 10 * screenScale
   const width = orientation === "H" ? longAxis : shortAxis
   const height = orientation === "H" ? shortAxis : longAxis
@@ -542,6 +610,19 @@ export const StepEdgeBody = ({
   ) => void
   children?: ReactNode
 }) => {
+  // Which ends the user has PINNED (a custom anchor) vs left to the router. Two
+  // boolean selectors (not one object) so equality stays primitive and the edge
+  // only re-renders when a pin actually flips. Drives the filled "anchored" grip.
+  const sourcePinned = useDiagramStore((state) =>
+    isFreeformEdgeAnchor(
+      state.edges.find((edge) => edge.id === id)?.data?.sourceAnchor
+    )
+  )
+  const targetPinned = useDiagramStore((state) =>
+    isFreeformEdgeAnchor(
+      state.edges.find((edge) => edge.id === id)?.data?.targetAnchor
+    )
+  )
   return (
     <g className="edge-container">
       <BaseEdge
@@ -549,6 +630,14 @@ export const StepEdgeBody = ({
         id={id}
         path={currentPath}
         pointerEvents="none"
+        // No fat React Flow interaction ribbon (default 20px): select/hover ride
+        // our own `.edge-overlay` stroke instead. RF's ribbon is a wider hit path
+        // that, on a dense diagram, paints OVER a neighbour edge's precise endpoint/
+        // bend handle and steals its pointer. `.edge-overlay` is narrower and never
+        // reaches a co-located neighbour's handle, so removing the ribbon fixes the
+        // theft by subtraction. Selection/hover fire on the wrapping `.react-flow__
+        // edge` group, not the ribbon, so nothing is lost.
+        interactionWidth={0}
         style={{
           stroke: strokeColor,
           strokeDasharray: isReconnecting ? "none" : strokeDashArray,
@@ -610,6 +699,9 @@ export const StepEdgeBody = ({
         isDiagramModifiable={isDiagramModifiable}
         canEditEndpoint={canEditEndpoint}
         onEndpointPointerDown={handleEndpointPointerDown}
+        bendHandles={bendHandles}
+        sourcePinned={sourcePinned}
+        targetPinned={targetPinned}
       />
 
       {children}
@@ -643,20 +735,37 @@ export const CommonEdgeElements = ({
   // element without reading a ref's `.current` during render.
   const [anchorEl, anchorRef] = usePopoverAnchor<SVGForeignObjectElement>()
 
-  // Whether this edge was routed by hand: stored points ARE the manual state (an
-  // auto-routed edge has none), so no separate field is needed.
+  // Whether this edge deviates from FULLY auto in any way the reset can undo.
+  // There are two independent manual states, and either one keeps the router from
+  // owning the edge: hand-drawn waypoints (`data.points`) AND pinned endpoint
+  // anchors (`data.sourceAnchor`/`targetAnchor`, written when an endpoint is
+  // dragged — which also freezes the opposite end). Checking only `points` hid the
+  // reset button on an edge whose PATH is auto but whose ANCHORS are pinned, so
+  // there was no way back to auto anchoring. Both count.
   const setEdges = useDiagramStore((state) => state.setEdges)
   const hasManualRoute = useDiagramStore((state) => {
-    const points = state.edges.find((edge) => edge.id === id)?.data?.points
-    return Array.isArray(points) && points.length > 0
+    const data = state.edges.find((edge) => edge.id === id)?.data
+    const points = data?.points
+    const hasManualPoints = Array.isArray(points) && points.length > 0
+    const hasPinnedAnchor =
+      isFreeformEdgeAnchor(data?.sourceAnchor) ||
+      isFreeformEdgeAnchor(data?.targetAnchor)
+    return hasManualPoints || hasPinnedAnchor
   })
 
-  // Hand the edge back to the router: clearing the points IS the auto state.
+  // Hand the edge FULLY back to the router: drop the hand-drawn waypoints AND the
+  // pinned anchors so the auto-anchor selector picks both ends again. Clearing only
+  // the points would leave the anchors frozen (still not auto).
   const handleResetRouting = useCallback(() => {
     setEdges((edges) =>
-      edges.map((edge) =>
-        edge.id === id ? { ...edge, data: { ...edge.data, points: [] } } : edge
-      )
+      edges.map((edge) => {
+        if (edge.id !== id) return edge
+        const nextData = { ...(edge.data ?? {}) } as Record<string, unknown>
+        nextData.points = []
+        delete nextData.sourceAnchor
+        delete nextData.targetAnchor
+        return { ...edge, data: nextData }
+      })
     )
   }, [id, setEdges])
 

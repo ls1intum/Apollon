@@ -1,6 +1,7 @@
 import { Position } from "@xyflow/react"
 import { IPoint } from "@/edges/Connection"
 import { removeDuplicatePoints } from "@/utils/edgeUtils"
+import { EDGES } from "@/constants"
 
 export function collapseCollinearPoints(points: IPoint[]): IPoint[] {
   if (points.length <= 2) return points
@@ -91,10 +92,26 @@ export function getBendHandlePosition(
   }
 }
 
+/** Smallest grid-aligned length that strictly clears the arm-overlap width, so a jog's
+ * moved arm is not read as a collapsed arm by the release cleanup (which uses `<=`).
+ * Shared by the jog placement and the handle-existence test so the two cannot drift. */
+const terminalArmFloorPx = (grid: number): number => {
+  const g = grid > 0 ? grid : 1
+  return Math.ceil((EDGES.ORTHOGONAL_ARM_OVERLAP_PX + 1) / g) * g
+}
+
+/** Shortest terminal segment that can still bend into a non-degenerate S-jog: below
+ * `MIN_STUB_LENGTH + armFloor` the stub and the moved arm cannot both clear their
+ * floors, the cleanup reads the jog as a spike, and the edge snaps straight — so the
+ * handle is withheld and the endpoint reconnect target owns that stub instead. */
+const terminalBendFloorPx = (): number =>
+  EDGES.MIN_STUB_LENGTH + terminalArmFloorPx(EDGES.BEND_SNAP_GRID_PX)
+
 /**
- * A bend handle for EVERY segment; no segment is too short to get one. The
- * renderer shrinks a handle to fit, so zoom changes a handle's SIZE, not its
- * EXISTENCE.
+ * A bend handle for every segment that has room to bend. Inner segments always get
+ * one (the renderer shrinks it to fit, so zoom changes a handle's SIZE, not its
+ * EXISTENCE). A terminal segment gets one only while it is long enough to host a
+ * non-cramped bend — see `terminalBendFloorPx`.
  *
  * The stub-inversion rule is enforced on the drag itself (`getBendLaneBounds`
  * clamps the lane), not by withholding handles. The safe area survives only as a
@@ -115,14 +132,29 @@ export function getBendableSegments(
     const rawLength = Math.abs(end.x - start.x) + Math.abs(end.y - start.y)
     if (rawLength <= 0) continue
 
-    // A segment with no room past the safe area puts its handle at its own
-    // midpoint.
-    const safeStart = i === 0 ? safeAreaPx : 0
-    const safeEnd = i === lastSegment ? safeAreaPx : 0
-    const bendableLength = rawLength - safeStart - safeEnd
-    const fitsPastSafeArea = bendableLength > 0
+    // Reserve the near-endpoint portion of a TERMINAL segment for that endpoint's
+    // reconnect target, which is drawn on top and would swallow a handle placed
+    // there. Capped at half the segment so a short stub still biases the handle
+    // outward. `nearestHandleReach` (GenericEdge) caps the target at the same edge,
+    // so the two never overlap.
+    const reserveStart = i === 0 ? Math.min(safeAreaPx, rawLength / 2) : 0
+    const reserveEnd =
+      i === lastSegment ? Math.min(safeAreaPx, rawLength / 2) : 0
+    const bendRegion = rawLength - reserveStart - reserveEnd
+
+    // Gated on the segment's FULL length — what the jog math operates on — not the
+    // reserved bend region. A lone segment is not a pinned stub (it jogs between the
+    // two ports), so it keeps its handle at any length.
+    const kind = getSegmentKind(i, collapsed.length)
+    const isTerminal = kind !== "inner"
+    const isLoneSegment = lastSegment === 0
+    if (isTerminal && !isLoneSegment && rawLength < terminalBendFloorPx()) {
+      continue
+    }
+
+    const fitsPastSafeArea = bendRegion > 0
     const centreFromStart = fitsPastSafeArea
-      ? safeStart + bendableLength / 2
+      ? reserveStart + bendRegion / 2
       : rawLength / 2
 
     const t = centreFromStart / rawLength
@@ -133,8 +165,8 @@ export function getBendableSegments(
         y: start.y + (end.y - start.y) * t,
       },
       orientation: getSegmentOrientation(collapsed, i),
-      kind: getSegmentKind(i, collapsed.length),
-      bendableLength: fitsPastSafeArea ? bendableLength : rawLength,
+      kind,
+      bendableLength: fitsPastSafeArea ? bendRegion : rawLength,
     })
   }
 
@@ -247,6 +279,37 @@ export function computeToolbarPosition(
   }
 }
 
+/**
+ * Where, along a terminal segment's axis, to put the jog that reconnects a dragged
+ * segment to its PINNED endpoint. The segment cannot move wholesale — the port fixes
+ * its entry orientation — so a perpendicular drag forms an S: approach → moved segment
+ * → jog → port stub. Both sides need room: the stub must stay >= MIN_STUB_LENGTH (else
+ * release validation rejects the entry axis) and the moved segment must clear
+ * ORTHOGONAL_ARM_OVERLAP_PX (else the release-time cleanup reads it as a collapsed arm
+ * and throws the hand-drawn path away). Placing the jog at the full stub exit only
+ * works while the corner sits further out than that; at ~STUB_LENGTH they coincide and
+ * the drag collapses inward or spikes outward. So shrink the port stub just enough.
+ */
+function computeTerminalJogCoordinate(
+  endpointCoord: number,
+  cornerCoord: number,
+  stubLength: number,
+  snapGrid: number
+): number {
+  const grid = snapGrid > 0 ? snapGrid : 1
+  // Strictly MORE than the arm-overlap width (the cleanup uses `<=`), snapped up
+  // to the grid so the resulting segment lands on a grid line.
+  const armFloor = terminalArmFloorPx(grid)
+  const minStub = Math.min(EDGES.MIN_STUB_LENGTH, stubLength)
+
+  const span = Math.abs(cornerCoord - endpointCoord)
+  const direction = cornerCoord >= endpointCoord ? 1 : -1
+  // Prefer the full stub; give it up only down to the point where the moved
+  // segment still clears the arm-overlap floor, and never below the min stub.
+  const stub = Math.min(stubLength, Math.max(minStub, span - armFloor))
+  return snapToGrid(endpointCoord + direction * stub, snapGrid)
+}
+
 export function applyTerminalSegmentBend(
   points: IPoint[],
   handle: BendHandle,
@@ -281,11 +344,20 @@ export function applyTerminalSegmentBend(
           points[1],
         ])
       }
+      // Reopen room between the port stub and the moved segment: on a stub-length
+      // terminal segment the corner sits right on `stubExit`, and jogging there
+      // would collapse (drag in) or spike (drag out).
+      const jogX = computeTerminalJogCoordinate(
+        points[0].x,
+        updatedPoints[1].x,
+        stubLength,
+        snapGrid
+      )
       updatedPoints[1] = { x: updatedPoints[1].x, y: newY }
       return removeDuplicatePoints([
         points[0],
-        stubExit,
-        { x: stubExit.x, y: newY },
+        { x: jogX, y: points[0].y },
+        { x: jogX, y: newY },
         updatedPoints[1],
         ...updatedPoints.slice(2),
         points[points.length - 1],
@@ -303,11 +375,17 @@ export function applyTerminalSegmentBend(
         points[1],
       ])
     }
+    const jogY = computeTerminalJogCoordinate(
+      points[0].y,
+      updatedPoints[1].y,
+      stubLength,
+      snapGrid
+    )
     updatedPoints[1] = { x: newX, y: updatedPoints[1].y }
     return removeDuplicatePoints([
       points[0],
-      stubExit,
-      { x: newX, y: stubExit.y },
+      { x: points[0].x, y: jogY },
+      { x: newX, y: jogY },
       updatedPoints[1],
       ...updatedPoints.slice(2),
       points[points.length - 1],
@@ -323,26 +401,41 @@ export function applyTerminalSegmentBend(
     if (orientation === "H") {
       const newY = snapToGrid(stubExit.y + delta.y, snapGrid)
       const updatedPoints = [...points]
-      updatedPoints[lastSegIdx] = { x: updatedPoints[lastSegIdx].x, y: newY }
+      const cornerX = updatedPoints[lastSegIdx].x
+      // Reopen room between the moved segment and the port stub (see the helper).
+      const jogX = computeTerminalJogCoordinate(
+        points[lastIdx].x,
+        cornerX,
+        stubLength,
+        snapGrid
+      )
+      updatedPoints[lastSegIdx] = { x: cornerX, y: newY }
       const leading = updatedPoints.slice(0, lastSegIdx + 1)
       return removeDuplicatePoints([
         points[0],
         ...leading,
-        { x: stubExit.x, y: newY },
-        stubExit,
+        { x: jogX, y: newY },
+        { x: jogX, y: points[lastIdx].y },
         points[lastIdx],
       ])
     }
 
     const newX = snapToGrid(stubExit.x + delta.x, snapGrid)
     const updatedPoints = [...points]
-    updatedPoints[lastSegIdx] = { x: newX, y: updatedPoints[lastSegIdx].y }
+    const cornerY = updatedPoints[lastSegIdx].y
+    const jogY = computeTerminalJogCoordinate(
+      points[lastIdx].y,
+      cornerY,
+      stubLength,
+      snapGrid
+    )
+    updatedPoints[lastSegIdx] = { x: newX, y: cornerY }
     const leading = updatedPoints.slice(0, lastSegIdx + 1)
     return removeDuplicatePoints([
       points[0],
       ...leading,
-      { x: newX, y: stubExit.y },
-      stubExit,
+      { x: newX, y: jogY },
+      { x: points[lastIdx].x, y: jogY },
       points[lastIdx],
     ])
   }

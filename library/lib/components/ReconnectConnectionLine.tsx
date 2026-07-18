@@ -1,20 +1,27 @@
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 import {
   ConnectionLineComponentProps,
   ConnectionLineType,
   getStraightPath,
   Position,
+  useStore,
+  type Edge,
   type XYPosition,
 } from "@xyflow/react"
 import { CANVAS, EDGES } from "@/constants"
 import { pointsToSvgPath, type IPoint } from "@/edges/Connection"
 import { useEdgeRoutingContext } from "@/hooks/useEdgeRoutingContext"
-import { useDiagramStore, useMetadataStore } from "@/store/context"
+import {
+  useDiagramStore,
+  useEdgeGeometryStore,
+  useMetadataStore,
+} from "@/store/context"
 import { useFreeformDropTarget } from "@/hooks/useFreeformDropTarget"
 import { useShallow } from "zustand/shallow"
 import {
   adjustSourceCoordinates,
   adjustTargetCoordinates,
+  getDefaultEdgeType,
   getEdgeMarkerStyles,
   preserveOrthogonalEdgePoints,
   routeOrthogonalPath,
@@ -25,6 +32,8 @@ import {
   getEdgeAnchorFromPoint,
   getEdgeAnchorPoint,
 } from "@/utils/connectionModes"
+import { computeConnectionPreviewRoute } from "@/utils/geometry/edgeGeometrySolver"
+import { STRAIGHT_PATH_STEP_EDGE_TYPES } from "@/edges/edgeRoutingBehavior"
 
 // Hide the new-connection ghost until dragged this far from the source, so a
 // stray click doesn't flash a preview. Bypassed while hovering a node.
@@ -34,6 +43,13 @@ const GHOST_DASH = "6 5"
 // Matches the connection indicator (`.connectionindicator`): a solid, opaque,
 // ~10px primary dot marking the connection point.
 const GHOST_SNAP_CIRCLE_RADIUS = 5
+
+// Fallback id for the transient edge published while a NEW connection is drawn onto
+// a node, so the solver routes every OTHER edge as if it existed (neighbours make
+// room live). Never enters the diagram store. Only used before `onConnectStart` has
+// minted the real id — the preview must otherwise carry the id the commit will use,
+// because sibling lanes are settled by edge id (see `pendingConnectionId`).
+const PENDING_CONNECTION_FALLBACK_ID = "__apollon_pending_connection__"
 
 /**
  * The ghost's path for a connection being drawn.
@@ -112,6 +128,30 @@ export const ReconnectConnectionLine = ({
   // preview snaps exactly where the edge attaches on release.
   const resolveDropTarget = useFreeformDropTarget()
   const allNodes = useDiagramStore((state) => state.nodes)
+  // The pieces the auto-anchor selector needs, so a NEW connection onto a node can
+  // preview the SAME route it commits to (source auto-picked, target pinned at the
+  // drop) instead of a fixed-drag-handle line that jumps on release.
+  const nodeLookup = useStore((state) => state.nodeLookup)
+  const connectionMode = useStore((state) => state.connectionMode)
+  const diagramType = useMetadataStore((state) => state.diagramType)
+  const previewEdgeType = getDefaultEdgeType(diagramType)
+  const previewEnableStraightPath =
+    STRAIGHT_PATH_STEP_EDGE_TYPES.has(previewEdgeType)
+  const setPendingConnectionEdge = useMetadataStore(
+    (state) => state.setPendingConnectionEdge
+  )
+  // The id the commit will use, minted at drag start. Sharing it keeps the preview in
+  // the same sibling lane as the committed edge, so the bundle does not re-order.
+  const pendingConnectionId = useMetadataStore(
+    (state) => state.pendingConnectionId
+  )
+  const pendingEdgeId = pendingConnectionId ?? PENDING_CONNECTION_FALLBACK_ID
+  // The route the solver committed for the pending edge, so the ghost draws the
+  // SAME line the neighbours reflowed around (its actual fan lane, obstacle dodges),
+  // not a lane-0 approximation. Lags the solve by a frame — imperceptible.
+  const pendingSolvedRoute = useEdgeGeometryStore(
+    (state) => state.geometryById[pendingEdgeId]
+  )
 
   // Where a NEW connection currently starts and ends. Resolved before the route
   // is computed, because the router has to be told what the world looks like
@@ -157,6 +197,39 @@ export const ReconnectConnectionLine = ({
     }
   }, [resolveDropTarget, fromNode?.id, fromX, fromY, toX, toY, toPosition])
 
+  // A new connection is only PREVIEWED as a solver edge when it is drawn onto a
+  // real target (reconnects already have their own live override). Fully auto (no
+  // pinned anchor) to match the auto commit. Memoised on source+target so hovering
+  // WITHIN one node does not thrash the solver.
+  const isNewConnection = !previewEdge || !reconnectPreviewHandleType
+  const pendingEdge = useMemo<Edge | null>(() => {
+    if (!isNewConnection || !fromNode?.id || !newConnection.targetId)
+      return null
+    return {
+      id: pendingEdgeId,
+      source: fromNode.id,
+      target: newConnection.targetId,
+      type: previewEdgeType,
+      data: { points: [] },
+    }
+  }, [
+    isNewConnection,
+    fromNode?.id,
+    newConnection.targetId,
+    previewEdgeType,
+    pendingEdgeId,
+  ])
+
+  // Publish/withdraw the pending edge as the hover target changes, and always
+  // withdraw it when the drag ends (this component unmounts) so a stray preview
+  // edge can never outlive the gesture.
+  useEffect(() => {
+    setPendingConnectionEdge(pendingEdge)
+  }, [pendingEdge, setPendingConnectionEdge])
+  useEffect(() => {
+    return () => setPendingConnectionEdge(null)
+  }, [setPendingConnectionEdge])
+
   // The SAME world the committed edge is routed against: the nodes it must not
   // plough through, its own margins, the container frames it must not trace, and
   // the edges it must not be drawn on top of. A new connection has no id yet, so
@@ -180,6 +253,42 @@ export const ReconnectConnectionLine = ({
       // hovering a node (see GHOST_MIN_DRAG_DISTANCE_PX).
       if (!newConnection.visible) return { d: "", snapPoint: null }
 
+      // Hovering a node: preview the route the COMMITTED edge will take, so the
+      // ghost matches the edge that appears on release instead of jumping to
+      // re-picked anchors. Prefer the SOLVER's route for the pending edge (it is the
+      // one the neighbours reflowed around — same fan lane, obstacle dodges); fall
+      // back to a local single-edge solve for the first frame before the solve lands,
+      // then to the plain cursor-following route in empty space / unmeasured nodes.
+      if (fromNode?.id && newConnection.targetId) {
+        if (pendingSolvedRoute && pendingSolvedRoute.length >= 2) {
+          return {
+            d: pointsToSvgPath(pendingSolvedRoute),
+            // The dot marks where the edge ACTUALLY connects — the auto-anchor at the
+            // route's target end — not the drop pixel or a fixed handle.
+            snapPoint: pendingSolvedRoute[pendingSolvedRoute.length - 1],
+          }
+        }
+        const previewRoute = computeConnectionPreviewRoute({
+          sourceId: fromNode.id,
+          targetId: newConnection.targetId,
+          edgeType: previewEdgeType,
+          enableStraightPath: previewEnableStraightPath,
+          nodes: allNodes,
+          nodeLookup,
+          connectionMode,
+          obstacles,
+          neighborEdges,
+        })
+        if (previewRoute && previewRoute.length >= 2) {
+          return {
+            d: pointsToSvgPath(previewRoute),
+            snapPoint: previewRoute[previewRoute.length - 1],
+          }
+        }
+      }
+
+      // Dragging over empty canvas (no target yet): the line follows the cursor and
+      // connects nowhere, so there is no attach point to mark.
       return {
         d: getConnectionPreviewPath(
           connectionLineType,
@@ -190,9 +299,7 @@ export const ReconnectConnectionLine = ({
           obstacles,
           neighborEdges
         ),
-        // Snap circle marks the live attach point: the edge connects
-        // continuously at any angle on the curve, not just at fixed handles.
-        snapPoint: newConnection.snapPoint,
+        snapPoint: null,
       }
     }
 
@@ -242,6 +349,7 @@ export const ReconnectConnectionLine = ({
     return { d: pointsToSvgPath(reconnectPreviewPoints), snapPoint: null }
   }, [
     connectionLineType,
+    fromNode?.id,
     fromPosition,
     fromX,
     fromY,
@@ -254,6 +362,12 @@ export const ReconnectConnectionLine = ({
     newConnection,
     obstacles,
     neighborEdges,
+    allNodes,
+    nodeLookup,
+    connectionMode,
+    previewEdgeType,
+    previewEnableStraightPath,
+    pendingSolvedRoute,
   ])
 
   const edgeStrokeColor =

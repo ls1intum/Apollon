@@ -1044,6 +1044,31 @@ export const useStepPathEdge = ({
               } else {
                 nextData.targetAnchor = commit.anchor
               }
+              // Pin the UNTOUCHED endpoint at its current auto-anchor. Reconnecting
+              // one end changes this edge's partner, and the node-side fan orders
+              // each side's endpoints by partner position — so leaving the opposite
+              // end auto lets it slide to a new lane (the endpoint you did not touch
+              // jumps). Freezing its present spot keeps it put, exactly as a
+              // reconnect should. A user-pinned opposite already owns its spot.
+              if (commit.endpoint === "source") {
+                if (!isFreeformEdgeAnchor(targetAnchor) && targetRect) {
+                  const pinned = getEdgeAnchorFromPoint(
+                    targetNode?.type,
+                    currentTargetEndpoint,
+                    targetRect
+                  )
+                  if (pinned) nextData.targetAnchor = pinned
+                }
+              } else {
+                if (!isFreeformEdgeAnchor(sourceAnchor) && sourceRect) {
+                  const pinned = getEdgeAnchorFromPoint(
+                    sourceNode?.type,
+                    currentSourceEndpoint,
+                    sourceRect
+                  )
+                  if (pinned) nextData.sourceAnchor = pinned
+                }
+              }
               if (shouldClearManualPoints) {
                 nextData.points = []
               } else if (normalizedPoints) {

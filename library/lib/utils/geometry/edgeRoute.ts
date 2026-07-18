@@ -5,7 +5,10 @@ import {
   routeCrossesHardObstacle,
   removeDuplicatePoints,
 } from "@/utils/edgeUtils"
-import { routeConflictsWithNeighborEdges } from "@/utils/geometry/orthogonalRouter"
+import {
+  routeConflictsWithNeighborEdges,
+  straightPathClearsBodies,
+} from "@/utils/geometry/orthogonalRouter"
 import type { ObstacleRect } from "@/utils/geometry/obstacles"
 
 /**
@@ -72,10 +75,19 @@ export function routeStepEdge(p: StepEdgeRouteParams): IPoint[] {
       }
     )
     // A straight shot is only allowed when it runs clear of every solid node AND
-    // is not drawn on top of / across a neighbouring edge.
+    // is not drawn on top of / across a neighbouring edge. "Clear" means the same
+    // clearance the A* router keeps — not merely "does not cross". The crossing test
+    // uses strict inequalities, so a line running EXACTLY along a body's border (or
+    // threading the seam between two touching bodies) reports no crossing; without
+    // this second gate such a line ships straight, drawn on top of a node's edge.
+    // Rejecting it here drops through to `routeOrthogonalPath`, whose A* doglegs
+    // around the body. The endpoint stubs legitimately touch their OWN nodes, so the
+    // near-node run is exempted (as `routeOrthogonalPath` does for its cheap route).
+    const hardObstacles = p.obstacles.filter((o) => !o.soft)
     if (
       straightPathPoints !== null &&
       !routeCrossesHardObstacle(straightPathPoints, p.obstacles) &&
+      straightPathClearsBodies(straightPathPoints, hardObstacles) &&
       !routeConflictsWithNeighborEdges(straightPathPoints, p.neighborEdges)
     ) {
       return removeDuplicatePoints(straightPathPoints)

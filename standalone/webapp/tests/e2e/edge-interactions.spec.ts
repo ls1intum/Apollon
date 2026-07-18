@@ -33,10 +33,26 @@ function edgeById(page: Page, id: string): Locator {
   return page.locator(`.react-flow__edge[data-id="${id}"]`)
 }
 
-/** Select an edge so its bend/endpoint handles render. */
+/** Select an edge so its bend/endpoint handles render. Clicks a point ON the path
+ * (its arc-length midpoint) rather than the element's bounding-box centre: for a
+ * bent/L-shaped edge the bbox centre sits in empty space off the line, so a
+ * force-click there misses the overlay stroke and fails to select. An on-path click
+ * is how a user actually selects the edge and is robust to routing shape. */
 async function selectEdge(page: Page, id: string): Promise<Locator> {
   const edge = edgeById(page, id)
-  await edge.locator(".edge-overlay, path").first().click({ force: true })
+  const pt = await page.evaluate((eid) => {
+    const p = document.querySelector(
+      `.react-flow__edge[data-id="${eid}"] path.react-flow__edge-path`
+    ) as SVGPathElement | null
+    if (!p) return null
+    const ctm = p.getScreenCTM()
+    if (!ctm) return null
+    const q = p.getPointAtLength(p.getTotalLength() / 2)
+    const m = new DOMPoint(q.x, q.y).matrixTransform(ctm)
+    return { x: m.x, y: m.y }
+  }, id)
+  if (!pt) throw new Error(`edge ${id} path not found for selection`)
+  await page.mouse.click(pt.x, pt.y)
   await page.waitForTimeout(150)
   return edge
 }

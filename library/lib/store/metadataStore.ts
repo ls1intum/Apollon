@@ -7,6 +7,7 @@ import { UMLDiagramType } from "@/types"
 import { ApollonMode, ApollonView } from "@/typings"
 import { IPoint } from "@/edges/Connection"
 import { DEFAULT_LABELS, type ApollonLabels } from "@/i18n/labels"
+import type { Edge } from "@xyflow/react"
 
 /**
  * An edge whose route is being dragged (bend or endpoint) right now, published
@@ -37,9 +38,22 @@ export type MetadataStore = {
   reconnectPreviewHandleType: "source" | "target" | null
   reconnectPreviewBasePoints: IPoint[]
   liveEdgeOverride: LiveEdgeOverride | null
+  /** A NEW connection being drawn onto a node, published as a transient edge so
+   * the central solver routes every OTHER edge as if it already existed — the
+   * neighbours fan/re-anchor to make room LIVE, instead of jumping on release.
+   * Never touches the diagram store (no undo/Yjs); cleared when the drag ends. */
+  pendingConnectionEdge: Edge | null
+  /** The id the edge under construction WILL be committed with, minted once when the
+   * drag starts. The preview must carry it: parallel siblings tie on every geometric
+   * key, so `computeParallelInfo` settles their lane order by edge id — preview and
+   * commit therefore have to share one identity, or the bundle re-lanes on release
+   * (the very jump the preview exists to prevent). Null when no drag is in flight. */
+  pendingConnectionId: string | null
   setMode: (mode: ApollonMode) => void
   setView: (view: ApollonView) => void
   setAvailableViews: (availableViews: ApollonView[]) => void
+  setPendingConnectionEdge: (edge: Edge | null) => void
+  setPendingConnectionId: (id: string | null) => void
   setReadonly: (readonly: boolean) => void
   setScrollLock: (scrollLock: boolean) => void
   setLabels: (labels: ApollonLabels) => void
@@ -82,6 +96,8 @@ type InitialMetadataState = {
   reconnectPreviewHandleType: "source" | "target" | null
   reconnectPreviewBasePoints: IPoint[]
   liveEdgeOverride: LiveEdgeOverride | null
+  pendingConnectionEdge: Edge | null
+  pendingConnectionId: string | null
 }
 const initialMetadataState: InitialMetadataState = {
   // Empty by default — an untitled diagram stays untitled (hosts render their own
@@ -103,6 +119,8 @@ const initialMetadataState: InitialMetadataState = {
   reconnectPreviewHandleType: null,
   reconnectPreviewBasePoints: [],
   liveEdgeOverride: null,
+  pendingConnectionEdge: null,
+  pendingConnectionId: null,
 }
 
 export const createMetadataStore = (
@@ -262,6 +280,18 @@ export const createMetadataStore = (
 
         setLiveEdgeOverride: (override) => {
           set({ liveEdgeOverride: override }, undefined, "setLiveEdgeOverride")
+        },
+
+        setPendingConnectionEdge: (edge) => {
+          set(
+            { pendingConnectionEdge: edge },
+            undefined,
+            "setPendingConnectionEdge"
+          )
+        },
+
+        setPendingConnectionId: (id) => {
+          set({ pendingConnectionId: id }, undefined, "setPendingConnectionId")
         },
 
         setDebug: (debug) => {

@@ -8,11 +8,16 @@ import {
 import { type MouseEvent as ReactMouseEvent, useCallback } from "react"
 import {
   CustomBackground,
-  ReconnectConnectionLine,
   AssessmentSelectionDebug,
   ScrollOverlay,
   AlignmentGuides,
 } from "@/components"
+// Imported DIRECTLY, not via the `@/components` barrel: this component pulls in the
+// edge-geometry solver to preview the committed auto route, and the barrel is
+// imported by `constants.ts`, so routing it through the barrel forms a
+// `constants → components → solver → edgeAnchoring` import cycle that leaves module
+// constants undefined at init. The direct path keeps the solver out of the barrel.
+import { ReconnectConnectionLine } from "@/components/ReconnectConnectionLine"
 import { OverlayLayer } from "@/overlay/OverlayLayer"
 import "@xyflow/react/dist/style.css"
 // Shared, embed-safe @tumaet/ui primitives + --apollon-/--home- design tokens

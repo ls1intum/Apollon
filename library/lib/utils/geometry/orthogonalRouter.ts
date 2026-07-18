@@ -239,6 +239,28 @@ export const routeRunsTooCloseToBody = (
   return false
 }
 
+/**
+ * Whether a candidate STRAIGHT-SHOT route keeps the router's clearance from every
+ * hard body — the gate the straight-path shortcut needs so it does not ship a line
+ * drawn along a border or through a touching seam (the strict crossing test misses
+ * those). Wraps `routeRunsTooCloseToBody` with the router's own constants so the
+ * caller (`edgeRoute`) need not import them — which would deepen the
+ * `constants ↔ components` import cycle and leave `CANVAS` undefined at init. The
+ * endpoint stubs legitimately touch their OWN nodes, so the near-node run is exempt.
+ */
+export const straightPathClearsBodies = (
+  points: readonly IPoint[],
+  hardBodies: readonly ObstacleRect[]
+): boolean =>
+  !routeRunsTooCloseToBody(
+    points,
+    hardBodies,
+    EDGES.NODE_CLEARANCE_PX,
+    EDGES.MIN_NODE_CLEARANCE_PX,
+    CANVAS.SNAP_TO_GRID_PX,
+    EDGES.STUB_LENGTH
+  )
+
 type Segment = { x1: number; y1: number; x2: number; y2: number }
 
 /** Flatten polylines to their individual segments once, for repeated testing. */

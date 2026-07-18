@@ -275,12 +275,16 @@ export const EDGES = Object.freeze({
   BEND_HANDLE_SCREEN_LENGTH_PX: 34,
   /** Smallest a bend handle may shrink to, in screen px. Below this a handle
    * stops being a touch target, so it stays this big and simply overlaps its
-   * segment's ends a little. */
-  BEND_HANDLE_MIN_SCREEN_LENGTH_PX: 14,
+   * segment's ends a little. Kept a comfortable mouse target: on a tight,
+   * many-bend edge every handle clamps here, so a too-small floor leaves the
+   * near-node handles ungrabbable. */
+  BEND_HANDLE_MIN_SCREEN_LENGTH_PX: 18,
   /** Smallest an endpoint hit target may shrink to on a very short edge. Each
    * endpoint owns half the run between them, but half of nothing is nothing —
-   * two small targets are still two targets, a zero-sized one is not. */
-  MIN_ENDPOINT_HIT_TARGET_PX: 12,
+   * two small targets are still two targets, a zero-sized one is not. Sized so
+   * the arrow-tip endpoint stays grabbable on a short terminal segment (where the
+   * terminal bend handle is withheld and the endpoint owns that stub). */
+  MIN_ENDPOINT_HIT_TARGET_PX: 15,
   /** Minimum clearance, in screen px, between a bend handle and the segment's
    * corners — how close a handle is allowed to sit to a corner. */
   BEND_HANDLE_CORNER_CLEARANCE_PX: 10,
@@ -292,6 +296,10 @@ export const EDGES = Object.freeze({
   BEND_HANDLE_SAFE_AREA_PX: 25,
   /** Size of the invisible endpoint hit target used for edge reconnection */
   ENDPOINT_HIT_TARGET_SIZE: 24,
+  /** Gap kept between the endpoint reconnect target and the nearest bend handle so the
+   * (on-top) target never abuts or buries the handle. Small — just enough to separate
+   * them cleanly at the handle's rounded corner. */
+  ENDPOINT_HANDLE_CLEARANCE_PX: 4,
   /** Grid step a dragged bend snaps to; matches the canvas grid so bends line
    * up with grid-snapped node handles. */
   BEND_SNAP_GRID_PX: CANVAS.SNAP_TO_GRID_PX,

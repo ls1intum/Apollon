@@ -40,6 +40,10 @@ export const EdgeGeometrySolver = () => {
   // The edge being bend/endpoint-dragged right now, if any: fed to the solver so
   // higher-id edges dodge the live preview.
   const liveEdgeOverride = useMetadataStore((s) => s.liveEdgeOverride)
+  // A NEW connection being drawn onto a node: routed alongside the real edges so
+  // every neighbour fans/re-anchors to make room LIVE (the fan orders by partner
+  // geometry, so the reflow matches the committed edge and does not jump on drop).
+  const pendingConnectionEdge = useMetadataStore((s) => s.pendingConnectionEdge)
 
   // Cross-frame memo of each edge's routed polyline, keyed on a signature of the
   // router's inputs, so an edge whose inputs did not change skips the search. A
@@ -91,7 +95,7 @@ export const EdgeGeometrySolver = () => {
       nodes,
       nodeLookup,
       connectionMode,
-      edges,
+      edges: pendingConnectionEdge ? [...edges, pendingConnectionEdge] : edges,
       straightPathTypes: STRAIGHT_PATH_STEP_EDGE_TYPES,
       straightHookTypes: STRAIGHT_HOOK_EDGE_TYPES,
       liveOverride: liveEdgeOverride,
@@ -109,6 +113,7 @@ export const EdgeGeometrySolver = () => {
     connectionMode,
     edges,
     liveEdgeOverride,
+    pendingConnectionEdge,
     geometryStore,
     setAllGeometry,
   ])

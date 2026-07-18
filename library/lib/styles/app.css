@@ -827,6 +827,16 @@
   background-color: var(--apollon-primary, #3e8acc) !important;
 }
 
+/* While DRAGGING a connection (the ghost line SVG is present), the edge auto-
+   anchors to a SINGLE point — the ghost marks it with one dot — rather than
+   attaching at a fixed handle. Showing a circle on every handle would mislead about
+   where it connects, so hide them for the duration of the drag. Click-to-connect
+   guidance (no ghost line) is unaffected — its circles are the click targets. */
+.apollon-editor--connection-guidance:has(.react-flow__connectionline)
+  .react-flow__handle.connectionindicator {
+  opacity: 0 !important;
+}
+
 .edge-bend-handle {
   opacity: 0;
   stroke: none;
@@ -884,6 +894,15 @@
   );
 }
 
+/* A USER-PINNED end (custom anchor) reads as a SOLID grip when the edge is
+   selected — a filled dot that says "you fixed this end"; the hollow grips are
+   still owned by the auto router. Only meaningful while selected, so it rides the
+   same `.selected` gate as the grip's own visibility. */
+.react-flow__edge.selected .edge-endpoint-grip--pinned {
+  fill: var(--apollon-primary, #3e8acc);
+  stroke: var(--apollon-primary, #3e8acc);
+}
+
 .react-flow__edge:hover .edge-bend-handle:hover,
 .react-flow__edge.selected .edge-bend-handle:hover {
   fill: color-mix(in srgb, var(--apollon-primary, #3e8acc) 70%, #000);
@@ -894,8 +913,12 @@
 }
 
 .react-flow__edge.selected .edge-overlay {
+  /* Invisible while selected (the coloured selection styling lives elsewhere) but
+     KEEP it pointer-live: with RF's fat interaction ribbon removed
+     (interactionWidth=0), this overlay stroke is the only mid-body click surface, so
+     clicking a selected edge's body must still land on it rather than fall through to
+     the pane and deselect. At ±7.5px it never reaches a co-located neighbour's handle. */
   opacity: 0;
-  pointer-events: none;
 }
 
 .react-flow__edge:hover .react-flow__edge-path,

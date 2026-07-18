@@ -118,6 +118,14 @@ export const useConnect = () => {
       stopConnectionGuidance: state.stopConnectionGuidance,
     }))
   )
+  const setPendingConnectionEdge = useMetadataStore(
+    (state) => state.setPendingConnectionEdge
+  )
+  const setPendingConnectionId = useMetadataStore(
+    (state) => state.setPendingConnectionId
+  )
+  /** The id minted at drag start and shared with the preview; see `onConnectStart`. */
+  const pendingConnectionId = useRef<string | null>(null)
 
   const defaultEdgeType = getDefaultEdgeType(diagramType)
 
@@ -136,6 +144,12 @@ export const useConnect = () => {
   const onConnectStart: OnConnectStart = (event, params) => {
     connectionStartParams.current = params
     startEdge.current = null
+    // Mint the committed edge's id NOW, so the live preview can be routed under the
+    // same identity. Sibling lanes are settled by edge id (every geometric key ties
+    // between parallels), so a preview under a different id lands in a different lane
+    // and the bundle re-orders on release.
+    pendingConnectionId.current = generateUUID()
+    setPendingConnectionId(pendingConnectionId.current)
     startConnectionGuidance(params.nodeId ?? null, params.handleId ?? null)
     const dropPosition = getDropPosition(event)
 
@@ -169,6 +183,9 @@ export const useConnect = () => {
 
   const onConnect = useCallback(
     (connection: Connection) => {
+      // Withdraw the preview edge as the real one lands, so the solver never holds
+      // both for a frame (which would fan them apart, then collapse — a flicker).
+      setPendingConnectionEdge(null)
       if (
         isSameNodeSameHandleArea(
           connection.source,
@@ -189,7 +206,7 @@ export const useConnect = () => {
 
       addEdge(newEdge)
     },
-    [addEdge, defaultEdgeType]
+    [addEdge, defaultEdgeType, setPendingConnectionEdge]
   )
 
   const onConnectEnd: OnConnectEnd = useCallback(
@@ -274,15 +291,21 @@ export const useConnect = () => {
               return
             }
 
+            // Create a FULLY AUTO edge (no pinned target anchor): the auto-anchor
+            // selector picks the best attachment, exactly as the live ghost/pending
+            // preview showed — so the edge lands where it previewed and the
+            // neighbours that made room stay put, instead of snapping to the drop
+            // pixel and jumping. A user who wants a specific spot drags the endpoint
+            // afterward (which writes the custom anchor then).
             setEdges((eds) =>
               eds.concat({
-                id: generateUUID(),
+                id: pendingConnectionId.current ?? generateUUID(),
                 source: sourceNodeId,
                 target: nodeOnTop.id,
                 type: defaultEdgeType,
                 sourceHandle: sourceHandleId,
                 targetHandle,
-                data: withEndpointAnchor(undefined, "target", targetAnchor),
+                data: { points: [] },
               })
             )
           }
@@ -291,6 +314,11 @@ export const useConnect = () => {
         startEdge.current = null
         connectionStartParams.current = null
         stopConnectionGuidance()
+        // Every path out of a connection gesture — commit, cancel, invalid drop —
+        // withdraws the preview edge and its id, so neither outlives the drag.
+        setPendingConnectionEdge(null)
+        setPendingConnectionId(null)
+        pendingConnectionId.current = null
       }
     },
     [
@@ -300,6 +328,8 @@ export const useConnect = () => {
       resolveDropTarget,
       setEdges,
       stopConnectionGuidance,
+      setPendingConnectionEdge,
+      setPendingConnectionId,
     ]
   )
 
