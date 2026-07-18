@@ -559,9 +559,27 @@ describe("computeAllEdgeGeometry — auto anchor optimization", () => {
     )
     const route = routeById["bidir"]
     const target = route[route.length - 1]
-    expect(exitSide([target, route[route.length - 2]])).toBe("L") // enters left side
-    // Within a lane of IMovable's left-side centre (y 105), not the corner (y 160/50).
-    expect(Math.abs(target.y - 105)).toBeLessThanOrEqual(3 * 5)
+    // The anchor must be CENTRED on whichever side it enters — never crept into a
+    // corner. The side itself is the cost's to choose: entering IMovable's bottom
+    // clears Animal in one corner, where entering its left has to get past Animal,
+    // so pinning the side here would encode the worse route.
+    const enters = exitSide([target, route[route.length - 2]])
+    const offCentre =
+      enters === "L" || enters === "R"
+        ? Math.abs(target.y - (50 + 110 / 2))
+        : Math.abs(target.x - (390 + 200 / 2))
+    expect(offCentre).toBeLessThanOrEqual(3 * 5)
+    // And it must not be driven through Animal, the node sitting between them.
+    const throughAnimal = route.slice(0, -1).some((p, i) => {
+      const q = route[i + 1]
+      return (
+        Math.min(p.x, q.x) < 279 &&
+        Math.max(p.x, q.x) > 81 &&
+        Math.min(p.y, q.y) < 169 &&
+        Math.max(p.y, q.y) > 71
+      )
+    })
+    expect(throughAnimal, "route driven through Animal").toBe(false)
   })
 
   it("does not run an auto route along a THIRD-PARTY node's border (graze)", () => {

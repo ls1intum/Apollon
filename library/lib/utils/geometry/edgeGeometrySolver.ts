@@ -234,6 +234,20 @@ function mergeManualPoints(
   return points
 }
 
+/** Whether `self` and `other` belong to the same MERGED arrowhead — a UML
+ * generalisation fan converging on one super-class. Such edges are MEANT to share
+ * the trunk, so they must not be priced as conflicting neighbours: the overlap cost
+ * would otherwise push each branch off the trunk it was just merged onto, undoing
+ * the merge and spending corners to do it. */
+function mergesWith(self: Edge, other: Edge): boolean {
+  const type = self.type ?? ""
+  return (
+    MERGED_ARROWHEAD_EDGE_TYPES.has(type) &&
+    other.type === type &&
+    self.target === other.target
+  )
+}
+
 /** Whether `other` is a TRUE sibling of `self`: leaves the very same
  * connection point, so it shares geometry. */
 function isSibling(self: Edge, other: Edge): boolean {
@@ -337,7 +351,7 @@ function collectNeighbors(
     const polyline = routeById[otherId]
     if (!polyline || polyline.length < 2) continue
     const other = edgeById.get(otherId)
-    if (other && isSibling(edge, other)) continue
+    if (other && (isSibling(edge, other) || mergesWith(edge, other))) continue
     const inRange = polyline.some(
       (p) => p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY
     )
@@ -615,7 +629,14 @@ function collectPortEnds(
       targetBand,
     })
   }
-  const sideByEnd = assignSides(sideEdges)
+  // Every measured node's rect, so side assignment can reject a pair whose route
+  // would be driven through a third node.
+  const allRects = new Map<string, Rect>()
+  for (const n of nodes) {
+    const r = rectOf(n.id)
+    if (r) allRects.set(n.id, r)
+  }
+  const sideByEnd = assignSides(sideEdges, allRects)
 
   const out: EndRef[] = []
   const four = (nodeId: string) =>

@@ -65,6 +65,11 @@ const HUG_COST_GU = 50
  * and graduated (see `thirdPartyGrazePx`) so it also breaks a cost-tie toward the
  * side whose route drops cleanly away from a nearby node. */
 const THIRD_PARTY_GRAZE_COST_GU = 50
+/** What driving the ideal route THROUGH a bystander node costs, in bend-units. The
+ * worst thing anchor selection can choose (the cited order is node-overlap ≻ crossing
+ * ≻ bend), and it is never a real option: the router must detour around it, spending
+ * corners the ideal route never showed. Priced far above the bends it would save. */
+const NODE_THROUGH_COST_GU = 10 * BEND_COST_GU
 /** What one CROSSING of an already-committed edge costs, in bend-units — ~3 bends,
  * the evidence rate (yFiles 5:1, libavoid 4:1; kept moderate because every crossing
  * here is a 90° one, the least harmful). Scored on the ideal route against the
@@ -333,6 +338,39 @@ const hugPenaltyPx = (
   return total
 }
 
+/** How many BYSTANDER node bodies the ideal route is driven THROUGH. Unlike the
+ * graduated graze below this is unambiguous — the route enters a node it does not
+ * belong to — and it applies whatever the bend count, because the router cannot make
+ * it disappear: it has to detour, which costs corners the ideal never showed. Scoring
+ * only the straight case (as the graze does) let a "1-bend" attachment win over a
+ * 2-bend one and then land as a 3-corner detour around whatever was in the way. */
+const routeThroughNodes = (
+  route: readonly IPoint[],
+  rects: readonly Rect[]
+): number => {
+  let n = 0
+  for (const r of rects) {
+    const loX = r.x + 1
+    const hiX = r.x + r.width - 1
+    const loY = r.y + 1
+    const hiY = r.y + r.height - 1
+    for (let i = 0; i < route.length - 1; i++) {
+      const a = route[i]
+      const b = route[i + 1]
+      if (
+        Math.min(a.x, b.x) < hiX &&
+        Math.max(a.x, b.x) > loX &&
+        Math.min(a.y, b.y) < hiY &&
+        Math.max(a.y, b.y) > loY
+      ) {
+        n++
+        break
+      }
+    }
+  }
+  return n
+}
+
 /** How close the ideal route runs to a BYSTANDER node. Graduated by distance to the
  * router's ideal clearance, so it both rejects grazes and breaks ties toward the side
  * that drops cleanly away. No segment is exempt — a bystander is never this edge's own
@@ -441,6 +479,9 @@ const scoreKey = (
   // the anchors stop sliding off-centre just to keep a grazing straight line.
   const graze =
     bends === 0 ? Math.round(thirdPartyGrazePx(route, thirdParty) / GRID) : 0
+  // Counted for EVERY candidate, not just straight ones: the router has to detour
+  // around a node in the way, and that detour costs corners the ideal never showed.
+  const through = routeThroughNodes(route, thirdParty)
   // Cross-edge coupling against the committed lower-id routes: a candidate that
   // crosses or runs on a neighbour costs more, so the winner avoids them where it
   // cheaply can (id-order greedy, the libavoid/yFiles model).
@@ -456,6 +497,7 @@ const scoreKey = (
     offCenter +
     hug * HUG_COST_GU +
     graze * THIRD_PARTY_GRAZE_COST_GU +
+    through * NODE_THROUGH_COST_GU +
     crossCost
   const length = Math.round(routeLength(route) / GRID)
   return [

@@ -31,8 +31,13 @@ const fx = (f: string) =>
 type Model = {
   id: string
   nodes: { id: string }[]
-  edges: { id: string; source: string; target: string }[]
+  edges: { id: string; source: string; target: string; type?: string }[]
 }
+
+/** Edge types whose arrowheads MERGE on a shared super-class side (UML generalisation
+ * / realisation). A member of such a fan is deliberately routed to the shared trunk,
+ * so "this edge could have been straight" does not apply to it. */
+const MERGED_TYPES = new Set(["ClassInheritance", "ClassRealization"])
 
 const seg = (a: Pt, b: Pt, c: Pt, d: Pt): boolean => {
   const r = { x: b.x - a.x, y: b.y - a.y }
@@ -105,7 +110,13 @@ async function measure(page: any, model: Model): Promise<Metrics> {
     corners += c
     const s = rectById.get(e.source)
     const t = rectById.get(e.target)
-    if (s && t && straightEligible(s, t) && c > 0) straightBroken++
+    const inMergedFan =
+      MERGED_TYPES.has(e.type ?? "") &&
+      model.edges.some(
+        (o) => o !== e && o.type === e.type && o.target === e.target
+      )
+    if (!inMergedFan && s && t && straightEligible(s, t) && c > 0)
+      straightBroken++
     if (s && pts[0]) {
       const o = offCentre(pts[0], s)
       if (o !== null) offMax = Math.max(offMax, o)
@@ -290,6 +301,23 @@ const CASES: {
     maxCrossings: 0,
     maxStraightBroken: 0,
     maxOffMax: 0.8,
+  },
+  // 64/67: UML generalisation fans. 64's three sub-classes converge on one arrowhead
+  // and share a trunk; 67 checks a fan whose members sit on different sides of the
+  // super-class (merging is opportunistic — the layout is not distorted to force it).
+  {
+    file: "routing-case-64.json",
+    maxCorners: 5,
+    maxCrossings: 0,
+    maxStraightBroken: 0,
+    maxOffMax: 0.9,
+  },
+  {
+    file: "routing-case-67.json",
+    maxCorners: 6,
+    maxCrossings: 0,
+    maxStraightBroken: 0,
+    maxOffMax: 0.9,
   },
 ]
 

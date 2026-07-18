@@ -273,7 +273,13 @@ export type SideEdge = {
  * peers assign the identical sides.
  */
 export const assignSides = (
-  edges: readonly SideEdge[]
+  edges: readonly SideEdge[],
+  /** Every node's rect, keyed by id, so a candidate side pair whose route would run
+   * THROUGH a third node can be rejected. Side assignment counts corners on the
+   * obstacle-FREE ideal, so without this it happily picks a "1-corner" pair that the
+   * router then has to detour into three corners around whatever is in the way. A node
+   * crossing outranks a bend (the cited order is node-overlap ≻ crossing ≻ bend). */
+  nodeRects: ReadonlyMap<string, Rect> = new Map()
 ): Map<string, Position> => {
   // Occupancy is a set of DISTINCT PARTNER NODES already placed on each `(node, side)`.
   // Counting distinct partners — excluding an edge's own partner — is what separates a
@@ -317,6 +323,37 @@ export const assignSides = (
     return n
   }
 
+  /** How many nodes — other than the edge's own two — the approximate route passes
+   * through. Axis-aligned segment vs rect, with a small inset so merely grazing a
+   * border does not count. */
+  const nodesCrossed = (e: SideEdge, route: readonly IPoint[]): number => {
+    let n = 0
+    for (const [id, r] of nodeRects) {
+      if (id === e.sourceNodeId || id === e.targetNodeId) continue
+      const lo = { x: r.x + 1, y: r.y + 1 }
+      const hi = { x: r.x + r.width - 1, y: r.y + r.height - 1 }
+      for (let i = 0; i < route.length - 1; i++) {
+        const a = route[i]
+        const b = route[i + 1]
+        const segLoX = Math.min(a.x, b.x)
+        const segHiX = Math.max(a.x, b.x)
+        const segLoY = Math.min(a.y, b.y)
+        const segHiY = Math.max(a.y, b.y)
+        if (segLoX < hi.x && segHiX > lo.x && segLoY < hi.y && segHiY > lo.y) {
+          n++
+          break
+        }
+      }
+    }
+    return n
+  }
+
+  // NOTE: the fan's members are NOT forced onto a common side. Measured across the
+  // corpus, buying a shared side cost 7 extra corners and introduced a crossing to gain
+  // one unified arrowhead — so merging is OPPORTUNISTIC: arrowheads collapse when the
+  // geometry already brings the fan to one side, and the layout is not distorted to
+  // manufacture that.
+
   const result = new Map<string, Position>()
   for (const e of ordered) {
     const { sourceRect: U, targetRect: V } = e
@@ -332,7 +369,11 @@ export const assignSides = (
       let bestKey: number[] | null = null
       for (const sU of SIDES)
         for (const sV of SIDES) {
+          const route = approxRoute(sU, sV, U, V)
           const key = [
+            // A route driven through another node is the worst thing side assignment
+            // can choose — far worse than a bend — so it leads the key.
+            nodesCrossed(e, route),
             combinedBends(sU, sV, U, V),
             // Raw-direction alignment DOMINATES: keep an edge on the side its partner
             // actually lies toward (so two same-direction edges bundle). Occupancy only
@@ -342,7 +383,7 @@ export const assignSides = (
             // Among equally-aimed pairs, prefer one that does NOT cross an edge already
             // assigned. This outranks occupancy: an emptier side is worth less than an
             // untangled picture (d59 chose the free side and crossed its neighbour).
-            crossingsAgainstPlaced(approxRoute(sU, sV, U, V)),
+            crossingsAgainstPlaced(route),
             occOthers(e.sourceNodeId, sU, e.targetNodeId) +
               occOthers(e.targetNodeId, sV, e.sourceNodeId),
             // When an L can bend two ways at equal aim + occupancy (a diagonal pair
@@ -360,6 +401,7 @@ export const assignSides = (
         }
       result.set(endKey(e.edgeId, "source"), best!.sU)
       result.set(endKey(e.edgeId, "target"), best!.sV)
+
       occAdd(e.sourceNodeId, best!.sU, e.targetNodeId)
       occAdd(e.targetNodeId, best!.sV, e.sourceNodeId)
       placed.push(approxRoute(best!.sU, best!.sV, U, V))
@@ -372,6 +414,10 @@ export const assignSides = (
       let best: Position | null = null
       let bestKey: number[] | null = null
       for (const s of SIDES) {
+        // Only the BENDS are evaluated over the other end here: that end is still free
+        // (the per-edge cost path picks it, obstacle-aware, later), so a node-crossing
+        // count taken from a guessed partner side would be misleading — the real route
+        // is not committed to it.
         let minB = Infinity
         for (const o of SIDES) {
           const b = e.sourceBand
@@ -391,6 +437,7 @@ export const assignSides = (
         }
       }
       result.set(endKey(e.edgeId, e.sourceBand ? "source" : "target"), best!)
+
       occAdd(node, best!, otherNode)
     }
   }
