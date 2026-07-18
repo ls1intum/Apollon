@@ -168,24 +168,24 @@ const CASES: {
   // current baseline (visually clean), so the gate holds it rather than chasing 0.
   {
     file: "routing-case-47.json",
-    maxCorners: 6,
-    maxCrossings: 1,
+    maxCorners: 3,
+    maxCrossings: 0,
     maxStraightBroken: 0,
-    maxOffMax: 0.85,
+    maxOffMax: 0.2,
   },
   {
     file: "routing-case-48.json",
-    maxCorners: 7,
-    maxCrossings: 1,
+    maxCorners: 2,
+    maxCrossings: 0,
     maxStraightBroken: 0,
-    maxOffMax: 0.85,
+    maxOffMax: 0.2,
   },
   {
     file: "routing-case-49.json",
     maxCorners: 2,
     maxCrossings: 0,
     maxStraightBroken: 0,
-    maxOffMax: 0.6,
+    maxOffMax: 0.45,
   },
   {
     file: "routing-case-50.json",
@@ -206,14 +206,14 @@ const CASES: {
     maxCorners: 1,
     maxCrossings: 0,
     maxStraightBroken: 0,
-    maxOffMax: 0.6,
+    maxOffMax: 0.5,
   },
   {
     file: "routing-case-54.json",
     maxCorners: 3,
     maxCrossings: 0,
     maxStraightBroken: 0,
-    maxOffMax: 0.3,
+    maxOffMax: 0.2,
   },
   {
     file: "routing-case-55.json",
@@ -229,17 +229,41 @@ const CASES: {
     maxCorners: 3,
     maxCrossings: 0,
     maxStraightBroken: 0,
-    maxOffMax: 0.85,
+    maxOffMax: 0.55,
   },
   // 57: ClassB has one edge on top and one on bottom, each the LONE arm on its side.
   // Both must sit at the side CENTRE (offMax low), not aimed off toward their far-left
   // partners — a lone arm's position does not change its corner count.
   {
     file: "routing-case-57.json",
-    maxCorners: 3,
+    maxCorners: 2,
     maxCrossings: 0,
     maxStraightBroken: 0,
     maxOffMax: 0.35,
+  },
+  // 58/59/60: reported live. 58 — a same-partner BUNDLE must stay centred on the side
+  // (aim orders nothing when every edge goes to one partner). 60 — a TIGHT overlap must
+  // not count as "straight": the step costs more than switching a side for a clean L.
+  {
+    file: "routing-case-58.json",
+    maxCorners: 5,
+    maxCrossings: 0,
+    maxStraightBroken: 0,
+    maxOffMax: 0.75,
+  },
+  {
+    file: "routing-case-59.json",
+    maxCorners: 9,
+    maxCrossings: 1,
+    maxStraightBroken: 0,
+    maxOffMax: 0.2,
+  },
+  {
+    file: "routing-case-60.json",
+    maxCorners: 4,
+    maxCrossings: 0,
+    maxStraightBroken: 0,
+    maxOffMax: 0.2,
   },
 ]
 

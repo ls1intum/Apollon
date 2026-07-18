@@ -78,12 +78,30 @@ const SIDE_ORDER: Record<Position, number> = {
   [Position.Left]: 3,
 }
 
-const rangesOverlap = (
+const rangeOverlapLen = (
   aLo: number,
   aHi: number,
   bLo: number,
   bHi: number
-): boolean => Math.max(aLo, bLo) < Math.min(aHi, bHi)
+): number => Math.max(0, Math.min(aHi, bHi) - Math.max(aLo, bLo))
+
+/** How much perpendicular-axis overlap a STRAIGHT shot needs to be real rather than a
+ * corner-jammed step. A few px of overlap technically lets a straight line touch both
+ * nodes, but the port lands within a corner and the router draws a 2-corner Z (the
+ * "step") — which must cost MORE than switching one end to a clean 1-corner L. So a
+ * straight only counts as 0 bends once the overlap clears this; below it, a diagonal L
+ * wins. (d55's 20px overlap stays straight; d60's 5px becomes an L.) */
+const MIN_STRAIGHT_OVERLAP_PX = 3 * GRID
+
+const overlapsEnoughForStraight = (
+  vertical: boolean,
+  a: Rect,
+  b: Rect
+): boolean =>
+  (vertical
+    ? rangeOverlapLen(a.y, a.y + a.height, b.y, b.y + b.height)
+    : rangeOverlapLen(a.x, a.x + a.width, b.x, b.x + b.width)) >=
+  MIN_STRAIGHT_OVERLAP_PX
 
 /**
  * The number of CORNERS an edge would take to leave `side` of `rect` toward
@@ -102,20 +120,7 @@ const bendsForSide = (side: Position, rect: Rect, partner: Rect): number => {
   const n = OUTWARD_NORMAL[side]
   const along = n.x * (p.x - c.x) + n.y * (p.y - c.y)
   if (along <= 0) return 3
-  const overlap = isVerticalSide(side)
-    ? rangesOverlap(
-        rect.y,
-        rect.y + rect.height,
-        partner.y,
-        partner.y + partner.height
-      )
-    : rangesOverlap(
-        rect.x,
-        rect.x + rect.width,
-        partner.x,
-        partner.x + partner.width
-      )
-  return overlap ? 0 : 1
+  return overlapsEnoughForStraight(isVerticalSide(side), rect, partner) ? 0 : 1
 }
 
 const SIDES = [Position.Top, Position.Right, Position.Bottom, Position.Left]
@@ -150,12 +155,11 @@ const combinedBends = (
   const alongV = -(nV.x * dx + nV.y * dy) // sV points toward U?
   if (alongU <= 0 && alongV <= 0) return 4
   if (alongU <= 0 || alongV <= 0) return 3
-  if (nU.x === -nV.x && nU.y === -nV.y) {
-    const overlap = isVerticalSide(sU)
-      ? rangesOverlap(U.y, U.y + U.height, V.y, V.y + V.height)
-      : rangesOverlap(U.x, U.x + U.width, V.x, V.x + V.width)
-    return overlap ? 0 : 2
-  }
+  if (nU.x === -nV.x && nU.y === -nV.y)
+    // Opposing sides: a straight shot (0) only when the overlap is enough to seat the
+    // port clear of the corners; a tight overlap draws a 2-corner Z (a "step"), so it
+    // ties the same as an offset pair and loses to a 1-corner perpendicular L.
+    return overlapsEnoughForStraight(isVerticalSide(sU), U, V) ? 0 : 2
   if (nU.x === nV.x && nU.y === nV.y) return 2
   return 1 // perpendicular
 }
@@ -250,6 +254,11 @@ export const assignSides = (
             -(aimU(sU) + aimV(sV)),
             occOthers(e.sourceNodeId, sU, e.targetNodeId) +
               occOthers(e.targetNodeId, sV, e.sourceNodeId),
+            // When an L can bend two ways at equal aim + occupancy (a diagonal pair
+            // whose ideal opposing shot is a tight-overlap step), keep the SOURCE on the
+            // side facing its partner and let the TARGET yield to the perpendicular — the
+            // edge then leaves toward where its partner actually is.
+            -aimU(sU),
             SIDE_ORDER[sU] + SIDE_ORDER[sV],
             SIDE_ORDER[sU],
           ]
@@ -498,7 +507,10 @@ const sharedStraightBand = (
   const pAxis = tangentialX ? partner.width : partner.height
   const overlapLo = Math.max(myLo, pLo)
   const overlapHi = Math.min(myLo + myAxis, pLo + pAxis)
-  if (overlapHi <= overlapLo) return null // no overlap ⇒ no straight shot
+  // Match `bendsForSide`/`combinedBends`: a straight lane needs REAL overlap, not a few
+  // px that would corner-jam into a step. Below the threshold there is no straight lane
+  // (assignSides won't have chosen this side pair anyway).
+  if (overlapHi - overlapLo < MIN_STRAIGHT_OVERLAP_PX) return null
   // Keep the band clear of the corners, but never past the overlap centre: a thin
   // overlap still yields a (single-point) straight lane rather than losing straightness.
   const margin = Math.min(
@@ -627,11 +639,14 @@ export const assignPorts = (
         const byKey = new Map(members.map((e) => [endKey(e.edgeId, e.end), e]))
         const centre = myLo + axis / 2
         const n = ordered.length
-        // A LONE L arm on the whole side is CENTRED: its along-side position does not
-        // change its corner count, so the tiny length saved by aiming at a far-off
-        // partner is not worth the off-centre look (the user's point). Aiming only
-        // earns its keep when it SPREADS several edges sharing the side.
-        const aimBias = group.length > 1 ? AIM_BIAS : 0
+        // Aiming only earns its keep when it ORDERS edges heading to DIFFERENT partners
+        // along the side. When every edge on this side goes to the SAME partner (a lone
+        // arm, or a bundle spread by `laneOffset` below), aiming orders nothing — it just
+        // drags the whole group off centre when the partner sits far to one side. So the
+        // group is CENTRED unless the side actually carries several distinct partners.
+        // An L's along-side position never changes its corner count, so centre is
+        // strictly the better default.
+        const aimBias = byPartner.size > 1 ? AIM_BIAS : 0
         ordered.forEach((m, i) => {
           const e = byKey.get(endKey(m.edgeId, m.end))!
           const aim = tangentialX ? e.partnerCenter.x : e.partnerCenter.y
