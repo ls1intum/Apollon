@@ -454,6 +454,36 @@
    too (App.tsx), so editor chrome still gets it; it references only chrome tokens
    so the rendered control is identical wherever the class is defined. */
 
+/* Opt-in `--toggle` peer: an unqualified `[aria-pressed="true"]` here would paint
+   every future editor chrome toggle, and the home band's pills (components.css)
+   already paint their own on-state. The hover/active peers exist because the base
+   button's own state rules would otherwise overwrite the pressed fill. */
+.apollon-chrome-iconbtn--toggle[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--apollon-chrome-accent) 18%, transparent);
+  color: var(--apollon-chrome-accent);
+}
+
+.apollon-chrome-iconbtn--toggle[aria-pressed="true"]:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--apollon-chrome-accent) 26%, transparent);
+}
+
+.apollon-chrome-iconbtn--toggle[aria-pressed="true"]:active:not(:disabled) {
+  background: color-mix(in srgb, var(--apollon-chrome-accent) 34%, transparent);
+}
+
+/* Forced colours drop the accent fill, which is this toggle's ONLY signal that a
+   mode is armed — repaint it with the system pair so the mode stays visible. The
+   hover/active peers are re-listed because their higher specificity would
+   otherwise restore the (now-invisible) accent fill. */
+@media (forced-colors: active) {
+  .apollon-chrome-iconbtn--toggle[aria-pressed="true"],
+  .apollon-chrome-iconbtn--toggle[aria-pressed="true"]:hover:not(:disabled),
+  .apollon-chrome-iconbtn--toggle[aria-pressed="true"]:active:not(:disabled) {
+    background: Highlight;
+    color: HighlightText;
+  }
+}
+
 /* Expanded minimap = its own glass card (the .react-flow__panel glass rule
    supplies the pane). Drop the panel padding so the map fills the rounded card
    (no fat glass gutter) and clip the svg to the card radius. */

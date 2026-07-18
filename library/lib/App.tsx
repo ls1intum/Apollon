@@ -44,6 +44,7 @@ import {
 import { diagramNodeTypes } from "./nodes"
 import { useDiagramModifiable } from "./hooks/useDiagramModifiable"
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts"
+import { useMultiSelectionMode } from "./hooks/useMultiSelectionMode"
 import { usePaneClicked } from "./hooks/usePaneClicked"
 import {
   useRemoteDraggingNodes,
@@ -144,6 +145,7 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
   const { onBeforeDelete, onNodeDoubleClick, onEdgeDoubleClick } =
     useElementInteractions()
   const { onPaneClicked } = usePaneClicked()
+  const multiSelectionMode = useMultiSelectionMode()
 
   const handleReactFlowInit = useCallback(
     (instance: ReactFlowInstance) => {
@@ -245,13 +247,22 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
             nodesDraggable={isDiagramModifiable}
             panOnScroll={!scrollLock || scrollEnabled}
             zoomOnScroll={!scrollLock || scrollEnabled}
-            // Keep the default left-drag pan (panOnDrag=true) — we do NOT switch
-            // to selectionOnDrag/space-pan. Adding Shift to multiSelectionKeyCode
-            // makes Shift+CLICK on a node/edge toggle it in/out of the
-            // multi-selection. selectionKeyCode keeps its default (Shift), so a
-            // Shift+DRAG on the empty pane still box-selects — no conflict, since
-            // a click on a node and a drag on the pane are different surfaces.
+            // Shift is also selectionKeyCode's default, but there's no conflict:
+            // a click on a node and a Shift+drag on the pane are different
+            // surfaces.
             multiSelectionKeyCode={["Shift", "Meta", "Control"]}
+            // With multiSelectionActive forced on, React Flow's pointerdown
+            // select would toggle the pressed node OUT of the selection and drop
+            // it from the group drag; selecting on click keeps the group whole.
+            selectNodesOnDrag={!multiSelectionMode}
+            // In the mode, a plain left-drag on the pane draws a selection box;
+            // panning moves to middle/right-drag (scroll/trackpad already pans
+            // by default). This is mouse-only by construction: d3-zoom gates the
+            // pan buttons on `mousedown` alone, so a touch drag ignores the [1,2]
+            // gate and keeps panning through the separate touch handler — which
+            // is why a one-finger drag never box-selects and pinch-zoom survives.
+            selectionOnDrag={multiSelectionMode}
+            panOnDrag={multiSelectionMode ? [1, 2] : true}
             // Delete the current selection with either key (Backspace on macOS,
             // Delete on full keyboards).
             deleteKeyCode={["Backspace", "Delete"]}

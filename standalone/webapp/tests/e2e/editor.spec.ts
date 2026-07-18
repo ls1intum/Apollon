@@ -760,7 +760,7 @@ test.describe("Mobile responsive layout", () => {
 
     // The zoom cluster / minimap stay inside the left/right insets.
     const controlsBox = await page
-      .getByRole("toolbar", { name: "Zoom and history controls" })
+      .getByRole("toolbar", { name: "Zoom, history and selection controls" })
       .boundingBox()
     expect(controlsBox?.x).toBeGreaterThanOrEqual(SAFE_INSET)
 
@@ -813,7 +813,7 @@ test.describe("Mobile responsive layout", () => {
     // edge stays above the zoom cluster's top edge.
     const palette = page.getByTestId("apollon-palette")
     const controls = page.getByRole("toolbar", {
-      name: "Zoom and history controls",
+      name: "Zoom, history and selection controls",
     })
     await expect
       .poll(async () => {
