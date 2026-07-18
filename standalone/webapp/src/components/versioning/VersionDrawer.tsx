@@ -106,7 +106,14 @@ export const VersionSidebarBody: FC<Props> = ({
     : versionsQuery.error instanceof ApiError
       ? versionsQuery.error.code
       : "INTERNAL"
-  const createMutation = useCreateVersionMutation(kind, diagramId)
+  const createMutation = useCreateVersionMutation(kind, diagramId, {
+    // Mutation-level, so a panel that unmounts mid-save (the user closes the
+    // rail or sheet) still hands the new headRev to the page's autosaver.
+    onCommitted: (summary) => {
+      lastLocalSaveIdRef.current = summary.id
+      onVersionSaved?.(summary.headRev)
+    },
+  })
   const restoreMutation = useRestoreVersionMutation(kind, diagramId)
   const enterPreview = useVersionStore((s) => s.enterPreview)
   const previewState = useVersionStore((s) => selectScopedPreview(s, diagramId))
@@ -311,17 +318,12 @@ export const VersionSidebarBody: FC<Props> = ({
     const name = description
       ? description.split("\n")[0]!.slice(0, MAX_NAME_LENGTH)
       : ""
-    // Call-site callbacks run before the option-level `onSettled` awaits the
-    // refetch, so `lastLocalSaveIdRef` is set while the fresh row is still
-    // landing — otherwise the baseline effect re-fetches a body we have.
     createMutation.mutate(
       { body: editor.model, name, description: description || undefined },
       {
-        onSuccess: (summary) => {
-          lastLocalSaveIdRef.current = summary.id
-          onVersionSaved?.(summary.headRev)
-          setDraft("")
-        },
+        // Panel-local only — meaningless if this panel is already gone. The
+        // headRev handoff lives on the mutation options above.
+        onSuccess: () => setDraft(""),
         onError: (err) => {
           if (err instanceof ApiError) {
             // BODY_TOO_LARGE is the same code for the server's 5MB limit and

@@ -70,6 +70,42 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
+describe("useCreateVersionMutation — onCommitted", () => {
+  it("fires even when the caller unmounts before the create resolves", async () => {
+    // Closing the version panel unmounts its component mid-save. TanStack
+    // skips `mutate()` call-site callbacks then, so the headRev handoff that
+    // settles the page's autosaver has to live on the mutation options —
+    // otherwise the autosaver keeps saving against a stale revision and every
+    // later save costs a revision-mismatch round-trip.
+    let resolveCreate!: (v: VersionSummary & { headRev: number }) => void
+    const create = vi.fn(
+      () =>
+        new Promise<VersionSummary & { headRev: number }>((resolve) => {
+          resolveCreate = resolve
+        })
+    )
+    const onCommitted = vi.fn()
+    const { wrapper } = setup({ create })
+
+    const { result, unmount } = renderHook(
+      () => useCreateVersionMutation("remote", DIAGRAM_ID, { onCommitted }),
+      { wrapper }
+    )
+
+    result.current.mutate({ body: fakeBody })
+    await waitFor(() => expect(create).toHaveBeenCalledTimes(1))
+
+    unmount()
+    resolveCreate({ ...summary("v-new"), headRev: 7 })
+
+    await waitFor(() => expect(onCommitted).toHaveBeenCalledTimes(1))
+    expect(onCommitted.mock.calls[0]![0]).toMatchObject({
+      id: "v-new",
+      headRev: 7,
+    })
+  })
+})
+
 describe("useEditVersionInfoMutation", () => {
   it("shows the new description before the server confirms it", async () => {
     let resolveEdit!: (v: VersionSummary) => void

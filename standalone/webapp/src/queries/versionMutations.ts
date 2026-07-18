@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "react-toastify"
 import type { UMLModel } from "@tumaet/apollon"
@@ -77,10 +78,28 @@ export interface CreateVersionVariables {
  */
 export function useCreateVersionMutation(
   kind: RepositoryKind,
-  diagramId: string
+  diagramId: string,
+  opts: {
+    /**
+     * Called with the committed version. Lives on the mutation options, not a
+     * `mutate()` call site, because the page uses it to hand the new `headRev`
+     * to the autosaver: call-site callbacks are skipped when the caller
+     * unmounts (closing the panel mid-save), which would leave the autosaver
+     * saving against a stale revision.
+     */
+    onCommitted?: (result: CreateVersionResult) => void
+  } = {}
 ) {
   const queryClient = useQueryClient()
   const repo = getVersionRepository(kind)
+  // Latest-closure ref so a caller can pass a fresh callback each render
+  // without re-creating the mutation. Assigned in an effect (not during
+  // render); the mutation is user-triggered, so it is always current by then,
+  // and the ref outlives the component — which is the point.
+  const onCommittedRef = useRef(opts.onCommitted)
+  useEffect(() => {
+    onCommittedRef.current = opts.onCommitted
+  })
   return useMutation({
     mutationFn: ({ body, name, description }: CreateVersionVariables) =>
       repo.create(diagramId, body, {
@@ -90,6 +109,7 @@ export function useCreateVersionMutation(
       }),
     onSuccess: (result) => {
       notifyEvictions(result)
+      onCommittedRef.current?.(result)
     },
     onSettled: () =>
       queryClient.invalidateQueries({
