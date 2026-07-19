@@ -546,6 +546,55 @@ describe("useKeyboardInset (OverlayLayer)", () => {
       delete window.visualViewport
     }
   })
+
+  // Only the part of the canvas the keyboard actually covers counts. A canvas
+  // running past the fold must reserve nothing extra — and nothing at all when
+  // no keyboard is up, since no `scroll` fires on layout scroll to clear it.
+  it("reserves at most the keyboard height for a canvas past the fold", () => {
+    const listeners: Record<string, Set<() => void>> = {}
+    const vv = {
+      height: 768, // equal to the layout viewport — no keyboard, no pinch-zoom
+      offsetTop: 0,
+      addEventListener: (type: string, cb: () => void) => {
+        ;(listeners[type] ??= new Set()).add(cb)
+      },
+      removeEventListener: (type: string, cb: () => void) => {
+        listeners[type]?.delete(cb)
+      },
+    }
+    const origInner = Object.getOwnPropertyDescriptor(window, "innerHeight")
+    Object.defineProperty(window, "innerHeight", {
+      configurable: true,
+      value: 768,
+    })
+    Object.defineProperty(window, "visualViewport", {
+      configurable: true,
+      value: vv,
+    })
+
+    try {
+      const belowFold = renderLayer(768 + 500)
+      act(() => {
+        listeners.resize?.forEach((cb) => cb())
+      })
+      expect(
+        belowFold.grid.style.getPropertyValue("--apollon-keyboard-inset")
+      ).toBe("0px")
+
+      // A 300px keyboard opens: reserve the keyboard, not the 500px overhang.
+      act(() => {
+        vv.height = 468
+        listeners.resize?.forEach((cb) => cb())
+      })
+      expect(
+        belowFold.grid.style.getPropertyValue("--apollon-keyboard-inset")
+      ).toBe("300px")
+    } finally {
+      if (origInner) Object.defineProperty(window, "innerHeight", origInner)
+      // @ts-expect-error clear the stubbed property (jsdom has none by default)
+      delete window.visualViewport
+    }
+  })
 })
 
 // `<Apollon.SelectionToolbar>` composes a selection-anchored toolbar. Like the

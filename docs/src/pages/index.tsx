@@ -115,6 +115,11 @@ function Hero() {
         <div className={styles.install}>
           <CodeBlock language="bash">npm install @tumaet/apollon</CodeBlock>
         </div>
+        <p className={styles.heroMeta}>
+          Open source (MIT), built at the Technical University of Munich — the
+          Angular editor in <Link href="https://artemis.tum.de">Artemis</Link>{" "}
+          runs on <code>@tumaet/apollon</code>.
+        </p>
       </div>
     </header>
   )
@@ -225,10 +230,9 @@ const WAYS: LinkCard[] = [
     title: "Embed it",
     body: (
       <>
-        <code>@tumaet/apollon</code> on npm. One build, every framework:{" "}
-        <code>react</code>, <code>react-dom</code>, <code>@xyflow/react</code>,{" "}
-        <code>yjs</code>, and <code>y-protocols</code> are required peers the
-        host shares with the editor.
+        One <code>@tumaet/apollon</code> package on npm, mounted in React,
+        Angular, or plain JavaScript. Your app shares a handful of peer
+        dependencies with the editor — the embedding guide lists them.
       </>
     ),
     to: "/library/",

@@ -32,14 +32,19 @@
 
 /* Border-color safety net (Tailwind v4 ships no Preflight border reset, so bare
    `border`/`border-t`/`border-b` utilities inherit `currentColor` = foreground →
-   near-black dividers in light, pure-white in dark). Default every border to the
-   design token so dividers stay subtle and theme-following. Scoped under @layer
-   base so any explicit border-color utility (which Tailwind emits in the
-   `utilities` layer) still wins. */
+   near-black dividers in light, pure-white in dark). Defaults our own borders to
+   the design token where it is defined — the webapp, which loads `theme.css`;
+   in the published bundle the token is absent, so this resolves to `currentColor`
+   and the rule is inert. Scoped under @layer base so any explicit border-color
+   utility (which Tailwind emits in the `utilities` layer) still wins. Scoped to
+   our `[data-slot]` primitives like the box-sizing floor below — an unscoped `*`
+   shipped in `style.css` and repainted every embedding page's form controls.
+   Don't re-widen it. */
 @layer base {
-  *,
-  ::before,
-  ::after {
+  [data-slot],
+  [data-slot] *,
+  [data-slot] ::before,
+  [data-slot] ::after {
     border-color: var(--color-border);
   }
 

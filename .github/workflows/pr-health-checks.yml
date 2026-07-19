@@ -37,6 +37,7 @@ jobs:
           filters: |
             code:
               - 'library/**'
+              - 'packages/**'
               - 'standalone/**'
               - 'vscode-extension/**'
               - 'docs/**'
@@ -51,6 +52,9 @@ jobs:
               - '.github/actions/**'
             library:
               - 'library/**'
+              # api-extractor bundles @tumaet/ui into the published library, so
+              # a design-system change ships to consumers as a library change.
+              - 'packages/**'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
               - '.github/workflows/pr-health-checks.yml'
