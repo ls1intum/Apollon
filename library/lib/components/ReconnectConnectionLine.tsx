@@ -23,6 +23,7 @@ import {
   adjustTargetCoordinates,
   getDefaultEdgeType,
   getEdgeMarkerStyles,
+  getSideHandleIdForPosition,
   preserveOrthogonalEdgePoints,
   routeOrthogonalPath,
 } from "@/utils/edgeUtils"
@@ -98,6 +99,7 @@ export const ReconnectConnectionLine = ({
   connectionLineStyle,
   connectionLineType,
   fromNode,
+  fromHandle,
   fromX,
   fromY,
   toX,
@@ -216,12 +218,23 @@ export const ReconnectConnectionLine = ({
   const pinnedTargetAnchor = newConnection.targetId
     ? newConnection.targetAnchor
     : null
+  // The handles the commit will assign (source: the one the drag started on; target:
+  // the side the drop resolved to). Straight-hook edge types — use-case, syntax-tree,
+  // Petri-net — resolve their endpoints through `getEdgePosition`, which reads these
+  // handles, so the preview must carry them or its line attaches at a different point
+  // than the committed edge.
+  const previewSourceHandle = fromHandle?.id ?? undefined
+  const previewTargetHandle = newConnection.targetId
+    ? getSideHandleIdForPosition(newConnection.toPosition)
+    : undefined
   const pendingEdge = useMemo<Edge | null>(() => {
     if (!isNewConnection || !fromNodeId || !newConnection.targetId) return null
     return {
       id: pendingEdgeId,
       source: fromNodeId,
       target: newConnection.targetId,
+      sourceHandle: previewSourceHandle,
+      targetHandle: previewTargetHandle,
       type: previewEdgeType,
       data: pinnedTargetAnchor
         ? { points: [], targetAnchor: pinnedTargetAnchor }
@@ -231,6 +244,8 @@ export const ReconnectConnectionLine = ({
     isNewConnection,
     fromNodeId,
     newConnection.targetId,
+    previewSourceHandle,
+    previewTargetHandle,
     pinnedTargetAnchor,
     previewEdgeType,
     pendingEdgeId,

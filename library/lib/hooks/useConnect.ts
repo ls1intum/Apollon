@@ -202,7 +202,11 @@ export const useConnect = () => {
 
       const newEdge: Edge = {
         ...connection,
-        id: generateUUID(),
+        // Reuse the id minted for the live preview (see onConnectStart) so a native
+        // handle-drop commits into the SAME fan lane it previewed in — sibling lanes
+        // are settled by edge id, so a fresh id here would re-lane parallel
+        // connections on release. Falls back to a new id if the gesture had none.
+        id: pendingConnectionId.current ?? generateUUID(),
         type: defaultEdgeType,
         selected: false,
       }
