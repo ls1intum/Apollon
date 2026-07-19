@@ -140,6 +140,31 @@ describe("obstacle-aware routing", () => {
     expect(route.length).toBeGreaterThanOrEqual(2)
   })
 
+  it("re-indexes when a node's type changes but its geometry does not", () => {
+    // The per-frame node index is cached on a fingerprint of what it reads. That
+    // fingerprint must cover type, not only geometry: a container is SOFT and a leaf
+    // is SOLID, so a mid node flipping type without moving must not keep the stale
+    // softness — else an edge routes through a now-solid node it should avoid.
+    const soft = getEdgeObstacles(
+      [node("a", 0, 0), node("b", 500, 0), node("mid", 200, -100, "bpmnPool")],
+      "a",
+      "b",
+      source,
+      { x: 500, y: 30 }
+    ).find((o) => o.id === "mid")
+    expect(soft?.soft).toBe(true)
+
+    const solid = getEdgeObstacles(
+      // Same id, position and size — ONLY the type differs.
+      [node("a", 0, 0), node("b", 500, 0), node("mid", 200, -100, "class")],
+      "a",
+      "b",
+      source,
+      { x: 500, y: 30 }
+    ).find((o) => o.id === "mid")
+    expect(solid?.soft).toBe(false)
+  })
+
   it("excludes a node sitting on top of an endpoint", () => {
     // Unsolvable otherwise — and an unsolvable route is one that churns.
     const nodes = [

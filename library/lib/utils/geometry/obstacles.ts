@@ -101,9 +101,24 @@ export const getContainerBorderPolylines = (
 type NodeEntry = { body: ObstacleRect; ancestors: Set<string> }
 type NodeIndex = { byId: Map<string, Node>; entries: Map<string, NodeEntry> }
 
-/** Cheap digest of everything `indexNodes` reads: the node set, and each node's
- * position, measured size and hidden/parent state. Arithmetic only — no allocation —
- * because this runs once per edge. */
+/** Fold a string into a running 32-bit hash — used for the identity fields below.
+ * Arithmetic only, no allocation. */
+const foldString = (h: number, s: string | undefined): number => {
+  let acc = h
+  if (s) {
+    for (let i = 0; i < s.length; i++) {
+      acc = (Math.imul(acc, 31) + s.charCodeAt(i)) | 0
+    }
+  }
+  return (Math.imul(acc, 31) + 1) | 0 // mark the field boundary (undefined vs "")
+}
+
+/** Cheap digest of EVERYTHING `indexNodes` reads: the node set, and each node's id,
+ * type, parent, position, measured size and hidden state. Identity (id/type/parentId)
+ * is folded in as well as geometry — the index's `byId`, its `soft` flag (from type)
+ * and its absolute positions + ancestors (from parentId) all depend on those, so a
+ * model switch, a reparent or a type change with unchanged geometry must still miss the
+ * cache. Arithmetic only — no allocation — because this runs once per edge. */
 const geometryFingerprint = (nodes: readonly Node[]): number => {
   let h = nodes.length
   for (const node of nodes) {
@@ -116,6 +131,9 @@ const geometryFingerprint = (nodes: readonly Node[]): number => {
         (height ?? 0) * 19 +
         (node.hidden ? 1 : 0)) |
       0
+    h = foldString(h, node.id)
+    h = foldString(h, node.type)
+    h = foldString(h, node.parentId)
   }
   return h
 }
