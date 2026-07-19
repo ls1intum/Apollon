@@ -257,31 +257,29 @@ function isSibling(self: Edge, other: Edge): boolean {
 }
 
 /**
- * A grid bucketing each already-routed edge's polyline VERTICES by cell, so an
- * edge finds its nearby neighbours without scanning every routed edge (the walk
- * is ascending-id, so a full scan is O(edges) per edge → O(edges²) per frame).
- * The cell only has to be a spatial hint: the caller re-checks each candidate
- * against the exact box, so the result is identical to a full scan.
+ * A grid bucketing each already-routed edge's polyline by cell, so an edge finds
+ * its nearby neighbours without scanning every routed edge (the walk is
+ * ascending-id, so a full scan is O(edges) per edge → O(edges²) per frame). The
+ * cell only has to be a spatial hint: the caller re-checks each candidate against
+ * the exact box, so the result is identical to a full scan.
+ *
+ * Every cell a SEGMENT passes through is bucketed, not just its vertices — a long
+ * run (say a 2000px edge) can cross a query box with both endpoints several cells
+ * away, so vertex-only bucketing would hide it from an edge that must not draw over
+ * it.
  */
 type NeighborGrid = Map<string, string[]>
 const NEIGHBOR_CELL_PX = 256
 const cellKey = (cx: number, cy: number): string => `${cx},${cy}`
 
-/** Bucket `edgeId` under every cell its polyline has a vertex in. */
+/** Bucket `edgeId` under every cell its polyline's segments pass through. */
 function indexRoutePolyline(
   grid: NeighborGrid,
   edgeId: string,
   polyline: readonly IPoint[]
 ): void {
-  let lastKey: string | null = null
-  for (const p of polyline) {
-    const key = cellKey(
-      Math.floor(p.x / NEIGHBOR_CELL_PX),
-      Math.floor(p.y / NEIGHBOR_CELL_PX)
-    )
-    // Consecutive vertices usually share a cell; the query dedups the rest.
-    if (key === lastKey) continue
-    lastKey = key
+  const addToCell = (cx: number, cy: number): void => {
+    const key = cellKey(cx, cy)
     const bucket = grid.get(key)
     if (bucket) {
       if (bucket[bucket.length - 1] !== edgeId) bucket.push(edgeId)
@@ -289,6 +287,52 @@ function indexRoutePolyline(
       grid.set(key, [edgeId])
     }
   }
+  const cellOf = (v: number): number => Math.floor(v / NEIGHBOR_CELL_PX)
+
+  if (polyline.length === 1) {
+    addToCell(cellOf(polyline[0].x), cellOf(polyline[0].y))
+    return
+  }
+  for (let i = 0; i < polyline.length - 1; i++) {
+    const a = polyline[i]
+    const b = polyline[i + 1]
+    // Routes are orthogonal, so one axis is constant and this fills a single row or
+    // column of cells; a stray diagonal would fill its bounding block — over-inclusive
+    // but safe, since the exact segment-vs-box test in the query drops the extras.
+    const cxLo = Math.min(cellOf(a.x), cellOf(b.x))
+    const cxHi = Math.max(cellOf(a.x), cellOf(b.x))
+    const cyLo = Math.min(cellOf(a.y), cellOf(b.y))
+    const cyHi = Math.max(cellOf(a.y), cellOf(b.y))
+    for (let cx = cxLo; cx <= cxHi; cx++) {
+      for (let cy = cyLo; cy <= cyHi; cy++) addToCell(cx, cy)
+    }
+  }
+}
+
+/** Whether any segment of an orthogonal polyline intersects the axis-aligned box.
+ * A segment's bounding box equals the segment itself (it is axis-aligned), so an
+ * AABB overlap is an exact crossing test here. Exported for the neighbour-detection
+ * regression test (a long segment must be found even with both ends outside the box). */
+export function polylineIntersectsBox(
+  polyline: readonly IPoint[],
+  minX: number,
+  maxX: number,
+  minY: number,
+  maxY: number
+): boolean {
+  for (let i = 0; i < polyline.length - 1; i++) {
+    const a = polyline[i]
+    const b = polyline[i + 1]
+    if (
+      Math.min(a.x, b.x) <= maxX &&
+      Math.max(a.x, b.x) >= minX &&
+      Math.min(a.y, b.y) <= maxY &&
+      Math.max(a.y, b.y) >= minY
+    ) {
+      return true
+    }
+  }
+  return false
 }
 
 /** Gather the polylines this edge must not be drawn on top of — lower-id
@@ -313,11 +357,10 @@ function collectNeighbors(
   const minY = Math.min(sy, ty) - pad
   const maxY = Math.max(sy, ty) + pad
 
-  // Candidate lower-id edges: those with a VERTEX in a cell overlapping the box. The
-  // grid indexes vertices, so a long segment crossing the box with both ends outside is
-  // not caught — but the box is padded by 6 stubs, several cells, and edges are
-  // orthogonal, so a segment reaching across it has a vertex within that pad. The
-  // precise test below drops the cell's out-of-box extras.
+  // Candidate lower-id edges: those with a segment in a cell overlapping the box.
+  // indexRoutePolyline buckets every cell a segment crosses, so a long run spanning
+  // the box is caught even with both endpoints far outside it. The exact
+  // segment-vs-box test below drops the cell's out-of-box extras.
   const candidateIds = new Set<string>()
   const cx0 = Math.floor(minX / NEIGHBOR_CELL_PX)
   const cx1 = Math.floor(maxX / NEIGHBOR_CELL_PX)
@@ -340,10 +383,9 @@ function collectNeighbors(
     if (!polyline || polyline.length < 2) continue
     const other = edgeById.get(otherId)
     if (other && isSibling(edge, other)) continue
-    const inRange = polyline.some(
-      (p) => p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY
-    )
-    if (inRange) neighbors.push(polyline)
+    if (polylineIntersectsBox(polyline, minX, maxX, minY, maxY)) {
+      neighbors.push(polyline)
+    }
   }
   neighbors.push(...borders)
   return neighbors
@@ -435,27 +477,36 @@ const serializeNeighbors = (neighborEdges: readonly IPoint[][]): string => {
 }
 
 /**
- * The ROUTE key for an auto edge with fixed anchors: the obstacles plus only the
- * neighbour segments the route can actually reach (`neighborsWithinReach`, the
- * router's own corridor). A neighbour bending OUTSIDE this edge's corridor cannot
- * change its route, so it must not invalidate the key — that is what keeps a
- * one-node drag from cascading a re-route across the whole graph. Computed from
- * the CHOSEN-anchor endpoints, so the corridor matches the route the router runs.
+ * The ROUTE key for an auto edge with fixed anchors: the CHOSEN-anchor endpoints
+ * (with their marker-padding-adjusted coordinates and exit positions), the
+ * obstacles, plus only the neighbour segments the route can actually reach
+ * (`neighborsWithinReach`, the router's own corridor). A neighbour bending OUTSIDE
+ * this edge's corridor cannot change its route, so it must not invalidate the key —
+ * that is what keeps a one-node drag from cascading a re-route across the whole
+ * graph. The endpoints are keyed explicitly (not left implicit in the corridor)
+ * because a padding-only change — e.g. a component edge switching between the
+ * provided and required interface sockets — moves the adjusted endpoint without
+ * necessarily touching any reachable neighbour, and would otherwise reuse a stale
+ * polyline that no longer reaches the socket.
  */
 const routeInputSignature = (
   endpoints: ResolvedEdgeEndpoints,
   obstacles: readonly ObstacleRect[],
   neighborEdges: readonly IPoint[][]
 ): string => {
+  const e = endpoints
   const reach = neighborsWithinReach(
-    endpoints.adjustedSource,
-    [endpoints.adjustedTarget],
+    e.adjustedSource,
+    [e.adjustedTarget],
     obstacles,
     neighborEdges
   )
   let n = "R"
   for (const s of reach) n += `;${s.x1},${s.y1},${s.x2},${s.y2}`
-  return `${serializeObstacles(obstacles)}|${n}`
+  const ends =
+    `${e.adjustedSource.x},${e.adjustedSource.y},${e.adjustedTarget.x},${e.adjustedTarget.y}` +
+    `|${e.sourcePosition},${e.targetPosition},${e.padding}`
+  return `${ends}|${serializeObstacles(obstacles)}|${n}`
 }
 
 /** The router's input for one resolved endpoint pair. Shared by the fixed-edge

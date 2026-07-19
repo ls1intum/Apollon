@@ -6,7 +6,10 @@ import {
   type InternalNode,
   type Node,
 } from "@xyflow/react"
-import { computeAllEdgeGeometry } from "@/utils/geometry/edgeGeometrySolver"
+import {
+  computeAllEdgeGeometry,
+  polylineIntersectsBox,
+} from "@/utils/geometry/edgeGeometrySolver"
 import {
   STRAIGHT_HOOK_EDGE_TYPES,
   STRAIGHT_PATH_STEP_EDGE_TYPES,
@@ -1202,5 +1205,51 @@ describe("cross-peer determinism", () => {
     for (let trial = 0; trial < 30; trial++) {
       expect(canonical(solve(shuffled(nodes), shuffled(edges)))).toBe(expected)
     }
+  })
+})
+
+describe("polylineIntersectsBox — neighbour segment detection", () => {
+  const box = { minX: 300, maxX: 400, minY: 480, maxY: 520 }
+  const hit = (pl: { x: number; y: number }[]) =>
+    polylineIntersectsBox(pl, box.minX, box.maxX, box.minY, box.maxY)
+
+  it("finds a long segment that spans the box with BOTH ends far outside it", () => {
+    // The bug this guards: a 2000px horizontal run crossing the query box, its two
+    // vertices several cells away on either side. Vertex-only detection missed it, so
+    // a later edge could be drawn straight over it. The segment test must catch it.
+    expect(
+      hit([
+        { x: 0, y: 500 },
+        { x: 2000, y: 500 },
+      ])
+    ).toBe(true)
+    // Same for a vertical run.
+    expect(
+      hit([
+        { x: 350, y: -1000 },
+        { x: 350, y: 1000 },
+      ])
+    ).toBe(true)
+  })
+
+  it("finds a spanning segment in the MIDDLE of a longer polyline", () => {
+    expect(
+      hit([
+        { x: 0, y: 0 },
+        { x: 0, y: 500 },
+        { x: 2000, y: 500 }, // this middle run crosses the box
+        { x: 2000, y: 0 },
+      ])
+    ).toBe(true)
+  })
+
+  it("rejects a polyline that stays entirely outside the box", () => {
+    expect(
+      hit([
+        { x: 0, y: 0 },
+        { x: 2000, y: 0 }, // well above the box
+        { x: 2000, y: 100 },
+      ])
+    ).toBe(false)
   })
 })
