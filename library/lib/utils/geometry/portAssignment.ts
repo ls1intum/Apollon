@@ -43,6 +43,12 @@ const MAX_PORT_GAP_PX = 8 * GRID
  * makes the first segment graze the node it just left. */
 const CORNER_CLEARANCE_PX = 2 * GRID
 
+/** How many corners an open-space crossing is worth when side assignment weighs the two
+ * against each other — the cited aesthetic/cost order is crossing ≻ bend at ≈ 3× (bend
+ * 100, crossing 300 on the published weights). So a side is allowed up to this many extra
+ * corners to keep from cutting across an edge already placed. */
+const CROSSING_BEND_EQUIV = 3
+
 /**
  * The number of CORNERS an edge would take to leave `side` of `rect` toward
  * `partner` — the obstacle-free bend count from Wybrow et al. (GD'09), reduced to
@@ -122,17 +128,116 @@ const sideMidpoint = (side: Position, rect: Rect): IPoint => {
   }
 }
 
+/** Whether the axis-aligned segment a→b passes through the INTERIOR of `r` (a small
+ * inset so merely grazing a border does not count). */
+const segCutsRect = (a: IPoint, b: IPoint, r: Rect): boolean => {
+  const lo = { x: r.x + 1, y: r.y + 1 }
+  const hi = { x: r.x + r.width - 1, y: r.y + r.height - 1 }
+  return (
+    Math.min(a.x, b.x) < hi.x &&
+    Math.max(a.x, b.x) > lo.x &&
+    Math.min(a.y, b.y) < hi.y &&
+    Math.max(a.y, b.y) > lo.y
+  )
+}
+
+export const routeCutsAny = (
+  route: readonly IPoint[],
+  rects: readonly Rect[]
+): number => {
+  let n = 0
+  for (const r of rects)
+    for (let i = 0; i < route.length - 1; i++)
+      if (segCutsRect(route[i], route[i + 1], r)) {
+        n++
+        break
+      }
+  return n
+}
+
+/**
+ * Pick the connecting-lane coordinate for a Z/U route. `anchor` is the tightest feasible
+ * value (the nearer stub coordinate); `dir` is the sign the lane may move away from it
+ * (−1 the lane may only DECREASE, +1 only INCREASE, 0 it is pinned BETWEEN the two stubs).
+ * Among the anchor and the far edge of every obstacle the lane can slide onto, pick the
+ * route with the fewest node hits, nearest the anchor — the shape the real router dodges
+ * to, instead of a naive line straight through a node. Falls back to the anchor.
+ */
+const pickLane = (
+  anchor: number,
+  betweenOther: number,
+  dir: -1 | 0 | 1,
+  edgeOf: (r: Rect) => [number, number],
+  makeRoute: (lane: number) => IPoint[],
+  rects: readonly Rect[]
+): number => {
+  const feasible = (c: number): boolean =>
+    dir === 0
+      ? c >= Math.min(anchor, betweenOther) &&
+        c <= Math.max(anchor, betweenOther)
+      : dir > 0
+        ? c >= anchor
+        : c <= anchor
+  const cands = new Set<number>([anchor])
+  if (dir === 0) cands.add((anchor + betweenOther) / 2)
+  for (const r of rects)
+    for (const e of edgeOf(r)) if (feasible(e)) cands.add(e)
+  let best = anchor
+  let bestHits = Infinity
+  let bestDist = Infinity
+  for (const c of [...cands].sort((p, q) => p - q)) {
+    const hits = routeCutsAny(makeRoute(c), rects)
+    const dist = Math.abs(c - anchor)
+    if (hits < bestHits || (hits === bestHits && dist < bestDist)) {
+      best = c
+      bestHits = hits
+      bestDist = dist
+    }
+  }
+  return best
+}
+
+/** For a Z/U route on a given axis, the lane's tightest feasible value and the direction
+ * it may slide, from the two ends' side normals (component along the lane's axis). */
+const laneConstraint = (
+  nU: number,
+  nV: number,
+  aCoord: number,
+  bCoord: number
+): { anchor: number; other: number; dir: -1 | 0 | 1 } => {
+  // nU/nV are the two outward-normal components on the lane's axis: −1 leaves toward
+  // smaller coords, +1 toward larger. Same sign ⇒ the lane runs OUTWARD past both
+  // (a U); opposite signs ⇒ it sits BETWEEN them (a Z).
+  if (nU < 0 && nV < 0)
+    return {
+      anchor: Math.min(aCoord, bCoord),
+      other: Math.max(aCoord, bCoord),
+      dir: -1,
+    }
+  if (nU > 0 && nV > 0)
+    return {
+      anchor: Math.max(aCoord, bCoord),
+      other: Math.min(aCoord, bCoord),
+      dir: 1,
+    }
+  return { anchor: aCoord, other: bCoord, dir: 0 }
+}
+
 /**
  * The APPROXIMATE orthogonal polyline a side pair would produce, drawn between the two
- * side midpoints. Used only to compare candidates against each other for CROSSINGS at
- * side-assignment time — positions are not chosen yet, so this is deliberately the
- * shape, not the final route.
+ * side midpoints and — crucially — DODGING the obstacle nodes the same way the real
+ * router will. Used to compare candidates for node-crossings and edge-crossings at
+ * side-assignment time; positions are not chosen yet, so this is the shape, not the
+ * final route. A Z route's connecting lane is slid into the gap beside a blocking node so
+ * the estimate no longer condemns a clean side just because its naive straight line
+ * happened to clip a node in the middle.
  */
-const approxRoute = (
+export const approxRoute = (
   sU: Position,
   sV: Position,
   U: Rect,
-  V: Rect
+  V: Rect,
+  obstacles: readonly Rect[] = []
 ): IPoint[] => {
   const a = sideMidpoint(sU, U)
   const b = sideMidpoint(sV, V)
@@ -142,14 +247,41 @@ const approxRoute = (
     // Perpendicular: one corner, on the axis each end leaves along.
     return uVert ? [a, { x: b.x, y: a.y }, b] : [a, { x: a.x, y: b.y }, b]
   if (uVert) {
-    // Both horizontal-leaving: straight when the ys match, else a Z through the middle.
+    // Both horizontal-leaving: straight when the ys match, else a vertical connecting
+    // lane (Z between them, or U past both) slid to dodge obstacles.
     if (a.y === b.y) return [a, b]
-    const midX = (a.x + b.x) / 2
-    return [a, { x: midX, y: a.y }, { x: midX, y: b.y }, b]
+    const { anchor, other, dir } = laneConstraint(
+      OUTWARD_NORMAL[sU].x,
+      OUTWARD_NORMAL[sV].x,
+      a.x,
+      b.x
+    )
+    const laneX = pickLane(
+      anchor,
+      other,
+      dir,
+      (r) => [r.x - CORNER_CLEARANCE_PX, r.x + r.width + CORNER_CLEARANCE_PX],
+      (x) => [a, { x, y: a.y }, { x, y: b.y }, b],
+      obstacles
+    )
+    return [a, { x: laneX, y: a.y }, { x: laneX, y: b.y }, b]
   }
   if (a.x === b.x) return [a, b]
-  const midY = (a.y + b.y) / 2
-  return [a, { x: a.x, y: midY }, { x: b.x, y: midY }, b]
+  const { anchor, other, dir } = laneConstraint(
+    OUTWARD_NORMAL[sU].y,
+    OUTWARD_NORMAL[sV].y,
+    a.y,
+    b.y
+  )
+  const laneY = pickLane(
+    anchor,
+    other,
+    dir,
+    (r) => [r.y - CORNER_CLEARANCE_PX, r.y + r.height + CORNER_CLEARANCE_PX],
+    (y) => [a, { x: a.x, y }, { x: b.x, y }, b],
+    obstacles
+  )
+  return [a, { x: a.x, y: laneY }, { x: b.x, y: laneY }, b]
 }
 
 /** Crossings between two orthogonal polylines — an exact integer H×V test (no float
@@ -290,26 +422,36 @@ export const assignSides = (
     const aimV = (s: Position): number =>
       Math.abs(OUTWARD_NORMAL[s].x * -dx + OUTWARD_NORMAL[s].y * -dy)
 
+    // Third nodes this edge must route around — everything but its own two ends. The
+    // approx route dodges these, so the key's node/edge-crossing counts reflect the route
+    // the real router draws, not a naive straight line clipped by a node in the middle.
+    const obstacles: Rect[] = []
+    for (const [id, r] of nodeRects)
+      if (id !== e.sourceNodeId && id !== e.targetNodeId) obstacles.push(r)
+
     if (e.sourceBand && e.targetBand) {
       let best: { sU: Position; sV: Position } | null = null
       let bestKey: number[] | null = null
       for (const sU of ALL_SIDES)
         for (const sV of ALL_SIDES) {
-          const route = approxRoute(sU, sV, U, V)
+          const route = approxRoute(sU, sV, U, V, obstacles)
           const key = [
-            // A route driven through another node is the worst thing side assignment
-            // can choose — far worse than a bend — so it leads the key.
+            // A route driven through another node is the worst thing side assignment can
+            // choose — far worse than a bend — so it leads the key. Counted on the DODGED
+            // route, so a side is only condemned when the node is genuinely unavoidable.
             nodesCrossed(e, route),
-            combinedBends(sU, sV, U, V),
-            // Raw-direction alignment DOMINATES: keep an edge on the side its partner
-            // actually lies toward (so two same-direction edges bundle). Occupancy only
-            // breaks a genuine aim TIE — e.g. a diagonal L reachable two ways equally,
-            // where the pair avoiding a side a DIFFERENT-partner edge already took wins.
+            // Corners AND crossings share one budget: a crossing costs CROSSING_BEND_EQUIV
+            // bends (the cited order crossing ≻ bend, ≈ 3× on published weights), so a
+            // crossing-free route wins over one that saves a corner by cutting across an
+            // edge already placed — the d59/d74/d75 defect where the cheaper-looking side
+            // tangled a neighbour. This budget outranks aim: an untangled picture beats
+            // keeping an edge on its most-facing side.
+            combinedBends(sU, sV, U, V) +
+              CROSSING_BEND_EQUIV * crossingsAgainstPlaced(route),
+            // Raw-direction alignment: keep an edge on the side its partner lies toward so
+            // two same-direction edges bundle. Breaks ties left by the corner/crossing
+            // budget.
             -(aimU(sU) + aimV(sV)),
-            // Among equally-aimed pairs, prefer one that does NOT cross an edge already
-            // assigned. This outranks occupancy: an emptier side is worth less than an
-            // untangled picture (d59 chose the free side and crossed its neighbour).
-            crossingsAgainstPlaced(route),
             occOthers(e.sourceNodeId, sU, e.targetNodeId) +
               occOthers(e.targetNodeId, sV, e.sourceNodeId),
             // When an L can bend two ways at equal aim + occupancy (a diagonal pair
@@ -330,7 +472,7 @@ export const assignSides = (
 
       occAdd(e.sourceNodeId, best!.sU, e.targetNodeId)
       occAdd(e.targetNodeId, best!.sV, e.sourceNodeId)
-      placed.push(approxRoute(best!.sU, best!.sV, U, V))
+      placed.push(approxRoute(best!.sU, best!.sV, U, V, obstacles))
     } else if (e.sourceBand || e.targetBand) {
       // One band end: pick its side to minimise the best achievable corners over the
       // other (cost-path) end, with the same occupancy + aim tie-break.

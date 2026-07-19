@@ -3,6 +3,8 @@ import { Position, type Rect } from "@xyflow/react"
 import {
   orderSideMembers,
   crossingOrderKey,
+  approxRoute,
+  routeCutsAny,
   assignPorts,
   endKey,
   type SideMember,
@@ -80,6 +82,31 @@ describe("orderSideMembers — the nesting rule", () => {
     )
     expect(reversed).toEqual(forward)
     expect(forward).toEqual(["e0", "e1", "e2", "e3"]) // top→bottom
+  })
+})
+
+describe("approxRoute — the side-assignment estimate dodges blocking nodes", () => {
+  it("slides a Z/U connecting lane over a node the naive line would cut", () => {
+    const U = rect(0, 200, 100, 60)
+    const V = rect(400, 200, 100, 60)
+    const blocker = rect(180, 180, 140, 100) // sits between U and V
+
+    // Both leave the TOP, so the connecting lane can go UP and over the blocker.
+    const dodged = approxRoute(Position.Top, Position.Top, U, V, [blocker])
+    expect(routeCutsAny(dodged, [blocker])).toBe(0)
+
+    // Without the obstacle the lane stays at the near stub — the straight run between
+    // the two tops, which WOULD have cut the blocker (proving the dodge did the work).
+    const naive = approxRoute(Position.Top, Position.Top, U, V)
+    expect(routeCutsAny(naive, [blocker])).toBeGreaterThan(0)
+  })
+
+  it("leaves a route unchanged when nothing is in the way", () => {
+    const U = rect(0, 0, 100, 60)
+    const V = rect(400, 0, 100, 60)
+    expect(
+      routeCutsAny(approxRoute(Position.Right, Position.Left, U, V, []), [])
+    ).toBe(0)
   })
 })
 

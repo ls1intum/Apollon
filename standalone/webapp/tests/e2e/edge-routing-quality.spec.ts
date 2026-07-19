@@ -330,6 +330,22 @@ const CASES: {
     maxStraightBroken: 0,
     maxOffMax: 0.55,
   },
+  // 74/75: a cross-edge must route AROUND a straight "wall" edge in the middle — side
+  // assignment now dodges the blocking node and prices the crossing, so 0 crossings.
+  {
+    file: "routing-case-74.json",
+    maxCorners: 5,
+    maxCrossings: 0,
+    maxStraightBroken: 0,
+    maxOffMax: 0.55,
+  },
+  {
+    file: "routing-case-75.json",
+    maxCorners: 4,
+    maxCrossings: 0,
+    maxStraightBroken: 0,
+    maxOffMax: 0.55,
+  },
 ]
 for (const c of CASES) {
   test(`routing quality: ${c.file}`, async ({ page }) => {
