@@ -1,0 +1,182 @@
+{
+  "id": "973d9b32-3217-49c6-847c-2303f8187841",
+  "version": "4.1.0",
+  "title": "",
+  "type": "ClassDiagram",
+  "nodes": [
+    {
+      "id": "97607cde-c4ce-45bf-ba1c-6a4bd60a5e63",
+      "width": 160,
+      "height": 100,
+      "type": "class",
+      "position": {
+        "x": 950,
+        "y": 530
+      },
+      "data": {
+        "name": "Class",
+        "methods": [
+          {
+            "id": "63c0e290-b8e5-4f18-b612-dac3f49b7b50",
+            "name": "+ method()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "f52b4177-7b68-4acb-86ae-1d7961fae745",
+            "name": "+ attribute: Type"
+          }
+        ]
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "c2237d89-83e2-430d-a001-c2e23a478c52",
+      "width": 160,
+      "height": 100,
+      "type": "class",
+      "position": {
+        "x": 585,
+        "y": 485
+      },
+      "data": {
+        "name": "Class",
+        "methods": [
+          {
+            "id": "d72a3de2-c5ab-46ef-b241-5766920acba5",
+            "name": "+ method()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "35d0eb17-fc09-4cde-a0f9-f5408acbdb58",
+            "name": "+ attribute: Type"
+          }
+        ]
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "259b217a-a10d-407c-9b0c-07a6d137b3fe",
+      "width": 160,
+      "height": 100,
+      "type": "class",
+      "position": {
+        "x": 300,
+        "y": 625
+      },
+      "data": {
+        "name": "Class",
+        "methods": [
+          {
+            "id": "fe6e2936-0486-4772-9dbb-73050713f11e",
+            "name": "+ method()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "5e13a18b-9f05-476c-85fa-db12ebe43d42",
+            "name": "+ attribute: Type"
+          }
+        ]
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "2915736f-3a55-4100-8719-038bcefb5052",
+      "width": 160,
+      "height": 100,
+      "type": "class",
+      "position": {
+        "x": 945,
+        "y": 345
+      },
+      "data": {
+        "name": "Class",
+        "methods": [
+          {
+            "id": "3e9be2ae-9db5-4a6a-a976-e8b3bf864305",
+            "name": "+ method()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "bc3b4e69-1fd2-4be7-892a-b286432085e0",
+            "name": "+ attribute: Type"
+          }
+        ]
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "c8e05897-1949-452c-87d3-fb39b4c6895c",
+      "source": "2915736f-3a55-4100-8719-038bcefb5052",
+      "target": "259b217a-a10d-407c-9b0c-07a6d137b3fe",
+      "type": "ClassUnidirectional",
+      "sourceHandle": "left",
+      "targetHandle": "right-between-mid-bottom-bottom",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "3bf6d522-9b52-42ca-a033-a3279f8cacca",
+      "source": "97607cde-c4ce-45bf-ba1c-6a4bd60a5e63",
+      "target": "259b217a-a10d-407c-9b0c-07a6d137b3fe",
+      "type": "ClassUnidirectional",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "fc45f434-c547-41fe-b9c5-f1a6f0a6af90",
+      "source": "97607cde-c4ce-45bf-ba1c-6a4bd60a5e63",
+      "target": "c2237d89-83e2-430d-a001-c2e23a478c52",
+      "type": "ClassUnidirectional",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "9e6863da-a9ae-4db2-b60a-24046476edd6",
+      "source": "2915736f-3a55-4100-8719-038bcefb5052",
+      "target": "c2237d89-83e2-430d-a001-c2e23a478c52",
+      "type": "ClassUnidirectional",
+      "sourceHandle": "right",
+      "targetHandle": "bottom-between-mid-right-center",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "45dc6fd1-ae4d-4565-8c45-c312c84df9e5",
+      "source": "2915736f-3a55-4100-8719-038bcefb5052",
+      "target": "97607cde-c4ce-45bf-ba1c-6a4bd60a5e63",
+      "type": "ClassUnidirectional",
+      "sourceHandle": "bottom-right",
+      "targetHandle": "top-mid-right",
+      "data": {
+        "points": []
+      }
+    }
+  ],
+  "assessments": {}
+}

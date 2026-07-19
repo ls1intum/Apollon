@@ -430,6 +430,65 @@ export const alongSideKey = (
   return Y >= 0 ? 2 - f : -2 - f // reflect the behind half past ±1, seam at ±2
 }
 
+/** Reach scale (px) for the depth term below. Only its ORDER matters (the term is
+ * strictly monotone in reach), so any positive constant works; a node-ish scale keeps
+ * the beyond-band edges well separated in float. */
+const REACH_ORDER_SCALE_PX = 300
+
+/**
+ * The NON-CROSSING order of a port along its side — the key the seat pass sorts on.
+ *
+ * Angular order alone (`alongSideKey`) is crossing-minimal only for the fan NEAR the
+ * node; two edges leaving one side whose ORTHOGONAL routes turn far away can still cross
+ * (the nearer-turning one cutting across the farther one's outward run). The order that
+ * actually avoids that depends on whether a port can reach the partner's tangential
+ * position WITHIN the node's own port band:
+ *   - partner tangential inside the band (|T| < halfExtent): the port can sit under it,
+ *     so order by that tangential coordinate — the fan spreads across the side;
+ *   - partner tangential BEYOND the band (a near-side-parallel edge, |T| ≥ halfExtent):
+ *     no port reaches it, so the crossing-free order is by DEPTH — the farther-reaching
+ *     edge takes the port on the OPPOSITE side from where it heads, nesting outside the
+ *     nearer one instead of being cut by it.
+ *
+ * Projected into the side-local frame (X = outward normal, Y = tangential in display
+ * order). Interior partners map to `Y / halfExtent` ∈ (−1, 1); those beyond the +tangent
+ * end to (1, 2] and beyond the −tangent end to [−2, −1), each depth-ordered so the
+ * regions never overlap and the sort stays total. One division, IEEE correctly-rounded.
+ */
+export const crossingOrderKey = (
+  side: Position,
+  dx: number,
+  dy: number,
+  tangentialHalfExtent: number
+): number => {
+  let X: number // outward normal component
+  let Y: number // tangential component, increasing in display order
+  switch (side) {
+    case Position.Top:
+      X = -dy
+      Y = dx
+      break
+    case Position.Bottom:
+      X = dy
+      Y = dx
+      break
+    case Position.Left:
+      X = -dx
+      Y = dy
+      break
+    default: // Right
+      X = dx
+      Y = dy
+      break
+  }
+  const H = Math.max(tangentialHalfExtent, 1)
+  const reach = X > 0 ? X : 0
+  const r = reach / (reach + REACH_ORDER_SCALE_PX) // [0, 1), monotone in reach
+  if (Y >= H) return 2 - r // beyond +tangent end: (1, 2], deeper nests toward 1
+  if (Y <= -H) return -2 + r // beyond −tangent end: [−2, −1), deeper nests toward −1
+  return Y / H // inside the band: (−1, 1), ordered by tangential position
+}
+
 /**
  * Order the members sharing one `(node, side)` by their along-side angular key.
  * Same-partner siblings (identical direction) tie and fall to edge id, a total
@@ -639,19 +698,20 @@ export const assignPorts = (
       end: "source" | "target"
       coord: number
       fixed: boolean
-      /** The angular rotation key of this end's partner direction — the NON-CROSSING
-       * order along the side (libavoid Thm 3). Breaks a desired-coordinate tie, so two
-       * edges wanting the same spot are separated in the order that does not tangle
-       * them, rather than by an arbitrary id. */
+      /** The NON-CROSSING order of this port along the side (see `crossingOrderKey`).
+       * Drives the seat pass so an edge is seated on the side its route leaves from,
+       * and breaks a desired-coordinate tie the same way. */
       rot: number
     }
     const seats: Seat[] = []
+    const tangentialHalfExtent = sideAxisLength(side, rect) / 2
     const rotOf = (e: EndRef): number => {
       const c = centerOf(e.rect)
-      return alongSideKey(
+      return crossingOrderKey(
         side,
         e.partnerCenter.x - c.x,
-        e.partnerCenter.y - c.y
+        e.partnerCenter.y - c.y,
+        tangentialHalfExtent
       )
     }
     const byPartner = new Map<string, EndRef[]>()

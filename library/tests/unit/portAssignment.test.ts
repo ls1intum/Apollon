@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest"
 import { Position, type Rect } from "@xyflow/react"
 import {
   orderSideMembers,
+  crossingOrderKey,
   assignPorts,
   endKey,
   type SideMember,
@@ -79,6 +80,40 @@ describe("orderSideMembers — the nesting rule", () => {
     )
     expect(reversed).toEqual(forward)
     expect(forward).toEqual(["e0", "e1", "e2", "e3"]) // top→bottom
+  })
+})
+
+describe("crossingOrderKey — reach order beyond the band, tangential order inside it", () => {
+  const H = 50 // node half-height → the Right side's tangential band is ±50
+
+  it("orders two near-parallel edges (partners beyond the band) by REACH, farther first", () => {
+    // The d69/d71/d72 case: both partners far past the side's tangential end (same
+    // direction), so no port reaches them and the FARTHER-reaching edge must nest
+    // OUTSIDE the nearer one — it takes the earlier (smaller-key) port — or its early
+    // turn cuts across the nearer one's outward run.
+    const near = crossingOrderKey(Position.Right, 100, 200, H) // reach 100
+    const far = crossingOrderKey(Position.Right, 400, 200, H) // reach 400, beyond band
+    expect(far).toBeLessThan(near) // farther seats first (toward the −tangent end)
+    expect(near).toBeGreaterThan(1) // both beyond the +tangent end
+    expect(far).toBeGreaterThan(1)
+  })
+
+  it("orders partners INSIDE the band by tangential position, not reach", () => {
+    // A fan whose partners fall within the side's own extent: the ports spread across
+    // the side in tangential order, exactly as before — reach must NOT reorder them.
+    const up = crossingOrderKey(Position.Right, 200, -30, H) // within band, higher
+    const down = crossingOrderKey(Position.Right, 200, 30, H) // within band, lower
+    expect(up).toBeLessThan(down) // top→bottom by tangential
+    expect(Math.abs(up)).toBeLessThan(1) // inside the band
+    expect(Math.abs(down)).toBeLessThan(1)
+  })
+
+  it("seats beyond-band partners outside in-band ones (−beyond < inside < +beyond)", () => {
+    const beyondUp = crossingOrderKey(Position.Right, 200, -300, H)
+    const inside = crossingOrderKey(Position.Right, 200, 10, H)
+    const beyondDown = crossingOrderKey(Position.Right, 200, 300, H)
+    expect(beyondUp).toBeLessThan(inside)
+    expect(inside).toBeLessThan(beyondDown)
   })
 })
 

@@ -308,8 +308,29 @@ const CASES: {
     maxStraightBroken: 0,
     maxOffMax: 0.85,
   },
-]
 
+  {
+    file: "routing-case-69.json",
+    maxCorners: 4,
+    maxCrossings: 0,
+    maxStraightBroken: 0,
+    maxOffMax: 0.8,
+  },
+  {
+    file: "routing-case-71.json",
+    maxCorners: 7,
+    maxCrossings: 0,
+    maxStraightBroken: 0,
+    maxOffMax: 0.35,
+  },
+  {
+    file: "routing-case-72.json",
+    maxCorners: 3,
+    maxCrossings: 0,
+    maxStraightBroken: 0,
+    maxOffMax: 0.55,
+  },
+]
 for (const c of CASES) {
   test(`routing quality: ${c.file}`, async ({ page }) => {
     const model = fx(c.file) as Model
