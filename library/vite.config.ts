@@ -76,6 +76,11 @@ const REACT_PEERS = [
   "react/compiler-runtime",
   "react-dom/client",
   "@xyflow/react",
+  // @xyflow/react re-exports @xyflow/system and shares its module state (the
+  // ConnectionMode enum, the coordinate helpers). It is a declared peer, so keep
+  // it external too — a bundled private copy would both bloat the entry and hand
+  // the router a second, non-interoperating system instance.
+  "@xyflow/system",
 ]
 
 // `@tumaet/apollon` declares in `dependencies`, externalized like the peers
