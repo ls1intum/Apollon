@@ -740,15 +740,20 @@ export const assignPorts = (
       })
     })
 
-    // One deterministic min-gap pass over all ports on the side, in coordinate order.
-    // A FIXED seat is a straight lane: its coordinate was derived symmetrically from
-    // both nodes so the edge's two ends agree, and moving it here would move only THIS
-    // end (the other node hosts different neighbours) and bend the edge. So fixed seats
-    // hold and the free seats around them absorb the spacing.
+    // One deterministic min-gap pass over all ports on the side, in NON-CROSSING order
+    // (the `rot` key), not raw coordinate order. Coordinate order alone lets a free L
+    // port whose centred desired spot happens to fall on the far side of a fixed straight
+    // lane sit in the crossing position — e.g. an edge turning UP toward its partner
+    // seated just BELOW a straight lane it then has to cut across. Ordering by `rot`
+    // seats each port on the side its route leaves from; a coordinate tie-break keeps
+    // same-direction ports in their desired spread. A FIXED seat is a straight lane (its
+    // coordinate was derived symmetrically from both nodes so the edge's two ends agree,
+    // and moving it here would bend the edge), so fixed seats hold their position and the
+    // free seats around them absorb the spacing.
     seats.sort(
       (a, b) =>
-        a.coord - b.coord ||
         a.rot - b.rot ||
+        a.coord - b.coord ||
         cmpStr(a.edgeId, b.edgeId) ||
         cmpStr(a.end, b.end)
     )
