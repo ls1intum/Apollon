@@ -14,7 +14,10 @@ import {
   getSideHandleIdForPosition,
   type FreeformEdgeAnchor,
 } from "@/utils"
-import { getEdgeAnchorFromPoint } from "@/utils/connectionModes"
+import {
+  dropAnchorIsAimed,
+  getEdgeAnchorFromPoint,
+} from "@/utils/connectionModes"
 import { HandleId } from "@/nodes/wrappers"
 import { useDiagramStore, useMetadataStore } from "@/store/context"
 import { useFreeformDropTarget } from "./useFreeformDropTarget"
@@ -291,12 +294,16 @@ export const useConnect = () => {
               return
             }
 
-            // Create a FULLY AUTO edge (no pinned target anchor): the auto-anchor
-            // selector picks the best attachment, exactly as the live ghost/pending
-            // preview showed — so the edge lands where it previewed and the
-            // neighbours that made room stay put, instead of snapping to the drop
-            // pixel and jumping. A user who wants a specific spot drags the endpoint
-            // afterward (which writes the custom anchor then).
+            // On a shaped node (oval, parallelogram) PIN the endpoint to the drop
+            // point: the live ghost ends at that point projected onto the node's real
+            // outline, and the committed edge must land there too — an auto anchor
+            // would jump it to a different place on release, the exact preview≠commit
+            // drift this router set out to kill. On a plain rectangle the border
+            // carries no sub-side aim, so keep the auto default and let the solver
+            // route its endpoint cleanly (the user pins later by dragging it). Either
+            // way keep the preview's id so the committed edge stays in the same fan
+            // lane.
+            const pinned = dropAnchorIsAimed(nodeOnTop.type)
             setEdges((eds) =>
               eds.concat({
                 id: pendingConnectionId.current ?? generateUUID(),
@@ -305,7 +312,9 @@ export const useConnect = () => {
                 type: defaultEdgeType,
                 sourceHandle: sourceHandleId,
                 targetHandle,
-                data: { points: [] },
+                data: pinned
+                  ? withEndpointAnchor(undefined, "target", targetAnchor)
+                  : { points: [] },
               })
             )
           }

@@ -59,6 +59,20 @@ export function getConnectionMode(nodeType?: string): ConnectionMode {
   return (nodeType ? MODE_OVERRIDES[nodeType] : undefined) ?? "freeform-rect"
 }
 
+/**
+ * Whether a NEW connection dropped on this node should PIN its endpoint to the drop
+ * point rather than auto-anchor it. True only for the continuous non-rectangular
+ * outlines — the oval and the parallelogram — where the exact drop lands on a visible
+ * curve/edge that the live ghost's snap circle marks, so an auto anchor would jump the
+ * endpoint to a different place on release (the preview≠commit drift). Plain rectangles
+ * and four-point nodes carry no sub-side aim, so they keep the auto default: the solver
+ * slides their endpoint for the cleanest route and the user pins later by dragging it.
+ */
+export function dropAnchorIsAimed(nodeType?: string): boolean {
+  const mode = getConnectionMode(nodeType)
+  return mode === "ellipse" || mode === "parallelogram"
+}
+
 /** Distance from a point to a rectangle (0 when the point is inside it). */
 export function distanceToRect(point: XYPosition, rect: Rect): number {
   const dx = Math.max(rect.x - point.x, 0, point.x - (rect.x + rect.width))

@@ -28,6 +28,7 @@ import {
 } from "@/utils/edgeUtils"
 import type { ObstacleRect } from "@/utils/geometry/obstacles"
 import {
+  dropAnchorIsAimed,
   getConnectionMode,
   getEdgeAnchorFromPoint,
   getEdgeAnchorPoint,
@@ -197,16 +198,24 @@ export const ReconnectConnectionLine = ({
       to: snapped ? snapped.point : pointer,
       toPosition: snapped ? snapped.position : toPosition,
       targetId: snapped?.id,
+      // Only shaped nodes pin their drop point (see dropAnchorIsAimed); a plain
+      // rectangle target stays auto, so the preview matches the auto commit.
+      targetAnchor: hit && dropAnchorIsAimed(hit.type) ? anchor : null,
       snapPoint: snapped?.showSnapCircle ? snapped.point : null,
       visible: draggedFar || snapped !== null,
     }
   }, [resolveDropTarget, fromNodeId, fromX, fromY, toX, toY, toPosition])
 
   // A new connection is only PREVIEWED as a solver edge when it is drawn onto a
-  // real target (reconnects already have their own live override). Fully auto (no
-  // pinned anchor) to match the auto commit. Memoised on source+target so hovering
-  // WITHIN one node does not thrash the solver.
+  // real target (reconnects already have their own live override). On a shaped node
+  // it carries the SAME drop anchor the commit will pin, so the ghost's endpoint
+  // equals the committed one; on a plain rectangle both stay auto. Either way the
+  // preview matches the commit. Memoised on source+target+anchor so hovering WITHIN
+  // one node does not thrash the solver.
   const isNewConnection = !previewEdge || !reconnectPreviewHandleType
+  const pinnedTargetAnchor = newConnection.targetId
+    ? newConnection.targetAnchor
+    : null
   const pendingEdge = useMemo<Edge | null>(() => {
     if (!isNewConnection || !fromNodeId || !newConnection.targetId) return null
     return {
@@ -214,12 +223,15 @@ export const ReconnectConnectionLine = ({
       source: fromNodeId,
       target: newConnection.targetId,
       type: previewEdgeType,
-      data: { points: [] },
+      data: pinnedTargetAnchor
+        ? { points: [], targetAnchor: pinnedTargetAnchor }
+        : { points: [] },
     }
   }, [
     isNewConnection,
     fromNodeId,
     newConnection.targetId,
+    pinnedTargetAnchor,
     previewEdgeType,
     pendingEdgeId,
   ])
