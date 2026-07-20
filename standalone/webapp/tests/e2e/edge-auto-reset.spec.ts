@@ -48,7 +48,7 @@ test("a pinned-anchor edge exposes the reset button and highlights both anchored
   await selectEdgeOnPath(page, id)
 
   const edge = page.locator(`.react-flow__edge[data-id="${id}"]`)
-  // Both ends are pinned, so both grips render filled ("anchored").
+  // Both ends are pinned, so both grips carry the pinned marker (a filled centre dot).
   await expect(edge.locator(".edge-endpoint-grip--pinned")).toHaveCount(2)
 
   const resetButton = page.getByRole("button", { name: "Reset routing" })

@@ -293,8 +293,8 @@ export const EdgeEndpointMarkers = ({
   // this end's terminal bend handle instead of painting over it.
   bendHandles?: BendHandle[]
   // Whether each end is USER-PINNED (a custom anchor) rather than auto-anchored.
-  // A pinned grip is drawn filled when the edge is selected, so the user can see
-  // at a glance which ends the router still owns and which they have fixed.
+  // A pinned grip gets a filled centre dot when the edge is selected, so the user
+  // can see at a glance which ends the router still owns and which they have fixed.
   sourcePinned?: boolean
   targetPinned?: boolean
 }) => {
@@ -467,6 +467,27 @@ export const EdgeEndpointMarkers = ({
             transform={`rotate(${targetGrip.rotationDeg} ${targetGrip.centerX} ${targetGrip.centerY})`}
             pointerEvents="none"
           />
+          {/* A USER-PINNED end keeps the white "handle" look (so it never merges with a
+              solid bend handle it may overlap) and marks itself with a filled centre dot
+              — "you fixed this end" — rather than a solid fill. */}
+          {sourcePinned && (
+            <circle
+              className="edge-endpoint-grip-dot"
+              cx={sourceGrip.centerX}
+              cy={sourceGrip.centerY}
+              r={FREEFORM_ENDPOINT_GRIP_RADIUS * screenScale}
+              pointerEvents="none"
+            />
+          )}
+          {targetPinned && (
+            <circle
+              className="edge-endpoint-grip-dot"
+              cx={targetGrip.centerX}
+              cy={targetGrip.centerY}
+              r={FREEFORM_ENDPOINT_GRIP_RADIUS * screenScale}
+              pointerEvents="none"
+            />
+          )}
         </>
       )}
       <rect

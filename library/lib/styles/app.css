@@ -922,6 +922,9 @@
   fill: var(--apollon-background, #fff);
   stroke: var(--apollon-primary, #3e8acc);
   stroke-width: 2px;
+  /* Paint the stroke UNDER the fill so it reads as a clean outer ring, and keep it
+     always visible against a bend handle it may overlap (the grip is drawn on top). */
+  paint-order: stroke;
   transition:
     fill 120ms ease,
     opacity 120ms ease,
@@ -960,13 +963,20 @@
   );
 }
 
-/* A USER-PINNED end (custom anchor) reads as a SOLID grip when the edge is
-   selected — a filled dot that says "you fixed this end"; the hollow grips are
-   still owned by the auto router. Only meaningful while selected, so it rides the
-   same `.selected` gate as the grip's own visibility. */
-.react-flow__edge.selected .edge-endpoint-grip--pinned {
+/* A USER-PINNED end (custom anchor) keeps the same white "handle" look as an
+   auto grip — so it never disappears into a solid bend handle it overlaps — and
+   is marked instead by a filled centre dot ("you fixed this end"). The dot rides
+   the same hover/selected visibility gate as the grip. */
+.edge-endpoint-grip-dot {
+  opacity: 0;
   fill: var(--apollon-primary, #3e8acc);
-  stroke: var(--apollon-primary, #3e8acc);
+  stroke: none;
+  transition: opacity 120ms ease;
+  vector-effect: non-scaling-stroke;
+}
+.react-flow__edge:hover .edge-endpoint-grip-dot,
+.react-flow__edge.selected .edge-endpoint-grip-dot {
+  opacity: 1;
 }
 
 .react-flow__edge:hover .edge-bend-handle:hover,
