@@ -59,29 +59,40 @@ describe("bend handle utilities", () => {
     expect(handles[0].position).toEqual({ x: 100, y: 0 })
   })
 
-  it("keeps inner + lone-segment handles at any length, but withholds a bend handle from a too-short TERMINAL segment", () => {
-    // A lone single segment (2-point edge) always gets a handle, however short:
-    // its bend jogs BETWEEN the two ports, so it is not a pinned stub. The
-    // renderer shrinks the handle to fit; availability is not a function of length.
+  it("withholds a SHORT lone segment's handle so the two endpoints own it, keeps a LONG one's", () => {
+    // A lone single segment (2-point edge) carries an endpoint at BOTH ends — reconnect
+    // and reposition, the primary interactions. On a short edge a centred bend handle
+    // would starve them (the reconnect targets, drawn on top, cap against it), so the
+    // endpoints win and the handle is withheld. A long lone segment has room for both.
     const shortLone = [
       { x: 0, y: 0 },
       { x: 12, y: 0 },
     ]
     expect(
       getBendableSegments(shortLone, EDGES.BEND_HANDLE_SAFE_AREA_PX)
-    ).toHaveLength(1)
+    ).toHaveLength(0)
 
-    // A default-length stub as a lone segment, the case that was impossible before.
+    // A default-length stub (30px) as a lone segment: still too short to seat a handle
+    // clear of both endpoints, so it is withheld too.
     const stub = [
       { x: 0, y: 0 },
       { x: EDGES.STUB_LENGTH, y: 0 },
     ]
-    const [stubHandle] = getBendableSegments(
-      stub,
+    expect(
+      getBendableSegments(stub, EDGES.BEND_HANDLE_SAFE_AREA_PX)
+    ).toHaveLength(0)
+
+    // A long lone segment keeps its handle in the clear middle between the two endpoints.
+    const longLone = [
+      { x: 0, y: 0 },
+      { x: 120, y: 0 },
+    ]
+    const [longHandle] = getBendableSegments(
+      longLone,
       EDGES.BEND_HANDLE_SAFE_AREA_PX
     )
-    expect(stubHandle).toBeDefined()
-    expect(stubHandle.position).toEqual({ x: EDGES.STUB_LENGTH / 2, y: 0 })
+    expect(longHandle).toBeDefined()
+    expect(longHandle.position).toEqual({ x: 60, y: 0 })
 
     // Multi-bend route with SHORT terminal segments (10px source stub, 12px target
     // stub): both terminals are pinned to a port and cannot bend cleanly at that
@@ -169,18 +180,23 @@ describe("bend handle utilities", () => {
     const safeArea = EDGES.BEND_HANDLE_SAFE_AREA_PX
 
     const [roomy] = getBendableSegments(points, safeArea)
-    // One segment is both terminals, so it gives up the safe area at both ends.
+    // One segment is both terminals, so it gives up the safe area at both ends, and the
+    // reported room is what is left BETWEEN the two endpoint reserves.
     expect(roomy.bendableLength).toBe(200 - 2 * safeArea)
 
-    // A segment with no room to spare reports its own length instead of a
-    // negative one, and the handle sits at its plain midpoint.
-    const tight = [
+    // An INNER segment reserves nothing for endpoints (its ends are corners, not
+    // endpoints), so it reports its own full length and sits at its midpoint.
+    const withInner = [
       { x: 0, y: 0 },
-      { x: 20, y: 0 },
+      { x: 0, y: 100 }, // long source terminal
+      { x: 40, y: 100 }, // 40px inner segment
+      { x: 40, y: 200 }, // long target terminal
     ]
-    const [cramped] = getBendableSegments(tight, safeArea)
-    expect(cramped.bendableLength).toBe(20)
-    expect(cramped.position).toEqual({ x: 10, y: 0 })
+    const inner = getBendableSegments(withInner, safeArea).find(
+      (h) => h.kind === "inner"
+    )
+    expect(inner?.bendableLength).toBe(40)
+    expect(inner?.position).toEqual({ x: 20, y: 100 })
   })
 
   it("keeps a handle past the node safe area when the segment has room for it", () => {

@@ -143,12 +143,21 @@ export function getBendableSegments(
     const bendRegion = rawLength - reserveStart - reserveEnd
 
     // Gated on the segment's FULL length — what the jog math operates on — not the
-    // reserved bend region. A lone segment is not a pinned stub (it jogs between the
-    // two ports), so it keeps its handle at any length.
+    // reserved bend region.
     const kind = getSegmentKind(i, collapsed.length)
     const isTerminal = kind !== "inner"
     const isLoneSegment = lastSegment === 0
     if (isTerminal && !isLoneSegment && rawLength < terminalBendFloorPx()) {
+      continue
+    }
+    // A LONE segment has an endpoint at BOTH ends, each of which owns its half for
+    // reconnecting and repositioning — the primary edge interactions, present on every
+    // edge. A centred bend handle between them starves both to nothing on a short edge
+    // (the reconnect targets, drawn on top, cap against it). So the endpoints win: the
+    // lone handle is withheld unless the region left BETWEEN the two endpoint reserves is
+    // big enough for a usable, non-overlapping handle. A longer lone edge keeps its
+    // handle in the clear middle; a short one is fully owned by its two grips.
+    if (isLoneSegment && bendRegion < EDGES.BEND_HANDLE_MIN_SCREEN_LENGTH_PX) {
       continue
     }
 
