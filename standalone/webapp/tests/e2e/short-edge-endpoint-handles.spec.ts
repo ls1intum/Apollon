@@ -84,7 +84,6 @@ test("a short pinned S-jog edge keeps usable endpoint grips and still shows its 
     }
     return {
       bendHandles: document.querySelectorAll(".edge-bend-handle").length,
-      pinnedDots: document.querySelectorAll(".edge-endpoint-grip-dot").length,
       sg: m(".edge-endpoint-grip--source"),
       tg: m(".edge-endpoint-grip--target"),
       gripFill: fillOf(".edge-endpoint-grip--source"),
@@ -98,8 +97,7 @@ test("a short pinned S-jog edge keeps usable endpoint grips and still shows its 
     expect(Math.max(grip!.w, grip!.h)).toBeGreaterThanOrEqual(10)
   }
   expect(info.bendHandles).toBeGreaterThan(0)
-  // The pinned grips read as WHITE-with-outline handles marked by a centre dot — NOT a
-  // solid blue fill that would merge into the (solid blue) bend handle they overlap.
-  expect(info.pinnedDots).toBe(2)
+  // The grips read as WHITE-with-outline handles — a fill distinct from the (solid blue)
+  // bend handle they overlap, so a pinned end never merges into it.
   expect(info.gripFill).not.toBe(info.bendFill)
 })

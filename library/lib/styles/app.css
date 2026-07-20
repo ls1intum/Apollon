@@ -963,21 +963,10 @@
   );
 }
 
-/* A USER-PINNED end (custom anchor) keeps the same white "handle" look as an
-   auto grip — so it never disappears into a solid bend handle it overlaps — and
-   is marked instead by a filled centre dot ("you fixed this end"). The dot rides
-   the same hover/selected visibility gate as the grip. */
-.edge-endpoint-grip-dot {
-  opacity: 0;
-  fill: var(--apollon-primary, #3e8acc);
-  stroke: none;
-  transition: opacity 120ms ease;
-  vector-effect: non-scaling-stroke;
-}
-.react-flow__edge:hover .edge-endpoint-grip-dot,
-.react-flow__edge.selected .edge-endpoint-grip-dot {
-  opacity: 1;
-}
+/* A USER-PINNED end (custom anchor) keeps the same clean white "handle" look as an
+   auto grip — a hollow pill with a blue outline — so it never disappears into a solid
+   bend handle it overlaps. The pinned state is surfaced through the reset affordance in
+   the edge toolbar rather than by restyling the grip. */
 
 .react-flow__edge:hover .edge-bend-handle:hover,
 .react-flow__edge.selected .edge-bend-handle:hover {
