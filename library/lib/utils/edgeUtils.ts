@@ -3004,6 +3004,27 @@ const getDegenerateRoute = (
   targetPoint: IPoint
 ): IPoint[] => [{ ...sourcePoint }, { ...targetPoint }]
 
+/**
+ * A point where the path REVERSES on itself along one axis — the two segments meeting
+ * there are collinear but point in opposite directions (a spike/fold). This is what a
+ * squeezed loop leaves once an arm is dragged flat onto its neighbour: dragging the
+ * PINNED terminal arm cannot merge into that neighbour cleanly (its port is fixed), so
+ * it folds and leaves a residual jog no simplify pass removes. A fold is never a shape
+ * worth keeping, so its presence marks a "collapse this loop" gesture.
+ */
+const hasAxisFold = (points: IPoint[]): boolean => {
+  for (let i = 1; i < points.length - 1; i++) {
+    const a = points[i - 1]
+    const b = points[i]
+    const c = points[i + 1]
+    const collinear =
+      (a.x === b.x && b.x === c.x) || (a.y === b.y && b.y === c.y)
+    const reverses = (b.x - a.x) * (c.x - b.x) + (b.y - a.y) * (c.y - b.y) < 0
+    if (collinear && reverses) return true
+  }
+  return false
+}
+
 export function normalizeOrthogonalEdgePoints(
   points: IPoint[],
   sourcePoint: IPoint,
@@ -3014,6 +3035,25 @@ export function normalizeOrthogonalEdgePoints(
 ): IPoint[] {
   if (isDegenerateRoute(sourcePoint, targetPoint)) {
     return getDegenerateRoute(sourcePoint, targetPoint)
+  }
+
+  // A fold means an arm was squeezed flat onto its neighbour (the loop collapsed). A
+  // pinned terminal arm folds rather than merging cleanly, leaving a jog that survives
+  // simplify — so hand the collapsed edge back to the router for the clean direct route,
+  // exactly as squeezing the inner arm already produces. Done here (not only at release)
+  // so the geometry re-projection that runs after a drag cannot re-introduce the jog.
+  if (hasAxisFold(points)) {
+    return sanitizeReleasedPoints(
+      routeOrthogonalPath(
+        sourcePoint,
+        targetPoint,
+        sourcePosition,
+        targetPosition,
+        obstacles
+      ),
+      sourcePoint,
+      targetPoint
+    )
   }
 
   const hasStubCollision = stubsWouldOverlap(

@@ -1580,6 +1580,60 @@ describe("preserveOrthogonalEdgePoints", () => {
     })
   })
 
+  // Dragging a PINNED terminal arm flat onto its neighbour folds the path back on
+  // itself (a spike). No simplify pass removes the residual jog, so normalize hands the
+  // collapsed edge to the router for the clean direct route — the same result squeezing
+  // the free inner arm already produces. Done in normalize (not just at release) so the
+  // post-drag geometry re-projection cannot re-introduce the jog.
+  describe("collapses a folded (squeezed-flat) route to the clean direct path", () => {
+    const S = { x: 565, y: 335 }
+    const T = { x: 645, y: 410 }
+
+    it("routes a folded terminal squeeze straight instead of keeping the jog", () => {
+      // The terminal down-run folded onto the source arm at x=615: 615,335 → up to 140 →
+      // back down to 380 reverses on itself.
+      const folded = [
+        { x: 565, y: 335 },
+        { x: 615, y: 335 },
+        { x: 615, y: 140 },
+        { x: 615, y: 380 },
+        { x: 645, y: 380 },
+        { x: 645, y: 410 },
+      ]
+      const result = normalizeOrthogonalEdgePoints(
+        folded,
+        S,
+        T,
+        Position.Right,
+        Position.Top
+      )
+      expect(result).toEqual([
+        { x: 565, y: 335 },
+        { x: 645, y: 335 },
+        { x: 645, y: 410 },
+      ])
+      expectOrthogonalSegments(result)
+    })
+
+    it("leaves an ordinary jog (no fold) untouched", () => {
+      // A genuine S-jog that never reverses on itself is preserved, not flattened.
+      const jog = [
+        { x: 0, y: 0 },
+        { x: 40, y: 0 },
+        { x: 40, y: 60 },
+        { x: 100, y: 60 },
+      ]
+      const result = normalizeOrthogonalEdgePoints(
+        jog,
+        { x: 0, y: 0 },
+        { x: 100, y: 60 },
+        Position.Right,
+        Position.Left
+      )
+      expect(result).toEqual(jog)
+    })
+  })
+
   it("detects mirrored horizontal and vertical stub collisions", () => {
     expect(
       stubsWouldOverlap(
