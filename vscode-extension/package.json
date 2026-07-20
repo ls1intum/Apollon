@@ -4,7 +4,7 @@
   "description": "Embeddable UML modeling editor for VS Code. Create, edit, and export UML diagrams (class, component, activity, BPMN, and more) directly inside your editor.",
   "publisher": "aet-tum",
   "license": "MIT",
-  "version": "5.1.1",
+  "version": "5.2.0",
   "icon": "media/icon.png",
   "engines": {
     "vscode": "^1.86.0"
