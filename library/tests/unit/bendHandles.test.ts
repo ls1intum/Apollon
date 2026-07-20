@@ -59,30 +59,28 @@ describe("bend handle utilities", () => {
     expect(handles[0].position).toEqual({ x: 100, y: 0 })
   })
 
-  it("withholds a SHORT lone segment's handle so the two endpoints own it, keeps a LONG one's", () => {
-    // A lone single segment (2-point edge) carries an endpoint at BOTH ends — reconnect
-    // and reposition, the primary interactions. On a short edge a centred bend handle
-    // would starve them (the reconnect targets, drawn on top, cap against it), so the
-    // endpoints win and the handle is withheld. A long lone segment has room for both.
+  it("gives a lone segment a handle at any length; the endpoint grips are sized separately", () => {
+    // A lone single segment (2-point edge) ALWAYS gets a bend handle — it bends cleanly at
+    // any length. Handles are never traded away for endpoint room: the endpoint grips are
+    // sized independently (GenericEdge floors them), so a short edge shows BOTH grips and
+    // the bend handle rather than one at the cost of the other.
     const shortLone = [
       { x: 0, y: 0 },
       { x: 12, y: 0 },
     ]
     expect(
       getBendableSegments(shortLone, EDGES.BEND_HANDLE_SAFE_AREA_PX)
-    ).toHaveLength(0)
+    ).toHaveLength(1)
 
-    // A default-length stub (30px) as a lone segment: still too short to seat a handle
-    // clear of both endpoints, so it is withheld too.
     const stub = [
       { x: 0, y: 0 },
       { x: EDGES.STUB_LENGTH, y: 0 },
     ]
     expect(
       getBendableSegments(stub, EDGES.BEND_HANDLE_SAFE_AREA_PX)
-    ).toHaveLength(0)
+    ).toHaveLength(1)
 
-    // A long lone segment keeps its handle in the clear middle between the two endpoints.
+    // A long lone segment centres its handle between the two endpoints.
     const longLone = [
       { x: 0, y: 0 },
       { x: 120, y: 0 },
@@ -94,79 +92,63 @@ describe("bend handle utilities", () => {
     expect(longHandle).toBeDefined()
     expect(longHandle.position).toEqual({ x: 60, y: 0 })
 
-    // Multi-bend route with SHORT terminal segments (10px source stub, 12px target
-    // stub): both terminals — AND the 8px inner segment tucked against the source — sit
-    // inside an endpoint's reserve, so they are withheld and the endpoints own those
-    // runs. Only the long middle inner segment, clear of both ends, keeps a handle.
+    // Inner segments always get a handle regardless of length; only terminal stubs are
+    // gated (below). Here the 8px inner keeps its handle alongside the long inner.
     const shortTerminals = [
       { x: 0, y: 0 },
-      { x: 10, y: 0 },
-      { x: 10, y: 8 },
-      { x: 300, y: 8 },
-      { x: 300, y: 20 },
-    ]
-    const shortHandles = getBendableSegments(
-      shortTerminals,
-      EDGES.BEND_HANDLE_SAFE_AREA_PX
-    )
-    expect(shortHandles.map((h) => h.kind)).toEqual(["inner"])
-
-    // The SAME route with LONG terminal segments (60px each) keeps all four handles:
-    // a terminal long enough to bend without cramping its stub is bendable.
-    const longTerminals = [
-      { x: 0, y: 0 },
-      { x: 60, y: 0 },
-      { x: 60, y: 8 },
-      { x: 300, y: 8 },
-      { x: 300, y: 80 },
+      { x: 10, y: 0 }, // 10px source terminal — below the jog floor, withheld
+      { x: 10, y: 8 }, // 8px inner — kept
+      { x: 300, y: 8 }, // long inner — kept
+      { x: 300, y: 20 }, // 12px target terminal — below the jog floor, withheld
     ]
     expect(
-      getBendableSegments(longTerminals, EDGES.BEND_HANDLE_SAFE_AREA_PX).map(
+      getBendableSegments(shortTerminals, EDGES.BEND_HANDLE_SAFE_AREA_PX).map(
         (h) => h.kind
       )
-    ).toEqual(["source-terminal", "inner", "inner", "target-terminal"])
+    ).toEqual(["inner", "inner"])
   })
 
-  it("withholds a bend handle inside an endpoint's reserve so the grip is never starved", () => {
+  it("gates a terminal handle at the jog floor: kept at the floor, withheld below it", () => {
     const safeArea = EDGES.BEND_HANDLE_SAFE_AREA_PX
-    const reserve = EDGES.ENDPOINT_HANDLE_RESERVE_PX
-    // A SHORT terminal (30px) puts its handle ~15px from the endpoint — inside the
-    // reserve — where it starves that endpoint's grip. The endpoint owns the stub
-    // instead; the two LONG middle segments keep their handles, clear of both ends.
-    const shortTargetStub = [
-      { x: 440, y: -265 },
-      { x: 440, y: -405 }, // seg0 V 140px → source-terminal (handle ~45px from source)
-      { x: 495, y: -405 }, // seg1 H 55px  → inner
-      { x: 495, y: -345 }, // seg2 V 60px  → inner
-      { x: 525, y: -345 }, // seg3 H 30px  → target-terminal, ~15px in → withheld
-    ]
-    expect(
-      getBendableSegments(shortTargetStub, safeArea).map((h) => h.kind)
-    ).toEqual(["source-terminal", "inner", "inner"])
-
-    // A terminal LONG enough to seat its handle clear of the reserve keeps it: a 140px
-    // source stub's handle sits well past the reserve from the source.
-    const longStubs = [
+    // A terminal stub only carries a bend handle when it is long enough to bend into a
+    // non-degenerate S-jog (MIN_STUB_LENGTH + armFloor). This is a geometry limit, not a
+    // space trade-off with the endpoints. AT the floor (20px) the handle is kept.
+    const atFloor = [
       { x: 0, y: 0 },
-      { x: 140, y: 0 }, // 140px source terminal — handle clear of the reserve
-      { x: 140, y: 200 }, // long inner
-      { x: 340, y: 200 }, // 200px target terminal — handle clear of the reserve
+      { x: 20, y: 0 }, // 20px source terminal — bends cleanly
+      { x: 20, y: 200 }, // long inner
+      { x: 300, y: 200 }, // 280px target terminal
     ]
-    const kept = getBendableSegments(longStubs, safeArea)
-    expect(kept.map((h) => h.kind)).toEqual([
+    expect(getBendableSegments(atFloor, safeArea).map((h) => h.kind)).toEqual([
       "source-terminal",
       "inner",
       "target-terminal",
     ])
-    // Every kept handle sits at least `reserve` along this monotonic edge from either end
-    // (Manhattan distance from the source corner equals path distance here).
-    const total = 140 + 200 + 200
-    for (const h of kept) {
-      const fromSource = h.position.x + h.position.y
-      expect(Math.min(fromSource, total - fromSource)).toBeGreaterThanOrEqual(
-        reserve
-      )
-    }
+
+    // BELOW the floor (15px) the stub degenerates — the drag would snap the edge straight
+    // — so only that terminal's handle is withheld.
+    const belowFloor = [
+      { x: 0, y: 0 },
+      { x: 15, y: 0 },
+      { x: 15, y: 200 },
+      { x: 300, y: 200 },
+    ]
+    expect(
+      getBendableSegments(belowFloor, safeArea).map((h) => h.kind)
+    ).toEqual(["inner", "target-terminal"])
+
+    // A default 30px terminal stub is well past the floor — kept (it used to be wrongly
+    // withheld for "endpoint room"; endpoints no longer need it).
+    const defaultStub = [
+      { x: 440, y: -265 },
+      { x: 440, y: -405 }, // 140px source terminal
+      { x: 495, y: -405 }, // 55px inner
+      { x: 495, y: -345 }, // 60px inner
+      { x: 525, y: -345 }, // 30px target terminal — kept
+    ]
+    expect(
+      getBendableSegments(defaultStub, safeArea).map((h) => h.kind)
+    ).toEqual(["source-terminal", "inner", "inner", "target-terminal"])
   })
 
   it("reports the room each handle has, so the renderer can size it", () => {

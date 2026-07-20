@@ -221,10 +221,9 @@ test.describe("Fresh-edge first bend — drawn edge", () => {
     const edge = await drawStraightEdge(page)
     const seen: string[] = []
     // The first drag bends the (horizontal) straight edge via its centre handle. Each
-    // FURTHER drag RESHAPES the bend by pulling the top HORIZONTAL segment (a vertical
-    // drag on it moves the lane); we grab a horizontal handle rather than `.first()`,
-    // which after bending is a vertical stub handle a vertical drag cannot move. The
-    // short terminal stubs no longer expose a handle at all — the endpoints own them.
+    // FURTHER drag RESHAPES the bend by pulling a HORIZONTAL segment (a vertical drag on
+    // it moves the lane); we grab a horizontal handle rather than `.first()`, which after
+    // bending may be a vertical stub handle a vertical drag cannot move.
     await dragFirstHandle(page, edge, -40)
     seen.push(JSON.stringify(await persistedPoints(page)))
     for (const dy of [-30, -50]) {

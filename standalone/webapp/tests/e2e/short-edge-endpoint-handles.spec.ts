@@ -5,10 +5,12 @@ import { fileURLToPath } from "node:url"
 import { waitForCanvasReady, openFixtureInLocalEditor } from "../helpers/canvas"
 
 /**
- * On a SHORT straight edge the endpoint grips — the visible handles you drag to
- * reposition an end or reconnect it to another node — must stay a usable size. They used
- * to be starved to 0-4px by a centred bend handle that owns the middle; the bend handle
- * now yields on a short lone segment so the two endpoints own the run.
+ * On a SHORT edge the endpoint grips — the visible handles you drag to reposition an end
+ * or reconnect it to another node — must stay a usable size. They used to be starved to
+ * 0-4px because their size was capped against a nearby bend handle. The grip is now sized
+ * independently (it is pointer-events:none, so it may cosmetically overlap a handle) and
+ * floored at a visible minimum, so BOTH the grips AND the bend handle stay present — no
+ * handle is traded away for another.
  */
 const __d = path.dirname(fileURLToPath(import.meta.url))
 const fx = JSON.parse(
@@ -18,7 +20,7 @@ const fx = JSON.parse(
   )
 )
 
-test("a short straight edge keeps usable endpoint grips (not starved by a bend handle)", async ({
+test("a short straight edge keeps usable endpoint grips alongside its bend handle", async ({
   page,
 }) => {
   await openFixtureInLocalEditor(page, fx)
@@ -54,7 +56,7 @@ test("a short straight edge keeps usable endpoint grips (not starved by a bend h
   }
 })
 
-test("a short pinned S-jog edge also keeps usable endpoint grips (no bend handle crowds them)", async ({
+test("a short pinned S-jog edge keeps usable endpoint grips and still shows its bend handles", async ({
   page,
 }) => {
   const fx = JSON.parse(
@@ -82,9 +84,11 @@ test("a short pinned S-jog edge also keeps usable endpoint grips (no bend handle
       tg: m(".edge-endpoint-grip--target"),
     }
   })
-  // No bend handle crowds this short edge; both grips are visible and usable (was 0px).
+  // Both grips are visible and usable (was 0px) AND the bend handles are still present —
+  // nothing is omitted on this short edge.
   for (const grip of [info.sg, info.tg]) {
     expect(grip).not.toBeNull()
     expect(Math.max(grip!.w, grip!.h)).toBeGreaterThanOrEqual(10)
   }
+  expect(info.bendHandles).toBeGreaterThan(0)
 })

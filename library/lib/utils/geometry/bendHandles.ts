@@ -125,36 +125,28 @@ export function getBendableSegments(
   if (collapsed.length < 2) return []
 
   const lastSegment = collapsed.length - 2
-  // Total routed length and the running distance to each segment's start, so a handle can
-  // be measured by how far ALONG THE EDGE it sits from either endpoint.
-  const segLen = (a: IPoint, b: IPoint) =>
-    Math.abs(b.x - a.x) + Math.abs(b.y - a.y)
-  let totalLength = 0
-  for (let i = 0; i <= lastSegment; i++)
-    totalLength += segLen(collapsed[i], collapsed[i + 1])
 
   const handles: BendHandle[] = []
-  let distToSegStart = 0
   for (let i = 0; i <= lastSegment; i++) {
     const start = collapsed[i]
     const end = collapsed[i + 1]
     const rawLength = Math.abs(end.x - start.x) + Math.abs(end.y - start.y)
     if (rawLength <= 0) continue
-    const segStartDist = distToSegStart
-    distToSegStart += rawLength
 
-    // Reserve the near-endpoint portion of a TERMINAL segment for that endpoint's
-    // reconnect target, which is drawn on top and would swallow a handle placed
-    // there. Capped at half the segment so a short stub still biases the handle
-    // outward. `nearestHandleReach` (GenericEdge) caps the target at the same edge,
-    // so the two never overlap.
+    // Bias the handle OUTWARD past the safe area on a terminal segment, so it does not
+    // sit right on top of the endpoint marker. Capped at half the segment so a short
+    // stub still gets a handle. This only MOVES the handle; it never withholds it — the
+    // endpoint grip is sized independently (GenericEdge), so a bend handle and a grip
+    // may sit near each other without either being starved.
     const reserveStart = i === 0 ? Math.min(safeAreaPx, rawLength / 2) : 0
     const reserveEnd =
       i === lastSegment ? Math.min(safeAreaPx, rawLength / 2) : 0
     const bendRegion = rawLength - reserveStart - reserveEnd
 
-    // Gated on the segment's FULL length — what the jog math operates on — not the
-    // reserved bend region.
+    // A terminal segment shorter than the jog floor cannot bend into a non-degenerate
+    // S — the drag would snap the edge straight — so it genuinely has no bend handle.
+    // (This is a degeneracy of the jog geometry, not a space trade-off.) Inner segments
+    // and lone segments bend cleanly at any length.
     const kind = getSegmentKind(i, collapsed.length)
     const isTerminal = kind !== "inner"
     const isLoneSegment = lastSegment === 0
@@ -166,22 +158,6 @@ export function getBendableSegments(
     const centreFromStart = fitsPastSafeArea
       ? reserveStart + bendRegion / 2
       : rawLength / 2
-
-    // ENDPOINTS FIRST. The two endpoint handles — reconnect to another node, reposition
-    // along the side — are the primary interaction on every edge. A bend handle placed
-    // within an endpoint's reserve (measured ALONG THE EDGE) starves that endpoint's grip
-    // to nothing, because the reconnect target, drawn on top, caps against it. So any
-    // handle — terminal OR inner — that would land inside either endpoint's reserve is
-    // withheld and the endpoint owns that run. A short edge is thus all grips, no bend
-    // handles; a longer one keeps every handle that sits clear in the middle.
-    const distFromSource = centreFromStart + segStartDist
-    const distFromTarget = totalLength - distFromSource
-    if (
-      Math.min(distFromSource, distFromTarget) <
-      EDGES.ENDPOINT_HANDLE_RESERVE_PX
-    ) {
-      continue
-    }
 
     const t = centreFromStart / rawLength
     handles.push({

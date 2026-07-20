@@ -44,6 +44,11 @@ const useHandleScreenScale = (): number =>
 export type BaseEdgeProps = ExtendedEdgeProps
 const FREEFORM_ENDPOINT_HIT_TARGET_SIZE = 44
 const FREEFORM_ENDPOINT_GRIP_LONG_AXIS = 18
+/** The grip never shrinks below this on-screen length, so an endpoint always shows a
+ * visible handle even on a very short or crowded edge. The grip is purely visual
+ * (pointer-events:none), so flooring it can only ever help legibility — the interactive
+ * hit target is sized separately. */
+const FREEFORM_ENDPOINT_GRIP_MIN_LONG_AXIS = 12
 const FREEFORM_ENDPOINT_GRIP_SHORT_AXIS = 8
 const FREEFORM_ENDPOINT_GRIP_RADIUS = 4
 /** Breathing room kept between a shortened grip and the middle of a short edge,
@@ -203,18 +208,21 @@ const getEndpointGripRect = (
   // zoomed out. The hit-target stays wide for grabbing.
   const radius = FREEFORM_ENDPOINT_GRIP_RADIUS * screenScale
   const short = FREEFORM_ENDPOINT_GRIP_SHORT_AXIS * screenScale
-  // On a short edge the full-size grip cannot sit clear of the endpoint AND stay
-  // in its own half, so shorten it and pull it in. Both grips give way equally,
-  // leaving a visible gap between them instead of one bar on top of the other.
+  // On a short edge the full-size grip cannot sit clear of the endpoint AND stay in its
+  // own half, so shorten it and pull it in — but never below a visible minimum. The two
+  // grips give way equally (each owns its half of the edge via `run`), so they read as
+  // two handles; the floor guarantees each stays visible even when its half is tiny.
   const margin = FREEFORM_ENDPOINT_GRIP_MARGIN * screenScale
   const long = Math.max(
     Math.min(FREEFORM_ENDPOINT_GRIP_LONG_AXIS * screenScale, run - margin),
-    0
+    FREEFORM_ENDPOINT_GRIP_MIN_LONG_AXIS * screenScale
   )
+  // Keep the grip's near edge at the endpoint tip (clearance ≥ long/2) so a floored grip
+  // sits ON the edge rather than straddling the node border.
   const baseClearance = long / 2 + radius
   const clearance = Math.max(
     Math.min(baseClearance, run - long / 2 - margin),
-    0
+    long / 2
   )
 
   if (outwardDir) {
@@ -408,19 +416,25 @@ export const EdgeEndpointMarkers = ({
     .filter(Boolean)
     .join(" ")
   const showEndpointGrips = Boolean(onEndpointPointerDown)
+  // The VISIBLE grip yields only to the other endpoint (so the two never cross the
+  // midpoint), NOT to bend handles: it is pointer-events:none, so it may cosmetically
+  // overlap a nearby bend handle without stealing any interaction. Only the hit target
+  // (above) caps against bend handles, keeping them grabbable.
+  const sourceGripRun = getEndpointRun(sourcePoint, targetPoint, sourceDir)
+  const targetGripRun = getEndpointRun(targetPoint, sourcePoint, targetDir)
   const sourceGrip = getEndpointGripRect(
     sourcePoint,
     sourcePosition,
     screenScale,
     sourceOutward,
-    sourceRun
+    sourceGripRun
   )
   const targetGrip = getEndpointGripRect(
     targetPoint,
     targetPosition,
     screenScale,
     targetOutward,
-    targetRun
+    targetGripRun
   )
 
   return (
