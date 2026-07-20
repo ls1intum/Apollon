@@ -61,9 +61,12 @@ jobs:
               - '.github/actions/**'
             vscode:
               # The extension bundles the library and typechecks against its
-              # emitted declarations, so a library change can break it.
+              # emitted declarations, so a library change can break it — and
+              # api-extractor inlines @tumaet/ui into those declarations, so a
+              # design-system change reaches the extension the same way.
               - 'vscode-extension/**'
               - 'library/**'
+              - 'packages/**'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
               - '.github/workflows/pr-health-checks.yml'
