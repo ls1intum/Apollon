@@ -921,15 +921,15 @@
   opacity: 0;
   fill: var(--apollon-background, #fff);
   stroke: var(--apollon-primary, #3e8acc);
-  stroke-width: 2px;
-  /* Paint the stroke UNDER the fill so it reads as a clean outer ring, and keep it
-     always visible against a bend handle it may overlap (the grip is drawn on top). */
+  /* stroke-width is set inline, scaled by the handle screen scale, so the outline
+     tracks the handle across zoom (NO non-scaling-stroke — that would pin it to a
+     constant screen width and read as too thick zoomed out / too thin zoomed in).
+     Painted UNDER the fill so it reads as a clean outer ring. */
   paint-order: stroke;
   transition:
     fill 120ms ease,
     opacity 120ms ease,
     stroke 120ms ease;
-  vector-effect: non-scaling-stroke;
 }
 
 .edge-endpoint-handle {

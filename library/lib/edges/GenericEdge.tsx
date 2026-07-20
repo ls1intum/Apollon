@@ -51,6 +51,10 @@ const FREEFORM_ENDPOINT_GRIP_LONG_AXIS = 18
 const FREEFORM_ENDPOINT_GRIP_MIN_LONG_AXIS = 12
 const FREEFORM_ENDPOINT_GRIP_SHORT_AXIS = 8
 const FREEFORM_ENDPOINT_GRIP_RADIUS = 4
+/** Grip outline width in flow units at natural scale. Multiplied by the handle screen
+ * scale (and drawn WITHOUT non-scaling-stroke) so the outline tracks the handle body:
+ * constant on-screen when zoomed out, growing with the handle when zoomed in. */
+const FREEFORM_ENDPOINT_GRIP_STROKE = 2
 /** Breathing room kept between a shortened grip and the middle of a short edge,
  * so the two grips read as two handles rather than one bar. */
 const FREEFORM_ENDPOINT_GRIP_MARGIN = 2
@@ -452,6 +456,7 @@ export const EdgeEndpointMarkers = ({
             rx={sourceGrip.radius}
             ry={sourceGrip.radius}
             transform={`rotate(${sourceGrip.rotationDeg} ${sourceGrip.centerX} ${sourceGrip.centerY})`}
+            style={{ strokeWidth: FREEFORM_ENDPOINT_GRIP_STROKE * screenScale }}
             pointerEvents="none"
           />
           <rect
@@ -465,6 +470,7 @@ export const EdgeEndpointMarkers = ({
             rx={targetGrip.radius}
             ry={targetGrip.radius}
             transform={`rotate(${targetGrip.rotationDeg} ${targetGrip.centerX} ${targetGrip.centerY})`}
+            style={{ strokeWidth: FREEFORM_ENDPOINT_GRIP_STROKE * screenScale }}
             pointerEvents="none"
           />
         </>
