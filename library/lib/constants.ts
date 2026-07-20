@@ -300,6 +300,13 @@ export const EDGES = Object.freeze({
    * (on-top) target never abuts or buries the handle. Small — just enough to separate
    * them cleanly at the handle's rounded corner. */
   ENDPOINT_HANDLE_CLEARANCE_PX: 4,
+  /** Run along the edge each ENDPOINT reserves for its own grip + reconnect target. A
+   * bend handle landing within this of either endpoint is withheld, so the endpoints —
+   * the primary, universal edge interaction — are never starved by a handle crowding
+   * their end. Sized so the grip clears the nearest kept handle at a usable length: the
+   * grip needs ~14px of run, and a handle eats its rendered half (≥9) plus the clearance
+   * (4), so ~27px keeps the grip legible; rounded to a grid multiple. */
+  ENDPOINT_HANDLE_RESERVE_PX: 30,
   /** Grid step a dragged bend snaps to; matches the canvas grid so bends line
    * up with grid-snapped node handles. */
   BEND_SNAP_GRID_PX: CANVAS.SNAP_TO_GRID_PX,

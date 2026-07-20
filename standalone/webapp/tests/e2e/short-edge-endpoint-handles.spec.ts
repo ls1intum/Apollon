@@ -53,3 +53,38 @@ test("a short straight edge keeps usable endpoint grips (not starved by a bend h
     expect(Math.min(hit!.w, hit!.h)).toBeGreaterThanOrEqual(12)
   }
 })
+
+test("a short pinned S-jog edge also keeps usable endpoint grips (no bend handle crowds them)", async ({
+  page,
+}) => {
+  const fx = JSON.parse(
+    fs.readFileSync(
+      path.join(__d, "..", "fixtures", "short-edge-pinned-jog.json"),
+      "utf-8"
+    )
+  )
+  await openFixtureInLocalEditor(page, fx)
+  await waitForCanvasReady(page)
+  await page.waitForTimeout(300)
+  await page.locator(".react-flow__edge").first().click({ force: true })
+  await page.waitForTimeout(300)
+
+  const info = await page.evaluate(() => {
+    const m = (sel: string) => {
+      const el = document.querySelector(sel)
+      if (!el) return null
+      const r = el.getBoundingClientRect()
+      return { w: Math.round(r.width), h: Math.round(r.height) }
+    }
+    return {
+      bendHandles: document.querySelectorAll(".edge-bend-handle").length,
+      sg: m(".edge-endpoint-grip--source"),
+      tg: m(".edge-endpoint-grip--target"),
+    }
+  })
+  // No bend handle crowds this short edge; both grips are visible and usable (was 0px).
+  for (const grip of [info.sg, info.tg]) {
+    expect(grip).not.toBeNull()
+    expect(Math.max(grip!.w, grip!.h)).toBeGreaterThanOrEqual(10)
+  }
+})

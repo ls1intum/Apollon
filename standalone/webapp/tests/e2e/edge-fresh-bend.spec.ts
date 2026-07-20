@@ -86,6 +86,24 @@ async function drawStraightEdge(page: Page): Promise<Locator> {
  * auto-selects, so its handle is already present — dragging it is the user's
  * "grab the middle and drag" gesture with no separate select-click. Using the
  * handle locator (not the path bbox) stays robust once the edge is bent. */
+/** The centre of a HORIZONTAL bend handle (wider than tall) on the edge — one a
+ * vertical drag actually reshapes. After the edge bends, `.first()` may be a vertical
+ * stub handle a vertical drag cannot move. */
+async function pickHorizontalBendHandle(
+  page: Page,
+  edge: Locator
+): Promise<{ cx: number; cy: number }> {
+  const handles = edge.locator(".edge-bend-handle")
+  const count = await handles.count()
+  for (let i = 0; i < count; i++) {
+    const box = await handles.nth(i).boundingBox()
+    if (box && box.width > box.height) {
+      return { cx: box.x + box.width / 2, cy: box.y + box.height / 2 }
+    }
+  }
+  throw new Error("no horizontal bend handle to drag")
+}
+
 async function dragFirstHandle(
   page: Page,
   edge: Locator,
@@ -202,13 +220,20 @@ test.describe("Fresh-edge first bend — drawn edge", () => {
   }) => {
     const edge = await drawStraightEdge(page)
     const seen: string[] = []
-    // Each drag RESHAPES the bend (all pull the same way, by different amounts).
-    // We deliberately do not drag a bend flat here: once the edge is bent,
-    // `.first()` is the source-TERMINAL handle, and pulling it back across the
-    // straight line legitimately returns a shallow edge to its auto-route
-    // (data.points = []) — a separate gesture, not a snap-back to regress.
-    for (const dy of [-40, -30, -50]) {
-      await dragFirstHandle(page, edge, dy)
+    // The first drag bends the (horizontal) straight edge via its centre handle. Each
+    // FURTHER drag RESHAPES the bend by pulling the top HORIZONTAL segment (a vertical
+    // drag on it moves the lane); we grab a horizontal handle rather than `.first()`,
+    // which after bending is a vertical stub handle a vertical drag cannot move. The
+    // short terminal stubs no longer expose a handle at all — the endpoints own them.
+    await dragFirstHandle(page, edge, -40)
+    seen.push(JSON.stringify(await persistedPoints(page)))
+    for (const dy of [-30, -50]) {
+      const handle = await pickHorizontalBendHandle(page, edge)
+      await page.mouse.move(handle.cx, handle.cy)
+      await page.mouse.down()
+      await page.mouse.move(handle.cx, handle.cy + dy, { steps: 12 })
+      await page.mouse.up()
+      await page.waitForTimeout(350)
       const points = await persistedPoints(page)
       expect(
         isStraightOrEmpty(points),

@@ -125,12 +125,23 @@ export function getBendableSegments(
   if (collapsed.length < 2) return []
 
   const lastSegment = collapsed.length - 2
+  // Total routed length and the running distance to each segment's start, so a handle can
+  // be measured by how far ALONG THE EDGE it sits from either endpoint.
+  const segLen = (a: IPoint, b: IPoint) =>
+    Math.abs(b.x - a.x) + Math.abs(b.y - a.y)
+  let totalLength = 0
+  for (let i = 0; i <= lastSegment; i++)
+    totalLength += segLen(collapsed[i], collapsed[i + 1])
+
   const handles: BendHandle[] = []
+  let distToSegStart = 0
   for (let i = 0; i <= lastSegment; i++) {
     const start = collapsed[i]
     const end = collapsed[i + 1]
     const rawLength = Math.abs(end.x - start.x) + Math.abs(end.y - start.y)
     if (rawLength <= 0) continue
+    const segStartDist = distToSegStart
+    distToSegStart += rawLength
 
     // Reserve the near-endpoint portion of a TERMINAL segment for that endpoint's
     // reconnect target, which is drawn on top and would swallow a handle placed
@@ -150,21 +161,27 @@ export function getBendableSegments(
     if (isTerminal && !isLoneSegment && rawLength < terminalBendFloorPx()) {
       continue
     }
-    // A LONE segment has an endpoint at BOTH ends, each of which owns its half for
-    // reconnecting and repositioning — the primary edge interactions, present on every
-    // edge. A centred bend handle between them starves both to nothing on a short edge
-    // (the reconnect targets, drawn on top, cap against it). So the endpoints win: the
-    // lone handle is withheld unless the region left BETWEEN the two endpoint reserves is
-    // big enough for a usable, non-overlapping handle. A longer lone edge keeps its
-    // handle in the clear middle; a short one is fully owned by its two grips.
-    if (isLoneSegment && bendRegion < EDGES.BEND_HANDLE_MIN_SCREEN_LENGTH_PX) {
-      continue
-    }
 
     const fitsPastSafeArea = bendRegion > 0
     const centreFromStart = fitsPastSafeArea
       ? reserveStart + bendRegion / 2
       : rawLength / 2
+
+    // ENDPOINTS FIRST. The two endpoint handles — reconnect to another node, reposition
+    // along the side — are the primary interaction on every edge. A bend handle placed
+    // within an endpoint's reserve (measured ALONG THE EDGE) starves that endpoint's grip
+    // to nothing, because the reconnect target, drawn on top, caps against it. So any
+    // handle — terminal OR inner — that would land inside either endpoint's reserve is
+    // withheld and the endpoint owns that run. A short edge is thus all grips, no bend
+    // handles; a longer one keeps every handle that sits clear in the middle.
+    const distFromSource = centreFromStart + segStartDist
+    const distFromTarget = totalLength - distFromSource
+    if (
+      Math.min(distFromSource, distFromTarget) <
+      EDGES.ENDPOINT_HANDLE_RESERVE_PX
+    ) {
+      continue
+    }
 
     const t = centreFromStart / rawLength
     handles.push({
