@@ -2968,6 +2968,23 @@ export function getBendLaneBounds(
     constrainBy(targetPoint, targetPosition)
   }
 
+  // The two PARALLEL arms flanking this segment (two away, joined to it by the
+  // perpendicular connectors i±1) are walls too: a lane must come to REST on an
+  // adjacent arm — where the connector between them collapses to zero and the loop
+  // merges — not sail through it and grow a fresh zig-zag on the far side. This is
+  // what makes "drag the arms together" collapse the loop instead of pushing it
+  // apart. Clamp toward whichever side each neighbour currently sits on; a neighbour
+  // already coincident with this lane imposes no bound (the loop is already merged).
+  const laneCoord = points[segmentIndex][laneAxis]
+  const clampAgainstArm = (armIndex: number): void => {
+    if (armIndex < 0 || armIndex > lastSegmentIndex) return
+    const armCoord = points[armIndex][laneAxis]
+    if (armCoord > laneCoord) bounds.max = Math.min(bounds.max, armCoord)
+    else if (armCoord < laneCoord) bounds.min = Math.max(bounds.min, armCoord)
+  }
+  clampAgainstArm(segmentIndex - 2)
+  clampAgainstArm(segmentIndex + 2)
+
   return bounds
 }
 

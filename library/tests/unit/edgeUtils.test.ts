@@ -32,6 +32,7 @@ import {
   simplifySvgPath,
   stubsWouldOverlap,
   getEffectiveStubLength,
+  getBendLaneBounds,
 } from "@/utils/edgeUtils"
 import { ConnectionLineType, Position } from "@xyflow/react"
 import { describe, expect, it } from "vitest"
@@ -1530,6 +1531,52 @@ describe("preserveOrthogonalEdgePoints", () => {
       )
       expect(result).toEqual(released)
       expectOrthogonalSegments(result)
+    })
+  })
+
+  // A dragged arm must come to REST on the parallel arm two segments away (where the
+  // connector between them collapses and the loop merges), not sail through it and grow
+  // a fresh zig-zag on the far side — which read as the geometry "pushing apart".
+  describe("clamps a dragged arm's lane at the adjacent parallel arm", () => {
+    // A loop like diagram 83: source stub → up → over → down into target. The two
+    // vertical arms are at x=615 and x=645; the target down-run (seg 3) is dragged left.
+    const loop = [
+      { x: 565, y: 335 }, // source
+      { x: 615, y: 335 },
+      { x: 615, y: 140 }, // seg1: left arm  (x=615)
+      { x: 645, y: 140 },
+      { x: 645, y: 410 }, // seg3: right arm (x=645) — the dragged terminal down-run
+    ]
+    const S = { x: 565, y: 335 }
+    const T = { x: 645, y: 410 }
+
+    it("stops the right arm at the left arm (x=615) instead of crossing it", () => {
+      const bounds = getBendLaneBounds(
+        loop,
+        3, // the target down-run
+        "V",
+        S,
+        T,
+        Position.Right,
+        Position.Top
+      )
+      // Dragging the x=645 arm LEFT, its lane may not go below x=615 (the parallel arm).
+      expect(bounds.min).toBe(615)
+    })
+
+    it("clamps the left arm at the right arm (x=645) when dragged toward it", () => {
+      // seg1 (left arm, x=615) has its parallel neighbour on the target side (seg3 at
+      // x=645), so dragging it RIGHT stops at 645 rather than crossing.
+      const bounds = getBendLaneBounds(
+        loop,
+        1,
+        "V",
+        S,
+        T,
+        Position.Right,
+        Position.Top
+      )
+      expect(bounds.max).toBe(645)
     })
   })
 
