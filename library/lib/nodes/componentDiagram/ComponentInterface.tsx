@@ -6,8 +6,7 @@ import { PopoverManager } from "@/components/popovers/PopoverManager"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
 import { ComponentInterfaceNodeSVG } from "@/components"
 import { NodeToolbar } from "@/components/toolbars/NodeToolbar"
-import { useDiagramStore } from "@/store"
-import { computeInterfaceLabelSide } from "@/utils/geometry/interfaceLabelLayout"
+import { useInterfaceLabelSide } from "@/hooks/useInterfaceLabelSide"
 
 export function ComponentInterface({
   id,
@@ -18,13 +17,12 @@ export function ComponentInterface({
   const [anchorEl, anchorRef] = usePopoverAnchor()
   const isDiagramModifiable = useDiagramModifiable()
   const showAssessmentResults = !isDiagramModifiable
-  // Move the name off any side a connecting edge attaches to. A primitive-
-  // returning selector re-renders the node only when the chosen side flips.
-  const labelSide = useDiagramStore((state) =>
-    computeInterfaceLabelSide(state.edges, id, {
-      badgeTopRight: showAssessmentResults,
-    })
-  )
+  // Move the name off any side a connecting edge actually attaches to (read from the
+  // routed geometry, not the stored handle). A primitive-returning selector re-renders
+  // the node only when the chosen side flips.
+  const labelSide = useInterfaceLabelSide(id, {
+    badgeTopRight: showAssessmentResults,
+  })
 
   if (!width || !height) {
     return null

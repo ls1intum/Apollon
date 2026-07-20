@@ -1,0 +1,86 @@
+{
+  "id": "a8388d43-7dd2-4fa0-9c48-bcc05b223cbd",
+  "version": "4.1.0",
+  "title": "",
+  "type": "ComponentDiagram",
+  "nodes": [
+    {
+      "id": "f11666b0-744e-4991-9b51-1a0a041bd82e",
+      "width": 30,
+      "height": 30,
+      "type": "componentInterface",
+      "position": {
+        "x": 320,
+        "y": 265
+      },
+      "data": {
+        "name": "Interface"
+      },
+      "measured": {
+        "width": 30,
+        "height": 30
+      }
+    },
+    {
+      "id": "931c0dd1-5b3b-4ad5-b005-17d09106926b",
+      "width": 180,
+      "height": 120,
+      "type": "component",
+      "position": {
+        "x": 15,
+        "y": 145
+      },
+      "data": {
+        "name": "Component",
+        "isComponentHeaderShown": true
+      },
+      "measured": {
+        "width": 180,
+        "height": 120
+      }
+    },
+    {
+      "id": "4c1423a0-cdfe-4b17-8442-0aa2f3fbfc64",
+      "width": 180,
+      "height": 120,
+      "type": "component",
+      "position": {
+        "x": 65,
+        "y": 385
+      },
+      "data": {
+        "name": "Component",
+        "isComponentHeaderShown": true
+      },
+      "measured": {
+        "width": 180,
+        "height": 120
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "c765be09-e913-47d1-b2c2-f72c263fbe77",
+      "source": "931c0dd1-5b3b-4ad5-b005-17d09106926b",
+      "target": "f11666b0-744e-4991-9b51-1a0a041bd82e",
+      "type": "ComponentDependency",
+      "sourceHandle": "right",
+      "targetHandle": "bottom",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "61b4f58c-841c-493e-9df4-1473208b8271",
+      "source": "4c1423a0-cdfe-4b17-8442-0aa2f3fbfc64",
+      "target": "f11666b0-744e-4991-9b51-1a0a041bd82e",
+      "type": "ComponentDependency",
+      "sourceHandle": "top",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    }
+  ],
+  "assessments": {}
+}

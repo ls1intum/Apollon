@@ -5,8 +5,10 @@ import {
   crossingOrderKey,
   approxRoute,
   routeCutsAny,
+  assignSides,
   assignPorts,
   endKey,
+  type SideEdge,
   type SideMember,
   type EndRef,
 } from "@/utils/geometry/portAssignment"
@@ -82,6 +84,82 @@ describe("orderSideMembers — the nesting rule", () => {
     )
     expect(reversed).toEqual(forward)
     expect(forward).toEqual(["e0", "e1", "e2", "e3"]) // top→bottom
+  })
+})
+
+describe("assignSides — four-centre nodes spread edges across sides", () => {
+  it("puts two edges to a single-slot node on DIFFERENT sides (not both facing)", () => {
+    // d76: an interface (four-centre) with two dependencies coming from the left. Both
+    // aim at its LEFT side, but a four-centre side holds ONE port, so they must split.
+    const iface = rect(320, 265, 30, 30)
+    const c1 = rect(15, 145, 180, 120) // up-left of the interface
+    const c2 = rect(65, 385, 180, 120) // down-left of the interface
+    const edges: SideEdge[] = [
+      {
+        edgeId: "e1",
+        sourceNodeId: "c1",
+        targetNodeId: "iface",
+        sourceRect: c1,
+        targetRect: iface,
+        sourceBand: false,
+        targetBand: true,
+      },
+      {
+        edgeId: "e2",
+        sourceNodeId: "c2",
+        targetNodeId: "iface",
+        sourceRect: c2,
+        targetRect: iface,
+        sourceBand: false,
+        targetBand: true,
+      },
+    ]
+    const rects = new Map([
+      ["iface", iface],
+      ["c1", c1],
+      ["c2", c2],
+    ])
+    const sides = assignSides(edges, rects, new Set(["iface"]))
+    const s1 = sides.get(endKey("e1", "target"))
+    const s2 = sides.get(endKey("e2", "target"))
+    expect(s1).toBeDefined()
+    expect(s2).toBeDefined()
+    expect(s1).not.toBe(s2) // the two ports land on different sides — no collision
+  })
+
+  it("still lets two edges share a side on a FREEFORM node (they spread by port)", () => {
+    const box = rect(300, 300, 160, 100)
+    const p1 = rect(0, 280)
+    const p2 = rect(0, 360) // both partners to the left → both want the left side
+    const edges: SideEdge[] = [
+      {
+        edgeId: "e1",
+        sourceNodeId: "p1",
+        targetNodeId: "box",
+        sourceRect: p1,
+        targetRect: box,
+        sourceBand: false,
+        targetBand: true,
+      },
+      {
+        edgeId: "e2",
+        sourceNodeId: "p2",
+        targetNodeId: "box",
+        sourceRect: p2,
+        targetRect: box,
+        sourceBand: false,
+        targetBand: true,
+      },
+    ]
+    const rects = new Map([
+      ["box", box],
+      ["p1", p1],
+      ["p2", p2],
+    ])
+    // No four-centre set → a freeform box may keep both on the facing side (ports spread).
+    const sides = assignSides(edges, rects)
+    expect(sides.get(endKey("e1", "target"))).toBe(Position.Left)
+    expect(sides.get(endKey("e2", "target"))).toBe(Position.Left)
   })
 })
 

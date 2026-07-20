@@ -676,11 +676,17 @@ function collectPortEnds(
     const r = rectOf(n.id)
     if (r) allRects.set(n.id, r)
   }
-  const sideByEnd = assignSides(sideEdges, allRects)
-
-  const out: EndRef[] = []
   const four = (nodeId: string) =>
     getConnectionMode(nodeById.get(nodeId)?.type) === "four-center"
+  // Four-centre nodes (interface / gateway / decision / merge …) expose ONE port per
+  // side, so two edges on a side collide at the same point. Side assignment must spread
+  // them across sides — pass which nodes are single-slot so it treats an occupied side
+  // there as a hard conflict, not a soft tie-break.
+  const fourCenterNodes = new Set<string>()
+  for (const n of nodes) if (four(n.id)) fourCenterNodes.add(n.id)
+  const sideByEnd = assignSides(sideEdges, allRects, fourCenterNodes)
+
+  const out: EndRef[] = []
   for (const edge of ordered) {
     if (edge.source === edge.target) continue
     const sourceCustom = asFreeformAnchor(edge.data?.sourceAnchor)

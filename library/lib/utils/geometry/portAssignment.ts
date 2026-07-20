@@ -343,7 +343,11 @@ export const assignSides = (
    * obstacle-FREE ideal, so without this it happily picks a "1-corner" pair that the
    * router then has to detour into three corners around whatever is in the way. A node
    * crossing outranks a bend (the cited order is node-overlap ≻ crossing ≻ bend). */
-  nodeRects: ReadonlyMap<string, Rect> = new Map()
+  nodeRects: ReadonlyMap<string, Rect> = new Map(),
+  /** Nodes whose sides hold only ONE port (four-centre: interface, gateway, decision,
+   * merge, …). Putting a second edge on such a side collides both at the side midpoint,
+   * so it is treated as a hard conflict rather than a soft occupancy tie-break. */
+  fourCenterNodes: ReadonlySet<string> = new Set()
 ): Map<string, Position> => {
   // Occupancy is a set of DISTINCT PARTNER NODES already placed on each `(node, side)`.
   // Counting distinct partners — excluding an edge's own partner — is what separates a
@@ -361,6 +365,14 @@ export const assignSides = (
     if (!set) return 0
     return set.has(exclude) ? set.size - 1 : set.size
   }
+  // On a four-centre node a side already carrying an edge to a DIFFERENT partner is a
+  // COLLISION (both would sit at the same side midpoint), so it is a hard conflict; on a
+  // freeform node the same count is only a soft spacing tie-break.
+  const singleSlotOcc = (
+    node: string,
+    side: Position,
+    exclude: string
+  ): number => (fourCenterNodes.has(node) ? occOthers(node, side, exclude) : 0)
 
   const hasStraight = (e: SideEdge): boolean =>
     ALL_SIDES.some((sU) =>
@@ -440,6 +452,11 @@ export const assignSides = (
             // choose — far worse than a bend — so it leads the key. Counted on the DODGED
             // route, so a side is only condemned when the node is genuinely unavoidable.
             nodesCrossed(e, route),
+            // A second edge on a four-centre side collides both at that midpoint — as bad
+            // as a node crossing, so it leads too. Spreads interface/gateway/decision edges
+            // across their four sides instead of piling onto the one facing the partner.
+            singleSlotOcc(e.sourceNodeId, sU, e.targetNodeId) +
+              singleSlotOcc(e.targetNodeId, sV, e.sourceNodeId),
             // Corners AND crossings share one budget: a crossing costs CROSSING_BEND_EQUIV
             // bends (the cited order crossing ≻ bend, ≈ 3× on published weights), so a
             // crossing-free route wins over one that saves a corner by cutting across an
@@ -494,6 +511,10 @@ export const assignSides = (
           if (b < minB) minB = b
         }
         const key = [
+          // A four-centre side already taken is a collision, not a tie-break — it leads,
+          // so a second edge to this single-slot node picks a FREE side (d76's interface
+          // put both dependencies on its left; now they split across two sides).
+          singleSlotOcc(node, s, otherNode),
           minB,
           -aim(s),
           occOthers(node, s, otherNode),
