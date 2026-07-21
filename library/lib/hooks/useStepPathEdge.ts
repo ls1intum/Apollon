@@ -879,15 +879,7 @@ export const useStepPathEdge = ({
 
         const { node: nodeOnTop, rect } = snapTarget
 
-        // The OTHER (fixed) endpoint, so a drop near a corner exits toward it.
-        const otherEndpoint =
-          endpoint === "source" ? currentTargetEndpoint : currentSourceEndpoint
-        const anchor = getEdgeAnchorFromPoint(
-          nodeOnTop.type,
-          flowPoint,
-          rect,
-          otherEndpoint
-        )
+        const anchor = getEdgeAnchorFromPoint(nodeOnTop.type, flowPoint, rect)
         if (!anchor) return null // node is not a connection target (mode "none")
         const resolvedAnchor = getEdgeAnchorPoint(nodeOnTop.type, rect, anchor)
         let sourceEndpoint = currentSourceEndpoint

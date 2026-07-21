@@ -360,28 +360,9 @@ export function getSideHandleIdForPosition(
   return sideToHandleId[position]
 }
 
-/** Outward unit normal of each rect side — the direction the edge LEAVES the node. */
-const SIDE_OUTWARD: Record<string, XYPosition> = {
-  top: { x: 0, y: -1 },
-  right: { x: 1, y: 0 },
-  bottom: { x: 0, y: 1 },
-  left: { x: -1, y: 0 },
-}
-
-/**
- * A drop lands NEAR a corner when its offset along the nearest side is within this
- * fraction of an end. There the two sides meeting at the corner both fit, so the side is
- * disambiguated by which one's exit heads toward the OTHER endpoint (below).
- */
-const CORNER_BAND = 0.15
-
 export function getFreeformAnchorFromPoint(
   point: XYPosition,
-  rect: Rect,
-  /** The edge's OTHER endpoint. When given, a drop near a corner picks whichever of the
-   * two adjacent sides exits TOWARD it, so the edge leaves toward its destination (a
-   * side exit) instead of away from it (e.g. straight up out of a top corner). */
-  otherEndpoint?: XYPosition
+  rect: Rect
 ): FreeformEdgeAnchor {
   const right = rect.x + rect.width
   const bottom = rect.y + rect.height
@@ -431,59 +412,11 @@ export function getFreeformAnchorFromPoint(
   }
 
   const roundedOffset = clamp(Math.round(closest.offset), 0, closest.axisLength)
-  const anchor: FreeformEdgeAnchor = {
+
+  return {
     side: closest.side,
     ratio: closest.axisLength > 0 ? roundedOffset / closest.axisLength : 0.5,
   }
-
-  if (!otherEndpoint) return anchor
-
-  // Near a corner, the two sides meeting there both fit the drop. Pick the one whose
-  // outward exit heads toward the other endpoint, so a corner connection leaves the node
-  // toward its destination instead of straight out (which forces an up-and-over route).
-  const nearStart = anchor.ratio <= CORNER_BAND
-  const nearEnd = anchor.ratio >= 1 - CORNER_BAND
-  if (!nearStart && !nearEnd) return anchor
-
-  // The corner point + the perpendicular side sharing it (with that side's ratio AT the
-  // corner). `nearStart` is the side's ratio-0 corner, `nearEnd` its ratio-1 corner.
-  let corner: XYPosition
-  let adjSide: Position
-  let adjRatio: number
-  switch (closest.side) {
-    case "right":
-      corner = nearStart ? { x: right, y: rect.y } : { x: right, y: bottom }
-      adjSide = (nearStart ? "top" : "bottom") as Position
-      adjRatio = 1
-      break
-    case "left":
-      corner = nearStart ? { x: rect.x, y: rect.y } : { x: rect.x, y: bottom }
-      adjSide = (nearStart ? "top" : "bottom") as Position
-      adjRatio = 0
-      break
-    case "top":
-      corner = nearStart ? { x: rect.x, y: rect.y } : { x: right, y: rect.y }
-      adjSide = (nearStart ? "left" : "right") as Position
-      adjRatio = 0
-      break
-    default: // bottom
-      corner = nearStart ? { x: rect.x, y: bottom } : { x: right, y: bottom }
-      adjSide = (nearStart ? "left" : "right") as Position
-      adjRatio = 1
-      break
-  }
-
-  const toOther = {
-    x: otherEndpoint.x - corner.x,
-    y: otherEndpoint.y - corner.y,
-  }
-  const dot = (side: Position) =>
-    SIDE_OUTWARD[side].x * toOther.x + SIDE_OUTWARD[side].y * toOther.y
-  // Only switch when the adjacent side genuinely exits MORE toward the other endpoint;
-  // a side already pointing that way is kept, so a clear side-drop never flips.
-  return dot(adjSide) > dot(anchor.side)
-    ? { side: adjSide, ratio: adjRatio }
-    : anchor
 }
 
 export function getFreeformAnchorPoint(
