@@ -498,6 +498,33 @@ describe("freeform rectangle anchors", () => {
     })
   })
 
+  it("at a corner, exits the side facing the other endpoint (not straight out)", () => {
+    // Drop AT the top-right corner (110, 20). Nearest-side alone ties to Top -> the edge
+    // would leave straight UP. With the other endpoint below-right, the corner should
+    // exit RIGHT instead, so the edge heads toward its destination.
+    const corner = { x: rect.x + rect.width, y: rect.y } // (110, 20)
+    const belowRight = { x: 200, y: 200 }
+
+    expect(getFreeformAnchorFromPoint(corner, rect).side).toBe(Position.Top)
+    expect(getFreeformAnchorFromPoint(corner, rect, belowRight)).toEqual({
+      side: Position.Right,
+      ratio: 0,
+    })
+
+    // Other endpoint straight ABOVE: Top exit is the one facing it, so it stays Top.
+    expect(
+      getFreeformAnchorFromPoint(corner, rect, { x: 100, y: -200 }).side
+    ).toBe(Position.Top)
+  })
+
+  it("leaves a clear mid-side drop unchanged even with the other endpoint given", () => {
+    // Well away from any corner (ratio 0.5): route-awareness must not move it.
+    const midRight = { x: 112, y: 60 }
+    expect(
+      getFreeformAnchorFromPoint(midRight, rect, { x: 200, y: -200 })
+    ).toEqual(getFreeformAnchorFromPoint(midRight, rect))
+  })
+
   it("recognizes persisted freeform anchors", () => {
     expect(
       getFreeformAnchorPoint(rect, { side: Position.Left, ratio: 0.5 })

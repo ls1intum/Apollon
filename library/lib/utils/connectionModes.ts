@@ -238,7 +238,10 @@ const rectBorderAlongRay = (
 export function getEdgeAnchorFromPoint(
   nodeType: string | undefined,
   point: XYPosition,
-  rect: Rect
+  rect: Rect,
+  /** The edge's OTHER endpoint, so a drop near a corner exits toward it (see
+   * `getFreeformAnchorFromPoint`). Only used for rect-border modes. */
+  otherEndpoint?: XYPosition
 ): FreeformEdgeAnchor | null {
   switch (getConnectionMode(nodeType)) {
     case "none":
@@ -254,7 +257,7 @@ export function getEdgeAnchorFromPoint(
     case "parallelogram":
     case "freeform-rect":
     default:
-      return getFreeformAnchorFromPoint(point, rect)
+      return getFreeformAnchorFromPoint(point, rect, otherEndpoint)
   }
 }
 
