@@ -840,6 +840,27 @@ describe("removeDuplicatePoints", () => {
 // preserveOrthogonalEdgePoints
 // ---------------------------------------------------------------------------
 describe("preserveOrthogonalEdgePoints", () => {
+  it("keeps a lane the user dragged close to a parallel stub (a narrow U), not snapped clear", () => {
+    // diagram 87: the down-run (x=665) was dragged to 15px from the source up-stub
+    // (x=680). It must STAY at 665 — pushing it to the 30px clearance line (650) snapped
+    // the drag straight back. A lane already on this side of the stub is the user's.
+    const dragged = [
+      { x: 680, y: 155 },
+      { x: 680, y: -150 },
+      { x: 665, y: -150 },
+      { x: 665, y: -10 },
+      { x: 575, y: -10 },
+    ]
+    const result = preserveOrthogonalEdgePoints(
+      dragged,
+      { x: 680, y: 155 },
+      { x: 575, y: -10 },
+      Position.Top,
+      Position.Right
+    )
+    expect(result).toEqual(dragged)
+  })
+
   it("keeps a manually moved bend when the target handle moves lower on the same side", () => {
     const result = preserveOrthogonalEdgePoints(
       [

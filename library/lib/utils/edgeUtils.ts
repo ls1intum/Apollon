@@ -1999,7 +1999,12 @@ const pushLanesClearOfStubs = (
           previous !== line &&
           Math.sign(start[lane] - line) !== Math.sign(previous - line)
       )
-    if (isClear(start[lane]) && !flipped) continue
+    // A lane the stored route already placed on THIS side of the stub is the user's —
+    // even a deliberately narrow U that runs close to a parallel stub. Keep it. Only
+    // re-clear a lane that has no stored side yet (a fresh route) or one that FLIPPED
+    // across the stub to the far side. Otherwise dragging a lane toward a stub would be
+    // snapped straight back to the clearance line.
+    if (!flipped && (isClear(start[lane]) || previous !== undefined)) continue
 
     const reference = previous ?? start[lane]
     const candidates = lines
