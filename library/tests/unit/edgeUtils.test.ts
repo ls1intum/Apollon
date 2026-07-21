@@ -498,6 +498,46 @@ describe("freeform rectangle anchors", () => {
     })
   })
 
+  describe("corner-overshoot side is resolved by the route (conservative)", () => {
+    // rect = {10,20,100,80}; top-right corner (110, 20). Other endpoint below-right.
+    const belowRight = { x: 200, y: 200 }
+
+    it("only a drop PAST the corner in BOTH axes uses the route", () => {
+      // Overshoot past the top-right corner -> nearest-side ties to Top (exits up), but the
+      // route wants the side, so it exits RIGHT toward the other endpoint.
+      expect(
+        getFreeformAnchorFromPoint({ x: 118, y: 12 }, rect, belowRight)
+      ).toEqual({ side: Position.Right, ratio: 0 })
+      // Without the other endpoint, it stays the plain nearest side (Top).
+      expect(getFreeformAnchorFromPoint({ x: 118, y: 12 }, rect).side).toBe(
+        Position.Top
+      )
+    })
+
+    it("a drag ALONG a side (outside one axis only) is never touched", () => {
+      // Above the top edge but within the node's x-range, right next to the corner: this is
+      // dragging along the TOP, so it stays Top even with the other endpoint given.
+      const alongTop = { x: 108, y: 12 } // x inside [10,110], y above the top
+      expect(getFreeformAnchorFromPoint(alongTop, rect, belowRight)).toEqual(
+        getFreeformAnchorFromPoint(alongTop, rect)
+      )
+      // Beside the right edge but within the y-range, next to the corner: dragging along
+      // the RIGHT, stays Right.
+      const alongRight = { x: 118, y: 26 } // y inside [20,100], x past the right
+      expect(getFreeformAnchorFromPoint(alongRight, rect, belowRight)).toEqual(
+        getFreeformAnchorFromPoint(alongRight, rect)
+      )
+    })
+
+    it("keeps the top exit at a corner when the other endpoint is above", () => {
+      // Past the top-right corner but the other end is straight up: Top faces it, so Top.
+      expect(
+        getFreeformAnchorFromPoint({ x: 118, y: 12 }, rect, { x: 100, y: -300 })
+          .side
+      ).toBe(Position.Top)
+    })
+  })
+
   it("recognizes persisted freeform anchors", () => {
     expect(
       getFreeformAnchorPoint(rect, { side: Position.Left, ratio: 0.5 })
