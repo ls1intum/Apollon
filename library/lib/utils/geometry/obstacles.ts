@@ -101,49 +101,19 @@ export const getContainerBorderPolylines = (
 type NodeEntry = { body: ObstacleRect; ancestors: Set<string> }
 type NodeIndex = { byId: Map<string, Node>; entries: Map<string, NodeEntry> }
 
-/** Fold a string into a running 32-bit hash — used for the identity fields below.
- * Arithmetic only, no allocation. */
-const foldString = (h: number, s: string | undefined): number => {
-  let acc = h
-  if (s) {
-    for (let i = 0; i < s.length; i++) {
-      acc = (Math.imul(acc, 31) + s.charCodeAt(i)) | 0
-    }
-  }
-  return (Math.imul(acc, 31) + 1) | 0 // mark the field boundary (undefined vs "")
-}
-
-/** Cheap digest of EVERYTHING `indexNodes` reads: the node set, and each node's id,
- * type, parent, position, measured size and hidden state. Identity (id/type/parentId)
- * is folded in as well as geometry — the index's `byId`, its `soft` flag (from type)
- * and its absolute positions + ancestors (from parentId) all depend on those, so a
- * model switch, a reparent or a type change with unchanged geometry must still miss the
- * cache. Arithmetic only — no allocation — because this runs once per edge. */
-const geometryFingerprint = (nodes: readonly Node[]): number => {
-  let h = nodes.length
-  for (const node of nodes) {
-    const { width, height } = nodeSize(node)
-    h =
-      (Math.imul(h, 31) +
-        (node.position.x | 0) * 7 +
-        (node.position.y | 0) * 13 +
-        (width ?? 0) * 17 +
-        (height ?? 0) * 19 +
-        (node.hidden ? 1 : 0)) |
-      0
-    h = foldString(h, node.id)
-    h = foldString(h, node.type)
-    h = foldString(h, node.parentId)
-  }
-  return h
-}
-
-let frameKey: number | null = null
+// The `nodes` array the index was last built from. Cache identity is the array REFERENCE,
+// not a content digest: the solver hands the SAME `nodes` reference to every edge in a
+// pass (so the index builds once and all edges reuse it), and the store publishes a NEW
+// array on any change to the node set, its geometry, or a node's measured size (React /
+// Zustand never mutate in place). Reference equality is therefore an EXACT test of "the
+// same node set" — no per-node hashing, and no chance a hash collision hands back a stale
+// index (a proof-of-equality a 32-bit digest cannot give). A new-but-identical array on a
+// later pass simply rebuilds; that costs one O(nodes) pass and is always correct.
+let frameNodes: readonly Node[] | null = null
 let frameIndex: NodeIndex | null = null
 
 const indexNodes = (nodes: readonly Node[]): NodeIndex => {
-  const key = geometryFingerprint(nodes)
-  if (key === frameKey && frameIndex) return frameIndex
+  if (nodes === frameNodes && frameIndex) return frameIndex
 
   const byId = new Map(nodes.map((node) => [node.id, node]))
   const entries = new Map<string, NodeEntry>()
@@ -167,7 +137,7 @@ const indexNodes = (nodes: readonly Node[]): NodeIndex => {
     })
   }
 
-  frameKey = key
+  frameNodes = nodes
   frameIndex = { byId, entries }
   return frameIndex
 }

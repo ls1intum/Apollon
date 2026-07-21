@@ -551,6 +551,13 @@ function routeStepParams(
  *
  * Node RECTS, not the base endpoints: selection is a function of the rectangles, and
  * the base React Flow would have picked is overridden.
+ *
+ * PLUS the marker padding. `selectEdgeAnchors` re-resolves each candidate through
+ * `resolveEdgeEndpoints`, which sets an auto endpoint back by `endpoints.padding` (the
+ * edge type's marker gap) before the route is scored. Two edge types with the same node
+ * rects but different markers can therefore pick different anchors, so the padding is
+ * part of the key — matching the route cache (`routeInputSignature`), which already
+ * folds it in.
  */
 function autoAnchorSignature(
   endpoints: ResolvedEdgeEndpoints,
@@ -568,6 +575,8 @@ function autoAnchorSignature(
   return [
     enableStraightPath ? "1" : "0",
     `${sourceType ?? ""},${targetType ?? ""}`,
+    // Marker gap an auto endpoint is set back by before scoring (see doc comment).
+    `${e.padding}`,
     `${e.sourceAbsolutePosition.x},${e.sourceAbsolutePosition.y},${e.sourceSize.width},${e.sourceSize.height}`,
     `${e.targetAbsolutePosition.x},${e.targetAbsolutePosition.y},${e.targetSize.width},${e.targetSize.height}`,
     // Includes any PINNED anchor — a user override OR a solver-assigned band port for
