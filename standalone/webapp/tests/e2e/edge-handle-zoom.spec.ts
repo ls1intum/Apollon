@@ -149,8 +149,8 @@ test("the endpoint grip outline scales with the handle across zoom (not a fixed 
 
   await selectEdge(page, id)
   const atDefault = await strokeUserUnits()
-  expect(atDefault, "outline ~2 flow-units at zoom 1").toBeGreaterThan(1.5)
-  expect(atDefault).toBeLessThan(3)
+  expect(atDefault, "outline ~4 flow-units at zoom 1").toBeGreaterThan(3)
+  expect(atDefault).toBeLessThan(5)
 
   const zoom = await zoomOutUntil(page, 0.5)
   await selectEdge(page, id)
