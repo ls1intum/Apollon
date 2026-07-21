@@ -360,50 +360,33 @@ export function getSideHandleIdForPosition(
   return sideToHandleId[position]
 }
 
-/** Outward unit normal of each rect side — the direction the edge LEAVES the node. */
-const SIDE_OUTWARD: Record<string, XYPosition> = {
-  top: { x: 0, y: -1 },
-  right: { x: 1, y: 0 },
-  bottom: { x: 0, y: 1 },
-  left: { x: -1, y: 0 },
-}
-
 export function getFreeformAnchorFromPoint(
   point: XYPosition,
-  rect: Rect,
-  /** The edge's OTHER endpoint. Used ONLY to break the tie at a true corner — a drop
-   * that overshoots the node in BOTH axes, where the two sides meeting there are equally
-   * near. There the side whose outward exit heads toward the other endpoint is chosen, so
-   * a corner connection leaves toward its destination instead of straight out. A drop on
-   * or beside a single side is unambiguous and never uses this. */
-  otherEndpoint?: XYPosition
+  rect: Rect
 ): FreeformEdgeAnchor {
   const right = rect.x + rect.width
   const bottom = rect.y + rect.height
 
-  // A TRUE corner drop: past the node in both axes, so neither side is "aimed at" more
-  // than the other. Only here is the side genuinely ambiguous — resolve it by the route.
-  // Dragging ALONG a side is outside in ONE axis only, so it never reaches this branch.
-  if (otherEndpoint) {
-    const pastX = point.x < rect.x ? -1 : point.x > right ? 1 : 0
-    const pastY = point.y < rect.y ? -1 : point.y > bottom ? 1 : 0
-    if (pastX !== 0 && pastY !== 0) {
-      const corner = {
-        x: pastX > 0 ? right : rect.x,
-        y: pastY > 0 ? bottom : rect.y,
-      }
-      const horizSide = (pastY > 0 ? "bottom" : "top") as Position
-      const vertSide = (pastX > 0 ? "right" : "left") as Position
-      const toOther = {
-        x: otherEndpoint.x - corner.x,
-        y: otherEndpoint.y - corner.y,
-      }
-      const dot = (side: Position) =>
-        SIDE_OUTWARD[side].x * toOther.x + SIDE_OUTWARD[side].y * toOther.y
-      return dot(vertSide) >= dot(horizSide)
-        ? { side: vertSide, ratio: pastY > 0 ? 1 : 0 }
-        : { side: horizSide, ratio: pastX > 0 ? 1 : 0 }
-    }
+  // A TRUE corner drop overshoots the node in BOTH axes, so the two sides meeting there
+  // tie on distance (both project to the corner) and nearest-side would just default to
+  // one. Break the tie by the ANGLE you aimed: whichever edge you overshot MORE past is
+  // the side. Overshoot mostly sideways -> the vertical (left/right) side; mostly up/down
+  // -> the horizontal (top/bottom) side. A drag ALONG a side is outside in ONE axis only,
+  // so it never reaches this branch and stays plain nearest-side.
+  const pastX = point.x < rect.x ? -1 : point.x > right ? 1 : 0
+  const pastY = point.y < rect.y ? -1 : point.y > bottom ? 1 : 0
+  if (pastX !== 0 && pastY !== 0) {
+    const overshootX = pastX > 0 ? point.x - right : rect.x - point.x
+    const overshootY = pastY > 0 ? point.y - bottom : rect.y - point.y
+    return overshootX >= overshootY
+      ? {
+          side: (pastX > 0 ? "right" : "left") as Position,
+          ratio: pastY > 0 ? 1 : 0,
+        }
+      : {
+          side: (pastY > 0 ? "bottom" : "top") as Position,
+          ratio: pastX > 0 ? 1 : 0,
+        }
   }
 
   const x = clamp(point.x, rect.x, right)
