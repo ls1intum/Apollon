@@ -117,9 +117,12 @@ const getEndpointRun = (
 
 /**
  * Half the on-screen length of the bend handle `EdgeBendHandle` draws for a segment of
- * this bendable length, expressed in FLOW units — the drawn handle is clamped to a
- * minimum SCREEN size, so when zoomed out its flow-space half grows PAST
- * `bendableLength / 2`. Used by the handle renderer to size the nub.
+ * this bendable length, expressed in FLOW units. The single source of truth shared by
+ * the handle renderer and `nearestHandleReach`: the endpoint reconnect target must stop
+ * at the handle's RENDERED near edge, and that edge is screen-scale dependent (the drawn
+ * handle is clamped to a minimum SCREEN size, so when zoomed out its flow-space half
+ * grows PAST `bendableLength / 2`). Capping against `bendableLength / 2` instead lets the
+ * drawn handle poke into the target at low zoom, and the target — drawn on top — eats it.
  */
 const renderedBendHandleHalfLength = (
   bendableLength: number,
@@ -132,6 +135,38 @@ const renderedBendHandleHalfLength = (
     EDGES.BEND_HANDLE_SCREEN_LENGTH_PX * screenScale
   )
   return longAxis / 2
+}
+
+/**
+ * How far outward the endpoint reconnect target may reach before it buries the nearest
+ * bend handle. The target is drawn ON TOP of the handles, so it must stop at the
+ * handle's RENDERED near edge — which is screen-scale dependent, hence
+ * `renderedBendHandleHalfLength` rather than the flow-space `bendableLength`. Caps
+ * against ANY handle kind: an inner handle can sit at the corner just past a short
+ * stub, and when the terminal stub is too short to bend there is no terminal handle to
+ * cap against at all. `Infinity` when nothing lies ahead of the endpoint.
+ */
+const nearestHandleReach = (
+  bendHandles: BendHandle[] | undefined,
+  endpoint: IPoint,
+  direction: IPoint,
+  screenScale: number
+): number => {
+  if (!bendHandles || bendHandles.length === 0) return Number.POSITIVE_INFINITY
+  const gap = EDGES.ENDPOINT_HANDLE_CLEARANCE_PX * screenScale
+  let reach = Number.POSITIVE_INFINITY
+  for (const handle of bendHandles) {
+    const along =
+      (handle.position.x - endpoint.x) * direction.x +
+      (handle.position.y - endpoint.y) * direction.y
+    if (along <= 0) continue // handle is beside/behind the endpoint's outward axis
+    const nearEdge =
+      along -
+      renderedBendHandleHalfLength(handle.bendableLength, screenScale) -
+      gap
+    if (nearEdge > 0) reach = Math.min(reach, nearEdge)
+  }
+  return reach
 }
 
 export const getEndpointHitTargetRect = (
@@ -241,6 +276,7 @@ export const EdgeEndpointMarkers = ({
   canEditEndpoint = true,
   onEndpointPointerDown,
   straight = false,
+  bendHandles,
   sourcePinned = false,
   targetPinned = false,
 }: {
@@ -257,6 +293,9 @@ export const EdgeEndpointMarkers = ({
   // Direct/straight edges: orient the grip + hit-target along the actual edge
   // angle instead of the endpoint's orthogonal N/E/S/W side.
   straight?: boolean
+  // The edge's bend handles, so a reconnect target can cap its outward reach at
+  // this end's terminal bend handle instead of painting over it.
+  bendHandles?: BendHandle[]
   // Whether each end is USER-PINNED (a custom anchor) rather than auto-anchored.
   // Kept as a prop/class for the reset affordance and tests; the grip itself looks the
   // same either way (a clean white handle), so nothing clutters the endpoint.
@@ -347,14 +386,17 @@ export const EdgeEndpointMarkers = ({
   const targetDir = targetOutward
     ? normalizeDir(targetOutward)
     : getEndpointDirection(targetPosition)
-  // The reconnect target owns the zone next to the node and TAKES PRECEDENCE over any
-  // bend handle there: reconnecting to another node is the consequential action, so a
-  // click near the endpoint must land on it, not on a bend handle that happens to sit
-  // close. The target reaches its natural size, bounded only by the OTHER endpoint's half
-  // (never the nearer bend handle), and is stacked above the bend handles; a bend handle
-  // clear of that zone stays grabbable.
-  const sourceRun = getEndpointRun(sourcePoint, targetPoint, sourceDir)
-  const targetRun = getEndpointRun(targetPoint, sourcePoint, targetDir)
+  // The reconnect target reaches at most to the OTHER endpoint's half AND stops
+  // short of this end's own terminal bend handle — so a short centred stub can
+  // still expose a grabbable bend handle beyond the (now-shortened) target.
+  const sourceRun = Math.min(
+    getEndpointRun(sourcePoint, targetPoint, sourceDir),
+    nearestHandleReach(bendHandles, sourcePoint, sourceDir, screenScale)
+  )
+  const targetRun = Math.min(
+    getEndpointRun(targetPoint, sourcePoint, targetDir),
+    nearestHandleReach(bendHandles, targetPoint, targetDir, screenScale)
+  )
   const sourceHitTarget = getEndpointHitTargetRect(
     sourcePoint,
     sourcePosition,
@@ -442,8 +484,10 @@ export const EdgeEndpointMarkers = ({
         height={sourceHitTarget.height}
         rx={sourceHitTarget.radius}
         ry={sourceHitTarget.radius}
-        // Above the bend handles (z 9999) so the reconnect target wins any overlap even
-        // in engines that honour z-index on SVG (paint order alone already puts it on top).
+        // Above the bend handles (z 9999) so where the reconnect target and a bend handle
+        // OVERLAP, the reconnect handle wins even in engines that honour z-index on SVG
+        // (paint order alone already puts it on top). It is still capped short of the bend
+        // handle, so the bend stays grabbable beyond the endpoint's zone.
         style={{ zIndex: 10000 }}
         pointerEvents={canEditEndpoint ? "all" : "none"}
         onPointerDown={
@@ -681,6 +725,7 @@ export const StepEdgeBody = ({
         isDiagramModifiable={isDiagramModifiable}
         canEditEndpoint={canEditEndpoint}
         onEndpointPointerDown={handleEndpointPointerDown}
+        bendHandles={bendHandles}
         sourcePinned={sourcePinned}
         targetPinned={targetPinned}
       />
