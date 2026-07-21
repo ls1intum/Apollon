@@ -101,3 +101,53 @@ test("a short pinned S-jog edge keeps usable endpoint grips and still shows its 
   // bend handle they overlap, so a pinned end never merges into it.
   expect(info.gripFill).not.toBe(info.bendFill)
 })
+
+test("the endpoint reconnect handle takes precedence over an overlapping bend handle", async ({
+  page,
+}) => {
+  // The node-connecting (reconnect) handle is the consequential action: a click near an
+  // endpoint must land on IT, never on a bend handle that sits close. The reconnect hit
+  // target owns the zone next to the node and is stacked above the bend handles.
+  const fx = JSON.parse(
+    fs.readFileSync(
+      path.join(__d, "..", "fixtures", "short-edge-pinned-jog.json"),
+      "utf-8"
+    )
+  )
+  await openFixtureInLocalEditor(page, fx)
+  await waitForCanvasReady(page)
+  await page.waitForTimeout(300)
+  await page.locator(".react-flow__edge").first().click({ force: true })
+  await page.waitForTimeout(300)
+
+  const overlaps = await page.evaluate(() => {
+    const box = (el: Element) => el.getBoundingClientRect()
+    const hits = Array.from(document.querySelectorAll(".edge-endpoint-handle"))
+    const bends = Array.from(document.querySelectorAll(".edge-bend-handle"))
+    const results: { winnerIsEndpoint: boolean }[] = []
+    for (const ht of hits) {
+      const h = box(ht)
+      for (const b of bends) {
+        const bb = box(b)
+        const ox1 = Math.max(h.x, bb.x),
+          oy1 = Math.max(h.y, bb.y),
+          ox2 = Math.min(h.x + h.width, bb.x + bb.width),
+          oy2 = Math.min(h.y + h.height, bb.y + bb.height)
+        if (ox2 - ox1 > 1 && oy2 - oy1 > 1) {
+          const el = document.elementFromPoint((ox1 + ox2) / 2, (oy1 + oy2) / 2)
+          results.push({
+            winnerIsEndpoint: Boolean(
+              el?.getAttribute("class")?.includes("edge-endpoint-handle")
+            ),
+          })
+        }
+      }
+    }
+    return results
+  })
+
+  // There is at least one endpoint/bend overlap on this crowded short edge, and the
+  // endpoint wins EVERY one of them.
+  expect(overlaps.length).toBeGreaterThan(0)
+  for (const o of overlaps) expect(o.winnerIsEndpoint).toBe(true)
+})
