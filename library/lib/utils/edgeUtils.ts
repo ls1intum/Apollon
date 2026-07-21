@@ -2740,43 +2740,6 @@ const hasReducedTerminalStub = (
   )
 }
 
-const hasArmCollapse = (points: IPoint[], proximityPx: number): boolean => {
-  if (points.length < 4) return false
-
-  for (let i = 0; i < points.length - 1; i++) {
-    const aStart = points[i]
-    const aEnd = points[i + 1]
-    const aIsH = aStart.y === aEnd.y
-    const aIsV = aStart.x === aEnd.x
-    if (!aIsH && !aIsV) continue
-
-    for (let j = i + 2; j < points.length - 1; j++) {
-      const bStart = points[j]
-      const bEnd = points[j + 1]
-      const bIsH = bStart.y === bEnd.y
-      const bIsV = bStart.x === bEnd.x
-
-      if (aIsH && bIsH && Math.abs(aStart.y - bStart.y) <= proximityPx) {
-        const aMinX = Math.min(aStart.x, aEnd.x)
-        const aMaxX = Math.max(aStart.x, aEnd.x)
-        const bMinX = Math.min(bStart.x, bEnd.x)
-        const bMaxX = Math.max(bStart.x, bEnd.x)
-        if (Math.max(aMinX, bMinX) < Math.min(aMaxX, bMaxX)) return true
-      }
-
-      if (aIsV && bIsV && Math.abs(aStart.x - bStart.x) <= proximityPx) {
-        const aMinY = Math.min(aStart.y, aEnd.y)
-        const aMaxY = Math.max(aStart.y, aEnd.y)
-        const bMinY = Math.min(bStart.y, bEnd.y)
-        const bMaxY = Math.max(bStart.y, bEnd.y)
-        if (Math.max(aMinY, bMinY) < Math.min(aMaxY, bMaxY)) return true
-      }
-    }
-  }
-
-  return false
-}
-
 const collapseTinyOrthogonalDoglegs = (
   points: IPoint[],
   proximityPx: number
@@ -3089,7 +3052,6 @@ export function normalizeOrthogonalEdgePoints(
       sourcePosition,
       targetPosition
     ) ||
-    hasArmCollapse(sanitized, EDGES.ORTHOGONAL_ARM_OVERLAP_PX) ||
     hasStubCollision
   ) {
     return fallback
@@ -3127,20 +3089,20 @@ export function resolveOrthogonalEdgeReleasePoints(
     targetPosition
   )
 
-  // When a release is invalid *because the user dragged the two parallel arms
-  // of a U together (or past each other)*, that is a deliberate "merge the U"
-  // gesture, not a bad drag — collapse the released geometry rather than
-  // snapping back to the pre-drag wide route. normalizeOrthogonalEdgePoints
-  // already routes overlapping input to the clean safe path and re-validates
-  // stubs, so any other invalidity still falls back safely.
+  // A release that FOLDS an arm flat onto its neighbour (a spike where the path reverses
+  // on itself) is a deliberate "collapse this loop" gesture, not a bad drag — keep the
+  // released geometry so normalizeOrthogonalEdgePoints routes it to the clean path rather
+  // than snapping back. Any other invalidity still falls back safely. A merely NARROW
+  // loop (arms close but not touching) is NOT a fold: it is kept exactly as drawn and
+  // only collapses once the arms actually meet.
   const sanitized = sanitizeReleasedPoints(
     releasedPoints,
     sourcePoint,
     targetPoint
   )
-  const armOverlap = hasArmCollapse(sanitized, EDGES.ORTHOGONAL_ARM_OVERLAP_PX)
+  const folded = hasAxisFold(sanitized)
   const pointsToNormalize =
-    invalid && !armOverlap ? lastValidPoints : releasedPoints
+    invalid && !folded ? lastValidPoints : releasedPoints
 
   return normalizeOrthogonalEdgePoints(
     pointsToNormalize,
@@ -3522,8 +3484,7 @@ export function preserveOrthogonalEdgePoints(
       targetPoint,
       sourcePosition,
       targetPosition
-    ) ||
-    hasArmCollapse(result, EDGES.ORTHOGONAL_ARM_OVERLAP_PX)
+    )
   ) {
     return safePoints
   }

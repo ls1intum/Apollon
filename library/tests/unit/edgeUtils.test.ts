@@ -1081,28 +1081,27 @@ describe("preserveOrthogonalEdgePoints", () => {
     expectOrthogonalSegments(result)
   })
 
-  it("draws a straight line between facing endpoints on a shared lane, however close", () => {
-    // Collinear stubs cannot fold back on each other, so proximity is irrelevant
-    // here — detouring two nodes that a straight line already connects is noise.
+  it("keeps a hand-drawn detour between facing endpoints as drawn (no auto-straighten)", () => {
+    // A detour the user drew is theirs to keep: we no longer flatten a loop between
+    // facing endpoints just because a straight line would also connect them. It only
+    // collapses when its arms actually fold onto each other.
+    const detour = [
+      { x: 0, y: 200 },
+      { x: 30, y: 200 },
+      { x: 30, y: 250 },
+      { x: 20, y: 250 },
+      { x: 20, y: 200 },
+      { x: 50, y: 200 },
+    ]
     const result = normalizeOrthogonalEdgePoints(
-      [
-        { x: 0, y: 200 },
-        { x: 30, y: 200 },
-        { x: 30, y: 250 },
-        { x: 20, y: 250 },
-        { x: 20, y: 200 },
-        { x: 50, y: 200 },
-      ],
+      detour,
       { x: 0, y: 200 },
       { x: 50, y: 200 },
       Position.Right,
       Position.Left
     )
 
-    expect(result).toEqual([
-      { x: 0, y: 200 },
-      { x: 50, y: 200 },
-    ])
+    expect(result).toEqual(detour)
     expectOrthogonalSegments(result)
   })
 
@@ -1320,26 +1319,26 @@ describe("preserveOrthogonalEdgePoints", () => {
     expectOrthogonalSegments(result)
   })
 
-  it("collapses near-overlapping parallel arms only in release normalization", () => {
+  it("keeps near-but-not-touching parallel arms as drawn (collapses only when they meet)", () => {
+    // Arms 10px apart are a narrow loop the user drew, not a spike — preserved. They
+    // only collapse once dragged together far enough that a stub can no longer fit.
+    const narrow = [
+      { x: 0, y: 200 },
+      { x: 360, y: 200 },
+      { x: 360, y: 250 },
+      { x: 370, y: 250 },
+      { x: 370, y: 200 },
+      { x: 400, y: 200 },
+    ]
     const result = normalizeOrthogonalEdgePoints(
-      [
-        { x: 0, y: 200 },
-        { x: 360, y: 200 },
-        { x: 360, y: 250 },
-        { x: 370, y: 250 },
-        { x: 370, y: 200 },
-        { x: 400, y: 200 },
-      ],
+      narrow,
       { x: 0, y: 200 },
       { x: 400, y: 200 },
       Position.Right,
       Position.Left
     )
 
-    expect(result).toEqual([
-      { x: 0, y: 200 },
-      { x: 400, y: 200 },
-    ])
+    expect(result).toEqual(narrow)
     expectOrthogonalSegments(result)
   })
 
@@ -1477,10 +1476,11 @@ describe("preserveOrthogonalEdgePoints", () => {
     expect(result).toEqual(tightened)
   })
 
-  // Dragging a U's arm so the two parallel arms meet or cross is a deliberate
-  // "merge the U" gesture and must collapse the route — not snap back to the
-  // pre-drag wide U. Arms still clearly apart stay a (narrow) U.
-  describe("collapses a U when its arms are dragged together", () => {
+  // A U collapses only once its arms actually MEET (touch/cross), where the loop folds
+  // onto itself or a stub can no longer fit — a real "collapse this loop" gesture. A U
+  // whose arms are merely close stays exactly as drawn, so a partial drag never snaps the
+  // loop into a straight line.
+  describe("collapses a U only when its arms actually meet", () => {
     const S = { x: 0, y: 200 }
     const T = { x: 400, y: 200 }
     const wideU = [
@@ -1500,9 +1500,10 @@ describe("preserveOrthogonalEdgePoints", () => {
       { x: 400, y: 200 },
     ]
 
-    // Arm gap 5px / 10px (boundary) / crossed: all collapse to a straight line.
-    for (const lx of [365, 360, 375]) {
-      it(`collapses when the dragged arm lands at x=${lx} (gap ${370 - lx}px)`, () => {
+    // Touching (0px), essentially touching (5px, a stub can no longer fit), and crossed
+    // all collapse to a straight line.
+    for (const lx of [365, 370, 375]) {
+      it(`collapses when the dragged arm reaches x=${lx} (gap ${370 - lx}px)`, () => {
         const result = resolveOrthogonalEdgeReleasePoints(
           releaseWithLeftArmAt(lx),
           wideU,
@@ -1519,19 +1520,22 @@ describe("preserveOrthogonalEdgePoints", () => {
       })
     }
 
-    it("preserves a deliberate narrow U whose arms are still 15px apart", () => {
-      const released = releaseWithLeftArmAt(355)
-      const result = resolveOrthogonalEdgeReleasePoints(
-        released,
-        wideU,
-        S,
-        T,
-        Position.Right,
-        Position.Left
-      )
-      expect(result).toEqual(released)
-      expectOrthogonalSegments(result)
-    })
+    // Still clearly apart (10px, 15px): the narrow U is kept exactly as drawn.
+    for (const lx of [360, 355]) {
+      it(`preserves a narrow U whose arms are ${370 - lx}px apart`, () => {
+        const released = releaseWithLeftArmAt(lx)
+        const result = resolveOrthogonalEdgeReleasePoints(
+          released,
+          wideU,
+          S,
+          T,
+          Position.Right,
+          Position.Left
+        )
+        expect(result).toEqual(released)
+        expectOrthogonalSegments(result)
+      })
+    }
   })
 
   // A dragged arm must come to REST on the parallel arm two segments away (where the
