@@ -531,6 +531,23 @@ describe("freeform rectangle anchors", () => {
         Position.Right
       )
     })
+
+    it("is STABLE across the corner lines — a point past one edge is always that side", () => {
+      // Right of the node, swept vertically THROUGH the top corner line (y=20) and just
+      // above/below it: every one is Right. Previously the exact corner line tied to Top,
+      // so a cursor moving vertically flip-flopped Right->Top->Right next to a corner.
+      for (const y of [16, 19, 20, 21, 24]) {
+        expect(getFreeformAnchorFromPoint({ x: 130, y }, rect).side).toBe(
+          Position.Right
+        )
+      }
+      // Above the node, swept horizontally through the right corner line (x=110): all Top.
+      for (const x of [104, 109, 110, 111, 116]) {
+        expect(getFreeformAnchorFromPoint({ x, y: 12 }, rect).side).toBe(
+          Position.Top
+        )
+      }
+    })
   })
 
   it("recognizes persisted freeform anchors", () => {

@@ -367,14 +367,19 @@ export function getFreeformAnchorFromPoint(
   const right = rect.x + rect.width
   const bottom = rect.y + rect.height
 
-  // A TRUE corner drop overshoots the node in BOTH axes, so the two sides meeting there
-  // tie on distance (both project to the corner) and nearest-side would just default to
-  // one. Break the tie by the ANGLE you aimed: whichever edge you overshot MORE past is
-  // the side. Overshoot mostly sideways -> the vertical (left/right) side; mostly up/down
-  // -> the horizontal (top/bottom) side. A drag ALONG a side is outside in ONE axis only,
-  // so it never reaches this branch and stays plain nearest-side.
+  // Resolve the EXTERIOR of the node explicitly, so a dragging cursor never flip-flops:
+  // nearest-side ties at the corner LINES (a point level with the top edge but past the
+  // right one is equidistant to both), and those tie-bands sit between regions that pick
+  // the other side, so a small move jumps top<->right. Instead:
+  //   • past ONE edge  -> THAT side, always (ratio from the in-range coordinate).
+  //   • past BOTH edges (a real corner) -> the side you overshot MORE past (the angle you
+  //     aimed): mostly sideways -> vertical (L/R) side, mostly up/down -> horizontal (T/B).
+  // Every exterior region is now a single side with one clean boundary between neighbours.
   const pastX = point.x < rect.x ? -1 : point.x > right ? 1 : 0
   const pastY = point.y < rect.y ? -1 : point.y > bottom ? 1 : 0
+  const ratioAlong = (offset: number, length: number) =>
+    length > 0 ? clamp(Math.round(offset), 0, length) / length : 0.5
+
   if (pastX !== 0 && pastY !== 0) {
     const overshootX = pastX > 0 ? point.x - right : rect.x - point.x
     const overshootY = pastY > 0 ? point.y - bottom : rect.y - point.y
@@ -388,7 +393,20 @@ export function getFreeformAnchorFromPoint(
           ratio: pastX > 0 ? 1 : 0,
         }
   }
+  if (pastX !== 0) {
+    return {
+      side: (pastX > 0 ? "right" : "left") as Position,
+      ratio: ratioAlong(point.y - rect.y, rect.height),
+    }
+  }
+  if (pastY !== 0) {
+    return {
+      side: (pastY > 0 ? "bottom" : "top") as Position,
+      ratio: ratioAlong(point.x - rect.x, rect.width),
+    }
+  }
 
+  // Interior drop (cursor inside the node): fall back to the nearest border.
   const x = clamp(point.x, rect.x, right)
   const y = clamp(point.y, rect.y, bottom)
   const candidates: Array<{
