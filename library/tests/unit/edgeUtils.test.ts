@@ -1584,37 +1584,60 @@ describe("preserveOrthogonalEdgePoints", () => {
     })
   })
 
-  // Dragging a PINNED terminal arm flat onto its neighbour folds the path back on
-  // itself (a spike). No simplify pass removes the residual jog, so normalize hands the
-  // collapsed edge to the router for the clean direct route — the same result squeezing
-  // the free inner arm already produces. Done in normalize (not just at release) so the
-  // post-drag geometry re-projection cannot re-introduce the jog.
-  describe("collapses a folded (squeezed-flat) route to the clean direct path", () => {
-    const S = { x: 565, y: 335 }
-    const T = { x: 645, y: 410 }
-
-    it("routes a folded terminal squeeze straight instead of keeping the jog", () => {
-      // The terminal down-run folded onto the source arm at x=615: 615,335 → up to 140 →
-      // back down to 380 reverses on itself.
+  // A fold is a spike where the path reverses on itself. normalize removes ONLY that
+  // spike (the collinear reversal collapses under simplify) and keeps every other corner
+  // the user drew — so squeezing one step of a multi-bend edge loses just that step, not
+  // the whole route. Done in normalize (not only at release) so the post-drag geometry
+  // re-projection cannot re-introduce the spike.
+  describe("removes a fold locally and keeps the rest of the route", () => {
+    it("drops only the spike of a multi-corner route (three corners stay, minus one)", () => {
+      // A route that spikes UP to y=-160 through a 5px step, then continues. Collapsing
+      // the step folds it (650,125 → up to -160 → down to -10 reverses); the spike goes,
+      // the outer corners (the 680→650 top jog) stay.
       const folded = [
-        { x: 565, y: 335 },
-        { x: 615, y: 335 },
-        { x: 615, y: 140 },
-        { x: 615, y: 380 },
-        { x: 645, y: 380 },
-        { x: 645, y: 410 },
+        { x: 680, y: 155 },
+        { x: 680, y: 125 },
+        { x: 650, y: 125 },
+        { x: 650, y: -160 },
+        { x: 650, y: -10 },
+        { x: 575, y: -10 },
       ]
       const result = normalizeOrthogonalEdgePoints(
         folded,
-        S,
-        T,
+        { x: 680, y: 155 },
+        { x: 575, y: -10 },
+        Position.Top,
+        Position.Right
+      )
+      expect(result).toEqual([
+        { x: 680, y: 155 },
+        { x: 680, y: 125 },
+        { x: 650, y: 125 },
+        { x: 650, y: -10 },
+        { x: 575, y: -10 },
+      ])
+      expectOrthogonalSegments(result)
+    })
+
+    it("collapses a simple loop's fold straight down to two corners", () => {
+      // When the only structure IS the spike, removing it leaves the direct route.
+      const folded = [
+        { x: 640, y: -30 },
+        { x: 680, y: -30 },
+        { x: 680, y: -120 },
+        { x: 680, y: 155 },
+      ]
+      const result = normalizeOrthogonalEdgePoints(
+        folded,
+        { x: 640, y: -30 },
+        { x: 680, y: 155 },
         Position.Right,
         Position.Top
       )
       expect(result).toEqual([
-        { x: 565, y: 335 },
-        { x: 645, y: 335 },
-        { x: 645, y: 410 },
+        { x: 640, y: -30 },
+        { x: 680, y: -30 },
+        { x: 680, y: 155 },
       ])
       expectOrthogonalSegments(result)
     })

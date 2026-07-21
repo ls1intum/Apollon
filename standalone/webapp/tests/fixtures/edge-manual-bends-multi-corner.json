@@ -1,0 +1,109 @@
+{
+  "id": "62bd7928-35ca-4b64-b1c2-f79b119dbe2c",
+  "version": "4.1.0",
+  "title": "",
+  "type": "ClassDiagram",
+  "nodes": [
+    {
+      "id": "034631c8-1b04-4ead-b9e8-6f661e08f927",
+      "width": 160,
+      "height": 100,
+      "type": "class",
+      "position": {
+        "x": 415,
+        "y": -60
+      },
+      "data": {
+        "name": "Class",
+        "methods": [
+          {
+            "id": "448302aa-9222-48da-8228-dbb2cd74ad1c",
+            "name": "+ method()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "a8b00fa0-3abb-480d-8917-f7607d6b29a3",
+            "name": "+ attribute: Type"
+          }
+        ]
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "c8fb23d5-2a96-4171-9a15-d12a1ed58349",
+      "width": 160,
+      "height": 100,
+      "type": "class",
+      "position": {
+        "x": 600,
+        "y": 155
+      },
+      "data": {
+        "name": "Class",
+        "methods": [
+          {
+            "id": "cf92ef50-be31-4d6e-9cce-7f0337baed6c",
+            "name": "+ method()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "6b08ed73-fadf-4afb-b142-93550dcaac28",
+            "name": "+ attribute: Type"
+          }
+        ]
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "0ed22a37-f110-46ca-91c6-0061eed84279",
+      "source": "c8fb23d5-2a96-4171-9a15-d12a1ed58349",
+      "target": "034631c8-1b04-4ead-b9e8-6f661e08f927",
+      "type": "ClassUnidirectional",
+      "sourceHandle": "top",
+      "targetHandle": "right",
+      "data": {
+        "points": [
+          {
+            "x": 680,
+            "y": 155
+          },
+          {
+            "x": 680,
+            "y": 125
+          },
+          {
+            "x": 655,
+            "y": 125
+          },
+          {
+            "x": 655,
+            "y": -160
+          },
+          {
+            "x": 650,
+            "y": -160
+          },
+          {
+            "x": 650,
+            "y": -10
+          },
+          {
+            "x": 575,
+            "y": -10
+          }
+        ]
+      }
+    }
+  ],
+  "assessments": {}
+}

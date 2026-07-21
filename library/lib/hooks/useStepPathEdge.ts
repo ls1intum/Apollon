@@ -436,6 +436,13 @@ export const useStepPathEdge = ({
   const activePoints = centralRoute ?? centralFallback
 
   useEffect(() => {
+    // This effect persists the SOLVER's (manual-merged, re-projected) route. Until the
+    // solver's first route lands, `activePoints` is `centralFallback` — a bare
+    // source→target straight line that is never painted. Re-projecting THAT would
+    // normalize it to the auto route and overwrite the user's stored manual bends before
+    // the solver ever preserved them. Wait for the real route: never persist the fallback.
+    if (!centralRoute) return
+
     if (shouldPreferComputedPath) {
       if (hasLocalManualPoints) {
         setCustomPoints([])
@@ -486,6 +493,7 @@ export const useStepPathEdge = ({
     )
   }, [
     activePoints,
+    centralRoute,
     customPoints,
     data?.points,
     hasLocalManualPoints,

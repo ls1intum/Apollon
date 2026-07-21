@@ -3000,23 +3000,13 @@ export function normalizeOrthogonalEdgePoints(
     return getDegenerateRoute(sourcePoint, targetPoint)
   }
 
-  // A fold means an arm was squeezed flat onto its neighbour (the loop collapsed). A
-  // pinned terminal arm folds rather than merging cleanly, leaving a jog that survives
-  // simplify — so hand the collapsed edge back to the router for the clean direct route,
-  // exactly as squeezing the inner arm already produces. Done here (not only at release)
-  // so the geometry re-projection that runs after a drag cannot re-introduce the jog.
+  // A fold is a spike: an arm squeezed flat onto its neighbour so the path reverses on
+  // itself. Remove ONLY that spike — the collinear reversal collapses under simplify —
+  // and keep the rest of the user's route, so a multi-bend edge loses just the squeezed
+  // step (three corners stay three corners minus one), not every corner. Done here (not
+  // only at release) so the geometry re-projection after a drag cannot re-introduce it.
   if (hasAxisFold(points)) {
-    return sanitizeReleasedPoints(
-      routeOrthogonalPath(
-        sourcePoint,
-        targetPoint,
-        sourcePosition,
-        targetPosition,
-        obstacles
-      ),
-      sourcePoint,
-      targetPoint
-    )
+    return sanitizeReleasedPoints(points, sourcePoint, targetPoint)
   }
 
   const hasStubCollision = stubsWouldOverlap(
