@@ -6,7 +6,7 @@ import {
   type Rect,
 } from "@xyflow/react"
 import { getEdgePosition, ConnectionMode } from "@xyflow/system"
-import { EDGES } from "@/constants"
+import { CANVAS, EDGES } from "@/constants"
 import type { IPoint } from "@/edges/Connection"
 import { getPositionOnCanvas } from "@/utils/nodeUtils"
 import {
@@ -17,26 +17,41 @@ import {
   isFreeformEdgeAnchor,
   type FreeformEdgeAnchor,
 } from "@/utils/edgeUtils"
-import { getEdgeAnchorPoint, getConnectionMode } from "@/utils/connectionModes"
 import {
+  getEdgeAnchorFromPoint,
+  getEdgeAnchorPoint,
+  getConnectionMode,
+} from "@/utils/connectionModes"
+import {
+  createNodeIndex,
   getEdgeObstacles,
   getContainerBorderPolylines,
+  type NodeIndex,
   type ObstacleRect,
 } from "@/utils/geometry/obstacles"
 import { routeStepEdge } from "@/utils/geometry/edgeRoute"
-import { neighborsWithinReach } from "@/utils/geometry/orthogonalRouter"
-import {
-  routeChosenAnchors,
-  selectEdgeAnchors,
-} from "@/utils/geometry/edgeAnchoring"
+import { selectEdgeAnchors } from "@/utils/geometry/edgeAnchoring"
 import {
   assignPorts,
   assignSides,
   endKey,
   type EndRef,
+  type ReservedSideEnd,
   type SideEdge,
 } from "@/utils/geometry/portAssignment"
-import { centerOf } from "@/utils/geometry/rectSides"
+import { canRunStraight, centerOf } from "@/utils/geometry/rectSides"
+import {
+  routeConflictScore,
+  routeConflictsWithNeighborEdges,
+} from "@/utils/geometry/orthogonalRouter"
+import { lexLess } from "@/utils/geometry/scalar"
+import { recordRouteScorePair } from "@/sync/perfCounters"
+import {
+  endpointPlacementCost,
+  polylineConflictCost,
+  ROUTING_COST,
+  weightedRoutingCost,
+} from "@/utils/geometry/routingCost"
 
 /**
  * One edge's endpoints, resolved from the React Flow store so all edges can be
@@ -234,28 +249,6 @@ function mergeManualPoints(
   return points
 }
 
-/** Whether `other` is a TRUE sibling of `self`: leaves the very same
- * connection point, so it shares geometry. */
-function isSibling(self: Edge, other: Edge): boolean {
-  const sharedNodes = [other.source, other.target].filter((n) =>
-    [self.source, self.target].includes(n)
-  ).length
-  if (sharedNodes !== 1) return false
-  const ends = [
-    [self.source, self.sourceHandle],
-    [self.target, self.targetHandle],
-  ] as const
-  const otherEnds = [
-    [other.source, other.sourceHandle],
-    [other.target, other.targetHandle],
-  ] as const
-  return ends.some(([node, handle]) =>
-    otherEnds.some(
-      ([otherNode, otherHandle]) => node === otherNode && handle === otherHandle
-    )
-  )
-}
-
 /**
  * A grid bucketing each already-routed edge's polyline by cell, so an edge finds
  * its nearby neighbours without scanning every routed edge (the walk is
@@ -335,29 +328,43 @@ export function polylineIntersectsBox(
   return false
 }
 
-/** Gather the polylines this edge must not be drawn on top of — lower-id
- * neighbours' finished routes plus container borders. */
+/** Gather the polylines this edge must not be drawn on top of — geometrically
+ * earlier neighbours' finished routes plus container borders. */
 function collectNeighbors(
   edge: Edge,
   endpoints: ResolvedEdgeEndpoints,
   nodes: readonly Node[],
-  edgeById: Map<string, Edge>,
+  nodeIndex: NodeIndex,
+  obstacles: readonly ObstacleRect[],
   routeById: Record<string, IPoint[]>,
   grid: NeighborGrid
 ): IPoint[][] {
-  const borders = getContainerBorderPolylines(nodes, edge.source, edge.target)
+  const borders = getContainerBorderPolylines(
+    nodes,
+    edge.source,
+    edge.target,
+    nodeIndex
+  )
 
-  const { x: sx } = endpoints.adjustedSource
-  const { y: sy } = endpoints.adjustedSource
-  const { x: tx } = endpoints.adjustedTarget
-  const { y: ty } = endpoints.adjustedTarget
+  // Query the union of both endpoint NODE rectangles, not React Flow's initial
+  // guessed connection points. Auto selection may leave from any of the four
+  // sides, so a neighbour reachable from an alternate side is part of the joint
+  // objective even when it lies outside the base-endpoint box.
+  const sx0 = endpoints.sourceAbsolutePosition.x
+  const sy0 = endpoints.sourceAbsolutePosition.y
+  const sx1 = sx0 + endpoints.sourceSize.width
+  const sy1 = sy0 + endpoints.sourceSize.height
+  const tx0 = endpoints.targetAbsolutePosition.x
+  const ty0 = endpoints.targetAbsolutePosition.y
+  const tx1 = tx0 + endpoints.targetSize.width
+  const ty1 = ty0 + endpoints.targetSize.height
   const pad = EDGES.STUB_LENGTH * 6
-  const minX = Math.min(sx, tx) - pad
-  const maxX = Math.max(sx, tx) + pad
-  const minY = Math.min(sy, ty) - pad
-  const maxY = Math.max(sy, ty) + pad
+  const minX = Math.min(sx0, tx0, ...obstacles.map((o) => o.x)) - pad
+  const maxX = Math.max(sx1, tx1, ...obstacles.map((o) => o.x + o.width)) + pad
+  const minY = Math.min(sy0, ty0, ...obstacles.map((o) => o.y)) - pad
+  const maxY = Math.max(sy1, ty1, ...obstacles.map((o) => o.y + o.height)) + pad
 
-  // Candidate lower-id edges: those with a segment in a cell overlapping the box.
+  // Candidate committed edges: those with a segment in a cell overlapping the box.
   // indexRoutePolyline buckets every cell a segment crosses, so a long run spanning
   // the box is caught even with both endpoints far outside it. The exact
   // segment-vs-box test below drops the cell's out-of-box extras.
@@ -373,16 +380,27 @@ function collectNeighbors(
     }
   }
 
-  // Ascending-id order, matching the previous full-map scan (routeById is built
-  // ascending), so neighbour order — and thus the routed result — is unchanged.
-  const ordered = [...candidateIds].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
+  const polylineKey = (polyline: readonly IPoint[]): string =>
+    polyline.map((point) => `${point.x},${point.y}`).join(";")
+  const keys = new Map(
+    [...candidateIds].map((id) => [id, polylineKey(routeById[id] ?? [])])
+  )
+  // Canonical GEOMETRY order makes hashing and A* independent of both bucket
+  // insertion and edge names. ID is used only when two polylines are identical.
+  const ordered = [...candidateIds].sort((a, b) => {
+    const ak = keys.get(a)!
+    const bk = keys.get(b)!
+    return ak < bk ? -1 : ak > bk ? 1 : a < b ? -1 : a > b ? 1 : 0
+  })
 
   const neighbors: IPoint[][] = []
   for (const otherId of ordered) {
     const polyline = routeById[otherId]
     if (!polyline || polyline.length < 2) continue
-    const other = edgeById.get(otherId)
-    if (other && isSibling(edge, other)) continue
+    // Siblings are intentionally included. The node-local coordinator proposes
+    // distinct ports, but capacity is soft; pricing their real committed stubs is
+    // what lets the joint search reject an overlap or reuse a port only when every
+    // alternative is worse.
     if (polylineIntersectsBox(polyline, minX, maxX, minY, maxY)) {
       neighbors.push(polyline)
     }
@@ -394,6 +412,30 @@ function collectNeighbors(
 export type LiveEdgeOverride = {
   edgeId: string
   points: IPoint[]
+  edge?: Edge
+  strategy?: "authoritative" | "predicted"
+}
+
+/**
+ * Turn the interaction-layer live state into the exact edge set and override the
+ * route solver should see. A bend is authored geometry and remains authoritative.
+ * An endpoint reconnect instead substitutes the edge that pointer-up will commit,
+ * then removes the override so that edge receives ordinary committed routing.
+ */
+export function prepareLiveEdgeSolve(
+  edges: readonly Edge[],
+  liveOverride: LiveEdgeOverride | null | undefined
+): { edges: readonly Edge[]; liveOverride: LiveEdgeOverride | null } {
+  if (liveOverride?.strategy !== "predicted" || liveOverride.edge === undefined)
+    return { edges, liveOverride: liveOverride ?? null }
+  const predictedEdge = liveOverride.edge
+
+  return {
+    edges: edges.map((edge) =>
+      edge.id === liveOverride.edgeId ? predictedEdge : edge
+    ),
+    liveOverride: null,
+  }
 }
 
 export type SolverInput = {
@@ -405,8 +447,14 @@ export type SolverInput = {
   straightPathTypes: ReadonlySet<string>
   /** Types rendered as a plain two-point line (the straight-path hook). */
   straightHookTypes: ReadonlySet<string>
-  /** An in-progress drag preview, routed at its own id so higher-id edges dodge
-   * it exactly as they would its committed route. */
+  /** Immutable edges omitted from a bounded refinement pass. Their routes are
+   * already present in `fixedRoutes`, but their endpoint reservations still
+   * participate in node-local side/port coordination. Internal-only. */
+  fixedEdges?: readonly Edge[]
+  /** An in-progress drag preview. Authored bend geometry is authoritative and
+   * routed first. A predicted reconnect substitutes the edge pointer-up will
+   * commit, then follows the ordinary automatic-routing path so preview and
+   * commit expose the same constraints to every neighbouring edge. */
   liveOverride?: LiveEdgeOverride | null
   /** Previous routes, held for edges whose endpoints are momentarily unknown. */
   previous?: Record<string, IPoint[]>
@@ -421,14 +469,10 @@ export type SolverInput = {
   solveCache?: Map<string, EdgeSolveCacheEntry>
 }
 
-/** One edge's cached solve, split into two keys. `sig` (the ANCHOR key) covers
- * everything the anchor PICK depends on — rects, types, customs, lane — so a hit
- * means the CHOSEN anchors still stand and ride along, letting a hit re-resolve
- * the endpoints `mergeManualPoints` needs without re-selecting. `routeSig` covers
- * what only the ROUTE depends on once anchors are fixed: the obstacle and
- * neighbour sets. Anchor hit + route miss ⇒ one cheap fixed-anchor re-route
- * instead of a full multi-candidate re-search, which is what stops a one-node
- * drag from cascading an anchor re-search across the whole graph. */
+/** One edge's cached solve. For auto edges `sig` is the complete JOINT signature:
+ * candidates, obstacles and reachable neighbours all participate because any one
+ * of them may change both the winning endpoints and route. `routeSig` remains for
+ * fixed-edge compatibility; auto solves leave it empty. */
 export type EdgeSolveCacheEntry = {
   sig: string
   routeSig: string
@@ -476,39 +520,6 @@ const serializeNeighbors = (neighborEdges: readonly IPoint[][]): string => {
   return n
 }
 
-/**
- * The ROUTE key for an auto edge with fixed anchors: the CHOSEN-anchor endpoints
- * (with their marker-padding-adjusted coordinates and exit positions), the
- * obstacles, plus only the neighbour segments the route can actually reach
- * (`neighborsWithinReach`, the router's own corridor). A neighbour bending OUTSIDE
- * this edge's corridor cannot change its route, so it must not invalidate the key —
- * that is what keeps a one-node drag from cascading a re-route across the whole
- * graph. The endpoints are keyed explicitly (not left implicit in the corridor)
- * because a padding-only change — e.g. a component edge switching between the
- * provided and required interface sockets — moves the adjusted endpoint without
- * necessarily touching any reachable neighbour, and would otherwise reuse a stale
- * polyline that no longer reaches the socket.
- */
-const routeInputSignature = (
-  endpoints: ResolvedEdgeEndpoints,
-  obstacles: readonly ObstacleRect[],
-  neighborEdges: readonly IPoint[][]
-): string => {
-  const e = endpoints
-  const reach = neighborsWithinReach(
-    e.adjustedSource,
-    [e.adjustedTarget],
-    obstacles,
-    neighborEdges
-  )
-  let n = "R"
-  for (const s of reach) n += `;${s.x1},${s.y1},${s.x2},${s.y2}`
-  const ends =
-    `${e.adjustedSource.x},${e.adjustedSource.y},${e.adjustedTarget.x},${e.adjustedTarget.y}` +
-    `|${e.sourcePosition},${e.targetPosition},${e.padding}`
-  return `${ends}|${serializeObstacles(obstacles)}|${n}`
-}
-
 /** The router's input for one resolved endpoint pair. Shared by the fixed-edge
  * path and the auto-anchor fallback so both route through the same primitive. */
 function routeStepParams(
@@ -535,29 +546,16 @@ function routeStepParams(
 }
 
 /**
- * Digest of everything the anchor SELECTION depends on: the two node rects, node
- * types, any custom (pinned) anchors, whether the edge may go straight, the sibling
- * lane, and the BYSTANDER bodies its ideal route is scored against (so a third node
- * moving into/out of the way re-picks the anchor).
- *
- * NEIGHBOURS ARE PART OF THIS KEY. `scoreKey` prices a candidate's crossings and
- * near-parallel runs against the already-committed routes, at up to three bends per
- * crossing, so the chosen anchor genuinely depends on them. Leaving them out let an
- * edge keep an anchor that was picked against neighbours which have since moved: the
- * cached diagram and a freshly-loaded one then differ, and so do two Yjs peers with
- * different drag histories — the anchors stop being a pure function of the current
- * geometry. Both digests are bounded by the same reach window the router uses, so a
- * far-away edge still touches nothing here.
- *
- * Node RECTS, not the base endpoints: selection is a function of the rectangles, and
- * the base React Flow would have picked is overridden.
+ * Digest of everything the JOINT endpoint-and-route solve depends on: endpoint
+ * rectangles and types, custom locks, node-local port suggestions, marker padding,
+ * the complete obstacle field, and committed neighbours. There is intentionally no
+ * anchor-only cache layer: an obstacle or neighbour can change the winning port.
  *
  * PLUS the marker padding. `selectEdgeAnchors` re-resolves each candidate through
  * `resolveEdgeEndpoints`, which sets an auto endpoint back by `endpoints.padding` (the
  * edge type's marker gap) before the route is scored. Two edge types with the same node
  * rects but different markers can therefore pick different anchors, so the padding is
- * part of the key — matching the route cache (`routeInputSignature`), which already
- * folds it in.
+ * part of the key as well.
  */
 function autoAnchorSignature(
   endpoints: ResolvedEdgeEndpoints,
@@ -565,8 +563,10 @@ function autoAnchorSignature(
   targetType: string | undefined,
   sourceCustom: FreeformEdgeAnchor | undefined,
   targetCustom: FreeformEdgeAnchor | undefined,
+  sourcePreferred: FreeformEdgeAnchor | undefined,
+  targetPreferred: FreeformEdgeAnchor | undefined,
   enableStraightPath: boolean,
-  thirdPartyObstacles: readonly ObstacleRect[],
+  obstacles: readonly ObstacleRect[],
   neighborEdges: readonly IPoint[][]
 ): string {
   const e = endpoints
@@ -583,10 +583,10 @@ function autoAnchorSignature(
     // a crowded side. A crowded side re-bands when a different edge joins/leaves it, so
     // the band ratio here changes and the pick is re-gated with no extra fan key.
     `${anchor(sourceCustom)};${anchor(targetCustom)}`,
-    // Bystanders the graze penalty scores against — a third node sliding into the
-    // ideal lane must re-pick, or the anchor stays on a now-grazing straight shot.
-    serializeObstacles(thirdPartyObstacles),
-    // Committed neighbours the crossing/proximity terms score against.
+    `${anchor(sourcePreferred)};${anchor(targetPreferred)}`,
+    // Full route geometry, including soft containers. Endpoint selection and A*
+    // are one optimisation, so there is no valid anchor-only subset of this key.
+    serializeObstacles(obstacles),
     serializeNeighbors(neighborEdges),
   ].join("|")
 }
@@ -623,33 +623,109 @@ function nodeRect(
   }
 }
 
-/** The free edge-ends of MULTI-EDGE nodes (a node carrying more than one free end),
- * each tagged with its GEOMETRIC facing side (the sector its partner sits in — so a
- * fork splits across sides by direction), its rect, its partner's centre (the angular
- * key) and whether the node is four-centre. Feeds `assignPorts`. Ends of single-edge
- * nodes are omitted: they stay on the per-edge cost path, which already handles their
- * side/ratio with no regression. Self-loops and fully-pinned edges take no part. */
+type FixedPortByEnd = Map<string, FreeformEdgeAnchor>
+
+/**
+ * Extract the endpoint seats that optimization may not move. Explicit pins are
+ * fixed individually; manual/live/straight-hook routes fix both ends because their
+ * topology is not an anchor-search variable. Re-resolving legacy manual endpoints
+ * against the current nodes keeps their reservations attached after a node move.
+ */
+function collectFixedPorts(
+  edges: readonly Edge[],
+  nodes: readonly Node[],
+  nodeById: Map<string, Node>,
+  nodeLookup: Map<string, InternalNode>,
+  connectionMode: ConnectionMode,
+  straightHookTypes: ReadonlySet<string>,
+  liveOverride: LiveEdgeOverride | null | undefined,
+  fixedRoutes: Readonly<Record<string, IPoint[]>>
+): FixedPortByEnd {
+  const result: FixedPortByEnd = new Map()
+  for (const edge of edges) {
+    const sourcePinned = asFreeformAnchor(edge.data?.sourceAnchor)
+    const targetPinned = asFreeformAnchor(edge.data?.targetAnchor)
+    if (sourcePinned) result.set(endKey(edge.id, "source"), sourcePinned)
+    if (targetPinned) result.set(endKey(edge.id, "target"), targetPinned)
+
+    const topologyFixed =
+      edge.id === liveOverride?.edgeId ||
+      straightHookTypes.has(edge.type ?? "") ||
+      edge.source === edge.target ||
+      (Array.isArray(edge.data?.points) && edge.data.points.length > 0) ||
+      fixedRoutes[edge.id] !== undefined
+    if (!topologyFixed || (sourcePinned && targetPinned)) continue
+
+    const endpoints = resolveEdgeEndpoints(
+      edge,
+      nodes,
+      nodeById,
+      nodeLookup,
+      connectionMode
+    )
+    if (!endpoints) continue
+    const fixedRoute =
+      edge.id === liveOverride?.edgeId
+        ? liveOverride.points
+        : fixedRoutes[edge.id]
+    const sourcePoint = fixedRoute?.[0] ?? endpoints.adjustedSource
+    const targetPoint =
+      fixedRoute?.[fixedRoute.length - 1] ?? endpoints.adjustedTarget
+    if (!sourcePinned) {
+      const sourceRect = nodeRect(edge.source, nodes, nodeById)
+      const anchor =
+        sourceRect &&
+        getEdgeAnchorFromPoint(
+          nodeById.get(edge.source)?.type,
+          sourcePoint,
+          sourceRect
+        )
+      if (anchor) result.set(endKey(edge.id, "source"), anchor)
+    }
+    if (!targetPinned) {
+      const targetRect = nodeRect(edge.target, nodes, nodeById)
+      const anchor =
+        targetRect &&
+        getEdgeAnchorFromPoint(
+          nodeById.get(edge.target)?.type,
+          targetPoint,
+          targetRect
+        )
+      if (anchor) result.set(endKey(edge.id, "target"), anchor)
+    }
+  }
+  return result
+}
+
+/** Every endpoint on a MULTI-EDGE node, tagged with its geometric side/order.
+ * Mutable ends receive soft side/seat proposals; customized ends enter the same
+ * capacity model as immutable reservations. Ends of single-edge nodes are omitted:
+ * there is no sibling capacity to coordinate there. */
 function collectPortEnds(
   ordered: readonly Edge[],
   nodes: readonly Node[],
-  nodeById: Map<string, Node>
+  nodeById: Map<string, Node>,
+  fixedPorts: FixedPortByEnd,
+  reservedRoutes: readonly IPoint[][]
 ): EndRef[] {
-  // Free ends per node — only a node with more than one gets geometric assignment.
-  const freeEnds = new Map<string, number>()
+  // Every endpoint consumes node-side capacity, including customized endpoints.
+  // A lone mutable edge next to a pin is therefore still coordinated rather than
+  // collapsing to the node centre when the other edge becomes authoritative.
+  const endsByNode = new Map<string, number>()
   for (const edge of ordered) {
     if (edge.source === edge.target) continue
-    if (!asFreeformAnchor(edge.data?.sourceAnchor))
-      freeEnds.set(edge.source, (freeEnds.get(edge.source) ?? 0) + 1)
-    if (!asFreeformAnchor(edge.data?.targetAnchor))
-      freeEnds.set(edge.target, (freeEnds.get(edge.target) ?? 0) + 1)
+    endsByNode.set(edge.source, (endsByNode.get(edge.source) ?? 0) + 1)
+    endsByNode.set(edge.target, (endsByNode.get(edge.target) ?? 0) + 1)
   }
   // The band ends are the FREE ends on MULTI-EDGE nodes. Their sides are chosen JOINTLY
   // (per edge, min corners over the side PAIR) so a diagonal fork arm is a 1-corner L,
   // not a 2-corner Z, and a straight edge claims its opposing sides first.
   const isBand = (
     nodeId: string,
-    custom: FreeformEdgeAnchor | undefined
-  ): boolean => !custom && (freeEnds.get(nodeId) ?? 0) > 1
+    edgeId: string,
+    end: "source" | "target"
+  ): boolean =>
+    !fixedPorts.has(endKey(edgeId, end)) && (endsByNode.get(nodeId) ?? 0) > 1
   const sideEdges: SideEdge[] = []
   const rectCache = new Map<string, Rect | null>()
   const rectOf = (nodeId: string): Rect | null => {
@@ -659,14 +735,11 @@ function collectPortEnds(
   }
   for (const edge of ordered) {
     if (edge.source === edge.target) continue
-    const sourceCustom = asFreeformAnchor(edge.data?.sourceAnchor)
-    const targetCustom = asFreeformAnchor(edge.data?.targetAnchor)
-    if (sourceCustom && targetCustom) continue
     const sourceRect = rectOf(edge.source)
     const targetRect = rectOf(edge.target)
     if (!sourceRect || !targetRect) continue
-    const sourceBand = isBand(edge.source, sourceCustom)
-    const targetBand = isBand(edge.target, targetCustom)
+    const sourceBand = isBand(edge.source, edge.id, "source")
+    const targetBand = isBand(edge.target, edge.id, "target")
     if (!sourceBand && !targetBand) continue
     sideEdges.push({
       edgeId: edge.id,
@@ -676,6 +749,8 @@ function collectPortEnds(
       targetRect,
       sourceBand,
       targetBand,
+      sourceFixedSide: fixedPorts.get(endKey(edge.id, "source"))?.side,
+      targetFixedSide: fixedPorts.get(endKey(edge.id, "target"))?.side,
     })
   }
   // Every measured node's rect, so side assignment can reject a pair whose route
@@ -693,20 +768,44 @@ function collectPortEnds(
   // there as a hard conflict, not a soft tie-break.
   const fourCenterNodes = new Set<string>()
   for (const n of nodes) if (four(n.id)) fourCenterNodes.add(n.id)
-  const sideByEnd = assignSides(sideEdges, allRects, fourCenterNodes)
+  const reservedEnds: ReservedSideEnd[] = []
+  for (const edge of ordered) {
+    const source = fixedPorts.get(endKey(edge.id, "source"))
+    const target = fixedPorts.get(endKey(edge.id, "target"))
+    if (source)
+      reservedEnds.push({
+        nodeId: edge.source,
+        partnerNodeId: edge.target,
+        side: source.side,
+      })
+    if (target)
+      reservedEnds.push({
+        nodeId: edge.target,
+        partnerNodeId: edge.source,
+        side: target.side,
+      })
+  }
+  const sideByEnd = assignSides(
+    sideEdges,
+    allRects,
+    fourCenterNodes,
+    reservedEnds,
+    reservedRoutes
+  )
 
   const out: EndRef[] = []
   for (const edge of ordered) {
     if (edge.source === edge.target) continue
-    const sourceCustom = asFreeformAnchor(edge.data?.sourceAnchor)
-    const targetCustom = asFreeformAnchor(edge.data?.targetAnchor)
-    if (sourceCustom && targetCustom) continue
     const sourceRect = rectOf(edge.source)
     const targetRect = rectOf(edge.target)
     if (!sourceRect || !targetRect) continue
-    const sourceSide = sideByEnd.get(endKey(edge.id, "source"))
-    const targetSide = sideByEnd.get(endKey(edge.id, "target"))
-    if (sourceSide !== undefined)
+    const sourceFixed = fixedPorts.get(endKey(edge.id, "source"))
+    const targetFixed = fixedPorts.get(endKey(edge.id, "target"))
+    const sourceSide =
+      sourceFixed?.side ?? sideByEnd.get(endKey(edge.id, "source"))
+    const targetSide =
+      targetFixed?.side ?? sideByEnd.get(endKey(edge.id, "target"))
+    if (sourceSide !== undefined && (endsByNode.get(edge.source) ?? 0) > 1)
       out.push({
         edgeId: edge.id,
         end: "source",
@@ -718,8 +817,9 @@ function collectPortEnds(
         partnerRect: targetRect,
         partnerSide: targetSide,
         fourCenter: four(edge.source),
+        immutableRatio: sourceFixed?.ratio,
       })
-    if (targetSide !== undefined)
+    if (targetSide !== undefined && (endsByNode.get(edge.target) ?? 0) > 1)
       out.push({
         edgeId: edge.id,
         end: "target",
@@ -731,17 +831,21 @@ function collectPortEnds(
         partnerRect: sourceRect,
         partnerSide: sourceSide,
         fourCenter: four(edge.target),
+        immutableRatio: targetFixed?.ratio,
       })
   }
   return out
 }
 
 /**
- * Route EVERY edge in one synchronous pass. An edge yields only to LOWER-id
- * neighbours (a strict DAG), so a single ascending-id walk visits each edge
- * after every neighbour it can depend on is final.
+ * Route EVERY edge in one synchronous pass. Fixed edges go first, then auto edges
+ * follow a geometry-derived total order; ids break only exact geometric ties.
  */
-export function computeAllEdgeGeometry(input: SolverInput): {
+function computeAllEdgeGeometryPass(
+  input: SolverInput,
+  generatedOrderVariant: number | "reverse",
+  fixedRoutes: Readonly<Record<string, IPoint[]>> = {}
+): {
   routeById: Record<string, IPoint[]>
 } {
   const {
@@ -751,6 +855,7 @@ export function computeAllEdgeGeometry(input: SolverInput): {
     edges,
     straightPathTypes,
     straightHookTypes,
+    fixedEdges = [],
     liveOverride,
     previous,
     solveCache,
@@ -758,35 +863,193 @@ export function computeAllEdgeGeometry(input: SolverInput): {
 
   const edgeById = new Map(edges.map((e) => [e.id, e]))
   const nodeById = new Map(nodes.map((n) => [n.id, n]))
-  // FULLY-PINNED edges (both ends user-anchored) route FIRST, then the rest by id.
-  // Their geometry is fixed and authoritative, so committing them before the auto
-  // edges puts them in the neighbour set for EVERY auto edge — the cross-edge cost
-  // then makes autos aware of them regardless of id order (a higher-id pinned edge
-  // was previously invisible to the autos it should avoid). Deterministic: a total
-  // order (pinned-first, then ascending id), and pinned routes depend on nothing an
-  // auto edge produces, so this is a valid topological order for the route DAG.
-  const fullyPinned = (e: Edge): boolean =>
-    !!asFreeformAnchor(e.data?.sourceAnchor) &&
+  // Exact, solve-scoped snapshot. React Flow can retain `nodes` identity while
+  // mutating measurements/geometry in place, so this must be rebuilt for every
+  // invocation, then shared by all edge obstacle and container-border queries.
+  const nodeIndex = createNodeIndex(nodes)
+  // AUTHORITATIVE edges route first: any user-pinned endpoint, authored bend
+  // topology, or the current live drag. Committing them before auto edges puts the
+  // customized geometry in every relevant neighbour set, so generated routes yield
+  // to user intent without jumping when a drag becomes stored data.
+  const hasPinnedEndpoint = (e: Edge): boolean =>
+    !!asFreeformAnchor(e.data?.sourceAnchor) ||
     !!asFreeformAnchor(e.data?.targetAnchor)
-  const ordered = [...edges].sort((a, b) => {
-    const pa = fullyPinned(a) ? 0 : 1
-    const pb = fullyPinned(b) ? 0 : 1
+  const hasAuthoritativeTopology = (e: Edge): boolean =>
+    straightHookTypes.has(e.type ?? "") ||
+    (Array.isArray(e.data?.points) && e.data.points.length > 0)
+  const authorityRank = (e: Edge): number =>
+    e.id === liveOverride?.edgeId
+      ? 0
+      : hasAuthoritativeTopology(e)
+        ? 1
+        : hasPinnedEndpoint(e)
+          ? 2
+          : 3
+  const hardAuthoritative = (e: Edge): boolean => authorityRank(e) < 2
+  const pinnedOnly = (e: Edge): boolean => authorityRank(e) === 2
+  const authoritative = (e: Edge): boolean => authorityRank(e) < 3
+  const geometryOrder = (edge: Edge): Array<number | string> => {
+    const source = nodeRect(edge.source, nodes, nodeById)
+    const target = nodeRect(edge.target, nodes, nodeById)
+    const sourceAnchor = asFreeformAnchor(edge.data?.sourceAnchor)
+    const targetAnchor = asFreeformAnchor(edge.data?.targetAnchor)
+    const straightEligible =
+      source &&
+      target &&
+      (canRunStraight(true, source, target) ||
+        canRunStraight(false, source, target))
+    const side = (p: Position | undefined): number =>
+      p === Position.Top
+        ? 0
+        : p === Position.Right
+          ? 1
+          : p === Position.Bottom
+            ? 2
+            : p === Position.Left
+              ? 3
+              : -1
+    return [
+      authorityRank(edge),
+      straightEligible ? 0 : 1,
+      source?.x ?? Infinity,
+      source?.y ?? Infinity,
+      source?.width ?? 0,
+      source?.height ?? 0,
+      target?.x ?? Infinity,
+      target?.y ?? Infinity,
+      target?.width ?? 0,
+      target?.height ?? 0,
+      edge.type ?? "",
+      side(sourceAnchor?.side),
+      sourceAnchor?.ratio ?? -1,
+      side(targetAnchor?.side),
+      targetAnchor?.ratio ?? -1,
+      edge.source,
+      edge.target,
+      edge.id,
+    ]
+  }
+  const geometryOrderByEdge = new Map(
+    edges.map((edge) => [edge, geometryOrder(edge)])
+  )
+  const compareOrder = (a: Edge, b: Edge): number => {
+    const ak = geometryOrderByEdge.get(a)!
+    const bk = geometryOrderByEdge.get(b)!
+    for (let i = 0; i < ak.length; i++) {
+      if (ak[i] === bk[i]) continue
+      return ak[i] < bk[i] ? -1 : 1
+    }
+    return 0
+  }
+  const canonicalOrder = [...edges].sort((a, b) => {
+    const pa = authoritative(a) ? 0 : 1
+    const pb = authoritative(b) ? 0 : 1
     if (pa !== pb) return pa - pb
-    return a.id < b.id ? -1 : a.id > b.id ? 1 : 0
+    return compareOrder(a, b)
   })
-  const routeById: Record<string, IPoint[]> = {}
+  const hardAuthoritativeOrder = canonicalOrder.filter(hardAuthoritative)
+  const pinnedOrder = canonicalOrder.filter(pinnedOnly)
+  const straightOrder = canonicalOrder.filter(
+    (edge) => !authoritative(edge) && geometryOrderByEdge.get(edge)![1] === 0
+  )
+  const flexibleOrder = canonicalOrder.filter(
+    (edge) => !authoritative(edge) && geometryOrderByEdge.get(edge)![1] !== 0
+  )
+  const rotate = <T>(values: readonly T[], by: number): T[] => {
+    if (values.length < 2) return [...values]
+    const offset = by % values.length
+    return [...values.slice(offset), ...values.slice(0, offset)]
+  }
+  const ordered =
+    generatedOrderVariant === 0
+      ? canonicalOrder
+      : [
+          // Live/manual topology is byte-immutable. Pinned-only edges still have
+          // a generated route between constrained endpoints, so vary their order
+          // within the pinned priority cohort instead of freezing one greedy walk.
+          ...hardAuthoritativeOrder,
+          ...(generatedOrderVariant === "reverse"
+            ? [...pinnedOrder].reverse()
+            : rotate(pinnedOrder, generatedOrderVariant)),
+          ...(generatedOrderVariant === "reverse"
+            ? [...straightOrder].reverse()
+            : straightOrder),
+          ...(generatedOrderVariant === "reverse"
+            ? [...flexibleOrder].reverse()
+            : rotate(flexibleOrder, generatedOrderVariant)),
+        ]
+  const routeById: Record<string, IPoint[]> = { ...fixedRoutes }
   // Spatial index of finished routes, grown as the walk proceeds so each edge
   // finds its lower-id neighbours without rescanning the whole route map.
   const neighborGrid: NeighborGrid = new Map()
-  // Geometric PORT ASSIGNMENT for MULTI-EDGE nodes: each such node's free ends are
-  // distributed across sides by their partner's direction (so a fork splits), then
-  // within a shared side ordered by rotation and seated in a centred band (so they
-  // nest and space themselves instead of piling onto one corner-aimed anchor). Each
-  // assigned port PINS its end — like a user anchor — so the other end still optimises
-  // against it on the cost path below. Single-edge nodes are absent and stay fully on
-  // the cost path. This replaces the whole fan / lane / slot / fork-redistribute stack
-  // (see `portAssignment.ts` and `./README.md`).
-  const bandPorts = assignPorts(collectPortEnds(ordered, nodes, nodeById))
+  for (const [edgeId, route] of Object.entries(fixedRoutes))
+    indexRoutePolyline(neighborGrid, edgeId, route)
+  // Geometric PORT COORDINATION for multi-edge nodes. Every edge participates in
+  // capacity: generated ends get soft proposals, while pins/manual/live/straight
+  // topology reserve immutable seats. This keeps sibling layout continuous when an
+  // automatic route becomes customized without changing its visible geometry.
+  const coordinationEdges = [...ordered, ...fixedEdges]
+  const fixedPorts = collectFixedPorts(
+    coordinationEdges,
+    nodes,
+    nodeById,
+    nodeLookup,
+    connectionMode,
+    straightHookTypes,
+    liveOverride,
+    fixedRoutes
+  )
+  const reservedRouteById = new Map<string, IPoint[]>(
+    Object.entries(fixedRoutes)
+  )
+  for (const edge of coordinationEdges) {
+    if (edge.id === liveOverride?.edgeId) {
+      reservedRouteById.set(edge.id, liveOverride.points)
+      continue
+    }
+    const manual = edge.data?.points
+    if (Array.isArray(manual) && manual.length >= 2) {
+      const endpoints = resolveEdgeEndpoints(
+        edge,
+        nodes,
+        nodeById,
+        nodeLookup,
+        connectionMode
+      )
+      reservedRouteById.set(
+        edge.id,
+        endpoints
+          ? preserveOrthogonalEdgePoints(
+              manual as IPoint[],
+              endpoints.adjustedSource,
+              endpoints.adjustedTarget,
+              endpoints.sourcePosition,
+              endpoints.targetPosition
+            )
+          : (manual as IPoint[])
+      )
+      continue
+    }
+    if (straightHookTypes.has(edge.type ?? "")) {
+      const endpoints = resolveEdgeEndpoints(
+        edge,
+        nodes,
+        nodeById,
+        nodeLookup,
+        connectionMode
+      )
+      if (endpoints)
+        reservedRouteById.set(edge.id, [
+          endpoints.adjustedSource,
+          endpoints.adjustedTarget,
+        ])
+    }
+  }
+  const bandPorts = assignPorts(
+    collectPortEnds(coordinationEdges, nodes, nodeById, fixedPorts, [
+      ...reservedRouteById.values(),
+    ])
+  )
 
   for (const edge of ordered) {
     if (liveOverride && liveOverride.edgeId === edge.id) {
@@ -821,12 +1084,42 @@ export function computeAllEdgeGeometry(input: SolverInput): {
       continue
     }
 
+    const candidateBounds: Rect = {
+      x: Math.min(
+        endpoints.sourceAbsolutePosition.x,
+        endpoints.targetAbsolutePosition.x
+      ),
+      y: Math.min(
+        endpoints.sourceAbsolutePosition.y,
+        endpoints.targetAbsolutePosition.y
+      ),
+      width:
+        Math.max(
+          endpoints.sourceAbsolutePosition.x + endpoints.sourceSize.width,
+          endpoints.targetAbsolutePosition.x + endpoints.targetSize.width
+        ) -
+        Math.min(
+          endpoints.sourceAbsolutePosition.x,
+          endpoints.targetAbsolutePosition.x
+        ),
+      height:
+        Math.max(
+          endpoints.sourceAbsolutePosition.y + endpoints.sourceSize.height,
+          endpoints.targetAbsolutePosition.y + endpoints.targetSize.height
+        ) -
+        Math.min(
+          endpoints.sourceAbsolutePosition.y,
+          endpoints.targetAbsolutePosition.y
+        ),
+    }
     const obstacles: ObstacleRect[] = getEdgeObstacles(
       nodes,
       edge.source,
       edge.target,
       endpoints.adjustedSource,
-      endpoints.adjustedTarget
+      endpoints.adjustedTarget,
+      nodeIndex,
+      candidateBounds
     )
     // Bystander bodies the anchor pick must not graze: the reach-windowed obstacles
     // minus the two endpoint bodies (priced by hugPenaltyPx) and soft containers
@@ -839,7 +1132,8 @@ export function computeAllEdgeGeometry(input: SolverInput): {
       edge,
       endpoints,
       nodes,
-      edgeById,
+      nodeIndex,
+      obstacles,
       routeById,
       neighborGrid
     )
@@ -847,35 +1141,39 @@ export function computeAllEdgeGeometry(input: SolverInput): {
     const enableStraightPath = straightPathTypes.has(edge.type ?? "")
     const sourceCustom = asFreeformAnchor(edge.data?.sourceAnchor)
     const targetCustom = asFreeformAnchor(edge.data?.targetAnchor)
-    // Auto-anchored unless BOTH ends are user-pinned, or it is a self-loop (which
-    // the anchor search has nothing to optimise — both ends sit on one node).
-    const isAuto =
-      edge.source !== edge.target && !(sourceCustom && targetCustom)
+    // Every non-manual, non-loop edge uses the SAME joint router, including a
+    // fully pinned edge. Pins reduce the endpoint candidate set to one; they must
+    // not switch the path primitive from joint A* to routeStepEdge, because adding
+    // a semantic no-op second pin would then change terminal stubs/lanes. Manual
+    // points remain authoritative and are only re-projected, never replaced.
+    const hasManualPoints =
+      Array.isArray(edge.data?.points) && edge.data.points.length > 0
+    const usesJointRouter = edge.source !== edge.target && !hasManualPoints
 
     // The endpoints the route is actually drawn between — the auto path replaces
     // them with the chosen anchors' resolution.
     let endpointsUsed = endpoints
     let computed: IPoint[]
 
-    if (isAuto) {
+    if (usesJointRouter) {
       const sourceType = nodeById.get(edge.source)?.type
       const targetType = nodeById.get(edge.target)?.type
-      // A crowded end is PINNED to its band port (a solver-assigned `{side, ratio}`),
-      // exactly like a user anchor: `selectEdgeAnchors` then optimises only the other,
-      // still-free end against it. A real user anchor always wins over a band port.
+      // The node-local coordinator proposes a distinct side/slot, but does not pin
+      // it. Joint A* sees that candidate alongside every side and may override it
+      // when the complete route is cheaper. User anchors remain authoritative.
       const sourceBand = bandPorts.get(endKey(edge.id, "source"))
       const targetBand = bandPorts.get(endKey(edge.id, "target"))
-      const effSourceCustom = sourceCustom ?? sourceBand
-      const effTargetCustom = targetCustom ?? targetBand
       const sig = solveCache
         ? autoAnchorSignature(
             endpoints,
             sourceType,
             targetType,
-            effSourceCustom,
-            effTargetCustom,
+            sourceCustom,
+            targetCustom,
+            sourceBand,
+            targetBand,
             enableStraightPath,
-            thirdPartyObstacles,
+            obstacles,
             neighborEdges
           )
         : ""
@@ -896,25 +1194,7 @@ export function computeAllEdgeGeometry(input: SolverInput): {
             },
             true
           ) ?? endpoints
-        // The route key is built from the CHOSEN-anchor endpoints, so its reach
-        // corridor matches the route the router would run.
-        const routeSig = solveCache
-          ? routeInputSignature(endpointsUsed, obstacles, neighborEdges)
-          : ""
-        if (cached.routeSig === routeSig) {
-          // Obstacles and reachable neighbours held too — reuse verbatim.
-          computed = cached.computed
-        } else {
-          // Only an obstacle or reachable neighbour moved: re-route the SAME
-          // anchors (one search), not a full re-pick.
-          computed = routeChosenAnchors(
-            endpointsUsed,
-            obstacles,
-            neighborEdges,
-            enableStraightPath
-          )
-          solveCache?.set(edge.id, { ...cached, routeSig, computed })
-        }
+        computed = cached.computed
       } else {
         const selected = selectEdgeAnchors({
           sourceRect: rectFromEndpoint(
@@ -927,8 +1207,10 @@ export function computeAllEdgeGeometry(input: SolverInput): {
           ),
           sourceType,
           targetType,
-          sourceCustom: effSourceCustom,
-          targetCustom: effTargetCustom,
+          sourceCustom,
+          targetCustom,
+          sourcePreferred: sourceBand,
+          targetPreferred: targetBand,
           resolve: (overrides) =>
             resolveEdgeEndpoints(
               edge,
@@ -949,18 +1231,10 @@ export function computeAllEdgeGeometry(input: SolverInput): {
           computed = selected.route
           solveCache?.set(edge.id, {
             sig,
-            routeSig: solveCache
-              ? routeInputSignature(
-                  selected.endpoints,
-                  obstacles,
-                  neighborEdges
-                )
-              : "",
+            routeSig: "",
             computed,
-            // A pinned end returns no chosen anchor; persist the band port (or user
-            // anchor) so the cache-hit re-resolve reproduces the identical pin.
-            sourceAnchor: selected.sourceAnchor ?? sourceBand,
-            targetAnchor: selected.targetAnchor ?? targetBand,
+            sourceAnchor: selected.sourceAnchor,
+            targetAnchor: selected.targetAnchor,
           })
         } else {
           // No candidate routed — fall back to the plain endpoints (uncached).
@@ -1014,6 +1288,511 @@ export function computeAllEdgeGeometry(input: SolverInput): {
   }
 
   return { routeById }
+}
+
+type RouteSetScore = Readonly<{
+  hardInvalidity: number
+  weightedCost: number
+  crossings: number
+  proximityPx: number
+  straightBroken: number
+  bends: number
+  maxCentroidImbalancePermille: number
+  totalCentroidImbalancePermille: number
+  maxCornerJamPermille: number
+  totalCornerJamPermille: number
+  length: number
+}>
+
+const routeSetScoreValues = (score: RouteSetScore): readonly number[] => [
+  score.hardInvalidity,
+  score.weightedCost,
+  score.maxCentroidImbalancePermille,
+  score.totalCentroidImbalancePermille,
+  score.maxCornerJamPermille,
+  score.totalCornerJamPermille,
+  score.straightBroken,
+  score.bends,
+  score.length,
+]
+
+const routeSetScoreLess = (
+  left: RouteSetScore,
+  right: RouteSetScore
+): boolean => lexLess(routeSetScoreValues(left), routeSetScoreValues(right))
+
+/** A score is already visually settled when no hard route conflict remains and
+ * shared-side bands stay centred and clear of the extreme corner zone. */
+const routeSetNeedsRefinement = (score: RouteSetScore): boolean =>
+  score.hardInvalidity > 0 ||
+  score.crossings > 0 ||
+  score.proximityPx > 0 ||
+  score.straightBroken > 0 ||
+  score.maxCentroidImbalancePermille > 100 ||
+  score.maxCornerJamPermille > 800
+
+const routeSetScore = (
+  routeById: Readonly<Record<string, readonly IPoint[]>>,
+  edges: readonly Edge[],
+  nodes: readonly Node[],
+  straightPathTypes: ReadonlySet<string>,
+  /** When present, score only terms that can change while these edges are
+   * rerouted. Interactions with every fixed route still count, but fixed-vs-fixed
+   * pairs and fixed per-edge costs are invariant and are not rescanned. */
+  focusEdgeIds?: ReadonlySet<string>,
+  /** Edges whose route topology is authored/live/plain-line. Their ports still
+   * shape shared-side centroid balance, but an intentional corner pin is not an
+   * auto-layout defect and must not trigger or improve refinement. */
+  immutableEdgeIds: ReadonlySet<string> = new Set()
+): RouteSetScore => {
+  let hardInvalidity = 0
+  let weightedCost = 0
+  let crossings = 0
+  let proximityPx = 0
+  let straightBroken = 0
+  let bends = 0
+  let length = 0
+  let maxCornerJamPermille = 0
+  let totalCornerJamPermille = 0
+  const portsByNodeSide = new Map<string, number[]>()
+  const nodeById = new Map(nodes.map((node) => [node.id, node]))
+  const focusNodeIds = focusEdgeIds
+    ? new Set(
+        edges
+          .filter((edge) => focusEdgeIds.has(edge.id))
+          .flatMap((edge) => [edge.source, edge.target])
+      )
+    : undefined
+  const recordPort = (
+    nodeId: string,
+    point: IPoint,
+    movable: boolean,
+    chargePlacement: boolean
+  ): void => {
+    if (focusNodeIds && !focusNodeIds.has(nodeId)) return
+    const rect = nodeRect(nodeId, nodes, nodeById)
+    if (!rect || rect.width <= 0 || rect.height <= 0) return
+    const distances = [
+      {
+        side: Position.Left,
+        distance: Math.abs(point.x - rect.x),
+        ratio: (point.y - rect.y) / rect.height,
+      },
+      {
+        side: Position.Right,
+        distance: Math.abs(point.x - (rect.x + rect.width)),
+        ratio: (point.y - rect.y) / rect.height,
+      },
+      {
+        side: Position.Top,
+        distance: Math.abs(point.y - rect.y),
+        ratio: (point.x - rect.x) / rect.width,
+      },
+      {
+        side: Position.Bottom,
+        distance: Math.abs(point.y - (rect.y + rect.height)),
+        ratio: (point.x - rect.x) / rect.width,
+      },
+    ].sort((a, b) => a.distance - b.distance || (a.side < b.side ? -1 : 1))
+    const nearest = distances[0]
+    const ratio = Math.max(0, Math.min(1, nearest.ratio))
+    if (movable) {
+      const cornerJam = Math.round(2_000 * Math.abs(ratio - 0.5))
+      maxCornerJamPermille = Math.max(maxCornerJamPermille, cornerJam)
+      totalCornerJamPermille += cornerJam
+      if (chargePlacement)
+        weightedCost += endpointPlacementCost(
+          { side: nearest.side, ratio },
+          CANVAS.SNAP_TO_GRID_PX
+        )
+    }
+    const key = `${nodeId}|${nearest.side}`
+    const group = portsByNodeSide.get(key)
+    if (group) group.push(ratio)
+    else portsByNodeSide.set(key, [ratio])
+  }
+  const routes = edges.flatMap((edge) => {
+    const focused = !focusEdgeIds || focusEdgeIds.has(edge.id)
+    const route = routeById[edge.id]
+    if (!route || route.length === 0) {
+      if (focused) hardInvalidity++
+      return []
+    }
+    const topologyImmutable = immutableEdgeIds.has(edge.id)
+    recordPort(
+      edge.source,
+      route[0],
+      !topologyImmutable && !asFreeformAnchor(edge.data?.sourceAnchor),
+      focused
+    )
+    recordPort(
+      edge.target,
+      route[route.length - 1],
+      !topologyImmutable && !asFreeformAnchor(edge.data?.targetAnchor),
+      focused
+    )
+    const sourceRect = nodeRect(edge.source, nodes, nodeById)
+    const targetRect = nodeRect(edge.target, nodes, nodeById)
+    const generated =
+      !asFreeformAnchor(edge.data?.sourceAnchor) &&
+      !asFreeformAnchor(edge.data?.targetAnchor) &&
+      !(Array.isArray(edge.data?.points) && edge.data.points.length > 0)
+    if (
+      focused &&
+      generated &&
+      sourceRect &&
+      targetRect &&
+      straightPathTypes.has(edge.type ?? "") &&
+      (canRunStraight(true, sourceRect, targetRect) ||
+        canRunStraight(false, sourceRect, targetRect)) &&
+      route.length > 2
+    )
+      straightBroken++
+    if (focused) {
+      const routeBends = Math.max(0, route.length - 2)
+      bends += routeBends
+      let routeLength = 0
+      for (let i = 0; i < route.length - 1; i++)
+        routeLength +=
+          Math.abs(route[i + 1].x - route[i].x) +
+          Math.abs(route[i + 1].y - route[i].y)
+      length += routeLength
+      weightedCost += weightedRoutingCost(
+        { lengthPx: routeLength, bends: routeBends },
+        CANVAS.SNAP_TO_GRID_PX
+      )
+    }
+    return [{ route, focused }]
+  })
+  for (let i = 0; i < routes.length; i++) {
+    if (!routes[i].focused) continue
+    for (let j = 0; j < routes.length; j++) {
+      if (i === j || (routes[j].focused && j < i)) continue
+      recordRouteScorePair()
+      const first = routes[i].route as IPoint[]
+      const second = routes[j].route as IPoint[]
+      // Per-edge crossing attribution is half-open so a lattice-vertex crossing
+      // is charged once. A route set has no direction: score both orientations
+      // and keep the symmetric worst case.
+      const forward = routeConflictScore(first, [second])
+      const reverse = routeConflictScore(second, [first])
+      const pairCrossings = Math.max(forward.crossings, reverse.crossings)
+      const general = polylineConflictCost(
+        first,
+        [second],
+        ROUTING_COST.parallelCrowdingClearanceInGridCells *
+          CANVAS.SNAP_TO_GRID_PX
+      )
+      crossings += pairCrossings
+      proximityPx += general.overlapPx + general.crowdingPx
+      weightedCost += weightedRoutingCost(
+        {
+          crossings: pairCrossings,
+          overlapPx: general.overlapPx,
+          crowdingPx: general.crowdingPx,
+        },
+        CANVAS.SNAP_TO_GRID_PX
+      )
+    }
+  }
+  let maxCentroidImbalancePermille = 0
+  let totalCentroidImbalancePermille = 0
+  for (const ratios of portsByNodeSide.values()) {
+    if (ratios.length < 2) continue
+    ratios.sort((a, b) => a - b)
+    const mean = ratios.reduce((sum, ratio) => sum + ratio, 0) / ratios.length
+    // Individual placement alone prefers a tight cluster around the centre and
+    // cannot distinguish a balanced fan from every port shifted to one half of
+    // the side. Price the group's centroid through the SAME convex placement
+    // curve, once per member. Balance can therefore trade against real path cost
+    // in pixel units; it is neither a lexicographic override nor a free tie-break.
+    weightedCost +=
+      ratios.length *
+      endpointPlacementCost(
+        { side: Position.Top, ratio: mean },
+        CANVAS.SNAP_TO_GRID_PX
+      )
+    const imbalance = Math.round(2_000 * Math.abs(mean - 0.5))
+    maxCentroidImbalancePermille = Math.max(
+      maxCentroidImbalancePermille,
+      imbalance
+    )
+    totalCentroidImbalancePermille += imbalance
+  }
+  return {
+    hardInvalidity,
+    weightedCost,
+    crossings,
+    proximityPx,
+    straightBroken,
+    bends,
+    maxCentroidImbalancePermille,
+    totalCentroidImbalancePermille,
+    maxCornerJamPermille,
+    totalCornerJamPermille,
+    length,
+  }
+}
+
+const refinementEdgeKey = (
+  edge: Edge,
+  nodes: readonly Node[],
+  nodeById: Map<string, Node>
+): Array<number | string> => {
+  const source = nodeRect(edge.source, nodes, nodeById)
+  const target = nodeRect(edge.target, nodes, nodeById)
+  return [
+    source?.x ?? Infinity,
+    source?.y ?? Infinity,
+    source?.width ?? 0,
+    source?.height ?? 0,
+    target?.x ?? Infinity,
+    target?.y ?? Infinity,
+    target?.width ?? 0,
+    target?.height ?? 0,
+    edge.type ?? "",
+    edge.source,
+    edge.target,
+    edge.id,
+  ]
+}
+
+const compareRefinementKeys = (
+  left: readonly (number | string)[],
+  right: readonly (number | string)[]
+): number => {
+  for (let i = 0; i < left.length; i++) {
+    if (left[i] === right[i]) continue
+    return left[i] < right[i] ? -1 : 1
+  }
+  return 0
+}
+
+/**
+ * Partition route-set refinement by actual interaction. Edges sharing a node must
+ * coordinate ports; routes already crossing or crowding each other must coordinate
+ * lanes. Everything else can remain a fixed neighbour while the component is
+ * rerouted, so a remote ninth edge cannot disable repair of a four-edge fan.
+ */
+const refinementComponents = (
+  edges: readonly Edge[],
+  routeById: Readonly<Record<string, readonly IPoint[]>>
+): Edge[][] => {
+  const parent = new Int32Array(edges.length)
+  for (let i = 0; i < edges.length; i++) parent[i] = i
+  const find = (index: number): number => {
+    let root = index
+    while (parent[root] !== root) root = parent[root]
+    while (parent[index] !== index) {
+      const next = parent[index]
+      parent[index] = root
+      index = next
+    }
+    return root
+  }
+  const union = (left: number, right: number): void => {
+    const leftRoot = find(left)
+    const rightRoot = find(right)
+    if (leftRoot !== rightRoot) parent[rightRoot] = leftRoot
+  }
+
+  const firstEdgeByNode = new Map<string, number>()
+  edges.forEach((edge, index) => {
+    for (const nodeId of [edge.source, edge.target]) {
+      const first = firstEdgeByNode.get(nodeId)
+      if (first === undefined) firstEdgeByNode.set(nodeId, index)
+      else union(first, index)
+    }
+  })
+
+  for (let i = 0; i < edges.length; i++) {
+    const first = routeById[edges[i].id]
+    if (!first || first.length < 2) continue
+    for (let j = i + 1; j < edges.length; j++) {
+      if (find(i) === find(j)) continue
+      const second = routeById[edges[j].id]
+      if (!second || second.length < 2) continue
+      const forward = routeConflictScore(first as IPoint[], [
+        second as IPoint[],
+      ])
+      const reverse = routeConflictScore(second as IPoint[], [
+        first as IPoint[],
+      ])
+      if (
+        forward.crossings > 0 ||
+        reverse.crossings > 0 ||
+        forward.proximityPx > 0 ||
+        reverse.proximityPx > 0 ||
+        routeConflictsWithNeighborEdges(first as IPoint[], [
+          second as IPoint[],
+        ]) ||
+        routeConflictsWithNeighborEdges(second as IPoint[], [first as IPoint[]])
+      )
+        union(i, j)
+    }
+  }
+
+  const byRoot = new Map<number, Edge[]>()
+  edges.forEach((edge, index) => {
+    const root = find(index)
+    const component = byRoot.get(root)
+    if (component) component.push(edge)
+    else byRoot.set(root, [edge])
+  })
+  return [...byRoot.values()]
+}
+
+/**
+ * Route the complete edge set. A canonical pass handles the ordinary case. Small
+ * diagrams with a real route-set conflict or a visibly off-centre shared-side band
+ * receive a bounded set of rip-up alternatives: cyclic flexible-edge orders plus a
+ * reversed order, while authoritative and straight cohorts retain priority. A
+ * coordinate-descent refinement may then combine individually valid routes from
+ * those passes when that strictly improves the whole-diagram objective. This lets
+ * an earlier flexible edge yield to a later constrained one and lets nested
+ * connectors swap seats as a pair, without putting an unbounded global optimiser
+ * on the drag path.
+ */
+export function computeAllEdgeGeometry(input: SolverInput): {
+  routeById: Record<string, IPoint[]>
+} {
+  const prepared = prepareLiveEdgeSolve(input.edges, input.liveOverride)
+  const solveInput: SolverInput = {
+    ...input,
+    edges: prepared.edges,
+    liveOverride: prepared.liveOverride,
+  }
+  const primary = computeAllEdgeGeometryPass(solveInput, 0)
+  // Four component passes are the interactive ceiling: primary, reverse, and two
+  // rotations. Above eight INTERACTING edges even that bounded repair can dominate
+  // a node-drag frame, so large conflict components keep the fast canonical solve.
+  // Remote components do not consume this budget or change one another's geometry.
+  // Crucially the rule is identical while an edge is live and after commit,
+  // preventing drag-start/end snaps.
+  const MAX_REFINEMENT_EDGES = 8
+  const MAX_ROTATIONS = 2
+  const immutableForRefinement = (edge: Edge): boolean =>
+    edge.id === solveInput.liveOverride?.edgeId ||
+    solveInput.straightHookTypes.has(edge.type ?? "") ||
+    (Array.isArray(edge.data?.points) && edge.data.points.length > 0)
+  const immutableEdgeIds = new Set(
+    solveInput.edges.filter(immutableForRefinement).map((edge) => edge.id)
+  )
+
+  const primaryScore = routeSetScore(
+    primary.routeById,
+    solveInput.edges,
+    solveInput.nodes,
+    solveInput.straightPathTypes,
+    undefined,
+    immutableEdgeIds
+  )
+  if (!routeSetNeedsRefinement(primaryScore)) return primary
+
+  let bestRoutes = primary.routeById
+  const nodeById = new Map(solveInput.nodes.map((node) => [node.id, node]))
+  const keyByEdge = new Map(
+    solveInput.edges.map((edge) => [
+      edge,
+      refinementEdgeKey(edge, solveInput.nodes, nodeById),
+    ])
+  )
+  const compareEdges = (a: Edge, b: Edge): number =>
+    compareRefinementKeys(keyByEdge.get(a)!, keyByEdge.get(b)!)
+  const components = refinementComponents(
+    solveInput.edges,
+    primary.routeById
+  ).map((component) => component.sort(compareEdges))
+  components.sort((a, b) => compareEdges(a[0], b[0]))
+
+  for (const componentEdges of components) {
+    const immutableEdges = componentEdges.filter(immutableForRefinement)
+    // Pins constrain endpoint candidates but do not freeze the generated route
+    // between them. Only authored/live/plain-line topology is immutable; this lets
+    // a pinned edge still participate in route-set repair without moving its seats.
+    const mutableEdges = componentEdges.filter(
+      (edge) => !immutableForRefinement(edge)
+    )
+    if (mutableEdges.length < 2 || mutableEdges.length > MAX_REFINEMENT_EDGES)
+      continue
+    const componentIds = new Set(componentEdges.map((edge) => edge.id))
+    let bestComponentScore = routeSetScore(
+      bestRoutes,
+      solveInput.edges,
+      solveInput.nodes,
+      solveInput.straightPathTypes,
+      componentIds,
+      immutableEdgeIds
+    )
+    if (!routeSetNeedsRefinement(bestComponentScore)) continue
+
+    const mutableIds = new Set(mutableEdges.map((edge) => edge.id))
+    const fixedRoutes = Object.fromEntries(
+      Object.entries(bestRoutes).filter(([edgeId]) => !mutableIds.has(edgeId))
+    )
+    const candidates = [{ routeById: bestRoutes }]
+    const variants: Array<number | "reverse"> = ["reverse"]
+    for (
+      let rotation = 1;
+      rotation < mutableEdges.length && rotation <= MAX_ROTATIONS;
+      rotation++
+    )
+      variants.push(rotation)
+    for (const variant of variants) {
+      const candidate = computeAllEdgeGeometryPass(
+        {
+          ...solveInput,
+          edges: mutableEdges,
+          fixedEdges: immutableEdges,
+          solveCache: undefined,
+        },
+        variant,
+        fixedRoutes
+      )
+      const score = routeSetScore(
+        candidate.routeById,
+        solveInput.edges,
+        solveInput.nodes,
+        solveInput.straightPathTypes,
+        componentIds,
+        immutableEdgeIds
+      )
+      candidates.push(candidate)
+      if (routeSetScoreLess(score, bestComponentScore)) {
+        bestRoutes = candidate.routeById
+        bestComponentScore = score
+      }
+    }
+
+    // Every candidate route has already passed the same hard-obstacle solver.
+    // Their cross-edge coupling is soft, so MUTABLE routes from different passes
+    // can be recombined. Immutable routes seeded every pass and only influence the
+    // objective/neighbour field. Greedy descent is bounded by mutable edge count.
+    for (let pass = 0; pass < mutableEdges.length; pass++) {
+      let improved = false
+      for (const edge of mutableEdges) {
+        for (const candidate of candidates) {
+          const route = candidate.routeById[edge.id]
+          if (!route || route === bestRoutes[edge.id]) continue
+          const combined = { ...bestRoutes, [edge.id]: route }
+          const score = routeSetScore(
+            combined,
+            solveInput.edges,
+            solveInput.nodes,
+            solveInput.straightPathTypes,
+            componentIds,
+            immutableEdgeIds
+          )
+          if (!routeSetScoreLess(score, bestComponentScore)) continue
+          bestRoutes = combined
+          bestComponentScore = score
+          improved = true
+        }
+      }
+      if (!improved) break
+    }
+  }
+  return { routeById: bestRoutes }
 }
 
 /**

@@ -141,28 +141,53 @@ describe("obstacle-aware routing", () => {
   })
 
   it("re-indexes when a node's type changes but its geometry does not", () => {
-    // The per-frame node index is cached on a fingerprint of what it reads. That
-    // fingerprint must cover type, not only geometry: a container is SOFT and a leaf
-    // is SOLID, so a mid node flipping type without moving must not keep the stale
-    // softness — else an edge routes through a now-solid node it should avoid.
-    const soft = getEdgeObstacles(
-      [node("a", 0, 0), node("b", 500, 0), node("mid", 200, -100, "bpmnPool")],
-      "a",
-      "b",
-      source,
-      { x: 500, y: 30 }
-    ).find((o) => o.id === "mid")
+    // React Flow may mutate nodes while retaining the array identity. A type-only
+    // mutation must be visible: a container is soft and a leaf is solid.
+    const nodes = [
+      node("a", 0, 0),
+      node("b", 500, 0),
+      node("mid", 200, -100, "bpmnPool"),
+    ]
+    const soft = getEdgeObstacles(nodes, "a", "b", source, {
+      x: 500,
+      y: 30,
+    }).find((o) => o.id === "mid")
     expect(soft?.soft).toBe(true)
 
-    const solid = getEdgeObstacles(
-      // Same id, position and size — ONLY the type differs.
-      [node("a", 0, 0), node("b", 500, 0), node("mid", 200, -100, "class")],
-      "a",
-      "b",
-      source,
-      { x: 500, y: 30 }
-    ).find((o) => o.id === "mid")
+    nodes[2].type = "class"
+    const solid = getEdgeObstacles(nodes, "a", "b", source, {
+      x: 500,
+      y: 30,
+    }).find((o) => o.id === "mid")
     expect(solid?.soft).toBe(false)
+  })
+
+  it("sees in-place measurement and geometry mutations on the same array", () => {
+    const mid = node("mid", 180, -20)
+    mid.width = undefined
+    mid.height = undefined
+    const nodes = [node("a", 0, 0), node("b", 400, 0), mid]
+
+    expect(
+      getEdgeObstacles(nodes, "a", "b", source, target).map((o) => o.id)
+    ).not.toContain("mid")
+
+    // Measurement arrives without replacing either the node or the array.
+    mid.measured = { width: 120, height: 70 }
+    expect(
+      getEdgeObstacles(nodes, "a", "b", source, target).find(
+        (o) => o.id === "mid"
+      )
+    ).toMatchObject({ x: 180, y: -20, width: 120, height: 70 })
+
+    // A later drag mutates the same position object in place as well.
+    mid.position.x = 230
+    mid.position.y = 15
+    expect(
+      getEdgeObstacles(nodes, "a", "b", source, target).find(
+        (o) => o.id === "mid"
+      )
+    ).toMatchObject({ x: 230, y: 15, width: 120, height: 70 })
   })
 
   it("excludes a node sitting on top of an endpoint", () => {

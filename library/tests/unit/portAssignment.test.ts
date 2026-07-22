@@ -163,6 +163,47 @@ describe("assignSides — four-centre nodes spread edges across sides", () => {
   })
 })
 
+describe("assignSides — customized diagonal reservations", () => {
+  it("avoids a diagonal authored corridor regardless of IDs or direction", () => {
+    const source = rect(0, 0)
+    const target = rect(300, 0)
+    const nodeRects = new Map([
+      ["source", source],
+      ["target", target],
+    ])
+    const makeEdge = (edgeId: string): SideEdge => ({
+      edgeId,
+      sourceNodeId: "source",
+      targetNodeId: "target",
+      sourceRect: source,
+      targetRect: target,
+      sourceBand: true,
+      targetBand: true,
+    })
+    const diagonal = [
+      { x: 120, y: 10 },
+      { x: 240, y: 50 },
+    ]
+    const solve = (edgeId: string, reserved: typeof diagonal) =>
+      assignSides([makeEdge(edgeId)], nodeRects, new Set(), [], [reserved])
+
+    const forward = solve("a-first", diagonal)
+    const renamed = solve("z-renamed", [...diagonal].reverse())
+    const semanticPair = (result: Map<string, Position>, id: string) => [
+      result.get(endKey(id, "source")),
+      result.get(endKey(id, "target")),
+    ]
+
+    expect(semanticPair(renamed, "z-renamed")).toEqual(
+      semanticPair(forward, "a-first")
+    )
+    expect(semanticPair(forward, "a-first")).not.toEqual([
+      Position.Right,
+      Position.Left,
+    ])
+  })
+})
+
 describe("approxRoute — the side-assignment estimate dodges blocking nodes", () => {
   it("slides a Z/U connecting lane over a node the naive line would cut", () => {
     const U = rect(0, 200, 100, 60)
@@ -201,6 +242,12 @@ describe("crossingOrderKey — reach order beyond the band, tangential order ins
     expect(far).toBeLessThan(near) // farther seats first (toward the −tangent end)
     expect(near).toBeGreaterThan(1) // both beyond the +tangent end
     expect(far).toBeGreaterThan(1)
+  })
+
+  it("counts a behind-side partner's wrap depth when nesting it with an outward partner", () => {
+    const behind = crossingOrderKey(Position.Right, -185, 395, H)
+    const outward = crossingOrderKey(Position.Right, 160, 195, H)
+    expect(behind).toBeLessThan(outward)
   })
 
   it("orders partners INSIDE the band by tangential position, not reach", () => {
@@ -336,6 +383,49 @@ describe("assignPorts — forks, nesting, merges emerge", () => {
     )
   })
 
+  it("centres independent straight lanes without leaving their feasible overlaps", () => {
+    // A tall hub has two narrow partners aligned with opposite ends of its Right
+    // side. Unconstrained recentering would put both hub ports near y=200, outside
+    // either partner, manufacturing two bends. The constrained allocation stays
+    // inside each overlap while remaining symmetric around the hub centre.
+    const hub = rect(0, 0, 120, 400)
+    const upper = rect(360, 0, 120, 80)
+    const lower = rect(360, 320, 120, 80)
+    const ends: EndRef[] = [
+      {
+        edgeId: "upper",
+        end: "source",
+        nodeId: "hub",
+        rect: hub,
+        side: Position.Right,
+        partnerCenter: centerOf(upper),
+        partnerNodeId: "upper-node",
+        partnerRect: upper,
+        partnerSide: Position.Left,
+      },
+      {
+        edgeId: "lower",
+        end: "source",
+        nodeId: "hub",
+        rect: hub,
+        side: Position.Right,
+        partnerCenter: centerOf(lower),
+        partnerNodeId: "lower-node",
+        partnerRect: lower,
+        partnerSide: Position.Left,
+      },
+    ]
+    const ports = assignPorts(ends)
+    const upperY = ports.get(endKey("upper", "source"))!.ratio * hub.height
+    const lowerY = ports.get(endKey("lower", "source"))!.ratio * hub.height
+
+    expect(upperY).toBeGreaterThan(upper.y)
+    expect(upperY).toBeLessThan(upper.y + upper.height)
+    expect(lowerY).toBeGreaterThan(lower.y)
+    expect(lowerY).toBeLessThan(lower.y + lower.height)
+    expect(upperY + lowerY).toBeCloseTo(hub.height, 5)
+  })
+
   it("centres a lone arm on its side (a distributed fork, no sibling to nest)", () => {
     const b = rect(0, 0)
     // A fork onto two different sides → each side has ONE member → dead centre.
@@ -377,6 +467,102 @@ describe("assignPorts — forks, nesting, merges emerge", () => {
     const ports = assignPorts(ends)
     expect(ports.get(endKey("e1", "source"))!.ratio).toBe(0.5)
     expect(ports.get(endKey("e2", "source"))!.ratio).toBe(0.5)
+  })
+
+  it("reserves an immutable port and seats mutable fan arms around it", () => {
+    const hub = rect(0, 0, 100, 100)
+    const upper = rect(300, -160)
+    const middle = rect(300, 20)
+    const lower = rect(300, 200)
+    const ends: EndRef[] = [
+      {
+        ...end("lower", "source", hub, Position.Right, lower),
+        nodeId: "hub",
+      },
+      {
+        ...end("reserved", "source", hub, Position.Right, middle),
+        nodeId: "hub",
+        immutableRatio: 0.5,
+      },
+      {
+        ...end("upper", "source", hub, Position.Right, upper),
+        nodeId: "hub",
+      },
+    ]
+
+    const ports = assignPorts(ends)
+    const upperRatio = ports.get(endKey("upper", "source"))!.ratio
+    const reservedRatio = ports.get(endKey("reserved", "source"))!.ratio
+    const lowerRatio = ports.get(endKey("lower", "source"))!.ratio
+
+    expect(reservedRatio).toBe(0.5)
+    expect(upperRatio).toBeLessThan(reservedRatio)
+    expect(lowerRatio).toBeGreaterThan(reservedRatio)
+    expect(reservedRatio - upperRatio).toBeGreaterThanOrEqual(0.15)
+    expect(lowerRatio - reservedRatio).toBeGreaterThanOrEqual(0.15)
+  })
+
+  it("never moves an immutable seat when generated straight seats must relax", () => {
+    const hub = rect(0, 0, 120, 100)
+    const aligned = rect(360, 0, 120, 100)
+    const mk = (edgeId: string, partnerNodeId: string): EndRef => ({
+      ...end(edgeId, "source", hub, Position.Right, aligned),
+      nodeId: "hub",
+      partnerNodeId,
+      partnerSide: Position.Left,
+    })
+    const ends: EndRef[] = [
+      mk("straight-a", "a"),
+      { ...mk("reserved", "m"), immutableRatio: 0.4 },
+      mk("straight-z", "z"),
+    ]
+
+    const ports = assignPorts(ends)
+    const ratios = ends.map(
+      ({ edgeId }) => ports.get(endKey(edgeId, "source"))!.ratio
+    )
+
+    expect(ports.get(endKey("reserved", "source"))!.ratio).toBe(0.4)
+    expect(new Set(ratios).size).toBe(3)
+    const ordered = [...ratios].sort((a, b) => a - b)
+    expect(ordered[0]).toBe(0.4)
+    expect(ordered[1] - ordered[0]).toBeGreaterThanOrEqual(0.15)
+    expect(ordered[2] - ordered[1]).toBeGreaterThanOrEqual(0.15)
+    expect(ordered[2]).toBeLessThanOrEqual(0.8)
+  })
+
+  it("compresses around close immutable reservations without moving them", () => {
+    const hub = rect(0, 0, 100, 100)
+    const partner = rect(300, 20)
+    const ends: EndRef[] = [
+      {
+        ...end("reserved-a", "source", hub, Position.Right, partner),
+        nodeId: "hub",
+        partnerNodeId: "a",
+        immutableRatio: 0.45,
+      },
+      {
+        ...end("reserved-b", "source", hub, Position.Right, partner),
+        nodeId: "hub",
+        partnerNodeId: "b",
+        immutableRatio: 0.5,
+      },
+      {
+        ...end("mutable", "source", hub, Position.Right, partner),
+        nodeId: "hub",
+        partnerNodeId: "z",
+      },
+    ]
+
+    const forward = assignPorts(ends)
+    const reversed = assignPorts([...ends].reverse())
+    expect(forward.get(endKey("reserved-a", "source"))!.ratio).toBe(0.45)
+    expect(forward.get(endKey("reserved-b", "source"))!.ratio).toBe(0.5)
+    expect(
+      forward.get(endKey("mutable", "source"))!.ratio
+    ).toBeGreaterThanOrEqual(0.55)
+    for (const key of forward.keys())
+      expect(reversed.get(key)).toEqual(forward.get(key))
   })
 
   it("is order-independent (determinism across peers)", () => {

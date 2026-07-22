@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test"
-import { waitForCanvasReady } from "../helpers/canvas"
+import { openFixtureInLocalEditor, waitForCanvasReady } from "../helpers/canvas"
 
 /**
  * E2E behavioural tests for the Apollon UML diagram editor.
@@ -26,37 +26,18 @@ async function openTemporaryLocalDiagram(
 ) {
   const modelId = "e2e-local-model-id"
 
-  await page.goto("/")
-  await page.evaluate(
-    ({ id, type }) => {
-      const storeValue = JSON.stringify({
-        state: {
-          models: {
-            [id]: {
-              id,
-              model: {
-                id,
-                type,
-                assessments: {},
-                edges: [],
-                nodes: [],
-                title: "E2E Diagram",
-                version: "4.0.0",
-              },
-              lastModifiedAt: new Date().toISOString(),
-            },
-          },
-          currentModelId: id,
-        },
-        version: 0,
-      })
-
-      localStorage.setItem("persistenceModelStore", storeValue)
-    },
-    { id: modelId, type: diagramType }
-  )
-
-  await page.goto(`/local/${modelId}`)
+  // Seed before the application boots. Writing localStorage after loading the
+  // dashboard races the already-hydrating store under a busy parallel run and
+  // can intermittently send the direct route to "Diagram not found".
+  await openFixtureInLocalEditor(page, {
+    id: modelId,
+    type: diagramType,
+    assessments: {},
+    edges: [],
+    nodes: [],
+    title: "E2E Diagram",
+    version: "4.0.0",
+  })
   const isLegacyRouting =
     (await page.getByText("Something went wrong.").count()) > 0
 

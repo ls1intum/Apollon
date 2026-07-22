@@ -37,8 +37,8 @@ export const EdgeGeometrySolver = () => {
   // would re-trigger the solve it commits) to hold the last routes for edges
   // whose nodes are momentarily unmeasured.
   const geometryStore = use(EdgeGeometryStoreContext)
-  // The edge being bend/endpoint-dragged right now, if any: fed to the solver so
-  // higher-id edges dodge the live preview.
+  // The edge being bend/endpoint-dragged right now, if any: bends are authoritative;
+  // reconnects substitute the exact edge pointer-up will commit before solving.
   const liveEdgeOverride = useMetadataStore((s) => s.liveEdgeOverride)
   // A NEW connection being drawn onto a node: routed alongside the real edges so
   // every neighbour fans/re-anchors to make room LIVE (the fan orders by partner

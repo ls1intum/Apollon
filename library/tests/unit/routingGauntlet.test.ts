@@ -355,6 +355,33 @@ describe("routing gauntlet", () => {
     checkRoute(points, bodies, "corridor")
   })
 
+  it("uses the medial axis to break ties in a moderately wide channel", () => {
+    // The 60px channel has two equally clear 25px-offset lanes (y=25 and y=35).
+    // Both have the same bends and Manhattan length because the endpoints sit on
+    // opposite walls. The geometric tie-break should choose the visible centre.
+    const points = routeOrthogonalPath(
+      { x: 0, y: 0 },
+      { x: 300, y: 60 },
+      Position.Right,
+      Position.Left,
+      [
+        { id: "upper", x: 80, y: -80, width: 140, height: 80 },
+        { id: "lower", x: 80, y: 60, width: 140, height: 80 },
+      ],
+      []
+    )
+    expect(
+      points.some(
+        (point, index) =>
+          index < points.length - 1 &&
+          point.y === 30 &&
+          points[index + 1].y === 30 &&
+          Math.min(point.x, points[index + 1].x) <= 80 &&
+          Math.max(point.x, points[index + 1].x) >= 220
+      )
+    ).toBe(true)
+  })
+
   /**
    * Nodes that TOUCH. The channel between them is zero wide, so "the best line the
    * channel allows" is their shared border — and a route drawn along it is the
@@ -380,6 +407,28 @@ describe("routing gauntlet", () => {
         `segment ${i} is drawn along the border the two nodes share`
       ).toBe(false)
     }
+  })
+
+  it("centres the lane between consecutive walls that meet at one boundary", () => {
+    // Minimized from the arbitrary-layout property (seed 544525154). The target
+    // ends exactly where the blocker begins in y. Together they are a continuous
+    // wall beside the vertical run, so the 20px x-gap has a feasible 10px lane.
+    const nodes = [
+      node("source", -30, 30),
+      node("blocker", 175, 5),
+      node("target", -5, -95),
+    ]
+    const { points, bodies } = routeBetween(
+      nodes,
+      "source",
+      "target",
+      Position.Right,
+      Position.Right
+    )
+    checkRoute(points, bodies, "consecutive-wall channel", {
+      source: Position.Right,
+      target: Position.Right,
+    })
   })
 
   /**

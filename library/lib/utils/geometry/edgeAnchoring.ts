@@ -5,8 +5,19 @@ import { getConnectionMode, getEdgeAnchorPoint } from "@/utils/connectionModes"
 import { type FreeformEdgeAnchor } from "@/utils/edgeUtils"
 import { routeStepEdge } from "@/utils/geometry/edgeRoute"
 import { clamp, lexLess } from "@/utils/geometry/scalar"
-import { routeConflictScore } from "@/utils/geometry/orthogonalRouter"
+import {
+  routeAroundObstaclesBetweenCandidates,
+  routeConflictScore,
+  type RouteEndpointCandidate,
+} from "@/utils/geometry/orthogonalRouter"
 import type { ObstacleRect } from "@/utils/geometry/obstacles"
+import {
+  endpointPlacementCost,
+  endpointPreferenceCost,
+  polylineConflictCost,
+  ROUTING_COST,
+  weightedRoutingCost,
+} from "@/utils/geometry/routingCost"
 import type { ResolvedEdgeEndpoints } from "@/utils/geometry/edgeGeometrySolver"
 import {
   OPPOSITE_SIDE,
@@ -23,9 +34,9 @@ import {
 /**
  * Endpoint-anchor selection: instead of pinning an edge to whatever side React
  * Flow's centre-to-centre guess lands on, pick the SIDE and the OFFSET along it
- * that route to the fewest bends around the same obstacles the router already
- * avoids. A user-dragged (custom) anchor is authoritative and never re-chosen;
- * only free ends are optimised.
+ * that minimise one shared endpoint-and-path objective against the same obstacles
+ * and neighbouring routes the router avoids. A user-dragged (custom) anchor is
+ * authoritative and never re-chosen; only free ends are optimised.
  *
  * The choice is MEMORYLESS — a pure function of the current geometry — on purpose. A
  * remembered "last frame's side" would render the same diagram differently on two Yjs
@@ -36,52 +47,11 @@ import {
  */
 
 const GRID = CANVAS.SNAP_TO_GRID_PX
-/** Anchor SELECTION scores the IDEAL geometry between the two nodes — obstacle-
- * and neighbour-free — so the pick reflects the clean shape an edge WANTS, not a
- * detour the router will add around whatever happens to be in the way. Those live
- * only in the final commit route. (Also: with no obstacles the step router never
- * searches, so scoring every candidate this way is free.) */
+/** Inputs used only by the bounded-lattice fallback. Normal solves use joint A*
+ * over real obstacles and neighbours. */
 const NO_OBSTACLES: readonly ObstacleRect[] = []
 const NO_NEIGHBORS: readonly IPoint[][] = []
 
-/** What one bend costs, in the grid units the off-centre term is weighed against:
- * `weightedCost = bends·BEND_COST_GU + offCentre + …` (length is a tie-break below
- * it, not a traded term). Sets the crossover in `OFF_CENTRE_DIVISOR`: straight where
- * possible, unless staying straight drags the anchors too far off centre. */
-const BEND_COST_GU = 12
-/** Divides the convex (sum-of-squares) off-centre term. Chosen so a symmetric
- * straight edge — both anchors the same fraction off centre — costs exactly one
- * bend at ~0.30 off centre: below that going straight is preferred, past it the
- * centred one-bend attachment wins. Ratio-based, so this crossover is the same for
- * a small node and a large one (the old pixel term crossed at a size-dependent
- * ratio, bending big nodes too eagerly and small ones never). */
-const OFF_CENTRE_DIVISOR = 15_000
-/** What one grid cell of "hug" — an ideal-route point run inside the endpoint
- * clearance — costs. Far above a bend so avoiding a graze always wins over saving
- * a corner; a hug is a defect, not a trade-off. */
-const HUG_COST_GU = 50
-/** What one grid cell of THIRD-PARTY graze costs — an ideal-route run that grazes,
- * crosses, or crowds a node that is NEITHER endpoint. As bad as hugging its own
- * node: an edge drawn on top of a third node reads as broken just the same. Above a
- * bend so a clean-but-more-bent attachment always beats one that grazes a bystander,
- * and graduated (see `thirdPartyGrazePx`) so it also breaks a cost-tie toward the
- * side whose route drops cleanly away from a nearby node. */
-const THIRD_PARTY_GRAZE_COST_GU = 50
-/** What driving the ideal route THROUGH a bystander node costs, in bend-units. The
- * worst thing anchor selection can choose (the cited order is node-overlap ≻ crossing
- * ≻ bend), and it is never a real option: the router must detour around it, spending
- * corners the ideal route never showed. Priced far above the bends it would save. */
-const NODE_THROUGH_COST_GU = 10 * BEND_COST_GU
-/** What one CROSSING of an already-committed edge costs, in bend-units — ~3 bends,
- * the evidence rate (yFiles 5:1, libavoid 4:1; kept moderate because every crossing
- * here is a 90° one, the least harmful). Scored on the ideal route against the
- * lower-id edges already placed, so an edge prefers a side/lane that does not cross
- * its neighbours — crossing avoidance and bundle NESTING emerge from this term. */
-const EDGE_CROSS_COST_GU = 36
-/** What one grid cell of running ON or too-close-alongside a committed edge costs.
- * Above a bend so a shared/smudged run always loses to a clean detour; this is what
- * pushes two edges off a shared stub (no fork-collapse) and spaces a crowded side. */
-const EDGE_OVERLAP_COST_GU = 40
 /** One concrete anchor choice: the stored `{side, ratio}`, its shape-projected
  * pixel, and the side the router must exit/enter along. */
 type AnchorChoice = {
@@ -100,7 +70,11 @@ const candidateSides = (rect: Rect, toward: IPoint): Position[] => {
   const perpendicular = isVerticalSide(primary)
     ? [Position.Top, Position.Bottom]
     : [Position.Left, Position.Right]
-  return [primary, ...perpendicular]
+  // Away-facing ports are uncommon but necessary when a blocker or an already
+  // committed route makes the apparent U-turn globally cheaper. The old selector
+  // discarded them before seeing the real route, which made joint optimisation
+  // impossible by construction.
+  return [primary, ...perpendicular, OPPOSITE_SIDE[primary]]
 }
 
 /** Snap a target offset ALONG a side (px from the side's low corner) to a grid-
@@ -419,7 +393,9 @@ const scoreKey = (
    * term (first edge, or a diagram with none placed yet). This is the unified cost's
    * cross-edge coupling: crossing avoidance, bundle nesting and no-fork-collapse all
    * emerge from it, in id order. */
-  committed: readonly IPoint[][]
+  committed: readonly IPoint[][],
+  sourcePreferred?: FreeformEdgeAnchor,
+  targetPreferred?: FreeformEdgeAnchor
 ): number[] => {
   const bends = Math.max(0, route.length - 2)
   // Off-centre is measured from the side CENTRE. Multi-edge spacing is handled up
@@ -427,11 +403,22 @@ const scoreKey = (
   // no longer needs a per-sibling slot reference.
   const ds = Math.round(1000 * Math.abs(source.anchor.ratio - 0.5))
   const dt = Math.round(1000 * Math.abs(target.anchor.ratio - 0.5))
-  // CONVEX (sum of squares) so the cost penalises CONCENTRATION, not just level: a
-  // pair jammed as (corner, centre) costs more than a balanced (mild, mild) pair
-  // the old linear sum rated exactly equal, so the balanced attachment wins on
-  // cost rather than falling to the geometry-blind tie-break.
-  const offCenter = Math.round((ds * ds + dt * dt) / OFF_CENTRE_DIVISOR)
+  const placement =
+    endpointPlacementCost(source.anchor, GRID) +
+    endpointPlacementCost(target.anchor, GRID)
+  const preference =
+    endpointPreferenceCost(
+      source.anchor,
+      sourcePreferred,
+      sideAxisLength(source.anchor.side, sourceRect),
+      GRID
+    ) +
+    endpointPreferenceCost(
+      target.anchor,
+      targetPreferred,
+      sideAxisLength(target.anchor.side, targetRect),
+      GRID
+    )
   // A hug is a defect, not a preference: weight it far above any bend so a
   // clear-but-more-bent attachment always beats one that grazes its own node.
   const hug = Math.round(hugPenaltyPx(route, sourceRect, targetRect) / GRID)
@@ -455,17 +442,29 @@ const scoreKey = (
     committed.length === 0
       ? { crossings: 0, proximityPx: 0 }
       : routeConflictScore(route, committed)
-  const crossCost =
-    conflict.crossings * EDGE_CROSS_COST_GU +
-    Math.round((conflict.proximityPx / GRID) * EDGE_OVERLAP_COST_GU)
+  const generalConflict = polylineConflictCost(
+    route,
+    committed,
+    ROUTING_COST.parallelCrowdingClearanceInGridCells * GRID
+  )
+  const lengthPx = routeLength(route)
   const weightedCost =
-    bends * BEND_COST_GU +
-    offCenter +
-    hug * HUG_COST_GU +
-    graze * THIRD_PARTY_GRAZE_COST_GU +
-    through * NODE_THROUGH_COST_GU +
-    crossCost
-  const length = Math.round(routeLength(route) / GRID)
+    weightedRoutingCost(
+      {
+        lengthPx,
+        bends,
+        crossings: conflict.crossings,
+        overlapPx: generalConflict.overlapPx,
+        crowdingPx: generalConflict.crowdingPx,
+      },
+      GRID
+    ) +
+    placement +
+    preference +
+    hug * ROUTING_COST.huggingPerPx +
+    graze * ROUTING_COST.huggingPerPx +
+    through * ROUTING_COST.edgeCrossing
+  const length = Math.round(lengthPx / GRID)
   return [
     weightedCost,
     // A four-centre end cannot slide, so two of its edges picking one side collapse
@@ -558,6 +557,10 @@ export type AutoAnchorInput = {
   /** Present ⇒ that end is a locked user override, not optimised. */
   sourceCustom?: FreeformEdgeAnchor
   targetCustom?: FreeformEdgeAnchor
+  /** Node-local coordinator suggestions. Unlike user anchors these are merely
+   * candidates: the joint route may choose another side or slot. */
+  sourcePreferred?: FreeformEdgeAnchor
+  targetPreferred?: FreeformEdgeAnchor
   resolve: ResolveWithAnchors
   obstacles: readonly ObstacleRect[]
   /** Obstacles that are NEITHER endpoint node (already reach-windowed by
@@ -616,6 +619,47 @@ export const selectEdgeAnchors = (
         centerOf(input.sourceRect)
       )
 
+  const addPreferred = (
+    options: AnchorChoice[],
+    preferred: FreeformEdgeAnchor | undefined,
+    type: string | undefined,
+    rect: Rect
+  ): void => {
+    if (!preferred) return
+    const add = (anchor: FreeformEdgeAnchor): void => {
+      const key = `${anchor.side}:${Math.round(anchor.ratio * 1000)}`
+      if (
+        options.some(
+          (option) =>
+            `${option.anchor.side}:${Math.round(option.anchor.ratio * 1000)}` ===
+            key
+        )
+      )
+        return
+      options.push(toAnchorChoice(type, rect, anchor))
+    }
+    add(preferred)
+    // Opposite ends observe a side in opposite rotational order. Offering the
+    // mirrored seat lets the real route decide between nesting and parallel lanes
+    // instead of forcing the coordinator's local ordering onto both nodes.
+    if (getConnectionMode(type) !== "four-center")
+      add({ side: preferred.side, ratio: 1 - preferred.ratio })
+  }
+  if (!input.sourceCustom)
+    addPreferred(
+      sourceOptions,
+      input.sourcePreferred,
+      input.sourceType,
+      input.sourceRect
+    )
+  if (!input.targetCustom)
+    addPreferred(
+      targetOptions,
+      input.targetPreferred,
+      input.targetType,
+      input.targetRect
+    )
+
   // When both ends are free, add the straight-aligned pair — anchors on one line
   // through the nodes' overlap. Per-side candidates aim at the partner's centre
   // and so miss a straight run for offset nodes; this recovers it, and the weighed
@@ -632,6 +676,55 @@ export const selectEdgeAnchors = (
   if (straight) {
     sourceOptions.push(straight.source)
     targetOptions.push(straight.target)
+  }
+
+  const addChoice = (options: AnchorChoice[], choice: AnchorChoice | null) => {
+    if (!choice) return
+    const key = `${choice.anchor.side}:${Math.round(choice.anchor.ratio * 1000)}`
+    if (
+      !options.some(
+        (option) =>
+          `${option.anchor.side}:${Math.round(option.anchor.ratio * 1000)}` ===
+          key
+      )
+    )
+      options.push(choice)
+  }
+
+  // A coordinated seat is soft, but the opposite free end must be offered the
+  // aligned mate or accepting that seat would manufacture a bend. This is also
+  // what makes a newly-added sibling reflow an existing straight edge live.
+  if (!input.sourceCustom && input.targetPreferred) {
+    const preferred = toAnchorChoice(
+      input.targetType,
+      input.targetRect,
+      input.targetPreferred
+    )
+    addChoice(
+      sourceOptions,
+      alignedToPinned(
+        input.sourceType,
+        input.sourceRect,
+        preferred.point,
+        preferred.position
+      )
+    )
+  }
+  if (!input.targetCustom && input.sourcePreferred) {
+    const preferred = toAnchorChoice(
+      input.sourceType,
+      input.sourceRect,
+      input.sourcePreferred
+    )
+    addChoice(
+      targetOptions,
+      alignedToPinned(
+        input.targetType,
+        input.targetRect,
+        preferred.point,
+        preferred.position
+      )
+    )
   }
 
   // Exactly ONE end pinned (a user anchor or a solver band port): offer the free end an
@@ -655,6 +748,113 @@ export const selectEdgeAnchors = (
     if (aligned) sourceOptions.push(aligned)
   }
 
+  // Resolve the Cartesian candidate set once, retaining the exact marker-padded
+  // endpoint geometry for the winning pair. Although one end's resolution is
+  // independent today, keeping the matrix avoids baking that implementation detail
+  // into the optimiser's contract.
+  const resolved = new Map<string, ResolvedEdgeEndpoints>()
+  const sourceCandidates: Array<RouteEndpointCandidate | undefined> = new Array(
+    sourceOptions.length
+  )
+  const targetCandidates: Array<RouteEndpointCandidate | undefined> = new Array(
+    targetOptions.length
+  )
+  const forceStubTurn = (anchor: FreeformEdgeAnchor, rect: Rect): boolean => {
+    const axis = sideAxisLength(anchor.side, rect)
+    return (
+      Math.min(anchor.ratio * axis, (1 - anchor.ratio) * axis) <=
+      EDGES.MIN_NODE_CLEARANCE_PX
+    )
+  }
+  for (let sourceIndex = 0; sourceIndex < sourceOptions.length; sourceIndex++) {
+    const source = sourceOptions[sourceIndex]
+    for (
+      let targetIndex = 0;
+      targetIndex < targetOptions.length;
+      targetIndex++
+    ) {
+      const target = targetOptions[targetIndex]
+      const endpoints = input.resolve({
+        sourceAnchor: source.anchor,
+        targetAnchor: target.anchor,
+      })
+      if (!endpoints) continue
+      resolved.set(`${sourceIndex}:${targetIndex}`, endpoints)
+      sourceCandidates[sourceIndex] ??= {
+        point: endpoints.adjustedSource,
+        position: endpoints.sourcePosition,
+        stubLength: EDGES.STUB_LENGTH,
+        cost: input.sourceCustom
+          ? 0
+          : endpointPlacementCost(source.anchor, GRID) +
+            endpointPreferenceCost(
+              source.anchor,
+              input.sourcePreferred,
+              sideAxisLength(source.anchor.side, input.sourceRect),
+              GRID
+            ),
+        forceStubTurn:
+          Boolean(input.sourceCustom) &&
+          forceStubTurn(source.anchor, input.sourceRect),
+      }
+      targetCandidates[targetIndex] ??= {
+        point: endpoints.adjustedTarget,
+        position: endpoints.targetPosition,
+        stubLength: EDGES.STUB_LENGTH,
+        cost: input.targetCustom
+          ? 0
+          : endpointPlacementCost(target.anchor, GRID) +
+            endpointPreferenceCost(
+              target.anchor,
+              input.targetPreferred,
+              sideAxisLength(target.anchor.side, input.targetRect),
+              GRID
+            ),
+        forceStubTurn:
+          Boolean(input.targetCustom) &&
+          forceStubTurn(target.anchor, input.targetRect),
+      }
+    }
+  }
+
+  const sourceMap: number[] = []
+  const targetMap: number[] = []
+  const jointSources = sourceCandidates.flatMap((candidate, index) => {
+    if (!candidate) return []
+    sourceMap.push(index)
+    return [candidate]
+  })
+  const jointTargets = targetCandidates.flatMap((candidate, index) => {
+    if (!candidate) return []
+    targetMap.push(index)
+    return [candidate]
+  })
+  const joint = routeAroundObstaclesBetweenCandidates(
+    jointSources,
+    jointTargets,
+    input.obstacles,
+    input.neighborEdges
+  )
+  if (joint) {
+    const sourceIndex = sourceMap[joint.sourceIndex]
+    const targetIndex = targetMap[joint.targetIndex]
+    const endpoints = resolved.get(`${sourceIndex}:${targetIndex}`)
+    if (endpoints) {
+      return {
+        endpoints,
+        route: joint.route,
+        sourceAnchor: input.sourceCustom
+          ? undefined
+          : sourceOptions[sourceIndex].anchor,
+        targetAnchor: input.targetCustom
+          ? undefined
+          : targetOptions[targetIndex].anchor,
+      }
+    }
+  }
+
+  // The bounded lattice can decline an exceptionally dense candidate graph. Keep
+  // the established ideal-route selector as a deterministic degradation path.
   let best: {
     endpoints: ResolvedEdgeEndpoints
     idealRoute: IPoint[]
@@ -694,7 +894,9 @@ export const selectEdgeAnchors = (
         sourceFacing,
         targetFacing,
         thirdParty,
-        input.neighborEdges
+        input.neighborEdges,
+        input.sourcePreferred,
+        input.targetPreferred
       )
       if (!best || lexLess(key, best.key)) {
         best = { endpoints, idealRoute, source, target, key }

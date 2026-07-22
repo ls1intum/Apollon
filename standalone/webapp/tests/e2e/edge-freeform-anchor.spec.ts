@@ -64,6 +64,19 @@ async function centerOf(locator: Locator): Promise<Pt> {
   }
 }
 
+/** The rendered target endpoint, transformed from SVG path space to screen space. */
+async function targetEndpointOf(edge: Locator): Promise<Pt> {
+  return edge.locator(".react-flow__edge-path").evaluate((element) => {
+    const path = element as SVGPathElement
+    const matrix = path.getScreenCTM()
+    if (!matrix) throw new Error("edge path has no screen transform")
+
+    const point = path.getPointAtLength(path.getTotalLength())
+    const screenPoint = new DOMPoint(point.x, point.y).matrixTransform(matrix)
+    return { x: screenPoint.x, y: screenPoint.y }
+  })
+}
+
 /** The persisted `{side, ratio}` anchor of an edge's target endpoint. */
 async function targetAnchorOf(page: Page, edgeId: string) {
   return page.evaluate((id) => {
@@ -158,7 +171,7 @@ async function expectFreeformTargetFollowsMovedNode({
 
   const anchorBefore = await targetAnchorOf(page, edgeId)
   const nodeBefore = await centerOf(targetNode)
-  const endpointBefore = await centerOf(targetHandle)
+  const endpointBefore = await targetEndpointOf(edge)
 
   // Move the node so its endpoint has to follow. A child pinned to its parent's
   // border (e.g. a component interface) can't be dragged freely on its own, so
@@ -185,7 +198,7 @@ async function expectFreeformTargetFollowsMovedNode({
     .poll(
       async () => {
         const nodeAfter = await centerOf(targetNode)
-        const endpointAfter = await centerOf(targetHandle)
+        const endpointAfter = await targetEndpointOf(edge)
         const nodeMoved = Math.hypot(
           nodeAfter.x - nodeBefore.x,
           nodeAfter.y - nodeBefore.y

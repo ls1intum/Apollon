@@ -95,9 +95,21 @@ test("interface edges split across sides and the label avoids them", async ({
   // The two edges attach to DIFFERENT sides of the four-centre interface.
   expect(sides[0]).not.toBe(sides[1])
 
-  // The label sits on a free side: with both edges on the left band, it must NOT be to
-  // the left of the interface centre (the reported bug), i.e. it is centred or opposite.
+  // The label sits on a free side derived from the CURRENT routed attachments.
+  // Do not pin it to the historical fixture's right side: a better router may
+  // legitimately split the edges top/bottom, in which case left is equally clean.
   expect(data.label).not.toBeNull()
   const ifaceCenterScreen = data.screen.x + data.screen.w / 2
-  expect(data.label!.cx).toBeGreaterThanOrEqual(ifaceCenterScreen - 2)
+  const ifaceMiddleScreen = data.screen.y + data.screen.h / 2
+  const labelDx = data.label!.cx - ifaceCenterScreen
+  const labelDy = data.label!.cy - ifaceMiddleScreen
+  const labelSide =
+    Math.abs(labelDx) >= Math.abs(labelDy)
+      ? labelDx >= 0
+        ? "right"
+        : "left"
+      : labelDy >= 0
+        ? "bottom"
+        : "top"
+  expect(sides).not.toContain(labelSide)
 })

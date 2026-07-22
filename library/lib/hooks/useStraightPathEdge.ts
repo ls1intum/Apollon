@@ -1,11 +1,13 @@
 import {
   useCallback,
+  useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react"
-import { Position, useReactFlow } from "@xyflow/react"
+import { Position, useReactFlow, type Edge } from "@xyflow/react"
 import {
   calculateOverlayPath,
   calculateStraightPath,
@@ -55,6 +57,7 @@ type StraightEndpointDragCommit = {
   targetPosition: Position
   sourceEndpoint: IPoint
   targetEndpoint: IPoint
+  predictedEdge: Edge
 }
 
 export const useStraightPathEdge = ({
@@ -68,13 +71,20 @@ export const useStraightPathEdge = ({
   targetY,
   sourcePosition,
   targetPosition,
+  sourceHandleId,
+  targetHandleId,
   data,
 }: BaseEdgeProps) => {
   const pathRef = useRef<SVGPathElement | null>(null)
   const endpointDragCommitRef = useRef<StraightEndpointDragCommit | null>(null)
+  const activePointerCancelRef = useRef<(() => void) | null>(null)
+  const activePointerTeardownRef = useRef<(() => void) | null>(null)
   const isDiagramModifiable = useDiagramModifiable()
   const isReconnecting = useMetadataStore(
     (state) => state.reconnectPreviewEdgeId === id
+  )
+  const setLiveEdgeOverride = useMetadataStore(
+    (state) => state.setLiveEdgeOverride
   )
   const { getIntersectingNodes, getNode, getNodes, screenToFlowPosition } =
     useReactFlow()
@@ -85,6 +95,13 @@ export const useStraightPathEdge = ({
     sourcePosition: Position
     targetPosition: Position
   } | null>(null)
+
+  useEffect(
+    () => () => {
+      activePointerTeardownRef.current?.()
+    },
+    []
+  )
   const sourceAnchor = data?.sourceAnchor
   const targetAnchor = data?.targetAnchor
   const shouldSubscribeToNodeGeometry =
@@ -291,6 +308,20 @@ export const useStraightPathEdge = ({
   const renderTargetPosition =
     dragPreviewPositions?.targetPosition ?? resolvedTargetPosition
 
+  // Straight-hook edges still participate in shared neighbour geometry. Publish
+  // the exact predicted edge so the complete route set uses committed constraints
+  // during the drag as well as after pointer-up.
+  useLayoutEffect(() => {
+    if (dragPreviewPoints === null) return
+    setLiveEdgeOverride({
+      edgeId: id,
+      points: dragPreviewPoints,
+      edge: endpointDragCommitRef.current?.predictedEdge,
+      strategy: endpointDragCommitRef.current ? "predicted" : "authoritative",
+    })
+    return () => setLiveEdgeOverride(null)
+  }, [dragPreviewPoints, id, setLiveEdgeOverride])
+
   // UseCase include/extend edges are dashed connectors that never read as
   // crossings to disambiguate, so they opt out of bridging.
   const lineJumps = useEdgeLineJumps(
@@ -355,6 +386,7 @@ export const useStraightPathEdge = ({
     (event: ReactPointerEvent<SVGRectElement>, endpoint: EndpointType) => {
       event.preventDefault()
       event.stopPropagation()
+      activePointerCancelRef.current?.()
       endpointDragCommitRef.current = null
 
       const ownerDocument = event.currentTarget.ownerDocument
@@ -415,6 +447,44 @@ export const useStraightPathEdge = ({
           }
         }
 
+        const predictedData = { ...data }
+        if (endpoint === "source") {
+          predictedData.sourceAnchor = anchor
+          if (!isFreeformEdgeAnchor(targetAnchor) && targetRect) {
+            predictedData.targetAnchor =
+              getEdgeAnchorFromPoint(
+                targetNode?.type,
+                currentTargetEndpoint,
+                targetRect
+              ) ?? undefined
+          }
+        } else {
+          predictedData.targetAnchor = anchor
+          if (!isFreeformEdgeAnchor(sourceAnchor) && sourceRect) {
+            predictedData.sourceAnchor =
+              getEdgeAnchorFromPoint(
+                sourceNode?.type,
+                currentSourceEndpoint,
+                sourceRect
+              ) ?? undefined
+          }
+        }
+        const predictedEdge: Edge = {
+          id,
+          source: endpoint === "source" ? nodeOnTop.id : source,
+          target: endpoint === "target" ? nodeOnTop.id : target,
+          sourceHandle:
+            endpoint === "source"
+              ? getSideHandleIdForPosition(resolvedAnchor.position)
+              : sourceHandleId,
+          targetHandle:
+            endpoint === "target"
+              ? getSideHandleIdForPosition(resolvedAnchor.position)
+              : targetHandleId,
+          type,
+          data: predictedData,
+        }
+
         return {
           endpoint,
           nodeId: nodeOnTop.id,
@@ -430,6 +500,7 @@ export const useStraightPathEdge = ({
               : resolvedTargetPosition,
           sourceEndpoint,
           targetEndpoint,
+          predictedEdge,
         }
       }
 
@@ -457,11 +528,30 @@ export const useStraightPathEdge = ({
         setDragPreviewPositions(null)
       }
 
-      const handlePointerUp = () => {
-        const commit = endpointDragCommitRef.current
+      const teardownPointerGesture = () => {
+        ownerDocument.removeEventListener("pointermove", handlePointerMove)
+        ownerDocument.removeEventListener("pointerup", handlePointerUp)
+        ownerDocument.removeEventListener("pointercancel", handlePointerCancel)
+        if (activePointerTeardownRef.current === teardownPointerGesture) {
+          activePointerTeardownRef.current = null
+          activePointerCancelRef.current = null
+        }
+      }
+
+      const restoreWithoutCommit = () => {
         endpointDragCommitRef.current = null
         setDragPreviewPoints(null)
         setDragPreviewPositions(null)
+      }
+
+      const handlePointerCancel = () => {
+        restoreWithoutCommit()
+        teardownPointerGesture()
+      }
+
+      const handlePointerUp = () => {
+        const commit = endpointDragCommitRef.current
+        restoreWithoutCommit()
 
         if (commit) {
           setEdges((edges) =>
@@ -476,6 +566,10 @@ export const useStraightPathEdge = ({
               } else {
                 nextData.targetAnchor = commit.anchor
               }
+              if (commit.predictedEdge.data?.sourceAnchor)
+                nextData.sourceAnchor = commit.predictedEdge.data.sourceAnchor
+              if (commit.predictedEdge.data?.targetAnchor)
+                nextData.targetAnchor = commit.predictedEdge.data.targetAnchor
 
               return commit.endpoint === "source"
                 ? {
@@ -494,17 +588,22 @@ export const useStraightPathEdge = ({
           )
         }
 
-        ownerDocument.removeEventListener("pointermove", handlePointerMove)
-        ownerDocument.removeEventListener("pointerup", handlePointerUp)
+        teardownPointerGesture()
       }
 
+      activePointerCancelRef.current = handlePointerCancel
+      activePointerTeardownRef.current = teardownPointerGesture
       ownerDocument.addEventListener("pointermove", handlePointerMove)
       ownerDocument.addEventListener("pointerup", handlePointerUp, {
+        once: true,
+      })
+      ownerDocument.addEventListener("pointercancel", handlePointerCancel, {
         once: true,
       })
     },
     [
       basePoints,
+      data,
       findFreeformEndpointNode,
       getIntersectingNodes,
       getNodeRect,
@@ -513,6 +612,17 @@ export const useStraightPathEdge = ({
       resolvedTargetPosition,
       screenToFlowPosition,
       setEdges,
+      source,
+      sourceAnchor,
+      sourceHandleId,
+      sourceNode?.type,
+      sourceRect,
+      target,
+      targetAnchor,
+      targetHandleId,
+      targetNode?.type,
+      targetRect,
+      type,
     ]
   )
 

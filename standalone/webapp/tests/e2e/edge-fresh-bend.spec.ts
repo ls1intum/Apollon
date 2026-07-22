@@ -34,6 +34,74 @@ const noEdge = load("two-class-no-edge.json")
 
 const SRC = "95aac2b6-3e6b-4e6d-9201-52a498e6ea20"
 const TGT = "32659cdc-bd03-46f3-918c-ee8dbba9c15b"
+const LOWER = "7b43c3f0-df30-4c59-9e36-62b23577bda1"
+const SELECTED_EDGE = "231f7ef5-b43d-4187-8996-f7726ed6e919"
+const SIBLING_EDGE = "c5d79e15-c4f1-4adc-9dbf-845cb41ebf29"
+const RECONNECT_TARGET = "3e898776-5f93-4ecb-b86b-1e528661f064"
+const RECONNECT_OBSTACLE = "6b21414c-a180-482a-b886-469208f76bfb"
+
+// A two-arm fan: customizing the upper arm must not make the lower automatic
+// arm disappear from/re-enter node-side coordination across the live→commit
+// boundary. Derived from the ordinary class fixture to retain realistic nodes.
+const fanFixture = JSON.parse(JSON.stringify(freshEdge)) as {
+  id: string
+  nodes: Array<Record<string, unknown>>
+  edges: Array<Record<string, unknown>>
+  [key: string]: unknown
+}
+fanFixture.id = "9387505d-6728-4594-888d-ac1e8a72291a"
+fanFixture.nodes[0].position = { x: 220, y: 370 }
+fanFixture.nodes[1].position = { x: 640, y: 270 }
+fanFixture.nodes.push({
+  ...JSON.parse(JSON.stringify(fanFixture.nodes[1])),
+  id: LOWER,
+  position: { x: 640, y: 470 },
+})
+fanFixture.edges = [
+  {
+    id: SELECTED_EDGE,
+    source: SRC,
+    target: TGT,
+    type: "ClassUnidirectional",
+    sourceHandle: "right",
+    targetHandle: "left",
+    data: { points: [] },
+  },
+  {
+    id: SIBLING_EDGE,
+    source: SRC,
+    target: LOWER,
+    type: "ClassUnidirectional",
+    sourceHandle: "right",
+    targetHandle: "left",
+    data: { points: [] },
+  },
+]
+
+// The endpoint begins below the source and is reconnected onto a horizontally
+// aligned target with a third class in between. A local two-node preview draws
+// straight through that class; the committed solver must dogleg around it.
+const reconnectObstacleFixture = JSON.parse(JSON.stringify(freshEdge)) as {
+  id: string
+  nodes: Array<Record<string, unknown>>
+  edges: Array<Record<string, unknown>>
+  [key: string]: unknown
+}
+reconnectObstacleFixture.id = "f55227cb-a8e0-4a37-b5ce-fb66ff33d852"
+reconnectObstacleFixture.nodes[0].position = { x: 140, y: 300 }
+reconnectObstacleFixture.nodes[1].position = { x: 720, y: 540 }
+reconnectObstacleFixture.nodes.push(
+  {
+    ...JSON.parse(JSON.stringify(reconnectObstacleFixture.nodes[1])),
+    id: RECONNECT_TARGET,
+    position: { x: 720, y: 300 },
+  },
+  {
+    ...JSON.parse(JSON.stringify(reconnectObstacleFixture.nodes[1])),
+    id: RECONNECT_OBSTACLE,
+    position: { x: 430, y: 300 },
+  }
+)
 
 type Pt = { x: number; y: number }
 
@@ -46,6 +114,18 @@ async function persistedPoints(page: Page): Promise<Pt[] | null> {
     const id = parsed.state.currentModelId
     const edges = parsed.state.models[id]?.model?.edges ?? []
     return edges[0]?.data?.points ?? null
+  })
+}
+
+async function persistedEdgeData(
+  page: Page
+): Promise<Record<string, unknown> | null> {
+  return page.evaluate(() => {
+    const raw = localStorage.getItem("persistenceModelStore")
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    const id = parsed.state.currentModelId
+    return parsed.state.models[id]?.model?.edges?.[0]?.data ?? null
   })
 }
 
@@ -168,6 +248,9 @@ test.describe("Fresh-edge first bend — loaded model", () => {
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2 - 60, {
       steps: 12,
     })
+    const previewPath = await edge
+      .locator(".react-flow__edge-path")
+      .getAttribute("d")
     await page.mouse.up()
     await page.waitForTimeout(350)
     const points = await persistedPoints(page)
@@ -176,6 +259,13 @@ test.describe("Fresh-edge first bend — loaded model", () => {
       `first bend snapped back: ${JSON.stringify(points)}`
     ).toBe(false)
     expect(Math.min(...points!.map((p) => p.y))).toBeLessThan(415)
+
+    const committed = await persistedEdgeData(page)
+    expect(committed).toHaveProperty("sourceAnchor")
+    expect(committed).toHaveProperty("targetAnchor")
+    await expect
+      .poll(() => edge.locator(".react-flow__edge-path").getAttribute("d"))
+      .toBe(previewPath)
   })
 })
 
@@ -266,4 +356,293 @@ test.describe("Fresh-edge first bend — drawn edge", () => {
       "committed bend drifted after re-render"
     ).toEqual(before)
   })
+})
+
+test("surrounding auto layout stays continuous through a live and committed bend", async ({
+  page,
+}) => {
+  await openFixtureInLocalEditor(page, fanFixture)
+  await waitForCanvasReady(page)
+
+  const selected = page.locator(`.react-flow__edge[data-id="${SELECTED_EDGE}"]`)
+  const siblingPath = page
+    .locator(`.react-flow__edge[data-id="${SIBLING_EDGE}"]`)
+    .locator(".react-flow__edge-path")
+  const initialSibling = await siblingPath.getAttribute("d")
+
+  await selected.locator(".edge-overlay, path").first().click({ force: true })
+  const handle = await pickHorizontalBendHandle(page, selected)
+  await page.mouse.move(handle.cx, handle.cy)
+  await page.mouse.down()
+  // Enter the live-drag state without crossing the bend snap grid. Merely making
+  // the edge authoritative must not recenter or flip its automatic sibling.
+  await page.mouse.move(handle.cx + 1, handle.cy, { steps: 2 })
+  await expect.poll(() => siblingPath.getAttribute("d")).toBe(initialSibling)
+
+  // Now perform a real customization. The sibling may legitimately optimize
+  // around the new route, but pointer-up must not change that optimized result.
+  await page.mouse.move(handle.cx, handle.cy - 60, { steps: 12 })
+  await page.waitForTimeout(200)
+  const liveSibling = await siblingPath.getAttribute("d")
+  await page.mouse.up()
+  await expect.poll(() => siblingPath.getAttribute("d")).toBe(liveSibling)
+
+  const committed = await persistedEdgeData(page)
+  expect(committed).toHaveProperty("sourceAnchor")
+  expect(committed).toHaveProperty("targetAnchor")
+})
+
+test("endpoint reconnect preview uses the committed obstacle-aware route", async ({
+  page,
+}) => {
+  await openFixtureInLocalEditor(page, reconnectObstacleFixture)
+  await waitForCanvasReady(page)
+
+  const edge = page.locator(`.react-flow__edge[data-id="${SELECTED_EDGE}"]`)
+  const edgePath = edge.locator(".react-flow__edge-path")
+  await edge.locator(".edge-overlay, path").first().click({ force: true })
+  const endpoint = edge.locator(".edge-endpoint-handle--target")
+  await expect(endpoint).toBeVisible()
+  const endpointBox = (await endpoint.boundingBox())!
+  const targetBox = (await page
+    .locator(`.react-flow__node[data-id="${RECONNECT_TARGET}"]`)
+    .boundingBox())!
+  const initialPath = await edgePath.getAttribute("d")
+
+  await page.mouse.move(
+    endpointBox.x + endpointBox.width / 2,
+    endpointBox.y + endpointBox.height / 2
+  )
+  await page.mouse.down()
+  await page.mouse.move(targetBox.x + 4, targetBox.y + targetBox.height / 2, {
+    steps: 18,
+  })
+  await expect.poll(() => edgePath.getAttribute("d")).not.toEqual(initialPath)
+  const livePath = await edgePath.getAttribute("d")
+  expect(livePath).toBeTruthy()
+  expect(
+    (livePath!.match(/[LHV]/g) ?? []).length,
+    "the live reconnect must already dogleg around the bystander"
+  ).toBeGreaterThan(1)
+
+  await page.mouse.up()
+  await expect.poll(() => edgePath.getAttribute("d")).toBe(livePath)
+  await expect
+    .poll(async () =>
+      page.evaluate((edgeId) => {
+        const raw = localStorage.getItem("persistenceModelStore")
+        if (!raw) return null
+        const parsed = JSON.parse(raw)
+        const id = parsed.state.currentModelId
+        const edges = parsed.state.models[id]?.model?.edges ?? []
+        return edges.find(
+          (candidate: { id: string }) => candidate.id === edgeId
+        )?.target
+      }, SELECTED_EDGE)
+    )
+    .toBe(RECONNECT_TARGET)
+  await expect
+    .poll(
+      () => persistedPoints(page),
+      "pinning an endpoint must not freeze an automatic edge into manual waypoints"
+    )
+    .toEqual([])
+})
+
+test("canceling a predicted reconnect does not commit its preview endpoint", async ({
+  page,
+}) => {
+  await openFixtureInLocalEditor(page, reconnectObstacleFixture)
+  await waitForCanvasReady(page)
+
+  const edge = page.locator(`.react-flow__edge[data-id="${SELECTED_EDGE}"]`)
+  await edge.locator(".edge-overlay, path").first().click({ force: true })
+  const bend = await pickHorizontalBendHandle(page, edge)
+  await page.mouse.move(bend.cx, bend.cy)
+  await page.mouse.down()
+  await page.mouse.move(bend.cx, bend.cy - 45, { steps: 10 })
+  await page.mouse.up()
+  await expect.poll(() => persistedPoints(page)).not.toEqual([])
+  // Let the ordinary bend commit finish its one solver reprojection before taking
+  // the cancellation baseline; otherwise this test compares against the transient
+  // pointer-up write rather than the settled authored route.
+  await page.waitForTimeout(400)
+  const pointsBeforeReconnect = await persistedPoints(page)
+
+  const endpoint = edge.locator(".edge-endpoint-handle--target")
+  const endpointBox = (await endpoint.boundingBox())!
+  const targetBox = (await page
+    .locator(`.react-flow__node[data-id="${RECONNECT_TARGET}"]`)
+    .boundingBox())!
+  const canvasBox = (await page.locator(".react-flow").first().boundingBox())!
+  await page.mouse.move(
+    endpointBox.x + endpointBox.width / 2,
+    endpointBox.y + endpointBox.height / 2
+  )
+  await page.mouse.down()
+  // Enter predicted mode, then leave every node and cancel there.
+  await page.mouse.move(targetBox.x + 4, targetBox.y + targetBox.height / 2, {
+    steps: 12,
+  })
+  await page.waitForTimeout(100)
+  await page.mouse.move(canvasBox.x + 20, canvasBox.y + 20, { steps: 12 })
+  await page.mouse.up()
+
+  await expect
+    .poll(
+      () => persistedPoints(page),
+      "canceling must preserve every authored waypoint, not only the endpoints"
+    )
+    .toEqual(pointsBeforeReconnect)
+  await expect
+    .poll(() =>
+      page.evaluate((edgeId) => {
+        const raw = localStorage.getItem("persistenceModelStore")
+        if (!raw) return null
+        const parsed = JSON.parse(raw)
+        const id = parsed.state.currentModelId
+        const edges = parsed.state.models[id]?.model?.edges ?? []
+        return edges.find(
+          (candidate: { id: string }) => candidate.id === edgeId
+        )?.target
+      }, SELECTED_EDGE)
+    )
+    .toBe(TGT)
+})
+
+test("pointercancel tears down a live bend without committing it", async ({
+  page,
+}) => {
+  await openFixtureInLocalEditor(page, freshEdge)
+  await waitForCanvasReady(page)
+
+  const edge = page.locator(`.react-flow__edge[data-id="${SELECTED_EDGE}"]`)
+  const edgePath = edge.locator(".react-flow__edge-path")
+  const box = await selectAndGetHandle(page, edge)
+  const initialPath = await edgePath.getAttribute("d")
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2 - 60, {
+    steps: 12,
+  })
+  await expect.poll(() => edgePath.getAttribute("d")).not.toBe(initialPath)
+
+  await page.evaluate(() =>
+    document.dispatchEvent(
+      new PointerEvent("pointercancel", { bubbles: true, pointerId: 1 })
+    )
+  )
+  // Playwright still tracks its synthetic mouse button as pressed. The later
+  // pointerup must be harmless because pointercancel already detached the gesture.
+  await page.mouse.up()
+
+  await expect.poll(() => persistedPoints(page)).toEqual([])
+  await expect.poll(() => edgePath.getAttribute("d")).toBe(initialPath)
+})
+
+test("pointercancel rejects a predicted endpoint commit and restores all waypoints", async ({
+  page,
+}) => {
+  await openFixtureInLocalEditor(page, reconnectObstacleFixture)
+  await waitForCanvasReady(page)
+
+  const edge = page.locator(`.react-flow__edge[data-id="${SELECTED_EDGE}"]`)
+  await edge.locator(".edge-overlay, path").first().click({ force: true })
+  const bend = await pickHorizontalBendHandle(page, edge)
+  await page.mouse.move(bend.cx, bend.cy)
+  await page.mouse.down()
+  await page.mouse.move(bend.cx, bend.cy - 45, { steps: 10 })
+  await page.mouse.up()
+  await page.waitForTimeout(400)
+  const before = await persistedPoints(page)
+  expect(before).not.toEqual([])
+
+  const endpointBox = (await edge
+    .locator(".edge-endpoint-handle--target")
+    .boundingBox())!
+  const targetBox = (await page
+    .locator(`.react-flow__node[data-id="${RECONNECT_TARGET}"]`)
+    .boundingBox())!
+  await page.mouse.move(
+    endpointBox.x + endpointBox.width / 2,
+    endpointBox.y + endpointBox.height / 2
+  )
+  await page.mouse.down()
+  await page.mouse.move(targetBox.x + 4, targetBox.y + targetBox.height / 2, {
+    steps: 12,
+  })
+  await page.evaluate(() =>
+    document.dispatchEvent(
+      new PointerEvent("pointercancel", { bubbles: true, pointerId: 1 })
+    )
+  )
+  await page.mouse.up()
+
+  await expect.poll(() => persistedPoints(page)).toEqual(before)
+  await expect
+    .poll(() =>
+      page.evaluate((edgeId) => {
+        const raw = localStorage.getItem("persistenceModelStore")
+        if (!raw) return null
+        const parsed = JSON.parse(raw)
+        const id = parsed.state.currentModelId
+        return parsed.state.models[id]?.model?.edges?.find(
+          (candidate: { id: string }) => candidate.id === edgeId
+        )?.target
+      }, SELECTED_EDGE)
+    )
+    .toBe(TGT)
+})
+
+test("reconnecting to a straight-eligible target preserves an authored bend", async ({
+  page,
+}) => {
+  await openFixtureInLocalEditor(page, reconnectObstacleFixture)
+  await waitForCanvasReady(page)
+
+  const edge = page.locator(`.react-flow__edge[data-id="${SELECTED_EDGE}"]`)
+  await edge.locator(".edge-overlay, path").first().click({ force: true })
+  const bend = await pickHorizontalBendHandle(page, edge)
+  await page.mouse.move(bend.cx, bend.cy)
+  await page.mouse.down()
+  await page.mouse.move(bend.cx, bend.cy - 45, { steps: 10 })
+  await page.mouse.up()
+  await page.waitForTimeout(400)
+  expect(await persistedPoints(page)).not.toEqual([])
+
+  const endpointBox = (await edge
+    .locator(".edge-endpoint-handle--target")
+    .boundingBox())!
+  const targetBox = (await page
+    .locator(`.react-flow__node[data-id="${RECONNECT_TARGET}"]`)
+    .boundingBox())!
+  await page.mouse.move(
+    endpointBox.x + endpointBox.width / 2,
+    endpointBox.y + endpointBox.height / 2
+  )
+  await page.mouse.down()
+  await page.mouse.move(targetBox.x + 4, targetBox.y + targetBox.height / 2, {
+    steps: 12,
+  })
+  await page.mouse.up()
+
+  await expect
+    .poll(
+      () => persistedPoints(page),
+      "endpoint pinning must not erase independently authored bend topology"
+    )
+    .not.toEqual([])
+  await expect
+    .poll(() =>
+      page.evaluate((edgeId) => {
+        const raw = localStorage.getItem("persistenceModelStore")
+        if (!raw) return null
+        const parsed = JSON.parse(raw)
+        const id = parsed.state.currentModelId
+        return parsed.state.models[id]?.model?.edges?.find(
+          (candidate: { id: string }) => candidate.id === edgeId
+        )?.target
+      }, SELECTED_EDGE)
+    )
+    .toBe(RECONNECT_TARGET)
 })

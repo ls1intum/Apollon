@@ -6,7 +6,13 @@ import {
   useRef,
   useState,
 } from "react"
-import { Position, useReactFlow, useStore, type Node } from "@xyflow/react"
+import {
+  Position,
+  useReactFlow,
+  useStore,
+  type Edge,
+  type Node,
+} from "@xyflow/react"
 import { EDGES } from "@/constants"
 import {
   adjustSourceCoordinates,
@@ -112,7 +118,8 @@ type EndpointDragCommit = {
   targetPosition: Position
   sourceRect: Rect
   targetRect: Rect
-  directPoints: IPoint[] | null
+  committedPoints: IPoint[]
+  predictedEdge: Edge
 }
 
 const arePointsEqual = (a: IPoint[], b: IPoint[]): boolean =>
@@ -142,6 +149,8 @@ export const useStepPathEdge = ({
   targetY: reactFlowTargetY,
   sourcePosition: reactFlowSourcePosition,
   targetPosition: reactFlowTargetPosition,
+  sourceHandleId,
+  targetHandleId,
   data,
   allowMidpointDragging = true,
 }: UseStepPathEdgeProps) => {
@@ -156,6 +165,11 @@ export const useStepPathEdge = ({
   // of snapping all the way back to the pre-drag shape.
   const lastValidDragRef = useRef<IPoint[]>([])
   const endpointDragCommitRef = useRef<EndpointDragCommit | null>(null)
+  // Document-level listeners outlive the SVG element that started a gesture.
+  // Keep explicit cancel/teardown handles so pointercancel restores the edge and
+  // unmount always detaches listeners without trying to update unmounted state.
+  const activePointerCancelRef = useRef<(() => void) | null>(null)
+  const activePointerTeardownRef = useRef<(() => void) | null>(null)
 
   const isDiagramModifiable = useDiagramModifiable()
   const isReconnecting = useMetadataStore(
@@ -180,6 +194,17 @@ export const useStepPathEdge = ({
     sourcePosition: Position
     targetPosition: Position
   } | null>(null)
+  // Render-visible counterpart to the pointer-up ref. The predicted central route
+  // is display state, so React must be able to observe when its endpoints change.
+  const [endpointPreviewCommit, setEndpointPreviewCommit] =
+    useState<EndpointDragCommit | null>(null)
+
+  useEffect(
+    () => () => {
+      activePointerTeardownRef.current?.()
+    },
+    []
+  )
 
   const { customPoints, setCustomPoints } = useEdgeState(data?.points)
   const sourceAnchor = data?.sourceAnchor
@@ -436,6 +461,28 @@ export const useStepPathEdge = ({
   const activePoints = centralRoute ?? centralFallback
 
   useEffect(() => {
+    // The central store also carries bend/reconnect preview geometry so every
+    // sibling can react before paint. It is not committed diagram state: pointer-up
+    // below owns that write. In particular, a predicted reconnect of an already
+    // manual edge must not overwrite its old waypoints merely by hovering a node.
+    if (dragPreviewPoints !== null) return
+
+    // Pointer-up clears local preview state before the solver's layout-effect
+    // cleanup necessarily restores the stored edge route. Do not let that brief
+    // handoff frame write a cursor/predicted endpoint into manual waypoints. A
+    // committed manual route always begins/ends at the edge props' resolved stored
+    // anchors (`baseAdjusted*`); node-move reprojection still passes this gate.
+    if (
+      centralRoute &&
+      centralRoute.length >= 2 &&
+      (centralRoute[0].x !== baseAdjustedSource.sourceX ||
+        centralRoute[0].y !== baseAdjustedSource.sourceY ||
+        centralRoute[centralRoute.length - 1].x !==
+          baseAdjustedTarget.targetX ||
+        centralRoute[centralRoute.length - 1].y !== baseAdjustedTarget.targetY)
+    )
+      return
+
     // This effect persists the SOLVER's (manual-merged, re-projected) route. Until the
     // solver's first route lands, `activePoints` is `centralFallback` — a bare
     // source→target straight line that is never painted. Re-projecting THAT would
@@ -493,9 +540,14 @@ export const useStepPathEdge = ({
     )
   }, [
     activePoints,
+    baseAdjustedSource.sourceX,
+    baseAdjustedSource.sourceY,
+    baseAdjustedTarget.targetX,
+    baseAdjustedTarget.targetY,
     centralRoute,
     customPoints,
     data?.points,
+    dragPreviewPoints,
     hasLocalManualPoints,
     hasManualPoints,
     hasStoredManualPoints,
@@ -515,7 +567,24 @@ export const useStepPathEdge = ({
   // the committed points. Only `renderPoints` drives the visible path and its
   // decorations; the persistence effect above stays keyed on `activePoints`
   // so a live preview never leaks into the store mid-drag.
-  const renderPoints = dragPreviewPoints ?? activePoints
+  const predictedCommit = endpointPreviewCommit
+  const isPredictedEndpointPreview =
+    dragPreviewPoints !== null && predictedCommit !== null
+  const centralPreviewMatchesCommit =
+    isPredictedEndpointPreview &&
+    centralRoute !== undefined &&
+    centralRoute.length >= 2 &&
+    centralRoute[0].x === predictedCommit.sourceEndpoint.x &&
+    centralRoute[0].y === predictedCommit.sourceEndpoint.y &&
+    centralRoute[centralRoute.length - 1].x ===
+      predictedCommit.targetEndpoint.x &&
+    centralRoute[centralRoute.length - 1].y === predictedCommit.targetEndpoint.y
+  // A snapped endpoint reconnect is solved as its predicted committed edge. Until
+  // that layout-effect solve lands, keep the local cursor-following fallback only
+  // if it already has the committed endpoints; never flash the old stored route.
+  const renderPoints = centralPreviewMatchesCommit
+    ? centralRoute
+    : (dragPreviewPoints ?? activePoints)
   const renderSourcePosition =
     dragPreviewPositions?.sourcePosition ?? sourcePosition
   const renderTargetPosition =
@@ -535,9 +604,14 @@ export const useStepPathEdge = ({
   // the dragged edge has non-null `dragPreviewPoints`, so only it ever publishes.
   useLayoutEffect(() => {
     if (dragPreviewPoints === null) return
-    setLiveEdgeOverride({ edgeId: id, points: dragPreviewPoints })
+    setLiveEdgeOverride({
+      edgeId: id,
+      points: dragPreviewPoints,
+      edge: endpointPreviewCommit?.predictedEdge,
+      strategy: endpointPreviewCommit ? "predicted" : "authoritative",
+    })
     return () => setLiveEdgeOverride(null)
-  }, [dragPreviewPoints, id, setLiveEdgeOverride])
+  }, [dragPreviewPoints, endpointPreviewCommit, id, setLiveEdgeOverride])
 
   const currentPath = useMemo(
     () => buildEdgePath(renderPoints, lineJumps),
@@ -645,6 +719,8 @@ export const useStepPathEdge = ({
     (event: React.PointerEvent, handle: BendHandle) => {
       if (!allowMidpointDragging) return
 
+      activePointerCancelRef.current?.()
+
       draggingHandleRef.current = handle
       setDraggingHandle(handle)
 
@@ -713,16 +789,34 @@ export const useStepPathEdge = ({
         const grid = EDGES.BEND_SNAP_GRID_PX
         // Snap to the grid first, then clamp into the legal interval: the lane
         // tracks the cursor and comes to rest against the wall.
-        const toLane = (value: number): number =>
+        // Snap the DELTA from the lane the user grabbed, not the absolute canvas
+        // coordinate. Coordinated ports frequently land between grid lines; absolute
+        // snapping moved such an edge on the very first pointermove even when the
+        // cursor had not changed its lane, which then needlessly re-optimized every
+        // automatic neighbour.
+        const toLane = (value: number, origin: number): number =>
           Math.min(
-            Math.max(Math.round(value / grid) * grid, laneBounds.min),
+            Math.max(
+              origin + Math.round((value - origin) / grid) * grid,
+              laneBounds.min
+            ),
             laneBounds.max
           )
 
         const delta: IPoint =
           activeHandle.orientation === "H"
-            ? { x: 0, y: toLane(rawY) - activeHandle.position.y }
-            : { x: toLane(rawX) - activeHandle.position.x, y: 0 }
+            ? {
+                x: 0,
+                y:
+                  toLane(rawY, activeHandle.position.y) -
+                  activeHandle.position.y,
+              }
+            : {
+                x:
+                  toLane(rawX, activeHandle.position.x) -
+                  activeHandle.position.x,
+                y: 0,
+              }
 
         const basePoints = dragPointsRef.current
         const newPoints =
@@ -762,6 +856,28 @@ export const useStepPathEdge = ({
         setDragPreviewPoints(newPoints)
       }
 
+      const ownerDocument = event.currentTarget.ownerDocument
+      const teardownPointerGesture = () => {
+        ownerDocument.removeEventListener("pointermove", handlePointerMove)
+        ownerDocument.removeEventListener("pointerup", handlePointerUp)
+        ownerDocument.removeEventListener("pointercancel", handlePointerCancel)
+        if (activePointerTeardownRef.current === teardownPointerGesture) {
+          activePointerTeardownRef.current = null
+          activePointerCancelRef.current = null
+        }
+      }
+
+      const restoreWithoutCommit = () => {
+        setDragPreviewPoints(null)
+        draggingHandleRef.current = null
+        setDraggingHandle(null)
+      }
+
+      const handlePointerCancel = () => {
+        restoreWithoutCommit()
+        teardownPointerGesture()
+      }
+
       const handlePointerUp = () => {
         // Drop the live preview; the render falls back to the committed points
         // (or to the points we commit just below). Both updates batch into one
@@ -798,21 +914,53 @@ export const useStepPathEdge = ({
 
           setCustomPoints(normalizedPoints)
           setEdges((eds) =>
-            eds.map((e) =>
-              e.id === id
-                ? { ...e, data: { ...e.data, points: normalizedPoints } }
-                : e
-            )
+            eds.map((e) => {
+              if (e.id !== id) return e
+
+              const nextData: Record<string, unknown> = {
+                ...e.data,
+                points: normalizedPoints,
+              }
+              // A bend customizes the complete visible route, including the
+              // attachment sites the joint solver chose. Persist those sites as
+              // pins when they were still automatic; otherwise the manual points
+              // would be re-projected onto the edge's older stored handles on
+              // release and the shape could jump at either end.
+              if (!isFreeformEdgeAnchor(sourceAnchor) && sourceRect) {
+                const pinnedSource = getEdgeAnchorFromPoint(
+                  sourceNode?.type,
+                  sourcePoint,
+                  sourceRect
+                )
+                if (pinnedSource) nextData.sourceAnchor = pinnedSource
+              }
+              if (!isFreeformEdgeAnchor(targetAnchor) && targetRect) {
+                const pinnedTarget = getEdgeAnchorFromPoint(
+                  targetNode?.type,
+                  targetPoint,
+                  targetRect
+                )
+                if (pinnedTarget) nextData.targetAnchor = pinnedTarget
+              }
+
+              return { ...e, data: nextData }
+            })
           )
         }
         draggingHandleRef.current = null
         setDraggingHandle(null)
-        document.removeEventListener("pointermove", handlePointerMove)
-        document.removeEventListener("pointerup", handlePointerUp)
+        teardownPointerGesture()
       }
 
-      document.addEventListener("pointermove", handlePointerMove)
-      document.addEventListener("pointerup", handlePointerUp, { once: true })
+      activePointerCancelRef.current = handlePointerCancel
+      activePointerTeardownRef.current = teardownPointerGesture
+      ownerDocument.addEventListener("pointermove", handlePointerMove)
+      ownerDocument.addEventListener("pointerup", handlePointerUp, {
+        once: true,
+      })
+      ownerDocument.addEventListener("pointercancel", handlePointerCancel, {
+        once: true,
+      })
     },
     [
       activePoints,
@@ -827,6 +975,12 @@ export const useStepPathEdge = ({
       adjustedSourceCoordinates.sourceY,
       adjustedTargetCoordinates.targetX,
       adjustedTargetCoordinates.targetY,
+      sourceAnchor,
+      sourceNode?.type,
+      sourceRect,
+      targetAnchor,
+      targetNode?.type,
+      targetRect,
     ]
   )
 
@@ -836,7 +990,9 @@ export const useStepPathEdge = ({
     (event: React.PointerEvent<SVGRectElement>, endpoint: EndpointType) => {
       event.preventDefault()
       event.stopPropagation()
+      activePointerCancelRef.current?.()
       endpointDragCommitRef.current = null
+      setEndpointPreviewCommit(null)
 
       const ownerDocument = event.currentTarget.ownerDocument
       const dragBaseline = [...activePoints]
@@ -947,6 +1103,56 @@ export const useStepPathEdge = ({
           nextSourcePosition,
           nextTargetPosition
         )
+        const committedPoints = normalizeOrthogonalEdgePoints(
+          preservedPoints,
+          sourceEndpoint,
+          targetEndpoint,
+          nextSourcePosition,
+          nextTargetPosition
+        )
+        const predictedData = {
+          ...data,
+          // Endpoint pinning and bend authorship are independent constraints. A
+          // previously automatic edge stays automatic under its predicted pins;
+          // only an already-authored route carries waypoints through reconnect.
+          points: hasManualPoints ? committedPoints : [],
+        }
+        if (endpoint === "source") {
+          predictedData.sourceAnchor = anchor
+          if (!isFreeformEdgeAnchor(targetAnchor) && targetRect) {
+            predictedData.targetAnchor =
+              getEdgeAnchorFromPoint(
+                targetNode?.type,
+                currentTargetEndpoint,
+                targetRect
+              ) ?? undefined
+          }
+        } else {
+          predictedData.targetAnchor = anchor
+          if (!isFreeformEdgeAnchor(sourceAnchor) && sourceRect) {
+            predictedData.sourceAnchor =
+              getEdgeAnchorFromPoint(
+                sourceNode?.type,
+                currentSourceEndpoint,
+                sourceRect
+              ) ?? undefined
+          }
+        }
+        const predictedEdge: Edge = {
+          id,
+          source: endpoint === "source" ? nodeOnTop.id : source,
+          target: endpoint === "target" ? nodeOnTop.id : target,
+          sourceHandle:
+            endpoint === "source"
+              ? getSideHandleIdForPosition(resolvedAnchor.position)
+              : sourceHandleId,
+          targetHandle:
+            endpoint === "target"
+              ? getSideHandleIdForPosition(resolvedAnchor.position)
+              : targetHandleId,
+          type,
+          data: predictedData,
+        }
 
         return {
           endpoint,
@@ -959,14 +1165,18 @@ export const useStepPathEdge = ({
           targetPosition: nextTargetPosition,
           sourceRect: nextSourceRect,
           targetRect: nextTargetRect,
-          directPoints,
-          points: directPoints ?? preservedPoints,
+          committedPoints,
+          points: hasManualPoints
+            ? committedPoints
+            : (directPoints ?? committedPoints),
+          predictedEdge,
         }
       }
 
       const handlePointerMove = (e: PointerEvent) => {
         const commit = resolveDragCommit(e.clientX, e.clientY)
         endpointDragCommitRef.current = commit
+        setEndpointPreviewCommit(commit)
         if (commit) {
           setDragPreviewPoints(commit.points)
           setDragPreviewPositions({
@@ -1016,27 +1226,41 @@ export const useStepPathEdge = ({
         })
       }
 
-      const handlePointerUp = () => {
-        const commit = endpointDragCommitRef.current
+      const teardownPointerGesture = () => {
+        ownerDocument.removeEventListener("pointermove", handlePointerMove)
+        ownerDocument.removeEventListener("pointerup", handlePointerUp)
+        ownerDocument.removeEventListener("pointercancel", handlePointerCancel)
+        if (activePointerTeardownRef.current === teardownPointerGesture) {
+          activePointerTeardownRef.current = null
+          activePointerCancelRef.current = null
+        }
+      }
+
+      const restoreWithoutCommit = () => {
         endpointDragCommitRef.current = null
+        setEndpointPreviewCommit(null)
         setDragPreviewPoints(null)
         setDragPreviewPositions(null)
+      }
+
+      const handlePointerCancel = () => {
+        restoreWithoutCommit()
+        teardownPointerGesture()
+      }
+
+      const handlePointerUp = () => {
+        const commit = endpointDragCommitRef.current
+        restoreWithoutCommit()
 
         if (commit) {
+          // Reconnecting an endpoint does not author bend topology. Preserve an
+          // existing manual route, but keep a previously automatic edge automatic
+          // so the joint solver can continue optimizing it under the new pins.
           const normalizedPoints = hasManualPoints
-            ? normalizeOrthogonalEdgePoints(
-                commit.points,
-                commit.sourceEndpoint,
-                commit.targetEndpoint,
-                commit.sourcePosition,
-                commit.targetPosition
-              )
+            ? commit.committedPoints
             : null
-          const shouldClearManualPoints = commit.directPoints !== null
 
-          if (shouldClearManualPoints) {
-            setCustomPoints([])
-          } else if (normalizedPoints) {
+          if (normalizedPoints) {
             setCustomPoints(normalizedPoints)
           }
 
@@ -1077,7 +1301,7 @@ export const useStepPathEdge = ({
                   if (pinned) nextData.sourceAnchor = pinned
                 }
               }
-              if (shouldClearManualPoints) {
+              if (!hasManualPoints) {
                 nextData.points = []
               } else if (normalizedPoints) {
                 nextData.points = normalizedPoints
@@ -1102,12 +1326,16 @@ export const useStepPathEdge = ({
           )
         }
 
-        ownerDocument.removeEventListener("pointermove", handlePointerMove)
-        ownerDocument.removeEventListener("pointerup", handlePointerUp)
+        teardownPointerGesture()
       }
 
+      activePointerCancelRef.current = handlePointerCancel
+      activePointerTeardownRef.current = teardownPointerGesture
       ownerDocument.addEventListener("pointermove", handlePointerMove)
       ownerDocument.addEventListener("pointerup", handlePointerUp, {
+        once: true,
+      })
+      ownerDocument.addEventListener("pointercancel", handlePointerCancel, {
         once: true,
       })
     },
@@ -1117,6 +1345,7 @@ export const useStepPathEdge = ({
       adjustedSourceCoordinates.sourceY,
       adjustedTargetCoordinates.targetX,
       adjustedTargetCoordinates.targetY,
+      data,
       findFreeformEndpointNode,
       getIntersectingNodes,
       getNodeRect,
@@ -1126,10 +1355,19 @@ export const useStepPathEdge = ({
       screenToFlowPosition,
       setCustomPoints,
       setEdges,
+      source,
+      sourceAnchor,
+      sourceHandleId,
+      sourceNode?.type,
       sourceRect,
       sourcePosition,
+      target,
+      targetAnchor,
+      targetHandleId,
+      targetNode?.type,
       targetRect,
       targetPosition,
+      type,
     ]
   )
 

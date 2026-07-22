@@ -4,8 +4,8 @@ import * as path from "node:path"
 import { fileURLToPath } from "node:url"
 import { waitForCanvasReady, openFixtureInLocalEditor } from "../helpers/canvas"
 import {
+  readEdgePathVertices,
   readNodeRects,
-  sampleEdgePath,
   type Pt,
   type Rect,
 } from "../helpers/edgeGeometry"
@@ -34,28 +34,38 @@ type Model = {
   edges: { id: string; source: string; target: string; type?: string }[]
 }
 
-const seg = (a: Pt, b: Pt, c: Pt, d: Pt): boolean => {
+const crossingPoint = (a: Pt, b: Pt, c: Pt, d: Pt): Pt | null => {
   const r = { x: b.x - a.x, y: b.y - a.y }
   const s = { x: d.x - c.x, y: d.y - c.y }
   const denom = r.x * s.y - r.y * s.x
-  if (denom === 0) return false
+  if (denom === 0) return null
   const t = ((c.x - a.x) * s.y - (c.y - a.y) * s.x) / denom
   const u = ((c.x - a.x) * r.y - (c.y - a.y) * r.x) / denom
   return t > 0.02 && t < 0.98 && u > 0.02 && u < 0.98
+    ? { x: a.x + t * r.x, y: a.y + t * r.y }
+    : null
 }
 
-const cornersOf = (pts: Pt[]): Pt[] => {
-  if (pts.length < 3) return pts
-  const out: Pt[] = [pts[0]]
-  for (let i = 1; i < pts.length - 1; i++) {
-    const a = pts[i - 1]
-    const b = pts[i]
-    const c = pts[i + 1]
-    if (Math.abs((b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x)) > 6)
-      out.push(b)
+const collinearOverlap = (a: Pt, b: Pt, c: Pt, d: Pt) => {
+  const horizontalA = Math.abs(a.y - b.y) < 1
+  const horizontalB = Math.abs(c.y - d.y) < 1
+  const verticalA = Math.abs(a.x - b.x) < 1
+  const verticalB = Math.abs(c.x - d.x) < 1
+  if (horizontalA && horizontalB && Math.abs(a.y - c.y) < 1) {
+    const lo = Math.max(Math.min(a.x, b.x), Math.min(c.x, d.x))
+    const hi = Math.min(Math.max(a.x, b.x), Math.max(c.x, d.x))
+    return hi > lo
+      ? { length: hi - lo, at: { x: (lo + hi) / 2, y: a.y } }
+      : null
   }
-  out.push(pts[pts.length - 1])
-  return out
+  if (verticalA && verticalB && Math.abs(a.x - c.x) < 1) {
+    const lo = Math.max(Math.min(a.y, b.y), Math.min(c.y, d.y))
+    const hi = Math.min(Math.max(a.y, b.y), Math.max(c.y, d.y))
+    return hi > lo
+      ? { length: hi - lo, at: { x: a.x, y: (lo + hi) / 2 } }
+      : null
+  }
+  return null
 }
 
 const rangesOverlap = (aLo: number, aHi: number, bLo: number, bHi: number) =>
@@ -85,8 +95,10 @@ const offCentre = (p: Pt, r: Rect): number | null => {
 type Metrics = {
   corners: number
   crossings: number
+  overlapPx: number
   straightBroken: number
   offMax: number
+  portCentroidError: number
 }
 
 async function measure(page: Page, model: Model): Promise<Metrics> {
@@ -94,11 +106,35 @@ async function measure(page: Page, model: Model): Promise<Metrics> {
   const rectById = new Map(rects.map((r) => [r.id, r]))
   const paths = new Map<string, Pt[]>()
   for (const e of model.edges)
-    paths.set(e.id, cornersOf(await sampleEdgePath(page, e.id, 4)))
+    paths.set(e.id, await readEdgePathVertices(page, e.id))
 
   let corners = 0
   let straightBroken = 0
   let offMax = 0
+  const portGroups = new Map<string, number[]>()
+  const recordPort = (nodeId: string, point: Pt, rect: Rect) => {
+    const m = 6
+    let side: string | null = null
+    let ratio = 0.5
+    if (Math.abs(point.x - rect.x) <= m) {
+      side = "left"
+      ratio = (point.y - rect.y) / rect.height
+    } else if (Math.abs(point.x - (rect.x + rect.width)) <= m) {
+      side = "right"
+      ratio = (point.y - rect.y) / rect.height
+    } else if (Math.abs(point.y - rect.y) <= m) {
+      side = "top"
+      ratio = (point.x - rect.x) / rect.width
+    } else if (Math.abs(point.y - (rect.y + rect.height)) <= m) {
+      side = "bottom"
+      ratio = (point.x - rect.x) / rect.width
+    }
+    if (!side) return
+    const key = `${nodeId}|${side}`
+    const group = portGroups.get(key)
+    if (group) group.push(ratio)
+    else portGroups.set(key, [ratio])
+  }
   for (const e of model.edges) {
     const pts = paths.get(e.id) ?? []
     const c = Math.max(0, pts.length - 2)
@@ -109,14 +145,24 @@ async function measure(page: Page, model: Model): Promise<Metrics> {
     if (s && pts[0]) {
       const o = offCentre(pts[0], s)
       if (o !== null) offMax = Math.max(offMax, o)
+      recordPort(e.source, pts[0], s)
     }
     if (t && pts[pts.length - 1]) {
       const o = offCentre(pts[pts.length - 1], t)
       if (o !== null) offMax = Math.max(offMax, o)
+      recordPort(e.target, pts[pts.length - 1], t)
     }
   }
 
+  let portCentroidError = 0
+  for (const ratios of portGroups.values()) {
+    if (ratios.length < 2) continue
+    const mean = ratios.reduce((sum, ratio) => sum + ratio, 0) / ratios.length
+    portCentroidError = Math.max(portCentroidError, 2 * Math.abs(mean - 0.5))
+  }
+
   let crossings = 0
+  let overlapPx = 0
   for (let i = 0; i < model.edges.length; i++)
     for (let j = i + 1; j < model.edges.length; j++) {
       const eA = model.edges[i]
@@ -131,26 +177,34 @@ async function measure(page: Page, model: Model): Promise<Metrics> {
       const B = paths.get(eB.id) ?? []
       let hit = false
       for (let a = 0; a < A.length - 1 && !hit; a++)
-        for (let b = 0; b < B.length - 1 && !hit; b++)
-          if (seg(A[a], A[a + 1], B[b], B[b + 1])) {
-            // ignore an intersection near a node both edges attach to
-            const mid = {
-              x: (A[a].x + A[a + 1].x) / 2,
-              y: (A[a].y + A[a + 1].y) / 2,
-            }
-            const nearShared = sharedRects.some(
-              (r) =>
-                mid.x >= r.x - 48 &&
-                mid.x <= r.x + r.width + 48 &&
-                mid.y >= r.y - 48 &&
-                mid.y <= r.y + r.height + 48
-            )
-            if (!nearShared) hit = true
-          }
+        for (let b = 0; b < B.length - 1 && !hit; b++) {
+          const crossing = crossingPoint(A[a], A[a + 1], B[b], B[b + 1])
+          const overlap = collinearOverlap(A[a], A[a + 1], B[b], B[b + 1])
+          // ignore an intersection near a node both edges attach to
+          const at = crossing ?? overlap?.at
+          if (!at) continue
+          const nearShared = sharedRects.some(
+            (r) =>
+              at.x >= r.x - 48 &&
+              at.x <= r.x + r.width + 48 &&
+              at.y >= r.y - 48 &&
+              at.y <= r.y + r.height + 48
+          )
+          if (!nearShared && crossing) hit = true
+          if (!nearShared && overlap && overlap.length > 4)
+            overlapPx += overlap.length
+        }
       if (hit) crossings++
     }
 
-  return { corners, crossings, straightBroken, offMax }
+  return {
+    corners,
+    crossings,
+    overlapPx: Math.round(overlapPx),
+    straightBroken,
+    offMax,
+    portCentroidError,
+  }
 }
 
 // Per-diagram thresholds — the current best. Lower/raise as the router improves.
@@ -158,17 +212,19 @@ const CASES: {
   file: string
   maxCorners: number
   maxCrossings: number
+  maxOverlapPx?: number
   maxStraightBroken: number
   maxOffMax: number
+  maxPortCentroidError?: number
 }[] = [
   // Thresholds = the current committed baseline (the ratchet the router must hold or
   // beat). straightBroken and crossings are the load-bearing invariants; corners/offMax
   // are the softer aesthetic budget.
-  // 47/48: the metric flags one convergence at shared node C as a "crossing"; it is the
-  // current baseline (visually clean), so the gate holds it rather than chasing 0.
+  // The corner sampler merges the two ends of a short rounded SVG turn, so these
+  // budgets represent visual bends rather than path tessellation details.
   {
     file: "routing-case-47.json",
-    maxCorners: 3,
+    maxCorners: 2,
     maxCrossings: 0,
     maxStraightBroken: 0,
     maxOffMax: 0.2,
@@ -200,6 +256,7 @@ const CASES: {
     maxCrossings: 0,
     maxStraightBroken: 0,
     maxOffMax: 0.55,
+    maxPortCentroidError: 0.35,
   },
   {
     file: "routing-case-53.json",
@@ -210,7 +267,7 @@ const CASES: {
   },
   {
     file: "routing-case-54.json",
-    maxCorners: 3,
+    maxCorners: 2,
     maxCrossings: 0,
     maxStraightBroken: 0,
     maxOffMax: 0.2,
@@ -221,12 +278,13 @@ const CASES: {
     maxCrossings: 0,
     maxStraightBroken: 0,
     maxOffMax: 0.85,
+    maxPortCentroidError: 0.26,
   },
   // 56: an auto edge (B->C) next to a FULLY-PINNED edge (B->A). B->C must stay
   // straight despite its neighbour being hand-anchored — the partially-pinned case.
   {
     file: "routing-case-56.json",
-    maxCorners: 3,
+    maxCorners: 2,
     maxCrossings: 0,
     maxStraightBroken: 0,
     maxOffMax: 0.55,
@@ -246,21 +304,21 @@ const CASES: {
   // not count as "straight": the step costs more than switching a side for a clean L.
   {
     file: "routing-case-58.json",
-    maxCorners: 4,
+    maxCorners: 3,
     maxCrossings: 0,
     maxStraightBroken: 0,
     maxOffMax: 0.75,
   },
   {
     file: "routing-case-59.json",
-    maxCorners: 5,
+    maxCorners: 3,
     maxCrossings: 0,
     maxStraightBroken: 0,
     maxOffMax: 0.8,
   },
   {
     file: "routing-case-60.json",
-    maxCorners: 4,
+    maxCorners: 3,
     maxCrossings: 0,
     maxStraightBroken: 0,
     maxOffMax: 0.2,
@@ -270,14 +328,14 @@ const CASES: {
   // 62: every partner lies to one side of ClassA — the band must stay CENTRED.
   {
     file: "routing-case-61.json",
-    maxCorners: 4,
+    maxCorners: 3,
     maxCrossings: 0,
     maxStraightBroken: 0,
     maxOffMax: 0.9,
   },
   {
     file: "routing-case-62.json",
-    maxCorners: 4,
+    maxCorners: 3,
     maxCrossings: 0,
     maxStraightBroken: 0,
     maxOffMax: 0.3,
@@ -296,29 +354,32 @@ const CASES: {
   // that the fan still routes cleanly (few corners, nothing crossing).
   {
     file: "routing-case-64.json",
-    maxCorners: 5,
-    maxCrossings: 0,
-    maxStraightBroken: 0,
-    maxOffMax: 0.5,
-  },
-  {
-    file: "routing-case-67.json",
     maxCorners: 4,
     maxCrossings: 0,
     maxStraightBroken: 0,
+    maxOffMax: 0.5,
+    maxPortCentroidError: 0.14,
+  },
+  {
+    file: "routing-case-67.json",
+    maxCorners: 2,
+    maxCrossings: 0,
+    maxStraightBroken: 0,
     maxOffMax: 0.85,
+    maxPortCentroidError: 0.41,
   },
 
   {
     file: "routing-case-69.json",
-    maxCorners: 4,
+    maxCorners: 3,
     maxCrossings: 0,
     maxStraightBroken: 0,
     maxOffMax: 0.8,
+    maxPortCentroidError: 0.3,
   },
   {
     file: "routing-case-71.json",
-    maxCorners: 7,
+    maxCorners: 5,
     maxCrossings: 0,
     maxStraightBroken: 0,
     maxOffMax: 0.35,
@@ -334,7 +395,7 @@ const CASES: {
   // assignment now dodges the blocking node and prices the crossing, so 0 crossings.
   {
     file: "routing-case-74.json",
-    maxCorners: 5,
+    maxCorners: 4,
     maxCrossings: 0,
     maxStraightBroken: 0,
     maxOffMax: 0.55,
@@ -344,7 +405,11 @@ const CASES: {
     maxCorners: 4,
     maxCrossings: 0,
     maxStraightBroken: 0,
-    maxOffMax: 0.55,
+    // The two right-side arrivals must nest below the outer route to keep both the
+    // central wall and each other crossing-free. Penalising that necessary local
+    // shift as if it were a freely balanceable fan rewards an eight-corner zigzag.
+    maxOffMax: 0.8,
+    maxPortCentroidError: 0.54,
   },
 ]
 for (const c of CASES) {
@@ -355,10 +420,13 @@ for (const c of CASES) {
     await page.waitForTimeout(400)
     const m = await measure(page, model)
     console.log(
-      `QUALITY ${c.file} corners=${m.corners} crossings=${m.crossings} straightBroken=${m.straightBroken} offMax=${m.offMax.toFixed(2)}`
+      `QUALITY ${c.file} corners=${m.corners} crossings=${m.crossings} overlapPx=${m.overlapPx} straightBroken=${m.straightBroken} offMax=${m.offMax.toFixed(2)} centroid=${m.portCentroidError.toFixed(2)}`
     )
     expect(m.crossings, "open-space crossings").toBeLessThanOrEqual(
       c.maxCrossings
+    )
+    expect(m.overlapPx, "open-space collinear overlap").toBeLessThanOrEqual(
+      c.maxOverlapPx ?? 0
     )
     expect(
       m.straightBroken,
@@ -366,5 +434,9 @@ for (const c of CASES) {
     ).toBeLessThanOrEqual(c.maxStraightBroken)
     expect(m.corners, "total corners").toBeLessThanOrEqual(c.maxCorners)
     expect(m.offMax, "worst corner-jam").toBeLessThanOrEqual(c.maxOffMax)
+    expect(
+      m.portCentroidError,
+      "shared-side port centroid imbalance"
+    ).toBeLessThanOrEqual(c.maxPortCentroidError ?? 0.1)
   })
 }

@@ -1,4 +1,4 @@
-import type { Node } from "@xyflow/react"
+import type { Node, Rect } from "@xyflow/react"
 import { EDGES } from "@/constants"
 import { getPositionOnCanvas, isParentNodeType } from "@/utils/nodeUtils"
 import type { IPoint } from "@/edges/Connection"
@@ -54,11 +54,10 @@ const nodeSize = (node: Node): { width: number; height: number } => ({
 export const getContainerBorderPolylines = (
   nodes: readonly Node[],
   sourceId: string,
-  targetId: string
+  targetId: string,
+  nodeIndex: NodeIndex = createNodeIndex(nodes)
 ): IPoint[][] => {
-  // Reuses the frame index (see `indexNodes`), so this adds no per-edge O(nodes)
-  // scan.
-  const { byId, entries } = indexNodes(nodes)
+  const { byId, entries } = nodeIndex
   const containers = new Set<string>()
   for (const endpoint of [sourceId, targetId]) {
     const node = byId.get(endpoint)
@@ -87,34 +86,32 @@ export const getContainerBorderPolylines = (
  * and ancestor set. Body geometry and ancestry depend only on the node set, not on
  * which edge is routed, so computing them per edge is O(edges × nodes) of waste.
  *
- * A frame's edges all read the same `nodes` array, so a one-entry cache computes the
- * index once instead of per edge. It is keyed on a fingerprint of the geometry the
- * index actually reads, NOT on the array's identity: React Flow mutates node objects
- * in place and keeps the array reference stable while measuring — which is why the
- * solver upstream keys its own effect on a content signature too. Identity alone let a
- * node that was unmeasured on the first pass (and so skipped as an obstacle entirely)
- * stay missing after it measured, and every edge routed straight through it.
+ * A frame's edges all read the same `nodes` array, so the central solver creates this
+ * index once instead of paying O(edges × nodes). Its lifetime must stay explicit:
+ * React Flow mutates node objects in place and can retain the array reference while
+ * measuring. A module-level identity cache therefore lets a node that was unmeasured
+ * on the first pass stay missing after it measures, and edges route through stale
+ * geometry.
  *
  * The bodies handed out are SHARED, read-only; the one place a body is altered (an
  * endpoint's soft→solid) takes a copy.
  */
 type NodeEntry = { body: ObstacleRect; ancestors: Set<string> }
-type NodeIndex = { byId: Map<string, Node>; entries: Map<string, NodeEntry> }
+export type NodeIndex = {
+  byId: Map<string, Node>
+  entries: Map<string, NodeEntry>
+}
 
-// The `nodes` array the index was last built from. Cache identity is the array REFERENCE,
-// not a content digest: the solver hands the SAME `nodes` reference to every edge in a
-// pass (so the index builds once and all edges reuse it), and the store publishes a NEW
-// array on any change to the node set, its geometry, or a node's measured size (React /
-// Zustand never mutate in place). Reference equality is therefore an EXACT test of "the
-// same node set" — no per-node hashing, and no chance a hash collision hands back a stale
-// index (a proof-of-equality a 32-bit digest cannot give). A new-but-identical array on a
-// later pass simply rebuilds; that costs one O(nodes) pass and is always correct.
-let frameNodes: readonly Node[] | null = null
-let frameIndex: NodeIndex | null = null
-
-const indexNodes = (nodes: readonly Node[]): NodeIndex => {
-  if (nodes === frameNodes && frameIndex) return frameIndex
-
+/**
+ * Snapshot the node facts obstacle queries share during one synchronous solve.
+ *
+ * The lifetime is deliberately explicit. React Flow may mutate node geometry and
+ * measurement in place while retaining the `nodes` array identity, so a module-level
+ * identity cache can return an index from an older render. The central solver creates
+ * exactly one snapshot per invocation and passes it to every edge query. Standalone
+ * callers that omit the optional index receive a fresh, exact snapshot per call.
+ */
+export const createNodeIndex = (nodes: readonly Node[]): NodeIndex => {
   const byId = new Map(nodes.map((node) => [node.id, node]))
   const entries = new Map<string, NodeEntry>()
   for (const node of nodes) {
@@ -137,9 +134,7 @@ const indexNodes = (nodes: readonly Node[]): NodeIndex => {
     })
   }
 
-  frameNodes = nodes
-  frameIndex = { byId, entries }
-  return frameIndex
+  return { byId, entries }
 }
 
 /**
@@ -164,9 +159,13 @@ export const getEdgeObstacles = (
   sourceId: string,
   targetId: string,
   sourcePoint: IPoint,
-  targetPoint: IPoint
+  targetPoint: IPoint,
+  nodeIndex: NodeIndex = createNodeIndex(nodes),
+  /** Union of every endpoint candidate. When omitted, the two resolved points
+   * retain the classic fixed-end corridor. */
+  candidateBounds?: Rect
 ): ObstacleRect[] => {
-  const { byId, entries } = indexNodes(nodes)
+  const { byId, entries } = nodeIndex
   const source = byId.get(sourceId)
   const target = byId.get(targetId)
 
@@ -216,10 +215,17 @@ export const getEdgeObstacles = (
   // detour around is itself part of the region the edge travels, and may push it
   // into the node beyond.
   const pad = 2 * EDGES.STUB_LENGTH + EDGES.NODE_CLEARANCE_PX
-  let left = Math.min(sourcePoint.x, targetPoint.x) - pad
-  let right = Math.max(sourcePoint.x, targetPoint.x) + pad
-  let top = Math.min(sourcePoint.y, targetPoint.y) - pad
-  let bottom = Math.max(sourcePoint.y, targetPoint.y) + pad
+  let left =
+    (candidateBounds?.x ?? Math.min(sourcePoint.x, targetPoint.x)) - pad
+  let right =
+    (candidateBounds
+      ? candidateBounds.x + candidateBounds.width
+      : Math.max(sourcePoint.x, targetPoint.x)) + pad
+  let top = (candidateBounds?.y ?? Math.min(sourcePoint.y, targetPoint.y)) - pad
+  let bottom =
+    (candidateBounds
+      ? candidateBounds.y + candidateBounds.height
+      : Math.max(sourcePoint.y, targetPoint.y)) + pad
 
   // Admit a node whose body comes within `pad`, then stretch to cover that body —
   // the body ONLY, not another pad's worth (stretching by a full pad each time would

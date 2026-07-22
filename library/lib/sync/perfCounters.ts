@@ -18,6 +18,9 @@ export type PerfCounters = {
   routerMaxExpansions: number
   /** Searches that hit their work budget and fell back to a plain step route. */
   routerAbandoned: number
+  /** Route pairs evaluated by whole-set/component refinement scoring. This guards
+   * the orchestration cost that router-search counters cannot see. */
+  routeScorePairs: number
   /** Wall-clock spent in `computeAllEdgeGeometry` (the whole-canvas solve that
    * runs in the layout effect on each drag frame). Total across all solves and
    * the single worst solve — the worst is the frame that drops. Machine-specific,
@@ -36,6 +39,7 @@ export const perfCounters: PerfCounters =
         routerExpansions: 0,
         routerMaxExpansions: 0,
         routerAbandoned: 0,
+        routeScorePairs: 0,
         solveMs: 0,
         solveMaxMs: 0,
         solveCount: 0,
@@ -80,4 +84,11 @@ export const recordRouterSearch = (
     }
     if (abandoned) perfCounters.routerAbandoned++
   }
+}
+
+/** One pair compared by the route-set objective. Kept separate from A* work so
+ * tests can prove a small conflict does not trigger repeated O(E²) rescans. */
+export const recordRouteScorePair = (): void => {
+  if (import.meta.env.DEV || import.meta.env.VITE_E2E === "true")
+    perfCounters.routeScorePairs++
 }

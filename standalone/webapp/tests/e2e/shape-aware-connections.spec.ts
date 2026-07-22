@@ -13,6 +13,7 @@ const flowchartFixture = readFixture("flowchart.json")
 
 const BROWSE = "880e8400-e29b-41d4-a716-446655440033" // use-case oval
 const INVENTORY = "880e8400-e29b-41d4-a716-446655440035" // use-case oval
+const USE_CASE_EDGE = "edge-assoc-customer-browse"
 const ACTIVITY_CONTAINER = "770e8400-e29b-41d4-a716-446655440021" // "Process Order"
 const IO_NODE = "50e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a" // flowchart parallelogram
 
@@ -38,6 +39,55 @@ async function ovalGeom(page: Page, id: string) {
     }
   }, id)
 }
+
+test("pointercancel restores a straight-hook reconnect without a stale commit", async ({
+  page,
+}) => {
+  await openFixtureInLocalEditor(page, useCaseFixture)
+  await waitForCanvasReady(page)
+
+  const edge = page.locator(`.react-flow__edge[data-id="${USE_CASE_EDGE}"]`)
+  const edgePath = edge.locator(".react-flow__edge-path")
+  const initialPath = await edgePath.getAttribute("d")
+  await edgePath.click({ force: true })
+  const endpointBox = (await edge
+    .locator(".edge-endpoint-handle--target")
+    .boundingBox())!
+  const targetBox = await nodeBox(page, INVENTORY)
+
+  await page.mouse.move(
+    endpointBox.x + endpointBox.width / 2,
+    endpointBox.y + endpointBox.height / 2
+  )
+  await page.mouse.down()
+  await page.mouse.move(
+    targetBox.x + targetBox.width / 2,
+    targetBox.y + targetBox.height / 2,
+    { steps: 12 }
+  )
+  await expect.poll(() => edgePath.getAttribute("d")).not.toBe(initialPath)
+  await page.evaluate(() =>
+    document.dispatchEvent(
+      new PointerEvent("pointercancel", { bubbles: true, pointerId: 1 })
+    )
+  )
+  await page.mouse.up()
+
+  await expect.poll(() => edgePath.getAttribute("d")).toBe(initialPath)
+  await expect
+    .poll(() =>
+      page.evaluate((edgeId) => {
+        const raw = localStorage.getItem("persistenceModelStore")
+        if (!raw) return null
+        const parsed = JSON.parse(raw)
+        const id = parsed.state.currentModelId
+        return parsed.state.models[id]?.model?.edges?.find(
+          (candidate: { id: string }) => candidate.id === edgeId
+        )?.target
+      }, USE_CASE_EDGE)
+    )
+    .toBe(BROWSE)
+})
 
 test("connecting to a use-case oval lands the endpoint on the ellipse curve, not the bbox corner", async ({
   page,

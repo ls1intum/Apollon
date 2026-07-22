@@ -70,6 +70,28 @@ export async function sampleEdgePath(
   )
 }
 
+/** Exact vertices emitted by Apollon's polyline path (`M … L …`). Unlike sampled
+ * curvature detection this cannot merge a real one-grid-cell dogleg. Line-jump
+ * curve commands are intentionally ignored: connecting their surrounding line
+ * vertices measures the underlying route rather than counting bridge decoration. */
+export async function readEdgePathVertices(
+  page: Page,
+  edgeId: string
+): Promise<Pt[]> {
+  return page.evaluate((id) => {
+    const path = document.querySelector<SVGPathElement>(
+      `.react-flow__edge[data-id="${id}"] .react-flow__edge-path`
+    )
+    const data = path?.getAttribute("d") ?? ""
+    const vertices: { x: number; y: number }[] = []
+    const command =
+      /[ML]\s*(-?(?:\d+(?:\.\d+)?|\.\d+))[,\s]+(-?(?:\d+(?:\.\d+)?|\.\d+))/gi
+    for (const match of data.matchAll(command))
+      vertices.push({ x: Number(match[1]), y: Number(match[2]) })
+    return vertices
+  }, edgeId)
+}
+
 /** How far a point sits *inside* a rectangle (0 when on or outside the border). */
 function penetration(p: Pt, r: Rect): number {
   const dx = Math.min(p.x - r.x, r.x + r.width - p.x)

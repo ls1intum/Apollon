@@ -11,13 +11,24 @@ import type { Edge } from "@xyflow/react"
 import { DISABLED_TAG_CONFIG, type TagConfig } from "@/utils/tagUtils"
 
 /**
- * An edge whose route is being dragged (bend or endpoint) right now, published
- * so the central solver can route every OTHER edge around the live preview.
+ * An edge whose route is being dragged right now. Bend geometry is authoritative;
+ * endpoint geometry can instead describe the exact edge pointer-up will commit so
+ * the central solver generates the whole live route set under committed constraints.
  * `null` whenever nothing is dragging.
  */
 export type LiveEdgeOverride = {
   edgeId: string
   points: IPoint[]
+  /** Predicted committed edge semantics during an endpoint drag. Bend drags may
+   * omit this because source/target/anchors do not change. */
+  edge?: Edge
+  /**
+   * Endpoint reconnects must be routed under the exact constraints the predicted
+   * edge will have after pointer-up. In that mode `points` is only an immediate
+   * interaction fallback; the central solver generates the authoritative preview.
+   * Bend drags omit this and keep their authored polyline byte-for-byte.
+   */
+  strategy?: "authoritative" | "predicted"
 }
 
 export type MetadataStore = {

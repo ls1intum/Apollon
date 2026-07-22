@@ -3,6 +3,10 @@ import { CANVAS } from "@/constants"
 import { clamp, lexLess } from "@/utils/geometry/scalar"
 import type { IPoint } from "@/edges/Connection"
 import {
+  polylineConflictCost,
+  ROUTING_COST,
+} from "@/utils/geometry/routingCost"
+import {
   ALL_SIDES,
   OUTWARD_NORMAL,
   SIDE_ORDER,
@@ -44,10 +48,11 @@ const MAX_PORT_GAP_PX = 8 * GRID
 const CORNER_CLEARANCE_PX = 2 * GRID
 
 /** How many corners an open-space crossing is worth when side assignment weighs the two
- * against each other — the cited aesthetic/cost order is crossing ≻ bend at ≈ 3× (bend
- * 100, crossing 300 on the published weights). So a side is allowed up to this many extra
- * corners to keep from cutting across an edge already placed. */
-const CROSSING_BEND_EQUIV = 3
+ * against each other. Derived from the same canonical pixel objective as A*, so this
+ * approximate pass cannot recommend a crossing that the exact route would reject. */
+const CROSSING_BEND_EQUIV =
+  ROUTING_COST.edgeCrossing /
+  (ROUTING_COST.bendInGridCells * CANVAS.SNAP_TO_GRID_PX)
 
 /**
  * The number of CORNERS an edge would take to leave `side` of `rect` toward
@@ -284,31 +289,6 @@ export const approxRoute = (
   return [a, { x: a.x, y: laneY }, { x: b.x, y: laneY }, b]
 }
 
-/** Crossings between two orthogonal polylines — an exact integer H×V test (no float
- * on the decision path). Endpoints touching do not count. */
-const countCrossings = (p: readonly IPoint[], q: readonly IPoint[]): number => {
-  let n = 0
-  for (let i = 0; i < p.length - 1; i++) {
-    const a1 = p[i]
-    const a2 = p[i + 1]
-    const aH = a1.y === a2.y
-    for (let j = 0; j < q.length - 1; j++) {
-      const b1 = q[j]
-      const b2 = q[j + 1]
-      const bH = b1.y === b2.y
-      if (aH === bH) continue // parallel: an overlap is not a crossing
-      const h = aH ? { a: a1, b: a2 } : { a: b1, b: b2 }
-      const v = aH ? { a: b1, b: b2 } : { a: a1, b: a2 }
-      const hy = h.a.y
-      const vx = v.a.x
-      const between = (m: number, lo: number, hi: number) =>
-        m > Math.min(lo, hi) && m < Math.max(lo, hi)
-      if (between(vx, h.a.x, h.b.x) && between(hy, v.a.y, v.b.y)) n++
-    }
-  }
-  return n
-}
-
 /** One edge whose free ends need a side. `sourceBand`/`targetBand` mark the ends
  * that are FREE and on a MULTI-EDGE node (the ones this stage assigns); a custom,
  * lone, or single-edge-node end is left false and keeps the cost path. */
@@ -320,6 +300,15 @@ export type SideEdge = {
   targetRect: Rect
   sourceBand: boolean
   targetBand: boolean
+  /** Immutable side of a non-band endpoint, when customization fixed it. */
+  sourceFixedSide?: Position
+  targetFixedSide?: Position
+}
+
+export type ReservedSideEnd = {
+  nodeId: string
+  partnerNodeId: string
+  side: Position
 }
 
 /**
@@ -347,7 +336,11 @@ export const assignSides = (
   /** Nodes whose sides hold only ONE port (four-centre: interface, gateway, decision,
    * merge, …). Putting a second edge on such a side collides both at the side midpoint,
    * so it is treated as a hard conflict rather than a soft occupancy tie-break. */
-  fourCenterNodes: ReadonlySet<string> = new Set()
+  fourCenterNodes: ReadonlySet<string> = new Set(),
+  /** Customized endpoints already consuming node-side capacity. */
+  reservedEnds: readonly ReservedSideEnd[] = [],
+  /** Immutable route topology, considered before choosing generated sides. */
+  reservedRoutes: readonly IPoint[][] = []
 ): Map<string, Position> => {
   // Occupancy is a set of DISTINCT PARTNER NODES already placed on each `(node, side)`.
   // Counting distinct partners — excluding an edge's own partner — is what separates a
@@ -365,6 +358,8 @@ export const assignSides = (
     if (!set) return 0
     return set.has(exclude) ? set.size - 1 : set.size
   }
+  for (const end of reservedEnds)
+    occAdd(end.nodeId, end.side, end.partnerNodeId)
   // On a four-centre node a side already carrying an edge to a DIFFERENT partner is a
   // COLLISION (both would sit at the same side midpoint), so it is a hard conflict; on a
   // freeform node the same count is only a soft spacing tie-break.
@@ -380,23 +375,74 @@ export const assignSides = (
         (sV) => combinedBends(sU, sV, e.sourceRect, e.targetRect) === 0
       )
     )
-  // Straight edges first (they lock the aligned opposing sides), then by id.
+  // Straight edges lock aligned opposing sides first. Within that class, route
+  // semantically distinct geometry in a geometry-derived order; an edge's storage id
+  // may only break a genuinely coincident tie. Otherwise renaming an edge can change
+  // which arm of a fan claims a clean side or corridor.
   const ordered = [...edges].sort((a, b) => {
     const sa = hasStraight(a) ? 0 : 1
     const sb = hasStraight(b) ? 0 : 1
     if (sa !== sb) return sa - sb
-    return a.edgeId < b.edgeId ? -1 : a.edgeId > b.edgeId ? 1 : 0
+    const ak: Array<number | string> = [
+      a.sourceRect.x,
+      a.sourceRect.y,
+      a.sourceRect.width,
+      a.sourceRect.height,
+      a.targetRect.x,
+      a.targetRect.y,
+      a.targetRect.width,
+      a.targetRect.height,
+      a.sourceNodeId,
+      a.targetNodeId,
+      a.edgeId,
+    ]
+    const bk: Array<number | string> = [
+      b.sourceRect.x,
+      b.sourceRect.y,
+      b.sourceRect.width,
+      b.sourceRect.height,
+      b.targetRect.x,
+      b.targetRect.y,
+      b.targetRect.width,
+      b.targetRect.height,
+      b.sourceNodeId,
+      b.targetNodeId,
+      b.edgeId,
+    ]
+    for (let i = 0; i < ak.length; i++) {
+      if (ak[i] === bk[i]) continue
+      return ak[i] < bk[i] ? -1 : 1
+    }
+    return 0
   })
 
   // Approximate shapes of the edges already assigned, so a later edge can prefer a side
   // pair that does NOT cross them. Edges that SHARE a node are included: they converge
   // at that node (which costs nothing — the strict `between` test ignores touching
   // endpoints) but can still genuinely cross out in the open, which is d59's defect.
-  const placed: IPoint[][] = []
-  const crossingsAgainstPlaced = (route: IPoint[]): number => {
-    let n = 0
-    for (const p of placed) n += countCrossings(route, p)
-    return n
+  const placed: IPoint[][] = reservedRoutes.map((route) => [...route])
+  const routeConflictBendEquiv = (route: IPoint[]): number => {
+    let crossings = 0
+    let nonCrossingCost = 0
+    placed.forEach((neighbor, index) => {
+      const conflict = polylineConflictCost(
+        route,
+        [neighbor],
+        ROUTING_COST.parallelCrowdingClearanceInGridCells * GRID
+      )
+      crossings += conflict.crossings
+      // Approximate generated routes share side midpoints before assignPorts
+      // spreads them. Charging that temporary overlap would split a clean bundle
+      // across sides. Immutable authored routes, however, reserve real space.
+      if (index < reservedRoutes.length)
+        nonCrossingCost +=
+          conflict.overlapPx * ROUTING_COST.overlapPerPx +
+          conflict.crowdingPx * ROUTING_COST.crowdingPerPx
+    })
+    return (
+      CROSSING_BEND_EQUIV * crossings +
+      nonCrossingCost / (ROUTING_COST.bendInGridCells * GRID)
+    )
   }
 
   /** How many nodes — other than the edge's own two — the approximate route passes
@@ -458,13 +504,12 @@ export const assignSides = (
             singleSlotOcc(e.sourceNodeId, sU, e.targetNodeId) +
               singleSlotOcc(e.targetNodeId, sV, e.sourceNodeId),
             // Corners AND crossings share one budget: a crossing costs CROSSING_BEND_EQUIV
-            // bends (the cited order crossing ≻ bend, ≈ 3× on published weights), so a
+            // bends (ten at the current canonical scale), so a
             // crossing-free route wins over one that saves a corner by cutting across an
             // edge already placed — the d59/d74/d75 defect where the cheaper-looking side
             // tangled a neighbour. This budget outranks aim: an untangled picture beats
             // keeping an edge on its most-facing side.
-            combinedBends(sU, sV, U, V) +
-              CROSSING_BEND_EQUIV * crossingsAgainstPlaced(route),
+            combinedBends(sU, sV, U, V) + routeConflictBendEquiv(route),
             // Raw-direction alignment: keep an edge on the side its partner lies toward so
             // two same-direction edges bundle. Breaks ties left by the corner/crossing
             // budget.
@@ -503,12 +548,30 @@ export const assignSides = (
         // (the per-edge cost path picks it, obstacle-aware, later), so a node-crossing
         // count taken from a guessed partner side would be misleading — the real route
         // is not committed to it.
+        const otherFixedSide = e.sourceBand
+          ? e.targetFixedSide
+          : e.sourceFixedSide
         let minB = Infinity
-        for (const o of ALL_SIDES) {
-          const b = e.sourceBand
-            ? combinedBends(s, o, U, V)
-            : combinedBends(o, s, U, V)
-          if (b < minB) minB = b
+        if (otherFixedSide !== undefined) {
+          const route = e.sourceBand
+            ? approxRoute(s, otherFixedSide, U, V, obstacles)
+            : approxRoute(otherFixedSide, s, U, V, obstacles)
+          minB =
+            (e.sourceBand
+              ? combinedBends(s, otherFixedSide, U, V)
+              : combinedBends(otherFixedSide, s, U, V)) +
+            routeConflictBendEquiv(route)
+        } else {
+          for (const o of ALL_SIDES) {
+            const route = e.sourceBand
+              ? approxRoute(s, o, U, V, obstacles)
+              : approxRoute(o, s, U, V, obstacles)
+            const b =
+              (e.sourceBand
+                ? combinedBends(s, o, U, V)
+                : combinedBends(o, s, U, V)) + routeConflictBendEquiv(route)
+            if (b < minB) minB = b
+          }
         }
         const key = [
           // A four-centre side already taken is a collision, not a tie-break — it leads,
@@ -645,7 +708,11 @@ export const crossingOrderKey = (
       break
   }
   const H = Math.max(tangentialHalfExtent, 1)
-  const reach = X > 0 ? X : 0
+  // A partner behind this side still has to wrap around the node before its
+  // orthogonal run can reach the port. Its normal depth is therefore |X|, not
+  // zero; treating it as zero reverses nested order against an outward partner
+  // and pushes both connections into one corner to avoid the manufactured cross.
+  const reach = Math.abs(X)
   const r = reach / (reach + REACH_ORDER_SCALE_PX) // [0, 1), monotone in reach
   if (Y >= H) return 2 - r // beyond +tangent end: (1, 2], deeper nests toward 1
   if (Y <= -H) return -2 + r // beyond −tangent end: [−2, −1), deeper nests toward −1
@@ -698,6 +765,10 @@ export type EndRef = {
    * the right relative order, and which order that is depends on both sides (see
    * `bundleNeedsMirror`). Absent ⇒ the partner end is on the cost path; no mirror. */
   partnerSide?: Position
+  /** An authored endpoint already occupying this side. The allocator must return
+   * this ratio byte-for-byte and seat generated ports around it; unlike a generated
+   * straight seat it is never relaxed when the side becomes crowded. */
+  immutableRatio?: number
   /** A FOUR-CENTRE node (activity/BPMN/flowchart-decision/petri) can only attach at
    * the side MIDPOINT, so its port is always ratio 0.5 — the band does not apply and
    * several edges on one such side collapse (the cost side-pass distributes them
@@ -798,6 +869,56 @@ const spreadCoords = (
 }
 
 /**
+ * The most centred ordered coordinates that stay inside per-port feasible bands.
+ * Straight lanes use the intersection of both endpoint sides as their band; moving
+ * one outside it manufactures a bend. The small forward/backward projection is a
+ * bounded isotonic solve: preserve the visual spread where possible, compress the
+ * gap only as far as the bands require, and never leave a band's hard bounds.
+ */
+const spreadCoordsWithinBounds = (
+  lo: number,
+  hi: number,
+  bounds: readonly { lo: number; hi: number }[],
+  minGap: number
+): number[] => {
+  if (bounds.length === 0) return []
+  const ideal = spreadCoords(lo, hi, bounds.length, minGap)
+  if (bounds.length === 1) return [clamp(ideal[0], bounds[0].lo, bounds[0].hi)]
+
+  // For ordered intervals, a gap g is feasible iff every earlier lower bound can
+  // still precede every later upper bound by (index distance × g).
+  let feasibleGap = ideal[1] - ideal[0]
+  for (let later = 1; later < bounds.length; later++)
+    for (let earlier = 0; earlier < later; earlier++)
+      feasibleGap = Math.min(
+        feasibleGap,
+        (bounds[later].hi - bounds[earlier].lo) / (later - earlier)
+      )
+  feasibleGap = Math.max(0, feasibleGap)
+
+  const result = ideal.map((value, index) =>
+    clamp(value, bounds[index].lo, bounds[index].hi)
+  )
+  // Alternating projections converge immediately for ordinary disjoint bands; N
+  // bounded passes also handles overlapping sibling bands without an unbounded loop.
+  for (let pass = 0; pass < bounds.length; pass++) {
+    for (let i = 1; i < result.length; i++)
+      result[i] = clamp(
+        Math.max(result[i], result[i - 1] + feasibleGap),
+        bounds[i].lo,
+        bounds[i].hi
+      )
+    for (let i = result.length - 2; i >= 0; i--)
+      result[i] = clamp(
+        Math.min(result[i], result[i + 1] - feasibleGap),
+        bounds[i].lo,
+        bounds[i].hi
+      )
+  }
+  return result
+}
+
+/**
  * Assign a concrete port to every end passed in — these are the free ends of
  * MULTI-EDGE nodes, whose side the caller has already fixed GEOMETRICALLY (the
  * facing sector), so a fork splits across sides by direction with no cost tie to
@@ -829,7 +950,10 @@ export const assignPorts = (
     const nodeId = group[0].nodeId
     if (group[0].fourCenter) {
       for (const e of group)
-        result.set(endKey(e.edgeId, e.end), { side, ratio: 0.5 })
+        result.set(endKey(e.edgeId, e.end), {
+          side,
+          ratio: e.immutableRatio ?? 0.5,
+        })
       continue
     }
 
@@ -839,7 +963,10 @@ export const assignPorts = (
     // router searching for a goal cell keyed on NaN until it exhausts its budget.
     if (axis <= 0) {
       for (const e of group)
-        result.set(endKey(e.edgeId, e.end), { side, ratio: 0.5 })
+        result.set(endKey(e.edgeId, e.end), {
+          side,
+          ratio: e.immutableRatio ?? 0.5,
+        })
       continue
     }
     const tangentialX = !isVerticalSide(side)
@@ -861,6 +988,17 @@ export const assignPorts = (
       end: "source" | "target"
       coord: number
       fixed: boolean
+      /** Authored reservation: harder than a generated straight seat. */
+      immutable: boolean
+      /** Feasible absolute interval. A fixed straight seat must remain in the
+       * overlap of its two endpoint sides; free L seats use the whole side. */
+      minCoord: number
+      maxCoord: number
+      partnerX: number
+      partnerY: number
+      partnerWidth: number
+      partnerHeight: number
+      partnerNodeId: string
       /** The NON-CROSSING order of this port along the side (see `crossingOrderKey`).
        * Drives the seat pass so an edge is seated on the side its route leaves from,
        * and breaks a desired-coordinate tie the same way. */
@@ -891,15 +1029,27 @@ export const assignPorts = (
           a.edgeId < b.edgeId ? -1 : a.edgeId > b.edgeId ? 1 : 0
         )
         const coords = spreadCoords(band.lo, band.hi, ordered.length, pitchPx)
-        ordered.forEach((e, i) =>
+        ordered.forEach((e, i) => {
+          const immutableCoord =
+            e.immutableRatio === undefined
+              ? null
+              : myLo + e.immutableRatio * axis
           seats.push({
             edgeId: e.edgeId,
             end: e.end,
-            coord: coords[i],
+            coord: immutableCoord ?? coords[i],
             fixed: true,
+            immutable: immutableCoord !== null,
+            minCoord: immutableCoord ?? band.lo,
+            maxCoord: immutableCoord ?? band.hi,
+            partnerX: e.partnerRect.x,
+            partnerY: e.partnerRect.y,
+            partnerWidth: e.partnerRect.width,
+            partnerHeight: e.partnerRect.height,
+            partnerNodeId: e.partnerNodeId,
             rot: rotOf(e),
           })
-        )
+        })
         continue
       }
       // L member(s) to this partner. A same-partner BUNDLE turning a corner nests only
@@ -944,6 +1094,11 @@ export const assignPorts = (
       (a, b) =>
         a.rot - b.rot ||
         a.rank - b.rank ||
+        a.e.partnerRect.x - b.e.partnerRect.x ||
+        a.e.partnerRect.y - b.e.partnerRect.y ||
+        a.e.partnerRect.width - b.e.partnerRect.width ||
+        a.e.partnerRect.height - b.e.partnerRect.height ||
+        cmpStr(a.e.partnerNodeId, b.e.partnerNodeId) ||
         cmpStr(a.e.edgeId, b.e.edgeId) ||
         cmpStr(a.e.end, b.e.end)
     )
@@ -954,11 +1109,21 @@ export const assignPorts = (
       pitchPx
     )
     lMembers.forEach(({ e, rot }, i) => {
+      const immutableCoord =
+        e.immutableRatio === undefined ? null : myLo + e.immutableRatio * axis
       seats.push({
         edgeId: e.edgeId,
         end: e.end,
-        coord: lCoords[i],
-        fixed: false,
+        coord: immutableCoord ?? lCoords[i],
+        fixed: immutableCoord !== null,
+        immutable: immutableCoord !== null,
+        minCoord: immutableCoord ?? myLo + margin,
+        maxCoord: immutableCoord ?? myLo + axis - margin,
+        partnerX: e.partnerRect.x,
+        partnerY: e.partnerRect.y,
+        partnerWidth: e.partnerRect.width,
+        partnerHeight: e.partnerRect.height,
+        partnerNodeId: e.partnerNodeId,
         rot,
       })
     })
@@ -977,14 +1142,83 @@ export const assignPorts = (
       (a, b) =>
         a.rot - b.rot ||
         a.coord - b.coord ||
+        a.partnerX - b.partnerX ||
+        a.partnerY - b.partnerY ||
+        a.partnerWidth - b.partnerWidth ||
+        a.partnerHeight - b.partnerHeight ||
+        cmpStr(a.partnerNodeId, b.partnerNodeId) ||
         cmpStr(a.edgeId, b.edgeId) ||
         cmpStr(a.end, b.end)
     )
     const lo = myLo + margin
     const hi = myLo + axis - margin
-    const gap =
+    // When several independently straight-eligible connections meet this side,
+    // rebalance them as one centred node-local band. Keeping each partner's aimed
+    // coordinate would leave an existing edge unmoved when a new sibling arrives,
+    // while commit then has no stable shared capacity model. The opposite free ends
+    // receive aligned candidates, so every member remains straight.
+    const rebalancesStraightPartners =
+      byPartner.size > 1 &&
+      seats.length > 1 &&
+      seats.every((seat) => seat.fixed)
+    if (rebalancesStraightPartners) {
+      const centred = spreadCoordsWithinBounds(
+        lo,
+        hi,
+        seats.map((seat) => ({ lo: seat.minCoord, hi: seat.maxCoord })),
+        pitchPx
+      )
+      seats.forEach((seat, index) => {
+        seat.coord = centred[index]
+      })
+    }
+    let unconstrainedGap =
       seats.length > 1 ? Math.min(pitchPx, (hi - lo) / (seats.length - 1)) : 0
-    const pos = seats.map((s) => clamp(s.coord, lo, hi))
+    const immutableSeats = seats
+      .map((seat, index) => ({ seat, index }))
+      .filter(({ seat }) => seat.immutable)
+    // Authored reservations are hard. Reduce the requested gap when two reserved
+    // seats (or a reservation and the mutable side bounds) leave less capacity;
+    // never "solve" infeasibility by moving the authored endpoint.
+    for (const { seat, index } of immutableSeats) {
+      if (index > 0)
+        unconstrainedGap = Math.min(
+          unconstrainedGap,
+          Math.max(0, (seat.coord - lo) / index)
+        )
+      const after = seats.length - 1 - index
+      if (after > 0)
+        unconstrainedGap = Math.min(
+          unconstrainedGap,
+          Math.max(0, (hi - seat.coord) / after)
+        )
+    }
+    for (let later = 1; later < immutableSeats.length; later++)
+      for (let earlier = 0; earlier < later; earlier++) {
+        const left = immutableSeats[earlier]
+        const right = immutableSeats[later]
+        unconstrainedGap = Math.min(
+          unconstrainedGap,
+          Math.max(
+            0,
+            (right.seat.coord - left.seat.coord) / (right.index - left.index)
+          )
+        )
+      }
+    const gap = rebalancesStraightPartners
+      ? Math.max(
+          0,
+          Math.min(
+            unconstrainedGap,
+            ...seats
+              .slice(1)
+              .map((seat, index) => seat.coord - seats[index].coord)
+          )
+        )
+      : unconstrainedGap
+    const pos = seats.map((s) =>
+      s.immutable ? s.coord : clamp(s.coord, lo, hi)
+    )
     for (let i = 1; i < pos.length; i++)
       if (!seats[i].fixed && pos[i] < pos[i - 1] + gap)
         pos[i] = pos[i - 1] + gap
@@ -996,16 +1230,25 @@ export const assignPorts = (
     // smudged line. Legibility wins over straightness there, so relax everything.
     const stillCrowded = pos.some((p, i) => i > 0 && p < pos[i - 1] + gap)
     if (stillCrowded) {
-      for (let i = 1; i < pos.length; i++)
-        if (pos[i] < pos[i - 1] + gap) pos[i] = pos[i - 1] + gap
-      for (let i = pos.length - 2; i >= 0; i--)
-        if (pos[i] > pos[i + 1] - gap) pos[i] = pos[i + 1] - gap
+      // Generated straight seats now become movable, but authored reservations
+      // remain fixed. Alternating projections let both sides absorb the pressure.
+      for (let pass = 0; pass < seats.length; pass++) {
+        for (let i = 1; i < pos.length; i++)
+          if (!seats[i].immutable && pos[i] < pos[i - 1] + gap)
+            pos[i] = Math.min(hi, pos[i - 1] + gap)
+        for (let i = pos.length - 2; i >= 0; i--)
+          if (!seats[i].immutable && pos[i] > pos[i + 1] - gap)
+            pos[i] = Math.max(lo, pos[i + 1] - gap)
+      }
     }
     // ratio = (absolute coord − low corner) / axis
     seats.forEach((s, i) =>
       result.set(endKey(s.edgeId, s.end), {
         side,
-        ratio: (clamp(pos[i], lo, hi) - myLo) / axis,
+        ratio: s.immutable
+          ? group.find((end) => end.edgeId === s.edgeId && end.end === s.end)!
+              .immutableRatio!
+          : (clamp(pos[i], lo, hi) - myLo) / axis,
       })
     )
   }
