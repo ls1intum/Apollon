@@ -25,6 +25,13 @@ const A = "95aac2b6-3e6b-4e6d-9201-52a498e6ea20"
 const B = "32659cdc-bd03-46f3-918c-ee8dbba9c15b"
 const EDGE = "edge-inheritance-dog-animal"
 const DEST = "550e8400-e29b-41d4-a716-446655440005"
+const USE_CASE_SOURCE = "880e8400-e29b-41d4-a716-446655440031"
+const USE_CASE_TARGET = "880e8400-e29b-41d4-a716-446655440032"
+const useCaseNoEdges = {
+  ...fx("use-case-diagram.json"),
+  id: "fixture-use-case-native-handle-preview",
+  edges: [],
+}
 
 async function box(page: Page, id: string) {
   return (await page
@@ -53,6 +60,20 @@ async function ghost(page: Page) {
     }
     return { visible, end }
   })
+}
+
+async function committedEdgeEnd(page: Page) {
+  return page
+    .locator(".react-flow__edge path.react-flow__edge-path")
+    .first()
+    .evaluate((element) => {
+      const path = element as SVGPathElement
+      const point = path.getPointAtLength(path.getTotalLength())
+      const matrix = path.getScreenCTM()
+      if (!matrix) throw new Error("edge path has no screen transform")
+      const screen = new DOMPoint(point.x, point.y).matrixTransform(matrix)
+      return { x: screen.x, y: screen.y }
+    })
 }
 
 /** Nearest side of a node box to a screen point. */
@@ -166,23 +187,70 @@ test("the new-connection ghost previews exactly where the edge attaches (preview
   expect(g.end, "ghost end must resolve over the target").toBeTruthy()
 
   await page.mouse.up()
-  await page.waitForTimeout(150)
-  // Exactly one edge now exists; its target endpoint is where the drop attached.
-  const committedEnd = await page.evaluate(() => {
-    const p = document.querySelector(
-      ".react-flow__edge path.react-flow__edge-path"
-    ) as SVGPathElement | null
-    const ctm = p?.getScreenCTM()
-    if (!p || !ctm) return null
-    const q = p.getPointAtLength(p.getTotalLength())
-    const m = new DOMPoint(q.x, q.y).matrixTransform(ctm)
-    return { x: m.x, y: m.y }
-  })
-  expect(committedEnd, "the drop must create an edge").toBeTruthy()
+  await expect(page.locator(".react-flow__edge")).toHaveCount(1)
+  const committedEnd = await committedEdgeEnd(page)
   expect(
-    Math.hypot(g.end!.x - committedEnd!.x, g.end!.y - committedEnd!.y),
+    Math.hypot(g.end!.x - committedEnd.x, g.end!.y - committedEnd.y),
     "the ghost end must match where the edge actually attaches"
   ).toBeLessThanOrEqual(6)
+})
+
+test("a straight-edge ghost preserves the exact native target handle", async ({
+  page,
+}) => {
+  await openFixtureInLocalEditor(page, useCaseNoEdges)
+  await waitForCanvasReady(page)
+
+  const source = page.locator(`.react-flow__node[data-id="${USE_CASE_SOURCE}"]`)
+  const target = page.locator(`.react-flow__node[data-id="${USE_CASE_TARGET}"]`)
+  await source.hover()
+  const sourceHandle = source.locator(
+    '.react-flow__handle[data-handleid="right"]'
+  )
+  const targetHandle = target.locator(
+    '.react-flow__handle[data-handleid="left-top"]'
+  )
+  const sourceBox = await sourceHandle.boundingBox()
+  const targetBox = await targetHandle.boundingBox()
+  if (!sourceBox || !targetBox)
+    throw new Error("connection handles not measured")
+
+  const start = {
+    x: sourceBox.x + sourceBox.width / 2,
+    y: sourceBox.y + sourceBox.height / 2,
+  }
+  const drop = {
+    x: targetBox.x + targetBox.width / 2,
+    y: targetBox.y + targetBox.height / 2,
+  }
+  await page.mouse.move(start.x, start.y)
+  await page.mouse.down()
+  await page.mouse.move(drop.x, drop.y, { steps: 16 })
+
+  await expect
+    .poll(async () => {
+      const end = (await ghost(page)).end
+      return end ? Math.hypot(end.x - drop.x, end.y - drop.y) : Infinity
+    })
+    .toBeLessThanOrEqual(2)
+  const previewEnd = (await ghost(page)).end!
+  await page.mouse.up()
+
+  const committedEdge = page.locator(".react-flow__edge").first()
+  await expect(committedEdge).toBeVisible()
+  const committedEnd = await committedEdgeEnd(page)
+  const storedTargetHandle = await page.evaluate(() => {
+    const raw = localStorage.getItem("persistenceModelStore")
+    if (!raw) throw new Error("missing persistence model")
+    const parsed = JSON.parse(raw)
+    const model = parsed.state.models[parsed.state.currentModelId]?.model
+    return model?.edges?.[0]?.targetHandle
+  })
+
+  expect(storedTargetHandle).toBe("left-top")
+  expect(
+    Math.hypot(previewEnd.x - committedEnd.x, previewEnd.y - committedEnd.y)
+  ).toBeLessThanOrEqual(2)
 })
 
 test("reconnecting the target onto a specific side lands on that side", async ({

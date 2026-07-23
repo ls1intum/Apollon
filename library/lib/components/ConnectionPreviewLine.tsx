@@ -83,8 +83,13 @@ export const ConnectionPreviewLine = ({
   toY,
   fromPosition,
   toPosition,
+  toNode,
+  toHandle,
 }: ConnectionLineComponentProps) => {
   const fromNodeId = fromNode?.id
+  const nativeTargetId = toNode?.id
+  const nativeTargetHandleId = toHandle?.id ?? undefined
+  const nativeTargetPosition = toHandle?.position
   const resolveDropTarget = useFreeformDropTarget()
   const allNodes = useDiagramStore((state) => state.nodes)
   const nodeLookup = useStore((state) => state.nodeLookup)
@@ -110,14 +115,20 @@ export const ConnectionPreviewLine = ({
       Math.round(v / CANVAS.SNAP_TO_GRID_PX) * CANVAS.SNAP_TO_GRID_PX
     const pointer: XYPosition = { x: snap(toX), y: snap(toY) }
 
-    const target = resolveDropTarget(pointer, fromNodeId)
+    const hasNativeTarget =
+      nativeTargetId !== undefined &&
+      nativeTargetId !== fromNodeId &&
+      nativeTargetPosition !== undefined
+    const target = hasNativeTarget
+      ? null
+      : resolveDropTarget(pointer, fromNodeId)
     // Empty space resolves to the source node, which is not a preview target.
     const hit = target && target.id !== fromNodeId ? target : null
     const anchor = hit
       ? getEdgeAnchorFromPoint(hit.type, pointer, hit.rect)
       : null
 
-    const snapped =
+    const freeformTarget =
       hit && anchor
         ? {
             ...getEdgeAnchorPoint(hit.type, hit.rect, anchor),
@@ -131,22 +142,40 @@ export const ConnectionPreviewLine = ({
 
     return {
       from: { x: fromX, y: fromY },
-      to: snapped ? snapped.point : pointer,
-      toPosition: snapped ? snapped.position : toPosition,
-      targetId: snapped?.id,
+      to: hasNativeTarget
+        ? { x: toX, y: toY }
+        : (freeformTarget?.point ?? pointer),
+      toPosition: hasNativeTarget
+        ? nativeTargetPosition
+        : (freeformTarget?.position ?? toPosition),
+      targetId: hasNativeTarget ? nativeTargetId : freeformTarget?.id,
+      targetHandle: hasNativeTarget
+        ? nativeTargetHandleId
+        : freeformTarget
+          ? getSideHandleIdForPosition(freeformTarget.position)
+          : undefined,
       targetAnchor: hit && dropAnchorIsAimed(hit.type) ? anchor : null,
-      snapPoint: snapped?.showSnapCircle ? snapped.point : null,
-      visible: draggedFar || snapped !== null,
+      snapPoint: freeformTarget?.showSnapCircle ? freeformTarget.point : null,
+      visible: draggedFar || hasNativeTarget || freeformTarget !== null,
     }
-  }, [resolveDropTarget, fromNodeId, fromX, fromY, toX, toY, toPosition])
+  }, [
+    resolveDropTarget,
+    fromNodeId,
+    fromX,
+    fromY,
+    toX,
+    toY,
+    toPosition,
+    nativeTargetId,
+    nativeTargetHandleId,
+    nativeTargetPosition,
+  ])
 
   const pinnedTargetAnchor = newConnection.targetId
     ? newConnection.targetAnchor
     : null
   const previewSourceHandle = fromHandle?.id ?? undefined
-  const previewTargetHandle = newConnection.targetId
-    ? getSideHandleIdForPosition(newConnection.toPosition)
-    : undefined
+  const previewTargetHandle = newConnection.targetHandle
   const pendingEdge = useMemo<Edge | null>(() => {
     if (!fromNodeId || !newConnection.targetId) return null
     return {
