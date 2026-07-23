@@ -15,7 +15,10 @@ import { IPoint } from "./Connection"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
 import { usePopoverAnchor } from "@/hooks/usePopoverAnchor"
 import AssessmentIcon from "@/components/svgs/AssessmentIcon"
-import { EdgeInlineMarkers } from "@/components/svgs/edges/InlineMarker"
+import {
+  EdgeInlineMarkers,
+  type InterfaceGeometry,
+} from "@/components/svgs/edges/InlineMarker"
 import type { DiagramEdgeType } from "./types"
 import { Assessment } from "@/typings"
 import type { BendHandle } from "@/utils/geometry/bendHandles"
@@ -593,6 +596,7 @@ export const StepEdgeBody = ({
   draggingHandleSegmentIndex,
   markerStart,
   markerEnd,
+  targetInterfaceGeometry,
   sourcePoint,
   targetPoint,
   sourcePosition,
@@ -618,6 +622,7 @@ export const StepEdgeBody = ({
   draggingHandleSegmentIndex: number | null
   markerStart?: string
   markerEnd?: string
+  targetInterfaceGeometry?: InterfaceGeometry
   sourcePoint: IPoint
   targetPoint: IPoint
   sourcePosition?: Position
@@ -679,6 +684,7 @@ export const StepEdgeBody = ({
           markerEnd={markerEnd}
           markerStart={markerStart}
           strokeColor={strokeColor}
+          targetInterfaceGeometry={targetInterfaceGeometry}
         />
       )}
 

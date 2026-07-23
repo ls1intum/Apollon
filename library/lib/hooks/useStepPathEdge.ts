@@ -366,6 +366,20 @@ export const useStepPathEdge = ({
       targetNodeHeight,
     ]
   )
+  const targetInterfaceGeometry =
+    targetRect &&
+    (targetNode?.type === "componentInterface" ||
+      targetNode?.type === "deploymentInterface")
+      ? {
+          center: {
+            x: targetRect.x + targetRect.width / 2,
+            y: targetRect.y + targetRect.height / 2,
+          },
+          // The interface SVG uses width / 2 as its circle radius. Match the
+          // rendered node exactly, including older 20px imported interfaces.
+          radius: targetRect.width / 2,
+        }
+      : undefined
   const resolvedSourceAnchor = useMemo(
     () =>
       sourceRect && isFreeformEdgeAnchor(sourceAnchor)
@@ -1471,5 +1485,6 @@ export const useStepPathEdge = ({
     canEditEndpoint,
     sourcePosition: renderSourcePosition,
     targetPosition: renderTargetPosition,
+    targetInterfaceGeometry,
   }
 }

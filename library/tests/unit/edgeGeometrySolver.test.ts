@@ -525,6 +525,103 @@ describe("computeAllEdgeGeometry — auto anchor optimization", () => {
     expect(exitSide(routeById["e1"])).toBe("R")
   })
 
+  it("keeps a flowchart's aligned decision branch straight as the graph is optimized", () => {
+    const typedNode = (
+      id: string,
+      type: string,
+      x: number,
+      y: number,
+      width: number,
+      height: number
+    ) => {
+      const result = makeNode(id, x, y, width, height)
+      result.node.type = type
+      result.internal.type = type
+      return result
+    }
+    const nodes = [
+      typedNode("start", "flowchartTerminal", 150, 0, 160, 70),
+      typedNode("initialize", "flowchartProcess", 150, 120, 160, 70),
+      typedNode("decision", "flowchartDecision", 150, 240, 160, 70),
+      typedNode("increment", "flowchartProcess", 150, 370, 160, 70),
+      typedNode("print", "flowchartInputOutput", 400, 240, 140, 70),
+      typedNode("cleanup", "flowchartFunctionCall", 390, 370, 160, 70),
+      typedNode("end", "flowchartTerminal", 390, 490, 160, 70),
+    ]
+    const edges: Edge[] = [
+      ["start-initialize", "start", "initialize"],
+      ["initialize-decision", "initialize", "decision"],
+      ["decision-increment", "decision", "increment"],
+      ["increment-loopback", "increment", "initialize"],
+      ["decision-print", "decision", "print"],
+      ["print-cleanup", "print", "cleanup"],
+      ["cleanup-end", "cleanup", "end"],
+    ].map(([id, source, target]) => ({
+      id,
+      source,
+      target,
+      type: "FlowChartFlowline",
+      data: { points: [] },
+    }))
+
+    const isolated = computeAllEdgeGeometry(
+      base(
+        nodes,
+        edges.filter((edge) => edge.id === "decision-print")
+      )
+    ).routeById["decision-print"]
+    expect(isolated).toEqual([
+      { x: 310, y: 275 },
+      { x: 410, y: 275 },
+    ])
+
+    const { routeById } = computeAllEdgeGeometry(base(nodes, edges))
+    expect(routeById["decision-print"]).toEqual([
+      { x: 310, y: 275 },
+      { x: 410, y: 275 },
+    ])
+  })
+
+  it("keeps the two overlapping lanes of a reachability diamond straight", () => {
+    const marking = (
+      id: string,
+      x: number,
+      y: number
+    ): { node: Node; internal: InternalNode } => {
+      const result = makeNode(id, x, y, 160, 120)
+      result.node.type = "reachabilityGraphMarking"
+      result.internal.type = "reachabilityGraphMarking"
+      return result
+    }
+    const nodes = [
+      marking("initial", 40, 80),
+      marking("upper", 300, 20),
+      marking("lower", 300, 200),
+      marking("final", 550, 80),
+    ]
+    const edges: Edge[] = [
+      ["initial-upper", "initial", "upper"],
+      ["initial-lower", "initial", "lower"],
+      ["upper-final", "upper", "final"],
+      ["lower-final", "lower", "final"],
+    ].map(([id, source, target]) => ({
+      id,
+      source,
+      target,
+      type: "ReachabilityGraphArc",
+      data: { points: [] },
+    }))
+
+    const { routeById } = computeAllEdgeGeometry(base(nodes, edges))
+
+    for (const id of ["initial-upper", "upper-final"]) {
+      expect(routeById[id]).toHaveLength(2)
+      expect(routeById[id][0].y).toBe(routeById[id][1].y)
+    }
+    for (const id of ["initial-lower", "lower-final"])
+      expect(routeById[id].length).toBeLessThanOrEqual(3)
+  })
+
   it("keeps the Bridge client and implementor associations straight around pinned inheritance fans", () => {
     const abstraction = makeNode("abstraction", 150, 175, 180, 70)
     const refinedLeft = makeNode("refined-left", 25, 305, 180, 70)

@@ -90,6 +90,7 @@ export const DeploymentDiagramEdge = ({
     targetPosition: renderTargetPosition,
     isDiagramModifiable,
     canEditEndpoint,
+    targetInterfaceGeometry,
   } = useStepPathEdge({
     id,
     type: dynamicEdgeType,
@@ -127,6 +128,7 @@ export const DeploymentDiagramEdge = ({
           draggingHandleSegmentIndex={draggingHandleSegmentIndex}
           markerStart={markerStart}
           markerEnd={markerEnd}
+          targetInterfaceGeometry={targetInterfaceGeometry}
           sourcePoint={sourcePoint}
           targetPoint={targetPoint}
           sourcePosition={renderSourcePosition}

@@ -1,4 +1,4 @@
-import { Position } from "@xyflow/system"
+import { Position, type Rect } from "@xyflow/system"
 import { CANVAS, EDGES } from "@/utils/geometry/routingConstants"
 import type { IPoint } from "@/edges/Connection"
 import { recordRouterSearch } from "@/sync/perfCounters"
@@ -1039,7 +1039,8 @@ export const routeAroundObstaclesBetweenCandidates = (
   targets: readonly RouteTarget[],
   obstacles: readonly ObstacleRect[],
   neighborEdges: readonly IPoint[][] = [],
-  incumbentRoute?: readonly IPoint[]
+  incumbentRoute?: readonly IPoint[],
+  endpointRects?: Readonly<{ source: Rect; target: Rect }>
 ): CandidateRouteResult | null => {
   if (sources.length === 0 || targets.length === 0) return null
   const searchStartedAt =
@@ -1137,7 +1138,10 @@ export const routeAroundObstaclesBetweenCandidates = (
       sources,
       obstacles,
       neighborEdges,
-      incumbentRoute ? [...incumbentRoute].reverse() : undefined
+      incumbentRoute ? [...incumbentRoute].reverse() : undefined,
+      endpointRects
+        ? { source: endpointRects.target, target: endpointRects.source }
+        : undefined
     )
     return reversed
       ? {
@@ -1212,6 +1216,16 @@ export const routeAroundObstaclesBetweenCandidates = (
     Math.max(a.x, b.x) > rect.x &&
     Math.min(a.y, b.y) < rect.y + rect.height &&
     Math.max(a.y, b.y) > rect.y
+  const sameRect = (left: ObstacleRect, right: Rect): boolean =>
+    left.x === right.x &&
+    left.y === right.y &&
+    left.width === right.width &&
+    left.height === right.height
+  const isEndpointBody = (rect: ObstacleRect): boolean =>
+    endpointRects !== undefined &&
+    (sameRect(rect, endpointRects.source) ||
+      sameRect(rect, endpointRects.target))
+  const straightHard = hard.filter((rect) => !isEndpointBody(rect))
 
   for (let sourceRank = 0; sourceRank < sourceInfos.length; sourceRank++) {
     const source = sourceInfos[sourceRank]
@@ -1232,7 +1246,9 @@ export const routeAroundObstaclesBetweenCandidates = (
       )
         continue
       if (
-        hard.some((rect) => segmentEnters(source.point, target.point, rect)) ||
+        straightHard.some((rect) =>
+          segmentEnters(source.point, target.point, rect)
+        ) ||
         soft.some((rect) => segmentEnters(source.point, target.point, rect))
       )
         continue
@@ -1241,7 +1257,7 @@ export const routeAroundObstaclesBetweenCandidates = (
         const { nearest, achievable } = clearanceAlongside(
           source.point,
           target.point,
-          hard,
+          straightHard,
           idealClearance
         )
         if (nearest === 0 || (nearest !== Infinity && nearest < achievable))

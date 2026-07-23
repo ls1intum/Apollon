@@ -26,8 +26,9 @@ export const STRAIGHT_HOOK_EDGE_TYPES: ReadonlySet<string> = new Set([
 
 /**
  * Step edges that attempt a straight shot before falling back to the orthogonal
- * router (`enableStraightPath === true`): the Class family (default true),
- * the Deployment family, and the SFC transition edge.
+ * router (`enableStraightPath === true`). This is a geometry capability, not a
+ * diagram-specific styling choice: every orthogonal family benefits from a
+ * collision-free, facing two-point route.
  */
 export const STRAIGHT_PATH_STEP_EDGE_TYPES: ReadonlySet<string> = new Set([
   "ClassAggregation",
@@ -37,11 +38,18 @@ export const STRAIGHT_PATH_STEP_EDGE_TYPES: ReadonlySet<string> = new Set([
   "ClassBidirectional",
   "ClassUnidirectional",
   "ClassDependency",
+  "ComponentDependency",
+  "ComponentProvidedInterface",
+  "ComponentRequiredInterface",
+  "ComponentRequiredThreeQuarterInterface",
+  "ComponentRequiredQuarterInterface",
   "DeploymentAssociation",
   "DeploymentDependency",
   "DeploymentProvidedInterface",
   "DeploymentRequiredInterface",
   "DeploymentRequiredThreeQuarterInterface",
   "DeploymentRequiredQuarterInterface",
+  "FlowChartFlowline",
+  "ReachabilityGraphArc",
   "SfcDiagramEdge",
 ])

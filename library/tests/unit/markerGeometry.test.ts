@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest"
-import { getMarkerHalfHeight } from "@/components/svgs/edges"
-import { MARKER_CONFIGS } from "@/constants"
+import {
+  getInterfaceSocketGeometry,
+  getMarkerHalfHeight,
+} from "@/components/svgs/edges"
+import { INTERFACE, MARKER_CONFIGS } from "@/constants"
 
 // The aggregation/composition diamond and the inheritance triangle sit side by
 // side in a class diagram, so what a reader perceives is their proportions, not
@@ -51,5 +54,47 @@ describe("class diagram marker geometry", () => {
     // EdgeTypePreviewIcon shrinks markers whose half-height exceeds 11; only the
     // node-scale interface socket should need that.
     expect(getMarkerHalfHeight("black-rhombus")).toBeLessThanOrEqual(11)
+  })
+})
+
+describe("required interface marker geometry", () => {
+  it("uses a true semicircle for the standard UML socket", () => {
+    expect(MARKER_CONFIGS["required-interface"].arcSpanDegrees).toBe(180)
+  })
+
+  it.each([
+    { radius: 10, direction: 0 },
+    { radius: 15, direction: Math.PI / 2 },
+    { radius: 18, direction: Math.PI },
+    { radius: 12, direction: -Math.PI / 2 },
+  ])(
+    "stays concentric with a $radius px interface at direction $direction",
+    ({ radius, direction }) => {
+      const interfaceCenter = { x: 137.25, y: -42.75 }
+      const geometry = getInterfaceSocketGeometry({
+        endPoint: { x: -999, y: 999 },
+        direction,
+        interfaceGeometry: {
+          center: interfaceCenter,
+          radius,
+        },
+        arcSpanDegrees: 180,
+      })
+      const distanceFromCenter = (point: { x: number; y: number }) =>
+        Math.hypot(point.x - interfaceCenter.x, point.y - interfaceCenter.y)
+
+      expect(geometry.center).toEqual(interfaceCenter)
+      expect(geometry.radius).toBe(radius + INTERFACE.SOCKET_GAP)
+      expect(distanceFromCenter(geometry.top)).toBeCloseTo(geometry.radius, 10)
+      expect(distanceFromCenter(geometry.bottom)).toBeCloseTo(
+        geometry.radius,
+        10
+      )
+    }
+  )
+
+  it("scales its bounds with imported interface sizes", () => {
+    expect(getMarkerHalfHeight("required-interface", 10)).toBe(14)
+    expect(getMarkerHalfHeight("required-interface", 15)).toBe(19)
   })
 })

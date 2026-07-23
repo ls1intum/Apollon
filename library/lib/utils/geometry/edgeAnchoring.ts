@@ -924,7 +924,8 @@ export const selectEdgeAnchors = (
     jointTargets,
     input.obstacles,
     input.neighborEdges,
-    input.incumbentRoute
+    input.incumbentRoute,
+    { source: input.sourceRect, target: input.targetRect }
   )
   if (joint) {
     const sourceIndex = sourceMap[joint.sourceIndex]

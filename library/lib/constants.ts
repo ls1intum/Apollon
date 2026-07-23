@@ -291,7 +291,7 @@ export const MARKER_CONFIGS = Object.freeze({
     size: INTERFACE_SOCKET_SIZE,
     widthFactor: 1,
     heightFactor: 1,
-    arcSpanDegrees: 150,
+    arcSpanDegrees: 180,
   },
   "required-interface-quarter": {
     type: "semicircle",
