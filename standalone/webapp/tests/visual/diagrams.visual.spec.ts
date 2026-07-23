@@ -149,7 +149,13 @@ function resolveLocalDiagramRoute(fixture: Record<string, unknown>) {
   return `/local/${id}`
 }
 
-const templateDiagrams = ["Adapter", "Bridge", "Command", "Observer", "Factory"]
+const templateDiagrams = [
+  { name: "Adapter", routing: { automatic: 1, pinned: 2 } },
+  { name: "Bridge", routing: { automatic: 2, pinned: 4 } },
+  { name: "Command", routing: { automatic: 5, pinned: 1 } },
+  { name: "Observer", routing: { automatic: 1, pinned: 2 } },
+  { name: "Factory", routing: { automatic: 1, pinned: 3 } },
+] as const
 
 test.describe("Template diagrams", () => {
   // Thumbnail generation and the lazy editor route do real work; keep this
@@ -157,7 +163,7 @@ test.describe("Template diagrams", () => {
   // timeout under a fully parallel visual run.
   test.describe.configure({ timeout: 60_000 })
 
-  for (const name of templateDiagrams) {
+  for (const { name, routing } of templateDiagrams) {
     test(`${name} template canvas matches baseline`, async ({ page }) => {
       const created = await createTemplateInLocalEditor(page, name)
       expect(created?.title).toBe(name)
@@ -181,15 +187,14 @@ test.describe("Template diagrams", () => {
             !("resizing" in node)
         )
       ).toBe(true)
-      expect(
-        edges.every(
-          (edge) =>
-            Array.isArray(edge.data?.points) &&
-            edge.data.points.length === 0 &&
-            edge.data.sourceAnchor == null &&
-            edge.data.targetAnchor == null
-        )
-      ).toBe(true)
+      expect(edges.every((edge) => edge.data?.points?.length === 0)).toBe(true)
+      const pinned = edges.filter(
+        (edge) =>
+          edge.data?.sourceAnchor != null || edge.data?.targetAnchor != null
+      )
+      expect(pinned).toHaveLength(routing.pinned)
+      expect(edges.length - pinned.length).toBe(routing.automatic)
+      await expect(page.locator(".react-flow__edge")).toHaveCount(edges.length)
 
       // Initial React Flow fitting can legitimately land at 97% or 100% while
       // node measurements arrive. The user-facing Fit view command is
@@ -200,15 +205,92 @@ test.describe("Template diagrams", () => {
 
       const editorArea = page.locator('[data-testid="editor-area"]')
       await expect(editorArea).toHaveScreenshot(
-        `template-${name.toLowerCase()}.png`,
-        { mask: [page.locator("header")] }
+        `template-${name.toLowerCase()}.png`
       )
     })
   }
 })
 
 // ---------------------------------------------------------------------------
-// 3. Routing authority – keep automatic, pinned and authored states distinct
+// 3. Template picker previews – the actual preset images users choose from
+// ---------------------------------------------------------------------------
+
+async function openTemplatePicker(
+  page: import("@playwright/test").Page,
+  theme: "light" | "dark"
+) {
+  await page.emulateMedia({ colorScheme: theme })
+  await page.addInitScript(
+    ({ persistedTheme }) => {
+      localStorage.setItem(
+        "persistenceModelStore",
+        JSON.stringify({
+          state: { models: {}, currentModelId: null },
+          version: 3,
+        })
+      )
+      localStorage.setItem("apollon-theme", persistedTheme)
+    },
+    {
+      persistedTheme: JSON.stringify({
+        state: {
+          systemThemePreference: theme,
+          userThemePreference: theme,
+          currentTheme: theme,
+        },
+        version: 2,
+      }),
+    }
+  )
+
+  await page.goto("/")
+  await page.getByRole("button", { name: "New diagram" }).first().click()
+  const dialog = page.getByRole("dialog")
+  await dialog.getByRole("tab", { name: "Use template" }).click()
+
+  await page.waitForFunction(() => {
+    const light = [
+      ...document.querySelectorAll<HTMLImageElement>(
+        "img.theme-thumbnail-light"
+      ),
+    ]
+    const dark = [
+      ...document.querySelectorAll<HTMLImageElement>(
+        "img.theme-thumbnail-dark"
+      ),
+    ]
+    return (
+      light.length === 5 &&
+      dark.length === 5 &&
+      [...light, ...dark].every(
+        (image) => image.complete && image.naturalWidth > 0
+      )
+    )
+  })
+  await page.waitForTimeout(200)
+  return dialog
+}
+
+test.describe("Template picker previews", () => {
+  test.describe.configure({ timeout: 60_000 })
+
+  for (const theme of ["light", "dark"] as const) {
+    test(`all preset cards are balanced in ${theme} mode`, async ({ page }) => {
+      const dialog = await openTemplatePicker(page, theme)
+
+      for (const { name } of templateDiagrams) {
+        const card = dialog.getByRole("button", { name, exact: true })
+        await expect(card).toHaveScreenshot(
+          `template-picker-${name.toLowerCase()}-${theme}.png`,
+          { maxDiffPixels: 250 }
+        )
+      }
+    })
+  }
+})
+
+// ---------------------------------------------------------------------------
+// 4. Routing authority – keep automatic, pinned and authored states distinct
 // ---------------------------------------------------------------------------
 
 const routingAuthorityFixtures = [
@@ -260,9 +342,7 @@ test.describe("Routing authority states", () => {
       ).toBeVisible()
 
       const editorArea = page.locator('[data-testid="editor-area"]')
-      await expect(editorArea).toHaveScreenshot(`routing-${name}.png`, {
-        mask: [page.locator("header")],
-      })
+      await expect(editorArea).toHaveScreenshot(`routing-${name}.png`)
     })
   }
 })

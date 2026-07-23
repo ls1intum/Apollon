@@ -9,7 +9,7 @@
       "height": 40,
       "id": "8acfa3c3-de5b-424a-a555-cb68855538d0",
       "type": "class",
-      "position": { "x": -280, "y": 340 },
+      "position": { "x": 0, "y": 15 },
       "data": { "name": "Client", "methods": [], "attributes": [] },
       "selected": false,
       "measured": { "width": 160, "height": 40 },
@@ -21,7 +21,7 @@
       "height": 70,
       "id": "7351d563-b929-460e-a09d-e2b463bfceea",
       "type": "class",
-      "position": { "x": -20, "y": 30 },
+      "position": { "x": 220, "y": 0 },
       "data": {
         "name": "Invoker",
         "methods": [
@@ -41,7 +41,7 @@
       "height": 70,
       "id": "41a9495d-9993-449e-a3b5-a7a704130380",
       "type": "class",
-      "position": { "x": 10, "y": 200 },
+      "position": { "x": 140, "y": 230 },
       "data": {
         "name": "Receiver",
         "methods": [
@@ -58,7 +58,7 @@
       "height": 80,
       "id": "52e53f8b-cac0-4816-a70a-c2f154f3fb67",
       "type": "class",
-      "position": { "x": 395, "y": 25 },
+      "position": { "x": 600, "y": -5 },
       "data": {
         "name": "Command",
         "methods": [
@@ -80,7 +80,7 @@
       "height": 100,
       "id": "f235a28a-6d9b-482c-9e67-546dfd92e0d5",
       "type": "class",
-      "position": { "x": 345, "y": 185 },
+      "position": { "x": 500, "y": 215 },
       "data": {
         "name": "ConcreteCommand",
         "methods": [
@@ -125,7 +125,12 @@
       "targetHandle": "bottom",
       "id": "1737994915434-52e53f8b-cac0-4816-a70a-c2f154f3fb67-f235a28a-6d9b-482c-9e67-546dfd92e0d5",
       "type": "ClassInheritance",
-      "selected": false
+      "selected": false,
+      "data": {
+        "points": [],
+        "sourceAnchor": { "side": "top", "ratio": 0.5 },
+        "targetAnchor": { "side": "bottom", "ratio": 0.5 }
+      }
     },
     {
       "source": "f235a28a-6d9b-482c-9e67-546dfd92e0d5",
@@ -134,15 +139,6 @@
       "targetHandle": "right",
       "id": "1737994981686-f235a28a-6d9b-482c-9e67-546dfd92e0d5-41a9495d-9993-449e-a3b5-a7a704130380",
       "type": "ClassUnidirectional",
-      "selected": false
-    },
-    {
-      "source": "726a23e8-c86e-469d-927a-d0f4c199b474",
-      "sourceHandle": "top",
-      "target": "52e53f8b-cac0-4816-a70a-c2f154f3fb67",
-      "targetHandle": "bottom-right",
-      "id": "1737994991158-726a23e8-c86e-469d-927a-d0f4c199b474-52e53f8b-cac0-4816-a70a-c2f154f3fb67",
-      "type": "ClassBidirectional",
       "selected": false
     },
     {
