@@ -19,6 +19,7 @@ test.describe.configure({ mode: "serial" })
 
 const fixture = loadFixture("perf-30-nodes.json")
 const DRAG_COUNT = 40
+const VISIBLE_DRAG_NODE_COUNT = 24
 const BYTE_BUDGET = 256 * 1024
 // A drag commits ~one settle write; writing every frame would be ~one per
 // frame. 1.5 writes/gesture sits well under the per-frame rate and tolerates an
@@ -42,14 +43,15 @@ test("encoded Yjs doc stays bounded across many drag gestures", async ({
   const editor = page.locator(`#react-flow-library-${String(fixture.id)}`)
   for (let i = 0; i < DRAG_COUNT; i++) {
     const node = editor.locator(
-      `.react-flow__node[data-id="perf-node-${String(i % 30).padStart(
-        2,
-        "0"
-      )}"]`
+      `.react-flow__node[data-id="perf-node-${String(
+        i % VISIBLE_DRAG_NODE_COUNT
+      ).padStart(2, "0")}"]`
     )
     // Alternate direction so nodes don't march off-screen and stay grabbable.
     const dir = i % 2 === 0 ? 1 : -1
-    await dragNodeBy(node, page, 24 * dir, 16 * dir)
+    await dragNodeBy(node, page, 24 * dir, 16 * dir, {
+      waitForRouting: false,
+    })
   }
 
   const after = await readPerf(page)

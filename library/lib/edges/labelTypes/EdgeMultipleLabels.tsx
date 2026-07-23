@@ -10,7 +10,6 @@ interface EdgeMultipleLabelsProps {
   messages?: MessageData[]
   pathMiddlePosition: IPoint
   showRelationshipLabels: boolean
-  isReconnecting?: boolean
   sourcePosition: IPoint
   targetPosition: IPoint
   isHorizontalEdge: boolean
@@ -21,7 +20,6 @@ export const EdgeMultipleLabels = ({
   messages,
   pathMiddlePosition,
   showRelationshipLabels,
-  isReconnecting,
   sourcePosition,
   targetPosition,
   isHorizontalEdge,
@@ -29,8 +27,7 @@ export const EdgeMultipleLabels = ({
 }: EdgeMultipleLabelsProps) => {
   const displayMessages = messages ?? []
 
-  if (displayMessages.length === 0 || !showRelationshipLabels || isReconnecting)
-    return null
+  if (displayMessages.length === 0 || !showRelationshipLabels) return null
 
   const { forward, backward } = computeMessageLayout(
     displayMessages,

@@ -299,10 +299,11 @@ export const EdgeGeometrySolver = () => {
         currentOverride
           ? {
               ...pendingGeometry,
-              // A provisional Worker generation can lag the pointer. The edge
-              // being authored remains the immediate source of truth while its
-              // neighbours inherit the Worker's holistic side/port/route work.
-              [currentOverride.edgeId]: currentOverride.points,
+              [currentOverride.edgeId]:
+                currentOverride.strategy === "predicted"
+                  ? (pendingGeometry[currentOverride.edgeId] ??
+                    currentOverride.points)
+                  : currentOverride.points,
             }
           : releasedEdgePreview
             ? {

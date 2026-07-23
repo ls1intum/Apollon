@@ -4,19 +4,6 @@ import * as path from "node:path"
 import { fileURLToPath } from "node:url"
 import { waitForCanvasReady, openFixtureInLocalEditor } from "../helpers/canvas"
 
-/**
- * Handing an edge back to the router.
- *
- * Before this, a single bend froze an edge into a fixed polyline for good: it
- * stopped being auto-routed, it never picked up any later routing improvement,
- * and there was no way back. "Reset routing" is the way back — and because
- * stored points ARE the manual state (an auto-routed edge simply has none),
- * resetting is just clearing them. No new field, no migration, nothing to break.
- *
- * The button only appears once there is something to reset, which is also the
- * honest signal that the edge is no longer auto-routed.
- */
-
 const __d = path.dirname(fileURLToPath(import.meta.url))
 const fixture = JSON.parse(
   fs.readFileSync(
@@ -25,7 +12,6 @@ const fixture = JSON.parse(
   )
 ) as Record<string, unknown>
 
-/** The first edge's persisted points — the source of truth for auto vs manual. */
 async function persistedPoints(page: Page): Promise<unknown[] | null> {
   return page.evaluate(() => {
     const raw = localStorage.getItem("persistenceModelStore")
@@ -42,7 +28,7 @@ test("an auto-routed edge offers nothing to reset", async ({ page }) => {
 
   const edge = page.locator(".react-flow__edge").first()
   await edge.click({ force: true })
-  await page.waitForTimeout(300)
+  await expect(edge).toHaveClass(/selected/)
 
   // Nothing has been bent, so the edge is already where the router wants it.
   await expect(page.getByRole("button", { name: "Reset routing" })).toHaveCount(
@@ -58,7 +44,7 @@ test("resetting a hand-routed edge hands it back to the router", async ({
 
   const edge = page.locator(".react-flow__edge").first()
   await edge.click({ force: true })
-  await page.waitForTimeout(300)
+  await expect(edge).toHaveClass(/selected/)
 
   // Bend it, so it becomes hand-routed.
   const handle = edge.locator(".edge-bend-handle").first()
@@ -70,24 +56,19 @@ test("resetting a hand-routed edge hands it back to the router", async ({
   await page.mouse.down()
   await page.mouse.move(cx, cy - 60, { steps: 12 })
   await page.mouse.up()
-  await page.waitForTimeout(400)
 
-  const bent = await persistedPoints(page)
-  expect(bent, "the drag did not persist a manual route").not.toEqual([])
-  expect((bent ?? []).length).toBeGreaterThan(0)
+  await expect
+    .poll(() => persistedPoints(page), {
+      message: "the drag did not persist a manual route",
+    })
+    .not.toEqual([])
 
-  // The way back now exists.
-  await edge.click({ force: true })
-  await page.waitForTimeout(300)
   const reset = page.getByRole("button", { name: "Reset routing" })
   await expect(reset).toBeVisible()
   await reset.click()
-  await page.waitForTimeout(500)
 
-  // Back to auto: no stored points at all, which is exactly what "auto" means.
-  expect(await persistedPoints(page)).toEqual([])
+  await expect.poll(() => persistedPoints(page)).toEqual([])
 
-  // And the affordance is gone again, because there is nothing left to reset.
   await expect(page.getByRole("button", { name: "Reset routing" })).toHaveCount(
     0
   )

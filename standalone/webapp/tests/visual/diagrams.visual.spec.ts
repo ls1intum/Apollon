@@ -7,6 +7,7 @@ import {
   injectFixtureIntoLocalStorage,
   clickFitView,
   createTemplateInLocalEditor,
+  openNewDiagramDialog,
   selectEdgeOnPath,
 } from "../helpers/canvas"
 
@@ -167,10 +168,13 @@ async function expectProvidedInterfaceClearsRequiredSockets(
           path.getPointAtLength((path.getTotalLength() * index) / count)
         )
       const providedPoints = sample(provided, 360)
+      const socketPoints = (sockets as SVGPathElement[]).map((socket) =>
+        sample(socket, 720)
+      )
       let minimumDistance = Number.POSITIVE_INFINITY
-      for (const socket of sockets as SVGPathElement[]) {
+      for (const points of socketPoints) {
         for (const edgePoint of providedPoints) {
-          for (const socketPoint of sample(socket, 720)) {
+          for (const socketPoint of points) {
             minimumDistance = Math.min(
               minimumDistance,
               Math.hypot(
@@ -658,8 +662,7 @@ async function openTemplatePicker(
   )
 
   await page.goto("/")
-  await page.getByRole("button", { name: "New diagram" }).first().click()
-  const dialog = page.getByRole("dialog")
+  const dialog = await openNewDiagramDialog(page)
   await dialog.getByRole("tab", { name: "Use template" }).click()
 
   await page.waitForFunction(() => {
@@ -681,7 +684,12 @@ async function openTemplatePicker(
       )
     )
   })
-  await page.waitForTimeout(200)
+  await page.evaluate(async () => {
+    await document.fonts.ready
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+    )
+  })
   return dialog
 }
 
@@ -695,8 +703,7 @@ test.describe("Template picker previews", () => {
       for (const { name } of templateDiagrams) {
         const card = dialog.getByRole("button", { name, exact: true })
         await expect(card).toHaveScreenshot(
-          `template-picker-${name.toLowerCase()}-${theme}.png`,
-          { maxDiffPixels: 250 }
+          `template-picker-${name.toLowerCase()}-${theme}.png`
         )
       }
     })

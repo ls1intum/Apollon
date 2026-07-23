@@ -6,50 +6,15 @@ import {
   dragNodeBy,
 } from "./perfHelpers"
 
-/**
- * Edge routing is a graph search. Large subsequent solves run in a Worker, but
- * wasting searches still delays the exact accepted generation and burns CPU that
- * the browser needs for rendering. An edge's route depends on its endpoints, the
- * few nodes near it and the edges it must not cross; when none of those changed,
- * the answer did not either, and the edge must not search again.
- *
- * That is the property this spec holds onto, and it is not one a stopwatch can
- * hold. A wall-clock budget measures the machine — it passes on a developer laptop
- * and fails on a loaded CI box, so it either flakes or gets loosened until it
- * means nothing. Counting searches measures the ALGORITHM: "dragging one node
- * re-routes the whole canvas, sixty times a second" fails here identically
- * everywhere, which is exactly the regression that made the editor lag.
- *
- * 30 classes, 87 edges — a third of them running past a node that is squarely in
- * the way, so they genuinely search.
- */
+// Deterministic work budgets catch algorithmic regressions independently of CI
+// speed; the frame budget separately covers the user-visible 30 fps contract.
 test.describe.configure({ mode: "serial" })
 
 const fixture = loadFixture("perf-routing-30-nodes.json")
 const DRAG_COUNT = 10
 
-/**
- * Searches a single drag gesture may cost.
- *
- * A drag is ~12 frames. Moving one node changes the world for the edges attached
- * to it, the ones a moved obstacle now sits in front of, and — as those re-route —
- * their close neighbours in turn. Re-routing all 87 edges every frame (the
- * behaviour before routes were keyed on their inputs) is ~1000 searches per
- * gesture; this budget stays well below that, so a genuine "re-route the whole
- * canvas" regression still fails here loudly.
- *
- * The number is a headroom over the real per-gesture cost, not a tight fit to it.
- * Auto endpoint anchors (edges slide/switch sides to route cleanly) raise that
- * cost on purpose: more edges attach at varied points and fan out into separate
- * lanes, so a moving node ripples through more neighbours. That cost is
- * irreducible under deterministic exactness — a route MUST be a pure function of
- * the current geometry (so Yjs peers with different drag histories never diverge).
- * Proven cached routes and incumbent bounds may make a warm solve faster, but may
- * never change its answer. Route keys include only the clipped obstacle/edge
- * corridor the search can reach. What remains is legitimate work; the budget
- * leaves room for browser event-coalescing differences without approaching the
- * ~1000-search regression.
- */
+// A 12-frame drag that reroutes all 87 edges each frame costs ~1,000 searches.
+// The budget allows endpoint and nearby-neighbour ripple without permitting that.
 const MAX_SEARCHES_PER_DRAG = 300
 
 /** The search's own cost. Ordinary detours run a few hundred expansions; a lattice
@@ -66,6 +31,7 @@ const MAX_EXPANSIONS_WORST_SEARCH = 16_000
  * scorer evaluated ~10,000 pairs per gesture here; spatially impossible pairs
  * must stay out of the segment-level objective. */
 const MAX_ROUTE_SCORE_PAIRS_PER_DRAG = 1_000
+const MAX_P95_INTERACTION_FRAME_MS = 34
 
 const renderedEdgePaths = async (
   editor: Locator
@@ -257,6 +223,15 @@ test("a continuously moving large diagram shows holistic route progress before r
   const afterHandoff = await readPerf(page)
   expect(afterHandoff.routingSolving).toBe(0)
   expect(afterHandoff.routingPreviewCount).toBe(0)
+  expect(
+    afterHandoff.workerAttemptCount - beforeInteraction.workerAttemptCount
+  ).toBeGreaterThan(0)
+  expect(
+    afterHandoff.workerSolveCount - beforeInteraction.workerSolveCount
+  ).toBeGreaterThan(0)
+  expect(
+    afterHandoff.workerFallbackCount - beforeInteraction.workerFallbackCount
+  ).toBe(0)
   const settled = await renderedEdgePaths(editor)
   const changedAtSettlement = Object.keys(settled).filter(
     (id) => during[id] !== undefined && during[id] !== settled[id]
@@ -283,4 +258,32 @@ test("a continuously moving large diagram shows holistic route progress before r
       )
   )
   expect(await renderedEdgePaths(editor)).toEqual(settled)
+})
+
+test("large-diagram interaction sustains a 30 fps p95 frame budget", async ({
+  page,
+}) => {
+  await openLocalWithPerf(page, fixture)
+  const editor = page.locator(`#react-flow-library-${String(fixture.id)}`)
+  const frameDeltas: number[] = []
+
+  for (let index = 0; index < 4; index++) {
+    const node = editor.locator(
+      `.react-flow__node[data-id="perf-node-${String(index).padStart(2, "0")}"]`
+    )
+    frameDeltas.push(
+      ...(await dragNodeBy(node, page, index % 2 === 0 ? 40 : -40, 30, {
+        steps: 12,
+        measureFrames: true,
+      }))
+    )
+  }
+
+  expect(frameDeltas.length).toBeGreaterThan(20)
+  const sorted = frameDeltas.toSorted((a, b) => a - b)
+  const p95 = sorted[Math.ceil(sorted.length * 0.95) - 1]
+  expect(
+    p95,
+    `p95 interaction frame was ${p95.toFixed(1)} ms`
+  ).toBeLessThanOrEqual(MAX_P95_INTERACTION_FRAME_MS)
 })

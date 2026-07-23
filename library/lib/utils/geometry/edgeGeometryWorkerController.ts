@@ -40,8 +40,6 @@ export const shouldUseEdgeGeometryWorker = ({
 }): boolean => hasRunInitialSolve && edgeCount >= threshold && !disabled
 
 export const EDGE_GEOMETRY_WORKER_EDGE_THRESHOLD = 32
-export const EDGE_GEOMETRY_WORKER_PREVIEW_EDGE_THRESHOLD =
-  EDGE_GEOMETRY_WORKER_EDGE_THRESHOLD
 /** Maximum time between sampled holistic previews during active interaction.
  * The Worker still coalesces to one in-flight + one pending generation. */
 export const EDGE_GEOMETRY_WORKER_PREVIEW_CADENCE_MS = 80
@@ -57,8 +55,7 @@ export const shouldSampleEdgeGeometryWorker = ({
 }: {
   edgeCount: number
   interacting: boolean
-}): boolean =>
-  interacting && edgeCount >= EDGE_GEOMETRY_WORKER_PREVIEW_EDGE_THRESHOLD
+}): boolean => interacting && edgeCount >= EDGE_GEOMETRY_WORKER_EDGE_THRESHOLD
 
 /**
  * A Worker cannot interrupt a CPU-bound solve already running. Keep at most one

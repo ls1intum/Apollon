@@ -153,7 +153,12 @@ for (const n of SIZES) {
     for (let i = 0; i < DRAG_COUNT; i++) {
       const dx = i % 2 === 0 ? 30 : -30
       const dy = i % 2 === 0 ? 40 : -40
-      mainFrames.push(...(await dragNodeBy(node, page, dx, dy, 12, true)))
+      mainFrames.push(
+        ...(await dragNodeBy(node, page, dx, dy, {
+          steps: 12,
+          measureFrames: true,
+        }))
+      )
     }
     const after = await readPerf(page)
     if (profiler) {

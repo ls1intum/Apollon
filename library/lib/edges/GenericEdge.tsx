@@ -1,10 +1,8 @@
 import {
   useState,
   useEffect,
-  useRef,
   useCallback,
   type ReactNode,
-  type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
 } from "react"
 import { BaseEdge, Position, useStore } from "@xyflow/react"
@@ -305,72 +303,10 @@ export const EdgeEndpointMarkers = ({
   sourcePinned?: boolean
   targetPinned?: boolean
 }) => {
-  const sourceHandleRef = useRef<SVGRectElement | null>(null)
   const screenScale = useHandleScreenScale()
-
-  useEffect(() => {
-    if (!isDiagramModifiable) return
-
-    // `.react-flow__edgeupdater*` are React Flow v12 internal class names.
-    // Reconnection defers to RF's native updater while the hit target controls
-    // UX; pinned to RF v12 (revisit on a major React Flow bump).
-    const edgeGroup = sourceHandleRef.current?.closest(".react-flow__edge")
-    const nativeUpdaters = Array.from(
-      edgeGroup?.querySelectorAll<SVGElement>(".react-flow__edgeupdater") ?? []
-    )
-
-    const previousPointerEvents = nativeUpdaters.map(
-      (updater) => updater.style.pointerEvents
-    )
-
-    nativeUpdaters.forEach((updater) => {
-      updater.style.pointerEvents = "none"
-    })
-
-    return () => {
-      nativeUpdaters.forEach((updater, index) => {
-        updater.style.pointerEvents = previousPointerEvents[index]
-      })
-    }
-  }, [isDiagramModifiable])
 
   if (!isDiagramModifiable) {
     return null
-  }
-
-  const forwardToNativeReconnect = (
-    event: ReactMouseEvent<SVGRectElement>,
-    endType: "source" | "target"
-  ) => {
-    const edgeGroup = event.currentTarget.closest(".react-flow__edge")
-    const nativeUpdater = edgeGroup?.querySelector(
-      `.react-flow__edgeupdater-${endType}`
-    )
-
-    if (!nativeUpdater) return
-
-    event.preventDefault()
-    event.stopPropagation()
-    const eventWindow = event.currentTarget.ownerDocument.defaultView ?? window
-
-    // Hand off to React Flow's native reconnect updater so reconnection stays
-    // owned by React Flow while the hit target controls UX.
-    nativeUpdater.dispatchEvent(
-      new eventWindow.MouseEvent("mousedown", {
-        bubbles: true,
-        cancelable: true,
-        button: event.button,
-        buttons: event.buttons,
-        clientX: event.clientX,
-        clientY: event.clientY,
-        screenX: event.screenX,
-        screenY: event.screenY,
-        ctrlKey: event.ctrlKey,
-        shiftKey: event.shiftKey,
-        altKey: event.altKey,
-        metaKey: event.metaKey,
-      })
-    )
   }
   // For a straight edge the grip sits on the line, offset from its endpoint
   // TOWARD the other endpoint (so it clears the marker on the node side) and
@@ -479,7 +415,6 @@ export const EdgeEndpointMarkers = ({
         </>
       )}
       <rect
-        ref={sourceHandleRef}
         className={`${className} edge-endpoint-handle--source`}
         x={sourceHitTarget.x}
         y={sourceHitTarget.y}
@@ -492,15 +427,12 @@ export const EdgeEndpointMarkers = ({
         // (paint order alone already puts it on top). It is still capped short of the bend
         // handle, so the bend stays grabbable beyond the endpoint's zone.
         style={{ zIndex: 10000 }}
-        pointerEvents={canEditEndpoint ? "all" : "none"}
+        pointerEvents={
+          canEditEndpoint && onEndpointPointerDown ? "all" : "none"
+        }
         onPointerDown={
           canEditEndpoint && onEndpointPointerDown
             ? (event) => onEndpointPointerDown(event, "source")
-            : undefined
-        }
-        onMouseDown={
-          canEditEndpoint && !onEndpointPointerDown
-            ? (event) => forwardToNativeReconnect(event, "source")
             : undefined
         }
       />
@@ -513,15 +445,12 @@ export const EdgeEndpointMarkers = ({
         rx={targetHitTarget.radius}
         ry={targetHitTarget.radius}
         style={{ zIndex: 10000 }}
-        pointerEvents={canEditEndpoint ? "all" : "none"}
+        pointerEvents={
+          canEditEndpoint && onEndpointPointerDown ? "all" : "none"
+        }
         onPointerDown={
           canEditEndpoint && onEndpointPointerDown
             ? (event) => onEndpointPointerDown(event, "target")
-            : undefined
-        }
-        onMouseDown={
-          canEditEndpoint && !onEndpointPointerDown
-            ? (event) => forwardToNativeReconnect(event, "target")
             : undefined
         }
       />
@@ -591,7 +520,6 @@ export const StepEdgeBody = ({
   strokeColor,
   strokeDashArray,
   hasInitialCalculation,
-  isReconnecting,
   isBendDragging,
   draggingHandleSegmentIndex,
   markerStart,
@@ -617,7 +545,6 @@ export const StepEdgeBody = ({
   strokeColor: string
   strokeDashArray?: string
   hasInitialCalculation: boolean
-  isReconnecting: boolean
   isBendDragging: boolean
   draggingHandleSegmentIndex: number | null
   markerStart?: string
@@ -671,22 +598,20 @@ export const StepEdgeBody = ({
         interactionWidth={0}
         style={{
           stroke: strokeColor,
-          strokeDasharray: isReconnecting ? "none" : strokeDashArray,
+          strokeDasharray: strokeDashArray,
           transition: hasInitialCalculation ? "opacity 0.1s ease-in" : "none",
           opacity: 1,
         }}
       />
 
       {/* Inline markers for export compatibility (survives ungrouping). */}
-      {!isReconnecting && (
-        <EdgeInlineMarkers
-          pathD={currentPath}
-          markerEnd={markerEnd}
-          markerStart={markerStart}
-          strokeColor={strokeColor}
-          targetInterfaceGeometry={targetInterfaceGeometry}
-        />
-      )}
+      <EdgeInlineMarkers
+        pathD={currentPath}
+        markerEnd={markerEnd}
+        markerStart={markerStart}
+        strokeColor={strokeColor}
+        targetInterfaceGeometry={targetInterfaceGeometry}
+      />
 
       <path
         ref={pathRef}
@@ -695,11 +620,10 @@ export const StepEdgeBody = ({
         fill="none"
         strokeWidth={EDGES.EDGE_HIGHLIGHT_STROKE_WIDTH}
         pointerEvents="stroke"
-        style={{ opacity: isReconnecting || isBendDragging ? 0 : 0.4 }}
+        style={{ opacity: isBendDragging ? 0 : 0.4 }}
       />
 
       {isDiagramModifiable &&
-        !isReconnecting &&
         allowMidpointDragging &&
         bendHandles
           .filter(
@@ -762,18 +686,10 @@ export const CommonEdgeElements = ({
 }) => {
   const nodeScore = assessments[id]?.score
   const uiPosition = toolbarPosition ?? pathMiddlePosition
-  // Owns its popover anchor: a callback ref captures the toolbar's
-  // <foreignObject> into state so the popover positions against the live
-  // element without reading a ref's `.current` during render.
-  const [anchorEl, anchorRef] = usePopoverAnchor<SVGForeignObjectElement>()
+  // The callback ref makes the framework toolbar's portal content available
+  // as soon as it mounts, without reading `.current` during render.
+  const [anchorEl, anchorRef] = usePopoverAnchor<HTMLDivElement>()
 
-  // Whether this edge deviates from FULLY auto in any way the reset can undo.
-  // There are two independent manual states, and either one keeps the router from
-  // owning the edge: hand-drawn waypoints (`data.points`) AND pinned endpoint
-  // anchors (`data.sourceAnchor`/`targetAnchor`, written when an endpoint is
-  // dragged — which also freezes the opposite end). Checking only `points` hid the
-  // reset button on an edge whose PATH is auto but whose ANCHORS are pinned, so
-  // there was no way back to auto anchoring. Both count.
   const setEdges = useDiagramStore((state) => state.setEdges)
   const hasManualRoute = useDiagramStore((state) => {
     const data = state.edges.find((edge) => edge.id === id)?.data
@@ -785,9 +701,6 @@ export const CommonEdgeElements = ({
     return hasManualPoints || hasPinnedAnchor
   })
 
-  // Hand the edge FULLY back to the router: drop the hand-drawn waypoints AND the
-  // pinned anchors so the auto-anchor selector picks both ends again. Clearing only
-  // the points would leave the anchors frozen (still not auto).
   const handleResetRouting = useCallback(() => {
     setEdges((edges) =>
       edges.map((edge) => {
@@ -807,7 +720,6 @@ export const CommonEdgeElements = ({
         edgeId={id}
         anchorRef={anchorRef}
         position={uiPosition}
-        scaleAnchor={pathMiddlePosition}
         onEditClick={() => setPopOverElementId(id)}
         onDeleteClick={handleDelete}
         canResetRouting={isDiagramModifiable && hasManualRoute}

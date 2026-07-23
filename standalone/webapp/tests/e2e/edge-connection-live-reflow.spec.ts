@@ -58,7 +58,6 @@ test("a new connection reflows the neighbours live and the commit does not jump"
   await page.setViewportSize({ width: 1200, height: 1000 })
   await openFixtureInLocalEditor(page, fixture)
   await waitForCanvasReady(page)
-  await page.waitForTimeout(300)
 
   const before = await pathOf(page, "AC")
   expect(before).toBeTruthy()
@@ -80,24 +79,37 @@ test("a new connection reflows the neighbours live and the commit does not jump"
   await page.mouse.move(cBox.x + cBox.width / 2, cBox.y + cBox.height / 2, {
     steps: 15,
   })
-  await page.waitForTimeout(300)
 
   // The existing A→C edge must have moved to make room for the in-progress B→C.
+  await expect
+    .poll(() => pathOf(page, "AC"), {
+      message: "the neighbour must reflow while the connection is dragged",
+    })
+    .not.toEqual(before)
   const during = await pathOf(page, "AC")
-  expect(
-    during,
-    "the neighbour must reflow WHILE the connection is dragged"
-  ).not.toEqual(before)
 
   await page.mouse.up()
-  await page.waitForTimeout(400)
+  await expect(page.locator(".react-flow__edge")).toHaveCount(2)
 
   // And it must stay exactly where the preview put it — no jump on commit.
-  const after = await pathOf(page, "AC")
+  const handoffPaths = await page.evaluate(async () => {
+    const values: Array<string | null> = []
+    for (let frame = 0; frame < 60; frame++) {
+      values.push(
+        document
+          .querySelector(
+            '.react-flow__edge[data-id="AC"] path.react-flow__edge-path'
+          )
+          ?.getAttribute("d") ?? null
+      )
+      await new Promise<void>((resolve) =>
+        requestAnimationFrame(() => resolve())
+      )
+    }
+    return values
+  })
   expect(
-    after,
+    new Set(handoffPaths),
     "the neighbour must not jump when the edge is committed"
-  ).toEqual(during)
-  // The new edge really was created.
-  await expect(page.locator(".react-flow__edge")).toHaveCount(2)
+  ).toEqual(new Set([during]))
 })

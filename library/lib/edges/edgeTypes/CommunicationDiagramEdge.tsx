@@ -52,7 +52,6 @@ export const CommunicationDiagramEdge = ({
     isBendDragging,
     draggingHandleSegmentIndex,
     hasInitialCalculation,
-    isReconnecting,
     markerEnd,
     markerStart,
     strokeDashArray,
@@ -105,7 +104,6 @@ export const CommunicationDiagramEdge = ({
           strokeColor={strokeColor}
           strokeDashArray={strokeDashArray}
           hasInitialCalculation={hasInitialCalculation}
-          isReconnecting={isReconnecting}
           isBendDragging={isBendDragging}
           draggingHandleSegmentIndex={draggingHandleSegmentIndex}
           markerStart={markerStart}
@@ -126,7 +124,6 @@ export const CommunicationDiagramEdge = ({
           messages={data?.messages}
           pathMiddlePosition={messageHost.point}
           showRelationshipLabels={true}
-          isReconnecting={isReconnecting}
           sourcePosition={messageHost.start}
           targetPosition={messageHost.end}
           textColor={textColor}

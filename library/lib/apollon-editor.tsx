@@ -670,6 +670,7 @@ export class ApollonEditor {
     }
 
     try {
+      const routingGeneration = edgeGeometryStore.getState().acceptedGeneration
       diagramStore.getState().setNodesAndEdges(model.nodes, model.edges)
       diagramStore.getState().setAssessments(model.assessments)
 
@@ -738,30 +739,24 @@ export class ApollonEditor {
         }
       }
 
-      // Wait for ReactFlow to fully lay out nodes and measure custom handle
-      // positions (especially for non-rectangular shapes like parallelograms).
-      // setTimeout lets ResizeObserver callbacks fire; double-rAF ensures paint.
+      // Let React Flow publish its measured handles before awaiting the exact
+      // solve that consumes them.
       await new Promise<void>((resolve) => {
-        setTimeout(() => {
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => resolve())
-          })
-        }, 150)
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
       })
 
-      // Large diagrams route in a versioned Worker after their handles measure.
-      // Export must observe the accepted exact generation, not whichever settled
-      // route happened to be visible after the historical fixed delay above.
-      await Promise.race([
-        edgeGeometryStore.getState().waitForSettled(),
-        new Promise<never>((_, reject) => {
-          setTimeout(
-            () =>
-              reject(new Error("Edge geometry did not settle before export")),
-            3000
-          )
-        }),
-      ])
+      if (model.edges.length > 0) {
+        await Promise.race([
+          edgeGeometryStore.getState().waitForSettled(routingGeneration),
+          new Promise<never>((_, reject) => {
+            setTimeout(
+              () =>
+                reject(new Error("Edge geometry did not settle before export")),
+              3000
+            )
+          }),
+        ])
+      }
 
       filterRenderedElements(container, options)
 

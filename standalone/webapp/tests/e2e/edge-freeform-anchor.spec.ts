@@ -239,6 +239,9 @@ async function expectEndpointCanRetargetToNode({
   await openFixtureInLocalEditor(page, fixture)
   await waitForCanvasReady(page)
 
+  const edgeBefore = (await storedEdges(page)).find(
+    (edge) => edge.id === edgeId
+  )
   const edge = await selectEdge(page, edgeId)
   const endpointHandle = edge.locator(".edge-endpoint-handle--target")
   await expect(endpointHandle).toBeVisible()
@@ -274,6 +277,7 @@ async function expectEndpointCanRetargetToNode({
   const edgeState = (await storedEdges(page)).find((edge) => edge.id === edgeId)
   expect(edgeState).toMatchObject({ target: targetId, targetHandle })
   expect(edgeState?.data).toHaveProperty("targetAnchor")
+  expect(edgeState?.data?.sourceAnchor).toEqual(edgeBefore?.data?.sourceAnchor)
 }
 
 // Following is diagram-agnostic — the stored {side, ratio} anchor is
@@ -474,8 +478,8 @@ test("a new same-node edge can connect different handles", async ({ page }) => {
   if (!nodeBox) throw new Error("source node has no bounding box")
 
   await node.hover()
-  await page.waitForTimeout(120)
   const rightHandle = node.locator('.react-flow__handle[data-handleid="right"]')
+  await expect(rightHandle.first()).toBeVisible()
   const handleBox = await rightHandle.first().boundingBox()
   if (!handleBox) throw new Error("source handle has no bounding box")
 
@@ -509,8 +513,8 @@ test("a new same-node edge cannot reconnect to the same handle", async ({
   const node = page.locator(`.react-flow__node[data-id="${CLASS_SOURCE}"]`)
 
   await node.hover()
-  await page.waitForTimeout(120)
   const rightHandle = node.locator('.react-flow__handle[data-handleid="right"]')
+  await expect(rightHandle.first()).toBeVisible()
   const handleBox = await rightHandle.first().boundingBox()
   if (!handleBox) throw new Error("source handle has no bounding box")
 
@@ -521,7 +525,12 @@ test("a new same-node edge cannot reconnect to the same handle", async ({
   await page.mouse.move(x + 16, y, { steps: 4 })
   await page.mouse.move(x, y, { steps: 4 })
   await page.mouse.up()
-  await page.waitForTimeout(400)
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+      )
+  )
 
   expect(await storedEdges(page)).toHaveLength(0)
 })

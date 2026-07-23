@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url"
 import { waitForCanvasReady, openFixtureInLocalEditor } from "../helpers/canvas"
 
 /**
- * The connection GHOST (preview line rendered by ReconnectConnectionLine while a
+ * The connection GHOST (preview line rendered by ConnectionPreviewLine while a
  * connection or reconnection is dragged):
  *  - a NEW connection stays hidden until the pointer is dragged a short distance
  *    from the source node (so a click / tiny drag doesn't flash a preview),

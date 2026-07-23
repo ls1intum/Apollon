@@ -36,7 +36,11 @@ import { BaseEdgeProps } from "../edges/GenericEdge"
 import { computeToolbarPosition } from "@/utils/geometry/bendHandles"
 import { getMidSegment } from "@/utils/geometry/edgeLabelLayout"
 import { useEdgeLineJumps, buildEdgePath } from "./useEdgeLineJumps"
-import { useDiagramStore, useMetadataStore } from "@/store/context"
+import {
+  useDiagramStore,
+  useEdgeGeometryStore,
+  useMetadataStore,
+} from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { getPositionOnCanvas } from "@/utils"
 
@@ -82,9 +86,6 @@ export const useStraightPathEdge = ({
   const activePointerCancelRef = useRef<(() => void) | null>(null)
   const activePointerTeardownRef = useRef<(() => void) | null>(null)
   const isDiagramModifiable = useDiagramModifiable()
-  const isReconnecting = useMetadataStore(
-    (state) => state.reconnectPreviewEdgeId === id
-  )
   const setLiveEdgeOverride = useMetadataStore(
     (state) => state.setLiveEdgeOverride
   )
@@ -97,6 +98,11 @@ export const useStraightPathEdge = ({
     sourcePosition: Position
     targetPosition: Position
   } | null>(null)
+  const [endpointPreviewCommit, setEndpointPreviewCommit] =
+    useState<StraightEndpointDragCommit | null>(null)
+  const centralRoute = useEdgeGeometryStore(
+    (state) => state.previewById[id] ?? state.geometryById[id]
+  )
 
   useEffect(
     () => () => {
@@ -319,7 +325,25 @@ export const useStraightPathEdge = ({
       adjustedTargetCoordinates.targetY,
     ]
   )
-  const renderPoints = dragPreviewPoints ?? basePoints
+  const centralPreviewMatchesCommit =
+    dragPreviewPoints !== null &&
+    endpointPreviewCommit !== null &&
+    centralRoute !== undefined &&
+    centralRoute.length >= 2 &&
+    (endpointPreviewCommit.endpoint === "source"
+      ? centralRoute[0].x === endpointPreviewCommit.sourceEndpoint.x &&
+        centralRoute[0].y === endpointPreviewCommit.sourceEndpoint.y
+      : centralRoute[centralRoute.length - 1].x ===
+          endpointPreviewCommit.targetEndpoint.x &&
+        centralRoute[centralRoute.length - 1].y ===
+          endpointPreviewCommit.targetEndpoint.y)
+  const renderPoints = useMemo<IPoint[]>(
+    () =>
+      centralPreviewMatchesCommit
+        ? [centralRoute[0], centralRoute[centralRoute.length - 1]]
+        : (dragPreviewPoints ?? basePoints),
+    [basePoints, centralPreviewMatchesCommit, centralRoute, dragPreviewPoints]
+  )
   const renderSourcePosition =
     dragPreviewPositions?.sourcePosition ?? resolvedSourcePosition
   const renderTargetPosition =
@@ -333,18 +357,18 @@ export const useStraightPathEdge = ({
     setLiveEdgeOverride({
       edgeId: id,
       points: dragPreviewPoints,
-      edge: endpointDragCommitRef.current?.predictedEdge,
-      strategy: endpointDragCommitRef.current ? "predicted" : "authoritative",
+      edge: endpointPreviewCommit?.predictedEdge,
+      strategy: endpointPreviewCommit ? "predicted" : "authoritative",
     })
     return () => setLiveEdgeOverride(null)
-  }, [dragPreviewPoints, id, setLiveEdgeOverride])
+  }, [dragPreviewPoints, endpointPreviewCommit, id, setLiveEdgeOverride])
 
   // UseCase include/extend edges are dashed connectors that never read as
   // crossings to disambiguate, so they opt out of bridging.
   const lineJumps = useEdgeLineJumps(
     id,
     renderPoints,
-    !isReconnecting && type !== "UseCaseInclude" && type !== "UseCaseExtend"
+    type !== "UseCaseInclude" && type !== "UseCaseExtend"
   )
 
   // Midpoint + orientation derived purely from the two endpoints. A straight
@@ -401,10 +425,15 @@ export const useStraightPathEdge = ({
 
   const handleEndpointPointerDown = useCallback(
     (event: ReactPointerEvent<SVGRectElement>, endpoint: EndpointType) => {
+      if (!event.isPrimary || event.button !== 0) return
       event.preventDefault()
       event.stopPropagation()
       activePointerCancelRef.current?.()
+      const pointerId = event.pointerId
+      const pointerTarget = event.currentTarget
+      pointerTarget.setPointerCapture(pointerId)
       endpointDragCommitRef.current = null
+      setEndpointPreviewCommit(null)
 
       const ownerDocument = event.currentTarget.ownerDocument
       const currentSourceEndpoint = basePoints[0]
@@ -452,11 +481,15 @@ export const useStraightPathEdge = ({
             y: movingEndpoint.sourceY,
           }
         } else {
+          const targetPreviewPadding = getTargetConnectionPointPadding(
+            padding,
+            true
+          )
           const movingEndpoint = adjustTargetCoordinates(
             resolvedAnchor.point.x,
             resolvedAnchor.point.y,
             resolvedAnchor.position,
-            0
+            targetPreviewPadding
           )
           targetEndpoint = {
             x: movingEndpoint.targetX,
@@ -467,24 +500,8 @@ export const useStraightPathEdge = ({
         const predictedData = { ...data }
         if (endpoint === "source") {
           predictedData.sourceAnchor = anchor
-          if (!isFreeformEdgeAnchor(targetAnchor) && targetRect) {
-            predictedData.targetAnchor =
-              getEdgeAnchorFromPoint(
-                targetNode?.type,
-                currentTargetEndpoint,
-                targetRect
-              ) ?? undefined
-          }
         } else {
           predictedData.targetAnchor = anchor
-          if (!isFreeformEdgeAnchor(sourceAnchor) && sourceRect) {
-            predictedData.sourceAnchor =
-              getEdgeAnchorFromPoint(
-                sourceNode?.type,
-                currentSourceEndpoint,
-                sourceRect
-              ) ?? undefined
-          }
         }
         const predictedEdge: Edge = {
           id,
@@ -522,8 +539,10 @@ export const useStraightPathEdge = ({
       }
 
       const handlePointerMove = (e: PointerEvent) => {
+        if (e.pointerId !== pointerId) return
         const commit = resolveDragCommit(e.clientX, e.clientY)
         endpointDragCommitRef.current = commit
+        setEndpointPreviewCommit(commit)
         if (commit) {
           setDragPreviewPoints([commit.sourceEndpoint, commit.targetEndpoint])
           setDragPreviewPositions({
@@ -549,6 +568,8 @@ export const useStraightPathEdge = ({
         ownerDocument.removeEventListener("pointermove", handlePointerMove)
         ownerDocument.removeEventListener("pointerup", handlePointerUp)
         ownerDocument.removeEventListener("pointercancel", handlePointerCancel)
+        if (pointerTarget.hasPointerCapture(pointerId))
+          pointerTarget.releasePointerCapture(pointerId)
         if (activePointerTeardownRef.current === teardownPointerGesture) {
           activePointerTeardownRef.current = null
           activePointerCancelRef.current = null
@@ -557,16 +578,19 @@ export const useStraightPathEdge = ({
 
       const restoreWithoutCommit = () => {
         endpointDragCommitRef.current = null
+        setEndpointPreviewCommit(null)
         setDragPreviewPoints(null)
         setDragPreviewPositions(null)
       }
 
-      const handlePointerCancel = () => {
+      const handlePointerCancel = (e?: PointerEvent) => {
+        if (e && e.pointerId !== pointerId) return
         restoreWithoutCommit()
         teardownPointerGesture()
       }
 
-      const handlePointerUp = () => {
+      const handlePointerUp = (e: PointerEvent) => {
+        if (e.pointerId !== pointerId) return
         const commit = endpointDragCommitRef.current
         restoreWithoutCommit()
 
@@ -583,10 +607,6 @@ export const useStraightPathEdge = ({
               } else {
                 nextData.targetAnchor = commit.anchor
               }
-              if (commit.predictedEdge.data?.sourceAnchor)
-                nextData.sourceAnchor = commit.predictedEdge.data.sourceAnchor
-              if (commit.predictedEdge.data?.targetAnchor)
-                nextData.targetAnchor = commit.predictedEdge.data.targetAnchor
 
               return commit.endpoint === "source"
                 ? {
@@ -611,12 +631,8 @@ export const useStraightPathEdge = ({
       activePointerCancelRef.current = handlePointerCancel
       activePointerTeardownRef.current = teardownPointerGesture
       ownerDocument.addEventListener("pointermove", handlePointerMove)
-      ownerDocument.addEventListener("pointerup", handlePointerUp, {
-        once: true,
-      })
-      ownerDocument.addEventListener("pointercancel", handlePointerCancel, {
-        once: true,
-      })
+      ownerDocument.addEventListener("pointerup", handlePointerUp)
+      ownerDocument.addEventListener("pointercancel", handlePointerCancel)
     },
     [
       basePoints,
@@ -625,20 +641,15 @@ export const useStraightPathEdge = ({
       getIntersectingNodes,
       getNodeRect,
       id,
+      padding,
       resolvedSourcePosition,
       resolvedTargetPosition,
       screenToFlowPosition,
       setEdges,
       source,
-      sourceAnchor,
       sourceHandleId,
-      sourceNode?.type,
-      sourceRect,
       target,
-      targetAnchor,
       targetHandleId,
-      targetNode?.type,
-      targetRect,
       type,
     ]
   )
@@ -654,7 +665,6 @@ export const useStraightPathEdge = ({
     sourcePoint,
     targetPoint,
     isDiagramModifiable,
-    isReconnecting,
     canEditEndpoint,
     handleEndpointPointerDown,
     sourcePosition: renderSourcePosition,

@@ -286,6 +286,9 @@ importers:
       '@dnd-kit/utilities':
         specifier: 3.2.2
         version: 3.2.2(react@19.2.7)
+      '@xyflow/system':
+        specifier: 'catalog:'
+        version: 0.0.78
       lucide-react:
         specifier: 'catalog:'
         version: 1.22.0(react@19.2.7)
@@ -332,9 +335,6 @@ importers:
       '@xyflow/react':
         specifier: 'catalog:'
         version: 12.11.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      '@xyflow/system':
-        specifier: 'catalog:'
-        version: 0.0.78
       ajv:
         specifier: 8.20.0
         version: 8.20.0
@@ -656,9 +656,6 @@ importers:
       '@xyflow/react':
         specifier: 'catalog:'
         version: 12.11.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      '@xyflow/system':
-        specifier: 'catalog:'
-        version: 0.0.78
       clsx:
         specifier: 'catalog:'
         version: 2.1.1

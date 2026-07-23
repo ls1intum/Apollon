@@ -3,16 +3,10 @@ import * as fs from "node:fs"
 import * as path from "node:path"
 import { fileURLToPath } from "node:url"
 import { waitForCanvasReady, openFixtureInLocalEditor } from "../helpers/canvas"
+import { readEdgePathVertices } from "../helpers/edgeGeometry"
 
 const __d = path.dirname(fileURLToPath(import.meta.url))
 
-/**
- * Regression: a hand-drawn multi-corner edge whose anchors are auto ({}) must LOAD with
- * every bend intact. The re-projection effect used to fire with the solver's fallback
- * (a bare source->target straight line) before the real route landed, normalize THAT to
- * the plain auto route, and overwrite the stored manual bends — flattening a 6-corner
- * path to 2 corners on load. The effect now waits for the solver's actual route.
- */
 test("a hand-drawn multi-corner edge keeps all its bends on load", async ({
   page,
 }) => {
@@ -22,25 +16,37 @@ test("a hand-drawn multi-corner edge keeps all its bends on load", async ({
       "utf-8"
     )
   )
-  const storedCorners = fx.edges[0].data.points.length
-  expect(storedCorners).toBeGreaterThanOrEqual(6)
+  const edgeId = fx.edges[0].id as string
+  const authoredPoints = fx.edges[0].data.points
+  expect(authoredPoints).toHaveLength(7)
 
   await openFixtureInLocalEditor(page, fx)
   await waitForCanvasReady(page)
-  await page.waitForTimeout(600)
 
-  const cornerCount = await page.evaluate(() => {
-    const d = document
-      .querySelector(".react-flow__edge path.react-flow__edge-path")
-      ?.getAttribute("d")
-    if (!d) return 0
-    // count L/M commands = vertices
-    return (d.match(/[ML]/g) || []).length
+  const persistedPoints = () =>
+    page.evaluate((id) => {
+      const persisted = localStorage.getItem("persistenceModelStore")
+      if (!persisted) return null
+      const state = JSON.parse(persisted).state
+      const model = state.models?.[state.currentModelId]?.model
+      return model?.edges?.find((edge: { id: string }) => edge.id === id)?.data
+        ?.points
+    }, edgeId)
+
+  await expect
+    .poll(async () => (await persistedPoints())?.length)
+    .toBe(authoredPoints.length)
+  const normalizedPoints = await persistedPoints()
+  expect(normalizedPoints).not.toBeNull()
+  normalizedPoints.forEach((point: { x: number; y: number }, index: number) => {
+    expect(Math.abs(point.x - authoredPoints[index].x)).toBeLessThanOrEqual(1)
+    expect(Math.abs(point.y - authoredPoints[index].y)).toBeLessThanOrEqual(1)
   })
+  await expect
+    .poll(async () => (await readEdgePathVertices(page, edgeId)).length)
+    .toBe(authoredPoints.length)
 
-  // The full hand-drawn path survived (not flattened to a 2-3 point auto route).
-  expect(
-    cornerCount,
-    "the multi-corner hand-drawn path must not collapse on load"
-  ).toBeGreaterThanOrEqual(storedCorners - 1)
+  await page.reload()
+  await waitForCanvasReady(page)
+  await expect.poll(persistedPoints).toEqual(normalizedPoints)
 })

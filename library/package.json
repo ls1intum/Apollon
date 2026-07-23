@@ -54,6 +54,10 @@
       "types": "./dist/export.d.ts",
       "import": "./dist/export.js"
     },
+    "./model": {
+      "types": "./dist/model.d.ts",
+      "import": "./dist/model.js"
+    },
     "./style.css": "./dist/assets/style.css",
     "./schema": "./schema/uml-model-4.schema.json",
     "./package.json": "./package.json"
@@ -103,7 +107,6 @@
   ],
   "peerDependencies": {
     "@xyflow/react": "^12.9.0",
-    "@xyflow/system": ">=0.0.78",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "y-protocols": "^1.0.6",
@@ -115,6 +118,7 @@
     "@dnd-kit/core": "6.3.1",
     "@dnd-kit/sortable": "10.0.0",
     "@dnd-kit/utilities": "3.2.2",
+    "@xyflow/system": "catalog:",
     "lucide-react": "catalog:",
     "zustand": "catalog:"
   },
@@ -137,7 +141,6 @@
     "@vitejs/plugin-react": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "@xyflow/react": "catalog:",
-    "@xyflow/system": "catalog:",
     "ajv": "8.20.0",
     "babel-plugin-react-compiler": "catalog:",
     "eslint": "catalog:",

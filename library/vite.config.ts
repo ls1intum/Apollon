@@ -43,7 +43,7 @@ function emitFontLicense(): Plugin {
   }
 }
 
-// Single build pass — `dist/{index,internals,export}.js`.
+// Single build pass — `dist/{index,internals,export,model}.js`.
 //
 // EVERY runtime dependency a consumer can install from `@tumaet/apollon` is
 // externalized: the React family (react / react-dom / @xyflow/react), the UI
@@ -76,10 +76,8 @@ const REACT_PEERS = [
   "react/compiler-runtime",
   "react-dom/client",
   "@xyflow/react",
-  // @xyflow/react re-exports @xyflow/system and shares its module state (the
-  // ConnectionMode enum, the coordinate helpers). It is a declared peer, so keep
-  // it external too — a bundled private copy would both bloat the entry and hand
-  // the router a second, non-interoperating system instance.
+  // Routing uses low-level coordinate helpers not re-exported by React Flow.
+  // The exact compatible system package is a direct dependency.
   "@xyflow/system",
 ]
 
@@ -155,6 +153,7 @@ export default defineConfig({
         index: resolve(__dirname, "lib/index.tsx"),
         internals: resolve(__dirname, "lib/internals.ts"),
         export: resolve(__dirname, "lib/export/index.ts"),
+        model: resolve(__dirname, "lib/model.ts"),
       },
       formats: ["es"],
       cssFileName: "style",

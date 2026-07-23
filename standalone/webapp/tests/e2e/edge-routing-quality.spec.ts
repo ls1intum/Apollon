@@ -453,7 +453,19 @@ for (const c of CASES) {
     const model = fx(c.file) as Model
     await openFixtureInLocalEditor(page, model)
     await waitForCanvasReady(page)
-    await page.waitForTimeout(400)
+    let previousPaths = ""
+    await expect
+      .poll(async () => {
+        const paths = await page
+          .locator(".react-flow__edge path.react-flow__edge-path")
+          .evaluateAll((elements) =>
+            elements.map((element) => element.getAttribute("d")).join("|")
+          )
+        const stable = paths !== "" && paths === previousPaths
+        previousPaths = paths
+        return stable
+      })
+      .toBe(true)
     const m = await measure(page, model)
     console.log(
       `QUALITY ${c.file} corners=${m.corners} crossings=${m.crossings} overlapPx=${m.overlapPx} straightBroken=${m.straightBroken} offMax=${m.offMax.toFixed(2)} centroid=${m.portCentroidError.toFixed(2)} gaps=${m.portGapImbalance.toFixed(2)} sharedGaps=${m.sharedPortGapImbalance.toFixed(2)}`

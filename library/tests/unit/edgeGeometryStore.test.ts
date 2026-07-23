@@ -17,6 +17,21 @@ describe("edge geometry store", () => {
     await expect(store.getState().waitForSettled()).resolves.toBeUndefined()
   })
 
+  it("can wait for a solve that has not started yet", async () => {
+    const store = createEdgeGeometryStore()
+    const generation = store.getState().acceptedGeneration
+    const settled = vi.fn()
+    const waiting = store.getState().waitForSettled(generation).then(settled)
+
+    await Promise.resolve()
+    expect(settled).not.toHaveBeenCalled()
+
+    store.getState().setAllGeometry({})
+    await waiting
+    expect(settled).toHaveBeenCalledOnce()
+    expect(store.getState().acceptedGeneration).toBe(generation + 1)
+  })
+
   it("reuses unchanged route references across exact commits", () => {
     const store = createEdgeGeometryStore()
     const route = [

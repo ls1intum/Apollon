@@ -27,7 +27,6 @@ import {
   parseSvgPath,
   preserveOrthogonalEdgePoints,
   resolveOrthogonalEdgeReleasePoints,
-  resolveReconnectPreviewBasePoints,
   roundAnchorPointOutward,
   removeDuplicatePoints,
   simplifyPoints,
@@ -2121,55 +2120,6 @@ describe("preserveOrthogonalEdgePoints", () => {
     )
     expect(result[1]).toEqual({ x: 60, y: 200 })
     expectOrthogonalSegments(result)
-  })
-})
-
-describe("resolveReconnectPreviewBasePoints", () => {
-  it("prefers stored manual points when available", () => {
-    const result = resolveReconnectPreviewBasePoints(
-      [
-        { x: 10, y: 20 },
-        { x: 30, y: 40 },
-      ],
-      [{ x: 50, y: 60 }],
-      [{ x: 70, y: 80 }]
-    )
-
-    expect(result).toEqual([
-      { x: 10, y: 20 },
-      { x: 30, y: 40 },
-    ])
-  })
-
-  it("falls back to local custom points before computed points", () => {
-    const result = resolveReconnectPreviewBasePoints(
-      undefined,
-      [
-        { x: 15, y: 25 },
-        { x: 35, y: 45 },
-      ],
-      [{ x: 55, y: 65 }]
-    )
-
-    expect(result).toEqual([
-      { x: 15, y: 25 },
-      { x: 35, y: 45 },
-    ])
-  })
-
-  it("returns a cloned fallback path when no manual points exist", () => {
-    const fallbackPoints = [
-      { x: 5, y: 10 },
-      { x: 15, y: 20 },
-    ]
-    const result = resolveReconnectPreviewBasePoints(
-      undefined,
-      undefined,
-      fallbackPoints
-    )
-
-    expect(result).toEqual(fallbackPoints)
-    expect(result).not.toBe(fallbackPoints)
   })
 })
 

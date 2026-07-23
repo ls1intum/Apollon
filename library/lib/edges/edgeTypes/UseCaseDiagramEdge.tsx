@@ -59,7 +59,6 @@ export const UseCaseEdge = ({
     edgeData,
     currentPath,
     overlayPath,
-    isReconnecting,
     markerEnd,
     markerStart,
     strokeDashArray,
@@ -107,14 +106,12 @@ export const UseCaseEdge = ({
             }}
           />
 
-          {!isReconnecting && (
-            <EdgeInlineMarkers
-              pathD={currentPath}
-              markerEnd={markerEnd}
-              markerStart={markerStart}
-              strokeColor={strokeColor}
-            />
-          )}
+          <EdgeInlineMarkers
+            pathD={currentPath}
+            markerEnd={markerEnd}
+            markerStart={markerStart}
+            strokeColor={strokeColor}
+          />
 
           <path
             ref={pathRef}
@@ -126,18 +123,16 @@ export const UseCaseEdge = ({
             style={{ opacity: 0.4 }}
           />
 
-          {!isReconnecting && (
-            <EdgeEndpointMarkers
-              sourcePoint={sourcePoint}
-              targetPoint={targetPoint}
-              sourcePosition={renderSourcePosition}
-              targetPosition={renderTargetPosition}
-              isDiagramModifiable={isDiagramModifiable}
-              canEditEndpoint={canEditEndpoint}
-              onEndpointPointerDown={handleEndpointPointerDown}
-              straight
-            />
-          )}
+          <EdgeEndpointMarkers
+            sourcePoint={sourcePoint}
+            targetPoint={targetPoint}
+            sourcePosition={renderSourcePosition}
+            targetPosition={renderTargetPosition}
+            isDiagramModifiable={isDiagramModifiable}
+            canEditEndpoint={canEditEndpoint}
+            onEndpointPointerDown={handleEndpointPointerDown}
+            straight
+          />
         </g>
 
         <EdgeMiddleLabels

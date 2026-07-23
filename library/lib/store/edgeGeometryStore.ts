@@ -28,6 +28,9 @@ export type EdgeGeometryStore = {
    * Exact consumers can await the accepted generation instead of relying on an
    * arbitrary animation delay. */
   isSolving: boolean
+  /** Monotonic count of accepted exact solves, including content-identical
+   * generations. Consumers use it as a barrier, never as persisted state. */
+  acceptedGeneration: number
   /**
    * Replace the WHOLE map in one write — the central edge solver's single-pass
    * output. Reuses each edge's previous `IPoint[]` reference when its content is
@@ -45,7 +48,7 @@ export type EdgeGeometryStore = {
   setPreviewGeometry: (routeById: Record<string, IPoint[]>) => void
   clearPreviewGeometry: () => void
   setSolving: (solving: boolean) => void
-  waitForSettled: () => Promise<void>
+  waitForSettled: (afterGeneration?: number) => Promise<void>
 }
 
 const samePoints = (a: IPoint[], b: IPoint[]): boolean =>
@@ -78,117 +81,142 @@ const sameNodeGeometry = (
 export const createEdgeGeometryStore = (): UseBoundStore<
   StoreApi<EdgeGeometryStore>
 > => {
-  const settledWaiters = new Set<() => void>()
+  const settledWaiters = new Set<{
+    afterGeneration: number | undefined
+    resolve: () => void
+  }>()
   return create<EdgeGeometryStore>()(
     devtools(
-      subscribeWithSelector((set, get) => ({
-        geometryById: {},
-        previewById: {},
-        settledNodeGeometry: new Map(),
-        isSolving: false,
-
-        setAllGeometry: (routeById, nodeGeometry, settlementPreview) => {
+      subscribeWithSelector((set, get) => {
+        const resolveReadyWaiters = () => {
           const state = get()
-          const previous = state.geometryById
-          const prevIds = Object.keys(previous)
-          const nextIds = Object.keys(routeById)
-          let geometryChanged = prevIds.length !== nextIds.length
-          const next: Record<string, IPoint[]> = {}
-          for (const id of nextIds) {
-            const prior = previous[id]
-            const preview = state.previewById[id]
-            if (prior && samePoints(prior, routeById[id])) {
-              next[id] = prior // reuse reference so unchanged edges don't re-render
-            } else if (preview && samePoints(preview, routeById[id])) {
-              // If the exact solve proves the display projection was already
-              // right, promote that array while atomically clearing preview so
-              // the rendered selector remains reference-equal.
-              next[id] = preview
-              geometryChanged = true
-            } else {
-              next[id] = routeById[id]
-              geometryChanged = true
-            }
-          }
-          const nextPreview: Record<string, IPoint[]> = {}
-          for (const [id, candidate] of Object.entries(
-            settlementPreview ?? {}
-          )) {
-            if (!routeById[id]) continue
-            const prior = state.previewById[id]
-            nextPreview[id] =
-              prior && samePoints(prior, candidate) ? prior : candidate
-          }
-          const previousPreviewIds = Object.keys(state.previewById)
-          const nextPreviewIds = Object.keys(nextPreview)
-          const previewChanged =
-            previousPreviewIds.length !== nextPreviewIds.length ||
-            nextPreviewIds.some(
-              (id) => state.previewById[id] !== nextPreview[id]
+          if (state.isSolving) return
+          for (const waiter of settledWaiters) {
+            if (
+              waiter.afterGeneration !== undefined &&
+              state.acceptedGeneration <= waiter.afterGeneration
             )
-          const nodeGeometryChanged =
-            nodeGeometry !== undefined &&
-            !sameNodeGeometry(state.settledNodeGeometry, nodeGeometry)
-          if (!geometryChanged && !previewChanged && !nodeGeometryChanged)
-            return
-          // Replace the display projection in the same write so no render can
-          // observe an old preview under a newly accepted exact generation.
-          set(
-            {
-              geometryById: geometryChanged ? next : previous,
-              previewById: previewChanged ? nextPreview : state.previewById,
-              settledNodeGeometry: nodeGeometryChanged
-                ? nodeGeometry
-                : state.settledNodeGeometry,
-            },
-            undefined,
-            "setAllGeometry"
-          )
-        },
+              continue
+            settledWaiters.delete(waiter)
+            waiter.resolve()
+          }
+        }
 
-        setPreviewGeometry: (routeById) => {
-          const state = get()
-          const previous = state.previewById
-          const nextIds = Object.keys(routeById)
-          const previousIds = Object.keys(previous)
-          let changed = nextIds.length !== previousIds.length
-          const next: Record<string, IPoint[]> = {}
-          for (const id of nextIds) {
-            const candidate = routeById[id]
-            const exact = state.geometryById[id]
-            const prior = previous[id]
-            if (exact && samePoints(exact, candidate)) {
-              next[id] = exact
-            } else if (prior && samePoints(prior, candidate)) {
-              next[id] = prior
-            } else {
-              next[id] = candidate
+        return {
+          geometryById: {},
+          previewById: {},
+          settledNodeGeometry: new Map(),
+          isSolving: false,
+          acceptedGeneration: 0,
+
+          setAllGeometry: (routeById, nodeGeometry, settlementPreview) => {
+            const state = get()
+            const previous = state.geometryById
+            const prevIds = Object.keys(previous)
+            const nextIds = Object.keys(routeById)
+            let geometryChanged = prevIds.length !== nextIds.length
+            const next: Record<string, IPoint[]> = {}
+            for (const id of nextIds) {
+              const prior = previous[id]
+              const preview = state.previewById[id]
+              if (prior && samePoints(prior, routeById[id])) {
+                next[id] = prior // reuse reference so unchanged edges don't re-render
+              } else if (preview && samePoints(preview, routeById[id])) {
+                // If the exact solve proves the display projection was already
+                // right, promote that array while atomically clearing preview so
+                // the rendered selector remains reference-equal.
+                next[id] = preview
+                geometryChanged = true
+              } else {
+                next[id] = routeById[id]
+                geometryChanged = true
+              }
             }
-            if (next[id] !== prior) changed = true
-          }
-          if (!changed) return
-          set({ previewById: next }, undefined, "setPreviewGeometry")
-        },
+            const nextPreview: Record<string, IPoint[]> = {}
+            for (const [id, candidate] of Object.entries(
+              settlementPreview ?? {}
+            )) {
+              if (!routeById[id]) continue
+              const prior = state.previewById[id]
+              nextPreview[id] =
+                prior && samePoints(prior, candidate) ? prior : candidate
+            }
+            const previousPreviewIds = Object.keys(state.previewById)
+            const nextPreviewIds = Object.keys(nextPreview)
+            const previewChanged =
+              previousPreviewIds.length !== nextPreviewIds.length ||
+              nextPreviewIds.some(
+                (id) => state.previewById[id] !== nextPreview[id]
+              )
+            const nodeGeometryChanged =
+              nodeGeometry !== undefined &&
+              !sameNodeGeometry(state.settledNodeGeometry, nodeGeometry)
+            // Replace the display projection in the same write so no render can
+            // observe an old preview under a newly accepted exact generation.
+            set(
+              {
+                geometryById: geometryChanged ? next : previous,
+                previewById: previewChanged ? nextPreview : state.previewById,
+                settledNodeGeometry: nodeGeometryChanged
+                  ? nodeGeometry
+                  : state.settledNodeGeometry,
+                acceptedGeneration: state.acceptedGeneration + 1,
+              },
+              undefined,
+              "setAllGeometry"
+            )
+            resolveReadyWaiters()
+          },
 
-        clearPreviewGeometry: () => {
-          if (Object.keys(get().previewById).length === 0) return
-          set({ previewById: {} }, undefined, "clearPreviewGeometry")
-        },
+          setPreviewGeometry: (routeById) => {
+            const state = get()
+            const previous = state.previewById
+            const nextIds = Object.keys(routeById)
+            const previousIds = Object.keys(previous)
+            let changed = nextIds.length !== previousIds.length
+            const next: Record<string, IPoint[]> = {}
+            for (const id of nextIds) {
+              const candidate = routeById[id]
+              const exact = state.geometryById[id]
+              const prior = previous[id]
+              if (exact && samePoints(exact, candidate)) {
+                next[id] = exact
+              } else if (prior && samePoints(prior, candidate)) {
+                next[id] = prior
+              } else {
+                next[id] = candidate
+              }
+              if (next[id] !== prior) changed = true
+            }
+            if (!changed) return
+            set({ previewById: next }, undefined, "setPreviewGeometry")
+          },
 
-        setSolving: (solving) => {
-          if (get().isSolving === solving) return
-          set({ isSolving: solving }, undefined, "setSolving")
-          if (!solving) {
-            for (const resolve of settledWaiters) resolve()
-            settledWaiters.clear()
-          }
-        },
+          clearPreviewGeometry: () => {
+            if (Object.keys(get().previewById).length === 0) return
+            set({ previewById: {} }, undefined, "clearPreviewGeometry")
+          },
 
-        waitForSettled: () =>
-          get().isSolving
-            ? new Promise<void>((resolve) => settledWaiters.add(resolve))
-            : Promise.resolve(),
-      })),
+          setSolving: (solving) => {
+            if (get().isSolving === solving) return
+            set({ isSolving: solving }, undefined, "setSolving")
+            if (!solving) resolveReadyWaiters()
+          },
+
+          waitForSettled: (afterGeneration) => {
+            const state = get()
+            if (
+              !state.isSolving &&
+              (afterGeneration === undefined ||
+                state.acceptedGeneration > afterGeneration)
+            )
+              return Promise.resolve()
+            return new Promise<void>((resolve) =>
+              settledWaiters.add({ afterGeneration, resolve })
+            )
+          },
+        }
+      }),
       { name: "EdgeGeometryStore" }
     )
   )

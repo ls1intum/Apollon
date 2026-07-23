@@ -8,6 +8,7 @@ import {
   getEdgeObstacles,
   getContainerBorderPolylines,
 } from "@/utils/geometry/obstacles"
+import { selectRouteEntriesIntersectingRect } from "@/utils/geometry/edgeGeometrySubscriptions"
 import { useStableValue } from "./useStableValue"
 
 /** Content equality for obstacle rects: same set, same geometry, same softness. */
@@ -47,8 +48,8 @@ const polylinesEqual = (a: IPoint[][], b: IPoint[][]): boolean => {
 /**
  * Everything the router needs to know about the world around one edge: what it
  * must not run through, and what it must not be drawn on top of. Committed edges
- * are routed by the central solver; this hook serves the live reconnect preview
- * (ReconnectConnectionLine) the SAME obstacles and neighbour polylines (read from
+ * are routed by the central solver; this hook serves the live connection preview
+ * the same obstacles and neighbour polylines (read from
  * the solver-populated geometry registry) so the drag matches the route on release.
  *
  * `selfId` is the edge being routed, or `undefined` for a connection that does not
@@ -146,17 +147,23 @@ export const useEdgeRoutingContext = ({
     const minY = Math.min(sy, ty) - pad
     const maxY = Math.max(sy, ty) + pad
 
+    const candidates = selectRouteEntriesIntersectingRect(
+      geometryById,
+      {
+        x: minX,
+        y: minY,
+        width: maxX - minX,
+        height: maxY - minY,
+      },
+      selfId
+    )
     const neighbors: IPoint[][] = []
-    for (const [otherId, polyline] of Object.entries(geometryById)) {
-      if (otherId === selfId || polyline.length < 2) continue
+    for (let index = 0; index < candidates.length; index += 2) {
+      const otherId = candidates[index] as string
+      const polyline = candidates[index + 1] as IPoint[]
       if (selfId !== undefined && otherId >= selfId) continue
-      // A true sibling — one leaving the very same connection point — may share
-      // a bus with us; it could not avoid us if it tried.
       if (isSibling(otherId)) continue
-      const inRange = polyline.some(
-        (p) => p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY
-      )
-      if (inRange) neighbors.push(polyline)
+      neighbors.push(polyline)
     }
 
     neighbors.push(...borders)

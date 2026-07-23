@@ -198,7 +198,7 @@ export function UseCase({
           // snap circle at the 4 cardinal handles. Every drop instead routes
           // through the freeform path, which attaches continuously along the
           // curve and draws its own snap circle at the live attach point (see
-          // ReconnectConnectionLine), so the preview matches the landing at any
+          // ConnectionPreviewLine), so the preview matches the landing at any
           // angle.
           isConnectableEnd={false}
         />

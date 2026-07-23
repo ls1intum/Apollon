@@ -52,9 +52,6 @@ export type MetadataStore = {
   connectionGuidanceActive: boolean
   connectionGuidanceSourceNodeId: string | null
   connectionGuidanceSourceHandleId: string | null
-  reconnectPreviewEdgeId: string | null
-  reconnectPreviewHandleType: "source" | "target" | null
-  reconnectPreviewBasePoints: IPoint[]
   liveEdgeOverride: LiveEdgeOverride | null
   /** A NEW connection being drawn onto a node, published as a transient edge so
    * the central solver routes every OTHER edge as if it already existed — the
@@ -84,12 +81,6 @@ export type MetadataStore = {
     sourceHandleId: string | null
   ) => void
   stopConnectionGuidance: () => void
-  startReconnectPreview: (
-    edgeId: string,
-    handleType: "source" | "target",
-    basePoints: IPoint[]
-  ) => void
-  stopReconnectPreview: () => void
   setLiveEdgeOverride: (override: LiveEdgeOverride | null) => void
   updateDiagramTitle: (diagramTitle: string) => void
   updateDiagramType: (diagramType: UMLDiagramType) => void
@@ -116,9 +107,6 @@ type InitialMetadataState = {
   connectionGuidanceActive: boolean
   connectionGuidanceSourceNodeId: string | null
   connectionGuidanceSourceHandleId: string | null
-  reconnectPreviewEdgeId: string | null
-  reconnectPreviewHandleType: "source" | "target" | null
-  reconnectPreviewBasePoints: IPoint[]
   liveEdgeOverride: LiveEdgeOverride | null
   pendingConnectionEdge: Edge | null
   pendingConnectionId: string | null
@@ -142,9 +130,6 @@ const initialMetadataState: InitialMetadataState = {
   connectionGuidanceActive: false,
   connectionGuidanceSourceNodeId: null,
   connectionGuidanceSourceHandleId: null,
-  reconnectPreviewEdgeId: null,
-  reconnectPreviewHandleType: null,
-  reconnectPreviewBasePoints: [],
   liveEdgeOverride: null,
   pendingConnectionEdge: null,
   pendingConnectionId: null,
@@ -301,32 +286,6 @@ export const createMetadataStore = (
             },
             undefined,
             "stopConnectionGuidance"
-          )
-        },
-
-        startReconnectPreview: (edgeId, handleType, basePoints) => {
-          set(
-            {
-              reconnectPreviewEdgeId: edgeId,
-              reconnectPreviewHandleType: handleType,
-              reconnectPreviewBasePoints: basePoints.map((point) => ({
-                ...point,
-              })),
-            },
-            undefined,
-            "startReconnectPreview"
-          )
-        },
-
-        stopReconnectPreview: () => {
-          set(
-            {
-              reconnectPreviewEdgeId: null,
-              reconnectPreviewHandleType: null,
-              reconnectPreviewBasePoints: [],
-            },
-            undefined,
-            "stopReconnectPreview"
           )
         },
 

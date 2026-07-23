@@ -10,7 +10,7 @@ import {
   type Node,
 } from "@xyflow/react"
 import {
-  EDGE_GEOMETRY_WORKER_PREVIEW_EDGE_THRESHOLD,
+  EDGE_GEOMETRY_WORKER_EDGE_THRESHOLD,
   EdgeGeometryWorkerController,
   shouldSampleEdgeGeometryWorker,
   shouldUseEdgeGeometryWorker,
@@ -226,19 +226,19 @@ describe("EdgeGeometryWorkerController", () => {
   it("defers only large actively changing scenes", () => {
     expect(
       shouldSampleEdgeGeometryWorker({
-        edgeCount: EDGE_GEOMETRY_WORKER_PREVIEW_EDGE_THRESHOLD - 1,
+        edgeCount: EDGE_GEOMETRY_WORKER_EDGE_THRESHOLD - 1,
         interacting: true,
       })
     ).toBe(false)
     expect(
       shouldSampleEdgeGeometryWorker({
-        edgeCount: EDGE_GEOMETRY_WORKER_PREVIEW_EDGE_THRESHOLD,
+        edgeCount: EDGE_GEOMETRY_WORKER_EDGE_THRESHOLD,
         interacting: false,
       })
     ).toBe(false)
     expect(
       shouldSampleEdgeGeometryWorker({
-        edgeCount: EDGE_GEOMETRY_WORKER_PREVIEW_EDGE_THRESHOLD,
+        edgeCount: EDGE_GEOMETRY_WORKER_EDGE_THRESHOLD,
         interacting: true,
       })
     ).toBe(true)

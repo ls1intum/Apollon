@@ -24,6 +24,26 @@ export type Rect = {
 }
 export type Pt = { x: number; y: number }
 
+export function collapseCollinearVertices(points: readonly Pt[]): Pt[] {
+  const collapsed: Pt[] = []
+  for (const point of points) {
+    const previous = collapsed[collapsed.length - 1]
+    if (previous?.x === point.x && previous.y === point.y) continue
+    while (collapsed.length >= 2) {
+      const before = collapsed[collapsed.length - 2]
+      const current = collapsed[collapsed.length - 1]
+      if (
+        (before.x === current.x && current.x === point.x) ||
+        (before.y === current.y && current.y === point.y)
+      )
+        collapsed.pop()
+      else break
+    }
+    collapsed.push(point)
+  }
+  return collapsed
+}
+
 /** Every node's rectangle in flow coordinates, keyed by data-id. */
 export async function readNodeRects(page: Page): Promise<Rect[]> {
   return page.evaluate(() => {
@@ -78,7 +98,7 @@ export async function readEdgePathVertices(
   page: Page,
   edgeId: string
 ): Promise<Pt[]> {
-  return page.evaluate((id) => {
+  const vertices = await page.evaluate((id) => {
     const path = document.querySelector<SVGPathElement>(
       `.react-flow__edge[data-id="${id}"] .react-flow__edge-path`
     )
@@ -90,6 +110,7 @@ export async function readEdgePathVertices(
       vertices.push({ x: Number(match[1]), y: Number(match[2]) })
     return vertices
   }, edgeId)
+  return collapseCollinearVertices(vertices)
 }
 
 /** How far a point sits *inside* a rectangle (0 when on or outside the border). */

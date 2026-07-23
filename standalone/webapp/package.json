@@ -54,7 +54,6 @@
     "@tumaet/apollon": "workspace:*",
     "@tumaet/ui": "workspace:*",
     "@xyflow/react": "catalog:",
-    "@xyflow/system": "catalog:",
     "clsx": "catalog:",
     "idb": "8.0.3",
     "jspdf": "catalog:",

@@ -3,9 +3,8 @@ import {
   ReactFlowInstance,
   ConnectionMode,
   ReactFlow,
-  type Edge,
 } from "@xyflow/react"
-import { type MouseEvent as ReactMouseEvent, useCallback } from "react"
+import { useCallback } from "react"
 import {
   CustomBackground,
   AssessmentSelectionDebug,
@@ -17,7 +16,7 @@ import {
 // imported by `constants.ts`, so routing it through the barrel forms a
 // `constants → components → solver → edgeAnchoring` import cycle that leaves module
 // constants undefined at init. The direct path keeps the solver out of the barrel.
-import { ReconnectConnectionLine } from "@/components/ReconnectConnectionLine"
+import { ConnectionPreviewLine } from "@/components/ConnectionPreviewLine"
 import { OverlayLayer } from "@/overlay/OverlayLayer"
 import "@xyflow/react/dist/style.css"
 // Shared, embed-safe @tumaet/ui primitives + --apollon-/--home- design tokens
@@ -41,7 +40,6 @@ import { diagramEdgeTypes } from "./edges"
 import {
   useNodeDragStop,
   useConnect,
-  useReconnect,
   useElementInteractions,
   useDragOver,
   useNodeDrag,
@@ -55,11 +53,7 @@ import {
   useRemoteDraggingNodes,
   applyDraggingOverlay,
 } from "./hooks/useRemoteDraggingNodes"
-import {
-  getConnectionLineType,
-  resolveReconnectPreviewBasePoints,
-} from "./utils/edgeUtils"
-import { IPoint } from "./edges/Connection"
+import { getConnectionLineType } from "./utils/edgeUtils"
 import {
   CollaborationLayer,
   type CollaborationAwarenessApi,
@@ -77,18 +71,6 @@ interface AppProps {
   onlyRenderVisibleElements?: boolean
 }
 const proOptions = { hideAttribution: true }
-const isPointArray = (value: unknown): value is IPoint[] =>
-  Array.isArray(value) &&
-  value.every(
-    (point) =>
-      typeof point === "object" &&
-      point !== null &&
-      "x" in point &&
-      "y" in point &&
-      typeof point.x === "number" &&
-      typeof point.y === "number"
-  )
-
 function App({
   onReactFlowInit,
   collaboration,
@@ -116,8 +98,6 @@ function App({
     scrollEnabled,
     keyboardShortcuts,
     connectionGuidanceActive,
-    startReconnectPreview,
-    stopReconnectPreview,
   } = useMetadataStore(
     useShallow((state) => ({
       diagramType: state.diagramType,
@@ -126,8 +106,6 @@ function App({
       scrollEnabled: state.scrollEnabled,
       keyboardShortcuts: state.keyboardShortcuts,
       connectionGuidanceActive: state.connectionGuidanceActive,
-      startReconnectPreview: state.startReconnectPreview,
-      stopReconnectPreview: state.stopReconnectPreview,
     }))
   )
 
@@ -157,7 +135,6 @@ function App({
   const onDragOver = useDragOver()
   const { onConnect, onConnectEnd, onConnectStart, onEdgesDelete } =
     useConnect()
-  const onReconnect = useReconnect()
   const { onBeforeDelete, onNodeDoubleClick, onEdgeDoubleClick } =
     useElementInteractions()
   const { onPaneClicked } = usePaneClicked()
@@ -169,25 +146,6 @@ function App({
     },
     [onReactFlowInit]
   )
-
-  const handleReconnectStart = useCallback(
-    (_event: ReactMouseEvent, edge: Edge, handleType: "source" | "target") => {
-      const storedPoints = isPointArray(edge.data?.points)
-        ? edge.data.points
-        : undefined
-
-      startReconnectPreview(
-        edge.id,
-        handleType,
-        resolveReconnectPreviewBasePoints(storedPoints, undefined, [])
-      )
-    },
-    [startReconnectPreview]
-  )
-
-  const handleReconnectEnd = useCallback(() => {
-    stopReconnectPreview()
-  }, [stopReconnectPreview])
 
   return (
     <TooltipProvider>
@@ -235,11 +193,8 @@ function App({
             zoomOnDoubleClick={false}
             onNodeDrag={onNodeDrag}
             onNodeDragStop={onNodeDragStop}
-            onReconnect={onReconnect}
-            onReconnectStart={handleReconnectStart}
-            onReconnectEnd={handleReconnectEnd}
             connectionLineType={connectionLineType}
-            connectionLineComponent={ReconnectConnectionLine}
+            connectionLineComponent={ConnectionPreviewLine}
             connectionMode={ConnectionMode.Loose}
             // Lift the selected edge (and its bend/endpoint handles) above other
             // edges so an overlapping edge's interaction ribbon can't steal the
@@ -263,7 +218,7 @@ function App({
             onBeforeDelete={onBeforeDelete}
             onPaneClick={onPaneClicked}
             proOptions={proOptions}
-            edgesReconnectable={isDiagramModifiable}
+            edgesReconnectable={false}
             nodesConnectable={isDiagramModifiable}
             nodesDraggable={isDiagramModifiable}
             panOnScroll={!scrollLock || scrollEnabled}

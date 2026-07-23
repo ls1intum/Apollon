@@ -1553,21 +1553,6 @@ export function removeDuplicatePoints(points: IPoint[]): IPoint[] {
   return filtered
 }
 
-export function resolveReconnectPreviewBasePoints(
-  storedPoints: IPoint[] | undefined,
-  localPoints: IPoint[] | undefined,
-  fallbackPoints: IPoint[]
-): IPoint[] {
-  const previewBasePoints =
-    storedPoints && storedPoints.length > 0
-      ? storedPoints
-      : localPoints && localPoints.length > 0
-        ? localPoints
-        : fallbackPoints
-
-  return previewBasePoints.map((point) => ({ ...point }))
-}
-
 type SegmentAxis = "horizontal" | "vertical"
 
 const getSegmentAxisForPosition = (position: Position): SegmentAxis => {

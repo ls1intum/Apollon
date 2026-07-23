@@ -95,8 +95,15 @@ export async function dragNodeBy(
   page: Page,
   dx: number,
   dy: number,
-  steps = 12,
-  measureFrames = false
+  {
+    steps = 12,
+    measureFrames = false,
+    waitForRouting = true,
+  }: {
+    steps?: number
+    measureFrames?: boolean
+    waitForRouting?: boolean
+  } = {}
 ): Promise<number[]> {
   const box = await node.boundingBox()
   if (!box) throw new Error("node has no bounding box")
@@ -164,13 +171,12 @@ export async function dragNodeBy(
       })
     : []
   await page.mouse.up()
-  // Large exact solves are versioned and may finish in a Worker. Await the
-  // accepted latest generation instead of guessing with a fixed delay; this also
-  // makes the counters below include the Worker's merged operation deltas.
-  await page.waitForFunction(() => {
-    const snapshot = (window as PerfWindow).__apollonPerf?.()
-    return snapshot !== undefined && snapshot.routingSolving === 0
-  })
+  if (waitForRouting) {
+    await page.waitForFunction(() => {
+      const snapshot = (window as PerfWindow).__apollonPerf?.()
+      return snapshot !== undefined && snapshot.routingSolving === 0
+    })
+  }
   await page.evaluate(
     () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
   )

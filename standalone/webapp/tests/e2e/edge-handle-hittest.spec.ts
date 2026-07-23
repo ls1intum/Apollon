@@ -4,15 +4,6 @@ import * as path from "node:path"
 import { fileURLToPath } from "node:url"
 import { waitForCanvasReady, openFixtureInLocalEditor } from "../helpers/canvas"
 
-/**
- * Guards against the "visible but undraggable bend handle" bug. A selected
- * edge's handle could be covered by (a) another edge's interaction/overlay
- * ribbon, or (b) the edge's own toolbar box — stealing the pointer (the
- * reported "finger" cursor). The fixes: elevate the selected edge above other
- * edges, and make the toolbar body pointer-transparent (only its buttons take
- * the pointer).
- */
-
 const __d = path.dirname(fileURLToPath(import.meta.url))
 const classDiagram = JSON.parse(
   fs.readFileSync(
@@ -21,9 +12,6 @@ const classDiagram = JSON.parse(
   )
 ) as Record<string, unknown>
 
-/** Select an edge by clicking a point ON its path (25% along its length, away
- * from the centre bend handle) so React Flow actually selects it. Clicking an
- * L-shaped edge's bounding-box centre misses the stroke. */
 async function selectEdgeById(page: Page, id: string): Promise<void> {
   const pt = await page.evaluate((edgeId) => {
     const g = document.querySelector(`.react-flow__edge[data-id="${edgeId}"]`)
@@ -38,10 +26,11 @@ async function selectEdgeById(page: Page, id: string): Promise<void> {
   }, id)
   if (!pt) throw new Error(`edge ${id} path not found`)
   await page.mouse.click(pt.x, pt.y)
-  await page.waitForTimeout(150)
+  await expect(page.locator(`.react-flow__edge[data-id="${id}"]`)).toHaveClass(
+    /selected/
+  )
 }
 
-/** zIndex of the <svg> wrapping a given edge's `.react-flow__edge` group. */
 async function edgeZIndex(page: Page, id: string): Promise<number> {
   return page.evaluate((edgeId) => {
     const g = document.querySelector(`.react-flow__edge[data-id="${edgeId}"]`)
@@ -77,19 +66,27 @@ test("the edge toolbar body does not capture pointer events (only its buttons do
 
   await selectEdgeById(page, "edge-bidirectional-dog-imovable")
 
-  const pe = await page.evaluate((edgeId) => {
-    const g = document.querySelector(`.react-flow__edge[data-id="${edgeId}"]`)
-    const fo = g?.querySelector("foreignObject")
-    const body = fo?.querySelector(":scope > div") as HTMLElement | null
-    if (!body) return null
-    const button = body.querySelector(":scope > *") as HTMLElement | null
-    return {
-      body: getComputedStyle(body).pointerEvents,
-      button: button ? getComputedStyle(button).pointerEvents : null,
-    }
-  }, "edge-bidirectional-dog-imovable")
+  const pe = await page
+    .locator(
+      '.react-flow__edge-toolbar[data-id="edge-bidirectional-dog-imovable"]'
+    )
+    .evaluate((root) => {
+      const body = root.querySelector(
+        ".apollon-edge-toolbar"
+      ) as HTMLElement | null
+      const button = body?.querySelector("button") as HTMLElement | null
+      if (!body || !button) return null
+      return {
+        root: getComputedStyle(root).pointerEvents,
+        body: getComputedStyle(body).pointerEvents,
+        button: getComputedStyle(button).pointerEvents,
+      }
+    })
 
   expect(pe, "toolbar should be rendered for the selected edge").not.toBeNull()
+  expect(pe!.root, "React Flow's toolbar portal must be transparent").toBe(
+    "none"
+  )
   expect(pe!.body, "toolbar body must not steal the pointer").toBe("none")
   expect(pe!.button, "toolbar buttons must stay clickable").toBe("auto")
 })

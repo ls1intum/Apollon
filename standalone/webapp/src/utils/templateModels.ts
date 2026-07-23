@@ -1,14 +1,4 @@
-import type { UMLModel } from "@tumaet/apollon"
-
-type RuntimeNodeState = {
-  selected?: boolean
-  dragging?: boolean
-  resizing?: boolean
-}
-
-type RuntimeEdgeState = {
-  selected?: boolean
-}
+import { importDiagram, type UMLModel } from "@tumaet/apollon/model"
 
 export type TemplateRoutingState = "automatic" | "pinned" | "authored"
 
@@ -33,21 +23,7 @@ export const getTemplateEdgeRoutingState = (
   return "automatic"
 }
 
-/**
- * Turn a bundled template asset into a clean model instance.
- *
- * The source JSON was originally captured from a live React Flow session and
- * still contains transient selection/drag/resize flags. Those flags describe
- * the editor that saved the asset, not the preset a user is creating. Strip
- * them while preserving deliberate routing authority:
- *
- * - no anchors + no points: the holistic router owns the edge;
- * - sourceAnchor/targetAnchor: the chosen endpoint seats stay pinned;
- * - non-empty points: the authored bend topology stays authoritative.
- *
- * Missing legacy edge data is normalized to an empty automatic point list so a
- * newly created preset satisfies the current UMLModel contract immediately.
- */
+/** Clone and normalize a bundled asset through the public import boundary. */
 export const prepareTemplateModel = (
   source: UMLModel,
   overrides: Partial<Pick<UMLModel, "id" | "title">> = {}
@@ -56,33 +32,10 @@ export const prepareTemplateModel = (
     typeof structuredClone === "function"
       ? structuredClone(source)
       : (JSON.parse(JSON.stringify(source)) as UMLModel)
+  const model = importDiagram(clone)
 
   return {
-    ...clone,
+    ...model,
     ...overrides,
-    nodes: clone.nodes.map((node) => {
-      const persistentNode = {
-        ...node,
-      } as UMLModel["nodes"][number] & RuntimeNodeState
-      delete persistentNode.selected
-      delete persistentNode.dragging
-      delete persistentNode.resizing
-      return persistentNode
-    }),
-    edges: clone.edges.map((edge) => {
-      const persistentEdge = {
-        ...edge,
-      } as UMLModel["edges"][number] & RuntimeEdgeState
-      delete persistentEdge.selected
-      return {
-        ...persistentEdge,
-        data: {
-          ...(persistentEdge.data ?? {}),
-          points: Array.isArray(persistentEdge.data?.points)
-            ? persistentEdge.data.points
-            : [],
-        },
-      }
-    }),
   }
 }
