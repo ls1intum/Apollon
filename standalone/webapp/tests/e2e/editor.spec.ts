@@ -759,34 +759,15 @@ test.describe("Mobile responsive layout", () => {
     // stop above the zoom/controls toolbar, not grow into it.
     await page.setViewportSize({ width: 844, height: 390 })
     const modelId = "e2e-bpmn-overlap"
-    await page.goto("/")
-    await page.evaluate((id) => {
-      localStorage.setItem(
-        "persistenceModelStore",
-        JSON.stringify({
-          state: {
-            models: {
-              [id]: {
-                id,
-                model: {
-                  id,
-                  type: "BPMN",
-                  assessments: {},
-                  edges: [],
-                  nodes: [],
-                  title: "BPMN",
-                  version: "4.0.0",
-                },
-                lastModifiedAt: new Date().toISOString(),
-              },
-            },
-            currentModelId: id,
-          },
-          version: 0,
-        })
-      )
-    }, modelId)
-    await page.goto(`/local/${modelId}`)
+    await openFixtureInLocalEditor(page, {
+      id: modelId,
+      type: "BPMN",
+      assessments: {},
+      edges: [],
+      nodes: [],
+      title: "BPMN",
+      version: "4.0.0",
+    })
     await waitForCanvasReady(page, false)
 
     // The palette height is ResizeObserver-driven, so poll the relation rather
@@ -820,34 +801,15 @@ test.describe("Element palette", () => {
     }) => {
       await page.setViewportSize({ width: w, height: h })
       const modelId = `e2e-bpmn-palette-${w}x${h}`
-      await page.goto("/")
-      await page.evaluate((id) => {
-        localStorage.setItem(
-          "persistenceModelStore",
-          JSON.stringify({
-            state: {
-              models: {
-                [id]: {
-                  id,
-                  model: {
-                    id,
-                    type: "BPMN",
-                    assessments: {},
-                    edges: [],
-                    nodes: [],
-                    title: "BPMN",
-                    version: "4.0.0",
-                  },
-                  lastModifiedAt: new Date().toISOString(),
-                },
-              },
-              currentModelId: id,
-            },
-            version: 0,
-          })
-        )
-      }, modelId)
-      await page.goto(`/local/${modelId}`)
+      await openFixtureInLocalEditor(page, {
+        id: modelId,
+        type: "BPMN",
+        assessments: {},
+        edges: [],
+        nodes: [],
+        title: "BPMN",
+        version: "4.0.0",
+      })
       await waitForCanvasReady(page, false)
 
       const palette = page.getByTestId("apollon-palette")

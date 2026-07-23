@@ -2,6 +2,7 @@ import { Position, type Rect } from "@xyflow/system"
 import { CANVAS, EDGES } from "@/utils/geometry/routingConstants"
 import type { IPoint } from "@/edges/Connection"
 import { getConnectionMode, getEdgeAnchorPoint } from "@/utils/connectionModes"
+import { getNodeConnectionRect } from "@/utils/geometry/nodeGeometry"
 import { type FreeformEdgeAnchor } from "@/utils/edgeUtils"
 import { routeStepEdge } from "@/utils/geometry/edgeRoute"
 import { clamp, lexLess } from "@/utils/geometry/scalar"
@@ -119,6 +120,7 @@ const generateCandidates = (
   toward: IPoint
 ): AnchorChoice[] => {
   const mode = getConnectionMode(nodeType)
+  const connectionRect = getNodeConnectionRect(nodeType, rect)
   const fourCenter = mode === "four-center"
   const seen = new Set<string>()
   const choices: AnchorChoice[] = []
@@ -128,7 +130,7 @@ const generateCandidates = (
     seen.add(key)
     choices.push(toAnchorChoice(nodeType, rect, { side, ratio }))
   }
-  for (const side of candidateSides(rect, toward)) {
+  for (const side of candidateSides(connectionRect, toward)) {
     if (fourCenter) {
       pushRatio(side, 0.5)
       continue
@@ -137,10 +139,13 @@ const generateCandidates = (
     // up — a straight or single clean run) and one CENTRED (best when the partner
     // is displaced, where aiming clamps the anchor into a corner). The cost picks
     // between them; dedup drops the centred one when aiming already centres.
-    pushRatio(side, alignedRatio(side, rect, toward))
+    pushRatio(side, alignedRatio(side, connectionRect, toward))
     pushRatio(
       side,
-      ratioAt(sideAxisLength(side, rect) / 2, sideAxisLength(side, rect))
+      ratioAt(
+        sideAxisLength(side, connectionRect) / 2,
+        sideAxisLength(side, connectionRect)
+      )
     )
   }
   return choices
@@ -157,24 +162,31 @@ const straightAlignedPair = (
     getConnectionMode(targetType) === "four-center"
   )
     return null
-  const sSide = facingSide(sourceRect, centerOf(targetRect))
-  const tSide = facingSide(targetRect, centerOf(sourceRect))
+  const sourceConnectionRect = getNodeConnectionRect(sourceType, sourceRect)
+  const targetConnectionRect = getNodeConnectionRect(targetType, targetRect)
+  const sSide = facingSide(sourceConnectionRect, centerOf(targetConnectionRect))
+  const tSide = facingSide(targetConnectionRect, centerOf(sourceConnectionRect))
   // The two anchors can share one line only if their sides directly oppose on the
   // same axis (Right↔Left or Bottom↔Top).
   if (OPPOSITE_SIDE[sSide] !== tSide) return null
 
   const vertical = isVerticalSide(sSide) // left/right sides ⇒ a straight run shares Y
-  const sLo = vertical ? sourceRect.y : sourceRect.x
+  const sLo = vertical ? sourceConnectionRect.y : sourceConnectionRect.x
   const sHi = vertical
-    ? sourceRect.y + sourceRect.height
-    : sourceRect.x + sourceRect.width
-  const tLo = vertical ? targetRect.y : targetRect.x
+    ? sourceConnectionRect.y + sourceConnectionRect.height
+    : sourceConnectionRect.x + sourceConnectionRect.width
+  const tLo = vertical ? targetConnectionRect.y : targetConnectionRect.x
   const tHi = vertical
-    ? targetRect.y + targetRect.height
-    : targetRect.x + targetRect.width
-  const sAxis = vertical ? sourceRect.height : sourceRect.width
-  const tAxis = vertical ? targetRect.height : targetRect.width
-  if (!canRunStraight(vertical, sourceRect, targetRect)) return null
+    ? targetConnectionRect.y + targetConnectionRect.height
+    : targetConnectionRect.x + targetConnectionRect.width
+  const sAxis = vertical
+    ? sourceConnectionRect.height
+    : sourceConnectionRect.width
+  const tAxis = vertical
+    ? targetConnectionRect.height
+    : targetConnectionRect.width
+  if (!canRunStraight(vertical, sourceConnectionRect, targetConnectionRect))
+    return null
   const margin = cornerMargin(sAxis, tAxis)
   const lo = Math.max(sLo, tLo) + margin
   const hi = Math.min(sHi, tHi) - margin
@@ -209,11 +221,12 @@ const alignedToPinned = (
   pinnedSide: Position
 ): AnchorChoice | null => {
   if (getConnectionMode(freeType) === "four-center") return null
+  const connectionRect = getNodeConnectionRect(freeType, freeRect)
   const freeSide = OPPOSITE_SIDE[pinnedSide]
   const vertical = isVerticalSide(freeSide) // left/right ⇒ the straight run shares Y
-  const axisLen = sideAxisLength(freeSide, freeRect)
+  const axisLen = sideAxisLength(freeSide, connectionRect)
   if (axisLen <= 0) return null
-  const lo = vertical ? freeRect.y : freeRect.x
+  const lo = vertical ? connectionRect.y : connectionRect.x
   const coord = vertical ? pinnedPoint.y : pinnedPoint.x
   const margin = Math.min(2 * GRID, axisLen * 0.3)
   // Only when the pinned point projects onto the free side clear of its corners — else
@@ -603,6 +616,14 @@ export const selectEdgeAnchors = (
   input: AutoAnchorInput
 ): AutoAnchorResult | null => {
   const thirdParty = input.thirdPartyObstacles ?? NO_OBSTACLES
+  const sourceConnectionRect = getNodeConnectionRect(
+    input.sourceType,
+    input.sourceRect
+  )
+  const targetConnectionRect = getNodeConnectionRect(
+    input.targetType,
+    input.targetRect
+  )
 
   // A FOUR-CENTRE end can only sit on a side-midpoint, so two of its edges that pick
   // the same side collapse onto one point. The scorer breaks a cost-tie toward the
@@ -611,25 +632,25 @@ export const selectEdgeAnchors = (
   // (custom) end has a single fixed candidate, so its facing preference is moot.
   const sourceFacing =
     !input.sourceCustom && getConnectionMode(input.sourceType) === "four-center"
-      ? facingSide(input.sourceRect, centerOf(input.targetRect))
+      ? facingSide(sourceConnectionRect, centerOf(targetConnectionRect))
       : null
   const targetFacing =
     !input.targetCustom && getConnectionMode(input.targetType) === "four-center"
-      ? facingSide(input.targetRect, centerOf(input.sourceRect))
+      ? facingSide(targetConnectionRect, centerOf(sourceConnectionRect))
       : null
   const sourceOptions = input.sourceCustom
     ? [toAnchorChoice(input.sourceType, input.sourceRect, input.sourceCustom)]
     : generateCandidates(
         input.sourceType,
         input.sourceRect,
-        centerOf(input.targetRect)
+        centerOf(targetConnectionRect)
       )
   const targetOptions = input.targetCustom
     ? [toAnchorChoice(input.targetType, input.targetRect, input.targetCustom)]
     : generateCandidates(
         input.targetType,
         input.targetRect,
-        centerOf(input.sourceRect)
+        centerOf(sourceConnectionRect)
       )
 
   const addPreferred = (
@@ -860,18 +881,18 @@ export const selectEdgeAnchors = (
         ? 0
         : endpointPlacementCost(
             source.anchor,
-            sideAxisLength(source.anchor.side, input.sourceRect),
+            sideAxisLength(source.anchor.side, sourceConnectionRect),
             GRID
           ) +
           endpointPreferenceCost(
             source.anchor,
             input.sourcePreferred,
-            sideAxisLength(source.anchor.side, input.sourceRect),
+            sideAxisLength(source.anchor.side, sourceConnectionRect),
             GRID
           ),
       forceStubTurn:
         (Boolean(input.sourceCustom) &&
-          forceStubTurn(source.anchor, input.sourceRect)) ||
+          forceStubTurn(source.anchor, sourceConnectionRect)) ||
         (balancedPinnedStubLengths?.requiresTurn ?? false),
     }
   }
@@ -891,18 +912,18 @@ export const selectEdgeAnchors = (
         ? 0
         : endpointPlacementCost(
             target.anchor,
-            sideAxisLength(target.anchor.side, input.targetRect),
+            sideAxisLength(target.anchor.side, targetConnectionRect),
             GRID
           ) +
           endpointPreferenceCost(
             target.anchor,
             input.targetPreferred,
-            sideAxisLength(target.anchor.side, input.targetRect),
+            sideAxisLength(target.anchor.side, targetConnectionRect),
             GRID
           ),
       forceStubTurn:
         (Boolean(input.targetCustom) &&
-          forceStubTurn(target.anchor, input.targetRect)) ||
+          forceStubTurn(target.anchor, targetConnectionRect)) ||
         (balancedPinnedStubLengths?.requiresTurn ?? false),
     }
   }
@@ -983,8 +1004,8 @@ export const selectEdgeAnchors = (
         idealRoute,
         source,
         target,
-        input.sourceRect,
-        input.targetRect,
+        sourceConnectionRect,
+        targetConnectionRect,
         sourceFacing,
         targetFacing,
         thirdParty,

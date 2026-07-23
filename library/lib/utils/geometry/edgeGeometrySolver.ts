@@ -7,7 +7,10 @@ import {
 import { getEdgePosition, ConnectionMode, Position } from "@xyflow/system"
 import { CANVAS, EDGES } from "@/utils/geometry/routingConstants"
 import type { IPoint } from "@/edges/Connection"
-import { getRoutingPositionOnCanvas } from "@/utils/geometry/nodeGeometry"
+import {
+  getNodeConnectionRect,
+  getRoutingPositionOnCanvas,
+} from "@/utils/geometry/nodeGeometry"
 import {
   adjustSourceCoordinates,
   adjustTargetCoordinates,
@@ -918,10 +921,21 @@ function collectPortEnds(
   ): boolean =>
     !fixedPorts.has(endKey(edgeId, end)) && (endsByNode.get(nodeId) ?? 0) > 1
   const sideEdges: SideEdge[] = []
+  const bodyRectCache = new Map<string, Rect | null>()
+  const bodyRectOf = (nodeId: string): Rect | null => {
+    if (!bodyRectCache.has(nodeId))
+      bodyRectCache.set(nodeId, nodeRect(nodeId, nodes, nodeById))
+    return bodyRectCache.get(nodeId) ?? null
+  }
   const rectCache = new Map<string, Rect | null>()
   const rectOf = (nodeId: string): Rect | null => {
-    if (!rectCache.has(nodeId))
-      rectCache.set(nodeId, nodeRect(nodeId, nodes, nodeById))
+    if (!rectCache.has(nodeId)) {
+      const body = bodyRectOf(nodeId)
+      rectCache.set(
+        nodeId,
+        body ? getNodeConnectionRect(nodeById.get(nodeId)?.type, body) : null
+      )
+    }
     return rectCache.get(nodeId) ?? null
   }
   for (const edge of ordered) {
@@ -948,7 +962,7 @@ function collectPortEnds(
   // would be driven through a third node.
   const allRects = new Map<string, Rect>()
   for (const n of nodes) {
-    const r = rectOf(n.id)
+    const r = bodyRectOf(n.id)
     if (r) allRects.set(n.id, r)
   }
   const four = (nodeId: string) =>

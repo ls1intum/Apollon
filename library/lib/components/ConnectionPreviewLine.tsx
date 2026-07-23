@@ -83,6 +83,7 @@ export const ConnectionPreviewLine = ({
   toY,
   fromPosition,
   toPosition,
+  connectionStatus,
   toNode,
   toHandle,
 }: ConnectionLineComponentProps) => {
@@ -115,7 +116,11 @@ export const ConnectionPreviewLine = ({
       Math.round(v / CANVAS.SNAP_TO_GRID_PX) * CANVAS.SNAP_TO_GRID_PX
     const pointer: XYPosition = { x: snap(toX), y: snap(toY) }
 
+    // React Flow still reports the nearest handle for an invalid drop. Only a
+    // valid handle is committed through onConnect; invalid drops use the same
+    // shape-aware freeform path as onConnectEnd.
     const hasNativeTarget =
+      connectionStatus === "valid" &&
       nativeTargetId !== undefined &&
       nativeTargetId !== fromNodeId &&
       nativeTargetPosition !== undefined
@@ -166,6 +171,7 @@ export const ConnectionPreviewLine = ({
     toX,
     toY,
     toPosition,
+    connectionStatus,
     nativeTargetId,
     nativeTargetHandleId,
     nativeTargetPosition,

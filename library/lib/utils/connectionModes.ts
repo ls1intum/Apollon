@@ -4,18 +4,21 @@ import {
   getFreeformAnchorFromPoint,
   getFreeformAnchorPoint,
 } from "./edgeUtils"
+import { getNodeConnectionRect } from "./geometry/nodeGeometry"
 
 /**
  * How an edge endpoint may attach to a node, decided by the node's visible
  * shape rather than its bounding box. The anchor math below branches on this so
  * a drop, its preview, and the rendered edge all agree.
  *
- * The stored anchor is always `{side, ratio}` on the node's bounding rectangle;
- * the mode only changes how that anchor is turned into a pixel (project onto the
- * oval, snap to a vertex, …) and how a drop is turned into an anchor.
+ * The stored anchor is always `{side, ratio}` on the node's connection rectangle
+ * (normally its bounds; the package excludes its raised tab). The mode changes
+ * how that anchor becomes a pixel (project onto an oval, snap to a vertex, …)
+ * and how a drop becomes an anchor.
  */
 export type ConnectionMode =
   | "freeform-rect" // anywhere on the rectangle border (default box shapes)
+  | "package" // on the package's main body; the raised tab is notation
   | "ellipse" // on the inscribed oval, at the angle you aimed (use-case)
   | "parallelogram" // anywhere along the sheared outline (flowchart input/output)
   | "four-center" // only the four side points — N/E/S/W (FOUR_WAY-handle nodes)
@@ -33,6 +36,8 @@ const MODE_OVERRIDES: Record<string, ConnectionMode> = {
   titleAndDesctiption: "none",
   bpmnAnnotation: "none",
   activitySwimlane: "none",
+  // A package's raised tab belongs to the notation, not its connection surface.
+  package: "package",
   // The one true oval — full handles, so connect anywhere along the curve.
   useCase: "ellipse",
   // Everything below renders only the four side handles, so it connects at
@@ -249,6 +254,11 @@ export function getEdgeAnchorFromPoint(
       // Store the anchor ALONG THE RAY to the cursor so the curve projection
       // lands at the aimed angle (no diagonal drift).
       return rectBorderAlongRay(rect, point)
+    case "package":
+      return getFreeformAnchorFromPoint(
+        point,
+        getNodeConnectionRect(nodeType, rect)
+      )
     // parallelogram & freeform-rect store the nearest rect-border anchor; the
     // shape projection at render lands on the slanted outline / border.
     case "parallelogram":
@@ -280,6 +290,11 @@ export function getEdgeAnchorPoint(
       )
     case "parallelogram":
       return projectOntoParallelogram(rect, anchor)
+    case "package":
+      return getFreeformAnchorPoint(
+        getNodeConnectionRect(nodeType, rect),
+        anchor
+      )
     case "none":
     case "freeform-rect":
     default:
