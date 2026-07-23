@@ -56,9 +56,9 @@ test("encoded Yjs doc stays bounded across many drag gestures", async ({
   const writesAdded = after.storeNodeWrites - baseline.storeNodeWrites
   const bytesAdded = after.encodedDocBytes - baseline.encodedDocBytes
 
-  // Meta-assertion: a defanged driver that never actually grabbed a node
-  // would record zero store writes — fail loudly instead of passing green.
-  expect(writesAdded).toBeGreaterThanOrEqual(1)
+  // Meta-assertion: most gestures must commit. This prevents a partially
+  // defanged driver from making the upper write/byte budgets pass vacuously.
+  expect(writesAdded).toBeGreaterThanOrEqual(DRAG_COUNT * 0.75)
 
   // Absolute budget: stays far under a generous ceiling.
   expect(after.encodedDocBytes).toBeLessThan(BYTE_BUDGET)
