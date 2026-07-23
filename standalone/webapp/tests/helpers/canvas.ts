@@ -95,3 +95,76 @@ export async function openFixtureInLocalEditor(
   await injectFixtureIntoLocalStorage(page, fixture)
   await page.goto(`/local/${fixture.id as string}`)
 }
+
+/**
+ * Create one of the bundled presets through the real dashboard dialog.
+ *
+ * Template visual tests use this instead of injecting the asset directly:
+ * cloning, transient-state cleanup, fresh-id assignment, persistence and route
+ * navigation are all part of what a user sees when choosing a preset.
+ */
+export async function createTemplateInLocalEditor(
+  page: Page,
+  templateName: string
+) {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "persistenceModelStore",
+      JSON.stringify({
+        state: { models: {}, currentModelId: null },
+        version: 3,
+      })
+    )
+  })
+  await page.goto("/")
+  await page
+    .getByRole("heading", { level: 1, name: "Your diagrams" })
+    .waitFor({ timeout: 15_000 })
+
+  await page.getByRole("button", { name: "New diagram" }).first().click()
+  const dialog = page.getByRole("dialog")
+  await dialog.getByRole("tab", { name: "Use template" }).click()
+  await dialog.getByRole("button", { name: templateName, exact: true }).click()
+  await dialog.getByRole("button", { name: "Create Diagram" }).click()
+
+  await page.waitForURL(/\/local\/[^/]+$/, { timeout: 15_000 })
+  await waitForCanvasReady(page)
+
+  return page.evaluate(() => {
+    const persisted = localStorage.getItem("persistenceModelStore")
+    if (!persisted) return null
+
+    const state = JSON.parse(persisted).state as {
+      currentModelId?: string
+      models?: Record<string, { model?: Record<string, unknown> }>
+    }
+    const currentId = state.currentModelId
+    return currentId ? (state.models?.[currentId]?.model ?? null) : null
+  })
+}
+
+/** Select an edge through the visible middle of its rendered path. */
+export async function selectEdgeOnPath(page: Page, edgeId: string) {
+  const point = await page.evaluate((id) => {
+    const path = document.querySelector(
+      `.react-flow__edge[data-id="${id}"] path.react-flow__edge-path`
+    ) as SVGPathElement | null
+    if (!path) return null
+
+    const transform = path.getScreenCTM()
+    if (!transform) return null
+
+    const midpoint = path.getPointAtLength(path.getTotalLength() / 2)
+    const screenPoint = new DOMPoint(midpoint.x, midpoint.y).matrixTransform(
+      transform
+    )
+    return { x: screenPoint.x, y: screenPoint.y }
+  }, edgeId)
+
+  if (!point) {
+    throw new Error(`Edge "${edgeId}" path was not rendered`)
+  }
+
+  await page.mouse.click(point.x, point.y)
+  await page.waitForTimeout(200)
+}

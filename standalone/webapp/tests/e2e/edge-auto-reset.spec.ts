@@ -1,8 +1,12 @@
-import { test, expect, type Page } from "@playwright/test"
+import { test, expect } from "@playwright/test"
 import * as fs from "node:fs"
 import * as path from "node:path"
 import { fileURLToPath } from "node:url"
-import { waitForCanvasReady, openFixtureInLocalEditor } from "../helpers/canvas"
+import {
+  waitForCanvasReady,
+  openFixtureInLocalEditor,
+  selectEdgeOnPath,
+} from "../helpers/canvas"
 
 /**
  * The "Reset routing" affordance and the pinned-endpoint highlight.
@@ -20,23 +24,6 @@ const load = (name: string) =>
   ) as Record<string, unknown> & { edges: { id: string }[] }
 
 const pinnedFixture = load("edge-pinned-anchors.json")
-
-async function selectEdgeOnPath(page: Page, id: string): Promise<void> {
-  const pt = await page.evaluate((eid) => {
-    const p = document.querySelector(
-      `.react-flow__edge[data-id="${eid}"] path.react-flow__edge-path`
-    ) as SVGPathElement | null
-    if (!p) return null
-    const ctm = p.getScreenCTM()
-    if (!ctm) return null
-    const q = p.getPointAtLength(p.getTotalLength() / 2)
-    const m = new DOMPoint(q.x, q.y).matrixTransform(ctm)
-    return { x: m.x, y: m.y }
-  }, id)
-  if (!pt) throw new Error(`edge ${id} path not found`)
-  await page.mouse.click(pt.x, pt.y)
-  await page.waitForTimeout(200)
-}
 
 test("a pinned-anchor edge exposes the reset button and highlights both anchored ends", async ({
   page,

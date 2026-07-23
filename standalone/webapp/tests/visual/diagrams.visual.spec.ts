@@ -6,6 +6,8 @@ import {
   waitForCanvasReady,
   injectFixtureIntoLocalStorage,
   clickFitView,
+  createTemplateInLocalEditor,
+  selectEdgeOnPath,
 } from "../helpers/canvas"
 
 const __filename = fileURLToPath(import.meta.url)
@@ -136,17 +138,8 @@ test.describe("Visual regression - diagram fixtures", () => {
 })
 
 // ---------------------------------------------------------------------------
-// 2. Template diagrams – GoF design pattern templates loaded via fixture injection
+// 2. Template diagrams – GoF presets created through the user-facing workflow
 // ---------------------------------------------------------------------------
-// The template JSON files live in the webapp's assets directory. We load them
-// via fixture injection (the same approach as the 13 diagram fixtures above)
-// so the tests are deterministic and don't depend on Vite serving dynamic
-// imports at runtime.
-
-function loadJsonFile(filePath: string): Record<string, unknown> {
-  const raw = fs.readFileSync(filePath, "utf-8")
-  return JSON.parse(raw) as Record<string, unknown>
-}
 
 function resolveLocalDiagramRoute(fixture: Record<string, unknown>) {
   const id = fixture.id
@@ -156,35 +149,120 @@ function resolveLocalDiagramRoute(fixture: Record<string, unknown>) {
   return `/local/${id}`
 }
 
-const templatesDir = path.join(
-  __dirname,
-  "..",
-  "..",
-  "assets",
-  "diagramTemplates"
-)
-
-const templateDiagrams = [
-  { name: "Adapter", file: "Adapter" },
-  { name: "Bridge", file: "Bridge" },
-  { name: "Command", file: "Command" },
-  { name: "Observer", file: "Observer" },
-  { name: "Factory", file: "Factory" },
-]
+const templateDiagrams = ["Adapter", "Bridge", "Command", "Observer", "Factory"]
 
 test.describe("Template diagrams", () => {
-  for (const { name, file } of templateDiagrams) {
+  // Thumbnail generation and the lazy editor route do real work; keep this
+  // user-workflow regression explicit rather than relying on the generic 30s
+  // timeout under a fully parallel visual run.
+  test.describe.configure({ timeout: 60_000 })
+
+  for (const name of templateDiagrams) {
     test(`${name} template canvas matches baseline`, async ({ page }) => {
-      const template = loadJsonFile(path.join(templatesDir, `${file}.json`))
-      await injectFixtureIntoLocalStorage(page, template)
-      await page.goto(resolveLocalDiagramRoute(template))
-      await waitForCanvasReady(page)
+      const created = await createTemplateInLocalEditor(page, name)
+      expect(created?.title).toBe(name)
+      expect(created?.id).toBe(page.url().split("/").at(-1))
+
+      const nodes = created?.nodes as Array<Record<string, unknown>>
+      const edges = created?.edges as Array<{
+        data?: {
+          points?: unknown[]
+          sourceAnchor?: unknown
+          targetAnchor?: unknown
+        }
+      }>
+      expect(nodes.length).toBeGreaterThan(0)
+      expect(edges.length).toBeGreaterThan(0)
+      expect(
+        nodes.every(
+          (node) =>
+            !("selected" in node) &&
+            !("dragging" in node) &&
+            !("resizing" in node)
+        )
+      ).toBe(true)
+      expect(
+        edges.every(
+          (edge) =>
+            Array.isArray(edge.data?.points) &&
+            edge.data.points.length === 0 &&
+            edge.data.sourceAnchor == null &&
+            edge.data.targetAnchor == null
+        )
+      ).toBe(true)
+
+      // Initial React Flow fitting can legitimately land at 97% or 100% while
+      // node measurements arrive. The user-facing Fit view command is
+      // inset-aware and deterministic, frames every preset clear of the
+      // palette/header, and keeps the screenshot about template geometry
+      // rather than mount timing.
+      await clickFitView(page)
 
       const editorArea = page.locator('[data-testid="editor-area"]')
       await expect(editorArea).toHaveScreenshot(
         `template-${name.toLowerCase()}.png`,
         { mask: [page.locator("header")] }
       )
+    })
+  }
+})
+
+// ---------------------------------------------------------------------------
+// 3. Routing authority – keep automatic, pinned and authored states distinct
+// ---------------------------------------------------------------------------
+
+const routingAuthorityFixtures = [
+  {
+    name: "pinned-endpoints",
+    fixture: loadFixture("edge-pinned-anchors.json") as Record<
+      string,
+      unknown
+    > & { edges: { id: string }[] },
+    pinnedGrips: 2,
+    minimumBendHandles: 1,
+  },
+  {
+    name: "authored-bends",
+    fixture: loadFixture("edge-manual-bends-multi-corner.json") as Record<
+      string,
+      unknown
+    > & { edges: { id: string }[] },
+    pinnedGrips: 0,
+    minimumBendHandles: 4,
+  },
+]
+
+test.describe("Routing authority states", () => {
+  for (const {
+    name,
+    fixture,
+    pinnedGrips,
+    minimumBendHandles,
+  } of routingAuthorityFixtures) {
+    test(`${name} remains visually explicit`, async ({ page }) => {
+      await injectFixtureIntoLocalStorage(page, fixture)
+      await page.goto(resolveLocalDiagramRoute(fixture))
+      await waitForCanvasReady(page)
+      await clickFitView(page)
+
+      const edgeId = fixture.edges[0].id
+      await selectEdgeOnPath(page, edgeId)
+      const edge = page.locator(`.react-flow__edge[data-id="${edgeId}"]`)
+
+      await expect(edge.locator(".edge-endpoint-grip--pinned")).toHaveCount(
+        pinnedGrips
+      )
+      expect(
+        await edge.locator(".edge-bend-handle").count()
+      ).toBeGreaterThanOrEqual(minimumBendHandles)
+      await expect(
+        page.getByRole("button", { name: "Reset routing" })
+      ).toBeVisible()
+
+      const editorArea = page.locator('[data-testid="editor-area"]')
+      await expect(editorArea).toHaveScreenshot(`routing-${name}.png`, {
+        mask: [page.locator("header")],
+      })
     })
   }
 })
