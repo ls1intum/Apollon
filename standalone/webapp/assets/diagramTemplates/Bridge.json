@@ -1,15 +1,15 @@
 {
   "id": "d4fd3979-d1bb-451b-b3a4-e4dea94a90c4",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "title": "Bridge Diagram",
   "type": "ClassDiagram",
   "nodes": [
     {
-      "width": 190,
+      "width": 180,
       "height": 70,
       "id": "2eb1ceb2-266e-4669-89f1-c61e246cb10c",
       "type": "class",
-      "position": { "x": 123, "y": 140 },
+      "position": { "x": 150, "y": 175 },
       "data": {
         "name": "Abstraction",
         "methods": [
@@ -21,16 +21,16 @@
         "attributes": []
       },
       "selected": false,
-      "measured": { "width": 190, "height": 70 },
+      "measured": { "width": 180, "height": 70 },
       "dragging": true,
       "resizing": false
     },
     {
-      "width": 198,
+      "width": 180,
       "height": 70,
       "id": "7052e703-263f-4df5-95e0-3558793849af",
       "type": "class",
-      "position": { "x": 0, "y": 350 },
+      "position": { "x": 25, "y": 305 },
       "data": {
         "name": "RefinedAbstraction1",
         "methods": [
@@ -39,7 +39,7 @@
         "attributes": []
       },
       "selected": false,
-      "measured": { "width": 198, "height": 70 },
+      "measured": { "width": 180, "height": 70 },
       "dragging": true,
       "resizing": false
     },
@@ -48,18 +48,18 @@
       "height": 40,
       "id": "286257b1-ebd3-424f-b3e4-c1c2a722531b",
       "type": "class",
-      "position": { "x": 135, "y": 0 },
+      "position": { "x": -140, "y": 190 },
       "data": { "name": "Client", "methods": [], "attributes": [] },
       "selected": false,
       "measured": { "width": 167, "height": 40 },
       "dragging": true
     },
     {
-      "width": 198,
+      "width": 180,
       "height": 70,
       "id": "2fecb039-1b0d-4de9-8820-fa120c51f4f6",
       "type": "class",
-      "position": { "x": 238, "y": 350 },
+      "position": { "x": 270, "y": 305 },
       "data": {
         "name": "RefinedAbstraction2",
         "methods": [
@@ -68,15 +68,15 @@
         "attributes": []
       },
       "selected": false,
-      "measured": { "width": 198, "height": 70 },
+      "measured": { "width": 180, "height": 70 },
       "dragging": true
     },
     {
-      "width": 160,
+      "width": 200,
       "height": 70,
       "id": "889cb1f6-175a-45c0-ae06-d1acab5dcbdc",
       "type": "class",
-      "position": { "x": 614, "y": 140 },
+      "position": { "x": 635, "y": 175 },
       "data": {
         "name": "Implementor",
         "methods": [
@@ -88,15 +88,15 @@
         "attributes": []
       },
       "selected": false,
-      "measured": { "width": 160, "height": 70 },
+      "measured": { "width": 200, "height": 70 },
       "dragging": true
     },
     {
-      "width": 198.02259826660156,
+      "width": 200,
       "height": 70,
       "id": "2e018906-a3db-4308-977b-175ace3c3185",
       "type": "class",
-      "position": { "x": 476, "y": 350 },
+      "position": { "x": 505, "y": 305 },
       "data": {
         "name": "ConcreteImplementor1",
         "methods": [
@@ -108,15 +108,15 @@
         "attributes": []
       },
       "selected": false,
-      "measured": { "width": 198, "height": 70 },
+      "measured": { "width": 200, "height": 70 },
       "dragging": true
     },
     {
-      "width": 198.02259826660156,
+      "width": 200,
       "height": 70,
       "id": "1bb3eed4-bcc2-45af-9b6e-62020b9c439d",
       "type": "class",
-      "position": { "x": 714, "y": 350 },
+      "position": { "x": 765, "y": 305 },
       "data": {
         "name": "ConcreteImplementor2",
         "methods": [
@@ -128,7 +128,7 @@
         "attributes": []
       },
       "selected": false,
-      "measured": { "width": 198, "height": 70 },
+      "measured": { "width": 200, "height": 70 },
       "dragging": true,
       "resizing": false
     }
@@ -155,7 +155,7 @@
       "data": {
         "points": [],
         "sourceAnchor": { "side": "top", "ratio": 0.5 },
-        "targetAnchor": { "side": "bottom", "ratio": 0.3333333333333333 }
+        "targetAnchor": { "side": "bottom", "ratio": 0.5 }
       }
     },
     {
@@ -169,7 +169,7 @@
       "data": {
         "points": [],
         "sourceAnchor": { "side": "top", "ratio": 0.5 },
-        "targetAnchor": { "side": "bottom", "ratio": 0.6666666666666666 }
+        "targetAnchor": { "side": "bottom", "ratio": 0.5 }
       }
     },
     {
@@ -183,7 +183,7 @@
       "data": {
         "points": [],
         "sourceAnchor": { "side": "top", "ratio": 0.5 },
-        "targetAnchor": { "side": "bottom", "ratio": 0.3333333333333333 }
+        "targetAnchor": { "side": "bottom", "ratio": 0.5 }
       }
     },
     {
@@ -197,7 +197,7 @@
       "data": {
         "points": [],
         "sourceAnchor": { "side": "top", "ratio": 0.5 },
-        "targetAnchor": { "side": "bottom", "ratio": 0.6666666666666666 }
+        "targetAnchor": { "side": "bottom", "ratio": 0.5 }
       }
     },
     {

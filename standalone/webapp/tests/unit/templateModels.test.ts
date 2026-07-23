@@ -61,10 +61,9 @@ describe("diagram template routing policy", () => {
   )
 
   it.each(templates)(
-    "%s spaces pinned hierarchy seats into equal side segments",
+    "%s uses one centred pinned junction for each hierarchy fan",
     (_, source) => {
       const model = source as unknown as UMLModel
-      const groups = new Map<string, number[]>()
 
       for (const edge of model.edges) {
         if (getTemplateEdgeRoutingState(edge) !== "pinned") continue
@@ -75,18 +74,7 @@ describe("diagram template routing policy", () => {
           ratio: 0.5,
         })
         expect(edge.data?.targetAnchor?.side).toBe("bottom")
-
-        const key = `${edge.target}:${edge.data.targetAnchor.side}`
-        const ratios = groups.get(key) ?? []
-        ratios.push(edge.data.targetAnchor.ratio)
-        groups.set(key, ratios)
-      }
-
-      for (const ratios of groups.values()) {
-        ratios.sort((a, b) => a - b)
-        expect(ratios).toEqual(
-          ratios.map((_, index) => (index + 1) / (ratios.length + 1))
-        )
+        expect(edge.data?.targetAnchor?.ratio).toBe(0.5)
       }
     }
   )

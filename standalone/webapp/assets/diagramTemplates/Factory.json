@@ -1,6 +1,6 @@
 {
   "id": "d4fd3979-d1bb-451b-b3a4-e4dea94a90c1",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "title": "Factory Diagram",
   "type": "ClassDiagram",
   "nodes": [
@@ -27,7 +27,7 @@
     },
     {
       "width": 250,
-      "height": 110,
+      "height": 100,
       "id": "1c0330be-83dd-4d92-9bd1-d62a36e90c7b",
       "type": "class",
       "position": { "x": 265, "y": 130 },
@@ -45,10 +45,10 @@
             "name": "+ attribute: Type"
           }
         ],
-        "stereotype": "Abstract"
+        "isAbstract": true
       },
       "selected": false,
-      "measured": { "width": 250, "height": 110 },
+      "measured": { "width": 250, "height": 100 },
       "dragging": true,
       "resizing": false
     },
@@ -57,7 +57,7 @@
       "height": 70,
       "id": "8a30926e-581b-49c9-b0cc-7a9119ae1579",
       "type": "class",
-      "position": { "x": 0, "y": 330 },
+      "position": { "x": 35, "y": 330 },
       "data": {
         "name": "ConcreteProductA",
         "methods": [
@@ -78,7 +78,7 @@
       "height": 70,
       "id": "fc1e3b34-6e01-4fb6-8c26-a70535fa1ff2",
       "type": "class",
-      "position": { "x": 260, "y": 330 },
+      "position": { "x": 275, "y": 330 },
       "data": {
         "name": "ConcreteProductB",
         "methods": [
@@ -99,7 +99,7 @@
       "height": 70,
       "id": "552eb7f3-62a7-45d9-8133-da6f5379b5a4",
       "type": "class",
-      "position": { "x": 540, "y": 330 },
+      "position": { "x": 535, "y": 330 },
       "data": {
         "name": "ConcreteProductC",
         "methods": [
@@ -138,7 +138,7 @@
       "data": {
         "points": [],
         "sourceAnchor": { "side": "top", "ratio": 0.5 },
-        "targetAnchor": { "side": "bottom", "ratio": 0.25 }
+        "targetAnchor": { "side": "bottom", "ratio": 0.5 }
       }
     },
     {
@@ -166,7 +166,7 @@
       "data": {
         "points": [],
         "sourceAnchor": { "side": "top", "ratio": 0.5 },
-        "targetAnchor": { "side": "bottom", "ratio": 0.75 }
+        "targetAnchor": { "side": "bottom", "ratio": 0.5 }
       }
     }
   ],

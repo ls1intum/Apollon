@@ -14,6 +14,7 @@ import {
   getEdgeMarkerStyles,
   preserveOrthogonalEdgePoints,
   isFreeformEdgeAnchor,
+  roundAnchorPointOutward,
   type FreeformEdgeAnchor,
 } from "@/utils/edgeUtils"
 import {
@@ -192,10 +193,16 @@ function resolveEdgeEndpoints(
     : EDGES.SOURCE_CONNECTION_POINT_PADDING
   const targetConnectionPointPadding = resolvedTargetAnchor ? 0 : padding
 
-  const roundedSourceX = Math.round(sourceX)
-  const roundedSourceY = Math.round(sourceY)
-  const roundedTargetX = Math.round(targetX)
-  const roundedTargetY = Math.round(targetY)
+  const roundedSource = resolvedSourceAnchor
+    ? roundAnchorPointOutward(resolvedSourceAnchor.point, sourcePosition)
+    : { x: Math.round(sourceX), y: Math.round(sourceY) }
+  const roundedTarget = resolvedTargetAnchor
+    ? roundAnchorPointOutward(resolvedTargetAnchor.point, targetPosition)
+    : { x: Math.round(targetX), y: Math.round(targetY) }
+  const roundedSourceX = roundedSource.x
+  const roundedSourceY = roundedSource.y
+  const roundedTargetX = roundedTarget.x
+  const roundedTargetY = roundedTarget.y
 
   const adjustedTarget = adjustTargetCoordinates(
     roundedTargetX,
@@ -341,6 +348,72 @@ export function polylineIntersectsBox(
   return false
 }
 
+type EdgeEnd = "source" | "target"
+type SharedPinnedJunction = {
+  firstEnd: EdgeEnd
+  secondEnd: EdgeEnd
+}
+
+const pinnedAnchor = (
+  edge: Edge,
+  end: EdgeEnd
+): FreeformEdgeAnchor | undefined => {
+  const value =
+    end === "source" ? edge.data?.sourceAnchor : edge.data?.targetAnchor
+  return isFreeformEdgeAnchor(value) ? value : undefined
+}
+
+const samePinnedAnchor = (
+  first: FreeformEdgeAnchor | undefined,
+  second: FreeformEdgeAnchor | undefined
+): boolean =>
+  first !== undefined &&
+  second !== undefined &&
+  first.side === second.side &&
+  Math.abs(first.ratio - second.ratio) <= 1e-9
+
+const NO_SHARED_PINNED_JUNCTIONS: readonly SharedPinnedJunction[] = []
+
+/**
+ * An exact co-pin on the same node is an authored junction, not an accidental
+ * edge overlap. The edge types stay irrelevant: users explicitly create this
+ * topology by pinning the endpoints together.
+ */
+const sharedPinnedJunctions = (
+  first: Edge,
+  second: Edge
+): readonly SharedPinnedJunction[] => {
+  const firstSource = pinnedAnchor(first, "source")
+  const firstTarget = pinnedAnchor(first, "target")
+  const secondSource = pinnedAnchor(second, "source")
+  const secondTarget = pinnedAnchor(second, "target")
+  if ((!firstSource && !firstTarget) || (!secondSource && !secondTarget))
+    return NO_SHARED_PINNED_JUNCTIONS
+
+  const result: SharedPinnedJunction[] = []
+  if (
+    first.source === second.source &&
+    samePinnedAnchor(firstSource, secondSource)
+  )
+    result.push({ firstEnd: "source", secondEnd: "source" })
+  if (
+    first.source === second.target &&
+    samePinnedAnchor(firstSource, secondTarget)
+  )
+    result.push({ firstEnd: "source", secondEnd: "target" })
+  if (
+    first.target === second.source &&
+    samePinnedAnchor(firstTarget, secondSource)
+  )
+    result.push({ firstEnd: "target", secondEnd: "source" })
+  if (
+    first.target === second.target &&
+    samePinnedAnchor(firstTarget, secondTarget)
+  )
+    result.push({ firstEnd: "target", secondEnd: "target" })
+  return result
+}
+
 /** Gather nearby routed edges and synthetic container borders separately.
  * Borders prevent a route from lying along a package/pool frame, but crossing a
  * frame to leave its own container is not an edge crossing and must not inherit
@@ -352,7 +425,8 @@ function collectNeighbors(
   nodeIndex: NodeIndex,
   obstacles: readonly ObstacleRect[],
   routeById: Record<string, IPoint[]>,
-  grid: NeighborGrid
+  grid: NeighborGrid,
+  edgeById: ReadonlyMap<string, Edge>
 ): { edgeRoutes: IPoint[][]; containerBorders: IPoint[][] } {
   const borders = getContainerBorderPolylines(
     nodes,
@@ -422,10 +496,12 @@ function collectNeighbors(
   for (const otherId of ordered) {
     const polyline = routeById[otherId]
     if (!polyline || polyline.length < 2) continue
-    // Siblings are intentionally included. The node-local coordinator proposes
-    // distinct ports, but capacity is soft; pricing their real committed stubs is
-    // what lets the joint search reject an overlap or reuse a port only when every
-    // alternative is worse.
+    const other = edgeById.get(otherId)
+    if (other && sharedPinnedJunctions(edge, other).length > 0) continue
+    // Ordinary siblings are intentionally included. The node-local coordinator
+    // proposes distinct ports, but capacity is soft; pricing committed stubs lets
+    // the joint search reject accidental overlap. Exact co-pins were filtered
+    // above because their common terminal trunk is authored topology.
     if (polylineIntersectsBox(polyline, minX, maxX, minY, maxY)) {
       neighbors.push(polyline)
     }
@@ -1266,7 +1342,8 @@ function computeAllEdgeGeometryPass(
       nodeIndex,
       obstacles,
       routeById,
-      neighborGrid
+      neighborGrid,
+      edgeById
     )
     const signatureNeighbors = [...neighborEdges, ...containerBorders]
     const autoNeighborSignature = reachableNeighborSignature(
@@ -1606,6 +1683,82 @@ const boundsMayConflict = (
     b.maxY + clearance <= a.minY
   )
 
+const pointEqual = (a: IPoint, b: IPoint): boolean => a.x === b.x && a.y === b.y
+
+const pointOnSegment = (point: IPoint, a: IPoint, b: IPoint): boolean =>
+  point.x >= Math.min(a.x, b.x) &&
+  point.x <= Math.max(a.x, b.x) &&
+  point.y >= Math.min(a.y, b.y) &&
+  point.y <= Math.max(a.y, b.y) &&
+  (a.x === b.x ? point.x === a.x : point.y === a.y)
+
+const trimOrientedRouteAt = (
+  route: readonly IPoint[],
+  point: IPoint
+): IPoint[] => {
+  for (let index = 0; index < route.length - 1; index++) {
+    if (!pointOnSegment(point, route[index], route[index + 1])) continue
+    const tail = pointEqual(point, route[index + 1])
+      ? route.slice(index + 1)
+      : [point, ...route.slice(index + 1)]
+    return tail.map(({ x, y }) => ({ x, y }))
+  }
+  return route.map(({ x, y }) => ({ x, y }))
+}
+
+/**
+ * Remove only the common terminal trunk at an explicit shared pin. Conflicts
+ * after the routes diverge still count, so a shared arrowhead does not become a
+ * blanket exemption for two otherwise crossing edges.
+ */
+const trimSharedPinnedTrunk = (
+  firstRoute: readonly IPoint[],
+  firstEnd: EdgeEnd,
+  secondRoute: readonly IPoint[],
+  secondEnd: EdgeEnd
+): [IPoint[], IPoint[]] => {
+  const first =
+    firstEnd === "source" ? [...firstRoute] : [...firstRoute].reverse()
+  const second =
+    secondEnd === "source" ? [...secondRoute] : [...secondRoute].reverse()
+  if (first.length < 2 || second.length < 2 || !pointEqual(first[0], second[0]))
+    return [[...firstRoute], [...secondRoute]]
+
+  let firstIndex = 0
+  let secondIndex = 0
+  let shared = first[0]
+  while (firstIndex < first.length - 1 && secondIndex < second.length - 1) {
+    const firstNext = first[firstIndex + 1]
+    const secondNext = second[secondIndex + 1]
+    const firstDx = Math.sign(firstNext.x - shared.x)
+    const firstDy = Math.sign(firstNext.y - shared.y)
+    const secondDx = Math.sign(secondNext.x - shared.x)
+    const secondDy = Math.sign(secondNext.y - shared.y)
+    if (firstDx !== secondDx || firstDy !== secondDy) break
+
+    const firstDistance =
+      Math.abs(firstNext.x - shared.x) + Math.abs(firstNext.y - shared.y)
+    const secondDistance =
+      Math.abs(secondNext.x - shared.x) + Math.abs(secondNext.y - shared.y)
+    const commonDistance = Math.min(firstDistance, secondDistance)
+    shared = {
+      x: shared.x + firstDx * commonDistance,
+      y: shared.y + firstDy * commonDistance,
+    }
+    if (firstDistance !== secondDistance) break
+    firstIndex++
+    secondIndex++
+  }
+
+  if (pointEqual(shared, first[0])) return [[...firstRoute], [...secondRoute]]
+  const trimmedFirst = trimOrientedRouteAt(first, shared)
+  const trimmedSecond = trimOrientedRouteAt(second, shared)
+  return [
+    firstEnd === "source" ? trimmedFirst : trimmedFirst.reverse(),
+    secondEnd === "source" ? trimmedSecond : trimmedSecond.reverse(),
+  ]
+}
+
 const routeSetScore = (
   routeById: Readonly<Record<string, readonly IPoint[]>>,
   edges: readonly Edge[],
@@ -1635,7 +1788,7 @@ const routeSetScore = (
   let totalCornerJamPermille = 0
   const portsByNodeSide = new Map<
     string,
-    { ratios: number[]; sideLength: number }
+    { ratios: number[]; pinnedRatios: Set<number>; sideLength: number }
   >()
   const nodeById = new Map(nodes.map((node) => [node.id, node]))
   const focusNodeIds = focusEdgeIds
@@ -1648,7 +1801,8 @@ const routeSetScore = (
   const recordPort = (
     nodeId: string,
     point: IPoint,
-    movable: boolean
+    movable: boolean,
+    explicitlyPinned: boolean
   ): void => {
     if (focusNodeIds && !focusNodeIds.has(nodeId)) return
     const rect = nodeRect(nodeId, nodes, nodeById)
@@ -1661,10 +1815,15 @@ const routeSetScore = (
     }
     const key = `${nodeId}|${port.side}`
     const group = portsByNodeSide.get(key)
-    if (group) group.ratios.push(port.ratio)
-    else
+    const pinnedRatioKey = Math.round(port.ratio * 1e9)
+    if (group) {
+      if (explicitlyPinned && group.pinnedRatios.has(pinnedRatioKey)) return
+      group.ratios.push(port.ratio)
+      if (explicitlyPinned) group.pinnedRatios.add(pinnedRatioKey)
+    } else
       portsByNodeSide.set(key, {
         ratios: [port.ratio],
+        pinnedRatios: new Set(explicitlyPinned ? [pinnedRatioKey] : []),
         sideLength: sideAxisLength(port.side, rect),
       })
   }
@@ -1676,15 +1835,19 @@ const routeSetScore = (
       return []
     }
     const topologyImmutable = immutableEdgeIds.has(edge.id)
+    const sourcePinned = asFreeformAnchor(edge.data?.sourceAnchor)
+    const targetPinned = asFreeformAnchor(edge.data?.targetAnchor)
     recordPort(
       edge.source,
       route[0],
-      !topologyImmutable && !asFreeformAnchor(edge.data?.sourceAnchor)
+      !topologyImmutable && !sourcePinned,
+      sourcePinned !== undefined
     )
     recordPort(
       edge.target,
       route[route.length - 1],
-      !topologyImmutable && !asFreeformAnchor(edge.data?.targetAnchor)
+      !topologyImmutable && !targetPinned,
+      targetPinned !== undefined
     )
     const sourceRect = nodeRect(edge.source, nodes, nodeById)
     const targetRect = nodeRect(edge.target, nodes, nodeById)
@@ -1717,7 +1880,7 @@ const routeSetScore = (
         CANVAS.SNAP_TO_GRID_PX
       )
     }
-    return [{ route, focused, bounds: polylineBounds(route) }]
+    return [{ edge, route, focused, bounds: polylineBounds(route) }]
   })
   const conflictClearance =
     ROUTING_COST.parallelCrowdingClearanceInGridCells * CANVAS.SNAP_TO_GRID_PX
@@ -1734,8 +1897,18 @@ const routeSetScore = (
       )
         continue
       recordRouteScorePair()
-      const first = routes[i].route as IPoint[]
-      const second = routes[j].route as IPoint[]
+      let first = routes[i].route as IPoint[]
+      let second = routes[j].route as IPoint[]
+      for (const junction of sharedPinnedJunctions(
+        routes[i].edge,
+        routes[j].edge
+      ))
+        [first, second] = trimSharedPinnedTrunk(
+          first,
+          junction.firstEnd,
+          second,
+          junction.secondEnd
+        )
       // Per-edge crossing attribution is half-open so a lattice-vertex crossing
       // is charged once. A route set has no direction: score both orientations
       // and keep the symmetric worst case.

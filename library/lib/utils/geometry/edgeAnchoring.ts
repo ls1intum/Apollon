@@ -805,6 +805,43 @@ export const selectEdgeAnchors = (
       EDGES.MIN_NODE_CLEARANCE_PX
     )
   }
+  const balancedPinnedStubLengths = (() => {
+    if (!input.sourceCustom || !input.targetCustom) return null
+    const source = sourceOptions[0]
+    const target = targetOptions[0]
+    const sourcePoint = source.point
+    const targetPoint = target.point
+    const vertical =
+      (source.position === Position.Top &&
+        target.position === Position.Bottom &&
+        sourcePoint.y > targetPoint.y) ||
+      (source.position === Position.Bottom &&
+        target.position === Position.Top &&
+        sourcePoint.y < targetPoint.y)
+    const horizontal =
+      (source.position === Position.Left &&
+        target.position === Position.Right &&
+        sourcePoint.x > targetPoint.x) ||
+      (source.position === Position.Right &&
+        target.position === Position.Left &&
+        sourcePoint.x < targetPoint.x)
+    if (!vertical && !horizontal) return null
+
+    const sourceCoordinate = vertical ? sourcePoint.y : sourcePoint.x
+    const targetCoordinate = vertical ? targetPoint.y : targetPoint.x
+    const lane =
+      Math.round((sourceCoordinate + targetCoordinate) / 2 / GRID) * GRID
+    const sourceLength = Math.abs(sourceCoordinate - lane)
+    const targetLength = Math.abs(targetCoordinate - lane)
+    if (sourceLength < GRID || targetLength < GRID) return null
+    return {
+      sourceLength,
+      targetLength,
+      requiresTurn: vertical
+        ? sourcePoint.x !== targetPoint.x
+        : sourcePoint.y !== targetPoint.y,
+    }
+  })()
   const referenceSource = sourceOptions[0]
   const referenceTarget = targetOptions[0]
   for (let sourceIndex = 0; sourceIndex < sourceOptions.length; sourceIndex++) {
@@ -818,7 +855,7 @@ export const selectEdgeAnchors = (
     sourceCandidates[sourceIndex] = {
       point: endpoints.adjustedSource,
       position: endpoints.sourcePosition,
-      stubLength: EDGES.STUB_LENGTH,
+      stubLength: balancedPinnedStubLengths?.sourceLength ?? EDGES.STUB_LENGTH,
       cost: input.sourceCustom
         ? 0
         : endpointPlacementCost(
@@ -833,8 +870,9 @@ export const selectEdgeAnchors = (
             GRID
           ),
       forceStubTurn:
-        Boolean(input.sourceCustom) &&
-        forceStubTurn(source.anchor, input.sourceRect),
+        (Boolean(input.sourceCustom) &&
+          forceStubTurn(source.anchor, input.sourceRect)) ||
+        (balancedPinnedStubLengths?.requiresTurn ?? false),
     }
   }
   for (let targetIndex = 0; targetIndex < targetOptions.length; targetIndex++) {
@@ -848,7 +886,7 @@ export const selectEdgeAnchors = (
     targetCandidates[targetIndex] = {
       point: endpoints.adjustedTarget,
       position: endpoints.targetPosition,
-      stubLength: EDGES.STUB_LENGTH,
+      stubLength: balancedPinnedStubLengths?.targetLength ?? EDGES.STUB_LENGTH,
       cost: input.targetCustom
         ? 0
         : endpointPlacementCost(
@@ -863,8 +901,9 @@ export const selectEdgeAnchors = (
             GRID
           ),
       forceStubTurn:
-        Boolean(input.targetCustom) &&
-        forceStubTurn(target.anchor, input.targetRect),
+        (Boolean(input.targetCustom) &&
+          forceStubTurn(target.anchor, input.targetRect)) ||
+        (balancedPinnedStubLengths?.requiresTurn ?? false),
     }
   }
 

@@ -52,6 +52,29 @@ export const adjustSourceCoordinates = (
   return { sourceX, sourceY }
 }
 
+/**
+ * Round a shape-projected connection point without moving it back inside its
+ * node. Fractional text measurements make this distinction observable at the
+ * right and bottom boundaries.
+ */
+export const roundAnchorPointOutward = (
+  point: XYPosition,
+  position: Position
+): XYPosition => ({
+  x:
+    position === Position.Left
+      ? Math.floor(point.x)
+      : position === Position.Right
+        ? Math.ceil(point.x)
+        : Math.round(point.x),
+  y:
+    position === Position.Top
+      ? Math.floor(point.y)
+      : position === Position.Bottom
+        ? Math.ceil(point.y)
+        : Math.round(point.y),
+})
+
 export const calculateDynamicEdgeLabels = (
   x: number,
   y: number,

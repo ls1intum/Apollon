@@ -37,6 +37,31 @@ function loadFixture(filename: string): Record<string, unknown> {
   return JSON.parse(raw) as Record<string, unknown>
 }
 
+function pathPoints(d: string | null): { x: number; y: number }[] {
+  if (!d) return []
+  return [...d.matchAll(/[ML]\s*(-?[\d.]+)[ ,]+(-?[\d.]+)/g)].map((match) => ({
+    x: Number(match[1]),
+    y: Number(match[2]),
+  }))
+}
+
+function pathBendCount(d: string | null): number {
+  const points = pathPoints(d)
+  if (points.length < 2) return Number.POSITIVE_INFINITY
+  let bends = 0
+  for (let index = 1; index < points.length - 1; index++) {
+    const before = points[index - 1]
+    const current = points[index]
+    const after = points[index + 1]
+    if (
+      (before.x === current.x) !== (current.x === after.x) ||
+      (before.y === current.y) !== (current.y === after.y)
+    )
+      bends++
+  }
+  return bends
+}
+
 // All 13 diagram fixtures with human-readable name + kebab-case file slug.
 // `fitView: true` triggers the ReactFlow fit-view button so the full diagram
 // is visible — needed for diagrams that overflow the viewport at zoom 1.0.
@@ -195,6 +220,51 @@ test.describe("Template diagrams", () => {
       expect(pinned).toHaveLength(routing.pinned)
       expect(edges.length - pinned.length).toBe(routing.automatic)
       await expect(page.locator(".react-flow__edge")).toHaveCount(edges.length)
+      if (name === "Bridge") {
+        const clientAssociation =
+          "xy-edge__286257b1-ebd3-424f-b3e4-c1c2a722531bright-2eb1ceb2-266e-4669-89f1-c61e246cb10cleft"
+        await expect
+          .poll(async () =>
+            pathBendCount(
+              await page
+                .locator(
+                  `.react-flow__edge[data-id="${clientAssociation}"] .react-flow__edge-path`
+                )
+                .first()
+                .getAttribute("d")
+            )
+          )
+          .toBe(0)
+      }
+      if (name === "Factory" || name === "Adapter") {
+        const outerInheritance =
+          name === "Factory"
+            ? "1737998332817-8a30926e-581b-49c9-b0cc-7a9119ae1579-1c0330be-83dd-4d92-9bd1-d62a36e90c7b"
+            : "1737993042486-7052e703-263f-4df5-95e0-3558793849af-2eb1ceb2-266e-4669-89f1-c61e246cb10c"
+        const expectedBusY = name === "Factory" ? 280 : 230
+        await expect
+          .poll(async () =>
+            pathPoints(
+              await page
+                .locator(
+                  `.react-flow__edge[data-id="${outerInheritance}"] .react-flow__edge-path`
+                )
+                .first()
+                .getAttribute("d")
+            ).slice(1, -1)
+          )
+          .toEqual(
+            name === "Factory"
+              ? [
+                  { x: 140, y: expectedBusY },
+                  { x: 390, y: expectedBusY },
+                ]
+              : [
+                  { x: 275, y: expectedBusY },
+                  { x: 365, y: expectedBusY },
+                ]
+          )
+      }
 
       // Initial React Flow fitting can legitimately land at 97% or 100% while
       // node measurements arrive. The user-facing Fit view command is

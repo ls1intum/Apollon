@@ -27,6 +27,7 @@ import {
   preserveOrthogonalEdgePoints,
   resolveOrthogonalEdgeReleasePoints,
   resolveReconnectPreviewBasePoints,
+  roundAnchorPointOutward,
   removeDuplicatePoints,
   simplifyPoints,
   simplifySvgPath,
@@ -557,6 +558,21 @@ describe("freeform rectangle anchors", () => {
       point: { x: 10, y: 60 },
       position: Position.Left,
     })
+  })
+
+  it("rounds fractional boundaries outward instead of into the node", () => {
+    expect(
+      roundAnchorPointOutward({ x: 27.204, y: 210.4 }, Position.Right)
+    ).toEqual({ x: 28, y: 210 })
+    expect(
+      roundAnchorPointOutward({ x: -140.2, y: 210.4 }, Position.Left)
+    ).toEqual({ x: -141, y: 210 })
+    expect(
+      roundAnchorPointOutward({ x: 210.4, y: 245.2 }, Position.Bottom)
+    ).toEqual({ x: 210, y: 246 })
+    expect(
+      roundAnchorPointOutward({ x: 210.4, y: 174.8 }, Position.Top)
+    ).toEqual({ x: 210, y: 174 })
   })
 })
 

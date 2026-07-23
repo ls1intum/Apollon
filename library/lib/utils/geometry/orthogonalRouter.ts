@@ -1859,7 +1859,7 @@ export const routeAroundObstaclesBetweenCandidates = (
         if (
           nearestLo !== Infinity &&
           nearestHi !== Infinity &&
-          nearestLo + nearestHi < 4 * idealClearance
+          nearestLo + nearestHi <= 4 * idealClearance
         ) {
           const imbalance =
             Math.abs(nearestLo - nearestHi) / (nearestLo + nearestHi)

@@ -525,6 +525,227 @@ describe("computeAllEdgeGeometry — auto anchor optimization", () => {
     expect(exitSide(routeById["e1"])).toBe("R")
   })
 
+  it("keeps the Bridge client and implementor associations straight around pinned inheritance fans", () => {
+    const abstraction = makeNode("abstraction", 150, 175, 180, 70)
+    const refinedLeft = makeNode("refined-left", 25, 305, 180, 70)
+    const client = makeNode("client", -140, 190, 167.20445251464844, 40)
+    const refinedRight = makeNode("refined-right", 270, 305, 180, 70)
+    const implementor = makeNode("implementor", 635, 175, 200, 70)
+    const concreteLeft = makeNode("concrete-left", 505, 305, 200, 70)
+    const concreteRight = makeNode("concrete-right", 765, 305, 200, 70)
+    const clientSourceHandles = client.internal.internals.handleBounds
+      ?.source as Array<{ id: string | null }> | undefined
+    const abstractionTargetHandles = abstraction.internal.internals.handleBounds
+      ?.target as Array<{ id: string | null }> | undefined
+    clientSourceHandles?.forEach((handle) => {
+      handle.id = "right"
+    })
+    abstractionTargetHandles?.forEach((handle) => {
+      handle.id = "left"
+    })
+    const centreTip = {
+      sourceAnchor: { side: Position.Top, ratio: 0.5 },
+      targetAnchor: { side: Position.Bottom, ratio: 0.5 },
+      points: [],
+    }
+    const edges: Edge[] = [
+      {
+        id: "client-abstraction",
+        source: "client",
+        target: "abstraction",
+        type: "ClassBidirectional",
+        sourceHandle: "right",
+        targetHandle: "left",
+        data: { points: [] },
+      },
+      {
+        id: "refined-left",
+        source: "refined-left",
+        target: "abstraction",
+        type: "ClassInheritance",
+        data: centreTip,
+      },
+      {
+        id: "refined-right",
+        source: "refined-right",
+        target: "abstraction",
+        type: "ClassInheritance",
+        data: centreTip,
+      },
+      {
+        id: "concrete-left",
+        source: "concrete-left",
+        target: "implementor",
+        type: "ClassInheritance",
+        data: centreTip,
+      },
+      {
+        id: "concrete-right",
+        source: "concrete-right",
+        target: "implementor",
+        type: "ClassInheritance",
+        data: centreTip,
+      },
+      {
+        id: "abstraction-implementor",
+        source: "abstraction",
+        target: "implementor",
+        type: "ClassBidirectional",
+        data: { points: [] },
+      },
+    ]
+    const nodes = [
+      abstraction,
+      refinedLeft,
+      client,
+      refinedRight,
+      implementor,
+      concreteLeft,
+      concreteRight,
+    ]
+    const { routeById } = computeAllEdgeGeometry(base(nodes, edges))
+
+    for (const edgeId of ["client-abstraction", "abstraction-implementor"]) {
+      const route = routeById[edgeId]
+      expect(route).toHaveLength(2)
+      expect(route[0].y).toBe(route[1].y)
+      expect(exitSide(route)).toBe("R")
+    }
+  })
+
+  it("keeps automatic branches on an explicitly shared pinned junction stable", () => {
+    const product = makeNode("product", 265, 130, 250, 100)
+    const left = makeNode("left", 35, 330, 210, 70)
+    const middle = makeNode("middle", 275, 330, 230, 70)
+    const right = makeNode("right", 535, 330, 240, 70)
+    const pinned = {
+      sourceAnchor: { side: Position.Top, ratio: 0.5 },
+      targetAnchor: { side: Position.Bottom, ratio: 0.5 },
+      points: [],
+    }
+    const edges: Edge[] = [
+      {
+        id: "left-product",
+        source: "left",
+        target: "product",
+        type: "ClassInheritance",
+        data: pinned,
+      },
+      {
+        id: "middle-product",
+        source: "middle",
+        target: "product",
+        type: "ClassInheritance",
+        data: pinned,
+      },
+      {
+        id: "right-product",
+        source: "right",
+        target: "product",
+        type: "ClassInheritance",
+        data: pinned,
+      },
+    ]
+    const solve = (
+      children: { node: Node; internal: InternalNode }[]
+    ): Record<string, { x: number; y: number }[]> =>
+      computeAllEdgeGeometry(base([product, ...children], edges)).routeById
+    const pristine = solve([left, middle, right])
+
+    left.node.position.x += 5
+    left.internal.position.x += 5
+    left.internal.internals.positionAbsolute.x += 5
+    const nudged = solve([left, middle, right])
+
+    for (const edgeId of edges.map((edge) => edge.id)) {
+      const route = pristine[edgeId]
+      const moved = nudged[edgeId]
+      expect(route.at(-1)).toEqual({ x: 390, y: 230 })
+      expect(moved.at(-1)).toEqual({ x: 390, y: 230 })
+      expect(route.length).toBeLessThanOrEqual(4)
+      expect(moved).toHaveLength(route.length)
+      const final = route.slice(-2)
+      const movedFinal = moved.slice(-2)
+      expect(final[0].x).toBe(390)
+      expect(movedFinal[0].x).toBe(390)
+      expect(movedFinal[0].y).toBe(final[0].y)
+    }
+
+    expect(pristine["left-product"]).toEqual([
+      { x: 140, y: 330 },
+      { x: 140, y: 280 },
+      { x: 390, y: 280 },
+      { x: 390, y: 230 },
+    ])
+    expect(pristine["middle-product"]).toEqual([
+      { x: 390, y: 330 },
+      { x: 390, y: 230 },
+    ])
+    expect(pristine["right-product"]).toEqual([
+      { x: 655, y: 330 },
+      { x: 655, y: 280 },
+      { x: 390, y: 280 },
+      { x: 390, y: 230 },
+    ])
+
+    // Moving either outer branch by a full two grid cells keeps the common bus
+    // and trunk fixed; only that branch's source run changes.
+    for (const delta of [-10, -5, 5, 10]) {
+      const shiftedLeft = makeNode("left", 35 + delta, 330, 210, 70)
+      const shifted = solve([shiftedLeft, middle, right])
+      expect(shifted["left-product"].slice(2)).toEqual(
+        pristine["left-product"].slice(2)
+      )
+      expect(shifted["middle-product"]).toEqual(pristine["middle-product"])
+      expect(shifted["right-product"]).toEqual(pristine["right-product"])
+    }
+  })
+
+  it("balances a two-branch pinned junction on the grid midpoint", () => {
+    const adapter = makeNode("adapter", 270, 120, 190, 70)
+    const left = makeNode("left", 195, 265, 160, 70)
+    const right = makeNode("right", 390, 265, 160, 70)
+    const pinned = {
+      sourceAnchor: { side: Position.Top, ratio: 0.5 },
+      targetAnchor: { side: Position.Bottom, ratio: 0.5 },
+      points: [],
+    }
+    const { routeById } = computeAllEdgeGeometry(
+      base(
+        [adapter, left, right],
+        [
+          {
+            id: "left-adapter",
+            source: "left",
+            target: "adapter",
+            type: "ClassInheritance",
+            data: pinned,
+          },
+          {
+            id: "right-adapter",
+            source: "right",
+            target: "adapter",
+            type: "ClassInheritance",
+            data: pinned,
+          },
+        ]
+      )
+    )
+
+    expect(routeById["left-adapter"]).toEqual([
+      { x: 275, y: 265 },
+      { x: 275, y: 230 },
+      { x: 365, y: 230 },
+      { x: 365, y: 190 },
+    ])
+    expect(routeById["right-adapter"]).toEqual([
+      { x: 470, y: 265 },
+      { x: 470, y: 230 },
+      { x: 365, y: 230 },
+      { x: 365, y: 190 },
+    ])
+  })
+
   it("straightens an offset-but-overlapping pair by sliding both anchors", () => {
     // b is to the right of a and shifted down by less than a node height, so the
     // sides still overlap in y. Aiming each anchor at the partner's centre would

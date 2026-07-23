@@ -16,6 +16,7 @@ import {
   adjustTargetCoordinates,
   getSideHandleIdForPosition,
   isFreeformEdgeAnchor,
+  roundAnchorPointOutward,
   type FreeformEdgeAnchor,
 } from "@/utils/edgeUtils"
 import {
@@ -265,10 +266,22 @@ export const useStraightPathEdge = ({
 
   // Round coordinates to whole pixels for pixel-perfect rendering
   // React Flow may return fractional values when node dimensions are odd
-  const roundedSourceX = Math.round(resolvedSourceX)
-  const roundedSourceY = Math.round(resolvedSourceY)
-  const roundedTargetX = Math.round(resolvedTargetX)
-  const roundedTargetY = Math.round(resolvedTargetY)
+  const roundedSource = resolvedSourceAnchor
+    ? roundAnchorPointOutward(
+        resolvedSourceAnchor.point,
+        resolvedSourcePosition
+      )
+    : { x: Math.round(resolvedSourceX), y: Math.round(resolvedSourceY) }
+  const roundedTarget = resolvedTargetAnchor
+    ? roundAnchorPointOutward(
+        resolvedTargetAnchor.point,
+        resolvedTargetPosition
+      )
+    : { x: Math.round(resolvedTargetX), y: Math.round(resolvedTargetY) }
+  const roundedSourceX = roundedSource.x
+  const roundedSourceY = roundedSource.y
+  const roundedTargetX = roundedTarget.x
+  const roundedTargetY = roundedTarget.y
 
   const adjustedTargetCoordinates = adjustTargetCoordinates(
     roundedTargetX,
