@@ -1,6 +1,6 @@
 // The single source of tag semantics: every reader and writer of `data.tags`
 // goes through here, so they cannot disagree. See `DefaultNodeProps.tags`.
-import { ApollonNode } from "@/typings"
+import type { ApollonNode } from "@/typings"
 
 /** Over-length tags are dropped, not truncated. */
 export const MAX_TAG_LENGTH = 200

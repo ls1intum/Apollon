@@ -2259,10 +2259,11 @@ export function computeAllEdgeGeometry(input: SolverInput): {
       bestComponentScore = feedbackScore
     }
 
-    // Every candidate route has already passed the same hard-obstacle solver.
-    // Their cross-edge coupling is soft, so MUTABLE routes from different passes
-    // can be recombined. Immutable routes seeded every pass and only influence the
-    // objective/neighbour field. Greedy descent is bounded by mutable edge count.
+    // Every candidate route has passed the same bounded routing and degradation
+    // policy. Their cross-edge coupling is soft, so MUTABLE routes from different
+    // passes can be recombined. Immutable routes are seeded every pass and only
+    // influence the objective/neighbour field. Greedy descent is bounded by
+    // mutable edge count.
     for (let pass = 0; pass < mutableEdges.length; pass++) {
       let improved = false
       for (const edge of mutableEdges) {

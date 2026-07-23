@@ -278,8 +278,6 @@ export const EdgeEndpointMarkers = ({
   onEndpointPointerDown,
   straight = false,
   bendHandles,
-  sourcePinned = false,
-  targetPinned = false,
 }: {
   sourcePoint: IPoint
   targetPoint: IPoint
@@ -297,11 +295,6 @@ export const EdgeEndpointMarkers = ({
   // The edge's bend handles, so a reconnect target can cap its outward reach at
   // this end's terminal bend handle instead of painting over it.
   bendHandles?: BendHandle[]
-  // Whether each end is USER-PINNED (a custom anchor) rather than auto-anchored.
-  // Kept as a prop/class for the reset affordance and tests; the grip itself looks the
-  // same either way (a clean white handle), so nothing clutters the endpoint.
-  sourcePinned?: boolean
-  targetPinned?: boolean
 }) => {
   const screenScale = useHandleScreenScale()
 
@@ -385,9 +378,7 @@ export const EdgeEndpointMarkers = ({
       {showEndpointGrips && (
         <>
           <rect
-            className={`edge-circle edge-endpoint-grip edge-endpoint-grip--source${
-              sourcePinned ? " edge-endpoint-grip--pinned" : ""
-            }`}
+            className="edge-circle edge-endpoint-grip edge-endpoint-grip--source"
             x={sourceGrip.x}
             y={sourceGrip.y}
             width={sourceGrip.width}
@@ -399,9 +390,7 @@ export const EdgeEndpointMarkers = ({
             pointerEvents="none"
           />
           <rect
-            className={`edge-circle edge-endpoint-grip edge-endpoint-grip--target${
-              targetPinned ? " edge-endpoint-grip--pinned" : ""
-            }`}
+            className="edge-circle edge-endpoint-grip edge-endpoint-grip--target"
             x={targetGrip.x}
             y={targetGrip.y}
             width={targetGrip.width}
@@ -568,19 +557,6 @@ export const StepEdgeBody = ({
   ) => void
   children?: ReactNode
 }) => {
-  // Which ends the user has PINNED (a custom anchor) vs left to the router. Two
-  // boolean selectors (not one object) so equality stays primitive and the edge
-  // only re-renders when a pin actually flips. Drives the filled "anchored" grip.
-  const sourcePinned = useDiagramStore((state) =>
-    isFreeformEdgeAnchor(
-      state.edges.find((edge) => edge.id === id)?.data?.sourceAnchor
-    )
-  )
-  const targetPinned = useDiagramStore((state) =>
-    isFreeformEdgeAnchor(
-      state.edges.find((edge) => edge.id === id)?.data?.targetAnchor
-    )
-  )
   return (
     <g className="edge-container">
       <BaseEdge
@@ -656,8 +632,6 @@ export const StepEdgeBody = ({
         canEditEndpoint={canEditEndpoint}
         onEndpointPointerDown={handleEndpointPointerDown}
         bendHandles={bendHandles}
-        sourcePinned={sourcePinned}
-        targetPinned={targetPinned}
       />
 
       {children}
@@ -667,6 +641,7 @@ export const StepEdgeBody = ({
 
 export const CommonEdgeElements = ({
   id,
+  data,
   pathMiddlePosition,
   toolbarPosition,
   isDiagramModifiable,
@@ -676,6 +651,7 @@ export const CommonEdgeElements = ({
   type,
 }: {
   id: string
+  data: BaseEdgeProps["data"]
   pathMiddlePosition: IPoint
   toolbarPosition?: IPoint
   isDiagramModifiable: boolean
@@ -691,15 +667,12 @@ export const CommonEdgeElements = ({
   const [anchorEl, anchorRef] = usePopoverAnchor<HTMLDivElement>()
 
   const setEdges = useDiagramStore((state) => state.setEdges)
-  const hasManualRoute = useDiagramStore((state) => {
-    const data = state.edges.find((edge) => edge.id === id)?.data
-    const points = data?.points
-    const hasManualPoints = Array.isArray(points) && points.length > 0
-    const hasPinnedAnchor =
-      isFreeformEdgeAnchor(data?.sourceAnchor) ||
-      isFreeformEdgeAnchor(data?.targetAnchor)
-    return hasManualPoints || hasPinnedAnchor
-  })
+  const points = data?.points
+  const hasManualPoints = Array.isArray(points) && points.length > 0
+  const hasPinnedAnchor =
+    isFreeformEdgeAnchor(data?.sourceAnchor) ||
+    isFreeformEdgeAnchor(data?.targetAnchor)
+  const hasManualRoute = hasManualPoints || hasPinnedAnchor
 
   const handleResetRouting = useCallback(() => {
     setEdges((edges) =>

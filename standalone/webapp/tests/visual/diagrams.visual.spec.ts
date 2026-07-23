@@ -721,7 +721,6 @@ const routingAuthorityFixtures = [
       string,
       unknown
     > & { edges: { id: string }[] },
-    pinnedGrips: 2,
     minimumBendHandles: 1,
   },
   {
@@ -730,7 +729,6 @@ const routingAuthorityFixtures = [
       string,
       unknown
     > & { edges: { id: string }[] },
-    pinnedGrips: 0,
     minimumBendHandles: 4,
   },
 ]
@@ -739,10 +737,9 @@ test.describe("Routing authority states", () => {
   for (const {
     name,
     fixture,
-    pinnedGrips,
     minimumBendHandles,
   } of routingAuthorityFixtures) {
-    test(`${name} remains visually explicit`, async ({ page }) => {
+    test(`${name} remains editable`, async ({ page }) => {
       await injectFixtureIntoLocalStorage(page, fixture)
       await page.goto(resolveLocalDiagramRoute(fixture))
       await waitForCanvasReady(page)
@@ -752,9 +749,6 @@ test.describe("Routing authority states", () => {
       await selectEdgeOnPath(page, edgeId)
       const edge = page.locator(`.react-flow__edge[data-id="${edgeId}"]`)
 
-      await expect(edge.locator(".edge-endpoint-grip--pinned")).toHaveCount(
-        pinnedGrips
-      )
       expect(
         await edge.locator(".edge-bend-handle").count()
       ).toBeGreaterThanOrEqual(minimumBendHandles)

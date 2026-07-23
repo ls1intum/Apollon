@@ -8,14 +8,8 @@ import {
   selectEdgeOnPath,
 } from "../helpers/canvas"
 
-/**
- * The "Reset routing" affordance and the pinned-endpoint highlight.
- *
- * An edge is FULLY auto only when it has neither hand-drawn waypoints NOR pinned
- * endpoint anchors. The reset button (and the filled "anchored" grips) must appear
- * whenever EITHER manual state is present — an edge whose path is auto but whose
- * anchors are pinned used to hide the button, leaving no way back to auto anchoring.
- */
+// A pinned endpoint is manual routing state even when the path itself is
+// automatic, so the edge must still provide a way back to full auto-routing.
 
 const __dirname2 = path.dirname(fileURLToPath(import.meta.url))
 const load = (name: string) =>
@@ -25,35 +19,25 @@ const load = (name: string) =>
 
 const pinnedFixture = load("edge-pinned-anchors.json")
 
-test("a pinned-anchor edge exposes the reset button and highlights both anchored ends", async ({
-  page,
-}) => {
+test("a pinned-anchor edge exposes reset routing", async ({ page }) => {
   await openFixtureInLocalEditor(page, pinnedFixture)
   await waitForCanvasReady(page)
   const id = pinnedFixture.edges[0].id
 
   await selectEdgeOnPath(page, id)
 
-  const edge = page.locator(`.react-flow__edge[data-id="${id}"]`)
-  // Both ends are pinned, so both grips carry the pinned marker (a filled centre dot).
-  await expect(edge.locator(".edge-endpoint-grip--pinned")).toHaveCount(2)
-
   const resetButton = page.getByRole("button", { name: "Reset routing" })
   await expect(resetButton).toBeVisible()
 
-  // Reset hands the edge fully back to the router: the anchors clear, so the
-  // filled grips and the button itself disappear.
+  // Reset hands the edge fully back to the router, so there is no longer any
+  // manual routing state to reset.
   await resetButton.click()
-  await page.waitForTimeout(300)
-  await expect(edge.locator(".edge-endpoint-grip--pinned")).toHaveCount(0)
   await expect(page.getByRole("button", { name: "Reset routing" })).toHaveCount(
     0
   )
 })
 
-test("a fully auto edge shows no reset button and no anchored grips", async ({
-  page,
-}) => {
+test("a fully auto edge shows no reset button", async ({ page }) => {
   // Same geometry, but the edge keeps its default auto anchoring (no custom
   // anchors, no waypoints) — nothing to reset.
   const auto = load("edge-pinned-anchors.json")
@@ -67,8 +51,6 @@ test("a fully auto edge shows no reset button and no anchored grips", async ({
 
   await selectEdgeOnPath(page, id)
 
-  const edge = page.locator(`.react-flow__edge[data-id="${id}"]`)
-  await expect(edge.locator(".edge-endpoint-grip--pinned")).toHaveCount(0)
   await expect(page.getByRole("button", { name: "Reset routing" })).toHaveCount(
     0
   )

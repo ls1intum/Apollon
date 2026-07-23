@@ -97,6 +97,14 @@ import { importDiagram } from "@tumaet/apollon"
 editor.model = importDiagram(maybeV2OrV3Json) // → guaranteed v4
 ```
 
+Server code that only needs to normalize model JSON can use the DOM-free entry:
+
+```ts
+import { importDiagram } from "@tumaet/apollon/model"
+
+export const normalizeDiagram = (data: unknown) => importDiagram(data)
+```
+
 The v2 / v3 detectors and converters live behind `@tumaet/apollon/internals`
 and are **not** part of the stability guarantee — only `importDiagram` is.
 

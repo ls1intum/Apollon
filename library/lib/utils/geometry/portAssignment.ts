@@ -604,9 +604,9 @@ export type SideMember = {
 /**
  * A member's position along its side, as ONE monotonic scalar in (−2, 2) that
  * increases with the along-side angle of the partner direction — the rotation
- * around the node. Ordering members by this key makes same-side edges NEST
- * instead of cross (libavoid Thm 3/4: angular order is crossing-minimal for edges
- * sharing a node) and orders a merge so it enters crossing-free.
+ * around the node. Ordering members by this key is a stable heuristic that makes
+ * same-side fans nest instead of cross and orders a merge so it enters
+ * crossing-free.
  *
  * Projected into the side-local frame (X = outward normal, Y = the tangential
  * axis in display order — left→right on Top/Bottom, top→bottom on Left/Right),

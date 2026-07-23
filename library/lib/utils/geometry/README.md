@@ -73,15 +73,15 @@ the leaf directly so its dependency graph never traverses React components.
 
 ## Why it is shaped this way
 
-The literature is consistent that fixed-node connector routing wants **one cohesive per-edge
-cost inside the search, plus one deterministic ordering stage** — not an unbounded global
-optimiser, and not a stack of special cases. `routingCost.ts` is the single scale shared by
-side proposals, endpoint placement, A\*, fallback ranking, and route-set repair. A bend costs
-40 px and leaving a proposed side costs 35 px, so node-local coordination breaks ties without
-overruling a route that can genuinely save a corner. An open-canvas crossing costs 400 px:
-enough to prefer several bends and a moderate detour, but not enough to create enormous laps
-when crossing is the coherent result. Authored diagonal segments participate in this same
-crossing, overlap, and crowding model rather than being approximated as staircases.
+The routing stages share named penalties and deterministic tie-breaks, while each stage keeps
+the objective appropriate to its bounded search. The A\* path cost combines length, bends,
+crossings, overlap, and crowding. Node-local coordination proposes sides and seats before
+that search, and route-set repair compares complete candidates lexicographically afterward.
+A bend costs 40 px and leaving a proposed side costs 35 px, so coordination breaks ties
+without overruling a route that can genuinely save a corner. An open-canvas crossing costs
+400 px: enough to prefer several bends and a moderate detour, but not enough to create
+enormous laps when crossing is the coherent result. Authored diagonal segments participate
+in crossing, overlap, and crowding checks rather than being approximated as staircases.
 
 Container frames are synthetic boundaries, not diagram edges. The solver first prices real
 neighbouring routes with the crossing model above, then consults package/pool borders only if
@@ -94,7 +94,7 @@ For a small interacting edge component with a crossing, overlap, or visibly disp
 shared-side band, Apollon tries a bounded family of deterministic ordering variants.
 Disconnected remote edges do not enter that combinatorial budget. Their routes stay fixed,
 and component scoring evaluates only focused-edge interactions against the full route set,
-instead of repeatedly rescoring fixed-vs-fixed pairs. Individually obstacle-safe routes may
+instead of repeatedly rescoring fixed-vs-fixed pairs. Individually routed candidates may
 be recombined, but only while a named lexicographic route-set objective strictly improves.
 Manual/live/plain-line topology is seeded as immutable geometry in every variant and does
 not consume the eight-mutable-edge repair budget. A pinned-only edge keeps its endpoint seats
@@ -112,9 +112,9 @@ geometry, and a candidate is accepted only when the whole component score strict
 
 - **Wybrow, Marriott & Stuckey, _Orthogonal Connector Routing_ (GD 2009)** —
   [PDF](https://users.monash.edu/~mwybrow/papers/wybrow-gd-2009.pdf). Per-connector cost
-  monotone in length and bends; a separate ordering/nudging stage. Theorems 3–4 give the
-  result `orderSideMembers` relies on: ordering edges by the direction they diverge is
-  crossing-minimal for edges sharing a node.
+  monotone in length and bends; a separate ordering/nudging stage. Its treatment of shared
+  connector segments motivates the stable angular-order heuristic in `orderSideMembers`;
+  Apollon's node-side assignment is a different, editor-specific problem.
 - **Hegemann & Wolff, _A Simple Pipeline for Orthogonal Graph Drawing_ (GD 2023)** —
   [arXiv:2309.01671](https://arxiv.org/abs/2309.01671). Closest published setting to ours
   (free-floating rectangles, no layering): partner direction decides side and order, then

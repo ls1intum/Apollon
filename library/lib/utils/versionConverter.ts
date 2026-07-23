@@ -3,12 +3,12 @@
  * every entry point has to accept `any` until it's narrowed inline. Replacing
  * these with proper types would require defining the full v3/v2 envelope and
  * isn't in scope here. */
-import { UMLModel, ApollonNode, ApollonEdge, Assessment } from "../typings"
+import type { UMLModel, ApollonNode, ApollonEdge, Assessment } from "../typings"
 import { transformEdges } from "../services/migration/EdgeTransformer"
 import { UMLDiagramType } from "../types/DiagramType"
 import { ClassStereotype } from "../types/nodes/enums"
-import { IPoint } from "../edges/Connection"
-import {
+import type { IPoint } from "../edges/Connection"
+import type {
   V3DiagramFormat,
   V3UMLModel,
   V3UMLElement,
@@ -19,9 +19,9 @@ import {
 } from "./v3Typings"
 import { log } from "../logger"
 import { applyTags, taggableElements } from "./tagUtils"
-import { INTERFACE } from "../constants"
+import { INTERFACE } from "./geometry/routingConstants"
 
-import {
+import type {
   ClassNodeProps,
   ObjectNodeProps,
   CommunicationObjectNodeProps,
@@ -35,7 +35,7 @@ import {
   BPMNEventProps,
   ReachabilityGraphMarkingProps,
 } from "../types/nodes/NodeProps"
-import { MessageData } from "@/edges/EdgeProps"
+import type { MessageData } from "@/edges/EdgeProps"
 
 function normalizeImportedInterfaceGeometry(
   nodeType: string,

@@ -96,6 +96,15 @@
       ]
     },
     {
+      "name": "/model normalization chunk (DOM-free)",
+      "path": "dist/versionConverter-*.js",
+      "limit": "8 kB",
+      "disablePlugins": [
+        "@size-limit/webpack",
+        "@size-limit/time"
+      ]
+    },
+    {
       "name": "/export lazy chunk (published JS, renderers externalized)",
       "path": "dist/export.js",
       "limit": "700 kB",

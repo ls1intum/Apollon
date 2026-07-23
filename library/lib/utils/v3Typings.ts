@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- mirrors the legacy V3 JSON model shape (pre-typed-schema); intentionally loose at this boundary. */
-import { IPoint } from "../edges/Connection"
+import type { IPoint } from "../edges/Connection"
 
 export type V3Selection = {
   elements: { [id: string]: boolean }

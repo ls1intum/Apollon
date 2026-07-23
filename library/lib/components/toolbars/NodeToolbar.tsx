@@ -30,15 +30,12 @@ export const NodeToolbar: FC<Props> = ({ elementId, showEdit = true }) => {
       align="end"
       offset={10}
       className="apollon-element-toolbar-host"
-      style={{ pointerEvents: "none" }}
     >
       <ButtonGroup
         aria-label={t.selectionActions}
         orientation="vertical"
         className="apollon-element-toolbar nodrag nopan"
         onPointerDownCapture={(event) => event.stopPropagation()}
-        onMouseDownCapture={(event) => event.stopPropagation()}
-        onTouchStartCapture={(event) => event.stopPropagation()}
       >
         <IconButton
           ariaLabel={t.deleteElement}
