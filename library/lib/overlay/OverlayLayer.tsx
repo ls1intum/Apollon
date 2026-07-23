@@ -124,10 +124,16 @@ function useKeyboardInset(gridRef: RefObject<HTMLDivElement | null>): void {
       host = (grid?.closest(".apollon-canvas") as HTMLElement | null) ?? grid
       if (!host) return
       const keyboardTop = vv.offsetTop + vv.height
-      const overlap = Math.max(
-        0,
-        host.getBoundingClientRect().bottom - keyboardTop
+      // Clamp to the visible viewport: canvas below the fold is not covered by
+      // the keyboard, so the inset can never exceed the keyboard's own height.
+      // Unclamped, an editor mounted below the fold reserved the whole gap to
+      // the window bottom — and `visualViewport` fires no `scroll` for
+      // layout-viewport scrolling, so that value never cleared.
+      const visibleBottom = Math.min(
+        host.getBoundingClientRect().bottom,
+        window.innerHeight
       )
+      const overlap = Math.max(0, visibleBottom - keyboardTop)
       host.style.setProperty("--apollon-keyboard-inset", `${overlap}px`)
     }
     update()

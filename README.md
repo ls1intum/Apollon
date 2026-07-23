@@ -57,13 +57,15 @@ This monorepo contains every piece of the Apollon platform:
 ## Use the library
 
 ```sh
-npm install @tumaet/apollon react react-dom @xyflow/react yjs y-protocols
+npm install @tumaet/apollon
 ```
 
-`react`, `react-dom`, `@xyflow/react`, `yjs`, and `y-protocols` are required
-peer dependencies — the editor renders on the host's single React and Yjs
-instance instead of bundling its own. See the
-[library README](./library/README.md) for the full API and per-framework guides.
+npm 7+, pnpm 8+, and Bun pull in the required peer dependencies automatically
+(`react`, `react-dom`, `@xyflow/react`, `yjs`, `y-protocols`) — the editor
+renders on the host's single React and Yjs instance instead of bundling its
+own. Yarn never installs peers, so list them in the install command there. See
+the [library README](./library/README.md) for the full API and per-framework
+guides.
 
 ## Run the stack locally
 

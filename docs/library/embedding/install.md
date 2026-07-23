@@ -11,6 +11,15 @@ Apollon renders on React 19 (`react` / `react-dom` `^19`). On React 18 the
 install fails with an `ERESOLVE` peer error — upgrade your host to React 19 first.
 :::
 
+```sh
+npm install @tumaet/apollon
+```
+
+npm 7+, pnpm 8+, and Bun install the five required peers automatically, so the
+one-liner is all most setups need. Yarn never installs peers; the per-host
+commands below list them explicitly (use them with Yarn, or whenever you want
+to pin the peer versions yourself).
+
 ## React hosts
 
 You already have `react` and `react-dom` — add the remaining peers:
@@ -55,7 +64,8 @@ import "@tumaet/apollon/style.css"
 | `yjs`           | `^13.6.0` | the document model, undo/redo, and live collaboration |
 | `y-protocols`   | `^1.0.6`  | collaboration sync/awareness                          |
 
-npm 7+ auto-installs missing peers; **pnpm and yarn users add them explicitly**.
+npm 7+, pnpm 8+, and Bun auto-install missing required peers; **Yarn never
+does** — add them explicitly there.
 Apollon externalizes every runtime dependency, so a host that already uses React
 or Yjs shares a single instance with the editor instead of a private, possibly
 mismatched copy — no duplicate payload, and no "Invalid hook call" or
@@ -63,8 +73,11 @@ cross-instance-document errors.
 
 ## Optional: PNG / PDF export
 
-SVG and JSON export are built in. For PNG and PDF, install the optional renderers
-and import them from `@tumaet/apollon/export`:
+SVG and JSON export are built in. The PNG/PDF renderers (`@resvg/resvg-wasm`,
+`jspdf`, `svg2pdf.js`) ship as **optional dependencies** of `@tumaet/apollon`,
+so a normal install brings them in automatically; import them from
+`@tumaet/apollon/export`. Add them explicitly only if you install with
+`--omit=optional` (or an optional install was skipped):
 
 ```sh
 npm install @resvg/resvg-wasm jspdf svg2pdf.js

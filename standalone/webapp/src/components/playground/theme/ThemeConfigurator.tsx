@@ -221,7 +221,7 @@ export const ThemeConfigurator = ({
         )}
 
         {activeGroup.note && (
-          <p className="text-muted-foreground m-0 mb-1 rounded-md border border-dashed p-2 text-[11px] leading-snug">
+          <p className="text-muted-foreground border-border m-0 mb-1 rounded-md border border-dashed p-2 text-[11px] leading-snug">
             {activeGroup.note}
           </p>
         )}

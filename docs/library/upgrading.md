@@ -55,7 +55,7 @@ npm install @tumaet/apollon \
   yjs y-protocols
 ```
 
-npm 7+ auto-installs missing peers; **pnpm and yarn users must add them
+npm 7+, pnpm 8+, and Bun auto-install missing peers; **Yarn users must add them
 explicitly**. See [Install](/library/embedding/install) for why they're external.
 
 ## React 19 is required
